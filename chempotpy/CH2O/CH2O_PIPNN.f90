@@ -56,28 +56,25 @@
       do istate=1,nstates
         p(istate)=v
       enddo
+      end subroutine
 
-      endsubroutine
 
-
-       subroutine ch2opipNN(ct,vpes)
+  subroutine ch2opipNN( ct, vpes )
        use nnparam
        implicit none
        integer i,j,k,lpes
        real*8 rb(ndim),xbond(ndim),basis(nbasis),tmp1,txinput(nbasis-1)
        real*8 ct(3,natom),xvec(3,ndim),cx(3,natom),cy(3,natom)
        real*8 vpes,vpesa,vpesb,vpesc,vpesH,vnn,rfx(6)
-       basis=0.d0
-
-       cx=ct
-
-       k=0
+       basis = 0.d0
+       cx    = ct
+       k     = 0
        do i=1,natom-1
-        do j=i+1,natom
-         k=k+1
-!        write(*,*)k,i,j
-         xvec(:,k)=cx(:,i)-cx(:,j)
-        enddo
+           do j=i+1,natom
+               k=k+1
+               !write(*,*)k,i,j
+               xvec(:,k)=cx(:,i)-cx(:,j)
+           enddo
        enddo
        if(k.ne.ndim)stop 'error in bond dimension'
        do i=1,ndim
@@ -87,28 +84,22 @@
 !         return
 !       endif
        enddo
-
        xbond(:)=dexp(-rb(:)/alpha)
        call bemsav(xbond,basis)
-
        do j=1,nbasis-1
-        txinput(j)=basis(j+1)
+           txinput(j)=basis(j+1)
        enddo
-
        call getpota(txinput,vpes)
-!      vnn=min(vpes,5d0)
-       vnn=vpes
-       vpes=vnn
-
-       return
-
+       ! vnn=min(vpes,5d0)
+       vnn  = vpes
+       vpes = vnn
        end subroutine ch2opipNN
 
 !-->  read NN weights and biases from matlab output
 !-->  weights saved in 'weights.txt'
 !-->  biases saved in 'biases.txt'
 !-->  one has to call this subroutine one and only one before calling the getpot() subroutine
-      subroutine pes_init(path)
+subroutine pes_init( path )
       use nnparam
       implicit none
       character(len=1024), intent(in) :: path
@@ -116,13 +107,9 @@
       integer ibasis,npd,iterm,ib,nfile
       character f1*80,line*80
       character(len=1024) :: file_path1, file_path2
-
-
       file_path1 = trim(path)//"/CH2O/weights.txt"
       file_path2 = trim(path)//"/CH2O/biases.txt"
-
       open(4,file=file_path2,status='old')
-
         nfile=7
         open(nfile,file=file_path1)
         read(nfile,*)nhid,noutput
@@ -157,21 +144,17 @@
         iwe=iwe+1
         enddo
         enddo
-        
         if (iwe.ne.nwe) then
            write(*,*)'provided number of parameters ',nwe
            write(*,*)'actual number of parameters ',iwe
            write(*,*)'nwe not equal to iwe, check input files or code'
            stop
         endif
-
         close(nfile)
         close(4)
+end subroutine pes_init 
 
-        return
-        end subroutine pes_init 
-
-        subroutine getpota(x,vpot)
+subroutine getpota(x,vpot)
         use nnparam
         implicit none
         integer i,inode1,inode2,ilay1,ilay2
@@ -182,7 +165,6 @@
         do i=1,ninput
           y(i,1)=(x(i)-pavga(i))/pdela(i)
         enddo
-
 !-->....evaluate the hidden layer
         do ilay1=2,nlayer-1
         ilay2=ilay1-1
@@ -195,7 +177,6 @@
         y(inode1,ilay1)=tranfun(y(inode1,ilay1),ifunc)
         enddo
         enddo
-
 !-->....now evaluate the output
         ilay1=nlayer
         ilay2=ilay1-1
@@ -208,61 +189,46 @@
 !-->....the transfer function is linear y=x for output layer
 !-->....so no operation is needed here
         enddo
-
 !-->....the value of output layer is the fitted potntial 
         vpot=y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
-
-        return
         end subroutine getpota
-
 
         function tranfun(x,ifunc)
         implicit none
         integer ifunc
         real*8 tranfun,x
-        if (ifunc.eq.1) then
-        tranfun=dtanh(x)
-        else if (ifunc.eq.2) then
-        tranfun=1d0/(1d0+dexp(-x))
-        else if (ifunc.eq.3) then
-        tranfun=x
+        if( ifunc == 1 )then
+            tranfun=dtanh(x)
+        elseif(ifunc.eq.2 )then
+            tranfun=1d0/(1d0+dexp(-x))
+        elseif(ifunc.eq.3 )then
+            tranfun=x
         endif
-        return
         end
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
       function emsav(x,c) result(v)
         implicit none
         real*8,dimension(1:6)::x
         real*8,dimension(0:17)::c
         real*8::v
-        ! ::::::::::::::::::::
         real*8,dimension(0:17)::p
-        
         call bemsav(x,p)
         v = dot_product(p,c)
-        
-        return
       end function emsav
       
       subroutine bemsav(x,p)
         implicit none
         real*8,dimension(1:6),intent(in)::x
         real*8,dimension(0:17),intent(out)::p
-        ! ::::::::::::::::::::
         real*8,dimension(0:10)::m
-        
         call evmono(x,m)
         call evpoly(m,p)
-        
-        return
       end subroutine bemsav
       
       subroutine evmono(x,m)
         implicit none
         real*8,dimension(1:6),intent(in)::x
         real*8,dimension(0:10),intent(out)::m
-        !::::::::::::::::::::
-        
         m(0) = 1.0D0
         m(1) = x(6)
         m(2) = x(5)
@@ -274,16 +240,12 @@
         m(8) = m(3)*m(4)
         m(9) = m(2)*m(5)
         m(10) = m(4)*m(5)
-
-        return
       end subroutine evmono
 
       subroutine evpoly(m,p)
         implicit none
         real*8,dimension(0:10),intent(in)::m
         real*8,dimension(0:17),intent(out)::p
-        !::::::::::::::::::::
-        
         p(0) = m(0)
         p(1) = m(1)
         p(2) = m(2) + m(3)
@@ -302,7 +264,5 @@
         p(15) = p(2)*p(2) - p(6) - p(6)
         p(16) = p(3)*p(3) - p(9) - p(9)
         p(17) = p(4)*p(4)
-
-        return
       end subroutine evpoly
 
