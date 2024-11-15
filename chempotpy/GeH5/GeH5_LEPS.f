@@ -74,45 +74,34 @@ C        'utilities' section of POTLIB-online.
       endsubroutine
 
 
-      SUBROUTINE POT
-C
-C        This potential is written such that:
-C
-C                       X(1)  - X(3)  : X, Y, Z for H1
-C                       X(4)  - X(6)  : X, Y, Z for Ge
-C                       X(7)  - X(9)  : X, Y, Z for H3
-C                       X(10) - X(12) : X, Y, Z for H4
-C                       X(13) - X(15) : X, Y, Z for H2
-C                       X(16) - X(18) : X, Y, Z for H5
-C
+! This potential is written such that:
+!                X(1)  - X(3)  : X, Y, Z for H1
+!                X(4)  - X(6)  : X, Y, Z for Ge
+!                X(7)  - X(9)  : X, Y, Z for H3
+!                X(10) - X(12) : X, Y, Z for H4
+!                X(13) - X(15) : X, Y, Z for H2
+!                X(16) - X(18) : X, Y, Z for H5
+subroutine pot
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-C
       CHARACTER*75 REF(5)
-C
       PARAMETER(N3ATOM = 75)
       PARAMETER (ISURF = 5)
       PARAMETER (JSURF = ISURF*(ISURF+1)/2)
-C
       PARAMETER (PI = 3.141592653589793D0)
       PARAMETER (NATOM = 25)
-C
       COMMON/PT1CM/ R(N3ATOM), ENGYGS, DEGSDR(N3ATOM)
       COMMON/PT3CM/ EZERO(ISURF+1)
       COMMON/PT4CM/ ENGYES(ISURF), DEESDR(N3ATOM,ISURF)
       COMMON/PT5CM/ ENGYIJ(JSURF), DEIJDR(N3ATOM,JSURF)
-C
       COMMON/INFOCM/ CARTNU(NATOM,3),INDEXES(NATOM),
      +               IRCTNT,NATOMS,ICARTR,MDER,MSURF,REF
-C
       COMMON/USROCM/ PENGYGS,PENGYES(ISURF),
      +               PENGYIJ(JSURF),
      +               DGSCART(NATOM,3),DESCART(NATOM,3,ISURF),
      +               DIJCART(NATOM,3,JSURF)
-C
       COMMON/USRICM/ CART(NATOM,3),ANUZERO,
      +               NULBL(NATOM),NFLAG(20),
      +               NASURF(ISURF+1,ISURF+1),NDER
-C
       COMMON /POTCM/ nnc,nnb,nnh(4),
      +               r0ch,d1ch,d3ch,
      +               a1ch,b1ch,c1ch,
@@ -122,8 +111,6 @@ C
      +               atheta,btheta,ctheta,
      +               fch3,hch3,
      +               fkinf,ak,bk,aa1,aa2,aa3,aa4
-C
-C
        common /angles/  theta0(4,4),dtheta0(4,4,4)
        common /bonds/   rcb,rch(4),rbh(4)
        common /coords/  tcb(3),tch(4,3),tbh(4,3)
@@ -136,102 +123,66 @@ C
        common /op1/     s3(4),ds3(4)
        common /qpdot_pl/   q(150),pdot(150)
        common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
-C
       CALL CARTOU
       CALL CARTTOR
-C
 C Changing units from angstrom to bohr and initialize
-C
       DO 10 I = 1, 18
          q(I) = R(I)
 c         q(I) = R(I)*0.52918d0
          pdot(I)=0.D0
  10   CONTINUE
-c
 c  calculate relative coordinates and bond lengths
-c
        en=0.0d0
-
        call coorden
-c
 c  calculate switching functions
-c
        call switchf
-c
 c  calculate reference angles and their derivatives
-c
        call refangles
-c
 c  calculate stretching potential
-c
        call stretch(vstr)
-c
 c  calculate out of plane bending potential
-c
        call opbend(vop)
-c
 c  calculate in plane bending potential
-c
        call ipbend(vip)
-c
 c  total potential energy is vstr+vop+vip
-c
        en=vstr+vop+vip
-c
 c 0.03812 conversion factor from 10(5) j/mol to hartrees
-c
        en = en*0.03812D0
        ENGYGS = en
-c
       CALL EUNITZERO
       IF(NDER.NE.0) THEN
-c
 c 0.0201723 conversion factor from 10(5)j/mol/A to hartrees/bohr
-c
          do i=1,18
             DEGSDR(i)=pdot(i)*0.0201723d0
          enddo
          CALL RTOCART
          CALL DEDCOU
       ENDIF
-C
        return
        end
-c
-c******************************************************
-c
-       subroutine coorden
-c
-c  calculates relative coordinates and bond lengths
-c
-       implicit double precision (a-h,o-z)
-C
-      CHARACTER*75 REF(5)
-C
-      PARAMETER(N3ATOM = 75)
-      PARAMETER (ISURF = 5)
-      PARAMETER (JSURF = ISURF*(ISURF+1)/2)
-C
-      PARAMETER (PI = 3.141592653589793D0)
-      PARAMETER (NATOM = 25)
-C
+
+! calculates relative coordinates and bond lengths
+subroutine coorden
+    implicit double precision (a-h,o-z)
+    CHARACTER*75 REF(5)
+    PARAMETER(N3ATOM = 75)
+    PARAMETER (ISURF = 5)
+    PARAMETER (JSURF = ISURF*(ISURF+1)/2)
+    PARAMETER (PI = 3.141592653589793D0)
+    PARAMETER (NATOM = 25)
       COMMON/PT1CM/ R(N3ATOM), ENGYGS, DEGSDR(N3ATOM)
       COMMON/PT3CM/ EZERO(ISURF+1)
       COMMON/PT4CM/ ENGYES(ISURF), DEESDR(N3ATOM,ISURF)
       COMMON/PT5CM/ ENGYIJ(JSURF), DEIJDR(N3ATOM,JSURF)
-C
       COMMON/INFOCM/ CARTNU(NATOM,3),INDEXES(NATOM),
      +               IRCTNT,NATOMS,ICARTR,MDER,MSURF,REF
-C
       COMMON/USROCM/ PENGYGS,PENGYES(ISURF),
      +               PENGYIJ(JSURF),
      +               DGSCART(NATOM,3),DESCART(NATOM,3,ISURF),
      +               DIJCART(NATOM,3,JSURF)
-C
       COMMON/USRICM/ CART(NATOM,3),ANUZERO,
      +               NULBL(NATOM),NFLAG(20),
      +               NASURF(ISURF+1,ISURF+1),NDER
-C
       COMMON /POTCM/ nnc,nnb,nnh(4),
      +               r0ch,d1ch,d3ch,
      +               a1ch,b1ch,c1ch,
@@ -241,7 +192,6 @@ C
      +               atheta,btheta,ctheta,
      +               fch3,hch3,
      +               fkinf,ak,bk,aa1,aa2,aa3,aa4
-C
        common /angles/  theta0(4,4),dtheta0(4,4,4)
        common /bonds/   rcb,rch(4),rbh(4)
        common /coords/  tcb(3),tch(4,3),tbh(4,3)
@@ -254,9 +204,7 @@ C
        common /op1/     s3(4),ds3(4)
        common /qpdot_pl/   q(150),pdot(150)
        common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
-C
-c  calculate relative coordinates
-c
+!  calculate relative coordinates
        do ind=1,3
          tcb(ind)=q(nc(ind))-q(nhb(ind))
          do i=1,4
@@ -264,55 +212,38 @@ c
            tbh(i,ind)=q(nhb(ind))-q(nh(i,ind))
          enddo
        enddo
-c
-c  calculate bond lengths
-c
+!  calculate bond lengths
        rcb=sqrt(tcb(1)*tcb(1)+tcb(2)*tcb(2)+tcb(3)*tcb(3))
        do i=1,4
-         rch(i)=sqrt(tch(i,1)*tch(i,1)+tch(i,2)*tch(i,2)+
-     *                tch(i,3)*tch(i,3))
-         rbh(i)=sqrt(tbh(i,1)*tbh(i,1)+tbh(i,2)*tbh(i,2)+
-     *                tbh(i,3)*tbh(i,3))
+         rch(i)=sqrt(tch(i,1)*tch(i,1)+tch(i,2)*tch(i,2)+tch(i,3)*tch(i,3))
+         rbh(i)=sqrt(tbh(i,1)*tbh(i,1)+tbh(i,2)*tbh(i,2)+tbh(i,3)*tbh(i,3))
        enddo
        return
        end
-c
-c******************************************************
-c
-c
-       subroutine refangles
-c
-c  subroutine calculates reference angles for the "in-plane" potential
-c
-       implicit double precision (a-h,o-z)
-C
-      CHARACTER*75 REF(5)
-C
-      PARAMETER(N3ATOM = 75)
-      PARAMETER (ISURF = 5)
-      PARAMETER (JSURF = ISURF*(ISURF+1)/2)
-C
-      PARAMETER (PI = 3.141592653589793D0)
-      PARAMETER (NATOM = 25)
-C
-      COMMON/PT1CM/ R(N3ATOM), ENGYGS, DEGSDR(N3ATOM)
-      COMMON/PT3CM/ EZERO(ISURF+1)
-      COMMON/PT4CM/ ENGYES(ISURF), DEESDR(N3ATOM,ISURF)
-      COMMON/PT5CM/ ENGYIJ(JSURF), DEIJDR(N3ATOM,JSURF)
-C
-      COMMON/INFOCM/ CARTNU(NATOM,3),INDEXES(NATOM),
+
+!  subroutine calculates reference angles for the "in-plane" potential
+subroutine refangles
+    implicit double precision (a-h,o-z)
+    CHARACTER*75 REF(5)
+    PARAMETER(N3ATOM = 75)
+    PARAMETER (ISURF = 5)
+    PARAMETER (JSURF = ISURF*(ISURF+1)/2)
+    PARAMETER (PI = 3.141592653589793D0)
+    PARAMETER (NATOM = 25)
+    COMMON/PT1CM/ R(N3ATOM), ENGYGS, DEGSDR(N3ATOM)
+    COMMON/PT3CM/ EZERO(ISURF+1)
+    COMMON/PT4CM/ ENGYES(ISURF), DEESDR(N3ATOM,ISURF)
+    COMMON/PT5CM/ ENGYIJ(JSURF), DEIJDR(N3ATOM,JSURF)
+    COMMON/INFOCM/ CARTNU(NATOM,3),INDEXES(NATOM),
      +               IRCTNT,NATOMS,ICARTR,MDER,MSURF,REF
-C
-      COMMON/USROCM/ PENGYGS,PENGYES(ISURF),
+    COMMON/USROCM/ PENGYGS,PENGYES(ISURF),
      +               PENGYIJ(JSURF),
      +               DGSCART(NATOM,3),DESCART(NATOM,3,ISURF),
      +               DIJCART(NATOM,3,JSURF)
-C
-      COMMON/USRICM/ CART(NATOM,3),ANUZERO,
+    COMMON/USRICM/ CART(NATOM,3),ANUZERO,
      +               NULBL(NATOM),NFLAG(20),
      +               NASURF(ISURF+1,ISURF+1),NDER
-C
-      COMMON /POTCM/ nnc,nnb,nnh(4),
+    COMMON /POTCM/ nnc,nnb,nnh(4),
      +               r0ch,d1ch,d3ch,
      +               a1ch,b1ch,c1ch,
      +               r0hh,d1hh,d3hh,ahh,
@@ -321,138 +252,101 @@ C
      +               atheta,btheta,ctheta,
      +               fch3,hch3,
      +               fkinf,ak,bk,aa1,aa2,aa3,aa4
-C
-       common /angles/  theta0(4,4),dtheta0(4,4,4)
-       common /bonds/   rcb,rch(4),rbh(4)
-       common /coords/  tcb(3),tch(4,3),tbh(4,3)
-       common /delta1/  fdelta(4),hdelta(4)
-       common /delta2/  dfdelta(4,4),dhdelta(4,4)
-       common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-       common /fsw1/    a1s,b1s,a2s,b2s
-       common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-       common /ndx/     nc(3),nhb(3),nh(4,3)
-       common /op1/     s3(4),ds3(4)
-       common /qpdot_pl/   q(150),pdot(150)
-       common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
-C
-       tau=acos(-1.0d0/3.0d0)
-C       pi=4.0d0*atan(1.0d0)
-       halfpi=0.5d0*pi
-       twopi=2.0d0*pi
-       tausih=0.678d0*pi
-c
-c  set diagonal elements to zero
-c
+    common /angles/  theta0(4,4),dtheta0(4,4,4)
+    common /bonds/   rcb,rch(4),rbh(4)
+    common /coords/  tcb(3),tch(4,3),tbh(4,3)
+    common /delta1/  fdelta(4),hdelta(4)
+    common /delta2/  dfdelta(4,4),dhdelta(4,4)
+    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
+    common /fsw1/    a1s,b1s,a2s,b2s
+    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
+    common /ndx/     nc(3),nhb(3),nh(4,3)
+    common /op1/     s3(4),ds3(4)
+    common /qpdot_pl/   q(150),pdot(150)
+    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    tau    = acos(-1.0d0/3.0d0)
+    ! pi   = 4.0d0*atan(1.0d0)
+    halfpi = 0.5d0*pi
+    twopi  = 2.0d0*pi
+    tausih = 0.678d0*pi
+! set diagonal elements to zero
        do i=1,4
          theta0(i,i)=0.0d0
          do k=1,4
            dtheta0(i,i,k)=0.0d0
          enddo
        enddo
-c
-c  calculate reference angles
-c
-       theta0(1,2)=tau+(tau-tausih)*(sphi(1)*sphi(2)-1.0d0)
-     *             +(tau-twopi/3.0d0)*(stheta(3)*stheta(4)-1.0d0)
-       theta0(1,3)=tau+(tau-tausih)*(sphi(1)*sphi(3)-1.0d0)
-     *             +(tau-twopi/3.0d0)*(stheta(2)*stheta(4)-1.0d0)
-       theta0(1,4)=tau+(tau-tausih)*(sphi(1)*sphi(4)-1.0d0)
-     *             +(tau-twopi/3.0d0)*(stheta(2)*stheta(3)-1.0d0)
-       theta0(2,3)=tau+(tau-tausih)*(sphi(2)*sphi(3)-1.0d0)
-     *             +(tau-twopi/3.0d0)*(stheta(1)*stheta(4)-1.0d0)
-       theta0(2,4)=tau+(tau-tausih)*(sphi(2)*sphi(4)-1.0d0)
-     *             +(tau-twopi/3.0d0)*(stheta(1)*stheta(3)-1.0d0)
-       theta0(3,4)=tau+(tau-tausih)*(sphi(3)*sphi(4)-1.0d0)
-     *             +(tau-twopi/3.0d0)*(stheta(1)*stheta(2)-1.0d0)
-c
-c  calculate the derivatives of theta0(i,j) in terms of rch(k)
-c  quantity calulated is dtheta0(i,j,k)
-c
-c  derivatives wrt rch(1)
-c
+! calculate reference angles
+       theta0(1,2)=tau+(tau-tausih)*(sphi(1)*sphi(2)-1.0d0)+(tau-twopi/3.0d0)*(stheta(3)*stheta(4)-1.0d0)
+       theta0(1,3)=tau+(tau-tausih)*(sphi(1)*sphi(3)-1.0d0)+(tau-twopi/3.0d0)*(stheta(2)*stheta(4)-1.0d0)
+       theta0(1,4)=tau+(tau-tausih)*(sphi(1)*sphi(4)-1.0d0)+(tau-twopi/3.0d0)*(stheta(2)*stheta(3)-1.0d0)
+       theta0(2,3)=tau+(tau-tausih)*(sphi(2)*sphi(3)-1.0d0)+(tau-twopi/3.0d0)*(stheta(1)*stheta(4)-1.0d0)
+       theta0(2,4)=tau+(tau-tausih)*(sphi(2)*sphi(4)-1.0d0)+(tau-twopi/3.0d0)*(stheta(1)*stheta(3)-1.0d0)
+       theta0(3,4)=tau+(tau-tausih)*(sphi(3)*sphi(4)-1.0d0)+(tau-twopi/3.0d0)*(stheta(1)*stheta(2)-1.0d0)
+       ! calculate the derivatives of theta0(i,j) in terms of rch(k)
+       ! quantity calulated is dtheta0(i,j,k)
+       ! derivatives wrt rch(1)
        dtheta0(1,2,1)=(tau-tausih)*dsphi(1)*sphi(2)
        dtheta0(1,3,1)=(tau-tausih)*dsphi(1)*sphi(3)
        dtheta0(1,4,1)=(tau-tausih)*dsphi(1)*sphi(4)
        dtheta0(2,3,1)=(tau-twopi/3.0d0)*dstheta(1)*stheta(4)
        dtheta0(2,4,1)=(tau-twopi/3.0d0)*dstheta(1)*stheta(3)
        dtheta0(3,4,1)=(tau-twopi/3.0d0)*dstheta(1)*stheta(2)
-c
-c  derivatives wrt rch(2)
-c
+       ! derivatives wrt rch(2)
        dtheta0(1,2,2)=(tau-tausih)*sphi(1)*dsphi(2)
        dtheta0(1,3,2)=(tau-twopi/3.0d0)*dstheta(2)*stheta(4)
        dtheta0(1,4,2)=(tau-twopi/3.0d0)*dstheta(2)*stheta(3)
        dtheta0(2,3,2)=(tau-tausih)*dsphi(2)*sphi(3)
        dtheta0(2,4,2)=(tau-tausih)*dsphi(2)*sphi(4)
        dtheta0(3,4,2)=(tau-twopi/3.0d0)*stheta(1)*dstheta(2)
-c
-c  derivatives wrt rch(3)
-c
+       ! derivatives wrt rch(3)
        dtheta0(1,2,3)=(tau-twopi/3.0d0)*dstheta(3)*stheta(4)
        dtheta0(1,3,3)=(tau-tausih)*sphi(1)*dsphi(3)
        dtheta0(1,4,3)=(tau-twopi/3.0d0)*stheta(2)*dstheta(3)
        dtheta0(2,3,3)=(tau-tausih)*sphi(2)*dsphi(3)
        dtheta0(2,4,3)=(tau-twopi/3.0d0)*stheta(1)*dstheta(3)
        dtheta0(3,4,3)=(tau-tausih)*dsphi(3)*sphi(4)
-c
-c  derivatives wrt rch(4)
-c
+       ! derivatives wrt rch(4)
        dtheta0(1,2,4)=(tau-twopi/3.0d0)*stheta(3)*dstheta(4)
        dtheta0(1,3,4)=(tau-twopi/3.0d0)*stheta(2)*dstheta(4)
        dtheta0(1,4,4)=(tau-tausih)*sphi(1)*dsphi(4)
        dtheta0(2,3,4)=(tau-twopi/3.0d0)*stheta(1)*dstheta(4)
        dtheta0(2,4,4)=(tau-tausih)*sphi(2)*dsphi(4)
        dtheta0(3,4,4)=(tau-tausih)*sphi(3)*dsphi(4)
-c
-c  fill in the other half of the matrix
-c
-        do i=1,3
-          do j=i+1,4
-            theta0(j,i)=theta0(i,j)
-            do k=1,4
-              dtheta0(j,i,k)=dtheta0(i,j,k)
-            enddo
-          enddo
-        enddo
-       return
+       ! fill in the other half of the matrix
+       do i = 1, 3
+           do j = i+1, 4
+               theta0(j,i) = theta0(i,j)
+               do k = 1, 4
+                   dtheta0(j,i,k) = dtheta0(i,j,k)
+               enddo
+           enddo
+       enddo
        end
-c
-c******************************************************
-c
-c
-       subroutine stretch(vstr)
-c
+
 c  subroutine to calculate leps-type stretching potential and its
 c  derivatives
-c
+subroutine stretch( vstr )
        implicit double precision (a-h,o-z)
-C
       CHARACTER*75 REF(5)
-C
       PARAMETER(N3ATOM = 75)
       PARAMETER (ISURF = 5)
       PARAMETER (JSURF = ISURF*(ISURF+1)/2)
-C
       PARAMETER (PI = 3.141592653589793D0)
       PARAMETER (NATOM = 25)
-C
       COMMON/PT1CM/ R(N3ATOM), ENGYGS, DEGSDR(N3ATOM)
       COMMON/PT3CM/ EZERO(ISURF+1)
       COMMON/PT4CM/ ENGYES(ISURF), DEESDR(N3ATOM,ISURF)
       COMMON/PT5CM/ ENGYIJ(JSURF), DEIJDR(N3ATOM,JSURF)
-C
       COMMON/INFOCM/ CARTNU(NATOM,3),INDEXES(NATOM),
      +               IRCTNT,NATOMS,ICARTR,MDER,MSURF,REF
-C
       COMMON/USROCM/ PENGYGS,PENGYES(ISURF),
      +               PENGYIJ(JSURF),
      +               DGSCART(NATOM,3),DESCART(NATOM,3,ISURF),
      +               DIJCART(NATOM,3,JSURF)
-C
       COMMON/USRICM/ CART(NATOM,3),ANUZERO,
      +               NULBL(NATOM),NFLAG(20),
      +               NASURF(ISURF+1,ISURF+1),NDER
-C
       COMMON /POTCM/ nnc,nnb,nnh(4),
      +               r0ch,d1ch,d3ch,
      +               a1ch,b1ch,c1ch,
@@ -462,7 +356,6 @@ C
      +               atheta,btheta,ctheta,
      +               fch3,hch3,
      +               fkinf,ak,bk,aa1,aa2,aa3,aa4
-C
        common /angles/  theta0(4,4),dtheta0(4,4,4)
        common /bonds/   rcb,rch(4),rbh(4)
        common /coords/  tcb(3),tch(4,3),tbh(4,3)
@@ -475,137 +368,95 @@ C
        common /op1/     s3(4),ds3(4)
        common /qpdot_pl/   q(150),pdot(150)
        common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
-C
        dimension vqch(4),vjch(4),vqbh(4),vjbh(4),vq(4),vj(4),
      *           achdc(3),achdh(4,3)
-c
-c  calculate avergage bond length for the methane moiety
-c
-       rav=(rch(1)+rch(2)+rch(3)+rch(4))/4.0d0
-c
-c  initialise:
-c
-       vstr=0.0d0
-c
-c  ach:
-c
-c  in double precision tanh(19.0d0)=1.0d0 and we put the if statement
-c  in to avoid overflow/underflow errors
-c
-       arga=c1ch*(rav-r0ch)
-       if(arga.lt.19.0d0)then
+     ! calculate avergage bond length for the methane moiety
+     rav=(rch(1)+rch(2)+rch(3)+rch(4))/4.0d0
+     !initialise:
+     vstr=0.0d0
+     ! ach:
+     ! in double precision tanh(19.0d0)=1.0d0 and we put the if statement
+     ! in to avoid overflow/underflow errors
+     arga=c1ch*(rav-r0ch)
+     if( arga.lt.19.0d0)then
          ach=a1ch+b1ch*(tanh(arga)+1.0d0)*0.5d0
          dumach=b1ch*c1ch/(2.0d0*cosh(arga)**2)
-       else
-         ach=a1ch+b1ch
-         dumach=0.0d0
-       endif
-c
-c  calculate singlet: e1, triplet: e3 energies and vq and vj
-c  terms for each bond
-c
-       e1=d1cb*(exp(-2.0d0*acb*(rcb-r0ch))-2.0d0*exp(-acb*(rcb-r0ch)))
-       e3=d3cb*(exp(-2.0d0*acb*(rcb-r0ch))+2.0d0*exp(-acb*(rcb-r0ch)))
-       vqcb=(e1+e3)*0.5d0
-       vjcb=(e1-e3)*0.5d0
+     else
+         ach    = a1ch+b1ch
+         dumach = 0.0d0
+     endif
+     ! calculate singlet: e1, triplet: e3 energies and vq and vj
+     ! terms for each bond
+     e1   = d1cb*(exp(-2.0d0*acb*(rcb-r0ch))-2.0d0*exp(-acb*(rcb-r0ch)))
+     e3   = d3cb*(exp(-2.0d0*acb*(rcb-r0ch))+2.0d0*exp(-acb*(rcb-r0ch)))
+     vqcb = (e1+e3)*0.5d0
+     vjcb = (e1-e3)*0.5d0
        do i=1,4
-         e1=d1ch*(exp(-2.0d0*ach*(rch(i)-r0ch))
-     *              -2.0d0*exp(-ach*(rch(i)-r0ch)))
-         e3=d3ch*(exp(-2.0d0*ach*(rch(i)-r0ch))
-     *              +2.0d0*exp(-ach*(rch(i)-r0ch)))
-         vqch(i)=(e1+e3)*0.5d0
-         vjch(i)=(e1-e3)*0.5d0
-         e1=d1hh*(exp(-2.0d0*ahh*(rbh(i)-r0hh))
-     *              -2.0d0*exp(-ahh*(rbh(i)-r0hh)))
-         e3=d3hh*(exp(-2.0d0*ahh*(rbh(i)-r0hh))
-     *              +2.0d0*exp(-ahh*(rbh(i)-r0hh)))
-         vqbh(i)=(e1+e3)*0.5d0
-         vjbh(i)=(e1-e3)*0.5d0
-c
-c  calculate 3 body potential
-c
-         vq(i)=vqch(i)+vqcb+vqbh(i)
-         vj(i)=-sqrt(((vjch(i)-vjcb)**2+(vjcb-vjbh(i))**2
-     *                 +(vjbh(i)-vjch(i))**2)*0.5d0)
+         e1      = d1ch*(exp(-2.0d0*ach*(rch(i)-r0ch))-2.0d0*exp(-ach*(rch(i)-r0ch)))
+         e3      = d3ch*(exp(-2.0d0*ach*(rch(i)-r0ch))+2.0d0*exp(-ach*(rch(i)-r0ch)))
+         vqch(i) = (e1+e3)*0.5d0
+         vjch(i) = (e1-e3)*0.5d0
+         e1      = d1hh*(exp(-2.0d0*ahh*(rbh(i)-r0hh))-2.0d0*exp(-ahh*(rbh(i)-r0hh)))
+         e3      = d3hh*(exp(-2.0d0*ahh*(rbh(i)-r0hh))+2.0d0*exp(-ahh*(rbh(i)-r0hh)))
+         vqbh(i) = (e1+e3)*0.5d0
+         vjbh(i) = (e1-e3)*0.5d0
+         ! calculate 3 body potential
+         vq(i)   = vqch(i)+vqcb+vqbh(i)
+         vj(i)   =-sqrt(((vjch(i)-vjcb)**2+(vjcb-vjbh(i))**2+(vjbh(i)-vjch(i))**2)*0.5d0)
          vstr=vstr+vq(i)+vj(i)
        enddo
-c
-c  partial derivatives
-c  first we need the derivative of ach:
-c
+       ! partial derivatives
+       ! first we need the derivative of ach:
        do ind=1,3
-         achdc(ind)=dumach*(tch(1,ind)/rch(1)+tch(2,ind)/rch(2)
-     *            +tch(3,ind)/rch(3)+tch(4,ind)/rch(4))/4.0d0
+         achdc(ind)=dumach*(tch(1,ind)/rch(1)+tch(2,ind)/rch(2)+tch(3,ind)/rch(3)+tch(4,ind)/rch(4))/4.0d0
          do i=1,4
            achdh(i,ind)=-dumach*tch(i,ind)/rch(i)/4.0d0
          enddo
        enddo
-       dumqcb=-acb*((d1cb+d3cb)*exp(-2.0d0*acb*(rcb-r0ch))-
-     *         (d1cb-d3cb)*exp(-acb*(rcb-r0ch)))/rcb
-c
-c  calculate cartesian derivatives:
-c  looping over ch(i) and bh(i)
-c
+       dumqcb=-acb*((d1cb+d3cb)*exp(-2.0d0*acb*(rcb-r0ch))-(d1cb-d3cb)*exp(-acb*(rcb-r0ch)))/rcb
+       ! calculate cartesian derivatives:
+       ! looping over ch(i) and bh(i)
        do i=1,4
-         dumqbh=-ahh*((d1hh+d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh))-
-     *           (d1hh-d3hh)*exp(-ahh*(rbh(i)-r0hh)))/rbh(i)
+         dumqbh=-ahh*((d1hh+d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh))-(d1hh-d3hh)*exp(-ahh*(rbh(i)-r0hh)))/rbh(i)
          factj=0.5d0/vj(i)
-         dumjcb=-acb*((d1cb-d3cb)*exp(-2.0d0*acb*(rcb-r0ch))
-     *            -(d1cb+d3cb)*exp(-acb*(rcb-r0ch)))*factj/rcb
-         dumjbh=-ahh*((d1hh-d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh))
-     *            -(d1hh+d3hh)*exp(-ahh*(rbh(i)-r0hh)))*factj/rbh(i)
+         dumjcb=-acb*((d1cb-d3cb)*exp(-2.0d0*acb*(rcb-r0ch))-(d1cb+d3cb)*exp(-acb*(rcb-r0ch)))*factj/rcb
+         dumjbh=-ahh*((d1hh-d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh))-(d1hh+d3hh)*exp(-ahh*(rbh(i)-r0hh)))*factj/rbh(i)
          do ind=1,3
-c
-c  deriv wrt hb:
-c
+! deriv wrt hb:
                   pdot(nhb(ind))=pdot(nhb(ind))
      *             -tcb(ind)*dumqcb+tbh(i,ind)*dumqbh
      *            +(vjch(i)-vjcb)*(dumjcb*tcb(ind))
      *            +(vjcb-vjbh(i))*(-dumjcb*tcb(ind)-dumjbh*tbh(i,ind))
      *            +(vjbh(i)-vjch(i))*dumjbh*tbh(i,ind)
-c
-c  dvqch(i)/dc
-c
+! dvqch(i)/dc
            dumqch=-(ach*tch(i,ind)/rch(i)+achdc(ind)*(rch(i)-r0ch))
      *              *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch))
      *                 -(d1ch-d3ch)*exp(-ach*(rch(i)-r0ch)))
                pdot(nc(ind))=pdot(nc(ind))+dumqch+tcb(ind)*dumqcb
-c
-c  dvqch(i)/dh(i)
-c
+! dvqch(i)/dh(i)
            dumqhi=(ach*tch(i,ind)/rch(i)-achdh(i,ind)*(rch(i)-r0ch))
      *              *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch))
      *                 -(d1ch-d3ch)*exp(-ach*(rch(i)-r0ch)))
               pdot(nh(i,ind))=pdot(nh(i,ind))+dumqhi-tbh(i,ind)*dumqbh
-c
-c  dvjch(i)/dc
-c
+! dvjch(i)/dc
            dumjch=-(ach*tch(i,ind)/rch(i)+achdc(ind)*(rch(i)-r0ch))
      *              *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch))
      *               -(d1ch+d3ch)*exp(-ach*(rch(i)-r0ch)))*factj
-c
-c  dvj(i)/dnc(ind)
-c
+! dvj(i)/dnc(ind)
            pdot(nc(ind))=pdot(nc(ind))
      *            +(vjch(i)-vjcb)*(dumjch-dumjcb*tcb(ind))
      *            +(vjcb-vjbh(i))*dumjcb*tcb(ind)
      *            -(vjbh(i)-vjch(i))*dumjch
-c
-c  dvjch(i)/dh(i)
-c
+! dvjch(i)/dh(i)
            dumjhi=(ach*tch(i,ind)/rch(i)-achdh(i,ind)*(rch(i)-r0ch))
      *              *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch))
      *               -(d1ch+d3ch)*exp(-ach*(rch(i)-r0ch)))*factj
-c
-c  dvj(i)/dnh(i,ind)
-c
+! dvj(i)/dnh(i,ind)
             pdot(nh(i,ind))=pdot(nh(i,ind))
      *            +(vjch(i)-vjcb)*dumjhi
      *            +(vjcb-vjbh(i))*dumjbh*tbh(i,ind)
      *            +(vjbh(i)-vjch(i))*(-dumjbh*tbh(i,ind)-dumjhi)
-c
-c  dv(i)/dh(j)
-c
+!  dv(i)/dh(j)
            do k=1,3
              j=i+k
              if(j.gt.4)j=j-4
@@ -623,18 +474,11 @@ c
        enddo
        return
        end
-c
-c******************************************************
-c
-c
-       subroutine opbend(vop)
-c
-c  subroutine calculates symmetrized vop potential and derivatives
-c
+
+! calculates symmetrized vop potential and derivatives
+subroutine opbend( vop )
        implicit double precision (a-h,o-z)
-C
       CHARACTER*75 REF(5)
-C
       PARAMETER(N3ATOM = 75)
       PARAMETER (ISURF = 5)
       PARAMETER (JSURF = ISURF*(ISURF+1)/2)
@@ -658,7 +502,6 @@ C
       COMMON/USRICM/ CART(NATOM,3),ANUZERO,
      +               NULBL(NATOM),NFLAG(20),
      +               NASURF(ISURF+1,ISURF+1),NDER
-C
       COMMON /POTCM/ nnc,nnb,nnh(4),
      +               r0ch,d1ch,d3ch,
      +               a1ch,b1ch,c1ch,
@@ -668,7 +511,6 @@ C
      +               atheta,btheta,ctheta,
      +               fch3,hch3,
      +               fkinf,ak,bk,aa1,aa2,aa3,aa4
-C
        common /angles/  theta0(4,4),dtheta0(4,4,4)
        common /bonds/   rcb,rch(4),rbh(4)
        common /coords/  tcb(3),tch(4,3),tbh(4,3)
@@ -681,20 +523,13 @@ C
        common /op1/     s3(4),ds3(4)
        common /qpdot_pl/   q(150),pdot(150)
        common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
-C
        double precision norma
        dimension sumd2(4),sumd4(4)
        dimension in(3),a(3),b(3),axb(3),c(4,3),argd(4)
-c
-c
        vop=0.0d0
-c
-c  calculate force constants and their derivatives
-c
+! calculate force constants and their derivatives
        call opforce
-c
-c  calculate out-of-plane angle and derivatives
-c
+! calculate out-of-plane angle and derivatives
        do i=1,4
          j=i+1
          if(j.gt.4)j=j-4
@@ -702,99 +537,70 @@ c
          if(k.gt.4)k=k-4
          l=k+1
          if(l.gt.4)l=l-4
-c
-c  modification to ensure that the set of methane CH bond vector
-c  (rj,rk,rl) is a right-handed set
-c
-       in(1)=j
-       in(2)=k
-       in(3)=l
-c
-c  vector a is rk-rj, vector b is rl-rj
-c
-       do ind=1,3
-         a(ind)=q(nh(k,ind))-q(nh(j,ind))
-         b(ind)=q(nh(l,ind))-q(nh(j,ind))
+       ! modification to ensure that the set of methane CH bond vector
+       ! (rj,rk,rl) is a right-handed set
+       in(1) = j
+       in(2) = k
+       in(3) = l
+       ! vector a is rk-rj, vector b is rl-rj
+       do ind = 1, 3
+           a(ind) = q(nh(k,ind))-q(nh(j,ind))
+           b(ind) = q(nh(l,ind))-q(nh(j,ind))
        enddo
-c
-c  axb is vector a cross b
-c
+       ! axb is vector a cross b
        axb(1)=a(2)*b(3)-a(3)*b(2)
        axb(2)=a(3)*b(1)-a(1)*b(3)
        axb(3)=a(1)*b(2)-a(2)*b(1)
        norma=axb(1)*axb(1)+axb(2)*axb(2)+axb(3)*axb(3)
        norma=sqrt(norma)
-c
-c  c is position vector of h(ii): calculate c(j),c(k),c(l)
-c
+       ! c is position vector of h(ii): calculate c(j),c(k),c(l)
        do ii=1,3
-         do ind=1,3
-           c(in(ii),ind)=-tch(in(ii),ind)/rch(in(ii))
-         enddo
-       enddo
-c
-c  argd is the dot product axb dot c
-c
-       do ii=1,3
-         argd(in(ii))=axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2)
-     *                                +axb(3)*c(in(ii),3)
-         argd(in(ii))=argd(in(ii))/norma
-c
-c  if argd > 0 we need to switch vectors k and l around
-c
-         if (argd(in(ii)).gt.0.d0) then
-             itemp=k
-             k=l
-             l=itemp
-         endif
-       enddo
-c
-c  subroutine performs sum over j, k, l
-c  sum2 = sum delta**2
-c  sum4 = sum delta**4
-c
-         call calcdelta(i,j,k,l,sum2,sum4)
-         sumd2(i)=sum2
-         sumd4(i)=sum4
-         vop=vop+fdelta(i)*sumd2(i)+hdelta(i)*sumd4(i)
-       enddo
-       do i=1,4
-         do j=1,4
-c
-c  overall derivatives of force constants i wrt the bond-length rch(j)
-c
-           ddr=dfdelta(i,j)*sumd2(i)+dhdelta(i,j)*sumd4(i)
-c
-c  calculate derivatives in terms of cartesian coordinates:
-c
            do ind=1,3
-             pdot(nh(j,ind))=pdot(nh(j,ind))-tch(j,ind)*ddr/rch(j)
-             pdot(nc(ind))=pdot(nc(ind))+tch(j,ind)*ddr/rch(j)
+              c(in(ii),ind)=-tch(in(ii),ind)/rch(in(ii))
            enddo
+       enddo
+       ! argd is the dot product axb dot c
+       do ii=1,3
+           argd(in(ii))=axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) *                                +axb(3)*c(in(ii),3)
+           argd(in(ii))=argd(in(ii))/norma
+           ! if argd > 0 we need to switch vectors k and l around
+           if( argd(in(ii)) .gt. 0.d0 )then
+               itemp = k
+               k     = l
+               l     = itemp
+           endif
+       enddo
+       ! subroutine performs sum over j, k, l
+       ! sum2 = sum delta**2
+       ! sum4 = sum delta**4
+       call calcdelta(i,j,k,l,sum2,sum4)
+       sumd2(i) = sum2
+       sumd4(i) = sum4
+       vop      = vop+fdelta(i)*sumd2(i)+hdelta(i)*sumd4(i)
+       enddo
+       do i = 1, 4
+         do j = 1, 4
+             ! overall derivatives of force constants i wrt the bond-length rch(j)
+             ddr = dfdelta(i,j)*sumd2(i)+dhdelta(i,j)*sumd4(i)
+             ! calculate derivatives in terms of cartesian coordinates:
+             do ind = 1,3
+                 pdot(nh(j,ind)) = pdot(nh(j,ind))-tch(j,ind)*ddr/rch(j)
+                 pdot(nc(ind))   = pdot(nc(ind))+tch(j,ind)*ddr/rch(j)
+             enddo
          enddo
        enddo
-       return
        end
-c
-c******************************************************
-c
-c
+
+!  subroutine calculates symmetrised in plane bend term
+!  and its derivatives
        subroutine ipbend(vip)
-c
-c  subroutine calculates symmetrised in plane bend term
-c  and its derivatives
-c
        implicit double precision (a-h,o-z)
-C
       CHARACTER*75 REF(5)
-C
       PARAMETER(N3ATOM = 75)
       PARAMETER (ISURF = 5)
       PARAMETER (JSURF = ISURF*(ISURF+1)/2)
-C
       PARAMETER (PI = 3.141592653589793D0)
       PARAMETER (NATOM = 25)
-C
       COMMON/PT1CM/ R(N3ATOM), ENGYGS, DEGSDR(N3ATOM)
       COMMON/PT3CM/ EZERO(ISURF+1)
       COMMON/PT4CM/ ENGYES(ISURF), DEESDR(N3ATOM,ISURF)
