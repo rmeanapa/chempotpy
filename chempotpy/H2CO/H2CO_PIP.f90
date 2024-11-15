@@ -442,44 +442,40 @@
       RETURN
       END
 
-      subroutine pes(x,igrad,path,p,gradient_out,d)
-      use shell
-      implicit none
-      ! number of electronic state
-      integer, parameter :: nstates=1
-      integer, parameter :: natoms=4
-      integer, intent(in) :: igrad
-      character(len=1024), intent(in) :: path
-      double precision, intent(in) :: x(natoms,3)
-      double precision, intent(out) :: p(nstates)
-      double precision, intent(out) :: gradient_out(nstates,natoms,3)
-      double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-      real*8 :: tx(3,natoms), v
-      integer :: iatom, idir, j, istate
-      logical, save :: first_time_data=.true.
-      !initialize 
-      gradient_out=0.d0
-      d=0.d0
-
-      do iatom=1,natoms
-      do idir=1,3
-        tx(idir,iatom)=x(iatom,idir)/0.529177211
-      enddo 
-      enddo
-
-      if (igrad==0) then
+subroutine pes( x, igrad, path, p, gradient_out, d )
+    use shell
+    implicit none
+    ! number of electronic state
+    integer, parameter :: nstates=1
+    integer, parameter :: natoms=4
+    integer, intent(in) :: igrad
+    character(len=1024), intent(in) :: path
+    double precision, intent(in) :: x(natoms,3)
+    double precision, intent(out) :: p(nstates)
+    double precision, intent(out) :: gradient_out(nstates,natoms,3)
+    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    real*8 :: tx(3,natoms), v
+    integer :: iatom, idir, j, istate
+    logical, save :: first_time_data=.true.
+    !initialize 
+    gradient_out=0.d0
+    d=0.d0
+    do iatom=1,natoms
+        do idir=1,3
+            tx(idir,iatom)=x(iatom,idir)/0.529177211
+        enddo 
+    enddo
+    if (igrad==0) then
         if(first_time_data) then
-          call pes_init(path)
-          first_time_data=.false.
+           call pes_init(path)
+           first_time_data=.false.
         endif
         call getpot(tx,v,path)
         v=v*27.211386
         do istate=1,nstates
-          p(istate)=v
+            p(istate)=v
         enddo
-      else
+    else
         write (*,*) 'Only energy is available'
-      endif
-
-      endsubroutine
+    endif
+end subroutine

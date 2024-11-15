@@ -1,4 +1,3 @@
-!**********************************************************************
 !   System:                     N4
 !   Name of this surface:       N4_1A_MB-PIP-MEG3
 !   Functional form:            permutation-invariant polynomials
@@ -2368,28 +2367,21 @@
 
       end subroutine d3disp
 
-!**********************************************************************
 ! compute energy
-!**********************************************************************
-      subroutine edisp(max_elem,maxc,n,dist,iz,mxc, &
-                 rs6,rs8,e6,e8,e6dr,e8dr,c6a,igrad)
-
+subroutine edisp(max_elem,maxc,n,dist,iz,mxc,rs6,rs8,e6,e8,e6dr,e8dr,c6a,igrad)
       integer n,iz(2),max_elem,maxc,mxc(max_elem)
       double precision dist(1),r2r4(max_elem),r0ab(max_elem,max_elem)
       double precision rs6,rs8,rcov(max_elem)
       double precision c6ab(max_elem,max_elem,maxc,maxc,3)
       double precision e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
-
       integer iat,jat,igrad
       double precision r,tmp,c6,c8,a1,a2
       double precision damp6,damp8
       double precision cn(n)
       double precision r2ab(n*n),cc6ab(n*n),dmp(n*n)
       integer step
-
-      e6(:) =0.0d0
-      e8(:) =0.0d0
-
+      e6(:)   =0.0d0
+      e8(:)   =0.0d0
       e6dr(:) =0.0d0
       e8dr(:) =0.0d0
 
@@ -2458,24 +2450,22 @@
       step=0
       do iat=1,n-1
          do jat=iat+1,n
-         step=step+1
-         r=dist(step)
-         c6=c6a(step)
-! r2r4 stored in main as sqrt
-         c8 =3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
-
-! energy for BJ damping
-          tmp=sqrt(c8/c6)
-          e6(step)= c6/(r**6+(a1*tmp+a2)**6)
-          e8(step)= c8/(r**8+(a1*tmp+a2)**8)
-! calculate gradients
-         if (igrad .eq. 1) then
-! grad for BJ damping
-          e6dr(step)=c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
-          e8dr(step)=c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
+            step=step+1
+            r=dist(step)
+            c6=c6a(step)
+            ! r2r4 stored in main as sqrt
+            c8 =3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
+            ! energy for BJ damping
+            tmp=sqrt(c8/c6)
+            e6(step)= c6/(r**6+(a1*tmp+a2)**6)
+            e8(step)= c8/(r**8+(a1*tmp+a2)**8)
+            ! calculate gradients
+            if( igrad .eq. 1) then
+            ! grad for BJ damping
+            e6dr(step)=c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
+            e8dr(step)=c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
          endif
          enddo
       enddo
-
-      end subroutine edisp
+end subroutine edisp
 

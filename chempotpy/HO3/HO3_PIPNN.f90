@@ -71,30 +71,27 @@
 
       endsubroutine
 
-!******************************************************************
-        subroutine ho3_pes_interface(q,vpes)
+
+subroutine ho3_pes_interface( q, vpes )
         use nnparam,only: vpescut
         implicit none
         integer :: lxc
         double precision :: q(3,4) ! q in HOOO order and angstrom.
         double precision :: vpes,vpesa,vpesb,vpesc ! in eV
-
-        vpes=0.d0
-        vpesa=0.d0
-        vpesb=0.d0
-        vpesc=0.d0
-        lxc=0
-
-        call before_vpes(q,lxc)
-        if (lxc.eq.-1) then
-           vpesa=vpescut
-           vpesb=vpescut
-           vpesc=vpescut
-           vpes=vpescut
-           return
+        vpes  = 0.d0
+        vpesa = 0.d0
+        vpesb = 0.d0
+        vpesc = 0.d0
+        lxc   = 0
+        call before_vpes(q, lxc)
+        if( lxc .eq. -1 )then
+            vpesa = vpescut
+            vpesb = vpescut
+            vpesc = vpescut
+            vpes  = vpescut
+            return
         endif
-
-        if (lxc.eq.0) then
+        if( lxc .eq. 0 )then
            call ho3NN(q,vpes,vpesa,vpesb,vpesc) 
            if (vpes.lt.-1.5 .or. vpes.gt.vpescut) then
               vpes=vpescut
@@ -104,13 +101,9 @@
            endif
            return
         endif
+end subroutine ho3_pes_interface
 
-        return
-        end 
-!******************************************************************
-
-!******************************************************************
-        subroutine ho3NN(ct,vpes,vpesa,vpesb,vpesc) 
+subroutine ho3NN( ct, vpes, vpesa, vpesb, vpesc ) 
         use nnparam
         implicit none
         integer i
@@ -121,75 +114,60 @@
         double precision,parameter :: alpha=2.5d0 ! bohr
         double precision, parameter :: BtoA=0.529177249d0 
         double precision,parameter :: PI=dacos(-1.d0)
- 
-        basis=0.d0
-        xct=ct
-
-        qvec(:,1)=xct(:,3)-xct(:,4) !  O3->O4
-        qvec(:,2)=xct(:,2)-xct(:,4) !  O2->O4
-        qvec(:,3)=xct(:,1)-xct(:,4) !  H1->O4
-        qvec(:,4)=xct(:,2)-xct(:,3) !  O2->O3
-        qvec(:,5)=xct(:,1)-xct(:,3) !  H1->O3
-        qvec(:,6)=xct(:,1)-xct(:,2) !  H1->O2 
-
-        rb(1)=dsqrt(dot_product(qvec(:,1),qvec(:,1)))
-        rb(2)=dsqrt(dot_product(qvec(:,2),qvec(:,2)))
-        rb(3)=dsqrt(dot_product(qvec(:,3),qvec(:,3)))
-        rb(4)=dsqrt(dot_product(qvec(:,4),qvec(:,4)))
-        rb(5)=dsqrt(dot_product(qvec(:,5),qvec(:,5)))
-        rb(6)=dsqrt(dot_product(qvec(:,6),qvec(:,6)))
-        
-        xbond(:)=dexp(-rb(:)/(alpha*BtoA))
- 
+        basis = 0.d0
+        xct   = ct
+        qvec(:,1) = xct(:,3)-xct(:,4) !  O3->O4
+        qvec(:,2) = xct(:,2)-xct(:,4) !  O2->O4
+        qvec(:,3) = xct(:,1)-xct(:,4) !  H1->O4
+        qvec(:,4) = xct(:,2)-xct(:,3) !  O2->O3
+        qvec(:,5) = xct(:,1)-xct(:,3) !  H1->O3
+        qvec(:,6) = xct(:,1)-xct(:,2) !  H1->O2 
+        rb(1)     = dsqrt(dot_product(qvec(:,1),qvec(:,1)))
+        rb(2)     = dsqrt(dot_product(qvec(:,2),qvec(:,2)))
+        rb(3)     = dsqrt(dot_product(qvec(:,3),qvec(:,3)))
+        rb(4)     = dsqrt(dot_product(qvec(:,4),qvec(:,4)))
+        rb(5)     = dsqrt(dot_product(qvec(:,5),qvec(:,5)))
+        rb(6)     = dsqrt(dot_product(qvec(:,6),qvec(:,6)))
+        xbond(:)  = dexp(-rb(:)/(alpha*BtoA))
         call bemsav(xbond,basis)
- 
         do i=1,22
-           txinput(i)=basis(i)
+            txinput(i)=basis(i)
         enddo
- 
-        call getpota(txinput,vpesa)
-        call getpotb(txinput,vpesb)
-        call getpotc(txinput,vpesc)
+        call getpota(txinput, vpesa)
+        call getpotb(txinput, vpesb)
+        call getpotc(txinput, vpesc)
         vpes=(vpesa+vpesb+vpesc)/3.0d0
- 
-        return
         end subroutine ho3NN
-!******************************************************************
 
-!******************************************************************
 !-->  read NN weights and biases from matlab output
 !-->  weights saved in 'weightsa.txt','weightsb.txt','weightsc.txt'
 !-->  biases saved in 'biasesa.txt','biasesb.txt','biasesc.txt'
 !-->  one has to call this subroutine once and only once in the 
 !     main code
-        subroutine pes_init(path)
-        use nnparam
-        implicit none
-        character(len=1024), intent(in) :: path
-        integer ihid,iwe,inode1,inode2,ilay1,ilay2
-        integer i,wfilea,bfilea,wfileb,bfileb,wfilec,bfilec
-        character(len=1024) :: file_path1, file_path2        
-        character(len=1024) :: file_path3, file_path4
-        character(len=1024) :: file_path5, file_path6
- 
-        wfilea=551
-        bfilea=661 
-        wfileb=552
-        bfileb=662
-        wfilec=553
-        bfilec=663 
-
-        file_path1 = trim(path)//"/HO3/weightsa.txt"
-        file_path2 = trim(path)//"/HO3/biasesa.txt"
-        open(wfilea,file=file_path1,status='old')
-        open(bfilea,file=file_path2,status='old')
-
-        rewind(wfilea)
-        rewind(bfilea)
-
-        read(wfilea,*)nhid,noutput
-        nscale=ninput+noutput
-        nlayer=nhid+2 
+subroutine pes_init( path )
+    use nnparam
+    implicit none
+    character(len=1024), intent(in) :: path
+    integer ihid,iwe,inode1,inode2,ilay1,ilay2
+    integer i,wfilea,bfilea,wfileb,bfileb,wfilec,bfilec
+    character(len=1024) :: file_path1, file_path2        
+    character(len=1024) :: file_path3, file_path4
+    character(len=1024) :: file_path5, file_path6
+    wfilea     = 551
+    bfilea     = 661 
+    wfileb     = 552
+    bfileb     = 662
+    wfilec     = 553
+    bfilec     = 663 
+    file_path1 = trim(path)//"/HO3/weightsa.txt"
+    file_path2 = trim(path)//"/HO3/biasesa.txt"
+    open(wfilea,file=file_path1,status='old')
+    open(bfilea,file=file_path2,status='old')
+    rewind(wfilea)
+    rewind(bfilea)
+    read(wfilea,*)nhid,noutput
+    nscale   = ninput+noutput
+    nlayer   = nhid+2 
         allocate(nodes(nlayer),pdela(nscale),pavga(nscale))
         nodes(1)=ninput
         nodes(nlayer)=noutput
@@ -198,8 +176,7 @@
         do i=1,nlayer
            nodemax=max(nodemax,nodes(i))
         enddo
-        allocate(weighta(nodemax,nodemax,2:nlayer),&
-     &  biasa(nodemax,2:nlayer))
+        allocate(weighta(nodemax,nodemax,2:nlayer),biasa(nodemax,2:nlayer))
         read(wfilea,*)ifunc,nwe
         read(wfilea,*)(pdela(i),i=1,nscale)
         read(wfilea,*)(pavga(i),i=1,nscale)
@@ -215,11 +192,11 @@
                iwe=iwe+1
            enddo
         enddo
-        if (iwe.ne.nwe) then
-           write(*,*)'provided number of parameters ',nwe
-           write(*,*)'actual number of parameters ',iwe
-           write(*,*)'nwe not equal to iwe, check input files or code'
-           stop
+        if( iwe .ne. nwe )then
+            write(*,*)'provided number of parameters ',nwe
+            write(*,*)'actual number of parameters ',iwe
+            write(*,*)'nwe not equal to iwe, check input files or code'
+            stop
         endif
         close(wfilea)
         close(bfilea)
