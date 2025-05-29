@@ -1,4 +1,7 @@
-      subroutine pes(x,igrad,p,g,d)
+      
+      
+      
+      subroutine pes( x, igrad, p, g, d )
 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       ! number of electronic state
@@ -26,12 +29,9 @@
       enddo
       enddo
       ! input cartesian is ClHH
-      RR(1)=sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2
-     *          +(x(1,3)-x(2,3))**2)/0.529177211
-      RR(2)=sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2
-     *          +(x(2,3)-x(3,3))**2)/0.529177211
-      RR(3)=sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2
-     *          +(x(1,3)-x(3,3))**2)/0.529177211
+      rr(1)=sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2+(x(1,3)-x(2,3))**2)/0.529177211
+      rr(2)=sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2+(x(2,3)-x(3,3))**2)/0.529177211
+      rr(3)=sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2+(x(1,3)-x(3,3))**2)/0.529177211
       
       NSURF=0
       NDER=igrad
@@ -78,15 +78,11 @@
       endsubroutine
 
 subroutine evdrdx( x, r, drdx )
-   integer :: i, j
    real(8), intent(in)  :: x(9), r(3)
    real(8), intent(out) :: drdx(3,9)
+   integer :: i, j
    ! Initialize dRdX(3,9)
-   do i=1,3
-      do j=1,9
-          dRdX(i,j)=0.0d0
-      enddo
-   enddo
+   drdx = 0.
    dRdX(1,1)=(x(1)-x(4))/r(1)
    dRdX(1,2)=(x(2)-x(5))/r(1)
    dRdX(1,3)=(x(3)-x(6))/r(1)
@@ -312,8 +308,9 @@ C   the parameters are in Hartree atomic units.
          DATA AN1, FNS / 0.026D0, 0.004D0/
          END
 
-      SUBROUTINE POTINFO
-      IMPLICIT REAL*8 (A-H,O-Z)
+subroutine potinfo
+   implicit none
+
       CHARACTER*75 REF(5)
       PARAMETER (N3ATOM=75)
       PARAMETER (NATOM=25)

@@ -473,35 +473,32 @@ subroutine potinfo
       end
 
 
-      subroutine ancvrt
-      implicit none
-      character*75 ref(5)
-      character*3 periodic_1(7,32)
-      parameter (n3atom=75)
-      parameter (natom=25)
-      parameter (isurf = 5)
-      parameter (jsurf = isurf*(isurf+1)/2)
-      character*2 name1(natom)
-      character*2 name2(natom)
-      character*1 iblank
-      character*20 distance
-      character*20 units
-      common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
-      common /pt3cm/  ezero(isurf+1)
-      common /pt4cm/  engyes(isurf),deesdr(n3atom,isurf)
-      common /pt5cm/  engyij(jsurf),deijdr(n3atom,jsurf)
-      common/usrocm/ pengygs,pengyes(isurf),
-     +               pengyij(jsurf),
-     +               dgscart(natom,3),descart(natom,3,isurf),
-     +               dijcart(natom,3,jsurf)
-      common/utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf),
-     +               dijcartnu(natom,3,jsurf),cnvrtd,cnvrte,
-     +               cnvrtde,ireorder,ksdiag,kediag,ksoffd,keoffd
-      common/infocm/ cartnu(natom,3),indexes(natom),
-     +               irctnt,natoms,icartr,mder,msurf,ref
-      common/usricm/ cart(natom,3),anuzero,
-     +               nulbl(natom),nflag(20),
-     +               nasurf(isurf+1,isurf+1),nder
+subroutine ancvrt
+    implicit none
+    character(len=75)  :: ref(5)
+    integer, parameter :: n3atom=75, natom=25, isurf=5
+    integer, parameter :: jsurf=isurf*(isurf+1)/2
+    integer            :: ind, i, k
+    character(len=20)  :: distance, units
+    character(len=1)   :: iblank 
+    character(len=2)   :: name1(natom), name2(natom)
+    character(len=3)   :: periodic_1(7,32)
+    !   common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
+    !   common /pt3cm/  ezero(isurf+1)
+    !   common /pt4cm/  engyes(isurf),deesdr(n3atom,isurf)
+    !   common /pt5cm/  engyij(jsurf),deijdr(n3atom,jsurf)
+    !   common/usrocm/ pengygs,pengyes(isurf),
+    !  +               pengyij(jsurf),
+    !  +               dgscart(natom,3),descart(natom,3,isurf),
+    !  +               dijcart(natom,3,jsurf)
+    !   common/utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf),
+    !  +               dijcartnu(natom,3,jsurf),cnvrtd,cnvrte,
+    !  +               cnvrtde,ireorder,ksdiag,kediag,ksoffd,keoffd
+    !   common/infocm/ cartnu(natom,3),indexes(natom),
+    !  +               irctnt,natoms,icartr,mder,msurf,ref
+    !   common/usricm/ cart(natom,3),anuzero,
+    !  +               nulbl(natom),nflag(20),
+    !  +               nasurf(isurf+1,isurf+1),nder
       dimension ianum(7,32)
       dimension isave(natom),jsave(natom)
       parameter(        pi = 3.141592653589793d0)
@@ -521,10 +518,10 @@ subroutine potinfo
       parameter(     htokj = 2625.49962d0)
       parameter(    bohr_a = .5291772083d0)
       do i=1,7
-         do j=1,32
-            ianum(i,j)      = 0
-            periodic_1(i,j) = ' '
-         enddo 
+          do j=1,32
+             ianum(i,j)      = 0
+             periodic_1(i,j) = ' '
+          enddo 
       enddo 
       distance = 'bohr                '
       units    = 'hartree             '
@@ -646,260 +643,245 @@ subroutine potinfo
       ianum(7,30) = 116
       ianum(7,31) = 117
       ianum(7,32) = 120
-      periodic_1(1,1)   = 'h  '
-      periodic_1(1,32)  = 'he '
-      periodic_1(2,1)   = 'li '
-      periodic_1(2,2)   = 'be '
-      periodic_1(2,27)  = 'b  '
-      periodic_1(2,28)  = 'c  '
-      periodic_1(2,29)  = 'n  '
-      periodic_1(2,30)  = 'o  '
-      periodic_1(2,31)  = 'f  '
-      periodic_1(2,32)  = 'ne '
-      periodic_1(3,1)   = 'na '
-      periodic_1(3,2)   = 'mg '
-      periodic_1(3,27)  = 'al '
-      periodic_1(3,28)  = 'si '
-      periodic_1(3,29)  = 'p  '
-      periodic_1(3,30)  = 's  '
-      periodic_1(3,31)  = 'cl '
-      periodic_1(3,32)  = 'ar '
-      periodic_1(4,1)   = 'k  '
-      periodic_1(4,2)   = 'ca '
-      periodic_1(4,17)  = 'sc '
-      periodic_1(4,18)  = 'ti '
-      periodic_1(4,19)  = 'v  '
-      periodic_1(4,20)  = 'cr '
-      periodic_1(4,21)  = 'mn '
-      periodic_1(4,22)  = 'fe '
-      periodic_1(4,23)  = 'co '
-      periodic_1(4,24)  = 'ni '
-      periodic_1(4,25)  = 'cu '
-      periodic_1(4,26)  = 'zn '
-      periodic_1(4,27)  = 'ga '
-      periodic_1(4,28)  = 'ge '
-      periodic_1(4,29)  = 'as '
-      periodic_1(4,30)  = 'se '
-      periodic_1(4,31)  = 'br '
-      periodic_1(4,32)  = 'kr '
-      periodic_1(5,1)   = 'rb '
-      periodic_1(5,2)   = 'sr '
-      periodic_1(5,17)  = 'y  '
-      periodic_1(5,18)  = 'zr '
-      periodic_1(5,19)  = 'nb '
-      periodic_1(5,20)  = 'mo '
-      periodic_1(5,21)  = 'tc '
-      periodic_1(5,22)  = 'ru '
-      periodic_1(5,23)  = 'rh '
-      periodic_1(5,24)  = 'pd '
-      periodic_1(5,25)  = 'ag '
-      periodic_1(5,26)  = 'cd '
-      periodic_1(5,27)  = 'in '
-      periodic_1(5,28)  = 'sn '
-      periodic_1(5,29)  = 'sb '
-      periodic_1(5,30)  = 'te '
-      periodic_1(5,31)  = 'i  '
-      periodic_1(5,32)  = 'xe '
-      periodic_1(5,32)  = 'xe '
+      periodic_1(1,1)   = 'H  '
+      periodic_1(1,32)  = 'He '
+      periodic_1(2,1)   = 'Li '
+      periodic_1(2,2)   = 'Be '
+      periodic_1(2,27)  = 'B  '
+      periodic_1(2,28)  = 'C  '
+      periodic_1(2,29)  = 'N  '
+      periodic_1(2,30)  = 'O  '
+      periodic_1(2,31)  = 'F  '
+      periodic_1(2,32)  = 'Ne '
+      periodic_1(3,1)   = 'Na '
+      periodic_1(3,2)   = 'Mg '
+      periodic_1(3,27)  = 'Al '
+      periodic_1(3,28)  = 'Si '
+      periodic_1(3,29)  = 'P  '
+      periodic_1(3,30)  = 'S  '
+      periodic_1(3,31)  = 'Cl '
+      periodic_1(3,32)  = 'Ar '
+      periodic_1(4,1)   = 'K  '
+      periodic_1(4,2)   = 'Ca '
+      periodic_1(4,17)  = 'Sc '
+      periodic_1(4,18)  = 'Ti '
+      periodic_1(4,19)  = 'V  '
+      periodic_1(4,20)  = 'Cr '
+      periodic_1(4,21)  = 'Mn '
+      periodic_1(4,22)  = 'Fe '
+      periodic_1(4,23)  = 'Co '
+      periodic_1(4,24)  = 'Ni '
+      periodic_1(4,25)  = 'Cu '
+      periodic_1(4,26)  = 'Zn '
+      periodic_1(4,27)  = 'Ga '
+      periodic_1(4,28)  = 'Ge '
+      periodic_1(4,29)  = 'As '
+      periodic_1(4,30)  = 'Se '
+      periodic_1(4,31)  = 'Br '
+      periodic_1(4,32)  = 'Kr '
+      periodic_1(5,1)   = 'Rb '
+      periodic_1(5,2)   = 'Sr '
+      periodic_1(5,17)  = 'Y  '
+      periodic_1(5,18)  = 'Zr '
+      periodic_1(5,19)  = 'Nb '
+      periodic_1(5,20)  = 'Mo '
+      periodic_1(5,21)  = 'Tc '
+      periodic_1(5,22)  = 'Ru '
+      periodic_1(5,23)  = 'Rh '
+      periodic_1(5,24)  = 'Pd '
+      periodic_1(5,25)  = 'Ag '
+      periodic_1(5,26)  = 'Cd '
+      periodic_1(5,27)  = 'In '
+      periodic_1(5,28)  = 'Sn '
+      periodic_1(5,29)  = 'Sb '
+      periodic_1(5,30)  = 'Te '
+      periodic_1(5,31)  = 'I  '
+      periodic_1(5,32)  = 'Xe '
       do i=1,natoms
-         isave(i)=0
-         jsave(i)=0
-         name1(i)='  '
-         name2(i)='  '
-      end do
+          isave(i) = 0
+          jsave(i) = 0
+          name1(i) = '  '
+          name2(i) = '  '
+      enddo
       iblank=' '
       do ind=1,natoms
-         do i=1,7
-            do j=1,32
-               if(indexes(ind).eq.ianum(i,j)) then
-                  isave(ind)=i
-                  jsave(ind)=j
-               endif
-            enddo
-         enddo
+          do i=1,7
+              do j=1,32
+                  if( indexes(ind) .eq. ianum(i,j) )then
+                      isave(ind) = i
+                      jsave(ind) = j
+                  endif
+              enddo
+          enddo
       enddo
-      do ind=1,natoms
+      do ind = 1, natoms
           ind2 = nulbl(ind)
-          if( ind2 .eq. 0 ) ind2=ind
+          if( ind2 == 0 ) ind2 = ind
       enddo
-      inc1=0
-      do ind=1,irctnt-1
+      inc1 = 0
+      do ind = 1, irctnt-1
           inc1        = inc1+1
           name1(inc1) = periodic_1(isave(ind),jsave(ind))(:2)
       enddo
-      inc2=0
-      do ind=irctnt,natoms
+      inc2 = 0
+      do ind = irctnt, natoms
           inc2        = inc2+1
           name2(inc2) = periodic_1(isave(ind),jsave(ind))(:2)
       enddo
-      if( nflag(1) .eq. 2 ) distance = 'angstroms           '
-      if( nflag(2) .eq. 2 )then
+      if( nflag(1) == 2 ) distance = 'angstroms           '
+      if( nflag(2) == 2 )then
           units = 'millihartree        '
-      elseif(nflag(2).eq.3)then
+      elseif( nflag(2) .eq. 3 )then
           units = 'ev                  '
-      elseif(nflag(2).eq.4)then
+      elseif( nflag(2) .eq. 4 )then
           units = 'kcal per mole       '
-      elseif(nflag(2).eq.5)then
+      elseif( nflag(2) .eq. 5 )then
           units = 'wavenumbers         '
-      elseif(nflag(2).eq.6)then
+      elseif( nflag(2) .eq. 6 )then
           units = 'kilojoules per mole '
       endif
       cnvrtd  = 1.d0
       cnvrte  = 1.d0
       cnvrtde = 1.d0
-      if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
-      if( nflag(2) .eq. 2 )then
+      if( nflag(1) == 2 ) cnvrtd = bohr_a
+      if( nflag(2) == 2 )then
           cnvrte = cnvrte*htomillh
-      elseif( nflag(2) .eq. 3 )then
+      elseif( nflag(2) == 3 )then
           cnvrte = cnvrte*htoev
-      elseif( nflag(2) .eq. 4 )then
+      elseif( nflag(2) == 4 )then
           cnvrte = cnvrte*htokcal
-      elseif( nflag(2) .eq. 5 )then
+      elseif( nflag(2) == 5 )then
           cnvrte = cnvrte*htowave
-      elseif( nflag(2) .eq. 6 )then
+      elseif( nflag(2) == 6 )then
           cnvrte = cnvrte*htokj
       endif
       cnvrtde = cnvrte/cnvrtd
-      isum = 0
+      isum    = 0
       do inu=1,25
           isum = isum + nulbl(inu)
       enddo
       ireorder = 0
       if( isum .ne. 0 ) ireorder = 1
-      end subroutine
+end subroutine ancvrt
 
-      subroutine cartou
-      implicit real*8(a-h,o-z)
-      character*75 ref(5)
-      parameter (n3atom=75)
-      parameter (natom=25)
-      parameter (isurf = 5)
-      parameter (jsurf = isurf*(isurf+1)/2)
-      common/infocm/ cartnu(natom,3),indexes(natom),
-     +               irctnt,natoms,icartr,mder,msurf,ref
-      common/utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf),
-     +               dijcartnu(natom,3,jsurf),cnvrtd,cnvrte,
-     +               cnvrtde,ireorder,ksdiag,kediag,ksoffd,keoffd
-      common/usricm/ cart(natom,3),anuzero,
-     +               nulbl(natom),nflag(20),
-     +               nasurf(isurf+1,isurf+1),nder
-      if (ireorder.eq.1) then
-          do i=1,natoms
-             do j=1,3
+subroutine cartou
+    implicit none
+    character(len=75)  :: ref(5)
+    integer, parameter :: n3atom=75, natom=25, isurf=5
+    integer, parameter :: jsurf=isurf*(isurf+1)/2
+    integer            :: ind, i, k
+    !   common/infocm/ cartnu(natom,3),indexes(natom),
+    !  +               irctnt,natoms,icartr,mder,msurf,ref
+    !   common/utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf),
+    !  +               dijcartnu(natom,3,jsurf),cnvrtd,cnvrte,
+    !  +               cnvrtde,ireorder,ksdiag,kediag,ksoffd,keoffd
+    !   common/usricm/ cart(natom,3),anuzero,
+    !  +               nulbl(natom),nflag(20),
+    !  +               nasurf(isurf+1,isurf+1),nder
+    if( ireorder .eq. 1 )then
+        do i=1,natoms
+            do j=1,3
                 cartnu(nulbl(i),j)=cart(i,j)/cnvrtd
-             end do
-          end do
-      else
-          do i=1,natoms
-             do j=1,3
+            enddo
+        enddo
+    else
+        do i=1,natoms
+            do j=1,3
                 cartnu(i,j)=cart(i,j)/cnvrtd
-             end do
-          end do
-      end if
-      return
-      end
+            enddo
+        enddo
+      endif
+end subroutine cartou
  
-      subroutine carttor
-      implicit real*8(a-h,o-z)
-      character*75 ref(5)
-      parameter (n3atom=75)
-      parameter (natom=25)
-      parameter (isurf=5)
-      common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
-      common/infocm/ cartnu(natom,3),indexes(natom),
-     +               irctnt,natoms,icartr,mder,msurf,ref
-      common/usricm/ cart(natom,3),anuzero,
-     +               nulbl(natom),nflag(20),
-     +               nasurf(isurf+1,isurf+1),nder
-      if(icartr.eq.1) then
-         do i=1,natoms
-            ind=3*i-2
+subroutine carttor
+    implicit none
+    character(len=75)  :: ref(5)
+    integer, parameter :: n3atom=75, natom=25, isurf=5
+    integer            :: ind, i, k
+    !   common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
+    !   common/infocm/ cartnu(natom,3),indexes(natom),
+    !  +               irctnt,natoms,icartr,mder,msurf,ref
+    !   common/usricm/ cart(natom,3),anuzero,
+    !  +               nulbl(natom),nflag(20),
+    !  +               nasurf(isurf+1,isurf+1),nder
+    if( icartr == 1 )then
+        do i = 1, natoms
+            ind      = 3*i-2
             r(ind)   = cartnu(i,1)
             r(ind+1) = cartnu(i,2)
             r(ind+2) = cartnu(i,3)
-         end do
-      elseif(icartr.eq.2) then
-         i = 1                                                       
-         do k=1,natoms-1
+        enddo
+    elseif( icartr == 2 )then
+        i = 1                                                       
+        do k = 1, natoms-1
             do l = k+1,natoms                                  
-               r(i) = sqrt( (cartnu(k,1)-cartnu(l,1))**2 +
-     +                      (cartnu(k,2)-cartnu(l,2))**2 +
-     +                      (cartnu(k,3)-cartnu(l,3))**2 )
+               r(i) = sqrt( (cartnu(k,1)-cartnu(l,1))**2 + (cartnu(k,2)-cartnu(l,2))**2 + (cartnu(k,3)-cartnu(l,3))**2 )
                i = i + 1                  
-            end do
+            enddo
          enddo
-      elseif(icartr.eq.3) then
-         r(1) = sqrt( (cartnu(1,1)-cartnu(2,1))**2 +
-     +                (cartnu(1,2)-cartnu(2,2))**2 +
-     +                (cartnu(1,3)-cartnu(2,3))**2 )
-         r(2) = sqrt( (cartnu(2,1)-cartnu(3,1))**2 +
-     +                (cartnu(2,2)-cartnu(3,2))**2 +
-     +                (cartnu(2,3)-cartnu(3,3))**2 )
-         r(3) = sqrt( (cartnu(1,1)-cartnu(3,1))**2 +
-     +                (cartnu(1,2)-cartnu(3,2))**2 +
-     +                (cartnu(1,3)-cartnu(3,3))**2 )
-      elseif(icartr.eq.4) then
-      flm    = 18.99840d0
-      hym    = 1.007825d0
-      xcm1   = (hym*cartnu(1,1)+flm*cartnu(2,1))/(flm+hym)
-      ycm1   = (hym*cartnu(1,2)+flm*cartnu(2,2))/(flm+hym)
-      zcm1   = (hym*cartnu(1,3)+flm*cartnu(2,3))/(flm+hym)
-      xcm2   = (hym*cartnu(3,1)+flm*cartnu(4,1))/(flm+hym)
-      ycm2   = (hym*cartnu(3,2)+flm*cartnu(4,2))/(flm+hym)
-      zcm2   = (hym*cartnu(3,3)+flm*cartnu(4,3))/(flm+hym)
-      xcm3   = xcm2-xcm1
-      ycm3   = ycm2-ycm1
-      zcm3   = zcm2-zcm1
-      xrm1   = cartnu(1,1)-xcm1
-      yrm1   = cartnu(1,2)-ycm1
-      zrm1   = cartnu(1,3)-zcm1
-      theta1 = (xrm1*xcm3+yrm1*ycm3+zrm1*zcm3)
-      theta1 = theta1/(sqrt(xrm1**2+yrm1**2+zrm1**2))
-      theta1 = theta1/(sqrt(xcm3**2+ycm3**2+zcm3**2))
-      if( theta1 .gt.  1.0d0 ) theta1=1.0d0
-      if( theta1 .lt. -1.0d0 ) theta1=-1.0d0
-      theta1 = acos(theta1)
-      xrm2   = cartnu(3,1)-xcm2
-      yrm2   = cartnu(3,2)-ycm2
-      zrm2   = cartnu(3,3)-zcm2
-      theta2 = (xrm2*(-xcm3)+yrm2*(-ycm3)+zrm2*(-zcm3))
-      theta2 = theta2/(sqrt(xrm2**2+yrm2**2+zrm2**2))
-      theta2 = theta2/(sqrt(xcm3**2+ycm3**2+zcm3**2))
-      if( theta2 .gt.  1.0d0 ) theta2 = 1.0d0
-      if( theta2 .lt. -1.0d0 ) theta2 =-1.0d0
-      theta2 = acos(theta2)
-      pi     = acos(-1.0d0)
-      theta2 = pi-theta2
-      q1     = sqrt(xrm1**2+yrm1**2+zrm1**2)
-      q2     = sqrt(xrm2**2+yrm2**2+zrm2**2)
-      cmm    = (xcm3**2+ycm3**2+zcm3**2)
-      cmm    = sqrt(cmm)
-      hhd    = (cartnu(1,1)-cartnu(3,1))**2 +
-             + (cartnu(1,2)-cartnu(3,2))**2 +
-             + (cartnu(1,3)-cartnu(3,3))**2
-      hhd    = sqrt(hhd)
-      q      = cmm-q1*cos(theta1)+q2*cos(theta2)
-      q3     = sqrt(abs(hhd**2-q**2))
-      q1     = q1*sin(theta1)
-      q2     = q2*sin(theta2)
-      cphi   = (q1**2+q2**2-q3**2)/(2.*q1*q2)
-      if( cphi .lt. -1.0d0 ) cphi = -1.0d0
-      if( cphi .gt.  1.0d0 ) cphi =  1.0d0
-      phi=acos(cphi)
- 2001 format(6f12.8)
-      r(1)=sqrt(xcm3**2+ycm3**2+zcm3**2)
-      r(2)=(sqrt(xrm1**2+yrm1**2+zrm1**2))*(flm+hym)/flm
-      r(3)=(sqrt(xrm2**2+yrm2**2+zrm2**2))*(flm+hym)/flm
-      r(4)=theta1
-      r(5)=theta2
-      r(6)=phi
-      elseif(icartr.ne.0) then
-         write(nflag(18),1000) icartr
- 1000    format(2x,'wrong icartr for cartnu; icartr =',i5//)
-         stop
-      endif
-      end
- 
+    elseif( icartr == 3 )then
+        r(1) = sqrt( (cartnu(1,1)-cartnu(2,1))**2 +(cartnu(1,2)-cartnu(2,2))**2 +(cartnu(1,3)-cartnu(2,3))**2 )
+        r(2) = sqrt( (cartnu(2,1)-cartnu(3,1))**2 +(cartnu(2,2)-cartnu(3,2))**2 +(cartnu(2,3)-cartnu(3,3))**2 )
+        r(3) = sqrt( (cartnu(1,1)-cartnu(3,1))**2 +(cartnu(1,2)-cartnu(3,2))**2 +(cartnu(1,3)-cartnu(3,3))**2 )
+    elseif( icartr == 4 )then
+        flm    = 18.99840d0
+        hym    = 1.007825d0
+        xcm1   = (hym*cartnu(1,1)+flm*cartnu(2,1))/(flm+hym)
+        ycm1   = (hym*cartnu(1,2)+flm*cartnu(2,2))/(flm+hym)
+        zcm1   = (hym*cartnu(1,3)+flm*cartnu(2,3))/(flm+hym)
+        xcm2   = (hym*cartnu(3,1)+flm*cartnu(4,1))/(flm+hym)
+        ycm2   = (hym*cartnu(3,2)+flm*cartnu(4,2))/(flm+hym)
+        zcm2   = (hym*cartnu(3,3)+flm*cartnu(4,3))/(flm+hym)
+        xcm3   = xcm2-xcm1
+        ycm3   = ycm2-ycm1
+        zcm3   = zcm2-zcm1
+        xrm1   = cartnu(1,1)-xcm1
+        yrm1   = cartnu(1,2)-ycm1
+        zrm1   = cartnu(1,3)-zcm1
+        theta1 = (xrm1*xcm3+yrm1*ycm3+zrm1*zcm3)
+        theta1 = theta1/(sqrt(xrm1**2+yrm1**2+zrm1**2))
+        theta1 = theta1/(sqrt(xcm3**2+ycm3**2+zcm3**2))
+        if( theta1 .gt.  1.0d0 ) theta1=1.0d0
+        if( theta1 .lt. -1.0d0 ) theta1=-1.0d0
+        theta1 = acos(theta1)
+        xrm2   = cartnu(3,1)-xcm2
+        yrm2   = cartnu(3,2)-ycm2
+        zrm2   = cartnu(3,3)-zcm2
+        theta2 = (xrm2*(-xcm3)+yrm2*(-ycm3)+zrm2*(-zcm3))
+        theta2 = theta2/(sqrt(xrm2**2+yrm2**2+zrm2**2))
+        theta2 = theta2/(sqrt(xcm3**2+ycm3**2+zcm3**2))
+        if( theta2 .gt.  1.0d0 ) theta2 = 1.0d0
+        if( theta2 .lt. -1.0d0 ) theta2 =-1.0d0
+        theta2 = acos(theta2)
+        pi     = acos(-1.0d0)
+        theta2 = pi-theta2
+        q1     = sqrt(xrm1**2+yrm1**2+zrm1**2)
+        q2     = sqrt(xrm2**2+yrm2**2+zrm2**2)
+        cmm    = (xcm3**2+ycm3**2+zcm3**2)
+        cmm    = sqrt(cmm)
+        hhd    = (cartnu(1,1)-cartnu(3,1))**2+(cartnu(1,2)-cartnu(3,2))**2+(cartnu(1,3)-cartnu(3,3))**2
+        hhd    = sqrt(hhd)
+        q      = cmm-q1*cos(theta1)+q2*cos(theta2)
+        q3     = sqrt(abs(hhd**2-q**2))
+        q1     = q1*sin(theta1)
+        q2     = q2*sin(theta2)
+        cphi   = (q1**2+q2**2-q3**2)/(2.*q1*q2)
+        if( cphi .lt. -1.0d0 ) cphi = -1.0d0
+        if( cphi .gt.  1.0d0 ) cphi =  1.0d0
+        phi    = acos(cphi)
+        2001 format(6f12.8)
+        r(1)=sqrt(xcm3**2+ycm3**2+zcm3**2)
+        r(2)=(sqrt(xrm1**2+yrm1**2+zrm1**2))*(flm+hym)/flm
+        r(3)=(sqrt(xrm2**2+yrm2**2+zrm2**2))*(flm+hym)/flm
+        r(4)=theta1
+        r(5)=theta2
+        r(6)=phi
+    elseif( icartr .ne. 0 )then
+        write(nflag(18),1000) icartr
+        1000    format(2x,'wrong icartr for cartnu; icartr =',i5//)
+        stop
+    endif
+end subroutine carttor
  
 subroutine eunitzero
     implicit none
@@ -919,9 +901,10 @@ end subroutine eunitzero
  
 subroutine rtocart
     implicit none 
-    real(8) :: ygs(n3atom),yes(n3atom,isurf),yij(n3atom,jsurf)
+    real(8) :: ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+    integer :: i, j, j1, j2
     if( icartr == 1 )then
-         do i = 1, natoms
+        do i = 1, natoms
             ind            = 3*i-2
             dgscartnu(i,1) = degsdr(ind)
             dgscartnu(i,2) = degsdr(ind+1)
@@ -940,67 +923,67 @@ subroutine rtocart
                   dijcartnu(i,3,k) = deijdr(ind+2,k)
                end do
             endif
-         end do
-      elseif(icartr.eq.2) then
-         do i = 1, natoms         
+        enddo
+    elseif( icartr == 2 )then
+        do i = 1, natoms         
             dgscartnu(i,1) = 0.d0
             dgscartnu(i,2) = 0.d0
             dgscartnu(i,3) = 0.d0
-            if(ksdiag.ne.0) then
-               do j1=ksdiag,kediag
+            if( ksdiag .ne. 0 )then
+                do j1 = ksdiag, kediag
                   descartnu(i,1,j1) = 0.d0
                   descartnu(i,2,j1) = 0.d0
                   descartnu(i,3,j1) = 0.d0
-               enddo
+                enddo
             endif
-            if(ksoffd.ne.0) then
-               do j2=ksoffd,keoffd
-                  dijcartnu(i,1,j2) = 0.d0
-                  dijcartnu(i,2,j2) = 0.d0
-                  dijcartnu(i,3,j2) = 0.d0
-               enddo
+            if( ksoffd .ne. 0 )then
+                do j2 = ksoffd, keoffd
+                    dijcartnu(i,1,j2) = 0.d0
+                    dijcartnu(i,2,j2) = 0.d0
+                    dijcartnu(i,3,j2) = 0.d0
+                enddo
             endif
             do j = 1,natoms
-               if( j .lt. i )then
-                   m1 = natoms*(j-1) - (j*(j-1))/2 + i-j
-               elseif( j .gt. i )then
-                   m1 = natoms*(i-1) - (i*(i-1))/2 + j-i
-               else
-                   exit
-                   !go to 20
-               endif
-               y = degsdr(m1)
-               termx = (cartnu(i,1)-cartnu(j,1))/r(m1)
-               termy = (cartnu(i,2)-cartnu(j,2))/r(m1)
-               termz = (cartnu(i,3)-cartnu(j,3))/r(m1)
-               dgscartnu(i,1) = dgscartnu(i,1) + termx*y
-               dgscartnu(i,2) = dgscartnu(i,2) + termy*y
-               dgscartnu(i,3) = dgscartnu(i,3) + termz*y
-               if( ksdiag .gt. 0 )then
-                   y = deesdr(m1,j1)
-                   do j1 = ksdiag, kediag
-                       descartnu(i,1,j1) = descartnu(i,1,j1) + termx*y
-                       descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
-                       descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
-                   enddo
-               elseif( ksoffd .gt. 0 )then
-                   do j2 = ksoffd,keoffd
-                       y                 = deijdr(m1,j2)
-                       dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
-                       dijcartnu(i,2,j2) = dijcartnu(i,2,j2) + termy*y
-                       dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
-                   enddo
-               endif
-            !20 continue
+                if( j .lt. i )then
+                    m1 = natoms*(j-1) - (j*(j-1))/2 + i-j
+                elseif( j .gt. i )then
+                    m1 = natoms*(i-1) - (i*(i-1))/2 + j-i
+                else
+                    exit
+                    !go to 20
+                endif
+                y              = degsdr(m1)
+                termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)
+                termy          = (cartnu(i,2)-cartnu(j,2))/r(m1)
+                termz          = (cartnu(i,3)-cartnu(j,3))/r(m1)
+                dgscartnu(i,1) = dgscartnu(i,1) + termx*y
+                dgscartnu(i,2) = dgscartnu(i,2) + termy*y
+                dgscartnu(i,3) = dgscartnu(i,3) + termz*y
+                if( ksdiag > 0 )then
+                    y = deesdr(m1,j1)
+                    do j1 = ksdiag, kediag
+                        descartnu(i,1,j1) = descartnu(i,1,j1) + termx*y
+                        descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
+                        descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
+                    enddo
+                elseif( ksoffd > 0 )then
+                    do j2 = ksoffd,keoffd
+                        y                 = deijdr(m1,j2)
+                        dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
+                        dijcartnu(i,2,j2) = dijcartnu(i,2,j2) + termy*y
+                        dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
+                    enddo
+                endif
+                !20 continue
             enddo
-         enddo
-      elseif(icartr.eq.3) then
+        enddo
+    elseif( icartr == 3 )then
         do i = 1, natoms
             ygs(i) = degsdr(i)/r(i)
-            if(ksdiag.ne.0) then
-               do j=ksdiag,kediag
-                  yes(i,j) = deesdr(i,j)/r(i)
-               enddo
+            if( ksdiag .ne. 0 ) then
+                do j = ksdiag, kediag
+                   yes(i,j) = deesdr(i,j)/r(i)
+                enddo
             endif
             if( ksoffd .ne. 0 )then
                 do k = ksoffd,keoffd
@@ -1009,18 +992,18 @@ subroutine rtocart
             endif
         enddo
         do k = 1,3
-            term12         =  cartnu(1,k)-cartnu(2,k)
-            term23         =  cartnu(2,k)-cartnu(3,k)
-            term13         =  cartnu(1,k)-cartnu(3,k)
+            term12         =  cartnu(1,k) - cartnu(2,k)
+            term23         =  cartnu(2,k) - cartnu(3,k)
+            term13         =  cartnu(1,k) - cartnu(3,k)
             dgscartnu(1,k) =  term12*ygs(1) + term13*ygs(3)
             dgscartnu(2,k) = -term12*ygs(1) + term23*ygs(2)
             dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
             if( ksdiag .ne. 0 )then
-               do j1 = ksdiag, kediag
-                   descartnu(1,k,j1) =  term12*yes(1,j1) + term13*yes(3,j1)
-                   descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                   descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
-               enddo
+                do j1 = ksdiag, kediag
+                    descartnu(1,k,j1) =  term12*yes(1,j1) + term13*yes(3,j1)
+                    descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
+                    descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                enddo
             endif
             if( ksoffd .ne. 0 )then
                 do j2 = ksoffd, keoffd
@@ -1065,7 +1048,7 @@ subroutine rtocart
         write(nflag(18),'(2x,' wrong icartr for derivative; icartr =',i5//)') icartr
         stop
     endif
-end subroutine 
+end subroutine rtocart
  
 subroutine dedcou
     implicit none 
