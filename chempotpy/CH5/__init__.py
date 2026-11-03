@@ -15,7 +15,7 @@ def intro():
     Single-State Surfaces:
     1.  CH5_VBMM_CBG_2009:    single-state surface of CH5, ground state,      P
     2.  CH5_LEPS_JJ_2002:     single-state surface of CH5, ground state,      P
-    3.  CH5_GEN_J1_1987:      single-state surface of CH5, ground state,      P
+    3.  CH5_GEN_J1_1987:      single-state surface of CH5, ground state,      P/G
     4.  CH5_GEN_J2_1987:      single-state surface of CH5, ground state,      P
     5.  CH5_LEPS_JG_1995:     single-state surface of CH5, ground state,      P
 
@@ -35,7 +35,7 @@ def intro_detail():
 
     Single-State Surfaces:
     1.  CH5_VBMM_CBG_2009:    single-state surface of CH5, ground state,
-                              availability: potential energy
+                              availability: potential energy and gradient
                               functional form: VBMM
                               corresponding surface in POTLIB: ch52008.f 
                               ref: J. C. Corchado, J. L. Bravo and J. Espinosa-Garcia,

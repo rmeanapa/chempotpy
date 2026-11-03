@@ -80,7 +80,8 @@
     real*8 :: r(n*(n-1)/2)
     real*8 :: gr(ns,n*(n-1)/2)
     real*8 :: hr(ns,ns,n*(n-1)/2)
-    real*8 :: v2b(ns),g2b(ns,n*(n-1)/2)  !!!!
+    real*8 :: v2b(ns), v2b_1(n*(n-1)/2,ns)
+    real*8 :: g2b(ns,n*(n-1)/2)
     real*8 :: drdx(n*(n-1)/2,3*n)
     integer :: i,j,k,l,m
     integer :: imollist(3)
@@ -33392,4 +33393,3 @@ del =   5.1098
       endif
       return
       end subroutine noground
-

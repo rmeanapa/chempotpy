@@ -1,4 +1,5 @@
       subroutine pes(x,igrad,path,p,g,d)
+
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       ! number of electronic state
       integer, parameter :: nstates=1

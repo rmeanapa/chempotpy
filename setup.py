@@ -16,11 +16,10 @@ setup(
     python_requires=">=3.8",
     packages=find_packages(),
     package_data={
-        'chempotpy': ['*/*']
+        'chempotpy': ['*/*', 'core/fortran/*.f90']
     },
     install_requires=[
         'numpy',
-        'charset_normalizer',
     ],
-    zip_safe=True,
+    zip_safe=False,
 )

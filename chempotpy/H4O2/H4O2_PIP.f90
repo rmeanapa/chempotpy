@@ -809,7 +809,7 @@ endif
 if (8.le.mxd) then
  stop 'mg42: degree 8 not implemented'
 endif
-end subroutine mg42_secs
+contains
 subroutine mg42_setd ()
  integer :: i, j, k, l0, l1
  integer, parameter, dimension(0:2) :: lb=(/ 0, m, m+n /)
@@ -1013,3 +1013,4 @@ end subroutine mg42_deg7_i2j0
 subroutine mg42_deg7_i2j1 ()
  pv(106) = pv(106)+d2(i0,i1)*d2(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
 end subroutine mg42_deg7_i2j1
+end subroutine mg42_secs

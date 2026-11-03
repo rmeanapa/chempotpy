@@ -3,7 +3,7 @@
 !     (C)2018 Guo Group, UNM
 !     2019.1.20 Qian Yao updated
 
-       module nnparam
+      module nnparam
        implicit none
        real*8,parameter::alpha=1.5d0,PI=3.1415926d0,radian=PI/180.0d0
        integer,parameter::nbasis=50,ndim=6,natom=4
@@ -19,7 +19,7 @@
        real*8, allocatable::weightc(:,:,:),biasc(:,:)
        real*8, allocatable::pdelc(:),pavgc(:)
 
-       end module nnparam
+      end module nnparam
 
       subroutine pes(x,igrad,path,p,g,d)
 

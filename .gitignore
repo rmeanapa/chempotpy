@@ -1,5 +1,14 @@
-chempotpy/__pycache__/
-chempotpy/**/__pycache__/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+*.log
+*.mod
+*.o
+*.so
+*.smod
+*.swp
+*.swo
 
 dist
 chempotpy.egg-info

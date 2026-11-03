@@ -16,10 +16,6 @@ import os
 import numpy as np
 import array
 
-print("Welcome using ChemPotPy, a library for analytical PESs")
-print("To see quick introduction, use chempotpy.intro()")
-print("To see the complete manual, use chempotpy.manual()")
-
 def intro():
 
     print("""
@@ -654,7 +650,7 @@ def manual():
     CH5:
     125. S1.  CH5_VBMM_CBG_2009:    single-state, P
     126. S2.  CH5_LEPS_JJ_2002:     single-state, P
-    127. S3.  CH5_GEN_J1_1987:      single-state, P
+    127. S3.  CH5_GEN_J1_1987:      single-state, P/G
     128. S4.  CH5_GEN_J2_1987:      single-state, P
     129. S5.  CH5_LEPS_JG_1995:     single-state, P
 
@@ -1374,3 +1370,67 @@ def un(system, surface, geom):
     u, grad = module0.reverse_order_dpem(u, grad, geom, rank_ordered)
     return u, grad
 
+
+# All public evaluation APIs use the same dispatcher. The historical lists
+# above describe only exceptional f2py signatures; ordinary PES and DPEM
+# entry points are discovered directly on their extension modules.
+from .core.runtime import LegacyRuntime as _LegacyRuntime
+
+_runtime = _LegacyRuntime(
+    requires_data_path=requires_read_file_list,
+    variable_atom_surfaces=Al_list,
+    aluminium_hydride_surfaces=AlmHn_list,
+    silicon_oxygen_hydride_surfaces=SiOH_list,
+)
+
+
+def p( system, surface, geom ):
+    """Return adiabatic energies in eV."""
+
+    prepared = _runtime.prepare(system, surface, geom)
+    energy, _, _ = _runtime.adiabatic(prepared, 0)
+    return energy
+
+
+def pg( system, surface, geom ):
+    """Return adiabatic energies and analytic gradients in eV and eV/angstrom."""
+
+    prepared = _runtime.prepare(system, surface, geom)
+    energy, gradient, _ = _runtime.adiabatic(prepared, 1)
+    return energy, gradient
+
+
+def pgd( system, surface, geom ):
+    """Return energies, gradients, and nonadiabatic couplings."""
+
+    prepared = _runtime.prepare(system, surface, geom)
+    return _runtime.adiabatic(prepared, 2)
+
+
+def pn( system, surface, geom ):
+    """Return energies and central-finite-difference gradients."""
+
+    prepared = _runtime.prepare(system, surface, geom)
+    return _runtime.numerical_adiabatic(prepared)
+
+
+def u( system, surface, geom ):
+    """Return a diabatic potential-energy matrix in eV."""
+
+    prepared = _runtime.prepare(system, surface, geom)
+    matrix, _ = _runtime.diabatic(prepared, 0)
+    return matrix
+
+
+def ug( system, surface, geom ):
+    """Return a diabatic matrix and its analytic gradient."""
+
+    prepared = _runtime.prepare(system, surface, geom)
+    return _runtime.diabatic(prepared, 1)
+
+
+def un( system, surface, geom ):
+    """Return a diabatic matrix and central-finite-difference gradient."""
+
+    prepared = _runtime.prepare(system, surface, geom)
+    return _runtime.numerical_diabatic(prepared)

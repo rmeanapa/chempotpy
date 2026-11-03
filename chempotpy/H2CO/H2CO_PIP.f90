@@ -37,13 +37,13 @@
    character(len=1024), intent(in) :: path
    integer::i
    real*8::v,f
-   real*8::cood(3,4),com(3)  
+   real*8::cood(3,4),com(3)
    real*8::y(6),r(6)
    real*8::bas(coff)
    real*8 smallCH, smallOH
    real*8 S, x,z,x3,x2,z1,z2
 !       This probram expects cood to be in the order C,O,H,H
-    
+
    call edis(r(1),y(1),cood(:,3),cood(:,4))
    call edis(r(2),y(2),cood(:,2),cood(:,3))
    call edis(r(3),y(3),cood(:,1),cood(:,3))
@@ -55,7 +55,7 @@
    call basis(bas,y)
 
     if (r(3)< r(4)) then
-       smallCH=r(3)     
+       smallCH=r(3)
        smallOH=r(2)
    else
        smallCH=r(4)
@@ -87,8 +87,8 @@
     if (x .ge. 8) then
        call hcopot(V,smallCH,r(6),smallOH,path)
        f= f*(1-s)+V*s
-     end if 
- 
+     end if
+
     v=f
  end subroutine getpot
 
@@ -249,7 +249,7 @@
             QINIT(KS)=.true.
           END IF
           MLIN(KS)=(GZHC+1)*(GZCO+1)*(GZWIN+1)+(GZ2CO+1)
-          MTAN(KS)= 2*(GNHC+1)*(GNCO+1)*(GNWIN+1)-2+2*GN2CO 
+          MTAN(KS)= 2*(GNHC+1)*(GNCO+1)*(GNWIN+1)-2+2*GN2CO
           IF(KS.EQ.1) THEN               ! Mit Konus:
             MLIN(KS)= MLIN(KS) + (GWHC+1)*(GWCO+1)*(GWWIN+1)
             MTAN(KS)= MTAN(KS) + 4
@@ -442,40 +442,44 @@
       RETURN
       END
 
-subroutine pes( x, igrad, path, p, gradient_out, d )
-    use shell
-    implicit none
-    ! number of electronic state
-    integer, parameter :: nstates=1
-    integer, parameter :: natoms=4
-    integer, intent(in) :: igrad
-    character(len=1024), intent(in) :: path
-    double precision, intent(in) :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: gradient_out(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
-    real*8 :: tx(3,natoms), v
-    integer :: iatom, idir, j, istate
-    logical, save :: first_time_data=.true.
-    !initialize 
-    gradient_out=0.d0
-    d=0.d0
-    do iatom=1,natoms
-        do idir=1,3
-            tx(idir,iatom)=x(iatom,idir)/0.529177211
-        enddo 
-    enddo
-    if (igrad==0) then
+      subroutine pes(x,igrad,path,p,gradient_out,d)
+      use shell
+      implicit none
+      ! number of electronic state
+      integer, parameter :: nstates=1
+      integer, parameter :: natoms=4
+      integer, intent(in) :: igrad
+      character(len=1024), intent(in) :: path
+      double precision, intent(in) :: x(natoms,3)
+      double precision, intent(out) :: p(nstates)
+      double precision, intent(out) :: gradient_out(nstates,natoms,3)
+      double precision, intent(out) :: d(nstates,nstates,natoms,3)
+
+      real*8 :: tx(3,natoms), v
+      integer :: iatom, idir, j, istate
+      logical, save :: first_time_data=.true.
+      !initialize
+      gradient_out=0.d0
+      d=0.d0
+
+      do iatom=1,natoms
+      do idir=1,3
+        tx(idir,iatom)=x(iatom,idir)/0.529177211
+      enddo
+      enddo
+
+      if (igrad==0) then
         if(first_time_data) then
-           call pes_init(path)
-           first_time_data=.false.
+          call pes_init(path)
+          first_time_data=.false.
         endif
         call getpot(tx,v,path)
         v=v*27.211386
         do istate=1,nstates
-            p(istate)=v
+          p(istate)=v
         enddo
-    else
+      else
         write (*,*) 'Only energy is available'
-    endif
-end subroutine
+      endif
+
+      endsubroutine
