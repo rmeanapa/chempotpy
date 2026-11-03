@@ -55,10 +55,35 @@ Modernizing Fortran sources
 ---------------------------
 
 Modernized PES code uses four-space indentation, spaced procedure arguments,
-short `!> @brief` documentation, explicit interfaces and intents, `private` by
-default in modules, and `use ..., only: ...` imports. Run `make check-style` to
-validate sources carrying the `!> @modern` marker. The detailed migration and
-numerical-parity rules are in `docs/PES_CONTRACT.md`.
+short `!> @brief` documentation, explicit declarations and `implicit none`,
+`private` by default in modules, and `use ..., only: ...` imports. Run
+`make check-style` to validate every free-form Fortran source. Compilation also
+uses `-fimplicit-none`, so an undeclared variable is a hard error.
+
+Declarations use `::`, constants use typed `parameter` declarations, and
+intrinsic kinds and character lengths use standard syntax. Source code is
+lowercase without changing comments or character literals. Files acquire units
+with `open(newunit=...)`; numbered diagnostic writes are retained only where a
+legacy public routine still exposes that behavior.
+
+The formatter uses a 120-column readability target for normal equations rather
+than Fortran 77's 72/80-column limit. Generated numerical data may exceed that
+target, and all free-form compilation uses unlimited line length.
+
+Format specifications are written inline in `read` and `write` statements.
+Legacy labeled `FORMAT` statements and redundant `return` statements directly
+before a procedure end are rejected by the style gate; intentional early
+returns remain valid.
+
+All PES kernels are now authoritative free-form `.f90` sources; no legacy `.f`
+implementation remains in the package. The regression suite recompiles every
+converted kernel and compares it with values captured from the released
+fixed-form source. The detailed contract, migration, and numerical-parity rules
+are in `docs/PES_CONTRACT.md`.
+
+Run `make test-surfaces` for the slower catalog gate, which independently
+compiles and evaluates all 363 callable PES interfaces at two deterministic
+geometries.
 
 
 Compile Chempotpy subroutine

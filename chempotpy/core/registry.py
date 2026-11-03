@@ -12,9 +12,7 @@ ENTRY_POINT_PATTERN = re.compile(
     r"^\s*(?:recursive\s+)?subroutine\s+(pes|dpem)\s*\(",
     re.IGNORECASE | re.MULTILINE,
 )
-SOURCE_FORM_OVERRIDES = {
-    ("CH5p", "CH5p_PIP"): "fixed",
-}
+SOURCE_FORM_OVERRIDES = {}
 
 
 @dataclass(frozen=True)

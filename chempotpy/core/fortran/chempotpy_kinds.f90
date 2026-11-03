@@ -3,6 +3,7 @@
 module chempotpy_kinds
     use iso_fortran_env, only: real32, real64
     implicit none
+
     private
 
     public :: real32

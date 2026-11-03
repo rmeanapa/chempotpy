@@ -1,15 +1,17 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate the NP-D aluminum potential through the Python contract.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
-    energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
+        energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_legacy_units, only: legacy_coordinates_to_bohr, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
 
-    integer, parameter :: state_count = 1
-    real(real64), intent(in) :: coordinates_angstrom(10000,3)
-    integer, intent(in) :: atom_count, derivative_order
+
+
+    integer, parameter        :: state_count = 1
+    real(real64), intent(in)  :: coordinates_angstrom(10000,3)
+    integer, intent(in)       :: atom_count, derivative_order
     real(real64), intent(out) :: energy_ev(state_count)
     real(real64), intent(out) :: gradient_ev_per_angstrom( &
         state_count,atom_count,3 )
@@ -17,9 +19,9 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
 
-    energy_ev = 0.0d0
+    energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
-    coupling_per_angstrom = 0.0d0
+    coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
         coordinates_angstrom(1:atom_count,:), coordinates_bohr )
     call evaluate_np_d( coordinates_bohr, atom_count, energy_hartree )
@@ -37,7 +39,9 @@ subroutine evaluate_np_d( coordinates_bohr, atom_count, energy_hartree )
     use chempotpy_kinds, only: real64
     implicit none
 
-    real(real64), parameter :: hartree_to_ev = 27.2113961d0
+
+
+    real(real64), parameter :: hartree_to_ev    = 27.2113961d0
     real(real64), parameter :: bohr_to_angstrom = 0.529177249d0
     ! Preserve the default-real parameter rounding in the released kernel.
     real(real64), parameter :: repulsive_scale = &
@@ -50,30 +54,24 @@ subroutine evaluate_np_d( coordinates_bohr, atom_count, energy_hartree )
         1.6507381200790405273d0*bohr_to_angstrom
     real(real64), parameter :: embedding_exponent = &
         0.58854091167449951172d0
-    real(real64), intent(in) :: coordinates_bohr(atom_count,3)
-    integer, intent(in) :: atom_count
+    real(real64), intent(in)  :: coordinates_bohr(atom_count,3)
+    integer, intent(in)       :: atom_count
     real(real64), intent(out) :: energy_hartree
-    real(real64) :: distance_bohr
-    real(real64) :: repulsive_sum, density_sum
-    integer :: center_atom, neighbor_atom
+    real(real64)              :: distance_bohr
+    real(real64)              :: repulsive_sum, density_sum
+    integer                   :: center_atom, neighbor_atom
 
     energy_hartree = 0.0d0
     do center_atom = 1, atom_count
         repulsive_sum = 0.0d0
-        density_sum = 0.0d0
+        density_sum   = 0.0d0
         do neighbor_atom = 1, atom_count
             if( center_atom /= neighbor_atom ) then
-                distance_bohr = cartesian_distance( &
-                    coordinates_bohr(center_atom,:), &
-                    coordinates_bohr(neighbor_atom,:) )
-                repulsive_sum = repulsive_sum &
-                    +exp(-distance_bohr*repulsive_decay)
-                density_sum = density_sum &
-                    +exp(-distance_bohr*density_decay)
+                distance_bohr = cartesian_distance( coordinates_bohr(center_atom,:), coordinates_bohr(neighbor_atom,:) )
+                repulsive_sum = repulsive_sum +exp(-distance_bohr*repulsive_decay)
+                density_sum   = density_sum +exp(-distance_bohr*density_decay)
             endif
         enddo
-        energy_hartree = energy_hartree &
-            +repulsive_scale*repulsive_sum &
-            -embedding_scale*density_sum**embedding_exponent
+        energy_hartree = energy_hartree +repulsive_scale*repulsive_sum -embedding_scale*density_sum**embedding_exponent
     enddo
 end subroutine evaluate_np_d

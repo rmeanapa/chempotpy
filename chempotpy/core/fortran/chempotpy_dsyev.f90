@@ -3,20 +3,21 @@
 subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
     implicit none
 
-    character(len=1), intent(in) :: jobz, uplo
-    integer, intent(in) :: n, lda, lwork
-    real(8), intent(inout) :: a(lda,*)
-    real(8), intent(out) :: w(*)
-    real(8), intent(inout) :: work(*)
-    integer, intent(out) :: info
-    integer :: i, j, p, q, iteration, max_iterations
-    integer :: minimum_work, eigen_index
-    real(8) :: app, aqq, apq, tau, tangent, cosine, sine
-    real(8) :: updated_ip, updated_iq, off_diagonal_max
-    real(8) :: scale, tolerance, temporary_value
-    real(8), allocatable :: matrix(:,:), eigenvectors(:,:)
 
-    info = 0
+    character(len=1), intent(in) :: jobz, uplo
+    integer, intent(in)          :: n, lda, lwork
+    real(8), intent(inout)       :: a(lda,*)
+    real(8), intent(out)         :: w(*)
+    real(8), intent(inout)       :: work(*)
+    integer, intent(out)         :: info
+    integer                      :: i, j, p, q, iteration, max_iterations
+    integer                      :: minimum_work, eigen_index
+    real(8)                      :: app, aqq, apq, tau, tangent, cosine, sine
+    real(8)                      :: updated_ip, updated_iq, off_diagonal_max
+    real(8)                      :: scale, tolerance, temporary_value
+    real(8), allocatable         :: matrix(:,:), eigenvectors(:,:)
+
+    info         = 0
     minimum_work = max(1, 3*n-1)
     if( lwork == -1 ) then
         work(1) = real(minimum_work, kind=8)
@@ -24,13 +25,13 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
     endif
     if( jobz /= 'N' .and. jobz /= 'n' .and. &
         jobz /= 'V' .and. jobz /= 'v' ) then
-        info = -1
-        return
+    info = -1
+    return
     endif
     if( uplo /= 'U' .and. uplo /= 'u' .and. &
         uplo /= 'L' .and. uplo /= 'l' ) then
-        info = -2
-        return
+    info = -2
+    return
     endif
     if( n < 0 ) then
         info = -3
@@ -48,11 +49,11 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
     if( n == 0 ) return
 
     allocate(matrix(n,n), eigenvectors(n,n))
-    matrix = 0.0d0
+    matrix       = 0.0d0
     eigenvectors = 0.0d0
     do i = 1, n
         eigenvectors(i,i) = 1.0d0
-        matrix(i,i) = a(i,i)
+        matrix(i,i)       = a(i,i)
     enddo
     if( uplo == 'U' .or. uplo == 'u' ) then
         do j = 2, n
@@ -70,19 +71,19 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
         enddo
     endif
 
-    scale = max(1.0d0, maxval(abs(matrix)))
-    tolerance = epsilon(1.0d0)*scale*real(max(1,n), kind=8)
+    scale          = max(1.0d0, maxval(abs(matrix)))
+    tolerance      = epsilon(1.0d0)*scale*real(max(1,n), kind=8)
     max_iterations = max(32, 100*n*n)
     do iteration = 1, max_iterations
         off_diagonal_max = 0.0d0
-        p = 1
-        q = min(2,n)
+        p                = 1
+        q                = min(2,n)
         do j = 2, n
             do i = 1, j-1
                 if( abs(matrix(i,j)) > off_diagonal_max ) then
                     off_diagonal_max = abs(matrix(i,j))
-                    p = i
-                    q = j
+                    p                = i
+                    q                = j
                 endif
             enddo
         enddo
@@ -98,30 +99,26 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
             tangent = -1.0d0/(-tau+hypot(1.0d0,tau))
         endif
         cosine = 1.0d0/sqrt(1.0d0+tangent*tangent)
-        sine = tangent*cosine
+        sine   = tangent*cosine
 
         do i = 1, n
             if( i /= p .and. i /= q ) then
-                updated_ip = cosine*matrix(i,p)-sine*matrix(i,q)
-                updated_iq = sine*matrix(i,p)+cosine*matrix(i,q)
+                updated_ip  = cosine*matrix(i,p)-sine*matrix(i,q)
+                updated_iq  = sine*matrix(i,p)+cosine*matrix(i,q)
                 matrix(i,p) = updated_ip
                 matrix(p,i) = updated_ip
                 matrix(i,q) = updated_iq
                 matrix(q,i) = updated_iq
             endif
         enddo
-        matrix(p,p) = cosine*cosine*app-2.0d0*sine*cosine*apq &
-            +sine*sine*aqq
-        matrix(q,q) = sine*sine*app+2.0d0*sine*cosine*apq &
-            +cosine*cosine*aqq
+        matrix(p,p) = cosine*cosine*app-2.0d0*sine*cosine*apq +sine*sine*aqq
+        matrix(q,q) = sine*sine*app+2.0d0*sine*cosine*apq +cosine*cosine*aqq
         matrix(p,q) = 0.0d0
         matrix(q,p) = 0.0d0
 
         do i = 1, n
-            updated_ip = cosine*eigenvectors(i,p) &
-                -sine*eigenvectors(i,q)
-            updated_iq = sine*eigenvectors(i,p) &
-                +cosine*eigenvectors(i,q)
+            updated_ip        = cosine*eigenvectors(i,p) -sine*eigenvectors(i,q)
+            updated_iq        = sine*eigenvectors(i,p) +cosine*eigenvectors(i,q)
             eigenvectors(i,p) = updated_ip
             eigenvectors(i,q) = updated_iq
         enddo
@@ -138,11 +135,11 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
         enddo
         if( eigen_index /= i ) then
             temporary_value = w(i)
-            w(i) = w(eigen_index)
-            w(eigen_index) = temporary_value
+            w(i)            = w(eigen_index)
+            w(eigen_index)  = temporary_value
             do j = 1, n
-                temporary_value = eigenvectors(j,i)
-                eigenvectors(j,i) = eigenvectors(j,eigen_index)
+                temporary_value             = eigenvectors(j,i)
+                eigenvectors(j,i)           = eigenvectors(j,eigen_index)
                 eigenvectors(j,eigen_index) = temporary_value
             enddo
         endif

@@ -51,7 +51,11 @@ The maintained bundled core currently contains:
   their original default-real rounding behavior.
 - `chempotpy_geometry`: Cartesian distance, three-component dot product, angle
   cosine, and symmetric distance-matrix operations.
+- `chempotpy_legacy_coordinates`: explicit-argument implementations of the
+  historical POTLIB Cartesian input and internal-coordinate setup algorithms.
+- `chempotpy_neural_network_io`: shared parsing of neural-network headers.
 - `chempotpy_status`: status values for future non-printing modern interfaces.
+- `chempotpy_blas`: the small BLAS subset required by bundled legacy kernels.
 - `chempotpy_dsyev`: the standalone historical `DSYEV` ABI implementation.
 
 `scripts/build_pes.py` resolves bundled module dependencies recursively from
@@ -109,111 +113,100 @@ source inside that surface's independently loadable extension.
 Modernized PES sources follow the same compact conventions used by SIMPLE:
 
 - Free-form Fortran with four spaces per indentation level and no tabs.
+- The formatter targets 120 columns for ordinary equations and declarations,
+  rather than the fixed-form 72/80-column limit. Generated coefficient or data
+  statements may be longer; compilation uses `-ffree-line-length-none`.
 - Procedure declarations use spaced argument lists, for example
   `subroutine pes( coordinates, derivative_order, energy, gradient, coupling )`.
 - Every procedure has a short `!> @brief` description immediately above it.
-- Every scope has `implicit none`; dummy arguments have explicit `intent`.
+- Every scope has `implicit none`; every dummy argument and local variable is
+  explicitly declared. New and reviewed interfaces also specify `intent`.
+- Variable declarations use the `::` separator and standard kind/length syntax;
+  constants use typed `parameter` declarations rather than separate
+  `PARAMETER(...)` statements.
 - Modules begin with `private` and explicitly publish only their supported API.
 - Imports use `use ..., only: ...`; numerical kernels do not perform application
   orchestration or own hard-coded output units.
+- Fortran code is lowercase while character literals and comments retain their
+  original capitalization. Consecutive declarations, constants, and simple
+  assignments are aligned when doing so improves readability.
+- Files are opened with `newunit=` and a local unit variable. Existing numbered
+  diagnostic writes remain compatibility behavior until a non-printing status
+  and logging interface replaces them deliberately.
+- Format specifications live directly in their `read` or `write` statement;
+  detached labeled `FORMAT` statements are not used.
+- Early `return` statements remain available for control flow, but a `return`
+  immediately before `end subroutine` or `end function` is omitted.
 - Names describe physical quantities and units rather than historical temporary
   abbreviations when a kernel is migrated and numerically revalidated.
 
-Files carrying the `!> @modern` marker are checked by
-`scripts/check_fortran_style.py`. A legacy fixed-form kernel receives that marker
-only after a reference build and numerical parity check; formatting is never
-allowed to silently change a published fit.
+`scripts/check_fortran_style.py` checks every `.f90` source rather than relying
+on an opt-in marker. The compiler gate adds `-fimplicit-none`, so a declaration
+missed by the source transformer is rejected even if the style scanner cannot
+recognize the construct. Formatting is checked for idempotence by the same
+structural formatter used during migration.
 
-The current style inventory finds 2,679 procedure declarations across 370
-Fortran/signature files. Forty-eight declarations use the spaced modern form and
-46 procedures have `!> @brief` documentation. Twenty-four sources currently opt into
-the strict modern style gate. This is the tracked
-migration backlog; it is not evidence that the other kernels are numerically
-invalid.
+## Repository-wide modernization status
 
-## Initial audit findings
+- The package contains 373 free-form `.f90` sources and no fixed-form `.f`
+  sources. The registry identifies 363 independently callable PES sources with
+  no competing duplicate stems.
+- Every procedure scope uses `implicit none`; all variables formerly inferred
+  by `implicit double precision(a-h,o-z)`, `implicit real*8`, or default Fortran
+  rules now have explicit declarations.
+- All block structure uses four spaces per nesting level, tabs are forbidden,
+  procedure argument lists are spaced, and every procedure has an immediately
+  preceding `!> @brief` description.
+- All 2,920 detached labeled formats were either moved into their I/O statement
+  or removed when unused. Redundant terminal returns were removed without
+  changing early-return control flow.
+- All 10,601 legacy `PARAMETER(...)` statements are now typed declarations.
+  Legacy star-sized intrinsic types and entity-level character lengths have
+  also been removed, and active `OPEN` statements no longer hard-code units.
+- The 120 identical `CARTOU` and 120 identical POTLIB `CARTTOR` implementations
+  are compatibility wrappers over `chempotpy_legacy_coordinates`; the distinct
+  F2H2 derivative variant remains local pending its dedicated derivative test.
+- Every module has a `private` default. Its `public` list is limited to entry
+  points and names that compiler-resolved consumers import.
+- Every module import has an `only:` list. Core dependencies remain discoverable
+  by the isolated PES builder.
+- Published arithmetic, literal spelling, fit coefficients, and wrapper
+  conversion behavior were preserved. Descriptive renaming and algorithmic
+  restructuring remain separate changes that require their own numerical
+  review.
+- `COMMON` removal is intentionally incomplete: 18,493 active declarations
+  remain in 163 sources, primarily POTLIB families whose `BLOCK DATA` state and
+  aliased layouts must be migrated together. H4O2 and CH3OH now keep their
+  mutable PES state private to modules, H3Cl uses explicit saved locals, and 30
+  dead parallel-control blocks have been removed.
 
-- After removing the unvalidated fork conversions and the competing H3Cl
-  conversion, the current tree contains 88 system packages and 364 Fortran
-  sources. After the current compact Aln batches, 249 are fixed form and 115 are
-  free form. They expose 323 adiabatic `pes`
-  entry points, 40 diabatic `dpem` entry points, and one retained CH4 support
-  source that is not built as a standalone surface.
-- The Makefile compiles both `.f` and `.f90` files with the same stem, so an
-  unvalidated conversion can silently compete with the released implementation.
-- The first fork modernization batch contained free-form ALC and FH2 sources
-  that did not pass `gfortran -fsyntax-only`. Those variants were discarded;
-  their released fixed-form counterparts are the authoritative starting point.
-- The repository tracked 59 compiled extensions, compiler logs, object/module
-  files, and editor swap files. They are removed in the current working tree;
-  Git history remains the recovery path until the maintainer commits the cleanup.
-- The current `make check` searches build logs but does not fail when a surface
-  fails compilation and does not validate numerical behavior.
+The migration utilities are retained under `scripts/`: the fixed-form converter,
+compiler-assisted explicit-type inserter, structural formatter, module API
+privatizer, and import normalizer can be rerun and are covered by the style and
+compilation gates.
 
-## First compatibility migration: CH5 J1
+## Numerical preservation record
 
-- The released `CH5_GEN_J1_1987.f` remains the authoritative CHEMPOTPY kernel.
-- `chempotpy.CH5.adapters.create_ch5_j1_surface` exposes ordered `HHHHCH`
-  coordinates and the single-state energy/gradient through the atomic-unit
-  contract.
-- The compatibility adapter deliberately uses the released wrapper's rounded
-  factors at both sides of the call. A later direct-kernel adapter can remove
-  this round trip only after parity is locked down.
-- At the POLYRATE regression geometry, the independently compiled released
-  CHEMPOTPY source agrees with POLYRATE to `7.5e-9` hartree for energy and
-  `1.9e-8` hartree/bohr for the Cartesian gradient. The residual is consistent
-  with the rounded conversion constants in the released CHEMPOTPY wrapper.
-
-## First complete style migration: Aln HalP
-
-- `Aln_HalP` is now free-form Fortran with four-space indentation, explicit
-  intents, descriptive physical names, spaced procedure arguments, and a brief
-  for both its public wrapper and numerical kernel.
-- Four deterministic geometries containing two, three, five, and eight atoms
-  agree bit-for-bit with the independently compiled released extension.
-- The released wrapper's conversion literals were first rounded in default
-  real precision. Their exact promoted values remain explicit compatibility
-  constants; replacing them with canonical constants is a separate numerical
-  change.
-- Two- and four-atom release energies are stored in an independent gfortran
-  regression test.
-
-## First compact Aln kernel batch
-
-- Ten additional 94--102 line Aln sources are now modern free-form Fortran:
-  `ER`, `ER2`, `Gol`, `NP_D`, `PapCEP`, `PapKEP`, `deSPH_M`, `reGol`,
-  `reHalP`, and `redeSPH_M`.
-- Historical temporaries such as `x`, `v`, `rr`, `aa`, and `t1` were replaced
-  with names describing coordinates, distances, fit parameters, and accumulated
-  energy. Labeled loops and `go to` statements were replaced with structured
-  loops without changing the arithmetic order.
-- Several published parameter tables used unsuffixed long decimal literals.
-  The released compiler rounded those values to default real before assigning
-  them to double precision. The modern sources spell out the exact promoted
-  values and document the compatibility constraint.
-- All 59 Aln extensions build successfully after the batch. Forty reference
-  energies spanning two, three, five, and eight atoms match the released
-  extensions bit-for-bit; the references also run as an independent gfortran
-  regression test.
-- These eleven modern Aln surfaces now import `real64`, released-wrapper
-  conversions, and Cartesian distance from the bundled core. A direct comparison
-  of 44 extension results still matches the released binaries bit-for-bit.
-
-## Second compact Aln kernel batch
-
-- `PetW`, `rePetW`, `StrM`, `reStrM`, `SutC`, and `reSutC` are now modern
-  free-form sources using the bundled kinds, compatibility conversions, and
-  Cartesian distance operation.
-- Historical labeled loops and repeated coordinate-component arithmetic were
-  replaced with structured loops and named physical accumulators while retaining
-  the released summation order.
-- The reparameterized fits and the original PetW phase multipliers contained
-  unsuffixed literals. Their intended source decimals are retained as explicit
-  `real32` values and promoted to `real64`, making the compatibility behavior
-  visible without storing opaque expanded decimals.
-- Twenty-four extension results covering two, three, five, and eight atoms match
-  the released binaries bit-for-bit and are stored in the independent gfortran
-  regression suite.
+- Before conversion, 205 fixed-form sources were compiled and evaluated. The
+  fixture records each source's SHA-256 digest and 656 formatted outputs. The
+  repository-wide regression test recompiles all 205 `.f90` replacements and
+  compares their outputs with those frozen release references.
+- A second catalog fixture covers all 363 callable PES interfaces at two
+  deterministic, nonsymmetric geometries. It records the authoritative source
+  digest, interface signature, state dimensions, and formatted outputs; run
+  `make test-surfaces` to compile and evaluate the complete catalog.
+- The earlier Aln fixture independently records 42 source digests and 336
+  energies across non-symmetric two-, three-, five-, and eight-atom geometries.
+  All modern Aln sources reproduce those values exactly.
+- The released BrH2 LTBZSO wrappers declared `engygs` locally while the kernel
+  returned it through `/pt1cm/`, producing an undefined diagonal element. Both
+  adiabatic and diabatic wrappers now reference the owning shared block; repeated
+  captures return stable ground-state energies and the catalog fixture records
+  the corrected outputs.
+- The CH5 J1 atomic-unit adapter remains checked against the independently
+  compiled released behavior. Its small POLYRATE residual reflects the rounded
+  conversion literals in the historical CHEMPOTPY wrapper, not the source-form
+  migration.
 
 ## Validation gates
 

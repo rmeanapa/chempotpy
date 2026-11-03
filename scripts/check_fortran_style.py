@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce CHEMPOTPY style on Fortran sources marked as modernized."""
+"""Enforce CHEMPOTPY style on every free-form Fortran source."""
 
 from __future__ import annotations
 
@@ -10,10 +10,14 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import List, Sequence
 
+try:
+    from scripts.format_fortran import format_source_text
+except ModuleNotFoundError:  # Direct execution from the scripts directory.
+    from format_fortran import format_source_text
+
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = REPOSITORY_ROOT / "chempotpy"
-MODERN_MARKER = "!> @modern"
 PROCEDURE_PATTERN = re.compile(
     r"^\s*(?:(?:pure|elemental|recursive|impure)\s+)*"
     r"(?:[a-z][a-z0-9_]*(?:\([^)]*\))?\s+)?"
@@ -22,6 +26,14 @@ PROCEDURE_PATTERN = re.compile(
 )
 MODULE_PATTERN = re.compile(
     r"^\s*module\s+(?!procedure\b)([a-z][a-z0-9_]*)",
+    flags=re.IGNORECASE,
+)
+LEGACY_DECLARATION_PATTERN = re.compile(
+    r"^\s*(?:double\s+precision|double\s+complex|"
+    r"real(?:\s*\([^)]*\))?|integer(?:\s*\([^)]*\))?|"
+    r"logical(?:\s*\([^)]*\))?|complex(?:\s*\([^)]*\))?|"
+    r"character(?:\s*\([^)]*\))?)(?:\s*,[^:]*)?\s+"
+    r"(?!function\b|subroutine\b)(?!.*::)",
     flags=re.IGNORECASE,
 )
 
@@ -37,13 +49,9 @@ class StyleViolation:
 
 
 def modern_sources() -> Sequence[Path]:
-    """Return free-form sources explicitly opted into the modern style gate."""
+    """Return every free-form source governed by the modern style gate."""
 
-    candidates = sorted(PACKAGE_ROOT.rglob("*.f90"))
-    return tuple(
-        path for path in candidates
-        if MODERN_MARKER in path.read_text(errors="replace")
-    )
+    return tuple(sorted(PACKAGE_ROOT.rglob("*.f90")))
 
 
 def style_inventory() -> dict:
@@ -65,7 +73,7 @@ def style_inventory() -> dict:
             procedure_count += 1
             files_with_procedures.add(path)
             opening = line.find("(", match.start(2))
-            closing = line.rfind(")")
+            closing = line.find(")", opening)
             opening_spaced = opening >= 0 and line[opening: opening+2] == "( "
             closing_spaced = (
                 closing <= opening or line[closing-1: closing+1] == " )"
@@ -88,11 +96,17 @@ def style_inventory() -> dict:
 
 
 def check_source(path: Path) -> Sequence[StyleViolation]:
-    """Return all style violations in one marked modern Fortran source."""
+    """Return all style violations in one modern Fortran source."""
 
     lines = path.read_text(errors="replace").splitlines()
     relative_path = str(path.relative_to(REPOSITORY_ROOT))
     violations: List[StyleViolation] = []
+    source_text = path.read_text(errors="replace")
+    if format_source_text(source_text) != source_text:
+        violations.append(StyleViolation(
+            relative_path, 1, "structural-indent",
+            "source does not match four-space structural indentation",
+        ))
     modules = []
     for line_number, line in enumerate(lines, start=1):
         stripped = line.lstrip()
@@ -116,7 +130,7 @@ def check_source(path: Path) -> Sequence[StyleViolation]:
                     relative_path, line_number, "argument-spacing",
                     "procedure arguments must start with '( '",
                 ))
-            closing = line.rfind(")")
+            closing = line.find(")", opening)
             if closing > opening and line[closing-1: closing+1] != " )":
                 violations.append(StyleViolation(
                     relative_path, line_number, "argument-spacing",
@@ -135,11 +149,78 @@ def check_source(path: Path) -> Sequence[StyleViolation]:
         module_match = MODULE_PATTERN.match(line)
         if module_match is not None:
             modules.append((line_number, module_match.group(1)))
-        if re.match(r"^\s*use\s+", line, flags=re.IGNORECASE):
+        if re.match(r"^\s*use(?:\s|,)", line, flags=re.IGNORECASE):
             if not re.search(r",\s*only\s*:", line, flags=re.IGNORECASE):
                 violations.append(StyleViolation(
                     relative_path, line_number, "use-only",
                     "module imports must use only:",
+                ))
+        if re.match(r"^\s*implicit\b", line, flags=re.IGNORECASE) and not re.match(
+            r"^\s*implicit\s+none\b", line, flags=re.IGNORECASE
+        ):
+            violations.append(StyleViolation(
+                relative_path, line_number, "implicit-typing",
+                "implicit typing maps are forbidden",
+            ))
+        if re.search(
+            r"\b(?:real|integer|complex|logical|character)\s*\*",
+            line.split("!", 1)[0],
+            flags=re.IGNORECASE,
+        ):
+            violations.append(StyleViolation(
+                relative_path, line_number, "star-kind",
+                "legacy star-sized intrinsic declarations are forbidden",
+            ))
+        code = line.split("!", 1)[0]
+        if LEGACY_DECLARATION_PATTERN.match(code):
+            violations.append(StyleViolation(
+                relative_path, line_number, "declaration-separator",
+                "variable declarations must use the :: separator",
+            ))
+        if re.match(r"^\s*parameter\s*\(", code, flags=re.IGNORECASE):
+            violations.append(StyleViolation(
+                relative_path, line_number, "legacy-parameter",
+                "declare constants with a type, parameter, and ::",
+            ))
+        if re.match(
+            r"^\s*character(?:\s*\([^)]*\))?.*::.*"
+            r"\b[a-z][a-z0-9_]*\s*\*\s*\d+",
+            code,
+            flags=re.IGNORECASE,
+        ):
+            violations.append(StyleViolation(
+                relative_path, line_number, "legacy-character-length",
+                "put character length in character(len=...), not the entity",
+            ))
+        if re.search(
+            r"\bopen\s*\(\s*(?:unit\s*=\s*)?\d+",
+            code,
+            flags=re.IGNORECASE,
+        ):
+            violations.append(StyleViolation(
+                relative_path, line_number, "hardcoded-open-unit",
+                "OPEN statements must acquire a unit with newunit=",
+            ))
+        if re.match(r"^\s*\d+\s+format\s*\(", line, flags=re.IGNORECASE):
+            violations.append(StyleViolation(
+                relative_path, line_number, "labeled-format",
+                "put the format specification directly in READ or WRITE",
+            ))
+        if re.match(r"^\s*return\s*(?:!.*)?$", line, flags=re.IGNORECASE):
+            next_index = line_number
+            while next_index < len(lines) and (
+                not lines[next_index].strip()
+                or lines[next_index].lstrip().startswith("!")
+            ):
+                next_index += 1
+            if next_index < len(lines) and re.match(
+                r"^\s*(?:end\s*(?:subroutine|function)\b.*|end)\s*$",
+                lines[next_index],
+                flags=re.IGNORECASE,
+            ):
+                violations.append(StyleViolation(
+                    relative_path, line_number, "terminal-return",
+                    "RETURN immediately before a procedure end is redundant",
                 ))
 
     lower_lines = [line.strip().lower() for line in lines]
@@ -167,7 +248,7 @@ def check_source(path: Path) -> Sequence[StyleViolation]:
 
 
 def main() -> int:
-    """Check all opted-in sources and fail when any violation is present."""
+    """Check all free-form sources and fail when any violation is present."""
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--json", action="store_true")

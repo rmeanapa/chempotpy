@@ -3,6 +3,7 @@
 module chempotpy_legacy_units
     use chempotpy_kinds, only: real32, real64
     implicit none
+
     private
 
     public :: legacy_bohr_to_angstrom
@@ -16,12 +17,12 @@ module chempotpy_legacy_units
     real(real64), parameter :: legacy_hartree_to_electronvolt = &
         real(27.211386_real32, real64)
 
-contains
+    contains
 
     !> @brief Convert wrapper coordinates using the released rounded factor.
     pure subroutine legacy_coordinates_to_bohr( &
-        coordinates_angstrom, coordinates_bohr )
-        real(real64), intent(in) :: coordinates_angstrom(:,:)
+            coordinates_angstrom, coordinates_bohr )
+        real(real64), intent(in)  :: coordinates_angstrom(:,:)
         real(real64), intent(out) :: coordinates_bohr( &
             size(coordinates_angstrom,1),size(coordinates_angstrom,2))
 
@@ -31,11 +32,10 @@ contains
 
     !> @brief Convert wrapper energy using the released rounded factor.
     pure function legacy_energy_to_electronvolt( &
-        energy_hartree ) result(energy_electronvolt)
+            energy_hartree ) result(energy_electronvolt)
         real(real64), intent(in) :: energy_hartree
-        real(real64) :: energy_electronvolt
+        real(real64)             :: energy_electronvolt
 
-        energy_electronvolt = energy_hartree &
-            *legacy_hartree_to_electronvolt
+        energy_electronvolt = energy_hartree *legacy_hartree_to_electronvolt
     end function legacy_energy_to_electronvolt
 end module chempotpy_legacy_units

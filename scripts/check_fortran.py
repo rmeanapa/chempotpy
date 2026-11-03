@@ -52,7 +52,11 @@ def compiler_command(
     if source.source_form == "fixed":
         command.extend(("-ffixed-form", "-ffixed-line-length-72"))
     else:
-        command.extend(("-ffree-form", "-ffree-line-length-none"))
+        command.extend((
+            "-ffree-form",
+            "-ffree-line-length-none",
+            "-fimplicit-none",
+        ))
     source_text = (
         source.path.read_text(errors="replace")
         if source.path.exists()

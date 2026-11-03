@@ -1,0 +1,2505 @@
+{
+  "surfaces": {
+    "ALC/ALC5m0_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "1fa6238056f2be4a821bf53e990ae6b7d693c9792990573d1dd94e186355332c",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.15566773842010129E+000",
+        "3.59322328206100794E+000"
+      ]
+    },
+    "ALC/ALC6m0_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "dd9573c62dbd1bb4882390c6c814ceb1e9b2571871adca3e90ee990238301f8c",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.15422437156299917E+000",
+        "3.59322328206100794E+000"
+      ]
+    },
+    "ALC/ALC7m0_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "18f59d93080c87d52e6088185a3c0ceb9f87ff49a6897b72db100fdc8496715a",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.16028651236282876E+000",
+        "3.59322328206100794E+000"
+      ]
+    },
+    "ALC/ALC7m10_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "a8ee2bcff164926c0f56da67d1b1d20403a60412ea4902104449fe90392cdc54",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "4.89950372048864491E+000",
+        "3.40192972277979644E+000"
+      ]
+    },
+    "ALC/ALC7m1_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "d7fed0eb1af54fcee240fd635c10073d626c07c6f2409e16e5e732620559d422",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.13864864116709441E+000",
+        "3.57819261096862817E+000"
+      ]
+    },
+    "ALC/ALC7m4_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c6080f48b4c6423bcf21f25ac9e1fe210f100b7115dc66360200d59588538d3c",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.06678168725125389E+000",
+        "3.52708178391615990E+000"
+      ]
+    },
+    "ALC/ALC7m5_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "6fc22bb64db6903aa4c7572e2156829213ecfcd8d8e7edc9f2ac5c3a141aaa7a",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.04090066296217731E+000",
+        "3.50823593466673556E+000"
+      ]
+    },
+    "ALC/ALC7m7_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f28586e4b571f1479ce271fc8f3391a1be1b5855ab804f01aa092e664dacc20c",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "4.98659199203473325E+000",
+        "3.46803360356962820E+000"
+      ]
+    },
+    "ALC/ALC7p2_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "890e5fc7a4f2f1ed57a175f7688355aad31d4e40f1a9213d3d193f2207adf432",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.08375222045886677E+000",
+        "3.53368346118453314E+000"
+      ]
+    },
+    "ALC/ALC7p3_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "acb0d0e889b1098499237b4183146b100756a7d0be1de412a2a4c6394b99b7aa",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.04293498840568333E+000",
+        "3.50224310560640761E+000"
+      ]
+    },
+    "ALC/ALC7p5_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "15932af82eb365f66bab10bb00ade3f0d36442f4b65821cc981d52b80340eec1",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "4.95605957672257524E+000",
+        "3.43591068946854694E+000"
+      ]
+    },
+    "ALC/ALC_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "11275e0106f2006628946a05384999ecbf158789fd0e168f154159b8614979db",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.82472132317508651E+000",
+        "1.80856814447300529E+000"
+      ]
+    },
+    "AlmHn/AlmHn_VBO1": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "6d543745d31a985d6afe5e3e7e0bb407c4b0ba3c94e94e23fdb868ff718357cd",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "xyz,nal,nh,natoms,igrad,p,g,d)",
+      "values": [
+        "3.46068499093064075E+000",
+        "1.69453709968413246E+000"
+      ]
+    },
+    "AlmHn/AlmHn_VBO2": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "a2417a958cf05284719581a38641a6fc96a313ad4ce4288d4e28d14bdaa55b68",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "xyz,nal,nh,natoms,igrad,p,g,d)",
+      "values": [
+        "3.56903579623329614E+000",
+        "1.92597091415831922E+000"
+      ]
+    },
+    "BrH2/BrH2_LEPS_C_1982": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "6bc987000bb46a0589568ebdd624739bdf5f39a50857f6a0c15f346317e0d606",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.77706919703123400E+000",
+        "5.79126177076493054E+000"
+      ]
+    },
+    "BrH2/BrH2_LEPS_LTBZ1_1995": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f8b8119cad105ea5286cd0b161284da3cc53f78c936799ee62f28c96c86ac436",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.10905371509294426E+000",
+        "5.93161731630592204E+000"
+      ]
+    },
+    "BrH2/BrH2_LEPS_LTBZ2_1995": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "41e695ea254b556117a16db9f10425fb91f5d0ffa0e2dd615b7eaf459b8ed29d",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.25785718003896285E+000",
+        "2.16553758038227322E+001",
+        "6.08016929813029261E+000",
+        "1.85708590815010659E+001"
+      ]
+    },
+    "BrH2/BrH2_LEPS_LTBZ2_1995_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "6dc2533b4b813cedccd8ba9c46159d3c71af9c741b42ceb3912ba57758dc0766",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "8.26131912680582481E+000",
+        "-2.15335810324679189E-001",
+        "-2.15335810324679189E-001",
+        "2.16519138570558667E+001",
+        "6.08388272801880792E+000",
+        "-2.15335810324679189E-001",
+        "-2.15335810324679189E-001",
+        "1.85671456516125559E+001"
+      ]
+    },
+    "BrH2/BrH2_LEPS_LTBZSO_1995": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "d4d2cd2f44fa486486a02029ebf91fcbdf89140fd908ce773faaf8f33bfa9e10",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-2.14137770987762226E-003",
+        "2.16540552347657496E+001",
+        "-2.49705995577930015E-003",
+        "1.85696427115683242E+001"
+      ]
+    },
+    "BrH2/BrH2_LEPS_LTBZSO_1995_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "92d63dfba54737da7871757705d3e67cb02d35d65197e1143f69991b0f2b4922",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "0.00000000000000000E+000",
+        "-2.15335810324679189E-001",
+        "-2.15335810324679189E-001",
+        "2.16519138570558702E+001",
+        "8.28605944645095402E-313",
+        "-2.15335810324679189E-001",
+        "-2.15335810324679189E-001",
+        "1.85671456516125453E+001"
+      ]
+    },
+    "BrH2/BrH2_LEPS_W_1959": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "b1886f6ced76accaac0e81c67a3c057018055239d7511b1cc7d7830731346b10",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.71139469465193006E+000",
+        "5.58679619914170367E+000"
+      ]
+    },
+    "BrHCl/BrHCl_LEPS1": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "55df493416823e16ea26309b474353381e36b982aea95dcc4aaf39097ba02f5e",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.51570867236617985E+001",
+        "1.11841011867773599E+001"
+      ]
+    },
+    "BrHCl/BrHCl_LEPS2": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "22b72a286631e14d12e227f785d6cac0063e5b69fd09922172c5f7c770be9896",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.87758329678513043E+001",
+        "1.40255610686673720E+001"
+      ]
+    },
+    "BrHCl/BrHCl_LEPS3": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "d581cbfacace3ecfa93683c6c5af7e9dd3f7073bc3d0b2b7dd3df40417e9a966",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.87260221848927806E+001",
+        "1.39767806813312596E+001"
+      ]
+    },
+    "C2H6Cl/C2H6Cl_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "54c94012768ed42c3a1a5f992b84b95e5a698f28f87ce282bc30d2ad123d2e8f",
+      "natoms": 9,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.22143822425967352E+000",
+        "-6.91065856307109350E+000"
+      ]
+    },
+    "C2H6F/C2H6F_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "e2ae48efc7a5c6e778bb0b8fd3a930a09d99edbf46d0326643068a27f833ab44",
+      "natoms": 9,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "4.65265134981161310E+000",
+        "-8.05003147723429002E+000"
+      ]
+    },
+    "C2H6H/C2H6H_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "140309af697aa2674effeabc70c623b7fe74a0d598c99a2e4e6e092d4cb27bd8",
+      "natoms": 9,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.78100342901309183E+000",
+        "-1.50539046922526598E+000"
+      ]
+    },
+    "C2H6O/C2H6O_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f57cbd096c870f10c01676258086078e4a1d8de828c2a1f2b0d89e82488c7c7d",
+      "natoms": 9,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.46968006069360468E+000",
+        "-9.13014542505495896E+000"
+      ]
+    },
+    "C2H6OH/C2H6OH_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "268efc892eb6858b07323d12883b448384b3be712bd8d98421f650c6774b499c",
+      "natoms": 10,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.13414407694805721E+001",
+        "7.14903531088297739E-001"
+      ]
+    },
+    "C2H7/C2H7_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "28bd065450729a6bf67cbf36cfcde30dfd675687162d8b2f49bbca161509aa6b",
+      "natoms": 9,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "4.09889233133384209E+002",
+        "8.17660556701176375E+001"
+      ]
+    },
+    "C6H6O/PHOH_APRP": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "0c5c9f9203b041f33c844ed5b456d7107be96f709f6c3d3c2ecdf07e42fb1bdb",
+      "natoms": 13,
+      "nstates": 3,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.23156319592066581E+002",
+        "1.24052421632699151E+002",
+        "1.31029749940234666E+002",
+        "1.96842224364880309E+002",
+        "1.99823543531170941E+002",
+        "2.01483409223798475E+002"
+      ]
+    },
+    "C6H6O/PHOH_APRP_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "7e129e3065c2c828bfd222a3120307a5220beed01cc3fa0c82d2fcd0990c2872",
+      "natoms": 13,
+      "nstates": 3,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "1.24009772398818697E+002",
+        "0.00000000000000000E+000",
+        "-1.90785503540171847E-001",
+        "0.00000000000000000E+000",
+        "1.31029749940234666E+002",
+        "3.12354155017516538E-046",
+        "-1.90785503540171847E-001",
+        "3.12354155017516538E-046",
+        "1.23198968825947006E+002",
+        "1.99693311906845366E+002",
+        "0.00000000000000000E+000",
+        "6.09345355020125101E-001",
+        "0.00000000000000000E+000",
+        "2.01483409223798475E+002",
+        "-3.50415309988340381E-064",
+        "6.09345355020125101E-001",
+        "-3.50415309988340381E-064",
+        "1.96972455989205912E+002"
+      ]
+    },
+    "CH3NH2/CH3NH2_APRP": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "9deca0ba39a57a22c589253ea49d6c97c2162d4adfbc78e72e4e0fe42847249f",
+      "natoms": 7,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "4.32097942145299569E+001",
+        "5.75935467837403650E+001",
+        "3.50652235520728297E+001",
+        "4.42215680041025578E+001"
+      ]
+    },
+    "CH3NH2/CH3NH2_APRP_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "f127f20c7b5e42f020fd069045050ea414226bf63dc57ecb59b341b178fc79ad",
+      "natoms": 7,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "5.67061444359622939E+001",
+        "3.46073588604129201E+000",
+        "3.46073588604129201E+000",
+        "4.40971965623080138E+001",
+        "4.41510392937336036E+001",
+        "8.00506631396174950E-001",
+        "8.00506631396174950E-001",
+        "3.51357522624417840E+001"
+      ]
+    },
+    "CH4Br/CH4Br_VBMM_2002": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "6aafa794adf07439524e51c2fe734aba949c89838adf25aefa82fe718c5623fe",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,path,p,g,d)",
+      "values": [
+        "7.59057278363923587E+001",
+        "1.49745305852806521E+001"
+      ]
+    },
+    "CH4CN/CH4CN_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "5d7ba65cefb6378f6f0bb7515d8d5bfae21ffa65c497bb56681ec0f5d560b32b",
+      "natoms": 7,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.37069077320696408E+002",
+        "3.81392024162767953E+001"
+      ]
+    },
+    "CH4Cl/CH4Cl_VBMM_2000": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "ef81571f05f1bb381510194a19b5716aa5a709adce91a475da5f404f37a1feba",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-8.70125310756760761E+000",
+        "-8.87806181928405103E+000"
+      ]
+    },
+    "CH4Cl/CH4Cl_VBMM_2005": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c16717bc06636c2440106f6c193534e7a0c188ae64177fc50262464a11f15b64",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.14622700438948630E+001",
+        "-4.11800624705782869E+000"
+      ]
+    },
+    "CH4F/CH4F_GEN_GCSO_1996": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "9ac7fef62b0ef41d0871bf8499ca2100e8d63fb75cc768aa386c660bcc2b05c7",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,path,p,g,d)",
+      "values": [
+        "-1.17782425927648706E+001",
+        "-1.27635082180151613E+001"
+      ]
+    },
+    "CH4F/CH4F_GEN_GC_1996": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "9541e637db2f7390715efadbc3b200bd05b18cd3771d69f4b2156b18159f3e64",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,path,p,g,d)",
+      "values": [
+        "-1.20071668823497522E+001",
+        "-1.30951670625563086E+001"
+      ]
+    },
+    "CH4F/CH4F_LEPS_RNCG_2006": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "cd90c1895a06dedb5f1efbe4367b4852f2c7f55e1a46ce13e02cde25b4b04b68",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-9.88108835078438830E+000",
+        "-1.38292250042960383E+001"
+      ]
+    },
+    "CH4O/CH4O_LEP_1995": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "d4e675b6cf1c26c046788b19cdf114455393f0652673f5db6b9208d246ac7735",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-9.59950958615012340E+000",
+        "-9.71239283769595652E+000"
+      ]
+    },
+    "CH4O/CH4O_LEP_1998": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "ef3c24865594469049b3cf5546a36e95c209ea4942c2f238c51e5b2ffce5b8fe",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-1.34574230189198563E+000",
+        "-8.26460195317287116E+000"
+      ]
+    },
+    "CH4O/CH4O_LEP_2000": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "6f8b8623bf3dcbef9e33f3856fdcd48fe4dce42c8d7cb6720b1571e013176e76",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-1.35269770726344829E+000",
+        "-8.31795544971887857E+000"
+      ]
+    },
+    "CH4O/CH4O_LEP_2014": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "1b4fe691cd60317a30a2d65ea6c80f23bea71c2525eec9bc5ec51fe9572c98fb",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-1.86331478415452843E+001",
+        "-1.34893911802092621E+001"
+      ]
+    },
+    "CH4OCl/CH4OCl_VBMM_2023": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f103379f66ba39e6a56c668b96cd9385e1800c1ac3a41a9c7589bc82341e381b",
+      "natoms": 7,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.52616118844977766E+000",
+        "2.29718578452798496E+001"
+      ]
+    },
+    "CH4OH/CH4OH_VBMM_2000": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c22aff9078a3fd23449eb1777f60a2ef944c0d6e8c86799c2705e55ab8063803",
+      "natoms": 7,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.09519524611246020E+001",
+        "2.02981560702853514E+000"
+      ]
+    },
+    "CH4OH/CH4OH_VBMM_2015": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "2d0b52546030f12d7f267da5460feea9755214da3c9639fe35d01f5b5cfec151",
+      "natoms": 7,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.79093646829524971E+002",
+        "8.05359796701585418E-001"
+      ]
+    },
+    "CH5/CH5_GEN_J1_1987": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "709c51c509bee574a9ccfcdcf5ba1f15a97bf66cbe48c9e0bff5ad6b5bbc7546",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.32862732278827611E+000",
+        "1.03064041077460420E+001"
+      ]
+    },
+    "CH5/CH5_GEN_J2_1987": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "63f140e93e58aa6ee6717a0cc3a1316d7ec3e85cb2327f5eb71a9e32c02f7498",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.31302001974057347E+000",
+        "1.02040045578670728E+001"
+      ]
+    },
+    "CH5/CH5_LEPS_JG_1995": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f4efa20b5c6d99b940f0511b791b0a3def435d0cab5fe4c735a3238242dc08f9",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-8.37690479625458195E+000",
+        "-1.05093274961066676E+001"
+      ]
+    },
+    "CH5/CH5_LEPS_JJ_2002": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f859fe40acc9661bad267b2902efc3cb495550448ac0bb1cd8717ea7dc2914a6",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-7.72570060808561898E+000",
+        "-1.01294799938481663E+001"
+      ]
+    },
+    "CH5/CH5_VBMM_CBG_2009": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "63e59409b37ac2ab006192a8426fc491579680c26f683e06504cc03ae126c23a",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-7.52939833067185127E+000",
+        "-1.01561639210587327E+001"
+      ]
+    },
+    "CH5O2/CH5O2_VBMM_2023": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "a2b02ae20efdfeafa95a8e6b21da5f3e1593e8060303a233acd9b78e724d4573",
+      "natoms": 8,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.72770506746611652E+000",
+        "4.15910055640893539E+000"
+      ]
+    },
+    "Cl2H/Cl2H_LEPS_BCMR_1983": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "33cd724be3bc87b74bd03f03580734c2938a82c2e487a3a145822cbddd74dbdf",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.08373999509711378E+001",
+        "7.93885804630432279E+000"
+      ]
+    },
+    "Cl2H/Cl2H_LEPS_KNPRY_1966": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "3bdb62ad36ce4ad43f08461ec3f1a6119d2afd19336aa68ac2779311a906c110",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.60690630399247709E+001",
+        "8.17846009927748696E+001"
+      ]
+    },
+    "Cl2H/Cl2H_LEPS_PK2_1987": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "421ab98fcfcd0b7d9b0787acc68302f8fb0107c67aff722a260c15ae9a58f960",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.24283220853581184E+001",
+        "8.77541506547918893E+000"
+      ]
+    },
+    "Cl2H/Cl2H_LEPS_PK3_1987": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f9cbb723d2180a10c48a6423af1b77ca1e4f0f4db12ad07535104929315b0d41",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.40039117410832912E+001",
+        "9.61011330406289765E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_ALTG1_1996": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "909573fe44f551e2ac36d5a84f233ebf7ac23131a43d9701d8aef1b18549b32a",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.85498601228146409E+000",
+        "9.29244654152113631E-002"
+      ]
+    },
+    "ClH2/ClH2_LEPS_ALTG2_1996": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "33038224d654336c3284118b6664bbe24574c48b1f4e48e498339e2ff2262c1c",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.85497619023016469E+000",
+        "9.29243690331856692E-002"
+      ]
+    },
+    "ClH2/ClH2_LEPS_GTM1_1981": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c3d30e99e57cfcabfac52df324fe8d8c6a82ed1874fc8e2958fae4e32f5ac06c",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.72873704766426517E+000",
+        "2.42010491038763842E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_GTM2_1981": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "d7417048f52b4b2ce65dc7d2b59a7c2af986454722a228b4ae0aed064fc101fb",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.81361999648285366E+000",
+        "2.50401233578985050E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_GTM3_1981": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "7204ba477753671cce65507dafb2706b93efe82d5270b22fd2c27d722d3b73d6",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.70957678900774779E+000",
+        "2.39509500250023777E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_GTM4_1982": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "cbc773d786b1f8e83cfa7f46bdd18fcf88ea15062f966f2ee1dd082c7f5db0b0",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.79231892263181347E+000",
+        "2.48209862520594937E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_KNPRY_1966": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "b1647c69994c36077c98db9684e07a77d2a47de30ba9c362d18abd16c4bb380d",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.80015674528444292E+000",
+        "2.50385833971852811E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_LB_1980": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "a9de75ce087cf9f33e8f0b7539886a3845be142c43899739700271ebf9065d99",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.92950128401367582E+000",
+        "2.58229232622562366E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_PK1_1966": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "18f24c7097466c833d7de5e44bf79aef7465d01090150c6a2c7e60c397ae0ad9",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.80015674528444292E+000",
+        "2.50385833971852811E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_PK2_1966": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "8ff14e4036e97eeea7dc31b08bc8153f10300223be23af10b7c0aa5db2529e98",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.79905990047191766E+000",
+        "2.49617994680089605E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_SPK_1973": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "15d40418d6167b6967a1181d1601cac710c0938d0f505683c8d358b5701c7500",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.77829585981998628E+000",
+        "2.46621608595417463E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_STSBLTG1_1989": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "7d365eecffb9f1017cf2fc61b5677ed38ab471a68dc1afc8bee6b6dcab6c2754",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.84892435294729296E+000",
+        "2.49286738122936891E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_STSBLTG2_1989": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f09dd36528ef83d6d3ce2fd29d275ea3ed5a9e8d2c373503eedfec3f2710d9e7",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.85416013035679272E+000",
+        "2.49286738122936891E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_TTGI1_1985": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "ed501c298abd7ade1f2930fd6a225ba2da757ea36b6bdf1948c63fdd0b351222",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.67636679172584424E+000",
+        "2.37404747929351201E+000"
+      ]
+    },
+    "ClH2/ClH2_LEPS_TTGI2_1985": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "3ff3d689081ac90034296790119bdaa334355f814444d775d4477cde92ab4362",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,path,p,g,d)",
+      "values": [
+        "3.67579555646346057E+000",
+        "2.37360288137135056E+000"
+      ]
+    },
+    "ClNH3/ClNH3_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "5e5818655b25ca8d881908a7b2be92540d02f2f44e5d9fb982db764bb1b36310",
+      "natoms": 5,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-4.46873140605965080E+000",
+        "4.03252182382905033E+000"
+      ]
+    },
+    "F2H/F2H_LEPS_JOT_1972": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "b0e32e4487afe7f93013fff8951b536df695d402cf4d650398b667e1cc1df84e",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.12122634039011118E+001",
+        "9.81607048603465593E+000"
+      ]
+    },
+    "F2H/F2H_LEPS_KNPRY_1966": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c9762838e7e71df368d6876f425202f840e494556b377077db55a0ce7b8a4161",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.12122005752459266E+001",
+        "9.81601724655698327E+000"
+      ]
+    },
+    "F2H2/F2H2_GEN_JBKKL_1990": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "28d6d3015f7eaf68304bebfee48cd72448050ce09c73754e4312543872924700",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,path,p,g,d)",
+      "values": [
+        "-1.37961350830752478E-003",
+        "-1.14418339339420388E-004"
+      ]
+    },
+    "F2H2/F2H2_GEN_S2_1996": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "907ecf20667cfd7403a4b432ffdee7836c213e3dceedfb3ab7c82f762f73a7ec",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.70654283012972375E-006",
+        "1.21379643435324267E-003"
+      ]
+    },
+    "F2H2/F2H2_GEN_SQSBDE_1995": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "b03bd58c97adf2cc2f7f4f4b81d17a4848bf821321c321f5af99916fee1ec51e",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.68912049385714541E-006",
+        "1.21375819827094860E-003"
+      ]
+    },
+    "FH2/FH2_GEN_5SECCOG1_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "61484927f71392d71e2db05fec6b1fb4caabf65f275b11be827ced23ef0a7054",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-9.44853089858046280E-001",
+        "-9.52326313349759479E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SECCOG2_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c4d1f8ae046b1101e1ebb5e251d7d1ded452cfcdbbee124797c86bddb1245db3",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-9.44853089858046280E-001",
+        "-9.52326313349759479E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SECCOG3_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "01908770678c328c994aedb10a50c23b82af82cb23b937857ba9411c96dc1e35",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-9.44853089858046280E-001",
+        "-9.52326313349759479E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SECG1_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "004c98f3b989f2d21c488f13e1037d3f92819abbeed64eba1cb82a94bfcea175",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-8.84067034009311858E-001",
+        "-8.98914185126774123E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SECG2_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "499552a17c1f7f7dd8ea05bb26647c2244b74179f20b84872b119211268c10b2",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-8.34207704271345385E-001",
+        "-8.48525868468279043E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SECG3_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "d3d3de818968c5cb13a4e8e98b9ba43ed1c226cf7440eb63c2e71efb36bad64a",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-7.67726750771885680E-001",
+        "-7.83902581497932793E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SECS1_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "4ab23091f74d241246df73fe767498b86fce3a9f707fa2f6b3a12cf044c9f85c",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-9.00031089131830053E-001",
+        "-9.10862335358032849E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SECS2_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "582602a2c786db67f9a391de272d21896ba075565b97abab0094519e2c3a20eb",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-8.80947339348770453E-001",
+        "-8.93212416716928637E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SECS3_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "3073b98d755414d50f2ee837fdcffb4528b739a83f36b5f8a302e7c5a8e54b74",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-8.68266776626240966E-001",
+        "-8.81485927075094766E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SECW_1991": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "beb8085a8b64536138dd797e9ceed588aad20f5d315bb59517fad3354cbc68db",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-9.34358643913930642E-001",
+        "-9.50078688966715545E-001"
+      ]
+    },
+    "FH2/FH2_GEN_5SEC_1991": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "3a79d38a2b8c0546d0f83424d4593c2106bc126c852361acf19b59afaab4e7df",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-9.44853089858046946E-001",
+        "-9.52326313349759479E-001"
+      ]
+    },
+    "FH2/FH2_GEN_6SEC_1993": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f1bfd2842227cc7d4277391c702eeffb09f0cbaacca173834ee87c1eb5634731",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-8.14415880092358879E-001",
+        "-8.31517568273978380E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_M5SK_1966": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "2c570fbda82225781828b0119a23b1aab016f8271ca02d6333a717513350a1ae",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-6.02063227548658486E-001",
+        "-6.44711663643991018E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_M5_1991": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "3f7f584a9303e3092f46aa0b5b4dfd85842c3f8a143892845bb3ee30c4038de3",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-6.06160100986251060E-001",
+        "-6.47008101179915029E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_NO1_1984": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "1d618c06dac945cf036ff38ac6a562497780f66f9cb2c62d1b547c2e4cbeb641",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-6.15214164371026828E-001",
+        "-6.54898977152875150E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_NO2_1984": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "1a4b7801d6eb33f702645b3b6c63460ab567608e22ccb11b67b707854299b648",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-6.30315817966402236E-001",
+        "-6.54899053514768403E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_NO2a_1984": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "672c67e6eeafa35d105b9eee5b40c8c04818c96ab23cebb9991cb0bdb2ae123d",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-6.30315817966402236E-001",
+        "-6.54899053514768403E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_NO3_1984": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f19d0f6684ce07220dedbed1ca770b8c45288e43f35670ec7a6042b03f3b38ca",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-8.09245746944661226E-001",
+        "-8.15873441728290572E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_NO4_1984": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "1c1940ba9e83f7b5b5cf00bd63a0c8b47f67d324d14753fe59bd51827e04e606",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-6.76769822024206102E-001",
+        "-7.28527686167885768E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_NO5_1985": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "95e3679558b7df8ea053443ad56a897b42860f8fa58b4486cad9d4243ac2af93",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-7.67760368422174766E-001",
+        "-8.32157526366539280E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_NO5a_1985": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "753c28d5364c6139525ffec316ffada60c27ce1169b6fdcf456b7377f9c06ca5",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-7.59075139628585749E-001",
+        "-8.24709643580371576E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_NO5b_1985": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "1b53722f398a525805c353d107c1a09843c6d8c1fc753360aa77ca76f0a26a10",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-7.30615688625803505E-001",
+        "-7.89198861359186266E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_NO5z_1985": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f4c74416aefa24c357bd541f10c0c31b5d940e8103cfa2c7620e0880405f33a0",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-7.05431242494876209E-001",
+        "-7.71611618059612425E-001"
+      ]
+    },
+    "FH2/FH2_LEPS_SK_1980": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "19763df84e270eb64c81b1122709910079cf7c347cd368044f63927a70f0d740",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-6.02063227548658486E-001",
+        "-6.44711663643991018E-001"
+      ]
+    },
+    "GeH4OH/GeH4OH_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f722624ab91584d1efb76741f8a0af615b7c4eabddf1a2568555b4831f54166d",
+      "natoms": 7,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.69513743420686058E+000",
+        "1.12521609809304870E+001"
+      ]
+    },
+    "GeH5/GeH5_LEPS": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "7ced694986c9f0935acb75672ddb3c6edaf4bcfbd2346e98ab2b5583c33fbc2a",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "9.62559511732348483E+000",
+        "3.31681044978644701E+000"
+      ]
+    },
+    "H2O2/H2O2_GEN_1998": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "5450b37f6b379f2833d907295547e47c53c1cfb59383eb8b6f84fcc5f9dd8b29",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.54962150888533500E+002",
+        "1.05286659396394995E+002"
+      ]
+    },
+    "H3/H3_GEN_A2_2002": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "a811a8b0b508ec717ebe24681c31980a896d011d9d58b81f9af4d861664ca7b5",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.55274403623902102E-001",
+        "6.03816575722219362E-001"
+      ]
+    },
+    "H3/H3_GEN_A3_2002": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "b4295cd7e30e4c3cd88132fcce1d4d35cf134fcebe20bccdd3a07fa2cc6ccd35",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.63129592912931498E-001",
+        "6.24060876004593701E-001"
+      ]
+    },
+    "H3/H3_GEN_A4_2002": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "4a48e2b32c87db3e368d7bd475f16a7843fd3f8cfbf670f44632da7970a5e216",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.55221076072249664E-001",
+        "6.17626190751268123E-001"
+      ]
+    },
+    "H3/H3_GEN_BKMP_1991": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "a1e7712a3fd105cca1b17c6d85a0449de8fd233a6fb438b0c04e3a06cedae18d",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.58682807940597437E-001",
+        "5.33137935350443182E-001"
+      ]
+    },
+    "H3/H3_GEN_CCI_2002": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "0f27041440fed946137e3b96721c8421efc2b26b432b94c67e1875e73aad886f",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.52318226566882986E-001",
+        "6.15418470081232072E-001"
+      ]
+    },
+    "H3/H3_GEN_DMBE_1987": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "4c8be0d985be84b8e2d68b5f573a080e85082240bb80ff428b980287c65677fb",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.68321810785632486E-001",
+        "6.41011889424933301E+000",
+        "5.42403396224355849E-001",
+        "6.45671888054165777E+000"
+      ]
+    },
+    "H3/H3_GEN_PK2_1964": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "d1911e7c532979a8800e2db306a8139434c6fd69049f4c23dd8c402091964eb4",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.16325223501085984E-001",
+        "6.07601645446436800E-001"
+      ]
+    },
+    "H3/H3_GEN_TK_1984": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "3f3bc4650b360c4a1cb85f70aa1c20db9b5873f05afe8f41006a05b9b546bda0",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.22937815504801340E-001",
+        "5.30766608759935865E-001"
+      ]
+    },
+    "H3Cl/H3Cl_PIPNN": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "4882a9f1924da9f618e9b95e829d828ff31ad7c00d4e0086642f65cea4234126",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,path,p,g,d)",
+      "values": [
+        "4.04838975406039392E+000",
+        "3.48461799500846681E+000"
+      ]
+    },
+    "H3p/H3p_KBNN_2002": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "827e5c7946fa95ee4edce2dd96873fa91e7665bf727fb418dc2fd94fd652316e",
+      "natoms": 3,
+      "nstates": 3,
+      "signature": "x,igrad,pin,grad,dvec)",
+      "values": [
+        "-2.54425189446154620E+000",
+        "5.78423833993707603E+000",
+        "1.37548234946440981E+001",
+        "-2.22164657774780494E+000",
+        "5.62438005137585417E+000",
+        "1.35586149958014381E+001"
+      ]
+    },
+    "H3p/H3p_UNO_2001": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "aba476cf1fdd81672c0659e2fa2c69f3a7d00215d24f38f4959484bde26fa6e9",
+      "natoms": 3,
+      "nstates": 3,
+      "signature": "x,igrad,pin,grad,dvec)",
+      "values": [
+        "-2.58009861469044877E+000",
+        "8.00916171900431095E+000",
+        "1.57838979281693828E+001",
+        "-2.23615817510866322E+000",
+        "7.61603031835651922E+000",
+        "1.52728857570519025E+001"
+      ]
+    },
+    "I2H/I2H_LEPS_KK_1981": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f91d1433399d588802c263ce15a7461d8a6fef8b65f85d360def11d20d4b299b",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "4.09944633993074987E+001",
+        "3.04752488246594382E+001"
+      ]
+    },
+    "I2H/I2H_LEPS_PT1_1971": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "e625e62457af4d1aab64e642631cea9bc6b88bd41110374e797f6c041c9eaff5",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "4.09930469816631913E+001",
+        "3.04752609065273710E+001"
+      ]
+    },
+    "I2H/I2H_LEPS_PT2_1971": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "9bf17bf6680f1080e330b27afbd02a80f27471423ef930c57cd88d19eeba5373",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "4.00492372166036503E+001",
+        "2.96719831398241034E+001"
+      ]
+    },
+    "IH2/IH2_LEPS_DT1_1971": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "22236f3fb8e800bbd3781e3706157ac45a3aae92ec638aa7705e9942d663e365",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.56919392583468245E+001",
+        "1.26489046917239385E+001"
+      ]
+    },
+    "IH2/IH2_LEPS_DT2_1971": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "a54f8e90586688985e44954990eb0cf7724f9c46e16638e70faff5a253cd6338",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.59621681526114507E+001",
+        "1.26489046917239385E+001"
+      ]
+    },
+    "IH2/IH2_LEPS_KNPRY_1966": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "48bc7e1e1c92ac761c1552e67687b7eb4f997e819a44771141ee075226b3a5a0",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.62345468796156069E+001",
+        "1.24775109745211861E+001"
+      ]
+    },
+    "IH2/IH2_LEPS_PPW1_1974": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "116530bc2bf4cf7c765582cfaa2e34dce13097d629f4f41292480a77399076cf",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.62260386706318265E+001",
+        "1.24694404403422840E+001"
+      ]
+    },
+    "IH2/IH2_LEPS_RSPTS_1970": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "5113ce72ca11bea4b72cb296347f258823e7be438b897f3bc1fa26b1445df530",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.74870938618552358E+001",
+        "1.36942513961052512E+001"
+      ]
+    },
+    "LiFH/LiFH_LEPS_JHCTP_2001": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c07a74695686eb1024c30946e5e039a1a0fa171f55dec9a8e4dc1802624534a4",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.54399349326334612E+000",
+        "5.20747851042386056E+000",
+        "3.10675509080145851E+000",
+        "4.77344089292748208E+000"
+      ]
+    },
+    "LiFH/LiFH_LEPS_JHCTP_2001_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "27b8b43d5787a146a8a4522c85a6bb4678da39fa3b0b45b71b2201fa7383aae1",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "4.83396783006703235E+000",
+        "6.94131970292677036E-001",
+        "6.94131970292677036E-001",
+        "3.91750417362017522E+000",
+        "4.27517794312922383E+000",
+        "7.63008399044549424E-001",
+        "7.63008399044549424E-001",
+        "3.60501804059971676E+000"
+      ]
+    },
+    "LiFH/LiFH_LEPS_JHTP1_2002": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "faf48b90ecfaa5c4e84dfe777a06562394dccad7ea4afc04b13dd58534367c88",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.34765713404922494E+000",
+        "6.37366274609379779E+000",
+        "2.92589690684990344E+000",
+        "5.72118673618926543E+000"
+      ]
+    },
+    "LiFH/LiFH_LEPS_JHTP1_2002_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "ad55272b6ea25cc1456cadd124b0c2b1e28dd6d7479b6bbe501eb06f876f5e40",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "6.30199730735121122E+000",
+        "4.60134854922486014E-001",
+        "4.60134854922486014E-001",
+        "3.41932257279181195E+000",
+        "5.61743830812384015E+000",
+        "5.28434659589224975E-001",
+        "5.28434659589224975E-001",
+        "3.02964533491532739E+000"
+      ]
+    },
+    "LiFH/LiFH_LEPS_JHTP2_2002": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "fd79af89ea1f54656068df443b5a0821b0d1933e6f778439fd4f6ae988969d01",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.34454113055676761E+000",
+        "6.37195783039508346E+000",
+        "2.92235135006823210E+000",
+        "5.71923716952432848E+000"
+      ]
+    },
+    "LiFH/LiFH_LEPS_JHTP2_2002_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "15c92486d8d367325bb109943e6f029a9bbbed8eafd23500f6bdd027005efda1",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "6.30032745475486422E+000",
+        "4.60134854922486070E-001",
+        "4.60134854922486070E-001",
+        "3.41617150619698906E+000",
+        "5.61555268603395863E+000",
+        "5.28434659589225197E-001",
+        "5.28434659589225197E-001",
+        "3.02603583355860195E+000"
+      ]
+    },
+    "MCH/MCHSB_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c511da3528663754cbec1de8083b84b014b1dafd83870556769149456bef44fc",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.51860117425904750E+000",
+        "1.67006375224787043E+001",
+        "5.99794755165566240E+000",
+        "1.18750390881430974E+001"
+      ]
+    },
+    "MCH/MCHSB_LEPS_ModelSurface_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "c8f363f694d23a98ca11a0633274b588d79161ce8b3942dda41a7e8f438ebaed",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.52003097845496438E+000",
+        "1.14570806742791298E-001",
+        "1.14570806742791298E-001",
+        "1.66992077182827892E+001",
+        "6.00289279449428204E+000",
+        "1.70408888870275194E-001",
+        "1.70408888870275194E-001",
+        "1.18700938453044742E+001"
+      ]
+    },
+    "MCH/MCHSL_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "cba1fb8194b9a00007f705bd46f87d53678fbce560c8574dd8049c75d1d979ca",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.51903873844753612E+000",
+        "1.67001999582902130E+001",
+        "6.00003584408376689E+000",
+        "1.18729507957149867E+001"
+      ]
+    },
+    "MCH/MCHSL_LEPS_ModelSurface_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "66dec5c79a863893c60a76cf42219fc6bb1cdb090e7744ede520d412e71e57ce",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.52003097845496438E+000",
+        "9.54407194898303224E-002",
+        "9.54407194898303224E-002",
+        "1.66992077182827892E+001",
+        "6.00289279449428204E+000",
+        "1.29500828631825132E-001",
+        "1.29500828631825132E-001",
+        "1.18700938453044742E+001"
+      ]
+    },
+    "MCH/MCHTL_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "6ebf5ea4c0aef6eb838ae48cec4858345198a176095afa6e243ec3581c27bae5",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.51760815158043716E+000",
+        "1.67016305451573110E+001",
+        "5.99365745962656415E+000",
+        "1.18793291801721939E+001"
+      ]
+    },
+    "MCH/MCHTL_LEPS_ModelSurface_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "0615dd31a1fb293588f5178162ea7f950e0a4bde2adf724738a2a7a4f73722f0",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.52003097845496438E+000",
+        "1.49149006638769982E-001",
+        "1.49149006638769982E-001",
+        "1.66992077182827892E+001",
+        "6.00289279449428204E+000",
+        "2.32961065095826508E-001",
+        "2.32961065095826508E-001",
+        "1.18700938453044742E+001"
+      ]
+    },
+    "MCH/MCHWB_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c50f609b65f8cb432e8aa0f15e035aa80e7e411e2421a0f1389a4cac5bd2b218",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "9.57738108782159117E+001",
+        "5.19252088340214073E+002",
+        "8.13526023259274638E+001",
+        "4.20027517904560682E+002"
+      ]
+    },
+    "MCH/MCHWB_LEPS_ModelSurface_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "3f59f00f96c62bc5a8420f5f9c2d45e622c2959a76dd4a289086e74ebe9177a2",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "9.57738109960390602E+001",
+        "-7.06367763095775911E-003",
+        "-7.06367763095775911E-003",
+        "5.19252088222390967E+002",
+        "8.13526023302667625E+001",
+        "-1.21227609962691282E-003",
+        "-1.21227609962691282E-003",
+        "4.20027517900221312E+002"
+      ]
+    },
+    "MCH/MCHWL_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c258771d88702e6188f1edc34820e679002fb74dbddf26234ce42ce526a457fa",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.51994166807003772E+000",
+        "1.66992970286677220E+001",
+        "6.00263555503201296E+000",
+        "1.18703510847667406E+001"
+      ]
+    },
+    "MCH/MCHWL_LEPS_ModelSurface_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "3bc2d91453a43c6b568a4ace0ba37ac84f445e85b22c499514fe23af824992b1",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.52003097845496438E+000",
+        "2.86322158469491002E-002",
+        "2.86322158469491002E-002",
+        "1.66992077182827892E+001",
+        "6.00289279449428204E+000",
+        "3.88502485895475397E-002",
+        "3.88502485895475397E-002",
+        "1.18700938453044742E+001"
+      ]
+    },
+    "MXH/MXHSB_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "4ba58e2bc6851af9d9040100e9c27d8999bb908eaf77fdd77a794caff90abc1d",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.51126368614368634E+000",
+        "1.67079750105940654E+001",
+        "5.99005185653984551E+000",
+        "1.18829347832589178E+001"
+      ]
+    },
+    "MXH/MXHSB_LEPS_ModelSurface_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "4792f35ada97fc34bea5e034b95dbab6c143b53a82e507c6ba7d46cabcf79563",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.52003097845496438E+000",
+        "2.83819292983087668E-001",
+        "2.83819292983087668E-001",
+        "1.66992077182827892E+001",
+        "6.00289279449428204E+000",
+        "2.74782194378062006E-001",
+        "2.74782194378062006E-001",
+        "1.18700938453044742E+001"
+      ]
+    },
+    "MXH/MXHSL_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "3273e4d2d6134ad8800ec1163f09d755322958ad06220c9253cba8d62090398e",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.51394526185150724E+000",
+        "1.67052934348862507E+001",
+        "5.99547016592890003E+000",
+        "1.18775164738698482E+001"
+      ]
+    },
+    "MXH/MXHSL_LEPS_ModelSurface_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "1e07ce2653dd0118eae7ca7cfab9166eaa6d0254546c4e19c4e8608089e3aab8",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.52003097845496438E+000",
+        "2.36429491050129059E-001",
+        "2.36429491050129059E-001",
+        "1.66992077182827892E+001",
+        "6.00289279449428204E+000",
+        "2.08818460710222698E-001",
+        "2.08818460710222698E-001",
+        "1.18700938453044742E+001"
+      ]
+    },
+    "MXH/MXHWL_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "5da7e5c144120da181fc671a98345cb5d133ad6f3bf84add59902b323f192057",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.51948293355172215E+000",
+        "1.66997557631860332E+001",
+        "6.00222398902413268E+000",
+        "1.18707626507746227E+001"
+      ]
+    },
+    "MXH/MXHWL_LEPS_ModelSurface_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "97ff7ac79fb7a6e71072db6f3c58f075b0b155799d40fb093e6e2f23f5a4a66c",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.52003097845496438E+000",
+        "7.09288473150387205E-002",
+        "7.09288473150387205E-002",
+        "1.66992077182827892E+001",
+        "6.00289279449428204E+000",
+        "6.26455382130668148E-002",
+        "6.26455382130668148E-002",
+        "1.18700938453044742E+001"
+      ]
+    },
+    "N4/N4_1A_PIP_2013": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "115cc2d98a2d95e1ff8baf7fef0fd60e53eec512c0557dc60acd5200a70ad062",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.94619823082437087E+001",
+        "1.63966385595459414E+001"
+      ]
+    },
+    "NH3/NH3_GEN_FFW1_2006": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "dbe640231d48204df403d1f11f0186042e4175ad21d68b3e5703458e46c342d9",
+      "natoms": 4,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.06733906237309881E+001",
+        "1.09706646246639785E+001",
+        "NaN",
+        "NaN"
+      ]
+    },
+    "NH3/NH3_GEN_FFW1_2006_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "fce9d87e1e5a107614df974ad3f5b075b95878b9ab86a31224f3e0de30fc8ed3",
+      "natoms": 4,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "1.09687529198931504E+001",
+        "-2.37622707394639365E-002",
+        "-2.37622707394639365E-002",
+        "1.06753023285018127E+001",
+        "NaN",
+        "NaN",
+        "NaN",
+        "NaN"
+      ]
+    },
+    "NH3/NH3_GEN_FFW2_2007": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "d62d19edf7f83e0a843f17bb879ae62ce1aea623b02066a694f46a13f4c55833",
+      "natoms": 4,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.06733906531548683E+001",
+        "1.09706646540942536E+001",
+        "NaN",
+        "NaN"
+      ]
+    },
+    "NH3/NH3_GEN_FFW2_2007_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "19e7583fbc47831ac9ab8df65852bd2e369c782da7ebafc22f1eac6977790d3a",
+      "natoms": 4,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "1.09687529493234663E+001",
+        "-2.37622707394635271E-002",
+        "-2.37622707394635271E-002",
+        "1.06753023579256521E+001",
+        "NaN",
+        "NaN",
+        "NaN",
+        "NaN"
+      ]
+    },
+    "NH3CN/NH3CN_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "c639ea260f524f0cf29f6dae50b8674a3542af0425925a9e0a3ad5f091a5bddb",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-1.93872776933587310E+000",
+        "-1.83220971796901844E+000"
+      ]
+    },
+    "NH3OH/NH3OH_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "63b8b941b0a8a2ad020a034b4ed0cea5abe4222b52ccbab0d3c02708ad9bc4d4",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.83826091847431794E+000",
+        "2.62839904619825901E+001"
+      ]
+    },
+    "NH4/NH4_VBMM_1997": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "8d0ff2b6c43871b7c20615395495133f922cf5e50b1a67e18bfbf360fb8288cd",
+      "natoms": 5,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-9.91604355559102579E+000",
+        "-6.80374882249813240E+000"
+      ]
+    },
+    "NH4/NH4_VBMM_2010": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "ced8364bb32017ba5511d91010d6c998c815b24647566b970d8977476d524bd3",
+      "natoms": 5,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "-4.13907854381628404E+000",
+        "-5.07828654462931972E+000"
+      ]
+    },
+    "NaFH/NaFH_LEPS_JHCTP_2001": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "100ca4a76455bf8ebe756dcc21e6122963bc5cd970b351f61b8e8af4323ac81c",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.13216963125819170E+000",
+        "1.00201058159613936E+001",
+        "7.00242998125940819E+000",
+        "9.39173053477168196E+000"
+      ]
+    },
+    "NaFH/NaFH_LEPS_JHCTP_2001_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "ff8ff9e0e4092413c7edd868605f74e341ac2153a9f093d90102e44aee8a8a7a",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "8.61389397782783917E+000",
+        "8.23047069652391827E-001",
+        "8.23047069652391827E-001",
+        "9.53838146939174969E+000",
+        "7.31265524994011962E+000",
+        "8.03107520101946082E-001",
+        "8.03107520101946082E-001",
+        "9.08150526609097142E+000"
+      ]
+    },
+    "NaFH/NaFH_LEPS_TTYPP1_1998": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "13edcaa9f54957ae7959e79f5de7c5ade565d59ad64cf8a7df69410f0bfda5f1",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "5.82257777451538772E+000",
+        "1.99044016295437594E+001",
+        "4.24752055714211085E+000",
+        "1.01099303685585369E+001"
+      ]
+    },
+    "NaFH/NaFH_LEPS_TTYPP1_1998_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "12f8ed14d3faf00737518b3960315e146668408fdd2f64501a9cacf3539d2911",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "1.98886714968156895E+001",
+        "4.70384439811935062E-001",
+        "4.70384439811935062E-001",
+        "5.83830790724345139E+000",
+        "1.00728213372721758E+001",
+        "4.64942221036444170E-001",
+        "4.64942221036444170E-001",
+        "4.28462958842847019E+000"
+      ]
+    },
+    "NaFH/NaFH_LEPS_TTYPP2_1998": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "1fe107731f6ad7948cad864c70a77b26896531349af1949661130618d9e51daa",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.22733364241938148E+000",
+        "1.01009417447332961E+001",
+        "7.07766484413793329E+000",
+        "9.42528488365485018E+000"
+      ]
+    },
+    "NaFH/NaFH_LEPS_TTYPP2_1998_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "651c649d9b7ebe3a8e91e96fda70f75064e5fdac2d2dcf0adc5e39a3210e04a3",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "8.71940915487424562E+000",
+        "8.24510980598796905E-001",
+        "8.24510980598796905E-001",
+        "9.60886623227842840E+000",
+        "7.39686369119876286E+000",
+        "8.04655022966820122E-001",
+        "8.04655022966820122E-001",
+        "9.10608603659402327E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_5F_1992": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "e6af20156c1322c1825946c01738e7da4bdfdb393dfc6c0127575cdf649b4632",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.95520662925378108E+000",
+        "9.83582535453197515E+000",
+        "6.58679993098112426E+000",
+        "8.92075096227376463E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_5F_1992_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "9c6ccc6d62e9fe3a78645a30bd6eeb6e13f07dce9723142515b4937b88a65888",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "9.80304089004814472E+000",
+        "3.05556412432881841E-001",
+        "3.05556412432881841E-001",
+        "6.98799109373761418E+000",
+        "8.84952152995676755E+000",
+        "4.01462794025100100E-001",
+        "4.01462794025100100E-001",
+        "6.65802936329812045E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_5G_1992": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "bcf5d1553015f75b7600adca0924ab7dc6226bf0bb5644ec858db0b93d46ceb6",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "6.91864806568803292E+000",
+        "9.83052882644056858E+000",
+        "6.54713954321269931E+000",
+        "8.91472934356090896E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_5G_1992_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "b98e2cb6a7355d868346b2a901441998705f9dead1dd233146285fd618d08f61",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "9.79810384118311894E+000",
+        "3.05559014054408440E-001",
+        "3.05559014054408440E-001",
+        "6.95107305094547900E+000",
+        "8.84457695074270056E+000",
+        "4.01460747132625695E-001",
+        "4.01460747132625695E-001",
+        "6.61729193603090504E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_6_2000": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "7eb2d0127a4a56194b0859ba554d878b37b3026c66f1b77b0cd770b1f490fcc0",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.24084054783190822E+000",
+        "8.95421097115071341E+000",
+        "6.44175412028876515E+000",
+        "7.40588683546042592E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_6_2000_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "2730fb0f66c9e6fe1a738148801fe9c6a50447080d9b9a364fe554bfd27c7a6a",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "8.45905582526687994E+000",
+        "3.28710233385567874E-001",
+        "3.28710233385567874E-001",
+        "8.73599569371574169E+000",
+        "6.52987740585156651E+000",
+        "2.77843173609014005E-001",
+        "2.77843173609014005E-001",
+        "7.31776354989762279E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_7LD_2000": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "fec1d58da912d5076706634b117cbe81c4e2186501cc1a17dc07bac652a495f9",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.42519362655087711E+000",
+        "8.77608941597958037E+000",
+        "6.03405075246221578E+000",
+        "7.42048682207887467E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_7LD_2000_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "deecada8866bc5914e16689fff5934d6d1dd10abb2afa0387b18455103a96b88",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.89915406759015060E+000",
+        "6.44695792204030727E-001",
+        "6.44695792204030727E-001",
+        "8.30212897494030244E+000",
+        "6.69905630576902578E+000",
+        "6.92643703263841615E-001",
+        "6.92643703263841615E-001",
+        "6.75548126877206823E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_7L_2000": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "e0cd7dd755869d4a67487e02c4be53c937f4c86150ce33717cbf2d6d688c532c",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.42519362655087711E+000",
+        "8.77608941597958037E+000",
+        "6.03405075246221578E+000",
+        "7.42048682207887467E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_7L_2000_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "98a8c0646ece18dd5c6b753dad71c9fbe64205551219d2080ebba76f5c5f6e82",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.89915406759015060E+000",
+        "6.44695792204030727E-001",
+        "6.44695792204030727E-001",
+        "8.30212897494030244E+000",
+        "6.69905630576902578E+000",
+        "6.92643703263841615E-001",
+        "6.92643703263841615E-001",
+        "6.75548126877206823E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_7SD_2000": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "28f426c6f283f5b90ffff6e9831eb81b6a0e79ceb200c5761aa5e22e3f435b44",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.42657216660250974E+000",
+        "8.77713191258470360E+000",
+        "6.03561153858689003E+000",
+        "7.42195313283643010E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_7SD_2000_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "648da635336386e6b3da530e461e1f17c38fdc31259498f3457efbdedfe56304",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.90092856565069024E+000",
+        "6.44695792204030727E-001",
+        "6.44695792204030727E-001",
+        "8.30277551353652576E+000",
+        "6.70175541736086888E+000",
+        "6.92643703263841615E-001",
+        "6.92643703263841615E-001",
+        "6.75580925406245125E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_7S_2000": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "8ed351afd5d45b3904e04447f0bac43a2f840f857479304164be734cd1b49490",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.42657216660250974E+000",
+        "8.77713191258470360E+000",
+        "6.03561153858689003E+000",
+        "7.42195313283643010E+000"
+      ]
+    },
+    "NaH2/NaH2_LEPS_7S_2000_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "3fa8aec48b484bd50744abc4195b8e40a0a3f0408ba7fe7eefee7fab6c51d8a4",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "7.90092856565069024E+000",
+        "6.44695792204030727E-001",
+        "6.44695792204030727E-001",
+        "8.30277551353652576E+000",
+        "6.70175541736086888E+000",
+        "6.92643703263841615E-001",
+        "6.92643703263841615E-001",
+        "6.75580925406245125E+000"
+      ]
+    },
+    "O2H/O2H_GEN": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "5182d54740e8d9e8a2c9c596a232c65df28ac1be1656b3c09ac2ef1ea91fc238",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.06947172724990436E+000",
+        "6.43032363536319629E+000"
+      ]
+    },
+    "O3/O3_1_1Ap": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "839c983562623332f83fc6acde1fefd7e13ff4e84b937bf0936b4e7fdeede8ba",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.36633127759115407E+001",
+        "1.45507662547341994E+001"
+      ]
+    },
+    "O3/O3_1_1App": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "275eb39af5fc50b162889eaccc89c1b94e2a2bce2077e704fc9a5808ff762bcb",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.64283579788702987E+001",
+        "1.41542096908540014E+001"
+      ]
+    },
+    "O3/O3_1_3Ap": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "82370c9664752bf5676cd1f6c1125e390ade8c45b5f8d6450fce2a29535b12c7",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.89354094937028918E+001",
+        "1.77211388968238381E+001"
+      ]
+    },
+    "O3/O3_1_3App": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "2b1339f0ecc872e48731abd5265fd32004edfcb40a4f67f471e269b0828195cd",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.53621806414502160E+001",
+        "1.33555560133041311E+001"
+      ]
+    },
+    "O3/O3_1_5Ap": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "92f775b926ea1cd42918153971284a75cbe3e18b2b091bf59583d8e0915e7c02",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.57424685845350290E+001",
+        "2.27808964721961722E+001"
+      ]
+    },
+    "O3/O3_1_5App": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "45d2c63873ad812472dc7b25a5da9ad1017e97c1d4b5258536df621364c220a1",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.50610353198535876E+001",
+        "2.30372918830450679E+001"
+      ]
+    },
+    "O3/O3_2_1Ap": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "79be0d5686837a669c30badf7a052b36e8b8b12373f7b8cd73dba4e6bcaa6a1c",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.88004520642259685E+001",
+        "1.45561915143004690E+001"
+      ]
+    },
+    "O3/O3_2_3Ap": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "eb692316291fb39b0dca14196368f2ef4c259a393835719aad9bebdf3f17d6b0",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.04017711394630972E+001",
+        "1.97328874790160036E+001"
+      ]
+    },
+    "O3/O3_2_5Ap": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "120d2c93f5fcbc0314f5eda1668e11f76c0cf1a7a226409d34ea295941438de7",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.71725796536720701E+001",
+        "2.38109466496767865E+001"
+      ]
+    },
+    "O4/O4_quintet": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f553b7de6c7e6fd5d0b3744e2b9700875634fc29ef9e73d0ff14bc418c7e04bc",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.21137538961634732E+001",
+        "2.57691015266434604E+001"
+      ]
+    },
+    "O4/O4_singlet": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "7c82b0bae62cf05a26e53546e9c2ca21206f8ce29603b1922d967c27504e47b5",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.12426966355720062E+001",
+        "1.81160530685884105E+001"
+      ]
+    },
+    "O4/O4_triplet_v2": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "dd194e92afe6e82e7e38622ef14af344aa5108ed63c79823d1ed0e32da022c4b",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.28978391292023638E+001",
+        "1.94392811064183846E+001"
+      ]
+    },
+    "OH2/OH2_Ap_GEN_M21986": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "912249e2d9d26cf144b31adfc97f58933cdfd1f4d6bbaa07fe19cdc4562eaf39",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.45286178101584906E-001",
+        "4.98568855787981768E-001"
+      ]
+    },
+    "OH2/OH2_App_GEN_M21986": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "6119db6d0b33683c8e5a1197d88060f8ae89af99235ac24de15d0cd9bf70606a",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.37195917734613215E-001",
+        "4.98568855787981768E-001"
+      ]
+    },
+    "OH2/OH2_App_GEN_M3n1988": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f180b6785cb7522b4462305fe48ddff19b6b0c660d2569f942185b4e78b1106d",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.44845013685467050E-001",
+        "4.98568855787981768E-001"
+      ]
+    },
+    "OH2/OH2_App_GEN_M3na1988": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "0947b6df5fc33d2b9e8b7281fbcd0f65690434174be0c37826fc109d0d98968d",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.37354360889538629E-001",
+        "4.98568866631518171E-001"
+      ]
+    },
+    "OH2/OH2_GEN_DIM1981": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "2665edefe4c39966e1e211741ea479a693d3dc4c5c67c413105d3f4eeb79f5c0",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.40601306292555694E-001",
+        "6.26212608348599931E-001"
+      ]
+    },
+    "OH2/OH2_GEN_POL1980": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "9c271c93d8b36b3230616af62d7fc334c9a0f3fa7db0564bd6c5f676d457c225",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.11936734817824379E-001",
+        "5.04667349851645075E-001"
+      ]
+    },
+    "OH2/OH2_GEN_SL1979": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "3ed81226b5e0bf4711616402cfd876f934da97a37e8df6388c23e4349c06a924",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "8.49120225814132823E-001",
+        "6.15629867269210207E-001"
+      ]
+    },
+    "OH2/OH2_LEPS_JW1977": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "f1727f914029d4d60b84c265a19d16618673f6ac8c27422cd9a7ec030bcd0811",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.37492935055234944E-001",
+        "5.32716084688336200E-001"
+      ]
+    },
+    "OH2/OH2_LEPS_JWS1985": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "cbec0cfc066394167afa27820e4cdc25c4105a49b7460a3821f62d5c308ccd22",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "7.47476042551004971E-001",
+        "5.36545607680984582E-001"
+      ]
+    },
+    "OH3/OH3_LEPS_SE_1986": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "299a2666350d469dec25b2e4f3afab0fcbf3a939420ecc171d0e0f0e71677d3f",
+      "natoms": 4,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.09448765132430292E+000",
+        "2.29794721729558482E+000"
+      ]
+    },
+    "SiH4Cl/SiH4Cl_VBMM": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "180c77839a423dbc65593c92a239887d7d4d2d87917346d6c617f0b6f2753930",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "2.62943231613286876E+001",
+        "7.58142372008196919E+000"
+      ]
+    },
+    "SiH5/SiH5_LEP_1998v1": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "bd4c93aa34db5681593e09dc884fe60f9006ca74c73cb3bd842304ced52ea2ef",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.61109993303086840E+000",
+        "-9.21929135163276792E-001"
+      ]
+    },
+    "SiH5/SiH5_LEP_1998v2": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "9f45efe5367e80f64304f3b2ff357875424d495f171ff5c79601754b9e1d35c7",
+      "natoms": 6,
+      "nstates": 1,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "3.61570373296903069E+000",
+        "-8.88748351304846418E-001"
+      ]
+    },
+    "SiOH/SiOH_GEN_1988": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "78b4b7bf53657e9e1ee4b20912500ae53b78d58f0a940ca1cefd3e98bbd1a467",
+      "natoms": 3,
+      "nstates": 1,
+      "signature": "xyz,nsi,no,nh,natoms,igrad,p,g,d)",
+      "values": [
+        "7.25811792402407292E+001",
+        "6.20902273473061257E+001"
+      ]
+    },
+    "YRH/YRH_LEPS_ModelSurface": {
+      "entry_point": "pes",
+      "legacy_source_sha256": "9eea77fb4cee74bb62ab5eab53c7d7e6a528de84ced1003b6750ec374390fcb2",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,p,g,d)",
+      "values": [
+        "1.21995758440629753E+000",
+        "1.69229984754059704E+000",
+        "9.61629616625434558E-001",
+        "1.50580864228246591E+000"
+      ]
+    },
+    "YRH/YRH_LEPS_ModelSurface_DPEM": {
+      "entry_point": "dpem",
+      "legacy_source_sha256": "26a0d05ce7dea1e9b0f7d199f297e35a9698b3e8eaf372eb2a286b6598fd800c",
+      "natoms": 3,
+      "nstates": 2,
+      "signature": "x,igrad,u,ug)",
+      "values": [
+        "1.26008156239450986E+000",
+        "1.31690231070131392E-001",
+        "1.31690231070131392E-001",
+        "1.65217586955238427E+000",
+        "1.02433089402714161E+000",
+        "1.73750596707195143E-001",
+        "1.73750596707195143E-001",
+        "1.44310736488075908E+000"
+      ]
+    }
+  }
+}

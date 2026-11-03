@@ -1,4 +1,4 @@
-.PHONY: all audit build check check-binaries check-fortran check-style clean test
+.PHONY: all audit build check check-binaries check-fortran check-style clean test test-surfaces
 
 PYTHON ?= python3
 BUILD_FLAGS ?=
@@ -25,6 +25,9 @@ check: audit test check-fortran check-style
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v
+
+test-surfaces:
+	$(PYTHON) -m unittest tests.test_all_surfaces -v
 
 clean:
 	$(PYTHON) scripts/clean_generated.py
