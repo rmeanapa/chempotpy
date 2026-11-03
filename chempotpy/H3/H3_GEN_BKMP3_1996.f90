@@ -39,18 +39,16 @@ end subroutine
 !> @brief Evaluate PREPOT.
 subroutine prepot
     implicit none
-    double precision            :: eee, eshift, evp, rvp, vp, xxx
-    integer                     :: ivp, ivp1, nsurf, nt
-    integer, parameter          :: n2     = 5000
-    integer, parameter          :: nmax   = 800
-    integer, parameter          :: mmax   = 5000
-    double precision, parameter :: htkcal = 627.5096d0
-    save
-    dimension rvp(nt,3), evp(nt), xxx(3), vp(3)
-    return
+end subroutine prepot
 
-    entry pot (rvp, evp, nt, nsurf)
-
+!> @brief Evaluate a batch of BKMP3 geometries.
+subroutine pot( rvp, evp, nt, nsurf )
+    implicit none
+    integer, intent(in)           :: nt, nsurf
+    double precision, intent(in)  :: rvp(nt,3)
+    double precision, intent(out) :: evp(nt)
+    double precision              :: eee, eshift, vp(3), xxx(3)
+    integer                       :: ivp, ivp1
     eshift = -0.174495770894d0
     do 101 ivp = 1, nt
         do 102 ivp1 = 1, 3
@@ -59,7 +57,7 @@ subroutine prepot
         call bkmp2(xxx, eee, vp, -1)
         evp(ivp) = eee-eshift
     101 continue
-end
+end subroutine pot
 
 !> @brief Evaluate surfid.
 subroutine surfid( h3id )

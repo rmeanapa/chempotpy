@@ -2307,7 +2307,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "1082051e746934bccc1187bdd955ad237624ad081de55778363eefcf2f649506",
+      "source_sha256": "7c3561c55d79c7cd30fe0ea0b002d94dac7eb9c8138b1c4d1d894ff2f9bcc489",
       "values": [
         "5.62402040753105403E-001",
         "5.36378121667137608E-001"
