@@ -126,12 +126,18 @@ Modernized PES sources follow the same compact conventions used by SIMPLE:
 - Variable declarations use the `::` separator and standard kind/length syntax;
   constants use typed `parameter` declarations rather than separate
   `PARAMETER(...)` statements.
+- Procedure specifications declare named constants needed by shapes first,
+  followed by dummy arguments carrying `intent(...)`, followed by local
+  variables. Missing legacy intents are added only after the argument's actual
+  read/write behavior is verified; the formatter does not guess direction.
 - Modules begin with `private` and explicitly publish only their supported API.
 - Imports use `use ..., only: ...`; numerical kernels do not perform application
   orchestration or own hard-coded output units.
 - Fortran code is lowercase while character literals and comments retain their
   original capitalization. Consecutive declarations, constants, and simple
   assignments are aligned when doing so improves readability.
+- Blank lines are used as single visual separators; consecutive empty lines are
+  removed by the formatter.
 - Files are opened with `newunit=` and a local unit variable. Existing numbered
   diagnostic writes remain compatibility behavior until a non-printing status
   and logging interface replaces them deliberately.

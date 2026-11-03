@@ -4,17 +4,17 @@ subroutine pes( x, igrad, path, p, g, d )
 
     implicit none
 
-    integer :: istate
     ! number of electronic state
-    integer, parameter              :: nstates = 1
-    integer, parameter              :: natoms  = 6
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 6
+
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
+    double precision, intent(in)    :: x(natoms,3)
+    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: d(nstates,nstates,natoms,3)
 
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
+    integer          :: istate
     double precision :: tx(18), dx(18), v
     integer          :: iatom, idir, i, j
     logical, save    :: first_time_data=.true.
@@ -55,8 +55,6 @@ subroutine pes( x, igrad, path, p, g, d )
     endif
 
 end subroutine pes
-
-
 
 ! System:          CH4F
 ! Functional form:
@@ -101,16 +99,17 @@ subroutine surf( v, coord, dx, n3tm, path )
     !                       X(16) - X(18) : X, Y, Z for F
     !
     implicit none
-    integer :: file_unit_7
+    character(len=1024), intent(in) :: path
 
+    integer          :: file_unit_7
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, aa5, acb, ahh, ak, aphi, atheta, &
         & b1ch, b1s, b2s, b3s, bk, bphi, btheta, c1ch, comlin, coord, cphi, ctheta, d1cb, d1ch, d1hh, &
         & d3cb, d3ch, d3hh, dfdc, dfdelta, dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, dtheta0, dx, &
         & en, f1, fact1, fact2, fch3, fdelta, fk0, fkinf, hch3, hdelta, pdot, q, r0cb, r0ch, r0hh, &
         & rbh, rcb, rch, rphi, s1, s2, s3, sphi, stheta, tbh, tcb, tch, theta0, v, vip, vop, vstr
-    integer                         :: i, icount, ind, n, n3tm, nc, nh, nhb, nnb, nnc, nnh
-    character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
+    integer             :: i, icount, ind, n, n3tm, nc, nh, nhb, nnb, nnc, nnh
+    character(len=1024) :: file_path1
+
     !
     dimension coord(n3tm),dx(n3tm)
 

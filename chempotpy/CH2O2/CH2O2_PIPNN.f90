@@ -1,4 +1,3 @@
-
 !******************************************************************************
 !******************************************************************************
 !-->  program to get potential energy for a given geometry after NN fitting
@@ -9,8 +8,6 @@ module nnparam1
     public :: alpha, bias3a1, bohr, ifunc31, natom, nbasis, nbond, ndata, nhid3, ninput1, nlayer31, &
         & nodemax31, nodes3a1, noutput1, nscale1, nwe3, para2, pavg3a1, pdel3a1, pi, radian, vpesmin, &
         & weight3a1
-
-
 
     double precision,parameter :: alpha = 1.8d0,pi=3.141592653589793238d0,&
         &radian=pi/180.0d0,bohr=0.5291772d0
@@ -34,7 +31,6 @@ subroutine pes( x, igrad, path, p, g, d )
         & radian, vpesmin, weight3a1
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 5
@@ -43,7 +39,6 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
 
     double precision :: v, tx(3,natoms)
     integer          :: iatom, idir, j, istate
@@ -76,14 +71,12 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
 !> @brief Evaluate pes_init.
 subroutine pes_init( path )
     use nnparam1, only: alpha, bias3a1, bohr, ifunc31, natom, nbasis, nbond, ndata, nhid3, ninput1, &
         & nlayer31, nodemax31, nodes3a1, noutput1, nscale1, nwe3, para2, pavg3a1, pdel3a1, pi, &
         & radian, vpesmin, weight3a1
     implicit none
-
 
     character(len=1024), intent(in) :: path
     integer                         :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
@@ -147,7 +140,6 @@ subroutine pot3a1( x, vpot3 ) ! fhcl, a
         & radian, vpesmin, weight3a1
     implicit none
 
-
     integer                      :: i,ndriv,inode1,inode2,ilay1,ilay2
     integer                      :: j,k,neu1,neu2
     double precision             :: x(ninput1),y(nodemax31,nlayer31),vpot3
@@ -195,7 +187,6 @@ end subroutine pot3a1
 function tranfun1( x, ifunc )
     implicit none
 
-
     integer          :: ifunc
     double precision :: tranfun1,x
     !    ifunc=1, transfer function is hyperbolic tangent function, 'tansig'
@@ -214,7 +205,6 @@ end function tranfun1
 function logsig1( x )
     implicit none
 
-
     double precision :: x,logsig1
     logsig1 = 1.d0/(1.d0+dexp(-x))
 end function logsig1
@@ -223,7 +213,6 @@ end function logsig1
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v )
     implicit none
-
 
     double precision,parameter :: alpha = 1.8d0,para=0.5291772d0
     integer,parameter          :: natom = 5
@@ -265,7 +254,6 @@ end subroutine evvdvdx
 subroutine bemsav1( x, p )
     implicit none
 
-
     double precision :: x(1:10)
     double precision :: p(0:101)
     double precision :: m(0:38)
@@ -278,7 +266,6 @@ end subroutine bemsav1
 !> @brief Evaluate evmono1.
 subroutine evmono1( x, m )
     implicit none
-
 
     double precision :: x(1:10)
     double precision :: m(0:38)
@@ -328,7 +315,6 @@ end subroutine evmono1
 !> @brief Evaluate evpoly1.
 subroutine evpoly1( m, p )
     implicit none
-
 
     double precision :: x(1:10)
     double precision :: p(0:101)
@@ -438,4 +424,3 @@ subroutine evpoly1( m, p )
     p(101) = p(5)*p(27)
 
 end subroutine evpoly1
-

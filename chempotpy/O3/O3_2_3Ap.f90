@@ -100,7 +100,6 @@ subroutine o3pes( x, v, dvdx, igrad )
 
     implicit none
 
-
     integer          :: i,igrad,j,nob,k
     double precision :: v
     double precision :: dvdx(12),x(12)
@@ -152,7 +151,6 @@ subroutine coord_convt( x )
     r(1) = sqrt((x(4)-x(1))**2 + (x(5)-x(2))**2 + (x(6)-x(3))**2)
     r(2) = sqrt((x(7)-x(1))**2 + (x(8)-x(2))**2 + (x(9)-x(3))**2)
     r(3) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
-
 
 end subroutine coord_convt
 !> @brief Evaluate EvV for the O3_2_3Ap potential.
@@ -216,7 +214,6 @@ subroutine evv( v )
 
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
-
 
 end subroutine evv
 !> @brief Evaluate EvdVdX for the O3_2_3Ap potential.
@@ -315,7 +312,6 @@ subroutine evmono
     rm(6) = rm(2)*rm(3)
     rm(7) = rm(1)*rm(6)
 
-
 end subroutine evmono
 !> @brief Evaluate EvPoly for the O3_2_3Ap potential.
 subroutine evpoly
@@ -399,7 +395,6 @@ subroutine evpoly
     p(65) = p( 2)*p(40) - p(60)
     p(66) = p( 1)*p(52) - p(65)
 
-
 end subroutine evpoly
 !> @brief Evaluate evbas for the O3_2_3Ap potential.
 subroutine evbas
@@ -455,7 +450,6 @@ subroutine evbas
     do i=44,56
         b(i) = b1(i+10)
     enddo
-
 
 end subroutine evbas
 !> @brief Evaluate ev2gm2 for the O3_2_3Ap potential.
@@ -650,7 +644,6 @@ subroutine evdrdx( x )
     drdx(3,9) = -drdx(3,6)
     ! Finish the calculation of non-zero dRdX
 
-
 end subroutine evdrdx
 !> @brief Evaluate EvdMsdR for the O3_2_3Ap potential.
 subroutine evdmsdr
@@ -689,7 +682,6 @@ subroutine evdmsdr
         dmsdr(i,i) = (-2.0d0*(r(i)-rb)/ab-1/a)* exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
     enddo
 
-
 end subroutine evdmsdr
 !> @brief Evaluate EvdMdR for the O3_2_3Ap potential.
 subroutine evdmdr
@@ -719,7 +711,6 @@ subroutine evdmdr
         dmdr(i,6) = dmdr(i,2)*rm(3) + rm(2)*dmdr(i,3)
         dmdr(i,7) = dmdr(i,1)*rm(6) + rm(1)*dmdr(i,6)
     enddo
-
 
 end subroutine evdmdr
 !> @brief Evaluate EvdPdr for the O3_2_3Ap potential.
@@ -810,7 +801,6 @@ subroutine evdpdr
         dpdr(i,66) = dpdr(i, 1)*p(52) + p( 1)*dpdr(i,52) - dpdr(i,65)
     enddo
 
-
 end subroutine evdpdr
 !> @brief Evaluate evdbdr for the O3_2_3Ap potential.
 subroutine evdbdr
@@ -874,7 +864,6 @@ subroutine evdbdr
         enddo
 
     enddo
-
 
 end subroutine evdbdr
 

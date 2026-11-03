@@ -4,16 +4,17 @@ subroutine dpem( x, igrad, u, ug )
 
     implicit none
 
-    double precision :: d, g
-    integer          :: iatom, idir, nder
     ! number of electronic state
-    integer, parameter            :: nstates = 2
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 2
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
 
+    double precision :: d, g
+    integer          :: iatom, idir, nder
     double precision :: nt, r(1,3), r2(3), v(1)
     double precision :: p(nstates)
     double precision :: u11(1), u12(1), u22(1)
@@ -23,9 +24,8 @@ subroutine dpem( x, igrad, u, ug )
     double precision :: t(nstates,nstates)
     double precision :: tmpmat(nstates,nstates)
     double precision :: tx(9), drdx(3,9)
-
-    logical, save :: first_time_data=.true.
-    integer       :: i, j, k, l
+    logical, save    :: first_time_data=.true.
+    integer          :: i, j, k, l
 
     !initialize
     u = 0.d0
@@ -81,7 +81,6 @@ subroutine dpem( x, igrad, u, ug )
         enddo
     enddo
 
-
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the MXHSB_LEPS_ModelSurface_DPEM potential.
@@ -89,9 +88,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -210,7 +210,6 @@ subroutine prepot
     call g_prepot12(g_p_)
     call g_prepot22(g_p_)
 
-
 end subroutine prepot
 !
 ! ********************************************************************
@@ -254,7 +253,6 @@ subroutine pot( r, e, de, nt, nsurf )
         write(*,*)'Error!'
         stop
     endif
-
 
 end subroutine pot
 ! ********************************************************************

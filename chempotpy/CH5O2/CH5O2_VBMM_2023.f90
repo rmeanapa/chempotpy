@@ -4,19 +4,20 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    double precision :: anuzero, cart, descart, dgscart, dijcart, pengyes, pengygs, pengyij, v
-    integer          :: iatom, idir, istate, nasurf, nder, nflag, nulbl
     ! number of electronic state
-    integer, parameter            :: nstates = 1
-    integer, parameter            :: natoms  = 8
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 8
+    integer, parameter :: natom   = 25
+    integer, parameter :: isurf   = 5
+    integer, parameter :: jsurf   = int(isurf*(isurf+1)/2)
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
-    integer, parameter :: natom = 25
-    integer, parameter :: isurf = 5
-    integer, parameter :: jsurf = int(isurf*(isurf+1)/2)
+    double precision :: anuzero, cart, descart, dgscart, dijcart, pengyes, pengygs, pengyij, v
+    integer          :: iatom, idir, istate, nasurf, nder, nflag, nulbl
 
     common/usrocm/ pengygs,pengyes(isurf), &
         & pengyij(jsurf), &
@@ -47,7 +48,6 @@ subroutine pes( x, igrad, p, g, d )
     endif
 
     call pot
-
 
     if (igrad==0) then
         do istate=1,nstates
@@ -3227,7 +3227,6 @@ subroutine potinfo
     endif
 end subroutine potinfo
 
-
 !> @brief Evaluate ANCVRT for the CH5O2_VBMM_2023 potential.
 subroutine ancvrt
     implicit none
@@ -3581,7 +3580,6 @@ subroutine carttor
         stop
     end if
 end subroutine carttor
-
 
 !> @brief Evaluate EUNITZERO for the CH5O2_VBMM_2023 potential.
 subroutine eunitzero

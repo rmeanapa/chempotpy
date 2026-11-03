@@ -4,16 +4,17 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    double precision :: v
-    integer          :: istate
     ! number of electronic state
-    integer, parameter            :: nstates = 1
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
+    double precision :: v
+    integer          :: istate
     double precision :: r(1,3),e(1)
     logical, save    :: first_time_data=.true.
 
@@ -26,7 +27,6 @@ subroutine pes( x, igrad, p, g, d )
     r(1,1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
     r(1,2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
     r(1,3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
-
 
     !if(first_time_data) then
     call prepot
@@ -151,7 +151,6 @@ subroutine prepot
 
     30 continue
 
-
 end subroutine prepot
 
 !> @brief Evaluate POTINFO for the ClH2_LEPS_ALTG2_1996 potential.
@@ -269,7 +268,6 @@ subroutine potinfo
             '*-1/ANGSTROM'',//)')
     endif
 end subroutine potinfo
-
 
 !> @brief Evaluate ANCVRT for the ClH2_LEPS_ALTG2_1996 potential.
 subroutine ancvrt
@@ -624,7 +622,6 @@ subroutine carttor
         stop
     end if
 end subroutine carttor
-
 
 !> @brief Evaluate EUNITZERO for the ClH2_LEPS_ALTG2_1996 potential.
 subroutine eunitzero

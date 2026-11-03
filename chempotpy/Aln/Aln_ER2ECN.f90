@@ -7,8 +7,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     use chempotpy_kinds, only: real64
     implicit none
 
-
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -65,7 +63,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     implicit none
 
-
     double precision :: a1, a1b, a2, a2b, a3, a3b, abscz1, abscz2, au2, au2b, &
         & bu2, bu2b, co, cob, cz1, cz2, de, deb, du2, dx, dy, dz, ec1, ee, eeb, es1, fu2, g1, &
         & g1e, g2, gcorr, gu2, gzero, poly, polyb, r, re, reb, rho, rhob, rij, rr, term, v, x, y, &
@@ -96,7 +93,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     du2   = 2.21812408402540306
     gu2   = 0.853639472398632138
     gzero = 4.62188568637029817
-
 
     do 3 i=1,natom
         r(i,i)   = 0.d0
@@ -153,7 +149,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
         31 continue
     30 continue
 
-
     ! potential, includes cutoff
     v = 0.d0
     do 1 i=1,natom
@@ -174,6 +169,5 @@ subroutine pot( x, y, z, v, natom, maxatom )
             if (rr.le.bu2b) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
             v = v-de*ee*poly*co -deb*eeb*polyb*cob*fu2(i,j)
     1 continue
-
 
 end subroutine pot

@@ -4,21 +4,22 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    double precision :: anuzero, cart, deesdr, degsdr, deijdr, descart, dgscart, dijcart, engyes, engygs, &
-        & engyij, pengyes, pengygs, pengyij, r
-    integer :: iatom, idir, nasurf, nder, nflag, nulbl
     ! number of electronic state
-    integer, parameter            :: nstates = 2
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 2
+    integer, parameter :: natoms  = 3
+    integer, parameter :: n3atom  = 75
+    integer, parameter :: natom   = 25
+    integer, parameter :: isurf   = 5
+    integer, parameter :: jsurf   = int(isurf*(isurf+1)/2)
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
-    integer, parameter :: n3atom = 75
-    integer, parameter :: natom  = 25
-    integer, parameter :: isurf  = 5
-    integer, parameter :: jsurf  = int(isurf*(isurf+1)/2)
+    double precision :: anuzero, cart, deesdr, degsdr, deijdr, descart, dgscart, dijcart, engyes, engygs, &
+        & engyij, pengyes, pengygs, pengyij, r
+    integer :: iatom, idir, nasurf, nder, nflag, nulbl
 
     common /pt1cm/ r(n3atom),engygs,degsdr(n3atom)
     common /pt4cm/ engyes(isurf),deesdr(75,isurf)
@@ -94,8 +95,6 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     allocate( work_d(lwork_d) )
     call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
 end subroutine diagonalize
-
-
 
 !> @brief Evaluate prepot for the BrH2_LEPS_LTBZSO_1995 potential.
 subroutine prepot
@@ -949,7 +948,6 @@ subroutine potinfo
     endif
 end subroutine potinfo
 
-
 !> @brief Evaluate ANCVRT for the BrH2_LEPS_LTBZSO_1995 potential.
 subroutine ancvrt
     implicit none
@@ -1303,7 +1301,6 @@ subroutine carttor
         stop
     end if
 end subroutine carttor
-
 
 !> @brief Evaluate EUNITZERO for the BrH2_LEPS_LTBZSO_1995 potential.
 subroutine eunitzero

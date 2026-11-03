@@ -24,7 +24,6 @@ subroutine pes( x, igrad, p, gradient_out, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 6
@@ -33,7 +32,6 @@ subroutine pes( x, igrad, p, gradient_out, d )
     double precision, intent(out) :: p(nstates)
     double precision, intent(out) :: gradient_out(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
 
     real             :: tx(natoms,3)
     double precision :: v
@@ -59,24 +57,22 @@ subroutine pes( x, igrad, p, gradient_out, d )
         write (*,*) 'Only energy is available'
     endif
 
-
 end subroutine pes
-
-
 
 !> @brief Evaluate mycalcpot for the CH5p_PIP potential.
 subroutine mycalcpot( x, nwalk, v )
     implicit none
 
-
-    double precision   :: emin, r
-    integer            :: i
     integer, parameter :: natom = 6
     integer, parameter :: ndim  = 3*natom
+
     !dimension coord(ndim,nwalk)
     integer, intent(in)                                    :: nwalk
     double precision, dimension(nwalk,natom,3), intent(in) :: x
     double precision, dimension (nwalk), intent(out)       :: v
+
+    double precision :: emin, r
+    integer          :: i
     emin = -40.65276470207075d0 + 2.9123825129317993d-007 !global surf
     do i = 1,nwalk
         call getpot(x(i,:,:),r,v(i))
@@ -90,7 +86,6 @@ end subroutine mycalcpot
 subroutine getpot( x, r, epot )
     !
     implicit none
-
 
     !
     integer, parameter :: natoms = 6
@@ -148,7 +143,6 @@ end subroutine getpot
 double precision function sw( a, b, x )
     implicit none
 
-
     double precision :: a, b, x
     sw = 0.5d0*a*x**2 + (10.d0 + b/2.d0 - 3.d0*a/2.d0)*x**3 + (3.d0*a/2.d0 - b - 15.d0)*x**4 + (6.d0 + b/2.d0 - a/ &
         & 2.d0)* x**5
@@ -164,8 +158,6 @@ end function sw
 subroutine getlr( r, rh2, theta, elr )
 
     implicit none
-
-
 
     double precision :: r, rh2, theta
     double precision :: alpha, alpha0, alpha90
@@ -191,7 +183,6 @@ subroutine geth2pot( xyz1, v )
     !...  Based on pes6n4
     !...
     implicit none
-
 
     integer, parameter :: natoms  = 6
     integer, parameter :: natoms1 = 2
@@ -247,7 +238,6 @@ end subroutine geth2pot
 subroutine getfit( xn, f0 )
     !
     implicit none
-
 
     !
     !
@@ -1493,8 +1483,6 @@ subroutine getd0 ( xn, dc0, dc1, dw0, dw1, d0, r0 )
 
     implicit none
 
-
-
     double precision, dimension(0:2,0:5) :: xn
     double precision :: dc0, dc1, dw0, dw1
     double precision, dimension(0:5,0:5) :: d0, r0
@@ -1537,8 +1525,6 @@ end subroutine getd0
 subroutine getvec ( m, d, vec )
 
     implicit none
-
-
 
     integer :: m
 
@@ -1990,8 +1976,6 @@ subroutine getrvec ( m, r, vec )
 
     implicit none
 
-
-
     integer :: m
 
     double precision, dimension(0:5,0:5) :: r, r1
@@ -2058,7 +2042,6 @@ subroutine getch3pot( xyz1, v )
     !...
     implicit none
 
-
     integer, parameter :: natoms  = 6
     integer, parameter :: natoms1 = 4
     integer            :: i, j
@@ -2118,8 +2101,6 @@ subroutine cspline( x, y0, y90, yq )
     integer :: file_unit_70
     integer :: file_unit_71
 
-
-
     integer, parameter               :: np = 21, np2 = 257
     integer                          :: i, nfunc
     double precision                 :: x, y0, yp01, yp0n, y90, yp901, yp90n
@@ -2171,7 +2152,6 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
 
     implicit none
 
-
     integer            :: n
     integer, parameter :: nmax = 500
     integer            :: i, k
@@ -2214,7 +2194,6 @@ end subroutine spline
 !> @brief Evaluate splint for the CH5p_PIP potential.
 subroutine splint( xa, ya, y2a, n, x, y )
     implicit none
-
 
     integer                        :: n
     double precision               :: x, y
@@ -2261,7 +2240,6 @@ end subroutine splint
 subroutine calcr( x, xch3, xh2a, dist, h2dist, theta )
 
     implicit none
-
 
     integer            :: i, j, npp1, npp2, jr
     integer, parameter :: natoms = 6
@@ -2332,7 +2310,6 @@ subroutine calcr( x, xch3, xh2a, dist, h2dist, theta )
         end if
     end do
 
-
     do i = 1, 3
         do j = 1, 4
             xch3(j,i) = xch3t(i,j)
@@ -2358,8 +2335,6 @@ subroutine calcdist( x1, x2, dist )
     !....
     implicit none
 
-
-
     double precision, dimension(3) :: x1, x2
     double precision               :: dist
 
@@ -2372,8 +2347,6 @@ subroutine calcangle( a, b, c, theta )
     !.... a, b, c are the length of sides of triangle
 
     implicit none
-
-
 
     double precision :: a, b, c, theta, pi, d
 

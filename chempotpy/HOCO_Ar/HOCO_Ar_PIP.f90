@@ -3,8 +3,6 @@ module bemsa
     private
     public :: bemsav, coeff, emsav, evmono, evpoly
 
-
-
     double precision :: coeff(1376)
 
     contains
@@ -1724,7 +1722,6 @@ subroutine pes( x, igrad, path, p, gradient_out, d )
     use bemsa, only: bemsav, coeff, emsav, evmono, evpoly
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 5
@@ -1756,21 +1753,19 @@ subroutine pes( x, igrad, path, p, gradient_out, d )
         write (*,*) 'Only energy is available'
     endif
 
-
 endsubroutine
-
 
 !> @brief Evaluate prepot.
 subroutine prepot ( path )
     use bemsa, only: bemsav, coeff, emsav, evmono, evpoly
     implicit none
-    integer :: file_unit_10
-
+    integer, parameter :: dp = kind(0.d0)                   ! double precision
 
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
-    integer                         :: i
-    integer, parameter              :: dp = kind(0.d0)                   ! double precision
+
+    integer             :: file_unit_10
+    character(len=1024) :: file_path1
+    integer             :: i
 
     file_path1 = trim(path)//"/HOCO_Ar/coeff_HOCO-Ar_under1.5_12432_C.dat"
     open(newunit=file_unit_10,file=file_path1)
@@ -1784,7 +1779,6 @@ endsubroutine prepot
 subroutine pot( xyz, v )
     use bemsa, only: bemsav, coeff, emsav, evmono, evpoly
     implicit none
-
 
     integer, parameter              :: dp = kind(0.d0)
     double precision, intent(in)    :: xyz(5,3)
@@ -1828,6 +1822,5 @@ subroutine pot( xyz, v )
     x(10) = exp(-x(10)/a2)
 
     v = emsav(x,coeff)
-
 
 end  subroutine

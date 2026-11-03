@@ -5,8 +5,6 @@ module pes_shell
     public :: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, g, &
         & pes_init
 
-
-
     double precision :: coeff(1:8040) ! change to number of coefficients
     ! (size of c in bemsa.f90)
     save coeff
@@ -27615,7 +27613,6 @@ subroutine pes( x, igrad, path, potential, gradient_out, dvec )
         & g, pes_init
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 12
@@ -27625,7 +27622,6 @@ subroutine pes( x, igrad, path, potential, gradient_out, dvec )
     double precision, intent(out)   :: potential(nstates)
     double precision, intent(out)   :: gradient_out(nstates,natoms,3)
     double precision, intent(out)   :: dvec(nstates,nstates,natoms,3)
-
 
     double precision :: tx(3,natoms)
     double precision :: energy
@@ -27641,7 +27637,6 @@ subroutine pes( x, igrad, path, potential, gradient_out, dvec )
             tx(idir, iatom) = x(iatom, idir)/0.529177211
         enddo
     enddo
-
 
     ! zero of energy: 247.471007349006 a.u.
     ! is taken from coeff.dat, use the biase as zero of energy
@@ -27670,6 +27665,4 @@ subroutine pes( x, igrad, path, potential, gradient_out, dvec )
         write (*,*) 'Only energy and gradient are available'
     endif
 
-
 endsubroutine
-

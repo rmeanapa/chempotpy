@@ -7,8 +7,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     use chempotpy_kinds, only: real64
     implicit none
 
-
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -67,7 +65,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms
 
     implicit none
-
 
     double precision :: a1, a1b, a2, a2b, a3, a3b, abscz1, abscz2, ac, au2, au23, au2b, bu2, bu2b, co, cob, cz1, cz2, de, &
         & deb, du2, dx, dy, dz, ec1, ee, eeb, es1, fcn, fs, g1, g1e, g2, gcorr, gu2, gzero, poly, polyb, r, re, reb, rho, &
@@ -150,7 +147,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
         fs(i,i) = 1.d0                           ! shouldn't get used anywhe
     510 continue
 
-
     ! CALCULATE CN FUNCTION
     !     first calculate g_alpha
     g1e = dexp(g1)
@@ -214,6 +210,5 @@ subroutine pot( x, y, z, v, natom, maxatom )
             tmpb = deb*eeb*polyb*cob
             v    = v-tmp+tmpb*(fs(i,j)-fcn(i,j))
     1 continue
-
 
 end subroutine pot

@@ -3,7 +3,6 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 4
@@ -34,11 +33,9 @@ subroutine pes( x, igrad, p, g, d )
 
 endsubroutine
 
-
 !> @brief Evaluate prepot.
 subroutine prepot
     implicit none
-
 
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp)           :: xyz(4,3)
@@ -596,7 +593,6 @@ end subroutine
 subroutine potder( xyz, dxyz )
     implicit none
 
-
     integer, parameter    :: dp = kind(0.d0)                   ! double precision
     real(dp), intent(in)  :: xyz(4,3)
     real(dp), intent(out) :: dxyz(4,3)
@@ -620,7 +616,6 @@ end subroutine
 double precision function emsav( x, c ) result(v)
     implicit none
 
-
     integer, parameter :: wp = kind(1.0d0)
     real(wp),dimension(1:6)::x
     real(wp),dimension(0:501)::c
@@ -637,7 +632,6 @@ end function emsav
 subroutine bemsav( x, p )
     implicit none
 
-
     integer, parameter :: wp = kind(1.0d0)
     real(wp),dimension(1:6),intent(in)::x
     real(wp),dimension(0:501),intent(out)::p
@@ -651,7 +645,6 @@ end subroutine bemsav
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     integer, parameter :: wp = kind(1.0d0)
     real(wp),dimension(1:6),intent(in)::x
@@ -674,7 +667,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     integer, parameter :: wp = kind(1.0d0)
     real(wp),dimension(0:10),intent(in)::m

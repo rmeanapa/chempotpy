@@ -3,8 +3,6 @@ module zmasses
     private
     public :: zmass1, zmass2
 
-
-
     double precision :: zmass1, zmass2
 end module
 
@@ -13,7 +11,6 @@ end module
 subroutine pot( rvp, evp, dvp )
     use zmasses, only: zmass1, zmass2
     implicit none
-
 
     double precision, intent(in)  :: rvp(3)
     double precision, intent(out) :: evp, dvp(3)
@@ -133,11 +130,9 @@ else
 
 end
 
-
 !> @brief Evaluate prepotbodcdh2.
 subroutine prepotbodcdh2
     implicit none
-
 
     save
 
@@ -729,7 +724,6 @@ subroutine prepotbodcdh2
     maxi2a = maxi2
     return
 
-
     entry potbodcdh2(r1x,r2x,r3x,eee,dv)
 
     rsum = r1x+r2x+r3x
@@ -771,7 +765,6 @@ else
     sum1     = dgtot(2)
     dgtot(2) = dgtot(3)
     dgtot(3) = sum1
-
 
     bb2 = towave*gtot
     do i = 1,3
@@ -841,7 +834,6 @@ else
         dsum3(3) = dsum3(3)+xlin3(ipar(ii))*drprod3
     enddo
 
-
     v3c = sum1+sum2*bb2+sum3*bb3
     eee = v+damper*v3c
 
@@ -849,14 +841,11 @@ else
         dv(i) = dv(i) +ddamper(i)*v3c +damper*(sum2*dbb2(i)+sum3*dbb3(i) +dsum1(i)+dsum2(i)*bb2+dsum3(i)*bb3)
     enddo
 
-
 end
-
 
 !> @brief Evaluate bodc2body.
 double precision function bodc2body( r1x, dv )
     implicit none
-
 
     double precision :: xlp(14), beta, re, v, r1x, dv, t
     integer          :: j, indx
@@ -900,7 +889,6 @@ end
 subroutine indexa2( mbig, mtop )
     implicit none
 
-
     integer            :: mbig, mtop, iind, jind, kind, ipar, maxi, maxi2
     integer            :: l,l2,i,j,k,isum
     integer, parameter :: n2 = 5000
@@ -936,7 +924,6 @@ subroutine indexa2( mbig, mtop )
     maxi2 = l
 end
 
-
 !> @brief Evaluate prepot_leps.
 subroutine prepot_leps
     !
@@ -944,7 +931,6 @@ subroutine prepot_leps
     !       potential parameters are read in PREPOT
     !
     implicit none
-
 
     integer          :: i
     double precision :: d(3),re(3),beta(3),sato(3),rt3
@@ -968,7 +954,6 @@ subroutine prepot_leps
     !     WRITE (6,600) (D(I)*627.509552,I=1,3),Re,Beta,Sato
 end
 
-
 !> @brief Evaluate leps.
 subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     !
@@ -982,7 +967,6 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     !      from each atom
     !
     implicit none
-
 
     integer          :: i,j
     double precision :: r(3),v1,v2,xma,xmb,xmc,gtot,dgtot(3)
@@ -1052,7 +1036,6 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     drad(2) = 0.5d0*hdif*dhdif(2) +2.0d0*h12*dh12(2)
     drad(3) = 0.5d0*hdif*dhdif(3) +2.0d0*h12*dh12(3)
 
-
     ! Calculate matrix elements of d/dRi; note that at conical intersection f12
     !   diverges, but is set to zero in the code.
     do i = 1,3
@@ -1065,7 +1048,6 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
             df12(i,i) = df12(i,i) + 0.25d0*(h12*d2hdif(i)-hdif*d2h12(i))/rad
         endif
     enddo
-
 
     !
     ! Calculate diagonal matrix element of kinetic energy operator
@@ -1088,7 +1070,6 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     dcos3(2) = 1.0d0/r(1) - cos3/r(2)
     dcos3(3) = -r(3)/(r(1)*r(2))
 
-
     do i = 1,3
         ! contribution from ga
         dgtot(i) = (f12(1)*(df12(1,i) + dcos2(i)*f12(3) + cos2*df12(3,i)) + cos2*df12(1,i)*f12(3) + f12(3)*df12(3,i))/ &
@@ -1101,15 +1082,11 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
             & df12(3,i))/xmc
     enddo
 
-
-
-
 end
 
 !> @brief Evaluate prepotcbs.
 subroutine prepotcbs
     implicit none
-
 
     integer :: iind, jind, kind, ipar, maxi, maxi2
     integer :: maxi2a,maxi2b,ii,i,it
@@ -1479,7 +1456,6 @@ subroutine prepotcbs
     call singlet(r2x,es2,des2)
     call singlet(r3x,es3,des3)
 
-
     q1       = 0.5d0*(es1+etrip1)
     q2       = 0.5d0*(es2+etrip2)
     q3       = 0.5d0*(es3+etrip3)
@@ -1584,11 +1560,9 @@ subroutine prepotcbs
 
 end
 
-
 !> @brief Evaluate indexa3.
 subroutine indexa3( mbig, mtop )
     implicit none
-
 
     integer            :: mbig,mtop
     integer            :: iind, jind, kind, ipar, maxi, maxi2
@@ -1672,11 +1646,9 @@ subroutine indexa3( mbig, mtop )
     maxi2 = l
 end
 
-
 !> @brief Evaluate trip.
 subroutine trip( r, v, dv )
     implicit none
-
 
     integer          :: j
     double precision :: r,v,dv,t0,t1,t2,vlr,dvlr,vsr,dvsr
@@ -1745,7 +1717,6 @@ end
 subroutine singlet( r, v, dv )
     implicit none
 
-
     integer          :: j
     double precision :: r,v,dv,t0,t1,t2,vsr,damp,xd,xd2,prefac
     double precision :: c6=-6.499027d0
@@ -1801,11 +1772,9 @@ subroutine singlet( r, v, dv )
 
 end
 
-
 !> @brief Evaluate golden.
 subroutine golden( ax, bx, cx, tol, xmin, fval )
     implicit none
-
 
     external fcn
 
@@ -1878,12 +1847,10 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
 
 end
 
-
 !> @brief Evaluate fcn.
 double precision function fcn( x )
     use zmasses, only: zmass1, zmass2
     implicit none
-
 
     double precision :: x, e, bodc2body, v, dv, towave, xmh, massfact
     !      Evaluates the Born-Huang energy of an isomer of H2 with masses of zmass1 and zmass2
@@ -1894,12 +1861,10 @@ double precision function fcn( x )
     fcn = massfact*bodc2body(x,dv)/towave+v
 end
 
-
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, p, g, d )
 
     implicit none
-
 
     ! number of electronic state
     integer, parameter  :: nstates = 1
@@ -1915,7 +1880,6 @@ subroutine pes( x, igrad, p, g, d )
     double precision :: gx(nstates,9)
     integer          :: iatom, idir, i, j
     logical, save    :: first_time_data=.true.
-
 
     !initialize
     v = 0.d0
@@ -1966,10 +1930,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3

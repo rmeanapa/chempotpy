@@ -26,16 +26,18 @@ subroutine pes( x, igrad, p, g, d )
     implicit none
 
     ! number of electronic state
-    integer, parameter            :: nstates = 1
-    integer, parameter            :: natoms  = 4
+    integer, parameter          :: nstates = 1
+    integer, parameter          :: natoms  = 4
+    double precision, parameter :: eref    = -218.40801323d0
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-    double precision, parameter   :: eref = -218.40801323d0
 
     double precision :: v, tx(12), tg(12)
     integer          :: iatom, idir, j, istate
+
     !initialize
     v = 0.d0
     g = 0.d0
@@ -101,7 +103,6 @@ subroutine n4pes( x, v, dvdx, igrad )
 
     implicit none
 
-
     integer          :: i,igrad,j,nob,k
     double precision :: v
     double precision :: dvdx(12),x(12)
@@ -156,7 +157,6 @@ subroutine coord_convt( x )
     r(4) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
     r(5) = sqrt((x(4)-x(10))**2 + (x(5)-x(11))**2 + (x(6)-x(12))**2)
     r(6) = sqrt((x(7)-x(10))**2 + (x(8)-x(11))**2 + (x(9)-x(12))**2)
-
 
 end subroutine coord_convt
 !> @brief Evaluate EvV for the N4_1A_PIP_2013 potential.
@@ -215,7 +215,6 @@ subroutine evv( v )
 
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
-
 
 end subroutine evv
 !> @brief Evaluate EvdVdX for the N4_1A_PIP_2013 potential.
@@ -414,8 +413,6 @@ subroutine evmono
     rm(109) = rm(6)*rm(85)
     rm(110) = rm(6)*rm(86)
     rm(111) = rm(6)*rm(87)
-
-
 
 end subroutine evmono
 !> @brief Evaluate EvPoly for the N4_1A_PIP_2013 potential.
@@ -747,7 +744,6 @@ subroutine evpoly
     p(304) = p(3)*p(119) - p(295) - p(296) - p(293)
     p(305) = p(1)*p(194) - p(304) - p(303)
 
-
 end subroutine evpoly
 !> @brief Evaluate evbas for the N4_1A_PIP_2013 potential.
 subroutine evbas
@@ -768,7 +764,6 @@ subroutine evbas
     do i=1,306
         b1(i) = p(i-1)
     enddo
-
 
     ! Remove unconnected terms and 2-body terms and pass to B(1:276)
     b(1) = b1(4)
@@ -826,7 +821,6 @@ subroutine evbas
     b(274) = b1(301)
     b(275) = b1(303)
     b(276) = b1(305)
-
 
 end subroutine evbas
 !> @brief Evaluate ev2gm2 for the N4_1A_PIP_2013 potential.
@@ -1067,7 +1061,6 @@ subroutine evdrdx( x )
     drdx(6,12) = -drdx(6,9)
     ! Finish the calculation of non-zero dRdX
 
-
 end subroutine evdrdx
 !> @brief Evaluate EvdMsdR for the N4_1A_PIP_2013 potential.
 subroutine evdmsdr
@@ -1104,7 +1097,6 @@ subroutine evdmsdr
     do i=1,6
         dmsdr(i,i) = -(1/a)*exp(-(r(i)-re)/a)
     enddo
-
 
 end subroutine evdmsdr
 !> @brief Evaluate EvdMdR for the N4_1A_PIP_2013 potential.
@@ -1239,7 +1231,6 @@ subroutine evdmdr
         dmdr(i,110) = dmdr(i,6)*rm(86) + rm(6)*dmdr(i,86)
         dmdr(i,111) = dmdr(i,6)*rm(87) + rm(6)*dmdr(i,87)
     enddo
-
 
 end subroutine evdmdr
 !> @brief Evaluate EvdPdr for the N4_1A_PIP_2013 potential.
@@ -1605,7 +1596,6 @@ subroutine evdpdr
         dpdr(i,305) = dpdr(i,1)*p(194) + p(1)*dpdr(i,194) - dpdr(i,304) - dpdr(i,303)
     enddo
 
-
 end subroutine evdpdr
 !> @brief Evaluate evdbdr for the N4_1A_PIP_2013 potential.
 subroutine evdbdr
@@ -1689,7 +1679,6 @@ subroutine evdbdr
         dbdr(j,275) = db1dr(j,303)
         dbdr(j,276) = db1dr(j,305)
     enddo
-
 
 end subroutine evdbdr
 ! Begin

@@ -3,8 +3,6 @@ module shell
     private
     public :: cof, coff, power, total
 
-
-
     real,parameter    :: total = 8
     integer,parameter :: coff  = 1561
     !real,parameter::alpha(4)=(/2.0,2.0,2.0,2.0/)
@@ -15,13 +13,12 @@ end module shell
 subroutine pes_init( path )
     use shell, only: cof, coff, power, total
     implicit none
-    integer :: file_unit_112
-    integer :: file_unit_113
-
-
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1, file_path2
-    integer                         :: i
+
+    integer             :: file_unit_112
+    integer             :: file_unit_113
+    character(len=1024) :: file_path1, file_path2
+    integer             :: i
 
     file_path1 = trim(path)//"/H2CO/coeff8"
     file_path2 = trim(path)//"/H2CO/index8"
@@ -46,7 +43,6 @@ subroutine getpot( cood, v, path )
     use shell, only: cof, coff, power, total
     implicit none
 
-
     character(len=1024), intent(in) :: path
     integer                         :: i
     double precision                :: v,f
@@ -63,7 +59,6 @@ subroutine getpot( cood, v, path )
     call edis(r(4),y(4),cood(:,1),cood(:,4))
     call edis(r(5),y(5),cood(:,2),cood(:,4))
     call edis(r(6),y(6),cood(:,1),cood(:,2))
-
 
     call basis(bas,y)
 
@@ -110,10 +105,10 @@ subroutine edis( dis, edist, atomi, atomj )
     use shell, only: cof, coff, power, total
     implicit none
 
-
-    double precision             :: atomi(3),atomj(3)
-    double precision             :: dis,alfa
     double precision,intent(out) :: edist
+
+    double precision :: atomi(3),atomj(3)
+    double precision :: dis,alfa
     alfa  = 2.0
     dis   = sqrt((atomi(1)-atomj(1))**2+(atomi(2)-atomj(2))**2+(atomi(3)-atomj(3))**2)
     edist = exp(-dis/alfa)
@@ -123,7 +118,6 @@ end subroutine edis
 subroutine basis( bas, y )
     use shell, only: cof, coff, power, total
     implicit none
-
 
     integer          :: m,n,p,q,i,j,k
     double precision :: bas(coff)
@@ -138,18 +132,18 @@ end subroutine
 subroutine hcopot( f, rhc, rco, roh, path )
     implicit none
 
+    double precision, parameter :: au2ev = 27.2116d0
+    double precision, parameter :: a0    = 0.52918d0
+    double precision, parameter :: pi    = 3.1415926536d0
 
     character(len=1024), intent(in) :: path
-    integer                         :: j,loop,iv
-    double precision                :: rmin(3),rmax(3),z1,z2,z3,m(3),h(3)
-    double precision                :: pot, potmin, ma, mb, mc
-    double precision, parameter     :: au2ev = 27.2116d0
-    double precision, parameter     :: a0    = 0.52918d0
-    double precision, parameter     :: pi    = 3.1415926536d0
-    double precision                :: pot3,c3,pothco,f
-    double precision                :: v, rhc,rco, cgamma, roh
-    integer                         :: istate
 
+    integer          :: j,loop,iv
+    double precision :: rmin(3),rmax(3),z1,z2,z3,m(3),h(3)
+    double precision :: pot, potmin, ma, mb, mc
+    double precision :: pot3,c3,pothco,f
+    double precision :: v, rhc,rco, cgamma, roh
+    integer          :: istate
 
     ma = 1.0    !  H
     mb = 12.0    !  C
@@ -168,13 +162,12 @@ end subroutine hcopot
 !> @brief Evaluate POT3IN.
 subroutine pot3in( path )
     implicit none
-    integer :: file_unit_10
-
-
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
-    double precision                :: v, pothco
-    double precision, save          :: g = 0d0, r = 1d0, rkl = 1d0
+
+    integer                :: file_unit_10
+    character(len=1024)    :: file_path1
+    double precision       :: v, pothco
+    double precision, save :: g = 0d0, r = 1d0, rkl = 1d0
     external pothco
 
     file_path1 = trim(path)//"/H2CO/pothco_hmk.para"
@@ -187,8 +180,6 @@ end
 function pothco( rhc, rco, rcos, istate )
     use iso_fortran_env, only: real64
     implicit none
-
-
 
     integer          :: istate ! Initialiserung falls <>0, INPUT
     double precision :: rhc, rco, rcos, pothco
@@ -220,7 +211,6 @@ function pothco( rhc, rco, rcos, istate )
         &40d0,170d0, 20d0,180d0, 10d0,0d0/)
     double precision :: xcos(nwin), nucos(nwin), kk(maxlin,2),aa(maxtan,2),v2ch, v2oh
     external v2ch, v2oh
-
 
     integer          :: i, j,k,l, ll,jj, j1,j2,j3,ks,i1,i2
     logical, save    :: qinit(2) = [.false.,.false.] ! zeigt an ob Parameter initialisiert.
@@ -355,15 +345,12 @@ function pothco( rhc, rco, rcos, istate )
             jj   = jj + 4
         end if
 
-
         if(jj.ne.mtan(ks)+1) stop 'POTHCO: MTAN FALSCH !'
-
 
         ll = 1
 
         pq = easym
         pq = pq + v2ch(rhci)
-
 
         pco = rcoi**ix2co / abs(qq2)**2  ! *** PP_CO(R_CO)
         do j=0,gz2co
@@ -372,7 +359,6 @@ function pothco( rhc, rco, rcos, istate )
             pco = pco * ( rcoi - nuco(j+1) ) ! P_{CO,J}(R_CO)
         end do
         pq = pq + v2oh(rohi)
-
 
         nenn= rhci**(ixhc-ixoh) * rcoi**(ixco-ixoh) * rohi**ixoh&
             &/ ( abs(qq4)**2 + nenadd ) ! *** PP_HCO(R_HC,R_CO,COS())
@@ -412,7 +398,6 @@ function pothco( rhc, rco, rcos, istate )
 
         if(ll.ne.mlin(ks)+1) stop ' POTHCO: MLIN FALSCH '
 
-
         pq = pq + 0.055d0/au2ev + vplus         ! OFFSET(Dez.1994)
 
         if (rohi.lt.1.1d0.or.rhci.lt.1.3d0.or.&
@@ -428,7 +413,6 @@ end
 !> @brief Evaluate V2OH.
 function v2oh( r )
     implicit none
-
 
     double precision :: v2oh,  r
 
@@ -451,7 +435,6 @@ end
 !> @brief Evaluate V2CH.
 function v2ch( r )
     implicit none
-
 
     double precision :: v2ch, r
 
@@ -476,7 +459,6 @@ end
 subroutine pes( x, igrad, path, p, gradient_out, d )
     use shell, only: cof, coff, power, total
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1

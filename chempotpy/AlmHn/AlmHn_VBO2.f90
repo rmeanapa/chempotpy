@@ -75,7 +75,6 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     !    maxatom --- maximal number of atoms (input)
     !    symbol  --- character*2 array of dimension holds the atomic symbols
 
-
     implicit none
 
     double precision :: add, alpha, alpha_al, alpha_alh, alpha_h, beta, beta_al, &
@@ -157,7 +156,6 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
         stop "Undefined atomic symbol."
         endif
     enddo
-
 
     ! parameters for kappa.
     ! kap3(4,5) is kappa for p=3,4,5 in Eq. (14)

@@ -38,7 +38,6 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 4
@@ -77,10 +76,8 @@ subroutine o4( v, r )
 
     implicit none
 
-
     double precision, intent(in)  :: r(6)
     double precision, intent(out) :: v
-
 
     double precision :: xr(6)
     integer          :: mpoints
@@ -118,7 +115,6 @@ endsubroutine
 !> @brief Evaluate assign.
 subroutine assign( coeff, indices, permutation )
     implicit none
-
 
     double precision,intent(inout) :: coeff(306), indices(306,6)
     integer, intent(inout)         :: permutation(24,6)
@@ -2412,6 +2408,3 @@ subroutine assign( coeff, indices, permutation )
     coeff(305) = 7.92816877365
     coeff(306) = 0.0492935180664
 endsubroutine
-
-
-

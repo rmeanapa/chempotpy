@@ -6,8 +6,6 @@ module nnparam
     public :: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, nodes, &
         & noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
 
-
-
     double precision,parameter    :: alpha   = 1.0d0,pi=3.1415926d0,radian=pi/180.0d0
     integer,parameter             :: nbasis  = 18,ndim=6,natom=4
     double precision,parameter    :: vpesmin = -114.158373618668d0
@@ -27,7 +25,6 @@ subroutine pes( x, igrad, path, p, g, d )
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 4
@@ -36,7 +33,6 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
 
     double precision :: v, tx(3,natoms)
     integer          :: iatom, idir, j, istate
@@ -69,13 +65,11 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
 !> @brief Evaluate ch2opipNN.
 subroutine ch2opipnn( ct, vpes )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-
 
     integer          :: i,j,k,lpes
     double precision :: rb(ndim),xbond(ndim),basis(nbasis),tmp1,txinput(nbasis-1)
@@ -114,7 +108,6 @@ subroutine ch2opipnn( ct, vpes )
     vnn  = vpes
     vpes = vnn
 
-
 end subroutine ch2opipnn
 
 !-->  read NN weights and biases from matlab output
@@ -126,15 +119,13 @@ subroutine pes_init( path )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-    integer :: file_unit_4
-
-
     character(len=1024), intent(in) :: path
-    integer                         :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
-    integer                         :: ibasis,npd,iterm,ib,nfile
-    character(len=80)               :: f1, line
-    character(len=1024)             :: file_path1, file_path2
 
+    integer             :: file_unit_4
+    integer             :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
+    integer             :: ibasis,npd,iterm,ib,nfile
+    character(len=80)   :: f1, line
+    character(len=1024) :: file_path1, file_path2
 
     file_path1 = trim(path)//"/CH2O/weights.txt"
     file_path2 = trim(path)//"/CH2O/biases.txt"
@@ -194,7 +185,6 @@ subroutine getpota( x, vpot )
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     integer                    :: j,k,neu1,neu2,ndriv
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -233,11 +223,9 @@ subroutine getpota( x, vpot )
 
 end subroutine getpota
 
-
 !> @brief Evaluate tranfun.
 function tranfun( x, ifunc )
     implicit none
-
 
     integer          :: ifunc
     double precision :: tranfun,x
@@ -254,7 +242,6 @@ end
 function emsav( x, c ) result(v)
     implicit none
 
-
     double precision,dimension(1:6)::x
     double precision,dimension(0:17)::c
     double precision :: v
@@ -270,7 +257,6 @@ end function emsav
 subroutine bemsav( x, p )
     implicit none
 
-
     double precision,dimension(1:6),intent(in)::x
     double precision,dimension(0:17),intent(out)::p
     ! ::::::::::::::::::::
@@ -284,7 +270,6 @@ end subroutine bemsav
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision,dimension(1:6),intent(in)::x
     double precision,dimension(0:10),intent(out)::m
@@ -307,7 +292,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision,dimension(0:10),intent(in)::m
     double precision,dimension(0:17),intent(out)::p
@@ -333,4 +317,3 @@ subroutine evpoly( m, p )
     p(17) = p(4)*p(4)
 
 end subroutine evpoly
-

@@ -13,8 +13,6 @@ module nnparam1
         & nodemax31, nodes3a1, noutput1, nscale1, nwe3, para2, pavg3a1, pdel3a1, pi, radian, &
         & weight3a1
 
-
-
     double precision,parameter   :: alpha   = 1.8d0,pi=3.141592653589793238d0
     double precision,parameter   :: radian  = pi/180.0d0,bohr=0.5291772d0
     double precision,parameter   :: para2   = 27.2114d0
@@ -35,7 +33,6 @@ subroutine pes( x, igrad, path, p, g, d )
         & radian, weight3a1
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 7
@@ -44,7 +41,6 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
 
     double precision :: v, tx(3,natoms)
     integer          :: iatom, idir, j, istate
@@ -77,8 +73,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
-
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v )
     !**************************************************************************!
@@ -102,7 +96,6 @@ subroutine evvdvdx( xcart, v )
     !https://pubs.acs.org/doi/10.1021/acsomega.0c03210
     !***************************************************************************
     implicit none
-
 
     double precision,parameter :: alpha = 1.8d0,para=0.5291772d0
     integer,parameter          :: natom = 7
@@ -141,7 +134,6 @@ subroutine pes_init( path )
         & nlayer31, nodemax31, nodes3a1, noutput1, nscale1, nwe3, para2, pavg3a1, pdel3a1, pi, &
         & radian, weight3a1
     implicit none
-
 
     character(len=1024), intent(in) :: path
     integer                         :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
@@ -205,7 +197,6 @@ subroutine pot3a( x, vpot3 ) ! fhcl, a
         & radian, weight3a1
     implicit none
 
-
     integer                      :: i,ndriv,inode1,inode2,ilay1,ilay2
     integer                      :: j,k,neu1,neu2
     double precision             :: x(ninput1),y(nodemax31,nlayer31),vpot3
@@ -253,7 +244,6 @@ end subroutine pot3a
 function tranfun1( x, ifunc )
     implicit none
 
-
     integer          :: ifunc
     double precision :: tranfun1,x
     !    ifunc=1, transfer function is hyperbolic tangent function, 'tansig'
@@ -272,7 +262,6 @@ end function tranfun1
 function logsig1( x )
     implicit none
 
-
     double precision :: x,logsig1
     logsig1 = 1.d0/(1.d0+dexp(-x))
 end function logsig1
@@ -281,7 +270,6 @@ end function logsig1
 !> @brief Evaluate bemsav.
 subroutine bemsav( x, p )
     implicit none
-
 
     double precision :: x(1:21)
     double precision :: p(0:2389)
@@ -296,10 +284,8 @@ end subroutine bemsav
 subroutine evmono( x, m )
     implicit none
 
-
     double precision :: x(1:21)
     double precision :: m(0:707)
-
 
     m(0)   = 1.0d0
     m(1)   = x(21)
@@ -1015,7 +1001,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision :: p(0:2389)
     double precision :: m(0:707)

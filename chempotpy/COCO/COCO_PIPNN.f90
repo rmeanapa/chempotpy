@@ -8,12 +8,10 @@
 !! input: r O1-C1-O2-C2 Bohr
 !! output: v (interaction energy only) cm-1
 
-
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, p, g, d )
 
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -91,7 +89,6 @@ endsubroutine
 subroutine evdrdx( x, r, drdx )
     implicit none
 
-
     integer          :: i,j
     double precision :: x(12), r(6), drdx(6,12)
     do i=1,6
@@ -155,14 +152,15 @@ end subroutine evdrdx
 subroutine pes_ococ( r, v, idv, dvdr, path )
     implicit none
 
+    double precision,parameter :: pi = dacos(-1.d0)
+    integer,parameter          :: np = 7
 
     character(len=1024), intent(in) :: path
     double precision,intent(in)     :: r(6)
     integer,intent(in)              :: idv
     double precision,intent(out)    :: v,dvdr(6)
-    double precision,parameter      :: pi = dacos(-1.d0)
-    integer,parameter               :: np = 7
-    double precision                :: p(np,1),vp(1),dvdp(np,1),dpdr(np,6)
+
+    double precision :: p(np,1),vp(1),dvdp(np,1),dpdr(np,6)
 
     if(idv.ne.0 .and. idv.ne.1) stop "Only energy and gradient are available"
 
@@ -178,13 +176,14 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
     subroutine pip_ococ( r, p, idv, dpdr )
         ! molecular based fundamental invariants
         implicit none
+        double precision,parameter :: ita = 0.3d0
+
         double precision,intent(in)  :: r(6)   ! atom order: O1 C1 O2 C2
         integer,intent(in)           :: idv
         double precision,intent(out) :: p(7),dpdr(7,6)
-        integer                      :: i
 
-        double precision           :: g(6)
-        double precision,parameter :: ita = 0.3d0
+        integer          :: i
+        double precision :: g(6)
 
         do i=1,6
             g(i) = exp(-r(i)*ita)
@@ -230,20 +229,20 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
     !> @brief Evaluate nnfit_ococ.
     subroutine nnfit_ococ( ndim, ntot, r0, vx, idv, dv, path )
         implicit none
+        integer,parameter :: s0 = 7,s1=45,s2=45
+
         character(len=1024), intent(in) :: path
         integer,intent(in)              :: ndim,ntot
         double precision,intent(in)     :: r0(ndim,ntot)
         double precision,intent(out)    :: vx(ntot)
+        integer,intent(in)              :: idv
+        double precision,intent(out)    :: dv(ndim,ntot)
 
-        integer,parameter     :: s0 = 7,s1=45,s2=45
         double precision,save :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3,rg(2,s0),vg(2)
-
-        integer,intent(in)           :: idv
-        double precision,intent(out) :: dv(ndim,ntot)
-        integer                      :: i
-        integer,save                 :: init=0
-        integer,save                 :: fid
-        character(len=1024)          :: file_path1
+        integer               :: i
+        integer,save          :: init=0
+        integer,save          :: fid
+        character(len=1024)   :: file_path1
 
         file_path1 = trim(path)//"/COCO/nn_ococ_w20.txt"
 
@@ -421,13 +420,8 @@ subroutine potco( r, v, dv )
     ! updated: 2020/6/25, dv/dr
     implicit none
 
-
-    double precision,intent(in)  :: r !! bohr
-    double precision,intent(out) :: v,dv !! cm-1, cm-1/bohr
-    double precision             :: x,y1j
-    integer                      :: j
-    integer,parameter            :: ns     = 8
-    double precision,parameter   :: w1(ns) = [  2.5731334302226245d+00,&
+    integer,parameter          :: ns     = 8
+    double precision,parameter :: w1(ns) = [  2.5731334302226245d+00,&
         -4.1635475296365723d+00,&
         6.2652688635816842d+00,&
         -8.1228824615517947d+00,&
@@ -454,6 +448,12 @@ subroutine potco( r, v, dv )
     double precision,parameter :: b2 = 6.8970075393140338d+00
     double precision,parameter :: ra = 1.4000000000000000d+00,rb=7.0000000000000000d+00
     double precision,parameter :: va = 9.8087308941410573d-02,vb=1.9558422718340193d+05
+
+    double precision,intent(in)  :: r !! bohr
+    double precision,intent(out) :: v,dv !! cm-1, cm-1/bohr
+
+    double precision :: x,y1j
+    integer          :: j
 
     v  = 0.d0
     dv = 0.d0

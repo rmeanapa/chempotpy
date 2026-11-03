@@ -4,15 +4,17 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    double precision :: dedrr, e, rr, v
-    integer          :: i, iatom, idir, istate, j, nder, ndum, nsurf
     ! number of electronic state
-    integer, parameter            :: nstates = 1
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
+
+    double precision :: dedrr, e, rr, v
+    integer          :: i, iatom, idir, istate, j, nder, ndum, nsurf
 
     common /pt1cm/ rr(3),e,dedrr(3)
     common /pt2cm/ nsurf, nder, ndum(21)
@@ -58,7 +60,6 @@ subroutine pes( x, igrad, p, g, d )
         enddo
     enddo
 
-
     if (igrad==0) then
         do istate=1,nstates
             p(istate) = e
@@ -84,9 +85,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -451,7 +453,6 @@ subroutine potinfo
     endif
 end subroutine potinfo
 
-
 !> @brief Evaluate ANCVRT for the ALC7m0_LEPS_ModelSurface potential.
 subroutine ancvrt
     implicit none
@@ -805,7 +806,6 @@ subroutine carttor
         stop
     end if
 end subroutine carttor
-
 
 !> @brief Evaluate EUNITZERO for the ALC7m0_LEPS_ModelSurface potential.
 subroutine eunitzero

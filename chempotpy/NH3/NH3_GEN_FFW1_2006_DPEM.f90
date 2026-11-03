@@ -4,14 +4,16 @@ subroutine dpem( x, igrad, u, ug )
 
     implicit none
 
-    integer :: nhcoeu1, nhcoeu12, nhcoeu2, nhindu1, nhindu12, nhindu2
     ! number of electronic state
-    integer, parameter            :: nstates = 2
-    integer, parameter            :: natoms  = 4
+    integer, parameter :: nstates = 2
+    integer, parameter :: natoms  = 4
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
+
+    integer :: nhcoeu1, nhcoeu12, nhcoeu2, nhindu1, nhindu12, nhindu2
 
     common /c_nhcoe/  nhcoeu1, nhcoeu2, nhcoeu12, &
         & nhindu1, nhindu2, nhindu12
@@ -164,7 +166,6 @@ subroutine pot( xcart, u11, u22, u12, v1, v2, gu11, gu22, gu12, gv1, gv2 )
     double precision, parameter :: ang_to_bohr   = 1.0d0/autoang
     double precision, parameter :: gconv         = ev_to_hartree/ang_to_bohr
 
-
     ! convert geometry from bohr to ang
     do i=1,12
         cart(i) = xcart(i)*autoang
@@ -194,7 +195,6 @@ subroutine prepot
 
     call potcoeff
 end subroutine prepot
-
 
 !!*************************************************************!!
 !> @brief Evaluate packpot for the NH3_GEN_FFW1_2006_DPEM potential.
@@ -413,7 +413,6 @@ subroutine sumpoly( nc, ind0, x, coeff, v, gv, cpot )
         enddo
     end do
 
-
 end subroutine sumpoly
 
 !!**********************************************!!
@@ -480,7 +479,6 @@ subroutine getsymm( i1, i2, i3, n, x, y, dy )
 
 end subroutine getsymm
 
-
 !
 !!****************************************************************!!
 !> @brief Evaluate repulsive for the NH3_GEN_FFW1_2006_DPEM potential.
@@ -488,7 +486,6 @@ subroutine repulsive( rr, erep, derep, cpot )
     !!****************************************************************!!
     ! Additional repuslive terms
     implicit none
-
 
     double precision :: rr(6),erep,derep(6)
     character(len=3) :: cpot
@@ -566,7 +563,6 @@ subroutine repulsive( rr, erep, derep, cpot )
     erephh     = 0.0
     ecorrlimit = 0.0
     ecor1      = 0.0
-
 
     if (cpot.ne.'U12') then
         do i=1,3
@@ -705,7 +701,6 @@ subroutine u11poly( ind0, geoint, ans, g_ans )
     dg2 = -2.d0*alp*r2*g2
     dg3 = -2.d0*alp*r3*g3
 
-
     ! Energy and Derivatives
     ! f(r)  = 1 - exp[-B(r-C)]
     ! dxi = dxi/dri (i=1,2,3) A,B,C are constants
@@ -812,7 +807,6 @@ subroutine u11poly( ind0, geoint, ans, g_ans )
     !     dans / dbeta
     g_ans(7) = y123 * y(4) * y(5) * y(6) * dy77
 
-
 end subroutine u11poly
 
 !!****************************************************************!!
@@ -915,7 +909,6 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
     dg2 = -2.d0*alp*r2*g2
     dg3 = -2.d0*alp*r3*g3
 
-
     ! Energy and Derivatives
     ! f(r)  = 1 - exp[-B(r-C)]
     ! dxi = dxi/dri (i=1,2,3) A,B,C are constants
@@ -974,7 +967,6 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
         dy32 = 0.d0
         dy33 = dy(3)
     endif
-
 
     !     x* = dcos(GTa) - dcos(  theta )
     !     GTa = 120.0 degree, dcos(GTa) = -0.5d0
@@ -1071,7 +1063,6 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
     !     dans / dbeta
     g_ans(7) = y123 * y(4) * y(5) * y(6) * dy77
 
-
 end subroutine u22poly
 
 !!****************************************************************!!
@@ -1104,7 +1095,6 @@ subroutine u12poly( ind0, geoint, ans, g_ans )
     double precision, parameter :: gtu12a = 2.0d0*pi/3.0d0
     double precision, parameter :: hbu12a = 0.5d0*pi
 
-
     !-------------------------------!
     ! Misc
     !-------------------------------!
@@ -1121,7 +1111,6 @@ subroutine u12poly( ind0, geoint, ans, g_ans )
     !  parameters to be optimized:
     !                 FRU12c(r04)
     fru12c = .1501070926d+01
-
 
     !======================================================================!
     ! geoInt contains the internals in the following format
@@ -1252,8 +1241,6 @@ subroutine calcindu1( ind, m1, m2, m3, m4, m5, m6, m7, nc )
 
     integer :: i1,i2,i3,i4,i5,i6,i7,inc
 
-
-
     inc = 0
     do i7=1, m7
         do i1=0, m1
@@ -1303,8 +1290,6 @@ subroutine calcindu2( ind, m1, m2, m3, m4, m5, m6, m7, nc )
 
     integer :: i1,i2,i3,i4,i5,i6,i7,inc
 
-
-
     inc = 0
     do i7=0, m7
         do i1=0, m1
@@ -1340,8 +1325,6 @@ subroutine calcindu2( ind, m1, m2, m3, m4, m5, m6, m7, nc )
 
 end subroutine calcindu2
 
-
-
 !!***************************************************************!!
 !> @brief Evaluate calcindU12 for the NH3_GEN_FFW1_2006_DPEM potential.
 subroutine calcindu12( ind, m1, m2, m3, m4, m5, m6, m7, nc )
@@ -1359,8 +1342,6 @@ subroutine calcindu12( ind, m1, m2, m3, m4, m5, m6, m7, nc )
     integer :: ind(nc,7)
 
     integer :: i1,i2,i3,i4,i5,i6,i7,inc
-
-
 
     inc = 0
     do i7=3, m7
@@ -1392,13 +1373,11 @@ subroutine calcindu12( ind, m1, m2, m3, m4, m5, m6, m7, nc )
 
 end subroutine calcindu12
 
-
 !********************************************************
 !> @brief Evaluate potcoeff for the NH3_GEN_FFW1_2006_DPEM potential.
 subroutine potcoeff
     !********************************************************
     implicit none
-
 
     !
     ! Integer constants
@@ -1615,8 +1594,6 @@ subroutine potcoeff
     nhcoeu12(43) = .5060705599d+00
     nhcoeu12(44) = -.2054781302d+00
     nhcoeu12(45) = .1836178250d+00
-
-
 
 end subroutine potcoeff
 !                           DISCLAIMER
@@ -2415,7 +2392,6 @@ subroutine carttoang( cart, ans, gangint )
     !-----------------------------------------------------
     implicit none
 
-
     ! I/O variables
     integer, parameter          :: natom = 4
     double precision, parameter :: pi    = 3.1415926535897930d0
@@ -2538,7 +2514,6 @@ subroutine carttoang( cart, ans, gangint )
         gangint(j,6) = dt(3) * gangint(j,6)
     enddo
 
-
 end subroutine carttoang
 
 !*******************************************!
@@ -2604,7 +2579,6 @@ subroutine polar_to_cart( p, ans )
     ans(1) = p(1) * dcos(phi) * sinth
     ans(2) = p(1) * dsin(phi) * sinth
     ans(3) = p(1) * dcos(theta)
-
 
 end subroutine polar_to_cart
 
@@ -2730,7 +2704,6 @@ subroutine frombowman( bow, coord )
         coord(9+i) = ans(i)
     enddo
 
-
 end subroutine frombowman
 
 !!************************************************************!!
@@ -2844,7 +2817,6 @@ subroutine rarray( natoms, x, mx, r, dr, mr )
     ! x:  x1,y1,z1,...,xn,yn,zn
     ! dr(i,j): derivatives of jth r to i th cart coord
     implicit none
-
 
     integer :: natoms
     ! dimension of x and r, must be larger than 3*natoms and

@@ -32,7 +32,6 @@ module chempotpy_legacy_coordinates
         end if
     end subroutine convert_cartesian_input
 
-
     !> @brief Build a released POTLIB coordinate vector from Cartesian input.
     pure subroutine cartesian_to_potlib_coordinates( &
             cartesian_coordinates, atom_count, coordinate_mode, coordinates, &

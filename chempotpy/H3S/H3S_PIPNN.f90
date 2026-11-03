@@ -4,8 +4,6 @@ module nnparam
     public :: alpha, biasa, ifunc, natom, nbasis, ndata, ndim, nhid, ninput, nlayer, nodemax, nodes, &
         & noutput, nscale, nwe, para2, pavga, pdela, pi, radian, vpesmin, weighta
 
-
-
     double precision,parameter    :: alpha   = 1.0d0,pi=3.1415926d0,radian=pi/180.0d0
     double precision,parameter    :: para2   = 27.2116d0
     integer,parameter             :: nbasis  = 23,ndim=6,natom=4,ndata=33435
@@ -25,7 +23,6 @@ subroutine pes( x, igrad, path, p, g, d )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndata, ndim, nhid, ninput, nlayer, &
         & nodemax, nodes, noutput, nscale, nwe, para2, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -79,7 +76,6 @@ subroutine pipnn( ct, vpes, vpesa, vpesb, vpesc )
         & nodemax, nodes, noutput, nscale, nwe, para2, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
 
-
     integer          :: i,j,k,lpes
     double precision :: rb(ndim),xbond(ndim),basis(nbasis),tmp1,txinput(nbasis-1)
     double precision :: ct(3,natom),xvec(3,ndim),cx(3,natom),cy(3,natom)
@@ -127,15 +123,13 @@ subroutine pes_init( path )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndata, ndim, nhid, ninput, nlayer, &
         & nodemax, nodes, noutput, nscale, nwe, para2, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-    integer :: file_unit_4
-
-
     character(len=1024), intent(in) :: path
-    integer                         :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
-    integer                         :: ibasis,npd,iterm,ib,nfile
-    character(len=80)               :: f1, line
-    character(len=1024)             :: file_path1, file_path2
 
+    integer             :: file_unit_4
+    integer             :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
+    integer             :: ibasis,npd,iterm,ib,nfile
+    character(len=80)   :: f1, line
+    character(len=1024) :: file_path1, file_path2
 
     file_path1 = trim(path)//"/H3S/weights.txt"
     file_path2 = trim(path)//"/H3S/biase.txt"
@@ -196,7 +190,6 @@ subroutine getpota( x, vpot, dvdg, ndriv )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndata, ndim, nhid, ninput, nlayer, &
         & nodemax, nodes, noutput, nscale, nwe, para2, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-
 
     integer                      :: i,inode1,inode2,ilay1,ilay2
     integer                      :: j,k,neu1,neu2,ndriv
@@ -273,14 +266,11 @@ subroutine getpota( x, vpot, dvdg, ndriv )
         deallocate(nxw1,nxw2,nxw3,ax,bx)
     endif
 
-
 end subroutine getpota
-
 
 !> @brief Evaluate tranfun.
 function tranfun( x, ifunc )
     implicit none
-
 
     integer          :: ifunc
     double precision :: tranfun,x
@@ -293,12 +283,9 @@ function tranfun( x, ifunc )
     endif
 end
 
-
-
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v, dvdx, ndriv )
     implicit none
-
 
     double precision,parameter :: alpha = 1d0
     integer                    :: i,j,k,ndriv
@@ -345,7 +332,6 @@ end subroutine evvdvdx
 subroutine bemsav( xmorse, m, p )
     implicit none
 
-
     double precision,dimension(1:6),intent(in)::xmorse
     double precision,dimension(0:22),intent(out)::p
     ! ::::::::::::::::::::
@@ -357,7 +343,6 @@ end subroutine bemsav
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision,dimension(1:6),intent(in)::x
     double precision,dimension(0:29),intent(out)::m
@@ -399,7 +384,6 @@ end subroutine evmono
 subroutine evpoly( m, p )
     implicit none
 
-
     double precision,dimension(0:29),intent(in)::m
     double precision,dimension(0:22),intent(out)::p
 
@@ -429,12 +413,9 @@ subroutine evpoly( m, p )
 
 end subroutine evpoly
 
-
-
 !> @brief Evaluate evdvdx.
 subroutine evdvdx( dvdg, dpdr, drdx, dvdx )
     implicit none
-
 
     integer          :: i,j,k
     double precision :: dvdx(1:12),xcart(1:3,1:4),drdx(1:6,1:12),x(1:12)
@@ -464,7 +445,6 @@ end subroutine evdvdx
 subroutine evdvdr( r, m, p, dpdr )
     implicit none
 
-
     integer          :: i,j
     double precision :: r(1:6),dmsdr(1:6,1:6),dmdr(1:6,0:29)
     double precision :: dvdr(1:6),dpdr(1:6,0:22)
@@ -475,13 +455,11 @@ subroutine evdvdr( r, m, p, dpdr )
     call evdmdr(m,dmsdr,dmdr)
     call evdpdr(p,dmdr,dpdr)
 
-
 end subroutine evdvdr
 
 !> @brief Evaluate evdrdx.
 subroutine evdrdx( r, x, drdx )
     implicit none
-
 
     integer          :: i,j,k
     double precision :: r(1:6),drdx(1:6,1:12),x(1:12)
@@ -507,7 +485,6 @@ end subroutine evdrdx
 subroutine evdmsdr( r, dmsdr )
     implicit none
 
-
     double precision,parameter :: alpha = 1d0
     integer                    :: i,j
     double precision           :: dmsdr(1:6,1:6),r(1:6)
@@ -527,7 +504,6 @@ end subroutine evdmsdr
 !> @brief Evaluate evdmdr.
 subroutine evdmdr( m, dmsdr, dmdr )
     implicit none
-
 
     integer          :: i,j
     double precision :: dmsdr(1:6,1:6),dmdr(1:6,0:29),m(0:29)
@@ -570,7 +546,6 @@ end subroutine evdmdr
 !> @brief Evaluate evdpdr.
 subroutine evdpdr( p, dmdr, dpdr )
     implicit none
-
 
     integer          :: i,j
     double precision :: dmdr(1:6,0:29),dpdr(1:6,0:22)

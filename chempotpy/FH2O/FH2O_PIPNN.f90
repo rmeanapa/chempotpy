@@ -8,8 +8,6 @@ module nnparam
         & nodes, noutput, npbasissoc, nrbasissoc, nscale, nterm, nwe, p2soccoef, pavga, pavgb, pavgc, &
         & pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, weightb, weightc
 
-
-
     double precision,parameter :: alpha = 1.0d0,vpesmin=-176.0260035639990d0,&
         & pi=3.141592653589793238d0,radian=pi/180.0d0,bohr=0.5291772d0
     integer,parameter    :: nbasis = 18,nrbasissoc=147,npbasissoc=288
@@ -38,7 +36,6 @@ subroutine pes( x, igrad, path, p, g, d )
         & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
         & weightb, weightc
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -94,7 +91,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
 !> @brief Evaluate fh2o_soc_nn.
 subroutine fh2o_soc_nn( xt, vg, socg, vgsoc )
     use nnparam, only: alpha, biasa, biasb, biasc, bohr, ifunc, nbasis, nhid, nindex, ninput, nlayer, &
@@ -102,8 +98,6 @@ subroutine fh2o_soc_nn( xt, vg, socg, vgsoc )
         & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
         & weightb, weightc
     implicit none
-
-
 
     double precision :: xt(3,4),xt2(3,4),xn(3,4),xvec(3,6),rint(6),rt(6)
     double precision :: tr1basis(nrbasissoc),tr2basis(nrbasissoc)
@@ -176,11 +170,9 @@ subroutine fh2o_soc_nn( xt, vg, socg, vgsoc )
 
 end subroutine fh2o_soc_nn
 
-
 !> @brief Evaluate orderxnt.
 subroutine orderxnt( x1, x2 )
     implicit none
-
 
     double precision :: x1(3,4),x2(3,4),xvec(3,2),r1,r2,xt(3,4)
     xt        = x1
@@ -204,7 +196,6 @@ end subroutine orderxnt
 double precision function r1function( r, n )
     implicit none
 
-
     double precision, parameter :: r0 = 1.8d0,c=0.45d0
     double precision            :: r
     integer                     :: n
@@ -219,11 +210,9 @@ double precision function r1function( r, n )
 
 end function r1function
 
-
 !> @brief Evaluate r2function.
 double precision function r2function( r, n )
     implicit none
-
 
     double precision,parameter :: r0 = 2.0d0,c=0.42d0
     double precision           :: r
@@ -243,7 +232,6 @@ end function r2function
 double precision function p2function( r, n )
     implicit none
 
-
     double precision,parameter :: r0 = 2.3d0,c=0.40d0
     double precision           :: r
     integer                    :: n
@@ -258,7 +246,6 @@ double precision function p2function( r, n )
 
 end function p2function
 
-
 !> @brief Evaluate soc_react_ground.
 subroutine soc_react_ground( rcom, t2, phi, socrg )
     use nnparam, only: alpha, biasa, biasb, biasc, bohr, ifunc, nbasis, nhid, nindex, ninput, nlayer, &
@@ -266,7 +253,6 @@ subroutine soc_react_ground( rcom, t2, phi, socrg )
         & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
         & weightb, weightc
     implicit none
-
 
     double precision :: rcom,t2,phi,socrg,r1function
     double precision :: tr1basis(nrbasissoc)
@@ -296,7 +282,6 @@ subroutine soc_react_ground( rcom, t2, phi, socrg )
 
 end subroutine soc_react_ground
 
-
 !> @brief Evaluate soc_product_ground.
 subroutine soc_product_ground( rcom, t1, t2, phi, socpg )
     use nnparam, only: alpha, biasa, biasb, biasc, bohr, ifunc, nbasis, nhid, nindex, ninput, nlayer, &
@@ -304,7 +289,6 @@ subroutine soc_product_ground( rcom, t1, t2, phi, socpg )
         & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
         & weightb, weightc
     implicit none
-
 
     double precision :: rcom,t1,t2,phi,socpg,socps,p2function
     double precision :: tp2basis(npbasissoc)
@@ -340,7 +324,6 @@ subroutine fh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHFO order and angstro
         & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
         & weightb, weightc
     implicit none
-
 
     integer,parameter :: ndim = 6
     integer           :: j,k
@@ -432,7 +415,6 @@ subroutine fh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHFO order and angstro
     if(vpes.lt.-1.5d0)vpes=5.0d0
     vpes = min(vpes,5.0d0)
 
-
 end subroutine fh2onn
 
 !-->  read NN weights and biases from matlab output
@@ -448,15 +430,14 @@ subroutine pes_init( path )
         & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
         & weightb, weightc
     implicit none
-    integer :: file_unit_4
-
-
     character(len=1024), intent(in) :: path
-    integer                         :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
-    integer                         :: ibasis,npd,iterm,ib,nfile
-    character(len=80)               :: f1
-    character                       :: line
-    character(len=1024)             :: file_path1, file_path2
+
+    integer             :: file_unit_4
+    integer             :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
+    integer             :: ibasis,npd,iterm,ib,nfile
+    character(len=80)   :: f1
+    character           :: line
+    character(len=1024) :: file_path1, file_path2
 
     file_path1 = trim(path)//"/FH2O/weights.txt"
     file_path2 = trim(path)//"/FH2O/biases.txt"
@@ -624,7 +605,6 @@ subroutine pes_init( path )
     close(nfile)
     close(file_unit_4)
 
-
 end subroutine pes_init
 
 !> @brief Evaluate getpota.
@@ -634,7 +614,6 @@ subroutine getpota( x, vpot )
         & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
         & weightb, weightc
     implicit none
-
 
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -680,7 +659,6 @@ subroutine getpotb( x, vpot )
         & weightb, weightc
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -725,7 +703,6 @@ subroutine getpotc( x, vpot )
         & weightb, weightc
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -766,7 +743,6 @@ end subroutine getpotc
 function tranfun( x, ifunc )
     implicit none
 
-
     integer          :: ifunc
     double precision :: tranfun,x
     if (ifunc.eq.1) then
@@ -782,7 +758,6 @@ end
 function emsav( x, c ) result(v)
     implicit none
 
-
     double precision,dimension(1:6)::x
     double precision,dimension(0:17)::c
     double precision :: v
@@ -796,7 +771,6 @@ end function emsav
 subroutine bemsav( x, p )
     implicit none
 
-
     double precision,dimension(1:6),intent(in)::x
     double precision,dimension(0:17),intent(out)::p
     ! ::::::::::::::::::::
@@ -808,7 +782,6 @@ end subroutine bemsav
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision,dimension(1:6),intent(in)::x
     double precision,dimension(0:10),intent(out)::m
@@ -830,7 +803,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision,dimension(0:10),intent(in)::m
     double precision,dimension(0:17),intent(out)::p
@@ -859,7 +831,6 @@ end subroutine evpoly
 !> @brief Evaluate xyzTOjcb3.
 subroutine xyztojcb3( ct, rt )
     implicit none
-
 
     !   D  F
     !           /|\         /
@@ -909,11 +880,9 @@ subroutine xyztojcb3( ct, rt )
 
 end subroutine xyztojcb3
 
-
 !> @brief Evaluate jcb3tocart.
 subroutine jcb3tocart( rint, cart )
     implicit none
-
 
     double precision :: rint(6),cart(3,4)
     double precision :: r1,r2,r3,th1,th2,phia,sth1,sth2,sth3,cth1,cth2,cth3
@@ -975,7 +944,6 @@ subroutine cart_dijacobi( c1, r )
     ! convert the diatom-diatom Jacobi coordinates to XYZ coordinates
     !  c in angstrom and ABCD, r in angstrom and radians
     implicit none
-
 
     double precision :: r(1:6),c(1:3,1:4),mass(1:4),c1(1:3,1:4)
     double precision :: crop1(1:3),crop2(1:3)
@@ -1045,7 +1013,6 @@ subroutine dijacobi_cart( r, c )
     ! convert the diatom-diatom Jacobi coordinates to XYZ coordinates
     ! r in angstrom and radians,  c in bohr and ABCD
     implicit none
-
 
     double precision :: r(1:6),c(1:3,1:4),mass(1:4)
     double precision :: cm(3,2),vec(1:3,1:6), pi
@@ -1136,7 +1103,6 @@ end subroutine dijacobi_cart
 !> @brief Evaluate crossp.
 subroutine crossp( v1, v2, v3 )
     implicit none
-
 
     double precision :: v1(1:3),v2(1:3),v3(1:3)
     ! cross product of two 3-dimensional vectors

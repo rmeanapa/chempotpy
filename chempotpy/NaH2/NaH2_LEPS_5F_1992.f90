@@ -57,9 +57,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -162,7 +163,6 @@ subroutine prepot
     call prepot12
     call prepot22
 
-
 end subroutine prepot
 !
 !> @brief Evaluate pot for the NaH2_LEPS_5F_1992 potential.
@@ -182,7 +182,6 @@ subroutine pot( r, e, nt, nsurf )
     else
         call pot22(r,e,nt)
     end if
-
 
 end subroutine pot
 !
@@ -270,8 +269,6 @@ subroutine prepot11
 
     10 continue
 
-
-
 end subroutine prepot11
 !
 !  U12 surface - coupling surface
@@ -313,8 +310,6 @@ subroutine prepot12
         e(i) = ang*(f1+f3)*cevau
 
     10 continue
-
-
 
 end subroutine prepot12
 !
@@ -422,7 +417,5 @@ subroutine prepot22
         e(i) = (e(i)+vdisp)*cevau
 
     10 continue
-
-
 
 end subroutine prepot22

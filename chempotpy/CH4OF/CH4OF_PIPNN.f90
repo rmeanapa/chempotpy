@@ -6,8 +6,6 @@ module nnparam
     public :: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, nodes, &
         & noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
 
-
-
     double precision,parameter    :: alpha   = 1.0d0,pi=3.1415926d0,radian=pi/180.0d0
     integer,parameter             :: nbasis  = 1105,ndim=21,natom=7
     double precision,parameter    :: vpesmin = -215.234262652419d0
@@ -26,7 +24,6 @@ subroutine pes( x, igrad, path, p, g, d )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -72,13 +69,11 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
 !> @brief Evaluate fch3ohpipNN.
 subroutine fch3ohpipnn( ct, vpes )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-
 
     integer          :: i,j,k,lpes
     double precision :: rb(ndim),xbond(ndim),basis(nbasis),tmp1,txinput(nbasis-1)
@@ -113,7 +108,6 @@ subroutine fch3ohpipnn( ct, vpes )
     !       vnn=vpes
     !       vpes=vnn
 
-
 end subroutine fch3ohpipnn
 
 !-->  read NN weights and biases from matlab output
@@ -125,14 +119,13 @@ subroutine pes_init( path )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-    integer :: file_unit_4
-
-
     character(len=1024), intent(in) :: path
-    integer                         :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
-    integer                         :: ibasis,npd,iterm,ib,nfile
-    character(len=80)               :: f1, line
-    character(len=1024)             :: file_path1, file_path2
+
+    integer             :: file_unit_4
+    integer             :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
+    integer             :: ibasis,npd,iterm,ib,nfile
+    character(len=80)   :: f1, line
+    character(len=1024) :: file_path1, file_path2
 
     file_path1 = trim(path)//"/CH4OF/weights.txt"
     file_path2 = trim(path)//"/CH4OF/biases.txt"
@@ -192,7 +185,6 @@ subroutine getpota( x, vpot )
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     integer                    :: j,k,neu1,neu2,ndriv
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -231,11 +223,9 @@ subroutine getpota( x, vpot )
 
 end subroutine getpota
 
-
 !> @brief Evaluate tranfun.
 function tranfun( x, ifunc )
     implicit none
-
 
     integer          :: ifunc
     double precision :: tranfun,x
@@ -252,7 +242,6 @@ end
 subroutine bemsav( xmorse, p )
     implicit none
 
-
     double precision,dimension(1:21),intent(in)::xmorse
     double precision,dimension(0:1104),intent(out)::p
     ! ::::::::::::::::::::
@@ -261,11 +250,9 @@ subroutine bemsav( xmorse, p )
     call evpoly(m,p)
 end subroutine bemsav
 
-
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision,dimension(1:21),intent(in)::x
     double precision,dimension(0:2000),intent(out)::m
@@ -2277,7 +2264,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision,dimension(0:2000),intent(in)::m
     double precision,dimension(0:1104),intent(out)::p

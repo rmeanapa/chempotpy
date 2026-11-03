@@ -104,7 +104,6 @@ subroutine o4pes( x, v, dvdx, igrad )
 
     implicit none
 
-
     integer          :: i,igrad,j,nob,k
     double precision :: v
     double precision :: dvdx(12),x(12)
@@ -159,7 +158,6 @@ subroutine coord_convt( x )
     r(4) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
     r(5) = sqrt((x(4)-x(10))**2 + (x(5)-x(11))**2 + (x(6)-x(12))**2)
     r(6) = sqrt((x(7)-x(10))**2 + (x(8)-x(11))**2 + (x(9)-x(12))**2)
-
 
 end subroutine coord_convt
 !> @brief Evaluate EvV for the O4_triplet_v2 potential.
@@ -216,7 +214,6 @@ subroutine evv( v )
     call d3disp(r,disp,dispdr,0)
     v = v+disp
 
-
     ! Evaluate V by taken the product of C and Basis function array
     do i=1,430
         v = v + c(i)*b(i)
@@ -224,7 +221,6 @@ subroutine evv( v )
 
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
-
 
 end subroutine evv
 !> @brief Evaluate EvdVdX for the O4_triplet_v2 potential.
@@ -427,8 +423,6 @@ subroutine evmono
     rm(109) = rm(6)*rm(85)
     rm(110) = rm(6)*rm(86)
     rm(111) = rm(6)*rm(87)
-
-
 
 end subroutine evmono
 !> @brief Evaluate EvPoly for the O4_triplet_v2 potential.
@@ -922,7 +916,6 @@ subroutine evpoly
     p(464) = p(3)*p(194) - p(453) - p(454) - p(451)
     p(465) = p(1)*p(305) - p(464) - p(463)
 
-
 end subroutine evpoly
 !> @brief Evaluate evbas for the O4_triplet_v2 potential.
 subroutine evbas
@@ -943,7 +936,6 @@ subroutine evbas
     do i=1,466
         b1(i) = p(i-1)
     enddo
-
 
     ! Remove unconnected terms and 2-body terms and pass to B(1:430)
     b(1) = b1(4)
@@ -1011,7 +1003,6 @@ subroutine evbas
     b(428) = b1(461)
     b(429) = b1(463)
     b(430) = b1(465)
-
 
 end subroutine evbas
 !> @brief Evaluate ev2gm2 for the O4_triplet_v2 potential.
@@ -1230,7 +1221,6 @@ subroutine evdrdx( x )
     drdx(6,12) = -drdx(6,9)
     ! Finish the calculation of non-zero dRdX
 
-
 end subroutine evdrdx
 !> @brief Evaluate EvdMsdR for the O4_triplet_v2 potential.
 subroutine evdmsdr
@@ -1268,7 +1258,6 @@ subroutine evdmsdr
         dmsdr(i,i) = (-2.0d0*(r(i)-rb)/ab-1/a)* exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
 
     enddo
-
 
 end subroutine evdmsdr
 !> @brief Evaluate EvdMdR for the O4_triplet_v2 potential.
@@ -1403,7 +1392,6 @@ subroutine evdmdr
         dmdr(i,110) = dmdr(i,6)*rm(86) + rm(6)*dmdr(i,86)
         dmdr(i,111) = dmdr(i,6)*rm(87) + rm(6)*dmdr(i,87)
     enddo
-
 
 end subroutine evdmdr
 !> @brief Evaluate EvdPdr for the O4_triplet_v2 potential.
@@ -1939,7 +1927,6 @@ subroutine evdpdr
 
     enddo
 
-
 end subroutine evdpdr
 !> @brief Evaluate evdbdr for the O4_triplet_v2 potential.
 subroutine evdbdr
@@ -2033,7 +2020,6 @@ subroutine evdbdr
         dbdr(j,429) = db1dr(j,463)
         dbdr(j,430) = db1dr(j,465)
     enddo
-
 
 end subroutine evdbdr
 

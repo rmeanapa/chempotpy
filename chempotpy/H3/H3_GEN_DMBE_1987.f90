@@ -4,21 +4,22 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    double precision :: anuzero, cart, deesdr, degsdr, deijdr, descart, dgscart, dijcart, engyes, &
-        & engygs, engyij, pengyes, pengygs, pengyij, r, v
-    integer :: iatom, nasurf, nder, nflag, nulbl
     ! number of electronic state
-    integer, parameter            :: nstates = 2
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 2
+    integer, parameter :: natoms  = 3
+    integer, parameter :: n3atom  = 75
+    integer, parameter :: natom   = 25
+    integer, parameter :: isurf   = 5
+    integer, parameter :: jsurf   = int(isurf*(isurf+1)/2)
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
-    integer, parameter :: n3atom = 75
-    integer, parameter :: natom  = 25
-    integer, parameter :: isurf  = 5
-    integer, parameter :: jsurf  = int(isurf*(isurf+1)/2)
+    double precision :: anuzero, cart, deesdr, degsdr, deijdr, descart, dgscart, dijcart, engyes, &
+        & engygs, engyij, pengyes, pengygs, pengyij, r, v
+    integer :: iatom, nasurf, nder, nflag, nulbl
 
     common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
     common /pt4cm/  engyes(isurf),deesdr(n3atom,isurf)
@@ -80,7 +81,6 @@ subroutine pes( x, igrad, p, g, d )
     r1(2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)
     r1(3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)
 
-
     call evdrdx(tx, r1, drdx)
     hr = 0.d0
     gr = 0.d0
@@ -110,7 +110,6 @@ subroutine pes( x, igrad, p, g, d )
         enddo
     enddo
 
-
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the H3_GEN_DMBE_1987 potential.
@@ -118,9 +117,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -503,7 +503,6 @@ subroutine pot
             20 continue
         endif
     endif
-
 
     !
     ! first electronic state
@@ -2358,7 +2357,6 @@ subroutine potinfo
     endif
 end subroutine potinfo
 
-
 !> @brief Evaluate ANCVRT for the H3_GEN_DMBE_1987 potential.
 subroutine ancvrt
     implicit none
@@ -2712,7 +2710,6 @@ subroutine carttor
         stop
     end if
 end subroutine carttor
-
 
 !> @brief Evaluate EUNITZERO for the H3_GEN_DMBE_1987 potential.
 subroutine eunitzero

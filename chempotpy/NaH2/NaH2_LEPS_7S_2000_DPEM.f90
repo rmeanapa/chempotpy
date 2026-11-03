@@ -46,15 +46,15 @@ subroutine dpem( x, igrad, u, ug )
 
 end subroutine dpem
 
-
 !> @brief Evaluate EvdRdX for the NaH2_LEPS_7S_2000_DPEM potential.
 subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -175,11 +175,9 @@ end subroutine diagonalize
 subroutine prepot
     implicit none
 
-
     call prepot11
     call prepot12
     call prepot22
-
 
 end subroutine prepot
 !
@@ -201,7 +199,6 @@ subroutine pot( r, e, nt, nsurf )
     else if (nsurf .eq. 3) then
         call pot22(r,e,nt)
     end if
-
 
 end subroutine pot
 
@@ -245,7 +242,6 @@ subroutine prepot11
     entry pot11(r,e,nt)
 
     do 10 i=1,nt
-
 
         ! ============================================================
         ! useful quantities calculated first
@@ -311,7 +307,6 @@ subroutine prepot11
 
 end subroutine prepot11
 
-
 ! ********************************************************************
 ! ********************************************************************
 
@@ -321,7 +316,6 @@ end subroutine prepot11
 subroutine prepot12
 
     implicit none
-
 
     double precision :: ap,alp,bet,rnagsq,rnag,cosg,rd0,r20
     double precision :: r1s,r2s,r3s,cos1,cos2,theta
@@ -338,7 +332,6 @@ subroutine prepot12
     save
 
     theta = 15.6d0*dacos(-1.0d0)/180.0d0
-
 
     cevau = 1.d0/27.2113961d0
 
@@ -428,7 +421,6 @@ subroutine prepot22
     data c2a /1.38661d0/, c2b /0.27362d0/, c2c /0.03764d0/, &
         & una2p/2.1037d0/
 
-
     cevau  = 1.d0/27.2113961d0
     onethd = 1.0d0/3.0d0
     twothd = 2.0d0/3.0d0
@@ -448,7 +440,6 @@ subroutine prepot22
         r1s = r(i,1)*r(i,1)
         r2s = r(i,2)*r(i,2)
         r3s = r(i,3)*r(i,3)
-
 
         cosa = (r1s+r3s-r2s)/(2*r(i,1)*r(i,3))
 
@@ -489,7 +480,6 @@ subroutine prepot22
         t1m = t190 +(t1c-t190)* 0.5d0*(1.0d0+dtanh(t1alp*(r(i,2)-t1rho)))
 
         t1 = t1m + (t10-t1m)*cosg**2
-
 
         ! The H2 triplet
 
@@ -555,7 +545,6 @@ subroutine prepot22
 
         t3 = t3m + (t30 - t3m)*cosg**2
 
-
         ! ===============================================================
         ! The final LEPS form
 
@@ -573,8 +562,6 @@ subroutine prepot22
 
     10 continue
 end subroutine prepot22
-
-
 
 !***********************************************************************
 !***********************************************************************

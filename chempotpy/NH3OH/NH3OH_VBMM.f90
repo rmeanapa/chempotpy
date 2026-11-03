@@ -5,19 +5,20 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    double precision :: anuzero, cart, descart, dgscart, dijcart, pengyes, pengygs, pengyij, v
-    integer          :: iatom, idir, istate, nasurf, nder, nflag, nulbl
     ! number of electronic state
-    integer, parameter            :: nstates = 1
-    integer, parameter            :: natoms  = 6
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 6
+    integer, parameter :: natom   = 25
+    integer, parameter :: isurf   = 5
+    integer, parameter :: jsurf   = int(isurf*(isurf+1)/2)
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
-    integer, parameter :: natom = 25
-    integer, parameter :: isurf = 5
-    integer, parameter :: jsurf = int(isurf*(isurf+1)/2)
+    double precision :: anuzero, cart, descart, dgscart, dijcart, pengyes, pengygs, pengyij, v
+    integer          :: iatom, idir, istate, nasurf, nder, nflag, nulbl
 
     common/usrocm/ pengygs,pengyes(isurf), &
         & pengyij(jsurf), &
@@ -77,7 +78,6 @@ end subroutine pes
 !
 !   References: M. Monge-Palacios, C. Rangel and J. Espinosa-Garcia,
 !   J.Chem.Phys. 138, 084305 (2013)
-
 
 !> @brief Evaluate POT for the NH3OH_VBMM potential.
 subroutine pot
@@ -2220,7 +2220,6 @@ subroutine potinfo
     endif
 end subroutine potinfo
 
-
 !> @brief Evaluate ANCVRT for the NH3OH_VBMM potential.
 subroutine ancvrt
     implicit none
@@ -2574,7 +2573,6 @@ subroutine carttor
         stop
     end if
 end subroutine carttor
-
 
 !> @brief Evaluate EUNITZERO for the NH3OH_VBMM potential.
 subroutine eunitzero

@@ -30,12 +30,10 @@
 !                        bhandarkar@iitb.ac.in  !
 !***********************************************************************!
 
-
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, p, g, d )
 
     implicit none
-
 
     ! number of electronic state
     integer, parameter            :: nstates = 1
@@ -67,12 +65,10 @@ subroutine pes( x, igrad, p, g, d )
 
 endsubroutine
 
-
 !> @brief Evaluate n3.
 subroutine n3( v, rx, ry, rz )
 
     implicit none
-
 
     double precision, intent(in)  :: rx, ry, rz
     double precision, intent(out) :: v
@@ -89,7 +85,6 @@ subroutine n3( v, rx, ry, rz )
 
     re = 1.098d0
     ae = 0.9d0
-
 
     xrx = exp(-(rx-re)/ae)
     xry = exp(-(ry-re)/ae)
@@ -113,7 +108,6 @@ endsubroutine
 !> @brief Evaluate assign.
 subroutine assign( coeff, indices )
     implicit none
-
 
     double precision,intent(inout) :: coeff(52), indices(52,3)
 

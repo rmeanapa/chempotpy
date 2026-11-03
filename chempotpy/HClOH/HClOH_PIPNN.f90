@@ -7,8 +7,6 @@ module nnparam
     public :: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, nscale, nwe, &
         & pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
 
-
-
     integer, parameter            :: ninput = 17
     integer                       :: noutput,nhid,nlayer,ifunc,nwe,nodemax
     integer                       :: nscale
@@ -29,7 +27,6 @@ subroutine pes( x, igrad, path, p, g, d )
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 4
@@ -38,7 +35,6 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
 
     double precision :: v, tx(3,natoms)
     integer          :: iatom, idir, j, istate
@@ -84,7 +80,6 @@ endsubroutine
 subroutine hcloh_pes_interface( ct, vpes )
     use nnparam,only: vpescut
     implicit none
-
 
     integer          :: lxc
     double precision :: xct(3,4),ct(3,4),xvec(3,6),xct2(3,4)
@@ -132,7 +127,6 @@ subroutine hcloh_pes_interface( ct, vpes )
 end
 !**************************************************************************
 
-
 !**************************************************************************
 !> @brief Evaluate hclohNN.
 subroutine hclohnn( ct, vpes, vpesa, vpesb, vpesc )
@@ -140,7 +134,6 @@ subroutine hclohnn( ct, vpes, vpesa, vpesb, vpesc )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
-
 
     integer                    :: i
     double precision           :: rb(6),xbond(6),basis(0:17)
@@ -182,10 +175,8 @@ subroutine hclohnn( ct, vpes, vpesa, vpesb, vpesc )
     if(vpes.lt.-1.5d0)vpes=5.0d0
     vpes = min(vpes,5.0d0)
 
-
 end subroutine hclohnn
 !**************************************************************************
-
 
 !**************************************************************************
 !-->  read NN weights and biases from matlab output
@@ -198,7 +189,6 @@ subroutine pes_init( path )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
-
 
     character(len=1024), intent(in) :: path
     integer                         :: ihid,iwe,inode1,inode2,ilay1,ilay2
@@ -263,7 +253,6 @@ subroutine pes_init( path )
     file_path4 = trim(path)//"/HClOH/biasesb.txt"
     open(wfileb,file=file_path3,status='old')
     open(bfileb,file=file_path4,status='old')
-
 
     rewind(wfileb)
     rewind(bfileb)
@@ -352,10 +341,8 @@ subroutine pes_init( path )
     close(wfilec)
     close(bfilec)
 
-
 end subroutine pes_init
 !**************************************************************************
-
 
 !**************************************************************************
 !> @brief Evaluate getpota.
@@ -363,7 +350,6 @@ subroutine getpota( x, vpot )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
-
 
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -403,14 +389,12 @@ subroutine getpota( x, vpot )
 end subroutine getpota
 !**************************************************************************
 
-
 !**************************************************************************
 !> @brief Evaluate getpotb.
 subroutine getpotb( x, vpot )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
-
 
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -450,14 +434,12 @@ subroutine getpotb( x, vpot )
 end subroutine getpotb
 !**************************************************************************
 
-
 !**************************************************************************
 !> @brief Evaluate getpotc.
 subroutine getpotc( x, vpot )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
-
 
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -497,12 +479,10 @@ subroutine getpotc( x, vpot )
 end subroutine getpotc
 !**************************************************************************
 
-
 !**************************************************************************
 !> @brief Evaluate tranfun.
 function tranfun( x, ifunc )
     implicit none
-
 
     integer          :: ifunc
     double precision :: tranfun,x
@@ -519,7 +499,6 @@ end
 subroutine bemsav( x, p )
     implicit none
 
-
     double precision :: x(6),m(0:10),p(0:17)
 
     call evmono(x,m)
@@ -528,12 +507,10 @@ subroutine bemsav( x, p )
 end subroutine bemsav
 !**************************************************************************
 
-
 !**************************************************************************
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision :: x(6),m(0:10)
 
@@ -552,12 +529,10 @@ subroutine evmono( x, m )
 end subroutine evmono
 !**************************************************************************
 
-
 !**************************************************************************
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision :: m(0:10),p(0:17)
 
@@ -583,12 +558,10 @@ subroutine evpoly( m, p )
 end subroutine evpoly
 !**************************************************************************
 
-
 !**************************************************************************
 !> @brief Evaluate before_vpes.
 subroutine before_vpes( xct, lxc )
     implicit none
-
 
     integer          :: lxc,i
     double precision :: xct(3,4),xct2(3,4),xvec(3,6),bt(6)

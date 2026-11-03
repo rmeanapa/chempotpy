@@ -8,8 +8,6 @@ module nnparam
         & nscale, nterm, nwe, nxhcl, nxho, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, r0hcl, r0ho, &
         & radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
 
-
-
     double precision,parameter :: alpha = 1.0d0,vpesmin=-536.01052952d0,&
         &vpescut=5.0d0,&
         &pi=3.141592653589793238d0,radian=pi/180.0d0,bohr=0.5291772d0
@@ -44,7 +42,6 @@ subroutine pes( x, igrad, p, g, d )
         & noutput, nscale, nterm, nwe, nxhcl, nxho, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, &
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
-
 
     ! number of electronic state
     integer, parameter            :: nstates = 1
@@ -105,7 +102,6 @@ subroutine clh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHClO order and angst
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
 
-
     integer,parameter :: ndim = 6
     integer           :: j,k
     double precision  :: rb(ndim),xbond(ndim),basis(0:nbasis-1),tmp1
@@ -147,7 +143,6 @@ subroutine clh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHClO order and angst
     if(vpes.lt.-1.5d0)vpes=5.0d0
     vpes = min(vpes,5.0d0)
 
-
 end subroutine clh2onn
 
 !-->  read NN weights and biases from matlab output
@@ -161,7 +156,6 @@ subroutine pes_init
         & noutput, nscale, nterm, nwe, nxhcl, nxho, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, &
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
-
 
     double precision,parameter :: dy1 = 1.0d30,dyn=1.0d30
     integer,parameter          :: nn  = 100
@@ -31846,7 +31840,6 @@ subroutine getpota( x, vpot )
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -31890,7 +31883,6 @@ subroutine getpotb( x, vpot )
         & noutput, nscale, nterm, nwe, nxhcl, nxho, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, &
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
-
 
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -31936,7 +31928,6 @@ subroutine getpotc( x, vpot )
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -31977,7 +31968,6 @@ end subroutine getpotc
 function tranfun( x, ifunc )
     implicit none
 
-
     integer          :: ifunc
     double precision :: tranfun,x
     if (ifunc.eq.1) then
@@ -31993,7 +31983,6 @@ end
 function emsav( x, c ) result(v)
     implicit none
 
-
     double precision,dimension(1:6)::x
     double precision,dimension(0:17)::c
     double precision :: v
@@ -32007,7 +31996,6 @@ end function emsav
 subroutine bemsav( x, p )
     implicit none
 
-
     double precision,dimension(1:6),intent(in)::x
     double precision,dimension(0:17),intent(out)::p
     ! ::::::::::::::::::::
@@ -32019,7 +32007,6 @@ end subroutine bemsav
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision,dimension(1:6),intent(in)::x
     double precision,dimension(0:10),intent(out)::m
@@ -32041,7 +32028,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision,dimension(0:10),intent(in)::m
     double precision,dimension(0:17),intent(out)::p
@@ -32073,7 +32059,6 @@ end subroutine evpoly
 subroutine hohcl_pes_interface( xc, vpes )
     use nnparam,only: vpescut
     implicit none
-
 
     integer          :: lxc,i,j
     double precision :: xc(3,4),rbond(6),xct(3,4),xvec(3,6),xct2(3,4)
@@ -32155,7 +32140,6 @@ subroutine ho_hcl_correction( xc, vdp )
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
 
-
     double precision :: xc(3,4),xct2(3,4),vdp,vcorr,rbond(6),vt1
     double precision :: xvec(3,6),rhpo,rhcl,dpthcl,dptho
     double precision :: angb,anga,angab,vechcl(3),vecho(3),vechh(3)
@@ -32191,7 +32175,6 @@ subroutine ho_hcl_correction( xc, vdp )
     !              \             /
     !               \           / H
     !             H  \
-
 
     call ho_hcl_pes_spline(rhcl,rhpo,vt1)
 
@@ -32231,7 +32214,6 @@ subroutine ho_hcl_correction( xc, vdp )
     vdp = ((vt1+vcorr)-vpesmin)*627.509d0 - 0.15d0
     vdp = vdp/23.0605d0
 
-
 end subroutine ho_hcl_correction
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32240,7 +32222,6 @@ end subroutine ho_hcl_correction
 !> @brief Evaluate before_vpes.
 subroutine before_vpes( xct, lxc )
     implicit none
-
 
     double precision :: xct(3,4),bt(6),xvec(3,6),xct2(3,4)
     double precision :: xcom1(3),xcom2(3),rcom,mass(4)
@@ -32371,7 +32352,6 @@ subroutine before_vpes( xct, lxc )
     !     endif
     lxc = 0
 
-
 end subroutine before_vpes
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32384,7 +32364,6 @@ subroutine ho_dipole( rt, dpt )
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
 
-
     integer,parameter          :: nn  = 100
     double precision,parameter :: dy1 = 1.0d30,dyn=1.0d30
     double precision           :: y2(nn),rt,dpt
@@ -32393,7 +32372,6 @@ subroutine ho_dipole( rt, dpt )
     if (rt.lt.r0ho(1))  rt=r0ho(1)
     if (rt.gt.r0ho(n0ho))rt=r0ho(n0ho)
     call splint(r0ho,dp0ho,y2,n0ho,rt,dpt)
-
 
 end  subroutine ho_dipole
 
@@ -32407,7 +32385,6 @@ subroutine hcl_dipole( rt, dpt )
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
 
-
     integer,parameter          :: nn  = 100
     double precision,parameter :: dy1 = 1.0d30,dyn=1.0d30
     double precision           :: y2(nn),rt,dpt
@@ -32416,7 +32393,6 @@ subroutine hcl_dipole( rt, dpt )
     if (rt.lt.r0hcl(1))  rt=r0hcl(1)
     if (rt.gt.r0hcl(n0hcl))rt=r0hcl(n0hcl)
     call splint(r0hcl,dp0hcl,y2,n0hcl,rt,dpt)
-
 
 end  subroutine hcl_dipole
 
@@ -32429,7 +32405,6 @@ subroutine ho_hcl_pes_spline( r1, r2, vpes )
         & noutput, nscale, nterm, nwe, nxhcl, nxho, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, &
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
-
 
     integer,parameter :: nn = 100
     double precision  :: ytmp(nn),y2tmp(nn),y2a(nxhcl,nxho),yytmp(nn)
@@ -32464,7 +32439,6 @@ subroutine ho_hcl_pes_spline( r1, r2, vpes )
 
     vpes = y
 
-
 end subroutine  ho_hcl_pes_spline
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32472,7 +32446,6 @@ end subroutine  ho_hcl_pes_spline
 !> @brief Evaluate splint.
 subroutine splint( xa, ya, y2a, n, x, y )
     implicit none
-
 
     double precision :: a, b, h, x, xa, y, y2a, ya
     integer          :: k, khi, klo, n
@@ -32498,7 +32471,6 @@ end
 !> @brief Evaluate spline.
 subroutine spline( x, y, n, yp1, ypn, y2 )
     implicit none
-
 
     double precision :: p, qn, sig, u, un, x, y, y2, yp1, ypn
     integer          :: i, k, n

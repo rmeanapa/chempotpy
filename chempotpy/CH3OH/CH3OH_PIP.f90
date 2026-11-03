@@ -3,9 +3,6 @@ module pes_shell
     private
     public :: auang, calcpot, getd0, getr0, getrvec, getv_x4yz, getvec, potshell, prepot
 
-
-
-
     real,parameter   :: auang = 0.5291772083d0
     integer          :: coefficient_count
     integer          :: correction_count
@@ -679,13 +676,11 @@ module pes_shell
 
 end module pes_shell
 
-
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, p, g, d )
 
     use pes_shell, only: auang, calcpot, getd0, getr0, getrvec, getv_x4yz, getvec, potshell, prepot
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -695,7 +690,6 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
 
     double precision :: v, tx(3,natoms)
     integer          :: iatom, idir, j, istate

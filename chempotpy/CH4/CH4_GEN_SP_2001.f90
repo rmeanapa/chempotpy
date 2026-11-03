@@ -3,8 +3,6 @@
 subroutine pes( x, igrad, path, p, g, d )
     implicit none
 
-
-
     integer, parameter              :: nstates          = 1
     integer, parameter              :: natoms           = 5
     real(8), parameter              :: bohr_to_angstrom = 0.529177211d0
@@ -30,18 +28,17 @@ subroutine pes( x, igrad, path, p, g, d )
     endif
 end subroutine pes
 
-
 !> @brief Convert methane Cartesian coordinates and call the T8 kernel.
 subroutine getpot( potential_energy, coordinates, path )
     implicit none
 
-
+    real(8), parameter :: zero_point_shift = &
+        -28.11193019d0*4.556335d-6
 
     character(len=1024), intent(in) :: path
     real(8), intent(in)             :: coordinates(5,3)
     real(8), intent(out)            :: potential_energy
-    real(8), parameter              :: zero_point_shift = &
-        -28.11193019d0*4.556335d-6
+
     real(8) :: energy_hartree
     real(8) :: radau_coordinates(10)
 
@@ -50,21 +47,20 @@ subroutine getpot( potential_energy, coordinates, path )
     potential_energy = energy_hartree-zero_point_shift
 end subroutine getpot
 
-
 !> @brief Convert CH4 Cartesian coordinates to the T8 Radau coordinates.
 subroutine methaneradau( coordinates, radau_coordinates )
     implicit none
 
-
+    real(8), parameter :: unitconvm = 5.48579903d-4
 
     real(8), intent(in)  :: coordinates(5,3)
     real(8), intent(out) :: radau_coordinates(10)
-    real(8), parameter   :: unitconvm = 5.48579903d-4
-    real(8), save        :: alpha0 = 0.0d0
-    logical, save        :: initialized = .false.
-    real(8)              :: carbon_mass, hydrogen_mass
-    real(8)              :: relative(4,3), shifted(4,3), shift(3)
-    integer              :: atom_index
+
+    real(8), save :: alpha0 = 0.0d0
+    logical, save :: initialized = .false.
+    real(8)       :: carbon_mass, hydrogen_mass
+    real(8)       :: relative(4,3), shifted(4,3), shift(3)
+    integer       :: atom_index
 
     if( .not. initialized ) then
         carbon_mass   = 12.0d0/unitconvm-6.0d0

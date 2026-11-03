@@ -4,17 +4,18 @@ subroutine pes( x, igrad, pin, grad, dvec )
 
     implicit none
 
-    double precision :: u
-    integer          :: iatom, idir
     ! number of electronic state
-    integer, parameter            :: nstates = 3
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 3
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: pin(nstates)
     double precision, intent(out) :: grad(nstates,natoms,3)
     double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
 
+    double precision :: u
+    integer          :: iatom, idir
     integer          :: nt
     double precision :: r(1,3), r2(3)
     double precision :: u11(1), u12(1), u13(1), u22(1), u23(1), u33(1)
@@ -114,7 +115,6 @@ subroutine pes( x, igrad, pin, grad, dvec )
         enddo
     enddo
 
-
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the H3p_UNO_2001 potential.
@@ -122,9 +122,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3

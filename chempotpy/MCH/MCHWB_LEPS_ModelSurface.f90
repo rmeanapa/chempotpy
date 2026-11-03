@@ -4,15 +4,16 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    integer :: iatom, idir, nder
     ! number of electronic state
-    integer, parameter            :: nstates = 2
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 2
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
+    integer          :: iatom, idir, nder
     double precision :: nt, r(1,3), r2(3), v(1)
     double precision :: u11(1), u12(1), u22(1)
     double precision :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
@@ -104,7 +105,6 @@ subroutine pes( x, igrad, p, g, d )
         enddo
     enddo
 
-
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the MCHWB_LEPS_ModelSurface potential.
@@ -112,9 +112,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -233,7 +234,6 @@ subroutine prepot
     call g_prepot12(g_p_)
     call g_prepot22(g_p_)
 
-
 end subroutine prepot
 !
 ! ********************************************************************
@@ -277,7 +277,6 @@ subroutine pot( r, e, de, nt, nsurf )
         write(*,*)'Error!'
         stop
     endif
-
 
 end subroutine pot
 ! ********************************************************************
@@ -639,7 +638,6 @@ subroutine g_prepot12( g_p_ )
         e(i) = e(i) * line
         ! end new stuff by AJ
         ! ******************************************************************
-
 
         !--------
         !

@@ -1,7 +1,6 @@
 program main
     implicit none
 
-
     character(len=1024) :: system, surface, path
     integer, parameter  :: natoms = 3, nstates=6
     integer             :: igrad

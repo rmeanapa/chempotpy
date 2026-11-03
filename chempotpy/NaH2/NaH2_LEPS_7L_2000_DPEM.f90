@@ -46,15 +46,15 @@ subroutine dpem( x, igrad, u, ug )
 
 end subroutine dpem
 
-
 !> @brief Evaluate EvdRdX for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -152,8 +152,6 @@ end subroutine diagonalize
 !                            R(2) = R(H-H')
 !                            R(3) = R(Na-H')
 
-
-
 ! This is NaH2 potential matrix 7l, finalized on 5/17/99
 ! This version contains long range forces.
 
@@ -174,11 +172,9 @@ end subroutine diagonalize
 subroutine prepot
     implicit none
 
-
     call prepot11
     call prepot12
     call prepot22
-
 
 end subroutine prepot
 !
@@ -270,13 +266,11 @@ subroutine prepot11
     onethd = 1.0d0/3.0d0
     twothd = 2.0d0/3.0d0
 
-
     return
     !
     entry pot11(r,e,nt)
 
     do 10 i=1,nt
-
 
         ! ============================================================
         ! useful quantities calculated first, r1^2, R2^2, R3^2, atom to diatom
@@ -371,10 +365,8 @@ subroutine prepot11
         xes3 = dexp(-bes1*(r(i,3)-res1))
         s3   = des1*onethd*xes3*(xes3+2.0d0)
 
-
         ! ===============================================================
         ! this long section contains data pertinent to long range forces
-
 
         !  H2 ionization energy:
 
@@ -398,12 +390,10 @@ subroutine prepot11
 
         alhh = alb+alt*(1.5d0*cstsq-0.5d0)
 
-
         !  The NaH + H dispersion and NaH + H induction terms must go on the low
         !  so that the adiabat is fitted correctly in the region of the coupling
 
         ! NaH properties
-
 
         rnahie1 = (hnai1+hnai2*r(i,1)) /(hnai3+hnai4*r(i,1)+hnai5*r1s+hnai6*r(i,1)*r1s)+rnaie
 
@@ -449,7 +439,6 @@ subroutine prepot11
         dexp1 = dexp(-39.0625d0*rnag1c*rnag1)
         c61   = c61*(1.0d0+(rnahpol1b/rnahpol1-1.0d0)*dexp1)
 
-
         c63   = -1.5d0*rnahie3*hie*rnag3c/(rnahie3+hie)*rnahpol3*hpol*div3
         dexp3 = dexp(-39.0625d0*rnag3c*rnag3)
         c63   = c63*(1.0d0+(rnahpol3b/rnahpol3-1.0d0)*dexp3)
@@ -462,7 +451,6 @@ subroutine prepot11
 
         c6swt1 = 0.5d0*(1.0d0-dtanh(dalp*(r(i,1)-drho)))
         c6swt3 = 0.5d0*(1.0d0-dtanh(dalp*(r(i,3)-drho)))
-
 
         c61   = c61*c6swt1*cevau
         c63   = c63*c6swt3*cevau
@@ -492,7 +480,6 @@ subroutine prepot11
 
 end subroutine prepot11
 
-
 ! ********************************************************************
 ! ********************************************************************
 
@@ -502,7 +489,6 @@ end subroutine prepot11
 subroutine prepot12
 
     implicit none
-
 
     double precision :: ap,alp,bet,rnagsq,rnag,cosg,rd0,r20
     double precision :: r1s,r2s,r3s,cos1,cos2,theta
@@ -645,8 +631,6 @@ subroutine prepot22
     data h2qc1/1.532d0/, h2qc2/-.04635d0/, h2qc3/1.826d0/, &
         & h2qc4/-2.508d0/, h2qc5/1.856d0/
 
-
-
     cevau  = 1.d0/27.2113961d0
     onethd = 1.0d0/3.0d0
     twothd = 2.0d0/3.0d0
@@ -690,7 +674,6 @@ subroutine prepot22
         cos2 = (r3s+r2s-r1s)/(2.0d0*r(i,3)*r(i,2))
         cosg = 0.5d0*(cos1-cos2)
 
-
         frac  = 0.958d0
         rnag1 = dsqrt(dabs(r2s+frac*(r3s-r2s-r1s)+r1s*frac*frac))
         rnag3 = dsqrt(dabs(r2s+frac*(r1s-r2s-r3s)+r3s*frac*frac))
@@ -728,7 +711,6 @@ subroutine prepot22
 
         ! The first NaH triplet
 
-
         g10 = r(i,1)-ret10
         t10 = f10*dexp(-bet10*g10)+dexp(-bet10b*g10)
         t10 = t10/(1.0d0+f10)
@@ -742,7 +724,6 @@ subroutine prepot22
         t1m = t190 +(t1c-t190)* 0.5d0*(1.0d0+dtanh(t1alp*(r(i,2)-t1rho)))
 
         t1 = t1m + (t10-t1m)*cosg**2
-
 
         ! The H2 triplet
 
@@ -777,7 +758,6 @@ subroutine prepot22
 
         s2 = s2 + (s20b - s2)*cosg**2* 0.5d0*(1.0d0-dtanh(s20alp*(rmid-s20rho)))
 
-
         ! The second NaH singlet
         ! new singlet, designed to minic lower adiabatic behavior
         denah  = 1.97134878d0
@@ -810,7 +790,6 @@ subroutine prepot22
 
         t3 = t3m + (t30 - t3m)*cosg**2
 
-
         ! =========================================================
         ! this long section contains data pertinent to long range forces
 
@@ -834,7 +813,6 @@ subroutine prepot22
         alt  = twothd*(al1-al2)
         alb  = onethd*al1+twothd*al2
         alhh = alb+alt*(1.5d0*cstsq-0.5d0)
-
 
         ! here follow properties necesary for the long range forces in
         ! the Na + H2 channel:
@@ -908,12 +886,10 @@ subroutine prepot22
 
         cind3 = rmuimu3*(1.0d0+(1.0d0/(1.5d0*cstsq3+0.5d0)-1.0d0)*dexp3)
 
-
         elec = (qq+qh+c6*cevau)*0.5d0 *(1.0d0-dtanh(balp*(r(i,2)-brho)))
 
         c6swt1 = 0.5d0*(1.0d0-dtanh(dalp*(r(i,1)-drho)))
         c6swt3 = 0.5d0*(1.0d0-dtanh(dalp*(r(i,3)-drho)))
-
 
         c61   = c61*c6swt1*cevau
         c63   = c63*c6swt3*cevau
@@ -939,8 +915,6 @@ subroutine prepot22
 
     10 continue
 end subroutine prepot22
-
-
 
 !***********************************************************************
 !***********************************************************************

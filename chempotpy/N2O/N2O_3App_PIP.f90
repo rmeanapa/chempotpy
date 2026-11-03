@@ -1,4 +1,3 @@
-
 !**********************************************************************
 !   System:                     N2O (lowest 3A" state)
 !   Functional form:            permutationally invariant polynomials
@@ -51,8 +50,6 @@ module n2o_3app_pip_par
     private
     public :: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, gconv, &
         & p, r, re, rm, rms, totdiss
-
-
 
     double precision,parameter :: cconv = 0.52917721092d0
     double precision,parameter :: econv = 0.159360144d-2
@@ -196,7 +193,6 @@ subroutine pes( x, igrad, potential, gradient, dvec )
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 3
@@ -205,7 +201,6 @@ subroutine pes( x, igrad, potential, gradient, dvec )
     double precision, intent(out) :: potential(nstates)
     double precision, intent(out) :: gradient(nstates,natoms,3)
     double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-
 
     double precision :: v, tx(12), tg(12)
     integer          :: iatom, idir, j, istate
@@ -313,7 +308,6 @@ subroutine n2o2pes( x, v, dvdx, igrad )
 
     implicit none
 
-
     integer          :: i,igrad,j,nob,k
     double precision :: v
     double precision :: dvdx(12),x(12)
@@ -349,7 +343,6 @@ subroutine coord_convt( x )
 
     implicit none
 
-
     integer          :: i
     double precision :: x(12)
 
@@ -384,7 +377,6 @@ subroutine evv( v )
     !**********************************************************************
 
     implicit none
-
 
     integer          :: i,j,k
     double precision :: dist,dv2dr,v,v21,v22,v23,v24,v25,v26
@@ -451,7 +443,6 @@ subroutine evdvdx( x, dvdx )
 
     implicit none
 
-
     integer          :: i,j
     double precision :: dvdx(12),x(12)
 
@@ -490,7 +481,6 @@ subroutine evmeg
 
     implicit none
 
-
     integer :: i
 
     do i=1,6
@@ -509,7 +499,6 @@ subroutine evmono
     !**********************************************************************
 
     implicit none
-
 
     rm(0)  = 1.0d0
     rm(1)  = rms(6)
@@ -530,7 +519,6 @@ subroutine evmono
     rm(16) = rm(3)*rm(12)
     rm(17) = rm(2)*rm(16)
 
-
 end subroutine evmono
 
 !> @brief Evaluate EvPoly.
@@ -544,7 +532,6 @@ subroutine evpoly
     !**********************************************************************
 
     implicit none
-
 
     p(0)    = rm(0)
     p(1)    = rm(1)
@@ -2814,7 +2801,6 @@ subroutine evbas
 
     implicit none
 
-
     integer          :: i
     double precision :: b1(2254)
 
@@ -3060,7 +3046,6 @@ subroutine evbas2
     !**********************************************************************
 
     implicit none
-
 
     b(  1) = b2(   1)
     b(  2) = b2(   2)
@@ -3351,7 +3336,6 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
 
     implicit none
 
-
     integer,intent(in)           :: igrad,imol,pairw
     double precision,intent(in)  :: r
     double precision,intent(out) :: v2,dv2dr
@@ -3482,7 +3466,6 @@ subroutine evdvdr
 
     implicit none
 
-
     integer          :: i,j
     double precision :: dist,v,v21,v22,v23,v24,v25,v26
     double precision :: dv2dr1,dv2dr2,dv2dr3,dv2dr4,dv2dr5,dv2dr6
@@ -3559,7 +3542,6 @@ subroutine evdrdx( x )
     !**********************************************************************
 
     implicit none
-
 
     integer          :: i,j
     double precision :: x(12)
@@ -3638,7 +3620,6 @@ subroutine evdmsdr
 
     implicit none
 
-
     integer :: i,j
 
     ! Initialize dmsdr
@@ -3669,7 +3650,6 @@ subroutine evdmdr
     !**********************************************************************
 
     implicit none
-
 
     integer :: i
 
@@ -3707,7 +3687,6 @@ subroutine evdpdr
     !**********************************************************************
 
     implicit none
-
 
     integer :: i
 
@@ -5982,7 +5961,6 @@ subroutine evdbdr
 
     implicit none
 
-
     integer          :: i,j
     double precision :: db1dr(6,2254)
 
@@ -6233,7 +6211,6 @@ subroutine evdbdr2
     !**********************************************************************
 
     implicit none
-
 
     integer :: j
 
@@ -6495,4 +6472,3 @@ subroutine evdbdr2
 
     enddo
 end subroutine evdbdr2
-

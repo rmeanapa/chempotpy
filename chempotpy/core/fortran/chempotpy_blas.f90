@@ -20,7 +20,6 @@ function ddot( element_count, first, first_stride, second, second_stride ) &
     enddo
 end function ddot
 
-
 !> @brief Multiply a double-precision matrix and vector through the BLAS ABI.
 subroutine dgemv( transpose, row_count, column_count, alpha, matrix, &
         leading_dimension, input, input_stride, beta, output, output_stride )
@@ -77,7 +76,6 @@ subroutine dgemv( transpose, row_count, column_count, alpha, matrix, &
         enddo
     endif
 end subroutine dgemv
-
 
 !> @brief Multiply two double-precision matrices through the BLAS ABI.
 subroutine dgemm( transpose_left, transpose_right, row_count, column_count, &

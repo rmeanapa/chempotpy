@@ -7,8 +7,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     use chempotpy_kinds, only: real64
     implicit none
 
-
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -67,7 +65,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms (input)
 
     implicit none
-
 
     double precision :: a1, a2, arc1, arc2, b1, b2, bra, cot12, cot13, cot2, cot3, &
         & cote1, cote2, cote3, dx, dy, dz, em, en, r, r0, rel, rr, rr1, rr2, rr3, u, uem, uen, v, v1, &
@@ -162,7 +159,6 @@ subroutine scos( i, j, m, x, y, z, r, natom, maxatom, cote1, cote2, cote3 )
     !  cote3   --- cosine of the angle between bonds mi and mj
     !
     implicit none
-
 
     double precision :: cote1, cote2, cote3, r, scalar1, scalar2, scalar3, x, y, z
     integer          :: i, j, m, maxatom, natom

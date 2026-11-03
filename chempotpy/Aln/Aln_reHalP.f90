@@ -7,8 +7,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     use chempotpy_kinds, only: real64
     implicit none
 
-
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -33,15 +31,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     endif
 end subroutine pes
 
-
 !> @brief Evaluate the generalized Lennard-Jones aluminum cluster energy.
 subroutine evaluate_reparameterized_halicioglu_pound( &
         coordinates_bohr, atom_count, energy_hartree )
     use chempotpy_geometry, only: cartesian_distance
     use chempotpy_kinds, only: real64
     implicit none
-
-
 
     real(real64), parameter :: hartree_to_ev    = 27.2113961d0
     real(real64), parameter :: bohr_to_angstrom = 0.529177249d0

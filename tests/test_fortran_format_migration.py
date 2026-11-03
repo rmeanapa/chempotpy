@@ -35,6 +35,43 @@ end subroutine evaluate
         converted = format_source_text(source)
         self.assertIn("if (.not. valid) return", converted)
 
+    def test_intent_declarations_precede_local_variables(self) -> None:
+        source = """\
+subroutine evaluate( values, count )
+    implicit none
+
+    integer :: index
+    integer, parameter :: maximum_count = 10
+    integer, intent(in) :: count
+    real, intent(out) :: values(maximum_count)
+
+    values = 0.0
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertLess(
+            converted.index("integer, intent(in)"),
+            converted.index("integer :: index"),
+        )
+        self.assertLess(
+            converted.index("integer, parameter"),
+            converted.index("integer, intent(in)"),
+        )
+
+    def test_redundant_blank_lines_are_collapsed(self) -> None:
+        source = """\
+subroutine evaluate
+
+
+    implicit none
+
+
+
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertNotIn("\n\n\n", converted)
+
 
 if __name__ == "__main__":
     unittest.main()

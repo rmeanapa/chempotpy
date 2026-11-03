@@ -4,15 +4,16 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    integer :: iatom, idir, nder
     ! number of electronic state
-    integer, parameter            :: nstates = 2
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 2
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
+    integer          :: iatom, idir, nder
     integer          :: nt
     double precision :: r(1,3), r2(3), v(1)
     double precision :: u11(1), u12(1), u22(1)
@@ -101,7 +102,6 @@ subroutine pes( x, igrad, p, g, d )
         enddo
     enddo
 
-
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the NaH2_LEPS_7LD_2000 potential.
@@ -109,9 +109,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -235,11 +236,9 @@ subroutine prepot
 
     integer, parameter :: g_p_ = 3
 
-
     call g_prepot11(g_p_)
     call g_prepot12(g_p_)
     call g_prepot22(g_p_)
-
 
 end subroutine prepot
 !
@@ -281,7 +280,6 @@ subroutine pot( r, e, de, nt, nsurf )
     else if (nsurf .eq. 3) then
         call g_pot22(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
     end if
-
 
 end subroutine pot
 ! ********************************************************************

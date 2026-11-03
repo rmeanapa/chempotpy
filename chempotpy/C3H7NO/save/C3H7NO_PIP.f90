@@ -3,8 +3,6 @@ module basis
     private
     public :: bemsav, emsav, evmono, evpoly
 
-
-
     contains
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)
@@ -13745,8 +13743,6 @@ module gradient
     implicit none
     private
     public :: dbemsav, demsav, devmono, devpoly
-
-
 
     contains
     !> @brief Evaluate demsav.
@@ -27516,8 +27512,6 @@ module pes_shell
     private
     public :: coeff, f, g, pes_init
 
-
-
     real :: coeff(1:8040) ! change to number of coefficients
     ! (size of c in bemsa.f90)
     save coeff
@@ -27641,7 +27635,6 @@ subroutine pes( x, igrad, path, p, gradient_out, d )
     double precision, intent(out)   :: gradient_out(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
 
-
     real             :: tx(3,natoms)
     double precision :: v
     double precision :: grad(3*natoms)
@@ -27682,6 +27675,4 @@ subroutine pes( x, igrad, path, p, gradient_out, d )
         write (*,*) 'Only energy and gradient are available'
     endif
 
-
 endsubroutine
-

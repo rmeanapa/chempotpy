@@ -8,8 +8,6 @@ module nnparam
     public :: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, nscale, nwe, &
         & pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
 
-
-
     integer,parameter             :: ninput = 32
     integer                       :: noutput,nhid,nlayer,ifunc,nwe,nodemax
     integer                       :: nscale
@@ -31,7 +29,6 @@ subroutine pes( x, igrad, path, p, g, d )
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 4
@@ -40,7 +37,6 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
 
     double precision :: v, tx(3,natoms)
     integer          :: iatom, idir, j, istate
@@ -83,14 +79,12 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
 !******************************************************************
 ! q in KKRbRb order and angstrom
 !> @brief Evaluate k2rb2_pes_interface.
 subroutine k2rb2_pes_interface( q, vpes )
     use nnparam,only: vpescut
     implicit none
-
 
     integer          :: lxc
     double precision :: q(3,4)
@@ -131,7 +125,6 @@ subroutine k2rb2nn( ct, vpes, vpesa, vpesb, vpesc )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
-
 
     integer          :: i
     double precision :: rb(6),xbond(6),basis(0:32)
@@ -188,7 +181,6 @@ subroutine pes_init( path )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
-
 
     character(len=1024), intent(in) :: path
     integer                         :: ihid,iwe,inode1,inode2,ilay1,ilay2
@@ -249,7 +241,6 @@ subroutine pes_init( path )
     endif
     close(wfilea)
     close(bfilea)
-
 
     file_path3 = trim(path)//"/K2Rb2/weightsb.txt"
     file_path4 = trim(path)//"/K2Rb2/biasesb.txt"
@@ -343,7 +334,6 @@ subroutine pes_init( path )
     close(wfilec)
     close(bfilec)
 
-
 end subroutine pes_init
 !**************************************************************************
 
@@ -353,7 +343,6 @@ subroutine getpota( x, vpot )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
-
 
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -400,7 +389,6 @@ subroutine getpotb( x, vpot )
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -446,7 +434,6 @@ subroutine getpotc( x, vpot )
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -490,7 +477,6 @@ end subroutine getpotc
 function tranfun( x, ifunc )
     implicit none
 
-
     integer          :: ifunc
     double precision :: tranfun,x
     if (ifunc.eq.1) then
@@ -507,7 +493,6 @@ end
 !> @brief Evaluate before_vpes.
 subroutine before_vpes( xct, lxc )
     implicit none
-
 
     integer          :: i,lxc
     double precision :: xct(3,4),xc(3,4),xvec(3,6),rb(6)
@@ -541,7 +526,6 @@ subroutine before_vpes( xct, lxc )
 
 end subroutine before_vpes
 
-
 !**************************************************************************
 !------->
 !------->This is the subroutine for PIPs up to the order
@@ -558,10 +542,10 @@ end subroutine before_vpes
 subroutine bemsav( x, p )
     implicit none
 
-
     double precision,intent(in)  :: x(1:6)
-    double precision             :: m(0:16)
     double precision,intent(out) :: p(0:32)
+
+    double precision :: m(0:16)
 
     call evmono(x,m)
     call evpoly(m,p)
@@ -573,7 +557,6 @@ end subroutine bemsav
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision,intent(in)  :: x(1:6)
     double precision,intent(out) :: m(0:16)
@@ -603,7 +586,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision,intent(in)  :: m(0:16)
     double precision,intent(out) :: p(0:32)

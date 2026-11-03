@@ -5,7 +5,6 @@
 subroutine pes( x, igrad, path, p, g, d )
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 3
@@ -45,7 +44,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
 !=======================================================================
 !     PIP-NN PES of total energy for the C2N(^2A') system.
 !     where,
@@ -57,15 +55,16 @@ endsubroutine
 subroutine c2n_2a_prime( rb, path, vpes )
     implicit none
 
+    integer,parameter          :: npip    = 12
+    double precision,parameter :: alpha   = 1.5d0 ! angstrom
+    double precision,parameter :: vpescut = 5.d5 ! eV
+    double precision,parameter :: pi      = dacos(-1.d0)
 
-    integer,parameter               :: npip    = 12
-    double precision,parameter      :: alpha   = 1.5d0 ! angstrom
-    double precision,parameter      :: vpescut = 5.d5 ! eV
-    double precision,parameter      :: pi      = dacos(-1.d0)
-    integer                         :: i
     character(len=1024), intent(in) :: path
-    double precision                :: vpesa(1),vpesb(1),vpesc(1),vpes
-    double precision                :: rb(3),xbond(3),basis(0:npip),txinput(npip)
+
+    integer          :: i
+    double precision :: vpesa(1),vpesb(1),vpesc(1),vpes
+    double precision :: rb(3),xbond(3),basis(0:npip),txinput(npip)
 
     if (minval(rb).lt.0.79999999d0) then
         vpes  = vpescut
@@ -98,27 +97,25 @@ subroutine c2n_2a_prime( rb, path, vpes )
 end subroutine c2n_2a_prime
 !=======================================================================
 
-
 !=======================================================================
 !> @brief Evaluate nnfit_a.
 subroutine nnfit_a( ndim, ntot, r0, path, vx )
     implicit none
 
+    integer,parameter :: s0 = 12,s1=30,s2=30
 
-    integer,intent(in)           :: ndim,ntot
-    double precision,intent(in)  :: r0(ndim,ntot)
-    double precision,intent(out) :: vx(ntot)
-
-    integer,parameter               :: s0 = 12,s1=30,s2=30
-    double precision,save           :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3
-    double precision,save           :: rg(2,s0),vg(2)
+    integer,intent(in)              :: ndim,ntot
+    double precision,intent(in)     :: r0(ndim,ntot)
+    double precision,intent(out)    :: vx(ntot)
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
 
-    double precision :: dv(ndim,ntot)
-    integer          :: i
-    integer,save     :: init=0
-    integer,save     :: fid
+    double precision,save :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3
+    double precision,save :: rg(2,s0),vg(2)
+    character(len=1024)   :: file_path1
+    double precision      :: dv(ndim,ntot)
+    integer               :: i
+    integer,save          :: init=0
+    integer,save          :: fid
 
     if (ndim.ne.s0) stop "ndim .ne. s0"
 
@@ -143,27 +140,25 @@ subroutine nnfit_a( ndim, ntot, r0, path, vx )
 end subroutine
 !=======================================================================
 
-
 !=======================================================================
 !> @brief Evaluate nnfit_b.
 subroutine nnfit_b( ndim, ntot, r0, path, vx )
     implicit none
 
+    integer,parameter :: s0 = 12,s1=30,s2=30
 
-    integer,intent(in)           :: ndim,ntot
-    double precision,intent(in)  :: r0(ndim,ntot)
-    double precision,intent(out) :: vx(ntot)
-
-    integer,parameter               :: s0 = 12,s1=30,s2=30
-    double precision,save           :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3
-    double precision,save           :: rg(2,s0),vg(2)
+    integer,intent(in)              :: ndim,ntot
+    double precision,intent(in)     :: r0(ndim,ntot)
+    double precision,intent(out)    :: vx(ntot)
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
 
-    double precision :: dv(ndim,ntot)
-    integer          :: i
-    integer,save     :: init=0
-    integer,save     :: fid
+    double precision,save :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3
+    double precision,save :: rg(2,s0),vg(2)
+    character(len=1024)   :: file_path1
+    double precision      :: dv(ndim,ntot)
+    integer               :: i
+    integer,save          :: init=0
+    integer,save          :: fid
 
     if (ndim.ne.s0) stop "ndim .ne. s0"
 
@@ -188,27 +183,25 @@ subroutine nnfit_b( ndim, ntot, r0, path, vx )
 end subroutine
 !=======================================================================
 
-
 !=======================================================================
 !> @brief Evaluate nnfit_c.
 subroutine nnfit_c( ndim, ntot, r0, path, vx )
     implicit none
 
+    integer,parameter :: s0 = 12,s1=30,s2=30
 
-    integer,intent(in)           :: ndim,ntot
-    double precision,intent(in)  :: r0(ndim,ntot)
-    double precision,intent(out) :: vx(ntot)
-
-    integer,parameter               :: s0 = 12,s1=30,s2=30
-    double precision,save           :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3
-    double precision,save           :: rg(2,s0),vg(2)
+    integer,intent(in)              :: ndim,ntot
+    double precision,intent(in)     :: r0(ndim,ntot)
+    double precision,intent(out)    :: vx(ntot)
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
 
-    double precision :: dv(ndim,ntot)
-    integer          :: i
-    integer,save     :: init=0
-    integer,save     :: fid
+    double precision,save :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3
+    double precision,save :: rg(2,s0),vg(2)
+    character(len=1024)   :: file_path1
+    double precision      :: dv(ndim,ntot)
+    integer               :: i
+    integer,save          :: init=0
+    integer,save          :: fid
 
     if (ndim.ne.s0) stop "ndim .ne. s0"
 
@@ -233,7 +226,6 @@ subroutine nnfit_c( ndim, ntot, r0, path, vx )
 end subroutine
 !=======================================================================
 
-
 !=======================================================================
 ! Simulate a neural network with two hidden layers: n0-n1-n2-1
 ! Blas routines used in this subroutine: dgemv, ddot
@@ -241,7 +233,6 @@ end subroutine
 !> @brief Evaluate nsim.
 subroutine nsim( r0, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
     implicit none
-
 
     integer,intent(in)           :: n0,n1,n2,idv
     double precision,intent(in)  :: r0(n0),rg(2,n0),vg(2)
@@ -293,7 +284,6 @@ subroutine nsim( r0, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
 end subroutine nsim
 !=======================================================================
 
-
 !=======================================================================
 ! Simulate a neural network with two hidden layers:
 !    n0-n1(tansig)-n2(tansig)-1(pureline)
@@ -322,7 +312,6 @@ end subroutine nsim
 !> @brief Evaluate nsimx.
 subroutine nsimx( nt, r, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
     implicit none
-
 
     integer,intent(in)           :: nt,idv,n0,n1,n2
     double precision,intent(in)  :: r(n0,nt)
@@ -391,7 +380,6 @@ subroutine nsimx( nt, r, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg 
 end subroutine nsimx
 !=======================================================================
 
-
 !=======================================================================
 !------->This is the subroutine for PIPs up to the order of 3 of A2B1
 !------->type molecule.
@@ -406,10 +394,10 @@ end subroutine nsimx
 subroutine bemsav( x, p )
     implicit none
 
-
     double precision,intent(in)  :: x(1:3)
-    double precision             :: m(0:4)
     double precision,intent(out) :: p(0:12)
+
+    double precision :: m(0:4)
 
     call evmono(x,m)
     call evpoly(m,p)
@@ -421,7 +409,6 @@ end subroutine bemsav
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision,intent(in)  :: x(1:3)
     double precision,intent(out) :: m(0:4)
@@ -439,7 +426,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision,intent(in)  :: m(0:4)
     double precision,intent(out) :: p(0:12)

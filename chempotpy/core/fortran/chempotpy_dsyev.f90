@@ -3,7 +3,6 @@
 subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
     implicit none
 
-
     character(len=1), intent(in) :: jobz, uplo
     integer, intent(in)          :: n, lda, lwork
     real(8), intent(inout)       :: a(lda,*)

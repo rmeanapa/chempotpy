@@ -18,16 +18,16 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    integer :: istate
     ! number of electronic state
-    integer, parameter  :: nstates = 1
-    integer, parameter  :: natoms  = 3
-    integer, intent(in) :: igrad
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 3
 
+    integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
+    integer          :: istate
     double precision :: r(1,3), e(1), v
     integer          :: iatom, idir, i, j
     logical, save    :: first_time_data=.true.
@@ -61,7 +61,6 @@ module a4data
     implicit none
     private
     public :: beta, eshift, rnought, xlin1, xlin2, xlin3, xlin4
-
 
     save
     double precision                :: eshift= 0.1739709107962980d0
@@ -342,7 +341,6 @@ subroutine prepota4
     eee = v+damper*(sum1+sum2*bb+sum3*warp+sum4*bb*warp)
 
 end subroutine prepota4
-
 
 !> @brief Evaluate trip for the H3_GEN_A4_2002 potential.
 subroutine trip( r, v )

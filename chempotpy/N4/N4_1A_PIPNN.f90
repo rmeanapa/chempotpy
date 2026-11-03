@@ -43,8 +43,6 @@ module nnparam
         & nnew, nodemax, nodes, noutput, nscale, nterm, nwe, pavga, pavgb, pavgc, pdela, pdelb, &
         & pdelc, pi, radian, weighta, weightb, weightc
 
-
-
     double precision,parameter :: alpha  = 1.0d0,pi=3.1415926d0,radian=pi/180.0d0
     integer,parameter          :: nbasis = 306,ndim=6,natom=4,nnew=276
     integer,parameter          :: ninput = 276
@@ -69,7 +67,6 @@ subroutine pes( x, igrad, path, p, g, d )
         & pdelb, pdelc, pi, radian, weighta, weightb, weightc
 
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -126,7 +123,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
 !      subroutine n4pipNN(ct,vpes,vpesa,vpesb,vpesc,vn2) !ct in N4 order and angstrom
 !> @brief Evaluate n4pipNN.
 subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
@@ -135,7 +131,6 @@ subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
         & nlayer, nnew, nodemax, nodes, noutput, nscale, nterm, nwe, pavga, pavgb, pavgc, pdela, &
         & pdelb, pdelc, pi, radian, weighta, weightb, weightc
     implicit none
-
 
     integer          :: i,j,k
     double precision :: rb(ndim),xbond(ndim),basis(1:nbasis),tmp1,&
@@ -278,7 +273,6 @@ subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
         write (*,*) 'Only energy and gradient are available'
     endif
 
-
 end subroutine n4pipnn
 
 !> @brief Evaluate EvdRdX.
@@ -290,7 +284,6 @@ subroutine evdrdx( cx, r, drdx )
     !**********************************************************************
 
     implicit none
-
 
     integer          :: i,j
     double precision :: cx(3,4),r(6),drdx(6,12)
@@ -358,7 +351,6 @@ subroutine evdrdx( cx, r, drdx )
     !       enddo
     !     enddo
 
-
 end subroutine evdrdx
 !**********************************************************************
 !-->  read NN weights and biases from matlab output
@@ -372,14 +364,13 @@ subroutine pes_init( path )
         & nlayer, nnew, nodemax, nodes, noutput, nscale, nterm, nwe, pavga, pavgb, pavgc, pdela, &
         & pdelb, pdelc, pi, radian, weighta, weightb, weightc
     implicit none
-    integer :: file_unit_4
-
-
     character(len=1024), intent(in) :: path
-    integer                         :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
-    integer                         :: ibasis,npd,iterm,ib,nfile
-    character(len=80)               :: f1, line
-    character(len=1024)             :: file_path1, file_path2
+
+    integer             :: file_unit_4
+    integer             :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
+    integer             :: ibasis,npd,iterm,ib,nfile
+    character(len=80)   :: f1, line
+    character(len=1024) :: file_path1, file_path2
 
     file_path1 = trim(path)//"/N4/weights.txt-Noconnected"
     file_path2 = trim(path)//"/N4/biases.txt-Noconnected"
@@ -517,7 +508,6 @@ subroutine pes_init( path )
     close(nfile)
     close(file_unit_4)
 
-
 end subroutine pes_init
 
 !> @brief Evaluate getpota.
@@ -526,7 +516,6 @@ subroutine getpota( x, vpot )
         & nlayer, nnew, nodemax, nodes, noutput, nscale, nterm, nwe, pavga, pavgb, pavgc, pdela, &
         & pdelb, pdelc, pi, radian, weighta, weightb, weightc
     implicit none
-
 
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -571,7 +560,6 @@ subroutine getpotb( x, vpot )
         & pdelb, pdelc, pi, radian, weighta, weightb, weightc
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -615,7 +603,6 @@ subroutine getpotc( x, vpot )
         & pdelb, pdelc, pi, radian, weighta, weightb, weightc
     implicit none
 
-
     integer                    :: i,inode1,inode2,ilay1,ilay2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -656,7 +643,6 @@ end subroutine getpotc
 function tranfun( x, ifunc )
     implicit none
 
-
     integer          :: ifunc
     double precision :: tranfun,x
     if (ifunc.eq.1) then
@@ -667,7 +653,6 @@ function tranfun( x, ifunc )
         tranfun = x
     endif
 end
-
 
 !     function emsav49(x,c) result(v)
 !     implicit none
@@ -685,7 +670,6 @@ end
 subroutine bemsav49( x, p )
     implicit none
 
-
     double precision,dimension(1:6),intent(in)::x
     double precision,dimension(0:305),intent(out)::p
     ! ::::::::::::::::::::
@@ -697,7 +681,6 @@ end subroutine bemsav49
 !> @brief Evaluate evmono49.
 subroutine evmono49( x, m )
     implicit none
-
 
     double precision,dimension(1:6),intent(in)::x
     double precision,dimension(0:111),intent(out)::m
@@ -820,7 +803,6 @@ end subroutine evmono49
 !> @brief Evaluate evpoly49.
 subroutine evpoly49( m, p )
     implicit none
-
 
     double precision,dimension(0:111),intent(in)::m
     double precision,dimension(0:305),intent(out)::p
@@ -1138,8 +1120,6 @@ subroutine evpoly49( m, p )
 
 end subroutine evpoly49
 
-
-
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v, grad, imol, igrad )
     !**********************************************************************
@@ -1155,8 +1135,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     !
     !**********************************************************************
     implicit none
-
-
 
     integer,intent(in) :: imol, igrad
     double precision   :: r
@@ -1199,7 +1177,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     u = exp(-fy*(r-re))
 
     v = de*(1.0d0-u)*(1.0d0-u)-de
-
 
     ! Add D3 dispersion correction
     dist(1) = r
@@ -1244,7 +1221,6 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     !**********************************************************************
 
     implicit none
-
 
     double precision :: cn(2),s6,s8,rs6,rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -1317,7 +1293,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         &           rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
 
     implicit none
-
 
     integer          :: n,iz(2),max_elem,maxc,mxc(max_elem)
     double precision :: dist(1),r2r4(max_elem),r0ab(max_elem,max_elem)
@@ -1414,7 +1389,6 @@ subroutine bmx2b109( bm1, bm2, nobm, nob )
 
     implicit none
 
-
     integer :: nob, nobm
 
     integer          :: i
@@ -1477,6 +1451,5 @@ subroutine bmx2b109( bm1, bm2, nobm, nob )
     bm2(276) = bm1(305)
 
     !     nob=276
-
 
 end

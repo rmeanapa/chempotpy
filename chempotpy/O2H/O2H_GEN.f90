@@ -4,15 +4,17 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    double precision :: der, energy, r, v
-    integer          :: i, iatom, idir, istate, j, nder, ndum, nsurf
     ! number of electronic state
-    integer, parameter            :: nstates = 1
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
+
+    double precision :: der, energy, r, v
+    integer          :: i, iatom, idir, istate, j, nder, ndum, nsurf
 
     common /pt1cm/ r(3),energy,der(3)
     common /pt2cm/ nsurf, nder, ndum(21)
@@ -58,7 +60,6 @@ subroutine pes( x, igrad, p, g, d )
         enddo
     enddo
 
-
     if (igrad==0) then
         do istate=1,nstates
             p(istate) = energy
@@ -84,9 +85,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3

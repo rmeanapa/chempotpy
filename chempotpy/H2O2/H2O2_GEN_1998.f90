@@ -4,16 +4,16 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    integer :: istate
     ! number of electronic state
-    integer, parameter  :: nstates = 1
-    integer, parameter  :: natoms  = 4
-    integer, intent(in) :: igrad
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 4
 
+    integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
+    integer          :: istate
     double precision :: tx(12), dx(12), v
     integer          :: iatom, idir, i, j
     logical, save    :: first_time_data=.true.
@@ -76,7 +76,6 @@ subroutine surf( v, coord, dx, n3tm )
 
     implicit none
 
-
     double precision :: v, coord(n3tm), dx(n3tm)
     double precision :: dxx(n3tm), x(n3tm)
 
@@ -124,7 +123,6 @@ subroutine potential( v, x, dx, dxx, n3tm )
     !
     implicit none
 
-
     double precision :: coord(n3tm),dx(n3tm),dxx(n3tm),x(n3tm)
     double precision :: v, pass(6)
 
@@ -156,7 +154,6 @@ subroutine potential( v, x, dx, dxx, n3tm )
         & temp61x,temp62x,temp63x,temp64x,temp65x,temp66x
 
     integer :: n3tm, i, j, ii
-
 
     double precision, parameter :: rohlow  = 1.0d0
     double precision, parameter :: rohhigh = 4.0d0
@@ -606,7 +603,6 @@ subroutine potential( v, x, dx, dxx, n3tm )
     gv(11,12) = gv(12,11)
     gv(12,11) = temp66x
 
-
     do i = 1, 12
         dx(i) = gv(1,i)
     enddo
@@ -617,7 +613,6 @@ subroutine potential( v, x, dx, dxx, n3tm )
     do j=1,n3tm
         dxx(j) = 0.0d0
     enddo
-
 
     do i = 1, 12
 
@@ -767,7 +762,6 @@ subroutine potential( v, x, dx, dxx, n3tm )
 
     enddo
 
-
     do i = 1, 12
         do j = 1, 12
             do ii = 1, 12
@@ -796,7 +790,6 @@ subroutine potential( v, x, dx, dxx, n3tm )
         enddo
     enddo
 
-
     do i = 1,12
         do j = 1, 12
             gv(i,j) = 0.0d0
@@ -816,9 +809,7 @@ subroutine potential( v, x, dx, dxx, n3tm )
         dxx(i) = gvv(1,i,i)/0.529177d0
     enddo
 
-
 end subroutine potential
-
 
 !***********************************************************************
 
@@ -843,7 +834,6 @@ subroutine pot( v, x )
 
     implicit none
 
-
     double precision :: n, n1, n2
     double precision :: v, pi
 
@@ -863,7 +853,6 @@ subroutine pot( v, x )
 
     double precision :: x_normal1,y_normal1,z_normal1
     double precision :: x_normal2,y_normal2,z_normal2
-
 
     double precision, parameter :: rohlow  = 1.0d0
     double precision, parameter :: rohhigh = 4.0d0
@@ -976,7 +965,6 @@ subroutine pot( v, x )
 
     call vibpot(pass,v)
 
-
 end subroutine pot
 
 !***********************************************************************
@@ -985,7 +973,6 @@ end subroutine pot
 subroutine vibpot( coord, v )
 
     implicit none
-
 
     double precision :: v, pi
 
@@ -1182,8 +1169,6 @@ subroutine vibpot( coord, v )
     q4 = a1 - angle_ooh
     q5 = a2 - angle_ooh
 
-
-
     do i=0,4
         q1p(i) = 1.d0
         q2p(i) = 1.d0
@@ -1192,7 +1177,6 @@ subroutine vibpot( coord, v )
         q5p(i) = 1.d0
         q6p(i) = 1.d0
     enddo
-
 
     do i=1,4
         q1p(i) = q1p(i-1)*q1
@@ -1209,11 +1193,7 @@ subroutine vibpot( coord, v )
         v = v+coeff(i)*q1p(ind1(i))*q2p(ind2(i))*q3p(ind3(i))* q4p(ind4(i))*q5p(ind5(i))*q6p(ind6(i))
     enddo
 
-
-
 end subroutine vibpot
-
-
 
 !                           DISCLAIMER
 !
@@ -1253,7 +1233,6 @@ subroutine g_surf( g_p_, v, g_v, ldg_v, x, g_x, ldg_x )
 
     implicit none
 
-
     double precision :: n, n1, n2
     double precision :: v, pi
 
@@ -1274,13 +1253,11 @@ subroutine g_surf( g_p_, v, g_v, ldg_v, x, g_x, ldg_x )
     double precision :: x_normal1,y_normal1,z_normal1
     double precision :: x_normal2,y_normal2,z_normal2
 
-
     double precision, parameter :: rohlow  = 1.0d0
     double precision, parameter :: rohhigh = 4.0d0
     double precision, parameter :: roolow  = 1.8d0
     double precision, parameter :: roohigh = 4.0d0
     double precision, parameter :: rhhlow  = 0.7d0
-
 
     integer, parameter :: g_pmax_ = 12
     integer            :: g_i_, g_p_, ldg_x, ldg_v
@@ -1316,7 +1293,6 @@ subroutine g_surf( g_p_, v, g_v, ldg_v, x, g_x, ldg_x )
         &rcd, g_rh1o1
     save g_c1, g_c2, g_c3, g_c4, g_c5, g_c6, g_c7, g_c8, g_c9, g_c10
     external g_vibpot
-
 
     !
     !  Calculate energy at the configuration space point
@@ -1832,7 +1808,6 @@ subroutine g_vibpot( g_p_, coord, g_coord, ldg_coord, v, g_v, ldg_v &
 
     implicit none
 
-
     double precision :: v, pi
 
     double precision :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
@@ -1846,7 +1821,6 @@ subroutine g_vibpot( g_p_, coord, g_coord, ldg_coord, v, g_v, ldg_v &
     integer :: i
 
     double precision :: zoe
-
 
     integer, parameter :: g_pmax_ = 12
     integer            :: g_i_, g_p_, ldg_coord, ldg_v
@@ -2232,7 +2206,6 @@ subroutine g_analytic( g2p, g_p_, v, g_v, g_g_v, ldg_g_v, ldg_v, x, &
 
     implicit none
 
-
     double precision :: n, n1, n2
     double precision :: v, pi
 
@@ -2253,13 +2226,11 @@ subroutine g_analytic( g2p, g_p_, v, g_v, g_g_v, ldg_g_v, ldg_v, x, &
     double precision :: x_normal1,y_normal1,z_normal1
     double precision :: x_normal2,y_normal2,z_normal2
 
-
     double precision, parameter :: rohlow  = 1.0d0
     double precision, parameter :: rohhigh = 4.0d0
     double precision, parameter :: roolow  = 1.8d0
     double precision, parameter :: roohigh = 4.0d0
     double precision, parameter :: rhhlow  = 0.7d0
-
 
     integer, parameter :: g_pmax_ = 12
     integer, parameter :: g2pmax  = 12
@@ -3071,7 +3042,6 @@ subroutine g_g_vibpot( g2p, g_p_, coord, g_coord, g_g_coord, ldg_&
         &g_coord, ldg_coord, v, g_v, g_g_v, ldg_g_v, ldg_v )
     !
     implicit none
-
 
     double precision :: v, pi
 

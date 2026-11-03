@@ -96,7 +96,6 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 3
     integer, parameter            :: natoms  = 13
@@ -170,7 +169,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     !### gradients in Hatree/bohr
     !### zero of energy at V1 equilibrium of XQDPT energy
     implicit none
-
 
     !--- {'global' constants
     integer, parameter :: natom = 13, nstate=3, ntermmax=200 &
@@ -266,7 +264,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     !--- cc: eigenvectors
     call diagonalize(nstate, uu, vv, cc)
     !call diagonalize(vv, cc, uu, nstate)
-
 
     !--- get the nonadiabatic coupling elements
     dvec = 0d0

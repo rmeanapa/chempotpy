@@ -128,7 +128,6 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     !   esn_h is the exponent of Vi in Eq. (9)
     !   sig3_hal to sig4_alh are the sigma in Eq. (10)
 
-
     gam1_hal = 7.4891
     gam2_hal = 1.8993
     gam3_hal = 13.5669
@@ -283,7 +282,6 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     2 continue
 
     !    Calculate en2 which corresponds to the last term in Eq. (6) (pure A
-
 
     do 4 i=1,natom
         if(id(i).eq.1)then

@@ -7,8 +7,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     implicit none
 
-
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -33,15 +31,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     endif
 end subroutine pes
 
-
 !> @brief Evaluate the oscillatory Pettifor-Ward pair-potential energy.
 subroutine evaluate_pettifor_ward( &
         coordinates_bohr, atom_count, energy_hartree )
     use chempotpy_geometry, only: cartesian_distance
     use chempotpy_kinds, only: real32, real64
     implicit none
-
-
 
     real(real64), parameter :: bohr_to_angstrom = 0.529177249d0
     real(real64), parameter :: effective_charge = 3.0d0

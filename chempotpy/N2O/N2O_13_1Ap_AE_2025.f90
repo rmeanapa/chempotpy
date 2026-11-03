@@ -33,7 +33,6 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 13
     integer, parameter            :: natoms  = 3
@@ -74,7 +73,6 @@ subroutine energy_gradient( x, e, g, h, t, n, ns )
     ! drdx - dr/dx matrix for converting derivatives
 
     implicit none
-
 
     integer, intent(in)             :: n,ns
     double precision, intent(in)    :: x(n,3)
@@ -132,15 +130,15 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
         &bias_l0, bias_l1, bias_l2, bias_l3, bias_l4, v2b, v2b_1, g2b )
     implicit none
 
-
     integer, intent(in)             :: n, ns
-    double precision                :: r(n*(n-1)/2)
     double precision, intent(inout) :: e(ns), g(ns,n*(n-1)/2), h(ns,ns,n*(n-1)/2)
     double precision, intent(inout) :: t(ns,ns)
     double precision, intent(in)    :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,91)
     double precision, intent(in)    :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
     double precision, intent(in)    :: v2b(ns), v2b_1(n*(n-1)/2,ns)
     double precision, intent(in)    :: g2b(ns,n*(n-1)/2)
+
+    double precision :: r(n*(n-1)/2)
     !    real*8, intent(inout) :: mb(ns,ns) !!!****************
     double precision :: a0(30), a1(65), a2(95), a3(125), a4(91)
     double precision :: z0(30), z1(65), z2(95), z3(125), z4(91)
@@ -149,18 +147,14 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
     double precision :: dudr(ns,ns,3), tmpmat(ns,ns)
     integer          :: map(3,13)
     double precision :: e_0(13), sum_dis, s_j
-
     double precision :: af_f=1.2, af_a=-2.0, af_b=4.0, order=4.0
     double precision :: f, dfdr(n*(n-1)/2)
     double precision :: dfdr_3b(ns,n*(n-1)/2), dfdr_2b(ns,n*(n-1)/2)
-
     double precision :: ag_f=1.2, ag_a=-2.0, ag_b=6.0
     double precision :: decay, ddecaydr(n*(n-1)/2)
     double precision :: ddecaydr_3b(ns,n*(n-1)/2), ddecaydr_2b(ns,n*(n-1)/2)
-
-    integer :: sum1
-    integer :: i,j,k,l
-
+    integer          :: sum1
+    integer          :: i,j,k,l
     !real*8 :: v2b(ns),g2b(ns,n*(n-1)/2)
     double precision :: sum_v2b(ns), sum_g2b(ns,n*(n-1)/2)
     double precision :: reordered_v2b(ns),reordered_g2b(ns,n*(n-1)/2)
@@ -386,10 +380,10 @@ endsubroutine backprop
 subroutine activation_gelu( z, a, n )
     implicit none
 
-
-    integer                         :: i,n
     double precision, intent(in)    :: z(n)
     double precision, intent(inout) :: a(n)
+
+    integer :: i,n
 
     do i=1,n
         a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.d0)))
@@ -401,10 +395,10 @@ end subroutine activation_gelu
 subroutine activation_derivative_gelu( z, a, b, n )
     implicit none
 
-
-    integer                         :: i,n
     double precision, intent(in)    :: z(n), a(n)
     double precision, intent(inout) :: b(n)
+
+    integer :: i,n
 
     do i=1,n
         !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
@@ -422,17 +416,16 @@ end subroutine activation_derivative_gelu
 subroutine activation_functional_heviside( z, a, n, r, nbonds, f )
     implicit none
 
+    double precision, parameter :: af_f = 1.2, af_a=-2.0, af_b=4.0, order=4.0
 
     integer, intent(in)             :: n, nbonds
     double precision, intent(in)    :: z(n)
     double precision, intent(in)    :: r(nbonds)
     double precision, intent(inout) :: a(n)
     double precision, intent(out)   :: f
-    double precision                :: r_in, ar, br
-    integer                         :: max_index
-    double precision, parameter     :: af_f = 1.2, af_a=-2.0, af_b=4.0, order=4.0
 
-
+    double precision :: r_in, ar, br
+    integer          :: max_index
     integer          :: npairs, ibond, jbond, ipair
     double precision :: pair_sum, bond_sum
 
@@ -468,22 +461,20 @@ end subroutine activation_functional_heviside
 subroutine activation_functional_derivative_terms( g, z, n, r, nbonds, dfdr )
     implicit none
 
+    double precision, parameter :: af_f = 1.2, af_a=-2.0, af_b=4.0, order=4.0
 
-    integer                         :: i
     integer, intent(in)             :: n, nbonds
     double precision, intent(in)    :: z(n)
     double precision, intent(in)    :: r(nbonds)
     double precision, intent(inout) :: g(nbonds,n)
     double precision, intent(out)   :: dfdr(nbonds)
 
-    double precision            :: r_in, ar, br
-    double precision, parameter :: af_f = 1.2, af_a=-2.0, af_b=4.0, order=4.0
-    double precision            :: dfdr_in, dr_indr(nbonds)
-
+    integer          :: i
+    double precision :: r_in, ar, br
+    double precision :: dfdr_in, dr_indr(nbonds)
     integer          :: npairs, ibond, jbond, ipair
     double precision :: r_in_num
     double precision :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
-
     double precision :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
     double precision :: diff
 
@@ -529,8 +520,6 @@ subroutine activation_functional_derivative_terms( g, z, n, r, nbonds, dfdr )
         g(i,:) = dfdr(i)*z(:)+ar*br*g(i,:)
     enddo
 
-
-
 end subroutine activation_functional_derivative_terms
 
 !=============================
@@ -542,7 +531,6 @@ end subroutine activation_functional_derivative_terms
 !> @brief Evaluate decay_function_heviside.
 subroutine decay_function_heviside( r, nbonds, af_f, af_a, af_b, order, f )
     implicit none
-
 
     integer, intent(in)           :: nbonds
     double precision, intent(in)  :: af_f, af_a, af_b, order
@@ -577,14 +565,12 @@ subroutine decay_function_heviside( r, nbonds, af_f, af_a, af_b, order, f )
     f = ar*br
 end subroutine decay_function_heviside
 
-
 !=============================
 !add activation functional derivative terms
 !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
 !> @brief Evaluate decay_function_heviside_derivative.
 subroutine decay_function_heviside_derivative( r, nbonds, af_f, af_a, af_b, order, dfdr )
     implicit none
-
 
     integer, intent(in)           :: nbonds
     double precision, intent(in)  :: r(nbonds)
@@ -647,7 +633,6 @@ end subroutine decay_function_heviside_derivative
 subroutine sumover( a, b, sum1 )
     implicit none
 
-
     integer, intent(in)  :: a, b
     integer, intent(out) :: sum1
     integer              :: num
@@ -664,7 +649,6 @@ end subroutine sumover
 !> @brief Evaluate diagonalize.
 subroutine diagonalize( n, a_ss, ev_s, u_ss )
     implicit none
-
 
     ! parameters
     integer, intent(in)          :: n
@@ -697,7 +681,6 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     !     B_ss(i,i)=EV_s(i)
     !   enddo
 
-
 end subroutine diagonalize
 
 !==========================
@@ -705,7 +688,6 @@ end subroutine diagonalize
 !> @brief Evaluate grad_r_to_xyz.
 subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
     implicit none
-
 
     integer, intent(in)             :: n, ns
     double precision, intent(in)    :: x(n,3)
@@ -754,7 +736,6 @@ end subroutine grad_r_to_xyz
 !> @brief Evaluate nac_r_to_xyz.
 subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
     implicit none
-
 
     integer, intent(in)             :: n, ns
     double precision, intent(in)    :: x(n,3)
@@ -817,7 +798,6 @@ end subroutine nac_r_to_xyz
 subroutine convert_xyz_to_r( x, r, n )
     implicit none
 
-
     integer, intent(in)           :: n
     double precision, intent(in)  :: x(n,3)
     double precision, intent(out) :: r(n*(n-1)/2)
@@ -839,7 +819,6 @@ endsubroutine convert_xyz_to_r
 !> @brief Evaluate mproduct.
 subroutine mproduct( a, b, c, l, m, n )
     implicit none
-
 
     integer, intent(in)             :: l, m, n
     double precision, intent(in)    :: a(l,m), b(m,n)
@@ -863,7 +842,6 @@ endsubroutine mproduct
 !> @brief Evaluate assign_coeff_bias.
 subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4 )
     implicit none
-
 
     double precision, intent(inout) :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,91)
     double precision, intent(inout) :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
@@ -32750,14 +32728,11 @@ subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, 
     bias_l4(91) = -2.6596683264e-01
 endsubroutine assign_coeff_bias
 
-
 !> @brief Evaluate ev2gm2m.
 subroutine ev2gm2m( dist, v2b, v2b_1, g2b, imollist, igrad, n )
     !Bohr
 
     implicit none
-
-
 
     integer,intent(in)           :: imollist(3), igrad !igrad=0 /1
     integer,intent(in)           :: n
@@ -32819,8 +32794,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
     !
     !**********************************************************************
     implicit none
-
-
 
     integer,intent(in)           :: imol, igrad
     double precision,intent(in)  :: r
@@ -33059,7 +33032,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
             (imol.eq.3 .and. i.eq.7) .or. (imol.eq.3 .and. i.eq.8) .or. &
             (imol.eq.3 .and. i.eq.9))) then
 
-
         do k=0,7
             grad(i) = grad(i)-2.d0*as(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
         enddo
@@ -33100,7 +33072,6 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     !**********************************************************************
 
     implicit none
-
 
     double precision :: cn(2),s6,s8,rs6,rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -33181,7 +33152,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
 
     implicit none
-
 
     integer          :: n,iz(2),max_elem,maxc,mxc(max_elem)
     double precision :: dist(1),r2r4(max_elem),r0ab(max_elem,max_elem)
@@ -33266,7 +33236,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
 
 end subroutine edisp
 
-
 !> @brief Evaluate n2ground.
 subroutine n2ground( r, v, grad, imol, igrad )
     !**********************************************************************
@@ -33282,8 +33251,6 @@ subroutine n2ground( r, v, grad, imol, igrad )
     ! QM commented line 628-631 650-652 708-712 728-730
     !**********************************************************************
     implicit none
-
-
 
     integer,intent(in) :: imol, igrad
     double precision   :: r
@@ -33319,7 +33286,6 @@ subroutine n2ground( r, v, grad, imol, igrad )
     u = exp(-fy*(r-re))
 
     v = de*(1.0d0-u)*(1.0d0-u)-de
-
 
     !! Add D3 dispersion correction
     dist(1) = r
@@ -33371,8 +33337,6 @@ subroutine noground( r, v, grad, imol, igrad )
     !**********************************************************************
     implicit none
 
-
-
     integer,intent(in) :: imol, igrad
     double precision   :: r
     double precision   :: v, grad
@@ -33419,4 +33383,3 @@ subroutine noground( r, v, grad, imol, igrad )
         grad = grad + dispdr(1)
     endif
 end subroutine noground
-

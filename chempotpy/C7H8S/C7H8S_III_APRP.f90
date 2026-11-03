@@ -47,7 +47,6 @@
 !
 !*this*line*is*66*characters*long*********************************
 
-
 !=================================================================
 !  Important notes:
 !  * Variable 'debug' should be set to .false. for production runs.
@@ -66,7 +65,6 @@
 !         /      \
 !        H7       H8
 !=================================================================
-
 
 !=================================================================
 ! *def pot
@@ -100,7 +98,6 @@
 subroutine pes( x, igrad, p, g, d )
 
     implicit none
-
 
     ! number of electronic state
     integer, parameter            :: nstates = 3
@@ -171,7 +168,6 @@ endsubroutine
 !> @brief Evaluate pot.
 subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     implicit none
-
 
     !--- {'global' constants
     integer, parameter :: natom = 16, nstate=3, ntermmax=200 &
@@ -277,8 +273,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
 
     contains
 
-
-
     !=================================================================
     ! *def calcqps
     !    Calculate primary & secondary internal coordinates.
@@ -382,7 +376,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !--- attributes of qtc,
         !---  esp. their relation to qnr
         call assignqtc(nqtc, qtcsym, qnrindex, qtctyp)
-
 
         !--- value of qtc
         !--- loop over qtc index
@@ -1465,7 +1458,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         t    = dq1**4/(dq1**4+dq2**4)
         dtdq = ( 4*dq1**3*(dq1**4+dq2**4)-4*dq1**4*(dq1**3+dq2**3) ) / (dq1**4+dq2**4)**2
     end subroutine tent1
-
 
     !=================================================================
     ! *def evalBL

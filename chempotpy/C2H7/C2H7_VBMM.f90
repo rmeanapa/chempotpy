@@ -135,7 +135,6 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
         end do
     end do
 
-
 end subroutine c2h7poth
 ! end of c2h7poth
 !*******************************************************************
@@ -183,7 +182,6 @@ subroutine c2h7potg( x, eng_kcal, grad, xnorm )
         end do
         xnorm(i) = dsqrt(xnorm(i))
     end do
-
 
 end subroutine c2h7potg
 ! end of routine c2h7potg
@@ -259,7 +257,6 @@ subroutine c2h7pot( x, eng_kcal )
         h5prime(i) = (scale*c5(i)) + ((1.0d0-scale)*c1(i))
     end do
 
-
     ! Calculate avg C-H bond length for 3 QM H
     r1 = 0.0d0
     r2 = 0.0d0
@@ -301,8 +298,6 @@ subroutine c2h7pot( x, eng_kcal )
             & c1,h2,h3,h4,h5prime,h9,vjg)
         eng_kcal = vjg+vmm3
     end if
-
-
 
 end subroutine c2h7pot
 ! end of routine c2h7pot
@@ -374,7 +369,6 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
     double precision :: at0ccrh
     !%%%  parameter(r0ch=1.1120d0,r0cc=1.52470d0)
     !     parameter(r0ch=1.092510d0,r0cc=1.52720d0)
-
 
     !%%% for ethane
 
@@ -521,7 +515,6 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
     p(23) = scalech
     p(24) = r0crh
     p(25) = r0ccr
-
 
 end subroutine pmm3_mod
 ! end of routine pmm3_mod
@@ -894,7 +887,6 @@ subroutine ethane( np, para, rxncrd, &
     double precision :: v1hcch,v2hcch,v3hcch
     double precision :: ksthcch
     double precision :: esph,espc,rvh,rvc,scalech
-
 
     ! Func called:
     double precision :: xdist
@@ -1540,7 +1532,6 @@ subroutine ethane( np, para, rxncrd, &
         etotalmm = xsumrx
     end if
 
-
     ! start of if-block label: jg_case
     !....................................
     if(ljg) then
@@ -1949,7 +1940,6 @@ subroutine et( v1, v2, v3, w, eng )
     double precision :: eng
 
     eng = 0.50d0*( ( v1*(1.0d0+dcos(w)) ) + ( v2*(1.0d0-dcos(2.0d0*w)) ) + ( v3*(1.0d0+dcos(3.0d0*w)) ) )
-
 
 end subroutine et
 ! end of Et
@@ -2420,7 +2410,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     vqh4 = cbq+ch4q+bh4q
     vqh5 = cbq+ch5q+bh5q
 
-
     t2 = ((ch2j-cbj)**2) + ((cbj-bh2j )**2) + ((bh2j-ch2j)**2)
 
     t3 = ((ch3j-cbj)**2) + ((cbj-bh3j )**2) + ((bh3j-ch3j)**2)
@@ -2468,7 +2457,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
 
     !     vstr = vstr * 1.013850d0
     !%%%--------------------------------------------------
-
 
     if(ldebug) then
         write(*,*)
@@ -2548,7 +2536,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     !     theta052=theta052*scat0
     !     theta053=theta053*scat0
     !     theta054=theta054*scat0
-
 
     !
     ! calculate delta
@@ -2631,7 +2618,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     t2    = delta53*delta53
     t3    = delta54*delta54
     voph5 = (fd5*(t1+t2+t3))+ ( hd5*((t1*t1)+(t2*t2)+(t3*t3)) )
-
 
     ! total vop contribution
     vop = voph2+voph3+voph4+voph5
@@ -2723,7 +2709,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
         write(*,*)'Total xpot:',xpot_kcal
     end if
 
-
     if(.false.) then
         r(1)  = h2(1)/0.52918d0
         r(2)  = h2(2)/0.52918d0
@@ -2788,8 +2773,6 @@ subroutine v3qj77( alpha, d1, d3, r0, r, vq, vj )
     vj = 0.50d0*(e1-e3)
 end subroutine v3qj77
 ! end of V3qj
-
-
 
 !23456789
 ! References:
@@ -2976,7 +2959,6 @@ subroutine steckdel( v1, v2, v3, vi, deltai )
     rn   = dsqrt(rn)
 
     deltai = dacos(doti/(ri*rn))
-
 
 end subroutine steckdel
 ! end of sub steckdel
@@ -4589,7 +4571,6 @@ subroutine switchf
         endif
         !##          write(*,*) i,s1(i),rch(i)
 
-
         !
         !  calculate s3 and ds3
         !
@@ -4871,7 +4852,6 @@ subroutine xgaussfit( r, fit )
     double precision :: alpha(ng)
     double precision :: cf(ng)
     double precision :: fx
-
 
     r0(1) = 1.949230d0
     r0(2) = 1.013860d0

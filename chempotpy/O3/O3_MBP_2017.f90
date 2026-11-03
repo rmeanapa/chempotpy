@@ -37,7 +37,6 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 3
@@ -68,13 +67,10 @@ subroutine pes( x, igrad, p, g, d )
 
 endsubroutine
 
-
-
 !> @brief Evaluate o3.
 subroutine o3( v, rx, ry, rz )
 
     implicit none
-
 
     double precision, intent(in)  :: rx, ry, rz
     double precision, intent(out) :: v
@@ -109,13 +105,11 @@ subroutine o3( v, rx, ry, rz )
             & 1))*xrz**(indices(ii,2)) + xrx**(indices(ii,3))*xry**(indices(ii,2))*xrz**(indices(ii,1)))
     enddo
 
-
 endsubroutine
 
 !> @brief Evaluate assign.
 subroutine assign( coeff, indices )
     implicit none
-
 
     double precision,intent(inout) :: coeff(52), indices(52,3)
 
@@ -330,8 +324,3 @@ subroutine assign( coeff, indices )
     coeff(52) = -303.958774798
 
 endsubroutine
-
-
-
-
-

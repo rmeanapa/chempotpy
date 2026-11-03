@@ -51,9 +51,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -186,7 +187,6 @@ subroutine prepot
     call prepot12
     call prepot22
 
-
 end subroutine prepot
 
 ! ********************************************************************
@@ -219,7 +219,6 @@ end subroutine pot
 !> @brief Evaluate prepot11 for the LiFH_LEPS_JHTP1_2002_DPEM potential.
 subroutine prepot11
     implicit none
-
 
     ! MISC VARIABLES
     integer          :: i,nt,j
@@ -411,7 +410,6 @@ subroutine prepot12
 
     implicit none
 
-
     ! MISC VARIABLES
     integer          :: i,nt
     double precision :: r(nt,3),e(nt)
@@ -490,7 +488,6 @@ end subroutine prepot12
 !> @brief Evaluate prepot22 for the LiFH_LEPS_JHTP1_2002_DPEM potential.
 subroutine prepot22
     implicit none
-
 
     ! MISC VARIABLES
     integer          :: i,j,k,nt

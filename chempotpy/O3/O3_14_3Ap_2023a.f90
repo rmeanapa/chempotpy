@@ -22,7 +22,6 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 14
     integer, parameter            :: natoms  = 3
@@ -95,7 +94,6 @@ subroutine energy_gradient( x, e, g, h, t, n, ns )
 
     implicit none
 
-
     integer, intent(in)             :: n,ns
     double precision, intent(in)    :: x(n,3)
     double precision, intent(inout) :: e(ns)
@@ -152,23 +150,20 @@ endsubroutine energy_gradient
 subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4, v2b, g2b )
     implicit none
 
-
     integer, intent(in)             :: n, ns
-    double precision                :: r(n*(n-1)/2)
     double precision, intent(inout) :: e(ns), g(ns,n*(n-1)/2), h(ns,ns,n*(n-1)/2)
     double precision, intent(inout) :: t(ns,ns)
     double precision, intent(in)    :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,105)
     double precision, intent(in)    :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(105)
 
+    double precision :: r(n*(n-1)/2)
     double precision :: a0(30), a1(65), a2(95), a3(125), a4(105)
     double precision :: z0(30), z1(65), z2(95), z3(125), z4(105)
     double precision :: g0(3,30), g1(3,65), g2(3,95), g3(3,125), g4(3,105), g4p(105,3)
     double precision :: dpem(ns,ns), dvdu(ns,105)
     double precision :: dudr(ns,ns,3), tmpmat(ns,ns)
-
-    integer :: sum1
-    integer :: i,j,k,l
-
+    integer          :: sum1
+    integer          :: i,j,k,l
     double precision :: v2b(ns),g2b(ns,n*(n-1)/2)
 
     a0 = 0.0d0
@@ -328,10 +323,10 @@ endsubroutine backprop
 subroutine activation_gelu( z, a, n )
     implicit none
 
-
-    integer                         :: i,n
     double precision, intent(in)    :: z(n)
     double precision, intent(inout) :: a(n)
+
+    integer :: i,n
 
     do i=1,n
         a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.d0)))
@@ -343,10 +338,10 @@ end subroutine activation_gelu
 subroutine activation_derivative_gelu( z, a, b, n )
     implicit none
 
-
-    integer                         :: i,n
     double precision, intent(in)    :: z(n), a(n)
     double precision, intent(inout) :: b(n)
+
+    integer :: i,n
 
     do i=1,n
         !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
@@ -365,17 +360,17 @@ end subroutine activation_derivative_gelu
 subroutine activation_functional_heviside( z, a, n, r, nbonds )
     implicit none
 
+    double precision, parameter :: af_f = 0.6, af_a=-2, af_b=7.0
 
     integer, intent(in)             :: n, nbonds
     double precision, intent(in)    :: z(n)
     double precision, intent(in)    :: r(nbonds)
     double precision, intent(inout) :: a(n)
-    double precision                :: r2(nbonds)
-    double precision                :: r_max, ar, br
-    integer                         :: max_pos
-    double precision, parameter     :: af_f = 0.6, af_a=-2, af_b=7.0
 
-    integer :: i
+    double precision :: r2(nbonds)
+    double precision :: r_max, ar, br
+    integer          :: max_pos
+    integer          :: i
 
     r2          = r
     max_pos     = maxloc(r2,dim=1)
@@ -397,20 +392,19 @@ end subroutine activation_functional_heviside
 subroutine activation_functional_derivative_terms( g, z, n, r, nbonds )
     implicit none
 
+    double precision, parameter :: af_f = 0.6, af_a=-2, af_b=7.0
 
     integer, intent(in)             :: n, nbonds
     double precision, intent(in)    :: z(n)
     double precision, intent(in)    :: r(nbonds)
     double precision, intent(inout) :: g(nbonds,n)
 
-    double precision            :: r2(nbonds)
-    double precision            :: r_max
-    integer                     :: max_pos
-    double precision            :: ar, br
-    double precision, parameter :: af_f = 0.6, af_a=-2, af_b=7.0
-    double precision            :: dfdr(nbonds)
-
-    integer :: i
+    double precision :: r2(nbonds)
+    double precision :: r_max
+    integer          :: max_pos
+    double precision :: ar, br
+    double precision :: dfdr(nbonds)
+    integer          :: i
 
     r2          = r
     max_pos     = maxloc(r2,dim=1)
@@ -474,7 +468,6 @@ subroutine activation_functional_derivative_terms( g, z, n, r, nbonds )
         dfdr(3) = 0.d0
     endif
 
-
     do i=1,nbonds
         g(i,:) = dfdr(i)*z(:)+ar*br*g(i,:)
     enddo
@@ -486,7 +479,6 @@ end subroutine activation_functional_derivative_terms
 !> @brief Evaluate sumover.
 subroutine sumover( a, b, sum1 )
     implicit none
-
 
     integer, intent(in)  :: a, b
     integer, intent(out) :: sum1
@@ -504,7 +496,6 @@ end subroutine sumover
 !> @brief Evaluate diagonalize.
 subroutine diagonalize( n, a_ss, ev_s, u_ss )
     implicit none
-
 
     ! parameters
     integer, intent(in)          :: n
@@ -537,7 +528,6 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     !     B_ss(i,i)=EV_s(i)
     !   enddo
 
-
 end subroutine diagonalize
 
 !==========================
@@ -545,7 +535,6 @@ end subroutine diagonalize
 !> @brief Evaluate grad_r_to_xyz.
 subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
     implicit none
-
 
     integer, intent(in)             :: n, ns
     double precision, intent(in)    :: x(n,3)
@@ -594,7 +583,6 @@ end subroutine grad_r_to_xyz
 !> @brief Evaluate nac_r_to_xyz.
 subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
     implicit none
-
 
     integer, intent(in)             :: n, ns
     double precision, intent(in)    :: x(n,3)
@@ -657,7 +645,6 @@ end subroutine nac_r_to_xyz
 subroutine convert_xyz_to_r( x, r, n )
     implicit none
 
-
     integer, intent(in)           :: n
     double precision, intent(in)  :: x(n,3)
     double precision, intent(out) :: r(n*(n-1)/2)
@@ -679,7 +666,6 @@ endsubroutine convert_xyz_to_r
 !> @brief Evaluate mproduct.
 subroutine mproduct( a, b, c, l, m, n )
     implicit none
-
 
     integer, intent(in)             :: l, m, n
     double precision, intent(in)    :: a(l,m), b(m,n)
@@ -703,7 +689,6 @@ endsubroutine mproduct
 !> @brief Evaluate assign_coeff_bias.
 subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4 )
     implicit none
-
 
     double precision, intent(inout) :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,105)
     double precision, intent(inout) :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(105)
@@ -34362,8 +34347,6 @@ subroutine ev2gm2m( dist, v2b, g2b, imol, igrad, n )
 
     implicit none
 
-
-
     integer,intent(in)           :: imol, igrad
     integer,intent(in)           :: n
     double precision,intent(in)  :: dist(n*(n-1)/2)
@@ -34408,8 +34391,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     !**********************************************************************
     implicit none
 
-
-
     integer,intent(in)           :: imol, igrad
     double precision,intent(in)  :: r
     double precision,intent(out) :: v(14), grad(14)
@@ -34432,7 +34413,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     ! V(4) - O2(3Del_u)   + O(3P)
     ! V(5) - O2(3Del_u)   + O(3P)
     ! V(6) - O2(3Sig_u^+) + O(3P)
-
 
     ! Calculate dispersion correction for all states
     dist(1) = r
@@ -34595,7 +34575,6 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
 
     implicit none
 
-
     double precision :: cn(2),s6,s8,rs6,rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
     double precision :: e6dr(1),e8dr(1)
@@ -34667,7 +34646,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
 
     implicit none
-
 
     integer          :: n,iz(2),max_elem,maxc,mxc(max_elem)
     double precision :: dist(1),r2r4(max_elem),r0ab(max_elem,max_elem)
@@ -34751,4 +34729,3 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
     enddo
 
 end subroutine edisp
-

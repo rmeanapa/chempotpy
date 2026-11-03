@@ -29,7 +29,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 3
@@ -113,7 +112,6 @@ subroutine pes( x, igrad, path, p, g, d )
         write (*,*) 'Only energy and gradient are available'
     endif
 
-
 endsubroutine
 
 !> @brief Evaluate EvdRdX.
@@ -121,10 +119,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -232,25 +230,25 @@ subroutine myprepot( path )
     !
     ! ----------------------------------------------------------------------------
     implicit none
-    integer :: file_unit_45
-
+    integer, parameter :: dp = kind(0.d0)                   ! double precision
 
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
-    integer, parameter              :: dp = kind(0.d0)                   ! double precision
-    real(dp), dimension(14)         :: phi_oh, phi_hbr
-    real(dp), dimension(1110)       :: x_1,x_2,y_1,amn
-    real(dp)                        :: r1,r2,r3,value,dr1,dr2,dr3
-    real(dp)                        :: r_oh,r_hbr,r_bro
-    real(dp)                        :: sum1, sum2, dzdr, dfdr
-    real(dp)                        :: dbetadz, dedr_oh, dedr_hbr
-    real(dp)                        :: v_oh, v_hbr, v_bro, v3
-    real(dp)                        :: th_y,theta
-    real(dp)                        :: z,re,de,phi_inf,alpha_s,r_s,z_i,phi_z,f_s
-    real(dp)                        :: x_1_max,x_2_max,y_1_max
-    real(dp)                        :: x_1_min,x_2_min,y_1_min
-    real(dp)                        :: q_1,q_2,q_3,dq_1,dq_2,dq_3
-    integer                         :: i, ncall
+
+    integer                   :: file_unit_45
+    character(len=1024)       :: file_path1
+    real(dp), dimension(14)   :: phi_oh, phi_hbr
+    real(dp), dimension(1110) :: x_1,x_2,y_1,amn
+    real(dp)                  :: r1,r2,r3,value,dr1,dr2,dr3
+    real(dp)                  :: r_oh,r_hbr,r_bro
+    real(dp)                  :: sum1, sum2, dzdr, dfdr
+    real(dp)                  :: dbetadz, dedr_oh, dedr_hbr
+    real(dp)                  :: v_oh, v_hbr, v_bro, v3
+    real(dp)                  :: th_y,theta
+    real(dp)                  :: z,re,de,phi_inf,alpha_s,r_s,z_i,phi_z,f_s
+    real(dp)                  :: x_1_max,x_2_max,y_1_max
+    real(dp)                  :: x_1_min,x_2_min,y_1_min
+    real(dp)                  :: q_1,q_2,q_3,dq_1,dq_2,dq_3
+    integer                   :: i, ncall
     data ncall/1/
     save ncall
     save phi_oh,phi_hbr,x_1,x_2,y_1,amn

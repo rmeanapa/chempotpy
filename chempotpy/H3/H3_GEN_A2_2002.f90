@@ -18,16 +18,16 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    integer :: istate
     ! number of electronic state
-    integer, parameter  :: nstates = 1
-    integer, parameter  :: natoms  = 3
-    integer, intent(in) :: igrad
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 3
 
+    integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
+    integer          :: istate
     double precision :: r(1,3), e(1), v
     integer          :: iatom, idir, i, j
     logical, save    :: first_time_data=.true.
@@ -57,12 +57,10 @@ subroutine pes( x, igrad, p, g, d )
 
 end subroutine pes
 
-
 module a2data
     implicit none
     private
     public :: beta, eshift, rnought, xlin1, xlin2, xlin3, xlin4
-
 
     save
     double precision                :: eshift=0.1662307680057728d0
@@ -344,7 +342,6 @@ subroutine prepota2
 
 end subroutine prepota2
 
-
 !> @brief Evaluate trip for the H3_GEN_A2_2002 potential.
 subroutine trip( r, v )
     !     H2 triplet curve for FCI/aug-cc-pVDZ
@@ -406,7 +403,6 @@ subroutine singlet( r, v )
         & 2.5357629098565200d-03, 1.5612692551680850d-05, &
         & -6.9340042488041930d-04, 2.3175123448115890d-04, &
         & -3.3226980442299310d-05, 1.6041565480651940d-06/)
-
 
     damp   = 1.d0-exp(-beta*r**2)
     xd     = damp/r

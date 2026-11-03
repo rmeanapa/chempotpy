@@ -4,15 +4,16 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    integer :: iatom, idir, nder
     ! number of electronic state
-    integer, parameter            :: nstates = 2
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 2
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
+    integer          :: iatom, idir, nder
     double precision :: nt, r(1,3), r2(3), v(1)
     double precision :: u11(1), u12(1), u22(1)
     double precision :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
@@ -100,7 +101,6 @@ subroutine pes( x, igrad, p, g, d )
         enddo
     enddo
 
-
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the NaFH_LEPS_TTYPP2_1998 potential.
@@ -108,9 +108,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -206,7 +207,6 @@ subroutine prepot
     call prepot12
     call prepot22
 
-
 end subroutine prepot
 !
 !> @brief Evaluate pot for the NaFH_LEPS_TTYPP2_1998 potential.
@@ -252,7 +252,6 @@ subroutine pot( r, e, de, nt, nsurf )
     else
         call pot22(r,e,de,nt)
     end if
-
 
 end subroutine pot
 !
@@ -488,7 +487,6 @@ subroutine prepot11
 
     !-----------------------------------------------------------------------
 
-
 end subroutine prepot11
 !
 !  U12 surface - coupling surface
@@ -553,7 +551,6 @@ subroutine prepot12
         unaf    = dexp(-ccnf(1)-ccnf(2)*r(i,3)- hlp*r(i,3))
         unaf    = unaf*27.2113961d0
         dunafd3 = -unaf*(ccnf(2)+hlp-ccnf(4)*hlp*hlp*r(i,3)/ccnf(3))
-
 
         hlp     = 1.d0/(1.d0+ccnh(4)*r(i,1))
         unah    = dexp(-ccnh(1)-ccnh(2)*r(i,1)- ccnh(3)*hlp*r(i,1))
@@ -651,8 +648,6 @@ subroutine prepot12
         de(2,i) = de(2,i)*cevau
         de(3,i) = de(3,i)*cevau
     10 continue
-
-
 
 end subroutine prepot12
 !
@@ -884,8 +879,6 @@ subroutine prepot22
         de(3,i) = de(3,i)*cevau
 
     10 continue
-
-
 
 end subroutine prepot22
 

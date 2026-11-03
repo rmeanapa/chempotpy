@@ -72,7 +72,6 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
 end subroutine diagonalize
 
-
 !> @brief Evaluate prepot for the NaFH_LEPS_TTYPP1_1998_DPEM potential.
 subroutine prepot
     !
@@ -118,7 +117,6 @@ subroutine prepot
     call prepot12
     call prepot22
 
-
 end subroutine prepot
 !
 !> @brief Evaluate pot for the NaFH_LEPS_TTYPP1_1998_DPEM potential.
@@ -138,7 +136,6 @@ subroutine pot( r, e, nt, nsurf )
     else
         call pot22(r,e,nt)
     end if
-
 
 end subroutine pot
 !
@@ -288,8 +285,6 @@ subroutine prepot11
 
     10 continue
 
-
-
 end subroutine prepot11
 !
 !  U12 surface - coupling surface
@@ -334,7 +329,6 @@ subroutine prepot12
 
     do 10 i=1,nt
 
-
         hlp  = ccmf(3)/(1.d0+ccmf(4)*r(i,3))
         unaf = dexp(-ccmf(1)-ccmf(2)*r(i,3)- hlp*r(i,3))
         unaf = unaf*27.2113961d0
@@ -366,8 +360,6 @@ subroutine prepot12
         !***********************************************************************
 
     10 continue
-
-
 
 end subroutine prepot12
 
@@ -529,7 +521,5 @@ subroutine prepot22
         !***********************************************************************
 
     10 continue
-
-
 
 end subroutine prepot22

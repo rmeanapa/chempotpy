@@ -3,8 +3,6 @@ module bemsa
     private
     public :: bemsav, coeff, emsav, evmono, evpoly
 
-
-
     double precision :: coeff(5809)
     contains
 
@@ -24048,7 +24046,6 @@ subroutine pes( x, igrad, path, p, gradient_out, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 11
@@ -24080,22 +24077,19 @@ subroutine pes( x, igrad, path, p, gradient_out, d )
         write (*,*) 'Only energy is available'
     endif
 
-
 endsubroutine
 
 !> @brief Evaluate prepot.
 subroutine prepot( path )
     use bemsa, only: bemsav, coeff, emsav, evmono, evpoly
     implicit none
-    integer :: file_unit_10
-
-
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
-    integer                         :: i, ncoeff, numero
+
+    integer             :: file_unit_10
+    character(len=1024) :: file_path1
+    integer             :: i, ncoeff, numero
 
     ! Geometry coordinates must be provided as a matrix xyz (11,3)
-
     file_path1 = trim(path)//"/CH4_H2O_H2O/coeff_CH4-H2O-H2O.dat"
     open(newunit=file_unit_10,file=file_path1)
     do i = 1, 5809
@@ -24109,7 +24103,6 @@ endsubroutine prepot
 subroutine pot( xyz, v )
     use bemsa, only: bemsav, coeff, emsav, evmono, evpoly
     implicit none
-
 
     double precision, intent(in)    :: xyz(11,3)
     double precision, intent(inout) :: v
@@ -24183,4 +24176,3 @@ subroutine pot( xyz, v )
 
     call emsav(x,coeff,v)
 end  subroutine
-

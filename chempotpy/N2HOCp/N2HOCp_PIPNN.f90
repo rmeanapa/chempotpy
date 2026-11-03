@@ -9,8 +9,6 @@ module nnparam
         & nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, weighta, &
         & weightb, weightc
 
-
-
     double precision,parameter :: alpha  = 1.5d0,pi=3.1415926d0,radian=pi/180.0d0
     integer,parameter          :: nbasis = 167,ndim=10,natom=5
     integer,parameter          :: ninput = 167
@@ -34,7 +32,6 @@ subroutine pes( x, igrad, path, p, g, d )
         & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
         & weighta, weightb, weightc
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -68,7 +65,6 @@ subroutine pes( x, igrad, path, p, g, d )
         enddo
     enddo
 
-
     if (igrad==0) then
         call pes_init(path)
         call n2chopipnn(r,v,va,vb,vc)
@@ -101,7 +97,6 @@ endsubroutine
 double precision function distance( a, b )
     implicit none
 
-
     integer          :: i
     double precision :: a(3), b(3)
 
@@ -119,7 +114,6 @@ subroutine n2chopipnn( rb, vpes, vpesa, vpesb, vpesc )
         & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
         & weighta, weightb, weightc
     implicit none
-
 
     integer          :: i,j,k,lpes
     double precision :: rb(ndim),xbond(ndim),basis(0:nbasis),tmp1,txinput(nbasis)
@@ -139,7 +133,6 @@ subroutine n2chopipnn( rb, vpes, vpesa, vpesb, vpesc )
     call getpotc(txinput,vpesc)
     vpes = (vpesa+vpesb+vpesc)/3d0
 
-
 end subroutine n2chopipnn
 
 !-->  read NN weights and biases from matlab output
@@ -153,16 +146,15 @@ subroutine pes_init( path )
         & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
         & weighta, weightb, weightc
     implicit none
-    integer :: file_unit_4
-
-
     character(len=1024), intent(in) :: path
-    integer                         :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
-    integer                         :: ibasis,npd,iterm,ib,nfile
-    character(len=80)               :: f1, line
-    character(len=1024)             :: file_path1, file_path2
-    character(len=1024)             :: file_path3, file_path4
-    character(len=1024)             :: file_path5, file_path6
+
+    integer             :: file_unit_4
+    integer             :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
+    integer             :: ibasis,npd,iterm,ib,nfile
+    character(len=80)   :: f1, line
+    character(len=1024) :: file_path1, file_path2
+    character(len=1024) :: file_path3, file_path4
+    character(len=1024) :: file_path5, file_path6
 
     file_path1 = trim(path)//"/N2HOCp/weights.txt-1"
     file_path2 = trim(path)//"/N2HOCp/biases.txt-1"
@@ -318,7 +310,6 @@ end
 function tranfun( x, ifunc )
     implicit none
 
-
     integer          :: ifunc
     double precision :: tranfun,x
     if (ifunc.eq.1) then
@@ -336,7 +327,6 @@ subroutine getpot( x, vpot )
         & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
         & weighta, weightb, weightc
     implicit none
-
 
     integer                    :: i,ndriv,inode1,inode2,ilay1,ilay2,j,k,neu1,neu2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -380,7 +370,6 @@ end subroutine getpot
 function emsav21113( x, c ) result(v)
     implicit none
 
-
     double precision,dimension(1:10)::x
     double precision,dimension(0:167)::c
     double precision :: v
@@ -394,7 +383,6 @@ end function emsav21113
 subroutine bemsav21113( x, p )
     implicit none
 
-
     double precision,dimension(1:10),intent(in)::x
     double precision,dimension(0:167),intent(out)::p
     ! ::::::::::::::::::::
@@ -406,7 +394,6 @@ end subroutine bemsav21113
 !> @brief Evaluate evmono21113.
 subroutine evmono21113( x, m )
     implicit none
-
 
     double precision,dimension(1:10),intent(in)::x
     double precision,dimension(0:21),intent(out)::m
@@ -439,7 +426,6 @@ end subroutine evmono21113
 !> @brief Evaluate evpoly21113.
 subroutine evpoly21113( m, p )
     implicit none
-
 
     double precision,dimension(0:21),intent(in)::m
     double precision,dimension(0:167),intent(out)::p
@@ -622,7 +608,6 @@ subroutine getpota( x, vpot )
         & weighta, weightb, weightc
     implicit none
 
-
     integer                    :: i,ndriv,inode1,inode2,ilay1,ilay2,j,k,neu1,neu2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -667,7 +652,6 @@ subroutine getpotb( x, vpot )
         & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
         & weighta, weightb, weightc
     implicit none
-
 
     integer                    :: i,ndriv,inode1,inode2,ilay1,ilay2,j,k,neu1,neu2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
@@ -714,7 +698,6 @@ subroutine getpotc( x, vpot )
         & weighta, weightb, weightc
     implicit none
 
-
     integer                    :: i,ndriv,inode1,inode2,ilay1,ilay2,j,k,neu1,neu2
     double precision           :: x(ninput),y(nodemax,nlayer),vpot
     double precision, external :: tranfun
@@ -752,4 +735,3 @@ subroutine getpotc( x, vpot )
     vpot = y(nodes(nlayer),nlayer)*pdelc(nscale)+pavgc(nscale)
 
 end subroutine getpotc
-

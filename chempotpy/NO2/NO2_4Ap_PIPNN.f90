@@ -31,8 +31,6 @@ module nnparam
     public :: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, nodes3a, &
         & noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
 
-
-
     !***************************************************************************
     !natom     ==>Number of atoms
     !npes      ==>Number of PESs
@@ -56,7 +54,6 @@ subroutine pes( x, igrad, path, p, g, d )
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
 
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -108,7 +105,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
 !***************************************************************************
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v, vpes, dvdxa, dvdx, ndriv )
@@ -131,7 +127,6 @@ subroutine evvdvdx( xcart, v, vpes, dvdxa, dvdx, ndriv )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     integer          :: i,j,k,ndriv
     double precision :: v,vpes(npes),c(0:ninput),dvdx(1:natom*3,npes)
@@ -188,7 +183,6 @@ subroutine pes_init( path )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     character(len=1024), intent(in) :: path
     integer                         :: i,j,ihid,iwe,inode1,inode2,ilay1,ilay2
@@ -267,7 +261,6 @@ subroutine pot3a( x, vpot3, dvdg, ndriv ) !-->3-HOCO, a
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     integer                      :: i,ndriv,inode1,inode2,ilay1,ilay2
     integer                      :: j,k,m,neu1,neu2
@@ -356,7 +349,6 @@ end subroutine pot3a
 function tranfun( x, ifunc )
     implicit none
 
-
     integer          :: ifunc
     double precision :: tranfun,x
     if (ifunc.eq.1) then
@@ -371,7 +363,6 @@ end function tranfun
 !> @brief Evaluate LOGSIG.
 function logsig( x )
     implicit none
-
 
     double precision :: x,logsig
     logsig = 1.d0/(1.d0+dexp(-x))
@@ -431,7 +422,6 @@ end function logsig
 subroutine bemsav( xmorse, m, p )
     implicit none
 
-
     double precision :: xmorse(1:3)
     double precision :: p(0:12)
     double precision :: m(0:4)
@@ -444,7 +434,6 @@ end subroutine bemsav
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision :: x(1:3)
     double precision :: m(0:4)
@@ -460,7 +449,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision :: p(0:12)
     double precision :: m(0:4)
@@ -486,7 +474,6 @@ subroutine evdvdx( dvdg, dpdr, drdx, dvdxa, dvdx )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     integer          :: i,j,k
     double precision :: dvdx(1:natom*3,npes),xcart(1:3,1:natom)
@@ -531,7 +518,6 @@ subroutine evdvdr( r, c, m, p, dpdr )
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
 
-
     integer          :: i,j
     double precision :: r(1:nbond),dmsdr(1:nbond,1:nbond),dmdr(1:nbond,0:4)
     double precision :: dvdr(1:nbond),dpdr(1:nbond,0:ninput),c(0:ninput)
@@ -549,7 +535,6 @@ subroutine evdrdx( xcart, r, x, drdx )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     integer          :: i,j,k
     double precision :: r(1:nbond),xcart(1:3,1:natom),drdx(1:nbond,1:natom*3)
@@ -585,7 +570,6 @@ subroutine evdmsdr( r, dmsdr )
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
 
-
     integer          :: i,j
     double precision :: dmsdr(1:nbond,1:nbond),r(1:nbond)
     ! ::::::::::::::::::::
@@ -607,7 +591,6 @@ subroutine evdmdr( m, dmsdr, dmdr )
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
 
-
     integer          :: i,j
     double precision :: dmsdr(1:nbond,1:nbond),dmdr(1:nbond,0:4),m(0:4)
 
@@ -626,7 +609,6 @@ subroutine evdpdr( p, dmdr, dpdr )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     integer          :: i,j
     double precision :: dmdr(1:nbond,0:4),dpdr(1:nbond,0:ninput)

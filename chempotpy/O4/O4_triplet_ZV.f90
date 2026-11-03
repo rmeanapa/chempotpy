@@ -1,4 +1,3 @@
-
 !**********************************************************************
 !   System:                     O4
 !   Name of this surface:       PES_O4_triplet_umn_v2
@@ -78,8 +77,6 @@ module o4_triplet_zv_par
     private
     public :: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, gconv, p, r, ra, &
         & rb, rm, rms, totdiss
-
-
 
     double precision,parameter :: cconv = 0.52917721092d0
     double precision,parameter :: econv = 0.159360144d-2
@@ -278,7 +275,6 @@ subroutine pes( x, igrad, potential, gradient, dvec )
         & eref, gconv, p, r, ra, rb, rm, rms, totdiss
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 4
@@ -357,7 +353,6 @@ subroutine o4pes( x, v, dvdx, igrad )
 
     implicit none
 
-
     integer          :: i,igrad,j,nob,k
     double precision :: v
     double precision :: dvdx(12),x(12)
@@ -390,7 +385,6 @@ subroutine coord_convt( x )
 
     implicit none
 
-
     integer          :: i
     double precision :: x(12)
 
@@ -407,7 +401,6 @@ subroutine coord_convt( x )
     r(4) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
     r(5) = sqrt((x(4)-x(10))**2 + (x(5)-x(11))**2 + (x(6)-x(12))**2)
     r(6) = sqrt((x(7)-x(10))**2 + (x(8)-x(11))**2 + (x(9)-x(12))**2)
-
 
 end subroutine coord_convt
 
@@ -433,7 +426,6 @@ subroutine evv( v )
     !**********************************************************************
 
     implicit none
-
 
     integer          :: i,j,k
     double precision :: dist,dv2dr,v,v2,disp,dispdr(6)
@@ -472,7 +464,6 @@ subroutine evv( v )
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
 
-
 end subroutine evv
 
 !> @brief Evaluate EvdVdX.
@@ -492,7 +483,6 @@ subroutine evdvdx( x, dvdx )
     !**********************************************************************
 
     implicit none
-
 
     integer          :: i,j
     double precision :: dvdx(12),x(12)
@@ -536,7 +526,6 @@ subroutine evmorse
     !**********************************************************************
     implicit none
 
-
     integer :: i
 
     do i=1,6
@@ -556,7 +545,6 @@ subroutine evmono
     !**********************************************************************
 
     implicit none
-
 
     rm(0)   = 1.0d0
     rm(1)   = rms(6)
@@ -671,7 +659,6 @@ subroutine evmono
     rm(110) = rm(6)*rm(86)
     rm(111) = rm(6)*rm(87)
 
-
 end subroutine evmono
 
 !> @brief Evaluate EvPoly.
@@ -685,7 +672,6 @@ subroutine evpoly
     !**********************************************************************
 
     implicit none
-
 
     p(0)  = rm(0)
     p(1)  = rm(1) + rm(2) + rm(3) + rm(4) + rm(5) + rm(6)
@@ -1164,7 +1150,6 @@ subroutine evpoly
     p(464) = p(3)*p(194) - p(453) - p(454) - p(451)
     p(465) = p(1)*p(305) - p(464) - p(463)
 
-
 end subroutine evpoly
 
 !> @brief Evaluate evbas.
@@ -1176,7 +1161,6 @@ subroutine evbas
     !**********************************************************************
 
     implicit none
-
 
     integer          :: i
     double precision :: b1(466)
@@ -1253,7 +1237,6 @@ subroutine evbas
     b(429) = b1(463)
     b(430) = b1(465)
 
-
 end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
@@ -1270,8 +1253,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     !
     !**********************************************************************
     implicit none
-
-
 
     integer,intent(in)           :: imol, igrad
     double precision,intent(in)  :: r
@@ -1359,7 +1340,6 @@ subroutine evdvdr
 
     implicit none
 
-
     integer          :: i,j
     double precision :: dist,v2,dv2dr,disp,dispdr(6)
 
@@ -1421,7 +1401,6 @@ subroutine evdrdx( x )
 
     implicit none
 
-
     integer          :: i,j
     double precision :: x(12)
 
@@ -1482,7 +1461,6 @@ subroutine evdrdx( x )
     drdx(6,12) = -drdx(6,9)
     ! Finish the calculation of non-zero dRdX
 
-
 end subroutine evdrdx
 
 !> @brief Evaluate EvdMsdR.
@@ -1499,7 +1477,6 @@ subroutine evdmsdr
     !**********************************************************************
 
     implicit none
-
 
     integer :: i,j
 
@@ -1518,7 +1495,6 @@ subroutine evdmsdr
 
     enddo
 
-
 end subroutine evdmsdr
 
 !> @brief Evaluate EvdMdR.
@@ -1532,7 +1508,6 @@ subroutine evdmdr
     !**********************************************************************
 
     implicit none
-
 
     integer :: i
 
@@ -1651,7 +1626,6 @@ subroutine evdmdr
         dmdr(i,111) = dmdr(i,6)*rm(87) + rm(6)*dmdr(i,87)
     enddo
 
-
 end subroutine evdmdr
 
 !> @brief Evaluate EvdPdr.
@@ -1665,7 +1639,6 @@ subroutine evdpdr
     !**********************************************************************
 
     implicit none
-
 
     integer :: i
 
@@ -2184,7 +2157,6 @@ subroutine evdpdr
 
     enddo
 
-
 end subroutine evdpdr
 
 !> @brief Evaluate evdbdr.
@@ -2196,7 +2168,6 @@ subroutine evdbdr
     !**********************************************************************
 
     implicit none
-
 
     integer          :: i,j
     double precision :: db1dr(6,466)
@@ -2277,7 +2248,6 @@ subroutine evdbdr
         dbdr(j,430) = db1dr(j,465)
     enddo
 
-
 end subroutine evdbdr
 
 !> @brief Evaluate d3disp.
@@ -2301,7 +2271,6 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     !**********************************************************************
 
     implicit none
-
 
     double precision :: cn(2),s6,s8,rs6,rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -2374,7 +2343,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
 
     implicit none
-
 
     integer          :: n,iz(2),max_elem,maxc,mxc(max_elem)
     double precision :: dist(1),r2r4(max_elem),r0ab(max_elem,max_elem)

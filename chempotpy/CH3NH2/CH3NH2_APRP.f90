@@ -159,7 +159,6 @@ subroutine pes( x, igrad, p, g, d )
 
 end subroutine pes
 
-
 !> @brief Evaluate pot for the CH3NH2_APRP potential.
 subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
     implicit none
@@ -220,7 +219,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
             duy(i,j) = duy(i,j)+dy(i)
             duz(i,j) = duz(i,j)+dz(i)
         enddo
-
 
     enddo
 
@@ -284,7 +282,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
     enddo
 
 end subroutine pot
-
 
 !> @brief Evaluate dihedr1 for the CH3NH2_APRP potential.
 double precision function dihedr1( i, j, k, l, x, y, z )
@@ -375,7 +372,6 @@ double precision function dihedr1( i, j, k, l, x, y, z )
 
 end function dihedr1
 
-
 !> @brief Evaluate bndlen for the CH3NH2_APRP potential.
 double precision function bndlen( i, j, x, y, z )
     !***********************************************************************
@@ -400,7 +396,6 @@ double precision function bndlen( i, j, x, y, z )
         write(*,'(I3,3F18.12)') j,x(j),y(j),z(j)
         stop
     endif
-
 
 end function bndlen
 
@@ -444,7 +439,6 @@ subroutine xprod1( x1, x2, x3 )
     !***********************************************************************
 
     implicit none
-
 
     double precision :: x1(3),x2(3),x3(3)
 
@@ -520,7 +514,6 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
         & 6,4,7, &
         & 7,4,5/
 
-
     r1 = bndlen(1,3,x,y,z)
     t2 = dihedr2(1,3,4,2,x,y,z)
 
@@ -539,8 +532,6 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
     len1 = qc(18)
     len2 = qc(19)
     len3 = qc(20)
-
-
 
     dx1 = 0d0
     dy1 = 0d0
@@ -568,8 +559,6 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
             dz1(nat) = dz1(nat)+dk(kk+5)*dngz(nat)
         enddo
     enddo
-
-
 
     ! 11th/12th dk COORD
 
@@ -629,7 +618,6 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
     dy1(5) = dy1(5)+dk(14)*dihedrly(2,3,4,5,x,y,z)
     dz1(5) = dz1(5)+dk(14)*dihedrlz(2,3,4,5,x,y,z)
 
-
     do kk=6,8
         i = bends(1,kk)
         j = bends(2,kk)
@@ -652,7 +640,6 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
             dz1(nat) = dz1(nat)+dk(12+kk)*dngz(nat)
         enddo
     enddo
-
 
     ! 21th dk COORD
 
@@ -682,7 +669,6 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
     dy1(4) = dy1(4)+dk(22)*dihedrky(1,3,4,2,x,y,z)
     dz1(4) = dz1(4)+dk(22)*dihedrkz(1,3,4,2,x,y,z)
 
-
 end subroutine convertit
 
 !> @brief Evaluate angder for the CH3NH2_APRP potential.
@@ -706,7 +692,6 @@ subroutine angder( x, y, z, i, j, k, dngx, dngy, dngz )
 
     to = (x(j)-x(i))*(x(j)-x(k)) +(y(j)-y(i))*(y(j)-y(k)) +(z(j)-z(i))*(z(j)-z(k))
 
-
     be=((((x(j)-x(i))**2)+((y(j)-y(i))**2)+((z(j)-z(i))**2))**0.5d0) *((((x(j)-x(k))**2)+((y(j)-y(k))**2)+((z(j)- &
         & z(k))** 2))**0.5d0)
 
@@ -721,15 +706,12 @@ subroutine angder( x, y, z, i, j, k, dngx, dngy, dngz )
 
     dngz(j) = cgo*((2d0*z(j)-z(i)-z(k))*be -( (((z(j)-z(i))/ra)*rb) + (((z(j)-z(k))/rb)*ra) )*to)/(be**2d0)
 
-
     !--------- k -----------!
     dngx(k) = cgo*( -1d0*(x(j)-x(i))*be -(((x(k)-x(j))/rb)*ra*to))/(be**2d0)
 
     dngy(k) = cgo*( -1d0*(y(j)-y(i))*be -(((y(k)-y(j))/rb)*ra*to))/(be**2d0)
 
     dngz(k) = cgo*( -1d0*(z(j)-z(i))*be -(((z(k)-z(j))/rb)*ra*to))/(be**2d0)
-
-
 
     !--------- i -----------!
     dngx(i) = cgo*( -(x(j)-x(k))*be -(((x(i)-x(j))/ra)*rb*to))/(be**2d0)
@@ -738,9 +720,7 @@ subroutine angder( x, y, z, i, j, k, dngx, dngy, dngz )
 
     dngz(i) = cgo*( -(z(j)-z(k))*be -(((z(i)-z(j))/ra)*rb*to))/(be**2d0)
 
-
 end subroutine angder
-
 
 !> @brief Evaluate disder for the CH3NH2_APRP potential.
 subroutine disder( x, y, z, i, j, dngx, dngy, dngz )
@@ -768,7 +748,6 @@ subroutine disder( x, y, z, i, j, dngx, dngy, dngz )
 
 end subroutine disder
 
-
 !> @brief Evaluate solver for the CH3NH2_APRP potential.
 subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
     !***********************************************************************
@@ -781,7 +760,6 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
     !***********************************************************************
 
     implicit none
-
 
     integer            :: nrap,ntap,ra1,ra2
     integer, parameter :: nqs = 5
@@ -840,7 +818,6 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
     vb  = 0d0
     dut = 0d0
 
-
     do i=1,nqs
         qs(i) = qc(i)
     enddo
@@ -850,7 +827,6 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         sqb(i) = sin(qb(i))
         cqb(i) = cos(qb(i))
     enddo
-
 
     torh1 = qc(11)
     torh2 = qc(12)
@@ -865,7 +841,6 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
     len1 = qc(18)
     len2 = qc(19)
     len3 = qc(20)
-
 
     call getpara(ii,nrap,ntap, &
         & knhb1,knhb2, &
@@ -883,7 +858,6 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         & gnc1,gnc2,gnc3, &
         & ft1,fa1)
 
-
     call getv0(ii,nrap,ntap,v0)
 
     ! Calculate potential energy
@@ -898,8 +872,6 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         ! STRETCH 2 (NC)
         vs = vs+gnc1(ra1,ra2) *(1d0-exp(gnc2(ra1,ra2)*(qc(2)-gnc3(ra1,ra2))))**2d0
         vs = vs+knc1(ra1,ra2)*(qc(2)-knc2(ra1,ra2))**4d0
-
-
 
         ! STRETCHES 3-5 (CH)
         do i=3,nqs
@@ -922,14 +894,12 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
 
         v3 = ft1(ra1,ra2)*(1d0-(4d0*(torh2**3d0)-3d0*torh2)) * exp(((rh2hx-dd1)**2d0)/ft2)
 
-
         dd2 = 1.881d0
         rr  = 1.761d0
         fa2 = -2.0d0
 
         v4=(fa1(ra1,ra2)*(ang1-dd2)**2d0) *exp(((len1-rr)**2d0)/fa2) +(fa1(ra1,ra2)*(ang2-dd2)**2d0) *exp(((len2-rr)** &
             & 2d0)/fa2) +(fa1(ra1,ra2)*(ang3-dd2)**2d0) *exp(((len3-rr)**2d0)/fa2)
-
 
     elseif (ii .eq. 3) then
         ! STRETCHES
@@ -939,10 +909,6 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         vs = vs+jnc1(ra1,ra2)*exp(jnc2(ra1,ra2) *(qc(2)-jnc3(ra1,ra2))**2d0)
         ! STRETCHES 3-5 (CH)
 
-
-
-
-
         ! BENDS
         ! BEND 1 (CNHA)
         vb = jcnha1(ra1,ra2)*exp(jcnha2(ra1,ra2) *(cqb(1)-jcnha3(ra1,ra2))**2d0)
@@ -950,15 +916,10 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         vb = vb+jcnhb1(ra1,ra2)*exp(jcnhb2(ra1,ra2) *(cqb(2)-jcnhb3(ra1,ra2))**2d0)
         ! BEND 3-5 (NCH)
 
-
-
-
     endif
 
     ! COMBINE
     ut = vs+vb+u0+v3+v4
-
-
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -972,23 +933,14 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
                 & ra2)*(qc(1)-gnhb3(ra1,ra2))))
             dut(1) = dut(1)+4d0*knhb1(ra1,ra2)*(qc(1)-knhb2(ra1,ra2))**3d0
 
-
-
-
-
             ! STRETCH 2 (NC)
 
             dut(2)=-2d0*gnc2(ra1,ra2)*gnc1(ra1,ra2)* exp(gnc2(ra1,ra2)*(qc(2)-gnc3(ra1,ra2)))* (1d0-exp(gnc2(ra1,ra2)* &
                 & (qc(2)-gnc3(ra1,ra2))))
             dut(2) = dut(2)+4d0*knc1(ra1,ra2)*(qc(2)-knc2(ra1,ra2))**3d0
 
-
-
-
             ! STRETCHES 3-5 (CH)
             do i=3,nqs
-
-
 
                 dut(i)=-2d0*kch2(ra1,ra2)*kch1(ra1,ra2)* exp(kch2(ra1,ra2)*(qs(i)-kch3(ra1,ra2)))* (1d0-exp(kch2(ra1, &
                     & ra2)*(qs(i)-kch3(ra1,ra2))))
@@ -1004,13 +956,11 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
                 dut(nqs+i) = knch1(ra1,ra2)*(qb(i)-knch2(ra1,ra2))*2d0
             enddo
 
-
             dut(11) = 2d0*((rh1hx-dd1)/ft2)*exp(((rh1hx-dd1)**2d0)/ft2) *ft1(ra1,ra2)*(1d0-(4d0*(torh1**3d0)-3d0*torh1))
             dut(12) = 2d0*((rh2hx-dd1)/ft2)*exp(((rh2hx-dd1)**2d0)/ft2) *ft1(ra1,ra2)*(1d0-(4d0*(torh2**3d0)-3d0*torh2))
 
             dut(13) = ft1(ra1,ra2)*(-12d0*(torh1**2d0)+3d0) * exp(((rh1hx-dd1)**2d0)/ft2)
             dut(14) = ft1(ra1,ra2)*(-12d0*(torh2**2d0)+3d0) * exp(((rh2hx-dd1)**2d0)/ft2)
-
 
             dut(15) = 2d0*fa1(ra1,ra2)*(ang1-dd2) *exp(((len1-rr)**2d0)/fa2)
             dut(16) = 2d0*fa1(ra1,ra2)*(ang2-dd2) *exp(((len2-rr)**2d0)/fa2)
@@ -1044,7 +994,6 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
     endif
 
 end subroutine solver
-
 
 !> @brief Evaluate getV0 for the CH3NH2_APRP potential.
 subroutine getv0( ii, nrap, ntap, v0 )
@@ -1184,8 +1133,6 @@ subroutine getpara( ii, nrap, ntap, &
     jcnhb1 = 0d0
     jcnhb2 = 0d0
     jcnhb3 = 0d0
-
-
 
     if (ii .eq. 1) then
         ! STRETCH 1 (NHB)
@@ -1468,7 +1415,6 @@ subroutine getpara( ii, nrap, ntap, &
         fa1(3,1) = fa1(3,2)
         fa1(4,1) = fa1(4,2)
 
-
     else if (ii .eq. 2) then
         ! STRETCH 1 (NHB)
 
@@ -1725,7 +1671,6 @@ subroutine getpara( ii, nrap, ntap, &
         knch2(3,1) = 1.9d0
         knch2(4,1) = knch2(4,2)
 
-
         ! Methylrot and Methylang
         ft1(1,2) = 0.012d0
         ft1(2,2) = 0.012d0
@@ -1752,8 +1697,6 @@ subroutine getpara( ii, nrap, ntap, &
         fa1(2,1) = 0.5d0
         fa1(3,1) = fa1(3,2)
         fa1(4,1) = fa1(4,2)
-
-
 
     else if (ii .eq. 3) then
         ! STRETCH 1 (NHB)
@@ -1918,13 +1861,7 @@ subroutine getpara( ii, nrap, ntap, &
 
     endif
 
-
-
-
-
-
 end subroutine getpara
-
 
 !> @brief Evaluate tert for the CH3NH2_APRP potential.
 subroutine tert( igrad, ii, x, y, z, nrap, ntap, en, dx1, dy1, dz1 )
@@ -1953,7 +1890,6 @@ subroutine tert( igrad, ii, x, y, z, nrap, ntap, en, dx1, dy1, dz1 )
     double precision :: beta
     double precision :: dbeta(12)
     double precision :: dihedr2
-
 
     ! The anchor points:
 
@@ -2020,13 +1956,11 @@ subroutine tert( igrad, ii, x, y, z, nrap, ntap, en, dx1, dy1, dz1 )
     endif
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 end subroutine tert
 !-------------------------------------------------!
 !-------------------------------------------------!
 !-------------------------------------------------!
 !-------------------------------------------------!
-
 
 !> @brief Evaluate calcHess1 for the CH3NH2_APRP potential.
 subroutine calchess1( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
@@ -2090,7 +2024,6 @@ subroutine calchess1( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
             dh(2,i) = dhs(i)
         enddo
     endif
-
 
 end subroutine calchess1
 
@@ -2183,7 +2116,6 @@ subroutine calchess2( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
 
 end subroutine calchess2
 
-
 !> @brief Evaluate calcHess3 for the CH3NH2_APRP potential.
 subroutine calchess3( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
     ! calcs the tertiary contribution for case 3: between 4 anchor points
@@ -2237,8 +2169,6 @@ subroutine calchess3( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
 
 end subroutine calchess3
 
-
-
 !> @brief Evaluate calcgeom for the CH3NH2_APRP potential.
 subroutine calcgeom( x, y, z, qc )
     ! get the internal coords for tertiary calcs
@@ -2280,7 +2210,6 @@ subroutine calcgeom( x, y, z, qc )
 
 end subroutine calcgeom
 
-
 !> @brief Evaluate bigtent for the CH3NH2_APRP potential.
 subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
     !***********************************************************************
@@ -2303,8 +2232,6 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
 
     f  = 0d0
     fg = 0
-
-
 
     ! Check whether the point are end points
     if (r1 .lt. rap(1,si)) then
@@ -2331,7 +2258,6 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
             fg(2) = i
         endif
     enddo
-
 
     un = 0d0
     up = 0d0
@@ -2392,17 +2318,12 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
         tk = 3
     endif
 
-
     dnom = un*vn + un*vp + up*vn + up*vp
 
     f(1) = un*vn/dnom
     f(2) = un*vp/dnom
     f(3) = up*vn/dnom
     f(4) = up*vp/dnom
-
-
-
-
 
     df = 0d0
     if( (fg(1)-1.eq.0) .and. (fg(2)-1.eq.0)) then
@@ -2443,8 +2364,6 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
 
     endif
 
-
-
     ddnom(1) = dun*vn + dun*vp + dup*vn + dup*vp
     ddnom(2) = un*dvn + un*dvp + up*dvn + up*dvp
 
@@ -2460,8 +2379,6 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
 
 end subroutine bigtent
 
-
-
 !> @brief Evaluate KPev2gm2 for the CH3NH2_APRP potential.
 subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
     ! gives the primary coordinate contribution
@@ -2469,10 +2386,6 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
     implicit none
 
     integer :: imol
-
-
-
-
 
     double precision :: a12(4)
     double precision :: const(4)
@@ -2511,7 +2424,6 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
     rr = bndlen(1,3,x,y,z)
     tt = dihedr2(1,3,4,2,x,y,z)
 
-
     if (imol .eq. 1) then ! GROUND STATE
 
         e1 = 6.420621d0
@@ -2535,7 +2447,6 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
         gr3 = 0.647196191d0
 
         v3 = v3+ ak*(tt-tt0)**2d0* gr1*exp(gr2*(rr-gr3)**2d0)
-
 
         if (igrad .eq. 1) then
             dv2dr = dv2dr+ ak*(tt-tt0)**2d0* 2d0*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2d0)
@@ -2574,7 +2485,6 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
             v3 = v3+ fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))**2d0))
         enddo
 
-
         if (igrad .eq. 1) then
             do i=1,4
                 dv2dr=dv2dr+ 2d0*fr2(i)*(rr-fr3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))** &
@@ -2587,10 +2497,7 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
             enddo
         endif
 
-
-
     else if (imol .eq. 2) then ! EXCITED STATE
-
 
         e1 = 4.509566d0
         n4 = 1.650445177d0
@@ -2618,7 +2525,6 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
         gr3 = 0.901675465d0
 
         v3 = v3+ ak*(tt-tt0)**2d0* gr1*exp(gr2*(rr-gr3)**2d0)
-
 
         if (igrad .eq. 1) then
             dv2dr = dv2dr+ ak*(tt-tt0)**2d0* 2d0*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2d0)
@@ -2662,7 +2568,6 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
             v3 = v3+ fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))**2d0))
         enddo
 
-
         if (igrad .eq. 1) then
             do i=1,5
                 dv2dr=dv2dr+ 2d0*fr2(i)*(rr-fr3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))** &
@@ -2675,10 +2580,7 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
             enddo
         endif
 
-
-
     else if (imol .eq. 3) then ! COUPLING
-
 
         a12(1)   = -0.16290134d0
         ga1(1)   = -0.231270633d0
@@ -2716,25 +2618,20 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
         gb3(4)   = -2.057979708d0
         const(4) = 0.669000566d0
 
-
         ka1(1) = -2.904320563d0
         ka1(2) = -5.709140977d0
         ka1(3) = -5.612288257d0
         ka1(4) = -2.876200866d0
-
 
         ka2(1) = 0.382538122d0
         ka2(2) = 1.81713229d0
         ka2(3) = 2.40922499d0
         ka2(4) = 3.270326934d0
 
-
         do i=1,4
             v3=v3 + (a12(i)*sqrt(1.1d0-(tt**2d0)) +const(i) + ga1(i)*exp(ga2(i)*((tt-ga3(i))**2d0)) + gb1(i)* &
                 & exp(gb2(i)* ((tt-gb3(i))**2d0))) *(exp(ka1(i)*(rr-ka2(i))**2d0))
         enddo
-
-
 
         if (igrad .eq. 1) then
 
@@ -2750,10 +2647,7 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
             enddo
         endif
 
-
-
     endif
-
 
     dx(1) = dv2dr*((x(1)-x(3))/rr)
     dy(1) = dv2dr*((y(1)-y(3))/rr)
@@ -2762,7 +2656,6 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
     dx(3) = dv2dr*((x(3)-x(1))/rr)
     dy(3) = dv2dr*((y(3)-y(1))/rr)
     dz(3) = dv2dr*((z(3)-z(1))/rr)
-
 
     dx(1) = dx(1)+dv2dt*dihedrix(1,3,4,2,x,y,z)
     dy(1) = dy(1)+dv2dt*dihedriy(1,3,4,2,x,y,z)
@@ -2781,8 +2674,6 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
     dz(4) = dv2dt*dihedrkz(1,3,4,2,x,y,z)
 
 end subroutine kpev2gm2
-
-
 
 !> @brief Evaluate dihedr2 for the CH3NH2_APRP potential.
 double precision function dihedr2( i, j, k, l, x, y, z )
@@ -2818,7 +2709,6 @@ double precision function dihedr2( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     kkx = x(i)-x(j)
     kky = y(i)-y(j)
     kkz = z(i)-z(j)
@@ -2835,7 +2725,6 @@ double precision function dihedr2( i, j, k, l, x, y, z )
     eey = y(j)-y(k)
     eez = z(j)-z(k)
 
-
     oo1(1) = kky*yyz-kkz*yyy
     oo1(2) = kkz*yyx-kkx*yyz
     oo1(3) = kkx*yyy-kky*yyx
@@ -2843,7 +2732,6 @@ double precision function dihedr2( i, j, k, l, x, y, z )
     oo2(1) = lly*eez-llz*eey
     oo2(2) = llz*eex-llx*eez
     oo2(3) = llx*eey-lly*eex
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -2869,11 +2757,9 @@ double precision function dihedr2( i, j, k, l, x, y, z )
     !       dihedr2=acos(ra)
     dihedr2 = ra
 
-
     !--------------------------------------------------!
 
 end function dihedr2
-
 
 !> @brief Evaluate dihedrIX for the CH3NH2_APRP potential.
 double precision function dihedrix( i, j, k, l, x, y, z )
@@ -2910,7 +2796,6 @@ double precision function dihedrix( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -2927,7 +2812,6 @@ double precision function dihedrix( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -2935,7 +2819,6 @@ double precision function dihedrix( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -2960,9 +2843,6 @@ double precision function dihedrix( i, j, k, l, x, y, z )
     !       dihedr2=acos(ra)
     !       dihedr2=ra
 
-
-
-
     !------------------Xi---------------------------
     !top (sab deriv for Xi)
 
@@ -2982,11 +2862,7 @@ double precision function dihedrix( i, j, k, l, x, y, z )
 
     !------------------Xi---------------------------
 
-
 end function dihedrix
-
-
-
 
 !> @brief Evaluate dihedrIY for the CH3NH2_APRP potential.
 double precision function dihedriy( i, j, k, l, x, y, z )
@@ -3020,7 +2896,6 @@ double precision function dihedriy( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3037,7 +2912,6 @@ double precision function dihedriy( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -3045,7 +2919,6 @@ double precision function dihedriy( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -3069,7 +2942,6 @@ double precision function dihedriy( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
     !------------------Yi---------------------------
 
     !top (sab deriv for Yi)
@@ -3082,8 +2954,6 @@ double precision function dihedriy( i, j, k, l, x, y, z )
 
     bd = (sso2*ld)/(2d0*p1p2)
 
-
-
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
     !       dihedrIY=(-id)/(1d0-ra**2d0)**(0.5d0)
@@ -3092,10 +2962,6 @@ double precision function dihedriy( i, j, k, l, x, y, z )
     !------------------Yi---------------------------
 
 end function dihedriy
-
-
-
-
 
 !> @brief Evaluate dihedrIZ for the CH3NH2_APRP potential.
 double precision function dihedriz( i, j, k, l, x, y, z )
@@ -3132,7 +2998,6 @@ double precision function dihedriz( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3149,7 +3014,6 @@ double precision function dihedriz( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -3157,7 +3021,6 @@ double precision function dihedriz( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -3181,7 +3044,6 @@ double precision function dihedriz( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
     !------------------Zi---------------------------
 
     !top (sab deriv for Zi)
@@ -3194,7 +3056,6 @@ double precision function dihedriz( i, j, k, l, x, y, z )
 
     bd = (sso2*ld)/(2d0*p1p2)
 
-
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
     !       dihedrIZ=(-id)/(1d0-ra**2d0)**(0.5d0)
@@ -3202,11 +3063,7 @@ double precision function dihedriz( i, j, k, l, x, y, z )
 
     !------------------Zi---------------------------
 
-
 end function dihedriz
-
-
-
 
 !> @brief Evaluate dihedrLX for the CH3NH2_APRP potential.
 double precision function dihedrlx( i, j, k, l, x, y, z )
@@ -3243,7 +3100,6 @@ double precision function dihedrlx( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3260,7 +3116,6 @@ double precision function dihedrlx( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -3268,7 +3123,6 @@ double precision function dihedrlx( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -3292,21 +3146,17 @@ double precision function dihedrlx( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
     !------------------Xl---------------------------
-
 
     !top (sab deriv for Xl)
 
     td = -1d0*ijz*kjx*jkz +ijx*kjz*jkz +ijx*kjy*jky -ijy*kjx*jky
-
 
     ! deriv of sso2 for Xl
 
     rd = 2d0*(x(l)-x(k))*(jky**2+jkz**2) -2*(jky*lky*jkx +jkz*lkz*jkx)
 
     bd = (sso1*rd)/(2d0*p1p2)
-
 
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
@@ -3316,7 +3166,6 @@ double precision function dihedrlx( i, j, k, l, x, y, z )
     !------------------Xl---------------------------
 
 end function dihedrlx
-
 
 !> @brief Evaluate dihedrLY for the CH3NH2_APRP potential.
 double precision function dihedrly( i, j, k, l, x, y, z )
@@ -3353,7 +3202,6 @@ double precision function dihedrly( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3370,7 +3218,6 @@ double precision function dihedrly( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -3378,7 +3225,6 @@ double precision function dihedrly( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -3402,21 +3248,17 @@ double precision function dihedrly( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
     !------------------Yl---------------------------
 
     !top (sab deriv for Yl)
 
     td = -1d0*ijz*kjy*jkz +ijy*kjz*jkz +ijy*kjx*jkx -ijx*kjy*jkx
 
-
     ! deriv of sso2 for Yl
 
     rd = 2d0*(y(l)-y(k))*(jkx**2+jkz**2) -2*(jkx*lkx*jky +jkz*lkz*jky)
 
     bd = (sso1*rd)/(2d0*p1p2)
-
-
 
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
@@ -3426,8 +3268,6 @@ double precision function dihedrly( i, j, k, l, x, y, z )
     !------------------Yl---------------------------
 
 end function dihedrly
-
-
 
 !> @brief Evaluate dihedrLZ for the CH3NH2_APRP potential.
 double precision function dihedrlz( i, j, k, l, x, y, z )
@@ -3464,7 +3304,6 @@ double precision function dihedrlz( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3481,7 +3320,6 @@ double precision function dihedrlz( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -3489,7 +3327,6 @@ double precision function dihedrlz( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -3513,21 +3350,17 @@ double precision function dihedrlz( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
     !------------------Zl---------------------------
 
     !top (sab deriv for Zl)
 
     td = -1d0*ijy*kjz*jky +ijz*kjy*jky +ijz*kjx*jkx -ijx*kjz*jkx
 
-
     ! deriv of sso2 and bd for Zl
 
     rd = 2d0*(z(l)-z(k))*(jky**2+jkx**2) -2*(jky*lky*jkz +jkx*lkx*jkz)
 
-
     bd = (sso1*rd)/(2d0*p1p2)
-
 
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
@@ -3536,7 +3369,6 @@ double precision function dihedrlz( i, j, k, l, x, y, z )
 
     !------------------Zl---------------------------
 end function dihedrlz
-
 
 !> @brief Evaluate dihedrJX for the CH3NH2_APRP potential.
 double precision function dihedrjx( i, j, k, l, x, y, z )
@@ -3573,7 +3405,6 @@ double precision function dihedrjx( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3590,7 +3421,6 @@ double precision function dihedrjx( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -3598,7 +3428,6 @@ double precision function dihedrjx( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -3622,11 +3451,9 @@ double precision function dihedrjx( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
     !------------------Xj---------------------------
 
     !top (sab deriv for Xj)
-
 
     td=(-2d0*x(j)+2d0*x(k))*ijz*lkz +ijz*lkx*jkz -(-2d0*x(j)+x(k)+x(i))*kjz*lkz -kjz*lkx*jkz -kjy*lkx*jky -(-2d0*x(j)+ &
         & x(k)+x(i))*kjy*lky +ijy*lkx*jky +(-2d0*x(j)+2d0*x(k))*ijy*lky
@@ -3635,15 +3462,11 @@ double precision function dihedrjx( i, j, k, l, x, y, z )
 
     ld = 2d0*(x(j)-x(k))*(ijz**2+ijy**2) +2d0*(x(j)-x(i))*(kjz**2+kjy**2) -2*(2d0*x(j)-x(k)-x(i))*(ijz*kjz +ijy*kjy)
 
-
     ! deriv of sso2 for Xj
 
     rd = 2d0*(x(j)-x(k))*(lkz**2+lky**2) -2*(lkz*lkx*jkz +lky*lkx*jky)
 
-
     bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
-
-
 
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
@@ -3652,8 +3475,6 @@ double precision function dihedrjx( i, j, k, l, x, y, z )
 
     !------------------Xj---------------------------
 end function dihedrjx
-
-
 
 !> @brief Evaluate dihedrJY for the CH3NH2_APRP potential.
 double precision function dihedrjy( i, j, k, l, x, y, z )
@@ -3690,7 +3511,6 @@ double precision function dihedrjy( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3707,7 +3527,6 @@ double precision function dihedrjy( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -3715,7 +3534,6 @@ double precision function dihedrjy( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -3739,30 +3557,22 @@ double precision function dihedrjy( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
     !------------------Yj---------------------------
 
     !top (sab deriv for Yj)
 
-
     td=-kjz*lky*jkz -(-2d0*y(j)+y(k)+y(i))*kjz*lkz +ijz*lky*jkz +(-2d0*y(j)+2d0*y(k))*ijz*lkz +(-2d0*y(j)+2d0*y(k))* &
         & ijx* lkx +ijx*lky*jkx -(-2d0*y(j)+y(k)+y(i))*kjx*lkx -kjx*lky*jkx
-
 
     ! deriv of sso1 for Yj
 
     ld = 2d0*(y(j)-y(k))*(ijz**2+ijx**2) +2d0*(y(j)-y(i))*(kjz**2+kjx**2) -2*(2d0*y(j)-y(k)-y(i))*(ijz*kjz +ijx*kjx)
 
-
-
     ! deriv of sso2 for Yj
 
     rd = 2d0*(y(j)-y(k))*(lkz**2+lkx**2) -2*(lkz*lky*jkz +lkx*lky*jkx)
 
-
     bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
-
-
 
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
@@ -3771,8 +3581,6 @@ double precision function dihedrjy( i, j, k, l, x, y, z )
 
     !------------------Yj---------------------------
 end function dihedrjy
-
-
 
 !> @brief Evaluate dihedrJZ for the CH3NH2_APRP potential.
 double precision function dihedrjz( i, j, k, l, x, y, z )
@@ -3809,7 +3617,6 @@ double precision function dihedrjz( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3826,7 +3633,6 @@ double precision function dihedrjz( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -3834,7 +3640,6 @@ double precision function dihedrjz( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -3858,7 +3663,6 @@ double precision function dihedrjz( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
     !------------------Zj---------------------------
 
     !top (sab deriv for Zj)
@@ -3870,15 +3674,11 @@ double precision function dihedrjz( i, j, k, l, x, y, z )
 
     ld = 2d0*(z(j)-z(k))*(ijy**2+ijx**2) +2d0*(z(j)-z(i))*(kjy**2+kjx**2) -2*(2d0*z(j)-z(k)-z(i))*(ijy*kjy +ijx*kjx)
 
-
     ! deriv of sso2 for Zj
 
     rd = 2d0*(z(j)-z(k))*(lky**2+lkx**2) -2*(lky*lkz*jky +lkx*lkz*jkx)
 
-
     bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
-
-
 
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
@@ -3887,8 +3687,6 @@ double precision function dihedrjz( i, j, k, l, x, y, z )
 
     !------------------Zj---------------------------
 end function dihedrjz
-
-
 
 !> @brief Evaluate dihedrKX for the CH3NH2_APRP potential.
 double precision function dihedrkx( i, j, k, l, x, y, z )
@@ -3925,7 +3723,6 @@ double precision function dihedrkx( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3942,7 +3739,6 @@ double precision function dihedrkx( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -3950,7 +3746,6 @@ double precision function dihedrkx( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -3974,36 +3769,22 @@ double precision function dihedrkx( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
-
-
-
-
-
-
-
     !------------------Xk---------------------------
 
     !top (sab deriv for Xk)
 
-
     td=(-2d0*x(k)+2d0*x(j))*ijz*lkz -(-2d0*x(k)+x(j)+x(l))*ijz*jkz +ijx*kjz*lkz -ijx*kjz*jkz -ijx*kjy*jky +ijx*kjy* &
         & lky - (-2d0*x(k)+x(j)+x(l))*ijy*jky +(-2d0*x(k)+2d0*x(j))*ijy*lky
-
 
     ! deriv of sso1 for Xk
 
     ld = 2d0*(x(k)-x(j))*(ijz**2+ijy**2) -2*(ijx*ijz*kjz +ijx*ijy*kjy)
 
-
     ! deriv of sso2 for Xk
-
 
     rd = 2d0*(x(k)-x(j))*(lkz**2+lky**2) +2d0*(x(k)-x(l))*(jkz**2+jky**2) -2*(2d0*x(k)-x(j)-x(l))*(lkz*jkz +lky*jky)
 
-
     bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
-
 
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
@@ -4012,11 +3793,7 @@ double precision function dihedrkx( i, j, k, l, x, y, z )
 
     !------------------Xk---------------------------
 
-
-
 end function dihedrkx
-
-
 
 !> @brief Evaluate dihedrKY for the CH3NH2_APRP potential.
 double precision function dihedrky( i, j, k, l, x, y, z )
@@ -4053,7 +3830,6 @@ double precision function dihedrky( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -4070,7 +3846,6 @@ double precision function dihedrky( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -4078,7 +3853,6 @@ double precision function dihedrky( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -4102,32 +3876,22 @@ double precision function dihedrky( i, j, k, l, x, y, z )
     ra = sab/p1p2
     !       dihedr2=acos(ra)
 
-
-
-
-
     !------------------Yk---------------------------
 
     !top (sab deriv for Yk)
 
-
     td=(-2d0*y(k)+2d0*y(j))*ijz*lkz -(-2d0*y(k)+y(j)+y(l))*ijz*jkz +ijy*kjz*lkz -ijy*kjz*jkz -ijy*kjx*jkx +ijy*kjx* &
         & lkx - (-2d0*y(k)+y(j)+y(l))*ijx*jkx +(-2d0*y(k)+2d0*y(j))*ijx*lkx
-
 
     ! deriv of sso1 for Yk
 
     ld = 2d0*(y(k)-y(j))*(ijz**2+ijx**2) -2*(ijy*ijz*kjz +ijy*ijx*kjx)
 
-
     ! deriv of sso2 for Yk
-
 
     rd = 2d0*(y(k)-y(j))*(lkz**2+lkx**2) +2d0*(y(k)-y(l))*(jkz**2+jkx**2) -2*(2d0*y(k)-y(j)-y(l))*(lkz*jkz +lkx*jkx)
 
-
     bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
-
 
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
@@ -4136,9 +3900,7 @@ double precision function dihedrky( i, j, k, l, x, y, z )
 
     !------------------Yk---------------------------
 
-
 end function dihedrky
-
 
 !> @brief Evaluate dihedrKZ for the CH3NH2_APRP potential.
 double precision function dihedrkz( i, j, k, l, x, y, z )
@@ -4175,7 +3937,6 @@ double precision function dihedrkz( i, j, k, l, x, y, z )
     !           k----l
     !             kl
 
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -4192,7 +3953,6 @@ double precision function dihedrkz( i, j, k, l, x, y, z )
     jky = y(j)-y(k)
     jkz = z(j)-z(k)
 
-
     oo1(1) = ijy*kjz-ijz*kjy
     oo1(2) = ijz*kjx-ijx*kjz
     oo1(3) = ijx*kjy-ijy*kjx
@@ -4200,7 +3960,6 @@ double precision function dihedrkz( i, j, k, l, x, y, z )
     oo2(1) = lky*jkz-lkz*jky
     oo2(2) = lkz*jkx-lkx*jkz
     oo2(3) = lkx*jky-lky*jkx
-
 
     so1(1) = oo1(1)**2d0
     so1(2) = oo1(2)**2d0
@@ -4228,24 +3987,18 @@ double precision function dihedrkz( i, j, k, l, x, y, z )
 
     !top (sab deriv for Zk)
 
-
     td=(-2d0*z(k)+2d0*z(j))*ijy*lky -(-2d0*z(k)+z(j)+z(l))*ijy*jky +ijz*kjy*lky -ijz*kjy*jky -ijz*kjx*jkx +ijz*kjx* &
         & lkx - (-2d0*z(k)+z(j)+z(l))*ijx*jkx +(-2d0*z(k)+2d0*z(j))*ijx*lkx
-
 
     ! deriv of sso1 for Zk
 
     ld = 2d0*(z(k)-z(j))*(ijy**2+ijx**2) -2*(ijz*ijy*kjy +ijz*ijx*kjx)
 
-
     ! deriv of sso2 for Zk
-
 
     rd = 2d0*(z(k)-z(j))*(lky**2+lkx**2) +2d0*(z(k)-z(l))*(jky**2+jkx**2) -2*(2d0*z(k)-z(j)-z(l))*(lky*jky +lkx*jkx)
 
-
     bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
-
 
     !ra=sab/p1p2
     id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
@@ -4253,6 +4006,5 @@ double precision function dihedrkz( i, j, k, l, x, y, z )
     dihedrkz = id!(-id)/(1d0-ra**2d0)**(0.5d0)
 
     !------------------Zk---------------------------
-
 
 end function dihedrkz

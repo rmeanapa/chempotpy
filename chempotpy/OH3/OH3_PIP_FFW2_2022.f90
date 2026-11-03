@@ -73,12 +73,10 @@
 !  10. rv: the diabatic to adiabatic rotation matrix
 !===========================================================================
 
-
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, p, g, d )
 
     implicit none
-
 
     ! number of electronic state
     integer, parameter            :: nstates = 3
@@ -102,7 +100,6 @@ subroutine pes( x, igrad, p, g, d )
     double precision  :: u(3,3),rv(3,3),a(3)
     double precision  :: ga(4,3,3),f(4,3,3,3)
     double precision  :: tmpgu(3,3),tmpga(3,3)
-
 
     xyz = x
 
@@ -134,7 +131,6 @@ subroutine pes( x, igrad, p, g, d )
     u(3,3) = u33
     call dsyevj3(u,rv,a)
     call order(a,rv)
-
 
     p = (a+76.80042447)*27.211386
 
@@ -233,7 +229,6 @@ end
 !> @brief Evaluate DSYEVJ3.
 subroutine dsyevj3( a, q, w )
     implicit none
-
 
     double precision :: a(3,3)
     double precision :: q(3,3)
@@ -346,7 +341,6 @@ end subroutine
 !> @brief Evaluate order.
 subroutine order( a, rv )
     implicit none
-
 
     double precision :: a(3)
     double precision :: rv(3,3)
@@ -464,7 +458,6 @@ end subroutine
 subroutine u12_dvdx( xyz, u12, s12, du12dx )
     implicit none
 
-
     integer, parameter :: dp = kind(0.d0)
     integer            :: i,j,k
     real(dp)           :: du12dx(4,3),xyz(4,3)
@@ -540,7 +533,6 @@ subroutine u12_dvdx( xyz, u12, s12, du12dx )
         dudx(i) = dtdx(i)*s12+volume*dvdx(i)
     enddo
 
-
     ! Assign dvdx back to du12dx
     do i=1,4
         do j=1,3
@@ -548,7 +540,6 @@ subroutine u12_dvdx( xyz, u12, s12, du12dx )
             du12dx(i,j) = dudx(k)
         enddo
     enddo
-
 
 end subroutine u12_dvdx
 
@@ -562,7 +553,6 @@ end subroutine u12_dvdx
 !> @brief Evaluate EvU12O10dVdR.
 subroutine evu12o10dvdr( coord, r, dvdr )
     implicit none
-
 
     integer, parameter :: ddp = kind(0.d0)
     integer            :: i,j
@@ -3451,7 +3441,6 @@ subroutine evu12o10dvdr( coord, r, dvdr )
     p(1504) = p(1)*p(958) - p(1480)
     p(1505) = p(2)*p(959) - p(1503)
 
-
     do i=1,6
         dm(0)  = 0.0d0
         dm(1)  = dmsdr(i,4)
@@ -6316,7 +6305,6 @@ end subroutine evu12o10dvdr
 subroutine evdrdx( coord, r, drdx )
     implicit none
 
-
     integer, parameter :: dp = kind(0.d0)
     real(dp)           :: coord(12),r(6),drdx(6,12)
 
@@ -6370,7 +6358,6 @@ subroutine evdrdx( coord, r, drdx )
     drdx(6,12) = -drdx(6,9)
     ! Finish the calculation of non-zero dRdX
 
-
 end subroutine evdrdx
 
 !===========================================================================
@@ -6382,7 +6369,6 @@ end subroutine evdrdx
 !> @brief Evaluate Num_dtdx.
 subroutine num_dtdx( xyz, dtdx )
     implicit none
-
 
     integer, parameter :: dp = kind(0.d0)
     integer            :: i,j,k,m,n
@@ -6423,7 +6409,6 @@ end subroutine num_dtdx
 subroutine p_volume( xyz, volume )
     implicit none
 
-
     integer, parameter :: dp = kind(0.d0)
     integer            :: i,j,k
     real(dp)           :: volume
@@ -6453,7 +6438,6 @@ end subroutine p_volume
 !> @brief Evaluate u13_dvdx.
 subroutine u13_dvdx( xyz, u13, du13dx )
     implicit none
-
 
     integer, parameter :: dp = kind(0.d0)
     integer            :: i,j,k
@@ -6522,7 +6506,6 @@ subroutine u13_dvdx( xyz, u13, du13dx )
         enddo
     enddo
 
-
 end subroutine u13_dvdx
 
 !===========================================================================
@@ -6535,7 +6518,6 @@ end subroutine u13_dvdx
 !> @brief Evaluate EvU13O10dVdR.
 subroutine evu13o10dvdr( coord, r, dvdr )
     implicit none
-
 
     integer, parameter :: ddp = kind(0.d0)
     integer            :: i,j
@@ -19613,7 +19595,6 @@ end subroutine evu13o10dvdr
 subroutine u23_dvdx( xyz, u23, s23, du23dx )
     implicit none
 
-
     integer, parameter :: dp = kind(0.d0)
     integer            :: i,j,k
     real(dp)           :: du23dx(4,3),xyz(4,3)
@@ -19689,7 +19670,6 @@ subroutine u23_dvdx( xyz, u23, s23, du23dx )
         dudx(i) = dtdx(i)*s23+volume*dvdx(i)
     enddo
 
-
     ! Assign dvdx back to du23dvdx
     do i=1,4
         do j=1,3
@@ -19697,7 +19677,6 @@ subroutine u23_dvdx( xyz, u23, s23, du23dx )
             du23dx(i,j) = dudx(k)
         enddo
     enddo
-
 
 end subroutine u23_dvdx
 
@@ -19711,7 +19690,6 @@ end subroutine u23_dvdx
 !> @brief Evaluate EvU23O10dVdR.
 subroutine evu23o10dvdr( coord, r, dvdr )
     implicit none
-
 
     integer, parameter :: ddp = kind(0.d0)
     integer            :: i,j
@@ -22600,7 +22578,6 @@ subroutine evu23o10dvdr( coord, r, dvdr )
     p(1504) = p(1)*p(958) - p(1480)
     p(1505) = p(2)*p(959) - p(1503)
 
-
     do i=1,6
         dm(0)  = 0.0d0
         dm(1)  = dmsdr(i,4)
@@ -25461,7 +25438,6 @@ end subroutine evu23o10dvdr
 subroutine u12_order10
     implicit none
 
-
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp)           :: xyz(4,3)
     real(dp)           :: v, r12, r13, r14, r23, r24, r34
@@ -26835,7 +26811,6 @@ end  subroutine
 !> @brief Evaluate u13_order12.
 subroutine u13_order12
     implicit none
-
 
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp)           :: xyz(4,3)
@@ -29956,7 +29931,6 @@ subroutine u13_order12
 
 end  subroutine
 
-
 !===========================================================================
 ! *def u23_order10
 ! subtoutine of computing u23
@@ -29964,7 +29938,6 @@ end  subroutine
 !> @brief Evaluate u23_order10.
 subroutine u23_order10
     implicit none
-
 
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp)           :: xyz(4,3)
@@ -31346,7 +31319,6 @@ end  subroutine
 !> @brief Evaluate ev_pol_con_12.
 subroutine ev_pol_con_12( x, q )
     implicit none
-
 
     integer            :: j
     integer, parameter :: dp = kind(0.d0)                   ! double precision
@@ -37878,7 +37850,6 @@ end subroutine ev_pol_con_12
 subroutine ev_pol_con_10( x, q )
     implicit none
 
-
     integer            :: i, j
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp),dimension(1:6),intent(in)::x
@@ -40746,7 +40717,6 @@ end subroutine ev_pol_con_10
 subroutine u11_prepot_8
     implicit none
 
-
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp)           :: xyz(4,3)
     real(dp)           :: v, r12, r13, r14, r23, r24, r34
@@ -41369,7 +41339,6 @@ subroutine u11_prepot_8
     dxyz(4,2) = -dr3/r14*(xyz(1,2)-xyz(4,2))-dr5/r24*(xyz(2,2)-xyz(4,2))-dr6/r34*(xyz(3,2)-xyz(4,2))
     dxyz(4,3) = -dr3/r14*(xyz(1,3)-xyz(4,3))-dr5/r24*(xyz(2,3)-xyz(4,3))-dr6/r34*(xyz(3,3)-xyz(4,3))
 
-
 end  subroutine
 
 !===========================================================================
@@ -41379,7 +41348,6 @@ end  subroutine
 !> @brief Evaluate u22_prepot_8.
 subroutine u22_prepot_8
     implicit none
-
 
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp)           :: xyz(4,3)
@@ -41970,7 +41938,6 @@ subroutine u22_prepot_8
     rb_hh = rb1
     rb_oh = rb2
 
-
     x(1) = exp(-((r12-ra1))/a1 -((r12-rb1)**2)/b1)
     x(2) = exp(-((r13-ra1))/a1 -((r13-rb1)**2)/b1)
     x(3) = exp(-((r14-ra2))/a2 -((r14-rb2)**2)/b2)
@@ -42021,7 +41988,6 @@ end  subroutine
 !> @brief Evaluate u33_prepot_8.
 subroutine u33_prepot_8
     implicit none
-
 
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp)           :: xyz(4,3)
@@ -42623,7 +42589,6 @@ subroutine u33_prepot_8
     call ev_pol_con_8(x,p)
     v = dot_product(coeff,p) + (ohstar_alt(r14)+ohstar_alt(r24)+ohstar_alt(r34)+hh(r12)+hh(r13)+hh(r23))
 
-
     call grad_ev_pol_con_8(x,dpdx1,dpdx2,dpdx3,dpdx4,dpdx5,dpdx6)
 
     dx1 = dot_product(coeff,dpdx1)
@@ -42662,7 +42627,6 @@ end  subroutine
 double precision function d3bj_hh( r )
     implicit none
 
-
     integer, parameter   :: dp = kind(0.d0)                   ! double precision
     real(dp), intent(in) :: r
     real(dp)             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
@@ -42689,7 +42653,6 @@ end function d3bj_hh
 !> @brief Evaluate grad_d3bj_hh.
 double precision function grad_d3bj_hh( r )
     implicit none
-
 
     integer, parameter   :: dp = kind(0.d0)                   ! double precision
     real(dp), intent(in) :: r
@@ -42718,7 +42681,6 @@ end function grad_d3bj_hh
 double precision function d3bj_oh( r )
     implicit none
 
-
     integer, parameter   :: dp = kind(0.d0)                   ! double precision
     real(dp), intent(in) :: r
     real(dp)             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
@@ -42745,7 +42707,6 @@ end function d3bj_oh
 !> @brief Evaluate grad_d3bj_oh.
 double precision function grad_d3bj_oh( r )
     implicit none
-
 
     integer, parameter   :: dp = kind(0.d0)                   ! double precision
     real(dp), intent(in) :: r
@@ -42774,12 +42735,13 @@ end function grad_d3bj_oh
 double precision function hh( r )
     implicit none
 
+    integer, parameter :: dp = kind(0.d0)                   ! double precision
 
-    integer, parameter   :: dp = kind(0.d0)                   ! double precision
-    real(dp)             :: d3bj_hh
     real(dp), intent(in) :: r
-    real(dp)             :: vsr, alpha, beta, c(8), p(8)
-    integer              :: i
+
+    real(dp) :: d3bj_hh
+    real(dp) :: vsr, alpha, beta, c(8), p(8)
+    integer  :: i
 
     alpha = 0.53931748805004220
     beta  = 1.6459680933202987
@@ -42806,12 +42768,13 @@ end function hh
 double precision function grad_hh( r )
     implicit none
 
+    integer, parameter :: dp = kind(0.d0)                   ! double precision
 
-    integer, parameter   :: dp = kind(0.d0)                   ! double precision
-    real(dp)             :: grad_d3bj_hh
     real(dp), intent(in) :: r
-    real(dp)             :: vsr, alpha, beta, c(8), p(8)
-    integer              :: i
+
+    real(dp) :: grad_d3bj_hh
+    real(dp) :: vsr, alpha, beta, c(8), p(8)
+    integer  :: i
 
     alpha = 0.53931748805004220
     beta  = 1.6459680933202987
@@ -42839,12 +42802,13 @@ end function grad_hh
 double precision function oh( r )
     implicit none
 
+    integer, parameter :: dp = kind(0.d0)                   ! double precision
 
-    integer, parameter   :: dp = kind(0.d0)                   ! double precision
-    real(dp)             :: d3bj_oh
     real(dp), intent(in) :: r
-    real(dp)             :: vsr, alpha, beta, c(8), p(8)
-    integer              :: i
+
+    real(dp) :: d3bj_oh
+    real(dp) :: vsr, alpha, beta, c(8), p(8)
+    integer  :: i
 
     alpha = 0.51045358916334960_dp
     beta  = 1.5433662455565513_dp
@@ -42871,12 +42835,13 @@ end function oh
 double precision function grad_oh( r )
     implicit none
 
+    integer, parameter :: dp = kind(0.d0)                   ! double precision
 
-    integer, parameter   :: dp = kind(0.d0)                   ! double precision
-    real(dp)             :: grad_d3bj_oh
     real(dp), intent(in) :: r
-    real(dp)             :: vsr, alpha, beta, c(8), p(8)
-    integer              :: i
+
+    real(dp) :: grad_d3bj_oh
+    real(dp) :: vsr, alpha, beta, c(8), p(8)
+    integer  :: i
 
     alpha = 0.51045358916334960_dp
     beta  = 1.5433662455565513_dp
@@ -42903,7 +42868,6 @@ end function grad_oh
 double precision function ohstar_alt( r )
     implicit none
 
-
     integer, parameter     :: dp = kind(0.d0)                   ! double precision
     real(dp), intent(in)   :: r
     integer                :: i
@@ -42928,7 +42892,6 @@ double precision function ohstar_alt( r )
 
     vsr = dot_product(csr, psr)
 
-
     fs = 0.5_dp*(1.0_dp - tanh(1250.0_dp*(r-1.177_dp)))
 
     ohstar_alt = fs*vsr + (1.0_dp - fs)*d3bj_oh(r)
@@ -42939,7 +42902,6 @@ end function ohstar_alt
 double precision function grad_ohstar_alt( r )
     implicit none
 
-
     integer, parameter     :: dp = kind(0.d0)                   ! double precision
     real(dp), intent(in)   :: r
     integer                :: i
@@ -42947,7 +42909,6 @@ double precision function grad_ohstar_alt( r )
     real(dp), dimension(3) :: plr, clr, pglr
     real(dp)               :: asr, bsr
     real(dp), dimension(6) :: psr, csr, pgsr
-
 
     asr = 0.22510201499513907
     bsr = 2.2657615066074954
@@ -42980,7 +42941,6 @@ end function grad_ohstar_alt
 !> @brief Evaluate ev_pol_con_8.
 subroutine ev_pol_con_8( x, p )
     implicit none
-
 
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp),dimension(1:6),intent(in)::x
@@ -43741,7 +43701,6 @@ end subroutine ev_pol_con_8
 !> @brief Evaluate grad_ev_pol_con_8.
 subroutine grad_ev_pol_con_8( x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6 )
     implicit none
-
 
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp),dimension(1:6),intent(in)::x

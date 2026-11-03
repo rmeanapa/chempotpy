@@ -3,7 +3,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 4
@@ -25,7 +24,6 @@ subroutine pes( x, igrad, path, p, g, d )
     p = 0.d0
     g = 0.d0
     d = 0.d0
-
 
     x1(:) = x(:,1)/0.529177211
     y1(:) = x(:,2)/0.529177211
@@ -62,8 +60,6 @@ module falcons_vars_eval
     private
     public :: aji, qi
 
-
-
     double precision, dimension(:,:), allocatable :: qi,aji
 end module falcons_vars_eval
 
@@ -74,8 +70,6 @@ module falcons_vars_main
         & mcrc, moltype, n, nall, nitcrc, nma, nmincrc, nn, np, nplmax, ntar, ntarmax, ntarmin, &
         & pesform, pnu, ps, pu, pwonly, q, qeq, qp, qps, qr, qs, r, rwfa, rwfb, sd, systo, t, x, xr, &
         & y
-
-
 
     integer :: i,j,k,l,nn,ind,n,m,eta,np,moltype,pesform,&
         & nma,nplmax,nall,nmincrc,mcrc,qps,pwonly,cgmeth,&
@@ -98,7 +92,6 @@ subroutine prepot( path )
         & systo, t, x, xr, y
     implicit none
 
-
     character(len=1024), intent(in) :: path
     call readpes(path)
 end subroutine prepot
@@ -112,12 +105,13 @@ subroutine readpes( path )
         & systo, t, x, xr, y
     implicit none
 
+    integer, parameter :: fid = 200
 
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
-    logical                         :: ex
-    integer                         :: oridval,maskval
-    integer, parameter              :: fid = 200
+
+    character(len=1024) :: file_path1
+    logical             :: ex
+    integer             :: oridval,maskval
     cmap(1,:)  = (/1,2,3/)
     cmap(2,:)  = (/1,4,5/)
     cmap(3,:)  = (/2,4,6/)
@@ -226,7 +220,6 @@ subroutine readcrcparameters( fid )
         & systo, t, x, xr, y
     implicit none
 
-
     integer :: fid
     read(fid,*)
     read(fid,*)
@@ -250,12 +243,12 @@ subroutine pot( x_, y_, z_, e_, dedx_, dedy_, dedz_ )
         & systo, t, x, xr, y
     implicit none
 
-
     double precision, dimension(4), intent(in)  :: x_,y_,z_
-    double precision                            :: cconv,econv,gconv,eref
-    double precision, dimension(4)              :: x__,y__,z__
     double precision, intent(out)               :: e_
     double precision, dimension(4), intent(out) :: dedx_,dedy_,dedz_
+
+    double precision               :: cconv,econv,gconv,eref
+    double precision, dimension(4) :: x__,y__,z__
 
     pu     = 3d0
     epsu   = 1d-1
@@ -292,7 +285,6 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
         & cmap, qp, qps, mcrc, crc, n, m, eta, ps, pu, epsu, aa, r, np, e, dedy )
     use falcons_vars_eval, only: aji, qi
     implicit none
-
 
     integer, intent(in)                           :: cg,moltype,pwonly,qps,mcrc,n,m,eta
     integer, dimension(4,3), intent(in)           :: cmap
@@ -428,11 +420,11 @@ end subroutine evaluatesurface
 subroutine calcqch( q, qch )
     implicit none
 
-
-    integer                                    :: i
-    double precision                           :: val
     double precision, dimension(6), intent(in) :: q
     double precision, intent(out)              :: qch
+
+    integer          :: i
+    double precision :: val
     val = 0d0
     do i=1,6
         val = val+ q(i)**2d0
@@ -444,13 +436,13 @@ end subroutine calcqch
 subroutine calccr( qch, mcrc, crc, cr, crs, dcrdqch )
     implicit none
 
-
-    integer                                       :: icrc
     integer, intent(in)                           :: mcrc
     double precision, intent(in)                  :: qch
-    double precision                              :: pqch
     double precision, intent(out)                 :: cr,crs,dcrdqch
     double precision, dimension(mcrc), intent(in) :: crc
+
+    integer          :: icrc
+    double precision :: pqch
     pqch    = 1d0
     cr      = crc(1)
     dcrdqch = 0d0
@@ -466,17 +458,17 @@ end subroutine calccr
 subroutine calcbj( b, dbdx, x, eta, m, dflag )
     implicit none
 
-
-    integer                                       :: ind,i,j,k,l,ll,a
     integer, intent(in)                           :: eta,m,dflag
-    double precision                              :: tmp,tmp2,tmp3
     double precision, dimension(6), intent(in)    :: x
     double precision, dimension(m), intent(out)   :: b
     double precision, dimension(m,6), intent(out) :: dbdx
-    double precision, dimension(6)                :: xx,x2,xxx
-    double precision, dimension(m)                :: dbdxa
-    double precision, dimension(6,6)              :: xy,xy2
-    double precision, dimension(6,6,6)            :: xyz
+
+    integer                            :: ind,i,j,k,l,ll,a
+    double precision                   :: tmp,tmp2,tmp3
+    double precision, dimension(6)     :: xx,x2,xxx
+    double precision, dimension(m)     :: dbdxa
+    double precision, dimension(6,6)   :: xy,xy2
+    double precision, dimension(6,6,6) :: xyz
     b    = 0d0
     dbdx = 0d0
     xx   = 0d0 !xx(j)     = x(j)*x(j)
@@ -734,16 +726,16 @@ end subroutine calcbj
 subroutine distance6ds_perm( q, qi, qp, qps, cg, ds, ddsdq )
     implicit none
 
-
-    integer                                     :: i,a,iszero
     integer, intent(in)                         :: cg,qps
-    integer, dimension(6)                       :: sd
     integer, dimension(qps,6), intent(in)       :: qp
-    double precision                            :: dsval,dssum,mult,dsvali,dsvalis,dssumi
     double precision, intent(out)               :: ds
-    double precision, dimension(6)              :: qdif
     double precision, dimension(6), intent(in)  :: q,qi
     double precision, dimension(6), intent(out) :: ddsdq
+
+    integer                        :: i,a,iszero
+    integer, dimension(6)          :: sd
+    double precision               :: dsval,dssum,mult,dsvali,dsvalis,dssumi
+    double precision, dimension(6) :: qdif
     iszero = 0
     dssum  = 0d0
     do a=1,6
@@ -797,10 +789,10 @@ end subroutine distance6ds_perm
 subroutine weightw( w, dwdz, ds, rs, ps, pu, epsu )
     implicit none
 
-
-    double precision              :: z,uval,sval
     double precision, intent(in)  :: ds,ps,pu,epsu,rs
     double precision, intent(out) :: w,dwdz
+
+    double precision :: z,uval,sval
     z    = ds/rs
     uval = 1d0/((z**pu)+ (epsu**pu))
     sval = (1d0- z**ps)**4d0
@@ -813,13 +805,13 @@ subroutine calccoordinates( &
         & y, qr, xr, q, x, sd, aa, qeq, moltype, qp, qps )
     implicit none
 
-
     integer, intent(in)                         :: moltype,qps
-    integer, dimension(qps,6)                   :: qp
     integer, dimension(6), intent(out)          :: sd
     double precision, dimension(6), intent(in)  :: aa,qeq
     double precision, dimension(6), intent(out) :: qr,xr,q,x
-    double precision, dimension(4,3)            :: y
+
+    integer, dimension(qps,6)        :: qp
+    double precision, dimension(4,3) :: y
     call cartesian2rawdist(y,qr)
     call rawdist2rawmorse(qr,xr,qeq,aa)
     q = xr
@@ -831,10 +823,10 @@ subroutine default2cartesian( ra, rb, d, thetaa_d, thetab_d, &
         &  phi_d, y )
     implicit none
 
-
     double precision, intent(in)                  :: ra,rb,d,thetaa_d,thetab_d,phi_d
-    double precision                              :: thetaa,thetab,phi,pi,y11,y31,y32
     double precision, dimension(4,3), intent(out) :: y
+
+    double precision :: thetaa,thetab,phi,pi,y11,y31,y32
     pi     = 3.1415926536d0
     thetaa = thetaa_d*pi/180d0
     thetab = thetab_d*pi/180d0
@@ -860,10 +852,10 @@ end subroutine default2cartesian
 subroutine cartesian2rawdist( y, qr )
     implicit none
 
-
-    integer                                      :: i
     double precision, dimension(6), intent(out)  :: qr
     double precision, dimension(4,3), intent(in) :: y
+
+    integer :: i
     call distance3d(y(1,:),y(2,:),qr(1))
     call distance3d(y(1,:),y(3,:),qr(2))
     call distance3d(y(1,:),y(4,:),qr(3))
@@ -876,7 +868,6 @@ end subroutine cartesian2rawdist
 subroutine distance3d( p1, p2, d )
     implicit none
 
-
     double precision, intent(out)              :: d
     double precision, dimension(3), intent(in) :: p1,p2
     d = sqrt((p1(1)-p2(1))**2d0+(p1(2)-p2(2))**2d0+(p1(3)-p2(3))**2d0)
@@ -886,10 +877,10 @@ end subroutine distance3d
 subroutine rawdist2rawmorse( qr, xr, qeq, aa )
     implicit none
 
-
-    integer                                     :: i
     double precision, dimension(6), intent(in)  :: qr,qeq,aa
     double precision, dimension(6), intent(out) :: xr
+
+    integer :: i
     do i=1,6
         xr(i) = exp(-(qr(i)-qeq(i))/aa(i))
     end do
@@ -899,13 +890,13 @@ end subroutine rawdist2rawmorse
 subroutine calcinvariants( vr, v, moltype )
     implicit none
 
-
     integer, intent(in)                         :: moltype
-    integer                                     :: i
-    double precision                            :: e0,e1,f0,f1,vrtmp
     double precision, dimension(6), intent(in)  :: vr
     double precision, dimension(6), intent(out) :: v
-    double precision, dimension(4)              :: vv
+
+    integer                        :: i
+    double precision               :: e0,e1,f0,f1,vrtmp
+    double precision, dimension(4) :: vv
     v = 0d0
     select case (moltype)
     case (1)
@@ -942,13 +933,13 @@ end subroutine calcinvariants
 subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
     implicit none
 
-
     integer, intent(in)                           :: moltype
-    integer                                       :: i
-    double precision                              :: mult
-    double precision, dimension(6)                :: tmp,tmp2
     double precision, dimension(6), intent(in)    :: vr,v
     double precision, dimension(6,6), intent(out) :: dvdvr
+
+    integer                        :: i
+    double precision               :: mult
+    double precision, dimension(6) :: tmp,tmp2
     select case (moltype)
     case (1)
         mult   = 1d0/4d0     !LEGACY: *3d0*(v(4)**2d0))
@@ -1064,12 +1055,12 @@ end subroutine calcinvariantsjacobian
 subroutine calcdqrdyjacobian( qr, y, dqrdy )
     implicit none
 
-
-    integer                                         :: i
-    double precision                                :: val
     double precision, dimension(6), intent(in)      :: qr
     double precision, dimension(4,3), intent(in)    :: y
     double precision, dimension(6,4,3), intent(out) :: dqrdy
+
+    integer          :: i
+    double precision :: val
     dqrdy = 0d0
     do i=1,3
         val          = y(1,i)-y(2,i)
@@ -1099,7 +1090,6 @@ end subroutine calcdqrdyjacobian
 !> @brief Evaluate calcpairwise.
 subroutine calcpairwise( r, v2, dv2dr, imol, igrad )
     implicit none
-
 
     integer, intent(in) :: igrad,imol
     double precision, dimension(0:10) :: c
@@ -1177,12 +1167,12 @@ end subroutine calcpairwise
 subroutine calcsumpairwise( rvec, v2, dv2dr, systype, igrad )
     implicit none
 
-
     integer, intent(in)                         :: systype,igrad
-    integer                                     :: a
-    double precision                            :: v2,tmp,de
     double precision, dimension(6), intent(in)  :: rvec
     double precision, dimension(6), intent(out) :: dv2dr
+
+    integer          :: a
+    double precision :: v2,tmp,de
     v2 = 0d0
     do a=1,6
         dv2dr(a) = 0d0

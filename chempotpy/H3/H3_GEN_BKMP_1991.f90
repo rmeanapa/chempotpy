@@ -4,16 +4,16 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-    double precision :: dedr, energy, r1, r2, r3
     ! number of electronic state
-    integer, parameter  :: nstates = 1
-    integer, parameter  :: natoms  = 3
-    integer, intent(in) :: igrad
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 3
 
+    integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
+    double precision :: dedr, energy, r1, r2, r3
     double precision :: r(3), v
     double precision :: tx(9), rx(3), drdx(3,9)
     double precision :: gx(nstates,9)
@@ -74,9 +74,10 @@ end subroutine pes
 subroutine evdrdx( x, r, drdx )
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -125,7 +126,6 @@ subroutine prepot
     !   Coordinates, potential energy, and derivatives are passed
     !   through the common block POTCM:
     !                  COMMON /POTCM/ R(3), ENERGY, DEDR(3)
-
 
     !   The potential energy in the three asymptotic valleys are
     !   stored in the common block ASYCOM:

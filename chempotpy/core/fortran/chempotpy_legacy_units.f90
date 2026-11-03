@@ -29,7 +29,6 @@ module chempotpy_legacy_units
         coordinates_bohr = coordinates_angstrom/legacy_bohr_to_angstrom
     end subroutine legacy_coordinates_to_bohr
 
-
     !> @brief Convert wrapper energy using the released rounded factor.
     pure function legacy_energy_to_electronvolt( &
             energy_hartree ) result(energy_electronvolt)

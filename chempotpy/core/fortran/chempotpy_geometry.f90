@@ -26,7 +26,6 @@ module chempotpy_geometry
         distance = sqrt(delta_x*delta_x+delta_y*delta_y+delta_z*delta_z)
     end function cartesian_distance
 
-
     !> @brief Return the Cartesian dot product of two three-component vectors.
     pure function dot_product_3d( first_vector, second_vector ) &
             result(product)
@@ -35,7 +34,6 @@ module chempotpy_geometry
 
         product = first_vector(1)*second_vector(1) +first_vector(2)*second_vector(2) +first_vector(3)*second_vector(3)
     end function dot_product_3d
-
 
     !> @brief Return the cosine of the angle between two Cartesian vectors.
     pure function cosine_between_vectors( &
@@ -48,7 +46,6 @@ module chempotpy_geometry
         second_norm = sqrt(dot_product_3d(second_vector,second_vector))
         cosine      = dot_product_3d(first_vector,second_vector) /(first_norm*second_norm)
     end function cosine_between_vectors
-
 
     !> @brief Fill a symmetric Cartesian distance matrix for a geometry.
     pure subroutine fill_distance_matrix( coordinates, distances )

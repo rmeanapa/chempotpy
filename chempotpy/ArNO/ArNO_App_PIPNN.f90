@@ -7,7 +7,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 3
@@ -48,13 +47,11 @@ subroutine pes( x, igrad, path, p, g, d )
         p(istate) = vtm
     enddo
 
-
 endsubroutine
 
 !> @brief Evaluate ArNOpes.
 subroutine arnopes( r_no, r_arn, cthx, vtot, vint, istat )
     implicit none
-
 
     double precision :: cthx, r_arn, r_no, s, v, v1, v2, vint, vtot
     integer          :: istat
@@ -69,7 +66,6 @@ end
 !> @brief Evaluate ArNOpes_sh.
 subroutine arnopes_sh( r10, r20, cthi, va, istate )
     implicit none
-
 
     double precision            :: cth, cthi, r1, r10, r2, r20, th, va, vcut
     integer                     :: istate
@@ -96,22 +92,22 @@ end
 !> @brief Evaluate potread.
 subroutine potread( path )
     implicit none
-    integer :: file_unit_98
+    double precision, parameter :: pi    = 3.141592653589793d0
+    integer, parameter          :: nroh1 = 17
+    integer, parameter          :: nth   = 13
+    integer, parameter          :: nroh2 = 70
+    integer, parameter          :: ip    = 2
+    integer, parameter          :: m     = 100
+    integer, parameter          :: n     = 100
+    integer, parameter          :: l     = 100
 
+    character(len=1024), intent(in) :: path
 
+    integer          :: file_unit_98
     double precision :: dal, dy1, dyn, pesmin, r1m, r2m, ra1, ra2, roh1, roh2, rra1, &
         & rra2, th1, thm, thth, tth1, vcut, ve, ve1, ve2, vmin1, xt, y, y2
-    integer                         :: i, ii, ind, j, k
-    character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
-    double precision, parameter     :: pi    = 3.141592653589793d0
-    integer, parameter              :: nroh1 = 17
-    integer, parameter              :: nth   = 13
-    integer, parameter              :: nroh2 = 70
-    integer, parameter              :: ip    = 2
-    integer, parameter              :: m     = 100
-    integer, parameter              :: n     = 100
-    integer, parameter              :: l     = 100
+    integer             :: i, ii, ind, j, k
+    character(len=1024) :: file_path1
     dimension xt(m),y(m),y2(l)
     data vmin1/-656.852768990000d0/
     data dy1,dyn/1.0d30,1.0d30/
@@ -177,7 +173,6 @@ end
 !> @brief Evaluate spl3.
 subroutine spl3( r1, th, r2, v, istate )
     implicit none
-
 
     double precision :: ddhy, ddny, dds1, dds2, dds3, ddty, dhy, dny, ds1, ds2, ds3, dty, dy1, &
         & dyn, h1, h2, h3, pesmin, r1, r1a, r2, roh1, roh2, s1, s2, s3, ss, sss, th, thth, v, &
@@ -266,7 +261,6 @@ end
 subroutine splint( xa, ya, y2a, n, x, y )
     implicit none
 
-
     double precision :: a, b, h, x, xa, y, y2a, ya
     integer          :: k, khi, klo, n
     dimension xa(n),y2a(n),ya(n)
@@ -291,7 +285,6 @@ end
 !> @brief Evaluate spline.
 subroutine spline( x, y, n, yp1, ypn, y2 )
     implicit none
-
 
     double precision :: p, qn, sig, u, un, x, y, y2, yp1, ypn
     integer          :: i, k, n
@@ -327,7 +320,6 @@ end
 !> @brief Evaluate longpes.
 subroutine longpes( r_no, r_arn, cthx, v, istat )
     implicit none
-
 
     double precision :: a1, a2, amn, amo, cth, cthx, de, dy1, dyn, r, r1, r2, r_arn, r_no, s, &
         & t, tocm, v, vmin1, x, y, y2
@@ -560,7 +552,6 @@ end
 subroutine vfuncs( theta, r, c, v )
     implicit none
 
-
     double precision :: afunc, c, cth, f, r, theta, v
     integer          :: i
     dimension afunc(4),c(4)
@@ -581,7 +572,6 @@ end
 subroutine bval( cth, b )
     implicit none
 
-
     double precision :: cth,b,b0,b1,b2
     b0 = -3.0318d0
     b1 = 0.1299d0
@@ -591,7 +581,6 @@ end
 !> @brief Evaluate Fval.
 subroutine fval( r, cth, f )
     implicit none
-
 
     double precision :: r,cth,f,b
 
@@ -603,7 +592,6 @@ end
 !> @brief Evaluate pes1D.
 subroutine pes1d( r_no, v, istat )
     implicit none
-
 
     double precision :: a1, a2, de, dy1, dyn, r2, r_no, tocm, v, vmin1, x, y, y2
     integer          :: i, istat

@@ -1,21 +1,21 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 
-
 !> @brief Evaluate pes for the F2H2_GEN_JBKKL_1990 potential.
 subroutine pes( x, igrad, path, p, g, d )
 
     implicit none
 
-    integer :: iatom, idir, istate
     ! number of electronic state
-    integer, parameter              :: nstates = 1
-    integer, parameter              :: natoms  = 4
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 4
+
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
 
+    integer          :: iatom, idir, istate
     double precision :: cartnu(natoms,3), r(6), v
     double precision :: rcm, r1, r2
     logical, save    :: first_time_data=.true.
@@ -36,7 +36,6 @@ subroutine pes( x, igrad, path, p, g, d )
         call bjinit(path)
         first_time_data = .false.
     endif
-
 
     call carttor(cartnu,r)
     rcm = r(1)
@@ -119,15 +118,14 @@ endsubroutine carttor
 !> @brief Evaluate bjinit for the F2H2_GEN_JBKKL_1990 potential.
 subroutine bjinit( path )
     implicit none
-    integer :: file_unit_11
-
-    double precision                :: c
-    integer                         :: i
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
+
+    integer             :: file_unit_11
+    double precision    :: c
+    integer             :: i
+    character(len=1024) :: file_path1
     dimension c(359)
     common/params/c
-
 
     file_path1 = trim(path)//"/F2H2/bjkkl.par"
     open(newunit=file_unit_11,file=file_path1)

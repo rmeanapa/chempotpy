@@ -70,6 +70,10 @@ The formatter uses a 120-column readability target for normal equations rather
 than Fortran 77's 72/80-column limit. Generated numerical data may exceed that
 target, and all free-form compilation uses unlimited line length.
 
+Within a procedure, named constants needed for array shapes come first,
+followed by `intent(...)` dummy arguments and then local variables. Redundant
+runs of empty lines are collapsed to one visual separator.
+
 Format specifications are written inline in `read` and `write` statements.
 Legacy labeled `FORMAT` statements and redundant `return` statements directly
 before a procedure end are rejected by the style gate; intentional early

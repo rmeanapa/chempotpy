@@ -3,17 +3,16 @@ subroutine pes( x, igrad, p, g, d )
 
     implicit none
 
-
-    integer :: istate
     ! number of electronic state
-    integer, parameter  :: nstates = 1
-    integer, parameter  :: natoms  = 3
-    integer, intent(in) :: igrad
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 3
 
+    integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
 
+    integer          :: istate
     double precision :: r(1,3), e(1), v
     integer          :: iatom, idir, i, j
     logical, save    :: first_time_data=.true.
@@ -27,7 +26,6 @@ subroutine pes( x, igrad, p, g, d )
     r(1,1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
     r(1,2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
     r(1,3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
-
 
     call prepot
 
@@ -49,7 +47,6 @@ endsubroutine
 subroutine prepot
     implicit none
 
-
     double precision            :: eee, eshift, evp, rvp, vp, xxx
     integer                     :: ivp, ivp1, nsurf, nt
     integer, parameter          :: n2     = 5000
@@ -58,7 +55,6 @@ subroutine prepot
     double precision, parameter :: htkcal = 627.5096d0
     save
     dimension rvp(nt, 3), evp(nt),xxx(3),vp(3)
-
 
     return
 
@@ -77,14 +73,12 @@ end
 subroutine surfid( h3id )
     implicit none
 
-
     double precision :: h3id
     h3id = 950621.0
 end
 !> @brief Evaluate bkmp2.
 subroutine bkmp2( r, vtot, dvtot, id )
     implicit none
-
 
     double precision :: cal, cas, cb, cbnda, cbndb, dcal, dcas, dcbnda, dcbndb, dt, dvas, &
         & dvbnda, dvbndb, dvlon, dvtot, r, t, vas, vb, vbnda, vbndb, vlon, vtot
@@ -166,7 +160,6 @@ end
 subroutine triplet95( r, e3, id )
     implicit none
 
-
     double precision :: dr, e1, e3, exdr, r, ra6, ra61, rsq
     integer          :: id, ipr
     dimension e3(3),e1(3)
@@ -210,7 +203,6 @@ end
 !> @brief Evaluate vH2opt95.
 subroutine vh2opt95( r, e, ideriv )
     implicit none
-
 
     double precision :: alphar, dalphr, ddalph, ddvlr, ddvsr, dvlr, dvsr, e, exalph, r, r02, r04, r06, r10, r11, r12, &
         & r13, r14, r15, r2, r3, r4, r5, r6, r7, r8, r9, rr2, rr25, rr26, rr27, rr4, rr43, rr44, rr6, rr62, rr63, vlr, &
@@ -300,7 +292,6 @@ end
 subroutine h3lond95( r, vlon, dvlon )
     implicit none
 
-
     double precision :: de1, de3, dvlon, e1, e3, esing, etrip, r, rootjt, sumj, sumq, vlon
     integer          :: i, ipr
     double precision :: q(3),j(3),jt
@@ -345,7 +336,6 @@ end
 subroutine vascal95( rpass, vas, dvas )
     implicit none
 
-
     double precision :: a, a2, a3, a4, a5, da, ds, dvas, exp1, exp6, r, r1, r2, r3, rcu, rpass, rsq, s, vas
     integer          :: ipr
     dimension dvas(3),da(3),ds(3),rpass(3)
@@ -385,7 +375,6 @@ end
 subroutine acalc95( r1, r2, r3, a, da )
     implicit none
 
-
     double precision :: a, da, r1, r2, r3
     integer          :: ipr
     dimension da(3)
@@ -406,7 +395,6 @@ end
 !> @brief Evaluate compac95.
 subroutine compac95( r, icompc, t, dt )
     implicit none
-
 
     double precision :: bot, bot2, dt, r, t, top, top2, top3
     integer          :: i, icompc
@@ -437,7 +425,6 @@ end
 !> @brief Evaluate casym95.
 subroutine casym95( r, cas, dcas, id, t, dt )
     implicit none
-
 
     double precision :: a, a2, cas, da, dcas, determ, dpr, dseries, dsumt, dt, dterm1, eterm, pr, pr2, pr3, r, series, &
         & sr, sr2, sr3, sumt, t, term1
@@ -512,7 +499,6 @@ end
 subroutine csym95( r, cal, dcal )
     implicit none
 
-
     double precision :: cal, dcal, dexp3, dg, exp3, g, r, ri, rpri, rpri2, rrri, rrri2, rrri3, sr, sr2, sr3, sumg, sumv
     integer          :: i, ipr
     dimension r(3),dcal(3),g(3)
@@ -562,7 +548,6 @@ subroutine vbcb95( rpass, icompc, t, dt, ipr, &
         &                  vbnda, vbndb, dvbnda, dvbndb, &
         &                  cbnda, cbndb, dcbnda, dcbndb )
     implicit none
-
 
     double precision :: aasum, asum, b1, b12, b13, b14, b15, b1a, b1b, b2, b3, b3b, bsum, c1, c1cube, c2, c2cube, c3, &
         & c3cube, cb, cbnda, cbndb, cbnds, cos3t1, cos3t2, cos3t3, csum, cx1, d1, d2, d3, daasum, dasum, db1a, db1b, db2, &
@@ -980,7 +965,6 @@ end
 !> @brief Evaluate chgeom.
 subroutine chgeom( r, ivalid )
     implicit none
-
 
     double precision            :: r, rhi, rlo, rmid
     integer                     :: ivalid

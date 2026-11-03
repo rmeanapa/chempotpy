@@ -4,16 +4,18 @@ subroutine pes( x, igrad, path, p, g, d )
 
     implicit none
 
-    double precision :: dq, q, v, xter
-    integer          :: i, iatom, idebug, idir, idum, istate, j, nder, ndum
     ! number of electronic state
-    integer, parameter              :: nstates = 1
-    integer, parameter              :: natoms  = 3
+    integer, parameter :: nstates = 1
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+
+    double precision :: dq, q, v, xter
+    integer          :: i, iatom, idebug, idir, idum, istate, j, nder, ndum
     common /pt1cm/ q(3),xter,dq(3)
     common /pt2cm/ nder, ndum, idebug, idum(19)
     double precision :: tx(9), r2(3), dedx(9), drdx(3,9)
@@ -57,7 +59,6 @@ subroutine pes( x, igrad, path, p, g, d )
         enddo
     enddo
 
-
     if (igrad==0) then
         do istate=1,nstates
             p(istate) = xter
@@ -83,9 +84,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -197,6 +199,8 @@ subroutine prepot( path )
     !
     implicit none
 
+    character(len=1024), intent(in) :: path
+
     double precision :: arg, c, cs, ct, ct2, dd, ddgab, ddsxa, ddsxb, dduab, deldsx, delgab, dels11, &
         & dels12, dels22, delsab, delspx, deltab, deltpx, deltsx, deluab, dgab, dh, dh11, dh12, dh13, &
         & dh14, dh15, dh16, dh22, dh24, dh25, dh26, dh33, dh34, dh44, dh45, dh46, dh55, dh56, dh66, &
@@ -208,8 +212,7 @@ subroutine prepot( path )
         & spxb, spxfit, sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, &
         & tabfit, test, th, tpxa, tpxb, tpxfit, tre, tsab, tsxa, tsxb, tsxfit, two, uabfit, vec, w, &
         & x, xter, xtra, zero
-    integer                         :: i, idebug, idum, iflag, indx, iptprt, iptrd1, ix, j, k, nder, ndim, ndum, nroot, ns
-    character(len=1024), intent(in) :: path
+    integer :: i, idebug, idum, iflag, indx, iptprt, iptrd1, ix, j, k, nder, ndim, ndum, nroot, ns
     common /pt4cm/ iptprt, iptrd1
     common /pt2cm/ nder, ndum, idebug, idum(19)
     common /pt5cm/ easyab, easybc, easyac
@@ -1012,7 +1015,6 @@ subroutine potinfo
     endif
 end subroutine potinfo
 
-
 !> @brief Evaluate ANCVRT for the ClH2_LEPS_TTGI2_1985 potential.
 subroutine ancvrt
     implicit none
@@ -1366,7 +1368,6 @@ subroutine carttor
         stop
     end if
 end subroutine carttor
-
 
 !> @brief Evaluate EUNITZERO for the ClH2_LEPS_TTGI2_1985 potential.
 subroutine eunitzero

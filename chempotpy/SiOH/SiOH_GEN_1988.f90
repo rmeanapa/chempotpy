@@ -213,7 +213,6 @@ subroutine siohpot( x, y, z, q, indmm, v, dvdx, dvdy, dvdz, natom, &
     theta(1,8,14)    = theta(14,8,1)
     theta(1,8,1)     = 104.5d0/pang
 
-
     ! Initialize
     !         do i=1,natom
     !           write(6,100) indmm(i),q(i),x(i)*pdis,y(i)*pdis,z(i)*pdis

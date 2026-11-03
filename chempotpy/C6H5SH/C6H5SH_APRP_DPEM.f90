@@ -96,7 +96,6 @@ subroutine dpem( x, igrad, u, ug )
 
     implicit none
 
-
     ! number of electronic state
     integer, parameter            :: nstates = 3
     integer, parameter            :: natoms  = 13
@@ -155,7 +154,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     !### zero of energy at V1 equilibrium of XQDPT energy
     implicit none
 
-
     !--- {'global' constants
     integer, parameter :: natom = 13, nstate=3, ntermmax=200 &
         , ntermtype=4, napmax=10, nqtpset=2, nlcmax=6
@@ -163,33 +161,30 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     double precision, parameter :: ev_hartree = 3.674931d-2
     double precision, parameter :: ang_bohr   = 0.529177249d0
     integer, parameter          :: n_ps       = 2 !number of primary & secondary coordinates
-    !--- }'global' constants
+    !--- zero of energy
+    double precision, parameter :: ezero = -629.4436077422d0
 
-    !--- {arguments
-    integer                         :: igrad, repflag
     double precision, intent(inout) :: uu(nstate,nstate), guu(3,natom,nstate,nstate)
-    double precision                :: xx(3,natom), vv(nstate), gvv(3,natom,nstate) &
+
+    !--- }'global' constants
+    !--- {arguments
+    integer          :: igrad, repflag
+    double precision :: xx(3,natom), vv(nstate), gvv(3,natom,nstate) &
         , dvec(3,natom,nstate,nstate), cc(nstate,nstate)
     !--- }arguments
-
     integer          :: i, j, k, l, ist, jst
     double precision :: x(3,natom), vt(nstate,nstate) &
         , gvt(3,natom,nstate,nstate), tmpmat33(nstate,nstate)
-
     !--- internals for prim.&sec. pot, tert. pot., tert. coupl.
     !--- qtp has two sets, for bonded & dissoc. S-H
     double precision :: qps(n_ps),qtp(ntermmax,nqtpset), qtc(ntermmax) &
         , bmatqtc(ntermmax,natom*3) !--- attributes
-
     !--- number/type of terms and atom index lists for qtp
     integer :: nqtp(nqtpset), itermqtptype(ntermmax,nqtpset) &
         , iqtplist(4,ntermmax,nqtpset) &
         , nqtc, qtcsym(ntermmax), qtctyp(ntermmax)
-
     !--- for diagonalization of prim+sec U
     double precision :: dtamat(nstate,nstate), vtmp(nstate)
-    !--- zero of energy
-    double precision, parameter :: ezero = -629.4436077422d0
     !--- debug
     logical :: debug_notert, debug
 
@@ -222,7 +217,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     call calcu12_ps(uu, guu, x, qps)
     call calcu13_ps(uu, guu, x, qps)
     call calcu23_ps(uu, guu, x, qps)
-
 
     !@03 tertiary elements and their grad. w.r.t. x
     if(.not.debug_notert) then

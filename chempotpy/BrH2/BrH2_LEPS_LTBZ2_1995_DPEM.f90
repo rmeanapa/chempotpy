@@ -4,16 +4,17 @@ subroutine dpem( x, igrad, u, ug )
 
     implicit none
 
-    double precision :: d, g, p
-    integer          :: iatom, idir, nder
     ! number of electronic state
-    integer, parameter            :: nstates = 2
-    integer, parameter            :: natoms  = 3
+    integer, parameter :: nstates = 2
+    integer, parameter :: natoms  = 3
+
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
 
+    double precision :: d, g, p
+    integer          :: iatom, idir, nder
     double precision :: nt, r(1,3), r2(3), v(1)
     double precision :: u11(1), u12(1), u22(1)
     double precision :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
@@ -78,7 +79,6 @@ subroutine dpem( x, igrad, u, ug )
         enddo
     enddo
 
-
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
@@ -86,9 +86,10 @@ subroutine evdrdx( x, r, drdx )
 
     implicit none
 
-    integer                       :: i,j
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
+
+    integer :: i,j
 
     ! Initialize dRdX(3,9)
     do i=1,3
@@ -225,7 +226,6 @@ subroutine pot( r, e, de, nt, nsurf )
 
 end subroutine pot
 
-
 !> @brief Evaluate g_prepot11 for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
 subroutine g_prepot11( g_p_ )
     !   this is a vectorized version of the BrH2SEC potential with derivativ
@@ -302,7 +302,6 @@ subroutine g_prepot11( g_p_ )
 
     common /com_para/ g_myrank,g_nprocs
     integer :: g_myrank,g_nprocs
-
 
     common /g_satocm/ g_zhhp1, g_zhhp2, g_zhbrp1, g_zhbrp2, g_z, g_dz
     common /g_v3ccom/ g_v3cp1, g_v3cp2, g_v3cp3, g_v3cp4, g_v3cp5, &

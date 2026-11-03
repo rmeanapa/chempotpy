@@ -7,8 +7,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     use chempotpy_kinds, only: real64
     implicit none
 
-
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -66,14 +64,12 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     implicit none
 
-
     double precision :: alpha, beta, bs, dx, dy, dz, e0, e2, e3, en, ep, eta, eta1, &
         & eta2, fra, pi, rr, s, u, ud, udno, uno, v, vv, x, y, z
     integer :: i, j, m, maxatom, natom
     dimension x(maxatom),y(maxatom),z(maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-
 
     !  calculate the potential energy
 

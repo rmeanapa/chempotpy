@@ -2,9 +2,6 @@ module constants
     implicit none
     private
 
-
-
-
     ! Define the mass of different atoms
     real,parameter :: c_mass = 12.0000000  !21874.66
     real,parameter :: d_mass = 2.0135532127
@@ -51,7 +48,6 @@ module h4o2_pes_state
         close(file_unit_20)
     end subroutine load_h4o2_coefficients
 
-
     !> @brief Evaluate the fitted H4O2 expansion for Cartesian coordinates.
     subroutine evaluate_h4o2_coefficients( potential, cartesian_coordinates )
         real, intent(out) :: potential
@@ -69,7 +65,6 @@ end module h4o2_pes_state
 subroutine pes( x, igrad, path, p, g, d )
 
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -114,10 +109,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
-
-
-
 !=================================================!
 ! Initializing HBB water potential                !
 !=================================================!
@@ -126,7 +117,6 @@ subroutine pes_init( path )
     use h4o2_pes_state, only: load_h4o2_coefficients
 
     implicit none
-
 
     character(len=1024), intent(in) :: path
     character(len=1024)             :: file_path1, file_path2
@@ -147,7 +137,6 @@ subroutine h4o2pot( x, v )
     ! x(1:18) Cartesian coordinates in bohr, must in order H H H H O O
     ! f: potential in hartree
     implicit none
-
 
     real,intent(in)     :: x(18)
     real, intent(inout) :: v
@@ -178,7 +167,6 @@ end module inv_mg42_t
 subroutine getr0 ( nk, xn, r0 )
     implicit none
 
-
     integer :: nk
     real    :: xn(0:2,0:nk-1), r0(0:nk-1,0:nk-1)
     integer :: i, j
@@ -196,7 +184,6 @@ subroutine getrvec ( m, r, vec )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
 
     ! version for X4Y2
     integer            :: m
@@ -245,7 +232,6 @@ subroutine getvec ( ms, mr, xn, vec )
         & mg42_ngrp, mg42_nr
     implicit none
 
-
     ! version for X4Y2
     integer            :: ms, mr
     integer, parameter :: nk = 6
@@ -278,7 +264,6 @@ end subroutine getvec
 subroutine getx0 ( nk, r0, x0 )
     implicit none
 
-
     integer :: nk
     real    :: r0(0:nk-1,0:nk-1), x0(0:nk*(nk-1)/2-1)
     integer :: i, j, k
@@ -296,7 +281,6 @@ subroutine inv_base ( mxd, u, v, w )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
 
     integer, intent (in) :: mxd
     real, intent (in)    :: u(0:mg42_ivp(mxd)-1), v(0:mg42_ivs(mxd)-1)
@@ -327,7 +311,6 @@ subroutine mg42_base ( mxd, x, w )
         & mg42_ngrp, mg42_nr
     implicit none
 
-
     integer, intent (in) :: mxd
     real , intent (in)   :: x(0:mg42_nr-1)
     real , intent (out)  :: w(0:mg42_ivb(mxd)-1)
@@ -343,7 +326,6 @@ subroutine mg42_gens ( ind, x, y )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
 
     integer, intent (in) :: ind
     real , intent (in)   :: x(0:mg42_nr-1)
@@ -379,13 +361,14 @@ subroutine mg42_prims ( x, u )
         & mg42_ngrp, mg42_nr
     implicit none
 
+    !-----------------------------------------------------------------------
+    integer, parameter :: m = 4, n=2, m2=m*(m-1)/2, n2=n*(n-1)/2
 
     real , intent (in)  :: x(0:mg42_nr-1)
     real , intent (out) :: u(0:mg42_nr-1)
-    !-----------------------------------------------------------------------
-    integer, parameter :: m = 4, n=2, m2=m*(m-1)/2, n2=n*(n-1)/2
-    integer            :: i, j
-    real               :: x0(0:m2-1), x1(0:m*n-1), x2(0:n2-1), t0(0:m-1), &
+
+    integer :: i, j
+    real    :: x0(0:m2-1), x1(0:m*n-1), x2(0:n2-1), t0(0:m-1), &
         e(0:m-1), f(0:n-1)
     x0    = x(0:m2-1)
     x1    = x(m2:m2+m*n-1)
@@ -423,15 +406,16 @@ subroutine mg42_secs ( mxd, x, v )
         & mg42_ngrp, mg42_nr
     implicit none
 
-
-    integer, intent (in) :: mxd
-    real , intent (in)   :: x(0:mg42_nr-1)
-    real , intent (out)  :: v(0:mg42_ivs(mxd)-1)
     !! Note: We stop at degree 7 for now.
     !-----------------------------------------------------------------------
     integer, parameter :: m = 4, n=2, nk=6, npv=107, &
         m2=m*(m-1), m3=m*(m-1)*(m-2), n2=n*(n-1), mn=m*n, m2n=m*(m-1)*n, mn2=m*n*(n-1), m2n2=m2n*(n-1), m3n=m*(m-1)* &
         & (m- 2)*n, m3n2 = m*(m-1)*(m-2)*n*(n-1)
+
+    integer, intent (in) :: mxd
+    real , intent (in)   :: x(0:mg42_nr-1)
+    real , intent (out)  :: v(0:mg42_ivs(mxd)-1)
+
     integer :: i0, i1, i2, j0, j1
     real    :: pv(0:npv-1), d(0:nk-1,0:nk-1), d2(0:nk-1,0:nk-1), &
         d3(0:nk-1,0:nk-1), d4(0:nk-1,0:nk-1), d5(0:nk-1,0:nk-1), &

@@ -348,6 +348,110 @@ def align_declarations(lines: Sequence[str]) -> List[str]:
     return aligned
 
 
+def declaration_end(lines: Sequence[str], index: int) -> int:
+    """Return the first line after one possibly continued declaration."""
+
+    end = index + 1
+    while (
+        end < len(lines)
+        and code_without_comment(lines[end - 1]).rstrip().endswith("&")
+    ):
+        end += 1
+    return end
+
+
+def declaration_rank(declaration) -> int:
+    """Order constants, dummy arguments, and local variables."""
+
+    attributes = declaration.group("attributes") or ""
+    if re.search(r"(?:^|,)\s*parameter\s*(?:,|$)", attributes, re.I):
+        return 0
+    if re.search(r"(?:^|,)\s*intent\s*\(", attributes, re.I):
+        return 1
+    return 2
+
+
+def order_initial_declarations(lines: Sequence[str]) -> List[str]:
+    """Place intended dummy arguments before local variable declarations."""
+
+    ordered = list(lines)
+    index = 0
+    while index < len(ordered):
+        if not re.match(r"^\s*implicit\s+none\b", ordered[index], re.I):
+            index += 1
+            continue
+
+        first = index + 1
+        while first < len(ordered) and (
+            not ordered[first].strip()
+            or ordered[first].lstrip().startswith("!")
+        ):
+            first += 1
+        if first >= len(ordered) or DECLARATION.match(ordered[first]) is None:
+            index += 1
+            continue
+
+        entries = []
+        pending = []
+        cursor = first
+        while cursor < len(ordered):
+            if (
+                not ordered[cursor].strip()
+                or ordered[cursor].lstrip().startswith("!")
+            ):
+                pending.append(ordered[cursor])
+                cursor += 1
+                continue
+            declaration = DECLARATION.match(ordered[cursor])
+            if declaration is None:
+                break
+            end = declaration_end(ordered, cursor)
+            comments = [
+                line for line in pending if line.lstrip().startswith("!")
+            ]
+            entries.append((
+                declaration_rank(declaration),
+                comments + ordered[cursor:end],
+            ))
+            pending = []
+            cursor = end
+
+        ranks = [rank for rank, _ in entries]
+        if 1 not in ranks or ranks == sorted(ranks):
+            index = cursor
+            continue
+
+        replacement = []
+        previous_rank = None
+        for rank, chunk in sorted(entries, key=lambda item: item[0]):
+            if previous_rank is not None and rank != previous_rank:
+                replacement.append("")
+            replacement.extend(chunk)
+            previous_rank = rank
+        if pending:
+            if replacement and replacement[-1].strip():
+                replacement.append("")
+            replacement.extend(
+                line for line in pending if line.strip()
+            )
+        ordered[first:cursor] = replacement
+        index = first + len(replacement)
+    return ordered
+
+
+def collapse_blank_lines(lines: Sequence[str]) -> List[str]:
+    """Collapse redundant runs while retaining one visual separator."""
+
+    collapsed = []
+    for line in lines:
+        if not line.strip() and (not collapsed or not collapsed[-1].strip()):
+            continue
+        collapsed.append(line)
+    while collapsed and not collapsed[-1].strip():
+        collapsed.pop()
+    return collapsed
+
+
 def remove_terminal_returns(lines: Sequence[str]) -> List[str]:
     """Remove unlabeled RETURN statements immediately before procedure ends."""
 
@@ -798,10 +902,12 @@ def format_source_text(source_text: str) -> str:
             if opened is not None:
                 stack.append(opened)
 
+    output = order_initial_declarations(output)
     output = align_declarations(output)
     output = align_assignments(output)
     output = align_parameters(output)
     output = align_typed_parameters(output)
+    output = collapse_blank_lines(output)
     return "\n".join(output) + "\n"
 
 

@@ -9,8 +9,6 @@ module nnparam
     public :: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
 
-
-
     !***************************************************************************
     !natom     ==>Number of atoms
     !npes      ==>Number of PESs
@@ -35,7 +33,6 @@ subroutine pes( x, igrad, path, p, g, d )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
         & nodemax3, nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -78,7 +75,6 @@ subroutine pes( x, igrad, path, p, g, d )
 
 endsubroutine
 
-
 !***************************************************************************
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v )
@@ -105,7 +101,6 @@ subroutine evvdvdx( xcart, v )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
         & nodemax3, nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     integer          :: i,j,k,ndriv
     double precision :: v,vpes(npes),c(0:ninput),dvdx(1:natom*3,npes)
@@ -160,7 +155,6 @@ subroutine pes_init( path )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
         & nodemax3, nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     character(len=1024), intent(in) :: path
     integer                         :: i,j,ihid,iwe,inode1,inode2,ilay1,ilay2
@@ -235,7 +229,6 @@ subroutine pot3a( x, vpot3 )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
         & nodemax3, nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-
 
     integer                      :: i,ndriv,inode1,inode2,ilay1,ilay2
     integer                      :: j,k,m,neu1,neu2
@@ -323,7 +316,6 @@ end subroutine pot3a
 function tranfun( x, ifunc )
     implicit none
 
-
     integer          :: ifunc
     double precision :: tranfun,x
     if (ifunc.eq.1) then
@@ -338,7 +330,6 @@ end function tranfun
 !> @brief Evaluate LOGSIG.
 function logsig( x )
     implicit none
-
 
     double precision :: x,logsig
     logsig = 1.d0/(1.d0+dexp(-x))
@@ -508,7 +499,6 @@ end function logsig
 subroutine bemsav( x, m, p )
     implicit none
 
-
     double precision :: x(1:10)
     double precision :: p(0:230)
     double precision :: m(0:109)
@@ -521,7 +511,6 @@ end subroutine bemsav
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
 
     double precision :: x(1:10)
     double precision :: m(0:109)
@@ -642,7 +631,6 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
 
     double precision :: p(0:230)
     double precision :: m(0:109)

@@ -7,8 +7,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     use chempotpy_kinds, only: real64
     implicit none
 
-
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -65,7 +63,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     implicit none
 
-
     double precision :: a1, a2, a3, arc1, arc2, au2, au23, b1, b2, bra, bu2, co, &
         & co1, co2, co3, coij, coim, cojm, cot12, cot2, cot3, de, dx, dy, dz, ee, poly, re, rho, rij, &
         & rim, rjm, rr, rr1, rr2, rr3, u3, v, w2, x, y, z
@@ -102,7 +99,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 v    = v-de*ee*poly*co
             endif
     1 continue
-
 
     !  2. calculate energy of three-body interactions
     u3 = 0.d0
@@ -171,7 +167,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     7 v=v+u3
 
-
 end subroutine pot
 !
 !
@@ -197,7 +192,6 @@ subroutine scos( i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, &
     !  co3     --- cosine of the angle between bonds mi and mj
     !
     implicit none
-
 
     double precision :: co1, co2, co3, rij, rim, rjm, scalar1, scalar2, scalar3, x, y, z
     integer          :: i, j, m, maxatom, natom

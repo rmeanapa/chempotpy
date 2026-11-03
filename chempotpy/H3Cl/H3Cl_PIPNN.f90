@@ -10,7 +10,6 @@ module nnparam
         & nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, weighta, &
         & weightb, weightc
 
-
     double precision,parameter :: alpha  = 1.5d0,pi=3.1415926d0,radian=pi/180.0d0
     integer,parameter          :: nbasis = 50,ndim=6,natom=4
     integer,parameter          :: ninput = 50
@@ -86,15 +85,14 @@ subroutine pes( x, igrad, path, p, g, d )
 
 end subroutine pes
 
-
-
 !> @brief Evaluate pesh3cl for the H3Cl_PIPNN potential.
 subroutine pesh3cl( x, vtot, path )
     implicit none
 
+    character(len=1024), intent(in) :: path
+
     double precision :: phi, r, r1, r2, r3, s, th1, th2, v, v0, v1, vint, vpes, vpesa, vpesb, vpesc, &
         & vpip, vtot, x
-    character(len=1024), intent(in) :: path
     dimension r(6),x(3,4)
     double precision, parameter :: tocm = 219474.63137d0
     integer, parameter          :: n    = 644
@@ -113,14 +111,15 @@ end subroutine pesh3cl
 !> @brief Evaluate POT0 for the H3Cl_PIPNN potential.
 subroutine pot0( r0, vv0, path )
     implicit none
-    integer :: file_unit_100
+    integer, parameter :: m0 = 1425
 
-    integer, parameter              :: m0 = 1425
-    double precision                :: dy1, dyn, r0, vv0
-    double precision, save          :: xt0(m0), yl0(m0), ym0(m0)
-    integer                         :: i, init
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
+
+    integer                :: file_unit_100
+    double precision       :: dy1, dyn, r0, vv0
+    double precision, save :: xt0(m0), yl0(m0), ym0(m0)
+    integer                :: i, init
+    character(len=1024)    :: file_path1
     data dy1,dyn/1.0d30,1.0d30/
     data init/0/
     save init
@@ -139,18 +138,18 @@ subroutine pot0( r0, vv0, path )
     call splint(xt0,ym0,yl0,m0,r0,vv0)
 end subroutine pot0
 
-
 !> @brief Evaluate POT1 for the H3Cl_PIPNN potential.
 subroutine pot1( r1, vv1, path )
     implicit none
-    integer :: file_unit_200
+    integer, parameter :: m1 = 3200
 
-    integer, parameter              :: m1 = 3200
-    double precision                :: dy1, dyn, r1, vv1
-    double precision, save          :: xt1(m1), yl1(m1), ym1(m1)
-    integer                         :: i, init
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
+
+    integer                :: file_unit_200
+    double precision       :: dy1, dyn, r1, vv1
+    double precision, save :: xt1(m1), yl1(m1), ym1(m1)
+    integer                :: i, init
+    character(len=1024)    :: file_path1
     data dy1,dyn/1.0d30,1.0d30/
     data init/0/
     save init
@@ -168,7 +167,6 @@ subroutine pot1( r1, vv1, path )
     endif
     call splint(xt1,ym1,yl1,m1,r1,vv1)
 end subroutine pot1
-
 
 !##################################################################
 !# SPLINE ROUTINES
@@ -239,15 +237,16 @@ end subroutine spline
 !> @brief Evaluate ClH3vlr for the H3Cl_PIPNN potential.
 subroutine clh3vlr( r1, r2, r3, theta1, theta2, phi, vint, n, path )
     implicit none
-    integer :: file_unit_300
+    integer, parameter :: m = 644
 
-    integer, parameter              :: m = 644
-    double precision                :: phi, r1, r2, r3, theta1, theta2, vint
-    double precision, save          :: a(m)
-    integer                         :: i, init, n
     character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1
-    double precision                :: afunc(n)
+
+    integer                :: file_unit_300
+    double precision       :: phi, r1, r2, r3, theta1, theta2, vint
+    double precision, save :: a(m)
+    integer                :: i, init, n
+    character(len=1024)    :: file_path1
+    double precision       :: afunc(n)
     data init/0/
     save init
 
@@ -359,7 +358,6 @@ subroutine funcs( ra, rb, rc, theta1, theta2, phi, afunc, ma )
 
 end subroutine funcs
 
-
 !> @brief Evaluate ClH3pipNN for the H3Cl_PIPNN potential.
 subroutine clh3pipnn( rb, vpes, vpesa, vpesb, vpesc )
     use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, &
@@ -385,7 +383,6 @@ subroutine clh3pipnn( rb, vpes, vpesa, vpesb, vpesc )
     call getpotc(txinput,vpesc)
     vpes = (vpesa+vpesb+vpesc)/3d0
 
-
 end subroutine clh3pipnn
 
 !-->  read NN weights and biases from matlab output
@@ -399,15 +396,15 @@ subroutine pes_init( path )
         & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
         & weighta, weightb, weightc
     implicit none
-    integer :: file_unit_4
-
     character(len=1024), intent(in) :: path
-    integer                         :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
-    integer                         :: ibasis,npd,iterm,ib,nfile
-    character(len=80)               :: f1, line
-    character(len=1024)             :: file_path1, file_path2
-    character(len=1024)             :: file_path3, file_path4
-    character(len=1024)             :: file_path5, file_path6
+
+    integer             :: file_unit_4
+    integer             :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
+    integer             :: ibasis,npd,iterm,ib,nfile
+    character(len=80)   :: f1, line
+    character(len=1024) :: file_path1, file_path2
+    character(len=1024) :: file_path3, file_path4
+    character(len=1024) :: file_path5, file_path6
 
     file_path1 = trim(path)//"/H3Cl/weights.txt-1"
     file_path2 = trim(path)//"/H3Cl/biases.txt-1"
@@ -583,7 +580,6 @@ function tranfun( x, ifunc )
     endif
 end function tranfun
 !-->!-->!-->!-->!-->!-->!-->!-->!-->!-->subroutine to accelerate~~~~~~
-
 
 !> @brief Evaluate emsav134 for the H3Cl_PIPNN potential.
 function emsav134( x, c ) result(v )
@@ -865,8 +861,6 @@ double precision function distance( a, b )
 
 end function distance
 
-
-
 !> @brief Evaluate xyz_to_jaco for the H3Cl_PIPNN potential.
 subroutine xyz_to_jaco( x, r1, r2, r3, theta1, theta2, phi, r )
     implicit none
@@ -910,7 +904,6 @@ subroutine xyz_to_jaco( x, r1, r2, r3, theta1, theta2, phi, r )
     r(6) = distance(x(:,2),x(:,1))
 end subroutine xyz_to_jaco
 
-
 !> @brief Evaluate dihedral for the H3Cl_PIPNN potential.
 subroutine dihedral( a, b, c, d, th )
     implicit none
@@ -918,7 +911,6 @@ subroutine dihedral( a, b, c, d, th )
     double precision :: a(3),b(3),c(3),d(3),th,x,y
     double precision :: v_ab(3),v_bc(3),v_cd(3),n1(3),n2(3),s1,s2,s3,m1(3)
     integer          :: i
-
 
     do i=1,3
         v_ab(i) = b(i)-a(i)

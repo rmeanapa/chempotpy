@@ -152,7 +152,6 @@ subroutine pes( x, igrad, p, g, d )
 
 end subroutine pes
 
-
 !***********************************************************************
 !> @brief Evaluate pot for the PHOH_APRP potential.
 subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
@@ -160,7 +159,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     !
     !***********************************************************************
     implicit none
-
 
     integer            :: i,j,k,l,m
     integer            :: igrad, repflag
@@ -605,7 +603,6 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
     !***********************************************************************
 
     implicit none
-
 
     integer, parameter :: nap = 4
     !      integer nqa,nqb
@@ -10813,7 +10810,6 @@ subroutine evu1r( igrad, r, v, dvdr )
 
     implicit none
 
-
     double precision, parameter :: de   = 0.17596055d0
     double precision, parameter :: re   = 1.93206106d0
     double precision, parameter :: beta = 0.63822703d0
@@ -10943,7 +10939,6 @@ subroutine evu2r( igrad, r, v, dvdr )
     !**********************************************************************
 
     implicit none
-
 
     double precision, parameter :: alpha = 0.67269344d0
     double precision, parameter :: de    = 0.41866243d0
@@ -11230,7 +11225,6 @@ subroutine evubm( igrad, natm, x, y, z, ubm, dubmdx )
 
     implicit none
 
-
     double precision, parameter :: b     = 6.693126d1
     double precision, parameter :: alpha = 1.894454d0
 
@@ -11416,7 +11410,6 @@ subroutine evuij( nap, natm, igrad, ir, t, dtdr, x, y, z, u12, u13, u23, &
     !        write(*,'(A,I2,A,F8.4)') 'qtc(',i,') = ',qtc(i)*180.d0/pi
     !      enddo
     ! End
-
 
     !Add by J. Zheng
     !      stc(:) = 0d0
@@ -11646,7 +11639,6 @@ subroutine evu13to( r, phi, u13to, d13dph, d13dr )
     data a3/-0.082676d0,-0.021770d0,0.0d0/
     data a5/0.053915d0,-0.008539d0,.0d0/
 
-
     double precision :: alpha1(ngf),alpha3(ngf),alpha5(ngf)
     data alpha1/0.2956970d1,0.4695508d1,0.1167016d1/
     data alpha3/0.5029657d1,0.8744002d1,0.0d0/
@@ -11722,7 +11714,6 @@ subroutine evu23to( r, phi, u23to, d23dph, d23dr )
     data a2/0.016924d0/
     data a4/0.007145d0/
     data a6/0.003113d0/
-
 
     double precision :: alpha2(ngf),alpha4(ngf),alpha6(ngf)
     data alpha2/0.10841076d2/
@@ -11803,7 +11794,6 @@ subroutine evintcoord( nbl, ibl, nba, iba, nto, ito, noop, ioop, &
     implicit none
 
     double precision :: bndang, bndlen, dihedr, oopba1
-
 
     integer, parameter          :: maxint = 1000
     double precision, parameter :: btoa   = 0.5291772192d0
@@ -11946,7 +11936,6 @@ subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
         bm(irow,3*j)   = eij(3)
     enddo
 
-
     ! Evaluate the B matrix contributed from bendings
     do ijk=1,nba
         irow = irow+1
@@ -11998,7 +11987,6 @@ subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
         sijk = sin(aijk)
         cjkl = cos(ajkl)
         sjkl = sin(ajkl)
-
 
         eij(1) = (x(j)-x(i))/rij
         eij(2) = (y(j)-y(i))/rij
@@ -12139,7 +12127,6 @@ double precision function bndlen( i, j, x, y, z )
         write(*,'(I3,3F18.12)') j,x(j),y(j),z(j)
         stop
     endif
-
 
 end function bndlen
 !> @brief Evaluate bndang for the PHOH_APRP potential.
@@ -12349,7 +12336,6 @@ subroutine xprod1( x1, x2, x3 )
     !***********************************************************************
 
     implicit none
-
 
     double precision :: x1(3),x2(3),x3(3)
 
