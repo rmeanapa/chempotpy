@@ -30,6 +30,7 @@ SUPPORT_SOURCES = {
 CORE_FORTRAN_ROOT = REPOSITORY_ROOT / "chempotpy" / "core" / "fortran"
 CORE_MODULE_SOURCES = {
     "chempotpy_geometry": CORE_FORTRAN_ROOT / "chempotpy_geometry.f90",
+    "chempotpy_h3_basis": CORE_FORTRAN_ROOT / "chempotpy_h3_basis.f90",
     "chempotpy_kinds": CORE_FORTRAN_ROOT / "chempotpy_kinds.f90",
     "chempotpy_legacy_coordinates": (
         CORE_FORTRAN_ROOT / "chempotpy_legacy_coordinates.f90"

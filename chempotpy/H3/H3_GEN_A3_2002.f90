@@ -252,15 +252,14 @@ end subroutine prepot
 !> @brief Evaluate prepota3 for the H3_GEN_A3_2002 potential.
 subroutine prepota3
     use a3data, only: beta, eshift, rnought, xlin1, xlin2, xlin3, xlin4
+    use chempotpy_h3_basis, only: get_h3_basis_term, initialize_h3_basis
     implicit none
 
     double precision :: ald, bb, betad, damper, eee, epscem, epslon, es1, es2, es3, etrip1, etrip2, &
         & etrip3, q1, q2, q3, r1x, r2x, r3x, rdamp1, rdamp2, rdamp3, rho1, rho2, rho3, rprod, sum1, &
         & sum2, sum3, sum4, v, vlondon, warp, xj, xj1, xj2, xj3, xjs
-    integer :: ii, iind, ipar, it, jind, kind, maxi, maxi2, maxi2a, maxi2b
+    integer :: coefficient_index, first_power, ii, it, maxi2a, maxi2b, second_power, third_power
     save
-    integer, parameter :: n2 = 5000
-    common /indy/iind(n2),jind(n2),kind(n2),ipar(n2),maxi,maxi2
     double precision :: rho1t(0:12),rho2t(0:12),rho3t(0:12)
 
     write(6,*)' Using A3 H3 PES of 8/15/01'
@@ -272,14 +271,7 @@ subroutine prepota3
     ald    = 0.02d0
     betad  = 0.72d0
 
-    maxi2 = 0
-    maxi  = 0
-    call indexa3(12,12)
-    maxi2a = maxi2
-
-    maxi = 0
-    call indexa3(11,11)
-    maxi2b = maxi2-maxi2a
+    call initialize_h3_basis( 12, 11, maxi2a, maxi2b )
     return
 
     entry pota3(r1x,r2x,r3x,eee)
@@ -333,105 +325,23 @@ subroutine prepota3
     enddo
 
     do ii=1,maxi2a
-        rprod = rho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
-        sum1  = sum1+xlin1(ipar(ii))*rprod
-        sum2  = sum2+xlin2(ipar(ii))*rprod
+        call get_h3_basis_term( ii, first_power, second_power, third_power, coefficient_index )
+        rprod = rho1t(third_power)*rho2t(second_power)*rho3t(first_power)
+        sum1  = sum1+xlin1(coefficient_index)*rprod
+        sum2  = sum2+xlin2(coefficient_index)*rprod
     enddo
 
     do ii=maxi2a+1,maxi2a+maxi2b
-        rprod = rho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
-        sum3  = sum3+xlin3(ipar(ii))*rprod
-        sum4  = sum4+xlin4(ipar(ii))*rprod
+        call get_h3_basis_term( ii, first_power, second_power, third_power, coefficient_index )
+        rprod = rho1t(third_power)*rho2t(second_power)*rho3t(first_power)
+        sum3  = sum3+xlin3(coefficient_index)*rprod
+        sum4  = sum4+xlin4(coefficient_index)*rprod
     enddo
 
     eee = v+damper*(sum1+sum2*bb+sum3*warp+sum4*bb*warp)
 
 end subroutine prepota3
 
-!> @brief Evaluate indexa3 for the H3_GEN_A3_2002 potential.
-subroutine indexa3( mbig, mtop )
-    implicit none
-
-    integer            :: i, iind, ipar, isum, j, jind, k, kind, l, l2, maxi, maxi2, mbig, mtop
-    integer, parameter :: n2 = 5000
-    !     calculate the fitting indices for A3 symmetry
-    common /indy/iind(n2),jind(n2),kind(n2),ipar(n2),maxi,maxi2
-
-    l  = maxi2
-    l2 = maxi
-
-    do  i=0,min(mtop,mbig)
-        do  j=i,min(mtop,mbig)
-            do  k=j,min(mtop,mbig)
-                isum = i+j+k
-                if(isum.le.mbig)then
-                    if(((isum-i).gt.0).and.((isum-j).gt.0).and. &
-                        & ((isum-k).gt.0))then
-                    l2      = l2+1
-                    l       = l+1
-                    ipar(l) = l2
-                    iind(l) = i
-                    jind(l) = j
-                    kind(l) = k
-                    if(i.ne.j)then
-                        if(j.ne.k)then
-                            l       = l+1
-                            ipar(l) = l2
-                            iind(l) = i
-                            jind(l) = k
-                            kind(l) = j
-                            l       = l+1
-                            ipar(l) = l2
-                            iind(l) = j
-                            jind(l) = i
-                            kind(l) = k
-                            l       = l+1
-                            ipar(l) = l2
-                            iind(l) = j
-                            jind(l) = k
-                            kind(l) = i
-                            l       = l+1
-                            ipar(l) = l2
-                            iind(l) = k
-                            jind(l) = i
-                            kind(l) = j
-                            l       = l+1
-                            ipar(l) = l2
-                            iind(l) = k
-                            jind(l) = j
-                            kind(l) = i
-                        else
-                            l       = l+1
-                            ipar(l) = l2
-                            iind(l) = j
-                            jind(l) = i
-                            kind(l) = k
-                            l       = l+1
-                            ipar(l) = l2
-                            iind(l) = j
-                            jind(l) = k
-                            kind(l) = i
-                        endif
-                    elseif (j.ne.k)then
-                        l       = l+1
-                        ipar(l) = l2
-                        iind(l) = j
-                        jind(l) = k
-                        kind(l) = i
-                        l       = l+1
-                        ipar(l) = l2
-                        iind(l) = k
-                        jind(l) = j
-                        kind(l) = i
-                    endif
-                endif
-                endif
-            enddo
-        enddo
-    enddo
-    maxi  = l2
-    maxi2 = l
-end subroutine indexa3
 
 !> @brief Evaluate trip for the H3_GEN_A3_2002 potential.
 subroutine trip( r, v )

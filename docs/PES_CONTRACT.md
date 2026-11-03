@@ -51,6 +51,8 @@ The maintained bundled core currently contains:
   their original default-real rounding behavior.
 - `chempotpy_geometry`: Cartesian distance, three-component dot product, angle
   cosine, and symmetric distance-matrix operations.
+- `chempotpy_h3_basis`: private symmetric-polynomial index storage and a
+  procedural initialization/lookup API for the H3 2002 fit family.
 - `chempotpy_legacy_coordinates`: explicit-argument implementations of the
   historical POTLIB Cartesian input and internal-coordinate setup algorithms.
 - `chempotpy_neural_network_io`: shared parsing of neural-network headers.
@@ -174,11 +176,12 @@ structural formatter used during migration.
   conversion behavior were preserved. Descriptive renaming and algorithmic
   restructuring remain separate changes that require their own numerical
   review.
-- `COMMON` removal is intentionally incomplete: 18,493 active declarations
-  remain in 163 sources, primarily POTLIB families whose `BLOCK DATA` state and
+- `COMMON` removal is intentionally incomplete: 18,485 active declarations
+  remain in 159 sources, primarily POTLIB families whose `BLOCK DATA` state and
   aliased layouts must be migrated together. H4O2 and CH3OH now keep their
-  mutable PES state private to modules, H3Cl uses explicit saved locals, and 30
-  dead parallel-control blocks have been removed.
+  mutable PES state private to modules, H3Cl uses explicit saved locals, the
+  four H3 2002 fits use the private bundled basis-index module, and 30 dead
+  parallel-control blocks have been removed.
 
 The migration utilities are retained under `scripts/`: the fixed-form converter,
 compiler-assisted explicit-type inserter, structural formatter, module API
