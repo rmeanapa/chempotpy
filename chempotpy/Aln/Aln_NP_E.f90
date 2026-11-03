@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_NP_E potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Embedded atom
     !   Common name:                   NP-E
@@ -68,15 +65,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms (input)
 
     implicit none
-
     double precision :: a, alp1, alp2, b1, b2, delta, dx, dy, dz, e1, e2, ef, em1, &
         & em2, f0, f2, h, psiarg, psicut, q1, q2, q3, r1, r2, r3, r4, rc, rho, rhobar, rr, v, v2, x, &
         & xksum, y, z
     integer                     :: i, j, maxatom, natom
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-    dimension x(maxatom),y(maxatom),z(maxatom)
-
+    dimension x(maxatom), y(maxatom), z(maxatom)
     rc    = 6.21230561520981794/autoang
     h     = 1.23419121131286391/autoang
     e1    = 323.306599351550119/autoev
@@ -119,10 +114,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !      q3 = -15.30493d0   /autoev
 
     v = 0.d0
-    do 2 i=1,natom
+    do 2 i=1, natom
         v2     = 0.d0
         rhobar = 0.d0
-        do 3 j=1,natom
+        do 3 j=1, natom
             if (i.eq.j) go to 3
             dx = x(i)-x(j)
             dy = y(i)-y(j)
@@ -135,7 +130,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 psicut = 0.d0
             else
                 psicut = psiarg**4/(1.d0+psiarg**4)
-            endif
+            end if
             em1 = dexp(-2.d0*alp1*(rr-r1))-2.d0*dexp(-alp1*(rr-r1))
             em2 = dexp(-2.d0*alp2*(rr-r2))-2.d0*dexp(-alp2*(rr-r2))
             v2  = v2 + (e1*em1+e2*em2+delta)*psicut

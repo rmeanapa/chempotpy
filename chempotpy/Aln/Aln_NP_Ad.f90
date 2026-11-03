@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_NP_Ad potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Extended Rydberg with Screening and Coordination Number
     !   Common name:                   NP-A
@@ -84,7 +81,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !   REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.
     !
     implicit none
-
     double precision :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, bu2b, &
         & co, cob, cz1, cz2, d1_p, d1_w, d2_p, d2_v, d3_v, d4_b, d4_ba, d4_bb, d4_v, d5_b, d5_v, &
         & d6_b, d6_b1, d7_b, d7_v, d8_b1, d8_b2, dcobdrr, de, deb, deebdrr, dpolybdrr, dtmpbdrr, du2, &
@@ -94,12 +90,11 @@ subroutine pot( x, y, z, v, natom, maxatom )
     integer                     :: i, j, k, l, maxatom, natom
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-    dimension x(maxatom),y(maxatom),z(maxatom)
-    double precision :: gxs(maxatom),gys(maxatom),gzs(maxatom), &
-        & gxgcorr(maxatom,maxatom),gygcorr(maxatom,maxatom), &
-        & gzgcorr(maxatom,maxatom),gcorr(maxatom)
-    double precision :: dvdy(maxatom),dvdz(maxatom),dvdx(maxatom)
-
+    dimension x(maxatom), y(maxatom), z(maxatom)
+    double precision :: gxs(maxatom), gys(maxatom), gzs(maxatom), &
+        & gxgcorr(maxatom, maxatom), gygcorr(maxatom, maxatom), &
+        & gzgcorr(maxatom, maxatom), gcorr(maxatom)
+    double precision :: dvdy(maxatom), dvdz(maxatom), dvdx(maxatom)
     ! Nanoparticle parameters (Ref. 2)
     !       two-body interaction
     de  = 1.71013678553981441 / autoev
@@ -151,7 +146,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 gxs(k) = 0.0d0
                 gys(k) = 0.0d0
                 gzs(k) = 0.0d0
-            enddo
+            end do
             s = 0.d0
             do 512 l = 1, natom
                 if (l .eq. j .or. l .eq. i) goto 512
@@ -241,7 +236,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 dvdx(k) = dvdx(k) + d1_p*tmpb*gxs(k)
                 dvdy(k) = dvdy(k) + d1_p*tmpb*gys(k)
                 dvdz(k) = dvdz(k) + d1_p*tmpb*gzs(k)
-            enddo
+            end do
 
             v = v + tmpb * d2_v
         515 continue
@@ -251,10 +246,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
     g1e = dexp(g1)
     do 20 i = 1, natom
         do j = 1, natom
-            gxgcorr(j,i) = 0.0d0
-            gygcorr(j,i) = 0.0d0
-            gzgcorr(j,i) = 0.0d0
-        enddo
+            gxgcorr(j, i) = 0.0d0
+            gygcorr(j, i) = 0.0d0
+            gzgcorr(j, i) = 0.0d0
+        end do
         gcorr(i) = 0.d0
         do 21 j = 1, natom
             if (i .eq. j) goto 21
@@ -265,21 +260,21 @@ subroutine pot( x, y, z, v, natom, maxatom )
             d2_v = sqrt(d1_w)
             rij  = d2_v
             if (rij .ge. g2) goto 21
-            d3_v         = 1d0 - rij / g2
-            d4_v         = (-g1) / d3_v
-            d4_b         = (-((-d4_v) / d3_v)) * (1.0d0 / g2)
-            d1_w         = d4_v
-            d2_v         = dexp(d1_w)
-            d1_p         = d2_v
-            dum          = g1e*d1_p*d4_b/rij
-            term         = d2_v
-            gxgcorr(i,i) = dum*(x(i)-x(j)) + gxgcorr(i,i)
-            gxgcorr(j,i) = -dum*(x(i)-x(j)) + gxgcorr(j,i)
-            gygcorr(i,i) = dum*(y(i)-y(j)) + gygcorr(i,i)
-            gygcorr(j,i) = -dum*(y(i)-y(j)) + gygcorr(j,i)
-            gzgcorr(i,i) = dum*(z(i)-z(j)) + gzgcorr(i,i)
-            gzgcorr(j,i) = -dum*(z(i)-z(j)) + gzgcorr(j,i)
-            gcorr(i)     = gcorr(i) + term
+            d3_v          = 1d0 - rij / g2
+            d4_v          = (-g1) / d3_v
+            d4_b          = (-((-d4_v) / d3_v)) * (1.0d0 / g2)
+            d1_w          = d4_v
+            d2_v          = dexp(d1_w)
+            d1_p          = d2_v
+            dum           = g1e*d1_p*d4_b/rij
+            term          = d2_v
+            gxgcorr(i, i) = dum*(x(i)-x(j)) + gxgcorr(i, i)
+            gxgcorr(j, i) = -dum*(x(i)-x(j)) + gxgcorr(j, i)
+            gygcorr(i, i) = dum*(y(i)-y(j)) + gygcorr(i, i)
+            gygcorr(j, i) = -dum*(y(i)-y(j)) + gygcorr(j, i)
+            gzgcorr(i, i) = dum*(z(i)-z(j)) + gzgcorr(i, i)
+            gzgcorr(j, i) = -dum*(z(i)-z(j)) + gzgcorr(j, i)
+            gcorr(i)      = gcorr(i) + term
         21 continue
         gcorr(i) = gcorr(i) * g1e
     20 continue
@@ -319,7 +314,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 cz1  = 0.d0
                 d2_v = 0.d0
                 d1_p = 0.d0
-            endif
+            end if
             d3_v  = 1d0 + d2_v
             d4_ba = -d1_p / d3_v**2
             es1   = 1d0 / d3_v
@@ -334,7 +329,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 cz2  = 0.d0
                 d2_v = 0.d0
                 d1_p = 0.d0
-            endif
+            end if
             d3_v  = 1d0 + d2_v
             d4_v  = 1d0 / d3_v
             d4_bb = (-d4_v) / d3_v * d1_p
@@ -358,10 +353,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dtmpbdrr  = 0.5d0*deb*(eeb*polyb*dcobdrr+eeb*dpolybdrr*cob +deebdrr*polyb*cob)
 
             do k = 1, natom
-                dvdx(k) = dvdx(k) - tmpb*(tt2*gxgcorr(k,j)+tt1*gxgcorr(k,i))/gzero
-                dvdy(k) = dvdy(k) - tmpb*(tt2*gygcorr(k,j)+tt1*gygcorr(k,i))/gzero
-                dvdz(k) = dvdz(k) - tmpb*(tt2*gzgcorr(k,j)+tt1*gzgcorr(k,i))/gzero
-            enddo
+                dvdx(k) = dvdx(k) - tmpb*(tt2*gxgcorr(k, j)+tt1*gxgcorr(k, i))/gzero
+                dvdy(k) = dvdy(k) - tmpb*(tt2*gygcorr(k, j)+tt1*gygcorr(k, i))/gzero
+                dvdz(k) = dvdz(k) - tmpb*(tt2*gzgcorr(k, j)+tt1*gzgcorr(k, i))/gzero
+            end do
             dvdx(i) = dvdx(i)+tmpb*(tt2+tt1)*gdum/gzero*(x(i)-x(j))
             dvdx(j) = dvdx(j)-tmpb*(tt2+tt1)*gdum/gzero*(x(i)-x(j))
             dvdy(i) = dvdy(i)+tmpb*(tt2+tt1)*gdum/gzero*(y(i)-y(j))
@@ -422,7 +417,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 d1_p = d2_v
                 g_co = d1_p * d6_b * g_rr
                 co   = d2_v
-            endif
+            end if
             d2_v    = de * ee
             d4_v    = d2_v * poly
             d5_b    = co * d2_v

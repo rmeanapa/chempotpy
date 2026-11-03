@@ -1,8 +1,8 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate pes for the AlmHn_VBO1 potential.
 subroutine pes( xyz, nal, nh, natoms, igrad, p, g, d )
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, intent(in)           :: nal, nh, natoms
@@ -10,39 +10,35 @@ subroutine pes( xyz, nal, nh, natoms, igrad, p, g, d )
     integer, intent(in)           :: igrad
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: cx(natoms), cy(natoms), cz(natoms)
-    double precision :: v
-    character(len=2) :: symbol(natoms)
-    integer          :: istate, iatom
-
+    double precision              :: cx(natoms), cy(natoms), cz(natoms)
+    double precision              :: v
+    character(len=2)              :: symbol(natoms)
+    integer                       :: istate, iatom
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
-    do iatom=1,natoms
-        cx(iatom) = xyz(iatom,1)/0.529177211
-        cy(iatom) = xyz(iatom,2)/0.529177211
-        cz(iatom) = xyz(iatom,3)/0.529177211
-    enddo
+    do iatom=1, natoms
+        cx(iatom) = xyz(iatom,1)/legacy_bohr_to_angstrom
+        cy(iatom) = xyz(iatom,2)/legacy_bohr_to_angstrom
+        cz(iatom) = xyz(iatom,3)/legacy_bohr_to_angstrom
+    end do
 
-    do iatom=1,nal
+    do iatom=1, nal
         symbol(iatom) = 'Al'
-    enddo
-    do iatom=1,nh
+    end do
+    do iatom=1, nh
         symbol(iatom+nal) = 'H'
-    enddo
+    end do
 
     call alhpot(cx, cy, cz, v, natoms, 10000, symbol)
 
     if (igrad==0) then
-        do istate=1,nstates
-            p(istate) = v*27.211386
-        enddo
+        do istate=1, nstates
+            p(istate) = v*legacy_hartree_to_electronvolt
+        end do
     else
-        write (*,*) 'Only energy is available'
-    endif
+        write (*, *) 'Only energy is available'
+    end if
 
 end subroutine pes
 
@@ -78,7 +74,6 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     ! This version of the code corrects two typos around lines 64 and 65. Ja
 
     implicit none
-
     double precision :: add, c1, c1_al, c1_h, c1_hal, c2, c2_al, c2_h, c2_hal, c3, &
         & c3_al, c3_h, c4, c4_al, c4_h, del1, den1, den2, den3, den4, dx, dy, dz, en, en1, en2, esn, &
         & esn_al, esn_h, fa, gam1_al, gam1_h, gam1_hal, gam2_al, gam2_h, gam2_hal, gam3_al, gam3_alh, &
@@ -88,15 +83,13 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
     character(len=2)            :: symbol(maxatom)
-    dimension x(maxatom),y(maxatom),z(maxatom),r(maxatom,maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom), r(maxatom,maxatom)
     dimension id(maxatom)
-    double precision :: b(4,maxatom,maxatom),sigma(4,maxatom,maxatom)
+    double precision :: b(4,maxatom,maxatom), sigma(4,maxatom,maxatom)
     double precision :: cn(4,maxatom,maxatom), gam(4,maxatom,maxatom)
-
     !   gam1_h to gam4_h are gammaij in Eq. (1) of Ref. 1
     !   c1_h to c4_h are ci,1 to ci,4 in Eqs. (6) and (7)
     !   esn_h is the exponent of Vi in Eq. (6)
-
     gam1_h = 2.7292
     gam2_h = 8.8100
     gam3_h = 16.1462
@@ -143,7 +136,7 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
 
     !   Determine which atoms in the data file are Aluminum and which Hydrog
 
-    do i=1,natom
+    do i=1, natom
         if((symbol(i).eq.'H ').or.(symbol(i).eq.'h ').or. &
             & (symbol(i).eq.' H').or.(symbol(i).eq.' h'))then
         id(i) = 1
@@ -151,16 +144,16 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
             & (symbol(i).eq.'al').or.(symbol(i).eq.'aL'))then
         id(i) = 2
     else
-        write(13,*)'Atomic symbol ',symbol(i),' undefined. Stopping.'
+        write(13, *)'Atomic symbol ', symbol(i), ' undefined. Stopping.'
         stop "Undefined atomic symbol."
-        endif
-    enddo
+        end if
+    end do
 
     !    Calculate all internuclear distances
 
-    do 1 i=1,natom-1
+    do 1 i=1, natom-1
         r(i,i) = 0.d0
-        do 1 j=i+1,natom
+        do 1 j=i+1, natom
             dx     = x(i)-x(j)
             dy     = y(i)-y(j)
             dz     = z(i)-z(j)
@@ -172,9 +165,9 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
 
     en1 = 0d0
     en2 = 0d0
-    do 2 i=1,natom
+    do 2 i=1, natom
         v1 = 0d0
-        do 3 j=1,natom
+        do 3 j=1, natom
             if(i.eq.j)go to 3
             if((id(i).eq.1).and.(id(j).eq.1))then
                 del1 = 5.29/autoang
@@ -260,7 +253,7 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
                 den4      = 1d0-(r1/del1)**en
                 cn(4,i,j) = dexp(gam(4,i,j)/den4)
 
-            endif
+            end if
 
             !   Calculate bij according to Eq. (1)
 
@@ -273,17 +266,17 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
                 fa       = c1*b(1,i,j)+c2*b(2,i,j)
                 v1       = v1+fa
             else
-                do k=1,4
+                do k=1, 4
                     b(k,i,j) = 0.0d0
-                enddo
-            endif
+                end do
+            end if
         3 continue
         en1 = en1+v1
     2 continue
 
     !    Calculate en2 which corresponds to the last term in Eq. (6) (pure A
 
-    do 4 i=1,natom
+    do 4 i=1, natom
         if(id(i).eq.1)then
             c3  = c3_h
             c4  = c4_h
@@ -292,10 +285,10 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
             c3  = c3_al
             c4  = c4_al
             esn = esn_al
-        endif
+        end if
         vi3 = 0.0d0
         vi4 = 0.0d0
-        do 5 j=1,natom
+        do 5 j=1, natom
             if(i.eq.j)goto 5
             vi3 = vi3+c3*sigma(3,i,j)*b(3,i,j)
             vi4 = vi4+c4*sigma(4,i,j)*b(4,i,j)

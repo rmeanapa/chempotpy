@@ -1,104 +1,92 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate dpem for the NaFH_LEPS_TTYPP2_1998_DPEM potential.
 subroutine dpem( x, igrad, u, ug )
-
+    use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
     implicit none
-
     ! number of electronic state
-    integer, parameter :: nstates = 2
-    integer, parameter :: natoms  = 3
-
+    integer, parameter            :: nstates = 2
+    integer, parameter            :: natoms  = 3
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-
-    double precision :: d, g
-    integer          :: iatom, idir, nder
-    double precision :: nt, r(1,3), r2(3), v(1)
-    double precision :: p(nstates)
-    double precision :: u11(1), u12(1), u22(1)
-    double precision :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
-    double precision :: dudr(nstates,nstates,3)
-    double precision :: dudx(nstates,nstates,9)
-    double precision :: t(nstates,nstates)
-    double precision :: tmpmat(nstates,nstates)
-    double precision :: tx(9), drdx(3,9)
-    logical, save    :: first_time_data=.true.
-    integer          :: i, j, k, l
-
+    double precision              :: d, g
+    integer                       :: iatom, idir, nder
+    double precision              :: nt, r(1,3), r2(3), v(1)
+    double precision              :: p(nstates)
+    double precision              :: u11(1), u12(1), u22(1)
+    double precision              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
+    double precision              :: dudr(nstates,nstates,3)
+    double precision              :: dudx(nstates,nstates,9)
+    double precision              :: t(nstates,nstates)
+    double precision              :: tmpmat(nstates,nstates)
+    double precision              :: tx(9), drdx(3,9)
+    logical, save                 :: first_time_data=.true.
+    integer                       :: i, j, k, l
     !initialize
-    u = 0.d0
-    p = 0.d0
-    g = 0.d0
-    d = 0.d0
+    u = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
 
     nt = 1
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        enddo
-    enddo
+        end do
+    end do
     ! input cartesian is ClHH
-    r(1,1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
-    r(1,2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
-    r(1,3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
+    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
 
     nder = igrad
 
     if(first_time_data) then
         call prepot
         first_time_data = .false.
-    endif
+    end if
 
-    call pot(r,u11,de_u11,1,1)
-    call pot(r,u12,de_u12,1,2)
-    call pot(r,u22,de_u22,1,3)
-    u(1,1)      = u11(1)*27.211386
-    u(1,2)      = u12(1)*27.211386
-    u(2,1)      = u12(1)*27.211386
-    u(2,2)      = u22(1)*27.211386
+    call pot(r, u11, de_u11, 1, 1)
+    call pot(r, u12, de_u12, 1, 2)
+    call pot(r, u22, de_u22, 1, 3)
+    u(1,1)      = u11(1)*legacy_hartree_to_electronvolt
+    u(1,2)      = u12(1)*legacy_hartree_to_electronvolt
+    u(2,1)      = u12(1)*legacy_hartree_to_electronvolt
+    u(2,2)      = u22(1)*legacy_hartree_to_electronvolt
     dudr(1,1,:) = de_u11(:,1)*51.422067
     dudr(1,2,:) = de_u12(:,1)*51.422067
     dudr(2,1,:) = de_u12(:,1)*51.422067
     dudr(2,2,:) = de_u22(:,1)*51.422067
-    call diagonalize(nstates,u,p,t)
+    call diagonalize(nstates, u, p, t)
 
-    r2 = r(1,:)*0.529177211
+    r2 = r(1,:)*legacy_bohr_to_angstrom
     call evdrdx(tx, r2, drdx)
     dudx = 0.d0
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             dudx(:,:,i) = dudx(:,:,i)+dudr(:,:,j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j                  = (iatom-1)*3+idir
             ug(:,:,iatom,idir) = dudx(:,:,j)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the NaFH_LEPS_TTYPP2_1998_DPEM potential.
 subroutine evdrdx( x, r, drdx )
-
     implicit none
-
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-
-    integer :: i,j
-
+    integer                       :: i, j
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
+    do i=1, 3
+        do j=1, 9
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
@@ -126,27 +114,25 @@ end subroutine evdrdx
 !> @brief Evaluate diagonalize for the NaFH_LEPS_TTYPP2_1998_DPEM potential.
 subroutine diagonalize( n, a_ss, ev_s, u_ss )
     implicit none
-
     integer, intent(in)           :: n
     double precision, intent(in)  :: a_ss(n,n)
     double precision, intent(out) :: u_ss(n,n)
     double precision, intent(out) :: ev_s(n)
-    integer                       :: io,i
-    double precision,allocatable  :: work_d(:)
+    integer                       :: io, i
+    double precision, allocatable :: work_d(:)
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
-
     u_ss = a_ss
     if (first_time_diag) then
         lwork_d = -1
         allocate( work_d(2) )
-        call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    endif
+    end if
     allocate( work_d(lwork_d) )
-    call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
 !
@@ -154,11 +140,11 @@ end subroutine diagonalize
 subroutine prepot
     !
     !
-    !   System:          NaFH
-    !   Common name:     NaFH surface fit A
-    !   Number of derivatives: 1
+    !   System:                        NaFH
+    !   Common name:                   NaFH surface fit A
+    !   Number of derivatives:         1
     !   Number of electronic surfaces: 2
-    !   Interface: 3-2V
+    !   Interface:                     3-2V
 
     !   References:  M.S. Topaler, D.G. Truhlar, X.Y. Chang, P. Piecuch,
     !                and J.C. Polanyi, J. Chem. Phys. 108, 5349 (1998).
@@ -179,15 +165,14 @@ subroutine prepot
     !
     !
     implicit none
-
-    common /com_para/ g_myrank,g_nprocs
-    integer :: g_myrank,g_nprocs
-
+    common /com_para/ g_myrank, g_nprocs
+    integer :: g_myrank, g_nprocs
     call prepot11
     call prepot12
     call prepot22
 
 end subroutine prepot
+
 !
 !> @brief Evaluate pot for the NaFH_LEPS_TTYPP2_1998_DPEM potential.
 subroutine pot( r, e, de, nt, nsurf )
@@ -218,22 +203,20 @@ subroutine pot( r, e, de, nt, nsurf )
     !                          in the reactant channel
     !
     implicit none
-
     double precision :: de, e, r
     integer          :: nsurf, nt
-
-    dimension r(nt,3),e(nt)
+    dimension r(nt,3), e(nt)
     dimension de(3,nt)
-
     if (nsurf .eq. 1) then
-        call pot11(r,e,de,nt)
+        call pot11(r, e, de, nt)
     else if (nsurf .eq. 2) then
-        call pot12(r,e,de,nt)
+        call pot12(r, e, de, nt)
     else
-        call pot22(r,e,de,nt)
+        call pot22(r, e, de, nt)
     end if
 
 end subroutine pot
+
 !
 !
 !  U11 surface - lower diabatic surface
@@ -241,7 +224,6 @@ end subroutine pot
 !> @brief Evaluate prepot11 for the NaFH_LEPS_TTYPP2_1998_DPEM potential.
 subroutine prepot11
     implicit none
-
     double precision :: abs1, ac, acut1, adip1, ads1, af1, af2, al2, al2n, aln0, aln0n1, aln0n2, amf, &
         & amh, amna, amu, anorm, ars1, asmall, axs1, bc, c2a, c2b, c2c, cevau, chf, cnf, cnf1, cog, &
         & coul1, coul2, coul3, cplg2, csb, danormd1, danormd2, danormd3, dcd1, dcd2, dcd3, dcl1d1, &
@@ -251,23 +233,20 @@ subroutine prepot11
         & exch3, hlp, hlp1, hlp11, hlp2, hlp22, hlp23, hlp3, r, r1s, r2s, r3s, rac2, rcut1, rdip1, &
         & rehf, renf, rn0n, rnag2, rootw, s1, s2, s3, surf, t1, t2, t3, una2p, w, y, y2, y3
     integer :: i, l, l1, l2, nt
-    dimension r(nt,3),e(nt)
+    dimension r(nt,3), e(nt)
     dimension de(3,nt)
-    common /com_para/ g_myrank,g_nprocs
-    integer :: g_myrank,g_nprocs
-
-    save /onetwo/,/uone/,/angular1/,rac2,af1,af2
-
-    common/onetwo/cnf(6),cnf1(5),chf(6),bc(0:5), &
-        & ads1,ars1,abs1,amh,amf,amna,amu,una2p,asmall,cevau, &
-        & denf,renf,dehf,rehf
-    common/uone/y(4,3,4),c2a(4),c2b(4),c2c(4),dip1(4), &
-        & adip1(4),rdip1(4),acut1(4),rcut1(4), &
-        & dipn(4),al2(4),aln0(4), &
-        & dipnn(4),al2n(4),aln0n1(4),aln0n2(4),rn0n(4)
+    common /com_para/ g_myrank, g_nprocs
+    integer :: g_myrank, g_nprocs
+    save /onetwo/, /uone/, /angular1/, rac2, af1, af2
+    common/onetwo/cnf(6), cnf1(5), chf(6), bc(0:5), &
+        & ads1, ars1, abs1, amh, amf, amna, amu, una2p, asmall, cevau, &
+        & denf, renf, dehf, rehf
+    common/uone/y(4, 3, 4), c2a(4), c2b(4), c2c(4), dip1(4), &
+        & adip1(4), rdip1(4), acut1(4), rcut1(4), &
+        & dipn(4), al2(4), aln0(4), &
+        & dipnn(4), al2n(4), aln0n1(4), aln0n2(4), rn0n(4)
     common/angular1/ac(4)
     !-----------------------------------------------------------------------
-
     rac2 = 1.d0/dsqrt(2.d0)
 
     af1 = amh/(amf+amh)
@@ -275,9 +254,9 @@ subroutine prepot11
 
     return
     !
-    entry pot11(r,e,de,nt)
+    entry pot11(r, e, de, nt)
 
-    do 10 i=1,nt
+    do 10 i=1, nt
 
         r1s      = r(i,1)*r(i,1)
         r2s      = r(i,2)*r(i,2)
@@ -333,20 +312,20 @@ subroutine prepot11
         danormd3 = 0.d0
         do 20 l = l1, l2
 
-            hlp1  = y(1,1,l)*dexp(-y(2,1,l)*r(i,1))
-            hlp2  = y(3,1,l)*dexp(-y(4,1,l)*r(i,1))
+            hlp1  = y(1, 1, l)*dexp(-y(2, 1, l)*r(i,1))
+            hlp2  = y(3, 1, l)*dexp(-y(4, 1, l)*r(i,1))
             t1    = hlp1+hlp2+s1
-            dt1d1 = -y(2,1,l)*hlp1-y(4,1,l)*hlp2+ds1d1
+            dt1d1 = -y(2, 1, l)*hlp1-y(4, 1, l)*hlp2+ds1d1
 
-            hlp1  = y(1,2,l)*dexp(-y(2,2,l)*r(i,2))
-            hlp2  = y(3,2,l)*dexp(-y(4,2,l)*r(i,2))
+            hlp1  = y(1, 2, l)*dexp(-y(2, 2, l)*r(i,2))
+            hlp2  = y(3, 2, l)*dexp(-y(4, 2, l)*r(i,2))
             t2    = hlp1+hlp2+s2
-            dt2d2 = -y(2,2,l)*hlp1-y(4,2,l)*hlp2+ds2d2
+            dt2d2 = -y(2, 2, l)*hlp1-y(4, 2, l)*hlp2+ds2d2
 
-            hlp1  = y(1,3,l)*dexp(-y(2,3,l)*r(i,3))
-            hlp2  = y(3,3,l)*dexp(-y(4,3,l)*r(i,3))
+            hlp1  = y(1, 3, l)*dexp(-y(2, 3, l)*r(i,3))
+            hlp2  = y(3, 3, l)*dexp(-y(4, 3, l)*r(i,3))
             t3    = hlp1+hlp2+s3
-            dt3d3 = -y(2,3,l)*hlp1-y(4,3,l)*hlp2+ds3d3
+            dt3d3 = -y(2, 3, l)*hlp1-y(4, 3, l)*hlp2+ds3d3
 
             coul1  = 0.5d0*(s1+t1)
             dcl1d1 = 0.5d0*(ds1d1+dt1d1)
@@ -380,17 +359,17 @@ subroutine prepot11
                 dsurfd1 = dcl1d1
             else
                 dsurfd1 = (dcl1d1-0.25d0*(dwd1+2.d0*cplg2*dcd1)/rootw)
-            endif
+            end if
             if( (dwd2+2.d0*cplg2*dcd2) .eq. 0.0d0 )then
                 dsurfd2 = dcl2d2
             else
                 dsurfd2 = (dcl2d2-0.25d0*(dwd2+2.d0*cplg2*dcd2)/rootw)
-            endif
+            end if
             if( (dwd3+2.d0*cplg2*dcd3) .eq. 0.0d0 )then
                 dsurfd3 = dcl3d3
             else
                 dsurfd3 = (dcl3d3-0.25d0*(dwd3+2.d0*cplg2*dcd3)/rootw)
-            endif
+            end if
 
             hlp1    = adip1(l)*(rnag2-rdip1(l))
             hlp2    = acut1(l)*(r(i,2)-rcut1(l))
@@ -421,7 +400,7 @@ subroutine prepot11
                 hlp2 = dexp(hlp2)
             else
                 hlp2 = 1.0d308
-            endif
+            end if
             hlp3    = dexp(-aln0n2(l)*(rnag2-rn0n(l)**2))
             hlp23   = 1.d0/(hlp2+hlp3)**2
             hlp11   = dtanh(hlp1)
@@ -468,13 +447,13 @@ subroutine prepot11
     !-----------------------------------------------------------------------
 
 end subroutine prepot11
+
 !
 !  U12 surface - coupling surface
 !
 !> @brief Evaluate prepot12 for the NaFH_LEPS_TTYPP2_1998_DPEM potential.
 subroutine prepot12
     implicit none
-
     double precision :: abs1, ads1, af1, af2, ahf, ahft, amf, amh, amna, amu, anaf, anaft, anah, &
         & anaht, ars1, asmall, bc, ccnf, ccnh, ccnha, ccnhi, ccnhi1, cevau, chf, cnf, cnf1, cstsq, &
         & dahftd1, dahftd2, dahftd3, danaftd1, danaftd2, danaftd3, danahtd1, danahtd2, danahtd3, &
@@ -484,30 +463,27 @@ subroutine prepot12
         & dunahd2, dunahd3, e, hlp, hlp1, hlp2, r, r13, r13t, r1s, r21, r21t, r23, r23t, r2s, r3s, &
         & rehf, renf, rnag2, sw1, sw21, sw23, una2p, unaf, unah, xpnh, xpnh1
     integer :: i, nt
-    dimension r(nt,3),e(nt)
+    dimension r(nt,3), e(nt)
     dimension de(3,nt)
-    common /com_para/ g_myrank,g_nprocs
-    integer :: g_myrank,g_nprocs
-
-    save /onetwo/,/ucoupl/,/ucoupl1/,/u12nah/,af1,af2
-
-    common/onetwo/cnf(6),cnf1(5),chf(6),bc(0:5), &
-        & ads1,ars1,abs1,amh,amf,amna,amu,una2p,asmall,cevau, &
-        & denf,renf,dehf,rehf
-    common/ucoupl/ahf(3),anaf(3),anah(3),r21(3),r23(3),r13(3)
-    common/ucoupl1/ccnf(4),ccnha(4),ccnhi(4),ccnhi1(4)
-    common/u12nah/xpnh,xpnh1
+    common /com_para/ g_myrank, g_nprocs
+    integer :: g_myrank, g_nprocs
+    save /onetwo/, /ucoupl/, /ucoupl1/, /u12nah/, af1, af2
+    common/onetwo/cnf(6), cnf1(5), chf(6), bc(0:5), &
+        & ads1, ars1, abs1, amh, amf, amna, amu, una2p, asmall, cevau, &
+        & denf, renf, dehf, rehf
+    common/ucoupl/ahf(3), anaf(3), anah(3), r21(3), r23(3), r13(3)
+    common/ucoupl1/ccnf(4), ccnha(4), ccnhi(4), ccnhi1(4)
+    common/u12nah/xpnh, xpnh1
     dimension ccnh(4)
-    dimension dccnhd2(4),dccnhd3(4)
-
+    dimension dccnhd2(4), dccnhd3(4)
     af1 = amh/(amf+amh)
     af2 = amf/(amf+amh)
 
     return
     !
-    entry pot12(r,e,de,nt)
+    entry pot12(r, e, de, nt)
 
-    do 10 i=1,nt
+    do 10 i=1, nt
 
         hlp1    = dexp(-xpnh*r(i,2)**2)
         hlp2    = dexp(-xpnh1*r(i,3)**2)
@@ -535,8 +511,8 @@ subroutine prepot12
         hlp     = 1.d0/(1.d0+ccnh(4)*r(i,1))
         unah    = dexp(-ccnh(1)-ccnh(2)*r(i,1)- ccnh(3)*hlp*r(i,1))
         dunahd1 = -unah*(ccnh(2)+ccnh(3)*hlp -ccnh(4)*hlp*hlp*ccnh(3)*r(i,1))
-        dunahd2 = -unah*(dccnhd2(1)+dccnhd2(2)*r(i,1) + dccnhd2(3)*r(i,1)*hlp-ccnh(3)*r(i,1)*r(i,1)*dccnhd2(4)*hlp*hlp)
-        dunahd3 = -unah*(dccnhd3(1)+dccnhd3(2)*r(i,1) + dccnhd3(3)*r(i,1)*hlp-ccnh(3)*r(i,1)*r(i,1)*dccnhd3(4)*hlp*hlp)
+        dunahd2 = -unah*(dccnhd2(1)+dccnhd2(2)*r(i,1) + dccnhd2(3)*r(i,1)*hlp-ccnh(3)*r(i,1)*r(i,1)*dccnhd2(4)* hlp*hlp)
+        dunahd3 = -unah*(dccnhd3(1)+dccnhd3(2)*r(i,1) + dccnhd3(3)*r(i,1)*hlp-ccnh(3)*r(i,1)*r(i,1)*dccnhd3(4)* hlp*hlp)
         !-----------------------------------------------------------------------
 
         r1s      = r(i,1)*r(i,1)
@@ -617,9 +593,11 @@ subroutine prepot12
         dsw23d2 = hlp1*(ahft+dahftd2*r(i,2)-danaftd2*r(i,3)-dr23td2)
         dsw23d3 = hlp1*(dahftd3*r(i,2)-anaft-danaftd3*r(i,3)-dr23td3)
 
-        e(i)    = unaf*sw1*sw23+unah*(1.d0-sw1)*sw21
-        de(1,i) = unaf*dsw1d1*sw23+unaf*sw1*dsw23d1 + dunahd1*(1.d0-sw1)*sw21-unah*dsw1d1*sw21 + unah*(1.d0-sw1)*dsw21d1
-        de(2,i) = unaf*dsw1d2*sw23+unaf*sw1*dsw23d2 + dunahd2*(1.d0-sw1)*sw21-unah*dsw1d2*sw21 + unah*(1.d0-sw1)*dsw21d2
+        e(i) = unaf*sw1*sw23+unah*(1.d0-sw1)*sw21
+        de(1,i) = unaf*dsw1d1*sw23+unaf*sw1*dsw23d1 + dunahd1*(1.d0-sw1)*sw21-unah*dsw1d1*sw21 + unah*(1.d0-sw1)* &
+            & dsw21d1
+        de(2,i) = unaf*dsw1d2*sw23+unaf*sw1*dsw23d2 + dunahd2*(1.d0-sw1)*sw21-unah*dsw1d2*sw21 + unah*(1.d0-sw1)* &
+            & dsw21d2
         de(3,i) = dunafd3*sw1*sw23+unaf*dsw1d3*sw23+unaf*sw1*dsw23d3 + dunahd3*(1.d0-sw1)*sw21-unah*dsw1d3*sw21 + &
             & unah* (1.d0-sw1)*dsw21d3
 
@@ -630,13 +608,13 @@ subroutine prepot12
     10 continue
 
 end subroutine prepot12
+
 !
 !  U22 surface - upper diabatic surface
 !
 !> @brief Evaluate prepot22 for the NaFH_LEPS_TTYPP2_1998_DPEM potential.
 subroutine prepot22
     implicit none
-
     double precision :: abs1, ac, acut2, acut2n, adip2, adip2n, ads1, af1, af2, al20, al20a, al20i, &
         & al20i1, al2a, aly, amf, amh, amna, amu, anorm, ars1, asmall, bc, c2a, c2b, c2c, cevau, chf, &
         & cnf, cnf1, cog, coul1, coul2, coul3, cplg2, csb, ctanh, cy, dal20, danormd1, danormd2, &
@@ -648,24 +626,21 @@ subroutine prepot22
         & r, r1s, r20, r20a, r20i, r2s, r3s, rac2, rcut2, rcut2n, rdip2, rdip2n, rehf, renf, rnag2, &
         & rootw, rr0a, rsi, ry, s1, s2, s2a, s3, surf, t1, t2, t3, una2p, w, y, y2, y3
     integer :: i, l, l1, l2, nt
-    dimension r(nt,3),e(nt)
+    dimension r(nt,3), e(nt)
     dimension de(3,nt)
-    common /com_para/ g_myrank,g_nprocs
-    integer :: g_myrank,g_nprocs
-
-    save /onetwo/,/utwo/,/angular2/,rac2,af1,af2
-
-    common/onetwo/cnf(6),cnf1(5),chf(6),bc(0:5), &
-        & ads1,ars1,abs1,amh,amf,amna,amu,una2p,asmall,cevau, &
-        & denf,renf,dehf,rehf
-    common/utwo/y(4,3,4),c2a(4),c2b(4),c2c(4),r20i(4), &
-        & r20a,al20i(4),al20i1(4),al20a,psi,rsi,al2a(4), &
-        & rr0a(4),dip2(4),adip2(4),rdip2(4),acut2(4), &
-        & rcut2(4),ry(4),aly(4),dy(4),dy1(4),dy2(4), &
-        & dip2n(4),adip2n(4),rdip2n(4),acut2n(4),rcut2n(4)
+    common /com_para/ g_myrank, g_nprocs
+    integer :: g_myrank, g_nprocs
+    save /onetwo/, /utwo/, /angular2/, rac2, af1, af2
+    common/onetwo/cnf(6), cnf1(5), chf(6), bc(0:5), &
+        & ads1, ars1, abs1, amh, amf, amna, amu, una2p, asmall, cevau, &
+        & denf, renf, dehf, rehf
+    common/utwo/y(4, 3, 4), c2a(4), c2b(4), c2c(4), r20i(4), &
+        & r20a, al20i(4), al20i1(4), al20a, psi, rsi, al2a(4), &
+        & rr0a(4), dip2(4), adip2(4), rdip2(4), acut2(4), &
+        & rcut2(4), ry(4), aly(4), dy(4), dy1(4), dy2(4), &
+        & dip2n(4), adip2n(4), rdip2n(4), acut2n(4), rcut2n(4)
     common/angular2/ac(4)
     !-----------------------------------------------------------------------
-
     rac2 = 1.d0/dsqrt(2.d0)
 
     af1 = amh/(amf+amh)
@@ -673,9 +648,9 @@ subroutine prepot22
     !
     return
     !
-    entry pot22(r,e,de,nt)
+    entry pot22(r, e, de, nt)
     !
-    do 10 i=1,nt
+    do 10 i=1, nt
 
         r1s      = r(i,1)*r(i,1)
         r2s      = r(i,2)*r(i,2)
@@ -730,10 +705,10 @@ subroutine prepot22
 
         do 20 l = l1, l2
 
-            hlp1  = y(1,1,l)*dexp(-y(2,1,l)*r(i,1))
-            hlp2  = y(3,1,l)*dexp(-y(4,1,l)*r(i,1))
+            hlp1  = y(1, 1, l)*dexp(-y(2, 1, l)*r(i,1))
+            hlp2  = y(3, 1, l)*dexp(-y(4, 1, l)*r(i,1))
             t1    = hlp1+hlp2+s1
-            dt1d1 = -y(2,1,l)*hlp1-y(4,1,l)*hlp2+ds1d1
+            dt1d1 = -y(2, 1, l)*hlp1-y(4, 1, l)*hlp2+ds1d1
 
             hlp  = al2a(l)*(r(i,3)+r(i,1)-rr0a(l))
             hlp1 = al2a(l)/(dcosh(hlp)**2)
@@ -752,12 +727,12 @@ subroutine prepot22
             al20  = al20i(l)+(al20i1(l)-al20i(l))*hlp + (al20a-al20i1(l))*ctanh
             dal20 = 0.5d0*(al20i1(l)-al20i(l))*hlp1 + (al20a-al20i1(l))*dctanh
 
-            hlp1  = y(1,2,l)*dexp(-y(2,2,l)*r(i,2))
-            hlp2  = dexp(-(y(4,2,l)+dy2(l)*ctanh)*r(i,2))
-            hlp3  = (y(3,2,l)+dy1(l)*ctanh)*hlp2
+            hlp1  = y(1, 2, l)*dexp(-y(2, 2, l)*r(i,2))
+            hlp2  = dexp(-(y(4, 2, l)+dy2(l)*ctanh)*r(i,2))
+            hlp3  = (y(3, 2, l)+dy1(l)*ctanh)*hlp2
             t2    = hlp1+hlp3
             dt2d1 = dy1(l)*dctanh*hlp2 - dy2(l)*dctanh*r(i,2)*hlp3
-            dt2d2 = -y(2,2,l)*hlp1-(y(4,2,l)+dy2(l)*ctanh)*hlp3
+            dt2d2 = -y(2, 2, l)*hlp1-(y(4, 2, l)+dy2(l)*ctanh)*hlp3
             dt2d3 = dt2d1
 
             hlp   = 0.5d0*(1.d0+dtanh(al20*(r(i,2)-r20)))
@@ -768,12 +743,12 @@ subroutine prepot22
             ds2d3 = ds2d1
 
             hlp   = aly(l)*(r(i,3)-ry(l))
-            cy    = y(2,3,l)+0.5d0*dy(l)*(1.d0+dtanh(hlp))
+            cy    = y(2, 3, l)+0.5d0*dy(l)*(1.d0+dtanh(hlp))
             dcyd3 = 0.5d0*dy(l)*aly(l)/(dcosh(hlp)**2)
-            hlp1  = y(1,3,l)*dexp(-cy*r(i,3))
-            hlp2  = y(3,3,l)*dexp(-y(4,3,l)*r(i,3))
+            hlp1  = y(1, 3, l)*dexp(-cy*r(i,3))
+            hlp2  = y(3, 3, l)*dexp(-y(4, 3, l)*r(i,3))
             t3    = hlp1+hlp2
-            dt3d3 = -(cy+dcyd3*r(i,3))*hlp1-y(4,3,l)*hlp2
+            dt3d3 = -(cy+dcyd3*r(i,3))*hlp1-y(4, 3, l)*hlp2
 
             coul1  = 0.5d0*(s1+t1)
             dcl1d1 = 0.5d0*(ds1d1+dt1d1)
@@ -864,224 +839,213 @@ end subroutine prepot22
 
 block data general
     implicit none
-
     double precision :: bc
-    double precision :: cnf,cnf1,chf
-    double precision :: amh,amf,amna,amu
-    double precision :: denf,renf,dehf,rehf
-    double precision :: ads1,ars1,abs1
-    double precision :: una2p,asmall,cevau
-
-    common/onetwo/cnf(6),cnf1(5),chf(6),bc(0:5), &
-        & ads1,ars1,abs1,amh,amf,amna,amu,una2p,asmall,cevau, &
-        & denf,renf,dehf,rehf
-    data amh/1.007825d0/,amf/18.998403d0/,amna/22.989767d0/, &
+    double precision :: cnf, cnf1, chf
+    double precision :: amh, amf, amna, amu
+    double precision :: denf, renf, dehf, rehf
+    double precision :: ads1, ars1, abs1
+    double precision :: una2p, asmall, cevau
+    common/onetwo/cnf(6), cnf1(5), chf(6), bc(0:5), &
+        & ads1, ars1, abs1, amh, amf, amna, amu, una2p, asmall, cevau, &
+        & denf, renf, dehf, rehf
+    data amh/1.007825d0/, amf/18.998403d0/, amna/22.989767d0/, &
         & amu/1822.8885d0/
-    data denf/4.3830525d0/,renf/3.6395d0/, &
-        & cnf/0.168364d0,2.29333d0,-0.848620d-1,-0.109707d-1, &
-        & 0.246582d-2,0.377012d0/
-    data cnf1/0.620115d0,0.694459d-1,0.757570d0,0.283055d0,2.69998d0/
-    data dehf/5.77096d0/,rehf/1.7328d0/,chf/0.441258d0,3.88056d0, &
-        & -1.27110d0,-1.37766d0,0.168186d0,2.07230d0/
-    data bc/-1.d0,0.d0,1.d0,2.d0,3.0,5.d0/
-    data ads1/2.91087d-3/,ars1/7.37707d0/,abs1/7.13223d-1/
+    data denf/4.3830525d0/, renf/3.6395d0/, &
+        & cnf/0.168364d0, 2.29333d0, -0.848620d-1, -0.109707d-1, &
+        & 0.246582d-2, 0.377012d0/
+    data cnf1/0.620115d0, 0.694459d-1, 0.757570d0, 0.283055d0, 2.69998d0/
+    data dehf/5.77096d0/, rehf/1.7328d0/, chf/0.441258d0, 3.88056d0, &
+        & -1.27110d0, -1.37766d0, 0.168186d0, 2.07230d0/
+    data bc/-1.d0, 0.d0, 1.d0, 2.d0, 3.0, 5.d0/
+    data ads1/2.91087d-3/, ars1/7.37707d0/, abs1/7.13223d-1/
     data una2p/2.0973375d0/
     data asmall/0.09d0/
     data cevau/0.036749308867692d0/
-
 end
 
 block data uoneone
     implicit none
-
     double precision :: ac
-    double precision :: y,dip1,adip1,rdip1,acut1,rcut1, &
-        & c2a,c2b,c2c,dipn,al2,aln0, &
-        & dipnn,al2n,aln0n1,aln0n2,rn0n
-    common/uone/y(4,3,4),c2a(4),c2b(4),c2c(4),dip1(4), &
-        & adip1(4),rdip1(4),acut1(4),rcut1(4), &
-        & dipn(4),al2(4),aln0(4), &
-        & dipnn(4),al2n(4),aln0n1(4),aln0n2(4),rn0n(4)
+    double precision :: y, dip1, adip1, rdip1, acut1, rcut1, &
+        & c2a, c2b, c2c, dipn, al2, aln0, &
+        & dipnn, al2n, aln0n1, aln0n2, rn0n
+    common/uone/y(4, 3, 4), c2a(4), c2b(4), c2c(4), dip1(4), &
+        & adip1(4), rdip1(4), acut1(4), rcut1(4), &
+        & dipn(4), al2(4), aln0(4), &
+        & dipnn(4), al2n(4), aln0n1(4), aln0n2(4), rn0n(4)
     common/angular1/ac(4)
-    data y(1,1,1)/0.00000d0/,y(2,1,1)/0.00000d0/, &
-        & y(1,1,2)/0.00000d0/,y(2,1,2)/0.00000d0/, &
-        & y(1,1,3)/0.00000d0/,y(2,1,3)/0.00000d0/, &
-        & y(1,1,4)/0.00000d0/,y(2,1,4)/0.00000d0/, &
-        & y(3,1,1)/6.6796d0/,y(4,1,1)/2.7839d0/, &
-        & y(3,1,2)/6.6796d0/,y(4,1,2)/2.7839d0/, &
-        & y(3,1,3)/7.1360d0/,y(4,1,3)/1.0376d0/, &
-        & y(3,1,4)/8.8737d0/,y(4,1,4)/1.9627d0/
-    data y(1,2,1)/6.0459d+1/,y(2,2,1)/3.7503d0/, &
-        & y(1,2,2)/6.0459d+1/,y(2,2,2)/3.7503d0/, &
-        & y(1,2,3)/6.0459d+1/,y(2,2,3)/3.7503d0/, &
-        & y(1,2,4)/8.5430d0/,y(2,2,4)/9.00856d-1/, &
-        & y(3,2,1)/8.4874d0/,y(4,2,1)/1.0916d+1/, &
-        & y(3,2,2)/8.4874d0/,y(4,2,2)/9.9850d0/, &
-        & y(3,2,3)/8.4874d0/,y(4,2,3)/5.5898d0/, &
-        & y(3,2,4)/9.5899d0/,y(4,2,4)/1.1615d+1/
-    data y(1,3,1)/7.3251d0/,y(2,3,1)/2.8774d0/, &
-        & y(1,3,2)/7.3251d0/,y(2,3,2)/3.6094d0/, &
-        & y(1,3,3)/7.3251d0/,y(2,3,3)/3.9288d0/, &
-        & y(1,3,4)/7.5811d0/,y(2,3,4)/4.4272d0/, &
-        & y(3,3,1)/1.9300d+3/,y(4,3,1)/2.7091d0/, &
-        & y(3,3,2)/3.8969d+3/,y(4,3,2)/2.7591d0/, &
-        & y(3,3,3)/5.9130d+3/,y(4,3,3)/2.6881d0/, &
-        & y(3,3,4)/5.9007d+3/,y(4,3,4)/3.8929d0/
-    data c2a(1)/8.5742d0/,c2b(1)/1.5953d0/,c2c(1)/3.3745d-1/
-    data c2a(2)/9.8509d0/,c2b(2)/6.6359d0/,c2c(2)/3.0396d-1/
-    data c2a(3)/9.5937d0/,c2b(3)/1.3441d+1/,c2c(3)/2.8812d-1/
-    data c2a(4)/1.1386d0/,c2b(4)/8.1112d0/,c2c(4)/2.6061d0/
-    data dip1(1)/1.9651d0/,rdip1(1)/8.3109d-1/, &
-        & dip1(2)/1.9651d0/,rdip1(2)/8.3109d-1/, &
-        & dip1(3)/2.1803d0/,rdip1(3)/7.1647d-1/, &
-        & dip1(4)/2.2483d0/,rdip1(4)/9.7128d-1/, &
-        & adip1(1)/4.8674d-2/,adip1(2)/5.0603d-2/, &
-        & adip1(3)/4.8499d-2/,adip1(4)/8.5924d-2/
-    data acut1(1)/6.3761d0/,rcut1(1)/5.2007d0/, &
-        & acut1(2)/6.3761d0/,rcut1(2)/3.6585d0/, &
-        & acut1(3)/6.0812d0/,rcut1(3)/3.4684d0/, &
-        & acut1(4)/5.0516d0/,rcut1(4)/1.6434d0/
-    data dipn(1)/1.5754d-1/,al2(1)/8.4809d-2/, &
-        & dipn(2)/1.2274d-1/,al2(2)/8.4809d-2/, &
-        & dipn(3)/4.1823d-2/,al2(3)/9.4867d-2/, &
-        & dipn(4)/3.4350d-1/,al2(4)/6.5542d-2/, &
+    data y(1, 1, 1)/0.00000d0/, y(2, 1, 1)/0.00000d0/, &
+        & y(1, 1, 2)/0.00000d0/, y(2, 1, 2)/0.00000d0/, &
+        & y(1, 1, 3)/0.00000d0/, y(2, 1, 3)/0.00000d0/, &
+        & y(1, 1, 4)/0.00000d0/, y(2, 1, 4)/0.00000d0/, &
+        & y(3, 1, 1)/6.6796d0/, y(4, 1, 1)/2.7839d0/, &
+        & y(3, 1, 2)/6.6796d0/, y(4, 1, 2)/2.7839d0/, &
+        & y(3, 1, 3)/7.1360d0/, y(4, 1, 3)/1.0376d0/, &
+        & y(3, 1, 4)/8.8737d0/, y(4, 1, 4)/1.9627d0/
+    data y(1, 2, 1)/6.0459d+1/, y(2, 2, 1)/3.7503d0/, &
+        & y(1, 2, 2)/6.0459d+1/, y(2, 2, 2)/3.7503d0/, &
+        & y(1, 2, 3)/6.0459d+1/, y(2, 2, 3)/3.7503d0/, &
+        & y(1, 2, 4)/8.5430d0/, y(2, 2, 4)/9.00856d-1/, &
+        & y(3, 2, 1)/8.4874d0/, y(4, 2, 1)/1.0916d+1/, &
+        & y(3, 2, 2)/8.4874d0/, y(4, 2, 2)/9.9850d0/, &
+        & y(3, 2, 3)/8.4874d0/, y(4, 2, 3)/5.5898d0/, &
+        & y(3, 2, 4)/9.5899d0/, y(4, 2, 4)/1.1615d+1/
+    data y(1, 3, 1)/7.3251d0/, y(2, 3, 1)/2.8774d0/, &
+        & y(1, 3, 2)/7.3251d0/, y(2, 3, 2)/3.6094d0/, &
+        & y(1, 3, 3)/7.3251d0/, y(2, 3, 3)/3.9288d0/, &
+        & y(1, 3, 4)/7.5811d0/, y(2, 3, 4)/4.4272d0/, &
+        & y(3, 3, 1)/1.9300d+3/, y(4, 3, 1)/2.7091d0/, &
+        & y(3, 3, 2)/3.8969d+3/, y(4, 3, 2)/2.7591d0/, &
+        & y(3, 3, 3)/5.9130d+3/, y(4, 3, 3)/2.6881d0/, &
+        & y(3, 3, 4)/5.9007d+3/, y(4, 3, 4)/3.8929d0/
+    data c2a(1)/8.5742d0/, c2b(1)/1.5953d0/, c2c(1)/3.3745d-1/
+    data c2a(2)/9.8509d0/, c2b(2)/6.6359d0/, c2c(2)/3.0396d-1/
+    data c2a(3)/9.5937d0/, c2b(3)/1.3441d+1/, c2c(3)/2.8812d-1/
+    data c2a(4)/1.1386d0/, c2b(4)/8.1112d0/, c2c(4)/2.6061d0/
+    data dip1(1)/1.9651d0/, rdip1(1)/8.3109d-1/, &
+        & dip1(2)/1.9651d0/, rdip1(2)/8.3109d-1/, &
+        & dip1(3)/2.1803d0/, rdip1(3)/7.1647d-1/, &
+        & dip1(4)/2.2483d0/, rdip1(4)/9.7128d-1/, &
+        & adip1(1)/4.8674d-2/, adip1(2)/5.0603d-2/, &
+        & adip1(3)/4.8499d-2/, adip1(4)/8.5924d-2/
+    data acut1(1)/6.3761d0/, rcut1(1)/5.2007d0/, &
+        & acut1(2)/6.3761d0/, rcut1(2)/3.6585d0/, &
+        & acut1(3)/6.0812d0/, rcut1(3)/3.4684d0/, &
+        & acut1(4)/5.0516d0/, rcut1(4)/1.6434d0/
+    data dipn(1)/1.5754d-1/, al2(1)/8.4809d-2/, &
+        & dipn(2)/1.2274d-1/, al2(2)/8.4809d-2/, &
+        & dipn(3)/4.1823d-2/, al2(3)/9.4867d-2/, &
+        & dipn(4)/3.4350d-1/, al2(4)/6.5542d-2/, &
         & aln0(1)/3.1971d-2/, &
         & aln0(2)/3.5817d-2/, &
         & aln0(3)/1.6686d-1/, &
         & aln0(4)/5.9961d-2/
-    data dipnn(1)/0.0000d0/,al2n(1)/0.0000d-2/, &
-        & dipnn(2)/3.7501d-3/,al2n(2)/9.2376d0/, &
-        & dipnn(3)/7.6323d-3/,al2n(3)/9.3515d-2/, &
-        & dipnn(4)/0.0000d0/,al2n(4)/.0000d-2/, &
+    data dipnn(1)/0.0000d0/, al2n(1)/0.0000d-2/, &
+        & dipnn(2)/3.7501d-3/, al2n(2)/9.2376d0/, &
+        & dipnn(3)/7.6323d-3/, al2n(3)/9.3515d-2/, &
+        & dipnn(4)/0.0000d0/, al2n(4)/.0000d-2/, &
         & rn0n(1)/0.0d0/, &
         & rn0n(2)/6.6001d0/, &
         & rn0n(3)/5.9949d0/, &
         & rn0n(4)/0.0d0/, &
-        & aln0n1(1)/0.0000d-2/,aln0n2(1)/0.0000d-2/, &
-        & aln0n1(2)/3.2545d-2/,aln0n2(2)/4.9001d-1/, &
-        & aln0n1(3)/8.5914d-2/,aln0n2(3)/2.1382d0/, &
-        & aln0n1(4)/0.0000d-2/,aln0n2(4)/0.0000d-2/
-    data ac/4.6913d0,5.4684d-1,7.5932d-1,8.0000d-1/
-
+        & aln0n1(1)/0.0000d-2/, aln0n2(1)/0.0000d-2/, &
+        & aln0n1(2)/3.2545d-2/, aln0n2(2)/4.9001d-1/, &
+        & aln0n1(3)/8.5914d-2/, aln0n2(3)/2.1382d0/, &
+        & aln0n1(4)/0.0000d-2/, aln0n2(4)/0.0000d-2/
+    data ac/4.6913d0, 5.4684d-1, 7.5932d-1, 8.0000d-1/
 end
 
 block data utwotwo
     implicit none
-
     double precision :: ac
-    double precision :: y,r20i,r20a,al20i,al20a,al2a, &
-        & rr0a,ry,aly,dy,c2a,c2b,c2c,al20i1, &
-        & dip2,adip2,rdip2,acut2,rcut2,psi,rsi, &
-        & dip2n,adip2n,rdip2n,acut2n,rcut2n, &
-        & dy1,dy2
-    common/utwo/y(4,3,4),c2a(4),c2b(4),c2c(4),r20i(4), &
-        & r20a,al20i(4),al20i1(4),al20a,psi,rsi,al2a(4), &
-        & rr0a(4),dip2(4),adip2(4),rdip2(4),acut2(4), &
-        & rcut2(4),ry(4),aly(4),dy(4),dy1(4),dy2(4), &
-        & dip2n(4),adip2n(4),rdip2n(4),acut2n(4),rcut2n(4)
+    double precision :: y, r20i, r20a, al20i, al20a, al2a, &
+        & rr0a, ry, aly, dy, c2a, c2b, c2c, al20i1, &
+        & dip2, adip2, rdip2, acut2, rcut2, psi, rsi, &
+        & dip2n, adip2n, rdip2n, acut2n, rcut2n, &
+        & dy1, dy2
+    common/utwo/y(4, 3, 4), c2a(4), c2b(4), c2c(4), r20i(4), &
+        & r20a, al20i(4), al20i1(4), al20a, psi, rsi, al2a(4), &
+        & rr0a(4), dip2(4), adip2(4), rdip2(4), acut2(4), &
+        & rcut2(4), ry(4), aly(4), dy(4), dy1(4), dy2(4), &
+        & dip2n(4), adip2n(4), rdip2n(4), acut2n(4), rcut2n(4)
     common/angular2/ac(4)
-
-    data y(1,1,1)/1.0407d+3/,y(2,1,1)/4.5911d0/, &
-        & y(1,1,2)/1.1608d+3/,y(2,1,2)/3.8886d0/, &
-        & y(1,1,3)/4.9492d+3/,y(2,1,3)/2.6147d0/, &
-        & y(1,1,4)/8.3093d+3/,y(2,1,4)/3.2431d0/, &
-        & y(3,1,1)/1.4941d0/,y(4,1,1)/4.5525d0/, &
-        & y(3,1,2)/1.4941d0/,y(4,1,2)/4.5525d0/, &
-        & y(3,1,3)/1.4941d0/,y(4,1,3)/4.5525d0/, &
-        & y(3,1,4)/2.8361d0/,y(4,1,4)/4.4686d0/
-    data y(1,2,1)/0.0000d0/,y(2,2,1)/0.0000d0/, &
-        & y(1,2,2)/0.0000d0/,y(2,2,2)/0.0000d0/, &
-        & y(1,2,3)/0.0000d0/,y(2,2,3)/0.0000d0/, &
-        & y(1,2,4)/0.0000d0/,y(2,2,4)/0.0000d0/, &
-        & y(3,2,1)/1.8076d+3/,y(4,2,1)/2.8815d0/ &
-        & y(3,2,2)/1.8076d+3/,y(4,2,2)/2.8815d0/, &
-        & y(3,2,3)/1.8076d+3/,y(4,2,3)/2.8815d0/, &
-        & y(3,2,4)/2.3109d+3/,y(4,2,4)/3.1315d0/
-    data y(1,3,1)/5.7330d0/,y(2,3,1)/3.2053d-1/, &
-        & y(1,3,2)/5.7330d0/,y(2,3,2)/3.2053d-1/, &
-        & y(1,3,3)/5.7330d0/,y(2,3,3)/3.2053d-1/, &
-        & y(1,3,4)/5.0393d0/,y(2,3,4)/2.7567d-1/, &
-        & y(3,3,1)/2.5774d+5/,y(4,3,1)/4.2267d0/, &
-        & y(3,3,2)/2.5774d+5/,y(4,3,2)/4.2267d0/, &
-        & y(3,3,3)/2.5774d+5/,y(4,3,3)/4.2267d0/, &
-        & y(3,3,4)/1.6506d+5/,y(4,3,4)/3.9246d0/
-
-    data c2a(1)/5.6406d0/,c2b(1)/7.7152d-2/
-    data c2a(2)/8.2390d0/,c2b(2)/1.7133d-1/
-    data c2a(3)/7.1504d0/,c2b(3)/1.1011d-1/
-    data c2a(4)/8.0196d0/,c2b(4)/1.0017d-1/, &
+    data y(1, 1, 1)/1.0407d+3/, y(2, 1, 1)/4.5911d0/, &
+        & y(1, 1, 2)/1.1608d+3/, y(2, 1, 2)/3.8886d0/, &
+        & y(1, 1, 3)/4.9492d+3/, y(2, 1, 3)/2.6147d0/, &
+        & y(1, 1, 4)/8.3093d+3/, y(2, 1, 4)/3.2431d0/, &
+        & y(3, 1, 1)/1.4941d0/, y(4, 1, 1)/4.5525d0/, &
+        & y(3, 1, 2)/1.4941d0/, y(4, 1, 2)/4.5525d0/, &
+        & y(3, 1, 3)/1.4941d0/, y(4, 1, 3)/4.5525d0/, &
+        & y(3, 1, 4)/2.8361d0/, y(4, 1, 4)/4.4686d0/
+    data y(1, 2, 1)/0.0000d0/, y(2, 2, 1)/0.0000d0/, &
+        & y(1, 2, 2)/0.0000d0/, y(2, 2, 2)/0.0000d0/, &
+        & y(1, 2, 3)/0.0000d0/, y(2, 2, 3)/0.0000d0/, &
+        & y(1, 2, 4)/0.0000d0/, y(2, 2, 4)/0.0000d0/, &
+        & y(3, 2, 1)/1.8076d+3/, y(4, 2, 1)/2.8815d0/ &
+        & y(3, 2, 2)/1.8076d+3/, y(4, 2, 2)/2.8815d0/, &
+        & y(3, 2, 3)/1.8076d+3/, y(4, 2, 3)/2.8815d0/, &
+        & y(3, 2, 4)/2.3109d+3/, y(4, 2, 4)/3.1315d0/
+    data y(1, 3, 1)/5.7330d0/, y(2, 3, 1)/3.2053d-1/, &
+        & y(1, 3, 2)/5.7330d0/, y(2, 3, 2)/3.2053d-1/, &
+        & y(1, 3, 3)/5.7330d0/, y(2, 3, 3)/3.2053d-1/, &
+        & y(1, 3, 4)/5.0393d0/, y(2, 3, 4)/2.7567d-1/, &
+        & y(3, 3, 1)/2.5774d+5/, y(4, 3, 1)/4.2267d0/, &
+        & y(3, 3, 2)/2.5774d+5/, y(4, 3, 2)/4.2267d0/, &
+        & y(3, 3, 3)/2.5774d+5/, y(4, 3, 3)/4.2267d0/, &
+        & y(3, 3, 4)/1.6506d+5/, y(4, 3, 4)/3.9246d0/
+    data c2a(1)/5.6406d0/, c2b(1)/7.7152d-2/
+    data c2a(2)/8.2390d0/, c2b(2)/1.7133d-1/
+    data c2a(3)/7.1504d0/, c2b(3)/1.1011d-1/
+    data c2a(4)/8.0196d0/, c2b(4)/1.0017d-1/, &
         & c2c(1)/8.4595d-2/, &
         & c2c(2)/8.4595d-2/, &
         & c2c(3)/8.4595d-2/, &
         & c2c(4)/8.4411d-2/
-    data r20i(1)/2.9013d0/,al20i(1)/1.7119d0/
-    data r20i(2)/3.1196d0/,al20i(2)/9.4849d-1/
-    data r20i(3)/3.0995d0/,al20i(3)/0.0d0/
-    data r20i(4)/2.6572d0/,al20i(4)/2.3214d0/, &
-        & r20a/3.1305d0/,al20i1(1)/3.5428d0/, &
-        & al20a/3.024d+1/,al20i1(2)/6.7257d0/, &
-        & psi/0.7d0/,al20i1(3)/3.0240d+1/, &
-        & rsi/22.2d0/,al20i1(4)/9.6978d0/, &
-        & al2a(1)/5.8088d-1/,rr0a(1)/9.5543d0/, &
-        & al2a(2)/5.8088d-1/,rr0a(2)/9.5543d0/, &
-        & al2a(3)/5.8088d-1/,rr0a(3)/9.5543d0/, &
-        & al2a(4)/8.1525d-1/,rr0a(4)/8.2500d0/
+    data r20i(1)/2.9013d0/, al20i(1)/1.7119d0/
+    data r20i(2)/3.1196d0/, al20i(2)/9.4849d-1/
+    data r20i(3)/3.0995d0/, al20i(3)/0.0d0/
+    data r20i(4)/2.6572d0/, al20i(4)/2.3214d0/, &
+        & r20a/3.1305d0/, al20i1(1)/3.5428d0/, &
+        & al20a/3.024d+1/, al20i1(2)/6.7257d0/, &
+        & psi/0.7d0/, al20i1(3)/3.0240d+1/, &
+        & rsi/22.2d0/, al20i1(4)/9.6978d0/, &
+        & al2a(1)/5.8088d-1/, rr0a(1)/9.5543d0/, &
+        & al2a(2)/5.8088d-1/, rr0a(2)/9.5543d0/, &
+        & al2a(3)/5.8088d-1/, rr0a(3)/9.5543d0/, &
+        & al2a(4)/8.1525d-1/, rr0a(4)/8.2500d0/
     data dip2(1)/2.6475d-1/
     data dip2(2)/2.6475d-1/
     data dip2(3)/2.6475d-1/
     data dip2(4)/5.0336d-1/
-    data adip2(1)/3.2317d-1/,rdip2(1)/3.7260d0/
-    data adip2(2)/1.8513d-1/,rdip2(2)/4.5515d0/
-    data adip2(3)/4.3999d-2/,rdip2(3)/2.1191d-1/
-    data adip2(4)/2.3003d-1/,rdip2(4)/5.0160d0/
-    data acut2(1)/2.0799d0/,rcut2(1)/1.2496d0/
-    data acut2(2)/1.4204d0/,rcut2(2)/1.0817d0/
-    data acut2(3)/7.9086d-1/,rcut2(3)/1.0575d0/
-    data acut2(4)/2.8447d0/,rcut2(4)/3.0015d0/
-    data dip2n(1)/2.2091d-1/,adip2n(1)/1.0288d-1/
-    data dip2n(2)/2.2091d-1/,adip2n(2)/1.0288d-1/
-    data dip2n(3)/2.2091d-1/,adip2n(3)/1.0288d-1/
-    data dip2n(4)/4.5301d-1/,adip2n(4)/1.1009d-1/
+    data adip2(1)/3.2317d-1/, rdip2(1)/3.7260d0/
+    data adip2(2)/1.8513d-1/, rdip2(2)/4.5515d0/
+    data adip2(3)/4.3999d-2/, rdip2(3)/2.1191d-1/
+    data adip2(4)/2.3003d-1/, rdip2(4)/5.0160d0/
+    data acut2(1)/2.0799d0/, rcut2(1)/1.2496d0/
+    data acut2(2)/1.4204d0/, rcut2(2)/1.0817d0/
+    data acut2(3)/7.9086d-1/, rcut2(3)/1.0575d0/
+    data acut2(4)/2.8447d0/, rcut2(4)/3.0015d0/
+    data dip2n(1)/2.2091d-1/, adip2n(1)/1.0288d-1/
+    data dip2n(2)/2.2091d-1/, adip2n(2)/1.0288d-1/
+    data dip2n(3)/2.2091d-1/, adip2n(3)/1.0288d-1/
+    data dip2n(4)/4.5301d-1/, adip2n(4)/1.1009d-1/
     data rdip2n(1)/5.1554d0/
     data rdip2n(2)/5.1554d0/
     data rdip2n(3)/5.1554d0/
     data rdip2n(4)/6.7003d0/
-    data acut2n(1)/3.5607d0/,rcut2n(1)/3.0661d0/
-    data acut2n(2)/4.3956d0/,rcut2n(2)/3.0661d0/
-    data acut2n(3)/4.1924d0/,rcut2n(3)/3.0661d0/
-    data acut2n(4)/3.0765d0/,rcut2n(4)/2.8845d0/
-    data ry(1)/1.4328d+1/,aly(1)/4.9044d-1/
-    data ry(2)/1.2504d+1/,aly(2)/6.4718d-1/
-    data ry(3)/1.2102d+1/,aly(3)/2.5833d-1/
-    data ry(4)/7.9381d0/,aly(4)/6.4853d-1/
-    data dy(1)/7.5126d-1/,dy1(1)/0.d0/,dy2(1)/0.d0/
-    data dy(2)/2.0210d-1/,dy1(2)/0.d0/,dy2(2)/0.d0/
-    data dy(3)/1.1749d-1/,dy1(3)/0.d0/,dy2(3)/0.d0/
+    data acut2n(1)/3.5607d0/, rcut2n(1)/3.0661d0/
+    data acut2n(2)/4.3956d0/, rcut2n(2)/3.0661d0/
+    data acut2n(3)/4.1924d0/, rcut2n(3)/3.0661d0/
+    data acut2n(4)/3.0765d0/, rcut2n(4)/2.8845d0/
+    data ry(1)/1.4328d+1/, aly(1)/4.9044d-1/
+    data ry(2)/1.2504d+1/, aly(2)/6.4718d-1/
+    data ry(3)/1.2102d+1/, aly(3)/2.5833d-1/
+    data ry(4)/7.9381d0/, aly(4)/6.4853d-1/
+    data dy(1)/7.5126d-1/, dy1(1)/0.d0/, dy2(1)/0.d0/
+    data dy(2)/2.0210d-1/, dy1(2)/0.d0/, dy2(2)/0.d0/
+    data dy(3)/1.1749d-1/, dy1(3)/0.d0/, dy2(3)/0.d0/
     data dy(4)/8.1959d-2/, &
-        & dy1(4)/-5.03d+2/,dy2(4)/-0.25d0/
-    data ac/2.0018d0,4.1908d-1,5.4988d0,3.0178d-1/
-
+        & dy1(4)/-5.03d+2/, dy2(4)/-0.25d0/
+    data ac/2.0018d0, 4.1908d-1, 5.4988d0, 3.0178d-1/
 end
 
 block data uonetwo
     implicit none
-
-    double precision :: ahf,anaf,anah,r21,r23,r13
-    double precision :: ccnf,ccnha,ccnhi,ccnhi1,xpnh,xpnh1
-    common/ucoupl/ahf(3),anaf(3),anah(3),r21(3),r23(3),r13(3)
-    common/ucoupl1/ccnf(4),ccnha(4),ccnhi(4),ccnhi1(4)
-    common/u12nah/xpnh,xpnh1
-    data ccnf/3.9960d0,5.4730d-01,-1.1428d0,2.0440d-01/
-    data ccnha/1.00d0,0.80d0,-2.67d0,0.456d0/
-    data ccnhi/1.0897d0,-6.5205d-1,7.7968d-1,-1.2933d-2/
-    data ccnhi1/-6.1073d-1,-1.7425d-1,-8.3877d-1, &
+    double precision :: ahf, anaf, anah, r21, r23, r13
+    double precision :: ccnf, ccnha, ccnhi, ccnhi1, xpnh, xpnh1
+    common/ucoupl/ahf(3), anaf(3), anah(3), r21(3), r23(3), r13(3)
+    common/ucoupl1/ccnf(4), ccnha(4), ccnhi(4), ccnhi1(4)
+    common/u12nah/xpnh, xpnh1
+    data ccnf/3.9960d0, 5.4730d-01, -1.1428d0, 2.0440d-01/
+    data ccnha/1.00d0, 0.80d0, -2.67d0, 0.456d0/
+    data ccnhi/1.0897d0, -6.5205d-1, 7.7968d-1, -1.2933d-2/
+    data ccnhi1/-6.1073d-1, -1.7425d-1, -8.3877d-1, &
         & -3.5361d-1/
-    data xpnh/5.6906d-2/,xpnh1/2.3185d-1/
-
-    data ahf/1.7177d0,2.2707d0,1.2248d-1/, &
-        & anaf/6.7786d-1,9.8809d-1,-1.0541d-1/, &
-        & anah/6.5680d-1,1.0141d0,-5.1056d-2/
-    data r21/3.5114d0,1.3540d0,3.2267d-1/, &
-        & r23/-3.3006d-1,2.0804d-1,2.4499d-1/, &
-        & r13/1.2431d0,9.9188d-1,1.1051d-1/
+    data xpnh/5.6906d-2/, xpnh1/2.3185d-1/
+    data ahf/1.7177d0, 2.2707d0, 1.2248d-1/, &
+        & anaf/6.7786d-1, 9.8809d-1, -1.0541d-1/, &
+        & anah/6.5680d-1, 1.0141d0, -5.1056d-2/
+    data r21/3.5114d0, 1.3540d0, 3.2267d-1/, &
+        & r23/-3.3006d-1, 2.0804d-1, 2.4499d-1/, &
+        & r13/1.2431d0, 9.9188d-1, 1.1051d-1/
 end

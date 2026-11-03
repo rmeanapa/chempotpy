@@ -3,15 +3,12 @@
 module chempotpy_units
     use chempotpy_kinds, only: real64
     implicit none
-
     private
-
     public :: angstrom_to_bohr
     public :: bohr_to_angstrom
     public :: electronvolt_to_hartree
     public :: hartree_per_bohr_to_ev_per_angstrom
     public :: hartree_to_electronvolt
-
     ! These values match chempotpy.core.units and are used only by new APIs.
     real(real64), parameter :: bohr_to_angstrom = 0.529177210903_real64
     real(real64), parameter :: angstrom_to_bohr = 1.0_real64 &

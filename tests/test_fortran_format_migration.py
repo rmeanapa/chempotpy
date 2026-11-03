@@ -51,12 +51,14 @@ end subroutine evaluate
         converted = format_source_text(source)
         self.assertLess(
             converted.index("integer, intent(in)"),
-            converted.index("integer :: index"),
+            converted.index(":: index"),
         )
         self.assertLess(
             converted.index("integer, parameter"),
             converted.index("integer, intent(in)"),
         )
+        self.assertNotIn("maximum_count = 10\n\n", converted)
+        self.assertNotIn("values(maximum_count)\n\n", converted)
 
     def test_redundant_blank_lines_are_collapsed(self) -> None:
         source = """\
@@ -71,6 +73,109 @@ end subroutine evaluate
 """
         converted = format_source_text(source)
         self.assertNotIn("\n\n\n", converted)
+
+    def test_short_initializations_use_semicolons(self) -> None:
+        source = """\
+subroutine initialize
+    implicit none
+    real :: energy, gradient, coupling
+
+    ! initialize outputs
+    energy = 0.0
+    gradient = 0.0
+    coupling = 0.0
+end subroutine initialize
+"""
+        converted = format_source_text(source)
+        self.assertIn(
+            "energy = 0.0; gradient = 0.0; coupling = 0.0",
+            converted,
+        )
+
+    def test_variables_are_separated_by_spaces(self) -> None:
+        source = """\
+subroutine evaluate( values, count )
+    implicit none
+    integer, intent(in) :: count
+    real, intent(out) :: values(count,3)
+    real :: first,second,third
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("values(count,3)", converted)
+        self.assertIn("first, second, third", converted)
+
+    def test_array_slices_are_compact(self) -> None:
+        source = """\
+subroutine evaluate( r, values )
+    implicit none
+    real, intent(in) :: values(3, 3)
+    real, intent(out) :: r(1, 3)
+    r(1, :) = values(1, :)
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("values(3,3)", converted)
+        self.assertIn("r(1,3)", converted)
+        self.assertIn("r(1,:) = values(1,:)", converted)
+
+    def test_pes_metadata_values_are_aligned(self) -> None:
+        source = """\
+!   System: H3
+!   Functional form:
+!   Common name: a2
+!   Number of electronic surfaces: 1
+!   Interface: 3-1V
+subroutine evaluate
+    implicit none
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("!   System:                        H3", converted)
+        self.assertIn("!   Common name:                   a2", converted)
+        self.assertIn("!   Number of electronic surfaces: 1", converted)
+        self.assertIn("!   Interface:                     3-1V", converted)
+
+    def test_source_units_have_one_blank_separator(self) -> None:
+        source = """\
+subroutine first
+    implicit none
+end subroutine first
+!> @brief Evaluate second.
+subroutine second
+    implicit none
+end subroutine second
+"""
+        converted = format_source_text(source)
+        self.assertIn("end subroutine first\n\n!> @brief", converted)
+        self.assertNotIn("end subroutine first\n\n\n", converted)
+
+    def test_compact_end_statements_are_separated(self) -> None:
+        source = """\
+subroutine evaluate
+    implicit none
+    if (.true.) then
+    endif
+endsubroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("end if", converted)
+        self.assertIn("end subroutine evaluate", converted)
+
+    def test_only_clauses_are_aligned(self) -> None:
+        source = """\
+subroutine evaluate
+    use geometry, only: distance
+    use legacy_conversion_utilities, only: bohr_to_angstrom
+    implicit none
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("use geometry,                    only: distance", converted)
+        self.assertIn(
+            "use legacy_conversion_utilities, only: bohr_to_angstrom",
+            converted,
+        )
 
 
 if __name__ == "__main__":

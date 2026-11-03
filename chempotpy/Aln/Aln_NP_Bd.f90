@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_NP_Bd potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Embedded atom
     !   Common name:                   NP-B
@@ -73,18 +70,16 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximum number of atoms (input)
 
     implicit none
-
     double precision :: ab, alpha, beta, bigef, cc, d_rho, d_v2, dbigefdrho, delta, &
         & dphidr, dphiqdr, dqdr, dr, drdr, drhodr, dstermdrho, dvdx, dvdy, dvdz, dx, dxxdr, dy, dz, &
         & ec, ef, gamma, phi, phi0, q, r0, rc, rho, rn, rr, s, sterm, v, v2, x, xm, xx, y, z
     integer                     :: i, j, k, l, m, maxatom, natom
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-    dimension x(maxatom),y(maxatom),z(maxatom)
-    dimension cc(6),s(3)
-    dimension d_v2(3,maxatom),d_rho(3,maxatom), &  ! Derivs
-        & dvdx(maxatom),dvdy(maxatom),dvdz(maxatom)
-
+    dimension x(maxatom), y(maxatom), z(maxatom)
+    dimension cc(6), s(3)
+    dimension d_v2(3,maxatom), d_rho(3,maxatom), &  ! Derivs
+        & dvdx(maxatom), dvdy(maxatom), dvdz(maxatom)
     ! Original Literature Parameters (Ref. 1)
     !        ec    =   3.39d0/autoev
     !        phi0  =   0.1318d0/autoev
@@ -104,7 +99,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !        s(3)  =  24.d0
     !        rn    =   1.75d0*r0
     !        rc    =   1.95d0*r0
-
     ! Cluster-parameterized Parameters (Ref. 3)
     !        ec    =   3.648900830d0/autoev
     !        phi0  =   0.395759648d0/autoev
@@ -124,7 +118,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !        s(3)  =  27.910600879d0
     !        rn    =   1.75d0*r0
     !        rc    =   1.95d0*r0
-
     ! Nanoparticle-parameterized Parameters (Ref. 2)
     ec    = 2.833661628d0/autoev
     phi0  = 0.209474568d0/autoev
@@ -147,23 +140,23 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     ! Initialize
     v = 0.d0
-    do i=1,natom
+    do i=1, natom
         dvdx(i) = 0.d0
         dvdy(i) = 0.d0
         dvdz(i) = 0.d0
-    enddo
+    end do
 
     ! Double loop (main loop)
-    do 2 i=1,natom
+    do 2 i=1, natom
         rho = 0.d0
         v2  = 0.d0
-        do k=1,3
-            do j=1,natom
+        do k=1, 3
+            do j=1, natom
                 d_rho(k,j) = 0.d0
                 d_v2(k,j)  = 0.d0
-            enddo
-        enddo
-        do 3 j=1,natom
+            end do
+        end do
+        do 3 j=1, natom
             if (i.eq.j) go to 3
             dx = x(i)-x(j)
             dy = y(i)-y(j)
@@ -184,7 +177,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 dxxdr = 1.d0/(rc-rn)  ! Derivs
                 dqdr  = ((1.d0-xx)**3)*(3.d0+12.d0*xx)*dxxdr &  ! Derivs
                     & -(3.d0*(1.d0-xx)**2)*(1.d0+3.d0*xx+6.d0*xx**2)*dxxdr
-            endif
+            end if
 
             ! Pair potential phi
             dr      = rr/r0-1.d0
@@ -196,13 +189,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
             ! Embedding potential rho
             drhodr = 0.d0  ! Derivs
-            do l=0,5
+            do l=0, 5
                 ef  = (cc(l+1)/12.d0)*(r0/rr)**l
                 rho = rho + ef*q
                 if (l.ne.0) drhodr = drhodr &  ! Derivs
                     & - (q/rr)*dble(l)*(cc(l+1)/12.d0)*(r0/rr)**l+ef*dqdr
                 if (l.eq.0) drhodr = drhodr + ef*dqdr  ! Derivs
-            enddo
+            end do
 
             ! v2 (pairwise repulsion) derivs
             d_v2(1,i) = d_v2(1,i) + dphiqdr*dx/rr
@@ -223,7 +216,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
         sterm      = 0.d0
         dstermdrho = 0.d0  ! Derivs
         if (rho.gt.0.d0) then
-            do m=1,3
+            do m=1, 3
                 xm = dsqrt(dble(m))
                 sterm=sterm+s(m)*dexp(-gamma*(xm-1.d0)) *(1.d0+delta*(xm-1.d0)-xm*(delta/beta)*dlog(rho)) *(rho)**(xm* &
                     & gamma/beta)
@@ -231,8 +224,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
                     & (1.d0+delta*(xm-1.d0)-xm*(delta/beta)*dlog(rho)) &
                     & *(xm*gamma/beta)*(rho)**(xm*gamma/beta-1.d0) &
                     & +(-xm*(delta/beta)*(1.d0/rho))*(rho)**(xm*gamma/beta) )
-            enddo
-        endif
+            end do
+        end if
 
         ab         = alpha/beta
         bigef      = 0.d0
@@ -242,14 +235,14 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dbigefdrho = -ec*(1.d0-ab*dlog(rho))*(ab)*rho**(ab-1.d0) &  ! Deri
                 & -ec*(-ab*(1.d0/rho))*rho**ab &
                 & +0.5d0*phi0*dstermdrho
-        endif
+        end if
 
         ! Combine derivs
-        do j=1,natom
+        do j=1, natom
             dvdx(j) = dvdx(j) + d_v2(1,j) + dbigefdrho*d_rho(1,j)
             dvdy(j) = dvdy(j) + d_v2(2,j) + dbigefdrho*d_rho(2,j)
             dvdz(j) = dvdz(j) + d_v2(3,j) + dbigefdrho*d_rho(3,j)
-        enddo
+        end do
 
         v = v + v2 + bigef
     2 continue

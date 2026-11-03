@@ -1,12 +1,12 @@
 !**********************************************************************
-!   System:                     NO2
+!   System: NO2
 !   Name of this surface:       NO2_6Ap_MB-PIP-MEG
-!   Functional form:            permutationally invariant polynomials
-!   Common name:                NO2(adiabatic sextet ground state)
-!   Number of derivatives:      1
-!   Number of bodies:           3
+!   Functional form:               permutationally invariant polynomials
+!   Common name:                   NO2(adiabatic sextet ground state)
+!   Number of derivatives:         1
+!   Number of bodies:              3
 !   Number of electronic surfaces: 1
-!   Interface: Section-2
+!   Interface:                     Section-2
 !
 !   References:: Z. Varga, Y. Liu, J. Li, Y. Paukku, H. Guo, and
 !                D. G. Truhlar, in preparation
@@ -25,7 +25,6 @@
 !   Output: dEdX(3),dEdY(3),dEdZ(3)     in units of hartree/bohr
 !**********************************************************************
 module no2_6ap_zv_par
-
     ! Conversion factors
     ! Cconv: bohr to Angstrom
     !        1 bohr = 0.52917721092 angstrom
@@ -37,10 +36,9 @@ module no2_6ap_zv_par
     private
     public :: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, gconv, p, r, re, &
         & rm, rms, totdiss
-
-    double precision,parameter :: cconv = 0.52917721092d0
-    double precision,parameter :: econv = 0.159360144d-2
-    double precision,parameter :: gconv = 0.843297564d-3
+    double precision, parameter :: cconv = 0.52917721092d0
+    double precision, parameter :: econv = 0.159360144d-2
+    double precision, parameter :: gconv = 0.843297564d-3
     ! Common variables
     ! R(3):          Interatomic bond distance
     ! rMs(3)             Array to store base terms
@@ -53,160 +51,158 @@ module no2_6ap_zv_par
     ! dVdR(3):       The derivative of V w.r.t. R
     ! dRdX(3,9):     The derivative of R w.r.t. X
     ! dBdR(3,227)    The derivative of B w.r.t. R
-
     double precision :: r(3)
-    double precision :: rms(3),rm(0:4),p(0:251),b(227)
-    double precision :: dmsdr(3,3),dmdr(3,0:4),dpdr(3,0:251)
-    double precision :: dvdr(3),drdx(3,9),dbdr(3,227)
-
+    double precision :: rms(3), rm(0:4), p(0:251), b(227)
+    double precision :: dmsdr(3,3), dmdr(3,0:4), dpdr(3,0:251)
+    double precision :: dvdr(3), drdx(3,9), dbdr(3,227)
     ! Nonlinear parameters:
     ! a(in Ang)
     ! ab (in Ang^2)
     ! re (in Ang)
     ! order of data: OO,NO,NO,NO,NO,NN
-    double precision,parameter :: a(3)  = (/ 1.25d0,0.94d0,0.94d0 /)
-    double precision,parameter :: ab(3) = (/ 2.10d0,3.90d0,3.90d0 /)
-    double precision,parameter :: re(3) = (/ 1.208d0,1.4219d0,&
+    double precision, parameter :: a(3)  = (/ 1.25d0, 0.94d0, 0.94d0 /)
+    double precision, parameter :: ab(3) = (/ 2.10d0, 3.90d0, 3.90d0 /)
+    double precision, parameter :: re(3) = (/ 1.208d0, 1.4219d0, &
         1.4219d0 /)
     ! Reference energy of infinitely separated four atoms in hartree
-    double precision,parameter :: eref = -204.78312431d0
+    double precision, parameter :: eref = -204.78312431d0
     ! Initialized v to be De(N2) + De(O2) = 228.4 + 120.143 kcal/mol
-    double precision,parameter :: totdiss = 348.643d0
+    double precision, parameter :: totdiss = 348.643d0
     ! Linear parameters optimized by the weighted-least square fitting
-    double precision,parameter :: c(227) = (/ &
+    double precision, parameter :: c(227) = (/ &
         0.197851973467d+03 &
         , -0.255484057397d+03 &
-        ,  0.102451508727d+04 &
+        , 0.102451508727d+04 &
         , -0.126574980991d+04 &
-        ,  0.275229975480d+04 &
-        ,  0.733673569320d+03 &
+        , 0.275229975480d+04 &
+        , 0.733673569320d+03 &
         , -0.518870736871d+04 &
-        ,  0.201817758606d+04 &
-        ,  0.891703858476d+03 &
-        ,  0.507316828077d+04 &
+        , 0.201817758606d+04 &
+        , 0.891703858476d+03 &
+        , 0.507316828077d+04 &
         , -0.101579474125d+05 &
         , -0.350104191179d+04 &
         , -0.337155016986d+04 &
-        ,  0.971442829339d+04 &
-        ,  0.168379520427d+05 &
+        , 0.971442829339d+04 &
+        , 0.168379520427d+05 &
         , -0.105186569326d+05 &
-        ,  0.123602811150d+04 &
+        , 0.123602811150d+04 &
         , -0.259860701557d+04 &
         , -0.583209633828d+04 &
-        ,  0.152118875687d+05 &
-        ,  0.991348255848d+04 &
-        ,  0.600977702834d+04 &
-        ,  0.711983606150d+04 &
+        , 0.152118875687d+05 &
+        , 0.991348255848d+04 &
+        , 0.600977702834d+04 &
+        , 0.711983606150d+04 &
         , -0.112666103912d+05 &
         , -0.196576443468d+05 &
         , -0.152049051200d+05 &
-        ,  0.707407150137d+04 &
-        ,  0.195350176198d+05 &
+        , 0.707407150137d+04 &
+        , 0.195350176198d+05 &
         , -0.445877017302d+04 &
         , -0.109170577599d+05 &
-        ,  0.136475419992d+05 &
+        , 0.136475419992d+05 &
         , -0.713740263918d+04 &
         , -0.602423893153d+04 &
         , -0.155469012866d+05 &
-        ,  0.842567027256d+04 &
+        , 0.842567027256d+04 &
         , -0.116600624284d+05 &
         , -0.568317643645d+04 &
         , -0.573210695082d+04 &
-        ,  0.162954212098d+05 &
+        , 0.162954212098d+05 &
         , -0.330644370138d+04 &
         , -0.679270263122d+04 &
-        ,  0.286451564814d+05 &
-        ,  0.145220800878d+05 &
+        , 0.286451564814d+05 &
+        , 0.145220800878d+05 &
         , -0.400234667228d+05 &
-        ,  0.851746181247d+04 &
+        , 0.851746181247d+04 &
         , -0.625017097990d+04 &
-        ,  0.459881481068d+04 &
+        , 0.459881481068d+04 &
         , -0.118928671299d+05 &
-        ,  0.154696846468d+05 &
+        , 0.154696846468d+05 &
         , -0.759688748088d+04 &
-        ,  0.552526417473d+04 &
+        , 0.552526417473d+04 &
         , -0.121643944936d+05 &
         , -0.726093907242d+04 &
-        ,  0.445906853203d+03 &
+        , 0.445906853203d+03 &
         , -0.142216891785d+04 &
         , -0.598237155146d+04 &
-        ,  0.155914829358d+05 &
-        ,  0.622685213824d+04 &
-        ,  0.769234646079d+04 &
-        ,  0.741994254446d+04 &
+        , 0.155914829358d+05 &
+        , 0.622685213824d+04 &
+        , 0.769234646079d+04 &
+        , 0.741994254446d+04 &
         , -0.652683939907d+04 &
-        ,  0.117787810809d+05 &
+        , 0.117787810809d+05 &
         , -0.739058011120d+04 &
-        ,  0.185247130315d+04 &
+        , 0.185247130315d+04 &
         , -0.265371525365d+04 &
         , -0.982702489649d+04 &
-        ,  0.261478366815d+04 &
-        ,  0.316387605270d+04 &
+        , 0.261478366815d+04 &
+        , 0.316387605270d+04 &
         , -0.138684003793d+04 &
         , -0.417191707457d+04 &
-        ,  0.126919676090d+04 &
-        ,  0.706451507056d+04 &
-        ,  0.322749421172d+04 &
-        ,  0.105085457929d+05 &
-        ,  0.760100817180d+04 &
+        , 0.126919676090d+04 &
+        , 0.706451507056d+04 &
+        , 0.322749421172d+04 &
+        , 0.105085457929d+05 &
+        , 0.760100817180d+04 &
         , -0.154452941021d+03 &
-        ,  0.116591690913d+05 &
-        ,  0.545158062256d+04 &
+        , 0.116591690913d+05 &
+        , 0.545158062256d+04 &
         , -0.147009768999d+05 &
-        ,  0.837232861928d+04 &
+        , 0.837232861928d+04 &
         , -0.215839979930d+05 &
-        ,  0.259296687114d+04 &
+        , 0.259296687114d+04 &
         , -0.200350447569d+05 &
-        ,  0.715220756699d+04 &
+        , 0.715220756699d+04 &
         , -0.287718965267d+05 &
-        ,  0.465283734010d+05 &
+        , 0.465283734010d+05 &
         , -0.293538119662d+05 &
-        ,  0.360801302323d+04 &
+        , 0.360801302323d+04 &
         , -0.711375038801d+04 &
-        ,  0.207165303287d+05 &
+        , 0.207165303287d+05 &
         , -0.429871435991d+04 &
-        ,  0.146086049742d+05 &
+        , 0.146086049742d+05 &
         , -0.716645835750d+04 &
-        ,  0.621995624878d+04 &
+        , 0.621995624878d+04 &
         , -0.473847386335d+04 &
-        ,  0.105333303930d+05 &
-        ,  0.263169711349d+04 &
+        , 0.105333303930d+05 &
+        , 0.263169711349d+04 &
         , -0.172818407904d+05 &
-        ,  0.463716566887d+04 &
+        , 0.463716566887d+04 &
         , -0.281408500373d+04 &
         , -0.894014094886d+04 &
-        ,  0.200179311844d+05 &
+        , 0.200179311844d+05 &
         , -0.441979470138d+03 &
-        ,  0.323489831002d+04 &
+        , 0.323489831002d+04 &
         , -0.907414122311d+03 &
-        ,  0.508257104647d+02 &
-        ,  0.936674512833d+04 &
-        ,  0.129397387217d+05 &
+        , 0.508257104647d+02 &
+        , 0.936674512833d+04 &
+        , 0.129397387217d+05 &
         , -0.208555663847d+05 &
-        ,  0.641186135074d+04 &
+        , 0.641186135074d+04 &
         , -0.116098450869d+05 &
         , -0.997845013200d+04 &
-        ,  0.382079016880d+05 &
-        ,  0.100290883426d+05 &
-        ,  0.248234518634d+05 &
+        , 0.382079016880d+05 &
+        , 0.100290883426d+05 &
+        , 0.248234518634d+05 &
         , -0.245829719823d+05 &
-        ,  0.308607637422d+05 &
-        ,  0.234677776723d+05 &
+        , 0.308607637422d+05 &
+        , 0.234677776723d+05 &
         , -0.375273450900d+05 &
         , -0.109881222021d+05 &
         , -0.571478320286d+04 &
-        ,  0.814295997139d+04 &
-        ,  0.284182465748d+04 &
-        ,  0.104086164722d+05 &
+        , 0.814295997139d+04 &
+        , 0.284182465748d+04 &
+        , 0.104086164722d+05 &
         , -0.410536834285d+03 &
-        ,  0.354029040396d+03 &
+        , 0.354029040396d+03 &
         , -0.843965401937d+04 &
-        ,  0.906493399432d+04 &
+        , 0.906493399432d+04 &
         , -0.172590472400d+05 &
-        ,  0.952079534524d+04 &
-        ,  0.126554024450d+05 &
+        , 0.952079534524d+04 &
+        , 0.126554024450d+05 &
         , -0.981471615810d+04 &
-        ,  0.479612615911d+04 &
+        , 0.479612615911d+04 &
         , -0.516333206145d+04 &
         , -0.168329719551d+05 &
         , -0.848459247106d+04 &
@@ -214,104 +210,101 @@ module no2_6ap_zv_par
         , -0.145757850273d+04 &
         , -0.126305473974d+05 &
         , -0.610797260940d+04 &
-        ,  0.844685790027d+04 &
+        , 0.844685790027d+04 &
         , -0.142421471160d+05 &
         , -0.715744509654d+04 &
-        ,  0.246162603687d+05 &
+        , 0.246162603687d+05 &
         , -0.824628990267d+04 &
-        ,  0.117111101687d+05 &
-        ,  0.351150401387d+03 &
+        , 0.117111101687d+05 &
+        , 0.351150401387d+03 &
         , -0.292494493414d+05 &
-        ,  0.140305020196d+04 &
+        , 0.140305020196d+04 &
         , -0.422729151490d+05 &
-        ,  0.216155783998d+05 &
-        ,  0.818521936322d+04 &
+        , 0.216155783998d+05 &
+        , 0.818521936322d+04 &
         , -0.132237293517d+05 &
         , -0.258008632244d+05 &
-        ,  0.280840425206d+05 &
+        , 0.280840425206d+05 &
         , -0.111869656942d+05 &
-        ,  0.186793437556d+05 &
-        ,  0.111486007952d+05 &
+        , 0.186793437556d+05 &
+        , 0.111486007952d+05 &
         , -0.145059853978d+04 &
-        ,  0.892769732663d+03 &
+        , 0.892769732663d+03 &
         , -0.540868185268d+04 &
-        ,  0.109063146952d+04 &
+        , 0.109063146952d+04 &
         , -0.146293827803d+05 &
-        ,  0.423685045475d+04 &
+        , 0.423685045475d+04 &
         , -0.184042887679d+04 &
-        ,  0.378425075516d+04 &
+        , 0.378425075516d+04 &
         , -0.629363370015d+04 &
-        ,  0.101283066202d+05 &
+        , 0.101283066202d+05 &
         , -0.815033042720d+04 &
         , -0.342032862346d+04 &
-        ,  0.528707825716d+04 &
+        , 0.528707825716d+04 &
         , -0.471057640315d+04 &
-        ,  0.129718064645d+05 &
+        , 0.129718064645d+05 &
         , -0.784552516827d+04 &
-        ,  0.152080863164d+05 &
-        ,  0.123734944846d+05 &
+        , 0.152080863164d+05 &
+        , 0.123734944846d+05 &
         , -0.909484795350d+04 &
-        ,  0.899359101011d+04 &
-        ,  0.837285273537d+04 &
-        ,  0.450266986362d+04 &
+        , 0.899359101011d+04 &
+        , 0.837285273537d+04 &
+        , 0.450266986362d+04 &
         , -0.408792307120d+03 &
-        ,  0.307028846770d+04 &
-        ,  0.104772975173d+04 &
+        , 0.307028846770d+04 &
+        , 0.104772975173d+04 &
         , -0.591207739289d+04 &
-        ,  0.207157128033d+04 &
-        ,  0.926540004974d+04 &
+        , 0.207157128033d+04 &
+        , 0.926540004974d+04 &
         , -0.109545683769d+05 &
-        ,  0.535526969523d+04 &
-        ,  0.355079207629d+04 &
-        ,  0.342973320658d+03 &
-        ,  0.176505414329d+04 &
+        , 0.535526969523d+04 &
+        , 0.355079207629d+04 &
+        , 0.342973320658d+03 &
+        , 0.176505414329d+04 &
         , -0.349594085218d+04 &
-        ,  0.250628788190d+04 &
+        , 0.250628788190d+04 &
         , -0.842520291547d+03 &
-        ,  0.138136890343d+05 &
+        , 0.138136890343d+05 &
         , -0.276137469472d+03 &
         , -0.119356198512d+05 &
-        ,  0.651433421422d+04 &
+        , 0.651433421422d+04 &
         , -0.452855594330d+04 &
-        ,  0.453039184733d+04 &
-        ,  0.290856136590d+04 &
+        , 0.453039184733d+04 &
+        , 0.290856136590d+04 &
         , -0.136535894560d+04 &
-        ,  0.159837882572d+04 &
+        , 0.159837882572d+04 &
         , -0.926400783938d+04 &
         , -0.434731735828d+04 &
-        ,  0.111788331706d+05 &
-        ,  0.395860487370d+04 &
+        , 0.111788331706d+05 &
+        , 0.395860487370d+04 &
         , -0.267210631811d+04 &
-        ,  0.543433196451d+03 &
+        , 0.543433196451d+03 &
         , -0.641876015513d+03 &
-        ,  0.415457036349d+04 &
+        , 0.415457036349d+04 &
         , -0.427222709067d+04 &
-        ,  0.307291280121d+04 &
+        , 0.307291280121d+04 &
         , -0.245813507346d+04 &
-        ,  0.187946788742d+04 &
-        ,  0.278640613016d+03 &
+        , 0.187946788742d+04 &
+        , 0.278640613016d+03 &
         , -0.967554521946d+03 &
-        ,  0.142923552437d+04 &
+        , 0.142923552437d+04 &
         , -0.584461294728d+04 &
-        ,  0.119942280466d+05 &
+        , 0.119942280466d+05 &
         , -0.243417599475d+05 &
-        ,  0.292835698311d+05 &
+        , 0.292835698311d+05 &
         , -0.304103983818d+05 &
-        ,  0.189934641723d+05 &
+        , 0.189934641723d+05 &
         , -0.749215811846d+04 &
         , -0.123338225832d+04 &
         , -0.978741526281d+03 &
         /)
-
 end module no2_6ap_zv_par
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, potential, gradient, dvec )
-
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, re, rm, rms, totdiss
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 3
@@ -320,43 +313,40 @@ subroutine pes( x, igrad, potential, gradient, dvec )
     double precision, intent(out) :: potential(nstates)
     double precision, intent(out) :: gradient(nstates,natoms,3)
     double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-
-    double precision :: v, tx(9), tg(9)
-    integer          :: iatom, idir, j, istate
+    double precision              :: v, tx(9), tg(9)
+    integer                       :: iatom, idir, j, istate
     !initialize
-    potential = 0.d0
-    gradient  = 0.d0
-    dvec      = 0.d0
+    potential = 0.d0; gradient = 0.d0; dvec = 0.d0
 
-    do iatom=1,natoms
-        do idir=1,3
+    do iatom=1, natoms
+        do idir=1, 3
             j     = 3*(iatom-1)+idir
-            tx(j) = x(iatom, idir)
-        enddo
-    enddo
+            tx(j) = x(iatom,idir)
+        end do
+    end do
     tg = 0.d0
 
-    call no2pes(tx,v,tg,igrad)
+    call no2pes(tx, v, tg, igrad)
 
     v  = v/23.0609 !+Eref*27.211386d0
     tg = tg/23.0609
 
-    do istate=1,nstates
+    do istate=1, nstates
         potential(istate) = v
-    enddo
+    end do
 
-    do istate=1,nstates
-        do iatom=1,natoms
-            do idir=1,3
+    do istate=1, nstates
+        do iatom=1, natoms
+            do idir=1, 3
                 j                           = 3*(iatom-1)+idir
                 gradient(istate,iatom,idir) = tg(j)
-            enddo
-        enddo
-    enddo
+            end do
+        end do
+    end do
 
     dvec = 0.d0
 
-endsubroutine
+end subroutine
 
 !**********************************************************************
 ! Local variables used in the N2O2 PES subroutine
@@ -387,10 +377,9 @@ subroutine no2pes( x, v, dvdx, igrad )
     ! dRdX:         The derivative of R w.r.t. X, dim(3*9)
     !**********************************************************************
     implicit none
-
-    integer          :: i,igrad,j,nob,k
+    integer          :: i, igrad, j, nob, k
     double precision :: v
-    double precision :: dvdx(9),x(9)
+    double precision :: dvdx(9), x(9)
     ! Obtain Cartesian coordinates from input file
     call coord_convt(x)
     if (igrad .le. 1) then
@@ -398,12 +387,13 @@ subroutine no2pes( x, v, dvdx, igrad )
         call evv(v)
         if (igrad .eq. 1) then
             ! Call subroutine EvdVdX to evaluate the derivatives of V w.r.t. X
-            call evdvdx(x,dvdx)
-        endif
+            call evdvdx(x, dvdx)
+        end if
     else
-        write (*,*) 'Only igrad = 0, 1 is allowed!'
-    endif
+        write (*, *) 'Only igrad = 0, 1 is allowed!'
+    end if
 end subroutine no2pes
+
 !> @brief Evaluate coord_convt.
 subroutine coord_convt( x )
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -418,7 +408,6 @@ subroutine coord_convt( x )
     !
     !**********************************************************************
     implicit none
-
     integer          :: i
     double precision :: x(9)
     r(1) = sqrt((x(4)-x(1))**2  + (x(5)-x(2))**2  + (x(6)-x(3))**2)
@@ -426,6 +415,7 @@ subroutine coord_convt( x )
     r(3) = sqrt((x(4)-x(7))**2  + (x(5)-x(8))**2  + (x(6)-x(9))**2)
 
 end subroutine coord_convt
+
 !> @brief Evaluate EvV.
 subroutine evv( v )
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -447,10 +437,9 @@ subroutine evv( v )
     ! B(1:227): Array to store basis functions
     !**********************************************************************
     implicit none
-
-    integer          :: i,j,k
-    double precision :: dist,dv2dr,v,v21,v22,v23
-    double precision :: vpf,dvpfdr(3)
+    integer          :: i, j, k
+    double precision :: dist, dv2dr, v, v21, v22, v23
+    double precision :: vpf, dvpfdr(3)
     ! Calculate the six MEG terms for each point
     call evmeg
     ! Calculate the monomials for each point by using six MEG terms
@@ -464,22 +453,23 @@ subroutine evv( v )
     ! Evaluate 2-body interactions
 
     dist = r(1)
-    call ev2gm2(dist,v21,dv2dr,4,0)         ! OO
+    call ev2gm2(dist, v21, dv2dr, 4, 0)         ! OO
     dist = r(2)
-    call ev2gm2(dist,v22,dv2dr,3,0)         ! NO
+    call ev2gm2(dist, v22, dv2dr, 3, 0)         ! NO
     dist = r(3)
-    call ev2gm2(dist,v23,dv2dr,3,0)         ! NO
+    call ev2gm2(dist, v23, dv2dr, 3, 0)         ! NO
     v = v + v21 + v22 + v23
     ! Evaluate V by taken the product of C and Basis function arrays
-    do i=1,227
+    do i=1, 227
         v = v + c(i)*b(i)
-    enddo
+    end do
     ! Add a patch function to get the barrier between 2A1 and 2B2 minima
     !       call patchfunc(Vpf,dVpfdR,0)
     !       v=v + Vpf
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
 end subroutine evv
+
 !> @brief Evaluate EvdVdX.
 subroutine evdvdx( x, dvdx )
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -496,25 +486,25 @@ subroutine evdvdx( x, dvdx )
     !               Cartesian coordinates
     !**********************************************************************
     implicit none
-
-    integer          :: i,j
-    double precision :: dvdx(9),x(9)
+    integer          :: i, j
+    double precision :: dvdx(9), x(9)
     ! Initialize dVdX
-    do i=1,9
+    do i=1, 9
         dvdx(i) = 0.0d0
-    enddo
+    end do
     ! Call EvdVdR to evaluate dVdR(3)
     call evdvdr
     ! Call EvdRdX to evaluate dRdX(3,9)
     call evdrdx(x)
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi),
     ! j=1 to 3
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 end subroutine evdvdx
+
 !> @brief Evaluate EvMEG.
 subroutine evmeg
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -527,12 +517,12 @@ subroutine evmeg
     !  ab:   nonlinear parameter (Angstrom^2)
     !**********************************************************************
     implicit none
-
     integer :: i
-    do i=1,3
+    do i=1, 3
         rms(i) = exp(-(r(i)-re(i))/a(i)-(r(i)-re(i))**2.0d0/ab(i))
-    enddo
+    end do
 end subroutine evmeg
+
 !> @brief Evaluate EvMono.
 subroutine evmono
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -544,9 +534,7 @@ subroutine evmono
     !**********************************************************************
 
     implicit none
-
     integer :: i
-
     rm(0) = 1.0d0
     rm(1) = rms(3)
     rm(2) = rms(2)
@@ -554,6 +542,7 @@ subroutine evmono
     rm(4) = rm(1)*rm(2)
 
 end subroutine evmono
+
 !> @brief Evaluate EvPoly.
 subroutine evpoly
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -564,7 +553,6 @@ subroutine evpoly
     !  For degree 10, the number of polynomials is nob.
     !**********************************************************************
     implicit none
-
     p(0)   = rm(0)
     p(1)   = rm(1) + rm(2)
     p(2)   = rm(3)
@@ -819,6 +807,7 @@ subroutine evpoly
     p(251) = p(2)*p(202)
 
 end subroutine evpoly
+
 !> @brief Evaluate evbas.
 subroutine evbas
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -829,49 +818,49 @@ subroutine evbas
     !**********************************************************************
 
     implicit none
-
     integer          :: i
     double precision :: b1(252)
     ! Pass P(0:251) to BM1(1:252)
-    do i=1,252
+    do i=1, 252
         b1(i) = p(i-1)
-    enddo
+    end do
     ! Remove unconnected terms and 2-body terms and pass to B(1:227)
-    do i=1,2
+    do i=1, 2
         b(i) = b1(i+3)
-    enddo
-    do i=3,6
+    end do
+    do i=3, 6
         b(i) = b1(i+5)
-    enddo
-    do i=7,13
+    end do
+    do i=7, 13
         b(i) = b1(i+7)
-    enddo
-    do i=14,23
+    end do
+    do i=14, 23
         b(i) = b1(i+9)
-    enddo
-    do i=24,37
+    end do
+    do i=24, 37
         b(i) = b1(i+11)
-    enddo
-    do i=38,55
+    end do
+    do i=38, 55
         b(i) = b1(i+13)
-    enddo
-    do i=56,78
+    end do
+    do i=56, 78
         b(i) = b1(i+15)
-    enddo
-    do i=79,106
+    end do
+    do i=79, 106
         b(i) = b1(i+17)
-    enddo
-    do i=107,140
+    end do
+    do i=107, 140
         b(i) = b1(i+19)
-    enddo
-    do i=141,180
+    end do
+    do i=141, 180
         b(i) = b1(i+21)
-    enddo
-    do i=181,227
+    end do
+    do i=181, 227
         b(i) = b1(i+23)
-    enddo
+    end do
 
 end subroutine evbas
+
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v, grad, imol, igrad )
     !**********************************************************************
@@ -886,19 +875,18 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     !
     !**********************************************************************
     implicit none
-
-    integer,intent(in)           :: imol, igrad
-    double precision,intent(in)  :: r
-    double precision,intent(out) :: v, grad
+    integer, intent(in)           :: imol, igrad
+    double precision, intent(in)  :: r
+    double precision, intent(out) :: v, grad
     ! Parameters of analytical even-tempered Gaussian expansions for the
     ! ground state potential energy curve of O2 CBS+SR+SO+CV.
     ! Units: alpha in Angstrom^-2, beta=dimensionless, as_k in milihartree.
-    double precision :: alpha,beta,as(0:7)
+    double precision :: alpha, beta, as(0:7)
     integer          :: k
     ! NO potential variables
-    double precision :: re,de,c(12),u,dfdr
+    double precision :: re, de, c(12), u, dfdr
     ! Dispersion variables
-    double precision :: dist(1),disp,dispdr(1)
+    double precision :: dist(1), disp, dispdr(1)
     ! O2 pairwise
     if (imol .eq. 4) then
         ! Original parameters
@@ -924,30 +912,30 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
         as(6) = -2.946204062950765d5
         as(7) = 1.176861219078620d5
         v     = 0.d0
-        do k=0,7
+        do k=0, 7
             v = v + as(k)*dexp(-alpha*beta**k*r**2)
-        enddo
+        end do
         ! From milihartree to kcal/mol
         v = v*627.509523475149d-3
         ! Add D3 dispersion correction
         !        write(*,*) "voo= ",v
         dist(1) = r
-        call d3disp(dist,disp,dispdr,0,imol)
+        call d3disp(dist, disp, dispdr, 0, imol)
         v = v+disp
         !        write(*,*) "dispoo= ",disp
 
         ! Compute the gradient if needed
         if (igrad.eq.1) then
             grad = 0.d0
-            do k=0,7
+            do k=0, 7
                 grad = grad-2.d0*as(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
-            enddo
+            end do
             ! Convert from milihartree/A to (kcal/mol)/A
             grad = grad*627.509523475149d-3
             ! Add analytical gradient of D3 dispersion correction
-            call d3disp(dist,disp,dispdr,1,imol)
+            call d3disp(dist, disp, dispdr, 1, imol)
             grad = grad + dispdr(1)
-        endif
+        end if
         ! NO pairwise for quartet NO
     else if (imol .eq. 3) then
         !!! quartet NO only for sextet NO2 surface !!!
@@ -980,7 +968,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
         ! Add D3 dispersion correction
         !        write(*,*) "vno= ",v
         dist(1) = r
-        call d3disp(dist,disp,dispdr,0,imol)
+        call d3disp(dist, disp, dispdr, 0, imol)
         v = v+disp
         !        write(*,*) "dispno= ",disp
         ! 1st derivate by r
@@ -991,10 +979,10 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
                 & dfdr*u**4.0d0 + c(5)*5.0d0*dfdr*u**5.0d0 + c(6)*6.0d0*dfdr*u**6.0d0 + c(7)*7.0d0*dfdr*u**7.0d0 + &
                 & c(8)* 8.0d0*dfdr*u**8.0d0 + c(9)*9.0d0*dfdr*u**9.0d0 + c(10)*10.0d0*dfdr*u**10.0d0 )
             ! Add analytical gradient of D3 dispersion correction
-            call d3disp(dist,disp,dispdr,1,imol)
+            call d3disp(dist, disp, dispdr, 1, imol)
             grad = grad + dispdr(1)
-        endif
-    endif
+        end if
+    end if
 end subroutine ev2gm2
 
 !> @brief Evaluate patchfunc.
@@ -1006,13 +994,11 @@ subroutine patchfunc( vpf, dvpfdr, igrad )
     !      minima of the doublet surface
     !**********************************************************************
     implicit none
-
     integer          :: igrad
     double precision :: vpf
-    double precision :: tmp,tmp2,tmp3
+    double precision :: tmp, tmp2, tmp3
     double precision :: dvpfdr(3)
-    double precision :: rnoe,aooe,a0,a1,a2
-
+    double precision :: rnoe, aooe, a0, a1, a2
     a0   = 6.5d0  ! in kcal/mol
     a1   = 0.009d0 ! in Ang**2
     a2   = 0.002d0 ! in rad**2
@@ -1037,7 +1023,7 @@ subroutine patchfunc( vpf, dvpfdr, igrad )
         tmp3      = -2.0d0*(r(3)-rnoe)/a1-2.0d0*(1/r(2)-tmp2)*(tmp2-aooe)/a2
         dvpfdr(3) = vpf * tmp3
 
-    endif
+    end if
 
 end subroutine patchfunc
 
@@ -1063,24 +1049,23 @@ subroutine evdvdr
     !**********************************************************************
 
     implicit none
-
-    integer          :: i,j
-    double precision :: dist,v,v21,v22,v23
-    double precision :: dv2dr1,dv2dr2,dv2dr3
-    double precision :: vpf,dvpfdr(3)
+    integer          :: i, j
+    double precision :: dist, v, v21, v22, v23
+    double precision :: dv2dr1, dv2dr2, dv2dr3
+    double precision :: vpf, dvpfdr(3)
     ! Initialize dVdR(6)
-    do i=1,3
+    do i=1, 3
         dvdr(i) = 0.0d0
-    enddo
+    end do
     ! Add dV2dR(i) to dVdR
     dist = r(1)
-    call ev2gm2(dist,v21,dv2dr1,4,1)  ! OO
+    call ev2gm2(dist, v21, dv2dr1, 4, 1)  ! OO
     dvdr(1) = dv2dr1
     dist    = r(2)
-    call ev2gm2(dist,v22,dv2dr2,3,1)  ! NO
+    call ev2gm2(dist, v22, dv2dr2, 3, 1)  ! NO
     dvdr(2) = dv2dr2
     dist    = r(3)
-    call ev2gm2(dist,v23,dv2dr3,3,1)  ! NO
+    call ev2gm2(dist, v23, dv2dr3, 3, 1)  ! NO
     dvdr(3) = dv2dr3
 
     ! Calculate dMEG/dr(3,3) for given R(3)
@@ -1092,11 +1077,11 @@ subroutine evdvdr
     ! Remove 2-body interactions and unconnected terms from polynomials
     call evdbdr
     ! Evaluate dVdR(3) by taking the product of C(j) and dPdR(i,j)
-    do i=1,3
-        do j=1,227
+    do i=1, 3
+        do j=1, 227
             dvdr(i) = dvdr(i) + c(j)*dbdr(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
     ! Add the derivative of patch function to get the barrier
     ! between 2A1 and 2B2 minima
@@ -1107,6 +1092,7 @@ subroutine evdvdr
     !      enddo
 
 end subroutine evdvdr
+
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( x )
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -1123,15 +1109,14 @@ subroutine evdrdx( x )
     ! P(nob):       Array to store polynomials
     !**********************************************************************
     implicit none
-
-    integer          :: i,j
+    integer          :: i, j
     double precision :: x(9)
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
+    do i=1, 3
+        do j=1, 9
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
     ! Start to calculate the non-zero dRdX
     ! dr1dx
     drdx(1,1) = (x(1)-x(4))/r(1)
@@ -1156,6 +1141,7 @@ subroutine evdrdx( x )
     drdx(3,9) = -drdx(3,6)
     ! Finish the calculation of non-zero dRdX
 end subroutine evdrdx
+
 !> @brief Evaluate EvdMsdR.
 subroutine evdmsdr
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -1169,21 +1155,21 @@ subroutine evdmsdr
     ! re:           equilibrium bond length(Angstrom)
     !**********************************************************************
     implicit none
-
-    integer :: i,j
+    integer :: i, j
     ! Initialize dmsdr
-    do i=1,3
-        do j=1,3
+    do i=1, 3
+        do j=1, 3
             dmsdr(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
     ! dmsdr(i,i)= (-1/a-2*(r-re)/ab)*Exp(-(r-re)/a-(r-re)^2/ab)
-    do i=1,3
+    do i=1, 3
         dmsdr(i,i) = (-2.0d0*(r(i)-re(i))/ab(i)-1.0d0/a(i)) * exp(-(r(i)-re(i))/a(i)-((r(i)-re(i))**2.0d0)/ab(i))
-    enddo
+    end do
 end subroutine evdmsdr
+
 !> @brief Evaluate EvdMdR.
 subroutine evdmdr
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -1194,16 +1180,16 @@ subroutine evdmdr
     !  For degree 10, the number of monomials is nom.
     !**********************************************************************
     implicit none
-
     integer :: i
-    do i=1,3
+    do i=1, 3
         dmdr(i,0) = 1.0d0
         dmdr(i,1) = dmsdr(i,3)
         dmdr(i,2) = dmsdr(i,2)
         dmdr(i,3) = dmsdr(i,1)
         dmdr(i,4) = dmdr(i,1)*rm(2) + rm(1)*dmdr(i,2)
-    enddo
+    end do
 end subroutine evdmdr
+
 !> @brief Evaluate EvdPdr.
 subroutine evdpdr
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -1214,9 +1200,8 @@ subroutine evdpdr
     !  For degree 10, the number of polynomials is nob.
     !**********************************************************************
     implicit none
-
     integer :: i
-    do i=1,3
+    do i=1, 3
         dpdr(i,0)   = dmdr(i,0)
         dpdr(i,1)   = dmdr(i,1) + dmdr(i,2)
         dpdr(i,2)   = dmdr(i,3)
@@ -1470,8 +1455,9 @@ subroutine evdpdr
         dpdr(i,250) = dpdr(i,1)*p(201) + p(1)*dpdr(i,201) - dpdr(i,238)
         dpdr(i,251) = dpdr(i,2)*p(202) + p(2)*dpdr(i,202)
 
-    enddo
+    end do
 end subroutine evdpdr
+
 !> @brief Evaluate evdbdr.
 subroutine evdbdr
     use no2_6ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -1482,53 +1468,53 @@ subroutine evdbdr
     !**********************************************************************
 
     implicit none
-
-    integer          :: i,j
+    integer          :: i, j
     double precision :: db1dr(3,252)
     ! Pass P(0:251) to BM1(1:252)
-    do j=1,3
-        do i=1,252
+    do j=1, 3
+        do i=1, 252
             db1dr(j,i) = dpdr(j,i-1)
-        enddo
-    enddo
+        end do
+    end do
     ! Remove unconnected terms and 2-body terms and pass to B(1:227)
-    do j=1,3
-        do i=1,2
+    do j=1, 3
+        do i=1, 2
             dbdr(j,i) = db1dr(j,i+3)
-        enddo
-        do i=3,6
+        end do
+        do i=3, 6
             dbdr(j,i) = db1dr(j,i+5)
-        enddo
-        do i=7,13
+        end do
+        do i=7, 13
             dbdr(j,i) = db1dr(j,i+7)
-        enddo
-        do i=14,23
+        end do
+        do i=14, 23
             dbdr(j,i) = db1dr(j,i+9)
-        enddo
-        do i=24,37
+        end do
+        do i=24, 37
             dbdr(j,i) = db1dr(j,i+11)
-        enddo
-        do i=38,55
+        end do
+        do i=38, 55
             dbdr(j,i) = db1dr(j,i+13)
-        enddo
-        do i=56,78
+        end do
+        do i=56, 78
             dbdr(j,i) = db1dr(j,i+15)
-        enddo
-        do i=79,106
+        end do
+        do i=79, 106
             dbdr(j,i) = db1dr(j,i+17)
-        enddo
-        do i=107,140
+        end do
+        do i=107, 140
             dbdr(j,i) = db1dr(j,i+19)
-        enddo
-        do i=141,180
+        end do
+        do i=141, 180
             dbdr(j,i) = db1dr(j,i+21)
-        enddo
-        do i=181,227
+        end do
+        do i=181, 227
             dbdr(j,i) = db1dr(j,i+23)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine evdbdr
+
 !> @brief Evaluate d3disp.
 subroutine d3disp( dist, disp, dispdr, igrad, imol )
     !**********************************************************************
@@ -1549,14 +1535,13 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     !
     !**********************************************************************
     implicit none
-
-    double precision :: cn(2),s6,s8,rs6,rs8
+    double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
-    double precision :: e6dr(1),e8dr(1)
+    double precision :: e6dr(1), e8dr(1)
     integer          :: iz(2), mxc(94), i, j, igrad
     double precision :: c6ab(94,94,5,5,3)
     double precision :: r2r4(94)
-    double precision :: autoang,autokcal
+    double precision :: autoang, autokcal
     integer          :: imol
     autoang  = 0.52917726d0
     autokcal = 627.509541d0
@@ -1566,9 +1551,9 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     s8  = 2.0d0
     rs6 = 0.5299d0
     rs8 = 2.20d0
-    do i=1,1
+    do i=1, 1
         dist(i) = dist(i)/autoang
-    enddo
+    end do
     if (imol.eq.4) then
         ! iz for O2 system
         iz(1) = 8
@@ -1585,26 +1570,27 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     else
         ! currently imol = 4 is used
         stop
-    endif
+    end if
     ! Calculate dispersion correction
-    call edisp(94,5,2,dist,iz,mxc, &
-        rs6,rs8,e6,e8,e6dr,e8dr,c6,0)
+    call edisp(94, 5, 2, dist, iz, mxc, &
+        rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
     disp = 0.0d0
-    do i=1,1
+    do i=1, 1
         disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
-    enddo
+    end do
     if (igrad .eq. 1) then
-        call edisp(94,5,2,dist,iz,mxc, &
-            rs6,rs8,e6,e8,e6dr,e8dr,c6,1)
+        call edisp(94, 5, 2, dist, iz, mxc, &
+            rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
         dispdr(:) = 0.0d0
-        do i=1,1
+        do i=1, 1
             dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
-        enddo
-    endif
-    do i=1,1
+        end do
+    end if
+    do i=1, 1
         dist(i) = dist(i)*autoang
-    enddo
+    end do
 end subroutine d3disp
+
 !**********************************************************************
 ! compute energy
 !**********************************************************************
@@ -1612,18 +1598,16 @@ end subroutine d3disp
 subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
     implicit none
-
-    integer          :: n,iz(2),max_elem,maxc,mxc(max_elem)
-    double precision :: dist(1),r2r4(max_elem),r0ab(max_elem,max_elem)
-    double precision :: rs6,rs8,rcov(max_elem)
+    integer          :: n, iz(2), max_elem, maxc, mxc(max_elem)
+    double precision :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+    double precision :: rs6, rs8, rcov(max_elem)
     double precision :: c6ab(max_elem,max_elem,maxc,maxc,3)
     double precision :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
-
-    integer          :: iat,jat,igrad
-    double precision :: r,tmp,c6,c8,a1,a2
-    double precision :: damp6,damp8
+    integer          :: iat, jat, igrad
+    double precision :: r, tmp, c6, c8, a1, a2
+    double precision :: damp6, damp8
     double precision :: cn(n)
-    double precision :: r2ab(n*n),cc6ab(n*n),dmp(n*n)
+    double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
     integer          :: step
     e6(:)   = 0.0d0
     e8(:)   = 0.0d0
@@ -1635,20 +1619,20 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
     !  the large number of digits is just to keep the results consistent
     !  with older versions. They should not imply any higher accuracy than
     !  the old values
-    r2r4(1:94)=(/ 2.00734898d0,  1.56637132d0,  5.01986934d0,  3.85379032d0, 3.64446594d0,  3.10492822d0, &
-        & 2.71175247d0, 2.59361680d0, 2.38825250d0,  2.21522516d0,  6.58585536d0,  5.46295967d0, 5.65216669d0, &
-        & 4.88284902d0, 4.29727576d0,  4.04108902d0, 3.72932356d0,  3.44677275d0,  7.97762753d0,  7.07623947d0, &
-        & 6.60844053d0, 6.28791364d0,  6.07728703d0,  5.54643096d0, 5.80491167d0,  5.58415602d0,  5.41374528d0, &
-        & 5.28497229d0, 5.22592821d0,  5.09817141d0,  6.12149689d0,  5.54083734d0, 5.06696878d0,  4.87005108d0, &
-        & 4.59089647d0, 4.31176304d0, 9.55461698d0,  8.67396077d0,  7.97210197d0,  7.43439917d0, 6.58711862d0, &
-        & 6.19536215d0, 6.01517290d0,  5.81623410d0, 5.65710424d0,  5.52640661d0,  5.44263305d0,  5.58285373d0, &
-        & 7.02081898d0, 6.46815523d0,  5.98089120d0,  5.81686657d0, 5.53321815d0,  5.25477007d0, 11.02204549d0, &
-        & 0.15679528d0, 9.35167836d0,  9.06926079d0,  8.97241155d0,  8.90092807d0, 8.85984840d0,  8.81736827d0, &
-        & 8.79317710d0, 7.89969626d0, 8.80588454d0,  8.42439218d0,  8.54289262d0,  8.47583370d0, 8.45090888d0, &
-        & 8.47339339d0, 7.83525634d0,  8.20702843d0, 7.70559063d0,  7.32755997d0,  7.03887381d0,  6.68978720d0, &
-        & 6.05450052d0, 5.88752022d0,  5.70661499d0,  5.78450695d0, 7.79780729d0,  7.26443867d0,  6.78151984d0, &
-        & 6.67883169d0, 6.39024318d0,  6.09527958d0, 11.79156076d0, 11.10997644d0, 9.51377795d0,  8.67197068d0, &
-        & 8.77140725d0, 8.65402716d0, 8.53923501d0,  8.85024712d0 /)
+    r2r4(1:94)=(/ 2.00734898d0, 1.56637132d0, 5.01986934d0, 3.85379032d0, 3.64446594d0, 3.10492822d0, 2.71175247d0, &
+        & 2.59361680d0, 2.38825250d0, 2.21522516d0, 6.58585536d0, 5.46295967d0, 5.65216669d0, 4.88284902d0, &
+        & 4.29727576d0, 4.04108902d0, 3.72932356d0, 3.44677275d0, 7.97762753d0, 7.07623947d0, 6.60844053d0, &
+        & 6.28791364d0, 6.07728703d0, 5.54643096d0, 5.80491167d0, 5.58415602d0, 5.41374528d0, 5.28497229d0, &
+        & 5.22592821d0, 5.09817141d0, 6.12149689d0, 5.54083734d0, 5.06696878d0, 4.87005108d0, 4.59089647d0, &
+        & 4.31176304d0, 9.55461698d0, 8.67396077d0, 7.97210197d0, 7.43439917d0, 6.58711862d0, 6.19536215d0, &
+        & 6.01517290d0, 5.81623410d0, 5.65710424d0, 5.52640661d0, 5.44263305d0, 5.58285373d0, 7.02081898d0, &
+        & 6.46815523d0, 5.98089120d0, 5.81686657d0, 5.53321815d0, 5.25477007d0, 11.02204549d0, 0.15679528d0, &
+        & 9.35167836d0, 9.06926079d0, 8.97241155d0, 8.90092807d0, 8.85984840d0, 8.81736827d0, 8.79317710d0, &
+        & 7.89969626d0, 8.80588454d0, 8.42439218d0, 8.54289262d0, 8.47583370d0, 8.45090888d0, 8.47339339d0, &
+        & 7.83525634d0, 8.20702843d0, 7.70559063d0, 7.32755997d0, 7.03887381d0, 6.68978720d0, 6.05450052d0, &
+        & 5.88752022d0, 5.70661499d0, 5.78450695d0, 7.79780729d0, 7.26443867d0, 6.78151984d0, 6.67883169d0, &
+        & 6.39024318d0, 6.09527958d0, 11.79156076d0, 11.10997644d0, 9.51377795d0, 8.67197068d0, 8.77140725d0, &
+        & 8.65402716d0, 8.53923501d0, 8.85024712d0 /)
     ! these new data are scaled with k2=4./3. and converted to a_0 via
     ! autoang=0.52917726d0
     rcov(1:94)=(/ 0.80628308d0, 1.15903197d0, 3.02356173d0, 2.36845659d0, 1.94011865d0, 1.88972601d0, 1.78894056d0, &
@@ -1667,8 +1651,8 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & 3.85504098d0, 3.88023730d0, 3.90543362d0 /)
     ! DFT-D3
     step = 0
-    do iat=1,n-1
-        do jat=iat+1,n
+    do iat=1, n-1
+        do jat=iat+1, n
             step = step+1
             r    = dist(step)
             c6   = c6a(step)
@@ -1683,7 +1667,7 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
                 ! grad for BJ damping
                 e6dr(step) = c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
                 e8dr(step) = c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
-            endif
-        enddo
-    enddo
+            end if
+        end do
+    end do
 end subroutine edisp

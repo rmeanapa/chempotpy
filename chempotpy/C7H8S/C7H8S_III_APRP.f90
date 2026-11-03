@@ -1,11 +1,11 @@
 !**********************************************************************
-!   System:                     C7H8S
-!   Functional form:            Anchor-Points Reactive Potential (APRP) (3x3 diabatic fit)
-!   Common name:                PhSCH3 III (Coupled PESs, Surface set III)
-!   Number of derivatives:      1
-!   Number of bodies:           16
+!   System:                        C7H8S
+!   Functional form:               Anchor-Points Reactive Potential (APRP) (3x3 diabatic fit)
+!   Common name:                   PhSCH3 III (Coupled PESs, Surface set III)
+!   Number of derivatives:         1
+!   Number of bodies:              16
 !   Number of electronic surfaces: 3
-!   Interface: Section-2
+!   Interface:                     Section-2
 !
 !   Reference: "Full-dimensional ground- and excited-state potential energy surfaces and
 ! state couplings for photodissociation of thioanisole"
@@ -96,9 +96,8 @@
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, p, g, d )
-
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 3
     integer, parameter            :: natoms  = 16
@@ -106,69 +105,65 @@ subroutine pes( x, igrad, p, g, d )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: xx(3,natoms), uu(nstates,nstates)
-    double precision :: guu(3,natoms,nstates,nstates)
-    double precision :: vv(nstates), gvv(3,natoms,nstates)
-    double precision :: dvec(3,natoms,nstates,nstates)
-    double precision :: cc(nstates,nstates)
-    integer          :: iatom, idir, j, istate, jstate
+    double precision              :: xx(3,natoms), uu(nstates,nstates)
+    double precision              :: guu(3,natoms,nstates,nstates)
+    double precision              :: vv(nstates), gvv(3,natoms,nstates)
+    double precision              :: dvec(3,natoms,nstates,nstates)
+    double precision              :: cc(nstates,nstates)
+    integer                       :: iatom, idir, j, istate, jstate
     !initialize
-    p = 0.d0
-    g = 0.d0
-    d = 0.d0
+    p = 0.d0; g = 0.d0; d = 0.d0
 
-    do iatom=1,natoms
-        do idir=1,3
-            xx(idir,iatom) = x(iatom,idir)/0.529177211
-        enddo
-    enddo
+    do iatom=1, natoms
+        do idir=1, 3
+            xx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
+        end do
+    end do
 
-    call pot(igrad,xx,uu,guu,vv,gvv,dvec,cc,0)
+    call pot(igrad, xx, uu, guu, vv, gvv, dvec, cc, 0)
 
     if (igrad==0) then
-        do istate=1,nstates
-            p(istate) = vv(istate)*27.211386
-        enddo
+        do istate=1, nstates
+            p(istate) = vv(istate)*legacy_hartree_to_electronvolt
+        end do
     elseif (igrad==1) then
-        do istate=1,nstates
-            p(istate) = vv(istate)*27.211386
-        enddo
-        do istate=1,nstates
-            do iatom=1,natoms
-                do idir=1,3
+        do istate=1, nstates
+            p(istate) = vv(istate)*legacy_hartree_to_electronvolt
+        end do
+        do istate=1, nstates
+            do iatom=1, natoms
+                do idir=1, 3
                     g(istate,iatom,idir) = gvv(idir,iatom,istate)*51.422067
-                enddo
-            enddo
-        enddo
+                end do
+            end do
+        end do
     elseif (igrad==2) then
-        do istate=1,nstates
-            p(istate) = vv(istate)*27.211386
-        enddo
-        do istate=1,nstates
-            do iatom=1,natoms
-                do idir=1,3
+        do istate=1, nstates
+            p(istate) = vv(istate)*legacy_hartree_to_electronvolt
+        end do
+        do istate=1, nstates
+            do iatom=1, natoms
+                do idir=1, 3
                     g(istate,iatom,idir) = gvv(idir,iatom,istate)*51.422067
-                enddo
-            enddo
-        enddo
-        do istate=1,nstates
-            do jstate=1,nstates
-                do iatom=1,natoms
-                    do idir=1,3
-                        d(istate,jstate,iatom,idir) = dvec(idir,iatom,istate,jstate)/0.529177211
-                    enddo
-                enddo
-            enddo
-        enddo
-    endif
+                end do
+            end do
+        end do
+        do istate=1, nstates
+            do jstate=1, nstates
+                do iatom=1, natoms
+                    do idir=1, 3
+                        d(istate,jstate,iatom,idir) = dvec(idir,iatom,istate,jstate)/legacy_bohr_to_angstrom
+                    end do
+                end do
+            end do
+        end do
+    end if
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate pot.
 subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     implicit none
-
     !--- {'global' constants
     integer, parameter :: natom = 16, nstate=3, ntermmax=200 &
         , ntermtype=4, napmax=10, nqtpset=2, nlcmax=6
@@ -184,23 +179,22 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     !--- }arguments
     integer          :: i, j, k, l, ist, jst
     double precision :: x(3,natom), vt(nstate,nstate) &
-        , gvt(3,natom,nstate,nstate), tmpmat33(nstate,nstate)
+        , gvt(3, natom, nstate, nstate), tmpmat33(nstate, nstate)
     !--- internals for prim.&sec. pot, tert. pot., tert. coupl.
     !--- qtp has two sets, for bonded & dissoc. S-Me
     double precision :: qps(3), qtp(ntermmax,nqtpset) &
         , qtc(ntermmax) &
         !--- attributes
-        , bmatqtc(ntermmax,natom*3)
+        , bmatqtc(ntermmax, natom*3)
     !--- number/type of terms and atom index lists for qtp
     integer :: nqtp(nqtpset), itermqtptype(ntermmax,nqtpset) &
-        , iqtplist(4,ntermmax,nqtpset) &
+        , iqtplist(4, ntermmax, nqtpset) &
         , nqtc, qtcsym(ntermmax), qtctyp(ntermmax)
     !--- for diagonalization of prim+sec U
     double precision :: dtamat(nstate,nstate), vtmp(nstate)
     logical          :: debug, debug2
     !--- zero of energy
     double precision :: ezero
-
     !--- debug: input cartesians in Angstroms; otherwise in bohr
     debug = .false.
     !--- debug2: use only 1 anchor point
@@ -227,14 +221,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     call calcu13_ps(uu, guu, x, qps)
     call calcu23_ps(uu, guu, x, qps)
     !--- calculate tert. potential and its grad.
-    call calcuii_t(vt, gvt, x, qps, qtp, nqtp,&
+    call calcuii_t(vt, gvt, x, qps, qtp, nqtp, &
         itermqtptype, iqtplist)
     !== {assuming tert. pot. are diabatic
     uu  = uu+vt
     guu = guu+gvt
     !== }assuming tert. pot. are diabatic
     !--- calculate tert. diab. coupl.
-    call calcuij_t(uu, guu, x, qps, qtc, nqtc, qtcsym, qtctyp,&
+    call calcuij_t(uu, guu, x, qps, qtc, nqtc, qtcsym, qtctyp, &
         bmatqtc)
     !--- calculate Born-Mayer potential and add it to diabats
     call calcbornmayer(uu, guu, x)
@@ -249,16 +243,16 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     do i = 1, 3
         do j = 1, natom
             !--- C^T*dU*C
-            tmpmat33(:,:) = guu(i,j,:,:)
-            tmpmat33      = matmul(transpose(cc), matmul(tmpmat33, cc))
+            tmpmat33(:, :) = guu(i,j,:,:)
+            tmpmat33       = matmul(transpose(cc), matmul(tmpmat33, cc))
             !--- dV_i = (C^T*dU*C)_ii
             do ist = 1, nstate
-                gvv(i,j,ist) = tmpmat33(ist,ist)
+                gvv(i,j,ist) = tmpmat33(ist, ist)
             end do
             !--- F_ij = (C^T*dU*C)_ij / (V_j-V_i)
             do ist = 1, nstate-1
                 do jst = ist+1, nstate
-                    dvec(i,j,ist,jst) = tmpmat33(ist,jst)/(vv(jst)-vv(ist))
+                    dvec(i,j,ist,jst) = tmpmat33(ist, jst)/(vv(jst)-vv(ist))
                     dvec(i,j,jst,ist) = -dvec(i,j,ist,jst)
                 end do
             end do
@@ -285,7 +279,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     subroutine calcqps( qps, x )
         implicit none
         double precision :: qps(3), x(3,natom)
-
         qps(1) = evalbl(x, 12, 13)
         !--- the CSCC torsion is not a good prim. coordinate;
         !---   instead, use the "special" coordinate phi
@@ -312,18 +305,17 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
         double precision :: qtp(:,:), x(3,natom)
         integer          :: nterm(nqtpset), itypeqtp(ntermmax,nqtpset) &
-            , iqtplist(4,ntermmax,nqtpset)
+            , iqtplist(4, ntermmax, nqtpset)
         integer :: iterm, iset, ii, jj, kk, ll
-
         !--- assign attributes of tert. int. for potentials
         call assignqtp(nterm, itypeqtp, iqtplist)
 
         do iset = 1, nqtpset
             do iterm = 1, nterm(iset)
-                ii = iqtplist(1,iterm,iset)
-                jj = iqtplist(2,iterm,iset)
-                kk = iqtplist(3,iterm,iset)
-                ll = iqtplist(4,iterm,iset)
+                ii = iqtplist(1, iterm, iset)
+                jj = iqtplist(2, iterm, iset)
+                kk = iqtplist(3, iterm, iset)
+                ll = iqtplist(4, iterm, iset)
                 select case(itypeqtp(iterm,iset))
                     !--- bond length
                 case(1)
@@ -360,14 +352,13 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
         integer          :: qtcsym(ntermmax), nqtc
         double precision :: qtc(ntermmax), x(3,natom) &
-            , bmatqtc(ntermmax,natom*3)
+            , bmatqtc(ntermmax, natom*3)
         double precision :: qr(ntermmax), lccoef(nlcmax,ntermmax) &
-            , lcqr(nlcmax), bmatrow(natom*3), bmatr(ntermmax,natom*3)
+            , lcqr(nlcmax), bmatrow(natom*3), bmatr(ntermmax, natom*3)
         integer :: nqr, itypeqr(ntermmax), iqrlist(10,ntermmax) &
             , nqnr, lcindex(nlcmax,ntermmax), nlc(ntermmax) &
             , qnrindex(ntermmax), qtctyp(ntermmax) &
             , iqtc, iqnr, iqr, ilc
-
         !--- calculate redundant q
         call calcqr(qr, x, nqr, itypeqr, iqrlist)
         !--- attributes of nonredund. q (qnr),
@@ -385,7 +376,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             !--- value of qr involved in qtc(i)
             lcqr(1:nlcmax) = qr(lcindex(1:nlcmax,iqnr))
             !--- take lin.comb. of qr to get qtc
-            qtc(iqtc) = dot_product(lccoef(:,iqnr),lcqr)
+            qtc(iqtc) = dot_product(lccoef(:,iqnr), lcqr)
         end do
 
         !--- B matrix for qr
@@ -404,7 +395,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             !--- loop over qr involved in the lin.comb.
             do ilc = 1, nlc(iqnr)
                 !--- lin.comb. of bmatr rows
-                bmatqtc(iqtc,:) = bmatqtc(iqtc,:) +lccoef(ilc,iqnr)*bmatr(lcindex(ilc,iqnr),:)
+                bmatqtc(iqtc, :) = bmatqtc(iqtc, :) +lccoef(ilc,iqnr)*bmatr(lcindex(ilc,iqnr), :)
             end do
         end do
 
@@ -427,7 +418,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         double precision :: qr(ntermmax), x(3,natom)
         integer          :: nqr, itypeqr(ntermmax), iqrlist(10,ntermmax)
         integer          :: iterm, ii, jj, kk, ll
-
         !--- attributes of redundant q (qr)
         call assignqr(nqr, itypeqr, iqrlist)
 
@@ -478,7 +468,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         integer          :: i
         double precision :: bmatrow(3*natom), bmat(3,3*natom)
         integer          :: iatomlist(10)
-
         !--- param. set 6
         de     = 0.137295383087261
         b      = 2.29327756747856
@@ -528,14 +517,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !--- (d U1)/(d theta)
         gradu1(3) = 0d0
         !--- use B matrix to convert dU1/dq to dU1/dx
-        iatomlist(1:4) = (/12,13,0,0/)
+        iatomlist(1:4) = (/12, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
         bmat(1,:) = bmatrow(:)
         !--- special coordinate in place of CCSC torsion
-        iatomlist(1:5) = (/2,3,4,12,13/)
+        iatomlist(1:5) = (/2, 3, 4, 12, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
         bmat(2,:)    = bmatrow(:)
-        guu(:,:,1,1) = guu(:,:,1,1) +reshape(matmul(gradu1, bmat), (/3,natom/))
+        guu(:,:,1,1) = guu(:,:,1,1) +reshape(matmul(gradu1, bmat), (/3, natom/))
     end subroutine calcu1_ps
 
     !=================================================================
@@ -563,7 +552,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         integer          :: i
         double precision :: bmatrow(3*natom), bmat(3,3*natom)
         integer          :: iatomlist(10)
-
         !--- param. set 3
         de     = 9.093579980902658d-002
         b      = 1.95603566794475
@@ -604,14 +592,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !--- (d U2)/(d theta)
         gradu2(3) = 0d0
         !--- use B matrix to convert dU2/dq to dU2/dx
-        iatomlist(1:4) = (/12,13,0,0/)
+        iatomlist(1:4) = (/12, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
         bmat(1,:) = bmatrow(:)
         !--- special coordinate in place of CCSC torsion
-        iatomlist(1:5) = (/2,3,4,12,13/)
+        iatomlist(1:5) = (/2, 3, 4, 12, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
         bmat(2,:)    = bmatrow(:)
-        guu(:,:,2,2) = guu(:,:,2,2) +reshape(matmul(gradu2, bmat), (/3,natom/))
+        guu(:,:,2,2) = guu(:,:,2,2) +reshape(matmul(gradu2, bmat), (/3, natom/))
 
     end subroutine calcu2_ps
 
@@ -641,7 +629,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         integer          :: i
         double precision :: bmatrow(3*natom), bmat(3,3*natom)
         integer          :: iatomlist(10)
-
         !--- param. set 5
         !  De      =    1.65138486208663
         de = 4.025
@@ -694,14 +681,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !--- (d U3)/(d theta)
         gradu3(3) = 0d0
         !--- use B matrix to convert dU3/dq to dU3/dx
-        iatomlist(1:4) = (/12,13,0,0/)
+        iatomlist(1:4) = (/12, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
         bmat(1,:) = bmatrow(:)
         !--- special coordinate in place of CCSC torsion
-        iatomlist(1:5) = (/2,3,4,12,13/)
+        iatomlist(1:5) = (/2, 3, 4, 12, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
         bmat(2,:)    = bmatrow(:)
-        guu(:,:,3,3) = guu(:,:,3,3) +reshape(matmul(gradu3, bmat), (/3,natom/))
+        guu(:,:,3,3) = guu(:,:,3,3) +reshape(matmul(gradu3, bmat), (/3, natom/))
 
     end subroutine calcu3_ps
 
@@ -726,7 +713,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             , b(0:4), alpha(2:4), k(2:4), r0(2:4), u12, dkdr
         integer          :: i, iatomlist(10)
         double precision :: bmatrow(3*natom), bmat(3,3*natom)
-
         !--- B(0) is average of intercept over all R
         b(0)     = -3d-4
         b(2)     = 0.01911d0
@@ -756,17 +742,17 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             !--- (d U12)/(d theta) has been set to zero
         end do
         !--- use B matrix to convert dU12/dq to dU12/dx
-        iatomlist(1:4) = (/12,13,0,0/)
+        iatomlist(1:4) = (/12, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
         bmat(1,:) = bmatrow(:)
         !--- special coordinate in place of CCSC torsion
-        iatomlist(1:5) = (/2,3,4,12,13/)
+        iatomlist(1:5) = (/2, 3, 4, 12, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
         bmat(2,:)      = bmatrow(:)
-        iatomlist(1:4) = (/3,12,13,0/)
+        iatomlist(1:4) = (/3, 12, 13, 0/)
         call calcbmat(bmatrow, x, iatomlist, 2)
         bmat(3,:)    = bmatrow(:)
-        guu(:,:,1,2) = guu(:,:,1,2) +reshape(matmul(gradu12, bmat), (/3,natom/))
+        guu(:,:,1,2) = guu(:,:,1,2) +reshape(matmul(gradu12, bmat), (/3, natom/))
         guu(:,:,2,1) = guu(:,:,1,2)
 
     end subroutine calcu12_ps
@@ -792,7 +778,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             , b2, alpha2, r2, c0, c1, alpha4, k(2:4), dkdr(2:4)
         integer          :: i, iatomlist(10)
         double precision :: bmatrow(3*natom), bmat(3,3*natom)
-
         !  B2      = -0.09737d0
         b2     = -0.097000229d0
         alpha2 = 0.848925978d0
@@ -824,17 +809,17 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             !--- (d U13)/(d theta) has been set to zero
         end do
         !--- use B matrix to convert dU13/dq to dU13/dx
-        iatomlist(1:4) = (/12,13,0,0/)
+        iatomlist(1:4) = (/12, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
         bmat(1,:) = bmatrow(:)
         !--- special coordinate in place of CCSC torsion
-        iatomlist(1:5) = (/2,3,4,12,13/)
+        iatomlist(1:5) = (/2, 3, 4, 12, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
         bmat(2,:)      = bmatrow(:)
-        iatomlist(1:4) = (/3,12,13,0/)
+        iatomlist(1:4) = (/3, 12, 13, 0/)
         call calcbmat(bmatrow, x, iatomlist, 2)
         bmat(3,:)    = bmatrow(:)
-        guu(:,:,1,3) = guu(:,:,1,3) +reshape(matmul(gradu13, bmat), (/3,natom/))
+        guu(:,:,1,3) = guu(:,:,1,3) +reshape(matmul(gradu13, bmat), (/3, natom/))
         guu(:,:,3,1) = guu(:,:,1,3)
 
     end subroutine calcu13_ps
@@ -860,7 +845,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             , b(4:6), alpha(4:6), r0(4:6), k(4:6), dkdr
         integer          :: i, iatomlist(10)
         double precision :: bmatrow(3*natom), bmat(3,3*natom)
-
         b(4)     = -0.00485d0
         alpha(4) = 9.143137602d0
         r0(4)    = 1.98608d0
@@ -888,17 +872,17 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             !--- (d U23)/(d theta) has been set to zero
         end do
         !--- use B matrix to convert dU23/dq to dU23/dx
-        iatomlist(1:4) = (/12,13,0,0/)
+        iatomlist(1:4) = (/12, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
         bmat(1,:) = bmatrow(:)
         !--- special coordinate in place of CCSC torsion
-        iatomlist(1:5) = (/2,3,4,12,13/)
+        iatomlist(1:5) = (/2, 3, 4, 12, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
         bmat(2,:)      = bmatrow(:)
-        iatomlist(1:4) = (/3,12,13,0/)
+        iatomlist(1:4) = (/3, 12, 13, 0/)
         call calcbmat(bmatrow, x, iatomlist, 2)
         bmat(3,:)    = bmatrow(:)
-        guu(:,:,2,3) = guu(:,:,2,3) +reshape(matmul(gradu23, bmat), (/3,natom/))
+        guu(:,:,2,3) = guu(:,:,2,3) +reshape(matmul(gradu23, bmat), (/3, natom/))
         guu(:,:,3,2) = guu(:,:,2,3)
 
     end subroutine calcu23_ps
@@ -922,12 +906,11 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             iqtplist )
         implicit none
         double precision :: vt(nstate,nstate) &
-            , gvt(3,natom,nstate,nstate), x(3,natom), qps(:), qtp(:,:)
+            , gvt(3, natom, nstate, nstate), x(3,natom), qps(:), qtp(:,:)
         integer :: nterm(nqtpset), itypeqtp(ntermmax,nqtpset) &
-            , iqtplist(4,ntermmax,nqtpset)
+            , iqtplist(4, ntermmax, nqtpset)
         integer          :: i, j, imin
         double precision :: vmin, vtmp, gvtmp(3,natom)
-
         vt = 0d0; gvt = 0d0
         !--- calculate vt and gvt in diabatic order
         !--- uii_t is the actual routine
@@ -945,9 +928,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             iqtplist, istate )
         implicit none
         double precision :: vt(nstate,nstate) &
-            , gvt(3,natom,nstate,nstate), x(3,natom), qps(:), qtp(:,:)
+            , gvt(3, natom, nstate, nstate), x(3,natom), qps(:), qtp(:,:)
         integer :: nterm(nqtpset), itypeqtp(ntermmax,nqtpset) &
-            , iqtplist(4,ntermmax,nqtpset)
+            , iqtplist(4, ntermmax, nqtpset)
         integer          :: istate
         double precision :: k(ntermmax,napmax) &
             , q0(ntermmax,napmax) &
@@ -955,10 +938,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             , eterm, gterm, energy(0:napmax)
         integer :: iap, iterm, nap, n(ntermmax,napmax), ntermap &
             , iset, iatomlist(10), iqtpset(napmax)
-        double precision             :: bmatrow(3*natom), gradc(3,natom,0:napmax)
-        double precision,allocatable :: bmat(:,:), gg(:)
-        double precision             :: tent(napmax), dtent(0:napmax), r
-
+        double precision              :: bmatrow(3*natom), gradc(3,natom,0:napmax)
+        double precision, allocatable :: bmat(:,:), gg(:)
+        double precision              :: tent(napmax), dtent(0:napmax), r
         call assignparamuii_t(k, q0, n, istate)
         !--- set up state-dependent variables
         !--- Here 'istate' is diabatic state at phi = 0
@@ -973,9 +955,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             iqtpset(4)   = 2
             !--- prim&sec coord. of each anchor point
             if(debug2) then
-                r0(1:4) = (/1.8d0,100d0,200d0,300d0/)
+                r0(1:4) = (/1.8d0, 100d0, 200d0, 300d0/)
             else
-                r0(1:4) = (/1.8d0,2.2d0,3.2d0,6.0d0/)
+                r0(1:4) = (/1.8d0, 2.2d0, 3.2d0, 6.0d0/)
             end if
             phi0(1:4) = 0d0
             !--- const. part of tert. potential
@@ -989,9 +971,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             iqtpset(1:2) = 1
             !--- prim&sec coord. of each anchor point
             if(debug2) then
-                r0(1:2) = (/1.8d0,100d0/)
+                r0(1:2) = (/1.8d0, 100d0/)
             else
-                r0(1:2) = (/1.8d0,2.2d0/)
+                r0(1:2) = (/1.8d0, 2.2d0/)
             end if
             phi0(1:2) = 0d0
             !--- const. part of tert. potential
@@ -1006,14 +988,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             iqtpset(4)   = 2
             !--- prim&sec coord. of each anchor point
             if(debug2) then
-                r0(1:4) = (/1.9d0,100d0,200d0,300d0/)
+                r0(1:4) = (/1.9d0, 100d0, 200d0, 300d0/)
             else
-                r0(1:4) = (/1.9d0,2.2d0,3.2d0,6.0d0/)
+                r0(1:4) = (/1.9d0, 2.2d0, 3.2d0, 6.0d0/)
             end if
             phi0(1:4) = 0d0
             !--- const. part of tert. potential
             !---  which is relaxed minus unrelaxed energy at APs
-            energy(1:4) = (/ -0.0070903858216569311, -0.0061801905494431415, -0.022128914781961655 , - &
+            energy(1:4) = (/ -0.0070903858216569311, -0.0061801905494431415, -0.022128914781961655, - &
                 & 0.0089441460466859052/)
         end select
 
@@ -1021,24 +1003,24 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         do iap = 1, nap
             ntermap = nterm(iqtpset(iap))
             iset    = iqtpset(iap)
-            allocate(bmat(ntermap,3*natom),gg(ntermap))
+            allocate(bmat(ntermap,3*natom), gg(ntermap))
             do iterm = 1, ntermap
                 !--- energy and grad. w.r.t. internals
                 call calcffterm(eterm, gterm, k(iterm,iap), &
                     q0(iterm,iap), n(iterm,iap), &
                     qtp(iterm,iset), &
-                    itypeqtp(iterm, iset))
+                    itypeqtp(iterm,iset))
                 energy(iap) = energy(iap)+eterm
                 gg(iterm)   = gterm
                 !--- calc. B matrix row
-                iatomlist(1:4) = iqtplist(:,iterm,iqtpset(iap))
+                iatomlist(1:4) = iqtplist(:, iterm, iqtpset(iap))
                 call calcbmat(bmatrow, x, iatomlist, &
-                    itypeqtp(iterm, iset))
+                    itypeqtp(iterm,iset))
                 bmat(iterm,:) = bmatrow(:)
             end do
             !--- use B matrix to convert to grad. w.r.t. Cartesians
-            gradc(:,:,iap) = reshape(matmul(gg, bmat), (/3,natom/))
-            deallocate(bmat,gg)
+            gradc(:,:,iap) = reshape(matmul(gg, bmat), (/3, natom/))
+            deallocate(bmat, gg)
         end do
         !--- calculate tent func. and dtent/dR
         r = qps(1)
@@ -1056,15 +1038,15 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             dtent(0) = dtent(0)+dtent(iap)*energy(iap)
         end do
         !--- use B matrix to convert dV/dR to dV/dx
-        iatomlist(1:4) = (/12,13,0,0/)
+        iatomlist(1:4) = (/12, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
-        gradc(:,:,0) = gradc(:,:,0) +reshape(dtent(0)*bmatrow, (/3,natom/))
+        gradc(:,:,0) = gradc(:,:,0) +reshape(dtent(0)*bmatrow, (/3, natom/))
         !--- collect results
-        vt(istate,istate)      = energy(0)
-        gvt(:,:,istate,istate) = gradc(:,:,0)
+        vt(istate,istate)         = energy(0)
+        gvt(:, :, istate, istate) = gradc(:,:,0)
         if(debug2) then
-            vt(istate,istate)      = energy(1)
-            gvt(:,:,istate,istate) = gradc(:,:,1)
+            vt(istate,istate)         = energy(1)
+            gvt(:, :, istate, istate) = gradc(:,:,1)
         end if
     end subroutine uii_t
 
@@ -1091,10 +1073,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
         double precision :: uu(nstate,nstate), qps(:), qtc(:) &
             , guu(3,natom,nstate,nstate), x(3,natom) &
-            , bmatqtc(ntermmax,natom*3)
+            , bmatqtc(ntermmax, natom*3)
         integer          :: nqtc, qtcsym(ntermmax), qtctyp(ntermmax)
         double precision :: uij, duij(3,natom)
-
         call uij_t(uij, duij, x, qps, qtc, &
             nqtc, qtcsym, qtctyp, bmatqtc, 12)
         uu(1,2)      = uu(1,2)+uij; uu(2,1) = uu(1,2)
@@ -1112,6 +1093,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         guu(:,:,3,2) = guu(:,:,2,3)
 
     end subroutine calcuij_t
+
     !--- Actual core routine of calcuij_t
     !--- Parameters have the same meaning as in calcuij_t
     !> @brief Evaluate uij_t.
@@ -1119,9 +1101,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             qtcsym, qtctyp, bmatqtc, istate )
         implicit none
         double precision :: uij, duij(3,natom), x(3,natom), qps(:) &
-            , qtc(:), bmatqtc(ntermmax,natom*3)
+            , qtc(:), bmatqtc(ntermmax, natom*3)
         integer                       :: nqtc, qtcsym(ntermmax), qtctyp(ntermmax), istate
-        integer,parameter             :: nr0 = 2, nphi0=5, nk=2
+        integer, parameter            :: nr0 = 2, nphi0=5, nk=2
         integer                       :: ir0, iphi0, iqtc, iatomlist(10)
         double precision, allocatable :: gg(:), bmat(:,:)
         double precision              :: ee(nr0,nphi0), e, g &
@@ -1132,15 +1114,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             , qtcv(nqtc), bmatrow(3*natom) &
             , sij(nphi0), dsij(nphi0) &
             , atten(0:nr0), datten(0:nr0)
-
         !--- initialization
         !--- prim&sec coord.
         r            = qps(1)
         phi          = qps(2)
         qtcv(1:nqtc) = qtc(1:nqtc)
         !--- R and phi values at anchor points
-        r0(:)   = (/1.97d0,3.5d0/)
-        phi0(:) = (/0d0,10d0,45d0,80d0,90d0/)
+        r0(:)   = (/1.97d0, 3.5d0/)
+        phi0(:) = (/0d0, 10d0, 45d0, 80d0, 90d0/)
         phi0(:) = phi0(:)/180d0*pi
         do iphi0 = 1, nphi0
             cos2phi0(iphi0) = -cos(2*phi0(iphi0))
@@ -1150,8 +1131,8 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         call assignparamuij_t(k, qtc0, nqtc, nk, nr0, nphi0, istate)
 
         ee = 0d0
-        allocate(gg(nqtc),bmat(nqtc,3*natom))
-        bmat(1:nqtc,:) = bmatqtc(1:nqtc,:)
+        allocate(gg(nqtc), bmat(nqtc,3*natom))
+        bmat(1:nqtc,:) = bmatqtc(1:nqtc, :)
         !--- loop over anchor points (each with 2 subscripts iR0,iphi0)
         do ir0 = 1, nr0
             do iphi0 = 1, nphi0
@@ -1174,10 +1155,10 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                     gg(iqtc)      = g
                 end do
                 !--- use B matrix to convert to grad. w.r.t. Cartesians
-                gradc(:,:,ir0,iphi0) = reshape(matmul(gg, bmat), (/3,natom/))
+                gradc(:,:,ir0,iphi0) = reshape(matmul(gg, bmat), (/3, natom/))
             end do
         end do
-        deallocate(gg,bmat)
+        deallocate(gg, bmat)
         !--- calculate tent func., sij,  and dtentR/dR & dtentphi/dphi
         !--- & dsij/dphi
         do ir0 = 1, nr0
@@ -1253,13 +1234,13 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             end do
         end do
         !--- use B matrix to convert duij/dq to duij/dx
-        iatomlist(1:4) = (/12,13,0,0/)
+        iatomlist(1:4) = (/12, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
-        duij(:,:) = duij(:,:) +reshape(dtentr(0)*bmatrow, (/3,natom/))
+        duij(:,:) = duij(:,:) +reshape(dtentr(0)*bmatrow, (/3, natom/))
         !--- special coordinate in place of CCSC torsion
-        iatomlist(1:5) = (/2,3,4,12,13/)
+        iatomlist(1:5) = (/2, 3, 4, 12, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
-        duij(:,:) = duij(:,:) +reshape(dtentphi(0)*bmatrow, (/3,natom/))
+        duij(:,:) = duij(:,:) +reshape(dtentphi(0)*bmatrow, (/3, natom/))
 
         if(debug2) then
             uij       = ee(1,1)
@@ -1287,10 +1268,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         double precision :: dist(3), bb, alpha, bmatrow(natom*3), vbm &
             , dvdr
         integer :: ic, is, iatomlist(10,3)
-
-        dist(1) = evalbl(x, 1, 4); iatomlist(1:4,1) = (/1,4,0,0/)
-        dist(2) = evalbl(x, 2, 5); iatomlist(1:4,2) = (/2,5,0,0/)
-        dist(3) = evalbl(x, 3, 6); iatomlist(1:4,3) = (/3,6,0,0/)
+        dist(1) = evalbl(x, 1, 4); iatomlist(1:4,1) = (/1, 4, 0, 0/)
+        dist(2) = evalbl(x, 2, 5); iatomlist(1:4,2) = (/2, 5, 0, 0/)
+        dist(3) = evalbl(x, 3, 6); iatomlist(1:4,3) = (/3, 6, 0, 0/)
         !--- parameters: BB=42000kcal=66.931hartree, alpha=3.58 A-1
         bb = 66.931; alpha = 3.58
 
@@ -1300,7 +1280,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             call calcbmat(bmatrow, x, iatomlist(:,ic), 1)
             do is = 1, nstate
                 uu(is,is)      = uu(is,is)+vbm
-                guu(:,:,is,is) = guu(:,:,is,is) +reshape(dvdr*bmatrow, (/3,natom/))
+                guu(:,:,is,is) = guu(:,:,is,is) +reshape(dvdr*bmatrow, (/3, natom/))
             end do
         end do
     end subroutine calcbornmayer
@@ -1323,7 +1303,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
         double precision :: ee, gg, k, q0, q
         integer          :: n, itype
-
         select case (itype)
             !--- bond length
         case(1)
@@ -1367,7 +1346,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         double precision :: ee, gg, k(nk), q0, q
         integer          :: i
         double precision :: dq, cc, expo, qq, qq0
-
         select case(ityp)
             !--- ityp 1: use the coordinate as variable
         case(1)
@@ -1416,7 +1394,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
         double precision :: t, dtdq, q, q0(:)
         integer          :: i, j, k, nq0
-
         !--- if j is the 1st anchor point
         if(i.eq.0) then
             if(q<q0(j)) then
@@ -1446,6 +1423,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         end if
 
     end subroutine calctent1
+
     !--- called by calctent1
     !--- tent(q1) = 0, tent(q2) = 1
     !> @brief Evaluate tent1.
@@ -1474,7 +1452,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         integer          :: i, j
         double precision :: x(3,natom)
         double precision :: r(3)
-
         r(:)   = x(:,i)-x(:,j)
         evalbl = sqrt(dot_product(r, r))
     end function evalbl
@@ -1494,7 +1471,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         integer          :: i, j, k
         double precision :: x(3,natom)
         double precision :: eji(3), ejk(3), cosba
-
         eji(:) = (x(:,i)-x(:,j))/evalbl(x, i, j)
         ejk(:) = (x(:,k)-x(:,j))/evalbl(x, j, k)
         cosba  = dot_product(eji, ejk)
@@ -1526,7 +1502,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         double precision :: eij(3), ejk(3), ekl(3) &
             , sinijk, sinjkl, costo &
             , cross1(3), cross2(3), cross3(3)
-
         eij(:) = (x(:,j)-x(:,i))/evalbl(x, i, j)
         ejk(:) = (x(:,k)-x(:,j))/evalbl(x, j, k)
         ekl(:) = (x(:,l)-x(:,k))/evalbl(x, k, l)
@@ -1570,7 +1545,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         double precision :: x(3,natom)
         double precision :: eli(3), elj(3), elk(3), sinjlk, sinob &
             , cross1(3)
-
         eli(:) = (x(:,i)-x(:,l))/evalbl(x, l, i)
         elj(:) = (x(:,j)-x(:,l))/evalbl(x, l, j)
         elk(:) = (x(:,k)-x(:,l))/evalbl(x, l, k)
@@ -1602,7 +1576,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         integer          :: i, j, k, l
         double precision :: x(3,natom)
         double precision :: eij(3), eik(3), eijxeik(3), ril(3), sinjik
-
         ril(:) = x(:,l)-x(:,i)
         eij(:) = (x(:,j)-x(:,i))/evalbl(x, i, j)
         eik(:) = (x(:,k)-x(:,i))/evalbl(x, i, k)
@@ -1628,7 +1601,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         double precision :: e12(3), e23(3), e13(3), ez(3), ex(3), ep(3) &
             , e45(3), e24(3), etmp(3), etmp2(3), etmp3(3) &
             , sin123, sin13z, cos13z, e12xe23(3), cossp1, sgn
-
         e12(:) = (x(:,j)-x(:,i))/evalbl(x, i, j)
         e23(:) = (x(:,k)-x(:,j))/evalbl(x, j, k)
         e13(:) = (x(:,k)-x(:,i))/evalbl(x, i, k)
@@ -1671,7 +1643,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     subroutine xprod( axb, a, b )
         implicit none
         double precision :: axb(3), a(3), b(3)
-
         axb(1) = a(2)*b(3)-a(3)*b(2)
         axb(2) = a(3)*b(1)-a(1)*b(3)
         axb(3) = a(1)*b(2)-a(2)*b(1)
@@ -1691,11 +1662,10 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     subroutine diagonalize( eigval, eigvec, mat, ndim )
         implicit none
         double precision :: eigval(ndim), eigvec(ndim,ndim) &
-            , mat(ndim,ndim)
+            , mat(ndim, ndim)
         integer                       :: ndim
         double precision, allocatable :: work(:)
         integer                       :: lwork, info
-
         eigvec = mat
         lwork  = -1
         allocate(work(1))
@@ -1706,7 +1676,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         call dsyev('V', 'U', ndim, eigvec, ndim, eigval, work, lwork, info)
         deallocate(work)
         if (info.ne.0 ) then
-            write(*,*) "dsyev exits abnormally in diagonalization."
+            write(*, *) "dsyev exits abnormally in diagonalization."
             stop
         end if
     end subroutine diagonalize
@@ -1730,12 +1700,11 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         double precision :: cijk, sijk, pxmg, pymg, pzmg, sjkl, sijkl
         double precision :: rkl, rkl1, rkl2, rkl3, cjkl, cijkl, pjkl
         integer          :: i, j, ijk, im, k, l, m, ijkl, ilisttmp(4), ii, iii, jj
-        double precision :: a243,s243,c243,e41(3),e42(3),e43(3) &
-            ,r41,r42,r43,oopb,coopb,toopb,tmpv(3),bmv1(3),bmv2(3),bmv3(3) &
-            ,bmv4(3),e12(3),e13(3),v14(3),r12,r13,theta,rtmp &
-            ,tmpv2(3),tmpv3(3),rowtmp(3*natom),xtmp(3,natom) &
-            ,coord1,coord2,step
-
+        double precision :: a243, s243, c243, e41(3), e42(3), e43(3) &
+            , r41, r42, r43, oopb, coopb, toopb, tmpv(3), bmv1(3), bmv2(3), bmv3(3) &
+            , bmv4(3), e12(3), e13(3), v14(3), r12, r13, theta, rtmp &
+            , tmpv2(3), tmpv3(3), rowtmp(3*natom), xtmp(3, natom) &
+            , coord1, coord2, step
         bmatrow(:) = 0d0
         select case(inttype)
             !--- bond length; adapted from polyrate
@@ -1798,14 +1767,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             rkl1 = x(1,l)-x(1,k)
             rkl2 = x(2,l)-x(2,k)
             rkl3 = x(3,l)-x(3,k)
-            rij  = evalbl(x, i,j)
-            rjk  = evalbl(x, j,k)
-            rkl  = evalbl(x, k,l)
+            rij  = evalbl(x, i, j)
+            rjk  = evalbl(x, j, k)
+            rkl  = evalbl(x, k, l)
 
-            pijk = evalba(x, i,j,k)
+            pijk = evalba(x, i, j, k)
             cijk = cos(pijk)
             sijk = sin(pijk)
-            pjkl = evalba(x, j,k,l)
+            pjkl = evalba(x, j, k, l)
             cjkl = cos(pjkl)
             sjkl = sin(pjkl)
             cijkl=((-rij2*rjk1+rij1*rjk2)*(-rjk2*rkl1+rjk1*rkl2)+ (rij3*rjk1-rij1*rjk3)*(rjk3*rkl1-rjk1*rkl3)+ (-rij3* &
@@ -1864,31 +1833,31 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             e43(1) = x(1,k)-x(1,l)
             e43(2) = x(2,k)-x(2,l)
             e43(3) = x(3,k)-x(3,l)
-            r41    = evalbl(x, i,l)
-            r42    = evalbl(x, j,l)
-            r43    = evalbl(x, k,l)
+            r41    = evalbl(x, i, l)
+            r42    = evalbl(x, j, l)
+            r43    = evalbl(x, k, l)
             e41    = e41/r41
             e42    = e42/r42
             e43    = e43/r43
-            a243   = evalba(x, j,l,k)
+            a243   = evalba(x, j, l, k)
             c243   = cos(a243)
             s243   = sin(a243)
-            call xprod(tmpv,e42,e43)
-            oopb  = asin(dot_product(tmpv,e41)/s243)
+            call xprod(tmpv, e42, e43)
+            oopb  = asin(dot_product(tmpv, e41)/s243)
             coopb = cos(oopb)
             toopb = tan(oopb)
 
-            call xprod(tmpv,e42,e43)
+            call xprod(tmpv, e42, e43)
             bmv1           = (tmpv/coopb/s243-toopb*e41)/r41
             bmatrow(3*i-2) = bmv1(1)
             bmatrow(3*i-1) = bmv1(2)
             bmatrow(3*i)   = bmv1(3)
-            call xprod(tmpv,e43,e41)
+            call xprod(tmpv, e43, e41)
             bmv2           = (tmpv/coopb/s243-toopb/s243**2*(e42-e43*c243))/r42
             bmatrow(3*j-2) = bmv2(1)
             bmatrow(3*j-1) = bmv2(2)
             bmatrow(3*j)   = bmv2(3)
-            call xprod(tmpv,e41,e42)
+            call xprod(tmpv, e41, e42)
             bmv3           = (tmpv/coopb/s243-toopb/s243**2*(e43-e42*c243))/r43
             bmatrow(3*k-2) = bmv3(1)
             bmatrow(3*k-1) = bmv3(2)
@@ -1913,8 +1882,8 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             v14(1) = x(1,l)-x(1,i)
             v14(2) = x(2,l)-x(2,i)
             v14(3) = x(3,l)-x(3,i)
-            r12    = evalbl(x, i,j)
-            r13    = evalbl(x, i,k)
+            r12    = evalbl(x, i, j)
+            r13    = evalbl(x, i, k)
             e12(:) = e12(:)/r12
             e13(:) = e13(:)/r13
             theta  = evalba(x, j, i, k)
@@ -1969,9 +1938,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                 !--- loop over x,y,z
                 do jj = 1, 3
                     xtmp                = x
-                    xtmp(jj, iii)       = x(jj, iii)+step
+                    xtmp(jj, iii)       = x(jj,iii)+step
                     coord1              = evalsp1(xtmp, i, j, k, l, m)
-                    xtmp(jj, iii)       = x(jj, iii)-step
+                    xtmp(jj, iii)       = x(jj,iii)-step
                     coord2              = evalsp1(xtmp, i, j, k, l, m)
                     bmatrow(3*iii-3+jj) = (coord1-coord2)/step/2
                 end do
@@ -1995,9 +1964,8 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     subroutine assignqtp( nterm, itypeqtp, iqtplist )
         implicit none
         integer :: nterm(nqtpset), itypeqtp(ntermmax,nqtpset) &
-            , iqtplist(4,ntermmax,nqtpset)
-
-        nterm(1:2) = (/73,67/)
+            , iqtplist(4, ntermmax, nqtpset)
+        nterm(1:2) = (/73, 67/)
         !--- type of each FF term of each set
         !--- 1=BL(BondLen), 2=BA(BondAng), 3=TO(Torsion), 5=OD(OOPDist)
         !----- set 1, for short R, corresp. to atom connectivity
@@ -2016,150 +1984,150 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         iqtplist = 0
         !--- first set (for short R)
         !--- BEGIN generated by 'python gen_qtp.py qr_tert_pot_1.txt'
-        iqtplist(1:2,  1,1) = (/ 1, 2/)
-        iqtplist(1:2,  2,1) = (/ 1, 6/)
-        iqtplist(1:2,  3,1) = (/ 1, 7/)
-        iqtplist(1:2,  4,1) = (/ 2, 3/)
-        iqtplist(1:2,  5,1) = (/ 2, 8/)
-        iqtplist(1:2,  6,1) = (/13,14/)
-        iqtplist(1:2,  7,1) = (/13,15/)
-        iqtplist(1:2,  8,1) = (/13,16/)
-        iqtplist(1:2,  9,1) = (/ 3, 4/)
-        iqtplist(1:2, 10,1) = (/ 3,12/)
-        iqtplist(1:2, 11,1) = (/ 4, 5/)
-        iqtplist(1:2, 12,1) = (/ 4, 9/)
-        iqtplist(1:2, 13,1) = (/ 5, 6/)
-        iqtplist(1:2, 14,1) = (/ 5,10/)
-        iqtplist(1:2, 15,1) = (/ 6,11/)
-        iqtplist(1:3, 16,1) = (/ 1, 2, 3/)
-        iqtplist(1:3, 17,1) = (/ 1, 2, 8/)
-        iqtplist(1:3, 18,1) = (/ 1, 6, 5/)
-        iqtplist(1:3, 19,1) = (/ 1, 6,11/)
-        iqtplist(1:3, 20,1) = (/ 2, 1, 6/)
-        iqtplist(1:3, 21,1) = (/ 2, 1, 7/)
-        iqtplist(1:3, 22,1) = (/ 2, 3, 4/)
-        iqtplist(1:3, 23,1) = (/ 2, 3,12/)
-        iqtplist(1:3, 24,1) = (/13,12, 3/)
-        iqtplist(1:3, 25,1) = (/ 3, 2, 8/)
-        iqtplist(1:3, 26,1) = (/ 3, 4, 5/)
-        iqtplist(1:3, 27,1) = (/ 3, 4, 9/)
-        iqtplist(1:3, 28,1) = (/ 4, 3,12/)
-        iqtplist(1:3, 29,1) = (/ 4, 5, 6/)
-        iqtplist(1:3, 30,1) = (/ 4, 5,10/)
-        iqtplist(1:3, 31,1) = (/ 5, 4, 9/)
-        iqtplist(1:3, 32,1) = (/ 5, 6,11/)
-        iqtplist(1:3, 33,1) = (/ 6, 1, 7/)
-        iqtplist(1:3, 34,1) = (/ 6, 5,10/)
-        iqtplist(1:3, 35,1) = (/14,13,15/)
-        iqtplist(1:3, 36,1) = (/14,13,16/)
-        iqtplist(1:3, 37,1) = (/14,13,12/)
-        iqtplist(1:3, 38,1) = (/15,13,16/)
-        iqtplist(1:3, 39,1) = (/15,13,12/)
-        iqtplist(1:3, 40,1) = (/16,13,12/)
-        iqtplist(1:4, 41,1) = (/ 1, 2, 3, 4/)
-        iqtplist(1:4, 42,1) = (/ 1, 2, 3,12/)
-        iqtplist(1:4, 43,1) = (/ 1, 6, 5, 4/)
-        iqtplist(1:4, 44,1) = (/ 1, 6, 5,10/)
-        iqtplist(1:4, 45,1) = (/ 2, 1, 6, 5/)
-        iqtplist(1:4, 46,1) = (/ 2, 1, 6,11/)
-        iqtplist(1:4, 47,1) = (/ 2, 3, 4, 5/)
-        iqtplist(1:4, 48,1) = (/ 2, 3, 4, 9/)
-        iqtplist(1:4, 49,1) = (/ 3, 2, 1, 6/)
-        iqtplist(1:4, 50,1) = (/ 3, 2, 1, 7/)
-        iqtplist(1:4, 51,1) = (/ 3, 4, 5, 6/)
-        iqtplist(1:4, 52,1) = (/ 3, 4, 5,10/)
-        iqtplist(1:4, 53,1) = (/ 3,12,13,14/)
-        iqtplist(1:4, 54,1) = (/ 3,12,13,15/)
-        iqtplist(1:4, 55,1) = (/ 3,12,13,16/)
-        iqtplist(1:4, 56,1) = (/ 4, 3, 2, 8/)
-        iqtplist(1:4, 57,1) = (/ 4, 5, 6,11/)
-        iqtplist(1:4, 58,1) = (/ 5, 4, 3,12/)
-        iqtplist(1:4, 59,1) = (/ 5, 6, 1, 7/)
-        iqtplist(1:4, 60,1) = (/ 6, 1, 2, 8/)
-        iqtplist(1:4, 61,1) = (/ 6, 5, 4, 9/)
-        iqtplist(1:4, 62,1) = (/11, 6, 1, 7/)
-        iqtplist(1:4, 63,1) = (/11, 6, 5,10/)
-        iqtplist(1:4, 64,1) = (/ 7, 1, 2, 8/)
-        iqtplist(1:4, 65,1) = (/ 8, 2, 3,12/)
-        iqtplist(1:4, 66,1) = (/ 9, 4, 3,12/)
-        iqtplist(1:4, 67,1) = (/ 9, 4, 5,10/)
-        iqtplist(1:4, 68,1) = (/ 1, 3, 8, 2/)
-        iqtplist(1:4, 69,1) = (/ 1, 5,11, 6/)
-        iqtplist(1:4, 70,1) = (/ 2, 4,12, 3/)
-        iqtplist(1:4, 71,1) = (/ 2, 6, 7, 1/)
-        iqtplist(1:4, 72,1) = (/ 3, 5, 9, 4/)
-        iqtplist(1:4, 73,1) = (/ 4, 6,10, 5/)
+        iqtplist(1:2, 1, 1)  = (/ 1, 2/)
+        iqtplist(1:2, 2, 1)  = (/ 1, 6/)
+        iqtplist(1:2, 3, 1)  = (/ 1, 7/)
+        iqtplist(1:2, 4, 1)  = (/ 2, 3/)
+        iqtplist(1:2, 5, 1)  = (/ 2, 8/)
+        iqtplist(1:2, 6, 1)  = (/13, 14/)
+        iqtplist(1:2, 7, 1)  = (/13, 15/)
+        iqtplist(1:2, 8, 1)  = (/13, 16/)
+        iqtplist(1:2, 9, 1)  = (/ 3, 4/)
+        iqtplist(1:2, 10, 1) = (/ 3, 12/)
+        iqtplist(1:2, 11, 1) = (/ 4, 5/)
+        iqtplist(1:2, 12, 1) = (/ 4, 9/)
+        iqtplist(1:2, 13, 1) = (/ 5, 6/)
+        iqtplist(1:2, 14, 1) = (/ 5, 10/)
+        iqtplist(1:2, 15, 1) = (/ 6, 11/)
+        iqtplist(1:3, 16, 1) = (/ 1, 2, 3/)
+        iqtplist(1:3, 17, 1) = (/ 1, 2, 8/)
+        iqtplist(1:3, 18, 1) = (/ 1, 6, 5/)
+        iqtplist(1:3, 19, 1) = (/ 1, 6, 11/)
+        iqtplist(1:3, 20, 1) = (/ 2, 1, 6/)
+        iqtplist(1:3, 21, 1) = (/ 2, 1, 7/)
+        iqtplist(1:3, 22, 1) = (/ 2, 3, 4/)
+        iqtplist(1:3, 23, 1) = (/ 2, 3, 12/)
+        iqtplist(1:3, 24, 1) = (/13, 12, 3/)
+        iqtplist(1:3, 25, 1) = (/ 3, 2, 8/)
+        iqtplist(1:3, 26, 1) = (/ 3, 4, 5/)
+        iqtplist(1:3, 27, 1) = (/ 3, 4, 9/)
+        iqtplist(1:3, 28, 1) = (/ 4, 3, 12/)
+        iqtplist(1:3, 29, 1) = (/ 4, 5, 6/)
+        iqtplist(1:3, 30, 1) = (/ 4, 5, 10/)
+        iqtplist(1:3, 31, 1) = (/ 5, 4, 9/)
+        iqtplist(1:3, 32, 1) = (/ 5, 6, 11/)
+        iqtplist(1:3, 33, 1) = (/ 6, 1, 7/)
+        iqtplist(1:3, 34, 1) = (/ 6, 5, 10/)
+        iqtplist(1:3, 35, 1) = (/14, 13, 15/)
+        iqtplist(1:3, 36, 1) = (/14, 13, 16/)
+        iqtplist(1:3, 37, 1) = (/14, 13, 12/)
+        iqtplist(1:3, 38, 1) = (/15, 13, 16/)
+        iqtplist(1:3, 39, 1) = (/15, 13, 12/)
+        iqtplist(1:3, 40, 1) = (/16, 13, 12/)
+        iqtplist(1:4, 41, 1) = (/ 1, 2, 3, 4/)
+        iqtplist(1:4, 42, 1) = (/ 1, 2, 3, 12/)
+        iqtplist(1:4, 43, 1) = (/ 1, 6, 5, 4/)
+        iqtplist(1:4, 44, 1) = (/ 1, 6, 5, 10/)
+        iqtplist(1:4, 45, 1) = (/ 2, 1, 6, 5/)
+        iqtplist(1:4, 46, 1) = (/ 2, 1, 6, 11/)
+        iqtplist(1:4, 47, 1) = (/ 2, 3, 4, 5/)
+        iqtplist(1:4, 48, 1) = (/ 2, 3, 4, 9/)
+        iqtplist(1:4, 49, 1) = (/ 3, 2, 1, 6/)
+        iqtplist(1:4, 50, 1) = (/ 3, 2, 1, 7/)
+        iqtplist(1:4, 51, 1) = (/ 3, 4, 5, 6/)
+        iqtplist(1:4, 52, 1) = (/ 3, 4, 5, 10/)
+        iqtplist(1:4, 53, 1) = (/ 3, 12, 13, 14/)
+        iqtplist(1:4, 54, 1) = (/ 3, 12, 13, 15/)
+        iqtplist(1:4, 55, 1) = (/ 3, 12, 13, 16/)
+        iqtplist(1:4, 56, 1) = (/ 4, 3, 2, 8/)
+        iqtplist(1:4, 57, 1) = (/ 4, 5, 6, 11/)
+        iqtplist(1:4, 58, 1) = (/ 5, 4, 3, 12/)
+        iqtplist(1:4, 59, 1) = (/ 5, 6, 1, 7/)
+        iqtplist(1:4, 60, 1) = (/ 6, 1, 2, 8/)
+        iqtplist(1:4, 61, 1) = (/ 6, 5, 4, 9/)
+        iqtplist(1:4, 62, 1) = (/11, 6, 1, 7/)
+        iqtplist(1:4, 63, 1) = (/11, 6, 5, 10/)
+        iqtplist(1:4, 64, 1) = (/ 7, 1, 2, 8/)
+        iqtplist(1:4, 65, 1) = (/ 8, 2, 3, 12/)
+        iqtplist(1:4, 66, 1) = (/ 9, 4, 3, 12/)
+        iqtplist(1:4, 67, 1) = (/ 9, 4, 5, 10/)
+        iqtplist(1:4, 68, 1) = (/ 1, 3, 8, 2/)
+        iqtplist(1:4, 69, 1) = (/ 1, 5, 11, 6/)
+        iqtplist(1:4, 70, 1) = (/ 2, 4, 12, 3/)
+        iqtplist(1:4, 71, 1) = (/ 2, 6, 7, 1/)
+        iqtplist(1:4, 72, 1) = (/ 3, 5, 9, 4/)
+        iqtplist(1:4, 73, 1) = (/ 4, 6, 10, 5/)
         !--- END generated by 'python gen_qtp.py qr_tert_pot_1.txt'
 
         !--- second set (for long R)
         !--- BEGIN generated by 'python gen_qtp.py qr_tert_pot_2.txt'
-        iqtplist(1:2,  1,2) = (/ 1, 2/)
-        iqtplist(1:2,  2,2) = (/ 1, 6/)
-        iqtplist(1:2,  3,2) = (/ 1, 7/)
-        iqtplist(1:2,  4,2) = (/ 2, 3/)
-        iqtplist(1:2,  5,2) = (/ 2, 8/)
-        iqtplist(1:2,  6,2) = (/13,14/)
-        iqtplist(1:2,  7,2) = (/13,15/)
-        iqtplist(1:2,  8,2) = (/13,16/)
-        iqtplist(1:2,  9,2) = (/ 3, 4/)
-        iqtplist(1:2, 10,2) = (/ 3,12/)
-        iqtplist(1:2, 11,2) = (/ 4, 5/)
-        iqtplist(1:2, 12,2) = (/ 4, 9/)
-        iqtplist(1:2, 13,2) = (/ 5, 6/)
-        iqtplist(1:2, 14,2) = (/ 5,10/)
-        iqtplist(1:2, 15,2) = (/ 6,11/)
-        iqtplist(1:3, 16,2) = (/ 1, 2, 3/)
-        iqtplist(1:3, 17,2) = (/ 1, 2, 8/)
-        iqtplist(1:3, 18,2) = (/ 1, 6, 5/)
-        iqtplist(1:3, 19,2) = (/ 1, 6,11/)
-        iqtplist(1:3, 20,2) = (/ 2, 1, 6/)
-        iqtplist(1:3, 21,2) = (/ 2, 1, 7/)
-        iqtplist(1:3, 22,2) = (/ 2, 3, 4/)
-        iqtplist(1:3, 23,2) = (/ 2, 3,12/)
-        iqtplist(1:3, 24,2) = (/ 3, 2, 8/)
-        iqtplist(1:3, 25,2) = (/ 3, 4, 5/)
-        iqtplist(1:3, 26,2) = (/ 3, 4, 9/)
-        iqtplist(1:3, 27,2) = (/ 4, 3,12/)
-        iqtplist(1:3, 28,2) = (/ 4, 5, 6/)
-        iqtplist(1:3, 29,2) = (/ 4, 5,10/)
-        iqtplist(1:3, 30,2) = (/ 5, 4, 9/)
-        iqtplist(1:3, 31,2) = (/ 5, 6,11/)
-        iqtplist(1:3, 32,2) = (/ 6, 1, 7/)
-        iqtplist(1:3, 33,2) = (/ 6, 5,10/)
-        iqtplist(1:3, 34,2) = (/14,13,15/)
-        iqtplist(1:3, 35,2) = (/14,13,16/)
-        iqtplist(1:3, 36,2) = (/15,13,16/)
-        iqtplist(1:4, 37,2) = (/ 1, 2, 3, 4/)
-        iqtplist(1:4, 38,2) = (/ 1, 2, 3,12/)
-        iqtplist(1:4, 39,2) = (/ 1, 6, 5, 4/)
-        iqtplist(1:4, 40,2) = (/ 1, 6, 5,10/)
-        iqtplist(1:4, 41,2) = (/ 2, 1, 6, 5/)
-        iqtplist(1:4, 42,2) = (/ 2, 1, 6,11/)
-        iqtplist(1:4, 43,2) = (/ 2, 3, 4, 5/)
-        iqtplist(1:4, 44,2) = (/ 2, 3, 4, 9/)
-        iqtplist(1:4, 45,2) = (/ 3, 2, 1, 6/)
-        iqtplist(1:4, 46,2) = (/ 3, 2, 1, 7/)
-        iqtplist(1:4, 47,2) = (/ 3, 4, 5, 6/)
-        iqtplist(1:4, 48,2) = (/ 3, 4, 5,10/)
-        iqtplist(1:4, 49,2) = (/ 4, 3, 2, 8/)
-        iqtplist(1:4, 50,2) = (/ 4, 5, 6,11/)
-        iqtplist(1:4, 51,2) = (/ 5, 4, 3,12/)
-        iqtplist(1:4, 52,2) = (/ 5, 6, 1, 7/)
-        iqtplist(1:4, 53,2) = (/ 6, 1, 2, 8/)
-        iqtplist(1:4, 54,2) = (/ 6, 5, 4, 9/)
-        iqtplist(1:4, 55,2) = (/11, 6, 1, 7/)
-        iqtplist(1:4, 56,2) = (/11, 6, 5,10/)
-        iqtplist(1:4, 57,2) = (/ 7, 1, 2, 8/)
-        iqtplist(1:4, 58,2) = (/ 8, 2, 3,12/)
-        iqtplist(1:4, 59,2) = (/ 9, 4, 3,12/)
-        iqtplist(1:4, 60,2) = (/ 9, 4, 5,10/)
-        iqtplist(1:4, 61,2) = (/ 1, 3, 8, 2/)
-        iqtplist(1:4, 62,2) = (/ 1, 5,11, 6/)
-        iqtplist(1:4, 63,2) = (/ 2, 4,12, 3/)
-        iqtplist(1:4, 64,2) = (/ 2, 6, 7, 1/)
-        iqtplist(1:4, 65,2) = (/ 3, 5, 9, 4/)
-        iqtplist(1:4, 66,2) = (/ 4, 6,10, 5/)
-        iqtplist(1:4, 67,2) = (/14,15,16,13/)
+        iqtplist(1:2, 1, 2)  = (/ 1, 2/)
+        iqtplist(1:2, 2, 2)  = (/ 1, 6/)
+        iqtplist(1:2, 3, 2)  = (/ 1, 7/)
+        iqtplist(1:2, 4, 2)  = (/ 2, 3/)
+        iqtplist(1:2, 5, 2)  = (/ 2, 8/)
+        iqtplist(1:2, 6, 2)  = (/13, 14/)
+        iqtplist(1:2, 7, 2)  = (/13, 15/)
+        iqtplist(1:2, 8, 2)  = (/13, 16/)
+        iqtplist(1:2, 9, 2)  = (/ 3, 4/)
+        iqtplist(1:2, 10, 2) = (/ 3, 12/)
+        iqtplist(1:2, 11, 2) = (/ 4, 5/)
+        iqtplist(1:2, 12, 2) = (/ 4, 9/)
+        iqtplist(1:2, 13, 2) = (/ 5, 6/)
+        iqtplist(1:2, 14, 2) = (/ 5, 10/)
+        iqtplist(1:2, 15, 2) = (/ 6, 11/)
+        iqtplist(1:3, 16, 2) = (/ 1, 2, 3/)
+        iqtplist(1:3, 17, 2) = (/ 1, 2, 8/)
+        iqtplist(1:3, 18, 2) = (/ 1, 6, 5/)
+        iqtplist(1:3, 19, 2) = (/ 1, 6, 11/)
+        iqtplist(1:3, 20, 2) = (/ 2, 1, 6/)
+        iqtplist(1:3, 21, 2) = (/ 2, 1, 7/)
+        iqtplist(1:3, 22, 2) = (/ 2, 3, 4/)
+        iqtplist(1:3, 23, 2) = (/ 2, 3, 12/)
+        iqtplist(1:3, 24, 2) = (/ 3, 2, 8/)
+        iqtplist(1:3, 25, 2) = (/ 3, 4, 5/)
+        iqtplist(1:3, 26, 2) = (/ 3, 4, 9/)
+        iqtplist(1:3, 27, 2) = (/ 4, 3, 12/)
+        iqtplist(1:3, 28, 2) = (/ 4, 5, 6/)
+        iqtplist(1:3, 29, 2) = (/ 4, 5, 10/)
+        iqtplist(1:3, 30, 2) = (/ 5, 4, 9/)
+        iqtplist(1:3, 31, 2) = (/ 5, 6, 11/)
+        iqtplist(1:3, 32, 2) = (/ 6, 1, 7/)
+        iqtplist(1:3, 33, 2) = (/ 6, 5, 10/)
+        iqtplist(1:3, 34, 2) = (/14, 13, 15/)
+        iqtplist(1:3, 35, 2) = (/14, 13, 16/)
+        iqtplist(1:3, 36, 2) = (/15, 13, 16/)
+        iqtplist(1:4, 37, 2) = (/ 1, 2, 3, 4/)
+        iqtplist(1:4, 38, 2) = (/ 1, 2, 3, 12/)
+        iqtplist(1:4, 39, 2) = (/ 1, 6, 5, 4/)
+        iqtplist(1:4, 40, 2) = (/ 1, 6, 5, 10/)
+        iqtplist(1:4, 41, 2) = (/ 2, 1, 6, 5/)
+        iqtplist(1:4, 42, 2) = (/ 2, 1, 6, 11/)
+        iqtplist(1:4, 43, 2) = (/ 2, 3, 4, 5/)
+        iqtplist(1:4, 44, 2) = (/ 2, 3, 4, 9/)
+        iqtplist(1:4, 45, 2) = (/ 3, 2, 1, 6/)
+        iqtplist(1:4, 46, 2) = (/ 3, 2, 1, 7/)
+        iqtplist(1:4, 47, 2) = (/ 3, 4, 5, 6/)
+        iqtplist(1:4, 48, 2) = (/ 3, 4, 5, 10/)
+        iqtplist(1:4, 49, 2) = (/ 4, 3, 2, 8/)
+        iqtplist(1:4, 50, 2) = (/ 4, 5, 6, 11/)
+        iqtplist(1:4, 51, 2) = (/ 5, 4, 3, 12/)
+        iqtplist(1:4, 52, 2) = (/ 5, 6, 1, 7/)
+        iqtplist(1:4, 53, 2) = (/ 6, 1, 2, 8/)
+        iqtplist(1:4, 54, 2) = (/ 6, 5, 4, 9/)
+        iqtplist(1:4, 55, 2) = (/11, 6, 1, 7/)
+        iqtplist(1:4, 56, 2) = (/11, 6, 5, 10/)
+        iqtplist(1:4, 57, 2) = (/ 7, 1, 2, 8/)
+        iqtplist(1:4, 58, 2) = (/ 8, 2, 3, 12/)
+        iqtplist(1:4, 59, 2) = (/ 9, 4, 3, 12/)
+        iqtplist(1:4, 60, 2) = (/ 9, 4, 5, 10/)
+        iqtplist(1:4, 61, 2) = (/ 1, 3, 8, 2/)
+        iqtplist(1:4, 62, 2) = (/ 1, 5, 11, 6/)
+        iqtplist(1:4, 63, 2) = (/ 2, 4, 12, 3/)
+        iqtplist(1:4, 64, 2) = (/ 2, 6, 7, 1/)
+        iqtplist(1:4, 65, 2) = (/ 3, 5, 9, 4/)
+        iqtplist(1:4, 66, 2) = (/ 4, 6, 10, 5/)
+        iqtplist(1:4, 67, 2) = (/14, 15, 16, 13/)
         !--- END generated by 'python gen_qtp.py qr_tert_pot_2.txt'
 
     end subroutine assignqtp
@@ -2181,7 +2149,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
         integer :: nqr, itypeqr(ntermmax) &
             , iqrlist(10,ntermmax)
-
         nqr = 55
         !--- type of qr
         !--- 1=BL(BondLen), 2=BA(BondAng), 3=TO(Torsion), 4=OB(OOPBend)
@@ -2192,22 +2159,22 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
 
         !--- BEGIN generated by 'python gen_qr_forUij-t.py rdef0.txt'
         !--- bond length
-        iqrlist(1:2, 1) = (/ 2, 1/)
-        iqrlist(1:2, 2) = (/ 3, 2/)
-        iqrlist(1:2, 3) = (/ 4, 3/)
-        iqrlist(1:2, 4) = (/ 5, 4/)
-        iqrlist(1:2, 5) = (/ 6, 5/)
-        iqrlist(1:2, 6) = (/ 1, 6/)
-        iqrlist(1:2, 7) = (/ 7, 1/)
-        iqrlist(1:2, 8) = (/ 8, 2/)
-        iqrlist(1:2, 9) = (/ 9, 4/)
+        iqrlist(1:2,1)  = (/ 2, 1/)
+        iqrlist(1:2,2)  = (/ 3, 2/)
+        iqrlist(1:2,3)  = (/ 4, 3/)
+        iqrlist(1:2,4)  = (/ 5, 4/)
+        iqrlist(1:2,5)  = (/ 6, 5/)
+        iqrlist(1:2,6)  = (/ 1, 6/)
+        iqrlist(1:2,7)  = (/ 7, 1/)
+        iqrlist(1:2,8)  = (/ 8, 2/)
+        iqrlist(1:2,9)  = (/ 9, 4/)
         iqrlist(1:2,10) = (/10, 5/)
         iqrlist(1:2,11) = (/11, 6/)
         iqrlist(1:2,12) = (/12, 3/)
-        iqrlist(1:2,13) = (/13,12/)
-        iqrlist(1:2,14) = (/14,13/)
-        iqrlist(1:2,15) = (/15,13/)
-        iqrlist(1:2,16) = (/16,13/)
+        iqrlist(1:2,13) = (/13, 12/)
+        iqrlist(1:2,14) = (/14, 13/)
+        iqrlist(1:2,15) = (/15, 13/)
+        iqrlist(1:2,16) = (/16, 13/)
         !--- bend
         iqrlist(1:3,17) = (/ 3, 2, 1/)
         iqrlist(1:3,18) = (/ 4, 3, 2/)
@@ -2227,13 +2194,13 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         iqrlist(1:3,32) = (/11, 6, 1/)
         iqrlist(1:3,33) = (/12, 3, 2/)
         iqrlist(1:3,34) = (/12, 3, 4/)
-        iqrlist(1:3,35) = (/13,12, 3/)
-        iqrlist(1:3,36) = (/14,13,15/)
-        iqrlist(1:3,37) = (/15,13,16/)
-        iqrlist(1:3,38) = (/14,13,16/)
-        iqrlist(1:3,39) = (/16,13,12/)
-        iqrlist(1:3,40) = (/14,13,12/)
-        iqrlist(1:3,41) = (/15,13,12/)
+        iqrlist(1:3,35) = (/13, 12, 3/)
+        iqrlist(1:3,36) = (/14, 13, 15/)
+        iqrlist(1:3,37) = (/15, 13, 16/)
+        iqrlist(1:3,38) = (/14, 13, 16/)
+        iqrlist(1:3,39) = (/16, 13, 12/)
+        iqrlist(1:3,40) = (/14, 13, 12/)
+        iqrlist(1:3,41) = (/15, 13, 12/)
         !--- torsion
         iqrlist(1:4,42) = (/ 4, 3, 2, 1/)
         iqrlist(1:4,43) = (/ 5, 4, 3, 2/)
@@ -2241,8 +2208,8 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         iqrlist(1:4,45) = (/ 1, 6, 5, 4/)
         iqrlist(1:4,46) = (/ 2, 1, 6, 5/)
         iqrlist(1:4,47) = (/ 3, 2, 1, 6/)
-        iqrlist(1:4,48) = (/13,12, 3, 4/)
-        iqrlist(1:4,49) = (/16,13,12, 3/)
+        iqrlist(1:4,48) = (/13, 12, 3, 4/)
+        iqrlist(1:4,49) = (/16, 13, 12, 3/)
         !--- oop bend
         iqrlist(1:4,50) = (/ 7, 2, 6, 1/)
         iqrlist(1:4,51) = (/ 8, 3, 1, 2/)
@@ -2271,44 +2238,43 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
         integer          :: nqnr, lcindex(nlcmax,ntermmax), nlc(ntermmax)
         double precision :: lccoef(nlcmax,ntermmax)
-
         nqnr = 42
         !--- BEGIN generated by python gen_qnr_forUij-t.py intnrdef.txt
         nlc    (           1) = 1
-        lcindex(1:nlc( 1), 1) = (/  1/)
-        lccoef (1:nlc( 1), 1) = &
+        lcindex(1:nlc( 1),1) = (/  1/)
+        lccoef (1:nlc( 1),1) = &
             (/  1.00000/)
         nlc    (           2) = 1
-        lcindex(1:nlc( 2), 2) = (/  2/)
-        lccoef (1:nlc( 2), 2) = &
+        lcindex(1:nlc( 2),2) = (/  2/)
+        lccoef (1:nlc( 2),2) = &
             (/  1.00000/)
         nlc    (           3) = 1
-        lcindex(1:nlc( 3), 3) = (/  3/)
-        lccoef (1:nlc( 3), 3) = &
+        lcindex(1:nlc( 3),3) = (/  3/)
+        lccoef (1:nlc( 3),3) = &
             (/  1.00000/)
         nlc    (           4) = 1
-        lcindex(1:nlc( 4), 4) = (/  4/)
-        lccoef (1:nlc( 4), 4) = &
+        lcindex(1:nlc( 4),4) = (/  4/)
+        lccoef (1:nlc( 4),4) = &
             (/  1.00000/)
         nlc    (           5) = 1
-        lcindex(1:nlc( 5), 5) = (/  5/)
-        lccoef (1:nlc( 5), 5) = &
+        lcindex(1:nlc( 5),5) = (/  5/)
+        lccoef (1:nlc( 5),5) = &
             (/  1.00000/)
         nlc    (           6) = 1
-        lcindex(1:nlc( 6), 6) = (/  6/)
-        lccoef (1:nlc( 6), 6) = &
+        lcindex(1:nlc( 6),6) = (/  6/)
+        lccoef (1:nlc( 6),6) = &
             (/  1.00000/)
         nlc    (           7) = 1
-        lcindex(1:nlc( 7), 7) = (/  7/)
-        lccoef (1:nlc( 7), 7) = &
+        lcindex(1:nlc( 7),7) = (/  7/)
+        lccoef (1:nlc( 7),7) = &
             (/  1.00000/)
         nlc    (           8) = 1
-        lcindex(1:nlc( 8), 8) = (/  8/)
-        lccoef (1:nlc( 8), 8) = &
+        lcindex(1:nlc( 8),8) = (/  8/)
+        lccoef (1:nlc( 8),8) = &
             (/  1.00000/)
         nlc    (           9) = 1
-        lcindex(1:nlc( 9), 9) = (/  9/)
-        lccoef (1:nlc( 9), 9) = &
+        lcindex(1:nlc( 9),9) = (/  9/)
+        lccoef (1:nlc( 9),9) = &
             (/  1.00000/)
         nlc    (          10) = 1
         lcindex(1:nlc(10),10) = (/ 10/)
@@ -2329,27 +2295,27 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         nlc    (          14) = 3
         lcindex(1:nlc(14),14) = (/ 14, 15, 16/)
         lccoef (1:nlc(14),14) = &
-            (/  0.57735,  0.57735,  0.57735/)
+            (/  0.57735, 0.57735, 0.57735/)
         nlc    (          15) = 3
         lcindex(1:nlc(15),15) = (/ 14, 15, 16/)
         lccoef (1:nlc(15),15) = &
-            (/ -0.40825, -0.40825,  0.81650/)
+            (/ -0.40825, -0.40825, 0.81650/)
         nlc    (          16) = 3
         lcindex(1:nlc(16),16) = (/ 14, 15, 16/)
         lccoef (1:nlc(16),16) = &
-            (/  0.70711, -0.70711,  0.00000/)
+            (/  0.70711, -0.70711, 0.00000/)
         nlc    (          17) = 6
         lcindex(1:nlc(17),17) = (/ 17, 18, 19, 20, 21, 22/)
         lccoef (1:nlc(17),17) = &
-            (/  0.40825, -0.40825,  0.40825, -0.40825,  0.40825, -0.40825/)
+            (/  0.40825, -0.40825, 0.40825, -0.40825, 0.40825, -0.40825/)
         nlc    (          18) = 6
         lcindex(1:nlc(18),18) = (/ 17, 18, 19, 20, 21, 22/)
         lccoef (1:nlc(18),18) = &
-            (/  0.57735, -0.28868, -0.28868,  0.57735, -0.28868, -0.28868/)
+            (/  0.57735, -0.28868, -0.28868, 0.57735, -0.28868, -0.28868/)
         nlc    (          19) = 6
         lcindex(1:nlc(19),19) = (/ 17, 18, 19, 20, 21, 22/)
         lccoef (1:nlc(19),19) = &
-            (/  0.00000,  0.50000, -0.50000,  0.00000,  0.50000, -0.50000/)
+            (/  0.00000, 0.50000, -0.50000, 0.00000, 0.50000, -0.50000/)
         nlc    (          20) = 2
         lcindex(1:nlc(20),20) = (/ 23, 24/)
         lccoef (1:nlc(20),20) = &
@@ -2381,7 +2347,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         nlc    (          27) = 6
         lcindex(1:nlc(27),27) = (/ 36, 37, 38, 39, 40, 41/)
         lccoef (1:nlc(27),27) = &
-            (/  0.40825,  0.40825,  0.40825, -0.40825, -0.40825, -0.40825/)
+            (/  0.40825, 0.40825, 0.40825, -0.40825, -0.40825, -0.40825/)
         nlc    (          28) = 3
         lcindex(1:nlc(28),28) = (/ 36, 37, 38/)
         lccoef (1:nlc(28),28) = &
@@ -2401,15 +2367,15 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         nlc    (          32) = 6
         lcindex(1:nlc(32),32) = (/ 42, 43, 44, 45, 46, 47/)
         lccoef (1:nlc(32),32) = &
-            (/  0.40825, -0.40825,  0.40825, -0.40825,  0.40825, -0.40825/)
+            (/  0.40825, -0.40825, 0.40825, -0.40825, 0.40825, -0.40825/)
         nlc    (          33) = 6
         lcindex(1:nlc(33),33) = (/ 42, 43, 44, 45, 46, 47/)
         lccoef (1:nlc(33),33) = &
-            (/  0.50000,  0.00000, -0.50000,  0.50000,  0.00000, -0.50000/)
+            (/  0.50000, 0.00000, -0.50000, 0.50000, 0.00000, -0.50000/)
         nlc    (          34) = 6
         lcindex(1:nlc(34),34) = (/ 42, 43, 44, 45, 46, 47/)
         lccoef (1:nlc(34),34) = &
-            (/ -0.28868,  0.57735, -0.28868, -0.28868,  0.57735, -0.28868/)
+            (/ -0.28868, 0.57735, -0.28868, -0.28868, 0.57735, -0.28868/)
         nlc    (          35) = 1
         lcindex(1:nlc(35),35) = (/ 48/)
         lccoef (1:nlc(35),35) = &
@@ -2461,15 +2427,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
         integer :: nqtc, qtcsym(ntermmax), qnrindex(ntermmax) &
             , qtctyp(ntermmax)
-
         nqtc = 11
         !--- correspondence of qtc to qnr
-        qnrindex(1:nqtc) = (/42,31,32,34, 18,19,25,30, 33, 26, 38/)
+        qnrindex(1:nqtc) = (/42, 31, 32, 34, 18, 19, 25, 30, 33, 26, 38/)
         !--- type of qtc: 1=normal; 2=angle involving a breaking bond
-        qtctyp  (1:nqtc) = (/ 1, 1, 1, 1,  1, 1, 1, 1,  1,  2, 1/)
+        qtctyp  (1:nqtc) = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1/)
         !--- symm. of qtc at Cs geom.
         !---  1=a', 2=a"
-        qtcsym(1:nqtc) = (/2,2,2,2, 1,1,1,1, 2, 1, 2/)
+        qtcsym(1:nqtc) = (/2, 2, 2, 2, 1, 1, 1, 1, 2, 1, 2/)
     end subroutine assignqtc
 
     !=================================================================
@@ -2489,2205 +2454,2204 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
         double precision :: k(ntermmax,napmax), q0(ntermmax,napmax)
         integer          :: n(ntermmax,napmax), istate
-
         !--- unit of parameters have been coverted to
         !---   hartree, Angstrom, rad
         select case(istate)
         case(1)
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 1)
-            k (  1, 1) =  2.619244e+00
-            q0(  1, 1) = 1.390000e+00
-            n (  1, 1) =  0
-            k (  2, 1) =  2.492554e+00
-            q0(  2, 1) = 1.397000e+00
-            n (  2, 1) =  0
-            k (  3, 1) =  1.545696e+00
-            q0(  3, 1) = 1.090000e+00
-            n (  3, 1) =  0
-            k (  4, 1) =  2.337722e+00
-            q0(  4, 1) = 1.403000e+00
-            n (  4, 1) =  0
-            k (  5, 1) =  1.534213e+00
-            q0(  5, 1) = 1.091000e+00
-            n (  5, 1) =  0
-            k (  6, 1) =  1.426792e+00
-            q0(  6, 1) = 1.097000e+00
-            n (  6, 1) =  0
-            k (  7, 1) =  1.426793e+00
-            q0(  7, 1) = 1.097000e+00
-            n (  7, 1) =  0
-            k (  8, 1) =  1.451096e+00
-            q0(  8, 1) = 1.096000e+00
-            n (  8, 1) =  0
-            k (  9, 1) =  2.377239e+00
-            q0(  9, 1) = 1.398000e+00
-            n (  9, 1) =  0
-            k ( 10, 1) =  2.216034e+00
-            q0( 10, 1) = 1.765000e+00
-            n ( 10, 1) =  0
-            k ( 11, 1) =  2.519101e+00
-            q0( 11, 1) = 1.397000e+00
-            n ( 11, 1) =  0
-            k ( 12, 1) =  1.551794e+00
-            q0( 12, 1) = 1.088000e+00
-            n ( 12, 1) =  0
-            k ( 13, 1) =  2.560072e+00
-            q0( 13, 1) = 1.392000e+00
-            n ( 13, 1) =  0
-            k ( 14, 1) =  1.544277e+00
-            q0( 14, 1) = 1.090000e+00
-            n ( 14, 1) =  0
-            k ( 15, 1) =  1.553667e+00
-            q0( 15, 1) = 1.089000e+00
-            n ( 15, 1) =  0
-            k ( 16, 1) =  2.382446e-01
-            q0( 16, 1) = 2.100172e+00
-            n ( 16, 1) =  0
-            k ( 17, 1) =  1.833758e-01
-            q0( 17, 1) = 2.096943e+00
-            n ( 17, 1) =  0
-            k ( 18, 1) =  2.370064e-01
-            q0( 18, 1) = 2.080293e+00
-            n ( 18, 1) =  0
-            k ( 19, 1) =  1.710962e-01
-            q0( 19, 1) = 2.101481e+00
-            n ( 19, 1) =  0
-            k ( 20, 1) =  2.150197e-01
-            q0( 20, 1) = 2.103034e+00
-            n ( 20, 1) =  0
-            k ( 21, 1) =  1.641261e-01
-            q0( 21, 1) = 2.083626e+00
-            n ( 21, 1) =  0
-            k ( 22, 1) =  1.087538e-01
-            q0( 22, 1) = 2.081776e+00
-            n ( 22, 1) =  0
-            k ( 23, 1) =  2.963787e-01
-            q0( 23, 1) = 2.034460e+00
-            n ( 23, 1) =  0
-            k ( 24, 1) =  3.029554e-01
-            q0( 24, 1) = 1.795420e+00
-            n ( 24, 1) =  0
-            k ( 25, 1) =  1.503844e-01
-            q0( 25, 1) = 2.086489e+00
-            n ( 25, 1) =  0
-            k ( 26, 1) =  2.380949e-01
-            q0( 26, 1) = 2.093435e+00
-            n ( 26, 1) =  0
-            k ( 27, 1) =  1.498012e-01
-            q0( 27, 1) = 2.110679e+00
-            n ( 27, 1) =  0
-            k ( 28, 1) =  3.251847e-01
-            q0( 28, 1) = 2.167629e+00
-            n ( 28, 1) =  0
-            k ( 29, 1) =  2.146442e-01
-            q0( 29, 1) = 2.108620e+00
-            n ( 29, 1) =  0
-            k ( 30, 1) =  1.620271e-01
-            q0( 30, 1) = 2.079315e+00
-            n ( 30, 1) =  0
-            k ( 31, 1) =  1.791926e-01
-            q0( 31, 1) = 2.079612e+00
-            n ( 31, 1) =  0
-            k ( 32, 1) =  1.709755e-01
-            q0( 32, 1) = 2.101900e+00
-            n ( 32, 1) =  0
-            k ( 33, 1) =  1.652768e-01
-            q0( 33, 1) = 2.096943e+00
-            n ( 33, 1) =  0
-            k ( 34, 1) =  1.678104e-01
-            q0( 34, 1) = 2.095634e+00
-            n ( 34, 1) =  0
-            k ( 35, 1) =  8.883264e-02
-            q0( 35, 1) = 1.928344e+00
-            n ( 35, 1) =  0
-            k ( 36, 1) =  9.599204e-02
-            q0( 36, 1) = 1.902845e+00
-            n ( 36, 1) =  0
-            k ( 37, 1) =  1.180519e-01
-            q0( 37, 1) = 1.942743e+00
-            n ( 37, 1) =  0
-            k ( 38, 1) =  9.599242e-02
-            q0( 38, 1) = 1.902845e+00
-            n ( 38, 1) =  0
-            k ( 39, 1) =  1.180515e-01
-            q0( 39, 1) = 1.942743e+00
-            n ( 39, 1) =  0
-            k ( 40, 1) =  1.218393e-01
-            q0( 40, 1) = 1.842370e+00
-            n ( 40, 1) =  0
-            k ( 41, 1) =  2.088609e-18
-            q0( 41, 1) = 0.000000e+00
-            n ( 41, 1) =  2
-            k ( 42, 1) =  5.749321e-03
-            q0( 42, 1) = 0.000000e+00
-            n ( 42, 1) =  2
-            k ( 43, 1) =  1.958462e-02
-            q0( 43, 1) = 0.000000e+00
-            n ( 43, 1) =  2
-            k ( 44, 1) =  1.239744e-02
-            q0( 44, 1) = 0.000000e+00
-            n ( 44, 1) =  2
-            k ( 45, 1) =  5.303858e-03
-            q0( 45, 1) = 0.000000e+00
-            n ( 45, 1) =  2
-            k ( 46, 1) =  1.150228e-02
-            q0( 46, 1) = 0.000000e+00
-            n ( 46, 1) =  2
-            k ( 47, 1) =  1.573999e-02
-            q0( 47, 1) = 0.000000e+00
-            n ( 47, 1) =  2
-            k ( 48, 1) =  8.958560e-03
-            q0( 48, 1) = 0.000000e+00
-            n ( 48, 1) =  2
-            k ( 49, 1) =  1.798006e-02
-            q0( 49, 1) = 0.000000e+00
-            n ( 49, 1) =  2
-            k ( 50, 1) =  1.261305e-02
-            q0( 50, 1) = 0.000000e+00
-            n ( 50, 1) =  2
-            k ( 51, 1) =  4.521086e-03
-            q0( 51, 1) = 0.000000e+00
-            n ( 51, 1) =  2
-            k ( 52, 1) =  1.239651e-02
-            q0( 52, 1) = 0.000000e+00
-            n ( 52, 1) =  2
-            k ( 53, 1) =  5.795252e-03
-            q0( 53, 1) = 1.047198e+00
-            n ( 53, 1) =  3
-            k ( 54, 1) =  5.795341e-03
-            q0( 54, 1) = 1.047198e+00
-            n ( 54, 1) =  3
-            k ( 55, 1) =  4.122935e-03
-            q0( 55, 1) = 1.047198e+00
-            n ( 55, 1) =  3
-            k ( 56, 1) =  9.876327e-03
-            q0( 56, 1) = 0.000000e+00
-            n ( 56, 1) =  2
-            k ( 57, 1) =  1.224966e-02
-            q0( 57, 1) = 0.000000e+00
-            n ( 57, 1) =  2
-            k ( 58, 1) =  1.043591e-02
-            q0( 58, 1) = 0.000000e+00
-            n ( 58, 1) =  2
-            k ( 59, 1) =  1.141268e-02
-            q0( 59, 1) = 0.000000e+00
-            n ( 59, 1) =  2
-            k ( 60, 1) =  1.257323e-02
-            q0( 60, 1) = 0.000000e+00
-            n ( 60, 1) =  2
-            k ( 61, 1) =  1.250853e-02
-            q0( 61, 1) = 0.000000e+00
-            n ( 61, 1) =  2
-            k ( 62, 1) =  4.548687e-03
-            q0( 62, 1) = 0.000000e+00
-            n ( 62, 1) =  2
-            k ( 63, 1) =  5.334954e-03
-            q0( 63, 1) = 0.000000e+00
-            n ( 63, 1) =  2
-            k ( 64, 1) =  5.444707e-03
-            q0( 64, 1) = 0.000000e+00
-            n ( 64, 1) =  2
-            k ( 65, 1) =  2.744636e-03
-            q0( 65, 1) = 0.000000e+00
-            n ( 65, 1) =  2
-            k ( 66, 1) =  2.243665e-03
-            q0( 66, 1) = 0.000000e+00
-            n ( 66, 1) =  2
-            k ( 67, 1) =  5.217540e-03
-            q0( 67, 1) = 0.000000e+00
-            n ( 67, 1) =  2
-            k ( 68, 1) =  1.320081e-01
-            q0( 68, 1) = 0.000000e+00
-            n ( 68, 1) =  0
-            k ( 69, 1) =  9.511945e-02
-            q0( 69, 1) = 0.000000e+00
-            n ( 69, 1) =  0
-            k ( 70, 1) =  1.780134e-01
-            q0( 70, 1) = 0.000000e+00
-            n ( 70, 1) =  0
-            k ( 71, 1) =  1.315198e-01
-            q0( 71, 1) = 0.000000e+00
-            n ( 71, 1) =  0
-            k ( 72, 1) =  1.285078e-01
-            q0( 72, 1) = 0.000000e+00
-            n ( 72, 1) =  0
-            k ( 73, 1) =  1.150246e-01
-            q0( 73, 1) = 0.000000e+00
-            n ( 73, 1) =  0
+            k (  1,1) =  2.619244e+00
+            q0(  1,1) = 1.390000e+00
+            n (  1,1) =  0
+            k (  2,1) =  2.492554e+00
+            q0(  2,1) = 1.397000e+00
+            n (  2,1) =  0
+            k (  3,1) =  1.545696e+00
+            q0(  3,1) = 1.090000e+00
+            n (  3,1) =  0
+            k (  4,1) =  2.337722e+00
+            q0(  4,1) = 1.403000e+00
+            n (  4,1) =  0
+            k (  5,1) =  1.534213e+00
+            q0(  5,1) = 1.091000e+00
+            n (  5,1) =  0
+            k (  6,1) =  1.426792e+00
+            q0(  6,1) = 1.097000e+00
+            n (  6,1) =  0
+            k (  7,1) =  1.426793e+00
+            q0(  7,1) = 1.097000e+00
+            n (  7,1) =  0
+            k (  8,1) =  1.451096e+00
+            q0(  8,1) = 1.096000e+00
+            n (  8,1) =  0
+            k (  9,1) =  2.377239e+00
+            q0(  9,1) = 1.398000e+00
+            n (  9,1) =  0
+            k ( 10,1) =  2.216034e+00
+            q0( 10,1) = 1.765000e+00
+            n ( 10,1) =  0
+            k ( 11,1) =  2.519101e+00
+            q0( 11,1) = 1.397000e+00
+            n ( 11,1) =  0
+            k ( 12,1) =  1.551794e+00
+            q0( 12,1) = 1.088000e+00
+            n ( 12,1) =  0
+            k ( 13,1) =  2.560072e+00
+            q0( 13,1) = 1.392000e+00
+            n ( 13,1) =  0
+            k ( 14,1) =  1.544277e+00
+            q0( 14,1) = 1.090000e+00
+            n ( 14,1) =  0
+            k ( 15,1) =  1.553667e+00
+            q0( 15,1) = 1.089000e+00
+            n ( 15,1) =  0
+            k ( 16,1) =  2.382446e-01
+            q0( 16,1) = 2.100172e+00
+            n ( 16,1) =  0
+            k ( 17,1) =  1.833758e-01
+            q0( 17,1) = 2.096943e+00
+            n ( 17,1) =  0
+            k ( 18,1) =  2.370064e-01
+            q0( 18,1) = 2.080293e+00
+            n ( 18,1) =  0
+            k ( 19,1) =  1.710962e-01
+            q0( 19,1) = 2.101481e+00
+            n ( 19,1) =  0
+            k ( 20,1) =  2.150197e-01
+            q0( 20,1) = 2.103034e+00
+            n ( 20,1) =  0
+            k ( 21,1) =  1.641261e-01
+            q0( 21,1) = 2.083626e+00
+            n ( 21,1) =  0
+            k ( 22,1) =  1.087538e-01
+            q0( 22,1) = 2.081776e+00
+            n ( 22,1) =  0
+            k ( 23,1) =  2.963787e-01
+            q0( 23,1) = 2.034460e+00
+            n ( 23,1) =  0
+            k ( 24,1) =  3.029554e-01
+            q0( 24,1) = 1.795420e+00
+            n ( 24,1) =  0
+            k ( 25,1) =  1.503844e-01
+            q0( 25,1) = 2.086489e+00
+            n ( 25,1) =  0
+            k ( 26,1) =  2.380949e-01
+            q0( 26,1) = 2.093435e+00
+            n ( 26,1) =  0
+            k ( 27,1) =  1.498012e-01
+            q0( 27,1) = 2.110679e+00
+            n ( 27,1) =  0
+            k ( 28,1) =  3.251847e-01
+            q0( 28,1) = 2.167629e+00
+            n ( 28,1) =  0
+            k ( 29,1) =  2.146442e-01
+            q0( 29,1) = 2.108620e+00
+            n ( 29,1) =  0
+            k ( 30,1) =  1.620271e-01
+            q0( 30,1) = 2.079315e+00
+            n ( 30,1) =  0
+            k ( 31,1) =  1.791926e-01
+            q0( 31,1) = 2.079612e+00
+            n ( 31,1) =  0
+            k ( 32,1) =  1.709755e-01
+            q0( 32,1) = 2.101900e+00
+            n ( 32,1) =  0
+            k ( 33,1) =  1.652768e-01
+            q0( 33,1) = 2.096943e+00
+            n ( 33,1) =  0
+            k ( 34,1) =  1.678104e-01
+            q0( 34,1) = 2.095634e+00
+            n ( 34,1) =  0
+            k ( 35,1) =  8.883264e-02
+            q0( 35,1) = 1.928344e+00
+            n ( 35,1) =  0
+            k ( 36,1) =  9.599204e-02
+            q0( 36,1) = 1.902845e+00
+            n ( 36,1) =  0
+            k ( 37,1) =  1.180519e-01
+            q0( 37,1) = 1.942743e+00
+            n ( 37,1) =  0
+            k ( 38,1) =  9.599242e-02
+            q0( 38,1) = 1.902845e+00
+            n ( 38,1) =  0
+            k ( 39,1) =  1.180515e-01
+            q0( 39,1) = 1.942743e+00
+            n ( 39,1) =  0
+            k ( 40,1) =  1.218393e-01
+            q0( 40,1) = 1.842370e+00
+            n ( 40,1) =  0
+            k ( 41,1) =  2.088609e-18
+            q0( 41,1) = 0.000000e+00
+            n ( 41,1) =  2
+            k ( 42,1) =  5.749321e-03
+            q0( 42,1) = 0.000000e+00
+            n ( 42,1) =  2
+            k ( 43,1) =  1.958462e-02
+            q0( 43,1) = 0.000000e+00
+            n ( 43,1) =  2
+            k ( 44,1) =  1.239744e-02
+            q0( 44,1) = 0.000000e+00
+            n ( 44,1) =  2
+            k ( 45,1) =  5.303858e-03
+            q0( 45,1) = 0.000000e+00
+            n ( 45,1) =  2
+            k ( 46,1) =  1.150228e-02
+            q0( 46,1) = 0.000000e+00
+            n ( 46,1) =  2
+            k ( 47,1) =  1.573999e-02
+            q0( 47,1) = 0.000000e+00
+            n ( 47,1) =  2
+            k ( 48,1) =  8.958560e-03
+            q0( 48,1) = 0.000000e+00
+            n ( 48,1) =  2
+            k ( 49,1) =  1.798006e-02
+            q0( 49,1) = 0.000000e+00
+            n ( 49,1) =  2
+            k ( 50,1) =  1.261305e-02
+            q0( 50,1) = 0.000000e+00
+            n ( 50,1) =  2
+            k ( 51,1) =  4.521086e-03
+            q0( 51,1) = 0.000000e+00
+            n ( 51,1) =  2
+            k ( 52,1) =  1.239651e-02
+            q0( 52,1) = 0.000000e+00
+            n ( 52,1) =  2
+            k ( 53,1) =  5.795252e-03
+            q0( 53,1) = 1.047198e+00
+            n ( 53,1) =  3
+            k ( 54,1) =  5.795341e-03
+            q0( 54,1) = 1.047198e+00
+            n ( 54,1) =  3
+            k ( 55,1) =  4.122935e-03
+            q0( 55,1) = 1.047198e+00
+            n ( 55,1) =  3
+            k ( 56,1) =  9.876327e-03
+            q0( 56,1) = 0.000000e+00
+            n ( 56,1) =  2
+            k ( 57,1) =  1.224966e-02
+            q0( 57,1) = 0.000000e+00
+            n ( 57,1) =  2
+            k ( 58,1) =  1.043591e-02
+            q0( 58,1) = 0.000000e+00
+            n ( 58,1) =  2
+            k ( 59,1) =  1.141268e-02
+            q0( 59,1) = 0.000000e+00
+            n ( 59,1) =  2
+            k ( 60,1) =  1.257323e-02
+            q0( 60,1) = 0.000000e+00
+            n ( 60,1) =  2
+            k ( 61,1) =  1.250853e-02
+            q0( 61,1) = 0.000000e+00
+            n ( 61,1) =  2
+            k ( 62,1) =  4.548687e-03
+            q0( 62,1) = 0.000000e+00
+            n ( 62,1) =  2
+            k ( 63,1) =  5.334954e-03
+            q0( 63,1) = 0.000000e+00
+            n ( 63,1) =  2
+            k ( 64,1) =  5.444707e-03
+            q0( 64,1) = 0.000000e+00
+            n ( 64,1) =  2
+            k ( 65,1) =  2.744636e-03
+            q0( 65,1) = 0.000000e+00
+            n ( 65,1) =  2
+            k ( 66,1) =  2.243665e-03
+            q0( 66,1) = 0.000000e+00
+            n ( 66,1) =  2
+            k ( 67,1) =  5.217540e-03
+            q0( 67,1) = 0.000000e+00
+            n ( 67,1) =  2
+            k ( 68,1) =  1.320081e-01
+            q0( 68,1) = 0.000000e+00
+            n ( 68,1) =  0
+            k ( 69,1) =  9.511945e-02
+            q0( 69,1) = 0.000000e+00
+            n ( 69,1) =  0
+            k ( 70,1) =  1.780134e-01
+            q0( 70,1) = 0.000000e+00
+            n ( 70,1) =  0
+            k ( 71,1) =  1.315198e-01
+            q0( 71,1) = 0.000000e+00
+            n ( 71,1) =  0
+            k ( 72,1) =  1.285078e-01
+            q0( 72,1) = 0.000000e+00
+            n ( 72,1) =  0
+            k ( 73,1) =  1.150246e-01
+            q0( 73,1) = 0.000000e+00
+            n ( 73,1) =  0
             !--- END generated by 'gen_FFparam.py'
 
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 2)
-            k (  1, 2) =  2.586008e+00
-            q0(  1, 2) = 1.392000e+00
-            n (  1, 2) =  0
-            k (  2, 2) =  2.494312e+00
-            q0(  2, 2) = 1.396000e+00
-            n (  2, 2) =  0
-            k (  3, 2) =  1.539699e+00
-            q0(  3, 2) = 1.090000e+00
-            n (  3, 2) =  0
-            k (  4, 2) =  2.273210e+00
-            q0(  4, 2) = 1.407000e+00
-            n (  4, 2) =  0
-            k (  5, 2) =  1.527902e+00
-            q0(  5, 2) = 1.091000e+00
-            n (  5, 2) =  0
-            k (  6, 2) =  1.509773e+00
-            q0(  6, 2) = 1.091000e+00
-            n (  6, 2) =  0
-            k (  7, 2) =  1.509773e+00
-            q0(  7, 2) = 1.091000e+00
-            n (  7, 2) =  0
-            k (  8, 2) =  1.512585e+00
-            q0(  8, 2) = 1.091000e+00
-            n (  8, 2) =  0
-            k (  9, 2) =  2.365982e+00
-            q0(  9, 2) = 1.398000e+00
-            n (  9, 2) =  0
-            k ( 10, 2) =  2.165702e+00
-            q0( 10, 2) = 1.770000e+00
-            n ( 10, 2) =  0
-            k ( 11, 2) =  2.518431e+00
-            q0( 11, 2) = 1.396000e+00
-            n ( 11, 2) =  0
-            k ( 12, 2) =  1.558609e+00
-            q0( 12, 2) = 1.087000e+00
-            n ( 12, 2) =  0
-            k ( 13, 2) =  2.541240e+00
-            q0( 13, 2) = 1.393000e+00
-            n ( 13, 2) =  0
-            k ( 14, 2) =  1.538749e+00
-            q0( 14, 2) = 1.090000e+00
-            n ( 14, 2) =  0
-            k ( 15, 2) =  1.549891e+00
-            q0( 15, 2) = 1.089000e+00
-            n ( 15, 2) =  0
-            k ( 16, 2) =  2.432243e-01
-            q0( 16, 2) = 2.099893e+00
-            n ( 16, 2) =  0
-            k ( 17, 2) =  1.842465e-01
-            q0( 17, 2) = 2.090782e+00
-            n ( 17, 2) =  0
-            k ( 18, 2) =  2.357369e-01
-            q0( 18, 2) = 2.078705e+00
-            n ( 18, 2) =  0
-            k ( 19, 2) =  1.710109e-01
-            q0( 19, 2) = 2.103174e+00
-            n ( 19, 2) =  0
-            k ( 20, 2) =  2.129420e-01
-            q0( 20, 2) = 2.103663e+00
-            n ( 20, 2) =  0
-            k ( 21, 2) =  1.636367e-01
-            q0( 21, 2) = 2.085442e+00
-            n ( 21, 2) =  0
-            k ( 22, 2) =  9.800080e-02
-            q0( 22, 2) = 2.074498e+00
-            n ( 22, 2) =  0
-            k ( 23, 2) =  3.048183e-01
-            q0( 23, 2) = 2.037480e+00
-            n ( 23, 2) =  0
-            k ( 24, 2) =  2.269325e-01
-            q0( 24, 2) = 1.787793e+00
-            n ( 24, 2) =  0
-            k ( 25, 2) =  1.474177e-01
-            q0( 25, 2) = 2.093802e+00
-            n ( 25, 2) =  0
-            k ( 26, 2) =  2.414756e-01
-            q0( 26, 2) = 2.099439e+00
-            n ( 26, 2) =  0
-            k ( 27, 2) =  1.490913e-01
-            q0( 27, 2) = 2.100033e+00
-            n ( 27, 2) =  0
-            k ( 28, 2) =  3.040409e-01
-            q0( 28, 2) = 2.173476e+00
-            n ( 28, 2) =  0
-            k ( 29, 2) =  2.153762e-01
-            q0( 29, 2) = 2.110854e+00
-            n ( 29, 2) =  0
-            k ( 30, 2) =  1.628635e-01
-            q0( 30, 2) = 2.076610e+00
-            n ( 30, 2) =  0
-            k ( 31, 2) =  1.774977e-01
-            q0( 31, 2) = 2.082038e+00
-            n ( 31, 2) =  0
-            k ( 32, 2) =  1.709660e-01
-            q0( 32, 2) = 2.101795e+00
-            n ( 32, 2) =  0
-            k ( 33, 2) =  1.649907e-01
-            q0( 33, 2) = 2.095163e+00
-            n ( 33, 2) =  0
-            k ( 34, 2) =  1.664442e-01
-            q0( 34, 2) = 2.094168e+00
-            n ( 34, 2) =  0
-            k ( 35, 2) =  1.060995e-01
-            q0( 35, 2) = 2.011544e+00
-            n ( 35, 2) =  0
-            k ( 36, 2) =  1.101787e-01
-            q0( 36, 2) = 1.985801e+00
-            n ( 36, 2) =  0
-            k ( 37, 2) =  9.485893e-02
-            q0( 37, 2) = 1.841881e+00
-            n ( 37, 2) =  0
-            k ( 38, 2) =  1.101791e-01
-            q0( 38, 2) = 1.985801e+00
-            n ( 38, 2) =  0
-            k ( 39, 2) =  9.485816e-02
-            q0( 39, 2) = 1.841881e+00
-            n ( 39, 2) =  0
-            k ( 40, 2) =  1.099867e-01
-            q0( 40, 2) = 1.772138e+00
-            n ( 40, 2) =  0
-            k ( 41, 2) =  4.272806e-18
-            q0( 41, 2) = 0.000000e+00
-            n ( 41, 2) =  2
-            k ( 42, 2) =  7.822627e-03
-            q0( 42, 2) = 0.000000e+00
-            n ( 42, 2) =  2
-            k ( 43, 2) =  1.976277e-02
-            q0( 43, 2) = 0.000000e+00
-            n ( 43, 2) =  2
-            k ( 44, 2) =  1.275336e-02
-            q0( 44, 2) = 0.000000e+00
-            n ( 44, 2) =  2
-            k ( 45, 2) =  5.714018e-03
-            q0( 45, 2) = 0.000000e+00
-            n ( 45, 2) =  2
-            k ( 46, 2) =  1.164570e-02
-            q0( 46, 2) = 0.000000e+00
-            n ( 46, 2) =  2
-            k ( 47, 2) =  1.552873e-02
-            q0( 47, 2) = 0.000000e+00
-            n ( 47, 2) =  2
-            k ( 48, 2) =  8.696028e-03
-            q0( 48, 2) = 0.000000e+00
-            n ( 48, 2) =  2
-            k ( 49, 2) =  1.820143e-02
-            q0( 49, 2) = 0.000000e+00
-            n ( 49, 2) =  2
-            k ( 50, 2) =  1.233255e-02
-            q0( 50, 2) = 0.000000e+00
-            n ( 50, 2) =  2
-            k ( 51, 2) =  4.511505e-03
-            q0( 51, 2) = 0.000000e+00
-            n ( 51, 2) =  2
-            k ( 52, 2) =  1.175369e-02
-            q0( 52, 2) = 0.000000e+00
-            n ( 52, 2) =  2
-            k ( 53, 2) =  1.725200e-03
-            q0( 53, 2) = 1.047198e+00
-            n ( 53, 2) =  3
-            k ( 54, 2) =  1.725198e-03
-            q0( 54, 2) = 1.047198e+00
-            n ( 54, 2) =  3
-            k ( 55, 2) = -4.529911e-19
-            q0( 55, 2) = 1.047198e+00
-            n ( 55, 2) =  3
-            k ( 56, 2) =  1.004664e-02
-            q0( 56, 2) = 0.000000e+00
-            n ( 56, 2) =  2
-            k ( 57, 2) =  1.199563e-02
-            q0( 57, 2) = 0.000000e+00
-            n ( 57, 2) =  2
-            k ( 58, 2) =  1.262188e-02
-            q0( 58, 2) = 0.000000e+00
-            n ( 58, 2) =  2
-            k ( 59, 2) =  1.171924e-02
-            q0( 59, 2) = 0.000000e+00
-            n ( 59, 2) =  2
-            k ( 60, 2) =  1.254759e-02
-            q0( 60, 2) = 0.000000e+00
-            n ( 60, 2) =  2
-            k ( 61, 2) =  1.274894e-02
-            q0( 61, 2) = 0.000000e+00
-            n ( 61, 2) =  2
-            k ( 62, 2) =  5.001135e-03
-            q0( 62, 2) = 0.000000e+00
-            n ( 62, 2) =  2
-            k ( 63, 2) =  5.629632e-03
-            q0( 63, 2) = 0.000000e+00
-            n ( 63, 2) =  2
-            k ( 64, 2) =  5.644706e-03
-            q0( 64, 2) = 0.000000e+00
-            n ( 64, 2) =  2
-            k ( 65, 2) =  3.448609e-03
-            q0( 65, 2) = 0.000000e+00
-            n ( 65, 2) =  2
-            k ( 66, 2) =  2.542402e-03
-            q0( 66, 2) = 0.000000e+00
-            n ( 66, 2) =  2
-            k ( 67, 2) =  5.294531e-03
-            q0( 67, 2) = 0.000000e+00
-            n ( 67, 2) =  2
-            k ( 68, 2) =  1.223143e-01
-            q0( 68, 2) = 0.000000e+00
-            n ( 68, 2) =  0
-            k ( 69, 2) =  8.630360e-02
-            q0( 69, 2) = 0.000000e+00
-            n ( 69, 2) =  0
-            k ( 70, 2) =  1.966613e-01
-            q0( 70, 2) = 0.000000e+00
-            n ( 70, 2) =  0
-            k ( 71, 2) =  1.220161e-01
-            q0( 71, 2) = 0.000000e+00
-            n ( 71, 2) =  0
-            k ( 72, 2) =  1.226224e-01
-            q0( 72, 2) = 0.000000e+00
-            n ( 72, 2) =  0
-            k ( 73, 2) =  1.110292e-01
-            q0( 73, 2) = 0.000000e+00
-            n ( 73, 2) =  0
+            k (  1,2) =  2.586008e+00
+            q0(  1,2) = 1.392000e+00
+            n (  1,2) =  0
+            k (  2,2) =  2.494312e+00
+            q0(  2,2) = 1.396000e+00
+            n (  2,2) =  0
+            k (  3,2) =  1.539699e+00
+            q0(  3,2) = 1.090000e+00
+            n (  3,2) =  0
+            k (  4,2) =  2.273210e+00
+            q0(  4,2) = 1.407000e+00
+            n (  4,2) =  0
+            k (  5,2) =  1.527902e+00
+            q0(  5,2) = 1.091000e+00
+            n (  5,2) =  0
+            k (  6,2) =  1.509773e+00
+            q0(  6,2) = 1.091000e+00
+            n (  6,2) =  0
+            k (  7,2) =  1.509773e+00
+            q0(  7,2) = 1.091000e+00
+            n (  7,2) =  0
+            k (  8,2) =  1.512585e+00
+            q0(  8,2) = 1.091000e+00
+            n (  8,2) =  0
+            k (  9,2) =  2.365982e+00
+            q0(  9,2) = 1.398000e+00
+            n (  9,2) =  0
+            k ( 10,2) =  2.165702e+00
+            q0( 10,2) = 1.770000e+00
+            n ( 10,2) =  0
+            k ( 11,2) =  2.518431e+00
+            q0( 11,2) = 1.396000e+00
+            n ( 11,2) =  0
+            k ( 12,2) =  1.558609e+00
+            q0( 12,2) = 1.087000e+00
+            n ( 12,2) =  0
+            k ( 13,2) =  2.541240e+00
+            q0( 13,2) = 1.393000e+00
+            n ( 13,2) =  0
+            k ( 14,2) =  1.538749e+00
+            q0( 14,2) = 1.090000e+00
+            n ( 14,2) =  0
+            k ( 15,2) =  1.549891e+00
+            q0( 15,2) = 1.089000e+00
+            n ( 15,2) =  0
+            k ( 16,2) =  2.432243e-01
+            q0( 16,2) = 2.099893e+00
+            n ( 16,2) =  0
+            k ( 17,2) =  1.842465e-01
+            q0( 17,2) = 2.090782e+00
+            n ( 17,2) =  0
+            k ( 18,2) =  2.357369e-01
+            q0( 18,2) = 2.078705e+00
+            n ( 18,2) =  0
+            k ( 19,2) =  1.710109e-01
+            q0( 19,2) = 2.103174e+00
+            n ( 19,2) =  0
+            k ( 20,2) =  2.129420e-01
+            q0( 20,2) = 2.103663e+00
+            n ( 20,2) =  0
+            k ( 21,2) =  1.636367e-01
+            q0( 21,2) = 2.085442e+00
+            n ( 21,2) =  0
+            k ( 22,2) =  9.800080e-02
+            q0( 22,2) = 2.074498e+00
+            n ( 22,2) =  0
+            k ( 23,2) =  3.048183e-01
+            q0( 23,2) = 2.037480e+00
+            n ( 23,2) =  0
+            k ( 24,2) =  2.269325e-01
+            q0( 24,2) = 1.787793e+00
+            n ( 24,2) =  0
+            k ( 25,2) =  1.474177e-01
+            q0( 25,2) = 2.093802e+00
+            n ( 25,2) =  0
+            k ( 26,2) =  2.414756e-01
+            q0( 26,2) = 2.099439e+00
+            n ( 26,2) =  0
+            k ( 27,2) =  1.490913e-01
+            q0( 27,2) = 2.100033e+00
+            n ( 27,2) =  0
+            k ( 28,2) =  3.040409e-01
+            q0( 28,2) = 2.173476e+00
+            n ( 28,2) =  0
+            k ( 29,2) =  2.153762e-01
+            q0( 29,2) = 2.110854e+00
+            n ( 29,2) =  0
+            k ( 30,2) =  1.628635e-01
+            q0( 30,2) = 2.076610e+00
+            n ( 30,2) =  0
+            k ( 31,2) =  1.774977e-01
+            q0( 31,2) = 2.082038e+00
+            n ( 31,2) =  0
+            k ( 32,2) =  1.709660e-01
+            q0( 32,2) = 2.101795e+00
+            n ( 32,2) =  0
+            k ( 33,2) =  1.649907e-01
+            q0( 33,2) = 2.095163e+00
+            n ( 33,2) =  0
+            k ( 34,2) =  1.664442e-01
+            q0( 34,2) = 2.094168e+00
+            n ( 34,2) =  0
+            k ( 35,2) =  1.060995e-01
+            q0( 35,2) = 2.011544e+00
+            n ( 35,2) =  0
+            k ( 36,2) =  1.101787e-01
+            q0( 36,2) = 1.985801e+00
+            n ( 36,2) =  0
+            k ( 37,2) =  9.485893e-02
+            q0( 37,2) = 1.841881e+00
+            n ( 37,2) =  0
+            k ( 38,2) =  1.101791e-01
+            q0( 38,2) = 1.985801e+00
+            n ( 38,2) =  0
+            k ( 39,2) =  9.485816e-02
+            q0( 39,2) = 1.841881e+00
+            n ( 39,2) =  0
+            k ( 40,2) =  1.099867e-01
+            q0( 40,2) = 1.772138e+00
+            n ( 40,2) =  0
+            k ( 41,2) =  4.272806e-18
+            q0( 41,2) = 0.000000e+00
+            n ( 41,2) =  2
+            k ( 42,2) =  7.822627e-03
+            q0( 42,2) = 0.000000e+00
+            n ( 42,2) =  2
+            k ( 43,2) =  1.976277e-02
+            q0( 43,2) = 0.000000e+00
+            n ( 43,2) =  2
+            k ( 44,2) =  1.275336e-02
+            q0( 44,2) = 0.000000e+00
+            n ( 44,2) =  2
+            k ( 45,2) =  5.714018e-03
+            q0( 45,2) = 0.000000e+00
+            n ( 45,2) =  2
+            k ( 46,2) =  1.164570e-02
+            q0( 46,2) = 0.000000e+00
+            n ( 46,2) =  2
+            k ( 47,2) =  1.552873e-02
+            q0( 47,2) = 0.000000e+00
+            n ( 47,2) =  2
+            k ( 48,2) =  8.696028e-03
+            q0( 48,2) = 0.000000e+00
+            n ( 48,2) =  2
+            k ( 49,2) =  1.820143e-02
+            q0( 49,2) = 0.000000e+00
+            n ( 49,2) =  2
+            k ( 50,2) =  1.233255e-02
+            q0( 50,2) = 0.000000e+00
+            n ( 50,2) =  2
+            k ( 51,2) =  4.511505e-03
+            q0( 51,2) = 0.000000e+00
+            n ( 51,2) =  2
+            k ( 52,2) =  1.175369e-02
+            q0( 52,2) = 0.000000e+00
+            n ( 52,2) =  2
+            k ( 53,2) =  1.725200e-03
+            q0( 53,2) = 1.047198e+00
+            n ( 53,2) =  3
+            k ( 54,2) =  1.725198e-03
+            q0( 54,2) = 1.047198e+00
+            n ( 54,2) =  3
+            k ( 55,2) = -4.529911e-19
+            q0( 55,2) = 1.047198e+00
+            n ( 55,2) =  3
+            k ( 56,2) =  1.004664e-02
+            q0( 56,2) = 0.000000e+00
+            n ( 56,2) =  2
+            k ( 57,2) =  1.199563e-02
+            q0( 57,2) = 0.000000e+00
+            n ( 57,2) =  2
+            k ( 58,2) =  1.262188e-02
+            q0( 58,2) = 0.000000e+00
+            n ( 58,2) =  2
+            k ( 59,2) =  1.171924e-02
+            q0( 59,2) = 0.000000e+00
+            n ( 59,2) =  2
+            k ( 60,2) =  1.254759e-02
+            q0( 60,2) = 0.000000e+00
+            n ( 60,2) =  2
+            k ( 61,2) =  1.274894e-02
+            q0( 61,2) = 0.000000e+00
+            n ( 61,2) =  2
+            k ( 62,2) =  5.001135e-03
+            q0( 62,2) = 0.000000e+00
+            n ( 62,2) =  2
+            k ( 63,2) =  5.629632e-03
+            q0( 63,2) = 0.000000e+00
+            n ( 63,2) =  2
+            k ( 64,2) =  5.644706e-03
+            q0( 64,2) = 0.000000e+00
+            n ( 64,2) =  2
+            k ( 65,2) =  3.448609e-03
+            q0( 65,2) = 0.000000e+00
+            n ( 65,2) =  2
+            k ( 66,2) =  2.542402e-03
+            q0( 66,2) = 0.000000e+00
+            n ( 66,2) =  2
+            k ( 67,2) =  5.294531e-03
+            q0( 67,2) = 0.000000e+00
+            n ( 67,2) =  2
+            k ( 68,2) =  1.223143e-01
+            q0( 68,2) = 0.000000e+00
+            n ( 68,2) =  0
+            k ( 69,2) =  8.630360e-02
+            q0( 69,2) = 0.000000e+00
+            n ( 69,2) =  0
+            k ( 70,2) =  1.966613e-01
+            q0( 70,2) = 0.000000e+00
+            n ( 70,2) =  0
+            k ( 71,2) =  1.220161e-01
+            q0( 71,2) = 0.000000e+00
+            n ( 71,2) =  0
+            k ( 72,2) =  1.226224e-01
+            q0( 72,2) = 0.000000e+00
+            n ( 72,2) =  0
+            k ( 73,2) =  1.110292e-01
+            q0( 73,2) = 0.000000e+00
+            n ( 73,2) =  0
             !--- END generated by 'gen_FFparam.py'
 
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 3)
-            k (  1, 3) =  2.560516e+00
-            q0(  1, 3) = 1.393000e+00
-            n (  1, 3) =  0
-            k (  2, 3) =  2.501888e+00
-            q0(  2, 3) = 1.395000e+00
-            n (  2, 3) =  0
-            k (  3, 3) =  1.537737e+00
-            q0(  3, 3) = 1.091000e+00
-            n (  3, 3) =  0
-            k (  4, 3) =  2.239875e+00
-            q0(  4, 3) = 1.408000e+00
-            n (  4, 3) =  0
-            k (  5, 3) =  1.533643e+00
-            q0(  5, 3) = 1.090000e+00
-            n (  5, 3) =  0
-            k (  6, 3) =  1.560748e+00
-            q0(  6, 3) = 1.088000e+00
-            n (  6, 3) =  0
-            k (  7, 3) =  1.560748e+00
-            q0(  7, 3) = 1.088000e+00
-            n (  7, 3) =  0
-            k (  8, 3) =  1.565978e+00
-            q0(  8, 3) = 1.088000e+00
-            n (  8, 3) =  0
-            k (  9, 3) =  2.314755e+00
-            q0(  9, 3) = 1.401000e+00
-            n (  9, 3) =  0
-            k ( 10, 3) =  2.169444e+00
-            q0( 10, 3) = 1.758000e+00
-            n ( 10, 3) =  0
-            k ( 11, 3) =  2.552078e+00
-            q0( 11, 3) = 1.394000e+00
-            n ( 11, 3) =  0
-            k ( 12, 3) =  1.543869e+00
-            q0( 12, 3) = 1.088000e+00
-            n ( 12, 3) =  0
-            k ( 13, 3) =  2.521473e+00
-            q0( 13, 3) = 1.394000e+00
-            n ( 13, 3) =  0
-            k ( 14, 3) =  1.536166e+00
-            q0( 14, 3) = 1.090000e+00
-            n ( 14, 3) =  0
-            k ( 15, 3) =  1.548182e+00
-            q0( 15, 3) = 1.089000e+00
-            n ( 15, 3) =  0
-            k ( 16, 3) =  2.578413e-01
-            q0( 16, 3) = 2.100626e+00
-            n ( 16, 3) =  0
-            k ( 17, 3) =  1.822046e-01
-            q0( 17, 3) = 2.090922e+00
-            n ( 17, 3) =  0
-            k ( 18, 3) =  2.340991e-01
-            q0( 18, 3) = 2.076697e+00
-            n ( 18, 3) =  0
-            k ( 19, 3) =  1.735537e-01
-            q0( 19, 3) = 2.103645e+00
-            n ( 19, 3) =  0
-            k ( 20, 3) =  2.035320e-01
-            q0( 20, 3) = 2.107886e+00
-            n ( 20, 3) =  0
-            k ( 21, 3) =  1.605101e-01
-            q0( 21, 3) = 2.080555e+00
-            n ( 21, 3) =  0
-            k ( 22, 3) =  8.282731e-02
-            q0( 22, 3) = 2.068128e+00
-            n ( 22, 3) =  0
-            k ( 23, 3) =  2.794139e-01
-            q0( 23, 3) = 2.058825e+00
-            n ( 23, 3) =  0
-            k ( 24, 3) =  0.110980e+00 !<- modified to that determined by ab initio
-            q0( 24, 3) = 1.755714e+00
-            n ( 24, 3) =  0
-            k ( 25, 3) =  1.429100e-01
-            q0( 25, 3) = 2.092388e+00
-            n ( 25, 3) =  0
-            k ( 26, 3) =  2.464998e-01
-            q0( 26, 3) = 2.105321e+00
-            n ( 26, 3) =  0
-            k ( 27, 3) =  1.384849e-01
-            q0( 27, 3) = 2.078390e+00
-            n ( 27, 3) =  0
-            k ( 28, 3) =  2.913622e-01
-            q0( 28, 3) = 2.158257e+00
-            n ( 28, 3) =  0
-            k ( 29, 3) =  2.125451e-01
-            q0( 29, 3) = 2.108532e+00
-            n ( 29, 3) =  0
-            k ( 30, 3) =  1.634257e-01
-            q0( 30, 3) = 2.079001e+00
-            n ( 30, 3) =  0
-            k ( 31, 3) =  1.793233e-01
-            q0( 31, 3) = 2.098846e+00
-            n ( 31, 3) =  0
-            k ( 32, 3) =  1.698797e-01
-            q0( 32, 3) = 2.103331e+00
-            n ( 32, 3) =  0
-            k ( 33, 3) =  1.664545e-01
-            q0( 33, 3) = 2.095669e+00
-            n ( 33, 3) =  0
-            k ( 34, 3) =  1.668216e-01
-            q0( 34, 3) = 2.094866e+00
-            n ( 34, 3) =  0
-            k ( 35, 3) =  1.128791e-01
-            q0( 35, 3) = 2.093034e+00
-            n ( 35, 3) =  0
-            k ( 36, 3) =  1.095914e-01
-            q0( 36, 3) = 2.080206e+00
-            n ( 36, 3) =  0
-            k ( 37, 3) =  7.410439e-02
-            q0( 37, 3) = 1.675429e+00
-            n ( 37, 3) =  0
-            k ( 38, 3) =  1.095914e-01
-            q0( 38, 3) = 2.080206e+00
-            n ( 38, 3) =  0
-            k ( 39, 3) =  7.410439e-02
-            q0( 39, 3) = 1.675429e+00
-            n ( 39, 3) =  0
-            k ( 40, 3) =  7.933426e-02
-            q0( 40, 3) = 1.626996e+00
-            n ( 40, 3) =  0
-            k ( 41, 3) =  7.685329e-03
-            q0( 41, 3) = 0.000000e+00
-            n ( 41, 3) =  2
-            k ( 42, 3) =  4.701895e-03
-            q0( 42, 3) = 0.000000e+00
-            n ( 42, 3) =  2
-            k ( 43, 3) =  1.443515e-02
-            q0( 43, 3) = 0.000000e+00
-            n ( 43, 3) =  2
-            k ( 44, 3) =  1.335221e-02
-            q0( 44, 3) = 0.000000e+00
-            n ( 44, 3) =  2
-            k ( 45, 3) =  1.217395e-02
-            q0( 45, 3) = 0.000000e+00
-            n ( 45, 3) =  2
-            k ( 46, 3) =  1.134732e-02
-            q0( 46, 3) = 0.000000e+00
-            n ( 46, 3) =  2
-            k ( 47, 3) =  8.573103e-03
-            q0( 47, 3) = 0.000000e+00
-            n ( 47, 3) =  2
-            k ( 48, 3) =  7.218820e-03
-            q0( 48, 3) = 0.000000e+00
-            n ( 48, 3) =  2
-            k ( 49, 3) =  1.144454e-02
-            q0( 49, 3) = 0.000000e+00
-            n ( 49, 3) =  2
-            k ( 50, 3) =  1.221598e-02
-            q0( 50, 3) = 0.000000e+00
-            n ( 50, 3) =  2
-            k ( 51, 3) =  1.015292e-02
-            q0( 51, 3) = 0.000000e+00
-            n ( 51, 3) =  2
-            k ( 52, 3) =  1.082467e-02
-            q0( 52, 3) = 0.000000e+00
-            n ( 52, 3) =  2
-            k ( 53, 3) =  2.037170e-19
-            q0( 53, 3) = 1.047198e+00
-            n ( 53, 3) =  3
-            k ( 54, 3) = -2.114968e-19
-            q0( 54, 3) = 1.047198e+00
-            n ( 54, 3) =  3
-            k ( 55, 3) =  2.117121e-18
-            q0( 55, 3) = 1.047198e+00
-            n ( 55, 3) =  3
-            k ( 56, 3) =  1.051896e-02
-            q0( 56, 3) = 0.000000e+00
-            n ( 56, 3) =  2
-            k ( 57, 3) =  1.195683e-02
-            q0( 57, 3) = 0.000000e+00
-            n ( 57, 3) =  2
-            k ( 58, 3) =  1.250556e-02
-            q0( 58, 3) = 0.000000e+00
-            n ( 58, 3) =  2
-            k ( 59, 3) =  1.182710e-02
-            q0( 59, 3) = 0.000000e+00
-            n ( 59, 3) =  2
-            k ( 60, 3) =  1.215134e-02
-            q0( 60, 3) = 0.000000e+00
-            n ( 60, 3) =  2
-            k ( 61, 3) =  1.352822e-02
-            q0( 61, 3) = 0.000000e+00
-            n ( 61, 3) =  2
-            k ( 62, 3) =  5.187953e-03
-            q0( 62, 3) = 0.000000e+00
-            n ( 62, 3) =  2
-            k ( 63, 3) =  5.858189e-03
-            q0( 63, 3) = 0.000000e+00
-            n ( 63, 3) =  2
-            k ( 64, 3) =  6.068200e-03
-            q0( 64, 3) = 0.000000e+00
-            n ( 64, 3) =  2
-            k ( 65, 3) =  4.091956e-03
-            q0( 65, 3) = 0.000000e+00
-            n ( 65, 3) =  2
-            k ( 66, 3) =  1.609711e-03
-            q0( 66, 3) = 0.000000e+00
-            n ( 66, 3) =  2
-            k ( 67, 3) =  5.318200e-03
-            q0( 67, 3) = 0.000000e+00
-            n ( 67, 3) =  2
-            k ( 68, 3) =  1.084807e-01
-            q0( 68, 3) = 0.000000e+00
-            n ( 68, 3) =  0
-            k ( 69, 3) =  7.573418e-02
-            q0( 69, 3) = 0.000000e+00
-            n ( 69, 3) =  0
-            k ( 70, 3) =  2.138858e-01
-            q0( 70, 3) = 0.000000e+00
-            n ( 70, 3) =  0
-            k ( 71, 3) =  1.169523e-01
-            q0( 71, 3) = 0.000000e+00
-            n ( 71, 3) =  0
-            k ( 72, 3) =  1.257060e-01
-            q0( 72, 3) = 0.000000e+00
-            n ( 72, 3) =  0
-            k ( 73, 3) =  1.056851e-01
-            q0( 73, 3) = 0.000000e+00
-            n ( 73, 3) =  0
+            k (  1,3) =  2.560516e+00
+            q0(  1,3) = 1.393000e+00
+            n (  1,3) =  0
+            k (  2,3) =  2.501888e+00
+            q0(  2,3) = 1.395000e+00
+            n (  2,3) =  0
+            k (  3,3) =  1.537737e+00
+            q0(  3,3) = 1.091000e+00
+            n (  3,3) =  0
+            k (  4,3) =  2.239875e+00
+            q0(  4,3) = 1.408000e+00
+            n (  4,3) =  0
+            k (  5,3) =  1.533643e+00
+            q0(  5,3) = 1.090000e+00
+            n (  5,3) =  0
+            k (  6,3) =  1.560748e+00
+            q0(  6,3) = 1.088000e+00
+            n (  6,3) =  0
+            k (  7,3) =  1.560748e+00
+            q0(  7,3) = 1.088000e+00
+            n (  7,3) =  0
+            k (  8,3) =  1.565978e+00
+            q0(  8,3) = 1.088000e+00
+            n (  8,3) =  0
+            k (  9,3) =  2.314755e+00
+            q0(  9,3) = 1.401000e+00
+            n (  9,3) =  0
+            k ( 10,3) =  2.169444e+00
+            q0( 10,3) = 1.758000e+00
+            n ( 10,3) =  0
+            k ( 11,3) =  2.552078e+00
+            q0( 11,3) = 1.394000e+00
+            n ( 11,3) =  0
+            k ( 12,3) =  1.543869e+00
+            q0( 12,3) = 1.088000e+00
+            n ( 12,3) =  0
+            k ( 13,3) =  2.521473e+00
+            q0( 13,3) = 1.394000e+00
+            n ( 13,3) =  0
+            k ( 14,3) =  1.536166e+00
+            q0( 14,3) = 1.090000e+00
+            n ( 14,3) =  0
+            k ( 15,3) =  1.548182e+00
+            q0( 15,3) = 1.089000e+00
+            n ( 15,3) =  0
+            k ( 16,3) =  2.578413e-01
+            q0( 16,3) = 2.100626e+00
+            n ( 16,3) =  0
+            k ( 17,3) =  1.822046e-01
+            q0( 17,3) = 2.090922e+00
+            n ( 17,3) =  0
+            k ( 18,3) =  2.340991e-01
+            q0( 18,3) = 2.076697e+00
+            n ( 18,3) =  0
+            k ( 19,3) =  1.735537e-01
+            q0( 19,3) = 2.103645e+00
+            n ( 19,3) =  0
+            k ( 20,3) =  2.035320e-01
+            q0( 20,3) = 2.107886e+00
+            n ( 20,3) =  0
+            k ( 21,3) =  1.605101e-01
+            q0( 21,3) = 2.080555e+00
+            n ( 21,3) =  0
+            k ( 22,3) =  8.282731e-02
+            q0( 22,3) = 2.068128e+00
+            n ( 22,3) =  0
+            k ( 23,3) =  2.794139e-01
+            q0( 23,3) = 2.058825e+00
+            n ( 23,3) =  0
+            k ( 24,3) =  0.110980e+00 !<- modified to that determined by ab initio
+            q0( 24,3) = 1.755714e+00
+            n ( 24,3) =  0
+            k ( 25,3) =  1.429100e-01
+            q0( 25,3) = 2.092388e+00
+            n ( 25,3) =  0
+            k ( 26,3) =  2.464998e-01
+            q0( 26,3) = 2.105321e+00
+            n ( 26,3) =  0
+            k ( 27,3) =  1.384849e-01
+            q0( 27,3) = 2.078390e+00
+            n ( 27,3) =  0
+            k ( 28,3) =  2.913622e-01
+            q0( 28,3) = 2.158257e+00
+            n ( 28,3) =  0
+            k ( 29,3) =  2.125451e-01
+            q0( 29,3) = 2.108532e+00
+            n ( 29,3) =  0
+            k ( 30,3) =  1.634257e-01
+            q0( 30,3) = 2.079001e+00
+            n ( 30,3) =  0
+            k ( 31,3) =  1.793233e-01
+            q0( 31,3) = 2.098846e+00
+            n ( 31,3) =  0
+            k ( 32,3) =  1.698797e-01
+            q0( 32,3) = 2.103331e+00
+            n ( 32,3) =  0
+            k ( 33,3) =  1.664545e-01
+            q0( 33,3) = 2.095669e+00
+            n ( 33,3) =  0
+            k ( 34,3) =  1.668216e-01
+            q0( 34,3) = 2.094866e+00
+            n ( 34,3) =  0
+            k ( 35,3) =  1.128791e-01
+            q0( 35,3) = 2.093034e+00
+            n ( 35,3) =  0
+            k ( 36,3) =  1.095914e-01
+            q0( 36,3) = 2.080206e+00
+            n ( 36,3) =  0
+            k ( 37,3) =  7.410439e-02
+            q0( 37,3) = 1.675429e+00
+            n ( 37,3) =  0
+            k ( 38,3) =  1.095914e-01
+            q0( 38,3) = 2.080206e+00
+            n ( 38,3) =  0
+            k ( 39,3) =  7.410439e-02
+            q0( 39,3) = 1.675429e+00
+            n ( 39,3) =  0
+            k ( 40,3) =  7.933426e-02
+            q0( 40,3) = 1.626996e+00
+            n ( 40,3) =  0
+            k ( 41,3) =  7.685329e-03
+            q0( 41,3) = 0.000000e+00
+            n ( 41,3) =  2
+            k ( 42,3) =  4.701895e-03
+            q0( 42,3) = 0.000000e+00
+            n ( 42,3) =  2
+            k ( 43,3) =  1.443515e-02
+            q0( 43,3) = 0.000000e+00
+            n ( 43,3) =  2
+            k ( 44,3) =  1.335221e-02
+            q0( 44,3) = 0.000000e+00
+            n ( 44,3) =  2
+            k ( 45,3) =  1.217395e-02
+            q0( 45,3) = 0.000000e+00
+            n ( 45,3) =  2
+            k ( 46,3) =  1.134732e-02
+            q0( 46,3) = 0.000000e+00
+            n ( 46,3) =  2
+            k ( 47,3) =  8.573103e-03
+            q0( 47,3) = 0.000000e+00
+            n ( 47,3) =  2
+            k ( 48,3) =  7.218820e-03
+            q0( 48,3) = 0.000000e+00
+            n ( 48,3) =  2
+            k ( 49,3) =  1.144454e-02
+            q0( 49,3) = 0.000000e+00
+            n ( 49,3) =  2
+            k ( 50,3) =  1.221598e-02
+            q0( 50,3) = 0.000000e+00
+            n ( 50,3) =  2
+            k ( 51,3) =  1.015292e-02
+            q0( 51,3) = 0.000000e+00
+            n ( 51,3) =  2
+            k ( 52,3) =  1.082467e-02
+            q0( 52,3) = 0.000000e+00
+            n ( 52,3) =  2
+            k ( 53,3) =  2.037170e-19
+            q0( 53,3) = 1.047198e+00
+            n ( 53,3) =  3
+            k ( 54,3) = -2.114968e-19
+            q0( 54,3) = 1.047198e+00
+            n ( 54,3) =  3
+            k ( 55,3) =  2.117121e-18
+            q0( 55,3) = 1.047198e+00
+            n ( 55,3) =  3
+            k ( 56,3) =  1.051896e-02
+            q0( 56,3) = 0.000000e+00
+            n ( 56,3) =  2
+            k ( 57,3) =  1.195683e-02
+            q0( 57,3) = 0.000000e+00
+            n ( 57,3) =  2
+            k ( 58,3) =  1.250556e-02
+            q0( 58,3) = 0.000000e+00
+            n ( 58,3) =  2
+            k ( 59,3) =  1.182710e-02
+            q0( 59,3) = 0.000000e+00
+            n ( 59,3) =  2
+            k ( 60,3) =  1.215134e-02
+            q0( 60,3) = 0.000000e+00
+            n ( 60,3) =  2
+            k ( 61,3) =  1.352822e-02
+            q0( 61,3) = 0.000000e+00
+            n ( 61,3) =  2
+            k ( 62,3) =  5.187953e-03
+            q0( 62,3) = 0.000000e+00
+            n ( 62,3) =  2
+            k ( 63,3) =  5.858189e-03
+            q0( 63,3) = 0.000000e+00
+            n ( 63,3) =  2
+            k ( 64,3) =  6.068200e-03
+            q0( 64,3) = 0.000000e+00
+            n ( 64,3) =  2
+            k ( 65,3) =  4.091956e-03
+            q0( 65,3) = 0.000000e+00
+            n ( 65,3) =  2
+            k ( 66,3) =  1.609711e-03
+            q0( 66,3) = 0.000000e+00
+            n ( 66,3) =  2
+            k ( 67,3) =  5.318200e-03
+            q0( 67,3) = 0.000000e+00
+            n ( 67,3) =  2
+            k ( 68,3) =  1.084807e-01
+            q0( 68,3) = 0.000000e+00
+            n ( 68,3) =  0
+            k ( 69,3) =  7.573418e-02
+            q0( 69,3) = 0.000000e+00
+            n ( 69,3) =  0
+            k ( 70,3) =  2.138858e-01
+            q0( 70,3) = 0.000000e+00
+            n ( 70,3) =  0
+            k ( 71,3) =  1.169523e-01
+            q0( 71,3) = 0.000000e+00
+            n ( 71,3) =  0
+            k ( 72,3) =  1.257060e-01
+            q0( 72,3) = 0.000000e+00
+            n ( 72,3) =  0
+            k ( 73,3) =  1.056851e-01
+            q0( 73,3) = 0.000000e+00
+            n ( 73,3) =  0
             !--- END generated by 'gen_FFparam.py'
 
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 4)
-            k (  1, 4) =  2.502030e+00
-            q0(  1, 4) = 1.397000e+00
-            n (  1, 4) =  0
-            k (  2, 4) =  2.409036e+00
-            q0(  2, 4) = 1.402000e+00
-            n (  2, 4) =  0
-            k (  3, 4) =  1.504721e+00
-            q0(  3, 4) = 1.094000e+00
-            n (  3, 4) =  0
-            k (  4, 4) =  2.159074e+00
-            q0(  4, 4) = 1.414000e+00
-            n (  4, 4) =  0
-            k (  5, 4) =  1.504317e+00
-            q0(  5, 4) = 1.093000e+00
-            n (  5, 4) =  0
-            k (  6, 4) =  1.545522e+00
-            q0(  6, 4) = 1.086000e+00
-            n (  6, 4) =  0
-            k (  7, 4) =  1.545476e+00
-            q0(  7, 4) = 1.086000e+00
-            n (  7, 4) =  0
-            k (  8, 4) =  1.545476e+00
-            q0(  8, 4) = 1.086000e+00
-            n (  8, 4) =  0
-            k (  9, 4) =  2.159100e+00
-            q0(  9, 4) = 1.414000e+00
-            n (  9, 4) =  0
-            k ( 10, 4) =  2.043999e+00
-            q0( 10, 4) = 1.747000e+00
-            n ( 10, 4) =  0
-            k ( 11, 4) =  2.502011e+00
-            q0( 11, 4) = 1.397000e+00
-            n ( 11, 4) =  0
-            k ( 12, 4) =  1.504319e+00
-            q0( 12, 4) = 1.093000e+00
-            n ( 12, 4) =  0
-            k ( 13, 4) =  2.409125e+00
-            q0( 13, 4) = 1.402000e+00
-            n ( 13, 4) =  0
-            k ( 14, 4) =  1.504723e+00
-            q0( 14, 4) = 1.094000e+00
-            n ( 14, 4) =  0
-            k ( 15, 4) =  1.513360e+00
-            q0( 15, 4) = 1.092000e+00
-            n ( 15, 4) =  0
-            k ( 16, 4) =  2.573168e-01
-            q0( 16, 4) = 2.091812e+00
-            n ( 16, 4) =  0
-            k ( 17, 4) =  1.741128e-01
-            q0( 17, 4) = 2.096332e+00
-            n ( 17, 4) =  0
-            k ( 18, 4) =  2.347779e-01
-            q0( 18, 4) = 2.080729e+00
-            n ( 18, 4) =  0
-            k ( 19, 4) =  1.658820e-01
-            q0( 19, 4) = 2.101464e+00
-            n ( 19, 4) =  0
-            k ( 20, 4) =  1.958142e-01
-            q0( 20, 4) = 2.109702e+00
-            n ( 20, 4) =  0
-            k ( 21, 4) =  1.493316e-01
-            q0( 21, 4) = 2.078076e+00
-            n ( 21, 4) =  0
-            k ( 22, 4) =  1.065801e-01
-            q0( 22, 4) = 2.083818e+00
-            n ( 22, 4) =  0
-            k ( 23, 4) =  2.061597e-01
-            q0( 23, 4) = 2.100259e+00
-            n ( 23, 4) =  0
-            k ( 24, 4) =  1.361638e-01
-            q0( 24, 4) = 2.095512e+00
-            n ( 24, 4) =  0
-            k ( 25, 4) =  2.573286e-01
-            q0( 25, 4) = 2.091812e+00
-            n ( 25, 4) =  0
-            k ( 26, 4) =  1.361680e-01
-            q0( 26, 4) = 2.095512e+00
-            n ( 26, 4) =  0
-            k ( 27, 4) =  2.061071e-01
-            q0( 27, 4) = 2.100277e+00
-            n ( 27, 4) =  0
-            k ( 28, 4) =  1.958077e-01
-            q0( 28, 4) = 2.109702e+00
-            n ( 28, 4) =  0
-            k ( 29, 4) =  1.493255e-01
-            q0( 29, 4) = 2.078076e+00
-            n ( 29, 4) =  0
-            k ( 30, 4) =  1.741121e-01
-            q0( 30, 4) = 2.096332e+00
-            n ( 30, 4) =  0
-            k ( 31, 4) =  1.658816e-01
-            q0( 31, 4) = 2.101464e+00
-            n ( 31, 4) =  0
-            k ( 32, 4) =  1.594352e-01
-            q0( 32, 4) = 2.095861e+00
-            n ( 32, 4) =  0
-            k ( 33, 4) =  1.594284e-01
-            q0( 33, 4) = 2.095861e+00
-            n ( 33, 4) =  0
-            k ( 34, 4) =  1.035906e-01
-            q0( 34, 4) = 2.094517e+00
-            n ( 34, 4) =  0
-            k ( 35, 4) =  1.035906e-01
-            q0( 35, 4) = 2.094517e+00
-            n ( 35, 4) =  0
-            k ( 36, 4) =  1.035906e-01
-            q0( 36, 4) = 2.094517e+00
-            n ( 36, 4) =  0
-            k ( 37, 4) =  6.104468e-04
-            q0( 37, 4) = 0.000000e+00
-            n ( 37, 4) =  2
-            k ( 38, 4) =  1.074035e-02
-            q0( 38, 4) = 0.000000e+00
-            n ( 38, 4) =  2
-            k ( 39, 4) =  1.621593e-02
-            q0( 39, 4) = 0.000000e+00
-            n ( 39, 4) =  2
-            k ( 40, 4) =  1.216098e-02
-            q0( 40, 4) = 0.000000e+00
-            n ( 40, 4) =  2
-            k ( 41, 4) =  5.417335e-03
-            q0( 41, 4) = 0.000000e+00
-            n ( 41, 4) =  2
-            k ( 42, 4) =  1.090588e-02
-            q0( 42, 4) = 0.000000e+00
-            n ( 42, 4) =  2
-            k ( 43, 4) =  1.159637e-02
-            q0( 43, 4) = 0.000000e+00
-            n ( 43, 4) =  2
-            k ( 44, 4) =  8.506780e-03
-            q0( 44, 4) = 0.000000e+00
-            n ( 44, 4) =  2
-            k ( 45, 4) =  1.780232e-02
-            q0( 45, 4) = 0.000000e+00
-            n ( 45, 4) =  2
-            k ( 46, 4) =  1.139541e-02
-            q0( 46, 4) = 0.000000e+00
-            n ( 46, 4) =  2
-            k ( 47, 4) =  7.035355e-03
-            q0( 47, 4) = 0.000000e+00
-            n ( 47, 4) =  2
-            k ( 48, 4) =  1.139430e-02
-            q0( 48, 4) = 0.000000e+00
-            n ( 48, 4) =  2
-            k ( 49, 4) =  8.504789e-03
-            q0( 49, 4) = 0.000000e+00
-            n ( 49, 4) =  2
-            k ( 50, 4) =  1.090593e-02
-            q0( 50, 4) = 0.000000e+00
-            n ( 50, 4) =  2
-            k ( 51, 4) =  1.073720e-02
-            q0( 51, 4) = 0.000000e+00
-            n ( 51, 4) =  2
-            k ( 52, 4) =  1.216066e-02
-            q0( 52, 4) = 0.000000e+00
-            n ( 52, 4) =  2
-            k ( 53, 4) =  1.308835e-02
-            q0( 53, 4) = 0.000000e+00
-            n ( 53, 4) =  2
-            k ( 54, 4) =  1.308665e-02
-            q0( 54, 4) = 0.000000e+00
-            n ( 54, 4) =  2
-            k ( 55, 4) =  4.533650e-03
-            q0( 55, 4) = 0.000000e+00
-            n ( 55, 4) =  2
-            k ( 56, 4) =  4.533081e-03
-            q0( 56, 4) = 0.000000e+00
-            n ( 56, 4) =  2
-            k ( 57, 4) =  4.578897e-03
-            q0( 57, 4) = 0.000000e+00
-            n ( 57, 4) =  2
-            k ( 58, 4) =  2.232449e-03
-            q0( 58, 4) = 0.000000e+00
-            n ( 58, 4) =  2
-            k ( 59, 4) =  2.231001e-03
-            q0( 59, 4) = 0.000000e+00
-            n ( 59, 4) =  2
-            k ( 60, 4) =  4.576198e-03
-            q0( 60, 4) = 0.000000e+00
-            n ( 60, 4) =  2
-            k ( 61, 4) =  1.121196e-01
-            q0( 61, 4) = 0.000000e+00
-            n ( 61, 4) =  0
-            k ( 62, 4) =  8.981265e-02
-            q0( 62, 4) = 0.000000e+00
-            n ( 62, 4) =  0
-            k ( 63, 4) =  2.236630e-01
-            q0( 63, 4) = 0.000000e+00
-            n ( 63, 4) =  0
-            k ( 64, 4) =  1.151899e-01
-            q0( 64, 4) = 0.000000e+00
-            n ( 64, 4) =  0
-            k ( 65, 4) =  1.121871e-01
-            q0( 65, 4) = 0.000000e+00
-            n ( 65, 4) =  0
-            k ( 66, 4) =  1.152280e-01
-            q0( 66, 4) = 0.000000e+00
-            n ( 66, 4) =  0
-            k ( 67, 4) =  4.859191e-02
-            q0( 67, 4) = 0.000000e+00
-            n ( 67, 4) =  0
+            k (  1,4) =  2.502030e+00
+            q0(  1,4) = 1.397000e+00
+            n (  1,4) =  0
+            k (  2,4) =  2.409036e+00
+            q0(  2,4) = 1.402000e+00
+            n (  2,4) =  0
+            k (  3,4) =  1.504721e+00
+            q0(  3,4) = 1.094000e+00
+            n (  3,4) =  0
+            k (  4,4) =  2.159074e+00
+            q0(  4,4) = 1.414000e+00
+            n (  4,4) =  0
+            k (  5,4) =  1.504317e+00
+            q0(  5,4) = 1.093000e+00
+            n (  5,4) =  0
+            k (  6,4) =  1.545522e+00
+            q0(  6,4) = 1.086000e+00
+            n (  6,4) =  0
+            k (  7,4) =  1.545476e+00
+            q0(  7,4) = 1.086000e+00
+            n (  7,4) =  0
+            k (  8,4) =  1.545476e+00
+            q0(  8,4) = 1.086000e+00
+            n (  8,4) =  0
+            k (  9,4) =  2.159100e+00
+            q0(  9,4) = 1.414000e+00
+            n (  9,4) =  0
+            k ( 10,4) =  2.043999e+00
+            q0( 10,4) = 1.747000e+00
+            n ( 10,4) =  0
+            k ( 11,4) =  2.502011e+00
+            q0( 11,4) = 1.397000e+00
+            n ( 11,4) =  0
+            k ( 12,4) =  1.504319e+00
+            q0( 12,4) = 1.093000e+00
+            n ( 12,4) =  0
+            k ( 13,4) =  2.409125e+00
+            q0( 13,4) = 1.402000e+00
+            n ( 13,4) =  0
+            k ( 14,4) =  1.504723e+00
+            q0( 14,4) = 1.094000e+00
+            n ( 14,4) =  0
+            k ( 15,4) =  1.513360e+00
+            q0( 15,4) = 1.092000e+00
+            n ( 15,4) =  0
+            k ( 16,4) =  2.573168e-01
+            q0( 16,4) = 2.091812e+00
+            n ( 16,4) =  0
+            k ( 17,4) =  1.741128e-01
+            q0( 17,4) = 2.096332e+00
+            n ( 17,4) =  0
+            k ( 18,4) =  2.347779e-01
+            q0( 18,4) = 2.080729e+00
+            n ( 18,4) =  0
+            k ( 19,4) =  1.658820e-01
+            q0( 19,4) = 2.101464e+00
+            n ( 19,4) =  0
+            k ( 20,4) =  1.958142e-01
+            q0( 20,4) = 2.109702e+00
+            n ( 20,4) =  0
+            k ( 21,4) =  1.493316e-01
+            q0( 21,4) = 2.078076e+00
+            n ( 21,4) =  0
+            k ( 22,4) =  1.065801e-01
+            q0( 22,4) = 2.083818e+00
+            n ( 22,4) =  0
+            k ( 23,4) =  2.061597e-01
+            q0( 23,4) = 2.100259e+00
+            n ( 23,4) =  0
+            k ( 24,4) =  1.361638e-01
+            q0( 24,4) = 2.095512e+00
+            n ( 24,4) =  0
+            k ( 25,4) =  2.573286e-01
+            q0( 25,4) = 2.091812e+00
+            n ( 25,4) =  0
+            k ( 26,4) =  1.361680e-01
+            q0( 26,4) = 2.095512e+00
+            n ( 26,4) =  0
+            k ( 27,4) =  2.061071e-01
+            q0( 27,4) = 2.100277e+00
+            n ( 27,4) =  0
+            k ( 28,4) =  1.958077e-01
+            q0( 28,4) = 2.109702e+00
+            n ( 28,4) =  0
+            k ( 29,4) =  1.493255e-01
+            q0( 29,4) = 2.078076e+00
+            n ( 29,4) =  0
+            k ( 30,4) =  1.741121e-01
+            q0( 30,4) = 2.096332e+00
+            n ( 30,4) =  0
+            k ( 31,4) =  1.658816e-01
+            q0( 31,4) = 2.101464e+00
+            n ( 31,4) =  0
+            k ( 32,4) =  1.594352e-01
+            q0( 32,4) = 2.095861e+00
+            n ( 32,4) =  0
+            k ( 33,4) =  1.594284e-01
+            q0( 33,4) = 2.095861e+00
+            n ( 33,4) =  0
+            k ( 34,4) =  1.035906e-01
+            q0( 34,4) = 2.094517e+00
+            n ( 34,4) =  0
+            k ( 35,4) =  1.035906e-01
+            q0( 35,4) = 2.094517e+00
+            n ( 35,4) =  0
+            k ( 36,4) =  1.035906e-01
+            q0( 36,4) = 2.094517e+00
+            n ( 36,4) =  0
+            k ( 37,4) =  6.104468e-04
+            q0( 37,4) = 0.000000e+00
+            n ( 37,4) =  2
+            k ( 38,4) =  1.074035e-02
+            q0( 38,4) = 0.000000e+00
+            n ( 38,4) =  2
+            k ( 39,4) =  1.621593e-02
+            q0( 39,4) = 0.000000e+00
+            n ( 39,4) =  2
+            k ( 40,4) =  1.216098e-02
+            q0( 40,4) = 0.000000e+00
+            n ( 40,4) =  2
+            k ( 41,4) =  5.417335e-03
+            q0( 41,4) = 0.000000e+00
+            n ( 41,4) =  2
+            k ( 42,4) =  1.090588e-02
+            q0( 42,4) = 0.000000e+00
+            n ( 42,4) =  2
+            k ( 43,4) =  1.159637e-02
+            q0( 43,4) = 0.000000e+00
+            n ( 43,4) =  2
+            k ( 44,4) =  8.506780e-03
+            q0( 44,4) = 0.000000e+00
+            n ( 44,4) =  2
+            k ( 45,4) =  1.780232e-02
+            q0( 45,4) = 0.000000e+00
+            n ( 45,4) =  2
+            k ( 46,4) =  1.139541e-02
+            q0( 46,4) = 0.000000e+00
+            n ( 46,4) =  2
+            k ( 47,4) =  7.035355e-03
+            q0( 47,4) = 0.000000e+00
+            n ( 47,4) =  2
+            k ( 48,4) =  1.139430e-02
+            q0( 48,4) = 0.000000e+00
+            n ( 48,4) =  2
+            k ( 49,4) =  8.504789e-03
+            q0( 49,4) = 0.000000e+00
+            n ( 49,4) =  2
+            k ( 50,4) =  1.090593e-02
+            q0( 50,4) = 0.000000e+00
+            n ( 50,4) =  2
+            k ( 51,4) =  1.073720e-02
+            q0( 51,4) = 0.000000e+00
+            n ( 51,4) =  2
+            k ( 52,4) =  1.216066e-02
+            q0( 52,4) = 0.000000e+00
+            n ( 52,4) =  2
+            k ( 53,4) =  1.308835e-02
+            q0( 53,4) = 0.000000e+00
+            n ( 53,4) =  2
+            k ( 54,4) =  1.308665e-02
+            q0( 54,4) = 0.000000e+00
+            n ( 54,4) =  2
+            k ( 55,4) =  4.533650e-03
+            q0( 55,4) = 0.000000e+00
+            n ( 55,4) =  2
+            k ( 56,4) =  4.533081e-03
+            q0( 56,4) = 0.000000e+00
+            n ( 56,4) =  2
+            k ( 57,4) =  4.578897e-03
+            q0( 57,4) = 0.000000e+00
+            n ( 57,4) =  2
+            k ( 58,4) =  2.232449e-03
+            q0( 58,4) = 0.000000e+00
+            n ( 58,4) =  2
+            k ( 59,4) =  2.231001e-03
+            q0( 59,4) = 0.000000e+00
+            n ( 59,4) =  2
+            k ( 60,4) =  4.576198e-03
+            q0( 60,4) = 0.000000e+00
+            n ( 60,4) =  2
+            k ( 61,4) =  1.121196e-01
+            q0( 61,4) = 0.000000e+00
+            n ( 61,4) =  0
+            k ( 62,4) =  8.981265e-02
+            q0( 62,4) = 0.000000e+00
+            n ( 62,4) =  0
+            k ( 63,4) =  2.236630e-01
+            q0( 63,4) = 0.000000e+00
+            n ( 63,4) =  0
+            k ( 64,4) =  1.151899e-01
+            q0( 64,4) = 0.000000e+00
+            n ( 64,4) =  0
+            k ( 65,4) =  1.121871e-01
+            q0( 65,4) = 0.000000e+00
+            n ( 65,4) =  0
+            k ( 66,4) =  1.152280e-01
+            q0( 66,4) = 0.000000e+00
+            n ( 66,4) =  0
+            k ( 67,4) =  4.859191e-02
+            q0( 67,4) = 0.000000e+00
+            n ( 67,4) =  0
             !--- END generated by 'gen_FFparam.py'
 
         case(2)
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 2, anchor point 1)
-            k (  1, 1) =  2.099256e+00
-            q0(  1, 1) = 1.448000e+00
-            n (  1, 1) =  0
-            k (  2, 1) =  2.332055e+00
-            q0(  2, 1) = 1.400000e+00
-            n (  2, 1) =  0
-            k (  3, 1) =  1.524362e+00
-            q0(  3, 1) = 1.091000e+00
-            n (  3, 1) =  0
-            k (  4, 1) =  1.676149e+00
-            q0(  4, 1) = 1.421000e+00
-            n (  4, 1) =  0
-            k (  5, 1) =  1.545961e+00
-            q0(  5, 1) = 1.091000e+00
-            n (  5, 1) =  0
-            k (  6, 1) =  1.388955e+00
-            q0(  6, 1) = 1.100000e+00
-            n (  6, 1) =  0
-            k (  7, 1) =  1.388952e+00
-            q0(  7, 1) = 1.100000e+00
-            n (  7, 1) =  0
-            k (  8, 1) =  1.423946e+00
-            q0(  8, 1) = 1.098000e+00
-            n (  8, 1) =  0
-            k (  9, 1) =  2.034759e+00
-            q0(  9, 1) = 1.400000e+00
-            n (  9, 1) =  0
-            k ( 10, 1) =  1.861592e+00
-            q0( 10, 1) = 1.758000e+00
-            n ( 10, 1) =  0
-            k ( 11, 1) =  2.197888e+00
-            q0( 11, 1) = 1.446000e+00
-            n ( 11, 1) =  0
-            k ( 12, 1) =  1.536207e+00
-            q0( 12, 1) = 1.090000e+00
-            n ( 12, 1) =  0
-            k ( 13, 1) =  2.036112e+00
-            q0( 13, 1) = 1.418000e+00
-            n ( 13, 1) =  0
-            k ( 14, 1) =  1.530491e+00
-            q0( 14, 1) = 1.090000e+00
-            n ( 14, 1) =  0
-            k ( 15, 1) =  1.475892e+00
-            q0( 15, 1) = 1.096000e+00
-            n ( 15, 1) =  0
-            k ( 16, 1) =  1.315937e-01
-            q0( 16, 1) = 2.032436e+00
-            n ( 16, 1) =  0
-            k ( 17, 1) =  1.807470e-01
-            q0( 17, 1) = 2.133595e+00
-            n ( 17, 1) =  0
-            k ( 18, 1) =  3.722420e-01
-            q0( 18, 1) = 2.152078e+00
-            n ( 18, 1) =  0
-            k ( 19, 1) =  1.184643e-01
-            q0( 19, 1) = 2.066871e+00
-            n ( 19, 1) =  0
-            k ( 20, 1) =  5.047498e-02
-            q0( 20, 1) = 2.081986e+00
-            n ( 20, 1) =  0
-            k ( 21, 1) =  1.793240e-01
-            q0( 21, 1) = 2.098532e+00
-            n ( 21, 1) =  0
-            k ( 22, 1) =  1.671987e-01
-            q0( 22, 1) = 2.184716e+00
-            n ( 22, 1) =  0
-            k ( 23, 1) =  1.926083e-01
-            q0( 23, 1) = 1.956532e+00
-            n ( 23, 1) =  0
-            k ( 24, 1) =  4.050324e-01
-            q0( 24, 1) = 1.868148e+00
-            n ( 24, 1) =  0
-            k ( 25, 1) =  1.136161e-01
-            q0( 25, 1) = 2.117660e+00
-            n ( 25, 1) =  0
-            k ( 26, 1) =  1.315137e-01
-            q0( 26, 1) = 2.050081e+00
-            n ( 26, 1) =  0
-            k ( 27, 1) =  1.199475e-01
-            q0( 27, 1) = 2.129040e+00
-            n ( 27, 1) =  0
-            k ( 28, 1) =  8.090805e-02
-            q0( 28, 1) = 2.143160e+00
-            n ( 28, 1) =  0
-            k ( 29, 1) =  1.123646e-01
-            q0( 29, 1) = 2.066871e+00
-            n ( 29, 1) =  0
-            k ( 30, 1) =  1.423482e-01
-            q0( 30, 1) = 2.104151e+00
-            n ( 30, 1) =  0
-            k ( 31, 1) =  1.874988e-01
-            q0( 31, 1) = 2.104693e+00
-            n ( 31, 1) =  0
-            k ( 32, 1) =  1.359300e-01
-            q0( 32, 1) = 2.064829e+00
-            n ( 32, 1) =  0
-            k ( 33, 1) =  1.224407e-01
-            q0( 33, 1) = 2.103209e+00
-            n ( 33, 1) =  0
-            k ( 34, 1) =  1.382518e-01
-            q0( 34, 1) = 2.112721e+00
-            n ( 34, 1) =  0
-            k ( 35, 1) =  8.629370e-02
-            q0( 35, 1) = 1.921660e+00
-            n ( 35, 1) =  0
-            k ( 36, 1) =  1.004670e-01
-            q0( 36, 1) = 1.924400e+00
-            n ( 36, 1) =  0
-            k ( 37, 1) =  1.016203e-01
-            q0( 37, 1) = 1.918728e+00
-            n ( 37, 1) =  0
-            k ( 38, 1) =  1.004689e-01
-            q0( 38, 1) = 1.924400e+00
-            n ( 38, 1) =  0
-            k ( 39, 1) =  1.016195e-01
-            q0( 39, 1) = 1.918728e+00
-            n ( 39, 1) =  0
-            k ( 40, 1) =  1.190151e-01
-            q0( 40, 1) = 1.855721e+00
-            n ( 40, 1) =  0
-            k ( 41, 1) =  1.196000e-02
-            q0( 41, 1) = 0.000000e+00
-            n ( 41, 1) =  2
-            k ( 42, 1) =  4.528281e-03
-            q0( 42, 1) = 0.000000e+00
-            n ( 42, 1) =  2
-            k ( 43, 1) =  7.046882e-03
-            q0( 43, 1) = 0.000000e+00
-            n ( 43, 1) =  2
-            k ( 44, 1) =  5.387371e-03
-            q0( 44, 1) = 0.000000e+00
-            n ( 44, 1) =  2
-            k ( 45, 1) =  1.420963e-02
-            q0( 45, 1) = 0.000000e+00
-            n ( 45, 1) =  2
-            k ( 46, 1) =  1.126947e-02
-            q0( 46, 1) = 0.000000e+00
-            n ( 46, 1) =  2
-            k ( 47, 1) =  1.620348e-02
-            q0( 47, 1) = 0.000000e+00
-            n ( 47, 1) =  2
-            k ( 48, 1) =  7.125802e-03
-            q0( 48, 1) = 0.000000e+00
-            n ( 48, 1) =  2
-            k ( 49, 1) =  1.972603e-04
-            q0( 49, 1) = 0.000000e+00
-            n ( 49, 1) =  2
-            k ( 50, 1) =  5.037631e-03
-            q0( 50, 1) = 0.000000e+00
-            n ( 50, 1) =  2
-            k ( 51, 1) =  4.592675e-04
-            q0( 51, 1) = 0.000000e+00
-            n ( 51, 1) =  2
-            k ( 52, 1) =  3.954652e-03
-            q0( 52, 1) = 0.000000e+00
-            n ( 52, 1) =  2
-            k ( 53, 1) =  8.470852e-04
-            q0( 53, 1) = 1.047198e+00
-            n ( 53, 1) =  3
-            k ( 54, 1) =  8.464375e-04
-            q0( 54, 1) = 1.047198e+00
-            n ( 54, 1) =  3
-            k ( 55, 1) =  3.480857e-03
-            q0( 55, 1) = 1.047198e+00
-            n ( 55, 1) =  3
-            k ( 56, 1) =  5.766086e-03
-            q0( 56, 1) = 0.000000e+00
-            n ( 56, 1) =  2
-            k ( 57, 1) =  7.487901e-03
-            q0( 57, 1) = 0.000000e+00
-            n ( 57, 1) =  2
-            k ( 58, 1) =  5.492509e-03
-            q0( 58, 1) = 0.000000e+00
-            n ( 58, 1) =  2
-            k ( 59, 1) =  8.722326e-03
-            q0( 59, 1) = 0.000000e+00
-            n ( 59, 1) =  2
-            k ( 60, 1) =  1.920246e-03
-            q0( 60, 1) = 0.000000e+00
-            n ( 60, 1) =  2
-            k ( 61, 1) =  3.148223e-03
-            q0( 61, 1) = 0.000000e+00
-            n ( 61, 1) =  2
-            k ( 62, 1) =  5.201883e-03
-            q0( 62, 1) = 0.000000e+00
-            n ( 62, 1) =  2
-            k ( 63, 1) =  2.595324e-03
-            q0( 63, 1) = 0.000000e+00
-            n ( 63, 1) =  2
-            k ( 64, 1) =  1.898873e-03
-            q0( 64, 1) = 0.000000e+00
-            n ( 64, 1) =  2
-            k ( 65, 1) = -1.363518e-18
-            q0( 65, 1) = 0.000000e+00
-            n ( 65, 1) =  2
-            k ( 66, 1) =  1.315343e-04
-            q0( 66, 1) = 0.000000e+00
-            n ( 66, 1) =  2
-            k ( 67, 1) =  1.936263e-03
-            q0( 67, 1) = 0.000000e+00
-            n ( 67, 1) =  2
-            k ( 68, 1) =  0.000000e+00
-            q0( 68, 1) = 0.000000e+00
-            n ( 68, 1) =  0
-            k ( 69, 1) =  1.826796e-01
-            q0( 69, 1) = 0.000000e+00
-            n ( 69, 1) =  0
-            k ( 70, 1) =  6.632873e-02
-            q0( 70, 1) = 0.000000e+00
-            n ( 70, 1) =  0
-            k ( 71, 1) =  1.152733e-02
-            q0( 71, 1) = 0.000000e+00
-            n ( 71, 1) =  0
-            k ( 72, 1) =  5.891947e-02
-            q0( 72, 1) = 0.000000e+00
-            n ( 72, 1) =  0
-            k ( 73, 1) =  0.000000e+00
-            q0( 73, 1) = 0.000000e+00
-            n ( 73, 1) =  0
+            k (  1,1) =  2.099256e+00
+            q0(  1,1) = 1.448000e+00
+            n (  1,1) =  0
+            k (  2,1) =  2.332055e+00
+            q0(  2,1) = 1.400000e+00
+            n (  2,1) =  0
+            k (  3,1) =  1.524362e+00
+            q0(  3,1) = 1.091000e+00
+            n (  3,1) =  0
+            k (  4,1) =  1.676149e+00
+            q0(  4,1) = 1.421000e+00
+            n (  4,1) =  0
+            k (  5,1) =  1.545961e+00
+            q0(  5,1) = 1.091000e+00
+            n (  5,1) =  0
+            k (  6,1) =  1.388955e+00
+            q0(  6,1) = 1.100000e+00
+            n (  6,1) =  0
+            k (  7,1) =  1.388952e+00
+            q0(  7,1) = 1.100000e+00
+            n (  7,1) =  0
+            k (  8,1) =  1.423946e+00
+            q0(  8,1) = 1.098000e+00
+            n (  8,1) =  0
+            k (  9,1) =  2.034759e+00
+            q0(  9,1) = 1.400000e+00
+            n (  9,1) =  0
+            k ( 10,1) =  1.861592e+00
+            q0( 10,1) = 1.758000e+00
+            n ( 10,1) =  0
+            k ( 11,1) =  2.197888e+00
+            q0( 11,1) = 1.446000e+00
+            n ( 11,1) =  0
+            k ( 12,1) =  1.536207e+00
+            q0( 12,1) = 1.090000e+00
+            n ( 12,1) =  0
+            k ( 13,1) =  2.036112e+00
+            q0( 13,1) = 1.418000e+00
+            n ( 13,1) =  0
+            k ( 14,1) =  1.530491e+00
+            q0( 14,1) = 1.090000e+00
+            n ( 14,1) =  0
+            k ( 15,1) =  1.475892e+00
+            q0( 15,1) = 1.096000e+00
+            n ( 15,1) =  0
+            k ( 16,1) =  1.315937e-01
+            q0( 16,1) = 2.032436e+00
+            n ( 16,1) =  0
+            k ( 17,1) =  1.807470e-01
+            q0( 17,1) = 2.133595e+00
+            n ( 17,1) =  0
+            k ( 18,1) =  3.722420e-01
+            q0( 18,1) = 2.152078e+00
+            n ( 18,1) =  0
+            k ( 19,1) =  1.184643e-01
+            q0( 19,1) = 2.066871e+00
+            n ( 19,1) =  0
+            k ( 20,1) =  5.047498e-02
+            q0( 20,1) = 2.081986e+00
+            n ( 20,1) =  0
+            k ( 21,1) =  1.793240e-01
+            q0( 21,1) = 2.098532e+00
+            n ( 21,1) =  0
+            k ( 22,1) =  1.671987e-01
+            q0( 22,1) = 2.184716e+00
+            n ( 22,1) =  0
+            k ( 23,1) =  1.926083e-01
+            q0( 23,1) = 1.956532e+00
+            n ( 23,1) =  0
+            k ( 24,1) =  4.050324e-01
+            q0( 24,1) = 1.868148e+00
+            n ( 24,1) =  0
+            k ( 25,1) =  1.136161e-01
+            q0( 25,1) = 2.117660e+00
+            n ( 25,1) =  0
+            k ( 26,1) =  1.315137e-01
+            q0( 26,1) = 2.050081e+00
+            n ( 26,1) =  0
+            k ( 27,1) =  1.199475e-01
+            q0( 27,1) = 2.129040e+00
+            n ( 27,1) =  0
+            k ( 28,1) =  8.090805e-02
+            q0( 28,1) = 2.143160e+00
+            n ( 28,1) =  0
+            k ( 29,1) =  1.123646e-01
+            q0( 29,1) = 2.066871e+00
+            n ( 29,1) =  0
+            k ( 30,1) =  1.423482e-01
+            q0( 30,1) = 2.104151e+00
+            n ( 30,1) =  0
+            k ( 31,1) =  1.874988e-01
+            q0( 31,1) = 2.104693e+00
+            n ( 31,1) =  0
+            k ( 32,1) =  1.359300e-01
+            q0( 32,1) = 2.064829e+00
+            n ( 32,1) =  0
+            k ( 33,1) =  1.224407e-01
+            q0( 33,1) = 2.103209e+00
+            n ( 33,1) =  0
+            k ( 34,1) =  1.382518e-01
+            q0( 34,1) = 2.112721e+00
+            n ( 34,1) =  0
+            k ( 35,1) =  8.629370e-02
+            q0( 35,1) = 1.921660e+00
+            n ( 35,1) =  0
+            k ( 36,1) =  1.004670e-01
+            q0( 36,1) = 1.924400e+00
+            n ( 36,1) =  0
+            k ( 37,1) =  1.016203e-01
+            q0( 37,1) = 1.918728e+00
+            n ( 37,1) =  0
+            k ( 38,1) =  1.004689e-01
+            q0( 38,1) = 1.924400e+00
+            n ( 38,1) =  0
+            k ( 39,1) =  1.016195e-01
+            q0( 39,1) = 1.918728e+00
+            n ( 39,1) =  0
+            k ( 40,1) =  1.190151e-01
+            q0( 40,1) = 1.855721e+00
+            n ( 40,1) =  0
+            k ( 41,1) =  1.196000e-02
+            q0( 41,1) = 0.000000e+00
+            n ( 41,1) =  2
+            k ( 42,1) =  4.528281e-03
+            q0( 42,1) = 0.000000e+00
+            n ( 42,1) =  2
+            k ( 43,1) =  7.046882e-03
+            q0( 43,1) = 0.000000e+00
+            n ( 43,1) =  2
+            k ( 44,1) =  5.387371e-03
+            q0( 44,1) = 0.000000e+00
+            n ( 44,1) =  2
+            k ( 45,1) =  1.420963e-02
+            q0( 45,1) = 0.000000e+00
+            n ( 45,1) =  2
+            k ( 46,1) =  1.126947e-02
+            q0( 46,1) = 0.000000e+00
+            n ( 46,1) =  2
+            k ( 47,1) =  1.620348e-02
+            q0( 47,1) = 0.000000e+00
+            n ( 47,1) =  2
+            k ( 48,1) =  7.125802e-03
+            q0( 48,1) = 0.000000e+00
+            n ( 48,1) =  2
+            k ( 49,1) =  1.972603e-04
+            q0( 49,1) = 0.000000e+00
+            n ( 49,1) =  2
+            k ( 50,1) =  5.037631e-03
+            q0( 50,1) = 0.000000e+00
+            n ( 50,1) =  2
+            k ( 51,1) =  4.592675e-04
+            q0( 51,1) = 0.000000e+00
+            n ( 51,1) =  2
+            k ( 52,1) =  3.954652e-03
+            q0( 52,1) = 0.000000e+00
+            n ( 52,1) =  2
+            k ( 53,1) =  8.470852e-04
+            q0( 53,1) = 1.047198e+00
+            n ( 53,1) =  3
+            k ( 54,1) =  8.464375e-04
+            q0( 54,1) = 1.047198e+00
+            n ( 54,1) =  3
+            k ( 55,1) =  3.480857e-03
+            q0( 55,1) = 1.047198e+00
+            n ( 55,1) =  3
+            k ( 56,1) =  5.766086e-03
+            q0( 56,1) = 0.000000e+00
+            n ( 56,1) =  2
+            k ( 57,1) =  7.487901e-03
+            q0( 57,1) = 0.000000e+00
+            n ( 57,1) =  2
+            k ( 58,1) =  5.492509e-03
+            q0( 58,1) = 0.000000e+00
+            n ( 58,1) =  2
+            k ( 59,1) =  8.722326e-03
+            q0( 59,1) = 0.000000e+00
+            n ( 59,1) =  2
+            k ( 60,1) =  1.920246e-03
+            q0( 60,1) = 0.000000e+00
+            n ( 60,1) =  2
+            k ( 61,1) =  3.148223e-03
+            q0( 61,1) = 0.000000e+00
+            n ( 61,1) =  2
+            k ( 62,1) =  5.201883e-03
+            q0( 62,1) = 0.000000e+00
+            n ( 62,1) =  2
+            k ( 63,1) =  2.595324e-03
+            q0( 63,1) = 0.000000e+00
+            n ( 63,1) =  2
+            k ( 64,1) =  1.898873e-03
+            q0( 64,1) = 0.000000e+00
+            n ( 64,1) =  2
+            k ( 65,1) = -1.363518e-18
+            q0( 65,1) = 0.000000e+00
+            n ( 65,1) =  2
+            k ( 66,1) =  1.315343e-04
+            q0( 66,1) = 0.000000e+00
+            n ( 66,1) =  2
+            k ( 67,1) =  1.936263e-03
+            q0( 67,1) = 0.000000e+00
+            n ( 67,1) =  2
+            k ( 68,1) =  0.000000e+00
+            q0( 68,1) = 0.000000e+00
+            n ( 68,1) =  0
+            k ( 69,1) =  1.826796e-01
+            q0( 69,1) = 0.000000e+00
+            n ( 69,1) =  0
+            k ( 70,1) =  6.632873e-02
+            q0( 70,1) = 0.000000e+00
+            n ( 70,1) =  0
+            k ( 71,1) =  1.152733e-02
+            q0( 71,1) = 0.000000e+00
+            n ( 71,1) =  0
+            k ( 72,1) =  5.891947e-02
+            q0( 72,1) = 0.000000e+00
+            n ( 72,1) =  0
+            k ( 73,1) =  0.000000e+00
+            q0( 73,1) = 0.000000e+00
+            n ( 73,1) =  0
             !--- END generated by 'gen_FFparam.py'
 
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 2, anchor point 2)
-            k (  1, 2) =  2.114727e+00
-            q0(  1, 2) = 1.449000e+00
-            n (  1, 2) =  0
-            k (  2, 2) =  2.273469e+00
-            q0(  2, 2) = 1.403000e+00
-            n (  2, 2) =  0
-            k (  3, 2) =  1.524679e+00
-            q0(  3, 2) = 1.092000e+00
-            n (  3, 2) =  0
-            k (  4, 2) =  1.658834e+00
-            q0(  4, 2) = 1.424000e+00
-            n (  4, 2) =  0
-            k (  5, 2) =  1.540762e+00
-            q0(  5, 2) = 1.092000e+00
-            n (  5, 2) =  0
-            k (  6, 2) =  1.486884e+00
-            q0(  6, 2) = 1.093000e+00
-            n (  6, 2) =  0
-            k (  7, 2) =  1.486886e+00
-            q0(  7, 2) = 1.093000e+00
-            n (  7, 2) =  0
-            k (  8, 2) =  1.479232e+00
-            q0(  8, 2) = 1.094000e+00
-            n (  8, 2) =  0
-            k (  9, 2) =  1.952021e+00
-            q0(  9, 2) = 1.404000e+00
-            n (  9, 2) =  0
-            k ( 10, 2) =  1.928628e+00
-            q0( 10, 2) = 1.754000e+00
-            n ( 10, 2) =  0
-            k ( 11, 2) =  2.213432e+00
-            q0( 11, 2) = 1.446000e+00
-            n ( 11, 2) =  0
-            k ( 12, 2) =  1.548743e+00
-            q0( 12, 2) = 1.089000e+00
-            n ( 12, 2) =  0
-            k ( 13, 2) =  2.088041e+00
-            q0( 13, 2) = 1.415000e+00
-            n ( 13, 2) =  0
-            k ( 14, 2) =  1.528886e+00
-            q0( 14, 2) = 1.090000e+00
-            n ( 14, 2) =  0
-            k ( 15, 2) =  1.474695e+00
-            q0( 15, 2) = 1.096000e+00
-            n ( 15, 2) =  0
-            k ( 16, 2) =  1.296070e-01
-            q0( 16, 2) = 2.036904e+00
-            n ( 16, 2) =  0
-            k ( 17, 2) =  1.803101e-01
-            q0( 17, 2) = 2.126422e+00
-            n ( 17, 2) =  0
-            k ( 18, 2) =  3.781834e-01
-            q0( 18, 2) = 2.151851e+00
-            n ( 18, 2) =  0
-            k ( 19, 2) =  1.223211e-01
-            q0( 19, 2) = 2.067255e+00
-            n ( 19, 2) =  0
-            k ( 20, 2) =  5.433101e-02
-            q0( 20, 2) = 2.078513e+00
-            n ( 20, 2) =  0
-            k ( 21, 2) =  1.721094e-01
-            q0( 21, 2) = 2.101952e+00
-            n ( 21, 2) =  0
-            k ( 22, 2) =  1.808456e-01
-            q0( 22, 2) = 2.176129e+00
-            n ( 22, 2) =  0
-            k ( 23, 2) =  1.480839e-01
-            q0( 23, 2) = 1.965398e+00
-            n ( 23, 2) =  0
-            k ( 24, 2) =  3.401620e-01
-            q0( 24, 2) = 1.856245e+00
-            n ( 24, 2) =  0
-            k ( 25, 2) =  1.167652e-01
-            q0( 25, 2) = 2.120854e+00
-            n ( 25, 2) =  0
-            k ( 26, 2) =  1.291621e-01
-            q0( 26, 2) = 2.052158e+00
-            n ( 26, 2) =  0
-            k ( 27, 2) =  1.180560e-01
-            q0( 27, 2) = 2.117416e+00
-            n ( 27, 2) =  0
-            k ( 28, 2) =  7.312172e-02
-            q0( 28, 2) = 2.144294e+00
-            n ( 28, 2) =  0
-            k ( 29, 2) =  9.702423e-02
-            q0( 29, 2) = 2.072666e+00
-            n ( 29, 2) =  0
-            k ( 30, 2) =  1.513126e-01
-            q0( 30, 2) = 2.101673e+00
-            n ( 30, 2) =  0
-            k ( 31, 2) =  1.810125e-01
-            q0( 31, 2) = 2.112477e+00
-            n ( 31, 2) =  0
-            k ( 32, 2) =  1.317696e-01
-            q0( 32, 2) = 2.064864e+00
-            n ( 32, 2) =  0
-            k ( 33, 2) =  1.238119e-01
-            q0( 33, 2) = 2.103645e+00
-            n ( 33, 2) =  0
-            k ( 34, 2) =  1.343242e-01
-            q0( 34, 2) = 2.108026e+00
-            n ( 34, 2) =  0
-            k ( 35, 2) =  1.013640e-01
-            q0( 35, 2) = 2.014442e+00
-            n ( 35, 2) =  0
-            k ( 36, 2) =  1.055022e-01
-            q0( 36, 2) = 2.002277e+00
-            n ( 36, 2) =  0
-            k ( 37, 2) =  9.307031e-02
-            q0( 37, 2) = 1.819855e+00
-            n ( 37, 2) =  0
-            k ( 38, 2) =  1.055026e-01
-            q0( 38, 2) = 2.002277e+00
-            n ( 38, 2) =  0
-            k ( 39, 2) =  9.307146e-02
-            q0( 39, 2) = 1.819855e+00
-            n ( 39, 2) =  0
-            k ( 40, 2) =  1.080583e-01
-            q0( 40, 2) = 1.769083e+00
-            n ( 40, 2) =  0
-            k ( 41, 2) =  1.403860e-02
-            q0( 41, 2) = 0.000000e+00
-            n ( 41, 2) =  2
-            k ( 42, 2) =  1.326022e-02
-            q0( 42, 2) = 0.000000e+00
-            n ( 42, 2) =  2
-            k ( 43, 2) =  8.001698e-03
-            q0( 43, 2) = 0.000000e+00
-            n ( 43, 2) =  2
-            k ( 44, 2) =  6.270384e-03
-            q0( 44, 2) = 0.000000e+00
-            n ( 44, 2) =  2
-            k ( 45, 2) =  1.271884e-02
-            q0( 45, 2) = 0.000000e+00
-            n ( 45, 2) =  2
-            k ( 46, 2) =  1.025594e-02
-            q0( 46, 2) = 0.000000e+00
-            n ( 46, 2) =  2
-            k ( 47, 2) =  1.671992e-02
-            q0( 47, 2) = 0.000000e+00
-            n ( 47, 2) =  2
-            k ( 48, 2) =  5.561355e-03
-            q0( 48, 2) = 0.000000e+00
-            n ( 48, 2) =  2
-            k ( 49, 2) = -1.941309e-19
-            q0( 49, 2) = 0.000000e+00
-            n ( 49, 2) =  2
-            k ( 50, 2) =  4.518538e-03
-            q0( 50, 2) = 0.000000e+00
-            n ( 50, 2) =  2
-            k ( 51, 2) =  1.625108e-20
-            q0( 51, 2) = 0.000000e+00
-            n ( 51, 2) =  2
-            k ( 52, 2) =  3.442974e-03
-            q0( 52, 2) = 0.000000e+00
-            n ( 52, 2) =  2
-            k ( 53, 2) =  7.948978e-04
-            q0( 53, 2) = 1.047198e+00
-            n ( 53, 2) =  3
-            k ( 54, 2) =  7.945585e-04
-            q0( 54, 2) = 1.047198e+00
-            n ( 54, 2) =  3
-            k ( 55, 2) =  1.295192e-03
-            q0( 55, 2) = 1.047198e+00
-            n ( 55, 2) =  3
-            k ( 56, 2) =  5.439138e-03
-            q0( 56, 2) = 0.000000e+00
-            n ( 56, 2) =  2
-            k ( 57, 2) =  7.174384e-03
-            q0( 57, 2) = 0.000000e+00
-            n ( 57, 2) =  2
-            k ( 58, 2) =  1.168332e-02
-            q0( 58, 2) = 0.000000e+00
-            n ( 58, 2) =  2
-            k ( 59, 2) =  8.218264e-03
-            q0( 59, 2) = 0.000000e+00
-            n ( 59, 2) =  2
-            k ( 60, 2) =  2.651560e-03
-            q0( 60, 2) = 0.000000e+00
-            n ( 60, 2) =  2
-            k ( 61, 2) =  3.729236e-03
-            q0( 61, 2) = 0.000000e+00
-            n ( 61, 2) =  2
-            k ( 62, 2) =  5.217169e-03
-            q0( 62, 2) = 0.000000e+00
-            n ( 62, 2) =  2
-            k ( 63, 2) =  3.355673e-03
-            q0( 63, 2) = 0.000000e+00
-            n ( 63, 2) =  2
-            k ( 64, 2) =  1.747159e-03
-            q0( 64, 2) = 0.000000e+00
-            n ( 64, 2) =  2
-            k ( 65, 2) =  2.357344e-04
-            q0( 65, 2) = 0.000000e+00
-            n ( 65, 2) =  2
-            k ( 66, 2) =  3.322309e-19
-            q0( 66, 2) = 0.000000e+00
-            n ( 66, 2) =  2
-            k ( 67, 2) =  1.747420e-03
-            q0( 67, 2) = 0.000000e+00
-            n ( 67, 2) =  2
-            k ( 68, 2) = -0.000000e+00
-            q0( 68, 2) = 0.000000e+00
-            n ( 68, 2) =  0
-            k ( 69, 2) =  1.832707e-01
-            q0( 69, 2) = 0.000000e+00
-            n ( 69, 2) =  0
-            k ( 70, 2) =  3.061437e-02
-            q0( 70, 2) = 0.000000e+00
-            n ( 70, 2) =  0
-            k ( 71, 2) =  2.906114e-04
-            q0( 71, 2) = 0.000000e+00
-            n ( 71, 2) =  0
-            k ( 72, 2) =  4.363514e-02
-            q0( 72, 2) = 0.000000e+00
-            n ( 72, 2) =  0
-            k ( 73, 2) =  0.000000e+00
-            q0( 73, 2) = 0.000000e+00
-            n ( 73, 2) =  0
+            k (  1,2) =  2.114727e+00
+            q0(  1,2) = 1.449000e+00
+            n (  1,2) =  0
+            k (  2,2) =  2.273469e+00
+            q0(  2,2) = 1.403000e+00
+            n (  2,2) =  0
+            k (  3,2) =  1.524679e+00
+            q0(  3,2) = 1.092000e+00
+            n (  3,2) =  0
+            k (  4,2) =  1.658834e+00
+            q0(  4,2) = 1.424000e+00
+            n (  4,2) =  0
+            k (  5,2) =  1.540762e+00
+            q0(  5,2) = 1.092000e+00
+            n (  5,2) =  0
+            k (  6,2) =  1.486884e+00
+            q0(  6,2) = 1.093000e+00
+            n (  6,2) =  0
+            k (  7,2) =  1.486886e+00
+            q0(  7,2) = 1.093000e+00
+            n (  7,2) =  0
+            k (  8,2) =  1.479232e+00
+            q0(  8,2) = 1.094000e+00
+            n (  8,2) =  0
+            k (  9,2) =  1.952021e+00
+            q0(  9,2) = 1.404000e+00
+            n (  9,2) =  0
+            k ( 10,2) =  1.928628e+00
+            q0( 10,2) = 1.754000e+00
+            n ( 10,2) =  0
+            k ( 11,2) =  2.213432e+00
+            q0( 11,2) = 1.446000e+00
+            n ( 11,2) =  0
+            k ( 12,2) =  1.548743e+00
+            q0( 12,2) = 1.089000e+00
+            n ( 12,2) =  0
+            k ( 13,2) =  2.088041e+00
+            q0( 13,2) = 1.415000e+00
+            n ( 13,2) =  0
+            k ( 14,2) =  1.528886e+00
+            q0( 14,2) = 1.090000e+00
+            n ( 14,2) =  0
+            k ( 15,2) =  1.474695e+00
+            q0( 15,2) = 1.096000e+00
+            n ( 15,2) =  0
+            k ( 16,2) =  1.296070e-01
+            q0( 16,2) = 2.036904e+00
+            n ( 16,2) =  0
+            k ( 17,2) =  1.803101e-01
+            q0( 17,2) = 2.126422e+00
+            n ( 17,2) =  0
+            k ( 18,2) =  3.781834e-01
+            q0( 18,2) = 2.151851e+00
+            n ( 18,2) =  0
+            k ( 19,2) =  1.223211e-01
+            q0( 19,2) = 2.067255e+00
+            n ( 19,2) =  0
+            k ( 20,2) =  5.433101e-02
+            q0( 20,2) = 2.078513e+00
+            n ( 20,2) =  0
+            k ( 21,2) =  1.721094e-01
+            q0( 21,2) = 2.101952e+00
+            n ( 21,2) =  0
+            k ( 22,2) =  1.808456e-01
+            q0( 22,2) = 2.176129e+00
+            n ( 22,2) =  0
+            k ( 23,2) =  1.480839e-01
+            q0( 23,2) = 1.965398e+00
+            n ( 23,2) =  0
+            k ( 24,2) =  3.401620e-01
+            q0( 24,2) = 1.856245e+00
+            n ( 24,2) =  0
+            k ( 25,2) =  1.167652e-01
+            q0( 25,2) = 2.120854e+00
+            n ( 25,2) =  0
+            k ( 26,2) =  1.291621e-01
+            q0( 26,2) = 2.052158e+00
+            n ( 26,2) =  0
+            k ( 27,2) =  1.180560e-01
+            q0( 27,2) = 2.117416e+00
+            n ( 27,2) =  0
+            k ( 28,2) =  7.312172e-02
+            q0( 28,2) = 2.144294e+00
+            n ( 28,2) =  0
+            k ( 29,2) =  9.702423e-02
+            q0( 29,2) = 2.072666e+00
+            n ( 29,2) =  0
+            k ( 30,2) =  1.513126e-01
+            q0( 30,2) = 2.101673e+00
+            n ( 30,2) =  0
+            k ( 31,2) =  1.810125e-01
+            q0( 31,2) = 2.112477e+00
+            n ( 31,2) =  0
+            k ( 32,2) =  1.317696e-01
+            q0( 32,2) = 2.064864e+00
+            n ( 32,2) =  0
+            k ( 33,2) =  1.238119e-01
+            q0( 33,2) = 2.103645e+00
+            n ( 33,2) =  0
+            k ( 34,2) =  1.343242e-01
+            q0( 34,2) = 2.108026e+00
+            n ( 34,2) =  0
+            k ( 35,2) =  1.013640e-01
+            q0( 35,2) = 2.014442e+00
+            n ( 35,2) =  0
+            k ( 36,2) =  1.055022e-01
+            q0( 36,2) = 2.002277e+00
+            n ( 36,2) =  0
+            k ( 37,2) =  9.307031e-02
+            q0( 37,2) = 1.819855e+00
+            n ( 37,2) =  0
+            k ( 38,2) =  1.055026e-01
+            q0( 38,2) = 2.002277e+00
+            n ( 38,2) =  0
+            k ( 39,2) =  9.307146e-02
+            q0( 39,2) = 1.819855e+00
+            n ( 39,2) =  0
+            k ( 40,2) =  1.080583e-01
+            q0( 40,2) = 1.769083e+00
+            n ( 40,2) =  0
+            k ( 41,2) =  1.403860e-02
+            q0( 41,2) = 0.000000e+00
+            n ( 41,2) =  2
+            k ( 42,2) =  1.326022e-02
+            q0( 42,2) = 0.000000e+00
+            n ( 42,2) =  2
+            k ( 43,2) =  8.001698e-03
+            q0( 43,2) = 0.000000e+00
+            n ( 43,2) =  2
+            k ( 44,2) =  6.270384e-03
+            q0( 44,2) = 0.000000e+00
+            n ( 44,2) =  2
+            k ( 45,2) =  1.271884e-02
+            q0( 45,2) = 0.000000e+00
+            n ( 45,2) =  2
+            k ( 46,2) =  1.025594e-02
+            q0( 46,2) = 0.000000e+00
+            n ( 46,2) =  2
+            k ( 47,2) =  1.671992e-02
+            q0( 47,2) = 0.000000e+00
+            n ( 47,2) =  2
+            k ( 48,2) =  5.561355e-03
+            q0( 48,2) = 0.000000e+00
+            n ( 48,2) =  2
+            k ( 49,2) = -1.941309e-19
+            q0( 49,2) = 0.000000e+00
+            n ( 49,2) =  2
+            k ( 50,2) =  4.518538e-03
+            q0( 50,2) = 0.000000e+00
+            n ( 50,2) =  2
+            k ( 51,2) =  1.625108e-20
+            q0( 51,2) = 0.000000e+00
+            n ( 51,2) =  2
+            k ( 52,2) =  3.442974e-03
+            q0( 52,2) = 0.000000e+00
+            n ( 52,2) =  2
+            k ( 53,2) =  7.948978e-04
+            q0( 53,2) = 1.047198e+00
+            n ( 53,2) =  3
+            k ( 54,2) =  7.945585e-04
+            q0( 54,2) = 1.047198e+00
+            n ( 54,2) =  3
+            k ( 55,2) =  1.295192e-03
+            q0( 55,2) = 1.047198e+00
+            n ( 55,2) =  3
+            k ( 56,2) =  5.439138e-03
+            q0( 56,2) = 0.000000e+00
+            n ( 56,2) =  2
+            k ( 57,2) =  7.174384e-03
+            q0( 57,2) = 0.000000e+00
+            n ( 57,2) =  2
+            k ( 58,2) =  1.168332e-02
+            q0( 58,2) = 0.000000e+00
+            n ( 58,2) =  2
+            k ( 59,2) =  8.218264e-03
+            q0( 59,2) = 0.000000e+00
+            n ( 59,2) =  2
+            k ( 60,2) =  2.651560e-03
+            q0( 60,2) = 0.000000e+00
+            n ( 60,2) =  2
+            k ( 61,2) =  3.729236e-03
+            q0( 61,2) = 0.000000e+00
+            n ( 61,2) =  2
+            k ( 62,2) =  5.217169e-03
+            q0( 62,2) = 0.000000e+00
+            n ( 62,2) =  2
+            k ( 63,2) =  3.355673e-03
+            q0( 63,2) = 0.000000e+00
+            n ( 63,2) =  2
+            k ( 64,2) =  1.747159e-03
+            q0( 64,2) = 0.000000e+00
+            n ( 64,2) =  2
+            k ( 65,2) =  2.357344e-04
+            q0( 65,2) = 0.000000e+00
+            n ( 65,2) =  2
+            k ( 66,2) =  3.322309e-19
+            q0( 66,2) = 0.000000e+00
+            n ( 66,2) =  2
+            k ( 67,2) =  1.747420e-03
+            q0( 67,2) = 0.000000e+00
+            n ( 67,2) =  2
+            k ( 68,2) = -0.000000e+00
+            q0( 68,2) = 0.000000e+00
+            n ( 68,2) =  0
+            k ( 69,2) =  1.832707e-01
+            q0( 69,2) = 0.000000e+00
+            n ( 69,2) =  0
+            k ( 70,2) =  3.061437e-02
+            q0( 70,2) = 0.000000e+00
+            n ( 70,2) =  0
+            k ( 71,2) =  2.906114e-04
+            q0( 71,2) = 0.000000e+00
+            n ( 71,2) =  0
+            k ( 72,2) =  4.363514e-02
+            q0( 72,2) = 0.000000e+00
+            n ( 72,2) =  0
+            k ( 73,2) =  0.000000e+00
+            q0( 73,2) = 0.000000e+00
+            n ( 73,2) =  0
             !--- END generated by 'gen_FFparam.py'
 
         case(3)
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 1)
-            k (  1, 1) =  2.373294e+00
-            q0(  1, 1) = 1.440000e+00
-            n (  1, 1) =  0
-            k (  2, 1) =  2.177843e+00
-            q0(  2, 1) = 1.405000e+00
-            n (  2, 1) =  0
-            k (  3, 1) =  1.509142e+00
-            q0(  3, 1) = 1.091000e+00
-            n (  3, 1) =  0
-            k (  4, 1) =  1.154301e+00
-            q0(  4, 1) = 1.442000e+00
-            n (  4, 1) =  0
-            k (  5, 1) =  1.535268e+00
-            q0(  5, 1) = 1.094000e+00
-            n (  5, 1) =  0
-            k (  6, 1) =  1.416883e+00
-            q0(  6, 1) = 1.096000e+00
-            n (  6, 1) =  0
-            k (  7, 1) =  1.416884e+00
-            q0(  7, 1) = 1.096000e+00
-            n (  7, 1) =  0
-            k (  8, 1) =  1.403014e+00
-            q0(  8, 1) = 1.101000e+00
-            n (  8, 1) =  0
-            k (  9, 1) =  1.529880e+00
-            q0(  9, 1) = 1.409000e+00
-            n (  9, 1) =  0
-            k ( 10, 1) =  2.117134e+00
-            q0( 10, 1) = 1.743000e+00
-            n ( 10, 1) =  0
-            k ( 11, 1) =  2.514729e+00
-            q0( 11, 1) = 1.437000e+00
-            n ( 11, 1) =  0
-            k ( 12, 1) =  1.557646e+00
-            q0( 12, 1) = 1.088000e+00
-            n ( 12, 1) =  0
-            k ( 13, 1) =  1.876803e+00
-            q0( 13, 1) = 1.424000e+00
-            n ( 13, 1) =  0
-            k ( 14, 1) =  1.525333e+00
-            q0( 14, 1) = 1.091000e+00
-            n ( 14, 1) =  0
-            k ( 15, 1) =  1.509592e+00
-            q0( 15, 1) = 1.092000e+00
-            n ( 15, 1) =  0
-            k ( 16, 1) =  4.205182e-02
-            q0( 16, 1) = 2.083120e+00
-            n ( 16, 1) =  0
-            k ( 17, 1) =  1.205805e-01
-            q0( 17, 1) = 2.120959e+00
-            n ( 17, 1) =  0
-            k ( 18, 1) =  3.783742e-01
-            q0( 18, 1) = 2.109475e+00
-            n ( 18, 1) =  0
-            k ( 19, 1) =  9.620915e-02
-            q0( 19, 1) = 2.085773e+00
-            n ( 19, 1) =  0
-            k ( 20, 1) = -0.000000e+00
-            q0( 20, 1) = 2.074970e+00
-            n ( 20, 1) =  0
-            k ( 21, 1) =  2.055118e-01
-            q0( 21, 1) = 2.109841e+00
-            n ( 21, 1) =  0
-            k ( 22, 1) =  2.457110e-01
-            q0( 22, 1) = 2.125165e+00
-            n ( 22, 1) =  0
-            k ( 23, 1) =  1.410898e-01
-            q0( 23, 1) = 1.963426e+00
-            n ( 23, 1) =  0
-            k ( 24, 1) =  3.675180e-01
-            q0( 24, 1) = 1.807288e+00
-            n ( 24, 1) =  0
-            k ( 25, 1) =  1.674981e-01
-            q0( 25, 1) = 2.099736e+00
-            n ( 25, 1) =  0
-            k ( 26, 1) = -0.000000e+00
-            q0( 26, 1) = 2.089927e+00
-            n ( 26, 1) =  0
-            k ( 27, 1) =  1.327572e-01
-            q0( 27, 1) = 2.118830e+00
-            n ( 27, 1) =  0
-            k ( 28, 1) =  5.140471e-02
-            q0( 28, 1) = 2.155813e+00
-            n ( 28, 1) =  0
-            k ( 29, 1) =  6.438814e-02
-            q0( 29, 1) = 2.087484e+00
-            n ( 29, 1) =  0
-            k ( 30, 1) =  1.297719e-01
-            q0( 30, 1) = 2.094866e+00
-            n ( 30, 1) =  0
-            k ( 31, 1) =  1.817491e-01
-            q0( 31, 1) = 2.082928e+00
-            n ( 31, 1) =  0
-            k ( 32, 1) =  1.378603e-01
-            q0( 32, 1) = 2.077989e+00
-            n ( 32, 1) =  0
-            k ( 33, 1) =  1.153952e-01
-            q0( 33, 1) = 2.110016e+00
-            n ( 33, 1) =  0
-            k ( 34, 1) =  1.465455e-01
-            q0( 34, 1) = 2.113419e+00
-            n ( 34, 1) =  0
-            k ( 35, 1) =  7.546414e-02
-            q0( 35, 1) = 1.991665e+00
-            n ( 35, 1) =  0
-            k ( 36, 1) =  8.991739e-02
-            q0( 36, 1) = 1.927943e+00
-            n ( 36, 1) =  0
-            k ( 37, 1) =  1.274981e-01
-            q0( 37, 1) = 1.881797e+00
-            n ( 37, 1) =  0
-            k ( 38, 1) =  8.991929e-02
-            q0( 38, 1) = 1.927943e+00
-            n ( 38, 1) =  0
-            k ( 39, 1) =  1.274996e-01
-            q0( 39, 1) = 1.881797e+00
-            n ( 39, 1) =  0
-            k ( 40, 1) =  1.086064e-01
-            q0( 40, 1) = 1.853854e+00
-            n ( 40, 1) =  0
-            k ( 41, 1) =  1.047469e-02
-            q0( 41, 1) = 0.000000e+00
-            n ( 41, 1) =  2
-            k ( 42, 1) =  1.572206e-02
-            q0( 42, 1) = 0.000000e+00
-            n ( 42, 1) =  2
-            k ( 43, 1) =  4.691529e-03
-            q0( 43, 1) = 0.000000e+00
-            n ( 43, 1) =  2
-            k ( 44, 1) =  7.708206e-04
-            q0( 44, 1) = 0.000000e+00
-            n ( 44, 1) =  2
-            k ( 45, 1) =  1.212452e-02
-            q0( 45, 1) = 0.000000e+00
-            n ( 45, 1) =  2
-            k ( 46, 1) =  7.812745e-03
-            q0( 46, 1) = 0.000000e+00
-            n ( 46, 1) =  2
-            k ( 47, 1) =  2.113265e-02
-            q0( 47, 1) = 0.000000e+00
-            n ( 47, 1) =  2
-            k ( 48, 1) =  1.133672e-03
-            q0( 48, 1) = 0.000000e+00
-            n ( 48, 1) =  2
-            k ( 49, 1) = -5.200703e-18
-            q0( 49, 1) = 0.000000e+00
-            n ( 49, 1) =  2
-            k ( 50, 1) =  2.922068e-03
-            q0( 50, 1) = 0.000000e+00
-            n ( 50, 1) =  2
-            k ( 51, 1) =  6.892048e-18
-            q0( 51, 1) = 0.000000e+00
-            n ( 51, 1) =  2
-            k ( 52, 1) =  9.637625e-03
-            q0( 52, 1) = 0.000000e+00
-            n ( 52, 1) =  2
-            k ( 53, 1) =  5.763774e-03
-            q0( 53, 1) = 1.047198e+00
-            n ( 53, 1) =  3
-            k ( 54, 1) =  5.763681e-03
-            q0( 54, 1) = 1.047198e+00
-            n ( 54, 1) =  3
-            k ( 55, 1) =  4.194053e-03
-            q0( 55, 1) = 1.047198e+00
-            n ( 55, 1) =  3
-            k ( 56, 1) =  2.181215e-03
-            q0( 56, 1) = 0.000000e+00
-            n ( 56, 1) =  2
-            k ( 57, 1) =  2.666180e-03
-            q0( 57, 1) = 0.000000e+00
-            n ( 57, 1) =  2
-            k ( 58, 1) =  9.700088e-03
-            q0( 58, 1) = 0.000000e+00
-            n ( 58, 1) =  2
-            k ( 59, 1) =  7.602363e-03
-            q0( 59, 1) = 0.000000e+00
-            n ( 59, 1) =  2
-            k ( 60, 1) =  4.103400e-03
-            q0( 60, 1) = 0.000000e+00
-            n ( 60, 1) =  2
-            k ( 61, 1) =  6.551103e-03
-            q0( 61, 1) = 0.000000e+00
-            n ( 61, 1) =  2
-            k ( 62, 1) =  4.802784e-03
-            q0( 62, 1) = 0.000000e+00
-            n ( 62, 1) =  2
-            k ( 63, 1) =  9.354648e-04
-            q0( 63, 1) = 0.000000e+00
-            n ( 63, 1) =  2
-            k ( 64, 1) =  1.598692e-03
-            q0( 64, 1) = 0.000000e+00
-            n ( 64, 1) =  2
-            k ( 65, 1) =  5.542229e-18
-            q0( 65, 1) = 0.000000e+00
-            n ( 65, 1) =  2
-            k ( 66, 1) = -7.681318e-19
-            q0( 66, 1) = 0.000000e+00
-            n ( 66, 1) =  2
-            k ( 67, 1) =  3.090533e-03
-            q0( 67, 1) = 0.000000e+00
-            n ( 67, 1) =  2
-            k ( 68, 1) =  0.000000e+00
-            q0( 68, 1) = 0.000000e+00
-            n ( 68, 1) =  0
-            k ( 69, 1) =  2.290205e-01
-            q0( 69, 1) = 0.000000e+00
-            n ( 69, 1) =  0
-            k ( 70, 1) = -0.000000e+00
-            q0( 70, 1) = 0.000000e+00
-            n ( 70, 1) =  0
-            k ( 71, 1) =  2.056219e-02
-            q0( 71, 1) = 0.000000e+00
-            n ( 71, 1) =  0
-            k ( 72, 1) =  5.071417e-02
-            q0( 72, 1) = 0.000000e+00
-            n ( 72, 1) =  0
-            k ( 73, 1) =  0.000000e+00
-            q0( 73, 1) = 0.000000e+00
-            n ( 73, 1) =  0
+            k (  1,1) =  2.373294e+00
+            q0(  1,1) = 1.440000e+00
+            n (  1,1) =  0
+            k (  2,1) =  2.177843e+00
+            q0(  2,1) = 1.405000e+00
+            n (  2,1) =  0
+            k (  3,1) =  1.509142e+00
+            q0(  3,1) = 1.091000e+00
+            n (  3,1) =  0
+            k (  4,1) =  1.154301e+00
+            q0(  4,1) = 1.442000e+00
+            n (  4,1) =  0
+            k (  5,1) =  1.535268e+00
+            q0(  5,1) = 1.094000e+00
+            n (  5,1) =  0
+            k (  6,1) =  1.416883e+00
+            q0(  6,1) = 1.096000e+00
+            n (  6,1) =  0
+            k (  7,1) =  1.416884e+00
+            q0(  7,1) = 1.096000e+00
+            n (  7,1) =  0
+            k (  8,1) =  1.403014e+00
+            q0(  8,1) = 1.101000e+00
+            n (  8,1) =  0
+            k (  9,1) =  1.529880e+00
+            q0(  9,1) = 1.409000e+00
+            n (  9,1) =  0
+            k ( 10,1) =  2.117134e+00
+            q0( 10,1) = 1.743000e+00
+            n ( 10,1) =  0
+            k ( 11,1) =  2.514729e+00
+            q0( 11,1) = 1.437000e+00
+            n ( 11,1) =  0
+            k ( 12,1) =  1.557646e+00
+            q0( 12,1) = 1.088000e+00
+            n ( 12,1) =  0
+            k ( 13,1) =  1.876803e+00
+            q0( 13,1) = 1.424000e+00
+            n ( 13,1) =  0
+            k ( 14,1) =  1.525333e+00
+            q0( 14,1) = 1.091000e+00
+            n ( 14,1) =  0
+            k ( 15,1) =  1.509592e+00
+            q0( 15,1) = 1.092000e+00
+            n ( 15,1) =  0
+            k ( 16,1) =  4.205182e-02
+            q0( 16,1) = 2.083120e+00
+            n ( 16,1) =  0
+            k ( 17,1) =  1.205805e-01
+            q0( 17,1) = 2.120959e+00
+            n ( 17,1) =  0
+            k ( 18,1) =  3.783742e-01
+            q0( 18,1) = 2.109475e+00
+            n ( 18,1) =  0
+            k ( 19,1) =  9.620915e-02
+            q0( 19,1) = 2.085773e+00
+            n ( 19,1) =  0
+            k ( 20,1) = -0.000000e+00
+            q0( 20,1) = 2.074970e+00
+            n ( 20,1) =  0
+            k ( 21,1) =  2.055118e-01
+            q0( 21,1) = 2.109841e+00
+            n ( 21,1) =  0
+            k ( 22,1) =  2.457110e-01
+            q0( 22,1) = 2.125165e+00
+            n ( 22,1) =  0
+            k ( 23,1) =  1.410898e-01
+            q0( 23,1) = 1.963426e+00
+            n ( 23,1) =  0
+            k ( 24,1) =  3.675180e-01
+            q0( 24,1) = 1.807288e+00
+            n ( 24,1) =  0
+            k ( 25,1) =  1.674981e-01
+            q0( 25,1) = 2.099736e+00
+            n ( 25,1) =  0
+            k ( 26,1) = -0.000000e+00
+            q0( 26,1) = 2.089927e+00
+            n ( 26,1) =  0
+            k ( 27,1) =  1.327572e-01
+            q0( 27,1) = 2.118830e+00
+            n ( 27,1) =  0
+            k ( 28,1) =  5.140471e-02
+            q0( 28,1) = 2.155813e+00
+            n ( 28,1) =  0
+            k ( 29,1) =  6.438814e-02
+            q0( 29,1) = 2.087484e+00
+            n ( 29,1) =  0
+            k ( 30,1) =  1.297719e-01
+            q0( 30,1) = 2.094866e+00
+            n ( 30,1) =  0
+            k ( 31,1) =  1.817491e-01
+            q0( 31,1) = 2.082928e+00
+            n ( 31,1) =  0
+            k ( 32,1) =  1.378603e-01
+            q0( 32,1) = 2.077989e+00
+            n ( 32,1) =  0
+            k ( 33,1) =  1.153952e-01
+            q0( 33,1) = 2.110016e+00
+            n ( 33,1) =  0
+            k ( 34,1) =  1.465455e-01
+            q0( 34,1) = 2.113419e+00
+            n ( 34,1) =  0
+            k ( 35,1) =  7.546414e-02
+            q0( 35,1) = 1.991665e+00
+            n ( 35,1) =  0
+            k ( 36,1) =  8.991739e-02
+            q0( 36,1) = 1.927943e+00
+            n ( 36,1) =  0
+            k ( 37,1) =  1.274981e-01
+            q0( 37,1) = 1.881797e+00
+            n ( 37,1) =  0
+            k ( 38,1) =  8.991929e-02
+            q0( 38,1) = 1.927943e+00
+            n ( 38,1) =  0
+            k ( 39,1) =  1.274996e-01
+            q0( 39,1) = 1.881797e+00
+            n ( 39,1) =  0
+            k ( 40,1) =  1.086064e-01
+            q0( 40,1) = 1.853854e+00
+            n ( 40,1) =  0
+            k ( 41,1) =  1.047469e-02
+            q0( 41,1) = 0.000000e+00
+            n ( 41,1) =  2
+            k ( 42,1) =  1.572206e-02
+            q0( 42,1) = 0.000000e+00
+            n ( 42,1) =  2
+            k ( 43,1) =  4.691529e-03
+            q0( 43,1) = 0.000000e+00
+            n ( 43,1) =  2
+            k ( 44,1) =  7.708206e-04
+            q0( 44,1) = 0.000000e+00
+            n ( 44,1) =  2
+            k ( 45,1) =  1.212452e-02
+            q0( 45,1) = 0.000000e+00
+            n ( 45,1) =  2
+            k ( 46,1) =  7.812745e-03
+            q0( 46,1) = 0.000000e+00
+            n ( 46,1) =  2
+            k ( 47,1) =  2.113265e-02
+            q0( 47,1) = 0.000000e+00
+            n ( 47,1) =  2
+            k ( 48,1) =  1.133672e-03
+            q0( 48,1) = 0.000000e+00
+            n ( 48,1) =  2
+            k ( 49,1) = -5.200703e-18
+            q0( 49,1) = 0.000000e+00
+            n ( 49,1) =  2
+            k ( 50,1) =  2.922068e-03
+            q0( 50,1) = 0.000000e+00
+            n ( 50,1) =  2
+            k ( 51,1) =  6.892048e-18
+            q0( 51,1) = 0.000000e+00
+            n ( 51,1) =  2
+            k ( 52,1) =  9.637625e-03
+            q0( 52,1) = 0.000000e+00
+            n ( 52,1) =  2
+            k ( 53,1) =  5.763774e-03
+            q0( 53,1) = 1.047198e+00
+            n ( 53,1) =  3
+            k ( 54,1) =  5.763681e-03
+            q0( 54,1) = 1.047198e+00
+            n ( 54,1) =  3
+            k ( 55,1) =  4.194053e-03
+            q0( 55,1) = 1.047198e+00
+            n ( 55,1) =  3
+            k ( 56,1) =  2.181215e-03
+            q0( 56,1) = 0.000000e+00
+            n ( 56,1) =  2
+            k ( 57,1) =  2.666180e-03
+            q0( 57,1) = 0.000000e+00
+            n ( 57,1) =  2
+            k ( 58,1) =  9.700088e-03
+            q0( 58,1) = 0.000000e+00
+            n ( 58,1) =  2
+            k ( 59,1) =  7.602363e-03
+            q0( 59,1) = 0.000000e+00
+            n ( 59,1) =  2
+            k ( 60,1) =  4.103400e-03
+            q0( 60,1) = 0.000000e+00
+            n ( 60,1) =  2
+            k ( 61,1) =  6.551103e-03
+            q0( 61,1) = 0.000000e+00
+            n ( 61,1) =  2
+            k ( 62,1) =  4.802784e-03
+            q0( 62,1) = 0.000000e+00
+            n ( 62,1) =  2
+            k ( 63,1) =  9.354648e-04
+            q0( 63,1) = 0.000000e+00
+            n ( 63,1) =  2
+            k ( 64,1) =  1.598692e-03
+            q0( 64,1) = 0.000000e+00
+            n ( 64,1) =  2
+            k ( 65,1) =  5.542229e-18
+            q0( 65,1) = 0.000000e+00
+            n ( 65,1) =  2
+            k ( 66,1) = -7.681318e-19
+            q0( 66,1) = 0.000000e+00
+            n ( 66,1) =  2
+            k ( 67,1) =  3.090533e-03
+            q0( 67,1) = 0.000000e+00
+            n ( 67,1) =  2
+            k ( 68,1) =  0.000000e+00
+            q0( 68,1) = 0.000000e+00
+            n ( 68,1) =  0
+            k ( 69,1) =  2.290205e-01
+            q0( 69,1) = 0.000000e+00
+            n ( 69,1) =  0
+            k ( 70,1) = -0.000000e+00
+            q0( 70,1) = 0.000000e+00
+            n ( 70,1) =  0
+            k ( 71,1) =  2.056219e-02
+            q0( 71,1) = 0.000000e+00
+            n ( 71,1) =  0
+            k ( 72,1) =  5.071417e-02
+            q0( 72,1) = 0.000000e+00
+            n ( 72,1) =  0
+            k ( 73,1) =  0.000000e+00
+            q0( 73,1) = 0.000000e+00
+            n ( 73,1) =  0
             !--- END generated by 'gen_FFparam.py'
 
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 2)
-            k (  1, 2) =  2.597274e+00
-            q0(  1, 2) = 1.385000e+00
-            n (  1, 2) =  0
-            k (  2, 2) =  2.217378e+00
-            q0(  2, 2) = 1.410000e+00
-            n (  2, 2) =  0
-            k (  3, 2) =  1.513056e+00
-            q0(  3, 2) = 1.093000e+00
-            n (  3, 2) =  0
-            k (  4, 2) =  1.978833e+00
-            q0(  4, 2) = 1.440000e+00
-            n (  4, 2) =  0
-            k (  5, 2) =  1.535447e+00
-            q0(  5, 2) = 1.092000e+00
-            n (  5, 2) =  0
-            k (  6, 2) =  1.406883e+00
-            q0(  6, 2) = 1.101000e+00
-            n (  6, 2) =  0
-            k (  7, 2) =  1.406879e+00
-            q0(  7, 2) = 1.101000e+00
-            n (  7, 2) =  0
-            k (  8, 2) =  1.447261e+00
-            q0(  8, 2) = 1.097000e+00
-            n (  8, 2) =  0
-            k (  9, 2) =  1.896865e+00
-            q0(  9, 2) = 1.440000e+00
-            n (  9, 2) =  0
-            k ( 10, 2) =  2.365632e+00
-            q0( 10, 2) = 1.700000e+00
-            n ( 10, 2) =  0
-            k ( 11, 2) =  2.598387e+00
-            q0( 11, 2) = 1.387000e+00
-            n ( 11, 2) =  0
-            k ( 12, 2) =  1.554059e+00
-            q0( 12, 2) = 1.089000e+00
-            n ( 12, 2) =  0
-            k ( 13, 2) =  2.222899e+00
-            q0( 13, 2) = 1.411000e+00
-            n ( 13, 2) =  0
-            k ( 14, 2) =  1.508677e+00
-            q0( 14, 2) = 1.093000e+00
-            n ( 14, 2) =  0
-            k ( 15, 2) =  1.520533e+00
-            q0( 15, 2) = 1.093000e+00
-            n ( 15, 2) =  0
-            k ( 16, 2) =  2.421399e-01
-            q0( 16, 2) = 2.118079e+00
-            n ( 16, 2) =  0
-            k ( 17, 2) =  1.924206e-01
-            q0( 17, 2) = 2.116718e+00
-            n ( 17, 2) =  0
-            k ( 18, 2) =  2.096623e-01
-            q0( 18, 2) = 2.095914e+00
-            n ( 18, 2) =  0
-            k ( 19, 2) =  1.743943e-01
-            q0( 19, 2) = 2.094360e+00
-            n ( 19, 2) =  0
-            k ( 20, 2) =  2.161719e-01
-            q0( 20, 2) = 2.095058e+00
-            n ( 20, 2) =  0
-            k ( 21, 2) =  1.448772e-01
-            q0( 21, 2) = 2.092807e+00
-            n ( 21, 2) =  0
-            k ( 22, 2) =  5.533501e-02
-            q0( 22, 2) = 2.050151e+00
-            n ( 22, 2) =  0
-            k ( 23, 2) =  2.609554e-01
-            q0( 23, 2) = 2.063677e+00
-            n ( 23, 2) =  0
-            k ( 24, 2) =  6.084291e-02
-            q0( 24, 2) = 1.719097e+00
-            n ( 24, 2) =  0
-            k ( 25, 2) =  9.994101e-02
-            q0( 25, 2) = 2.048144e+00
-            n ( 25, 2) =  0
-            k ( 26, 2) =  2.504176e-01
-            q0( 26, 2) = 2.104919e+00
-            n ( 26, 2) =  0
-            k ( 27, 2) =  1.118664e-01
-            q0( 27, 2) = 2.082317e+00
-            n ( 27, 2) =  0
-            k ( 28, 2) =  3.157335e-01
-            q0( 28, 2) = 2.169479e+00
-            n ( 28, 2) =  0
-            k ( 29, 2) =  2.111850e-01
-            q0( 29, 2) = 2.103576e+00
-            n ( 29, 2) =  0
-            k ( 30, 2) =  1.439041e-01
-            q0( 30, 2) = 2.092039e+00
-            n ( 30, 2) =  0
-            k ( 31, 2) =  1.877049e-01
-            q0( 31, 2) = 2.097798e+00
-            n ( 31, 2) =  0
-            k ( 32, 2) =  1.769565e-01
-            q0( 32, 2) = 2.093261e+00
-            n ( 32, 2) =  0
-            k ( 33, 2) =  1.522713e-01
-            q0( 33, 2) = 2.095163e+00
-            n ( 33, 2) =  0
-            k ( 34, 2) =  1.523391e-01
-            q0( 34, 2) = 2.089019e+00
-            n ( 34, 2) =  0
-            k ( 35, 2) =  9.501813e-02
-            q0( 35, 2) = 1.981612e+00
-            n ( 35, 2) =  0
-            k ( 36, 2) =  9.449595e-02
-            q0( 36, 2) = 1.956846e+00
-            n ( 36, 2) =  0
-            k ( 37, 2) =  5.735824e-02
-            q0( 37, 2) = 1.840223e+00
-            n ( 37, 2) =  0
-            k ( 38, 2) =  9.449480e-02
-            q0( 38, 2) = 1.956846e+00
-            n ( 38, 2) =  0
-            k ( 39, 2) =  5.735824e-02
-            q0( 39, 2) = 1.840223e+00
-            n ( 39, 2) =  0
-            k ( 40, 2) =  5.735824e-02
-            q0( 40, 2) = 1.840223e+00
-            n ( 40, 2) =  0
-            k ( 41, 2) =  7.234870e-03
-            q0( 41, 2) = 0.000000e+00
-            n ( 41, 2) =  2
-            k ( 42, 2) =  3.086217e-03
-            q0( 42, 2) = 0.000000e+00
-            n ( 42, 2) =  2
-            k ( 43, 2) =  2.389716e-03
-            q0( 43, 2) = 0.000000e+00
-            n ( 43, 2) =  2
-            k ( 44, 2) =  7.655210e-03
-            q0( 44, 2) = 0.000000e+00
-            n ( 44, 2) =  2
-            k ( 45, 2) =  1.248072e-02
-            q0( 45, 2) = 0.000000e+00
-            n ( 45, 2) =  2
-            k ( 46, 2) =  9.453230e-03
-            q0( 46, 2) = 0.000000e+00
-            n ( 46, 2) =  2
-            k ( 47, 2) =  3.242337e-04
-            q0( 47, 2) = 0.000000e+00
-            n ( 47, 2) =  2
-            k ( 48, 2) =  7.212680e-03
-            q0( 48, 2) = 0.000000e+00
-            n ( 48, 2) =  2
-            k ( 49, 2) =  9.569813e-03
-            q0( 49, 2) = 0.000000e+00
-            n ( 49, 2) =  2
-            k ( 50, 2) =  1.464638e-02
-            q0( 50, 2) = 0.000000e+00
-            n ( 50, 2) =  2
-            k ( 51, 2) =  1.847392e-02
-            q0( 51, 2) = 0.000000e+00
-            n ( 51, 2) =  2
-            k ( 52, 2) =  1.679505e-02
-            q0( 52, 2) = 0.000000e+00
-            n ( 52, 2) =  2
-            k ( 53, 2) =  3.251311e-03
-            q0( 53, 2) = 1.047198e+00
-            n ( 53, 2) =  3
-            k ( 54, 2) =  3.251267e-03
-            q0( 54, 2) = 1.047198e+00
-            n ( 54, 2) =  3
-            k ( 55, 2) =  3.720008e-03
-            q0( 55, 2) = 1.047198e+00
-            n ( 55, 2) =  3
-            k ( 56, 2) =  6.190699e-03
-            q0( 56, 2) = 0.000000e+00
-            n ( 56, 2) =  2
-            k ( 57, 2) =  8.298659e-03
-            q0( 57, 2) = 0.000000e+00
-            n ( 57, 2) =  2
-            k ( 58, 2) = -2.921170e-19
-            q0( 58, 2) = 0.000000e+00
-            n ( 58, 2) =  2
-            k ( 59, 2) =  9.439310e-03
-            q0( 59, 2) = 0.000000e+00
-            n ( 59, 2) =  2
-            k ( 60, 2) =  1.437363e-02
-            q0( 60, 2) = 0.000000e+00
-            n ( 60, 2) =  2
-            k ( 61, 2) =  1.364788e-02
-            q0( 61, 2) = 0.000000e+00
-            n ( 61, 2) =  2
-            k ( 62, 2) =  3.645499e-03
-            q0( 62, 2) = 0.000000e+00
-            n ( 62, 2) =  2
-            k ( 63, 2) =  2.821118e-03
-            q0( 63, 2) = 0.000000e+00
-            n ( 63, 2) =  2
-            k ( 64, 2) =  7.117884e-03
-            q0( 64, 2) = 0.000000e+00
-            n ( 64, 2) =  2
-            k ( 65, 2) = -5.278213e-20
-            q0( 65, 2) = 0.000000e+00
-            n ( 65, 2) =  2
-            k ( 66, 2) =  1.551261e-03
-            q0( 66, 2) = 0.000000e+00
-            n ( 66, 2) =  2
-            k ( 67, 2) =  7.582990e-03
-            q0( 67, 2) = 0.000000e+00
-            n ( 67, 2) =  2
-            k ( 68, 2) =  1.477277e-01
-            q0( 68, 2) = 0.000000e+00
-            n ( 68, 2) =  0
-            k ( 69, 2) =  1.866521e-01
-            q0( 69, 2) = 0.000000e+00
-            n ( 69, 2) =  0
-            k ( 70, 2) =  2.170837e-01
-            q0( 70, 2) = 0.000000e+00
-            n ( 70, 2) =  0
-            k ( 71, 2) =  9.500137e-02
-            q0( 71, 2) = 0.000000e+00
-            n ( 71, 2) =  0
-            k ( 72, 2) =  1.383067e-01
-            q0( 72, 2) = 0.000000e+00
-            n ( 72, 2) =  0
-            k ( 73, 2) =  1.087188e-01
-            q0( 73, 2) = 0.000000e+00
-            n ( 73, 2) =  0
+            k (  1,2) =  2.597274e+00
+            q0(  1,2) = 1.385000e+00
+            n (  1,2) =  0
+            k (  2,2) =  2.217378e+00
+            q0(  2,2) = 1.410000e+00
+            n (  2,2) =  0
+            k (  3,2) =  1.513056e+00
+            q0(  3,2) = 1.093000e+00
+            n (  3,2) =  0
+            k (  4,2) =  1.978833e+00
+            q0(  4,2) = 1.440000e+00
+            n (  4,2) =  0
+            k (  5,2) =  1.535447e+00
+            q0(  5,2) = 1.092000e+00
+            n (  5,2) =  0
+            k (  6,2) =  1.406883e+00
+            q0(  6,2) = 1.101000e+00
+            n (  6,2) =  0
+            k (  7,2) =  1.406879e+00
+            q0(  7,2) = 1.101000e+00
+            n (  7,2) =  0
+            k (  8,2) =  1.447261e+00
+            q0(  8,2) = 1.097000e+00
+            n (  8,2) =  0
+            k (  9,2) =  1.896865e+00
+            q0(  9,2) = 1.440000e+00
+            n (  9,2) =  0
+            k ( 10,2) =  2.365632e+00
+            q0( 10,2) = 1.700000e+00
+            n ( 10,2) =  0
+            k ( 11,2) =  2.598387e+00
+            q0( 11,2) = 1.387000e+00
+            n ( 11,2) =  0
+            k ( 12,2) =  1.554059e+00
+            q0( 12,2) = 1.089000e+00
+            n ( 12,2) =  0
+            k ( 13,2) =  2.222899e+00
+            q0( 13,2) = 1.411000e+00
+            n ( 13,2) =  0
+            k ( 14,2) =  1.508677e+00
+            q0( 14,2) = 1.093000e+00
+            n ( 14,2) =  0
+            k ( 15,2) =  1.520533e+00
+            q0( 15,2) = 1.093000e+00
+            n ( 15,2) =  0
+            k ( 16,2) =  2.421399e-01
+            q0( 16,2) = 2.118079e+00
+            n ( 16,2) =  0
+            k ( 17,2) =  1.924206e-01
+            q0( 17,2) = 2.116718e+00
+            n ( 17,2) =  0
+            k ( 18,2) =  2.096623e-01
+            q0( 18,2) = 2.095914e+00
+            n ( 18,2) =  0
+            k ( 19,2) =  1.743943e-01
+            q0( 19,2) = 2.094360e+00
+            n ( 19,2) =  0
+            k ( 20,2) =  2.161719e-01
+            q0( 20,2) = 2.095058e+00
+            n ( 20,2) =  0
+            k ( 21,2) =  1.448772e-01
+            q0( 21,2) = 2.092807e+00
+            n ( 21,2) =  0
+            k ( 22,2) =  5.533501e-02
+            q0( 22,2) = 2.050151e+00
+            n ( 22,2) =  0
+            k ( 23,2) =  2.609554e-01
+            q0( 23,2) = 2.063677e+00
+            n ( 23,2) =  0
+            k ( 24,2) =  6.084291e-02
+            q0( 24,2) = 1.719097e+00
+            n ( 24,2) =  0
+            k ( 25,2) =  9.994101e-02
+            q0( 25,2) = 2.048144e+00
+            n ( 25,2) =  0
+            k ( 26,2) =  2.504176e-01
+            q0( 26,2) = 2.104919e+00
+            n ( 26,2) =  0
+            k ( 27,2) =  1.118664e-01
+            q0( 27,2) = 2.082317e+00
+            n ( 27,2) =  0
+            k ( 28,2) =  3.157335e-01
+            q0( 28,2) = 2.169479e+00
+            n ( 28,2) =  0
+            k ( 29,2) =  2.111850e-01
+            q0( 29,2) = 2.103576e+00
+            n ( 29,2) =  0
+            k ( 30,2) =  1.439041e-01
+            q0( 30,2) = 2.092039e+00
+            n ( 30,2) =  0
+            k ( 31,2) =  1.877049e-01
+            q0( 31,2) = 2.097798e+00
+            n ( 31,2) =  0
+            k ( 32,2) =  1.769565e-01
+            q0( 32,2) = 2.093261e+00
+            n ( 32,2) =  0
+            k ( 33,2) =  1.522713e-01
+            q0( 33,2) = 2.095163e+00
+            n ( 33,2) =  0
+            k ( 34,2) =  1.523391e-01
+            q0( 34,2) = 2.089019e+00
+            n ( 34,2) =  0
+            k ( 35,2) =  9.501813e-02
+            q0( 35,2) = 1.981612e+00
+            n ( 35,2) =  0
+            k ( 36,2) =  9.449595e-02
+            q0( 36,2) = 1.956846e+00
+            n ( 36,2) =  0
+            k ( 37,2) =  5.735824e-02
+            q0( 37,2) = 1.840223e+00
+            n ( 37,2) =  0
+            k ( 38,2) =  9.449480e-02
+            q0( 38,2) = 1.956846e+00
+            n ( 38,2) =  0
+            k ( 39,2) =  5.735824e-02
+            q0( 39,2) = 1.840223e+00
+            n ( 39,2) =  0
+            k ( 40,2) =  5.735824e-02
+            q0( 40,2) = 1.840223e+00
+            n ( 40,2) =  0
+            k ( 41,2) =  7.234870e-03
+            q0( 41,2) = 0.000000e+00
+            n ( 41,2) =  2
+            k ( 42,2) =  3.086217e-03
+            q0( 42,2) = 0.000000e+00
+            n ( 42,2) =  2
+            k ( 43,2) =  2.389716e-03
+            q0( 43,2) = 0.000000e+00
+            n ( 43,2) =  2
+            k ( 44,2) =  7.655210e-03
+            q0( 44,2) = 0.000000e+00
+            n ( 44,2) =  2
+            k ( 45,2) =  1.248072e-02
+            q0( 45,2) = 0.000000e+00
+            n ( 45,2) =  2
+            k ( 46,2) =  9.453230e-03
+            q0( 46,2) = 0.000000e+00
+            n ( 46,2) =  2
+            k ( 47,2) =  3.242337e-04
+            q0( 47,2) = 0.000000e+00
+            n ( 47,2) =  2
+            k ( 48,2) =  7.212680e-03
+            q0( 48,2) = 0.000000e+00
+            n ( 48,2) =  2
+            k ( 49,2) =  9.569813e-03
+            q0( 49,2) = 0.000000e+00
+            n ( 49,2) =  2
+            k ( 50,2) =  1.464638e-02
+            q0( 50,2) = 0.000000e+00
+            n ( 50,2) =  2
+            k ( 51,2) =  1.847392e-02
+            q0( 51,2) = 0.000000e+00
+            n ( 51,2) =  2
+            k ( 52,2) =  1.679505e-02
+            q0( 52,2) = 0.000000e+00
+            n ( 52,2) =  2
+            k ( 53,2) =  3.251311e-03
+            q0( 53,2) = 1.047198e+00
+            n ( 53,2) =  3
+            k ( 54,2) =  3.251267e-03
+            q0( 54,2) = 1.047198e+00
+            n ( 54,2) =  3
+            k ( 55,2) =  3.720008e-03
+            q0( 55,2) = 1.047198e+00
+            n ( 55,2) =  3
+            k ( 56,2) =  6.190699e-03
+            q0( 56,2) = 0.000000e+00
+            n ( 56,2) =  2
+            k ( 57,2) =  8.298659e-03
+            q0( 57,2) = 0.000000e+00
+            n ( 57,2) =  2
+            k ( 58,2) = -2.921170e-19
+            q0( 58,2) = 0.000000e+00
+            n ( 58,2) =  2
+            k ( 59,2) =  9.439310e-03
+            q0( 59,2) = 0.000000e+00
+            n ( 59,2) =  2
+            k ( 60,2) =  1.437363e-02
+            q0( 60,2) = 0.000000e+00
+            n ( 60,2) =  2
+            k ( 61,2) =  1.364788e-02
+            q0( 61,2) = 0.000000e+00
+            n ( 61,2) =  2
+            k ( 62,2) =  3.645499e-03
+            q0( 62,2) = 0.000000e+00
+            n ( 62,2) =  2
+            k ( 63,2) =  2.821118e-03
+            q0( 63,2) = 0.000000e+00
+            n ( 63,2) =  2
+            k ( 64,2) =  7.117884e-03
+            q0( 64,2) = 0.000000e+00
+            n ( 64,2) =  2
+            k ( 65,2) = -5.278213e-20
+            q0( 65,2) = 0.000000e+00
+            n ( 65,2) =  2
+            k ( 66,2) =  1.551261e-03
+            q0( 66,2) = 0.000000e+00
+            n ( 66,2) =  2
+            k ( 67,2) =  7.582990e-03
+            q0( 67,2) = 0.000000e+00
+            n ( 67,2) =  2
+            k ( 68,2) =  1.477277e-01
+            q0( 68,2) = 0.000000e+00
+            n ( 68,2) =  0
+            k ( 69,2) =  1.866521e-01
+            q0( 69,2) = 0.000000e+00
+            n ( 69,2) =  0
+            k ( 70,2) =  2.170837e-01
+            q0( 70,2) = 0.000000e+00
+            n ( 70,2) =  0
+            k ( 71,2) =  9.500137e-02
+            q0( 71,2) = 0.000000e+00
+            n ( 71,2) =  0
+            k ( 72,2) =  1.383067e-01
+            q0( 72,2) = 0.000000e+00
+            n ( 72,2) =  0
+            k ( 73,2) =  1.087188e-01
+            q0( 73,2) = 0.000000e+00
+            n ( 73,2) =  0
             !--- END generated by 'gen_FFparam.py'
 
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 3)
-            k (  1, 3) =  2.632633e+00
-            q0(  1, 3) = 1.386000e+00
-            n (  1, 3) =  0
-            k (  2, 3) =  2.214016e+00
-            q0(  2, 3) = 1.413000e+00
-            n (  2, 3) =  0
-            k (  3, 3) =  1.510205e+00
-            q0(  3, 3) = 1.093000e+00
-            n (  3, 3) =  0
-            k (  4, 3) =  2.053144e+00
-            q0(  4, 3) = 1.437000e+00
-            n (  4, 3) =  0
-            k (  5, 3) =  1.517029e+00
-            q0(  5, 3) = 1.093000e+00
-            n (  5, 3) =  0
-            k (  6, 3) =  1.557611e+00
-            q0(  6, 3) = 1.089000e+00
-            n (  6, 3) =  0
-            k (  7, 3) =  1.557610e+00
-            q0(  7, 3) = 1.089000e+00
-            n (  7, 3) =  0
-            k (  8, 3) =  1.529096e+00
-            q0(  8, 3) = 1.088000e+00
-            n (  8, 3) =  0
-            k (  9, 3) =  2.155382e+00
-            q0(  9, 3) = 1.437000e+00
-            n (  9, 3) =  0
-            k ( 10, 3) =  2.878127e+00
-            q0( 10, 3) = 1.703000e+00
-            n ( 10, 3) =  0
-            k ( 11, 3) =  2.586510e+00
-            q0( 11, 3) = 1.388000e+00
-            n ( 11, 3) =  0
-            k ( 12, 3) =  1.529718e+00
-            q0( 12, 3) = 1.091000e+00
-            n ( 12, 3) =  0
-            k ( 13, 3) =  2.227572e+00
-            q0( 13, 3) = 1.411000e+00
-            n ( 13, 3) =  0
-            k ( 14, 3) =  1.509522e+00
-            q0( 14, 3) = 1.093000e+00
-            n ( 14, 3) =  0
-            k ( 15, 3) =  1.518047e+00
-            q0( 15, 3) = 1.093000e+00
-            n ( 15, 3) =  0
-            k ( 16, 3) =  2.867249e-01
-            q0( 16, 3) = 2.113698e+00
-            n ( 16, 3) =  0
-            k ( 17, 3) =  1.710422e-01
-            q0( 17, 3) = 2.113698e+00
-            n ( 17, 3) =  0
-            k ( 18, 3) =  2.073553e-01
-            q0( 18, 3) = 2.099910e+00
-            n ( 18, 3) =  0
-            k ( 19, 3) =  1.752993e-01
-            q0( 19, 3) = 2.091777e+00
-            n ( 19, 3) =  0
-            k ( 20, 3) =  2.160439e-01
-            q0( 20, 3) = 2.094133e+00
-            n ( 20, 3) =  0
-            k ( 21, 3) =  1.501977e-01
-            q0( 21, 3) = 2.100102e+00
-            n ( 21, 3) =  0
-            k ( 22, 3) =  4.848717e-02
-            q0( 22, 3) = 2.052123e+00
-            n ( 22, 3) =  0
-            k ( 23, 3) =  2.425299e-01
-            q0( 23, 3) = 2.108742e+00
-            n ( 23, 3) =  0
-            k ( 24, 3) =  0.139860e+00 !<- modified to that determined by ab initio
-            q0( 24, 3) = 1.927786e+00
-            n ( 24, 3) =  0
-            k ( 25, 3) =  1.585421e-01
-            q0( 25, 3) = 2.056242e+00
-            n ( 25, 3) =  0
-            k ( 26, 3) =  2.382976e-01
-            q0( 26, 3) = 2.111639e+00
-            n ( 26, 3) =  0
-            k ( 27, 3) =  1.265356e-01
-            q0( 27, 3) = 2.058825e+00
-            n ( 27, 3) =  0
-            k ( 28, 3) =  2.976711e-01
-            q0( 28, 3) = 2.123350e+00
-            n ( 28, 3) =  0
-            k ( 29, 3) =  2.244366e-01
-            q0( 29, 3) = 2.096018e+00
-            n ( 29, 3) =  0
-            k ( 30, 3) =  1.526316e-01
-            q0( 30, 3) = 2.097659e+00
-            n ( 30, 3) =  0
-            k ( 31, 3) =  1.725318e-01
-            q0( 31, 3) = 2.113035e+00
-            n ( 31, 3) =  0
-            k ( 32, 3) =  1.714729e-01
-            q0( 32, 3) = 2.092039e+00
-            n ( 32, 3) =  0
-            k ( 33, 3) =  1.499944e-01
-            q0( 33, 3) = 2.089369e+00
-            n ( 33, 3) =  0
-            k ( 34, 3) =  1.491080e-01
-            q0( 34, 3) = 2.089735e+00
-            n ( 34, 3) =  0
-            k ( 35, 3) =  1.646620e-02
-            q0( 35, 3) = 2.099963e+00
-            n ( 35, 3) =  0
-            k ( 36, 3) =  9.248795e-02
-            q0( 36, 3) = 2.090486e+00
-            n ( 36, 3) =  0
-            k ( 37, 3) =  1.282602e-01
-            q0( 37, 3) = 1.656073e+00
-            n ( 37, 3) =  0
-            k ( 38, 3) =  9.248757e-02
-            q0( 38, 3) = 2.090486e+00
-            n ( 38, 3) =  0
-            k ( 39, 3) =  1.282598e-01
-            q0( 39, 3) = 1.656073e+00
-            n ( 39, 3) =  0
-            k ( 40, 3) =  1.282598e-01
-            q0( 40, 3) = 1.656073e+00
-            n ( 40, 3) =  0
-            k ( 41, 3) =  1.904720e-16
-            q0( 41, 3) = 0.000000e+00
-            n ( 41, 3) =  2
-            k ( 42, 3) =  7.617600e-02
-            q0( 42, 3) = 0.000000e+00
-            n ( 42, 3) =  2
-            k ( 43, 3) =  2.797215e-17
-            q0( 43, 3) = 0.000000e+00
-            n ( 43, 3) =  2
-            k ( 44, 3) =  1.430453e-02
-            q0( 44, 3) = 0.000000e+00
-            n ( 44, 3) =  2
-            k ( 45, 3) =  2.907223e-02
-            q0( 45, 3) = 0.000000e+00
-            n ( 45, 3) =  2
-            k ( 46, 3) =  6.191780e-02
-            q0( 46, 3) = 0.000000e+00
-            n ( 46, 3) =  2
-            k ( 47, 3) = -1.563365e-17
-            q0( 47, 3) = 0.000000e+00
-            n ( 47, 3) =  2
-            k ( 48, 3) =  7.617600e-02
-            q0( 48, 3) = 0.000000e+00
-            n ( 48, 3) =  2
-            k ( 49, 3) =  1.896072e-02
-            q0( 49, 3) = 0.000000e+00
-            n ( 49, 3) =  2
-            k ( 50, 3) = -4.746710e-17
-            q0( 50, 3) = 0.000000e+00
-            n ( 50, 3) =  2
-            k ( 51, 3) =  2.885312e-02
-            q0( 51, 3) = 0.000000e+00
-            n ( 51, 3) =  2
-            k ( 52, 3) =  5.852025e-17
-            q0( 52, 3) = 0.000000e+00
-            n ( 52, 3) =  2
-            k ( 53, 3) =  2.914115e-02
-            q0( 53, 3) = 1.047198e+00
-            n ( 53, 3) =  3
-            k ( 54, 3) =  2.914115e-02
-            q0( 54, 3) = 1.047198e+00
-            n ( 54, 3) =  3
-            k ( 55, 3) =  2.805188e-17
-            q0( 55, 3) = 1.047198e+00
-            n ( 55, 3) =  3
-            k ( 56, 3) =  7.617600e-02
-            q0( 56, 3) = 0.000000e+00
-            n ( 56, 3) =  2
-            k ( 57, 3) =  1.363430e-03
-            q0( 57, 3) = 0.000000e+00
-            n ( 57, 3) =  2
-            k ( 58, 3) =  4.243584e-17
-            q0( 58, 3) = 0.000000e+00
-            n ( 58, 3) =  2
-            k ( 59, 3) =  1.017938e-02
-            q0( 59, 3) = 0.000000e+00
-            n ( 59, 3) =  2
-            k ( 60, 3) =  9.139687e-17
-            q0( 60, 3) = 0.000000e+00
-            n ( 60, 3) =  2
-            k ( 61, 3) =  5.799873e-18
-            q0( 61, 3) = 0.000000e+00
-            n ( 61, 3) =  2
-            k ( 62, 3) =  6.645935e-03
-            q0( 62, 3) = 0.000000e+00
-            n ( 62, 3) =  2
-            k ( 63, 3) =  4.455693e-17
-            q0( 63, 3) = 0.000000e+00
-            n ( 63, 3) =  2
-            k ( 64, 3) = -1.003487e-16
-            q0( 64, 3) = 0.000000e+00
-            n ( 64, 3) =  2
-            k ( 65, 3) = -1.053017e-17
-            q0( 65, 3) = 0.000000e+00
-            n ( 65, 3) =  2
-            k ( 66, 3) =  5.604263e-02
-            q0( 66, 3) = 0.000000e+00
-            n ( 66, 3) =  2
-            k ( 67, 3) =  3.804124e-18
-            q0( 67, 3) = 0.000000e+00
-            n ( 67, 3) =  2
-            k ( 68, 3) =  3.921190e-01
-            q0( 68, 3) = 0.000000e+00
-            n ( 68, 3) =  0
-            k ( 69, 3) =  0.000000e+00
-            q0( 69, 3) = 0.000000e+00
-            n ( 69, 3) =  0
-            k ( 70, 3) =  0.000000e+00
-            q0( 70, 3) = 0.000000e+00
-            n ( 70, 3) =  0
-            k ( 71, 3) =  1.006875e-01
-            q0( 71, 3) = 0.000000e+00
-            n ( 71, 3) =  0
-            k ( 72, 3) = -0.000000e+00
-            q0( 72, 3) = 0.000000e+00
-            n ( 72, 3) =  0
-            k ( 73, 3) =  2.298139e-01
-            q0( 73, 3) = 0.000000e+00
-            n ( 73, 3) =  0
+            k (  1,3) =  2.632633e+00
+            q0(  1,3) = 1.386000e+00
+            n (  1,3) =  0
+            k (  2,3) =  2.214016e+00
+            q0(  2,3) = 1.413000e+00
+            n (  2,3) =  0
+            k (  3,3) =  1.510205e+00
+            q0(  3,3) = 1.093000e+00
+            n (  3,3) =  0
+            k (  4,3) =  2.053144e+00
+            q0(  4,3) = 1.437000e+00
+            n (  4,3) =  0
+            k (  5,3) =  1.517029e+00
+            q0(  5,3) = 1.093000e+00
+            n (  5,3) =  0
+            k (  6,3) =  1.557611e+00
+            q0(  6,3) = 1.089000e+00
+            n (  6,3) =  0
+            k (  7,3) =  1.557610e+00
+            q0(  7,3) = 1.089000e+00
+            n (  7,3) =  0
+            k (  8,3) =  1.529096e+00
+            q0(  8,3) = 1.088000e+00
+            n (  8,3) =  0
+            k (  9,3) =  2.155382e+00
+            q0(  9,3) = 1.437000e+00
+            n (  9,3) =  0
+            k ( 10,3) =  2.878127e+00
+            q0( 10,3) = 1.703000e+00
+            n ( 10,3) =  0
+            k ( 11,3) =  2.586510e+00
+            q0( 11,3) = 1.388000e+00
+            n ( 11,3) =  0
+            k ( 12,3) =  1.529718e+00
+            q0( 12,3) = 1.091000e+00
+            n ( 12,3) =  0
+            k ( 13,3) =  2.227572e+00
+            q0( 13,3) = 1.411000e+00
+            n ( 13,3) =  0
+            k ( 14,3) =  1.509522e+00
+            q0( 14,3) = 1.093000e+00
+            n ( 14,3) =  0
+            k ( 15,3) =  1.518047e+00
+            q0( 15,3) = 1.093000e+00
+            n ( 15,3) =  0
+            k ( 16,3) =  2.867249e-01
+            q0( 16,3) = 2.113698e+00
+            n ( 16,3) =  0
+            k ( 17,3) =  1.710422e-01
+            q0( 17,3) = 2.113698e+00
+            n ( 17,3) =  0
+            k ( 18,3) =  2.073553e-01
+            q0( 18,3) = 2.099910e+00
+            n ( 18,3) =  0
+            k ( 19,3) =  1.752993e-01
+            q0( 19,3) = 2.091777e+00
+            n ( 19,3) =  0
+            k ( 20,3) =  2.160439e-01
+            q0( 20,3) = 2.094133e+00
+            n ( 20,3) =  0
+            k ( 21,3) =  1.501977e-01
+            q0( 21,3) = 2.100102e+00
+            n ( 21,3) =  0
+            k ( 22,3) =  4.848717e-02
+            q0( 22,3) = 2.052123e+00
+            n ( 22,3) =  0
+            k ( 23,3) =  2.425299e-01
+            q0( 23,3) = 2.108742e+00
+            n ( 23,3) =  0
+            k ( 24,3) =  0.139860e+00 !<- modified to that determined by ab initio
+            q0( 24,3) = 1.927786e+00
+            n ( 24,3) =  0
+            k ( 25,3) =  1.585421e-01
+            q0( 25,3) = 2.056242e+00
+            n ( 25,3) =  0
+            k ( 26,3) =  2.382976e-01
+            q0( 26,3) = 2.111639e+00
+            n ( 26,3) =  0
+            k ( 27,3) =  1.265356e-01
+            q0( 27,3) = 2.058825e+00
+            n ( 27,3) =  0
+            k ( 28,3) =  2.976711e-01
+            q0( 28,3) = 2.123350e+00
+            n ( 28,3) =  0
+            k ( 29,3) =  2.244366e-01
+            q0( 29,3) = 2.096018e+00
+            n ( 29,3) =  0
+            k ( 30,3) =  1.526316e-01
+            q0( 30,3) = 2.097659e+00
+            n ( 30,3) =  0
+            k ( 31,3) =  1.725318e-01
+            q0( 31,3) = 2.113035e+00
+            n ( 31,3) =  0
+            k ( 32,3) =  1.714729e-01
+            q0( 32,3) = 2.092039e+00
+            n ( 32,3) =  0
+            k ( 33,3) =  1.499944e-01
+            q0( 33,3) = 2.089369e+00
+            n ( 33,3) =  0
+            k ( 34,3) =  1.491080e-01
+            q0( 34,3) = 2.089735e+00
+            n ( 34,3) =  0
+            k ( 35,3) =  1.646620e-02
+            q0( 35,3) = 2.099963e+00
+            n ( 35,3) =  0
+            k ( 36,3) =  9.248795e-02
+            q0( 36,3) = 2.090486e+00
+            n ( 36,3) =  0
+            k ( 37,3) =  1.282602e-01
+            q0( 37,3) = 1.656073e+00
+            n ( 37,3) =  0
+            k ( 38,3) =  9.248757e-02
+            q0( 38,3) = 2.090486e+00
+            n ( 38,3) =  0
+            k ( 39,3) =  1.282598e-01
+            q0( 39,3) = 1.656073e+00
+            n ( 39,3) =  0
+            k ( 40,3) =  1.282598e-01
+            q0( 40,3) = 1.656073e+00
+            n ( 40,3) =  0
+            k ( 41,3) =  1.904720e-16
+            q0( 41,3) = 0.000000e+00
+            n ( 41,3) =  2
+            k ( 42,3) =  7.617600e-02
+            q0( 42,3) = 0.000000e+00
+            n ( 42,3) =  2
+            k ( 43,3) =  2.797215e-17
+            q0( 43,3) = 0.000000e+00
+            n ( 43,3) =  2
+            k ( 44,3) =  1.430453e-02
+            q0( 44,3) = 0.000000e+00
+            n ( 44,3) =  2
+            k ( 45,3) =  2.907223e-02
+            q0( 45,3) = 0.000000e+00
+            n ( 45,3) =  2
+            k ( 46,3) =  6.191780e-02
+            q0( 46,3) = 0.000000e+00
+            n ( 46,3) =  2
+            k ( 47,3) = -1.563365e-17
+            q0( 47,3) = 0.000000e+00
+            n ( 47,3) =  2
+            k ( 48,3) =  7.617600e-02
+            q0( 48,3) = 0.000000e+00
+            n ( 48,3) =  2
+            k ( 49,3) =  1.896072e-02
+            q0( 49,3) = 0.000000e+00
+            n ( 49,3) =  2
+            k ( 50,3) = -4.746710e-17
+            q0( 50,3) = 0.000000e+00
+            n ( 50,3) =  2
+            k ( 51,3) =  2.885312e-02
+            q0( 51,3) = 0.000000e+00
+            n ( 51,3) =  2
+            k ( 52,3) =  5.852025e-17
+            q0( 52,3) = 0.000000e+00
+            n ( 52,3) =  2
+            k ( 53,3) =  2.914115e-02
+            q0( 53,3) = 1.047198e+00
+            n ( 53,3) =  3
+            k ( 54,3) =  2.914115e-02
+            q0( 54,3) = 1.047198e+00
+            n ( 54,3) =  3
+            k ( 55,3) =  2.805188e-17
+            q0( 55,3) = 1.047198e+00
+            n ( 55,3) =  3
+            k ( 56,3) =  7.617600e-02
+            q0( 56,3) = 0.000000e+00
+            n ( 56,3) =  2
+            k ( 57,3) =  1.363430e-03
+            q0( 57,3) = 0.000000e+00
+            n ( 57,3) =  2
+            k ( 58,3) =  4.243584e-17
+            q0( 58,3) = 0.000000e+00
+            n ( 58,3) =  2
+            k ( 59,3) =  1.017938e-02
+            q0( 59,3) = 0.000000e+00
+            n ( 59,3) =  2
+            k ( 60,3) =  9.139687e-17
+            q0( 60,3) = 0.000000e+00
+            n ( 60,3) =  2
+            k ( 61,3) =  5.799873e-18
+            q0( 61,3) = 0.000000e+00
+            n ( 61,3) =  2
+            k ( 62,3) =  6.645935e-03
+            q0( 62,3) = 0.000000e+00
+            n ( 62,3) =  2
+            k ( 63,3) =  4.455693e-17
+            q0( 63,3) = 0.000000e+00
+            n ( 63,3) =  2
+            k ( 64,3) = -1.003487e-16
+            q0( 64,3) = 0.000000e+00
+            n ( 64,3) =  2
+            k ( 65,3) = -1.053017e-17
+            q0( 65,3) = 0.000000e+00
+            n ( 65,3) =  2
+            k ( 66,3) =  5.604263e-02
+            q0( 66,3) = 0.000000e+00
+            n ( 66,3) =  2
+            k ( 67,3) =  3.804124e-18
+            q0( 67,3) = 0.000000e+00
+            n ( 67,3) =  2
+            k ( 68,3) =  3.921190e-01
+            q0( 68,3) = 0.000000e+00
+            n ( 68,3) =  0
+            k ( 69,3) =  0.000000e+00
+            q0( 69,3) = 0.000000e+00
+            n ( 69,3) =  0
+            k ( 70,3) =  0.000000e+00
+            q0( 70,3) = 0.000000e+00
+            n ( 70,3) =  0
+            k ( 71,3) =  1.006875e-01
+            q0( 71,3) = 0.000000e+00
+            n ( 71,3) =  0
+            k ( 72,3) = -0.000000e+00
+            q0( 72,3) = 0.000000e+00
+            n ( 72,3) =  0
+            k ( 73,3) =  2.298139e-01
+            q0( 73,3) = 0.000000e+00
+            n ( 73,3) =  0
             !--- END generated by 'gen_FFparam.py'
 
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 4)
-            k (  1, 4) =  2.561712e+00
-            q0(  1, 4) = 1.393000e+00
-            n (  1, 4) =  0
-            k (  2, 4) =  2.519063e+00
-            q0(  2, 4) = 1.395000e+00
-            n (  2, 4) =  0
-            k (  3, 4) =  1.548283e+00
-            q0(  3, 4) = 1.090000e+00
-            n (  3, 4) =  0
-            k (  4, 4) =  2.328953e+00
-            q0(  4, 4) = 1.401000e+00
-            n (  4, 4) =  0
-            k (  5, 4) =  1.541133e+00
-            q0(  5, 4) = 1.090000e+00
-            n (  5, 4) =  0
-            k (  6, 4) =  1.545522e+00
-            q0(  6, 4) = 1.086000e+00
-            n (  6, 4) =  0
-            k (  7, 4) =  1.545476e+00
-            q0(  7, 4) = 1.086000e+00
-            n (  7, 4) =  0
-            k (  8, 4) =  1.545476e+00
-            q0(  8, 4) = 1.086000e+00
-            n (  8, 4) =  0
-            k (  9, 4) =  2.330569e+00
-            q0(  9, 4) = 1.401000e+00
-            n (  9, 4) =  0
-            k ( 10, 4) =  2.177974e+00
-            q0( 10, 4) = 1.755000e+00
-            n ( 10, 4) =  0
-            k ( 11, 4) =  2.559662e+00
-            q0( 11, 4) = 1.393000e+00
-            n ( 11, 4) =  0
-            k ( 12, 4) =  1.541109e+00
-            q0( 12, 4) = 1.090000e+00
-            n ( 12, 4) =  0
-            k ( 13, 4) =  2.521272e+00
-            q0( 13, 4) = 1.395000e+00
-            n ( 13, 4) =  0
-            k ( 14, 4) =  1.548297e+00
-            q0( 14, 4) = 1.090000e+00
-            n ( 14, 4) =  0
-            k ( 15, 4) =  1.556223e+00
-            q0( 15, 4) = 1.089000e+00
-            n ( 15, 4) =  0
-            k ( 16, 4) =  2.589180e-01
-            q0( 16, 4) = 2.088583e+00
-            n ( 16, 4) =  0
-            k ( 17, 4) =  1.806598e-01
-            q0( 17, 4) = 2.098881e+00
-            n ( 17, 4) =  0
-            k ( 18, 4) =  2.458881e-01
-            q0( 18, 4) = 2.083190e+00
-            n ( 18, 4) =  0
-            k ( 19, 4) =  1.715335e-01
-            q0( 19, 4) = 2.100137e+00
-            n ( 19, 4) =  0
-            k ( 20, 4) =  2.104061e-01
-            q0( 20, 4) = 2.106752e+00
-            n ( 20, 4) =  0
-            k ( 21, 4) =  1.600991e-01
-            q0( 21, 4) = 2.080310e+00
-            n ( 21, 4) =  0
-            k ( 22, 4) =  1.298786e-01
-            q0( 22, 4) = 2.093470e+00
-            n ( 22, 4) =  0
-            k ( 23, 4) =  2.318169e-01
-            q0( 23, 4) = 2.095338e+00
-            n ( 23, 4) =  0
-            k ( 24, 4) =  1.464541e-01
-            q0( 24, 4) = 2.096140e+00
-            n ( 24, 4) =  0
-            k ( 25, 4) =  2.589207e-01
-            q0( 25, 4) = 2.088653e+00
-            n ( 25, 4) =  0
-            k ( 26, 4) =  1.464529e-01
-            q0( 26, 4) = 2.096228e+00
-            n ( 26, 4) =  0
-            k ( 27, 4) =  2.317472e-01
-            q0( 27, 4) = 2.095320e+00
-            n ( 27, 4) =  0
-            k ( 28, 4) =  2.103737e-01
-            q0( 28, 4) = 2.106700e+00
-            n ( 28, 4) =  0
-            k ( 29, 4) =  1.600774e-01
-            q0( 29, 4) = 2.080171e+00
-            n ( 29, 4) =  0
-            k ( 30, 4) =  1.806697e-01
-            q0( 30, 4) = 2.098776e+00
-            n ( 30, 4) =  0
-            k ( 31, 4) =  1.715727e-01
-            q0( 31, 4) = 2.100294e+00
-            n ( 31, 4) =  0
-            k ( 32, 4) =  1.672383e-01
-            q0( 32, 4) = 2.096577e+00
-            n ( 32, 4) =  0
-            k ( 33, 4) =  1.672661e-01
-            q0( 33, 4) = 2.096716e+00
-            n ( 33, 4) =  0
-            k ( 34, 4) =  1.035906e-01
-            q0( 34, 4) = 2.094517e+00
-            n ( 34, 4) =  0
-            k ( 35, 4) =  1.035906e-01
-            q0( 35, 4) = 2.094517e+00
-            n ( 35, 4) =  0
-            k ( 36, 4) =  1.035906e-01
-            q0( 36, 4) = 2.094517e+00
-            n ( 36, 4) =  0
-            k ( 37, 4) =  7.344867e-03
-            q0( 37, 4) = 0.000000e+00
-            n ( 37, 4) =  2
-            k ( 38, 4) =  1.150083e-02
-            q0( 38, 4) = 0.000000e+00
-            n ( 38, 4) =  2
-            k ( 39, 4) =  1.277474e-02
-            q0( 39, 4) = 0.000000e+00
-            n ( 39, 4) =  2
-            k ( 40, 4) =  1.242807e-02
-            q0( 40, 4) = 0.000000e+00
-            n ( 40, 4) =  2
-            k ( 41, 4) =  1.136981e-02
-            q0( 41, 4) = 0.000000e+00
-            n ( 41, 4) =  2
-            k ( 42, 4) =  1.169830e-02
-            q0( 42, 4) = 0.000000e+00
-            n ( 42, 4) =  2
-            k ( 43, 4) =  8.753866e-03
-            q0( 43, 4) = 0.000000e+00
-            n ( 43, 4) =  2
-            k ( 44, 4) =  9.481992e-03
-            q0( 44, 4) = 0.000000e+00
-            n ( 44, 4) =  2
-            k ( 45, 4) =  1.330871e-02
-            q0( 45, 4) = 0.000000e+00
-            n ( 45, 4) =  2
-            k ( 46, 4) =  1.173337e-02
-            q0( 46, 4) = 0.000000e+00
-            n ( 46, 4) =  2
-            k ( 47, 4) =  1.190960e-02
-            q0( 47, 4) = 0.000000e+00
-            n ( 47, 4) =  2
-            k ( 48, 4) =  1.171697e-02
-            q0( 48, 4) = 0.000000e+00
-            n ( 48, 4) =  2
-            k ( 49, 4) =  9.468767e-03
-            q0( 49, 4) = 0.000000e+00
-            n ( 49, 4) =  2
-            k ( 50, 4) =  1.171277e-02
-            q0( 50, 4) = 0.000000e+00
-            n ( 50, 4) =  2
-            k ( 51, 4) =  1.154456e-02
-            q0( 51, 4) = 0.000000e+00
-            n ( 51, 4) =  2
-            k ( 52, 4) =  1.241307e-02
-            q0( 52, 4) = 0.000000e+00
-            n ( 52, 4) =  2
-            k ( 53, 4) =  1.274807e-02
-            q0( 53, 4) = 0.000000e+00
-            n ( 53, 4) =  2
-            k ( 54, 4) =  1.273423e-02
-            q0( 54, 4) = 0.000000e+00
-            n ( 54, 4) =  2
-            k ( 55, 4) =  5.355534e-03
-            q0( 55, 4) = 0.000000e+00
-            n ( 55, 4) =  2
-            k ( 56, 4) =  5.358725e-03
-            q0( 56, 4) = 0.000000e+00
-            n ( 56, 4) =  2
-            k ( 57, 4) =  5.148179e-03
-            q0( 57, 4) = 0.000000e+00
-            n ( 57, 4) =  2
-            k ( 58, 4) =  3.337459e-03
-            q0( 58, 4) = 0.000000e+00
-            n ( 58, 4) =  2
-            k ( 59, 4) =  3.356269e-03
-            q0( 59, 4) = 0.000000e+00
-            n ( 59, 4) =  2
-            k ( 60, 4) =  5.141157e-03
-            q0( 60, 4) = 0.000000e+00
-            n ( 60, 4) =  2
-            k ( 61, 4) =  1.181836e-01
-            q0( 61, 4) = 0.000000e+00
-            n ( 61, 4) =  0
-            k ( 62, 4) =  9.210745e-02
-            q0( 62, 4) = 0.000000e+00
-            n ( 62, 4) =  0
-            k ( 63, 4) =  1.953495e-01
-            q0( 63, 4) = 0.000000e+00
-            n ( 63, 4) =  0
-            k ( 64, 4) =  1.192638e-01
-            q0( 64, 4) = 0.000000e+00
-            n ( 64, 4) =  0
-            k ( 65, 4) =  1.180206e-01
-            q0( 65, 4) = 0.000000e+00
-            n ( 65, 4) =  0
-            k ( 66, 4) =  1.193255e-01
-            q0( 66, 4) = 0.000000e+00
-            n ( 66, 4) =  0
-            k ( 67, 4) =  4.859191e-02
-            q0( 67, 4) = 0.000000e+00
-            n ( 67, 4) =  0
+            k (  1,4) =  2.561712e+00
+            q0(  1,4) = 1.393000e+00
+            n (  1,4) =  0
+            k (  2,4) =  2.519063e+00
+            q0(  2,4) = 1.395000e+00
+            n (  2,4) =  0
+            k (  3,4) =  1.548283e+00
+            q0(  3,4) = 1.090000e+00
+            n (  3,4) =  0
+            k (  4,4) =  2.328953e+00
+            q0(  4,4) = 1.401000e+00
+            n (  4,4) =  0
+            k (  5,4) =  1.541133e+00
+            q0(  5,4) = 1.090000e+00
+            n (  5,4) =  0
+            k (  6,4) =  1.545522e+00
+            q0(  6,4) = 1.086000e+00
+            n (  6,4) =  0
+            k (  7,4) =  1.545476e+00
+            q0(  7,4) = 1.086000e+00
+            n (  7,4) =  0
+            k (  8,4) =  1.545476e+00
+            q0(  8,4) = 1.086000e+00
+            n (  8,4) =  0
+            k (  9,4) =  2.330569e+00
+            q0(  9,4) = 1.401000e+00
+            n (  9,4) =  0
+            k ( 10,4) =  2.177974e+00
+            q0( 10,4) = 1.755000e+00
+            n ( 10,4) =  0
+            k ( 11,4) =  2.559662e+00
+            q0( 11,4) = 1.393000e+00
+            n ( 11,4) =  0
+            k ( 12,4) =  1.541109e+00
+            q0( 12,4) = 1.090000e+00
+            n ( 12,4) =  0
+            k ( 13,4) =  2.521272e+00
+            q0( 13,4) = 1.395000e+00
+            n ( 13,4) =  0
+            k ( 14,4) =  1.548297e+00
+            q0( 14,4) = 1.090000e+00
+            n ( 14,4) =  0
+            k ( 15,4) =  1.556223e+00
+            q0( 15,4) = 1.089000e+00
+            n ( 15,4) =  0
+            k ( 16,4) =  2.589180e-01
+            q0( 16,4) = 2.088583e+00
+            n ( 16,4) =  0
+            k ( 17,4) =  1.806598e-01
+            q0( 17,4) = 2.098881e+00
+            n ( 17,4) =  0
+            k ( 18,4) =  2.458881e-01
+            q0( 18,4) = 2.083190e+00
+            n ( 18,4) =  0
+            k ( 19,4) =  1.715335e-01
+            q0( 19,4) = 2.100137e+00
+            n ( 19,4) =  0
+            k ( 20,4) =  2.104061e-01
+            q0( 20,4) = 2.106752e+00
+            n ( 20,4) =  0
+            k ( 21,4) =  1.600991e-01
+            q0( 21,4) = 2.080310e+00
+            n ( 21,4) =  0
+            k ( 22,4) =  1.298786e-01
+            q0( 22,4) = 2.093470e+00
+            n ( 22,4) =  0
+            k ( 23,4) =  2.318169e-01
+            q0( 23,4) = 2.095338e+00
+            n ( 23,4) =  0
+            k ( 24,4) =  1.464541e-01
+            q0( 24,4) = 2.096140e+00
+            n ( 24,4) =  0
+            k ( 25,4) =  2.589207e-01
+            q0( 25,4) = 2.088653e+00
+            n ( 25,4) =  0
+            k ( 26,4) =  1.464529e-01
+            q0( 26,4) = 2.096228e+00
+            n ( 26,4) =  0
+            k ( 27,4) =  2.317472e-01
+            q0( 27,4) = 2.095320e+00
+            n ( 27,4) =  0
+            k ( 28,4) =  2.103737e-01
+            q0( 28,4) = 2.106700e+00
+            n ( 28,4) =  0
+            k ( 29,4) =  1.600774e-01
+            q0( 29,4) = 2.080171e+00
+            n ( 29,4) =  0
+            k ( 30,4) =  1.806697e-01
+            q0( 30,4) = 2.098776e+00
+            n ( 30,4) =  0
+            k ( 31,4) =  1.715727e-01
+            q0( 31,4) = 2.100294e+00
+            n ( 31,4) =  0
+            k ( 32,4) =  1.672383e-01
+            q0( 32,4) = 2.096577e+00
+            n ( 32,4) =  0
+            k ( 33,4) =  1.672661e-01
+            q0( 33,4) = 2.096716e+00
+            n ( 33,4) =  0
+            k ( 34,4) =  1.035906e-01
+            q0( 34,4) = 2.094517e+00
+            n ( 34,4) =  0
+            k ( 35,4) =  1.035906e-01
+            q0( 35,4) = 2.094517e+00
+            n ( 35,4) =  0
+            k ( 36,4) =  1.035906e-01
+            q0( 36,4) = 2.094517e+00
+            n ( 36,4) =  0
+            k ( 37,4) =  7.344867e-03
+            q0( 37,4) = 0.000000e+00
+            n ( 37,4) =  2
+            k ( 38,4) =  1.150083e-02
+            q0( 38,4) = 0.000000e+00
+            n ( 38,4) =  2
+            k ( 39,4) =  1.277474e-02
+            q0( 39,4) = 0.000000e+00
+            n ( 39,4) =  2
+            k ( 40,4) =  1.242807e-02
+            q0( 40,4) = 0.000000e+00
+            n ( 40,4) =  2
+            k ( 41,4) =  1.136981e-02
+            q0( 41,4) = 0.000000e+00
+            n ( 41,4) =  2
+            k ( 42,4) =  1.169830e-02
+            q0( 42,4) = 0.000000e+00
+            n ( 42,4) =  2
+            k ( 43,4) =  8.753866e-03
+            q0( 43,4) = 0.000000e+00
+            n ( 43,4) =  2
+            k ( 44,4) =  9.481992e-03
+            q0( 44,4) = 0.000000e+00
+            n ( 44,4) =  2
+            k ( 45,4) =  1.330871e-02
+            q0( 45,4) = 0.000000e+00
+            n ( 45,4) =  2
+            k ( 46,4) =  1.173337e-02
+            q0( 46,4) = 0.000000e+00
+            n ( 46,4) =  2
+            k ( 47,4) =  1.190960e-02
+            q0( 47,4) = 0.000000e+00
+            n ( 47,4) =  2
+            k ( 48,4) =  1.171697e-02
+            q0( 48,4) = 0.000000e+00
+            n ( 48,4) =  2
+            k ( 49,4) =  9.468767e-03
+            q0( 49,4) = 0.000000e+00
+            n ( 49,4) =  2
+            k ( 50,4) =  1.171277e-02
+            q0( 50,4) = 0.000000e+00
+            n ( 50,4) =  2
+            k ( 51,4) =  1.154456e-02
+            q0( 51,4) = 0.000000e+00
+            n ( 51,4) =  2
+            k ( 52,4) =  1.241307e-02
+            q0( 52,4) = 0.000000e+00
+            n ( 52,4) =  2
+            k ( 53,4) =  1.274807e-02
+            q0( 53,4) = 0.000000e+00
+            n ( 53,4) =  2
+            k ( 54,4) =  1.273423e-02
+            q0( 54,4) = 0.000000e+00
+            n ( 54,4) =  2
+            k ( 55,4) =  5.355534e-03
+            q0( 55,4) = 0.000000e+00
+            n ( 55,4) =  2
+            k ( 56,4) =  5.358725e-03
+            q0( 56,4) = 0.000000e+00
+            n ( 56,4) =  2
+            k ( 57,4) =  5.148179e-03
+            q0( 57,4) = 0.000000e+00
+            n ( 57,4) =  2
+            k ( 58,4) =  3.337459e-03
+            q0( 58,4) = 0.000000e+00
+            n ( 58,4) =  2
+            k ( 59,4) =  3.356269e-03
+            q0( 59,4) = 0.000000e+00
+            n ( 59,4) =  2
+            k ( 60,4) =  5.141157e-03
+            q0( 60,4) = 0.000000e+00
+            n ( 60,4) =  2
+            k ( 61,4) =  1.181836e-01
+            q0( 61,4) = 0.000000e+00
+            n ( 61,4) =  0
+            k ( 62,4) =  9.210745e-02
+            q0( 62,4) = 0.000000e+00
+            n ( 62,4) =  0
+            k ( 63,4) =  1.953495e-01
+            q0( 63,4) = 0.000000e+00
+            n ( 63,4) =  0
+            k ( 64,4) =  1.192638e-01
+            q0( 64,4) = 0.000000e+00
+            n ( 64,4) =  0
+            k ( 65,4) =  1.180206e-01
+            q0( 65,4) = 0.000000e+00
+            n ( 65,4) =  0
+            k ( 66,4) =  1.193255e-01
+            q0( 66,4) = 0.000000e+00
+            n ( 66,4) =  0
+            k ( 67,4) =  4.859191e-02
+            q0( 67,4) = 0.000000e+00
+            n ( 67,4) =  0
             !--- END generated by 'gen_FFparam.py'
 
         end select
@@ -4741,342 +4705,342 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         case(12)
             !--- k(K1orK2, iR0, iphi0, iAP)
             !--- BEGIN generated by "python gen_uijparam.py u12-t_param.txt 1"
-            k(:, 1, 1, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 1) = (/-3.761870e-05, 0.000000e+00/)
-            k(:, 1, 3, 1) = (/-1.356040e-04,-2.289310e-06/)
-            k(:, 1, 4, 1) = (/ 2.566430e-04, 0.000000e+00/)
-            k(:, 1, 5, 1) = (/ 2.566430e-04, 0.000000e+00/)
-            k(:, 2, 1, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 2) = (/ 0.000000e+00,-2.506840e-08/)
-            k(:, 1, 2, 2) = (/-8.741780e-06,-2.506840e-07/)
-            k(:, 1, 3, 2) = (/-2.871230e-05, 9.292700e-11/)
-            k(:, 1, 4, 2) = (/-3.277990e-05,-1.629990e-06/)
-            k(:, 1, 5, 2) = (/ 0.000000e+00,-1.629990e-06/)
-            k(:, 2, 1, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 3) = (/ 0.000000e+00, 1.621010e-08/)
-            k(:, 1, 2, 3) = (/ 4.570820e-07, 1.621010e-07/)
-            k(:, 1, 3, 3) = (/ 1.298620e-05, 8.125900e-07/)
-            k(:, 1, 4, 3) = (/-6.459140e-05,-1.069700e-06/)
-            k(:, 1, 5, 3) = (/ 0.000000e+00,-1.069700e-06/)
-            k(:, 2, 1, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 4) = (/ 0.000000e+00, 5.321210e-08/)
-            k(:, 1, 2, 4) = (/-2.436850e-06, 5.321210e-07/)
-            k(:, 1, 3, 4) = (/-3.571280e-05, 1.220330e-06/)
-            k(:, 1, 4, 4) = (/-2.547150e-05, 3.035980e-06/)
-            k(:, 1, 5, 4) = (/-2.547150e-05, 3.035980e-06/)
-            k(:, 2, 1, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 5) = (/-4.219240e-06, 8.579970e-08/)
-            k(:, 1, 2, 5) = (/-4.219240e-05, 8.579970e-07/)
-            k(:, 1, 3, 5) = (/ 8.694530e-05, 1.328920e-07/)
-            k(:, 1, 4, 5) = (/ 2.021970e-04,-3.878100e-06/)
-            k(:, 1, 5, 5) = (/ 2.021970e-04,-3.878100e-06/)
-            k(:, 2, 1, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 6) = (/-1.625200e-07,-4.013710e-08/)
-            k(:, 1, 2, 6) = (/-1.625200e-06,-4.013710e-07/)
-            k(:, 1, 3, 6) = (/ 1.111190e-04,-1.825150e-06/)
-            k(:, 1, 4, 6) = (/ 1.983250e-04, 2.991040e-06/)
-            k(:, 1, 5, 6) = (/ 1.983250e-04, 2.991040e-06/)
-            k(:, 2, 1, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 7) = (/-1.269050e-05, 1.795710e-08/)
-            k(:, 1, 2, 7) = (/-1.269050e-04, 1.795710e-07/)
-            k(:, 1, 3, 7) = (/-1.568250e-04, 1.466680e-06/)
-            k(:, 1, 4, 7) = (/-3.966160e-05, 5.889630e-06/)
-            k(:, 1, 5, 7) = (/ 0.000000e+00, 5.889630e-06/)
-            k(:, 2, 1, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 8) = (/ 1.677950e-06,-1.389780e-08/)
-            k(:, 1, 2, 8) = (/ 1.677950e-05,-1.389780e-07/)
-            k(:, 1, 3, 8) = (/ 1.238040e-06, 8.786340e-07/)
-            k(:, 1, 4, 8) = (/-3.946220e-06,-1.404240e-07/)
-            k(:, 1, 5, 8) = (/-3.946220e-06,-1.404240e-07/)
-            k(:, 2, 1, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 3, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 4, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 5, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1,10) = (/ 1.730000e-04, 6.490000e-04/)
-            k(:, 1, 2,10) = (/ 1.730000e-03, 6.490000e-03/)
-            k(:, 1, 3,10) = (/ 3.920000e-03,-7.108160e-04/)
-            k(:, 1, 4,10) = (/ 5.549190e-04, 2.400000e-03/)
-            k(:, 1, 5,10) = (/ 5.549190e-04, 2.400000e-03/)
-            k(:, 2, 1,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 3,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 4,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 5,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,1)  = (/-3.761870e-05, 0.000000e+00/)
+            k(:,1,3,1)  = (/-1.356040e-04, -2.289310e-06/)
+            k(:,1,4,1)  = (/ 2.566430e-04, 0.000000e+00/)
+            k(:,1,5,1)  = (/ 2.566430e-04, 0.000000e+00/)
+            k(:,2,1,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,2)  = (/ 0.000000e+00, -2.506840e-08/)
+            k(:,1,2,2)  = (/-8.741780e-06, -2.506840e-07/)
+            k(:,1,3,2)  = (/-2.871230e-05, 9.292700e-11/)
+            k(:,1,4,2)  = (/-3.277990e-05, -1.629990e-06/)
+            k(:,1,5,2)  = (/ 0.000000e+00, -1.629990e-06/)
+            k(:,2,1,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,3)  = (/ 0.000000e+00, 1.621010e-08/)
+            k(:,1,2,3)  = (/ 4.570820e-07, 1.621010e-07/)
+            k(:,1,3,3)  = (/ 1.298620e-05, 8.125900e-07/)
+            k(:,1,4,3)  = (/-6.459140e-05, -1.069700e-06/)
+            k(:,1,5,3)  = (/ 0.000000e+00, -1.069700e-06/)
+            k(:,2,1,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,4)  = (/ 0.000000e+00, 5.321210e-08/)
+            k(:,1,2,4)  = (/-2.436850e-06, 5.321210e-07/)
+            k(:,1,3,4)  = (/-3.571280e-05, 1.220330e-06/)
+            k(:,1,4,4)  = (/-2.547150e-05, 3.035980e-06/)
+            k(:,1,5,4)  = (/-2.547150e-05, 3.035980e-06/)
+            k(:,2,1,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,5)  = (/-4.219240e-06, 8.579970e-08/)
+            k(:,1,2,5)  = (/-4.219240e-05, 8.579970e-07/)
+            k(:,1,3,5)  = (/ 8.694530e-05, 1.328920e-07/)
+            k(:,1,4,5)  = (/ 2.021970e-04, -3.878100e-06/)
+            k(:,1,5,5)  = (/ 2.021970e-04, -3.878100e-06/)
+            k(:,2,1,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,6)  = (/-1.625200e-07, -4.013710e-08/)
+            k(:,1,2,6)  = (/-1.625200e-06, -4.013710e-07/)
+            k(:,1,3,6)  = (/ 1.111190e-04, -1.825150e-06/)
+            k(:,1,4,6)  = (/ 1.983250e-04, 2.991040e-06/)
+            k(:,1,5,6)  = (/ 1.983250e-04, 2.991040e-06/)
+            k(:,2,1,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,7)  = (/-1.269050e-05, 1.795710e-08/)
+            k(:,1,2,7)  = (/-1.269050e-04, 1.795710e-07/)
+            k(:,1,3,7)  = (/-1.568250e-04, 1.466680e-06/)
+            k(:,1,4,7)  = (/-3.966160e-05, 5.889630e-06/)
+            k(:,1,5,7)  = (/ 0.000000e+00, 5.889630e-06/)
+            k(:,2,1,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,8)  = (/ 1.677950e-06, -1.389780e-08/)
+            k(:,1,2,8)  = (/ 1.677950e-05, -1.389780e-07/)
+            k(:,1,3,8)  = (/ 1.238040e-06, 8.786340e-07/)
+            k(:,1,4,8)  = (/-3.946220e-06, -1.404240e-07/)
+            k(:,1,5,8)  = (/-3.946220e-06, -1.404240e-07/)
+            k(:,2,1,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,3,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,4,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,5,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,10) = (/ 1.730000e-04, 6.490000e-04/)
+            k(:,1,2,10) = (/ 1.730000e-03, 6.490000e-03/)
+            k(:,1,3,10) = (/ 3.920000e-03, -7.108160e-04/)
+            k(:,1,4,10) = (/ 5.549190e-04, 2.400000e-03/)
+            k(:,1,5,10) = (/ 5.549190e-04, 2.400000e-03/)
+            k(:,2,1,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,3,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,4,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,5,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,11) = (/ 0.000000e+00, 0.000000e+00/)
             !--- END generated by "python gen_uijparam.py u12-t_param.txt 1"
         case(13)
             !--- BEGIN generated by "python gen_uijparam.py u13-t_param.txt 1"
-            k(:, 1, 1, 1) = (/ 1.108530e-05, 0.000000e+00/)
-            k(:, 1, 2, 1) = (/ 1.108530e-04, 5.132520e-06/)
-            k(:, 1, 3, 1) = (/ 1.043710e-04, 1.929240e-05/)
-            k(:, 1, 4, 1) = (/ 1.318670e-04,-2.090110e-06/)
-            k(:, 1, 5, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1, 1) = (/-6.587610e-07, 0.000000e+00/)
-            k(:, 2, 2, 1) = (/-6.587610e-06,-2.093880e-07/)
-            k(:, 2, 3, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 2) = (/ 6.782220e-05, 0.000000e+00/)
-            k(:, 1, 2, 2) = (/ 6.782220e-04, 1.740420e-06/)
-            k(:, 1, 3, 2) = (/ 3.819440e-04, 7.941420e-06/)
-            k(:, 1, 4, 2) = (/-2.734530e-04, 9.269190e-06/)
-            k(:, 1, 5, 2) = (/-2.734530e-04, 0.000000e+00/)
-            k(:, 2, 1, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 3) = (/-1.873890e-06, 0.000000e+00/)
-            k(:, 1, 2, 3) = (/-1.873890e-05, 1.607880e-07/)
-            k(:, 1, 3, 3) = (/-3.970050e-05, 9.590160e-07/)
-            k(:, 1, 4, 3) = (/-2.175030e-06, 1.002970e-06/)
-            k(:, 1, 5, 3) = (/-2.175030e-06, 0.000000e+00/)
-            k(:, 2, 1, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 4) = (/ 1.110960e-05, 0.000000e+00/)
-            k(:, 1, 2, 4) = (/ 1.110960e-04, 1.227640e-07/)
-            k(:, 1, 3, 4) = (/ 4.603570e-05, 1.433790e-06/)
-            k(:, 1, 4, 4) = (/-7.701760e-05, 2.118810e-06/)
-            k(:, 1, 5, 4) = (/-7.701760e-05, 2.118810e-06/)
-            k(:, 2, 1, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 5) = (/-2.006590e-05, 2.537640e-07/)
-            k(:, 1, 3, 5) = (/-3.765110e-05, 3.973740e-07/)
-            k(:, 1, 4, 5) = (/-1.512450e-05, 1.334030e-06/)
-            k(:, 1, 5, 5) = (/-1.512450e-05, 1.334030e-06/)
-            k(:, 2, 1, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 6) = (/ 6.109150e-06, 4.133380e-08/)
-            k(:, 1, 3, 6) = (/-2.168970e-07, 8.695480e-07/)
-            k(:, 1, 4, 6) = (/ 6.900410e-05, 2.749200e-06/)
-            k(:, 1, 5, 6) = (/ 6.900410e-05, 2.749200e-06/)
-            k(:, 2, 1, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 7) = (/-2.082470e-05, 7.975570e-07/)
-            k(:, 1, 3, 7) = (/-2.122660e-05, 2.897200e-06/)
-            k(:, 1, 4, 7) = (/-2.704370e-06, 7.528350e-06/)
-            k(:, 1, 5, 7) = (/-2.704370e-06, 0.000000e+00/)
-            k(:, 2, 1, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 8) = (/-4.555340e-05, 5.356330e-07/)
-            k(:, 1, 3, 8) = (/-4.013790e-05, 3.255770e-06/)
-            k(:, 1, 4, 8) = (/ 9.978290e-05, 2.754410e-06/)
-            k(:, 1, 5, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 3, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 4, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 5, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1, 9) = (/-7.491630e-06, 0.000000e+00/)
-            k(:, 2, 2, 9) = (/-7.491630e-05,-4.316920e-08/)
-            k(:, 2, 3, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2,10) = (/ 5.130000e-03, 1.485000e-02/)
-            k(:, 1, 3,10) = (/ 1.480000e-03, 4.802000e-02/)
-            k(:, 1, 4,10) = (/-2.045000e-02, 2.725000e-02/)
-            k(:, 1, 5,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 3,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 4,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 5,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1,11) = (/-5.007750e-06, 0.000000e+00/)
-            k(:, 2, 2,11) = (/-5.007750e-05,-1.521600e-07/)
-            k(:, 2, 3,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,1)  = (/ 1.108530e-05, 0.000000e+00/)
+            k(:,1,2,1)  = (/ 1.108530e-04, 5.132520e-06/)
+            k(:,1,3,1)  = (/ 1.043710e-04, 1.929240e-05/)
+            k(:,1,4,1)  = (/ 1.318670e-04, -2.090110e-06/)
+            k(:,1,5,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,1)  = (/-6.587610e-07, 0.000000e+00/)
+            k(:,2,2,1)  = (/-6.587610e-06, -2.093880e-07/)
+            k(:,2,3,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,2)  = (/ 6.782220e-05, 0.000000e+00/)
+            k(:,1,2,2)  = (/ 6.782220e-04, 1.740420e-06/)
+            k(:,1,3,2)  = (/ 3.819440e-04, 7.941420e-06/)
+            k(:,1,4,2)  = (/-2.734530e-04, 9.269190e-06/)
+            k(:,1,5,2)  = (/-2.734530e-04, 0.000000e+00/)
+            k(:,2,1,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,3)  = (/-1.873890e-06, 0.000000e+00/)
+            k(:,1,2,3)  = (/-1.873890e-05, 1.607880e-07/)
+            k(:,1,3,3)  = (/-3.970050e-05, 9.590160e-07/)
+            k(:,1,4,3)  = (/-2.175030e-06, 1.002970e-06/)
+            k(:,1,5,3)  = (/-2.175030e-06, 0.000000e+00/)
+            k(:,2,1,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,4)  = (/ 1.110960e-05, 0.000000e+00/)
+            k(:,1,2,4)  = (/ 1.110960e-04, 1.227640e-07/)
+            k(:,1,3,4)  = (/ 4.603570e-05, 1.433790e-06/)
+            k(:,1,4,4)  = (/-7.701760e-05, 2.118810e-06/)
+            k(:,1,5,4)  = (/-7.701760e-05, 2.118810e-06/)
+            k(:,2,1,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,5)  = (/-2.006590e-05, 2.537640e-07/)
+            k(:,1,3,5)  = (/-3.765110e-05, 3.973740e-07/)
+            k(:,1,4,5)  = (/-1.512450e-05, 1.334030e-06/)
+            k(:,1,5,5)  = (/-1.512450e-05, 1.334030e-06/)
+            k(:,2,1,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,6)  = (/ 6.109150e-06, 4.133380e-08/)
+            k(:,1,3,6)  = (/-2.168970e-07, 8.695480e-07/)
+            k(:,1,4,6)  = (/ 6.900410e-05, 2.749200e-06/)
+            k(:,1,5,6)  = (/ 6.900410e-05, 2.749200e-06/)
+            k(:,2,1,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,7)  = (/-2.082470e-05, 7.975570e-07/)
+            k(:,1,3,7)  = (/-2.122660e-05, 2.897200e-06/)
+            k(:,1,4,7)  = (/-2.704370e-06, 7.528350e-06/)
+            k(:,1,5,7)  = (/-2.704370e-06, 0.000000e+00/)
+            k(:,2,1,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,8)  = (/-4.555340e-05, 5.356330e-07/)
+            k(:,1,3,8)  = (/-4.013790e-05, 3.255770e-06/)
+            k(:,1,4,8)  = (/ 9.978290e-05, 2.754410e-06/)
+            k(:,1,5,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,3,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,4,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,5,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,9)  = (/-7.491630e-06, 0.000000e+00/)
+            k(:,2,2,9)  = (/-7.491630e-05, -4.316920e-08/)
+            k(:,2,3,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,10) = (/ 5.130000e-03, 1.485000e-02/)
+            k(:,1,3,10) = (/ 1.480000e-03, 4.802000e-02/)
+            k(:,1,4,10) = (/-2.045000e-02, 2.725000e-02/)
+            k(:,1,5,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,3,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,4,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,5,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,11) = (/-5.007750e-06, 0.000000e+00/)
+            k(:,2,2,11) = (/-5.007750e-05, -1.521600e-07/)
+            k(:,2,3,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,11) = (/ 0.000000e+00, 0.000000e+00/)
             !--- END generated by "python gen_uijparam.py u13-t_param.txt 1"
         case(23)
             !--- BEGIN generated by "python gen_uijparam.py u23-t_param.txt 1"
-            k(:, 1, 1, 1) = (/ 3.080780e-05, 0.000000e+00/)
-            k(:, 1, 2, 1) = (/ 3.080780e-04, 3.101950e-06/)
-            k(:, 1, 3, 1) = (/-1.744460e-05, 3.392200e-06/)
-            k(:, 1, 4, 1) = (/-1.113940e-04,-1.402690e-06/)
-            k(:, 1, 5, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 1) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 2) = (/ 4.534340e-06, 0.000000e+00/)
-            k(:, 1, 2, 2) = (/ 4.534340e-05, 9.405500e-08/)
-            k(:, 1, 3, 2) = (/-4.708560e-05, 4.713280e-07/)
-            k(:, 1, 4, 2) = (/-7.667080e-05,-9.933570e-07/)
-            k(:, 1, 5, 2) = (/-7.667080e-05, 0.000000e+00/)
-            k(:, 2, 1, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 2) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 3) = (/-1.501560e-05, 0.000000e+00/)
-            k(:, 1, 2, 3) = (/-1.501560e-04, 1.661390e-07/)
-            k(:, 1, 3, 3) = (/-6.065620e-05, 8.299980e-07/)
-            k(:, 1, 4, 3) = (/ 1.482230e-05,-2.747200e-07/)
-            k(:, 1, 5, 3) = (/ 1.482230e-05, 0.000000e+00/)
-            k(:, 2, 1, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 3) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 4) = (/ 1.403630e-05, 0.000000e+00/)
-            k(:, 1, 2, 4) = (/ 1.403630e-04, 1.939340e-08/)
-            k(:, 1, 3, 4) = (/ 1.966730e-05, 1.755230e-08/)
-            k(:, 1, 4, 4) = (/-1.062540e-05,-4.497190e-07/)
-            k(:, 1, 5, 4) = (/-1.062540e-05,-4.497190e-07/)
-            k(:, 2, 1, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 4) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 5) = (/-2.618850e-05, 1.174180e-07/)
-            k(:, 1, 3, 5) = (/-4.449210e-05, 4.052410e-07/)
-            k(:, 1, 4, 5) = (/ 2.124070e-04,-4.271490e-06/)
-            k(:, 1, 5, 5) = (/ 2.124070e-04,-4.271490e-06/)
-            k(:, 2, 1, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 5) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 6) = (/-5.736600e-05,-2.828080e-07/)
-            k(:, 1, 3, 6) = (/-1.353800e-04,-2.794580e-06/)
-            k(:, 1, 4, 6) = (/ 2.268140e-04, 3.924680e-06/)
-            k(:, 1, 5, 6) = (/ 2.268140e-04, 3.924680e-06/)
-            k(:, 2, 1, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 6) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 7) = (/ 1.303790e-05,-4.460330e-07/)
-            k(:, 1, 3, 7) = (/ 8.400290e-05, 1.651570e-07/)
-            k(:, 1, 4, 7) = (/-1.930350e-04,-3.966430e-08/)
-            k(:, 1, 5, 7) = (/-1.930350e-04, 0.000000e+00/)
-            k(:, 2, 1, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 7) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 8) = (/ 2.200940e-05, 9.830790e-08/)
-            k(:, 1, 3, 8) = (/ 4.424690e-05, 1.128610e-06/)
-            k(:, 1, 4, 8) = (/ 1.146040e-05,-1.061750e-07/)
-            k(:, 1, 5, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 8) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 3, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 4, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 5, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5, 9) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2,10) = (/-1.080000e-03, 7.000000e-03/)
-            k(:, 1, 3,10) = (/-2.830000e-03, 9.010000e-03/)
-            k(:, 1, 4,10) = (/ 1.330000e-03, 4.556870e-04/)
-            k(:, 1, 5,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5,10) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 1,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 2,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 3,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 4,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 1, 5,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 1,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 2,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 3,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 4,11) = (/ 0.000000e+00, 0.000000e+00/)
-            k(:, 2, 5,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,1)  = (/ 3.080780e-05, 0.000000e+00/)
+            k(:,1,2,1)  = (/ 3.080780e-04, 3.101950e-06/)
+            k(:,1,3,1)  = (/-1.744460e-05, 3.392200e-06/)
+            k(:,1,4,1)  = (/-1.113940e-04, -1.402690e-06/)
+            k(:,1,5,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,1)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,2)  = (/ 4.534340e-06, 0.000000e+00/)
+            k(:,1,2,2)  = (/ 4.534340e-05, 9.405500e-08/)
+            k(:,1,3,2)  = (/-4.708560e-05, 4.713280e-07/)
+            k(:,1,4,2)  = (/-7.667080e-05, -9.933570e-07/)
+            k(:,1,5,2)  = (/-7.667080e-05, 0.000000e+00/)
+            k(:,2,1,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,2)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,3)  = (/-1.501560e-05, 0.000000e+00/)
+            k(:,1,2,3)  = (/-1.501560e-04, 1.661390e-07/)
+            k(:,1,3,3)  = (/-6.065620e-05, 8.299980e-07/)
+            k(:,1,4,3)  = (/ 1.482230e-05, -2.747200e-07/)
+            k(:,1,5,3)  = (/ 1.482230e-05, 0.000000e+00/)
+            k(:,2,1,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,3)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,4)  = (/ 1.403630e-05, 0.000000e+00/)
+            k(:,1,2,4)  = (/ 1.403630e-04, 1.939340e-08/)
+            k(:,1,3,4)  = (/ 1.966730e-05, 1.755230e-08/)
+            k(:,1,4,4)  = (/-1.062540e-05, -4.497190e-07/)
+            k(:,1,5,4)  = (/-1.062540e-05, -4.497190e-07/)
+            k(:,2,1,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,4)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,5)  = (/-2.618850e-05, 1.174180e-07/)
+            k(:,1,3,5)  = (/-4.449210e-05, 4.052410e-07/)
+            k(:,1,4,5)  = (/ 2.124070e-04, -4.271490e-06/)
+            k(:,1,5,5)  = (/ 2.124070e-04, -4.271490e-06/)
+            k(:,2,1,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,5)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,6)  = (/-5.736600e-05, -2.828080e-07/)
+            k(:,1,3,6)  = (/-1.353800e-04, -2.794580e-06/)
+            k(:,1,4,6)  = (/ 2.268140e-04, 3.924680e-06/)
+            k(:,1,5,6)  = (/ 2.268140e-04, 3.924680e-06/)
+            k(:,2,1,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,6)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,7)  = (/ 1.303790e-05, -4.460330e-07/)
+            k(:,1,3,7)  = (/ 8.400290e-05, 1.651570e-07/)
+            k(:,1,4,7)  = (/-1.930350e-04, -3.966430e-08/)
+            k(:,1,5,7)  = (/-1.930350e-04, 0.000000e+00/)
+            k(:,2,1,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,7)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,8)  = (/ 2.200940e-05, 9.830790e-08/)
+            k(:,1,3,8)  = (/ 4.424690e-05, 1.128610e-06/)
+            k(:,1,4,8)  = (/ 1.146040e-05, -1.061750e-07/)
+            k(:,1,5,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,8)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,3,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,4,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,5,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,9)  = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,10) = (/-1.080000e-03, 7.000000e-03/)
+            k(:,1,3,10) = (/-2.830000e-03, 9.010000e-03/)
+            k(:,1,4,10) = (/ 1.330000e-03, 4.556870e-04/)
+            k(:,1,5,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,10) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,1,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,2,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,3,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,4,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,1,5,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,1,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,2,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,3,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,4,11) = (/ 0.000000e+00, 0.000000e+00/)
+            k(:,2,5,11) = (/ 0.000000e+00, 0.000000e+00/)
             !--- END generated by "python gen_uijparam.py u23-t_param.txt 1"
         end select
 

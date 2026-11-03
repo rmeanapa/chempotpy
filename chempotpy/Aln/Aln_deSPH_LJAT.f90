@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_deSPH_LJAT potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Lennard-Jones plus Axilrod-Teller
     !   Common name:                   deSPH/LJAT
@@ -62,21 +59,19 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms (input)
 
     implicit none
-
     double precision :: a, aa, b, c, co1, co2, co3, dx, dy, dz, rij, rim, &
         & rjm, rr, sig, u2, u3, v, x, y, z
     integer                     :: i, j, m, maxatom, natom
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
     double precision, parameter :: autokpm = 627.5095d0
-    dimension x(maxatom),y(maxatom),z(maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom)
     !
     !  calculate the potential energy
     ! in kJ/mol
     !      a = 2975343.77d0 / ((autoang**12) * autokpm)
     !      b = -17765.823d0 / ((autoang**6)  * autokpm)
     !      c = 81286.093d0  / ((autoang**9)  * autokpm)
-
     ! in eV
     a   = 129023.16d0   / ((autoang**12) * autoev)
     b   = -770.399d0    / ((autoang**6)  * autoev)
@@ -88,8 +83,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     !  1. calculate energy of two-body interactions L-J
     u2 = 0.d0
-    do 2 i=1,natom-1
-        do 3 j=i+1,natom
+    do 2 i=1, natom-1
+        do 3 j=i+1, natom
             dx = x(i)-x(j)
             dy = y(i)-y(j)
             dz = z(i)-z(j)
@@ -101,9 +96,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  2. calculate energy of three-body interactions
     u3 = 0.d0
     if(natom.eq.2) go to 7
-    do 6 i=1,natom-2
-        do 4 j=i+1,natom-1
-            do 5 m=j+1,natom
+    do 6 i=1, natom-2
+        do 4 j=i+1, natom-1
+            do 5 m=j+1, natom
                 dx  = x(i)-x(j)
                 dy  = y(i)-y(j)
                 dz  = z(i)-z(j)
@@ -116,7 +111,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 dy  = y(m)-y(i)
                 dz  = z(m)-z(i)
                 rim = dsqrt(dx*dx+dy*dy+dz*dz)
-                call scos(i,j,m,x,y,z,rij,rjm,rim,natom,maxatom,co1,co2,co3)
+                call scos(i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, co1, co2, co3)
                 u3 = u3+c*(1.d0+3.d0*co1*co2*co3)/((rij*rjm*rim)**3)
             5 continue
         4 continue
@@ -124,6 +119,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  calculate the potential energy
     7 v=u2+u3
 end subroutine pot
+
 !
 !
 !
@@ -148,10 +144,9 @@ subroutine scos( i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, &
     !  co3     --- cosine of the angle between bonds mi and mj
     !
     implicit none
-
     double precision :: co1, co2, co3, rij, rim, rjm, scalar1, scalar2, scalar3, x, y, z
     integer          :: i, j, m, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom)
     !  calculate scalar products of the position vectors of two atoms
     !  originating from the third atom
     scalar1 = (x(j)-x(i))*(x(m)-x(i)) +(y(j)-y(i))*(y(m)-y(i)) +(z(j)-z(i))*(z(m)-z(i))

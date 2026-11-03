@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,8 +25,8 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ErkVIII potential.
@@ -65,19 +63,17 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms (input)
 
     implicit none
-
     double precision :: a1, a2, arc1, arc2, b1, b2, bra, cot12, cot13, cot2, cot3, &
         & cote1, cote2, cote3, dx, dy, dz, em, en, r, r0, rel, rr, rr1, rr2, rr3, u, uem, uen, v, v1, &
         & w1, w2, war, x, y, z
     integer :: i, j, m, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom),r(maxatom,maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom), r(maxatom,maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-
     !  calculate and tabulate the distances between all atoms
-    do 1 i=1,natom
+    do 1 i=1, natom
         r(i,i) = 0d0
-        do 1 j=i+1,natom
+        do 1 j=i+1, natom
             dx     = x(i)-x(j)
             dy     = y(i)-y(j)
             dz     = z(i)-z(j)
@@ -94,8 +90,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
     en = 6.d0
 
     u = 0.d0
-    do 2 i=1,natom-1
-        do 3 j=i+1,natom
+    do 2 i=1, natom-1
+        do 3 j=i+1, natom
             rr  = r(i,j)
             rel = r0/rr
             uem = a1*rel**em
@@ -106,10 +102,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     v1 = 0.d0
     if(natom.eq.2) go to 55
-    do 4 i=1,natom-2
-        do 5 j=i+1,natom-1
-            do 6 m=j+1,natom
-                call scos(i,j,m,x,y,z,r,natom,maxatom,cote1,cote2,cote3)
+    do 4 i=1, natom-2
+        do 5 j=i+1, natom-1
+            do 6 m=j+1, natom
+                call scos(i, j, m, x, y, z, r, natom, maxatom, cote1, cote2, cote3)
                 rr1   = 1.d0/r(i,j)
                 rr2   = 1.d0/r(i,m)
                 rr3   = 1.d0/r(j,m)
@@ -137,6 +133,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
     4 continue
     55 v=u+v1
 end subroutine pot
+
 !
 !
 !> @brief Evaluate scos for the Aln_ErkVIII potential.
@@ -159,10 +156,9 @@ subroutine scos( i, j, m, x, y, z, r, natom, maxatom, cote1, cote2, cote3 )
     !  cote3   --- cosine of the angle between bonds mi and mj
     !
     implicit none
-
     double precision :: cote1, cote2, cote3, r, scalar1, scalar2, scalar3, x, y, z
     integer          :: i, j, m, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom),r(maxatom,maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom), r(maxatom,maxatom)
     !  calculate scalar products of the position vectors of two atoms
     !  originating from the third atom
     scalar1 = (x(j)-x(i))*(x(m)-x(i)) +(y(j)-y(i))*(y(m)-y(i)) +(z(j)-z(i))*(z(m)-z(i))

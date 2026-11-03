@@ -2,62 +2,55 @@
 
 !> @brief Evaluate pes for the F2H2_GEN_JBKKL_1990 potential.
 subroutine pes( x, igrad, path, p, g, d )
-
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
-    integer, parameter :: nstates = 1
-    integer, parameter :: natoms  = 4
-
+    integer, parameter              :: nstates = 1
+    integer, parameter              :: natoms  = 4
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
-    integer          :: iatom, idir, istate
-    double precision :: cartnu(natoms,3), r(6), v
-    double precision :: rcm, r1, r2
-    logical, save    :: first_time_data=.true.
-
+    integer                         :: iatom, idir, istate
+    double precision                :: cartnu(natoms,3), r(6), v
+    double precision                :: rcm, r1, r2
+    logical, save                   :: first_time_data=.true.
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
     cartnu = 0.d0
-    do iatom=1,natoms
-        do idir=1,3
-            cartnu(iatom,idir) = x(iatom,idir)/0.529177211
-        enddo
-    enddo
+    do iatom=1, natoms
+        do idir=1, 3
+            cartnu(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+        end do
+    end do
 
     if(first_time_data) then
         call bjinit(path)
         first_time_data = .false.
-    endif
+    end if
 
-    call carttor(cartnu,r)
+    call carttor(cartnu, r)
     rcm = r(1)
     r1  = r(2)
     r2  = r(3)
 
-    call trbunk(rcm,r1,r2,v,4,0,0)
+    call trbunk(rcm, r1, r2, v, 4, 0, 0)
 
     if (igrad==0) then
-        do istate=1,nstates
-            p(istate) = v*27.211386
-        enddo
+        do istate=1, nstates
+            p(istate) = v*legacy_hartree_to_electronvolt
+        end do
     else
-        write (*,*) 'Only energy is available'
-    endif
+        write (*, *) 'Only energy is available'
+    end if
 
 end subroutine pes
 
 !> @brief Evaluate CARTTOR for the F2H2_GEN_JBKKL_1990 potential.
 subroutine carttor( cartnu, r )
     implicit none
-
     double precision :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, &
         & xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
     double precision :: cartnu(4,3), r(6)
@@ -112,27 +105,26 @@ subroutine carttor( cartnu, r )
     r(4) = theta1
     r(5) = theta2
     r(6) = phi
-endsubroutine carttor
+end subroutine carttor
 
 ! bjinit reads in parameters for BJKKL potential from file bjkkl.par
 !> @brief Evaluate bjinit for the F2H2_GEN_JBKKL_1990 potential.
 subroutine bjinit( path )
     implicit none
     character(len=1024), intent(in) :: path
-
-    integer             :: file_unit_11
-    double precision    :: c
-    integer             :: i
-    character(len=1024) :: file_path1
+    integer                         :: file_unit_11
+    double precision                :: c
+    integer                         :: i
+    character(len=1024)             :: file_path1
     dimension c(359)
     common/params/c
-
     file_path1 = trim(path)//"/F2H2/bjkkl.par"
-    open(newunit=file_unit_11,file=file_path1)
-    read(file_unit_11,'(5F14.10)')(c(i),i=1,359)
+    open(newunit=file_unit_11, file=file_path1)
+    read(file_unit_11, '(5F14.10)')(c(i), i=1, 359)
     close(file_unit_11)
 
 end subroutine bjinit
+
 !
 !
 !
@@ -140,7 +132,6 @@ end subroutine bjinit
 !
 !> @brief Evaluate trbunk for the F2H2_GEN_JBKKL_1990 potential.
 subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
-
     !     subroutine trbunk transforms the surface of Bunker, Jensen, Kofran
     !     Lischka and Karpfen(the angular part only; no two-body terms) to t
     !     representation of Launay et al.
@@ -152,7 +143,6 @@ subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
     !     Launay expansion: J.M. Launay, J. Phys. B 10, 3665 (1977).
 
     implicit none
-
     double precision :: a, bo, c, cdenom, const, const1, const2, const3, ha, pc, phas, pi, r, r1, r2, threej, v, vl, xl, &
         & xl1, xl2, xm
     integer :: imu, iq1, iq2, l, ll, lm, lu
@@ -171,8 +161,7 @@ subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
     dimension c(359)
     common/acoef/a
     common/params/c
-    common/consts/pi,bo,ha,vl,pc
-
+    common/consts/pi, bo, ha, vl, pc
     bo = 0.529177249d0
     ha = 219474.63067d0
     pi = 3.1415926535898d0
@@ -181,17 +170,17 @@ subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
 
     !     next get the a's from subroutine vcalc
 
-    call vcalc(r1,r2,r)
+    call vcalc(r1, r2, r)
 
     xl1 = float(iq1)
     xl2 = float(iq2)
     xm  = float(imu)
-    lm  = min(iq1,iq2)
+    lm  = min(iq1, iq2)
     ll  = abs(iq1-iq2)
     lu  = iq1+iq2
     v   = 0.0d0
 
-    do 20 l=ll,lu,2
+    do 20 l=ll, lu, 2
         xl     = float(l)
         phas   = (-1)**(iq1-iq2)
         const1 = one
@@ -201,7 +190,7 @@ subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
         cdenom = (four*pi)**3
         const3 = dsqrt(two/cdenom)
         const  = phas*const1*const2*const3
-        v      = v+a(iq1,iq2,l)*const*threej(xl1,xl2,xl,xm,-xm,0.d0)
+        v      = v+a(iq1,iq2,l)*const*threej(xl1, xl2, xl, xm, -xm, 0.d0)
     20 continue
 
     !     divide next two terms by three because there is a bug in Bunker's
@@ -218,6 +207,7 @@ subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
     !50   continue
 
 end subroutine trbunk
+
 !> @brief Evaluate THREEJ for the F2H2_GEN_JBKKL_1990 potential.
 function threej( a, b, c, al, be, ga )
     !
@@ -228,7 +218,6 @@ function threej( a, b, c, al, be, ga )
     !
     !
     implicit none
-
     double precision :: a, al, b, be, c, clebsh, delta, dnew, fakt, ga, summ, term, term1, term2, &
         & term3, term4, term5, term6, threej
     integer :: iphase, new, newmax, newmin
@@ -264,14 +253,14 @@ function threej( a, b, c, al, be, ga )
     !     .  NOW FIND WHAT THE RANGE OF NEW IS.
     !
     !
-    newmin = idnint(dmax1((a+be-c),(b-c-al),0.d0))
-    newmax = idnint(dmin1((a-al),(b+be),(a+b-c)))
+    newmin = idnint(dmax1((a+be-c), (b-c-al), 0.d0))
+    newmax = idnint(dmin1((a-al), (b+be), (a+b-c)))
     !
     !
     summ = 0.d0
     !
     !
-    do 10 new=newmin,newmax
+    do 10 new=newmin, newmax
         dnew  = dfloat(new)
         term4 = fakt(a-al-dnew)*fakt(c-b+al+dnew)
         term5 = fakt(b+be-dnew)*fakt(c-a-be+dnew)
@@ -290,6 +279,7 @@ function threej( a, b, c, al, be, ga )
     !
     !
 end function threej
+
 !> @brief Evaluate VCALC for the F2H2_GEN_JBKKL_1990 potential.
 subroutine vcalc( r1, r2, rab )
     !
@@ -299,16 +289,15 @@ subroutine vcalc( r1, r2, rab )
     !       G IS THE SCRIPT I USED BY GREEN IN HIS EQ.(A9)
     !
     implicit none
-
     double precision :: a, bo, c, cd, cdq, cq, d1, d2, d3, de1, de2, de3, de4, g, ha, pc, pi, r1, r2, &
         & r6, rab, req, rin01, rin10, rmiddle, rout10, t1, t1deg, t2, t2deg, tau, taudeg, vl, y1, &
         & y1py2, y1y2, y1y22, y1y23, y1y24, y2, y3
     integer :: i, il, iu, j, k
     save
     integer :: out
-    dimension c(359),g(0:4,0:4,0:8),a(0:4,0:4,0:8),req(6)
+    dimension c(359), g(0:4,0:4,0:8), a(0:4,0:4,0:8), req(6)
     common/params/c
-    common/consts/pi,bo,ha,vl,pc
+    common/consts/pi, bo, ha, vl, pc
     common/acoef/a
     !
     out = 6
@@ -354,10 +343,10 @@ subroutine vcalc( r1, r2, rab )
     !    X             P(L1,M,T1)*P(L2,M,T2)*DCOS(XM*TAU)
     !100  G(L1,L2,L)=COEFF*G(L1,L2,L)
     !
-    do 20 i=0,4
-        do 20 j=0,4
+    do 20 i=0, 4
+        do 20 j=0, 4
 
-            do 20 k=0,8
+            do 20 k=0, 8
     20 a(i,j,k)=0.0d0
     !
     d1  = r1-c(1)
@@ -404,14 +393,14 @@ subroutine vcalc( r1, r2, rab )
     !
 
     a(0,0,0)=c(357)*de2*rin10 +c(20)*y1y2*rout10 +(c(12)*de1+c(13)*de2+c(14)*de3+c(15)*de4)*rmiddle +(c(4)/r6 + c(5)/ &
-        & (rab**7) + c(6)/(rab**8) +c(7)/(rab**9)+c(8)/(rab**10))*rin01 +(c(157)*(y1+y2)*y3 +c(158)*y1*y2*y3 +c(166)* &
+        & (rab**7) + c(6)/(rab**8) +c(7)/(rab**9)+c(8)/(rab**10))*rin01 +(c(157)*(y1+y2)*y3 +c(158)*y1*y2*y3 + c(166)* &
         & y1* y2*y3**2 +c(167)*y1*y2*y3**3)*rmiddle
 
     a(1,0,1)=(c(22)*de1+c(23)*de2 +c(24)*de3+c(25)*de4 +c(26)*y1 +c(27)*y2 +c(21)*y1*y3 +c(156)*y2*y3 +c(28)*y1**2 + &
         & c(29)*y2**2 +c(30)*y1*y2 +c(116)*y1**3 +c(117)*y2**3 +c(118)*y1*y2**2 +c(119)*y2*y1**2 +c(159)*y1*y2*y3 + &
         & c(169)*y1*y2*y3**2 +c(179)*y1*y2**2*y3)*rmiddle
-    a(0,1,1)=-(c(22)*de1+c(23)*de2 +c(24)*de3+c(25)*de4 +c(26)*y2 +c(27)*y1 +c(21)*y2*y3 +c(156)*y1*y3 +c(28)*y2**2 + &
-        & c(29)*y1**2 +c(30)*y1*y2 +c(116)*y2**3 +c(117)*y1**3 +c(118)*y2*y1**2 +c(119)*y1*y2**2 +c(159)*y1*y2*y3 + &
+    a(0,1,1)=-(c(22)*de1+c(23)*de2 +c(24)*de3+c(25)*de4 +c(26)*y2 +c(27)*y1 +c(21)*y2*y3 +c(156)*y1*y3 +c(28)*y2** 2 + &
+        & c(29)*y1**2 +c(30)*y1*y2 +c(116)*y2**3 +c(117)*y1**3 +c(118)*y2*y1**2 +c(119)*y1*y2**2 +c(159)*y1*y2* y3 + &
         & c(169)*y1*y2*y3**2 +c(179)*y1**2*y1*y3)*rmiddle
     !
     a(1,1,0)=(c(32)*de1+c(33)*de2 +c(34)*de3+c(35)*de4 +c(36)*y1y22 +c(37)*y1y23 +c(38)*y1py2 +c(39)*y1py2*y1y2 + &
@@ -419,25 +408,25 @@ subroutine vcalc( r1, r2, rab )
     a(1,1,2)=(c(42)*de1+c(43)*de2 +c(44)*de3+c(45)*de4)*rmiddle -((8.d0*pi**1.5d0*dsqrt(2.d0/15.d0))*(c(41)**2)/(cd* &
         & rab**3))*rin01 +(c(46)*y1y22 +c(47)*y1y23 +c(48)*y1py2 +c(49)*y1py2*y1y2 +c(50)*y1y2)*rmiddle
     !
-    a(2,0,2)=c(356)/r6+(c(52)*de1+c(53)*de2 +c(54)*de3+c(55)*de4 +c(56)*y1 +c(57)*y2 +c(58)*y1**2 +c(59)*y2**2 +c(60)* &
-        & y1*y2 +c(126)*y1**3 +c(127)*y2**3 +c(128)*y1*y2**2 +c(129)*y2*y1**2)*rmiddle
-    a(0,2,2)=c(356)/r6+(c(52)*de1+c(53)*de2 +c(54)*de3+c(55)*de4 +c(56)*y2 +c(57)*y1 +c(58)*y2**2 +c(59)*y1**2 +c(60)* &
-        & y1*y2 +c(126)*y2**3 +c(127)*y1**3 +c(128)*y2*y1**2 +c(129)*y1*y2**2)*rmiddle
+    a(2,0,2)=c(356)/r6+(c(52)*de1+c(53)*de2 +c(54)*de3+c(55)*de4 +c(56)*y1 +c(57)*y2 +c(58)*y1**2 +c(59)*y2**2 + &
+        & c(60)* y1*y2 +c(126)*y1**3 +c(127)*y2**3 +c(128)*y1*y2**2 +c(129)*y2*y1**2)*rmiddle
+    a(0,2,2)=c(356)/r6+(c(52)*de1+c(53)*de2 +c(54)*de3+c(55)*de4 +c(56)*y2 +c(57)*y1 +c(58)*y2**2 +c(59)*y1**2 + &
+        & c(60)* y1*y2 +c(126)*y2**3 +c(127)*y1**3 +c(128)*y2*y1**2 +c(129)*y1*y2**2)*rmiddle
     !
     a(2,1,1)=(c(62)*de1+c(63)*de2 +c(64)*de3+c(65)*de4 +c(66)*y1 +c(67)*y2 +c(68)*y1**2 +c(69)*y2**2 +c(70)*y1*y2 + &
         & c(136)*y1**3 +c(137)*y2**3 +c(138)*y1*y2**2 +c(139)*y2*y1**2)*rmiddle
     a(1,2,1)=-(c(62)*de1+c(63)*de2 +c(64)*de3+c(65)*de4 +c(66)*y2 +c(67)*y1 +c(68)*y2**2 +c(69)*y1**2 +c(70)*y1*y2 + &
         & c(136)*y2**3 +c(137)*y1**3 +c(138)*y2*y1**2 +c(139)*y1*y2**2)*rmiddle
-    a(2,1,3)=(c(72)*de1+c(73)*de2 +c(74)*de3+c(75)*de4)*rmiddle -rin01*(8.d0*pi**1.5d0/dsqrt(7.d0))*c(41)*c(101)/(cdq* &
-        & rab**4) +(c(76)*y1 +c(77)*y2 +c(78)*y1**2 +c(79)*y2**2 +c(80)*y1*y2 +c(146)*y1**3 +c(147)*y2**3 +c(148)*y1* &
-        & y2**2 +c(149)*y2*y1**2)*rmiddle
+    a(2,1,3)=(c(72)*de1+c(73)*de2 +c(74)*de3+c(75)*de4)*rmiddle -rin01*(8.d0*pi**1.5d0/dsqrt(7.d0))*c(41)*c(101)/ &
+        & (cdq* rab**4) +(c(76)*y1 +c(77)*y2 +c(78)*y1**2 +c(79)*y2**2 +c(80)*y1*y2 +c(146)*y1**3 +c(147)*y2**3 + &
+        & c(148)*y1* y2**2 +c(149)*y2*y1**2)*rmiddle
     a(1,2,3)=-(c(72)*de1+c(73)*de2 +c(74)*de3+c(75)*de4)*rmiddle +rin01*(8.d0*pi**1.5d0/dsqrt(7.d0))*c(41)*c(101)/ &
         & (cdq* rab**4) -(c(76)*y2 +c(77)*y1 +c(78)*y2**2 +c(79)*y1**2 +c(80)*y1*y2 +c(146)*y2**3 +c(147)*y1**3 + &
         & c(148)*y2* y1**2 +c(149)*y1*y2**2)*rmiddle
     !
     a(2,2,0)=(c(82)*de1+c(83)*de2 +c(84)*de3+c(85)*de4 +c(86)*y1y22 +c(87)*y1y23 +c(88)*y1py2 +c(89)*y1py2*y1y2 + &
         & c(90)* y1y2)*rmiddle
-    a(2,2,2)=c(91)/r6 +(c(92)*de1+c(93)*de2 +c(94)*de3+c(95)*de4 +c(96)*y1y22 +c(97)*y1y23 +c(98)*y1py2 +c(99)*y1py2* &
+    a(2,2,2)=c(91)/r6 +(c(92)*de1+c(93)*de2 +c(94)*de3+c(95)*de4 +c(96)*y1y22 +c(97)*y1y23 +c(98)*y1py2 +c(99)* y1py2* &
         & y1y2 +c(100)*y1y2)*rmiddle
     a(2,2,4)=(c(102)*de1+c(103)*de2 +c(104)*de3+c(105)*de4)*rmiddle +(8.d0*pi**1.5d0/3.d0)*dsqrt(14.d0/5.d0)*rin01* &
         & (c(101)**2)/(cq*rab**5) +(c(106)*y1y22 +c(107)*y1y23 +c(108)*y1py2 +c(109)*y1py2*y1y2 +c(110)*y1y2)*rmiddle
@@ -486,11 +475,11 @@ subroutine vcalc( r1, r2, rab )
     a(4,4,6) = c(342)*de1+c(343)*de2 +c(344)*de3+c(345)*de4
     a(4,4,8) = c(352)*de1+c(353)*de2 +c(354)*de3+c(355)*de4
     !
-    do 992 i=0,4
-        do 992 j=0,4
+    do 992 i=0, 4
+        do 992 j=0, 4
             il = iabs(i-j)
             iu = i+j
-            do 992 k=il,iu,2
+            do 992 k=il, iu, 2
                 if(i.ne.4.and.j.ne.4)go to 992
                 a(i,j,k) = a(i,j,k)*rmiddle
     992 continue
@@ -528,13 +517,13 @@ subroutine vcalc( r1, r2, rab )
     !     V=V+VSRG
     !
 end subroutine vcalc
+
 !> @brief Evaluate FAKT for the F2H2_GEN_JBKKL_1990 potential.
 function fakt( a )
     !     THIS FUNCTION COMPUTES N!/(10**N).  STOP 101 IMPLIES TRIED
     !     TO TAKE FACTORIAL OF A NEGATIVE NO.
     !
     implicit none
-
     double precision :: a, ax, fakt
     integer          :: i, ic
     save
@@ -548,7 +537,7 @@ function fakt( a )
     ic   = idnint(ax)
     ax   = ax/10.d0
     fakt = ax
-    do 10  i=1,ic-1
+    do 10  i=1, ic-1
         fakt = fakt*(ax-dfloat(i)*.1d0)
     10 continue
 end function fakt

@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_reCoxJM potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Extended Rydberg plus generalized three-body
     !   Common name:                   reCoxJM
@@ -63,17 +60,14 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms (input)
 
     implicit none
-
     double precision :: a2, a3, c0, c1, c2, c3, c4, c5, c6, dd, dx, dy, dz, &
         & fsech, oneha, onesi, oneth, poly, q1, q2, q23, q3, q332, r, re, rij, rjk, rki, rr, &
         & twoth, v, v2, v3, x, y, z
     integer :: i, j, k, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom),r(maxatom,maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom), r(maxatom,maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-
     !  calculate and tabulate the distances between all atoms
-
     ! original parameters
     !      a2=7.d0
     !      a3=8.d0
@@ -86,7 +80,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !      c4= 1.6498d0
     !      c5=-5.3579d0
     !      c6= 1.6327d0
-
     ! new parameters
     a2 = 4.75085490962383972
     a3 = 7.73864191499755716
@@ -105,9 +98,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
     twoth = dsqrt(2.d0/3.d0)
     onesi = dsqrt(1.d0/6.d0)
 
-    do 1 i=1,natom
+    do 1 i=1, natom
         r(i,i) = 0d0
-        do 1 j=i+1,natom
+        do 1 j=i+1, natom
             dx     = x(i)-x(j)
             dy     = y(i)-y(j)
             dz     = z(i)-z(j)
@@ -118,13 +111,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
     v  = 0.d0
     v2 = 0.d0
     v3 = 0.d0
-    do 2 i=1,natom
-        do 2 j=i+1,natom
+    do 2 i=1, natom
+        do 2 j=i+1, natom
             !  two body term
             rr  = r(i,j)
             rij = (rr-re)/re
             v2  = v2-dd*(1.d0+a2*rij)*dexp(-a2*rij)
-            do 2 k=j+1,natom
+            do 2 k=j+1, natom
                 ! three body term
                 rjk   = (r(j,k)-re)/re
                 rki   = (r(k,i)-re)/re

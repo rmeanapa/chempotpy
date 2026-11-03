@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_reErkIV potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Heuristic
     !   Common name:                   reErkIV
@@ -67,15 +64,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms (input)
 
     implicit none
-
     double precision :: aa, alpha, c2, c3, dist, dx, dy, dz, en, en2, fijk, fikj, fjki, r0, r02, r1, r2, rr, temp1, &
         & temp2, u, v, vmany, vpair, wijk, x, y, z
     integer :: i, j, k, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom),dist(maxatom,maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom), dist(maxatom,maxatom)
     dimension u(maxatom,maxatom)
     double precision, parameter :: autoang = 0.5291277249d0
     double precision, parameter :: autoev  = 27.2113961d0
-
     alpha = dlog(2.d0)
 
     ! Original parameters
@@ -98,8 +93,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
     en2   = en*2d0
 
     !  pair potential, energy is denoted as vpair
-    do i=1,natom-1
-        do j=i+1,natom
+    do i=1, natom-1
+        do j=i+1, natom
             dx        = x(i)-x(j)
             dy        = y(i)-y(j)
             dz        = z(i)-z(j)
@@ -118,8 +113,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     if (natom .ge. 3) then
         do i=1, natom-2
-            do j=i+1,natom-1
-                do k=j+1,natom
+            do j=i+1, natom-1
+                do k=j+1, natom
                     fijk  = dexp(-(dist(i,k)**2 + dist(j,k)**2)/r02)
                     fikj  = dexp(-(dist(i,j)**2 + dist(k,j)**2)/r02)
                     fjki  = dexp(-(dist(j,i)**2 + dist(k,i)**2)/r02)

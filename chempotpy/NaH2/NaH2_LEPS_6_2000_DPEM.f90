@@ -1,104 +1,92 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate dpem for the NaH2_LEPS_6_2000_DPEM potential.
 subroutine dpem( x, igrad, u, ug )
-
+    use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
     implicit none
-
     ! number of electronic state
-    integer, parameter :: nstates = 2
-    integer, parameter :: natoms  = 3
-
+    integer, parameter            :: nstates = 2
+    integer, parameter            :: natoms  = 3
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-
-    double precision :: d, g
-    integer          :: iatom, idir, nder
-    double precision :: nt, r(1,3), r2(3), v(1)
-    double precision :: p(nstates)
-    double precision :: u11(1), u12(1), u22(1)
-    double precision :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
-    double precision :: dudr(nstates,nstates,3)
-    double precision :: dudx(nstates,nstates,9)
-    double precision :: t(nstates,nstates)
-    double precision :: tmpmat(nstates,nstates)
-    double precision :: tx(9), drdx(3,9)
-    logical, save    :: first_time_data=.true.
-    integer          :: i, j, k, l
-
+    double precision              :: d, g
+    integer                       :: iatom, idir, nder
+    double precision              :: nt, r(1,3), r2(3), v(1)
+    double precision              :: p(nstates)
+    double precision              :: u11(1), u12(1), u22(1)
+    double precision              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
+    double precision              :: dudr(nstates,nstates,3)
+    double precision              :: dudx(nstates,nstates,9)
+    double precision              :: t(nstates,nstates)
+    double precision              :: tmpmat(nstates,nstates)
+    double precision              :: tx(9), drdx(3,9)
+    logical, save                 :: first_time_data=.true.
+    integer                       :: i, j, k, l
     !initialize
-    u = 0.d0
-    p = 0.d0
-    g = 0.d0
-    d = 0.d0
+    u = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
 
     nt = 1
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        enddo
-    enddo
+        end do
+    end do
     ! input cartesian is ClHH
-    r(1,1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
-    r(1,2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
-    r(1,3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
+    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
 
     nder = igrad
 
     if(first_time_data) then
         call prepot
         first_time_data = .false.
-    endif
+    end if
 
-    call pot(r,u11,de_u11,1,1)
-    call pot(r,u12,de_u12,1,2)
-    call pot(r,u22,de_u22,1,3)
-    u(1,1)      = u11(1)*27.211386
-    u(1,2)      = u12(1)*27.211386
-    u(2,1)      = u12(1)*27.211386
-    u(2,2)      = u22(1)*27.211386
+    call pot(r, u11, de_u11, 1, 1)
+    call pot(r, u12, de_u12, 1, 2)
+    call pot(r, u22, de_u22, 1, 3)
+    u(1,1)      = u11(1)*legacy_hartree_to_electronvolt
+    u(1,2)      = u12(1)*legacy_hartree_to_electronvolt
+    u(2,1)      = u12(1)*legacy_hartree_to_electronvolt
+    u(2,2)      = u22(1)*legacy_hartree_to_electronvolt
     dudr(1,1,:) = de_u11(:,1)*51.422067
     dudr(1,2,:) = de_u12(:,1)*51.422067
     dudr(2,1,:) = de_u12(:,1)*51.422067
     dudr(2,2,:) = de_u22(:,1)*51.422067
-    call diagonalize(nstates,u,p,t)
+    call diagonalize(nstates, u, p, t)
 
-    r2 = r(1,:)*0.529177211
+    r2 = r(1,:)*legacy_bohr_to_angstrom
     call evdrdx(tx, r2, drdx)
     dudx = 0.d0
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             dudx(:,:,i) = dudx(:,:,i)+dudr(:,:,j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j                  = (iatom-1)*3+idir
             ug(:,:,iatom,idir) = dudx(:,:,j)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the NaH2_LEPS_6_2000_DPEM potential.
 subroutine evdrdx( x, r, drdx )
-
     implicit none
-
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-
-    integer :: i,j
-
+    integer                       :: i, j
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
+    do i=1, 3
+        do j=1, 9
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
@@ -126,36 +114,34 @@ end subroutine evdrdx
 !> @brief Evaluate diagonalize for the NaH2_LEPS_6_2000_DPEM potential.
 subroutine diagonalize( n, a_ss, ev_s, u_ss )
     implicit none
-
     integer, intent(in)           :: n
     double precision, intent(in)  :: a_ss(n,n)
     double precision, intent(out) :: u_ss(n,n)
     double precision, intent(out) :: ev_s(n)
-    integer                       :: io,i
-    double precision,allocatable  :: work_d(:)
+    integer                       :: io, i
+    double precision, allocatable :: work_d(:)
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
-
     u_ss = a_ss
     if (first_time_diag) then
         lwork_d = -1
         allocate( work_d(2) )
-        call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    endif
+    end if
     allocate( work_d(lwork_d) )
-    call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
 !
-!   System:          NaH2
-!   Functional form: Modified Extended LEPS (2x2 diabatic fit)
-!   Common name:     NaH2 surface set 6
-!   Interface:       3-2V
+!   System:                        NaH2
+!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
+!   Common name:                   NaH2 surface set 6
+!   Interface:                     3-2V
 !   Number of electronic surfaces: 2
-!   Number of derivatives: 1
+!   Number of derivatives:         1
 !   References:      M. D. Hack and D. G. Truhlar, J. Chem. Phys.
 !                    112, 9716 (2000)
 !
@@ -212,44 +198,38 @@ end subroutine diagonalize
 !> @brief Evaluate prepot for the NaH2_LEPS_6_2000_DPEM potential.
 subroutine prepot
     implicit none
-
     integer, parameter :: g_p_ = 3
-
     call g_prepot11(g_p_)
     call g_prepot12(g_p_)
     call g_prepot22(g_p_)
 
 end subroutine prepot
+
 !
 ! ********************************************************************
 ! ********************************************************************
 !> @brief Evaluate pot for the NaH2_LEPS_6_2000_DPEM potential.
 subroutine pot( r, e, de, nt, nsurf )
-
     implicit none
-
     double precision :: de, e, g_e, g_r, r, v11, v12, v22
-    dimension r(nt,3),e(nt),de(3,nt)
-
+    dimension r(nt,3), e(nt), de(3,nt)
     integer            :: i, j, k, nsurf, nt
     integer, parameter :: g_p_  = 3
     integer, parameter :: ldg_r = 3
     integer, parameter :: ldg_e = 3
-    dimension g_r(ldg_r,nt,3),g_e(ldg_e,nt)
-
+    dimension g_r(ldg_r,nt,3), g_e(ldg_e,nt)
     ! initialize seed matrix here
-
-    do i=1,nt
-        do j=1,3
-            do k=1,3
+    do i=1, nt
+        do j=1, 3
+            do k=1, 3
                 if (j .eq. k) then
                     g_r(j,i,k) = 1.0d0
                 else
                     g_r(j,i,k) = 0.0d0
-                endif
-            enddo
-        enddo
-    enddo
+                end if
+            end do
+        end do
+    end do
 
     !
 
@@ -260,7 +240,7 @@ subroutine pot( r, e, de, nt, nsurf )
     else if (nsurf .eq. 3) then
         call g_pot22(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
     else
-        do 10 i=1,nt
+        do 10 i=1, nt
             call g_pot11(g_p_, r, g_r, ldg_r, v11, de, ldg_e, 1)
             call g_pot12(g_p_, r, g_r, ldg_r, v12, de, ldg_e, 1)
             call g_pot22(g_p_, r, g_r, ldg_r, v22, de, ldg_e, 1)
@@ -296,7 +276,6 @@ end subroutine pot
 !> @brief Evaluate g_prepot11 for the NaH2_LEPS_6_2000_DPEM potential.
 subroutine g_prepot11( g_p_ )
     implicit none
-
     double precision :: al1, al2, alb, alhh, alt, balp, brho, c2a, c2b, c2c, c6, c60, c61, c63, c690, &
         & c6swt1, c6swt3, cevau, cind1, cind3, cosa, coscos, coul1, coul2, coul3, cplg2, cstsq, &
         & cstsq1, cstsq3, dalp, deh2, dexp1, dexp3, div1, div3, drho, e, elec, exch1, exch2, exch3, &
@@ -318,9 +297,8 @@ subroutine g_prepot11( g_p_ )
         & t20c, t20c1, t20c2, t20c3, t20c4, t20c5, t20c6, t20rho, t2a, t2c1, t2c2, t2c3, t2c4, t2c5, &
         & t2c6, t3, t30, t30alt, t390, t3i, twothd, w
     !
-    dimension r(nt, 3), e(nt)
-    integer :: i,j,k,nsurf,nt
-
+    dimension r(nt,3), e(nt)
+    integer :: i, j, k, nsurf, nt
     !
     save
     !
@@ -333,9 +311,9 @@ subroutine g_prepot11( g_p_ )
     double precision :: d1_w, d2_w, d3_v, d4_v, d5_v, d6_v, d3_b, d4_b, &
         & d5_b, d6_b
     double precision :: d1_p, d7_v, d8_v, d9_v, d10_v, d7_b, d8_b, d9_b &
-        & , d10_b, d11_v
+        &, d10_b, d11_v
     double precision :: d12_v, d13_v, d19_v, d11_b, d12_b, d13_b, d14_b &
-        & , g_r1s(g_pmax_), g_r(ldg_r, nt, 3), g_r2s(g_pmax_)
+        &, g_r1s(g_pmax_), g_r(ldg_r,nt,3), g_r2s(g_pmax_)
     double precision :: g_r3s(g_pmax_), g_d2_w(g_pmax_), g_d1_w(g_pmax_ &
         & ), g_rnag(g_pmax_), g_rnags(g_pmax_), g_rnagc(g_pmax_), g_rnag1(g_&
         &pmax_), g_rnag3(g_pmax_), g_rnag1c(g_pmax_), g_rnag3c(g_pmax_)
@@ -343,17 +321,17 @@ subroutine g_prepot11( g_p_ )
         &_), g_cstsq(g_pmax_), g_cosa(g_pmax_), g_coscos(g_pmax_), g_cstsq1 &
         & (g_pmax_), g_cstsq3(g_pmax_), g_s1a(g_pmax_), g_s10c(g_pmax_)
     double precision :: g_s10(g_pmax_), g_s1ic(g_pmax_), g_s1i(g_pmax_) &
-        & , g_s190c(g_pmax_), g_s190(g_pmax_), g_s1(g_pmax_), g_t190(g_pmax_ &
+        &, g_s190c(g_pmax_), g_s190(g_pmax_), g_s1(g_pmax_), g_t190(g_pmax_ &
         & ), g_t10(g_pmax_), g_t10alt(g_pmax_), g_t1i(g_pmax_)
     double precision :: g_t1(g_pmax_), g_s2a(g_pmax_), g_s290c(g_pmax_) &
-        & , g_s290(g_pmax_), g_s20c(g_pmax_), g_s20(g_pmax_), g_s2(g_pmax_), &
+        &, g_s290(g_pmax_), g_s20c(g_pmax_), g_s20(g_pmax_), g_s2(g_pmax_), &
         & g_t2a(g_pmax_), g_t20c(g_pmax_), g_t20(g_pmax_)
     double precision :: g_t2(g_pmax_), g_s3a(g_pmax_), g_s30c(g_pmax_), &
         & g_s30(g_pmax_), g_s3ic(g_pmax_), g_s3i(g_pmax_), g_s390c(g_pmax_) &
-        & , g_s390(g_pmax_), g_s3(g_pmax_), g_t390(g_pmax_)
+        &, g_s390(g_pmax_), g_s3(g_pmax_), g_t390(g_pmax_)
     double precision :: g_t30(g_pmax_), g_t30alt(g_pmax_), g_t3(g_pmax_ &
         & ), g_t3i(g_pmax_), g_h2ie(g_pmax_), g_al1(g_pmax_), g_al2(g_pmax_) &
-        & , g_rnahie1(g_pmax_), g_rnahie3(g_pmax_), g_rnahmu1(g_pmax_)
+        &, g_rnahie1(g_pmax_), g_rnahie3(g_pmax_), g_rnahmu1(g_pmax_)
     double precision :: g_rnahmu3(g_pmax_), g_rnahpar1(g_pmax_), g_rnah&
         &par3(g_pmax_), g_rnahperp1(g_pmax_), g_rnahperp3(g_pmax_), g_rnahp&
         &ol1(g_pmax_), g_rnahpol1b(g_pmax_), g_rnahpol3(g_pmax_), g_rnahpol&
@@ -365,7 +343,7 @@ subroutine g_prepot11( g_p_ )
         &pmax_), g_c6swt3(g_pmax_), g_elec(g_pmax_), g_coul1(g_pmax_), g_co&
         &ul2(g_pmax_), g_coul3(g_pmax_), g_exch1(g_pmax_), g_exch2(g_pmax_)
     double precision :: g_exch3(g_pmax_), g_w(g_pmax_), g_cplg2(g_pmax_ &
-        & ), g_e(ldg_e, nt)
+        & ), g_e(ldg_e,nt)
     integer :: g_ehfid
     save g_exch1, g_exch2, g_exch3, g_w, g_cplg2
     save g_c63, g_dexp3, g_cind1, g_cind3, g_c6swt1, g_c6swt3, g_ele&
@@ -383,7 +361,7 @@ subroutine g_prepot11( g_p_ )
     save g_s1a, g_s10c, g_s10, g_s1ic, g_s1i, g_s190c, g_s190, g_s1, &
         & g_t190, g_t10
     save g_rnag1c, g_rnag3c, g_rsm1, g_rsm2, g_rsm3, g_cstsq, g_cosa &
-        & , g_coscos, g_cstsq1, g_cstsq3
+        &, g_coscos, g_cstsq1, g_cstsq3
     save g_r1s, g_r2s, g_r3s, g_d2_w, g_d1_w, g_rnag, g_rnags, g_rna&
         &gc, g_rnag1, g_rnag3
     intrinsic dble
@@ -395,7 +373,7 @@ subroutine g_prepot11( g_p_ )
     data s190c1 /274.97638d0/, s190c2 /2.20787d0/, s190c3 /-28.97638&
         &d0/, s190c6 /1.383d0/, s190alp /0.66693d0/, s190rho /6.95276d0/
     data s101i /479.85039d0/, s102i /2.22598d0/, s103i /-24.20472d0/ &
-        & , s104i /30.19685d0/, s105i /-9.96063d0/, s106i /1.383d0/, s1ialp &
+        &, s104i /30.19685d0/, s105i /-9.96063d0/, s106i /1.383d0/, s1ialp &
         & /0.15d0/
     !
     ! data blocks for the NaH triplets
@@ -461,7 +439,7 @@ subroutine g_prepot11( g_p_ )
     if (g_p_ .gt. g_pmax_) then
         print *, 'Parameter g_p_ is greater than g_pmax_'
         stop
-    endif
+    end if
     rac2   = 1.d0 / dsqrt(2.d0)
     cevau  = 1.d0 / 27.2113961d0
     onethd = 1.0d0 / 3.0d0
@@ -479,23 +457,23 @@ subroutine g_prepot11( g_p_ )
         ! center of mass distances, the H-Na-H bond angle and the Jacobian
         ! angle chi.
         !
-        d2_b = r(i, 1) + r(i, 1)
+        d2_b = r(i,1) + r(i,1)
         do g_i_ = 1, g_p_
-            g_r1s(g_i_) = d2_b * g_r(g_i_, i, 1)
-        enddo
-        r1s = r(i, 1) * r(i, 1)
+            g_r1s(g_i_) = d2_b * g_r(g_i_,i,1)
+        end do
+        r1s = r(i,1) * r(i,1)
         !--------
-        d2_b = r(i, 2) + r(i, 2)
+        d2_b = r(i,2) + r(i,2)
         do g_i_ = 1, g_p_
-            g_r2s(g_i_) = d2_b * g_r(g_i_, i, 2)
-        enddo
-        r2s = r(i, 2) * r(i, 2)
+            g_r2s(g_i_) = d2_b * g_r(g_i_,i,2)
+        end do
+        r2s = r(i,2) * r(i,2)
         !--------
-        d2_b = r(i, 3) + r(i, 3)
+        d2_b = r(i,3) + r(i,3)
         do g_i_ = 1, g_p_
-            g_r3s(g_i_) = d2_b * g_r(g_i_, i, 3)
-        enddo
-        r3s = r(i, 3) * r(i, 3)
+            g_r3s(g_i_) = d2_b * g_r(g_i_,i,3)
+        end do
+        r3s = r(i,3) * r(i,3)
         !--------
 
         rnag = dsqrt(dabs(0.5d0*(r1s+r3s-0.5d0*r2s)))
@@ -508,18 +486,18 @@ subroutine g_prepot11( g_p_ )
             g_rnag(1) = 0.0d0
             g_rnag(2) = 0.0d0
             g_rnag(3) = 0.0d0
-        endif
+        end if
 
         !--------
         d2_b = rnag + rnag
         do g_i_ = 1, g_p_
             g_rnags(g_i_) = d2_b * g_rnag(g_i_)
-        enddo
+        end do
         rnags = rnag * rnag
         !--------
         do g_i_ = 1, g_p_
             g_rnagc(g_i_) = rnags * g_rnag(g_i_) + rnag * g_rnags(g_i_)
-        enddo
+        end do
         rnagc = rnags * rnag
         !--------
         !
@@ -536,7 +514,7 @@ subroutine g_prepot11( g_p_ )
             g_rnag1(1) = 0.0d0
             g_rnag1(2) = 0.0d0
             g_rnag1(3) = 0.0d0
-        endif
+        end if
 
         !--------
         rnag3 = dsqrt(dabs(r2s+frac*(r1s-r2s-r3s)+r3s*frac*frac))
@@ -549,7 +527,7 @@ subroutine g_prepot11( g_p_ )
             g_rnag3(1) = 0.0d0
             g_rnag3(2) = 0.0d0
             g_rnag3(3) = 0.0d0
-        endif
+        end if
 
         !--------
         !
@@ -557,111 +535,110 @@ subroutine g_prepot11( g_p_ )
         d3_b = d2_v + rnag1 * rnag1 + rnag1 * rnag1
         do g_i_ = 1, g_p_
             g_rnag1c(g_i_) = d3_b * g_rnag1(g_i_)
-        enddo
+        end do
         rnag1c = d2_v * rnag1
         !--------
         d2_v = rnag3 * rnag3
         d3_b = d2_v + rnag3 * rnag3 + rnag3 * rnag3
         do g_i_ = 1, g_p_
             g_rnag3c(g_i_) = d3_b * g_rnag3(g_i_)
-        enddo
+        end do
         rnag3c = d2_v * rnag3
         !--------
         !
         ! the shortest of any two distances . . .
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-0.5d0) * g_r(g_i_, i, 2) + 0.5d0 * g_r(g_i_ , i, 3)
-        enddo
-        d1_w = 0.5d0 * (r(i, 3) - r(i, 2))
-        d3_v = r(i, 2) - r(i, 3)
+            g_d1_w(g_i_) = (-0.5d0) * g_r(g_i_,i,2) + 0.5d0 * g_r(g_i_,i,3)
+        end do
+        d1_w = 0.5d0 * (r(i,3) - r(i,2))
+        d3_v = r(i,2) - r(i,3)
         d5_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d5_v *  d5_v)
         d7_v = 0.5d0 + 0.5d0 * d5_v
         d8_b = d3_v * 0.5d0 * d1_p
         d2_b = 1.0d0 + (-d7_v)
         do g_i_ = 1, g_p_
-            g_rsm1(g_i_) = d8_b * g_d1_w(g_i_) + d7_v * g_r(g_i_, i, 2) + d2_b * g_r(g_i_, i, 3)
-        enddo
-        rsm1 = r(i, 3) + d3_v * d7_v
+            g_rsm1(g_i_) = d8_b * g_d1_w(g_i_) + d7_v * g_r(g_i_,i,2) + d2_b * g_r(g_i_,i,3)
+        end do
+        rsm1 = r(i,3) + d3_v * d7_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-0.5d0) * g_r(g_i_, i, 1) + 0.5d0 * g_r(g_i_ , i, 3)
-        enddo
-        d1_w = 0.5d0 * (r(i, 3) - r(i, 1))
-        d3_v = r(i, 1) - r(i, 3)
+            g_d1_w(g_i_) = (-0.5d0) * g_r(g_i_,i,1) + 0.5d0 * g_r(g_i_,i,3)
+        end do
+        d1_w = 0.5d0 * (r(i,3) - r(i,1))
+        d3_v = r(i,1) - r(i,3)
         d5_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d5_v *  d5_v)
         d7_v = 0.5d0 + 0.5d0 * d5_v
         d8_b = d3_v * 0.5d0 * d1_p
         d2_b = 1.0d0 + (-d7_v)
         do g_i_ = 1, g_p_
-            g_rsm2(g_i_) = d8_b * g_d1_w(g_i_) + d7_v * g_r(g_i_, i, 1) + d2_b * g_r(g_i_, i, 3)
-        enddo
-        rsm2 = r(i, 3) + d3_v * d7_v
+            g_rsm2(g_i_) = d8_b * g_d1_w(g_i_) + d7_v * g_r(g_i_,i,1) + d2_b * g_r(g_i_,i,3)
+        end do
+        rsm2 = r(i,3) + d3_v * d7_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-0.5d0) * g_r(g_i_, i, 2) + 0.5d0 * g_r(g_i_ , i, 1)
-        enddo
-        d1_w = 0.5d0 * (r(i, 1) - r(i, 2))
-        d3_v = r(i, 2) - r(i, 1)
+            g_d1_w(g_i_) = (-0.5d0) * g_r(g_i_,i,2) + 0.5d0 * g_r(g_i_,i,1)
+        end do
+        d1_w = 0.5d0 * (r(i,1) - r(i,2))
+        d3_v = r(i,2) - r(i,1)
         d5_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d5_v *  d5_v)
         d7_v = 0.5d0 + 0.5d0 * d5_v
         d8_b = d3_v * 0.5d0 * d1_p
         d2_b = 1.0d0 + (-d7_v)
         do g_i_ = 1, g_p_
-            g_rsm3(g_i_) = d8_b * g_d1_w(g_i_) + d7_v * g_r(g_i_, i, 2) + d2_b * g_r(g_i_, i, 1)
-        enddo
-        rsm3 = r(i, 1) + d3_v * d7_v
+            g_rsm3(g_i_) = d8_b * g_d1_w(g_i_) + d7_v * g_r(g_i_,i,2) + d2_b * g_r(g_i_,i,1)
+        end do
+        rsm3 = r(i,1) + d3_v * d7_v
         !--------
         !
-        rexp1 = dexp(-r(i, 1))
-        rexp2 = dexp(-r(i, 2))
-        rexp3 = dexp(-r(i, 3))
+        rexp1 = dexp(-r(i,1))
+        rexp2 = dexp(-r(i,2))
+        rexp3 = dexp(-r(i,3))
         !
         ! checks on angles . . .
         if (rnag .eq. 0.0d0) then
             do g_i_ = 1, g_p_
                 g_cstsq(g_i_) = 0.0d0
-            enddo
+            end do
             cstsq = 1.0d0
             !--------
         else
-            d7_v = r(i, 2) * rnag
+            d7_v = r(i,2) * rnag
             d8_v = 0.5d0 * (r3s - r1s) / d7_v
             d9_v = d8_v * d8_v
             d1_p = 2.0d0 * d8_v
             d4_b = d1_p * ((-d8_v) / d7_v)
             d5_b = d4_b * rnag
-            d6_b = d4_b * r(i, 2)
+            d6_b = d4_b * r(i,2)
             d7_b = d1_p * (1.0d0 / d7_v) * 0.5d0
             do g_i_ = 1, g_p_
-                g_cstsq(g_i_) = d6_b * g_rnag(g_i_) + d5_b * g_r(g_i_, i, 2) + (-d7_b) * g_r1s(g_i_) + d7_b * &
-                    & g_r3s(g_i_)
-            enddo
+                g_cstsq(g_i_) = d6_b * g_rnag(g_i_) + d5_b * g_r(g_i_,i,2) + (-d7_b) * g_r1s(g_i_) + d7_b * g_r3s(g_i_)
+            end do
             cstsq = d9_v
             !--------
-        endif
+        end if
         !
-        d7_v  = dble(2) * r(i, 1)
-        d9_v  = d7_v * r(i, 3)
+        d7_v  = dble(2) * r(i,1)
+        d9_v  = d7_v * r(i,3)
         d10_v = (r1s + r3s - r2s) / d9_v
         d2_b  = 1.0d0 / d9_v
         d3_b  = (-d10_v) / d9_v
         d5_b  = d3_b * d7_v
-        d6_b  = d3_b * r(i, 3) * dble(2)
+        d6_b  = d3_b * r(i,3) * dble(2)
         do g_i_ = 1, g_p_
-            g_cosa(g_i_) = d5_b * g_r(g_i_, i, 3) + d6_b * g_r(g_i_, i, 1) + (-d2_b) * g_r2s(g_i_) + d2_b * &
-                & g_r3s(g_i_) + d2_b * g_r1s(g_i_)
-        enddo
+            g_cosa(g_i_) = d5_b * g_r(g_i_,i,3) + d6_b * g_r(g_i_,i,1) + (-d2_b) * g_r2s(g_i_) + d2_b * g_r3s(g_i_) + &
+                & d2_b * g_r1s(g_i_)
+        end do
         cosa = d10_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-10.0d0) * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = (-10.0d0) * rnags
         d4_v = 0.5d0 + 0.5d0 * cosa
         d5_v = cstsq * d4_v
@@ -673,18 +650,18 @@ subroutine g_prepot11( g_p_ )
         d9_b = d8_v * cstsq * 0.5d0
         do g_i_ = 1, g_p_
             g_coscos(g_i_) = d5_b * g_d1_w(g_i_) + d9_b * g_cosa(g_i_) + d6_b * g_cstsq(g_i_)
-        enddo
+        end do
         coscos = d5_v * d8_v
         !--------
         !
         if (rnag1 .eq. 0.0d0) then
             do g_i_ = 1, g_p_
                 g_cstsq1(g_i_) = 0.0d0
-            enddo
+            end do
             cstsq1 = 1.0d0
             !--------
         else
-            d11_v = r(i, 1) * rnag1
+            d11_v = r(i,1) * rnag1
             d12_v = (r3s - r2s - r1s + 2.0d0 * r3s * frac) / d11_v
             d13_v = d12_v * d12_v
             d1_p  = 2.0d0 * d12_v
@@ -692,24 +669,24 @@ subroutine g_prepot11( g_p_ )
             d4_b  = d3_b * (1.0d0 / d11_v)
             d5_b  = d3_b * ((-d12_v) / d11_v)
             d6_b  = d5_b * rnag1
-            d7_b  = d5_b * r(i, 1)
+            d7_b  = d5_b * r(i,1)
             d11_b = d4_b * frac * 2.0d0 + d4_b
             do g_i_ = 1, g_p_
-                g_cstsq1(g_i_) = d7_b * g_rnag1(g_i_) + d6_b * g_r(g_i_, i , 1) + (-d4_b) * g_r1s(g_i_) + (-d4_b) * &
+                g_cstsq1(g_i_) = d7_b * g_rnag1(g_i_) + d6_b * g_r(g_i_,i,1) + (-d4_b) * g_r1s(g_i_) + (-d4_b) * &
                     & g_r2s(g_i_) + d11_b * g_r3s(g_i_)
-            enddo
+            end do
             cstsq1 = 0.25d0 * d13_v
             !--------
-        endif
+        end if
         !
         if (rnag3 .eq. 0.0d0) then
             do g_i_ = 1, g_p_
                 g_cstsq3(g_i_) = 0.0d0
-            enddo
+            end do
             cstsq3 = 1.0d0
             !--------
         else
-            d11_v = r(i, 3) * rnag3
+            d11_v = r(i,3) * rnag3
             d12_v = (r1s - r2s - r3s + 2.0d0 * r1s * frac) / d11_v
             d13_v = d12_v * d12_v
             d1_p  = 2.0d0 * d12_v
@@ -717,15 +694,15 @@ subroutine g_prepot11( g_p_ )
             d4_b  = d3_b * (1.0d0 / d11_v)
             d5_b  = d3_b * ((-d12_v) / d11_v)
             d6_b  = d5_b * rnag3
-            d7_b  = d5_b * r(i, 3)
+            d7_b  = d5_b * r(i,3)
             d11_b = d4_b * frac * 2.0d0 + d4_b
             do g_i_ = 1, g_p_
-                g_cstsq3(g_i_) = d7_b * g_rnag3(g_i_) + d6_b * g_r(g_i_, i , 3) + (-d4_b) * g_r3s(g_i_) + (-d4_b) * &
+                g_cstsq3(g_i_) = d7_b * g_rnag3(g_i_) + d6_b * g_r(g_i_,i,3) + (-d4_b) * g_r3s(g_i_) + (-d4_b) * &
                     & g_r2s(g_i_) + d11_b * g_r1s(g_i_)
-            enddo
+            end do
             cstsq3 = 0.25d0 * d13_v
             !--------
-        endif
+        end if
         !
         !==============================================================k
         !This section contains the diatomic curves
@@ -733,58 +710,58 @@ subroutine g_prepot11( g_p_ )
         ! The first NaH singlet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s1c2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-s1c2) * r(i, 1)
+            g_d1_w(g_i_) = (-s1c2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-s1c2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s1c6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-s1c6) * r(i, 1)
+            g_d2_w(g_i_) = (-s1c6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-s1c6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s1c3 + s1c4 * r(i, 1) + s1c5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = s1c3 + s1c4 * r(i,1) + s1c5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * s1c5
         d7_b  = d12_v * d9_v + d8_b * s1c4
         d14_b = s1c1 * d2_p
         do g_i_ = 1, g_p_
-            g_s1a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s1a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         s1a = s1c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s10c2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-s10c2) * r(i, 1)
+            g_d1_w(g_i_) = (-s10c2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-s10c2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s10c6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-s10c6) * r(i, 1)
+            g_d2_w(g_i_) = (-s10c6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-s10c6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s10c3 + s10c4 * r(i, 1) + s10c5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = s10c3 + s10c4 * r(i,1) + s10c5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * s10c5
         d7_b  = d12_v * d9_v + d8_b * s10c4
         d14_b = s10c1 * d2_p
         do g_i_ = 1, g_p_
-            g_s10c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s10c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         s10c = s10c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = s10alp * g_rsm1(g_i_)
-        enddo
+        end do
         d1_w = s10alp * (rsm1 - s10rho)
         d4_v = (s10c - s1a) * 0.5d0
         d6_v = tanh (d1_w)
@@ -795,38 +772,38 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_s10(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_s10c(g_i_) + d2_b * g_s1a(g_i_)
-        enddo
+        end do
         s10 = s1a + d4_v * d7_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s102i) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-s102i) * r(i, 1)
+            g_d1_w(g_i_) = (-s102i) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-s102i) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s106i) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-s106i) * r(i, 1)
+            g_d2_w(g_i_) = (-s106i) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-s106i) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s103i + s104i * r(i, 1) + s105i * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = s103i + s104i * r(i,1) + s105i * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * s105i
         d7_b  = d12_v * d9_v + d8_b * s104i
         d14_b = s101i * d2_p
         do g_i_ = 1, g_p_
-            g_s1ic(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s1ic(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         s1ic = s101i * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = s1ialp * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = s1ialp * rnags
         d3_v = s1ic - s1a
         d5_v = tanh (d1_w)
@@ -836,36 +813,36 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d6_v)
         do g_i_ = 1, g_p_
             g_s1i(g_i_) = d7_b * g_d1_w(g_i_) + d6_v * g_s1ic(g_i_) + d2_b * g_s1a(g_i_)
-        enddo
+        end do
         s1i = s1a + d3_v * d6_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s190c2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-s190c2) * r(i, 1)
+            g_d1_w(g_i_) = (-s190c2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-s190c2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s190c6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w = (-s190c6) * r(i, 1)
+            g_d2_w(g_i_) = (-s190c6) * g_r(g_i_,i,1)
+        end do
+        d2_w = (-s190c6) * r(i,1)
         d2_v = exp(d1_w)
         d2_p = d2_v
-        d5_v = r(i, 1) * s190c3
+        d5_v = r(i,1) * s190c3
         d7_v = exp(d2_w)
         d1_p = d7_v
         d6_b = d5_v * d1_p
         d7_b = d7_v * s190c3
         d9_b = s190c1 * d2_p
         do g_i_ = 1, g_p_
-            g_s190c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r(g_i_, i, 1) + d9_b * g_d1_w(g_i_)
-        enddo
+            g_s190c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r(g_i_,i,1) + d9_b * g_d1_w(g_i_)
+        end do
         s190c = s190c1 * d2_v + d5_v * d7_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = s190alp * g_r(g_i_, i, 2)
-        enddo
-        d1_w = s190alp * (r(i, 2) - s190rho)
+            g_d1_w(g_i_) = s190alp * g_r(g_i_,i,2)
+        end do
+        d1_w = s190alp * (r(i,2) - s190rho)
         d4_v = (s190c - s1a) * 0.5d0
         d6_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d6_v *  d6_v)
@@ -875,7 +852,7 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_s190(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_s190c(g_i_) + d2_b * g_s1a(g_i_)
-        enddo
+        end do
         s190 = s1a + d4_v * d7_v
         !--------
         !
@@ -887,7 +864,7 @@ subroutine g_prepot11( g_p_ )
         do g_i_ = 1, g_p_
             g_s1(g_i_) = d13_v * g_s1i(g_i_) + d7_b * g_cosa(g_i_) + d3_v * g_coscos(g_i_) + d10_b * g_s190(g_i_) + &
                 & coscos * g_s10(g_i_)
-        enddo
+        end do
         s1 = d3_v * coscos + s190 * d8_v + s1i * d13_v
         !--------
         !
@@ -895,84 +872,84 @@ subroutine g_prepot11( g_p_ )
         ! The first NaH triplet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t190c2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-t190c2) * r(i, 1)
+            g_d1_w(g_i_) = (-t190c2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-t190c2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t190c6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-t190c6) * r(i, 1)
+            g_d2_w(g_i_) = (-t190c6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-t190c6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t190c3 + t190c4 * r(i, 1) + t190c5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = t190c3 + t190c4 * r(i,1) + t190c5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * t190c5
         d7_b  = d12_v * d9_v + d8_b * t190c4
         d14_b = t190c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t190(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t190(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         t190 = t190c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t10c2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-t10c2) * r(i, 1)
+            g_d1_w(g_i_) = (-t10c2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-t10c2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t10c6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-t10c6) * r(i, 1)
+            g_d2_w(g_i_) = (-t10c6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-t10c6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t10c3 + t10c4 * r(i, 1) + t10c5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = t10c3 + t10c4 * r(i,1) + t10c5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * t10c5
         d7_b  = d12_v * d9_v + d8_b * t10c4
         d14_b = t10c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t10(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t10(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         t10 = t10c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t10ac2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-t10ac2) * r(i, 1)
+            g_d1_w(g_i_) = (-t10ac2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-t10ac2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t10ac6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-t10ac6) * r(i, 1)
+            g_d2_w(g_i_) = (-t10ac6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-t10ac6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t10ac3 + t10ac4 * r(i, 1) + t10ac5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = t10ac3 + t10ac4 * r(i,1) + t10ac5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * t10ac5
         d7_b  = d12_v * d9_v + d8_b * t10ac4
         d14_b = t10ac1 * d2_p
         do g_i_ = 1, g_p_
-            g_t10alt(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t10alt(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         t10alt = t10ac1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = t10alp * g_r(g_i_, i, 2)
-        enddo
-        d1_w = t10alp * (r(i, 2) - t10rho)
+            g_d1_w(g_i_) = t10alp * g_r(g_i_,i,2)
+        end do
+        d1_w = t10alp * (r(i,2) - t10rho)
         d3_v = t10alt - t10
         d5_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d5_v *  d5_v)
@@ -981,32 +958,32 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d7_v)
         do g_i_ = 1, g_p_
             g_t10(g_i_) = d8_b * g_d1_w(g_i_) + d7_v * g_t10alt(g_i_) + d2_b * g_t10(g_i_)
-        enddo
+        end do
         t10 = t10 + d3_v * d7_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t1ic2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-t1ic2) * r(i, 1)
+            g_d1_w(g_i_) = (-t1ic2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-t1ic2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t1ic6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-t1ic6) * r(i, 1)
+            g_d2_w(g_i_) = (-t1ic6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-t1ic6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t1ic3 + t1ic4 * r(i, 1) + t1ic5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = t1ic3 + t1ic4 * r(i,1) + t1ic5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * t1ic5
         d7_b  = d12_v * d9_v + d8_b * t1ic4
         d14_b = t1ic1 * d2_p
         do g_i_ = 1, g_p_
-            g_t1i(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t1i(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         t1i = t1ic1 * d2_v + d10_v * d12_v
         !--------
         !
@@ -1018,7 +995,7 @@ subroutine g_prepot11( g_p_ )
         do g_i_ = 1, g_p_
             g_t1(g_i_) = d13_v * g_t1i(g_i_) + d7_b * g_cosa(g_i_) + d3_v * g_coscos(g_i_) + d10_b * g_t190(g_i_) + &
                 & coscos * g_t10(g_i_)
-        enddo
+        end do
         t1 = d3_v * coscos + t190 * d8_v + t1i * d13_v
         !--------
         !
@@ -1026,17 +1003,17 @@ subroutine g_prepot11( g_p_ )
         ! The H2 singlet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s2c3) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-s2c3) * r(i, 2)
+            g_d1_w(g_i_) = (-s2c3) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-s2c3) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s2c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-s2c6) * r(i, 2)
-        d3_v  = s2c1 + s2c2 * r(i, 2)
+            g_d2_w(g_i_) = (-s2c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-s2c6) * r(i,2)
+        d3_v  = s2c1 + s2c2 * r(i,2)
         d5_v  = exp(d1_w)
         d2_p  = d5_v
-        d9_v  = s2c4 + s2c5 * r(i, 2)
+        d9_v  = s2c4 + s2c5 * r(i,2)
         d10_v = r2s * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
@@ -1045,23 +1022,23 @@ subroutine g_prepot11( g_p_ )
         d13_b = d3_v * d2_p
         d10_b = d12_v * r2s * s2c5 + d5_v * s2c2
         do g_i_ = 1, g_p_
-            g_s2a(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r2s(g_i_) + d13_b * g_d1_w(g_i_) + d10_b * g_r(g_i_, i, 2)
-        enddo
+            g_s2a(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r2s(g_i_) + d13_b * g_d1_w(g_i_) + d10_b * g_r(g_i_,i,2)
+        end do
         s2a = d3_v * d5_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s290c3) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-s290c3) * r(i, 2)
+            g_d1_w(g_i_) = (-s290c3) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-s290c3) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s290c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-s290c6) * r(i, 2)
-        d3_v  = s290c1 + s290c2 * r(i, 2)
+            g_d2_w(g_i_) = (-s290c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-s290c6) * r(i,2)
+        d3_v  = s290c1 + s290c2 * r(i,2)
         d5_v  = exp(d1_w)
         d2_p  = d5_v
-        d9_v  = s290c4 + s290c5 * r(i, 2)
+        d9_v  = s290c4 + s290c5 * r(i,2)
         d10_v = r2s * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
@@ -1070,14 +1047,14 @@ subroutine g_prepot11( g_p_ )
         d13_b = d3_v * d2_p
         d10_b = d12_v * r2s * s290c5 + d5_v * s290c2
         do g_i_ = 1, g_p_
-            g_s290c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r2s(g_i_) + d13_b * g_d1_w(g_i_) + d10_b * g_r(g_i_, i, 2)
-        enddo
+            g_s290c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r2s(g_i_) + d13_b * g_d1_w(g_i_) + d10_b * g_r(g_i_,i,2)
+        end do
         s290c = d3_v * d5_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = s290alp * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = s290alp * (rnags - s290rho)
         d4_v = (s290c - s2a) * 0.5d0
         d6_v = tanh (d1_w)
@@ -1088,22 +1065,22 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_s290(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_s290c(g_i_) + d2_b * g_s2a(g_i_)
-        enddo
+        end do
         s290 = s2a + d4_v * d7_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s20c3) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-s20c3) * r(i, 2)
+            g_d1_w(g_i_) = (-s20c3) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-s20c3) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s20c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-s20c6) * r(i, 2)
-        d3_v  = s20c1 + s20c2 * r(i, 2)
+            g_d2_w(g_i_) = (-s20c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-s20c6) * r(i,2)
+        d3_v  = s20c1 + s20c2 * r(i,2)
         d5_v  = exp(d1_w)
         d2_p  = d5_v
-        d9_v  = s20c4 + s20c5 * r(i, 2)
+        d9_v  = s20c4 + s20c5 * r(i,2)
         d10_v = r2s * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
@@ -1112,14 +1089,14 @@ subroutine g_prepot11( g_p_ )
         d13_b = d3_v * d2_p
         d10_b = d12_v * r2s * s20c5 + d5_v * s20c2
         do g_i_ = 1, g_p_
-            g_s20c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r2s(g_i_) + d13_b * g_d1_w(g_i_) + d10_b * g_r(g_i_, i, 2)
-        enddo
+            g_s20c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r2s(g_i_) + d13_b * g_d1_w(g_i_) + d10_b * g_r(g_i_,i,2)
+        end do
         s20c = d3_v * d5_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = s20alp * g_rsm2(g_i_)
-        enddo
+        end do
         d1_w = s20alp * (rsm2 - s20rho)
         d4_v = (s20c - s2a) * 0.5d0
         d6_v = tanh (d1_w)
@@ -1130,7 +1107,7 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_s20(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_s20c(g_i_) + d2_b * g_s2a(g_i_)
-        enddo
+        end do
         s20 = s2a + d4_v * d7_v
         !--------
         !
@@ -1138,7 +1115,7 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-coscos)
         do g_i_ = 1, g_p_
             g_s2(g_i_) = d3_v * g_coscos(g_i_) + coscos * g_s20(g_i_) + d2_b * g_s290(g_i_)
-        enddo
+        end do
         s2 = s290 + d3_v * coscos
         !--------
         !
@@ -1146,58 +1123,58 @@ subroutine g_prepot11( g_p_ )
         ! The H2 triplet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t2c2) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-t2c2) * r(i, 2)
+            g_d1_w(g_i_) = (-t2c2) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-t2c2) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t2c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-t2c6) * r(i, 2)
+            g_d2_w(g_i_) = (-t2c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-t2c6) * r(i,2)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t2c3 + t2c4 * r(i, 2) + t2c5 * r2s
-        d10_v = r(i, 2) * d9_v
+        d9_v  = t2c3 + t2c4 * r(i,2) + t2c5 * r2s
+        d10_v = r(i,2) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 2)
+        d8_b  = d12_v * r(i,2)
         d11_b = d8_b * t2c5
         d7_b  = d12_v * d9_v + d8_b * t2c4
         d14_b = t2c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t2a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_, i, 2) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t2a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_,i,2) + d14_b * g_d1_w(g_i_)
+        end do
         t2a = t2c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t20c2) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-t20c2) * r(i, 2)
+            g_d1_w(g_i_) = (-t20c2) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-t20c2) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t20c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-t20c6) * r(i, 2)
+            g_d2_w(g_i_) = (-t20c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-t20c6) * r(i,2)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t20c3 + t20c4 * r(i, 2) + t20c5 * r2s
-        d10_v = r(i, 2) * d9_v
+        d9_v  = t20c3 + t20c4 * r(i,2) + t20c5 * r2s
+        d10_v = r(i,2) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 2)
+        d8_b  = d12_v * r(i,2)
         d11_b = d8_b * t20c5
         d7_b  = d12_v * d9_v + d8_b * t20c4
         d14_b = t20c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t20c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_, i, 2) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t20c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_,i,2) + d14_b * g_d1_w(g_i_)
+        end do
         t20c = t20c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = t20alp * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = t20alp * (rnags - t20rho)
         d4_v = (t20c - t2a) * 0.5d0
         d6_v = tanh (d1_w)
@@ -1208,7 +1185,7 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_t20(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_t20c(g_i_) + d2_b * g_t2a(g_i_)
-        enddo
+        end do
         t20 = t2a + d4_v * d7_v
         !--------
         !
@@ -1216,65 +1193,65 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-coscos)
         do g_i_ = 1, g_p_
             g_t2(g_i_) = d3_v * g_coscos(g_i_) + coscos * g_t20(g_i_) + d2_b * g_t2a(g_i_)
-        enddo
+        end do
         t2 = t2a + d3_v * coscos
         !--------
         !
         ! The second NaH singlet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s1c2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-s1c2) * r(i, 3)
+            g_d1_w(g_i_) = (-s1c2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-s1c2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s1c6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-s1c6) * r(i, 3)
+            g_d2_w(g_i_) = (-s1c6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-s1c6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s1c3 + s1c4 * r(i, 3) + s1c5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = s1c3 + s1c4 * r(i,3) + s1c5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * s1c5
         d7_b  = d12_v * d9_v + d8_b * s1c4
         d14_b = s1c1 * d2_p
         do g_i_ = 1, g_p_
-            g_s3a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s3a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         s3a = s1c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s10c2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-s10c2) * r(i, 3)
+            g_d1_w(g_i_) = (-s10c2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-s10c2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s10c6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-s10c6) * r(i, 3)
+            g_d2_w(g_i_) = (-s10c6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-s10c6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s10c3 + s10c4 * r(i, 3) + s10c5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = s10c3 + s10c4 * r(i,3) + s10c5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * s10c5
         d7_b  = d12_v * d9_v + d8_b * s10c4
         d14_b = s10c1 * d2_p
         do g_i_ = 1, g_p_
-            g_s30c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s30c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         s30c = s10c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = s10alp * g_rsm3(g_i_)
-        enddo
+        end do
         d1_w = s10alp * (rsm3 - s10rho)
         d4_v = (s30c - s3a) * 0.5d0
         d6_v = tanh (d1_w)
@@ -1285,38 +1262,38 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_s30(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_s30c(g_i_) + d2_b * g_s3a(g_i_)
-        enddo
+        end do
         s30 = s3a + d4_v * d7_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s102i) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-s102i) * r(i, 3)
+            g_d1_w(g_i_) = (-s102i) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-s102i) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s106i) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-s106i) * r(i, 3)
+            g_d2_w(g_i_) = (-s106i) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-s106i) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s103i + s104i * r(i, 3) + s105i * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = s103i + s104i * r(i,3) + s105i * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * s105i
         d7_b  = d12_v * d9_v + d8_b * s104i
         d14_b = s101i * d2_p
         do g_i_ = 1, g_p_
-            g_s3ic(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s3ic(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         s3ic = s101i * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = s1ialp * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = s1ialp * rnags
         d3_v = s3ic - s3a
         d5_v = tanh (d1_w)
@@ -1326,36 +1303,36 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d6_v)
         do g_i_ = 1, g_p_
             g_s3i(g_i_) = d7_b * g_d1_w(g_i_) + d6_v * g_s3ic(g_i_) + d2_b * g_s3a(g_i_)
-        enddo
+        end do
         s3i = s3a + d3_v * d6_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s190c2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-s190c2) * r(i, 3)
+            g_d1_w(g_i_) = (-s190c2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-s190c2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s190c6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w = (-s190c6) * r(i, 3)
+            g_d2_w(g_i_) = (-s190c6) * g_r(g_i_,i,3)
+        end do
+        d2_w = (-s190c6) * r(i,3)
         d2_v = exp(d1_w)
         d2_p = d2_v
-        d5_v = r(i, 3) * s190c3
+        d5_v = r(i,3) * s190c3
         d7_v = exp(d2_w)
         d1_p = d7_v
         d6_b = d5_v * d1_p
         d7_b = d7_v * s190c3
         d9_b = s190c1 * d2_p
         do g_i_ = 1, g_p_
-            g_s390c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r(g_i_, i, 3) + d9_b * g_d1_w(g_i_)
-        enddo
+            g_s390c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r(g_i_,i,3) + d9_b * g_d1_w(g_i_)
+        end do
         s390c = s190c1 * d2_v + d5_v * d7_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = s190alp * g_r(g_i_, i, 2)
-        enddo
-        d1_w = s190alp * (r(i, 2) - s190rho)
+            g_d1_w(g_i_) = s190alp * g_r(g_i_,i,2)
+        end do
+        d1_w = s190alp * (r(i,2) - s190rho)
         d4_v = (s390c - s3a) * 0.5d0
         d6_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d6_v *  d6_v)
@@ -1365,7 +1342,7 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_s390(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_s390c(g_i_) + d2_b * g_s3a(g_i_)
-        enddo
+        end do
         s390 = s3a + d4_v * d7_v
         !--------
         !
@@ -1377,7 +1354,7 @@ subroutine g_prepot11( g_p_ )
         do g_i_ = 1, g_p_
             g_s3(g_i_) = d13_v * g_s3i(g_i_) + d7_b * g_cosa(g_i_) + d3_v * g_coscos(g_i_) + d10_b * g_s390(g_i_) + &
                 & coscos * g_s30(g_i_)
-        enddo
+        end do
         s3 = d3_v * coscos + s390 * d8_v + s3i * d13_v
         !--------
         !
@@ -1385,84 +1362,84 @@ subroutine g_prepot11( g_p_ )
         ! The second NaH triplet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t190c2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-t190c2) * r(i, 3)
+            g_d1_w(g_i_) = (-t190c2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-t190c2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t190c6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-t190c6) * r(i, 3)
+            g_d2_w(g_i_) = (-t190c6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-t190c6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t190c3 + t190c4 * r(i, 3) + t190c5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = t190c3 + t190c4 * r(i,3) + t190c5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * t190c5
         d7_b  = d12_v * d9_v + d8_b * t190c4
         d14_b = t190c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t390(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t390(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         t390 = t190c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t10c2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-t10c2) * r(i, 3)
+            g_d1_w(g_i_) = (-t10c2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-t10c2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t10c6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-t10c6) * r(i, 3)
+            g_d2_w(g_i_) = (-t10c6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-t10c6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t10c3 + t10c4 * r(i, 3) + t10c5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = t10c3 + t10c4 * r(i,3) + t10c5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * t10c5
         d7_b  = d12_v * d9_v + d8_b * t10c4
         d14_b = t10c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t30(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t30(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         t30 = t10c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t10ac2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-t10ac2) * r(i, 3)
+            g_d1_w(g_i_) = (-t10ac2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-t10ac2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t10ac6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-t10ac6) * r(i, 3)
+            g_d2_w(g_i_) = (-t10ac6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-t10ac6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t10ac3 + t10ac4 * r(i, 3) + t10ac5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = t10ac3 + t10ac4 * r(i,3) + t10ac5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * t10ac5
         d7_b  = d12_v * d9_v + d8_b * t10ac4
         d14_b = t10ac1 * d2_p
         do g_i_ = 1, g_p_
-            g_t30alt(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t30alt(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         t30alt = t10ac1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = t10alp * g_r(g_i_, i, 2)
-        enddo
-        d1_w = t10alp * (r(i, 2) - t10rho)
+            g_d1_w(g_i_) = t10alp * g_r(g_i_,i,2)
+        end do
+        d1_w = t10alp * (r(i,2) - t10rho)
         d3_v = t30alt - t30
         d5_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d5_v *  d5_v)
@@ -1471,7 +1448,7 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d7_v)
         do g_i_ = 1, g_p_
             g_t30(g_i_) = d8_b * g_d1_w(g_i_) + d7_v * g_t30alt(g_i_) + d2_b * g_t30(g_i_)
-        enddo
+        end do
         t30 = t30 + d3_v * d7_v
         !--------
         !
@@ -1479,32 +1456,32 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-cstsq)
         do g_i_ = 1, g_p_
             g_t3(g_i_) = d3_v * g_cstsq(g_i_) + cstsq * g_t30(g_i_) + d2_b * g_t390(g_i_)
-        enddo
+        end do
         t3 = t390 + d3_v * cstsq
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t1ic2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-t1ic2) * r(i, 3)
+            g_d1_w(g_i_) = (-t1ic2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-t1ic2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t1ic6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-t1ic6) * r(i, 3)
+            g_d2_w(g_i_) = (-t1ic6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-t1ic6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t1ic3 + t1ic4 * r(i, 3) + t1ic5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = t1ic3 + t1ic4 * r(i,3) + t1ic5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * t1ic5
         d7_b  = d12_v * d9_v + d8_b * t1ic4
         d14_b = t1ic1 * d2_p
         do g_i_ = 1, g_p_
-            g_t3i(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t3i(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         t3i = t1ic1 * d2_v + d10_v * d12_v
         !--------
         !
@@ -1514,7 +1491,7 @@ subroutine g_prepot11( g_p_ )
         d8_b = -(d6_v * 0.5d0)
         do g_i_ = 1, g_p_
             g_t3(g_i_) = d4_v * g_t3i(g_i_) + d8_b * g_cosa(g_i_) + d2_b * g_t3(g_i_)
-        enddo
+        end do
         t3 = t3 + d4_v * d6_v
         !--------
         !
@@ -1526,7 +1503,7 @@ subroutine g_prepot11( g_p_ )
         do g_i_ = 1, g_p_
             g_t3(g_i_) = d13_v * g_t3i(g_i_) + d7_b * g_cosa(g_i_) + d3_v * g_coscos(g_i_) + d10_b * g_t390(g_i_) + &
                 & coscos * g_t30(g_i_)
-        enddo
+        end do
         t3 = d3_v * coscos + t390 * d8_v + t3i * d13_v
         !--------
         !
@@ -1537,17 +1514,17 @@ subroutine g_prepot11( g_p_ )
         !  H2 ionization energy:
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-h2i3) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-h2i3) * r(i, 2)
+            g_d1_w(g_i_) = (-h2i3) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-h2i3) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-h2i6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-h2i6) * r(i, 2)
-        d3_v  = h2i1 + h2i2 * r(i, 2)
+            g_d2_w(g_i_) = (-h2i6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-h2i6) * r(i,2)
+        d3_v  = h2i1 + h2i2 * r(i,2)
         d5_v  = exp(d1_w)
         d2_p  = d5_v
-        d9_v  = h2i4 + h2i5 * r(i, 2)
+        d9_v  = h2i4 + h2i5 * r(i,2)
         d10_v = r2s * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
@@ -1557,8 +1534,8 @@ subroutine g_prepot11( g_p_ )
         d13_b = d12_v * r2s * h2i5 + d5_v * h2i2
         do g_i_ = 1, g_p_
             g_h2ie(g_i_) = -g_s2a(g_i_) + d9_b * g_d2_w(g_i_) + d10_b * g_r2s(g_i_) + d16_b * g_d1_w(g_i_) + d13_b * &
-                & g_r(g_i_, i, 2)
-        enddo
+                & g_r(g_i_,i,2)
+        end do
         h2ie = d3_v * d5_v + d10_v * d12_v - s2a + hie
         !--------
         !
@@ -1570,52 +1547,52 @@ subroutine g_prepot11( g_p_ )
         !   alb is the mean polarizability
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-h2a1) * g_r(g_i_, i, 2)
-        enddo
-        d1_w  = h2a1 * (h2a2 - r(i, 2))
+            g_d1_w(g_i_) = (-h2a1) * g_r(g_i_,i,2)
+        end do
+        d1_w  = h2a1 * (h2a2 - r(i,2))
         d2_v  = exp(d1_w)
         d1_p  = d2_v
-        d9_v  = h2a6 * r(i, 2)
+        d9_v  = h2a6 * r(i,2)
         d12_v = h2a7 * r2s
         d15_v = h2a8 * r2s
         d16_v = d15_v * r2s
         d19_v = h2a9 * r2s
         d20_v = d19_v * r2s
-        d22_v = h2a3 + h2a4 * r(i, 2) + h2a5 * r2s + d9_v * r2s + d12_v * r2s + d16_v * r(i, 2) + d20_v * r2s
+        d22_v = h2a3 + h2a4 * r(i,2) + h2a5 * r2s + d9_v * r2s + d12_v * r2s + d16_v * r(i,2) + d20_v * r2s
         d7_b  = d2_v * r2s
-        d12_b = d2_v * r(i, 2)
+        d12_b = d2_v * r(i,2)
         d8_b = d2_v * d20_v + d7_b * d19_v + d7_b * r2s * h2a9 + d12_b * d15_v + d12_b * r2s * h2a8 + d2_v * d12_v + &
             & d2_v * r2s * h2a7 + d2_v * d9_v + d2_v * h2a5
         d13_b = d2_v * d16_v + d2_v * r2s * h2a6 + d2_v * h2a4
         d24_b = d22_v * d1_p
         do g_i_ = 1, g_p_
-            g_al1(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_, i, 2) + d24_b * g_d1_w(g_i_)
-        enddo
+            g_al1(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_,i,2) + d24_b * g_d1_w(g_i_)
+        end do
         al1 = d2_v * d22_v + 2.0d0 * hpol
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-h2b1) * g_r(g_i_, i, 2)
-        enddo
-        d1_w  = h2b1 * (h2b2 - r(i, 2))
+            g_d1_w(g_i_) = (-h2b1) * g_r(g_i_,i,2)
+        end do
+        d1_w  = h2b1 * (h2b2 - r(i,2))
         d2_v  = exp(d1_w)
         d1_p  = d2_v
-        d9_v  = h2b6 * r(i, 2)
+        d9_v  = h2b6 * r(i,2)
         d12_v = h2b7 * r2s
         d15_v = h2b8 * r2s
         d16_v = d15_v * r2s
         d19_v = h2b9 * r2s
         d20_v = d19_v * r2s
-        d22_v = h2b3 + h2b4 * r(i, 2) + h2b5 * r2s + d9_v * r2s + d12_v * r2s + d16_v * r(i, 2) + d20_v * r2s
+        d22_v = h2b3 + h2b4 * r(i,2) + h2b5 * r2s + d9_v * r2s + d12_v * r2s + d16_v * r(i,2) + d20_v * r2s
         d7_b  = d2_v * r2s
-        d12_b = d2_v * r(i, 2)
+        d12_b = d2_v * r(i,2)
         d8_b = d2_v * d20_v + d7_b * d19_v + d7_b * r2s * h2b9 + d12_b * d15_v + d12_b * r2s * h2b8 + d2_v * d12_v + &
             & d2_v * r2s * h2b7 + d2_v * d9_v + d2_v * h2b5
         d13_b = d2_v * d16_v + d2_v * r2s * h2b6 + d2_v * h2b4
         d24_b = d22_v * d1_p
         do g_i_ = 1, g_p_
-            g_al2(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_, i, 2) + d24_b * g_d1_w(g_i_)
-        enddo
+            g_al2(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_,i,2) + d24_b * g_d1_w(g_i_)
+        end do
         al2 = d2_v * d22_v + 2.0d0 * hpol
         !--------
         !
@@ -1632,121 +1609,121 @@ subroutine g_prepot11( g_p_ )
         ! NaH properties
         !
         !
-        d9_v  = hnai6 * r(i, 1)
-        d11_v = hnai3 + hnai4 * r(i, 1) + hnai5 * r1s + d9_v * r1s
-        d12_v = (hnai1 + hnai2 * r(i, 1)) / d11_v
+        d9_v  = hnai6 * r(i,1)
+        d11_v = hnai3 + hnai4 * r(i,1) + hnai5 * r1s + d9_v * r1s
+        d12_v = (hnai1 + hnai2 * r(i,1)) / d11_v
         d4_b  = (-d12_v) / d11_v
         d8_b  = d4_b * d9_v + d4_b * hnai5
         d9_b  = d4_b * r1s * hnai6 + d4_b * hnai4 + 1.0d0 / d11_v * hnai2
         do g_i_ = 1, g_p_
-            g_rnahie1(g_i_) = d8_b * g_r1s(g_i_) + d9_b * g_r(g_i_, i, 1 )
-        enddo
+            g_rnahie1(g_i_) = d8_b * g_r1s(g_i_) + d9_b * g_r(g_i_,i,1 )
+        end do
         rnahie1 = d12_v + rnaie
         !--------
         !
-        d9_v  = hnai6 * r(i, 3)
-        d11_v = hnai3 + hnai4 * r(i, 3) + hnai5 * r3s + d9_v * r3s
-        d12_v = (hnai1 + hnai2 * r(i, 3)) / d11_v
+        d9_v  = hnai6 * r(i,3)
+        d11_v = hnai3 + hnai4 * r(i,3) + hnai5 * r3s + d9_v * r3s
+        d12_v = (hnai1 + hnai2 * r(i,3)) / d11_v
         d4_b  = (-d12_v) / d11_v
         d8_b  = d4_b * d9_v + d4_b * hnai5
         d9_b  = d4_b * r3s * hnai6 + d4_b * hnai4 + 1.0d0 / d11_v * hnai2
         do g_i_ = 1, g_p_
-            g_rnahie3(g_i_) = d8_b * g_r3s(g_i_) + d9_b * g_r(g_i_, i, 3 )
-        enddo
+            g_rnahie3(g_i_) = d8_b * g_r3s(g_i_) + d9_b * g_r(g_i_,i,3 )
+        end do
         rnahie3 = d12_v + rnaie
         !--------
         !
-        d10_v = hnau6 * r(i, 1)
-        d12_v = hnau3 + hnau4 * r(i, 1) + hnau5 * r1s + d10_v * r1s
-        d13_v = (hnau1 * r(i, 1) + hnau2 * r1s) / d12_v
+        d10_v = hnau6 * r(i,1)
+        d12_v = hnau3 + hnau4 * r(i,1) + hnau5 * r1s + d10_v * r1s
+        d13_v = (hnau1 * r(i,1) + hnau2 * r1s) / d12_v
         d2_b  = 1.0d0 / d12_v
         d3_b  = (-d13_v) / d12_v
         d7_b  = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
         d8_b  = d3_b * r1s * hnau6 + d3_b * hnau4 + d2_b * hnau1
         do g_i_ = 1, g_p_
-            g_rnahmu1(g_i_) = d7_b * g_r1s(g_i_) + d8_b * g_r(g_i_, i, 1 )
-        enddo
+            g_rnahmu1(g_i_) = d7_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1 )
+        end do
         rnahmu1 = d13_v
         !--------
         !
-        d10_v = hnau6 * r(i, 3)
-        d12_v = hnau3 + hnau4 * r(i, 3) + hnau5 * r3s + d10_v * r3s
-        d13_v = (hnau1 * r(i, 3) + hnau2 * r3s) / d12_v
+        d10_v = hnau6 * r(i,3)
+        d12_v = hnau3 + hnau4 * r(i,3) + hnau5 * r3s + d10_v * r3s
+        d13_v = (hnau1 * r(i,3) + hnau2 * r3s) / d12_v
         d2_b  = 1.0d0 / d12_v
         d3_b  = (-d13_v) / d12_v
         d7_b  = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
         d8_b  = d3_b * r3s * hnau6 + d3_b * hnau4 + d2_b * hnau1
         do g_i_ = 1, g_p_
-            g_rnahmu3(g_i_) = d7_b * g_r3s(g_i_) + d8_b * g_r(g_i_, i, 3 )
-        enddo
+            g_rnahmu3(g_i_) = d7_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3 )
+        end do
         rnahmu3 = d13_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_, i, 1)
-        enddo
-        d1_w  = (-hnaa1) * r(i, 1)
+            g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_,i,1)
+        end do
+        d1_w  = (-hnaa1) * r(i,1)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
         d9_v  = hnaa5 * r1s
-        d11_v = hnaa2 + hnaa3 * r(i, 1) + hnaa4 * r1s + d9_v * r(i, 1)
-        d9_b  = d2_v * r(i, 1) * hnaa5 + d2_v * hnaa4
+        d11_v = hnaa2 + hnaa3 * r(i,1) + hnaa4 * r1s + d9_v * r(i,1)
+        d9_b  = d2_v * r(i,1) * hnaa5 + d2_v * hnaa4
         d8_b  = d2_v * d9_v + d2_v * hnaa3
         d13_b = d11_v * d1_p
         do g_i_ = 1, g_p_
-            g_rnahpar1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_, i, 1) + d13_b * g_d1_w(g_i_)
-        enddo
+            g_rnahpar1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1) + d13_b * g_d1_w(g_i_)
+        end do
         rnahpar1 = rnapol + hpol + d2_v * d11_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_, i, 3)
-        enddo
-        d1_w  = (-hnaa1) * r(i, 3)
+            g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_,i,3)
+        end do
+        d1_w  = (-hnaa1) * r(i,3)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
         d9_v  = hnaa5 * r3s
-        d11_v = hnaa2 + hnaa3 * r(i, 3) + hnaa4 * r3s + d9_v * r(i, 3)
-        d9_b  = d2_v * r(i, 3) * hnaa5 + d2_v * hnaa4
+        d11_v = hnaa2 + hnaa3 * r(i,3) + hnaa4 * r3s + d9_v * r(i,3)
+        d9_b  = d2_v * r(i,3) * hnaa5 + d2_v * hnaa4
         d8_b  = d2_v * d9_v + d2_v * hnaa3
         d13_b = d11_v * d1_p
         do g_i_ = 1, g_p_
-            g_rnahpar3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_, i, 3) + d13_b * g_d1_w(g_i_)
-        enddo
+            g_rnahpar3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3) + d13_b * g_d1_w(g_i_)
+        end do
         rnahpar3 = rnapol + hpol + d2_v * d11_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-hnab1) * g_r(g_i_, i, 1)
-        enddo
-        d1_w  = (-hnab1) * r(i, 1)
+            g_d1_w(g_i_) = (-hnab1) * g_r(g_i_,i,1)
+        end do
+        d1_w  = (-hnab1) * r(i,1)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
         d9_v  = hnab5 * r1s
-        d11_v = hnab2 + hnab3 * r(i, 1) + hnab4 * r1s + d9_v * r(i, 1)
-        d9_b  = d2_v * r(i, 1) * hnab5 + d2_v * hnab4
+        d11_v = hnab2 + hnab3 * r(i,1) + hnab4 * r1s + d9_v * r(i,1)
+        d9_b  = d2_v * r(i,1) * hnab5 + d2_v * hnab4
         d8_b  = d2_v * d9_v + d2_v * hnab3
         d13_b = d11_v * d1_p
         do g_i_ = 1, g_p_
-            g_rnahperp1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_, i, 1) + d13_b * g_d1_w(g_i_)
-        enddo
+            g_rnahperp1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1) + d13_b * g_d1_w(g_i_)
+        end do
         rnahperp1 = rnapol + hpol + d2_v * d11_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-hnab1) * g_r(g_i_, i, 3)
-        enddo
-        d1_w  = (-hnab1) * r(i, 3)
+            g_d1_w(g_i_) = (-hnab1) * g_r(g_i_,i,3)
+        end do
+        d1_w  = (-hnab1) * r(i,3)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
         d9_v  = hnab5 * r3s
-        d11_v = hnab2 + hnab3 * r(i, 3) + hnab4 * r3s + d9_v * r(i, 3)
-        d9_b  = d2_v * r(i, 3) * hnab5 + d2_v * hnab4
+        d11_v = hnab2 + hnab3 * r(i,3) + hnab4 * r3s + d9_v * r(i,3)
+        d9_b  = d2_v * r(i,3) * hnab5 + d2_v * hnab4
         d8_b  = d2_v * d9_v + d2_v * hnab3
         d13_b = d11_v * d1_p
         do g_i_ = 1, g_p_
-            g_rnahperp3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_, i, 3) + d13_b * g_d1_w(g_i_)
-        enddo
+            g_rnahperp3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3) + d13_b * g_d1_w(g_i_)
+        end do
         rnahperp3 = rnapol + hpol + d2_v * d11_v
         !--------
         !
@@ -1754,12 +1731,12 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-cstsq1)
         do g_i_ = 1, g_p_
             g_rnahpol1(g_i_) = d3_v * g_cstsq1(g_i_) + cstsq1 * g_rnahpar1(g_i_) + d2_b * g_rnahperp1(g_i_)
-        enddo
+        end do
         rnahpol1 = rnahperp1 + d3_v * cstsq1
         !--------
         do g_i_ = 1, g_p_
             g_rnahpol1b(g_i_) = twothd * g_rnahperp1(g_i_) + onethd * g_rnahpar1(g_i_)
-        enddo
+        end do
         rnahpol1b = onethd * rnahpar1 + twothd * rnahperp1
         !--------
         !
@@ -1767,12 +1744,12 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-cstsq3)
         do g_i_ = 1, g_p_
             g_rnahpol3(g_i_) = d3_v * g_cstsq3(g_i_) + cstsq3 * g_rnahpar3(g_i_) + d2_b * g_rnahperp3(g_i_)
-        enddo
+        end do
         rnahpol3 = rnahperp3 + d3_v * cstsq3
         !--------
         do g_i_ = 1, g_p_
             g_rnahpol3b(g_i_) = twothd * g_rnahperp3(g_i_) + onethd * g_rnahpar3(g_i_)
-        enddo
+        end do
         rnahpol3b = onethd * rnahpar3 + twothd * rnahperp3
         !--------
         !
@@ -1787,7 +1764,7 @@ subroutine g_prepot11( g_p_ )
         d5_b = d3_b * d2_v + d4_b * rnag1c + d4_b * rnag1c
         do g_i_ = 1, g_p_
             g_div1(g_i_) = d5_b * g_rnag1c(g_i_)
-        enddo
+        end do
         div1 = d5_v
         !--------
         d2_v  = rnahmu1 * rnahmu1
@@ -1803,7 +1780,7 @@ subroutine g_prepot11( g_p_ )
         do g_i_ = 1, g_p_
             g_rmuimu1(g_i_) = d10_v * g_div1(g_i_) + d5_b * g_rnag1c(g_i_) + d9_b * g_cstsq1(g_i_) + d12_b * &
                 & g_rnahmu1(g_i_)
-        enddo
+        end do
         rmuimu1 = d10_v * div1
         !--------
         !
@@ -1815,7 +1792,7 @@ subroutine g_prepot11( g_p_ )
         d5_b = d3_b * d2_v + d4_b * rnag3c + d4_b * rnag3c
         do g_i_ = 1, g_p_
             g_div3(g_i_) = d5_b * g_rnag3c(g_i_)
-        enddo
+        end do
         div3 = d5_v
         !--------
         d2_v  = rnahmu3 * rnahmu3
@@ -1831,7 +1808,7 @@ subroutine g_prepot11( g_p_ )
         do g_i_ = 1, g_p_
             g_rmuimu3(g_i_) = d10_v * g_div3(g_i_) + d5_b * g_rnag3c(g_i_) + d9_b * g_cstsq3(g_i_) + d12_b * &
                 & g_rnahmu3(g_i_)
-        enddo
+        end do
         rmuimu3 = d10_v * div3
         !--------
         !
@@ -1851,14 +1828,14 @@ subroutine g_prepot11( g_p_ )
         d9_b  = d3_b * d10_v + d2_b * al2 * rnapol * ((-1.5d0) * rnaie)
         do g_i_ = 1, g_p_
             g_c690(g_i_) = d8_b * g_rnagc(g_i_) + d11_b * g_al2(g_i_) + d9_b * g_h2ie(g_i_)
-        enddo
+        end do
         c690 = d12_v
         !--------
         d2_v = c690 * f90
         d4_b = rnagc * f90
         do g_i_ = 1, g_p_
             g_c690(g_i_) = d2_v * g_rnagc(g_i_) + d4_b * g_c690(g_i_)
-        enddo
+        end do
         c690 = d2_v * rnagc
         !--------
         !
@@ -1877,14 +1854,14 @@ subroutine g_prepot11( g_p_ )
         d9_b  = d3_b * d10_v + d2_b * al1 * rnapol * ((-1.5d0) * rnaie)
         do g_i_ = 1, g_p_
             g_c60(g_i_) = d8_b * g_rnagc(g_i_) + d11_b * g_al1(g_i_) + d9_b * g_h2ie(g_i_)
-        enddo
+        end do
         c60 = d12_v
         !--------
         d2_v = c60 * f0
         d4_b = rnagc * f0
         do g_i_ = 1, g_p_
             g_c60(g_i_) = d2_v * g_rnagc(g_i_) + d4_b * g_c60(g_i_)
-        enddo
+        end do
         c60 = d2_v * rnagc
         !--------
         !
@@ -1892,7 +1869,7 @@ subroutine g_prepot11( g_p_ )
         d4_b = rnagc * (-39.0625d0)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d2_v * g_rnagc(g_i_) + d4_b * g_rnag(g_i_)
-        enddo
+        end do
         d1_w = d2_v * rnagc
         d3_v = c60 - c690
         d5_v = d3_v * cstsq
@@ -1905,7 +1882,7 @@ subroutine g_prepot11( g_p_ )
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_c6(g_i_) = d7_b * g_d1_w(g_i_) + d9_b * g_cstsq(g_i_) + d8_b * g_c60(g_i_) + d2_b * g_c690(g_i_)
-        enddo
+        end do
         c6 = c690 + d5_v * d8_v
         !--------
         !
@@ -1922,20 +1899,20 @@ subroutine g_prepot11( g_p_ )
         do g_i_ = 1, g_p_
             g_c61(g_i_) = d10_v * g_div1(g_i_) + d6_b * g_rnahpol1(g_i_) + d11_b * g_rnag1c(g_i_) + d9_b * &
                 & g_rnahie1(g_i_)
-        enddo
+        end do
         c61 = d10_v * div1
         !--------
         d2_v = (-39.0625d0) * rnag1c
         d4_b = rnag1 * (-39.0625d0)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d2_v * g_rnag1(g_i_) + d4_b * g_rnag1c(g_i_)
-        enddo
+        end do
         d1_w = d2_v * rnag1
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_dexp1(g_i_) = d1_p * g_d1_w(g_i_)
-        enddo
+        end do
         dexp1 = d2_v
         !--------
         d4_v = rnahpol1b / rnahpol1
@@ -1947,7 +1924,7 @@ subroutine g_prepot11( g_p_ )
         d9_b = d7_b * ((-d4_v) / rnahpol1)
         do g_i_ = 1, g_p_
             g_c61(g_i_) = d6_b * g_dexp1(g_i_) + d9_b * g_rnahpol1(g_i_) + d8_b * g_rnahpol1b(g_i_) + d8_v * g_c61(g_i_)
-        enddo
+        end do
         c61 = c61 * d8_v
         !--------
         !
@@ -1965,20 +1942,20 @@ subroutine g_prepot11( g_p_ )
         do g_i_ = 1, g_p_
             g_c63(g_i_) = d10_v * g_div3(g_i_) + d6_b * g_rnahpol3(g_i_) + d11_b * g_rnag3c(g_i_) + d9_b * &
                 & g_rnahie3(g_i_)
-        enddo
+        end do
         c63 = d10_v * div3
         !--------
         d2_v = (-39.0625d0) * rnag3c
         d4_b = rnag3 * (-39.0625d0)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d2_v * g_rnag3(g_i_) + d4_b * g_rnag3c(g_i_)
-        enddo
+        end do
         d1_w = d2_v * rnag3
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_dexp3(g_i_) = d1_p * g_d1_w(g_i_)
-        enddo
+        end do
         dexp3 = d2_v
         !--------
         d4_v = rnahpol3b / rnahpol3
@@ -1990,7 +1967,7 @@ subroutine g_prepot11( g_p_ )
         d9_b = d7_b * ((-d4_v) / rnahpol3)
         do g_i_ = 1, g_p_
             g_c63(g_i_) = d6_b * g_dexp3(g_i_) + d9_b * g_rnahpol3(g_i_) + d8_b * g_rnahpol3b(g_i_) + d8_v * g_c63(g_i_)
-        enddo
+        end do
         c63 = c63 * d8_v
         !--------
         !
@@ -2002,7 +1979,7 @@ subroutine g_prepot11( g_p_ )
         d10_b = rmuimu1 * dexp1 * ((-d5_v) / d4_v) * 1.5d0
         do g_i_ = 1, g_p_
             g_cind1(g_i_) = d6_b * g_dexp1(g_i_) + d10_b * g_cstsq1(g_i_ ) + d9_v * g_rmuimu1(g_i_)
-        enddo
+        end do
         cind1 = rmuimu1 * d9_v
         !--------
         !
@@ -2014,14 +1991,14 @@ subroutine g_prepot11( g_p_ )
         d10_b = rmuimu3 * dexp3 * ((-d5_v) / d4_v) * 1.5d0
         do g_i_ = 1, g_p_
             g_cind3(g_i_) = d6_b * g_dexp3(g_i_) + d10_b * g_cstsq3(g_i_ ) + d9_v * g_rmuimu3(g_i_)
-        enddo
+        end do
         cind3 = rmuimu3 * d9_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = balp * g_r(g_i_, i, 2)
-        enddo
-        d1_w = balp * (r(i, 2) - brho)
+            g_d1_w(g_i_) = balp * g_r(g_i_,i,2)
+        end do
+        d1_w = balp * (r(i,2) - brho)
         d3_v = c6 * cevau * 0.5d0
         d5_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d5_v *  d5_v)
@@ -2030,32 +2007,32 @@ subroutine g_prepot11( g_p_ )
         d7_b = d6_v * 0.5d0 * cevau
         do g_i_ = 1, g_p_
             g_c6(g_i_) = d5_b * g_d1_w(g_i_) + d7_b * g_c6(g_i_)
-        enddo
+        end do
         c6 = d3_v * d6_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = dalp * g_r(g_i_, i, 1)
-        enddo
-        d1_w = dalp * (r(i, 1) - drho)
+            g_d1_w(g_i_) = dalp * g_r(g_i_,i,1)
+        end do
+        d1_w = dalp * (r(i,1) - drho)
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_c6swt1(g_i_) = d4_b * g_d1_w(g_i_)
-        enddo
+        end do
         c6swt1 = 0.5d0 * (1.0d0 - d2_v)
         !--------
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = dalp * g_r(g_i_, i, 3)
-        enddo
-        d1_w = dalp * (r(i, 3) - drho)
+            g_d1_w(g_i_) = dalp * g_r(g_i_,i,3)
+        end do
+        d1_w = dalp * (r(i,3) - drho)
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_c6swt3(g_i_) = d4_b * g_d1_w(g_i_)
-        enddo
+        end do
         c6swt3 = 0.5d0 * (1.0d0 - d2_v)
         !--------
         !
@@ -2064,30 +2041,30 @@ subroutine g_prepot11( g_p_ )
         d4_b = cevau * c61
         do g_i_ = 1, g_p_
             g_c61(g_i_) = d4_b * g_c6swt1(g_i_) + d3_b * g_c61(g_i_)
-        enddo
+        end do
         c61 = c61 * c6swt1 * cevau
         !--------
         d3_b = cevau * c6swt3
         d4_b = cevau * c63
         do g_i_ = 1, g_p_
             g_c63(g_i_) = d4_b * g_c6swt3(g_i_) + d3_b * g_c63(g_i_)
-        enddo
+        end do
         c63 = c63 * c6swt3 * cevau
         !--------
         do g_i_ = 1, g_p_
             g_cind1(g_i_) = cind1 * g_c6swt1(g_i_) + c6swt1 * g_cind1(g_i_)
-        enddo
+        end do
         cind1 = cind1 * c6swt1
         !--------
         do g_i_ = 1, g_p_
             g_cind3(g_i_) = cind3 * g_c6swt3(g_i_) + c6swt3 * g_cind3(g_i_)
-        enddo
+        end do
         cind3 = cind3 * c6swt3
         !--------
         !
         do g_i_ = 1, g_p_
             g_elec(g_i_) = g_c6(g_i_) + g_cind3(g_i_) + g_cind1(g_i_) + g_c63(g_i_) + g_c61(g_i_)
-        enddo
+        end do
         elec = c61 + c63 + cind1 + cind3 + c6
         !--------
         !
@@ -2096,32 +2073,32 @@ subroutine g_prepot11( g_p_ )
         !
         do g_i_ = 1, g_p_
             g_coul1(g_i_) = 0.5d0 * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
-        enddo
+        end do
         coul1 = 0.5d0 * (s1 + t1)
         !--------
         do g_i_ = 1, g_p_
             g_coul2(g_i_) = 0.5d0 * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
-        enddo
+        end do
         coul2 = 0.5d0 * (s2 + t2)
         !--------
         do g_i_ = 1, g_p_
             g_coul3(g_i_) = 0.5d0 * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
-        enddo
+        end do
         coul3 = 0.5d0 * (s3 + t3)
         !--------
         do g_i_ = 1, g_p_
             g_exch1(g_i_) = (-0.5d0) * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
-        enddo
+        end do
         exch1 = 0.5d0 * (s1 - t1)
         !--------
         do g_i_ = 1, g_p_
             g_exch2(g_i_) = (-0.5d0) * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
-        enddo
+        end do
         exch2 = 0.5d0 * (s2 - t2)
         !--------
         do g_i_ = 1, g_p_
             g_exch3(g_i_) = (-0.5d0) * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
-        enddo
+        end do
         exch3 = 0.5d0 * (s3 - t3)
         !--------
         d4_v  = (exch1 - exch2) * (exch1 - exch2)
@@ -2135,27 +2112,26 @@ subroutine g_prepot11( g_p_ )
         d10_b = d2_p + (-d3_p)
         do g_i_ = 1, g_p_
             g_w(g_i_) = d5_b * g_exch3(g_i_) + d10_b * g_exch2(g_i_) + d6_b * g_exch1(g_i_)
-        enddo
+        end do
         w = d4_v + d7_v + d10_v
         !--------
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-c2c) * g_r(g_i_, i, 3) + (-c2c) * g_r(g_i_, i, 2) + (-c2c) * g_r(g_i_, i, 1) + (-c2b) * &
-                & g_w(g_i_)
-        enddo
-        d1_w = (-c2b) * w - c2c * (r(i, 1) + r(i, 2) + r(i, 3))
+            g_d1_w(g_i_) = (-c2c) * g_r(g_i_,i,3) + (-c2c) * g_r(g_i_,i,2) + (-c2c) * g_r(g_i_,i,1) + (-c2b) * g_w(g_i_)
+        end do
+        d1_w = (-c2b) * w - c2c * (r(i,1) + r(i,2) + r(i,3))
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = c2a * d1_p
         do g_i_ = 1, g_p_
             g_cplg2(g_i_) = d3_b * g_d1_w(g_i_)
-        enddo
+        end do
         cplg2 = c2a * d2_v
         !--------
         !
         d4_b = cplg2 + cplg2
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_cplg2(g_i_) + g_w(g_i_)
-        enddo
+        end do
         d1_w = w + cplg2 * cplg2
         d8_v = sqrt(d1_w)
 
@@ -2163,17 +2139,17 @@ subroutine g_prepot11( g_p_ )
             d1_p = 1.0d0 / (2.0d0 *  d8_v)
         else
             d1_p = 0.0d0
-        endif
+        end if
         d6_b = (-cevau) * rac2 * d1_p
         do g_i_ = 1, g_p_
-            g_e(g_i_, i) = d6_b * g_d1_w(g_i_) + cevau * g_coul3(g_i_) + cevau * g_coul2(g_i_) + cevau * g_coul1(g_i_)
-        enddo
+            g_e(g_i_,i) = d6_b * g_d1_w(g_i_) + cevau * g_coul3(g_i_) + cevau * g_coul2(g_i_) + cevau * g_coul1(g_i_)
+        end do
         e(i) = (coul1 + coul2 + coul3 + deh2 - rac2 * d8_v) * cevau
         !--------
         !
         do g_i_ = 1, g_p_
-            g_e(g_i_, i) = g_elec(g_i_) + g_e(g_i_, i)
-        enddo
+            g_e(g_i_,i) = g_elec(g_i_) + g_e(g_i_,i)
+        end do
         e(i) = e(i) + elec
         !--------
         !
@@ -2181,6 +2157,7 @@ subroutine g_prepot11( g_p_ )
     99999 continue
     !
 end subroutine g_prepot11
+
 !
 !
 ! ********************************************************************
@@ -2210,17 +2187,15 @@ end subroutine g_prepot11
 subroutine g_prepot12( g_p_ )
     !
     implicit none
-
     !
     double precision :: r, e, amp, erl, ers, eps, rmx, rmod, ralp, frho &
-        & , thalp, thrho, phalp, phrho, r1s, r2s, r3s, cevau, pi, f1, f3, rm&
+        &, thalp, thrho, phalp, phrho, r1s, r2s, r3s, cevau, pi, f1, f3, rm&
         &odswt1, rmodswt3, f1p, f3p, f1mod, f3mod, thetaswt, phi, cosa, rna&
         &g, rnagsq, chi, falp, sinchi, alpha1, alpha3, dtanh
     !
-
     integer :: nt, i, j, k
     logical :: leven
-    dimension r(nt, 3), e(nt)
+    dimension r(nt,3), e(nt)
     !
     save
     integer, parameter :: g_pmax_ = 3
@@ -2229,20 +2204,20 @@ subroutine g_prepot12( g_p_ )
         &_v, d9_b, d2_b
     double precision :: d1_p, d3_v, d4_v, d5_v, d6_v, d3_b, d4_b, d5_b, &
         & d6_b, d1_w
-    double precision :: d7_v, d8_v, g_r1s(g_pmax_), g_r(ldg_r, nt, 3), &
+    double precision :: d7_v, d8_v, g_r1s(g_pmax_), g_r(ldg_r,nt,3), &
         & g_r2s(g_pmax_), g_r3s(g_pmax_), g_alpha1(g_pmax_), g_alpha3(g_pmax&
         &_), g_d1_w(g_pmax_), g_f1(g_pmax_)
     double precision :: g_f3(g_pmax_), g_rnagsq(g_pmax_), g_rnag(g_pmax&
         &_), g_chi(g_pmax_), g_cosa(g_pmax_), g_sinchi(g_pmax_), g_rmodswt1 &
         & (g_pmax_), g_rmodswt3(g_pmax_), g_f1p(g_pmax_), g_f3p(g_pmax_)
     double precision :: g_f1mod(g_pmax_), g_f3mod(g_pmax_), g_thetaswt( &
-        & g_pmax_), g_phi(g_pmax_), g_e(ldg_e, nt)
+        & g_pmax_), g_phi(g_pmax_), g_e(ldg_e,nt)
     integer :: g_ehfid
     save g_phi
     save g_chi, g_cosa, g_sinchi, g_rmodswt1, g_rmodswt3, g_f1p, g_f&
         &3p, g_f1mod, g_f3mod, g_thetaswt
     save g_r1s, g_r2s, g_r3s, g_alpha1, g_alpha3, g_d1_w, g_f1, g_f3 &
-        & , g_rnagsq, g_rnag
+        &, g_rnagsq, g_rnag
     data amp /1.5150d0/, erl /0.08877d0/, ers /11.630d0/, eps /1.0d-&
         &4/, rmx /2.622d0/, rmod /0.5409d0/, falp /0.7583d0/, frho /5.1858d&
         &0/, thalp /2.4882d0/, thrho /2.0d0/, phalp /0.40787d0/, phrho /7.3&
@@ -2254,7 +2229,7 @@ subroutine g_prepot12( g_p_ )
     if (g_p_ .gt. g_pmax_) then
         print *, 'Parameter g_p_ is greater than g_pmax_'
         stop
-    endif
+    end if
     cevau = 1.d0 / 27.2113961d0
     pi    = dacos(-1.0d0)
 
@@ -2269,78 +2244,78 @@ subroutine g_prepot12( g_p_ )
     !
     do i = 1, nt
         !
-        d2_v = r(i, 1) * r(i, 1)
-        d1_p = 2.0d0 * r(i, 1)
+        d2_v = r(i,1) * r(i,1)
+        d1_p = 2.0d0 * r(i,1)
         do g_i_ = 1, g_p_
-            g_r1s(g_i_) = d1_p * g_r(g_i_, i, 1)
-        enddo
+            g_r1s(g_i_) = d1_p * g_r(g_i_,i,1)
+        end do
         r1s = d2_v
         !--------
-        d2_v = r(i, 2) * r(i, 2)
-        d1_p = 2.0d0 * r(i, 2)
+        d2_v = r(i,2) * r(i,2)
+        d1_p = 2.0d0 * r(i,2)
         do g_i_ = 1, g_p_
-            g_r2s(g_i_) = d1_p * g_r(g_i_, i, 2)
-        enddo
+            g_r2s(g_i_) = d1_p * g_r(g_i_,i,2)
+        end do
         r2s = d2_v
         !--------
-        d2_v = r(i, 3) * r(i, 3)
-        d1_p = 2.0d0 * r(i, 3)
+        d2_v = r(i,3) * r(i,3)
+        d1_p = 2.0d0 * r(i,3)
         do g_i_ = 1, g_p_
-            g_r3s(g_i_) = d1_p * g_r(g_i_, i, 3)
-        enddo
+            g_r3s(g_i_) = d1_p * g_r(g_i_,i,3)
+        end do
         r3s = d2_v
         !--------
         ! here we do the function evaluations . . .
         !
-        d4_v = eps + r(i, 1) * r1s
+        d4_v = eps + r(i,1) * r1s
         d5_v = ers / d4_v
         d4_b = (-d5_v) / d4_v
         d5_b = d4_b * r1s
-        d6_b = d4_b * r(i, 1)
+        d6_b = d4_b * r(i,1)
         do g_i_ = 1, g_p_
-            g_alpha1(g_i_) = d6_b * g_r1s(g_i_) + d5_b * g_r(g_i_, i, 1)
-        enddo
+            g_alpha1(g_i_) = d6_b * g_r1s(g_i_) + d5_b * g_r(g_i_,i,1)
+        end do
         alpha1 = erl + d5_v
         !--------
-        d4_v = eps + r(i, 3) * r3s
+        d4_v = eps + r(i,3) * r3s
         d5_v = ers / d4_v
         d4_b = (-d5_v) / d4_v
         d5_b = d4_b * r3s
-        d6_b = d4_b * r(i, 3)
+        d6_b = d4_b * r(i,3)
         do g_i_ = 1, g_p_
-            g_alpha3(g_i_) = d6_b * g_r3s(g_i_) + d5_b * g_r(g_i_, i, 3)
-        enddo
+            g_alpha3(g_i_) = d6_b * g_r3s(g_i_) + d5_b * g_r(g_i_,i,3)
+        end do
         alpha3 = erl + d5_v
         !--------
         !
-        d5_v = (r(i, 1) - rmx) * (r(i, 1) - rmx)
-        d1_p = 2.0d0 * (r(i, 1) - rmx)
+        d5_v = (r(i,1) - rmx) * (r(i,1) - rmx)
+        d1_p = 2.0d0 * (r(i,1) - rmx)
         d5_b = (-alpha1) * d1_p
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = d5_b * g_r(g_i_, i, 1) + (-d5_v) * g_alpha1(g_i_)
-        enddo
+            g_d1_w(g_i_) = d5_b * g_r(g_i_,i,1) + (-d5_v) * g_alpha1(g_i_)
+        end do
         d1_w = (-alpha1) * d5_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = amp * d1_p
         do g_i_ = 1, g_p_
             g_f1(g_i_) = d3_b * g_d1_w(g_i_)
-        enddo
+        end do
         f1 = amp * d2_v
         !--------
-        d5_v = (r(i, 3) - rmx) * (r(i, 3) - rmx)
-        d1_p = 2.0d0 * (r(i, 3) - rmx)
+        d5_v = (r(i,3) - rmx) * (r(i,3) - rmx)
+        d1_p = 2.0d0 * (r(i,3) - rmx)
         d5_b = (-alpha3) * d1_p
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = d5_b * g_r(g_i_, i, 3) + (-d5_v) * g_alpha3(g_i_)
-        enddo
+            g_d1_w(g_i_) = d5_b * g_r(g_i_,i,3) + (-d5_v) * g_alpha3(g_i_)
+        end do
         d1_w = (-alpha3) * d5_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = amp * d1_p
         do g_i_ = 1, g_p_
             g_f3(g_i_) = d3_b * g_d1_w(g_i_)
-        enddo
+        end do
         f3 = amp * d2_v
         !--------
         !
@@ -2348,7 +2323,7 @@ subroutine g_prepot12( g_p_ )
         !
         do g_i_ = 1, g_p_
             g_rnagsq(g_i_) = (-0.25d0) * g_r2s(g_i_) + 0.5d0 * g_r3s(g_i_) + 0.5d0 * g_r1s(g_i_)
-        enddo
+        end do
         rnagsq = 0.5d0 * r1s + 0.5d0 * r3s - 0.25d0 * r2s
         !--------
         if (rnagsq .gt. 0.0d0) then
@@ -2362,52 +2337,52 @@ subroutine g_prepot12( g_p_ )
                 g_rnag(1) = 0.0d0
                 g_rnag(2) = 0.0d0
                 g_rnag(3) = 0.0d0
-            endif
+            end if
 
             !--------
             d5_v = 2.0d0 * rnag
-            d7_v = d5_v * r(i, 2)
+            d7_v = d5_v * r(i,2)
             d8_v = (r3s - r1s) / d7_v
             d9_v = d8_v * d8_v
             d1_p = 2.0d0 * d8_v
             d3_b = d1_p * (1.0d0 / d7_v)
             d4_b = d1_p * ((-d8_v) / d7_v)
             d6_b = d4_b * d5_v
-            d7_b = d4_b * r(i, 2) * 2.0d0
+            d7_b = d4_b * r(i,2) * 2.0d0
             do g_i_ = 1, g_p_
-                g_chi(g_i_) = d6_b * g_r(g_i_, i, 2) + d7_b * g_rnag(g_i_) + (-d3_b) * g_r1s(g_i_) + d3_b * g_r3s(g_i_)
-            enddo
+                g_chi(g_i_) = d6_b * g_r(g_i_,i,2) + d7_b * g_rnag(g_i_) + (-d3_b) * g_r1s(g_i_) + d3_b * g_r3s(g_i_)
+            end do
             chi = d9_v
             !--------
         else
             do g_i_ = 1, g_p_
                 g_rnag(g_i_) = 0.0d0
-            enddo
+            end do
             rnag = 0.0d0
             !--------
             do g_i_ = 1, g_p_
                 g_chi(g_i_) = 0.0d0
-            enddo
+            end do
             chi = 0.0d0
             !--------
-        endif
+        end if
         !
-        d7_v  = 2.0d0 * r(i, 1)
-        d9_v  = d7_v * r(i, 3)
+        d7_v  = 2.0d0 * r(i,1)
+        d9_v  = d7_v * r(i,3)
         d10_v = (r1s + r3s - r2s) / d9_v
         d2_b  = 1.0d0 / d9_v
         d3_b  = (-d10_v) / d9_v
         d5_b  = d3_b * d7_v
-        d6_b  = d3_b * r(i, 3) * 2.0d0
+        d6_b  = d3_b * r(i,3) * 2.0d0
         do g_i_ = 1, g_p_
-            g_cosa(g_i_) = d5_b * g_r(g_i_, i, 3) + d6_b * g_r(g_i_, i, 1) + (-d2_b) * g_r2s(g_i_) + d2_b * &
-                & g_r3s(g_i_) + d2_b * g_r1s(g_i_)
-        enddo
+            g_cosa(g_i_) = d5_b * g_r(g_i_,i,3) + d6_b * g_r(g_i_,i,1) + (-d2_b) * g_r2s(g_i_) + d2_b * g_r3s(g_i_) + &
+                & d2_b * g_r1s(g_i_)
+        end do
         cosa = d10_v
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-10.0d0) * g_rnagsq(g_i_)
-        enddo
+        end do
         d1_w  = (-10.0d0) * rnagsq
         d2_v  = 1.0d0 - chi
         d5_v  = 0.5d0 * cosa + 0.5d0
@@ -2420,16 +2395,16 @@ subroutine g_prepot12( g_p_ )
         d10_b = -(d9_v * d5_v)
         do g_i_ = 1, g_p_
             g_sinchi(g_i_) = d5_b * g_d1_w(g_i_) + d9_b * g_cosa(g_i_) + d10_b * g_chi(g_i_)
-        enddo
+        end do
         sinchi = d6_v * d9_v
         !--------
         !
         ! here ends the procedure
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = falp * g_r(g_i_, i, 3)
-        enddo
-        d1_w = falp * (r(i, 3) - frho)
+            g_d1_w(g_i_) = falp * g_r(g_i_,i,3)
+        end do
+        d1_w = falp * (r(i,3) - frho)
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_v = 0.5d0 - 0.5d0 * d2_v
@@ -2438,14 +2413,14 @@ subroutine g_prepot12( g_p_ )
         d8_b = (-d7_v) * 0.5d0 * d1_p
         do g_i_ = 1, g_p_
             g_rmodswt1(g_i_) = d5_b * g_cosa(g_i_) + d8_b * g_d1_w(g_i_)
-        enddo
+        end do
         rmodswt1 = d4_v * d7_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = falp * g_r(g_i_, i, 1)
-        enddo
-        d1_w = falp * (r(i, 1) - frho)
+            g_d1_w(g_i_) = falp * g_r(g_i_,i,1)
+        end do
+        d1_w = falp * (r(i,1) - frho)
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_v = 0.5d0 - 0.5d0 * d2_v
@@ -2454,39 +2429,39 @@ subroutine g_prepot12( g_p_ )
         d8_b = (-d7_v) * 0.5d0 * d1_p
         do g_i_ = 1, g_p_
             g_rmodswt3(g_i_) = d5_b * g_cosa(g_i_) + d8_b * g_d1_w(g_i_)
-        enddo
+        end do
         rmodswt3 = d4_v * d7_v
         !--------
         !
-        d5_v = (r(i, 1) - rmx * rmod) * (r(i, 1) - rmx * rmod)
-        d1_p = 2.0d0 * (r(i, 1) - rmx * rmod)
+        d5_v = (r(i,1) - rmx * rmod) * (r(i,1) - rmx * rmod)
+        d1_p = 2.0d0 * (r(i,1) - rmx * rmod)
         d5_b = (-alpha1) * d1_p
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = d5_b * g_r(g_i_, i, 1) + (-d5_v) * g_alpha1(g_i_)
-        enddo
+            g_d1_w(g_i_) = d5_b * g_r(g_i_,i,1) + (-d5_v) * g_alpha1(g_i_)
+        end do
         d1_w = (-alpha1) * d5_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = amp * d1_p
         do g_i_ = 1, g_p_
             g_f1p(g_i_) = d3_b * g_d1_w(g_i_)
-        enddo
+        end do
         f1p = amp * d2_v
         !--------
         !
-        d5_v = (r(i, 3) - rmx * rmod) * (r(i, 3) - rmx * rmod)
-        d1_p = 2.0d0 * (r(i, 3) - rmx * rmod)
+        d5_v = (r(i,3) - rmx * rmod) * (r(i,3) - rmx * rmod)
+        d1_p = 2.0d0 * (r(i,3) - rmx * rmod)
         d5_b = (-alpha3) * d1_p
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = d5_b * g_r(g_i_, i, 3) + (-d5_v) * g_alpha3(g_i_)
-        enddo
+            g_d1_w(g_i_) = d5_b * g_r(g_i_,i,3) + (-d5_v) * g_alpha3(g_i_)
+        end do
         d1_w = (-alpha3) * d5_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = amp * d1_p
         do g_i_ = 1, g_p_
             g_f3p(g_i_) = d3_b * g_d1_w(g_i_)
-        enddo
+        end do
         f3p = amp * d2_v
         !--------
         !
@@ -2494,7 +2469,7 @@ subroutine g_prepot12( g_p_ )
         d3_b = 1.0d0 + (-rmodswt1)
         do g_i_ = 1, g_p_
             g_f1mod(g_i_) = d3_b * g_f1(g_i_) + rmodswt1 * g_f1p(g_i_) + d4_v * g_rmodswt1(g_i_)
-        enddo
+        end do
         f1mod = rmodswt1 * d4_v + f1
         !--------
         !
@@ -2502,20 +2477,20 @@ subroutine g_prepot12( g_p_ )
         d3_b = 1.0d0 + (-rmodswt3)
         do g_i_ = 1, g_p_
             g_f3mod(g_i_) = d3_b * g_f3(g_i_) + rmodswt3 * g_f3p(g_i_) + d4_v * g_rmodswt3(g_i_)
-        enddo
+        end do
         f3mod = rmodswt3 * d4_v + f3
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = thalp * g_r(g_i_, i, 2)
-        enddo
-        d1_w = thalp * (r(i, 2) - thrho)
+            g_d1_w(g_i_) = thalp * g_r(g_i_,i,2)
+        end do
+        d1_w = thalp * (r(i,2) - thrho)
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_thetaswt(g_i_) = d4_b * g_d1_w(g_i_)
-        enddo
+        end do
         thetaswt = 0.5d0 - 0.5d0 * d2_v
         !--------
         !
@@ -2527,14 +2502,14 @@ subroutine g_prepot12( g_p_ )
         do g_i_ = 1, g_p_
             g_phi(g_i_) = d7_b * g_sinchi(g_i_) + d5_b * g_thetaswt(g_i_ ) + (-d8_v) * g_f3mod(g_i_) + d8_v * &
                 & g_f1mod(g_i_)
-        enddo
+        end do
         phi = d3_v * d8_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = phalp * g_r(g_i_, i, 2)
-        enddo
-        d1_w  = phalp * (r(i, 2) - phrho)
+            g_d1_w(g_i_) = phalp * g_r(g_i_,i,2)
+        end do
+        d1_w  = phalp * (r(i,2) - phrho)
         d2_v  = tanh (d1_w)
         d1_p  = 1.0d0 - ( d2_v *  d2_v)
         d4_v  = 0.5d0 * (1.d0 - d2_v)
@@ -2545,8 +2520,8 @@ subroutine g_prepot12( g_p_ )
         d9_b  = (-(d5_b * d4_v)) * 0.5d0
         d12_b = (-(d5_b * d7_v * 0.5d0)) * d1_p
         do g_i_ = 1, g_p_
-            g_e(g_i_, i) = d4_b * g_phi(g_i_) + d9_b * g_cosa(g_i_) + d12_b * g_d1_w(g_i_)
-        enddo
+            g_e(g_i_,i) = d4_b * g_phi(g_i_) + d9_b * g_cosa(g_i_) + d12_b * g_d1_w(g_i_)
+        end do
         e(i) = d9_v * phi * cevau
         !--------
         !
@@ -2562,8 +2537,8 @@ subroutine g_prepot12( g_p_ )
             d5_v = d2_v / d4_v
             d5_b = (-d5_v) / d4_v * d1_p + 1.0d0 / d4_v * d2_p
             do g_i_ = 1, g_p_
-                g_d1_w(g_i_) = d5_b * g_e(g_i_, i)
-            enddo
+                g_d1_w(g_i_) = d5_b * g_e(g_i_,i)
+            end do
             d1_w = d5_v
             d2_v = sqrt(d1_w)
 
@@ -2571,16 +2546,17 @@ subroutine g_prepot12( g_p_ )
                 d1_p = 1.0d0 / (2.0d0 *  d2_v)
             else
                 d1_p = 0.0d0
-            endif
+            end if
             do g_i_ = 1, g_p_
-                g_e(g_i_, i) = d1_p * g_d1_w(g_i_)
-            enddo
+                g_e(g_i_,i) = d1_p * g_d1_w(g_i_)
+            end do
             e(i) = d2_v
             !--------
-        endif
+        end if
         !
-    enddo
+    end do
 end subroutine g_prepot12
+
 !
 ! ********************************************************************
 ! ********************************************************************
@@ -2608,7 +2584,6 @@ end subroutine g_prepot12
 !> @brief Evaluate g_prepot22 for the NaH2_LEPS_6_2000_DPEM potential.
 subroutine g_prepot22( g_p_ )
     implicit none
-
     double precision :: al1, al2, alb, alhh, alt, balp, brho, c2a, c2b, c2c, c6, c61, c63, c6swt1, &
         & c6swt3, cevau, cind1, cind3, cosa, coscos, coul1, coul2, coul3, cplg2, cstsq, cstsq1, &
         & cstsq3, dalp, deh2, dexp1, dexp2, dexp3, div1, div3, drho, e, elec, exch1, exch2, exch3, &
@@ -2627,10 +2602,8 @@ subroutine g_prepot22( g_p_ )
         & t20c, t20c1, t20c2, t20c3, t20c4, t20c5, t20c6, t20rho, t290, t290alp, t290c, t290c1, &
         & t290c2, t290c3, t290c4, t290c5, t290c6, t290rho, t2a, t2c1, t2c2, t2c3, t2c4, t2c5, t2c6, &
         & t3, t30, t390, twothd, una2p, w
-
-    dimension r(nt, 3), e(nt)
-    integer :: i,j,k,nsurf,nt
-
+    dimension r(nt,3), e(nt)
+    integer :: i, j, k, nsurf, nt
     save
     !
     ! the NaH singlet data blocks
@@ -2641,9 +2614,9 @@ subroutine g_prepot22( g_p_ )
     double precision :: d1_w, d2_w, d3_v, d4_v, d5_v, d6_v, d3_b, d4_b, &
         & d5_b, d6_b
     double precision :: d1_p, d7_v, d8_v, d9_v, d7_b, d8_b, d9_b, d10_v &
-        & , d10_b, d11_v
+        &, d10_b, d11_v
     double precision :: d12_v, d13_v, d19_v, d11_b, d12_b, d13_b, d14_b &
-        & , g_r1s(g_pmax_), g_r(ldg_r, nt, 3), g_r2s(g_pmax_)
+        &, g_r1s(g_pmax_), g_r(ldg_r,nt,3), g_r2s(g_pmax_)
     double precision :: g_r3s(g_pmax_), g_d2_w(g_pmax_), g_d1_w(g_pmax_ &
         & ), g_rnag(g_pmax_), g_rnags(g_pmax_), g_rnagc(g_pmax_), g_cstsq(g_&
         &pmax_), g_cosa(g_pmax_), g_coscos(g_pmax_), g_rnag1(g_pmax_)
@@ -2657,7 +2630,7 @@ subroutine g_prepot22( g_p_ )
         & ), g_s3a(g_pmax_), g_s3ic(g_pmax_), g_s3i(g_pmax_), g_s3(g_pmax_), &
         & g_t30(g_pmax_), g_t390(g_pmax_), g_t3(g_pmax_)
     double precision :: g_h2ie(g_pmax_), g_al1(g_pmax_), g_al2(g_pmax_) &
-        & , g_alt(g_pmax_), g_alb(g_pmax_), g_alhh(g_pmax_), g_h2hex(g_pmax_ &
+        &, g_alt(g_pmax_), g_alb(g_pmax_), g_alhh(g_pmax_), g_h2hex(g_pmax_ &
         & ), g_h2quad(g_pmax_), g_rnahie1(g_pmax_), g_rnahie3(g_pmax_)
     double precision :: g_rnahmu1(g_pmax_), g_rnahmu3(g_pmax_), g_rnahp&
         &ar1(g_pmax_), g_rnahpar3(g_pmax_), g_rnahperp1(g_pmax_), g_rnahper&
@@ -2671,7 +2644,7 @@ subroutine g_prepot22( g_p_ )
         &pmax_), g_c6swt1(g_pmax_), g_c6swt3(g_pmax_), g_coul1(g_pmax_)
     double precision :: g_coul2(g_pmax_), g_coul3(g_pmax_), g_exch1(g_p&
         &max_), g_exch2(g_pmax_), g_exch3(g_pmax_), g_w(g_pmax_), g_cplg2(g&
-        &_pmax_), g_e(ldg_e, nt)
+        &_pmax_), g_e(ldg_e,nt)
     integer :: g_ehfid
     save g_c6swt3, g_coul1, g_coul2, g_coul3, g_exch1, g_exch2, g_ex&
         &ch3, g_w, g_cplg2
@@ -2684,7 +2657,7 @@ subroutine g_prepot22( g_p_ )
     save g_t390, g_t3, g_h2ie, g_al1, g_al2, g_alt, g_alb, g_alhh, g&
         &_h2hex, g_h2quad
     save g_s2a, g_s2mod, g_s290c, g_s290, g_s2, g_s3a, g_s3ic, g_s3i &
-        & , g_s3, g_t30
+        &, g_s3, g_t30
     save g_s1, g_t10, g_t190, g_t1, g_t2a, g_t290c, g_t290, g_t20c, &
         & g_t20, g_t2
     save g_coscos, g_rnag1, g_rnag3, g_rnag1c, g_rnag3c, g_cstsq1, g&
@@ -2695,7 +2668,7 @@ subroutine g_prepot22( g_p_ )
     data s1c1 /170.769d0/, s1c2 /1.514d0/, s1c3 /-87.110d0/, s1c4 /5&
         &7.480d0/, s1c5 /-14.228d0/, s1c6 /1.303d0/
     data s1ic1 /460.09449d0/, s1ic2 /2.45039d0/, s1ic3 /-29.81890d0/ &
-        & , s1ic4 /42.67717d0/, s1ic5 /-13.11811d0/, s1ic6 /1.303d0/, s1ialp &
+        &, s1ic4 /42.67717d0/, s1ic5 /-13.11811d0/, s1ic6 /1.303d0/, s1ialp &
         & /0.28780d0/
     !
     ! the NaH triplet data blocks
@@ -2711,7 +2684,7 @@ subroutine g_prepot22( g_p_ )
         & /, t290c4 /-7.88189d0/, t290c5 /-2.35433d0/, t290c6 /2.032d0/, t29&
         &0alp /0.09543d0/, t290rho /40.81102d0/
     data t20c1 /159.34646d0/, t20c2 /3.51260d0/, t20c3 /121.65354d0/ &
-        & , t20c4 /9.41732d0/, t20c5 /-11.03937d0/, t20c6 /2.032/, t20alp /0&
+        &, t20c4 /9.41732d0/, t20c5 /-11.03937d0/, t20c6 /2.032/, t20alp /0&
         &.11260d0/, t20rho /43.22799504d0/
     !
     ! The H2 singlet
@@ -2762,7 +2735,7 @@ subroutine g_prepot22( g_p_ )
     if (g_p_ .gt. g_pmax_) then
         print *, 'Parameter g_p_ is greater than g_pmax_'
         stop
-    endif
+    end if
     cevau  = 1.d0 / 27.2113961d0
     onethd = 1.0d0 / 3.0d0
     twothd = 2.0d0 / 3.0d0
@@ -2780,23 +2753,23 @@ subroutine g_prepot22( g_p_ )
         ! of any of the three diatomic distances, and the bond angle
         ! H-Na-H
         !
-        d2_b = r(i, 1) + r(i, 1)
+        d2_b = r(i,1) + r(i,1)
         do g_i_ = 1, g_p_
-            g_r1s(g_i_) = d2_b * g_r(g_i_, i, 1)
-        enddo
-        r1s = r(i, 1) * r(i, 1)
+            g_r1s(g_i_) = d2_b * g_r(g_i_,i,1)
+        end do
+        r1s = r(i,1) * r(i,1)
         !--------
-        d2_b = r(i, 2) + r(i, 2)
+        d2_b = r(i,2) + r(i,2)
         do g_i_ = 1, g_p_
-            g_r2s(g_i_) = d2_b * g_r(g_i_, i, 2)
-        enddo
-        r2s = r(i, 2) * r(i, 2)
+            g_r2s(g_i_) = d2_b * g_r(g_i_,i,2)
+        end do
+        r2s = r(i,2) * r(i,2)
         !--------
-        d2_b = r(i, 3) + r(i, 3)
+        d2_b = r(i,3) + r(i,3)
         do g_i_ = 1, g_p_
-            g_r3s(g_i_) = d2_b * g_r(g_i_, i, 3)
-        enddo
-        r3s = r(i, 3) * r(i, 3)
+            g_r3s(g_i_) = d2_b * g_r(g_i_,i,3)
+        end do
+        r3s = r(i,3) * r(i,3)
         !--------
         !
         rnag = dsqrt(dabs(0.5d0*(r1s+r3s-0.5d0*r2s)))
@@ -2809,61 +2782,60 @@ subroutine g_prepot22( g_p_ )
             g_rnag(1) = 0.0d0
             g_rnag(2) = 0.0d0
             g_rnag(3) = 0.0d0
-        endif
+        end if
 
         !--------
         d2_b = rnag + rnag
         do g_i_ = 1, g_p_
             g_rnags(g_i_) = d2_b * g_rnag(g_i_)
-        enddo
+        end do
         rnags = rnag * rnag
         !--------
         do g_i_ = 1, g_p_
             g_rnagc(g_i_) = rnags * g_rnag(g_i_) + rnag * g_rnags(g_i_)
-        enddo
+        end do
         rnagc = rnags * rnag
         !--------
         !
         if (rnag .eq. 0.0d0) then
             do g_i_ = 1, g_p_
                 g_cstsq(g_i_) = 0.0d0
-            enddo
+            end do
             cstsq = 0.0d0
             !--------
         else
-            d7_v = r(i, 2) * rnag
+            d7_v = r(i,2) * rnag
             d8_v = 0.5d0 * (r3s - r1s) / d7_v
             d9_v = d8_v * d8_v
             d1_p = 2.0d0 * d8_v
             d4_b = d1_p * ((-d8_v) / d7_v)
             d5_b = d4_b * rnag
-            d6_b = d4_b * r(i, 2)
+            d6_b = d4_b * r(i,2)
             d7_b = d1_p * (1.0d0 / d7_v) * 0.5d0
             do g_i_ = 1, g_p_
-                g_cstsq(g_i_) = d6_b * g_rnag(g_i_) + d5_b * g_r(g_i_, i, 2) + (-d7_b) * g_r1s(g_i_) + d7_b * &
-                    & g_r3s(g_i_)
-            enddo
+                g_cstsq(g_i_) = d6_b * g_rnag(g_i_) + d5_b * g_r(g_i_,i,2) + (-d7_b) * g_r1s(g_i_) + d7_b * g_r3s(g_i_)
+            end do
             cstsq = d9_v
             !--------
-        endif
+        end if
         !
-        d7_v  = dble(2) * r(i, 1)
-        d9_v  = d7_v * r(i, 3)
+        d7_v  = dble(2) * r(i,1)
+        d9_v  = d7_v * r(i,3)
         d10_v = (r1s + r3s - r2s) / d9_v
         d2_b  = 1.0d0 / d9_v
         d3_b  = (-d10_v) / d9_v
         d5_b  = d3_b * d7_v
-        d6_b  = d3_b * r(i, 3) * dble(2)
+        d6_b  = d3_b * r(i,3) * dble(2)
         do g_i_ = 1, g_p_
-            g_cosa(g_i_) = d5_b * g_r(g_i_, i, 3) + d6_b * g_r(g_i_, i, 1) + (-d2_b) * g_r2s(g_i_) + d2_b * &
-                & g_r3s(g_i_) + d2_b * g_r1s(g_i_)
-        enddo
+            g_cosa(g_i_) = d5_b * g_r(g_i_,i,3) + d6_b * g_r(g_i_,i,1) + (-d2_b) * g_r2s(g_i_) + d2_b * g_r3s(g_i_) + &
+                & d2_b * g_r1s(g_i_)
+        end do
         cosa = d10_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-10.0d0) * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = (-10.0d0) * rnags
         d4_v = 0.5d0 + 0.5d0 * cosa
         d5_v = cstsq * d4_v
@@ -2875,7 +2847,7 @@ subroutine g_prepot22( g_p_ )
         d9_b = d8_v * cstsq * 0.5d0
         do g_i_ = 1, g_p_
             g_coscos(g_i_) = d5_b * g_d1_w(g_i_) + d9_b * g_cosa(g_i_) + d6_b * g_cstsq(g_i_)
-        enddo
+        end do
         coscos = d5_v * d8_v
         !--------
         !
@@ -2891,7 +2863,7 @@ subroutine g_prepot22( g_p_ )
             g_rnag1(1) = 0.0d0
             g_rnag1(2) = 0.0d0
             g_rnag1(3) = 0.0d0
-        endif
+        end if
 
         !--------
 
@@ -2903,7 +2875,7 @@ subroutine g_prepot22( g_p_ )
             g_rnag3(1) = 0.0d0
             g_rnag3(2) = 0.0d0
             g_rnag3(3) = 0.0d0
-        endif
+        end if
 
         !--------
         !
@@ -2911,25 +2883,25 @@ subroutine g_prepot22( g_p_ )
         d3_b = d2_v + rnag1 * rnag1 + rnag1 * rnag1
         do g_i_ = 1, g_p_
             g_rnag1c(g_i_) = d3_b * g_rnag1(g_i_)
-        enddo
+        end do
         rnag1c = d2_v * rnag1
         !--------
         d2_v = rnag3 * rnag3
         d3_b = d2_v + rnag3 * rnag3 + rnag3 * rnag3
         do g_i_ = 1, g_p_
             g_rnag3c(g_i_) = d3_b * g_rnag3(g_i_)
-        enddo
+        end do
         rnag3c = d2_v * rnag3
         !--------
         !
         if (rnag1 .eq. 0.0d0) then
             do g_i_ = 1, g_p_
                 g_cstsq1(g_i_) = 0.0d0
-            enddo
+            end do
             cstsq1 = 1.0d0
             !--------
         else
-            d11_v = r(i, 1) * rnag1
+            d11_v = r(i,1) * rnag1
             d12_v = (r3s - r2s - r1s + 2.0d0 * r3s * frac) / d11_v
             d13_v = d12_v * d12_v
             d1_p  = 2.0d0 * d12_v
@@ -2937,24 +2909,24 @@ subroutine g_prepot22( g_p_ )
             d4_b  = d3_b * (1.0d0 / d11_v)
             d5_b  = d3_b * ((-d12_v) / d11_v)
             d6_b  = d5_b * rnag1
-            d7_b  = d5_b * r(i, 1)
+            d7_b  = d5_b * r(i,1)
             d11_b = d4_b * frac * 2.0d0 + d4_b
             do g_i_ = 1, g_p_
-                g_cstsq1(g_i_) = d7_b * g_rnag1(g_i_) + d6_b * g_r(g_i_, i , 1) + (-d4_b) * g_r1s(g_i_) + (-d4_b) * &
+                g_cstsq1(g_i_) = d7_b * g_rnag1(g_i_) + d6_b * g_r(g_i_,i,1) + (-d4_b) * g_r1s(g_i_) + (-d4_b) * &
                     & g_r2s(g_i_) + d11_b * g_r3s(g_i_)
-            enddo
+            end do
             cstsq1 = 0.25d0 * d13_v
             !--------
-        endif
+        end if
         !
         if (rnag3 .eq. 0.0d0) then
             do g_i_ = 1, g_p_
                 g_cstsq3(g_i_) = 0.0d0
-            enddo
+            end do
             cstsq3 = 1.0d0
             !--------
         else
-            d11_v = r(i, 3) * rnag3
+            d11_v = r(i,3) * rnag3
             d12_v = (r1s - r2s - r3s + 2.0d0 * r1s * frac) / d11_v
             d13_v = d12_v * d12_v
             d1_p  = 2.0d0 * d12_v
@@ -2962,73 +2934,73 @@ subroutine g_prepot22( g_p_ )
             d4_b  = d3_b * (1.0d0 / d11_v)
             d5_b  = d3_b * ((-d12_v) / d11_v)
             d6_b  = d5_b * rnag3
-            d7_b  = d5_b * r(i, 3)
+            d7_b  = d5_b * r(i,3)
             d11_b = d4_b * frac * 2.0d0 + d4_b
             do g_i_ = 1, g_p_
-                g_cstsq3(g_i_) = d7_b * g_rnag3(g_i_) + d6_b * g_r(g_i_, i , 3) + (-d4_b) * g_r3s(g_i_) + (-d4_b) * &
+                g_cstsq3(g_i_) = d7_b * g_rnag3(g_i_) + d6_b * g_r(g_i_,i,3) + (-d4_b) * g_r3s(g_i_) + (-d4_b) * &
                     & g_r2s(g_i_) + d11_b * g_r1s(g_i_)
-            enddo
+            end do
             cstsq3 = 0.25d0 * d13_v
             !--------
-        endif
+        end if
         !
         ! =========================================================
         !
         ! The first NaH singlet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s1c2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-s1c2) * r(i, 1)
+            g_d1_w(g_i_) = (-s1c2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-s1c2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s1c6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-s1c6) * r(i, 1)
+            g_d2_w(g_i_) = (-s1c6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-s1c6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s1c3 + s1c4 * r(i, 1) + s1c5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = s1c3 + s1c4 * r(i,1) + s1c5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * s1c5
         d7_b  = d12_v * d9_v + d8_b * s1c4
         d14_b = s1c1 * d2_p
         do g_i_ = 1, g_p_
-            g_s1a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s1a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         s1a = s1c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s1ic2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-s1ic2) * r(i, 1)
+            g_d1_w(g_i_) = (-s1ic2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-s1ic2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s1ic6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-s1ic6) * r(i, 1)
+            g_d2_w(g_i_) = (-s1ic6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-s1ic6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s1ic3 + s1ic4 * r(i, 1) + s1ic5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = s1ic3 + s1ic4 * r(i,1) + s1ic5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * s1ic5
         d7_b  = d12_v * d9_v + d8_b * s1ic4
         d14_b = s1ic1 * d2_p
         do g_i_ = 1, g_p_
-            g_s1ic(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s1ic(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         s1ic = s1ic1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = s1ialp * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = s1ialp * rnags
         d3_v = s1ic - s1a
         d5_v = tanh (d1_w)
@@ -3038,7 +3010,7 @@ subroutine g_prepot22( g_p_ )
         d2_b = 1.0d0 + (-d6_v)
         do g_i_ = 1, g_p_
             g_s1i(g_i_) = d7_b * g_d1_w(g_i_) + d6_v * g_s1ic(g_i_) + d2_b * g_s1a(g_i_)
-        enddo
+        end do
         s1i = s1a + d3_v * d6_v
         !--------
         !
@@ -3048,7 +3020,7 @@ subroutine g_prepot22( g_p_ )
         d8_b = -(d6_v * 0.5d0)
         do g_i_ = 1, g_p_
             g_s1(g_i_) = d4_v * g_s1i(g_i_) + d8_b * g_cosa(g_i_) + d2_b * g_s1a(g_i_)
-        enddo
+        end do
         s1 = s1a + d4_v * d6_v
         !--------
         !
@@ -3056,52 +3028,52 @@ subroutine g_prepot22( g_p_ )
         ! The first NaH triplet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t10c2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-t10c2) * r(i, 1)
+            g_d1_w(g_i_) = (-t10c2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-t10c2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t10c6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-t10c6) * r(i, 1)
+            g_d2_w(g_i_) = (-t10c6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-t10c6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t10c3 + t10c4 * r(i, 1) + t10c5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = t10c3 + t10c4 * r(i,1) + t10c5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * t10c5
         d7_b  = d12_v * d9_v + d8_b * t10c4
         d14_b = t10c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t10(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t10(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         t10 = t10c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t190c2) * g_r(g_i_, i, 1)
-        enddo
-        d1_w = (-t190c2) * r(i, 1)
+            g_d1_w(g_i_) = (-t190c2) * g_r(g_i_,i,1)
+        end do
+        d1_w = (-t190c2) * r(i,1)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t190c6) * g_r(g_i_, i, 1)
-        enddo
-        d2_w  = (-t190c6) * r(i, 1)
+            g_d2_w(g_i_) = (-t190c6) * g_r(g_i_,i,1)
+        end do
+        d2_w  = (-t190c6) * r(i,1)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t190c3 + t190c4 * r(i, 1) + t190c5 * r1s
-        d10_v = r(i, 1) * d9_v
+        d9_v  = t190c3 + t190c4 * r(i,1) + t190c5 * r1s
+        d10_v = r(i,1) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 1)
+        d8_b  = d12_v * r(i,1)
         d11_b = d8_b * t190c5
         d7_b  = d12_v * d9_v + d8_b * t190c4
         d14_b = t190c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t190(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_, i, 1) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t190(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r1s(g_i_) + d7_b * g_r(g_i_,i,1) + d14_b * g_d1_w(g_i_)
+        end do
         t190 = t190c1 * d2_v + d10_v * d12_v
         !--------
         !
@@ -3113,65 +3085,65 @@ subroutine g_prepot22( g_p_ )
         d12_b = (-d6_v) * 0.5d0
         do g_i_ = 1, g_p_
             g_t1(g_i_) = d9_v * g_coscos(g_i_) + d6_b * g_t10(g_i_) + d12_b * g_cosa(g_i_) + d7_b * g_t190(g_i_)
-        enddo
+        end do
         t1 = t190 + d4_v * d6_v + d9_v * coscos
         !--------
         !
         ! The H2 triplet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t2c2) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-t2c2) * r(i, 2)
+            g_d1_w(g_i_) = (-t2c2) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-t2c2) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t2c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-t2c6) * r(i, 2)
+            g_d2_w(g_i_) = (-t2c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-t2c6) * r(i,2)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t2c3 + t2c4 * r(i, 2) + t2c5 * r2s
-        d10_v = r(i, 2) * d9_v
+        d9_v  = t2c3 + t2c4 * r(i,2) + t2c5 * r2s
+        d10_v = r(i,2) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 2)
+        d8_b  = d12_v * r(i,2)
         d11_b = d8_b * t2c5
         d7_b  = d12_v * d9_v + d8_b * t2c4
         d14_b = t2c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t2a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_, i, 2) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t2a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_,i,2) + d14_b * g_d1_w(g_i_)
+        end do
         t2a = t2c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t290c2) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-t290c2) * r(i, 2)
+            g_d1_w(g_i_) = (-t290c2) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-t290c2) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t290c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-t290c6) * r(i, 2)
+            g_d2_w(g_i_) = (-t290c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-t290c6) * r(i,2)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t290c3 + r(i, 2) * t290c4 + t290c5 * r2s
-        d10_v = r(i, 2) * d9_v
+        d9_v  = t290c3 + r(i,2) * t290c4 + t290c5 * r2s
+        d10_v = r(i,2) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 2)
+        d8_b  = d12_v * r(i,2)
         d11_b = d8_b * t290c5
         d7_b  = d12_v * d9_v + d8_b * t290c4
         d14_b = t290c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t290c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_, i, 2) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t290c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_,i,2) + d14_b * g_d1_w(g_i_)
+        end do
         t290c = t290c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = t290alp * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = t290alp * (rnags - t290rho)
         d3_v = t290c - t2a
         d5_v = tanh (d1_w)
@@ -3182,38 +3154,38 @@ subroutine g_prepot22( g_p_ )
         d2_b = 1.0d0 + (-d5_b)
         do g_i_ = 1, g_p_
             g_t290(g_i_) = d8_b * g_d1_w(g_i_) + d5_b * g_t290c(g_i_) + d2_b * g_t2a(g_i_)
-        enddo
+        end do
         t290 = t2a + d3_v * d6_v * 0.5d0
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t20c2) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-t20c2) * r(i, 2)
+            g_d1_w(g_i_) = (-t20c2) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-t20c2) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t20c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-t20c6) * r(i, 2)
+            g_d2_w(g_i_) = (-t20c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-t20c6) * r(i,2)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t20c3 + t20c4 * r(i, 2) + t20c5 * r2s
-        d10_v = r(i, 2) * d9_v
+        d9_v  = t20c3 + t20c4 * r(i,2) + t20c5 * r2s
+        d10_v = r(i,2) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 2)
+        d8_b  = d12_v * r(i,2)
         d11_b = d8_b * t20c5
         d7_b  = d12_v * d9_v + d8_b * t20c4
         d14_b = t20c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t20c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_, i, 2) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t20c(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r2s(g_i_) + d7_b * g_r(g_i_,i,2) + d14_b * g_d1_w(g_i_)
+        end do
         t20c = t20c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = t20alp * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = t20alp * (rnags - t20rho)
         d3_v = t20c - t2a
         d5_v = tanh (d1_w)
@@ -3224,7 +3196,7 @@ subroutine g_prepot22( g_p_ )
         d2_b = 1.0d0 + (-d5_b)
         do g_i_ = 1, g_p_
             g_t20(g_i_) = d8_b * g_d1_w(g_i_) + d5_b * g_t20c(g_i_) + d2_b * g_t2a(g_i_)
-        enddo
+        end do
         t20 = t2a + d3_v * d6_v * 0.5d0
         !--------
         !
@@ -3232,24 +3204,24 @@ subroutine g_prepot22( g_p_ )
         d2_b = 1.0d0 + (-coscos)
         do g_i_ = 1, g_p_
             g_t2(g_i_) = d3_v * g_coscos(g_i_) + coscos * g_t20(g_i_) + d2_b * g_t290(g_i_)
-        enddo
+        end do
         t2 = t290 + d3_v * coscos
         !--------
         !
         ! The H2 singlet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s2c3) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-s2c3) * r(i, 2)
+            g_d1_w(g_i_) = (-s2c3) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-s2c3) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s2c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-s2c6) * r(i, 2)
-        d3_v  = s2c1 + s2c2 * r(i, 2)
+            g_d2_w(g_i_) = (-s2c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-s2c6) * r(i,2)
+        d3_v  = s2c1 + s2c2 * r(i,2)
         d5_v  = exp(d1_w)
         d2_p  = d5_v
-        d9_v  = s2c4 + s2c5 * r(i, 2)
+        d9_v  = s2c4 + s2c5 * r(i,2)
         d10_v = r2s * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
@@ -3258,15 +3230,15 @@ subroutine g_prepot22( g_p_ )
         d14_b = d3_v * d2_p
         d11_b = d12_v * r2s * s2c5 + d5_v * s2c2
         do g_i_ = 1, g_p_
-            g_s2a(g_i_) = d7_b * g_d2_w(g_i_) + d8_b * g_r2s(g_i_) + d14_b * g_d1_w(g_i_) + d11_b * g_r(g_i_, i, 2)
-        enddo
+            g_s2a(g_i_) = d7_b * g_d2_w(g_i_) + d8_b * g_r2s(g_i_) + d14_b * g_d1_w(g_i_) + d11_b * g_r(g_i_,i,2)
+        end do
         s2a = d3_v * d5_v + d10_v * d12_v + una2p
         !--------
         !
         d2_b = 1.0d0 / 0.1d0
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-d2_b) * g_t2(g_i_) + d2_b * g_s2a(g_i_)
-        enddo
+        end do
         d1_w = (s2a - t2) / 0.1d0
         d5_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d5_v *  d5_v)
@@ -3277,22 +3249,22 @@ subroutine g_prepot22( g_p_ )
         d8_b = -d6_b + 0.5d0
         do g_i_ = 1, g_p_
             g_s2mod(g_i_) = d9_b * g_d1_w(g_i_) + d8_b * g_t2(g_i_) + d7_b * g_s2a(g_i_)
-        enddo
+        end do
         s2mod = 0.5d0 * (s2a + t2 - d5_v * d6_v)
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s290c3) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-s290c3) * r(i, 2)
+            g_d1_w(g_i_) = (-s290c3) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-s290c3) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s290c6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-s290c6) * r(i, 2)
-        d3_v  = s290c1 + s290c2 * r(i, 2)
+            g_d2_w(g_i_) = (-s290c6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-s290c6) * r(i,2)
+        d3_v  = s290c1 + s290c2 * r(i,2)
         d5_v  = exp(d1_w)
         d2_p  = d5_v
-        d9_v  = s290c4 + s290c5 * r(i, 2)
+        d9_v  = s290c4 + s290c5 * r(i,2)
         d10_v = r2s * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
@@ -3301,14 +3273,14 @@ subroutine g_prepot22( g_p_ )
         d13_b = d3_v * d2_p
         d10_b = d12_v * r2s * s290c5 + d5_v * s290c2
         do g_i_ = 1, g_p_
-            g_s290c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r2s(g_i_) + d13_b * g_d1_w(g_i_) + d10_b * g_r(g_i_, i, 2)
-        enddo
+            g_s290c(g_i_) = d6_b * g_d2_w(g_i_) + d7_b * g_r2s(g_i_) + d13_b * g_d1_w(g_i_) + d10_b * g_r(g_i_,i,2)
+        end do
         s290c = d3_v * d5_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = s290alp * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = s290alp * (rnags - s290rho)
         d4_v = (s290c - s2mod) * 0.5d0
         d6_v = tanh (d1_w)
@@ -3319,7 +3291,7 @@ subroutine g_prepot22( g_p_ )
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_s290(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_s290c(g_i_) + d2_b * g_s2mod(g_i_)
-        enddo
+        end do
         s290 = s2mod + d4_v * d7_v
         !--------
         !
@@ -3327,64 +3299,64 @@ subroutine g_prepot22( g_p_ )
         d2_b = 1.0d0 + (-coscos)
         do g_i_ = 1, g_p_
             g_s2(g_i_) = d3_v * g_coscos(g_i_) + coscos * g_s2mod(g_i_) + d2_b * g_s290(g_i_)
-        enddo
+        end do
         s2 = s290 + d3_v * coscos
         !--------
         !
         ! The second NaH singlet
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s1c2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-s1c2) * r(i, 3)
+            g_d1_w(g_i_) = (-s1c2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-s1c2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s1c6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-s1c6) * r(i, 3)
+            g_d2_w(g_i_) = (-s1c6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-s1c6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s1c3 + s1c4 * r(i, 3) + s1c5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = s1c3 + s1c4 * r(i,3) + s1c5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * s1c5
         d7_b  = d12_v * d9_v + d8_b * s1c4
         d14_b = s1c1 * d2_p
         do g_i_ = 1, g_p_
-            g_s3a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s3a(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         s3a = s1c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-s1ic2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-s1ic2) * r(i, 3)
+            g_d1_w(g_i_) = (-s1ic2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-s1ic2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-s1ic6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-s1ic6) * r(i, 3)
+            g_d2_w(g_i_) = (-s1ic6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-s1ic6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = s1ic3 + s1ic4 * r(i, 3) + s1ic5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = s1ic3 + s1ic4 * r(i,3) + s1ic5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * s1ic5
         d7_b  = d12_v * d9_v + d8_b * s1ic4
         d14_b = s1ic1 * d2_p
         do g_i_ = 1, g_p_
-            g_s3ic(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_s3ic(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         s3ic = s1ic1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = s1ialp * g_rnags(g_i_)
-        enddo
+        end do
         d1_w = s1ialp * rnags
         d3_v = s3ic - s3a
         d5_v = tanh (d1_w)
@@ -3394,7 +3366,7 @@ subroutine g_prepot22( g_p_ )
         d2_b = 1.0d0 + (-d6_v)
         do g_i_ = 1, g_p_
             g_s3i(g_i_) = d7_b * g_d1_w(g_i_) + d6_v * g_s3ic(g_i_) + d2_b * g_s3a(g_i_)
-        enddo
+        end do
         s3i = s3a + d3_v * d6_v
         !--------
         !
@@ -3404,7 +3376,7 @@ subroutine g_prepot22( g_p_ )
         d8_b = -(d6_v * 0.5d0)
         do g_i_ = 1, g_p_
             g_s3(g_i_) = d4_v * g_s3i(g_i_) + d8_b * g_cosa(g_i_) + d2_b * g_s3a(g_i_)
-        enddo
+        end do
         s3 = s3a + d4_v * d6_v
         !--------
         !
@@ -3412,52 +3384,52 @@ subroutine g_prepot22( g_p_ )
         ! The second NaH triplet
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t10c2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-t10c2) * r(i, 3)
+            g_d1_w(g_i_) = (-t10c2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-t10c2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t10c6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-t10c6) * r(i, 3)
+            g_d2_w(g_i_) = (-t10c6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-t10c6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t10c3 + t10c4 * r(i, 3) + t10c5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = t10c3 + t10c4 * r(i,3) + t10c5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * t10c5
         d7_b  = d12_v * d9_v + d8_b * t10c4
         d14_b = t10c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t30(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t30(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         t30 = t10c1 * d2_v + d10_v * d12_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-t190c2) * g_r(g_i_, i, 3)
-        enddo
-        d1_w = (-t190c2) * r(i, 3)
+            g_d1_w(g_i_) = (-t190c2) * g_r(g_i_,i,3)
+        end do
+        d1_w = (-t190c2) * r(i,3)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-t190c6) * g_r(g_i_, i, 3)
-        enddo
-        d2_w  = (-t190c6) * r(i, 3)
+            g_d2_w(g_i_) = (-t190c6) * g_r(g_i_,i,3)
+        end do
+        d2_w  = (-t190c6) * r(i,3)
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = t190c3 + t190c4 * r(i, 3) + t190c5 * r3s
-        d10_v = r(i, 3) * d9_v
+        d9_v  = t190c3 + t190c4 * r(i,3) + t190c5 * r3s
+        d10_v = r(i,3) * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
         d6_b  = d10_v * d1_p
-        d8_b  = d12_v * r(i, 3)
+        d8_b  = d12_v * r(i,3)
         d11_b = d8_b * t190c5
         d7_b  = d12_v * d9_v + d8_b * t190c4
         d14_b = t190c1 * d2_p
         do g_i_ = 1, g_p_
-            g_t390(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_, i, 3) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_t390(g_i_) = d6_b * g_d2_w(g_i_) + d11_b * g_r3s(g_i_) + d7_b * g_r(g_i_,i,3) + d14_b * g_d1_w(g_i_)
+        end do
         t390 = t190c1 * d2_v + d10_v * d12_v
         !--------
         !
@@ -3469,7 +3441,7 @@ subroutine g_prepot22( g_p_ )
         d12_b = (-d6_v) * 0.5d0
         do g_i_ = 1, g_p_
             g_t3(g_i_) = d9_v * g_coscos(g_i_) + d6_b * g_t30(g_i_) + d12_b * g_cosa(g_i_) + d7_b * g_t390(g_i_)
-        enddo
+        end do
         t3 = t390 + d4_v * d6_v + d9_v * coscos
         !--------
         !
@@ -3479,17 +3451,17 @@ subroutine g_prepot22( g_p_ )
         !  H2 ionization energy:
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-h2i3) * g_r(g_i_, i, 2)
-        enddo
-        d1_w = (-h2i3) * r(i, 2)
+            g_d1_w(g_i_) = (-h2i3) * g_r(g_i_,i,2)
+        end do
+        d1_w = (-h2i3) * r(i,2)
         do g_i_ = 1, g_p_
-            g_d2_w(g_i_) = (-h2i6) * g_r(g_i_, i, 2)
-        enddo
-        d2_w  = (-h2i6) * r(i, 2)
-        d3_v  = h2i1 + h2i2 * r(i, 2)
+            g_d2_w(g_i_) = (-h2i6) * g_r(g_i_,i,2)
+        end do
+        d2_w  = (-h2i6) * r(i,2)
+        d3_v  = h2i1 + h2i2 * r(i,2)
         d5_v  = exp(d1_w)
         d2_p  = d5_v
-        d9_v  = h2i4 + h2i5 * r(i, 2)
+        d9_v  = h2i4 + h2i5 * r(i,2)
         d10_v = r2s * d9_v
         d12_v = exp(d2_w)
         d1_p  = d12_v
@@ -3499,8 +3471,8 @@ subroutine g_prepot22( g_p_ )
         d13_b = d12_v * r2s * h2i5 + d5_v * h2i2
         do g_i_ = 1, g_p_
             g_h2ie(g_i_) = -g_s2a(g_i_) + d9_b * g_d2_w(g_i_) + d10_b * g_r2s(g_i_) + d16_b * g_d1_w(g_i_) + d13_b * &
-                & g_r(g_i_, i, 2)
-        enddo
+                & g_r(g_i_,i,2)
+        end do
         h2ie = d3_v * d5_v + d10_v * d12_v - s2a + hie
         !--------
         !
@@ -3512,73 +3484,73 @@ subroutine g_prepot22( g_p_ )
         !   alb is the mean polarizability
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-h2a1) * g_r(g_i_, i, 2)
-        enddo
-        d1_w  = h2a1 * (h2a2 - r(i, 2))
+            g_d1_w(g_i_) = (-h2a1) * g_r(g_i_,i,2)
+        end do
+        d1_w  = h2a1 * (h2a2 - r(i,2))
         d2_v  = exp(d1_w)
         d1_p  = d2_v
-        d9_v  = h2a6 * r(i, 2)
+        d9_v  = h2a6 * r(i,2)
         d12_v = h2a7 * r2s
         d15_v = h2a8 * r2s
         d16_v = d15_v * r2s
         d19_v = h2a9 * r2s
         d20_v = d19_v * r2s
-        d22_v = h2a3 + h2a4 * r(i, 2) + h2a5 * r2s + d9_v * r2s + d12_v * r2s + d16_v * r(i, 2) + d20_v * r2s
+        d22_v = h2a3 + h2a4 * r(i,2) + h2a5 * r2s + d9_v * r2s + d12_v * r2s + d16_v * r(i,2) + d20_v * r2s
         d7_b  = d2_v * r2s
-        d12_b = d2_v * r(i, 2)
+        d12_b = d2_v * r(i,2)
         d8_b = d2_v * d20_v + d7_b * d19_v + d7_b * r2s * h2a9 + d12_b * d15_v + d12_b * r2s * h2a8 + d2_v * d12_v + &
             & d2_v * r2s * h2a7 + d2_v * d9_v + d2_v * h2a5
         d13_b = d2_v * d16_v + d2_v * r2s * h2a6 + d2_v * h2a4
         d24_b = d22_v * d1_p
         do g_i_ = 1, g_p_
-            g_al1(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_, i, 2) + d24_b * g_d1_w(g_i_)
-        enddo
+            g_al1(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_,i,2) + d24_b * g_d1_w(g_i_)
+        end do
         al1 = d2_v * d22_v + 2.0d0 * hpol
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-h2b1) * g_r(g_i_, i, 2)
-        enddo
-        d1_w  = h2b1 * (h2b2 - r(i, 2))
+            g_d1_w(g_i_) = (-h2b1) * g_r(g_i_,i,2)
+        end do
+        d1_w  = h2b1 * (h2b2 - r(i,2))
         d2_v  = exp(d1_w)
         d2_p  = d2_v
-        d9_v  = r(i, 2) ** ( 3 - 2)
-        d9_v  = d9_v * r(i, 2)
+        d9_v  = r(i,2) ** ( 3 - 2)
+        d9_v  = d9_v * r(i,2)
         d1_p  = 3 *  d9_v
-        d9_v  = d9_v * r(i, 2)
+        d9_v  = d9_v * r(i,2)
         d12_v = h2b7 * r2s
         d15_v = h2b8 * r2s
         d16_v = d15_v * r2s
         d19_v = h2b9 * r2s
         d20_v = d19_v * r2s
-        d22_v = h2b3 + h2b4 * r(i, 2) + h2b5 * r2s + h2b6 * d9_v + d12_v * r2s + d16_v * r(i, 2) + d20_v * r2s
+        d22_v = h2b3 + h2b4 * r(i,2) + h2b5 * r2s + h2b6 * d9_v + d12_v * r2s + d16_v * r(i,2) + d20_v * r2s
         d7_b  = d2_v * r2s
-        d12_b = d2_v * r(i, 2)
+        d12_b = d2_v * r(i,2)
         d8_b = d2_v * d20_v + d7_b * d19_v + d7_b * r2s * h2b9 + d12_b * d15_v + d12_b * r2s * h2b8 + d2_v * d12_v + &
             & d2_v * r2s * h2b7 + d2_v * h2b5
         d13_b = d2_v * d16_v + d2_v * h2b6 * d1_p + d2_v * h2b4
         d24_b = d22_v * d2_p
         do g_i_ = 1, g_p_
-            g_al2(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_, i, 2) + d24_b * g_d1_w(g_i_)
-        enddo
+            g_al2(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_,i,2) + d24_b * g_d1_w(g_i_)
+        end do
         al2 = d2_v * d22_v + 2.0d0 * hpol
         !--------
         !
         do g_i_ = 1, g_p_
             g_alt(g_i_) = (-twothd) * g_al2(g_i_) + twothd * g_al1(g_i_)
-        enddo
+        end do
         alt = twothd * (al1 - al2)
         !--------
         do g_i_ = 1, g_p_
             g_alb(g_i_) = twothd * g_al2(g_i_) + onethd * g_al1(g_i_)
-        enddo
+        end do
         alb = onethd * al1 + twothd * al2
         !--------
         d5_v = 1.5d0 * cstsq - 0.5d0
         d7_b = alt * 1.5d0
         do g_i_ = 1, g_p_
             g_alhh(g_i_) = d7_b * g_cstsq(g_i_) + d5_v * g_alt(g_i_) + g_alb(g_i_)
-        enddo
+        end do
         alhh = alb + alt * d5_v
         !--------
         !
@@ -3589,158 +3561,158 @@ subroutine g_prepot22( g_p_ )
         ! H2 properties:
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-h2hc1) * g_r(g_i_, i, 2)
-        enddo
-        d1_w  = (-h2hc1) * r(i, 2)
+            g_d1_w(g_i_) = (-h2hc1) * g_r(g_i_,i,2)
+        end do
+        d1_w  = (-h2hc1) * r(i,2)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
-        d8_v  = h2hc4 * r(i, 2)
+        d8_v  = h2hc4 * r(i,2)
         d11_v = h2hc5 * r2s
-        d13_v = h2hc2 * r(i, 2) + h2hc3 * r2s + d8_v * r2s + d11_v * r2s
+        d13_v = h2hc2 * r(i,2) + h2hc3 * r2s + d8_v * r2s + d11_v * r2s
         d7_b  = d2_v * d11_v + d2_v * r2s * h2hc5 + d2_v * d8_v + d2_v * h2hc3
         d11_b = d2_v * r2s * h2hc4 + d2_v * h2hc2
         d14_b = d13_v * d1_p
         do g_i_ = 1, g_p_
-            g_h2hex(g_i_) = d7_b * g_r2s(g_i_) + d11_b * g_r(g_i_, i, 2) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_h2hex(g_i_) = d7_b * g_r2s(g_i_) + d11_b * g_r(g_i_,i,2) + d14_b * g_d1_w(g_i_)
+        end do
         h2hex = d2_v * d13_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-h2qc1) * g_r(g_i_, i, 2)
-        enddo
-        d1_w  = (-h2qc1) * r(i, 2)
+            g_d1_w(g_i_) = (-h2qc1) * g_r(g_i_,i,2)
+        end do
+        d1_w  = (-h2qc1) * r(i,2)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
-        d8_v  = h2qc4 * r(i, 2)
+        d8_v  = h2qc4 * r(i,2)
         d11_v = h2qc5 * r2s
-        d13_v = h2qc2 * r(i, 2) + h2qc3 * r2s + d8_v * r2s + d11_v * r2s
+        d13_v = h2qc2 * r(i,2) + h2qc3 * r2s + d8_v * r2s + d11_v * r2s
         d7_b  = d2_v * d11_v + d2_v * r2s * h2qc5 + d2_v * d8_v + d2_v * h2qc3
         d11_b = d2_v * r2s * h2qc4 + d2_v * h2qc2
         d14_b = d13_v * d1_p
         do g_i_ = 1, g_p_
-            g_h2quad(g_i_) = d7_b * g_r2s(g_i_) + d11_b * g_r(g_i_, i, 2 ) + d14_b * g_d1_w(g_i_)
-        enddo
+            g_h2quad(g_i_) = d7_b * g_r2s(g_i_) + d11_b * g_r(g_i_,i,2 ) + d14_b * g_d1_w(g_i_)
+        end do
         h2quad = d2_v * d13_v
         !--------
         !
         ! NaH properties
         !
-        d9_v  = hnai6 * r(i, 1)
-        d11_v = hnai3 + hnai4 * r(i, 1) + hnai5 * r1s + d9_v * r1s
-        d12_v = (hnai1 + hnai2 * r(i, 1)) / d11_v
+        d9_v  = hnai6 * r(i,1)
+        d11_v = hnai3 + hnai4 * r(i,1) + hnai5 * r1s + d9_v * r1s
+        d12_v = (hnai1 + hnai2 * r(i,1)) / d11_v
         d5_b  = (-d12_v) / d11_v
         d9_b  = d5_b * d9_v + d5_b * hnai5
         d10_b = d5_b * r1s * hnai6 + d5_b * hnai4 + 1.0d0 / d11_v * hnai2
         do g_i_ = 1, g_p_
-            g_rnahie1(g_i_) = d9_b * g_r1s(g_i_) + d10_b * g_r(g_i_, i, 1)
-        enddo
+            g_rnahie1(g_i_) = d9_b * g_r1s(g_i_) + d10_b * g_r(g_i_,i,1)
+        end do
         rnahie1 = d12_v + rnaie + una2p
         !--------
         !
-        d9_v  = hnai6 * r(i, 3)
-        d11_v = hnai3 + hnai4 * r(i, 3) + hnai5 * r3s + d9_v * r3s
-        d12_v = (hnai1 + hnai2 * r(i, 3)) / d11_v
+        d9_v  = hnai6 * r(i,3)
+        d11_v = hnai3 + hnai4 * r(i,3) + hnai5 * r3s + d9_v * r3s
+        d12_v = (hnai1 + hnai2 * r(i,3)) / d11_v
         d5_b  = (-d12_v) / d11_v
         d9_b  = d5_b * d9_v + d5_b * hnai5
         d10_b = d5_b * r3s * hnai6 + d5_b * hnai4 + 1.0d0 / d11_v * hnai2
         do g_i_ = 1, g_p_
-            g_rnahie3(g_i_) = d9_b * g_r3s(g_i_) + d10_b * g_r(g_i_, i, 3)
-        enddo
+            g_rnahie3(g_i_) = d9_b * g_r3s(g_i_) + d10_b * g_r(g_i_,i,3)
+        end do
         rnahie3 = d12_v + rnaie + una2p
         !--------
         !
-        d10_v = hnau6 * r(i, 1)
-        d12_v = hnau3 + hnau4 * r(i, 1) + hnau5 * r1s + d10_v * r1s
-        d13_v = (hnau1 * r(i, 1) + hnau2 * r1s) / d12_v
+        d10_v = hnau6 * r(i,1)
+        d12_v = hnau3 + hnau4 * r(i,1) + hnau5 * r1s + d10_v * r1s
+        d13_v = (hnau1 * r(i,1) + hnau2 * r1s) / d12_v
         d2_b  = 1.0d0 / d12_v
         d3_b  = (-d13_v) / d12_v
         d7_b  = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
         d8_b  = d3_b * r1s * hnau6 + d3_b * hnau4 + d2_b * hnau1
         do g_i_ = 1, g_p_
-            g_rnahmu1(g_i_) = d7_b * g_r1s(g_i_) + d8_b * g_r(g_i_, i, 1 )
-        enddo
+            g_rnahmu1(g_i_) = d7_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1 )
+        end do
         rnahmu1 = d13_v
         !--------
         !
-        d10_v = hnau6 * r(i, 3)
-        d12_v = hnau3 + hnau4 * r(i, 3) + hnau5 * r3s + d10_v * r3s
-        d13_v = (hnau1 * r(i, 3) + hnau2 * r3s) / d12_v
+        d10_v = hnau6 * r(i,3)
+        d12_v = hnau3 + hnau4 * r(i,3) + hnau5 * r3s + d10_v * r3s
+        d13_v = (hnau1 * r(i,3) + hnau2 * r3s) / d12_v
         d2_b  = 1.0d0 / d12_v
         d3_b  = (-d13_v) / d12_v
         d7_b  = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
         d8_b  = d3_b * r3s * hnau6 + d3_b * hnau4 + d2_b * hnau1
         do g_i_ = 1, g_p_
-            g_rnahmu3(g_i_) = d7_b * g_r3s(g_i_) + d8_b * g_r(g_i_, i, 3 )
-        enddo
+            g_rnahmu3(g_i_) = d7_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3 )
+        end do
         rnahmu3 = d13_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_, i, 1)
-        enddo
-        d1_w  = (-hnaa1) * r(i, 1)
+            g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_,i,1)
+        end do
+        d1_w  = (-hnaa1) * r(i,1)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
         d9_v  = hnaa5 * r1s
-        d11_v = hnaa2 + hnaa3 * r(i, 1) + hnaa4 * r1s + d9_v * r(i, 1)
-        d9_b  = d2_v * r(i, 1) * hnaa5 + d2_v * hnaa4
+        d11_v = hnaa2 + hnaa3 * r(i,1) + hnaa4 * r1s + d9_v * r(i,1)
+        d9_b  = d2_v * r(i,1) * hnaa5 + d2_v * hnaa4
         d8_b  = d2_v * d9_v + d2_v * hnaa3
         d13_b = d11_v * d1_p
         do g_i_ = 1, g_p_
-            g_rnahpar1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_, i, 1) + d13_b * g_d1_w(g_i_)
-        enddo
+            g_rnahpar1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1) + d13_b * g_d1_w(g_i_)
+        end do
         rnahpar1 = 159.267d0 + hpol + d2_v * d11_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_, i, 3)
-        enddo
-        d1_w  = (-hnaa1) * r(i, 3)
+            g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_,i,3)
+        end do
+        d1_w  = (-hnaa1) * r(i,3)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
         d9_v  = hnaa5 * r3s
-        d11_v = hnaa2 + hnaa3 * r(i, 3) + hnaa4 * r3s + d9_v * r(i, 3)
-        d9_b  = d2_v * r(i, 3) * hnaa5 + d2_v * hnaa4
+        d11_v = hnaa2 + hnaa3 * r(i,3) + hnaa4 * r3s + d9_v * r(i,3)
+        d9_b  = d2_v * r(i,3) * hnaa5 + d2_v * hnaa4
         d8_b  = d2_v * d9_v + d2_v * hnaa3
         d13_b = d11_v * d1_p
         do g_i_ = 1, g_p_
-            g_rnahpar3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_, i, 3) + d13_b * g_d1_w(g_i_)
-        enddo
+            g_rnahpar3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3) + d13_b * g_d1_w(g_i_)
+        end do
         rnahpar3 = 159.267d0 + hpol + d2_v * d11_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-hnab1) * g_r(g_i_, i, 1)
-        enddo
-        d1_w  = (-hnab1) * r(i, 1)
+            g_d1_w(g_i_) = (-hnab1) * g_r(g_i_,i,1)
+        end do
+        d1_w  = (-hnab1) * r(i,1)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
         d9_v  = hnab5 * r1s
-        d11_v = hnab2 + hnab3 * r(i, 1) + hnab4 * r1s + d9_v * r(i, 1)
-        d9_b  = d2_v * r(i, 1) * hnab5 + d2_v * hnab4
+        d11_v = hnab2 + hnab3 * r(i,1) + hnab4 * r1s + d9_v * r(i,1)
+        d9_b  = d2_v * r(i,1) * hnab5 + d2_v * hnab4
         d8_b  = d2_v * d9_v + d2_v * hnab3
         d13_b = d11_v * d1_p
         do g_i_ = 1, g_p_
-            g_rnahperp1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_, i, 1) + d13_b * g_d1_w(g_i_)
-        enddo
+            g_rnahperp1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1) + d13_b * g_d1_w(g_i_)
+        end do
         rnahperp1 = 159.267d0 + hpol + d2_v * d11_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-hnab1) * g_r(g_i_, i, 3)
-        enddo
-        d1_w  = (-hnab1) * r(i, 3)
+            g_d1_w(g_i_) = (-hnab1) * g_r(g_i_,i,3)
+        end do
+        d1_w  = (-hnab1) * r(i,3)
         d2_v  = exp(d1_w)
         d1_p  = d2_v
         d9_v  = hnab5 * r3s
-        d11_v = hnab2 + hnab3 * r(i, 3) + hnab4 * r3s + d9_v * r(i, 3)
-        d9_b  = d2_v * r(i, 3) * hnab5 + d2_v * hnab4
+        d11_v = hnab2 + hnab3 * r(i,3) + hnab4 * r3s + d9_v * r(i,3)
+        d9_b  = d2_v * r(i,3) * hnab5 + d2_v * hnab4
         d8_b  = d2_v * d9_v + d2_v * hnab3
         d13_b = d11_v * d1_p
         do g_i_ = 1, g_p_
-            g_rnahperp3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_, i, 3) + d13_b * g_d1_w(g_i_)
-        enddo
+            g_rnahperp3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3) + d13_b * g_d1_w(g_i_)
+        end do
         rnahperp3 = 159.267d0 + hpol + d2_v * d11_v
         !--------
         !
@@ -3748,12 +3720,12 @@ subroutine g_prepot22( g_p_ )
         d2_b = 1.0d0 + (-cstsq1)
         do g_i_ = 1, g_p_
             g_rnahpol1(g_i_) = d3_v * g_cstsq1(g_i_) + cstsq1 * g_rnahpar1(g_i_) + d2_b * g_rnahperp1(g_i_)
-        enddo
+        end do
         rnahpol1 = rnahperp1 + d3_v * cstsq1
         !--------
         do g_i_ = 1, g_p_
             g_rnahpol1b(g_i_) = twothd * g_rnahperp1(g_i_) + onethd * g_rnahpar1(g_i_)
-        enddo
+        end do
         rnahpol1b = onethd * rnahpar1 + twothd * rnahperp1
         !--------
         !
@@ -3761,12 +3733,12 @@ subroutine g_prepot22( g_p_ )
         d2_b = 1.0d0 + (-cstsq3)
         do g_i_ = 1, g_p_
             g_rnahpol3(g_i_) = d3_v * g_cstsq3(g_i_) + cstsq3 * g_rnahpar3(g_i_) + d2_b * g_rnahperp3(g_i_)
-        enddo
+        end do
         rnahpol3 = rnahperp3 + d3_v * cstsq3
         !--------
         do g_i_ = 1, g_p_
             g_rnahpol3b(g_i_) = twothd * g_rnahperp3(g_i_) + onethd * g_rnahpar3(g_i_)
-        enddo
+        end do
         rnahpol3b = onethd * rnahpar3 + twothd * rnahperp3
         !--------
         !
@@ -3775,7 +3747,7 @@ subroutine g_prepot22( g_p_ )
         ! quadrupole quadrupole
         do g_i_ = 1, g_p_
             g_qqint(g_i_) = (-7.0d0) * g_cstsq(g_i_)
-        enddo
+        end do
         qqint = 3.0d0 - 7.0d0 * cstsq
         !--------
         d5_v  = rnagc * rnag
@@ -3788,20 +3760,20 @@ subroutine g_prepot22( g_p_ )
         d10_b = qqint * (1.0d0 / d7_v) * (0.75d0 * rnaquad)
         do g_i_ = 1, g_p_
             g_qq(g_i_) = d8_v * g_qqint(g_i_) + d8_b * g_rnag(g_i_) + d9_b * g_rnagc(g_i_) + d10_b * g_h2quad(g_i_)
-        enddo
+        end do
         qq = d8_v * qqint
         !--------
         d2_v = (-39.0625d0) * rnagc
         d4_b = rnag * (-39.0625d0)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d2_v * g_rnag(g_i_) + d4_b * g_rnagc(g_i_)
-        enddo
+        end do
         d1_w = d2_v * rnag
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_dexp2(g_i_) = d1_p * g_d1_w(g_i_)
-        enddo
+        end do
         dexp2 = d2_v
         !--------
         d3_v = 3.0d0 * qqint
@@ -3812,7 +3784,7 @@ subroutine g_prepot22( g_p_ )
         d9_b = qq * dexp2 * ((-d4_v) / d3_v) * 3.0d0
         do g_i_ = 1, g_p_
             g_qq(g_i_) = d6_b * g_dexp2(g_i_) + d9_b * g_qqint(g_i_) + d8_v * g_qq(g_i_)
-        enddo
+        end do
         qq = qq * d8_v
         !--------
         !
@@ -3821,7 +3793,7 @@ subroutine g_prepot22( g_p_ )
         d4_b = 162.0d0 + (-d2_v) + (-cstsq) * 147.0d0
         do g_i_ = 1, g_p_
             g_qhint(g_i_) = d4_b * g_cstsq(g_i_)
-        enddo
+        end do
         qhint = -45.0d0 - d2_v * cstsq + 162.0d0 * cstsq
         !--------
         d4_v  = rnagc * rnagc
@@ -3834,7 +3806,7 @@ subroutine g_prepot22( g_p_ )
         d10_b = qhint * (1.0d0 / d7_v) * (0.3125d0 * rnaquad)
         do g_i_ = 1, g_p_
             g_qh(g_i_) = d8_v * g_qhint(g_i_) + d8_b * g_rnag(g_i_) + d9_b * g_rnagc(g_i_) + d10_b * g_h2hex(g_i_)
-        enddo
+        end do
         qh = d8_v * qhint
         !--------
         d3_v = (-40.8d0) * pi / qhint
@@ -3844,7 +3816,7 @@ subroutine g_prepot22( g_p_ )
         d8_b = qh * dexp2 * ((-d3_v) / qhint)
         do g_i_ = 1, g_p_
             g_qh(g_i_) = d6_b * g_dexp2(g_i_) + d8_b * g_qhint(g_i_) + d7_v * g_qh(g_i_)
-        enddo
+        end do
         qh = qh * d7_v
         !--------
         !
@@ -3859,7 +3831,7 @@ subroutine g_prepot22( g_p_ )
         d5_b = d3_b * d2_v + d4_b * rnag1c + d4_b * rnag1c
         do g_i_ = 1, g_p_
             g_div1(g_i_) = d5_b * g_rnag1c(g_i_)
-        enddo
+        end do
         div1 = d5_v
         !--------
         d2_v  = rnahmu1 * rnahmu1
@@ -3875,7 +3847,7 @@ subroutine g_prepot22( g_p_ )
         do g_i_ = 1, g_p_
             g_rmuimu1(g_i_) = d10_v * g_div1(g_i_) + d5_b * g_rnag1c(g_i_) + d9_b * g_cstsq1(g_i_) + d12_b * &
                 & g_rnahmu1(g_i_)
-        enddo
+        end do
         rmuimu1 = d10_v * div1
         !--------
         !
@@ -3887,7 +3859,7 @@ subroutine g_prepot22( g_p_ )
         d5_b = d3_b * d2_v + d4_b * rnag3c + d4_b * rnag3c
         do g_i_ = 1, g_p_
             g_div3(g_i_) = d5_b * g_rnag3c(g_i_)
-        enddo
+        end do
         div3 = d5_v
         !--------
         d2_v  = rnahmu3 * rnahmu3
@@ -3903,7 +3875,7 @@ subroutine g_prepot22( g_p_ )
         do g_i_ = 1, g_p_
             g_rmuimu3(g_i_) = d10_v * g_div3(g_i_) + d5_b * g_rnag3c(g_i_) + d9_b * g_cstsq3(g_i_) + d12_b * &
                 & g_rnahmu3(g_i_)
-        enddo
+        end do
         rmuimu3 = d10_v * div3
         !--------
         !
@@ -3922,7 +3894,7 @@ subroutine g_prepot22( g_p_ )
         d11_b = d8_b * ((-d4_v) / d3_v) + d8_b * (1.0d0 / d3_v) * ((-1.5d0) * rnaie)
         do g_i_ = 1, g_p_
             g_c6(g_i_) = d5_b * g_rnagc(g_i_) + d7_b * g_alhh(g_i_) + d11_b * g_h2ie(g_i_)
-        enddo
+        end do
         c6 = d11_v
         !--------
         d4_v = alb / alhh
@@ -3934,7 +3906,7 @@ subroutine g_prepot22( g_p_ )
         d9_b = d7_b * ((-d4_v) / alhh)
         do g_i_ = 1, g_p_
             g_c6(g_i_) = d6_b * g_dexp2(g_i_) + d9_b * g_alhh(g_i_) + d8_b * g_alb(g_i_) + d8_v * g_c6(g_i_)
-        enddo
+        end do
         c6 = c6 * d8_v
         !--------
         !
@@ -3950,20 +3922,20 @@ subroutine g_prepot22( g_p_ )
         do g_i_ = 1, g_p_
             g_c61(g_i_) = d10_v * g_div1(g_i_) + d5_b * g_rnag1c(g_i_) + d8_b * g_rnahpol1(g_i_) + d11_b * &
                 & g_rnahie1(g_i_)
-        enddo
+        end do
         c61 = d10_v * div1
         !--------
         d2_v = (-39.0625d0) * rnag1c
         d4_b = rnag1 * (-39.0625d0)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d2_v * g_rnag1(g_i_) + d4_b * g_rnag1c(g_i_)
-        enddo
+        end do
         d1_w = d2_v * rnag1
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_dexp1(g_i_) = d1_p * g_d1_w(g_i_)
-        enddo
+        end do
         dexp1 = d2_v
         !--------
         d4_v = rnahpol1b / rnahpol1
@@ -3975,7 +3947,7 @@ subroutine g_prepot22( g_p_ )
         d9_b = d7_b * ((-d4_v) / rnahpol1)
         do g_i_ = 1, g_p_
             g_c61(g_i_) = d6_b * g_dexp1(g_i_) + d9_b * g_rnahpol1(g_i_) + d8_b * g_rnahpol1b(g_i_) + d8_v * g_c61(g_i_)
-        enddo
+        end do
         c61 = c61 * d8_v
         !--------
         !
@@ -3991,20 +3963,20 @@ subroutine g_prepot22( g_p_ )
         do g_i_ = 1, g_p_
             g_c63(g_i_) = d10_v * g_div3(g_i_) + d5_b * g_rnag3c(g_i_) + d8_b * g_rnahpol3(g_i_) + d11_b * &
                 & g_rnahie3(g_i_)
-        enddo
+        end do
         c63 = d10_v * div3
         !--------
         d2_v = (-39.0625d0) * rnag3c
         d4_b = rnag3 * (-39.0625d0)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d2_v * g_rnag3(g_i_) + d4_b * g_rnag3c(g_i_)
-        enddo
+        end do
         d1_w = d2_v * rnag3
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_dexp3(g_i_) = d1_p * g_d1_w(g_i_)
-        enddo
+        end do
         dexp3 = d2_v
         !--------
         d4_v = rnahpol3b / rnahpol3
@@ -4016,7 +3988,7 @@ subroutine g_prepot22( g_p_ )
         d9_b = d7_b * ((-d4_v) / rnahpol3)
         do g_i_ = 1, g_p_
             g_c63(g_i_) = d6_b * g_dexp3(g_i_) + d9_b * g_rnahpol3(g_i_) + d8_b * g_rnahpol3b(g_i_) + d8_v * g_c63(g_i_)
-        enddo
+        end do
         c63 = c63 * d8_v
         !--------
         !
@@ -4028,7 +4000,7 @@ subroutine g_prepot22( g_p_ )
         d10_b = rmuimu1 * dexp1 * ((-d5_v) / d4_v) * 1.5d0
         do g_i_ = 1, g_p_
             g_cind1(g_i_) = d6_b * g_dexp1(g_i_) + d10_b * g_cstsq1(g_i_ ) + d9_v * g_rmuimu1(g_i_)
-        enddo
+        end do
         cind1 = rmuimu1 * d9_v
         !--------
         !
@@ -4040,15 +4012,15 @@ subroutine g_prepot22( g_p_ )
         d10_b = rmuimu3 * dexp3 * ((-d5_v) / d4_v) * 1.5d0
         do g_i_ = 1, g_p_
             g_cind3(g_i_) = d6_b * g_dexp3(g_i_) + d10_b * g_cstsq3(g_i_ ) + d9_v * g_rmuimu3(g_i_)
-        enddo
+        end do
         cind3 = rmuimu3 * d9_v
         !--------
         !
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = balp * g_r(g_i_, i, 2)
-        enddo
-        d1_w  = balp * (r(i, 2) - brho)
+            g_d1_w(g_i_) = balp * g_r(g_i_,i,2)
+        end do
+        d1_w  = balp * (r(i,2) - brho)
         d7_v  = (qq + qh + c6 * cevau) * 0.5d0
         d9_v  = tanh (d1_w)
         d1_p  = 1.0d0 - ( d9_v *  d9_v)
@@ -4058,32 +4030,32 @@ subroutine g_prepot22( g_p_ )
         d9_b  = d6_b * cevau
         do g_i_ = 1, g_p_
             g_elec(g_i_) = d5_b * g_d1_w(g_i_) + d9_b * g_c6(g_i_) + d6_b * g_qh(g_i_) + d6_b * g_qq(g_i_)
-        enddo
+        end do
         elec = d7_v * d10_v
         !--------
         !
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = dalp * g_r(g_i_, i, 1)
-        enddo
-        d1_w = dalp * (r(i, 1) - drho)
+            g_d1_w(g_i_) = dalp * g_r(g_i_,i,1)
+        end do
+        d1_w = dalp * (r(i,1) - drho)
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_c6swt1(g_i_) = d4_b * g_d1_w(g_i_)
-        enddo
+        end do
         c6swt1 = 0.5d0 * (1.0d0 - d2_v)
         !--------
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = dalp * g_r(g_i_, i, 3)
-        enddo
-        d1_w = dalp * (r(i, 3) - drho)
+            g_d1_w(g_i_) = dalp * g_r(g_i_,i,3)
+        end do
+        d1_w = dalp * (r(i,3) - drho)
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_c6swt3(g_i_) = d4_b * g_d1_w(g_i_)
-        enddo
+        end do
         c6swt3 = 0.5d0 * (1.0d0 - d2_v)
         !--------
         !
@@ -4092,62 +4064,62 @@ subroutine g_prepot22( g_p_ )
         d4_b = cevau * c61
         do g_i_ = 1, g_p_
             g_c61(g_i_) = d4_b * g_c6swt1(g_i_) + d3_b * g_c61(g_i_)
-        enddo
+        end do
         c61 = c61 * c6swt1 * cevau
         !--------
         d3_b = cevau * c6swt3
         d4_b = cevau * c63
         do g_i_ = 1, g_p_
             g_c63(g_i_) = d4_b * g_c6swt3(g_i_) + d3_b * g_c63(g_i_)
-        enddo
+        end do
         c63 = c63 * c6swt3 * cevau
         !--------
         do g_i_ = 1, g_p_
             g_cind1(g_i_) = cind1 * g_c6swt1(g_i_) + c6swt1 * g_cind1(g_i_)
-        enddo
+        end do
         cind1 = cind1 * c6swt1
         !--------
         do g_i_ = 1, g_p_
             g_cind3(g_i_) = cind3 * g_c6swt3(g_i_) + c6swt3 * g_cind3(g_i_)
-        enddo
+        end do
         cind3 = cind3 * c6swt3
         !--------
         !
         do g_i_ = 1, g_p_
             g_elec(g_i_) = g_cind3(g_i_) + g_cind1(g_i_) + g_c63(g_i_) + g_c61(g_i_) + g_elec(g_i_)
-        enddo
+        end do
         elec = elec + c61 + c63 + cind1 + cind3
         !--------
         ! ===============================================================
         !
         do g_i_ = 1, g_p_
             g_coul1(g_i_) = 0.5d0 * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
-        enddo
+        end do
         coul1 = 0.5d0 * (s1 + t1)
         !--------
         do g_i_ = 1, g_p_
             g_coul2(g_i_) = 0.5d0 * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
-        enddo
+        end do
         coul2 = 0.5d0 * (s2 + t2)
         !--------
         do g_i_ = 1, g_p_
             g_coul3(g_i_) = 0.5d0 * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
-        enddo
+        end do
         coul3 = 0.5d0 * (s3 + t3)
         !--------
         do g_i_ = 1, g_p_
             g_exch1(g_i_) = (-0.5d0) * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
-        enddo
+        end do
         exch1 = 0.5d0 * (s1 - t1)
         !--------
         do g_i_ = 1, g_p_
             g_exch2(g_i_) = (-0.5d0) * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
-        enddo
+        end do
         exch2 = 0.5d0 * (s2 - t2)
         !--------
         do g_i_ = 1, g_p_
             g_exch3(g_i_) = (-0.5d0) * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
-        enddo
+        end do
         exch3 = 0.5d0 * (s3 - t3)
         !--------
         d4_v  = (exch1 - exch2) * (exch1 - exch2)
@@ -4161,26 +4133,25 @@ subroutine g_prepot22( g_p_ )
         d10_b = d2_p + (-d3_p)
         do g_i_ = 1, g_p_
             g_w(g_i_) = d5_b * g_exch3(g_i_) + d10_b * g_exch2(g_i_) + d6_b * g_exch1(g_i_)
-        enddo
+        end do
         w = d4_v + d7_v + d10_v
         !--------
         do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-c2c) * g_r(g_i_, i, 3) + (-c2c) * g_r(g_i_, i, 2) + (-c2c) * g_r(g_i_, i, 1) + (-c2b) * &
-                & g_w(g_i_)
-        enddo
-        d1_w = (-c2b) * w - c2c * (r(i, 1) + r(i, 2) + r(i, 3))
+            g_d1_w(g_i_) = (-c2c) * g_r(g_i_,i,3) + (-c2c) * g_r(g_i_,i,2) + (-c2c) * g_r(g_i_,i,1) + (-c2b) * g_w(g_i_)
+        end do
+        d1_w = (-c2b) * w - c2c * (r(i,1) + r(i,2) + r(i,3))
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = c2a * d1_p
         do g_i_ = 1, g_p_
             g_cplg2(g_i_) = d3_b * g_d1_w(g_i_)
-        enddo
+        end do
         cplg2 = c2a * d2_v
         !--------
         d4_b = cplg2 + cplg2
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_cplg2(g_i_) + g_w(g_i_)
-        enddo
+        end do
         d1_w = w + cplg2 * cplg2
         d8_v = sqrt(d1_w)
 
@@ -4188,22 +4159,23 @@ subroutine g_prepot22( g_p_ )
             d1_p = 1.0d0 / (2.0d0 *  d8_v)
         else
             d1_p = 0.0d0
-        endif
+        end if
         d5_b = (-(1.0d0 / dsqrt(2.0d0))) * d1_p
         do g_i_ = 1, g_p_
-            g_e(g_i_, i) = d5_b * g_d1_w(g_i_) + g_coul3(g_i_) + g_coul2 (g_i_) + g_coul1(g_i_)
-        enddo
+            g_e(g_i_,i) = d5_b * g_d1_w(g_i_) + g_coul3(g_i_) + g_coul2 (g_i_) + g_coul1(g_i_)
+        end do
         e(i) = coul1 + coul2 + coul3 + deh2 - d8_v / dsqrt(2.0d0)
         !--------
         do g_i_ = 1, g_p_
-            g_e(g_i_, i) = g_elec(g_i_) + cevau * g_e(g_i_, i)
-        enddo
+            g_e(g_i_,i) = g_elec(g_i_) + cevau * g_e(g_i_,i)
+        end do
         e(i) = e(i) * cevau + elec
         !--------
         !
         10 continue
     99999 continue
 end subroutine g_prepot22
+
 !
 !
 !

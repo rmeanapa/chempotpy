@@ -1,11 +1,11 @@
 !***********************************************************************
-!   System:                     O3
+!   System:                        O3
 !   Functional form:
-!   Common name:                O3
-!   Number of derivatives:      0
-!   Number of bodies:           3
+!   Common name:                   O3
+!   Number of derivatives:         0
+!   Number of bodies:              3
 !   Number of electronic surfaces: 1
-!   Interface: Section-2
+!   Interface:                     Section-2
 !
 !   References: doi 10.1063/1.4983813
 !               Author:  Tapan K. Mankodi, Upendra V. Bhandarkar,
@@ -13,7 +13,7 @@
 !
 !   Notes:
 !
-!   Data file:  coeff_n3_o3.txt
+!   Data file: coeff_n3_o3.txt
 !
 !***********************************************************************
 
@@ -34,9 +34,8 @@
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, p, g, d )
-
+    use chempotpy_geometry, only: cartesian_distance
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 3
@@ -44,47 +43,39 @@ subroutine pes( x, igrad, p, g, d )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: v, tx(3), sum_d
-    integer          :: ibond, iatom, idir, j, istate
+    double precision              :: v, tx(3), sum_d
+    integer                       :: ibond, iatom, idir, j, istate
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
     if (igrad==0) then
-        tx(1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2+(x(1,3)-x(2,3))**2)
-        tx(2) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2+(x(1,3)-x(3,3))**2)
-        tx(3) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2+(x(2,3)-x(3,3))**2)
-        call o3(v,tx(1),tx(2),tx(3))
+        tx(1) = cartesian_distance(x(1,:), x(2,:))
+        tx(2) = cartesian_distance(x(1,:), x(3,:))
+        tx(3) = cartesian_distance(x(2,:), x(3,:))
+        call o3(v, tx(1), tx(2), tx(3))
         v = v/23.0609
-        do istate=1,nstates
+        do istate=1, nstates
             p(istate) = v
-        enddo
+        end do
     else
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate o3.
 subroutine o3( v, rx, ry, rz )
-
     implicit none
-
     double precision, intent(in)  :: rx, ry, rz
     double precision, intent(out) :: v
-
-    integer          :: mpoints
-    double precision :: coeff(52)
-    double precision :: indices(52,3)
-    double precision :: ae,re
-    double precision :: xrx,xry,xrz
-
-    integer          :: i,j,k
-    double precision :: a
-    integer          :: ii
-
+    integer                       :: mpoints
+    double precision              :: coeff(52)
+    double precision              :: indices(52,3)
+    double precision              :: ae, re
+    double precision              :: xrx, xry, xrz
+    integer                       :: i, j, k
+    double precision              :: a
+    integer                       :: ii
     re = 1.208d0
     ae = 0.8d0
 
@@ -98,21 +89,20 @@ subroutine o3( v, rx, ry, rz )
 
     mpoints = 52
 
-    do ii=1,mpoints
-        v = v + coeff(ii)*(xrx**(indices(ii,1))*xry**(indices(ii,2))*xrz**(indices(ii,3)) + xrx**(indices(ii,1))*xry** &
-            & (indices(ii,3))*xrz**(indices(ii,2)) + xrx**(indices(ii,2))*xry**(indices(ii,3))*xrz**(indices(ii,1)) + &
-            & xrx**(indices(ii,2))*xry**(indices(ii,1))*xrz**(indices(ii,3)) + xrx**(indices(ii,3))*xry**(indices(ii, &
-            & 1))*xrz**(indices(ii,2)) + xrx**(indices(ii,3))*xry**(indices(ii,2))*xrz**(indices(ii,1)))
-    enddo
+    do ii=1, mpoints
+        v = v + coeff(ii)*(xrx**(indices(ii,1))*xry**(indices(ii,2))*xrz**(indices(ii,3)) + xrx**(indices(ii,1))* &
+            & xry** (indices(ii,3))*xrz**(indices(ii,2)) + xrx**(indices(ii,2))*xry**(indices(ii,3))*xrz** &
+            & (indices(ii,1)) + xrx**(indices(ii,2))*xry**(indices(ii,1))*xrz**(indices(ii,3)) + xrx**(indices(ii, &
+            & 3))*xry**(indices(ii,1))*xrz**(indices(ii,2)) + xrx**(indices(ii,3))*xry**(indices(ii,2))*xrz** &
+            & (indices(ii,1)))
+    end do
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate assign.
 subroutine assign( coeff, indices )
     implicit none
-
-    double precision,intent(inout) :: coeff(52), indices(52,3)
-
+    double precision, intent(inout) :: coeff(52), indices(52,3)
     indices(1,1)  = 0.0
     indices(1,2)  = 0.0
     indices(1,3)  = 0.0
@@ -323,4 +313,4 @@ subroutine assign( coeff, indices )
     coeff(51) = 1354.91499891
     coeff(52) = -303.958774798
 
-endsubroutine
+end subroutine

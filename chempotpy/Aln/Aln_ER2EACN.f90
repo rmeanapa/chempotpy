@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2EACN potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Extended Rydberg plus Embedded Atom and Coordination Number
     !   Common name:                   ER2+EACN
@@ -62,16 +59,14 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms
 
     implicit none
-
     double precision :: a1, a2, a3, abscz1, abscz2, au2, au23, b, bb, bu2, co, &
         & co3, cz1, cz2, de, du2, dx, dy, dz, ec1, ee, en, es1, ff, fu2, g1, g1e, g2, gcorr, gu2, &
         & gzero, poly, r, re, rho, rij, rr, term, u2, ud, ud2, v, x, y, z
     integer :: i, j, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom),gcorr(maxatom)
-    dimension fu2(maxatom,maxatom),r(maxatom,maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom), gcorr(maxatom)
+    dimension fu2(maxatom,maxatom), r(maxatom,maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-
     g1    = 0.911138251099169572
     g2    = 6.30972154372252092/autoang
     du2   = 0.406839276990718091
@@ -91,10 +86,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
     au2 = 0.143243771372740580
     bu2 = 6.50000000000000000/autoang
 
-    do 3 i=1,natom
+    do 3 i=1, natom
         r(i,i)   = 0.d0
         fu2(i,i) = 1.d0
-        do 3 j=i+1,natom
+        do 3 j=i+1, natom
             dx       = x(i)-x(j)
             dy       = y(i)-y(j)
             dz       = z(i)-z(j)
@@ -107,9 +102,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
     ! CALCULATE CN FUNCTION
     !     first calculate g_alpha
     g1e = dexp(g1)
-    do 20 i=1,natom                         ! alpha loop
+    do 20 i=1, natom                         ! alpha loop
         gcorr(i) = 0d0
-        do 21 j=1,natom                        ! beta loop
+        do 21 j=1, natom                        ! beta loop
             if(i.eq.j) go to 21                   ! beta != alpha
             rij = r(i,j)
             if (rij.ge.g2) go to 21               ! cutoff term counts nearb
@@ -120,8 +115,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
     20 continue
 
     !     then calculate CN term
-    do 30 i=1,natom                         ! alpha loop
-        do 31 j=1,natom                         ! beta loop
+    do 30 i=1, natom                         ! alpha loop
+        do 31 j=1, natom                         ! beta loop
             if(i.eq.j) go to 31                    ! beat != alpha
             rij = r(i,j)
 
@@ -150,10 +145,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
     v  = 0.d0
     u2 = 0.d0
     ff = 0.d0
-    do 1 i=1,natom
+    do 1 i=1, natom
         ud  = 0.d0
         ud2 = 0.d0
-        do 2 j=1,natom
+        do 2 j=1, natom
             if (i.eq.j) go to 2
             dx = x(i)-x(j)
             dy = y(i)-y(j)

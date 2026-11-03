@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_Jac potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Embedded atom/Effective medium theory
     !   Common name:                   Jac
@@ -62,16 +59,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms (input)
 
     implicit none
-
     double precision :: alpha, beta, bs, dx, dy, dz, e0, e2, e3, en, ep, eta, eta1, &
         & eta2, fra, pi, rr, s, u, ud, udno, uno, v, vv, x, y, z
     integer :: i, j, m, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-
     !  calculate the potential energy
-
     eta1 = 0.3
     en   = 0.007
     s    = 3.0
@@ -95,9 +89,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
     fra  = 1.d0/12.d0
 
     v = 0d0
-    do 2 i=1,natom
+    do 2 i=1, natom
         u = 0d0
-        do 3 j=1,natom
+        do 3 j=1, natom
             if(j.eq.i) go to 3
             dx = x(i)-x(j)
             dy = y(i)-y(j)
@@ -106,7 +100,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
             u  = u+dexp(-eta2*(rr-bs))   ! EAS(1) w/o exponent
         3 continue
         ud = 0d0
-        do 4 m=1,natom
+        do 4 m=1, natom
             if(m.eq.i) go to 4
             dx = x(i)-x(m)
             dy = y(i)-y(m)

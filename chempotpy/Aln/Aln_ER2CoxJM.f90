@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2CoxJM potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Extended Rydberg plus a generalized three-body term
     !   Common name:                   ER2+CoxJM
@@ -62,16 +59,14 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms
 
     implicit none
-
     double precision :: a1, a2, a3, au2, au23, bu2, c, c0, c1, c2, c3, c4, c5, c6, &
         & co, coij, cojk, coki, dd, de, dx, dy, dz, ee, fsech, fu2, oneha, onesi, oneth, poly, q1, &
         & q2, q23, q3, q332, r, re, ree, rho, rij, rjk, rki, rr, twoth, v, v3, x, y, z
     integer :: i, j, k, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom),c(15)
-    dimension fu2(maxatom,maxatom),r(maxatom,maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom), c(15)
+    dimension fu2(maxatom,maxatom), r(maxatom,maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-
     ! two-body
     de  = 1.71013678553981441/autoev
     re  = 5.08182706399609163
@@ -83,8 +78,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     !     potential, includes cutoff
     v = 0.d0
-    do 1 i=1,natom
-        do 1 j=i+1,natom
+    do 1 i=1, natom
+        do 1 j=i+1, natom
             dx = x(i)-x(j)
             dy = y(i)-y(j)
             dz = z(i)-z(j)
@@ -95,7 +90,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 poly = 1.d0+a1*rho+a2*rho**2+a3*rho**3
                 ee   = dexp(-a1*rho)
                 v    = v-de*ee*poly*co
-            endif
+            end if
     1 continue
 
     ! three-body
@@ -116,9 +111,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
     twoth = dsqrt(2.d0/3.d0)
     onesi = dsqrt(1.d0/6.d0)
 
-    do 111 i=1,natom
+    do 111 i=1, natom
         r(i,i) = 0d0
-        do 111 j=i+1,natom
+        do 111 j=i+1, natom
             dx     = x(i)-x(j)
             dy     = y(i)-y(j)
             dz     = z(i)-z(j)
@@ -127,8 +122,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     !  calculate the potential energy
     v3 = 0.d0
-    do 2 i=1,natom
-        do 3 j=i+1,natom
+    do 2 i=1, natom
+        do 3 j=i+1, natom
 
             !  two body term
 
@@ -138,7 +133,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
             coij = dexp(au23*(1.d0-1.d0/(1.d0-rr/bu2)))
             rij  = (rr-ree)/ree
 
-            do 4 k=j+1,natom
+            do 4 k=j+1, natom
                 ! three body term
 
                 rr   = r(k,j)

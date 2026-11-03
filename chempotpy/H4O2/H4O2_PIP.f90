@@ -1,36 +1,28 @@
 module constants
     implicit none
     private
-
     ! Define the mass of different atoms
-    real,parameter :: c_mass = 12.0000000  !21874.66
-    real,parameter :: d_mass = 2.0135532127
-    real,parameter :: h_mass = 1.0078250  !1837.15
-    real,parameter :: o_mass = 15.9949146  !29156.95
-    real,parameter :: pi     = acos(-1.0)
-
+    real, parameter :: c_mass = 12.0000000  !21874.66
+    real, parameter :: d_mass = 2.0135532127
+    real, parameter :: h_mass = 1.0078250  !1837.15
+    real, parameter :: o_mass = 15.9949146  !29156.95
+    real, parameter :: pi     = acos(-1.0)
     ! Define constants
-    real,parameter :: auang  = 0.5291772083
-    real,parameter :: aucm   = 219474.6313710
-    real,parameter :: aukcal = 627.51
-
-    real,parameter :: emass = 1822.88848
-
+    real, parameter :: auang  = 0.5291772083
+    real, parameter :: aucm   = 219474.6313710
+    real, parameter :: aukcal = 627.51
+    real, parameter :: emass  = 1822.88848
 end module constants
 
 !> @brief Own the fitted H4O2 coefficients without legacy COMMON storage.
 module h4o2_pes_state
     implicit none
-
     private
-
     public :: evaluate_h4o2_coefficients
     public :: load_h4o2_coefficients
-
     integer          :: coefficient_count
     integer          :: correction_count
     double precision :: coefficients(0:5226)
-
     contains
 
     !> @brief Load the fitted H4O2 coefficients from the package data file.
@@ -40,11 +32,11 @@ module h4o2_pes_state
         integer                      :: coefficient
 
         coefficient_count = 5056; correction_count = 57
-        open(newunit=file_unit_20,file=file_name,status='old')
-        read(file_unit_20,*)
-        read(file_unit_20,*)
-        read(file_unit_20,*) (coefficients(coefficient), &
-            coefficient = 0,coefficient_count+3*correction_count-1)
+        open(newunit=file_unit_20, file=file_name, status='old')
+        read(file_unit_20, *)
+        read(file_unit_20, *)
+        read(file_unit_20, *) (coefficients(coefficient), &
+            coefficient = 0, coefficient_count+3*correction_count-1)
         close(file_unit_20)
     end subroutine load_h4o2_coefficients
 
@@ -57,15 +49,15 @@ module h4o2_pes_state
 
         call getvec( coefficient_count, correction_count, &
             cartesian_coordinates, basis )
-        potential = dot_product(coefficients,basis)
+        potential = dot_product(coefficients, basis)
     end subroutine evaluate_h4o2_coefficients
+
 end module h4o2_pes_state
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, p, g, d )
-
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 6
@@ -74,22 +66,19 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
     !     logical, save :: first_time_data=.true.
     real    :: tx(18)
     real    :: v
     integer :: iatom, idir, j, istate
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
-    do iatom=1,natoms
-        do idir=1,3
+    do iatom=1, natoms
+        do idir=1, 3
             j     = (iatom-1)*3+idir
-            tx(j) = x(iatom, idir)/0.529177211
-        enddo
-    enddo
+            tx(j) = x(iatom,idir)/legacy_bohr_to_angstrom
+        end do
+    end do
 
     !     if(first_time_data) then
     call pes_init(path)
@@ -99,15 +88,15 @@ subroutine pes( x, igrad, path, p, g, d )
     if (igrad==0) then
         call h4o2pot(tx, v)
     else
-        write (*,*) 'Only energy is available'
-    endif
+        write (*, *) 'Only energy is available'
+    end if
 
-    v = v*27.211386
-    do istate=1,nstates
+    v = v*legacy_hartree_to_electronvolt
+    do istate=1, nstates
         p(istate) = v
-    enddo
+    end do
 
-endsubroutine
+end subroutine
 
 !=================================================!
 ! Initializing HBB water potential                !
@@ -117,10 +106,8 @@ subroutine pes_init( path )
     use h4o2_pes_state, only: load_h4o2_coefficients
 
     implicit none
-
     character(len=1024), intent(in) :: path
     character(len=1024)             :: file_path1, file_path2
-
     file_path1 = trim(path)//"/H4O2/h4o2.pes4.coeff.dat"
 
     ! 2-body init
@@ -137,15 +124,13 @@ subroutine h4o2pot( x, v )
     ! x(1:18) Cartesian coordinates in bohr, must in order H H H H O O
     ! f: potential in hartree
     implicit none
-
-    real,intent(in)     :: x(18)
+    real, intent(in)    :: x(18)
     real, intent(inout) :: v
     ! ::::::::::::::::::::
-    real ,dimension(3,6) :: xn
-    real                 :: pot
-
-    xn = reshape(x,(/3,6/))
-    call evaluate_h4o2_coefficients(pot,xn)
+    real, dimension(3, 6) :: xn
+    real                  :: pot
+    xn = reshape(x, (/3, 6/))
+    call evaluate_h4o2_coefficients(pot, xn)
     v = pot
 
 end subroutine h4o2pot
@@ -154,7 +139,6 @@ module inv_mg42_t
     !..use and access
     implicit none
     private
-
     integer, parameter, public :: &
         mg42_nr=15, mg42_ngrp=48, mg42_ngen=3, mg42_dvp(0:9) = (/ 0, 3, 5, 3, 3, 0, 1, 0, 0, 0 /), mg42_ivp(0:9) = (/ &
         & 0, 3, 8, 11, 14, 14, 15, 15, 15, 15 /), mg42_dvs(0:9) = (/ 1, 0, 1, 10, 24, 47, 101, 195, 328, 489 /), &
@@ -166,7 +150,6 @@ end module inv_mg42_t
 !> @brief Evaluate getr0.
 subroutine getr0 ( nk, xn, r0 )
     implicit none
-
     integer :: nk
     real    :: xn(0:2,0:nk-1), r0(0:nk-1,0:nk-1)
     integer :: i, j
@@ -175,8 +158,8 @@ subroutine getr0 ( nk, xn, r0 )
         do j = i+1, nk-1
             r0(i,j) = sqrt((xn(0,j)-xn(0,i))**2+(xn(1,j)-xn(1,i))**2+ (xn(2,j)-xn(2,i))**2)
             r0(j,i) = r0(i,j)
-        enddo
-    enddo
+        end do
+    end do
 end subroutine getr0
 
 !> @brief Evaluate getrvec.
@@ -184,7 +167,6 @@ subroutine getrvec ( m, r, vec )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
     ! version for X4Y2
     integer            :: m
     integer, parameter :: nk = 6
@@ -195,7 +177,7 @@ subroutine getrvec ( m, r, vec )
     ! Test for compatibility
     if (.not.(m.eq.1.or.m.eq.4)) then
         stop 'getrvec - wrong dimension'
-    endif
+    end if
     ! Computation
     x = 0
     do i = 0, nk-1
@@ -204,9 +186,9 @@ subroutine getrvec ( m, r, vec )
                 r1(i,j) = 0
             else
                 r1(i,j) = exp(-r(i,j))/r(i,j)
-            endif
-        enddo
-    enddo
+            end if
+        end do
+    end do
     ! XY distance
     x(0) = sum(r1(0:3,4:5))/6
     ! XX distance
@@ -214,8 +196,8 @@ subroutine getrvec ( m, r, vec )
     do i = 0, 3
         do j = i+1, 3
             t0 = t0+r1(i,j)/6
-        enddo
-    enddo
+        end do
+    end do
     x(1) = t0
     ! YY distance
     x(2) = r1(4,5)
@@ -223,7 +205,7 @@ subroutine getrvec ( m, r, vec )
     vec(0) = 1
     if (4.le.m) then
         vec(1:3) = x
-    endif
+    end if
 end subroutine getrvec
 
 !> @brief Evaluate getvec.
@@ -231,7 +213,6 @@ subroutine getvec ( ms, mr, xn, vec )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
     ! version for X4Y2
     integer            :: ms, mr
     integer, parameter :: nk = 6
@@ -243,11 +224,11 @@ subroutine getvec ( ms, mr, xn, vec )
     do k = 9, 0, -1
         if (ms.eq.mg42_ivb(k)) then
             deg = k
-        endif
-    enddo
+        end if
+    end do
     if (deg.eq.-1) then
         stop 'getvec: bad ms'
-    endif
+    end if
     vec = 0
     call getr0 (nk, xn, r0)
     call getx0 (nk, r0, x0)
@@ -256,14 +237,13 @@ subroutine getvec ( ms, mr, xn, vec )
     do l = 0, mr-1
         do k = 0, 2
             vec(ms+3*l+k) = rvec(k+1)*vec(l)
-        enddo
-    enddo
+        end do
+    end do
 end subroutine getvec
 
 !> @brief Evaluate getx0.
 subroutine getx0 ( nk, r0, x0 )
     implicit none
-
     integer :: nk
     real    :: r0(0:nk-1,0:nk-1), x0(0:nk*(nk-1)/2-1)
     integer :: i, j, k
@@ -272,8 +252,8 @@ subroutine getx0 ( nk, r0, x0 )
         do i = 0, j-1
             x0(k) = 1.d0*exp(-r0(i,j)/3)
             k     = k+1
-        enddo
-    enddo
+        end do
+    end do
 end subroutine getx0
 
 !> @brief Evaluate inv_base.
@@ -281,7 +261,6 @@ subroutine inv_base ( mxd, u, v, w )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
     integer, intent (in) :: mxd
     real, intent (in)    :: u(0:mg42_ivp(mxd)-1), v(0:mg42_ivs(mxd)-1)
     real, intent (out)   :: w(0:mg42_ivb(mxd)-1)
@@ -297,12 +276,12 @@ subroutine inv_base ( mxd, u, v, w )
                 inc              = l(d+1-k,0)-l(d-k,i)
                 w(ind:ind+inc-1) = u(i)*w(l(d-k,i):l(d-k,i)+inc-1)
                 ind              = ind+inc
-            enddo
-        enddo
+            end do
+        end do
         l(d,mg42_ivp(d):mg42_ivp(mxd))         = ind
         w(ind:ind+mg42_ivs(d)-mg42_ivs(d-1)-1) = v(mg42_ivs(d-1):mg42_ivs(d)-1)
         ind                                    = ind+mg42_ivs(d)-mg42_ivs(d-1)
-    enddo
+    end do
 end subroutine inv_base
 
 !> @brief Evaluate mg42_base.
@@ -310,10 +289,9 @@ subroutine mg42_base ( mxd, x, w )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
     integer, intent (in) :: mxd
-    real , intent (in)   :: x(0:mg42_nr-1)
-    real , intent (out)  :: w(0:mg42_ivb(mxd)-1)
+    real, intent (in)    :: x(0:mg42_nr-1)
+    real, intent (out)   :: w(0:mg42_ivb(mxd)-1)
     !-----------------------------------------------------------------------
     real :: u(0:mg42_nr-1), v(0:mg42_ivs(mxd)-1)
     call mg42_prims (x, u)
@@ -326,10 +304,9 @@ subroutine mg42_gens ( ind, x, y )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
     integer, intent (in) :: ind
-    real , intent (in)   :: x(0:mg42_nr-1)
-    real , intent (out)  :: y(0:mg42_nr-1)
+    real, intent (in)    :: x(0:mg42_nr-1)
+    real, intent (out)   :: y(0:mg42_nr-1)
     !-----------------------------------------------------------------------
     integer :: iord(0:mg42_nr-1)
     ! Numbering (block revlex):
@@ -352,7 +329,7 @@ subroutine mg42_gens ( ind, x, y )
         y(iord(:)) = x(:)
     else
         y(:) = x(iord(:))
-    endif
+    end if
 end subroutine mg42_gens
 
 !> @brief Evaluate mg42_prims.
@@ -360,15 +337,12 @@ subroutine mg42_prims ( x, u )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
     !-----------------------------------------------------------------------
     integer, parameter :: m = 4, n=2, m2=m*(m-1)/2, n2=n*(n-1)/2
-
-    real , intent (in)  :: x(0:mg42_nr-1)
-    real , intent (out) :: u(0:mg42_nr-1)
-
-    integer :: i, j
-    real    :: x0(0:m2-1), x1(0:m*n-1), x2(0:n2-1), t0(0:m-1), &
+    real, intent (in)  :: x(0:mg42_nr-1)
+    real, intent (out) :: u(0:mg42_nr-1)
+    integer            :: i, j
+    real               :: x0(0:m2-1), x1(0:m*n-1), x2(0:n2-1), t0(0:m-1), &
         e(0:m-1), f(0:n-1)
     x0    = x(0:m2-1)
     x1    = x(m2:m2+m*n-1)
@@ -379,10 +353,10 @@ subroutine mg42_prims ( x, u )
     t0(3) = (x0(3)+x0(4)+x0(5))/3
     do i = 0, m-1
         e(i) = sum(x1(i:i+m*(n-1):m))/n
-    enddo
+    end do
     do j = 0, n-1
         f(j) = sum(x1(m*j:m*(j+1)-1))/m
-    enddo
+    end do
     u(0)  = sum(x0)/size(x0)
     u(1)  = sum(x1)/size(x1)
     u(2)  = sum(x2)/size(x2)
@@ -405,7 +379,6 @@ subroutine mg42_secs ( mxd, x, v )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-
     !! Note: We stop at degree 7 for now.
     !-----------------------------------------------------------------------
     integer, parameter :: m = 4, n=2, nk=6, npv=107, &
@@ -413,13 +386,13 @@ subroutine mg42_secs ( mxd, x, v )
         & (m- 2)*n, m3n2 = m*(m-1)*(m-2)*n*(n-1)
 
     integer, intent (in) :: mxd
-    real , intent (in)   :: x(0:mg42_nr-1)
-    real , intent (out)  :: v(0:mg42_ivs(mxd)-1)
+    real, intent (in)    :: x(0:mg42_nr-1)
+    real, intent (out)   :: v(0:mg42_ivs(mxd)-1)
 
     integer :: i0, i1, i2, j0, j1
     real    :: pv(0:npv-1), d(0:nk-1,0:nk-1), d2(0:nk-1,0:nk-1), &
-        d3(0:nk-1,0:nk-1), d4(0:nk-1,0:nk-1), d5(0:nk-1,0:nk-1), &
-        d6(0:nk-1,0:nk-1), d7(0:nk-1,0:nk-1)
+        d3(0:nk-1, 0:nk-1), d4(0:nk-1, 0:nk-1), d5(0:nk-1, 0:nk-1), &
+        d6(0:nk-1, 0:nk-1), d7(0:nk-1, 0:nk-1)
     call mg42_setd ()
     pv = 0
     do i0 = 0, m-1
@@ -427,132 +400,132 @@ subroutine mg42_secs ( mxd, x, v )
             if (i1.ne.i0) then
                 if (4.le.mxd) then
                     call mg42_deg4_i1 ()
-                endif
+                end if
                 if (5.le.mxd) then
                     call mg42_deg5_i1 ()
-                endif
+                end if
                 do i2 = 0, m-1
                     if (i2.ne.i0.and.i2.ne.i1) then
                         if (3.le.mxd) then
                             call mg42_deg3_i2 ()
-                        endif
-                    endif
-                enddo
-            endif
-        enddo
-    enddo
+                        end if
+                    end if
+                end do
+            end if
+        end do
+    end do
     do j0 = m, m+n-1
         do i0 = 0, m-1
             if (3.le.mxd) then
                 call mg42_deg3_i0j0 ()
-            endif
+            end if
             if (5.le.mxd) then
                 call mg42_deg5_i0j0 ()
-            endif
+            end if
             if (7.le.mxd) then
                 call mg42_deg7_i0j0 ()
-            endif
+            end if
             do i1 = 0, m-1
                 if (i1.ne.i0) then
                     if (2.le.mxd) then
                         call mg42_deg2_i1j0 ()
-                    endif
+                    end if
                     if (3.le.mxd) then
                         call mg42_deg3_i1j0 ()
-                    endif
+                    end if
                     if (4.le.mxd) then
                         call mg42_deg4_i1j0 ()
-                    endif
+                    end if
                     if (5.le.mxd) then
                         call mg42_deg5_i1j0 ()
-                    endif
+                    end if
                     if (6.le.mxd) then
                         call mg42_deg6_i1j0 ()
-                    endif
+                    end if
                     if (7.le.mxd) then
                         call mg42_deg7_i1j0 ()
-                    endif
+                    end if
                     do i2 = 0, m-1
                         if (i2.ne.i0.and.i2.ne.i1) then
                             if (3.le.mxd) then
                                 call mg42_deg3_i2j0 ()
-                            endif
+                            end if
                             if (4.le.mxd) then
                                 call mg42_deg4_i2j0 ()
-                            endif
+                            end if
                             if (5.le.mxd) then
                                 call mg42_deg5_i2j0 ()
-                            endif
+                            end if
                             if (6.le.mxd) then
                                 call mg42_deg6_i2j0 ()
-                            endif
+                            end if
                             if (7.le.mxd) then
                                 call mg42_deg7_i2j0 ()
-                            endif
-                        endif
-                    enddo
-                endif
-            enddo
-        enddo
+                            end if
+                        end if
+                    end do
+                end if
+            end do
+        end do
         do j1 = m, m+n-1
             if (j1.ne.j0) then
                 do i0 = 0, m-1
                     if (4.le.mxd) then
                         call mg42_deg4_i0j1 ()
-                    endif
+                    end if
                     if (5.le.mxd) then
                         call mg42_deg5_i0j1 ()
-                    endif
+                    end if
                     if (6.le.mxd) then
                         call mg42_deg6_i0j1 ()
-                    endif
+                    end if
                     do i1 = 0, m-1
                         if (i1.ne.i0) then
                             if (3.le.mxd) then
                                 call mg42_deg3_i1j1 ()
-                            endif
+                            end if
                             if (4.le.mxd) then
                                 call mg42_deg4_i1j1 ()
-                            endif
+                            end if
                             if (5.le.mxd) then
                                 call mg42_deg5_i1j1 ()
-                            endif
+                            end if
                             if (6.le.mxd) then
                                 call mg42_deg6_i1j1 ()
-                            endif
+                            end if
                             do i2 = 0, m-1
                                 if (i2.ne.i0.and.i2.ne.i1) then
                                     if (4.le.mxd) then
                                         call mg42_deg4_i2j1 ()
-                                    endif
+                                    end if
                                     if (5.le.mxd) then
                                         call mg42_deg5_i2j1 ()
-                                    endif
+                                    end if
                                     if (6.le.mxd) then
                                         call mg42_deg6_i2j1 ()
-                                    endif
+                                    end if
                                     if (7.le.mxd) then
                                         call mg42_deg7_i2j1 ()
-                                    endif
-                                endif
-                            enddo
-                        endif
-                    enddo
-                enddo
-            endif
-        enddo
-    enddo
+                                    end if
+                                end if
+                            end do
+                        end if
+                    end do
+                end do
+            end if
+        end do
+    end do
     v(0) = 1
     if (2.le.mxd) then
         v(1:1) = pv(0:0)
-    endif
+    end if
     if (3.le.mxd) then
         v(2:11) = pv(1:10)
-    endif
+    end if
     if (4.le.mxd) then
         v(12)    = pv(0)*pv(0)
         v(13:35) = pv(11:33)
-    endif
+    end if
     if (5.le.mxd) then
         v(36)    = pv(0)*pv(1)
         v(37)    = pv(0)*pv(2)
@@ -565,7 +538,7 @@ subroutine mg42_secs ( mxd, x, v )
         v(44)    = pv(0)*pv(9)
         v(45)    = pv(0)*pv(10)
         v(46:82) = pv(34:70)
-    endif
+    end if
     if (6.le.mxd) then
         v(83)      = pv(1)*pv(1)
         v(84)      = pv(1)*pv(2)
@@ -638,7 +611,7 @@ subroutine mg42_secs ( mxd, x, v )
         v(151)     = pv(0)*pv(32)
         v(152)     = pv(0)*pv(33)
         v(153:183) = pv(71:101)
-    endif
+    end if
     if (7.le.mxd) then
         v(184)     = pv(9)*pv(11)
         v(185)     = pv(10)*pv(11)
@@ -831,10 +804,10 @@ subroutine mg42_secs ( mxd, x, v )
         v(372)     = pv(0)*pv(69)
         v(373)     = pv(0)*pv(70)
         v(374:378) = pv(102:106)
-    endif
+    end if
     if (8.le.mxd) then
         stop 'mg42: degree 8 not implemented'
-    endif
+    end if
     contains
     !> @brief Evaluate mg42_setd.
     subroutine mg42_setd ( )
@@ -844,51 +817,55 @@ subroutine mg42_secs ( mxd, x, v )
         do l1 = 0, 1
             do l0 = 0, l1
                 do j = lb(l1), lb(l1+1)-1
-                    do i = lb(l0), min(j-1,lb(l0+1)-1)
-                        d(i,j)  = x(k)
-                        d(j,i)  = d(i,j)
-                        d2(i,j) = x(k)**2
-                        d2(j,i) = d2(i,j)
-                        d3(i,j) = x(k)**3
-                        d3(j,i) = d3(i,j)
-                        d4(i,j) = x(k)**4
-                        d4(j,i) = d4(i,j)
-                        d5(i,j) = x(k)**5
-                        d5(j,i) = d5(i,j)
-                        d6(i,j) = x(k)**6
-                        d6(j,i) = d6(i,j)
-                        d7(i,j) = x(k)**7
-                        d7(j,i) = d7(i,j)
-                        k       = k+1
-                    enddo
-                enddo
-            enddo
-        enddo
+                    do i = lb(l0), min(j-1, lb(l0+1)-1)
+                        d(i,j)   = x(k)
+                        d(j,i)   = d(i,j)
+                        d2(i,j)  = x(k)**2
+                        d2(j,i)  = d2(i,j)
+                        d3(i, j) = x(k)**3
+                        d3(j, i) = d3(i, j)
+                        d4(i, j) = x(k)**4
+                        d4(j, i) = d4(i, j)
+                        d5(i, j) = x(k)**5
+                        d5(j, i) = d5(i, j)
+                        d6(i, j) = x(k)**6
+                        d6(j, i) = d6(i, j)
+                        d7(i, j) = x(k)**7
+                        d7(j, i) = d7(i, j)
+                        k        = k+1
+                    end do
+                end do
+            end do
+        end do
         if (k.ne.mg42_nr) then
             stop 'mg42_setd: bad count'
-        endif
+        end if
         do i = 0, nk-1
-            d(i,i)  = 0
-            d2(i,i) = 0
-            d3(i,i) = 0
-            d4(i,i) = 0
-            d5(i,i) = 0
-            d6(i,i) = 0
-            d7(i,i) = 0
-        enddo
+            d(i,i)   = 0
+            d2(i,i)  = 0
+            d3(i, i) = 0
+            d4(i, i) = 0
+            d5(i, i) = 0
+            d6(i, i) = 0
+            d7(i, i) = 0
+        end do
     end subroutine mg42_setd
+
     !> @brief Evaluate mg42_deg2_i1j0.
     subroutine mg42_deg2_i1j0 ( )
         pv(0) = pv(0)+d(i0,i1)*d(i0,j0)/m2n
     end subroutine mg42_deg2_i1j0
+
     !> @brief Evaluate mg42_deg3_i2.
     subroutine mg42_deg3_i2 ( )
         pv(1) = pv(1)+d2(i0,i1)*d(i0,i2)/m3
     end subroutine mg42_deg3_i2
+
     !> @brief Evaluate mg42_deg3_i0j0.
     subroutine mg42_deg3_i0j0 ( )
-        pv(5) = pv(5)+d3(i0,j0)/mn
+        pv(5) = pv(5)+d3(i0, j0)/mn
     end subroutine mg42_deg3_i0j0
+
     !> @brief Evaluate mg42_deg3_i1j0.
     subroutine mg42_deg3_i1j0 ( )
         pv(2) = pv(2)+d2(i0,i1)*d(i0,j0)/m2n
@@ -896,30 +873,35 @@ subroutine mg42_secs ( mxd, x, v )
         pv(6) = pv(6)+d(i0,i1)*d(i0,j0)*d(i1,j0)/m2n
         pv(8) = pv(8)+d2(i0,j0)*d(i1,j0)/m2n
     end subroutine mg42_deg3_i1j0
+
     !> @brief Evaluate mg42_deg3_i1j1.
     subroutine mg42_deg3_i1j1 ( )
         pv(9)  = pv(9)+d(i0,i1)*d(i0,j0)*d(i0,j1)/m2n2
         pv(10) = pv(10)+d(i0,i1)*d(i1,j0)*d(i0,j1)/m2n2
     end subroutine mg42_deg3_i1j1
+
     !> @brief Evaluate mg42_deg3_i2j0.
     subroutine mg42_deg3_i2j0 ( )
         pv(3) = pv(3)+d(i0,i1)*d(i0,i2)*d(i0,j0)/m3n
         pv(7) = pv(7)+d(i0,i2)*d(i0,j0)*d(i1,j0)/m3n
     end subroutine mg42_deg3_i2j0
+
     !> @brief Evaluate mg42_deg4_i1.
     subroutine mg42_deg4_i1 ( )
-        pv(11) = pv(11)+d4(i0,i1)/m2
+        pv(11) = pv(11)+d4(i0, i1)/m2
     end subroutine mg42_deg4_i1
+
     !> @brief Evaluate mg42_deg4_i1j0.
     subroutine mg42_deg4_i1j0 ( )
-        pv(12) = pv(12)+d3(i0,i1)*d(i0,j0)/m2n
+        pv(12) = pv(12)+d3(i0, i1)*d(i0,j0)/m2n
         pv(15) = pv(15)+d2(i0,i1)*d2(i0,j0)/m2n
-        pv(17) = pv(17)+d(i0,i1)*d3(i0,j0)/m2n
+        pv(17) = pv(17)+d(i0,i1)*d3(i0, j0)/m2n
         pv(18) = pv(18)+d2(i0,i1)*d(i0,j0)*d(i1,j0)/m2n
         pv(22) = pv(22)+d(i0,i1)*d2(i0,j0)*d(i1,j0)/m2n
-        pv(25) = pv(25)+d3(i0,j0)*d(i1,j0)/m2n
+        pv(25) = pv(25)+d3(i0, j0)*d(i1,j0)/m2n
         pv(26) = pv(26)+d2(i0,j0)*d2(i1,j0)/m2n
     end subroutine mg42_deg4_i1j0
+
     !> @brief Evaluate mg42_deg4_i2j0.
     subroutine mg42_deg4_i2j0 ( )
         pv(13) = pv(13)+d2(i0,i1)*d(i0,i2)*d(i0,j0)/m3n
@@ -931,10 +913,12 @@ subroutine mg42_secs ( mxd, x, v )
         pv(23) = pv(23)+d(i0,i2)*d2(i0,j0)*d(i1,j0)/m3n
         pv(24) = pv(24)+d(i1,i2)*d2(i0,j0)*d(i1,j0)/m3n
     end subroutine mg42_deg4_i2j0
+
     !> @brief Evaluate mg42_deg4_i0j1.
     subroutine mg42_deg4_i0j1 ( )
-        pv(30) = pv(30)+d3(i0,j0)*d(i0,j1)/mn2
+        pv(30) = pv(30)+d3(i0, j0)*d(i0,j1)/mn2
     end subroutine mg42_deg4_i0j1
+
     !> @brief Evaluate mg42_deg4_i1j1.
     subroutine mg42_deg4_i1j1 ( )
         pv(27) = pv(27)+d2(i0,i1)*d(i0,j0)*d(i0,j1)/m2n2
@@ -943,36 +927,41 @@ subroutine mg42_secs ( mxd, x, v )
         pv(32) = pv(32)+d(i0,i1)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
         pv(33) = pv(33)+d2(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
     end subroutine mg42_deg4_i1j1
+
     !> @brief Evaluate mg42_deg4_i2j1.
     subroutine mg42_deg4_i2j1 ( )
         pv(28) = pv(28)+d(i0,i1)*d(i0,i2)*d(i0,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg4_i2j1
+
     !> @brief Evaluate mg42_deg5_i1.
     subroutine mg42_deg5_i1 ( )
-        pv(34) = pv(34)+d5(i0,i1)/m2
+        pv(34) = pv(34)+d5(i0, i1)/m2
     end subroutine mg42_deg5_i1
+
     !> @brief Evaluate mg42_deg5_i0j0.
     subroutine mg42_deg5_i0j0 ( )
-        pv(43) = pv(43)+d5(i0,j0)/mn
+        pv(43) = pv(43)+d5(i0, j0)/mn
     end subroutine mg42_deg5_i0j0
+
     !> @brief Evaluate mg42_deg5_i1j0.
     subroutine mg42_deg5_i1j0 ( )
-        pv(35) = pv(35)+d4(i0,i1)*d(i0,j0)/m2n
-        pv(37) = pv(37)+d3(i0,i1)*d2(i0,j0)/m2n
-        pv(40) = pv(40)+d2(i0,i1)*d3(i0,j0)/m2n
-        pv(42) = pv(42)+d(i0,i1)*d4(i0,j0)/m2n
-        pv(44) = pv(44)+d3(i0,i1)*d(i0,j0)*d(i1,j0)/m2n
+        pv(35) = pv(35)+d4(i0, i1)*d(i0,j0)/m2n
+        pv(37) = pv(37)+d3(i0, i1)*d2(i0,j0)/m2n
+        pv(40) = pv(40)+d2(i0,i1)*d3(i0, j0)/m2n
+        pv(42) = pv(42)+d(i0,i1)*d4(i0, j0)/m2n
+        pv(44) = pv(44)+d3(i0, i1)*d(i0,j0)*d(i1,j0)/m2n
         pv(48) = pv(48)+d2(i0,i1)*d2(i0,j0)*d(i1,j0)/m2n
-        pv(54) = pv(54)+d(i0,i1)*d3(i0,j0)*d(i1,j0)/m2n
-        pv(57) = pv(57)+d4(i0,j0)*d(i1,j0)/m2n
+        pv(54) = pv(54)+d(i0,i1)*d3(i0, j0)*d(i1,j0)/m2n
+        pv(57) = pv(57)+d4(i0, j0)*d(i1,j0)/m2n
         pv(58) = pv(58)+d(i0,i1)*d2(i0,j0)*d2(i1,j0)/m2n
     end subroutine mg42_deg5_i1j0
+
     !> @brief Evaluate mg42_deg5_i2j0.
     subroutine mg42_deg5_i2j0 ( )
-        pv(36) = pv(36)+d3(i0,i1)*d(i0,i2)*d(i0,j0)/m3n
+        pv(36) = pv(36)+d3(i0, i1)*d(i0,i2)*d(i0,j0)/m3n
         pv(38) = pv(38)+d2(i0,i1)*d(i0,i2)*d2(i0,j0)/m3n
         pv(39) = pv(39)+d2(i0,i1)*d(i1,i2)*d2(i0,j0)/m3n
-        pv(41) = pv(41)+d(i0,i1)*d(i0,i2)*d3(i0,j0)/m3n
+        pv(41) = pv(41)+d(i0,i1)*d(i0,i2)*d3(i0, j0)/m3n
         pv(45) = pv(45)+d2(i0,i1)*d(i0,i2)*d(i0,j0)*d(i1,j0)/m3n
         pv(46) = pv(46)+d(i0,i1)*d2(i0,i2)*d(i0,j0)*d(i1,j0)/m3n
         pv(47) = pv(47)+d(i0,i1)*d(i0,i2)*d(i1,i2)*d(i0,j0)*d(i1,j0)/m3n
@@ -981,91 +970,104 @@ subroutine mg42_secs ( mxd, x, v )
         pv(51) = pv(51)+d(i0,i1)*d(i1,i2)*d2(i0,j0)*d(i1,j0)/m3n
         pv(52) = pv(52)+d(i0,i2)*d(i1,i2)*d2(i0,j0)*d(i1,j0)/m3n
         pv(53) = pv(53)+d2(i1,i2)*d2(i0,j0)*d(i1,j0)/m3n
-        pv(55) = pv(55)+d(i0,i2)*d3(i0,j0)*d(i1,j0)/m3n
-        pv(56) = pv(56)+d(i1,i2)*d3(i0,j0)*d(i1,j0)/m3n
+        pv(55) = pv(55)+d(i0,i2)*d3(i0, j0)*d(i1,j0)/m3n
+        pv(56) = pv(56)+d(i1,i2)*d3(i0, j0)*d(i1,j0)/m3n
     end subroutine mg42_deg5_i2j0
+
     !> @brief Evaluate mg42_deg5_i0j1.
     subroutine mg42_deg5_i0j1 ( )
-        pv(63) = pv(63)+d4(i0,j0)*d(i0,j1)/mn2
+        pv(63) = pv(63)+d4(i0, j0)*d(i0,j1)/mn2
     end subroutine mg42_deg5_i0j1
+
     !> @brief Evaluate mg42_deg5_i1j1.
     subroutine mg42_deg5_i1j1 ( )
-        pv(59) = pv(59)+d3(i0,i1)*d(i0,j0)*d(i0,j1)/m2n2
+        pv(59) = pv(59)+d3(i0, i1)*d(i0,j0)*d(i0,j1)/m2n2
         pv(61) = pv(61)+d2(i0,i1)*d2(i0,j0)*d(i0,j1)/m2n2
-        pv(62) = pv(62)+d(i0,i1)*d3(i0,j0)*d(i0,j1)/m2n2
+        pv(62) = pv(62)+d(i0,i1)*d3(i0, j0)*d(i0,j1)/m2n2
         pv(64) = pv(64)+d2(i0,i1)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
         pv(66) = pv(66)+d(i0,i1)*d2(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
-        pv(68) = pv(68)+d3(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
+        pv(68) = pv(68)+d3(i0, j0)*d(i1,j0)*d(i0,j1)/m2n2
         pv(69) = pv(69)+d(i0,i1)*d(i0,j0)*d2(i1,j0)*d(i0,j1)/m2n2
         pv(70) = pv(70)+d(i0,i1)*d(i0,j0)*d(i1,j0)*d2(i0,j1)/m2n2
     end subroutine mg42_deg5_i1j1
+
     !> @brief Evaluate mg42_deg5_i2j1.
     subroutine mg42_deg5_i2j1 ( )
         pv(60) = pv(60)+d2(i0,i1)*d(i0,i2)*d(i0,j0)*d(i0,j1)/m3n2
         pv(65) = pv(65)+d(i0,i1)*d(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
         pv(67) = pv(67)+d(i0,i2)*d2(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg5_i2j1
+
     !> @brief Evaluate mg42_deg6_i1j0.
     subroutine mg42_deg6_i1j0 ( )
-        pv(71) = pv(71)+d4(i0,i1)*d2(i0,j0)/m2n
-        pv(73) = pv(73)+d3(i0,i1)*d3(i0,j0)/m2n
-        pv(75) = pv(75)+d2(i0,i1)*d4(i0,j0)/m2n
-        pv(77) = pv(77)+d(i0,i1)*d5(i0,j0)/m2n
-        pv(78) = pv(78)+d4(i0,i1)*d(i0,j0)*d(i1,j0)/m2n
-        pv(81) = pv(81)+d3(i0,i1)*d2(i0,j0)*d(i1,j0)/m2n
-        pv(86) = pv(86)+d2(i0,i1)*d3(i0,j0)*d(i1,j0)/m2n
-        pv(90) = pv(90)+d(i0,i1)*d4(i0,j0)*d(i1,j0)/m2n
-        pv(92) = pv(92)+d(i0,i1)*d3(i0,j0)*d2(i1,j0)/m2n
-        pv(94) = pv(94)+d4(i0,j0)*d2(i1,j0)/m2n
+        pv(71) = pv(71)+d4(i0, i1)*d2(i0,j0)/m2n
+        pv(73) = pv(73)+d3(i0, i1)*d3(i0, j0)/m2n
+        pv(75) = pv(75)+d2(i0,i1)*d4(i0, j0)/m2n
+        pv(77) = pv(77)+d(i0,i1)*d5(i0, j0)/m2n
+        pv(78) = pv(78)+d4(i0, i1)*d(i0,j0)*d(i1,j0)/m2n
+        pv(81) = pv(81)+d3(i0, i1)*d2(i0,j0)*d(i1,j0)/m2n
+        pv(86) = pv(86)+d2(i0,i1)*d3(i0, j0)*d(i1,j0)/m2n
+        pv(90) = pv(90)+d(i0,i1)*d4(i0, j0)*d(i1,j0)/m2n
+        pv(92) = pv(92)+d(i0,i1)*d3(i0, j0)*d2(i1,j0)/m2n
+        pv(94) = pv(94)+d4(i0, j0)*d2(i1,j0)/m2n
     end subroutine mg42_deg6_i1j0
+
     !> @brief Evaluate mg42_deg6_i2j0.
     subroutine mg42_deg6_i2j0 ( )
-        pv(72) = pv(72)+d3(i0,i1)*d(i0,i2)*d2(i0,j0)/m3n
-        pv(74) = pv(74)+d2(i0,i1)*d(i0,i2)*d3(i0,j0)/m3n
-        pv(76) = pv(76)+d(i0,i1)*d(i0,i2)*d4(i0,j0)/m3n
-        pv(79) = pv(79)+d3(i0,i1)*d(i0,i2)*d(i0,j0)*d(i1,j0)/m3n
+        pv(72) = pv(72)+d3(i0, i1)*d(i0,i2)*d2(i0,j0)/m3n
+        pv(74) = pv(74)+d2(i0,i1)*d(i0,i2)*d3(i0, j0)/m3n
+        pv(76) = pv(76)+d(i0,i1)*d(i0,i2)*d4(i0, j0)/m3n
+        pv(79) = pv(79)+d3(i0, i1)*d(i0,i2)*d(i0,j0)*d(i1,j0)/m3n
         pv(80) = pv(80)+d2(i0,i1)*d(i0,i2)*d(i1,i2)*d(i0,j0)*d(i1,j0)/m3n
         pv(82) = pv(82)+d2(i0,i1)*d(i0,i2)*d2(i0,j0)*d(i1,j0)/m3n
         pv(83) = pv(83)+d(i0,i1)*d2(i0,i2)*d2(i0,j0)*d(i1,j0)/m3n
         pv(84) = pv(84)+d2(i0,i1)*d(i1,i2)*d2(i0,j0)*d(i1,j0)/m3n
         pv(85) = pv(85)+d(i0,i1)*d(i0,i2)*d(i1,i2)*d2(i0,j0)*d(i1,j0)/m3n
-        pv(87) = pv(87)+d(i0,i1)*d(i0,i2)*d3(i0,j0)*d(i1,j0)/m3n
-        pv(88) = pv(88)+d2(i0,i2)*d3(i0,j0)*d(i1,j0)/m3n
-        pv(89) = pv(89)+d(i0,i1)*d(i1,i2)*d3(i0,j0)*d(i1,j0)/m3n
-        pv(91) = pv(91)+d(i1,i2)*d4(i0,j0)*d(i1,j0)/m3n
-        pv(93) = pv(93)+d(i0,i2)*d3(i0,j0)*d2(i1,j0)/m3n
+        pv(87) = pv(87)+d(i0,i1)*d(i0,i2)*d3(i0, j0)*d(i1,j0)/m3n
+        pv(88) = pv(88)+d2(i0,i2)*d3(i0, j0)*d(i1,j0)/m3n
+        pv(89) = pv(89)+d(i0,i1)*d(i1,i2)*d3(i0, j0)*d(i1,j0)/m3n
+        pv(91) = pv(91)+d(i1,i2)*d4(i0, j0)*d(i1,j0)/m3n
+        pv(93) = pv(93)+d(i0,i2)*d3(i0, j0)*d2(i1,j0)/m3n
     end subroutine mg42_deg6_i2j0
+
     !> @brief Evaluate mg42_deg6_i0j1.
     subroutine mg42_deg6_i0j1 ( )
-        pv(96) = pv(96)+d5(i0,j0)*d(i0,j1)/mn2
+        pv(96) = pv(96)+d5(i0, j0)*d(i0,j1)/mn2
     end subroutine mg42_deg6_i0j1
+
     !> @brief Evaluate mg42_deg6_i1j1.
     subroutine mg42_deg6_i1j1 ( )
-        pv(95)  = pv(95)+d2(i0,i1)*d3(i0,j0)*d(i0,j1)/m2n2
+        pv(95)  = pv(95)+d2(i0,i1)*d3(i0, j0)*d(i0,j1)/m2n2
         pv(98)  = pv(98)+d2(i0,i1)*d2(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
-        pv(100) = pv(100)+d(i0,i1)*d3(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
+        pv(100) = pv(100)+d(i0,i1)*d3(i0, j0)*d(i1,j0)*d(i0,j1)/m2n2
         pv(101) = pv(101)+d(i0,i1)*d2(i0,j0)*d2(i1,j0)*d(i0,j1)/m2n2
     end subroutine mg42_deg6_i1j1
+
     !> @brief Evaluate mg42_deg6_i2j1.
     subroutine mg42_deg6_i2j1 ( )
         pv(97) = pv(97)+d2(i0,i1)*d(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
         pv(99) = pv(99)+d(i0,i1)*d(i0,i2)*d2(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg6_i2j1
+
     !> @brief Evaluate mg42_deg7_i0j0.
     subroutine mg42_deg7_i0j0 ( )
-        pv(103) = pv(103)+d7(i0,j0)/mn
+        pv(103) = pv(103)+d7(i0, j0)/mn
     end subroutine mg42_deg7_i0j0
+
     !> @brief Evaluate mg42_deg7_i1j0.
     subroutine mg42_deg7_i1j0 ( )
-        pv(102) = pv(102)+d(i0,i1)*d6(i0,j0)/m2n
-        pv(105) = pv(105)+d2(i0,i1)*d4(i0,j0)*d(i1,j0)/m2n
+        pv(102) = pv(102)+d(i0,i1)*d6(i0, j0)/m2n
+        pv(105) = pv(105)+d2(i0,i1)*d4(i0, j0)*d(i1,j0)/m2n
     end subroutine mg42_deg7_i1j0
+
     !> @brief Evaluate mg42_deg7_i2j0.
     subroutine mg42_deg7_i2j0 ( )
         pv(104) = pv(104)+d2(i0,i1)*d2(i0,i2)*d2(i0,j0)*d(i1,j0)/m3n
     end subroutine mg42_deg7_i2j0
+
     !> @brief Evaluate mg42_deg7_i2j1.
     subroutine mg42_deg7_i2j1 ( )
         pv(106) = pv(106)+d2(i0,i1)*d2(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg7_i2j1
+
 end subroutine mg42_secs

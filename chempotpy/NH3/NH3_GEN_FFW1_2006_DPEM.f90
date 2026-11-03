@@ -1,23 +1,19 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate dpem for the NH3_GEN_FFW1_2006_DPEM potential.
 subroutine dpem( x, igrad, u, ug )
-
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
-    integer, parameter :: nstates = 2
-    integer, parameter :: natoms  = 4
-
+    integer, parameter            :: nstates = 2
+    integer, parameter            :: natoms  = 4
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-
-    integer :: nhcoeu1, nhcoeu12, nhcoeu2, nhindu1, nhindu12, nhindu2
-
+    integer                       :: nhcoeu1, nhcoeu12, nhcoeu2, nhindu1, nhindu12, nhindu2
     common /c_nhcoe/  nhcoeu1, nhcoeu2, nhcoeu12, &
         & nhindu1, nhindu2, nhindu12
-    double precision :: v1,v2,u11,u12,u22
+    double precision :: v1, v2, u11, u12, u22
     double precision :: tx(12), gu11(12), gu12(12), gu22(12)
     double precision :: gv1(12), gv2(12)
     double precision :: dudx(nstates,nstates,12)
@@ -26,28 +22,26 @@ subroutine dpem( x, igrad, u, ug )
     double precision :: hx(nstates,nstates,12), gx(nstates,12)
     logical, save    :: first_time_data=.true.
     integer          :: iatom, idir, i, j, k, l
-
     !initialize
-    u  = 0.d0
-    ug = 0.d0
+    u = 0.d0; ug = 0.d0
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j     = (iatom-1)*3+idir
-            tx(j) = x(iatom,idir)/0.529177211
-        enddo
-    enddo
+            tx(j) = x(iatom,idir)/legacy_bohr_to_angstrom
+        end do
+    end do
 
     if(first_time_data) then
         call prepot
         first_time_data = .false.
-    endif
+    end if
 
-    call pot(tx,u11,u22,u12,v1,v2,gu11,gu22,gu12,gv1,gv2)
-    u(1,1) = u11*27.211386
-    u(1,2) = u12*27.211386
-    u(2,1) = u12*27.211386
-    u(2,2) = u22*27.211386
+    call pot(tx, u11, u22, u12, v1, v2, gu11, gu22, gu12, gv1, gv2)
+    u(1,1) = u11*legacy_hartree_to_electronvolt
+    u(1,2) = u12*legacy_hartree_to_electronvolt
+    u(2,1) = u12*legacy_hartree_to_electronvolt
+    u(2,2) = u22*legacy_hartree_to_electronvolt
 
     dudx(1,1,:) = gu11(:)*51.422067
     dudx(2,2,:) = gu22(:)*51.422067
@@ -55,38 +49,36 @@ subroutine dpem( x, igrad, u, ug )
     dudx(2,1,:) = gu12(:)*51.422067
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j                  = (iatom-1)*3+idir
             ug(:,:,iatom,idir) = dudx(:,:,j)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine dpem
 
 !> @brief Evaluate diagonalize for the NH3_GEN_FFW1_2006_DPEM potential.
 subroutine diagonalize( n, a_ss, ev_s, u_ss )
     implicit none
-
     integer, intent(in)           :: n
     double precision, intent(in)  :: a_ss(n,n)
     double precision, intent(out) :: u_ss(n,n)
     double precision, intent(out) :: ev_s(n)
-    integer                       :: io,i
-    double precision,allocatable  :: work_d(:)
+    integer                       :: io, i
+    double precision, allocatable :: work_d(:)
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
-
     u_ss = a_ss
     if (first_time_diag) then
         lwork_d = -1
         allocate( work_d(2) )
-        call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    endif
+    end if
     allocate( work_d(lwork_d) )
-    call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
 !*******************************************************************
@@ -139,7 +131,6 @@ subroutine pot( xcart, u11, u22, u12, v1, v2, gu11, gu22, gu12, gv1, gv2 )
     !  Xcart(10:12) is H3
 
     implicit none
-
     ! I/O variables
     integer, parameter :: natom = 4
     double precision   :: xcart(12)
@@ -153,38 +144,35 @@ subroutine pot( xcart, u11, u22, u12, v1, v2, gu11, gu22, gu12, gv1, gv2 )
     double precision   :: gu12(12)
     double precision   :: gv1(12)
     double precision   :: gv2(12)
-
     ! Local variables
     ! cart(12) local Xcart in ANG, x1,y1,z1,...,x4,y4,z4
     double precision :: cart(12)
-    integer          :: i,j
-
+    integer          :: i, j
     ! Unit conversion parameters
     double precision, parameter :: autoang       = 0.5291772108d0
     double precision, parameter :: autoev        = 27.2113845d0
     double precision, parameter :: ev_to_hartree = 1.d0/autoev
     double precision, parameter :: ang_to_bohr   = 1.0d0/autoang
     double precision, parameter :: gconv         = ev_to_hartree/ang_to_bohr
-
     ! convert geometry from bohr to ang
-    do i=1,12
+    do i=1, 12
         cart(i) = xcart(i)*autoang
     end do
 
     ! get energies and gradients and convert to atomic unit
-    call packpot(cart,u11,u22,u12,v1,v2,gu11,gu22,gu12,gv1,gv2)
+    call packpot(cart, u11, u22, u12, v1, v2, gu11, gu22, gu12, gv1, gv2)
     u11 = u11 * ev_to_hartree
     u22 = u22 * ev_to_hartree
     u12 = u12 * ev_to_hartree
     v1  = v1  * ev_to_hartree
     v2  = v2  * ev_to_hartree
-    do i=1,12
+    do i=1, 12
         gu11(i) = gu11(i) * gconv
         gu22(i) = gu22(i) * gconv
         gu12(i) = gu12(i) * gconv
         gv1(i)  = gv1(i)  * gconv
         gv2(i)  = gv2(i)  * gconv
-    enddo
+    end do
 
 end subroutine pot
 
@@ -192,7 +180,6 @@ end subroutine pot
 !> @brief Evaluate prepot for the NH3_GEN_FFW1_2006_DPEM potential.
 subroutine prepot
     implicit none
-
     call potcoeff
 end subroutine prepot
 
@@ -202,13 +189,12 @@ subroutine packpot( coord, u11, u22, u12, v1, v2, &
         & gcu11, gcu22, gcu12, gcv1, gcv2 )
     !!*************************************************************!!
     implicit none
-
     !--------------------------------------------------------------!
     ! I/O variables
     !--------------------------------------------------------------!
     ! coord: x1,y1,z1...x4,y4,z4
     double precision :: coord(12)
-    double precision :: u11,u22,u12,v1,v2
+    double precision :: u11, u22, u12, v1, v2
     double precision :: gcu11(12)
     double precision :: gcu22(12)
     double precision :: gcu12(12)
@@ -229,7 +215,6 @@ subroutine packpot( coord, u11, u22, u12, v1, v2, &
     double precision   :: nhcoeu12(ncu12)
     common /c_nhcoe/  nhcoeu1, nhcoeu2, nhcoeu12, &
         & nhindu1, nhindu2, nhindu12
-
     ! Distances 1-3: NH, 4-6: HH
     double precision :: rr(6)
     ! gradients of distances to cartesian coordinates
@@ -245,7 +230,6 @@ subroutine packpot( coord, u11, u22, u12, v1, v2, &
     ! Parameter List
     !--------------------------------------------------------------!
     double precision, parameter :: pi = 3.1415926535897930d0
-
     !--------------------------!
     ! Internal coordinates used
     !--------------------------!
@@ -259,11 +243,10 @@ subroutine packpot( coord, u11, u22, u12, v1, v2, &
     double precision :: bowint(7)
     ! gradients of bowman internal coordinates to cartesian coordinates
     double precision :: gbowint(12,7)
-
     !-------------------------!
     ! Misc
     !-------------------------!
-    integer          :: i,ii,j,k,n
+    integer          :: i, ii, j, k, n
     double precision :: erep
     !=======================================================================
     ! This code computes the fitted pot using the polynomial funcs as
@@ -273,70 +256,69 @@ subroutine packpot( coord, u11, u22, u12, v1, v2, &
     !       [1]. Coefficient File
     !       [2]. Index File (contains the powers for the polynomial)
     !
-
     ! Initialize energy derivatives
-    do i=1,12
+    do i=1, 12
         gcu11(i) = 0.d0
         gcu22(i) = 0.d0
         gcu12(i) = 0.d0
         gcv1(i)  = 0.d0
         gcv2(i)  = 0.d0
-    enddo
+    end do
     ! Initialize gangint,and dbow
-    do i=1,7
-        do j=1,12
+    do i=1, 7
+        do j=1, 12
             gangint(j,i) = 0.d0
             gbowint(j,i) = 0.d0
-        enddo
-    enddo
+        end do
+    end do
 
     ! Calculate internal coodinates
-    call tobowman(coord,bowint,gbowint)
-    call carttoang(coord,angint,gangint)
+    call tobowman(coord, bowint, gbowint)
+    call carttoang(coord, angint, gangint)
     ! Calculate the distances
-    call rarray(4,coord,12,rr,grr,6)
+    call rarray(4, coord, 12, rr, grr, 6)
     ! Calculate bowman internal coodinates
     ! The 7th internal for angint and bowint are both beta
     angint(7) = bowint(7)
     ! Derivatives of 7 (beta) are the same for gangint and gbowint, which
     ! are calculated in toBowman
-    do j=1,12
+    do j=1, 12
         gangint(j,7) = gbowint(j,7)
-    enddo
+    end do
 
     !     Calculate U11,U22,wighout repulsive
-    call sumpoly(ncu1,nhindu1,angint,nhcoeu1,u11,gu11,'U11')
-    call sumpoly(ncu2,nhindu2,angint,nhcoeu2,u22,gu22,'U22')
-    call sumpoly(ncu12,nhindu12,angint,nhcoeu12,u12,gu12,'U12')
+    call sumpoly(ncu1, nhindu1, angint, nhcoeu1, u11, gu11, 'U11')
+    call sumpoly(ncu2, nhindu2, angint, nhcoeu2, u22, gu22, 'U22')
+    call sumpoly(ncu12, nhindu12, angint, nhcoeu12, u12, gu12, 'U12')
 
     !     Convert derivatives of internal coordinates to Catersian by chain
     !     rule
-    do j=1,12
-        do i=1,7
+    do j=1, 12
+        do i=1, 7
             gcu11(j) = gcu11(j) + gu11(i) * gangint(j,i)
             gcu22(j) = gcu22(j) + gu22(i) * gangint(j,i)
             gcu12(j) = gcu12(j) + gu12(i) * gangint(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
-    call repulsive(rr,erep,derep,'U11')
+    call repulsive(rr, erep, derep, 'U11')
     u11 = u11 + erep
-    do j=1,12
-        do i=1,6
+    do j=1, 12
+        do i=1, 6
             gcu11(j) = gcu11(j) + derep(i) * grr(j,i)
-        enddo
-    enddo
-    call repulsive(rr,erep,derep,'U22')
+        end do
+    end do
+    call repulsive(rr, erep, derep, 'U22')
     u22 = u22 + erep
-    do j=1,12
-        do i=1,6
+    do j=1, 12
+        do i=1, 6
             gcu22(j) = gcu22(j) + derep(i) * grr(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
     !     Calculate V1,V2 from U11 and U22
-    call getadiabat(12, u11,  u22,  u12,  v1,  v2, &
-        & gcu11,gcu22,gcu12,gcv1,gcv2)
+    call getadiabat(12, u11, u22, u12, v1, v2, &
+        & gcu11, gcu22, gcu12, gcv1, gcv2)
 
 end subroutine packpot
 
@@ -347,7 +329,6 @@ subroutine sumpoly( nc, ind0, x, coeff, v, gv, cpot )
     !    This part are all the same for U,U1,U12 except the poly normial
     !    called
     implicit none
-
     integer          :: nc
     integer          :: ind0(nc,7)
     double precision :: x(7)
@@ -355,62 +336,60 @@ subroutine sumpoly( nc, ind0, x, coeff, v, gv, cpot )
     double precision :: v
     double precision :: gv(7)
     character(len=3) :: cpot
-
-    integer          :: i,j,k
-    integer          :: i1,i2,i3
+    integer          :: i, j, k
+    integer          :: i1, i2, i3
     double precision :: fval
     double precision :: fsum
     double precision :: y(7)
     !     intemediate storage of derivatives
     ! dy(i,j) = dy(i)/dx(j)
     double precision :: dy(7,7)
-    double precision :: dfval(7),dfsum(7)
+    double precision :: dfval(7), dfsum(7)
     integer          :: indp(7)
-
     !     Initialize V,gV
     v = 0.0d0
-    do i=1,7
+    do i=1, 7
         gv(i) = 0.d0
-    enddo
-    do k=1,nc
+    end do
+    do k=1, nc
         fsum = 0.0d0
-        do i=1,7
+        do i=1, 7
             indp(i)  = ind0(k,i)
             dfsum(i) = 0.d0
-        enddo
-        do i1=1,3
-            do i2=1,3
-                do i3=1,3
+        end do
+        do i1=1, 3
+            do i2=1, 3
+                do i3=1, 3
                     if(i2==i1) cycle
                     if(i3==i1) cycle
                     if(i3==i2) cycle
                     !         symmetrize x to get y
-                    call getsymm(i1,i2,i3,7,x,y,dy)
+                    call getsymm(i1, i2, i3, 7, x, y, dy)
 
                     if (cpot.eq.'U11') then
-                        call u11poly(indp,y,fval,dfval)
+                        call u11poly(indp, y, fval, dfval)
                     elseif (cpot.eq.'U22') then
-                        call u22poly(indp,y,fval,dfval)
+                        call u22poly(indp, y, fval, dfval)
                     elseif (cpot.eq.'U12') then
-                        call u12poly(indp,y,fval,dfval)
+                        call u12poly(indp, y, fval, dfval)
                     else
-                        write(6,*) "Dont know how to calculate ",cpot
+                        write(6, *) "Dont know how to calculate ", cpot
                         stop
-                    endif
+                    end if
                     fsum = fsum + fval
-                    do i=1,7
+                    do i=1, 7
                         !           apply chain rule
-                        do j=1,7
+                        do j=1, 7
                             dfsum(i) = dfsum(i) + dfval(j)*dy(j,i)
-                        enddo
-                    enddo
+                        end do
+                    end do
                 end do
             end do
         end do
         v = v + fsum * coeff(k)
-        do i=1,7
+        do i=1, 7
             gv(i) = gv(i) + dfsum(i)*coeff(k)
-        enddo
+        end do
     end do
 
 end subroutine sumpoly
@@ -420,18 +399,16 @@ end subroutine sumpoly
 subroutine symopt( n, ip, s )
     !!**********************************************!!
     implicit none
-
-    integer          :: n,ip(n)
+    integer          :: n, ip(n)
     double precision :: s(n,n)
-
-    integer :: i,j
-    do i=1,n
-        do j=1,n
+    integer          :: i, j
+    do i=1, n
+        do j=1, n
             s(i,j) = 0.d0
-        enddo
-    enddo
+        end do
+    end do
 
-    do i=1,n
+    do i=1, n
         s(i,ip(i)) = 1.d0
     end do
 
@@ -442,7 +419,6 @@ end subroutine symopt
 subroutine getsymm( i1, i2, i3, n, x, y, dy )
     !!****************************************!!
     implicit none
-
     integer          :: i1
     integer          :: i2
     integer          :: i3
@@ -451,27 +427,26 @@ subroutine getsymm( i1, i2, i3, n, x, y, dy )
     double precision :: y(n)
     ! dy(i,j) = dy(i)/dx(j)
     double precision :: dy(n,n)
-
-    integer          :: ip(3),i,j,k
+    integer          :: ip(3), i, j, k
     double precision :: s(3,3)
-    do i=1,n
+    do i=1, n
         y(i) = 0.d0
-        do j=1,n
+        do j=1, n
             dy(i,j) = 0.d0
-        enddo
-    enddo
+        end do
+    end do
     ip(1) = i1
     ip(2) = i2
     ip(3) = i3
-    call  symopt(3,ip,s)
-    do i=1,3
-        do j=1,3
+    call  symopt(3, ip, s)
+    do i=1, 3
+        do j=1, 3
             y(i)        = y(i) + s(i,j)*x(j)
             y(i+3)      = y(i+3) + s(i,j)*x(j+3)
             dy(i,j)     = s(i,j)
             dy(i+3,j+3) = s(i,j)
-        enddo
-    enddo
+        end do
+    end do
     !      y(1:3) = matmul(S,x(1:3))
     !      y(4:6) = matmul(S,x(4:6))
     y(7)    = x(7)
@@ -486,23 +461,22 @@ subroutine repulsive( rr, erep, derep, cpot )
     !!****************************************************************!!
     ! Additional repuslive terms
     implicit none
-
-    double precision :: rr(6),erep,derep(6)
+    double precision :: rr(6), erep, derep(6)
     character(len=3) :: cpot
-    double precision :: bnh1,bnh2,bhh
+    double precision :: bnh1, bnh2, bhh
     !     exponental coefficient
-    double precision :: alpnh1,alpnh2,alphh
+    double precision :: alpnh1, alpnh2, alphh
     !     Center of Gaussian Function
-    double precision :: r0nh,r0hh
+    double precision :: r0nh, r0hh
     !      parameter (R00 = 0.0d0)
     double precision :: r0
-    double precision :: erepi,erepnh,erephh
+    double precision :: erepi, erepnh, erephh
     ! second additional repulsive terms added to NH repulsion
-    double precision :: erepnh1,erepnh2
+    double precision :: erepnh1, erepnh2
     ! Used for asymtotic correction
     double precision :: ecorrlimit
     ! Derivatives: derepXH: 1-3 NH repul. derivs, 4-6, HH repul. derivs
-    double precision :: derepxh(6),derepnh1,derepnh2,derepi
+    double precision :: derepxh(6), derepnh1, derepnh2, derepi
     double precision :: decorrlimit
     ! U11
     !     DE between the dissociation limit and exp
@@ -524,15 +498,13 @@ subroutine repulsive( rr, erep, derep, cpot )
     !      parameter (gam  = 1.81d0 )
     double precision, parameter :: gam   = 3.00d0
     double precision, parameter :: recor = 2.0d0*1.024d0
-    integer                     :: i,j
+    integer                     :: i, j
     !  misc
     double precision :: tmp
     double precision :: dtmp
-    double precision :: dr,dr1,dr2
+    double precision :: dr, dr1, dr2
     double precision :: rr1
-
     !      Re0 = 1.004d0
-
     r0nh = -0.2d0
     r0hh = -0.2d0
     !              Exp        Theor
@@ -551,7 +523,7 @@ subroutine repulsive( rr, erep, derep, cpot )
         bnh2   = 419.66d0
         eshift = shiftu22
         deltae = deu22
-    endif
+    end if
     ! Fitted
     bnh1       = 32.363
     bhh        = 12.743
@@ -565,7 +537,7 @@ subroutine repulsive( rr, erep, derep, cpot )
     ecor1      = 0.0
 
     if (cpot.ne.'U12') then
-        do i=1,3
+        do i=1, 3
             dr       = rr(i)-r0nh
             rr1      = 1.d0/rr(i)
             erepi    = dexp(-alpnh1*dr*dr) * rr1
@@ -586,27 +558,27 @@ subroutine repulsive( rr, erep, derep, cpot )
             erepi     = 0.5d0*( 1.d0 + tmp )
             ecor1     = ecor1 + erepi
             decor1(i) = 0.5d0*dtmp
-        enddo
+        end do
         erepnh = bnh1*erepnh1 + bnh2*erepnh2
 
-        do i=4,6
+        do i=4, 6
             dr         = rr(i)-r0hh
             rr1        = 1.d0/rr(i)
             erepi      = dexp(-alphh*dr*dr) * rr1
             erephh     = erephh + erepi
             derepxh(i) = -bhh*erepi*( 2.d0*alphh*dr + rr1 )
             decor1(i)  = 0.d0
-        enddo
+        end do
         erephh = bhh * erephh
 
-        do i=1,6
+        do i=1, 6
             decorrlimit = deltae*decor1(i)
             derep(i)    = derepxh(i) + decorrlimit
-        enddo
+        end do
 
         ecorrlimit = eshift + deltae*ecor1
         erep       = erepnh + erephh + ecorrlimit
-    endif
+    end if
 
 end subroutine repulsive
 
@@ -615,7 +587,6 @@ end subroutine repulsive
 subroutine u11poly( ind0, geoint, ans, g_ans )
     !!****************************************************************!!
     implicit none
-
     integer          :: ind0(7)
     double precision :: geoint(7)
     double precision :: ans
@@ -648,22 +619,21 @@ subroutine u11poly( ind0, geoint, ans, g_ans )
     double precision :: x6
     double precision :: x7
     double precision :: y(7)
-    double precision :: beta,r1,r2,r3,the1,the2,the3
-    integer          :: i,j,k,l,m,n,p
+    double precision :: beta, r1, r2, r3, the1, the2, the3
+    integer          :: i, j, k, l, m, n, p
     integer          :: ind
     !-------------------------------!
     ! Derivatives
     !-------------------------------!
-    double precision :: y123,y4567
-    double precision :: dg1,dg2,dg3
-    double precision :: dx1,dx2,dx3,dx4,dx5,dx6,dx7
-    double precision :: dy71,dy72,dy73,dy77
+    double precision :: y123, y4567
+    double precision :: dg1, dg2, dg3
+    double precision :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
+    double precision :: dy71, dy72, dy73, dy77
     double precision :: dy(3)
-    double precision :: dy42,dy43,dy44
-    double precision :: dy51,dy53,dy55
-    double precision :: dy61,dy62,dy66
+    double precision :: dy42, dy43, dy44
+    double precision :: dy51, dy53, dy55
+    double precision :: dy61, dy62, dy66
     double precision :: tmp
-
     !  parameters to be optimized:
     !                 GTa(theta0),FRb(gamma),FRc(r0),ALP(delta)
     frb = .1872506360d+01
@@ -705,7 +675,7 @@ subroutine u11poly( ind0, geoint, ans, g_ans )
     ! f(r)  = 1 - exp[-B(r-C)]
     ! dxi = dxi/dri (i=1,2,3) A,B,C are constants
     ! df/dr = B exp[-B(r-C)]
-    do i=1,3
+    do i=1, 3
         ind = ind0(i)
         if (ind.eq.0) then
             dy(i) = 0.d0
@@ -717,8 +687,8 @@ subroutine u11poly( ind0, geoint, ans, g_ans )
             tmp   = x1**(ind-1)
             dy(i) = dble(ind)* tmp * dx1
             y(i)  = tmp*x1
-        endif
-    enddo
+        end if
+    end do
 
     ! De = 1.d0 in GT function, geoInt(4-6) are theta1,theta2,theta3
     !     x* = dcos(GTa) - dcos(  theta )
@@ -736,7 +706,7 @@ subroutine u11poly( ind0, geoint, ans, g_ans )
         dy43 = dble(l)* tmp *  x4 *  g2 * dg3
         dy44 = dble(l)* tmp * dx4 *  g2 *  g3
         y(4) = tmp*x4*g2*g3
-    endif
+    end if
 
     ! dy5i = dy(5)/dri (i=1,2,3), dy55 = dy(5)/dtheta2
     if (m.eq.0) then
@@ -752,7 +722,7 @@ subroutine u11poly( ind0, geoint, ans, g_ans )
         dy53 = dble(m)* tmp *  x5 *  g1 * dg3
         dy55 = dble(m)* tmp * dx5 *  g1 *  g3
         y(5) = tmp*x5*g1*g3
-    endif
+    end if
 
     ! dy6i = dy(6)/dri (i=1,2,3), dy66 = dy(6)/dtheta3
     if (n.eq.0) then
@@ -768,7 +738,7 @@ subroutine u11poly( ind0, geoint, ans, g_ans )
         dy62 = dble(n)* tmp *  x6 *  g1 * dg2
         dy66 = dble(n)* tmp * dx6 *  g1 *  g2
         y(6) = tmp*x6*g1*g2
-    endif
+    end if
 
     !  geoInt(7) beta; HBa PI/2
     tmp = dble(p) * (beta-hba)
@@ -814,7 +784,6 @@ end subroutine u11poly
 subroutine u22poly( ind0, geoint, ans, g_ans )
     !!****************************************************************!!
     implicit none
-
     integer          :: ind0(7)
     double precision :: geoint(7)
     double precision :: ans
@@ -838,34 +807,33 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
     double precision :: g1
     double precision :: g2
     double precision :: g3
-    double precision :: x1,x11
-    double precision :: x2,x21
-    double precision :: x3,x31
+    double precision :: x1, x11
+    double precision :: x2, x21
+    double precision :: x3, x31
     double precision :: x4
     double precision :: x5
     double precision :: x6
     double precision :: x7
     double precision :: y(7)
-    double precision :: beta,r1,r2,r3,the1,the2,the3
-    integer          :: i,j,k,l,m,n,p
+    double precision :: beta, r1, r2, r3, the1, the2, the3
+    integer          :: i, j, k, l, m, n, p
     integer          :: ind
     !-------------------------------!
     ! Derivatives
     !-------------------------------!
-    double precision :: y123,y4567
-    double precision :: dg1,dg2,dg3,g1g2,g2g3,g1g3
-    double precision :: dx1,dx2,dx3,dx4,dx5,dx6,dx7
-    double precision :: dy71,dy72,dy73,dy77
+    double precision :: y123, y4567
+    double precision :: dg1, dg2, dg3, g1g2, g2g3, g1g3
+    double precision :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
+    double precision :: dy71, dy72, dy73, dy77
     double precision :: dy(3)
-    double precision :: dy11,dy12,dy13
-    double precision :: dy21,dy22,dy23
-    double precision :: dy31,dy32,dy33
-    double precision :: dy42,dy43,dy44
-    double precision :: dy51,dy53,dy55
-    double precision :: dy61,dy62,dy66
-    double precision :: tmp,dtmp(3)
+    double precision :: dy11, dy12, dy13
+    double precision :: dy21, dy22, dy23
+    double precision :: dy31, dy32, dy33
+    double precision :: dy42, dy43, dy44
+    double precision :: dy51, dy53, dy55
+    double precision :: dy61, dy62, dy66
+    double precision :: tmp, dtmp(3)
     double precision :: dr
-
     !
     ! Wed Oct 18 14:57:07 CDT 2006, with additional NH2 (linear)
     frb = .1633658498d+01
@@ -913,7 +881,7 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
     ! f(r)  = 1 - exp[-B(r-C)]
     ! dxi = dxi/dri (i=1,2,3) A,B,C are constants
     ! df/dr = B exp[-B(r-C)]
-    do i=1,3
+    do i=1, 3
         ind = ind0(i)
         if (ind.eq.0) then
             dy(i) = 0.d0
@@ -925,8 +893,8 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
             tmp   = x1**(ind-1)
             dy(i) = dble(ind)* tmp * dx1
             y(i)  = tmp*x1
-        endif
-    enddo
+        end if
+    end do
     ! Li on Suggested by Don. (R-Re)^2 exp(-a (R-Re)^2)
     if (ind0(1).eq.3) then
         dr   = geoint(1) - re
@@ -940,7 +908,7 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
         dy11 = dy(1)
         dy12 = 0.d0
         dy13 = 0.d0
-    endif
+    end if
     if (ind0(2).eq.3) then
         dr   = geoint(2) - re
         x1   = dexp(-frd*dr*dr)
@@ -953,7 +921,7 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
         dy21 = 0.d0
         dy22 = dy(2)
         dy23 = 0.d0
-    endif
+    end if
     if (ind0(3).eq.3) then
         dr   = geoint(3) - re
         x1   = dexp(-frd*dr*dr)
@@ -966,7 +934,7 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
         dy31 = 0.d0
         dy32 = 0.d0
         dy33 = dy(3)
-    endif
+    end if
 
     !     x* = dcos(GTa) - dcos(  theta )
     !     GTa = 120.0 degree, dcos(GTa) = -0.5d0
@@ -985,7 +953,7 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
         dy43 = tmp *  x4 *  g2 * dg3
         dy44 = dble(l)* tmp * dx4 *  g2g3
         y(4) = 1.d0+tmp*x4*g2g3
-    endif
+    end if
 
     if (m.eq.0) then
         dy51 = dg1*g3
@@ -1000,7 +968,7 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
         dy53 = tmp *  x5 *  g1 * dg3
         dy55 = dble(m)* tmp * dx5 *  g1g3
         y(5) = 1.d0+tmp*x5*g1g3
-    endif
+    end if
 
     ! dy6i = dy(6)/dri (i=1,2,3), dy66 = dy(6)/dtheta3
     if (n.eq.0) then
@@ -1016,7 +984,7 @@ subroutine u22poly( ind0, geoint, ans, g_ans )
         dy62 = tmp *  x6 *  g1 * dg2
         dy66 = dble(n)* tmp * dx6 *  g1g2
         y(6) = 1.d0+tmp*x6*g1g2
-    endif
+    end if
 
     !  geoInt(7) beta; HBa PI/2
     !      y(7) = 1 + (1-x7)*g1*g2*g3
@@ -1070,7 +1038,6 @@ end subroutine u22poly
 subroutine u12poly( ind0, geoint, ans, g_ans )
     !!****************************************************************!!
     implicit none
-
     integer          :: ind0(7)
     double precision :: geoint(7)
     double precision :: ans
@@ -1089,25 +1056,22 @@ subroutine u12poly( ind0, geoint, ans, g_ans )
     double precision            :: fru12a, fru12c
     double precision            :: alp
     double precision, parameter :: deg2au = pi/180.d0
-
     double precision, parameter :: fru12b = 1.00d0
     !      parameter ( FRU12c = 2.0150d0        )
     double precision, parameter :: gtu12a = 2.0d0*pi/3.0d0
     double precision, parameter :: hbu12a = 0.5d0*pi
-
     !-------------------------------!
     ! Misc
     !-------------------------------!
-    integer          :: i,j,ind
-    double precision :: z1(6),tz,tf,z123,z456
-    double precision :: hbu12,fru121,fru122,fru123
-    double precision :: theta,beta
+    integer          :: i, j, ind
+    double precision :: z1(6), tz, tf, z123, z456
+    double precision :: hbu12, fru121, fru122, fru123
+    double precision :: theta, beta
     double precision :: y(7)
     double precision :: tmp
     ! Derivatives
     double precision :: dz1(6)
-    double precision :: d7,dfr1,dfr2,dfr3
-
+    double precision :: d7, dfr1, dfr2, dfr3
     !  parameters to be optimized:
     !                 FRU12c(r04)
     fru12c = .1501070926d+01
@@ -1123,7 +1087,7 @@ subroutine u12poly( ind0, geoint, ans, g_ans )
     ! geoInt(7) : beta
     !======================================================================!
     !
-    do i=1,3
+    do i=1, 3
         ind = ind0(i)
         if (ind.eq.0) then
             dz1(i) = 0.d0
@@ -1132,10 +1096,10 @@ subroutine u12poly( ind0, geoint, ans, g_ans )
             z1(i)  = geoint(i)**(ind-1)
             dz1(i) = dble(ind)*z1(i)
             z1(i)  = z1(i)*geoint(i)
-        endif
+        end if
     end do
 
-    do i=4,6
+    do i=4, 6
         ind = ind0(i)
         if (ind.eq.0) then
             dz1(i) = 0.d0
@@ -1146,7 +1110,7 @@ subroutine u12poly( ind0, geoint, ans, g_ans )
             z1(i)  = theta**(ind-1)
             dz1(i) = dble(ind)*z1(i) * deg2au
             z1(i)  = z1(i)*theta
-        endif
+        end if
     end do
 
     beta  = geoint(7)*deg2au
@@ -1195,18 +1159,15 @@ subroutine getadiabat( nv, u11, u22, u12, v1, v2, &
         & gu11, gu22, gu12, gv1, gv2 )
     !!**************************************************!!
     implicit none
-
     ! input
     integer          :: nv
-    double precision :: u11,u22,u12
-    double precision :: gu11(nv),gu22(nv),gu12(nv)
+    double precision :: u11, u22, u12
+    double precision :: gu11(nv), gu22(nv), gu12(nv)
     ! Output
-    double precision :: v1,v2
-    double precision :: gv1(nv),gv2(nv)
-
-    integer          :: i,j
-    double precision :: x,y,dx,dy
-
+    double precision :: v1, v2
+    double precision :: gv1(nv), gv2(nv)
+    integer          :: i, j
+    double precision :: x, y, dx, dy
     x = u11+u22
     y = dsqrt( ((u22-u11)**2) + (4.0d0*u12*u12) )
 
@@ -1214,12 +1175,12 @@ subroutine getadiabat( nv, u11, u22, u12, v1, v2, &
     v2 = 0.5d0*(x + y)
 
     ! Derivatives
-    do i=1,nv
+    do i=1, nv
         dx     = gu11(i) + gu22(i)
         dy     = ( (u22-u11)*( gu22(i)-gu11(i) ) + 4.d0*u12*gu12(i) ) / y
         gv1(i) = 0.5d0 * (dx - dy)
         gv2(i) = 0.5d0 * (dx + dy)
-    enddo
+    end do
 
 end subroutine getadiabat
 
@@ -1228,7 +1189,6 @@ end subroutine getadiabat
 subroutine calcindu1( ind, m1, m2, m3, m4, m5, m6, m7, nc )
     !!***************************************************************!!
     implicit none
-
     integer :: nc
     integer :: m1
     integer :: m2
@@ -1238,17 +1198,15 @@ subroutine calcindu1( ind, m1, m2, m3, m4, m5, m6, m7, nc )
     integer :: m6
     integer :: m7
     integer :: ind(nc,7)
-
-    integer :: i1,i2,i3,i4,i5,i6,i7,inc
-
+    integer :: i1, i2, i3, i4, i5, i6, i7, inc
     inc = 0
     do i7=1, m7
         do i1=0, m1
-            do i2=i1,m2
-                do i3=i2,m3
+            do i2=i1, m2
+                do i3=i2, m3
                     do i4=0, m4
-                        do i5=i4,m5
-                            do i6=i5,m6
+                        do i5=i4, m5
+                            do i6=i5, m6
                                 if( i1+i2+i3+i4+i5+i6 .eq. 0 ) cycle
                                 if(i1+i2+i3 .gt. 4) cycle
                                 if(i4+i5+i6 .gt. 2) cycle
@@ -1276,7 +1234,6 @@ end subroutine calcindu1
 subroutine calcindu2( ind, m1, m2, m3, m4, m5, m6, m7, nc )
     !!***************************************************************!!
     implicit none
-
     integer :: nc
     integer :: mnc
     integer :: m1
@@ -1287,24 +1244,22 @@ subroutine calcindu2( ind, m1, m2, m3, m4, m5, m6, m7, nc )
     integer :: m6
     integer :: m7
     integer :: ind(nc,7)
-
-    integer :: i1,i2,i3,i4,i5,i6,i7,inc
-
+    integer :: i1, i2, i3, i4, i5, i6, i7, inc
     inc = 0
     do i7=0, m7
         do i1=0, m1
-            do i2=i1,m2
-                do i3=i2,m3
+            do i2=i1, m2
+                do i3=i2, m3
                     do i4=0, m4
-                        do i5=i4,m5
-                            do i6=i5,m6
+                        do i5=i4, m5
+                            do i6=i5, m6
                                 if( i1+i2+i3+i4+i5+i6 .gt. 0 .and. i7.eq.0) cycle
                                 if( i1+i2+i3+i4+i5+i6 .eq. 0 .and. i7.gt.0) cycle
                                 if( i1+i2+i3 .gt. 5 ) cycle
                                 if( i4+i5+i6 .gt. 2 ) cycle
                                 if( i1+i2+i3 .ge. 4 ) then
                                     if ( i1.eq.2 .or. i2.eq.2 .or.i3.eq.2 ) cycle
-                                endif
+                                end if
                                 inc        = inc + 1
                                 ind(inc,1) = i1
                                 ind(inc,2) = i2
@@ -1330,7 +1285,6 @@ end subroutine calcindu2
 subroutine calcindu12( ind, m1, m2, m3, m4, m5, m6, m7, nc )
     !!***************************************************************!!
     implicit none
-
     integer :: nc
     integer :: m1
     integer :: m2
@@ -1340,17 +1294,15 @@ subroutine calcindu12( ind, m1, m2, m3, m4, m5, m6, m7, nc )
     integer :: m6
     integer :: m7
     integer :: ind(nc,7)
-
-    integer :: i1,i2,i3,i4,i5,i6,i7,inc
-
+    integer :: i1, i2, i3, i4, i5, i6, i7, inc
     inc = 0
     do i7=3, m7
         do i1=0, m1
-            do i2=i1,m2
-                do i3=i2,m3
+            do i2=i1, m2
+                do i3=i2, m3
                     do i4=0, m4
-                        do i5=i4,m5
-                            do i6=i5,m6
+                        do i5=i4, m5
+                            do i6=i5, m6
                                 if( i1+i2+i3+i4+i5+i6 .eq. 0 ) cycle
                                 if( i1+i2+i3 .gt. 2 ) cycle
                                 if( i4+i5+i6 .gt. 2 ) cycle
@@ -1378,7 +1330,6 @@ end subroutine calcindu12
 subroutine potcoeff
     !********************************************************
     implicit none
-
     !
     ! Integer constants
     integer, parameter :: nv    = 7
@@ -1393,8 +1344,7 @@ subroutine potcoeff
     double precision   :: nhcoeu12(ncu12)
     common /c_nhcoe/  nhcoeu1, nhcoeu2, nhcoeu12, &
         & nhindu1, nhindu2, nhindu12
-
-    integer            :: i,j
+    integer            :: i, j
     integer            :: m1, mu2
     integer, parameter :: m2    = 2
     integer, parameter :: m3    = 3
@@ -1403,11 +1353,10 @@ subroutine potcoeff
     integer, parameter :: m6    = 6
     integer, parameter :: m7    = 7
     integer, parameter :: m7u12 = 5
-
     ! Get indices
-    call calcindu1(nhindu1,m2,m2,m2,m2,m2,m2,m2,ncu1)
-    call calcindu2(nhindu2,m3,m3,m3,m2,m2,m2,m2,ncu2)
-    call calcindu12(nhindu12,m2,m2,m2,m2,m2,m2,m5,ncu12)
+    call calcindu1(nhindu1, m2, m2, m2, m2, m2, m2, m2, ncu1)
+    call calcindu2(nhindu2, m3, m3, m3, m2, m2, m2, m2, ncu2)
+    call calcindu12(nhindu12, m2, m2, m2, m2, m2, m2, m5, ncu12)
 
     ! U11 and U22 fitted with additional points of linear NH2
 
@@ -1596,6 +1545,7 @@ subroutine potcoeff
     nhcoeu12(45) = .1836178250d+00
 
 end subroutine potcoeff
+
 !                           DISCLAIMER
 !
 !   This file was generated on 05/01/06 by the version of
@@ -1616,7 +1566,6 @@ end subroutine potcoeff
 subroutine tobowman( x, bow, g_bow )
     !!*********************************************************************!
     implicit none
-
     integer, parameter :: natom = 4
     !     X in one array with x1,y1,z1,...x4,y4,z4
     double precision            :: x(3 * natom)
@@ -1656,8 +1605,8 @@ subroutine tobowman( x, bow, g_bow )
     !------------------------!
     ! Geometry
     !------------------------!
-    double precision :: cartn(natom, 3)
-    double precision :: cartp(natom, 3)
+    double precision :: cartn(natom,3)
+    double precision :: cartp(natom,3)
     !
     !------------------------!
     ! Unit Vectors
@@ -1680,8 +1629,8 @@ subroutine tobowman( x, bow, g_bow )
     !------------------------!
     integer          :: i, j, k, n, m
     double precision :: xt, yt, zt, w
-    double precision :: b(3, 3)
-    double precision :: a(3, 3)
+    double precision :: b(3,3)
+    double precision :: a(3,3)
     !
     !=====================================================================
     ! Get data from user
@@ -1696,66 +1645,66 @@ subroutine tobowman( x, bow, g_bow )
     integer            :: g_i_
     double precision   :: d5_b, d3_p, d7_b, d2_v, d3_v, d8_b, d2_b, d3_b, &
         & d1_w, d4_v
-    double precision :: d5_v, d1_p, d7_v, d2_p, d4_b, g_cartn(g_pmax_, &
-        & natom, 3), g_x(g_pmax_, 3 * natom), g_d1_w(g_pmax_), g_r(g_pmax_, &
+    double precision :: d5_v, d1_p, d7_v, d2_p, d4_b, g_cartn(g_pmax_,&
+        & natom,3), g_x(g_pmax_,3 * natom), g_d1_w(g_pmax_), g_r(g_pmax_, &
         & 3), g_ua(g_pmax_, 3)
-    double precision :: g_ub(g_pmax_, 3), g_uc(g_pmax_, 3), g_uba(g_pma&
-        &x_, 3), g_uca(g_pmax_, 3), g_ucb(g_pmax_, 3), g_a(g_pmax_, 3, 3), &
+    double precision :: g_ub(g_pmax_,3), g_uc(g_pmax_,3), g_uba(g_pma&
+        &x_,3), g_uca(g_pmax_, 3), g_ucb(g_pmax_, 3), g_a(g_pmax_, 3, 3), &
         & g_b(g_pmax_, 3, 3), g_ut(g_pmax_, 3), g_w(g_pmax_), g_beta(g_pmax_ &
-        & , 3)
+        &, 3)
     double precision :: g_a1(g_pmax_), g_a2(g_pmax_), g_a3(g_pmax_), g_&
         &d(g_pmax_), g_xt(g_pmax_), g_yt(g_pmax_), g_zt(g_pmax_), g_cartp(g&
         &_pmax_, natom, 3), g_dist(g_pmax_), g_theta(g_pmax_, 3)
-    double precision :: g_bow(g_pmax_, 7)
+    double precision :: g_bow(g_pmax_,7)
     integer          :: g_ehfid
     save g_zt, g_cartp, g_dist, g_theta
     save g_b, g_ut, g_w, g_beta, g_a1, g_a2, g_a3, g_d, g_xt, g_yt
     save g_cartn, g_d1_w, g_r, g_ua, g_ub, g_uc, g_uba, g_uca, g_ucb &
-        & , g_a
+        &, g_a
     external g_distplane
     external g_det3
     data g_ehfid /0/
     !
     !        call ehsfid(g_ehfid, 'toBowman','g_toBowman.f')
-    do i=1,12
-        do j=1,12
+    do i=1, 12
+        do j=1, 12
             if (i.eq.j) then
                 g_x(i,j) = 1.d0
             else
                 g_x(i,j) = 0.d0
-            endif
-        enddo
-    enddo
+            end if
+        end do
+    end do
     !
     do i = 1, natom
         do g_i_ = 1, g_pmax_
-            g_cartn(g_i_, i, 1) = -g_x(g_i_, 1) + g_x(g_i_, 3 * i - 2)
-        enddo
-        cartn(i, 1) = x(3 * i - 2) - x(1)
+            g_cartn(g_i_,i,1) = -g_x(g_i_,1) + g_x(g_i_,3 * i - 2)
+        end do
+        cartn(i,1) = x(3 * i - 2) - x(1)
         !--------
         do g_i_ = 1, g_pmax_
-            g_cartn(g_i_, i, 2) = -g_x(g_i_, 2) + g_x(g_i_, 3 * i - 1)
-        enddo
-        cartn(i, 2) = x(3 * i - 1) - x(2)
+            g_cartn(g_i_,i,2) = -g_x(g_i_,2) + g_x(g_i_,3 * i - 1)
+        end do
+        cartn(i,2) = x(3 * i - 1) - x(2)
         !--------
         do g_i_ = 1, g_pmax_
-            g_cartn(g_i_, i, 3) = -g_x(g_i_, 3) + g_x(g_i_, 3 * i)
-        enddo
-        cartn(i, 3) = x(3 * i) - x(3)
+            g_cartn(g_i_,i,3) = -g_x(g_i_,3) + g_x(g_i_,3 * i)
+        end do
+        cartn(i,3) = x(3 * i) - x(3)
         !--------
-    enddo
+    end do
     !
     ! Get the bond distances
     do i = 2, natom
-        d2_v = cartn(i, 1) * cartn(i, 1)
-        d3_p = 2.0d0 * cartn(i, 1)
-        d4_v = cartn(i, 2) * cartn(i, 2)
-        d2_p = 2.0d0 * cartn(i, 2)
-        d7_v = cartn(i, 3) * cartn(i, 3)
-        d1_p = 2.0d0 * cartn(i, 3)
+        d2_v = cartn(i,1) * cartn(i,1)
+        d3_p = 2.0d0 * cartn(i,1)
+        d4_v = cartn(i,2) * cartn(i,2)
+        d2_p = 2.0d0 * cartn(i,2)
+        d7_v = cartn(i,3) * cartn(i,3)
+        d1_p = 2.0d0 * cartn(i,3)
         do g_i_ = 1, g_pmax_
-            g_d1_w(g_i_) = d1_p * g_cartn(g_i_, i, 3) + d2_p * g_cartn(g_i_, i, 2) + d3_p * g_cartn(g_i_, i, 1)
-        enddo
+            g_d1_w(g_i_) = d1_p * g_cartn(g_i_,i,3) + d2_p * g_cartn(g_i_,i,2) + d3_p * g_cartn(g_i_,i,1)
+        end do
         d1_w = d2_v + d4_v + d7_v
         d2_v = sqrt(d1_w)
 
@@ -1765,41 +1714,41 @@ subroutine tobowman( x, bow, g_bow )
             !             call ehufDO (9,d1_w, d2_v, d1_p,
             !     +g_ehfid,
             !     +164)
-        endif
+        end if
         do g_i_ = 1, g_pmax_
             g_r(g_i_, i - 1) = d1_p * g_d1_w(g_i_)
-        enddo
+        end do
         r(i - 1) = d2_v
         !--------
-    enddo
+    end do
     !
     ! get the units vectors along Ha, Hb, and Hc
     do i = 1, 3
-        d3_v = cartn(2, i) / r(1)
+        d3_v = cartn(2,i) / r(1)
         d2_b = 1.0d0 / r(1)
         d3_b = (-d3_v) / r(1)
         do g_i_ = 1, g_pmax_
-            g_ua(g_i_, i) = d3_b * g_r(g_i_, 1) + d2_b * g_cartn(g_i_, 2 , i)
-        enddo
+            g_ua(g_i_, i) = d3_b * g_r(g_i_, 1) + d2_b * g_cartn(g_i_,2,i)
+        end do
         ua(i) = d3_v
         !--------
-        d3_v = cartn(3, i) / r(2)
+        d3_v = cartn(3,i) / r(2)
         d2_b = 1.0d0 / r(2)
         d3_b = (-d3_v) / r(2)
         do g_i_ = 1, g_pmax_
-            g_ub(g_i_, i) = d3_b * g_r(g_i_, 2) + d2_b * g_cartn(g_i_, 3 , i)
-        enddo
+            g_ub(g_i_,i) = d3_b * g_r(g_i_, 2) + d2_b * g_cartn(g_i_,3,i)
+        end do
         ub(i) = d3_v
         !--------
-        d3_v = cartn(4, i) / r(3)
+        d3_v = cartn(4,i) / r(3)
         d2_b = 1.0d0 / r(3)
         d3_b = (-d3_v) / r(3)
         do g_i_ = 1, g_pmax_
-            g_uc(g_i_, i) = d3_b * g_r(g_i_, 3) + d2_b * g_cartn(g_i_, 4 , i)
-        enddo
+            g_uc(g_i_,i) = d3_b * g_r(g_i_, 3) + d2_b * g_cartn(g_i_,4,i)
+        end do
         uc(i) = d3_v
         !--------
-    enddo
+    end do
     !
     ! The trisector direction satisfies the following eq
     ! (by definition of it being trisector)
@@ -1814,21 +1763,21 @@ subroutine tobowman( x, bow, g_bow )
     !
     do i = 1, 3
         do g_i_ = 1, g_pmax_
-            g_uba(g_i_, i) = -g_ua(g_i_, i) + g_ub(g_i_, i)
-        enddo
+            g_uba(g_i_,i) = -g_ua(g_i_, i) + g_ub(g_i_,i)
+        end do
         uba(i) = ub(i) - ua(i)
         !--------
         do g_i_ = 1, g_pmax_
-            g_uca(g_i_, i) = -g_ua(g_i_, i) + g_uc(g_i_, i)
-        enddo
+            g_uca(g_i_, i) = -g_ua(g_i_, i) + g_uc(g_i_,i)
+        end do
         uca(i) = uc(i) - ua(i)
         !--------
         do g_i_ = 1, g_pmax_
-            g_ucb(g_i_, i) = -g_ub(g_i_, i) + g_uc(g_i_, i)
-        enddo
+            g_ucb(g_i_, i) = -g_ub(g_i_,i) + g_uc(g_i_,i)
+        end do
         ucb(i) = uc(i) - ub(i)
         !--------
-    enddo
+    end do
     !
     ! Find the eq of the plane defined by
     ! points uBA, uCA, and uCB.
@@ -1849,47 +1798,47 @@ subroutine tobowman( x, bow, g_bow )
     !
     do i = 1, 3
         do g_i_ = 1, g_pmax_
-            g_a(g_i_, 1, i) = g_uba(g_i_, i)
-        enddo
-        a(1, i) = uba(i)
+            g_a(g_i_, 1, i) = g_uba(g_i_,i)
+        end do
+        a(1,i) = uba(i)
         !--------
         do g_i_ = 1, g_pmax_
             g_a(g_i_, 2, i) = g_uca(g_i_, i)
-        enddo
-        a(2, i) = uca(i)
+        end do
+        a(2,i) = uca(i)
         !--------
         do g_i_ = 1, g_pmax_
             g_a(g_i_, 3, i) = g_ucb(g_i_, i)
-        enddo
-        a(3, i) = ucb(i)
+        end do
+        a(3,i) = ucb(i)
         !--------
-    enddo
+    end do
     do i = 1, 3
         do j = 1, 3
             do k = 1, 3
                 do g_i_ = 1, g_pmax_
                     g_b(g_i_, j, k) = g_a(g_i_, j, k)
-                enddo
-                b(j, k) = a(j, k)
+                end do
+                b(j,k) = a(j,k)
                 !--------
-            enddo
-        enddo
+            end do
+        end do
         do j = 1, 3
             do g_i_ = 1, g_pmax_
                 g_b(g_i_, j, i) = 0.0d0
-            enddo
-            b(j, i) = 1.0d0
+            end do
+            b(j,i) = 1.0d0
             !--------
-        enddo
+        end do
         call g_det3(b, g_b, ut(i), g_ut(1, i))
-    enddo
+    end do
     !
     d4_b = ut(3) + ut(3)
     d7_b = ut(2) + ut(2)
     d8_b = ut(1) + ut(1)
     do g_i_ = 1, g_pmax_
         g_d1_w(g_i_) = d4_b * g_ut(g_i_, 3) + d7_b * g_ut(g_i_, 2) + d8_b * g_ut(g_i_, 1)
-    enddo
+    end do
     d1_w = ut(1) * ut(1) + ut(2) * ut(2) + ut(3) * ut(3)
     d2_v = sqrt(d1_w)
 
@@ -1899,10 +1848,10 @@ subroutine tobowman( x, bow, g_bow )
         !           call ehufDO (9,d1_w, d2_v, d1_p,
         !     +g_ehfid,
         !     +302)
-    endif
+    end if
     do g_i_ = 1, g_pmax_
         g_w(g_i_) = d1_p * g_d1_w(g_i_)
-    enddo
+    end do
     w = d2_v
     !--------
     do i = 1, 3
@@ -1911,16 +1860,16 @@ subroutine tobowman( x, bow, g_bow )
         d3_b = (-d3_v) / w
         do g_i_ = 1, g_pmax_
             g_ut(g_i_, i) = d3_b * g_w(g_i_) + d2_b * g_ut(g_i_, i)
-        enddo
+        end do
         ut(i) = d3_v
         !--------
-    enddo
+    end do
     !
     ! Get the value of  beta (angle between any H-N and {A,B,C})
     do g_i_ = 1, g_pmax_
         g_w(g_i_) = ut(3) * g_ua(g_i_, 3) + ua(3) * g_ut(g_i_, 3) + ut (2) * g_ua(g_i_, 2) + ua(2) * g_ut(g_i_, 2) + &
             & ut(1) * g_ua(g_i_, 1 ) + ua(1) * g_ut(g_i_, 1)
-    enddo
+    end do
     w = ut(1) * ua(1) + ut(2) * ua(2) + ut(3) * ua(3)
     !--------
     d2_v = acos(w)
@@ -1931,11 +1880,11 @@ subroutine tobowman( x, bow, g_bow )
         !           call ehufDO (14,w, d2_v, d1_p,
         !     +g_ehfid,
         !     +335)
-    endif
+    end if
     d4_b = 1.0d0 / pi * 180.0d0 * d1_p
     do g_i_ = 1, g_pmax_
         g_beta(g_i_, 1) = d4_b * g_w(g_i_)
-    enddo
+    end do
     beta(1) = d2_v * 180.0d0 / pi
     !--------
     !     beta(2) = dacos( dot_product(uT,uB) ) * 180.0d0/PI
@@ -1953,28 +1902,28 @@ subroutine tobowman( x, bow, g_bow )
     !
     do g_i_ = 1, g_pmax_
         g_a1(g_i_) = g_ut(g_i_, 1)
-    enddo
+    end do
     a1 = ut(1)
     !--------
     do g_i_ = 1, g_pmax_
         g_a2(g_i_) = g_ut(g_i_, 2)
-    enddo
+    end do
     a2 = ut(2)
     !--------
     do g_i_ = 1, g_pmax_
         g_a3(g_i_) = g_ut(g_i_, 3)
-    enddo
+    end do
     a3 = ut(3)
     !--------
     do g_i_ = 1, g_pmax_
-        g_w(g_i_) = ut(3) * g_cartn(g_i_, 2, 3) + cartn(2, 3) * g_ut(g_i_, 3) + ut(2) * g_cartn(g_i_, 2, 2) + cartn(2, &
-            & 2) * g_ut(g_i_, 2 ) + ut(1) * g_cartn(g_i_, 2, 1) + cartn(2, 1) * g_ut(g_i_, 1)
-    enddo
-    w = ut(1) * cartn(2, 1) + ut(2) * cartn(2, 2) + ut(3) * cartn(2, 3)
+        g_w(g_i_) = ut(3) * g_cartn(g_i_,2,3) + cartn(2,3) * g_ut(g_i_, 3) + ut(2) * g_cartn(g_i_,2,2) + cartn(2,2) * &
+            & g_ut(g_i_, 2 ) + ut(1) * g_cartn(g_i_,2,1) + cartn(2,1) * g_ut(g_i_, 1)
+    end do
+    w = ut(1) * cartn(2,1) + ut(2) * cartn(2,2) + ut(3) * cartn(2,3)
     !--------
     do g_i_ = 1, g_pmax_
         g_d(g_i_) = -g_w(g_i_)
-    enddo
+    end do
     d = -w
     !--------
     !
@@ -1989,48 +1938,48 @@ subroutine tobowman( x, bow, g_bow )
     !
     do i = 1, natom
         do g_i_ = 1, g_pmax_
-            g_xt(g_i_) = g_cartn(g_i_, i, 1)
-        enddo
-        xt = cartn(i, 1)
+            g_xt(g_i_) = g_cartn(g_i_,i,1)
+        end do
+        xt = cartn(i,1)
         !--------
         do g_i_ = 1, g_pmax_
-            g_yt(g_i_) = g_cartn(g_i_, i, 2)
-        enddo
-        yt = cartn(i, 2)
+            g_yt(g_i_) = g_cartn(g_i_,i,2)
+        end do
+        yt = cartn(i,2)
         !--------
         do g_i_ = 1, g_pmax_
-            g_zt(g_i_) = g_cartn(g_i_, i, 3)
-        enddo
-        zt = cartn(i, 3)
+            g_zt(g_i_) = g_cartn(g_i_,i,3)
+        end do
+        zt = cartn(i,3)
         !--------
         call g_distplane(a1, g_a1, a2, g_a2, a3, g_a3, d, g_d, xt, g_x&
             &t, yt, g_yt, zt, g_zt, dist, g_dist)
         do j = 1, 3
             do g_i_ = 1, g_pmax_
-                g_cartp(g_i_, i, j) = (-dist) * g_ut(g_i_, j) + (-ut(j)) * g_dist(g_i_) + g_cartn(g_i_, i, j)
-            enddo
-            cartp(i, j) = cartn(i, j) - dist * ut(j)
+                g_cartp(g_i_, i, j) = (-dist) * g_ut(g_i_, j) + (-ut(j)) * g_dist(g_i_) + g_cartn(g_i_,i,j)
+            end do
+            cartp(i,j) = cartn(i,j) - dist * ut(j)
             !--------
-        enddo
-    enddo
+        end do
+    end do
     !
     do i = 2, natom
         do j = 1, 3
             do g_i_ = 1, g_pmax_
                 g_cartp(g_i_, i, j) = -g_cartp(g_i_, 1, j) + g_cartp(g_i_, i, j)
-            enddo
-            cartp(i, j) = cartp(i, j) - cartp(1, j)
+            end do
+            cartp(i,j) = cartp(i,j) - cartp(1,j)
             !--------
-        enddo
-    enddo
+        end do
+    end do
     !
     do i = 1, 3
         do g_i_ = 1, g_pmax_
             g_cartp(g_i_, 1, i) = 0.0d0
-        enddo
-        cartp(1, i) = 0.0d0
+        end do
+        cartp(1,i) = 0.0d0
         !--------
-    enddo
+    end do
     !---------------------------------------------------------
     ! The theta are labelled as:
     ! H1-N-H2 : theta(1)
@@ -2046,15 +1995,15 @@ subroutine tobowman( x, bow, g_bow )
     do j = 2, natom
         do i = j + 1, natom
             k    = k + 1
-            d2_v = cartp(i, 1) * cartp(i, 1)
-            d3_p = 2.0d0 * cartp(i, 1)
-            d4_v = cartp(i, 2) * cartp(i, 2)
-            d2_p = 2.0d0 * cartp(i, 2)
-            d7_v = cartp(i, 3) * cartp(i, 3)
-            d1_p = 2.0d0 * cartp(i, 3)
+            d2_v = cartp(i,1) * cartp(i,1)
+            d3_p = 2.0d0 * cartp(i,1)
+            d4_v = cartp(i,2) * cartp(i,2)
+            d2_p = 2.0d0 * cartp(i,2)
+            d7_v = cartp(i,3) * cartp(i,3)
+            d1_p = 2.0d0 * cartp(i,3)
             do g_i_ = 1, g_pmax_
                 g_d1_w(g_i_) = d1_p * g_cartp(g_i_, i, 3) + d2_p * g_cartp (g_i_, i, 2) + d3_p * g_cartp(g_i_, i, 1)
-            enddo
+            end do
             d1_w = d2_v + d4_v + d7_v
             d2_v = sqrt(d1_w)
 
@@ -2064,21 +2013,21 @@ subroutine tobowman( x, bow, g_bow )
                 !               call ehufDO (9,d1_w, d2_v, d1_p,
                 !     +g_ehfid,
                 !     +473)
-            endif
+            end if
             do g_i_ = 1, g_pmax_
                 g_xt(g_i_) = d1_p * g_d1_w(g_i_)
-            enddo
+            end do
             xt = d2_v
             !--------
-            d2_v = cartp(j, 1) * cartp(j, 1)
-            d3_p = 2.0d0 * cartp(j, 1)
-            d4_v = cartp(j, 2) * cartp(j, 2)
-            d2_p = 2.0d0 * cartp(j, 2)
-            d7_v = cartp(j, 3) * cartp(j, 3)
-            d1_p = 2.0d0 * cartp(j, 3)
+            d2_v = cartp(j,1) * cartp(j,1)
+            d3_p = 2.0d0 * cartp(j,1)
+            d4_v = cartp(j,2) * cartp(j,2)
+            d2_p = 2.0d0 * cartp(j,2)
+            d7_v = cartp(j,3) * cartp(j,3)
+            d1_p = 2.0d0 * cartp(j,3)
             do g_i_ = 1, g_pmax_
                 g_d1_w(g_i_) = d1_p * g_cartp(g_i_, j, 3) + d2_p * g_cartp (g_i_, j, 2) + d3_p * g_cartp(g_i_, j, 1)
-            enddo
+            end do
             d1_w = d2_v + d4_v + d7_v
             d2_v = sqrt(d1_w)
 
@@ -2088,18 +2037,18 @@ subroutine tobowman( x, bow, g_bow )
                 !               call ehufDO (9,d1_w, d2_v, d1_p,
                 !     +g_ehfid,
                 !     +498)
-            endif
+            end if
             do g_i_ = 1, g_pmax_
                 g_yt(g_i_) = d1_p * g_d1_w(g_i_)
-            enddo
+            end do
             yt = d2_v
             !--------
             do g_i_ = 1, g_pmax_
-                g_zt(g_i_) = cartp(i, 3) * g_cartp(g_i_, j, 3) + cartp(j, 3) * g_cartp(g_i_, i, 3) + cartp(i, 2) * &
-                    & g_cartp(g_i_, j, 2) + cartp(j, 2) * g_cartp(g_i_, i, 2) + cartp(i, 1) * g_cartp(g_i_, j, 1) + &
-                    & cartp(j, 1) * g_cartp(g_i_, i, 1)
-            enddo
-            zt = cartp(i, 1) * cartp(j, 1) + cartp(i, 2) * cartp(j, 2) + cartp(i, 3) * cartp(j, 3)
+                g_zt(g_i_) = cartp(i,3) * g_cartp(g_i_, j, 3) + cartp(j,3) * g_cartp(g_i_, i, 3) + cartp(i,2) * &
+                    & g_cartp(g_i_, j, 2) + cartp(j,2) * g_cartp(g_i_, i, 2) + cartp(i,1) * g_cartp(g_i_, j, 1) + &
+                    & cartp(j,1) * g_cartp(g_i_, i, 1)
+            end do
+            zt = cartp(i,1) * cartp(j,1) + cartp(i,2) * cartp(j,2) + cartp(i,3) * cartp(j,3)
             !--------
             d4_v = xt * yt
             d5_v = zt / d4_v
@@ -2109,23 +2058,23 @@ subroutine tobowman( x, bow, g_bow )
             d5_b = d3_b * xt
             do g_i_ = 1, g_pmax_
                 g_w(g_i_) = d5_b * g_yt(g_i_) + d4_b * g_xt(g_i_) + d2_b * g_zt(g_i_)
-            enddo
+            end do
             w = d5_v
             !--------
             if (w .gt. 1.0d0) then
                 do g_i_ = 1, g_pmax_
                     g_w(g_i_) = 0.0d0
-                enddo
+                end do
                 w = 1.0d0
                 !--------
-            endif
+            end if
             if (w .lt. (-1.0d0)) then
                 do g_i_ = 1, g_pmax_
                     g_w(g_i_) = 0.0d0
-                enddo
+                end do
                 w = -1.0d0
                 !--------
-            endif
+            end if
             d2_v = acos(w)
 
             if ( abs(w) .lt. 1.0d0 ) then
@@ -2134,10 +2083,10 @@ subroutine tobowman( x, bow, g_bow )
                 !               call ehufDO (14,w, d2_v, d1_p,
                 !     +g_ehfid,
                 !     +547)
-            endif
+            end if
             do g_i_ = 1, g_pmax_
                 g_d1_w(g_i_) = d1_p * g_w(g_i_)
-            enddo
+            end do
             d1_w = d2_v
             d2_v = abs(d1_w)
 
@@ -2149,15 +2098,15 @@ subroutine tobowman( x, bow, g_bow )
                 !               call ehufDO (3,d1_w, d2_v, d1_p,
                 !     +g_ehfid,
                 !     +562)
-            endif
+            end if
             d4_b = 1.0d0 / pi * 180.0d0 * d1_p
             do g_i_ = 1, g_pmax_
                 g_theta(g_i_, k) = d4_b * g_d1_w(g_i_)
-            enddo
+            end do
             theta(k) = d2_v * 180.0d0 / pi
             !--------
-        enddo
-    enddo
+        end do
+    end do
     !---------------------------------------------------------
     ! Now we we will relabel theta such that
     ! H1-N-H2 : theta(3)
@@ -2165,17 +2114,17 @@ subroutine tobowman( x, bow, g_bow )
     ! H2-N-H3 : theta(1)
     do g_i_ = 1, g_pmax_
         g_xt(g_i_) = g_theta(g_i_, 1)
-    enddo
+    end do
     xt = theta(1)
     !--------
     do g_i_ = 1, g_pmax_
         g_theta(g_i_, 1) = g_theta(g_i_, 3)
-    enddo
+    end do
     theta(1) = theta(3)
     !--------
     do g_i_ = 1, g_pmax_
         g_theta(g_i_, 3) = g_xt(g_i_)
-    enddo
+    end do
     theta(3) = xt
     !--------
     !---------------------------------------------------------
@@ -2188,42 +2137,43 @@ subroutine tobowman( x, bow, g_bow )
     !
     !
     do g_i_ = 1, g_pmax_
-        g_bow(g_i_, 1) = g_r(g_i_, 1)
-    enddo
+        g_bow(g_i_,1) = g_r(g_i_, 1)
+    end do
     bow(1) = r(1)
     !--------
     do g_i_ = 1, g_pmax_
-        g_bow(g_i_, 2) = g_r(g_i_, 2)
-    enddo
+        g_bow(g_i_,2) = g_r(g_i_, 2)
+    end do
     bow(2) = r(2)
     !--------
     do g_i_ = 1, g_pmax_
-        g_bow(g_i_, 3) = g_r(g_i_, 3)
-    enddo
+        g_bow(g_i_,3) = g_r(g_i_, 3)
+    end do
     bow(3) = r(3)
     !--------
     do g_i_ = 1, g_pmax_
-        g_bow(g_i_, 4) = g_theta(g_i_, 1)
-    enddo
+        g_bow(g_i_,4) = g_theta(g_i_, 1)
+    end do
     bow(4) = theta(1)
     !--------
     do g_i_ = 1, g_pmax_
-        g_bow(g_i_, 5) = g_theta(g_i_, 2)
-    enddo
+        g_bow(g_i_,5) = g_theta(g_i_, 2)
+    end do
     bow(5) = theta(2)
     !--------
     do g_i_ = 1, g_pmax_
-        g_bow(g_i_, 6) = g_theta(g_i_, 3)
-    enddo
+        g_bow(g_i_,6) = g_theta(g_i_, 3)
+    end do
     bow(6) = theta(3)
     !--------
     do g_i_ = 1, g_pmax_
-        g_bow(g_i_, 7) = g_beta(g_i_, 1)
-    enddo
+        g_bow(g_i_,7) = g_beta(g_i_, 1)
+    end do
     bow(7) = beta(1)
     !--------
     !
 end subroutine tobowman
+
 !
 !!********************************************************!!
 !> @brief Evaluate g_distplane for the NH3_GEN_FFW1_2006_DPEM potential.
@@ -2231,7 +2181,6 @@ subroutine g_distplane( a1, g_a1, a2, g_a2, a3, g_a3, d, g_d, x, g_&
         &x, y, g_y, z, g_z, dist, g_dist )
     !!********************************************************!!
     implicit none
-
     !
     double precision :: a1
     double precision :: a2
@@ -2271,7 +2220,7 @@ subroutine g_distplane( a1, g_a1, a2, g_a2, a3, g_a3, d, g_d, x, g_&
     d1_p = 2.0d0 * a3
     do g_i_ = 1, g_pmax_
         g_d1_w(g_i_) = d1_p * g_a3(g_i_) + d2_p * g_a2(g_i_) + d3_p * g_a1(g_i_)
-    enddo
+    end do
     d1_w  = d2_v + d4_v + d7_v
     d15_v = sqrt(d1_w)
 
@@ -2281,7 +2230,7 @@ subroutine g_distplane( a1, g_a1, a2, g_a2, a3, g_a3, d, g_d, x, g_&
         !           call ehufDO (9,d1_w, d15_v, d1_p,
         !     +g_ehfid,
         !     +695)
-    endif
+    end if
     d16_v = (a1 * x + a2 * y + a3 * z + d) / d15_v
     d2_b  = 1.0d0 / d15_v
     d4_b  = (-d16_v) / d15_v * d1_p
@@ -2294,20 +2243,20 @@ subroutine g_distplane( a1, g_a1, a2, g_a2, a3, g_a3, d, g_d, x, g_&
     do g_i_ = 1, g_pmax_
         g_dist(g_i_) = d4_b * g_d1_w(g_i_) + d2_b * g_d(g_i_) + d10_b * g_z(g_i_) + d9_b * g_a3(g_i_) + d14_b * &
             & g_y(g_i_) + d13_b * g_a2 (g_i_) + d16_b * g_x(g_i_) + d15_b * g_a1(g_i_)
-    enddo
+    end do
     dist = d16_v
     !--------
     !
     !
 end subroutine g_distplane
+
 !
 !!********************************************************!!
 !> @brief Evaluate g_det3 for the NH3_GEN_FFW1_2006_DPEM potential.
 subroutine g_det3( a, g_a, ans, g_ans )
     !!********************************************************!!
     implicit none
-
-    double precision :: a(3, 3)
+    double precision :: a(3,3)
     double precision :: ans
     !
     ! Compute determinant of a 3x3 matrix
@@ -2324,43 +2273,43 @@ subroutine g_det3( a, g_a, ans, g_ans )
     !
     !        call ehsfid(g_ehfid, 'det3','g_toBowman.f')
     !
-    d8_v = a(2, 2) * a(3, 3) - a(2, 3) * a(3, 2)
-    d6_b = (-a(1, 1)) * a(3, 2)
-    d7_b = (-a(1, 1)) * a(2, 3)
-    d8_b = a(1, 1) * a(3, 3)
-    d9_b = a(1, 1) * a(2, 2)
+    d8_v = a(2,2) * a(3,3) - a(2,3) * a(3,2)
+    d6_b = (-a(1,1)) * a(3,2)
+    d7_b = (-a(1,1)) * a(2,3)
+    d8_b = a(1,1) * a(3,3)
+    d9_b = a(1,1) * a(2,2)
     do g_i_ = 1, g_pmax_
         g_x(g_i_) = d7_b * g_a(g_i_, 3, 2) + d6_b * g_a(g_i_, 2, 3) + d9_b * g_a(g_i_, 3, 3) + d8_b * g_a(g_i_, 2, &
             & 2) + d8_v * g_a(g_i_, 1, 1)
-    enddo
-    x = a(1, 1) * d8_v
+    end do
+    x = a(1,1) * d8_v
     !--------
-    d8_v = a(2, 1) * a(3, 3) - a(2, 3) * a(3, 1)
-    d6_b = (-a(1, 2)) * a(3, 1)
-    d7_b = (-a(1, 2)) * a(2, 3)
-    d8_b = a(1, 2) * a(3, 3)
-    d9_b = a(1, 2) * a(2, 1)
+    d8_v = a(2,1) * a(3,3) - a(2,3) * a(3,1)
+    d6_b = (-a(1,2)) * a(3,1)
+    d7_b = (-a(1,2)) * a(2,3)
+    d8_b = a(1,2) * a(3,3)
+    d9_b = a(1,2) * a(2,1)
     do g_i_ = 1, g_pmax_
         g_y(g_i_) = d7_b * g_a(g_i_, 3, 1) + d6_b * g_a(g_i_, 2, 3) + d9_b * g_a(g_i_, 3, 3) + d8_b * g_a(g_i_, 2, &
             & 1) + d8_v * g_a(g_i_, 1, 2)
-    enddo
-    y = a(1, 2) * d8_v
+    end do
+    y = a(1,2) * d8_v
     !--------
-    d8_v = a(2, 1) * a(3, 2) - a(2, 2) * a(3, 1)
-    d6_b = (-a(1, 3)) * a(3, 1)
-    d7_b = (-a(1, 3)) * a(2, 2)
-    d8_b = a(1, 3) * a(3, 2)
-    d9_b = a(1, 3) * a(2, 1)
+    d8_v = a(2,1) * a(3,2) - a(2,2) * a(3,1)
+    d6_b = (-a(1,3)) * a(3,1)
+    d7_b = (-a(1,3)) * a(2,2)
+    d8_b = a(1,3) * a(3,2)
+    d9_b = a(1,3) * a(2,1)
     do g_i_ = 1, g_pmax_
         g_z(g_i_) = d7_b * g_a(g_i_, 3, 1) + d6_b * g_a(g_i_, 2, 2) + d9_b * g_a(g_i_, 3, 2) + d8_b * g_a(g_i_, 2, &
             & 1) + d8_v * g_a(g_i_, 1, 3)
-    enddo
-    z = a(1, 3) * d8_v
+    end do
+    z = a(1,3) * d8_v
     !--------
     !
     do g_i_ = 1, g_pmax_
         g_ans(g_i_) = g_z(g_i_) + (-g_y(g_i_)) + g_x(g_i_)
-    enddo
+    end do
     ans = x - y + z
     !--------
     !
@@ -2391,31 +2340,28 @@ subroutine carttoang( cart, ans, gangint )
     ![r1,r2,r3,theta1,theta2,theta3]
     !-----------------------------------------------------
     implicit none
-
     ! I/O variables
     integer, parameter          :: natom = 4
     double precision, parameter :: pi    = 3.1415926535897930d0
     double precision            :: cart(3*natom)
     double precision            :: gangint(12,7)
-
     ! Local variables
-    integer          :: i,j,k
-    double precision :: r(3),t(3)
+    integer          :: i, j, k
+    double precision :: r(3), t(3)
     double precision :: dt(3)
     double precision :: theta(3)
     double precision :: carth(3,3)
     double precision :: ans(7)
-
     ! initialize gangint
-    do i=1,7
-        do j=1,12
+    do i=1, 7
+        do j=1, 12
             gangint(j,i) = 0.d0
-        enddo
-    enddo
+        end do
+    end do
     ! Put N at the origin and
     ! and get N-H bond vectors
     k = 0
-    do i=2,natom
+    do i=2, natom
         k          = k+1
         carth(k,1) = cart(3*i-2)-cart(1)
         carth(k,2) = cart(3*i-1)-cart(2)
@@ -2423,16 +2369,16 @@ subroutine carttoang( cart, ans, gangint )
     end do
 
     ! calculate bond distances
-    do i=1,3
+    do i=1, 3
         r(i) = dsqrt(carth(i,1)*carth(i,1) + carth(i,2)*carth(i,2) + carth(i,3)*carth(i,3) )
         ! dr/dx,cartH(i) is a function of the cartesian coord. of the i+1 atom
-        do j=1,3
+        do j=1, 3
             k = 3*i + j
             !         dr(i)/dx(2),dr(i)/dx(3),dr(i)/dx(4)
             gangint(k,i) = carth(i,j)/r(i)
             !         dr(i)/dx(1)
             gangint(j,i) = -gangint(k,i)
-        enddo
+        end do
     end do
     !------------------------------------------------------
     ! calculate bond angles
@@ -2440,79 +2386,79 @@ subroutine carttoang( cart, ans, gangint )
     t(1) = (carth(2,1)*carth(3,1)+carth(2,2)*carth(3,2)+ carth(2,3)*carth(3,3))/(r(2)*r(3))
     t(2) = (carth(1,1)*carth(3,1)+carth(1,2)*carth(3,2)+ carth(1,3)*carth(3,3))/(r(1)*r(3))
     t(3) = (carth(1,1)*carth(2,1)+carth(1,2)*carth(2,2)+ carth(1,3)*carth(2,3))/(r(1)*r(2))
-    do i=1,3
+    do i=1, 3
         !    Due to numerical errors, t maybe larger than 1.0 by a tiny value
         !        by definition 0 <= dacos(t) <= PI
         if (t(i).gt.1.d0) then
             t(i) = 1.d0
         elseif (t(i).lt.-1.d0) then
             t(i) = -1.d0
-        endif
+        end if
         theta(i) = dacos( t(i) )
         !       convert to degrees
         theta(i) = theta(i)*180.0d0/pi
     end do
 
     ! return answer
-    do i=1,3
+    do i=1, 3
         ans(i)   = r(i)
         ans(3+i) = theta(i)
-    enddo
+    end do
 
     !   Derivatives of the three angles
     !    dtheta1/dt1  theta = acos(t)
-    do i=1,3
+    do i=1, 3
         if (dabs(t(i)).ge.1.d0) then
             !         write(*,*) "Abnormal structure: N-H2-H3 is linear"
             !         stop
             dt(i) = 0.d0
         else
             dt(i) = -(1.d0/dsqrt( 1.d0-t(i)*t(i) ))*180.d0/pi
-        endif
-    enddo
+        end if
+    end do
     !    dtheta1/dx3,dtheta1/dx4,dtheta1/dx1. dtheta1/dx2=0
     !    theta1 is a function of atom 1,3,4
-    do j=1,3
+    do j=1, 3
         k            = 6+j
         gangint(k,4) = carth(3,j)/(r(2)*r(3)) - gangint(k,2)*t(1)/r(2)
         gangint(k,4) = dt(1) * gangint(k,4)
         k            = 9+j
         gangint(k,4) = carth(2,j)/(r(2)*r(3)) - gangint(k,3)*t(1)/r(3)
         gangint(k,4) = dt(1) * gangint(k,4)
-        gangint(j,4) = -(carth(2,j)+carth(3,j))/(r(2)*r(3)) - ( r(3)*gangint(j,2)+r(2)*gangint(j,3) ) *  t(1)/(r(2)* &
+        gangint(j,4) = -(carth(2,j)+carth(3,j))/(r(2)*r(3)) - ( r(3)*gangint(j,2)+r(2)*gangint(j,3) ) *  t(1)/ (r(2)* &
             & r(3))
         gangint(j,4) = dt(1) * gangint(j,4)
-    enddo
+    end do
 
     !    dtheta2/dt2  theta = acos(t)
     !    dtheta2/dx2,dtheta2/dx4,dtheta2/dx1. dtheta2/dx3=0
     !    theta2 is a function of atom 1,2,4
-    do j=1,3
+    do j=1, 3
         k            = 3+j
         gangint(k,5) = carth(3,j)/(r(1)*r(3)) - gangint(k,1)*t(2)/r(1)
         gangint(k,5) = dt(2) * gangint(k,5)
         k            = 9+j
         gangint(k,5) = carth(1,j)/(r(1)*r(3)) - gangint(k,3)*t(2)/r(3)
         gangint(k,5) = dt(2) * gangint(k,5)
-        gangint(j,5) = -(carth(1,j)+carth(3,j))/(r(1)*r(3)) - ( r(1)*gangint(j,3)+r(3)*gangint(j,1) ) *  t(2)/(r(1)* &
+        gangint(j,5) = -(carth(1,j)+carth(3,j))/(r(1)*r(3)) - ( r(1)*gangint(j,3)+r(3)*gangint(j,1) ) *  t(2)/ (r(1)* &
             & r(3))
         gangint(j,5) = dt(2) * gangint(j,5)
-    enddo
+    end do
 
     !    dtheta3/dt3  theta = acos(t)
     !    dtheta3/dx2,dtheta3/dx3,dtheta3/dx1. dtheta3/dx4=0
     !    theta3 is a function of atom 1,2,3
-    do j=1,3
+    do j=1, 3
         k            = 3+j
         gangint(k,6) = carth(2,j)/(r(1)*r(2)) - gangint(k,1)*t(3)/r(1)
         gangint(k,6) = dt(3) * gangint(k,6)
         k            = 6+j
         gangint(k,6) = carth(1,j)/(r(1)*r(2)) - gangint(k,2)*t(3)/r(2)
         gangint(k,6) = dt(3) * gangint(k,6)
-        gangint(j,6) = -(carth(1,j)+carth(2,j))/(r(1)*r(2)) - ( r(1)*gangint(j,2)+r(2)*gangint(j,1) ) *  t(3)/(r(1)* &
+        gangint(j,6) = -(carth(1,j)+carth(2,j))/(r(1)*r(2)) - ( r(1)*gangint(j,2)+r(2)*gangint(j,1) ) *  t(3)/ (r(1)* &
             & r(2))
         gangint(j,6) = dt(3) * gangint(j,6)
-    enddo
+    end do
 
 end subroutine carttoang
 
@@ -2521,7 +2467,6 @@ end subroutine carttoang
 subroutine cart_to_polar( x, ans )
     !*******************************************!
     implicit none
-
     double precision            :: x(3)
     double precision            :: ans(3)
     double precision, parameter :: pi = 3.1415926535897930d0
@@ -2531,7 +2476,6 @@ subroutine cart_to_polar( x, ans )
     ! ans(3) : theta (0-PI) !in degrees
     !
     double precision :: t
-
     ans(1) = dsqrt( x(1)*x(1) + x(2)*x(2) + x(3)*x(3) )
     if (ans(1).ne.0.d0) then
         t      = dacos(x(3)/ans(1))      !angle is between [-PI,PI]
@@ -2550,7 +2494,7 @@ subroutine cart_to_polar( x, ans )
     else
         ans(2) = 0.d0
         ans(3) = 0.d0
-    endif
+    end if
 
 end subroutine cart_to_polar
 
@@ -2559,7 +2503,6 @@ end subroutine cart_to_polar
 subroutine polar_to_cart( p, ans )
     !*******************************************!
     implicit none
-
     double precision            :: p(3)
     double precision            :: ans(3)
     double precision, parameter :: pi = 3.1415926535897930d0
@@ -2568,9 +2511,8 @@ subroutine polar_to_cart( p, ans )
     ! p(2) : phi (0-2PI)  !in degrees
     ! p(3) : theta (0-PI) !in degrees
     !
-    double precision :: phi,theta
+    double precision :: phi, theta
     double precision :: sinth
-
     phi   = p(2) * pi/180.0d0
     theta = p(3) * pi/180.0d0
 
@@ -2587,7 +2529,6 @@ end subroutine polar_to_cart
 subroutine frombowman( bow, coord )
     !*********************************************!
     implicit none
-
     double precision            :: bow(7)
     double precision            :: coord(12)
     double precision, parameter :: pi = 3.1415926535897930d0
@@ -2611,15 +2552,15 @@ subroutine frombowman( bow, coord )
     ! coord(7:9)   : H2  x,y,z
     ! coord(10:12) : H3  x,y,z
     !
-    double precision :: r1,r2,r3
-    double precision :: theta1,theta2,theta3
-    double precision :: phi1,phi2,phi3
+    double precision :: r1, r2, r3
+    double precision :: theta1, theta2, theta3
+    double precision :: phi1, phi2, phi3
     double precision :: beta
     double precision :: ph1(3)
     double precision :: ph2(3)
     double precision :: ph3(3)
     double precision :: ans(3)
-    integer          :: i,j
+    integer          :: i, j
     double precision :: small
     small = 1.d-3
 
@@ -2663,10 +2604,10 @@ subroutine frombowman( bow, coord )
     elseif (dabs(theta3-theta1-theta2).lt.small) then
         phi3 = theta2
     else
-        write(6,*) "Is this geometry possible?"
-        write(6,*) bow
+        write(6, *) "Is this geometry possible?"
+        write(6, *) bow
         stop
-    endif
+    end if
 
     ! vector for H1 in polar
     ph1(1) = r1
@@ -2689,20 +2630,20 @@ subroutine frombowman( bow, coord )
     coord(2) = 0.0d0
     coord(3) = 0.0d0
     ! H1
-    call polar_to_cart(ph1,ans)
-    do i=1,3
+    call polar_to_cart(ph1, ans)
+    do i=1, 3
         coord(3+i) = ans(i)
-    enddo
+    end do
     ! H2
-    call polar_to_cart(ph2,ans)
-    do i=1,3
+    call polar_to_cart(ph2, ans)
+    do i=1, 3
         coord(6+i) = ans(i)
-    enddo
+    end do
     ! H3
-    call polar_to_cart(ph3,ans)
-    do i=1,3
+    call polar_to_cart(ph3, ans)
+    do i=1, 3
         coord(9+i) = ans(i)
-    enddo
+    end do
 
 end subroutine frombowman
 
@@ -2730,7 +2671,6 @@ subroutine angle_to_cart( angint, coord )
     ![r1,r2,r3,theta1,theta2,theta3]
     !
     implicit none
-
     !--------------------
     ! I/O variables
     !--------------------
@@ -2751,10 +2691,9 @@ subroutine angle_to_cart( angint, coord )
     !--------------------
     double precision, parameter :: degtopi = 3.1415926535897930d0/180.d0
     double precision            :: x
-    double precision            :: costh1,costh2,costh3,sinth3
+    double precision            :: costh1, costh2, costh3, sinth3
     double precision, parameter :: small = 1.d-10
     integer                     :: i
-
     ! initialize
     r1     = angint(1)
     r2     = angint(2)
@@ -2762,9 +2701,9 @@ subroutine angle_to_cart( angint, coord )
     theta1 = angint(4)*degtopi
     theta2 = angint(5)*degtopi
     theta3 = angint(6)*degtopi
-    do i = 1,12
+    do i = 1, 12
         coord(i) = 0.0d0
-    enddo
+    end do
     costh2 = dcos(theta2)
     costh3 = dcos(theta3)
     sinth3 = dsin(theta3)
@@ -2798,12 +2737,12 @@ subroutine angle_to_cart( angint, coord )
         elseif( (x-1.d0) .le. small) then
             uh3(3) = 0.d0
         else
-            write(*,*)'ERROR: Set of three bond angles is unphysical'
-            write(*,*) r1,r2,r3,theta1/degtopi, &
-                & theta2/degtopi,theta3/degtopi
+            write(*, *)'ERROR: Set of three bond angles is unphysical'
+            write(*, *) r1, r2, r3, theta1/degtopi, &
+                & theta2/degtopi, theta3/degtopi
             stop
-        endif
-    endif
+        end if
+    end if
     coord(10) = r3 * uh3(1)
     coord(11) = r3 * uh3(2)
     coord(12) = r3 * uh3(3)
@@ -2817,27 +2756,25 @@ subroutine rarray( natoms, x, mx, r, dr, mr )
     ! x:  x1,y1,z1,...,xn,yn,zn
     ! dr(i,j): derivatives of jth r to i th cart coord
     implicit none
-
     integer :: natoms
     ! dimension of x and r, must be larger than 3*natoms and
     ! natoms*(natoms-1)/2 respectively
-    integer          :: mx,mr
-    double precision :: x(mx),r(mr),dr(mx,mr)
-
-    integer          :: i,j,k,ii,ij,nr
-    double precision :: dx,dy,dz
+    integer          :: mx, mr
+    double precision :: x(mx), r(mr), dr(mx,mr)
+    integer          :: i, j, k, ii, ij, nr
+    double precision :: dx, dy, dz
     nr = natoms*(natoms-1)/2
 
-    do i=1,nr
-        do j = 1,3*natoms
+    do i=1, nr
+        do j = 1, 3*natoms
             dr(j,i) = 0.d0
-        enddo
-    enddo
+        end do
+    end do
 
     k = 0
-    do i = 1,natoms
+    do i = 1, natoms
         ii = 3*(i-1)
-        do j = i+1,natoms
+        do j = i+1, natoms
             k          = k+1
             ij         = 3*(j-1)
             dx         = x(ij+1) - x(ii+1)
@@ -2850,7 +2787,7 @@ subroutine rarray( natoms, x, mx, r, dr, mr )
             dr(ii+1,k) = -dr(ij+1,k)
             dr(ii+2,k) = -dr(ij+2,k)
             dr(ii+3,k) = -dr(ij+3,k)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine rarray

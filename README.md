@@ -83,7 +83,8 @@ All PES kernels are now authoritative free-form `.f90` sources; no legacy `.f`
 implementation remains in the package. The regression suite recompiles every
 converted kernel and compares it with values captured from the released
 fixed-form source. The detailed contract, migration, and numerical-parity rules
-are in `docs/PES_CONTRACT.md`.
+are in `docs/PES_CONTRACT.md`; the required source conventions are collected in
+`docs/FORTRAN_STYLE.md`.
 
 Run `make test-surfaces` for the slower catalog gate, which independently
 compiles and evaluates all 363 callable PES interfaces at two deterministic

@@ -2,17 +2,15 @@ module bemsa
     implicit none
     private
     public :: bemsav, coeff, emsav, evmono, evpoly
-
     double precision :: coeff(5809)
     contains
 
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
         implicit none
-        double precision,dimension(1:55),intent(in)::x
-        double precision,dimension(1:16422),intent(out)::m
+        double precision, dimension(1:55), intent(in)::x
+        double precision, dimension(1:16422), intent(out)::m
         !::::::::::::::::::::
-
         m( 1)    = x(55)
         m( 2)    = x(54)
         m( 3)    = x(53)
@@ -16441,11 +16439,10 @@ module bemsa
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
         implicit none
-        double precision,dimension(1:16422),intent(in)::m
-        double precision,dimension(1:5809),intent(out)::p
-        double precision,dimension(1:231)::d
+        double precision, dimension(1:16422), intent(in)::m
+        double precision, dimension(1:5809), intent(out)::p
+        double precision, dimension(1:231)::d
         !::::::::::::::::::::
-
         d(    1) = m(    1)
         d(    2) = m(    2)
         d(    3) = m(    3)
@@ -24011,13 +24008,12 @@ module bemsa
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         implicit none
-        double precision,dimension(1:55),intent(in)::x
-        double precision,dimension(1:5809),intent(out)::p
+        double precision, dimension(1:55), intent(in)::x
+        double precision, dimension(1:5809), intent(out)::p
         ! ::::::::::::::::::::
-        double precision,dimension(1:16422)::m
-
-        call evmono(x,m)
-        call evpoly(m,p)
+        double precision, dimension(1:16422)::m
+        call evmono(x, m)
+        call evpoly(m, p)
 
     end subroutine bemsav
 
@@ -24028,14 +24024,13 @@ module bemsa
         double precision, intent(inout) :: energy
         double precision                :: p(5809)
         integer                         :: i
-
-        call bemsav(x,p)
+        call bemsav(x, p)
 
         energy = 0.d0
 
-        do i=1,5809
+        do i=1, 5809
             energy = energy+c(i)*p(i)
-        enddo
+        end do
 
     end subroutine emsav
 
@@ -24043,9 +24038,8 @@ end module bemsa
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, p, gradient_out, d )
-
+    use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 11
@@ -24055,62 +24049,55 @@ subroutine pes( x, igrad, path, p, gradient_out, d )
     double precision, intent(out)   :: p(nstates)
     double precision, intent(out)   :: gradient_out(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
-    double precision :: v
-    integer          :: iatom, idir, j, istate
-    logical, save    :: first_time_data=.true.
+    double precision                :: v
+    integer                         :: iatom, idir, j, istate
+    logical, save                   :: first_time_data=.true.
     !initialize
-    gradient_out = 0.d0
-    d            = 0.d0
+    gradient_out = 0.d0; d = 0.d0
 
     if (igrad==0) then
         if(first_time_data) then
             call prepot(path)
             first_time_data = .false.
-        endif
+        end if
         call pot(x, v)
-        v = v*27.211386
-        do istate=1,nstates
+        v = v*legacy_hartree_to_electronvolt
+        do istate=1, nstates
             p(istate) = v
-        enddo
+        end do
     else
-        write (*,*) 'Only energy is available'
-    endif
+        write (*, *) 'Only energy is available'
+    end if
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate prepot.
 subroutine prepot( path )
     use bemsa, only: bemsav, coeff, emsav, evmono, evpoly
     implicit none
     character(len=1024), intent(in) :: path
-
-    integer             :: file_unit_10
-    character(len=1024) :: file_path1
-    integer             :: i, ncoeff, numero
-
+    integer                         :: file_unit_10
+    character(len=1024)             :: file_path1
+    integer                         :: i, ncoeff, numero
     ! Geometry coordinates must be provided as a matrix xyz (11,3)
     file_path1 = trim(path)//"/CH4_H2O_H2O/coeff_CH4-H2O-H2O.dat"
-    open(newunit=file_unit_10,file=file_path1)
+    open(newunit=file_unit_10, file=file_path1)
     do i = 1, 5809
-        read(file_unit_10,*) coeff (i)
-    enddo
+        read(file_unit_10, *) coeff (i)
+    end do
     close(file_unit_10)
 
-endsubroutine prepot
+end subroutine prepot
 
 !> @brief Evaluate pot.
 subroutine pot( xyz, v )
     use bemsa, only: bemsav, coeff, emsav, evmono, evpoly
     implicit none
-
     double precision, intent(in)    :: xyz(11,3)
     double precision, intent(inout) :: v
-
-    double precision :: x(55)
-    double precision :: a1,a2
-    integer          :: i
-
+    double precision                :: x(55)
+    double precision                :: a1, a2
+    integer                         :: i
     a1 = 2.0
 
     x(1)  = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
@@ -24169,10 +24156,10 @@ subroutine pot( xyz, v )
     x(54) = sqrt((xyz(9,1)-xyz(11,1))**2+(xyz(9,2)-xyz(11,2))**2+(xyz(9,3)-xyz(11,3))**2)
     x(55) = sqrt((xyz(10,1)-xyz(11,1))**2+(xyz(10,2)-xyz(11,2))**2+(xyz(10,3)-xyz(11,3))**2)
 
-    do i=1,55
+    do i=1, 55
         x(i) = x(i)/0.5291772083
         x(i) = exp(-x(i)/a1)
-    enddo
+    end do
 
-    call emsav(x,coeff,v)
+    call emsav(x, coeff, v)
 end  subroutine

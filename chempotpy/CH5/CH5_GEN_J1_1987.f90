@@ -1,68 +1,61 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate pes for the CH5_GEN_J1_1987 potential.
 subroutine pes( x, igrad, p, g, d )
-
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
-    integer, parameter :: nstates = 1
-    integer, parameter :: natoms  = 6
-    integer, parameter :: natom   = 25
-    integer, parameter :: isurf   = 5
-    integer, parameter :: jsurf   = int(isurf*(isurf+1)/2)
-
+    integer, parameter            :: nstates = 1
+    integer, parameter            :: natoms  = 6
+    integer, parameter            :: natom   = 25
+    integer, parameter            :: isurf   = 5
+    integer, parameter            :: jsurf   = int(isurf*(isurf+1)/2)
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: anuzero, cart, descart, dgscart, dijcart, pengyes, pengygs, pengyij, v
-    integer          :: iatom, idir, istate, nasurf, nder, nflag, nulbl
-
-    common/usrocm/ pengygs,pengyes(isurf), &
+    double precision              :: anuzero, cart, descart, dgscart, dijcart, pengyes, pengygs, pengyij, v
+    integer                       :: iatom, idir, istate, nasurf, nder, nflag, nulbl
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     logical, save :: first_time_data=.true.
-
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
     cart = 0.d0
-    do iatom=1,natoms
-        do idir=1,3
-            cart(iatom,idir) = x(iatom,idir)/0.529177211
-        enddo
-    enddo
+    do iatom=1, natoms
+        do idir=1, 3
+            cart(iatom, idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+        end do
+    end do
 
     if(first_time_data) then
         call prepot
         first_time_data = .false.
-    endif
+    end if
 
     call pot
 
     if (igrad==0) then
-        do istate=1,nstates
-            p(istate) = pengygs*27.211386
-        enddo
+        do istate=1, nstates
+            p(istate) = pengygs*legacy_hartree_to_electronvolt
+        end do
     else if (igrad==1) then
-        do istate=1,nstates
-            p(istate) = pengygs*27.211386
-        enddo
-        do iatom=1,natoms
-            do idir=1,3
-                g(1,iatom,idir) = dgscart(iatom,idir)*51.422067
-            enddo
-        enddo
+        do istate=1, nstates
+            p(istate) = pengygs*legacy_hartree_to_electronvolt
+        end do
+        do iatom=1, natoms
+            do idir=1, 3
+                g(1,iatom,idir) = dgscart(iatom, idir)*51.422067
+            end do
+        end do
     else if (igrad==2) then
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 
 end subroutine pes
 
@@ -103,7 +96,6 @@ subroutine pot
     !***********************************************************************
     !
     implicit none
-
     double precision :: a11, a12, a13, a14, a21, a22, a23, a24, aa, acs, ag, alph, anuzero, aparm, ar, asb, asf, ass, b1, &
         & beta, c1, cart, cartnu, cc, coord, cp, d1, d3, daa, dadr1, dalp, dasb, dasf, deccr1, deccr5, deccr6, dedx, &
         & deesdr, degsdr, deijdr, der, der2, der3, der4, descart, df, dfr, dgscart, dijcart, dk, dr2, drdx, dtemp, dtot, &
@@ -124,34 +116,34 @@ subroutine pot
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    dimension dfr(4),dvoop(18),y1(6),y2(6),f(4),df(4),dk(6)
+    dimension dfr(4), dvoop(18), y1(6), y2(6), f(4), df(4), dk(6)
     !
-    dimension coord(18),dxx(18)
+    dimension coord(18), dxx(18)
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /potxcm/ x(6),y(6),z(6),energy,drdx(15,18),dedx(18)
-    common /potrcm/ ag(6),r2(15),acs(6),ass(6)
+    common /potxcm/ x(6), y(6), z(6), energy, drdx(15,18), dedx(18)
+    common /potrcm/ ag(6), r2(15), acs(6), ass(6)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
-    common /dervcp/ deccr1,deccr5,deccr6
-    common /temcom/ rtem(9),dtemp(9),etem
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
+    common /dervcp/ deccr1, deccr5, deccr6
+    common /temcom/ rtem(9), dtemp(9), etem
     common /alpdcm/ dalp
     data evcon / 2.721161d+1 /
     !
@@ -160,7 +152,7 @@ subroutine pot
     !
     !     PUT COORDINATES IN PROPER ARRAYS
     !
-    do 1 i=1,18
+    do 1 i=1, 18
         coord(i) = r(i)
     1 continue
     !
@@ -195,7 +187,7 @@ subroutine pot
     30 if (ar(5).lt.rhmax) go to 40
     rhmax = ar(5)
     kmax  = 5
-    40 call switch (kmax,1, v, coord, dxx)
+    40 call switch (kmax, 1, v, coord, dxx)
     !
     ! COMPUTE THE HCH ANGLES AND STORE RESULTS IN ARRAY AG
     !
@@ -211,26 +203,26 @@ subroutine pot
     !
     ! COMPUTE THE FOUR TRIATOMIC TERMS
     !
-    call tri (ar(1),ar(5),ar(6),der(1),der(5),der(6),1,3,2,ee,dtot)
+    call tri (ar(1), ar(5), ar(6), der(1), der(5), der(6), 1, 3, 2, ee, dtot)
     der(1) = der(1)+dtot
     der2   = dtot
     der3   = dtot
     der4   = dtot
-    call tri (ar(2),ar(5),ar(7),der(2),dr2,der(7),1,3,2,e,dtot)
+    call tri (ar(2), ar(5), ar(7), der(2), dr2, der(7), 1, 3, 2, e, dtot)
     ee     = ee+e
     der(2) = der(2)+der2+dtot
     der(1) = der(1)+dtot
     der3   = der3+dtot
     der4   = der4+dtot
     der(5) = der(5)+dr2
-    call tri (ar(3),ar(5),ar(8),der(3),dr2,der(8),1,3,2,e,dtot)
+    call tri (ar(3), ar(5), ar(8), der(3), dr2, der(8), 1, 3, 2, e, dtot)
     ee     = ee+e
     der(3) = der(3)+der3+dtot
     der(1) = der(1)+dtot
     der(2) = der(2)+dtot
     der4   = der4+dtot
     der(5) = der(5)+dr2
-    call tri (ar(4),ar(5),ar(9),der(4),dr2,der(9),1,3,2,e,dtot)
+    call tri (ar(4), ar(5), ar(9), der(4), dr2, der(9), 1, 3, 2, e, dtot)
     ee     = ee+e
     der(4) = der(4)+der4+dtot
     der(1) = der(1)+dtot
@@ -291,7 +283,7 @@ subroutine pot
     !
     ! COMPUTE THE EQUILIBRIUM ANGLES--THETA AND D(THETA)/DR
     !
-    call theta (asf,dasf,asb,dasb)
+    call theta (asf, dasf, asb, dasb)
     daa = 0.0d0
     !
     ! COMPUTE CONTRIBUTION TO THE TOTAL ENERGY FROM THE ANGLE TERMS
@@ -385,7 +377,7 @@ subroutine pot
     der(5) = der(5)-(dk(if1)*y1(if1)+dk(if2)*y1(if2)+dk(if3)*y1(if3))* daa-(dk(ib1)*y1(ib1)+dk(ib2)*y1(ib2)+dk(ib3)* &
         & y1(ib3))*3.0d0* sin(asf)*cos(asf)*daa/sin(asb)
     !
-    call switch (kmax,2, v, coord, dxx)
+    call switch (kmax, 2, v, coord, dxx)
     !
     energy = ee/evcon+refv
     do 110 i = 1, 15
@@ -398,7 +390,7 @@ subroutine pot
     !
     !      CALCULATE DEDX = DEDR(DER) * DRDX
     !
-    call mult (der,1,15,drdx,15,18,dedx)
+    call mult (der, 1, 15, drdx, 15, 18, dedx)
     ipt = 1
     do 120 i = 1, 6
         dxx(ipt)   = dedx(i)
@@ -409,7 +401,7 @@ subroutine pot
     !
     !     NOW ADD IN THE OUT OF PLANE BEND TERM
     !
-    call oopb (voop,dvoop,v,coord,dxx)
+    call oopb (voop, dvoop, v, coord, dxx)
     energy = energy+voop
     do 130 i = 1, 18
         dxx(i) = dxx(i)+dvoop(i)
@@ -418,15 +410,16 @@ subroutine pot
     engygs = energy
     call eunitzero
     if(nder.ne.0) then
-        do i=1,18
+        do i=1, 18
             degsdr(i) = dxx(i)
-        enddo
+        end do
         call rtocart
         call dedcou
-    endif
+    end if
 
     !
 end subroutine pot
+
 !
 !***********************************************************************
 !
@@ -438,7 +431,6 @@ subroutine angle
     !***********************************************************************
     !
     implicit none
-
     double precision :: aa, acs, ag, alph, anuzero, aparm, ar, ass, b1, beta, c1, cart, cartnu, cc, cp, d1, d3, dedx, &
         & deesdr, degsdr, deijdr, der, descart, dgscart, dijcart, drdx, energy, engyes, engygs, engyij, ezero, pengyes, &
         & pengygs, pengyij, r, r2, re, refv, tau, x, xx, y, z
@@ -456,28 +448,28 @@ subroutine angle
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /potxcm/ xx(6),y(6),z(6),energy,drdx(15,18),dedx(18)
-    common /potrcm/ ag(6),r2(15),acs(6),ass(6)
+    common /potxcm/ xx(6), y(6), z(6), energy, drdx(15,18), dedx(18)
+    common /potrcm/ ag(6), r2(15), acs(6), ass(6)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
     do 10 i = 1, 3
         x      = (r2(1)+r2(i+1)-r2(i+9))/(2.0d0*ar(1)*ar(i+1))
         acs(i) = x
@@ -495,6 +487,7 @@ subroutine angle
     ass(6) = sqrt(1.0d0-x*x)
     ag(6)  = acos(x)
 end subroutine angle
+
 !
 !
 !> @brief Evaluate CALPHA for the CH5_GEN_J1_1987 potential.
@@ -505,7 +498,6 @@ subroutine calpha
     !     AVERAGE C-H BOND LENGTH IN METHANE.
     !
     implicit none
-
     double precision :: aa, alph, anuzero, aparm, ar, b1, beta, c1, ca, cart, cartnu, cb, cc, cp, d1, d3, dalp, deesdr, &
         & degsdr, deijdr, der, descart, dgscart, dijcart, engyes, engygs, engyij, ezero, fa, fk0, htan, pengyes, pengygs, &
         & pengyij, r, ravg, re, refv, tau
@@ -523,26 +515,26 @@ subroutine calpha
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
-    common /pdt3cm/ fk0,fa,ca,cb
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
+    common /pdt3cm/ fk0, fa, ca, cb
     common /alpdcm/ dalp
     !
     !     FIRST COMPUTE THE AVERAGE METHANE BOND LENGTH
@@ -561,6 +553,7 @@ subroutine calpha
     dalp = (c1*cb/8.0d0)*(1.0d0-htan**2)
     !
 end subroutine calpha
+
 !
 !***********************************************************************
 !***********************************************************************
@@ -574,7 +567,6 @@ subroutine dista
     !***********************************************************************
     !
     implicit none
-
     double precision :: aa, acs, ag, alph, anuzero, aparm, ar, ass, b1, beta, c1, cart, cartnu, cc, cp, d1, d3, dedx, &
         & deesdr, degsdr, deijdr, der, descart, df, dgscart, dijcart, drdx, energy, engyes, engygs, engyij, ezero, &
         & pengyes, pengygs, pengyij, r, r2, re, refv, tau, x, y, z
@@ -592,30 +584,30 @@ subroutine dista
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
     dimension df(15,3)
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /potxcm/ x(6),y(6),z(6),energy,drdx(15,18),dedx(18)
-    common /potrcm/ ag(6),r2(15),acs(6),ass(6)
+    common /potxcm/ x(6), y(6), z(6), energy, drdx(15,18), dedx(18)
+    common /potrcm/ ag(6), r2(15), acs(6), ass(6)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
     do 10 i = 1, 4
         df(i,1) = x(i)-x(5)
         df(i,2) = y(i)-y(5)
@@ -660,6 +652,7 @@ subroutine dista
     r2(15)   = df(15,1)*df(15,1)+df(15,2)*df(15,2)+df(15,3)*df(15,3)
     ar(15)   = sqrt(r2(15))
 end subroutine dista
+
 !> @brief Evaluate DRDXC for the CH5_GEN_J1_1987 potential.
 subroutine drdxc
     !
@@ -668,7 +661,6 @@ subroutine drdxc
     !     ADDED BY FBB AT THE U. OF MINN.  1/24/84
     !
     implicit none
-
     double precision :: aa, acs, ag, alph, anuzero, aparm, ar, ass, b1, beta, c1, cart, cartnu, cc, cp, d1, d3, dedx, &
         & deesdr, degsdr, deijdr, der, descart, dgscart, dijcart, drdx, energy, engyes, engygs, engyij, ezero, pengyes, &
         & pengygs, pengyij, r, r2, re, refv, tau, x, y, z
@@ -686,28 +678,28 @@ subroutine drdxc
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /potxcm/ x(6),y(6),z(6),energy,drdx(15,18),dedx(18)
-    common /potrcm/ ag(6),r2(15),acs(6),ass(6)
+    common /potxcm/ x(6), y(6), z(6), energy, drdx(15,18), dedx(18)
+    common /potrcm/ ag(6), r2(15), acs(6), ass(6)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
     !
     !
     ! ZERO OUT DRDX
@@ -780,6 +772,7 @@ subroutine drdxc
     drdx(15,15) = -drdx(15,16)
     !
 end subroutine drdxc
+
 !
 !
 !> @brief Evaluate FORCE for the CH5_GEN_J1_1987 potential.
@@ -790,7 +783,6 @@ subroutine force ( dadr1 )
     !     TERM WITH RESPECT TO AR(1).
     !
     implicit none
-
     double precision :: aa, alph, anuzero, aparm, ar, b1, beta, c1, ca, cart, cartnu, cb, cc, cp, d1, d3, dadr1, deesdr, &
         & degsdr, deijdr, der, descart, dgscart, dijcart, engyes, engygs, engyij, ezero, fa, fex, fk0, pengyes, pengygs, &
         & pengyij, r, re, refv, tau
@@ -808,36 +800,36 @@ subroutine force ( dadr1 )
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
-    common /pdt3cm/ fk0,fa,ca,cb
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
+    common /pdt3cm/ fk0, fa, ca, cb
     !
     fex      = exp(-b1*(ar(1)-re(1))**2)
     aparm(1) = fk0+fa*fex
     dadr1    = -2.0d0*fa*b1*(ar(1)-re(1))*fex
 end subroutine force
+
 !> @brief Evaluate MULT for the CH5_GEN_J1_1987 potential.
 subroutine mult ( a, na, ma, b, nb, mb, c )
     implicit none
-
     double precision :: a, b, c, sum
     integer          :: i, j, k, ma, mb, na, nb
     !
@@ -846,7 +838,7 @@ subroutine mult ( a, na, ma, b, nb, mb, c )
     !         C = A X B
     !
     !
-    dimension a(na,ma),b(nb,mb),c(na,mb)
+    dimension a(na,ma), b(nb,mb), c(na,mb)
     !
     do 30 i = 1, na
         !
@@ -863,6 +855,7 @@ subroutine mult ( a, na, ma, b, nb, mb, c )
         !
     30 continue
 end subroutine mult
+
 !> @brief Evaluate OOPB for the CH5_GEN_J1_1987 potential.
 subroutine oopb ( voop, dvoop, v, x, dx )
     !
@@ -873,7 +866,6 @@ subroutine oopb ( voop, dvoop, v, x, dx )
     !     ARE ALSO COMPUTED AND STORED IN DVOOP.
     !
     implicit none
-
     double precision :: a0, a3, anuzero, aphi, b0, b3, bphi, c0, cart, cartnu, cphi, crossx, crossy, crossz, cst, d, &
         & dcross, ddelta, deesdr, degsdr, deijdr, delt, delta, descart, dfds, dfdx, dgamma, dgcros, dgscart, dhds, dhdx, &
         & dij, dijcart, dphi, drdx, drv, dsdr, dtop, dvoop, dx, dxmagr, engyes, engygs, engyij, erest, ezero, f, fch3, &
@@ -893,32 +885,32 @@ subroutine oopb ( voop, dvoop, v, x, dx )
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    dimension dvoop(18),xdif(2),ydif(2),zdif(2),rv(3,3),drv(3,3,18)
-    dimension xmagr(3),dxmagr(3,18),delta(3),ddelta(3,18)
-    dimension gamma(3),dgamma(3,18),top(3),dtop(3,18),dcross(3,18)
-    dimension dgcros(18),dphi(18),dfdx(18),dhdx(18),drdx(18)
+    dimension dvoop(18), xdif(2), ydif(2), zdif(2), rv(3,3), drv(3,3,18)
+    dimension xmagr(3), dxmagr(3,18), delta(3), ddelta(3,18)
+    dimension gamma(3), dgamma(3,18), top(3), dtop(3,18), dcross(3,18)
+    dimension dgcros(18), dphi(18), dfdx(18), dhdx(18), drdx(18)
     !
     !
-    dimension x(18),dx(18)
+    dimension x(18), dx(18)
     !
-    common /testcm/ gamma,dgamma
-    common /pdt2cm/ aphi,bphi,cphi,pch4,fch3,hch3,rnot,a3,b3,delt, &
-        & dij,a0,b0,c0,d,rex
+    common /testcm/ gamma, dgamma
+    common /pdt2cm/ aphi, bphi, cphi, pch4, fch3, hch3, rnot, a3, b3, delt, &
+        & dij, a0, b0, c0, d, rex
     !
     !     START BY COMPUTING THE NECESSARY DIFFERENCES IN THE R1,R2 AND
     !     R3 VECTORS.
@@ -968,7 +960,7 @@ subroutine oopb ( voop, dvoop, v, x, dx )
     if (rest.lt.70.0d0) then
         erest = exp(rest)
         sphi  = 1.0d0-tanh(aphi*(rstar-rnot)*erest)
-    endif
+    end if
     phinot = pch4+(pch4-pi/2.0d0)*(sphi-1.0d0)
     !
     !     NOW PUT THESE TWO TERMS TOGETHER TO GET EACH DELTA
@@ -1022,7 +1014,7 @@ subroutine oopb ( voop, dvoop, v, x, dx )
             dcross(i,10) = -ydif(1)
             dcross(i,11) = xdif(1)
             dcross(i,12) = 0.0d0
-        endif
+        end if
     60 continue
     !
     !     NOW COMPUTE THE PARTIALS FOR THE THREE R VECTORS
@@ -1053,8 +1045,8 @@ subroutine oopb ( voop, dvoop, v, x, dx )
     !
     do 120 i = 1, 18
         do 120 j = 1, 3
-            dtop(j,i) = dcross(1,i)*rv(j,1)+crossx*drv(j,1,i)+dcross(2,i )*rv(j,2)+crossy*drv(j,2,i)+dcross(3,i)*rv(j, &
-                & 3)+crossz* drv(j,3,i)
+            dtop(j,i) = dcross(1,i)*rv(j,1)+crossx*drv(j,1,i)+dcross(2,i )*rv(j,2)+crossy*drv(j,2,i)+ dcross(3,i)* &
+                & rv(j,3)+crossz* drv(j,3,i)
     120 continue
     !
     !     PARTIALS FOR THE MAGNITUDE OF THE CROSS PRODUCT  (GCROSS)
@@ -1069,7 +1061,7 @@ subroutine oopb ( voop, dvoop, v, x, dx )
         do 150 j = 1, 18
             dxmagr(i,j) = 0.0d0
             do 140 k = 1, 3
-                dxmagr(i,j) = dxmagr(i,j)+(1.0d0/xmagr(i))*(rv(i,k)*drv(i ,k,j))
+                dxmagr(i,j) = dxmagr(i,j)+(1.0d0/xmagr(i))*(rv(i,k)*drv(i,k,j))
             140 continue
     150 continue
     !
@@ -1093,7 +1085,7 @@ subroutine oopb ( voop, dvoop, v, x, dx )
         texp = exp(rest)
         dsdr = -((sech(aphi*(rstar-rnot)*texp))**2)
         dsdr = dsdr*aphi*texp*(1.0d0+(rstar-rnot)*bphi*3.0d0*(rstar- cphi)**2)
-    endif
+    end if
     do 170 i = 1, 18
         drdx(i) = 0.0d0
         dphi(i) = 0.0d0
@@ -1166,18 +1158,19 @@ subroutine oopb ( voop, dvoop, v, x, dx )
         dvoop(i) = term1+term2+term3+term4
     250 continue
 end subroutine oopb
+
 !
 !> @brief Evaluate SECH for the CH5_GEN_J1_1987 potential.
 function sech ( x )
     implicit none
-
     double precision :: sech, x
     if (x.gt.70.0d0) then
         sech = 0.0d0
     else
         sech = 1.0d0/cosh(x)
-    endif
+    end if
 end function sech
+
 !> @brief Evaluate SWITCH for the CH5_GEN_J1_1987 potential.
 subroutine switch ( kmax, lmg, v, coord, dxx )
     !
@@ -1191,7 +1184,6 @@ subroutine switch ( kmax, lmg, v, coord, dxx )
     ! **********************************************************************
     !
     implicit none
-
     double precision :: aa, acs, ag, alph, anuzero, aparm, ar, ass, b1, beta, c1, cart, cartnu, cc, coord, cp, d1, d3, &
         & dedx, deesdr, degsdr, deijdr, der, descart, dgscart, dijcart, drdx, dxx, energy, engyes, engygs, engyij, ezero, &
         & pengyes, pengygs, pengyij, r, r2, re, refv, store, tau, v, x, y, z
@@ -1209,31 +1201,31 @@ subroutine switch ( kmax, lmg, v, coord, dxx )
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    dimension coord(18),dxx(18)
+    dimension coord(18), dxx(18)
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /potxcm/ x(6),y(6),z(6),energy,drdx(15,18),dedx(18)
-    common /potrcm/ ag(6),r2(15),acs(6),ass(6)
+    common /potxcm/ x(6), y(6), z(6), energy, drdx(15,18), dedx(18)
+    common /potrcm/ ag(6), r2(15), acs(6), ass(6)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
-    go to (10,20,30,40,50), kmax
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
+    go to (10, 20, 30, 40, 50), kmax
     !
     ! H1 IS MAXIMUM
     !
@@ -1339,7 +1331,6 @@ subroutine theta ( asf, dasf, asb, dasb )
     !     THE SAME.       ADDED 11/22/85
     !
     implicit none
-
     double precision :: a, a0, a3, aa, alph, anuzero, aparm, aphi, ar, asb, asf, b, b0, b1, b3, beta, bphi, c, c0, c1, &
         & cart, cartnu, cc, cp, cphi, ctau, ctau2, d0, d1, d3, dasb, dasf, deesdr, degsdr, deijdr, delta, delta2, der, &
         & descart, dgscart, dij, dijcart, engyes, engygs, engyij, ezero, f, fch3, fk1, fk2, hch3, pch4, pengyes, pengygs, &
@@ -1358,27 +1349,27 @@ subroutine theta ( asf, dasf, asb, dasb )
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
-    common /pdt2cm/ aphi,bphi,cphi,pch4,fch3,hch3,rnot,a3,b3,delta, &
-        & dij,a0,b0,c0,d0,rex
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
+    common /pdt2cm/ aphi, bphi, cphi, pch4, fch3, hch3, rnot, a3, b3, delta, &
+        & dij, a0, b0, c0, d0, rex
     !
     ravg = (ar(1)+ar(2)+ar(3)+ar(4))/4.0d0
     !
@@ -1420,7 +1411,7 @@ subroutine theta ( asf, dasf, asb, dasb )
         rdif5 = rdif4*rdif
         asf   = a*rdif5+b*rdif4+c*rdif3+f
         dasf  = 5.0d0*a*rdif4+4.0d0*b*rdif3+3.0d0*c*rdif*rdif
-    endif
+    end if
     !
     ! COMPUTE BACKSIDE EQUILIBRIUM ANGLE
     !
@@ -1436,6 +1427,7 @@ subroutine theta ( asf, dasf, asb, dasb )
     dasf = dasf/4.0d0
     dasb = dasb/4.0d0
 end subroutine theta
+
 !
 !***********************************************************************
 !
@@ -1451,7 +1443,6 @@ subroutine tri ( rr1, rr2, rr3, dr1, dr2, dr3, i, j, k, e, dtot )
     !***********************************************************************
     !
     implicit none
-
     double precision :: a, a1, a2, aa, aa1, aa2, acs, ag, alab, alac, albc, alph, anuzero, aparm, ar, ass, b, b1, b2, bb, &
         & bb1, bb2, beta, bp1, c, c1, c2, cart, cartnu, cc, cc1, cc2, cp, cp1, d1, d3, dab1, dab3, dac1, dac3, dalp, &
         & de1ab, de1ac, de1bc, de3ab, de3ac, de3bc, deccr1, deccr5, deccr6, dedx, deesdr, degsdr, deijdr, der, descart, &
@@ -1472,30 +1463,30 @@ subroutine tri ( rr1, rr2, rr3, dr1, dr2, dr3, i, j, k, e, dtot )
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /potxcm/ x(6),y(6),z(6),energy,drdx(15,18),dedx(18)
-    common /potrcm/ ag(6),r2(15),acs(6),ass(6)
-    common /dervcp/ deccr1,deccr5,deccr6
+    common /potxcm/ x(6), y(6), z(6), energy, drdx(15,18), dedx(18)
+    common /potrcm/ ag(6), r2(15), acs(6), ass(6)
+    common /dervcp/ deccr1, deccr5, deccr6
     common /alpdcm/ dalp
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,bp1,cp1
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, bp1, cp1
     a     = rr1-re(i)
     b     = rr2-re(j)
     c     = rr3-re(k)
@@ -1553,6 +1544,7 @@ subroutine tri ( rr1, rr2, rr3, dr1, dr2, dr3, i, j, k, e, dtot )
     dr2   = (de1ac+de3ac)/2.0d0-(2.0d0*alac-alab-albc)*(de1ac-de3ac)/bb
     dr3   = (de1bc+de3bc)/2.0d0-(2.0d0*albc-alac-alab)*(de1bc-de3bc)/bb
 end subroutine tri
+
 !> @brief Evaluate TRIPLE for the CH5_GEN_J1_1987 potential.
 subroutine triple
     !
@@ -1560,7 +1552,6 @@ subroutine triple
     !     FUNCTION OF AR(H'-H) AND THE C-H-H' BEND ANGLE.
     !
     implicit none
-
     double precision :: a, a3, aa, alph, alpha, anuzero, aparm, aphi, ar, b, b1, b3, beta, bphi, c0, c1, cart, cartnu, &
         & cc, check, cp, cp1, cphi, d, d1, d3, dalr1, dalr5, dalr6, dc1r6, dcyx, deccr1, deccr5, deccr6, deesdr, deg20, &
         & degsdr, deijdr, delt, der, descart, dgscart, dij, dijcart, dyxr, engyes, engygs, engyij, ezero, fch3, hch3, &
@@ -1579,28 +1570,28 @@ subroutine triple
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,cp1
-    common /pdt2cm/ aphi,bphi,cphi,pch4,fch3,hch3,rnot,a3,b3,delt, &
-        & dij,a,b,c0,d,rex
-    common /dervcp/ deccr1,deccr5,deccr6
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, cp1
+    common /pdt2cm/ aphi, bphi, cphi, pch4, fch3, hch3, rnot, a3, b3, delt, &
+        & dij, a, b, c0, d, rex
+    common /dervcp/ deccr1, deccr5, deccr6
     !
     !     COMPUTE C1--IT IS A FUNCTION OF R6--THE H-H' BOND DISTANCE
     !
@@ -1609,7 +1600,7 @@ subroutine triple
         yx = (exp(2.0d0*pi*(r6-rex)/d))**3
     else
         yx = exp(2.0d0*pi*(ar(6)-rex)/d)
-    endif
+    end if
     c1    = -(a*yx/(yx+1.0d0)+b/yx)-c0
     dyxr  = (2.0d0*pi/d)*yx
     dcyx  = b/yx-(a*yx/(1+yx))/(1+yx)
@@ -1630,7 +1621,7 @@ subroutine triple
     else
         alpha = acos(tem/(-2.0d0*ar(1)*ar(6)))
         alpha = pi-alpha
-    endif
+    end if
     !
     !     NOW COMPUTE THE ANGLE DERIVATIVES (DERIV. ALPHA W.R. R1,R5,R6)
     !
@@ -1658,8 +1649,9 @@ subroutine triple
         deccr1 = 0.0d0
         deccr5 = 0.0d0
         deccr6 = dc1r6
-    endif
+    end if
 end subroutine triple
+
 !
 !> @brief Evaluate PREPOT for the CH5_GEN_J1_1987 potential.
 subroutine prepot
@@ -1674,7 +1666,6 @@ subroutine prepot
     !   N3TM must be greater than or equal to N3TMMN.
     !
     implicit none
-
     double precision :: aa, acs, ag, alph, anuzero, aparm, ar, ass, b1, beta, c1, cart, cartnu, cc, coord, cp, d1, d3, &
         & dalp, deccr1, deccr5, deccr6, dedx, der, df, dfr, dk, drdx, dtemp, dvoop, dxx, energy, etem, evcon, ezero, f, &
         & r2, re, refv, rtem, tau, x, y, y1, y2, z
@@ -1693,37 +1684,37 @@ subroutine prepot
     !
     common/pt3cm/ ezero(isurf+1)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    dimension dfr(4),dvoop(18),y1(6),y2(6),f(4),df(4),dk(6)
+    dimension dfr(4), dvoop(18), y1(6), y2(6), f(4), df(4), dk(6)
     !
-    dimension coord(18),dxx(18)
+    dimension coord(18), dxx(18)
     !
-    common /icorcm/ ar(15),der(15)
+    common /icorcm/ ar(15), der(15)
     !
-    common /potxcm/ x(6),y(6),z(6),energy,drdx(15,18),dedx(18)
-    common /potrcm/ ag(6),r2(15),acs(6),ass(6)
+    common /potxcm/ x(6), y(6), z(6), energy, drdx(15,18), dedx(18)
+    common /potrcm/ ag(6), r2(15), acs(6), ass(6)
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
-    common /dervcp/ deccr1,deccr5,deccr6
-    common /temcom/ rtem(9),dtemp(9),etem
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
+    common /dervcp/ deccr1, deccr5, deccr6
+    common /temcom/ rtem(9), dtemp(9), etem
     common /alpdcm/ dalp
     data evcon / 2.721161d+1 /
     !
     !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
     !
     if(natoms.gt.25) then
-        write(nflag(18),'(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
+        write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
         stop
     end if
     !
-    do i=1,5
+    do i=1, 5
         ref(i) = ' '
     end do
     !
@@ -1746,11 +1737,11 @@ subroutine prepot
     call ancvrt
     !
 end subroutine prepot
+
 !
 block data ptpacm
     !
     implicit none
-
     double precision :: a, a3, aa, alph, anuzero, aparm, aphi, b, b1, b3, beta, bphi, c0, c1, ca, cart, cartnu, cb, cc, &
         & cp, cphi, d, d1, d3, delt, dij, ezero, fa, fch3, fk0, hch3, pch4, re, refv, rex, rnot, tau
     integer :: icartr, indexes, irctnt, mder, msurf, nasurf, natoms, &
@@ -1767,41 +1758,41 @@ block data ptpacm
     !
     common/pt3cm/ ezero(isurf+1)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /pdatcm/ d1(3),d3(3),alph(3),re(3),beta(3),cc(3),aa(3), &
-        & aparm(5),refv,tau,cp,b1,c1
-    common /pdt2cm/ aphi,bphi,cphi,pch4,fch3,hch3,rnot,a3,b3,delt, &
-        & dij,a,b,c0,d,rex
-    common /pdt3cm/ fk0,fa,ca,cb
+    common /pdatcm/ d1(3), d3(3), alph(3), re(3), beta(3), cc(3), aa(3), &
+        & aparm(5), refv, tau, cp, b1, c1
+    common /pdt2cm/ aphi, bphi, cphi, pch4, fch3, hch3, rnot, a3, b3, delt, &
+        & dij, a, b, c0, d, rex
+    common /pdt3cm/ fk0, fa, ca, cb
     !
-    data nasurf /1,35*0/
+    data nasurf /1, 35*0/
     data nder /1/
-    data nflag /1,1,15*0,6,0,0/
+    data nflag /1, 1, 15*0, 6, 0, 0/
     !
     data anuzero /0.0d0/
-    data icartr,msurf,mder/1,0,1/
+    data icartr, msurf, mder/1, 0, 1/
     data nulbl /25*0/
     data natoms /6/
     !
-    data d1 /  4.8668d0,4.74660d0,1.1452d0 /
-    data d3 /  1.6890d0,1.75200d0,0.8870d0 /
+    data d1 /  4.8668d0, 4.74660d0, 1.1452d0 /
+    data d3 /  1.6890d0, 1.75200d0, 0.8870d0 /
     data b1 / 3.00d0 /
     data c1 / 11.00d0 /
-    data alph / 0.939d0,1.029955d0,0.939d0 /
-    data re / 2.0673d0,1.402d0,2.0673d0 /
-    data beta / 0.939d0,1.029955d0,0.939d0 /
-    data aa / 0.0d0,0.0d0,-2.3603d0 /
+    data alph / 0.939d0, 1.029955d0, 0.939d0 /
+    data re / 2.0673d0, 1.402d0, 2.0673d0 /
+    data beta / 0.939d0, 1.029955d0, 0.939d0 /
+    data aa / 0.0d0, 0.0d0, -2.3603d0 /
     data refv / 0.71098329d0 /
     data tau / 1.9105588d0 /
     data cp / 0.080768d0 /
-    data aparm / 4.0d0,0.8999975d0,0.448035d0,0.606528d0,3.239921d0 /
+    data aparm / 4.0d0, 0.8999975d0, 0.448035d0, 0.606528d0, 3.239921d0 /
     !
     data aphi / 2.7982366d-1 /
     data bphi / 5.937217d-2 /
@@ -1824,11 +1815,10 @@ block data ptpacm
     data fk0 / 2.55d0 /
     data fa / 0.8d0 /
 end
+
 !> @brief Evaluate POTINFO for the CH5_GEN_J1_1987 potential.
 subroutine potinfo
-
     implicit none
-
     double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, deesdr, degsdr, deijdr, descart, descartnu, &
         & dgscart, dgscartnu, dijcart, dijcartnu, engyes, engygs, engyij, ezero, pengyes, pengygs, pengyij, r
     integer :: i, icartr, indexes, irctnt, ireorder, j, k, kediag, keoffd, kmax, ksdiag, ksoffd, mder, msurf, nasurf, &
@@ -1841,86 +1831,86 @@ subroutine potinfo
     double precision, parameter :: pi     = 3.141592653589793d0
     common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
     common /pt3cm/  ezero(isurf+1)
-    common /pt4cm/  engyes(isurf),deesdr(n3atom,isurf)
-    common /pt5cm/  engyij(jsurf),deijdr(n3atom,jsurf)
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common /pt4cm/  engyes(isurf), deesdr(n3atom, isurf)
+    common /pt5cm/  engyij(jsurf), deijdr(n3atom, jsurf)
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
-    common/utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf), &
-        & dijcartnu(natom,3,jsurf),cnvrtd,cnvrte, &
-        & cnvrtde,ireorder,ksdiag,kediag,ksoffd,keoffd
-    write(nflag(18),'(/)')
-    do i =1,5
-        write(nflag(18),'(2x,a75)') ref(i)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
+    common/utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
+        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, &
+        & cnvrtde, ireorder, ksdiag, kediag, ksoffd, keoffd
+    write(nflag(18), '(/)')
+    do i =1, 5
+        write(nflag(18), '(2x,a75)') ref(i)
     end do
-    write(nflag(18),'(/)')
+    write(nflag(18), '(/)')
     kmax = 0
-    do i = 1,isurf+1
-        do j = 1,isurf+1
-            if(nasurf(i,j).ne.0.and.kmax.lt.max(i,j)) kmax = max(i,j)
-        enddo
-    enddo
-    write(nflag(18),'(2x,'' MAX. AND ACTUAL NO. OF EXCITED SURFACES: '',I3,5x,I3)') msurf,kmax-1
+    do i = 1, isurf+1
+        do j = 1, isurf+1
+            if(nasurf(i, j).ne.0.and.kmax.lt.max(i, j)) kmax = max(i, j)
+        end do
+    end do
+    write(nflag(18), '(2x,'' MAX. AND ACTUAL NO. OF EXCITED SURFACES: '',I3,5x,I3)') msurf, kmax-1
     if(kmax-1.gt.msurf) then
-        write(6,*) ' WRONG INPUT ON NUMBER OF EXCITED SURFACES'
+        write(6, *) ' WRONG INPUT ON NUMBER OF EXCITED SURFACES'
         stop
-    endif
+    end if
     ksdiag = 0
     kediag = 0
-    do i = 2,isurf+1
-        if(nasurf(i,i).ne.0) then
+    do i = 2, isurf+1
+        if(nasurf(i, i).ne.0) then
             kediag = i-1
             if(ksdiag.eq.0) ksdiag = i-1
-        endif
-    enddo
+        end if
+    end do
     ksoffd = 0
     keoffd = 0
     k      = 0
-    do i = 1,isurf
-        do j = i+1,isurf+1
+    do i = 1, isurf
+        do j = i+1, isurf+1
             k = k+1
-            if(nasurf(i,j)+nasurf(j,i).ne.0) then
+            if(nasurf(i, j)+nasurf(j, i).ne.0) then
                 keoffd = k
                 if(ksoffd.eq.0) ksoffd = k
-            endif
-        enddo
-    enddo
-    write(nflag(18),'(2x,'' MAX. AND ACTUAL ORDER OF DERIVATIVES:    '',I3,5x,I3)') mder,nder
+            end if
+        end do
+    end do
+    write(nflag(18), '(2x,'' MAX. AND ACTUAL ORDER OF DERIVATIVES:    '',I3,5x,I3)') mder, nder
     if(nder.gt.mder) then
-        write(6,*) ' WRONG INPUT ON ORDER OF DERIVATIVES'
+        write(6, *) ' WRONG INPUT ON ORDER OF DERIVATIVES'
         stop
-    endif
+    end if
     if(nflag(19).eq.1) then
-        write(nflag(18),'(/)')
-        write(nflag(18),'(2x,''Cartesian coordinates are supplied by'',/, 2x,''the user in the array CART.'',//)')
-        write(nflag(18),'(2x,''Provide cartesian coordinates in the'',/, 2x,''following order using the array CART'',' // &
+        write(nflag(18), '(/)')
+        write(nflag(18), '(2x,''Cartesian coordinates are supplied by'',/, 2x,''the user in the array CART.'',//)')
+        write(nflag(18), '(2x,''Provide cartesian coordinates in the'',/, 2x,''following order using the array CART'',' // &
             '//, 2x,'' CART(1,1)...CART(1,3)   => ATOM 1'',/, 2x,'' CART(2,1)...CART(2,3)   => AT' // &
             'OM 2'',/, 2x,'' CART(3,1)...CART(3,3)   => ATOM 3'',/, 2x,'' CART(N,1)...CART(N,3)  ' // &
             ' => ATOM N'',/, 2x,''CART(25,1)...CART(25,3)  => ATOM 25'',/)')
-        write(nflag(18),'(2x,''If the user wishes to relabel the atoms,'',/, 2x,''set the variable IREORDER equal to ' // &
+        write(nflag(18), '(2x,''If the user wishes to relabel the atoms,'',/, 2x,''set the variable IREORDER equal to ' // &
             '1'',/, 2x,''in the PARAMETER statement.  The user'',/, 2x,''must also specify the ne' // &
             'w labeling'',/, 2x,''scheme.  This is done using the array'',/, 2x,''NULBL in the fo' // &
             'llowing manner:'',//, 2x,''NULBL(i) = j'',/, 2x,''where:  i => old index'',/, 2x,'' ' // &
             '       j => new index'',//)')
-        write(nflag(18),'(2x,''Cartesian coordinates can be provided to'',/, 2x,''the potential routine in a variety ' // &
+        write(nflag(18), '(2x,''Cartesian coordinates can be provided to'',/, 2x,''the potential routine in a variety ' // &
             'of units.'',/, 2x,''The input units will be converted to Bohr'',/, 2x,''based on the' // &
             ' following values of the NFLAG'',/, 2x,''variable:'',//, 2x,''NFLAG(1)  =  1  =>  CA' // &
             'RTESIANS IN BOHR (no'',/, 2x,''                    conversion required)'',/, 2x,''NF' // &
             'LAG(1)  =  2  =>  CARTESIANS IN ANGSTROMS'',//)')
-        write(nflag(18),'(2x,''The value of the energy and derivatives'',/, 2x,''(if computed) can be reported in a v' // &
+        write(nflag(18), '(2x,''The value of the energy and derivatives'',/, 2x,''(if computed) can be reported in a v' // &
             'ariety'',/, 2x,''units.  A units conversion will take place'',/, 2x,''as specified b' // &
             'y the following values of the'',/, 2x,''NFLAG variable:'',//, 2x,''NFLAG(2) = 1 =>  ' // &
             'ENERGIES REPORTED IN HARTEEE'',/, 2x,''NFLAG(2) = 2 =>  ENERGIES REPORTED IN mHARTRE' // &
             'E'',/, 2x,''NFLAG(2) = 3 =>  ENERGIES REPORTED IN eV'',/, 2x,''NFLAG(2) = 4 =>  ENER' // &
             'GIES REPORTED IN kcal/mol'',/, 2x,''NFLAG(2) = 5 =>  ENERGIES REPORTED IN cm**-1'',/' // &
             '/)')
-        write(nflag(18),'(2x,''A units conversion will take place'',/, 2x,''as specified by the following values of t' // &
+        write(nflag(18), '(2x,''A units conversion will take place'',/, 2x,''as specified by the following values of t' // &
             'he'',/, 2x,''NFLAG variable:'',//, 2x,''NFLAG(1)=1 & NFLAG(2)=1 => DERIVATIVES REPOR' // &
             'TED IN'',/, 2x,''                           HARTEEE/BOHR'',/, 2x,''NFLAG(1)=1 & NFLA' // &
             'G(2)=2 => DERIVATIVES REPORTED IN'',/, 2x,''                           mHARTREE/BOHR' // &
@@ -1928,7 +1918,7 @@ subroutine potinfo
             '               eV/BOHR'',/, 2x,''NFLAG(1)=1 & NFLAG(2)=4 => DERIVATIVES REPORTED IN' // &
             ''',/, 2x,''                           kcal/mol/BOHR'',/, 2x,''NFLAG(1)=1 & NFLAG(2)=' // &
             '5 => DERIVATIVES REPORTED IN'',/, 2x,''                           cm**-1/BOHR'',//)')
-        write(nflag(18),'(2x,''A units conversion will take place'',/, 2x,''as specified by the following values of t' // &
+        write(nflag(18), '(2x,''A units conversion will take place'',/, 2x,''as specified by the following values of t' // &
             'he'',/, 2x,''NFLAG variable:'',//, 2x,''NFLAG(1)=2 & NFLAG(2)=1 => DERIVATIVES REPOR' // &
             'TED IN'',/, 2x,''                           HARTEEE/ANGSTROM'',/, 2x,''NFLAG(1)=2 & ' // &
             'NFLAG(2)=2 => DERIVATIVES REPORTED IN'',/, 2x,''                           mHARTREE/' // &
@@ -1937,13 +1927,12 @@ subroutine potinfo
             'REPORTED IN'',/, 2x,''                           kcal/mol/ANGSTROM'',/, 2x,''NFLAG(1' // &
             ')=2 & NFLAG(2)=5 => DERIVATIVES REPORTED IN'',/, 2x,''                           cm*' // &
             '*-1/ANGSTROM'',//)')
-    endif
+    end if
 end subroutine potinfo
 
 !> @brief Evaluate ANCVRT for the CH5_GEN_J1_1987 potential.
 subroutine ancvrt
     implicit none
-
     double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, deesdr, degsdr, deijdr, descart, descartnu, &
         & dgscart, dgscartnu, dijcart, dijcartnu, engyes, engygs, engyij, ezero, pengyes, pengygs, pengyij, r
     integer :: i, ianum, icartr, inc1, inc2, ind, ind2, indexes, inu, irctnt, ireorder, isave, isum, j, jsave, kediag, &
@@ -1961,22 +1950,22 @@ subroutine ancvrt
     character(len=20)  :: units
     common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
     common /pt3cm/  ezero(isurf+1)
-    common /pt4cm/  engyes(isurf),deesdr(n3atom,isurf)
-    common /pt5cm/  engyij(jsurf),deijdr(n3atom,jsurf)
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common /pt4cm/  engyes(isurf), deesdr(n3atom, isurf)
+    common /pt5cm/  engyij(jsurf), deijdr(n3atom, jsurf)
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
-    common/utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf), &
-        & dijcartnu(natom,3,jsurf),cnvrtd,cnvrte, &
-        & cnvrtde,ireorder,ksdiag,kediag,ksoffd,keoffd
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
+    common/utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
+        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, &
+        & cnvrtde, ireorder, ksdiag, kediag, ksoffd, keoffd
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     dimension ianum(7,32)
-    dimension isave(natom),jsave(natom)
+    dimension isave(natom), jsave(natom)
     double precision, parameter :: pi         = 3.141592653589793d0
     double precision, parameter :: clight     = 2.99792458d08
     double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -1993,8 +1982,8 @@ subroutine ancvrt
     double precision, parameter :: htowave    = 219474.631d0
     double precision, parameter :: htokj      = 2625.49962d0
     double precision, parameter :: bohr_a     = .5291772083d0
-    do i=1,7
-        do j=1,32
+    do i=1, 7
+        do j=1, 32
             ianum(i,j)      = 0
             periodic_1(i,j) = ' '
         end do
@@ -2174,16 +2163,16 @@ subroutine ancvrt
     periodic_1(5,31) = 'I  '
     periodic_1(5,32) = 'Xe '
     periodic_1(5,32) = 'Xe '
-    do i=1,natoms
+    do i=1, natoms
         isave(i) = 0
         jsave(i) = 0
         name1(i) = '  '
         name2(i) = '  '
     end do
     iblank = ' '
-    do ind=1,natoms
-        do i=1,7
-            do j=1,32
+    do ind=1, natoms
+        do i=1, 7
+            do j=1, 32
                 if(indexes(ind).eq.ianum(i,j)) then
                     isave(ind) = i
                     jsave(ind) = j
@@ -2192,17 +2181,17 @@ subroutine ancvrt
         end do
     end do
 
-    do ind=1,natoms
+    do ind=1, natoms
         ind2 = nulbl(ind)
         if(ind2.eq.0) ind2=ind
     end do
     inc1 = 0
-    do ind=1,irctnt-1
+    do ind=1, irctnt-1
         inc1        = inc1+1
         name1(inc1) = periodic_1(isave(ind),jsave(ind))(:2)
     end do
     inc2 = 0
-    do ind=irctnt,natoms
+    do ind=irctnt, natoms
         inc2        = inc2+1
         name2(inc2) = periodic_1(isave(ind),jsave(ind))(:2)
     end do
@@ -2217,7 +2206,7 @@ subroutine ancvrt
         units = 'WAVENUMBERS         '
     elseif(nflag(2).eq.6) then
         units = 'KILOJOULES PER MOLE '
-    endif
+    end if
     cnvrtd  = 1.d0
     cnvrte  = 1.d0
     cnvrtde = 1.d0
@@ -2232,20 +2221,20 @@ subroutine ancvrt
         cnvrte = cnvrte*htowave
     elseif(nflag(2).eq.6) then
         cnvrte = cnvrte*htokj
-    endif
+    end if
     cnvrtde = cnvrte/cnvrtd
     isum    = 0
-    do inu=1,25
+    do inu=1, 25
         isum = isum + nulbl(inu)
     end do
     ireorder = 0
     if(isum.ne.0) ireorder = 1
 end subroutine ancvrt
+
 !> @brief Evaluate CARTOU for the CH5_GEN_J1_1987 potential.
 subroutine cartou
     use chempotpy_legacy_coordinates, only: convert_cartesian_input
     implicit none
-
     double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, descartnu, dgscartnu, &
         & dijcartnu
     integer :: i, icartr, indexes, irctnt, ireorder, j, kediag, keoffd, ksdiag, ksoffd, mder, msurf, nasurf, natoms, &
@@ -2255,14 +2244,14 @@ subroutine cartou
     integer, parameter :: natom  = 25
     integer, parameter :: isurf  = 5
     integer, parameter :: jsurf  = isurf*(isurf+1)/2
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
-    common/utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf), &
-        & dijcartnu(natom,3,jsurf),cnvrtd,cnvrte, &
-        & cnvrtde,ireorder,ksdiag,kediag,ksoffd,keoffd
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
+    common/utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
+        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, &
+        & cnvrtde, ireorder, ksdiag, kediag, ksoffd, keoffd
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     call convert_cartesian_input( cart, nulbl, natoms, cnvrtd, ireorder == 1, cartnu )
 end subroutine cartou
 
@@ -2270,8 +2259,7 @@ end subroutine cartou
 subroutine carttor
     use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
     implicit none
-    integer :: coordinate_status
-
+    integer          :: coordinate_status
     double precision :: anuzero, cart, cartnu, cmm, cphi, degsdr, engygs, flm, hhd, hym, phi, pi, q, &
         & q1, q2, q3, r, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, &
         & zcm1, zcm2, zcm3, zrm1, zrm2
@@ -2282,14 +2270,14 @@ subroutine carttor
     integer, parameter :: natom  = 25
     integer, parameter :: isurf  = 5
     common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     call cartesian_to_potlib_coordinates( cartnu, natoms, icartr, r, coordinate_status )
     if (coordinate_status /= 0) then
-        write(nflag(18),'(2x,''WRONG ICARTR FOR CARTNU; ICARTR ='',i5//)') icartr
+        write(nflag(18), '(2x,''WRONG ICARTR FOR CARTNU; ICARTR ='',i5//)') icartr
         stop
     end if
 end subroutine carttor
@@ -2297,7 +2285,6 @@ end subroutine carttor
 !> @brief Evaluate EUNITZERO for the CH5_GEN_J1_1987 potential.
 subroutine eunitzero
     implicit none
-
     double precision :: anuzero, cart, cnvrtd, cnvrtde, cnvrte, deesdr, degsdr, deijdr, descart, &
         & descartnu, dgscart, dgscartnu, dijcart, dijcartnu, engyes, engygs, engyij, ezero, pengyes, &
         & pengygs, pengyij, r
@@ -2308,38 +2295,36 @@ subroutine eunitzero
     integer, parameter :: natom  = 25
     integer, parameter :: isurf  = 5
     integer, parameter :: jsurf  = isurf*(isurf+1)/2
-
     common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
     common /pt3cm/  ezero(isurf+1)
-    common /pt4cm/  engyes(isurf),deesdr(n3atom,isurf)
-    common /pt5cm/  engyij(jsurf),deijdr(n3atom,jsurf)
-    common/utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf), &
-        & dijcartnu(natom,3,jsurf),cnvrtd,cnvrte, &
-        & cnvrtde,ireorder,ksdiag,kediag,ksoffd,keoffd
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common /pt4cm/  engyes(isurf), deesdr(n3atom, isurf)
+    common /pt5cm/  engyij(jsurf), deijdr(n3atom, jsurf)
+    common/utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
+        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, &
+        & cnvrtde, ireorder, ksdiag, kediag, ksoffd, keoffd
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     pengygs = engygs * cnvrte - anuzero
     if(ksdiag.ne.0) then
-        do i=ksdiag,kediag
+        do i=ksdiag, kediag
             pengyes(i) = engyes(i) * cnvrte - anuzero
         end do
-    endif
+    end if
     if(ksoffd.ne.0) then
-        do j=ksoffd,keoffd
+        do j=ksoffd, keoffd
             pengyij(j) = engyij(j) * cnvrte
         end do
-    endif
+    end if
 end subroutine eunitzero
 
 !> @brief Evaluate RTOCART for the CH5_GEN_J1_1987 potential.
 subroutine rtocart
     implicit none
-
     double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, deesdr, degsdr, deijdr, &
         & descartnu, dgscartnu, dijcartnu, engyes, engygs, engyij, eps, epsp, ezero, phi, r, r1, r2, &
         & rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, &
@@ -2354,126 +2339,126 @@ subroutine rtocart
     integer, parameter :: jsurf  = isurf*(isurf+1)/2
     common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
     common /pt3cm/  ezero(isurf+1)
-    common /pt4cm/  engyes(isurf),deesdr(n3atom,isurf)
-    common /pt5cm/  engyij(jsurf),deijdr(n3atom,jsurf)
-    common /utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf), &
-        & dijcartnu(natom,3,jsurf),cnvrtd,cnvrte,cnvrtde, &
-        & ireorder,ksdiag,kediag,ksoffd,keoffd
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
-    dimension ygs(n3atom),yes(n3atom,isurf),yij(n3atom,jsurf)
+    common /pt4cm/  engyes(isurf), deesdr(n3atom, isurf)
+    common /pt5cm/  engyij(jsurf), deijdr(n3atom, jsurf)
+    common /utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
+        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, cnvrtde, &
+        & ireorder, ksdiag, kediag, ksoffd, keoffd
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
+    dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
     if(icartr.eq.1) then
         do i = 1, natoms
-            ind            = 3*i-2
-            dgscartnu(i,1) = degsdr(ind)
-            dgscartnu(i,2) = degsdr(ind+1)
-            dgscartnu(i,3) = degsdr(ind+2)
+            ind             = 3*i-2
+            dgscartnu(i, 1) = degsdr(ind)
+            dgscartnu(i, 2) = degsdr(ind+1)
+            dgscartnu(i, 3) = degsdr(ind+2)
             if(ksdiag.ne.0) then
-                do j = ksdiag,kediag
-                    descartnu(i,1,j) = deesdr(ind,j)
-                    descartnu(i,2,j) = deesdr(ind+1,j)
-                    descartnu(i,3,j) = deesdr(ind+2,j)
+                do j = ksdiag, kediag
+                    descartnu(i, 1, j) = deesdr(ind, j)
+                    descartnu(i, 2, j) = deesdr(ind+1, j)
+                    descartnu(i, 3, j) = deesdr(ind+2, j)
                 end do
-            endif
+            end if
             if(keoffd.ne.0) then
-                do k = ksoffd,keoffd
-                    dijcartnu(i,1,k) = deijdr(ind,k)
-                    dijcartnu(i,2,k) = deijdr(ind+1,k)
-                    dijcartnu(i,3,k) = deijdr(ind+2,k)
+                do k = ksoffd, keoffd
+                    dijcartnu(i, 1, k) = deijdr(ind, k)
+                    dijcartnu(i, 2, k) = deijdr(ind+1, k)
+                    dijcartnu(i, 3, k) = deijdr(ind+2, k)
                 end do
-            endif
+            end if
         end do
     elseif(icartr.eq.2) then
         do i = 1, natoms
-            dgscartnu(i,1) = 0.d0
-            dgscartnu(i,2) = 0.d0
-            dgscartnu(i,3) = 0.d0
+            dgscartnu(i, 1) = 0.d0
+            dgscartnu(i, 2) = 0.d0
+            dgscartnu(i, 3) = 0.d0
             if(ksdiag.ne.0) then
-                do j1=ksdiag,kediag
-                    descartnu(i,1,j1) = 0.d0
-                    descartnu(i,2,j1) = 0.d0
-                    descartnu(i,3,j1) = 0.d0
-                enddo
-            endif
+                do j1=ksdiag, kediag
+                    descartnu(i, 1, j1) = 0.d0
+                    descartnu(i, 2, j1) = 0.d0
+                    descartnu(i, 3, j1) = 0.d0
+                end do
+            end if
             if(ksoffd.ne.0) then
-                do j2=ksoffd,keoffd
-                    dijcartnu(i,1,j2) = 0.d0
-                    dijcartnu(i,2,j2) = 0.d0
-                    dijcartnu(i,3,j2) = 0.d0
-                enddo
-            endif
-            do j = 1,natoms
+                do j2=ksoffd, keoffd
+                    dijcartnu(i, 1, j2) = 0.d0
+                    dijcartnu(i, 2, j2) = 0.d0
+                    dijcartnu(i, 3, j2) = 0.d0
+                end do
+            end if
+            do j = 1, natoms
                 if(j.lt.i) then
                     m1 = natoms*(j-1) - (j*(j-1))/2 + i-j
                 elseif(j.gt.i) then
                     m1 = natoms*(i-1) - (i*(i-1))/2 + j-i
                 else
                     go to 20
-                endif
-                y              = degsdr(m1)
-                termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)
-                termy          = (cartnu(i,2)-cartnu(j,2))/r(m1)
-                termz          = (cartnu(i,3)-cartnu(j,3))/r(m1)
-                dgscartnu(i,1) = dgscartnu(i,1) + termx*y
-                dgscartnu(i,2) = dgscartnu(i,2) + termy*y
-                dgscartnu(i,3) = dgscartnu(i,3) + termz*y
+                end if
+                y               = degsdr(m1)
+                termx           = (cartnu(i, 1)-cartnu(j, 1))/r(m1)
+                termy           = (cartnu(i, 2)-cartnu(j, 2))/r(m1)
+                termz           = (cartnu(i, 3)-cartnu(j, 3))/r(m1)
+                dgscartnu(i, 1) = dgscartnu(i, 1) + termx*y
+                dgscartnu(i, 2) = dgscartnu(i, 2) + termy*y
+                dgscartnu(i, 3) = dgscartnu(i, 3) + termz*y
                 if(ksdiag.gt.0) then
-                    y = deesdr(m1,j1)
-                    do j1=ksdiag,kediag
-                        descartnu(i,1,j1) = descartnu(i,1,j1) + termx*y
-                        descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
-                        descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
-                    enddo
+                    y = deesdr(m1, j1)
+                    do j1=ksdiag, kediag
+                        descartnu(i, 1, j1) = descartnu(i, 1, j1) + termx*y
+                        descartnu(i, 2, j1) = descartnu(i, 2, j1) + termy*y
+                        descartnu(i, 3, j1) = descartnu(i, 3, j1) + termz*y
+                    end do
                 elseif(ksoffd.gt.0) then
-                    do j2=ksoffd,keoffd
-                        y                 = deijdr(m1,j2)
-                        dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
-                        dijcartnu(i,2,j2) = dijcartnu(i,2,j2) + termy*y
-                        dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
-                    enddo
-                endif
+                    do j2=ksoffd, keoffd
+                        y                   = deijdr(m1, j2)
+                        dijcartnu(i, 1, j2) = dijcartnu(i, 1, j2) + termx*y
+                        dijcartnu(i, 2, j2) = dijcartnu(i, 2, j2) + termy*y
+                        dijcartnu(i, 3, j2) = dijcartnu(i, 3, j2) + termz*y
+                    end do
+                end if
                 20 continue
-            enddo
-        enddo
+            end do
+        end do
     elseif(icartr.eq.3) then
         do i = 1, natoms
             ygs(i) = degsdr(i)/r(i)
             if(ksdiag.ne.0) then
-                do j=ksdiag,kediag
-                    yes(i,j) = deesdr(i,j)/r(i)
-                enddo
-            endif
+                do j=ksdiag, kediag
+                    yes(i,j) = deesdr(i, j)/r(i)
+                end do
+            end if
             if(ksoffd.ne.0) then
-                do k=ksoffd,keoffd
-                    yij(i,k) = deijdr(i,k)/r(i)
-                enddo
-            endif
-        enddo
-        do k = 1,3
-            term12         = cartnu(1,k)-cartnu(2,k)
-            term23         = cartnu(2,k)-cartnu(3,k)
-            term13         = cartnu(1,k)-cartnu(3,k)
-            dgscartnu(1,k) = term12*ygs(1) + term13*ygs(3)
-            dgscartnu(2,k) = -term12*ygs(1) + term23*ygs(2)
-            dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
+                do k=ksoffd, keoffd
+                    yij(i,k) = deijdr(i, k)/r(i)
+                end do
+            end if
+        end do
+        do k = 1, 3
+            term12          = cartnu(1, k)-cartnu(2, k)
+            term23          = cartnu(2, k)-cartnu(3, k)
+            term13          = cartnu(1, k)-cartnu(3, k)
+            dgscartnu(1, k) = term12*ygs(1) + term13*ygs(3)
+            dgscartnu(2, k) = -term12*ygs(1) + term23*ygs(2)
+            dgscartnu(3, k) = -term13*ygs(3) - term23*ygs(2)
             if(ksdiag.ne.0) then
-                do j1=ksdiag,kediag
-                    descartnu(1,k,j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                    descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                    descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
-                enddo
-            endif
+                do j1=ksdiag, kediag
+                    descartnu(1, k, j1) = term12*yes(1,j1) + term13*yes(3,j1)
+                    descartnu(2, k, j1) = -term12*yes(1,j1) + term23*yes(2,j1)
+                    descartnu(3, k, j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                end do
+            end if
             if(ksoffd.ne.0) then
-                do j2=ksoffd,keoffd
-                    dijcartnu(1,k,j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                    dijcartnu(2,k,j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                    dijcartnu(3,k,j2) = -term13*yij(3,j2) - term23*yij(2,j2)
-                enddo
-            endif
-        enddo
+                do j2=ksoffd, keoffd
+                    dijcartnu(1, k, j2) = term12*yij(1,j2) + term13*yij(3,j2)
+                    dijcartnu(2, k, j2) = -term12*yij(1,j2) + term23*yij(2,j2)
+                    dijcartnu(3, k, j2) = -term13*yij(3,j2) - term23*yij(2,j2)
+                end do
+            end if
+        end do
     elseif(icartr.eq.4) then
         wh   = 1.007825d0
         wf   = 18.99840d0
@@ -2506,15 +2491,14 @@ subroutine rtocart
         zd   = eps*t0+rcm
         rff  = sqrt((xa-xc)**2+yc**2+(za-zc)**2)
     else
-        write(nflag(18),'(2X,'' WRONG ICARTR FOR DERIVATIVE; ICARTR ='',I5//)') icartr
+        write(nflag(18), '(2X,'' WRONG ICARTR FOR DERIVATIVE; ICARTR ='',I5//)') icartr
         stop
-    endif
+    end if
 end subroutine rtocart
 
 !> @brief Evaluate DEDCOU for the CH5_GEN_J1_1987 potential.
 subroutine dedcou
     implicit none
-
     double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, descart, descartnu, dgscart, &
         & dgscartnu, dijcart, dijcartnu, pengyes, pengygs, pengyij
     integer :: i, icartr, indexes, irctnt, ireorder, j, k, kediag, keoffd, ksdiag, ksoffd, mder, msurf, nasurf, natoms, &
@@ -2524,57 +2508,57 @@ subroutine dedcou
     integer, parameter :: natom  = 25
     integer, parameter :: isurf  = 5
     integer, parameter :: jsurf  = isurf*(isurf+1)/2
-    common /utilcm/ dgscartnu(natom,3),descartnu(natom,3,isurf), &
-        & dijcartnu(natom,3,jsurf),cnvrtd,cnvrte,cnvrtde, &
-        & ireorder,ksdiag,kediag,ksoffd,keoffd
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common /utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
+        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, cnvrtde, &
+        & ireorder, ksdiag, kediag, ksoffd, keoffd
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     if (ireorder.eq.1) then
         do i = 1, natoms
-            dgscart(i,1) = dgscartnu(nulbl(i),1) * cnvrtde
-            dgscart(i,2) = dgscartnu(nulbl(i),2) * cnvrtde
-            dgscart(i,3) = dgscartnu(nulbl(i),3) * cnvrtde
+            dgscart(i, 1) = dgscartnu(nulbl(i), 1) * cnvrtde
+            dgscart(i, 2) = dgscartnu(nulbl(i), 2) * cnvrtde
+            dgscart(i, 3) = dgscartnu(nulbl(i), 3) * cnvrtde
             if(ksdiag.ne.0) then
-                do j=ksdiag,kediag
-                    descart(i,1,j) = descartnu(nulbl(i),1,j) * cnvrtde
-                    descart(i,2,j) = descartnu(nulbl(i),2,j) * cnvrtde
-                    descart(i,3,j) = descartnu(nulbl(i),3,j) * cnvrtde
+                do j=ksdiag, kediag
+                    descart(i, 1, j) = descartnu(nulbl(i), 1, j) * cnvrtde
+                    descart(i, 2, j) = descartnu(nulbl(i), 2, j) * cnvrtde
+                    descart(i, 3, j) = descartnu(nulbl(i), 3, j) * cnvrtde
                 end do
-            endif
+            end if
             if(ksoffd.ne.0) then
-                do k=ksoffd,keoffd
-                    dijcart(i,1,k) = dijcartnu(nulbl(i),1,k) * cnvrtde
-                    dijcart(i,2,k) = dijcartnu(nulbl(i),2,k) * cnvrtde
-                    dijcart(i,3,k) = dijcartnu(nulbl(i),3,k) * cnvrtde
+                do k=ksoffd, keoffd
+                    dijcart(i, 1, k) = dijcartnu(nulbl(i), 1, k) * cnvrtde
+                    dijcart(i, 2, k) = dijcartnu(nulbl(i), 2, k) * cnvrtde
+                    dijcart(i, 3, k) = dijcartnu(nulbl(i), 3, k) * cnvrtde
                 end do
-            endif
+            end if
         end do
     else
         do i = 1, natoms
-            dgscart(i,1) = dgscartnu(i,1) * cnvrtde
-            dgscart(i,2) = dgscartnu(i,2) * cnvrtde
-            dgscart(i,3) = dgscartnu(i,3) * cnvrtde
+            dgscart(i, 1) = dgscartnu(i, 1) * cnvrtde
+            dgscart(i, 2) = dgscartnu(i, 2) * cnvrtde
+            dgscart(i, 3) = dgscartnu(i, 3) * cnvrtde
             if(ksdiag.ne.0) then
-                do j=ksdiag,kediag
-                    descart(i,1,j) = descartnu(i,1,j) * cnvrtde
-                    descart(i,2,j) = descartnu(i,2,j) * cnvrtde
-                    descart(i,3,j) = descartnu(i,3,j) * cnvrtde
+                do j=ksdiag, kediag
+                    descart(i, 1, j) = descartnu(i, 1, j) * cnvrtde
+                    descart(i, 2, j) = descartnu(i, 2, j) * cnvrtde
+                    descart(i, 3, j) = descartnu(i, 3, j) * cnvrtde
                 end do
-            endif
+            end if
             if(ksoffd.ne.0) then
-                do k=ksoffd,keoffd
-                    dijcart(i,1,k) = dijcartnu(i,1,k) * cnvrtde
-                    dijcart(i,2,k) = dijcartnu(i,2,k) * cnvrtde
-                    dijcart(i,3,k) = dijcartnu(i,3,k) * cnvrtde
+                do k=ksoffd, keoffd
+                    dijcart(i, 1, k) = dijcartnu(i, 1, k) * cnvrtde
+                    dijcart(i, 2, k) = dijcartnu(i, 2, k) * cnvrtde
+                    dijcart(i, 3, k) = dijcartnu(i, 3, k) * cnvrtde
                 end do
-            endif
+            end if
         end do
-    endif
+    end if
 end subroutine dedcou

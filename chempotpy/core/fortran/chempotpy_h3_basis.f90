@@ -2,19 +2,15 @@
 module chempotpy_h3_basis
     implicit none
     private
-
     integer, parameter :: maximum_terms = 5000
-
-    integer, save :: first_powers(maximum_terms)
-    integer, save :: second_powers(maximum_terms)
-    integer, save :: third_powers(maximum_terms)
-    integer, save :: coefficient_indices(maximum_terms)
-    integer, save :: coefficient_count = 0
-    integer, save :: term_count = 0
-
+    integer, save      :: first_powers(maximum_terms)
+    integer, save      :: second_powers(maximum_terms)
+    integer, save      :: third_powers(maximum_terms)
+    integer, save      :: coefficient_indices(maximum_terms)
+    integer, save      :: coefficient_count = 0
+    integer, save      :: term_count = 0
     public :: get_h3_basis_term
     public :: initialize_h3_basis
-
     contains
 
     !> @brief Build the two symmetric polynomial index partitions used by the 2002 H3 fits.
@@ -58,9 +54,9 @@ module chempotpy_h3_basis
         integer :: third_power
         integer :: total_order
 
-        do first_power=0,min(top_order,maximum_order)
-            do second_power=first_power,min(top_order,maximum_order)
-                do third_power=second_power,min(top_order,maximum_order)
+        do first_power=0, min(top_order, maximum_order)
+            do second_power=first_power, min(top_order, maximum_order)
+                do third_power=second_power, min(top_order, maximum_order)
                     total_order = first_power+second_power+third_power
                     if (total_order > maximum_order) cycle
                     if ( &

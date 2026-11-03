@@ -1,9 +1,7 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate pes for the C2H7_VBMM potential.
 subroutine pes( x, igrad, p, g, d )
-
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 9
@@ -11,23 +9,20 @@ subroutine pes( x, igrad, p, g, d )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: v
-    integer          :: iatom, idir, j, istate, jstate
+    double precision              :: v
+    integer                       :: iatom, idir, j, istate, jstate
     !initialize
-    p = 0.d0
-    g = 0.d0
-    d = 0.d0
+    p = 0.d0; g = 0.d0; d = 0.d0
 
     if (igrad==0) then
-        call c2h7pot(x,v)
+        call c2h7pot(x, v)
         v = v/23.0609
-        do istate=1,nstates
+        do istate=1, nstates
             p(istate) = v
-        enddo
+        end do
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 
 end subroutine pes
 
@@ -36,18 +31,16 @@ end subroutine pes
 subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
     !*******************************************************************
     implicit none
-
-    integer, parameter :: npmm = 23
-    integer, parameter :: npjg = 34
-    double precision   :: x(9,3)
-    double precision   :: eng_kcal
-    double precision   :: grad(9,3)
-    double precision   :: xnorm(9)
-    double precision   :: hess(27,27)
-
-    integer                     :: i,j
-    integer                     :: i1,j1,k1
-    integer                     :: i2,j2,k2
+    integer, parameter          :: npmm = 23
+    integer, parameter          :: npjg = 34
+    double precision            :: x(9,3)
+    double precision            :: eng_kcal
+    double precision            :: grad(9,3)
+    double precision            :: xnorm(9)
+    double precision            :: hess(27,27)
+    integer                     :: i, j
+    integer                     :: i1, j1, k1
+    integer                     :: i2, j2, k2
     double precision            :: z
     double precision            :: x1(9,3)
     double precision            :: x2(9,3)
@@ -58,13 +51,12 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
     double precision            :: v3
     double precision            :: v4
     double precision, parameter :: delta = 1.0d-4
-
     ! get energy
-    call c2h7pot(x,eng_kcal)
+    call c2h7pot(x, eng_kcal)
 
     ! get numerical gradients
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             x1(i,j) = x(i,j)
             x2(i,j) = x(i,j)
             x3(i,j) = x(i,j)
@@ -72,13 +64,13 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
         end do
     end do
 
-    do i=1,9
+    do i=1, 9
         xnorm(i) = 0.0d0
-        do j=1,3
+        do j=1, 3
             x1(i,j) = x(i,j)-delta
             x2(i,j) = x(i,j)+delta
-            call c2h7pot(x1,v1)
-            call c2h7pot(x2,v2)
+            call c2h7pot(x1, v1)
+            call c2h7pot(x2, v2)
             grad(i,j) = (v2-v1)*0.50d0/delta
             x1(i,j)   = x(i,j)
             x2(i,j)   = x(i,j)
@@ -89,12 +81,12 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
 
     ! get numerical hessian
     k1 = 0
-    do i2=1,9
-        do j2=1,3
+    do i2=1, 9
+        do j2=1, 3
             k2 = k2+1
             k1 = 0
-            do i1=1,9
-                do j1=1,3
+            do i1=1, 9
+                do j1=1, 3
                     k1 = k1+1
                     if(k1>k2) then
                         x1(i1,j1) = x(i1,j1)+delta
@@ -105,10 +97,10 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
                         x3(i2,j2) = x(i2,j2)-delta
                         x4(i1,j1) = x(i1,j1)-delta
                         x4(i2,j2) = x(i2,j2)-delta
-                        call c2h7pot(x1,v1)
-                        call c2h7pot(x2,v2)
-                        call c2h7pot(x3,v3)
-                        call c2h7pot(x4,v4)
+                        call c2h7pot(x1, v1)
+                        call c2h7pot(x2, v2)
+                        call c2h7pot(x3, v3)
+                        call c2h7pot(x4, v4)
                         z           = 0.250d0*(v1-v2-v3+v4)
                         hess(k1,k2) = z/(delta*delta)
                         hess(k2,k1) = hess(k1,k2)
@@ -123,8 +115,8 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
                     elseif(k1==k2) then
                         x1(i1,j1) = x(i1,j1)+delta
                         x2(i2,j2) = x(i2,j2)-delta
-                        call c2h7pot(x1,v1)
-                        call c2h7pot(x2,v2)
+                        call c2h7pot(x1, v1)
+                        call c2h7pot(x2, v2)
                         z           = (v1-eng_kcal-eng_kcal+v2)
                         hess(k1,k1) = z/(delta*delta)
                         x1(i1,j1)   = x(i1,j1)
@@ -136,45 +128,43 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
     end do
 
 end subroutine c2h7poth
+
 ! end of c2h7poth
 !*******************************************************************
 !> @brief Evaluate c2h7potg for the C2H7_VBMM potential.
 subroutine c2h7potg( x, eng_kcal, grad, xnorm )
     !*******************************************************************
     implicit none
-
-    integer, parameter :: npmm = 23
-    integer, parameter :: npjg = 34
-    double precision   :: x(9,3)
-    double precision   :: eng_kcal
-    double precision   :: grad(9,3)
-    double precision   :: xnorm(9)
-
-    integer                     :: i,j
+    integer, parameter          :: npmm = 23
+    integer, parameter          :: npjg = 34
+    double precision            :: x(9,3)
+    double precision            :: eng_kcal
+    double precision            :: grad(9,3)
+    double precision            :: xnorm(9)
+    integer                     :: i, j
     double precision            :: x1(9,3)
     double precision            :: x2(9,3)
     double precision            :: v1
     double precision            :: v2
     double precision, parameter :: delta = 1.0d-4
-
     ! get energy
-    call c2h7pot(x,eng_kcal)
+    call c2h7pot(x, eng_kcal)
 
     ! get numerical gradients
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             x1(i,j) = x(i,j)
             x2(i,j) = x(i,j)
         end do
     end do
 
-    do i=1,9
+    do i=1, 9
         xnorm(i) = 0.0d0
-        do j=1,3
+        do j=1, 3
             x1(i,j) = x(i,j)-delta
             x2(i,j) = x(i,j)+delta
-            call c2h7pot(x1,v1)
-            call c2h7pot(x2,v2)
+            call c2h7pot(x1, v1)
+            call c2h7pot(x2, v2)
             grad(i,j) = (v2-v1)*0.50d0/delta
             x1(i,j)   = x(i,j)
             x2(i,j)   = x(i,j)
@@ -184,6 +174,7 @@ subroutine c2h7potg( x, eng_kcal, grad, xnorm )
     end do
 
 end subroutine c2h7potg
+
 ! end of routine c2h7potg
 !**************************************************************
 !> @brief Evaluate c2h7pot for the C2H7_VBMM potential.
@@ -193,7 +184,6 @@ subroutine c2h7pot( x, eng_kcal )
     ! Energy in kcal
     !
     implicit none
-
     integer, parameter :: npmm = 25
     integer, parameter :: npjg = 34
     double precision   :: x(9,3)
@@ -212,21 +202,18 @@ subroutine c2h7pot( x, eng_kcal )
     double precision   :: etotalmm
     double precision   :: paramm(npmm)
     double precision   :: parajg(npjg)
-
     ! average bond length
     double precision :: avgch
     double precision :: avgbh
     double precision :: rxncrd
-    double precision :: r1,r2,r3
-    double precision :: b1,b2,b3
-
+    double precision :: r1, r2, r3
+    double precision :: b1, b2, b3
     ! scale=C-H/C-C
     !%%%  parameter(scale=0.7153679930d0)
     double precision, parameter :: scale = 0.7171830610d0
     double precision            :: h5prime(3)
-
-    integer            :: i
-    logical, parameter :: lmm3 = .false.
+    integer                     :: i
+    logical, parameter          :: lmm3 = .false.
     !--------------------------------------------
     ! Convert geometry from:
     !
@@ -244,7 +231,7 @@ subroutine c2h7pot( x, eng_kcal )
     !     |  |
     !     H7 H4
     !
-    do i=1,3
+    do i=1, 3
         c1(i)      = x(5,i)
         h2(i)      = x(8,i)
         h3(i)      = x(6,i)
@@ -264,7 +251,7 @@ subroutine c2h7pot( x, eng_kcal )
     b1 = 0.0d0
     b2 = 0.0d0
     b3 = 0.0d0
-    do i=1,3
+    do i=1, 3
         r1 = r1+( (c1(i)-h2(i))**2 )
         r2 = r2+( (c1(i)-h3(i))**2 )
         r3 = r3+( (c1(i)-h4(i))**2 )
@@ -285,21 +272,22 @@ subroutine c2h7pot( x, eng_kcal )
     ! Get energy
     !
     if(lmm3) then
-        call pmm3(npmm,paramm)
-        call ethane(npmm,paramm,rxncrd, &
-            & c1,h2,h3,h4,c5,h6,h7,h8,vmm3,etotalmm)
+        call pmm3(npmm, paramm)
+        call ethane(npmm, paramm, rxncrd, &
+            & c1, h2, h3, h4, c5, h6, h7, h8, vmm3, etotalmm)
         eng_kcal = etotalmm
     else
-        call pmm3_mod(npmm,paramm,avgch,rxncrd)
-        call pjg_mod(npjg,parajg,avgch)
-        call ethane(npmm,paramm,rxncrd, &
-            & c1,h2,h3,h4,c5,h6,h7,h8,vmm3,etotalmm)
-        call xch5pot(npjg,parajg,rxncrd, &
-            & c1,h2,h3,h4,h5prime,h9,vjg)
+        call pmm3_mod(npmm, paramm, avgch, rxncrd)
+        call pjg_mod(npjg, parajg, avgch)
+        call ethane(npmm, paramm, rxncrd, &
+            & c1, h2, h3, h4, c5, h6, h7, h8, vmm3, etotalmm)
+        call xch5pot(npjg, parajg, rxncrd, &
+            & c1, h2, h3, h4, h5prime, h9, vjg)
         eng_kcal = vjg+vmm3
     end if
 
 end subroutine c2h7pot
+
 ! end of routine c2h7pot
 
 !**************************************************
@@ -307,20 +295,18 @@ end subroutine c2h7pot
 subroutine pmm3_mod( np, p, ravg, rxncrd )
     !**************************************************
     implicit none
-
     ! Output Variables
     integer          :: np
     double precision :: p(np)
     double precision :: ravg
     double precision :: rxncrd
     ! Local Variables
-    double precision :: r0ch,r0cc
-    double precision :: t0hch,t0cch
-    double precision :: t0hcrh,t0ccrh
-    double precision :: r0crh,r0ccr
+    double precision :: r0ch, r0cc
+    double precision :: t0hch, t0cch
+    double precision :: t0hcrh, t0ccrh
+    double precision :: r0crh, r0ccr
     !     parameter(r0ch=1.1120d0,r0cc=1.52470d0)
     !##   parameter(r0ch=1.09120d0,r0cc=1.51950d0)
-
     double precision, parameter :: ksch = 4.740d0
     double precision, parameter :: kscc = 4.490d0
     !%%%  parameter(t0hch=107.80d0,t0cch=110.70d0)
@@ -344,19 +330,19 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
     !----------------------------------------
     ! Switching
     double precision :: ravg0
-    double precision :: cr,cp,cs
+    double precision :: cr, cp, cs
     !--------------------------------------
     ! Modified parameters
     !--------------------------------------
-    integer          :: i,j
+    integer          :: i, j
     integer          :: ipt
     double precision :: x
-    double precision :: t1,t2,t3
-    double precision :: t4,t5,t6
-    double precision :: z1,z2,z3
-    double precision :: z4,z5,z6
-    double precision :: ar0ch,ar0cc
-    double precision :: asch,ascc
+    double precision :: t1, t2, t3
+    double precision :: t4, t5, t6
+    double precision :: z1, z2, z3
+    double precision :: z4, z5, z6
+    double precision :: ar0ch, ar0cc
+    double precision :: asch, ascc
     double precision :: av3hcch
     double precision :: aksthcch
     double precision :: akthch
@@ -369,9 +355,7 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
     double precision :: at0ccrh
     !%%%  parameter(r0ch=1.1120d0,r0cc=1.52470d0)
     !     parameter(r0ch=1.092510d0,r0cc=1.52720d0)
-
     !%%% for ethane
-
     ipt = 4
 
     if(ipt .eq. 1) then
@@ -517,13 +501,13 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
     p(25) = r0ccr
 
 end subroutine pmm3_mod
+
 ! end of routine pmm3_mod
 !**************************************************
 !> @brief Evaluate pjg_mod for the C2H7_VBMM potential.
 subroutine pjg_mod( np, para, ravg )
     !**************************************************
     implicit none
-
     ! I/O variables
     integer          :: np
     double precision :: para(np)
@@ -549,10 +533,8 @@ subroutine pjg_mod( np, para, ravg )
     !     parameter (r0cb=1.093970d0)
     !%%%  parameter (r0cb=1.092510d0)
     !%%%  parameter (r0ch=1.092510d0)
-
     !##   parameter (r0cb=1.09030d0)
     !##   parameter (r0ch=1.09070d0)
-
     double precision, parameter :: alphh = 1.94570d0
     double precision, parameter :: d1hh  = 109.4580d0*fact1
     double precision, parameter :: d3hh  = 39.6640d0*fact1
@@ -562,7 +544,6 @@ subroutine pjg_mod( np, para, ravg )
     double precision, parameter :: d3ch = 38.8340d0*fact1
     !     parameter (r0ch=1.093970d0)
     !##   parameter (r0ch=1.092510d0)
-
     ! out-of-plane bending parameters
     !     parameter (tau=CALC_AT_RUNTIME)
     double precision, parameter :: aphi   = 0.52879030d0
@@ -589,7 +570,7 @@ subroutine pjg_mod( np, para, ravg )
     !----------------------------------------
     ! Switching
     double precision :: ravg0
-    double precision :: cr,cp,cs
+    double precision :: cr, cp, cs
     !----------------------------------------
     !###
     integer          :: i
@@ -600,7 +581,6 @@ subroutine pjg_mod( np, para, ravg )
     double precision :: aalpcb
     !
     !%%% QM parameters
-
     ipt = 4
 
     ad1hh  = 1.0d0
@@ -683,18 +663,17 @@ subroutine pjg_mod( np, para, ravg )
     para(34) = aa4
 
 end subroutine pjg_mod
+
 ! end of routine pjp_mod
 !**************************************************
 !> @brief Evaluate pmm3 for the C2H7_VBMM potential.
 subroutine pmm3( np, p )
     !**************************************************
     implicit none
-
     ! Output Variables
     integer          :: np
     double precision :: p(np)
     ! Local Variables
-
     double precision, parameter :: r0ch    = 1.1120d0
     double precision, parameter :: r0cc    = 1.52470d0
     double precision, parameter :: ksch    = 4.740d0
@@ -746,13 +725,13 @@ subroutine pmm3( np, p )
     p(24) = r0crh
     p(25) = r0ccr
 end subroutine pmm3
+
 ! end of routine pmm3
 !**************************************************
 !> @brief Evaluate pjg for the C2H7_VBMM potential.
 subroutine pjg( np, para )
     !**************************************************
     implicit none
-
     ! I/O variables
     integer          :: np
     double precision :: para(np)
@@ -803,7 +782,6 @@ subroutine pjg( np, para )
     double precision, parameter :: aa2  = 1.5999630d0
     double precision, parameter :: aa3  = 2.1659530d0
     double precision, parameter :: aa4  = 11.5699770d0
-
     ! Str
     para(1)  = a1ch
     para(2)  = b1ch
@@ -842,6 +820,7 @@ subroutine pjg( np, para )
     para(33) = aa3
     para(34) = aa4
 end subroutine pjg
+
 ! end of routine pjp
 
 !**************************************************
@@ -850,7 +829,6 @@ subroutine ethane( np, para, rxncrd, &
         & c1, h2, h3, h4, c5, h6, h7, h8, vmm3, etotalmm )
     !**************************************************
     implicit none
-
     ! Input variables............
     integer          :: np
     double precision :: para(np)
@@ -873,26 +851,23 @@ subroutine ethane( np, para, rxncrd, &
     double precision :: estrtor
     double precision :: evdwaal
     double precision :: etotalmm
-
     ! parameters:
     ! Angles in Deg.
     ! Dist in Ang.
-    double precision :: r0ch,r0cc
-    double precision :: ksch,kscc
-    double precision :: t0hch,t0cch
-    double precision :: t0hcrh,t0ccrh
-    double precision :: kthch,ktcch
-    double precision :: ksbhch,ksbcch
-    double precision :: kbbhch,kbbcch
-    double precision :: v1hcch,v2hcch,v3hcch
+    double precision :: r0ch, r0cc
+    double precision :: ksch, kscc
+    double precision :: t0hch, t0cch
+    double precision :: t0hcrh, t0ccrh
+    double precision :: kthch, ktcch
+    double precision :: ksbhch, ksbcch
+    double precision :: kbbhch, kbbcch
+    double precision :: v1hcch, v2hcch, v3hcch
     double precision :: ksthcch
-    double precision :: esph,espc,rvh,rvc,scalech
-
+    double precision :: esph, espc, rvh, rvc, scalech
     ! Func called:
     double precision :: xdist
     double precision :: xangle
     double precision :: xtorsion
-
     ! Local parameters:
     integer, parameter          :: iout     = 6
     logical, parameter          :: lreact   = .false.
@@ -901,28 +876,21 @@ subroutine ethane( np, para, rxncrd, &
     logical, parameter          :: ljg      = .true.
     logical, parameter          :: ldebugmm = .false.
     double precision, parameter :: pi       = 3.1415926540d0
-
     ! Stretch varaibles
-    double precision :: rch(6),rcc
-    double precision :: esch,escc
-
+    double precision :: rch(6), rcc
+    double precision :: esch, escc
     ! Bend varaibles
-    double precision :: thch(6),tcch(6)
-    double precision :: ebhch,ebcch
-
+    double precision :: thch(6), tcch(6)
+    double precision :: ebhch, ebcch
     ! Stretch-Bend varaibles
     double precision :: esbcch
-
     ! Bend-Bend varaibles
-    double precision :: ebbhch,ebbcch
-
+    double precision :: ebbhch, ebbcch
     ! Torsional variables
     double precision :: phcch(9)
     double precision :: ethcch
-
     ! Stretch-xtorsion variables
     double precision :: esthcch
-
     ! van der Waal varaibles
     double precision :: sh2(3)
     double precision :: sh3(3)
@@ -933,7 +901,6 @@ subroutine ethane( np, para, rxncrd, &
     double precision :: sh8(3)
     double precision :: rvdwhh(9)
     double precision :: evdwhh
-
     ! energy compponents
     double precision :: astr(7)
     double precision :: abhch(6)
@@ -953,7 +920,6 @@ subroutine ethane( np, para, rxncrd, &
     double precision :: tthcch(9)
     double precision :: tsthcch(9)
     double precision :: tvdwhh(9)
-
     ! Switching func
     double precision            :: scale
     double precision            :: sw1(3)
@@ -968,10 +934,9 @@ subroutine ethane( np, para, rxncrd, &
     double precision            :: t0cchsw
     double precision, parameter :: t1 = 22.0d0
     double precision, parameter :: t2 = 1.354030d0
-
     ! Misc varaibles
-    integer          :: i,j,k
-    double precision :: xrv,xesp
+    integer          :: i, j, k
+    double precision :: xrv, xesp
     double precision :: xsumrx
     double precision :: xsumjg
     double precision :: xstr
@@ -1021,18 +986,18 @@ subroutine ethane( np, para, rxncrd, &
     !     write(IOUT,*)'LRADICAL :',LRADICAL
     !-------------------------------------------
     ! Evaluate bond xdist
-    rch(1) = xdist(c1,h2)
-    rch(2) = xdist(c1,h3)
-    rch(3) = xdist(c1,h4)
-    rch(4) = xdist(c5,h6)
-    rch(5) = xdist(c5,h7)
-    rch(6) = xdist(c5,h8)
-    rcc    = xdist(c1,c5)
+    rch(1) = xdist(c1, h2)
+    rch(2) = xdist(c1, h3)
+    rch(3) = xdist(c1, h4)
+    rch(4) = xdist(c5, h6)
+    rch(5) = xdist(c5, h7)
+    rch(6) = xdist(c5, h8)
+    rcc    = xdist(c1, c5)
     !-------------------------------------------
     !###
     ! calculate the swithing func
     swt2 = 1.0d0
-    do i=1,3
+    do i=1, 3
         swt1(i) = (1.0d0-dtanh(t1*(rch(i)-t2)))*0.50d0
         swt2    = swt2*swt1(i)
     end do
@@ -1051,10 +1016,10 @@ subroutine ethane( np, para, rxncrd, &
     ktcch = ktcch*scale
     !-------------------------------------------
     ! calculate str energy
-    call es(r0cc,kscc,rcc,escc)
+    call es(r0cc, kscc, rcc, escc)
     estr = escc
-    do i=1,6
-        call es(r0ch,ksch,rch(i),esch)
+    do i=1, 6
+        call es(r0ch, ksch, rch(i), esch)
         estr    = estr + esch
         astr(i) = esch
     end do
@@ -1062,24 +1027,24 @@ subroutine ethane( np, para, rxncrd, &
     !-------------------------------------------
     ! calculate bend energy
     ! there are 12 bending terms
-    thch(1) = xangle(h2,c1,h3)*180.0d0/pi
-    thch(2) = xangle(h2,c1,h4)*180.0d0/pi
-    thch(3) = xangle(h3,c1,h4)*180.0d0/pi
-    thch(4) = xangle(h6,c5,h7)*180.0d0/pi
-    thch(5) = xangle(h6,c5,h8)*180.0d0/pi
-    thch(6) = xangle(h7,c5,h8)*180.0d0/pi
+    thch(1) = xangle(h2, c1, h3)*180.0d0/pi
+    thch(2) = xangle(h2, c1, h4)*180.0d0/pi
+    thch(3) = xangle(h3, c1, h4)*180.0d0/pi
+    thch(4) = xangle(h6, c5, h7)*180.0d0/pi
+    thch(5) = xangle(h6, c5, h8)*180.0d0/pi
+    thch(6) = xangle(h7, c5, h8)*180.0d0/pi
 
-    tcch(1) = xangle(h2,c1,c5)*180.0d0/pi
-    tcch(2) = xangle(h3,c1,c5)*180.0d0/pi
-    tcch(3) = xangle(h4,c1,c5)*180.0d0/pi
-    tcch(4) = xangle(h6,c5,c1)*180.0d0/pi
-    tcch(5) = xangle(h7,c5,c1)*180.0d0/pi
-    tcch(6) = xangle(h8,c5,c1)*180.0d0/pi
+    tcch(1) = xangle(h2, c1, c5)*180.0d0/pi
+    tcch(2) = xangle(h3, c1, c5)*180.0d0/pi
+    tcch(3) = xangle(h4, c1, c5)*180.0d0/pi
+    tcch(4) = xangle(h6, c5, c1)*180.0d0/pi
+    tcch(5) = xangle(h7, c5, c1)*180.0d0/pi
+    tcch(6) = xangle(h8, c5, c1)*180.0d0/pi
 
     ebend = 0.0d0
-    do i=1,6
-        call eb(t0hch,kthch,thch(i),ebhch)
-        call eb(t0cch,ktcch,tcch(i),ebcch)
+    do i=1, 6
+        call eb(t0hch, kthch, thch(i), ebhch)
+        call eb(t0cch, ktcch, tcch(i), ebcch)
         ebend    = ebend + ebhch + ebcch
         abhch(i) = ebhch
         abcch(i) = ebcch
@@ -1095,8 +1060,8 @@ subroutine ethane( np, para, rxncrd, &
     ! H8-C5-C1
     !
     estrbnd = 0.0d0
-    do i=1,6
-        call esb(r0ch,r0cc,t0cch,ksbcch,rch(i),rcc,tcch(i),esbcch)
+    do i=1, 6
+        call esb(r0ch, r0cc, t0cch, ksbcch, rch(i), rcc, tcch(i), esbcch)
         estrbnd   = estrbnd + esbcch
         asbcch(i) = esbcch
     end do
@@ -1119,21 +1084,21 @@ subroutine ethane( np, para, rxncrd, &
 
     ebndbnd = 0.0d0
     k       = 0
-    do i=1,3
-        do j=i+1,3
+    do i=1, 3
+        do j=i+1, 3
             k = k + 1
-            call ebb(t0hch,t0hch,kbbhch,thch(i),thch(j),ebbhch)
-            call ebb(t0cch,t0cch,kbbcch,tcch(i),tcch(j),ebbcch)
+            call ebb(t0hch, t0hch, kbbhch, thch(i), thch(j), ebbhch)
+            call ebb(t0cch, t0cch, kbbcch, tcch(i), tcch(j), ebbcch)
             ebndbnd   = ebndbnd + ebbhch + ebbcch
             abbhch(k) = ebbhch
             abbcch(k) = ebbcch
         end do
     end do
-    do i=4,6
-        do j=i+1,6
+    do i=4, 6
+        do j=i+1, 6
             k = k + 1
-            call ebb(t0hch,t0hch,kbbhch,thch(i),thch(j),ebbhch)
-            call ebb(t0cch,t0cch,kbbcch,tcch(i),tcch(j),ebbcch)
+            call ebb(t0hch, t0hch, kbbhch, thch(i), thch(j), ebbhch)
+            call ebb(t0cch, t0cch, kbbcch, tcch(i), tcch(j), ebbcch)
             ebndbnd   = ebndbnd + ebbhch + ebbcch
             abbhch(k) = ebbhch
             abbcch(k) = ebbcch
@@ -1153,23 +1118,23 @@ subroutine ethane( np, para, rxncrd, &
     !
     ! Scale the C-H bonds and evaluate the
     ! coordinates of the scaled H
-    phcch(1) = xtorsion(h2,c1,c5,h6)
-    phcch(2) = xtorsion(h2,c1,c5,h7)
-    phcch(3) = xtorsion(h2,c1,c5,h8)
-    phcch(4) = xtorsion(h3,c1,c5,h6)
-    phcch(5) = xtorsion(h3,c1,c5,h7)
-    phcch(6) = xtorsion(h3,c1,c5,h8)
-    phcch(7) = xtorsion(h4,c1,c5,h6)
-    phcch(8) = xtorsion(h4,c1,c5,h7)
-    phcch(9) = xtorsion(h4,c1,c5,h8)
+    phcch(1) = xtorsion(h2, c1, c5, h6)
+    phcch(2) = xtorsion(h2, c1, c5, h7)
+    phcch(3) = xtorsion(h2, c1, c5, h8)
+    phcch(4) = xtorsion(h3, c1, c5, h6)
+    phcch(5) = xtorsion(h3, c1, c5, h7)
+    phcch(6) = xtorsion(h3, c1, c5, h8)
+    phcch(7) = xtorsion(h4, c1, c5, h6)
+    phcch(8) = xtorsion(h4, c1, c5, h7)
+    phcch(9) = xtorsion(h4, c1, c5, h8)
 
     etor = 0.0d0
-    do i=1,9
-        call et(v1hcch,v2hcch,v3hcch,phcch(i),ethcch)
+    do i=1, 9
+        call et(v1hcch, v2hcch, v3hcch, phcch(i), ethcch)
         etor      = etor + ethcch
         athcch(i) = ethcch
         if(ldebugmm) then
-            write(*,*) 'Torsion Angle:',phcch(i)
+            write(*, *) 'Torsion Angle:', phcch(i)
         end if
     end do
     !-------------------------------------------
@@ -1187,8 +1152,8 @@ subroutine ethane( np, para, rxncrd, &
     ! H4-C1-C5-H8
     !
     estrtor = 0.0d0
-    do i=1,9
-        call est(r0cc,ksthcch,rcc,phcch(i),esthcch)
+    do i=1, 9
+        call est(r0cc, ksthcch, rcc, phcch(i), esthcch)
         estrtor    = estrtor + esthcch
         asthcch(i) = esthcch
     end do
@@ -1207,7 +1172,7 @@ subroutine ethane( np, para, rxncrd, &
     ! H4-H7
     ! H4-H8
     !
-    do i=1,3
+    do i=1, 3
         sh2(i) = (scalech*h2(i)) + ((1.0d0-scalech)*c1(i))
         sh3(i) = (scalech*h3(i)) + ((1.0d0-scalech)*c1(i))
         sh4(i) = (scalech*h4(i)) + ((1.0d0-scalech)*c1(i))
@@ -1216,21 +1181,21 @@ subroutine ethane( np, para, rxncrd, &
         sh8(i) = (scalech*h8(i)) + ((1.0d0-scalech)*c5(i))
     end do
 
-    rvdwhh(1) = xdist(sh2,sh6)
-    rvdwhh(2) = xdist(sh2,sh7)
-    rvdwhh(3) = xdist(sh2,sh8)
-    rvdwhh(4) = xdist(sh3,sh6)
-    rvdwhh(5) = xdist(sh3,sh7)
-    rvdwhh(6) = xdist(sh3,sh8)
-    rvdwhh(7) = xdist(sh4,sh6)
-    rvdwhh(8) = xdist(sh4,sh7)
-    rvdwhh(9) = xdist(sh4,sh8)
+    rvdwhh(1) = xdist(sh2, sh6)
+    rvdwhh(2) = xdist(sh2, sh7)
+    rvdwhh(3) = xdist(sh2, sh8)
+    rvdwhh(4) = xdist(sh3, sh6)
+    rvdwhh(5) = xdist(sh3, sh7)
+    rvdwhh(6) = xdist(sh3, sh8)
+    rvdwhh(7) = xdist(sh4, sh6)
+    rvdwhh(8) = xdist(sh4, sh7)
+    rvdwhh(9) = xdist(sh4, sh8)
 
     evdwaal = 0.0d0
-    do i=1,9
+    do i=1, 9
         xrv  = rvh + rvh
         xesp = dsqrt(esph*esph)
-        call evdw(xrv,xesp,rvdwhh(i),evdwhh)
+        call evdw(xrv, xesp, rvdwhh(i), evdwhh)
         evdwaal   = evdwaal + evdwhh
         avdwhh(i) = evdwhh
     end do
@@ -1253,7 +1218,7 @@ subroutine ethane( np, para, rxncrd, &
     z1 = 117.2989954203791430d0
 
     sw2 = 1.0d0
-    do i=1,3
+    do i=1, 3
         z1     = 10.0d0
         sw1(i) = (1.0d0-dtanh(z1*(rch(i)-t2)))*0.50d0
         sw2    = sw2*sw1(i)
@@ -1262,37 +1227,37 @@ subroutine ethane( np, para, rxncrd, &
     !-----------------------------------------------------------
 
     if(lswitch) then
-        do i=1,3
-            call eb(t0hchsw,kthch,thch(i),ebhch)
-            call eb(t0cchsw,ktcch,tcch(i),ebcch)
-            call esb(r0chsw,r0ccsw,t0cchsw,ksbcch, &
-                & rch(i),rcc,tcch(i),esbcch)
+        do i=1, 3
+            call eb(t0hchsw, kthch, thch(i), ebhch)
+            call eb(t0cchsw, ktcch, tcch(i), ebcch)
+            call esb(r0chsw, r0ccsw, t0cchsw, ksbcch, &
+                & rch(i), rcc, tcch(i), esbcch)
             abhch(i)  = ebhch
             abcch(i)  = ebcch
             asbcch(i) = esbcch
         end do
         k = 0
-        do i=1,3
-            do j=i+1,3
+        do i=1, 3
+            do j=i+1, 3
                 k = k + 1
-                call ebb(t0hchsw,t0hchsw,kbbhch,thch(i),thch(j),ebbhch)
-                call ebb(t0cchsw,t0cchsw,kbbcch,tcch(i),tcch(j),ebbcch)
+                call ebb(t0hchsw, t0hchsw, kbbhch, thch(i), thch(j), ebbhch)
+                call ebb(t0cchsw, t0cchsw, kbbcch, tcch(i), tcch(j), ebbcch)
                 abbhch(k) = ebbhch
                 abbcch(k) = ebbcch
             end do
         end do
         ! compute engergies
-        do i=1,7
+        do i=1, 7
             tstr(i) = astr(i)
         end do
-        do i=1,6
+        do i=1, 6
             tbhch(i)  = abhch(i)
             tbcch(i)  = abcch(i)
             tsbcch(i) = asbcch(i)
             tbbhch(i) = abbhch(i)
             tbbcch(i) = abbcch(i)
         end do
-        do i=1,9
+        do i=1, 9
             tthcch(i)  = athcch(i)
             tsthcch(i) = asthcch(i)
             tvdwhh(i)  = avdwhh(i)
@@ -1399,13 +1364,13 @@ subroutine ethane( np, para, rxncrd, &
 
         xsumrx = 0.0d0
         xstr   = 0.0d0
-        do i=1,7
+        do i=1, 7
             xstr = xstr+tstr(i)
         end do
         xbend   = 0.0d0
         xstrbnd = 0.0d0
         xbndbnd = 0.0d0
-        do i=1,6
+        do i=1, 6
             xbend   = xbend+tbhch(i)+tbcch(i)
             xstrbnd = xstrbnd+tsbcch(i)
             xbndbnd = xbndbnd+tbbhch(i)+tbbcch(i)
@@ -1413,7 +1378,7 @@ subroutine ethane( np, para, rxncrd, &
         xtor    = 0.0d0
         xstrtor = 0.0d0
         xvdw    = 0.0d0
-        do i=1,9
+        do i=1, 9
             xtor    = xtor+tthcch(i)
             xstrtor = xstrtor+tsthcch(i)
             xvdw    = xvdw+tvdwhh(i)
@@ -1429,20 +1394,20 @@ subroutine ethane( np, para, rxncrd, &
     if(lradical) then
         !       modify the h-cR-h and h-cR-C bends and c-cR-h str-bnd
         !       for C-sp3 bonded to only two atoms
-        do i=1,3
-            call eb(t0hcrh,kthch,thch(i),ebhch)
-            call eb(t0ccrh,ktcch,tcch(i),ebcch)
-            call esb(r0ch,r0cc,t0ccrh,ksbcch,rch(i),rcc,tcch(i),esbcch)
+        do i=1, 3
+            call eb(t0hcrh, kthch, thch(i), ebhch)
+            call eb(t0ccrh, ktcch, tcch(i), ebcch)
+            call esb(r0ch, r0cc, t0ccrh, ksbcch, rch(i), rcc, tcch(i), esbcch)
             abhch(i)  = ebhch
             abcch(i)  = ebcch
             asbcch(i) = esbcch
         end do
         k = 0
-        do i=1,3
-            do j=i+1,3
+        do i=1, 3
+            do j=i+1, 3
                 k = k + 1
-                call ebb(t0hcrh,t0hcrh,kbbhch,thch(i),thch(j),ebbhch)
-                call ebb(t0ccrh,t0ccrh,kbbcch,tcch(i),tcch(j),ebbcch)
+                call ebb(t0hcrh, t0hcrh, kbbhch, thch(i), thch(j), ebbhch)
+                call ebb(t0ccrh, t0ccrh, kbbcch, tcch(i), tcch(j), ebbcch)
                 abbhch(k) = ebbhch
                 abbcch(k) = ebbcch
             end do
@@ -1450,17 +1415,17 @@ subroutine ethane( np, para, rxncrd, &
     end if
 
     if(lreact) then
-        do i=1,7
+        do i=1, 7
             tstr(i) = astr(i)
         end do
-        do i=1,6
+        do i=1, 6
             tbhch(i)  = abhch(i)
             tbcch(i)  = abcch(i)
             tsbcch(i) = asbcch(i)
             tbbhch(i) = abbhch(i)
             tbbcch(i) = abbcch(i)
         end do
-        do i=1,9
+        do i=1, 9
             tthcch(i)  = athcch(i)
             tsthcch(i) = asthcch(i)
             tvdwhh(i)  = avdwhh(i)
@@ -1505,13 +1470,13 @@ subroutine ethane( np, para, rxncrd, &
 
         xsumrx = 0.0d0
         xstr   = 0.0d0
-        do i=1,7
+        do i=1, 7
             xstr = xstr+tstr(i)
         end do
         xbend   = 0.0d0
         xstrbnd = 0.0d0
         xbndbnd = 0.0d0
-        do i=1,6
+        do i=1, 6
             xbend   = xbend+tbhch(i)+tbcch(i)
             xstrbnd = xstrbnd+tsbcch(i)
             xbndbnd = xbndbnd+tbbhch(i)+tbbcch(i)
@@ -1519,7 +1484,7 @@ subroutine ethane( np, para, rxncrd, &
         xtor    = 0.0d0
         xstrtor = 0.0d0
         xvdw    = 0.0d0
-        do i=1,9
+        do i=1, 9
             xtor    = xtor+tthcch(i)
             xstrtor = xstrtor+tsthcch(i)
             xvdw    = xvdw+tvdwhh(i)
@@ -1535,17 +1500,17 @@ subroutine ethane( np, para, rxncrd, &
     ! start of if-block label: jg_case
     !....................................
     if(ljg) then
-        do i=1,7
+        do i=1, 7
             tstr(i) = astr(i)
         end do
-        do i=1,6
+        do i=1, 6
             tbhch(i)  = abhch(i)
             tbcch(i)  = abcch(i)
             tsbcch(i) = asbcch(i)
             tbbhch(i) = abbhch(i)
             tbbcch(i) = abbcch(i)
         end do
-        do i=1,9
+        do i=1, 9
             tthcch(i)  = athcch(i)
             tsthcch(i) = asthcch(i)
             tvdwhh(i)  = avdwhh(i)
@@ -1655,13 +1620,13 @@ subroutine ethane( np, para, rxncrd, &
 
         xsumjg = 0.0d0
         xstr   = 0.0d0
-        do i=1,7
+        do i=1, 7
             xstr = xstr+tstr(i)
         end do
         xbend   = 0.0d0
         xstrbnd = 0.0d0
         xbndbnd = 0.0d0
-        do i=1,6
+        do i=1, 6
             xbend   = xbend+tbhch(i)+tbcch(i)
             xstrbnd = xstrbnd+tsbcch(i)
             xbndbnd = xbndbnd+tbbhch(i)+tbbcch(i)
@@ -1669,19 +1634,19 @@ subroutine ethane( np, para, rxncrd, &
         xtor    = 0.0d0
         xstrtor = 0.0d0
         xvdw    = 0.0d0
-        do i=1,9
+        do i=1, 9
             xtor    = xtor+tthcch(i)
             xstrtor = xstrtor+tsthcch(i)
             xvdw    = xvdw+tvdwhh(i)
         end do
         xsumjg = xstr+xbend+xstrbnd+xbndbnd+xtor+xstrtor+xvdw
         if(ldebugmm) then
-            write(*,'(A,F14.8)')
-            write(*,'(A,F14.8)') '----------------------------'
-            write(*,'(A,F14.8)') 'Energy from MM3'
-            write(*,'(A,F14.8)') '----------------------------'
-            call xdisp(xstr,xbend,xstrbnd,xbndbnd, &
-                & xtor,xstrtor,xvdw,xsumjg)
+            write(*, '(A,F14.8)')
+            write(*, '(A,F14.8)') '----------------------------'
+            write(*, '(A,F14.8)') 'Energy from MM3'
+            write(*, '(A,F14.8)') '----------------------------'
+            call xdisp(xstr, xbend, xstrbnd, xbndbnd, &
+                & xtor, xstrtor, xvdw, xsumjg)
 
         end if
 
@@ -1692,6 +1657,7 @@ subroutine ethane( np, para, rxncrd, &
     vmm3 = xsumjg
 
 end subroutine ethane
+
 ! end sub ethane
 !**************************************************
 !> @brief Evaluate xdisp for the C2H7_VBMM potential.
@@ -1699,7 +1665,6 @@ subroutine xdisp( xstr, xbend, xstrbnd, xbndbnd, &
         & xtor, xstrtor, xvdw, xsum )
     !**************************************************
     implicit none
-
     double precision :: xstr
     double precision :: xbend
     double precision :: xstrbnd
@@ -1708,65 +1673,64 @@ subroutine xdisp( xstr, xbend, xstrbnd, xbndbnd, &
     double precision :: xstrtor
     double precision :: xvdw
     double precision :: xsum
-    write(*,'(A,F14.4)')
-    write(*,'(A,F14.4)') 'Energy in kcal/mol'
-    write(*,'(A,F14.4)')'Stretch   :',xstr
-    write(*,'(A,F14.4)')'Bend      :',xbend
-    write(*,'(A,F14.4)')'Str-Bnd   :',xstrbnd
-    write(*,'(A,F14.4)')'Bnd-Bnd   :',xbndbnd
-    write(*,'(A,F14.4)')'Torsional :',xtor
-    write(*,'(A,F14.4)')'Str-Tor   :',xstrtor
-    write(*,'(A,F14.4)')'vdW       :',xvdw
-    write(*,'(A,F14.4)')
-    write(*,'(A,F14.4)')'Total MM eng.  :',xsum
+    write(*, '(A,F14.4)')
+    write(*, '(A,F14.4)') 'Energy in kcal/mol'
+    write(*, '(A,F14.4)')'Stretch   :', xstr
+    write(*, '(A,F14.4)')'Bend      :', xbend
+    write(*, '(A,F14.4)')'Str-Bnd   :', xstrbnd
+    write(*, '(A,F14.4)')'Bnd-Bnd   :', xbndbnd
+    write(*, '(A,F14.4)')'Torsional :', xtor
+    write(*, '(A,F14.4)')'Str-Tor   :', xstrtor
+    write(*, '(A,F14.4)')'vdW       :', xvdw
+    write(*, '(A,F14.4)')
+    write(*, '(A,F14.4)')'Total MM eng.  :', xsum
 end subroutine xdisp
+
 ! end sub xdisp
 !**************************************************
 !> @brief Evaluate xdist for the C2H7_VBMM potential.
 function xdist( x, y )
     !**************************************************
     implicit none
-
     double precision :: x(3)
     double precision :: y(3)
     double precision :: xdist
     integer          :: i
     double precision :: z
     z = 0.0d0
-    do i=1,3
+    do i=1, 3
         z = z + ( (y(i)-x(i))**2 )
     end do
     xdist = dsqrt(z)
 
 end function xdist
+
 ! end of func xdist
 !**************************************************
 !> @brief Evaluate xangle for the C2H7_VBMM potential.
 function xangle( a, b, c )
     !**************************************************
     implicit none
-
     double precision :: a(3)
     double precision :: b(3)
     double precision :: c(3)
     double precision :: xangle
     double precision :: xdist
-
     integer          :: i
-    double precision :: sum,rab(3),rcb(3)
-
-    do i=1,3
+    double precision :: sum, rab(3), rcb(3)
+    do i=1, 3
         rab(i) = a(i)-b(i)
         rcb(i) = c(i)-b(i)
     end do
     sum = 0.0d0
-    do i=1,3
+    do i=1, 3
         sum = sum + (rab(i)*rcb(i))
     end do
-    sum    = sum/(xdist(a,b)*xdist(c,b))
+    sum    = sum/(xdist(a, b)*xdist(c, b))
     xangle = dabs(dacos(sum))
 
 end function xangle
+
 ! end of xangle
 
 !***********************************************************
@@ -1774,7 +1738,6 @@ end function xangle
 function xtorsion( a, b, c, d )
     !***********************************************************
     implicit none
-
     double precision :: a(3)
     double precision :: b(3)
     double precision :: c(3)
@@ -1791,8 +1754,8 @@ function xtorsion( a, b, c, d )
     ! we will use the cross product definition of the
     ! dihedral xangle
     !
-    integer          :: i,j
-    double precision :: x,y,z
+    integer          :: i, j
+    double precision :: x, y, z
     double precision :: s
     double precision :: phi
     double precision :: dpuv
@@ -1803,7 +1766,7 @@ function xtorsion( a, b, c, d )
     double precision :: v(3)
     !
     ! define bond-vectors
-    do i=1,3
+    do i=1, 3
         rab(i) = a(i)-b(i)
         rcb(i) = c(i)-b(i)
         rcd(i) = c(i)-d(i)
@@ -1812,8 +1775,8 @@ function xtorsion( a, b, c, d )
     ! define the normal vectors
     ! u = rab X rcb
     ! v = rcb X rcd
-    call crossprod(rab,rcb,u)
-    call crossprod(rcb,rcd,v)
+    call crossprod(rab, rcb, u)
+    call crossprod(rcb, rcd, v)
     !
     ! evaluate the norm and dot product
     ! u and v
@@ -1825,7 +1788,7 @@ function xtorsion( a, b, c, d )
     y    = 0.0d0
     s    = 0.0d0
     dpuv = 0.0d0
-    do i=1,3
+    do i=1, 3
         x    = x+(u(i)*u(i))
         y    = y+(v(i)*v(i))
         dpuv = dpuv + (u(i)*v(i))
@@ -1857,6 +1820,7 @@ function xtorsion( a, b, c, d )
     xtorsion = s * phi
 
 end function xtorsion
+
 ! end of sub xtorsion
 
 !**************************************************
@@ -1864,7 +1828,6 @@ end function xtorsion
 subroutine crossprod( a, b, c )
     !**************************************************
     implicit none
-
     double precision :: a(3)
     double precision :: b(3)
     double precision :: c(3)
@@ -1879,35 +1842,31 @@ end subroutine crossprod
 subroutine es( r0, ks, r, eng )
     !*****************************************
     implicit none
-
-    double precision :: r0
-    double precision :: ks
-    double precision :: r
-    double precision :: eng
-
+    double precision            :: r0
+    double precision            :: ks
+    double precision            :: r
+    double precision            :: eng
     double precision            :: dr
     double precision, parameter :: c1 = 71.940d0
     double precision, parameter :: c2 = 2.550d0
     double precision, parameter :: c3 = 7.0d0/12.0d0
-
     eng = 0.0d0
     dr  = (r-r0)
     eng = (c1*ks*dr*dr) * (1.0d0-(c2*dr)+(c3*c2*c2*dr*dr))
     !    1 (1.0d0-(c2*dr)+(c3*c2*dr*dr))
 
 end subroutine es
+
 ! end of sub Es
 !*****************************************
 !> @brief Evaluate Eb for the C2H7_VBMM potential.
 subroutine eb( t0, kt, t, eng )
     !*****************************************
     implicit none
-
     double precision :: t0
     double precision :: kt
     double precision :: t
     double precision :: eng
-
     double precision :: dt
     ! Alligers (JACS, vol 111, pg 8551) parameters
     !     parameter(c1=0.0219140d0)
@@ -1921,109 +1880,100 @@ subroutine eb( t0, kt, t, eng )
     double precision, parameter :: c3 = 0.0000560d0
     double precision, parameter :: c4 = 0.00000070d0
     double precision, parameter :: c5 = 0.0000000220d0
-
     dt  = t-t0
     eng = c1*kt*dt*dt* ( 1.0d0-(c2*dt)+(c3*dt*dt)-(c4*dt*dt*dt) +(c5*dt*dt*dt*dt) )
 
 end subroutine eb
+
 ! end of sub Eb
 !*****************************************
 !> @brief Evaluate Et for the C2H7_VBMM potential.
 subroutine et( v1, v2, v3, w, eng )
     !*****************************************
     implicit none
-
     double precision :: v1
     double precision :: v2
     double precision :: v3
     double precision :: w
     double precision :: eng
-
     eng = 0.50d0*( ( v1*(1.0d0+dcos(w)) ) + ( v2*(1.0d0-dcos(2.0d0*w)) ) + ( v3*(1.0d0+dcos(3.0d0*w)) ) )
 
 end subroutine et
+
 ! end of Et
 !*****************************************
 !> @brief Evaluate Esb for the C2H7_VBMM potential.
 subroutine esb( ra0, rb0, t0, kst, ra, rb, t, eng )
     !*****************************************
     implicit none
-
-    double precision :: ra0
-    double precision :: rb0
-    double precision :: t0
-    double precision :: kst
-    double precision :: ra
-    double precision :: rb
-    double precision :: t
-    double precision :: eng
-
+    double precision            :: ra0
+    double precision            :: rb0
+    double precision            :: t0
+    double precision            :: kst
+    double precision            :: ra
+    double precision            :: rb
+    double precision            :: t
+    double precision            :: eng
     double precision, parameter :: c1 = 2.511180d0
-
     eng = c1*kst*(t-t0)*((ra-ra0)+(rb-rb0))
 
 end subroutine esb
+
 ! end of Esb
 !*****************************************
 !> @brief Evaluate Est for the C2H7_VBMM potential.
 subroutine est( r0, kws, r, w, eng )
     !*****************************************
     implicit none
-
-    double precision :: r0
-    double precision :: kws
-    double precision :: r
-    double precision :: w
-    double precision :: eng
-
+    double precision            :: r0
+    double precision            :: kws
+    double precision            :: r
+    double precision            :: w
+    double precision            :: eng
     double precision, parameter :: c1 = -11.9950d0
     ! In Alligers paper(JACS, vol 111, pg 8551)
     ! c1 is +ve but TINKER (version 4.1) defines
     ! c1/2 as -ve
-
     eng = 0.50d0*c1*kws*(r-r0)*(1.0d0+dcos(3.0d0*w))
 
 end subroutine est
+
 ! end of Est
 !*****************************************
 !> @brief Evaluate Ebb for the C2H7_VBMM potential.
 subroutine ebb( ta0, tb0, kbb, ta, tb, eng )
     !*****************************************
     implicit none
-
-    double precision :: ta0
-    double precision :: tb0
-    double precision :: kbb
-    double precision :: ta
-    double precision :: tb
-    double precision :: eng
-
+    double precision            :: ta0
+    double precision            :: tb0
+    double precision            :: kbb
+    double precision            :: ta
+    double precision            :: tb
+    double precision            :: eng
     double precision, parameter :: c1 = -0.021914180d0
-
     eng = c1*kbb*(ta-ta0)*(tb-tb0)
     !     write(*,1000) c1,kbb,(ta-ta0)*(tb-tb0),eng
 end subroutine ebb
+
 ! end of Ebb
 !*****************************************
 !> @brief Evaluate Evdw for the C2H7_VBMM potential.
 subroutine evdw( rv, esp, r, eng )
     !*****************************************
     implicit none
-
-    double precision :: rv
-    double precision :: esp
-    double precision :: r
-    double precision :: eng
-
+    double precision            :: rv
+    double precision            :: esp
+    double precision            :: r
+    double precision            :: eng
     double precision            :: x
     double precision, parameter :: c1 = 2.250d0
     double precision, parameter :: c2 = 1.840d+5
     double precision, parameter :: c3 = 12.00d0
-
     x   = rv/r
     eng = esp*((-c1*x*x*x*x*x*x)+(c2*dexp(-c3/x)))
 
 end subroutine evdw
+
 ! end of vdw
 
 !23456789
@@ -2045,7 +1995,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     ! routine are in 10(5)Joules/mol
     !
     implicit none
-
     ! Input variables
     integer          :: np
     double precision :: para(np)
@@ -2241,7 +2190,7 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     !
     !     misc and temp variables
     !
-    integer          :: i,j,k
+    integer          :: i, j, k
     double precision :: t1
     double precision :: t2
     double precision :: t3
@@ -2320,7 +2269,7 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     rbh4 = 0.0d0
     rbh5 = 0.0d0
     rcb  = 0.0d0
-    do i=1,3
+    do i=1, 3
         bvch2(i) = h2(i)-c1(i)
         bvch3(i) = h3(i)-c1(i)
         bvch4(i) = h4(i)-c1(i)
@@ -2371,11 +2320,11 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     ! involving Hb and all the other atoms
     ! cbq and cbj : coulomb and resonance integral between C1 and Hb
     !
-    call v3qj77(alpcb,d1cb,d3cb,r0cb,rcb,cbq,cbj)
-    call v3qj77(alphh,d1hh,d3hh,r0hh,rbh2,bh2q,bh2j)
-    call v3qj77(alphh,d1hh,d3hh,r0hh,rbh3,bh3q,bh3j)
-    call v3qj77(alphh,d1hh,d3hh,r0hh,rbh4,bh4q,bh4f)
-    call v3qj77(alphh,d1hh,d3hh,r0hh,rbh5,bh5q,bh5j)
+    call v3qj77(alpcb, d1cb, d3cb, r0cb, rcb, cbq, cbj)
+    call v3qj77(alphh, d1hh, d3hh, r0hh, rbh2, bh2q, bh2j)
+    call v3qj77(alphh, d1hh, d3hh, r0hh, rbh3, bh3q, bh3j)
+    call v3qj77(alphh, d1hh, d3hh, r0hh, rbh4, bh4q, bh4f)
+    call v3qj77(alphh, d1hh, d3hh, r0hh, rbh5, bh5q, bh5j)
     !%%%--------------------------------------------------
     !     t1 = 0.9950d0
     !     bh2q=bh2q*t1
@@ -2397,10 +2346,10 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     t3 = (1.0d0+(t2*0.080d0))*r0ch
     !     call V3qj77(alpch,d1ch,d3ch,t3,rch2,ch2q,ch2j)
 
-    call v3qj77(alpch,d1ch,d3ch,r0ch,rch2,ch2q,ch2j)
-    call v3qj77(alpch,d1ch,d3ch,r0ch,rch3,ch3q,ch3j)
-    call v3qj77(alpch,d1ch,d3ch,r0ch,rch4,ch4q,ch4j)
-    call v3qj77(alpch,d1ch,d3ch,r0ch,rch5,ch5q,ch5j)
+    call v3qj77(alpch, d1ch, d3ch, r0ch, rch2, ch2q, ch2j)
+    call v3qj77(alpch, d1ch, d3ch, r0ch, rch3, ch3q, ch3j)
+    call v3qj77(alpch, d1ch, d3ch, r0ch, rch4, ch4q, ch4j)
+    call v3qj77(alpch, d1ch, d3ch, r0ch, rch5, ch5q, ch5j)
     !
     ! coulomb and resonance integral for H2...H5
     ! Equation 2 of Ref. [1]
@@ -2440,7 +2389,7 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     t3 = 0.50d0*(1.0d0+dtanh(t1*(rxncrd-t2)))
     t4 = 1.013850d0
 
-    call xgaussfit(rxncrd,t4)
+    call xgaussfit(rxncrd, t4)
     !     t4=t4*0.999930d0
     !     t4=t4*1.00205d0
     !     t4=t4*1.0159995120d0/1.016043066097427340d0
@@ -2459,12 +2408,12 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     !%%%--------------------------------------------------
 
     if(ldebug) then
-        write(*,*)
-        write(*,*)'H2 Vstr :',v3h2*1.0d2*kj_in_kcal
-        write(*,*)'H3 Vstr :',v3h3*1.0d2*kj_in_kcal
-        write(*,*)'H4 Vstr :',v3h4*1.0d2*kj_in_kcal
-        write(*,*)'H5 Vstr :',v3h5*1.0d2*kj_in_kcal
-        write(*,*) 'VSTR FROM XPOT:',vstr*1.0d2*kj_in_kcal
+        write(*, *)
+        write(*, *)'H2 Vstr :', v3h2*1.0d2*kj_in_kcal
+        write(*, *)'H3 Vstr :', v3h3*1.0d2*kj_in_kcal
+        write(*, *)'H4 Vstr :', v3h4*1.0d2*kj_in_kcal
+        write(*, *)'H5 Vstr :', v3h5*1.0d2*kj_in_kcal
+        write(*, *) 'VSTR FROM XPOT:', vstr*1.0d2*kj_in_kcal
     end if
     !
     ! calculate the out-of-plane bend terms
@@ -2475,53 +2424,53 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     !
     ! calculate theta0
     !
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch2,rch3,rch4,rch5,theta023)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch2, rch3, rch4, rch5, theta023)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch2,rch4,rch5,rch3,theta024)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch2, rch4, rch5, rch3, theta024)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch2,rch5,rch3,rch4,theta025)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch2, rch5, rch3, rch4, theta025)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch3,rch2,rch5,rch4,theta032)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch3, rch2, rch5, rch4, theta032)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch3,rch4,rch2,rch5,theta034)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch3, rch4, rch2, rch5, theta034)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch3,rch5,rch4,rch2,theta035)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch3, rch5, rch4, rch2, theta035)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch4,rch2,rch3,rch5,theta042)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch4, rch2, rch3, rch5, theta042)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch4,rch3,rch5,rch2,theta043)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch4, rch3, rch5, rch2, theta043)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch4,rch5,rch2,rch3,theta045)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch4, rch5, rch2, rch3, theta045)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch5,rch2,rch4,rch3,theta052)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch5, rch2, rch4, rch3, theta052)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch5,rch3,rch2,rch4,theta053)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch5, rch3, rch2, rch4, theta053)
 
-    call gjtheta0(pi,tau,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta,r0ch, &
-        & rch5,rch4,rch3,rch2,theta054)
+    call gjtheta0(pi, tau, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, r0ch, &
+        & rch5, rch4, rch3, rch2, theta054)
 
     !     scat0=1.0d0
     !     theta023=theta023*scat0
@@ -2540,21 +2489,21 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     !
     ! calculate delta
     !
-    call steckdel(bvch3,bvch4,bvch5,bvch3,d23)
-    call steckdel(bvch3,bvch4,bvch5,bvch4,d24)
-    call steckdel(bvch3,bvch4,bvch5,bvch5,d25)
+    call steckdel(bvch3, bvch4, bvch5, bvch3, d23)
+    call steckdel(bvch3, bvch4, bvch5, bvch4, d24)
+    call steckdel(bvch3, bvch4, bvch5, bvch5, d25)
 
-    call steckdel(bvch5,bvch4,bvch2,bvch2,d32)
-    call steckdel(bvch5,bvch4,bvch2,bvch4,d34)
-    call steckdel(bvch5,bvch4,bvch2,bvch5,d35)
+    call steckdel(bvch5, bvch4, bvch2, bvch2, d32)
+    call steckdel(bvch5, bvch4, bvch2, bvch4, d34)
+    call steckdel(bvch5, bvch4, bvch2, bvch5, d35)
 
-    call steckdel(bvch5,bvch2,bvch3,bvch2,d42)
-    call steckdel(bvch5,bvch2,bvch3,bvch3,d43)
-    call steckdel(bvch5,bvch2,bvch3,bvch5,d45)
+    call steckdel(bvch5, bvch2, bvch3, bvch2, d42)
+    call steckdel(bvch5, bvch2, bvch3, bvch3, d43)
+    call steckdel(bvch5, bvch2, bvch3, bvch5, d45)
 
-    call steckdel(bvch2,bvch4,bvch3,bvch2,d52)
-    call steckdel(bvch2,bvch4,bvch3,bvch3,d53)
-    call steckdel(bvch2,bvch4,bvch3,bvch4,d54)
+    call steckdel(bvch2, bvch4, bvch3, bvch2, d52)
+    call steckdel(bvch2, bvch4, bvch3, bvch3, d53)
+    call steckdel(bvch2, bvch4, bvch3, bvch4, d54)
 
     delta23 = d23-theta023
     delta24 = d24-theta024
@@ -2573,29 +2522,29 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     delta54 = d54-theta054
 
     if(ldebug) then
-        write(iout,*)
-        write(iout,*) 'theta0 and delta terms:'
-        write(iout,*) 'H2-H3:',theta023,delta23
-        write(iout,*) 'H2-H4:',theta024,delta24
-        write(iout,*) 'H2-H5:',theta025,delta25
-        write(iout,*) 'H3-H4:',theta034,delta34
-        write(iout,*) 'H3-H5:',theta035,delta35
-        write(iout,*) 'H4-H5:',theta045,delta45
+        write(iout, *)
+        write(iout, *) 'theta0 and delta terms:'
+        write(iout, *) 'H2-H3:', theta023, delta23
+        write(iout, *) 'H2-H4:', theta024, delta24
+        write(iout, *) 'H2-H5:', theta025, delta25
+        write(iout, *) 'H3-H4:', theta034, delta34
+        write(iout, *) 'H3-H5:', theta035, delta35
+        write(iout, *) 'H4-H5:', theta045, delta45
     end if
     !
     ! calculate fd and hd terms
-    call calcfh(a3s,b3s,fd0,hd0,r0ch,rch2,rch3,rch4,rch5,fd2,hd2)
-    call calcfh(a3s,b3s,fd0,hd0,r0ch,rch3,rch5,rch4,rch2,fd3,hd3)
-    call calcfh(a3s,b3s,fd0,hd0,r0ch,rch4,rch5,rch2,rch3,fd4,hd4)
-    call calcfh(a3s,b3s,fd0,hd0,r0ch,rch5,rch2,rch4,rch3,fd5,hd5)
+    call calcfh(a3s, b3s, fd0, hd0, r0ch, rch2, rch3, rch4, rch5, fd2, hd2)
+    call calcfh(a3s, b3s, fd0, hd0, r0ch, rch3, rch5, rch4, rch2, fd3, hd3)
+    call calcfh(a3s, b3s, fd0, hd0, r0ch, rch4, rch5, rch2, rch3, fd4, hd4)
+    call calcfh(a3s, b3s, fd0, hd0, r0ch, rch5, rch2, rch4, rch3, fd5, hd5)
 
     if(ldebug) then
-        write(iout,*)
-        write(iout,*)'FD and HD terms:'
-        write(iout,*)'H2',fd2,hd2
-        write(iout,*)'H3',fd3,hd3
-        write(iout,*)'H4',fd4,hd4
-        write(iout,*)'H5',fd5,hd5
+        write(iout, *)
+        write(iout, *)'FD and HD terms:'
+        write(iout, *)'H2', fd2, hd2
+        write(iout, *)'H3', fd3, hd3
+        write(iout, *)'H4', fd4, hd4
+        write(iout, *)'H5', fd5, hd5
     end if
     !
     ! calculate vop contributions for each H
@@ -2623,37 +2572,37 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     vop = voph2+voph3+voph4+voph5
 
     if(ldebug) then
-        write(*,*)
-        write(*,*)'H2 Vop : ',voph2*1.0d2*kj_in_kcal
-        write(*,*)'H3 Vop : ',voph3*1.0d2*kj_in_kcal
-        write(*,*)'H4 Vop : ',voph4*1.0d2*kj_in_kcal
-        write(*,*)'H5 Vop : ',voph5*1.0d2*kj_in_kcal
-        write(iout,*) 'VOP FROM XPOT :',vop*1.0d2*kj_in_kcal
+        write(*, *)
+        write(*, *)'H2 Vop : ', voph2*1.0d2*kj_in_kcal
+        write(*, *)'H3 Vop : ', voph3*1.0d2*kj_in_kcal
+        write(*, *)'H4 Vop : ', voph4*1.0d2*kj_in_kcal
+        write(*, *)'H5 Vop : ', voph5*1.0d2*kj_in_kcal
+        write(iout, *) 'VOP FROM XPOT :', vop*1.0d2*kj_in_kcal
     end if
     !
     ! Calculate in-plane terms
 
     ! get the k0ij terms
-    call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch, &
-        & rch2,rch3,rch4,rch5,xk023)
-    call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch, &
-        & rch2,rch4,rch5,rch3,xk024)
-    call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch, &
-        & rch2,rch5,rch3,rch4,xk025)
+    call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
+        & rch2, rch3, rch4, rch5, xk023)
+    call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
+        & rch2, rch4, rch5, rch3, xk024)
+    call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
+        & rch2, rch5, rch3, rch4, xk025)
 
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,
     !    1               rch3,rch2,rch5,rch4,xk032)
-    call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch, &
-        & rch3,rch4,rch2,rch5,xk034)
-    call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch, &
-        & rch3,rch5,rch4,rch2,xk035)
+    call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
+        & rch3, rch4, rch2, rch5, xk034)
+    call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
+        & rch3, rch5, rch4, rch2, xk035)
 
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,
     !    1               rch4,rch2,rch3,rch5,xk042)
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,
     !    1               rch4,rch3,rch5,rch2,xk043)
-    call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch, &
-        & rch4,rch5,rch2,rch3,xk045)
+    call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
+        & rch4, rch5, rch2, rch3, xk045)
 
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,rch5,rch2,rch4,rch3,xk
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,rch5,rch3,rch2,rch4,xk
@@ -2661,18 +2610,18 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
 
     !
     ! get ki terms
-    call calcvipk(aa1,aa2,aa3,aa4,r0ch,r0hh,rch2,rbh2,xk2)
-    call calcvipk(aa1,aa2,aa3,aa4,r0ch,r0hh,rch3,rbh3,xk3)
-    call calcvipk(aa1,aa2,aa3,aa4,r0ch,r0hh,rch4,rbh4,xk4)
-    call calcvipk(aa1,aa2,aa3,aa4,r0ch,r0hh,rch5,rbh5,xk5)
+    call calcvipk(aa1, aa2, aa3, aa4, r0ch, r0hh, rch2, rbh2, xk2)
+    call calcvipk(aa1, aa2, aa3, aa4, r0ch, r0hh, rch3, rbh3, xk3)
+    call calcvipk(aa1, aa2, aa3, aa4, r0ch, r0hh, rch4, rbh4, xk4)
+    call calcvipk(aa1, aa2, aa3, aa4, r0ch, r0hh, rch5, rbh5, xk5)
     !
     ! get bond xangles
-    theta23 = xangle(h2,c1,h3)
-    theta24 = xangle(h2,c1,h4)
-    theta25 = xangle(h2,c1,h5)
-    theta34 = xangle(h3,c1,h4)
-    theta35 = xangle(h3,c1,h5)
-    theta45 = xangle(h4,c1,h5)
+    theta23 = xangle(h2, c1, h3)
+    theta24 = xangle(h2, c1, h4)
+    theta25 = xangle(h2, c1, h5)
+    theta34 = xangle(h3, c1, h4)
+    theta35 = xangle(h3, c1, h5)
+    theta45 = xangle(h4, c1, h5)
 
     vip23 = xk023*xk2*xk3*(theta23-theta023)*(theta23-theta023)
     vip24 = xk024*xk2*xk4*(theta24-theta024)*(theta24-theta024)
@@ -2690,23 +2639,23 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     xpot_kcal = xpot*100.0d0*kj_in_kcal
 
     if(ldebug) then
-        write(*,*)
-        write(*,*)'H2-H3 Vip :',0.50d0*vip23*1.0d2*kj_in_kcal
-        write(*,*)'H2-H4 Vip :',0.50d0*vip24*1.0d2*kj_in_kcal
-        write(*,*)'H2-H5 Vip :',0.50d0*vip25*1.0d2*kj_in_kcal
-        write(*,*)'H3-H4 Vip :',0.50d0*vip34*1.0d2*kj_in_kcal
-        write(*,*)'H3-H5 Vip :',0.50d0*vip35*1.0d2*kj_in_kcal
-        write(*,*)'H4-H5 Vip :',0.50d0*vip45*1.0d2*kj_in_kcal
-        write(*,*) 'VIP FROM XPOT:',vip*1.0d2*kj_in_kcal
-        write(*,*) 'VSTR+VIP+VOP :',(vstr+vip+vop)*1.0d2*kj_in_kcal
+        write(*, *)
+        write(*, *)'H2-H3 Vip :', 0.50d0*vip23*1.0d2*kj_in_kcal
+        write(*, *)'H2-H4 Vip :', 0.50d0*vip24*1.0d2*kj_in_kcal
+        write(*, *)'H2-H5 Vip :', 0.50d0*vip25*1.0d2*kj_in_kcal
+        write(*, *)'H3-H4 Vip :', 0.50d0*vip34*1.0d2*kj_in_kcal
+        write(*, *)'H3-H5 Vip :', 0.50d0*vip35*1.0d2*kj_in_kcal
+        write(*, *)'H4-H5 Vip :', 0.50d0*vip45*1.0d2*kj_in_kcal
+        write(*, *) 'VIP FROM XPOT:', vip*1.0d2*kj_in_kcal
+        write(*, *) 'VSTR+VIP+VOP :', (vstr+vip+vop)*1.0d2*kj_in_kcal
 
-        write(*,*)
-        write(*,*)'Energy after removing H5 term'
-        write(*,*)'Vstr:',(vstr-v3h5)*1.0d2*kj_in_kcal
-        write(*,*)'Vop :',(vop-voph5)*1.0d2*kj_in_kcal
-        write(*,*)'Vip :',vip-((vip25+vip35+vip45)*0.50d0)* &
+        write(*, *)
+        write(*, *)'Energy after removing H5 term'
+        write(*, *)'Vstr:', (vstr-v3h5)*1.0d2*kj_in_kcal
+        write(*, *)'Vop :', (vop-voph5)*1.0d2*kj_in_kcal
+        write(*, *)'Vip :', vip-((vip25+vip35+vip45)*0.50d0)* &
             & 1.0d2*kj_in_kcal
-        write(*,*)'Total xpot:',xpot_kcal
+        write(*, *)'Total xpot:', xpot_kcal
     end if
 
     if(.false.) then
@@ -2728,13 +2677,14 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
         r(16) = hb(1)/0.52918d0
         r(17) = hb(2)/0.52918d0
         r(18) = hb(3)/0.52918d0
-        call csurf(vsurf,r,dv,18)
+        call csurf(vsurf, r, dv, 18)
         !       vsurf=(vsurf-v3h5)*100.0d0*KJ_IN_KCAL
-        write(*,*) 'VSURF:',vsurf*627.510d0
-        write(*,*) 'MYVSURF:',(vstr+vop+vip)*0.03812d0*627.510d0
+        write(*, *) 'VSURF:', vsurf*627.510d0
+        write(*, *) 'MYVSURF:', (vstr+vop+vip)*0.03812d0*627.510d0
     end if
 
 end subroutine xch5pot
+
 !23456789
 ! References:
 ! [1]. Joseph et al. : JCP, vol 87(12),  pg 7036, 1987
@@ -2750,7 +2700,6 @@ subroutine v3qj77( alpha, d1, d3, r0, r, vq, vj )
     ! Equations: 2, 3, 4, 5, and 8 of Ref. [1]
     !
     implicit none
-
     ! Input variables
     double precision :: alpha
     double precision :: d1
@@ -2761,9 +2710,8 @@ subroutine v3qj77( alpha, d1, d3, r0, r, vq, vj )
     double precision :: vq
     double precision :: vj
     ! Local variables
-    double precision :: z1,z2
-    double precision :: e1,e3
-
+    double precision :: z1, z2
+    double precision :: e1, e3
     z1 = dexp(-alpha*(r-r0))
     z2 = dexp(-2.0d0*alpha*(r-r0))
 
@@ -2772,6 +2720,7 @@ subroutine v3qj77( alpha, d1, d3, r0, r, vq, vj )
     vq = 0.50d0*(e1+e3)
     vj = 0.50d0*(e1-e3)
 end subroutine v3qj77
+
 ! end of V3qj
 
 !23456789
@@ -2788,7 +2737,6 @@ function funcs3( alpha, beta, r0, r )
     ! Equation 4 of Ref. [2]
     !
     implicit none
-
     double precision :: alpha
     double precision :: beta
     double precision :: r0
@@ -2796,6 +2744,7 @@ function funcs3( alpha, beta, r0, r )
     double precision :: funcs3
     funcs3 = 1.0d0-dtanh(alpha*(r-r0)*(r-beta)*(r-beta))
 end function funcs3
+
 ! end of func funcS3
 !***********************************************************************
 !> @brief Evaluate calcfh for the C2H7_VBMM potential.
@@ -2805,7 +2754,6 @@ subroutine calcfh( a3, b3, fd0, hd0, r0, ri, rj, rk, rl, fdi, hdi )
     ! as defined by Equation 4 of Ref. [2]
     !
     implicit none
-
     ! Input variables
     double precision :: a3
     double precision :: b3
@@ -2824,7 +2772,6 @@ subroutine calcfh( a3, b3, fd0, hd0, r0, ri, rj, rk, rl, fdi, hdi )
     double precision :: s3j
     double precision :: s3k
     double precision :: s3l
-
     s3i = 1.0d0-tanh( a3*(ri-r0)*(ri-b3)*(ri-b3) )
     s3j = 1.0d0-tanh( a3*(rj-r0)*(rj-b3)*(rj-b3) )
     s3k = 1.0d0-tanh( a3*(rk-r0)*(rk-b3)*(rk-b3) )
@@ -2833,6 +2780,7 @@ subroutine calcfh( a3, b3, fd0, hd0, r0, ri, rj, rk, rl, fdi, hdi )
     hdi = (1.0d0-s3i)*s3j*s3k*s3l*hd0
 
 end subroutine calcfh
+
 ! end of sub calcfh
 
 !***********************************************************************
@@ -2845,7 +2793,6 @@ subroutine gjtheta0( pi, tau, aphi, bphi, cphi, atheta, btheta, ctheta, &
     ! Equation 5 in Ref. [2]
     !
     implicit none
-
     ! Input variables
     double precision :: pi
     double precision :: tau
@@ -2875,7 +2822,6 @@ subroutine gjtheta0( pi, tau, aphi, bphi, cphi, atheta, btheta, ctheta, &
     double precision :: sphij
     double precision :: sthetak
     double precision :: sthetal
-
     si       = aphi*(ri-r0)*dexp(bphi*(ri-cphi)*(ri-cphi)*(ri-cphi))
     sj       = aphi*(rj-r0)*dexp(bphi*(rj-cphi)*(rj-cphi)*(rj-cphi))
     sk       = atheta*(rk-r0)*dexp(btheta*(rk-ctheta)*(rk-ctheta)*(rk-ctheta))
@@ -2891,6 +2837,7 @@ subroutine gjtheta0( pi, tau, aphi, bphi, cphi, atheta, btheta, ctheta, &
     theta0ij = tau+(t1*s1)+(t2*s2)
 
 end subroutine gjtheta0
+
 ! end of gjtheta0
 !***********************************************************************
 !> @brief Evaluate steckdel for the C2H7_VBMM potential.
@@ -2904,7 +2851,6 @@ subroutine steckdel( v1, v2, v3, vi, deltai )
     ! will be done in the calling suroutine.
     !
     implicit none
-
     ! Input variables
     double precision :: v1(3)
     double precision :: v2(3)
@@ -2928,7 +2874,7 @@ subroutine steckdel( v1, v2, v3, vi, deltai )
     ! v21=v2-v1
     ! v31=v3-v1
     !
-    do i=1,3
+    do i=1, 3
         v21(i) = v2(i)-v1(i)
         v31(i) = v3(i)-v1(i)
     end do
@@ -2938,7 +2884,7 @@ subroutine steckdel( v1, v2, v3, vi, deltai )
     ! pn = r21 X r31
     ! rn is lenght of pn
     !
-    call crossprod(v21,v31,pn)
+    call crossprod(v21, v31, pn)
     !
     ! The xangle between pn and vi is deltaI
     ! evalute the dot product:
@@ -2947,7 +2893,7 @@ subroutine steckdel( v1, v2, v3, vi, deltai )
     ri   = 0.0d0
     rn   = 0.0d0
     doti = 0.0d0
-    do i=1,3
+    do i=1, 3
         ri   = ri+(vi(i)*vi(i))
         rn   = rn+(pn(i)*pn(i))
         doti = doti+(pn(i)*vi(i))
@@ -2961,6 +2907,7 @@ subroutine steckdel( v1, v2, v3, vi, deltai )
     deltai = dacos(doti/(ri*rn))
 
 end subroutine steckdel
+
 ! end of sub steckdel
 !23456789
 ! References:
@@ -2976,7 +2923,6 @@ subroutine calcvipk( a1, a2, a3, a4, r0ch, r0bh, rch, rbh, vipk )
     ! bendinging as given by equation 6 of Ref. [2]
     !
     implicit none
-
     ! Input varaibles
     double precision :: a1
     double precision :: a2
@@ -2991,11 +2937,11 @@ subroutine calcvipk( a1, a2, a3, a4, r0ch, r0bh, rch, rbh, vipk )
     ! Local variables
     double precision :: ua1
     double precision :: ua2
-
     ua1  = 1.0d0-dexp(-a1*rbh*rbh)
     ua2  = a2+(a3*dexp(-a4*(rbh-r0bh)*(rbh-r0bh)))
     vipk = ua1*dexp(-ua2*(rch-r0ch)*(rch-r0ch))
 end subroutine calcvipk
+
 ! end of sub calcvipk
 !***********************************************************************
 !> @brief Evaluate calcvipk0 for the C2H7_VBMM potential.
@@ -3005,7 +2951,6 @@ subroutine calcvipk0( a1, b1, a2, b2, ak, kch3, r0ch, ri, rj, rk, rl, vipk0ij )
     ! for in-plane-bending terms
     ! Equation 9 of Ref. [2]
     implicit none
-
     ! Input varaibles
     double precision :: a1
     double precision :: b1
@@ -3026,7 +2971,6 @@ subroutine calcvipk0( a1, b1, a2, b2, ak, kch3, r0ch, ri, rj, rk, rl, vipk0ij )
     double precision :: s1j
     double precision :: s2k
     double precision :: s2l
-
     kch4 = kch3+ak
     ! calculate switching func
     s1i = 1.0d0-dtanh( a1*(ri-r0ch)*((ri-b1)**8) )
@@ -3038,6 +2982,7 @@ subroutine calcvipk0( a1, b1, a2, b2, ak, kch3, r0ch, ri, rj, rk, rl, vipk0ij )
     vipk0ij = kch4+( kch4*((s1i*s1j)-1.0d0) ) +( (kch4-kch3)*((s2k*s2l)-1.0d0) )
 
 end subroutine calcvipk0
+
 ! end of sub. calcvipk0
 !23456789
 !************************************************
@@ -3052,14 +2997,12 @@ subroutine xlimit( a, b, s, x0, x, y )
     ! The output value is given by y
     !
     implicit none
-
     double precision :: a
     double precision :: b
     double precision :: s
     double precision :: x0
     double precision :: x
     double precision :: y
-
     double precision :: r
     double precision :: ca
     double precision :: cb
@@ -3078,6 +3021,7 @@ subroutine xlimit( a, b, s, x0, x, y )
     y  = (ca*a)+(cb*b)
 
 end subroutine xlimit
+
 ! end of xlimit
 !==========================================================
 !==========================================================
@@ -3110,39 +3054,36 @@ subroutine csurf( engygs, r, degsdr, n3tm )
     !                       X(16) - X(18) : X, Y, Z for H5
     !
     implicit none
-
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, aphi, atheta, b1ch, b1s, b2s, b3s, bk, &
         & bphi, btheta, c1ch, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, degsdr, dfdc, dfdelta, dfdh, dhdelta, &
         & ds1, ds2, ds3, dsphi, dstheta, dtheta0, en, engygs, f1, fch3, fdelta, fk0, fkinf, hch3, hdelta, pdot, q, r, &
         & r0cb, r0ch, r0hh, rbh, rcb, rch, s1, s2, s3, sphi, stheta, tbh, tcb, tch, theta0, vip, vop, vstr
-    integer :: i, n3tm, nc, nh, nhb, nnb, nnc, nnh
-
+    integer                     :: i, n3tm, nc, nh, nhb, nnb, nnc, nnh
     double precision, parameter :: pi = 3.141592653589793d0
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    dimension r(n3tm),degsdr(n3tm)
+    dimension r(n3tm), degsdr(n3tm)
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
-
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     call prepot
     ! Changing units from angstrom to bohr and initialize
     !
@@ -3195,11 +3136,12 @@ subroutine csurf( engygs, r, degsdr, n3tm )
     !
     ! 0.0201723 conversion factor from 10(5)j/mol/A to hartrees/bohr
     !
-    do i=1,18
+    do i=1, 18
         degsdr(i) = pdot(i)*0.0201723d0
-    enddo
+    end do
     !
 end subroutine csurf
+
 !
 !******************************************************
 !
@@ -3209,7 +3151,6 @@ subroutine coorden
     !  calculates relative coordinates and bond lengths
     !
     implicit none
-
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, atheta, b1ch, b1s, b2s, &
         & b3s, bk, bphi, btheta, c1ch, cart, cartnu, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, deesdr, degsdr, &
         & deijdr, descart, dfdc, dfdelta, dfdh, dgscart, dhdelta, dijcart, ds1, ds2, ds3, dsphi, dstheta, dtheta0, &
@@ -3229,62 +3170,63 @@ subroutine coorden
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
     !  calculate relative coordinates
     !
-    do ind=1,3
+    do ind=1, 3
         tcb(ind) = q(nc(ind))-q(nhb(ind))
-        do i=1,4
-            tch(i,ind) = q(nc(ind))-q(nh(i,ind))
-            tbh(i,ind) = q(nhb(ind))-q(nh(i,ind))
-        enddo
-    enddo
+        do i=1, 4
+            tch(i, ind) = q(nc(ind))-q(nh(i, ind))
+            tbh(i, ind) = q(nhb(ind))-q(nh(i, ind))
+        end do
+    end do
     !
     !  calculate bond lengths
     !
     rcb = sqrt(tcb(1)*tcb(1)+tcb(2)*tcb(2)+tcb(3)*tcb(3))
-    do i=1,4
-        rch(i) = sqrt(tch(i,1)*tch(i,1)+tch(i,2)*tch(i,2)+ tch(i,3)*tch(i,3))
-        rbh(i) = sqrt(tbh(i,1)*tbh(i,1)+tbh(i,2)*tbh(i,2)+ tbh(i,3)*tbh(i,3))
-    enddo
+    do i=1, 4
+        rch(i) = sqrt(tch(i, 1)*tch(i, 1)+tch(i, 2)*tch(i, 2)+ tch(i, 3)*tch(i, 3))
+        rbh(i) = sqrt(tbh(i, 1)*tbh(i, 1)+tbh(i, 2)*tbh(i, 2)+ tbh(i, 3)*tbh(i, 3))
+    end do
 end subroutine coorden
+
 !
 !******************************************************
 !
@@ -3295,7 +3237,6 @@ subroutine refxangles
     !  subroutine calculates reference xangles for the "in-plane" potential
     !
     implicit none
-
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, atheta, b1ch, b1s, b2s, &
         & b3s, bk, bphi, btheta, c1ch, cart, cartnu, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, deesdr, degsdr, &
         & deijdr, descart, dfdc, dfdelta, dfdh, dgscart, dhdelta, dijcart, ds1, ds2, ds3, dsphi, dstheta, dtheta0, &
@@ -3315,43 +3256,43 @@ subroutine refxangles
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
     tau = acos(-1.0d0/3.0d0)
     !       pi=4.0d0*atan(1.0d0)
@@ -3360,73 +3301,74 @@ subroutine refxangles
     !
     !  set diagonal elements to zero
     !
-    do i=1,4
-        theta0(i,i) = 0.0d0
-        do k=1,4
-            dtheta0(i,i,k) = 0.0d0
-        enddo
-    enddo
+    do i=1, 4
+        theta0(i, i) = 0.0d0
+        do k=1, 4
+            dtheta0(i, i, k) = 0.0d0
+        end do
+    end do
     !
     !  calculate reference xangles
     !
     !##
-    theta0(1,2) = tau+(tau-halfpi)*(sphi(1)*sphi(2)-1.0d0) +(tau-twopi/3.0d0)*(stheta(3)*stheta(4)-1.0d0)
-    theta0(1,3) = tau+(tau-halfpi)*(sphi(1)*sphi(3)-1.0d0) +(tau-twopi/3.0d0)*(stheta(2)*stheta(4)-1.0d0)
-    theta0(1,4) = tau+(tau-halfpi)*(sphi(1)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(2)*stheta(3)-1.0d0)
-    theta0(2,3) = tau+(tau-halfpi)*(sphi(2)*sphi(3)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(4)-1.0d0)
-    theta0(2,4) = tau+(tau-halfpi)*(sphi(2)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(3)-1.0d0)
-    theta0(3,4) = tau+(tau-halfpi)*(sphi(3)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(2)-1.0d0)
+    theta0(1, 2) = tau+(tau-halfpi)*(sphi(1)*sphi(2)-1.0d0) +(tau-twopi/3.0d0)*(stheta(3)*stheta(4)-1.0d0)
+    theta0(1, 3) = tau+(tau-halfpi)*(sphi(1)*sphi(3)-1.0d0) +(tau-twopi/3.0d0)*(stheta(2)*stheta(4)-1.0d0)
+    theta0(1, 4) = tau+(tau-halfpi)*(sphi(1)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(2)*stheta(3)-1.0d0)
+    theta0(2, 3) = tau+(tau-halfpi)*(sphi(2)*sphi(3)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(4)-1.0d0)
+    theta0(2, 4) = tau+(tau-halfpi)*(sphi(2)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(3)-1.0d0)
+    theta0(3, 4) = tau+(tau-halfpi)*(sphi(3)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(2)-1.0d0)
     !
     !  calculate the derivatives of theta0(i,j) in terms of rch(k)
     !  quantity calulated is dtheta0(i,j,k)
     !
     !  derivatives wrt rch(1)
     !
-    dtheta0(1,2,1) = (tau-halfpi)*dsphi(1)*sphi(2)
-    dtheta0(1,3,1) = (tau-halfpi)*dsphi(1)*sphi(3)
-    dtheta0(1,4,1) = (tau-halfpi)*dsphi(1)*sphi(4)
-    dtheta0(2,3,1) = (tau-twopi/3.0d0)*dstheta(1)*stheta(4)
-    dtheta0(2,4,1) = (tau-twopi/3.0d0)*dstheta(1)*stheta(3)
-    dtheta0(3,4,1) = (tau-twopi/3.0d0)*dstheta(1)*stheta(2)
+    dtheta0(1, 2, 1) = (tau-halfpi)*dsphi(1)*sphi(2)
+    dtheta0(1, 3, 1) = (tau-halfpi)*dsphi(1)*sphi(3)
+    dtheta0(1, 4, 1) = (tau-halfpi)*dsphi(1)*sphi(4)
+    dtheta0(2, 3, 1) = (tau-twopi/3.0d0)*dstheta(1)*stheta(4)
+    dtheta0(2, 4, 1) = (tau-twopi/3.0d0)*dstheta(1)*stheta(3)
+    dtheta0(3, 4, 1) = (tau-twopi/3.0d0)*dstheta(1)*stheta(2)
     !
     !  derivatives wrt rch(2)
     !
-    dtheta0(1,2,2) = (tau-halfpi)*sphi(1)*dsphi(2)
-    dtheta0(1,3,2) = (tau-twopi/3.0d0)*dstheta(2)*stheta(4)
-    dtheta0(1,4,2) = (tau-twopi/3.0d0)*dstheta(2)*stheta(3)
-    dtheta0(2,3,2) = (tau-halfpi)*dsphi(2)*sphi(3)
-    dtheta0(2,4,2) = (tau-halfpi)*dsphi(2)*sphi(4)
-    dtheta0(3,4,2) = (tau-twopi/3.0d0)*stheta(1)*dstheta(2)
+    dtheta0(1, 2, 2) = (tau-halfpi)*sphi(1)*dsphi(2)
+    dtheta0(1, 3, 2) = (tau-twopi/3.0d0)*dstheta(2)*stheta(4)
+    dtheta0(1, 4, 2) = (tau-twopi/3.0d0)*dstheta(2)*stheta(3)
+    dtheta0(2, 3, 2) = (tau-halfpi)*dsphi(2)*sphi(3)
+    dtheta0(2, 4, 2) = (tau-halfpi)*dsphi(2)*sphi(4)
+    dtheta0(3, 4, 2) = (tau-twopi/3.0d0)*stheta(1)*dstheta(2)
     !
     !  derivatives wrt rch(3)
     !
-    dtheta0(1,2,3) = (tau-twopi/3.0d0)*dstheta(3)*stheta(4)
-    dtheta0(1,3,3) = (tau-halfpi)*sphi(1)*dsphi(3)
-    dtheta0(1,4,3) = (tau-twopi/3.0d0)*stheta(2)*dstheta(3)
-    dtheta0(2,3,3) = (tau-halfpi)*sphi(2)*dsphi(3)
-    dtheta0(2,4,3) = (tau-twopi/3.0d0)*stheta(1)*dstheta(3)
-    dtheta0(3,4,3) = (tau-halfpi)*dsphi(3)*sphi(4)
+    dtheta0(1, 2, 3) = (tau-twopi/3.0d0)*dstheta(3)*stheta(4)
+    dtheta0(1, 3, 3) = (tau-halfpi)*sphi(1)*dsphi(3)
+    dtheta0(1, 4, 3) = (tau-twopi/3.0d0)*stheta(2)*dstheta(3)
+    dtheta0(2, 3, 3) = (tau-halfpi)*sphi(2)*dsphi(3)
+    dtheta0(2, 4, 3) = (tau-twopi/3.0d0)*stheta(1)*dstheta(3)
+    dtheta0(3, 4, 3) = (tau-halfpi)*dsphi(3)*sphi(4)
     !
     !  derivatives wrt rch(4)
     !
-    dtheta0(1,2,4) = (tau-twopi/3.0d0)*stheta(3)*dstheta(4)
-    dtheta0(1,3,4) = (tau-twopi/3.0d0)*stheta(2)*dstheta(4)
-    dtheta0(1,4,4) = (tau-halfpi)*sphi(1)*dsphi(4)
-    dtheta0(2,3,4) = (tau-twopi/3.0d0)*stheta(1)*dstheta(4)
-    dtheta0(2,4,4) = (tau-halfpi)*sphi(2)*dsphi(4)
-    dtheta0(3,4,4) = (tau-halfpi)*sphi(3)*dsphi(4)
+    dtheta0(1, 2, 4) = (tau-twopi/3.0d0)*stheta(3)*dstheta(4)
+    dtheta0(1, 3, 4) = (tau-twopi/3.0d0)*stheta(2)*dstheta(4)
+    dtheta0(1, 4, 4) = (tau-halfpi)*sphi(1)*dsphi(4)
+    dtheta0(2, 3, 4) = (tau-twopi/3.0d0)*stheta(1)*dstheta(4)
+    dtheta0(2, 4, 4) = (tau-halfpi)*sphi(2)*dsphi(4)
+    dtheta0(3, 4, 4) = (tau-halfpi)*sphi(3)*dsphi(4)
     !
     !  fill in the other half of the matrix
     !
-    do i=1,3
-        do j=i+1,4
-            theta0(j,i) = theta0(i,j)
-            do k=1,4
-                dtheta0(j,i,k) = dtheta0(i,j,k)
-            enddo
-        enddo
-    enddo
+    do i=1, 3
+        do j=i+1, 4
+            theta0(j, i) = theta0(i, j)
+            do k=1, 4
+                dtheta0(j, i, k) = dtheta0(i, j, k)
+            end do
+        end do
+    end do
 end subroutine refxangles
+
 !
 !******************************************************
 !
@@ -3438,7 +3380,6 @@ subroutine stretch( vstr )
     !  derivatives
     !
     implicit none
-
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ach, achdc, achdh, ahh, ak, anuzero, aphi, arga, &
         & atheta, b1ch, b1s, b2s, b3s, bk, bphi, btheta, c1ch, cart, cartnu, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, &
         & d3hh, deesdr, degsdr, deijdr, descart, dfdc, dfdelta, dfdh, dgscart, dhdelta, dijcart, ds1, ds2, ds3, dsphi, &
@@ -3460,46 +3401,46 @@ subroutine stretch( vstr )
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
-    dimension vqch(4),vjch(4),vqbh(4),vjbh(4),vq(4),vj(4), &
-        & achdc(3),achdh(4,3)
+    dimension vqch(4), vjch(4), vqbh(4), vjbh(4), vq(4), vj(4), &
+        & achdc(3), achdh(4, 3)
     !
     !  calculate avergage bond length for the methane moiety
     !
@@ -3521,7 +3462,7 @@ subroutine stretch( vstr )
     else
         ach    = a1ch+b1ch
         dumach = 0.0d0
-    endif
+    end if
     !
     !  calculate singlet: e1, triplet: e3 energies and vq and vj
     !  terms for each bond
@@ -3530,7 +3471,7 @@ subroutine stretch( vstr )
     e3   = d3cb*(exp(-2.0d0*acb*(rcb-r0cb))+2.0d0*exp(-acb*(rcb-r0cb)))
     vqcb = (e1+e3)*0.5d0
     vjcb = (e1-e3)*0.5d0
-    do i=1,4
+    do i=1, 4
         e1      = d1ch*(exp(-2.0d0*ach*(rch(i)-r0ch)) -2.0d0*exp(-ach*(rch(i)-r0ch)))
         e3      = d3ch*(exp(-2.0d0*ach*(rch(i)-r0ch)) +2.0d0*exp(-ach*(rch(i)-r0ch)))
         vqch(i) = (e1+e3)*0.5d0
@@ -3545,49 +3486,49 @@ subroutine stretch( vstr )
         vq(i) = vqch(i)+vqcb+vqbh(i)
         vj(i) = -sqrt(((vjch(i)-vjcb)**2+(vjcb-vjbh(i))**2 +(vjbh(i)-vjch(i))**2)*0.5d0)
         vstr  = vstr+vq(i)+vj(i)
-    enddo
+    end do
     !
     !  partial derivatives
     !  first we need the derivative of ach:
     !
-    do ind=1,3
-        achdc(ind) = dumach*(tch(1,ind)/rch(1)+tch(2,ind)/rch(2) +tch(3,ind)/rch(3)+tch(4,ind)/rch(4))/4.0d0
-        do i=1,4
-            achdh(i,ind) = -dumach*tch(i,ind)/rch(i)/4.0d0
-        enddo
-    enddo
+    do ind=1, 3
+        achdc(ind) = dumach*(tch(1, ind)/rch(1)+tch(2, ind)/rch(2) +tch(3, ind)/rch(3)+tch(4, ind)/rch(4))/4.0d0
+        do i=1, 4
+            achdh(i, ind) = -dumach*tch(i, ind)/rch(i)/4.0d0
+        end do
+    end do
     dumqcb = -acb*((d1cb+d3cb)*exp(-2.0d0*acb*(rcb-r0cb))- (d1cb-d3cb)*exp(-acb*(rcb-r0cb)))/rcb
     !
     !  calculate cartesian derivatives:
     !  looping over ch(i) and bh(i)
     !
-    do i=1,4
+    do i=1, 4
         dumqbh = -ahh*((d1hh+d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh))- (d1hh-d3hh)*exp(-ahh*(rbh(i)-r0hh)))/rbh(i)
         factj  = 0.5d0/vj(i)
         dumjcb = -acb*((d1cb-d3cb)*exp(-2.0d0*acb*(rcb-r0cb)) -(d1cb+d3cb)*exp(-acb*(rcb-r0cb)))*factj/rcb
         dumjbh = -ahh*((d1hh-d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh)) -(d1hh+d3hh)*exp(-ahh*(rbh(i)-r0hh)))*factj/rbh(i)
-        do ind=1,3
+        do ind=1, 3
             !
             !  deriv wrt hb:
             !
-            pdot(nhb(ind))=pdot(nhb(ind)) -tcb(ind)*dumqcb+tbh(i,ind)*dumqbh +(vjch(i)-vjcb)*(dumjcb*tcb(ind)) +(vjcb- &
-                & vjbh(i))*(-dumjcb*tcb(ind)-dumjbh*tbh(i,ind)) +(vjbh(i)-vjch(i))*dumjbh*tbh(i,ind)
+            pdot(nhb(ind))=pdot(nhb(ind)) -tcb(ind)*dumqcb+tbh(i, ind)*dumqbh +(vjch(i)-vjcb)*(dumjcb*tcb(ind)) + &
+                & (vjcb- vjbh(i))*(-dumjcb*tcb(ind)-dumjbh*tbh(i, ind)) +(vjbh(i)-vjch(i))*dumjbh*tbh(i, ind)
             !
             !  dvqch(i)/dc
             !
-            dumqch=-(ach*tch(i,ind)/rch(i)+achdc(ind)*(rch(i)-r0ch)) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
+            dumqch=-(ach*tch(i, ind)/rch(i)+achdc(ind)*(rch(i)-r0ch)) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
                 & (d1ch- d3ch)*exp(-ach*(rch(i)-r0ch)))
             pdot(nc(ind)) = pdot(nc(ind))+dumqch+tcb(ind)*dumqcb
             !
             !  dvqch(i)/dh(i)
             !
-            dumqhi=(ach*tch(i,ind)/rch(i)-achdh(i,ind)*(rch(i)-r0ch)) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
+            dumqhi=(ach*tch(i, ind)/rch(i)-achdh(i, ind)*(rch(i)-r0ch)) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
                 & (d1ch-d3ch)*exp(-ach*(rch(i)-r0ch)))
-            pdot(nh(i,ind)) = pdot(nh(i,ind))+dumqhi-tbh(i,ind)*dumqbh
+            pdot(nh(i, ind)) = pdot(nh(i, ind))+dumqhi-tbh(i, ind)*dumqbh
             !
             !  dvjch(i)/dc
             !
-            dumjch=-(ach*tch(i,ind)/rch(i)+achdc(ind)*(rch(i)-r0ch)) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
+            dumjch=-(ach*tch(i, ind)/rch(i)+achdc(ind)*(rch(i)-r0ch)) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
                 & (d1ch+ d3ch)*exp(-ach*(rch(i)-r0ch)))*factj
             !
             !  dvj(i)/dnc(ind)
@@ -3597,28 +3538,29 @@ subroutine stretch( vstr )
             !
             !  dvjch(i)/dh(i)
             !
-            dumjhi=(ach*tch(i,ind)/rch(i)-achdh(i,ind)*(rch(i)-r0ch)) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
+            dumjhi=(ach*tch(i, ind)/rch(i)-achdh(i, ind)*(rch(i)-r0ch)) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
                 & (d1ch+d3ch)*exp(-ach*(rch(i)-r0ch)))*factj
             !
             !  dvj(i)/dnh(i,ind)
             !
-            pdot(nh(i,ind))=pdot(nh(i,ind)) +(vjch(i)-vjcb)*dumjhi +(vjcb-vjbh(i))*dumjbh*tbh(i,ind) +(vjbh(i)- &
-                & vjch(i))* (-dumjbh*tbh(i,ind)-dumjhi)
+            pdot(nh(i, ind))=pdot(nh(i, ind)) +(vjch(i)-vjcb)*dumjhi +(vjcb-vjbh(i))*dumjbh*tbh(i, ind) +(vjbh(i)- &
+                & vjch(i))* (-dumjbh*tbh(i, ind)-dumjhi)
             !
             !  dv(i)/dh(j)
             !
-            do k=1,3
+            do k=1, 3
                 j = i+k
                 if(j.gt.4)j=j-4
-                dumqhj=-achdh(j,ind)*(rch(i)-r0ch) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) -(d1ch-d3ch)*exp(-ach* &
+                dumqhj=-achdh(j, ind)*(rch(i)-r0ch) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) -(d1ch-d3ch)*exp(-ach* &
                     & (rch(i)-r0ch)))
-                dumjhj=-achdh(j,ind)*(rch(i)-r0ch) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) -(d1ch+d3ch)*exp(-ach* &
+                dumjhj=-achdh(j, ind)*(rch(i)-r0ch) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) -(d1ch+d3ch)*exp(-ach* &
                     & (rch(i)-r0ch)))*factj
-                pdot(nh(j,ind)) = pdot(nh(j,ind))+dumqhj +(vjch(i)-vjcb)*dumjhj -(vjbh(i)-vjch(i))*dumjhj
-            enddo
-        enddo
-    enddo
+                pdot(nh(j, ind)) = pdot(nh(j, ind))+dumqhj +(vjch(i)-vjcb)*dumjhj -(vjbh(i)-vjch(i))*dumjhj
+            end do
+        end do
+    end do
 end subroutine stretch
+
 !
 !******************************************************
 !
@@ -3629,7 +3571,6 @@ subroutine opbend( vop )
     !  subroutine calculates symmetrized vop potential and derivatives
     !
     implicit none
-
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, atheta, b1ch, b1s, b2s, &
         & b3s, bk, bphi, btheta, c1ch, cart, cartnu, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, ddr, deesdr, &
         & degsdr, deijdr, descart, dfdc, dfdelta, dfdh, dgscart, dhdelta, dijcart, ds1, ds2, ds3, dsphi, dstheta, &
@@ -3650,45 +3591,45 @@ subroutine opbend( vop )
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
-    dimension sumd2(4),sumd4(4)
+    dimension sumd2(4), sumd4(4)
     !
     !
     vop = 0.0d0
@@ -3699,7 +3640,7 @@ subroutine opbend( vop )
     !
     !  calculate out-of-plane xangle and derivatives
     !
-    do i=1,4
+    do i=1, 4
         j = i+1
         if(j.gt.4)j=j-4
         k = j+1
@@ -3716,33 +3657,34 @@ subroutine opbend( vop )
             itemp = k
             k     = l
             l     = itemp
-        endif
+        end if
         !
         !  subroutine performs sum over j, k, l
         !  sum2 = sum delta**2
         !  sum4 = sum delta**4
         !
-        call calcdelta(i,j,k,l,sum2,sum4)
+        call calcdelta(i, j, k, l, sum2, sum4)
         sumd2(i) = sum2
         sumd4(i) = sum4
         vop      = vop+fdelta(i)*sumd2(i)+hdelta(i)*sumd4(i)
-    enddo
-    do i=1,4
-        do j=1,4
+    end do
+    do i=1, 4
+        do j=1, 4
             !
             !  overall derivatives of force constants i wrt the bond-length rch(j)
             !
-            ddr = dfdelta(i,j)*sumd2(i)+dhdelta(i,j)*sumd4(i)
+            ddr = dfdelta(i, j)*sumd2(i)+dhdelta(i, j)*sumd4(i)
             !
             !  calculate derivatives in terms of cartesian coordinates:
             !
-            do ind=1,3
-                pdot(nh(j,ind)) = pdot(nh(j,ind))-tch(j,ind)*ddr/rch(j)
-                pdot(nc(ind))   = pdot(nc(ind))+tch(j,ind)*ddr/rch(j)
-            enddo
-        enddo
-    enddo
+            do ind=1, 3
+                pdot(nh(j, ind)) = pdot(nh(j, ind))-tch(j, ind)*ddr/rch(j)
+                pdot(nc(ind))    = pdot(nc(ind))+tch(j, ind)*ddr/rch(j)
+            end do
+        end do
+    end do
 end subroutine opbend
+
 !
 !******************************************************
 !
@@ -3754,7 +3696,6 @@ subroutine ipbend( vip )
     !  and its derivatives
     !
     implicit none
-
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, atheta, b1ch, b1s, b2s, &
         & b3s, bk, bphi, btheta, c1ch, cart, cartnu, costh, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, deesdr, &
         & degsdr, deijdr, descart, dfdc, dfdelta, dfdh, dgscart, dhdelta, dijcart, ds1, ds2, ds3, dsphi, dstheta, dth, &
@@ -3775,45 +3716,45 @@ subroutine ipbend( vip )
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
-    dimension costh(4,4),theta(4,4),dth(4,4)
+    dimension costh(4,4), theta(4,4), dth(4,4)
     !
     !  initialise
     !
@@ -3826,13 +3767,13 @@ subroutine ipbend( vip )
     !
     !  calculate theta(i,j) and in plane bend potential
     !
-    do i=1,3
-        do j=i+1,4
-            costh(i,j) = tch(i,1)*tch(j,1)+tch(i,2)*tch(j,2) +tch(i,3)*tch(j,3)
+    do i=1, 3
+        do j=i+1, 4
+            costh(i,j) = tch(i, 1)*tch(j, 1)+tch(i, 2)*tch(j, 2) +tch(i, 3)*tch(j, 3)
             costh(i,j) = costh(i,j)/rch(i)/rch(j)
             theta(i,j) = acos(costh(i,j))
-            dth(i,j)   = theta(i,j)-theta0(i,j)
-            vip        = vip+0.5d0*fk0(i,j)*f1(i)*f1(j)*dth(i,j)**2
+            dth(i,j)   = theta(i,j)-theta0(i, j)
+            vip        = vip+0.5d0*fk0(i, j)*f1(i)*f1(j)*dth(i,j)**2
             !##
             !                 write(*,*) i,j,f1(j)
             !
@@ -3841,31 +3782,32 @@ subroutine ipbend( vip )
             !  calculate pdots wrt theta:
             !
             termth = -1.0d0/sqrt(1.0d0-costh(i,j)*costh(i,j))
-            do ind=1,3
-                dthi            = -tch(j,ind)/rch(i)/rch(j) +costh(i,j)*tch(i,ind)/rch(i)/rch(i)
-                dthi            = dthi*termth
-                dthj            = -tch(i,ind)/rch(i)/rch(j) +costh(i,j)*tch(j,ind)/rch(j)/rch(j)
-                dthj            = dthj*termth
-                dthc            = -(dthi+dthj)
-                pdot(nh(i,ind)) = pdot(nh(i,ind)) +fk0(i,j)*f1(i)*f1(j)*dthi*dth(i,j)
-                pdot(nh(j,ind)) = pdot(nh(j,ind)) +fk0(i,j)*f1(i)*f1(j)*dthj*dth(i,j)
-                pdot(nc(ind))   = pdot(nc(ind)) +fk0(i,j)*f1(i)*f1(j)*dthc*dth(i,j)
-                do k=1,4
+            do ind=1, 3
+                dthi             = -tch(j, ind)/rch(i)/rch(j) +costh(i,j)*tch(i, ind)/rch(i)/rch(i)
+                dthi             = dthi*termth
+                dthj             = -tch(i, ind)/rch(i)/rch(j) +costh(i,j)*tch(j, ind)/rch(j)/rch(j)
+                dthj             = dthj*termth
+                dthc             = -(dthi+dthj)
+                pdot(nh(i, ind)) = pdot(nh(i, ind)) +fk0(i, j)*f1(i)*f1(j)*dthi*dth(i,j)
+                pdot(nh(j, ind)) = pdot(nh(j, ind)) +fk0(i, j)*f1(i)*f1(j)*dthj*dth(i,j)
+                pdot(nc(ind))    = pdot(nc(ind)) +fk0(i, j)*f1(i)*f1(j)*dthc*dth(i,j)
+                do k=1, 4
                     !
                     !  calculate pdots wrt force constants and wrt theta0
                     !
-                    dth0k = -dtheta0(i,j,k)*tch(k,ind)/rch(k)
+                    dth0k = -dtheta0(i, j, k)*tch(k, ind)/rch(k)
                     dth0c = -dth0k
-                    pdot(nh(k,ind))=pdot(nh(k,ind)) -0.5d0*tch(k,ind)*dfdc(i,j,k)*dth(i,j)**2/rch(k) -0.5d0*tbh(k, &
-                        & ind)* dfdh(i,j,k)*dth(i,j)**2/rbh(k) -fk0(i,j)*f1(i)*f1(j)*dth0k*dth(i,j)
-                    pdot(nc(ind))=pdot(nc(ind)) +0.5d0*tch(k,ind)*dfdc(i,j,k)*dth(i,j)**2/rch(k) -fk0(i,j)*f1(i)* &
+                    pdot(nh(k, ind))=pdot(nh(k, ind)) -0.5d0*tch(k, ind)*dfdc(i, j, k)*dth(i,j)**2/rch(k) -0.5d0* &
+                        & tbh(k, ind)* dfdh(i, j, k)*dth(i,j)**2/rbh(k) -fk0(i, j)*f1(i)*f1(j)*dth0k*dth(i,j)
+                    pdot(nc(ind))=pdot(nc(ind)) +0.5d0*tch(k, ind)*dfdc(i, j, k)*dth(i,j)**2/rch(k) -fk0(i, j)*f1(i)* &
                         & f1(j)* dth0c*dth(i,j)
-                    pdot(nhb(ind)) = pdot(nhb(ind)) +0.5d0*tbh(k,ind)*dfdh(i,j,k)*dth(i,j)**2/rbh(k)
-                enddo
-            enddo
-        enddo
-    enddo
+                    pdot(nhb(ind)) = pdot(nhb(ind)) +0.5d0*tbh(k, ind)*dfdh(i, j, k)*dth(i,j)**2/rbh(k)
+                end do
+            end do
+        end do
+    end do
 end subroutine ipbend
+
 !
 !***********************************************************************
 !
@@ -3878,7 +3820,6 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
     !   also calculates the derivatives wrt delta
     !
     implicit none
-
     double precision :: a, a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, argd, atemp1, atemp2, &
         & atemp3, atemp4, atemp5, atheta, axb, b, b1ch, b1s, b2s, b3s, bk, bphi, btheta, c, c1ch, cart, cartnu, cdot, &
         & cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, daxb, deesdr, degsdr, deijdr, deldot, delta, descart, dfdc, &
@@ -3900,46 +3841,46 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
-    dimension  delta(4),in(3),a(3),b(3),axb(3),c(4,3),argd(4), &
-        & daxb(4,3,3),cdot(4,3,3),atemp2(3)
+    dimension  delta(4), in(3), a(3), b(3), axb(3), c(4,3), argd(4), &
+        & daxb(4, 3, 3), cdot(4, 3, 3), atemp2(3)
     !
     !  initialise
     !
@@ -3954,10 +3895,10 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
     !
     !  vector a is rk-rj, vector b is rl-rj
     !
-    do ind=1,3
-        a(ind) = q(nh(k,ind))-q(nh(j,ind))
-        b(ind) = q(nh(l,ind))-q(nh(j,ind))
-    enddo
+    do ind=1, 3
+        a(ind) = q(nh(k, ind))-q(nh(j, ind))
+        b(ind) = q(nh(l, ind))-q(nh(j, ind))
+    end do
 
     !##
     !        write(*,*)
@@ -3984,114 +3925,114 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
     !  c is position vector of h(ii): calculate c(j),c(k),c(l)
     !
     !##
-    do ii=1,3
-        do ind=1,3
-            c(in(ii),ind) = -tch(in(ii),ind)/rch(in(ii))
-        enddo
-    enddo
+    do ii=1, 3
+        do ind=1, 3
+            c(in(ii),ind) = -tch(in(ii), ind)/rch(in(ii))
+        end do
+    end do
     !##
     !
     !  argd is the dot product axb dot c
     !
-    do ii=1,3
+    do ii=1, 3
         argd(in(ii)) = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
         argd(in(ii)) = argd(in(ii))/norma
 
-        delta(in(ii)) = acos(argd(in(ii)))-theta0(i,in(ii))
+        delta(in(ii)) = acos(argd(in(ii)))-theta0(i, in(ii))
         !##        write(*,*) 'theta0 ',i,in(ii),theta0(i,in(ii))
         sum2 = sum2+delta(in(ii))**2
         sum4 = sum4+delta(in(ii))**4
-    enddo
+    end do
     !
     !  derivatives of axb wrt hj:
     !
-    daxb(j,1,1) = 0.0d0
-    daxb(j,1,2) = b(3)-a(3)
-    daxb(j,1,3) = -b(2)+a(2)
-    daxb(j,2,1) = -b(3)+a(3)
-    daxb(j,2,2) = 0.0d0
-    daxb(j,2,3) = b(1)-a(1)
-    daxb(j,3,1) = b(2)-a(2)
-    daxb(j,3,2) = -b(1)+a(1)
-    daxb(j,3,3) = 0.0d0
+    daxb(j, 1, 1) = 0.0d0
+    daxb(j, 1, 2) = b(3)-a(3)
+    daxb(j, 1, 3) = -b(2)+a(2)
+    daxb(j, 2, 1) = -b(3)+a(3)
+    daxb(j, 2, 2) = 0.0d0
+    daxb(j, 2, 3) = b(1)-a(1)
+    daxb(j, 3, 1) = b(2)-a(2)
+    daxb(j, 3, 2) = -b(1)+a(1)
+    daxb(j, 3, 3) = 0.0d0
     !
     !  derivatives of axb wrt hk:
     !
-    daxb(k,1,1) = 0.0d0
-    daxb(k,1,2) = -b(3)
-    daxb(k,1,3) = b(2)
-    daxb(k,2,1) = b(3)
-    daxb(k,2,2) = 0.0d0
-    daxb(k,2,3) = -b(1)
-    daxb(k,3,1) = -b(2)
-    daxb(k,3,2) = b(1)
-    daxb(k,3,3) = 0.0d0
+    daxb(k, 1, 1) = 0.0d0
+    daxb(k, 1, 2) = -b(3)
+    daxb(k, 1, 3) = b(2)
+    daxb(k, 2, 1) = b(3)
+    daxb(k, 2, 2) = 0.0d0
+    daxb(k, 2, 3) = -b(1)
+    daxb(k, 3, 1) = -b(2)
+    daxb(k, 3, 2) = b(1)
+    daxb(k, 3, 3) = 0.0d0
     !
     !  derivatives of axb wrt hl:
     !
-    daxb(l,1,1) = 0.0d0
-    daxb(l,1,2) = a(3)
-    daxb(l,1,3) = -a(2)
-    daxb(l,2,1) = -a(3)
-    daxb(l,2,2) = 0.0d0
-    daxb(l,2,3) = a(1)
-    daxb(l,3,1) = a(2)
-    daxb(l,3,2) = -a(1)
-    daxb(l,3,3) = 0.0d0
+    daxb(l, 1, 1) = 0.0d0
+    daxb(l, 1, 2) = a(3)
+    daxb(l, 1, 3) = -a(2)
+    daxb(l, 2, 1) = -a(3)
+    daxb(l, 2, 2) = 0.0d0
+    daxb(l, 2, 3) = a(1)
+    daxb(l, 3, 1) = a(2)
+    daxb(l, 3, 2) = -a(1)
+    daxb(l, 3, 3) = 0.0d0
     !
     !   loop over cdot(in(ii),ind,jind) where we consider deriv of c(in(ii))
     !   wrt h(in(ii),jind) with components jind
     !
-    do ii=1,3
+    do ii=1, 3
         !
         !  deriv of cdot(in(ii),x) wrt x, y, z
         !
-        cdot(in(ii),1,1) = 1.0d0/rch(in(ii)) +tch(in(ii),1)*c(in(ii),1)/rch(in(ii))**2
-        cdot(in(ii),1,2) = tch(in(ii),2)*c(in(ii),1)/rch(in(ii))**2
-        cdot(in(ii),1,3) = tch(in(ii),3)*c(in(ii),1)/rch(in(ii))**2
+        cdot(in(ii), 1, 1) = 1.0d0/rch(in(ii)) +tch(in(ii), 1)*c(in(ii),1)/rch(in(ii))**2
+        cdot(in(ii), 1, 2) = tch(in(ii), 2)*c(in(ii),1)/rch(in(ii))**2
+        cdot(in(ii), 1, 3) = tch(in(ii), 3)*c(in(ii),1)/rch(in(ii))**2
         !
         !  deriv of cdot(in(ii),y) wrt x, y, z
         !
-        cdot(in(ii),2,1) = tch(in(ii),1)*c(in(ii),2)/rch(in(ii))**2
-        cdot(in(ii),2,2) = 1.0d0/rch(in(ii)) +tch(in(ii),2)*c(in(ii),2)/rch(in(ii))**2
-        cdot(in(ii),2,3) = tch(in(ii),3)*c(in(ii),2)/rch(in(ii))**2
+        cdot(in(ii), 2, 1) = tch(in(ii), 1)*c(in(ii),2)/rch(in(ii))**2
+        cdot(in(ii), 2, 2) = 1.0d0/rch(in(ii)) +tch(in(ii), 2)*c(in(ii),2)/rch(in(ii))**2
+        cdot(in(ii), 2, 3) = tch(in(ii), 3)*c(in(ii),2)/rch(in(ii))**2
         !
         !  deriv of cdot(in(ii),z) wrt x, y, z
         !
-        cdot(in(ii),3,1) = tch(in(ii),1)*c(in(ii),3)/rch(in(ii))**2
-        cdot(in(ii),3,2) = tch(in(ii),2)*c(in(ii),3)/rch(in(ii))**2
-        cdot(in(ii),3,3) = 1.0d0/rch(in(ii)) +tch(in(ii),3)*c(in(ii),3)/rch(in(ii))**2
-    enddo
+        cdot(in(ii), 3, 1) = tch(in(ii), 1)*c(in(ii),3)/rch(in(ii))**2
+        cdot(in(ii), 3, 2) = tch(in(ii), 2)*c(in(ii),3)/rch(in(ii))**2
+        cdot(in(ii), 3, 3) = 1.0d0/rch(in(ii)) +tch(in(ii), 3)*c(in(ii),3)/rch(in(ii))**2
+    end do
     !
-    do ii=1,3
-        do ind=1,3
-            deldot = -dtheta0(i,in(ii),i)
+    do ii=1, 3
+        do ind=1, 3
+            deldot = -dtheta0(i, in(ii), i)
             !
             !  derivative wrt h(i,ind)
             !  for  rch(i) only terms are from the derivatives of theta0
             !
-            deldot = -deldot*tch(i,ind)/rch(i)
-            pdot(nh(i,ind))=pdot(nh(i,ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)*delta(in(ii))**3* &
+            deldot = -deldot*tch(i, ind)/rch(i)
+            pdot(nh(i, ind))=pdot(nh(i, ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)*delta(in(ii))**3* &
                 & deldot
             !
             !  derivative wrt c(ind)
             !
             deldot        = -deldot
             pdot(nc(ind)) = pdot(nc(ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)*delta(in(ii))**3*deldot
-            do jj=1,3
+            do jj=1, 3
                 !
                 !  partial derivatives wrt h(in(jj),ind), loop over delta(i,in(ii))
                 !
                 !   atemp1 is axb dot daxb wrt h(in(jj))
                 !
-                atemp1 = axb(1)*daxb(in(jj),ind,1) +axb(2)*daxb(in(jj),ind,2) +axb(3)*daxb(in(jj),ind,3)
+                atemp1 = axb(1)*daxb(in(jj), ind, 1) +axb(2)*daxb(in(jj), ind, 2) +axb(3)*daxb(in(jj), ind, 3)
                 atemp1 = atemp1/(norma**3)
                 !
                 !  atemp2 is deriv of normalised axb
                 !
-                atemp2(1) = daxb(in(jj),ind,1)/norma-atemp1*axb(1)
-                atemp2(2) = daxb(in(jj),ind,2)/norma-atemp1*axb(2)
-                atemp2(3) = daxb(in(jj),ind,3)/norma-atemp1*axb(3)
+                atemp2(1) = daxb(in(jj), ind, 1)/norma-atemp1*axb(1)
+                atemp2(2) = daxb(in(jj), ind, 2)/norma-atemp1*axb(2)
+                atemp2(3) = daxb(in(jj), ind, 3)/norma-atemp1*axb(3)
                 !
                 !  atemp3 is daxb dot c(in(ii))
 
@@ -4104,21 +4045,21 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
                     !
                     !  ie deriv of c(in(ii)) wrt h(in(jj)) is non zero only for ii = jj
                     !
-                    atemp4 = axb(1)*cdot(in(ii),1,ind) +axb(2)*cdot(in(ii),2,ind) +axb(3)*cdot(in(ii),3,ind)
+                    atemp4 = axb(1)*cdot(in(ii), 1, ind) +axb(2)*cdot(in(ii), 2, ind) +axb(3)*cdot(in(ii), 3, ind)
                     atemp4 = atemp4/norma
-                endif
+                end if
                 !
                 !  atemp5 is deriv of theta0(i,in(ii)) wrt to nh(in(jj),ind)
                 !
-                atemp5 = -dtheta0(i,in(ii),in(jj))
+                atemp5 = -dtheta0(i, in(ii), in(jj))
                 !
                 !  deriv wrt h(in(jj)),ind):
                 !
-                atemp5 = -atemp5*tch(in(jj),ind)/rch(in(jj))
+                atemp5 = -atemp5*tch(in(jj), ind)/rch(in(jj))
                 deldot = atemp3+atemp4
                 deldot = -1.0d0/sqrt(1.0d0-argd(in(ii))**2)*deldot
                 deldot = deldot+atemp5
-                pdot(nh(in(jj),ind))=pdot(nh(in(jj),ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)* &
+                pdot(nh(in(jj), ind))=pdot(nh(in(jj), ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)* &
                     & delta(in(ii))**3*deldot
                 !
                 !  for carbon the only contributions are from axb dot cdot term and
@@ -4128,9 +4069,9 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
                 deldot = deldot-atemp5
                 pdot(nc(ind))=pdot(nc(ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)*delta(in(ii))**3* &
                     & deldot
-            enddo
-        enddo
-    enddo
+            end do
+        end do
+    end do
 end subroutine calcdelta
 
 !******************************************************
@@ -4142,7 +4083,6 @@ subroutine opforce
     !  and their derivatives
     !
     implicit none
-
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, atheta, b1ch, b1s, b2s, &
         & b3s, bk, bphi, btheta, c1ch, cart, cartnu, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, deesdr, degsdr, &
         & deijdr, descart, dfdc, dfdelta, dfdh, dgscart, dhdelta, dijcart, ds1, ds2, ds3, dsphi, dstheta, dswitch, &
@@ -4162,45 +4102,45 @@ subroutine opforce
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
-    dimension switch(4),dswitch(4,4)
+    dimension switch(4), dswitch(4,4)
     !
     !  calculate switching functions:
     !
@@ -4240,15 +4180,16 @@ subroutine opforce
     !
     !  calculate the force constants and their derivatives
     !
-    do i=1,4
+    do i=1, 4
         fdelta(i) = switch(i)*fch3
         hdelta(i) = switch(i)*hch3
-        do j=1,4
-            dfdelta(i,j) = dswitch(i,j)*fch3
-            dhdelta(i,j) = dswitch(i,j)*hch3
-        enddo
-    enddo
+        do j=1, 4
+            dfdelta(i, j) = dswitch(i,j)*fch3
+            dhdelta(i, j) = dswitch(i,j)*hch3
+        end do
+    end do
 end subroutine opforce
+
 !
 !******************************************************
 !
@@ -4260,7 +4201,6 @@ subroutine ipforce
     !  all partial derivatives involving them
     !
     implicit none
-
     double precision :: a1, a1ch, a1s, a2, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, arga1, arga2, &
         & atheta, b1ch, b1s, b2s, b3s, bk, bphi, btheta, c1ch, cart, cartnu, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, &
         & d3hh, deesdr, degsdr, deijdr, descart, df1dc, df1dh, dfdc, dfdelta, dfdh, dfk0, dgscart, dhdelta, dijcart, ds1, &
@@ -4281,45 +4221,45 @@ subroutine ipforce
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
-    dimension dfk0(4,4,4),df1dc(4),df1dh(4)
+    dimension dfk0(4,4,4), df1dc(4), df1dh(4)
     !
     !  set force constant at asymptotes
     !
@@ -4327,12 +4267,12 @@ subroutine ipforce
     f2 = fkinf
     !
     !##
-    fk0(1,2) = f0+f0*(s1(1)*s1(2)-1.0d0)+(f0-f2)*(s2(3)*s2(4)-1.0d0)
-    fk0(1,3) = f0+f0*(s1(1)*s1(3)-1.0d0)+(f0-f2)*(s2(2)*s2(4)-1.0d0)
-    fk0(1,4) = f0+f0*(s1(1)*s1(4)-1.0d0)+(f0-f2)*(s2(2)*s2(3)-1.0d0)
-    fk0(2,3) = f0+f0*(s1(2)*s1(3)-1.0d0)+(f0-f2)*(s2(1)*s2(4)-1.0d0)
-    fk0(2,4) = f0+f0*(s1(2)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(3)-1.0d0)
-    fk0(3,4) = f0+f0*(s1(3)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(2)-1.0d0)
+    fk0(1, 2) = f0+f0*(s1(1)*s1(2)-1.0d0)+(f0-f2)*(s2(3)*s2(4)-1.0d0)
+    fk0(1, 3) = f0+f0*(s1(1)*s1(3)-1.0d0)+(f0-f2)*(s2(2)*s2(4)-1.0d0)
+    fk0(1, 4) = f0+f0*(s1(1)*s1(4)-1.0d0)+(f0-f2)*(s2(2)*s2(3)-1.0d0)
+    fk0(2, 3) = f0+f0*(s1(2)*s1(3)-1.0d0)+(f0-f2)*(s2(1)*s2(4)-1.0d0)
+    fk0(2, 4) = f0+f0*(s1(2)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(3)-1.0d0)
+    fk0(3, 4) = f0+f0*(s1(3)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(2)-1.0d0)
 
     !##
     !           write(*,*)
@@ -4377,7 +4317,7 @@ subroutine ipforce
     dfk0(3,4,3) = f0*ds1(3)*s1(4)
     dfk0(3,4,4) = f0*s1(3)*ds1(4)
     !
-    do i=1,4
+    do i=1, 4
         !
         !  calculate the terms f1(i)
         !
@@ -4397,77 +4337,78 @@ subroutine ipforce
         duma2    = -2.0d0*aa3*aa4*(rbh(i)-r0hh)*exp(-arga2)
         df1dc(i) = -2.0d0*(rch(i)-r0ch)*a1*a2*exp(-a2*(rch(i)-r0ch)**2)
         df1dh(i) = duma1*exp(-a2*(rch(i)-r0ch)**2) -duma2*(rch(i)-r0ch)**2*a1*exp(-a2*(rch(i)-r0ch)**2)
-    enddo
+    end do
     !
     !  derivative of total force constant f(i,j) wrt bond length rch(k)
     !  is given by dfdc(i,j,k)
     !
-    dfdc(1,2,1) = dfk0(1,2,1)*f1(1)*f1(2)+fk0(1,2)*df1dc(1)*f1(2)
-    dfdc(1,2,2) = dfk0(1,2,2)*f1(1)*f1(2)+fk0(1,2)*f1(1)*df1dc(2)
-    dfdc(1,2,3) = dfk0(1,2,3)*f1(1)*f1(2)
-    dfdc(1,2,4) = dfk0(1,2,4)*f1(1)*f1(2)
+    dfdc(1, 2, 1) = dfk0(1,2,1)*f1(1)*f1(2)+fk0(1, 2)*df1dc(1)*f1(2)
+    dfdc(1, 2, 2) = dfk0(1,2,2)*f1(1)*f1(2)+fk0(1, 2)*f1(1)*df1dc(2)
+    dfdc(1, 2, 3) = dfk0(1,2,3)*f1(1)*f1(2)
+    dfdc(1, 2, 4) = dfk0(1,2,4)*f1(1)*f1(2)
     !
-    dfdc(1,3,1) = dfk0(1,3,1)*f1(1)*f1(3)+fk0(1,3)*df1dc(1)*f1(3)
-    dfdc(1,3,2) = dfk0(1,3,2)*f1(1)*f1(3)
-    dfdc(1,3,3) = dfk0(1,3,3)*f1(1)*f1(3)+fk0(1,3)*f1(1)*df1dc(3)
-    dfdc(1,3,4) = dfk0(1,3,4)*f1(1)*f1(3)
+    dfdc(1, 3, 1) = dfk0(1,3,1)*f1(1)*f1(3)+fk0(1, 3)*df1dc(1)*f1(3)
+    dfdc(1, 3, 2) = dfk0(1,3,2)*f1(1)*f1(3)
+    dfdc(1, 3, 3) = dfk0(1,3,3)*f1(1)*f1(3)+fk0(1, 3)*f1(1)*df1dc(3)
+    dfdc(1, 3, 4) = dfk0(1,3,4)*f1(1)*f1(3)
     !
-    dfdc(1,4,1) = dfk0(1,4,1)*f1(1)*f1(4)+fk0(1,4)*df1dc(1)*f1(4)
-    dfdc(1,4,2) = dfk0(1,4,2)*f1(1)*f1(4)
-    dfdc(1,4,3) = dfk0(1,4,3)*f1(1)*f1(4)
-    dfdc(1,4,4) = dfk0(1,4,4)*f1(1)*f1(4)+fk0(1,4)*f1(1)*df1dc(4)
+    dfdc(1, 4, 1) = dfk0(1,4,1)*f1(1)*f1(4)+fk0(1, 4)*df1dc(1)*f1(4)
+    dfdc(1, 4, 2) = dfk0(1,4,2)*f1(1)*f1(4)
+    dfdc(1, 4, 3) = dfk0(1,4,3)*f1(1)*f1(4)
+    dfdc(1, 4, 4) = dfk0(1,4,4)*f1(1)*f1(4)+fk0(1, 4)*f1(1)*df1dc(4)
     !
-    dfdc(2,3,1) = dfk0(2,3,1)*f1(2)*f1(3)
-    dfdc(2,3,2) = dfk0(2,3,2)*f1(2)*f1(3)+fk0(2,3)*df1dc(2)*f1(3)
-    dfdc(2,3,3) = dfk0(2,3,3)*f1(2)*f1(3)+fk0(2,3)*f1(2)*df1dc(3)
-    dfdc(2,3,4) = dfk0(2,3,4)*f1(2)*f1(3)
+    dfdc(2, 3, 1) = dfk0(2,3,1)*f1(2)*f1(3)
+    dfdc(2, 3, 2) = dfk0(2,3,2)*f1(2)*f1(3)+fk0(2, 3)*df1dc(2)*f1(3)
+    dfdc(2, 3, 3) = dfk0(2,3,3)*f1(2)*f1(3)+fk0(2, 3)*f1(2)*df1dc(3)
+    dfdc(2, 3, 4) = dfk0(2,3,4)*f1(2)*f1(3)
     !
-    dfdc(2,4,1) = dfk0(2,4,1)*f1(2)*f1(4)
-    dfdc(2,4,2) = dfk0(2,4,2)*f1(2)*f1(4)+fk0(2,4)*df1dc(2)*f1(4)
-    dfdc(2,4,3) = dfk0(2,4,3)*f1(2)*f1(4)
-    dfdc(2,4,4) = dfk0(2,4,4)*f1(2)*f1(4)+fk0(2,4)*f1(2)*df1dc(4)
+    dfdc(2, 4, 1) = dfk0(2,4,1)*f1(2)*f1(4)
+    dfdc(2, 4, 2) = dfk0(2,4,2)*f1(2)*f1(4)+fk0(2, 4)*df1dc(2)*f1(4)
+    dfdc(2, 4, 3) = dfk0(2,4,3)*f1(2)*f1(4)
+    dfdc(2, 4, 4) = dfk0(2,4,4)*f1(2)*f1(4)+fk0(2, 4)*f1(2)*df1dc(4)
     !
-    dfdc(3,4,1) = dfk0(3,4,1)*f1(3)*f1(4)
-    dfdc(3,4,2) = dfk0(3,4,2)*f1(3)*f1(4)
-    dfdc(3,4,3) = dfk0(3,4,3)*f1(3)*f1(4)+fk0(3,4)*df1dc(3)*f1(4)
-    dfdc(3,4,4) = dfk0(3,4,4)*f1(3)*f1(4)+fk0(3,4)*f1(3)*df1dc(4)
+    dfdc(3, 4, 1) = dfk0(3,4,1)*f1(3)*f1(4)
+    dfdc(3, 4, 2) = dfk0(3,4,2)*f1(3)*f1(4)
+    dfdc(3, 4, 3) = dfk0(3,4,3)*f1(3)*f1(4)+fk0(3, 4)*df1dc(3)*f1(4)
+    dfdc(3, 4, 4) = dfk0(3,4,4)*f1(3)*f1(4)+fk0(3, 4)*f1(3)*df1dc(4)
     !
     !  derivative of total force constant f(i,j) wrt bond length rbh(k)
     !  is given by dfdh(i,j,k)
     !
     !  only non-zero derivatives are those from rbh(i) and rbh(j)
     !
-    dfdh(1,2,1) = fk0(1,2)*df1dh(1)*f1(2)
-    dfdh(1,2,2) = fk0(1,2)*f1(1)*df1dh(2)
-    dfdh(1,2,3) = 0.0d0
-    dfdh(1,2,4) = 0.0d0
+    dfdh(1, 2, 1) = fk0(1, 2)*df1dh(1)*f1(2)
+    dfdh(1, 2, 2) = fk0(1, 2)*f1(1)*df1dh(2)
+    dfdh(1, 2, 3) = 0.0d0
+    dfdh(1, 2, 4) = 0.0d0
     !
-    dfdh(1,3,1) = fk0(1,3)*df1dh(1)*f1(3)
-    dfdh(1,3,2) = 0.0d0
-    dfdh(1,3,3) = fk0(1,3)*f1(1)*df1dh(3)
-    dfdh(1,3,4) = 0.0d0
+    dfdh(1, 3, 1) = fk0(1, 3)*df1dh(1)*f1(3)
+    dfdh(1, 3, 2) = 0.0d0
+    dfdh(1, 3, 3) = fk0(1, 3)*f1(1)*df1dh(3)
+    dfdh(1, 3, 4) = 0.0d0
     !
-    dfdh(1,4,1) = fk0(1,4)*df1dh(1)*f1(4)
-    dfdh(1,4,2) = 0.0d0
-    dfdh(1,4,3) = 0.0d0
-    dfdh(1,4,4) = fk0(1,4)*f1(1)*df1dh(4)
+    dfdh(1, 4, 1) = fk0(1, 4)*df1dh(1)*f1(4)
+    dfdh(1, 4, 2) = 0.0d0
+    dfdh(1, 4, 3) = 0.0d0
+    dfdh(1, 4, 4) = fk0(1, 4)*f1(1)*df1dh(4)
     !
-    dfdh(2,3,1) = 0.0d0
-    dfdh(2,3,2) = fk0(2,3)*df1dh(2)*f1(3)
-    dfdh(2,3,3) = fk0(2,3)*f1(2)*df1dh(3)
-    dfdh(2,3,4) = 0.0d0
+    dfdh(2, 3, 1) = 0.0d0
+    dfdh(2, 3, 2) = fk0(2, 3)*df1dh(2)*f1(3)
+    dfdh(2, 3, 3) = fk0(2, 3)*f1(2)*df1dh(3)
+    dfdh(2, 3, 4) = 0.0d0
     !
-    dfdh(2,4,1) = 0.0d0
-    dfdh(2,4,2) = fk0(2,4)*df1dh(2)*f1(4)
-    dfdh(2,4,3) = 0.0d0
-    dfdh(2,4,4) = fk0(2,4)*f1(2)*df1dh(4)
+    dfdh(2, 4, 1) = 0.0d0
+    dfdh(2, 4, 2) = fk0(2, 4)*df1dh(2)*f1(4)
+    dfdh(2, 4, 3) = 0.0d0
+    dfdh(2, 4, 4) = fk0(2, 4)*f1(2)*df1dh(4)
     !
-    dfdh(3,4,1) = 0.0d0
-    dfdh(3,4,2) = 0.0d0
-    dfdh(3,4,3) = fk0(3,4)*df1dh(3)*f1(4)
-    dfdh(3,4,4) = fk0(3,4)*f1(3)*df1dh(4)
+    dfdh(3, 4, 1) = 0.0d0
+    dfdh(3, 4, 2) = 0.0d0
+    dfdh(3, 4, 3) = fk0(3, 4)*df1dh(3)*f1(4)
+    dfdh(3, 4, 4) = fk0(3, 4)*f1(3)*df1dh(4)
     !
 end subroutine ipforce
+
 !
 !******************************************************
 !
@@ -4479,7 +4420,6 @@ subroutine switchf
     !  and their derivatives ds3,dsphi,dstheta
     !
     implicit none
-
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, argmax, args1, args2, &
         & args3, argsphi, argstheta, atheta, b1ch, b1s, b2s, b3s, bk, bphi, btheta, c1ch, cart, cartnu, cphi, ctheta, &
         & d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, deesdr, degsdr, deijdr, descart, dfdc, dfdelta, dfdh, dgscart, dhdelta, &
@@ -4500,43 +4440,43 @@ subroutine switchf
     !
     common/pt1cm/ r(n3atom), engygs, degsdr(n3atom)
     common/pt3cm/ ezero(isurf+1)
-    common/pt4cm/ engyes(isurf), deesdr(n3atom,isurf)
-    common/pt5cm/ engyij(jsurf), deijdr(n3atom,jsurf)
+    common/pt4cm/ engyes(isurf), deesdr(n3atom, isurf)
+    common/pt5cm/ engyij(jsurf), deijdr(n3atom, jsurf)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
-    common/usrocm/ pengygs,pengyes(isurf), &
+    common/usrocm/ pengygs, pengyes(isurf), &
         & pengyij(jsurf), &
-        & dgscart(natom,3),descart(natom,3,isurf), &
-        & dijcart(natom,3,jsurf)
+        & dgscart(natom, 3), descart(natom, 3, isurf), &
+        & dijcart(natom, 3, jsurf)
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /xangles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /xangles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
     !##
     a1s = 1.5313681d-7
@@ -4549,7 +4489,7 @@ subroutine switchf
     !  tanh(19.0d0)=1.0d0
     !
     argmax = 19.0d0
-    do i=1,4
+    do i=1, 4
         args1 = a1s*(rch(i)-r0ch)*(rch(i)-b1s)**8
         if(args1.lt.argmax)then
             s1(i)  = 1.0d0-tanh(args1)
@@ -4558,7 +4498,7 @@ subroutine switchf
         else
             s1(i)  = 0.0d0
             ds1(i) = 0.0d0
-        endif
+        end if
         !
         args2 = a2s*(rch(i)-r0ch)*(rch(i)-b2s)**6
         if(args2.lt.argmax)then
@@ -4568,7 +4508,7 @@ subroutine switchf
         else
             s2(i)  = 0.0d0
             ds2(i) = 0.0d0
-        endif
+        end if
         !##          write(*,*) i,s1(i),rch(i)
 
         !
@@ -4582,7 +4522,7 @@ subroutine switchf
         else
             s3(i)  = 0.0d0
             ds3(i) = 0.0d0
-        endif
+        end if
         !
         !  calculate sphi and dsphi
         !
@@ -4598,7 +4538,7 @@ subroutine switchf
         else
             sphi(i)  = 0.0d0
             dsphi(i) = 0.0d0
-        endif
+        end if
         !
         !  calculate stheta and dstheta
         !
@@ -4611,9 +4551,10 @@ subroutine switchf
         else
             stheta(i)  = 0.0d0
             dstheta(i) = 0.0d0
-        endif
-    enddo
+        end if
+    end do
 end subroutine switchf
+
 !
 !> @brief Evaluate PREPOT for the C2H7_VBMM potential.
 subroutine prepot
@@ -4628,7 +4569,6 @@ subroutine prepot
     !   N3TM must be greater than or equal to N3TMMN.
     !
     implicit none
-
     double precision :: a1ch, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, atheta, b1ch, b3s, bk, bphi, btheta, &
         & c1ch, cart, cartnu, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, ezero, fact1, fact2, fch3, fkinf, hch3, &
         & r0cb, r0ch, r0hh
@@ -4647,34 +4587,34 @@ subroutine prepot
     !
     common/pt3cm/ ezero(isurf+1)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
-    common /ndx/     nc(3),nhb(3),nh(4,3)
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
     !
     !
     !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
     !
     if(natoms.gt.25) then
-        write(nflag(18),'(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
+        write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
         stop
     end if
     !
-    do i=1,5
+    do i=1, 5
         ref(i) = ' '
     end do
     !
@@ -4694,14 +4634,14 @@ subroutine prepot
     !
     !  calculate indexes for coordinates
     !
-    do ind=1,3
+    do ind=1, 3
         icount   = ind-3
         nc(ind)  = 3*nnc+icount
         nhb(ind) = 3*nnb+icount
-        do i=1,4
-            nh(i,ind) = 3*nnh(i)+icount
-        enddo
-    enddo
+        do i=1, 4
+            nh(i, ind) = 3*nnh(i)+icount
+        end do
+    end do
     !
     !  convert to appropriate units:
     !
@@ -4728,19 +4668,19 @@ subroutine prepot
     !##----------------------------------
     !
 end subroutine prepot
+
 !> @brief Evaluate CSETUP for the C2H7_VBMM potential.
 subroutine csetup( n3tm )
     !       dummy subroutine to make the code compatable with chk.f
 
     implicit none
-
     integer :: n3tm
 end subroutine csetup
+
 !
 block data ptpacm
     !
     implicit none
-
     double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, anuzero, aphi, atheta, b1ch, b1s, b2s, &
         & b3s, bk, bphi, btheta, c1ch, cart, cartnu, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, dfdc, dfdelta, &
         & dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, dtheta0, ezero, f1, fch3, fdelta, fk0, fkinf, hch3, hdelta, pdot, &
@@ -4759,48 +4699,48 @@ block data ptpacm
     !
     common/pt3cm/ ezero(isurf+1)
     !
-    common/infocm/ cartnu(natom,3),indexes(natom), &
-        & irctnt,natoms,icartr,mder,msurf,ref
+    common/infocm/ cartnu(natom, 3), indexes(natom), &
+        & irctnt, natoms, icartr, mder, msurf, ref
     !
     !
-    common/usricm/ cart(natom,3),anuzero, &
-        & nulbl(natom),nflag(20), &
-        & nasurf(isurf+1,isurf+1),nder
+    common/usricm/ cart(natom, 3), anuzero, &
+        & nulbl(natom), nflag(20), &
+        & nasurf(isurf+1, isurf+1), nder
     !
-    common /potcm/ nnc,nnb,nnh(4), &
-        & r0ch,d1ch,d3ch, &
-        & a1ch,b1ch,c1ch, &
-        & r0hh,d1hh,d3hh,ahh, &
-        & r0cb,d1cb,d3cb,acb, &
-        & a3s,b3s,aphi,bphi,cphi, &
-        & atheta,btheta,ctheta, &
-        & fch3,hch3, &
-        & fkinf,ak,bk,aa1,aa2,aa3,aa4
+    common /potcm/ nnc, nnb, nnh(4), &
+        & r0ch, d1ch, d3ch, &
+        & a1ch, b1ch, c1ch, &
+        & r0hh, d1hh, d3hh, ahh, &
+        & r0cb, d1cb, d3cb, acb, &
+        & a3s, b3s, aphi, bphi, cphi, &
+        & atheta, btheta, ctheta, &
+        & fch3, hch3, &
+        & fkinf, ak, bk, aa1, aa2, aa3, aa4
     !
-    common /angles/  theta0(4,4),dtheta0(4,4,4)
-    common /bonds/   rcb,rch(4),rbh(4)
-    common /coords/  tcb(3),tch(4,3),tbh(4,3)
-    common /delta1/  fdelta(4),hdelta(4)
-    common /delta2/  dfdelta(4,4),dhdelta(4,4)
-    common /force1/  fk0(4,4),f1(4),dfdc(4,4,4),dfdh(4,4,4)
-    common /fsw1/    a1s,b1s,a2s,b2s
-    common /ip1/     s1(4),ds1(4),s2(4),ds2(4)
-    common /ndx/     nc(3),nhb(3),nh(4,3)
-    common /op1/     s3(4),ds3(4)
-    common /qpdot_pl/   q(150),pdot(150)
-    common /switch1/ sphi(4),dsphi(4),stheta(4),dstheta(4)
+    common /angles/  theta0(4, 4), dtheta0(4, 4, 4)
+    common /bonds/   rcb, rch(4), rbh(4)
+    common /coords/  tcb(3), tch(4, 3), tbh(4, 3)
+    common /delta1/  fdelta(4), hdelta(4)
+    common /delta2/  dfdelta(4, 4), dhdelta(4, 4)
+    common /force1/  fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
+    common /fsw1/    a1s, b1s, a2s, b2s
+    common /ip1/     s1(4), ds1(4), s2(4), ds2(4)
+    common /ndx/     nc(3), nhb(3), nh(4, 3)
+    common /op1/     s3(4), ds3(4)
+    common /qpdot_pl/   q(150), pdot(150)
+    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
     !
-    data nasurf /1,35*0/
+    data nasurf /1, 35*0/
     data nder /1/
-    data nflag /1,1,15*0,6,0,0/
+    data nflag /1, 1, 15*0, 6, 0, 0/
     !
     data anuzero /0.0d0/
-    data icartr,msurf,mder/1,0,1/
+    data icartr, msurf, mder/1, 0, 1/
     data nulbl /25*0/
     data natoms /6/
     data nnc     /2/
     data nnb     /6/
-    data nnh     /3,4,5,1/
+    data nnh     /3, 4, 5, 1/
     data r0ch    /   1.09397d0/
     data d1ch    / 112.230d0/
     data d3ch    /  38.834d0/
@@ -4839,27 +4779,23 @@ end
 !> @brief Evaluate xgaussfit for the C2H7_VBMM potential.
 subroutine xgaussfit( r, fit )
     implicit none
-
-    double precision :: r
-    double precision :: fit
-
+    double precision   :: r
+    double precision   :: fit
     integer, parameter :: ng = 6
-
-    integer          :: i,j,k
-    double precision :: d
-    double precision :: ans
-    double precision :: r0(ng)
-    double precision :: alpha(ng)
-    double precision :: cf(ng)
-    double precision :: fx
-
+    integer            :: i, j, k
+    double precision   :: d
+    double precision   :: ans
+    double precision   :: r0(ng)
+    double precision   :: alpha(ng)
+    double precision   :: cf(ng)
+    double precision   :: fx
     r0(1) = 1.949230d0
     r0(2) = 1.013860d0
     r0(3) = 2.790270d0
     r0(4) = (r0(1)+r0(2))*0.50d0
     r0(5) = (r0(1)+r0(3))*0.50d0
     r0(6) = (r0(2)+r0(3))*0.50d0
-    do i=1,ng
+    do i=1, ng
         alpha(i) = 0.250d0
     end do
 
@@ -4871,7 +4807,7 @@ subroutine xgaussfit( r, fit )
     cf(6) = 1280.367802966489080d0
 
     ans = 0.0d0
-    do i=1,ng
+    do i=1, ng
         d   = r-r0(i)
         fx  = dexp(-alpha(i)*d*d)
         ans = ans+(cf(i)*fx)

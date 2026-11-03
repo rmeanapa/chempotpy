@@ -1,41 +1,33 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate pes for the O2H_GEN potential.
 subroutine pes( x, igrad, p, g, d )
-
+    use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
     implicit none
-
     ! number of electronic state
-    integer, parameter :: nstates = 1
-    integer, parameter :: natoms  = 3
-
+    integer, parameter            :: nstates = 1
+    integer, parameter            :: natoms  = 3
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: der, energy, r, v
-    integer          :: i, iatom, idir, istate, j, nder, ndum, nsurf
-
-    common /pt1cm/ r(3),energy,der(3)
+    double precision              :: der, energy, r, v
+    integer                       :: i, iatom, idir, istate, j, nder, ndum, nsurf
+    common /pt1cm/ r(3), energy, der(3)
     common /pt2cm/ nsurf, nder, ndum(21)
     double precision :: tx(9), r2(3), dedx(9), drdx(3,9)
     logical, save    :: first_time_data=.true.
-
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        enddo
-    enddo
+        end do
+    end do
     ! input cartesian is ClHH
-    r(1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
-    r(2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
-    r(3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
+    call legacy_triatomic_distances_to_bohr( x, r )
 
     nsurf = 0
     nder  = igrad
@@ -44,58 +36,54 @@ subroutine pes( x, igrad, p, g, d )
     if(first_time_data) then
         call prepot
         first_time_data = .false.
-    endif
+    end if
 
     call pot
 
-    energy = energy*27.211386
+    energy = energy*legacy_hartree_to_electronvolt
     der    = der*51.422067
 
-    r2 = r*0.529177211
+    r2 = r*legacy_bohr_to_angstrom
     call evdrdx(tx, r2, drdx)
     dedx = 0.d0
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             dedx(i) = dedx(i)+der(j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
     if (igrad==0) then
-        do istate=1,nstates
+        do istate=1, nstates
             p(istate) = energy
-        enddo
+        end do
     else if (igrad==1) then
-        do istate=1,nstates
+        do istate=1, nstates
             p(istate) = energy
-        enddo
-        do iatom=1,natoms
-            do idir=1,3
+        end do
+        do iatom=1, natoms
+            do idir=1, 3
                 j               = (iatom-1)*3+idir
                 g(1,iatom,idir) = dedx(j)
-            enddo
-        enddo
+            end do
+        end do
     else if (igrad==2) then
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the O2H_GEN potential.
 subroutine evdrdx( x, r, drdx )
-
     implicit none
-
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-
-    integer :: i,j
-
+    integer                       :: i, j
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
+    do i=1, 3
+        do j=1, 9
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
@@ -124,7 +112,7 @@ end subroutine evdrdx
 !> @brief Evaluate PREPOT for the O2H_GEN potential.
 subroutine prepot
     !
-    !   System:    HO2
+    !   System: HO2
     !   Reference: C. F. Melius and R. J. Blint
     !              Chem. Phys. Lett. 64, 183 (1979).
     !
@@ -177,23 +165,22 @@ subroutine prepot
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !
     implicit none
-
     double precision :: a, alpha, b, beta, c, csth, da, db, dcsth, de, der, dmew, dprod1, dprod2, &
         & dprod3, dsec, dthird, dv, easyab, easyac, easybc, energy, prod1, prod2, prod3, r, rab, rac, &
         & rbc, req, second, third, vab, vac, vbc, zeroad, zev, zkcal
     integer :: i, idum, iprt, it, it1, j, nder, ndum, nsurf
     !
-    double precision :: num,denom,gamma,junk,expo,dexpo,mew
+    double precision :: num, denom, gamma, junk, expo, dexpo, mew
     !
     !
-    common /pt1cm/ r(3),energy,der(3)
+    common /pt1cm/ r(3), energy, der(3)
     common /pt2cm/ nsurf, nder, ndum(20)
     common /pt4cm/ iprt, idum(19)
     common /pt5cm/ easyab, easybc, easyac
     !
-    dimension dcsth(3),dv(3),gamma(3),junk(4),c(5,3,3),a(5),da(5,3), &
-        & req(3),de(3),expo(3),dexpo(3),dmew(3),b(5,3),db(5,3,3),dprod1(3 &
-        & ),dprod2(3),dsec(3),dthird(3),dprod3(3)
+    dimension dcsth(3), dv(3), gamma(3), junk(4), c(5,3,3), a(5), da(5,3), &
+        & req(3), de(3), expo(3), dexpo(3), dmew(3), b(5, 3), db(5, 3, 3), dprod1(3 &
+        & ), dprod2(3), dsec(3), dthird(3), dprod3(3)
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          Initialize the constants
@@ -286,7 +273,7 @@ subroutine prepot
         dexpo(1) = -alpha*expo(1)
         dexpo(2) = -beta*expo(2)
         dexpo(3) = -alpha*expo(3)
-    endif
+    end if
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          CALCULATE VAB AND DV(1)
@@ -337,7 +324,7 @@ subroutine prepot
         dcsth(1) = (2.0d0*rab/denom)-(2.0d0*rbc)*csth/denom
         dcsth(2) = (2.0d0*rbc/denom)-(2.0d0*rab)*csth/denom
         dcsth(3) = -(2.0d0*rac/denom)
-    endif
+    end if
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          CALCULATE THE B IJ 'S--SEE EQUATION 5
@@ -345,15 +332,15 @@ subroutine prepot
     !
     do 80 i = 1, 5
         do 70 j = 1, 3
-            b(i,j) = c(i,j,1)*(1.0d0+c(i,j,2)*csth*(1.0d0+c(i,j,3)* csth))
+            b(i, j) = c(i,j,1)*(1.0d0+c(i,j,2)*csth*(1.0d0+c(i,j,3)* csth))
             !
             !               CALCULATE THE DERIVATIVES TOO.
             !
             if (nder .eq. 1) then
                 do 60 it = 1, 3
-                    db(i,j,it) = c(i,j,1)*c(i,j,2)*(csth*c(i,j,3)* dcsth(it)+dcsth(it)* (1.0d0+c(i,j,3)*csth))
+                    db(i, j, it) = c(i,j,1)*c(i,j,2)*(csth*c(i,j,3)* dcsth(it)+dcsth(it)* (1.0d0+c(i,j,3)*csth))
                 60 continue
-            endif
+            end if
         70 continue
     80 continue
     !
@@ -366,24 +353,24 @@ subroutine prepot
         dmew(2) = -beta*expo(2)
         dmew(1) = 0.0d0
         dmew(3) = 0.0d0
-    endif
+    end if
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          NOW CALCULATE A I 'S AND DERIVATIVES--SEE EQUATION 4
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !
     do 100 it = 1, 5
-        junk(1) = 1.0d0+b(it,3)*mew
-        junk(2) = mew*b(it,2)
+        junk(1) = 1.0d0+b(it, 3)*mew
+        junk(2) = mew*b(it, 2)
         junk(3) = 1.0d0+junk(2)*junk(1)
         !
-        a(it) = b(it,1)*junk(3)
+        a(it) = b(it, 1)*junk(3)
         if (nder .eq. 1) then
             do 90 it1 = 1, 3
-                da(it,it1) = db(it,1,it1)*junk(3)+b(it,1)* ((db(it,2,it1)*mew+b(it,2)*dmew(it1))* junk(1)+junk(2)* &
-                    & (db(it,3,it1)*mew+ b(it,3)*dmew(it1)))
+                da(it,it1) = db(it, 1, it1)*junk(3)+b(it, 1)* ((db(it, 2, it1)*mew+b(it, 2)*dmew(it1))* junk(1)+ &
+                    & junk(2)* (db(it, 3, it1)*mew+ b(it, 3)*dmew(it1)))
             90 continue
-        endif
+        end if
     100 continue
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -402,7 +389,7 @@ subroutine prepot
         dprod2(2) = (da(3,2)*rab*rac)/(rab+rac)
         dprod2(1) = ((da(3,1)*rab*rac+a(3)*rac)*(rab+rac)- (a(3)*rab*rac))/((rab+rac)*(rab+rac))
         dprod2(3) = ((da(3,3)*rab*rac+a(3)*rab)*(rab+rac)- (a(3)*rab*rac))/((rab+rac)*(rab+rac))
-    endif
+    end if
     !
     !          CALCULATE PROD3
     !
@@ -415,7 +402,7 @@ subroutine prepot
             dprod3(it) = dprod3(it)+a(2)*prod2
             110 continue
         120 continue
-    endif
+    end if
     !
     second = prod1*prod3
     !
@@ -423,7 +410,7 @@ subroutine prepot
         do 130 it = 1, 3
             dsec(it) = prod1*dprod3(it)+dprod1(it)*prod3
         130 continue
-    endif
+    end if
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          CALCULATE THE THIRD TERM
@@ -438,11 +425,11 @@ subroutine prepot
         do 140 it1 = 1, 2
             it = 1
             if (it1.eq.2) it = 3
-            dthird(it) = dexpo(it)*expo(2)*a(4)*junk(2)+ junk(1)*expo(2)*da(4,it)*junk(2)+ junk(1)*expo(2)*a(4)*(da(5, &
-                & it)* (rab+rac)+a(5))
+            dthird(it) = dexpo(it)*expo(2)*a(4)*junk(2)+ junk(1)*expo(2)*da(4,it)*junk(2)+ junk(1)*expo(2)*a(4)* &
+                & (da(5,it)* (rab+rac)+a(5))
         140 continue
         dthird(2) = junk(1)*(dexpo(2)*a(4)*junk(2)+expo(2)*(da(4,2)* junk(2)+a(4)*(da(5,2)*(rab+rac))))
-    endif
+    end if
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          FINALLY SUM IT ALL UP
@@ -461,7 +448,7 @@ subroutine prepot
         der(3)  = der(1)
         der(1)  = junk(1)
         160 continue
-    endif
+    end if
     !
     !CCCCCCCCCCCCCCC
     !
@@ -470,12 +457,12 @@ subroutine prepot
     !
     !
 end subroutine prepot
+
 !
 !*****
 !
 block data ptparm
     implicit none
-
     integer :: idum, iprt, nder, ndum, nsurf
     common /pt2cm/ nsurf, nder, ndum(21)
     common /pt4cm/ iprt, idum(19)
@@ -487,4 +474,5 @@ block data ptparm
     data ndum /21*0/
     !
 end
+
 !*****

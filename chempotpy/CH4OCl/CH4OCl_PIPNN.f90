@@ -5,26 +5,22 @@ module nnparam
     private
     public :: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, nodes, &
         & noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
-
-    double precision,parameter    :: alpha   = 1.0d0,pi=3.1415926d0,radian=pi/180.0d0
-    integer,parameter             :: nbasis  = 1105,ndim=21,natom=7
-    double precision,parameter    :: vpesmin = -575.2960146494d0
+    double precision, parameter   :: alpha   = 1.0d0, pi=3.1415926d0, radian=pi/180.0d0
+    integer, parameter            :: nbasis  = 1105, ndim=21, natom=7
+    double precision, parameter   :: vpesmin = -575.2960146494d0
     integer, parameter            :: ninput  = 1104
-    integer                       :: noutput,nhid,nlayer,ifunc,nwe,nodemax
+    integer                       :: noutput, nhid, nlayer, ifunc, nwe, nodemax
     integer                       :: nscale
     integer, allocatable          :: nodes(:)
-    double precision, allocatable :: weighta(:,:,:),biasa(:,:)
-    double precision, allocatable :: pdela(:),pavga(:)
-
+    double precision, allocatable :: weighta(:,:,:), biasa(:,:)
+    double precision, allocatable :: pdela(:), pavga(:)
 end module nnparam
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, p, g, d )
-
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 7
@@ -33,20 +29,17 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
-    double precision :: v
-    double precision :: tx(3,natoms)
-    integer          :: iatom, idir, j, istate
+    double precision                :: v
+    double precision                :: tx(3,natoms)
+    integer                         :: iatom, idir, j, istate
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
-    do iatom=1,natoms
-        do idir=1,3
-            tx(idir,iatom) = x(iatom, idir)
-        enddo
-    enddo
+    do iatom=1, natoms
+        do idir=1, 3
+            tx(idir,iatom) = x(iatom,idir)
+        end do
+    end do
 
     if (igrad==0) then
         call pes_init(path)
@@ -57,54 +50,53 @@ subroutine pes( x, igrad, path, p, g, d )
         deallocate(pdela)
         deallocate(pavga)
     else
-        write (*,*) 'Only energy is available'
-    endif
+        write (*, *) 'Only energy is available'
+    end if
 
-    do istate=1,nstates
+    do istate=1, nstates
         p(istate) = v
-    enddo
+    end do
 
     g = 0.d0
     d = 0.d0
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate clch3ohpipNN.
 subroutine clch3ohpipnn( ct, vpes )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-
-    integer          :: i,j,k,lpes
-    double precision :: rb(ndim),xbond(ndim),basis(nbasis),tmp1,txinput(nbasis-1)
-    double precision :: ct(3,natom),xvec(3,ndim),cx(3,natom),cy(3,natom)
-    double precision :: vpes,vpesa,vpesb,vpesc,vpesh,vnn
+    integer          :: i, j, k, lpes
+    double precision :: rb(ndim), xbond(ndim), basis(nbasis), tmp1, txinput(nbasis-1)
+    double precision :: ct(3,natom), xvec(3,ndim), cx(3,natom), cy(3,natom)
+    double precision :: vpes, vpesa, vpesb, vpesc, vpesh, vnn
     basis = 0.d0
 
     cx = ct
 
     k = 0
-    do i=1,natom-1
-        do j=i+1,natom
+    do i=1, natom-1
+        do j=i+1, natom
             k = k+1
             !        write(*,*)k,i,j
             xvec(:,k) = cx(:,i)-cx(:,j)
-        enddo
-    enddo
+        end do
+    end do
     if(k.ne.ndim)stop 'error in bond dimension'
-    do i=1,ndim
-        rb(i) = dsqrt(dot_product(xvec(:,i),xvec(:,i)))
-    enddo
+    do i=1, ndim
+        rb(i) = dsqrt(dot_product(xvec(:,i), xvec(:,i)))
+    end do
 
     xbond(:) = dexp(-rb(:)/alpha)
-    call bemsav(xbond,basis)
+    call bemsav(xbond, basis)
 
-    do j=1,nbasis-1
+    do j=1, nbasis-1
         txinput(j) = basis(j+1)
-    enddo
+    end do
     !        write(987,'(2000E16.8)')txinput(:)
 
-    call getpota(txinput,vpes)
+    call getpota(txinput, vpes)
     !       vnn=vpes
     !       vpes=vnn
 
@@ -120,59 +112,57 @@ subroutine pes_init( path )
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
     character(len=1024), intent(in) :: path
-
-    integer             :: file_unit_4
-    integer             :: i,ihid,iwe,inode1,inode2,ilay1,ilay2
-    integer             :: ibasis,npd,iterm,ib,nfile
-    character(len=80)   :: f1, line
-    character(len=1024) :: file_path1, file_path2
-
+    integer                         :: file_unit_4
+    integer                         :: i, ihid, iwe, inode1, inode2, ilay1, ilay2
+    integer                         :: ibasis, npd, iterm, ib, nfile
+    character(len=80)               :: f1, line
+    character(len=1024)             :: file_path1, file_path2
     file_path1 = trim(path)//"/CH4OCl/weights.txt"
     file_path2 = trim(path)//"/CH4OCl/biases.txt"
 
-    open(newunit=file_unit_4,file=file_path2,status='old')
+    open(newunit=file_unit_4, file=file_path2, status='old')
 
     nfile = 7
-    open(nfile,file=file_path1)
-    read(nfile,*)nhid,noutput
+    open(nfile, file=file_path1)
+    read(nfile, *)nhid, noutput
     nscale = ninput+noutput
     nlayer = nhid+2 !additional one for input layer and one for output
-    allocate(nodes(nlayer),pdela(nscale),pavga(nscale))
+    allocate(nodes(nlayer), pdela(nscale), pavga(nscale))
     nodes(1)      = ninput
     nodes(nlayer) = noutput
-    read(nfile,*)(nodes(ihid),ihid=2,nhid+1)
+    read(nfile, *)(nodes(ihid), ihid=2, nhid+1)
     nodemax = 0
-    do i=1,nlayer
-        nodemax = max(nodemax,nodes(i))
-    enddo
-    allocate(weighta(nodemax,nodemax,2:nlayer),&
+    do i=1, nlayer
+        nodemax = max(nodemax, nodes(i))
+    end do
+    allocate(weighta(nodemax,nodemax,2:nlayer), &
         &   biasa(nodemax,2:nlayer))
-    read(nfile,*)ifunc,nwe
+    read(nfile, *)ifunc, nwe
     !-->....ifunc hence controls the type of transfer function used for hidden layers
     !-->....At this time, only an equivalent transfer function can be used for all hidden layers
     !-->....and the pure linear function is always applid to the output layer.
     !-->....see function tranfun() for details
-    read(nfile,*)(pdela(i),i=1,nscale)
-    read(nfile,*)(pavga(i),i=1,nscale)
+    read(nfile, *)(pdela(i), i=1, nscale)
+    read(nfile, *)(pavga(i), i=1, nscale)
     iwe = 0
-    do ilay1=2,nlayer
+    do ilay1=2, nlayer
         ilay2 = ilay1-1
-        do inode1=1,nodes(ilay1)
-            do inode2=1,nodes(ilay2) !
-                read(nfile,*)weighta(inode2,inode1,ilay1)
+        do inode1=1, nodes(ilay1)
+            do inode2=1, nodes(ilay2) !
+                read(nfile, *)weighta(inode2,inode1,ilay1)
                 iwe = iwe+1
-            enddo
-            read(file_unit_4,*)biasa(inode1,ilay1)
+            end do
+            read(file_unit_4, *)biasa(inode1,ilay1)
             iwe = iwe+1
-        enddo
-    enddo
+        end do
+    end do
 
     if (iwe.ne.nwe) then
-        write(*,*)'provided number of parameters ',nwe
-        write(*,*)'actual number of parameters ',iwe
-        write(*,*)'nwe not equal to iwe, check input files or code'
+        write(*, *)'provided number of parameters ', nwe
+        write(*, *)'actual number of parameters ', iwe
+        write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    endif
+    end if
 
     close(nfile)
     close(file_unit_4)
@@ -184,39 +174,38 @@ subroutine getpota( x, vpot )
     use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-
-    integer                    :: i,inode1,inode2,ilay1,ilay2
-    integer                    :: j,k,neu1,neu2,ndriv
-    double precision           :: x(ninput),y(nodemax,nlayer),vpot
+    integer                    :: i, inode1, inode2, ilay1, ilay2
+    integer                    :: j, k, neu1, neu2, ndriv
+    double precision           :: x(ninput), y(nodemax,nlayer), vpot
     double precision, external :: tranfun
     !-->....set up the normalized input layer
-    do i=1,ninput
+    do i=1, ninput
         y(i,1) = (x(i)-pavga(i))/pdela(i)
-    enddo
+    end do
 
     !-->....evaluate the hidden layer
-    do ilay1=2,nlayer-1
+    do ilay1=2, nlayer-1
         ilay2 = ilay1-1
-        do inode1=1,nodes(ilay1)
+        do inode1=1, nodes(ilay1)
             y(inode1,ilay1) = biasa(inode1,ilay1)
-            do inode2=1,nodes(ilay2)
+            do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-            enddo
-            y(inode1,ilay1) = tranfun(y(inode1,ilay1),ifunc)
-        enddo
-    enddo
+            end do
+            y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
+        end do
+    end do
 
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
-    do inode1=1,nodes(ilay1)
+    do inode1=1, nodes(ilay1)
         y(inode1,ilay1) = biasa(inode1,ilay1)
-        do inode2=1,nodes(ilay2)
+        do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-        enddo
+        end do
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    enddo
+    end do
 
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
@@ -226,37 +215,33 @@ end subroutine getpota
 !> @brief Evaluate tranfun.
 function tranfun( x, ifunc )
     implicit none
-
     integer          :: ifunc
-    double precision :: tranfun,x
+    double precision :: tranfun, x
     if (ifunc.eq.1) then
         tranfun = dtanh(x)
     else if (ifunc.eq.2) then
         tranfun = 1d0/(1d0+dexp(-x))
     else if (ifunc.eq.3) then
         tranfun = x
-    endif
+    end if
 end
 
 !> @brief Evaluate bemsav.
 subroutine bemsav( xmorse, p )
     implicit none
-
-    double precision,dimension(1:21),intent(in)::xmorse
-    double precision,dimension(0:1104),intent(out)::p
+    double precision, dimension(1:21), intent(in)::xmorse
+    double precision, dimension(0:1104), intent(out)::p
     ! ::::::::::::::::::::
-    double precision,dimension(0:2000)::m
-    call evmono(xmorse,m)
-    call evpoly(m,p)
+    double precision, dimension(0:2000)::m
+    call evmono(xmorse, m)
+    call evpoly(m, p)
 end subroutine bemsav
 
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
-    double precision,dimension(1:21),intent(in)::x
-    double precision,dimension(0:2000),intent(out)::m
-
+    double precision, dimension(1:21), intent(in)::x
+    double precision, dimension(0:2000), intent(out)::m
     m(0)    = 1.d0
     m(1)    = x(21)
     m(2)    = x(20)
@@ -2264,10 +2249,8 @@ end subroutine evmono
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
-    double precision,dimension(0:2000),intent(in)::m
-    double precision,dimension(0:1104),intent(out)::p
-
+    double precision, dimension(0:2000), intent(in)::m
+    double precision, dimension(0:1104), intent(out)::p
     p(0)  = m(0)
     p(1)  = m(1)
     p(2)  = m(2)

@@ -1,9 +1,9 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate pes for the NaFH_LEPS_TTYPP1_1998 potential.
 subroutine pes( x, igrad, p, g, d )
-
+    use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
+    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 2
     integer, parameter            :: natoms  = 3
@@ -11,81 +11,72 @@ subroutine pes( x, igrad, p, g, d )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: nt, r(1,3), v(1)
-    double precision :: u11(1), u12(1), u22(1)
-    double precision :: u(nstates,nstates)
-    double precision :: t(nstates,nstates)
-    logical, save    :: first_time_data=.true.
-    integer          :: i, j, k, l
-
+    double precision              :: nt, r(1,3), v(1)
+    double precision              :: u11(1), u12(1), u22(1)
+    double precision              :: u(nstates,nstates)
+    double precision              :: t(nstates,nstates)
+    logical, save                 :: first_time_data=.true.
+    integer                       :: i, j, k, l
     !initialize
-    u = 0.d0
-    p = 0.d0
-    g = 0.d0
-    d = 0.d0
+    u = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
 
     nt = 1
     ! input cartesian is ClHH
-    r(1,1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
-    r(1,2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
-    r(1,3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
+    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
 
     if(first_time_data) then
         call prepot
         first_time_data = .false.
-    endif
+    end if
 
     if (igrad==0) then
-        call pot(r,u11,1,1)
-        call pot(r,u12,1,2)
-        call pot(r,u22,1,3)
-        u(1,1) = u11(1)*27.211386
-        u(1,2) = u12(1)*27.211386
-        u(2,1) = u12(1)*27.211386
-        u(2,2) = u22(1)*27.211386
-        call diagonalize(nstates,u,p,t)
+        call pot(r, u11, 1, 1)
+        call pot(r, u12, 1, 2)
+        call pot(r, u22, 1, 3)
+        u(1,1) = u11(1)*legacy_hartree_to_electronvolt
+        u(1,2) = u12(1)*legacy_hartree_to_electronvolt
+        u(2,1) = u12(1)*legacy_hartree_to_electronvolt
+        u(2,2) = u22(1)*legacy_hartree_to_electronvolt
+        call diagonalize(nstates, u, p, t)
     else
-        write(*,*) "Only energy is available"
-    endif
+        write(*, *) "Only energy is available"
+    end if
 
 end subroutine pes
 
 !> @brief Evaluate diagonalize for the NaFH_LEPS_TTYPP1_1998 potential.
 subroutine diagonalize( n, a_ss, ev_s, u_ss )
     implicit none
-
     integer, intent(in)           :: n
     double precision, intent(in)  :: a_ss(n,n)
     double precision, intent(out) :: u_ss(n,n)
     double precision, intent(out) :: ev_s(n)
-    integer                       :: io,i
-    double precision,allocatable  :: work_d(:)
+    integer                       :: io, i
+    double precision, allocatable :: work_d(:)
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
-
     u_ss = a_ss
     if (first_time_diag) then
         lwork_d = -1
         allocate( work_d(2) )
-        call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    endif
+    end if
     allocate( work_d(lwork_d) )
-    call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
 !> @brief Evaluate prepot for the NaFH_LEPS_TTYPP1_1998 potential.
 subroutine prepot
     !
-    !   System:          NaFH
-    !   Common name:     N3
-    !   Functional form: Modified extended LEPS
-    !   Number of derivatives: 0
+    !   System:                        NaFH
+    !   Common name:                   N3
+    !   Functional form:               Modified extended LEPS
+    !   Number of derivatives:         0
     !   Number of electronic surfaces: 2
-    !   Interface: 3-1V
+    !   Interface:                     3-1V
 
     !   Reference:  Unpublished, M. S. Topaler and D. G. Truhlar
 
@@ -117,67 +108,61 @@ subroutine prepot
     !                            R(3) = R(Na-F)
 
     implicit none
-
     call prepot11
     call prepot12
     call prepot22
 
 end subroutine prepot
+
 !
 !> @brief Evaluate pot for the NaFH_LEPS_TTYPP1_1998 potential.
 subroutine pot( r, e, nt, nsurf )
-
     implicit none
-
     double precision :: e, r
     integer          :: nsurf, nt
-
-    dimension r(nt,3),e(nt)
-
+    dimension r(nt,3), e(nt)
     if (nsurf .eq. 1) then
-        call pot11(r,e,nt)
+        call pot11(r, e, nt)
     else if (nsurf .eq. 2) then
-        call pot12(r,e,nt)
+        call pot12(r, e, nt)
     else
-        call pot22(r,e,nt)
+        call pot22(r, e, nt)
     end if
 
 end subroutine pot
+
 !
 !  U11 surface - lower diabatic surface
 !
 !> @brief Evaluate prepot11 for the NaFH_LEPS_TTYPP1_1998 potential.
 subroutine prepot11
     implicit none
-
     double precision :: a, abs1, ads1, ars1, as1, as3, axs1, axs3, betat2, c1, c2, c2a, c2b, c2c, c3, &
         & c4, cbs1, cds1, cevau, cfm, coul1, coul2, coul3, cplg2, cprime, crs1, cs1, cs3, cxs1, cxs3, &
         & deh2, dn, dt2, e, exch1, exch2, exch3, hlp, hlp1, hlp2, hlp3, r, r2s, rac2, ret2, rootw, &
         & rr1, rr1s, rr3, rr3s, s1, s2, s2a, s2h, s2i, s3, scale, swa, swa2, swr0, swr20, swt, t1, &
         & t2, t3, w, xt2
     integer :: i, nt
-    dimension r(nt,3),e(nt)
-
+    dimension r(nt,3), e(nt)
     save
     data scale/1.5d0/
     data cprime/4.0d-1/
-    data dt2/2.885656d-2/,ret2/1.237624d0/,betat2/1.038036d+1/, &
-        & c1/1255969.4d0/,c2/4.7d0/,c3/5.546257d0/, &
+    data dt2/2.885656d-2/, ret2/1.237624d0/, betat2/1.038036d+1/, &
+        & c1/1255969.4d0/, c2/4.7d0/, c3/5.546257d0/, &
         & c4/5.573967d-1/
-    data ads1/0.08d0/,ars1/4.0d0/,abs1/1.55d0/, &
-        & cds1/2.40d0/,crs1/4.15d0/,cbs1/1.20d0/
-    data swa/0.7d0/,swr0/6.5d0/,swa2/1.1d0/,swr20/1.9d0/, &
-        & c2a/1.5d0/,c2b/1.0d0/,c2c/0.15d0/,deh2/3.39687d0/
+    data ads1/0.08d0/, ars1/4.0d0/, abs1/1.55d0/, &
+        & cds1/2.40d0/, crs1/4.15d0/, cbs1/1.20d0/
+    data swa/0.7d0/, swr0/6.5d0/, swa2/1.1d0/, swr20/1.9d0/, &
+        & c2a/1.5d0/, c2b/1.0d0/, c2c/0.15d0/, deh2/3.39687d0/
     data cfm/0.0d0/
-
     rac2  = 1.d0/dsqrt(2.d0)
     cevau = 1.d0/27.2113961d0
 
     return
     !
-    entry pot11(r,e,nt)
+    entry pot11(r, e, nt)
 
-    do 10 i=1,nt
+    do 10 i=1, nt
 
         !***********************************************************************
         r2s  = r(i,2)*r(i,2)
@@ -291,28 +276,24 @@ subroutine prepot11
     10 continue
 
 end subroutine prepot11
+
 !
 !  U12 surface - coupling surface
 !
 !> @brief Evaluate prepot12 for the NaFH_LEPS_TTYPP1_1998 potential.
 subroutine prepot12
     implicit none
-
     double precision :: amc, cevau, e, gmc, hlp, r, rmc, sw1, sw21, sw23, unaf, unah
     integer          :: i, nt
-    dimension r(nt,3),e(nt)
-
+    dimension r(nt,3), e(nt)
     !      BLOCK DATA UONETWO
-    double precision :: ahf,anaf,anah,r21,r23,r13
-    double precision :: ccmf(4),ccmh(4)
+    double precision :: ahf, anaf, anah, r21, r23, r13
+    double precision :: ccmf(4), ccmh(4)
     !      common/ucoupl/ahf,anaf,anah,r21,r23,r13
     !      common/ucoupl1/ccMF(4),ccMH(4)
-
     save
-
-    data ccmf/3.9960d0,5.4730d-01,-1.1428d0,2.0440d-01/
-    data ccmh/1.00d0,0.80d0,-2.67d0,0.456d0/
-
+    data ccmf/3.9960d0, 5.4730d-01, -1.1428d0, 2.0440d-01/
+    data ccmh/1.00d0, 0.80d0, -2.67d0, 0.456d0/
     data ahf/3.0000d0/, &
         & anaf/18.0000d-1/, &
         & anah/16.0000d-1/
@@ -320,19 +301,16 @@ subroutine prepot12
         & r23/-3.3006d-1/, &
         & r13/1.2431d0/
     !      END
-
     !      save /ucoupl/,/ucoupl1/
-
     !      common/ucoupl/ahf,anaf,anah,r21,r23,r13
     !      common/ucoupl1/ccMF(4),ccMH(4)
-
     cevau = 1.d0/27.2113961d0
 
     return
     !
-    entry pot12(r,e,nt)
+    entry pot12(r, e, nt)
 
-    do 10 i=1,nt
+    do 10 i=1, nt
 
         hlp  = ccmf(3)/(1.d0+ccmf(4)*r(i,3))
         unaf = dexp(-ccmf(1)-ccmf(2)*r(i,3)- hlp*r(i,3))
@@ -374,7 +352,6 @@ end subroutine prepot12
 !> @brief Evaluate prepot22 for the NaFH_LEPS_TTYPP1_1998 potential.
 subroutine prepot22
     implicit none
-
     double precision :: a, a0g1, a0g2, a0g3, a90g1, a90g2, a90g3, aaa, aaa1, af1, b, b0g1, b0g2, &
         & b0g3, b90g1, b90g2, b90g3, c1s1, c2a, c2b, c2c, c2s1, c3s1, c4s1, c5s1, c6s1, cevau, coul1, &
         & coul2, coul3, cplg2, cprime, daa, deh2, dn, dnaht1, dnaht11, dnaht2, dnaht3, dnaht4, &
@@ -384,40 +361,38 @@ subroutine prepot22
         & s2, s2a, s2b, s2i, s3, scale, swa, swr0, swt, t1, t2, t2a, t3, una2p, w, y0b1, y0b2, y0d1, &
         & y0d2, y0r1, y0r2, y90b1, y90b2, y90d1, y90d2, y90r1, y90r2
     integer :: i, nt
-    dimension r(nt,3),e(nt)
-
+    dimension r(nt,3), e(nt)
     save
     data scale/1.5d0/
-    data c1s1/203.128d0/,c2s1/1.6167d0/,c3s1/-100.124d0/, &
-        & c4s1/68.078d0/,c5s1/-15.832d0/,c6s1/1.303d0/
-    data dnaht1/3.35000d0/,dnaht2/10.000d0/,dnaht3/54.6393d0/, &
-        & dnaht4/-17.63343d0/,dnaht5/3.0085d0/,dnaht6/1.450d0/, &
-        & dnaht7/-2.87977d0/,dnaht61/1.300d0/,dnaht11/2.85000d0/
-    data deh2/4.7404422d0/,una2p/2.1037d0/,c2a/0.8d0/,c2b/0.8d0/, &
-        & c2c/0.15d0/,cprime/8.0d-1/
-    data y0d1/2.417800d-1/,y0r1/3.708055d0/,y0b1/6.960127d-1/, &
-        & y90d1/1.372065d-2/,y90r1/7.233552d0/,y90b1/5.127734d-1/, &
-        & y0d2/8.870172d-1/,y0r2/2.300265d0/,y0b2/8.497374d-1/, &
-        & y90d2/1.106187d0/,y90r2/2.002516d0/,y90b2/9.514887d-1/, &
-        & swa/0.78495d0/,swr0/7.47654d0/
-    data a0g1/-8.210245d-2/,b0g1/4.658698d0/,r0g1/4.552860d0/, &
-        & a0g2/3.546427d-2/,b0g2/6.456787d-1/,r0g2/6.332225d0/, &
-        & a0g3/-1.562327d-2/,b0g3/1.170537d-1/,r0g3/1.097310d+1/
-    data a90g1/-9.929297d-2/,b90g1/4.367220d0/,r90g1/4.402447d0/, &
-        & a90g2/4.696181d-2/,b90g2/5.470459d-1/,r90g2/6.289526d0/, &
-        & a90g3/-1.219900d-2/,b90g3/1.002291d-2/,r90g3/1.118725d+1/
-    data h2t1/1.5d0/,h2t2/4.47009d0/,h2t3/4.48534d0/, &
-        & h2t4/1.77908d0/,h2t5/-6.46276d0/,h2t6/3.15396d0/, &
+    data c1s1/203.128d0/, c2s1/1.6167d0/, c3s1/-100.124d0/, &
+        & c4s1/68.078d0/, c5s1/-15.832d0/, c6s1/1.303d0/
+    data dnaht1/3.35000d0/, dnaht2/10.000d0/, dnaht3/54.6393d0/, &
+        & dnaht4/-17.63343d0/, dnaht5/3.0085d0/, dnaht6/1.450d0/, &
+        & dnaht7/-2.87977d0/, dnaht61/1.300d0/, dnaht11/2.85000d0/
+    data deh2/4.7404422d0/, una2p/2.1037d0/, c2a/0.8d0/, c2b/0.8d0/, &
+        & c2c/0.15d0/, cprime/8.0d-1/
+    data y0d1/2.417800d-1/, y0r1/3.708055d0/, y0b1/6.960127d-1/, &
+        & y90d1/1.372065d-2/, y90r1/7.233552d0/, y90b1/5.127734d-1/, &
+        & y0d2/8.870172d-1/, y0r2/2.300265d0/, y0b2/8.497374d-1/, &
+        & y90d2/1.106187d0/, y90r2/2.002516d0/, y90b2/9.514887d-1/, &
+        & swa/0.78495d0/, swr0/7.47654d0/
+    data a0g1/-8.210245d-2/, b0g1/4.658698d0/, r0g1/4.552860d0/, &
+        & a0g2/3.546427d-2/, b0g2/6.456787d-1/, r0g2/6.332225d0/, &
+        & a0g3/-1.562327d-2/, b0g3/1.170537d-1/, r0g3/1.097310d+1/
+    data a90g1/-9.929297d-2/, b90g1/4.367220d0/, r90g1/4.402447d0/, &
+        & a90g2/4.696181d-2/, b90g2/5.470459d-1/, r90g2/6.289526d0/, &
+        & a90g3/-1.219900d-2/, b90g3/1.002291d-2/, r90g3/1.118725d+1/
+    data h2t1/1.5d0/, h2t2/4.47009d0/, h2t3/4.48534d0/, &
+        & h2t4/1.77908d0/, h2t5/-6.46276d0/, h2t6/3.15396d0/, &
         & h2t7/-1.59912d0/
-
     rac2  = 1.d0/dsqrt(2.d0)
     cevau = 1.d0/27.2113961d0
 
     return
     !
-    entry pot22(r,e,nt)
+    entry pot22(r, e, nt)
 
-    do 10 i=1,nt
+    do 10 i=1, nt
 
         !***********************************************************************
         r1s  = r(i,1)*r(i,1)

@@ -44,6 +44,12 @@ DECLARATION = re.compile(
     r"(?P<attributes>\s*,[^:]*)?\s*::\s*(?P<entities>.*)$",
     flags=re.IGNORECASE,
 )
+USE_ONLY = re.compile(
+    r"^(?P<indent>\s*)(?P<prefix>use(?:\s*,\s*"
+    r"(?:intrinsic|non_intrinsic)\s*::)?\s+[a-z][a-z0-9_]*\s*,)"
+    r"\s*only\s*:(?P<entities>.*)$",
+    flags=re.IGNORECASE,
+)
 ASSIGNMENT = re.compile(
     r"^(?P<indent>\s*)(?P<target>[a-z][a-z0-9_]*(?:%[a-z][a-z0-9_]*)*"
     r"(?:\([^=]*\))?)\s*=\s*(?P<expression>[^=>].*)$",
@@ -58,6 +64,16 @@ LABELED_DO = re.compile(
     r"^(?:[a-z][a-z0-9_]*\s*:\s*)?do\s+(\d+)\s+",
     flags=re.IGNORECASE,
 )
+PES_METADATA_LABELS = {
+    "system",
+    "functional form",
+    "common name",
+    "number of derivatives",
+    "number of bodies",
+    "number of electronic surfaces",
+    "interface",
+    "data file",
+}
 
 
 @dataclass
@@ -134,6 +150,235 @@ def lowercase_fortran_code(source_text: str) -> str:
             output.append(character.lower())
         index += 1
     return "".join(output)
+
+
+def align_pes_metadata(source_text: str) -> str:
+    """Align values in consecutive standard PES metadata comments."""
+
+    lines = source_text.splitlines()
+    pattern = re.compile(
+        r"^(?P<indent>\s*)!\s{3}(?P<label>[^:]+):\s*(?P<value>.*)$"
+    )
+    index = 0
+    while index < len(lines):
+        match = pattern.match(lines[index])
+        if (
+            match is None
+            or match.group("label").strip().lower() not in PES_METADATA_LABELS
+        ):
+            index += 1
+            continue
+        group = []
+        cursor = index
+        while cursor < len(lines):
+            candidate = pattern.match(lines[cursor])
+            if (
+                candidate is None
+                or candidate.group("indent") != match.group("indent")
+                or candidate.group("label").strip().lower()
+                not in PES_METADATA_LABELS
+            ):
+                break
+            group.append((cursor, candidate))
+            cursor += 1
+        width = max(len(item.group("label").strip()) for _, item in group)
+        for line_index, item in group:
+            label = item.group("label").strip()
+            value = item.group("value").strip()
+            suffix = (
+                "{}{}".format(" " * (width-len(label)+1), value)
+                if value
+                else ""
+            )
+            lines[line_index] = "{}!   {}:{}".format(
+                item.group("indent"), label, suffix
+            )
+        index = cursor
+    return "\n".join(lines) + "\n"
+
+
+def normalize_comma_spacing(source_text: str) -> str:
+    """Put one space after code commas while preserving literals/comments."""
+
+    output = []
+    quote = ""
+    comment = False
+    index = 0
+    while index < len(source_text):
+        character = source_text[index]
+        if comment:
+            output.append(character)
+            if character == "\n":
+                comment = False
+        elif quote:
+            output.append(character)
+            if character == quote:
+                if index + 1 < len(source_text) and source_text[index + 1] == quote:
+                    output.append(source_text[index + 1])
+                    index += 1
+                else:
+                    quote = ""
+        elif character in "'\"":
+            quote = character
+            output.append(character)
+        elif character == "!":
+            comment = True
+            output.append(character)
+        elif character == ",":
+            while output and output[-1] in " \t":
+                output.pop()
+            output.append(",")
+            while index + 1 < len(source_text) and source_text[index + 1] in " \t":
+                index += 1
+            if (
+                index + 1 < len(source_text)
+                and source_text[index + 1] not in "\r\n"
+            ):
+                output.append(" ")
+        else:
+            output.append(character)
+        index += 1
+    return "".join(output)
+
+
+def split_top_level_entities(text: str) -> List[str]:
+    """Split a declaration entity list without splitting array shapes."""
+
+    entities = []
+    start = 0
+    depth = 0
+    quote = ""
+    for index, character in enumerate(text):
+        if quote:
+            if character == quote:
+                quote = ""
+        elif character in "'\"":
+            quote = character
+        elif character in "([":
+            depth += 1
+        elif character in ")]":
+            depth -= 1
+        elif character == "," and depth == 0:
+            entities.append(text[start:index])
+            start = index+1
+    entities.append(text[start:])
+    return entities
+
+
+def declared_array_names(source_text: str) -> set[str]:
+    """Return array names declared in modern and legacy declarations."""
+
+    names: set[str] = set()
+    for line in source_text.splitlines():
+        code = code_without_comment(line)
+        if "::" in code:
+            entities = code.split("::", 1)[1]
+            for entity in split_top_level_entities(entities):
+                declarator = entity.split("=", 1)[0].strip()
+                match = re.match(r"([a-z][a-z0-9_]*)\s*\(", declarator, re.I)
+                if match is not None:
+                    names.add(match.group(1).lower())
+        dimension = re.match(r"^\s*dimension\s+(.+)$", code, re.I)
+        if dimension is not None:
+            for entity in split_top_level_entities(dimension.group(1)):
+                match = re.match(r"\s*([a-z][a-z0-9_]*)\s*\(", entity, re.I)
+                if match is not None:
+                    names.add(match.group(1).lower())
+    return names
+
+
+def compact_array_commas(source_text: str) -> str:
+    """Remove spaces after commas inside declared array subscripts."""
+
+    array_names = declared_array_names(source_text)
+    output = []
+    contexts = []
+    quote = ""
+    comment = False
+    index = 0
+    while index < len(source_text):
+        character = source_text[index]
+        if comment:
+            output.append(character)
+            if character == "\n":
+                comment = False
+        elif quote:
+            output.append(character)
+            if character == quote:
+                if index + 1 < len(source_text) and source_text[index + 1] == quote:
+                    output.append(source_text[index + 1])
+                    index += 1
+                else:
+                    quote = ""
+        elif character in "'\"":
+            quote = character
+            output.append(character)
+        elif character == "!":
+            comment = True
+            output.append(character)
+        elif character == "(":
+            end = len(output)
+            while end and output[end-1] in " \t":
+                end -= 1
+            start = end
+            while start and re.match(r"[a-z0-9_]", output[start-1], re.I):
+                start -= 1
+            name = "".join(output[start:end]).lower()
+            contexts.append(name in array_names)
+            output.append(character)
+        elif character == ")":
+            if contexts:
+                contexts.pop()
+            output.append(character)
+        elif character == "," and contexts and contexts[-1]:
+            while output and output[-1] in " \t":
+                output.pop()
+            output.append(",")
+            while index + 1 < len(source_text) and source_text[index + 1] in " \t":
+                index += 1
+        else:
+            output.append(character)
+        index += 1
+    return "".join(output)
+
+
+def normalize_end_statements(source_text: str) -> str:
+    """Separate compact END keywords used by legacy source."""
+
+    replacements = {
+        "associate": "associate",
+        "blockdata": "block data",
+        "block": "block",
+        "critical": "critical",
+        "do": "do",
+        "enum": "enum",
+        "forall": "forall",
+        "function": "function",
+        "if": "if",
+        "interface": "interface",
+        "module": "module",
+        "program": "program",
+        "select": "select",
+        "subroutine": "subroutine",
+        "team": "team",
+        "type": "type",
+        "where": "where",
+    }
+    pattern = re.compile(
+        r"^(?P<prefix>\s*(?:\d+\s+)?)end(?P<kind>"
+        + "|".join(replacements)
+        + r")\b(?P<suffix>.*)$",
+        re.IGNORECASE | re.MULTILINE,
+    )
+
+    def replace(match) -> str:
+        return "{}end {}{}".format(
+            match.group("prefix"),
+            replacements[match.group("kind").lower()],
+            match.group("suffix"),
+        )
+
+    return pattern.sub(replace, source_text)
 
 
 def normalized_code(line: str) -> tuple[str | None, str]:
@@ -348,6 +593,37 @@ def align_declarations(lines: Sequence[str]) -> List[str]:
     return aligned
 
 
+def align_use_only(lines: Sequence[str]) -> List[str]:
+    """Align ONLY clauses in consecutive USE statement groups."""
+
+    aligned = list(lines)
+    index = 0
+    while index < len(aligned):
+        first = USE_ONLY.match(aligned[index])
+        if first is None:
+            index += 1
+            continue
+        group = [(index, first)]
+        next_index = index + 1
+        while next_index < len(aligned):
+            match = USE_ONLY.match(aligned[next_index])
+            if match is None or match.group("indent") != first.group("indent"):
+                break
+            group.append((next_index, match))
+            next_index += 1
+        width = max(len(match.group("prefix")) for _, match in group)
+        for line_index, match in group:
+            prefix = match.group("prefix")
+            aligned[line_index] = "{}{}{} only:{}".format(
+                match.group("indent"),
+                prefix,
+                " " * (width-len(prefix)),
+                match.group("entities"),
+            )
+        index = next_index
+    return aligned
+
+
 def declaration_end(lines: Sequence[str], index: int) -> int:
     """Return the first line after one possibly continued declaration."""
 
@@ -422,15 +698,9 @@ def order_initial_declarations(lines: Sequence[str]) -> List[str]:
             continue
 
         replacement = []
-        previous_rank = None
         for rank, chunk in sorted(entries, key=lambda item: item[0]):
-            if previous_rank is not None and rank != previous_rank:
-                replacement.append("")
             replacement.extend(chunk)
-            previous_rank = rank
         if pending:
-            if replacement and replacement[-1].strip():
-                replacement.append("")
             replacement.extend(
                 line for line in pending if line.strip()
             )
@@ -450,6 +720,137 @@ def collapse_blank_lines(lines: Sequence[str]) -> List[str]:
     while collapsed and not collapsed[-1].strip():
         collapsed.pop()
     return collapsed
+
+
+def compact_unit_headers(lines: Sequence[str]) -> List[str]:
+    """Remove empty lines between a source-unit header and its specification."""
+
+    compacted = list(lines)
+    index = 0
+    while index < len(compacted):
+        if UNIT_START.match(compacted[index].strip()) is None:
+            index += 1
+            continue
+        while index + 1 < len(compacted) and not compacted[index + 1].strip():
+            del compacted[index + 1]
+        index += 1
+    return compacted
+
+
+def executable_statement(line: str) -> bool:
+    """Return whether a line begins executable procedure code."""
+
+    code = normalized_code(line)[1].strip()
+    if not code or code.startswith("!"):
+        return False
+    if ASSIGNMENT.match(line) is not None:
+        return True
+    return bool(re.match(
+        r"^(?:associate|backspace|block\b|call\b|close\b|cycle\b|"
+        r"deallocate\b|do\b|else\b|entry\b|error\s+stop\b|exit\b|"
+        r"forall\b|go\s*to\b|goto\b|if\s*\(|inquire\b|nullify\b|"
+        r"open\b|print\b|read\b|return\b|rewind\b|select\b|stop\b|"
+        r"sync\b|wait\b|where\b|write\b|end\b|contains\b)",
+        code,
+        re.IGNORECASE,
+    ))
+
+
+def compact_specification_sections(lines: Sequence[str]) -> List[str]:
+    """Remove blank lines from each initial specification section."""
+
+    compacted = list(lines)
+    index = 0
+    while index < len(compacted):
+        if not re.match(r"^\s*implicit\s+none\b", compacted[index], re.I):
+            index += 1
+            continue
+        end = index + 1
+        while end < len(compacted) and not executable_statement(compacted[end]):
+            end += 1
+        compacted[index + 1:end] = [
+            line for line in compacted[index + 1:end] if line.strip()
+        ]
+        index += 1
+    return compacted
+
+
+def combine_initialization_assignments(
+    lines: Sequence[str], maximum_width: int = 120
+) -> List[str]:
+    """Combine short literal initialization runs with semicolons."""
+
+    combined = list(lines)
+    index = 0
+    literal = re.compile(
+        r"^(?:[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[de][+-]?\d+)?|"
+        r"\.true\.|\.false\.)$",
+        re.IGNORECASE,
+    )
+    while index < len(combined):
+        if not re.match(r"^\s*!.*\binitiali[sz]", combined[index], re.I):
+            index += 1
+            continue
+        assignments = []
+        cursor = index + 1
+        while cursor < len(combined):
+            match = ASSIGNMENT.match(combined[cursor])
+            if (
+                match is None
+                or match.group("indent") != re.match(
+                    r"^\s*", combined[index]
+                ).group(0)
+                or not re.match(
+                    r"^[a-z][a-z0-9_]*(?:%[a-z][a-z0-9_]*)*$",
+                    match.group("target"),
+                    re.IGNORECASE,
+                )
+                or literal.match(match.group("expression").strip()) is None
+            ):
+                break
+            assignments.append((
+                match.group("target"), match.group("expression").strip()
+            ))
+            cursor += 1
+        if len(assignments) < 2:
+            index += 1
+            continue
+
+        indentation = re.match(r"^\s*", combined[index]).group(0)
+        replacement = []
+        current = ""
+        for target, expression in assignments:
+            statement = "{} = {}".format(target, expression)
+            candidate = statement if not current else current + "; " + statement
+            if current and len(indentation) + len(candidate) > maximum_width:
+                replacement.append(indentation + current)
+                current = statement
+            else:
+                current = candidate
+        replacement.append(indentation + current)
+        combined[index + 1:cursor] = replacement
+        index += 1 + len(replacement)
+    return combined
+
+
+def ensure_unit_separation(lines: Sequence[str]) -> List[str]:
+    """Keep exactly one blank line between top-level source units."""
+
+    separated = []
+    unit_end = re.compile(
+        r"^\s*(?:end\s+(?:subroutine|function|module|program|block\s+data)"
+        r"(?:\s+[a-z][a-z0-9_]*)?|end)\s*$",
+        re.IGNORECASE,
+    )
+    for index, line in enumerate(lines):
+        separated.append(line)
+        if (
+            unit_end.match(line)
+            and index + 1 < len(lines)
+            and lines[index + 1].strip()
+        ):
+            separated.append("")
+    return separated
 
 
 def remove_terminal_returns(lines: Sequence[str]) -> List[str]:
@@ -839,6 +1240,10 @@ def format_source_text(source_text: str) -> str:
     """Return structurally indented free-form Fortran source."""
 
     source_text = lowercase_fortran_code(source_text)
+    source_text = align_pes_metadata(source_text)
+    source_text = normalize_comma_spacing(source_text)
+    source_text = compact_array_commas(source_text)
+    source_text = normalize_end_statements(source_text)
     source_text = source_text.expandtabs(4)
     source_text = normalize_procedures(source_text)
     source_text = "\n".join(
@@ -903,11 +1308,16 @@ def format_source_text(source_text: str) -> str:
                 stack.append(opened)
 
     output = order_initial_declarations(output)
+    output = align_use_only(output)
     output = align_declarations(output)
     output = align_assignments(output)
     output = align_parameters(output)
     output = align_typed_parameters(output)
     output = collapse_blank_lines(output)
+    output = compact_unit_headers(output)
+    output = compact_specification_sections(output)
+    output = combine_initialization_assignments(output)
+    output = ensure_unit_separation(output)
     return "\n".join(output) + "\n"
 
 

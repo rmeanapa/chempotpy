@@ -1,12 +1,12 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!   System:                     CH3NH2
-!   Functional form:            Anchor-Points Reactive Potential (APRP)
+!   System:          CH3NH2
+!   Functional form: Anchor-Points Reactive Potential (APRP)
 !                               (2x2 diabatic potential energy matrix)
-!   Common name:                Methylamine(Coupled PESs)
-!   Number of derivatives:      1
-!   Number of bodies:           7
+!   Common name:                   Methylamine(Coupled PESs)
+!   Number of derivatives:         1
+!   Number of bodies:              7
 !   Number of electronic surfaces: 2
-!   Interface: Section-2
+!   Interface:                     Section-2
 !
 !   Reference: Kelsey A. Parker,and Donald G. Truhlar
 !              J. Chem. Phys. 152, 244309 (2020).
@@ -83,9 +83,8 @@
 
 !> @brief Evaluate dpem for the CH3NH2_APRP_DPEM potential.
 subroutine dpem( x, igrad, u, ug )
-
+    use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 2
     integer, parameter            :: natoms  = 7
@@ -93,119 +92,115 @@ subroutine dpem( x, igrad, u, ug )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-
-    double precision :: xx(3,natoms), uu(nstates,nstates)
-    double precision :: guu(3,natoms,nstates,nstates)
-    double precision :: vv(nstates), gvv(3,natoms,nstates)
-    double precision :: dvec(3,natoms,nstates,nstates)
-    double precision :: cc(nstates,nstates)
-    integer          :: iatom, idir, j, istate, jstate
-    integer          :: jgrad
+    double precision              :: xx(3,natoms), uu(nstates,nstates)
+    double precision              :: guu(3,natoms,nstates,nstates)
+    double precision              :: vv(nstates), gvv(3,natoms,nstates)
+    double precision              :: dvec(3,natoms,nstates,nstates)
+    double precision              :: cc(nstates,nstates)
+    integer                       :: iatom, idir, j, istate, jstate
+    integer                       :: jgrad
     !initialize
-    u  = 0.d0
-    ug = 0.d0
+    u = 0.d0; ug = 0.d0
 
-    do iatom=1,natoms
-        do idir=1,3
+    do iatom=1, natoms
+        do idir=1, 3
             xx(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
+        end do
+    end do
 
     if (igrad==0) then
         jgrad = 0
     else
         jgrad = 1
-    endif
+    end if
 
-    call pot(jgrad,xx,uu,guu,vv,gvv,dvec,cc,0)
+    call pot(jgrad, xx, uu, guu, vv, gvv, dvec, cc, 0)
 
     if (igrad==0) then
-        do istate=1,nstates
-            do jstate=1,nstates
-                u(istate,jstate) = uu(istate,jstate)*27.211386
-            enddo
-        enddo
+        do istate=1, nstates
+            do jstate=1, nstates
+                u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
+            end do
+        end do
     elseif (igrad==1) then
-        do istate=1,nstates
-            do jstate=1,nstates
-                u(istate,jstate) = uu(istate,jstate)*27.211386
-            enddo
-        enddo
-        do istate=1,nstates
-            do jstate=1,nstates
-                do iatom=1,natoms
-                    do idir=1,3
+        do istate=1, nstates
+            do jstate=1, nstates
+                u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
+            end do
+        end do
+        do istate=1, nstates
+            do jstate=1, nstates
+                do iatom=1, natoms
+                    do idir=1, 3
                         ug(istate,jstate,iatom,idir) = guu(idir,iatom,istate,jstate)*51.
-                    enddo
-                enddo
-            enddo
-        enddo
-    endif
+                    end do
+                end do
+            end do
+        end do
+    end if
 
 end subroutine dpem
 
 !> @brief Evaluate pot for the CH3NH2_APRP_DPEM potential.
 subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
     implicit none
-
     double precision              :: xx(3,7)
-    double precision              :: x(7),y(7),z(7)
+    double precision              :: x(7), y(7), z(7)
     double precision              :: scp(3)
-    integer                       :: i,j
+    integer                       :: i, j
     double precision              :: e1
-    integer                       :: nrap,ntap
-    double precision              :: dx1(7),dy1(7),dz1(7)
-    double precision              :: dx(7),dy(7),dz(7)
+    integer                       :: nrap, ntap
+    double precision              :: dx1(7), dy1(7), dz1(7)
+    double precision              :: dx(7), dy(7), dz(7)
     integer                       :: igrad
-    double precision              :: dux(7,3),duy(7,3),duz(7,3)
-    double precision              :: uu(2,2),vv(2)
+    double precision              :: dux(7,3), duy(7,3), duz(7,3)
+    double precision              :: uu(2,2), vv(2)
     double precision              :: tt(1)
-    double precision              :: guu(3,7,2,2),gtt(3,7,1,1)
+    double precision              :: guu(3,7,2,2), gtt(3,7,1,1)
     double precision              :: gvv(3,7,2)
     double precision              :: dvec(3,7,2,2)
     double precision              :: eigvec(2,2)
-    integer                       :: lwork,info
+    integer                       :: lwork, info
     integer                       :: repflag
     double precision, allocatable :: work(:)
     double precision              :: tmpmat22(2,2)
-    integer                       :: ist,jst
+    integer                       :: ist, jst
     double precision, parameter   :: evtohartree = 27.21139d0
     double precision, parameter   :: bohrtoang   = 0.52917721067d0
-    double precision              :: v2,v4
-
+    double precision              :: v2, v4
     scp = 0d0
     dux = 0d0
     duy = 0d0
     duz = 0d0
 
-    do i=1,7
+    do i=1, 7
         x(i) = xx(1,i)
         y(i) = xx(2,i)
         z(i) = xx(3,i)
-    enddo
+    end do
 
     ! get tertiary then primary contributions
-    do j=1,3
+    do j=1, 3
         nrap = 4
         ntap = 3
-        call tert(igrad,j,x,y,z,nrap,ntap,e1,dx1,dy1,dz1)
+        call tert(igrad, j, x, y, z, nrap, ntap, e1, dx1, dy1, dz1)
 
         scp(j) = e1
-        do i=1,7
+        do i=1, 7
             dux(i,j) = dx1(i)
             duy(i,j) = dy1(i)
             duz(i,j) = dz1(i)
-        enddo
+        end do
 
-        call kpev2gm2(igrad,x,y,z,v2,j,dx,dy,dz)
+        call kpev2gm2(igrad, x, y, z, v2, j, dx, dy, dz)
         scp(j) = scp(j)+v2
-        do i=1,7
+        do i=1, 7
             dux(i,j) = dux(i,j)+dx(i)
             duy(i,j) = duy(i,j)+dy(i)
             duz(i,j) = duz(i,j)+dz(i)
-        enddo
+        end do
 
-    enddo
+    end do
 
     ! change units from eV to Hartree and Angstrom to Bohr
 
@@ -218,18 +213,18 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
 
     lwork = -1
     allocate (work (1) )
-    call dsyev('V','L',2,eigvec,2,vv,work,lwork,info)
+    call dsyev('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
     lwork = int(work(1))
     deallocate (work)
     allocate( work(lwork) )
-    call dsyev('V','L',2,eigvec,2,vv,work,lwork,info)
+    call dsyev('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
     deallocate (work)
     if(info.ne.0) then
-        write(6,*) 'Error in diagolization of U matrix'
+        write(6, *) 'Error in diagolization of U matrix'
         stop
-    endif
+    end if
 
-    do i=1,7
+    do i=1, 7
         guu(1,i,1,1) = (dux(i,1)/evtohartree)*bohrtoang
         guu(2,i,1,1) = (duy(i,1)/evtohartree)*bohrtoang
         guu(3,i,1,1) = (duz(i,1)/evtohartree)*bohrtoang
@@ -246,25 +241,25 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
         guu(2,i,2,1) = (duy(i,3)/evtohartree)*bohrtoang
         guu(3,i,2,1) = (duz(i,3)/evtohartree)*bohrtoang
 
-    enddo
+    end do
 
     ! convert diabatic potential energy matrix and its gradients to
     ! adiabatic potentials and gradients
 
-    do i=1,3
-        do j=1,7
+    do i=1, 3
+        do j=1, 7
             tmpmat22(:,:) = guu(i,j,:,:)
-            tmpmat22      = matmul(transpose(eigvec), matmul(tmpmat22,eigvec))
-            do ist=1,2
+            tmpmat22      = matmul(transpose(eigvec), matmul(tmpmat22, eigvec))
+            do ist=1, 2
                 gvv(i,j,ist) = tmpmat22(ist,ist)
-            enddo
+            end do
             !
             ist               = 1
             jst               = 2
             dvec(i,j,ist,jst) = tmpmat22(ist,jst)/ (vv(jst)-vv(ist))
             dvec(i,j,jst,ist) = -dvec(i,j,ist,jst)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine pot
 
@@ -279,17 +274,13 @@ double precision function dihedr1( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    double precision :: a, bndang, bndlen
-    integer          :: i, j, k, l
-
+    double precision            :: a, bndang, bndlen
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -297,19 +288,19 @@ double precision function dihedr1( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-    rij  = bndlen(i,j,x,y,z)
-    rjk  = bndlen(j,k,x,y,z)
-    rkl  = bndlen(k,l,x,y,z)
-    aijk = bndang(i,j,k,x,y,z)
-    ajkl = bndang(j,k,l,x,y,z)
+    rij  = bndlen(i, j, x, y, z)
+    rjk  = bndlen(j, k, x, y, z)
+    rkl  = bndlen(k, l, x, y, z)
+    aijk = bndang(i, j, k, x, y, z)
+    ajkl = bndang(j, k, l, x, y, z)
 
     ! Check whether i-j-k or j-k-l are collinear
     if ((abs(aijk) .le. tiny) .or. (abs(aijk-pi) .lt. tiny)) then
-        write(*,'(''Torsion angle not defined since atoms'',3I3,'' collinear'')') i,j,k
-    endif
+        write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') i, j, k
+    end if
     if ((abs(ajkl) .le. tiny) .or. (abs(ajkl-pi) .lt. tiny)) then
-        write(*,'(''Torsion angle not defined since atoms'',3I3,'' collinear'')') j,k,l
-    endif
+        write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') j, k, l
+    end if
 
     ! Calculate eij
     eij(1) = (x(j)-x(i))/rij
@@ -329,15 +320,15 @@ double precision function dihedr1( i, j, k, l, x, y, z )
     ! v = ejk*ekl Normal vector in plane j-k-l
     ! w = u*v used to determine the sign of dihedral angle
     !
-    call xprod1(eij,ejk,u)
-    call xprod1(ejk,ekl,v)
-    call xprod1(u,v,w)
+    call xprod1(eij, ejk, u)
+    call xprod1(ejk, ekl, v)
+    call xprod1(u, v, w)
 
-    call sprod(3,u,v,a)
+    call sprod(3, u, v, a)
 
     a       = a/(dsin(aijk)*dsin(ajkl))
-    a       = max(a,-1.0d0)
-    a       = min(a,1.0d0)
+    a       = max(a, -1.0d0)
+    a       = min(a, 1.0d0)
     dihedr1 = dacos(a)
 
     ! Determine the sign of dihedr based on u,v,ejk
@@ -347,7 +338,7 @@ double precision function dihedr1( i, j, k, l, x, y, z )
     wejk = w(1)*ejk(1)+w(2)*ejk(2)+w(3)*ejk(3)
     if (wejk .lt. 0.0d0) then
         dihedr1 = -dihedr1
-    endif
+    end if
 
     ! Setting the range of dihedral angle between -90.0 degree to 270 degree
     ! to avoid discontinuity around 180 degrees
@@ -365,22 +356,18 @@ double precision function bndlen( i, j, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j
-
+    integer                     :: i, j
     double precision, parameter :: tiny = 1.0d-13
-
-    double precision :: x(*),y(*),z(*)
-
+    double precision            :: x(*), y(*), z(*)
     bndlen = sqrt( (x(i)-x(j))*(x(i)-x(j)) +      (y(i)-y(j))*(y(i)-y(j)) +      (z(i)-z(j))*(z(i)-z(j)))
 
     if (bndlen .le. tiny) then
-        write(*,'('' Atom'',I3,'' and'',I3,'' are too close to each other!'')') i,j
+        write(*, '('' Atom'',I3,'' and'',I3,'' are too close to each other!'')') i, j
         !CDB  KRY 20140718
-        write(*,'(I3,3F18.12)') i,x(i),y(i),z(i)
-        write(*,'(I3,3F18.12)') j,x(j),y(j),z(j)
+        write(*, '(I3,3F18.12)') i, x(i), y(i), z(i)
+        write(*, '(I3,3F18.12)') j, x(j), y(j), z(j)
         stop
-    endif
+    end if
 
 end function bndlen
 
@@ -392,15 +379,12 @@ double precision function bndang( i, j, k, x, y, z )
     !***********************************************************************
 
     implicit none
-
     double precision :: a, bndlen
     integer          :: i, j, k
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eji(3),ejk(3),rji,rjk
-
-    rji = bndlen(i,j,x,y,z)
-    rjk = bndlen(j,k,x,y,z)
+    double precision :: x(*), y(*), z(*)
+    double precision :: eji(3), ejk(3), rji, rjk
+    rji = bndlen(i, j, x, y, z)
+    rjk = bndlen(j, k, x, y, z)
 
     eji(1) = (x(i)-x(j))/rji
     eji(2) = (y(i)-y(j))/rji
@@ -410,7 +394,7 @@ double precision function bndang( i, j, k, x, y, z )
     ejk(2) = (y(k)-y(j))/rjk
     ejk(3) = (z(k)-z(j))/rjk
 
-    call sprod(3,eji,ejk,a)
+    call sprod(3, eji, ejk, a)
     bndang = acos(a)
 
 end function bndang
@@ -424,14 +408,13 @@ subroutine xprod1( x1, x2, x3 )
     !***********************************************************************
 
     implicit none
-
-    double precision :: x1(3),x2(3),x3(3)
-
+    double precision :: x1(3), x2(3), x3(3)
     x3(1) = x1(2)*x2(3)-x1(3)*x2(2)
     x3(2) = x1(3)*x2(1)-x1(1)*x2(3)
     x3(3) = x1(1)*x2(2)-x1(2)*x2(1)
 
 end subroutine xprod1
+
 !> @brief Evaluate sprod for the CH3NH2_APRP_DPEM potential.
 subroutine sprod( n, a, b, c )
     !***********************************************************************
@@ -441,16 +424,13 @@ subroutine sprod( n, a, b, c )
     !***********************************************************************
 
     implicit none
-
-    integer :: i
-
+    integer          :: i
     integer          :: n
-    double precision :: a(*),b(*),c
-
+    double precision :: a(*), b(*), c
     c = 0.0d0
-    do i=1,n
+    do i=1, n
         c = c+a(i)*b(i)
-    enddo
+    end do
 
 end subroutine sprod
 
@@ -459,50 +439,48 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
     ! this subroutine deals with the tertiary derivatives and converts these
     ! from the various internal coords to XYZ
     implicit none
-
-    integer          :: kk,nat
-    integer          :: i,j,k
+    integer          :: kk, nat
+    integer          :: i, j, k
     double precision :: xyz(4,3)
     double precision :: beta
-    double precision :: x(7),y(7),z(7)
+    double precision :: x(7), y(7), z(7)
     double precision :: dk(22)
-    double precision :: r1,t2
+    double precision :: r1, t2
     double precision :: qc(20)
-    double precision :: dx1(7),dy1(7),dz1(7)
+    double precision :: dx1(7), dy1(7), dz1(7)
     double precision :: bndlen
-    double precision :: dngx(7),dngy(7),dngz(7)
-    double precision :: dihedrix,dihedriy,dihedriz
-    double precision :: dihedrjx,dihedrjy,dihedrjz
-    double precision :: dihedrkx,dihedrky,dihedrkz
-    double precision :: dihedrlx,dihedrly,dihedrlz
+    double precision :: dngx(7), dngy(7), dngz(7)
+    double precision :: dihedrix, dihedriy, dihedriz
+    double precision :: dihedrjx, dihedrjy, dihedrjz
+    double precision :: dihedrkx, dihedrky, dihedrkz
+    double precision :: dihedrlx, dihedrly, dihedrlz
     double precision :: dihedr2
-    double precision :: torh1,torh2,rh1hx,rh2hx
-    double precision :: ang1,ang2,ang3
-    double precision :: len1,len2,len3
-    integer          :: bonds(2,8),bends(3,8)
-    data bonds   /2,3, &
-        & 3,4, &
-        & 4,5, &
-        & 4,6, &
-        & 4,7, &
+    double precision :: torh1, torh2, rh1hx, rh2hx
+    double precision :: ang1, ang2, ang3
+    double precision :: len1, len2, len3
+    integer          :: bonds(2,8), bends(3,8)
+    data bonds   /2, 3, &
+        & 3, 4, &
+        & 4, 5, &
+        & 4, 6, &
+        & 4, 7, &
         !
-        & 5,6, &
-        & 6,7, &
-        & 7,5/
-    data bends   /1,3,4, &
-        & 2,3,4, &
-        & 3,4,5, &
-        & 3,4,6, &
-        & 3,4,7, &
+        & 5, 6, &
+        & 6, 7, &
+        & 7, 5/
+    data bends   /1, 3, 4, &
+        & 2, 3, 4, &
+        & 3, 4, 5, &
+        & 3, 4, 6, &
+        & 3, 4, 7, &
         !
-        & 5,4,6, &
-        & 6,4,7, &
-        & 7,4,5/
+        & 5, 4, 6, &
+        & 6, 4, 7, &
+        & 7, 4, 5/
+    r1 = bndlen(1, 3, x, y, z)
+    t2 = dihedr2(1, 3, 4, 2, x, y, z)
 
-    r1 = bndlen(1,3,x,y,z)
-    t2 = dihedr2(1,3,4,2,x,y,z)
-
-    call calcgeom(x,y,z,qc)
+    call calcgeom(x, y, z, qc)
 
     torh1 = qc(11)
     torh2 = qc(12)
@@ -522,28 +500,28 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
     dy1 = 0d0
     dz1 = 0d0
 
-    do kk=1,5
+    do kk=1, 5
         i = bonds(1,kk)
         j = bonds(2,kk)
-        call disder(x,y,z,i,j,dngx,dngy,dngz)
-        do nat=1,7
+        call disder(x, y, z, i, j, dngx, dngy, dngz)
+        do nat=1, 7
             dx1(nat) = dx1(nat)+dk(kk)*dngx(nat)
             dy1(nat) = dy1(nat)+dk(kk)*dngy(nat)
             dz1(nat) = dz1(nat)+dk(kk)*dngz(nat)
-        enddo
-    enddo
+        end do
+    end do
 
-    do kk=1,5
+    do kk=1, 5
         i = bends(1,kk)
         j = bends(2,kk)
         k = bends(3,kk)
-        call angder(x,y,z,i,j,k,dngx,dngy,dngz)
-        do nat=1,7
+        call angder(x, y, z, i, j, k, dngx, dngy, dngz)
+        do nat=1, 7
             dx1(nat) = dx1(nat)+dk(kk+5)*dngx(nat)
             dy1(nat) = dy1(nat)+dk(kk+5)*dngy(nat)
             dz1(nat) = dz1(nat)+dk(kk+5)*dngz(nat)
-        enddo
-    enddo
+        end do
+    end do
 
     ! 11th/12th dk COORD
 
@@ -569,62 +547,62 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
 
     !!!!
     ! H1
-    dx1(1) = dx1(1)+dk(13)*dihedrix(1,3,4,5,x,y,z)
-    dy1(1) = dy1(1)+dk(13)*dihedriy(1,3,4,5,x,y,z)
-    dz1(1) = dz1(1)+dk(13)*dihedriz(1,3,4,5,x,y,z)
+    dx1(1) = dx1(1)+dk(13)*dihedrix(1, 3, 4, 5, x, y, z)
+    dy1(1) = dy1(1)+dk(13)*dihedriy(1, 3, 4, 5, x, y, z)
+    dz1(1) = dz1(1)+dk(13)*dihedriz(1, 3, 4, 5, x, y, z)
     ! N
-    dx1(3) = dx1(3)+dk(13)*dihedrjx(1,3,4,5,x,y,z)
-    dy1(3) = dy1(3)+dk(13)*dihedrjy(1,3,4,5,x,y,z)
-    dz1(3) = dz1(3)+dk(13)*dihedrjz(1,3,4,5,x,y,z)
+    dx1(3) = dx1(3)+dk(13)*dihedrjx(1, 3, 4, 5, x, y, z)
+    dy1(3) = dy1(3)+dk(13)*dihedrjy(1, 3, 4, 5, x, y, z)
+    dz1(3) = dz1(3)+dk(13)*dihedrjz(1, 3, 4, 5, x, y, z)
     ! C
-    dx1(4) = dx1(4)+dk(13)*dihedrkx(1,3,4,5,x,y,z)
-    dy1(4) = dy1(4)+dk(13)*dihedrky(1,3,4,5,x,y,z)
-    dz1(4) = dz1(4)+dk(13)*dihedrkz(1,3,4,5,x,y,z)
+    dx1(4) = dx1(4)+dk(13)*dihedrkx(1, 3, 4, 5, x, y, z)
+    dy1(4) = dy1(4)+dk(13)*dihedrky(1, 3, 4, 5, x, y, z)
+    dz1(4) = dz1(4)+dk(13)*dihedrkz(1, 3, 4, 5, x, y, z)
     ! HX
-    dx1(5) = dx1(5)+dk(13)*dihedrlx(1,3,4,5,x,y,z)
-    dy1(5) = dy1(5)+dk(13)*dihedrly(1,3,4,5,x,y,z)
-    dz1(5) = dz1(5)+dk(13)*dihedrlz(1,3,4,5,x,y,z)
+    dx1(5) = dx1(5)+dk(13)*dihedrlx(1, 3, 4, 5, x, y, z)
+    dy1(5) = dy1(5)+dk(13)*dihedrly(1, 3, 4, 5, x, y, z)
+    dz1(5) = dz1(5)+dk(13)*dihedrlz(1, 3, 4, 5, x, y, z)
 
     !!!!
     ! H2
-    dx1(2) = dx1(2)+dk(14)*dihedrix(2,3,4,5,x,y,z)
-    dy1(2) = dy1(2)+dk(14)*dihedriy(2,3,4,5,x,y,z)
-    dz1(2) = dz1(2)+dk(14)*dihedriz(2,3,4,5,x,y,z)
+    dx1(2) = dx1(2)+dk(14)*dihedrix(2, 3, 4, 5, x, y, z)
+    dy1(2) = dy1(2)+dk(14)*dihedriy(2, 3, 4, 5, x, y, z)
+    dz1(2) = dz1(2)+dk(14)*dihedriz(2, 3, 4, 5, x, y, z)
     ! N
-    dx1(3) = dx1(3)+dk(14)*dihedrjx(2,3,4,5,x,y,z)
-    dy1(3) = dy1(3)+dk(14)*dihedrjy(2,3,4,5,x,y,z)
-    dz1(3) = dz1(3)+dk(14)*dihedrjz(2,3,4,5,x,y,z)
+    dx1(3) = dx1(3)+dk(14)*dihedrjx(2, 3, 4, 5, x, y, z)
+    dy1(3) = dy1(3)+dk(14)*dihedrjy(2, 3, 4, 5, x, y, z)
+    dz1(3) = dz1(3)+dk(14)*dihedrjz(2, 3, 4, 5, x, y, z)
     ! C
-    dx1(4) = dx1(4)+dk(14)*dihedrkx(2,3,4,5,x,y,z)
-    dy1(4) = dy1(4)+dk(14)*dihedrky(2,3,4,5,x,y,z)
-    dz1(4) = dz1(4)+dk(14)*dihedrkz(2,3,4,5,x,y,z)
+    dx1(4) = dx1(4)+dk(14)*dihedrkx(2, 3, 4, 5, x, y, z)
+    dy1(4) = dy1(4)+dk(14)*dihedrky(2, 3, 4, 5, x, y, z)
+    dz1(4) = dz1(4)+dk(14)*dihedrkz(2, 3, 4, 5, x, y, z)
     ! HX
-    dx1(5) = dx1(5)+dk(14)*dihedrlx(2,3,4,5,x,y,z)
-    dy1(5) = dy1(5)+dk(14)*dihedrly(2,3,4,5,x,y,z)
-    dz1(5) = dz1(5)+dk(14)*dihedrlz(2,3,4,5,x,y,z)
+    dx1(5) = dx1(5)+dk(14)*dihedrlx(2, 3, 4, 5, x, y, z)
+    dy1(5) = dy1(5)+dk(14)*dihedrly(2, 3, 4, 5, x, y, z)
+    dz1(5) = dz1(5)+dk(14)*dihedrlz(2, 3, 4, 5, x, y, z)
 
-    do kk=6,8
+    do kk=6, 8
         i = bends(1,kk)
         j = bends(2,kk)
         k = bends(3,kk)
-        call angder(x,y,z,i,j,k,dngx,dngy,dngz)
-        do nat=1,7
+        call angder(x, y, z, i, j, k, dngx, dngy, dngz)
+        do nat=1, 7
             dx1(nat) = dx1(nat)+dk(9+kk)*dngx(nat)
             dy1(nat) = dy1(nat)+dk(9+kk)*dngy(nat)
             dz1(nat) = dz1(nat)+dk(9+kk)*dngz(nat)
-        enddo
-    enddo
+        end do
+    end do
 
-    do kk=6,8
+    do kk=6, 8
         i = bonds(1,kk)
         j = bonds(2,kk)
-        call disder(x,y,z,i,j,dngx,dngy,dngz)
-        do nat=1,7
+        call disder(x, y, z, i, j, dngx, dngy, dngz)
+        do nat=1, 7
             dx1(nat) = dx1(nat)+dk(12+kk)*dngx(nat)
             dy1(nat) = dy1(nat)+dk(12+kk)*dngy(nat)
             dz1(nat) = dz1(nat)+dk(12+kk)*dngz(nat)
-        enddo
-    enddo
+        end do
+    end do
 
     ! 21th dk COORD
 
@@ -638,21 +616,21 @@ subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
 
     ! 22th dk COORD
 
-    dx1(1) = dx1(1)+dk(22)*dihedrix(1,3,4,2,x,y,z)
-    dy1(1) = dy1(1)+dk(22)*dihedriy(1,3,4,2,x,y,z)
-    dz1(1) = dz1(1)+dk(22)*dihedriz(1,3,4,2,x,y,z)
+    dx1(1) = dx1(1)+dk(22)*dihedrix(1, 3, 4, 2, x, y, z)
+    dy1(1) = dy1(1)+dk(22)*dihedriy(1, 3, 4, 2, x, y, z)
+    dz1(1) = dz1(1)+dk(22)*dihedriz(1, 3, 4, 2, x, y, z)
 
-    dx1(2) = dx1(2)+dk(22)*dihedrlx(1,3,4,2,x,y,z)
-    dy1(2) = dy1(2)+dk(22)*dihedrly(1,3,4,2,x,y,z)
-    dz1(2) = dz1(2)+dk(22)*dihedrlz(1,3,4,2,x,y,z)
+    dx1(2) = dx1(2)+dk(22)*dihedrlx(1, 3, 4, 2, x, y, z)
+    dy1(2) = dy1(2)+dk(22)*dihedrly(1, 3, 4, 2, x, y, z)
+    dz1(2) = dz1(2)+dk(22)*dihedrlz(1, 3, 4, 2, x, y, z)
     ! N
-    dx1(3) = dx1(3)+dk(22)*dihedrjx(1,3,4,2,x,y,z)
-    dy1(3) = dy1(3)+dk(22)*dihedrjy(1,3,4,2,x,y,z)
-    dz1(3) = dz1(3)+dk(22)*dihedrjz(1,3,4,2,x,y,z)
+    dx1(3) = dx1(3)+dk(22)*dihedrjx(1, 3, 4, 2, x, y, z)
+    dy1(3) = dy1(3)+dk(22)*dihedrjy(1, 3, 4, 2, x, y, z)
+    dz1(3) = dz1(3)+dk(22)*dihedrjz(1, 3, 4, 2, x, y, z)
     ! C
-    dx1(4) = dx1(4)+dk(22)*dihedrkx(1,3,4,2,x,y,z)
-    dy1(4) = dy1(4)+dk(22)*dihedrky(1,3,4,2,x,y,z)
-    dz1(4) = dz1(4)+dk(22)*dihedrkz(1,3,4,2,x,y,z)
+    dx1(4) = dx1(4)+dk(22)*dihedrkx(1, 3, 4, 2, x, y, z)
+    dy1(4) = dy1(4)+dk(22)*dihedrky(1, 3, 4, 2, x, y, z)
+    dz1(4) = dz1(4)+dk(22)*dihedrkz(1, 3, 4, 2, x, y, z)
 
 end subroutine convertit
 
@@ -660,20 +638,18 @@ end subroutine convertit
 subroutine angder( x, y, z, i, j, k, dngx, dngy, dngz )
     ! This subroutine converts a bond angle derivative to XYZ
     implicit none
-
-    integer          :: i,j,k
-    double precision :: x(7),y(7),z(7)
-    double precision :: ra,rb
-    double precision :: to,be,go,cgo
-    double precision :: dngx(7),dngy(7),dngz(7)
+    integer          :: i, j, k
+    double precision :: x(7), y(7), z(7)
+    double precision :: ra, rb
+    double precision :: to, be, go, cgo
+    double precision :: dngx(7), dngy(7), dngz(7)
     double precision :: bndlen
-
     dngx = 0d0
     dngy = 0d0
     dngz = 0d0
 
-    ra = bndlen(j,i,x,y,z)
-    rb = bndlen(j,k,x,y,z)
+    ra = bndlen(j, i, x, y, z)
+    rb = bndlen(j, k, x, y, z)
 
     to = (x(j)-x(i))*(x(j)-x(k)) +(y(j)-y(i))*(y(j)-y(k)) +(z(j)-z(i))*(z(j)-z(k))
 
@@ -711,25 +687,23 @@ end subroutine angder
 subroutine disder( x, y, z, i, j, dngx, dngy, dngz )
     ! This subroutine converts a distance derivative to XYZ
     implicit none
-
-    integer          :: i,j,k
-    double precision :: x(7),y(7),z(7)
-    double precision :: ra,rb
-    double precision :: to,be,go,cgo
-    double precision :: dngx(7),dngy(7),dngz(7)
+    integer          :: i, j, k
+    double precision :: x(7), y(7), z(7)
+    double precision :: ra, rb
+    double precision :: to, be, go, cgo
+    double precision :: dngx(7), dngy(7), dngz(7)
     double precision :: bndlen
-
     dngx = 0d0
     dngy = 0d0
     dngz = 0d0
 
-    dngx(i) = (x(i)-x(j))/bndlen(i,j,x,y,z)
-    dngy(i) = (y(i)-y(j))/bndlen(i,j,x,y,z)
-    dngz(i) = (z(i)-z(j))/bndlen(i,j,x,y,z)
+    dngx(i) = (x(i)-x(j))/bndlen(i, j, x, y, z)
+    dngy(i) = (y(i)-y(j))/bndlen(i, j, x, y, z)
+    dngz(i) = (z(i)-z(j))/bndlen(i, j, x, y, z)
 
-    dngx(j) = (x(j)-x(i))/bndlen(i,j,x,y,z)
-    dngy(j) = (y(j)-y(i))/bndlen(i,j,x,y,z)
-    dngz(j) = (z(j)-z(i))/bndlen(i,j,x,y,z)
+    dngx(j) = (x(j)-x(i))/bndlen(i, j, x, y, z)
+    dngy(j) = (y(j)-y(i))/bndlen(i, j, x, y, z)
+    dngz(j) = (z(j)-z(i))/bndlen(i, j, x, y, z)
 
 end subroutine disder
 
@@ -745,57 +719,54 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
     !***********************************************************************
 
     implicit none
-
-    integer            :: nrap,ntap,ra1,ra2
+    integer            :: nrap, ntap, ra1, ra2
     integer, parameter :: nqs = 5
     integer, parameter :: nqb = 5
-    integer            :: igrad,ii
-    integer            :: ntot,nqtc
-    double precision   :: r,ut,dutdr,ra
-
+    integer            :: igrad, ii
+    integer            :: ntot, nqtc
+    double precision   :: r, ut, dutdr, ra
     ! Local variables
-    integer          :: i,j,k
+    integer          :: i, j, k
     double precision :: u0
-    double precision :: vs,vb,vbs
+    double precision :: vs, vb, vbs
     double precision :: qs(nqs)
     double precision :: qb(nqb)
-    double precision :: sqb(nqb),cqb(nqb)
-    double precision :: qc(20),dut(20)
+    double precision :: sqb(nqb), cqb(nqb)
+    double precision :: qc(20), dut(20)
     double precision :: v0(nrap,ntap)
     double precision :: pi
-    double precision :: dnc1,dnc2
-    double precision :: dch1,dch2
-    double precision :: knhb1(nrap,ntap),knhb2(nrap,ntap)
-    double precision :: knc1(nrap,ntap),knc2(nrap,ntap)
-    double precision :: kch1(nrap,ntap),kch2(nrap,ntap)
+    double precision :: dnc1, dnc2
+    double precision :: dch1, dch2
+    double precision :: knhb1(nrap,ntap), knhb2(nrap,ntap)
+    double precision :: knc1(nrap,ntap), knc2(nrap,ntap)
+    double precision :: kch1(nrap,ntap), kch2(nrap,ntap)
     double precision :: kch3(nrap,ntap)
-    double precision :: kcnha1(nrap,ntap),kcnha2(nrap,ntap)
-    double precision :: kcnhb1(nrap,ntap),kcnhb2(nrap,ntap)
-    double precision :: knch1(nrap,ntap),knch2(nrap,ntap)
+    double precision :: kcnha1(nrap,ntap), kcnha2(nrap,ntap)
+    double precision :: kcnhb1(nrap,ntap), kcnhb2(nrap,ntap)
+    double precision :: knch1(nrap,ntap), knch2(nrap,ntap)
     !
-    double precision :: jnhb1(nrap,ntap),jnhb2(nrap,ntap)
+    double precision :: jnhb1(nrap,ntap), jnhb2(nrap,ntap)
     double precision :: jnhb3(nrap,ntap)
-    double precision :: jnc1(nrap,ntap),jnc2(nrap,ntap)
+    double precision :: jnc1(nrap,ntap), jnc2(nrap,ntap)
     double precision :: jnc3(nrap,ntap)
-    double precision :: jcnha1(nrap,ntap),jcnha2(nrap,ntap)
+    double precision :: jcnha1(nrap,ntap), jcnha2(nrap,ntap)
     double precision :: jcnha3(nrap,ntap)
-    double precision :: jcnhb1(nrap,ntap),jcnhb2(nrap,ntap)
+    double precision :: jcnhb1(nrap,ntap), jcnhb2(nrap,ntap)
     double precision :: jcnhb3(nrap,ntap)
     !
-    double precision :: gnhb1(nrap,ntap),gnhb2(nrap,ntap)
+    double precision :: gnhb1(nrap,ntap), gnhb2(nrap,ntap)
     double precision :: gnhb3(nrap,ntap)
     !
-    double precision :: gnc1(nrap,ntap),gnc2(nrap,ntap)
+    double precision :: gnc1(nrap,ntap), gnc2(nrap,ntap)
     double precision :: gnc3(nrap,ntap)
     !
-    double precision :: v3,v4
-    double precision :: torh1,torh2,rh1hx,rh2hx
-    double precision :: ang1,ang2,ang3
-    double precision :: len1,len2,len3
-    double precision :: dd1,dd2,rr,ft2,fa2
+    double precision :: v3, v4
+    double precision :: torh1, torh2, rh1hx, rh2hx
+    double precision :: ang1, ang2, ang3
+    double precision :: len1, len2, len3
+    double precision :: dd1, dd2, rr, ft2, fa2
     double precision :: ft1(nrap,ntap)
     double precision :: fa1(nrap,ntap)
-
     pi = 4.d0*datan(1.d0)
 
     ut  = 0d0
@@ -803,15 +774,15 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
     vb  = 0d0
     dut = 0d0
 
-    do i=1,nqs
+    do i=1, nqs
         qs(i) = qc(i)
-    enddo
+    end do
 
-    do i=1,nqb
+    do i=1, nqb
         qb(i)  = qc(i+nqs)
         sqb(i) = sin(qb(i))
         cqb(i) = cos(qb(i))
-    enddo
+    end do
 
     torh1 = qc(11)
     torh2 = qc(12)
@@ -827,23 +798,23 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
     len2 = qc(19)
     len3 = qc(20)
 
-    call getpara(ii,nrap,ntap, &
-        & knhb1,knhb2, &
-        & knc1,knc2, &
-        & kch1,kch2, &
+    call getpara(ii, nrap, ntap, &
+        & knhb1, knhb2, &
+        & knc1, knc2, &
+        & kch1, kch2, &
         & kch3, &
-        & kcnha1,kcnha2, &
-        & kcnhb1,kcnhb2, &
-        & knch1,knch2, &
-        & jnhb1,jnhb2, &
+        & kcnha1, kcnha2, &
+        & kcnhb1, kcnhb2, &
+        & knch1, knch2, &
+        & jnhb1, jnhb2, &
         & jnhb3, &
-        & jnc1,jnc2,jnc3,jcnha1,jcnha2, &
-        & jcnha3,jcnhb1,jcnhb2,jcnhb3, &
-        & gnhb1,gnhb2,gnhb3, &
-        & gnc1,gnc2,gnc3, &
-        & ft1,fa1)
+        & jnc1, jnc2, jnc3, jcnha1, jcnha2, &
+        & jcnha3, jcnhb1, jcnhb2, jcnhb3, &
+        & gnhb1, gnhb2, gnhb3, &
+        & gnc1, gnc2, gnc3, &
+        & ft1, fa1)
 
-    call getv0(ii,nrap,ntap,v0)
+    call getv0(ii, nrap, ntap, v0)
 
     ! Calculate potential energy
     ! CONSTANT
@@ -859,10 +830,10 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         vs = vs+knc1(ra1,ra2)*(qc(2)-knc2(ra1,ra2))**4d0
 
         ! STRETCHES 3-5 (CH)
-        do i=3,nqs
+        do i=3, nqs
 
             vs = vs+kch1(ra1,ra2) *(1d0-exp(kch2(ra1,ra2)*(qc(i)-kch3(ra1,ra2))))**2d0
-        enddo
+        end do
 
         ! BENDS
         ! BEND 1 (CNHA)
@@ -870,9 +841,9 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         ! BEND 2 (CNHB)
         vb = vb+kcnhb1(ra1,ra2)*(cqb(2)-kcnhb2(ra1,ra2))**2d0
         ! BEND 3-5 (NCH)
-        do i=3,nqb
+        do i=3, nqb
             vb = vb+knch1(ra1,ra2)*(qb(i)-knch2(ra1,ra2))**2d0
-        enddo
+        end do
 
         ft2 = -3.0d0
         dd1 = 2.2d0
@@ -883,8 +854,8 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         rr  = 1.761d0
         fa2 = -2.0d0
 
-        v4=(fa1(ra1,ra2)*(ang1-dd2)**2d0) *exp(((len1-rr)**2d0)/fa2) +(fa1(ra1,ra2)*(ang2-dd2)**2d0) *exp(((len2-rr)** &
-            & 2d0)/fa2) +(fa1(ra1,ra2)*(ang3-dd2)**2d0) *exp(((len3-rr)**2d0)/fa2)
+        v4=(fa1(ra1,ra2)*(ang1-dd2)**2d0) *exp(((len1-rr)**2d0)/fa2) +(fa1(ra1,ra2)*(ang2-dd2)**2d0) *exp(((len2- &
+            & rr)** 2d0)/fa2) +(fa1(ra1,ra2)*(ang3-dd2)**2d0) *exp(((len3-rr)**2d0)/fa2)
 
     elseif (ii .eq. 3) then
         ! STRETCHES
@@ -901,7 +872,7 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         vb = vb+jcnhb1(ra1,ra2)*exp(jcnhb2(ra1,ra2) *(cqb(2)-jcnhb3(ra1,ra2))**2d0)
         ! BEND 3-5 (NCH)
 
-    endif
+    end if
 
     ! COMBINE
     ut = vs+vb+u0+v3+v4
@@ -914,22 +885,22 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
             ! STRETCHES
             ! STRETCH 1 (NHB)
             !       if (ii .eq. 1) then
-            dut(1)=-2d0*gnhb2(ra1,ra2)*gnhb1(ra1,ra2)* exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2)))* (1d0-exp(gnhb2(ra1, &
-                & ra2)*(qc(1)-gnhb3(ra1,ra2))))
+            dut(1)=-2d0*gnhb2(ra1,ra2)*gnhb1(ra1,ra2)* exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2)))* (1d0- &
+                & exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2))))
             dut(1) = dut(1)+4d0*knhb1(ra1,ra2)*(qc(1)-knhb2(ra1,ra2))**3d0
 
             ! STRETCH 2 (NC)
 
-            dut(2)=-2d0*gnc2(ra1,ra2)*gnc1(ra1,ra2)* exp(gnc2(ra1,ra2)*(qc(2)-gnc3(ra1,ra2)))* (1d0-exp(gnc2(ra1,ra2)* &
-                & (qc(2)-gnc3(ra1,ra2))))
+            dut(2)=-2d0*gnc2(ra1,ra2)*gnc1(ra1,ra2)* exp(gnc2(ra1,ra2)*(qc(2)-gnc3(ra1,ra2)))* (1d0-exp(gnc2(ra1, &
+                & ra2)* (qc(2)-gnc3(ra1,ra2))))
             dut(2) = dut(2)+4d0*knc1(ra1,ra2)*(qc(2)-knc2(ra1,ra2))**3d0
 
             ! STRETCHES 3-5 (CH)
-            do i=3,nqs
+            do i=3, nqs
 
-                dut(i)=-2d0*kch2(ra1,ra2)*kch1(ra1,ra2)* exp(kch2(ra1,ra2)*(qs(i)-kch3(ra1,ra2)))* (1d0-exp(kch2(ra1, &
+                dut(i)=-2d0*kch2(ra1,ra2)*kch1(ra1,ra2)* exp(kch2(ra1,ra2)*(qs(i)-kch3(ra1,ra2)))* (1d0- exp(kch2(ra1, &
                     & ra2)*(qs(i)-kch3(ra1,ra2))))
-            enddo
+            end do
 
             ! BENDS
             ! BEND 1 (CNHA)
@@ -937,12 +908,14 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
             ! BEND 2 (CNHB)
             dut(7) = kcnhb1(ra1,ra2)*(cqb(2)-kcnhb2(ra1,ra2)) *2d0*(-sqb(2))
             ! BEND 3-5 (NCH)
-            do i=3,nqb
+            do i=3, nqb
                 dut(nqs+i) = knch1(ra1,ra2)*(qb(i)-knch2(ra1,ra2))*2d0
-            enddo
+            end do
 
-            dut(11) = 2d0*((rh1hx-dd1)/ft2)*exp(((rh1hx-dd1)**2d0)/ft2) *ft1(ra1,ra2)*(1d0-(4d0*(torh1**3d0)-3d0*torh1))
-            dut(12) = 2d0*((rh2hx-dd1)/ft2)*exp(((rh2hx-dd1)**2d0)/ft2) *ft1(ra1,ra2)*(1d0-(4d0*(torh2**3d0)-3d0*torh2))
+            dut(11) = 2d0*((rh1hx-dd1)/ft2)*exp(((rh1hx-dd1)**2d0)/ft2) *ft1(ra1,ra2)*(1d0-(4d0*(torh1**3d0)-3d0* &
+                & torh1))
+            dut(12) = 2d0*((rh2hx-dd1)/ft2)*exp(((rh2hx-dd1)**2d0)/ft2) *ft1(ra1,ra2)*(1d0-(4d0*(torh2**3d0)-3d0* &
+                & torh2))
 
             dut(13) = ft1(ra1,ra2)*(-12d0*(torh1**2d0)+3d0) * exp(((rh1hx-dd1)**2d0)/ft2)
             dut(14) = ft1(ra1,ra2)*(-12d0*(torh2**2d0)+3d0) * exp(((rh2hx-dd1)**2d0)/ft2)
@@ -965,8 +938,8 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
             dut(1)=jnhb2(ra1,ra2)*(qc(1)-jnhb3(ra1,ra2))*2d0* jnhb1(ra1,ra2)*exp(jnhb2(ra1,ra2) *(qc(1)-jnhb3(ra1, &
                 & ra2))**2d0)
             ! STRETCH 2 (NC)
-            dut(2) = jnc2(ra1,ra2)*(qc(2)-jnc3(ra1,ra2))*2d0* jnc1(ra1,ra2)*exp(jnc2(ra1,ra2) *(qc(2)-jnc3(ra1,ra2))** &
-                & 2d0)
+            dut(2) = jnc2(ra1,ra2)*(qc(2)-jnc3(ra1,ra2))*2d0* jnc1(ra1,ra2)*exp(jnc2(ra1,ra2) *(qc(2)-jnc3(ra1, &
+                & ra2))** 2d0)
 
             ! BENDS
             ! BEND 1 (CNHA)
@@ -975,8 +948,8 @@ subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
             ! BEND 2 (CNHB)
             dut(7)=jcnhb2(ra1,ra2)*(cqb(2)-jcnhb3(ra1,ra2))*2d0 *jcnhb1(ra1,ra2)*exp(jcnhb2(ra1,ra2) *(cqb(2)- &
                 & jcnhb3(ra1,ra2))**2d0) *(-sqb(2))
-        endif
-    endif
+        end if
+    end if
 
 end subroutine solver
 
@@ -984,11 +957,9 @@ end subroutine solver
 subroutine getv0( ii, nrap, ntap, v0 )
     ! subrountine gives constants in tertiary eqns
     implicit none
-
     integer          :: ii
-    integer          :: nrap,ntap
+    integer          :: nrap, ntap
     double precision :: v0(nrap,ntap)
-
     v0 = 0d0
 
     if (ii .eq. 1) then
@@ -1044,7 +1015,7 @@ subroutine getv0( ii, nrap, ntap, v0 )
         v0(4,2) = -0.0000d0
         v0(4,3) = -0.0000d0
 
-    endif
+    end if
 
 end subroutine getv0
 
@@ -1066,33 +1037,31 @@ subroutine getpara( ii, nrap, ntap, &
         & ft1, fa1 )
     ! subroutine gives parameters for the tertiary contribution
     implicit none
-
     integer          :: ii
-    integer          :: nrap,i,j,ntap
-    double precision :: knhb1(nrap,ntap),knhb2(nrap,ntap)
-    double precision :: knc1(nrap,ntap),knc2(nrap,ntap)
-    double precision :: kch1(nrap,ntap),kch2(nrap,ntap)
+    integer          :: nrap, i, j, ntap
+    double precision :: knhb1(nrap,ntap), knhb2(nrap,ntap)
+    double precision :: knc1(nrap,ntap), knc2(nrap,ntap)
+    double precision :: kch1(nrap,ntap), kch2(nrap,ntap)
     double precision :: kch3(nrap,ntap)
-    double precision :: kcnha1(nrap,ntap),kcnha2(nrap,ntap)
-    double precision :: kcnhb1(nrap,ntap),kcnhb2(nrap,ntap)
-    double precision :: knch1(nrap,ntap),knch2(nrap,ntap)
+    double precision :: kcnha1(nrap,ntap), kcnha2(nrap,ntap)
+    double precision :: kcnhb1(nrap,ntap), kcnhb2(nrap,ntap)
+    double precision :: knch1(nrap,ntap), knch2(nrap,ntap)
     !
-    double precision :: jnhb1(nrap,ntap),jnhb2(nrap,ntap)
+    double precision :: jnhb1(nrap,ntap), jnhb2(nrap,ntap)
     double precision :: jnhb3(nrap,ntap)
-    double precision :: jnc1(nrap,ntap),jnc2(nrap,ntap)
+    double precision :: jnc1(nrap,ntap), jnc2(nrap,ntap)
     double precision :: jnc3(nrap,ntap)
-    double precision :: jcnha1(nrap,ntap),jcnha2(nrap,ntap)
+    double precision :: jcnha1(nrap,ntap), jcnha2(nrap,ntap)
     double precision :: jcnha3(nrap,ntap)
-    double precision :: jcnhb1(nrap,ntap),jcnhb2(nrap,ntap)
+    double precision :: jcnhb1(nrap,ntap), jcnhb2(nrap,ntap)
     double precision :: jcnhb3(nrap,ntap)
     !
-    double precision :: gnhb1(nrap,ntap),gnhb2(nrap,ntap)
+    double precision :: gnhb1(nrap,ntap), gnhb2(nrap,ntap)
     double precision :: gnhb3(nrap,ntap)
     !
-    double precision :: gnc1(nrap,ntap),gnc2(nrap,ntap)
+    double precision :: gnc1(nrap,ntap), gnc2(nrap,ntap)
     double precision :: gnc3(nrap,ntap)
-    double precision :: ft1(nrap,ntap),fa1(nrap,ntap)
-
+    double precision :: ft1(nrap,ntap), fa1(nrap,ntap)
     knhb1  = 0d0
     knhb2  = 0d0
     knc1   = 0d0
@@ -1844,7 +1813,7 @@ subroutine getpara( ii, nrap, ntap, &
         jcnhb3(3,1) = 0.342020143d0
         jcnhb3(4,1) = jcnhb3(4,2)
 
-    endif
+    end if
 
 end subroutine getpara
 
@@ -1854,63 +1823,60 @@ subroutine tert( igrad, ii, x, y, z, nrap, ntap, en, dx1, dy1, dz1 )
     ! Subroutine to calculate the tertiary contribution
     !***********************************************************************
     implicit none
-
     integer          :: tk
-    integer          :: nrap,ntap
+    integer          :: nrap, ntap
     integer          :: igrad
-    double precision :: r1,t2
-    double precision :: x(7),y(7),z(7)
+    double precision :: r1, t2
+    double precision :: x(7), y(7), z(7)
     double precision :: xyz(4,3)
     double precision :: dx(22)
-    double precision :: rap(nrap,3),tap(ntap,3)
-    integer          :: i,ii,j
+    double precision :: rap(nrap,3), tap(ntap,3)
+    integer          :: i, ii, j
     integer          :: fg(2)
-    double precision :: u,v,f(4)
-    double precision :: bndlen,bndang
-    double precision :: h(4),en
-    double precision :: dh(4,20),dhe(20)
+    double precision :: u, v, f(4)
+    double precision :: bndlen, bndang
+    double precision :: h(4), en
+    double precision :: dh(4,20), dhe(20)
     double precision :: df(4,2)
     double precision :: dtr(2)
-    double precision :: dx1(7),dy1(7),dz1(7)
+    double precision :: dx1(7), dy1(7), dz1(7)
     double precision :: beta
     double precision :: dbeta(12)
     double precision :: dihedr2
-
     ! The anchor points:
-
-    do i=1,3
+    do i=1, 3
         rap(1,i) = 0.7157485d0
         rap(2,i) = 1.0157485d0
         rap(3,i) = 2.2157485d0
         rap(4,i) = 3.5157485d0
-    enddo
-    do i=1,3
+    end do
+    do i=1, 3
         tap(1,i) = -0.193287305d0
         tap(2,i) = 0.482599384d0
         tap(3,i) = 1.0d0
-    enddo
+    end do
 
-    r1 = bndlen(1,3,x,y,z)
-    t2 = dihedr2(1,3,4,2,x,y,z)
+    r1 = bndlen(1, 3, x, y, z)
+    t2 = dihedr2(1, 3, 4, 2, x, y, z)
 
     ! calls the 2D tent
-    call bigtent(r1,t2,f,rap,nrap,tap,ntap,fg,ii,tk,df)
+    call bigtent(r1, t2, f, rap, nrap, tap, ntap, fg, ii, tk, df)
 
     ! calcs the contribution at the anchor points
     h = 0d0
     if (tk.eq.1) then
-        call calchess1(igrad,nrap,ntap,fg,x,y,z,ii,h,dh)
+        call calchess1(igrad, nrap, ntap, fg, x, y, z, ii, h, dh)
     else if (tk.eq.2) then
-        call calchess2(igrad,nrap,ntap,fg,x,y,z,ii,h,dh)
+        call calchess2(igrad, nrap, ntap, fg, x, y, z, ii, h, dh)
     else if (tk.eq.3) then
-        call calchess3(igrad,nrap,ntap,fg,x,y,z,ii,h,dh)
-    endif
+        call calchess3(igrad, nrap, ntap, fg, x, y, z, ii, h, dh)
+    end if
 
     ! Combines the tent functions and contribution from the anchor points
     en = 0d0
-    do i=1,4
+    do i=1, 4
         en = en+h(i)*f(i)
-    enddo
+    end do
 
     dx1 = 0d0
     dy1 = 0d0
@@ -1918,30 +1884,31 @@ subroutine tert( igrad, ii, x, y, z, nrap, ntap, en, dx1, dy1, dz1 )
     !!!!!!!!!!! GET GRADIENT !!!!!!!!!
     if (igrad .eq. 1) then
         dhe = 0d0
-        do j=1,20
-            do i=1,4
+        do j=1, 20
+            do i=1, 4
                 dhe(j) = dhe(j)+dh(i,j)*f(i)
-            enddo
-        enddo
+            end do
+        end do
 
         dtr = 0d0
-        do j=1,2
-            do i=1,4
+        do j=1, 2
+            do i=1, 4
                 dtr(j) = dtr(j)+df(i,j)*h(i)
-            enddo
-        enddo
+            end do
+        end do
 
-        do i=1,20
+        do i=1, 20
             dx(i) = dhe(i)
-        enddo
+        end do
         dx(21) = dtr(1)
         dx(22) = dtr(2)
 
-        call convertit(x,y,z,dx,dx1,dy1,dz1)
-    endif
+        call convertit(x, y, z, dx, dx1, dy1, dz1)
+    end if
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end subroutine tert
+
 !-------------------------------------------------!
 !-------------------------------------------------!
 !-------------------------------------------------!
@@ -1952,63 +1919,60 @@ subroutine calchess1( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
     ! calcs the tertiary contribution for case 1: corners of the 2D tent
     ! i.e. only need 1 anchor point
     implicit none
-
     integer          :: igrad
-    integer          :: ra1,ra2
-    integer          :: nrap,ntap
-    double precision :: r1,t2
-    double precision :: x(7),y(7),z(7)
+    integer          :: ra1, ra2
+    integer          :: nrap, ntap
+    double precision :: r1, t2
+    double precision :: x(7), y(7), z(7)
     double precision :: qc(20)
     double precision :: e
     double precision :: dx
-
-    integer          :: i,ii
+    integer          :: i, ii
     integer          :: fg(2)
-    double precision :: u,v,f(4)
-    double precision :: h(4),hs
-    double precision :: dhs(20),dh(4,20)
+    double precision :: u, v, f(4)
+    double precision :: h(4), hs
+    double precision :: dhs(20), dh(4,20)
     double precision :: pi
-
     pi  = 4.d0*datan(1.d0)
     hs  = 0d0
     dhs = 0d0
     dh  = 0d0
 
-    call calcgeom(x,y,z,qc)
+    call calcgeom(x, y, z, qc)
     !****** CORNERS
     if( (fg(1)-1.eq.0) .and. (fg(2)-1.eq.0)) then
         ra1 = 1
         ra2 = 1
-        call solver(igrad,ra1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(4) = hs
-        do i=1,20
+        do i=1, 20
             dh(4,i) = dhs(i)
-        enddo
+        end do
     else if( (fg(1).eq.nrap+1) .and. (fg(2).eq.ntap+1)) then
         ra1 = nrap
         ra2 = ntap
-        call solver(igrad,ra1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(1) = hs
-        do i=1,20
+        do i=1, 20
             dh(1,i) = dhs(i)
-        enddo
+        end do
     else if( (fg(1)-1.eq.0) .and. (fg(2).eq.ntap+1)) then
         ra1 = 1
         ra2 = ntap
-        call solver(igrad,ra1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(3) = hs
-        do i=1,20
+        do i=1, 20
             dh(3,i) = dhs(i)
-        enddo
+        end do
     else if( (fg(1).eq.nrap+1) .and. (fg(2)-1.eq.0)) then
         ra1 = nrap
         ra2 = 1
-        call solver(igrad,ra1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(2) = hs
-        do i=1,20
+        do i=1, 20
             dh(2,i) = dhs(i)
-        enddo
-    endif
+        end do
+    end if
 
 end subroutine calchess1
 
@@ -2017,87 +1981,84 @@ subroutine calchess2( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
     ! calcs the tertiary contribution for case 2: sides of the 2D tent
     ! i.e. between 2 anchor points
     implicit none
-
     integer          :: igrad
-    integer          :: ra1,ra2
-    integer          :: nrap,ntap
-    double precision :: r1,t2
-    double precision :: x(7),y(7),z(7)
+    integer          :: ra1, ra2
+    integer          :: nrap, ntap
+    double precision :: r1, t2
+    double precision :: x(7), y(7), z(7)
     double precision :: qc(20)
     double precision :: e
     double precision :: dx
-
-    integer          :: i,ii
+    integer          :: i, ii
     integer          :: fg(2)
-    double precision :: u,v,f(4)
-    double precision :: h(4),hs
-    double precision :: dhs(20),dh(4,20)
+    double precision :: u, v, f(4)
+    double precision :: h(4), hs
+    double precision :: dhs(20), dh(4,20)
     double precision :: pi
-
     pi  = 4.d0*datan(1.d0)
     hs  = 0d0
     dhs = 0d0
     dh  = 0d0
 
-    call calcgeom(x,y,z,qc)
+    call calcgeom(x, y, z, qc)
     !****** SIDES
     if( (fg(1)-1.eq.0) ) then
         ra1 = 1
         ra2 = fg(2)
-        call solver(igrad,ra1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(3) = hs
-        do i=1,20
+        do i=1, 20
             dh(3,i) = dhs(i)
-        enddo
-        call solver(igrad,ra1,ra2-1,qc,ii,nrap,ntap,hs,dhs)
+        end do
+        call solver(igrad, ra1, ra2-1, qc, ii, nrap, ntap, hs, dhs)
         h(4) = hs
-        do i=1,20
+        do i=1, 20
             dh(4,i) = dhs(i)
-        enddo
+        end do
 
     else if( (fg(1).eq.nrap+1) ) then
         ra1 = nrap
         ra2 = fg(2)
-        call solver(igrad,ra1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(1) = hs
-        do i=1,20
+        do i=1, 20
             dh(1,i) = dhs(i)
-        enddo
-        call solver(igrad,ra1,ra2-1,qc,ii,nrap,ntap,hs,dhs)
+        end do
+        call solver(igrad, ra1, ra2-1, qc, ii, nrap, ntap, hs, dhs)
         h(2) = hs
-        do i=1,20
+        do i=1, 20
             dh(2,i) = dhs(i)
-        enddo
+        end do
 
     else if( (fg(2)-1.eq.0) ) then
         ra2 = 1
         ra1 = fg(1)
-        call solver(igrad,ra1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(2) = hs
-        do i=1,20
+        do i=1, 20
             dh(2,i) = dhs(i)
-        enddo
-        call solver(igrad,ra1-1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        end do
+        call solver(igrad, ra1-1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(4) = hs
-        do i=1,20
+        do i=1, 20
             dh(4,i) = dhs(i)
-        enddo
+        end do
 
     else if( (fg(2).eq.ntap+1) ) then
         ra2 = ntap
         ra1 = fg(1)
-        call solver(igrad,ra1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(1) = hs
-        do i=1,20
+        do i=1, 20
             dh(1,i) = dhs(i)
-        enddo
-        call solver(igrad,ra1-1,ra2,qc,ii,nrap,ntap,hs,dhs)
+        end do
+        call solver(igrad, ra1-1, ra2, qc, ii, nrap, ntap, hs, dhs)
         h(3) = hs
-        do i=1,20
+        do i=1, 20
             dh(3,i) = dhs(i)
-        enddo
+        end do
 
-    endif
+    end if
 
 end subroutine calchess2
 
@@ -2105,23 +2066,20 @@ end subroutine calchess2
 subroutine calchess3( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
     ! calcs the tertiary contribution for case 3: between 4 anchor points
     implicit none
-
     integer          :: igrad
-    integer          :: ra1,ra2
-    integer          :: nrap,ntap
-    double precision :: r1,t2
-    double precision :: x(7),y(7),z(7)
+    integer          :: ra1, ra2
+    integer          :: nrap, ntap
+    double precision :: r1, t2
+    double precision :: x(7), y(7), z(7)
     double precision :: qc(20)
     double precision :: e
     double precision :: dx
-
-    integer          :: i,ii
+    integer          :: i, ii
     integer          :: fg(2)
-    double precision :: u,v,f(4)
-    double precision :: h(4),hs
-    double precision :: dhs(20),dh(4,20)
+    double precision :: u, v, f(4)
+    double precision :: h(4), hs
+    double precision :: dhs(20), dh(4,20)
     double precision :: pi
-
     pi  = 4.d0*datan(1.d0)
     hs  = 0d0
     dhs = 0d0
@@ -2130,27 +2088,27 @@ subroutine calchess3( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
     ra1 = fg(1)
     ra2 = fg(2)
 
-    call calcgeom(x,y,z,qc)
-    call solver(igrad,ra1,ra2,qc,ii,nrap,ntap,hs,dhs)
+    call calcgeom(x, y, z, qc)
+    call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
     h(1) = hs
-    do i=1,20
+    do i=1, 20
         dh(1,i) = dhs(i)
-    enddo
-    call solver(igrad,ra1,ra2-1,qc,ii,nrap,ntap,hs,dhs)
+    end do
+    call solver(igrad, ra1, ra2-1, qc, ii, nrap, ntap, hs, dhs)
     h(2) = hs
-    do i=1,20
+    do i=1, 20
         dh(2,i) = dhs(i)
-    enddo
-    call solver(igrad,ra1-1,ra2,qc,ii,nrap,ntap,hs,dhs)
+    end do
+    call solver(igrad, ra1-1, ra2, qc, ii, nrap, ntap, hs, dhs)
     h(3) = hs
-    do i=1,20
+    do i=1, 20
         dh(3,i) = dhs(i)
-    enddo
-    call solver(igrad,ra1-1,ra2-1,qc,ii,nrap,ntap,hs,dhs)
+    end do
+    call solver(igrad, ra1-1, ra2-1, qc, ii, nrap, ntap, hs, dhs)
     h(4) = hs
-    do i=1,20
+    do i=1, 20
         dh(4,i) = dhs(i)
-    enddo
+    end do
 
 end subroutine calchess3
 
@@ -2158,40 +2116,38 @@ end subroutine calchess3
 subroutine calcgeom( x, y, z, qc )
     ! get the internal coords for tertiary calcs
     implicit none
-
     integer          :: i
-    double precision :: x(7),y(7),z(7)
+    double precision :: x(7), y(7), z(7)
     double precision :: qc(20)
-    double precision :: bndlen,bndang
+    double precision :: bndlen, bndang
     double precision :: dihedr2
+    qc(1) = bndlen(2, 3, x, y, z)
+    qc(2) = bndlen(3, 4, x, y, z)
 
-    qc(1) = bndlen(2,3,x,y,z)
-    qc(2) = bndlen(3,4,x,y,z)
+    qc(3) = bndlen(4, 5, x, y, z)
+    qc(4) = bndlen(4, 6, x, y, z)
+    qc(5) = bndlen(4, 7, x, y, z)
 
-    qc(3) = bndlen(4,5,x,y,z)
-    qc(4) = bndlen(4,6,x,y,z)
-    qc(5) = bndlen(4,7,x,y,z)
+    qc(6) = bndang(1, 3, 4, x, y, z)
+    qc(7) = bndang(2, 3, 4, x, y, z)
 
-    qc(6) = bndang(1,3,4,x,y,z)
-    qc(7) = bndang(2,3,4,x,y,z)
+    qc(8)  = bndang(3, 4, 5, x, y, z)
+    qc(9)  = bndang(3, 4, 6, x, y, z)
+    qc(10) = bndang(3, 4, 7, x, y, z)
 
-    qc(8)  = bndang(3,4,5,x,y,z)
-    qc(9)  = bndang(3,4,6,x,y,z)
-    qc(10) = bndang(3,4,7,x,y,z)
+    qc(11) = dihedr2(1, 3, 4, 5, x, y, z)
+    qc(12) = dihedr2(2, 3, 4, 5, x, y, z)
 
-    qc(11) = dihedr2(1,3,4,5,x,y,z)
-    qc(12) = dihedr2(2,3,4,5,x,y,z)
+    qc(13) = bndlen(1, 5, x, y, z)
+    qc(14) = bndlen(2, 5, x, y, z)
 
-    qc(13) = bndlen(1,5,x,y,z)
-    qc(14) = bndlen(2,5,x,y,z)
+    qc(15) = bndang(5, 4, 6, x, y, z)
+    qc(16) = bndang(6, 4, 7, x, y, z)
+    qc(17) = bndang(7, 4, 5, x, y, z)
 
-    qc(15) = bndang(5,4,6,x,y,z)
-    qc(16) = bndang(6,4,7,x,y,z)
-    qc(17) = bndang(7,4,5,x,y,z)
-
-    qc(18) = bndlen(5,6,x,y,z)
-    qc(19) = bndlen(6,7,x,y,z)
-    qc(20) = bndlen(7,5,x,y,z)
+    qc(18) = bndlen(5, 6, x, y, z)
+    qc(19) = bndlen(6, 7, x, y, z)
+    qc(20) = bndlen(7, 5, x, y, z)
 
 end subroutine calcgeom
 
@@ -2201,20 +2157,17 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
     ! Subroutine to evaluate 2D tent functions
     !***********************************************************************
     implicit none
-
-    integer          :: i,si,s,tk
+    integer          :: i, si, s, tk
     integer          :: nrap !number of anchor points
     integer          :: ntap !number of anchor points
-    double precision :: r1,t2
-
+    double precision :: r1, t2
     double precision :: rap(nrap,3)
     double precision :: tap(ntap,3)
     double precision :: f(4)
-    double precision :: un,up,vn,vp,dnom
+    double precision :: un, up, vn, vp, dnom
     double precision :: df(4,2)
-    double precision :: dun,dup,dvn,dvp,ddnom(2)
+    double precision :: dun, dup, dvn, dvp, ddnom(2)
     integer          :: fg(2)
-
     f  = 0d0
     fg = 0
 
@@ -2223,26 +2176,26 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
         fg(1) = 1
     else if (r1 .ge. rap(nrap,si)) then
         fg(1) = nrap+1
-    endif
+    end if
 
-    do i=2,nrap
+    do i=2, nrap
         if ((rap(i-1,si) .le. r1) .and. (r1 .lt. rap(i,si))) then
             fg(1) = i
-        endif
-    enddo
+        end if
+    end do
 
     ! Check whether the point are end points
     if (t2 .lt. tap(1,si)) then
         fg(2) = 1
     else if (t2 .ge. tap(ntap,si)) then
         fg(2) = ntap+1
-    endif
+    end if
 
-    do i=2,ntap
+    do i=2, ntap
         if ((tap(i-1,si) .le. t2) .and. (t2 .lt. tap(i,si))) then
             fg(2) = i
-        endif
-    enddo
+        end if
+    end do
 
     un = 0d0
     up = 0d0
@@ -2278,7 +2231,7 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
         ! Connection for r1=rap
         if (r1 .eq. rap((fg(1)-1),si)) then
             un = 1d0
-        endif
+        end if
         tk = 2
     else if( (fg(2)-1.eq.0) ) then
         un = (r1-rap((fg(1)-1),si))**4d0
@@ -2292,7 +2245,7 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
         ! Connection for t2=rap
         if (t2 .eq. tap(fg(2)-1,si)) then
             vn = 1d0
-        endif
+        end if
         tk = 2
         !****** MIDDLE
     else
@@ -2301,7 +2254,7 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
         vn = (t2-tap(fg(2)-1,si))**4d0
         vp = (t2-tap(fg(2),si))**4d0
         tk = 3
-    endif
+    end if
 
     dnom = un*vn + un*vp + up*vn + up*vp
 
@@ -2347,7 +2300,7 @@ subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
         dvn = 4d0*(t2-tap(fg(2)-1,si))**3d0
         dvp = 4d0*(t2-tap(fg(2),si))**3d0
 
-    endif
+    end if
 
     ddnom(1) = dun*vn + dun*vp + dup*vn + dup*vp
     ddnom(2) = un*dvn + un*dvp + up*dvn + up*dvp
@@ -2369,35 +2322,32 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
     ! gives the primary coordinate contribution
 
     implicit none
-
-    integer :: imol
-
+    integer          :: imol
     double precision :: a12(4)
     double precision :: const(4)
-    double precision :: ga1(4),ga2(4),ga3(4)
-    double precision :: gb1(4),gb2(4),gb3(4)
-    double precision :: ka1(4),ka2(4)
+    double precision :: ga1(4), ga2(4), ga3(4)
+    double precision :: gb1(4), gb2(4), gb3(4)
+    double precision :: ka1(4), ka2(4)
     double precision :: c(0:10)
-    double precision :: re,de,rmin,pi,rx
-    double precision :: fy,dfdr,u,dydr,lj,dljdr
-    double precision :: rr,tt,dv2dr,dv2dt,v3
-    integer          :: ri,i,igrad
-    double precision :: x(7),y(7),z(7)
-    double precision :: dx(7),dy(7),dz(7)
-    double precision :: ae,e1,e2,e3,f1,f2,f3
-    double precision :: g1,g2,g3,g4,i2,i3,i4
-    double precision :: h2,h3,h4,j2,j3,j4
-    double precision :: n1,n2,n3,n4
+    double precision :: re, de, rmin, pi, rx
+    double precision :: fy, dfdr, u, dydr, lj, dljdr
+    double precision :: rr, tt, dv2dr, dv2dt, v3
+    integer          :: ri, i, igrad
+    double precision :: x(7), y(7), z(7)
+    double precision :: dx(7), dy(7), dz(7)
+    double precision :: ae, e1, e2, e3, f1, f2, f3
+    double precision :: g1, g2, g3, g4, i2, i3, i4
+    double precision :: h2, h3, h4, j2, j3, j4
+    double precision :: n1, n2, n3, n4
     double precision :: bndlen
     double precision :: dihedr2
-    double precision :: ak,tt0,gr1,gr2,gr3
-    double precision :: fr1(5),fr2(5),fr3(5)
-    double precision :: ft2(5),ft3(5)
-    double precision :: dihedrix,dihedriy,dihedriz
-    double precision :: dihedrjx,dihedrjy,dihedrjz
-    double precision :: dihedrkx,dihedrky,dihedrkz
-    double precision :: dihedrlx,dihedrly,dihedrlz
-
+    double precision :: ak, tt0, gr1, gr2, gr3
+    double precision :: fr1(5), fr2(5), fr3(5)
+    double precision :: ft2(5), ft3(5)
+    double precision :: dihedrix, dihedriy, dihedriz
+    double precision :: dihedrjx, dihedrjy, dihedrjz
+    double precision :: dihedrkx, dihedrky, dihedrkz
+    double precision :: dihedrlx, dihedrly, dihedrlz
     dv2dr = 0d0
     dv2dt = 0d0
     v3    = 0d0
@@ -2406,8 +2356,8 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
     dy = 0d0
     dz = 0d0
 
-    rr = bndlen(1,3,x,y,z)
-    tt = dihedr2(1,3,4,2,x,y,z)
+    rr = bndlen(1, 3, x, y, z)
+    tt = dihedr2(1, 3, 4, 2, x, y, z)
 
     if (imol .eq. 1) then ! GROUND STATE
 
@@ -2422,7 +2372,7 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
 
         if (igrad .eq. 1) then
             dv2dr = -2.0d0*e1*e2*exp(e2*(rr-e3)) *(1-exp(e2*(rr-e3))) + 2d0*f1*f2*(rr-f3)*exp(f2*(rr-f3)**2d0)
-        endif
+        end if
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ak  = 0.945760042d0
@@ -2437,7 +2387,7 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
             dv2dr = dv2dr+ ak*(tt-tt0)**2d0* 2d0*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2d0)
 
             dv2dt = ak*(tt-tt0)*2d0* gr1*exp(gr2*(rr-gr3)**2d0)
-        endif
+        end if
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -2466,21 +2416,21 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
         ft3(3) = 1.002868947d0
         ft3(4) = -0.334959847d0
 
-        do i=1,4
+        do i=1, 4
             v3 = v3+ fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))**2d0))
-        enddo
+        end do
 
         if (igrad .eq. 1) then
-            do i=1,4
+            do i=1, 4
                 dv2dr=dv2dr+ 2d0*fr2(i)*(rr-fr3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))** &
                     & 2d0))
-            enddo
+            end do
 
-            do i=1,4
+            do i=1, 4
                 dv2dt=dv2dt+ 2d0*ft2(i)*(tt-ft3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))** &
                     & 2d0))
-            enddo
-        endif
+            end do
+        end if
 
     else if (imol .eq. 2) then ! EXCITED STATE
 
@@ -2500,7 +2450,7 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
         if (igrad .eq. 1) then
             dv2dr=e2*n4*exp(e2*(rr-e3)) + (n2*(rr-n3)*2d0) *f1*exp(f2*((rr-f3)**2d0)) +(n1+n2*(rr-n3)**2d0) *2d0*f1* &
                 & f2* (rr-f3)*exp(f2*(rr-f3)**2d0)
-        endif
+        end if
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ak  = 1.233643227d0
@@ -2515,7 +2465,7 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
             dv2dr = dv2dr+ ak*(tt-tt0)**2d0* 2d0*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2d0)
 
             dv2dt = ak*(tt-tt0)*2d0* gr1*exp(gr2*(rr-gr3)**2d0)
-        endif
+        end if
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -2549,21 +2499,21 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
         ft3(4) = -0.5580416d0
         ft3(5) = 0.427418036d0
 
-        do i=1,5
+        do i=1, 5
             v3 = v3+ fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))**2d0))
-        enddo
+        end do
 
         if (igrad .eq. 1) then
-            do i=1,5
+            do i=1, 5
                 dv2dr=dv2dr+ 2d0*fr2(i)*(rr-fr3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))** &
                     & 2d0))
-            enddo
+            end do
 
-            do i=1,5
+            do i=1, 5
                 dv2dt=dv2dt+ 2d0*ft2(i)*(tt-ft3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))** &
                     & 2d0))
-            enddo
-        endif
+            end do
+        end if
 
     else if (imol .eq. 3) then ! COUPLING
 
@@ -2613,26 +2563,26 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
         ka2(3) = 2.40922499d0
         ka2(4) = 3.270326934d0
 
-        do i=1,4
+        do i=1, 4
             v3=v3 + (a12(i)*sqrt(1.1d0-(tt**2d0)) +const(i) + ga1(i)*exp(ga2(i)*((tt-ga3(i))**2d0)) + gb1(i)* &
                 & exp(gb2(i)* ((tt-gb3(i))**2d0))) *(exp(ka1(i)*(rr-ka2(i))**2d0))
-        enddo
+        end do
 
         if (igrad .eq. 1) then
 
-            do i=1,4
+            do i=1, 4
                 dv2dt=dv2dt + (-1.0d0*a12(i)*tt *(1.0d0/sqrt(1.1d0-(tt**2d0))) + ga1(i)*exp(ga2(i)*((tt-ga3(i))** &
                     & 2d0)) * ga2(i)*((tt-ga3(i))*2d0) + gb1(i)*exp(gb2(i)*((tt-gb3(i))**2d0)) *gb2(i)*((tt-gb3(i))* &
                     & 2d0)) * (exp(ka1(i)*(rr-ka2(i))**2d0))
-            enddo
+            end do
 
-            do i=1,4
+            do i=1, 4
                 dv2dr=dv2dr + (a12(i)*sqrt(1.1d0-(tt**2d0)) +const(i) + ga1(i)*exp(ga2(i)*((tt-ga3(i))**2d0)) + &
                     & gb1(i)* exp(gb2(i)*((tt-gb3(i))**2d0))) *(exp(ka1(i)*(rr-ka2(i))**2d0)) *(ka1(i)*(rr-ka2(i))*2d0)
-            enddo
-        endif
+            end do
+        end if
 
-    endif
+    end if
 
     dx(1) = dv2dr*((x(1)-x(3))/rr)
     dy(1) = dv2dr*((y(1)-y(3))/rr)
@@ -2642,21 +2592,21 @@ subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
     dy(3) = dv2dr*((y(3)-y(1))/rr)
     dz(3) = dv2dr*((z(3)-z(1))/rr)
 
-    dx(1) = dx(1)+dv2dt*dihedrix(1,3,4,2,x,y,z)
-    dy(1) = dy(1)+dv2dt*dihedriy(1,3,4,2,x,y,z)
-    dz(1) = dz(1)+dv2dt*dihedriz(1,3,4,2,x,y,z)
+    dx(1) = dx(1)+dv2dt*dihedrix(1, 3, 4, 2, x, y, z)
+    dy(1) = dy(1)+dv2dt*dihedriy(1, 3, 4, 2, x, y, z)
+    dz(1) = dz(1)+dv2dt*dihedriz(1, 3, 4, 2, x, y, z)
 
-    dx(2) = dv2dt*dihedrlx(1,3,4,2,x,y,z)
-    dy(2) = dv2dt*dihedrly(1,3,4,2,x,y,z)
-    dz(2) = dv2dt*dihedrlz(1,3,4,2,x,y,z)
+    dx(2) = dv2dt*dihedrlx(1, 3, 4, 2, x, y, z)
+    dy(2) = dv2dt*dihedrly(1, 3, 4, 2, x, y, z)
+    dz(2) = dv2dt*dihedrlz(1, 3, 4, 2, x, y, z)
 
-    dx(3) = dx(3)+dv2dt*dihedrjx(1,3,4,2,x,y,z)
-    dy(3) = dy(3)+dv2dt*dihedrjy(1,3,4,2,x,y,z)
-    dz(3) = dz(3)+dv2dt*dihedrjz(1,3,4,2,x,y,z)
+    dx(3) = dx(3)+dv2dt*dihedrjx(1, 3, 4, 2, x, y, z)
+    dy(3) = dy(3)+dv2dt*dihedrjy(1, 3, 4, 2, x, y, z)
+    dz(3) = dz(3)+dv2dt*dihedrjz(1, 3, 4, 2, x, y, z)
 
-    dx(4) = dv2dt*dihedrkx(1,3,4,2,x,y,z)
-    dy(4) = dv2dt*dihedrky(1,3,4,2,x,y,z)
-    dz(4) = dv2dt*dihedrkz(1,3,4,2,x,y,z)
+    dx(4) = dv2dt*dihedrkx(1, 3, 4, 2, x, y, z)
+    dy(4) = dv2dt*dihedrky(1, 3, 4, 2, x, y, z)
+    dz(4) = dv2dt*dihedrkz(1, 3, 4, 2, x, y, z)
 
 end subroutine kpev2gm2
 
@@ -2670,22 +2620,18 @@ double precision function dihedr2( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: kkx,kky,kkz,yyx,yyy,yyz
-    double precision :: llx,lly,llz,eex,eey,eez
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: kkx, kky, kkz, yyx, yyy, yyz
+    double precision            :: llx, lly, llz, eex, eey, eez
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -2693,7 +2639,6 @@ double precision function dihedr2( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     kkx = x(i)-x(j)
     kky = y(i)-y(j)
     kkz = z(i)-z(j)
@@ -2756,23 +2701,19 @@ double precision function dihedrix( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -2780,7 +2721,6 @@ double precision function dihedrix( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -2859,28 +2799,23 @@ double precision function dihedriy( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !         \
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -2958,23 +2893,19 @@ double precision function dihedriz( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -2982,7 +2913,6 @@ double precision function dihedriz( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3060,23 +2990,19 @@ double precision function dihedrlx( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -3084,7 +3010,6 @@ double precision function dihedrlx( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3162,23 +3087,19 @@ double precision function dihedrly( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -3186,7 +3107,6 @@ double precision function dihedrly( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3264,23 +3184,19 @@ double precision function dihedrlz( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -3288,7 +3204,6 @@ double precision function dihedrlz( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3365,23 +3280,19 @@ double precision function dihedrjx( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -3389,7 +3300,6 @@ double precision function dihedrjx( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3471,23 +3381,19 @@ double precision function dihedrjy( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -3495,7 +3401,6 @@ double precision function dihedrjy( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3577,23 +3482,19 @@ double precision function dihedrjz( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -3601,7 +3502,6 @@ double precision function dihedrjz( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3683,23 +3583,19 @@ double precision function dihedrkx( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -3707,7 +3603,6 @@ double precision function dihedrkx( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3790,23 +3685,19 @@ double precision function dihedrky( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -3814,7 +3705,6 @@ double precision function dihedrky( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)
@@ -3897,23 +3787,19 @@ double precision function dihedrkz( i, j, k, l, x, y, z )
     !***********************************************************************
 
     implicit none
-
-    integer :: i, j, k, l
-
+    integer                     :: i, j, k, l
     double precision, parameter :: tiny = 1.0d-13
     double precision, parameter :: pi   = 3.1415926535898d0
-
-    double precision :: x(*),y(*),z(*)
-    double precision :: eij(3),ejk(3),ekl(3),u(3),v(3),w(3)
-    double precision :: rij,rjk,rkl,aijk,ajkl,wejk
-    double precision :: ijx,ijy,ijz,kjx,kjy,kjz
-    double precision :: lkx,lky,lkz,jkx,jky,jkz
-    double precision :: oo1(3),oo2(3),so1(3),so2(3)
-    double precision :: sso1,sso2,rso1,rso2
-    double precision :: ab(3)
-    double precision :: sab,p1p2,ra
-    double precision :: ld,rd,td,bd,id,fd
-
+    double precision            :: x(*), y(*), z(*)
+    double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+    double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+    double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
+    double precision            :: lkx, lky, lkz, jkx, jky, jkz
+    double precision            :: oo1(3), oo2(3), so1(3), so2(3)
+    double precision            :: sso1, sso2, rso1, rso2
+    double precision            :: ab(3)
+    double precision            :: sab, p1p2, ra
+    double precision            :: ld, rd, td, bd, id, fd
     !   eij
     ! i-----j
     !   aijk \ ejk
@@ -3921,7 +3807,6 @@ double precision function dihedrkz( i, j, k, l, x, y, z )
     !          \ ajkl
     !           k----l
     !             kl
-
     ijx = x(i)-x(j)
     ijy = y(i)-y(j)
     ijz = z(i)-z(j)

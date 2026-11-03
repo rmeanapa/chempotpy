@@ -1,90 +1,79 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate pes for the H3_GEN_BKMP_1991 potential.
 subroutine pes( x, igrad, p, g, d )
-
+    use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
     implicit none
-
     ! number of electronic state
-    integer, parameter :: nstates = 1
-    integer, parameter :: natoms  = 3
-
+    integer, parameter            :: nstates = 1
+    integer, parameter            :: natoms  = 3
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: dedr, energy, r1, r2, r3
-    double precision :: r(3), v
-    double precision :: tx(9), rx(3), drdx(3,9)
-    double precision :: gx(nstates,9)
-    integer          :: iatom, idir, i, j
-    logical, save    :: first_time_data=.true.
-
+    double precision              :: dedr, energy, r1, r2, r3
+    double precision              :: r(3), v
+    double precision              :: tx(9), rx(3), drdx(3,9)
+    double precision              :: gx(nstates,9)
+    integer                       :: iatom, idir, i, j
+    logical, save                 :: first_time_data=.true.
     common /potcm/ r1, r2, r3, energy, dedr(3)
-
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        enddo
-    enddo
+        end do
+    end do
     ! input cartesian is HHH
-    r(1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
-    r(2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
-    r(3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
+    call legacy_triatomic_distances_to_bohr( x, r )
 
     r1 = r(1)
     r2 = r(2)
     r3 = r(3)
-    rx = r*0.529177211
+    rx = r*legacy_bohr_to_angstrom
 
     call prepot
     call pot
 
-    p    = energy*27.211386
+    p    = energy*legacy_hartree_to_electronvolt
     dedr = dedr*51.422067
 
     call evdrdx(tx, rx, drdx)
     gx = 0.d0
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             gx(:,i) = gx(:,i)+dedr(j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j               = (iatom-1)*3+idir
             g(:,iatom,idir) = gx(:,j)
-        enddo
-    enddo
+        end do
+    end do
 
     if (igrad==2) then
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the H3_GEN_BKMP_1991 potential.
 subroutine evdrdx( x, r, drdx )
     implicit none
-
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-
-    integer :: i,j
-
+    integer                       :: i, j
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
+    do i=1, 3
+        do j=1, 9
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
@@ -113,13 +102,13 @@ end subroutine evdrdx
 !> @brief Evaluate PREPOT for the H3_GEN_BKMP_1991 potential.
 subroutine prepot
     !
-    !   System:          H3
-    !   Common name:     BKMP
+    !   System:      H3
+    !   Common name: BKMP
     !   Reference:       A. I. Boothroyd, W. J. Keogh, P. G. Martin,
     !                    and M. R. Peterson
     !                    J. Chem. Phys. 95, 4343 (1991).
     !
-    !   Interface:       3-1S
+    !   Interface: 3-1S
     !
     !   PREPOT must be called once before any calls to POT.
     !   The potential parameters are included in DATA statements.
@@ -170,11 +159,10 @@ subroutine prepot
     !                  IPRT                6
     !
     implicit none
-
     double precision            :: der, easyab, easyac, easybc, energy, rab, rac, rbc
     integer                     :: idbug, iprt, nder, ndum, nsurf
     double precision, parameter :: verson = 706.0d0
-    common /potcm/ rab,rbc,rac,energy,der(3)
+    common /potcm/ rab, rbc, rac, energy, der(3)
     common /potccm/ nsurf, nder, idbug, ndum(7)
     common /iocom/ iprt
     common /asycom/ easyab, easybc, easyac
@@ -190,11 +178,11 @@ subroutine prepot
     !
     !
 end subroutine prepot
+
 !
 !> @brief Evaluate POT for the H3_GEN_BKMP_1991 potential.
 subroutine pot
     implicit none
-
     double precision :: dedr, easyab, easyac, easybc, energy, r1, r2, r3, rval
     integer          :: idbug, iprt, nder, ndum, nsurf
     common /potcm/ r1, r2, r3, energy, dedr(3)
@@ -211,12 +199,12 @@ subroutine pot
             'this '', ''potential, '', /,2X,T5,''only the ground electronic surface, NSURF = 0, ' // &
             ''', ''is available'')') nsurf
         stop 'POT 1'
-    endif
+    end if
     if (nder .gt. 1) then
         write (iprt, '(/, 2X,''POT has been called with NDER = '',I5, /, 2X, ''This value of NDER is not allowed in t' // &
             'his '', ''version of the potential.'')') nder
         stop 'POT 2'
-    endif
+    end if
     !
     call h3tot (rval, energy, dedr, nder, idbug)
     !    Put the zero of energy at the BC asymptotic valley, i.e., at
@@ -225,6 +213,7 @@ subroutine pot
     !
     !
 end subroutine pot
+
 !
 !     subroutine h3tot(r,Vtot,dVtot,id)
 !> @brief Evaluate h3tot for the H3_GEN_BKMP_1991 potential.
@@ -251,18 +240,17 @@ subroutine h3tot( r, vtot, dvtot, id, ipr )
     !  if ipr.gt.1  also print out some details about derivatives
     !----------------------------------------------------------------------
     implicit none
-
     double precision :: cal, cas, cb, cbnda, cbndb, cbp, db1a, db1b, db2, db3, dcal, dcas, dcbnda, &
         & dcbndb, dt, dvas, dvbnda, dvbndb, dvlon, dvtot, expass, r, t, vas, vb, vbnda, vbndb, vbp, &
         & vlon, vtot
     integer :: i, icompc, id, ipass, ipr
-    dimension r(3),dvtot(3)
-    dimension dvlon(3),dvas(3),dvbnda(3),dvbndb(3), &
-        & dcal(3), dcas(3),dcbnda(3),dcbndb(3)
+    dimension r(3), dvtot(3)
+    dimension dvlon(3), dvas(3), dvbnda(3), dvbndb(3), &
+        & dcal(3), dcas(3), dcbnda(3), dcbndb(3)
     !     dimension vb(2,25),cb(2,25),vbp(2,25),cbp(2,25)    {debugging}
-    dimension vb(2,25),cb(2,25),vbp(2,25),cbp(2,25)
-    dimension db1a(3),db1b(3),dt(3),t(3)
-    dimension db2(3),db3(6),expass(4)
+    dimension vb(2,25), cb(2,25), vbp(2,25), cbp(2,25)
+    dimension db1a(3), db1b(3), dt(3), t(3)
+    dimension db2(3), db3(6), expass(4)
     common/pass/ipass(100)
     !     ipr = ipass(1)
     !  zero everything to avoid any 'funny' values:
@@ -275,7 +263,7 @@ subroutine h3tot( r, vtot, dvtot, id, ipr )
     cbnda = 0.d0
     cbndb = 0.d0
     !     do i=1,3
-    do 700 i=1,3
+    do 700 i=1, 3
         dvlon(i)  = 0.d0
         dvas(i)   = 0.d0
         dvbnda(i) = 0.d0
@@ -288,7 +276,7 @@ subroutine h3tot( r, vtot, dvtot, id, ipr )
     700 continue
     !  zero the vb and cb arrays (used only for numerical derivatives)
     !     do i=1,25
-    do 701 i=1,25
+    do 701 i=1, 25
         vb(1,i) = 0.d0
         vb(2,i) = 0.d0
         cb(1,i) = 0.d0
@@ -298,15 +286,15 @@ subroutine h3tot( r, vtot, dvtot, id, ipr )
     call h3lond( r, vlon, dvlon )
     call vascal( r, vas, dvas )
     !    now do any corrections required for compact geometries:
-    call compac(r,icompc,t,dt)
+    call compac(r, icompc, t, dt)
     !    oct.3/90 compact routines only called for compact geometries:
     if(icompc.ge.1)then
         call csym  ( r, cal, dcal )
-        call casym ( r, cas, dcas,  1 ,t,dt)
+        call casym ( r, cas, dcas, 1, t, dt)
     end if
-    call vbcb(r,icompc,t,dt,ipr, &
-        & vbnda,vbndb,dvbnda,dvbndb, &
-        & cbnda,cbndb,dcbnda,dcbndb)
+    call vbcb(r, icompc, t, dt, ipr, &
+        & vbnda, vbndb, dvbnda, dvbndb, &
+        & cbnda, cbndb, dcbnda, dcbndb)
     !    add up the various parts of the potential:
     vtot = vlon + vas + vbnda + vbndb + cal + cas + cbnda + cbndb
     !    add up the various parts of the derivative:
@@ -315,32 +303,33 @@ subroutine h3tot( r, vtot, dvtot, id, ipr )
     dvtot(3) = dvlon(3) + dvas(3) + dvbnda(3) + dvbndb(3) +  dcal(3) + dcas(3) + dcbnda(3) + dcbndb(3)
 
     if(ipr.gt.0) then
-        write(7,*)
-        write(7,*) 'h3tot enter --------------------------------'
-        write(7,'(5x,''    r ='',3(1x,f16.10),'' icompac = '',i1,/, 5x,''Vtot  = '',f18.12,/, 5x,''Vlon  = '',f18.12,' // &
+        write(7, *)
+        write(7, *) 'h3tot enter --------------------------------'
+        write(7, '(5x,''    r ='',3(1x,f16.10),'' icompac = '',i1,/, 5x,''Vtot  = '',f18.12,/, 5x,''Vlon  = '',f18.12,' // &
             '''       Vas   = '',g18.12,/, 5x,''Cal   = '',g18.12,''       Cas   = '',g18.12,/, 5' // &
             'x,''Vbnda = '',g18.12,''       Vbndb = '',g18.12,/, 5x,''Cbnda = '',g18.12,''       ' // &
-            'Cbndb = '',g18.12)') r,icompc,vtot, &
-            & vlon,vas,cal,cas,vbnda,vbndb,cbnda,cbndb
+            'Cbndb = '',g18.12)') r, icompc, vtot, &
+            & vlon, vas, cal, cas, vbnda, vbndb, cbnda, cbndb
         if(ipr.gt.1)then
-            write(7,'('' dVtot   = '',3(1x,g18.12),/, '' dVlon   = '',3(1x,g18.12),/, '' dVas    = '',3(1x,g18.12),/,' // &
+            write(7, '('' dVtot   = '',3(1x,g18.12),/, '' dVlon   = '',3(1x,g18.12),/, '' dVas    = '',3(1x,g18.12),/,' // &
                 ' '' dVbnda  = '',3(1x,g18.12),/, '' dVbndb  = '',3(1x,g18.12),/, '' dCal    = '',3(1' // &
                 'x,g18.12),/, '' dCas    = '',3(1x,g18.12),/, '' dCbnda  = '',3(1x,g18.12),/, '' dCbn' // &
-                'db  = '',3(1x,g18.12))') dvtot,dvlon,dvas,dvbnda,dvbndb, &
-                & dcal,dcas,dcbnda,dcbndb
+                'db  = '',3(1x,g18.12))') dvtot, dvlon, dvas, dvbnda, dvbndb, &
+                & dcal, dcas, dcbnda, dcbndb
         end if
-        write(7,'(''Vba values: '',5(1x,g12.6),/,''Vbb values: '',5(1x,g12.6))') (vb(1,i),i=1,5),(vb(2,i),i=1,5)
-        write(7,'(''Cba values: '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''C' // &
+        write(7, '(''Vba values: '',5(1x,g12.6),/,''Vbb values: '',5(1x,g12.6))') (vb(1,i), i=1, 5), (vb(2,i), i=1, 5)
+        write(7, '(''Cba values: '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''C' // &
             'bb values: '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''            '',3(1x,f' // &
-            '16.8))') (cb(1,i),i=1,9),(cb(2,i),i=1,9)
-        write(7,'(''   Vbnda        Vbndb        Cbnda        Cbndb '',/, 4(e12.6,2x),/, ''dVbnda: '',3(e16.10,1x),/,' // &
+            '16.8))') (cb(1,i), i=1, 9), (cb(2,i), i=1, 9)
+        write(7, '(''   Vbnda        Vbndb        Cbnda        Cbndb '',/, 4(e12.6,2x),/, ''dVbnda: '',3(e16.10,1x),/,' // &
             ' ''dVbndb: '',3(e16.10,1x),/, ''dCbnda: '',3(e16.10,1x),/, ''dCbndb: '',3(e16.10,1x)' // &
-            ')') vbnda,vbndb,cbnda,cbndb, &
-            & dvbnda,dvbndb,dcbnda,dcbndb
-        write(7,*) 'exiting subr.h3tot'
-        write(7,*) 'h3tot exit ---------------------------------'
+            ')') vbnda, vbndb, cbnda, cbndb, &
+            & dvbnda, dvbndb, dcbnda, dcbndb
+        write(7, *) 'exiting subr.h3tot'
+        write(7, *) 'h3tot exit ---------------------------------'
     end if
 end subroutine h3tot
+
 !
 !     subroutine triplet(r,E3,id)
 !> @brief Evaluate triplt for the H3_GEN_BKMP_1991 potential.
@@ -356,10 +345,9 @@ subroutine triplt( r, e3, id )
     !     in between           use the transition equation
     !--------------------------------------------------------------------
     implicit none
-
     double precision :: dr, e1, e3, exdr, r, ra6, ra61, rsq
     integer          :: id, ipass, ipr
-    dimension e3(3),e1(3)
+    dimension e3(3), e1(3)
     common/pass/ipass(100)
     double precision, parameter :: rl = 0.95d0
     double precision, parameter :: rr = 1.15d0
@@ -395,7 +383,7 @@ subroutine triplt( r, e3, id )
     end if
     if(r.lt.rr )then
         dr = r- rl
-        call vh2opt(r,e1,2)
+        call vh2opt(r, e1, 2)
         if( r.le.rl ) then
             !          Johnson triplet equation:
             e3(1) = e1(1) + c2*dr + c3
@@ -406,8 +394,9 @@ subroutine triplt( r, e3, id )
             e3(2) = e1(2) + 3.d0*c1*dr*dr + c2
         end if
     end if
-    if(ipr.gt.0) write(7,'(''  triplet:  E3 = '',3(1x,f12.8))') e3
+    if(ipr.gt.0) write(7, '(''  triplet:  E3 = '',3(1x,f12.8))') e3
 end subroutine triplt
+
 !
 !
 !> @brief Evaluate vH2opt for the H3_GEN_BKMP_1991 potential.
@@ -419,7 +408,6 @@ subroutine vh2opt( r, e, ideriv )
     ! (1st deriv added on May 2 1989; 2nd deriv on May 28 1989)
     !-----------------------------------------------------------------
     implicit none
-
     double precision :: alphar, dalphr, ddalph, ddvlr, ddvsr, dvlr, dvsr, e, exalph, r, r02, r04, r06, r10, r11, r12, &
         & r13, r14, r15, r2, r3, r4, r5, r6, r7, r8, r9, rr2, rr25, rr26, rr27, rr4, rr43, rr44, rr6, rr62, rr63, vlr, &
         & vsr
@@ -513,6 +501,7 @@ subroutine vh2opt( r, e, ideriv )
         e(3) = ddvsr + ddvlr
     end if
 end subroutine vh2opt
+
 !
 !> @brief Evaluate h3lond for the H3_GEN_BKMP_1991 potential.
 subroutine h3lond( r, vlon, dvlon )
@@ -524,27 +513,26 @@ subroutine h3lond( r, vlon, dvlon )
     ! configurations
     !----------------------------------------------------------------------
     implicit none
-
     double precision :: de1, de3, dj1, dj2, dj3, dvlon, e1, e3, esing, etrip, r, rootjt, sumj, sumq, vlon
     integer          :: i, ipass, ipr
     !     real*8 Q(3),J(3),Jt
-    double precision :: q(3),j(3),jt
-    dimension r(3),e1(3),e3(3),esing(3),etrip(3),dvlon(3)
-    dimension de1(3),de3(3),dj1(3),dj2(3),dj3(3)
+    double precision :: q(3), j(3), jt
+    dimension r(3), e1(3), e3(3), esing(3), etrip(3), dvlon(3)
+    dimension de1(3), de3(3), dj1(3), dj2(3), dj3(3)
     common/pass/ipass(100)
     double precision, parameter :: half = 0.5d0
     double precision, parameter :: two  = 2.d0
     double precision, parameter :: eps2 = 1.d-12
     ipr = ipass(2)
     !     do i=1,3
-    do 702 i=1,3
-        call vh2opt(r(i),esing,2)
+    do 702 i=1, 3
+        call vh2opt(r(i), esing, 2)
         e1(i)  = esing(1)
         de1(i) = esing(2)
         !        call triplet(r(i),etrip,2)
-        call triplt(r(i),etrip,2)
-        if(ipr.gt.0) write(7,'(''from subr.london: '',/, ''  using r'',i1,'':   Esinglet='',3(1x,f12.8),/, ''        ' // &
-            ' '',1x,''    Etriplet='',3(1x,f12.8))') i,esing,etrip
+        call triplt(r(i), etrip, 2)
+        if(ipr.gt.0) write(7, '(''from subr.london: '',/, ''  using r'',i1,'':   Esinglet='',3(1x,f12.8),/, ''        ' // &
+            ' '',1x,''    Etriplet='',3(1x,f12.8))') i, esing, etrip
         e3(i)  = etrip(1)
         de3(i) = etrip(2)
         q(i)   = half*(e1(i) + e3(i))
@@ -557,20 +545,21 @@ subroutine h3lond( r, vlon, dvlon )
     rootjt = sqrt(jt)
     vlon   = sumq - rootjt
     if(ipr.gt.0) then
-        write(7,'(''         sumQ = '',g12.6,''        sumJ = '',g12.6)') sumq,sumj
-        write(7,'(''         Vlon = '',f12.8,''      rootJt = '',g12.6)') vlon,rootjt
+        write(7, '(''         sumQ = '',g12.6,''        sumJ = '',g12.6)') sumq, sumj
+        write(7, '(''         Vlon = '',f12.8,''      rootJt = '',g12.6)') vlon, rootjt
     end if
     !  calculate the derivatives with respect to r(i):
     dvlon(1) = half*(de1(1)+de3(1)) - 0.25d0*(two*j(1)-j(2)-j(3))*(de1(1)-de3(1))/rootjt
     dvlon(2) = half*(de1(2)+de3(2)) - 0.25d0*(two*j(2)-j(3)-j(1))*(de1(2)-de3(2))/rootjt
     dvlon(3) = half*(de1(3)+de3(3)) - 0.25d0*(two*j(3)-j(1)-j(2))*(de1(3)-de3(3))/rootjt
     if(ipr.gt.0) then
-        write(7,'(''             r = '',3(1x,f12.6),/, ''            E1 = '',3(1x,f12.8),/, ''            E3 = '',3(1' // &
-            'x,f12.8),/, ''          vlon = '',1x,f12.8)') r,e1,e3,vlon
-        write(7,'(13x,''q = '',3(1x,e12.6),/,13x,''j = '',3(1x,e12.6))') q,j
-        write(7,'(''         dVlon = '',3(1x,g12.6))') dvlon
+        write(7, '(''             r = '',3(1x,f12.6),/, ''            E1 = '',3(1x,f12.8),/, ''            E3 = '',3(1' // &
+            'x,f12.8),/, ''          vlon = '',1x,f12.8)') r, e1, e3, vlon
+        write(7, '(13x,''q = '',3(1x,e12.6),/,13x,''j = '',3(1x,e12.6))') q, j
+        write(7, '(''         dVlon = '',3(1x,g12.6))') dvlon
     end if
 end subroutine h3lond
+
 !
 !> @brief Evaluate Vascal for the H3_GEN_BKMP_1991 potential.
 subroutine vascal( rpass, vas, dvas )
@@ -581,11 +570,10 @@ subroutine vascal( rpass, vas, dvas )
     !  see equations [14] to [16] of truhlar/horowitz 1978 paper
     !------------------------------------------------------------------
     implicit none
-
     double precision :: a, a2, a3, a4, a5, da, ds, dvas, exp1, exp6, r, r1, r2, r3, rcu, rpass, rsq, s, vas
     integer          :: ipass, ipr
     common/pass/ipass(100)
-    dimension dvas(3),da(3),ds(3),rpass(3)
+    dimension dvas(3), da(3), ds(3), rpass(3)
     !--- Vasym values from fit632c ----------------------
     double precision, parameter :: aa1 = 0.3438222224d-02
     double precision, parameter :: aa2 = 0.1398145763d-02
@@ -602,7 +590,7 @@ subroutine vascal( rpass, vas, dvas )
     rsq = r*r
     rcu = rsq*r
     !   calculate the Vas term first (eq.14 of truhlar/horowitz)
-    call acalc(r1,r2,r3,a,da)
+    call acalc(r1, r2, r3, a, da)
     a2      = a *a
     a3      = a2*a
     a4      = a3*a
@@ -617,9 +605,10 @@ subroutine vascal( rpass, vas, dvas )
     dvas(2) = -3.d0*aa1*rsq*s*exp1 + ds(2)*exp1 -aa7*a2*exp6/rsq  + 2.d0*aa7*a*da(2)*exp6/r -aa6*aa7*a2*exp6/r
     ds(3)   = ( 2.d0*aa2*a  +3.d0*aa3*a2 +4.d0*aa4*a3 +5.d0*aa5*a4) * da(3)
     dvas(3) = -3.d0*aa1*rsq*s*exp1 + ds(3)*exp1 -aa7*a2*exp6/rsq  + 2.d0*aa7*a*da(3)*exp6/r -aa6*aa7*a2*exp6/r
-    if(ipr.gt.0) write(7,'(''    from subr.vascal:   Vas  = '',  1x,g12.6, /, ''                        dS   = '',3(1' // &
-        'x,g12.6),/, ''                        dVas = '',3(1x,g12.6))') vas,ds,dvas
+    if(ipr.gt.0) write(7, '(''    from subr.vascal:   Vas  = '',  1x,g12.6, /, ''                        dS   = '',3(1' // &
+        'x,g12.6),/, ''                        dVas = '',3(1x,g12.6))') vas, ds, dvas
 end subroutine vascal
+
 !
 !> @brief Evaluate acalc for the H3_GEN_BKMP_1991 potential.
 subroutine acalc( r1, r2, r3, a, da )
@@ -630,7 +619,6 @@ subroutine acalc( r1, r2, r3, a, da )
     !           A  = dabs[ (r1-r2)*(r2-r3)*(r3-r1) ]
     !---------------------------------------------------------------------
     implicit none
-
     double precision :: a, da, r1, r2, r3
     integer          :: ipass, ipr
     dimension da(3)
@@ -646,9 +634,10 @@ subroutine acalc( r1, r2, r3, a, da )
         da(2) = -da(2)
         da(3) = -da(3)
     end if
-    if(ipr.gt.0) write(7,'(''Acalc enter ---------------------------------------'',/, ''     A = '',f15.10,''   dA = ' // &
-        ''',3(1x,g12.6),/, ''Acalc exit ----------------------------------------'')') a,da
+    if(ipr.gt.0) write(7, '(''Acalc enter ---------------------------------------'',/, ''     A = '',f15.10,''   dA = ' // &
+        ''',3(1x,g12.6),/, ''Acalc exit ----------------------------------------'')') a, da
 end subroutine acalc
+
 !
 !> @brief Evaluate compac for the H3_GEN_BKMP_1991 potential.
 subroutine compac( r, icompc, t, dt )
@@ -659,16 +648,15 @@ subroutine compac( r, icompc, t, dt )
     !  rr value from the johnson correction.
     !-----------------------------------------------------------------
     implicit none
-
     double precision :: bot, bot2, dt, r, t, top, top2, top3
     integer          :: i, icompc, ipass
-    dimension r(3),t(3),dt(3)
+    dimension r(3), t(3), dt(3)
     common/pass/ipass(100)
     double precision, parameter :: rr = 1.15d0
     double precision, parameter :: rp = 1.25d0
     !  first see if this is a compact geometry:
     !     do i=1,3
-    do 703 i=1,3
+    do 703 i=1, 3
         t(i)  = 0.d0
         dt(i) = 0.d0
         !     end do
@@ -680,7 +668,7 @@ subroutine compac( r, icompc, t, dt )
     if(icompc.eq.0) return
     ! calculate the T(i) values:
     !     do i=1,3
-    do 704 i=1,3
+    do 704 i=1, 3
         if(r(i).lt.rr) then
             top   = rr-r(i)
             bot   = rp-r(i)
@@ -693,6 +681,7 @@ subroutine compac( r, icompc, t, dt )
         !     end do
     704 continue
 end subroutine compac
+
 !
 !> @brief Evaluate casym for the H3_GEN_BKMP_1991 potential.
 subroutine casym ( r, cas, dcas, id, t, dt )
@@ -701,14 +690,13 @@ subroutine casym ( r, cas, dcas, id, t, dt )
     !  the compact asymmetric correction term and derivatives
     !---------------------------------------------------------------
     implicit none
-
     double precision :: a, a2, cas, da, dcas, determ, dpr, dseris, dsumt, dt, dterm1, eterm, pr, pr2, pr3, r, series, sr, &
         & sr2, sr3, sumt, t, term1
     integer :: i, id, ipass, ipr
-    dimension r(3),t(3)
+    dimension r(3), t(3)
     !     dimension dPr(3),dT(3),dsumT(3),dterm1(3),determ(3),dseries(3),
-    dimension dpr(3),dt(3),dsumt(3),dterm1(3),determ(3),dseris(3), &
-        & dcas(3),da(3)
+    dimension dpr(3), dt(3), dsumt(3), dterm1(3), determ(3), dseris(3), &
+        & dcas(3), da(3)
     common/pass/ipass(100)
     !---- Casym values from fit633a
     double precision, parameter :: u1  = 0.1537481166d+00
@@ -729,7 +717,7 @@ subroutine casym ( r, cas, dcas, id, t, dt )
     dcas(1) = 0.d0
     dcas(2) = 0.d0
     dcas(3) = 0.d0
-    call acalc(r(1),r(2),r(3),a,da)
+    call acalc(r(1), r(2), r(3), a, da)
     a2 = a*a
     !     if(A.eq.0.d0) return
     sumt = t(1) + t(2) + t(3)
@@ -745,14 +733,14 @@ subroutine casym ( r, cas, dcas, id, t, dt )
     eterm  = exp(-u3*sr3)
     cas    = sumt * a2 * term1 * series * eterm
     if(ipr.gt.0) then
-        write(7,*)
-        write(7,*) 'Casym: ------------------'
-        write(7,*) ' T(i) = ',t
-        write(7,*) 'dT(i) = ',dt
-        write(7,*) ' id = ',id
-        write(7,'(''subr.Cas:   series = '',g12.6,''     term1 = '',g12.6,/, ''             eterm = '',g12.6,''      ' // &
-            'Cas  = '',g12.6)') series,term1,eterm,cas
-        write(7,*) ' Cas = ',cas
+        write(7, *)
+        write(7, *) 'Casym: ------------------'
+        write(7, *) ' T(i) = ', t
+        write(7, *) 'dT(i) = ', dt
+        write(7, *) ' id = ', id
+        write(7, '(''subr.Cas:   series = '',g12.6,''     term1 = '',g12.6,/, ''             eterm = '',g12.6,''      ' // &
+            'Cas  = '',g12.6)') series, term1, eterm, cas
+        write(7, *) ' Cas = ', cas
     end if
     !     if(id.gt.0)then {calculate the derivative as well}
     if(id.gt.0)then
@@ -760,7 +748,7 @@ subroutine casym ( r, cas, dcas, id, t, dt )
         dpr(2) = r(3)*r(1)
         dpr(3) = r(1)*r(2)
         !        do i=1,3
-        do 705 i=1,3
+        do 705 i=1, 3
             dsumt(i)  = dt(i)
             dterm1(i) = -1.d0*u1*u2*pr**(-u2-1.d0)*dpr(i)
             determ(i) = eterm *(-3.d0*u3*sr2)
@@ -778,13 +766,14 @@ subroutine casym ( r, cas, dcas, id, t, dt )
         705 continue
         if(ipr.gt.0) then
             !           write(7,7500) dPr,dt,dterm1,determ,dseries,dCas
-            write(7,'(''    derivatives: dPr = '',3(1x,g12.6),/, ''                 dT  = '',3(1x,g12.6),/, ''       ' // &
+            write(7, '(''    derivatives: dPr = '',3(1x,g12.6),/, ''                 dT  = '',3(1x,g12.6),/, ''       ' // &
                 '       dterm1 = '',3(1x,g12.6),/, ''              determ = '',3(1x,g12.6),/,  ''    ' // &
-                '          dseris = '',3(1x,g12.6),/, ''              dCas   = '',3(1x,g12.6))') dpr,dt,dterm1,determ,dseris,dcas
-            write(7,*) ' dCas = ',dcas
+                '          dseris = '',3(1x,g12.6),/, ''              dCas   = '',3(1x,g12.6))') dpr, dt, dterm1, determ, dseris, dcas
+            write(7, *) ' dCas = ', dcas
         end if
     end if
 end subroutine casym
+
 !
 !> @brief Evaluate csym for the H3_GEN_BKMP_1991 potential.
 subroutine csym( r, cal, dcal )
@@ -795,12 +784,11 @@ subroutine csym( r, cal, dcal )
     !  correction to all compact geometries
     !---------------------------------------------------------------
     implicit none
-
     double precision :: cal, dcal, dexp3, dg, exp3, g, r, ri, rpri, rpri2, rrri, rrri2, rrri3, sr, sr2, sr3, sumg, sumv, &
         & t
     integer :: i, ipass, ipr
-    dimension r(3),t(3),dcal(3),g(3)
-    dimension dg(3),sumv(3)
+    dimension r(3), t(3), dcal(3), g(3)
+    dimension dg(3), sumv(3)
     common/pass/ipass(100)
     double precision, parameter :: rr = 1.15d0
     double precision, parameter :: rp = 1.25d0
@@ -816,7 +804,7 @@ subroutine csym( r, cal, dcal )
     exp3  = exp( -v3*sr3 )
     dexp3 = -3.d0*v3*sr2*exp3
     !     do i=1,3
-    do 706 i=1,3
+    do 706 i=1, 3
         ri      = r(i)
         rrri    = rr-ri
         rrri2   = rrri*rrri
@@ -838,13 +826,14 @@ subroutine csym( r, cal, dcal )
     dcal(2) = dg(2)*exp3 + sumg*dexp3
     dcal(3) = dg(3)*exp3 + sumg*dexp3
     if(ipr.gt.0)then
-        write(7,*)
-        write(7,'(''Csym enter ----------------------------------------'',/, ''    Cal = '',1x,g20.14)') cal
-        write(7,'(''      G = '',3(1x,g12.6),/, ''     dG = '',3(1x,g12.6),/, ''   sumv = '',3(1x,g12.6),/, ''   dCal' // &
-            ' = '',3(1x,g16.10),/, ''Csym exit -----------------------------------------'')') g,dg,sumv,dcal
-        write(7,*) 'exiting subr.csym'
+        write(7, *)
+        write(7, '(''Csym enter ----------------------------------------'',/, ''    Cal = '',1x,g20.14)') cal
+        write(7, '(''      G = '',3(1x,g12.6),/, ''     dG = '',3(1x,g12.6),/, ''   sumv = '',3(1x,g12.6),/, ''   dCal' // &
+            ' = '',3(1x,g16.10),/, ''Csym exit -----------------------------------------'')') g, dg, sumv, dcal
+        write(7, *) 'exiting subr.csym'
     end if
 end subroutine csym
+
 !
 !> @brief Evaluate VbCb for the H3_GEN_BKMP_1991 potential.
 subroutine vbcb( rpass, icompc, t, dt, ipr, &
@@ -862,7 +851,6 @@ subroutine vbcb( rpass, icompc, t, dt, ipr, &
     !   B1b = 1 - sum of [ P3(cos(theta(i))) ]
     !--------------------------------------------------------------
     implicit none
-
     double precision :: aasum, asum, b1, b12, b13, b14, b15, b1a, b1b, b2, b3, b3b, bsum, c1, c1cube, c2, c2cube, c3, &
         & c3cube, cb, cbnda, cbndb, cbnds, cos3t1, cos3t2, cos3t3, csum, cx1, d1, d2, d3, daasum, dasum, db1a, db1b, db2, &
         & db3, dbsum, dc1dr1, dc1dr2, dc1dr3, dc2dr1, dc2dr2, dc2dr3, dc3dr1, dc3dr2, dc3dr3, dcb1, dcb2, dcb3, dcb4, &
@@ -872,20 +860,20 @@ subroutine vbcb( rpass, icompc, t, dt, ipr, &
         & vbndb
     integer :: icompc, ipr
     !    arrays required for B1,B2,B3 calculations:
-    dimension rpass(3),db1a(3),db1b(3),th(3), &
-        & db2(3),db3(6)
+    dimension rpass(3), db1a(3), db1b(3), th(3), &
+        & db2(3), db3(6)
     !    arrays required for Vbend calculations:
-    dimension dvbnda(3),dvbndb(3)
-    dimension dvb1(3),dvb2(3),dvb3(3),dvb4(3),dvb5(3),dvbnd(3)
+    dimension dvbnda(3), dvbndb(3)
+    dimension dvb1(3), dvb2(3), dvb3(3), dvb4(3), dvb5(3), dvbnd(3)
     dimension vbnd(2)
     dimension vb(2,25)
     !     dimension vb(2,25)   {passed out for debugging only}
     !    arrays required for Cbend calculations:
-    dimension cbnds(2),dcbnds(2,3)
-    dimension dcb1(3),dcb2(3),dcb3(3),dcb4(3),dcb5(3),dcb6(3), &
-        & dcb7(3),dcb8(3)
-    dimension t(3),dp(3)
-    dimension dt(3),dcbnda(3),dcbndb(3)
+    dimension cbnds(2), dcbnds(2,3)
+    dimension dcb1(3), dcb2(3), dcb3(3), dcb4(3), dcb5(3), dcb6(3), &
+        & dcb7(3), dcb8(3)
+    dimension t(3), dp(3)
+    dimension dt(3), dcbnda(3), dcbndb(3)
     !     dimension cb(2,25)   {passed out for debugging only}
     dimension cb(2,25)
     !     parameter( z58=0.625d0, z38=0.375d0 )  {3/8 and 5/8}
@@ -1426,4 +1414,5 @@ subroutine vbcb( rpass, icompc, t, dt, ipr, &
     !d        write(7,*)
     !d     end if
 end subroutine vbcb
+
 !

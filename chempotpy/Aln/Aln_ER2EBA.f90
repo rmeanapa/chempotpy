@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2EBA potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Extended Rydberg plus Extended Bond Angle
     !   Common name:                   ER2+EBA
@@ -62,16 +59,14 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms
 
     implicit none
-
     double precision :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, &
         & bu2b, c, co, cob, de, deb, dx, dy, dz, e2, ee, eeb, fu2, poly, polyb, r, re, reb, rho, &
         & rhob, rij, ril, rlj, rr, s, sij, sil, slj, term, v, x, xk1, xk2, xk3, y, z
     integer :: i, j, l, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom),c(10)
-    dimension fu2(maxatom,maxatom),r(maxatom,maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom), c(10)
+    dimension fu2(maxatom,maxatom), r(maxatom,maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-
     de  = 1.71013678553981441/autoev
     re  = 5.08182706399609163
     a1  = 1.24074255007327805
@@ -92,10 +87,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
     bu2b = 6.5d0/autoang
     au23 = 1.19960918417195894
 
-    do 3 i=1,natom
+    do 3 i=1, natom
         r(i,i)   = 0.d0
         fu2(i,i) = 1.d0
-        do 3 j=i+1,natom
+        do 3 j=i+1, natom
             dx       = x(i)-x(j)
             dy       = y(i)-y(j)
             dz       = z(i)-z(j)
@@ -106,9 +101,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
     3 continue
 
     ! do BA term, needs xk1,xk2,xk3
-    do 10 i=1,natom                          ! alpha loop
+    do 10 i=1, natom                          ! alpha loop
         sil = 0.d0
-        do 11 l=1,natom                      ! gamma loop
+        do 11 l=1, natom                      ! gamma loop
             if(l.eq.i) go to 11                  ! gamma != alpha
             ril = r(i,l)
             if(ril.ge.bu2) go to 11              ! cutoff for Ralpha,gamma
@@ -117,9 +112,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
             sil  = sil+term                         ! sum
         11 continue
 
-        do 15 j=i+1,natom                      ! beta loop
+        do 15 j=i+1, natom                      ! beta loop
             slj = 0.d0
-            do 12 l=1,natom                      ! delta loop
+            do 12 l=1, natom                      ! delta loop
                 if(l.eq.j) go to 12                  ! delta != beta
                 rlj = r(l,j)
                 if(rlj.ge.bu2) go to 12              ! cutoff for Rbeta,delta
@@ -150,8 +145,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     ! potential, includes cutoff
     v = 0.d0
-    do 1 i=1,natom
-        do 1 j=i+1,natom
+    do 1 i=1, natom
+        do 1 j=i+1, natom
             dx    = x(i)-x(j)
             dy    = y(i)-y(j)
             dz    = z(i)-z(j)

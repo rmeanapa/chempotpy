@@ -2,7 +2,6 @@ module zmasses
     implicit none
     private
     public :: zmass1, zmass2
-
     double precision :: zmass1, zmass2
 end module
 
@@ -11,35 +10,30 @@ end module
 subroutine pot( rvp, evp, dvp )
     use zmasses, only: zmass1, zmass2
     implicit none
-
     double precision, intent(in)  :: rvp(3)
     double precision, intent(out) :: evp, dvp(3)
     integer                       :: icase, info, i
-    double precision              :: r1x,r2x,r3x, ecci
-    double precision              :: dcci(3),d1(3),d2(3),d3(3)
+    double precision              :: r1x, r2x, r3x, ecci
+    double precision              :: dcci(3), d1(3), d2(3), d3(3)
     double precision              :: xmh, xmd, xmminv(3,3), amat(3), t
-    double precision              :: e1,e2,e3,emat(3), ezero, hatom_bodc,xmin
+    double precision              :: e1, e2, e3, emat(3), ezero, hatom_bodc, xmin
     double precision              :: twobzero=-17.5988842162493135d0  ! lowest H2 2body bodc
-    double precision              :: ccishift= 0.1744759989649372d0,ezero2
+    double precision              :: ccishift= 0.1744759989649372d0, ezero2
     double precision              :: towave=219474.7d0  ! hartree to cm-1 conversion
-
-    double precision :: xmass1=1836.15264d0, xmass2=1836.15264d0, &
+    double precision              :: xmass1=1836.15264d0, xmass2=1836.15264d0, &
         &                    xmass3=1836.15264d0
     save xmh, xmd, xmass1, xmass2, xmass3, icase, xmminv, ezero, &
         &     towave
-
     !     write(6,*)present(newmasses)
     !     if(present(newmasses))then
     !       xmass1=newmasses(1)
     !       xmass2=newmasses(2)
     !       xmass3=newmasses(3)
     !     endif
-
     !    We need to zero the PES with respect to one arrangement
     !    If only one mass is distinct, choose the target mass as that, otherwise choose
     !    the lightest particle.  If another choice is desired, add appropriate assignment
     !    statements here
-
     if(xmass1.eq.xmass2)then
         zmass1 = xmass1
         zmass2 = xmass2
@@ -50,20 +44,20 @@ subroutine pot( rvp, evp, dvp )
         zmass1 = xmass2
         zmass2 = xmass3
     else
-        zmass1 = max(xmass1,xmass2,xmass3)
+        zmass1 = max(xmass1, xmass2, xmass3)
         if(xmass1.lt.zmass1)then
-            zmass2 = max(xmass1,min(xmass2,xmass3))
+            zmass2 = max(xmass1, min(xmass2, xmass3))
         else
-            zmass2 = max(xmass2,xmass3)
-        endif
-    endif
+            zmass2 = max(xmass2, xmass3)
+        end if
+    end if
 
     xmh        = 1836.15264d0   ! H nuclear mass (after substracting 1 for electron mass)
     xmd        = 3670.48293d0   ! D nuclear mass (after substracting 1 for electron mass)
     hatom_bodc = 59.6818d0  ! the BODC in cm-1 of H with an aug-cc-pVTZ basis set
 
     ezero = hatom_bodc*xmh*(1d0/xmass1+1d0/xmass2+1d0/xmass3)
-    call golden(1.3d0,1.4d0,1.5d0,1.d-14,xmin,ezero2)
+    call golden(1.3d0, 1.4d0, 1.5d0, 1.d-14, xmin, ezero2)
 
     ezero = ezero/towave+ezero2+ccishift
 
@@ -78,7 +72,7 @@ else
     xmminv(1,1) = t
     xmminv(2,2) = t
     xmminv(3,3) = t
-    endif
+    end if
 
     call prepotcbs
     call prepot_leps
@@ -92,35 +86,35 @@ else
     r1x = rvp(1)
     r3x = rvp(2)
     r2x = rvp(3)
-    call potcbs(r1x,r2x,r3x,ecci,dcci)
+    call potcbs(r1x, r2x, r3x, ecci, dcci)
 
-    call potbodcdh2(r1x,r2x,r3x,e1,d1)
+    call potbodcdh2(r1x, r2x, r3x, e1, d1)
 
     if(icase.eq.1)then
         evp    = e1 - ezero
         dvp(:) = d1(:)
     else
-        call potbodcdh2(r1x,r3x,r2x,e2,d2)
+        call potbodcdh2(r1x, r3x, r2x, e2, d2)
         t     = d2(2)
         d2(2) = d2(3)
         d2(3) = t
-        call potbodcdh2(r3x,r2x,r1x,e3,d3)
+        call potbodcdh2(r3x, r2x, r1x, e3, d3)
         t       = d3(1)
         d3(1)   = d3(3)
         d3(3)   = t
         emat(1) = e1
         emat(2) = e2
         emat(3) = e3
-        amat(:) = matmul(xmminv,emat)
+        amat(:) = matmul(xmminv, emat)
         evp     = amat(1)/xmass1+amat(2)/xmass2+amat(3)/xmass3 - ezero
-        do i =1,3
+        do i =1, 3
             emat(1) = d1(i)
             emat(2) = d2(i)
             emat(3) = d3(i)
-            amat(:) = matmul(xmminv,emat)
+            amat(:) = matmul(xmminv, emat)
             dvp(i)  = amat(1)/xmass1+amat(2)/xmass2+amat(3)/xmass3
-        enddo
-    endif
+        end do
+    end if
 
     evp    = evp/towave+ecci-ezero
     dvp(1) = dvp(1)/towave+dcci(1)
@@ -133,32 +127,29 @@ end
 !> @brief Evaluate prepotbodcdh2.
 subroutine prepotbodcdh2
     implicit none
-
     save
-
-    integer,parameter :: n2 = 5000
-    common /indy2/iind(n2),jind(n2),kind(n2),ipar(n2),maxi,maxi2
-    integer          :: iind,jind,kind,ipar  ! arrays of length n2
+    integer, parameter :: n2 = 5000
+    common /indy2/iind(n2), jind(n2), kind(n2), ipar(n2), maxi, maxi2
+    integer          :: iind, jind, kind, ipar  ! arrays of length n2
     integer          :: ii, it, maxi, maxi2, maxi2a, i
     double precision :: r1x, r2x, r3x, rho1, rho2, rho3, eee, dv(1:3)
     double precision :: drho1, drho2, drho3
     double precision :: e1body, xmd, xmh, hatom_bodc, bodc2body
     double precision :: round, ald, betad, beta, deldamp, rhodamp
     double precision :: bb2, bb3, bb4, bb5, v, rnought, towave
-    double precision :: xma, xmb, xmc, v1, v2, gtot, rsum,&
+    double precision :: xma, xmb, xmc, v1, v2, gtot, rsum, &
         &                    betadsum, rdampsum, v3c
     double precision :: sum1, sum2, sum3, sum4, sum5, rprod
-    double precision :: bigq, slit, slitsq, damper, rpass(3),&
+    double precision :: bigq, slit, slitsq, damper, rpass(3), &
         &                    sdamp, rdamp1, rdamp2, rdamp3
     double precision :: slit1, slit2, slit3, ddamper(1:3), dsdamp
-    double precision :: dgtot(1:3),dbb2(1:3),dbb3(1:3)
+    double precision :: dgtot(1:3), dbb2(1:3), dbb3(1:3)
     double precision :: dv1, dv2, dv3
     double precision :: dsum1(1:3), dsum2(1:3), dsum3(1:3)
-    double precision :: rho1t(0:13),rho2t(0:13),rho3t(0:13)
-    double precision :: drho1t(0:13),drho2t(0:13),drho3t(0:13)
+    double precision :: rho1t(0:13), rho2t(0:13), rho3t(0:13)
+    double precision :: drho1t(0:13), drho2t(0:13), drho3t(0:13)
     double precision :: drprod1, drprod2, drprod3
     double precision :: xlin1(180), xlin2(180), xlin3(180)
-
     xlin1(1)   = 2.451839720665176d+02
     xlin1(2)   = -3.023514674602468d+02
     xlin1(3)   = -3.643179260300581d+02
@@ -720,11 +711,11 @@ subroutine prepotbodcdh2
     rnought  = 2.0d0
     maxi2    = 0
     maxi     = 0
-    call indexa2(11,11)
+    call indexa2(11, 11)
     maxi2a = maxi2
     return
 
-    entry potbodcdh2(r1x,r2x,r3x,eee,dv)
+    entry potbodcdh2(r1x, r2x, r3x, eee, dv)
 
     rsum = r1x+r2x+r3x
     if((r1x.le.betad).or.(r2x.le.betad).or.(r3x.le.betad)&
@@ -755,21 +746,21 @@ else
             & (betadsum-rsum)+rdamp2/(betad-r2x))
         ddamper(3)=damper*(-dsdamp*slit*r3x* (4.0d0*(r1x*r1x+r2x*r2x-2.0d0*r3x*r3x)/slit3+2.0d0/bigq) +rdampsum/ &
             & (betadsum-rsum)+rdamp3/(betad-r3x))
-    endif
-    endif
+    end if
+    end if
 
     rpass(1) = r1x
     rpass(3) = r2x
     rpass(2) = r3x
-    call leps(rpass,v1,v2,xma,xmb,xmc,gtot,dgtot)
+    call leps(rpass, v1, v2, xma, xmb, xmc, gtot, dgtot)
     sum1     = dgtot(2)
     dgtot(2) = dgtot(3)
     dgtot(3) = sum1
 
     bb2 = towave*gtot
-    do i = 1,3
+    do i = 1, 3
         dbb2(i) = towave*dgtot(i)
-    enddo
+    end do
     bb3     = sqrt(round+(r1x-r3x)**2+(r1x-r2x)**2+(r2x-r3x)**2)
     dbb3(1) = (2.0d0*r1x-r2x-r3x)/bb3
     dbb3(2) = (2.0d0*r2x-r1x-r3x)/bb3
@@ -777,7 +768,7 @@ else
 
     e1body = (2.d0 + xmh/xmd) * hatom_bodc
 
-    v = e1body + ((xmd+xmh)/(2.d0*xmd))*(bodc2body(r1x,dv1) +bodc2body(r2x,dv2)) + bodc2body(r3x,dv3)
+    v = e1body + ((xmd+xmh)/(2.d0*xmd))*(bodc2body(r1x, dv1) +bodc2body(r2x, dv2)) + bodc2body(r3x, dv3)
 
     dv(1) = ((xmd+xmh)/(2.d0*xmd))*dv1
     dv(2) = ((xmd+xmh)/(2.d0*xmd))*dv2
@@ -804,7 +795,7 @@ else
     rho2t(0) = 1.d0
     rho3t(0) = 1.d0
 
-    do it=1,13
+    do it=1, 13
         rho1t(it) = rho1t(it-1)*rho1
         rho2t(it) = rho2t(it-1)*rho2
         rho3t(it) = rho3t(it-1)*rho3
@@ -812,9 +803,9 @@ else
         drho1t(it) = it*rho1t(it-1)*drho1
         drho2t(it) = it*rho2t(it-1)*drho2
         drho3t(it) = it*rho3t(it-1)*drho3
-    enddo
+    end do
 
-    do ii=1,maxi2a
+    do ii=1, maxi2a
         rprod = rho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
         sum1  = sum1+xlin1(ipar(ii))*rprod
         sum2  = sum2+xlin2(ipar(ii))*rprod
@@ -832,21 +823,20 @@ else
         dsum3(1) = dsum3(1)+xlin3(ipar(ii))*drprod1
         dsum3(2) = dsum3(2)+xlin3(ipar(ii))*drprod2
         dsum3(3) = dsum3(3)+xlin3(ipar(ii))*drprod3
-    enddo
+    end do
 
     v3c = sum1+sum2*bb2+sum3*bb3
     eee = v+damper*v3c
 
-    do i = 1,3
+    do i = 1, 3
         dv(i) = dv(i) +ddamper(i)*v3c +damper*(sum2*dbb2(i)+sum3*dbb3(i) +dsum1(i)+dsum2(i)*bb2+dsum3(i)*bb3)
-    enddo
+    end do
 
 end
 
 !> @brief Evaluate bodc2body.
 double precision function bodc2body( r1x, dv )
     implicit none
-
     double precision :: xlp(14), beta, re, v, r1x, dv, t
     integer          :: j, indx
     !
@@ -873,11 +863,11 @@ double precision function bodc2body( r1x, dv )
     v    = xlp(14)
     dv   = -beta*xlp(14)
     indx = 14
-    do j=2,14
+    do j=2, 14
         indx = indx-1
         v    = v*(r1x-re)+xlp(indx)
         dv   = dv*(r1x-re)+indx*xlp(indx+1)-beta*xlp(indx)
-    enddo
+    end do
     t         = exp(-beta*(r1x-re))
     v         = v*t
     dv        = dv*t
@@ -888,16 +878,15 @@ end
 !> @brief Evaluate indexa2.
 subroutine indexa2( mbig, mtop )
     implicit none
-
     integer            :: mbig, mtop, iind, jind, kind, ipar, maxi, maxi2
-    integer            :: l,l2,i,j,k,isum
+    integer            :: l, l2, i, j, k, isum
     integer, parameter :: n2 = 5000
-    common /indy2/iind(n2),jind(n2),kind(n2),ipar(n2),maxi,maxi2
+    common /indy2/iind(n2), jind(n2), kind(n2), ipar(n2), maxi, maxi2
     l  = 0
     l2 = 0
-    do 10 i=0,min(mtop,mbig)
-        do 20 j=0,min(mtop,mbig)
-            do 30 k=j,min(mtop,mbig)
+    do 10 i=0, min(mtop, mbig)
+        do 20 j=0, min(mtop, mbig)
+            do 30 k=j, min(mtop, mbig)
                 isum = i+j+k
                 if(isum.le.mbig)then
                     if(((isum-i).gt.0).and.((isum-j).gt.0).and.&
@@ -914,9 +903,9 @@ subroutine indexa2( mbig, mtop )
                         iind(l) = i
                         jind(l) = k
                         kind(l) = j
-                    endif
-                endif
-                endif
+                    end if
+                end if
+                end if
             30 continue
         20 continue
     10 continue
@@ -931,12 +920,10 @@ subroutine prepot_leps
     !       potential parameters are read in PREPOT
     !
     implicit none
-
     integer          :: i
-    double precision :: d(3),re(3),beta(3),sato(3),rt3
-    common /lepscm/  d,re,beta,sato,rt3
+    double precision :: d(3), re(3), beta(3), sato(3), rt3
+    common /lepscm/  d, re, beta, sato, rt3
     save
-
     d(:)    = 109.4583d0
     re(:)   = .7412871d0
     beta(:) = 1.973536d0
@@ -945,7 +932,7 @@ subroutine prepot_leps
 
     ! Convert to atomic units
 
-    do i = 1,3
+    do i = 1, 3
         d(i)    = d(i)/627.509552d0
         re(i)   = re(i)/0.52917725d0
         beta(i) = beta(i)*0.52917725d0
@@ -967,21 +954,19 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     !      from each atom
     !
     implicit none
-
-    integer          :: i,j
-    double precision :: r(3),v1,v2,xma,xmb,xmc,gtot,dgtot(3)
-    double precision :: ex,vs(3),vt(3),dvs(3),dvt(3)
-    double precision :: h11,h12,h22,hsum,hdif,dhdif(3),rad,delh
-    double precision :: f12(3),cos1,cos2,cos3,ga,gb,gc
-    double precision :: d2vs(3),d2vt(3),dh11(3),dh12(3),dh22(3)
-    double precision :: d2h12(3),d2hdif(3),drad(3),df12(3,3)
-    double precision :: dcos1(3),dcos2(3),dcos3(3)
-
-    double precision :: d(3),re(3),beta(3),sato(3),rt3
-    common /lepscm/  d,re,beta,sato,rt3
+    integer          :: i, j
+    double precision :: r(3), v1, v2, xma, xmb, xmc, gtot, dgtot(3)
+    double precision :: ex, vs(3), vt(3), dvs(3), dvt(3)
+    double precision :: h11, h12, h22, hsum, hdif, dhdif(3), rad, delh
+    double precision :: f12(3), cos1, cos2, cos3, ga, gb, gc
+    double precision :: d2vs(3), d2vt(3), dh11(3), dh12(3), dh22(3)
+    double precision :: d2h12(3), d2hdif(3), drad(3), df12(3,3)
+    double precision :: dcos1(3), dcos2(3), dcos3(3)
+    double precision :: d(3), re(3), beta(3), sato(3), rt3
+    common /lepscm/  d, re, beta, sato, rt3
     !
     ! Compute single and triplet diatomic potentials
-    do i = 1,3
+    do i = 1, 3
         ex      = exp(-beta(i)*(r(i)-re(i)))
         vs(i)   = d(i)*(ex - 2.0d0)*ex
         dvs(i)  = -2.0d0*d(i)*beta(i)*(ex-1.0d0)*ex
@@ -1038,16 +1023,16 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
 
     ! Calculate matrix elements of d/dRi; note that at conical intersection f12
     !   diverges, but is set to zero in the code.
-    do i = 1,3
+    do i = 1, 3
         f12(i) = 0.25d0*(h12*dhdif(i) - hdif*dh12(i))
         if (rad.ne.0.0d0) then
             f12(i) = f12(i)/rad
-            do j = 1,3
+            do j = 1, 3
                 df12(i,j) = (0.25d0*(dh12(j)*dhdif(i)-dhdif(j)*dh12(i)) -f12(i)*drad(j))/rad
-            enddo
+            end do
             df12(i,i) = df12(i,i) + 0.25d0*(h12*d2hdif(i)-hdif*d2h12(i))/rad
-        endif
-    enddo
+        end if
+    end do
 
     !
     ! Calculate diagonal matrix element of kinetic energy operator
@@ -1070,47 +1055,44 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     dcos3(2) = 1.0d0/r(1) - cos3/r(2)
     dcos3(3) = -r(3)/(r(1)*r(2))
 
-    do i = 1,3
+    do i = 1, 3
         ! contribution from ga
-        dgtot(i) = (f12(1)*(df12(1,i) + dcos2(i)*f12(3) + cos2*df12(3,i)) + cos2*df12(1,i)*f12(3) + f12(3)*df12(3,i))/ &
-            & xma
+        dgtot(i) = (f12(1)*(df12(1,i) + dcos2(i)*f12(3) + cos2*df12(3,i)) + cos2*df12(1,i)*f12(3) + f12(3)*df12(3, &
+            & i))/ xma
         ! contribution from ga
         dgtot(i) = dgtot(i) + (f12(1)*(df12(1,i) + dcos3(i)*f12(2) + cos3*df12(2,i)) + cos3*df12(1,i)*f12(2) + f12(2)* &
             & df12(2,i))/xmb
         ! contribution from ga
         dgtot(i) = dgtot(i) + (f12(2)*(df12(2,i) + dcos1(i)*f12(3) + cos1*df12(3,i)) + cos1*df12(2,i)*f12(3) + f12(3)* &
             & df12(3,i))/xmc
-    enddo
+    end do
 
 end
 
 !> @brief Evaluate prepotcbs.
 subroutine prepotcbs
     implicit none
-
     integer :: iind, jind, kind, ipar, maxi, maxi2
-    integer :: maxi2a,maxi2b,ii,i,it
+    integer :: maxi2a, maxi2b, ii, i, it
     save
     integer, parameter :: n2 = 5000
-    common /indy/iind(n2),jind(n2),kind(n2),ipar(n2),maxi,maxi2
-
-    double precision :: epslon,epscem,ald,betad
-    double precision :: r1x,r2x,r3x,eee,dv(3)
-    double precision :: etrip1,etrip2,etrip3,detrip1,detrip2,detrip3
-    double precision :: es1,es2,es3,des1,des2,des3
-    double precision :: q1,q2,q3,xj1,xj2,xj3,xj,vlondon
-    double precision :: dq1,dq2,dq3,dxj1,dxj2,dxj3,dvlon(3)
-    double precision :: damper,ddamp(3),rdamp1,rdamp2,rdamp3
-    double precision :: bb,dbb(3),warp,dwarp(3),rho1,rho2,rho3
-    double precision :: rho1t(0:12),rho2t(0:12),rho3t(0:12)
-    double precision :: sum1,sum2,sum3,sum4
-    double precision :: dsum1(3),dsum2(3),dsum3(3),dsum4(3)
-    double precision :: rprod,t1,v3c
+    common /indy/iind(n2), jind(n2), kind(n2), ipar(n2), maxi, maxi2
+    double precision :: epslon, epscem, ald, betad
+    double precision :: r1x, r2x, r3x, eee, dv(3)
+    double precision :: etrip1, etrip2, etrip3, detrip1, detrip2, detrip3
+    double precision :: es1, es2, es3, des1, des2, des3
+    double precision :: q1, q2, q3, xj1, xj2, xj3, xj, vlondon
+    double precision :: dq1, dq2, dq3, dxj1, dxj2, dxj3, dvlon(3)
+    double precision :: damper, ddamp(3), rdamp1, rdamp2, rdamp3
+    double precision :: bb, dbb(3), warp, dwarp(3), rho1, rho2, rho3
+    double precision :: rho1t(0:12), rho2t(0:12), rho3t(0:12)
+    double precision :: sum1, sum2, sum3, sum4
+    double precision :: dsum1(3), dsum2(3), dsum3(3), dsum4(3)
+    double precision :: rprod, t1, v3c
     double precision :: eshift= 0.1744759989649372d0
     double precision :: beta=0.9246250191375499d0
     double precision :: rnought=2.d0
     double precision :: xlin1(89), xlin2(89), xlin3(71), xlin4(71)
-
     xlin1(1)  = -0.1682626669809615d0
     xlin1(2)  = 1.697952225005269d0
     xlin1(3)  = 3.959367441888326d0
@@ -1439,22 +1421,22 @@ subroutine prepotcbs
 
     maxi2 = 0
     maxi  = 0
-    call indexa3(12,12)
+    call indexa3(12, 12)
     maxi2a = maxi2
 
     maxi = 0
-    call indexa3(11,11)
+    call indexa3(11, 11)
     maxi2b = maxi2-maxi2a
     return
 
-    entry potcbs(r1x,r2x,r3x,eee,dv)
+    entry potcbs(r1x, r2x, r3x, eee, dv)
 
-    call trip(r1x,etrip1,detrip1)
-    call trip(r2x,etrip2,detrip2)
-    call trip(r3x,etrip3,detrip3)
-    call singlet(r1x,es1,des1)
-    call singlet(r2x,es2,des2)
-    call singlet(r3x,es3,des3)
+    call trip(r1x, etrip1, detrip1)
+    call trip(r2x, etrip2, detrip2)
+    call trip(r3x, etrip3, detrip3)
+    call singlet(r1x, es1, des1)
+    call singlet(r2x, es2, des2)
+    call singlet(r3x, es3, des3)
 
     q1       = 0.5d0*(es1+etrip1)
     q2       = 0.5d0*(es2+etrip2)
@@ -1487,7 +1469,7 @@ subroutine prepotcbs
         ddamp(1) = rdamp1/(betad-r1x)
         ddamp(2) = rdamp2/(betad-r2x)
         ddamp(3) = rdamp3/(betad-r3x)
-    endif
+    end if
 
     bb     = sqrt(epscem+(r1x-r3x)**2+(r1x-r2x)**2+(r2x-r3x)**2)
     dbb(1) = (2.d0*r1x-r2x-r3x)/bb
@@ -1505,24 +1487,24 @@ subroutine prepotcbs
     rho1t(0) = 1.d0
     rho2t(0) = 1.d0
     rho3t(0) = 1.d0
-    do it=1,12
+    do it=1, 12
         rho1t(it) = rho1t(it-1)*rho1
         rho2t(it) = rho2t(it-1)*rho2
         rho3t(it) = rho3t(it-1)*rho3
-    enddo
+    end do
 
     sum1 = 0.d0
     sum2 = 0.d0
     sum3 = 0.d0
     sum4 = 0.d0
-    do i = 1,3
+    do i = 1, 3
         dsum1(i) = 0.d0
         dsum2(i) = 0.d0
         dsum3(i) = 0.d0
         dsum4(i) = 0.d0
-    enddo
+    end do
 
-    do ii=1,maxi2a
+    do ii=1, maxi2a
         rprod    = rho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
         t1       = xlin1(ipar(ii))*rprod
         sum1     = sum1+t1
@@ -1534,9 +1516,9 @@ subroutine prepotcbs
         dsum2(1) = dsum2(1)-beta*kind(ii)*t1
         dsum2(2) = dsum2(2)-beta*jind(ii)*t1
         dsum2(3) = dsum2(3)-beta*iind(ii)*t1
-    enddo
+    end do
 
-    do ii=maxi2a+1,maxi2a+maxi2b
+    do ii=maxi2a+1, maxi2a+maxi2b
         rprod    = rho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
         t1       = xlin3(ipar(ii))*rprod
         sum3     = sum3+t1
@@ -1548,34 +1530,32 @@ subroutine prepotcbs
         dsum4(1) = dsum4(1)-beta*kind(ii)*t1
         dsum4(2) = dsum4(2)-beta*jind(ii)*t1
         dsum4(3) = dsum4(3)-beta*iind(ii)*t1
-    enddo
+    end do
 
     v3c = damper*(sum1+sum2*bb+warp*(sum3+sum4*bb))
     eee = vlondon+v3c+eshift
 
-    do i = 1,3
+    do i = 1, 3
         dv(i)=dvlon(i) +ddamp(i)*v3c +damper*(dsum1(i)+dbb(i)*(sum2+warp*sum4)+bb*dsum2(i) +dwarp(i)*(sum3+bb*sum4)+ &
             & warp*(dsum3(i)+bb*dsum4(i)))
-    enddo
+    end do
 
 end
 
 !> @brief Evaluate indexa3.
 subroutine indexa3( mbig, mtop )
     implicit none
-
-    integer            :: mbig,mtop
+    integer            :: mbig, mtop
     integer            :: iind, jind, kind, ipar, maxi, maxi2
-    integer            :: l,l2,i,j,k,isum
+    integer            :: l, l2, i, j, k, isum
     integer, parameter :: n2 = 5000
-    common /indy/iind(n2),jind(n2),kind(n2),ipar(n2),maxi,maxi2
-
+    common /indy/iind(n2), jind(n2), kind(n2), ipar(n2), maxi, maxi2
     l  = maxi2
     l2 = maxi
 
-    do  i=0,min(mtop,mbig)
-        do  j=i,min(mtop,mbig)
-            do  k=j,min(mtop,mbig)
+    do  i=0, min(mtop, mbig)
+        do  j=i, min(mtop, mbig)
+            do  k=j, min(mtop, mbig)
                 isum = i+j+k
                 if(isum.le.mbig)then
                     if(((isum-i).gt.0).and.((isum-j).gt.0).and.&
@@ -1624,7 +1604,7 @@ subroutine indexa3( mbig, mtop )
                             iind(l) = j
                             jind(l) = k
                             kind(l) = i
-                        endif
+                        end if
                     elseif (j.ne.k)then
                         l       = l+1
                         ipar(l) = l2
@@ -1636,12 +1616,12 @@ subroutine indexa3( mbig, mtop )
                         iind(l) = k
                         jind(l) = j
                         kind(l) = i
-                    endif
-                endif
-                endif
-            enddo
-        enddo
-    enddo
+                    end if
+                end if
+                end if
+            end do
+        end do
+    end do
     maxi  = l2
     maxi2 = l
 end
@@ -1649,16 +1629,14 @@ end
 !> @brief Evaluate trip.
 subroutine trip( r, v, dv )
     implicit none
-
     integer          :: j
-    double precision :: r,v,dv,t0,t1,t2,vlr,dvlr,vsr,dvsr
-    double precision :: damp,xd,xd2,prefac
+    double precision :: r, v, dv, t0, t1, t2, vlr, dvlr, vsr, dvsr
+    double precision :: damp, xd, xd2, prefac
     double precision :: c6=-6.499027d0
     double precision :: c8=-124.3991d0
     double precision :: c10=-3285.828d0
     double precision :: beta=0.2d0
     double precision :: re=1.401d0
-
     double precision :: alpha=4.342902497495857d0
     double precision :: xlp(17)
     xlp(1)  = 2.190254292077946d-1
@@ -1688,16 +1666,16 @@ subroutine trip( r, v, dv )
         dvsr = 0.0
         t1   = 1.0d0
         t2   = 0.0d0
-        do j=1,17
+        do j=1, 17
             vsr  = vsr+xlp(j)*t1*prefac
             dvsr = dvsr+(j-1)*xlp(j)*t2*prefac
             t2   = t1
             t1   = t1*t0
-        enddo
+        end do
     else
         vsr  = xlp(1)*prefac
         dvsr = xlp(2)*prefac
-    endif
+    end if
     dvsr = dvsr-alpha*vsr
 
     t1   = r*r
@@ -1716,9 +1694,8 @@ end
 !> @brief Evaluate singlet.
 subroutine singlet( r, v, dv )
     implicit none
-
     integer          :: j
-    double precision :: r,v,dv,t0,t1,t2,vsr,damp,xd,xd2,prefac
+    double precision :: r, v, dv, t0, t1, t2, vsr, damp, xd, xd2, prefac
     double precision :: c6=-6.499027d0
     double precision :: c8=-124.3991d0
     double precision :: c10=-3285.828d0
@@ -1757,16 +1734,16 @@ subroutine singlet( r, v, dv )
     if((r-re).ne.0.d0)then
         t1 = 1.0d0
         t2 = 0.0d0
-        do j=1,17
+        do j=1, 17
             vsr = vsr+xlp(j)*t1*prefac
             dv  = dv+(j-1)*xlp(j)*t2*prefac
             t2  = t1
             t1  = t1*t0
-        enddo
+        end do
     else
         vsr = xlp(1)*prefac
         dv  = dv+xlp(2)*prefac
-    endif
+    end if
     v  = v+vsr
     dv = dv-alpha*vsr
 
@@ -1775,26 +1752,23 @@ end
 !> @brief Evaluate golden.
 subroutine golden( ax, bx, cx, tol, xmin, fval )
     implicit none
-
     external fcn
-
     double precision, parameter :: r = 0.61803399d0, c = 1d0-r
     double precision            :: f1, f2, x0, x1, x2, x3, tol
     double precision            :: fval, xmin, bx, ax, cx, fcn
     double precision            :: fa, fb, fc
     integer                     :: icount
     integer, parameter          :: maxcount = 5000
-
     fa = fcn(ax)
     fb = fcn(bx)
     fc = fcn(cx)
     if((fb.ge.fa).or.(fb.ge.fc)) then
-        write(6,*)'bracketing error in golden'
-        write(6,*)ax,fa
-        write(6,*)bx,fb
-        write(6,*)cx,fc
+        write(6, *)'bracketing error in golden'
+        write(6, *)ax, fa
+        write(6, *)bx, fb
+        write(6, *)cx, fc
         stop
-    endif
+    end if
 
     x0 = ax
     x3 = cx
@@ -1809,7 +1783,7 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
         f2 = fb
         x1 = bx-c*(bx-ax)
         f1 = fcn(x1)
-    endif
+    end if
 
     icount = 0
 
@@ -1818,9 +1792,9 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
 
         icount = icount+1
         if(icount.ge.maxcount)then
-            write(6,*)'too many evaluations in golden'
+            write(6, *)'too many evaluations in golden'
             stop
-        endif
+        end if
 
         if(f2.lt.f1)then
             x0 = x1
@@ -1834,8 +1808,8 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
             x1 = r*x2+c*x0
             f2 = f1
             f1 = fcn(x1)
-        endif
-    enddo
+        end if
+    end do
 
     if(f1.lt.f2)then
         fval = f1
@@ -1843,7 +1817,7 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
     else
         fval = f2
         xmin = x2
-    endif
+    end if
 
 end
 
@@ -1851,96 +1825,84 @@ end
 double precision function fcn( x )
     use zmasses, only: zmass1, zmass2
     implicit none
-
     double precision :: x, e, bodc2body, v, dv, towave, xmh, massfact
     !      Evaluates the Born-Huang energy of an isomer of H2 with masses of zmass1 and zmass2
     xmh      = 1836.15264d0   ! H nuclear mass (after substracting 1 for electron mass)
     massfact = 0.5d0*xmh*(zmass1+zmass2)/(zmass1*zmass2)
     towave   = 219474.7d0
-    call singlet(x,v,dv)
-    fcn = massfact*bodc2body(x,dv)/towave+v
+    call singlet(x, v, dv)
+    fcn = massfact*bodc2body(x, dv)/towave+v
 end
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, p, g, d )
-
+    use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
     implicit none
-
     ! number of electronic state
-    integer, parameter  :: nstates = 1
-    integer, parameter  :: natoms  = 3
-    integer, intent(in) :: igrad
-
+    integer, parameter            :: nstates = 1
+    integer, parameter            :: natoms  = 3
+    integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: r(3), dvp(3), v
-    double precision :: tx(9), r2(3), drdx(3,9)
-    double precision :: gx(nstates,9)
-    integer          :: iatom, idir, i, j
-    logical, save    :: first_time_data=.true.
-
+    double precision              :: r(3), dvp(3), v
+    double precision              :: tx(9), r2(3), drdx(3,9)
+    double precision              :: gx(nstates,9)
+    integer                       :: iatom, idir, i, j
+    logical, save                 :: first_time_data=.true.
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        enddo
-    enddo
+        end do
+    end do
     ! input cartesian is HHH
-    r(1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
-    r(2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
-    r(3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
+    call legacy_triatomic_distances_to_bohr( x, r )
 
-    r2 = r*0.529177211
+    r2 = r*legacy_bohr_to_angstrom
 
-    call pot(r,v,dvp)
+    call pot(r, v, dvp)
 
-    p   = v*27.211386
+    p   = v*legacy_hartree_to_electronvolt
     dvp = dvp*51.422067
 
     call evdrdx(tx, r2, drdx)
     gx = 0.d0
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             gx(:,i) = gx(:,i)+dvp(j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j               = (iatom-1)*3+idir
             g(:,iatom,idir) = gx(:,j)
-        enddo
-    enddo
+        end do
+    end do
 
     if (igrad==2) then
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( x, r, drdx )
-
     implicit none
-
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-
-    integer :: i,j
-
+    integer                       :: i, j
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
+    do i=1, 3
+        do j=1, 9
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
@@ -1963,4 +1925,4 @@ subroutine evdrdx( x, r, drdx )
     drdx(3,8) = -drdx(3,2)
     drdx(3,9) = -drdx(3,3)
 
-endsubroutine
+end subroutine

@@ -1,15 +1,29 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Provide explicit-argument adapters for released POTLIB coordinates.
 module chempotpy_legacy_coordinates
-    use chempotpy_kinds, only: real64
+    use chempotpy_geometry,     only: cartesian_distance
+    use chempotpy_kinds,        only: real64
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom
     implicit none
-
     private
-
     public :: convert_cartesian_input
     public :: cartesian_to_potlib_coordinates
-
+    public :: legacy_triatomic_distances_to_bohr
     contains
+
+    !> @brief Return the 1-2, 2-3, and 1-3 distances in legacy bohr.
+    pure subroutine legacy_triatomic_distances_to_bohr( &
+            coordinates_angstrom, distances_bohr )
+        real(real64), intent(in)  :: coordinates_angstrom(:,:)
+        real(real64), intent(out) :: distances_bohr(3)
+
+        distances_bohr(1) = cartesian_distance( coordinates_angstrom(1,:), coordinates_angstrom(2,:) )/ &
+            & legacy_bohr_to_angstrom
+        distances_bohr(2) = cartesian_distance( coordinates_angstrom(2,:), coordinates_angstrom(3,:) )/ &
+            & legacy_bohr_to_angstrom
+        distances_bohr(3) = cartesian_distance( coordinates_angstrom(1,:), coordinates_angstrom(3,:) )/ &
+            & legacy_bohr_to_angstrom
+    end subroutine legacy_triatomic_distances_to_bohr
 
     !> @brief Convert user Cartesian coordinates to POTLIB distance units.
     pure subroutine convert_cartesian_input( cartesian_coordinates, &
@@ -73,13 +87,13 @@ module chempotpy_legacy_coordinates
             end do
         case (3)
             coordinates(1) = sqrt( (cartesian_coordinates(1,1)-cartesian_coordinates(2,1))**2 + &
-                & (cartesian_coordinates(1, 2)-cartesian_coordinates(2,2))**2 +(cartesian_coordinates(1,3)- &
+                & (cartesian_coordinates(1,2)-cartesian_coordinates(2,2))**2 +(cartesian_coordinates(1,3)- &
                 & cartesian_coordinates(2,3))**2 )
             coordinates(2) = sqrt( (cartesian_coordinates(2,1)-cartesian_coordinates(3,1))**2 + &
-                & (cartesian_coordinates(2, 2)-cartesian_coordinates(3,2))**2 +(cartesian_coordinates(2,3)- &
+                & (cartesian_coordinates(2,2)-cartesian_coordinates(3,2))**2 +(cartesian_coordinates(2,3)- &
                 & cartesian_coordinates(3,3))**2 )
             coordinates(3) = sqrt( (cartesian_coordinates(1,1)-cartesian_coordinates(3,1))**2 + &
-                & (cartesian_coordinates(1, 2)-cartesian_coordinates(3,2))**2 +(cartesian_coordinates(1,3)- &
+                & (cartesian_coordinates(1,2)-cartesian_coordinates(3,2))**2 +(cartesian_coordinates(1,3)- &
                 & cartesian_coordinates(3,3))**2 )
         case (4)
             center_1 = (hydrogen_mass*cartesian_coordinates(1,1:3) +fluorine_mass*cartesian_coordinates(2,1:3)) / &
@@ -93,13 +107,13 @@ module chempotpy_legacy_coordinates
             theta_1 = sum(relative_1*center_delta)
             theta_1 = theta_1/sqrt(sum(relative_1**2))
             theta_1 = theta_1/sqrt(sum(center_delta**2))
-            theta_1 = min(1.0_real64,max(-1.0_real64,theta_1))
+            theta_1 = min(1.0_real64, max(-1.0_real64, theta_1))
             theta_1 = acos(theta_1)
 
             theta_2 = sum(relative_2*(-center_delta))
             theta_2 = theta_2/sqrt(sum(relative_2**2))
             theta_2 = theta_2/sqrt(sum(center_delta**2))
-            theta_2 = min(1.0_real64,max(-1.0_real64,theta_2))
+            theta_2 = min(1.0_real64, max(-1.0_real64, theta_2))
             theta_2 = acos(theta_2)
             theta_2 = acos(-1.0_real64)-theta_2
 
@@ -110,7 +124,7 @@ module chempotpy_legacy_coordinates
             q3                 = sqrt(abs(hydrogen_distance**2-projected_distance**2))
             q1                 = q1*sin(theta_1); q2 = q2*sin(theta_2)
             cosine_phi         = (q1**2+q2**2-q3**2)/(2.0_real64*q1*q2)
-            cosine_phi         = min(1.0_real64,max(-1.0_real64,cosine_phi))
+            cosine_phi         = min(1.0_real64, max(-1.0_real64, cosine_phi))
             phi                = acos(cosine_phi)
 
             coordinates(1) = center_distance
@@ -123,4 +137,5 @@ module chempotpy_legacy_coordinates
             status = 1
         end select
     end subroutine cartesian_to_potlib_coordinates
+
 end module chempotpy_legacy_coordinates

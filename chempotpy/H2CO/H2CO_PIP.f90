@@ -2,11 +2,10 @@ module shell
     implicit none
     private
     public :: cof, coff, power, total
-
-    real,parameter    :: total = 8
-    integer,parameter :: coff  = 1561
+    real, parameter    :: total = 8
+    integer, parameter :: coff  = 1561
     !real,parameter::alpha(4)=(/2.0,2.0,2.0,2.0/)
-    double precision :: cof(coff),power(coff,6)
+    double precision :: cof(coff), power(coff,6)
 end module shell
 
 !> @brief Evaluate pes_init.
@@ -14,24 +13,22 @@ subroutine pes_init( path )
     use shell, only: cof, coff, power, total
     implicit none
     character(len=1024), intent(in) :: path
-
-    integer             :: file_unit_112
-    integer             :: file_unit_113
-    character(len=1024) :: file_path1, file_path2
-    integer             :: i
-
+    integer                         :: file_unit_112
+    integer                         :: file_unit_113
+    character(len=1024)             :: file_path1, file_path2
+    integer                         :: i
     file_path1 = trim(path)//"/H2CO/coeff8"
     file_path2 = trim(path)//"/H2CO/index8"
-    open(newunit=file_unit_112,status='old',file=file_path1)
-    open(newunit=file_unit_113,status='old',file=file_path2)
+    open(newunit=file_unit_112, status='old', file=file_path1)
+    open(newunit=file_unit_113, status='old', file=file_path2)
 
-    read(file_unit_112,*)
-    do i=1,coff
-        read(file_unit_112,*) cof(i)
+    read(file_unit_112, *)
+    do i=1, coff
+        read(file_unit_112, *) cof(i)
     end do
-    do i=1,coff
-        read(file_unit_113,*) power(i,1),power(i,2),power(i,3),power(i,4),&
-            &power(i,5),power(i,6)
+    do i=1, coff
+        read(file_unit_113, *) power(i,1), power(i,2), power(i,3), power(i,4), &
+            &power(i,5), power(i,6)
     end do
     close(file_unit_113)
     close(file_unit_112)
@@ -42,25 +39,23 @@ end subroutine pes_init
 subroutine getpot( cood, v, path )
     use shell, only: cof, coff, power, total
     implicit none
-
     character(len=1024), intent(in) :: path
     integer                         :: i
-    double precision                :: v,f
-    double precision                :: cood(3,4),com(3)
-    double precision                :: y(6),r(6)
+    double precision                :: v, f
+    double precision                :: cood(3,4), com(3)
+    double precision                :: y(6), r(6)
     double precision                :: bas(coff)
     double precision                :: smallch, smalloh
-    double precision                :: s, x,z,x3,x2,z1,z2
+    double precision                :: s, x, z, x3, x2, z1, z2
     !       This probram expects cood to be in the order C,O,H,H
+    call edis(r(1), y(1), cood(:,3), cood(:,4))
+    call edis(r(2), y(2), cood(:,2), cood(:,3))
+    call edis(r(3), y(3), cood(:,1), cood(:,3))
+    call edis(r(4), y(4), cood(:,1), cood(:,4))
+    call edis(r(5), y(5), cood(:,2), cood(:,4))
+    call edis(r(6), y(6), cood(:,1), cood(:,2))
 
-    call edis(r(1),y(1),cood(:,3),cood(:,4))
-    call edis(r(2),y(2),cood(:,2),cood(:,3))
-    call edis(r(3),y(3),cood(:,1),cood(:,3))
-    call edis(r(4),y(4),cood(:,1),cood(:,4))
-    call edis(r(5),y(5),cood(:,2),cood(:,4))
-    call edis(r(6),y(6),cood(:,1),cood(:,2))
-
-    call basis(bas,y)
+    call basis(bas, y)
 
     if (r(3)< r(4)) then
         smallch = r(3)
@@ -87,13 +82,13 @@ subroutine getpot( cood, v, path )
     end if
 
     f = 0
-    do i=1,coff
+    do i=1, coff
         f = f+cof(i)*bas(i)
     end do
     f = f+114.332958863-1.059892782251382e-004
 
     if (x .ge. 8) then
-        call hcopot(v,smallch,r(6),smalloh,path)
+        call hcopot(v, smallch, r(6), smalloh, path)
         f = f*(1-s)+v*s
     end if
 
@@ -104,11 +99,9 @@ end subroutine getpot
 subroutine edis( dis, edist, atomi, atomj )
     use shell, only: cof, coff, power, total
     implicit none
-
-    double precision,intent(out) :: edist
-
-    double precision :: atomi(3),atomj(3)
-    double precision :: dis,alfa
+    double precision, intent(out) :: edist
+    double precision              :: atomi(3), atomj(3)
+    double precision              :: dis, alfa
     alfa  = 2.0
     dis   = sqrt((atomi(1)-atomj(1))**2+(atomi(2)-atomj(2))**2+(atomi(3)-atomj(3))**2)
     edist = exp(-dis/alfa)
@@ -118,11 +111,10 @@ end subroutine edis
 subroutine basis( bas, y )
     use shell, only: cof, coff, power, total
     implicit none
-
-    integer          :: m,n,p,q,i,j,k
+    integer          :: m, n, p, q, i, j, k
     double precision :: bas(coff)
     double precision :: y(6)
-    do k=1,coff
+    do k=1, coff
         bas(k)=(y(1)**power(k,1))*(y(6)**power(k,6))*((y(2)**power(k,2))* (y(3)**power(k,3))*(y(4)**power(k,4))* &
             & (y(5)** power(k,5))+(y(2)**power(k,5))* (y(3)**power(k,4))*(y(4)**power(k,3))*(y(5)**power(k,2)))
     end do
@@ -131,20 +123,16 @@ end subroutine
 !> @brief Evaluate hcopot.
 subroutine hcopot( f, rhc, rco, roh, path )
     implicit none
-
-    double precision, parameter :: au2ev = 27.2116d0
-    double precision, parameter :: a0    = 0.52918d0
-    double precision, parameter :: pi    = 3.1415926536d0
-
+    double precision, parameter     :: au2ev = 27.2116d0
+    double precision, parameter     :: a0    = 0.52918d0
+    double precision, parameter     :: pi    = 3.1415926536d0
     character(len=1024), intent(in) :: path
-
-    integer          :: j,loop,iv
-    double precision :: rmin(3),rmax(3),z1,z2,z3,m(3),h(3)
-    double precision :: pot, potmin, ma, mb, mc
-    double precision :: pot3,c3,pothco,f
-    double precision :: v, rhc,rco, cgamma, roh
-    integer          :: istate
-
+    integer                         :: j, loop, iv
+    double precision                :: rmin(3), rmax(3), z1, z2, z3, m(3), h(3)
+    double precision                :: pot, potmin, ma, mb, mc
+    double precision                :: pot3, c3, pothco, f
+    double precision                :: v, rhc, rco, cgamma, roh
+    integer                         :: istate
     ma = 1.0    !  H
     mb = 12.0    !  C
     mc = 16.0    !  O
@@ -154,7 +142,7 @@ subroutine hcopot( f, rhc, rco, roh, path )
     cgamma = (rhc*rhc+rco*rco-roh*roh)/(2*rhc*rco)
 
     pot = 0.0d0
-    pot = pothco(rhc,rco,cgamma,istate)
+    pot = pothco(rhc, rco, cgamma, istate)
     pot = pot+.18140000
     f   = pot
 end subroutine hcopot
@@ -163,16 +151,14 @@ end subroutine hcopot
 subroutine pot3in( path )
     implicit none
     character(len=1024), intent(in) :: path
-
-    integer                :: file_unit_10
-    character(len=1024)    :: file_path1
-    double precision       :: v, pothco
-    double precision, save :: g = 0d0, r = 1d0, rkl = 1d0
+    integer                         :: file_unit_10
+    character(len=1024)             :: file_path1
+    double precision                :: v, pothco
+    double precision, save          :: g = 0d0, r = 1d0, rkl = 1d0
     external pothco
-
     file_path1 = trim(path)//"/H2CO/pothco_hmk.para"
-    open(newunit=file_unit_10,file=file_path1,status='old')
-    v = pothco(0d0,0d0,0d0,0)
+    open(newunit=file_unit_10, file=file_path1, status='old')
+    v = pothco(0d0, 0d0, 0d0, 0)
     close(file_unit_10)
 end
 
@@ -180,7 +166,6 @@ end
 function pothco( rhc, rco, rcos, istate )
     use iso_fortran_env, only: real64
     implicit none
-
     integer          :: istate ! Initialiserung falls <>0, INPUT
     double precision :: rhc, rco, rcos, pothco
     ! INPUT: R_HC in a.u., R_CO in a.u.,  COS(gamma_HCO),
@@ -190,9 +175,7 @@ function pothco( rhc, rco, rcos, istate )
     double precision, parameter :: ev2cm  = 8065.44d0  ! eV / cm^-1
     double precision, parameter :: kc2ev  = 23.061d0  ! {kcal/mol} / eV
     double precision, parameter :: au2cm  = au2ev*ev2cm  ! hartree / cm^-1
-
-    integer, parameter :: nhc = 12, nco=9, nwin=12
-
+    integer, parameter          :: nhc    = 12, nco=9, nwin=12
     integer                     :: gzhc, gzco, gzwin, mlin(2) ! GRAD IM ZAEHLER
     integer                     :: gnhc, gnco, gnwin, mtan(2) ! GRAD IM NENNER
     integer                     :: ixhc, ixco, ixoh ! FESTE VORFAKTOREN IM NENNER.
@@ -203,22 +186,20 @@ function pothco( rhc, rco, rcos, istate )
     integer, parameter          :: maxlin = 500
     integer, parameter          :: maxtan = 200  ! Maximalwerte fuer MLIN und MTAN.
     double precision            :: wuradd, nenadd, easym
-    double precision, parameter :: nuhc(12) = (/2.3d0,2.5d0, 2.1d0,3.0d0, 1.9d0,3.5d0,&
-        &1.7d0,4.0d0, 1.5d0,5.0d0, 1.3d0,7.0d0/)
-    double precision, parameter :: nuco(9) = (/2.2d0,1.9d0, 2.5d0,1.7d0, 3.0d0,2.05d0,&
-        &2.35d0,3.5d0, 4.0d0/)
-    double precision, parameter :: nuwin(12) = (/100d0,120d0, 80d0,140d0, 60d0,160d0,&    ! NEUE NULLST.
-        &40d0,170d0, 20d0,180d0, 10d0,0d0/)
-    double precision :: xcos(nwin), nucos(nwin), kk(maxlin,2),aa(maxtan,2),v2ch, v2oh
+    double precision, parameter :: nuhc(12) = (/2.3d0, 2.5d0, 2.1d0, 3.0d0, 1.9d0, 3.5d0, &
+        &1.7d0, 4.0d0, 1.5d0, 5.0d0, 1.3d0, 7.0d0/)
+    double precision, parameter :: nuco(9) = (/2.2d0, 1.9d0, 2.5d0, 1.7d0, 3.0d0, 2.05d0, &
+        &2.35d0, 3.5d0, 4.0d0/)
+    double precision, parameter :: nuwin(12) = (/100d0, 120d0, 80d0, 140d0, 60d0, 160d0, &    ! NEUE NULLST.
+        &40d0, 170d0, 20d0, 180d0, 10d0, 0d0/)
+    double precision :: xcos(nwin), nucos(nwin), kk(maxlin,2), aa(maxtan,2), v2ch, v2oh
     external v2ch, v2oh
-
-    integer          :: i, j,k,l, ll,jj, j1,j2,j3,ks,i1,i2
-    logical, save    :: qinit(2) = [.false.,.false.] ! zeigt an ob Parameter initialisiert.
-    double precision :: pq,  a, b, c, nenn, rhcsin,rhccos, konus
+    integer          :: i, j, k, l, ll, jj, j1, j2, j3, ks, i1, i2
+    logical, save    :: qinit(2) = [.false., .false.] ! zeigt an ob Parameter initialisiert.
+    double precision :: pq, a, b, c, nenn, rhcsin, rhccos, konus
     double precision :: phc, pco, pcos, poh, rhci, rcoi, rcosi, rohi
     double precision :: thy, aco, ahc, vplus, pi
     complex(real64)  :: qq1, qq2, qq3, qq4, wurz
-
     if(istate.le.0) then
 
         if(istate.eq.0)then
@@ -234,33 +215,33 @@ function pothco( rhc, rco, rcos, istate )
 
         pi = acos(-1d0)
 
-        do j1=1,nhc
+        do j1=1, nhc
         end do
-        do j2=1,nco
+        do j2=1, nco
         end do
-        do j3=1,nwin
+        do j3=1, nwin
             nucos(j3) = cos(pi/180d0*nuwin(j3)) ! Nullstellen d. 1d-Polynome.
         end do
 
-        read(10,*)
-        read(10,*)
-        read(10,*)   gzhc, gzco, gzwin
-        read(10,*)
-        read(10,*)   gnhc, gnco, gnwin
-        read(10,*)
-        read(10,*)   ixhc, ixco, ixoh
-        read(10,*)
-        read(10,*)   gwhc, gwco, gwwin
-        read(10,*)
-        read(10,*)   gz2hc,  gn2hc,  ix2hc
-        read(10,*)
-        read(10,*)   gz2co,  gn2co,  ix2co
-        read(10,*)
-        read(10,*)   gz2oh,  gn2oh,  ix2oh
-        read(10,*)
-        read(10,*)   wuradd, nenadd, easym
+        read(10, *)
+        read(10, *)
+        read(10, *)   gzhc, gzco, gzwin
+        read(10, *)
+        read(10, *)   gnhc, gnco, gnwin
+        read(10, *)
+        read(10, *)   ixhc, ixco, ixoh
+        read(10, *)
+        read(10, *)   gwhc, gwco, gwwin
+        read(10, *)
+        read(10, *)   gz2hc, gn2hc, ix2hc
+        read(10, *)
+        read(10, *)   gz2co, gn2co, ix2co
+        read(10, *)
+        read(10, *)   gz2oh, gn2oh, ix2oh
+        read(10, *)
+        read(10, *)   wuradd, nenadd, easym
 
-        do ks=i1,i2
+        do ks=i1, i2
 
             if(qinit(ks)) then             ! Test ob schon mal initialisiert.
             else
@@ -272,14 +253,14 @@ function pothco( rhc, rco, rcos, istate )
                 mlin(ks) = mlin(ks) + (gwhc+1)*(gwco+1)*(gwwin+1)
                 mtan(ks) = mtan(ks) + 4
             end if
-            read(10,*)
-            do i=1,mlin(ks)
-                read(10,*) j, kk(i,ks)
+            read(10, *)
+            do i=1, mlin(ks)
+                read(10, *) j, kk(i,ks)
                 if(i.ne.j) stop ' POTHCO: INDEX FALSCH '
             end do
-            read(10,*)
-            do i=1,mtan(ks)
-                read(10,*) j, aa(i,ks)
+            read(10, *)
+            do i=1, mtan(ks)
+                read(10, *) j, aa(i,ks)
                 if(i.ne.j) stop ' POTHCO: INDEX FALSCH '
             end do
 
@@ -299,33 +280,33 @@ function pothco( rhc, rco, rcos, istate )
         rhci  = ahc * (rhci-2.11d0) + 2.11d0
         rcoi  = aco * (rcoi-2.23d0) + 2.23d0
         vplus = ( 0.5d0 * thy - 0.5d0 ) * 50d-3 / 27.2116d0 ! innen -50 meV.
-        rhci  = max(rhci,1.3d0)            ! R_HC > 1.3 a.u.
-        rcoi  = max(rcoi,1.5d0)            ! R_CO > 1.5 a.u.
+        rhci  = max(rhci, 1.3d0)            ! R_HC > 1.3 a.u.
+        rcoi  = max(rcoi, 1.5d0)            ! R_CO > 1.5 a.u.
         rohi  = sqrt( rhci**2 + rcoi**2 - 2d0*rhci*rcoi*rcosi )
-        rohi  = max(rohi,0.01d0)          ! zur numerischen Stabilitaet.
+        rohi  = max(rohi, 0.01d0)          ! zur numerischen Stabilitaet.
 
         ks = istate
         jj = 1                           ! Index in AA(JJ,KS) (Nenner).
 
-        qq2 = (1d0,0d0)                   ! *** QQ_CO(R_CO)
+        qq2 = (1d0, 0d0)                   ! *** QQ_CO(R_CO)
         pco = 1d0
-        do j=1,gn2co
+        do j=1, gn2co
             pco = pco * ( rcoi - nuco(j) ) ! P_{CO,J}(R_CO)
             qq2 = qq2 + dcmplx( aa(jj,ks)*pco, aa(jj+1,ks)*pco )
             jj  = jj + 2
         end do
 
-        qq4 = (1d0,0d0)                   ! *** QQ_HCO(R_HC,R_CO,COS())
+        qq4 = (1d0, 0d0)                   ! *** QQ_HCO(R_HC,R_CO,COS())
         phc = 1d0
-        do j=0,gnhc
+        do j=0, gnhc
             pco = phc
-            do k=0,gnco
+            do k=0, gnco
                 pcos = pco
                 if(j.gt.0.or.k.gt.0) then
                     qq4 = qq4 + dcmplx( aa(jj,ks)*pco, aa(jj+1,ks)*pco )
                     jj  = jj + 2
                 end if
-                do l=1,gnwin
+                do l=1, gnwin
                     pcos = pcos * ( rcosi - nucos(l) )
                     qq4  = qq4 + dcmplx( aa(jj,ks)*pcos, aa(jj+1,ks)*pcos )
 
@@ -353,7 +334,7 @@ function pothco( rhc, rco, rcos, istate )
         pq = pq + v2ch(rhci)
 
         pco = rcoi**ix2co / abs(qq2)**2  ! *** PP_CO(R_CO)
-        do j=0,gz2co
+        do j=0, gz2co
             pq  = pq + kk(ll,ks) * pco
             ll  = ll + 1
             pco = pco * ( rcoi - nuco(j+1) ) ! P_{CO,J}(R_CO)
@@ -365,11 +346,11 @@ function pothco( rhc, rco, rcos, istate )
         konus = 0d0                      ! Konische Durchschneidung:
         if(ks.eq.1) then                ! (nur auf 1. Flaeche)
             phc = wurz * nenn
-            do j=0,gwhc
+            do j=0, gwhc
                 pco = phc
-                do k=0,gwco
+                do k=0, gwco
                     pcos = pco
-                    do l=0,gwwin
+                    do l=0, gwwin
                         konus = konus + kk(ll,ks) * pcos
                         ll    = ll + 1
                         pcos  = pcos * ( rcosi - nucos(l+1) )
@@ -382,11 +363,11 @@ function pothco( rhc, rco, rcos, istate )
         end if
 
         phc = nenn
-        do j=0,gzhc                     ! normale Polynome:
+        do j=0, gzhc                     ! normale Polynome:
             pco = phc
-            do k=0,gzco
+            do k=0, gzco
                 pcos = pco
-                do l=0,gzwin
+                do l=0, gzwin
                     pq   = pq + kk(ll,ks) * pcos
                     ll   = ll + 1
                     pcos = pcos * ( rcosi - nucos(l+1) )
@@ -410,17 +391,14 @@ function pothco( rhc, rco, rcos, istate )
 
     999 return
 end
+
 !> @brief Evaluate V2OH.
 function v2oh( r )
     implicit none
-
-    double precision :: v2oh,  r
-
+    double precision            :: v2oh, r
     double precision, parameter :: au2ang = 0.529177d0  ! a_0 / ANGSTROEM
     double precision, parameter :: au2ev  = 27.2116d0  ! HARTREE / EV
-
-    double precision :: a1, a2, a3, de, re, rho
-
+    double precision            :: a1, a2, a3, de, re, rho
     a1 = 4.507                    ! Huxley etc. nach Daten aus Herzberg.
     a2 = 4.884
     a3 = 3.795
@@ -432,17 +410,14 @@ function v2oh( r )
     v2oh = -de*(1+a1*rho+a2*rho**2+a3*rho**3)*exp(-a1*rho)
 
 end
+
 !> @brief Evaluate V2CH.
 function v2ch( r )
     implicit none
-
-    double precision :: v2ch, r
-
+    double precision            :: v2ch, r
     double precision, parameter :: au2ang = 0.529177d0  ! a_0 / ANGSTROEM
     double precision, parameter :: au2ev  = 27.2116d0  ! HARTREE / EV
-
-    double precision :: a1, a2, a3, de, re, rho
-
+    double precision            :: a1, a2, a3, de, re, rho
     a1 = 3.836
     a2 = 3.511
     a3 = 2.268
@@ -457,9 +432,9 @@ end
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, p, gradient_out, d )
-    use shell, only: cof, coff, power, total
+    use shell,                  only: cof, coff, power, total
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 4
@@ -469,32 +444,30 @@ subroutine pes( x, igrad, path, p, gradient_out, d )
     double precision, intent(out)   :: p(nstates)
     double precision, intent(out)   :: gradient_out(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
-    double precision :: tx(3,natoms), v
-    integer          :: iatom, idir, j, istate
-    logical, save    :: first_time_data=.true.
+    double precision                :: tx(3,natoms), v
+    integer                         :: iatom, idir, j, istate
+    logical, save                   :: first_time_data=.true.
     !initialize
-    gradient_out = 0.d0
-    d            = 0.d0
+    gradient_out = 0.d0; d = 0.d0
 
-    do iatom=1,natoms
-        do idir=1,3
-            tx(idir,iatom) = x(iatom,idir)/0.529177211
-        enddo
-    enddo
+    do iatom=1, natoms
+        do idir=1, 3
+            tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
+        end do
+    end do
 
     if (igrad==0) then
         if(first_time_data) then
             call pes_init(path)
             first_time_data = .false.
-        endif
-        call getpot(tx,v,path)
-        v = v*27.211386
-        do istate=1,nstates
+        end if
+        call getpot(tx, v, path)
+        v = v*legacy_hartree_to_electronvolt
+        do istate=1, nstates
             p(istate) = v
-        enddo
+        end do
     else
-        write (*,*) 'Only energy is available'
-    endif
+        write (*, *) 'Only energy is available'
+    end if
 
-endsubroutine
+end subroutine

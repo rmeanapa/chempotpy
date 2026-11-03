@@ -1,70 +1,62 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate pes for the H3p_UNO_2001 potential.
 subroutine pes( x, igrad, pin, grad, dvec )
-
+    use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
     implicit none
-
     ! number of electronic state
-    integer, parameter :: nstates = 3
-    integer, parameter :: natoms  = 3
-
+    integer, parameter            :: nstates = 3
+    integer, parameter            :: natoms  = 3
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: pin(nstates)
     double precision, intent(out) :: grad(nstates,natoms,3)
     double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-
-    double precision :: u
-    integer          :: iatom, idir
-    integer          :: nt
-    double precision :: r(1,3), r2(3)
-    double precision :: u11(1), u12(1), u13(1), u22(1), u23(1), u33(1)
-    double precision :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
-    double precision :: de_u13(3,1), de_u23(3,1), de_u33(3,1)
-    double precision :: dpem(nstates,nstates), dudr(nstates,nstates,3)
-    double precision :: trans(nstates,nstates)
-    double precision :: tmpmat(nstates,nstates)
-    double precision :: hr(nstates,nstates,3), gr(nstates,3)
-    double precision :: tx(9), drdx(3,9)
-    double precision :: hx(nstates,nstates,9), gx(nstates,9)
-    logical, save    :: first_time_data=.true.
-    integer          :: i, j, k, l
-
+    double precision              :: u
+    integer                       :: iatom, idir
+    integer                       :: nt
+    double precision              :: r(1,3), r2(3)
+    double precision              :: u11(1), u12(1), u13(1), u22(1), u23(1), u33(1)
+    double precision              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
+    double precision              :: de_u13(3,1), de_u23(3,1), de_u33(3,1)
+    double precision              :: dpem(nstates,nstates), dudr(nstates,nstates,3)
+    double precision              :: trans(nstates,nstates)
+    double precision              :: tmpmat(nstates,nstates)
+    double precision              :: hr(nstates,nstates,3), gr(nstates,3)
+    double precision              :: tx(9), drdx(3,9)
+    double precision              :: hx(nstates,nstates,9), gx(nstates,9)
+    logical, save                 :: first_time_data=.true.
+    integer                       :: i, j, k, l
     !initialize
-    u    = 0.d0
-    pin  = 0.d0
-    grad = 0.d0
-    dvec = 0.d0
+    u = 0.d0; pin = 0.d0; grad = 0.d0; dvec = 0.d0
 
     nt = 1
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        enddo
-    enddo
+        end do
+    end do
 
     ! input cartesian is HHH
-    r(1,1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
-    r(1,2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
-    r(1,3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
+    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
 
-    call pot(r,u11,de_u11,1,1)
-    call pot(r,u12,de_u12,1,2)
-    call pot(r,u22,de_u22,1,3)
-    call pot(r,u13,de_u13,1,4)
-    call pot(r,u23,de_u23,1,5)
-    call pot(r,u33,de_u33,1,6)
+    call pot(r, u11, de_u11, 1, 1)
+    call pot(r, u12, de_u12, 1, 2)
+    call pot(r, u22, de_u22, 1, 3)
+    call pot(r, u13, de_u13, 1, 4)
+    call pot(r, u23, de_u23, 1, 5)
+    call pot(r, u33, de_u33, 1, 6)
 
-    dpem(1,1) = u11(1)*27.211386
-    dpem(1,2) = u12(1)*27.211386
-    dpem(2,1) = u12(1)*27.211386
-    dpem(2,2) = u22(1)*27.211386
-    dpem(1,3) = u13(1)*27.211386
-    dpem(3,1) = u13(1)*27.211386
-    dpem(2,3) = u23(1)*27.211386
-    dpem(3,2) = u23(1)*27.211386
-    dpem(3,3) = u33(1)*27.211386
+    dpem(1,1) = u11(1)*legacy_hartree_to_electronvolt
+    dpem(1,2) = u12(1)*legacy_hartree_to_electronvolt
+    dpem(2,1) = u12(1)*legacy_hartree_to_electronvolt
+    dpem(2,2) = u22(1)*legacy_hartree_to_electronvolt
+    dpem(1,3) = u13(1)*legacy_hartree_to_electronvolt
+    dpem(3,1) = u13(1)*legacy_hartree_to_electronvolt
+    dpem(2,3) = u23(1)*legacy_hartree_to_electronvolt
+    dpem(3,2) = u23(1)*legacy_hartree_to_electronvolt
+    dpem(3,3) = u33(1)*legacy_hartree_to_electronvolt
 
     dudr(1,1,:) = de_u11(:,1)*51.422067
     dudr(1,2,:) = de_u12(:,1)*51.422067
@@ -76,63 +68,59 @@ subroutine pes( x, igrad, pin, grad, dvec )
     dudr(3,2,:) = de_u23(:,1)*51.422067
     dudr(3,3,:) = de_u33(:,1)*51.422067
 
-    call diagonalize(nstates,dpem,pin,trans)
+    call diagonalize(nstates, dpem, pin, trans)
 
-    do i=1,3
+    do i=1, 3
         tmpmat(:,:) = dudr(:,:,i)
-        tmpmat      = matmul(transpose(trans), matmul(tmpmat,trans))
-        do j=1,nstates
-            do k=j+1,nstates
+        tmpmat      = matmul(transpose(trans), matmul(tmpmat, trans))
+        do j=1, nstates
+            do k=j+1, nstates
                 if ((pin(k)-pin(j)) > 1.d-8) then
                     hr(j,k,i) = tmpmat(j,k)/(pin(k)-pin(j))
                 else
                     hr(j,k,i) = tmpmat(j,k)/1.d-8
-                endif
+                end if
                 hr(k,j,i) = -hr(j,k,i)
-            enddo
-        enddo
-        do j=1,nstates
+            end do
+        end do
+        do j=1, nstates
             gr(j,i) = tmpmat(j,j)
-        enddo
-    enddo
+        end do
+    end do
 
-    r2 = r(1,:)*0.529177211
+    r2 = r(1,:)*legacy_bohr_to_angstrom
     call evdrdx(tx, r2, drdx)
     hx = 0.d0
     gx = 0.d0
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             hx(:,:,i) = hx(:,:,i)+hr(:,:,j)*drdx(j,i)
             gx(:,i)   = gx(:,i)+gr(:,j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j                    = (iatom-1)*3+idir
             grad(:,iatom,idir)   = gx(:,j)
             dvec(:,:,iatom,idir) = hx(:,:,j)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the H3p_UNO_2001 potential.
 subroutine evdrdx( x, r, drdx )
-
     implicit none
-
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-
-    integer :: i,j
-
+    integer                       :: i, j
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
+    do i=1, 3
+        do j=1, 9
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
@@ -160,36 +148,34 @@ end subroutine evdrdx
 !> @brief Evaluate diagonalize for the H3p_UNO_2001 potential.
 subroutine diagonalize( n, a_ss, ev_s, u_ss )
     implicit none
-
     integer, intent(in)           :: n
     double precision, intent(in)  :: a_ss(n,n)
     double precision, intent(out) :: u_ss(n,n)
     double precision, intent(out) :: ev_s(n)
-    integer                       :: io,i
-    double precision,allocatable  :: work_d(:)
+    integer                       :: io, i
+    double precision, allocatable :: work_d(:)
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
-
     u_ss = a_ss
     if (first_time_diag) then
         lwork_d = -1
         allocate( work_d(2) )
-        call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    endif
+    end if
     allocate( work_d(lwork_d) )
-    call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!   System:          H3plus
-!   Functional form: DIM
-!   Common name:     H3+ UNO with derivatives
-!   Number of derivatives: 1
-!   Number of bodies: 3
+!   System:                        H3plus
+!   Functional form:               DIM
+!   Common name:                   H3+ UNO with derivatives
+!   Number of derivatives:         1
+!   Number of bodies:              3
 !   Number of electronic surfaces: 3
-!   Interface: 3-2V
+!   Interface:                     3-2V
 !
 !   References: V. G. Ushakov, K. Nobusada, and V. I. Osherov,
 !               Phys. Chem. Chem. Phys., Vol. 3, 63 (2001)
@@ -239,20 +225,19 @@ end subroutine diagonalize
 subroutine pot( r, e, de, nt, nsurf )
     !
     implicit none
-
     double precision :: a, b, b_g, b_h, b_u, d_g, d_h, d_u, de, e, r, r1, r2, r3, r_g, r_h, r_u
     integer          :: i, ii, j, k, l, nsurf, nt
-    dimension r(nt, 3), de(3, nt), e(nt)
+    dimension r(nt,3), de(3,nt), e(nt)
     !
     !     Table 2: fitting parameters of eqns 10 and 11
     double precision :: c1(3), c2(3), c3(3), c4(3), c5(3), c6(3), c7(3)
     double precision :: c8(3), c9(3), c10(3), c11(3), c12(3), c13(3), c&
         &14(3)
-    double precision :: p(3, 3)
-    double precision :: c(3, 3)
+    double precision :: p(3,3)
+    double precision :: c(3,3)
     double precision :: osg(3), tsg(3), tsu(3)
     double precision :: h(3), g(3), u(3)
-    double precision :: potential(3, 3)
+    double precision :: potential(3,3)
     !
     !     Table 2: fitting params for eqns 10 and 11
     integer            :: g_i_, g_p_
@@ -267,13 +252,13 @@ subroutine pot( r, e, de, nt, nsurf )
         & d10_b, d11_b, d24_v
     double precision :: d12_b, d21_b, d27_v, d28_v, d29_v, d2_b, d3_b, &
         & d32_v, d4_b, d34_v
-    double precision :: d5_b, d6_b, d37_v, g_r1(g_pmax_), g_r(ldg_r, nt &
-        & , 3), g_r2(g_pmax_), g_r3(g_pmax_), g_p(g_pmax_, 3, 3), g_d1_w(g_p&
+    double precision :: d5_b, d6_b, d37_v, g_r1(g_pmax_), g_r(ldg_r,nt &
+        &,3), g_r2(g_pmax_), g_r3(g_pmax_), g_p(g_pmax_, 3, 3), g_d1_w(g_p&
         &max_), g_c(g_pmax_, 3, 3)
-    double precision :: g_osg(g_pmax_, 3), g_d2_w(g_pmax_), g_d3_w(g_pm&
+    double precision :: g_osg(g_pmax_,3), g_d2_w(g_pmax_), g_d3_w(g_pm&
         &ax_), g_tsg(g_pmax_, 3), g_tsu(g_pmax_, 3), g_h(g_pmax_, 3), g_g(g&
         &_pmax_, 3), g_u(g_pmax_, 3), g_potential(g_pmax_, 3, 3), g_e(ldg_e &
-        & , nt)
+        &, nt)
     integer :: g_ehfid
     !        save g_tsu, g_h, g_g, g_u, g_potential
     !        save g_r1, g_r2, g_r3, g_p, g_d1_w, g_c, g_osg, g_d2_w, g_d3_w,
@@ -320,31 +305,31 @@ subroutine pot( r, e, de, nt, nsurf )
     !        entry g_pot(g_p_, r, g_r, ldg_r, e, g_e, ldg_e, de, nt, nsurf)
     g_p_ = 3
 
-    do i=1,nt
-        do j=1,3
-            do k=1,3
+    do i=1, nt
+        do j=1, 3
+            do k=1, 3
                 if (j .eq. k) g_r(j,i,k)=1.0d0
                 if (j .ne. k) g_r(j,i,k)=0.0d0
-            enddo
-        enddo
-    enddo
+            end do
+        end do
+    end do
     !
     do ii = 1, nt
         !
         do g_i_ = 1, g_p_
-            g_r1(g_i_) = g_r(g_i_, ii, 1)
-        enddo
-        r1 = r(ii, 1)
+            g_r1(g_i_) = g_r(g_i_,ii,1)
+        end do
+        r1 = r(ii,1)
         !--------
         do g_i_ = 1, g_p_
-            g_r2(g_i_) = g_r(g_i_, ii, 2)
-        enddo
-        r2 = r(ii, 2)
+            g_r2(g_i_) = g_r(g_i_,ii,2)
+        end do
+        r2 = r(ii,2)
         !--------
         do g_i_ = 1, g_p_
-            g_r3(g_i_) = g_r(g_i_, ii, 3)
-        enddo
-        r3 = r(ii, 3)
+            g_r3(g_i_) = g_r(g_i_,ii,3)
+        end do
+        r3 = r(ii,3)
         !--------
         !
         !     equation 11
@@ -384,8 +369,8 @@ subroutine pot( r, e, de, nt, nsurf )
                 & c7(l) + d4_v + r1 * c4(l) + c2(l)
             do g_i_ = 1, g_p_
                 g_p(g_i_, l, 1) = d6_b * g_r3(g_i_) + d5_b * g_r2(g_i_) + d12_b * g_r1(g_i_)
-            enddo
-            p(l, 1) = c1(l) + c2(l) * r1 + d4_v * r1 + c5(l) * d10_v + d13_v * r3 + d16_v * d17_v + c8(l) * d20_v + &
+            end do
+            p(l,1) = c1(l) + c2(l) * r1 + d4_v * r1 + c5(l) * d10_v + d13_v * r3 + d16_v * d17_v + c8(l) * d20_v + &
                 & c9(l) * d24_v + d28_v * d29_v + d32_v * d34_v + d38_v * r3 + d42_v * d43_v + c3(l) * (r2 + r3)
             !--------
             !
@@ -424,8 +409,8 @@ subroutine pot( r, e, de, nt, nsurf )
                 & c7(l) + d4_v + r2 * c4(l) + c2(l)
             do g_i_ = 1, g_p_
                 g_p(g_i_, l, 2) = d6_b * g_r1(g_i_) + d5_b * g_r3(g_i_) + d12_b * g_r2(g_i_)
-            enddo
-            p(l, 2) = c1(l) + c2(l) * r2 + d4_v * r2 + c5(l) * d10_v + d13_v * r1 + d16_v * d17_v + c8(l) * d20_v + &
+            end do
+            p(l,2) = c1(l) + c2(l) * r2 + d4_v * r2 + c5(l) * d10_v + d13_v * r1 + d16_v * d17_v + c8(l) * d20_v + &
                 & c9(l) * d24_v + d28_v * d29_v + d32_v * d34_v + d38_v * r1 + d42_v * d43_v + c3(l) * (r3 + r1)
             !--------
             !
@@ -464,93 +449,93 @@ subroutine pot( r, e, de, nt, nsurf )
                 & c7(l) + d4_v + r3 * c4(l) + c2(l)
             do g_i_ = 1, g_p_
                 g_p(g_i_, l, 3) = d6_b * g_r2(g_i_) + d5_b * g_r1(g_i_) + d12_b * g_r3(g_i_)
-            enddo
-            p(l, 3) = c1(l) + c2(l) * r3 + d4_v * r3 + c5(l) * d10_v + d13_v * r2 + d16_v * d17_v + c8(l) * d20_v + &
+            end do
+            p(l,3) = c1(l) + c2(l) * r3 + d4_v * r3 + c5(l) * d10_v + d13_v * r2 + d16_v * d17_v + c8(l) * d20_v + &
                 & c9(l) * d24_v + d28_v * d29_v + d32_v * d34_v + d38_v * r2 + d42_v * d43_v + c3(l) * (r1 + r2)
             !--------
-        enddo
+        end do
         !
         !     equation 10
         do l = 1, 3
             d2_b = (-c14(l)) * c14(l)
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d2_b * g_r3(g_i_) + d2_b * g_r2(g_i_)
-            enddo
+            end do
             d1_w = (-c14(l)) * c14(l) * (r2 + r3)
             d3_v = exp(d1_w)
             d1_p = d3_v
-            d4_b = p(l, 1) * d1_p
+            d4_b = p(l,1) * d1_p
             do g_i_ = 1, g_p_
-                g_c(g_i_, l, 1) = d4_b * g_d1_w(g_i_) + d3_v * g_p(g_i_, l , 1)
-            enddo
-            c(l, 1) = p(l, 1) * d3_v
+                g_c(g_i_, l, 1) = d4_b * g_d1_w(g_i_) + d3_v * g_p(g_i_, l, 1)
+            end do
+            c(l,1) = p(l,1) * d3_v
             !--------
             d2_b = (-c14(l)) * c14(l)
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d2_b * g_r1(g_i_) + d2_b * g_r3(g_i_)
-            enddo
+            end do
             d1_w = (-c14(l)) * c14(l) * (r3 + r1)
             d3_v = exp(d1_w)
             d1_p = d3_v
-            d4_b = p(l, 2) * d1_p
+            d4_b = p(l,2) * d1_p
             do g_i_ = 1, g_p_
-                g_c(g_i_, l, 2) = d4_b * g_d1_w(g_i_) + d3_v * g_p(g_i_, l , 2)
-            enddo
-            c(l, 2) = p(l, 2) * d3_v
+                g_c(g_i_, l, 2) = d4_b * g_d1_w(g_i_) + d3_v * g_p(g_i_, l, 2)
+            end do
+            c(l,2) = p(l,2) * d3_v
             !--------
             d2_b = (-c14(l)) * c14(l)
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d2_b * g_r2(g_i_) + d2_b * g_r1(g_i_)
-            enddo
+            end do
             d1_w = (-c14(l)) * c14(l) * (r1 + r2)
             d3_v = exp(d1_w)
             d1_p = d3_v
-            d4_b = p(l, 3) * d1_p
+            d4_b = p(l,3) * d1_p
             do g_i_ = 1, g_p_
-                g_c(g_i_, l, 3) = d4_b * g_d1_w(g_i_) + d3_v * g_p(g_i_, l , 3)
-            enddo
-            c(l, 3) = p(l, 3) * d3_v
+                g_c(g_i_, l, 3) = d4_b * g_d1_w(g_i_) + d3_v * g_p(g_i_, l, 3)
+            end do
+            c(l,3) = p(l,3) * d3_v
             !--------
-        enddo
+        end do
         !
         !     equations 7,8,9
         do k = 1, 3
             do g_i_ = 1, g_p_
-                g_d1_w(g_i_) = (-b_h) * g_r(g_i_, ii, k)
-            enddo
-            d1_w  = (-b_h) * (r(ii, k) - r_h)
+                g_d1_w(g_i_) = (-b_h) * g_r(g_i_,ii,k)
+            end do
+            d1_w  = (-b_h) * (r(ii,k) - r_h)
             d2_v  = exp(d1_w)
             d3_p  = d2_v
             d3_v  = d2_v * d_h
-            d9_v  = (r(ii, k) - r_h) * (r(ii, k) - r_h)
-            d2_p  = 2.0d0 * (r(ii, k) - r_h)
-            d13_v = (r(ii, k) - r_h) ** ( 3 - 2)
-            d13_v = d13_v * (r(ii, k) - r_h)
+            d9_v  = (r(ii,k) - r_h) * (r(ii,k) - r_h)
+            d2_p  = 2.0d0 * (r(ii,k) - r_h)
+            d13_v = (r(ii,k) - r_h) ** ( 3 - 2)
+            d13_v = d13_v * (r(ii,k) - r_h)
             d1_p  = 3 *  d13_v
-            d13_v = d13_v * (r(ii, k) - r_h)
-            d15_v = 1.0d0 + b_h * (r(ii, k) - r_h) + a * d9_v + b * d13_v
+            d13_v = d13_v * (r(ii,k) - r_h)
+            d15_v = 1.0d0 + b_h * (r(ii,k) - r_h) + a * d9_v + b * d13_v
             d8_b  = d3_v * b * d1_p + d3_v * a * d2_p + d3_v * b_h
             d16_b = d15_v * d_h * d3_p
             do g_i_ = 1, g_p_
-                g_osg(g_i_, k) = d8_b * g_r(g_i_, ii, k) + d16_b * g_d1_w( g_i_)
-            enddo
+                g_osg(g_i_,k) = d8_b * g_r(g_i_,ii,k) + d16_b * g_d1_w( g_i_)
+            end do
             osg(k) = d3_v * d15_v
             !--------
             d3_b = (-2.0d0) * b_g
             do g_i_ = 1, g_p_
-                g_d1_w(g_i_) = d3_b * g_r(g_i_, ii, k)
-            enddo
-            d1_w = (-2.0d0) * b_g * (r(ii, k) - r_g)
+                g_d1_w(g_i_) = d3_b * g_r(g_i_,ii,k)
+            end do
+            d1_w = (-2.0d0) * b_g * (r(ii,k) - r_g)
             d3_b = dble(-1.0) * b_g
             do g_i_ = 1, g_p_
-                g_d2_w(g_i_) = d3_b * g_r(g_i_, ii, k)
-            enddo
-            d2_w = dble(-1.0) * b_g * (r(ii, k) - r_g)
+                g_d2_w(g_i_) = d3_b * g_r(g_i_,ii,k)
+            end do
+            d2_w = dble(-1.0) * b_g * (r(ii,k) - r_g)
             d3_b = (-8.0d0) * b_g
             do g_i_ = 1, g_p_
-                g_d3_w(g_i_) = d3_b * g_r(g_i_, ii, k)
-            enddo
-            d3_w  = (-8.0d0) * b_g * (r(ii, k) - r_g)
+                g_d3_w(g_i_) = d3_b * g_r(g_i_,ii,k)
+            end do
+            d3_w  = (-8.0d0) * b_g * (r(ii,k) - r_g)
             d2_v  = exp(d1_w)
             d3_p  = d2_v
             d4_v  = exp(d2_w)
@@ -562,18 +547,18 @@ subroutine pot( r, e, de, nt, nsurf )
             d11_b = d_g * d3_p
             do g_i_ = 1, g_p_
                 g_tsg(g_i_, k) = d6_b * g_d3_w(g_i_) + d10_b * g_d2_w(g_i_ ) + d11_b * g_d1_w(g_i_)
-            enddo
+            end do
             tsg(k) = d_g * (d2_v - 2.0d0 * d4_v + 0.0015d0 * d8_v)
             !--------
             d3_b = (-2.0d0) * b_u
             do g_i_ = 1, g_p_
-                g_d1_w(g_i_) = d3_b * g_r(g_i_, ii, k)
-            enddo
-            d1_w = (-2.0d0) * b_u * (r(ii, k) - r_u)
+                g_d1_w(g_i_) = d3_b * g_r(g_i_,ii,k)
+            end do
+            d1_w = (-2.0d0) * b_u * (r(ii,k) - r_u)
             do g_i_ = 1, g_p_
-                g_d2_w(g_i_) = (-b_u) * g_r(g_i_, ii, k)
-            enddo
-            d2_w = (-b_u) * (r(ii, k) - r_u)
+                g_d2_w(g_i_) = (-b_u) * g_r(g_i_,ii,k)
+            end do
+            d2_w = (-b_u) * (r(ii,k) - r_u)
             d2_v = exp(d1_w)
             d2_p = d2_v
             d4_v = exp(d2_w)
@@ -582,140 +567,141 @@ subroutine pot( r, e, de, nt, nsurf )
             d7_b = d_u * d2_p
             do g_i_ = 1, g_p_
                 g_tsu(g_i_, k) = d6_b * g_d2_w(g_i_) + d7_b * g_d1_w(g_i_)
-            enddo
+            end do
             tsu(k) = d_u * (d2_v + 2.0d0 * d4_v)
             !--------
-        enddo
+        end do
         !
         !     eqns 4,5,6
         do i = 1, 3
             do g_i_ = 1, g_p_
-                g_h(g_i_, i) = g_c(g_i_, 1, i) + g_osg(g_i_, i)
-            enddo
-            h(i) = osg(i) + c(1, i)
+                g_h(g_i_, i) = g_c(g_i_, 1, i) + g_osg(g_i_,i)
+            end do
+            h(i) = osg(i) + c(1,i)
             !--------
             do g_i_ = 1, g_p_
                 g_g(g_i_, i) = g_c(g_i_, 2, i) + g_tsg(g_i_, i)
-            enddo
-            g(i) = tsg(i) + c(2, i)
+            end do
+            g(i) = tsg(i) + c(2,i)
             !--------
             do g_i_ = 1, g_p_
                 g_u(g_i_, i) = g_c(g_i_, 3, i) + g_tsu(g_i_, i)
-            enddo
-            u(i) = tsu(i) + c(3, i)
+            end do
+            u(i) = tsu(i) + c(3,i)
             !--------
-        enddo
+        end do
         !
         !     this 'potential' 3X3 is the potential matrix
         do g_i_ = 1, g_p_
             g_potential(g_i_, 1, 1) = 0.5d0 * g_u(g_i_, 3) + 0.5d0 * g_g (g_i_, 3) + 0.5d0 * g_u(g_i_, 2) + 0.5d0 * &
-                & g_g(g_i_, 2) + g_h(g_i_ , 1)
-        enddo
-        potential(1, 1) = h(1) + 0.5d0 * (g(2) + u(2) + g(3) + u(3))
+                & g_g(g_i_, 2) + g_h(g_i_, 1)
+        end do
+        potential(1,1) = h(1) + 0.5d0 * (g(2) + u(2) + g(3) + u(3))
         !--------
         do g_i_ = 1, g_p_
             g_potential(g_i_, 2, 2) = 0.5d0 * g_u(g_i_, 3) + 0.5d0 * g_g (g_i_, 3) + 0.5d0 * g_u(g_i_, 1) + 0.5d0 * &
-                & g_g(g_i_, 1) + g_h(g_i_ , 2)
-        enddo
-        potential(2, 2) = h(2) + 0.5d0 * (g(1) + u(1) + g(3) + u(3))
+                & g_g(g_i_, 1) + g_h(g_i_, 2)
+        end do
+        potential(2,2) = h(2) + 0.5d0 * (g(1) + u(1) + g(3) + u(3))
         !--------
         do g_i_ = 1, g_p_
             g_potential(g_i_, 3, 3) = 0.5d0 * g_u(g_i_, 2) + 0.5d0 * g_g (g_i_, 2) + 0.5d0 * g_u(g_i_, 1) + 0.5d0 * &
-                & g_g(g_i_, 1) + g_h(g_i_ , 3)
-        enddo
-        potential(3, 3) = h(3) + 0.5d0 * (g(1) + u(1) + g(2) + u(2))
+                & g_g(g_i_, 1) + g_h(g_i_, 3)
+        end do
+        potential(3,3) = h(3) + 0.5d0 * (g(1) + u(1) + g(2) + u(2))
         !--------
         do g_i_ = 1, g_p_
             g_potential(g_i_, 1, 2) = (-0.5d0) * g_u(g_i_, 3) + 0.5d0 * g_g(g_i_, 3)
-        enddo
-        potential(1, 2) = 0.5d0 * (g(3) - u(3))
+        end do
+        potential(1,2) = 0.5d0 * (g(3) - u(3))
         !--------
         do g_i_ = 1, g_p_
             g_potential(g_i_, 1, 3) = (-0.5d0) * g_u(g_i_, 2) + 0.5d0 * g_g(g_i_, 2)
-        enddo
-        potential(1, 3) = 0.5d0 * (g(2) - u(2))
+        end do
+        potential(1,3) = 0.5d0 * (g(2) - u(2))
         !--------
         do g_i_ = 1, g_p_
             g_potential(g_i_, 2, 1) = (-0.5d0) * g_u(g_i_, 3) + 0.5d0 * g_g(g_i_, 3)
-        enddo
-        potential(2, 1) = 0.5d0 * (g(3) - u(3))
+        end do
+        potential(2,1) = 0.5d0 * (g(3) - u(3))
         !--------
         do g_i_ = 1, g_p_
             g_potential(g_i_, 2, 3) = (-0.5d0) * g_u(g_i_, 1) + 0.5d0 * g_g(g_i_, 1)
-        enddo
-        potential(2, 3) = 0.5d0 * (g(1) - u(1))
+        end do
+        potential(2,3) = 0.5d0 * (g(1) - u(1))
         !--------
         do g_i_ = 1, g_p_
             g_potential(g_i_, 3, 1) = (-0.5d0) * g_u(g_i_, 2) + 0.5d0 * g_g(g_i_, 2)
-        enddo
-        potential(3, 1) = 0.5d0 * (g(2) - u(2))
+        end do
+        potential(3,1) = 0.5d0 * (g(2) - u(2))
         !--------
         do g_i_ = 1, g_p_
             g_potential(g_i_, 3, 2) = (-0.5d0) * g_u(g_i_, 1) + 0.5d0 * g_g(g_i_, 1)
-        enddo
-        potential(3, 2) = 0.5d0 * (g(1) - u(1))
+        end do
+        potential(3,2) = 0.5d0 * (g(1) - u(1))
         !--------
         !
         if (nsurf .eq. 1) then
             do g_i_ = 1, g_p_
                 g_e(g_i_, ii) = g_potential(g_i_, 1, 1)
-            enddo
-            e(ii) = potential(1, 1) - d_h
+            end do
+            e(ii) = potential(1,1) - d_h
             !--------
-        endif
+        end if
         if (nsurf .eq. 2) then
             do g_i_ = 1, g_p_
                 g_e(g_i_, ii) = g_potential(g_i_, 1, 2)
-            enddo
-            e(ii) = potential(1, 2)
+            end do
+            e(ii) = potential(1,2)
             !--------
-        endif
+        end if
         if (nsurf .eq. 3) then
             do g_i_ = 1, g_p_
                 g_e(g_i_, ii) = g_potential(g_i_, 2, 2)
-            enddo
-            e(ii) = potential(2, 2) - d_h
+            end do
+            e(ii) = potential(2,2) - d_h
             !--------
-        endif
+        end if
         if (nsurf .eq. 4) then
             do g_i_ = 1, g_p_
                 g_e(g_i_, ii) = g_potential(g_i_, 1, 3)
-            enddo
-            e(ii) = potential(1, 3)
+            end do
+            e(ii) = potential(1,3)
             !--------
-        endif
+        end if
         if (nsurf .eq. 5) then
             do g_i_ = 1, g_p_
                 g_e(g_i_, ii) = g_potential(g_i_, 2, 3)
-            enddo
-            e(ii) = potential(2, 3)
+            end do
+            e(ii) = potential(2,3)
             !--------
-        endif
+        end if
         if (nsurf .eq. 6) then
             do g_i_ = 1, g_p_
                 g_e(g_i_, ii) = g_potential(g_i_, 3, 3)
-            enddo
-            e(ii) = potential(3, 3) - d_h
+            end do
+            e(ii) = potential(3,3) - d_h
             !--------
-        endif
+        end if
         if (nsurf .gt. 6 .or. nsurf .lt. 1) then
             do g_i_ = 1, g_p_
                 g_e(g_i_, ii) = 0.0d0
-            enddo
+            end do
             e(ii) = 0.d0
             !--------
             write (6, *) 'WARN:  NSURF = ', nsurf
-        endif
+        end if
         !
         ! derivatives
         do i = 1, 3
-            de(i, ii) = g_e(i,ii)
-        enddo
+            de(i,ii) = g_e(i, ii)
+        end do
         !
         ! end nt loop
-    enddo
+    end do
     !
 end subroutine pot
+
 !******************************************
 !
 !

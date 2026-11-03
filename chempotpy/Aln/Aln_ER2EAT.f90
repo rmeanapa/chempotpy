@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2EAT potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Extended Rydberg plus the Extended Axilrod-Teller term
     !   Common name:                   ER2+EAT
@@ -62,15 +59,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms
 
     implicit none
-
     double precision :: a1, a2, a3, arc1, arc2, au2, au23, b1, b2, bra, bu2, co, &
         & co1, co2, co3, coij, coim, cojm, cot12, cot2, cot3, de, dx, dy, dz, ee, poly, re, rho, rij, &
         & rim, rjm, rr, rr1, rr2, rr3, u3, v, w2, x, y, z
     integer :: i, j, m, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-
     b1   = 569.076697606  / (autoev*autoang**9)
     b2   = 5.0219833903273/ (autoev*autoang**11)
     au23 = 0.164763067904250132e-01
@@ -85,8 +80,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     !     potential, includes cutoff
     v = 0.d0
-    do 1 i=1,natom
-        do 1 j=i+1,natom
+    do 1 i=1, natom
+        do 1 j=i+1, natom
             dx = x(i)-x(j)
             dy = y(i)-y(j)
             dz = z(i)-z(j)
@@ -97,22 +92,22 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 poly = 1.d0+a1*rho+a2*rho**2+a3*rho**3
                 ee   = dexp(-a1*rho)
                 v    = v-de*ee*poly*co
-            endif
+            end if
     1 continue
 
     !  2. calculate energy of three-body interactions
     u3 = 0.d0
     if(natom.eq.2) go to 7
 
-    do 6 i=1,natom
-        do 4 j=1,natom
+    do 6 i=1, natom
+        do 4 j=1, natom
             if (i.eq.j) go to 4
             dx  = x(i)-x(j)
             dy  = y(i)-y(j)
             dz  = z(i)-z(j)
             rij = dsqrt(dx*dx+dy*dy+dz*dz)
             if (rij.ge.bu2) go to 4
-            do 5 m=1,natom
+            do 5 m=1, natom
                 if (i.eq.m) go to 5
                 if (j.eq.m) go to 5
                 dx  = x(m)-x(j)
@@ -134,7 +129,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 if (rim.lt.bu2) coim=dexp(au23*(1.d0-1.d0/(1.d0-rim/bu2)))
                 co = coij*cojm*coim
 
-                call scos(i,j,m,x,y,z,rij,rjm,rim,natom,maxatom,co1,co2,co3)
+                call scos(i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, co1, co2, co3)
 
                 ! at term
                 u3 = u3+b1*(1.d0+3.d0*co1*co2*co3)/((rij*rjm*rim)**3)*co
@@ -144,12 +139,12 @@ subroutine pot( x, y, z, v, natom, maxatom )
                     arc1 = 0.d0
                 else
                     arc1 = dacos(co1)
-                endif
+                end if
                 if ((dabs(co2)-1.d0).le.10d-12) then
                     arc2 = 0.d0
                 else
                     arc2 = dacos(co2)
-                endif
+                end if
                 cot12 = 6.d0*(dsin(arc1)*dsin(arc2)+co1*co2)
                 cot3  = -25.d0*(4.d0*(co3)**3-3.d0*co3)
                 cot2  = 3.d0+5.d0*(2.d0*(co3)**2-1.d0)
@@ -168,6 +163,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
     7 v=v+u3
 
 end subroutine pot
+
 !
 !
 !
@@ -192,10 +188,9 @@ subroutine scos( i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, &
     !  co3     --- cosine of the angle between bonds mi and mj
     !
     implicit none
-
     double precision :: co1, co2, co3, rij, rim, rjm, scalar1, scalar2, scalar3, x, y, z
     integer          :: i, j, m, maxatom, natom
-    dimension x(maxatom),y(maxatom),z(maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom)
     !  calculate scalar products of the position vectors of two atoms
     !  originating from the third atom
     scalar1 = (x(j)-x(i))*(x(m)-x(i)) +(y(j)-y(i))*(y(m)-y(i)) +(z(j)-z(i))*(z(m)-z(i))

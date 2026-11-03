@@ -19,6 +19,7 @@ class FortranCoreTests( unittest.TestCase ):
             "chempotpy_units.f90",
             "chempotpy_legacy_units.f90",
             "chempotpy_geometry.f90",
+            "chempotpy_legacy_coordinates.f90",
             "chempotpy_status.f90",
         )
         driver_source = """
@@ -26,6 +27,8 @@ program test_fortran_core
     use chempotpy_geometry, only: cartesian_distance, &
         cosine_between_vectors, dot_product_3d, fill_distance_matrix
     use chempotpy_kinds, only: real64
+    use chempotpy_legacy_coordinates, only: &
+        legacy_triatomic_distances_to_bohr
     use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, &
         legacy_coordinates_to_bohr, legacy_energy_to_electronvolt, &
         legacy_hartree_to_electronvolt
@@ -36,7 +39,7 @@ program test_fortran_core
     implicit none
 
     real(real64) :: first_point(3), second_point(3), coordinates(3,3)
-    real(real64) :: distances(3,3), converted(1,3)
+    real(real64) :: distances(3,3), converted(1,3), pair_distances(3)
 
     if( bohr_to_angstrom /= 0.529177210903_real64 ) &
         error stop 'canonical length conversion changed'
@@ -81,6 +84,14 @@ program test_fortran_core
         error stop 'distance matrix failed'
     if( any(distances /= transpose(distances)) ) &
         error stop 'distance matrix is not symmetric'
+    coordinates = 0.0_real64
+    coordinates(2,1) = 3.0_real64*legacy_bohr_to_angstrom
+    coordinates(3,1) = 3.0_real64*legacy_bohr_to_angstrom
+    coordinates(3,2) = 4.0_real64*legacy_bohr_to_angstrom
+    call legacy_triatomic_distances_to_bohr(coordinates, pair_distances)
+    if( any(abs(pair_distances-[3.0_real64, 4.0_real64, 5.0_real64]) &
+        > 8.0_real64*epsilon(1.0_real64)) ) &
+        error stop 'legacy triatomic distances failed'
 
     if( status_success /= 0 .or. status_derivative_unavailable /= 1 &
         .or. status_invalid_input /= 2 ) error stop 'status contract changed'

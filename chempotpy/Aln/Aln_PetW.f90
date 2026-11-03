@@ -2,11 +2,10 @@
 !> @brief Evaluate the Pettifor-Ward aluminum potential through Python.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
-    use chempotpy_kinds, only: real64
+    use chempotpy_kinds,        only: real64
     use chempotpy_legacy_units, only: legacy_coordinates_to_bohr, &
         legacy_energy_to_electronvolt
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,17 +25,16 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate the oscillatory Pettifor-Ward pair-potential energy.
 subroutine evaluate_pettifor_ward( &
         coordinates_bohr, atom_count, energy_hartree )
     use chempotpy_geometry, only: cartesian_distance
-    use chempotpy_kinds, only: real32, real64
+    use chempotpy_kinds,    only: real32, real64
     implicit none
-
     real(real64), parameter :: bohr_to_angstrom = 0.529177249d0
     real(real64), parameter :: effective_charge = 3.0d0
     real(real64), parameter :: amplitudes(3)    = [7.964d0, 1.275d0, 0.030d0]
@@ -66,6 +63,6 @@ subroutine evaluate_pettifor_ward( &
                 & distance_bohr+ phases(2)) *exp(-decay_rates(2)*distance_bohr) +amplitudes(3)*cos(wavevectors(3)* &
                 & distance_bohr+ phases(3)) *exp(-decay_rates(3)*distance_bohr))
             energy_hartree = energy_hartree+pair_energy
-        enddo
-    enddo
+        end do
+    end do
 end subroutine evaluate_pettifor_ward

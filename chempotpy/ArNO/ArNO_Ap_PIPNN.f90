@@ -4,9 +4,9 @@
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, p, g, d )
-
+    use chempotpy_geometry,     only: cartesian_distance
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom
     implicit none
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 3
@@ -15,58 +15,52 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
-    double precision :: vtm, vim
-    double precision :: r_no, r_arn, r_aro, cthx
-    integer          :: iatom, idir, j, istate
+    double precision                :: vtm, vim
+    double precision                :: r_no, r_arn, r_aro, cthx
+    integer                         :: iatom, idir, j, istate
     !initialize
-    vtm = 0.0
-    p   = 0.d0
-    g   = 0.d0
-    d   = 0.d0
+    vtm = 0.0; p = 0.d0; g = 0.d0; d = 0.d0
 
     ! x: Ar, N, O order
-    r_no  = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2+ (x(2,3)-x(3,3))**2)
-    r_no  = r_no/0.529177211
-    r_arn = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2+ (x(1,3)-x(2,3))**2)
-    r_arn = r_arn/0.529177211
-    r_aro = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2+ (x(1,3)-x(3,3))**2)
-    r_aro = r_aro/0.529177211
+    r_no  = cartesian_distance(x(2,:), x(3,:))
+    r_no  = r_no/legacy_bohr_to_angstrom
+    r_arn = cartesian_distance(x(1,:), x(2,:))
+    r_arn = r_arn/legacy_bohr_to_angstrom
+    r_aro = cartesian_distance(x(1,:), x(3,:))
+    r_aro = r_aro/legacy_bohr_to_angstrom
     cthx  = (r_arn**2+r_no**2-r_aro**2)/2d0/r_arn/r_no
 
     if (igrad==0) then
         call potread(path)
-        call arnopes(r_no,r_arn,cthx,vtm,vim,1)
+        call arnopes(r_no, r_arn, cthx, vtm, vim, 1)
     else
-        write (*,*) 'Only energy is available'
-    endif
+        write (*, *) 'Only energy is available'
+    end if
 
     vtm = vtm/8065.7112013
 
-    do istate=1,nstates
+    do istate=1, nstates
         p(istate) = vtm
-    enddo
+    end do
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate ArNOpes.
 subroutine arnopes( r_no, r_arn, cthx, vtot, vint, istat )
     implicit none
-
     double precision :: cthx, r_arn, r_no, s, v, v1, v2, vint, vtot
     integer          :: istat
-    call arnopes_sh(r_no,r_arn,cthx,v1,istat)
-    call longpes(r_no,r_arn,cthx,v2,istat)
+    call arnopes_sh(r_no, r_arn, cthx, v1, istat)
+    call longpes(r_no, r_arn, cthx, v2, istat)
     s    = 0.5d0*(1d0-dtanh(0.8d0*(r_arn-17d0)))
     vtot = s*v1+(1d0-s)*v2
-    call pes1d(r_no,v,istat)
+    call pes1d(r_no, v, istat)
     vint = vtot-v
 end
 
 !> @brief Evaluate ArNOpes_sh.
 subroutine arnopes_sh( r10, r20, cthi, va, istate )
     implicit none
-
     double precision            :: cth, cthi, r1, r10, r2, r20, th, va, vcut
     integer                     :: istate
     double precision, parameter :: rbohr = 0.5291771
@@ -84,7 +78,7 @@ subroutine arnopes_sh( r10, r20, cthi, va, istate )
     if (r2.lt.3.50d0) r2=3.50d0
     if (r2.gt.40.d0) r2=40.d0
     if(istate.ne.1.and.istate.ne.2)istate=1
-    call spl3(r2,th,r1,va,istate)
+    call spl3(r2, th, r1, va, istate)
     !       set zero point at minimum of Ar + NO on A' state
     va = va*219474.63067d0/27.2114d0-31.4930895583566d0
 end
@@ -92,40 +86,37 @@ end
 !> @brief Evaluate potread.
 subroutine potread( path )
     implicit none
-    double precision, parameter :: pi    = 3.141592653589793d0
-    integer, parameter          :: nroh1 = 17
-    integer, parameter          :: nth   = 13
-    integer, parameter          :: nroh2 = 70
-    integer, parameter          :: ip    = 2
-    integer, parameter          :: m     = 100
-    integer, parameter          :: n     = 100
-    integer, parameter          :: l     = 100
-
+    double precision, parameter     :: pi    = 3.141592653589793d0
+    integer, parameter              :: nroh1 = 17
+    integer, parameter              :: nth   = 13
+    integer, parameter              :: nroh2 = 70
+    integer, parameter              :: ip    = 2
+    integer, parameter              :: m     = 100
+    integer, parameter              :: n     = 100
+    integer, parameter              :: l     = 100
     character(len=1024), intent(in) :: path
-
-    integer          :: file_unit_98
-    double precision :: dal, dy1, dyn, pesmin, r1m, r2m, ra1, ra2, roh1, roh2, rra1, &
+    integer                         :: file_unit_98
+    double precision                :: dal, dy1, dyn, pesmin, r1m, r2m, ra1, ra2, roh1, roh2, rra1, &
         & rra2, th1, thm, thth, tth1, vcut, ve, ve1, ve2, vmin1, xt, y, y2
     integer             :: i, ii, ind, j, k
     character(len=1024) :: file_path1
-    dimension xt(m),y(m),y2(l)
+    dimension xt(m), y(m), y2(l)
     data vmin1/-656.852768990000d0/
-    data dy1,dyn/1.0d30,1.0d30/
+    data dy1, dyn/1.0d30, 1.0d30/
     common /bvcut/vcut
-    common /pesa/pesmin,roh2(nroh1,nth,nroh2),roh1(nroh1),&
-        &thth(nth),ve(ip,nroh1,nth,nroh2),ind(nroh1,nth)
-
+    common /pesa/pesmin, roh2(nroh1, nth, nroh2), roh1(nroh1), &
+        &thth(nth), ve(ip, nroh1, nth, nroh2), ind(nroh1, nth)
     file_path1 = trim(path)//"/ArNO/spline.dat"
-    open(newunit=file_unit_98,file=file_path1,status='old')
+    open(newunit=file_unit_98, file=file_path1, status='old')
     !        open(66,file='check.txt')
     vcut   = 12d0 ! in eV
     pesmin = 10000
     !        read(98,*)
-    do i=1,nroh1
-        do j=1,nth
-            ind(i,j) = 0
-            do k=1,nroh2
-                read(file_unit_98,*)ra1,th1,ra2,ve1,ve2
+    do i=1, nroh1
+        do j=1, nth
+            ind(i, j) = 0
+            do k=1, nroh2
+                read(file_unit_98, *)ra1, th1, ra2, ve1, ve2
                 if (ra1+ra2.lt.0.1) goto 7
                 if (k.eq.1) then
                     rra1 = ra1
@@ -134,46 +125,45 @@ subroutine potread( path )
                 else
                     dal = abs(ra1-rra1)+abs(th1-tth1)
                     if (dal.gt.0.01) then
-                        write(*,*)' error  ',ii,ra1,rra1,ra2,rra2
+                        write(*, *)' error  ', ii, ra1, rra1, ra2, rra2
                         stop
-                    endif
-                endif
+                    end if
+                end if
                 if (ve1.lt.pesmin) then
                     pesmin = ve1
                     r1m    = ra1
                     r2m    = ra2
                     thm    = th1
-                endif
-                ind(i,j)    = ind(i,j)+1
-                roh2(i,j,k) = ra2
-                roh1(i)     = ra1
-                thth(j)     = th1
-                ve(1,i,j,k) = (ve1-vmin1)*27.2114d0
-                ve(2,i,j,k) = (ve2-vmin1)*27.2114d0
-            enddo
+                end if
+                ind(i, j)      = ind(i, j)+1
+                roh2(i, j, k)  = ra2
+                roh1(i)        = ra1
+                thth(j)        = th1
+                ve(1, i, j, k) = (ve1-vmin1)*27.2114d0
+                ve(2, i, j, k) = (ve2-vmin1)*27.2114d0
+            end do
             7 continue
-        enddo
-    enddo
+        end do
+    end do
     !        write(*,*)r1m,r2m,thm,pesmin
     !        write(*,*)' th1=',(thth(i),i=1,nth)
     !        write(*,*)' roh1=',(roh1(i),i=1,nroh1)
-    do i=1,nroh1
-        do j=1,nth
-            do k=1,ind(i,j)
-                if (ve(1,i,j,k).gt.vcut) ve(1,i,j,k)=vcut
-                if (ve(2,i,j,k).gt.vcut) ve(2,i,j,k)=vcut
+    do i=1, nroh1
+        do j=1, nth
+            do k=1, ind(i, j)
+                if (ve(1, i, j, k).gt.vcut) ve(1, i, j, k)=vcut
+                if (ve(2, i, j, k).gt.vcut) ve(2, i, j, k)=vcut
                 !          write(66,1001)roh1(i),thth(j),roh2(i,j,k)
                 !     &,ve(1,i,j,k),ve(2,i,j,k)
-            enddo
-        enddo
-    enddo
+            end do
+        end do
+    end do
     close(file_unit_98)
 end
 
 !> @brief Evaluate spl3.
 subroutine spl3( r1, th, r2, v, istate )
     implicit none
-
     double precision :: ddhy, ddny, dds1, dds2, dds3, ddty, dhy, dny, ds1, ds2, ds3, dty, dy1, &
         & dyn, h1, h2, h3, pesmin, r1, r1a, r2, roh1, roh2, s1, s2, s3, ss, sss, th, thth, v, &
         & vcut, ve, xt, y, y2, y3, yw2
@@ -186,43 +176,42 @@ subroutine spl3( r1, th, r2, v, istate )
     integer, parameter :: n     = 100
     integer, parameter :: l     = 100
     dimension xt(m)
-    dimension dty(l),ddty(l),s1(l),ds1(l),dds1(l),h1(l)
-    dimension dny(n),ddny(n),s2(l),ds2(l),dds2(l),h2(n)
-    dimension dhy(m),ddhy(m),s3(l),ds3(l),dds3(l),h3(m)
-    dimension y(m),ss(m),sss(m),y2(l)
-    data dy1,dyn/1.0d30,1.0d30/
+    dimension dty(l), ddty(l), s1(l), ds1(l), dds1(l), h1(l)
+    dimension dny(n), ddny(n), s2(l), ds2(l), dds2(l), h2(n)
+    dimension dhy(m), ddhy(m), s3(l), ds3(l), dds3(l), h3(m)
+    dimension y(m), ss(m), sss(m), y2(l)
+    data dy1, dyn/1.0d30, 1.0d30/
     common /bvcut/vcut
-    common /pesa/pesmin,roh2(nroh1,nth,nroh2),roh1(nroh1),&
-        &thth(nth),ve(ip,nroh1,nth,nroh2),ind(nroh1,nth)
-
+    common /pesa/pesmin, roh2(nroh1, nth, nroh2), roh1(nroh1), &
+        &thth(nth), ve(ip, nroh1, nth, nroh2), ind(nroh1, nth)
     !        do iop=istate,istate
     iop = istate
     !$OMP PARALLEL DEFAULT(SHARED)
     !$OMP&  PRIVATE (i,j,nh,k,xt,y,y2,y3,ss,nthth,yw2)
     !$OMP DO
-    do 20 i=1,nroh1
-        do 10 j=1,nth
+    do 20 i=1, nroh1
+        do 10 j=1, nth
             nh = 0
-            do 2 k=1,ind(i,j)
+            do 2 k=1, ind(i, j)
                 nh     = nh+1
-                xt(nh) = roh2(i,j,k)
-                y(nh)  = ve(iop,i,j,k)
+                xt(nh) = roh2(i, j, k)
+                y(nh)  = ve(iop, i, j, k)
             2 continue
             r1a = r1
-            call spline(xt,y,nh,dy1,dyn,y2)
-            call splint(xt,y,y2,nh,r1a,y3)
+            call spline(xt, y, nh, dy1, dyn, y2)
+            call splint(xt, y, y2, nh, r1a, y3)
             22 continue
             if (y3.gt.vcut) y3=vcut
             ss(j) = y3
         10 continue
         nthth = 0
-        do 5 j=1,nth
+        do 5 j=1, nth
             nthth     = nthth+1
             xt(nthth) = thth(j)
             y(nthth)  = ss(j)
         5 continue
-        call spline(xt,y,nthth,0.0d0,0.0d0,y2)
-        call splint(xt,y,y2,nthth,th,yw2)
+        call spline(xt, y, nthth, 0.0d0, 0.0d0, y2)
+        call splint(xt, y, y2, nthth, th, yw2)
         33 continue
         if(yw2.gt.vcut) yw2=vcut
         sss(i) = yw2
@@ -235,16 +224,16 @@ subroutine spl3( r1, th, r2, v, istate )
     !$OMP PARALLEL DEFAULT(SHARED)
     !$OMP&  PRIVATE (i)
     !$OMP DO
-    do i=1,nroh1
+    do i=1, nroh1
         !       nr1=nr1+1
         xt(i) = roh1(i)
         y(i)  = sss(i)
-    enddo
+    end do
     !$OMP END DO NOWAIT
     !$OMP END PARALLEL
 
-    call spline(xt,y,nr1,dy1,dyn,y2)
-    call splint(xt,y,y2,nr1,r2,yw2)
+    call spline(xt, y, nr1, dy1, dyn, y2)
+    call splint(xt, y, y2, nr1, r2, yw2)
     44 continue
     if (yw2.gt.vcut) yw2=vcut
     v = yw2
@@ -260,10 +249,9 @@ end
 !> @brief Evaluate splint.
 subroutine splint( xa, ya, y2a, n, x, y )
     implicit none
-
     double precision :: a, b, h, x, xa, y, y2a, ya
     integer          :: k, khi, klo, n
-    dimension xa(n),y2a(n),ya(n)
+    dimension xa(n), y2a(n), ya(n)
     klo = 1
     khi = n
     1 if (khi-klo.gt.1) then
@@ -272,23 +260,23 @@ subroutine splint( xa, ya, y2a, n, x, y )
             khi = k
         else
             klo = k
-        endif
+        end if
         goto 1
-    endif
+    end if
     h = xa(khi)-xa(klo)
-    if (h.eq.0.0d0) write(6,*) 'bad xa input in splint'
+    if (h.eq.0.0d0) write(6, *) 'bad xa input in splint'
     a = (xa(khi)-x)/h
     b = (x-xa(klo))/h
     y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))* (h**2)/6.0d0
 end
+
 !##############################################################################
 !> @brief Evaluate spline.
 subroutine spline( x, y, n, yp1, ypn, y2 )
     implicit none
-
     double precision :: p, qn, sig, u, un, x, y, y2, yp1, ypn
     integer          :: i, k, n
-    dimension x(n),y(n),y2(n)
+    dimension x(n), y(n), y2(n)
     integer, parameter :: nmax = 100
     dimension u(nmax)
     if (yp1.gt..99d30) then
@@ -297,8 +285,8 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
     else
         y2(1) = -0.5d0
         u(1)  = (3.0d0/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
-    endif
-    do 11 i=2,n-1
+    end if
+    do 11 i=2, n-1
         sig   = (x(i)-x(i-1))/(x(i+1)-x(i-1))
         p     = sig*y2(i-1)+2.0d0
         y2(i) = (sig-1.0d0)/p
@@ -310,9 +298,9 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
     else
         qn = 0.5d0
         un = (3.0d0/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
-    endif
+    end if
     y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0d0)
-    do 12 k=n-1,1,-1
+    do 12 k=n-1, 1, -1
         y2(k) = y2(k)*y2(k+1)+u(k)
     12 continue
 end
@@ -320,11 +308,10 @@ end
 !> @brief Evaluate longpes.
 subroutine longpes( r_no, r_arn, cthx, v, istat )
     implicit none
-
     double precision :: a1, a2, amn, amo, cth, cthx, de, dy1, dyn, r, r1, r2, r_arn, r_no, s, &
         & t, tocm, v, vmin1, x, y, y2
     integer :: i, istat
-    dimension x(17),a1(4,17),a2(4,17),y(17),y2(17),de(17)
+    dimension x(17), a1(4,17), a2(4,17), y(17), y2(17), de(17)
     data vmin1/-656.852768990000d0/
     !       R in angstrom
     amn = 14.0030740d0
@@ -335,7 +322,7 @@ subroutine longpes( r_no, r_arn, cthx, v, istat )
     s   = dsqrt(r1**2+t**2-2d0*r1*t*cthx) ! in bohr
     r   = s*0.5291772083d0
     cth = (t**2+s**2-r1**2)/2d0/t/s
-    cth = min(1d0,cth);cth=max(-1d0,cth)
+    cth = min(1d0, cth);cth=max(-1d0, cth)
 
     tocm = 219474.63067d0
     dy1  = 1d30
@@ -515,10 +502,10 @@ subroutine longpes( r_no, r_arn, cthx, v, istat )
         de(15) = -656.72354209d0
         de(16) = -656.65642703d0
         de(17) = -656.62721422d0
-        do i=1,17
-            call vfuncs(cth,r,a1(:,i),v)
+        do i=1, 17
+            call vfuncs(cth, r, a1(:,i), v)
             y(i) = v+(de(i)-vmin1)*tocm
-        enddo
+        end do
     else
         de(1)  = -656.45778154d0
         de(2)  = -656.72823764d0
@@ -537,54 +524,51 @@ subroutine longpes( r_no, r_arn, cthx, v, istat )
         de(15) = -656.72352380d0
         de(16) = -656.65639961d0
         de(17) = -656.62718628d0
-        do i=1,17
-            call vfuncs(cth,r,a2(:,i),v)
+        do i=1, 17
+            call vfuncs(cth, r, a2(:,i), v)
             y(i) = v+(de(i)-vmin1)*tocm
-        enddo
-    endif
-    call spline(x,y,17,dy1,dyn,y2)
-    call splint(x,y,y2,17,r2,v)
+        end do
+    end if
+    call spline(x, y, 17, dy1, dyn, y2)
+    call splint(x, y, y2, 17, r2, v)
     !       set zero point at minimum of Ar + NO on A' state
     v = v-31.4930895583566d0
 end
+
 !***********************************************************************
 !> @brief Evaluate VFUNCS.
 subroutine vfuncs( theta, r, c, v )
     implicit none
-
     double precision :: afunc, c, cth, f, r, theta, v
     integer          :: i
-    dimension afunc(4),c(4)
-
+    dimension afunc(4), c(4)
     cth = theta
-    call fval(r,cth,f)
+    call fval(r, cth, f)
     afunc(1) = f/r**6
     afunc(2) = cth*f/r**6
     afunc(3) = 0.5d0*(3d0*cth**2-1d0)*f/r**6
     afunc(4) = 0.5d0*(5d0*cth**3-3d0*cth)*f/r**6
     v        = 0d0
-    do i=1,4
+    do i=1, 4
         v = v+afunc(i)*c(i)
-    enddo
+    end do
 end
 
 !> @brief Evaluate Bval.
 subroutine bval( cth, b )
     implicit none
-
-    double precision :: cth,b,b0,b1,b2
+    double precision :: cth, b, b0, b1, b2
     b0 = -3.0318d0
     b1 = 0.1299d0
     b2 = 0.0564d0
     b  = b0+b1*cth+b2*0.5d0*(3d0*cth**2-1d0)
 end
+
 !> @brief Evaluate Fval.
 subroutine fval( r, cth, f )
     implicit none
-
-    double precision :: r,cth,f,b
-
-    call bval(cth,b)
+    double precision :: r, cth, f, b
+    call bval(cth, b)
     b = abs(b)*r
     f = 1d0-dexp(-b)*(1d0+b+b**2/2d0+b**3/6d0+b**4/24d0+b**5/120d0+ b**6/720d0)
 end
@@ -592,10 +576,9 @@ end
 !> @brief Evaluate pes1D.
 subroutine pes1d( r_no, v, istat )
     implicit none
-
     double precision :: a1, a2, de, dy1, dyn, r2, r_no, tocm, v, vmin1, x, y, y2
     integer          :: i, istat
-    dimension x(17),a1(4,17),a2(4,17),y(17),y2(17),de(17)
+    dimension x(17), a1(4,17), a2(4,17), y(17), y2(17), de(17)
     data vmin1/-656.852768990000d0/
     r2   = r_no
     tocm = 219474.63067d0
@@ -639,9 +622,9 @@ subroutine pes1d( r_no, v, istat )
         de(15) = -656.72354209d0
         de(16) = -656.65642703d0
         de(17) = -656.62721422d0
-        do i=1,17
+        do i=1, 17
             y(i) = (de(i)-vmin1)*tocm
-        enddo
+        end do
     else
         de(1)  = -656.45778154d0
         de(2)  = -656.72823764d0
@@ -660,12 +643,12 @@ subroutine pes1d( r_no, v, istat )
         de(15) = -656.72352380d0
         de(16) = -656.65639961d0
         de(17) = -656.62718628d0
-        do i=1,17
+        do i=1, 17
             y(i) = (de(i)-vmin1)*tocm
-        enddo
-    endif
-    call spline(x,y,17,dy1,dyn,y2)
-    call splint(x,y,y2,17,r2,v)
+        end do
+    end if
+    call spline(x, y, 17, dy1, dyn, y2)
+    call splint(x, y, y2, 17, r2, v)
     !       set zero point at minimum of Ar + NO on A' state
     v = v-31.4930895583566d0
 end

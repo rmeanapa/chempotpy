@@ -1,12 +1,12 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !**********************************************************************
-!   System:                     O3
-!   Functional form:            permutation-invariant polynomials
-!   Common name:                O3 2 1Ap (2nd adiab. singlet A' state)
-!   Number of derivatives:      1
-!   Number of bodies:           3
+!   System:                        O3
+!   Functional form:               permutation-invariant polynomials
+!   Common name:                   O3 2 1Ap (2nd adiab. singlet A' state)
+!   Number of derivatives:         1
+!   Number of bodies:              3
 !   Number of electronic surfaces: 1
-!   Interface: Section-2
+!   Interface:                     Section-2
 !
 !   References:: Z. Varga, Y. Paukku, and D. G. Truhlar,
 !     "Potential energy surfaces for O + O2 collisions"
@@ -24,9 +24,7 @@
 
 !> @brief Evaluate pes for the O3_2_1Ap potential.
 subroutine pes( x, igrad, p, g, d )
-
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 3
@@ -34,43 +32,41 @@ subroutine pes( x, igrad, p, g, d )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: v, tx(9), tg(9)
-    integer          :: iatom, idir, j, istate
+    double precision              :: v, tx(9), tg(9)
+    integer                       :: iatom, idir, j, istate
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
-    do iatom=1,natoms
-        do idir=1,3
+    do iatom=1, natoms
+        do idir=1, 3
             j     = 3*(iatom-1)+idir
-            tx(j) = x(iatom, idir)
-        enddo
-    enddo
+            tx(j) = x(iatom,idir)
+        end do
+    end do
     tg = 0.d0
 
-    call o3pes(tx,v,tg,igrad)
+    call o3pes(tx, v, tg, igrad)
 
     v  = v/23.0609
     tg = tg/23.0609
 
-    do istate=1,nstates
+    do istate=1, nstates
         p(istate) = v
-    enddo
+    end do
 
-    do istate=1,nstates
-        do iatom=1,natoms
-            do idir=1,3
+    do istate=1, nstates
+        do iatom=1, natoms
+            do idir=1, 3
                 j                    = 3*(iatom-1)+idir
                 g(istate,iatom,idir) = tg(j)
-            enddo
-        enddo
-    enddo
+            end do
+        end do
+    end do
 
     d = 0.d0
 
 end subroutine pes
+
 !
 ! Local variables used in the O3 PES subroutine
 ! input coordinate matrix: X(9)in Ang
@@ -99,17 +95,14 @@ subroutine o3pes( x, v, dvdx, igrad )
     !**********************************************************************
 
     implicit none
-
-    integer          :: i,igrad,j,nob,k
+    integer          :: i, igrad, j, nob, k
     double precision :: v
-    double precision :: dvdx(12),x(12)
-
+    double precision :: dvdx(12), x(12)
     !      common /coord/    R(3)
     !      common /epot/     rMs(3),rM(0:7),P(0:66),C(56),B(56)
     !      common /gradt/    dMsdR(3,3),dMdR(3,0:7),dPdR(3,0:66),dVdR(3),
     !     $                  dRdX(3,9),dBdR(3,56)
     !      common /msprmt/   a,ab,ra,rb
-
     ! Read Cartesian coordinate from input file
     call coord_convt(x)
 
@@ -119,13 +112,14 @@ subroutine o3pes( x, v, dvdx, igrad )
 
         if (igrad .eq. 1) then
             ! Call EvdVdX to evaluate the derivatives of V w.r.t. X
-            call evdvdx(x,dvdx)
-        endif
+            call evdvdx(x, dvdx)
+        end if
     else
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 
 end subroutine o3pes
+
 !> @brief Evaluate coord_convt for the O3_2_1Ap potential.
 subroutine coord_convt( x )
     !**********************************************************************
@@ -133,26 +127,22 @@ subroutine coord_convt( x )
     !  by reading XYZ coordinate
     !**********************************************************************
     implicit none
-
     double precision :: r
-
     integer          :: i
     double precision :: x(12)
-
     common /coord/    r(3)
-
     !**********************************************************************
     !  Now, calculate the inter-atomic distance
     !  r1 = r(O1O2)
     !  r2 = r(O1O3)
     !  r3 = r(O2O3)
     !**********************************************************************
-
     r(1) = sqrt((x(4)-x(1))**2 + (x(5)-x(2))**2 + (x(6)-x(3))**2)
     r(2) = sqrt((x(7)-x(1))**2 + (x(8)-x(2))**2 + (x(9)-x(3))**2)
     r(3) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
 
 end subroutine coord_convt
+
 !> @brief Evaluate EvV for the O3_2_1Ap potential.
 subroutine evv( v )
     !**********************************************************************
@@ -173,15 +163,11 @@ subroutine evv( v )
     !**********************************************************************
 
     implicit none
-
     double precision :: b, c, p, r, rm, rms
-
-    integer          :: i,j,k
-    double precision :: dist,dv2dr,v,v2,disp,dispdr(6)
-
+    integer          :: i, j, k
+    double precision :: dist, dv2dr, v, v2, disp, dispdr(6)
     common /coord/    r(3)
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
     ! Calculate the six MEG terms for each point
     call evmorse
 
@@ -197,25 +183,26 @@ subroutine evv( v )
     ! Initialized v to be 2De 2*120.243 kcal/mol
     v = 240.486d0
     ! Evaluate 2-body interactions
-    do i=1,3
+    do i=1, 3
         dist = r(i)
-        call ev2gm2(dist,v2,dv2dr,4,0)
+        call ev2gm2(dist, v2, dv2dr, 4, 0)
         v = v+v2
-    enddo
+    end do
 
     ! Add D3 dispersion correction
-    call d3disp(r,disp,dispdr,0)
+    call d3disp(r, disp, dispdr, 0)
     v = v+disp
 
     ! Evaluate V by taken the product of C and Basis function array
-    do i=1,56
+    do i=1, 56
         v = v + c(i)*b(i)
-    enddo
+    end do
 
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
 
 end subroutine evv
+
 !> @brief Evaluate EvdVdX for the O3_2_1Ap potential.
 subroutine evdvdx( x, dvdx )
     !**********************************************************************
@@ -231,21 +218,17 @@ subroutine evdvdx( x, dvdx )
     !**********************************************************************
 
     implicit none
-
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, r, rm, rms
-
-    integer          :: i,j
-    double precision :: dvdx(9),x(9)
-
+    integer          :: i, j
+    double precision :: dvdx(9), x(9)
     common /coord/    r(3)
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-    common /gradt/    dmsdr(3,3),dmdr(3,0:7),dpdr(3,0:66),dvdr(3), &
-        & drdx(3,9),dbdr(3,56)
-
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
+    common /gradt/    dmsdr(3, 3), dmdr(3, 0:7), dpdr(3, 0:66), dvdr(3), &
+        & drdx(3, 9), dbdr(3, 56)
     ! Initialize dVdX
-    do i=1,9
+    do i=1, 9
         dvdx(i) = 0.0d0
-    enddo
+    end do
 
     ! Call EvdVdR to evaluate dVdR(3)
     call evdvdr
@@ -255,40 +238,37 @@ subroutine evdvdx( x, dvdx )
 
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to
     ! 3
-    do i=1,9
-        do j=1,3
-            dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        enddo
-    enddo
+    do i=1, 9
+        do j=1, 3
+            dvdx(i) = dvdx(i) + dvdr(j)*drdx(j, i)
+        end do
+    end do
 
     !      write(*,*) 'The 9 dVdX are:'
     !      Write(*,9999) (dVdX(i),i=1,9)
     ! 9999 Format(1x,3F15.8)
 
 end subroutine evdvdx
+
 !> @brief Evaluate EvMorse for the O3_2_1Ap potential.
 subroutine evmorse
-
     implicit none
-
     double precision :: a, ab, b, c, p, r, ra, rb, rm, rms
-
-    integer :: i
-
+    integer          :: i
     common /coord/    r(3)
-    common /msprmt/   a,ab,ra,rb
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-
+    common /msprmt/   a, ab, ra, rb
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
     ! mixed exponential-Gaussian terms = exp(-(r-ra)/a-(r-rb)^2/ab)
     ! ra:   reference bond length
     ! rb:   reference bond length
     ! a:    nonlinear parameter, unit Anstrom
     ! ab:   nonlinear parameter, unit Anstrom^2
-    do i=1,3
+    do i=1, 3
         rms(i) = exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
-    enddo
+    end do
 
 end subroutine evmorse
+
 !> @brief Evaluate EvMono for the O3_2_1Ap potential.
 subroutine evmono
     !**********************************************************************
@@ -298,11 +278,8 @@ subroutine evmono
     !**********************************************************************
 
     implicit none
-
     double precision :: b, c, p, rm, rms
-
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
     rm(0) = 1.0d0
     rm(1) = rms(3)
     rm(2) = rms(2)
@@ -313,6 +290,7 @@ subroutine evmono
     rm(7) = rm(1)*rm(6)
 
 end subroutine evmono
+
 !> @brief Evaluate EvPoly for the O3_2_1Ap potential.
 subroutine evpoly
     !**********************************************************************
@@ -322,11 +300,8 @@ subroutine evpoly
     !**********************************************************************
 
     implicit none
-
     double precision :: b, c, p, rm, rms
-
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
     p( 0) = rm(0)
     p( 1) = rm(1) + rm(2) + rm(3)
     p( 2) = rm(4) + rm(5) + rm(6)
@@ -396,6 +371,7 @@ subroutine evpoly
     p(66) = p( 1)*p(52) - p(65)
 
 end subroutine evpoly
+
 !> @brief Evaluate evbas for the O3_2_1Ap potential.
 subroutine evbas
     !**********************************************************************
@@ -403,55 +379,52 @@ subroutine evbas
     !**********************************************************************
 
     implicit none
-
     double precision :: b, c, p, rm, rms
-
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
     integer          :: i
     double precision :: b1(67)
-
     ! Pass P(0:66) to BM1(1:67)
-    do i=1,67
+    do i=1, 67
         b1(i) = p(i-1)
-    enddo
+    end do
 
     ! Remove unconnected terms and 2-body terms and pass to B(1:430)
     b(1) = b1(3)
 
-    do i=2,3
+    do i=2, 3
         b(i) = b1(i+3)
-    enddo
+    end do
 
-    do i=4,6
+    do i=4, 6
         b(i) = b1(i+4)
-    enddo
+    end do
 
-    do i=7,10
+    do i=7, 10
         b(i) = b1(i+5)
-    enddo
+    end do
 
-    do i=11,16
+    do i=11, 16
         b(i) = b1(i+6)
-    enddo
+    end do
 
-    do i=17,23
+    do i=17, 23
         b(i) = b1(i+7)
-    enddo
+    end do
 
-    do i=24,32
+    do i=24, 32
         b(i) = b1(i+8)
-    enddo
+    end do
 
-    do i=33,43
+    do i=33, 43
         b(i) = b1(i+9)
-    enddo
+    end do
 
-    do i=44,56
+    do i=44, 56
         b(i) = b1(i+10)
-    enddo
+    end do
 
 end subroutine evbas
+
 !> @brief Evaluate ev2gm2 for the O3_2_1Ap potential.
 subroutine ev2gm2( r, v, grad, imol, igrad )
     !**********************************************************************
@@ -466,7 +439,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     !
     !**********************************************************************
     implicit none
-
     integer          :: imol
     double precision :: r
     double precision :: v, grad
@@ -474,7 +446,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     ! ground
     ! state potential energy curve of O2 CBS+SR+SO+CV. Units: alpha in
     ! Anstromgs^-2, beta=dimensionless, a_k in milihartree.
-    double precision :: alpha,beta,a(0:7)
+    double precision :: alpha, beta, a(0:7)
     integer          :: k, igrad
     ! Original parameters
     !      alpha = 0.785d0
@@ -487,7 +459,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     !      a(5) = 214799.54567d0
     !      a(6) = -148395.42850d0
     !      a(7) = 73310.781453d0
-
     ! Modified parameters for D3(BJ)
     alpha = 9.439784362354936d-1
     beta  = 1.262242998506810d0
@@ -501,20 +472,20 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     a(7)  = 1.176861219078620d5
 
     v = 0.d0
-    do k=0,7
+    do k=0, 7
         v = v + a(k)*dexp(-alpha*beta**k*r**2)
-    enddo
+    end do
     ! From milihartree to kcal/mol
     v = v*627.509523475149d-3
     ! Compute the gradient if needed
     if (igrad.eq.1) then
         grad = 0.d0
-        do k=0,7
+        do k=0, 7
             grad = grad-2.d0*a(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
-        enddo
+        end do
         ! Convert from milihartree/A to i(kcal/mol)/A
         grad = grad*627.509523475149d-3
-    endif
+    end if
 end subroutine ev2gm2
 
 !> @brief Evaluate EvdVdR for the O3_2_1Ap potential.
@@ -537,34 +508,30 @@ subroutine evdvdr
     !**********************************************************************
 
     implicit none
-
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, r, rm, rms
-
-    integer          :: i,j
-    double precision :: dist,v2,dv2dr,disp,dispdr(3)
-
+    integer          :: i, j
+    double precision :: dist, v2, dv2dr, disp, dispdr(3)
     common /coord/    r(3)
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-    common /gradt/    dmsdr(3,3),dmdr(3,0:7),dpdr(3,0:66),dvdr(3), &
-        & drdx(3,9),dbdr(3,56)
-
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
+    common /gradt/    dmsdr(3, 3), dmdr(3, 0:7), dpdr(3, 0:66), dvdr(3), &
+        & drdx(3, 9), dbdr(3, 56)
     ! Initialize dVdR(3)
-    do i=1,3
+    do i=1, 3
         dvdr(i) = 0.0d0
-    enddo
+    end do
 
     ! Add dV2dR(i) to dVdR
-    do i=1,3
+    do i=1, 3
         dist = r(i)
-        call ev2gm2(dist,v2,dv2dr,4,1)
+        call ev2gm2(dist, v2, dv2dr, 4, 1)
         dvdr(i) = dv2dr
-    enddo
+    end do
 
     ! Add numerical gradient of D3 dispersion correction
-    call d3disp(r,disp,dispdr,1)
-    do i=1,3
+    call d3disp(r, disp, dispdr, 1)
+    do i=1, 3
         dvdr(i) = dvdr(i) + dispdr(i)
-    enddo
+    end do
 
     ! Calculate dMEG/dr(3,3) for given R(3)
     call evdmsdr
@@ -579,13 +546,14 @@ subroutine evdvdr
     call evdbdr
 
     ! Evaluate dVdR(3) by taken the product of C(j) and dPdR(i,j)
-    do i=1,3
-        do j=1,56
-            dvdr(i) = dvdr(i) + c(j)*dbdr(i,j)
-        enddo
-    enddo
+    do i=1, 3
+        do j=1, 56
+            dvdr(i) = dvdr(i) + c(j)*dbdr(i, j)
+        end do
+    end do
 
 end subroutine evdvdr
+
 !> @brief Evaluate EvdRdX for the O3_2_1Ap potential.
 subroutine evdrdx( x )
     !**********************************************************************
@@ -601,50 +569,47 @@ subroutine evdrdx( x )
     !**********************************************************************
 
     implicit none
-
     double precision :: dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, r
-
-    integer          :: i,j
+    integer          :: i, j
     double precision :: x(9)
-
     common /coord/    r(3)
-    common /gradt/    dmsdr(3,3),dmdr(3,0:7),dpdr(3,0:66),dvdr(3), &
-        & drdx(3,9),dbdr(3,56)
-
+    common /gradt/    dmsdr(3, 3), dmdr(3, 0:7), dpdr(3, 0:66), dvdr(3), &
+        & drdx(3, 9), dbdr(3, 56)
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
+    do i=1, 3
+        do j=1, 9
+            drdx(i, j) = 0.0d0
+        end do
+    end do
 
     ! Start to calculate the non-zero dRdX
     ! dr1dx
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
+    drdx(1, 1) = (x(1)-x(4))/r(1)
+    drdx(1, 2) = (x(2)-x(5))/r(1)
+    drdx(1, 3) = (x(3)-x(6))/r(1)
+    drdx(1, 4) = -drdx(1, 1)
+    drdx(1, 5) = -drdx(1, 2)
+    drdx(1, 6) = -drdx(1, 3)
 
     ! dr2dx
-    drdx(2,1) = (x(1)-x(7))/r(2)
-    drdx(2,2) = (x(2)-x(8))/r(2)
-    drdx(2,3) = (x(3)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,1)
-    drdx(2,8) = -drdx(2,2)
-    drdx(2,9) = -drdx(2,3)
+    drdx(2, 1) = (x(1)-x(7))/r(2)
+    drdx(2, 2) = (x(2)-x(8))/r(2)
+    drdx(2, 3) = (x(3)-x(9))/r(2)
+    drdx(2, 7) = -drdx(2, 1)
+    drdx(2, 8) = -drdx(2, 2)
+    drdx(2, 9) = -drdx(2, 3)
 
     ! dr3dx
-    drdx(3,4) = (x(4)-x(7))/r(3)
-    drdx(3,5) = (x(5)-x(8))/r(3)
-    drdx(3,6) = (x(6)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,4)
-    drdx(3,8) = -drdx(3,5)
-    drdx(3,9) = -drdx(3,6)
+    drdx(3, 4) = (x(4)-x(7))/r(3)
+    drdx(3, 5) = (x(5)-x(8))/r(3)
+    drdx(3, 6) = (x(6)-x(9))/r(3)
+    drdx(3, 7) = -drdx(3, 4)
+    drdx(3, 8) = -drdx(3, 5)
+    drdx(3, 9) = -drdx(3, 6)
     ! Finish the calculation of non-zero dRdX
 
 end subroutine evdrdx
+
 !> @brief Evaluate EvdMsdR for the O3_2_1Ap potential.
 subroutine evdmsdr
     !**********************************************************************
@@ -658,31 +623,28 @@ subroutine evdmsdr
     !**********************************************************************
 
     implicit none
-
     double precision :: a, ab, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, r, ra, rb
-
-    integer :: i,j
-
+    integer          :: i, j
     common /coord/    r(3)
-    common /gradt/    dmsdr(3,3),dmdr(3,0:7),dpdr(3,0:66),dvdr(3), &
-        & drdx(3,9),dbdr(3,56)
-    common /msprmt/   a,ab,ra,rb
-
+    common /gradt/    dmsdr(3, 3), dmdr(3, 0:7), dpdr(3, 0:66), dvdr(3), &
+        & drdx(3, 9), dbdr(3, 56)
+    common /msprmt/   a, ab, ra, rb
     ! Initialize dmsdr
-    do i=1,3
-        do j=1,3
-            dmsdr(i,j) = 0.0d0
-        enddo
-    enddo
+    do i=1, 3
+        do j=1, 3
+            dmsdr(i, j) = 0.0d0
+        end do
+    end do
     !
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
     !
-    do i=1,3
-        dmsdr(i,i) = (-2.0d0*(r(i)-rb)/ab-1/a)* exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
-    enddo
+    do i=1, 3
+        dmsdr(i, i) = (-2.0d0*(r(i)-rb)/ab-1/a)* exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
+    end do
 
 end subroutine evdmsdr
+
 !> @brief Evaluate EvdMdR for the O3_2_1Ap potential.
 subroutine evdmdr
     !**********************************************************************
@@ -692,27 +654,24 @@ subroutine evdmdr
     !**********************************************************************
 
     implicit none
-
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, rm, rms
-
-    integer :: i
-
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-    common /gradt/    dmsdr(3,3),dmdr(3,0:7),dpdr(3,0:66),dvdr(3), &
-        & drdx(3,9),dbdr(3,56)
-
-    do i=1,3
-        dmdr(i,0) = 0.0d0
-        dmdr(i,1) = dmsdr(i,3)
-        dmdr(i,2) = dmsdr(i,2)
-        dmdr(i,3) = dmsdr(i,1)
-        dmdr(i,4) = dmdr(i,1)*rm(2) + rm(1)*dmdr(i,2)
-        dmdr(i,5) = dmdr(i,1)*rm(3) + rm(1)*dmdr(i,3)
-        dmdr(i,6) = dmdr(i,2)*rm(3) + rm(2)*dmdr(i,3)
-        dmdr(i,7) = dmdr(i,1)*rm(6) + rm(1)*dmdr(i,6)
-    enddo
+    integer          :: i
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
+    common /gradt/    dmsdr(3, 3), dmdr(3, 0:7), dpdr(3, 0:66), dvdr(3), &
+        & drdx(3, 9), dbdr(3, 56)
+    do i=1, 3
+        dmdr(i, 0) = 0.0d0
+        dmdr(i, 1) = dmsdr(i, 3)
+        dmdr(i, 2) = dmsdr(i, 2)
+        dmdr(i, 3) = dmsdr(i, 1)
+        dmdr(i, 4) = dmdr(i, 1)*rm(2) + rm(1)*dmdr(i, 2)
+        dmdr(i, 5) = dmdr(i, 1)*rm(3) + rm(1)*dmdr(i, 3)
+        dmdr(i, 6) = dmdr(i, 2)*rm(3) + rm(2)*dmdr(i, 3)
+        dmdr(i, 7) = dmdr(i, 1)*rm(6) + rm(1)*dmdr(i, 6)
+    end do
 
 end subroutine evdmdr
+
 !> @brief Evaluate EvdPdr for the O3_2_1Ap potential.
 subroutine evdpdr
     !**********************************************************************
@@ -722,86 +681,83 @@ subroutine evdpdr
     !**********************************************************************
 
     implicit none
-
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, rm, rms
-
-    integer :: i
-
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-    common /gradt/    dmsdr(3,3),dmdr(3,0:7),dpdr(3,0:66),dvdr(3), &
-        & drdx(3,9),dbdr(3,56)
-
-    do i=1,3
-        dpdr(i, 0) = dmdr(i,0)
-        dpdr(i, 1) = dmdr(i,1) + dmdr(i,2) + dmdr(i,3)
-        dpdr(i, 2) = dmdr(i,4) + dmdr(i,5) + dmdr(i,6)
-        dpdr(i, 3) = dpdr(i, 1)*p( 1) + p( 1)*dpdr(i, 1) - dpdr(i, 2) - dpdr(i, 2)
-        dpdr(i, 4) = dmdr(i,7)
-        dpdr(i, 5) = dpdr(i, 1)*p( 2) + p( 1)*dpdr(i, 2) - dpdr(i, 4) - dpdr(i, 4) - dpdr(i, 4)
-        dpdr(i, 6) = dpdr(i, 1)*p( 3) + p( 1)*dpdr(i, 3) - dpdr(i, 5)
-        dpdr(i, 7) = dpdr(i, 1)*p( 4) + p( 1)*dpdr(i, 4)
-        dpdr(i, 8) = dpdr(i, 2)*p( 2) + p( 2)*dpdr(i, 2) - dpdr(i, 7) - dpdr(i, 7)
-        dpdr(i, 9) = dpdr(i, 2)*p( 3) + p( 2)*dpdr(i, 3) - dpdr(i, 7)
-        dpdr(i,10) = dpdr(i, 1)*p( 6) + p( 1)*dpdr(i, 6) - dpdr(i, 9)
-        dpdr(i,11) = dpdr(i, 2)*p( 4) + p( 2)*dpdr(i, 4)
-        dpdr(i,12) = dpdr(i, 3)*p( 4) + p( 3)*dpdr(i, 4)
-        dpdr(i,13) = dpdr(i, 1)*p( 8) + p( 1)*dpdr(i, 8) - dpdr(i,11)
-        dpdr(i,14) = dpdr(i, 2)*p( 6) + p( 2)*dpdr(i, 6) - dpdr(i,12)
-        dpdr(i,15) = dpdr(i, 1)*p(10) + p( 1)*dpdr(i,10) - dpdr(i,14)
-        dpdr(i,16) = dpdr(i, 4)*p( 4) + p( 4)*dpdr(i, 4)
-        dpdr(i,17) = dpdr(i, 4)*p( 5) + p( 4)*dpdr(i, 5)
-        dpdr(i,18) = dpdr(i, 4)*p( 6) + p( 4)*dpdr(i, 6)
-        dpdr(i,19) = dpdr(i, 2)*p( 8) + p( 2)*dpdr(i, 8) - dpdr(i,17)
-        dpdr(i,20) = dpdr(i, 1)*p(13) + p( 1)*dpdr(i,13) - dpdr(i,17) - dpdr(i,19) - dpdr(i,19)
-        dpdr(i,21) = dpdr(i, 2)*p(10) + p( 2)*dpdr(i,10) - dpdr(i,18)
-        dpdr(i,22) = dpdr(i, 1)*p(15) + p( 1)*dpdr(i,15) - dpdr(i,21)
-        dpdr(i,23) = dpdr(i, 1)*p(16) + p( 1)*dpdr(i,16)
-        dpdr(i,24) = dpdr(i, 4)*p( 8) + p( 4)*dpdr(i, 8)
-        dpdr(i,25) = dpdr(i, 3)*p(11) + p( 3)*dpdr(i,11) - dpdr(i,23)
-        dpdr(i,26) = dpdr(i, 4)*p(10) + p( 4)*dpdr(i,10)
-        dpdr(i,27) = dpdr(i, 1)*p(19) + p( 1)*dpdr(i,19) - dpdr(i,24)
-        dpdr(i,28) = dpdr(i, 6)*p( 8) + p( 6)*dpdr(i, 8) - dpdr(i,23)
-        dpdr(i,29) = dpdr(i, 2)*p(15) + p( 2)*dpdr(i,15) - dpdr(i,26)
-        dpdr(i,30) = dpdr(i, 1)*p(22) + p( 1)*dpdr(i,22) - dpdr(i,29)
-        dpdr(i,31) = dpdr(i, 2)*p(16) + p( 2)*dpdr(i,16)
-        dpdr(i,32) = dpdr(i, 3)*p(16) + p( 3)*dpdr(i,16)
-        dpdr(i,33) = dpdr(i, 1)*p(24) + p( 1)*dpdr(i,24) - dpdr(i,31)
-        dpdr(i,34) = dpdr(i, 4)*p(14) + p( 4)*dpdr(i,14)
-        dpdr(i,35) = dpdr(i, 4)*p(15) + p( 4)*dpdr(i,15)
-        dpdr(i,36) = dpdr(i, 2)*p(19) + p( 2)*dpdr(i,19) - dpdr(i,33)
-        dpdr(i,37) = dpdr(i, 3)*p(19) + p( 3)*dpdr(i,19) - dpdr(i,31)
-        dpdr(i,38) = dpdr(i, 8)*p(10) + p( 8)*dpdr(i,10) - dpdr(i,32)
-        dpdr(i,39) = dpdr(i, 2)*p(22) + p( 2)*dpdr(i,22) - dpdr(i,35)
-        dpdr(i,40) = dpdr(i, 1)*p(30) + p( 1)*dpdr(i,30) - dpdr(i,39)
-        dpdr(i,41) = dpdr(i, 4)*p(16) + p( 4)*dpdr(i,16)
-        dpdr(i,42) = dpdr(i, 4)*p(17) + p( 4)*dpdr(i,17)
-        dpdr(i,43) = dpdr(i, 4)*p(19) + p( 4)*dpdr(i,19)
-        dpdr(i,44) = dpdr(i, 6)*p(16) + p( 6)*dpdr(i,16)
-        dpdr(i,45) = dpdr(i, 4)*p(20) + p( 4)*dpdr(i,20)
-        dpdr(i,46) = dpdr(i, 4)*p(21) + p( 4)*dpdr(i,21)
-        dpdr(i,47) = dpdr(i, 4)*p(22) + p( 4)*dpdr(i,22)
-        dpdr(i,48) = dpdr(i, 1)*p(36) + p( 1)*dpdr(i,36) - dpdr(i,43)
-        dpdr(i,49) = dpdr(i, 1)*p(37) + p( 1)*dpdr(i,37) - dpdr(i,45) - dpdr(i,48)
-        dpdr(i,50) = dpdr(i, 8)*p(15) + p( 8)*dpdr(i,15) - dpdr(i,44)
-        dpdr(i,51) = dpdr(i, 2)*p(30) + p( 2)*dpdr(i,30) - dpdr(i,47)
-        dpdr(i,52) = dpdr(i, 1)*p(40) + p( 1)*dpdr(i,40) - dpdr(i,51)
-        dpdr(i,53) = dpdr(i, 1)*p(41) + p( 1)*dpdr(i,41)
-        dpdr(i,54) = dpdr(i, 4)*p(24) + p( 4)*dpdr(i,24)
-        dpdr(i,55) = dpdr(i, 3)*p(31) + p( 3)*dpdr(i,31) - dpdr(i,53)
-        dpdr(i,56) = dpdr(i, 1)*p(43) + p( 1)*dpdr(i,43) - dpdr(i,54)
-        dpdr(i,57) = dpdr(i,10)*p(16) + p(10)*dpdr(i,16)
-        dpdr(i,58) = dpdr(i, 4)*p(28) + p( 4)*dpdr(i,28)
-        dpdr(i,59) = dpdr(i, 4)*p(29) + p( 4)*dpdr(i,29)
-        dpdr(i,60) = dpdr(i, 4)*p(30) + p( 4)*dpdr(i,30)
-        dpdr(i,61) = dpdr(i, 2)*p(36) + p( 2)*dpdr(i,36) - dpdr(i,56)
-        dpdr(i,62) = dpdr(i, 3)*p(36) + p( 3)*dpdr(i,36) - dpdr(i,54)
-        dpdr(i,63) = dpdr(i,10)*p(19) + p(10)*dpdr(i,19) - dpdr(i,53)
-        dpdr(i,64) = dpdr(i, 8)*p(22) + p( 8)*dpdr(i,22) - dpdr(i,57)
-        dpdr(i,65) = dpdr(i, 2)*p(40) + p( 2)*dpdr(i,40) - dpdr(i,60)
-        dpdr(i,66) = dpdr(i, 1)*p(52) + p( 1)*dpdr(i,52) - dpdr(i,65)
-    enddo
+    integer          :: i
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
+    common /gradt/    dmsdr(3, 3), dmdr(3, 0:7), dpdr(3, 0:66), dvdr(3), &
+        & drdx(3, 9), dbdr(3, 56)
+    do i=1, 3
+        dpdr(i, 0)  = dmdr(i, 0)
+        dpdr(i, 1)  = dmdr(i, 1) + dmdr(i, 2) + dmdr(i, 3)
+        dpdr(i, 2)  = dmdr(i, 4) + dmdr(i, 5) + dmdr(i, 6)
+        dpdr(i, 3)  = dpdr(i, 1)*p( 1) + p( 1)*dpdr(i, 1) - dpdr(i, 2) - dpdr(i, 2)
+        dpdr(i, 4)  = dmdr(i, 7)
+        dpdr(i, 5)  = dpdr(i, 1)*p( 2) + p( 1)*dpdr(i, 2) - dpdr(i, 4) - dpdr(i, 4) - dpdr(i, 4)
+        dpdr(i, 6)  = dpdr(i, 1)*p( 3) + p( 1)*dpdr(i, 3) - dpdr(i, 5)
+        dpdr(i, 7)  = dpdr(i, 1)*p( 4) + p( 1)*dpdr(i, 4)
+        dpdr(i, 8)  = dpdr(i, 2)*p( 2) + p( 2)*dpdr(i, 2) - dpdr(i, 7) - dpdr(i, 7)
+        dpdr(i, 9)  = dpdr(i, 2)*p( 3) + p( 2)*dpdr(i, 3) - dpdr(i, 7)
+        dpdr(i, 10) = dpdr(i, 1)*p( 6) + p( 1)*dpdr(i, 6) - dpdr(i, 9)
+        dpdr(i, 11) = dpdr(i, 2)*p( 4) + p( 2)*dpdr(i, 4)
+        dpdr(i, 12) = dpdr(i, 3)*p( 4) + p( 3)*dpdr(i, 4)
+        dpdr(i, 13) = dpdr(i, 1)*p( 8) + p( 1)*dpdr(i, 8) - dpdr(i, 11)
+        dpdr(i, 14) = dpdr(i, 2)*p( 6) + p( 2)*dpdr(i, 6) - dpdr(i, 12)
+        dpdr(i, 15) = dpdr(i, 1)*p(10) + p( 1)*dpdr(i, 10) - dpdr(i, 14)
+        dpdr(i, 16) = dpdr(i, 4)*p( 4) + p( 4)*dpdr(i, 4)
+        dpdr(i, 17) = dpdr(i, 4)*p( 5) + p( 4)*dpdr(i, 5)
+        dpdr(i, 18) = dpdr(i, 4)*p( 6) + p( 4)*dpdr(i, 6)
+        dpdr(i, 19) = dpdr(i, 2)*p( 8) + p( 2)*dpdr(i, 8) - dpdr(i, 17)
+        dpdr(i, 20) = dpdr(i, 1)*p(13) + p( 1)*dpdr(i, 13) - dpdr(i, 17) - dpdr(i, 19) - dpdr(i, 19)
+        dpdr(i, 21) = dpdr(i, 2)*p(10) + p( 2)*dpdr(i, 10) - dpdr(i, 18)
+        dpdr(i, 22) = dpdr(i, 1)*p(15) + p( 1)*dpdr(i, 15) - dpdr(i, 21)
+        dpdr(i, 23) = dpdr(i, 1)*p(16) + p( 1)*dpdr(i, 16)
+        dpdr(i, 24) = dpdr(i, 4)*p( 8) + p( 4)*dpdr(i, 8)
+        dpdr(i, 25) = dpdr(i, 3)*p(11) + p( 3)*dpdr(i, 11) - dpdr(i, 23)
+        dpdr(i, 26) = dpdr(i, 4)*p(10) + p( 4)*dpdr(i, 10)
+        dpdr(i, 27) = dpdr(i, 1)*p(19) + p( 1)*dpdr(i, 19) - dpdr(i, 24)
+        dpdr(i, 28) = dpdr(i, 6)*p( 8) + p( 6)*dpdr(i, 8) - dpdr(i, 23)
+        dpdr(i, 29) = dpdr(i, 2)*p(15) + p( 2)*dpdr(i, 15) - dpdr(i, 26)
+        dpdr(i, 30) = dpdr(i, 1)*p(22) + p( 1)*dpdr(i, 22) - dpdr(i, 29)
+        dpdr(i, 31) = dpdr(i, 2)*p(16) + p( 2)*dpdr(i, 16)
+        dpdr(i, 32) = dpdr(i, 3)*p(16) + p( 3)*dpdr(i, 16)
+        dpdr(i, 33) = dpdr(i, 1)*p(24) + p( 1)*dpdr(i, 24) - dpdr(i, 31)
+        dpdr(i, 34) = dpdr(i, 4)*p(14) + p( 4)*dpdr(i, 14)
+        dpdr(i, 35) = dpdr(i, 4)*p(15) + p( 4)*dpdr(i, 15)
+        dpdr(i, 36) = dpdr(i, 2)*p(19) + p( 2)*dpdr(i, 19) - dpdr(i, 33)
+        dpdr(i, 37) = dpdr(i, 3)*p(19) + p( 3)*dpdr(i, 19) - dpdr(i, 31)
+        dpdr(i, 38) = dpdr(i, 8)*p(10) + p( 8)*dpdr(i, 10) - dpdr(i, 32)
+        dpdr(i, 39) = dpdr(i, 2)*p(22) + p( 2)*dpdr(i, 22) - dpdr(i, 35)
+        dpdr(i, 40) = dpdr(i, 1)*p(30) + p( 1)*dpdr(i, 30) - dpdr(i, 39)
+        dpdr(i, 41) = dpdr(i, 4)*p(16) + p( 4)*dpdr(i, 16)
+        dpdr(i, 42) = dpdr(i, 4)*p(17) + p( 4)*dpdr(i, 17)
+        dpdr(i, 43) = dpdr(i, 4)*p(19) + p( 4)*dpdr(i, 19)
+        dpdr(i, 44) = dpdr(i, 6)*p(16) + p( 6)*dpdr(i, 16)
+        dpdr(i, 45) = dpdr(i, 4)*p(20) + p( 4)*dpdr(i, 20)
+        dpdr(i, 46) = dpdr(i, 4)*p(21) + p( 4)*dpdr(i, 21)
+        dpdr(i, 47) = dpdr(i, 4)*p(22) + p( 4)*dpdr(i, 22)
+        dpdr(i, 48) = dpdr(i, 1)*p(36) + p( 1)*dpdr(i, 36) - dpdr(i, 43)
+        dpdr(i, 49) = dpdr(i, 1)*p(37) + p( 1)*dpdr(i, 37) - dpdr(i, 45) - dpdr(i, 48)
+        dpdr(i, 50) = dpdr(i, 8)*p(15) + p( 8)*dpdr(i, 15) - dpdr(i, 44)
+        dpdr(i, 51) = dpdr(i, 2)*p(30) + p( 2)*dpdr(i, 30) - dpdr(i, 47)
+        dpdr(i, 52) = dpdr(i, 1)*p(40) + p( 1)*dpdr(i, 40) - dpdr(i, 51)
+        dpdr(i, 53) = dpdr(i, 1)*p(41) + p( 1)*dpdr(i, 41)
+        dpdr(i, 54) = dpdr(i, 4)*p(24) + p( 4)*dpdr(i, 24)
+        dpdr(i, 55) = dpdr(i, 3)*p(31) + p( 3)*dpdr(i, 31) - dpdr(i, 53)
+        dpdr(i, 56) = dpdr(i, 1)*p(43) + p( 1)*dpdr(i, 43) - dpdr(i, 54)
+        dpdr(i, 57) = dpdr(i, 10)*p(16) + p(10)*dpdr(i, 16)
+        dpdr(i, 58) = dpdr(i, 4)*p(28) + p( 4)*dpdr(i, 28)
+        dpdr(i, 59) = dpdr(i, 4)*p(29) + p( 4)*dpdr(i, 29)
+        dpdr(i, 60) = dpdr(i, 4)*p(30) + p( 4)*dpdr(i, 30)
+        dpdr(i, 61) = dpdr(i, 2)*p(36) + p( 2)*dpdr(i, 36) - dpdr(i, 56)
+        dpdr(i, 62) = dpdr(i, 3)*p(36) + p( 3)*dpdr(i, 36) - dpdr(i, 54)
+        dpdr(i, 63) = dpdr(i, 10)*p(19) + p(10)*dpdr(i, 19) - dpdr(i, 53)
+        dpdr(i, 64) = dpdr(i, 8)*p(22) + p( 8)*dpdr(i, 22) - dpdr(i, 57)
+        dpdr(i, 65) = dpdr(i, 2)*p(40) + p( 2)*dpdr(i, 40) - dpdr(i, 60)
+        dpdr(i, 66) = dpdr(i, 1)*p(52) + p( 1)*dpdr(i, 52) - dpdr(i, 65)
+    end do
 
 end subroutine evdpdr
+
 !> @brief Evaluate evdbdr for the O3_2_1Ap potential.
 subroutine evdbdr
     !**********************************************************************
@@ -809,61 +765,57 @@ subroutine evdbdr
     !**********************************************************************
 
     implicit none
-
     double precision :: dbdr, dmdr, dmsdr, dpdr, drdx, dvdr
     integer          :: j
-
-    common /gradt/    dmsdr(3,3),dmdr(3,0:7),dpdr(3,0:66),dvdr(3), &
-        & drdx(3,9),dbdr(3,56)
-
+    common /gradt/    dmsdr(3, 3), dmdr(3, 0:7), dpdr(3, 0:66), dvdr(3), &
+        & drdx(3, 9), dbdr(3, 56)
     integer          :: i
     double precision :: db1dr(3,67)
-
     ! Pass P(3,0:66) to BM1(3,1:67)
-    do j=1,3
-        do i=1,67
-            db1dr(j,i) = dpdr(j,i-1)
-        enddo
-    enddo
+    do j=1, 3
+        do i=1, 67
+            db1dr(j,i) = dpdr(j, i-1)
+        end do
+    end do
 
     ! Remove unconnected terms and 2-body terms and pass to B(1:56)
-    do j=1,3
+    do j=1, 3
 
-        dbdr(j,1) = db1dr(j,3)
+        dbdr(j, 1) = db1dr(j,3)
 
-        do i=2,3
-            dbdr(j,i) = db1dr(j,i+3)
-        enddo
+        do i=2, 3
+            dbdr(j, i) = db1dr(j,i+3)
+        end do
 
-        do i=4,6
-            dbdr(j,i) = db1dr(j,i+4)
-        enddo
+        do i=4, 6
+            dbdr(j, i) = db1dr(j,i+4)
+        end do
 
-        do i=7,10
-            dbdr(j,i) = db1dr(j,i+5)
-        enddo
+        do i=7, 10
+            dbdr(j, i) = db1dr(j,i+5)
+        end do
 
-        do i=11,16
-            dbdr(j,i) = db1dr(j,i+6)
-        enddo
+        do i=11, 16
+            dbdr(j, i) = db1dr(j,i+6)
+        end do
 
-        do i=17,23
-            dbdr(j,i) = db1dr(j,i+7)
-        enddo
+        do i=17, 23
+            dbdr(j, i) = db1dr(j,i+7)
+        end do
 
-        do i=24,32
-            dbdr(j,i) = db1dr(j,i+8)
-        enddo
+        do i=24, 32
+            dbdr(j, i) = db1dr(j,i+8)
+        end do
 
-        do i=33,43
-            dbdr(j,i) = db1dr(j,i+9)
-        enddo
+        do i=33, 43
+            dbdr(j, i) = db1dr(j,i+9)
+        end do
 
-        do i=44,56
-            dbdr(j,i) = db1dr(j,i+10)
-        enddo
+        do i=44, 56
+            dbdr(j, i) = db1dr(j,i+10)
+        end do
 
-    enddo
+    end do
 
 end subroutine evdbdr
 
@@ -887,17 +839,14 @@ end subroutine evdbdr
 
 !> @brief Evaluate d3disp for the O3_2_1Ap potential.
 subroutine d3disp( dist, disp, dispdr, igrad )
-
     implicit none
-
-    double precision :: cn(3),s6,s8,rs6,rs8
+    double precision :: cn(3), s6, s8, rs6, rs8
     double precision :: dist(3), e6(3), e8(3), disp, dispdr(3), c6(3)
-    double precision :: e6dr(3),e8dr(3)
+    double precision :: e6dr(3), e8dr(3)
     integer          :: iz(3), mxc(94), i, j, igrad
     double precision :: c6ab(94,94,5,5,3)
     double precision :: r2r4(94)
-    double precision :: autoang,autokcal
-
+    double precision :: autoang, autokcal
     autoang  = 0.52917726d0
     autokcal = 627.509541d0
 
@@ -908,9 +857,9 @@ subroutine d3disp( dist, disp, dispdr, igrad )
     rs6 = 0.5299d0
     rs8 = 2.20d0
 
-    do i=1,3
+    do i=1, 3
         dist(i) = dist(i)/autoang
-    enddo
+    end do
 
     ! iz for O4 system
     iz(1) = 8
@@ -922,29 +871,29 @@ subroutine d3disp( dist, disp, dispdr, igrad )
     c6(3) = 12.8d0
 
     ! Calculate dispersion correction
-    call edisp(94,5,3,dist,iz,mxc, &
-        & rs6,rs8,e6,e8,e6dr,e8dr,c6,0)
+    call edisp(94, 5, 3, dist, iz, mxc, &
+        & rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
 
     disp = 0.0d0
 
-    do i=1,3
+    do i=1, 3
         disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
-    enddo
+    end do
 
     if (igrad .eq. 1) then
-        call edisp(94,5,3,dist,iz,mxc, &
-            & rs6,rs8,e6,e8,e6dr,e8dr,c6,1)
+        call edisp(94, 5, 3, dist, iz, mxc, &
+            & rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
 
         dispdr(:) = 0.0d0
 
-        do i=1,3
+        do i=1, 3
             dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
-        enddo
-    endif
+        end do
+    end if
 
-    do i=1,3
+    do i=1, 3
         dist(i) = dist(i)*autoang
-    enddo
+    end do
 
 end subroutine d3disp
 
@@ -957,20 +906,17 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
 
     implicit none
-
-    integer          :: n,iz(3),max_elem,maxc,mxc(max_elem)
-    double precision :: dist(3),r2r4(max_elem),r0ab(max_elem,max_elem)
-    double precision :: rs6,rs8,rcov(max_elem)
+    integer          :: n, iz(3), max_elem, maxc, mxc(max_elem)
+    double precision :: dist(3), r2r4(max_elem), r0ab(max_elem,max_elem)
+    double precision :: rs6, rs8, rcov(max_elem)
     double precision :: c6ab(max_elem,max_elem,maxc,maxc,3)
     double precision :: e6(3), e8(3), c6a(3), e6dr(3), e8dr(3)
-
-    integer          :: iat,jat,igrad
-    double precision :: r,tmp,c6,c8,a1,a2
-    double precision :: damp6,damp8
+    integer          :: iat, jat, igrad
+    double precision :: r, tmp, c6, c8, a1, a2
+    double precision :: damp6, damp8
     double precision :: cn(n)
-    double precision :: r2ab(n*n),cc6ab(n*n),dmp(n*n)
+    double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
     integer          :: step
-
     e6(:) = 0.0d0
     e8(:) = 0.0d0
 
@@ -984,18 +930,17 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
     !  the large number of digits is just to keep the results consistent
     !  with older versions. They should not imply any higher accuracy than
     !  the old values
-    r2r4(1:94)=(/ 2.00734898,  1.56637132,  5.01986934,  3.85379032,  3.64446594, 3.10492822,  2.71175247, 2.59361680, &
-        & 2.38825250,  2.21522516, 6.58585536,  5.46295967,  5.65216669,  4.88284902,  4.29727576, 4.04108902, &
-        & 3.72932356,  3.44677275,  7.97762753,  7.07623947, 6.60844053,  6.28791364,  6.07728703, 5.54643096, &
-        & 5.80491167, 5.58415602,  5.41374528,  5.28497229,  5.22592821,  5.09817141, 6.12149689, 5.54083734, &
-        & 5.06696878,  4.87005108,  4.59089647, 4.31176304,  9.55461698,  8.67396077,  7.97210197, 7.43439917, &
-        & 6.58711862,  6.19536215,  6.01517290,  5.81623410,  5.65710424, 5.52640661,  5.44263305, 5.58285373, &
-        & 7.02081898,  6.46815523, 5.98089120,  5.81686657,  5.53321815,  5.25477007, 11.02204549, 10.15679528, &
-        & 9.35167836,  9.06926079,  8.97241155,  8.90092807, 8.85984840,  8.81736827,  8.79317710, 7.89969626, &
-        & 8.80588454, 8.42439218,  8.54289262,  8.47583370,  8.45090888,  8.47339339, 7.83525634, 8.20702843, &
-        & 7.70559063,  7.32755997,  7.03887381, 6.68978720,  6.05450052,  5.88752022,  5.70661499, 5.78450695, &
-        & 7.79780729,  7.26443867,  6.78151984,  6.67883169,  6.39024318, 6.09527958, 11.79156076, 11.10997644, &
-        & 9.51377795,  8.67197068, 8.77140725,  8.65402716,  8.53923501,  8.85024712 /)
+    r2r4(1:94)=(/ 2.00734898, 1.56637132, 5.01986934, 3.85379032, 3.64446594, 3.10492822, 2.71175247, 2.59361680, &
+        & 2.38825250, 2.21522516, 6.58585536, 5.46295967, 5.65216669, 4.88284902, 4.29727576, 4.04108902, 3.72932356, &
+        & 3.44677275, 7.97762753, 7.07623947, 6.60844053, 6.28791364, 6.07728703, 5.54643096, 5.80491167, 5.58415602, &
+        & 5.41374528, 5.28497229, 5.22592821, 5.09817141, 6.12149689, 5.54083734, 5.06696878, 4.87005108, 4.59089647, &
+        & 4.31176304, 9.55461698, 8.67396077, 7.97210197, 7.43439917, 6.58711862, 6.19536215, 6.01517290, 5.81623410, &
+        & 5.65710424, 5.52640661, 5.44263305, 5.58285373, 7.02081898, 6.46815523, 5.98089120, 5.81686657, 5.53321815, &
+        & 5.25477007, 11.02204549, 10.15679528, 9.35167836, 9.06926079, 8.97241155, 8.90092807, 8.85984840, &
+        & 8.81736827, 8.79317710, 7.89969626, 8.80588454, 8.42439218, 8.54289262, 8.47583370, 8.45090888, 8.47339339, &
+        & 7.83525634, 8.20702843, 7.70559063, 7.32755997, 7.03887381, 6.68978720, 6.05450052, 5.88752022, 5.70661499, &
+        & 5.78450695, 7.79780729, 7.26443867, 6.78151984, 6.67883169, 6.39024318, 6.09527958, 11.79156076, &
+        & 11.10997644, 9.51377795, 8.67197068, 8.77140725, 8.65402716, 8.53923501, 8.85024712 /)
 
     ! these new data are scaled with k2=4./3. and converted to a_0 via
     ! autoang=0.52917726d0
@@ -1013,8 +958,8 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
 
     ! DFT-D3
     step = 0
-    do iat=1,n-1
-        do jat=iat+1,n
+    do iat=1, n-1
+        do jat=iat+1, n
             step = step+1
             r    = dist(step)
             c6   = c6a(step)
@@ -1030,25 +975,21 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
                 ! grad for BJ damping
                 e6dr(step) = c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
                 e8dr(step) = c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
-            endif
-        enddo
-    enddo
+            end if
+        end do
+    end do
 
 end subroutine edisp
 
 ! Begin
 block data prmt
-
     implicit none
-
     double precision :: a, ab, b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, r, ra, rb, rm, rms
-
     common /coord/    r(3)
-    common /epot/     rms(3),rm(0:7),p(0:66),c(56),b(56)
-    common /gradt/    dmsdr(3,3),dmdr(3,0:7),dpdr(3,0:66),dvdr(3), &
-        & drdx(3,9),dbdr(3,56)
-    common /msprmt/   a,ab,ra,rb
-
+    common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
+    common /gradt/    dmsdr(3, 3), dmdr(3, 0:7), dpdr(3, 0:66), dvdr(3), &
+        & drdx(3, 9), dbdr(3, 56)
+    common /msprmt/   a, ab, ra, rb
     ! Nonlinear parameters:
     ! a(in Ang)
     ! ab (in Ang^2)
@@ -1058,7 +999,6 @@ block data prmt
     data ab   /0.92d0/
     data ra   /1.28d0/
     data rb   /1.05d0/
-
     ! Linear parameters optimized by the weighted-least square fitting
     data c(   1)   /   0.434187508648d+03 /
     data c(   2)   /   0.601877868424d+04 /
@@ -1116,5 +1056,4 @@ block data prmt
     data c(  54)   /  -0.167845982042d+05 /
     data c(  55)   /  -0.556894418697d+03 /
     data c(  56)   /   0.332719035097d+04 /
-
 end

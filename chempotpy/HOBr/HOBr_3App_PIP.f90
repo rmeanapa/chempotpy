@@ -1,11 +1,11 @@
 !**********************************************************************
-!   System:                     OHBr_3App
-!   Functional form:            permutationally invariant polynomials
-!   Common name:                OHBr (3A")
-!   Number of derivatives:      1
-!   Number of bodies:           3
+!   System:                        OHBr_3App
+!   Functional form:               permutationally invariant polynomials
+!   Common name:                   OHBr (3A")
+!   Number of derivatives:         1
+!   Number of bodies:              3
 !   Number of electronic surfaces: 1
-!   Interface: Section-2
+!   Interface:                     Section-2
 !**********************************************************************
 !
 !   References: A. G. S. de Oliveira-Filho, F. R. Ornellas and K. A.
@@ -26,9 +26,9 @@
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, p, g, d )
-
+    use chempotpy_geometry,     only: cartesian_distance
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 3
@@ -37,35 +37,32 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
-    double precision :: v
-    double precision :: r_oh, r_hbr, r_obr
-    double precision :: dr_oh, dr_hbr, dr_obr
-    double precision :: r(3), tx(9)
-    double precision :: dr(3), drdx(3,9), dx(9)
-    integer          :: iatom, idir, i, j, istate
-    logical, save    :: first_time_data=.true.
+    double precision                :: v
+    double precision                :: r_oh, r_hbr, r_obr
+    double precision                :: dr_oh, dr_hbr, dr_obr
+    double precision                :: r(3), tx(9)
+    double precision                :: dr(3), drdx(3,9), dx(9)
+    integer                         :: iatom, idir, i, j, istate
+    logical, save                   :: first_time_data=.true.
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
     ! x: H, O, Br order
-    r_obr = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2+ (x(2,3)-x(3,3))**2)
-    !      r_OBr=r_OBr/0.529177211
+    r_obr = cartesian_distance(x(2,:), x(3,:))
+    !      r_OBr=r_OBr/legacy_bohr_to_angstrom
 
-    r_oh = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2+ (x(1,3)-x(2,3))**2)
-    !      r_OH=r_OH/0.529177211
+    r_oh = cartesian_distance(x(1,:), x(2,:))
+    !      r_OH=r_OH/legacy_bohr_to_angstrom
 
-    r_hbr = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2+ (x(1,3)-x(3,3))**2)
-    !      r_HBr=r_HBr/0.529177211
+    r_hbr = cartesian_distance(x(1,:), x(3,:))
+    !      r_HBr=r_HBr/legacy_bohr_to_angstrom
 
     do iatom=1, natoms
-        do idir=1,3
+        do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        enddo
-    enddo
+        end do
+    end do
     r(1) = r_oh
     r(2) = r_hbr
     r(3) = r_obr
@@ -73,14 +70,14 @@ subroutine pes( x, igrad, path, p, g, d )
     if(first_time_data) then
         call myprepot(path)
         first_time_data = .false.
-    endif
+    end if
 
-    call mypot(r_oh,r_hbr,r_obr,v,dr_oh,dr_hbr,dr_obr)
+    call mypot(r_oh, r_hbr, r_obr, v, dr_oh, dr_hbr, dr_obr)
 
-    v     = v*27.211386
-    dr(1) = dr_oh*27.211386
-    dr(2) = dr_hbr*27.211386
-    dr(3) = dr_obr*27.211386
+    v     = v*legacy_hartree_to_electronvolt
+    dr(1) = dr_oh*legacy_hartree_to_electronvolt
+    dr(2) = dr_hbr*legacy_hartree_to_electronvolt
+    dr(3) = dr_obr*legacy_hartree_to_electronvolt
     !      dr(1)=dr_OH*51.422067
     !      dr(2)=dr_HBr*51.422067
     !      dr(3)=dr_OBr*51.422067
@@ -88,48 +85,44 @@ subroutine pes( x, igrad, path, p, g, d )
     call evdrdx(tx, r, drdx)
 
     dx = 0.d0
-    do i=1,9
-        do j=1,3
+    do i=1, 9
+        do j=1, 3
             dx(i) = dx(i)+dr(j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
     if (igrad==0) then
-        do istate=1,nstates
+        do istate=1, nstates
             p(istate) = v
-        enddo
+        end do
     else if (igrad==1) then
-        do istate=1,nstates
+        do istate=1, nstates
             p(istate) = v
-        enddo
+        end do
         do iatom=1, natoms
-            do idir=1,3
+            do idir=1, 3
                 j               = (iatom-1)*3+idir
                 g(1,iatom,idir) = dx(j)
-            enddo
-        enddo
+            end do
+        end do
     else if (igrad==2) then
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( x, r, drdx )
-
     implicit none
-
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-
-    integer :: i,j
-
+    integer                       :: i, j
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
+    do i=1, 3
+        do j=1, 9
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
@@ -152,7 +145,7 @@ subroutine evdrdx( x, r, drdx )
     drdx(3,8) = -drdx(3,5)
     drdx(3,9) = -drdx(3,6)
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate myprepot.
 subroutine myprepot( path )
@@ -230,48 +223,45 @@ subroutine myprepot( path )
     !
     ! ----------------------------------------------------------------------------
     implicit none
-    integer, parameter :: dp = kind(0.d0)                   ! double precision
-
+    integer, parameter              :: dp = kind(0.d0)                   ! double precision
     character(len=1024), intent(in) :: path
-
-    integer                   :: file_unit_45
-    character(len=1024)       :: file_path1
-    real(dp), dimension(14)   :: phi_oh, phi_hbr
-    real(dp), dimension(1110) :: x_1,x_2,y_1,amn
-    real(dp)                  :: r1,r2,r3,value,dr1,dr2,dr3
-    real(dp)                  :: r_oh,r_hbr,r_bro
-    real(dp)                  :: sum1, sum2, dzdr, dfdr
-    real(dp)                  :: dbetadz, dedr_oh, dedr_hbr
-    real(dp)                  :: v_oh, v_hbr, v_bro, v3
-    real(dp)                  :: th_y,theta
-    real(dp)                  :: z,re,de,phi_inf,alpha_s,r_s,z_i,phi_z,f_s
-    real(dp)                  :: x_1_max,x_2_max,y_1_max
-    real(dp)                  :: x_1_min,x_2_min,y_1_min
-    real(dp)                  :: q_1,q_2,q_3,dq_1,dq_2,dq_3
-    integer                   :: i, ncall
+    integer                         :: file_unit_45
+    character(len=1024)             :: file_path1
+    real(dp), dimension(14)         :: phi_oh, phi_hbr
+    real(dp), dimension(1110)       :: x_1, x_2, y_1, amn
+    real(dp)                        :: r1, r2, r3, value, dr1, dr2, dr3
+    real(dp)                        :: r_oh, r_hbr, r_bro
+    real(dp)                        :: sum1, sum2, dzdr, dfdr
+    real(dp)                        :: dbetadz, dedr_oh, dedr_hbr
+    real(dp)                        :: v_oh, v_hbr, v_bro, v3
+    real(dp)                        :: th_y, theta
+    real(dp)                        :: z, re, de, phi_inf, alpha_s, r_s, z_i, phi_z, f_s
+    real(dp)                        :: x_1_max, x_2_max, y_1_max
+    real(dp)                        :: x_1_min, x_2_min, y_1_min
+    real(dp)                        :: q_1, q_2, q_3, dq_1, dq_2, dq_3
+    integer                         :: i, ncall
     data ncall/1/
     save ncall
-    save phi_oh,phi_hbr,x_1,x_2,y_1,amn
-
+    save phi_oh, phi_hbr, x_1, x_2, y_1, amn
     file_path1 = trim(path)//"/HOBr/o_hbr_a_pp.par"
 
     if(ncall.eq.1) then
-        open(newunit=file_unit_45,file=file_path1,status="old")
-        do i=1,14
-            read(file_unit_45,*) phi_oh(i)
+        open(newunit=file_unit_45, file=file_path1, status="old")
+        do i=1, 14
+            read(file_unit_45, *) phi_oh(i)
         end do
-        do i=1,14
-            read(file_unit_45,*) phi_hbr(i)
+        do i=1, 14
+            read(file_unit_45, *) phi_hbr(i)
         end do
-        do i=1,1110
-            read(file_unit_45,*) x_1(i), x_2(i), y_1(i), amn(i)
+        do i=1, 1110
+            read(file_unit_45, *) x_1(i), x_2(i), y_1(i), amn(i)
         end do
         close(file_unit_45)
         ncall = 2
         return
     end if
 
-    entry mypot(r1,r2,r3,value,dr1,dr2,dr3)
+    entry mypot(r1, r2, r3, value, dr1, dr2, dr3)
 
     r_oh  = r1
     r_hbr = r2
@@ -286,7 +276,7 @@ subroutine myprepot( path )
     phi_z   = -phi_inf
     z_i     = 1.0_dp
     sum2    = 0.0_dp
-    do i=6,14,1
+    do i=6, 14, 1
         phi_z = phi_z+phi_oh(i)*z_i
         sum2  = sum2+(i-6)*phi_oh(i)*z_i/z
         z_i   = z_i*z
@@ -311,7 +301,7 @@ subroutine myprepot( path )
     phi_z   = -phi_inf
     z_i     = 1.0_dp
     sum2    = 0.0_dp
-    do i=6,14,1
+    do i=6, 14, 1
         phi_z = phi_z+phi_hbr(i)*z_i
         sum2  = sum2+(i-6)*phi_hbr(i)*z_i/z
         z_i   = z_i*z
@@ -335,7 +325,7 @@ subroutine myprepot( path )
     dr1 = 0.0_dp
     dr2 = 0.0_dp
     dr3 = 0.0_dp
-    do i=1,1110,1
+    do i=1, 1110, 1
 
         if (r_oh.ge.x_1(i)) then
             q_1  = (1.0_dp/14.0_dp)*(r_oh**(-7))*(1.0_dp-(7.0_dp/9.0_dp)*(x_1(i)/r_oh))

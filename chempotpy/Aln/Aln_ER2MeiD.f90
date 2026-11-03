@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2MeiD potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Extended Rydberg plus Embedded Atom
     !   Common name:                   ER2+MeiD
@@ -66,16 +63,14 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms
 
     implicit none
-
     double precision :: a1, a2, a3, ab, alpha, au2, beta, bigef, bu2, cc, co, de, &
         & delta, dx, dy, dz, ec, ee, ef, gamma, phi0, poly, q, r0, rc, re, rho, rho_pair, rn, rr, s, &
         & sterm, v, v_pair, ver2, x, xm, xx, y, z
     integer                     :: i, j, l, m, maxatom, natom
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-    dimension x(maxatom),y(maxatom),z(maxatom)
-    dimension cc(6),s(3)
-
+    dimension x(maxatom), y(maxatom), z(maxatom)
+    dimension cc(6), s(3)
     ! accurate two-body
     de  = 1.71013678553981441/autoev
     re  = 5.08182706399609163
@@ -86,8 +81,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
     bu2 = 6.50000000000000000/autoang
     !     potential, includes cutoff
     ver2 = 0.d0
-    do 1 i=1,natom
-        do 1 j=i+1,natom
+    do 1 i=1, natom
+        do 1 j=i+1, natom
             dx = x(i)-x(j)
             dy = y(i)-y(j)
             dz = z(i)-z(j)
@@ -98,7 +93,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 poly = 1.d0+a1*rho+a2*rho**2+a3*rho**3
                 ee   = dexp(-a1*rho)
                 ver2 = ver2-de*ee*poly*co
-            endif
+            end if
     1 continue
 
     !  calculate the potential energy
@@ -123,9 +118,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
     v      = 0.d0
     v_pair = 0.d0
-    do 2 i=1,natom
+    do 2 i=1, natom
         rho = 0.d0
-        do 3 j=1,natom
+        do 3 j=1, natom
             if (i.eq.j) go to 3
             dx = x(i)-x(j)
             dy = y(i)-y(j)
@@ -140,30 +135,30 @@ subroutine pot( x, y, z, v, natom, maxatom )
             else
                 xx = (rr-rn)/(rc-rn)
                 q  = ((1.d0-xx)**3)*(1.d0+3.d0*xx+6.d0*xx**2)
-            endif
+            end if
 
             ! embedding potential rho
             rho_pair = 0.d0
-            do l=0,5
+            do l=0, 5
                 ef       = (cc(l+1)/12.d0)*(r0/rr)**l
                 rho      = rho + ef*q
                 rho_pair = rho_pair + ef*q
-            enddo
+            end do
 
             sterm = 0.d0
             if (rho_pair.gt.0.d0) then
-                do m=1,3
+                do m=1, 3
                     xm = dsqrt(dble(m))
                     sterm=sterm+s(m)*dexp(-gamma*(xm-1.d0)) *(1.d0+delta*(xm-1.d0)-xm*(delta/beta)*dlog(rho_pair)) * &
                         & (rho_pair)**(xm*gamma/beta)
-                enddo
-            endif
+                end do
+            end if
 
             ab    = alpha/beta
             bigef = 0.d0
             if (rho_pair.gt.0.d0) then
                 bigef = -ec*(1.d0-ab*dlog(rho_pair))*rho_pair**ab + 0.5d0*phi0*sterm
-            endif
+            end if
 
             v_pair = v_pair + bigef
 
@@ -171,18 +166,18 @@ subroutine pot( x, y, z, v, natom, maxatom )
 
         sterm = 0.d0
         if (rho.gt.0.d0) then
-            do m=1,3
+            do m=1, 3
                 xm = dsqrt(dble(m))
                 sterm=sterm+s(m)*dexp(-gamma*(xm-1.d0)) *(1.d0+delta*(xm-1.d0)-xm*(delta/beta)*dlog(rho)) *(rho)**(xm* &
                     & gamma/beta)
-            enddo
-        endif
+            end do
+        end if
 
         ab    = alpha/beta
         bigef = 0.d0
         if (rho.gt.0.d0) then
             bigef = -ec*(1.d0-ab*dlog(rho))*rho**ab + 0.5d0*phi0*sterm
-        endif
+        end if
         v = v + bigef
     2 continue
 

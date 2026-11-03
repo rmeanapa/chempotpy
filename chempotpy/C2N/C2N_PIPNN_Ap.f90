@@ -3,8 +3,8 @@
 !=======================================================================
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_geometry, only: cartesian_distance
     implicit none
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 3
@@ -13,36 +13,32 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-
-    double precision :: v
-    double precision :: rb(3)
-    integer          :: iatom, idir, j, istate
+    double precision                :: v
+    double precision                :: rb(3)
+    integer                         :: iatom, idir, j, istate
     !initialize
-    v = 0.d0
-    p = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
 
     ! order of r_CC,r_NC,r_NC
     rb    = 0.d0
-    rb(1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2+ (x(1,3)-x(2,3))**2)
-    rb(2) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2+ (x(1,3)-x(3,3))**2)
-    rb(3) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2+ (x(2,3)-x(3,3))**2)
+    rb(1) = cartesian_distance(x(1,:), x(2,:))
+    rb(2) = cartesian_distance(x(1,:), x(3,:))
+    rb(3) = cartesian_distance(x(2,:), x(3,:))
 
     if (igrad==0) then
         call c2n_2a_prime(rb, path, v)
     else
-        write (*,*) 'Only energy is available'
-    endif
+        write (*, *) 'Only energy is available'
+    end if
 
-    do istate=1,nstates
+    do istate=1, nstates
         p(istate) = v
-    enddo
+    end do
 
     g = 0.d0
     d = 0.d0
 
-endsubroutine
+end subroutine
 
 !=======================================================================
 !     PIP-NN PES of total energy for the C2N(^2A') system.
@@ -54,18 +50,14 @@ endsubroutine
 !> @brief Evaluate c2n_2a_prime.
 subroutine c2n_2a_prime( rb, path, vpes )
     implicit none
-
-    integer,parameter          :: npip    = 12
-    double precision,parameter :: alpha   = 1.5d0 ! angstrom
-    double precision,parameter :: vpescut = 5.d5 ! eV
-    double precision,parameter :: pi      = dacos(-1.d0)
-
+    integer, parameter              :: npip    = 12
+    double precision, parameter     :: alpha   = 1.5d0 ! angstrom
+    double precision, parameter     :: vpescut = 5.d5 ! eV
+    double precision, parameter     :: pi      = dacos(-1.d0)
     character(len=1024), intent(in) :: path
-
-    integer          :: i
-    double precision :: vpesa(1),vpesb(1),vpesc(1),vpes
-    double precision :: rb(3),xbond(3),basis(0:npip),txinput(npip)
-
+    integer                         :: i
+    double precision                :: vpesa(1), vpesb(1), vpesc(1), vpes
+    double precision                :: rb(3), xbond(3), basis(0:npip), txinput(npip)
     if (minval(rb).lt.0.79999999d0) then
         vpes  = vpescut
         vpesa = vpescut
@@ -75,15 +67,15 @@ subroutine c2n_2a_prime( rb, path, vpes )
         xbond(:) = dexp(-rb(:)/alpha)
 
         basis = 0.d0
-        call bemsav(xbond,basis)
+        call bemsav(xbond, basis)
 
-        do i=1,npip
+        do i=1, npip
             txinput(i) = basis(i)
-        enddo
+        end do
 
-        call nnfit_a(npip,1,txinput,path,vpesa)
-        call nnfit_b(npip,1,txinput,path,vpesb)
-        call nnfit_c(npip,1,txinput,path,vpesc)
+        call nnfit_a(npip, 1, txinput, path, vpesa)
+        call nnfit_b(npip, 1, txinput, path, vpesb)
+        call nnfit_c(npip, 1, txinput, path, vpesc)
         vpes = (vpesa(1)+vpesb(1)+vpesc(1))/3.0d0
 
         if (vpes.gt.vpescut) then
@@ -91,32 +83,29 @@ subroutine c2n_2a_prime( rb, path, vpes )
             vpesa = vpescut
             vpesb = vpescut
             vpesc = vpescut
-        endif
-    endif
+        end if
+    end if
 
 end subroutine c2n_2a_prime
+
 !=======================================================================
 
 !=======================================================================
 !> @brief Evaluate nnfit_a.
 subroutine nnfit_a( ndim, ntot, r0, path, vx )
     implicit none
-
-    integer,parameter :: s0 = 12,s1=30,s2=30
-
-    integer,intent(in)              :: ndim,ntot
-    double precision,intent(in)     :: r0(ndim,ntot)
-    double precision,intent(out)    :: vx(ntot)
+    integer, parameter              :: s0 = 12, s1=30, s2=30
+    integer, intent(in)             :: ndim, ntot
+    double precision, intent(in)    :: r0(ndim,ntot)
+    double precision, intent(out)   :: vx(ntot)
     character(len=1024), intent(in) :: path
-
-    double precision,save :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3
-    double precision,save :: rg(2,s0),vg(2)
-    character(len=1024)   :: file_path1
-    double precision      :: dv(ndim,ntot)
-    integer               :: i
-    integer,save          :: init=0
-    integer,save          :: fid
-
+    double precision, save          :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
+    double precision, save          :: rg(2,s0), vg(2)
+    character(len=1024)             :: file_path1
+    double precision                :: dv(ndim,ntot)
+    integer                         :: i
+    integer, save                   :: init=0
+    integer, save                   :: fid
     if (ndim.ne.s0) stop "ndim .ne. s0"
 
     file_path1 = trim(path)//"/C2N/c2n_2a_prime_para_a.txt"
@@ -124,42 +113,39 @@ subroutine nnfit_a( ndim, ntot, r0, path, vx )
     if (init.eq.0) then
         init = 1
         fid  = 123456
-        open(fid,file=file_path1,status='old',action='read')
-        read(fid,*) w1,b1,w2,b2,w3,b3,rg,vg
+        open(fid, file=file_path1, status='old', action='read')
+        read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
         close(fid)
-    endif
+    end if
 
     if (ntot.ge.24) then
-        call nsimx(ntot,r0,vx,0,dv,s0,s1,s2,rg,w1,b1,w2,b2,w3,b3,vg)
+        call nsimx(ntot, r0, vx, 0, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
     else
-        do i=1,ntot
-            call nsim(r0(1,i),vx(i),0,dv(:,i),s0,s1,s2,rg,w1,b1,w2,b2,w3,b3,vg)
-        enddo
-    endif
+        do i=1, ntot
+            call nsim(r0(1,i), vx(i), 0, dv(:,i), s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
+        end do
+    end if
 
 end subroutine
+
 !=======================================================================
 
 !=======================================================================
 !> @brief Evaluate nnfit_b.
 subroutine nnfit_b( ndim, ntot, r0, path, vx )
     implicit none
-
-    integer,parameter :: s0 = 12,s1=30,s2=30
-
-    integer,intent(in)              :: ndim,ntot
-    double precision,intent(in)     :: r0(ndim,ntot)
-    double precision,intent(out)    :: vx(ntot)
+    integer, parameter              :: s0 = 12, s1=30, s2=30
+    integer, intent(in)             :: ndim, ntot
+    double precision, intent(in)    :: r0(ndim,ntot)
+    double precision, intent(out)   :: vx(ntot)
     character(len=1024), intent(in) :: path
-
-    double precision,save :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3
-    double precision,save :: rg(2,s0),vg(2)
-    character(len=1024)   :: file_path1
-    double precision      :: dv(ndim,ntot)
-    integer               :: i
-    integer,save          :: init=0
-    integer,save          :: fid
-
+    double precision, save          :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
+    double precision, save          :: rg(2,s0), vg(2)
+    character(len=1024)             :: file_path1
+    double precision                :: dv(ndim,ntot)
+    integer                         :: i
+    integer, save                   :: init=0
+    integer, save                   :: fid
     if (ndim.ne.s0) stop "ndim .ne. s0"
 
     file_path1 = trim(path)//"/C2N/c2n_2a_prime_para_b.txt"
@@ -167,42 +153,39 @@ subroutine nnfit_b( ndim, ntot, r0, path, vx )
     if (init.eq.0) then
         init = 1
         fid  = 123456
-        open(fid,file=file_path1,status='old',action='read')
-        read(fid,*) w1,b1,w2,b2,w3,b3,rg,vg
+        open(fid, file=file_path1, status='old', action='read')
+        read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
         close(fid)
-    endif
+    end if
 
     if (ntot.ge.24) then
-        call nsimx(ntot,r0,vx,0,dv,s0,s1,s2,rg,w1,b1,w2,b2,w3,b3,vg)
+        call nsimx(ntot, r0, vx, 0, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
     else
-        do i=1,ntot
-            call nsim(r0(1,i),vx(i),0,dv(:,i),s0,s1,s2,rg,w1,b1,w2,b2,w3,b3,vg)
-        enddo
-    endif
+        do i=1, ntot
+            call nsim(r0(1,i), vx(i), 0, dv(:,i), s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
+        end do
+    end if
 
 end subroutine
+
 !=======================================================================
 
 !=======================================================================
 !> @brief Evaluate nnfit_c.
 subroutine nnfit_c( ndim, ntot, r0, path, vx )
     implicit none
-
-    integer,parameter :: s0 = 12,s1=30,s2=30
-
-    integer,intent(in)              :: ndim,ntot
-    double precision,intent(in)     :: r0(ndim,ntot)
-    double precision,intent(out)    :: vx(ntot)
+    integer, parameter              :: s0 = 12, s1=30, s2=30
+    integer, intent(in)             :: ndim, ntot
+    double precision, intent(in)    :: r0(ndim,ntot)
+    double precision, intent(out)   :: vx(ntot)
     character(len=1024), intent(in) :: path
-
-    double precision,save :: w1(s0,s1),b1(s1),w2(s1,s2),b2(s2),w3(s2),b3
-    double precision,save :: rg(2,s0),vg(2)
-    character(len=1024)   :: file_path1
-    double precision      :: dv(ndim,ntot)
-    integer               :: i
-    integer,save          :: init=0
-    integer,save          :: fid
-
+    double precision, save          :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
+    double precision, save          :: rg(2,s0), vg(2)
+    character(len=1024)             :: file_path1
+    double precision                :: dv(ndim,ntot)
+    integer                         :: i
+    integer, save                   :: init=0
+    integer, save                   :: fid
     if (ndim.ne.s0) stop "ndim .ne. s0"
 
     file_path1 = trim(path)//"/C2N/c2n_2a_prime_para_c.txt"
@@ -210,20 +193,21 @@ subroutine nnfit_c( ndim, ntot, r0, path, vx )
     if (init.eq.0) then
         init = 1
         fid  = 123456
-        open(fid,file=file_path1,status='old',action='read')
-        read(fid,*) w1,b1,w2,b2,w3,b3,rg,vg
+        open(fid, file=file_path1, status='old', action='read')
+        read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
         close(fid)
-    endif
+    end if
 
     if (ntot.ge.24) then
-        call nsimx(ntot,r0,vx,0,dv,s0,s1,s2,rg,w1,b1,w2,b2,w3,b3,vg)
+        call nsimx(ntot, r0, vx, 0, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
     else
-        do i=1,ntot
-            call nsim(r0(1,i),vx(i),0,dv(:,i),s0,s1,s2,rg,w1,b1,w2,b2,w3,b3,vg)
-        enddo
-    endif
+        do i=1, ntot
+            call nsim(r0(1,i), vx(i), 0, dv(:,i), s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
+        end do
+    end if
 
 end subroutine
+
 !=======================================================================
 
 !=======================================================================
@@ -233,55 +217,53 @@ end subroutine
 !> @brief Evaluate nsim.
 subroutine nsim( r0, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
     implicit none
-
-    integer,intent(in)           :: n0,n1,n2,idv
-    double precision,intent(in)  :: r0(n0),rg(2,n0),vg(2)
-    double precision,intent(in)  :: w1(n0,n1),b1(n1)
-    double precision,intent(in)  :: w2(n1,n2),b2(n2)
-    double precision,intent(in)  :: w3(n2),b3
-    double precision,intent(out) :: v,dv(n0)
-
-    integer                   :: i,j,k
-    double precision          :: r(n0),rgg(n0),vgg,ax(n1),bx(n2)
-    double precision          :: dvtm,rtmp,rt1(n1),rt2(n2)
-    double precision,external :: ddot
-
+    integer, intent(in)           :: n0, n1, n2, idv
+    double precision, intent(in)  :: r0(n0), rg(2,n0), vg(2)
+    double precision, intent(in)  :: w1(n0,n1), b1(n1)
+    double precision, intent(in)  :: w2(n1,n2), b2(n2)
+    double precision, intent(in)  :: w3(n2), b3
+    double precision, intent(out) :: v, dv(n0)
+    integer                       :: i, j, k
+    double precision              :: r(n0), rgg(n0), vgg, ax(n1), bx(n2)
+    double precision              :: dvtm, rtmp, rt1(n1), rt2(n2)
+    double precision, external    :: ddot
     v   = 0.d0
     r   = r0
     vgg = vg(2)-vg(1)
     ! mapminmax [-1,1]
-    do i=1,n0
+    do i=1, n0
         rgg(i) = rg(2,i)-rg(1,i)
         r(i)   = 2.d0*(r(i)-rg(1,i))/rgg(i)-1.d0
     end do
     ! 1st layer
     rt1 = b1
-    call dgemv('t',n0,n1,1.d0,w1,n0,r,1,1.d0,rt1,1)
+    call dgemv('t', n0, n1, 1.d0, w1, n0, r, 1, 1.d0, rt1, 1)
     ax = dtanh(rt1)
     ! 2nd layer
     rt2 = b2
-    call dgemv('t',n1,n2,1.d0,w2,n1,ax,1,1.d0,rt2,1)
+    call dgemv('t', n1, n2, 1.d0, w2, n1, ax, 1, 1.d0, rt2, 1)
     bx = dtanh(rt2)
     ! output layer
-    v = b3+ddot(n2,w3,1,bx,1)
+    v = b3+ddot(n2, w3, 1, bx, 1)
     !reverse map
     v = vgg*(v+1.d0)/2+vg(1)
     if(idv.ne.1) return
 
     ! calculate first derivatives, dv(i)=dv/dr(i)
     dv = 0.d0
-    do i=1,n0
-        do k=1,n2
+    do i=1, n0
+        do k=1, n2
             dvtm = 0.d0
-            do j=1,n1
+            do j=1, n1
                 dvtm = dvtm+w2(j,k)*w1(i,j)*(1-ax(j)**2)
-            enddo
+            end do
             dv(i) = dv(i)+w3(k)*dvtm*(1-bx(k)**2)
-        enddo
+        end do
         dv(i) = dv(i)*vgg/rgg(i)
-    enddo
+    end do
 
 end subroutine nsim
+
 !=======================================================================
 
 !=======================================================================
@@ -312,72 +294,70 @@ end subroutine nsim
 !> @brief Evaluate nsimx.
 subroutine nsimx( nt, r, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
     implicit none
-
-    integer,intent(in)           :: nt,idv,n0,n1,n2
-    double precision,intent(in)  :: r(n0,nt)
-    double precision,intent(out) :: v(nt),dv(n0,nt)
-    double precision,intent(in)  :: w1(n0,n1),b1(n1),w2(n1,n2),b2(n2),w3(n2),b3
-    double precision,intent(in)  :: rg(2,n0),vg(2)
-
-    double precision :: x0(n0,nt),x1(nt,n1),x2(nt,n2),tmp,rgg(n0),vgg
-    integer          :: i,j,k,n
-
+    integer, intent(in)           :: nt, idv, n0, n1, n2
+    double precision, intent(in)  :: r(n0,nt)
+    double precision, intent(out) :: v(nt), dv(n0,nt)
+    double precision, intent(in)  :: w1(n0,n1), b1(n1), w2(n1,n2), b2(n2), w3(n2), b3
+    double precision, intent(in)  :: rg(2,n0), vg(2)
+    double precision              :: x0(n0,nt), x1(nt,n1), x2(nt,n2), tmp, rgg(n0), vgg
+    integer                       :: i, j, k, n
     v = 0.d0
-    do i=1,n0
+    do i=1, n0
         rgg(i) = rg(2,i)-rg(1,i)
-    enddo
+    end do
     vgg = vg(2)-vg(1)
 
     x0 = r
 
-    do i=1,n0
+    do i=1, n0
         x0(i,1:nt) = (x0(i,1:nt)-rg(1,i))/rgg(i)*2.d0-1.d0
-    enddo
+    end do
 
-    do i=1,n1
+    do i=1, n1
         x1(1:nt,i) = b1(i)
-    enddo
+    end do
 
     ! ---- x1=trans(x0(n0,nt))*w1(n0,n1)+x1(nt,n1)
     !call gpu_dgemm('t','n',nt,n1,n0,1.d0,x0,n0,w1,n0,1.d0,x1,nt)
-    call dgemm('t','n',nt,n1,n0,1.d0,x0,n0,w1,n0,1.d0,x1,nt)
+    call dgemm('t', 'n', nt, n1, n0, 1.d0, x0, n0, w1, n0, 1.d0, x1, nt)
 
     x1 = dtanh(x1)
 
-    do i=1,n2
+    do i=1, n2
         x2(1:nt,i) = b2(i)
-    enddo
+    end do
 
     ! ---- x2=x1(nt,n1)*w2(n1,n2)+x2(nt,n2)
     !call gpu_dgemm('n','n',nt,n2,n1,1.d0,x1,nt,w2,n1,1.d0,x2,nt)
-    call dgemm('n','n',nt,n2,n1,1.d0,x1,nt,w2,n1,1.d0,x2,nt)
+    call dgemm('n', 'n', nt, n2, n1, 1.d0, x1, nt, w2, n1, 1.d0, x2, nt)
 
     x2 = dtanh(x2)
 
     v(1:nt) = b3
 
     ! ---- v=x2(nt,n2)*w3(n2)+v(nt)
-    call dgemv('n',nt,n2,1.d0,x2,nt,w3,1,1.d0,v,1)
+    call dgemv('n', nt, n2, 1.d0, x2, nt, w3, 1, 1.d0, v, 1)
 
     v = (v+1.d0)/2.d0*vgg+vg(1)
 
     if (idv.ne.1) return
     ! ---- calculate first derivatives
     dv = 0.d0
-    do n=1,nt
-        do i=1,n0
-            do k=1,n2
+    do n=1, nt
+        do i=1, n0
+            do k=1, n2
                 tmp = 0.d0
-                do j=1,n1
+                do j=1, n1
                     tmp = tmp+w2(j,k)*w1(i,j)*(1-x1(n,j)**2)
-                enddo
+                end do
                 dv(i,n) = dv(i,n)+w3(k)*tmp*(1-x2(n,k)**2)
-            enddo
+            end do
             dv(i,n) = dv(i,n)*vgg/(rgg(i))
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine nsimx
+
 !=======================================================================
 
 !=======================================================================
@@ -393,26 +373,22 @@ end subroutine nsimx
 !> @brief Evaluate bemsav.
 subroutine bemsav( x, p )
     implicit none
-
-    double precision,intent(in)  :: x(1:3)
-    double precision,intent(out) :: p(0:12)
-
-    double precision :: m(0:4)
-
-    call evmono(x,m)
-    call evpoly(m,p)
+    double precision, intent(in)  :: x(1:3)
+    double precision, intent(out) :: p(0:12)
+    double precision              :: m(0:4)
+    call evmono(x, m)
+    call evpoly(m, p)
 
 end subroutine bemsav
+
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
-    double precision,intent(in)  :: x(1:3)
-    double precision,intent(out) :: m(0:4)
-
+    double precision, intent(in)  :: x(1:3)
+    double precision, intent(out) :: m(0:4)
     m(0) = 1.0d0
     m(1) = x(3)
     m(2) = x(2)
@@ -420,16 +396,15 @@ subroutine evmono( x, m )
     m(4) = m(1)*m(2)
 
 end subroutine evmono
+
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
-    double precision,intent(in)  :: m(0:4)
-    double precision,intent(out) :: p(0:12)
-
+    double precision, intent(in)  :: m(0:4)
+    double precision, intent(out) :: p(0:12)
     p(0)  = m(0)
     p(1)  = m(1)+m(2)
     p(2)  = m(3)
@@ -445,4 +420,5 @@ subroutine evpoly( m, p )
     p(12) = p(2)*p(6)
 
 end subroutine evpoly
+
 !=======================================================================

@@ -1,50 +1,44 @@
 module pes_shell
-
     implicit none
     private
     public :: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, g, &
         & pes_init
-
     double precision :: coeff(1:8040) ! change to number of coefficients
     ! (size of c in bemsa.f90)
     save coeff
-
     contains
 
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)
         implicit none
-        double precision,dimension(1:66)::x
-        double precision,dimension(0:8039)::c
+        double precision, dimension(1:66)::x
+        double precision, dimension(0:8039)::c
         double precision :: v
         ! ::::::::::::::::::::
-        double precision,dimension(0:8039)::p
-
-        call bemsav(x,p)
-        v = dot_product(p,c)
+        double precision, dimension(0:8039)::p
+        call bemsav(x, p)
+        v = dot_product(p, c)
 
     end function emsav
 
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         implicit none
-        double precision,dimension(1:66),intent(in)::x
-        double precision,dimension(0:8039),intent(out)::p
+        double precision, dimension(1:66), intent(in)::x
+        double precision, dimension(0:8039), intent(out)::p
         ! ::::::::::::::::::::
-        double precision,dimension(0:5402)::m
-
-        call evmono(x,m)
-        call evpoly(m,p)
+        double precision, dimension(0:5402)::m
+        call evmono(x, m)
+        call evpoly(m, p)
 
     end subroutine bemsav
 
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
         implicit none
-        double precision,dimension(1:66),intent(in)::x
-        double precision,dimension(0:5402),intent(out)::m
+        double precision, dimension(1:66), intent(in)::x
+        double precision, dimension(0:5402), intent(out)::m
         !::::::::::::::::::::
-
         m(0)    = 1.0d0
         m(1)    = x(66)
         m(2)    = x(65)
@@ -5454,10 +5448,9 @@ module pes_shell
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
         implicit none
-        double precision,dimension(0:5402),intent(in)::m
-        double precision,dimension(0:8039),intent(out)::p
+        double precision, dimension(0:5402), intent(in)::m
+        double precision, dimension(0:8039), intent(out)::p
         !::::::::::::::::::::
-
         p(0)   = m(0)
         p(1)   = m(1) + m(2) + m(3)
         p(2)   = m(4) + m(5) + m(6)
@@ -13748,115 +13741,112 @@ module pes_shell
     !> @brief Evaluate demsav.
     function demsav( drdx, c, m, p, flag ) result(grad)
         implicit none
-        double precision,dimension(36,66) :: drdx
-        double precision,dimension(0:8039)::c
-        double precision,dimension(0:5402)::m
-        double precision,dimension(0:8039)::p
+        double precision, dimension(36, 66) :: drdx
+        double precision, dimension(0:8039)::c
+        double precision, dimension(0:5402)::m
+        double precision, dimension(0:8039)::p
         double precision :: grad
         integer          :: flag
         ! ::::::::::::::::::::
-        double precision,dimension(0:8039)::dp
-
-        call dbemsav(drdx,dp,m,p,flag)
-        grad = dot_product(dp,c)
+        double precision, dimension(0:8039)::dp
+        call dbemsav(drdx, dp, m, p, flag)
+        grad = dot_product(dp, c)
 
     end function demsav
 
     !> @brief Evaluate dbemsav.
     subroutine dbemsav( drdx, dp, m, p, flag )
         implicit none
-        double precision,dimension(36,66),intent(in) :: drdx
-        double precision,dimension(0:8039),intent(out)::dp
-        double precision,dimension(0:5402),intent(in)::m
-        double precision,dimension(0:8039),intent(in)::p
+        double precision, dimension(36, 66), intent(in) :: drdx
+        double precision, dimension(0:8039), intent(out)::dp
+        double precision, dimension(0:5402), intent(in)::m
+        double precision, dimension(0:8039), intent(in)::p
         integer :: flag
         ! ::::::::::::::::::::
-        double precision,dimension(0:5402)::dm
-
-        call devmono(drdx,dm,m,flag)
-        call devpoly(dm,p,dp)
+        double precision, dimension(0:5402)::dm
+        call devmono(drdx, dm, m, flag)
+        call devpoly(dm, p, dp)
 
     end subroutine dbemsav
 
     !> @brief Evaluate devmono.
     subroutine devmono( drdx, dm, m, flag )
         implicit none
-        double precision,dimension(36,66),intent(in) :: drdx
-        double precision,dimension(0:5402),intent(out)::dm
-        double precision,dimension(0:5402),intent(in)::m
+        double precision, dimension(36, 66), intent(in) :: drdx
+        double precision, dimension(0:5402), intent(out)::dm
+        double precision, dimension(0:5402), intent(in)::m
         integer :: flag
         !::::::::::::::::::::
         double precision :: a
-
         a = 2.d0
 
         dm(0)    = 0.0d0
-        dm(1)    = -m(1)/a*drdx(flag,66)
-        dm(2)    = -m(2)/a*drdx(flag,65)
-        dm(3)    = -m(3)/a*drdx(flag,64)
-        dm(4)    = -m(4)/a*drdx(flag,63)
-        dm(5)    = -m(5)/a*drdx(flag,62)
-        dm(6)    = -m(6)/a*drdx(flag,61)
-        dm(7)    = -m(7)/a*drdx(flag,60)
-        dm(8)    = -m(8)/a*drdx(flag,59)
-        dm(9)    = -m(9)/a*drdx(flag,58)
-        dm(10)   = -m(10)/a*drdx(flag,57)
-        dm(11)   = -m(11)/a*drdx(flag,56)
-        dm(12)   = -m(12)/a*drdx(flag,55)
-        dm(13)   = -m(13)/a*drdx(flag,54)
-        dm(14)   = -m(14)/a*drdx(flag,53)
-        dm(15)   = -m(15)/a*drdx(flag,52)
-        dm(16)   = -m(16)/a*drdx(flag,51)
-        dm(17)   = -m(17)/a*drdx(flag,50)
-        dm(18)   = -m(18)/a*drdx(flag,49)
-        dm(19)   = -m(19)/a*drdx(flag,48)
-        dm(20)   = -m(20)/a*drdx(flag,47)
-        dm(21)   = -m(21)/a*drdx(flag,46)
-        dm(22)   = -m(22)/a*drdx(flag,45)
-        dm(23)   = -m(23)/a*drdx(flag,44)
-        dm(24)   = -m(24)/a*drdx(flag,43)
-        dm(25)   = -m(25)/a*drdx(flag,42)
-        dm(26)   = -m(26)/a*drdx(flag,41)
-        dm(27)   = -m(27)/a*drdx(flag,40)
-        dm(28)   = -m(28)/a*drdx(flag,39)
-        dm(29)   = -m(29)/a*drdx(flag,38)
-        dm(30)   = -m(30)/a*drdx(flag,37)
-        dm(31)   = -m(31)/a*drdx(flag,36)
-        dm(32)   = -m(32)/a*drdx(flag,35)
-        dm(33)   = -m(33)/a*drdx(flag,34)
-        dm(34)   = -m(34)/a*drdx(flag,33)
-        dm(35)   = -m(35)/a*drdx(flag,32)
-        dm(36)   = -m(36)/a*drdx(flag,31)
-        dm(37)   = -m(37)/a*drdx(flag,30)
-        dm(38)   = -m(38)/a*drdx(flag,29)
-        dm(39)   = -m(39)/a*drdx(flag,28)
-        dm(40)   = -m(40)/a*drdx(flag,21)
-        dm(41)   = -m(41)/a*drdx(flag,20)
-        dm(42)   = -m(42)/a*drdx(flag,19)
-        dm(43)   = -m(43)/a*drdx(flag,11)
-        dm(44)   = -m(44)/a*drdx(flag,10)
-        dm(45)   = -m(45)/a*drdx(flag,9)
-        dm(46)   = -m(46)/a*drdx(flag,27)
-        dm(47)   = -m(47)/a*drdx(flag,18)
-        dm(48)   = -m(48)/a*drdx(flag,8)
-        dm(49)   = -m(49)/a*drdx(flag,26)
-        dm(50)   = -m(50)/a*drdx(flag,17)
-        dm(51)   = -m(51)/a*drdx(flag,7)
-        dm(52)   = -m(52)/a*drdx(flag,25)
-        dm(53)   = -m(53)/a*drdx(flag,16)
-        dm(54)   = -m(54)/a*drdx(flag,6)
-        dm(55)   = -m(55)/a*drdx(flag,24)
-        dm(56)   = -m(56)/a*drdx(flag,15)
-        dm(57)   = -m(57)/a*drdx(flag,5)
-        dm(58)   = -m(58)/a*drdx(flag,23)
-        dm(59)   = -m(59)/a*drdx(flag,14)
-        dm(60)   = -m(60)/a*drdx(flag,4)
-        dm(61)   = -m(61)/a*drdx(flag,22)
-        dm(62)   = -m(62)/a*drdx(flag,13)
-        dm(63)   = -m(63)/a*drdx(flag,3)
-        dm(64)   = -m(64)/a*drdx(flag,12)
-        dm(65)   = -m(65)/a*drdx(flag,2)
-        dm(66)   = -m(66)/a*drdx(flag,1)
+        dm(1)    = -m(1)/a*drdx(flag, 66)
+        dm(2)    = -m(2)/a*drdx(flag, 65)
+        dm(3)    = -m(3)/a*drdx(flag, 64)
+        dm(4)    = -m(4)/a*drdx(flag, 63)
+        dm(5)    = -m(5)/a*drdx(flag, 62)
+        dm(6)    = -m(6)/a*drdx(flag, 61)
+        dm(7)    = -m(7)/a*drdx(flag, 60)
+        dm(8)    = -m(8)/a*drdx(flag, 59)
+        dm(9)    = -m(9)/a*drdx(flag, 58)
+        dm(10)   = -m(10)/a*drdx(flag, 57)
+        dm(11)   = -m(11)/a*drdx(flag, 56)
+        dm(12)   = -m(12)/a*drdx(flag, 55)
+        dm(13)   = -m(13)/a*drdx(flag, 54)
+        dm(14)   = -m(14)/a*drdx(flag, 53)
+        dm(15)   = -m(15)/a*drdx(flag, 52)
+        dm(16)   = -m(16)/a*drdx(flag, 51)
+        dm(17)   = -m(17)/a*drdx(flag, 50)
+        dm(18)   = -m(18)/a*drdx(flag, 49)
+        dm(19)   = -m(19)/a*drdx(flag, 48)
+        dm(20)   = -m(20)/a*drdx(flag, 47)
+        dm(21)   = -m(21)/a*drdx(flag, 46)
+        dm(22)   = -m(22)/a*drdx(flag, 45)
+        dm(23)   = -m(23)/a*drdx(flag, 44)
+        dm(24)   = -m(24)/a*drdx(flag, 43)
+        dm(25)   = -m(25)/a*drdx(flag, 42)
+        dm(26)   = -m(26)/a*drdx(flag, 41)
+        dm(27)   = -m(27)/a*drdx(flag, 40)
+        dm(28)   = -m(28)/a*drdx(flag, 39)
+        dm(29)   = -m(29)/a*drdx(flag, 38)
+        dm(30)   = -m(30)/a*drdx(flag, 37)
+        dm(31)   = -m(31)/a*drdx(flag, 36)
+        dm(32)   = -m(32)/a*drdx(flag, 35)
+        dm(33)   = -m(33)/a*drdx(flag, 34)
+        dm(34)   = -m(34)/a*drdx(flag, 33)
+        dm(35)   = -m(35)/a*drdx(flag, 32)
+        dm(36)   = -m(36)/a*drdx(flag, 31)
+        dm(37)   = -m(37)/a*drdx(flag, 30)
+        dm(38)   = -m(38)/a*drdx(flag, 29)
+        dm(39)   = -m(39)/a*drdx(flag, 28)
+        dm(40)   = -m(40)/a*drdx(flag, 21)
+        dm(41)   = -m(41)/a*drdx(flag, 20)
+        dm(42)   = -m(42)/a*drdx(flag, 19)
+        dm(43)   = -m(43)/a*drdx(flag, 11)
+        dm(44)   = -m(44)/a*drdx(flag, 10)
+        dm(45)   = -m(45)/a*drdx(flag, 9)
+        dm(46)   = -m(46)/a*drdx(flag, 27)
+        dm(47)   = -m(47)/a*drdx(flag, 18)
+        dm(48)   = -m(48)/a*drdx(flag, 8)
+        dm(49)   = -m(49)/a*drdx(flag, 26)
+        dm(50)   = -m(50)/a*drdx(flag, 17)
+        dm(51)   = -m(51)/a*drdx(flag, 7)
+        dm(52)   = -m(52)/a*drdx(flag, 25)
+        dm(53)   = -m(53)/a*drdx(flag, 16)
+        dm(54)   = -m(54)/a*drdx(flag, 6)
+        dm(55)   = -m(55)/a*drdx(flag, 24)
+        dm(56)   = -m(56)/a*drdx(flag, 15)
+        dm(57)   = -m(57)/a*drdx(flag, 5)
+        dm(58)   = -m(58)/a*drdx(flag, 23)
+        dm(59)   = -m(59)/a*drdx(flag, 14)
+        dm(60)   = -m(60)/a*drdx(flag, 4)
+        dm(61)   = -m(61)/a*drdx(flag, 22)
+        dm(62)   = -m(62)/a*drdx(flag, 13)
+        dm(63)   = -m(63)/a*drdx(flag, 3)
+        dm(64)   = -m(64)/a*drdx(flag, 12)
+        dm(65)   = -m(65)/a*drdx(flag, 2)
+        dm(66)   = -m(66)/a*drdx(flag, 1)
         dm(67)   = dm(1)*m(2) + m(1)*dm(2)
         dm(68)   = dm(1)*m(3) + m(1)*dm(3)
         dm(69)   = dm(2)*m(3) + m(2)*dm(3)
@@ -19199,11 +19189,10 @@ module pes_shell
     !> @brief Evaluate devpoly.
     subroutine devpoly( dm, p, dp )
         implicit none
-        double precision,dimension(0:5402),intent(in)::dm
-        double precision,dimension(0:8039),intent(in)::p
-        double precision,dimension(0:8039),intent(out)::dp
+        double precision, dimension(0:5402), intent(in)::dm
+        double precision, dimension(0:8039), intent(in)::p
+        double precision, dimension(0:8039), intent(out)::dp
         !::::::::::::::::::::
-
         dp(0)   = dm(0)
         dp(1)   = dm(1) + dm(2) + dm(3)
         dp(2)   = dm(4) + dm(5) + dm(6)
@@ -27517,10 +27506,10 @@ module pes_shell
 
         file_path1 = trim(path)//"/C3H7NO/coeff.dat"
 
-        open(newunit=file_unit_10,file=file_path1,status='old')
+        open(newunit=file_unit_10, file=file_path1, status='old')
 
-        do i=1,size(coeff)
-            read(file_unit_10,*) coeff(i)
+        do i=1, size(coeff)
+            read(file_unit_10, *) coeff(i)
         end do
         close(file_unit_10)
     end subroutine pes_init
@@ -27530,30 +27519,30 @@ module pes_shell
     !====================================!
     !> @brief Evaluate f.
     function f( xyz )
-        double precision,dimension(:,:),intent(in)::xyz
+        double precision, dimension(:, :), intent(in)::xyz
         double precision :: f
         !::::::::::::::::::::::::::::::
-        double precision,dimension(size(xyz,2)*(size(xyz,2)-1)/2) :: x
-        double precision,dimension(3)                             :: dr
-        double precision                                          :: a0  ! the same as the fitting code
-        integer                                                   :: i,j,k
+        double precision, dimension(size(xyz, 2)*(size(xyz, 2)-1)/2) :: x
+        double precision, dimension(3)                               :: dr
+        double precision                                             :: a0  ! the same as the fitting code
+        integer                                                      :: i, j, k
 
         a0 = 2.d0
 
         k = 1
-        do i=1,size(xyz,2)-1
-            do j=i+1,size(xyz,2)
-                dr   = xyz(:,i) - xyz(:,j)
-                x(k) = sqrt(dot_product(dr,dr))
+        do i=1, size(xyz, 2)-1
+            do j=i+1, size(xyz, 2)
+                dr   = xyz(:, i) - xyz(:, j)
+                x(k) = sqrt(dot_product(dr, dr))
                 k    = k+1
             end do
         end do
 
-        do i=1,size(x)
+        do i=1, size(x)
             x(i) = exp(-x(i)/a0)
         end do
 
-        f = emsav(x,coeff)
+        f = emsav(x, coeff)
 
     end function f
 
@@ -27563,43 +27552,43 @@ module pes_shell
     !===========================!
     !> @brief Evaluate g.
     function g( xyz )
-        double precision,dimension(:,:),intent(in)::xyz
-        double precision,dimension(size(xyz,2)*3) :: g
+        double precision, dimension(:, :), intent(in)::xyz
+        double precision, dimension(size(xyz, 2)*3) :: g
         !::::::::::::::::::::
-        double precision,dimension(size(xyz,2)*(size(xyz,2)-1)/2)               :: r,x
-        double precision,dimension(3,size(xyz,2)*(size(xyz,2)-1)/2)             :: dr
-        double precision,dimension(size(xyz,2)*3,size(xyz,2)*(size(xyz,2)-1)/2) :: drdx
-        double precision,dimension(1:8040)::p   ! change to number of popynomials
+        double precision, dimension(size(xyz, 2)*(size(xyz, 2)-1)/2)                 :: r, x
+        double precision, dimension(3, size(xyz, 2)*(size(xyz, 2)-1)/2)              :: dr
+        double precision, dimension(size(xyz, 2)*3, size(xyz, 2)*(size(xyz, 2)-1)/2) :: drdx
+        double precision, dimension(1:8040)::p   ! change to number of popynomials
         ! (size of p in bemsa.f90)
-        double precision,dimension(1:5403)::m  ! change to number of monomials
+        double precision, dimension(1:5403)::m  ! change to number of monomials
         ! (size of m in bemsa.f90
         double precision :: a0
-        integer          :: i,j,k
+        integer          :: i, j, k
 
         a0 = 2.d0
 
         k    = 1
         drdx = 0.d0
-        do i=1,size(xyz,2)-1
-            do j=i+1,size(xyz,2)
-                dr(:,k) = xyz(:,i) - xyz(:,j)
-                r(k)    = sqrt(dot_product(dr(:,k),dr(:,k)))
+        do i=1, size(xyz, 2)-1
+            do j=i+1, size(xyz, 2)
+                dr(:, k) = xyz(:, i) - xyz(:, j)
+                r(k)     = sqrt(dot_product(dr(:, k), dr(:, k)))
 
-                drdx(3*i-2:3*i,k) = dr(:,k)/r(k)
-                drdx(3*j-2:3*j,k) = -drdx(3*i-2:3*i,k)
-                k                 = k+1
+                drdx(3*i-2:3*i, k) = dr(:, k)/r(k)
+                drdx(3*j-2:3*j, k) = -drdx(3*i-2:3*i, k)
+                k                  = k+1
             end do
         end do
 
-        do i=1,size(x)
+        do i=1, size(x)
             x(i) = exp(-r(i)/a0)
         end do
 
-        call evmono(x,m)
-        call evpoly(m,p)
+        call evmono(x, m)
+        call evpoly(m, p)
 
-        do i=1,3*size(xyz,2)
-            g(i) = demsav(drdx,coeff,m,p,i)
+        do i=1, 3*size(xyz, 2)
+            g(i) = demsav(drdx, coeff, m, p, i)
         end do
 
     end function g
@@ -27608,11 +27597,10 @@ end module pes_shell
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, path, potential, gradient_out, dvec )
-
     use pes_shell, only: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, &
         & g, pes_init
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter              :: nstates = 1
     integer, parameter              :: natoms  = 12
@@ -27622,47 +27610,44 @@ subroutine pes( x, igrad, path, potential, gradient_out, dvec )
     double precision, intent(out)   :: potential(nstates)
     double precision, intent(out)   :: gradient_out(nstates,natoms,3)
     double precision, intent(out)   :: dvec(nstates,nstates,natoms,3)
-
-    double precision :: tx(3,natoms)
-    double precision :: energy
-    double precision :: grad(3*natoms)
-    integer          :: iatom, idir, j, istate
+    double precision                :: tx(3,natoms)
+    double precision                :: energy
+    double precision                :: grad(3*natoms)
+    integer                         :: iatom, idir, j, istate
     !initialize
-    energy       = 0.d0
-    gradient_out = 0.d0
-    dvec         = 0.d0
+    energy = 0.d0; gradient_out = 0.d0; dvec = 0.d0
 
-    do iatom=1,natoms
-        do idir=1,3
-            tx(idir, iatom) = x(iatom, idir)/0.529177211
-        enddo
-    enddo
+    do iatom=1, natoms
+        do idir=1, 3
+            tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
+        end do
+    end do
 
     ! zero of energy: 247.471007349006 a.u.
     ! is taken from coeff.dat, use the biase as zero of energy
     if (igrad==0) then
         call pes_init(path)
         energy = f(tx)
-        do istate=1,nstates
-            potential(istate) = (energy+247.471007349006)*27.211386
-        enddo
+        do istate=1, nstates
+            potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
+        end do
     else if (igrad==1) then
         call pes_init(path)
         energy = f(tx)
-        do istate=1,nstates
-            potential(istate) = (energy+247.471007349006)*27.211386
-        enddo
+        do istate=1, nstates
+            potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
+        end do
         grad = g(tx)
-        do istate=1,nstates
-            do iatom=1,natoms
-                do idir=1,3
+        do istate=1, nstates
+            do iatom=1, natoms
+                do idir=1, 3
                     j                               = (iatom-1)*3+idir
                     gradient_out(istate,iatom,idir) = grad(j)*51.422067
-                enddo
-            enddo
-        enddo
+                end do
+            end do
+        end do
     else
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 
-endsubroutine
+end subroutine

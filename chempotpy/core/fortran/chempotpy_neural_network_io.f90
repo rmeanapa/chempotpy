@@ -2,11 +2,8 @@
 !> @brief Read versioned neural-network metadata used by bundled PES data.
 module chempotpy_neural_network_io
     implicit none
-
     private
-
     public :: read_network_header
-
     contains
 
     !> @brief Read a network header with an optional leading input count.
@@ -17,14 +14,15 @@ module chempotpy_neural_network_io
         character(len=512)   :: header
         integer              :: input_count, status
 
-        read(file_unit,'(a)') header
-        read(header,*,iostat=status) input_count, hidden_layer_count, output_count
+        read(file_unit, '(a)') header
+        read(header, *, iostat=status) input_count, hidden_layer_count, output_count
         if (status == 0) then
             if (input_count /= expected_input_count) then
                 error stop "neural-network input count does not match the PES"
-            endif
+            end if
         else
-            read(header,*) hidden_layer_count, output_count
-        endif
+            read(header, *) hidden_layer_count, output_count
+        end if
     end subroutine read_network_header
+
 end module chempotpy_neural_network_io

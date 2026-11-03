@@ -1,8 +1,7 @@
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, p, g, d )
-
+    use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 4
@@ -10,44 +9,39 @@ subroutine pes( x, igrad, p, g, d )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: v
-    integer          :: iatom, idir, j, istate
+    double precision              :: v
+    integer                       :: iatom, idir, j, istate
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
     if (igrad==0) then
         call prepot
-        call pot(x,v)
+        call pot(x, v)
     else
-        write (*,*) 'Only energy is available'
-    endif
+        write (*, *) 'Only energy is available'
+    end if
 
-    v = v*27.211386
+    v = v*legacy_hartree_to_electronvolt
 
-    do istate=1,nstates
+    do istate=1, nstates
         p(istate) = v
-    enddo
+    end do
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate prepot.
 subroutine prepot
     implicit none
-
     integer, parameter :: dp = kind(0.d0)                   ! double precision
     real(dp)           :: xyz(4,3)
     real(dp)           :: v
     real(dp)           :: a1, a2, a3, a4
-    real(dp)           :: coeff(502),emsav
+    real(dp)           :: coeff(502), emsav
     real(dp)           :: x(6)
     integer            :: ncoeff
     integer            :: i, ncall
     data ncall/1/
     save ncall, coeff, a1, a2, a3, a4, ncoeff
-
     a1 = 2.0_dp
     a2 = 2.0_dp
     a3 = 2.0_dp
@@ -559,9 +553,9 @@ subroutine prepot
         coeff(501) = 8.2003579423252120d+01
         coeff(502) = 9.3232232083933184d+02
         return
-    endif
+    end if
 
-    entry pot(xyz,v)
+    entry pot(xyz, v)
     x(1) = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
     x(2) = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
     x(3) = sqrt((xyz(1,1)-xyz(4,1))**2+(xyz(1,2)-xyz(4,2))**2+(xyz(1,3)-xyz(4,3))**2)
@@ -587,12 +581,12 @@ subroutine prepot
     x(6) = x(6)/0.5291772083_dp
     x(6) = exp(-x(6)/a4)
 
-    v = emsav(x,coeff)
+    v = emsav(x, coeff)
 end subroutine
+
 !> @brief Evaluate potder.
 subroutine potder( xyz, dxyz )
     implicit none
-
     integer, parameter    :: dp = kind(0.d0)                   ! double precision
     real(dp), intent(in)  :: xyz(4,3)
     real(dp), intent(out) :: dxyz(4,3)
@@ -601,56 +595,52 @@ subroutine potder( xyz, dxyz )
     integer               :: i, j
     h = 0.01_dp*0.5291772_dp
 
-    do i=1,4
-        do j=1,3
+    do i=1, 4
+        do j=1, 3
             xyz_t      = xyz
             xyz_t(i,j) = xyz(i,j)-h
-            call pot(xyz_t,v1)
+            call pot(xyz_t, v1)
             xyz_t(i,j) = xyz(i,j)+h
-            call pot(xyz_t,v2)
+            call pot(xyz_t, v2)
             dxyz(i,j) = (-0.5_dp*v1+0.5_dp*v2)/h
         end do
     end do
 end subroutine
+
 !> @brief Evaluate emsav.
 double precision function emsav( x, c ) result(v)
     implicit none
-
     integer, parameter :: wp = kind(1.0d0)
-    real(wp),dimension(1:6)::x
-    real(wp),dimension(0:501)::c
+    real(wp), dimension(1:6)::x
+    real(wp), dimension(0:501)::c
     !  real(wp)::v
     ! ::::::::::::::::::::
-    real(wp),dimension(0:501)::p
-
-    call bemsav(x,p)
-    v = dot_product(p,c)
+    real(wp), dimension(0:501)::p
+    call bemsav(x, p)
+    v = dot_product(p, c)
 
 end function emsav
 
 !> @brief Evaluate bemsav.
 subroutine bemsav( x, p )
     implicit none
-
     integer, parameter :: wp = kind(1.0d0)
-    real(wp),dimension(1:6),intent(in)::x
-    real(wp),dimension(0:501),intent(out)::p
+    real(wp), dimension(1:6), intent(in)::x
+    real(wp), dimension(0:501), intent(out)::p
     ! ::::::::::::::::::::
-    real(wp),dimension(0:10)::m
-
-    call evmono(x,m)
-    call evpoly(m,p)
+    real(wp), dimension(0:10)::m
+    call evmono(x, m)
+    call evpoly(m, p)
 
 end subroutine bemsav
+
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
-
     integer, parameter :: wp = kind(1.0d0)
-    real(wp),dimension(1:6),intent(in)::x
-    real(wp),dimension(0:10),intent(out)::m
+    real(wp), dimension(1:6), intent(in)::x
+    real(wp), dimension(0:10), intent(out)::m
     !::::::::::::::::::::
-
     m(0)  = 1.0d0
     m(1)  = x(6)
     m(2)  = x(5)
@@ -664,15 +654,14 @@ subroutine evmono( x, m )
     m(10) = m(4)*m(5)
 
 end subroutine evmono
+
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
-
     integer, parameter :: wp = kind(1.0d0)
-    real(wp),dimension(0:10),intent(in)::m
-    real(wp),dimension(0:501),intent(out)::p
+    real(wp), dimension(0:10), intent(in)::m
+    real(wp), dimension(0:501), intent(out)::p
     !::::::::::::::::::::
-
     p(0)   = m(0)
     p(1)   = m(1)
     p(2)   = m(2) + m(3)

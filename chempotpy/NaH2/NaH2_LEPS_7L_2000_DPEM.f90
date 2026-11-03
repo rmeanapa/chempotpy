@@ -1,9 +1,9 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate dpem for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine dpem( x, igrad, u, ug )
-
+    use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
+    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 2
     integer, parameter            :: natoms  = 3
@@ -11,57 +11,48 @@ subroutine dpem( x, igrad, u, ug )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-
-    double precision :: nt, r(1,3), v(1)
-    double precision :: u11(1), u12(1), u22(1)
-    logical, save    :: first_time_data=.true.
-    integer          :: i, j, k, l
-
+    double precision              :: nt, r(1,3), v(1)
+    double precision              :: u11(1), u12(1), u22(1)
+    logical, save                 :: first_time_data=.true.
+    integer                       :: i, j, k, l
     !initialize
-    u  = 0.d0
-    ug = 0.d0
+    u = 0.d0; ug = 0.d0
 
     nt = 1
     ! input cartesian is ClHH
-    r(1,1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2 +(x(1,3)-x(2,3))**2)/0.529177211
-    r(1,2) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2 +(x(2,3)-x(3,3))**2)/0.529177211
-    r(1,3) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2 +(x(1,3)-x(3,3))**2)/0.529177211
+    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
 
     if(first_time_data) then
         call prepot
         first_time_data = .false.
-    endif
+    end if
 
     if (igrad==0) then
-        call pot(r,u11,1,1)
-        call pot(r,u12,1,2)
-        call pot(r,u22,1,3)
-        u(1,1) = u11(1)*27.211386
-        u(1,2) = u12(1)*27.211386
-        u(2,1) = u12(1)*27.211386
-        u(2,2) = u22(1)*27.211386
+        call pot(r, u11, 1, 1)
+        call pot(r, u12, 1, 2)
+        call pot(r, u22, 1, 3)
+        u(1,1) = u11(1)*legacy_hartree_to_electronvolt
+        u(1,2) = u12(1)*legacy_hartree_to_electronvolt
+        u(2,1) = u12(1)*legacy_hartree_to_electronvolt
+        u(2,2) = u22(1)*legacy_hartree_to_electronvolt
     else
-        write(*,*) "Only DPEM is available"
-    endif
+        write(*, *) "Only DPEM is available"
+    end if
 
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine evdrdx( x, r, drdx )
-
     implicit none
-
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-
-    integer :: i,j
-
+    integer                       :: i, j
     ! Initialize dRdX(3,9)
-    do i=1,3
-        do j=1,9
+    do i=1, 3
+        do j=1, 9
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
@@ -89,35 +80,33 @@ end subroutine evdrdx
 !> @brief Evaluate diagonalize for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine diagonalize( n, a_ss, ev_s, u_ss )
     implicit none
-
     integer, intent(in)           :: n
     double precision, intent(in)  :: a_ss(n,n)
     double precision, intent(out) :: u_ss(n,n)
     double precision, intent(out) :: ev_s(n)
-    integer                       :: io,i
-    double precision,allocatable  :: work_d(:)
+    integer                       :: io, i
+    double precision, allocatable :: work_d(:)
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
-
     u_ss = a_ss
     if (first_time_diag) then
         lwork_d = -1
         allocate( work_d(2) )
-        call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    endif
+    end if
     allocate( work_d(lwork_d) )
-    call dsyev('V','L',n,u_ss,n,ev_s,work_d,lwork_d,io)
+    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!   System:             NaH2
-!   Functional form:    Modified Extended LEPS (2x2 diabatic fit)
-!   Common name:        NaH2 surface set 7l
-!   Interface:          3-1V
+!   System:                        NaH2
+!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
+!   Common name:                   NaH2 surface set 7l
+!   Interface:                     3-1V
 !   Number of electronic surfaces: 2
-!   Number of derivatives: 0
+!   Number of derivatives:         0
 
 !   Notes:              This version contains long range forces,
 !                       no derivatives.  This fit is based on the surfac
@@ -171,30 +160,27 @@ end subroutine diagonalize
 !> @brief Evaluate prepot for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine prepot
     implicit none
-
     call prepot11
     call prepot12
     call prepot22
 
 end subroutine prepot
+
 !
 ! ********************************************************************
 ! ********************************************************************
 !> @brief Evaluate pot for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine pot( r, e, nt, nsurf )
-
     implicit none
-
     double precision :: e, r
     integer          :: nsurf, nt
-    dimension r(nt,3),e(nt)
-
+    dimension r(nt,3), e(nt)
     if (nsurf .eq. 1) then
-        call pot11(r,e,nt)
+        call pot11(r, e, nt)
     else if (nsurf .eq. 2) then
-        call pot12(r,e,nt)
+        call pot12(r, e, nt)
     else if (nsurf .eq. 3) then
-        call pot22(r,e,nt)
+        call pot22(r, e, nt)
     end if
 
 end subroutine pot
@@ -206,7 +192,6 @@ end subroutine pot
 !> @brief Evaluate prepot11 for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine prepot11
     implicit none
-
     double precision :: al1, al2, alb, alhh, alt, b0, balp, bect, bect2, beh2, bes1, bf, brho, c6, &
         & c60, c61, c63, c690, c6swt1, c6swt3, cevau, cind1, cind3, cos1, cos2, cosa, coscos, cosg, &
         & cstsq, cstsq1, cstsq3, dalp, dect, deh2, deh2m, des1, des20, dexp1, dexp3, div1, div3, &
@@ -220,47 +205,40 @@ subroutine prepot11
         & rnahpol3, rnahpol3b, rnaie, rnapol, rsm1, rsm2, rsm3, s1, s2, s2a, s2alp, s2rho, s3, sswt, &
         & twothd, vmid, xect, xeh2, xes1, xes3
     integer :: i, nt
-
-    dimension r(nt,3),e(nt)
-
+    dimension r(nt,3), e(nt)
     save
     ! NaH singlet
     data des1/0.55118d0/, bes1 /1.05118d0/, res1 /3.38583d0/
-
     ! H2 singlet
     data reh2 /1.401d0/, bf /1.627d0/, b0 /1.194d0/, &
         & gamh2a /2.323d0/, gamh2b /3.126d0/, deh2/4.74806d0/
     data des20 /0.996d0/, s2alp /3.0d0/, s2rho /7.0d0/
-
     ! H-Na-H term
     data dect /2.24409d0/, bect /0.57874d0/, &
         & rect /3.46457d0/, bect2 /0.87143d0/
-
     ! data blocks for the long range forces
-    data h2a1/2.38029900d0/,h2a2/1.47400334d0/,h2a3/-0.226331771d0/, &
-        & h2a4/-2.17339562d0/,h2a5/9.54597998d0/,h2a6/-23.3366749d0/, &
-        & h2a7/24.7115748d0/,h2a8/-12.8786102d0/,h2a9/2.75711758d0/
-    data h2b1/1.35164094d0/,h2b2/-0.254404564d0/,h2b3/-10.6627055d0/, &
-        & h2b4/-14.0112406d0/,h2b5/-7.80660398d0/,h2b6/5.47697753d0/, &
-        & h2b7/-6.95875664d0/,h2b8/3.64334771d0/,h2b9/-0.492505596d0/
-    data h2i1/160.484d0/,h2i2/-20.397d0/,h2i3/3.913d0/, &
-        & h2i4/0.777d0/,h2i5/-7.583/,h2i6/1.501/
-    data rnaie/5.139d0/,rnapol/159.267d0/,hpol/4.5d0/,hie/13.598d0/
-    data hnai1/-193.341d0/,hnai2/16.968d0/,hnai3/-77.120d0/, &
-        & hnai4/-1.024d0/,hnai5/6.009d0/,hnai6/-1.241d0/
+    data h2a1/2.38029900d0/, h2a2/1.47400334d0/, h2a3/-0.226331771d0/, &
+        & h2a4/-2.17339562d0/, h2a5/9.54597998d0/, h2a6/-23.3366749d0/, &
+        & h2a7/24.7115748d0/, h2a8/-12.8786102d0/, h2a9/2.75711758d0/
+    data h2b1/1.35164094d0/, h2b2/-0.254404564d0/, h2b3/-10.6627055d0/, &
+        & h2b4/-14.0112406d0/, h2b5/-7.80660398d0/, h2b6/5.47697753d0/, &
+        & h2b7/-6.95875664d0/, h2b8/3.64334771d0/, h2b9/-0.492505596d0/
+    data h2i1/160.484d0/, h2i2/-20.397d0/, h2i3/3.913d0/, &
+        & h2i4/0.777d0/, h2i5/-7.583/, h2i6/1.501/
+    data rnaie/5.139d0/, rnapol/159.267d0/, hpol/4.5d0/, hie/13.598d0/
+    data hnai1/-193.341d0/, hnai2/16.968d0/, hnai3/-77.120d0/, &
+        & hnai4/-1.024d0/, hnai5/6.009d0/, hnai6/-1.241d0/
     data hnau1/119.880d0/, hnau2/-0.620d0/, hnau3/31.335d0/, &
         & hnau4/70.414d0/, hnau5/-13.016d0/, hnau6/0.8681d0/
     data hnaa1/0.67d0/, hnaa2/-92.229d0/, hnaa3/51.01019d0/, &
         & hnaa4/-130.37826d0/, hnaa5/6.40285d0/
     data hnab1/0.34333d0/, hnab2/-92.229d0/, hnab3/-48.54867d0/, &
         & hnab4/-17.30523d0/, hnab5/0.99821d0/
-    data balp/2.07234d0/,brho/2.0d0/, rb0/5.1998697814229d7/, &
+    data balp/2.07234d0/, brho/2.0d0/, rb0/5.1998697814229d7/, &
         & rb90/5.0d8/, f90/1.0d0/, f0/1.0d0/, &
         & rd/9.1538750508008d8/, dalp/1.43307d0/, &
         & drho/5.71654d0/
-
     ! misc constants
-
     rac2   = 1.d0/dsqrt(2.d0)
     cevau  = 1.d0/27.2113961d0
     onethd = 1.0d0/3.0d0
@@ -268,9 +246,9 @@ subroutine prepot11
 
     return
     !
-    entry pot11(r,e,nt)
+    entry pot11(r, e, nt)
 
-    do 10 i=1,nt
+    do 10 i=1, nt
 
         ! ============================================================
         ! useful quantities calculated first, r1^2, R2^2, R3^2, atom to diatom
@@ -317,7 +295,7 @@ subroutine prepot11
             cstsq = 1.0d0
         else
             cstsq = (0.5d0*(r3s-r1s)/(r(i,2)*rnag))**2
-        endif
+        end if
 
         cosa = (r1s+r3s-r2s)/(2*r(i,1)*r(i,3))
 
@@ -327,13 +305,13 @@ subroutine prepot11
             cstsq1 = 1.0d0
         else
             cstsq1 = 0.25d0*((r3s-r2s-r1s+2.0d0*r3s*frac)/(r(i,1)*rnag1)) **2
-        endif
+        end if
 
         if (rnag3 .eq. 0.0d0) then
             cstsq3 = 1.0d0
         else
             cstsq3 = 0.25d0*((r1s-r2s-r3s+2.0d0*r1s*frac)/(r(i,3)*rnag3)) **2
-        endif
+        end if
 
         !==============================================================k
         !This section contains the diatomic curves
@@ -487,23 +465,16 @@ end subroutine prepot11
 
 !> @brief Evaluate prepot12 for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine prepot12
-
     implicit none
-
-    double precision :: ap,alp,bet,rnagsq,rnag,cosg,rd0,r20
-    double precision :: r1s,r2s,r3s,cos1,cos2,theta
+    double precision :: ap, alp, bet, rnagsq, rnag, cosg, rd0, r20
+    double precision :: r1s, r2s, r3s, cos1, cos2, theta
     double precision :: gc, gc2
-
     double precision :: cevau
-
-    integer          :: nt,i,j,k
+    integer          :: nt, i, j, k
     logical          :: leven
-    double precision :: r(nt,3),e(nt)
-
-    data  ap/0.835d0/,alp/4.0d0/,rd0/4.0d0/,bet/0.5d0/,r20/-1.3d0/
-
+    double precision :: r(nt,3), e(nt)
+    data  ap/0.835d0/, alp/4.0d0/, rd0/4.0d0/, bet/0.5d0/, r20/-1.3d0/
     save
-
     theta = 15.6d0*dacos(-1.0d0)/180.0d0
 
     cevau = 1.d0/27.2113961d0
@@ -513,9 +484,9 @@ subroutine prepot12
     leven = .true.
     return
 
-    entry pot12(r,e,nt)
+    entry pot12(r, e, nt)
 
-    do i=1,nt
+    do i=1, nt
 
         r1s = r(i,1)**2
         r2s = r(i,2)**2
@@ -528,7 +499,7 @@ subroutine prepot12
             rnag = dsqrt(rnagsq)
         else
             rnag = 0.0d0
-        endif
+        end if
 
         ! cosg = 0.5*(cos1-cos2) looks like cos(chi), but it never blows up
 
@@ -545,9 +516,9 @@ subroutine prepot12
         ! set leven equal to true for an even surface, false for an odd one
         if (leven) then
             e(i) = dsqrt(e(i)**4/(e(i)**2+1.0d-8))
-        endif
+        end if
 
-    enddo
+    end do
 end subroutine prepot12
 
 ! ********************************************************************
@@ -558,7 +529,6 @@ end subroutine prepot12
 !> @brief Evaluate prepot22 for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine prepot22
     implicit none
-
     double precision :: al1, al2, alb, alhh, alt, b0, balp, beh2, bet1, bet10, bet10b, bet190, bet1c, &
         & bet20, bet290, beta, bf, brho, c2a, c2b, c2c, c6, c61, c63, c6swt1, c6swt3, cevau, cind1, &
         & cind3, cos1, cos2, cosa, coscos, cosg, coul1, coul2, coul3, cplg2, cstsq, cstsq1, cstsq3, &
@@ -577,9 +547,7 @@ subroutine prepot22
         & t30, t390, t3c, t3m, twothd, una2p, w, xeh2, xenah, xet190, xet1c, xet20, xet290, xet3, &
         & xet390, xet3c
     integer :: i, nt
-
-    dimension r(nt,3),e(nt)
-
+    dimension r(nt,3), e(nt)
     save
     ! NaH triplets
     data ret10 /3.22835d0/, bet10 /0.57874d0/, &
@@ -587,35 +555,30 @@ subroutine prepot22
     data det190 /4.32441d0/, bet190 /2.43701d0/, ret190 /1.95480d0/, &
         & t1alp /0.30778d0/, t1rho /3.21850d0/
     data det1c /4.92126d0/, bet1c /0.65748d0/, ret1c /2.71654d0/
-
     ! H2 triplets
     data det20 /3.29921d0/, bet20 /2.64567d0/, ret20 /2.44882d0/
     data det290 /3.97638d0/, bet290 /3.73937d0/, ret290 /0.96024d0/
     data t2alp /1.0d0/, t2rho /9.0d0/
-
     ! H2 singlets
     data des290 /0.91433d0/, s2alp /0.66778d0/, s2rho /5.30472d0/
     data deh2 /4.74806d0/
     data s20alp /0.5d0/, s20rho /6.0d0/
-
     ! misc constants
-
     data c2a /1.38661d0/, c2b /0.27362d0/, c2c /0.03764d0/, &
         & una2p/2.1037d0/
-
     ! data blocks for the long range forces
-    data h2a1/2.38029900d0/,h2a2/1.47400334d0/,h2a3/-0.226331771d0/, &
-        & h2a4/-2.17339562d0/,h2a5/9.54597998d0/,h2a6/-23.3366749d0/, &
-        & h2a7/24.7115748d0/,h2a8/-12.8786102d0/,h2a9/2.75711758d0/
-    data h2b1/1.35164094d0/,h2b2/-0.254404564d0/,h2b3/-10.6627055d0/, &
-        & h2b4/-14.0112406d0/,h2b5/-7.80660398d0/,h2b6/5.47697753d0/, &
-        & h2b7/-6.95875664d0/,h2b8/3.64334771d0/,h2b9/-0.492505596d0/
-    data h2i1/160.484d0/,h2i2/-20.397d0/,h2i3/3.913d0/, &
-        & h2i4/0.777d0/,h2i5/-7.583/,h2i6/1.501/
-    data rnaie/3.0353/,rnapol1/290.4d0/,hpol/4.5d0/,hie/13.598d0/, &
+    data h2a1/2.38029900d0/, h2a2/1.47400334d0/, h2a3/-0.226331771d0/, &
+        & h2a4/-2.17339562d0/, h2a5/9.54597998d0/, h2a6/-23.3366749d0/, &
+        & h2a7/24.7115748d0/, h2a8/-12.8786102d0/, h2a9/2.75711758d0/
+    data h2b1/1.35164094d0/, h2b2/-0.254404564d0/, h2b3/-10.6627055d0/, &
+        & h2b4/-14.0112406d0/, h2b5/-7.80660398d0/, h2b6/5.47697753d0/, &
+        & h2b7/-6.95875664d0/, h2b8/3.64334771d0/, h2b9/-0.492505596d0/
+    data h2i1/160.484d0/, h2i2/-20.397d0/, h2i3/3.913d0/, &
+        & h2i4/0.777d0/, h2i5/-7.583/, h2i6/1.501/
+    data rnaie/3.0353/, rnapol1/290.4d0/, hpol/4.5d0/, hie/13.598d0/, &
         & rnaquad/-16.8992d0/
-    data hnai1/-193.341d0/,hnai2/16.968d0/,hnai3/-77.120d0/, &
-        & hnai4/-1.024d0/,hnai5/6.009d0/,hnai6/-1.241d0/
+    data hnai1/-193.341d0/, hnai2/16.968d0/, hnai3/-77.120d0/, &
+        & hnai4/-1.024d0/, hnai5/6.009d0/, hnai6/-1.241d0/
     data hnau1/119.880d0/, hnau2/-0.620d0/, hnau3/31.335d0/, &
         & hnau4/70.414d0/, hnau5/-13.016d0/, hnau6/0.8681d0/
     data hnaa1/0.67d0/, hnaa2/-92.229d0/, hnaa3/51.01019d0/, &
@@ -630,16 +593,15 @@ subroutine prepot22
         & h2hc4/-1.022d0/, h2hc5/0.665d0/
     data h2qc1/1.532d0/, h2qc2/-.04635d0/, h2qc3/1.826d0/, &
         & h2qc4/-2.508d0/, h2qc5/1.856d0/
-
     cevau  = 1.d0/27.2113961d0
     onethd = 1.0d0/3.0d0
     twothd = 2.0d0/3.0d0
 
     return
 
-    entry pot22(r,e,nt)
+    entry pot22(r, e, nt)
 
-    do 10 i=1,nt
+    do 10 i=1, nt
 
         ! =========================================================
         ! this section calcluates useful quantities - the A to BC center
@@ -662,7 +624,7 @@ subroutine prepot22
             cstsq = 0.0d0
         else
             cstsq = (0.5d0*(r3s-r1s)/(r(i,2)*rnag))**2
-        endif
+        end if
 
         cosa = (r1s+r3s-r2s)/(2*r(i,1)*r(i,3))
 
@@ -685,13 +647,13 @@ subroutine prepot22
             cstsq1 = 1.0d0
         else
             cstsq1 = 0.25d0*((r3s-r2s-r1s+2.0d0*r3s*frac)/(r(i,1)*rnag1)) **2
-        endif
+        end if
 
         if (rnag3 .eq. 0.0d0) then
             cstsq3 = 1.0d0
         else
             cstsq3 = 0.25d0*((r1s-r2s-r3s+2.0d0*r1s*frac)/(r(i,3)*rnag3)) **2
-        endif
+        end if
 
         ! =========================================================
 

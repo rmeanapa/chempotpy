@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count
@@ -18,7 +17,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3)
     real(real64) :: energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -29,16 +27,15 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate the cutoff extended-Rydberg Al-Al pair potential.
 subroutine evaluate_er2( coordinates_bohr, atom_count, energy_hartree )
     use chempotpy_geometry, only: cartesian_distance
-    use chempotpy_kinds, only: real64
+    use chempotpy_kinds,    only: real64
     implicit none
-
     real(real64), parameter :: hartree_to_ev    = 27.2113961d0
     real(real64), parameter :: bohr_to_angstrom = 0.529177249d0
     ! Preserve the default-real parameter rounding in the released kernel.
@@ -59,7 +56,6 @@ subroutine evaluate_er2( coordinates_bohr, atom_count, energy_hartree )
     real(real64)              :: distance_bohr
     real(real64)              :: radial_offset, polynomial, exponential, cutoff
     integer                   :: first_atom, second_atom
-
     energy_hartree = 0.0d0
     do first_atom = 1, atom_count-1
         do second_atom = first_atom+1, atom_count
@@ -71,8 +67,8 @@ subroutine evaluate_er2( coordinates_bohr, atom_count, energy_hartree )
             cutoff      = 0.0d0
             if( distance_bohr <= cutoff_distance_bohr ) then
                 cutoff = exp(cutoff_shape*(1.0d0 -1.0d0/(1.0d0-distance_bohr/cutoff_distance_bohr)))
-            endif
+            end if
             energy_hartree = energy_hartree -well_depth_hartree*exponential*polynomial*cutoff
-        enddo
-    enddo
+        end do
+    end do
 end subroutine evaluate_er2

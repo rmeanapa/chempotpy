@@ -6,7 +6,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         legacy_energy_to_electronvolt
     use chempotpy_kinds, only: real64
     implicit none
-
     integer, parameter        :: state_count = 1
     real(real64), intent(in)  :: coordinates_angstrom(10000,3)
     integer, intent(in)       :: atom_count, derivative_order
@@ -16,7 +15,6 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     real(real64), intent(out) :: coupling_per_angstrom( &
         state_count,state_count,atom_count,3 )
     real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-
     energy_ev                = 0.0d0
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
@@ -27,13 +25,12 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     if( derivative_order == 0 ) then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
-        write(*,*) 'Only energy is available'
-    endif
+        write(*, *) 'Only energy is available'
+    end if
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2MisFMP potential.
 subroutine pot( x, y, z, v, natom, maxatom )
-
     !   System:                        Aln
     !   Functional form:               Extended Rydberg plus Embedded Atom
     !   Common name:                   ER2+MisFMP
@@ -62,18 +59,16 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !  maxatom --- maximal number of atoms
 
     implicit none
-
     double precision :: a, a1, a2, a3, au2, au23, b1, b2, bu2, co, co3, de, dx, dy, &
         & dz, ee, ef, ef2, f0, f2, poly, q1, q2, q3, r3, r4, re, rh, rho, rhobar, rr, v, v2, x, &
         & xksum, xksum2, y, z
     integer                     :: i, j, maxatom, natom
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-    dimension x(maxatom),y(maxatom),z(maxatom)
+    dimension x(maxatom), y(maxatom), z(maxatom)
     !
     !  calculate the potential energy
     !
-
     de  = 1.71013678553981441/autoev
     re  = 5.08182706399609163
     a1  = 1.24074255007327805
@@ -97,11 +92,11 @@ subroutine pot( x, y, z, v, natom, maxatom )
     v   = 0.d0
     ef  = 0.d0
     ef2 = 0.d0
-    do 2 i=1,natom
+    do 2 i=1, natom
         v2     = 0.d0
         ef2    = 0.d0
         rhobar = 0.d0
-        do 3 j=1,natom
+        do 3 j=1, natom
             if (i.eq.j) go to 3
             dx = x(i)-x(j)
             dy = y(i)-y(j)

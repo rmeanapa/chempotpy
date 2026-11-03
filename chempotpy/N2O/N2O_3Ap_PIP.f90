@@ -1,11 +1,11 @@
 !**********************************************************************
-!   System:                     N2O (lowest 3A' state)
-!   Functional form:            permutationally invariant polynomials
-!   Common name:                N2O-3Ap (adiabatic triplet state)
-!   Number of derivatives:      1
-!   Number of bodies:           3
+!   System:                        N2O (lowest 3A' state)
+!   Functional form:               permutationally invariant polynomials
+!   Common name:                   N2O-3Ap (adiabatic triplet state)
+!   Number of derivatives:         1
+!   Number of bodies:              3
 !   Number of electronic surfaces: 1
-!   Interface: Section-2
+!   Interface:                     Section-2
 !
 !   References:: W. Lin, Z. Varga, G. Song, Y. Paukku, D. G. Truhlar
 !                J. Chem. Phys. 2016, 144, 024309
@@ -26,7 +26,6 @@
 !**********************************************************************
 
 module n2o_3ap_pip_par
-
     !**********************************************************************
     ! This code is based on O3_1_1Ap.f (FORTRAN77 version) where some
     ! keywords were replaced by more modern ones.
@@ -49,11 +48,9 @@ module n2o_3ap_pip_par
     private
     public :: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, gconv, &
         & p, r, re, rm, rms, totdiss
-
-    double precision,parameter :: cconv = 0.52917721092d0
-    double precision,parameter :: econv = 0.159360144d-2
-    double precision,parameter :: gconv = 0.843297564d-3
-
+    double precision, parameter :: cconv = 0.52917721092d0
+    double precision, parameter :: econv = 0.159360144d-2
+    double precision, parameter :: gconv = 0.843297564d-3
     ! Common variables
     ! R(6):         Interatomic bond distance
     ! rMs(6)                Array to store base terms
@@ -68,131 +65,122 @@ module n2o_3ap_pip_par
     ! dRdX(6,12):   The derivative of R w.r.t. X
     ! dB2dR(6,2153) The derivative of B w.r.t. R (four-body)
     ! dBdR(6,256)   The derivative of B w.r.t. R (three-body)
-
     double precision :: r(6)
-    double precision :: rms(6),rm(0:17),p(0:2253),b(256),b2(2153)
-    double precision :: dmsdr(6,6),dmdr(6,0:17),dpdr(6,0:2253)
-    double precision :: dvdr(6),drdx(6,12)
-    double precision :: db2dr(6,2153),dbdr(6,256)
-
+    double precision :: rms(6), rm(0:17), p(0:2253), b(256), b2(2153)
+    double precision :: dmsdr(6,6), dmdr(6,0:17), dpdr(6,0:2253)
+    double precision :: dvdr(6), drdx(6,12)
+    double precision :: db2dr(6,2153), dbdr(6,256)
     ! Nonlinear parameters:
     ! a(in Ang)
     ! ab (in Ang^2)
     ! re (in Ang)
     ! order of data: OO,NO,NO,NO,NO,NN
-
-    double precision,parameter :: a(6) = (/ 1.30d0,1.20d0,1.20d0,&
-        1.20d0,1.20d0,0.90d0 /)
-    double precision,parameter :: ab(6) = (/ 1.60d0,2.35d0,2.35d0,&
-        2.35d0,2.35d0,1.90d0 /)
-    double precision,parameter :: re(6) = (/ 1.208d0,1.1508d0,&
-        1.1508d0,1.1508d0,1.1508d0,1.098d0 /)
-
+    double precision, parameter :: a(6) = (/ 1.30d0, 1.20d0, 1.20d0, &
+        1.20d0, 1.20d0, 0.90d0 /)
+    double precision, parameter :: ab(6) = (/ 1.60d0, 2.35d0, 2.35d0, &
+        2.35d0, 2.35d0, 1.90d0 /)
+    double precision, parameter :: re(6) = (/ 1.208d0, 1.1508d0, &
+        1.1508d0, 1.1508d0, 1.1508d0, 1.098d0 /)
     ! Reference energy of N2 + O in hartree for N2O system
-    double precision,parameter :: eref = -0.191619504727d0
-
+    double precision, parameter :: eref = -0.191619504727d0
     ! De(N2) + De(O2) = 228.4 + 120.143 kcal/mol
-    double precision,parameter :: totdiss = 348.643d0
-
+    double precision, parameter :: totdiss = 348.643d0
     ! Linear parameters optimized by the weighted-least square fitting
-    double precision,parameter :: c(256) = (/ &
-        -0.192871657484d+03 , 0.505496814187d+03 ,-0.340092108191d+03 &
-        ,-0.631948144277d+03 ,-0.414752342299d+03 ,-0.808770263645d+02 &
-        ,-0.530235038834d+04 ,-0.507252209766d+03 , 0.453551379815d+03 &
-        ,-0.610805683206d+02 , 0.190224213025d+03 , 0.393599247694d+02 &
-        , 0.266388003190d+04 , 0.693011461852d+04 ,-0.369218833269d+02 &
-        , 0.271918627358d+04 ,-0.494872431297d+02 ,-0.344623172461d+03 &
-        , 0.126680354042d+03 ,-0.223485030547d+03 ,-0.366816503551d+02 &
-        , 0.407518964924d+02 , 0.381307340770d+03 , 0.288641404926d+02 &
-        , 0.740960148947d+02 , 0.155630333046d+02 , 0.314817625890d+05 &
-        , 0.917864576717d+02 ,-0.644828324198d+02 ,-0.381497908488d+03 &
-        , 0.150408980317d+05 ,-0.268654281778d+03 ,-0.700266311454d+02 &
-        ,-0.269919382254d-02 , 0.326584969287d-02 , 0.938719030160d-03 &
-        ,-0.157592797481d-02 , 0.159770366901d-02 ,-0.364326665533d-03 &
-        , 0.119119975980d-02 ,-0.208841247388d-02 , 0.774281292252d-03 &
-        ,-0.207872357177d+05 ,-0.145159901477d+05 ,-0.697184938758d-04 &
-        ,-0.242910714682d+05 ,-0.440986425715d+05 , 0.106029441338d-02 &
-        ,-0.322908188219d+04 , 0.697751604548d-04 , 0.271132696071d-03 &
-        , 0.825798353162d-03 , 0.159051390892d-02 , 0.111481257568d-02 &
-        ,-0.746484582749d-03 , 0.559502149372d-03 , 0.103795454379d-03 &
-        , 0.703206354046d-03 , 0.750770876039d-03 ,-0.378375719038d-03 &
-        ,-0.769196622059d-04 , 0.369919425793d-03 ,-0.133680752685d-02 &
-        ,-0.198133712502d-03 ,-0.428266929021d-03 ,-0.275884758594d-06 &
-        ,-0.832900911973d-05 ,-0.109162292574d-04 ,-0.125407404994d-05 &
-        ,-0.931837894314d-05 ,-0.196427845367d-05 , 0.181538780453d-05 &
-        , 0.369890040020d-05 ,-0.290972639050d-05 , 0.153202245201d-05 &
-        ,-0.133185566295d+06 ,-0.383446604246d-05 , 0.326943336404d-06 &
-        , 0.310131372316d-05 , 0.220608853851d-05 ,-0.132118244664d+05 &
-        ,-0.168103542819d-05 , 0.145682861330d-07 , 0.567154220843d+05 &
-        ,-0.209257268580d-05 ,-0.247665320785d-05 ,-0.180281153916d-05 &
-        , 0.974036083790d-06 ,-0.103092255131d+06 , 0.223113602260d-06 &
-        , 0.902062311070d-06 , 0.122851270135d-05 , 0.244930561166d-06 &
-        ,-0.314462522510d-05 ,-0.182623625733d-05 ,-0.308617018163d-06 &
-        ,-0.196458131541d-06 ,-0.804502633400d-07 , 0.216059561353d-07 &
-        , 0.825093593448d-08 , 0.151703716256d-08 , 0.272120814770d-08 &
-        , 0.359868863598d-07 ,-0.164291122928d-07 , 0.146173988469d-07 &
-        , 0.108993845060d-07 ,-0.295549398288d-07 , 0.392901711166d-09 &
-        , 0.690306478646d-09 , 0.751007636144d+05 , 0.330804955589d+05 &
-        , 0.731237201755d+05 ,-0.555519363843d-08 , 0.535284740937d+05 &
-        , 0.127922684244d+06 ,-0.334694050252d-09 , 0.287840726243d+03 &
-        ,-0.398722477257d-08 , 0.313593773171d-08 , 0.154250301421d-08 &
-        ,-0.669388100505d-09 ,-0.820728018880d-08 ,-0.228101271205d-08 &
-        ,-0.428553903475d-08 ,-0.509317032993d-09 ,-0.698491930962d-08 &
-        ,-0.535510480404d-08 ,-0.435102265328d-08 ,-0.133877620101d-08 &
-        , 0.145519152284d-09 ,-0.407453626394d-09 ,-0.116415321827d-09 &
-        , 0.669388100505d-09 , 0.392901711166d-09 ,-0.523868948221d-09 &
-        ,-0.196450855583d-09 , 0.523868948221d-09 , 0.698491930962d-09 &
-        , 0.145519152284d-10 , 0.338175669068d+06 ,-0.831727590528d+04 &
-        , 0.719984414516d+05 , 0.188413514729d+05 ,-0.792882888891d+05 &
-        , 0.243298665896d+06 ,-0.149732981414d+06 ,-0.943912897156d+05 &
-        ,-0.875496637326d+04 ,-0.165842004002d+06 ,-0.212000467286d+06 &
-        ,-0.155091427880d+05 ,-0.179834265602d+06 ,-0.179361289650d+05 &
-        ,-0.491757326431d+06 , 0.134094744039d+05 ,-0.309803967653d+06 &
-        , 0.199258259688d+06 , 0.357822266459d+05 , 0.102633789670d+05 &
-        ,-0.162907028249d+06 , 0.666467040310d+05 ,-0.257756722192d+06 &
-        , 0.177066352696d+06 , 0.145063127660d+06 ,-0.155636140179d+05 &
-        , 0.251739487804d+05 , 0.172717309885d+06 , 0.321029348794d+06 &
-        ,-0.796521545270d+05 , 0.106797153297d+06 , 0.629903951644d+05 &
-        , 0.408835428180d+06 ,-0.197822655479d+05 , 0.280010560477d+06 &
-        ,-0.160733582824d+06 , 0.526652489483d+05 ,-0.395040780841d+06 &
-        ,-0.914304422295d+05 , 0.260497570489d+06 , 0.278982708008d+05 &
-        , 0.387635337702d+05 ,-0.829432569855d+05 , 0.181358944279d+06 &
-        ,-0.123178634760d+06 ,-0.120262520907d+06 , 0.405038617902d+04 &
-        , 0.295069619882d+05 ,-0.189439482776d+06 ,-0.374163387846d+05 &
-        ,-0.532751065209d+05 ,-0.249135252651d+06 , 0.104410482833d+06 &
-        , 0.203893121354d+04 ,-0.815839765719d+05 ,-0.180434391399d+06 &
-        , 0.180067852932d+05 ,-0.863911157242d+05 , 0.144505604879d+05 &
-        ,-0.558704952455d+05 ,-0.213797124661d+06 , 0.133292031405d+06 &
-        , 0.163000174202d+06 , 0.232810601995d+06 ,-0.232303430689d+06 &
-        ,-0.966395516658d+05 ,-0.418566696669d+06 , 0.121392034676d+06 &
-        , 0.183041839657d+06 , 0.509269034545d+05 ,-0.108439249735d+06 &
-        , 0.465178713737d+05 , 0.508671626559d+05 , 0.881463674835d+04 &
-        ,-0.255258346907d+05 , 0.462934278728d+04 , 0.702391998396d+05 &
-        , 0.116727918999d+05 ,-0.145142584740d+05 , 0.896605501276d+05 &
-        ,-0.501899786892d+05 ,-0.271777310092d+05 , 0.480142416796d+05 &
-        , 0.324278841959d+05 ,-0.481545418697d+04 ,-0.199047126454d+04 &
-        , 0.152395558889d+05 , 0.920407417618d+04 , 0.407938699748d+05 &
-        ,-0.346542837775d+05 , 0.853313926693d+03 , 0.804658799646d+04 &
-        ,-0.248404511626d+05 ,-0.955094432932d+04 ,-0.570719710049d+05 &
-        ,-0.497802997147d+05 , 0.416205494297d+05 , 0.414831407658d+05 &
-        , 0.162885224226d+06 ,-0.581762974696d+05 ,-0.990110293861d+05 &
-        ,-0.114120083501d+05 , 0.336790786016d+05 ,-0.737317819169d+04 &
-        ,-0.837183620433d+04 ,-0.428570375057d+04 , 0.240105559722d+04 &
-        , 0.100983079867d+05 ,-0.429809903978d+05 ,-0.110862511783d+05 &
-        , 0.131770252630d+05 , 0.485710803249d+04 , 0.726091910392d+03 &
-        ,-0.110202920514d+05 , 0.981597122651d+04 , 0.766434197892d+04 &
-        ,-0.109242412965d+05                                           &
+    double precision, parameter :: c(256) = (/ &
+        -0.192871657484d+03, 0.505496814187d+03, -0.340092108191d+03 &
+        , -0.631948144277d+03, -0.414752342299d+03, -0.808770263645d+02 &
+        , -0.530235038834d+04, -0.507252209766d+03, 0.453551379815d+03 &
+        , -0.610805683206d+02, 0.190224213025d+03, 0.393599247694d+02 &
+        , 0.266388003190d+04, 0.693011461852d+04, -0.369218833269d+02 &
+        , 0.271918627358d+04, -0.494872431297d+02, -0.344623172461d+03 &
+        , 0.126680354042d+03, -0.223485030547d+03, -0.366816503551d+02 &
+        , 0.407518964924d+02, 0.381307340770d+03, 0.288641404926d+02 &
+        , 0.740960148947d+02, 0.155630333046d+02, 0.314817625890d+05 &
+        , 0.917864576717d+02, -0.644828324198d+02, -0.381497908488d+03 &
+        , 0.150408980317d+05, -0.268654281778d+03, -0.700266311454d+02 &
+        , -0.269919382254d-02, 0.326584969287d-02, 0.938719030160d-03 &
+        , -0.157592797481d-02, 0.159770366901d-02, -0.364326665533d-03 &
+        , 0.119119975980d-02, -0.208841247388d-02, 0.774281292252d-03 &
+        , -0.207872357177d+05, -0.145159901477d+05, -0.697184938758d-04 &
+        , -0.242910714682d+05, -0.440986425715d+05, 0.106029441338d-02 &
+        , -0.322908188219d+04, 0.697751604548d-04, 0.271132696071d-03 &
+        , 0.825798353162d-03, 0.159051390892d-02, 0.111481257568d-02 &
+        , -0.746484582749d-03, 0.559502149372d-03, 0.103795454379d-03 &
+        , 0.703206354046d-03, 0.750770876039d-03, -0.378375719038d-03 &
+        , -0.769196622059d-04, 0.369919425793d-03, -0.133680752685d-02 &
+        , -0.198133712502d-03, -0.428266929021d-03, -0.275884758594d-06 &
+        , -0.832900911973d-05, -0.109162292574d-04, -0.125407404994d-05 &
+        , -0.931837894314d-05, -0.196427845367d-05, 0.181538780453d-05 &
+        , 0.369890040020d-05, -0.290972639050d-05, 0.153202245201d-05 &
+        , -0.133185566295d+06, -0.383446604246d-05, 0.326943336404d-06 &
+        , 0.310131372316d-05, 0.220608853851d-05, -0.132118244664d+05 &
+        , -0.168103542819d-05, 0.145682861330d-07, 0.567154220843d+05 &
+        , -0.209257268580d-05, -0.247665320785d-05, -0.180281153916d-05 &
+        , 0.974036083790d-06, -0.103092255131d+06, 0.223113602260d-06 &
+        , 0.902062311070d-06, 0.122851270135d-05, 0.244930561166d-06 &
+        , -0.314462522510d-05, -0.182623625733d-05, -0.308617018163d-06 &
+        , -0.196458131541d-06, -0.804502633400d-07, 0.216059561353d-07 &
+        , 0.825093593448d-08, 0.151703716256d-08, 0.272120814770d-08 &
+        , 0.359868863598d-07, -0.164291122928d-07, 0.146173988469d-07 &
+        , 0.108993845060d-07, -0.295549398288d-07, 0.392901711166d-09 &
+        , 0.690306478646d-09, 0.751007636144d+05, 0.330804955589d+05 &
+        , 0.731237201755d+05, -0.555519363843d-08, 0.535284740937d+05 &
+        , 0.127922684244d+06, -0.334694050252d-09, 0.287840726243d+03 &
+        , -0.398722477257d-08, 0.313593773171d-08, 0.154250301421d-08 &
+        , -0.669388100505d-09, -0.820728018880d-08, -0.228101271205d-08 &
+        , -0.428553903475d-08, -0.509317032993d-09, -0.698491930962d-08 &
+        , -0.535510480404d-08, -0.435102265328d-08, -0.133877620101d-08 &
+        , 0.145519152284d-09, -0.407453626394d-09, -0.116415321827d-09 &
+        , 0.669388100505d-09, 0.392901711166d-09, -0.523868948221d-09 &
+        , -0.196450855583d-09, 0.523868948221d-09, 0.698491930962d-09 &
+        , 0.145519152284d-10, 0.338175669068d+06, -0.831727590528d+04 &
+        , 0.719984414516d+05, 0.188413514729d+05, -0.792882888891d+05 &
+        , 0.243298665896d+06, -0.149732981414d+06, -0.943912897156d+05 &
+        , -0.875496637326d+04, -0.165842004002d+06, -0.212000467286d+06 &
+        , -0.155091427880d+05, -0.179834265602d+06, -0.179361289650d+05 &
+        , -0.491757326431d+06, 0.134094744039d+05, -0.309803967653d+06 &
+        , 0.199258259688d+06, 0.357822266459d+05, 0.102633789670d+05 &
+        , -0.162907028249d+06, 0.666467040310d+05, -0.257756722192d+06 &
+        , 0.177066352696d+06, 0.145063127660d+06, -0.155636140179d+05 &
+        , 0.251739487804d+05, 0.172717309885d+06, 0.321029348794d+06 &
+        , -0.796521545270d+05, 0.106797153297d+06, 0.629903951644d+05 &
+        , 0.408835428180d+06, -0.197822655479d+05, 0.280010560477d+06 &
+        , -0.160733582824d+06, 0.526652489483d+05, -0.395040780841d+06 &
+        , -0.914304422295d+05, 0.260497570489d+06, 0.278982708008d+05 &
+        , 0.387635337702d+05, -0.829432569855d+05, 0.181358944279d+06 &
+        , -0.123178634760d+06, -0.120262520907d+06, 0.405038617902d+04 &
+        , 0.295069619882d+05, -0.189439482776d+06, -0.374163387846d+05 &
+        , -0.532751065209d+05, -0.249135252651d+06, 0.104410482833d+06 &
+        , 0.203893121354d+04, -0.815839765719d+05, -0.180434391399d+06 &
+        , 0.180067852932d+05, -0.863911157242d+05, 0.144505604879d+05 &
+        , -0.558704952455d+05, -0.213797124661d+06, 0.133292031405d+06 &
+        , 0.163000174202d+06, 0.232810601995d+06, -0.232303430689d+06 &
+        , -0.966395516658d+05, -0.418566696669d+06, 0.121392034676d+06 &
+        , 0.183041839657d+06, 0.509269034545d+05, -0.108439249735d+06 &
+        , 0.465178713737d+05, 0.508671626559d+05, 0.881463674835d+04 &
+        , -0.255258346907d+05, 0.462934278728d+04, 0.702391998396d+05 &
+        , 0.116727918999d+05, -0.145142584740d+05, 0.896605501276d+05 &
+        , -0.501899786892d+05, -0.271777310092d+05, 0.480142416796d+05 &
+        , 0.324278841959d+05, -0.481545418697d+04, -0.199047126454d+04 &
+        , 0.152395558889d+05, 0.920407417618d+04, 0.407938699748d+05 &
+        , -0.346542837775d+05, 0.853313926693d+03, 0.804658799646d+04 &
+        , -0.248404511626d+05, -0.955094432932d+04, -0.570719710049d+05 &
+        , -0.497802997147d+05, 0.416205494297d+05, 0.414831407658d+05 &
+        , 0.162885224226d+06, -0.581762974696d+05, -0.990110293861d+05 &
+        , -0.114120083501d+05, 0.336790786016d+05, -0.737317819169d+04 &
+        , -0.837183620433d+04, -0.428570375057d+04, 0.240105559722d+04 &
+        , 0.100983079867d+05, -0.429809903978d+05, -0.110862511783d+05 &
+        , 0.131770252630d+05, 0.485710803249d+04, 0.726091910392d+03 &
+        , -0.110202920514d+05, 0.981597122651d+04, 0.766434197892d+04 &
+        , -0.109242412965d+05                                           &
         /)
-
 end module n2o_3ap_pip_par
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, potential, gradient, dvec )
-
     use n2o_3ap_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 3
@@ -201,25 +189,22 @@ subroutine pes( x, igrad, potential, gradient, dvec )
     double precision, intent(out) :: potential(nstates)
     double precision, intent(out) :: gradient(nstates,natoms,3)
     double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-
-    double precision :: v, tx(12), tg(12)
-    integer          :: iatom, idir, j, istate
+    double precision              :: v, tx(12), tg(12)
+    integer                       :: iatom, idir, j, istate
     !initialize
-    potential = 0.d0
-    gradient  = 0.d0
-    dvec      = 0.d0
+    potential = 0.d0; gradient = 0.d0; dvec = 0.d0
 
     ! Notice that this N2O surface is weird, it is using N2O2 surface
     ! and simply make the first three coordinates as zero.
-    do idir=1,3
+    do idir=1, 3
         tx(idir) = 1.0d10
-    enddo
-    do iatom=1,3
-        do idir=1,3
+    end do
+    do iatom=1, 3
+        do idir=1, 3
             j     = 3*(iatom-1)+idir+3
-            tx(j) = x(iatom, idir)
-        enddo
-    enddo
+            tx(j) = x(iatom,idir)
+        end do
+    end do
     tg = 0.d0
 
     call n2o2pes(tx, v, tg, igrad)
@@ -231,31 +216,31 @@ subroutine pes( x, igrad, potential, gradient, dvec )
     ! output g is in kcal/mol/ang
     tg = tg/23.0609
 
-    do istate=1,nstates
+    do istate=1, nstates
         potential(istate) = v
-    enddo
+    end do
 
-    do istate=1,nstates
-        do iatom=1,natoms
-            do idir=1,3
+    do istate=1, nstates
+        do iatom=1, natoms
+            do idir=1, 3
                 j                           = 3*(iatom-1)+idir+3
                 gradient(istate,iatom,idir) = tg(j)
-            enddo
-        enddo
-    enddo
+            end do
+        end do
+    end do
 
     dvec = 0.d0
 
-endsubroutine
+end subroutine
 
 !**********************************************************************
-!   System:                     N2O2
-!   Functional form:            permutationally invariant polynomials
-!   Common name:                N2O2(adiabatic triplet ground state)
-!   Number of derivatives:      1
-!   Number of bodies:           4
+!   System:                        N2O2
+!   Functional form:               permutationally invariant polynomials
+!   Common name:                   N2O2(adiabatic triplet ground state)
+!   Number of derivatives:         1
+!   Number of bodies:              4
 !   Number of electronic surfaces: 1
-!   Interface: Section-2
+!   Interface:                     Section-2
 !
 !   References:: Z. Varga, R. Meana-PaÃ±eda, G. Song, Y. Paukku,
 !                and D. G. Truhlar J. Chem. Phys. Submitted
@@ -307,11 +292,9 @@ subroutine n2o2pes( x, v, dvdx, igrad )
     !**********************************************************************
 
     implicit none
-
-    integer          :: i,igrad,j,nob,k
+    integer          :: i, igrad, j, nob, k
     double precision :: v
-    double precision :: dvdx(12),x(12)
-
+    double precision :: dvdx(12), x(12)
     ! Obtain Cartesian coordinates from input file
     call coord_convt(x)
 
@@ -321,11 +304,11 @@ subroutine n2o2pes( x, v, dvdx, igrad )
 
         if (igrad .eq. 1) then
             ! Call subroutine EvdVdX to evaluate the derivatives of V w.r.t. X
-            call evdvdx(x,dvdx)
-        endif
+            call evdvdx(x, dvdx)
+        end if
     else
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 end subroutine n2o2pes
 
 !> @brief Evaluate coord_convt.
@@ -342,10 +325,8 @@ subroutine coord_convt( x )
     !**********************************************************************
 
     implicit none
-
     integer          :: i
     double precision :: x(12)
-
     r(1) = sqrt((x(4)-x(1))**2  + (x(5)-x(2))**2  + (x(6)-x(3))**2)
     r(2) = sqrt((x(7)-x(1))**2  + (x(8)-x(2))**2  + (x(9)-x(3))**2)
     r(3) = sqrt((x(10)-x(1))**2 + (x(11)-x(2))**2 + (x(12)-x(3))**2)
@@ -377,10 +358,8 @@ subroutine evv( v )
     !**********************************************************************
 
     implicit none
-
-    integer          :: i,j,k
-    double precision :: dist,dv2dr,v,v21,v22,v23,v24,v25,v26
-
+    integer          :: i, j, k
+    double precision :: dist, dv2dr, v, v21, v22, v23, v24, v25, v26
     ! Calculate the six MEG terms for each point
     call evmeg
 
@@ -401,24 +380,24 @@ subroutine evv( v )
     ! Evaluate 2-body interactions
 
     dist = r(1)
-    call ev2gm2(dist,v21,dv2dr,1,4,0)         ! OO
+    call ev2gm2(dist, v21, dv2dr, 1, 4, 0)         ! OO
     dist = r(2)
-    call ev2gm2(dist,v22,dv2dr,1,3,0)         ! NO
+    call ev2gm2(dist, v22, dv2dr, 1, 3, 0)         ! NO
     dist = r(3)
-    call ev2gm2(dist,v23,dv2dr,1,3,0)         ! NO
+    call ev2gm2(dist, v23, dv2dr, 1, 3, 0)         ! NO
     dist = r(4)
-    call ev2gm2(dist,v24,dv2dr,1,3,0)         ! NO
+    call ev2gm2(dist, v24, dv2dr, 1, 3, 0)         ! NO
     dist = r(5)
-    call ev2gm2(dist,v25,dv2dr,1,3,0)         ! NO
+    call ev2gm2(dist, v25, dv2dr, 1, 3, 0)         ! NO
     dist = r(6)
-    call ev2gm2(dist,v26,dv2dr,1,2,0)   ! NN
+    call ev2gm2(dist, v26, dv2dr, 1, 2, 0)   ! NN
 
     v = v + v21 + v22 + v23 + v24 + v25 + v26
 
     ! Evaluate V by taken the product of C and Basis function arrays
-    do i=1,256
+    do i=1, 256
         v = v + c(i)*b(i)
-    enddo
+    end do
 
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
@@ -442,14 +421,12 @@ subroutine evdvdx( x, dvdx )
     !**********************************************************************
 
     implicit none
-
-    integer          :: i,j
-    double precision :: dvdx(12),x(12)
-
+    integer          :: i, j
+    double precision :: dvdx(12), x(12)
     ! Initialize dVdX
-    do i=1,12
+    do i=1, 12
         dvdx(i) = 0.0d0
-    enddo
+    end do
 
     ! Call EvdVdR to evaluate dVdR(6)
     call evdvdr
@@ -459,11 +436,11 @@ subroutine evdvdx( x, dvdx )
 
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi),
     ! j=1 to 6
-    do i=1,12
-        do j=1,6
+    do i=1, 12
+        do j=1, 6
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine evdvdx
 
@@ -480,12 +457,10 @@ subroutine evmeg
     !**********************************************************************
 
     implicit none
-
     integer :: i
-
-    do i=1,6
+    do i=1, 6
         rms(i) = exp(-(r(i)-re(i))/a(i)-(r(i)-re(i))**2.0d0/ab(i))
-    enddo
+    end do
 end subroutine evmeg
 
 !> @brief Evaluate EvMono.
@@ -499,7 +474,6 @@ subroutine evmono
     !**********************************************************************
 
     implicit none
-
     rm(0)  = 1.0d0
     rm(1)  = rms(6)
     rm(2)  = rms(5)
@@ -532,7 +506,6 @@ subroutine evpoly
     !**********************************************************************
 
     implicit none
-
     p(0)    = rm(0)
     p(1)    = rm(1)
     p(2)    = rm(2) + rm(3) + rm(4) + rm(5)
@@ -2800,48 +2773,46 @@ subroutine evbas
     !**********************************************************************
 
     implicit none
-
     integer          :: i
     double precision :: b1(2254)
-
     ! Pass P(0:2253) to BM1(1:2254)
-    do i=1,2254
+    do i=1, 2254
         b1(i) = p(i-1)
-    enddo
+    end do
 
     ! Remove unconnected terms and 2-body terms and pass to B(1:2153)
 
     b2(1) = b1(5)
 
-    do i=2,3
+    do i=2, 3
         b2(i) = b1(i+5)
-    enddo
+    end do
 
     b2(4) = b1(10)
 
-    do i=5,14
+    do i=5, 14
         b2(i) = b1(i+9)
-    enddo
+    end do
 
-    do i=15,16
+    do i=15, 16
         b2(i) = b1(i+10)
-    enddo
+    end do
 
     b2(17) = b1(28)
 
     b2(18) = b1(30)
 
-    do i=19,44
+    do i=19, 44
         b2(i) = b1(i+15)
-    enddo
+    end do
 
-    do i=45,47
+    do i=45, 47
         b2(i) = b1(i+16)
-    enddo
+    end do
 
-    do i=48,49
+    do i=48, 49
         b2(i) = b1(i+17)
-    enddo
+    end do
 
     b2(50) = b1(68)
 
@@ -2849,17 +2820,17 @@ subroutine evbas
 
     b2(52) = b1(72)
 
-    do i=53,112
+    do i=53, 112
         b2(i) = b1(i+23)
-    enddo
+    end do
 
-    do i=113,115
+    do i=113, 115
         b2(i) = b1(i+24)
-    enddo
+    end do
 
-    do i=116,117
+    do i=116, 117
         b2(i) = b1(i+25)
-    enddo
+    end do
 
     b2(118) = b1(144)
 
@@ -2869,21 +2840,21 @@ subroutine evbas
 
     b2(121) = b1(150)
 
-    do i=122,235
+    do i=122, 235
         b2(i) = b1(i+32)
-    enddo
+    end do
 
-    do i=236,238
+    do i=236, 238
         b2(i) = b1(i+33)
-    enddo
+    end do
 
-    do i=239,241
+    do i=239, 241
         b2(i) = b1(i+34)
-    enddo
+    end do
 
-    do i=242,243
+    do i=242, 243
         b2(i) = b1(i+35)
-    enddo
+    end do
 
     b2(244) = b1(280)
 
@@ -2895,21 +2866,21 @@ subroutine evbas
 
     b2(248) = b1(288)
 
-    do i=249,450
+    do i=249, 450
         b2(i) = b1(i+43)
-    enddo
+    end do
 
-    do i=451,453
+    do i=451, 453
         b2(i) = b1(i+44)
-    enddo
+    end do
 
-    do i=454,456
+    do i=454, 456
         b2(i) = b1(i+45)
-    enddo
+    end do
 
-    do i=457,458
+    do i=457, 458
         b2(i) = b1(i+46)
-    enddo
+    end do
 
     b2(459) = b1(506)
 
@@ -2923,25 +2894,25 @@ subroutine evbas
 
     b2(464) = b1(516)
 
-    do i=465,795
+    do i=465, 795
         b2(i) = b1(i+55)
-    enddo
+    end do
 
-    do i=796,798
+    do i=796, 798
         b2(i) = b1(i+56)
-    enddo
+    end do
 
-    do i=799,801
+    do i=799, 801
         b2(i) = b1(i+57)
-    enddo
+    end do
 
-    do i=802,804
+    do i=802, 804
         b2(i) = b1(i+58)
-    enddo
+    end do
 
-    do i=805,806
+    do i=805, 806
         b2(i) = b1(i+59)
-    enddo
+    end do
 
     b2(807) = b1(867)
 
@@ -2957,25 +2928,25 @@ subroutine evbas
 
     b2(813) = b1(879)
 
-    do i=814,1332
+    do i=814, 1332
         b2(i) = b1(i+69)
-    enddo
+    end do
 
-    do i=1333,1335
+    do i=1333, 1335
         b2(i) = b1(i+70)
-    enddo
+    end do
 
-    do i=1336,1338
+    do i=1336, 1338
         b2(i) = b1(i+71)
-    enddo
+    end do
 
-    do i=1339,1341
+    do i=1339, 1341
         b2(i) = b1(i+72)
-    enddo
+    end do
 
-    do i=1342,1343
+    do i=1342, 1343
         b2(i) = b1(i+73)
-    enddo
+    end do
 
     b2(1344) = b1(1418)
 
@@ -2993,29 +2964,29 @@ subroutine evbas
 
     b2(1351) = b1(1432)
 
-    do i=1352,2130
+    do i=1352, 2130
         b2(i) = b1(i+84)
-    enddo
+    end do
 
-    do i=2131,2133
+    do i=2131, 2133
         b2(i) = b1(i+85)
-    enddo
+    end do
 
-    do i=2134,2136
+    do i=2134, 2136
         b2(i) = b1(i+86)
-    enddo
+    end do
 
-    do i=2137,2139
+    do i=2137, 2139
         b2(i) = b1(i+87)
-    enddo
+    end do
 
-    do i=2140,2142
+    do i=2140, 2142
         b2(i) = b1(i+88)
-    enddo
+    end do
 
-    do i=2143,2144
+    do i=2143, 2144
         b2(i) = b1(i+89)
-    enddo
+    end do
 
     b2(2145) = b1(2235)
 
@@ -3046,7 +3017,6 @@ subroutine evbas2
     !**********************************************************************
 
     implicit none
-
     b(  1) = b2(   1)
     b(  2) = b2(   2)
     b(  3) = b2(   3)
@@ -3337,14 +3307,12 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
     !**********************************************************************
 
     implicit none
-
-    integer,intent(in)           :: igrad,imol,pairw
-    double precision,intent(in)  :: r
-    double precision,intent(out) :: v2,dv2dr
-    double precision             :: cs(0:10)
-    double precision             :: red,de,rmin,pi,rx,vx
-    double precision             :: fy,dfdr,u,y,dydr,dfdy
-
+    integer, intent(in)           :: igrad, imol, pairw
+    double precision, intent(in)  :: r
+    double precision, intent(out) :: v2, dv2dr
+    double precision              :: cs(0:10)
+    double precision              :: red, de, rmin, pi, rx, vx
+    double precision              :: fy, dfdr, u, y, dydr, dfdy
     if (pairw .eq. 1) then
         ! Call MEG function to calculate the pairwise potentials
 
@@ -3402,7 +3370,7 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
             cs(8)  = -13.301027d0
             cs(9)  = 0.63802d0  ! delta b
             cs(10) = 0.99684d0  ! delta c
-        endif
+        end if
 
         if (imol .eq. 2)  then
             ! Keep this pairwise for N2
@@ -3421,7 +3389,7 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
                 dydr  = 8.0d0*r*r*r*red*red*red*red/(vx*vx)
                 dfdr  = dfdy*dydr
                 dv2dr = 2.0d0*de*(1-u)*u*(dfdr*(r-red)+fy)
-            endif
+            end if
 
         else
             !  For NO and O2
@@ -3439,9 +3407,9 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
                 dv2dr=      - de*(cs(1)*1.0d0*dfdr*u**1.0d0 + cs(2)*2.0d0*dfdr*u**2.0d0 + cs(3)*3.0d0*dfdr*u**3.0d0 + &
                     & cs(4)*4.0d0*dfdr*u**4.0d0 + cs(5)*5.0d0*dfdr*u**5.0d0 + cs(6)*6.0d0*dfdr*u**6.0d0 + cs(7)*7.0d0* &
                     & dfdr*u**7.0d0 + cs(8)*8.0d0*dfdr*u**8.0d0)
-            endif
-        endif
-    endif
+            end if
+        end if
+    end if
 
 end subroutine ev2gm2
 
@@ -3467,40 +3435,38 @@ subroutine evdvdr
     !**********************************************************************
 
     implicit none
-
-    integer          :: i,j
-    double precision :: dist,v,v21,v22,v23,v24,v25,v26
-    double precision :: dv2dr1,dv2dr2,dv2dr3,dv2dr4,dv2dr5,dv2dr6
-
+    integer          :: i, j
+    double precision :: dist, v, v21, v22, v23, v24, v25, v26
+    double precision :: dv2dr1, dv2dr2, dv2dr3, dv2dr4, dv2dr5, dv2dr6
     ! Initialize dVdR(6)
-    do i=1,6
+    do i=1, 6
         dvdr(i) = 0.0d0
-    enddo
+    end do
 
     ! Add dV2dR(i) to dVdR
 
     dist = r(1)
-    call ev2gm2(dist,v21,dv2dr1,1,4,1)  ! OO
+    call ev2gm2(dist, v21, dv2dr1, 1, 4, 1)  ! OO
     dvdr(1) = dv2dr1
 
     dist = r(2)
-    call ev2gm2(dist,v22,dv2dr2,1,3,1)  ! NO
+    call ev2gm2(dist, v22, dv2dr2, 1, 3, 1)  ! NO
     dvdr(2) = dv2dr2
 
     dist = r(3)
-    call ev2gm2(dist,v23,dv2dr3,1,3,1)  ! NO
+    call ev2gm2(dist, v23, dv2dr3, 1, 3, 1)  ! NO
     dvdr(3) = dv2dr3
 
     dist = r(4)
-    call ev2gm2(dist,v24,dv2dr4,1,3,1)  ! NO
+    call ev2gm2(dist, v24, dv2dr4, 1, 3, 1)  ! NO
     dvdr(4) = dv2dr4
 
     dist = r(5)
-    call ev2gm2(dist,v25,dv2dr5,1,3,1)  ! NO
+    call ev2gm2(dist, v25, dv2dr5, 1, 3, 1)  ! NO
     dvdr(5) = dv2dr5
 
     dist = r(6)
-    call ev2gm2(dist,v26,dv2dr6,1,2,1)  ! NN
+    call ev2gm2(dist, v26, dv2dr6, 1, 2, 1)  ! NN
     dvdr(6) = dv2dr6
 
     ! Calculate dMEG/dr(6,6) for given R(6)
@@ -3519,11 +3485,11 @@ subroutine evdvdr
     call evdbdr2
 
     ! Evaluate dVdR(6) by taking the product of C(j) and dPdR(i,j)
-    do i=1,6
-        do j=1,256
+    do i=1, 6
+        do j=1, 256
             dvdr(i) = dvdr(i) + c(j)*dbdr(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine evdvdr
 
@@ -3544,16 +3510,14 @@ subroutine evdrdx( x )
     !**********************************************************************
 
     implicit none
-
-    integer          :: i,j
+    integer          :: i, j
     double precision :: x(12)
-
     ! Initialize dRdX(6,12)
-    do i=1,6
-        do j=1,12
+    do i=1, 6
+        do j=1, 12
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     ! Start to calculate the non-zero dRdX
     ! dr1dx
@@ -3621,23 +3585,21 @@ subroutine evdmsdr
     !**********************************************************************
 
     implicit none
-
-    integer :: i,j
-
+    integer :: i, j
     ! Initialize dmsdr
-    do i=1,6
-        do j=1,6
+    do i=1, 6
+        do j=1, 6
             dmsdr(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
     ! dmsdr(i,i)= (-1/a-2*(r-re)/ab)*Exp(-(r-re)/a-(r-re)^2/ab)
 
-    do i=1,6
+    do i=1, 6
         dmsdr(i,i) = (-2.0d0*(r(i)-re(i))/ab(i)-1.0d0/a(i)) * exp(-(r(i)-re(i))/a(i)-((r(i)-re(i))**2.0d0)/ab(i))
-    enddo
+    end do
 
 end subroutine evdmsdr
 
@@ -3652,10 +3614,8 @@ subroutine evdmdr
     !**********************************************************************
 
     implicit none
-
     integer :: i
-
-    do i=1,6
+    do i=1, 6
         dmdr(i,0)  = 0.0d0
         dmdr(i,1)  = dmsdr(i,6)
         dmdr(i,2)  = dmsdr(i,5)
@@ -3674,7 +3634,7 @@ subroutine evdmdr
         dmdr(i,15) = dmdr(i,2)*rm(12) +  rm(2)*dmdr(i,12)
         dmdr(i,16) = dmdr(i,3)*rm(12) +  rm(3)*dmdr(i,12)
         dmdr(i,17) = dmdr(i,2)*rm(16) +  rm(2)*dmdr(i,16)
-    enddo
+    end do
 
 end subroutine evdmdr
 
@@ -3689,10 +3649,8 @@ subroutine evdpdr
     !**********************************************************************
 
     implicit none
-
     integer :: i
-
-    do i=1,6
+    do i=1, 6
         dpdr(i,0)  = dmdr(i,0)
         dpdr(i,1)  = dmdr(i,1)
         dpdr(i,2)  = dmdr(i,2) + dmdr(i,3) + dmdr(i,4) + dmdr(i,5)
@@ -5948,7 +5906,7 @@ subroutine evdpdr
         dpdr(i,2251) = dpdr(i,1)*p(1432) + p(1)*dpdr(i,1432)
         dpdr(i,2252) = dpdr(i,2)*p(1433) + p(2)*dpdr(i,1433) - dpdr(i,2232) - dpdr(i,2231) - dpdr(i,2230)
         dpdr(i,2253) = dpdr(i,3)*p(1434) + p(3)*dpdr(i,1434)
-    enddo
+    end do
 
 end subroutine evdpdr
 
@@ -5962,51 +5920,49 @@ subroutine evdbdr
     !**********************************************************************
 
     implicit none
-
-    integer          :: i,j
+    integer          :: i, j
     double precision :: db1dr(6,2254)
-
     ! Pass P(0:2253) to BM1(1:2254)
-    do j=1,6
-        do i=1,2254
+    do j=1, 6
+        do i=1, 2254
             db1dr(j,i) = dpdr(j,i-1)
-        enddo
-    enddo
+        end do
+    end do
 
     ! Remove unconnected terms and 2-body terms and pass to B(1:2153)
-    do j=1,6
+    do j=1, 6
 
         db2dr(j,1) = db1dr(j,5)
 
-        do i=2,3
+        do i=2, 3
             db2dr(j,i) = db1dr(j,i+5)
-        enddo
+        end do
 
         db2dr(j,4) = db1dr(j,10)
 
-        do i=5,14
+        do i=5, 14
             db2dr(j,i) = db1dr(j,i+9)
-        enddo
+        end do
 
-        do i=15,16
+        do i=15, 16
             db2dr(j,i) = db1dr(j,i+10)
-        enddo
+        end do
 
         db2dr(j,17) = db1dr(j,28)
 
         db2dr(j,18) = db1dr(j,30)
 
-        do i=19,44
+        do i=19, 44
             db2dr(j,i) = db1dr(j,i+15)
-        enddo
+        end do
 
-        do i=45,47
+        do i=45, 47
             db2dr(j,i) = db1dr(j,i+16)
-        enddo
+        end do
 
-        do i=48,49
+        do i=48, 49
             db2dr(j,i) = db1dr(j,i+17)
-        enddo
+        end do
 
         db2dr(j,50) = db1dr(j,68)
 
@@ -6014,17 +5970,17 @@ subroutine evdbdr
 
         db2dr(j,52) = db1dr(j,72)
 
-        do i=53,112
+        do i=53, 112
             db2dr(j,i) = db1dr(j,i+23)
-        enddo
+        end do
 
-        do i=113,115
+        do i=113, 115
             db2dr(j,i) = db1dr(j,i+24)
-        enddo
+        end do
 
-        do i=116,117
+        do i=116, 117
             db2dr(j,i) = db1dr(j,i+25)
-        enddo
+        end do
 
         db2dr(j,118) = db1dr(j,144)
 
@@ -6034,21 +5990,21 @@ subroutine evdbdr
 
         db2dr(j,121) = db1dr(j,150)
 
-        do i=122,235
+        do i=122, 235
             db2dr(j,i) = db1dr(j,i+32)
-        enddo
+        end do
 
-        do i=236,238
+        do i=236, 238
             db2dr(j,i) = db1dr(j,i+33)
-        enddo
+        end do
 
-        do i=239,241
+        do i=239, 241
             db2dr(j,i) = db1dr(j,i+34)
-        enddo
+        end do
 
-        do i=242,243
+        do i=242, 243
             db2dr(j,i) = db1dr(j,i+35)
-        enddo
+        end do
 
         db2dr(j,244) = db1dr(j,280)
 
@@ -6060,21 +6016,21 @@ subroutine evdbdr
 
         db2dr(j,248) = db1dr(j,288)
 
-        do i=249,450
+        do i=249, 450
             db2dr(j,i) = db1dr(j,i+43)
-        enddo
+        end do
 
-        do i=451,453
+        do i=451, 453
             db2dr(j,i) = db1dr(j,i+44)
-        enddo
+        end do
 
-        do i=454,456
+        do i=454, 456
             db2dr(j,i) = db1dr(j,i+45)
-        enddo
+        end do
 
-        do i=457,458
+        do i=457, 458
             db2dr(j,i) = db1dr(j,i+46)
-        enddo
+        end do
 
         db2dr(j,459) = db1dr(j,506)
 
@@ -6088,25 +6044,25 @@ subroutine evdbdr
 
         db2dr(j,464) = db1dr(j,516)
 
-        do i=465,795
+        do i=465, 795
             db2dr(j,i) = db1dr(j,i+55)
-        enddo
+        end do
 
-        do i=796,798
+        do i=796, 798
             db2dr(j,i) = db1dr(j,i+56)
-        enddo
+        end do
 
-        do i=799,801
+        do i=799, 801
             db2dr(j,i) = db1dr(j,i+57)
-        enddo
+        end do
 
-        do i=802,804
+        do i=802, 804
             db2dr(j,i) = db1dr(j,i+58)
-        enddo
+        end do
 
-        do i=805,806
+        do i=805, 806
             db2dr(j,i) = db1dr(j,i+59)
-        enddo
+        end do
 
         db2dr(j,807) = db1dr(j,867)
 
@@ -6122,25 +6078,25 @@ subroutine evdbdr
 
         db2dr(j,813) = db1dr(j,879)
 
-        do i=814,1332
+        do i=814, 1332
             db2dr(j,i) = db1dr(j,i+69)
-        enddo
+        end do
 
-        do i=1333,1335
+        do i=1333, 1335
             db2dr(j,i) = db1dr(j,i+70)
-        enddo
+        end do
 
-        do i=1336,1338
+        do i=1336, 1338
             db2dr(j,i) = db1dr(j,i+71)
-        enddo
+        end do
 
-        do i=1339,1341
+        do i=1339, 1341
             db2dr(j,i) = db1dr(j,i+72)
-        enddo
+        end do
 
-        do i=1342,1343
+        do i=1342, 1343
             db2dr(j,i) = db1dr(j,i+73)
-        enddo
+        end do
 
         db2dr(j,1344) = db1dr(j,1418)
 
@@ -6158,29 +6114,29 @@ subroutine evdbdr
 
         db2dr(j,1351) = db1dr(j,1432)
 
-        do i=1352,2130
+        do i=1352, 2130
             db2dr(j,i) = db1dr(j,i+84)
-        enddo
+        end do
 
-        do i=2131,2133
+        do i=2131, 2133
             db2dr(j,i) = db1dr(j,i+85)
-        enddo
+        end do
 
-        do i=2134,2136
+        do i=2134, 2136
             db2dr(j,i) = db1dr(j,i+86)
-        enddo
+        end do
 
-        do i=2137,2139
+        do i=2137, 2139
             db2dr(j,i) = db1dr(j,i+87)
-        enddo
+        end do
 
-        do i=2140,2142
+        do i=2140, 2142
             db2dr(j,i) = db1dr(j,i+88)
-        enddo
+        end do
 
-        do i=2143,2144
+        do i=2143, 2144
             db2dr(j,i) = db1dr(j,i+89)
-        enddo
+        end do
 
         db2dr(j,2145) = db1dr(j,2235)
 
@@ -6200,7 +6156,7 @@ subroutine evdbdr
 
         db2dr(j,2153) = db1dr(j,2251)
 
-    enddo
+    end do
 
 end subroutine evdbdr
 
@@ -6213,204 +6169,202 @@ subroutine evdbdr2
     !**********************************************************************
 
     implicit none
-
     integer :: j
-
-    do j=1,6
-        dbdr(j,  1) = db2dr(j,   1)
-        dbdr(j,  2) = db2dr(j,   2)
-        dbdr(j,  3) = db2dr(j,   3)
-        dbdr(j,  4) = db2dr(j,   4)
-        dbdr(j,  5) = db2dr(j,   5)
-        dbdr(j,  6) = db2dr(j,   6)
-        dbdr(j,  7) = db2dr(j,   7)
-        dbdr(j,  8) = db2dr(j,   8)
-        dbdr(j,  9) = db2dr(j,   9)
-        dbdr(j, 10) = db2dr(j,  10)
-        dbdr(j, 11) = db2dr(j,  11)
-        dbdr(j, 12) = db2dr(j,  12)
-        dbdr(j, 13) = db2dr(j,  13)
-        dbdr(j, 14) = db2dr(j,  14)
-        dbdr(j, 15) = db2dr(j,  15)
-        dbdr(j, 16) = db2dr(j,  16)
-        dbdr(j, 17) = db2dr(j,  17)
-        dbdr(j, 18) = db2dr(j,  18)
-        dbdr(j, 19) = db2dr(j,  19)
-        dbdr(j, 20) = db2dr(j,  20)
-        dbdr(j, 21) = db2dr(j,  21)
-        dbdr(j, 22) = db2dr(j,  22)
-        dbdr(j, 23) = db2dr(j,  23)
-        dbdr(j, 24) = db2dr(j,  24)
-        dbdr(j, 25) = db2dr(j,  25)
-        dbdr(j, 26) = db2dr(j,  26)
-        dbdr(j, 27) = db2dr(j,  27)
-        dbdr(j, 28) = db2dr(j,  28)
-        dbdr(j, 29) = db2dr(j,  29)
-        dbdr(j, 30) = db2dr(j,  30)
-        dbdr(j, 31) = db2dr(j,  31)
-        dbdr(j, 32) = db2dr(j,  32)
-        dbdr(j, 33) = db2dr(j,  33)
-        dbdr(j, 34) = db2dr(j,  34)
-        dbdr(j, 35) = db2dr(j,  35)
-        dbdr(j, 36) = db2dr(j,  36)
-        dbdr(j, 37) = db2dr(j,  37)
-        dbdr(j, 38) = db2dr(j,  38)
-        dbdr(j, 39) = db2dr(j,  39)
-        dbdr(j, 40) = db2dr(j,  40)
-        dbdr(j, 41) = db2dr(j,  41)
-        dbdr(j, 42) = db2dr(j,  42)
-        dbdr(j, 43) = db2dr(j,  43)
-        dbdr(j, 44) = db2dr(j,  44)
-        dbdr(j, 45) = db2dr(j,  45)
-        dbdr(j, 46) = db2dr(j,  46)
-        dbdr(j, 47) = db2dr(j,  47)
-        dbdr(j, 48) = db2dr(j,  48)
-        dbdr(j, 49) = db2dr(j,  49)
-        dbdr(j, 50) = db2dr(j,  50)
-        dbdr(j, 51) = db2dr(j,  51)
-        dbdr(j, 52) = db2dr(j,  52)
-        dbdr(j, 53) = db2dr(j,  53)
-        dbdr(j, 54) = db2dr(j,  54)
-        dbdr(j, 55) = db2dr(j,  55)
-        dbdr(j, 56) = db2dr(j,  56)
-        dbdr(j, 57) = db2dr(j,  57)
-        dbdr(j, 58) = db2dr(j,  58)
-        dbdr(j, 59) = db2dr(j,  59)
-        dbdr(j, 60) = db2dr(j,  60)
-        dbdr(j, 61) = db2dr(j,  61)
-        dbdr(j, 62) = db2dr(j,  62)
-        dbdr(j, 63) = db2dr(j,  63)
-        dbdr(j, 64) = db2dr(j,  64)
-        dbdr(j, 65) = db2dr(j,  65)
-        dbdr(j, 66) = db2dr(j,  66)
-        dbdr(j, 67) = db2dr(j,  67)
-        dbdr(j, 68) = db2dr(j,  68)
-        dbdr(j, 69) = db2dr(j,  69)
-        dbdr(j, 70) = db2dr(j,  70)
-        dbdr(j, 71) = db2dr(j,  71)
-        dbdr(j, 72) = db2dr(j,  72)
-        dbdr(j, 73) = db2dr(j,  73)
-        dbdr(j, 74) = db2dr(j,  74)
-        dbdr(j, 75) = db2dr(j,  75)
-        dbdr(j, 76) = db2dr(j,  76)
-        dbdr(j, 77) = db2dr(j,  77)
-        dbdr(j, 78) = db2dr(j,  78)
-        dbdr(j, 79) = db2dr(j,  79)
-        dbdr(j, 80) = db2dr(j,  80)
-        dbdr(j, 81) = db2dr(j,  81)
-        dbdr(j, 82) = db2dr(j,  82)
-        dbdr(j, 83) = db2dr(j,  83)
-        dbdr(j, 84) = db2dr(j,  84)
-        dbdr(j, 85) = db2dr(j,  85)
-        dbdr(j, 86) = db2dr(j,  86)
-        dbdr(j, 87) = db2dr(j,  87)
-        dbdr(j, 88) = db2dr(j,  88)
-        dbdr(j, 89) = db2dr(j,  89)
-        dbdr(j, 90) = db2dr(j,  90)
-        dbdr(j, 91) = db2dr(j,  91)
-        dbdr(j, 92) = db2dr(j,  92)
-        dbdr(j, 93) = db2dr(j,  93)
-        dbdr(j, 94) = db2dr(j,  94)
-        dbdr(j, 95) = db2dr(j,  95)
-        dbdr(j, 96) = db2dr(j,  96)
-        dbdr(j, 97) = db2dr(j,  97)
-        dbdr(j, 98) = db2dr(j,  98)
-        dbdr(j, 99) = db2dr(j,  99)
-        dbdr(j,100) = db2dr(j, 100)
-        dbdr(j,101) = db2dr(j, 101)
-        dbdr(j,102) = db2dr(j, 102)
-        dbdr(j,103) = db2dr(j, 103)
-        dbdr(j,104) = db2dr(j, 104)
-        dbdr(j,105) = db2dr(j, 105)
-        dbdr(j,106) = db2dr(j, 106)
-        dbdr(j,107) = db2dr(j, 107)
-        dbdr(j,108) = db2dr(j, 108)
-        dbdr(j,109) = db2dr(j, 109)
-        dbdr(j,110) = db2dr(j, 110)
-        dbdr(j,111) = db2dr(j, 111)
-        dbdr(j,112) = db2dr(j, 112)
-        dbdr(j,113) = db2dr(j, 113)
-        dbdr(j,114) = db2dr(j, 114)
-        dbdr(j,115) = db2dr(j, 115)
-        dbdr(j,116) = db2dr(j, 116)
-        dbdr(j,117) = db2dr(j, 117)
-        dbdr(j,118) = db2dr(j, 118)
-        dbdr(j,119) = db2dr(j, 119)
-        dbdr(j,120) = db2dr(j, 120)
-        dbdr(j,121) = db2dr(j, 121)
-        dbdr(j,122) = db2dr(j, 122)
-        dbdr(j,123) = db2dr(j, 123)
-        dbdr(j,124) = db2dr(j, 124)
-        dbdr(j,125) = db2dr(j, 125)
-        dbdr(j,126) = db2dr(j, 126)
-        dbdr(j,127) = db2dr(j, 127)
-        dbdr(j,128) = db2dr(j, 128)
-        dbdr(j,129) = db2dr(j, 129)
-        dbdr(j,130) = db2dr(j, 130)
-        dbdr(j,131) = db2dr(j, 131)
-        dbdr(j,132) = db2dr(j, 132)
-        dbdr(j,133) = db2dr(j, 133)
-        dbdr(j,134) = db2dr(j, 134)
-        dbdr(j,135) = db2dr(j, 135)
-        dbdr(j,136) = db2dr(j, 136)
-        dbdr(j,137) = db2dr(j, 137)
-        dbdr(j,138) = db2dr(j, 138)
-        dbdr(j,139) = db2dr(j, 140)
-        dbdr(j,140) = db2dr(j, 179)
-        dbdr(j,141) = db2dr(j, 184)
-        dbdr(j,142) = db2dr(j, 185)
-        dbdr(j,143) = db2dr(j, 193)
-        dbdr(j,144) = db2dr(j, 196)
-        dbdr(j,145) = db2dr(j, 202)
-        dbdr(j,146) = db2dr(j, 233)
-        dbdr(j,147) = db2dr(j, 234)
-        dbdr(j,148) = db2dr(j, 235)
-        dbdr(j,149) = db2dr(j, 237)
-        dbdr(j,150) = db2dr(j, 238)
-        dbdr(j,151) = db2dr(j, 240)
-        dbdr(j,152) = db2dr(j, 241)
-        dbdr(j,153) = db2dr(j, 243)
-        dbdr(j,154) = db2dr(j, 365)
-        dbdr(j,155) = db2dr(j, 370)
-        dbdr(j,156) = db2dr(j, 371)
-        dbdr(j,157) = db2dr(j, 379)
-        dbdr(j,158) = db2dr(j, 382)
-        dbdr(j,159) = db2dr(j, 385)
-        dbdr(j,160) = db2dr(j, 393)
-        dbdr(j,161) = db2dr(j, 396)
-        dbdr(j,162) = db2dr(j, 402)
-        dbdr(j,163) = db2dr(j, 447)
-        dbdr(j,164) = db2dr(j, 448)
-        dbdr(j,165) = db2dr(j, 449)
-        dbdr(j,166) = db2dr(j, 450)
-        dbdr(j,167) = db2dr(j, 452)
-        dbdr(j,168) = db2dr(j, 453)
-        dbdr(j,169) = db2dr(j, 455)
-        dbdr(j,170) = db2dr(j, 456)
-        dbdr(j,171) = db2dr(j, 458)
-        dbdr(j,172) = db2dr(j, 680)
-        dbdr(j,173) = db2dr(j, 685)
-        dbdr(j,174) = db2dr(j, 686)
-        dbdr(j,175) = db2dr(j, 693)
-        dbdr(j,176) = db2dr(j, 694)
-        dbdr(j,177) = db2dr(j, 697)
-        dbdr(j,178) = db2dr(j, 708)
-        dbdr(j,179) = db2dr(j, 711)
-        dbdr(j,180) = db2dr(j, 714)
-        dbdr(j,181) = db2dr(j, 723)
-        dbdr(j,182) = db2dr(j, 726)
-        dbdr(j,183) = db2dr(j, 732)
-        dbdr(j,184) = db2dr(j, 792)
-        dbdr(j,185) = db2dr(j, 793)
-        dbdr(j,186) = db2dr(j, 794)
-        dbdr(j,187) = db2dr(j, 795)
-        dbdr(j,188) = db2dr(j, 797)
-        dbdr(j,189) = db2dr(j, 798)
-        dbdr(j,190) = db2dr(j, 800)
-        dbdr(j,191) = db2dr(j, 801)
-        dbdr(j,192) = db2dr(j, 803)
-        dbdr(j,193) = db2dr(j, 804)
-        dbdr(j,194) = db2dr(j, 806)
+    do j=1, 6
+        dbdr(j,1)   = db2dr(j,1)
+        dbdr(j,2)   = db2dr(j,2)
+        dbdr(j,3)   = db2dr(j,3)
+        dbdr(j,4)   = db2dr(j,4)
+        dbdr(j,5)   = db2dr(j,5)
+        dbdr(j,6)   = db2dr(j,6)
+        dbdr(j,7)   = db2dr(j,7)
+        dbdr(j,8)   = db2dr(j,8)
+        dbdr(j,9)   = db2dr(j,9)
+        dbdr(j,10)  = db2dr(j,10)
+        dbdr(j,11)  = db2dr(j,11)
+        dbdr(j,12)  = db2dr(j,12)
+        dbdr(j,13)  = db2dr(j,13)
+        dbdr(j,14)  = db2dr(j,14)
+        dbdr(j,15)  = db2dr(j,15)
+        dbdr(j,16)  = db2dr(j,16)
+        dbdr(j,17)  = db2dr(j,17)
+        dbdr(j,18)  = db2dr(j,18)
+        dbdr(j,19)  = db2dr(j,19)
+        dbdr(j,20)  = db2dr(j,20)
+        dbdr(j,21)  = db2dr(j,21)
+        dbdr(j,22)  = db2dr(j,22)
+        dbdr(j,23)  = db2dr(j,23)
+        dbdr(j,24)  = db2dr(j,24)
+        dbdr(j,25)  = db2dr(j,25)
+        dbdr(j,26)  = db2dr(j,26)
+        dbdr(j,27)  = db2dr(j,27)
+        dbdr(j,28)  = db2dr(j,28)
+        dbdr(j,29)  = db2dr(j,29)
+        dbdr(j,30)  = db2dr(j,30)
+        dbdr(j,31)  = db2dr(j,31)
+        dbdr(j,32)  = db2dr(j,32)
+        dbdr(j,33)  = db2dr(j,33)
+        dbdr(j,34)  = db2dr(j,34)
+        dbdr(j,35)  = db2dr(j,35)
+        dbdr(j,36)  = db2dr(j,36)
+        dbdr(j,37)  = db2dr(j,37)
+        dbdr(j,38)  = db2dr(j,38)
+        dbdr(j,39)  = db2dr(j,39)
+        dbdr(j,40)  = db2dr(j,40)
+        dbdr(j,41)  = db2dr(j,41)
+        dbdr(j,42)  = db2dr(j,42)
+        dbdr(j,43)  = db2dr(j,43)
+        dbdr(j,44)  = db2dr(j,44)
+        dbdr(j,45)  = db2dr(j,45)
+        dbdr(j,46)  = db2dr(j,46)
+        dbdr(j,47)  = db2dr(j,47)
+        dbdr(j,48)  = db2dr(j,48)
+        dbdr(j,49)  = db2dr(j,49)
+        dbdr(j,50)  = db2dr(j,50)
+        dbdr(j,51)  = db2dr(j,51)
+        dbdr(j,52)  = db2dr(j,52)
+        dbdr(j,53)  = db2dr(j,53)
+        dbdr(j,54)  = db2dr(j,54)
+        dbdr(j,55)  = db2dr(j,55)
+        dbdr(j,56)  = db2dr(j,56)
+        dbdr(j,57)  = db2dr(j,57)
+        dbdr(j,58)  = db2dr(j,58)
+        dbdr(j,59)  = db2dr(j,59)
+        dbdr(j,60)  = db2dr(j,60)
+        dbdr(j,61)  = db2dr(j,61)
+        dbdr(j,62)  = db2dr(j,62)
+        dbdr(j,63)  = db2dr(j,63)
+        dbdr(j,64)  = db2dr(j,64)
+        dbdr(j,65)  = db2dr(j,65)
+        dbdr(j,66)  = db2dr(j,66)
+        dbdr(j,67)  = db2dr(j,67)
+        dbdr(j,68)  = db2dr(j,68)
+        dbdr(j,69)  = db2dr(j,69)
+        dbdr(j,70)  = db2dr(j,70)
+        dbdr(j,71)  = db2dr(j,71)
+        dbdr(j,72)  = db2dr(j,72)
+        dbdr(j,73)  = db2dr(j,73)
+        dbdr(j,74)  = db2dr(j,74)
+        dbdr(j,75)  = db2dr(j,75)
+        dbdr(j,76)  = db2dr(j,76)
+        dbdr(j,77)  = db2dr(j,77)
+        dbdr(j,78)  = db2dr(j,78)
+        dbdr(j,79)  = db2dr(j,79)
+        dbdr(j,80)  = db2dr(j,80)
+        dbdr(j,81)  = db2dr(j,81)
+        dbdr(j,82)  = db2dr(j,82)
+        dbdr(j,83)  = db2dr(j,83)
+        dbdr(j,84)  = db2dr(j,84)
+        dbdr(j,85)  = db2dr(j,85)
+        dbdr(j,86)  = db2dr(j,86)
+        dbdr(j,87)  = db2dr(j,87)
+        dbdr(j,88)  = db2dr(j,88)
+        dbdr(j,89)  = db2dr(j,89)
+        dbdr(j,90)  = db2dr(j,90)
+        dbdr(j,91)  = db2dr(j,91)
+        dbdr(j,92)  = db2dr(j,92)
+        dbdr(j,93)  = db2dr(j,93)
+        dbdr(j,94)  = db2dr(j,94)
+        dbdr(j,95)  = db2dr(j,95)
+        dbdr(j,96)  = db2dr(j,96)
+        dbdr(j,97)  = db2dr(j,97)
+        dbdr(j,98)  = db2dr(j,98)
+        dbdr(j,99)  = db2dr(j,99)
+        dbdr(j,100) = db2dr(j,100)
+        dbdr(j,101) = db2dr(j,101)
+        dbdr(j,102) = db2dr(j,102)
+        dbdr(j,103) = db2dr(j,103)
+        dbdr(j,104) = db2dr(j,104)
+        dbdr(j,105) = db2dr(j,105)
+        dbdr(j,106) = db2dr(j,106)
+        dbdr(j,107) = db2dr(j,107)
+        dbdr(j,108) = db2dr(j,108)
+        dbdr(j,109) = db2dr(j,109)
+        dbdr(j,110) = db2dr(j,110)
+        dbdr(j,111) = db2dr(j,111)
+        dbdr(j,112) = db2dr(j,112)
+        dbdr(j,113) = db2dr(j,113)
+        dbdr(j,114) = db2dr(j,114)
+        dbdr(j,115) = db2dr(j,115)
+        dbdr(j,116) = db2dr(j,116)
+        dbdr(j,117) = db2dr(j,117)
+        dbdr(j,118) = db2dr(j,118)
+        dbdr(j,119) = db2dr(j,119)
+        dbdr(j,120) = db2dr(j,120)
+        dbdr(j,121) = db2dr(j,121)
+        dbdr(j,122) = db2dr(j,122)
+        dbdr(j,123) = db2dr(j,123)
+        dbdr(j,124) = db2dr(j,124)
+        dbdr(j,125) = db2dr(j,125)
+        dbdr(j,126) = db2dr(j,126)
+        dbdr(j,127) = db2dr(j,127)
+        dbdr(j,128) = db2dr(j,128)
+        dbdr(j,129) = db2dr(j,129)
+        dbdr(j,130) = db2dr(j,130)
+        dbdr(j,131) = db2dr(j,131)
+        dbdr(j,132) = db2dr(j,132)
+        dbdr(j,133) = db2dr(j,133)
+        dbdr(j,134) = db2dr(j,134)
+        dbdr(j,135) = db2dr(j,135)
+        dbdr(j,136) = db2dr(j,136)
+        dbdr(j,137) = db2dr(j,137)
+        dbdr(j,138) = db2dr(j,138)
+        dbdr(j,139) = db2dr(j,140)
+        dbdr(j,140) = db2dr(j,179)
+        dbdr(j,141) = db2dr(j,184)
+        dbdr(j,142) = db2dr(j,185)
+        dbdr(j,143) = db2dr(j,193)
+        dbdr(j,144) = db2dr(j,196)
+        dbdr(j,145) = db2dr(j,202)
+        dbdr(j,146) = db2dr(j,233)
+        dbdr(j,147) = db2dr(j,234)
+        dbdr(j,148) = db2dr(j,235)
+        dbdr(j,149) = db2dr(j,237)
+        dbdr(j,150) = db2dr(j,238)
+        dbdr(j,151) = db2dr(j,240)
+        dbdr(j,152) = db2dr(j,241)
+        dbdr(j,153) = db2dr(j,243)
+        dbdr(j,154) = db2dr(j,365)
+        dbdr(j,155) = db2dr(j,370)
+        dbdr(j,156) = db2dr(j,371)
+        dbdr(j,157) = db2dr(j,379)
+        dbdr(j,158) = db2dr(j,382)
+        dbdr(j,159) = db2dr(j,385)
+        dbdr(j,160) = db2dr(j,393)
+        dbdr(j,161) = db2dr(j,396)
+        dbdr(j,162) = db2dr(j,402)
+        dbdr(j,163) = db2dr(j,447)
+        dbdr(j,164) = db2dr(j,448)
+        dbdr(j,165) = db2dr(j,449)
+        dbdr(j,166) = db2dr(j,450)
+        dbdr(j,167) = db2dr(j,452)
+        dbdr(j,168) = db2dr(j,453)
+        dbdr(j,169) = db2dr(j,455)
+        dbdr(j,170) = db2dr(j,456)
+        dbdr(j,171) = db2dr(j,458)
+        dbdr(j,172) = db2dr(j,680)
+        dbdr(j,173) = db2dr(j,685)
+        dbdr(j,174) = db2dr(j,686)
+        dbdr(j,175) = db2dr(j,693)
+        dbdr(j,176) = db2dr(j,694)
+        dbdr(j,177) = db2dr(j,697)
+        dbdr(j,178) = db2dr(j,708)
+        dbdr(j,179) = db2dr(j,711)
+        dbdr(j,180) = db2dr(j,714)
+        dbdr(j,181) = db2dr(j,723)
+        dbdr(j,182) = db2dr(j,726)
+        dbdr(j,183) = db2dr(j,732)
+        dbdr(j,184) = db2dr(j,792)
+        dbdr(j,185) = db2dr(j,793)
+        dbdr(j,186) = db2dr(j,794)
+        dbdr(j,187) = db2dr(j,795)
+        dbdr(j,188) = db2dr(j,797)
+        dbdr(j,189) = db2dr(j,798)
+        dbdr(j,190) = db2dr(j,800)
+        dbdr(j,191) = db2dr(j,801)
+        dbdr(j,192) = db2dr(j,803)
+        dbdr(j,193) = db2dr(j,804)
+        dbdr(j,194) = db2dr(j,806)
         dbdr(j,195) = db2dr(j,1178)
         dbdr(j,196) = db2dr(j,1183)
         dbdr(j,197) = db2dr(j,1184)
@@ -6474,5 +6428,5 @@ subroutine evdbdr2
         dbdr(j,255) = db2dr(j,2142)
         dbdr(j,256) = db2dr(j,2144)
 
-    enddo
+    end do
 end subroutine evdbdr2

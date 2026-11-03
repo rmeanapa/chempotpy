@@ -1,11 +1,11 @@
 !**********************************************************************
-!   System:                     OH3 (lowest 3 state)
-!   Functional form:            permutationally invariant polynomials
-!   Common name:                OH3 three states PES
-!   Number of derivatives:      3
-!   Number of bodies:           4
+!   System:                        OH3 (lowest 3 state)
+!   Functional form:               permutationally invariant polynomials
+!   Common name:                   OH3 three states PES
+!   Number of derivatives:         3
+!   Number of bodies:              4
 !   Number of electronic surfaces: 3
-!   Interface: Section-2
+!   Interface:                     Section-2
 !
 !   References:  Yinan Shu, Joanna Kryven, Antonio Gustavo Sampaio de Oliveira Filho,
 !                Steven L. Mielke, Linyao Zhang, Guo-Liang Song, Shaohong L. Li,
@@ -94,9 +94,8 @@
 
 !> @brief Evaluate dpem.
 subroutine dpem( x, igrad, u, ug )
-
+    use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 3
     integer, parameter            :: natoms  = 4
@@ -104,39 +103,37 @@ subroutine dpem( x, igrad, u, ug )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-
-    character (len=1) :: symb
-    integer           :: iatom,idir,istate,jstate
-    integer           :: i,j,k,l
-    double precision  :: u11, u22, u33
-    double precision  :: u12, u13, u23
-    double precision  :: s12, s23
-    double precision  :: xyz(4,3)
-    character(len=32) :: fname, bname
-    double precision  :: du11dx(4,3), du22dx(4,3), du33dx(4,3)
-    double precision  :: du12dx(4,3), du13dx(4,3), du23dx(4,3)
-    double precision  :: gu(4,3,3,3)
-    double precision  :: rv(3,3),a(3)
-    double precision  :: ga(4,3,3),f(4,3,3,3)
-    double precision  :: tmpgu(3,3),tmpga(3,3)
-
+    character (len=1)             :: symb
+    integer                       :: iatom, idir, istate, jstate
+    integer                       :: i, j, k, l
+    double precision              :: u11, u22, u33
+    double precision              :: u12, u13, u23
+    double precision              :: s12, s23
+    double precision              :: xyz(4,3)
+    character(len=32)             :: fname, bname
+    double precision              :: du11dx(4,3), du22dx(4,3), du33dx(4,3)
+    double precision              :: du12dx(4,3), du13dx(4,3), du23dx(4,3)
+    double precision              :: gu(4,3,3,3)
+    double precision              :: rv(3,3), a(3)
+    double precision              :: ga(4,3,3), f(4,3,3,3)
+    double precision              :: tmpgu(3,3), tmpga(3,3)
     xyz = x
 
     !compute diabatic states
     call u11_prepot_8
-    call u11_pot_8(xyz,u11,du11dx)
+    call u11_pot_8(xyz, u11, du11dx)
     call u22_prepot_8
-    call u22_pot_8(xyz,u22,du22dx)
+    call u22_pot_8(xyz, u22, du22dx)
     call u33_prepot_8
-    call u33_pot_8(xyz,u33,du33dx)
+    call u33_pot_8(xyz, u33, du33dx)
 
     !compute diabatic couplings
     call u12_order10
     call u13_order12
     call u23_order10
-    call u12_dc_10(xyz,u12,s12)
-    call u13_dc_12(xyz,u13)
-    call u23_dc_10(xyz,u23,s23)
+    call u12_dc_10(xyz, u12, s12)
+    call u13_dc_12(xyz, u13)
+    call u23_dc_10(xyz, u23, s23)
 
     !compute the adiabatic states and eigenvectors
     u(1,1) = u11
@@ -149,17 +146,17 @@ subroutine dpem( x, igrad, u, ug )
     u(3,2) = u23
     u(3,3) = u33
 
-    u = u*27.211386
+    u = u*legacy_hartree_to_electronvolt
 
     !compute diabatic couplings derivatives
-    call u12_dvdx(xyz,u12,s12,du12dx)
-    call u13_dvdx(xyz,u13,du13dx)
-    call u23_dvdx(xyz,u23,s23,du23dx)
+    call u12_dvdx(xyz, u12, s12, du12dx)
+    call u13_dvdx(xyz, u13, du13dx)
+    call u23_dvdx(xyz, u23, s23, du23dx)
 
     !assign dudx to gu
 
-    do i=1,4
-        do j=1,3
+    do i=1, 4
+        do j=1, 3
             ug(1,1,i,j) = du11dx(i,j)
             ug(1,2,i,j) = du12dx(i,j)
             ug(1,3,i,j) = du13dx(i,j)
@@ -169,12 +166,13 @@ subroutine dpem( x, igrad, u, ug )
             ug(3,1,i,j) = du13dx(i,j)
             ug(3,2,i,j) = du23dx(i,j)
             ug(3,3,i,j) = du33dx(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
-    ug = ug*27.211386
+    ug = ug*legacy_hartree_to_electronvolt
 
 end
+
 !===========================================================================
 ! *def u11_prepot_8
 ! subtoutine of computing u11 and gradient of u11
@@ -182,19 +180,17 @@ end
 !> @brief Evaluate u11_prepot_8.
 subroutine u11_prepot_8
     implicit none
-
     double precision   :: xyz(4,3)
     double precision   :: v, r12, r13, r14, r23, r24, r34
     double precision   :: a1, a2, b1, b2, oh, hh, ra1, ra2, rb1, rb2, grad_hh, grad_oh
     integer, parameter :: ncoeff = 546
     double precision   :: coeff(ncoeff), p(ncoeff)
-    double precision   :: dpdx1(ncoeff), dpdx2(ncoeff), dpdx3(ncoeff) ,dpdx4(ncoeff), dpdx5(ncoeff) ,dpdx6(ncoeff)
+    double precision   :: dpdx1(ncoeff), dpdx2(ncoeff), dpdx3(ncoeff), dpdx4(ncoeff), dpdx5(ncoeff), dpdx6(ncoeff)
     double precision   :: x(6), re_hh, re_oh, ra_hh, ra_oh, rb_hh, rb_oh
     double precision   :: dx1, dx2, dx3, dx4, dx5, dx6, dr1, dr2, dr3, dr4, dr5, dr6, dxyz(4,3)
     integer            :: ncall
     data ncall/1/
     save ncall, coeff, a1, a2, b1, b2, ra1, ra2, rb1, rb2
-
     if(ncall.eq.1) then
 
         a1          = 8.0000000000000004e-01
@@ -754,7 +750,7 @@ subroutine u11_prepot_8
         return
     end if
 
-    entry u11_pot_8(xyz,v, dxyz)
+    entry u11_pot_8(xyz, v, dxyz)
 
     r12 = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
     r13 = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
@@ -769,17 +765,17 @@ subroutine u11_prepot_8
     x(4) = exp(-((r23-ra1))/a1 -((r23-rb1)**2)/b1)
     x(5) = exp(-((r24-ra2))/a2 -((r24-rb2)**2)/b2)
     x(6) = exp(-((r34-ra2))/a2 -((r34-rb2)**2)/b2)
-    call ev_pol_con_8(x,p)
-    v = dot_product(coeff,p) +(oh(r14)+oh(r24)+oh(r34)+hh(r12)+hh(r13)+hh(r23))
+    call ev_pol_con_8(x, p)
+    v = dot_product(coeff, p) +(oh(r14)+oh(r24)+oh(r34)+hh(r12)+hh(r13)+hh(r23))
 
-    call grad_ev_pol_con_8(x,dpdx1,dpdx2,dpdx3,dpdx4,dpdx5,dpdx6)
+    call grad_ev_pol_con_8(x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6)
 
-    dx1 = dot_product(coeff,dpdx1)
-    dx2 = dot_product(coeff,dpdx2)
-    dx3 = dot_product(coeff,dpdx3)
-    dx4 = dot_product(coeff,dpdx4)
-    dx5 = dot_product(coeff,dpdx5)
-    dx6 = dot_product(coeff,dpdx6)
+    dx1 = dot_product(coeff, dpdx1)
+    dx2 = dot_product(coeff, dpdx2)
+    dx3 = dot_product(coeff, dpdx3)
+    dx4 = dot_product(coeff, dpdx4)
+    dx5 = dot_product(coeff, dpdx5)
+    dx6 = dot_product(coeff, dpdx6)
 
     dr1 = -x(1)*(1.0d0/(a1)+2.0d0*(r12-rb1)/(b1))*dx1 + grad_hh(r12)
     dr2 = -x(2)*(1.0d0/(a1)+2.0d0*(r13-rb1)/(b1))*dx2 + grad_hh(r13)
@@ -813,19 +809,17 @@ end  subroutine
 !> @brief Evaluate u22_prepot_8.
 subroutine u22_prepot_8
     implicit none
-
     double precision   :: xyz(4,3)
     double precision   :: v, r12, r13, r14, r23, r24, r34
     double precision   :: a1, a2, b1, b2, oh, hh, ra1, ra2, rb1, rb2, grad_hh, grad_oh
     integer, parameter :: ncoeff = 546
     double precision   :: coeff(ncoeff), p(ncoeff)
-    double precision   :: dpdx1(ncoeff), dpdx2(ncoeff), dpdx3(ncoeff) ,dpdx4(ncoeff), dpdx5(ncoeff) ,dpdx6(ncoeff)
+    double precision   :: dpdx1(ncoeff), dpdx2(ncoeff), dpdx3(ncoeff), dpdx4(ncoeff), dpdx5(ncoeff), dpdx6(ncoeff)
     double precision   :: x(6), re_hh, re_oh, ra_hh, ra_oh, rb_hh, rb_oh
     integer            :: ncall
     double precision   :: dx1, dx2, dx3, dx4, dx5, dx6, dr1, dr2, dr3, dr4, dr5, dr6, dxyz(4,3)
     data ncall/1/
     save ncall, coeff, a1, a2, b1, b2, ra1, ra2, rb1, rb2
-
     if(ncall.eq.1) then
 
         a1          = 8.0000000000000004e-01
@@ -1385,7 +1379,7 @@ subroutine u22_prepot_8
         return
     end if
 
-    entry u22_pot_8(xyz,v, dxyz)
+    entry u22_pot_8(xyz, v, dxyz)
 
     r12 = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
     r13 = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
@@ -1408,17 +1402,17 @@ subroutine u22_prepot_8
     x(4) = exp(-((r23-ra1))/a1 -((r23-rb1)**2)/b1)
     x(5) = exp(-((r24-ra2))/a2 -((r24-rb2)**2)/b2)
     x(6) = exp(-((r34-ra2))/a2 -((r34-rb2)**2)/b2)
-    call ev_pol_con_8(x,p)
-    v = dot_product(coeff,p)  +((oh(r14)+oh(r24)+oh(r34))*0.9960924723525706+hh(r12)+hh(r13)+hh(r23))
+    call ev_pol_con_8(x, p)
+    v = dot_product(coeff, p)  +((oh(r14)+oh(r24)+oh(r34))*0.9960924723525706+hh(r12)+hh(r13)+hh(r23))
 
-    call grad_ev_pol_con_8(x,dpdx1,dpdx2,dpdx3,dpdx4,dpdx5,dpdx6)
+    call grad_ev_pol_con_8(x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6)
 
-    dx1 = dot_product(coeff,dpdx1)
-    dx2 = dot_product(coeff,dpdx2)
-    dx3 = dot_product(coeff,dpdx3)
-    dx4 = dot_product(coeff,dpdx4)
-    dx5 = dot_product(coeff,dpdx5)
-    dx6 = dot_product(coeff,dpdx6)
+    dx1 = dot_product(coeff, dpdx1)
+    dx2 = dot_product(coeff, dpdx2)
+    dx3 = dot_product(coeff, dpdx3)
+    dx4 = dot_product(coeff, dpdx4)
+    dx5 = dot_product(coeff, dpdx5)
+    dx6 = dot_product(coeff, dpdx6)
 
     dr1 = -x(1)*(1.0d0/(a1)+2.0d0*(r12-rb1)/(b1))*dx1 + grad_hh(r12)
     dr2 = -x(2)*(1.0d0/(a1)+2.0d0*(r13-rb1)/(b1))*dx2 + grad_hh(r13)
@@ -1452,19 +1446,17 @@ end  subroutine
 !> @brief Evaluate u33_prepot_8.
 subroutine u33_prepot_8
     implicit none
-
     double precision   :: xyz(4,3)
     double precision   :: v, r12, r13, r14, r23, r24, r34
     double precision   :: a1, a2, b1, b2, ohstar, hh, ra1, ra2, rb1, rb2, grad_hh, grad_ohstar
     integer, parameter :: ncoeff = 546
     double precision   :: coeff(ncoeff), p(ncoeff)
-    double precision   :: dpdx1(ncoeff), dpdx2(ncoeff), dpdx3(ncoeff) ,dpdx4(ncoeff), dpdx5(ncoeff) ,dpdx6(ncoeff)
+    double precision   :: dpdx1(ncoeff), dpdx2(ncoeff), dpdx3(ncoeff), dpdx4(ncoeff), dpdx5(ncoeff), dpdx6(ncoeff)
     double precision   :: x(6), re_hh, re_oh, ra_hh, ra_oh, rb_hh, rb_oh
     double precision   :: dx1, dx2, dx3, dx4, dx5, dx6, dr1, dr2, dr3, dr4, dr5, dr6, dxyz(4,3)
     integer            :: ncall
     data ncall/1/
     save ncall, coeff, a1, a2, b1, b2, ra1, ra2, rb1, rb2
-
     if(ncall.eq.1) then
 
         a1          = 8.0000000000000004e-01
@@ -2024,7 +2016,7 @@ subroutine u33_prepot_8
         return
     end if
 
-    entry u33_pot_8(xyz,v, dxyz)
+    entry u33_pot_8(xyz, v, dxyz)
 
     r12 = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
     r13 = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
@@ -2048,17 +2040,17 @@ subroutine u33_prepot_8
     x(5) = exp(-((r24-ra2))/a2 -((r24-rb2)**2)/b2)
     x(6) = exp(-((r34-ra2))/a2 -((r34-rb2)**2)/b2)
 
-    call ev_pol_con_8(x,p)
-    v = dot_product(coeff,p) + (ohstar(r14)+ohstar(r24)+ohstar(r34)+hh(r12)+hh(r13)+hh(r23))
+    call ev_pol_con_8(x, p)
+    v = dot_product(coeff, p) + (ohstar(r14)+ohstar(r24)+ohstar(r34)+hh(r12)+hh(r13)+hh(r23))
 
-    call grad_ev_pol_con_8(x,dpdx1,dpdx2,dpdx3,dpdx4,dpdx5,dpdx6)
+    call grad_ev_pol_con_8(x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6)
 
-    dx1 = dot_product(coeff,dpdx1)
-    dx2 = dot_product(coeff,dpdx2)
-    dx3 = dot_product(coeff,dpdx3)
-    dx4 = dot_product(coeff,dpdx4)
-    dx5 = dot_product(coeff,dpdx5)
-    dx6 = dot_product(coeff,dpdx6)
+    dx1 = dot_product(coeff, dpdx1)
+    dx2 = dot_product(coeff, dpdx2)
+    dx3 = dot_product(coeff, dpdx3)
+    dx4 = dot_product(coeff, dpdx4)
+    dx5 = dot_product(coeff, dpdx5)
+    dx6 = dot_product(coeff, dpdx6)
 
     dr1 = -x(1)*(1.0d0/(a1)+2.0d0*(r12-rb1)/(b1))*dx1 + grad_hh(r12)
     dr2 = -x(2)*(1.0d0/(a1)+2.0d0*(r13-rb1)/(b1))*dx2 + grad_hh(r13)
@@ -2088,10 +2080,8 @@ end  subroutine
 !> @brief Evaluate d3bj_hh.
 double precision function d3bj_hh( r )
     implicit none
-
     double precision, intent(in) :: r
     double precision             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
-
     s6 = 1.0
     s8 = 2.0
 
@@ -2114,10 +2104,8 @@ end function d3bj_hh
 !> @brief Evaluate grad_d3bj_hh.
 double precision function grad_d3bj_hh( r )
     implicit none
-
     double precision, intent(in) :: r
     double precision             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
-
     s6 = 1.0
     s8 = 2.0
 
@@ -2140,10 +2128,8 @@ end function grad_d3bj_hh
 !> @brief Evaluate d3bj_oh.
 double precision function d3bj_oh( r )
     implicit none
-
     double precision, intent(in) :: r
     double precision             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
-
     s6 = 1.0
     s8 = 2.0
 
@@ -2166,10 +2152,8 @@ end function d3bj_oh
 !> @brief Evaluate grad_d3bj_oh.
 double precision function grad_d3bj_oh( r )
     implicit none
-
     double precision, intent(in) :: r
     double precision             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
-
     s6 = 1.0
     s8 = 2.0
 
@@ -2192,13 +2176,10 @@ end function grad_d3bj_oh
 !> @brief Evaluate hh.
 double precision function hh( r )
     implicit none
-
     double precision, intent(in) :: r
-
-    double precision :: d3bj_hh
-    double precision :: vsr, alpha, beta, c(8), p(8)
-    integer          :: i
-
+    double precision             :: d3bj_hh
+    double precision             :: vsr, alpha, beta, c(8), p(8)
+    integer                      :: i
     alpha = 0.53931748805004220
     beta  = 1.6459680933202987
 
@@ -2223,13 +2204,10 @@ end function hh
 !> @brief Evaluate grad_hh.
 double precision function grad_hh( r )
     implicit none
-
     double precision, intent(in) :: r
-
-    double precision :: grad_d3bj_hh
-    double precision :: vsr, alpha, beta, c(8), p(8)
-    integer          :: i
-
+    double precision             :: grad_d3bj_hh
+    double precision             :: vsr, alpha, beta, c(8), p(8)
+    integer                      :: i
     alpha = 0.53931748805004220
     beta  = 1.6459680933202987
 
@@ -2255,13 +2233,10 @@ end function grad_hh
 !> @brief Evaluate oh.
 double precision function oh( r )
     implicit none
-
     double precision, intent(in) :: r
-
-    double precision :: d3bj_oh
-    double precision :: vsr, alpha, beta, c(8), p(8)
-    integer          :: i
-
+    double precision             :: d3bj_oh
+    double precision             :: vsr, alpha, beta, c(8), p(8)
+    integer                      :: i
     alpha = 0.51045358916334960
     beta  = 1.5433662455565513
 
@@ -2286,13 +2261,10 @@ end function oh
 !> @brief Evaluate grad_oh.
 double precision function grad_oh( r )
     implicit none
-
     double precision, intent(in) :: r
-
-    double precision :: grad_d3bj_oh
-    double precision :: vsr, alpha, beta, c(8), p(8)
-    integer          :: i
-
+    double precision             :: grad_d3bj_oh
+    double precision             :: vsr, alpha, beta, c(8), p(8)
+    integer                      :: i
     alpha = 0.51045358916334960
     beta  = 1.5433662455565513
 
@@ -2317,14 +2289,12 @@ end function grad_oh
 !> @brief Evaluate ohstar.
 double precision function ohstar( r )
     implicit none
-
     double precision, intent(in)   :: r
     integer                        :: i
     double precision               :: alr, blr, vsr, vlr, fs
     double precision, dimension(3) :: plr, clr
     double precision               :: asr, bsr
     double precision, dimension(6) :: psr, csr
-
     alr    = 2.0991414262152035
     blr    = 0.55368872045847861
     clr(1) = 4.8925016098582264
@@ -2362,14 +2332,12 @@ end function ohstar
 !> @brief Evaluate grad_ohstar.
 double precision function grad_ohstar( r )
     implicit none
-
     double precision, intent(in)   :: r
     integer                        :: i
     double precision               :: alr, blr, vsr, vlr, fs, gsr, glr, gfs
     double precision, dimension(3) :: plr, clr, pglr
     double precision               :: asr, bsr
     double precision, dimension(6) :: psr, csr, pgsr
-
     alr    = 2.0991414262152035
     blr    = 0.55368872045847861
     clr(1) = 4.8925016098582264
@@ -2416,11 +2384,9 @@ end function grad_ohstar
 !> @brief Evaluate ev_pol_con_8.
 subroutine ev_pol_con_8( x, p )
     implicit none
-
-    double precision,dimension(1:6),intent(in)::x
-    double precision,dimension(1:546),intent(out)::p
-    double precision :: x1,x2,x3,x4,x5,x6
-
+    double precision, dimension(1:6), intent(in)::x
+    double precision, dimension(1:546), intent(out)::p
+    double precision :: x1, x2, x3, x4, x5, x6
     x1 = x(1)
     x2 = x(2)
     x3 = x(3)
@@ -3175,11 +3141,9 @@ end subroutine ev_pol_con_8
 !> @brief Evaluate grad_ev_pol_con_8.
 subroutine grad_ev_pol_con_8( x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6 )
     implicit none
-
-    double precision,dimension(1:6),intent(in)::x
-    double precision,dimension(1:546),intent(out)::dpdx1,dpdx2,dpdx3,dpdx4,dpdx5,dpdx6
-    double precision :: x1,x2,x3,x4,x5,x6
-
+    double precision, dimension(1:6), intent(in)::x
+    double precision, dimension(1:546), intent(out)::dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6
+    double precision :: x1, x2, x3, x4, x5, x6
     x1 = x(1)
     x2 = x(2)
     x3 = x(3)
@@ -6649,6 +6613,7 @@ subroutine grad_ev_pol_con_8( x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6 )
     dpdx6(546) = 0
 
 end subroutine grad_ev_pol_con_8
+
 !===========================================================================
 ! *def u12_order10
 ! subtoutine of computing u12
@@ -6656,7 +6621,6 @@ end subroutine grad_ev_pol_con_8
 !> @brief Evaluate u12_order10.
 subroutine u12_order10
     implicit none
-
     double precision   :: xyz(4,3)
     double precision   :: v, r12, r13, r14, r23, r24, r34
     double precision   :: s
@@ -6668,9 +6632,8 @@ subroutine u12_order10
     data ncall/1/
     save ncall, coeff, a1, a2, b1, b2, ra1, ra2, rb1, rb2
     integer          :: i, j
-    double precision :: rrel(3,3),cross(3)
+    double precision :: rrel(3,3), cross(3)
     double precision :: volume
-
     if(ncall.eq.1) then
         a1          = 0.610
         a2          = 0.800
@@ -7983,7 +7946,7 @@ subroutine u12_order10
         return
     end if
 
-    entry u12_dc_10(xyz,v,s)
+    entry u12_dc_10(xyz, v, s)
 
     r12 = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
     r13 = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
@@ -7999,11 +7962,11 @@ subroutine u12_order10
     x(5) = exp(-((r24-ra2))/a2 -((r24-rb2)**2)/b2)
     x(6) = exp(-((r34-ra2))/a2 -((r34-rb2)**2)/b2)
 
-    do i=1,3
-        do j=1,3
+    do i=1, 3
+        do j=1, 3
             rrel(i,j) = xyz(i,j)-xyz(4,j)
-        enddo
-    enddo
+        end do
+    end do
 
     !compute r2xr3
     cross(1) = rrel(2,2)*rrel(3,3)-rrel(2,3)*rrel(3,2)
@@ -8011,14 +7974,14 @@ subroutine u12_order10
     cross(3) = rrel(2,1)*rrel(3,2)-rrel(2,2)*rrel(3,1)
     !compute p*r1*(r2xr3)
     volume = 0.00000
-    do i=1,3
+    do i=1, 3
         volume = volume+rrel(1,i)*cross(i)
-    enddo
+    end do
     volume = tanh(15.4*volume)
 
-    call ev_pol_con_10(x,q)
-    v = dot_product(coeff,q)*volume/627.509474
-    s = dot_product(coeff,q)/627.509474
+    call ev_pol_con_10(x, q)
+    v = dot_product(coeff, q)*volume/627.509474
+    s = dot_product(coeff, q)/627.509474
 
 end  subroutine
 
@@ -8029,7 +7992,6 @@ end  subroutine
 !> @brief Evaluate u13_order12.
 subroutine u13_order12
     implicit none
-
     double precision   :: xyz(4,3)
     double precision   :: v, r12, r13, r14, r23, r24, r34
     double precision   :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
@@ -8039,7 +8001,6 @@ subroutine u13_order12
     integer            :: ncall
     data ncall/1/
     save ncall, coeff, a1, a2, b1, b2, ra1, ra2, rb1, rb2
-
     if(ncall.eq.1) then
         a1          = 1.2561573
         a2          = 1.1028022
@@ -11127,7 +11088,7 @@ subroutine u13_order12
         return
     end if
 
-    entry u13_dc_12(xyz,v)
+    entry u13_dc_12(xyz, v)
 
     r12 = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
     r13 = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
@@ -11143,8 +11104,8 @@ subroutine u13_order12
     x(5) = exp(-((r24-ra2))/a2 -((r24-rb2)**2)/b2)
     x(6) = exp(-((r34-ra2))/a2 -((r34-rb2)**2)/b2)
 
-    call ev_pol_con_12(x,q)
-    v = dot_product(coeff,q)/627.509474
+    call ev_pol_con_12(x, q)
+    v = dot_product(coeff, q)/627.509474
 
 end  subroutine
 
@@ -11155,7 +11116,6 @@ end  subroutine
 !> @brief Evaluate u23_order10.
 subroutine u23_order10
     implicit none
-
     double precision   :: xyz(4,3)
     double precision   :: v, r12, r13, r14, r23, r24, r34
     double precision   :: s
@@ -11167,9 +11127,8 @@ subroutine u23_order10
     data ncall/1/
     save ncall, coeff, a1, a2, b1, b2, ra1, ra2, rb1, rb2
     integer          :: i, j
-    double precision :: rrel(3,3),cross(3)
+    double precision :: rrel(3,3), cross(3)
     double precision :: volume
-
     if(ncall.eq.1) then
         a1          = 1.323343
         a2          = 1.09
@@ -12482,7 +12441,7 @@ subroutine u23_order10
         return
     end if
 
-    entry u23_dc_10(xyz,v,s)
+    entry u23_dc_10(xyz, v, s)
 
     r12 = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
     r13 = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
@@ -12505,11 +12464,11 @@ subroutine u23_order10
     x(5) = exp(-((r24-ra2))/a2 -((r24-rb2)**2)/b2)
     x(6) = exp(-((r34-ra2))/a2 -((r34-rb2)**2)/b2)
 
-    do i=1,3
-        do j=1,3
+    do i=1, 3
+        do j=1, 3
             rrel(i,j) = xyz(i,j)-xyz(4,j)
-        enddo
-    enddo
+        end do
+    end do
 
     !compute r2xr3
     cross(1) = rrel(2,2)*rrel(3,3)-rrel(2,3)*rrel(3,2)
@@ -12517,14 +12476,14 @@ subroutine u23_order10
     cross(3) = rrel(2,1)*rrel(3,2)-rrel(2,2)*rrel(3,1)
     !compute p*r1*(r2xr3)
     volume = 0.00000
-    do i=1,3
+    do i=1, 3
         volume = volume+rrel(1,i)*cross(i)
-    enddo
+    end do
     volume = tanh(15.4*volume)
 
-    call ev_pol_con_10(x,q)
-    v = dot_product(coeff,q)*volume/627.509474
-    s = dot_product(coeff,q)/627.509474
+    call ev_pol_con_10(x, q)
+    v = dot_product(coeff, q)*volume/627.509474
+    s = dot_product(coeff, q)/627.509474
 
 end  subroutine
 
@@ -12535,14 +12494,12 @@ end  subroutine
 !> @brief Evaluate ev_pol_con_12.
 subroutine ev_pol_con_12( x, q )
     implicit none
-
     integer :: j
-    double precision,dimension(1:6),intent(in)::x
-    double precision,dimension(1:3075),intent(out)::q
-    double precision,dimension(0:32) :: rm
-    double precision,dimension(0:3392) :: p
+    double precision, dimension(1:6), intent(in)::x
+    double precision, dimension(1:3075), intent(out)::q
+    double precision, dimension(0:32) :: rm
+    double precision, dimension(0:3392) :: p
     double precision :: bm1(3394), bm2(3076)
-
     rm(0)  = 1.0d0
     rm(1)  = x(4)
     rm(2)  = x(2)
@@ -15971,9 +15928,9 @@ subroutine ev_pol_con_12( x, q )
     p(3391) = p(1)*p(2288) - p(3362)
     p(3392) = p(2)*p(2289) - p(3390)
 
-    do j=1,3393
+    do j=1, 3393
         bm1(j) = p(j-1)
-    enddo
+    end do
 
     bm2(1)    = bm1(4)
     bm2(2)    = bm1(10)
@@ -19051,9 +19008,9 @@ subroutine ev_pol_con_12( x, q )
     bm2(3074) = bm1(3362)
     bm2(3075) = bm1(3363)
 
-    do j=1,3075
+    do j=1, 3075
         q(j) = bm2(j)
-    enddo
+    end do
 
 end subroutine ev_pol_con_12
 
@@ -19064,14 +19021,12 @@ end subroutine ev_pol_con_12
 !> @brief Evaluate ev_pol_con_10.
 subroutine ev_pol_con_10( x, q )
     implicit none
-
     integer :: i, j
-    double precision,dimension(1:6),intent(in)::x
-    double precision,dimension(1:1300),intent(out)::q
-    double precision,dimension(0:32) :: rm
-    double precision,dimension(0:1506) :: p
+    double precision, dimension(1:6), intent(in)::x
+    double precision, dimension(1:1300), intent(out)::q
+    double precision, dimension(0:32) :: rm
+    double precision, dimension(0:1506) :: p
     double precision :: bm1(1506), bm2(1300)
-
     rm(0)  = 1.0d0
     rm(1)  = x(4)
     rm(2)  = x(2)
@@ -20613,9 +20568,9 @@ subroutine ev_pol_con_10( x, q )
     p(1504) = p(1)*p(958) - p(1480)
     p(1505) = p(2)*p(959) - p(1503)
 
-    do j=1,1506
+    do j=1, 1506
         bm1(j) = p(j-1)
-    enddo
+    end do
 
     bm2(1)    = bm1(4)
     bm2(2)    = bm1(10)
@@ -21918,11 +21873,12 @@ subroutine ev_pol_con_10( x, q )
     bm2(1299) = bm1(1480)
     bm2(1300) = bm1(1481)
 
-    do j=1,1300
+    do j=1, 1300
         q(j) = bm2(j)
-    enddo
+    end do
 
 end subroutine ev_pol_con_10
+
 !===========================================================================
 ! *def DSYEVJ3(A, Q, W)
 !  subroutine of diagonalizing a 3 by 3 matrix
@@ -21933,29 +21889,25 @@ end subroutine ev_pol_con_10
 !> @brief Evaluate DSYEVJ3.
 subroutine dsyevj3( a, q, w )
     implicit none
-
-    double precision :: a(3,3)
-    double precision :: q(3,3)
-    double precision :: w(3)
-
+    double precision   :: a(3,3)
+    double precision   :: q(3,3)
+    double precision   :: w(3)
     integer, parameter :: n = 3
-
-    double precision :: sd, so
-    double precision :: s, c, t
-    double precision :: g, h, z, theta
-    double precision :: thresh
-    integer          :: i, x, y, r
-
+    double precision   :: sd, so
+    double precision   :: s, c, t
+    double precision   :: g, h, z, theta
+    double precision   :: thresh
+    integer            :: i, x, y, r
     do 10 x = 1, n
         q(x,x) = 1.0d0
         do 11, y = 1, x-1
-            q(x, y) = 0.0d0
-            q(y, x) = 0.0d0
+            q(x,y) = 0.0d0
+            q(y,x) = 0.0d0
             11 continue
             10 continue
 
             do 20 x = 1, n
-                w(x) = a(x, x)
+                w(x) = a(x,x)
             20 continue
 
             sd = 0.0d0
@@ -21968,7 +21920,7 @@ subroutine dsyevj3( a, q, w )
                 so = 0.0d0
                 do 50 x = 1, n
                     do 51 y = x+1, n
-                        so = so + abs(a(x, y))
+                        so = so + abs(a(x,y))
                     51 continue
                 50 continue
                 if (so .eq. 0.0d0) then
@@ -21983,15 +21935,15 @@ subroutine dsyevj3( a, q, w )
 
                 do 60 x = 1, n
                     do 61 y = x+1, n
-                        g = 100.0d0 * ( abs(a(x, y)) )
+                        g = 100.0d0 * ( abs(a(x,y)) )
                         if ( i .gt. 4 .and. abs(w(x)) + g .eq. abs(w(x)) .and. abs(w(y)) + g .eq. abs(w(y)) ) then
-                            a(x, y) = 0.0d0
-                        else if (abs(a(x, y)) .gt. thresh) then
+                            a(x,y) = 0.0d0
+                        else if (abs(a(x,y)) .gt. thresh) then
                             h = w(y) - w(x)
                             if ( abs(h) + g .eq. abs(h) ) then
-                                t = a(x, y) / h
+                                t = a(x,y) / h
                             else
-                                theta = 0.5d0 * h / a(x, y)
+                                theta = 0.5d0 * h / a(x,y)
                                 if (theta .lt. 0.0d0) then
                                     t = -1.0d0 / (sqrt(1.0d0 + theta**2) - theta)
                                 else
@@ -22001,31 +21953,31 @@ subroutine dsyevj3( a, q, w )
 
                             c = 1.0d0 / sqrt( 1.0d0 + t**2 )
                             s = t * c
-                            z = t * a(x, y)
+                            z = t * a(x,y)
 
-                            a(x, y) = 0.0d0
-                            w(x)    = w(x) - z
-                            w(y)    = w(y) + z
+                            a(x,y) = 0.0d0
+                            w(x)   = w(x) - z
+                            w(y)   = w(y) + z
                             do 70 r = 1, x-1
-                                t       = a(r, x)
-                                a(r, x) = c * t - s * a(r, y)
-                                a(r, y) = s * t + c * a(r, y)
+                                t      = a(r,x)
+                                a(r,x) = c * t - s * a(r,y)
+                                a(r,y) = s * t + c * a(r,y)
                             70 continue
                             do 80, r = x+1, y-1
-                                t       = a(x, r)
-                                a(x, r) = c * t - s * a(r, y)
-                                a(r, y) = s * t + c * a(r, y)
+                                t      = a(x,r)
+                                a(x,r) = c * t - s * a(r,y)
+                                a(r,y) = s * t + c * a(r,y)
                                 80 continue
                                 do 90, r = y+1, n
-                                    t       = a(x, r)
-                                    a(x, r) = c * t - s * a(y, r)
-                                    a(y, r) = s * t + c * a(y, r)
+                                    t      = a(x,r)
+                                    a(x,r) = c * t - s * a(y,r)
+                                    a(y,r) = s * t + c * a(y,r)
                                     90 continue
 
                                     do 100, r = 1, n
-                                        t       = q(r, x)
-                                        q(r, x) = c * t - s * q(r, y)
-                                        q(r, y) = s * t + c * q(r, y)
+                                        t      = q(r,x)
+                                        q(r,x) = c * t - s * q(r,y)
+                                        q(r,y) = s * t + c * q(r,y)
                                         100 continue
                         end if
                     61 continue
@@ -22045,18 +21997,16 @@ end subroutine
 !> @brief Evaluate order.
 subroutine order( a, rv )
     implicit none
-
     double precision :: a(3)
     double precision :: rv(3,3)
     double precision :: tmpv(3,3)
     double precision :: s0, s1, s2
     integer          :: i, j
-
-    do i=1,3
-        do j=1,3
+    do i=1, 3
+        do j=1, 3
             tmpv(i,j) = rv(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
     if (a(1) < a(2)) then
         if (a(1) < a(3)) then
@@ -22064,42 +22014,42 @@ subroutine order( a, rv )
                 s0 = a(1)
                 s1 = a(2)
                 s2 = a(3)
-                do i=1,3
+                do i=1, 3
                     rv(i,1) = tmpv(i,1)
-                enddo
-                do i=1,3
+                end do
+                do i=1, 3
                     rv(i,2) = tmpv(i,2)
-                enddo
-                do i=1,3
+                end do
+                do i=1, 3
                     rv(i,3) = tmpv(i,3)
-                enddo
+                end do
             else
                 s0 = a(1)
                 s1 = a(3)
                 s2 = a(2)
-                do i=1,3
+                do i=1, 3
                     rv(i,1) = tmpv(i,1)
-                enddo
-                do i=1,3
+                end do
+                do i=1, 3
                     rv(i,2) = tmpv(i,3)
-                enddo
-                do i=1,3
+                end do
+                do i=1, 3
                     rv(i,3) = tmpv(i,2)
-                enddo
+                end do
             end if
         else
             s0 = a(3)
             s1 = a(1)
             s2 = a(2)
-            do i=1,3
+            do i=1, 3
                 rv(i,1) = tmpv(i,3)
-            enddo
-            do i=1,3
+            end do
+            do i=1, 3
                 rv(i,2) = tmpv(i,1)
-            enddo
-            do i=1,3
+            end do
+            do i=1, 3
                 rv(i,3) = tmpv(i,2)
-            enddo
+            end do
         end if
     else
         if (a(2) < a(3)) then
@@ -22107,42 +22057,42 @@ subroutine order( a, rv )
                 s0 = a(2)
                 s1 = a(1)
                 s2 = a(3)
-                do i=1,3
+                do i=1, 3
                     rv(i,1) = tmpv(i,2)
-                enddo
-                do i=1,3
+                end do
+                do i=1, 3
                     rv(i,2) = tmpv(i,1)
-                enddo
-                do i=1,3
+                end do
+                do i=1, 3
                     rv(i,3) = tmpv(i,3)
-                enddo
+                end do
             else
                 s0 = a(2)
                 s1 = a(3)
                 s2 = a(1)
-                do i=1,3
+                do i=1, 3
                     rv(i,1) = tmpv(i,2)
-                enddo
-                do i=1,3
+                end do
+                do i=1, 3
                     rv(i,2) = tmpv(i,3)
-                enddo
-                do i=1,3
+                end do
+                do i=1, 3
                     rv(i,3) = tmpv(i,1)
-                enddo
+                end do
             end if
         else
             s0 = a(3)
             s1 = a(2)
             s2 = a(1)
-            do i=1,3
+            do i=1, 3
                 rv(i,1) = tmpv(i,3)
-            enddo
-            do i=1,3
+            end do
+            do i=1, 3
                 rv(i,2) = tmpv(i,2)
-            enddo
-            do i=1,3
+            end do
+            do i=1, 3
                 rv(i,3) = tmpv(i,1)
-            enddo
+            end do
         end if
     end if
 
@@ -22150,6 +22100,7 @@ subroutine order( a, rv )
     a(2) = s1
     a(3) = s2
 end subroutine
+
 !===========================================================================
 ! *def u12_dvdx(xyz,u12,s12,du12dx)
 !  main subtoutine of evaluating derivative of u12 w.r.t. the xyz coordinates
@@ -22161,40 +22112,38 @@ end subroutine
 !> @brief Evaluate u12_dvdx.
 subroutine u12_dvdx( xyz, u12, s12, du12dx )
     implicit none
-
-    integer          :: i,j,k
-    double precision :: du12dx(4,3),xyz(4,3)
-    double precision :: u12,s12
+    integer          :: i, j, k
+    double precision :: du12dx(4,3), xyz(4,3)
+    double precision :: u12, s12
     double precision :: coord(12), r(6)
     double precision :: dudx(12)
     double precision :: dvdx(12), dvdr(6), drdx(6,12)
     double precision :: dtdx(12)
     double precision :: volume
-
     ! Initialize dVdX(12)
-    do i=1,12
+    do i=1, 12
         dvdx(i) = 0.0d0
-    enddo
+    end do
 
     ! Initialize dRdX(6,12)
-    do i=1,6
-        do j=1,12
+    do i=1, 6
+        do j=1, 12
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     ! Initialize dVdR(6)
-    do i=1,6
+    do i=1, 6
         dvdr(i) = 0.0d0
-    enddo
+    end do
 
     ! Assign xyz to coord
-    do i=1,4
-        do j=1,3
+    do i=1, 4
+        do j=1, 3
             k        = 3*(i-1)+j
             coord(k) = xyz(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
     ! Compute distances r
     r(1) = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
@@ -22205,44 +22154,44 @@ subroutine u12_dvdx( xyz, u12, s12, du12dx )
     r(6) = sqrt((xyz(3,1)-xyz(4,1))**2+(xyz(3,2)-xyz(4,2))**2+(xyz(3,3)-xyz(4,3))**2)
 
     ! Call EvdVdR to evaluate dVdR(6)
-    call evu12o10dvdr(coord,r,dvdr)
+    call evu12o10dvdr(coord, r, dvdr)
 
     ! Call EvdRdX to evaluate dRdX(6,12)
-    call evdrdx(coord,r,drdx)
+    call evdrdx(coord, r, drdx)
 
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to 6
-    do i=1,12
-        do j=1,6
+    do i=1, 12
+        do j=1, 6
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
-    do i=1,12
+    do i=1, 12
         dvdx(i) = dvdx(i)/627.509474
-    enddo
+    end do
 
-    call p_volume(xyz,volume)
+    call p_volume(xyz, volume)
 
     ! Now compute numerical dtdx
-    call num_dtdx(xyz,dtdx)
+    call num_dtdx(xyz, dtdx)
 
     ! Chain rule again, because U=tanh*V
     ! dUdX=dtanhdX*V+tanh*dVdX
-    do i=1,12
+    do i=1, 12
         dudx(i) = 0
-    enddo
+    end do
 
-    do i=1,12
+    do i=1, 12
         dudx(i) = dtdx(i)*s12+volume*dvdx(i)
-    enddo
+    end do
 
     ! Assign dvdx back to du12dx
-    do i=1,4
-        do j=1,3
+    do i=1, 4
+        do j=1, 3
             k           = 3*(i-1)+j
             du12dx(i,j) = dudx(k)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine u12_dvdx
 
@@ -22256,19 +22205,17 @@ end subroutine u12_dvdx
 !> @brief Evaluate EvU12O10dVdR.
 subroutine evu12o10dvdr( coord, r, dvdr )
     implicit none
-
-    integer            :: i,j
-    double precision   :: coord(12),r(6),dvdr(6)
+    integer            :: i, j
+    double precision   :: coord(12), r(6), dvdr(6)
     double precision   :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
     integer, parameter :: ncoeff = 1300
     double precision   :: coeff(ncoeff)
-    double precision,dimension(0:32) :: rm
-    double precision,dimension(0:32) :: dm
-    double precision,dimension(0:1506) :: p
-    double precision,dimension(0:1506) :: dp
-    double precision :: x(6),dmsdr(6,6)
+    double precision, dimension(0:32) :: rm
+    double precision, dimension(0:32) :: dm
+    double precision, dimension(0:1506) :: p
+    double precision, dimension(0:1506) :: dp
+    double precision :: x(6), dmsdr(6,6)
     double precision :: dbm1(1506), dbm2(1300)
-
     ! Assign coefficients first
     a1          = 0.610
     a2          = 0.800
@@ -23590,11 +23537,11 @@ subroutine evu12o10dvdr( coord, r, dvdr )
     ! Calculate dMEG/dr(6,6) for giving R(6)
     ! dmsdr(i,j)=0  i!=j
     ! Initialize dmsdr
-    do i=1,6
-        do j=1,6
+    do i=1, 6
+        do j=1, 6
             dmsdr(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
     dmsdr(1,1) = (-2.0d0*(r(1)-rb1)/b1-1/a1)*exp(-(r(1)-ra1)/a1-((r(1)-rb1)**2.0d0)/b1)
     dmsdr(2,2) = (-2.0d0*(r(2)-rb1)/b1-1/a1)*exp(-(r(2)-ra1)/a1-((r(2)-rb1)**2.0d0)/b1)
     dmsdr(3,3) = (-2.0d0*(r(3)-rb2)/b2-1/a2)*exp(-(r(3)-ra2)/a2-((r(3)-rb2)**2.0d0)/b2)
@@ -25143,7 +25090,7 @@ subroutine evu12o10dvdr( coord, r, dvdr )
     p(1504) = p(1)*p(958) - p(1480)
     p(1505) = p(2)*p(959) - p(1503)
 
-    do i=1,6
+    do i=1, 6
         dm(0)  = 0.0d0
         dm(1)  = dmsdr(i,4)
         dm(2)  = dmsdr(i,2)
@@ -26685,9 +26632,9 @@ subroutine evu12o10dvdr( coord, r, dvdr )
         dp(1504) = dp(1)*p(958) + p(1)*dp(958) - dp(1480)
         dp(1505) = dp(2)*p(959) + p(2)*dp(959) - dp(1503)
 
-        do j=1,1506
+        do j=1, 1506
             dbm1(j) = dp(j-1)
-        enddo
+        end do
 
         dbm2(1)    = dbm1(4)
         dbm2(2)    = dbm1(10)
@@ -27990,7 +27937,7 @@ subroutine evu12o10dvdr( coord, r, dvdr )
         dbm2(1299) = dbm1(1480)
         dbm2(1300) = dbm1(1481)
 
-        dvdr(i) = dvdr(i) + dot_product(coeff,dbm2)
+        dvdr(i) = dvdr(i) + dot_product(coeff, dbm2)
 
     end do
 
@@ -28006,9 +27953,7 @@ end subroutine evu12o10dvdr
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( coord, r, drdx )
     implicit none
-
-    double precision :: coord(12),r(6),drdx(6,12)
-
+    double precision :: coord(12), r(6), drdx(6,12)
     ! Start to calculate the non-zero dRdX
     ! dr1dx
     drdx(1,1) = (coord(1)-coord(4))/r(1)
@@ -28070,33 +28015,31 @@ end subroutine evdrdx
 !> @brief Evaluate Num_dtdx.
 subroutine num_dtdx( xyz, dtdx )
     implicit none
-
-    integer          :: i,j,k,m,n
+    integer          :: i, j, k, m, n
     double precision :: xyz(4,3)
     double precision :: dtdx(12)
     double precision :: xyz1(4,3), xyz2(4,3)
     double precision :: volume1, volume2
-
-    do i=1,12
+    do i=1, 12
         dtdx(i) = 0.000
-    enddo
+    end do
 
-    do i=1,4
-        do j=1,3
-            do m=1,4
-                do n=1,3
+    do i=1, 4
+        do j=1, 3
+            do m=1, 4
+                do n=1, 3
                     xyz1(m,n) = xyz(m,n)
                     xyz2(m,n) = xyz(m,n)
-                enddo
-            enddo
+                end do
+            end do
             k         = (i-1)*3+j
             xyz1(i,j) = xyz(i,j)+0.001
-            call p_volume(xyz1,volume1)
+            call p_volume(xyz1, volume1)
             xyz2(i,j) = xyz(i,j)-0.001
-            call p_volume(xyz2,volume2)
+            call p_volume(xyz2, volume2)
             dtdx(k) = (volume1-volume2)/0.002
-        enddo
-    enddo
+        end do
+    end do
 end subroutine num_dtdx
 
 !===========================================================================
@@ -28108,25 +28051,25 @@ end subroutine num_dtdx
 !> @brief Evaluate P_volume.
 subroutine p_volume( xyz, volume )
     implicit none
-
-    integer          :: i,j,k
+    integer          :: i, j, k
     double precision :: volume
     double precision :: xyz(4,3)
-    double precision :: rrel(3,3),cross(3)
+    double precision :: rrel(3,3), cross(3)
     volume = 0.0000
-    do i=1,3
-        do j=1,3
+    do i=1, 3
+        do j=1, 3
             rrel(i,j) = xyz(i,j)-xyz(4,j)
-        enddo
-    enddo
+        end do
+    end do
     cross(1) = rrel(2,2)*rrel(3,3)-rrel(2,3)*rrel(3,2)
     cross(2) = -rrel(2,1)*rrel(3,3)+rrel(2,3)*rrel(3,1)
     cross(3) = rrel(2,1)*rrel(3,2)-rrel(2,2)*rrel(3,1)
-    do i=1,3
+    do i=1, 3
         volume = volume+rrel(1,i)*cross(i)
-    enddo
+    end do
     volume = tanh(15.4*volume)
 end subroutine p_volume
+
 !===========================================================================
 ! *def u13_dvdx(xyz,u13,du13dx)
 !  main subtoutine of evaluating derivative of u13 w.r.t. the xyz coordinates
@@ -28137,39 +28080,37 @@ end subroutine p_volume
 !> @brief Evaluate u13_dvdx.
 subroutine u13_dvdx( xyz, u13, du13dx )
     implicit none
-
-    integer          :: i,j,k
-    double precision :: du13dx(4,3),xyz(4,3)
+    integer          :: i, j, k
+    double precision :: du13dx(4,3), xyz(4,3)
     double precision :: u13
     double precision :: coord(12), r(6)
     double precision :: dudx(12)
     double precision :: dvdx(12), dvdr(6), drdx(6,12)
     double precision :: volume
-
     ! Initialize dVdX(12)
-    do i=1,12
+    do i=1, 12
         dvdx(i) = 0.0d0
-    enddo
+    end do
 
     ! Initialize dRdX(6,12)
-    do i=1,6
-        do j=1,12
+    do i=1, 6
+        do j=1, 12
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     ! Initialize dVdR(6)
-    do i=1,6
+    do i=1, 6
         dvdr(i) = 0.0d0
-    enddo
+    end do
 
     ! Assign xyz to coord
-    do i=1,4
-        do j=1,3
+    do i=1, 4
+        do j=1, 3
             k        = 3*(i-1)+j
             coord(k) = xyz(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
     ! Compute distances r
     r(1) = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
@@ -28180,29 +28121,29 @@ subroutine u13_dvdx( xyz, u13, du13dx )
     r(6) = sqrt((xyz(3,1)-xyz(4,1))**2+(xyz(3,2)-xyz(4,2))**2+(xyz(3,3)-xyz(4,3))**2)
 
     ! Call EvdVdR to evaluate dVdR(6)
-    call evu13o10dvdr(coord,r,dvdr)
+    call evu13o10dvdr(coord, r, dvdr)
 
     ! Call EvdRdX to evaluate dRdX(6,12)
-    call evdrdx(coord,r,drdx)
+    call evdrdx(coord, r, drdx)
 
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to 6
-    do i=1,12
-        do j=1,6
+    do i=1, 12
+        do j=1, 6
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
-    do i=1,12
+    do i=1, 12
         dudx(i) = dvdx(i)/627.509474
-    enddo
+    end do
 
     ! Assign dvdx back to du13dvdx
-    do i=1,4
-        do j=1,3
+    do i=1, 4
+        do j=1, 3
             k           = 3*(i-1)+j
             du13dx(i,j) = dudx(k)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine u13_dvdx
 
@@ -28216,20 +28157,18 @@ end subroutine u13_dvdx
 !> @brief Evaluate EvU13O10dVdR.
 subroutine evu13o10dvdr( coord, r, dvdr )
     implicit none
-
     integer, parameter :: ddp = kind(0.d0)
-    integer            :: i,j
-    real(ddp)          :: coord(12),r(6),dvdr(6)
+    integer            :: i, j
+    real(ddp)          :: coord(12), r(6), dvdr(6)
     real(ddp)          :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
     integer, parameter :: ncoeff = 3075
     real(ddp)          :: coeff(ncoeff)
-    real(ddp),dimension(0:32) :: rm
-    real(ddp),dimension(0:32) :: dm
-    real(ddp),dimension(0:3392) :: p
-    real(ddp),dimension(0:3392) :: dp
-    real(ddp) :: x(6),dmsdr(6,6)
+    real(ddp), dimension(0:32) :: rm
+    real(ddp), dimension(0:32) :: dm
+    real(ddp), dimension(0:3392) :: p
+    real(ddp), dimension(0:3392) :: dp
+    real(ddp) :: x(6), dmsdr(6,6)
     real(ddp) :: dbm1(3393), dbm2(3075)
-
     ! Assign coefficients first
     a1          = 1.2561573
     a2          = 1.1028022
@@ -31326,11 +31265,11 @@ subroutine evu13o10dvdr( coord, r, dvdr )
     ! Calculate dMEG/dr(6,6) for giving R(6)
     ! dmsdr(i,j)=0  i!=j
     ! Initialize dmsdr
-    do i=1,6
-        do j=1,6
+    do i=1, 6
+        do j=1, 6
             dmsdr(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
     dmsdr(1,1) = (-2.0d0*(r(1)-rb1)/b1-1/a1)*exp(-(r(1)-ra1)/a1-((r(1)-rb1)**2.0d0)/b1)
     dmsdr(2,2) = (-2.0d0*(r(2)-rb1)/b1-1/a1)*exp(-(r(2)-ra1)/a1-((r(2)-rb1)**2.0d0)/b1)
     dmsdr(3,3) = (-2.0d0*(r(3)-rb2)/b2-1/a2)*exp(-(r(3)-ra2)/a2-((r(3)-rb2)**2.0d0)/b2)
@@ -34766,7 +34705,7 @@ subroutine evu13o10dvdr( coord, r, dvdr )
     p(3391) = p(1)*p(2288) - p(3362)
     p(3392) = p(2)*p(2289) - p(3390)
 
-    do i=1,6
+    do i=1, 6
         dm(0)  = 0.0d0
         dm(1)  = dmsdr(i,4)
         dm(2)  = dmsdr(i,2)
@@ -38195,9 +38134,9 @@ subroutine evu13o10dvdr( coord, r, dvdr )
         dp(3391) = dp(1)*p(2288) + p(1)*dp(2288) - dp(3362)
         dp(3392) = dp(2)*p(2289) + p(2)*dp(2289) - dp(3390)
 
-        do j=1,3393
+        do j=1, 3393
             dbm1(j) = dp(j-1)
-        enddo
+        end do
 
         dbm2(1)    = dbm1(4)
         dbm2(2)    = dbm1(10)
@@ -41275,7 +41214,7 @@ subroutine evu13o10dvdr( coord, r, dvdr )
         dbm2(3074) = dbm1(3362)
         dbm2(3075) = dbm1(3363)
 
-        dvdr(i) = dvdr(i) + dot_product(coeff,dbm2)
+        dvdr(i) = dvdr(i) + dot_product(coeff, dbm2)
 
     end do
 
@@ -41292,40 +41231,38 @@ end subroutine evu13o10dvdr
 !> @brief Evaluate u23_dvdx.
 subroutine u23_dvdx( xyz, u23, s23, du23dx )
     implicit none
-
-    integer          :: i,j,k
-    double precision :: du23dx(4,3),xyz(4,3)
-    double precision :: u23,s23
+    integer          :: i, j, k
+    double precision :: du23dx(4,3), xyz(4,3)
+    double precision :: u23, s23
     double precision :: coord(12), r(6)
     double precision :: dudx(12)
     double precision :: dvdx(12), dvdr(6), drdx(6,12)
     double precision :: dtdx(12)
     double precision :: volume
-
     ! Initialize dVdX(12)
-    do i=1,12
+    do i=1, 12
         dvdx(i) = 0.0d0
-    enddo
+    end do
 
     ! Initialize dRdX(6,12)
-    do i=1,6
-        do j=1,12
+    do i=1, 6
+        do j=1, 12
             drdx(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
 
     ! Initialize dVdR(6)
-    do i=1,6
+    do i=1, 6
         dvdr(i) = 0.0d0
-    enddo
+    end do
 
     ! Assign xyz to coord
-    do i=1,4
-        do j=1,3
+    do i=1, 4
+        do j=1, 3
             k        = 3*(i-1)+j
             coord(k) = xyz(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
     ! Compute distances r
     r(1) = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
@@ -41336,44 +41273,44 @@ subroutine u23_dvdx( xyz, u23, s23, du23dx )
     r(6) = sqrt((xyz(3,1)-xyz(4,1))**2+(xyz(3,2)-xyz(4,2))**2+(xyz(3,3)-xyz(4,3))**2)
 
     ! Call EvdVdR to evaluate dVdR(6)
-    call evu23o10dvdr(coord,r,dvdr)
+    call evu23o10dvdr(coord, r, dvdr)
 
     ! Call EvdRdX to evaluate dRdX(6,12)
-    call evdrdx(coord,r,drdx)
+    call evdrdx(coord, r, drdx)
 
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to 6
-    do i=1,12
-        do j=1,6
+    do i=1, 12
+        do j=1, 6
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
-    do i=1,12
+    do i=1, 12
         dvdx(i) = dvdx(i)/627.509474
-    enddo
+    end do
 
-    call p_volume(xyz,volume)
+    call p_volume(xyz, volume)
 
     ! Now compute numerical dtdx
-    call num_dtdx(xyz,dtdx)
+    call num_dtdx(xyz, dtdx)
 
     ! Chain rule again, because U=tanh*V
     ! dUdX=dtanhdX*V+tanh*dVdX
-    do i=1,12
+    do i=1, 12
         dudx(i) = 0
-    enddo
+    end do
 
-    do i=1,12
+    do i=1, 12
         dudx(i) = dtdx(i)*s23+volume*dvdx(i)
-    enddo
+    end do
 
     ! Assign dvdx back to du23dvdx
-    do i=1,4
-        do j=1,3
+    do i=1, 4
+        do j=1, 3
             k           = 3*(i-1)+j
             du23dx(i,j) = dudx(k)
-        enddo
-    enddo
+        end do
+    end do
 
 end subroutine u23_dvdx
 
@@ -41387,20 +41324,18 @@ end subroutine u23_dvdx
 !> @brief Evaluate EvU23O10dVdR.
 subroutine evu23o10dvdr( coord, r, dvdr )
     implicit none
-
     integer, parameter :: ddp = kind(0.d0)
-    integer            :: i,j
-    real(ddp)          :: coord(12),r(6),dvdr(6)
+    integer            :: i, j
+    real(ddp)          :: coord(12), r(6), dvdr(6)
     real(ddp)          :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
     integer, parameter :: ncoeff = 1300
     real(ddp)          :: coeff(ncoeff)
-    real(ddp),dimension(0:32) :: rm
-    real(ddp),dimension(0:32) :: dm
-    real(ddp),dimension(0:1506) :: p
-    real(ddp),dimension(0:1506) :: dp
-    real(ddp) :: x(6),dmsdr(6,6)
+    real(ddp), dimension(0:32) :: rm
+    real(ddp), dimension(0:32) :: dm
+    real(ddp), dimension(0:1506) :: p
+    real(ddp), dimension(0:1506) :: dp
+    real(ddp) :: x(6), dmsdr(6,6)
     real(ddp) :: dbm1(1506), dbm2(1300)
-
     ! Assign coefficients first
     a1          = 1.323343
     a2          = 1.09
@@ -42722,11 +42657,11 @@ subroutine evu23o10dvdr( coord, r, dvdr )
     ! Calculate dMEG/dr(6,6) for giving R(6)
     ! dmsdr(i,j)=0  i!=j
     ! Initialize dmsdr
-    do i=1,6
-        do j=1,6
+    do i=1, 6
+        do j=1, 6
             dmsdr(i,j) = 0.0d0
-        enddo
-    enddo
+        end do
+    end do
     dmsdr(1,1) = (-2.0d0*(r(1)-rb1)/b1-1/a1)*exp(-(r(1)-ra1)/a1-((r(1)-rb1)**2.0d0)/b1)
     dmsdr(2,2) = (-2.0d0*(r(2)-rb1)/b1-1/a1)*exp(-(r(2)-ra1)/a1-((r(2)-rb1)**2.0d0)/b1)
     dmsdr(3,3) = (-2.0d0*(r(3)-rb2)/b2-1/a2)*exp(-(r(3)-ra2)/a2-((r(3)-rb2)**2.0d0)/b2)
@@ -44275,7 +44210,7 @@ subroutine evu23o10dvdr( coord, r, dvdr )
     p(1504) = p(1)*p(958) - p(1480)
     p(1505) = p(2)*p(959) - p(1503)
 
-    do i=1,6
+    do i=1, 6
         dm(0)  = 0.0d0
         dm(1)  = dmsdr(i,4)
         dm(2)  = dmsdr(i,2)
@@ -45817,9 +45752,9 @@ subroutine evu23o10dvdr( coord, r, dvdr )
         dp(1504) = dp(1)*p(958) + p(1)*dp(958) - dp(1480)
         dp(1505) = dp(2)*p(959) + p(2)*dp(959) - dp(1503)
 
-        do j=1,1506
+        do j=1, 1506
             dbm1(j) = dp(j-1)
-        enddo
+        end do
 
         dbm2(1)    = dbm1(4)
         dbm2(2)    = dbm1(10)
@@ -47122,7 +47057,7 @@ subroutine evu23o10dvdr( coord, r, dvdr )
         dbm2(1299) = dbm1(1480)
         dbm2(1300) = dbm1(1481)
 
-        dvdr(i) = dvdr(i) + dot_product(coeff,dbm2)
+        dvdr(i) = dvdr(i) + dot_product(coeff, dbm2)
 
     end do
 

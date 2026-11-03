@@ -4,6 +4,14 @@ This is the living design and validation record for modernizing CHEMPOTPY and
 interoperating with POLYRATE. It replaces ad hoc conversion and wrapper logic;
 it does not replace published numerical kernels or refit their coefficients.
 
+Public `pes` and `dpem` routines are compatibility adapters. Repeated
+validation, geometry, and unit mechanics belong in the bundled core. A surface
+should ultimately own only its evaluator, model metadata, native-unit
+declaration, and topology that is scientifically specific to that fit.
+Legacy `ENTRY` dispatch is not part of this contract. Initializers, batch
+evaluators, and point evaluators are distinct module procedures; any state they
+share has one private module owner.
+
 ## Boundary
 
 The portable low-level boundary uses:
@@ -54,7 +62,8 @@ The maintained bundled core currently contains:
 - `chempotpy_h3_basis`: private symmetric-polynomial index storage and a
   procedural initialization/lookup API for the H3 2002 fit family.
 - `chempotpy_legacy_coordinates`: explicit-argument implementations of the
-  historical POTLIB Cartesian input and internal-coordinate setup algorithms.
+  historical POTLIB Cartesian input and internal-coordinate setup algorithms,
+  including the shared legacy triatomic 1-2, 2-3, 1-3 distance adapter.
 - `chempotpy_neural_network_io`: shared parsing of neural-network headers.
 - `chempotpy_status`: status values for future non-printing modern interfaces.
 - `chempotpy_blas`: the small BLAS subset required by bundled legacy kernels.
@@ -111,6 +120,9 @@ source inside that surface's independently loadable extension.
    POLYRATE adapter use the validated boundary.
 
 ## Modern Fortran source style
+
+The normative development checklist is `FORTRAN_STYLE.md`. The summary below
+records the principal conventions relevant to the PES contract.
 
 Modernized PES sources follow the same compact conventions used by SIMPLE:
 

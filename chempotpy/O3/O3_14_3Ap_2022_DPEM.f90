@@ -1,10 +1,10 @@
 !***********************************************************************
-!   System:                     O3
-!   Functional form:            permutation restrained diabatization by
+!   System:          O3
+!   Functional form: permutation restrained diabatization by
 !                               deep neural network
-!   Common name:                O3_14_3Ap_2022 (14 quintet A' states)
-!   Number of derivatives:      first derivatives of adiabatic surfaces
-!   Number of bodies:           3
+!   Common name:           O3_14_3Ap_2022 (14 quintet A' states)
+!   Number of derivatives: first derivatives of adiabatic surfaces
+!   Number of bodies:      3
 !   Number of surfaces:         14
 !   Notes:                      -Diatomic potentials contain dispersion terms
 !                               -Compile the subroutine requires LAPACK
@@ -22,9 +22,8 @@
 
 !> @brief Evaluate dpem.
 subroutine dpem( x, igrad, u, ug )
-
+    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 14
     integer, parameter            :: natoms  = 3
@@ -32,28 +31,25 @@ subroutine dpem( x, igrad, u, ug )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-
-    double precision :: v(nstates), tx(natoms,3), tg(nstates,3,3)
-    double precision :: td(nstates,nstates,3,3)
-    double precision :: t(nstates,nstates)
-
-    integer :: iatom, idir, j, istate, jstate
+    double precision              :: v(nstates), tx(natoms,3), tg(nstates,3,3)
+    double precision              :: td(nstates,nstates,3,3)
+    double precision              :: t(nstates,nstates)
+    integer                       :: iatom, idir, j, istate, jstate
     !initialize
-    u  = 0.d0
-    ug = 0.d0
+    u = 0.d0; ug = 0.d0
 
     ! transform from angstrom to bohr
-    do iatom=1,natoms
-        do idir=1,3
-            tx(iatom,idir) = x(iatom,idir)/0.529177211
-        enddo
-    enddo
+    do iatom=1, natoms
+        do idir=1, 3
+            tx(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+        end do
+    end do
     tg = 0.d0
     td = 0.d0
 
-    call energy_gradient(tx,v,tg,td,t,u,ug,natoms,nstates)
+    call energy_gradient(tx, v, tg, td, t, u, ug, natoms, nstates)
 
-    u  = u*27.211386
+    u  = u*legacy_hartree_to_electronvolt
     ug = ug*51.422067
 
 end
@@ -78,8 +74,7 @@ subroutine energy_gradient( x, e, g, h, t, u, ug, n, ns )
     ! drdx - dr/dx matrix for converting derivatives
 
     implicit none
-
-    integer, intent(in)             :: n,ns
+    integer, intent(in)             :: n, ns
     double precision, intent(in)    :: x(n,3)
     double precision, intent(inout) :: e(ns)
     double precision, intent(inout) :: g(ns,n,3)
@@ -87,44 +82,42 @@ subroutine energy_gradient( x, e, g, h, t, u, ug, n, ns )
     double precision, intent(inout) :: h(ns,ns,n,3)
     double precision, intent(inout) :: u(ns,ns)
     double precision, intent(inout) :: ug(ns,ns,n,3)
-
     ! layers and their sizes
     double precision, save :: coeff_l0(3,15), coeff_l1(15,35)
     double precision, save :: coeff_l2(35,55), coeff_l3(55,105)
     double precision, save :: bias_l0(15), bias_l1(35), bias_l2(55), bias_l3(105)
-    double precision       :: r(n*(n-1)/2),expr(n*(n-1)/2)
+    double precision       :: r(n*(n-1)/2), expr(n*(n-1)/2)
     double precision       :: a
     double precision       :: gr(ns,n*(n-1)/2)
     double precision       :: hr(ns,ns,n*(n-1)/2)
     double precision       :: ur(ns,ns,n*(n-1)/2)
-    double precision       :: v2b(ns),g2b(ns,n*(n-1)/2)
+    double precision       :: v2b(ns), g2b(ns,n*(n-1)/2)
     double precision       :: drdx(n*(n-1)/2,3*n)
-    integer                :: i,j,k,l,m
+    integer                :: i, j, k, l, m
     logical, save          :: first_time_data=.true.
-
     e = 0.d0
     g = 0.d0
 
     ! get ddnn coefficients and bias
     if(first_time_data) then
-        call assign_coeff_bias(coeff_l0,coeff_l1,coeff_l2,coeff_l3, &
-            bias_l0,bias_l1,bias_l2,bias_l3)
+        call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, &
+            bias_l0, bias_l1, bias_l2, bias_l3)
         first_time_data = .false.
-    endif
+    end if
     ! input x is in bohr
     ! convert xyz coordinates to exp of internuclear distances,
     ! expr=exp(-a*r), where a = 1.0 1/bohr
     a = 1.0d0
-    call convert_xyz_to_expr(x,expr,r,n,a)
+    call convert_xyz_to_expr(x, expr, r, n, a)
     ! calculate the two-body terms
-    call ev2gm2m(r,v2b,g2b,4,1,n)
+    call ev2gm2m(r, v2b, g2b, 4, 1, n)
     ! forward propagate sfp to energy
-    call backprop(expr,n,ns,e,gr,hr,u,ur,t,coeff_l0,coeff_l1,coeff_l2, &
-        coeff_l3,bias_l0,bias_l1,bias_l2,bias_l3,v2b,g2b,a)
+    call backprop(expr, n, ns, e, gr, hr, u, ur, t, coeff_l0, coeff_l1, coeff_l2, &
+        coeff_l3, bias_l0, bias_l1, bias_l2, bias_l3, v2b, g2b, a)
     ! convert from gradient_r to gradient_xyz
-    call grad_r_to_xyz(g,drdx,gr,r,x,n,ns)
-    call nac_r_to_xyz(h,drdx,hr,r,x,n,ns)
-    call nac_r_to_xyz(ug,drdx,ur,r,x,n,ns)
+    call grad_r_to_xyz(g, drdx, gr, r, x, n, ns)
+    call nac_r_to_xyz(h, drdx, hr, r, x, n, ns)
+    call nac_r_to_xyz(ug, drdx, ur, r, x, n, ns)
     ! convert energy from eV to hartree (1/27.2107=0.0367502)
     e(:)   = e(:)*0.0367502d0
     u(:,:) = u(:,:)*0.0367502d0
@@ -132,7 +125,7 @@ subroutine energy_gradient( x, e, g, h, t, u, ug, n, ns )
     g(:,:,:)    = g(:,:,:)*0.0367502d0
     ug(:,:,:,:) = ug(:,:,:,:)*0.0367502d0
 
-endsubroutine energy_gradient
+end subroutine energy_gradient
 
 !===========================
 ! back propagation
@@ -140,30 +133,27 @@ endsubroutine energy_gradient
 subroutine backprop( expr, n, ns, e, g, h, u, ur, t, coeff_l0, coeff_l1, coeff_l2, &
         coeff_l3, bias_l0, bias_l1, bias_l2, bias_l3, v2b, g2b, a )
     implicit none
-
     integer, intent(in)             :: n, ns
-    double precision, intent(inout) :: e(ns), g(ns,n*(n-1)/2),h(ns,ns,n*(n-1)/2)
+    double precision, intent(inout) :: e(ns), g(ns,n*(n-1)/2), h(ns,ns,n*(n-1)/2)
     double precision, intent(inout) :: t(ns,ns), u(ns,ns), ur(ns,ns,n*(n-1)/2)
     double precision, intent(in)    :: coeff_l0(3,15), coeff_l1(15,35)
-    double precision, intent(in)    :: coeff_l2(35,55),coeff_l3(55,105)
+    double precision, intent(in)    :: coeff_l2(35,55), coeff_l3(55,105)
     double precision, intent(in)    :: bias_l0(15), bias_l1(35)
     double precision, intent(in)    :: bias_l2(55), bias_l3(105)
-
-    double precision :: expr(n*(n-1)/2)
-    double precision :: a0(15), a1(35), a2(55), a3(105)
-    double precision :: z0(15), z1(35), z2(55), z3(105)
-    double precision :: g0(3,15), g1(3,35)
-    double precision :: g2(3,55), g3(3,105), g3p(105,3)
-    double precision :: dpem(ns,ns), dvdu(ns,105)
-    double precision :: dudr(ns,ns,n*(n-1)/2),t_trans(ns,ns)
-    double precision :: tmp1(ns,ns,n*(n-1)/2),dgdr(ns,ns,n*(n-1)/2)
-    integer          :: sum1
-    integer          :: i,j,k,l
-    double precision :: v2b(ns),g2b(ns,n*(n-1)/2)
-    double precision :: dexpdr(n*(n-1)/2,n*(n-1)/2)
-    double precision :: g3r(105,n*(n-1)/2)
-    double precision :: a
-
+    double precision                :: expr(n*(n-1)/2)
+    double precision                :: a0(15), a1(35), a2(55), a3(105)
+    double precision                :: z0(15), z1(35), z2(55), z3(105)
+    double precision                :: g0(3,15), g1(3,35)
+    double precision                :: g2(3,55), g3(3,105), g3p(105,3)
+    double precision                :: dpem(ns,ns), dvdu(ns,105)
+    double precision                :: dudr(ns,ns,n*(n-1)/2), t_trans(ns,ns)
+    double precision                :: tmp1(ns,ns,n*(n-1)/2), dgdr(ns,ns,n*(n-1)/2)
+    integer                         :: sum1
+    integer                         :: i, j, k, l
+    double precision                :: v2b(ns), g2b(ns,n*(n-1)/2)
+    double precision                :: dexpdr(n*(n-1)/2,n*(n-1)/2)
+    double precision                :: g3r(105,n*(n-1)/2)
+    double precision                :: a
     a0 = 0.0d0
     a1 = 0.0d0
     a2 = 0.0d0
@@ -179,173 +169,167 @@ subroutine backprop( expr, n, ns, e, g, h, u, ur, t, coeff_l0, coeff_l1, coeff_l
     g2 = 0.0d0
     g3 = 0.0d0
 
-    call mproduct(expr,coeff_l0,z0,1,3,15)
+    call mproduct(expr, coeff_l0, z0, 1, 3, 15)
     z0 = z0 !+bias_l0
-    call activation_gelu(z0,a0,15)
+    call activation_gelu(z0, a0, 15)
 
-    call mproduct(a0,coeff_l1,z1,1,15,35)
+    call mproduct(a0, coeff_l1, z1, 1, 15, 35)
     z1 = z1 !+bias_l1
-    call activation_gelu(z1,a1,35)
+    call activation_gelu(z1, a1, 35)
 
-    call mproduct(a1,coeff_l2,z2,1,35,55)
+    call mproduct(a1, coeff_l2, z2, 1, 35, 55)
     z2 = z2 !+bias_l2
-    call activation_gelu(z2,a2,55)
+    call activation_gelu(z2, a2, 55)
 
     !diabatic layer, no activation function.
-    call mproduct(a2,coeff_l3,z3,1,55,105)
+    call mproduct(a2, coeff_l3, z3, 1, 55, 105)
     z3 = z3 !+bias_l3
     a3 = z3
 
     !construction many-body diabatic potential energy matrix (mb-dpem)
-    do i=1,ns
+    do i=1, ns
         dpem(i,i) = a3(i)
-    enddo
-    do i=1,ns
-        do j=i+1,ns
-            call sumover(ns,i,sum1)
+    end do
+    do i=1, ns
+        do j=i+1, ns
+            call sumover(ns, i, sum1)
             k         = ns-1+sum1+j-i
             dpem(i,j) = a3(k)
             dpem(j,i) = dpem(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
     !adding the two-body terms to mb-dpem
-    do i=1,ns
+    do i=1, ns
         dpem(i,i) = dpem(i,i) + v2b(i)
-    enddo
+    end do
 
     u = dpem
 
     ! diagonalize dpem
-    call diagonalize(ns,dpem,e,t)
+    call diagonalize(ns, dpem, e, t)
 
     ! cmpute dvdu
-    do i=1,ns
-        do j=1,ns
+    do i=1, ns
+        do j=1, ns
             dvdu(i,j) = t(j,i)*t(j,i)
-        enddo
-    enddo
-    do i=1,ns
-        do j=1,ns
-            do k=j+1,ns
-                call sumover(ns,j,sum1)
+        end do
+    end do
+    do i=1, ns
+        do j=1, ns
+            do k=j+1, ns
+                call sumover(ns, j, sum1)
                 l         = ns-1+sum1+k-j
                 dvdu(i,l) = 2.0*t(j,i)*t(k,i)
-            enddo
-        enddo
-    enddo
+            end do
+        end do
+    end do
 
     ! compute gradients
     g0 = coeff_l0
-    do i=1,3
+    do i=1, 3
         call activation_derivative_gelu(z0, a0, g0(i,:), 15)
-    enddo
+    end do
 
-    call mproduct(g0,coeff_l1,g1,3,15,35)
+    call mproduct(g0, coeff_l1, g1, 3, 15, 35)
 
-    do i=1,3
+    do i=1, 3
         call activation_derivative_gelu(z1, a1, g1(i,:), 35)
-    enddo
+    end do
 
-    call mproduct(g1,coeff_l2,g2,3,35,55)
-    do i=1,3
+    call mproduct(g1, coeff_l2, g2, 3, 35, 55)
+    do i=1, 3
         call activation_derivative_gelu(z2, a2, g2(i,:), 55)
-    enddo
+    end do
 
-    call mproduct(g2,coeff_l3,g3,3,55,105)
-    do i=1,3
-        do j=1,105
+    call mproduct(g2, coeff_l3, g3, 3, 55, 105)
+    do i=1, 3
+        do j=1, 105
             g3p(j,i) = g3(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
     ! g3p corresponds to dU_MB/dexpr
     ! convert that to dU_MB/dr with dexp(-a*r)/dr
     ! dexp(-a*r)/dr = -a*exp(-a*r)
     ! the unit of dU_MB/dr is eV/bohr
     dexpdr = 0.0d0
-    do i=1,3
+    do i=1, 3
         dexpdr(i,i) = -a*expr(i)
-    enddo
+    end do
 
-    call mproduct(g3p,dexpdr,g3r,105,3,3)
+    call mproduct(g3p, dexpdr, g3r, 105, 3, 3)
 
     ! add dU_2B/dr to dU_MB/dr
     ! the unit of dU_2B/dr is also eV/bohr
-    do i=1,ns
-        do j=1,3
+    do i=1, ns
+        do j=1, 3
             g3r(i,j) = g3r(i,j) + g2b(i,j)
-        enddo
-    enddo
+        end do
+    end do
 
-    call mproduct(dvdu,g3r,g,ns,105,3)
+    call mproduct(dvdu, g3r, g, ns, 105, 3)
 
-    do i=1,ns
-        do j=1,ns
+    do i=1, ns
+        do j=1, ns
             t_trans(i,j) = t(j,i)
-        enddo
-    enddo
+        end do
+    end do
 
     ! assign g3r elements to dudr
-    do i=1,ns
+    do i=1, ns
         dudr(i,i,:) = g3r(i,:)
-    enddo
-    do i=1,ns
-        do j=i+1,ns
-            call sumover(ns,i,sum1)
+    end do
+    do i=1, ns
+        do j=i+1, ns
+            call sumover(ns, i, sum1)
             k           = ns-1+sum1+j-i
             dudr(i,j,:) = g3r(k,:)
             dudr(j,i,:) = dudr(i,j,:)
-        enddo
-    enddo
+        end do
+    end do
 
     ur = dudr
 
-    do i=1,n*(n-1)/2
-        call mproduct(t_trans,dudr(:,:,i),tmp1(:,:,i),ns,ns,ns)
-        call mproduct(tmp1(:,:,i),t,dgdr(:,:,i),ns,ns,ns)
-    enddo
+    do i=1, n*(n-1)/2
+        call mproduct(t_trans, dudr(:,:,i), tmp1(:,:,i), ns, ns, ns)
+        call mproduct(tmp1(:,:,i), t, dgdr(:,:,i), ns, ns, ns)
+    end do
 
     h = 0.d0
-    do i=1,ns
-        do j=i+1,ns
+    do i=1, ns
+        do j=i+1, ns
             h(i,j,:) = dgdr(i,j,:)/(e(j)-e(i))
             h(j,i,:) = -h(i,j,:)
-        enddo
-    enddo
+        end do
+    end do
 
-endsubroutine backprop
+end subroutine backprop
 
 !=========================
 !activation function, gelu
 !> @brief Evaluate activation_gelu.
 subroutine activation_gelu( z, a, n )
     implicit none
-
     double precision, intent(in)    :: z(n)
     double precision, intent(inout) :: a(n)
-
-    integer :: i,n
-
-    do i=1,n
+    integer                         :: i, n
+    do i=1, n
         a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.d0)))
-    enddo
+    end do
 
 end subroutine activation_gelu
 
 !> @brief Evaluate activation_derivative_gelu.
 subroutine activation_derivative_gelu( z, a, b, n )
     implicit none
-
     double precision, intent(in)    :: z(n), a(n)
     double precision, intent(inout) :: b(n)
-
-    integer :: i,n
-
-    do i=1,n
+    integer                         :: i, n
+    do i=1, n
         !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
         b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
-    enddo
+    end do
 
 end subroutine activation_derivative_gelu
 
@@ -354,15 +338,13 @@ end subroutine activation_derivative_gelu
 !> @brief Evaluate sumover.
 subroutine sumover( a, b, sum1 )
     implicit none
-
     integer, intent(in)  :: a, b
     integer, intent(out) :: sum1
     integer              :: num
-
     sum1 = 1-a
     do num=a, a-b+1, -1
         sum1 = sum1+num
-    enddo
+    end do
 end subroutine sumover
 
 !==============================
@@ -371,7 +353,6 @@ end subroutine sumover
 !> @brief Evaluate diagonalize.
 subroutine diagonalize( n, a_ss, ev_s, u_ss )
     implicit none
-
     ! parameters
     integer, intent(in)          :: n
     double precision, intent(in) :: a_ss(n,n)
@@ -380,22 +361,21 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     ! internal variables
     !   real*8 :: EV_s(n)
     double precision, intent(out) :: ev_s(n)
-    integer                       :: io,i
-    double precision,allocatable  :: lapack_work_d(:)
+    integer                       :: io, i
+    double precision, allocatable :: lapack_work_d(:)
     integer, save                 :: lapack_lwork_d
     logical, save                 :: first_time_diag=.true.
-
     u_ss = a_ss
     if (first_time_diag) then
         lapack_lwork_d = -1
         allocate( lapack_work_d(2) )
-        call dsyev('V','L',n,u_ss,n,ev_s,lapack_work_d,lapack_lwork_d,io)
+        call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
         lapack_lwork_d = int(lapack_work_d(1))
         deallocate ( lapack_work_d )
         first_time_diag = .false.
-    endif
+    end if
     allocate( lapack_work_d(lapack_lwork_d) )
-    call dsyev('V','L',n,u_ss,n,ev_s,lapack_work_d,lapack_lwork_d,io)
+    call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
     ! U_ss already holds the transformation matrix
     ! now  building the diagonal matrix A_ss
     !   B_ss=0.d0
@@ -410,17 +390,14 @@ end subroutine diagonalize
 !> @brief Evaluate grad_r_to_xyz.
 subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
     implicit none
-
     integer, intent(in)             :: n, ns
     double precision, intent(in)    :: x(n,3)
     double precision, intent(in)    :: r(n*(n-1)/2)
     double precision, intent(in)    :: gr(ns,n*(n-1)/2)
     double precision, intent(inout) :: g(ns,n,3)
     double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
-
-    double precision :: gx(ns,3*n)
-    integer          :: i,j
-
+    double precision                :: gx(ns,3*n)
+    integer                         :: i, j
     drdx = 0.0d0
 
     ! compute drdx
@@ -443,13 +420,13 @@ subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
     drdx(3,8) = -drdx(3,5)
     drdx(3,9) = -drdx(3,6)
 
-    call mproduct(gr,drdx,gx,ns,n*(n-1)/2,3*n)
+    call mproduct(gr, drdx, gx, ns, n*(n-1)/2, 3*n)
 
-    do i=1,n
+    do i=1, n
         g(:,i,1) = gx(:,3*(i-1)+1)
         g(:,i,2) = gx(:,3*(i-1)+2)
         g(:,i,3) = gx(:,3*(i-1)+3)
-    enddo
+    end do
 
 end subroutine grad_r_to_xyz
 
@@ -458,17 +435,14 @@ end subroutine grad_r_to_xyz
 !> @brief Evaluate nac_r_to_xyz.
 subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
     implicit none
-
     integer, intent(in)             :: n, ns
     double precision, intent(in)    :: x(n,3)
     double precision, intent(in)    :: r(n*(n-1)/2)
     double precision, intent(in)    :: hr(ns,ns,n*(n-1)/2)
     double precision, intent(inout) :: h(ns,ns,n,3)
     double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
-
-    double precision :: hx(ns,ns,3*n)
-    integer          :: i,j
-
+    double precision                :: hx(ns,ns,3*n)
+    integer                         :: i, j
     drdx = 0.0d0
     ! compute drdx
     drdx(1,1) = (x(1,1)-x(2,1))/r(1)
@@ -490,15 +464,15 @@ subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
     drdx(3,8) = -drdx(3,5)
     drdx(3,9) = -drdx(3,6)
 
-    do i=1,ns
-        call mproduct(hr(i,:,:),drdx,hx(i,:,:),ns,n*(n-1)/2,3*n)
-    enddo
+    do i=1, ns
+        call mproduct(hr(i,:,:), drdx, hx(i,:,:), ns, n*(n-1)/2, 3*n)
+    end do
 
-    do i=1,n
+    do i=1, n
         h(:,:,i,1) = hx(:,:,3*(i-1)+1)
         h(:,:,i,2) = hx(:,:,3*(i-1)+2)
         h(:,:,i,3) = hx(:,:,3*(i-1)+3)
-    enddo
+    end do
 
 end subroutine nac_r_to_xyz
 
@@ -507,61 +481,54 @@ end subroutine nac_r_to_xyz
 !> @brief Evaluate convert_xyz_to_expr.
 subroutine convert_xyz_to_expr( x, expr, r, n, a )
     implicit none
-
     integer, intent(in)           :: n
     double precision, intent(in)  :: x(n,3)
     double precision, intent(out) :: expr(n*(n-1)/2)
     double precision, intent(out) :: r(n*(n-1)/2)
     double precision              :: a
     integer                       :: i, j, l
-
     l = 1
     !pairs of distances
-    do i=1,n
-        do j=i+1,n
+    do i=1, n
+        do j=i+1, n
             r(l) = sqrt((x(i,1)-x(j,1))**2+(x(i,2)-x(j,2))**2+(x(i,3)-x(j,3))**2)
             l    = l+1
-        enddo
-    enddo
+        end do
+    end do
 
-    do i=1,n*(n-1)/2
+    do i=1, n*(n-1)/2
         expr(i) = exp(-a*r(i))
-    enddo
+    end do
 
-endsubroutine convert_xyz_to_expr
+end subroutine convert_xyz_to_expr
 
 !=========================
 ! matrix vector product
 !> @brief Evaluate mproduct.
 subroutine mproduct( a, b, c, l, m, n )
     implicit none
-
     integer, intent(in)             :: l, m, n
     double precision, intent(in)    :: a(l,m), b(m,n)
     double precision, intent(inout) :: c(l,n)
-
-    integer :: i, j, k
-
-    do i=1,l
-        do j=1,n
+    integer                         :: i, j, k
+    do i=1, l
+        do j=1, n
             c(i,j) = 0.d0
-            do k=1,m
+            do k=1, m
                 c(i,j) = c(i,j)+a(i,k)*b(k,j)
-            enddo
-        enddo
-    enddo
+            end do
+        end do
+    end do
 
-endsubroutine mproduct
+end subroutine mproduct
 
 !===========================
 ! assign coefficients
 !> @brief Evaluate assign_coeff_bias.
 subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, bias_l0, bias_l1, bias_l2, bias_l3 )
     implicit none
-
     double precision, intent(inout) :: coeff_l0(3,15), coeff_l1(15,35), coeff_l2(35,55), coeff_l3(55,105)
     double precision, intent(inout) :: bias_l0(15), bias_l1(35), bias_l2(55), bias_l3(105)
-
     !coeff layer 0
     coeff_l0(1,1)  = 6.3045744896e+00
     coeff_l0(1,2)  = -3.2131705284e+00
@@ -8845,39 +8812,35 @@ subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, bias_l0, b
     !bias layer 3
     bias_l3 = 0.0d0
 
-endsubroutine assign_coeff_bias
+end subroutine assign_coeff_bias
 
 !> @brief Evaluate ev2gm2m.
 subroutine ev2gm2m( dist, v2b, g2b, imol, igrad, n )
-
     implicit none
-
-    integer,intent(in)           :: imol, igrad
-    integer,intent(in)           :: n
-    double precision,intent(in)  :: dist(n*(n-1)/2)
-    double precision,intent(out) :: v2b(14), g2b(14,3)
-    double precision             :: v(14), grad(14)
-    double precision             :: r
-    integer                      :: i,j
-
+    integer, intent(in)           :: imol, igrad
+    integer, intent(in)           :: n
+    double precision, intent(in)  :: dist(n*(n-1)/2)
+    double precision, intent(out) :: v2b(14), g2b(14,3)
+    double precision              :: v(14), grad(14)
+    double precision              :: r
+    integer                       :: i, j
     ! dist should be in bohr
     ! it is converted to be r in Ang
     ! v2b is in eV
     ! grad2b is in eV/bohr
-
     ! V0 is 120.17443 kcal/mol
     v2b = 120.17443d0/23.061d0
     g2b = 0.0d0
-    do i=1,n*(n-1)/2
+    do i=1, n*(n-1)/2
         r = dist(i)*0.529177d0
-        call ev2gm2(r,v,grad,imol,igrad)
+        call ev2gm2(r, v, grad, imol, igrad)
         v2b = v2b + v/23.061d0
         if (igrad.eq.1) then
-            do j=1,14
+            do j=1, 14
                 g2b(j,i) = grad(j)/(23.061d0/0.529177d0)
-            enddo
-        endif
-    enddo
+            end do
+        end if
+    end do
 
 end subroutine ev2gm2m
 
@@ -8895,19 +8858,17 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     !
     !**********************************************************************
     implicit none
-
-    integer,intent(in)           :: imol, igrad
-    double precision,intent(in)  :: r
-    double precision,intent(out) :: v(14), grad(14)
+    integer, intent(in)           :: imol, igrad
+    double precision, intent(in)  :: r
+    double precision, intent(out) :: v(14), grad(14)
     ! Parameters of analytical even-tempered Gaussian expansions for the
     ! ground state potential energy curve of O2 CBS+SR+SO+CV.
     ! Units: alpha in Angstrom^-2, beta=dimensionless, as_k in milihartree.
-    double precision :: alpha,beta,as(0:7)
+    double precision :: alpha, beta, as(0:7)
     double precision :: gam, del
-    integer          :: i,j,k
+    integer          :: i, j, k
     ! Dispersion variables
-    double precision :: dist(1),disp,dispdr(1)
-
+    double precision :: dist(1), disp, dispdr(1)
     v    = 0.0d0
     grad = 0.0d0
 
@@ -8929,9 +8890,9 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
 
     ! Calculate dispersion correction for all states
     dist(1) = r
-    call d3disp(dist,disp,dispdr,1,imol)
+    call d3disp(dist, disp, dispdr, 1, imol)
 
-    do i=1,14
+    do i=1, 14
         if ((i.eq.1).or.(i.eq.2)) then
             ! Original parameters
             !      alpha = 0.785d0
@@ -9031,38 +8992,38 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             as(5) = -50650.1633376840d0
             as(6) = -16795533.6522413d0
             as(7) = 2063993155.90011d0
-        endif
+        end if
 
-        do k=0,7
+        do k=0, 7
             v(i) = v(i) + as(k)*dexp(-alpha*beta**k*r**2)
-        enddo
+        end do
         if ((i.eq.7).or.(i.eq.8)) then
             v(i) = v(i) + gam*dexp(-del*(r-1.7d0)**2)
-        endif
+        end if
         if ((i.eq.1).or.(i.eq.2)) then
             ! From milihartree to kcal/mol
             v(i) = v(i)*627.509523475149d-3
-        endif
+        end if
 
         ! Add D3 dispersion correction
         v(i) = v(i)+disp
 
         ! Compute the gradient if needed
         if (igrad.eq.1) then
-            do k=0,7
+            do k=0, 7
                 grad(i) = grad(i)-2.d0*as(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
-            enddo
+            end do
             if ((i.eq.7).or.(i.eq.8)) then
                 grad(i) = grad(i)-2.0d0*del*gam*(r-1.7d0)*dexp(-del*(r-1.7d0)**2)
-            endif
+            end if
             if ((i.eq.1).or.(i.eq.2)) then
                 ! Convert from milihartree/A to (kcal/mol)/A
                 grad(i) = grad(i)*627.509523475149d-3
-            endif
+            end if
             grad(i) = grad(i) + dispdr(1)
-        endif
+        end if
 
-    enddo
+    end do
 
 end subroutine ev2gm2
 
@@ -9087,16 +9048,14 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     !**********************************************************************
 
     implicit none
-
-    double precision :: cn(2),s6,s8,rs6,rs8
+    double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
-    double precision :: e6dr(1),e8dr(1)
+    double precision :: e6dr(1), e8dr(1)
     integer          :: iz(2), mxc(94), i, j, igrad
     double precision :: c6ab(94,94,5,5,3)
     double precision :: r2r4(94)
-    double precision :: autoang,autokcal
+    double precision :: autoang, autokcal
     integer          :: imol
-
     autoang  = 0.52917726d0
     autokcal = 627.509541d0
 
@@ -9107,9 +9066,9 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     rs6 = 0.5299d0
     rs8 = 2.20d0
 
-    do i=1,1
+    do i=1, 1
         dist(i) = dist(i)/autoang
-    enddo
+    end do
 
     if (imol.eq.4) then
         ! iz for O2 system
@@ -9122,32 +9081,32 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     else
         ! currently imol = 4 is used
         stop
-    endif
+    end if
 
     ! Calculate dispersion correction
-    call edisp(94,5,2,dist,iz,mxc, &
-        rs6,rs8,e6,e8,e6dr,e8dr,c6,0)
+    call edisp(94, 5, 2, dist, iz, mxc, &
+        rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
 
     disp = 0.0d0
 
-    do i=1,1
+    do i=1, 1
         disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
-    enddo
+    end do
 
     if (igrad .eq. 1) then
-        call edisp(94,5,2,dist,iz,mxc, &
-            rs6,rs8,e6,e8,e6dr,e8dr,c6,1)
+        call edisp(94, 5, 2, dist, iz, mxc, &
+            rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
 
         dispdr(:) = 0.0d0
 
-        do i=1,1
+        do i=1, 1
             dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
-        enddo
-    endif
+        end do
+    end if
 
-    do i=1,1
+    do i=1, 1
         dist(i) = dist(i)*autoang
-    enddo
+    end do
 
 end subroutine d3disp
 
@@ -9159,20 +9118,17 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
 
     implicit none
-
-    integer          :: n,iz(2),max_elem,maxc,mxc(max_elem)
-    double precision :: dist(1),r2r4(max_elem),r0ab(max_elem,max_elem)
-    double precision :: rs6,rs8,rcov(max_elem)
+    integer          :: n, iz(2), max_elem, maxc, mxc(max_elem)
+    double precision :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+    double precision :: rs6, rs8, rcov(max_elem)
     double precision :: c6ab(max_elem,max_elem,maxc,maxc,3)
     double precision :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
-
-    integer          :: iat,jat,igrad
-    double precision :: r,tmp,c6,c8,a1,a2
-    double precision :: damp6,damp8
+    integer          :: iat, jat, igrad
+    double precision :: r, tmp, c6, c8, a1, a2
+    double precision :: damp6, damp8
     double precision :: cn(n)
-    double precision :: r2ab(n*n),cc6ab(n*n),dmp(n*n)
+    double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
     integer          :: step
-
     e6(:) = 0.0d0
     e8(:) = 0.0d0
 
@@ -9186,20 +9142,20 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
     !  the large number of digits is just to keep the results consistent
     !  with older versions. They should not imply any higher accuracy than
     !  the old values
-    r2r4(1:94)=(/ 2.00734898d0,  1.56637132d0,  5.01986934d0,  3.85379032d0, 3.64446594d0,  3.10492822d0, &
-        & 2.71175247d0, 2.59361680d0, 2.38825250d0,  2.21522516d0,  6.58585536d0,  5.46295967d0, 5.65216669d0, &
-        & 4.88284902d0, 4.29727576d0,  4.04108902d0, 3.72932356d0,  3.44677275d0,  7.97762753d0,  7.07623947d0, &
-        & 6.60844053d0, 6.28791364d0,  6.07728703d0,  5.54643096d0, 5.80491167d0,  5.58415602d0,  5.41374528d0, &
-        & 5.28497229d0, 5.22592821d0,  5.09817141d0,  6.12149689d0,  5.54083734d0, 5.06696878d0,  4.87005108d0, &
-        & 4.59089647d0, 4.31176304d0, 9.55461698d0,  8.67396077d0,  7.97210197d0,  7.43439917d0, 6.58711862d0, &
-        & 6.19536215d0, 6.01517290d0,  5.81623410d0, 5.65710424d0,  5.52640661d0,  5.44263305d0,  5.58285373d0, &
-        & 7.02081898d0, 6.46815523d0,  5.98089120d0,  5.81686657d0, 5.53321815d0,  5.25477007d0, 11.02204549d0, &
-        & 0.15679528d0, 9.35167836d0,  9.06926079d0,  8.97241155d0,  8.90092807d0, 8.85984840d0,  8.81736827d0, &
-        & 8.79317710d0, 7.89969626d0, 8.80588454d0,  8.42439218d0,  8.54289262d0,  8.47583370d0, 8.45090888d0, &
-        & 8.47339339d0, 7.83525634d0,  8.20702843d0, 7.70559063d0,  7.32755997d0,  7.03887381d0,  6.68978720d0, &
-        & 6.05450052d0, 5.88752022d0,  5.70661499d0,  5.78450695d0, 7.79780729d0,  7.26443867d0,  6.78151984d0, &
-        & 6.67883169d0, 6.39024318d0,  6.09527958d0, 11.79156076d0, 11.10997644d0, 9.51377795d0,  8.67197068d0, &
-        & 8.77140725d0, 8.65402716d0, 8.53923501d0,  8.85024712d0 /)
+    r2r4(1:94)=(/ 2.00734898d0, 1.56637132d0, 5.01986934d0, 3.85379032d0, 3.64446594d0, 3.10492822d0, 2.71175247d0, &
+        & 2.59361680d0, 2.38825250d0, 2.21522516d0, 6.58585536d0, 5.46295967d0, 5.65216669d0, 4.88284902d0, &
+        & 4.29727576d0, 4.04108902d0, 3.72932356d0, 3.44677275d0, 7.97762753d0, 7.07623947d0, 6.60844053d0, &
+        & 6.28791364d0, 6.07728703d0, 5.54643096d0, 5.80491167d0, 5.58415602d0, 5.41374528d0, 5.28497229d0, &
+        & 5.22592821d0, 5.09817141d0, 6.12149689d0, 5.54083734d0, 5.06696878d0, 4.87005108d0, 4.59089647d0, &
+        & 4.31176304d0, 9.55461698d0, 8.67396077d0, 7.97210197d0, 7.43439917d0, 6.58711862d0, 6.19536215d0, &
+        & 6.01517290d0, 5.81623410d0, 5.65710424d0, 5.52640661d0, 5.44263305d0, 5.58285373d0, 7.02081898d0, &
+        & 6.46815523d0, 5.98089120d0, 5.81686657d0, 5.53321815d0, 5.25477007d0, 11.02204549d0, 0.15679528d0, &
+        & 9.35167836d0, 9.06926079d0, 8.97241155d0, 8.90092807d0, 8.85984840d0, 8.81736827d0, 8.79317710d0, &
+        & 7.89969626d0, 8.80588454d0, 8.42439218d0, 8.54289262d0, 8.47583370d0, 8.45090888d0, 8.47339339d0, &
+        & 7.83525634d0, 8.20702843d0, 7.70559063d0, 7.32755997d0, 7.03887381d0, 6.68978720d0, 6.05450052d0, &
+        & 5.88752022d0, 5.70661499d0, 5.78450695d0, 7.79780729d0, 7.26443867d0, 6.78151984d0, 6.67883169d0, &
+        & 6.39024318d0, 6.09527958d0, 11.79156076d0, 11.10997644d0, 9.51377795d0, 8.67197068d0, 8.77140725d0, &
+        & 8.65402716d0, 8.53923501d0, 8.85024712d0 /)
 
     ! these new data are scaled with k2=4./3.  and converted a_0 via
     ! autoang=0.52917726d0
@@ -9220,8 +9176,8 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
 
     ! DFT-D3
     step = 0
-    do iat=1,n-1
-        do jat=iat+1,n
+    do iat=1, n-1
+        do jat=iat+1, n
             step = step+1
             r    = dist(step)
             c6   = c6a(step)
@@ -9237,8 +9193,8 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
                 ! grad for BJ damping
                 e6dr(step) = c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
                 e8dr(step) = c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
-            endif
-        enddo
-    enddo
+            end if
+        end do
+    end do
 
 end subroutine edisp

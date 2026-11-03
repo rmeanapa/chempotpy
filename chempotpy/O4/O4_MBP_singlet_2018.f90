@@ -1,11 +1,11 @@
 !***********************************************************************
-!   System:                     O4
-!   Functional form:            Permutational Invariant Global Least Square
-!   Common name:                O4 singlet
-!   Number of derivatives:      0
-!   Number of bodies:           4
+!   System:                        O4
+!   Functional form:               Permutational Invariant Global Least Square
+!   Common name:                   O4 singlet
+!   Number of derivatives:         0
+!   Number of bodies:              4
 !   Number of electronic surfaces: 1
-!   Interface: Section-2
+!   Interface:                     Section-2
 !
 !   References:  doi 10.1063/1.5008973
 !    Tapan K. Mankodi, Upendra V. Bhandarkar,
@@ -35,9 +35,8 @@
 
 !> @brief Evaluate pes.
 subroutine pes( x, igrad, p, g, d )
-
+    use chempotpy_geometry, only: cartesian_distance
     implicit none
-
     ! number of electronic state
     integer, parameter            :: nstates = 1
     integer, parameter            :: natoms  = 4
@@ -45,80 +44,71 @@ subroutine pes( x, igrad, p, g, d )
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-
-    double precision :: v, tx(6), sum_d
-    integer          :: ibond, iatom, idir, j, istate
+    double precision              :: v, tx(6), sum_d
+    integer                       :: ibond, iatom, idir, j, istate
     !initialize
-    v = 0.d0
-    g = 0.d0
-    d = 0.d0
+    v = 0.d0; g = 0.d0; d = 0.d0
 
     if (igrad==0) then
-        tx(1) = sqrt((x(1,1)-x(2,1))**2+(x(1,2)-x(2,2))**2+(x(1,3)-x(2,3))**2)
-        tx(2) = sqrt((x(1,1)-x(3,1))**2+(x(1,2)-x(3,2))**2+(x(1,3)-x(3,3))**2)
-        tx(3) = sqrt((x(1,1)-x(4,1))**2+(x(1,2)-x(4,2))**2+(x(1,3)-x(4,3))**2)
-        tx(4) = sqrt((x(2,1)-x(3,1))**2+(x(2,2)-x(3,2))**2+(x(2,3)-x(3,3))**2)
-        tx(5) = sqrt((x(2,1)-x(4,1))**2+(x(2,2)-x(4,2))**2+(x(2,3)-x(4,3))**2)
-        tx(6) = sqrt((x(3,1)-x(4,1))**2+(x(3,2)-x(4,2))**2+(x(3,3)-x(4,3))**2)
-        call o4(v,tx)
+        tx(1) = cartesian_distance(x(1,:), x(2,:))
+        tx(2) = cartesian_distance(x(1,:), x(3,:))
+        tx(3) = cartesian_distance(x(1,:), x(4,:))
+        tx(4) = cartesian_distance(x(2,:), x(3,:))
+        tx(5) = cartesian_distance(x(2,:), x(4,:))
+        tx(6) = cartesian_distance(x(3,:), x(4,:))
+        call o4(v, tx)
         v = v/23.0609
-        do istate=1,nstates
+        do istate=1, nstates
             p(istate) = v
-        enddo
+        end do
     else
-        write (*,*) 'Only energy and gradient are available'
-    endif
+        write (*, *) 'Only energy and gradient are available'
+    end if
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate o4.
 subroutine o4( v, r )
-
     implicit none
-
     double precision, intent(in)  :: r(6)
     double precision, intent(out) :: v
-
-    double precision :: xr(6)
-    integer          :: mpoints
-    double precision :: coeff(306)
-    double precision :: indices(306,6)
-    integer          :: permutation(24,6)
-    double precision :: ae,re
-    integer          :: i,j,k
-    integer          :: ci,cj,ck,cl
-    double precision :: mult
-
+    double precision              :: xr(6)
+    integer                       :: mpoints
+    double precision              :: coeff(306)
+    double precision              :: indices(306,6)
+    integer                       :: permutation(24,6)
+    double precision              :: ae, re
+    integer                       :: i, j, k
+    integer                       :: ci, cj, ck, cl
+    double precision              :: mult
     re      = 1.208d0
     ae      = 0.7d0
     mpoints = 306
 
-    do ci=1,6
+    do ci=1, 6
         xr(ci) = exp((1.208d0-r(ci))/0.7d0)
-    enddo
+    end do
 
     call assign(coeff, indices, permutation)
 
     v = 0.0
-    do ci=1,306
-        do cj = 1,24
+    do ci=1, 306
+        do cj = 1, 24
             mult = 1.0
-            do ck=1,6
+            do ck=1, 6
                 mult = mult*(xr(ck)**indices(ci,permutation(cj,ck)+1))
-            enddo
+            end do
             v = v+coeff(ci)*mult
-        enddo
-    enddo
+        end do
+    end do
 
-endsubroutine
+end subroutine
 
 !> @brief Evaluate assign.
 subroutine assign( coeff, indices, permutation )
     implicit none
-
-    double precision,intent(inout) :: coeff(306), indices(306,6)
-    integer, intent(inout)         :: permutation(24,6)
-
+    double precision, intent(inout) :: coeff(306), indices(306,6)
+    integer, intent(inout)          :: permutation(24,6)
     permutation(1,1)  = 0
     permutation(1,2)  = 1
     permutation(1,3)  = 2
@@ -2407,4 +2397,4 @@ subroutine assign( coeff, indices, permutation )
     coeff(304) = -12.0787184406
     coeff(305) = 7.92816877365
     coeff(306) = 0.0492935180664
-endsubroutine
+end subroutine
