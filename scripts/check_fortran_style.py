@@ -172,6 +172,11 @@ def check_source(path: Path) -> Sequence[StyleViolation]:
                 "legacy star-sized intrinsic declarations are forbidden",
             ))
         code = line.split("!", 1)[0]
+        if re.match(r"^\s*entry\b", code, flags=re.IGNORECASE):
+            violations.append(StyleViolation(
+                relative_path, line_number, "entry-statement",
+                "replace ENTRY with an explicit module procedure",
+            ))
         if LEGACY_DECLARATION_PATTERN.match(code):
             violations.append(StyleViolation(
                 relative_path, line_number, "declaration-separator",

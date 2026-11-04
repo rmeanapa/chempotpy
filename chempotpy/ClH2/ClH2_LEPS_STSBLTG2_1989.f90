@@ -98,215 +98,237 @@ end subroutine evdrdx
 
 !
 !> @brief Evaluate PREPOT for the ClH2_LEPS_STSBLTG2_1989 potential.
-subroutine prepot
-    !
-    !   System:          ClH2
-    !   Functional form: eLEPS (extended-London-Eyring-Polanyi-Sato)
-    !                    plus E3C (a three-center term).
-    !   Common name: GQQ
-    !   Reference:       D. W. Schwenke, S. C. Tucker, R. Steckler, F. B. Br
-    !                    G. C. Lynch, D. G. Truhlar, and B. C. Garrett
-    !                    J. Chem. Phys. 90, 3110-3120 (1989)
-    !
-    !   Calling Sequence:
-    !      PREPOT - initializes the potential's variables and
-    !               must be called once before any calls to POT
-    !      POT    - driver for the evaluation of the energy and the derivati
-    !               of the energy with respect to the coordinates for a give
-    !               geometric configuration
-    !
-    !   Units:
-    !      energies    - hartrees
-    !      coordinates - bohr
-    !      derivatives - hartrees/bohr
-    !
-    !   Surfaces:
-    !      ground electronic state
-    !
-    !   Zero of energy:
-    !      The classical potential energy is set equal to zero for the Cl
-    !      infinitely far from the H2 diatomic and R(H2) set equal to the
-    !      H2 equilibrium diatomic value.
-    !
-    !   Parameters:
-    !      Set in the BLOCK DATA subprogram PTPARM
-    !
-    !   Coordinates:
-    !      Internal, Definition: R(1) = R(Cl-H)
-    !                            R(2) = R(H-H)
-    !                            R(3) = R(Cl-H)
-    !
-    !   Common Blocks (used between the calling program and this potential):
-    !      /PT1CM/ R(3), ENERGY, DEDR(3)
-    !        passes the coordinates, ground state electronic energy, and
-    !        derivatives of the ground electronic state energy with respect
-    !        to the coordinates.
-    !      /PT2CM/ NSURF, NDER, NDUM(21)
-    !        passes the control flags where
-    !        NDER  = 0 => no derivatives are computed
-    !              = 1 => derivatives of the energy for the ground electroni
-    !                     state with respect to the coordinates are computed
-    !        NDUM  - not used
-    !      /PT4CM/ IPTPRT, IDUM(19)
-    !        IPTPRT passes the FORTRAN unit number used for potential output
-    !        IDUM   not used
-    !      /PT5CM/ EASYAB, EASYBC, EASYAC
-    !        passes the energy in the three asymptotic valleys for an A + BC
-    !        The energy in the AB valley, EASYAB, is equal to the energy of
-    !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
-    !        Re(AB), the equilibrium bond length for the AB diatomic.
-    !        Similarly, the terms EASYBC and EASYAC represent the energies
-    !        in the BC and the AC valleys, respectively.
-    !
-    !   Default Parameter Values:
-    !      Variable      Default value
-    !      NSURF            0
-    !      NDER             1
-    !      IPTPRT           6
-    !
-    !*****
+module chempotpy_clh2_leps_stsbltg2_1989_pot_legacy_state_dc4e9a05
     implicit none
-    double precision :: abcval, alp, ang1, ang11, ang12, ang13, ang14, ang2, ang21, ang22, ang3, ang31, ang32, ang33, &
-        & ang34, aprime, b, beta, bprime, con, coul, ctheta, d, d3cdr1, d3cdr2, d3cdr3, dedr, dist, do4z, e3c, easyab, &
-        & easyac, easybc, energy, exch, f1val, f2val, f3val, f4val, op3z, q2, q4, r, r1p2, r1p3, r1p4, r1p5, r3p2, r3p3, &
-        & r3p4, r3p5, rad, rco, rdif, re, rsum3, stheta, sval, theta, top3z, trm1, trm2, trm3, tval, tzp3, x, z, zp3, &
-        & zpo
-    integer                     :: i, idum, iptprt, nder, ndum, nsurf
-    double precision, parameter :: ckcau  = 627.5095d0
-    double precision, parameter :: cangau = 0.52917706d0
-    double precision, parameter :: r2     = 1.41421356d0
-    common /pt1cm/ r(3), energy, dedr(3)
-    common /pt2cm/ nsurf, nder, ndum(21)
-    common /pt5cm/ easyab, easybc, easyac
-    common /pt4cm/ iptprt, idum(19)
-    common /satocm/ d(3), re(3), beta(3), z(3)
-    common /v3ccom/ con, alp, aprime, bprime, q2, q4
-    !
-    dimension zpo(3), op3z(3), zp3(3), tzp3(3), top3z(3), do4z(3), b(3)
-    dimension x(3), coul(3), exch(3)
-    save
-    !
-    !WRITE (IPTPRT, 600) D, RE, BETA, Z
-    !WRITE (IPTPRT, 610) CON, APRIME, BPRIME, ALP, Q2, Q4
-    !
-    do  10 i = 1, 3
-        !   CONVERT TO ATOMIC UNITS
-        d(i)    = d(i)/ckcau
-        re(i)   = re(i)/cangau
-        beta(i) = beta(i)*cangau
-        !   COMPUTE USEFUL CONSTANTS
-        zpo(i)   = 1.0d0 + z(i)
-        op3z(i)  = 1.0d0 + 3.0d0*z(i)
-        top3z(i) = 2.0d0*op3z(i)
-        zp3(i)   = z(i) + 3.0d0
-        tzp3(i)  = 2.0d0*zp3(i)
-        do4z(i)  = d(i)/4.0d0/zpo(i)
-    10 b(i) = beta(i)*do4z(i)*2.0d0
-    !
-    !   Initialize the energy terms for the energy in the three asymptotic v
-    easyab = d(1)
-    easybc = d(2)
-    easyac = d(3)
-    !
-    return
-    !
-    entry pot
-    !   Check the value of NDER
-    !
-    !   Compute the eLEPS part of the potential
-    !
-    do 20 i = 1, 3
-        x(i)    = exp(-beta(i)*(r(i)-re(i)))
-        coul(i) = do4z(i)*(zp3(i)*x(i)-top3z(i))*x(i)
-        exch(i) = do4z(i)*(op3z(i)*x(i)-tzp3(i))*x(i)
-    20 continue
-    rad    = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+ (exch(3)-exch(1))**2)
-    energy = coul(1) + coul(2) + coul(3) - (rad/r2) + d(2)
-    !
-    !   Compute the derivatives of the eLEPS energy w.r.t. the bond lengths
-    !
-    if( nder .eq. 1 )then
-        sval = exch(1) + exch(2) + exch(3)
-        do 30 i = 1, 3
-            dedr(i) = 0.d0
-            if( x(i) .lt. 1.d-30 ) go to 30
-            tval = (3.0d0*exch(i)-sval)/r2*(op3z(i)*x(i)-zp3(i))
-            if (abs(rad) .lt. 1.d-32 .and.&
-                &abs(tval) .gt. 1.d-12) then
+    private
+    public :: dispatch
+    contains
+    !> @brief Evaluate dispatch.
+    subroutine dispatch( initialize_only )
+        !
+        !   System:          ClH2
+        !   Functional form: eLEPS (extended-London-Eyring-Polanyi-Sato)
+        !                    plus E3C (a three-center term).
+        !   Common name: GQQ
+        !   Reference:       D. W. Schwenke, S. C. Tucker, R. Steckler, F. B. Br
+        !                    G. C. Lynch, D. G. Truhlar, and B. C. Garrett
+        !                    J. Chem. Phys. 90, 3110-3120 (1989)
+        !
+        !   Calling Sequence:
+        !      PREPOT - initializes the potential's variables and
+        !               must be called once before any calls to POT
+        !      POT    - driver for the evaluation of the energy and the derivati
+        !               of the energy with respect to the coordinates for a give
+        !               geometric configuration
+        !
+        !   Units:
+        !      energies    - hartrees
+        !      coordinates - bohr
+        !      derivatives - hartrees/bohr
+        !
+        !   Surfaces:
+        !      ground electronic state
+        !
+        !   Zero of energy:
+        !      The classical potential energy is set equal to zero for the Cl
+        !      infinitely far from the H2 diatomic and R(H2) set equal to the
+        !      H2 equilibrium diatomic value.
+        !
+        !   Parameters:
+        !      Set in the BLOCK DATA subprogram PTPARM
+        !
+        !   Coordinates:
+        !      Internal, Definition: R(1) = R(Cl-H)
+        !                            R(2) = R(H-H)
+        !                            R(3) = R(Cl-H)
+        !
+        !   Common Blocks (used between the calling program and this potential):
+        !      /PT1CM/ R(3), ENERGY, DEDR(3)
+        !        passes the coordinates, ground state electronic energy, and
+        !        derivatives of the ground electronic state energy with respect
+        !        to the coordinates.
+        !      /PT2CM/ NSURF, NDER, NDUM(21)
+        !        passes the control flags where
+        !        NDER  = 0 => no derivatives are computed
+        !              = 1 => derivatives of the energy for the ground electroni
+        !                     state with respect to the coordinates are computed
+        !        NDUM  - not used
+        !      /PT4CM/ IPTPRT, IDUM(19)
+        !        IPTPRT passes the FORTRAN unit number used for potential output
+        !        IDUM   not used
+        !      /PT5CM/ EASYAB, EASYBC, EASYAC
+        !        passes the energy in the three asymptotic valleys for an A + BC
+        !        The energy in the AB valley, EASYAB, is equal to the energy of
+        !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
+        !        Re(AB), the equilibrium bond length for the AB diatomic.
+        !        Similarly, the terms EASYBC and EASYAC represent the energies
+        !        in the BC and the AC valleys, respectively.
+        !
+        !   Default Parameter Values:
+        !      Variable      Default value
+        !      NSURF            0
+        !      NDER             1
+        !      IPTPRT           6
+        !
+        !*****
+        implicit none
+        double precision, parameter :: ckcau  = 627.5095d0
+        double precision, parameter :: cangau = 0.52917706d0
+        double precision, parameter :: r2     = 1.41421356d0
+        logical, intent(in)         :: initialize_only
+        double precision            :: abcval, alp, ang1, ang11, ang12, ang13, ang14, ang2, ang21, ang22, ang3, ang31, ang32, ang33, &
+            & ang34, aprime, b, beta, bprime, con, coul, ctheta, d, d3cdr1, d3cdr2, d3cdr3, dedr, dist, do4z, e3c, easyab, &
+            & easyac, easybc, energy, exch, f1val, f2val, f3val, f4val, op3z, q2, q4, r, r1p2, r1p3, r1p4, r1p5, r3p2, r3p3, &
+            & r3p4, r3p5, rad, rco, rdif, re, rsum3, stheta, sval, theta, top3z, trm1, trm2, trm3, tval, tzp3, x, z, zp3, &
+            & zpo
+        integer :: i, idum, iptprt, nder, ndum, nsurf
+        common /pt1cm/ r(3), energy, dedr(3)
+        common /pt2cm/ nsurf, nder, ndum(21)
+        common /pt5cm/ easyab, easybc, easyac
+        common /pt4cm/ iptprt, idum(19)
+        common /satocm/ d(3), re(3), beta(3), z(3)
+        common /v3ccom/ con, alp, aprime, bprime, q2, q4
+        !
+        dimension zpo(3), op3z(3), zp3(3), tzp3(3), top3z(3), do4z(3), b(3)
+        dimension x(3), coul(3), exch(3)
+        save
+        !
+        !WRITE (IPTPRT, 600) D, RE, BETA, Z
+        !WRITE (IPTPRT, 610) CON, APRIME, BPRIME, ALP, Q2, Q4
+        !
+        if( initialize_only )then
+            do  10 i = 1, 3
+                !   CONVERT TO ATOMIC UNITS
+                d(i)    = d(i)/ckcau
+                re(i)   = re(i)/cangau
+                beta(i) = beta(i)*cangau
+                !   COMPUTE USEFUL CONSTANTS
+                zpo(i)   = 1.0d0 + z(i)
+                op3z(i)  = 1.0d0 + 3.0d0*z(i)
+                top3z(i) = 2.0d0*op3z(i)
+                zp3(i)   = z(i) + 3.0d0
+                tzp3(i)  = 2.0d0*zp3(i)
+                do4z(i)  = d(i)/4.0d0/zpo(i)
+            10 b(i) = beta(i)*do4z(i)*2.0d0
+            !
+            !   Initialize the energy terms for the energy in the three asymptotic v
+            easyab = d(1)
+            easybc = d(2)
+            easyac = d(3)
+            !
+            !
         else
-            tval = tval/rad
-    endif
-    dedr(i) = b(i)*x(i)*(tval-zp3(i)*x(i)+op3z(i))
-    30 continue
-    endif
-    !
-    !   Compute the three-center term
-    !
-    !   F1VAL is equal to f1 in the literature reference,
-    !   similarly F2VAL = f2, and F3VAL = f3
-    f1val = exp(-alp*(r(1)-r(3))**2)
-    f2val = exp(-aprime*(r(1)+r(3))**4)
-    f3val = exp(-bprime*(r(1)+r(3)-r(2))**2)
-    e3c   = con * f1val * f2val * f3val
-    !
-    !   Compute the angular dependent term, f4, which is called F4VAL
-    dist   = r(1)**2 + r(3)**2 - r(2)**2
-    ctheta = dist/(2.0d0*r(1)*r(3))
-    if( ctheta .lt. -1.0d0 )then
-        theta = acos(-1.0d0)
-    else if( ctheta .ge. 1.0d0 )then
-        theta = 0.0d0
-    else
-        theta = acos(ctheta)
-    endif
-    stheta = sin(theta)
-    !
-    f4val  = (q2*(stheta**2))+(q4 * (stheta**4)) + 1.0d0
-    e3c    = e3c * f4val
-    energy = e3c + energy
-    !
-    !   Compute the derivatives of the three-center term
-    !
-    if( nder .eq. 1 )then
-        !   Recall DIST = R(1)**2 + R(3)**2 - R(2)**2
-        rsum3   = (r(1) + r(3))**3
-        rdif    = r(1) - r(3)
-        rco     = r(1) + r(3) - r(2)
-        abcval  = e3c/f4val
-        r1p5    = r(1)**5
-        r1p4    = r(1)**4
-        r1p3    = r(1)**3
-        r1p2    = r(1)**2
-        r3p5    = r(3)**5
-        r3p4    = r(3)**4
-        r3p3    = r(3)**3
-        r3p2    = r(3)**2
-        trm1    = 4.0d0*aprime*rsum3
-        trm2    = 2.0d0*bprime*rco
-        trm3    = 2.0d0*alp*rdif
-        ang11   = -(dist**4)/(4.0d0*r1p5*r3p4)
-        ang12   = (dist**3)/(2.0d0*r1p3*r3p4)
-        ang13   = (dist**2)/(r1p3*r3p2)
-        ang14   = (-2.0d0*dist)/(r(1)*r3p2)
-        ang1    = q4 * (ang11 + ang12 + ang13 + ang14) + q2 * ((ang13/2.0d0) + (ang14/2.0d0))
-        ang31   = -(dist**4)/(4.0d0*r1p4*r3p5)
-        ang32   = (dist**3)/(2.0d0*r1p4*r3p3)
-        ang33   = (dist**2)/(r1p2*r3p3)
-        ang34   = (-2.0d0*dist)/(r1p2*r(3))
-        ang3    = q4 * (ang31 + ang32 + ang33 + ang34) + q2 * (ang33/2.0d0 + ang34/2.0d0)
-        ang21   = -r(2)*(dist**3)/(2.0d0*r1p4*r3p4)
-        ang22   = r(2)*2.0d0*dist/(r1p2*r3p2)
-        ang2    = q4 * (ang21 + ang22) + q2 * (ang22/2.0d0)
-        d3cdr1  = e3c * (-trm1 - trm2 - trm3) + abcval * ang1
-        d3cdr2  = e3c * trm2 + abcval * ang2
-        d3cdr3  = e3c * (-trm1 - trm2 + trm3) + abcval * ang3
-        dedr(1) = dedr(1) + d3cdr1
-        dedr(2) = dedr(2) + d3cdr2
-        dedr(3) = dedr(3) + d3cdr3
-    endif
-    !
-    !
+            !   Check the value of NDER
+            !
+            !   Compute the eLEPS part of the potential
+            !
+            do 20 i = 1, 3
+                x(i)    = exp(-beta(i)*(r(i)-re(i)))
+                coul(i) = do4z(i)*(zp3(i)*x(i)-top3z(i))*x(i)
+                exch(i) = do4z(i)*(op3z(i)*x(i)-tzp3(i))*x(i)
+            20 continue
+            rad    = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+ (exch(3)-exch(1))**2)
+            energy = coul(1) + coul(2) + coul(3) - (rad/r2) + d(2)
+            !
+            !   Compute the derivatives of the eLEPS energy w.r.t. the bond lengths
+            !
+            if( nder .eq. 1 )then
+                sval = exch(1) + exch(2) + exch(3)
+                do 30 i = 1, 3
+                    dedr(i) = 0.d0
+                    if( x(i) .lt. 1.d-30 ) go to 30
+                    tval = (3.0d0*exch(i)-sval)/r2*(op3z(i)*x(i)-zp3(i))
+                    if( abs(rad) .lt. 1.d-32 .and.abs(tval) .gt. 1.d-12 )then
+                    else
+                        tval = tval/rad
+                    endif
+                    dedr(i) = b(i)*x(i)*(tval-zp3(i)*x(i)+op3z(i))
+                30 continue
+            endif
+            !
+            !   Compute the three-center term
+            !
+            !   F1VAL is equal to f1 in the literature reference,
+            !   similarly F2VAL = f2, and F3VAL = f3
+            f1val = exp(-alp*(r(1)-r(3))**2)
+            f2val = exp(-aprime*(r(1)+r(3))**4)
+            f3val = exp(-bprime*(r(1)+r(3)-r(2))**2)
+            e3c   = con * f1val * f2val * f3val
+            !
+            !   Compute the angular dependent term, f4, which is called F4VAL
+            dist   = r(1)**2 + r(3)**2 - r(2)**2
+            ctheta = dist/(2.0d0*r(1)*r(3))
+            if( ctheta .lt. -1.0d0 )then
+                theta = acos(-1.0d0)
+            else if( ctheta .ge. 1.0d0 )then
+                theta = 0.0d0
+            else
+                theta = acos(ctheta)
+            endif
+            stheta = sin(theta)
+            !
+            f4val  = (q2*(stheta**2))+(q4 * (stheta**4)) + 1.0d0
+            e3c    = e3c * f4val
+            energy = e3c + energy
+            !
+            !   Compute the derivatives of the three-center term
+            !
+            if( nder .eq. 1 )then
+                !   Recall DIST = R(1)**2 + R(3)**2 - R(2)**2
+                rsum3   = (r(1) + r(3))**3
+                rdif    = r(1) - r(3)
+                rco     = r(1) + r(3) - r(2)
+                abcval  = e3c/f4val
+                r1p5    = r(1)**5
+                r1p4    = r(1)**4
+                r1p3    = r(1)**3
+                r1p2    = r(1)**2
+                r3p5    = r(3)**5
+                r3p4    = r(3)**4
+                r3p3    = r(3)**3
+                r3p2    = r(3)**2
+                trm1    = 4.0d0*aprime*rsum3
+                trm2    = 2.0d0*bprime*rco
+                trm3    = 2.0d0*alp*rdif
+                ang11   = -(dist**4)/(4.0d0*r1p5*r3p4)
+                ang12   = (dist**3)/(2.0d0*r1p3*r3p4)
+                ang13   = (dist**2)/(r1p3*r3p2)
+                ang14   = (-2.0d0*dist)/(r(1)*r3p2)
+                ang1    = q4 * (ang11 + ang12 + ang13 + ang14) + q2 * ((ang13/2.0d0) + (ang14/2.0d0))
+                ang31   = -(dist**4)/(4.0d0*r1p4*r3p5)
+                ang32   = (dist**3)/(2.0d0*r1p4*r3p3)
+                ang33   = (dist**2)/(r1p2*r3p3)
+                ang34   = (-2.0d0*dist)/(r1p2*r(3))
+                ang3    = q4 * (ang31 + ang32 + ang33 + ang34) + q2 * (ang33/2.0d0 + ang34/2.0d0)
+                ang21   = -r(2)*(dist**3)/(2.0d0*r1p4*r3p4)
+                ang22   = r(2)*2.0d0*dist/(r1p2*r3p2)
+                ang2    = q4 * (ang21 + ang22) + q2 * (ang22/2.0d0)
+                d3cdr1  = e3c * (-trm1 - trm2 - trm3) + abcval * ang1
+                d3cdr2  = e3c * trm2 + abcval * ang2
+                d3cdr3  = e3c * (-trm1 - trm2 + trm3) + abcval * ang3
+                dedr(1) = dedr(1) + d3cdr1
+                dedr(2) = dedr(2) + d3cdr2
+                dedr(3) = dedr(3) + d3cdr3
+            endif
+            !
+            !
+        endif
+    end subroutine dispatch
+end module chempotpy_clh2_leps_stsbltg2_1989_pot_legacy_state_dc4e9a05
+
+!> @brief Compatibility interface for prepot.
+subroutine prepot
+    use chempotpy_clh2_leps_stsbltg2_1989_pot_legacy_state_dc4e9a05, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.true.)
 end subroutine prepot
+
+!> @brief Compatibility interface for pot.
+subroutine pot
+    use chempotpy_clh2_leps_stsbltg2_1989_pot_legacy_state_dc4e9a05, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.false.)
+end subroutine pot
 
 !*****
 !

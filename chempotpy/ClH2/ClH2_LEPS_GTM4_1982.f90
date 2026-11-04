@@ -101,294 +101,317 @@ end subroutine evdrdx
 
 !
 !> @brief Evaluate PREPOT for the ClH2_LEPS_GTM4_1982 potential.
-subroutine prepot
-    !
-    !   System:          ClH2
-    !   Functional form: Empirical triatomic potential surface defined
-    !                    over orthogonal bond order coordinates
-    !   Common name: AL/AB
-    !   References:      B. C. Garrett, D. G. Truhlar, and A. W. Magnuson
-    !                    J. Chem. Phys. 76, 2321 (1982)
-    !                    N. Agmon and R. D. Levine
-    !                    J. Chem. Phys. 71, 3034 (1979)
-    !
-    !   Calling Sequence:
-    !      PREPOT - initializes the potential's variables and
-    !               must be called once before any calls to POT
-    !      POT    - driver for the evaluation of the energy and the derivati
-    !               of the energy with respect to the coordinates for a give
-    !               geometric configuration
-    !
-    !   Units:
-    !      energies    - hartrees
-    !      coordinates - bohrs
-    !      derivatives - hartrees/bohr
-    !
-    !   Surface(s):
-    !      ground electronic state
-    !
-    !   Zero of energy:
-    !      The classical potential energy is set equal to zero for the Cl
-    !      infinitely far from the H2 diatomic and R(H2) set equal to the
-    !      H2 equilibrium diatomic value.
-    !
-    !   Parameters:
-    !      Set in the BLOCK DATA subprogram PTPARM
-    !
-    !   Coordinates:
-    !      Internal, Definition: R(1) = R(Cl-first H)
-    !                            R(2) = R(first H-second H)
-    !                            R(3) = R(Cl-second H)
-    !
-    !   Common Blocks (used between the calling program and this potential):
-    !      /PT1CM/ R(3), ENERGY, DEDR(3)
-    !        passes the coordinates, ground state electronic energy, and
-    !        derivatives of the ground electronic state energy with respect
-    !        to the coordinates.
-    !      /PT2CM/ NSURF, NDER, NDUM(21)
-    !        passes the control flags where
-    !        NDER  = 0 => no derivatives are computed
-    !              = 1 => derivatives of the energy for the ground electroni
-    !                     state with respect to the coordinates are computed
-    !        NDUM  - not used
-    !      /PT4CM/ IPTPRT, IDUM(19)
-    !        IPTPRT passes the FORTRAN unit number used for potential output
-    !        IDUM   not used
-    !      /PT5CM/ EASYAB, EASYBC, EASYAC
-    !        passes the energy in the three asymptotic valleys for an A + BC
-    !        The energy in the AB valley, EASYAB, is equal to the energy of
-    !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
-    !        Re(AB), the equilibrium bond length for the AB diatomic.
-    !        Similarly, the terms EASYBC and EASYAC represent the energies
-    !        in the BC and the AC valleys, respectively.
-    !
-    !   Default Parameter Values:
-    !      Variable      Default value
-    !      NSURF            0
-    !      NDER             1
-    !      IPTPRT           6
-    !
-    !*****
+module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
     implicit none
-    double precision :: a, bcoor, beta, bigm, c, coef, dbcoor, de, denom, der, dew, dvstar, easyab, easyac, easybc, &
-        & energy, gamma, omega, rab, rac, rbb, rbc, req, rhh, rob, sigma, stuff, v1, v2, v3, v4, vabbc, vac, vstar
-    integer          :: idum, iptprt, it, nder, ndum, nsurf
-    double precision :: lamda, morse, m, nab, nab1, nbc, nbc1, &
-        & num, junk
-    double precision, parameter :: bohr   = .52917706d0
-    double precision, parameter :: hrtree = 627.5095d0
-    common /pt1cm/ rab, rbc, rac, energy, der(3)
-    common /pt2cm/ nsurf, nder, ndum(21)
-    common /pt4cm/ iptprt, idum(19)
-    common /pt5cm/ easyab, easybc, easyac
-    common /pparcm/ de(3), req(3), beta(3), lamda, a, gamma, rbb
-    dimension omega(2), junk(4), dvstar(2), morse(2), coef(2), dbcoor(2)
-    save rhh
-    !
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !      Echo the potential parameters
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !
-    !WRITE (IPTPRT,600) DE, REQ, BETA
-    !WRITE (IPTPRT,610) A, GAMMA, RBB, LAMDA
-    !
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !       CONVERT TO ATOMIC UNITS
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !
-    do 50 it = 1, 3
-        req(it)  = req(it)/bohr
-        beta(it) = beta(it) * bohr
-        de(it)   = de(it)/hrtree
-    50 continue
-    a     = a/bohr
-    lamda = lamda/hrtree
-    rhh   = 1.4007977d0
-    rbb   = rbb /bohr
-    !
-    !   Set the values for the potenetial in the three asymptotic valleys
-    easyab = de(1)
-    easybc = de(2)
-    easyac = de(3)
-    !
-    !CCCCCCCCCCC
-    return
-    !CCCCCCCCCCC
-    !
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !        MOVE ONTO THE MAIN PART OF THE ROUTINE
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !
-    entry pot
-    !
-    !   Check the value of NDER
-    !
-    !        FIRST CALCULATE SOME USEFUL NUMBERS
-    !
-    nab = exp((req(1) - rab)/a)
-    !
-    if( nab .lt. 1.d-15 ) nab = 1.d-15
-    !
-    nbc = exp((req(2) - rbc)/a)
-    !
-    if( nbc .lt. 1.d-15 ) nbc = 1.d-15
-    !
-    !        NAB AND NBC ARE THE BOND ORDERS OF THE DIATOMICS
-    !        AB AND BC RESPECTIVELY. (EQUATION 2.2)
-    !
-    c = 1.d0 - nab/nbc
-    if( abs(c) .gt. 1.d-14 ) goto 90
-    nab1 = .5d0
-    nbc1 = .5d0
-    go to 95
-    90 c = c/nab
-    nab1 = (2.d0 + c - sqrt(4.d0+c*c))/(2.d0*c)
-    nbc1 = 1.d0 - nab1
-    !
-    !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
-    !       SEE EQUATION 2.7A, 2.7B
-    !
-    95 m = nab + nbc
-    !
-    !        M IS THE SUM OF THE BOND ORDERS (EQUATION 2.3)
-    !
-    omega(1) = nab / m
-    omega(2) = nbc / m
-    !
-    !       THE OMEGAS ARE USED IN EQUATION 3.15A
-    !
-    sigma = -a * log(m)
-    !
-    !        SIGMA IS THE MYSTERY NUMBER REFERENCED IN EQUATION 3.15B
-    !        SE EQUATION 2.13
-    !
-    do 100 it = 1, 2
-        junk(it)  = exp(beta(it)*(-sigma))
-        morse(it) = de(it)*(junk(it)*junk(it)-2.d0*junk(it))
-    100 continue
-    !
-    !        MORSE FUNCTION--EQUATION 4-16, GAS PHASE REACTION
-    !        RATE THEORY, H. S. JOHNSTON.
-    !
-    !        ROB IS USED IN THE BENDING POTENTIAL CALCULATIONS
-    !
-    !          FIRST TRAP OUT ANY ZERO ARGUEMENTS
-    !
-    if( nab1*nbc1 .gt. 0.d0 ) go to 103
-    rob = 1.d0
-    go to 107
-    !
-    103 stuff = a * log(nab1*nbc1)
-    rob = (rbb - stuff)/(rhh - stuff)
-    !
-    !CCCCCCCCCCCCCCCCCCCCCCCCCC
-    !       CALCULATE DE(OMEGA)
-    !CCCCCCCCCCCCCCCCCCCCCCCCCC
-    !
-    !        THIS IS FORMULA 3.17
-    !
-    107 dew = 0.d0
-    do 110 it = 1, 2
-        dew = omega(it)*de(it) + dew
-    110 continue
-    dew = dew - lamda * bigm(omega(1))
-    !
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !        CALCULATE V*(SIGMA)
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !
-    vstar = 0.d0
-    num   = 0.d0
-    denom = 0.d0
-    do 210 it = 1, 2
-        num   = omega(it) * morse(it) + num
-        denom = omega(it)*de(it) + denom
-    210 continue
-    vstar = num/denom
-    !
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !        CALCULATE BENDING CORRECTION
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !
-    !        CALCULATE V(RAC)
-    !
-    junk(3) = exp(-beta(3)*(rac-req(3))/rob)
-    vac     = gamma * de(3) * junk(3)* (1.d0 + 0.5d0*junk(3))
-    !
-    !        CALCULATE V(RAB+RBC)
-    !
-    junk(4) = exp(beta(3)*(req(3)-rbc-rab)/rob)
-    vabbc   = gamma * de(3) * junk(4) * (1.d0 + 0.5d0*junk(4))
-    !
-    !        HERE IS THE BENDING CORRECTION
-    !
-    bcoor = vac - vabbc
-    !
-    !          WHILE IT'S CONVENIENT, CALCULATE THE DERIVATIVE
-    !          OF BCOOR WITH RESPECT TO RAB  RBC AND RAC.
-    !
-    !        CALCULATE DER(3) (THE DERIVATIVE WITH RESPECT TO RAC)
-    !
-    if( nder .eq. 1 )then
-        der(3)    = -gamma*de(3)*beta(3)*junk(3)*(1.d0+junk(3))/rob
-        dbcoor(1) = gamma * de(3) * beta(3) * junk(4) * (1.d0+ junk(4))/rob
-        dbcoor(2) = dbcoor(1)
-    endif
-    !
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !        NOW CALCULATE THE ENERGY
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !
-    energy = dew * vstar + bcoor + de(2)
-    !
-    !           DE(2) ADJUSTS THE POTENTIAL SO THAT IT IS ZERO
-    !           IN THE ASYMPTOTIC REACTANTS REGION.
-    !
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !        NOW CALCULATE THE DERIVATIVES, IF NDER = 1
-    !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-    !
-    if( nder .ne. 1 ) go to 920
-    !
-    !        NEXT CALCULATE DER(1) AND DER(2)
-    !
-    do 300 it = 1, 2
+    private
+    public :: dispatch
+    contains
+    !> @brief Evaluate dispatch.
+    subroutine dispatch( initialize_only )
         !
-        !        FIRST CALCULATE DVSTAR(1) AND DVSTAR(2) SEE EQUATION B.5
+        !   System:          ClH2
+        !   Functional form: Empirical triatomic potential surface defined
+        !                    over orthogonal bond order coordinates
+        !   Common name: AL/AB
+        !   References:      B. C. Garrett, D. G. Truhlar, and A. W. Magnuson
+        !                    J. Chem. Phys. 76, 2321 (1982)
+        !                    N. Agmon and R. D. Levine
+        !                    J. Chem. Phys. 71, 3034 (1979)
         !
-        v1 = omega(it)/(de(1)*omega(1) + de(2) * omega(2))
+        !   Calling Sequence:
+        !      PREPOT - initializes the potential's variables and
+        !               must be called once before any calls to POT
+        !      POT    - driver for the evaluation of the energy and the derivati
+        !               of the energy with respect to the coordinates for a give
+        !               geometric configuration
         !
-        if( it .eq. 1 ) go to 280
-        v2 = omega(1)*(morse(1) - morse(2) - vstar * (de(1)-de(2)))/a
-        go to 285
-        280 v2 = omega(2)*(morse(2) - morse(1) - vstar*(de(2)-de(1)))/a
-        285 continue
+        !   Units:
+        !      energies    - hartrees
+        !      coordinates - bohrs
+        !      derivatives - hartrees/bohr
         !
-        v3 = -omega(it)*2.d0*de(it)*beta(it)*(junk(it)*junk(it)-junk(it))
+        !   Surface(s):
+        !      ground electronic state
         !
-        if( it .eq. 1 ) go to 290
-        v4 = -omega(1)*2.d0*de(1)*beta(1)*(junk(1)*junk(1) - junk(1))
-        go to 295
-        290 v4 = -omega(2)*2*de(2)*beta(2)*(junk(2)*junk(2) - junk(2))
-        295 continue
+        !   Zero of energy:
+        !      The classical potential energy is set equal to zero for the Cl
+        !      infinitely far from the H2 diatomic and R(H2) set equal to the
+        !      H2 equilibrium diatomic value.
         !
-        dvstar(it) = v1*(v2+v3+v4)
+        !   Parameters:
+        !      Set in the BLOCK DATA subprogram PTPARM
         !
-        !       NOW CALCULATE THE COEFFICIENT OF VSTAR IN EQUATION B.1.
+        !   Coordinates:
+        !      Internal, Definition: R(1) = R(Cl-first H)
+        !                            R(2) = R(first H-second H)
+        !                            R(3) = R(Cl-second H)
         !
-        coef(it) = (nab*nbc/(m*m*a)) * ((de(1)-de(2)+lamda * log(nab/nbc)) * ((-1.d0)**it))
+        !   Common Blocks (used between the calling program and this potential):
+        !      /PT1CM/ R(3), ENERGY, DEDR(3)
+        !        passes the coordinates, ground state electronic energy, and
+        !        derivatives of the ground electronic state energy with respect
+        !        to the coordinates.
+        !      /PT2CM/ NSURF, NDER, NDUM(21)
+        !        passes the control flags where
+        !        NDER  = 0 => no derivatives are computed
+        !              = 1 => derivatives of the energy for the ground electroni
+        !                     state with respect to the coordinates are computed
+        !        NDUM  - not used
+        !      /PT4CM/ IPTPRT, IDUM(19)
+        !        IPTPRT passes the FORTRAN unit number used for potential output
+        !        IDUM   not used
+        !      /PT5CM/ EASYAB, EASYBC, EASYAC
+        !        passes the energy in the three asymptotic valleys for an A + BC
+        !        The energy in the AB valley, EASYAB, is equal to the energy of
+        !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
+        !        Re(AB), the equilibrium bond length for the AB diatomic.
+        !        Similarly, the terms EASYBC and EASYAC represent the energies
+        !        in the BC and the AC valleys, respectively.
         !
-        !       FINALLY PUT IT ALL TOGETHER TO CALCULATE THE DERIVITIVE
-        !       SEE EQUATION B.1
+        !   Default Parameter Values:
+        !      Variable      Default value
+        !      NSURF            0
+        !      NDER             1
+        !      IPTPRT           6
         !
-        der(it) = coef(it) * vstar + dew * dvstar(it) + dbcoor(it)
+        !*****
+        implicit none
+        double precision, parameter :: bohr   = .52917706d0
+        double precision, parameter :: hrtree = 627.5095d0
+        logical, intent(in)         :: initialize_only
+        double precision            :: a, bcoor, beta, bigm, c, coef, dbcoor, de, denom, der, dew, dvstar, easyab, easyac, easybc, &
+            & energy, gamma, omega, rab, rac, rbb, rbc, req, rhh, rob, sigma, stuff, v1, v2, v3, v4, vabbc, vac, vstar
+        integer          :: idum, iptprt, it, nder, ndum, nsurf
+        double precision :: lamda, morse, m, nab, nab1, nbc, nbc1, &
+            & num, junk
+        common /pt1cm/ rab, rbc, rac, energy, der(3)
+        common /pt2cm/ nsurf, nder, ndum(21)
+        common /pt4cm/ iptprt, idum(19)
+        common /pt5cm/ easyab, easybc, easyac
+        common /pparcm/ de(3), req(3), beta(3), lamda, a, gamma, rbb
+        dimension omega(2), junk(4), dvstar(2), morse(2), coef(2), dbcoor(2)
+        save rhh
         !
-    300 continue
-    310 continue
-    920 continue
-    !
-    !
+        !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+        !      Echo the potential parameters
+        !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+        !
+        !WRITE (IPTPRT,600) DE, REQ, BETA
+        !WRITE (IPTPRT,610) A, GAMMA, RBB, LAMDA
+        !
+        !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+        !       CONVERT TO ATOMIC UNITS
+        !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+        !
+        if( initialize_only )then
+            do 50 it = 1, 3
+                req(it)  = req(it)/bohr
+                beta(it) = beta(it) * bohr
+                de(it)   = de(it)/hrtree
+            50 continue
+            a     = a/bohr
+            lamda = lamda/hrtree
+            rhh   = 1.4007977d0
+            rbb   = rbb /bohr
+            !
+            !   Set the values for the potenetial in the three asymptotic valleys
+            easyab = de(1)
+            easybc = de(2)
+            easyac = de(3)
+            !
+            !CCCCCCCCCCC
+            !CCCCCCCCCCC
+            !
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !        MOVE ONTO THE MAIN PART OF THE ROUTINE
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !
+        else
+            !
+            !   Check the value of NDER
+            !
+            !        FIRST CALCULATE SOME USEFUL NUMBERS
+            !
+            nab = exp((req(1) - rab)/a)
+            !
+            if( nab .lt. 1.d-15 ) nab = 1.d-15
+            !
+            nbc = exp((req(2) - rbc)/a)
+            !
+            if( nbc .lt. 1.d-15 ) nbc = 1.d-15
+            !
+            !        NAB AND NBC ARE THE BOND ORDERS OF THE DIATOMICS
+            !        AB AND BC RESPECTIVELY. (EQUATION 2.2)
+            !
+            c = 1.d0 - nab/nbc
+            if( abs(c) .gt. 1.d-14 ) goto 90
+            nab1 = .5d0
+            nbc1 = .5d0
+            go to 95
+            90 c = c/nab
+            nab1 = (2.d0 + c - sqrt(4.d0+c*c))/(2.d0*c)
+            nbc1 = 1.d0 - nab1
+            !
+            !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
+            !       SEE EQUATION 2.7A, 2.7B
+            !
+            95 m = nab + nbc
+            !
+            !        M IS THE SUM OF THE BOND ORDERS (EQUATION 2.3)
+            !
+            omega(1) = nab / m
+            omega(2) = nbc / m
+            !
+            !       THE OMEGAS ARE USED IN EQUATION 3.15A
+            !
+            sigma = -a * log(m)
+            !
+            !        SIGMA IS THE MYSTERY NUMBER REFERENCED IN EQUATION 3.15B
+            !        SE EQUATION 2.13
+            !
+            do 100 it = 1, 2
+                junk(it)  = exp(beta(it)*(-sigma))
+                morse(it) = de(it)*(junk(it)*junk(it)-2.d0*junk(it))
+            100 continue
+            !
+            !        MORSE FUNCTION--EQUATION 4-16, GAS PHASE REACTION
+            !        RATE THEORY, H. S. JOHNSTON.
+            !
+            !        ROB IS USED IN THE BENDING POTENTIAL CALCULATIONS
+            !
+            !          FIRST TRAP OUT ANY ZERO ARGUEMENTS
+            !
+            if( nab1*nbc1 .gt. 0.d0 ) go to 103
+            rob = 1.d0
+            go to 107
+            !
+            103 stuff = a * log(nab1*nbc1)
+            rob = (rbb - stuff)/(rhh - stuff)
+            !
+            !CCCCCCCCCCCCCCCCCCCCCCCCCC
+            !       CALCULATE DE(OMEGA)
+            !CCCCCCCCCCCCCCCCCCCCCCCCCC
+            !
+            !        THIS IS FORMULA 3.17
+            !
+            107 dew = 0.d0
+            do 110 it = 1, 2
+                dew = omega(it)*de(it) + dew
+            110 continue
+            dew = dew - lamda * bigm(omega(1))
+            !
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !        CALCULATE V*(SIGMA)
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !
+            vstar = 0.d0
+            num   = 0.d0
+            denom = 0.d0
+            do 210 it = 1, 2
+                num   = omega(it) * morse(it) + num
+                denom = omega(it)*de(it) + denom
+            210 continue
+            vstar = num/denom
+            !
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !        CALCULATE BENDING CORRECTION
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !
+            !        CALCULATE V(RAC)
+            !
+            junk(3) = exp(-beta(3)*(rac-req(3))/rob)
+            vac     = gamma * de(3) * junk(3)* (1.d0 + 0.5d0*junk(3))
+            !
+            !        CALCULATE V(RAB+RBC)
+            !
+            junk(4) = exp(beta(3)*(req(3)-rbc-rab)/rob)
+            vabbc   = gamma * de(3) * junk(4) * (1.d0 + 0.5d0*junk(4))
+            !
+            !        HERE IS THE BENDING CORRECTION
+            !
+            bcoor = vac - vabbc
+            !
+            !          WHILE IT'S CONVENIENT, CALCULATE THE DERIVATIVE
+            !          OF BCOOR WITH RESPECT TO RAB  RBC AND RAC.
+            !
+            !        CALCULATE DER(3) (THE DERIVATIVE WITH RESPECT TO RAC)
+            !
+            if( nder .eq. 1 )then
+                der(3)    = -gamma*de(3)*beta(3)*junk(3)*(1.d0+junk(3))/rob
+                dbcoor(1) = gamma * de(3) * beta(3) * junk(4) * (1.d0+ junk(4))/rob
+                dbcoor(2) = dbcoor(1)
+            endif
+            !
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !        NOW CALCULATE THE ENERGY
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !
+            energy = dew * vstar + bcoor + de(2)
+            !
+            !           DE(2) ADJUSTS THE POTENTIAL SO THAT IT IS ZERO
+            !           IN THE ASYMPTOTIC REACTANTS REGION.
+            !
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !        NOW CALCULATE THE DERIVATIVES, IF NDER = 1
+            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+            !
+            if( nder .ne. 1 ) go to 920
+            !
+            !        NEXT CALCULATE DER(1) AND DER(2)
+            !
+            do 300 it = 1, 2
+                !
+                !        FIRST CALCULATE DVSTAR(1) AND DVSTAR(2) SEE EQUATION B.5
+                !
+                v1 = omega(it)/(de(1)*omega(1) + de(2) * omega(2))
+                !
+                if( it .eq. 1 ) go to 280
+                v2 = omega(1)*(morse(1) - morse(2) - vstar * (de(1)-de(2)))/a
+                go to 285
+                280 v2 = omega(2)*(morse(2) - morse(1) - vstar*(de(2)-de(1)))/a
+                285 continue
+                !
+                v3 = -omega(it)*2.d0*de(it)*beta(it)*(junk(it)*junk(it)-junk(it))
+                !
+                if( it .eq. 1 ) go to 290
+                v4 = -omega(1)*2.d0*de(1)*beta(1)*(junk(1)*junk(1) - junk(1))
+                go to 295
+                290 v4 = -omega(2)*2*de(2)*beta(2)*(junk(2)*junk(2) - junk(2))
+                295 continue
+                !
+                dvstar(it) = v1*(v2+v3+v4)
+                !
+                !       NOW CALCULATE THE COEFFICIENT OF VSTAR IN EQUATION B.1.
+                !
+                coef(it) = (nab*nbc/(m*m*a)) * ((de(1)-de(2)+lamda * log(nab/nbc)) * ((-1.d0)**it))
+                !
+                !       FINALLY PUT IT ALL TOGETHER TO CALCULATE THE DERIVITIVE
+                !       SEE EQUATION B.1
+                !
+                der(it) = coef(it) * vstar + dew * dvstar(it) + dbcoor(it)
+                !
+            300 continue
+            310 continue
+            920 continue
+            !
+            !
+        endif
+    end subroutine dispatch
+end module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
+
+!> @brief Compatibility interface for prepot.
+subroutine prepot
+    use chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.true.)
 end subroutine prepot
+
+!> @brief Compatibility interface for pot.
+subroutine pot
+    use chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.false.)
+end subroutine pot
 
 !
 !> @brief Evaluate BIGM for the ClH2_LEPS_GTM4_1982 potential.

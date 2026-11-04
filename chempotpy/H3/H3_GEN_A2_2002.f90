@@ -47,8 +47,12 @@ end subroutine pes
 module a2data
     implicit none
     private
-    public :: beta, eshift, rnought, xlin1, xlin2, xlin3, xlin4
+    public :: ald, beta, betad, epscem, epslon, eshift, maxi2a, maxi2b, rnought
+    public :: xlin1, xlin2, xlin3, xlin4
     save
+    double precision                :: ald=0.d0, betad=0.d0
+    double precision                :: epscem=0.d0, epslon=0.d0
+    integer                         :: maxi2a=0, maxi2b=0
     double precision                :: eshift=0.1662307680057728d0
     double precision                :: beta=0.900d0
     double precision                :: rnought=2.d0
@@ -240,15 +244,9 @@ end subroutine pot
 
 !> @brief Evaluate prepota2 for the H3_GEN_A2_2002 potential.
 subroutine prepota2
-    use a2data,             only: beta, eshift, rnought, xlin1, xlin2, xlin3, xlin4
-    use chempotpy_h3_basis, only: get_h3_basis_term, initialize_h3_basis
+    use a2data,             only: ald, betad, epscem, epslon, maxi2a, maxi2b
+    use chempotpy_h3_basis, only: initialize_h3_basis
     implicit none
-    double precision :: ald, bb, betad, damper, eee, epscem, epslon, es1, es2, es3, etrip1, etrip2, &
-        & etrip3, q1, q2, q3, r1x, r2x, r3x, rdamp1, rdamp2, rdamp3, rho1, rho2, rho3, rprod, sum1, &
-        & sum2, sum3, sum4, v, vlondon, warp, xj, xj1, xj2, xj3, xjs
-    integer :: coefficient_index, first_power, ii, it, maxi2a, maxi2b, second_power, third_power
-    save
-    double precision :: rho1t(0:12), rho2t(0:12), rho3t(0:12)
     write(6, *)' Using A2 H3 PES of 8/15/01'
     write(6, *)' S. L. Mielke, B. C. Garrett, and K. A. Peterson, J. Ch&
         &em. Phys., 116 (2002) 4142'
@@ -257,8 +255,19 @@ subroutine prepota2
     ald    = 0.02d0
     betad  = 0.72d0
     call initialize_h3_basis(12, 11, maxi2a, maxi2b)
-    return
-    entry pota2(r1x, r2x, r3x, eee)
+end subroutine prepota2
+
+!> @brief Evaluate one H3 A2 geometry.
+subroutine pota2( r1x, r2x, r3x, eee )
+    use a2data,             only: ald, beta, betad, epscem, epslon, eshift, maxi2a, maxi2b, rnought, xlin1, xlin2, xlin3, xlin4
+    use chempotpy_h3_basis, only: get_h3_basis_term
+    implicit none
+    double precision, intent(in)  :: r1x, r2x, r3x
+    double precision, intent(out) :: eee
+    double precision              :: bb, damper, es1, es2, es3, etrip1, etrip2, etrip3, q1, q2, q3, rdamp1, rdamp2, &
+        & rdamp3, rho1, rho2, rho3, rprod, sum1, sum2, sum3, sum4, v, vlondon, warp, xj, xj1, xj2, xj3, xjs
+    double precision :: rho1t(0:12), rho2t(0:12), rho3t(0:12)
+    integer          :: coefficient_index, first_power, ii, it, second_power, third_power
     call trip(r1x, etrip1)
     call trip(r2x, etrip2)
     call trip(r3x, etrip3)
@@ -313,7 +322,7 @@ subroutine prepota2
         sum4  = sum4+xlin4(coefficient_index)*rprod
     enddo
     eee = v+damper*(sum1+sum2*bb+sum3*warp+sum4*bb*warp)
-end subroutine prepota2
+end subroutine pota2
 
 !> @brief Evaluate trip for the H3_GEN_A2_2002 potential.
 subroutine trip( r, v )

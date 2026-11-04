@@ -97,357 +97,378 @@ end subroutine evdrdx
 
 !
 !> @brief Evaluate PREPOT for the ClH2_LEPS_TTGI1_1985 potential.
-subroutine prepot
-    !
-    !   System:          ClH2
-    !   Functional form: Isaacson and Muckerman's diatomics-in-molecules ver
-    !   Common name:     ClH2 DIMA
-    !   Reference:       unpublished
-    !   Cross Reference: S. C. Tucker, D. G. Truhlar,
-    !                    G. C. Garrett, and A. D. Isaacson
-    !                    J. Chem. Phys. 82, 4102 (1985)
-    !
-    !   Calling Sequence:
-    !      PREPOT - initializes the potential's variables and
-    !               must be called once before any calls to POT
-    !      POT    - driver for the evaluation of the energy and the derivati
-    !               of the energy with respect to the coordinates for a give
-    !               geometric configuration
-    !
-    !   Units:
-    !      energies    - hartrees
-    !      coordinates - bohr
-    !      derivatives - hartrees/bohr
-    !
-    !   Surfaces:
-    !      ground electronic state
-    !
-    !   Zero of energy:
-    !      The classical potential energy is set equal to zero for the Cl
-    !      infinitely far from the H2 diatomic and R(H2) set equal to the
-    !      H2 equilibrium diatomic value.
-    !
-    !   Parameters:
-    !      Set in the BLOCK DATA subprogram PTPARM
-    !
-    !   Coordinates:
-    !      Internal, Definition: R(1) = R(Cl-H)
-    !                            R(2) = R(H-H)
-    !                            R(3) = R(Cl-H)
-    !
-    !   Common Blocks (used between the calling program and this potential):
-    !      /PT1CM/ R(3), ENERGY, DEDR(3)
-    !        passes the coordinates, ground state electronic energy, and
-    !        derivatives of the ground electronic state energy with respect
-    !        to the coordinates.
-    !      /PT2CM/ NDER, NDUM, IDEBUG, IDUM(19)
-    !        passes the control flags where
-    !        NDER   = 0 => no derivatives are computed
-    !               = 1 => derivatives of the energy for the ground electron
-    !                      state with respect to the coordinates are compute
-    !        NDUM   - not used
-    !        IDEBUG = 1 => print intermediate values to the file linked to
-    !                      FORTRAN unit IPTPRT
-    !        IDUM   - not used
-    !      /PT4CM/ IPTPRT
-    !        passes the FORTRAN unit number used for potential output
-    !      /PT5CM/ EASYAB, EASYBC, EASYAC
-    !        passes the energy in the three asymptotic valleys for an A + BC
-    !        The energy in the AB valley, EASYAB, is equal to the energy of
-    !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
-    !        Re(AB), the equilibrium bond length for the AB diatomic.
-    !        In this potential the AB valley represents H infinitely far fro
-    !        the ClH diatomic and R(ClH) equal to Re(ClH).  Similarly, the t
-    !        EASYBC and EASYAC represent the energies in the H2 and the othe
-    !        valleys, respectively.
-    !
-    !   Default Parameter Values:
-    !      Variable      Default value
-    !      NDER             1
-    !      IDEBUG           0
-    !      IPTPRT           6
-    !
-    !*****
-    !
+module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
     implicit none
-    double precision :: arg, c, cs, ct, ct2, dd, ddgab, ddsxa, ddsxb, dduab, dgab, dh, dh1, dh11, &
-        & dh12, dh13, dh14, dh15, dh16, dh2, dh22, dh24, dh25, dh26, dh33, dh34, dh44, dh45, dh46, &
-        & dh55, dh56, dh66, dnumb, dpux, dq, dsgh, dspxa, dspxb, dss11a, dss11b, dss12a, dss12b, &
-        & dss22a, dss22b, dssab, dsxa, dsxb, dtdr1, dtdr2, dtdr3, dtpxa, dtpxb, dtsab, dtsxa, dtsxb, &
-        & duab, easyab, easyac, easybc, eht, en, factr, for, forth, gvec, h1, h2, half, one, q, r, &
-        & rt2i, six, spxa, spxb, sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, &
-        & st, st2, test, th, tpxa, tpxb, tre, tsab, tsxa, tsxb, two, vec, w, xter, xtra, zero
-    integer :: i, idebug, idum, iflag, indx, iptprt, ix, j, k, nder, ndim, ndum, nroot
-    common /pt4cm/ iptprt
-    common /pt2cm/ nder, ndum, idebug, idum(19)
-    common /pt5cm/ easyab, easybc, easyac
-    dimension h1(2,2), h2(2,2), dh1(2,2), dh2(2,2)
-    dimension th(6,6), vec(6,6), w(6), en(6), gvec(6), dh(6,6), r(3), dd(3)
-    dimension dh11(3), dh12(3), dh13(3), dh14(3), dh15(3), dh16(3), dh22(3)
-    dimension dh24(3), dh25(3), dh26(3), dh33(3), dh34(3), dh44(3), dh45(3)
-    dimension dh46(3), dh55(3), dh56(3), dh66(3)
-    character(len=80) :: title(2)
-    dimension indx(3)
-    common /pt1cm/ q(3), xter, dq(3)
-    common /potcm2/ c(3)
-    common /potcm3/ zero, one, two, tre, for, six, eht, half, forth, rt2i, &
-        & sqrt3, dpux, ssgx, dsgh, ssgh
-    equivalence (h1(1,1), ss11a), (h1(1,2), ss12a), (h1(2,2), ss22a)
-    equivalence (h2(1,1), ss11b), (h2(1,2), ss12b), (h2(2,2), ss22b)
-    equivalence (dh1(1,1), dss11a), (dh1(1,2), dss12a), (dh1(2,2), dss22a)
-    equivalence (dh2(1,1), dss11b), (dh2(1,2), dss12b), (dh2(2,2), dss22b)
-    equivalence (th(1,1), dh(1,1))
-    data ndim/6/
-    data nroot/1/
-    data test/0.999999999d0/
-    !   Initialize the array INDX which specifies the order of the
-    !   input bond distances.  INDX=1,2,3 for Cl + H2 and INDX=132 for H + C
-    data indx / 1, 2, 3/
-    data title(1) /'Final BNL DIM surface for CL+H2 -- 5 and7 kcal/mo&
-        &le barriers'/
-    data title(2) /'Spline fits replaced with analytic forms where pos&
-        &sible'/
-    !
-    !   Echo the name of the potential to the file linked to FORTRAN unit IP
-    !WRITE (IPTPRT, 600) C
-    !WRITE (IPTPRT, 610) TITLE
-    !
-    !
-    !     SET UP SPLINE FITS TO H2 CURVES
-    call setspl
-    !
-    !   Initialize the energy in the three asymptotic valleys
-    easyab = c(1)
-    easybc = c(2)
-    easyac = c(3)
-    !
-    return
-    !
-    entry pot
-    !
-    !***********************************************************************
-    !
-    !     ENTRY POT GIVE ENERGY AND PARTIALS W.R.T 3 DISTANCES
-    !
-    !     INTERNUCLEAR DISTANCES STORED IN Q(3) AND R(3)
-    !     NROOT-TH STATE ENERGY STORED IN XTER (OR TERM FOR DIATOMIC)
-    !     THREE PARTIALS STORED IN DD(3)
-    !
-    !***********************************************************************
-    !
-    !   Check the value of NDER
-    !
-    !     IAPP=1
-    !
-    !     SET FLAG FOR EIGENVECTOR OUTPUT
-    iflag = sign(1, nroot)
-    nroot = abs(nroot)
-    !
-    !     FOLLOWING COORDINATE DEFINITIONS PROVIDE FOR PROPER SYSTEM
-    do 15 ix=1, 3
-    15 r(ix)=q(indx(ix))
-    if( idebug .eq. 1 ) write(iptprt, '(1X,''DIMIMA, Q='',1P3E13.5,/,9X,'' R='',3E13.5)') q, r
-    !  CHECK FOR NEGATIVE R'S
-    xter  = 1.d30
-    dq(1) = -xter
-    dq(2) = -xter
-    dq(3) = -xter
-    if( r(1) .lt. 0.d0 .or. r(2) .lt. 0.d0 .or. r(3) .lt. 0.d0 ) return
-    !
-    !     ZERO OUT UNUSED HAMILTONIAN ELEMENTS
-    th(2,3) = zero
-    th(3,5) = zero
-    th(3,6) = zero
-    !
-    !     COMPUTE SINE AND COSINE OF ANGLE AXB, AND POWERS
-    ct = (r(1)*r(1)+r(3)*r(3)-r(2)*r(2))/(two*r(1)*r(3))
-    if( ct .gt. -test .and. ct .lt. test ) go to 10
-    ct = sign(test, ct)
-    10 continue
-    arg = one-ct*ct
-    st  = sqrt(arg)
-    ct2 = ct*ct
-    st2 = st*st
-    cs  = ct*st
-    !     COMPUTE DIATOMIC ENERGIES FOR R(3) ARRAY
-    call hcl(r(1), h1, tsxa, spxa, tpxa, dh1, dtsxa, dspxa, dtpxa)
-    call hcl(r(3), h2, tsxb, spxb, tpxb, dh2, dtsxb, dspxb, dtpxb)
-    call hclm(r(1), dsxa, ddsxa)
-    call hclm(r(3), dsxb, ddsxb)
-    call h2curv(r(2), ssab, tsab, dgab, duab, dssab, dtsab, ddgab, dduab)
-    if( idebug .eq. 1 ) write(iptprt, '(1X,''SS11A,SS11B,DSXA,DSXB,SSAB='',1P5E13.5)') ss11a, ss11b, dsxa, dsxb, ssab
-    !
-    !     CONSTRUCT DIM HAMILTONIAN IN ORTHOGONAL BASIS
-    !
-    th(1,1) = ss11a+forth*((ssab+tre*tsab)+ct2*(ss11b+tre*tsxb) +st2*(spxb+tre*tpxb))-dpux-two*dsgh
-    th(1,2) = forth*sqrt3*(ssab-tsab-ct2*(ss11b-tsxb)-st2*(spxb-tpxb))
-    th(1,3) = ss12a
-    th(1,4) = -half*ct*ss12b
-    th(1,5) = forth*cs*(ss11b+tre*tsxb-spxb-tre*tpxb)
-    th(1,6) = -forth*sqrt3*cs*(ss11b-tsxb-spxb+tpxb)
-    th(2,2) = tsxa+forth*((tre*ssab+tsab)+ct2*(tre*ss11b+tsxb) +st2*(tre*spxb+tpxb))-dpux-two*dsgh
-    th(2,4) = half*sqrt3*ct*ss12b
-    th(2,5) = th(1,6)
-    th(2,6) = forth*cs*(tre*ss11b+tsxb-tre*spxb-tpxb)
-    th(3,3) = ss22a+half*(dgab+duab)+dsxb-ssgx-ssgh-dsgh
-    th(3,4) = half*(dgab-duab)
-    th(4,4) = dsxa+half*(dgab+duab)+ss22b-ssgx-ssgh-dsgh
-    th(4,5) = -half*st*ss12b
-    th(4,6) = half*sqrt3*st*ss12b
-    th(5,5) = spxa+forth*((ssab+tre*tsab)+st2*(ss11b+tre*tsxb) +ct2*(spxb+tre*tpxb))-dpux-two*dsgh
-    th(5,6) = forth*sqrt3*(ssab-tsab-st2*(ss11b-tsxb)-ct2*(spxb-tpxb))
-    th(6,6) = tpxa+forth*((tre*ssab+tsab)+st2*(tre*ss11b+tsxb) +ct2*(tre*spxb+tpxb))-dpux-two*dsgh
-    !
-    !     FILL OUT MATRIX AND DIAGONALIZE
-    !
-    do 30 i=1, ndim
-        do 30 j=1, i
-            th(i,j) = th(j,i)
-    30 continue
-    !
-    call eign(ndim, th, vec, en, w, ndim)
-    !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
-    xter = en(nroot)+c(2)
-    if( idebug .eq. 1 ) &
-        & write(iptprt, '(1X,''NROOT,EN(1),EN(NROOT),C(2),XTER='',I5,1P4E13.5)') nroot, en(1), en(nroot), c(2), xter
-    if( iflag .lt. zero ) write(iptprt, '(1X,''VECTOR='',6D20.8)') (vec(i,nroot), i=1, ndim)
-    !
-    !************************* END OF FPOT3N *******************************
-    !
-    !     IF(IAPP.EQ.0) RETURN
-    if( nder .ne. 1 ) return
-    !
-    !     SET  VECTOR FOR STATE OF INTEREST
-    do 40 i=1, ndim
-        gvec(i) = vec(i,nroot)
-    40 continue
-    !     COMPUTE PARTIALS OF U=COS(THETA)
-    dtdr1 = (r(1)*r(1)+r(2)*r(2)-r(3)*r(3))/(two*r(1)*r(1)*r(3))
-    dtdr2 = -r(2)/(r(1)*r(3))
-    dtdr3 = (r(2)*r(2)+r(3)*r(3)-r(1)*r(1))/(two*r(3)*r(3)*r(1))
-    factr = -one/st
-    if( abs(st) .lt. 1.d-6 ) write(iptprt, &
-        & '(/,2X,T5,''Warning: Sine(THETA) = '',1PE20.10, '' in the derivative calculatio' // &
-        & 'n'', /,2X,T14,''a serious error may result'')') st
-    !     COMPUTE PARTIALS OF HAMILTONIAN ELEMENTS
-    xtra    = +half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
-    dh11(1) = dss11a+xtra*dtdr1
-    dh11(2) = forth*(dssab+tre*dtsab)+xtra*dtdr2
-    dh11(3) = forth*(ct2*(dss11b+tre*dtsxb)+st2*(dspxb+tre*dtpxb))+xtra* dtdr3
-    xtra    = -half*sqrt3*ct*(ss11b-tsxb-spxb+tpxb)
-    dh12(1) = xtra*dtdr1
-    dh12(2) = forth*sqrt3*(dssab-dtsab)+xtra*dtdr2
-    dh12(3) = -forth*sqrt3*(ct2*(dss11b-dtsxb)+st2*(dspxb-dtpxb))+xtra* dtdr3
-    dh13(1) = dss12a
-    dh13(2) = zero
-    dh13(3) = zero
-    xtra    = -half*ss12b
-    dh14(1) = xtra*dtdr1
-    dh14(2) = xtra*dtdr2
-    dh14(3) = -half*ct*dss12b+xtra*dtdr3
-    xtra    = forth*(ct2-st2)*(ss11b+tre*tsxb-spxb-tre*tpxb)*factr
-    dh15(1) = xtra*dtdr1
-    dh15(2) = xtra*dtdr2
-    dh15(3) = forth*cs*(dss11b+tre*dtsxb-dspxb-tre*dtpxb)+xtra*dtdr3
-    xtra    = -forth*sqrt3*(ct2-st2)*(ss11b-tsxb-spxb+tpxb)*factr
-    dh16(1) = xtra*dtdr1
-    dh16(2) = xtra*dtdr2
-    dh16(3) = -forth*sqrt3*cs*(dss11b-dtsxb-dspxb+dtpxb)+xtra*dtdr3
-    xtra    = +half*ct*(tre*ss11b+tsxb-tre*spxb-tpxb)
-    dh22(1) = dtsxa+xtra*dtdr1
-    dh22(2) = forth*(tre*dssab+dtsab)+xtra*dtdr2
-    dh22(3) = forth*(ct2*(tre*dss11b+dtsxb)+st2*(tre*dspxb+dtpxb))+xtra* dtdr3
-    xtra    = +half*sqrt3*ss12b
-    dh24(1) = xtra*dtdr1
-    dh24(2) = xtra*dtdr2
-    dh24(3) = half*sqrt3*ct*dss12b+xtra*dtdr3
-    dh25(1) = dh16(1)
-    dh25(2) = dh16(2)
-    dh25(3) = dh16(3)
-    xtra    = forth*(ct2-st2)*(tre*ss11b+tsxb-tre*spxb-tpxb)*factr
-    dh26(1) = xtra*dtdr1
-    dh26(2) = xtra*dtdr2
-    dh26(3) = forth*cs*(tre*dss11b+dtsxb-tre*dspxb-dtpxb)+xtra*dtdr3
-    dh33(1) = dss22a
-    dh33(2) = half*(ddgab+dduab)
-    dh33(3) = ddsxb
-    dh34(1) = zero
-    dh34(2) = half*(ddgab-dduab)
-    dh34(3) = zero
-    dh44(1) = ddsxa
-    dh44(2) = half*(ddgab+dduab)
-    dh44(3) = dss22b
-    xtra    = -half*ct*ss12b*factr
-    dh45(1) = xtra*dtdr1
-    dh45(2) = xtra*dtdr2
-    dh45(3) = -half*st*dss12b+xtra*dtdr3
-    xtra    = half*sqrt3*ct*ss12b*factr
-    dh46(1) = xtra*dtdr1
-    dh46(2) = xtra*dtdr2
-    dh46(3) = half*sqrt3*st*dss12b+xtra*dtdr3
-    xtra    = -half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
-    dh55(1) = dspxa+xtra*dtdr1
-    dh55(2) = forth*(dssab+tre*dtsab)+xtra*dtdr2
-    dh55(3) = forth*(st2*(dss11b+tre*dtsxb)+ct2*(dspxb+tre*dtpxb))+xtra* dtdr3
-    xtra    = +half*sqrt3*ct*(ss11b-tsxb-spxb+tpxb)
-    dh56(1) = xtra*dtdr1
-    dh56(2) = forth*sqrt3*(dssab-dtsab)+xtra*dtdr2
-    dh56(3) = -forth*sqrt3*(st2*(dss11b-dtsxb)+ct2*(dspxb-dtpxb))+xtra* dtdr3
-    xtra    = -half*ct*(tre*ss11b+tsxb-tre*spxb-tpxb)
-    dh66(1) = dtpxa+xtra*dtdr1
-    dh66(2) = forth*(tre*dssab+dtsab)+xtra*dtdr2
-    dh66(3) = forth*(st2*(tre*dss11b+dtsxb)+ct2*(tre*dspxb+dtpxb))+xtra* dtdr3
-    !
-    !     LOOP OVER R(I) DERIVATIVES
-    !     FIRST ZERO OUT UNUSED ELEMENTS
-    dh(2,3) = zero
-    dh(3,5) = zero
-    dh(3,6) = zero
-    do 50 i=1, 3
+    private
+    public :: dispatch
+    contains
+    !> @brief Evaluate dispatch.
+    subroutine dispatch( initialize_only )
         !
-        !     SET UP DERIVATIVE MATRIX
+        !   System:          ClH2
+        !   Functional form: Isaacson and Muckerman's diatomics-in-molecules ver
+        !   Common name:     ClH2 DIMA
+        !   Reference:       unpublished
+        !   Cross Reference: S. C. Tucker, D. G. Truhlar,
+        !                    G. C. Garrett, and A. D. Isaacson
+        !                    J. Chem. Phys. 82, 4102 (1985)
         !
-        dh(1,1) = dh11(i)
-        dh(1,2) = dh12(i)
-        dh(1,3) = dh13(i)
-        dh(1,4) = dh14(i)
-        dh(1,5) = dh15(i)
-        dh(1,6) = dh16(i)
-        dh(2,2) = dh22(i)
-        dh(2,4) = dh24(i)
-        dh(2,5) = dh25(i)
-        dh(2,6) = dh26(i)
-        dh(3,3) = dh33(i)
-        dh(3,4) = dh34(i)
-        dh(4,4) = dh44(i)
-        dh(4,5) = dh45(i)
-        dh(4,6) = dh46(i)
-        dh(5,5) = dh55(i)
-        dh(5,6) = dh56(i)
-        dh(6,6) = dh66(i)
+        !   Calling Sequence:
+        !      PREPOT - initializes the potential's variables and
+        !               must be called once before any calls to POT
+        !      POT    - driver for the evaluation of the energy and the derivati
+        !               of the energy with respect to the coordinates for a give
+        !               geometric configuration
         !
-        !     FILL OUT DERIVATIVE MATRIX
-        do 70 j=1, ndim
-            do 70 k=1, j
-                dh(j,k) = dh(k,j)
-        70 continue
+        !   Units:
+        !      energies    - hartrees
+        !      coordinates - bohr
+        !      derivatives - hartrees/bohr
         !
-        dnumb = zero
-        do 80 j=1, ndim
-            do 80 k=1, ndim
-                dnumb = dnumb+gvec(j)*dh(j,k)*gvec(k)
-        80 continue
-        dd(i) = dnumb
-        !     END OF DERIVATIVE LOOP
-    50 continue
-    !     PUT DERIVATIVES INTO CORRESPONDING SPOTS FOR CORRECT COORD CHOICE.
-    do 90 ix=1, 3
-    90 dq(indx(ix))=dd(ix)
-    !
-    !************************ END OF DFPOT *********************************
-    !
-    !
+        !   Surfaces:
+        !      ground electronic state
+        !
+        !   Zero of energy:
+        !      The classical potential energy is set equal to zero for the Cl
+        !      infinitely far from the H2 diatomic and R(H2) set equal to the
+        !      H2 equilibrium diatomic value.
+        !
+        !   Parameters:
+        !      Set in the BLOCK DATA subprogram PTPARM
+        !
+        !   Coordinates:
+        !      Internal, Definition: R(1) = R(Cl-H)
+        !                            R(2) = R(H-H)
+        !                            R(3) = R(Cl-H)
+        !
+        !   Common Blocks (used between the calling program and this potential):
+        !      /PT1CM/ R(3), ENERGY, DEDR(3)
+        !        passes the coordinates, ground state electronic energy, and
+        !        derivatives of the ground electronic state energy with respect
+        !        to the coordinates.
+        !      /PT2CM/ NDER, NDUM, IDEBUG, IDUM(19)
+        !        passes the control flags where
+        !        NDER   = 0 => no derivatives are computed
+        !               = 1 => derivatives of the energy for the ground electron
+        !                      state with respect to the coordinates are compute
+        !        NDUM   - not used
+        !        IDEBUG = 1 => print intermediate values to the file linked to
+        !                      FORTRAN unit IPTPRT
+        !        IDUM   - not used
+        !      /PT4CM/ IPTPRT
+        !        passes the FORTRAN unit number used for potential output
+        !      /PT5CM/ EASYAB, EASYBC, EASYAC
+        !        passes the energy in the three asymptotic valleys for an A + BC
+        !        The energy in the AB valley, EASYAB, is equal to the energy of
+        !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
+        !        Re(AB), the equilibrium bond length for the AB diatomic.
+        !        In this potential the AB valley represents H infinitely far fro
+        !        the ClH diatomic and R(ClH) equal to Re(ClH).  Similarly, the t
+        !        EASYBC and EASYAC represent the energies in the H2 and the othe
+        !        valleys, respectively.
+        !
+        !   Default Parameter Values:
+        !      Variable      Default value
+        !      NDER             1
+        !      IDEBUG           0
+        !      IPTPRT           6
+        !
+        !*****
+        !
+        implicit none
+        logical, intent(in) :: initialize_only
+        double precision    :: arg, c, cs, ct, ct2, dd, ddgab, ddsxa, ddsxb, dduab, dgab, dh, dh1, dh11, &
+            & dh12, dh13, dh14, dh15, dh16, dh2, dh22, dh24, dh25, dh26, dh33, dh34, dh44, dh45, dh46, &
+            & dh55, dh56, dh66, dnumb, dpux, dq, dsgh, dspxa, dspxb, dss11a, dss11b, dss12a, dss12b, &
+            & dss22a, dss22b, dssab, dsxa, dsxb, dtdr1, dtdr2, dtdr3, dtpxa, dtpxb, dtsab, dtsxa, dtsxb, &
+            & duab, easyab, easyac, easybc, eht, en, factr, for, forth, gvec, h1, h2, half, one, q, r, &
+            & rt2i, six, spxa, spxb, sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, &
+            & st, st2, test, th, tpxa, tpxb, tre, tsab, tsxa, tsxb, two, vec, w, xter, xtra, zero
+        integer :: i, idebug, idum, iflag, indx, iptprt, ix, j, k, nder, ndim, ndum, nroot
+        common /pt4cm/ iptprt
+        common /pt2cm/ nder, ndum, idebug, idum(19)
+        common /pt5cm/ easyab, easybc, easyac
+        dimension h1(2,2), h2(2,2), dh1(2,2), dh2(2,2)
+        dimension th(6,6), vec(6,6), w(6), en(6), gvec(6), dh(6,6), r(3), dd(3)
+        dimension dh11(3), dh12(3), dh13(3), dh14(3), dh15(3), dh16(3), dh22(3)
+        dimension dh24(3), dh25(3), dh26(3), dh33(3), dh34(3), dh44(3), dh45(3)
+        dimension dh46(3), dh55(3), dh56(3), dh66(3)
+        character(len=80) :: title(2)
+        dimension indx(3)
+        common /pt1cm/ q(3), xter, dq(3)
+        common /potcm2/ c(3)
+        common /potcm3/ zero, one, two, tre, for, six, eht, half, forth, rt2i, &
+            & sqrt3, dpux, ssgx, dsgh, ssgh
+        equivalence (h1(1,1), ss11a), (h1(1,2), ss12a), (h1(2,2), ss22a)
+        equivalence (h2(1,1), ss11b), (h2(1,2), ss12b), (h2(2,2), ss22b)
+        equivalence (dh1(1,1), dss11a), (dh1(1,2), dss12a), (dh1(2,2), dss22a)
+        equivalence (dh2(1,1), dss11b), (dh2(1,2), dss12b), (dh2(2,2), dss22b)
+        equivalence (th(1,1), dh(1,1))
+        data ndim/6/
+        data nroot/1/
+        data test/0.999999999d0/
+        !   Initialize the array INDX which specifies the order of the
+        !   input bond distances.  INDX=1,2,3 for Cl + H2 and INDX=132 for H + C
+        data indx / 1, 2, 3/
+        data title(1) /'Final BNL DIM surface for CL+H2 -- 5 and7 kcal/mole barriers'/
+        data title(2) /'Spline fits replaced with analytic forms where possible'/
+        !
+        !   Echo the name of the potential to the file linked to FORTRAN unit IP
+        !WRITE (IPTPRT, 600) C
+        !WRITE (IPTPRT, 610) TITLE
+        !
+        !
+        !     SET UP SPLINE FITS TO H2 CURVES
+        if( initialize_only )then
+            call setspl
+            !
+            !   Initialize the energy in the three asymptotic valleys
+            easyab = c(1)
+            easybc = c(2)
+            easyac = c(3)
+            !
+            !
+        else
+            !
+            !***********************************************************************
+            !
+            !     ENTRY POT GIVE ENERGY AND PARTIALS W.R.T 3 DISTANCES
+            !
+            !     INTERNUCLEAR DISTANCES STORED IN Q(3) AND R(3)
+            !     NROOT-TH STATE ENERGY STORED IN XTER (OR TERM FOR DIATOMIC)
+            !     THREE PARTIALS STORED IN DD(3)
+            !
+            !***********************************************************************
+            !
+            !   Check the value of NDER
+            !
+            !     IAPP=1
+            !
+            !     SET FLAG FOR EIGENVECTOR OUTPUT
+            iflag = sign(1, nroot)
+            nroot = abs(nroot)
+            !
+            !     FOLLOWING COORDINATE DEFINITIONS PROVIDE FOR PROPER SYSTEM
+            do 15 ix=1, 3
+            15 r(ix)=q(indx(ix))
+            if( idebug .eq. 1 ) write(iptprt, '(1X,''DIMIMA, Q='',1P3E13.5,/,9X,'' R='',3E13.5)') q, r
+            !  CHECK FOR NEGATIVE R'S
+            xter  = 1.d30
+            dq(1) = -xter
+            dq(2) = -xter
+            dq(3) = -xter
+            if( r(1) .lt. 0.d0 .or. r(2) .lt. 0.d0 .or. r(3) .lt. 0.d0 ) return
+            !
+            !     ZERO OUT UNUSED HAMILTONIAN ELEMENTS
+            th(2,3) = zero
+            th(3,5) = zero
+            th(3,6) = zero
+            !
+            !     COMPUTE SINE AND COSINE OF ANGLE AXB, AND POWERS
+            ct = (r(1)*r(1)+r(3)*r(3)-r(2)*r(2))/(two*r(1)*r(3))
+            if( ct .gt. -test .and. ct .lt. test ) go to 10
+            ct = sign(test, ct)
+            10 continue
+            arg = one-ct*ct
+            st  = sqrt(arg)
+            ct2 = ct*ct
+            st2 = st*st
+            cs  = ct*st
+            !     COMPUTE DIATOMIC ENERGIES FOR R(3) ARRAY
+            call hcl(r(1), h1, tsxa, spxa, tpxa, dh1, dtsxa, dspxa, dtpxa)
+            call hcl(r(3), h2, tsxb, spxb, tpxb, dh2, dtsxb, dspxb, dtpxb)
+            call hclm(r(1), dsxa, ddsxa)
+            call hclm(r(3), dsxb, ddsxb)
+            call h2curv(r(2), ssab, tsab, dgab, duab, dssab, dtsab, ddgab, dduab)
+            if( idebug .eq. 1 ) write(iptprt, '(1X,''SS11A,SS11B,DSXA,DSXB,SSAB='',1P5E13.5)') ss11a, ss11b, dsxa, dsxb, ssab
+            !
+            !     CONSTRUCT DIM HAMILTONIAN IN ORTHOGONAL BASIS
+            !
+            th(1,1) = ss11a+forth*((ssab+tre*tsab)+ct2*(ss11b+tre*tsxb) +st2*(spxb+tre*tpxb))-dpux-two*dsgh
+            th(1,2) = forth*sqrt3*(ssab-tsab-ct2*(ss11b-tsxb)-st2*(spxb-tpxb))
+            th(1,3) = ss12a
+            th(1,4) = -half*ct*ss12b
+            th(1,5) = forth*cs*(ss11b+tre*tsxb-spxb-tre*tpxb)
+            th(1,6) = -forth*sqrt3*cs*(ss11b-tsxb-spxb+tpxb)
+            th(2,2) = tsxa+forth*((tre*ssab+tsab)+ct2*(tre*ss11b+tsxb) +st2*(tre*spxb+tpxb))-dpux-two*dsgh
+            th(2,4) = half*sqrt3*ct*ss12b
+            th(2,5) = th(1,6)
+            th(2,6) = forth*cs*(tre*ss11b+tsxb-tre*spxb-tpxb)
+            th(3,3) = ss22a+half*(dgab+duab)+dsxb-ssgx-ssgh-dsgh
+            th(3,4) = half*(dgab-duab)
+            th(4,4) = dsxa+half*(dgab+duab)+ss22b-ssgx-ssgh-dsgh
+            th(4,5) = -half*st*ss12b
+            th(4,6) = half*sqrt3*st*ss12b
+            th(5,5) = spxa+forth*((ssab+tre*tsab)+st2*(ss11b+tre*tsxb) +ct2*(spxb+tre*tpxb))-dpux-two*dsgh
+            th(5,6) = forth*sqrt3*(ssab-tsab-st2*(ss11b-tsxb)-ct2*(spxb-tpxb))
+            th(6,6) = tpxa+forth*((tre*ssab+tsab)+st2*(tre*ss11b+tsxb) +ct2*(tre*spxb+tpxb))-dpux-two*dsgh
+            !
+            !     FILL OUT MATRIX AND DIAGONALIZE
+            !
+            do 30 i=1, ndim
+                do 30 j=1, i
+                    th(i,j) = th(j,i)
+            30 continue
+            !
+            call eign(ndim, th, vec, en, w, ndim)
+            !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
+            xter = en(nroot)+c(2)
+            if( idebug .eq. 1 ) &
+                & write(iptprt, '(1X,''NROOT,EN(1),EN(NROOT),C(2),XTER='',I5,1P4E13.5)') nroot, en(1), en(nroot), c(2), xter
+            if( iflag .lt. zero ) write(iptprt, '(1X,''VECTOR='',6D20.8)') (vec(i,nroot), i=1, ndim)
+            !
+            !************************* END OF FPOT3N *******************************
+            !
+            !     IF(IAPP.EQ.0) RETURN
+            if( nder .ne. 1 ) return
+            !
+            !     SET  VECTOR FOR STATE OF INTEREST
+            do 40 i=1, ndim
+                gvec(i) = vec(i,nroot)
+            40 continue
+            !     COMPUTE PARTIALS OF U=COS(THETA)
+            dtdr1 = (r(1)*r(1)+r(2)*r(2)-r(3)*r(3))/(two*r(1)*r(1)*r(3))
+            dtdr2 = -r(2)/(r(1)*r(3))
+            dtdr3 = (r(2)*r(2)+r(3)*r(3)-r(1)*r(1))/(two*r(3)*r(3)*r(1))
+            factr = -one/st
+            if( abs(st) .lt. 1.d-6 ) write(iptprt, &
+                & '(/,2X,T5,''Warning: Sine(THETA) = '',1PE20.10, '' in the derivative calculatio' // &
+                & 'n'', /,2X,T14,''a serious error may result'')') st
+            !     COMPUTE PARTIALS OF HAMILTONIAN ELEMENTS
+            xtra    = +half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
+            dh11(1) = dss11a+xtra*dtdr1
+            dh11(2) = forth*(dssab+tre*dtsab)+xtra*dtdr2
+            dh11(3) = forth*(ct2*(dss11b+tre*dtsxb)+st2*(dspxb+tre*dtpxb))+xtra* dtdr3
+            xtra    = -half*sqrt3*ct*(ss11b-tsxb-spxb+tpxb)
+            dh12(1) = xtra*dtdr1
+            dh12(2) = forth*sqrt3*(dssab-dtsab)+xtra*dtdr2
+            dh12(3) = -forth*sqrt3*(ct2*(dss11b-dtsxb)+st2*(dspxb-dtpxb))+xtra* dtdr3
+            dh13(1) = dss12a
+            dh13(2) = zero
+            dh13(3) = zero
+            xtra    = -half*ss12b
+            dh14(1) = xtra*dtdr1
+            dh14(2) = xtra*dtdr2
+            dh14(3) = -half*ct*dss12b+xtra*dtdr3
+            xtra    = forth*(ct2-st2)*(ss11b+tre*tsxb-spxb-tre*tpxb)*factr
+            dh15(1) = xtra*dtdr1
+            dh15(2) = xtra*dtdr2
+            dh15(3) = forth*cs*(dss11b+tre*dtsxb-dspxb-tre*dtpxb)+xtra*dtdr3
+            xtra    = -forth*sqrt3*(ct2-st2)*(ss11b-tsxb-spxb+tpxb)*factr
+            dh16(1) = xtra*dtdr1
+            dh16(2) = xtra*dtdr2
+            dh16(3) = -forth*sqrt3*cs*(dss11b-dtsxb-dspxb+dtpxb)+xtra*dtdr3
+            xtra    = +half*ct*(tre*ss11b+tsxb-tre*spxb-tpxb)
+            dh22(1) = dtsxa+xtra*dtdr1
+            dh22(2) = forth*(tre*dssab+dtsab)+xtra*dtdr2
+            dh22(3) = forth*(ct2*(tre*dss11b+dtsxb)+st2*(tre*dspxb+dtpxb))+xtra* dtdr3
+            xtra    = +half*sqrt3*ss12b
+            dh24(1) = xtra*dtdr1
+            dh24(2) = xtra*dtdr2
+            dh24(3) = half*sqrt3*ct*dss12b+xtra*dtdr3
+            dh25(1) = dh16(1)
+            dh25(2) = dh16(2)
+            dh25(3) = dh16(3)
+            xtra    = forth*(ct2-st2)*(tre*ss11b+tsxb-tre*spxb-tpxb)*factr
+            dh26(1) = xtra*dtdr1
+            dh26(2) = xtra*dtdr2
+            dh26(3) = forth*cs*(tre*dss11b+dtsxb-tre*dspxb-dtpxb)+xtra*dtdr3
+            dh33(1) = dss22a
+            dh33(2) = half*(ddgab+dduab)
+            dh33(3) = ddsxb
+            dh34(1) = zero
+            dh34(2) = half*(ddgab-dduab)
+            dh34(3) = zero
+            dh44(1) = ddsxa
+            dh44(2) = half*(ddgab+dduab)
+            dh44(3) = dss22b
+            xtra    = -half*ct*ss12b*factr
+            dh45(1) = xtra*dtdr1
+            dh45(2) = xtra*dtdr2
+            dh45(3) = -half*st*dss12b+xtra*dtdr3
+            xtra    = half*sqrt3*ct*ss12b*factr
+            dh46(1) = xtra*dtdr1
+            dh46(2) = xtra*dtdr2
+            dh46(3) = half*sqrt3*st*dss12b+xtra*dtdr3
+            xtra    = -half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
+            dh55(1) = dspxa+xtra*dtdr1
+            dh55(2) = forth*(dssab+tre*dtsab)+xtra*dtdr2
+            dh55(3) = forth*(st2*(dss11b+tre*dtsxb)+ct2*(dspxb+tre*dtpxb))+xtra* dtdr3
+            xtra    = +half*sqrt3*ct*(ss11b-tsxb-spxb+tpxb)
+            dh56(1) = xtra*dtdr1
+            dh56(2) = forth*sqrt3*(dssab-dtsab)+xtra*dtdr2
+            dh56(3) = -forth*sqrt3*(st2*(dss11b-dtsxb)+ct2*(dspxb-dtpxb))+xtra* dtdr3
+            xtra    = -half*ct*(tre*ss11b+tsxb-tre*spxb-tpxb)
+            dh66(1) = dtpxa+xtra*dtdr1
+            dh66(2) = forth*(tre*dssab+dtsab)+xtra*dtdr2
+            dh66(3) = forth*(st2*(tre*dss11b+dtsxb)+ct2*(tre*dspxb+dtpxb))+xtra* dtdr3
+            !
+            !     LOOP OVER R(I) DERIVATIVES
+            !     FIRST ZERO OUT UNUSED ELEMENTS
+            dh(2,3) = zero
+            dh(3,5) = zero
+            dh(3,6) = zero
+            do 50 i=1, 3
+                !
+                !     SET UP DERIVATIVE MATRIX
+                !
+                dh(1,1) = dh11(i)
+                dh(1,2) = dh12(i)
+                dh(1,3) = dh13(i)
+                dh(1,4) = dh14(i)
+                dh(1,5) = dh15(i)
+                dh(1,6) = dh16(i)
+                dh(2,2) = dh22(i)
+                dh(2,4) = dh24(i)
+                dh(2,5) = dh25(i)
+                dh(2,6) = dh26(i)
+                dh(3,3) = dh33(i)
+                dh(3,4) = dh34(i)
+                dh(4,4) = dh44(i)
+                dh(4,5) = dh45(i)
+                dh(4,6) = dh46(i)
+                dh(5,5) = dh55(i)
+                dh(5,6) = dh56(i)
+                dh(6,6) = dh66(i)
+                !
+                !     FILL OUT DERIVATIVE MATRIX
+                do 70 j=1, ndim
+                    do 70 k=1, j
+                        dh(j,k) = dh(k,j)
+                70 continue
+                !
+                dnumb = zero
+                do 80 j=1, ndim
+                    do 80 k=1, ndim
+                        dnumb = dnumb+gvec(j)*dh(j,k)*gvec(k)
+                80 continue
+                dd(i) = dnumb
+                !     END OF DERIVATIVE LOOP
+            50 continue
+            !     PUT DERIVATIVES INTO CORRESPONDING SPOTS FOR CORRECT COORD CHOICE.
+            do 90 ix=1, 3
+            90 dq(indx(ix))=dd(ix)
+            !
+            !************************ END OF DFPOT *********************************
+            !
+            !
+        endif
+    end subroutine dispatch
+end module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
+
+!> @brief Compatibility interface for prepot.
+subroutine prepot
+    use chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.true.)
 end subroutine prepot
+
+!> @brief Compatibility interface for pot.
+subroutine pot
+    use chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.false.)
+end subroutine pot
 
 !> @brief Evaluate SETSPL for the ClH2_LEPS_TTGI1_1985 potential.
 subroutine setspl

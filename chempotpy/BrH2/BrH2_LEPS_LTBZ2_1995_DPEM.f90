@@ -195,564 +195,651 @@ subroutine pot( r, e, de, nt, nsurf )
 end subroutine pot
 
 !> @brief Evaluate g_prepot11 for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
-subroutine g_prepot11( g_p_ )
-    !   this is a vectorized version of the BrH2SEC potential with derivativ
-    !
-    !   System:          BrH2
-    !   Functional form: extended-LEPS plus three-center term with
-    !                    internal-angle-dependent Sato parameters
-    !   Common name: BrH2SECD
-    !   Reference:       G. C. Lynch, D. G. Truhlar, F. B. Brown, et. al.
-    !                    J. Phys. Chem. 99, 207-225 (1995)
-    !   Analytic derivatives added, Yuri Volobuev, July-Aug 1998
-    !   Derivatives for pot11 are obtained using Adifor 2.1
-    !
-    !
-    !   PREPOT must be called once before any calls to POT.
-    !   The potential parameters are included in DATA statements.
-    !   For the this potential energy surface the potential energy in the
-    !   BC valley is equal to the energy of the HH diatomic.
-    !   The energy in the AC valley is equal to the energy of the HBr diatom
-    !   which is also the energy value in the BA valley.
-    !
-    !   This potential is written such that:
-    !                  R(1) = R(Br-H)
-    !                  R(2) = R(H-H)
-    !                  R(3) = R(H-Br)
-    !   The zero of energy is defined at Br "infinitely" far from the H2 dia
-    !
+module chempotpy_brh2_leps_ltbz2_1995_dpem_g_pot11_entry_sta_432f3192
     implicit none
-    double precision :: a1, a2, a3, a4, a5, a6, b, beta, betaa, capr, capr2, coschi, &
-        & costh, coul, d, de, deq, derad, dist, do4z, dv3c, dxdr, dz, e, exch, fcn4, op3z, pe, &
-        & r132p2, r1m3, r1m3p2, r1p2, r1p3, r1p3m2, r2, r2i, r2p2, r3p2, rad, re, rr, schip2, sintp2, &
-        & sintp6, sintp8, top3z, tzp3, v3c, v3cp1, v3cp2, v3cp3, v3cp4, v3cp5, v3cp6, x, xlamb, z, &
-        & zchi, zhbrp1, zhbrp2, zhhp1, zhhp2, zp3, zpo
-    integer          :: i, k, n
-    double precision :: r(3)
-    !
-    double precision, parameter :: cangau = 0.52917706d0
-    double precision, parameter :: charkc = 627.5095d0
-    !
-    common /satocm/ zhhp1, zhhp2, zhbrp1, zhbrp2, z(3), dz(3, 3)
-    common /v3ccom/ v3cp1, v3cp2, v3cp3, v3cp4, v3cp5, v3cp6, v3c, &
-        & dv3c(3)
-    common /lengcm/ x(3), coul(3), exch(3), rad
-    common /lsatcm/ zpo(3), op3z(3), zp3(3), tzp3(3), top3z(3), &
-        & do4z(3), beta(3)
-    common /ldercm/ dxdr(3, 3), deq(3), derad(3)
-    common /decom/ de(3)
-    !
-    dimension d(3), re(3), betaa(3), b(3), rr(n,3), e(n)
-    !
-    save
-    !
-    integer, parameter :: g_pmax_ = 3
-    integer            :: g_i_, g_p_, ldg_rr, ldg_e
-    double precision   :: d3_p, d2_p, d2_v, d10_v, d2_b, d3_v, d4_v, &
-        & d5_v, d6_v, d7_v, d3_b, d4_b, d5_b, d6_b, d7_b, d1_p, d8_v, &
-        & d8_b, d1_w, d10_b, g_r(g_pmax_, 3), g_r1p2(g_pmax_), &
-        & g_r2p2(g_pmax_), g_r3p2(g_pmax_), g_zchi(g_pmax_), &
-        & g_capr2(g_pmax_), g_capr(g_pmax_), g_coschi(g_pmax_), &
-        & g_schip2(g_pmax_), g_z(g_pmax_, 3), g_zpo(g_pmax_, 3), &
-        & g_op3z(g_pmax_, 3), g_top3z(g_pmax_, 3), g_zp3(g_pmax_, 3), &
-        & g_tzp3(g_pmax_, 3), g_do4z(g_pmax_, 3), g_pe(g_pmax_), &
-        & g_d1_w(g_pmax_), g_x(g_pmax_, 3), g_coul(g_pmax_, 3), &
-        & g_exch(g_pmax_, 3), g_rad(g_pmax_), g_r1p3(g_pmax_), &
-        & g_r1m3(g_pmax_), g_r1p3m2(g_pmax_), g_r1m3p2(g_pmax_), &
-        & g_r132p2(g_pmax_), g_dist(g_pmax_), g_costh(g_pmax_), &
-        & g_sintp2(g_pmax_), g_sintp6(g_pmax_), g_sintp8(g_pmax_), &
-        & g_fcn4(g_pmax_), g_v3c(g_pmax_), g_e(ldg_e,*), g_zhhp1(g_pmax_), &
-        & g_zhhp2(g_pmax_), g_zhbrp1(g_pmax_), g_zhbrp2(g_pmax_), &
-        & g_dz(g_pmax_, 3, 3), g_beta(g_pmax_, 3), g_v3cp1(g_pmax_), &
-        & g_v3cp2(g_pmax_), g_v3cp3(g_pmax_), g_v3cp4(g_pmax_), &
-        & g_v3cp5(g_pmax_), g_v3cp6(g_pmax_), g_dv3c(g_pmax_, 3)
-    common /com_para/ g_myrank, g_nprocs
-    integer :: g_myrank, g_nprocs
-    common /g_satocm/ g_zhhp1, g_zhhp2, g_zhbrp1, g_zhbrp2, g_z, g_dz
-    common /g_v3ccom/ g_v3cp1, g_v3cp2, g_v3cp3, g_v3cp4, g_v3cp5, &
-        & g_v3cp6, g_v3c, g_dv3c
-    common /g_lengcm/ g_x, g_coul, g_exch, g_rad
-    common /g_lsatcm/ g_zpo, g_op3z, g_zp3, g_tzp3, g_top3z, g_do4z, &
-        & g_beta
-    save g_r1m3, g_r1p3m2, g_r1m3p2, g_r132p2, g_dist, g_costh, &
-        & g_sintp2, g_sintp6, g_sintp8, g_fcn4, g_r1p2, g_r2p2, g_r3p2, &
-        & g_zchi, g_capr2, g_capr, g_coschi, g_schip2, g_d1_w, g_r1p3
-    data d /90.4473d0, 109.559d0, 90.4473d0/
-    if( g_p_ .gt. g_pmax_ )then
-        print *, 'Parameter g_p_ is greater than g_pmax_'
-        stop
-    endif
-    xlamb = .4568d0 / 27.21161d0
-    a1    = v3cp1
-    a2    = v3cp2
-    a3    = v3cp3
-    a4    = v3cp4
-    a5    = v3cp5
-    a6    = v3cp6
-    data re /1.41443d0, 0.74144d0, 1.41443d0/
-    data betaa /1.81088d0, 1.94198d0, 1.81088d0/
-    data r2 /1.41421356d0/
-    !
-    zhhp1  = 2.91230499d-1
-    zhhp2  = 4.99160974d0
-    zhbrp1 = 3.84262775d-3
-    zhbrp2 = 2.87642885d-3
-    v3cp1  = 1.67457884d0
-    v3cp2  = 7.09518875d-1
-    v3cp3  = 1.87582679d-1
-    v3cp4  = 2.43517074d-1
-    v3cp5  = 2.04145206d-1
-    v3cp6  = 2.57833022d0
-    !
-    !
-    !   Convert the constants to atomic units
-    !
-    do 99999 i = 1, 3
-        de(i)   = d(i) / charkc
-        re(i)   = re(i) / cangau
-        beta(i) = betaa(i) * cangau
-    99999 continue
-    !
-    !
-    !
-    return
-    !
-    entry g_pot11(g_p_, rr, e, g_e, ldg_e, n)
-    !
-    do 99996 k = 1, n
-        do g_i_ = 1, g_p_
-            g_r(g_i_, 1) = 0.0d0
-        enddo
-        r(1) = rr(k,1)
-        !--------
-        do g_i_ = 1, g_p_
-            g_r(g_i_, 2) = 0.0d0
-        enddo
-        r(2) = rr(k,2)
-        !--------
-        do g_i_ = 1, g_p_
-            g_r(g_i_, 3) = 0.0d0
-        enddo
-        r(3)      = rr(k,3)
-        g_r(1, 1) = 1.0d0
-        g_r(2, 2) = 1.0d0
-        g_r(3, 3) = 1.0d0
-        !--------
+    private
+    public :: dispatch
+    contains
+    !> @brief Evaluate dispatch.
+    subroutine dispatch( g_p_, rr, e, g_e, ldg_e, n, initialize_only )
+        !   this is a vectorized version of the BrH2SEC potential with derivativ
         !
-        !   Compute bond dependent Sato parameters
-        d2_b = r(1) + r(1)
-        do g_i_ = 1, g_p_
-            g_r1p2(g_i_) = d2_b * g_r(g_i_, 1)
-        enddo
-        r1p2 = r(1) * r(1)
-        !--------
-        d2_b = r(2) + r(2)
-        do g_i_ = 1, g_p_
-            g_r2p2(g_i_) = d2_b * g_r(g_i_, 2)
-        enddo
-        r2p2 = r(2) * r(2)
-        !--------
-        d2_b = r(3) + r(3)
-        do g_i_ = 1, g_p_
-            g_r3p2(g_i_) = d2_b * g_r(g_i_, 3)
-        enddo
-        r3p2 = r(3) * r(3)
-        !--------
-        r2i = 1.0d0 / r(2)
-        do g_i_ = 1, g_p_
-            g_zchi(g_i_) = 0.0d0
-        enddo
-        zchi = 0.0d0
-        !--------
-        !   CAPR IS THE Br TO H2 DISTANCE
-        d5_b = (-0.5d0) * 0.5d0
-        do g_i_ = 1, g_p_
-            g_capr2(g_i_) = d5_b * g_r2p2(g_i_) + 0.5d0 * g_r3p2(g_i_) + 0.5d0 * g_r1p2(g_i_)
-        enddo
-        capr2 = 0.5d0 * (r1p2 + r3p2 - 0.5d0 * r2p2)
-        !--------
-        if( capr2 .le. 0.d0 )then
-            do g_i_ = 1, g_p_
-                g_capr2(g_i_) = 0.0d0
-            enddo
-            capr2 = 0.0d0
-            !--------
-            do g_i_ = 1, g_p_
-                g_capr(g_i_) = 0.0d0
-            enddo
-            capr = 0.0d0
-            !--------
-        else
-            d2_v = sqrt(capr2)
-            if( capr2 .gt. 0.0d0 )then
-                d1_p = 1.0d0 / (2.0d0 *  d2_v)
-            else
-                d1_p = 0.0d0
+        !   System:          BrH2
+        !   Functional form: extended-LEPS plus three-center term with
+        !                    internal-angle-dependent Sato parameters
+        !   Common name: BrH2SECD
+        !   Reference:       G. C. Lynch, D. G. Truhlar, F. B. Brown, et. al.
+        !                    J. Phys. Chem. 99, 207-225 (1995)
+        !   Analytic derivatives added, Yuri Volobuev, July-Aug 1998
+        !   Derivatives for pot11 are obtained using Adifor 2.1
+        !
+        !
+        !   PREPOT must be called once before any calls to POT.
+        !   The potential parameters are included in DATA statements.
+        !   For the this potential energy surface the potential energy in the
+        !   BC valley is equal to the energy of the HH diatomic.
+        !   The energy in the AC valley is equal to the energy of the HBr diatom
+        !   which is also the energy value in the BA valley.
+        !
+        !   This potential is written such that:
+        !                  R(1) = R(Br-H)
+        !                  R(2) = R(H-H)
+        !                  R(3) = R(H-Br)
+        !   The zero of energy is defined at Br "infinitely" far from the H2 dia
+        !
+        implicit none
+        logical, intent(in) :: initialize_only
+        optional :: g_p_, rr, e, g_e, ldg_e, n
+        double precision :: a1, a2, a3, a4, a5, a6, b, beta, betaa, capr, capr2, coschi, &
+            & costh, coul, d, de, deq, derad, dist, do4z, dv3c, dxdr, dz, e, exch, fcn4, op3z, pe, &
+            & r132p2, r1m3, r1m3p2, r1p2, r1p3, r1p3m2, r2, r2i, r2p2, r3p2, rad, re, rr, schip2, sintp2, &
+            & sintp6, sintp8, top3z, tzp3, v3c, v3cp1, v3cp2, v3cp3, v3cp4, v3cp5, v3cp6, x, xlamb, z, &
+            & zchi, zhbrp1, zhbrp2, zhhp1, zhhp2, zp3, zpo
+        integer          :: i, k, n
+        double precision :: r(3)
+        !
+        double precision, parameter :: cangau = 0.52917706d0
+        double precision, parameter :: charkc = 627.5095d0
+        !
+        common /satocm/ zhhp1, zhhp2, zhbrp1, zhbrp2, z(3), dz(3, 3)
+        common /v3ccom/ v3cp1, v3cp2, v3cp3, v3cp4, v3cp5, v3cp6, v3c, &
+            & dv3c(3)
+        common /lengcm/ x(3), coul(3), exch(3), rad
+        common /lsatcm/ zpo(3), op3z(3), zp3(3), tzp3(3), top3z(3), &
+            & do4z(3), beta(3)
+        common /ldercm/ dxdr(3, 3), deq(3), derad(3)
+        common /decom/ de(3)
+        !
+        dimension d(3), re(3), betaa(3), b(3), rr(:,:), e(:)
+        !
+        save
+        !
+        integer, parameter :: g_pmax_ = 3
+        integer            :: g_i_, g_p_, ldg_rr, ldg_e
+        double precision   :: d3_p, d2_p, d2_v, d10_v, d2_b, d3_v, d4_v, &
+            & d5_v, d6_v, d7_v, d3_b, d4_b, d5_b, d6_b, d7_b, d1_p, d8_v, &
+            & d8_b, d1_w, d10_b, g_r(g_pmax_, 3), g_r1p2(g_pmax_), &
+            & g_r2p2(g_pmax_), g_r3p2(g_pmax_), g_zchi(g_pmax_), &
+            & g_capr2(g_pmax_), g_capr(g_pmax_), g_coschi(g_pmax_), &
+            & g_schip2(g_pmax_), g_z(g_pmax_, 3), g_zpo(g_pmax_, 3), &
+            & g_op3z(g_pmax_, 3), g_top3z(g_pmax_, 3), g_zp3(g_pmax_, 3), &
+            & g_tzp3(g_pmax_, 3), g_do4z(g_pmax_, 3), g_pe(g_pmax_), &
+            & g_d1_w(g_pmax_), g_x(g_pmax_, 3), g_coul(g_pmax_, 3), &
+            & g_exch(g_pmax_, 3), g_rad(g_pmax_), g_r1p3(g_pmax_), &
+            & g_r1m3(g_pmax_), g_r1p3m2(g_pmax_), g_r1m3p2(g_pmax_), &
+            & g_r132p2(g_pmax_), g_dist(g_pmax_), g_costh(g_pmax_), &
+            & g_sintp2(g_pmax_), g_sintp6(g_pmax_), g_sintp8(g_pmax_), &
+            & g_fcn4(g_pmax_), g_v3c(g_pmax_), g_e(:,:), g_zhhp1(g_pmax_), &
+            & g_zhhp2(g_pmax_), g_zhbrp1(g_pmax_), g_zhbrp2(g_pmax_), &
+            & g_dz(g_pmax_, 3, 3), g_beta(g_pmax_, 3), g_v3cp1(g_pmax_), &
+            & g_v3cp2(g_pmax_), g_v3cp3(g_pmax_), g_v3cp4(g_pmax_), &
+            & g_v3cp5(g_pmax_), g_v3cp6(g_pmax_), g_dv3c(g_pmax_, 3)
+        common /com_para/ g_myrank, g_nprocs
+        integer :: g_myrank, g_nprocs
+        common /g_satocm/ g_zhhp1, g_zhhp2, g_zhbrp1, g_zhbrp2, g_z, g_dz
+        common /g_v3ccom/ g_v3cp1, g_v3cp2, g_v3cp3, g_v3cp4, g_v3cp5, &
+            & g_v3cp6, g_v3c, g_dv3c
+        common /g_lengcm/ g_x, g_coul, g_exch, g_rad
+        common /g_lsatcm/ g_zpo, g_op3z, g_zp3, g_tzp3, g_top3z, g_do4z, &
+            & g_beta
+        save g_r1m3, g_r1p3m2, g_r1m3p2, g_r132p2, g_dist, g_costh, &
+            & g_sintp2, g_sintp6, g_sintp8, g_fcn4, g_r1p2, g_r2p2, g_r3p2, &
+            & g_zchi, g_capr2, g_capr, g_coschi, g_schip2, g_d1_w, g_r1p3
+        data d /90.4473d0, 109.559d0, 90.4473d0/
+        if( initialize_only )then
+            if( g_p_ .gt. g_pmax_ )then
+                print *, 'Parameter g_p_ is greater than g_pmax_'
+                stop
             endif
-            do g_i_ = 1, g_p_
-                g_capr(g_i_) = d1_p * g_capr2(g_i_)
-            enddo
-            capr = d2_v
-            !--------
-            !   Compute Chi, the angle between CAPR and RHH
-            d7_v = r(2) * capr
-            d8_v = 0.5d0 * (r3p2 - r1p2) / d7_v
-            d3_b = (-d8_v) / d7_v
-            d4_b = d3_b * capr
-            d5_b = d3_b * r(2)
-            d6_b = 1.0d0 / d7_v * 0.5d0
-            do g_i_ = 1, g_p_
-                g_coschi(g_i_) = d5_b * g_capr(g_i_) + d4_b * g_r(g_i_, 2) + (-d6_b) * g_r1p2(g_i_) + d6_b * &
-                    & g_r3p2(g_i_)
-            enddo
-            coschi = d8_v
-            !--------
-            d3_b = -coschi + (-coschi)
-            do g_i_ = 1, g_p_
-                g_schip2(g_i_) = d3_b * g_coschi(g_i_)
-            enddo
-            schip2 = 1.0d0 - coschi * coschi
-            !--------
-            d4_v = zhbrp2 * schip2
-            d6_v = zhbrp1 * schip2 + d4_v * schip2
-            d7_b = capr2 * d4_v + capr2 * schip2 * zhbrp2 + capr2 * zhbrp1
-            do g_i_ = 1, g_p_
-                g_zchi(g_i_) = d7_b * g_schip2(g_i_) + d6_v * g_capr2(g_i_ )
-            enddo
-            zchi = capr2 * d6_v
-            !--------
-        endif
-        do g_i_ = 1, g_p_
-            g_z(g_i_, 1) = g_zchi(g_i_)
-        enddo
-        z(1) = 0.1675d0 + zchi
-        !--------
-        do g_i_ = 1, g_p_
-            g_z(g_i_, 3) = g_z(g_i_, 1)
-        enddo
-        z(3) = z(1)
-        !--------
-        d3_v = zhhp2 + r2p2
-        d4_v = zhhp1 * r2p2 / d3_v
-        d4_b = (-d4_v) / d3_v + 1.0d0 / d3_v * zhhp1
-        do g_i_ = 1, g_p_
-            g_z(g_i_, 2) = d4_b * g_r2p2(g_i_)
-        enddo
-        z(2) = d4_v
-        !--------
-        !
-        !   Compute the LEPS parameters
-        !
-        do 99998 i = 1, 3
-            do g_i_ = 1, g_p_
-                g_zpo(g_i_, i) = g_z(g_i_, i)
-            enddo
-            zpo(i) = 1.0d0 + z(i)
-            !--------
-            do g_i_ = 1, g_p_
-                g_op3z(g_i_, i) = 3.0d0 * g_z(g_i_, i)
-            enddo
-            op3z(i) = 1.0d0 + 3.0d0 * z(i)
-            !--------
-            do g_i_ = 1, g_p_
-                g_top3z(g_i_, i) = 2.0d0 * g_op3z(g_i_, i)
-            enddo
-            top3z(i) = 2.0d0 * op3z(i)
-            !--------
-            do g_i_ = 1, g_p_
-                g_zp3(g_i_, i) = g_z(g_i_, i)
-            enddo
-            zp3(i) = z(i) + 3.0d0
-            !--------
-            do g_i_ = 1, g_p_
-                g_tzp3(g_i_, i) = 2.0d0 * g_zp3(g_i_, i)
-            enddo
-            tzp3(i) = 2.0d0 * zp3(i)
-            !--------
-            d2_v = de(i) / 4.0d0 / zpo(i)
-            d2_b = (-d2_v) / zpo(i)
-            do g_i_ = 1, g_p_
-                g_do4z(g_i_, i) = d2_b * g_zpo(g_i_, i)
-            enddo
-            do4z(i) = d2_v
-            !--------
-            b(i) = beta(i) * do4z(i) * 2.0d0
-            20 continue
-        99998 continue
-        do g_i_ = 1, g_p_
-            g_pe(g_i_) = 0.0d0
-        enddo
-        pe = 0.d0
-        !--------
-        do 99997 i = 1, 3
-            do g_i_ = 1, g_p_
-                g_d1_w(g_i_) = (-beta(i)) * g_r(g_i_, i)
-            enddo
-            d1_w = (-beta(i)) * (r(i) - re(i))
-            d2_v = exp(d1_w)
-            d1_p = d2_v
-            do g_i_ = 1, g_p_
-                g_x(g_i_, i) = d1_p * g_d1_w(g_i_)
-            enddo
-            x(i) = d2_v
-            !--------
-            d6_v = zp3(i) * x(i) - top3z(i)
-            d7_v = do4z(i) * d6_v
-            d4_b = x(i) * d6_v
-            d5_b = x(i) * do4z(i)
-            d8_b = d5_b * x(i)
-            d3_b = d7_v + d5_b * zp3(i)
-            do g_i_ = 1, g_p_
-                g_coul(g_i_, i) = (-d5_b) * g_top3z(g_i_, i) + d3_b * g_x( g_i_, i) + d8_b * g_zp3(g_i_, i) + d4_b * &
-                    & g_do4z(g_i_, i)
-            enddo
-            coul(i) = d7_v * x(i)
-            !--------
-            d6_v = op3z(i) * x(i) - tzp3(i)
-            d7_v = do4z(i) * d6_v
-            d4_b = x(i) * d6_v
-            d5_b = x(i) * do4z(i)
-            d8_b = d5_b * x(i)
-            d3_b = d7_v + d5_b * op3z(i)
-            do g_i_ = 1, g_p_
-                g_exch(g_i_, i) = (-d5_b) * g_tzp3(g_i_, i) + d3_b * g_x(g_i_, i) + d8_b * g_op3z(g_i_, i) + d4_b * &
-                    & g_do4z(g_i_, i)
-            enddo
-            exch(i) = d7_v * x(i)
-            !--------
-            do g_i_ = 1, g_p_
-                g_pe(g_i_) = g_coul(g_i_, i) + g_pe(g_i_)
-            enddo
-            pe = pe + coul(i)
-            !--------
-            30 continue
-        99997 continue
-        d4_v  = (exch(1) - exch(2)) * (exch(1) - exch(2))
-        d3_p  = 2.0d0 * (exch(1) - exch(2))
-        d7_v  = (exch(2) - exch(3)) * (exch(2) - exch(3))
-        d2_p  = 2.0d0 * (exch(2) - exch(3))
-        d10_v = (exch(3) - exch(1)) * (exch(3) - exch(1))
-        d1_p  = 2.0d0 * (exch(3) - exch(1))
-        d5_b  = d1_p + (-d2_p)
-        d6_b  = -d1_p + d3_p
-        d10_b = d2_p + (-d3_p)
-        do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = d5_b * g_exch(g_i_, 3) + d10_b * g_exch(g_i_, 2) + d6_b * g_exch(g_i_, 1)
-        enddo
-        d1_w = d4_v + d7_v + d10_v
-        d2_v = sqrt(d1_w)
-        if( d1_w .gt. 0.0d0 )then
-            d1_p = 1.0d0 / (2.0d0 *  d2_v)
+            xlamb = .4568d0 / 27.21161d0
+            a1    = v3cp1
+            a2    = v3cp2
+            a3    = v3cp3
+            a4    = v3cp4
+            a5    = v3cp5
+            a6    = v3cp6
+            data re /1.41443d0, 0.74144d0, 1.41443d0/
+            data betaa /1.81088d0, 1.94198d0, 1.81088d0/
+            data r2 /1.41421356d0/
+            !
+            zhhp1  = 2.91230499d-1
+            zhhp2  = 4.99160974d0
+            zhbrp1 = 3.84262775d-3
+            zhbrp2 = 2.87642885d-3
+            v3cp1  = 1.67457884d0
+            v3cp2  = 7.09518875d-1
+            v3cp3  = 1.87582679d-1
+            v3cp4  = 2.43517074d-1
+            v3cp5  = 2.04145206d-1
+            v3cp6  = 2.57833022d0
+            !
+            !
+            !   Convert the constants to atomic units
+            !
+            do 99999 i = 1, 3
+                de(i)   = d(i) / charkc
+                re(i)   = re(i) / cangau
+                beta(i) = betaa(i) * cangau
+            99999 continue
+            !
+            !
+            !
+            !
         else
-            d1_p = 0.0d0
+            !
+            do 99996 k = 1, n
+                do g_i_ = 1, g_p_
+                    g_r(g_i_, 1) = 0.0d0
+                enddo
+                r(1) = rr(k,1)
+                !--------
+                do g_i_ = 1, g_p_
+                    g_r(g_i_, 2) = 0.0d0
+                enddo
+                r(2) = rr(k,2)
+                !--------
+                do g_i_ = 1, g_p_
+                    g_r(g_i_, 3) = 0.0d0
+                enddo
+                r(3)      = rr(k,3)
+                g_r(1, 1) = 1.0d0
+                g_r(2, 2) = 1.0d0
+                g_r(3, 3) = 1.0d0
+                !--------
+                !
+                !   Compute bond dependent Sato parameters
+                d2_b = r(1) + r(1)
+                do g_i_ = 1, g_p_
+                    g_r1p2(g_i_) = d2_b * g_r(g_i_, 1)
+                enddo
+                r1p2 = r(1) * r(1)
+                !--------
+                d2_b = r(2) + r(2)
+                do g_i_ = 1, g_p_
+                    g_r2p2(g_i_) = d2_b * g_r(g_i_, 2)
+                enddo
+                r2p2 = r(2) * r(2)
+                !--------
+                d2_b = r(3) + r(3)
+                do g_i_ = 1, g_p_
+                    g_r3p2(g_i_) = d2_b * g_r(g_i_, 3)
+                enddo
+                r3p2 = r(3) * r(3)
+                !--------
+                r2i = 1.0d0 / r(2)
+                do g_i_ = 1, g_p_
+                    g_zchi(g_i_) = 0.0d0
+                enddo
+                zchi = 0.0d0
+                !--------
+                !   CAPR IS THE Br TO H2 DISTANCE
+                d5_b = (-0.5d0) * 0.5d0
+                do g_i_ = 1, g_p_
+                    g_capr2(g_i_) = d5_b * g_r2p2(g_i_) + 0.5d0 * g_r3p2(g_i_) + 0.5d0 * g_r1p2(g_i_)
+                enddo
+                capr2 = 0.5d0 * (r1p2 + r3p2 - 0.5d0 * r2p2)
+                !--------
+                if( capr2 .le. 0.d0 )then
+                    do g_i_ = 1, g_p_
+                        g_capr2(g_i_) = 0.0d0
+                    enddo
+                    capr2 = 0.0d0
+                    !--------
+                    do g_i_ = 1, g_p_
+                        g_capr(g_i_) = 0.0d0
+                    enddo
+                    capr = 0.0d0
+                    !--------
+                else
+                    d2_v = sqrt(capr2)
+                    if( capr2 .gt. 0.0d0 )then
+                        d1_p = 1.0d0 / (2.0d0 *  d2_v)
+                    else
+                        d1_p = 0.0d0
+                    endif
+                    do g_i_ = 1, g_p_
+                        g_capr(g_i_) = d1_p * g_capr2(g_i_)
+                    enddo
+                    capr = d2_v
+                    !--------
+                    !   Compute Chi, the angle between CAPR and RHH
+                    d7_v = r(2) * capr
+                    d8_v = 0.5d0 * (r3p2 - r1p2) / d7_v
+                    d3_b = (-d8_v) / d7_v
+                    d4_b = d3_b * capr
+                    d5_b = d3_b * r(2)
+                    d6_b = 1.0d0 / d7_v * 0.5d0
+                    do g_i_ = 1, g_p_
+                        g_coschi(g_i_) = d5_b * g_capr(g_i_) + d4_b * g_r(g_i_, 2) + (-d6_b) * g_r1p2(g_i_) + d6_b * &
+                            & g_r3p2(g_i_)
+                    enddo
+                    coschi = d8_v
+                    !--------
+                    d3_b = -coschi + (-coschi)
+                    do g_i_ = 1, g_p_
+                        g_schip2(g_i_) = d3_b * g_coschi(g_i_)
+                    enddo
+                    schip2 = 1.0d0 - coschi * coschi
+                    !--------
+                    d4_v = zhbrp2 * schip2
+                    d6_v = zhbrp1 * schip2 + d4_v * schip2
+                    d7_b = capr2 * d4_v + capr2 * schip2 * zhbrp2 + capr2 * zhbrp1
+                    do g_i_ = 1, g_p_
+                        g_zchi(g_i_) = d7_b * g_schip2(g_i_) + d6_v * g_capr2(g_i_ )
+                    enddo
+                    zchi = capr2 * d6_v
+                    !--------
+                endif
+                do g_i_ = 1, g_p_
+                    g_z(g_i_, 1) = g_zchi(g_i_)
+                enddo
+                z(1) = 0.1675d0 + zchi
+                !--------
+                do g_i_ = 1, g_p_
+                    g_z(g_i_, 3) = g_z(g_i_, 1)
+                enddo
+                z(3) = z(1)
+                !--------
+                d3_v = zhhp2 + r2p2
+                d4_v = zhhp1 * r2p2 / d3_v
+                d4_b = (-d4_v) / d3_v + 1.0d0 / d3_v * zhhp1
+                do g_i_ = 1, g_p_
+                    g_z(g_i_, 2) = d4_b * g_r2p2(g_i_)
+                enddo
+                z(2) = d4_v
+                !--------
+                !
+                !   Compute the LEPS parameters
+                !
+                do 99998 i = 1, 3
+                    do g_i_ = 1, g_p_
+                        g_zpo(g_i_, i) = g_z(g_i_, i)
+                    enddo
+                    zpo(i) = 1.0d0 + z(i)
+                    !--------
+                    do g_i_ = 1, g_p_
+                        g_op3z(g_i_, i) = 3.0d0 * g_z(g_i_, i)
+                    enddo
+                    op3z(i) = 1.0d0 + 3.0d0 * z(i)
+                    !--------
+                    do g_i_ = 1, g_p_
+                        g_top3z(g_i_, i) = 2.0d0 * g_op3z(g_i_, i)
+                    enddo
+                    top3z(i) = 2.0d0 * op3z(i)
+                    !--------
+                    do g_i_ = 1, g_p_
+                        g_zp3(g_i_, i) = g_z(g_i_, i)
+                    enddo
+                    zp3(i) = z(i) + 3.0d0
+                    !--------
+                    do g_i_ = 1, g_p_
+                        g_tzp3(g_i_, i) = 2.0d0 * g_zp3(g_i_, i)
+                    enddo
+                    tzp3(i) = 2.0d0 * zp3(i)
+                    !--------
+                    d2_v = de(i) / 4.0d0 / zpo(i)
+                    d2_b = (-d2_v) / zpo(i)
+                    do g_i_ = 1, g_p_
+                        g_do4z(g_i_, i) = d2_b * g_zpo(g_i_, i)
+                    enddo
+                    do4z(i) = d2_v
+                    !--------
+                    b(i) = beta(i) * do4z(i) * 2.0d0
+                    20 continue
+                99998 continue
+                do g_i_ = 1, g_p_
+                    g_pe(g_i_) = 0.0d0
+                enddo
+                pe = 0.d0
+                !--------
+                do 99997 i = 1, 3
+                    do g_i_ = 1, g_p_
+                        g_d1_w(g_i_) = (-beta(i)) * g_r(g_i_, i)
+                    enddo
+                    d1_w = (-beta(i)) * (r(i) - re(i))
+                    d2_v = exp(d1_w)
+                    d1_p = d2_v
+                    do g_i_ = 1, g_p_
+                        g_x(g_i_, i) = d1_p * g_d1_w(g_i_)
+                    enddo
+                    x(i) = d2_v
+                    !--------
+                    d6_v = zp3(i) * x(i) - top3z(i)
+                    d7_v = do4z(i) * d6_v
+                    d4_b = x(i) * d6_v
+                    d5_b = x(i) * do4z(i)
+                    d8_b = d5_b * x(i)
+                    d3_b = d7_v + d5_b * zp3(i)
+                    do g_i_ = 1, g_p_
+                        g_coul(g_i_, i) = (-d5_b) * g_top3z(g_i_, i) + d3_b * g_x( g_i_, i) + d8_b * g_zp3(g_i_, i) + &
+                            & d4_b * g_do4z(g_i_, i)
+                    enddo
+                    coul(i) = d7_v * x(i)
+                    !--------
+                    d6_v = op3z(i) * x(i) - tzp3(i)
+                    d7_v = do4z(i) * d6_v
+                    d4_b = x(i) * d6_v
+                    d5_b = x(i) * do4z(i)
+                    d8_b = d5_b * x(i)
+                    d3_b = d7_v + d5_b * op3z(i)
+                    do g_i_ = 1, g_p_
+                        g_exch(g_i_, i) = (-d5_b) * g_tzp3(g_i_, i) + d3_b * g_x(g_i_, i) + d8_b * g_op3z(g_i_, i) + &
+                            & d4_b * g_do4z(g_i_, i)
+                    enddo
+                    exch(i) = d7_v * x(i)
+                    !--------
+                    do g_i_ = 1, g_p_
+                        g_pe(g_i_) = g_coul(g_i_, i) + g_pe(g_i_)
+                    enddo
+                    pe = pe + coul(i)
+                    !--------
+                    30 continue
+                99997 continue
+                d4_v  = (exch(1) - exch(2)) * (exch(1) - exch(2))
+                d3_p  = 2.0d0 * (exch(1) - exch(2))
+                d7_v  = (exch(2) - exch(3)) * (exch(2) - exch(3))
+                d2_p  = 2.0d0 * (exch(2) - exch(3))
+                d10_v = (exch(3) - exch(1)) * (exch(3) - exch(1))
+                d1_p  = 2.0d0 * (exch(3) - exch(1))
+                d5_b  = d1_p + (-d2_p)
+                d6_b  = -d1_p + d3_p
+                d10_b = d2_p + (-d3_p)
+                do g_i_ = 1, g_p_
+                    g_d1_w(g_i_) = d5_b * g_exch(g_i_, 3) + d10_b * g_exch(g_i_, 2) + d6_b * g_exch(g_i_, 1)
+                enddo
+                d1_w = d4_v + d7_v + d10_v
+                d2_v = sqrt(d1_w)
+                if( d1_w .gt. 0.0d0 )then
+                    d1_p = 1.0d0 / (2.0d0 *  d2_v)
+                else
+                    d1_p = 0.0d0
+                endif
+                do g_i_ = 1, g_p_
+                    g_rad(g_i_) = d1_p * g_d1_w(g_i_)
+                enddo
+                rad = d2_v
+                !--------
+                d5_b = -(1.0d0 / r2)
+                do g_i_ = 1, g_p_
+                    g_pe(g_i_) = d5_b * g_rad(g_i_) + g_pe(g_i_)
+                enddo
+                pe = pe - rad / r2 + de(2)
+                !--------
+                !   Compute the three-center term
+                do g_i_ = 1, g_p_
+                    g_r1p3(g_i_) = g_r(g_i_, 3) + g_r(g_i_, 1)
+                enddo
+                r1p3 = r(1) + r(3)
+                !--------
+                a1 = v3cp1
+                a2 = v3cp2
+                a3 = v3cp3
+                a4 = v3cp4
+                a5 = v3cp5
+                a6 = v3cp6
+                do g_i_ = 1, g_p_
+                    g_r1m3(g_i_) = -g_r(g_i_, 3) + g_r(g_i_, 1)
+                enddo
+                r1m3 = r(1) - r(3)
+                !--------
+                do g_i_ = 1, g_p_
+                    g_r1p3m2(g_i_) = -g_r(g_i_, 2) + g_r1p3(g_i_)
+                enddo
+                r1p3m2 = r1p3 - r(2)
+                !--------
+                d2_b = r1m3 + r1m3
+                do g_i_ = 1, g_p_
+                    g_r1m3p2(g_i_) = d2_b * g_r1m3(g_i_)
+                enddo
+                r1m3p2 = r1m3 * r1m3
+                !--------
+                d2_b = r1p3m2 + r1p3m2
+                do g_i_ = 1, g_p_
+                    g_r132p2(g_i_) = d2_b * g_r1p3m2(g_i_)
+                enddo
+                r132p2 = r1p3m2 * r1p3m2
+                !--------
+                !   Compute the bond angle from the three internal coordinates
+                d4_b = -r(2) + (-r(2))
+                d7_b = r(3) + r(3)
+                d8_b = r(1) + r(1)
+                do g_i_ = 1, g_p_
+                    g_dist(g_i_) = d4_b * g_r(g_i_, 2) + d7_b * g_r(g_i_, 3) + d8_b * g_r(g_i_, 1)
+                enddo
+                dist = r(1) * r(1) + r(3) * r(3) - r(2) * r(2)
+                !--------
+                d3_v = 2.0d0 * r(1)
+                d5_v = d3_v * r(3)
+                d6_v = dist / d5_v
+                d2_b = 1.0d0 / d5_v
+                d3_b = (-d6_v) / d5_v
+                d5_b = d3_b * d3_v
+                d6_b = d3_b * r(3) * 2.0d0
+                do g_i_ = 1, g_p_
+                    g_costh(g_i_) = d5_b * g_r(g_i_, 3) + d6_b * g_r(g_i_, 1) + d2_b * g_dist(g_i_)
+                enddo
+                costh = d6_v
+                !--------
+                d3_b = -costh + (-costh)
+                do g_i_ = 1, g_p_
+                    g_sintp2(g_i_) = d3_b * g_costh(g_i_)
+                enddo
+                sintp2 = 1.0d0 - costh * costh
+                !--------
+                d2_v = sintp2 * sintp2
+                d3_b = d2_v + sintp2 * sintp2 + sintp2 * sintp2
+                do g_i_ = 1, g_p_
+                    g_sintp6(g_i_) = d3_b * g_sintp2(g_i_)
+                enddo
+                sintp6 = d2_v * sintp2
+                !--------
+                do g_i_ = 1, g_p_
+                    g_sintp8(g_i_) = sintp6 * g_sintp2(g_i_) + sintp2 * g_sintp6 (g_i_)
+                enddo
+                sintp8 = sintp6 * sintp2
+                !--------
+                do g_i_ = 1, g_p_
+                    g_fcn4(g_i_) = a6 * g_sintp8(g_i_) + a5 * g_sintp2(g_i_)
+                enddo
+                fcn4 = 1.d0 + a5 * sintp2 + a6 * sintp8
+                !--------
+                do g_i_ = 1, g_p_
+                    g_d1_w(g_i_) = (-a4) * g_r132p2(g_i_) + (-a3) * g_r1m3p2(g_i_) + (-a2) * g_r1p3(g_i_)
+                enddo
+                d1_w = -(a2 * r1p3 + a3 * r1m3p2 + a4 * r132p2)
+                d2_v = a1 * fcn4
+                d4_v = exp(d1_w)
+                d1_p = d4_v
+                d4_b = d2_v * d1_p
+                d5_b = d4_v * a1
+                do g_i_ = 1, g_p_
+                    g_v3c(g_i_) = d4_b * g_d1_w(g_i_) + d5_b * g_fcn4(g_i_)
+                enddo
+                v3c = d2_v * d4_v
+                !--------
+                !   Sum all the terms that make up the energy
+                do g_i_ = 1, g_p_
+                    g_pe(g_i_) = g_v3c(g_i_) + g_pe(g_i_)
+                enddo
+                pe = pe + v3c
+                !--------
+                do g_i_ = 1, g_p_
+                    g_e(g_i_,k) = g_pe(g_i_)
+                enddo
+                e(k) = pe + xlamb / 3.d0
+                !--------
+            99996 continue
+            !
         endif
-        do g_i_ = 1, g_p_
-            g_rad(g_i_) = d1_p * g_d1_w(g_i_)
-        enddo
-        rad = d2_v
-        !--------
-        d5_b = -(1.0d0 / r2)
-        do g_i_ = 1, g_p_
-            g_pe(g_i_) = d5_b * g_rad(g_i_) + g_pe(g_i_)
-        enddo
-        pe = pe - rad / r2 + de(2)
-        !--------
-        !   Compute the three-center term
-        do g_i_ = 1, g_p_
-            g_r1p3(g_i_) = g_r(g_i_, 3) + g_r(g_i_, 1)
-        enddo
-        r1p3 = r(1) + r(3)
-        !--------
-        a1 = v3cp1
-        a2 = v3cp2
-        a3 = v3cp3
-        a4 = v3cp4
-        a5 = v3cp5
-        a6 = v3cp6
-        do g_i_ = 1, g_p_
-            g_r1m3(g_i_) = -g_r(g_i_, 3) + g_r(g_i_, 1)
-        enddo
-        r1m3 = r(1) - r(3)
-        !--------
-        do g_i_ = 1, g_p_
-            g_r1p3m2(g_i_) = -g_r(g_i_, 2) + g_r1p3(g_i_)
-        enddo
-        r1p3m2 = r1p3 - r(2)
-        !--------
-        d2_b = r1m3 + r1m3
-        do g_i_ = 1, g_p_
-            g_r1m3p2(g_i_) = d2_b * g_r1m3(g_i_)
-        enddo
-        r1m3p2 = r1m3 * r1m3
-        !--------
-        d2_b = r1p3m2 + r1p3m2
-        do g_i_ = 1, g_p_
-            g_r132p2(g_i_) = d2_b * g_r1p3m2(g_i_)
-        enddo
-        r132p2 = r1p3m2 * r1p3m2
-        !--------
-        !   Compute the bond angle from the three internal coordinates
-        d4_b = -r(2) + (-r(2))
-        d7_b = r(3) + r(3)
-        d8_b = r(1) + r(1)
-        do g_i_ = 1, g_p_
-            g_dist(g_i_) = d4_b * g_r(g_i_, 2) + d7_b * g_r(g_i_, 3) + d8_b * g_r(g_i_, 1)
-        enddo
-        dist = r(1) * r(1) + r(3) * r(3) - r(2) * r(2)
-        !--------
-        d3_v = 2.0d0 * r(1)
-        d5_v = d3_v * r(3)
-        d6_v = dist / d5_v
-        d2_b = 1.0d0 / d5_v
-        d3_b = (-d6_v) / d5_v
-        d5_b = d3_b * d3_v
-        d6_b = d3_b * r(3) * 2.0d0
-        do g_i_ = 1, g_p_
-            g_costh(g_i_) = d5_b * g_r(g_i_, 3) + d6_b * g_r(g_i_, 1) + d2_b * g_dist(g_i_)
-        enddo
-        costh = d6_v
-        !--------
-        d3_b = -costh + (-costh)
-        do g_i_ = 1, g_p_
-            g_sintp2(g_i_) = d3_b * g_costh(g_i_)
-        enddo
-        sintp2 = 1.0d0 - costh * costh
-        !--------
-        d2_v = sintp2 * sintp2
-        d3_b = d2_v + sintp2 * sintp2 + sintp2 * sintp2
-        do g_i_ = 1, g_p_
-            g_sintp6(g_i_) = d3_b * g_sintp2(g_i_)
-        enddo
-        sintp6 = d2_v * sintp2
-        !--------
-        do g_i_ = 1, g_p_
-            g_sintp8(g_i_) = sintp6 * g_sintp2(g_i_) + sintp2 * g_sintp6 (g_i_)
-        enddo
-        sintp8 = sintp6 * sintp2
-        !--------
-        do g_i_ = 1, g_p_
-            g_fcn4(g_i_) = a6 * g_sintp8(g_i_) + a5 * g_sintp2(g_i_)
-        enddo
-        fcn4 = 1.d0 + a5 * sintp2 + a6 * sintp8
-        !--------
-        do g_i_ = 1, g_p_
-            g_d1_w(g_i_) = (-a4) * g_r132p2(g_i_) + (-a3) * g_r1m3p2(g_i_) + (-a2) * g_r1p3(g_i_)
-        enddo
-        d1_w = -(a2 * r1p3 + a3 * r1m3p2 + a4 * r132p2)
-        d2_v = a1 * fcn4
-        d4_v = exp(d1_w)
-        d1_p = d4_v
-        d4_b = d2_v * d1_p
-        d5_b = d4_v * a1
-        do g_i_ = 1, g_p_
-            g_v3c(g_i_) = d4_b * g_d1_w(g_i_) + d5_b * g_fcn4(g_i_)
-        enddo
-        v3c = d2_v * d4_v
-        !--------
-        !   Sum all the terms that make up the energy
-        do g_i_ = 1, g_p_
-            g_pe(g_i_) = g_v3c(g_i_) + g_pe(g_i_)
-        enddo
-        pe = pe + v3c
-        !--------
-        do g_i_ = 1, g_p_
-            g_e(g_i_,k) = g_pe(g_i_)
-        enddo
-        e(k) = pe + xlamb / 3.d0
-        !--------
-    99996 continue
-    !
+    end subroutine dispatch
+end module chempotpy_brh2_leps_ltbz2_1995_dpem_g_pot11_entry_sta_432f3192
+
+!> @brief Compatibility interface for g_prepot11.
+subroutine g_prepot11( g_p_ )
+    use chempotpy_brh2_leps_ltbz2_1995_dpem_g_pot11_entry_sta_432f3192, only: dispatch
+    implicit none
+    integer :: g_p_
+    call dispatch(g_p_=g_p_, initialize_only=.true.)
 end subroutine g_prepot11
+
+!> @brief Compatibility interface for g_pot11.
+subroutine g_pot11( g_p_, rr, e, g_e, ldg_e, n )
+    use chempotpy_brh2_leps_ltbz2_1995_dpem_g_pot11_entry_sta_432f3192, only: dispatch
+    implicit none
+    integer          :: g_p_
+    double precision :: rr(n,3)
+    double precision :: e(n)
+    double precision :: g_e(ldg_e,*)
+    integer          :: ldg_e
+    integer          :: n
+    call dispatch(g_p_=g_p_, rr=rr, e=e, g_e=g_e(1:ldg_e,1:n), ldg_e=ldg_e, n=n, initialize_only=.false.)
+end subroutine g_pot11
 
 !**********************************************************************
 !**********************************************************************
 
 !> @brief Evaluate PREPOT12 for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
-subroutine prepot12
+module chempotpy_brh2_leps_ltbz2_1995_dpem_pot12_legacy_state_432f3192
     implicit none
-    double precision :: de, e, rr, xlamb
-    integer          :: j, k, n
-    dimension rr(n,3), e(*), de(3,n)
-    save
-    xlamb = 0.4568d0/27.21161d0
-    return
-    !
-    entry pot12(rr, e, de, n)
-    do 7777 k=1, n
-        e(k) = -dsqrt(2.d0)*xlamb/3.d0
-        do j =1, 3
-            de(j,k) = 0.0d0
-        enddo
-    7777 continue
+    private
+    public :: dispatch
+    contains
+    !> @brief Evaluate dispatch.
+    subroutine dispatch( rr, e, de, n, initialize_only )
+        implicit none
+        logical, intent(in) :: initialize_only
+        optional :: rr, e, de, n
+        double precision :: de, e, rr, xlamb
+        integer          :: j, k, n
+        dimension rr(:,:), e(:), de(:,:)
+        save
+        if( initialize_only )then
+            xlamb = 0.4568d0/27.21161d0
+            !
+        else
+            do 7777 k=1, n
+                e(k) = -dsqrt(2.d0)*xlamb/3.d0
+                do j =1, 3
+                    de(j,k) = 0.0d0
+                enddo
+            7777 continue
+        endif
+    end subroutine dispatch
+end module chempotpy_brh2_leps_ltbz2_1995_dpem_pot12_legacy_state_432f3192
+
+!> @brief Compatibility interface for prepot12.
+subroutine prepot12
+    use chempotpy_brh2_leps_ltbz2_1995_dpem_pot12_legacy_state_432f3192, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.true.)
 end subroutine prepot12
+
+!> @brief Compatibility interface for pot12.
+subroutine pot12( rr, e, de, n )
+    use chempotpy_brh2_leps_ltbz2_1995_dpem_pot12_legacy_state_432f3192, only: dispatch
+    implicit none
+    double precision :: rr(n,3)
+    double precision :: e(*)
+    double precision :: de(3,n)
+    integer          :: n
+    call dispatch(rr=rr, e=e(1:n), de=de, n=n, initialize_only=.false.)
+end subroutine pot12
 
 !
 !
 !> @brief Evaluate PREPOT22 for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
-subroutine prepot22
+module chempotpy_brh2_leps_ltbz2_1995_dpem_pot22_legacy_state_432f3192
     implicit none
-    double precision :: b, beta, betaa, ccon, coul, d, de, der, do4z, dz, e, exch, &
-        & op3z, pe, r2, rad, re, rr, top3z, tzp3, vanti1, vanti3, vmorse, x, xlamb, y1, y2, y3, z, &
-        & zhbrp1, zhbrp2, zhhp1, zhhp2, zp3, zpo
-    integer :: i, k, n
-    !
-    double precision            :: r(3)
-    double precision, parameter :: cangau = 0.52917706d0
-    double precision, parameter :: charkc = 627.5095d0
-    !
-    common /satocm/ zhhp1, zhhp2, zhbrp1, zhbrp2, &
-        & z(3), dz(3, 3)
-    common /lengcm/x(3), coul(3), exch(3), rad
-    common /lsatcm/ zpo(3), op3z(3), zp3(3), tzp3(3), top3z(3), &
-        & do4z(3), beta(3)
-    common /decom/ de(3)
-    common /com_para/ g_myrank, g_nprocs
-    integer :: g_myrank, g_nprocs
-    !
-    dimension d(3), re(3), betaa(3), b(3), rr(n,3), e(*), der(3,n)
-    !
-    save
-    !
-    data d/90.4473d0, 109.559d0, 90.4473d0/
-    data re/1.41443d0, 0.74144d0, 1.41443d0/
-    data betaa/1.81088d0, 1.94198d0, 1.81088d0/
-    data r2/1.41421356d0/
-    !
-    data ccon /0.5d0/
-    xlamb  = 0.4568d0/27.21161d0
-    zhhp1  = 2.91230499d-1
-    zhhp2  = 4.99160974d0
-    zhbrp1 = 3.84262775d-3
-    zhbrp2 = 2.87642885d-3
-    !
-    !
-    !   Convert the constants to atomic units
-    !
-    do 10 i = 1, 3
-        de(i)   = d(i) / charkc
-        re(i)   = re(i) / cangau
-        beta(i) = betaa(i) * cangau
-    10 continue
-    !
-    !
-    return
-    !
-    entry pot22(rr, e, der, n)
-    do 7777 k=1, n
-        r(1)     = rr(k,1)
-        r(2)     = rr(k,2)
-        r(3)     = rr(k,3)
-        y2       = exp(-beta(2)*(r(2)-re(2)))
-        y1       = exp(-beta(1)*(r(1)-re(1)))
-        y3       = exp(-beta(3)*(r(3)-re(3)))
-        vmorse   = de(2)*(y2**2-2.d0*y2)
-        vanti1   = de(1)*(y1**2+2.d0*y1)
-        vanti3   = de(3)*(y3**2+2.d0*y3)
-        pe       = de(2)+vmorse+(vanti1+vanti3)*ccon+2.d0*xlamb/3.d0
-        der(1,k) = -2.0d0*beta(1)*de(1)*(y1**2+y1)*ccon
-        der(2,k) = -2.0d0*beta(2)*de(2)*(y2**2-y2)
-        der(3,k) = -2.0d0*beta(3)*de(3)*(y3**2+y3)*ccon
-        e(k)     = pe
-    7777 continue
-    !
+    private
+    public :: dispatch
+    contains
+    !> @brief Evaluate dispatch.
+    subroutine dispatch( rr, e, der, n, initialize_only )
+        implicit none
+        logical, intent(in) :: initialize_only
+        optional :: rr, e, der, n
+        double precision :: b, beta, betaa, ccon, coul, d, de, der, do4z, dz, e, exch, &
+            & op3z, pe, r2, rad, re, rr, top3z, tzp3, vanti1, vanti3, vmorse, x, xlamb, y1, y2, y3, z, &
+            & zhbrp1, zhbrp2, zhhp1, zhhp2, zp3, zpo
+        integer :: i, k, n
+        !
+        double precision            :: r(3)
+        double precision, parameter :: cangau = 0.52917706d0
+        double precision, parameter :: charkc = 627.5095d0
+        !
+        common /satocm/ zhhp1, zhhp2, zhbrp1, zhbrp2, &
+            & z(3), dz(3, 3)
+        common /lengcm/x(3), coul(3), exch(3), rad
+        common /lsatcm/ zpo(3), op3z(3), zp3(3), tzp3(3), top3z(3), &
+            & do4z(3), beta(3)
+        common /decom/ de(3)
+        common /com_para/ g_myrank, g_nprocs
+        integer :: g_myrank, g_nprocs
+        !
+        dimension d(3), re(3), betaa(3), b(3), rr(:,:), e(:), der(:,:)
+        !
+        save
+        !
+        data d/90.4473d0, 109.559d0, 90.4473d0/
+        data re/1.41443d0, 0.74144d0, 1.41443d0/
+        data betaa/1.81088d0, 1.94198d0, 1.81088d0/
+        data r2/1.41421356d0/
+        !
+        data ccon /0.5d0/
+        if( initialize_only )then
+            xlamb  = 0.4568d0/27.21161d0
+            zhhp1  = 2.91230499d-1
+            zhhp2  = 4.99160974d0
+            zhbrp1 = 3.84262775d-3
+            zhbrp2 = 2.87642885d-3
+            !
+            !
+            !   Convert the constants to atomic units
+            !
+            do 10 i = 1, 3
+                de(i)   = d(i) / charkc
+                re(i)   = re(i) / cangau
+                beta(i) = betaa(i) * cangau
+            10 continue
+            !
+            !
+            !
+        else
+            do 7777 k=1, n
+                r(1)     = rr(k,1)
+                r(2)     = rr(k,2)
+                r(3)     = rr(k,3)
+                y2       = exp(-beta(2)*(r(2)-re(2)))
+                y1       = exp(-beta(1)*(r(1)-re(1)))
+                y3       = exp(-beta(3)*(r(3)-re(3)))
+                vmorse   = de(2)*(y2**2-2.d0*y2)
+                vanti1   = de(1)*(y1**2+2.d0*y1)
+                vanti3   = de(3)*(y3**2+2.d0*y3)
+                pe       = de(2)+vmorse+(vanti1+vanti3)*ccon+2.d0*xlamb/3.d0
+                der(1,k) = -2.0d0*beta(1)*de(1)*(y1**2+y1)*ccon
+                der(2,k) = -2.0d0*beta(2)*de(2)*(y2**2-y2)
+                der(3,k) = -2.0d0*beta(3)*de(3)*(y3**2+y3)*ccon
+                e(k)     = pe
+            7777 continue
+            !
+        endif
+    end subroutine dispatch
+end module chempotpy_brh2_leps_ltbz2_1995_dpem_pot22_legacy_state_432f3192
+
+!> @brief Compatibility interface for prepot22.
+subroutine prepot22
+    use chempotpy_brh2_leps_ltbz2_1995_dpem_pot22_legacy_state_432f3192, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.true.)
 end subroutine prepot22
+
+!> @brief Compatibility interface for pot22.
+subroutine pot22( rr, e, der, n )
+    use chempotpy_brh2_leps_ltbz2_1995_dpem_pot22_legacy_state_432f3192, only: dispatch
+    implicit none
+    double precision :: rr(n,3)
+    double precision :: e(*)
+    double precision :: der(3,n)
+    integer          :: n
+    call dispatch(rr=rr, e=e(1:n), der=der, n=n, initialize_only=.false.)
+end subroutine pot22

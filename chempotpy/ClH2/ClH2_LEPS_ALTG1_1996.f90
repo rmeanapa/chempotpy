@@ -98,227 +98,252 @@ end subroutine evdrdx
 
 !
 !> @brief Evaluate prepot for the ClH2_LEPS_ALTG1_1996 potential.
-subroutine prepot
-    ! Last modified on 3 August 1995 by TCA.
-    !
-    ! System:          ClH2
-    ! Functional form: eLEPS (extended London-Eyring-Polanyi-Sato)
-    !                  plus E3C (a three-center term)
-    !                  and modifications to improve the saddle point
-    !                  bend potential; based on GQQ surface
-    ! Common name:     G3
-    ! Reference:       Allison, T. C.; Lynch, G. C.; Truhlar, D. G.;
-    !                  Gordon, M. S. J. Phys. Chem., to be submitted.
-    !
-    ! PREPOT must be called once before any calls to POT are made.  It shoul
-    ! never be called more than once.
-    ! The potential parameters are included in DATA statements.
-    !
-    ! The coordinates are defined as follows:
-    !           R(1) = R(H-Cl)
-    !           R(2) = R(H-H')
-    !           R(3) = R(H'-Cl)
-    !
-    ! The zero of energy for this potential occurs when the Cl atom is
-    ! "infinitely" far from the the H2 diatom, and the H2 diatom is at
-    ! its equilibrium seperation.
-    !
-    !
-    !   Common Blocks (used between the calling program and this potential):
-    !      /PT1CM/ R(3), ENERGY, DEDR(3)
-    !        passes the coordinates, ground state electronic energy, and
-    !        derivatives of the ground electronic state energy with respect
-    !        to the coordinates.
-    !      /PT2CM/ NSURF, NDER, NDUM(21)
-    !        passes the control flags where
-    !        NSURF = 0    ground electronic surface
-    !        NDER  = 0 => no derivatives are computed
-    !              = 1 => derivatives of the energy for the ground electroni
-    !                     state with respect to the coordinates are computed
-    !        NDUM  - not used
-    !      /PT4CM/ IPTPRT, IDUM(19)
-    !        IPTPRT passes the FORTRAN unit number used for potential output
-    !        IDUM   not used
-    !      /PT5CM/ EASYAB, EASYBC, EASYAC
-    !        passes the energy in the three asymptotic valleys for an A + BC
-    !        The energy in the AB valley, EASYAB, is equal to the energy of
-    !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
-    !        Re(AB), the equilibrium bond length for the AB diatomic.
-    !        In this potential the AB valley represents H infinitely far fro
-    !        the BrH diatomic and R(BrH) equal to Re(BrH).  Similarly, the t
-    !        EASYBC and EASYAC represent the energies in the H2 and the BrH
-    !        valleys, respectively.
-    !
-    !   Default Parameter Values:
-    !      Variable      Default value
-    !      NSURF            0
-    !      NDER             1
-    !      IPTPRT           6
-    !
-    !*****
+module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
     implicit none
-    double precision :: ap, at, b, bp, c1, c2, cangau, ckcau, ctheta, de, dedr, df1r1, df2r1, df3r1, &
-        & df4rr, dfr1, dfr2, dfr3, dfrr, dfrs, dfrt1, dfrt2, dfrt3, dj1r1, dj1r2, dj1r3, dj2r2, &
-        & dj3r1, dj3r2, dj3r3, easyab, easyac, easybc, energy, f1, f123, f124, f134, f2, f234, f3, &
-        & f4, fmod, g, g5, hradi, pf, pfd, pfs, q2, q4, r, r1i, r1s, r2i, r2s, r3i, r3s, rad, re, rj, &
-        & s, st2, stheta, wj1, wj12d, wj2, wj23d, wj3, wj31d, wq1, wq2, wq3, x, x2, y1, y1s, y2, y3, &
-        & y3s
-    integer :: i, nder, ndum, nsurf
-    common /pt1cm/ r(3), energy, dedr(3)
-    common /pt2cm/ nsurf, nder, ndum(21)
-    common /pt5cm/ easyab, easybc, easyac
-    !
-    dimension de(3), re(3), b(3), s(3), pf(3), pfs(3), pfd(3)
-    save de, re, b, s, rj, ap, at, bp, q2, q4, ckcau, cangau, c1, c2
-    !
-    ! Constants used by the code.  de is the dissociation energy (kcal/mol),
-    ! re is the equilibrium bond length (angstroms), b is the Morse beta
-    ! parameter (angstroms**-1), and s is the sato parameter (unitless) for
-    ! the appropriate diatom (1 = H-Cl, 2 = H=H', 3 = H'-Cl).  The other
-    ! constants may be found in the literature reference.  ckcau is the
-    ! conversion factor between kcal/mol and hartrees and cangau is the
-    ! conversion factor between angstroms and bohr.
-    !
-    data de     / 106.447d0, 109.458d0, 106.447d0 /
-    data re     / 1.2732d0, 0.74127d0, 1.2732d0 /
-    data b      / 1.8674d0, 1.9413d0, 1.8674d0 /
-    data s      / 0.1835d0, 0.167d0, 0.1835d0 /
-    data rj     / 0.0758016022d0 /
-    data ap     / 0.0008627355d0 /
-    data at     / 0.2981969860d0 /
-    data bp     / 0.1439106543d0 /
-    data q2     / 0.6940323070d0 /
-    data q4     / 1.6963092005d0 /
-    data c1     / 3.1053877618397071175758280546d+0 /
-    data c2     / -1.8942608491155350536449828878d+0 /
-    data ckcau  / 627.5095d0 /
-    data cangau / 0.52917706d0 /
-    !
-    ! Write header potential parameters to FORTRAN unit 6.
-    !
-    !
-    ! Calculate first derivatives (default).  If no first derivatives are
-    ! desired, nder should be set equal to zero after prepot is called.
-    !
-    nder = 1
-    !
-    ! Convert to atomic units and calculate some useful constants.
-    !
-    do 10 i=1, 3
-        de(i)  = de(i)/ckcau
-        re(i)  = re(i)/cangau
-        b(i)   = b(i)*cangau
-        pf(i)  = 0.5d0*de(i)*((1.d0-s(i))/(1.d0+s(i)))
-        pfs(i) = de(i)+pf(i)
-        pfd(i) = de(i)-pf(i)
-    10 continue
-    !
-    easyab = de(1)
-    easybc = de(2)
-    easyac = de(3)
-    !
-    !
-    return
-    !
-    entry pot
-    !
-    r1i = 1.d0/r(1)
-    r2i = 1.d0/r(2)
-    r3i = 1.d0/r(3)
-    r1s = r(1)*r(1)
-    r2s = r(2)*r(2)
-    r3s = r(3)*r(3)
-    !
-    ! Compute three-center term.
-    !
-    f1     = dexp(-ap*(r(1)+r(3))**4)
-    f2     = dexp(-at*(r(1)-r(3))**2)
-    f3     = dexp(-bp*(r(1)+r(3)-r(2))**2)
-    ctheta = (r1s+r3s-r2s)*(0.5d0*r1i*r3i)
-    if( ctheta .lt. -1.d0 )then
-        ctheta = -1.d0
-    else if( ctheta .gt. 1.d0 )then
-        ctheta = 1.d0
-    endif
-    stheta = dsin(dacos(ctheta))
-    st2    = stheta*stheta
-    f4     = 1.d0+q2*st2+q4*st2*st2
-    !
-    ! Compute modification to bending potential.
-    !
-    x    = (r(1)-r(3))*r2i
-    x2   = x*x
-    g5   = (0.5d0*(1.d0+ctheta))**5
-    g    = g5*(0.5d0*(1.d0+ctheta))
-    fmod = 1.d0+g*(c1*(1.d0-x2)+c2*(1.d0-x2*x2))
-    !
-    ! Compute coulomb and exchange terms.
-    !
-    y1  = dexp(b(1)*(re(1)-r(1)))
-    wq1 = (0.5d0*(de(1)+pf(1)*fmod)*y1-pfd(1))*y1
-    wj1 = (0.5d0*(de(1)-pf(1)*fmod)*y1-pfs(1))*y1
-    y2  = dexp(b(2)*(re(2)-r(2)))
-    wq2 = (0.5d0*pfs(2)*y2-pfd(2))*y2
-    wj2 = (0.5d0*pfd(2)*y2-pfs(2))*y2
-    y3  = dexp(b(3)*(re(3)-r(3)))
-    wq3 = (0.5d0*(de(3)+pf(3)*fmod)*y3-pfd(3))*y3
-    wj3 = (0.5d0*(de(3)-pf(3)*fmod)*y3-pfs(3))*y3
-    !
-    ! Compute potential energy.
-    !
-    rad    = dsqrt(wj1*(wj1-wj2)+wj2*(wj2-wj3)+wj3*(wj3-wj1))
-    energy = de(2)+wq1+wq2+wq3-rad+f4*(rj*f1*f2*f3)
-    !
-    if( nder .eq. 1 )then
+    private
+    public :: dispatch
+    contains
+    !> @brief Evaluate dispatch.
+    subroutine dispatch( initialize_only )
+        ! Last modified on 3 August 1995 by TCA.
         !
-        ! Compute contributions to the derivatives.
+        ! System:          ClH2
+        ! Functional form: eLEPS (extended London-Eyring-Polanyi-Sato)
+        !                  plus E3C (a three-center term)
+        !                  and modifications to improve the saddle point
+        !                  bend potential; based on GQQ surface
+        ! Common name:     G3
+        ! Reference:       Allison, T. C.; Lynch, G. C.; Truhlar, D. G.;
+        !                  Gordon, M. S. J. Phys. Chem., to be submitted.
         !
-        dfrr  = (1.d0-x2)*(c1+c2*(1.d0+x2))*3.d0*g5
-        dfrs  = 2.d0*x*g*(c1+2.d0*c2*x2)*r2i
-        dfrt1 = r3i-ctheta*r1i
-        dfrt2 = -r(2)*(r1i*r3i)
-        dfrt3 = r1i-ctheta*r3i
-        dfr1  = dfrr*dfrt1-dfrs
-        dfr2  = dfrr*dfrt2+dfrs*x
-        dfr3  = dfrr*dfrt3+dfrs
+        ! PREPOT must be called once before any calls to POT are made.  It shoul
+        ! never be called more than once.
+        ! The potential parameters are included in DATA statements.
         !
-        y1s = y1*y1
-        y3s = y3*y3
+        ! The coordinates are defined as follows:
+        !           R(1) = R(H-Cl)
+        !           R(2) = R(H-H')
+        !           R(3) = R(H'-Cl)
         !
-        dj1r1 = y1*(de(1)*b(1)*(1.d0-y1) -pf(1)*(-b(1)*(1.d0+fmod*y1)+0.5d0*dfr1*y1))
-        dj1r2 = -0.5d0*pf(1)*dfr2*y1s
-        dj1r3 = -0.5d0*pf(1)*dfr3*y1s
-        dj2r2 = b(2)*y2*(pfs(2)-pfd(2)*y2)
-        dj3r1 = -0.5d0*pf(3)*dfr1*y3s
-        dj3r2 = -0.5d0*pf(3)*dfr2*y3s
-        dj3r3 = y3*(de(3)*b(3)*(1.d0-y3) -pf(3)*(-b(3)*(1.d0+fmod*y3)+0.5d0*dfr3*y3))
+        ! The zero of energy for this potential occurs when the Cl atom is
+        ! "infinitely" far from the the H2 diatom, and the H2 diatom is at
+        ! its equilibrium seperation.
         !
-        df1r1 = -2.d0*at*f1*(r(1)-r(3))
-        df2r1 = -4.d0*ap*f2*(r(1)+r(3))**3
-        df3r1 = -2.d0*bp*f3*(r(1)+r(3)-r(2))
-        df4rr = 2.d0*ctheta*(q2+2.d0*q4*st2)
         !
-        f123  = f1*f2*f3
-        f124  = f1*f2*f4
-        f134  = f1*f3*f4
-        f234  = f2*f3*f4
-        wj12d = wj1-wj2
-        wj23d = wj2-wj3
-        wj31d = wj3-wj1
-        hradi = 0.5d0/rad
+        !   Common Blocks (used between the calling program and this potential):
+        !      /PT1CM/ R(3), ENERGY, DEDR(3)
+        !        passes the coordinates, ground state electronic energy, and
+        !        derivatives of the ground electronic state energy with respect
+        !        to the coordinates.
+        !      /PT2CM/ NSURF, NDER, NDUM(21)
+        !        passes the control flags where
+        !        NSURF = 0    ground electronic surface
+        !        NDER  = 0 => no derivatives are computed
+        !              = 1 => derivatives of the energy for the ground electroni
+        !                     state with respect to the coordinates are computed
+        !        NDUM  - not used
+        !      /PT4CM/ IPTPRT, IDUM(19)
+        !        IPTPRT passes the FORTRAN unit number used for potential output
+        !        IDUM   not used
+        !      /PT5CM/ EASYAB, EASYBC, EASYAC
+        !        passes the energy in the three asymptotic valleys for an A + BC
+        !        The energy in the AB valley, EASYAB, is equal to the energy of
+        !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
+        !        Re(AB), the equilibrium bond length for the AB diatomic.
+        !        In this potential the AB valley represents H infinitely far fro
+        !        the BrH diatomic and R(BrH) equal to Re(BrH).  Similarly, the t
+        !        EASYBC and EASYAC represent the energies in the H2 and the BrH
+        !        valleys, respectively.
         !
-        ! Assemble derivatives.
+        !   Default Parameter Values:
+        !      Variable      Default value
+        !      NSURF            0
+        !      NDER             1
+        !      IPTPRT           6
         !
-        dedr(1)=y1*(de(1)*b(1)*(1.d0-y1)+pf(1)*(-b(1)*(1.d0+fmod*y1) +0.5d0*dfr1*y1))+0.5d0*pf(3)*dfr1*y3s -hradi* &
-            & (wj12d*dj1r1-wj23d*dj3r1+wj31d*(dj3r1-dj1r1)) +rj*(f124*df3r1+f134*df2r1+f234*df1r1-f123*df4rr*dfrt1)
-        dedr(2)=0.5d0*pf(1)*dfr2*y1s+b(2)*y2*(pfd(2)-pfs(2)*y2) +0.5d0*pf(3)*dfr2*y3s -hradi*(wj12d*(dj1r2-dj2r2)+ &
-            & wj23d* (dj2r2-dj3r2) +wj31d*(dj3r2-dj1r2))-rj*(f123*df4rr*dfrt2+f124*df3r1)
-        dedr(3)=0.5d0*pf(1)*dfr3*y1s+y3*(de(3)*b(3)*(1.d0-y3) +pf(3)*(-b(3)*(1.d0+fmod*y3)+0.5d0*dfr3*y3)) -hradi* &
-            & (wj12d*dj1r3-wj23d*dj3r3+wj31d*(dj3r3-dj1r3)) +rj*(f124*df3r1+f134*df2r1-f234*df1r1-f123*df4rr*dfrt3)
-    endif
-    !
-    !
+        !*****
+        implicit none
+        logical, intent(in) :: initialize_only
+        double precision    :: ap, at, b, bp, c1, c2, cangau, ckcau, ctheta, de, dedr, df1r1, df2r1, df3r1, &
+            & df4rr, dfr1, dfr2, dfr3, dfrr, dfrs, dfrt1, dfrt2, dfrt3, dj1r1, dj1r2, dj1r3, dj2r2, &
+            & dj3r1, dj3r2, dj3r3, easyab, easyac, easybc, energy, f1, f123, f124, f134, f2, f234, f3, &
+            & f4, fmod, g, g5, hradi, pf, pfd, pfs, q2, q4, r, r1i, r1s, r2i, r2s, r3i, r3s, rad, re, rj, &
+            & s, st2, stheta, wj1, wj12d, wj2, wj23d, wj3, wj31d, wq1, wq2, wq3, x, x2, y1, y1s, y2, y3, &
+            & y3s
+        integer :: i, nder, ndum, nsurf
+        common /pt1cm/ r(3), energy, dedr(3)
+        common /pt2cm/ nsurf, nder, ndum(21)
+        common /pt5cm/ easyab, easybc, easyac
+        !
+        dimension de(3), re(3), b(3), s(3), pf(3), pfs(3), pfd(3)
+        save de, re, b, s, rj, ap, at, bp, q2, q4, ckcau, cangau, c1, c2
+        !
+        ! Constants used by the code.  de is the dissociation energy (kcal/mol),
+        ! re is the equilibrium bond length (angstroms), b is the Morse beta
+        ! parameter (angstroms**-1), and s is the sato parameter (unitless) for
+        ! the appropriate diatom (1 = H-Cl, 2 = H=H', 3 = H'-Cl).  The other
+        ! constants may be found in the literature reference.  ckcau is the
+        ! conversion factor between kcal/mol and hartrees and cangau is the
+        ! conversion factor between angstroms and bohr.
+        !
+        data de     / 106.447d0, 109.458d0, 106.447d0 /
+        data re     / 1.2732d0, 0.74127d0, 1.2732d0 /
+        data b      / 1.8674d0, 1.9413d0, 1.8674d0 /
+        data s      / 0.1835d0, 0.167d0, 0.1835d0 /
+        data rj     / 0.0758016022d0 /
+        data ap     / 0.0008627355d0 /
+        data at     / 0.2981969860d0 /
+        data bp     / 0.1439106543d0 /
+        data q2     / 0.6940323070d0 /
+        data q4     / 1.6963092005d0 /
+        data c1     / 3.1053877618397071175758280546d+0 /
+        data c2     / -1.8942608491155350536449828878d+0 /
+        data ckcau  / 627.5095d0 /
+        data cangau / 0.52917706d0 /
+        !
+        ! Write header potential parameters to FORTRAN unit 6.
+        !
+        !
+        ! Calculate first derivatives (default).  If no first derivatives are
+        ! desired, nder should be set equal to zero after prepot is called.
+        !
+        if( initialize_only )then
+            nder = 1
+            !
+            ! Convert to atomic units and calculate some useful constants.
+            !
+            do 10 i=1, 3
+                de(i)  = de(i)/ckcau
+                re(i)  = re(i)/cangau
+                b(i)   = b(i)*cangau
+                pf(i)  = 0.5d0*de(i)*((1.d0-s(i))/(1.d0+s(i)))
+                pfs(i) = de(i)+pf(i)
+                pfd(i) = de(i)-pf(i)
+            10 continue
+            !
+            easyab = de(1)
+            easybc = de(2)
+            easyac = de(3)
+            !
+            !
+            !
+        else
+            !
+            r1i = 1.d0/r(1)
+            r2i = 1.d0/r(2)
+            r3i = 1.d0/r(3)
+            r1s = r(1)*r(1)
+            r2s = r(2)*r(2)
+            r3s = r(3)*r(3)
+            !
+            ! Compute three-center term.
+            !
+            f1     = dexp(-ap*(r(1)+r(3))**4)
+            f2     = dexp(-at*(r(1)-r(3))**2)
+            f3     = dexp(-bp*(r(1)+r(3)-r(2))**2)
+            ctheta = (r1s+r3s-r2s)*(0.5d0*r1i*r3i)
+            if( ctheta .lt. -1.d0 )then
+                ctheta = -1.d0
+            else if( ctheta .gt. 1.d0 )then
+                ctheta = 1.d0
+            endif
+            stheta = dsin(dacos(ctheta))
+            st2    = stheta*stheta
+            f4     = 1.d0+q2*st2+q4*st2*st2
+            !
+            ! Compute modification to bending potential.
+            !
+            x    = (r(1)-r(3))*r2i
+            x2   = x*x
+            g5   = (0.5d0*(1.d0+ctheta))**5
+            g    = g5*(0.5d0*(1.d0+ctheta))
+            fmod = 1.d0+g*(c1*(1.d0-x2)+c2*(1.d0-x2*x2))
+            !
+            ! Compute coulomb and exchange terms.
+            !
+            y1  = dexp(b(1)*(re(1)-r(1)))
+            wq1 = (0.5d0*(de(1)+pf(1)*fmod)*y1-pfd(1))*y1
+            wj1 = (0.5d0*(de(1)-pf(1)*fmod)*y1-pfs(1))*y1
+            y2  = dexp(b(2)*(re(2)-r(2)))
+            wq2 = (0.5d0*pfs(2)*y2-pfd(2))*y2
+            wj2 = (0.5d0*pfd(2)*y2-pfs(2))*y2
+            y3  = dexp(b(3)*(re(3)-r(3)))
+            wq3 = (0.5d0*(de(3)+pf(3)*fmod)*y3-pfd(3))*y3
+            wj3 = (0.5d0*(de(3)-pf(3)*fmod)*y3-pfs(3))*y3
+            !
+            ! Compute potential energy.
+            !
+            rad    = dsqrt(wj1*(wj1-wj2)+wj2*(wj2-wj3)+wj3*(wj3-wj1))
+            energy = de(2)+wq1+wq2+wq3-rad+f4*(rj*f1*f2*f3)
+            !
+            if( nder .eq. 1 )then
+                !
+                ! Compute contributions to the derivatives.
+                !
+                dfrr  = (1.d0-x2)*(c1+c2*(1.d0+x2))*3.d0*g5
+                dfrs  = 2.d0*x*g*(c1+2.d0*c2*x2)*r2i
+                dfrt1 = r3i-ctheta*r1i
+                dfrt2 = -r(2)*(r1i*r3i)
+                dfrt3 = r1i-ctheta*r3i
+                dfr1  = dfrr*dfrt1-dfrs
+                dfr2  = dfrr*dfrt2+dfrs*x
+                dfr3  = dfrr*dfrt3+dfrs
+                !
+                y1s = y1*y1
+                y3s = y3*y3
+                !
+                dj1r1 = y1*(de(1)*b(1)*(1.d0-y1) -pf(1)*(-b(1)*(1.d0+fmod*y1)+0.5d0*dfr1*y1))
+                dj1r2 = -0.5d0*pf(1)*dfr2*y1s
+                dj1r3 = -0.5d0*pf(1)*dfr3*y1s
+                dj2r2 = b(2)*y2*(pfs(2)-pfd(2)*y2)
+                dj3r1 = -0.5d0*pf(3)*dfr1*y3s
+                dj3r2 = -0.5d0*pf(3)*dfr2*y3s
+                dj3r3 = y3*(de(3)*b(3)*(1.d0-y3) -pf(3)*(-b(3)*(1.d0+fmod*y3)+0.5d0*dfr3*y3))
+                !
+                df1r1 = -2.d0*at*f1*(r(1)-r(3))
+                df2r1 = -4.d0*ap*f2*(r(1)+r(3))**3
+                df3r1 = -2.d0*bp*f3*(r(1)+r(3)-r(2))
+                df4rr = 2.d0*ctheta*(q2+2.d0*q4*st2)
+                !
+                f123  = f1*f2*f3
+                f124  = f1*f2*f4
+                f134  = f1*f3*f4
+                f234  = f2*f3*f4
+                wj12d = wj1-wj2
+                wj23d = wj2-wj3
+                wj31d = wj3-wj1
+                hradi = 0.5d0/rad
+                !
+                ! Assemble derivatives.
+                !
+                dedr(1)=y1*(de(1)*b(1)*(1.d0-y1)+pf(1)*(-b(1)*(1.d0+fmod*y1) +0.5d0*dfr1*y1))+0.5d0*pf(3)*dfr1*y3s - &
+                    & hradi* (wj12d*dj1r1-wj23d*dj3r1+wj31d*(dj3r1-dj1r1)) +rj*(f124*df3r1+f134*df2r1+f234*df1r1-f123* &
+                    & df4rr*dfrt1)
+                dedr(2)=0.5d0*pf(1)*dfr2*y1s+b(2)*y2*(pfd(2)-pfs(2)*y2) +0.5d0*pf(3)*dfr2*y3s -hradi*(wj12d*(dj1r2- &
+                    & dj2r2)+ wj23d* (dj2r2-dj3r2) +wj31d*(dj3r2-dj1r2))-rj*(f123*df4rr*dfrt2+f124*df3r1)
+                dedr(3)=0.5d0*pf(1)*dfr3*y1s+y3*(de(3)*b(3)*(1.d0-y3) +pf(3)*(-b(3)*(1.d0+fmod*y3)+0.5d0*dfr3*y3)) - &
+                    & hradi* (wj12d*dj1r3-wj23d*dj3r3+wj31d*(dj3r3-dj1r3)) +rj*(f124*df3r1+f134*df2r1-f234*df1r1-f123* &
+                    & df4rr*dfrt3)
+            endif
+            !
+            !
+        endif
+    end subroutine dispatch
+end module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
+
+!> @brief Compatibility interface for prepot.
+subroutine prepot
+    use chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.true.)
 end subroutine prepot
+
+!> @brief Compatibility interface for pot.
+subroutine pot
+    use chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832, only: dispatch
+    implicit none
+    call dispatch(initialize_only=.false.)
+end subroutine pot
 
 !> @brief Evaluate POTINFO for the ClH2_LEPS_ALTG1_1996 potential.
 subroutine potinfo
