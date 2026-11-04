@@ -26,58 +26,51 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, i, j, k, istate
     !initialize
     v = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
-        end do
-    end do
+        enddo
+    enddo
     k = 0
     do i=1, 3
         do j=i+1, 4
             k         = k+1
             r_bond(k) = dsqrt(dot_product((tx(:,i)-tx(:,j)), (tx(:,i)-tx(:,j))))
-        end do
-    end do
-
+        enddo
+    enddo
     call pes_ococ(r_bond, v, igrad, dvdr, path)
-
     dvdr = dvdr/8065.7112013/legacy_bohr_to_angstrom
-
     ! convert dvdr to dvdx
     do iatom=1, natoms
         do idir=1, 3
             j      = 3*(iatom-1)+idir
             txx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     r2 = r_bond*legacy_bohr_to_angstrom
     call evdrdx(txx, r2, drdx)
     dvdx = 0.d0
     do i=1, 12
         do j=1, 6
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = v/8065.7112013
-        end do
-    else if (igrad==1) then
+        enddo
+    else if( igrad == 1 )then
         do istate=1, nstates
             p(istate) = v/8065.7112013
-        end do
+        enddo
         do iatom=1, natoms
             do idir=1, 3
                 j               = 3*(iatom-1)+idir
                 g(1,iatom,idir) = dvdx(j)
-            end do
-        end do
-    end if
-
+            enddo
+        enddo
+    endif
     d = 0.d0
-
 end subroutine
 
 !> @brief Evaluate EvdRdX.
@@ -88,8 +81,8 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 6
         do j=1, 12
             drdx(i,j) = 0.0d0
-        end do
-    end do
+        enddo
+    enddo
     ! Start to calculate the non-zero dRdX
     ! dr1dx
     drdx(1,1) = (x(1)-x(4))/r(1)
@@ -98,7 +91,6 @@ subroutine evdrdx( x, r, drdx )
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     ! dr2dx
     drdx(2,1) = (x(1)-x(7))/r(2)
     drdx(2,2) = (x(2)-x(8))/r(2)
@@ -106,7 +98,6 @@ subroutine evdrdx( x, r, drdx )
     drdx(2,7) = -drdx(2,1)
     drdx(2,8) = -drdx(2,2)
     drdx(2,9) = -drdx(2,3)
-
     ! dr3dx
     drdx(3,1)  = (x(1)-x(10))/r(3)
     drdx(3,2)  = (x(2)-x(11))/r(3)
@@ -114,7 +105,6 @@ subroutine evdrdx( x, r, drdx )
     drdx(3,10) = -drdx(3,1)
     drdx(3,11) = -drdx(3,2)
     drdx(3,12) = -drdx(3,3)
-
     ! dr4dx
     drdx(4,4) = (x(4)-x(7))/r(4)
     drdx(4,5) = (x(5)-x(8))/r(4)
@@ -122,7 +112,6 @@ subroutine evdrdx( x, r, drdx )
     drdx(4,7) = -drdx(4,4)
     drdx(4,8) = -drdx(4,5)
     drdx(4,9) = -drdx(4,6)
-
     ! dr5dx
     drdx(5,4)  = (x(4)-x(10))/r(5)
     drdx(5,5)  = (x(5)-x(11))/r(5)
@@ -130,7 +119,6 @@ subroutine evdrdx( x, r, drdx )
     drdx(5,10) = -drdx(5,4)
     drdx(5,11) = -drdx(5,5)
     drdx(5,12) = -drdx(5,6)
-
     ! dr6dx
     drdx(6,7)  = (x(7)-x(10))/r(6)
     drdx(6,8)  = (x(8)-x(11))/r(6)
@@ -139,7 +127,6 @@ subroutine evdrdx( x, r, drdx )
     drdx(6,11) = -drdx(6,8)
     drdx(6,12) = -drdx(6,9)
     ! Finish the calculation of non-zero dRdX
-
 end subroutine evdrdx
 
 !> @brief Evaluate pes_ococ.
@@ -152,16 +139,13 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
     integer, intent(in)             :: idv
     double precision, intent(out)   :: v, dvdr(6)
     double precision                :: p(np,1), vp(1), dvdp(np,1), dpdr(np,6)
-    if(idv.ne.0 .and. idv.ne.1) stop "Only energy and gradient are available"
-
+    if( idv .ne. 0 .and. idv .ne. 1 ) stop "Only energy and gradient are available"
     call pip_ococ(r, p(:,1), idv, dpdr)
     call nnfit_ococ(np, 1, p, vp, idv, dvdp, path)
-    if(idv.eq.1) call dgemv('t', 7, 6, 1.d0, dpdr, 7, dvdp, 1, 0.d0, dvdr, 1)
+    if( idv .eq. 1 ) call dgemv('t', 7, 6, 1.d0, dpdr, 7, dvdp, 1, 0.d0, dvdr, 1)
     v = vp(1)
     return
-
     contains
-
     !> @brief Evaluate pip_ococ.
     subroutine pip_ococ( r, p, idv, dpdr )
         ! molecular based fundamental invariants
@@ -174,8 +158,7 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
         double precision              :: g(6)
         do i=1, 6
             g(i) = exp(-r(i)*ita)
-        end do
-
+        enddo
         p(1) = g(1)+g(6)
         p(2) = g(3)+g(4)
         p(3) = g(1)**2+g(6)**2
@@ -183,15 +166,11 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
         p(5) = g(1)*g(3)+g(4)*g(6)
         p(6) = g(2)
         p(7) = g(5)
-
         p(3) = dsqrt(p(3))
         p(4) = dsqrt(p(4))
         p(5) = dsqrt(p(5))
-
-        if(idv.eq.0) return
-
-        dpdr = 0.d0
-
+        if( idv .eq. 0 ) return
+        dpdr      = 0.d0
         dpdr(1,1) = 1.d0
         dpdr(1,6) = 1.d0
         dpdr(2,3) = 1.d0
@@ -206,13 +185,10 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
         dpdr(5,6) = 0.5d0/p(5)*g(4)
         dpdr(6,2) = 1.d0
         dpdr(7,5) = 1.d0
-
         do i=1, 6
             dpdr(:,i) = dpdr(:,i)*g(i)*(-1.d0*ita)
-        end do
-
+        enddo
     end subroutine pip_ococ
-
     !> @brief Evaluate nnfit_ococ.
     subroutine nnfit_ococ( ndim, ntot, r0, vx, idv, dv, path )
         implicit none
@@ -229,24 +205,22 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
         integer, save                   :: fid
         character(len=1024)             :: file_path1
         file_path1 = trim(path)//"/COCO/nn_ococ_w20.txt"
-
-        if(ndim.ne.s0) stop "ndim .ne. s0"
-        if (init.eq.0) then
+        if( ndim .ne. s0 ) stop "ndim .ne. s0"
+        if( init .eq. 0 )then
             init = 1
             fid  = 870711
             open(fid, file=file_path1, status='old', action='read')
             read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
             close(fid)
-        end if
-        if(ntot.ge.24) then
+        endif
+        if( ntot .ge. 24 )then
             call nsimx(ntot, r0, vx, idv, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
         else
             do i=1, ntot
                 call nsim(r0(1,i), vx(i), idv, dv(:,i), s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
-            end do
-        end if
+            enddo
+        endif
     end subroutine nnfit_ococ
-
     !> @brief Evaluate nsim.
     subroutine nsim( r0, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
         ! ---- simulate a neural network with two hidden layers
@@ -270,7 +244,7 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
         do i=1, n0
             rgg(i) = rg(2,i)-rg(1,i)
             r(i)   = 2.d0*(r(i)-rg(1,i))/rgg(i)-1.d0
-        end do
+        enddo
         ! 1st layer
         rt1 = b1
         call dgemv('t', n0, n1, 1.d0, w1, n0, r, 1, 1.d0, rt1, 1)
@@ -283,29 +257,28 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
         v = b3+ddot(n2, w3, 1, bx, 1)
         !reverse map
         v = vgg*(v+1.d0)/2+vg(1)
-        if(idv.ne.1) return
+        if( idv .ne. 1 ) return
         ! calculate first derivatives, dv(i)=dv/dr(i)
         ! updated: 2020/6/26, speed up x5
         do j=1, n1
             maxx(j) = 1-ax(j)**2
-        end do
+        enddo
         do k=1, n2
             do j=1, n1
                 w2maxx(j,k) = maxx(j)*w2(j,k)
-            end do
-        end do
+            enddo
+        enddo
         do k=1, n2
             w3mbxx(k) = w3(k)*(1-bx(k)**2)
-        end do
+        enddo
         dv   = 0.d0
         dvtm = 0.d0
         call dgemm('n', 'n', n0, n2, n1, 1.d0, w1, n0, w2maxx, n1, 0.d0, dvtm, n0)
         call dgemv('n', n0, n2, 1.d0, dvtm, n0, w3mbxx, 1, 0.d0, dv, 1)
         do i=1, n0
             dv(i) = dv(i)*vgg/rgg(i)
-        end do
+        enddo
     end subroutine nsim
-
     !> @brief Evaluate nsimx.
     subroutine nsimx( nt, r, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
         ! ---- simulate a neural network with two hidden layers
@@ -342,43 +315,31 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
         v = 0.d0
         do i=1, n0
             rgg(i) = rg(2,i)-rg(1,i)
-        end do
+        enddo
         vgg = vg(2)-vg(1)
-
-        x0 = r
-
+        x0  = r
         do i=1, n0
             x0(i,1:nt) = (x0(i,1:nt)-rg(1,i))/rgg(i)*2.d0-1.d0
-        end do
-
+        enddo
         do i=1, n1
             x1(1:nt,i) = b1(i)
-        end do
-
+        enddo
         ! ---- x1=trans(x0(n0,nt))*w1(n0,n1)+x1(nt,n1)
         !call gpu_dgemm('t','n',nt,n1,n0,1.d0,x0,n0,w1,n0,1.d0,x1,nt)
         call dgemm('t', 'n', nt, n1, n0, 1.d0, x0, n0, w1, n0, 1.d0, x1, nt)
-
         x1 = dtanh(x1)
-
         do i=1, n2
             x2(1:nt,i) = b2(i)
-        end do
-
+        enddo
         ! ---- x2=x1(nt,n1)*w2(n1,n2)+x2(nt,n2)
         !call gpu_dgemm('n','n',nt,n2,n1,1.d0,x1,nt,w2,n1,1.d0,x2,nt)
         call dgemm('n', 'n', nt, n2, n1, 1.d0, x1, nt, w2, n1, 1.d0, x2, nt)
-
-        x2 = dtanh(x2)
-
+        x2      = dtanh(x2)
         v(1:nt) = b3
-
         ! ---- v=x2(nt,n2)*w3(n2)+v(nt)
         call dgemv('n', nt, n2, 1.d0, x2, nt, w3, 1, 1.d0, v, 1)
-
         v = (v+1.d0)/2.d0*vgg+vg(1)
-
-        if (idv.ne.1) return
+        if( idv .ne. 1 ) return
         ! ---- calculate first derivatives
         dv = 0.d0
         do n=1, nt
@@ -387,14 +348,13 @@ subroutine pes_ococ( r, v, idv, dvdr, path )
                     tmp = 0.d0
                     do j=1, n1
                         tmp = tmp+w2(j,k)*w1(i,j)*(1-x1(n,j)**2)
-                    end do
+                    enddo
                     dv(i,n) = dv(i,n)+w3(k)*tmp*(1-x2(n,k)**2)
-                end do
+                enddo
                 dv(i,n) = dv(i,n)*vgg/(rgg(i))
-            end do
-        end do
+            enddo
+        enddo
     end subroutine nsimx
-
 end subroutine pes_ococ
 
 !> @brief Evaluate potco.
@@ -441,7 +401,7 @@ subroutine potco( r, v, dv )
         y1j = tanh(b1(j)+w1(j)*x)
         v   = v+w2(j)*y1j
         dv  = dv+w2(j)*(1.d0-y1j**2)*w1(j)
-    end do
+    enddo
     v  = v+b2
     v  = (v+1.d0)*(vb-va)/2.d0+va
     v  = v+0.560096850315234d0

@@ -25,25 +25,21 @@ subroutine dpem( x, igrad, u, ug )
     logical, save                 :: first_time_data=.true.
     integer                       :: i, j, k, l
     !initialize
-    u = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
-
+    u  = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
     nt = 1
     do iatom=1, natoms
         do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
-
+    call legacy_triatomic_distances_to_bohr(x, r(1,:))
     nder = igrad
-
-    if(first_time_data) then
+    if( first_time_data )then
         call prepot
         first_time_data = .false.
-    end if
-
+    endif
     call pot(r, u11, de_u11, 1, 1)
     call pot(r, u12, de_u12, 1, 2)
     call pot(r, u22, de_u22, 1, 3)
@@ -56,23 +52,20 @@ subroutine dpem( x, igrad, u, ug )
     dudr(2,1,:) = de_u12(:,1)*51.422067
     dudr(2,2,:) = de_u22(:,1)*51.422067
     call diagonalize(nstates, u, p, t)
-
     r2 = r(1,:)*legacy_bohr_to_angstrom
     call evdrdx(tx, r2, drdx)
     dudx = 0.d0
     do i=1, 9
         do j=1, 3
             dudx(:,:,i) = dudx(:,:,i)+dudr(:,:,j)*drdx(j,i)
-        end do
-    end do
-
+        enddo
+    enddo
     do iatom=1, natoms
         do idir=1, 3
             j                  = (iatom-1)*3+idir
             ug(:,:,iatom,idir) = dudx(:,:,j)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the NaFH_LEPS_JHCTP_2001_DPEM potential.
@@ -85,30 +78,26 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 3
         do j=1, 9
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
     drdx(1,3) = (x(3)-x(6))/r(1)
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     drdx(2,4) = (x(4)-x(7))/r(2)
     drdx(2,5) = (x(5)-x(8))/r(2)
     drdx(2,6) = (x(6)-x(9))/r(2)
     drdx(2,7) = -drdx(2,4)
     drdx(2,8) = -drdx(2,5)
     drdx(2,9) = -drdx(2,6)
-
     drdx(3,1) = (x(1)-x(7))/r(3)
     drdx(3,2) = (x(2)-x(8))/r(3)
     drdx(3,3) = (x(3)-x(9))/r(3)
     drdx(3,7) = -drdx(3,1)
     drdx(3,8) = -drdx(3,2)
     drdx(3,9) = -drdx(3,3)
-
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the NaFH_LEPS_JHCTP_2001_DPEM potential.
@@ -123,14 +112,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
     u_ss = a_ss
-    if (first_time_diag) then
+    if( first_time_diag )then
         lwork_d = -1
         allocate( work_d(2) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    end if
+    endif
     allocate( work_d(lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
@@ -188,7 +177,6 @@ subroutine prepot
     call prepot12
     call prepot22
     call prepot11
-
 end subroutine prepot
 
 ! **********************************************************************
@@ -227,14 +215,13 @@ subroutine pot( r, e, de, nt, nsurf )
     integer          :: nsurf, nt
     dimension r(nt,3), e(nt)
     dimension de(3,nt)
-    if (nsurf .eq. 1) then
+    if( nsurf .eq. 1 )then
         call pot11(r, e, de, nt)
-    else if (nsurf .eq. 2) then
+    else if( nsurf .eq. 2 )then
         call pot12(r, e, de, nt)
     else
         call pot22(r, e, de, nt)
-    end if
-
+    endif
 end subroutine pot
 
 ! **********************************************************************
@@ -270,12 +257,10 @@ subroutine prepot11
     common/angular1/ac(4)
     !-----------------------------------------------------------------------
     rac2 = 1.d0/dsqrt(2.d0)
-
-    af1 = amh/(amf+amh)
-    af2 = amf/(amf+amh)
+    af1  = amh/(amf+amh)
+    af2  = amf/(amf+amh)
     if( g_myrank .eq. 0 )then
         !        write(6,100)af1,af2
-
         !----------------------------------
         !     Excited NaF surface:
         !        write(6,102)(cNF1(i),i=1,5)
@@ -313,13 +298,11 @@ subroutine prepot11
         !        write(6,131)(aln0n1(j),j=1,4)
         !        write(6,132)(aln0n2(j),j=1,4)
         !        write(6,133)(rn0n(j),j=1,4)
-    end if
+    endif
     return
     !
     entry pot11(r, e, de, nt)
-
     do 10 i=1, nt
-
         r1s      = r(i,1)*r(i,1)
         r2s      = r(i,2)*r(i,2)
         r3s      = r(i,3)*r(i,3)
@@ -327,7 +310,6 @@ subroutine prepot11
         drnag2d1 = 2.d0*af1*r(i,1)
         drnag2d2 = -2.d0*af1*af2*r(i,2)
         drnag2d3 = 2.d0*af2*r(i,3)
-
         !     Cosine of Na-F-H bond angle:
         hlp    = 1.d0/(r(i,2)*r(i,3))
         csb    = 0.5d0*(r2s+r3s-r1s)*hlp
@@ -335,19 +317,16 @@ subroutine prepot11
         dcsbd2 = 2.d0*(1.d0/r(i,3)-csb/r(i,2))
         dcsbd3 = 2.d0*(1.d0/r(i,2)-csb/r(i,3))
         csb    = 2.d0*(1.d0+csb)
-
-        if (csb.ge.4.d0) csb = 3.99999d0
+        if( csb .ge. 4.d0 ) csb = 3.99999d0
         l1 = idint(csb)+1
         l2 = l1+1
-        if (l1.eq.4) l2=l1
-        if (csb.le.bc(l1)) csb = bc(l1)+1.d-13
-        if (csb.ge.bc(l1+1)) csb = bc(l1+1)-1.d-13
-
+        if( l1 .eq. 4 ) l2=l1
+        if( csb .le. bc(l1) ) csb = bc(l1)+1.d-13
+        if( csb .ge. bc(l1+1) ) csb = bc(l1+1)-1.d-13
         axs1  = dexp(-abs1*(r(i,1)-ars1))
         s1    = ads1*axs1*(axs1-2.d0)
         ds1d1 = 2.d0*ads1*abs1*axs1*(1.d0-axs1)
         !-----------------------------------------------------------------------
-
         y2    = r(i,2)-rehf
         hlp1  = chf(1)*dexp(-chf(2)*y2)
         hlp2  = dexp(-chf(6)*y2)
@@ -355,7 +334,6 @@ subroutine prepot11
         s2    = dehf*(hlp1+hlp22)
         ds2d2 = dehf*(-chf(2)*hlp1 - chf(6)*hlp22 + (chf(3)+2.d0*chf(4)*y2+3.d0*chf(5)*y2**2)*hlp2)
         !-----------------------------------------------------------------------
-
         y3    = r(i,3)-renf
         hlp1  = dexp(-cnf1(3)*y3)
         hlp11 = (cnf1(1)+cnf1(2)*y3)*hlp1
@@ -363,7 +341,6 @@ subroutine prepot11
         s3    = hlp11+hlp2
         ds3d3 = -cnf1(3)*hlp11+cnf1(2)*hlp1-cnf1(5)*hlp2
         !-----------------------------------------------------------------------
-
         e(i)     = 0.d0
         de(1,i)  = 0.d0
         de(2,i)  = 0.d0
@@ -373,22 +350,18 @@ subroutine prepot11
         danormd2 = 0.d0
         danormd3 = 0.d0
         do 20 l = l1, l2
-
-            hlp1  = y(1, 1, l)*dexp(-y(2, 1, l)*r(i,1))
-            hlp2  = y(3, 1, l)*dexp(-y(4, 1, l)*r(i,1))
-            t1    = hlp1+hlp2+s1
-            dt1d1 = -y(2, 1, l)*hlp1-y(4, 1, l)*hlp2+ds1d1
-
-            hlp1  = y(1, 2, l)*dexp(-y(2, 2, l)*r(i,2))
-            hlp2  = y(3, 2, l)*dexp(-y(4, 2, l)*r(i,2))
-            t2    = hlp1+hlp2+s2
-            dt2d2 = -y(2, 2, l)*hlp1-y(4, 2, l)*hlp2+ds2d2
-
-            hlp1  = y(1, 3, l)*dexp(-y(2, 3, l)*r(i,3))
-            hlp2  = y(3, 3, l)*dexp(-y(4, 3, l)*r(i,3))
-            t3    = hlp1+hlp2+s3
-            dt3d3 = -y(2, 3, l)*hlp1-y(4, 3, l)*hlp2+ds3d3
-
+            hlp1   = y(1, 1, l)*dexp(-y(2, 1, l)*r(i,1))
+            hlp2   = y(3, 1, l)*dexp(-y(4, 1, l)*r(i,1))
+            t1     = hlp1+hlp2+s1
+            dt1d1  = -y(2, 1, l)*hlp1-y(4, 1, l)*hlp2+ds1d1
+            hlp1   = y(1, 2, l)*dexp(-y(2, 2, l)*r(i,2))
+            hlp2   = y(3, 2, l)*dexp(-y(4, 2, l)*r(i,2))
+            t2     = hlp1+hlp2+s2
+            dt2d2  = -y(2, 2, l)*hlp1-y(4, 2, l)*hlp2+ds2d2
+            hlp1   = y(1, 3, l)*dexp(-y(2, 3, l)*r(i,3))
+            hlp2   = y(3, 3, l)*dexp(-y(4, 3, l)*r(i,3))
+            t3     = hlp1+hlp2+s3
+            dt3d3  = -y(2, 3, l)*hlp1-y(4, 3, l)*hlp2+ds3d3
             coul1  = 0.5d0*(s1+t1)
             dcl1d1 = 0.5d0*(ds1d1+dt1d1)
             coul2  = 0.5d0*(s2+t2)
@@ -401,19 +374,16 @@ subroutine prepot11
             dex2d2 = 0.5d0*(ds2d2-dt2d2)
             exch3  = 0.5d0*(s3-t3)
             dex3d3 = 0.5d0*(ds3d3-dt3d3)
-
-            w    = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
-            dwd1 = 2.d0*(2.d0*exch1-exch2-exch3)*dex1d1
-            dwd2 = 2.d0*(2.d0*exch2-exch1-exch3)*dex2d2
-            dwd3 = 2.d0*(2.d0*exch3-exch1-exch2)*dex3d3
-
-            cplg2 = c2a(l)*dexp(-c2b(l)*w-c2c(l)*(r(i,1)+r(i,2)+r(i,3)))
-            dcd1  = (-c2b(l)*dwd1 - c2c(l))*cplg2
-            dcd2  = (-c2b(l)*dwd2 - c2c(l))*cplg2
-            dcd3  = (-c2b(l)*dwd3 - c2c(l))*cplg2
-
-            rootw = rac2*dsqrt(w+cplg2*cplg2)
-            surf  = (coul1+coul2+coul3+dehf-rootw)
+            w      = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
+            dwd1   = 2.d0*(2.d0*exch1-exch2-exch3)*dex1d1
+            dwd2   = 2.d0*(2.d0*exch2-exch1-exch3)*dex2d2
+            dwd3   = 2.d0*(2.d0*exch3-exch1-exch2)*dex3d3
+            cplg2  = c2a(l)*dexp(-c2b(l)*w-c2c(l)*(r(i,1)+r(i,2)+r(i,3)))
+            dcd1   = (-c2b(l)*dwd1 - c2c(l))*cplg2
+            dcd2   = (-c2b(l)*dwd2 - c2c(l))*cplg2
+            dcd3   = (-c2b(l)*dwd3 - c2c(l))*cplg2
+            rootw  = rac2*dsqrt(w+cplg2*cplg2)
+            surf   = (coul1+coul2+coul3+dehf-rootw)
             !
             ! check for zero by zero division (a case when all three atoms are asymp
             ! separated)
@@ -421,18 +391,17 @@ subroutine prepot11
                 dsurfd1 = dcl1d1
             else
                 dsurfd1 = (dcl1d1-0.25d0*(dwd1+2.d0*cplg2*dcd1)/rootw)
-            end if
+            endif
             if( (dwd2+2.d0*cplg2*dcd2) .eq. 0.0d0 )then
                 dsurfd2 = dcl2d2
             else
                 dsurfd2 = (dcl2d2-0.25d0*(dwd2+2.d0*cplg2*dcd2)/rootw)
-            end if
+            endif
             if( (dwd3+2.d0*cplg2*dcd3) .eq. 0.0d0 )then
                 dsurfd3 = dcl3d3
             else
                 dsurfd3 = (dcl3d3-0.25d0*(dwd3+2.d0*cplg2*dcd3)/rootw)
-            end if
-
+            endif
             hlp1    = adip1(l)*(rnag2-rdip1(l))
             hlp2    = acut1(l)*(r(i,2)-rcut1(l))
             hlp11   = 0.5d0/(dcosh(hlp1)**2)
@@ -443,7 +412,6 @@ subroutine prepot11
             dsurfd1 = dsurfd1+dip1(l)*adip1(l)*drnag2d1*hlp11*hlp2
             dsurfd2 = dsurfd2+dip1(l)*adip1(l)*drnag2d2*hlp11*hlp2 -dip1(l)*hlp1*acut1(l)*hlp22
             dsurfd3 = dsurfd3+dip1(l)*adip1(l)*drnag2d3*hlp11*hlp2
-
             hlp1    = al2(l)*(r(i,2)-rehf)
             hlp2    = aln0(l)*rnag2
             hlp11   = dtanh(hlp1)
@@ -454,15 +422,14 @@ subroutine prepot11
             dsurfd1 = dsurfd1 + dipn(l)*hlp1*hlp2*hlp22*aln0(l)*drnag2d1
             dsurfd2 = dsurfd2 + dipn(l)*hlp1*hlp2*hlp22*aln0(l)*drnag2d2 + dipn(l)*hlp2*hlp1*hlp11*al2(l)
             dsurfd3 = dsurfd3 + dipn(l)*hlp1*hlp2*hlp22*aln0(l)*drnag2d3
-
-            hlp1 = al2n(l)*(r(i,2)-rehf)
-            hlp2 = aln0n1(l)*(rnag2-rn0n(l)**2)
+            hlp1    = al2n(l)*(r(i,2)-rehf)
+            hlp2    = aln0n1(l)*(rnag2-rn0n(l)**2)
             ! try to prevent an overflow
-            if( hlp2 .lt. 709.0d0 ) then
+            if( hlp2 .lt. 709.0d0 )then
                 hlp2 = dexp(hlp2)
             else
                 hlp2 = 1.0d308
-            end if
+            endif
             hlp3    = dexp(-aln0n2(l)*(rnag2-rn0n(l)**2))
             hlp23   = 1.d0/(hlp2+hlp3)**2
             hlp11   = dtanh(hlp1)
@@ -472,16 +439,14 @@ subroutine prepot11
             dsurfd2=dsurfd2 + 2.d0*dipnn(l)*hlp1 *(aln0n1(l)*hlp2-aln0n2(l)*hlp3)*hlp23*drnag2d2 + 2.d0*dipnn(l)*hlp1* &
                 & hlp11*al2n(l)/(hlp2+hlp3)
             dsurfd3 = dsurfd3 + 2.d0*dipnn(l)*hlp1 *(aln0n1(l)*hlp2-aln0n2(l)*hlp3)*hlp23*drnag2d3
-
-            hlp  = 1.d0/( (1.d0-(csb-bc(l))/(bc(l-1)-bc(l))) * (1.d0-(csb-bc(l))/(bc(l+1)-bc(l))) )
-            hlp1 = (csb-bc(l))**2*hlp
-            cog  = dexp(-ac(l)*hlp1)
-            dcog = -cog*ac(l)*(2.d0*(csb-bc(l))*hlp +hlp1*(1.d0/(bc(l-1)-csb)+1.d0/(bc(l+1)-csb)))
+            hlp     = 1.d0/( (1.d0-(csb-bc(l))/(bc(l-1)-bc(l))) * (1.d0-(csb-bc(l))/(bc(l+1)-bc(l))) )
+            hlp1    = (csb-bc(l))**2*hlp
+            cog     = dexp(-ac(l)*hlp1)
+            dcog    = -cog*ac(l)*(2.d0*(csb-bc(l))*hlp +hlp1*(1.d0/(bc(l-1)-csb)+1.d0/(bc(l+1)-csb)))
             !-----------------------------------------------------------------------
-            dcogd1 = dcog*dcsbd1
-            dcogd2 = dcog*dcsbd2
-            dcogd3 = dcog*dcsbd3
-
+            dcogd1   = dcog*dcsbd1
+            dcogd2   = dcog*dcsbd2
+            dcogd3   = dcog*dcsbd3
             e(i)     = e(i) + surf*cog
             de(1,i)  = de(1,i) + dsurfd1*cog+surf*dcogd1
             de(2,i)  = de(2,i) + dsurfd2*cog+surf*dcogd2
@@ -499,26 +464,20 @@ subroutine prepot11
         de(2,i) = (de(2,i) - e(i)*danormd2)*hlp
         de(3,i) = (de(3,i) - e(i)*danormd3)*hlp
         !  77 format(2(2x,i3),5(2x,e16.8))
-
         do j=1, 3
             rdum(j) = r(i,j)
-        end do
-
+        enddo
         call lepscfu11(3, rdum, g_r, 3, cfu11, dcfu11, 3)
-
         e(i)    = e(i) + cfu11
         de(1,i) = de(1,i) + dcfu11(1)
         de(2,i) = de(2,i) + dcfu11(2)
         de(3,i) = de(3,i) + dcfu11(3)
-
         e(i)    = e(i)*cevau
         de(1,i) = de(1,i)*cevau
         de(2,i) = de(2,i)*cevau
         de(3,i) = de(3,i)*cevau
     10 continue
-
     !-----------------------------------------------------------------------
-
 end subroutine prepot11
 
 ! **********************************************************************
@@ -555,7 +514,6 @@ subroutine prepot12
     af2 = amf/(amf+amh)
     if( g_myrank .eq. 0 )then
         !         write(6,100)af1,af2
-
         !     NaF coupling:
         !         write(6,101)(ccNF(i),i=1,4)
         !         write(6,102)(ccNHa(i),i=1,4)
@@ -568,21 +526,17 @@ subroutine prepot12
         !j         write(6,109)(r21(i),i=1,3)
         !         write(6,110)(r23(i),i=1,3)
         !         write(6,111)(r13(i),i=1,3)
-    end if
-
+    endif
     return
     !
     entry pot12(r, e, de, nt)
-
     do 10 i=1, nt
-
-        hlp1    = dexp(-xpnh*r(i,2)**2)
-        hlp2    = dexp(-xpnh1*r(i,3)**2)
-        ccnh(1) = ccnha(1)+ccnhi(1)*hlp1+ccnhi1(1)*hlp2
-        ccnh(2) = ccnha(2)+ccnhi(2)*hlp1+ccnhi1(2)*hlp2
-        ccnh(3) = ccnha(3)+ccnhi(3)*hlp1+ccnhi1(3)*hlp2
-        ccnh(4) = ccnha(4)+ccnhi(4)*hlp1+ccnhi1(4)*hlp2
-
+        hlp1       = dexp(-xpnh*r(i,2)**2)
+        hlp2       = dexp(-xpnh1*r(i,3)**2)
+        ccnh(1)    = ccnha(1)+ccnhi(1)*hlp1+ccnhi1(1)*hlp2
+        ccnh(2)    = ccnha(2)+ccnhi(2)*hlp1+ccnhi1(2)*hlp2
+        ccnh(3)    = ccnha(3)+ccnhi(3)*hlp1+ccnhi1(3)*hlp2
+        ccnh(4)    = ccnha(4)+ccnhi(4)*hlp1+ccnhi1(4)*hlp2
         hlp1       = - 2.d0*xpnh*r(i,2)*hlp1
         hlp2       = - 2.d0*xpnh1*r(i,3)*hlp2
         dccnhd2(1) = ccnhi(1)*hlp1
@@ -593,19 +547,18 @@ subroutine prepot12
         dccnhd3(3) = ccnhi1(3)*hlp2
         dccnhd2(4) = ccnhi(4)*hlp1
         dccnhd3(4) = ccnhi1(4)*hlp2
-
-        hlp     = ccnf(3)/(1.d0+ccnf(4)*r(i,3))
-        unaf    = dexp(-ccnf(1)-ccnf(2)*r(i,3)- hlp*r(i,3))
-        unaf    = unaf*27.2113961d0
-        dunafd3 = -unaf*(ccnf(2)+hlp-ccnf(4)*hlp*hlp*r(i,3)/ccnf(3))
-
-        hlp     = 1.d0/(1.d0+ccnh(4)*r(i,1))
-        unah    = dexp(-ccnh(1)-ccnh(2)*r(i,1)- ccnh(3)*hlp*r(i,1))
-        dunahd1 = -unah*(ccnh(2)+ccnh(3)*hlp -ccnh(4)*hlp*hlp*ccnh(3)*r(i,1))
-        dunahd2 = -unah*(dccnhd2(1)+dccnhd2(2)*r(i,1) + dccnhd2(3)*r(i,1)*hlp-ccnh(3)*r(i,1)*r(i,1)*dccnhd2(4)* hlp*hlp)
-        dunahd3 = -unah*(dccnhd3(1)+dccnhd3(2)*r(i,1) + dccnhd3(3)*r(i,1)*hlp-ccnh(3)*r(i,1)*r(i,1)*dccnhd3(4)* hlp*hlp)
+        hlp        = ccnf(3)/(1.d0+ccnf(4)*r(i,3))
+        unaf       = dexp(-ccnf(1)-ccnf(2)*r(i,3)- hlp*r(i,3))
+        unaf       = unaf*27.2113961d0
+        dunafd3    = -unaf*(ccnf(2)+hlp-ccnf(4)*hlp*hlp*r(i,3)/ccnf(3))
+        hlp        = 1.d0/(1.d0+ccnh(4)*r(i,1))
+        unah       = dexp(-ccnh(1)-ccnh(2)*r(i,1)- ccnh(3)*hlp*r(i,1))
+        dunahd1    = -unah*(ccnh(2)+ccnh(3)*hlp -ccnh(4)*hlp*hlp*ccnh(3)*r(i,1))
+        dunahd2    = -unah*(dccnhd2(1)+dccnhd2(2)*r(i,1) + dccnhd2(3)*r(i,1)*hlp-ccnh(3)*r(i,1)*r(i,1)*dccnhd2(4)* &
+            & hlp*hlp)
+        dunahd3    = -unah*(dccnhd3(1)+dccnhd3(2)*r(i,1) + dccnhd3(3)*r(i,1)*hlp-ccnh(3)*r(i,1)*r(i,1)*dccnhd3(4)* &
+            & hlp*hlp)
         !-----------------------------------------------------------------------
-
         r1s      = r(i,1)*r(i,1)
         r2s      = r(i,2)*r(i,2)
         r3s      = r(i,3)*r(i,3)
@@ -620,99 +573,85 @@ subroutine prepot12
         dcstsqd2 = 2.d0*((af2-af1)/hlp-cstsq/r(i,2)) - cstsq*drnag2d2/hlp2
         dcstsqd3 = 2.d0*r(i,3)/(r(i,2)*hlp) - cstsq*drnag2d3/hlp2
         cstsq    = 2.0d0*(1.d0+cstsq)
-
-        hlp     = r21(2)-r21(1)-r21(3)
-        r21t    = r21(1)+hlp*cstsq +r21(3)*cstsq*cstsq
-        hlp1    = hlp+2.d0*r21(3)*cstsq
-        dr21td1 = hlp1*dcstsqd1
-        dr21td2 = hlp1*dcstsqd2
-        dr21td3 = hlp1*dcstsqd3
-
-        hlp     = r23(2)-r23(1)-r23(3)
-        r23t    = r23(1)+hlp*cstsq +r23(3)*cstsq*cstsq
-        hlp1    = hlp+2.d0*r23(3)*cstsq
-        dr23td1 = hlp1*dcstsqd1
-        dr23td2 = hlp1*dcstsqd2
-        dr23td3 = hlp1*dcstsqd3
-
-        hlp     = r13(2)-r13(1)-r13(3)
-        r13t    = r13(1)+hlp*cstsq +r13(3)*cstsq*cstsq
-        hlp1    = hlp+2.d0*r13(3)*cstsq
-        dr13td1 = hlp1*dcstsqd1
-        dr13td2 = hlp1*dcstsqd2
-        dr13td3 = hlp1*dcstsqd3
-
-        hlp     = ahf(2)-ahf(1)-ahf(3)
-        ahft    = ahf(1)+hlp*cstsq +ahf(3)*cstsq*cstsq
-        hlp1    = hlp+2.d0*ahf(3)*cstsq
-        dahftd1 = hlp1*dcstsqd1
-        dahftd2 = hlp1*dcstsqd2
-        dahftd3 = hlp1*dcstsqd3
-
+        hlp      = r21(2)-r21(1)-r21(3)
+        r21t     = r21(1)+hlp*cstsq +r21(3)*cstsq*cstsq
+        hlp1     = hlp+2.d0*r21(3)*cstsq
+        dr21td1  = hlp1*dcstsqd1
+        dr21td2  = hlp1*dcstsqd2
+        dr21td3  = hlp1*dcstsqd3
+        hlp      = r23(2)-r23(1)-r23(3)
+        r23t     = r23(1)+hlp*cstsq +r23(3)*cstsq*cstsq
+        hlp1     = hlp+2.d0*r23(3)*cstsq
+        dr23td1  = hlp1*dcstsqd1
+        dr23td2  = hlp1*dcstsqd2
+        dr23td3  = hlp1*dcstsqd3
+        hlp      = r13(2)-r13(1)-r13(3)
+        r13t     = r13(1)+hlp*cstsq +r13(3)*cstsq*cstsq
+        hlp1     = hlp+2.d0*r13(3)*cstsq
+        dr13td1  = hlp1*dcstsqd1
+        dr13td2  = hlp1*dcstsqd2
+        dr13td3  = hlp1*dcstsqd3
+        hlp      = ahf(2)-ahf(1)-ahf(3)
+        ahft     = ahf(1)+hlp*cstsq +ahf(3)*cstsq*cstsq
+        hlp1     = hlp+2.d0*ahf(3)*cstsq
+        dahftd1  = hlp1*dcstsqd1
+        dahftd2  = hlp1*dcstsqd2
+        dahftd3  = hlp1*dcstsqd3
         hlp      = anaf(2)-anaf(1)-anaf(3)
         anaft    = anaf(1)+hlp*cstsq +anaf(3)*cstsq*cstsq
         hlp1     = hlp+2.d0*anaf(3)*cstsq
         danaftd1 = hlp1*dcstsqd1
         danaftd2 = hlp1*dcstsqd2
         danaftd3 = hlp1*dcstsqd3
-
         hlp      = anah(2)-anah(1)-anah(3)
         anaht    = anah(1)+hlp*cstsq +anah(3)*cstsq*cstsq
         hlp1     = hlp+2.d0*anah(3)*cstsq
         danahtd1 = hlp1*dcstsqd1
         danahtd2 = hlp1*dcstsqd2
         danahtd3 = hlp1*dcstsqd3
-
-        hlp    = anaht*r(i,1)-anaft*r(i,3)-r13t
-        sw1    = 0.5d0*(1.d0+dtanh(hlp))
-        hlp1   = 0.5d0/(dcosh(hlp)**2)
-        dsw1d1 = hlp1*(anaht+danahtd1*r(i,1)-danaftd1*r(i,3)-dr13td1)
-        dsw1d2 = hlp1*(danahtd2*r(i,1)-danaftd2*r(i,3)-dr13td2)
-        dsw1d3 = hlp1*(danahtd3*r(i,1)-anaft-danaftd3*r(i,3)-dr13td3)
-
-        hlp     = ahft*r(i,2)-anaht*r(i,1)-r21t
-        sw21    = 0.5d0*(1.d0+dtanh(hlp))
-        hlp1    = 0.5d0/(dcosh(hlp)**2)
-        dsw21d1 = hlp1*(dahftd1*r(i,2)-anaht-danahtd1*r(i,1)-dr21td1)
-        dsw21d2 = hlp1*(ahft+dahftd2*r(i,2)-danahtd2*r(i,1)-dr21td2)
-        dsw21d3 = hlp1*(dahftd3*r(i,2)-danahtd3*r(i,1)-dr21td3)
-
-        hlp     = ahft*r(i,2)-anaft*r(i,3)-r23t
-        sw23    = 0.5d0*(1.d0+dtanh(hlp))
-        hlp1    = 0.5d0/(dcosh(hlp)**2)
-        dsw23d1 = hlp1*(dahftd1*r(i,2)-danaftd1*r(i,3)-dr23td1)
-        dsw23d2 = hlp1*(ahft+dahftd2*r(i,2)-danaftd2*r(i,3)-dr23td2)
-        dsw23d3 = hlp1*(dahftd3*r(i,2)-anaft-danaftd3*r(i,3)-dr23td3)
-
-        e(i) = unaf*sw1*sw23+unah*(1.d0-sw1)*sw21
+        hlp      = anaht*r(i,1)-anaft*r(i,3)-r13t
+        sw1      = 0.5d0*(1.d0+dtanh(hlp))
+        hlp1     = 0.5d0/(dcosh(hlp)**2)
+        dsw1d1   = hlp1*(anaht+danahtd1*r(i,1)-danaftd1*r(i,3)-dr13td1)
+        dsw1d2   = hlp1*(danahtd2*r(i,1)-danaftd2*r(i,3)-dr13td2)
+        dsw1d3   = hlp1*(danahtd3*r(i,1)-anaft-danaftd3*r(i,3)-dr13td3)
+        hlp      = ahft*r(i,2)-anaht*r(i,1)-r21t
+        sw21     = 0.5d0*(1.d0+dtanh(hlp))
+        hlp1     = 0.5d0/(dcosh(hlp)**2)
+        dsw21d1  = hlp1*(dahftd1*r(i,2)-anaht-danahtd1*r(i,1)-dr21td1)
+        dsw21d2  = hlp1*(ahft+dahftd2*r(i,2)-danahtd2*r(i,1)-dr21td2)
+        dsw21d3  = hlp1*(dahftd3*r(i,2)-danahtd3*r(i,1)-dr21td3)
+        hlp      = ahft*r(i,2)-anaft*r(i,3)-r23t
+        sw23     = 0.5d0*(1.d0+dtanh(hlp))
+        hlp1     = 0.5d0/(dcosh(hlp)**2)
+        dsw23d1  = hlp1*(dahftd1*r(i,2)-danaftd1*r(i,3)-dr23td1)
+        dsw23d2  = hlp1*(ahft+dahftd2*r(i,2)-danaftd2*r(i,3)-dr23td2)
+        dsw23d3  = hlp1*(dahftd3*r(i,2)-anaft-danaftd3*r(i,3)-dr23td3)
+        e(i)     = unaf*sw1*sw23+unah*(1.d0-sw1)*sw21
         de(1,i) = unaf*dsw1d1*sw23+unaf*sw1*dsw23d1 + dunahd1*(1.d0-sw1)*sw21-unah*dsw1d1*sw21 + unah*(1.d0-sw1)* &
             & dsw21d1
         de(2,i) = unaf*dsw1d2*sw23+unaf*sw1*dsw23d2 + dunahd2*(1.d0-sw1)*sw21-unah*dsw1d2*sw21 + unah*(1.d0-sw1)* &
             & dsw21d2
         de(3,i) = dunafd3*sw1*sw23+unaf*dsw1d3*sw23+unaf*sw1*dsw23d3 + dunahd3*(1.d0-sw1)*sw21-unah*dsw1d3*sw21 + &
             & unah* (1.d0-sw1)*dsw21d3
-
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !     correction function
-        cf_p   = 2.d0
-        cf_r0  = 3.5d0
-        swit   = 0.5d0*(1.d0+dtanh(cf_p*(cf_r0-r(i,2))))
-        dswit1 = 0.d0
-        dswit2 = -0.5d0*cf_p*1.d0/(dcosh(cf_p*(-r(i,2)+cf_r0))**2)
-        dswit3 = 0.d0
-
+        cf_p    = 2.d0
+        cf_r0   = 3.5d0
+        swit    = 0.5d0*(1.d0+dtanh(cf_p*(cf_r0-r(i,2))))
+        dswit1  = 0.d0
+        dswit2  = -0.5d0*cf_p*1.d0/(dcosh(cf_p*(-r(i,2)+cf_r0))**2)
+        dswit3  = 0.d0
         de(1,i) = e(i)*dswit1+swit*de(1,i)
         de(2,i) = e(i)*dswit2+swit*de(2,i)
         de(3,i) = e(i)*dswit3+swit*de(3,i)
         e(i)    = e(i)*swit
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
         e(i)    = e(i)*cevau
         de(1,i) = de(1,i)*cevau
         de(2,i) = de(2,i)*cevau
         de(3,i) = de(3,i)*cevau
     10 continue
-
 end subroutine prepot12
 
 ! **********************************************************************
@@ -750,9 +689,8 @@ subroutine prepot22
     common/angular2/ac(4)
     !-----------------------------------------------------------------------
     rac2 = 1.d0/dsqrt(2.d0)
-
-    af1 = amh/(amf+amh)
-    af2 = amf/(amf+amh)
+    af1  = amh/(amf+amh)
+    af2  = amf/(amf+amh)
     if( g_myrank .eq. 0 )then
         !         write(6,100)af1,af2
         !----------------------------------
@@ -800,14 +738,13 @@ subroutine prepot22
         !         write(6,140)(rdip2n(j),j=1,4)
         !         write(6,141)(acut2n(j),j=1,4)
         !         write(6,142)(rcut2n(j),j=1,4)
-    end if
+    endif
     !
     return
     !
     entry pot22(r, e, de, nt)
     !
     do 10 i=1, nt
-
         r1s      = r(i,1)*r(i,1)
         r2s      = r(i,2)*r(i,2)
         r3s      = r(i,3)*r(i,3)
@@ -815,7 +752,6 @@ subroutine prepot22
         drnag2d1 = 2.d0*af1*r(i,1)
         drnag2d2 = -2.d0*af1*af2*r(i,2)
         drnag2d3 = 2.d0*af2*r(i,3)
-
         !     Cosine of Na-F-H bond angle:
         hlp    = 1.d0/(r(i,2)*r(i,3))
         csb    = 0.5d0*(r2s+r3s-r1s)*hlp
@@ -823,14 +759,12 @@ subroutine prepot22
         dcsbd2 = 2.d0*(1.d0/r(i,3)-csb/r(i,2))
         dcsbd3 = 2.d0*(1.d0/r(i,2)-csb/r(i,3))
         csb    = 2.d0*(1.d0+csb)
-
-        if (csb.ge.4.d0) csb = 3.99999d0
+        if( csb .ge. 4.d0 ) csb = 3.99999d0
         l1 = idint(csb)+1
         l2 = l1+1
-        if (l1.eq.4) l2=l1
-        if (csb.le.bc(l1)) csb = bc(l1)+1.d-13
-        if (csb.ge.bc(l1+1)) csb = bc(l1+1)-1.d-13
-
+        if( l1 .eq. 4 ) l2=l1
+        if( csb .le. bc(l1) ) csb = bc(l1)+1.d-13
+        if( csb .ge. bc(l1+1) ) csb = bc(l1+1)-1.d-13
         !-----------------------------------------------------------------------
         s1    = 0.d0
         ds1d1 = 0.d0
@@ -849,7 +783,6 @@ subroutine prepot22
         s3    = denf*(hlp1+hlp22)
         ds3d3 = denf*(-cnf(2)*hlp1-cnf(6)*hlp22 + (cnf(3)+2.d0*cnf(4)*y3+3.d0*cnf(5)*y3**2)*hlp2)
         !-----------------------------------------------------------------------
-
         e(i)     = 0.d0
         de(1,i)  = 0.d0
         de(2,i)  = 0.d0
@@ -858,118 +791,103 @@ subroutine prepot22
         danormd1 = 0.d0
         danormd2 = 0.d0
         danormd3 = 0.d0
-
         do 20 l = l1, l2
-
             hlp1  = y(1, 1, l)*dexp(-y(2, 1, l)*r(i,1))
             hlp2  = y(3, 1, l)*dexp(-y(4, 1, l)*r(i,1))
             t1    = hlp1+hlp2+s1
             dt1d1 = -y(2, 1, l)*hlp1-y(4, 1, l)*hlp2+ds1d1
-
-            hlp  = al2a(l)*(r(i,3)+r(i,1)-rr0a(l))
-            hlp1 = al2a(l)/(dcosh(hlp)**2)
-            hlp  = 0.5d0*(1.d0+dtanh(hlp))
-            hlp2 = r(i,3)+r(i,1)-rsi
-            if (hlp2.gt.0.d0) then
+            hlp   = al2a(l)*(r(i,3)+r(i,1)-rr0a(l))
+            hlp1  = al2a(l)/(dcosh(hlp)**2)
+            hlp   = 0.5d0*(1.d0+dtanh(hlp))
+            hlp2  = r(i,3)+r(i,1)-rsi
+            if( hlp2 .gt. 0.d0 )then
                 !     write(6,*)'R1+R3=',(r(i,1)+r(i,3))
                 ctanh  = dexp(-psi/hlp2)
                 dctanh = psi*ctanh/(r(i,3)+r(i,1)-rsi)**2
             else
                 ctanh  = 0.d0
                 dctanh = 0.d0
-            end if
-            r20   = r20i(l)+(r20a-r20i(l))*hlp
-            dr20  = 0.5d0*(r20a-r20i(l))*hlp1
-            al20  = al20i(l)+(al20i1(l)-al20i(l))*hlp + (al20a-al20i1(l))*ctanh
-            dal20 = 0.5d0*(al20i1(l)-al20i(l))*hlp1 + (al20a-al20i1(l))*dctanh
-
-            hlp1  = y(1, 2, l)*dexp(-y(2, 2, l)*r(i,2))
-            hlp2  = dexp(-(y(4, 2, l)+dy2(l)*ctanh)*r(i,2))
-            hlp3  = (y(3, 2, l)+dy1(l)*ctanh)*hlp2
-            t2    = hlp1+hlp3
-            dt2d1 = dy1(l)*dctanh*hlp2 - dy2(l)*dctanh*r(i,2)*hlp3
-            dt2d2 = -y(2, 2, l)*hlp1-(y(4, 2, l)+dy2(l)*ctanh)*hlp3
-            dt2d3 = dt2d1
-
-            hlp   = 0.5d0*(1.d0+dtanh(al20*(r(i,2)-r20)))
-            s2    = s2a+(t2-s2a)*hlp
-            hlp1  = 0.5d0/(dcosh(al20*(r(i,2)-r20))**2)
-            ds2d1 = (t2-s2a)*hlp1*(dal20*(r(i,2)-r20)-al20*dr20)
-            ds2d2 = ds2ad2+(dt2d2-ds2ad2)*hlp + al20*hlp1*(t2-s2a)
-            ds2d3 = ds2d1
-
-            hlp   = aly(l)*(r(i,3)-ry(l))
-            cy    = y(2, 3, l)+0.5d0*dy(l)*(1.d0+dtanh(hlp))
-            dcyd3 = 0.5d0*dy(l)*aly(l)/(dcosh(hlp)**2)
-            hlp1  = y(1, 3, l)*dexp(-cy*r(i,3))
-            hlp2  = y(3, 3, l)*dexp(-y(4, 3, l)*r(i,3))
-            t3    = hlp1+hlp2
-            dt3d3 = -(cy+dcyd3*r(i,3))*hlp1-y(4, 3, l)*hlp2
-
-            coul1  = 0.5d0*(s1+t1)
-            dcl1d1 = 0.5d0*(ds1d1+dt1d1)
-            coul2  = 0.5d0*(s2+t2)
-            dcl2d1 = 0.5d0*(ds2d1+dt2d1)
-            dcl2d2 = 0.5d0*(ds2d2+dt2d2)
-            dcl2d3 = 0.5d0*(ds2d3+dt2d3)
-            coul3  = 0.5d0*(s3+t3)
-            dcl3d3 = 0.5d0*(ds3d3+dt3d3)
-
-            exch1  = 0.5d0*(s1-t1)
-            dex1d1 = 0.5d0*(ds1d1-dt1d1)
-            exch2  = 0.5d0*(s2-t2)
-            dex2d1 = 0.5d0*(ds2d1-dt2d1)
-            dex2d2 = 0.5d0*(ds2d2-dt2d2)
-            dex2d3 = 0.5d0*(ds2d3-dt2d3)
-            exch3  = 0.5d0*(s3-t3)
-            dex3d3 = 0.5d0*(ds3d3-dt3d3)
-
-            w    = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
-            dwd1 = 2.d0*(exch1-exch2)*(dex1d1-dex2d1) + 2.d0*(exch2-exch3)*dex2d1 - 2.d0*(exch3-exch1)*dex1d1
-            dwd2 = - 2.d0*(exch1-exch2)*dex2d2 + 2.d0*(exch2-exch3)*dex2d2
-            dwd3 = - 2.d0*(exch1-exch2)*dex2d3 + 2.d0*(exch2-exch3)*(dex2d3-dex3d3) + 2.d0*(exch3-exch1)*dex3d3
-
-            cplg2 = c2a(l)*dexp(-c2b(l)*w-c2c(l)*(r(i,1)+r(i,2)+r(i,3)))
-            dcd1  = (-c2b(l)*dwd1 - c2c(l))*cplg2
-            dcd2  = (-c2b(l)*dwd2 - c2c(l))*cplg2
-            dcd3  = (-c2b(l)*dwd3 - c2c(l))*cplg2
-
-            rootw   = rac2*dsqrt(w+cplg2*cplg2)
-            surf    = (coul1+coul2+coul3+dehf-rootw)
-            dsurfd1 = (dcl1d1+dcl2d1-0.25d0*(dwd1+2.d0*cplg2*dcd1)/rootw)
-            dsurfd2 = (dcl2d2-0.25d0*(dwd2+2.d0*cplg2*dcd2)/rootw)
-            dsurfd3 = (dcl2d3+dcl3d3-0.25d0*(dwd3+2.d0*cplg2*dcd3)/rootw)
-
-            hlp1    = acut2(l)*(r(i,2)-rcut2(l))
-            hlp2    = adip2(l)*(rnag2-rdip2(l)**2)
-            hlp11   = dtanh(hlp1)
-            hlp22   = dtanh(hlp2)
-            hlp1    = 1.d0/dcosh(hlp1)
-            hlp2    = 1.d0/dcosh(hlp2)
-            surf    = surf - dip2(l)*hlp1*hlp2
-            dsurfd1 = dsurfd1 + dip2(l)*hlp1*hlp2*hlp22*adip2(l)*drnag2d1
-            dsurfd2 = dsurfd2 + dip2(l)*hlp1*hlp2*hlp22*adip2(l)*drnag2d2 + dip2(l)*hlp2*hlp1*hlp11*acut2(l)
-            dsurfd3 = dsurfd3 + dip2(l)*hlp1*hlp2*hlp22*adip2(l)*drnag2d3
-
-            hlp1    = acut2n(l)*(r(i,2)-rcut2n(l))
-            hlp2    = adip2n(l)*(rnag2-rdip2n(l)**2)
-            hlp11   = dtanh(hlp1)
-            hlp22   = dtanh(hlp2)
-            hlp1    = 1.d0/dcosh(hlp1)
-            hlp2    = 1.d0/dcosh(hlp2)
-            surf    = surf - dip2n(l)*hlp1*hlp2
-            dsurfd1 = dsurfd1 + dip2n(l)*hlp1*hlp2*hlp22*adip2n(l)*drnag2d1
-            dsurfd2 = dsurfd2 + dip2n(l)*hlp1*hlp2*hlp22*adip2n(l)*drnag2d2 + dip2n(l)*hlp2*hlp1*hlp11*acut2n(l)
-            dsurfd3 = dsurfd3 + dip2n(l)*hlp1*hlp2*hlp22*adip2n(l)*drnag2d3
-
-            hlp    = 1.d0/( (1.d0-(csb-bc(l))/(bc(l-1)-bc(l))) * (1.d0-(csb-bc(l))/(bc(l+1)-bc(l))) )
-            hlp1   = (csb-bc(l))**2*hlp
-            cog    = dexp(-ac(l)*hlp1)
-            dcog   = -cog*ac(l)*(2.d0*(csb-bc(l))*hlp +hlp1*(1.d0/(bc(l-1)-csb)+1.d0/(bc(l+1)-csb)))
-            dcogd1 = dcog*dcsbd1
-            dcogd2 = dcog*dcsbd2
-            dcogd3 = dcog*dcsbd3
-
+            endif
+            r20      = r20i(l)+(r20a-r20i(l))*hlp
+            dr20     = 0.5d0*(r20a-r20i(l))*hlp1
+            al20     = al20i(l)+(al20i1(l)-al20i(l))*hlp + (al20a-al20i1(l))*ctanh
+            dal20    = 0.5d0*(al20i1(l)-al20i(l))*hlp1 + (al20a-al20i1(l))*dctanh
+            hlp1     = y(1, 2, l)*dexp(-y(2, 2, l)*r(i,2))
+            hlp2     = dexp(-(y(4, 2, l)+dy2(l)*ctanh)*r(i,2))
+            hlp3     = (y(3, 2, l)+dy1(l)*ctanh)*hlp2
+            t2       = hlp1+hlp3
+            dt2d1    = dy1(l)*dctanh*hlp2 - dy2(l)*dctanh*r(i,2)*hlp3
+            dt2d2    = -y(2, 2, l)*hlp1-(y(4, 2, l)+dy2(l)*ctanh)*hlp3
+            dt2d3    = dt2d1
+            hlp      = 0.5d0*(1.d0+dtanh(al20*(r(i,2)-r20)))
+            s2       = s2a+(t2-s2a)*hlp
+            hlp1     = 0.5d0/(dcosh(al20*(r(i,2)-r20))**2)
+            ds2d1    = (t2-s2a)*hlp1*(dal20*(r(i,2)-r20)-al20*dr20)
+            ds2d2    = ds2ad2+(dt2d2-ds2ad2)*hlp + al20*hlp1*(t2-s2a)
+            ds2d3    = ds2d1
+            hlp      = aly(l)*(r(i,3)-ry(l))
+            cy       = y(2, 3, l)+0.5d0*dy(l)*(1.d0+dtanh(hlp))
+            dcyd3    = 0.5d0*dy(l)*aly(l)/(dcosh(hlp)**2)
+            hlp1     = y(1, 3, l)*dexp(-cy*r(i,3))
+            hlp2     = y(3, 3, l)*dexp(-y(4, 3, l)*r(i,3))
+            t3       = hlp1+hlp2
+            dt3d3    = -(cy+dcyd3*r(i,3))*hlp1-y(4, 3, l)*hlp2
+            coul1    = 0.5d0*(s1+t1)
+            dcl1d1   = 0.5d0*(ds1d1+dt1d1)
+            coul2    = 0.5d0*(s2+t2)
+            dcl2d1   = 0.5d0*(ds2d1+dt2d1)
+            dcl2d2   = 0.5d0*(ds2d2+dt2d2)
+            dcl2d3   = 0.5d0*(ds2d3+dt2d3)
+            coul3    = 0.5d0*(s3+t3)
+            dcl3d3   = 0.5d0*(ds3d3+dt3d3)
+            exch1    = 0.5d0*(s1-t1)
+            dex1d1   = 0.5d0*(ds1d1-dt1d1)
+            exch2    = 0.5d0*(s2-t2)
+            dex2d1   = 0.5d0*(ds2d1-dt2d1)
+            dex2d2   = 0.5d0*(ds2d2-dt2d2)
+            dex2d3   = 0.5d0*(ds2d3-dt2d3)
+            exch3    = 0.5d0*(s3-t3)
+            dex3d3   = 0.5d0*(ds3d3-dt3d3)
+            w        = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
+            dwd1     = 2.d0*(exch1-exch2)*(dex1d1-dex2d1) + 2.d0*(exch2-exch3)*dex2d1 - 2.d0*(exch3-exch1)*dex1d1
+            dwd2     = - 2.d0*(exch1-exch2)*dex2d2 + 2.d0*(exch2-exch3)*dex2d2
+            dwd3     = - 2.d0*(exch1-exch2)*dex2d3 + 2.d0*(exch2-exch3)*(dex2d3-dex3d3) + 2.d0*(exch3-exch1)*dex3d3
+            cplg2    = c2a(l)*dexp(-c2b(l)*w-c2c(l)*(r(i,1)+r(i,2)+r(i,3)))
+            dcd1     = (-c2b(l)*dwd1 - c2c(l))*cplg2
+            dcd2     = (-c2b(l)*dwd2 - c2c(l))*cplg2
+            dcd3     = (-c2b(l)*dwd3 - c2c(l))*cplg2
+            rootw    = rac2*dsqrt(w+cplg2*cplg2)
+            surf     = (coul1+coul2+coul3+dehf-rootw)
+            dsurfd1  = (dcl1d1+dcl2d1-0.25d0*(dwd1+2.d0*cplg2*dcd1)/rootw)
+            dsurfd2  = (dcl2d2-0.25d0*(dwd2+2.d0*cplg2*dcd2)/rootw)
+            dsurfd3  = (dcl2d3+dcl3d3-0.25d0*(dwd3+2.d0*cplg2*dcd3)/rootw)
+            hlp1     = acut2(l)*(r(i,2)-rcut2(l))
+            hlp2     = adip2(l)*(rnag2-rdip2(l)**2)
+            hlp11    = dtanh(hlp1)
+            hlp22    = dtanh(hlp2)
+            hlp1     = 1.d0/dcosh(hlp1)
+            hlp2     = 1.d0/dcosh(hlp2)
+            surf     = surf - dip2(l)*hlp1*hlp2
+            dsurfd1  = dsurfd1 + dip2(l)*hlp1*hlp2*hlp22*adip2(l)*drnag2d1
+            dsurfd2  = dsurfd2 + dip2(l)*hlp1*hlp2*hlp22*adip2(l)*drnag2d2 + dip2(l)*hlp2*hlp1*hlp11*acut2(l)
+            dsurfd3  = dsurfd3 + dip2(l)*hlp1*hlp2*hlp22*adip2(l)*drnag2d3
+            hlp1     = acut2n(l)*(r(i,2)-rcut2n(l))
+            hlp2     = adip2n(l)*(rnag2-rdip2n(l)**2)
+            hlp11    = dtanh(hlp1)
+            hlp22    = dtanh(hlp2)
+            hlp1     = 1.d0/dcosh(hlp1)
+            hlp2     = 1.d0/dcosh(hlp2)
+            surf     = surf - dip2n(l)*hlp1*hlp2
+            dsurfd1  = dsurfd1 + dip2n(l)*hlp1*hlp2*hlp22*adip2n(l)*drnag2d1
+            dsurfd2  = dsurfd2 + dip2n(l)*hlp1*hlp2*hlp22*adip2n(l)*drnag2d2 + dip2n(l)*hlp2*hlp1*hlp11*acut2n(l)
+            dsurfd3  = dsurfd3 + dip2n(l)*hlp1*hlp2*hlp22*adip2n(l)*drnag2d3
+            hlp      = 1.d0/( (1.d0-(csb-bc(l))/(bc(l-1)-bc(l))) * (1.d0-(csb-bc(l))/(bc(l+1)-bc(l))) )
+            hlp1     = (csb-bc(l))**2*hlp
+            cog      = dexp(-ac(l)*hlp1)
+            dcog     = -cog*ac(l)*(2.d0*(csb-bc(l))*hlp +hlp1*(1.d0/(bc(l-1)-csb)+1.d0/(bc(l+1)-csb)))
+            dcogd1   = dcog*dcsbd1
+            dcogd2   = dcog*dcsbd2
+            dcogd3   = dcog*dcsbd3
             e(i)     = e(i) + surf*cog
             de(1,i)  = de(1,i) + dsurfd1*cog+surf*dcogd1
             de(2,i)  = de(2,i) + dsurfd2*cog+surf*dcogd2
@@ -984,25 +902,19 @@ subroutine prepot22
         de(1,i) = (de(1,i) - e(i)*danormd1)*hlp
         de(2,i) = (de(2,i) - e(i)*danormd2)*hlp
         de(3,i) = (de(3,i) - e(i)*danormd3)*hlp
-
         do j=1, 3
             rdum(j) = r(i,j)
-        end do
-
+        enddo
         call lepscfu22(3, rdum, g_r, 3, cfu22, dcfu22, 3)
-
         e(i)    = e(i) + cfu22
         de(1,i) = de(1,i) + dcfu22(1)
         de(2,i) = de(2,i) + dcfu22(2)
         de(3,i) = de(3,i) + dcfu22(3)
-
         e(i)    = e(i)*cevau
         de(1,i) = de(1,i)*cevau
         de(2,i) = de(2,i)*cevau
         de(3,i) = de(3,i)*cevau
-
     10 continue
-
 end subroutine prepot22
 
 ! **********************************************************************
@@ -1291,25 +1203,24 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     do ia = 1, 3
         do ib = 1, 1
             do ic = 1, 3
-                if(ia.eq.ic) g_r(ia,ib,ic) = 1.d0
-                if(ia.ne.ic) g_r(ia,ib,ic) = 0.d0
-            end do
-        end do
-    end do
-
+                if( ia .eq. ic ) g_r(ia,ib,ic) = 1.d0
+                if( ia .ne. ic ) g_r(ia,ib,ic) = 0.d0
+            enddo
+        enddo
+    enddo
     do g_i_ = 1, g_p_
         g_r1(g_i_) = dble(g_r(g_i_,1,1))
-    end do
+    enddo
     r1 = dble(r(1,1))
     !--------
     do g_i_ = 1, g_p_
         g_r2(g_i_) = dble(g_r(g_i_,1,2))
-    end do
+    enddo
     r2 = dble(r(1,2))
     !--------
     do g_i_ = 1, g_p_
         g_r3(g_i_) = dble(g_r(g_i_,1,3))
-    end do
+    enddo
     r3 = dble(r(1,3))
     !--------
     !
@@ -1332,16 +1243,16 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_y(g_i_) = g_r3(g_i_)
-    end do
+    enddo
     y = r3 - ronaf
     !--------
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-c3) * g_y(g_i_)
-    end do
+    enddo
     d1_w = (-c3) * y
     do g_i_ = 1, g_p_
         g_d2_w(g_i_) = (-c5) * g_y(g_i_)
-    end do
+    enddo
     d2_w  = (-c5) * y
     d3_v  = c1 + c2 * y
     d5_v  = exp(d1_w)
@@ -1353,7 +1264,7 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d10_b = d5_v * c2
     do g_i_ = 1, g_p_
         g_snaf(g_i_) = d5_b * g_d2_w(g_i_) + d8_b * g_d1_w(g_i_) + d10_b * g_y(g_i_)
-    end do
+    enddo
     snaf = d3_v * d5_v + c4 * d8_v
     !--------
     !
@@ -1367,11 +1278,11 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-t2) * g_r3(g_i_)
-    end do
+    enddo
     d1_w = (-t2) * r3
     do g_i_ = 1, g_p_
         g_d2_w(g_i_) = (-t4) * g_r3(g_i_)
-    end do
+    enddo
     d2_w  = (-t4) * r3
     d3_v  = exp(d1_w)
     d2_p  = d3_v
@@ -1381,16 +1292,16 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d10_b = c * t1 * d2_p
     do g_i_ = 1, g_p_
         g_tnaf_ac(g_i_) = d6_b * g_d2_w(g_i_) + d10_b * g_d1_w(g_i_) + c * g_snaf(g_i_)
-    end do
+    enddo
     tnaf_ac = (snaf + t1 * d3_v + t3 * d7_v) * c
     !--------
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-t2) * g_r3(g_i_)
-    end do
+    enddo
     d1_w = (-t2) * r3
     do g_i_ = 1, g_p_
         g_d2_w(g_i_) = (-t4) * g_r3(g_i_)
-    end do
+    enddo
     d2_w  = (-t4) * r3
     d3_v  = exp(d1_w)
     d2_p  = d3_v
@@ -1400,29 +1311,29 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d10_b = f * t1 * d2_p
     do g_i_ = 1, g_p_
         g_tnaf_ap(g_i_) = d6_b * g_d2_w(g_i_) + d10_b * g_d1_w(g_i_) + f * g_snaf(g_i_)
-    end do
+    enddo
     tnaf_ap = (snaf + t1 * d3_v + t3 * d7_v) * f
     !--------
     !
     do g_i_ = 1, g_p_
         g_q3_ac(g_i_) = 0.5d0 * g_tnaf_ac(g_i_) + 0.5d0 * g_snaf(g_i_)
-    end do
+    enddo
     q3_ac = 0.5d0 * (snaf + tnaf_ac)
     !--------
     do g_i_ = 1, g_p_
         g_q3_ap(g_i_) = 0.5d0 * g_tnaf_ap(g_i_) + 0.5d0 * g_snaf(g_i_)
-    end do
+    enddo
     q3_ap = 0.5d0 * (snaf + tnaf_ap)
     !--------
     !
     do g_i_ = 1, g_p_
         g_j3_ac(g_i_) = (-0.5d0) * g_tnaf_ac(g_i_) + 0.5d0 * g_snaf(g_i_)
-    end do
+    enddo
     j3_ac = 0.5d0 * (snaf - tnaf_ac)
     !--------
     do g_i_ = 1, g_p_
         g_j3_ap(g_i_) = (-0.5d0) * g_tnaf_ap(g_i_) + 0.5d0 * g_snaf(g_i_)
-    end do
+    enddo
     j3_ap = 0.5d0 * (snaf - tnaf_ap)
     !--------
     !
@@ -1433,19 +1344,19 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     denah = 0.00291087d0
     do g_i_ = 1, g_p_
         g_beta(g_i_) = 0.0d0
-    end do
+    enddo
     beta = 0.713223d0
     !--------
     d4_v = r1 - renah
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-beta) * g_r1(g_i_) + (-d4_v) * g_beta(g_i_)
-    end do
+    enddo
     d1_w = (-beta) * d4_v
     d2_v = exp(d1_w)
     d1_p = d2_v
     do g_i_ = 1, g_p_
         g_chi(g_i_) = d1_p * g_d1_w(g_i_)
-    end do
+    enddo
     chi = d2_v
     !--------
     d2_v = denah * chi
@@ -1453,7 +1364,7 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d4_b = d2_v + d3_v * denah
     do g_i_ = 1, g_p_
         g_snah(g_i_) = d4_b * g_chi(g_i_)
-    end do
+    enddo
     snah = d2_v * d3_v
     !--------
     !
@@ -1465,48 +1376,48 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-t2) * g_r1(g_i_)
-    end do
+    enddo
     d1_w = (-t2) * r1
     d3_v = exp(d1_w)
     d1_p = d3_v
     d6_b = a * t1 * d1_p
     do g_i_ = 1, g_p_
         g_tnah_ac(g_i_) = d6_b * g_d1_w(g_i_) + a * g_snah(g_i_)
-    end do
+    enddo
     tnah_ac = (snah + t1 * d3_v) * a
     !--------
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-t2) * g_r1(g_i_)
-    end do
+    enddo
     d1_w = (-t2) * r1
     d3_v = exp(d1_w)
     d1_p = d3_v
     d6_b = d * t1 * d1_p
     do g_i_ = 1, g_p_
         g_tnah_ap(g_i_) = d6_b * g_d1_w(g_i_) + d * g_snah(g_i_)
-    end do
+    enddo
     tnah_ap = (snah + t1 * d3_v) * d
     !--------
     !
     do g_i_ = 1, g_p_
         g_q1_ac(g_i_) = 0.5d0 * g_tnah_ac(g_i_) + 0.5d0 * g_snah(g_i_)
-    end do
+    enddo
     q1_ac = 0.5d0 * (snah + tnah_ac)
     !--------
     do g_i_ = 1, g_p_
         g_q1_ap(g_i_) = 0.5d0 * g_tnah_ap(g_i_) + 0.5d0 * g_snah(g_i_)
-    end do
+    enddo
     q1_ap = 0.5d0 * (snah + tnah_ap)
     !--------
     !
     do g_i_ = 1, g_p_
         g_j1_ac(g_i_) = (-0.5d0) * g_tnah_ac(g_i_) + 0.5d0 * g_snah(g_i_)
-    end do
+    enddo
     j1_ac = 0.5d0 * (snah - tnah_ac)
     !--------
     do g_i_ = 1, g_p_
         g_j1_ap(g_i_) = (-0.5d0) * g_tnah_ap(g_i_) + 0.5d0 * g_snah(g_i_)
-    end do
+    enddo
     j1_ap = 0.5d0 * (snah - tnah_ap)
     !--------
     !
@@ -1522,7 +1433,7 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_yhf(g_i_) = g_r2(g_i_)
-    end do
+    enddo
     yhf = r2 - c4
     !--------
     d4_v = yhf * yhf
@@ -1530,13 +1441,13 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d5_b = c3 * d1_p + c2
     do g_i_ = 1, g_p_
         g_beta(g_i_) = d5_b * g_yhf(g_i_)
-    end do
+    enddo
     beta = c1 + c2 * yhf + c3 * d4_v
     !--------
     d4_v = r2 - rehf
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-beta) * g_r2(g_i_) + (-d4_v) * g_beta(g_i_)
-    end do
+    enddo
     d1_w = (-beta) * d4_v
     d2_v = exp(d1_w)
     d2_p = d2_v
@@ -1545,7 +1456,7 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d6_b = (-(dehf * d1_p)) * d2_p
     do g_i_ = 1, g_p_
         g_shf_ac(g_i_) = d6_b * g_d1_w(g_i_)
-    end do
+    enddo
     shf_ac = dehf * d4_v - dehf
     !--------
     !
@@ -1563,16 +1474,16 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_yhf(g_i_) = g_r2(g_i_)
-    end do
+    enddo
     yhf = r2 - rehf
     !--------
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-c2) * g_yhf(g_i_)
-    end do
+    enddo
     d1_w = (-c2) * yhf
     do g_i_ = 1, g_p_
         g_d2_w(g_i_) = (-c7) * g_yhf(g_i_)
-    end do
+    enddo
     d2_w  = (-c7) * yhf
     d2_v  = exp(d1_w)
     d4_p  = d2_v
@@ -1591,7 +1502,7 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d17_b = dehf * c1 * d4_p
     do g_i_ = 1, g_p_
         g_shf_ap(g_i_) = d7_b * g_d2_w(g_i_) + d11_b * g_yhf(g_i_) + d17_b * g_d1_w(g_i_)
-    end do
+    enddo
     shf_ap = dehf * (c1 * d2_v + d12_v * d14_v)
     !--------
     !
@@ -1602,14 +1513,14 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     rehf = 1.7328d0
     do g_i_ = 1, g_p_
         g_beta(g_i_) = 0.0d0
-    end do
+    enddo
     beta = 1.26686217d0
     !--------
     !
     d4_v = r2 - rehf
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-beta) * g_r2(g_i_) + (-d4_v) * g_beta(g_i_)
-    end do
+    enddo
     d1_w = (-beta) * d4_v
     d2_v = exp(d1_w)
     d2_p = d2_v
@@ -1618,13 +1529,13 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d7_b = b * dehf * d1_p * d2_p
     do g_i_ = 1, g_p_
         g_thf_ac(g_i_) = d7_b * g_d1_w(g_i_)
-    end do
+    enddo
     thf_ac = (dehf * d4_v - dehf) * b
     !--------
     d4_v = r2 - rehf
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-beta) * g_r2(g_i_) + (-d4_v) * g_beta(g_i_)
-    end do
+    enddo
     d1_w = (-beta) * d4_v
     d2_v = exp(d1_w)
     d2_p = d2_v
@@ -1633,29 +1544,29 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d7_b = e * dehf * d1_p * d2_p
     do g_i_ = 1, g_p_
         g_thf_ap(g_i_) = d7_b * g_d1_w(g_i_)
-    end do
+    enddo
     thf_ap = (dehf * d4_v - dehf) * e
     !--------
     !
     do g_i_ = 1, g_p_
         g_q2_ac(g_i_) = 0.5d0 * g_thf_ac(g_i_) + 0.5d0 * g_shf_ac(g_i_ )
-    end do
+    enddo
     q2_ac = 0.5d0 * (shf_ac + thf_ac)
     !--------
     do g_i_ = 1, g_p_
         g_q2_ap(g_i_) = 0.5d0 * g_thf_ap(g_i_) + 0.5d0 * g_shf_ap(g_i_ )
-    end do
+    enddo
     q2_ap = 0.5d0 * (shf_ap + thf_ap)
     !--------
     !
     do g_i_ = 1, g_p_
         g_j2_ac(g_i_) = (-0.5d0) * g_thf_ac(g_i_) + 0.5d0 * g_shf_ac(g_i_)
-    end do
+    enddo
     j2_ac = 0.5d0 * (shf_ac - thf_ac)
     !--------
     do g_i_ = 1, g_p_
         g_j2_ap(g_i_) = (-0.5d0) * g_thf_ap(g_i_) + 0.5d0 * g_shf_ap(g_i_)
-    end do
+    enddo
     j2_ap = 0.5d0 * (shf_ap - thf_ap)
     !--------
     !
@@ -1663,17 +1574,17 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_j1_ac(g_i_) = g_j1_ac(g_i_)
-    end do
+    enddo
     j1_ac = j1_ac
     !--------
     do g_i_ = 1, g_p_
         g_j2_ac(g_i_) = g_j2_ac(g_i_)
-    end do
+    enddo
     j2_ac = j2_ac
     !--------
     do g_i_ = 1, g_p_
         g_j3_ac(g_i_) = g_j3_ac(g_i_)
-    end do
+    enddo
     j3_ac = j3_ac
     !--------
     d4_b = -j1_ac + (-j2_ac) + j3_ac + j3_ac
@@ -1681,12 +1592,11 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d5_b = -j3_ac + (-j2_ac) + j1_ac + j1_ac
     do g_i_ = 1, g_p_
         g_w(g_i_) = d4_b * g_j3_ac(g_i_) + d8_b * g_j2_ac(g_i_) + d5_b * g_j1_ac(g_i_)
-    end do
+    enddo
     w = j1_ac * j1_ac + j2_ac * j2_ac + j3_ac * j3_ac - j1_ac * j2_ac - j2_ac * j3_ac - j3_ac * j1_ac
     !--------
     !
     d7_v = sqrt(w)
-
     !        if ( w .gt. 0.0d0 ) then
     d1_p = 1.0d0 / (2.0d0 *  d7_v)
     !        else
@@ -1696,23 +1606,23 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     !        endif
     do g_i_ = 1, g_p_
         g_leps_ac(g_i_) = (-d1_p) * g_w(g_i_) + g_q3_ac(g_i_) + g_q2_ac(g_i_) + g_q1_ac(g_i_)
-    end do
+    enddo
     leps_ac = q1_ac + q2_ac + q3_ac - d7_v
     !--------
     !
     do g_i_ = 1, g_p_
         g_j1_ap(g_i_) = g_j1_ap(g_i_)
-    end do
+    enddo
     j1_ap = j1_ap
     !--------
     do g_i_ = 1, g_p_
         g_j2_ap(g_i_) = g_j2_ap(g_i_)
-    end do
+    enddo
     j2_ap = j2_ap
     !--------
     do g_i_ = 1, g_p_
         g_j3_ap(g_i_) = g_j3_ap(g_i_)
-    end do
+    enddo
     j3_ap = j3_ap
     !--------
     d4_b = -j1_ap + (-j2_ap) + j3_ap + j3_ap
@@ -1720,12 +1630,11 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     d5_b = -j3_ap + (-j2_ap) + j1_ap + j1_ap
     do g_i_ = 1, g_p_
         g_w(g_i_) = d4_b * g_j3_ap(g_i_) + d8_b * g_j2_ap(g_i_) + d5_b * g_j1_ap(g_i_)
-    end do
+    enddo
     w = j1_ap * j1_ap + j2_ap * j2_ap + j3_ap * j3_ap - j1_ap * j2_ap - j2_ap * j3_ap - j3_ap * j1_ap
     !--------
     !
     d7_v = sqrt(w)
-
     !        if ( w .gt. 0.0d0 ) then
     d1_p = 1.0d0 / (2.0d0 *  d7_v)
     !        else
@@ -1735,13 +1644,13 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cf&
     !        endif
     do g_i_ = 1, g_p_
         g_leps_ap(g_i_) = (-d1_p) * g_w(g_i_) + g_q3_ap(g_i_) + g_q2_ap(g_i_) + g_q1_ap(g_i_)
-    end do
+    enddo
     leps_ap = q1_ap + q2_ap + q3_ap - d7_v
     !--------
     !
     do g_i_ = 1, g_p_
         g_cfu11(g_i_) = -g_leps_ap(g_i_) + g_leps_ac(g_i_)
-    end do
+    enddo
     cfu11 = leps_ac - leps_ap + 6.122d0 - 5.77096d0
     !--------
 end subroutine lepscfu11
@@ -1820,24 +1729,24 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     do ia = 1, 3
         do ib = 1, 1
             do ic = 1, 3
-                if(ia.eq.ic) g_r(ia,ib,ic) = 1.d0
-                if(ia.ne.ic) g_r(ia,ib,ic) = 0.d0
-            end do
-        end do
-    end do
+                if( ia .eq. ic ) g_r(ia,ib,ic) = 1.d0
+                if( ia .ne. ic ) g_r(ia,ib,ic) = 0.d0
+            enddo
+        enddo
+    enddo
     do g_i_ = 1, g_p_
         g_r1(g_i_) = g_r(g_i_,1,1)
-    end do
+    enddo
     r1 = r(1,1)
     !--------
     do g_i_ = 1, g_p_
         g_r2(g_i_) = g_r(g_i_,1,2)
-    end do
+    enddo
     r2 = r(1,2)
     !--------
     do g_i_ = 1, g_p_
         g_r3(g_i_) = g_r(g_i_,1,3)
-    end do
+    enddo
     r3 = r(1,3)
     !--------
     !
@@ -1866,31 +1775,31 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_ynaf(g_i_) = g_r3(g_i_)
-    end do
+    enddo
     ynaf = r3 - renaf
     !--------
     !
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-c2nf) * g_ynaf(g_i_)
-    end do
+    enddo
     d1_w = (-c2nf) * ynaf
     d2_v = exp(d1_w)
     d1_p = d2_v
     d3_b = c1nf * d1_p
     do g_i_ = 1, g_p_
         g_hlp1(g_i_) = d3_b * g_d1_w(g_i_)
-    end do
+    enddo
     hlp1 = c1nf * d2_v
     !--------
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-c7nf) * g_ynaf(g_i_)
-    end do
+    enddo
     d1_w = (-c7nf) * ynaf
     d2_v = exp(d1_w)
     d1_p = d2_v
     do g_i_ = 1, g_p_
         g_hlp2(g_i_) = d1_p * g_d1_w(g_i_)
-    end do
+    enddo
     hlp2 = d2_v
     !--------
     !
@@ -1903,7 +1812,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d5_b = c6nf * d1_p + c5nf * d2_p + c4nf
     do g_i_ = 1, g_p_
         g_hlp22(g_i_) = d5_b * g_ynaf(g_i_)
-    end do
+    enddo
     hlp22 = c3nf + c4nf * ynaf + c5nf * d4_v + c6nf * d7_v
     !--------
     !
@@ -1911,7 +1820,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d6_b = denaf * hlp22
     do g_i_ = 1, g_p_
         g_snaf_ap(g_i_) = d6_b * g_hlp2(g_i_) + d5_b * g_hlp22(g_i_) + denaf * g_hlp1(g_i_)
-    end do
+    enddo
     snaf_ap = denaf * (hlp1 + hlp22 * hlp2)
     !--------
     !
@@ -1925,8 +1834,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     denaf = 4.94d0
     renaf = 3.6395d0
     !
-
-    if ( (r3 / c3) .ne. 0.0d0 ) then
+    if( (r3 / c3) .ne. 0.0d0 )then
         d3_v = (r3 / c3) ** ( c4 - 2.0d0)
         d3_v = d3_v * (r3 / c3)
         d2_p = c4 *  d3_v
@@ -1934,11 +1842,9 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     else
         !          ((r3 / c3) = 0)
         d3_v = (r3 / c3) **  c4
-
         d2_p = 0.0d0
-    end if
-
-    if ( (r3 / c3) .ne. 0.0d0 ) then
+    endif
+    if( (r3 / c3) .ne. 0.0d0 )then
         d6_v = (r3 / c3) ** ( c4 - 2.0d0)
         d6_v = d6_v * (r3 / c3)
         d1_p = c4 *  d6_v
@@ -1946,22 +1852,21 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     else
         !          ((r3 / c3) = 0)
         d6_v = (r3 / c3) **  c4
-
         d1_p = 0.0d0
-    end if
+    endif
     d7_v = c1 + d6_v
     d8_v = (c2 + d3_v) / d7_v
     d7_b = c1 * ((-d8_v) / d7_v) * d1_p * (1.0d0 / c3) + c1 * (1.0d0 / d7_v) * d2_p * (1.0d0 / c3)
     do g_i_ = 1, g_p_
         g_beta(g_i_) = d7_b * g_r3(g_i_)
-    end do
+    enddo
     beta = c1 * d8_v
     !--------
     !
     d4_v = r3 - renaf
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-beta) * g_r3(g_i_) + (-d4_v) * g_beta(g_i_)
-    end do
+    enddo
     d1_w = (-beta) * d4_v
     d2_v = exp(d1_w)
     d2_p = d2_v
@@ -1970,7 +1875,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d6_b = (-(denaf * d1_p)) * d2_p
     do g_i_ = 1, g_p_
         g_snaf_ac(g_i_) = d6_b * g_d1_w(g_i_)
-    end do
+    enddo
     snaf_ac = denaf * d4_v - denaf
     !--------
     !
@@ -1982,19 +1887,19 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     renaf = 3.6395d0
     do g_i_ = 1, g_p_
         g_beta(g_i_) = 0.0d0
-    end do
+    enddo
     beta = 0.69614d0
     !--------
     d4_v = r3 - renaf
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-beta) * g_r3(g_i_) + (-d4_v) * g_beta(g_i_)
-    end do
+    enddo
     d1_w = (-beta) * d4_v
     d2_v = exp(d1_w)
     d1_p = d2_v
     do g_i_ = 1, g_p_
         g_hlp(g_i_) = d1_p * g_d1_w(g_i_)
-    end do
+    enddo
     hlp = d2_v
     !--------
     !
@@ -2004,7 +1909,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d5_b = d2_b * (cc2 * 2.d0) + d2_b * cc1 * d1_p
     do g_i_ = 1, g_p_
         g_tnaf_ac(g_i_) = d5_b * g_hlp(g_i_)
-    end do
+    enddo
     tnaf_ac = 0.5d0 * denaf * (cc1 * d2_v + cc2 * 2.d0 * hlp)
     !--------
     d2_v = hlp * hlp
@@ -2013,29 +1918,29 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d5_b = d2_b * (f2 * 2.d0) + d2_b * f1 * d1_p
     do g_i_ = 1, g_p_
         g_tnaf_ap(g_i_) = d5_b * g_hlp(g_i_)
-    end do
+    enddo
     tnaf_ap = 0.5d0 * denaf * (f1 * d2_v + f2 * 2.d0 * hlp)
     !--------
     !
     do g_i_ = 1, g_p_
         g_q3_ac(g_i_) = 0.5d0 * g_tnaf_ac(g_i_) + 0.5d0 * g_snaf_ac(g_i_)
-    end do
+    enddo
     q3_ac = 0.5d0 * (snaf_ac + tnaf_ac)
     !--------
     do g_i_ = 1, g_p_
         g_q3_ap(g_i_) = 0.5d0 * g_tnaf_ap(g_i_) + 0.5d0 * g_snaf_ap(g_i_)
-    end do
+    enddo
     q3_ap = 0.5d0 * (snaf_ap + tnaf_ap)
     !--------
     !
     do g_i_ = 1, g_p_
         g_j3_ac(g_i_) = (-0.5d0) * g_tnaf_ac(g_i_) + 0.5d0 * g_snaf_ac (g_i_)
-    end do
+    enddo
     j3_ac = 0.5d0 * (snaf_ac - tnaf_ac)
     !--------
     do g_i_ = 1, g_p_
         g_j3_ap(g_i_) = (-0.5d0) * g_tnaf_ap(g_i_) + 0.5d0 * g_snaf_ap (g_i_)
-    end do
+    enddo
     j3_ap = 0.5d0 * (snaf_ap - tnaf_ap)
     !--------
     !
@@ -2054,11 +1959,11 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     t4nah = 4.5525d0
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-t2nah) * g_r1(g_i_)
-    end do
+    enddo
     d1_w = (-t2nah) * r1
     do g_i_ = 1, g_p_
         g_d2_w(g_i_) = (-t4nah) * g_r1(g_i_)
-    end do
+    enddo
     d2_w = (-t4nah) * r1
     d2_v = exp(d1_w)
     d2_p = d2_v
@@ -2068,16 +1973,16 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d7_b = t1nah * d2_p
     do g_i_ = 1, g_p_
         g_tnah_ac(g_i_) = d5_b * g_d2_w(g_i_) + d7_b * g_d1_w(g_i_)
-    end do
+    enddo
     tnah_ac = t1nah * d2_v + t3nah * d5_v
     !--------
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-t2nah) * g_r1(g_i_)
-    end do
+    enddo
     d1_w = (-t2nah) * r1
     do g_i_ = 1, g_p_
         g_d2_w(g_i_) = (-t4nah) * g_r1(g_i_)
-    end do
+    enddo
     d2_w = (-t4nah) * r1
     d2_v = exp(d1_w)
     d2_p = d2_v
@@ -2087,29 +1992,29 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d7_b = t1nah * d2_p
     do g_i_ = 1, g_p_
         g_tnah_ap(g_i_) = d5_b * g_d2_w(g_i_) + d7_b * g_d1_w(g_i_)
-    end do
+    enddo
     tnah_ap = t1nah * d2_v + t3nah * d5_v
     !--------
     !
     do g_i_ = 1, g_p_
         g_q1_ac(g_i_) = 0.5d0 * g_tnah_ac(g_i_)
-    end do
+    enddo
     q1_ac = 0.5d0 * (snah + tnah_ac)
     !--------
     do g_i_ = 1, g_p_
         g_q1_ap(g_i_) = 0.5d0 * g_tnah_ap(g_i_)
-    end do
+    enddo
     q1_ap = 0.5d0 * (snah + tnah_ap)
     !--------
     !
     do g_i_ = 1, g_p_
         g_j1_ac(g_i_) = (-0.5d0) * g_tnah_ac(g_i_)
-    end do
+    enddo
     j1_ac = 0.5d0 * (snah - tnah_ac)
     !--------
     do g_i_ = 1, g_p_
         g_j1_ap(g_i_) = (-0.5d0) * g_tnah_ap(g_i_)
-    end do
+    enddo
     j1_ap = 0.5d0 * (snah - tnah_ap)
     !--------
     !
@@ -2125,19 +2030,19 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     rehf = 1.7328d0
     do g_i_ = 1, g_p_
         g_beta(g_i_) = 0.0d0
-    end do
+    enddo
     beta = 1.2669d0
     !--------
     d4_v = r2 - rehf
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-beta) * g_r2(g_i_) + (-d4_v) * g_beta(g_i_)
-    end do
+    enddo
     d1_w = (-beta) * d4_v
     d2_v = exp(d1_w)
     d1_p = d2_v
     do g_i_ = 1, g_p_
         g_hlp(g_i_) = d1_p * g_d1_w(g_i_)
-    end do
+    enddo
     hlp = d2_v
     !--------
     d3_v = hlp * hlp
@@ -2146,7 +2051,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d6_b = d2_b * e2 * d1_p + d2_b * (e1 * 2.d0)
     do g_i_ = 1, g_p_
         g_thf_ac(g_i_) = d6_b * g_hlp(g_i_)
-    end do
+    enddo
     thf_ac = 0.5d0 * dehf * (e1 * 2.d0 * hlp + e2 * d3_v)
     !--------
     !
@@ -2154,19 +2059,19 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     rehf = 1.7328d0
     do g_i_ = 1, g_p_
         g_beta(g_i_) = 0.0d0
-    end do
+    enddo
     beta = 1.2669d0
     !--------
     d4_v = r2 - rehf
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-beta) * g_r2(g_i_) + (-d4_v) * g_beta(g_i_)
-    end do
+    enddo
     d1_w = (-beta) * d4_v
     d2_v = exp(d1_w)
     d1_p = d2_v
     do g_i_ = 1, g_p_
         g_hlp(g_i_) = d1_p * g_d1_w(g_i_)
-    end do
+    enddo
     hlp = d2_v
     !--------
     d3_v = hlp * hlp
@@ -2175,19 +2080,19 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d6_b = d2_b * b2 * d1_p + d2_b * (b1 * 2.d0)
     do g_i_ = 1, g_p_
         g_thf_ap(g_i_) = d6_b * g_hlp(g_i_)
-    end do
+    enddo
     thf_ap = 0.5d0 * dehf * (b1 * 2.d0 * hlp + b2 * d3_v)
     !--------
     !
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-15.d0) * g_r2(g_i_)
-    end do
+    enddo
     d1_w = (-15.d0) * (r2 - 2.d0)
     d2_v = exp(d1_w)
     d1_p = d2_v
     do g_i_ = 1, g_p_
         g_thf(g_i_) = d1_p * g_d1_w(g_i_)
-    end do
+    enddo
     thf = d2_v
     !--------
     !
@@ -2203,7 +2108,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_yhf(g_i_) = g_r2(g_i_)
-    end do
+    enddo
     yhf = r2 - c4
     !--------
     d4_v = yhf * yhf
@@ -2211,13 +2116,13 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d5_b = c3 * d1_p + c2
     do g_i_ = 1, g_p_
         g_beta(g_i_) = d5_b * g_yhf(g_i_)
-    end do
+    enddo
     beta = c1 + c2 * yhf + c3 * d4_v
     !--------
     d4_v = r2 - rehf
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-beta) * g_r2(g_i_) + (-d4_v) * g_beta(g_i_)
-    end do
+    enddo
     d1_w = (-beta) * d4_v
     d2_v = exp(d1_w)
     d2_p = d2_v
@@ -2226,7 +2131,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d6_b = (-(dehf * d1_p)) * d2_p
     do g_i_ = 1, g_p_
         g_shf_u11(g_i_) = d6_b * g_d1_w(g_i_)
-    end do
+    enddo
     shf_u11 = dehf * d4_v - dehf
     !--------
     !
@@ -2234,7 +2139,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_shfa(g_i_) = g_shf_u11(g_i_)
-    end do
+    enddo
     shfa = shf_u11 + nap
     !--------
     !
@@ -2242,13 +2147,13 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-alph0) * g_thf(g_i_) + alph0 * g_shfa(g_i_)
-    end do
+    enddo
     d1_w = alph0 * (shfa - thf)
     d2_v = tanh (d1_w)
     d1_p = 1.0d0 - ( d2_v *  d2_v)
     do g_i_ = 1, g_p_
         g_swit(g_i_) = d1_p * g_d1_w(g_i_)
-    end do
+    enddo
     swit = d2_v
     !--------
     d6_v = 0.5d0 * (shfa - thf)
@@ -2257,7 +2162,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d8_b = -d6_b + 0.5d0
     do g_i_ = 1, g_p_
         g_shf_ac(g_i_) = (-d6_v) * g_swit(g_i_) + d8_b * g_thf(g_i_) + d7_b * g_shfa(g_i_)
-    end do
+    enddo
     shf_ac = 0.5d0 * (shfa + thf) - d6_v * swit
     !--------
     !
@@ -2277,16 +2182,16 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_yhf(g_i_) = g_r2(g_i_)
-    end do
+    enddo
     yhf = r2 - rehf
     !--------
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = (-c2) * g_yhf(g_i_)
-    end do
+    enddo
     d1_w = (-c2) * yhf
     do g_i_ = 1, g_p_
         g_d2_w(g_i_) = (-c7) * g_yhf(g_i_)
-    end do
+    enddo
     d2_w  = (-c7) * yhf
     d2_v  = exp(d1_w)
     d4_p  = d2_v
@@ -2305,7 +2210,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d17_b = dehf * c1 * d4_p
     do g_i_ = 1, g_p_
         g_shf_u11(g_i_) = d7_b * g_d2_w(g_i_) + d11_b * g_yhf(g_i_) + d17_b * g_d1_w(g_i_)
-    end do
+    enddo
     shf_u11 = dehf * (c1 * d2_v + d12_v * d14_v)
     !--------
     !
@@ -2313,7 +2218,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_shfa(g_i_) = g_shf_u11(g_i_)
-    end do
+    enddo
     shfa = shf_u11 + nap
     !--------
     !
@@ -2322,14 +2227,14 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = alph0 * g_r2(g_i_)
-    end do
+    enddo
     d1_w = alph0 * (r2 - r0)
     d2_v = tanh (d1_w)
     d1_p = 1.0d0 - ( d2_v *  d2_v)
     d4_b = 0.5d0 * d1_p
     do g_i_ = 1, g_p_
         g_swit(g_i_) = d4_b * g_d1_w(g_i_)
-    end do
+    enddo
     swit = 0.5d0 * (1.d0 + d2_v)
     !--------
     !
@@ -2340,14 +2245,14 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d2_b  = -(t2hf + dt2hf)
     do g_i_ = 1, g_p_
         g_d1_w(g_i_) = d2_b * g_r2(g_i_)
-    end do
+    enddo
     d1_w = (-(t2hf + dt2hf)) * r2
     d2_v = exp(d1_w)
     d1_p = d2_v
     d3_b = (t1hf + dt1hf) * d1_p
     do g_i_ = 1, g_p_
         g_thf_ap_as(g_i_) = d3_b * g_d1_w(g_i_)
-    end do
+    enddo
     thf_ap_as = (t1hf + dt1hf) * d2_v
     !--------
     !
@@ -2355,7 +2260,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d2_b = 1.0d0 + (-swit)
     do g_i_ = 1, g_p_
         g_shf_ap(g_i_) = d3_v * g_swit(g_i_) + swit * g_thf_ap_as(g_i_ ) + d2_b * g_shfa(g_i_)
-    end do
+    enddo
     shf_ap = shfa + d3_v * swit
     !--------
     !
@@ -2363,23 +2268,23 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_q2_ac(g_i_) = 0.5d0 * g_thf_ac(g_i_) + 0.5d0 * g_shf_ac(g_i_ )
-    end do
+    enddo
     q2_ac = 0.5d0 * (shf_ac + thf_ac)
     !--------
     do g_i_ = 1, g_p_
         g_q2_ap(g_i_) = 0.5d0 * g_thf_ap(g_i_) + 0.5d0 * g_shf_ap(g_i_ )
-    end do
+    enddo
     q2_ap = 0.5d0 * (shf_ap + thf_ap)
     !--------
     !
     do g_i_ = 1, g_p_
         g_j2_ac(g_i_) = (-0.5d0) * g_thf_ac(g_i_) + 0.5d0 * g_shf_ac(g_i_)
-    end do
+    enddo
     j2_ac = 0.5d0 * (shf_ac - thf_ac)
     !--------
     do g_i_ = 1, g_p_
         g_j2_ap(g_i_) = (-0.5d0) * g_thf_ap(g_i_) + 0.5d0 * g_shf_ap(g_i_)
-    end do
+    enddo
     j2_ap = 0.5d0 * (shf_ap - thf_ap)
     !--------
     !
@@ -2387,17 +2292,17 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !
     do g_i_ = 1, g_p_
         g_j1_ac(g_i_) = g_j1_ac(g_i_)
-    end do
+    enddo
     j1_ac = j1_ac
     !--------
     do g_i_ = 1, g_p_
         g_j2_ac(g_i_) = g_j2_ac(g_i_)
-    end do
+    enddo
     j2_ac = j2_ac
     !--------
     do g_i_ = 1, g_p_
         g_j3_ac(g_i_) = g_j3_ac(g_i_)
-    end do
+    enddo
     j3_ac = j3_ac
     !--------
     d4_b = -j1_ac + (-j2_ac) + j3_ac + j3_ac
@@ -2405,12 +2310,11 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d5_b = -j3_ac + (-j2_ac) + j1_ac + j1_ac
     do g_i_ = 1, g_p_
         g_w(g_i_) = d4_b * g_j3_ac(g_i_) + d8_b * g_j2_ac(g_i_) + d5_b * g_j1_ac(g_i_)
-    end do
+    enddo
     w = j1_ac * j1_ac + j2_ac * j2_ac + j3_ac * j3_ac - j1_ac * j2_ac - j2_ac * j3_ac - j3_ac * j1_ac
     !--------
     !
     d7_v = sqrt(w)
-
     !        if ( w .gt. 0.0d0 ) then
     d1_p = 1.0d0 / (2.0d0 *  d7_v)
     !        else
@@ -2420,23 +2324,23 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !        endif
     do g_i_ = 1, g_p_
         g_leps_ac(g_i_) = (-d1_p) * g_w(g_i_) + g_q3_ac(g_i_) + g_q2_ac(g_i_) + g_q1_ac(g_i_)
-    end do
+    enddo
     leps_ac = q1_ac + q2_ac + q3_ac - d7_v + 6.122d0
     !--------
     !
     do g_i_ = 1, g_p_
         g_j1_ap(g_i_) = g_j1_ap(g_i_)
-    end do
+    enddo
     j1_ap = j1_ap
     !--------
     do g_i_ = 1, g_p_
         g_j2_ap(g_i_) = g_j2_ap(g_i_)
-    end do
+    enddo
     j2_ap = j2_ap
     !--------
     do g_i_ = 1, g_p_
         g_j3_ap(g_i_) = g_j3_ap(g_i_)
-    end do
+    enddo
     j3_ap = j3_ap
     !--------
     d4_b = -j1_ap + (-j2_ap) + j3_ap + j3_ap
@@ -2444,12 +2348,11 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     d5_b = -j3_ap + (-j2_ap) + j1_ap + j1_ap
     do g_i_ = 1, g_p_
         g_w(g_i_) = d4_b * g_j3_ap(g_i_) + d8_b * g_j2_ap(g_i_) + d5_b * g_j1_ap(g_i_)
-    end do
+    enddo
     w = j1_ap * j1_ap + j2_ap * j2_ap + j3_ap * j3_ap - j1_ap * j2_ap - j2_ap * j3_ap - j3_ap * j1_ap
     !--------
     !
     d7_v = sqrt(w)
-
     !        if ( w .gt. 0.0d0 ) then
     d1_p = 1.0d0 / (2.0d0 *  d7_v)
     !        else
@@ -2459,12 +2362,12 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cf&
     !        endif
     do g_i_ = 1, g_p_
         g_leps_ap(g_i_) = (-d1_p) * g_w(g_i_) + g_q3_ap(g_i_) + g_q2_ap(g_i_) + g_q1_ap(g_i_)
-    end do
+    enddo
     leps_ap = q1_ap + q2_ap + q3_ap - d7_v + 5.77096d0
     !--------
     do g_i_ = 1, g_p_
         g_cfu22(g_i_) = -g_leps_ap(g_i_) + g_leps_ac(g_i_)
-    end do
+    enddo
     cfu22 = leps_ac - leps_ap
     !--------
     !

@@ -42,14 +42,12 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call pes_init(path)
         call evvdvdx(tx, v)
         deallocate(nodes3a1)
@@ -59,12 +57,10 @@ subroutine pes( x, igrad, path, p, g, d )
         deallocate(pavg3a1)
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
 end subroutine
 
 !> @brief Evaluate evvdvdx.
@@ -99,25 +95,21 @@ subroutine evvdvdx( xcart, v )
     double precision            :: txinput(1:456)
     do i=1, natom
         x((3*(i-1)+1):(3*(i-1)+3)) = xcart(:,i)
-    end do
-
+    enddo
     k = 0
     do i=1, natom-1
         do j=i+1, natom
             k         = k+1
             r(k)      = dsqrt(dot_product(xcart(:,i)-xcart(:,j), xcart(:,i)-xcart(:,j)))
             xmorse(k) = dexp(-r(k)/(para*alpha))
-        end do
-    end do
-    if(k.ne.(natom*(natom-1)/2))stop "error"
+        enddo
+    enddo
+    if( k .ne. (natom*(natom-1)/2) ) stop "error"
     call bemsav(xmorse, p)
-
     do j=1, 456
         txinput(j) = p(j)
-    end do
-
+    enddo
     call pot3a(txinput, v)
-
 end subroutine evvdvdx
 
 !> @brief Evaluate pes_init.
@@ -131,12 +123,10 @@ subroutine pes_init( path )
     integer                         :: ibasis, npd, iterm, ib, nfile1, nfile2
     character(len=80)               :: f1
     character(len=1024)             :: file_path1, file_path2
-    nfile1 = 4
-    nfile2 = 7
-
+    nfile1     = 4
+    nfile2     = 7
     file_path1 = trim(path)//"/C2H2N2O/weights.txt"
     file_path2 = trim(path)//"/C2H2N2O/biases.txt"
-
     open(nfile1, file=file_path1, status='old')
     open(nfile2, file=file_path2, status='old')
     read(nfile1, *)nhid3, noutput1
@@ -149,7 +139,7 @@ subroutine pes_init( path )
     nodemax31 = 0
     do i=1, nlayer31
         nodemax31 = max(nodemax31, nodes3a1(i))
-    end do
+    enddo
     allocate(weight3a1(nodemax31,nodemax31,2:nlayer31), &
         &bias3a1(nodemax31,2:nlayer31))
     read(nfile1, *)ifunc31, nwe3
@@ -162,21 +152,19 @@ subroutine pes_init( path )
             do inode2=1, nodes3a1(ilay2) !
                 read(nfile1, *)weight3a1(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(nfile2, *)bias3a1(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-    if (iwe.ne.nwe3) then
+        enddo
+    enddo
+    if( iwe .ne. nwe3 )then
         write(*, *)'provided number of parameters ', nwe3
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     close(nfile1)
     close(nfile2)
-
 end subroutine pes_init
 
 !-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->
@@ -196,8 +184,7 @@ subroutine pot3a( x, vpot3 ) ! fhcl, a
     dvtmp = 0d0
     do i=1, ninput1
         y(i,1) = (x(i)-pavg3a1(i))/pdel3a1(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer31-1
         ilay2 = ilay1-1
@@ -205,11 +192,10 @@ subroutine pot3a( x, vpot3 ) ! fhcl, a
             y(inode1,ilay1) = bias3a1(inode1,ilay1)
             do inode2=1, nodes3a1(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+ y(inode2,ilay2)*weight3a1(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun1(y(inode1,ilay1), ifunc31)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer31
     ilay2 = ilay1-1
@@ -217,12 +203,10 @@ subroutine pot3a( x, vpot3 ) ! fhcl, a
         y(inode1,ilay1) = bias3a1(inode1,ilay1)
         do inode2=1, nodes3a1(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+ y(inode2,ilay2)*weight3a1(inode2,inode1,ilay1)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot3 = y(nodes3a1(nlayer31),nlayer31)*pdel3a1(nscale1)+ pavg3a1(nscale1)
-
     !        write(*,'(f16.8)')vpot3
     !        stop
 end subroutine pot3a
@@ -237,13 +221,13 @@ function tranfun1( x, ifunc )
     !    ifunc=1, transfer function is hyperbolic tangent function, 'tansig'
     !    ifunc=2, transfer function is log sigmoid function, 'logsig'
     !    ifunc=3, transfer function is pure linear function, 'purelin'. It is imposed to the output layer by default
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun1 = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun1 = 1d0/(1d0+dexp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun1 = x
-    end if
+    endif
 end function tranfun1
 
 !> @brief Evaluate LOGSIG1.
@@ -262,7 +246,6 @@ subroutine bemsav( x, p )
     double precision :: m(0:707)
     call evmono(x, m)
     call evpoly(m, p)
-
 end subroutine bemsav
 
 !> @brief Evaluate evmono.
@@ -978,7 +961,6 @@ subroutine evmono( x, m )
     m(705) = m(13)*m(254)
     m(706) = m(14)*m(254)
     m(707) = m(17)*m(254)
-
 end subroutine evmono
 
 !> @brief Evaluate evpoly.
@@ -3376,5 +3358,4 @@ subroutine evpoly( m, p )
     p(2387) = p(7)*p(455) - p(2317) - p(2315) - p(2314)
     p(2388) = p(8)*p(456) - p(2356) - p(2353) - p(2352)
     p(2389) = p(9)*p(457)
-
 end subroutine evpoly

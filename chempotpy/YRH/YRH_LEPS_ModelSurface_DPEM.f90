@@ -25,25 +25,21 @@ subroutine dpem( x, igrad, u, ug )
     logical, save                 :: first_time_data=.true.
     integer                       :: i, j, k, l
     !initialize
-    u = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
-
+    u  = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
     nt = 1
     do iatom=1, natoms
         do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
-
+    call legacy_triatomic_distances_to_bohr(x, r(1,:))
     nder = igrad
-
-    if(first_time_data) then
+    if( first_time_data )then
         call prepot
         first_time_data = .false.
-    end if
-
+    endif
     call pot(r, u11, de_u11, 1, 1)
     call pot(r, u12, de_u12, 1, 2)
     call pot(r, u22, de_u22, 1, 3)
@@ -56,23 +52,20 @@ subroutine dpem( x, igrad, u, ug )
     dudr(2,1,:) = de_u12(:,1)*51.422067
     dudr(2,2,:) = de_u22(:,1)*51.422067
     call diagonalize(nstates, u, p, t)
-
     r2 = r(1,:)*legacy_bohr_to_angstrom
     call evdrdx(tx, r2, drdx)
     dudx = 0.d0
     do i=1, 9
         do j=1, 3
             dudx(:,:,i) = dudx(:,:,i)+dudr(:,:,j)*drdx(j,i)
-        end do
-    end do
-
+        enddo
+    enddo
     do iatom=1, natoms
         do idir=1, 3
             j                  = (iatom-1)*3+idir
             ug(:,:,iatom,idir) = dudx(:,:,j)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the YRH_LEPS_ModelSurface_DPEM potential.
@@ -85,30 +78,26 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 3
         do j=1, 9
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
     drdx(1,3) = (x(3)-x(6))/r(1)
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     drdx(2,4) = (x(4)-x(7))/r(2)
     drdx(2,5) = (x(5)-x(8))/r(2)
     drdx(2,6) = (x(6)-x(9))/r(2)
     drdx(2,7) = -drdx(2,4)
     drdx(2,8) = -drdx(2,5)
     drdx(2,9) = -drdx(2,6)
-
     drdx(3,1) = (x(1)-x(7))/r(3)
     drdx(3,2) = (x(2)-x(8))/r(3)
     drdx(3,3) = (x(3)-x(9))/r(3)
     drdx(3,7) = -drdx(3,1)
     drdx(3,8) = -drdx(3,2)
     drdx(3,9) = -drdx(3,3)
-
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the YRH_LEPS_ModelSurface_DPEM potential.
@@ -123,14 +112,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
     u_ss = a_ss
-    if (first_time_diag) then
+    if( first_time_diag )then
         lwork_d = -1
         allocate( work_d(2) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    end if
+    endif
     allocate( work_d(lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
@@ -200,7 +189,6 @@ end subroutine prepot
 !> @brief Evaluate pot for the YRH_LEPS_ModelSurface_DPEM potential.
 subroutine pot( ro, e, de, nt, nsurf )
     !      subroutine pot(ro,nt,nsurf)
-
     implicit none
     double precision :: de, deo, e, g_e, g_r, r, ro
     integer          :: i, j, k, nsurf, nt
@@ -225,33 +213,28 @@ subroutine pot( ro, e, de, nt, nsurf )
         r(i,1) = ro(i,2)
         r(i,2) = ro(i,3)
         r(i,3) = ro(i,1)
-    end do
-
+    enddo
     !     seed matrix
-
     do i=1, nt
         do j=1, 3
             do k=1, 3
-                if (j .eq. k) g_r(j,i,k)=1.0d0
-                if (j .ne. k) g_r(j,i,k)=0.0d0
-            end do
-        end do
-    end do
-
-    if (nsurf.eq.1) then
+                if( j .eq. k ) g_r(j,i,k) = 1.0d0
+                if( j .ne. k ) g_r(j,i,k) = 0.0d0
+            enddo
+        enddo
+    enddo
+    if( nsurf .eq. 1 )then
         call g_pot11(g_p_, r, g_r, ldg_r, e, deo, ldg_e, nt)
-    else if (nsurf.eq.2) then
+    else if( nsurf .eq. 2 )then
         call g_pot12(g_p_, r, g_r, ldg_r, e, deo, ldg_e, nt)
     else
         call g_pot22(g_p_, r, g_r, ldg_r, e, deo, ldg_e, nt)
-    end if
-
+    endif
     do i=1, nt
         de(1,i) = deo(3,i)
         de(2,i) = deo(1,i)
         de(3,i) = deo(2,i)
-    end do
-
+    enddo
 end subroutine pot
 
 !******************************************************************
@@ -313,10 +296,10 @@ subroutine g_prepot11( g_p_ )
     data g_ehfid /0/
     !
     !
-    if (g_p_ .gt. g_pmax_) then
+    if( g_p_ .gt. g_pmax_ )then
         print *, 'Parameter g_p_ is greater than g_pmax_'
         stop
-    end if
+    endif
     cevau = 1.d0 / 27.2113961d0
     !
     return
@@ -327,24 +310,24 @@ subroutine g_prepot11( g_p_ )
         !
         do g_i_ = 1, g_p_
             g_r1(g_i_) = g_r(g_i_,i,1)
-        end do
+        enddo
         r1 = r(i,1)
         !--------
         do g_i_ = 1, g_p_
             g_r2(g_i_) = g_r(g_i_,i,2)
-        end do
+        enddo
         r2 = r(i,2)
         !--------
         do g_i_ = 1, g_p_
             g_r3(g_i_) = g_r(g_i_,i,3)
-        end do
+        enddo
         r3 = r(i,3)
         !--------
         !
         !   SINGLETS (s1, s2, s3)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-beta1_11) * g_r1(g_i_)
-        end do
+        enddo
         d1_w = (-beta1_11) * (r1 - re1_11)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -353,12 +336,12 @@ subroutine g_prepot11( g_p_ )
         d6_b = (-(de1_11 * d1_p)) * d2_p
         do g_i_ = 1, g_p_
             g_s1(g_i_) = d6_b * g_d1_w(g_i_)
-        end do
+        enddo
         s1 = de1_11 * d4_v - de1_11
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-beta2_11) * g_r2(g_i_)
-        end do
+        enddo
         d1_w = (-beta2_11) * (r2 - re2_11)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -367,12 +350,12 @@ subroutine g_prepot11( g_p_ )
         d6_b = (-(de2_11 * d1_p)) * d2_p
         do g_i_ = 1, g_p_
             g_s2(g_i_) = d6_b * g_d1_w(g_i_)
-        end do
+        enddo
         s2 = de2_11 * d4_v - de2_11
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-beta3_11) * g_r3(g_i_)
-        end do
+        enddo
         d1_w = (-beta3_11) * (r3 - re3_11)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -381,14 +364,14 @@ subroutine g_prepot11( g_p_ )
         d6_b = (-(de3_11 * d1_p)) * d2_p
         do g_i_ = 1, g_p_
             g_s3(g_i_) = d6_b * g_d1_w(g_i_)
-        end do
+        enddo
         s3 = de3_11 * d4_v - de3_11
         !--------
         !
         !   TRIPLETS (t1, t2, t3)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-beta1_11) * g_r1(g_i_)
-        end do
+        enddo
         d1_w = (-beta1_11) * (r1 - re1_11)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -397,12 +380,12 @@ subroutine g_prepot11( g_p_ )
         d7_b = 0.5d0 * de1_11 * d1_p * d2_p
         do g_i_ = 1, g_p_
             g_t1(g_i_) = d7_b * g_d1_w(g_i_)
-        end do
+        enddo
         t1 = 0.5d0 * (de1_11 * d4_v - de1_11)
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-beta2_11) * g_r2(g_i_)
-        end do
+        enddo
         d1_w = (-beta2_11) * (r2 - re2_11)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -411,12 +394,12 @@ subroutine g_prepot11( g_p_ )
         d7_b = 0.5d0 * de2_11 * d1_p * d2_p
         do g_i_ = 1, g_p_
             g_t2(g_i_) = d7_b * g_d1_w(g_i_)
-        end do
+        enddo
         t2 = 0.5d0 * (de2_11 * d4_v - de2_11)
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-beta3_11) * g_r3(g_i_)
-        end do
+        enddo
         d1_w = (-beta3_11) * (r3 - re3_11)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -425,55 +408,55 @@ subroutine g_prepot11( g_p_ )
         d7_b = 0.5d0 * de3_11 * d1_p * d2_p
         do g_i_ = 1, g_p_
             g_t3(g_i_) = d7_b * g_d1_w(g_i_)
-        end do
+        enddo
         t3 = 0.5d0 * (de3_11 * d4_v - de3_11)
         !--------
         !
         do g_i_ = 1, g_p_
             g_t1(g_i_) = sp1_11 * g_t1(g_i_)
-        end do
+        enddo
         t1 = t1 * sp1_11
         !--------
         do g_i_ = 1, g_p_
             g_t2(g_i_) = sp2_11 * g_t2(g_i_)
-        end do
+        enddo
         t2 = t2 * sp2_11
         !--------
         do g_i_ = 1, g_p_
             g_t3(g_i_) = sp3_11 * g_t3(g_i_)
-        end do
+        enddo
         t3 = t3 * sp3_11
         !--------
         !
         !  EXCHANGE AND COULOMB  (exch1, coul1, etc.)
         do g_i_ = 1, g_p_
             g_coul1(g_i_) = 0.5d0 * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
-        end do
+        enddo
         coul1 = 0.5d0 * (s1 + t1)
         !--------
         do g_i_ = 1, g_p_
             g_coul2(g_i_) = 0.5d0 * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
-        end do
+        enddo
         coul2 = 0.5d0 * (s2 + t2)
         !--------
         do g_i_ = 1, g_p_
             g_coul3(g_i_) = 0.5d0 * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
-        end do
+        enddo
         coul3 = 0.5d0 * (s3 + t3)
         !--------
         do g_i_ = 1, g_p_
             g_exch1(g_i_) = (-0.5d0) * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
-        end do
+        enddo
         exch1 = 0.5d0 * (s1 - t1)
         !--------
         do g_i_ = 1, g_p_
             g_exch2(g_i_) = (-0.5d0) * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
-        end do
+        enddo
         exch2 = 0.5d0 * (s2 - t2)
         !--------
         do g_i_ = 1, g_p_
             g_exch3(g_i_) = (-0.5d0) * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
-        end do
+        enddo
         exch3 = 0.5d0 * (s3 - t3)
         !--------
         !
@@ -488,20 +471,20 @@ subroutine g_prepot11( g_p_ )
         d10_b = d2_p + (-d3_p)
         do g_i_ = 1, g_p_
             g_w(g_i_) = d5_b * g_exch3(g_i_) + d10_b * g_exch2(g_i_) + d6_b * g_exch1(g_i_)
-        end do
+        enddo
         w = d4_v + d7_v + d10_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-cc_11) * g_r3(g_i_) + (-cc_11) * g_r2(g_i_) + (-cc_11) * g_r1(g_i_) + (-cb_11) * g_w(g_i_)
-        end do
+        enddo
         d1_w = (-cb_11) * w - cc_11 * (r1 + r2 + r3)
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = ca_11 * d1_p
         do g_i_ = 1, g_p_
             g_c1(g_i_) = d3_b * g_d1_w(g_i_)
-        end do
+        enddo
         c1 = ca_11 * d2_v
         !--------
         !
@@ -509,34 +492,33 @@ subroutine g_prepot11( g_p_ )
         d5_b = d2_b * c1 + d2_b * c1
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d5_b * g_c1(g_i_) + d2_b * g_w(g_i_)
-        end do
+        enddo
         d1_w = (w + c1 * c1) / 2.d0
         d2_v = sqrt(d1_w)
-
-        if ( d1_w .gt. 0.0d0 ) then
+        if( d1_w .gt. 0.0d0 )then
             d1_p = 1.0d0 / (2.0d0 *  d2_v)
         else
             d1_p = 0.d0
-        end if
+        endif
         do g_i_ = 1, g_p_
             g_rootw(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         rootw = d2_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_e(g_i_,i) = -g_rootw(g_i_) + g_coul3(g_i_) + g_coul2(g_i_ ) + g_coul1(g_i_)
-        end do
+        enddo
         e(i) = coul1 + coul2 + coul3 - rootw + de2_11
         !--------
         do g_i_ = 1, g_p_
             g_e(g_i_,i) = cevau * g_e(g_i_,i)
-        end do
+        enddo
         e(i) = e(i) * cevau
         !--------
         !
         !  end the nt loop here:
-    end do
+    enddo
     !
 end subroutine g_prepot11
 
@@ -574,10 +556,10 @@ subroutine g_prepot22( g_p_ )
     data g_ehfid /0/
     !
     !
-    if (g_p_ .gt. g_pmax_) then
+    if( g_p_ .gt. g_pmax_ )then
         print *, 'Parameter g_p_ is greater than g_pmax_'
         stop
-    end if
+    endif
     cevau = 1.d0 / 27.2113961d0
     !
     return
@@ -588,23 +570,23 @@ subroutine g_prepot22( g_p_ )
         !
         do g_i_ = 1, g_p_
             g_r1(g_i_) = g_r(g_i_,i,1)
-        end do
+        enddo
         r1 = r(i,1)
         !--------
         do g_i_ = 1, g_p_
             g_r2(g_i_) = g_r(g_i_,i,2)
-        end do
+        enddo
         r2 = r(i,2)
         !--------
         do g_i_ = 1, g_p_
             g_r3(g_i_) = g_r(g_i_,i,3)
-        end do
+        enddo
         r3 = r(i,3)
         !--------
         !
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-beta1_22) * g_r1(g_i_)
-        end do
+        enddo
         d1_w = (-beta1_22) * (r1 - re1_22)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -613,12 +595,12 @@ subroutine g_prepot22( g_p_ )
         d6_b = (-(de1_22 * d1_p)) * d2_p
         do g_i_ = 1, g_p_
             g_s1(g_i_) = d6_b * g_d1_w(g_i_)
-        end do
+        enddo
         s1 = de1_22 * d4_v - de1_22
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-beta2_22) * g_r2(g_i_)
-        end do
+        enddo
         d1_w = (-beta2_22) * (r2 - re2_22)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -627,12 +609,12 @@ subroutine g_prepot22( g_p_ )
         d7_b = 0.5d0 * de2_22 * d1_p * d2_p
         do g_i_ = 1, g_p_
             g_t2(g_i_) = d7_b * g_d1_w(g_i_)
-        end do
+        enddo
         t2 = 0.5d0 * (de2_22 * d4_v - de2_22)
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-beta3_22) * g_r3(g_i_)
-        end do
+        enddo
         d1_w = (-beta3_22) * (r3 - re3_22)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -641,23 +623,23 @@ subroutine g_prepot22( g_p_ )
         d7_b = 0.5d0 * de3_22 * d1_p * d2_p
         do g_i_ = 1, g_p_
             g_t3(g_i_) = d7_b * g_d1_w(g_i_)
-        end do
+        enddo
         t3 = 0.5d0 * (de3_22 * d4_v - de3_22)
         !--------
         !
         do g_i_ = 1, g_p_
             g_e(g_i_,i) = wgt * g_t3(g_i_) + wgt * g_t2(g_i_) + g_s1(g_i_)
-        end do
+        enddo
         e(i) = s1 + (t2 + t3) * wgt + excite + de2_11
         !--------
         do g_i_ = 1, g_p_
             g_e(g_i_,i) = cevau * g_e(g_i_,i)
-        end do
+        enddo
         e(i) = e(i) * cevau
         !--------
         !
         !  end the nt loop here:
-    end do
+    enddo
     !
 end subroutine g_prepot22
 
@@ -692,10 +674,10 @@ subroutine g_prepot12( g_p_ )
     data g_ehfid /0/
     !
     !
-    if (g_p_ .gt. g_pmax_) then
+    if( g_p_ .gt. g_pmax_ )then
         print *, 'Parameter g_p_ is greater than g_pmax_'
         stop
-    end if
+    endif
     cevau = 1.d0 / 27.2113961d0
     !
     return
@@ -706,12 +688,12 @@ subroutine g_prepot12( g_p_ )
         !
         do g_i_ = 1, g_p_
             g_r1(g_i_) = g_r(g_i_,i,1)
-        end do
+        enddo
         r1 = r(i,1)
         !--------
         do g_i_ = 1, g_p_
             g_r2(g_i_) = g_r(g_i_,i,2)
-        end do
+        enddo
         r2 = r(i,2)
         !--------
         r3 = r(i,3)
@@ -723,12 +705,12 @@ subroutine g_prepot12( g_p_ )
         !
         do g_i_ = 1, g_p_
             g_s1(g_i_) = sith * g_r2(g_i_) + csth * g_r1(g_i_)
-        end do
+        enddo
         s1 = (r1 - re1_12) * csth + (r2 - re2_12) * sith
         !--------
         do g_i_ = 1, g_p_
             g_s2(g_i_) = (-csth) * g_r2(g_i_) + sith * g_r1(g_i_)
-        end do
+        enddo
         s2 = (r1 - re1_12) * sith - (r2 - re2_12) * csth
         !--------
         !
@@ -737,13 +719,13 @@ subroutine g_prepot12( g_p_ )
         d3_b = (-a1) * d1_p
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_s1(g_i_)
-        end do
+        enddo
         d1_w = (-a1) * d2_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_tmp1(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         tmp1 = d2_v
         !--------
         d2_v = s2 * s2
@@ -751,13 +733,13 @@ subroutine g_prepot12( g_p_ )
         d3_b = (-a2) * d1_p
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_s2(g_i_)
-        end do
+        enddo
         d1_w = (-a2) * d2_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_tmp2(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         tmp2 = d2_v
         !--------
         !
@@ -765,18 +747,18 @@ subroutine g_prepot12( g_p_ )
         d4_b = scale * tmp1
         do g_i_ = 1, g_p_
             g_e(g_i_,i) = d4_b * g_tmp2(g_i_) + d3_b * g_tmp1(g_i_)
-        end do
+        enddo
         e(i) = tmp1 * tmp2 * scale
         !--------
         !
         do g_i_ = 1, g_p_
             g_e(g_i_,i) = cevau * g_e(g_i_,i)
-        end do
+        enddo
         e(i) = e(i) * cevau
         !--------
         !
         !   end the nt loop here:
-    end do
+    enddo
     !
 end subroutine g_prepot12
 

@@ -4,7 +4,6 @@ module bemsa
     public :: bemsav, coeff, emsav, evmono, evpoly
     double precision :: coeff(5809)
     contains
-
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
         implicit none
@@ -16433,9 +16432,7 @@ module bemsa
         m(16420) = m(   39) * m ( 2433)
         m(16421) = m(   39) * m ( 2436)
         m(16422) = m(   39) * m ( 2438)
-
     end subroutine evmono
-
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
         implicit none
@@ -24002,9 +23999,7 @@ module bemsa
         p( 5807) = d(   12) * p(  727) - p( 5627) - p( 5566) - p( 5554) - p( 5564) - p( 5552)
         p( 5808) = d(    9) * d(  231) - p( 5806)
         p( 5809) = d(   11) * d(  231) - p( 5807)
-
     end subroutine evpoly
-
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         implicit none
@@ -24014,9 +24009,7 @@ module bemsa
         double precision, dimension(1:16422)::m
         call evmono(x, m)
         call evpoly(m, p)
-
     end subroutine bemsav
-
     !> @brief Evaluate emsav.
     subroutine emsav( x, c, energy )
         implicit none
@@ -24025,15 +24018,11 @@ module bemsa
         double precision                :: p(5809)
         integer                         :: i
         call bemsav(x, p)
-
         energy = 0.d0
-
         do i=1, 5809
             energy = energy+c(i)*p(i)
-        end do
-
+        enddo
     end subroutine emsav
-
 end module bemsa
 
 !> @brief Evaluate pes.
@@ -24054,21 +24043,19 @@ subroutine pes( x, igrad, path, p, gradient_out, d )
     logical, save                   :: first_time_data=.true.
     !initialize
     gradient_out = 0.d0; d = 0.d0
-
-    if (igrad==0) then
-        if(first_time_data) then
+    if( igrad == 0 )then
+        if( first_time_data )then
             call prepot(path)
             first_time_data = .false.
-        end if
+        endif
         call pot(x, v)
         v = v*legacy_hartree_to_electronvolt
         do istate=1, nstates
             p(istate) = v
-        end do
+        enddo
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
 end subroutine
 
 !> @brief Evaluate prepot.
@@ -24084,9 +24071,8 @@ subroutine prepot( path )
     open(newunit=file_unit_10, file=file_path1)
     do i = 1, 5809
         read(file_unit_10, *) coeff (i)
-    end do
+    enddo
     close(file_unit_10)
-
 end subroutine prepot
 
 !> @brief Evaluate pot.
@@ -24098,8 +24084,7 @@ subroutine pot( xyz, v )
     double precision                :: x(55)
     double precision                :: a1, a2
     integer                         :: i
-    a1 = 2.0
-
+    a1    = 2.0
     x(1)  = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
     x(2)  = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
     x(3)  = sqrt((xyz(1,1)-xyz(4,1))**2+(xyz(1,2)-xyz(4,2))**2+(xyz(1,3)-xyz(4,3))**2)
@@ -24155,11 +24140,9 @@ subroutine pot( xyz, v )
     x(53) = sqrt((xyz(9,1)-xyz(10,1))**2+(xyz(9,2)-xyz(10,2))**2+(xyz(9,3)-xyz(10,3))**2)
     x(54) = sqrt((xyz(9,1)-xyz(11,1))**2+(xyz(9,2)-xyz(11,2))**2+(xyz(9,3)-xyz(11,3))**2)
     x(55) = sqrt((xyz(10,1)-xyz(11,1))**2+(xyz(10,2)-xyz(11,2))**2+(xyz(10,3)-xyz(11,3))**2)
-
     do i=1, 55
         x(i) = x(i)/0.5291772083
         x(i) = exp(-x(i)/a1)
-    end do
-
+    enddo
     call emsav(x, coeff, v)
 end  subroutine

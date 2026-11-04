@@ -33,7 +33,7 @@ subroutine evaluate( valid )
 end subroutine evaluate
 """
         converted = format_source_text(source)
-        self.assertIn("if (.not. valid) return", converted)
+        self.assertIn("if( .not. valid ) return", converted)
 
     def test_intent_declarations_precede_local_variables(self) -> None:
         source = """\
@@ -60,7 +60,7 @@ end subroutine evaluate
         self.assertNotIn("maximum_count = 10\n\n", converted)
         self.assertNotIn("values(maximum_count)\n\n", converted)
 
-    def test_redundant_blank_lines_are_collapsed(self) -> None:
+    def test_blank_lines_are_removed_inside_procedures(self) -> None:
         source = """\
 subroutine evaluate
 
@@ -72,7 +72,7 @@ subroutine evaluate
 end subroutine evaluate
 """
         converted = format_source_text(source)
-        self.assertNotIn("\n\n\n", converted)
+        self.assertNotIn("\n\n", converted)
 
     def test_short_initializations_use_semicolons(self) -> None:
         source = """\
@@ -150,6 +150,63 @@ end subroutine second
         self.assertIn("end subroutine first\n\n!> @brief", converted)
         self.assertNotIn("end subroutine first\n\n\n", converted)
 
+    def test_modules_have_no_internal_blank_lines(self) -> None:
+        source = """\
+module example
+    implicit none
+
+    contains
+
+    subroutine evaluate
+        implicit none
+
+    end subroutine evaluate
+
+end module example
+"""
+        converted = format_source_text(source)
+        self.assertNotIn("\n\n", converted)
+
+    def test_call_parentheses_have_no_inner_edge_spaces(self) -> None:
+        source = """\
+subroutine evaluate( first, second )
+    implicit none
+    real :: first, second
+    call calculate( first, second )
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("subroutine evaluate( first, second )", converted)
+        self.assertIn("call calculate(first, second)", converted)
+
+    def test_if_conditions_are_spaced(self) -> None:
+        source = """\
+subroutine evaluate( r, re )
+    implicit none
+    real :: r, re
+    if((r-re).ne.0.d0)then
+        r = re
+    endif
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("if( (r-re) .ne. 0.d0 )then", converted)
+        self.assertIn("endif", converted)
+        self.assertNotIn("endif\n\n", converted)
+
+    def test_if_spacing_preserves_character_literals(self) -> None:
+        source = """\
+subroutine evaluate( label )
+    implicit none
+    character(len=*), intent(in) :: label
+    if(label=='a>b')then
+        return
+    endif
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("if( label == 'a>b' )then", converted)
+
     def test_compact_end_statements_are_separated(self) -> None:
         source = """\
 subroutine evaluate
@@ -159,7 +216,7 @@ subroutine evaluate
 endsubroutine evaluate
 """
         converted = format_source_text(source)
-        self.assertIn("end if", converted)
+        self.assertIn("endif", converted)
         self.assertIn("end subroutine evaluate", converted)
 
     def test_only_clauses_are_aligned(self) -> None:

@@ -38,7 +38,6 @@ module n4_1a_pip_par
     ! keywords were repleced by more modern ones.
     ! The surface itself was not changed.
     !**********************************************************************
-
     ! Conversion factors
     ! Cconv: bohr to Angstrom
     !        1 bohr = 0.52917721092 angstrom
@@ -46,7 +45,6 @@ module n4_1a_pip_par
     !        1 kcal/mol = 0.159360144 * 10^-2 hartree
     ! Gconv: kcal/(mol*Angstrom) to hartree/bohr
     !        1 kcal mol^-1 angstrom^-1 = 0.843297564 * 10^-3 hartree/bohr
-
     implicit none
     private
     public :: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, gconv, p, r, re, &
@@ -196,38 +194,31 @@ subroutine pes( x, igrad, potential, gradient, dvec )
     integer                       :: iatom, idir, j, istate
     !initialize
     potential = 0.d0; gradient = 0.d0; dvec = 0.d0
-
     ! Notice that this N2O surface is weird, it is using N2O2 surface
     ! and simply make the first three coordinates as zero.
     do iatom=1, natoms
         do idir=1, 3
             j     = 3*(iatom-1)+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     tg = 0.d0
-
     call n4pes(tx, v, tg, igrad)
-
     ! output v is in kcal/mol, but there is a reference energy that is
     ! in hartree, so convert everything in eV.
     ! output g is in kcal/mol/ang
-
     do istate=1, nstates
         potential(istate) = v/23.0609
-    end do
-
+    enddo
     do istate=1, nstates
         do iatom=1, natoms
             do idir=1, 3
                 j                           = 3*(iatom-1)+idir
                 gradient(istate,iatom,idir) = tg(j)/23.0609
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     dvec = 0.d0
-
 end subroutine
 
 !> @brief Evaluate n4pes.
@@ -247,26 +238,22 @@ subroutine n4pes( x, v, dvdx, igrad )
     !       dim(6*112)
     ! dRdX:     The derivative of R w.r.t. X, dim(6*12)
     !**********************************************************************
-
     implicit none
     integer          :: i, igrad, j, nob, k
     double precision :: v
     double precision :: dvdx(12), x(12)
     ! Read Cartesian coordinate from input file
     call coord_convt(x)
-
-    if (igrad .le. 1) then
+    if( igrad .le. 1 )then
         ! Call subroutine Evv to evaluate potential energy V
         call evv(v)
-
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             ! Call EvdVdX to evaluate the derivatives of V w.r.t. X
             call evdvdx(x, dvdx)
-        end if
+        endif
     else
         write (*, *) 'Only igrad = 0, 1 is allowed!'
-    end if
-
+    endif
 end subroutine n4pes
 
 !> @brief Evaluate coord_convt.
@@ -277,7 +264,6 @@ subroutine coord_convt( x )
     !  Program to calculate the six interatomic distance
     !  by reading XYZ coordinate
     !**********************************************************************
-
     implicit none
     integer          :: i
     double precision :: x(12)
@@ -293,7 +279,6 @@ subroutine coord_convt( x )
     r(4) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
     r(5) = sqrt((x(4)-x(10))**2 + (x(5)-x(11))**2 + (x(6)-x(12))**2)
     r(6) = sqrt((x(7)-x(10))**2 + (x(8)-x(11))**2 + (x(9)-x(12))**2)
-
 end subroutine coord_convt
 
 !> @brief Evaluate EvV.
@@ -316,22 +301,17 @@ subroutine evv( v )
     ! P(0:305): Array to store polynomials
     ! B(1:276):     Array to store basis functions
     !**********************************************************************
-
     implicit none
     integer          :: i, j, k
     double precision :: dist, dv2dr, v, v2
     ! Calculate the six MEG terms for each point
     call evmorse
-
     ! Calculate the monomials for each point by using six MEG terms
     call evmono
-
     ! Calculate the polynomials (basis functions) by using monomials
     call evpoly
-
     ! Calculate the basis functions by removing unconnected and 2-body terms
     call evbas
-
     ! Initialized v to be totdiss
     v = totdiss
     ! Evaluate 2-body interactions
@@ -339,16 +319,13 @@ subroutine evv( v )
         dist = r(i)
         call ev2gm2(dist, v2, dv2dr, 1, 0)
         v = v+v2
-    end do
-
+    enddo
     ! Evaluate V by taken the product of C and Basis function array
     do i=1, 276
         v = v + c(i)*b(i)
-    end do
-
+    enddo
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
-
 end subroutine evv
 
 !> @brief Evaluate EvdVdX.
@@ -366,32 +343,26 @@ subroutine evdvdx( x, dvdx )
     ! dRdX:     dRdX(6,12), derivatives of R(6) w.r.t. 12
     !       Cartesian coordinates
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     double precision :: dvdx(12), x(12)
     ! Initialize dVdX
     do i=1, 12
         dvdx(i) = 0.0d0
-    end do
-
+    enddo
     ! Call EvdVdR to evaluate dVdR(6)
     call evdvdr
-
     ! Call EvdRdX to evaluate dRdX(6,12)
     call evdrdx(x)
-
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to 6
     do i=1, 12
         do j=1, 6
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        end do
-    end do
-
+        enddo
+    enddo
     !      write(*,*) 'The 12 dVdX are:'
     !      Write(*,9999) (dVdX(i),i=1,12)
     ! 9999 Format(1x,3F15.8)
-
 end subroutine evdvdx
 
 !> @brief Evaluate EvMorse.
@@ -404,13 +375,11 @@ subroutine evmorse
     ! a:    nonlinear parameter, unit Ang
     ! ab:   nonlinear parameter, unit Ang^2
     !**********************************************************************
-
     implicit none
     integer :: i
     do i=1, 6
         rms(i) = exp(-(r(i)-re)/a-((r(i)-re)**2.0d0)/ab)
-    end do
-
+    enddo
 end subroutine evmorse
 
 !> @brief Evaluate EvMono.
@@ -422,7 +391,6 @@ subroutine evmono
     !  monomials(M) that do not have usable decomposition.
     !  For A4 with max. degree 9, the number of monomials is nom.
     !**********************************************************************
-
     implicit none
     rm(0)   = 1.0d0
     rm(1)   = rms(6)
@@ -536,7 +504,6 @@ subroutine evmono
     rm(109) = rm(6)*rm(85)
     rm(110) = rm(6)*rm(86)
     rm(111) = rm(6)*rm(87)
-
 end subroutine evmono
 
 !> @brief Evaluate EvPoly.
@@ -548,7 +515,6 @@ subroutine evpoly
     !  permutation-invariant polynomials(p)
     !  For A4 with max. degree 9, the number of polynomials is nob.
     !**********************************************************************
-
     implicit none
     p(0)  = rm(0)
     p(1)  = rm(1) + rm(2) + rm(3) + rm(4) + rm(5) + rm(6)
@@ -864,7 +830,6 @@ subroutine evpoly
     p(303) = p(2)*p(119) - p(294)
     p(304) = p(3)*p(119) - p(295) - p(296) - p(293)
     p(305) = p(1)*p(194) - p(304) - p(303)
-
 end subroutine evpoly
 
 !> @brief Evaluate evbas.
@@ -874,72 +839,55 @@ subroutine evbas
     !**********************************************************************
     !  The subroutine eliminates the 2-body terms in Bowman's approach
     !**********************************************************************
-
     implicit none
     integer          :: i
     double precision :: b1(306)
     !     Pass P(0:305) to BM1(1:306)
     do i=1, 306
         b1(i) = p(i-1)
-    end do
-
+    enddo
     ! Remove unconnected terms and 2-body terms and pass to B(1:276)
     b(1) = b1(4)
-
     do i=2, 4
         b(i) = b1(i+4)
-    end do
-
+    enddo
     b(5) = b1(10)
-
     do i=6, 11
         b(i) = b1(i+6)
-    end do
-
+    enddo
     b(12) = b1(19)
     b(13) = b1(21)
-
     do i=14, 26
         b(i) = b1(i+9)
-    end do
-
+    enddo
     b(27) = b1(37)
     b(28) = b1(39)
-
     do i=29, 53
         b(i) = b1(i+12)
-    end do
-
+    enddo
     b(54) = b1(67)
     b(55) = b1(69)
     b(56) = b1(71)
-
     do i=57, 97
         b(i) = b1(i+16)
-    end do
-
+    enddo
     b(98)  = b1(115)
     b(99)  = b1(117)
     b(100) = b1(119)
-
     do i=101, 166
         b(i) = b1(i+20)
-    end do
-
+    enddo
     b(167) = b1(188)
     b(168) = b1(190)
     b(169) = b1(192)
     b(170) = b1(194)
-
     do i=171, 272
         b(i) = b1(i+25)
-    end do
-
+    enddo
     b(273) = b1(299)
     b(274) = b1(301)
     b(275) = b1(303)
     b(276) = b1(305)
-
 end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
@@ -962,7 +910,6 @@ subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
     ! imol .eq. 4   Parameters for O2 dissociation with SEC
     !               (for N2O2 data and O4 data)
     !**********************************************************************
-
     implicit none
     integer, intent(in)           :: igrad, imol
     double precision, intent(out) :: v2, dv2dr
@@ -970,7 +917,7 @@ subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
     double precision              :: rx
     double precision              :: red, de
     double precision              :: fy, dfdr, u, y, dydr, dfdy, vx
-    if (imol .eq. 1) then
+    if( imol .eq. 1 )then
         ! Parameter for N2 dissociation without SEC (for N4 data)
         red   = 1.098d0
         de    = 228.7d0
@@ -981,7 +928,7 @@ subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
         cs(4) = -5.02002309588d-1
         cs(5) = 3.80734244606d-1
         cs(6) = 1.21001628750d0
-    else if (imol .eq. 2) then
+    else if( imol .eq. 2 )then
         ! Parameter for N2 dissociation with SEC (for N2O2)
         red   = 1.098d0
         de    = 228.4d0
@@ -992,7 +939,7 @@ subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
         cs(4) = -4.08663480982d-1
         cs(5) = 3.92451705557d-1
         cs(6) = 1.13006674877d0
-    else if (imol .eq. 3) then
+    else if( imol .eq. 3 )then
         ! Parameter for NO dissociation with SEC (for N2O2)
         red   = 1.1508d0
         de    = 152.2d0
@@ -1003,7 +950,7 @@ subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
         cs(4) = 9.29495534058d-1
         cs(5) = 2.66966672332d-1
         cs(6) = -3.68118714223d-1
-    else if (imol .eq. 4) then
+    else if( imol .eq. 4 )then
         ! Parameter for O2 dissociation with SEC (for N2O2 and O4)
         red   = 1.208d0
         de    = 120.243d0
@@ -1014,25 +961,19 @@ subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
         cs(4) = -3.29632972405d-1
         cs(5) = 2.40883331247d0
         cs(6) = 2.09264029009d0
-    end if
-
-    y = (rx*rx*rx*rx - red*red*red*red)/(rx*rx*rx*rx + red*red*red*red)
-
+    endif
+    y  = (rx*rx*rx*rx - red*red*red*red)/(rx*rx*rx*rx + red*red*red*red)
     fy = cs(0) + cs(1)*y + cs(2)*y*y + cs(3)*y*y*y + cs(4)*y*y*y*y + cs(5)*y*y*y*y*y + cs(6)*y*y*y*y*y*y
-
-    u = exp(-fy*(rx-red))
-
+    u  = exp(-fy*(rx-red))
     v2 = de*(1.0d0-u)*(1.0d0-u)-de
-
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         dfdy = cs(1) + 2.0d0*cs(2)*y + 3.0d0*cs(3)*y*y + 4.0d0*cs(4)*y*y*y  + 5.0d0*cs(5)*y*y*y*y + 6.0d0*cs(6)*y*y*y* &
             & y* y
         vx    = rx*rx*rx*rx + red*red*red*red
         dydr  = 8.0d0*rx*rx*rx*red*red*red*red/(vx*vx)
         dfdr  = dfdy*dydr
         dv2dr = 2.0d0*de*(1-u)*u*(dfdr*(rx-red)+fy)
-    end if
-
+    endif
 end subroutine ev2gm2
 
 !> @brief Evaluate EvdVdR.
@@ -1055,41 +996,33 @@ subroutine evdvdr
     ! M(nom):   Array to store monomials
     ! P(nob):   Array to store polynomials
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     double precision :: dist, v2, dv2dr
     ! Initialize dVdR(6)
     do i=1, 6
         dvdr(i) = 0.0d0
-    end do
-
+    enddo
     ! Add dV2dR(i) to dVdR
     do i=1, 6
         dist = r(i)
         call ev2gm2(dist, v2, dv2dr, 1, 1)
         dvdr(i) = dv2dr
-    end do
-
+    enddo
     ! Calculate dMEG/dr(6,6) for given R(6)
     call evdmsdr
-
     ! Calculate the monomials for each point by using six MEG terms
     call evdmdr
-
     ! Calculate the polynomials by using monomials
     call evdpdr
-
     ! Remove 2-body interactions and unconnected terms from polynomials
     call evdbdr
-
     ! Evaluate dVdR(6) by taken the product of C(j) and dPdR(i,j)
     do i=1, 6
         do j=1, 276
             dvdr(i) = dvdr(i) + c(j)*dbdr(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine evdvdr
 
 !> @brief Evaluate EvdRdX.
@@ -1107,7 +1040,6 @@ subroutine evdrdx( x )
     ! M(nom):   Array to store monomials
     ! P(nob):   Array to store polynomials
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     double precision :: x(12)
@@ -1115,9 +1047,8 @@ subroutine evdrdx( x )
     do i=1, 6
         do j=1, 12
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     ! Start to calculate the non-zero dRdX
     ! dr1dx
     drdx(1,1) = (x(1)-x(4))/r(1)
@@ -1126,7 +1057,6 @@ subroutine evdrdx( x )
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     ! dr2dx
     drdx(2,1) = (x(1)-x(7))/r(2)
     drdx(2,2) = (x(2)-x(8))/r(2)
@@ -1134,7 +1064,6 @@ subroutine evdrdx( x )
     drdx(2,7) = -drdx(2,1)
     drdx(2,8) = -drdx(2,2)
     drdx(2,9) = -drdx(2,3)
-
     ! dr3dx
     drdx(3,1)  = (x(1)-x(10))/r(3)
     drdx(3,2)  = (x(2)-x(11))/r(3)
@@ -1142,7 +1071,6 @@ subroutine evdrdx( x )
     drdx(3,10) = -drdx(3,1)
     drdx(3,11) = -drdx(3,2)
     drdx(3,12) = -drdx(3,3)
-
     ! dr4dx
     drdx(4,4) = (x(4)-x(7))/r(4)
     drdx(4,5) = (x(5)-x(8))/r(4)
@@ -1150,7 +1078,6 @@ subroutine evdrdx( x )
     drdx(4,7) = -drdx(4,4)
     drdx(4,8) = -drdx(4,5)
     drdx(4,9) = -drdx(4,6)
-
     ! dr5dx
     drdx(5,4)  = (x(4)-x(10))/r(5)
     drdx(5,5)  = (x(5)-x(11))/r(5)
@@ -1158,7 +1085,6 @@ subroutine evdrdx( x )
     drdx(5,10) = -drdx(5,4)
     drdx(5,11) = -drdx(5,5)
     drdx(5,12) = -drdx(5,6)
-
     ! dr6dx
     drdx(6,7)  = (x(7)-x(10))/r(6)
     drdx(6,8)  = (x(8)-x(11))/r(6)
@@ -1167,7 +1093,6 @@ subroutine evdrdx( x )
     drdx(6,11) = -drdx(6,8)
     drdx(6,12) = -drdx(6,9)
     ! Finish the calculation of non-zero dRdX
-
 end subroutine evdrdx
 
 !> @brief Evaluate EvdMsdR.
@@ -1182,24 +1107,19 @@ subroutine evdmsdr
     ! ab:       Nonlinear parameter(Angstrom^2)
     ! re:       equilibrium bond length(Angstrom)
     !**********************************************************************
-
     implicit none
     integer :: i, j
     ! Initialize dmsdr
     do i=1, 6
         do j=1, 6
             dmsdr(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
-
     do i=1, 6
         dmsdr(i,i) = (-2.0d0*(r(i)-re)/ab-1/a) * exp(-(r(i)-re)/a-((r(i)-re)**2.0d0)/ab)
-
-    end do
-
+    enddo
 end subroutine evdmsdr
 
 !> @brief Evaluate EvdMdR.
@@ -1211,7 +1131,6 @@ subroutine evdmdr
     !  dMdR(6,nom) that do not have usable decomposition.
     !  For A4 with max. degree 9, the number of monomials is nom.
     !**********************************************************************
-
     implicit none
     integer :: i
     do i=1, 6
@@ -1327,8 +1246,7 @@ subroutine evdmdr
         dmdr(i,109) = dmdr(i,6)*rm(85) + rm(6)*dmdr(i,85)
         dmdr(i,110) = dmdr(i,6)*rm(86) + rm(6)*dmdr(i,86)
         dmdr(i,111) = dmdr(i,6)*rm(87) + rm(6)*dmdr(i,87)
-    end do
-
+    enddo
 end subroutine evdmdr
 
 !> @brief Evaluate EvdPdr.
@@ -1340,7 +1258,6 @@ subroutine evdpdr
     !  permutation-invariant polynomials(p)
     !  For A4 with max. degree 9, the number of polynomials is nob.
     !**********************************************************************
-
     implicit none
     integer :: i
     do i=1, 6
@@ -1686,8 +1603,7 @@ subroutine evdpdr
         dpdr(i,303) = dpdr(i,2)*p(119) + p(2)*dpdr(i,119) - dpdr(i,294)
         dpdr(i,304) = dpdr(i,3)*p(119) + p(3)*dpdr(i,119) - dpdr(i,295) - dpdr(i,296) - dpdr(i,293)
         dpdr(i,305) = dpdr(i,1)*p(194) + p(1)*dpdr(i,194) - dpdr(i,304) - dpdr(i,303)
-    end do
-
+    enddo
 end subroutine evdpdr
 
 !> @brief Evaluate evdbdr.
@@ -1697,7 +1613,6 @@ subroutine evdbdr
     !**********************************************************************
     !  The subroutine eliminates the 2-body terms in Bowman's approach
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     double precision :: db1dr(6,306)
@@ -1705,66 +1620,50 @@ subroutine evdbdr
     do j=1, 6
         do i=1, 306
             db1dr(j,i) = dpdr(j,i-1)
-        end do
-    end do
-
+        enddo
+    enddo
     ! Remove unconnected terms and 2-body terms and pass to B(1:276)
     do j=1, 6
         dbdr(j,1) = db1dr(j,4)
-
         do i=2, 4
             dbdr(j,i) = db1dr(j,i+4)
-        end do
-
+        enddo
         dbdr(j,5) = db1dr(j,10)
-
         do i=6, 11
             dbdr(j,i) = db1dr(j,i+6)
-        end do
-
+        enddo
         dbdr(j,12) = db1dr(j,19)
         dbdr(j,13) = db1dr(j,21)
-
         do i=14, 26
             dbdr(j,i) = db1dr(j,i+9)
-        end do
-
+        enddo
         dbdr(j,27) = db1dr(j,37)
         dbdr(j,28) = db1dr(j,39)
-
         do i=29, 53
             dbdr(j,i) = db1dr(j,i+12)
-        end do
-
+        enddo
         dbdr(j,54) = db1dr(j,67)
         dbdr(j,55) = db1dr(j,69)
         dbdr(j,56) = db1dr(j,71)
-
         do i=57, 97
             dbdr(j,i) = db1dr(j,i+16)
-        end do
-
+        enddo
         dbdr(j,98)  = db1dr(j,115)
         dbdr(j,99)  = db1dr(j,117)
         dbdr(j,100) = db1dr(j,119)
-
         do i=101, 166
             dbdr(j,i) = db1dr(j,i+20)
-        end do
-
+        enddo
         dbdr(j,167) = db1dr(j,188)
         dbdr(j,168) = db1dr(j,190)
         dbdr(j,169) = db1dr(j,192)
         dbdr(j,170) = db1dr(j,194)
-
         do i=171, 272
             dbdr(j,i) = db1dr(j,i+25)
-        end do
-
+        enddo
         dbdr(j,273) = db1dr(j,299)
         dbdr(j,274) = db1dr(j,301)
         dbdr(j,275) = db1dr(j,303)
         dbdr(j,276) = db1dr(j,305)
-    end do
-
+    enddo
 end subroutine evdbdr

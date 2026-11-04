@@ -50,14 +50,12 @@ subroutine pes( x, igrad, p, g, d )
     integer                       :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call pes_init
         call hohcl_pes_interface(tx, v)
         deallocate(nodes)
@@ -75,15 +73,12 @@ subroutine pes( x, igrad, p, g, d )
         deallocate(pavgc)
     else
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
     g = 0.d0
     d = 0.d0
-
 end subroutine
 
 !> @brief Evaluate clh2oNN.
@@ -99,9 +94,8 @@ subroutine clh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHClO order and angst
     double precision   :: txinput(1:nbasis-1)
     double precision   :: ct(3,4), xvec(3,ndim), xct(3,4), vpes
     double precision   :: vpesa, vpesb, vpesc, r12, r13, r14, r23, r24, r34
-    basis = 0.d0
-    xct   = ct
-
+    basis     = 0.d0
+    xct       = ct
     xvec(:,1) = xct(:,2)-xct(:,1) !  H2->H1
     xvec(:,2) = xct(:,3)-xct(:,1) !  x->H1
     xvec(:,3) = xct(:,4)-xct(:,1) !  O->H1
@@ -114,25 +108,18 @@ subroutine clh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHClO order and angst
     rb(4)     = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
     rb(5)     = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
     rb(6)     = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
-
-    r12 = rb(1);r13=rb(2);r14=rb(3);r23=rb(4);r24=rb(5);r34=rb(6)
-
-    xbond(:) = dexp(-rb(:)/alpha)
-
+    r12       = rb(1);r13=rb(2);r14=rb(3);r23=rb(4);r24=rb(5);r34=rb(6)
+    xbond(:)  = dexp(-rb(:)/alpha)
     call bemsav(xbond, basis)
-
     do j=1, nbasis-1
         txinput(j) = basis(j)
-    end do
-
+    enddo
     call getpota(txinput, vpesa)
     call getpotb(txinput, vpesb)
     call getpotc(txinput, vpesc)
     vpes = (vpesa+vpesb+vpesc)/3.0d0
-
-    if(vpes.lt.-1.5d0)vpes=5.0d0
+    if( vpes .lt. -1.5d0 ) vpes=5.0d0
     vpes = min(vpes, 5.0d0)
-
 end subroutine clh2onn
 
 !-->  read NN weights and biases from matlab output
@@ -1128,9 +1115,7 @@ subroutine pes_init
     rxhcl(  18)      = 1.80000000d0
     rxho(  18)       = 1.50000000d0
     exhohcl(  18,18) = -535.82799974d0
-
     ! HO and HCl separated at 50.0 angstrom
-
     e1ho(   1)  = -535.76343561d0
     e1ho(   2)  = -535.84811275d0
     e1ho(   3)  = -535.90498533d0
@@ -1167,27 +1152,22 @@ subroutine pes_init
     e1ho(  16)  = -535.91280678d0
     e1ho(  17)  = -535.90273221d0
     e1ho(  18)  = -535.89652917d0
-
-    m   = nxhcl
-    n   = nxho
-    x1a = rxhcl
-    x2a = rxho
-    ya  = exhohcl
-
+    m           = nxhcl
+    n           = nxho
+    x1a         = rxhcl
+    x2a         = rxho
+    ya          = exhohcl
     do j=1, m
         do k=1, n
             ytmp(k) = ya(j,k)
-        end do
+        enddo
         call spline(x2a, ytmp, n, 1.0d30, 1.0d30, y2tmp)
         do k=1, n
             y2a(j,k) = y2tmp(k)
-        end do
-    end do
-
+        enddo
+    enddo
     exhohcl2 = y2a
-
     !HCl dipole
-
     dp0hcl(   1) = 0.29998559d0
     r0hcl(   1)  = 3.03540523d0
     dp0hcl(   2) = 0.31240799d0
@@ -1224,11 +1204,8 @@ subroutine pes_init
     r0hcl(  17)  = 6.07081045d0
     dp0hcl(  18) = 0.55069854d0
     r0hcl(  18)  = 6.42791695d0
-
     call spline(r0hcl, dp0hcl, n0hcl, dy1, dyn, dp0hcl2)
-
     !HO dipole
-
     dp0ho(   1) = 0.56795497d0
     r0ho(   1)  = 2.32119223d0
     dp0ho(   2) = 0.58170575d0
@@ -1269,11 +1246,8 @@ subroutine pes_init
     r0ho(  19)  = 5.17804421d0
     dp0ho(  20) = 0.55745569d0
     r0ho(  20)  = 5.35659746d0
-
     call spline(r0ho, dp0ho, n0ho, dy1, dyn, dp0ho2)
-
     !******************************************************************************
-
     nhid   = 2;noutput=  1
     nscale = ninput+noutput
     nlayer = nhid+2
@@ -1285,7 +1259,7 @@ subroutine pes_init
     nodemax       = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weighta(nodemax,nodemax,2:nlayer), &
         &biasa(nodemax,2:nlayer))
     ifunc             = 1;nwe=  5061
@@ -11449,12 +11423,12 @@ subroutine pes_init
     biasa(  1,4)      = -0.12273469025273757438d0
     iwe               = iwe+1
     iwe               = 5061
-    if (iwe.ne.nwe) then
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check inputfiles or code'
         stop
-    end if
+    endif
     nhid   = 2;noutput=  1
     nscale = ninput+noutput
     nlayer = nhid+2
@@ -11466,7 +11440,7 @@ subroutine pes_init
     nodemax       = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightb(nodemax,nodemax,2:nlayer), &
         & biasb(nodemax,2:nlayer))
     ifunc             = 1;nwe=  5061
@@ -21630,12 +21604,12 @@ subroutine pes_init
     biasb(  1,4)      = 0.55107003129224929605d0
     iwe               = iwe+1
     iwe               = 5061
-    if (iwe.ne.nwe) then
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check inputfiles or code'
         stop
-    end if
+    endif
     nhid   = 2;noutput=  1
     nscale = ninput+noutput
     nlayer = nhid+2
@@ -21647,7 +21621,7 @@ subroutine pes_init
     nodemax       = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightc(nodemax,nodemax,2:nlayer), &
         &biasc(nodemax,2:nlayer))
     ifunc             = 1;nwe=  5061
@@ -31811,13 +31785,12 @@ subroutine pes_init
     biasc(  1,4)      = 0.96900308575181981485d0
     iwe               = iwe+1
     iwe               = 5061
-    if (iwe.ne.nwe) then
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check inputfiles or code'
         stop
-    end if
-
+    endif
 end subroutine pes_init
 
 !> @brief Evaluate getpota.
@@ -31833,8 +31806,7 @@ subroutine getpota( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavga(i))/pdela(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -31842,11 +31814,10 @@ subroutine getpota( x, vpot )
             y(inode1,ilay1) = biasa(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -31854,11 +31825,10 @@ subroutine getpota( x, vpot )
         y(inode1,ilay1) = biasa(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
 end subroutine getpota
@@ -31876,8 +31846,7 @@ subroutine getpotb( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgb(i))/pdelb(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -31885,11 +31854,10 @@ subroutine getpotb( x, vpot )
             y(inode1,ilay1) = biasb(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightb(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -31897,11 +31865,10 @@ subroutine getpotb( x, vpot )
         y(inode1,ilay1) = biasb(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightb(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelb(nscale)+pavgb(nscale)
 end subroutine getpotb
@@ -31919,8 +31886,7 @@ subroutine getpotc( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgc(i))/pdelc(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -31928,11 +31894,10 @@ subroutine getpotc( x, vpot )
             y(inode1,ilay1) = biasc(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightc(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -31940,11 +31905,10 @@ subroutine getpotc( x, vpot )
         y(inode1,ilay1) = biasc(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightc(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelc(nscale)+pavgc(nscale)
 end subroutine getpotc
@@ -31954,13 +31918,13 @@ function tranfun( x, ifunc )
     implicit none
     integer          :: ifunc
     double precision :: tranfun, x
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun = x
-    end if
+    endif
 end
 
 !> @brief Evaluate emsav.
@@ -32002,7 +31966,6 @@ subroutine evmono( x, m )
     m(8)  = m(3)*m(4)
     m(9)  = m(2)*m(5)
     m(10) = m(4)*m(5)
-
 end subroutine evmono
 
 !> @brief Evaluate evpoly.
@@ -32028,7 +31991,6 @@ subroutine evpoly( m, p )
     p(15) = p(2)*p(2)-p(6)-p(6)
     p(16) = p(3)*p(3)-p(9)-p(9)
     p(17) = p(4)*p(4)
-
 end subroutine evpoly
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32042,56 +32004,46 @@ subroutine hohcl_pes_interface( xc, vpes )
     double precision :: dpthcl, dptho, r13, r23, rhpo, rhcl, vfit, vdp
     double precision :: vt1, vcorr, vpes, tmp1, ybond(6), va, vb, vc
     double precision :: xcom1(3), xcom2(3), rcom, mass(4), skey
-    mass(1) = 1.00794d0
-    mass(2) = mass(1)
-    mass(3) = 35.453d0   !HHClO standard weight
-    mass(4) = 15.9994d0
-
-    vt1   = 0.0d0
-    vcorr = 0.0d0
-    xct   = xc
-
+    mass(1)   = 1.00794d0
+    mass(2)   = mass(1)
+    mass(3)   = 35.453d0   !HHClO standard weight
+    mass(4)   = 15.9994d0
+    vt1       = 0.0d0
+    vcorr     = 0.0d0
+    xct       = xc
     xvec(:,2) = xct(:,3)-xct(:,1) !  Cl-H1
     xvec(:,4) = xct(:,3)-xct(:,2) !  H2-Cl
     r13       = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
     r23       = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
-
     ! check the linked atom order: make sure that
     ! 1st H linked or near Cl
-
-    if(r13.gt.r23)then
+    if( r13 .gt. r23 )then
         xct2(:,1) = xct(:,2)
         xct2(:,2) = xct(:,1)
         xct2(:,3) = xct(:,3)
         xct2(:,4) = xct(:,4)
     else
         xct2 = xct
-    end if
-
+    endif
     call before_vpes(xct2, lxc)  !xct in order for H1-Cl  and H2-O, if possible
-
-    if(lxc.eq.-1)then
+    if( lxc .eq. -1 )then
         vpes = vpescut
         return
-    end if
-
+    endif
     lxc = 0
-    if(lxc.eq.2)then
+    if( lxc .eq. 2 )then
         call ho_hcl_correction(xct2, vpes)
         vpes = min(vpes, vpescut)
         return
-    end if
-
-    if(lxc.eq.0)then
+    endif
+    if( lxc .eq. 0 )then
         call clh2onn(xct2, vpes, va, vb, vc)
         vpes = min(vpes, vpescut)
         return
-    end if
-
-    if(lxc.eq.1)then
+    endif
+    if( lxc .eq. 1 )then
         ! check the linked atom order: make sure that
         ! 1st H linked or near Cl
-
         xcom1(:) = xct2(:,1)+(mass(3)/(mass(1)+mass(3)))* (xct2(:,3)-xct2(:,1))
         xcom2(:) = xct2(:,2)+(mass(4)/(mass(2)+mass(4)))* (xct2(:,4)-xct2(:,2))
         rcom     = dsqrt(dot_product(xcom1-xcom2, xcom1-xcom2))
@@ -32101,8 +32053,7 @@ subroutine hohcl_pes_interface( xc, vpes )
         vpes = skey*vfit+(1.0d0-skey)*vdp
         vpes = min(vpes, vpescut)
         return
-    end if
-
+    endif
 end subroutine hohcl_pes_interface
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32119,27 +32070,23 @@ subroutine ho_hcl_correction( xc, vdp )
     double precision :: angb, anga, angab, vechcl(3), vecho(3), vechh(3)
     double precision :: pointa(3), pointb(3), vecacl(3), vecbo(3), vecab(3)
     double precision :: racl, rbo, rab
-    xct2  = xc
-    vt1   = 0.0d0
-    vcorr = 0.d0
-
+    xct2      = xc
+    vt1       = 0.0d0
+    vcorr     = 0.d0
     xvec(:,1) = xct2(:,2)-xct2(:,1) !  H2->H1
     xvec(:,2) = xct2(:,3)-xct2(:,1) !  Cl->H1
     xvec(:,3) = xct2(:,4)-xct2(:,1) !  O->H1
     xvec(:,4) = xct2(:,3)-xct2(:,2) !  H2->Cl
     xvec(:,5) = xct2(:,4)-xct2(:,2) !  H2->O
     xvec(:,6) = xct2(:,4)-xct2(:,3) !  Cl-O
-
-    rbond(1) = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-    rbond(2) = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-    rbond(3) = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
-    rbond(4) = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
-    rbond(5) = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
-    rbond(6) = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
-
-    rhcl = rbond(2)
-    rhpo = rbond(5)
-
+    rbond(1)  = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
+    rbond(2)  = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
+    rbond(3)  = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
+    rbond(4)  = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
+    rbond(5)  = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
+    rbond(6)  = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
+    rhcl      = rbond(2)
+    rhpo      = rbond(5)
     !     Cl /\                       /\ O
     !          \                     /
     !           \ thetaA            /thetaB
@@ -32148,45 +32095,31 @@ subroutine ho_hcl_correction( xc, vdp )
     !              \             /
     !               \           / H
     !             H  \
-
     call ho_hcl_pes_spline(rhcl, rhpo, vt1)
-
     rhcl = rhcl/0.5291772d0
     rhpo = rhpo/0.52917720d0
-
     call hcl_dipole(rhcl, dpthcl)
     call ho_dipole(rhpo, dptho)
-
     !      dipole should be for the middle point of HCl and HO
-
     vechcl(:) = xvec(:,2)
     vecho(:)  = xvec(:,5)
-
     pointa(:) = xct2(:,1)+vechcl(:)/2.0d0
     pointb(:) = xct2(:,2)+vecho(:)/2.0d0
-
     vecacl(:) = xct2(:,3)-pointa(:)
     vecbo(:)  = xct2(:,4)-pointb(:)
     vecab(:)  = pointb(:)-pointa(:)
-
-    racl = dsqrt(dot_product(vecacl(:), vecacl(:)))
-    rbo  = dsqrt(dot_product(vecbo(:), vecbo(:)))
-    rab  = dsqrt(dot_product(vecab(:), vecab(:)))
-
-    anga = dot_product(vecacl, vecab)/(racl*rab)
-    anga = dacos(max(-1.0d0, min(1.0d0, anga)))
-
-    angb = dot_product(vecbo, vecab)/(rbo*rab)
-    angb = dacos(max(-1.0d0, min(1.0d0, angb)))
-
-    angab = dot_product(vecacl, vecbo)/(racl*rbo)
-    angab = dacos(max(-1.0d0, min(1.0d0, angab)))
-
-    vcorr = dpthcl*dptho/((rab/0.5291772d0)**3)* (dcos(angab)-3.0d0*dcos(angb)*dcos(anga))
-
-    vdp = ((vt1+vcorr)-vpesmin)*627.509d0 - 0.15d0
-    vdp = vdp/23.0605d0
-
+    racl      = dsqrt(dot_product(vecacl(:), vecacl(:)))
+    rbo       = dsqrt(dot_product(vecbo(:), vecbo(:)))
+    rab       = dsqrt(dot_product(vecab(:), vecab(:)))
+    anga      = dot_product(vecacl, vecab)/(racl*rab)
+    anga      = dacos(max(-1.0d0, min(1.0d0, anga)))
+    angb      = dot_product(vecbo, vecab)/(rbo*rab)
+    angb      = dacos(max(-1.0d0, min(1.0d0, angb)))
+    angab     = dot_product(vecacl, vecbo)/(racl*rbo)
+    angab     = dacos(max(-1.0d0, min(1.0d0, angab)))
+    vcorr     = dpthcl*dptho/((rab/0.5291772d0)**3)* (dcos(angab)-3.0d0*dcos(angb)*dcos(anga))
+    vdp       = ((vt1+vcorr)-vpesmin)*627.509d0 - 0.15d0
+    vdp       = vdp/23.0605d0
 end subroutine ho_hcl_correction
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32203,103 +32136,85 @@ subroutine before_vpes( xct, lxc )
     mass(2) = mass(1)
     mass(3) = 35.453d0   !HHClO standard weight
     mass(4) = 15.9994d0
-
     ! lxc=-1, unphysical point
     ! lxc=0,  normal
     ! lxc=1,  HO+HCl, using switch function
     ! lxc=2,  HO+HCl, using dipole interaction correction
-
-    lxc = 0
-    lbc = 0
-    lcd = 0
-    lde = 0
-
-    xct2 = xct
-
+    lxc       = 0
+    lbc       = 0
+    lcd       = 0
+    lde       = 0
+    xct2      = xct
     xvec(:,1) = xct2(:,2)-xct2(:,1) !  H2-H1
     xvec(:,2) = xct2(:,3)-xct2(:,1) !  Cl-H1
     xvec(:,3) = xct2(:,4)-xct2(:,1) !  O-H1
     xvec(:,4) = xct2(:,3)-xct2(:,2) !  H2-Cl
     xvec(:,5) = xct2(:,4)-xct2(:,2) !  H2-O
     xvec(:,6) = xct2(:,4)-xct2(:,3) !  Cl-O
-
-    r12 = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-    r13 = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-    r14 = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
-    r23 = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
-    r24 = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
-    r34 = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
-
-    bt(:) = (/r12, r13, r14, r23, r24, r34/)
-
+    r12       = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
+    r13       = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
+    r14       = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
+    r23       = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
+    r24       = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
+    r34       = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
+    bt(:)     = (/r12, r13, r14, r23, r24, r34/)
     ! remove some unphysical points
-
     do i=1, 6
-        if(bt(i).le.0.60d0)then
+        if( bt(i) .le. 0.60d0 )then
             lxc = -1
             return
-        end if
-    end do
-
+        endif
+    enddo
     !--> ClO distance, do not consider  H2 + ClO channel
     !--> ClO equilibrium distance,1.596gstrom, x 130% = 2.07 angstrom
-    if(r34.le.1.30d0.or.r12.le.0.60d0) then
+    if( r34 .le. 1.30d0.or.r12 .le. 0.60d0 )then
         lxc = -1
         return
-    end if
-
-    if(minval(bt).ge.2.00d0)then  !
+    endif
+    if( minval(bt) .ge. 2.00d0 )then!
         lxc = -1
         return
-    end if
-
-    if(r13.le.0.75d0.or.r23.le.0.75d0)then
+    endif
+    if( r13 .le. 0.75d0.or.r23 .le. 0.75d0 )then
         lxc = -1
         return
-    end if
-
+    endif
     ! H+O+HCl or HO + H +Cl or H+H+Cl+O
-    if(r14.lt.r24.and.r24.gt.2.0d0) then
-        if(r14.ge.2.0d0.or.r23.ge.2.0d0)then
+    if( r14 .lt. r24.and.r24 .gt. 2.0d0 )then
+        if( r14 .ge. 2.0d0.or.r23 .ge. 2.0d0 )then
             lxc = -1
             return
-        end if
-    end if
-
-    if(r24.lt.r14.and.r14.gt.2.0d0) then
-        if(r24.ge.2.0d0.or.r13.ge.2.0d0)then
+        endif
+    endif
+    if( r24 .lt. r14.and.r14 .gt. 2.0d0 )then
+        if( r24 .ge. 2.0d0.or.r13 .ge. 2.0d0 )then
             lxc = -1
             return
-        end if
-    end if
+        endif
+    endif
     ! OH1 and OH2 are both large
-    if(r14.ge.2.0d0.and.r24.ge.2.0d0)then
+    if( r14 .ge. 2.0d0.and.r24 .ge. 2.0d0 )then
         lxc = -1
         return
-    end if
-
+    endif
     ! ClH1 and ClH2 are both small
-    if(r13.le.1.1d0.and.r23.le.1.1d0)then
+    if( r13 .le. 1.1d0.and.r23 .le. 1.1d0 )then
         lxc = -1
         return
-    end if
-
+    endif
     !     if(r23.lt.r13.and.r13.gt.1.9d0.and.r24.gt.1.8d0) then
     !       if(r14.ge.1.8d0.or.r23.ge.1.9d0)then
     !         lxc=-1
     !         return
     !       endif
     !     endif
-
     !     if(r13.lt.r23.and.r23.gt.1.9d0.and.r14.gt.1.8d0) then
     !       if(r13.ge.1.8d0.or.r24.ge.1.9d0)then
     !         lxc=-1
     !         return
     !       endif
     !     endif
-
     !check if HO and HCl were produced
-
     !     if(r12.ge.3.5d0)then
     !
     !       xcom1(:)=xct2(:,1)+(mass(3)/(mass(1)+mass(3)))*
@@ -32319,10 +32234,8 @@ subroutine before_vpes( xct, lxc )
     !         lxc=0
     !         return
     !       endif
-
     !     endif
     lxc = 0
-
 end subroutine before_vpes
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32338,10 +32251,9 @@ subroutine ho_dipole( rt, dpt )
     double precision, parameter :: dy1 = 1.0d30, dyn=1.0d30
     double precision            :: y2(nn), rt, dpt
     y2 = dp0ho2
-    if (rt.lt.r0ho(1))  rt=r0ho(1)
-    if (rt.gt.r0ho(n0ho))rt=r0ho(n0ho)
+    if( rt .lt. r0ho(1) ) rt=r0ho(1)
+    if( rt .gt. r0ho(n0ho) ) rt=r0ho(n0ho)
     call splint(r0ho, dp0ho, y2, n0ho, rt, dpt)
-
 end  subroutine ho_dipole
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32357,10 +32269,9 @@ subroutine hcl_dipole( rt, dpt )
     double precision, parameter :: dy1 = 1.0d30, dyn=1.0d30
     double precision            :: y2(nn), rt, dpt
     y2 = dp0hcl2
-    if (rt.lt.r0hcl(1))  rt=r0hcl(1)
-    if (rt.gt.r0hcl(n0hcl))rt=r0hcl(n0hcl)
+    if( rt .lt. r0hcl(1) ) rt=r0hcl(1)
+    if( rt .gt. r0hcl(n0hcl) ) rt=r0hcl(n0hcl)
     call splint(r0hcl, dp0hcl, y2, n0hcl, rt, dpt)
-
 end  subroutine hcl_dipole
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32377,33 +32288,24 @@ subroutine ho_hcl_pes_spline( r1, r2, vpes )
     double precision   :: x1a(nxhcl), x2a(nxho), ya(nxhcl,nxho)
     integer            :: i, j, k, m, n
     double precision   :: r1, r2, x1, x2, y, vpes
-    x1 = r1
-    x2 = r2
-
+    x1  = r1
+    x2  = r2
     x1a = rxhcl
     x2a = rxho
     ya  = exhohcl
-
-    m = nxhcl
-    n = nxho
-
+    m   = nxhcl
+    n   = nxho
     y2a = exhohcl2
-
     do j=1, m
         do k=1, n
             ytmp(k)  = ya(j,k)
             y2tmp(k) = y2a(j,k)
-        end do
-
+        enddo
         call splint(x2a, ytmp, y2tmp, n, x2, yytmp(j))
-
-    end do
-
+    enddo
     call spline(x1a, yytmp, m, 1.0d30, 1.0d30, y2tmp)
     call splint(x1a, yytmp, y2tmp, m, x1, y)
-
     vpes = y
-
 end subroutine  ho_hcl_pes_spline
 
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -32418,15 +32320,15 @@ subroutine splint( xa, ya, y2a, n, x, y )
     khi = n
     1 if (khi-klo.gt.1) then
         k = (khi+klo)/2
-        if(xa(k).gt.x)then
+        if( xa(k) .gt. x )then
             khi = k
         else
             klo = k
-        end if
+        endif
         goto 1
-    end if
+    endif
     h = xa(khi)-xa(klo)
-    if (h.eq.0.0d0) write(6, *) 'bad xa input in splint'
+    if( h .eq. 0.0d0 ) write(6, *) 'bad xa input in splint'
     a = (xa(khi)-x)/h
     b = (x-xa(klo))/h
     y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h**2)/6.0d0
@@ -32440,26 +32342,26 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
     dimension x(n), y(n), y2(n)
     integer, parameter :: nmax = 100
     dimension u(nmax)
-    if (yp1.gt..99d30) then
+    if( yp1 .gt. .99d30 )then
         y2(1) = 0.0d0
         u(1)  = 0.0d0
     else
         y2(1) = -0.5d0
         u(1)  = (3.0d0/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
-    end if
+    endif
     do 11 i=2, n-1
         sig   = (x(i)-x(i-1))/(x(i+1)-x(i-1))
         p     = sig*y2(i-1)+2.0d0
         y2(i) = (sig-1.0d0)/p
         u(i)  = (6.0d0*((y(i+1)-y(i))/(x(i+ 1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig* u(i-1))/p
     11 continue
-    if (ypn.gt..99d30) then
+    if( ypn .gt. .99d30 )then
         qn = 0.0d0
         un = 0.0d0
     else
         qn = 0.5d0
         un = (3.0d0/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
-    end if
+    endif
     y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0d0)
     do 12 k=n-1, 1, -1
         y2(k) = y2(k)*y2(k+1)+u(k)

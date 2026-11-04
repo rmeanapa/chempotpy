@@ -36,23 +36,20 @@ subroutine pes( x, igrad, p, gradient_out, d )
     integer                       :: iatom, idir, j, istate
     !initialize
     v = 0.d0; gradient_out = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call mycalcpot(x, 1, v)
         v = v*legacy_hartree_to_electronvolt
         do istate=1, nstates
             p(istate) = v
-        end do
+        enddo
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
 end subroutine pes
 
 !> @brief Evaluate mycalcpot for the CH5p_PIP potential.
@@ -70,8 +67,7 @@ subroutine mycalcpot( x, nwalk, v )
     do i = 1, nwalk
         call getpot(x(i,:,:), r, v(i))
         v(i) = v(i)-emin !vmin is in H
-    end do
-
+    enddo
 end subroutine mycalcpot
 
 !***********************************************************************
@@ -96,38 +92,32 @@ subroutine getpot( x, r, epot )
     do i = 1, natoms
         do j = 1, 3
             xn(j, i) = x(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     call calcr(xn, xch3, xh2, r, rh2, theta)
-
     !     write(*,'a2,2x,f9.2') 'r=', r
     a = 0.d0
     b = 0.d0
-
-    if (r<=rmax) then
+    if( r <= rmax )then
         call getfit(xn, vfit)
-    end if
-
+    endif
     rp = (r - rmin)/(rmax - rmin)
     !      write(*,*) 'rp=', rp
-    if (r<rmin) then
+    if( r < rmin )then
         epot = vfit
     else
         call getlr(r, rh2, theta, elr)
         call getch3pot(xch3, epotch3)
         call geth2pot(xh2, epoth2)
-
         !        write(*,'a8,f9.3')'epotch3=', epotch3
         !        write(*,'a7,1x,f9.3')'epoth2=', epoth2
         !        write(*,'a10,e20.10')'longrange=',elr
-        if (r>rmax) then
+        if( r > rmax )then
             epot = elr + epoth2 + epotch3 + de
         else
             epot = (1.d0-sw(a, b, rp))*vfit + sw(a, b, rp)* (elr + epoth2 + epotch3 + de)
-        end if
-    end if
-
+        endif
+    endif
 end subroutine getpot
 
 !> @brief Evaluate sw for the CH5p_PIP potential.
@@ -155,7 +145,6 @@ subroutine getlr( r, rh2, theta, elr )
     double precision :: pi
     pi = 4.d0 * datan(1.d0)
     call cspline(rh2, alpha0, alpha90, q)
-
     !     write(*,'a4,1x,f9.5')'rh2=',rh2
     theta = theta / 180.d0 * pi
     alpha = 1.d0/3.d0*(alpha0 + 2*alpha90)
@@ -163,7 +152,6 @@ subroutine getlr( r, rh2, theta, elr )
     u3    = q*p2/r**3
     u4    = -(0.5d0*alpha + 1.d0/3.d0*(alpha0 - alpha90)*p2)/r**4
     elr   = u3 + u4
-
 end subroutine getlr
 
 !> @brief Evaluate geth2pot for the CH5p_PIP potential.
@@ -184,9 +172,8 @@ subroutine geth2pot( xyz1, v )
     do i = 5, 6
         do j = 1, 3
             xyz(i, j) = xyz1(i, j)
-        end do
-    end do
-
+        enddo
+    enddo
     xyz(1, 1) = 0.d0
     xyz(1, 2) = 0.d0
     xyz(1, 3) = 0.d0
@@ -199,24 +186,19 @@ subroutine geth2pot( xyz1, v )
     xyz(4, 1) = -1.7889744d0
     xyz(4, 2) = -1.0328649d0
     xyz(4, 3) = 0.d0
-
     do i = 1, natoms
         do j = 1, 3
             xyzt(j, i) = xyz(i, j)
-        end do
-    end do
-
+        enddo
+    enddo
     call getfit(xyzt, v)
-
     ch3pot = -39.4046592d0 + 0.0006415d0/2.d0
-
     !      ch3potab = -39.40570072d0
     h20 = -1.1745554d0 + 0.0006728d0/2.d0
-
-    v = v - ch3pot - h20
-    if ((v*ang.le.5.d0).and.(v*ang.ge.-5.d0)) then
+    v   = v - ch3pot - h20
+    if( (v*ang .le. 5.d0).and.(v*ang .ge. -5.d0) )then
         v = 0.d0
-    end if
+    endif
 end subroutine geth2pot
 
 !**********************************************************************
@@ -1416,14 +1398,11 @@ subroutine getfit( xn, f0 )
     do l = 0, mr-1
         do k = 0, 1
             vec(m+2*l+k) = rvec(k+1)*vec(l)
-        end do
-    end do
-
+        enddo
+    enddo
     f0 = dot_product(coef, vec)
-
     !.... Now the code is serving for PE calculation, gradient
     !...  is ignored for decreasing computational cost
-
     !       do i = 0, 2
     !          do j = 0, 5
     !             xn1 = xn ; xn1(i,j) = xn1(i,j)-dd
@@ -1436,7 +1415,6 @@ subroutine getfit( xn, f0 )
     !             enddo
     !          enddo
     !           t0 = dot_product(coef,vec)
-
     !           xn1 = xn ; xn1(i,j) = xn1(i,j)+dd
     !           call getd0 (xn1, dc0, dc1, dw0, dw1, d0, r0)
     !           call getvec (m, d0, vec(0:m-1))
@@ -1447,7 +1425,6 @@ subroutine getfit( xn, f0 )
     !             enddo
     !          enddo
     !           t1 = dot_product(coef,vec)
-
     !
     ! Note that gf0 will be the negative gradient
     !
@@ -1470,7 +1447,6 @@ subroutine getd0 ( xn, dc0, dc1, dw0, dw1, d0, r0 )
     ! Note: CH5+.  Nuclei 0..5; i=0 for the C, i in 1..5 for the H.
     d0(0, 0) = 0.d0
     r0(0, 0) = 0.d0
-
     do j = 1, 5
         t0 = sqrt((xn(0, j)-xn(0, 0))**2+(xn(1, j)-xn(1, 0))**2+ (xn(2, j)-xn(2, 0))**2)
         !         d0(0,j) = (log(t0)-dc0)/dw0
@@ -1479,8 +1455,7 @@ subroutine getd0 ( xn, dc0, dc1, dw0, dw1, d0, r0 )
         d0(j, 0) = d0(0, j)
         r0(0, j) = t0
         r0(j, 0) = t0
-    end do
-
+    enddo
     do i = 1, 5
         d0(i, i) = 0.d0
         r0(i, i) = 0.d0
@@ -1492,8 +1467,8 @@ subroutine getd0 ( xn, dc0, dc1, dw0, dw1, d0, r0 )
             d0(j, i) = d0(i, j)
             r0(i, j) = t0
             r0(j, i) = t0
-        end do
-    end do
+        enddo
+    enddo
 end subroutine getd0
 
 !**********************************************************************
@@ -1524,8 +1499,7 @@ subroutine getvec ( m, d, vec )
     if (.not.(m.eq.1.or.m.eq.3.or.m.eq.10.or.m.eq.32.or.&
         &m.eq.101.or.m.eq.299.or.m.eq.849.or.m.eq.2239)) then
     stop 'getvec - wrong dimension'
-    end if
-
+    endif
     !     Computation
     x = 0 ; y = 0 ; z = 0 ; u = 0 ; v = 0 ; w = 0
     do j0 = 0, 5
@@ -1538,9 +1512,8 @@ subroutine getvec ( m, d, vec )
             d4(j1, j0) = d4(j0, j1)
             d5(j0, j1) = her5(d(j0,j1))
             d5(j1, j0) = d5(j0, j1)
-        end do
-    end do
-
+        enddo
+    enddo
     do j1 = 1, 5
         x(0) = x(0)+d(0,j1)/5
         y(0) = y(0)+d2(0, j1)/5
@@ -1549,7 +1522,7 @@ subroutine getvec ( m, d, vec )
         v(0) = v(0)+d5(0, j1)/5
         !$       w() = w()+her6(d(0,j1))/5
         do j2 = 1, 5
-            if (j2.ne.j1) then
+            if( j2 .ne. j1 )then
                 y(1) = y(1)+d(0,j1)*d(j1,j2)/20
                 z(1) = z(1)+d2(0, j1)*d(j1,j2)/20
                 z(2) = z(2)+d(0,j1)*d2(j1, j2)/20
@@ -1578,7 +1551,7 @@ subroutine getvec ( m, d, vec )
                 !$        w() = w()+d4(0,j1)*d(0,j2)*d(j1,j2)/20
                 !$        w() = w()+d2(0,j1)*d2(0,j2)*d2(j1,j2)/20
                 do j3 = 1, 5
-                    if (j3.ne.j2.and.j3.ne.j1) then
+                    if( j3 .ne. j2.and.j3 .ne. j1 )then
                         z(4)  = z(4)+d(0,j1)*d(j1,j2)*d(j2,j3)/60
                         z(5)  = z(5)+d(0,j1)*d(j1,j2)*d(j1,j3)/60
                         u(6)  = u(6)+d(0,j1)*d2(j1, j2)*d(j2,j3)/60
@@ -1656,7 +1629,7 @@ subroutine getvec ( m, d, vec )
                         w(39) = w(39)+d(0,j1)*d(0,j2)*d2(j1, j2)*d(j1,j3)*d(j2,j3)/60
                         !$         w() = w()+d(0,j1)*d(0,j2)*d(0,j3)*d(j1,j2)*d(j1,j3)*d(j2,j3)/
                         do j4 = 1, 5
-                            if (j4.ne.j3.and.j4.ne.j2.and.j4.ne.j1) then
+                            if( j4 .ne. j3.and.j4 .ne. j2.and.j4 .ne. j1 )then
                                 u(13) = u(13)+d(0,j1)*d(j1,j2)*d(j1,j3)*d(j3,j4)/120
                                 u(14) = u(14)+d(0,j1)*d(j1,j2)*d(j1,j3)*d(j1,j4)/120
                                 v(25) = v(25)+d(0,j1)*d2(j1, j2)*d(j2,j3)*d(j3,j4)/120
@@ -1680,16 +1653,16 @@ subroutine getvec ( m, d, vec )
                                 !$          w() = w()+d(0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)*d2(j1,j4)/120
                                 !$          w() = w()+d2(0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)*d(j1,j4)/120
                                 !$          w() = w()+d(0,j1)*d2(j1,j2)*d(j1,j3)*d(j2,j3)*d(j1,j4)/120
-                            end if
-                        end do
-                    end if
-                end do
-            end if
-        end do
-    end do
+                            endif
+                        enddo
+                    endif
+                enddo
+            endif
+        enddo
+    enddo
     do j0 = 1, 5
         do j1 = 1, 5
-            if (j1.ne.j0) then
+            if( j1 .ne. j0 )then
                 x(1)  = x(1)+d(j0,j1)/4
                 y(2)  = y(2)+d2(j0, j1)/4
                 z(6)  = z(6)+d3(j0, j1)/4
@@ -1697,7 +1670,7 @@ subroutine getvec ( m, d, vec )
                 v(32) = v(32)+d5(j0, j1)/4
                 !$        w() = w()+her6(d(j0,j1))/4
                 do j2 = 1, 5
-                    if (j2.ne.j1.and.j2.ne.j0) then
+                    if( j2 .ne. j1.and.j2 .ne. j0 )then
                         y(3)  = y(3)+d(j0,j1)*d(j1,j2)/12
                         z(7)  = z(7)+d2(j0, j1)*d(j1,j2)/12
                         z(8)  = z(8)+d(j0,j1)*d(j0,j2)*d(j1,j2)/12
@@ -1715,7 +1688,7 @@ subroutine getvec ( m, d, vec )
                         !$         w() = w()+d3(j0,j1)*d2(j0,j2)*d(j1,j2)/12
                         !$         w() = w()+d5(j0,j1)*d(j1,j2)/12
                         do j3 = 1, 5
-                            if (j3.ne.j2.and.j3.ne.j1.and.j3.ne.j0) then
+                            if( j3 .ne. j2.and.j3 .ne. j1.and.j3 .ne. j0 )then
                                 z(9)  = z(9)+d(j0,j1)*d(j0,j2)*d(j0,j3)/24
                                 u(19) = u(19)+d2(j0, j1)*d(j0,j2)*d(j0,j3)/24
                                 u(20) = u(20)+d(j0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)/24
@@ -1734,28 +1707,28 @@ subroutine getvec ( m, d, vec )
                                 w(57) = w(57)+d4(j0, j1)*d(j0,j2)*d(j0,j3)/24
                                 w(58) = w(58)+d2(j0, j1)*d2(j0, j2)*d2(j0, j3)/24
                                 w(59) = w(59)+d3(j0, j1)*d2(j0, j2)*d(j0,j3)/24
-                            end if
-                        end do
-                    end if
-                end do
-            end if
-        end do
-    end do
+                            endif
+                        enddo
+                    endif
+                enddo
+            endif
+        enddo
+    enddo
     vec(0) = 1
-    if (3.le.m) then
+    if( 3 .le. m )then
         vec(1) = x(0)
         vec(2) = x(1)
-    end if
-    if (10.le.m) then
+    endif
+    if( 10 .le. m )then
         vec(3) = her2(x(0))
         vec(4) = x(0)*x(1)
         vec(5) = her2(x(1))
         do k = 0, 3
             vec(6+k) = y(k)
-        end do
-    end if
+        enddo
+    endif
     !! third order terms
-    if (32.le.m) then
+    if( 32 .le. m )then
         k0         = 10
         vec(k0)    = her3(x(0))
         vec(k0+1)  = her2(x(0))*x(1)
@@ -1772,174 +1745,174 @@ subroutine getvec ( m, d, vec )
         k0         = 22
         do k = 0, 9
             vec(k0+k) = z(k)
-        end do
-    end if
+        enddo
+    endif
     !! fourth order terms
-    if (101.le.m) then
+    if( 101 .le. m )then
         k0        = 32
         vec(k0)   = her4(x(0))
         vec(k0+1) = her3(x(0))*x(1)
         vec(k0+2) = her2(x(0))*her2(x(1))
         do k = 0, 3
             vec(k0+3+k) = her2(x(0))*y(k)
-        end do
+        enddo
         vec(k0+7) = x(0)*her3(x(1))
         do k = 0, 3
             vec(k0+8+k) = x(0)*x(1)*y(k)
-        end do
+        enddo
         do k = 0, 9
             vec(k0+12+k) = x(0)*z(k)
-        end do
+        enddo
         vec(k0+22) = her4(x(1))
         do k = 0, 3
             vec(k0+23+k) = her2(x(1))*y(k)
-        end do
+        enddo
         do k = 0, 9
             vec(k0+27+k) = x(1)*z(k)
-        end do
+        enddo
         k0 = k0+37
         do j = 0, 3
             do k = j, 3
                 vec(k0) = y(j)*y(k)
                 k0      = k0+1
-            end do
-        end do
-        if (k0.ne.79) then
+            enddo
+        enddo
+        if( k0 .ne. 79 )then
             stop 'getvec: counting error'
-        end if
+        endif
         do k = 0, 21
             vec(k0+k) = u(k)
-        end do
-    end if
+        enddo
+    endif
     !! fifth order terms
-    if (299.le.m) then
+    if( 299 .le. m )then
         k0        = 101
         vec(k0)   = her5(x(0))
         vec(k0+1) = her4(x(0))*x(1)
         vec(k0+2) = her3(x(0))*her2(x(1))
         do k = 0, 3
             vec(k0+3+k) = her3(x(0))*y(k)
-        end do
+        enddo
         vec(k0+7) = her2(x(0))*her3(x(1))
         do k = 0, 3
             vec(k0+8+k) = her2(x(0))*x(1)*y(k)
-        end do
+        enddo
         do k = 0, 9
             vec(k0+12+k) = her2(x(0))*z(k)
-        end do
+        enddo
         vec(k0+22) = x(0)*her4(x(1))
         do k = 0, 3
             vec(k0+23+k) = x(0)*her2(x(1))*y(k)
-        end do
+        enddo
         do k = 0, 9
             vec(k0+27+k) = x(0)*x(1)*z(k)
-        end do
+        enddo
         k0 = k0+37
         do j = 0, 3
             do k = j, 3
                 vec(k0) = x(0)*y(j)*y(k)
                 k0      = k0+1
-            end do
-        end do
-        if (k0.ne.148) then
+            enddo
+        enddo
+        if( k0 .ne. 148 )then
             stop 'getvec: counting error'
-        end if
+        endif
         do k = 0, 21
             vec(k0+k) = x(0)*u(k)
-        end do
+        enddo
         vec(k0+22) = her5(x(1))
         do k = 0, 3
             vec(k0+23+k) = her3(x(1))*y(k)
-        end do
+        enddo
         do k = 0, 9
             vec(k0+27+k) = her2(x(1))*z(k)
-        end do
+        enddo
         k0 = k0+37
         do j = 0, 3
             do k = j, 3
                 vec(k0) = x(1)*y(j)*y(k)
                 k0      = k0+1
-            end do
-        end do
-        if (k0.ne.195) then
+            enddo
+        enddo
+        if( k0 .ne. 195 )then
             stop 'getvec: counting error'
-        end if
+        endif
         do k = 0, 21
             vec(k0+k) = x(1)*u(k)
-        end do
+        enddo
         do j = 0, 3
             do k = 0, 9
                 vec(k0+22+10*j+k) = y(j)*z(k)
-            end do
-        end do
+            enddo
+        enddo
         k0 = 257
         do k = 0, 41
             vec(k0+k) = v(k)
-        end do
-    end if
+        enddo
+    endif
     !! sixth order terms
-    if (849.le.m) then
+    if( 849 .le. m )then
         k0 = 299
         do k = 0, 197
             vec(k0+k) = x(0)*vec(101+k)
-        end do
+        enddo
         do k = 0, 128
             vec(k0+198+k) = x(1)*vec(170+k)
-        end do
+        enddo
         do k = 0, 31
             vec(k0+327+k) = y(0)*vec(69+k)
-        end do
+        enddo
         do k = 0, 27
             vec(k0+359+k) = y(1)*vec(73+k)
-        end do
+        enddo
         do k = 0, 24
             vec(k0+387+k) = y(2)*vec(76+k)
-        end do
+        enddo
         do k = 0, 22
             vec(k0+412+k) = y(3)*vec(78+k)
-        end do
+        enddo
         k0 = k0+435
         do j = 0, 9
             do k = j, 9
                 vec(k0) = z(j)*z(k)
                 k0      = k0+1
-            end do
-        end do
-        if (k0.ne.789) then
+            enddo
+        enddo
+        if( k0 .ne. 789 )then
             stop 'getvec: counting error'
-        end if
+        endif
         do k = 0, 59
             vec(k0+k) = w(k)
-        end do
-    end if
+        enddo
+    endif
     !! seventh order terms (incomplete)
-    if (2239.le.m) then
+    if( 2239 .le. m )then
         k0 = 849
         do k = 0, 549 ! 849-299-1
             vec(k0+k) = x(0)*vec(299+k)
-        end do
+        enddo
         do k = 0, 351 ! 849-497-1
             vec(k0+550+k) = x(1)*vec(497+k)
-        end do
+        enddo
         do k = 0, 81 ! 299-217-1
             vec(k0+902+k) = y(0)*vec(217+k)
-        end do
+        enddo
         do k = 0, 71
             vec(k0+984+k) = y(1)*vec(227+k)
-        end do
+        enddo
         do k = 0, 61
             vec(k0+1056+k) = y(2)*vec(237+k)
-        end do
+        enddo
         do k = 0, 51
             vec(k0+1118+k) = y(3)*vec(247+k)
-        end do
+        enddo
         k0 = k0+1170
         do j = 0, 9
             do k = 0, 21
                 vec(k0+22*j+k) = z(j)*u(k)
-            end do
-        end do
-    end if
+            enddo
+        enddo
+    endif
 end subroutine getvec
 
 !********************************************************
@@ -1954,55 +1927,55 @@ subroutine getrvec ( m, r, vec )
     double precision, dimension(0:3) :: y
     !     ------------------------------------------------------------------
     !     Test for compatibility
-    if (.not.(m.eq.1.or.m.eq.3.or.m.eq.10)) then
+    if( .not.(m .eq. 1.or.m .eq. 3.or.m .eq. 10) )then
         stop 'getrvec - wrong dimension'
-    end if
+    endif
     !     Computation
     x = 0 ; y = 0
     do i = 0, 5
         do j = 0, 5
-            if (i.eq.j) then
+            if( i .eq. j )then
                 r1(i, j) = 0
             else
                 r1(i, j) = exp(-r(i, j))/r(i, j)
-            end if
-        end do
-    end do
+            endif
+        enddo
+    enddo
     do j1 = 1, 5
         x(0) = x(0)+r1(0, j1)/5
         y(0) = y(0)+r1(0, j1)**2/5
         do j2 = 1, 5
-            if (j2.ne.j1) then
+            if( j2 .ne. j1 )then
                 y(1) = y(1)+r1(0, j1)*r1(j1, j2)/20
-            end if
-        end do
-    end do
+            endif
+        enddo
+    enddo
     do j0 = 1, 5
         do j1 = 1, 5
-            if (j1.ne.j0) then
+            if( j1 .ne. j0 )then
                 x(1) = x(1)+r1(j0, j1)/4
                 y(2) = y(2)+r1(j0, j1)**2/4
                 do j2 = 1, 5
-                    if (j2.ne.j1.and.j2.ne.j0) then
+                    if( j2 .ne. j1.and.j2 .ne. j0 )then
                         y(3) = y(3)+r1(j0, j1)*r1(j1, j2)/12
-                    end if
-                end do
-            end if
-        end do
-    end do
+                    endif
+                enddo
+            endif
+        enddo
+    enddo
     vec(0) = 1
-    if (3.le.m) then
+    if( 3 .le. m )then
         vec(1) = x(0)
         vec(2) = x(1)
-    end if
-    if (10.le.m) then
+    endif
+    if( 10 .le. m )then
         vec(3) = x(0)**2
         vec(4) = x(0)*x(1)
         vec(5) = x(1)**2
         do k = 0, 3
             vec(6+k) = y(k)
-        end do
-    end if
+        enddo
+    endif
 end subroutine getrvec
 
 !> @brief Evaluate getch3pot for the CH5p_PIP potential.
@@ -2023,34 +1996,28 @@ subroutine getch3pot( xyz1, v )
     do i = 1, natoms1
         do j = 1, 3
             xyz(i, j) = xyz1(i, j)
-        end do
-    end do
-
+        enddo
+    enddo
     xyz(5, 1) = 0.7035d0
     xyz(5, 2) = 0.d0
     xyz(5, 3) = 14.0750143d0
     xyz(6, 1) = -0.7035d0
     xyz(6, 2) = 0.d0
     xyz(6, 3) = 14.0750143d0
-
     do i = 1, natoms
         do j = 1, 3
             xyzt(j, i) = xyz(i, j)
-        end do
-    end do
-
+        enddo
+    enddo
     call getfit(xyzt, v)
-
     h2pot = -1.1745554d0 + 0.0006728d0/2.d0
     !      h2potab = -1.17263405d0
     ch30 = -39.4046592d0 + 0.0006415d0/2.d0
     !      ch30 = -39.40570072d0
-
     v = v - h2pot - ch30
-
-    if ((v*ang.le.5.d0).and.(v*ang.ge.-5.d0)) then
+    if( (v*ang .le. 5.d0).and.(v*ang .ge. -5.d0) )then
         v = 0.d0
-    end if
+    endif
 end subroutine getch3pot
 
 !***********************************************************************
@@ -2074,33 +2041,27 @@ subroutine cspline( x, y0, y90, yq )
     double precision, dimension(np2) :: xa1, ya1, yq2
     open(newunit=file_unit_70, file='alpha_1967.dat', status='old')
     open(newunit=file_unit_71, file='q.dat', status='old')
-
     read(file_unit_70, *)
     do i = 1, np
         read(file_unit_70, *) xa(i), ya0(i), ya90(i)
-    end do
+    enddo
     yp01  = 0.d0
     yp0n  = 0.d0
     yp901 = 0.d0
     yp90n = 0.d0
-
     !     call SPLINE to get second derivatives
     call spline(xa, ya0, np, yp01, yp0n, y2s0)
     call spline(xa, ya90, np, yp901, yp90n, y2s90)
-
     !     call SPLINT for interpolations
     call splint(xa, ya0, y2s0, np, x, y0)
     call splint(xa, ya90, y2s90, np, x, y90)
-
     do i = 1, np2
         read(file_unit_71, *) xa1(i), ya1(i)
-    end do
+    enddo
     ypq1 = 0.d0
     ypqn = 0.d0
-
     call spline(xa1, ya1, np2, ypq1, ypqn, yq2)
     call splint(xa1, ya1, yq2, np2, x, yq)
-
     close(file_unit_70)
     close(file_unit_71)
 end subroutine cspline
@@ -2122,34 +2083,30 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
     double precision                  :: p, qn, sig, un
     double precision, dimension(n)    :: x, y, y2
     double precision, dimension(nmax) :: u
-    if (yp1.gt..99e30) then
+    if( yp1 .gt. .99e30 )then
         y2(1) = 0.5d0
         u(1)  = 0.5d0
     else
         y2(1) = -.5d0
         u(1)  = (3./(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
-    end if
-
+    endif
     do i = 2, n-1
         sig   = (x(i)-x(i-1))/(x(i+1)-x(i-1))
         p     = sig*y2(i-1)+2.d0
         y2(i) = (sig-1.)/p
         u(i)  = (6.*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1))/ (x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
-    end do
-
-    if (ypn.gt..99e30) then
+    enddo
+    if( ypn .gt. .99e30 )then
         qn = 0.d0
         un = 0.d0
     else
         qn = .5d0
         un = (3.d0/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
-    end if
-
+    endif
     y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.d0)
-
     do k = n-1, 1, -1
         y2(k) = y2(k)*y2(k+1)+u(k)
-    end do
+    enddo
 end subroutine spline
 
 !***********************************************************************
@@ -2163,18 +2120,17 @@ subroutine splint( xa, ya, y2a, n, x, y )
     double precision               :: a, b, h
     klo = 1
     khi = n
-
     1 if (khi-klo.gt.1) then
         k = (khi+klo)/2
-        if (xa(k).gt.x)then
+        if( xa(k) .gt. x )then
             khi = k
         else
             klo = k
-        end if
+        endif
         goto 1
-    end if
+    endif
     h = xa(khi)-xa(klo)
-    if (h.eq.0.) pause 'bad xa input in splint'
+    if( h .eq. 0. ) pause 'bad xa input in splint'
     a = (xa(khi)-x)/h
     b = (x-xa(klo))/h
     y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h** 2)/6.d0
@@ -2212,75 +2168,63 @@ subroutine calcr( x, xch3, xh2a, dist, h2dist, theta )
     double precision, dimension(2, 3)      :: xh2a
     do j = 1, natoms - 1
         rch(j) = sqrt((x(1,j+1)-x(1,1))**2+(x(2,j+1)-x(2,1))**2 +(x(3,j+1)-x(3,1))**2)
-    end do
+    enddo
     rchmax(1) = 0.d0
     rchmax(2) = 0.d0
     npp1      = 0
     npp2      = 0
-
     do j = 1, natoms - 1
-        if (rchmax(1)<rch(j)) then
+        if( rchmax(1) < rch(j) )then
             rchmax(1) = rch(j)
             npp1      = j
-        end if
-    end do
-
+        endif
+    enddo
     do j = 1, natoms - 1
-        if (npp1==j) then
+        if( npp1 == j )then
         else
-            if (rchmax(2)<rch(j)) then
+            if( rchmax(2) < rch(j) )then
                 rchmax(2) = rch(j)
                 npp2      = j
-            end if
-        end if
-    end do
-
+            endif
+        endif
+    enddo
     !.... Find the Cartisian coordinate of the center of H2
     do i = 1, 3
         xh2m(i) = 0.5d0*(x(i,npp1+1)+x(i,npp2+1))
-    end do
-
+    enddo
     !.... Obtain the R -- dist
-
     call calcdist(x, xh2m, dist)
-
     !.... The Cartisian coordinate of H2
     do i = 1, 3
         xh1(i) = x(i,npp1+1)
         xh2(i) = x(i,npp2+1)
-    end do
-
+    enddo
     do i = 1, 3
         xh2at(i, 1) = x(i,npp1+1)
         xh2at(i, 2) = x(i,npp2+1)
-    end do
-
+    enddo
     jr = 0
     do j = 1, natoms
-        if (j==npp1+1.or.j==npp2+1) then
+        if( j == npp1+1.or.j == npp2+1 )then
         else
             jr = jr + 1
             do i = 1, 3
                 xch3t(i, jr) = x(i,j)
-            end do
-        end if
-    end do
-
+            enddo
+        endif
+    enddo
     do i = 1, 3
         do j = 1, 4
             xch3(j, i) = xch3t(i, j)
-        end do
-    end do
-
+        enddo
+    enddo
     do i = 1, 3
         do j = 1, 2
             xh2a(j, i) = xh2at(i, j)
-        end do
-    end do
-
+        enddo
+    enddo
     !.... Calculate the bond distance of H2
     call calcdist(xh1, xh2, h2dist)
-
     h2dist5 = h2dist/2.d0
     call calcangle(rch(npp2), dist, h2dist5, theta)
 end subroutine calcr
@@ -2294,23 +2238,19 @@ subroutine calcdist( x1, x2, dist )
     double precision, dimension(3) :: x1, x2
     double precision               :: dist
     dist = dsqrt((x1(1) - x2(1))**2 + (x1(2) - x2(2))**2 + (x1(3) - x2(3))**2)
-
 end subroutine calcdist
 
 !> @brief Evaluate calcangle for the CH5p_PIP potential.
 subroutine calcangle( a, b, c, theta )
     !.... program to calculate theta
     !.... a, b, c are the length of sides of triangle
-
     implicit none
     double precision :: a, b, c, theta, pi, d
     pi = 4.d0*datan(1.d0)
-
-    if (abs(b-c-a).le.1e-5) then
+    if( abs(b-c-a) .le. 1e-5 )then
         theta = 0.d0
     else
         d     = b**2 + c**2 - a**2
         theta = 180.d0*dacos(d/(2.d0*b*c))/pi
-    end if
-
+    endif
 end subroutine calcangle

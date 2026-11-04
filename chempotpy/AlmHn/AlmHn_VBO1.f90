@@ -16,30 +16,25 @@ subroutine pes( xyz, nal, nh, natoms, igrad, p, g, d )
     integer                       :: istate, iatom
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         cx(iatom) = xyz(iatom,1)/legacy_bohr_to_angstrom
         cy(iatom) = xyz(iatom,2)/legacy_bohr_to_angstrom
         cz(iatom) = xyz(iatom,3)/legacy_bohr_to_angstrom
-    end do
-
+    enddo
     do iatom=1, nal
         symbol(iatom) = 'Al'
-    end do
+    enddo
     do iatom=1, nh
         symbol(iatom+nal) = 'H'
-    end do
-
+    enddo
     call alhpot(cx, cy, cz, v, natoms, 10000, symbol)
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = v*legacy_hartree_to_electronvolt
-        end do
+        enddo
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
 end subroutine pes
 
 !> @brief Evaluate alhpot for the AlmHn_VBO1 potential.
@@ -70,9 +65,7 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
     !  symbol  --- character*2 array of dimension holds the atomic symbols.
-
     ! This version of the code corrects two typos around lines 64 and 65. Ja
-
     implicit none
     double precision :: add, c1, c1_al, c1_h, c1_hal, c2, c2_al, c2_h, c2_hal, c3, &
         & c3_al, c3_h, c4, c4_al, c4_h, del1, den1, den2, den3, den4, dx, dy, dz, en, en1, en2, esn, &
@@ -101,9 +94,7 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     c4_h   = 0.00001
     !           c3_h=     23378.9026/autoev**(1/esn_h)
     !           c4_h=     22212.1589/autoev**(1/esn_h)
-
     !   The same definitions apply for Aluminum
-
     gam1_al = 0.3599
     gam2_al = 4.2538
     gam3_al = 0.5684
@@ -115,12 +106,10 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     c4_al   = 0.0068
     !           c3_al=        0.8576/autoev**(1/esn_al)
     !           c4_al=        0.4396/autoev**(1/esn_al)
-
     !   gam1_hal to gam4_hal and gam3_alh, gam4_alh are gammaij in Eq. (1)
     !   c1_hal and c2_hal are ci,1 and ci,2 in Eqs. (9) and (10)
     !   esn_h is the exponent of Vi in Eq. (9)
     !   sig3_hal to sig4_alh are the sigma in Eq. (10)
-
     gam1_hal = 7.4891
     gam2_hal = 1.8993
     gam3_hal = 13.5669
@@ -133,9 +122,7 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     sig4_alh = 0.00008
     c1_hal   = 0.3509/autoev
     c2_hal   = 0.5174/autoev
-
     !   Determine which atoms in the data file are Aluminum and which Hydrog
-
     do i=1, natom
         if((symbol(i).eq.'H ').or.(symbol(i).eq.'h ').or. &
             & (symbol(i).eq.' H').or.(symbol(i).eq.' h'))then
@@ -146,11 +133,9 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
     else
         write(13, *)'Atomic symbol ', symbol(i), ' undefined. Stopping.'
         stop "Undefined atomic symbol."
-        end if
-    end do
-
+        endif
+    enddo
     !    Calculate all internuclear distances
-
     do 1 i=1, natom-1
         r(i,i) = 0.d0
         do 1 j=i+1, natom
@@ -160,18 +145,15 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
             r(i,j) = dsqrt(dx*dx+dy*dy+dz*dz)
     1 r(j,i)=r(i,j)
     r(natom,natom) = 0.d0
-
     !    Calculate en1 which corresponds to the first term in parenthesis in
-
     en1 = 0d0
     en2 = 0d0
     do 2 i=1, natom
         v1 = 0d0
         do 3 j=1, natom
-            if(i.eq.j)go to 3
-            if((id(i).eq.1).and.(id(j).eq.1))then
-                del1 = 5.29/autoang
-
+            if( i .eq. j ) go to 3
+            if( (id(i) .eq. 1).and.(id(j) .eq. 1) )then
+                del1       = 5.29/autoang
                 gam(1,i,j) = gam1_h
                 gam(2,i,j) = gam2_h
                 gam(3,i,j) = gam3_h
@@ -179,71 +161,57 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
                 en         = 0.5
                 c1         = c1_h
                 c2         = c2_h
-
-                r1 = 0.7414/autoang
-
+                r1         = 0.7414/autoang
                 !    Calculate Nij according to Eq. (2)
-
-                den1      = 1d0-(r1/del1)**en
-                cn(1,i,j) = dexp(gam(1,i,j)/den1)
-                den2      = 1d0-(r1/del1)**en
-                cn(2,i,j) = dexp(gam(2,i,j)/den2)
-                den3      = 1d0-(r1/del1)**en
-                cn(3,i,j) = dexp(gam(3,i,j)/den3)
-                den4      = 1d0-(r1/del1)**en
-                cn(4,i,j) = dexp(gam(4,i,j)/den4)
-
+                den1         = 1d0-(r1/del1)**en
+                cn(1,i,j)    = dexp(gam(1,i,j)/den1)
+                den2         = 1d0-(r1/del1)**en
+                cn(2,i,j)    = dexp(gam(2,i,j)/den2)
+                den3         = 1d0-(r1/del1)**en
+                cn(3,i,j)    = dexp(gam(3,i,j)/den3)
+                den4         = 1d0-(r1/del1)**en
+                cn(4,i,j)    = dexp(gam(4,i,j)/den4)
                 sigma(3,i,j) = 1.0
                 sigma(4,i,j) = 1.0
-
-            else if((id(i).eq.2).and.(id(j).eq.2))then
-                del1 = 6.88/autoang
-
-                gam(1,i,j) = gam1_al
-                gam(2,i,j) = gam2_al
-                gam(3,i,j) = gam3_al
-                gam(4,i,j) = gam4_al
-                en         = 0.5
-                c1         = c1_al
-                c2         = c2_al
-
-                r1 = 2.7306/autoang
-
-                den1      = 1d0-(r1/del1)**en
-                cn(1,i,j) = dexp(gam(1,i,j)/den1)
-                den2      = 1d0-(r1/del1)**en
-                cn(2,i,j) = dexp(gam(2,i,j)/den2)
-                den3      = 1d0-(r1/del1)**en
-                cn(3,i,j) = dexp(gam(3,i,j)/den3)
-                den4      = 1d0-(r1/del1)**en
-                cn(4,i,j) = dexp(gam(4,i,j)/den4)
-
+            else if( (id(i) .eq. 2).and.(id(j) .eq. 2) )then
+                del1         = 6.88/autoang
+                gam(1,i,j)   = gam1_al
+                gam(2,i,j)   = gam2_al
+                gam(3,i,j)   = gam3_al
+                gam(4,i,j)   = gam4_al
+                en           = 0.5
+                c1           = c1_al
+                c2           = c2_al
+                r1           = 2.7306/autoang
+                den1         = 1d0-(r1/del1)**en
+                cn(1,i,j)    = dexp(gam(1,i,j)/den1)
+                den2         = 1d0-(r1/del1)**en
+                cn(2,i,j)    = dexp(gam(2,i,j)/den2)
+                den3         = 1d0-(r1/del1)**en
+                cn(3,i,j)    = dexp(gam(3,i,j)/den3)
+                den4         = 1d0-(r1/del1)**en
+                cn(4,i,j)    = dexp(gam(4,i,j)/den4)
                 sigma(3,i,j) = 1.0
                 sigma(4,i,j) = 1.0
-
             else
-                del1 = 6.88/autoang
-
+                del1       = 6.88/autoang
                 gam(1,i,j) = gam1_hal
                 gam(2,i,j) = gam2_hal
-                if((id(i).eq.1).and.(id(j).eq.2))then
+                if( (id(i) .eq. 1).and.(id(j) .eq. 2) )then
                     gam(3,i,j)   = gam3_hal
                     gam(4,i,j)   = gam4_hal
                     sigma(3,i,j) = sig3_hal
                     sigma(4,i,j) = sig4_hal
-                else if((id(i).eq.2).and.(id(j).eq.1)) then
+                else if( (id(i) .eq. 2).and.(id(j) .eq. 1) )then
                     gam(3,i,j)   = gam3_alh
                     gam(4,i,j)   = gam4_alh
                     sigma(3,i,j) = sig3_alh
                     sigma(4,i,j) = sig4_alh
-                end if
-
-                en = 0.5
-                c1 = c1_hal
-                c2 = c2_hal
-
-                r1 = 1.6637/autoang
-
+                endif
+                en        = 0.5
+                c1        = c1_hal
+                c2        = c2_hal
+                r1        = 1.6637/autoang
                 den1      = 1d0-(r1/del1)**en
                 cn(1,i,j) = dexp(gam(1,i,j)/den1)
                 den2      = 1d0-(r1/del1)**en
@@ -252,13 +220,10 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
                 cn(3,i,j) = dexp(gam(3,i,j)/den3)
                 den4      = 1d0-(r1/del1)**en
                 cn(4,i,j) = dexp(gam(4,i,j)/den4)
-
-            end if
-
+            endif
             !   Calculate bij according to Eq. (1)
-
             rij = r(i,j)
-            if(rij.lt.del1)then
+            if( rij .lt. del1 )then
                 b(1,i,j) = dexp(-gam(1,i,j)/(1d0-(rij/del1)**en))*cn(1,i,j)
                 b(2,i,j) = dexp(-gam(2,i,j)/(1d0-(rij/del1)**en))*cn(2,i,j)
                 b(3,i,j) = dexp(-gam(3,i,j)/(1d0-(rij/del1)**en))*cn(3,i,j)
@@ -268,34 +233,31 @@ subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
             else
                 do k=1, 4
                     b(k,i,j) = 0.0d0
-                end do
-            end if
+                enddo
+            endif
         3 continue
         en1 = en1+v1
     2 continue
-
     !    Calculate en2 which corresponds to the last term in Eq. (6) (pure A
-
     do 4 i=1, natom
-        if(id(i).eq.1)then
+        if( id(i) .eq. 1 )then
             c3  = c3_h
             c4  = c4_h
             esn = esn_h
-        elseif(id(i).eq.2)then
+        else if( id(i) .eq. 2 )then
             c3  = c3_al
             c4  = c4_al
             esn = esn_al
-        end if
+        endif
         vi3 = 0.0d0
         vi4 = 0.0d0
         do 5 j=1, natom
-            if(i.eq.j)goto 5
+            if( i .eq. j ) goto 5
             vi3 = vi3+c3*sigma(3,i,j)*b(3,i,j)
             vi4 = vi4+c4*sigma(4,i,j)*b(4,i,j)
         5 continue
         add = (vi3+vi4)**esn
         en2 = en2-add
     4 continue
-
     v = en1+en2
 end subroutine alhpot

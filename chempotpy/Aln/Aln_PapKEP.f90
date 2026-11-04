@@ -19,13 +19,13 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call evaluate_papkep( coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call evaluate_papkep(coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the PapKEP second-moment embedded-atom energy.
@@ -57,7 +57,7 @@ subroutine evaluate_papkep( coordinates_bohr, atom_count, energy_hartree )
             reduced_distance = distance_bohr/reference_distance_bohr-1.0d0
             repulsive_sum    = repulsive_sum +exp(-1.0d0*repulsive_exponent*reduced_distance)
             density_sum      = density_sum +exp(-2.0d0*density_exponent*reduced_distance)
-        end do
+        enddo
         energy_hartree = energy_hartree +repulsive_scale*repulsive_sum-embedding_scale*sqrt(density_sum)
-    end do
+    enddo
 end subroutine evaluate_papkep

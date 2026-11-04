@@ -51,7 +51,6 @@ end module nnparam
 subroutine pes( x, igrad, path, p, g, d )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
-
     implicit none
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -66,38 +65,31 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, j, istate
     !initialize
     p = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     tg = 0.d0
-
     call pes_init(path)
     call evvdvdx(tx, v, vpes, tg, tgn, igrad)
-
     deallocate(nodes3a)
     deallocate(weight3a)
     deallocate(bias3a)
     deallocate(pdel3a)
     deallocate(pavg3a)
-
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
     do istate=1, nstates
         do iatom=1, natoms
             do idir=1, 3
                 j                    = 3*(iatom-1)+idir
                 g(istate,iatom,idir) = tg(j)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     d = 0.d0
-
 end subroutine
 
 !***************************************************************************
@@ -131,8 +123,7 @@ subroutine evvdvdx( xcart, v, vpes, dvdxa, dvdx, ndriv )
     ! ::::::::::::::::::::
     do i=1, 3
         x((3*(i-1)+1):(3*(i-1)+3)) = xcart(:,i)
-    end do
-
+    enddo
     k = 0
     do i=1, 2
         do j=i+1, 3
@@ -140,35 +131,27 @@ subroutine evvdvdx( xcart, v, vpes, dvdxa, dvdx, ndriv )
             r(k)      = dot_product(xcart(:,i)-xcart(:,j), xcart(:,i)-xcart(:,j))
             r(k)      = dsqrt(r(k))
             xmorse(k) = dexp(-r(k)/alpha)
-        end do
-    end do
-    if(k.ne.3)stop "error"
-
+        enddo
+    enddo
+    if( k .ne. 3 ) stop "error"
     call bemsav(xmorse, m, p)
-
     do j=1, 12
         txinput(j) = p(j)
-    end do
-
+    enddo
     call pot3a(txinput, vpes, dvdg, ndriv)
-
     v = 0d0
     do i=1, npes
         v = v+vpes(i)
-    end do
-
+    enddo
     v = v/npes
-
-    if(ndriv.eq.1)then
+    if( ndriv .eq. 1 )then
         call evdvdr(r, c, m, p, dpdr)
         call evdrdx(xcart, r, x, drdx)
         call evdvdx(dvdg, dpdr, drdx, dvdxa, dvdx)
-    end if
-
-    if(ndriv.eq.2)then
+    endif
+    if( ndriv .eq. 2 )then
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine evvdvdx
 
 !****************************************************************!
@@ -187,14 +170,11 @@ subroutine pes_init( path )
     nfile2     = 7
     file_path1 = trim(path)//"/NO2/weights_NO2_4Ap_PIPNN.txt"
     file_path2 = trim(path)//"/NO2/biases_NO2_4Ap_PIPNN.txt"
-
     open(nfile1, file=file_path1, status='old')
     open(nfile2, file=file_path2, status='old')
-
     !      allocate(weight3a(100,100,2:4,npes),
     !     &bias3a(100,2:4,npes),nodes3a(10,npes),
     !     &pdel3a(50000,npes),pavg3a(50000,npes))
-
     read(nfile1, *)
     read(nfile2, *)
     read(nfile1, *)nhid3, noutput
@@ -208,19 +188,18 @@ subroutine pes_init( path )
     nodemax3 = 0
     do i=1, nlayer3
         nodemax3 = max(nodemax3, nodes3a(i))
-    end do
+    enddo
     allocate(weight3a(nodemax3,nodemax3,2:nlayer3,npes), &
         &bias3a(nodemax3,2:nlayer3,npes))
     read(nfile1, *)ifunc3, nwe3
-
     do j=1, npes
-        if(j.gt.1) then
+        if( j .gt. 1 )then
             read(nfile1, *)
             read(nfile1, *)
             read(nfile1, *)
             read(nfile1, *)
             read(nfile2, *)
-        end if
+        endif
         read(nfile1, *)(pdel3a(i, j), i=1, nscale)
         read(nfile1, *)(pavg3a(i, j), i=1, nscale)
         iwe = 0
@@ -230,22 +209,20 @@ subroutine pes_init( path )
                 do inode2=1, nodes3a(ilay2) !
                     read(nfile1, *)weight3a(inode2,inode1,ilay1,j)
                     iwe = iwe+1
-                end do
+                enddo
                 read(nfile2, *)bias3a(inode1,ilay1,j)
                 iwe = iwe+1
-            end do
-        end do
-        if (iwe.ne.nwe3) then
+            enddo
+        enddo
+        if( iwe .ne. nwe3 )then
             write(*, *)'provided number of parameters ', nwe3
             write(*, *)'actual number of parameters ', iwe
             write(*, *)'nwe not equal to iwe, check input files or code'
             stop
-        end if
-    end do
-
+        endif
+    enddo
     close(nfile1)
     close(nfile2)
-
 end subroutine pes_init
 
 !*************************************************************************
@@ -264,12 +241,10 @@ subroutine pot3a( x, vpot3, dvdg, ndriv ) !-->3-HOCO, a
     double precision, external    :: tranfun
     dvdg  = 0d0
     dvtmp = 0d0
-
     do m=1, npes
         do i=1, ninput
             y(i,1,m) = (x(i)-pavg3a(i, m))/pdel3a(i, m)
-        end do
-
+        enddo
         !-->.....evaluate the hidden layer
         do ilay1=2, nlayer3-1
             ilay2 = ilay1-1
@@ -277,11 +252,10 @@ subroutine pot3a( x, vpot3, dvdg, ndriv ) !-->3-HOCO, a
                 y(inode1,ilay1,m) = bias3a(inode1,ilay1,m)
                 do inode2=1, nodes3a(ilay2)
                     y(inode1,ilay1,m) = y(inode1,ilay1,m)+y(inode2,ilay2,m) *weight3a(inode2,inode1,ilay1,m)
-                end do
+                enddo
                 y(inode1,ilay1,m) = tranfun(y(inode1,ilay1,m), ifunc3)
-            end do
-        end do
-
+            enddo
+        enddo
         !-->.....now evaluate the output
         ilay1 = nlayer3
         ilay2 = ilay1-1
@@ -289,14 +263,12 @@ subroutine pot3a( x, vpot3, dvdg, ndriv ) !-->3-HOCO, a
             y(inode1,ilay1,m) = bias3a(inode1,ilay1,m)
             do inode2=1, nodes3a(ilay2)
                 y(inode1,ilay1,m) = y(inode1,ilay1,m)+y(inode2,ilay2,m) *weight3a(inode2,inode1,ilay1,m)
-            end do
-        end do
-
+            enddo
+        enddo
         !-->.....the value of output layer is the fitted potntial
         vpot3(m) = y(nodes3a(nlayer3),nlayer3,m) *pdel3a(nscale, m)+pavg3a(nscale, m)
-    end do
-
-    if(ndriv.eq.1)then
+    enddo
+    if( ndriv .eq. 1 )then
         neu1 = nodes3a(2);neu2=nodes3a(3)
         allocate(nxw1(1:ninput,1:neu1,npes), nxw2(1:neu1,1:neu2,npes), &
             &ax(1:neu1,npes), bx(1:neu2,npes), nxw3(1:neu2,npes))
@@ -304,36 +276,33 @@ subroutine pot3a( x, vpot3, dvdg, ndriv ) !-->3-HOCO, a
             do i=1, ninput
                 do j=1, neu1
                     nxw1(i,j,m) = weight3a(i,j,2,m)
-                end do
-            end do
+                enddo
+            enddo
             do j=1, neu1
                 do k=1, neu2
                     nxw2(j,k,m) = weight3a(j,k,3,m)
-                end do
-            end do
+                enddo
+            enddo
             do j=1, neu1
                 ax(j,m) = y(j,2,m)
-            end do
+            enddo
             do k=1, neu2
                 bx(k,m)   = y(k,3,m)
                 nxw3(k,m) = weight3a(k,1,4,m)
-            end do
+            enddo
             !        stop
-
             do i=1, ninput
                 do k=1, neu2
                     dvtmp = 0d0
                     do j=1, neu1
                         dvtmp(m) = dvtmp(m)+nxw2(j,k,m)*nxw1(i,j,m)*(1d0-ax(j,m)**2)
-                    end do
+                    enddo
                     dvdg(i,m) = dvdg(i,m)+nxw3(k,m)*dvtmp(m)*(1d0-bx(k,m)**2)
-                end do
+                enddo
                 dvdg(i,m) = dvdg(i,m)*pdel3a(nscale, m)/pdel3a(i, m)
-            end do
-
-        end do
-    end if
-
+            enddo
+        enddo
+    endif
 end subroutine pot3a
 
 !**************************************************************************
@@ -342,13 +311,13 @@ function tranfun( x, ifunc )
     implicit none
     integer          :: ifunc
     double precision :: tranfun, x
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun = x
-    end if
+    endif
 end function tranfun
 
 !**************************************************************************
@@ -418,7 +387,6 @@ subroutine bemsav( xmorse, m, p )
     double precision :: m(0:4)
     call evmono(xmorse, m)
     call evpoly(m, p)
-
 end subroutine bemsav
 
 !> @brief Evaluate evmono.
@@ -431,7 +399,6 @@ subroutine evmono( x, m )
     m(2) = x(2)
     m(3) = x(1)
     m(4) = m(1)*m(2)
-
 end subroutine evmono
 
 !> @brief Evaluate evpoly.
@@ -452,7 +419,6 @@ subroutine evpoly( m, p )
     p(10) = p(2)*p(4)
     p(11) = p(1)*p(5) - p(8)
     p(12) = p(2)*p(6)
-
 end subroutine evpoly
 
 !****************************************************************
@@ -473,28 +439,23 @@ subroutine evdvdx( dvdg, dpdr, drdx, dvdxa, dvdx )
         do j=1, 12
             do k=1, 3
                 dgdx(i,j) = dgdx(i,j) + dgdr(k,j)*drdx(k,i)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     dvdx = 0d0;dvdxa=0
-
     do k=1, npes
         do i=1, 9
             do j=1, 12
                 dvdx(i,k) = dvdx(i,k) + dvdg(j,k)*dgdx(i,j)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     do i=1, 9
         do k=1, npes
             dvdxa(i) = dvdxa(i)+dvdx(i,k)
-        end do
-    end do
-
+        enddo
+    enddo
     dvdxa = dvdxa/dble(npes)
-
 end subroutine evdvdx
 
 !***********************************************************************
@@ -511,7 +472,6 @@ subroutine evdvdr( r, c, m, p, dpdr )
     call evdmsdr(r, dmsdr)
     call evdmdr(m, dmsdr, dmdr)
     call evdpdr(p, dmdr, dpdr)
-
 end subroutine evdvdr
 
 !***********************************************************************
@@ -545,7 +505,6 @@ subroutine evdrdx( xcart, r, x, drdx )
     drdx(3,7) = -drdx(3,4)
     drdx(3,8) = -drdx(3,5)
     drdx(3,9) = -drdx(3,6)
-
 end subroutine evdrdx
 
 !*************************************************************************
@@ -558,15 +517,12 @@ subroutine evdmsdr( r, dmsdr )
     double precision :: dmsdr(1:nbond,1:nbond), r(1:nbond)
     ! ::::::::::::::::::::
     dmsdr(:,:) = 0d0
-
     !Morse term ms = exp(-r/alpha)
     ! dmsdr(i,j)=0  i!=j
     ! dmsdr(i,i)= -(1/alpha)*Exp(-r(i)/alpha)
-
     do i=1, nbond
         dmsdr(i,i) = -(1d0/alpha)*dexp(-r(i)/alpha)
-    end do
-
+    enddo
 end subroutine evdmsdr
 
 !**************************************************************************
@@ -583,8 +539,7 @@ subroutine evdmdr( m, dmsdr, dmdr )
         dmdr(i,2) = dmsdr(i,2)
         dmdr(i,3) = dmsdr(i,1)
         dmdr(i,4) = dmdr(i,1)*m(2)+m(1)*dmdr(i,2)
-    end do
-
+    enddo
 end subroutine evdmdr
 
 !*************************************************************************
@@ -610,6 +565,5 @@ subroutine evdpdr( p, dmdr, dpdr )
         dpdr(i,10) = dpdr(i,2)*p(4)+p(2)*dpdr(i,4)
         dpdr(i,11) = dpdr(i,1)*p(5)+p(1)*dpdr(i,5)-dpdr(i,8)
         dpdr(i,12) = dpdr(i,2)*p(6)+p(2)*dpdr(i,6)
-    end do
-
+    enddo
 end subroutine evdpdr

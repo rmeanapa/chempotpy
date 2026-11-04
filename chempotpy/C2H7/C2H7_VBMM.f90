@@ -13,17 +13,15 @@ subroutine pes( x, igrad, p, g, d )
     integer                       :: iatom, idir, j, istate, jstate
     !initialize
     p = 0.d0; g = 0.d0; d = 0.d0
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         call c2h7pot(x, v)
         v = v/23.0609
         do istate=1, nstates
             p(istate) = v
-        end do
+        enddo
     else
         write(*, *) 'Only energy is available'
-    end if
-
+    endif
 end subroutine pes
 
 !*******************************************************************
@@ -53,7 +51,6 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
     double precision, parameter :: delta = 1.0d-4
     ! get energy
     call c2h7pot(x, eng_kcal)
-
     ! get numerical gradients
     do i=1, 9
         do j=1, 3
@@ -61,9 +58,8 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
             x2(i,j) = x(i,j)
             x3(i,j) = x(i,j)
             x4(i,j) = x(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     do i=1, 9
         xnorm(i) = 0.0d0
         do j=1, 3
@@ -75,10 +71,9 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
             x1(i,j)   = x(i,j)
             x2(i,j)   = x(i,j)
             xnorm(i)  = xnorm(i)+(grad(i,j)**2)
-        end do
+        enddo
         xnorm(i) = dsqrt(xnorm(i))
-    end do
-
+    enddo
     ! get numerical hessian
     k1 = 0
     do i2=1, 9
@@ -88,7 +83,7 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
             do i1=1, 9
                 do j1=1, 3
                     k1 = k1+1
-                    if(k1>k2) then
+                    if( k1 > k2 )then
                         x1(i1,j1) = x(i1,j1)+delta
                         x1(i2,j2) = x(i2,j2)+delta
                         x2(i1,j1) = x(i1,j1)-delta
@@ -112,7 +107,7 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
                         x3(i2,j2)   = x(i2,j2)
                         x4(i1,j1)   = x(i1,j1)
                         x4(i2,j2)   = x(i2,j2)
-                    elseif(k1==k2) then
+                    else if( k1 == k2 )then
                         x1(i1,j1) = x(i1,j1)+delta
                         x2(i2,j2) = x(i2,j2)-delta
                         call c2h7pot(x1, v1)
@@ -121,12 +116,11 @@ subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
                         hess(k1,k1) = z/(delta*delta)
                         x1(i1,j1)   = x(i1,j1)
                         x2(i2,j2)   = x(i2,j2)
-                    end if
-                end do
-            end do
-        end do
-    end do
-
+                    endif
+                enddo
+            enddo
+        enddo
+    enddo
 end subroutine c2h7poth
 
 ! end of c2h7poth
@@ -149,15 +143,13 @@ subroutine c2h7potg( x, eng_kcal, grad, xnorm )
     double precision, parameter :: delta = 1.0d-4
     ! get energy
     call c2h7pot(x, eng_kcal)
-
     ! get numerical gradients
     do i=1, 9
         do j=1, 3
             x1(i,j) = x(i,j)
             x2(i,j) = x(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     do i=1, 9
         xnorm(i) = 0.0d0
         do j=1, 3
@@ -169,10 +161,9 @@ subroutine c2h7potg( x, eng_kcal, grad, xnorm )
             x1(i,j)   = x(i,j)
             x2(i,j)   = x(i,j)
             xnorm(i)  = xnorm(i)+(grad(i,j)**2)
-        end do
+        enddo
         xnorm(i) = dsqrt(xnorm(i))
-    end do
-
+    enddo
 end subroutine c2h7potg
 
 ! end of routine c2h7potg
@@ -242,8 +233,7 @@ subroutine c2h7pot( x, eng_kcal )
         h8(i)      = x(4,i)
         h9(i)      = x(9,i)
         h5prime(i) = (scale*c5(i)) + ((1.0d0-scale)*c1(i))
-    end do
-
+    enddo
     ! Calculate avg C-H bond length for 3 QM H
     r1 = 0.0d0
     r2 = 0.0d0
@@ -258,7 +248,7 @@ subroutine c2h7pot( x, eng_kcal )
         b1 = b1+( (h9(i)-h2(i))**2 )
         b2 = b2+( (h9(i)-h3(i))**2 )
         b3 = b3+( (h9(i)-h4(i))**2 )
-    end do
+    enddo
     r1     = dsqrt(r1)
     r2     = dsqrt(r2)
     r3     = dsqrt(r3)
@@ -271,7 +261,7 @@ subroutine c2h7pot( x, eng_kcal )
     !
     ! Get energy
     !
-    if(lmm3) then
+    if( lmm3 )then
         call pmm3(npmm, paramm)
         call ethane(npmm, paramm, rxncrd, &
             & c1, h2, h3, h4, c5, h6, h7, h8, vmm3, etotalmm)
@@ -284,8 +274,7 @@ subroutine c2h7pot( x, eng_kcal )
         call xch5pot(npjg, parajg, rxncrd, &
             & c1, h2, h3, h4, h5prime, h9, vjg)
         eng_kcal = vjg+vmm3
-    end if
-
+    endif
 end subroutine c2h7pot
 
 ! end of routine c2h7pot
@@ -357,8 +346,7 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
     !     parameter(r0ch=1.092510d0,r0cc=1.52720d0)
     !%%% for ethane
     ipt = 4
-
-    if(ipt .eq. 1) then
+    if( ipt .eq. 1 )then
         !       ETHANE
         r0ch   = 1.0850d0
         r0cc   = 1.510d0
@@ -368,7 +356,7 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
         r0ccr  = 1.47110d0
         t0hcrh = 120.0d0
         t0ccrh = 120.0d0
-    elseif(ipt .eq. 2) then
+    else if( ipt .eq. 2 )then
         !       TS
         r0ch   = 1.0850d0
         r0cc   = 1.510d0
@@ -378,7 +366,7 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
         r0ccr  = 1.47110d0
         t0hcrh = 120.0d0
         t0ccrh = 120.0d0
-    elseif(ipt .eq. 3) then
+    else if( ipt .eq. 3 )then
         !       ETHYL
         r0ch   = 1.0850d0
         r0cc   = 1.510d0
@@ -388,7 +376,7 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
         r0ccr  = 1.47110d0
         t0hcrh = 120.0d0
         t0ccrh = 120.0d0
-    elseif(ipt .eq. 4) then
+    else if( ipt .eq. 4 )then
         !--------------------------------------
         ! geometry
         r0ch   = 1.0850d0
@@ -403,14 +391,12 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
         t0ccrh = 117.2989954203791430d0
         t0ccrh = 121.0d0
         t0cch  = t0ccrh-7.10d0
-
         t1     = 6.0d0
         t2     = 0.90d0
         t3     = 0.50d0*(1.0d0+dtanh(t1*(rxncrd-t2)))
         t4     = 1.0d0-t3
         t0cch  = (t0cch*t3)+(111.34990d0*t4)
         t0ccrh = (t0ccrh*t3)+(111.34990d0*t4)
-
         !       t1=6.0d0
         !       t2=20.0d0
         !       t3=0.50d0*(1.0d0+dtanh(t1*(rxncrd-t2)))
@@ -419,11 +405,10 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
         !       t0ccRh=(t0ccRh*t4)+(120.0d0*t3)
         !--------------------------------------
         ! freq and energy
-        cs    = 10.0d0
-        ravg0 = 1.17320d0
-        cp    = 0.50d0*(1.0d0+(dtanh(cs*(ravg-ravg0))))
-        cr    = 1.0d0-cp
-
+        cs     = 10.0d0
+        ravg0  = 1.17320d0
+        cp     = 0.50d0*(1.0d0+(dtanh(cs*(ravg-ravg0))))
+        cr     = 1.0d0-cp
         ascc   = 0.70d0
         aktcch = 0.90d0
         akthch = 0.90d0
@@ -434,27 +419,22 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
         !       Ascc=1.0d0-(0.30d0*z3)
         !       Aktcch=1.0d0-(0.10d0*z3)
         !       Akthch=1.0d0-(0.10d0*z3)
-
-        t1 = 6.0d0
-        t2 = 0.950d0
-        t3 = 0.50d0*(1.0d0+dtanh(t1*(rxncrd-t2)))
-        t4 = (1.0d0*(1.0d0-t3))+(0.70d0*t3)
-        t5 = (1.0d0*(1.0d0-t3))+(0.90d0*t3)
-        t6 = (1.0d0*(1.0d0-t3))+(0.90d0*t3)
-
-        z1 = 6.0d0
-        z2 = 10.0d0
-        z3 = 0.50d0*(1.0d0+dtanh(z1*(rxncrd-z2)))
-
-        z4 = (t4*(1.0d0-z3))+(1.0d0*z3)
-        z5 = (t5*(1.0d0-z3))+(1.0d0*z3)
-        z6 = (t6*(1.0d0-z3))+(1.0d0*z3)
-
+        t1     = 6.0d0
+        t2     = 0.950d0
+        t3     = 0.50d0*(1.0d0+dtanh(t1*(rxncrd-t2)))
+        t4     = (1.0d0*(1.0d0-t3))+(0.70d0*t3)
+        t5     = (1.0d0*(1.0d0-t3))+(0.90d0*t3)
+        t6     = (1.0d0*(1.0d0-t3))+(0.90d0*t3)
+        z1     = 6.0d0
+        z2     = 10.0d0
+        z3     = 0.50d0*(1.0d0+dtanh(z1*(rxncrd-z2)))
+        z4     = (t4*(1.0d0-z3))+(1.0d0*z3)
+        z5     = (t5*(1.0d0-z3))+(1.0d0*z3)
+        z6     = (t6*(1.0d0-z3))+(1.0d0*z3)
         ascc   = z4
         aktcch = z5
         akthch = z6
-
-    end if
+    endif
     !###
     !     Ar0ch=0.980d0
     !     Ar0cc=0.9950d0
@@ -467,13 +447,9 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
     !     Aktcch=1.00d0
     !     Ar0cRh=1.0d0
     !     Ar0ccR=0.980d0
-
     !     At0ccRh=1.100d0
-
     !     Asch=1.10d0
-
     !%%%
-
     p(1)  = r0ch
     p(2)  = r0cc
     p(3)  = ksch
@@ -499,7 +475,6 @@ subroutine pmm3_mod( np, p, ravg, rxncrd )
     p(23) = scalech
     p(24) = r0crh
     p(25) = r0ccr
-
 end subroutine pmm3_mod
 
 ! end of routine pmm3_mod
@@ -581,28 +556,26 @@ subroutine pjg_mod( np, para, ravg )
     double precision :: aalpcb
     !
     !%%% QM parameters
-    ipt = 4
-
+    ipt    = 4
     ad1hh  = 1.0d0
     ad1ch  = 1.0d0
     aalpcb = 1.0d0
-
-    if(ipt .eq. 1) then
+    if( ipt .eq. 1 )then
         !       ETHANE
         r0ch = 1.0850d0
         r0cb = 1.400d0
         r0hh = 0.680d0
-    elseif(ipt .eq. 2) then
+    else if( ipt .eq. 2 )then
         !       TS
         r0ch = 1.080d0
         r0cb = 1.400d0
         r0hh = 0.660d0
-    elseif(ipt .eq. 3) then
+    else if( ipt .eq. 3 )then
         !       ETHYL
         r0ch = 1.0750d0
         r0cb = 1.400d0
         r0hh = 0.73590d0
-    elseif(ipt .eq. 4) then
+    else if( ipt .eq. 4 )then
         !------------------------------------------------------
         ! for geometry
         cs    = 10.0d0
@@ -622,7 +595,7 @@ subroutine pjg_mod( np, para, ravg )
         ad1hh = (1.0d0*cr)+(1.027500d0*cp)
         r0hh  = (0.720d0*cr)+(0.73590d0*cp)
         r0hh  = (0.70d0*cr)+(0.73590d0*cp)
-    end if
+    endif
     !======================================================
     ! Str
     para(1)  = a1ch
@@ -661,7 +634,6 @@ subroutine pjg_mod( np, para, ravg )
     para(32) = aa2
     para(33) = aa3
     para(34) = aa4
-
 end subroutine pjg_mod
 
 ! end of routine pjp_mod
@@ -1000,7 +972,7 @@ subroutine ethane( np, para, rxncrd, &
     do i=1, 3
         swt1(i) = (1.0d0-dtanh(t1*(rch(i)-t2)))*0.50d0
         swt2    = swt2*swt1(i)
-    end do
+    enddo
     ! switch C-C xdist
     r0cc = (swt2*r0cc)+((1.0d0-swt2)*r0ccr)
     !%%%
@@ -1010,7 +982,6 @@ subroutine ethane( np, para, rxncrd, &
     z3    = dexp(-z1*((rxncrd-z2)**2))
     scale = 1.0d0-(0.050d0*z3)
     !     scale=0.950d0
-
     ksch  = ksch*scale
     kthch = kthch*scale
     ktcch = ktcch*scale
@@ -1022,7 +993,7 @@ subroutine ethane( np, para, rxncrd, &
         call es(r0ch, ksch, rch(i), esch)
         estr    = estr + esch
         astr(i) = esch
-    end do
+    enddo
     astr(7) = escc
     !-------------------------------------------
     ! calculate bend energy
@@ -1033,22 +1004,20 @@ subroutine ethane( np, para, rxncrd, &
     thch(4) = xangle(h6, c5, h7)*180.0d0/pi
     thch(5) = xangle(h6, c5, h8)*180.0d0/pi
     thch(6) = xangle(h7, c5, h8)*180.0d0/pi
-
     tcch(1) = xangle(h2, c1, c5)*180.0d0/pi
     tcch(2) = xangle(h3, c1, c5)*180.0d0/pi
     tcch(3) = xangle(h4, c1, c5)*180.0d0/pi
     tcch(4) = xangle(h6, c5, c1)*180.0d0/pi
     tcch(5) = xangle(h7, c5, c1)*180.0d0/pi
     tcch(6) = xangle(h8, c5, c1)*180.0d0/pi
-
-    ebend = 0.0d0
+    ebend   = 0.0d0
     do i=1, 6
         call eb(t0hch, kthch, thch(i), ebhch)
         call eb(t0cch, ktcch, tcch(i), ebcch)
         ebend    = ebend + ebhch + ebcch
         abhch(i) = ebhch
         abcch(i) = ebcch
-    end do
+    enddo
     !-------------------------------------------
     ! Calculate Stretch-bend terms
     ! there are 6 stretch-bend cross terms
@@ -1064,7 +1033,7 @@ subroutine ethane( np, para, rxncrd, &
         call esb(r0ch, r0cc, t0cch, ksbcch, rch(i), rcc, tcch(i), esbcch)
         estrbnd   = estrbnd + esbcch
         asbcch(i) = esbcch
-    end do
+    enddo
     !-------------------------------------------
     ! Bend-Bend terms
     ! there are 12 bend-bend terms
@@ -1081,7 +1050,6 @@ subroutine ethane( np, para, rxncrd, &
     ! H6-C5-C1 & H6-C5-C1
     ! H6-C5-C1 & H7-C5-C1
     ! H7-C5-C1 & H8-C5-C1
-
     ebndbnd = 0.0d0
     k       = 0
     do i=1, 3
@@ -1092,8 +1060,8 @@ subroutine ethane( np, para, rxncrd, &
             ebndbnd   = ebndbnd + ebbhch + ebbcch
             abbhch(k) = ebbhch
             abbcch(k) = ebbcch
-        end do
-    end do
+        enddo
+    enddo
     do i=4, 6
         do j=i+1, 6
             k = k + 1
@@ -1102,8 +1070,8 @@ subroutine ethane( np, para, rxncrd, &
             ebndbnd   = ebndbnd + ebbhch + ebbcch
             abbhch(k) = ebbhch
             abbcch(k) = ebbcch
-        end do
-    end do
+        enddo
+    enddo
     !-------------------------------------------
     ! there are 9 xtorsional terms
     ! H2-C1-C5-H6
@@ -1127,16 +1095,15 @@ subroutine ethane( np, para, rxncrd, &
     phcch(7) = xtorsion(h4, c1, c5, h6)
     phcch(8) = xtorsion(h4, c1, c5, h7)
     phcch(9) = xtorsion(h4, c1, c5, h8)
-
-    etor = 0.0d0
+    etor     = 0.0d0
     do i=1, 9
         call et(v1hcch, v2hcch, v3hcch, phcch(i), ethcch)
         etor      = etor + ethcch
         athcch(i) = ethcch
-        if(ldebugmm) then
+        if( ldebugmm )then
             write(*, *) 'Torsion Angle:', phcch(i)
-        end if
-    end do
+        endif
+    enddo
     !-------------------------------------------
     ! stretch-xtorsion terms
     ! interaction of the C-C str with xtorsion
@@ -1156,7 +1123,7 @@ subroutine ethane( np, para, rxncrd, &
         call est(r0cc, ksthcch, rcc, phcch(i), esthcch)
         estrtor    = estrtor + esthcch
         asthcch(i) = esthcch
-    end do
+    enddo
     !-------------------------------------------
     ! Van der Waals terms
     ! all interaction which are greater than 1-3
@@ -1179,8 +1146,7 @@ subroutine ethane( np, para, rxncrd, &
         sh6(i) = (scalech*h6(i)) + ((1.0d0-scalech)*c5(i))
         sh7(i) = (scalech*h7(i)) + ((1.0d0-scalech)*c5(i))
         sh8(i) = (scalech*h8(i)) + ((1.0d0-scalech)*c5(i))
-    end do
-
+    enddo
     rvdwhh(1) = xdist(sh2, sh6)
     rvdwhh(2) = xdist(sh2, sh7)
     rvdwhh(3) = xdist(sh2, sh8)
@@ -1190,16 +1156,14 @@ subroutine ethane( np, para, rxncrd, &
     rvdwhh(7) = xdist(sh4, sh6)
     rvdwhh(8) = xdist(sh4, sh7)
     rvdwhh(9) = xdist(sh4, sh8)
-
-    evdwaal = 0.0d0
+    evdwaal   = 0.0d0
     do i=1, 9
         xrv  = rvh + rvh
         xesp = dsqrt(esph*esph)
         call evdw(xrv, xesp, rvdwhh(i), evdwhh)
         evdwaal   = evdwaal + evdwhh
         avdwhh(i) = evdwhh
-    end do
-
+    enddo
     etotalmm = estr+ebend+estrbnd+ebndbnd+ etor+estrtor+evdwaal
     !-------------------------------------------------------
     ! Switch between the parameters of ethane and ethyl radical
@@ -1211,22 +1175,20 @@ subroutine ethane( np, para, rxncrd, &
     t0cchsw = (swt2*t0cch)+((1.0d0-swt2)*t0ccrh)
     !-----------------------------------------------------------
     !%%%
-    z2 = 2.141145010007599490d0
-    z2 = 1.50d0
-    z1 = 0.50d0*(1.0d0+dtanh(6.0d0*(rxncrd-z2)))
-    z4 = ((1.0d0-z1)*t0cch)+(z1*t0ccrh)
-    z1 = 117.2989954203791430d0
-
+    z2  = 2.141145010007599490d0
+    z2  = 1.50d0
+    z1  = 0.50d0*(1.0d0+dtanh(6.0d0*(rxncrd-z2)))
+    z4  = ((1.0d0-z1)*t0cch)+(z1*t0ccrh)
+    z1  = 117.2989954203791430d0
     sw2 = 1.0d0
     do i=1, 3
         z1     = 10.0d0
         sw1(i) = (1.0d0-dtanh(z1*(rch(i)-t2)))*0.50d0
         sw2    = sw2*sw1(i)
-    end do
+    enddo
     t0cchsw = (sw2*t0cch)+((1.0d0-sw2)*t0ccrh)
     !-----------------------------------------------------------
-
-    if(lswitch) then
+    if( lswitch )then
         do i=1, 3
             call eb(t0hchsw, kthch, thch(i), ebhch)
             call eb(t0cchsw, ktcch, tcch(i), ebcch)
@@ -1235,7 +1197,7 @@ subroutine ethane( np, para, rxncrd, &
             abhch(i)  = ebhch
             abcch(i)  = ebcch
             asbcch(i) = esbcch
-        end do
+        enddo
         k = 0
         do i=1, 3
             do j=i+1, 3
@@ -1244,30 +1206,28 @@ subroutine ethane( np, para, rxncrd, &
                 call ebb(t0cchsw, t0cchsw, kbbcch, tcch(i), tcch(j), ebbcch)
                 abbhch(k) = ebbhch
                 abbcch(k) = ebbcch
-            end do
-        end do
+            enddo
+        enddo
         ! compute engergies
         do i=1, 7
             tstr(i) = astr(i)
-        end do
+        enddo
         do i=1, 6
             tbhch(i)  = abhch(i)
             tbcch(i)  = abcch(i)
             tsbcch(i) = asbcch(i)
             tbbhch(i) = abbhch(i)
             tbbcch(i) = abbcch(i)
-        end do
+        enddo
         do i=1, 9
             tthcch(i)  = athcch(i)
             tsthcch(i) = asthcch(i)
             tvdwhh(i)  = avdwhh(i)
-        end do
-
+        enddo
         !       switch C-H str term
         tstr(1) = tstr(1)*swt1(1)
         tstr(2) = tstr(2)*swt1(2)
         tstr(3) = tstr(3)*swt1(3)
-
         !       switch the following H-C-H bend terms
         !       H2-C1-H3
         !       H2-C1-H4
@@ -1275,7 +1235,6 @@ subroutine ethane( np, para, rxncrd, &
         tbhch(1) = tbhch(1)*swt1(1)*swt1(2)
         tbhch(2) = tbhch(2)*swt1(1)*swt1(3)
         tbhch(3) = tbhch(3)*swt1(2)*swt1(3)
-
         !       switch the following C-C-H bend terms
         !       C5-C1-H2
         !       C5-C1-H3
@@ -1283,7 +1242,6 @@ subroutine ethane( np, para, rxncrd, &
         tbcch(1) = tbcch(1)*swt1(1)
         tbcch(2) = tbcch(2)*swt1(2)
         tbcch(3) = tbcch(3)*swt1(3)
-
         !       switch the following C-C-H strbnd term
         !       C5-C1-H2
         !       C5-C1-H3
@@ -1291,17 +1249,14 @@ subroutine ethane( np, para, rxncrd, &
         tsbcch(1) = tsbcch(1)*swt1(1)
         tsbcch(2) = tsbcch(2)*swt1(2)
         tsbcch(3) = tsbcch(3)*swt1(3)
-
         !       remove three H-C-H2 bnd-bnd terms
         tbbhch(1) = tbbhch(1)*swt1(1)*swt1(2)
         tbbhch(2) = tbbhch(2)*swt1(1)*swt1(3)
         tbbhch(3) = tbbhch(3)*swt1(2)*swt1(3)
-
         !       remove two C-C-H2 bnd-bnd terms
         tbbcch(1) = tbbcch(1)*swt1(1)*swt1(2)
         tbbcch(2) = tbbcch(2)*swt1(1)*swt1(3)
         tbbcch(3) = tbbcch(3)*swt1(2)*swt1(3)
-
         !       switch the following  H-C-C-H xtorsional terms
         !       H2-C1-C5-H6
         !       H2-C1-C5-H7
@@ -1341,7 +1296,6 @@ subroutine ethane( np, para, rxncrd, &
         tsthcch(7) = tsthcch(7)*swt1(3)
         tsthcch(8) = tsthcch(8)*swt1(3)
         tsthcch(9) = tsthcch(9)*swt1(3)
-
         !       switch the following vdw terms
         !       H2-H6
         !       H2-H7
@@ -1361,12 +1315,11 @@ subroutine ethane( np, para, rxncrd, &
         tvdwhh(7) = tvdwhh(7)*swt1(3)
         tvdwhh(8) = tvdwhh(8)*swt1(3)
         tvdwhh(9) = tvdwhh(9)*swt1(3)
-
-        xsumrx = 0.0d0
-        xstr   = 0.0d0
+        xsumrx    = 0.0d0
+        xstr      = 0.0d0
         do i=1, 7
             xstr = xstr+tstr(i)
-        end do
+        enddo
         xbend   = 0.0d0
         xstrbnd = 0.0d0
         xbndbnd = 0.0d0
@@ -1374,7 +1327,7 @@ subroutine ethane( np, para, rxncrd, &
             xbend   = xbend+tbhch(i)+tbcch(i)
             xstrbnd = xstrbnd+tsbcch(i)
             xbndbnd = xbndbnd+tbbhch(i)+tbbcch(i)
-        end do
+        enddo
         xtor    = 0.0d0
         xstrtor = 0.0d0
         xvdw    = 0.0d0
@@ -1382,16 +1335,14 @@ subroutine ethane( np, para, rxncrd, &
             xtor    = xtor+tthcch(i)
             xstrtor = xstrtor+tsthcch(i)
             xvdw    = xvdw+tvdwhh(i)
-        end do
+        enddo
         xsumrx = xstr+xbend+xstrbnd+xbndbnd+xtor+xstrtor+xvdw
-
         !       call xdisp(xstr,xbend,xstrbnd,xbndbnd,
         !    1             xtor,xstrtor,xvdw,xsumRX)
-
         etotalmm = xsumrx
-    end if
+    endif
     !-------------------------------------------------------
-    if(lradical) then
+    if( lradical )then
         !       modify the h-cR-h and h-cR-C bends and c-cR-h str-bnd
         !       for C-sp3 bonded to only two atoms
         do i=1, 3
@@ -1401,7 +1352,7 @@ subroutine ethane( np, para, rxncrd, &
             abhch(i)  = ebhch
             abcch(i)  = ebcch
             asbcch(i) = esbcch
-        end do
+        enddo
         k = 0
         do i=1, 3
             do j=i+1, 3
@@ -1410,69 +1361,58 @@ subroutine ethane( np, para, rxncrd, &
                 call ebb(t0ccrh, t0ccrh, kbbcch, tcch(i), tcch(j), ebbcch)
                 abbhch(k) = ebbhch
                 abbcch(k) = ebbcch
-            end do
-        end do
-    end if
-
-    if(lreact) then
+            enddo
+        enddo
+    endif
+    if( lreact )then
         do i=1, 7
             tstr(i) = astr(i)
-        end do
+        enddo
         do i=1, 6
             tbhch(i)  = abhch(i)
             tbcch(i)  = abcch(i)
             tsbcch(i) = asbcch(i)
             tbbhch(i) = abbhch(i)
             tbbcch(i) = abbcch(i)
-        end do
+        enddo
         do i=1, 9
             tthcch(i)  = athcch(i)
             tsthcch(i) = asthcch(i)
             tvdwhh(i)  = avdwhh(i)
-        end do
-
+        enddo
         !       remove one C-H2 str term
         tstr(1) = 0.0d0
-
         !       remove two H-C-H2 bend terms
         tbhch(1) = 0.0d0
         tbhch(2) = 0.0d0
-
         !       remove one C-C-H2 bend term
         tbcch(1) = 0.0d0
-
         !       remove one C-C-H2 strbnd term
         tsbcch(1) = 0.0d0
-
         !       remove three H-C-H2 bnd-bnd terms
         tbbhch(1) = 0.0d0
         tbbhch(2) = 0.0d0
         tbbhch(3) = 0.0d0
-
         !       remove two C-C-H2 bnd-bnd terms
         tbbcch(1) = 0.0d0
         tbbcch(2) = 0.0d0
-
         !       remove three H-C-C-H2 xtorsional terms
         tthcch(1) = 0.0d0
         tthcch(2) = 0.0d0
         tthcch(3) = 0.0d0
-
         !       remove three H-C-C-H2 str-xtorsional terms
         tsthcch(1) = 0.0d0
         tsthcch(2) = 0.0d0
         tsthcch(3) = 0.0d0
-
         !       remove three vdw terms
         tvdwhh(1) = 0.0d0
         tvdwhh(2) = 0.0d0
         tvdwhh(3) = 0.0d0
-
-        xsumrx = 0.0d0
-        xstr   = 0.0d0
+        xsumrx    = 0.0d0
+        xstr      = 0.0d0
         do i=1, 7
             xstr = xstr+tstr(i)
-        end do
+        enddo
         xbend   = 0.0d0
         xstrbnd = 0.0d0
         xbndbnd = 0.0d0
@@ -1480,7 +1420,7 @@ subroutine ethane( np, para, rxncrd, &
             xbend   = xbend+tbhch(i)+tbcch(i)
             xstrbnd = xstrbnd+tsbcch(i)
             xbndbnd = xbndbnd+tbbhch(i)+tbbcch(i)
-        end do
+        enddo
         xtor    = 0.0d0
         xstrtor = 0.0d0
         xvdw    = 0.0d0
@@ -1488,34 +1428,30 @@ subroutine ethane( np, para, rxncrd, &
             xtor    = xtor+tthcch(i)
             xstrtor = xstrtor+tsthcch(i)
             xvdw    = xvdw+tvdwhh(i)
-        end do
+        enddo
         xsumrx = xstr+xbend+xstrbnd+xbndbnd+xtor+xstrtor+xvdw
-
         !       call xdisp(xstr,xbend,xstrbnd,xbndbnd,
         !    1             xtor,xstrtor,xvdw,xsumRX)
-
         etotalmm = xsumrx
-    end if
-
+    endif
     ! start of if-block label: jg_case
     !....................................
-    if(ljg) then
+    if( ljg )then
         do i=1, 7
             tstr(i) = astr(i)
-        end do
+        enddo
         do i=1, 6
             tbhch(i)  = abhch(i)
             tbcch(i)  = abcch(i)
             tsbcch(i) = asbcch(i)
             tbbhch(i) = abbhch(i)
             tbbcch(i) = abbcch(i)
-        end do
+        enddo
         do i=1, 9
             tthcch(i)  = athcch(i)
             tsthcch(i) = asthcch(i)
             tvdwhh(i)  = avdwhh(i)
-        end do
-
+        enddo
         !       remove the following C-H str terms
         !       C-H2
         !       C-H3
@@ -1523,7 +1459,6 @@ subroutine ethane( np, para, rxncrd, &
         tstr(1) = 0.0d0
         tstr(2) = 0.0d0
         tstr(3) = 0.0d0
-
         !       remove the following H-C-H bend terms
         !       H2-C1-H3
         !       H2-C1-H4
@@ -1531,7 +1466,6 @@ subroutine ethane( np, para, rxncrd, &
         tbhch(1) = 0.0d0
         tbhch(2) = 0.0d0
         tbhch(3) = 0.0d0
-
         !       switch the following C-C-H bend terms
         !       C5-C1-H2
         !       C5-C1-H3
@@ -1539,7 +1473,6 @@ subroutine ethane( np, para, rxncrd, &
         tbcch(1) = tbcch(1)*swt1(1)
         tbcch(2) = tbcch(2)*swt1(2)
         tbcch(3) = tbcch(3)*swt1(3)
-
         !       switch the following C-C-H strbnd term
         !       C5-C1-H2
         !       C5-C1-H3
@@ -1547,17 +1480,14 @@ subroutine ethane( np, para, rxncrd, &
         tsbcch(1) = tsbcch(1)*swt1(1)
         tsbcch(2) = tsbcch(2)*swt1(2)
         tsbcch(3) = tsbcch(3)*swt1(3)
-
         !       remove three H-C-H2 bnd-bnd terms
         tbbhch(1) = 0.0d0
         tbbhch(2) = 0.0d0
         tbbhch(3) = 0.0d0
-
         !       switch C-C-H bnd-bnd terms involving H2, H3 and H4
         tbbcch(1) = tbbcch(1)*swt1(1)
         tbbcch(2) = tbbcch(2)*swt1(2)
         tbbcch(3) = tbbcch(3)*swt1(3)
-
         !       switch the following  H-C-C-H xtorsional terms
         !       H2-C1-C5-H6
         !       H2-C1-C5-H7
@@ -1597,7 +1527,6 @@ subroutine ethane( np, para, rxncrd, &
         tsthcch(7) = tsthcch(7)*swt1(3)
         tsthcch(8) = tsthcch(8)*swt1(3)
         tsthcch(9) = tsthcch(9)*swt1(3)
-
         !       switch the following vdw terms
         !       H2-H6
         !       H2-H7
@@ -1617,12 +1546,11 @@ subroutine ethane( np, para, rxncrd, &
         tvdwhh(7) = tvdwhh(7)*swt1(3)
         tvdwhh(8) = tvdwhh(8)*swt1(3)
         tvdwhh(9) = tvdwhh(9)*swt1(3)
-
-        xsumjg = 0.0d0
-        xstr   = 0.0d0
+        xsumjg    = 0.0d0
+        xstr      = 0.0d0
         do i=1, 7
             xstr = xstr+tstr(i)
-        end do
+        enddo
         xbend   = 0.0d0
         xstrbnd = 0.0d0
         xbndbnd = 0.0d0
@@ -1630,7 +1558,7 @@ subroutine ethane( np, para, rxncrd, &
             xbend   = xbend+tbhch(i)+tbcch(i)
             xstrbnd = xstrbnd+tsbcch(i)
             xbndbnd = xbndbnd+tbbhch(i)+tbbcch(i)
-        end do
+        enddo
         xtor    = 0.0d0
         xstrtor = 0.0d0
         xvdw    = 0.0d0
@@ -1638,24 +1566,20 @@ subroutine ethane( np, para, rxncrd, &
             xtor    = xtor+tthcch(i)
             xstrtor = xstrtor+tsthcch(i)
             xvdw    = xvdw+tvdwhh(i)
-        end do
+        enddo
         xsumjg = xstr+xbend+xstrbnd+xbndbnd+xtor+xstrtor+xvdw
-        if(ldebugmm) then
+        if( ldebugmm )then
             write(*, '(A,F14.8)')
             write(*, '(A,F14.8)') '----------------------------'
             write(*, '(A,F14.8)') 'Energy from MM3'
             write(*, '(A,F14.8)') '----------------------------'
             call xdisp(xstr, xbend, xstrbnd, xbndbnd, &
                 & xtor, xstrtor, xvdw, xsumjg)
-
-        end if
-
-    end if
+        endif
+    endif
     ! end of if-block label: jg_case
     !....................................
-
     vmm3 = xsumjg
-
 end subroutine ethane
 
 ! end sub ethane
@@ -1700,9 +1624,8 @@ function xdist( x, y )
     z = 0.0d0
     do i=1, 3
         z = z + ( (y(i)-x(i))**2 )
-    end do
+    enddo
     xdist = dsqrt(z)
-
 end function xdist
 
 ! end of func xdist
@@ -1721,14 +1644,13 @@ function xangle( a, b, c )
     do i=1, 3
         rab(i) = a(i)-b(i)
         rcb(i) = c(i)-b(i)
-    end do
+    enddo
     sum = 0.0d0
     do i=1, 3
         sum = sum + (rab(i)*rcb(i))
-    end do
+    enddo
     sum    = sum/(xdist(a, b)*xdist(c, b))
     xangle = dabs(dacos(sum))
-
 end function xangle
 
 ! end of xangle
@@ -1770,7 +1692,7 @@ function xtorsion( a, b, c, d )
         rab(i) = a(i)-b(i)
         rcb(i) = c(i)-b(i)
         rcd(i) = c(i)-d(i)
-    end do
+    enddo
     !
     ! define the normal vectors
     ! u = rab X rcb
@@ -1793,32 +1715,30 @@ function xtorsion( a, b, c, d )
         y    = y+(v(i)*v(i))
         dpuv = dpuv + (u(i)*v(i))
         s    = s + (rab(i)*v(i))
-    end do
+    enddo
     x = sqrt(x)
     y = sqrt(y)
     !
     ! z is cos(phi) and should be in the
     ! range [-1,1]
     !
-    if(x*y .ne. 0.0d0) then
+    if( x*y .ne. 0.0d0 )then
         z = dpuv/(x*y)
     else
         z = dpuv
-    end if
-    if( z .gt.  1.0d0) z=1.0d0
-    if( z .lt. -1.0d0) z=-1.0d0
+    endif
+    if( z .gt. 1.0d0 ) z=1.0d0
+    if( z .lt. -1.0d0 ) z=-1.0d0
     ! get dihedral xangle
     phi = dacos(z)
     !
     ! get the sign
-    if(s /= 0.0d0) then
+    if( s /= 0.0d0 )then
         s = s/dabs(s)
     else
         s = 1.0d0
-    end if
-
+    endif
     xtorsion = s * phi
-
 end function xtorsion
 
 ! end of sub xtorsion
@@ -1854,7 +1774,6 @@ subroutine es( r0, ks, r, eng )
     dr  = (r-r0)
     eng = (c1*ks*dr*dr) * (1.0d0-(c2*dr)+(c3*c2*c2*dr*dr))
     !    1 (1.0d0-(c2*dr)+(c3*c2*dr*dr))
-
 end subroutine es
 
 ! end of sub Es
@@ -1882,7 +1801,6 @@ subroutine eb( t0, kt, t, eng )
     double precision, parameter :: c5 = 0.0000000220d0
     dt  = t-t0
     eng = c1*kt*dt*dt* ( 1.0d0-(c2*dt)+(c3*dt*dt)-(c4*dt*dt*dt) +(c5*dt*dt*dt*dt) )
-
 end subroutine eb
 
 ! end of sub Eb
@@ -1897,7 +1815,6 @@ subroutine et( v1, v2, v3, w, eng )
     double precision :: w
     double precision :: eng
     eng = 0.50d0*( ( v1*(1.0d0+dcos(w)) ) + ( v2*(1.0d0-dcos(2.0d0*w)) ) + ( v3*(1.0d0+dcos(3.0d0*w)) ) )
-
 end subroutine et
 
 ! end of Et
@@ -1916,7 +1833,6 @@ subroutine esb( ra0, rb0, t0, kst, ra, rb, t, eng )
     double precision            :: eng
     double precision, parameter :: c1 = 2.511180d0
     eng = c1*kst*(t-t0)*((ra-ra0)+(rb-rb0))
-
 end subroutine esb
 
 ! end of Esb
@@ -1935,7 +1851,6 @@ subroutine est( r0, kws, r, w, eng )
     ! c1 is +ve but TINKER (version 4.1) defines
     ! c1/2 as -ve
     eng = 0.50d0*c1*kws*(r-r0)*(1.0d0+dcos(3.0d0*w))
-
 end subroutine est
 
 ! end of Est
@@ -1971,7 +1886,6 @@ subroutine evdw( rv, esp, r, eng )
     double precision, parameter :: c3 = 12.00d0
     x   = rv/r
     eng = esp*((-c1*x*x*x*x*x*x)+(c2*dexp(-c3/x)))
-
 end subroutine evdw
 
 ! end of vdw
@@ -2284,7 +2198,7 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
         rbh3     = rbh3+((hb(i)-h3(i))*(hb(i)-h3(i)))
         rbh4     = rbh4+((hb(i)-h4(i))*(hb(i)-h4(i)))
         rbh5     = rbh5+((hb(i)-h5(i))*(hb(i)-h5(i)))
-    end do
+    enddo
     rch2  = dsqrt(rch2)
     rch3  = dsqrt(rch3)
     rch4  = dsqrt(rch4)
@@ -2306,7 +2220,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     t4 = 1.12750d0
     t5 = 0.50d0*(1.0d0+dtanh(t3*(rchav-t4)))
     !     r0ch=(t5*t2)+((1.0d0-t5)*t1)
-
     !
     ! calculate the Morse parameter alphaCH (alpch)
     ! used in the Vstr using Equation 2 of
@@ -2331,7 +2244,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     !     bh3q=bh3q*t1
     !     bh4q=bh4q*t1
     !     bh5q=bh5q*t1
-
     !     bh2j=bh2j*t1
     !     bh3j=bh3j*t1
     !     bh4f=bh4f*t1
@@ -2345,7 +2257,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     t2 = 1.0d0-t1
     t3 = (1.0d0+(t2*0.080d0))*r0ch
     !     call V3qj77(alpch,d1ch,d3ch,t3,rch2,ch2q,ch2j)
-
     call v3qj77(alpch, d1ch, d3ch, r0ch, rch2, ch2q, ch2j)
     call v3qj77(alpch, d1ch, d3ch, r0ch, rch3, ch3q, ch3j)
     call v3qj77(alpch, d1ch, d3ch, r0ch, rch4, ch4q, ch4j)
@@ -2358,63 +2269,49 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     vqh3 = cbq+ch3q+bh3q
     vqh4 = cbq+ch4q+bh4q
     vqh5 = cbq+ch5q+bh5q
-
-    t2 = ((ch2j-cbj)**2) + ((cbj-bh2j )**2) + ((bh2j-ch2j)**2)
-
-    t3 = ((ch3j-cbj)**2) + ((cbj-bh3j )**2) + ((bh3j-ch3j)**2)
-
-    t4 = ((ch4j-cbj)**2) + ((cbj-bh4f )**2) + ((bh4f-ch4j)**2)
-
-    t5 = ((ch5j-cbj)**2) + ((cbj-bh5j )**2) + ((bh5j-ch5j)**2)
-
+    t2   = ((ch2j-cbj)**2) + ((cbj-bh2j )**2) + ((bh2j-ch2j)**2)
+    t3   = ((ch3j-cbj)**2) + ((cbj-bh3j )**2) + ((bh3j-ch3j)**2)
+    t4   = ((ch4j-cbj)**2) + ((cbj-bh4f )**2) + ((bh4f-ch4j)**2)
+    t5   = ((ch5j-cbj)**2) + ((cbj-bh5j )**2) + ((bh5j-ch5j)**2)
     vjh2 = -dsqrt(0.50d0*t2)
     vjh3 = -dsqrt(0.50d0*t3)
     vjh4 = -dsqrt(0.50d0*t4)
     vjh5 = -dsqrt(0.50d0*t5)
-
     v3h2 = vqh2+vjh2
     v3h3 = vqh3+vjh3
     v3h4 = vqh4+vjh4
     v3h5 = vqh5+vjh5
     vstr = v3h2+v3h3+v3h4+v3h5
-
     !%%%--------------------------------------------------
     !     t1=10.0d0
     !     t2=2.144106410736830d0
     !     t3=0.013850d0
     !     t4=1.0d0+(t3*dexp(-t1*((rxncrd-t2)**2)))
-
     t1 = 6.0d0
     t2 = 0.950d0
     t3 = 0.50d0*(1.0d0+dtanh(t1*(rxncrd-t2)))
     t4 = 1.013850d0
-
     call xgaussfit(rxncrd, t4)
     !     t4=t4*0.999930d0
     !     t4=t4*1.00205d0
     !     t4=t4*1.0159995120d0/1.016043066097427340d0
-    t4 = t4*1.016043066097427340d0/1.0159995120d0
-
-    t5 = (1.0d0*(1.0d0-t3))+(t3*t4)
-
-    z1 = 6.0d0
-    z2 = 10.0d0
-    z3 = 0.50d0*(1.0d0+dtanh(z1*(rxncrd-z2)))
-    z4 = (t5*(1.0d0-z3))+(1.0d0*z3)
-
+    t4   = t4*1.016043066097427340d0/1.0159995120d0
+    t5   = (1.0d0*(1.0d0-t3))+(t3*t4)
+    z1   = 6.0d0
+    z2   = 10.0d0
+    z3   = 0.50d0*(1.0d0+dtanh(z1*(rxncrd-z2)))
+    z4   = (t5*(1.0d0-z3))+(1.0d0*z3)
     vstr = vstr * z4
-
     !     vstr = vstr * 1.013850d0
     !%%%--------------------------------------------------
-
-    if(ldebug) then
+    if( ldebug )then
         write(*, *)
         write(*, *)'H2 Vstr :', v3h2*1.0d2*kj_in_kcal
         write(*, *)'H3 Vstr :', v3h3*1.0d2*kj_in_kcal
         write(*, *)'H4 Vstr :', v3h4*1.0d2*kj_in_kcal
         write(*, *)'H5 Vstr :', v3h5*1.0d2*kj_in_kcal
         write(*, *) 'VSTR FROM XPOT:', vstr*1.0d2*kj_in_kcal
-    end if
+    endif
     !
     ! calculate the out-of-plane bend terms
     !
@@ -2427,51 +2324,39 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch2, rch3, rch4, rch5, theta023)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch2, rch4, rch5, rch3, theta024)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch2, rch5, rch3, rch4, theta025)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch3, rch2, rch5, rch4, theta032)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch3, rch4, rch2, rch5, theta034)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch3, rch5, rch4, rch2, theta035)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch4, rch2, rch3, rch5, theta042)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch4, rch3, rch5, rch2, theta043)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch4, rch5, rch2, rch3, theta045)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch5, rch2, rch4, rch3, theta052)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch5, rch3, rch2, rch4, theta053)
-
     call gjtheta0(pi, tau, aphi, bphi, cphi, &
         & atheta, btheta, ctheta, r0ch, &
         & rch5, rch4, rch3, rch2, theta054)
-
     !     scat0=1.0d0
     !     theta023=theta023*scat0
     !     theta024=theta024*scat0
@@ -2485,43 +2370,34 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     !     theta052=theta052*scat0
     !     theta053=theta053*scat0
     !     theta054=theta054*scat0
-
     !
     ! calculate delta
     !
     call steckdel(bvch3, bvch4, bvch5, bvch3, d23)
     call steckdel(bvch3, bvch4, bvch5, bvch4, d24)
     call steckdel(bvch3, bvch4, bvch5, bvch5, d25)
-
     call steckdel(bvch5, bvch4, bvch2, bvch2, d32)
     call steckdel(bvch5, bvch4, bvch2, bvch4, d34)
     call steckdel(bvch5, bvch4, bvch2, bvch5, d35)
-
     call steckdel(bvch5, bvch2, bvch3, bvch2, d42)
     call steckdel(bvch5, bvch2, bvch3, bvch3, d43)
     call steckdel(bvch5, bvch2, bvch3, bvch5, d45)
-
     call steckdel(bvch2, bvch4, bvch3, bvch2, d52)
     call steckdel(bvch2, bvch4, bvch3, bvch3, d53)
     call steckdel(bvch2, bvch4, bvch3, bvch4, d54)
-
     delta23 = d23-theta023
     delta24 = d24-theta024
     delta25 = d25-theta025
-
     delta32 = d32-theta032
     delta34 = d34-theta034
     delta35 = d35-theta035
-
     delta42 = d42-theta042
     delta43 = d43-theta043
     delta45 = d45-theta045
-
     delta52 = d52-theta052
     delta53 = d53-theta053
     delta54 = d54-theta054
-
-    if(ldebug) then
+    if( ldebug )then
         write(iout, *)
         write(iout, *) 'theta0 and delta terms:'
         write(iout, *) 'H2-H3:', theta023, delta23
@@ -2530,58 +2406,51 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
         write(iout, *) 'H3-H4:', theta034, delta34
         write(iout, *) 'H3-H5:', theta035, delta35
         write(iout, *) 'H4-H5:', theta045, delta45
-    end if
+    endif
     !
     ! calculate fd and hd terms
     call calcfh(a3s, b3s, fd0, hd0, r0ch, rch2, rch3, rch4, rch5, fd2, hd2)
     call calcfh(a3s, b3s, fd0, hd0, r0ch, rch3, rch5, rch4, rch2, fd3, hd3)
     call calcfh(a3s, b3s, fd0, hd0, r0ch, rch4, rch5, rch2, rch3, fd4, hd4)
     call calcfh(a3s, b3s, fd0, hd0, r0ch, rch5, rch2, rch4, rch3, fd5, hd5)
-
-    if(ldebug) then
+    if( ldebug )then
         write(iout, *)
         write(iout, *)'FD and HD terms:'
         write(iout, *)'H2', fd2, hd2
         write(iout, *)'H3', fd3, hd3
         write(iout, *)'H4', fd4, hd4
         write(iout, *)'H5', fd5, hd5
-    end if
+    endif
     !
     ! calculate vop contributions for each H
     t1    = delta23*delta23
     t2    = delta24*delta24
     t3    = delta25*delta25
     voph2 = (fd2*(t1+t2+t3))+ ( hd2*((t1*t1)+(t2*t2)+(t3*t3)) )
-
     t1    = delta32*delta32
     t2    = delta34*delta34
     t3    = delta35*delta35
     voph3 = (fd3*(t1+t2+t3))+ ( hd3*((t1*t1)+(t2*t2)+(t3*t3)) )
-
     t1    = delta42*delta42
     t2    = delta43*delta43
     t3    = delta45*delta45
     voph4 = (fd4*(t1+t2+t3))+ ( hd4*((t1*t1)+(t2*t2)+(t3*t3)) )
-
     t1    = delta52*delta52
     t2    = delta53*delta53
     t3    = delta54*delta54
     voph5 = (fd5*(t1+t2+t3))+ ( hd5*((t1*t1)+(t2*t2)+(t3*t3)) )
-
     ! total vop contribution
     vop = voph2+voph3+voph4+voph5
-
-    if(ldebug) then
+    if( ldebug )then
         write(*, *)
         write(*, *)'H2 Vop : ', voph2*1.0d2*kj_in_kcal
         write(*, *)'H3 Vop : ', voph3*1.0d2*kj_in_kcal
         write(*, *)'H4 Vop : ', voph4*1.0d2*kj_in_kcal
         write(*, *)'H5 Vop : ', voph5*1.0d2*kj_in_kcal
         write(iout, *) 'VOP FROM XPOT :', vop*1.0d2*kj_in_kcal
-    end if
+    endif
     !
     ! Calculate in-plane terms
-
     ! get the k0ij terms
     call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
         & rch2, rch3, rch4, rch5, xk023)
@@ -2589,25 +2458,21 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
         & rch2, rch4, rch5, rch3, xk024)
     call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
         & rch2, rch5, rch3, rch4, xk025)
-
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,
     !    1               rch3,rch2,rch5,rch4,xk032)
     call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
         & rch3, rch4, rch2, rch5, xk034)
     call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
         & rch3, rch5, rch4, rch2, xk035)
-
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,
     !    1               rch4,rch2,rch3,rch5,xk042)
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,
     !    1               rch4,rch3,rch5,rch2,xk043)
     call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
         & rch4, rch5, rch2, rch3, xk045)
-
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,rch5,rch2,rch4,rch3,xk
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,rch5,rch3,rch2,rch4,xk
     !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,rch5,rch4,rch3,rch2,xk
-
     !
     ! get ki terms
     call calcvipk(aa1, aa2, aa3, aa4, r0ch, r0hh, rch2, rbh2, xk2)
@@ -2622,23 +2487,19 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
     theta34 = xangle(h3, c1, h4)
     theta35 = xangle(h3, c1, h5)
     theta45 = xangle(h4, c1, h5)
-
-    vip23 = xk023*xk2*xk3*(theta23-theta023)*(theta23-theta023)
-    vip24 = xk024*xk2*xk4*(theta24-theta024)*(theta24-theta024)
-    vip25 = xk025*xk2*xk5*(theta25-theta025)*(theta25-theta025)
-    vip34 = xk034*xk3*xk4*(theta34-theta034)*(theta34-theta034)
-    vip35 = xk035*xk3*xk5*(theta35-theta035)*(theta35-theta035)
-    vip45 = xk045*xk4*xk5*(theta45-theta045)*(theta45-theta045)
-
-    vip = 0.50d0*(vip23+vip24+vip25+vip34+vip35+vip45)
-
+    vip23   = xk023*xk2*xk3*(theta23-theta023)*(theta23-theta023)
+    vip24   = xk024*xk2*xk4*(theta24-theta024)*(theta24-theta024)
+    vip25   = xk025*xk2*xk5*(theta25-theta025)*(theta25-theta025)
+    vip34   = xk034*xk3*xk4*(theta34-theta034)*(theta34-theta034)
+    vip35   = xk035*xk3*xk5*(theta35-theta035)*(theta35-theta035)
+    vip45   = xk045*xk4*xk5*(theta45-theta045)*(theta45-theta045)
+    vip     = 0.50d0*(vip23+vip24+vip25+vip34+vip35+vip45)
     !
     ! remove H5 str term
     ! total potential in 10(5)Joules/mol and kcal/mol
     xpot      = vstr+vop+vip-v3h5-voph5-((vip25+vip35+vip45)*0.50d0)
     xpot_kcal = xpot*100.0d0*kj_in_kcal
-
-    if(ldebug) then
+    if( ldebug )then
         write(*, *)
         write(*, *)'H2-H3 Vip :', 0.50d0*vip23*1.0d2*kj_in_kcal
         write(*, *)'H2-H4 Vip :', 0.50d0*vip24*1.0d2*kj_in_kcal
@@ -2648,7 +2509,6 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
         write(*, *)'H4-H5 Vip :', 0.50d0*vip45*1.0d2*kj_in_kcal
         write(*, *) 'VIP FROM XPOT:', vip*1.0d2*kj_in_kcal
         write(*, *) 'VSTR+VIP+VOP :', (vstr+vip+vop)*1.0d2*kj_in_kcal
-
         write(*, *)
         write(*, *)'Energy after removing H5 term'
         write(*, *)'Vstr:', (vstr-v3h5)*1.0d2*kj_in_kcal
@@ -2656,9 +2516,8 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
         write(*, *)'Vip :', vip-((vip25+vip35+vip45)*0.50d0)* &
             & 1.0d2*kj_in_kcal
         write(*, *)'Total xpot:', xpot_kcal
-    end if
-
-    if(.false.) then
+    endif
+    if( .false. )then
         r(1)  = h2(1)/0.52918d0
         r(2)  = h2(2)/0.52918d0
         r(3)  = h2(3)/0.52918d0
@@ -2681,8 +2540,7 @@ subroutine xch5pot( np, para, rxncrd, c1, h2, h3, h4, h5, hb, xpot_kcal )
         !       vsurf=(vsurf-v3h5)*100.0d0*KJ_IN_KCAL
         write(*, *) 'VSURF:', vsurf*627.510d0
         write(*, *) 'MYVSURF:', (vstr+vop+vip)*0.03812d0*627.510d0
-    end if
-
+    endif
 end subroutine xch5pot
 
 !23456789
@@ -2714,7 +2572,6 @@ subroutine v3qj77( alpha, d1, d3, r0, r, vq, vj )
     double precision :: e1, e3
     z1 = dexp(-alpha*(r-r0))
     z2 = dexp(-2.0d0*alpha*(r-r0))
-
     e1 = d1*(z2-(2.0d0*z1))
     e3 = d3*(z2+(2.0d0*z1))
     vq = 0.50d0*(e1+e3)
@@ -2778,7 +2635,6 @@ subroutine calcfh( a3, b3, fd0, hd0, r0, ri, rj, rk, rl, fdi, hdi )
     s3l = 1.0d0-tanh( a3*(rl-r0)*(rl-b3)*(rl-b3) )
     fdi = (1.0d0-s3i)*s3j*s3k*s3l*fd0
     hdi = (1.0d0-s3i)*s3j*s3k*s3l*hd0
-
 end subroutine calcfh
 
 ! end of sub calcfh
@@ -2835,7 +2691,6 @@ subroutine gjtheta0( pi, tau, aphi, bphi, cphi, atheta, btheta, ctheta, &
     t1       = tau-(0.50d0*pi)
     t2       = tau-(2.0d0*pi/3.0d0)
     theta0ij = tau+(t1*s1)+(t2*s2)
-
 end subroutine gjtheta0
 
 ! end of gjtheta0
@@ -2877,7 +2732,7 @@ subroutine steckdel( v1, v2, v3, vi, deltai )
     do i=1, 3
         v21(i) = v2(i)-v1(i)
         v31(i) = v3(i)-v1(i)
-    end do
+    enddo
     !
     ! the normal to the plane containing
     ! points 1, 2, and 3 is given by
@@ -2897,15 +2752,13 @@ subroutine steckdel( v1, v2, v3, vi, deltai )
         ri   = ri+(vi(i)*vi(i))
         rn   = rn+(pn(i)*pn(i))
         doti = doti+(pn(i)*vi(i))
-    end do
+    enddo
     ! doti should be -ve by convension
     ! for right-handed set
-    doti = -dabs(doti)
-    ri   = dsqrt(ri)
-    rn   = dsqrt(rn)
-
+    doti   = -dabs(doti)
+    ri     = dsqrt(ri)
+    rn     = dsqrt(rn)
     deltai = dacos(doti/(ri*rn))
-
 end subroutine steckdel
 
 ! end of sub steckdel
@@ -2977,10 +2830,8 @@ subroutine calcvipk0( a1, b1, a2, b2, ak, kch3, r0ch, ri, rj, rk, rl, vipk0ij )
     s1j = 1.0d0-dtanh( a1*(rj-r0ch)*((rj-b1)**8) )
     s2k = 1.0d0-dtanh( a2*(rk-r0ch)*((rk-b2)**6) )
     s2l = 1.0d0-dtanh( a2*(rl-r0ch)*((rl-b2)**6) )
-
     ! calculate k0 using Eq. 9 of Ref. [2]
     vipk0ij = kch4+( kch4*((s1i*s1j)-1.0d0) ) +( (kch4-kch3)*((s2k*s2l)-1.0d0) )
-
 end subroutine calcvipk0
 
 ! end of sub. calcvipk0
@@ -3019,7 +2870,6 @@ subroutine xlimit( a, b, s, x0, x, y )
     cb = 0.50d0*(1.0d0+dtanh(s*r))
     ca = 1.0d0-cb
     y  = (ca*a)+(cb*b)
-
 end subroutine xlimit
 
 ! end of xlimit
@@ -3095,7 +2945,6 @@ subroutine csurf( engygs, r, degsdr, n3tm )
     !  calculate relative coordinates and bond lengths
     !
     en = 0.0d0
-
     call coorden
     !
     !  calculate switching functions
@@ -3138,7 +2987,7 @@ subroutine csurf( engygs, r, degsdr, n3tm )
     !
     do i=1, 18
         degsdr(i) = pdot(i)*0.0201723d0
-    end do
+    enddo
     !
 end subroutine csurf
 
@@ -3215,8 +3064,8 @@ subroutine coorden
         do i=1, 4
             tch(i, ind) = q(nc(ind))-q(nh(i, ind))
             tbh(i, ind) = q(nhb(ind))-q(nh(i, ind))
-        end do
-    end do
+        enddo
+    enddo
     !
     !  calculate bond lengths
     !
@@ -3224,7 +3073,7 @@ subroutine coorden
     do i=1, 4
         rch(i) = sqrt(tch(i, 1)*tch(i, 1)+tch(i, 2)*tch(i, 2)+ tch(i, 3)*tch(i, 3))
         rbh(i) = sqrt(tbh(i, 1)*tbh(i, 1)+tbh(i, 2)*tbh(i, 2)+ tbh(i, 3)*tbh(i, 3))
-    end do
+    enddo
 end subroutine coorden
 
 !
@@ -3305,8 +3154,8 @@ subroutine refxangles
         theta0(i, i) = 0.0d0
         do k=1, 4
             dtheta0(i, i, k) = 0.0d0
-        end do
-    end do
+        enddo
+    enddo
     !
     !  calculate reference xangles
     !
@@ -3364,9 +3213,9 @@ subroutine refxangles
             theta0(j, i) = theta0(i, j)
             do k=1, 4
                 dtheta0(j, i, k) = dtheta0(i, j, k)
-            end do
-        end do
-    end do
+            enddo
+        enddo
+    enddo
 end subroutine refxangles
 
 !
@@ -3456,13 +3305,13 @@ subroutine stretch( vstr )
     !  in to avoid overflow/underflow errors
     !
     arga = c1ch*(rav-r0ch)
-    if(arga.lt.19.0d0)then
+    if( arga .lt. 19.0d0 )then
         ach    = a1ch+b1ch*(tanh(arga)+1.0d0)*0.5d0
         dumach = b1ch*c1ch/(2.0d0*cosh(arga)**2)
     else
         ach    = a1ch+b1ch
         dumach = 0.0d0
-    end if
+    endif
     !
     !  calculate singlet: e1, triplet: e3 energies and vq and vj
     !  terms for each bond
@@ -3486,7 +3335,7 @@ subroutine stretch( vstr )
         vq(i) = vqch(i)+vqcb+vqbh(i)
         vj(i) = -sqrt(((vjch(i)-vjcb)**2+(vjcb-vjbh(i))**2 +(vjbh(i)-vjch(i))**2)*0.5d0)
         vstr  = vstr+vq(i)+vj(i)
-    end do
+    enddo
     !
     !  partial derivatives
     !  first we need the derivative of ach:
@@ -3495,8 +3344,8 @@ subroutine stretch( vstr )
         achdc(ind) = dumach*(tch(1, ind)/rch(1)+tch(2, ind)/rch(2) +tch(3, ind)/rch(3)+tch(4, ind)/rch(4))/4.0d0
         do i=1, 4
             achdh(i, ind) = -dumach*tch(i, ind)/rch(i)/4.0d0
-        end do
-    end do
+        enddo
+    enddo
     dumqcb = -acb*((d1cb+d3cb)*exp(-2.0d0*acb*(rcb-r0cb))- (d1cb-d3cb)*exp(-acb*(rcb-r0cb)))/rcb
     !
     !  calculate cartesian derivatives:
@@ -3550,15 +3399,15 @@ subroutine stretch( vstr )
             !
             do k=1, 3
                 j = i+k
-                if(j.gt.4)j=j-4
+                if( j .gt. 4 ) j=j-4
                 dumqhj=-achdh(j, ind)*(rch(i)-r0ch) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) -(d1ch-d3ch)*exp(-ach* &
                     & (rch(i)-r0ch)))
                 dumjhj=-achdh(j, ind)*(rch(i)-r0ch) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) -(d1ch+d3ch)*exp(-ach* &
                     & (rch(i)-r0ch)))*factj
                 pdot(nh(j, ind)) = pdot(nh(j, ind))+dumqhj +(vjch(i)-vjcb)*dumjhj -(vjbh(i)-vjch(i))*dumjhj
-            end do
-        end do
-    end do
+            enddo
+        enddo
+    enddo
 end subroutine stretch
 
 !
@@ -3642,22 +3491,22 @@ subroutine opbend( vop )
     !
     do i=1, 4
         j = i+1
-        if(j.gt.4)j=j-4
+        if( j .gt. 4 ) j=j-4
         k = j+1
-        if(k.gt.4)k=k-4
+        if( k .gt. 4 ) k=k-4
         l = k+1
-        if(l.gt.4)l=l-4
+        if( l .gt. 4 ) l=l-4
         !
         !  if i is an even number then we have switched the vectors
         !  from a right handed set to a left handed set
         !
         !  in this case we need to switch vectors k and l around
         !
-        if((i.eq.2).or.(i.eq.4))then
+        if( (i .eq. 2).or.(i .eq. 4) )then
             itemp = k
             k     = l
             l     = itemp
-        end if
+        endif
         !
         !  subroutine performs sum over j, k, l
         !  sum2 = sum delta**2
@@ -3667,7 +3516,7 @@ subroutine opbend( vop )
         sumd2(i) = sum2
         sumd4(i) = sum4
         vop      = vop+fdelta(i)*sumd2(i)+hdelta(i)*sumd4(i)
-    end do
+    enddo
     do i=1, 4
         do j=1, 4
             !
@@ -3680,9 +3529,9 @@ subroutine opbend( vop )
             do ind=1, 3
                 pdot(nh(j, ind)) = pdot(nh(j, ind))-tch(j, ind)*ddr/rch(j)
                 pdot(nc(ind))    = pdot(nc(ind))+tch(j, ind)*ddr/rch(j)
-            end do
-        end do
-    end do
+            enddo
+        enddo
+    enddo
 end subroutine opbend
 
 !
@@ -3802,10 +3651,10 @@ subroutine ipbend( vip )
                     pdot(nc(ind))=pdot(nc(ind)) +0.5d0*tch(k, ind)*dfdc(i, j, k)*dth(i,j)**2/rch(k) -fk0(i, j)*f1(i)* &
                         & f1(j)* dth0c*dth(i,j)
                     pdot(nhb(ind)) = pdot(nhb(ind)) +0.5d0*tbh(k, ind)*dfdh(i, j, k)*dth(i,j)**2/rbh(k)
-                end do
-            end do
-        end do
-    end do
+                enddo
+            enddo
+        enddo
+    enddo
 end subroutine ipbend
 
 !
@@ -3898,8 +3747,7 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
     do ind=1, 3
         a(ind) = q(nh(k, ind))-q(nh(j, ind))
         b(ind) = q(nh(l, ind))-q(nh(j, ind))
-    end do
-
+    enddo
     !##
     !        write(*,*)
     !        write(*,*) ' i,j,k,l : ',i,j,k,l
@@ -3928,21 +3776,20 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
     do ii=1, 3
         do ind=1, 3
             c(in(ii),ind) = -tch(in(ii), ind)/rch(in(ii))
-        end do
-    end do
+        enddo
+    enddo
     !##
     !
     !  argd is the dot product axb dot c
     !
     do ii=1, 3
-        argd(in(ii)) = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
-        argd(in(ii)) = argd(in(ii))/norma
-
+        argd(in(ii))  = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
+        argd(in(ii))  = argd(in(ii))/norma
         delta(in(ii)) = acos(argd(in(ii)))-theta0(i, in(ii))
         !##        write(*,*) 'theta0 ',i,in(ii),theta0(i,in(ii))
         sum2 = sum2+delta(in(ii))**2
         sum4 = sum4+delta(in(ii))**4
-    end do
+    enddo
     !
     !  derivatives of axb wrt hj:
     !
@@ -4002,7 +3849,7 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
         cdot(in(ii), 3, 1) = tch(in(ii), 1)*c(in(ii),3)/rch(in(ii))**2
         cdot(in(ii), 3, 2) = tch(in(ii), 2)*c(in(ii),3)/rch(in(ii))**2
         cdot(in(ii), 3, 3) = 1.0d0/rch(in(ii)) +tch(in(ii), 3)*c(in(ii),3)/rch(in(ii))**2
-    end do
+    enddo
     !
     do ii=1, 3
         do ind=1, 3
@@ -4035,19 +3882,18 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
                 atemp2(3) = daxb(in(jj), ind, 3)/norma-atemp1*axb(3)
                 !
                 !  atemp3 is daxb dot c(in(ii))
-
                 atemp3 = atemp2(1)*c(in(ii),1)+atemp2(2)*c(in(ii),2) +atemp2(3)*c(in(ii),3)
                 !
                 !  atemp4 is axb dot cdot
                 !
                 atemp4 = 0.0d0
-                if(ii.eq.jj)then
+                if( ii .eq. jj )then
                     !
                     !  ie deriv of c(in(ii)) wrt h(in(jj)) is non zero only for ii = jj
                     !
                     atemp4 = axb(1)*cdot(in(ii), 1, ind) +axb(2)*cdot(in(ii), 2, ind) +axb(3)*cdot(in(ii), 3, ind)
                     atemp4 = atemp4/norma
-                end if
+                endif
                 !
                 !  atemp5 is deriv of theta0(i,in(ii)) wrt to nh(in(jj),ind)
                 !
@@ -4069,9 +3915,9 @@ subroutine calcdelta( i, j, k, l, sum2, sum4 )
                 deldot = deldot-atemp5
                 pdot(nc(ind))=pdot(nc(ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)*delta(in(ii))**3* &
                     & deldot
-            end do
-        end do
-    end do
+            enddo
+        enddo
+    enddo
 end subroutine calcdelta
 
 !******************************************************
@@ -4186,8 +4032,8 @@ subroutine opforce
         do j=1, 4
             dfdelta(i, j) = dswitch(i,j)*fch3
             dhdelta(i, j) = dswitch(i,j)*hch3
-        end do
-    end do
+        enddo
+    enddo
 end subroutine opforce
 
 !
@@ -4273,7 +4119,6 @@ subroutine ipforce
     fk0(2, 3) = f0+f0*(s1(2)*s1(3)-1.0d0)+(f0-f2)*(s2(1)*s2(4)-1.0d0)
     fk0(2, 4) = f0+f0*(s1(2)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(3)-1.0d0)
     fk0(3, 4) = f0+f0*(s1(3)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(2)-1.0d0)
-
     !##
     !           write(*,*)
     !           write(*,*) 'f0    : ',f0
@@ -4283,7 +4128,6 @@ subroutine ipforce
     !           write(*,*) 's2(3) : ',s2(3)
     !           write(*,*) 's2(4) : ',s2(4)
     !           write(*,*)
-
     !
     !  derivative of fk0
     !
@@ -4327,7 +4171,6 @@ subroutine ipforce
         a1    = 1.0d0-exp(-arga1)
         a2    = aa2+aa3*exp(-arga2)
         f1(i) = a1*exp(-a2*(rch(i)-r0ch)**2)
-
         !           write(*,*) 'A1 :',a1
         !           write(*,*) 'A2 :',a2
         !
@@ -4337,7 +4180,7 @@ subroutine ipforce
         duma2    = -2.0d0*aa3*aa4*(rbh(i)-r0hh)*exp(-arga2)
         df1dc(i) = -2.0d0*(rch(i)-r0ch)*a1*a2*exp(-a2*(rch(i)-r0ch)**2)
         df1dh(i) = duma1*exp(-a2*(rch(i)-r0ch)**2) -duma2*(rch(i)-r0ch)**2*a1*exp(-a2*(rch(i)-r0ch)**2)
-    end do
+    enddo
     !
     !  derivative of total force constant f(i,j) wrt bond length rch(k)
     !  is given by dfdc(i,j,k)
@@ -4491,45 +4334,44 @@ subroutine switchf
     argmax = 19.0d0
     do i=1, 4
         args1 = a1s*(rch(i)-r0ch)*(rch(i)-b1s)**8
-        if(args1.lt.argmax)then
+        if( args1 .lt. argmax )then
             s1(i)  = 1.0d0-tanh(args1)
             ds1(i) = a1s*((rch(i)-b1s)**8 +8.0d0*(rch(i)-r0ch)*(rch(i)-b1s)**7)
             ds1(i) = -ds1(i)/cosh(args1)**2
         else
             s1(i)  = 0.0d0
             ds1(i) = 0.0d0
-        end if
+        endif
         !
         args2 = a2s*(rch(i)-r0ch)*(rch(i)-b2s)**6
-        if(args2.lt.argmax)then
+        if( args2 .lt. argmax )then
             s2(i)  = 1.0d0-tanh(args2)
             ds2(i) = a2s*((rch(i)-b2s)**6 +6.0d0*(rch(i)-r0ch)*(rch(i)-b2s)**5)
             ds2(i) = -ds2(i)/cosh(args2)**2
         else
             s2(i)  = 0.0d0
             ds2(i) = 0.0d0
-        end if
+        endif
         !##          write(*,*) i,s1(i),rch(i)
-
         !
         !  calculate s3 and ds3
         !
         args3 = a3s*(rch(i)-r0ch)*(rch(i)-b3s)**2
-        if (args3.lt.argmax)then
+        if( args3 .lt. argmax )then
             s3(i)  = 1.0d0-tanh(args3)
             ds3(i) = a3s*(3.0d0*rch(i)**2-2.0d0*rch(i)*(r0ch+2.0d0*b3s) +b3s*(b3s+2.0d0*r0ch))
             ds3(i) = -ds3(i)/cosh(args3)**2
         else
             s3(i)  = 0.0d0
             ds3(i) = 0.0d0
-        end if
+        endif
         !
         !  calculate sphi and dsphi
         !
         !  condition here is on the bondlength rch(i)
         !  st argsphi is lt approx 19.0d0
         !
-        if(rch(i).lt.3.8d0)then
+        if( rch(i) .lt. 3.8d0 )then
             argsphi  = aphi*(rch(i)-r0ch)*exp(bphi*(rch(i)-cphi)**3)
             sphi(i)  = 1.0d0-tanh(argsphi)
             dsphi(i) = aphi*(1.0d0+3.0d0*bphi*(rch(i)-r0ch) *(rch(i)-cphi)**2)
@@ -4538,11 +4380,11 @@ subroutine switchf
         else
             sphi(i)  = 0.0d0
             dsphi(i) = 0.0d0
-        end if
+        endif
         !
         !  calculate stheta and dstheta
         !
-        if(rch(i).lt.3.8d0)then
+        if( rch(i) .lt. 3.8d0 )then
             argstheta  = atheta*(rch(i)-r0ch)*exp(btheta*(rch(i)-ctheta)**3)
             stheta(i)  = 1.0d0-tanh(argstheta)
             dstheta(i) = atheta*(1.0d0+3.0d0*btheta*(rch(i)-r0ch) *(rch(i)-ctheta)**2)
@@ -4551,8 +4393,8 @@ subroutine switchf
         else
             stheta(i)  = 0.0d0
             dstheta(i) = 0.0d0
-        end if
-    end do
+        endif
+    enddo
 end subroutine switchf
 
 !
@@ -4609,14 +4451,14 @@ subroutine prepot
     !
     !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
     !
-    if(natoms.gt.25) then
+    if( natoms .gt. 25 )then
         write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
         stop
-    end if
+    endif
     !
     do i=1, 5
         ref(i) = ' '
-    end do
+    enddo
     !
     ref(1) = 'M. J. T. Jordan and R. G. Gilbert'
     ref(2) = 'J. Chem. Phys. Vol. 102, p. 5669, 1995'
@@ -4640,8 +4482,8 @@ subroutine prepot
         nhb(ind) = 3*nnb+icount
         do i=1, 4
             nh(i, ind) = 3*nnh(i)+icount
-        end do
-    end do
+        enddo
+    enddo
     !
     !  convert to appropriate units:
     !
@@ -4672,7 +4514,6 @@ end subroutine prepot
 !> @brief Evaluate CSETUP for the C2H7_VBMM potential.
 subroutine csetup( n3tm )
     !       dummy subroutine to make the code compatable with chk.f
-
     implicit none
     integer :: n3tm
 end subroutine csetup
@@ -4797,22 +4638,18 @@ subroutine xgaussfit( r, fit )
     r0(6) = (r0(2)+r0(3))*0.50d0
     do i=1, ng
         alpha(i) = 0.250d0
-    end do
-
+    enddo
     cf(1) = -1178.890067483491520d0
     cf(2) = 32.80653355230102620d0
     cf(3) = 10.31188564665787060d0
     cf(4) = -159.8465369524321600d0
     cf(5) = 17.33838608018073660d0
     cf(6) = 1280.367802966489080d0
-
-    ans = 0.0d0
+    ans   = 0.0d0
     do i=1, ng
         d   = r-r0(i)
         fx  = dexp(-alpha(i)*d*d)
         ans = ans+(cf(i)*fx)
-    end do
-
+    enddo
     fit = ans
-
 end subroutine xgaussfit

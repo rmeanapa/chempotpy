@@ -24,6 +24,11 @@ UNIT_END = re.compile(
     r"^end\s*(?:module|program|block\s+data|subroutine|function)?\b",
     flags=re.IGNORECASE,
 )
+SOURCE_UNIT_END = re.compile(
+    r"^end(?:\s*(?:module|program|block\s+data|subroutine|function)"
+    r"(?:\s+[a-z][a-z0-9_]*)?)?$",
+    flags=re.IGNORECASE,
+)
 PROCEDURE_DECLARATION = re.compile(
     r"^(?P<indent>\s*)(?!end\b)"
     r"(?:(?:recursive|pure|elemental|impure|module)\s+)*"
@@ -378,7 +383,196 @@ def normalize_end_statements(source_text: str) -> str:
             match.group("suffix"),
         )
 
-    return pattern.sub(replace, source_text)
+    normalized = pattern.sub(replace, source_text)
+    normalized = re.sub(
+        r"^(?P<prefix>\s*(?:\d+\s+)?)end\s+if\b",
+        r"\g<prefix>endif",
+        normalized,
+        flags=re.IGNORECASE | re.MULTILINE,
+    )
+    normalized = re.sub(
+        r"^(?P<prefix>\s*(?:\d+\s+)?)end\s+do\b",
+        r"\g<prefix>enddo",
+        normalized,
+        flags=re.IGNORECASE | re.MULTILINE,
+    )
+    return normalized
+
+
+def normalize_call_spacing(source_text: str) -> str:
+    """Remove inner edge spaces from parenthesized CALL statements."""
+
+    characters = list(source_text)
+    boundaries = []
+    quote = ""
+    comment = False
+    index = 0
+    call_pattern = re.compile(
+        r"call\s+[a-z][a-z0-9_]*(?:%[a-z][a-z0-9_]*)*\s*\(",
+        re.IGNORECASE,
+    )
+    while index < len(source_text):
+        character = source_text[index]
+        if comment:
+            if character == "\n":
+                comment = False
+            index += 1
+            continue
+        if quote:
+            if character == quote:
+                if index + 1 < len(source_text) and source_text[index + 1] == quote:
+                    index += 2
+                    continue
+                quote = ""
+            index += 1
+            continue
+        if character in "'\"":
+            quote = character
+            index += 1
+            continue
+        if character == "!":
+            comment = True
+            index += 1
+            continue
+        match = call_pattern.match(source_text, index)
+        if match is None or (
+            index > 0 and re.match(r"[a-z0-9_]", source_text[index-1], re.I)
+        ):
+            index += 1
+            continue
+        opening = source_text.rfind("(", index, match.end())
+        depth = 1
+        cursor = opening+1
+        nested_quote = ""
+        nested_comment = False
+        while cursor < len(source_text) and depth:
+            current = source_text[cursor]
+            if nested_comment:
+                if current == "\n":
+                    nested_comment = False
+            elif nested_quote:
+                if current == nested_quote:
+                    if cursor + 1 < len(source_text) and source_text[cursor + 1] == nested_quote:
+                        cursor += 1
+                    else:
+                        nested_quote = ""
+            elif current in "'\"":
+                nested_quote = current
+            elif current == "!":
+                nested_comment = True
+            elif current == "(":
+                depth += 1
+            elif current == ")":
+                depth -= 1
+            cursor += 1
+        if depth == 0:
+            boundaries.append((opening, cursor-1))
+            index = cursor
+        else:
+            index = opening+1
+
+    for opening, closing in reversed(boundaries):
+        left = opening+1
+        while left < closing and characters[left] in " \t":
+            left += 1
+        if left < closing and characters[left] not in "&\r\n":
+            del characters[opening+1:left]
+            removed = left-(opening+1)
+            closing -= removed
+        right = closing
+        while right > opening and characters[right-1] in " \t":
+            right -= 1
+        del characters[right:closing]
+    return "".join(characters)
+
+
+def normalize_if_spacing(source_text: str) -> str:
+    """Space IF conditions and relational operators consistently."""
+
+    output = []
+    header = re.compile(
+        r"^(?P<indent>\s*)(?P<label>[a-z][a-z0-9_]*\s*:\s*)?"
+        r"(?P<keyword>if|else\s*if|elseif)\s*\(",
+        re.IGNORECASE,
+    )
+    relation = re.compile(
+        r"\s*(\.eq\.|\.ne\.|\.lt\.|\.le\.|\.gt\.|\.ge\.|"
+        r"==|/=|<=|>=|<|>)\s*",
+        re.IGNORECASE,
+    )
+
+    def space_relations(condition: str) -> str:
+        pieces = []
+        code_piece = []
+        quote = ""
+        index = 0
+        while index < len(condition):
+            character = condition[index]
+            if quote:
+                pieces.append(character)
+                if character == quote:
+                    if index + 1 < len(condition) and condition[index + 1] == quote:
+                        pieces.append(condition[index + 1])
+                        index += 1
+                    else:
+                        quote = ""
+            elif character in "'\"":
+                if code_piece:
+                    pieces.append(relation.sub(r" \1 ", "".join(code_piece)))
+                    code_piece = []
+                quote = character
+                pieces.append(character)
+            else:
+                code_piece.append(character)
+            index += 1
+        if code_piece:
+            pieces.append(relation.sub(r" \1 ", "".join(code_piece)))
+        return "".join(pieces)
+
+    for line in source_text.splitlines():
+        code = code_without_comment(line)
+        comment = line[len(code):]
+        match = header.match(code)
+        if match is None:
+            output.append(line)
+            continue
+        opening = match.end()-1
+        depth = 1
+        quote = ""
+        closing = opening+1
+        while closing < len(code) and depth:
+            character = code[closing]
+            if quote:
+                if character == quote:
+                    quote = ""
+            elif character in "'\"":
+                quote = character
+            elif character == "(":
+                depth += 1
+            elif character == ")":
+                depth -= 1
+            closing += 1
+        if depth:
+            output.append(line)
+            continue
+        condition = code[opening+1:closing-1].strip()
+        condition = space_relations(condition)
+        suffix = code[closing:].strip()
+        keyword = match.group("keyword").lower()
+        if keyword == "elseif":
+            keyword = "else if"
+        prefix = "{}{}{}( {} )".format(
+            match.group("indent"), match.group("label") or "", keyword, condition
+        )
+        if suffix.lower().startswith("then"):
+            remainder = suffix[4:].strip()
+            rebuilt = prefix + "then" + ((" " + remainder) if remainder else "")
+        elif suffix:
+            rebuilt = prefix + " " + suffix
+        else:
+            rebuilt = prefix
+        output.append(rebuilt + comment)
+    return "\n".join(output) + "\n"
 
 
 def normalized_code(line: str) -> tuple[str | None, str]:
@@ -833,24 +1027,30 @@ def combine_initialization_assignments(
     return combined
 
 
-def ensure_unit_separation(lines: Sequence[str]) -> List[str]:
-    """Keep exactly one blank line between top-level source units."""
+def normalize_unit_blank_lines(lines: Sequence[str]) -> List[str]:
+    """Remove internal blanks and separate top-level source units once."""
 
-    separated = []
-    unit_end = re.compile(
-        r"^\s*(?:end\s+(?:subroutine|function|module|program|block\s+data)"
-        r"(?:\s+[a-z][a-z0-9_]*)?|end)\s*$",
-        re.IGNORECASE,
-    )
-    for index, line in enumerate(lines):
-        separated.append(line)
-        if (
-            unit_end.match(line)
-            and index + 1 < len(lines)
-            and lines[index + 1].strip()
-        ):
-            separated.append("")
-    return separated
+    normalized = []
+    depth = 0
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            if depth == 0 and normalized and normalized[-1].strip():
+                normalized.append("")
+            continue
+        code = normalized_code(line)[1]
+        ending = SOURCE_UNIT_END.match(code) is not None
+        starting = UNIT_START.match(code) is not None
+        if ending:
+            depth = max(0, depth-1)
+        normalized.append(line)
+        if ending and depth == 0:
+            normalized.append("")
+        if starting:
+            depth += 1
+    while normalized and not normalized[-1].strip():
+        normalized.pop()
+    return normalized
 
 
 def remove_terminal_returns(lines: Sequence[str]) -> List[str]:
@@ -1244,6 +1444,8 @@ def format_source_text(source_text: str) -> str:
     source_text = normalize_comma_spacing(source_text)
     source_text = compact_array_commas(source_text)
     source_text = normalize_end_statements(source_text)
+    source_text = normalize_call_spacing(source_text)
+    source_text = normalize_if_spacing(source_text)
     source_text = source_text.expandtabs(4)
     source_text = normalize_procedures(source_text)
     source_text = "\n".join(
@@ -1307,6 +1509,7 @@ def format_source_text(source_text: str) -> str:
             if opened is not None:
                 stack.append(opened)
 
+    output = normalize_unit_blank_lines(output)
     output = order_initial_declarations(output)
     output = align_use_only(output)
     output = align_declarations(output)
@@ -1317,7 +1520,6 @@ def format_source_text(source_text: str) -> str:
     output = compact_unit_headers(output)
     output = compact_specification_sections(output)
     output = combine_initialization_assignments(output)
-    output = ensure_unit_separation(output)
     return "\n".join(output) + "\n"
 
 

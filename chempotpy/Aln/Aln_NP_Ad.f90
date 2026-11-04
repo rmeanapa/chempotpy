@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_NP_Ad potential.
@@ -123,7 +123,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     a3b  = 0.215461507389864804
     au2b = 0.138211749991007299
     bu2b = 6.50000000000000000/autoang
-
     ! Initialize arrays
     do 99998 i = 1, natom
         dvdx(i) = 0.0d0
@@ -131,7 +130,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
         dvdz(i) = 0.0d0
         v       = 0.d0
     99998 continue
-
     ! do S term, needs xk1,xk2,xk3
     do 510 i = 1, natom
         do 515 j = i + 1, natom
@@ -141,15 +139,15 @@ subroutine pot( x, y, z, v, natom, maxatom )
             d1_w = dx * dx + dy * dy + dz * dz
             d2_v = sqrt(d1_w)
             rij  = d2_v
-            if (rij .ge. bu2) goto 515
+            if( rij .ge. bu2 ) goto 515
             do k = 1, natom
                 gxs(k) = 0.0d0
                 gys(k) = 0.0d0
                 gzs(k) = 0.0d0
-            end do
+            enddo
             s = 0.d0
             do 512 l = 1, natom
-                if (l .eq. j .or. l .eq. i) goto 512
+                if( l .eq. j .or. l .eq. i ) goto 512
                 dx   = x(i) - x(l)
                 dy   = y(i) - y(l)
                 dz   = z(i) - z(l)
@@ -162,86 +160,74 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 d1_w = dx * dx + dy * dy + dz * dz
                 d2_v = sqrt(d1_w)
                 rjl  = d2_v
-                if (rjl .ge. bu2) goto 512
-                if (ril .ge. bu2) goto 512
-
-                rrr   = (ril + rjl) / rij
-                d3_v  = 1d0 - rjl / bu2
-                d6_b1 = -au23 / (d3_v**2 * bu2)
-                ac    = au23 * (1d0 - 1.d0/d3_v)
-                d4_v  = 1d0 - rij / bu2
-                d5_v  = 1d0 / d4_v
-                d8_b1 = (-((-au23) * ((-d5_v) / d4_v))) * (1.0d0 / bu2)
-                ac    = ac + au23 * (1d0 - d5_v)
-                d4_v  = 1d0 - ril / bu2
-                d5_v  = 1d0 / d4_v
-                d8_b2 = (-((-au23) * ((-d5_v) / d4_v))) * (1.0d0 / bu2)
-                ac    = ac + au23 * (1d0 - d5_v)
-                term  = xk1 * dexp(-xk2 * rrr ** xk3 + ac)
-                d5_b  = -xk2 * xk3 * rrr ** ( xk3 - 1.0d0)
-                d6_b  = d5_b * (1.0d0 / rij) * term
-                d7_b  = -d5_b * (rrr / rij) * term
-
+                if( rjl .ge. bu2 ) goto 512
+                if( ril .ge. bu2 ) goto 512
+                rrr    = (ril + rjl) / rij
+                d3_v   = 1d0 - rjl / bu2
+                d6_b1  = -au23 / (d3_v**2 * bu2)
+                ac     = au23 * (1d0 - 1.d0/d3_v)
+                d4_v   = 1d0 - rij / bu2
+                d5_v   = 1d0 / d4_v
+                d8_b1  = (-((-au23) * ((-d5_v) / d4_v))) * (1.0d0 / bu2)
+                ac     = ac + au23 * (1d0 - d5_v)
+                d4_v   = 1d0 - ril / bu2
+                d5_v   = 1d0 / d4_v
+                d8_b2  = (-((-au23) * ((-d5_v) / d4_v))) * (1.0d0 / bu2)
+                ac     = ac + au23 * (1d0 - d5_v)
+                term   = xk1 * dexp(-xk2 * rrr ** xk3 + ac)
+                d5_b   = -xk2 * xk3 * rrr ** ( xk3 - 1.0d0)
+                d6_b   = d5_b * (1.0d0 / rij) * term
+                d7_b   = -d5_b * (rrr / rij) * term
                 gxs(i) = gxs(i) + (term*d8_b1+d7_b)*(x(i)-x(j))/rij
                 gxs(i) = gxs(i) + (term*d8_b2+d6_b)*(x(i)-x(l))/ril
                 gxs(j) = gxs(j) + (term*d6_b1+d6_b)*(x(j)-x(l))/rjl
                 gxs(j) = gxs(j) + (term*d8_b1+d7_b)*(x(j)-x(i))/rij
                 gxs(l) = gxs(l) + (term*d8_b2+d6_b)*(x(l)-x(i))/ril
                 gxs(l) = gxs(l) + (term*d6_b1+d6_b)*(x(l)-x(j))/rjl
-
                 gys(i) = gys(i) + (term*d8_b1+d7_b)*(y(i)-y(j))/rij
                 gys(i) = gys(i) + (term*d8_b2+d6_b)*(y(i)-y(l))/ril
                 gys(j) = gys(j) + (term*d6_b1+d6_b)*(y(j)-y(l))/rjl
                 gys(j) = gys(j) + (term*d8_b1+d7_b)*(y(j)-y(i))/rij
                 gys(l) = gys(l) + (term*d8_b2+d6_b)*(y(l)-y(i))/ril
                 gys(l) = gys(l) + (term*d6_b1+d6_b)*(y(l)-y(j))/rjl
-
                 gzs(i) = gzs(i) + (term*d8_b1+d7_b)*(z(i)-z(j))/rij
                 gzs(i) = gzs(i) + (term*d8_b2+d6_b)*(z(i)-z(l))/ril
                 gzs(j) = gzs(j) + (term*d6_b1+d6_b)*(z(j)-z(l))/rjl
                 gzs(j) = gzs(j) + (term*d8_b1+d7_b)*(z(j)-z(i))/rij
                 gzs(l) = gzs(l) + (term*d8_b2+d6_b)*(z(l)-z(i))/ril
                 gzs(l) = gzs(l) + (term*d6_b1+d6_b)*(z(l)-z(j))/rjl
-
-                s = s + term
-
+                s      = s + term
             512 continue
-
             d2_v = tanh (s)
             d1_p = 1.0d0 - ( d2_v *  d2_v)
             fs   = d2_v
-
             ! effective two-body
             rr    = rij
             rhob  = rr-reb
             polyb = 1.d0+a1b*rhob+a2b*rhob**2+a3b*rhob**3
             eeb   = dexp(-a1b*rhob)
             cob   = 0.d0
-            if (rr.le.bu2b) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
+            if( rr .le. bu2b ) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
             tmpb    = deb*eeb*polyb*cob
             dcobdrr = 0.d0
-            if (rr.le.bu2b) dcobdrr=(-cob/bu2b)*au2b/(1.d0-rr/bu2b)**2
+            if( rr .le. bu2b ) dcobdrr=(-cob/bu2b)*au2b/(1.d0-rr/bu2b)**2
             dpolybdrr = a1b+2.d0*a2b*rhob+3.d0*a3b*rhob**2
             deebdrr   = -a1b*eeb
             dtmpbdrr  = deb*(eeb*polyb*dcobdrr+eeb*dpolybdrr*cob +deebdrr*polyb*cob)
-
-            dvdx(i) = dvdx(i) + dtmpbdrr*(x(i)-x(j))/rr*fs
-            dvdx(j) = dvdx(j) + dtmpbdrr*(x(j)-x(i))/rr*fs
-            dvdy(i) = dvdy(i) + dtmpbdrr*(y(i)-y(j))/rr*fs
-            dvdy(j) = dvdy(j) + dtmpbdrr*(y(j)-y(i))/rr*fs
-            dvdz(i) = dvdz(i) + dtmpbdrr*(z(i)-z(j))/rr*fs
-            dvdz(j) = dvdz(j) + dtmpbdrr*(z(j)-z(i))/rr*fs
-
+            dvdx(i)   = dvdx(i) + dtmpbdrr*(x(i)-x(j))/rr*fs
+            dvdx(j)   = dvdx(j) + dtmpbdrr*(x(j)-x(i))/rr*fs
+            dvdy(i)   = dvdy(i) + dtmpbdrr*(y(i)-y(j))/rr*fs
+            dvdy(j)   = dvdy(j) + dtmpbdrr*(y(j)-y(i))/rr*fs
+            dvdz(i)   = dvdz(i) + dtmpbdrr*(z(i)-z(j))/rr*fs
+            dvdz(j)   = dvdz(j) + dtmpbdrr*(z(j)-z(i))/rr*fs
             do k = 1, natom
                 dvdx(k) = dvdx(k) + d1_p*tmpb*gxs(k)
                 dvdy(k) = dvdy(k) + d1_p*tmpb*gys(k)
                 dvdz(k) = dvdz(k) + d1_p*tmpb*gzs(k)
-            end do
-
+            enddo
             v = v + tmpb * d2_v
         515 continue
     510 continue
-
     ! CALCULATE CN FUNCTION
     g1e = dexp(g1)
     do 20 i = 1, natom
@@ -249,17 +235,17 @@ subroutine pot( x, y, z, v, natom, maxatom )
             gxgcorr(j, i) = 0.0d0
             gygcorr(j, i) = 0.0d0
             gzgcorr(j, i) = 0.0d0
-        end do
+        enddo
         gcorr(i) = 0.d0
         do 21 j = 1, natom
-            if (i .eq. j) goto 21
+            if( i .eq. j ) goto 21
             dx   = x(i) - x(j)
             dy   = y(i) - y(j)
             dz   = z(i) - z(j)
             d1_w = dx * dx + dy * dy + dz * dz
             d2_v = sqrt(d1_w)
             rij  = d2_v
-            if (rij .ge. g2) goto 21
+            if( rij .ge. g2 ) goto 21
             d3_v          = 1d0 - rij / g2
             d4_v          = (-g1) / d3_v
             d4_b          = (-((-d4_v) / d3_v)) * (1.0d0 / g2)
@@ -278,22 +264,20 @@ subroutine pot( x, y, z, v, natom, maxatom )
         21 continue
         gcorr(i) = gcorr(i) * g1e
     20 continue
-
     !     then calculate CN term
     do 30 i = 1, natom
         do 31 j = 1, natom
-            if (i.eq.j) goto 31
+            if( i .eq. j ) goto 31
             dx   = x(i) - x(j)
             dy   = y(i) - y(j)
             dz   = z(i) - z(j)
             d1_w = dx * dx + dy * dy + dz * dz
             d2_v = sqrt(d1_w)
             rij  = d2_v
-            if (rij.ge.bu2b) goto 31
-
+            if( rij .ge. bu2b ) goto 31
             term = 0.d0
             gdum = 0.d0
-            if (rij.ge.g2) goto 32
+            if( rij .ge. g2 ) goto 32
             d3_v = 1.d0-rij/g2
             d4_v = 1.d0/d3_v
             d6_b = -g1*d4_v/(d3_v*g2)
@@ -303,9 +287,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
             gdum = d1_p * d6_b /rij
             term = d2_v
             32 continue
-
             cz1 = (gcorr(i) - term) / gzero
-            if (cz1.gt.1.d-20) then
+            if( cz1 .gt. 1.d-20 )then
                 d2_v = cz1 ** ( gu2 - 2.0d0)
                 d2_v = d2_v * cz1
                 d1_p = gu2 *  d2_v
@@ -314,13 +297,12 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 cz1  = 0.d0
                 d2_v = 0.d0
                 d1_p = 0.d0
-            end if
+            endif
             d3_v  = 1d0 + d2_v
             d4_ba = -d1_p / d3_v**2
             es1   = 1d0 / d3_v
-
-            cz2 = (gcorr(j) - term) / gzero
-            if (cz2.gt.1.d-20) then
+            cz2   = (gcorr(j) - term) / gzero
+            if( cz2 .gt. 1.d-20 )then
                 d2_v = cz2 ** ( gu2 - 2.0d0)
                 d2_v = d2_v * cz2
                 d1_p = gu2 *  d2_v
@@ -329,41 +311,37 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 cz2  = 0.d0
                 d2_v = 0.d0
                 d1_p = 0.d0
-            end if
+            endif
             d3_v  = 1d0 + d2_v
             d4_v  = 1d0 / d3_v
             d4_bb = (-d4_v) / d3_v * d1_p
             ec1   = d4_v
-
-            tt1 = du2 * ec1 * d4_ba
-            tt2 = du2 * es1 * d4_bb
-
+            tt1   = du2 * ec1 * d4_ba
+            tt2   = du2 * es1 * d4_bb
             ! modified two-body
             rr    = rij
             rhob  = rr-reb
             polyb = 1.d0+a1b*rhob+a2b*rhob**2+a3b*rhob**3
             eeb   = dexp(-a1b*rhob)
             cob   = 0.d0
-            if (rr.le.bu2b) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
+            if( rr .le. bu2b ) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
             tmpb    = 0.5d0*deb*eeb*polyb*cob
             dcobdrr = 0.d0
-            if (rr.le.bu2b) dcobdrr=(-cob/bu2b)*au2b/(1.d0-rr/bu2b)**2
+            if( rr .le. bu2b ) dcobdrr=(-cob/bu2b)*au2b/(1.d0-rr/bu2b)**2
             dpolybdrr = a1b+2.d0*a2b*rhob+3.d0*a3b*rhob**2
             deebdrr   = -a1b*eeb
             dtmpbdrr  = 0.5d0*deb*(eeb*polyb*dcobdrr+eeb*dpolybdrr*cob +deebdrr*polyb*cob)
-
             do k = 1, natom
                 dvdx(k) = dvdx(k) - tmpb*(tt2*gxgcorr(k, j)+tt1*gxgcorr(k, i))/gzero
                 dvdy(k) = dvdy(k) - tmpb*(tt2*gygcorr(k, j)+tt1*gygcorr(k, i))/gzero
                 dvdz(k) = dvdz(k) - tmpb*(tt2*gzgcorr(k, j)+tt1*gzgcorr(k, i))/gzero
-            end do
+            enddo
             dvdx(i) = dvdx(i)+tmpb*(tt2+tt1)*gdum/gzero*(x(i)-x(j))
             dvdx(j) = dvdx(j)-tmpb*(tt2+tt1)*gdum/gzero*(x(i)-x(j))
             dvdy(i) = dvdy(i)+tmpb*(tt2+tt1)*gdum/gzero*(y(i)-y(j))
             dvdy(j) = dvdy(j)-tmpb*(tt2+tt1)*gdum/gzero*(y(i)-y(j))
             dvdz(i) = dvdz(i)+tmpb*(tt2+tt1)*gdum/gzero*(z(i)-z(j))
             dvdz(j) = dvdz(j)-tmpb*(tt2+tt1)*gdum/gzero*(z(i)-z(j))
-
             fcn     = du2 * (es1 * ec1 - 1d0)
             dvdx(i) = dvdx(i) - dtmpbdrr*(x(i)-x(j))/rr*fcn
             dvdx(j) = dvdx(j) - dtmpbdrr*(x(j)-x(i))/rr*fcn
@@ -371,12 +349,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dvdy(j) = dvdy(j) - dtmpbdrr*(y(j)-y(i))/rr*fcn
             dvdz(i) = dvdz(i) - dtmpbdrr*(z(i)-z(j))/rr*fcn
             dvdz(j) = dvdz(j) - dtmpbdrr*(z(j)-z(i))/rr*fcn
-
-            v = v - tmpb * fcn
-
+            v       = v - tmpb * fcn
         31 continue
     30 continue
-
     ! pairwise term
     do 99989 i = 1, natom
         do 99990 j = i + 1, natom
@@ -385,11 +360,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dz   = z(i) - z(j)
             d1_w = dx * dx + dy * dy + dz * dz
             d2_v = sqrt(d1_w)
-
             d1_p = 1.0d0 / (2.0d0 *  d2_v)
             g_rr = d1_p * 2.d0
             rr   = d2_v
-            if (rr .gt. bu2) goto 99990
+            if( rr .gt. bu2 ) goto 99990
             g_rho  = g_rr
             rho    = rr - re
             d4_v   = rho * rho
@@ -408,7 +382,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
             ee     = d2_v
             g_co   = 0.0d0
             co     = 0.d0
-            if (rr .le. bu2) then
+            if( rr .le. bu2 )then
                 d3_v = 1.d0 - rr / bu2
                 d4_v = 1.d0 / d3_v
                 d6_b = (-((-au2) * ((-d4_v) / d3_v))) * (1.0d0 / bu2)
@@ -417,7 +391,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 d1_p = d2_v
                 g_co = d1_p * d6_b * g_rr
                 co   = d2_v
-            end if
+            endif
             d2_v    = de * ee
             d4_v    = d2_v * poly
             d5_b    = co * d2_v

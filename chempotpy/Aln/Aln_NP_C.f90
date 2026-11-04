@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_NP_C potential.
@@ -62,7 +62,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: aa, alpha, bb, beta, cc, dx, dy, dz, ff, p1, p2, phi, rho, &
         & rr, rrel, rstar, v, x, y, z
@@ -76,34 +75,28 @@ subroutine pot( x, y, z, v, natom, maxatom )
     aa    = 0.716877851705074343 / autoev
     bb    = 0.667088456913949440e-01 / autoev
     cc    = 0.333776366433971738 / autoev
-
-    v = 0.d0
-
+    v     = 0.d0
     ! pairwise term
     phi = 0.d0
     ff  = 0.d0
     do 5 i=1, natom
-
         rho = 0.d0
         do 6 j=1, natom
-            if (j.ne.i) then
+            if( j .ne. i )then
                 dx   = x(i)-x(j)
                 dy   = y(i)-y(j)
                 dz   = z(i)-z(j)
                 rr   = dsqrt(dx*dx+dy*dy+dz*dz)
                 rrel = rr-rstar
                 rho  = rho+dexp(-beta*rrel)
-            end if
-            if(i.gt.j) then
+            endif
+            if( i .gt. j )then
                 p1  = 2.d0*bb*dexp(-0.5d0*beta*rrel)
                 p2  = -cc*(1.d0+alpha*rrel)*dexp(-alpha*rrel)
                 phi = phi+p1+p2
-            end if
+            endif
         6 continue
-
         ff = ff-aa*dsqrt(rho)
     5 continue
-
     v = phi+ff
-
 end subroutine pot

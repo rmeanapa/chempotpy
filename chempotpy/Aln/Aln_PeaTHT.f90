@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_PeaTHT potential.
@@ -57,7 +57,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: aa, cote1, cote2, cote3, dx, dy, dz, em, en, r0, r1, r2, r3, &
         & rel, rr, sig, u, um, un, utr, v, x, y, z, zet
@@ -72,8 +71,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
     em  = 12.d0
     sig = (en/em)**(1.d0/(em-en))*r0
     zet = 2241.d0/(autoev*autoang**9)
-
-    v = 0d0
+    v   = 0d0
     !     calculate energy of two-body interactions
     um = 0.d0
     un = 0.d0
@@ -89,10 +87,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
         3 continue
     2 continue
     u = aa*(um-un)
-
     !  2. calculate energy of three-body interactions
     utr = 0
-    if(natom.eq.2) go to 7
+    if( natom .eq. 2 ) go to 7
     do 6 i=1, natom-2
         do 4 j=i+1, natom-1
             do 5 m=j+1, natom

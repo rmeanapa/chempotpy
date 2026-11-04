@@ -46,34 +46,27 @@ subroutine pes( x, igrad, path, p, g, d )
     logical, save                   :: first_time_data=.true.
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     ! x: H, O, Br order
     r_obr = cartesian_distance(x(2,:), x(3,:))
     !      r_OBr=r_OBr/legacy_bohr_to_angstrom
-
     r_oh = cartesian_distance(x(1,:), x(2,:))
     !      r_OH=r_OH/legacy_bohr_to_angstrom
-
     r_hbr = cartesian_distance(x(1,:), x(3,:))
     !      r_HBr=r_HBr/legacy_bohr_to_angstrom
-
     do iatom=1, natoms
         do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     r(1) = r_oh
     r(2) = r_hbr
     r(3) = r_obr
-
-    if(first_time_data) then
+    if( first_time_data )then
         call myprepot(path)
         first_time_data = .false.
-    end if
-
+    endif
     call mypot(r_oh, r_hbr, r_obr, v, dr_oh, dr_hbr, dr_obr)
-
     v     = v*legacy_hartree_to_electronvolt
     dr(1) = dr_oh*legacy_hartree_to_electronvolt
     dr(2) = dr_hbr*legacy_hartree_to_electronvolt
@@ -81,34 +74,30 @@ subroutine pes( x, igrad, path, p, g, d )
     !      dr(1)=dr_OH*51.422067
     !      dr(2)=dr_HBr*51.422067
     !      dr(3)=dr_OBr*51.422067
-
     call evdrdx(tx, r, drdx)
-
     dx = 0.d0
     do i=1, 9
         do j=1, 3
             dx(i) = dx(i)+dr(j)*drdx(j,i)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = v
-        end do
-    else if (igrad==1) then
+        enddo
+    else if( igrad == 1 )then
         do istate=1, nstates
             p(istate) = v
-        end do
+        enddo
         do iatom=1, natoms
             do idir=1, 3
                 j               = (iatom-1)*3+idir
                 g(1,iatom,idir) = dx(j)
-            end do
-        end do
-    else if (igrad==2) then
+            enddo
+        enddo
+    else if( igrad == 2 )then
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine
 
 !> @brief Evaluate EvdRdX.
@@ -121,30 +110,26 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 3
         do j=1, 9
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
     drdx(1,3) = (x(3)-x(6))/r(1)
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     drdx(2,1) = (x(1)-x(7))/r(2)
     drdx(2,2) = (x(2)-x(8))/r(2)
     drdx(2,3) = (x(3)-x(9))/r(2)
     drdx(2,7) = -drdx(2,1)
     drdx(2,8) = -drdx(2,2)
     drdx(2,9) = -drdx(2,3)
-
     drdx(3,4) = (x(4)-x(7))/r(3)
     drdx(3,5) = (x(5)-x(8))/r(3)
     drdx(3,6) = (x(6)-x(9))/r(3)
     drdx(3,7) = -drdx(3,4)
     drdx(3,8) = -drdx(3,5)
     drdx(3,9) = -drdx(3,6)
-
 end subroutine
 
 !> @brief Evaluate myprepot.
@@ -244,29 +229,25 @@ subroutine myprepot( path )
     save ncall
     save phi_oh, phi_hbr, x_1, x_2, y_1, amn
     file_path1 = trim(path)//"/HOBr/o_hbr_a_pp.par"
-
-    if(ncall.eq.1) then
+    if( ncall .eq. 1 )then
         open(newunit=file_unit_45, file=file_path1, status="old")
         do i=1, 14
             read(file_unit_45, *) phi_oh(i)
-        end do
+        enddo
         do i=1, 14
             read(file_unit_45, *) phi_hbr(i)
-        end do
+        enddo
         do i=1, 1110
             read(file_unit_45, *) x_1(i), x_2(i), y_1(i), amn(i)
-        end do
+        enddo
         close(file_unit_45)
         ncall = 2
         return
-    end if
-
+    endif
     entry mypot(r1, r2, r3, value, dr1, dr2, dr3)
-
-    r_oh  = r1
-    r_hbr = r2
-    r_bro = r3
-
+    r_oh    = r1
+    r_hbr   = r2
+    r_bro   = r3
     re      = phi_oh(1)
     de      = phi_oh(2)
     phi_inf = phi_oh(3)
@@ -280,18 +261,15 @@ subroutine myprepot( path )
         phi_z = phi_z+phi_oh(i)*z_i
         sum2  = sum2+(i-6)*phi_oh(i)*z_i/z
         z_i   = z_i*z
-    end do
-    sum1  = phi_z
-    f_s   = 1.0_dp/(exp(alpha_s*(r_oh-r_s))+1.0_dp)
-    phi_z = f_s*phi_z+phi_inf
-    v_oh  = de*((1.0_dp-(re/r_oh)**6*exp(-phi_z*z))**2-1.0_dp)
-
-    dzdr = 2.0_dp*re/((r_oh+re)**2)
-    dfdr = -alpha_s*exp(alpha_s*(r_oh-r_s))*f_s*f_s
-
+    enddo
+    sum1    = phi_z
+    f_s     = 1.0_dp/(exp(alpha_s*(r_oh-r_s))+1.0_dp)
+    phi_z   = f_s*phi_z+phi_inf
+    v_oh    = de*((1.0_dp-(re/r_oh)**6*exp(-phi_z*z))**2-1.0_dp)
+    dzdr    = 2.0_dp*re/((r_oh+re)**2)
+    dfdr    = -alpha_s*exp(alpha_s*(r_oh-r_s))*f_s*f_s
     dbetadz = phi_z+((1/dzdr)*dfdr*sum1+f_s*sum2)*z
     dedr_oh = 2.0_dp*de*(1.0_dp-(re/r_oh)**6*exp(-phi_z*z))*((re/r_oh)**6)*exp(-phi_z*z)*(dzdr*dbetadz+6.0_dp/r_oh)
-
     re      = phi_hbr(1)
     de      = phi_hbr(2)
     phi_inf = phi_hbr(3)
@@ -305,64 +283,53 @@ subroutine myprepot( path )
         phi_z = phi_z+phi_hbr(i)*z_i
         sum2  = sum2+(i-6)*phi_hbr(i)*z_i/z
         z_i   = z_i*z
-    end do
-    sum1  = phi_z
-    f_s   = 1.0_dp/(exp(alpha_s*(r_hbr-r_s))+1.0_dp)
-    phi_z = f_s*phi_z+phi_inf
-    v_hbr = de*((1.0_dp-(re/r_hbr)**6*exp(-phi_z*z))**2-1.0_dp)
-
-    dzdr = 2.0_dp*re/((r_hbr+re)**2)
-    dfdr = -alpha_s*exp(alpha_s*(r_hbr-r_s))*f_s*f_s
-
+    enddo
+    sum1     = phi_z
+    f_s      = 1.0_dp/(exp(alpha_s*(r_hbr-r_s))+1.0_dp)
+    phi_z    = f_s*phi_z+phi_inf
+    v_hbr    = de*((1.0_dp-(re/r_hbr)**6*exp(-phi_z*z))**2-1.0_dp)
+    dzdr     = 2.0_dp*re/((r_hbr+re)**2)
+    dfdr     = -alpha_s*exp(alpha_s*(r_hbr-r_s))*f_s*f_s
     dbetadz  = phi_z+((1/dzdr)*dfdr*sum1+f_s*sum2)*z
     dedr_hbr = 2.0_dp*de*(1.0_dp-(re/r_hbr)**6*exp(-phi_z*z))*((re/r_hbr)**6)*exp(-phi_z*z)*(dzdr*dbetadz+6.0_dp/r_hbr)
-
-    v_bro = 0.0868406_dp*exp(-1.91_dp*(r_bro-3.2509_dp))
-
-    th_y = (1.0_dp-((r_oh*r_oh+r_hbr*r_hbr-r_bro*r_bro)/(2.0_dp*r_oh*r_hbr)))/2.0_dp
-
-    v3  = 0.0_dp
-    dr1 = 0.0_dp
-    dr2 = 0.0_dp
-    dr3 = 0.0_dp
+    v_bro    = 0.0868406_dp*exp(-1.91_dp*(r_bro-3.2509_dp))
+    th_y     = (1.0_dp-((r_oh*r_oh+r_hbr*r_hbr-r_bro*r_bro)/(2.0_dp*r_oh*r_hbr)))/2.0_dp
+    v3       = 0.0_dp
+    dr1      = 0.0_dp
+    dr2      = 0.0_dp
+    dr3      = 0.0_dp
     do i=1, 1110, 1
-
-        if (r_oh.ge.x_1(i)) then
+        if( r_oh .ge. x_1(i) )then
             q_1  = (1.0_dp/14.0_dp)*(r_oh**(-7))*(1.0_dp-(7.0_dp/9.0_dp)*(x_1(i)/r_oh))
             dq_1 = 0.5_dp*(r_oh**(-8))*((8.0_dp/9.0_dp)*(x_1(i)/r_oh)-1.0_dp)
         else
             q_1  = (1.0_dp/14.0_dp)*(x_1(i)**(-7))*(1.0_dp-(7.0_dp/9.0_dp)*(r_oh/x_1(i)))
             dq_1 = -x_1(i)**(-8)/18.0_dp
-        end if
-
-        if (r_hbr.ge.x_2(i)) then
+        endif
+        if( r_hbr .ge. x_2(i) )then
             q_2  = (1.0_dp/14.0_dp)*(r_hbr**(-7))*(1.0_dp-(7.0_dp/9.0_dp)*(x_2(i)/r_hbr))
             dq_2 = 0.5_dp*(r_hbr**(-8))*((8.0_dp/9.0_dp)*(x_2(i)/r_hbr)-1.0_dp)
         else
             q_2  = (1.0_dp/14.0_dp)*(x_2(i)**(-7))*(1.0_dp-(7.0_dp/9.0_dp)*(r_hbr/x_2(i)))
             dq_2 = -x_2(i)**(-8)/18.0_dp
-        end if
-
-        if (th_y.ge.y_1(i)) then
+        endif
+        if( th_y .ge. y_1(i) )then
             q_3  = 1.0_dp+th_y*y_1(i)+2.0_dp*y_1(i)**2*th_y*(1.0_dp-(1.0_dp/3.0_dp)*(y_1(i)/th_y))
             dq_3 = y_1(i)+2.0_dp*y_1(i)**2
         else
             q_3  = 1.0_dp+th_y*y_1(i)+2.0_dp*th_y**2*y_1(i)*(1.0_dp-(1.0_dp/3.0_dp)*(th_y/y_1(i)))
             dq_3 = y_1(i)+4.0_dp*y_1(i)*th_y-2.0_dp*th_y**2
-        end if
-
+        endif
         v3  = v3+amn(i)*q_1*q_2*q_3
         dr1 = dr1+amn(i)*dq_1*q_2*q_3
         dr2 = dr2+amn(i)*q_1*dq_2*q_3
         dr3 = dr3+amn(i)*q_1*q_2*dq_3
-    end do
+    enddo
     value = 0.97714_dp*v3+v_oh+v_hbr+v_bro+0.14242006_dp
-
-    dr3 = 0.97714_dp*dr3*r3/(2.0_dp*r1*r2)
-    dr1 = 0.97714_dp*dr1-dr3*((r1-r2*((r_oh**2+r_hbr**2-r_bro**2)/(2*r_oh*r_hbr)))/r3)
-    dr2 = 0.97714_dp*dr2-dr3*((r2-r1*((r_oh**2+r_hbr**2-r_bro**2)/(2*r_oh*r_hbr)))/r3)
-
-    dr1 = dedr_oh+dr1
-    dr2 = dedr_hbr+dr2
-    dr3 = dr3-1.91_dp*0.0868406_dp*exp(-1.91_dp*(r_bro-3.2509_dp))
+    dr3   = 0.97714_dp*dr3*r3/(2.0_dp*r1*r2)
+    dr1   = 0.97714_dp*dr1-dr3*((r1-r2*((r_oh**2+r_hbr**2-r_bro**2)/(2*r_oh*r_hbr)))/r3)
+    dr2   = 0.97714_dp*dr2-dr3*((r2-r1*((r_oh**2+r_hbr**2-r_bro**2)/(2*r_oh*r_hbr)))/r3)
+    dr1   = dedr_oh+dr1
+    dr2   = dedr_hbr+dr2
+    dr3   = dr3-1.91_dp*0.0868406_dp*exp(-1.91_dp*(r_bro-3.2509_dp))
 end subroutine

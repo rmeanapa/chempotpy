@@ -5,7 +5,6 @@ module chempotpy_neural_network_io
     private
     public :: read_network_header
     contains
-
     !> @brief Read a network header with an optional leading input count.
     subroutine read_network_header( file_unit, expected_input_count, &
             hidden_layer_count, output_count )
@@ -13,16 +12,14 @@ module chempotpy_neural_network_io
         integer, intent(out) :: hidden_layer_count, output_count
         character(len=512)   :: header
         integer              :: input_count, status
-
         read(file_unit, '(a)') header
         read(header, *, iostat=status) input_count, hidden_layer_count, output_count
-        if (status == 0) then
-            if (input_count /= expected_input_count) then
+        if( status == 0 )then
+            if( input_count /= expected_input_count )then
                 error stop "neural-network input count does not match the PES"
-            end if
+            endif
         else
             read(header, *) hidden_layer_count, output_count
-        end if
+        endif
     end subroutine read_network_header
-
 end module chempotpy_neural_network_io

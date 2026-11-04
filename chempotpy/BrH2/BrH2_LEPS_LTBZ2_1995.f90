@@ -24,25 +24,21 @@ subroutine pes( x, igrad, p, g, d )
     logical, save                 :: first_time_data=.true.
     integer                       :: i, j, k, l
     !initialize
-    u = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
-
+    u  = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
     nt = 1
     do iatom=1, natoms
         do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
-
+    call legacy_triatomic_distances_to_bohr(x, r(1,:))
     nder = igrad
-
-    if(first_time_data) then
+    if( first_time_data )then
         call prepot
         first_time_data = .false.
-    end if
-
+    endif
     call pot(r, u11, de_u11, 1, 1)
     call pot(r, u12, de_u12, 1, 2)
     call pot(r, u22, de_u22, 1, 3)
@@ -55,25 +51,23 @@ subroutine pes( x, igrad, p, g, d )
     dudr(2,1,:) = de_u12(:,1)*51.422067
     dudr(2,2,:) = de_u22(:,1)*51.422067
     call diagonalize(nstates, u, p, t)
-
     do i=1, 3
         tmpmat(:,:) = dudr(:,:,i)
         tmpmat      = matmul(transpose(t), matmul(tmpmat, t))
         do j=1, nstates
             do k=j+1, nstates
-                if ((p(k)-p(j)) > 1.d-8) then
+                if( (p(k)-p(j)) > 1.d-8 )then
                     hr(j,k,i) = tmpmat(j,k)/(p(k)-p(j))
                 else
                     hr(j,k,i) = tmpmat(j,k)/1.d-8
-                end if
+                endif
                 hr(k,j,i) = -hr(j,k,i)
-            end do
-        end do
+            enddo
+        enddo
         do j=1, nstates
             gr(j,i) = tmpmat(j,j)
-        end do
-    end do
-
+        enddo
+    enddo
     r2 = r(1,:)*legacy_bohr_to_angstrom
     call evdrdx(tx, r2, drdx)
     hx = 0.d0
@@ -82,17 +76,15 @@ subroutine pes( x, igrad, p, g, d )
         do j=1, 3
             hx(:,:,i) = hx(:,:,i)+hr(:,:,j)*drdx(j,i)
             gx(:,i)   = gx(:,i)+gr(:,j)*drdx(j,i)
-        end do
-    end do
-
+        enddo
+    enddo
     do iatom=1, natoms
         do idir=1, 3
             j                 = (iatom-1)*3+idir
             g(:,iatom,idir)   = gx(:,j)
             d(:,:,iatom,idir) = hx(:,:,j)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the BrH2_LEPS_LTBZ2_1995 potential.
@@ -105,30 +97,26 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 3
         do j=1, 9
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
     drdx(1,3) = (x(3)-x(6))/r(1)
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     drdx(2,4) = (x(4)-x(7))/r(2)
     drdx(2,5) = (x(5)-x(8))/r(2)
     drdx(2,6) = (x(6)-x(9))/r(2)
     drdx(2,7) = -drdx(2,4)
     drdx(2,8) = -drdx(2,5)
     drdx(2,9) = -drdx(2,6)
-
     drdx(3,1) = (x(1)-x(7))/r(3)
     drdx(3,2) = (x(2)-x(8))/r(3)
     drdx(3,3) = (x(3)-x(9))/r(3)
     drdx(3,7) = -drdx(3,1)
     drdx(3,8) = -drdx(3,2)
     drdx(3,9) = -drdx(3,3)
-
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the BrH2_LEPS_LTBZ2_1995 potential.
@@ -143,14 +131,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
     u_ss = a_ss
-    if (first_time_diag) then
+    if( first_time_diag )then
         lwork_d = -1
         allocate( work_d(2) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    end if
+    endif
     allocate( work_d(lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
@@ -204,7 +192,6 @@ subroutine prepot
     call g_prepot11(g_p_)
     call prepot12
     call prepot22
-
 end subroutine prepot
 
 !**********************************************************************
@@ -219,14 +206,13 @@ subroutine pot( r, e, de, nt, nsurf )
     integer, parameter :: g_p_  = 3
     integer, parameter :: ldg_e = 3
     dimension g_e(ldg_e,nt)
-    if (nsurf .eq. 1) then
+    if( nsurf .eq. 1 )then
         call g_pot11(g_p_, r, e, de, ldg_e, nt)
-    else if (nsurf .eq. 2) then
+    else if( nsurf .eq. 2 )then
         call pot12(r, e, de, nt)
-    else if (nsurf .eq. 3) then
+    else if( nsurf .eq. 3 )then
         call pot22(r, e, de, nt)
-    end if
-
+    endif
 end subroutine pot
 
 !> @brief Evaluate g_prepot11 for the BrH2_LEPS_LTBZ2_1995 potential.
@@ -313,11 +299,10 @@ subroutine g_prepot11( g_p_ )
         & g_sintp2, g_sintp6, g_sintp8, g_fcn4, g_r1p2, g_r2p2, g_r3p2, &
         & g_zchi, g_capr2, g_capr, g_coschi, g_schip2, g_d1_w, g_r1p3
     data d /90.4473d0, 109.559d0, 90.4473d0/
-    if (g_p_ .gt. g_pmax_) then
+    if( g_p_ .gt. g_pmax_ )then
         print *, 'Parameter g_p_ is greater than g_pmax_'
         stop
-    end if
-
+    endif
     xlamb = .4568d0 / 27.21161d0
     a1    = v3cp1
     a2    = v3cp2
@@ -350,7 +335,6 @@ subroutine g_prepot11( g_p_ )
     99999 continue
     !
     !
-
     !
     return
     !
@@ -359,19 +343,18 @@ subroutine g_prepot11( g_p_ )
     do 99996 k = 1, n
         do g_i_ = 1, g_p_
             g_r(g_i_, 1) = 0.0d0
-        end do
+        enddo
         r(1) = rr(k,1)
         !--------
         do g_i_ = 1, g_p_
             g_r(g_i_, 2) = 0.0d0
-        end do
+        enddo
         r(2) = rr(k,2)
         !--------
         do g_i_ = 1, g_p_
             g_r(g_i_, 3) = 0.0d0
-        end do
-        r(3) = rr(k,3)
-
+        enddo
+        r(3)      = rr(k,3)
         g_r(1, 1) = 1.0d0
         g_r(2, 2) = 1.0d0
         g_r(3, 3) = 1.0d0
@@ -381,56 +364,55 @@ subroutine g_prepot11( g_p_ )
         d2_b = r(1) + r(1)
         do g_i_ = 1, g_p_
             g_r1p2(g_i_) = d2_b * g_r(g_i_, 1)
-        end do
+        enddo
         r1p2 = r(1) * r(1)
         !--------
         d2_b = r(2) + r(2)
         do g_i_ = 1, g_p_
             g_r2p2(g_i_) = d2_b * g_r(g_i_, 2)
-        end do
+        enddo
         r2p2 = r(2) * r(2)
         !--------
         d2_b = r(3) + r(3)
         do g_i_ = 1, g_p_
             g_r3p2(g_i_) = d2_b * g_r(g_i_, 3)
-        end do
+        enddo
         r3p2 = r(3) * r(3)
         !--------
         r2i = 1.0d0 / r(2)
         do g_i_ = 1, g_p_
             g_zchi(g_i_) = 0.0d0
-        end do
+        enddo
         zchi = 0.0d0
         !--------
         !   CAPR IS THE Br TO H2 DISTANCE
         d5_b = (-0.5d0) * 0.5d0
         do g_i_ = 1, g_p_
             g_capr2(g_i_) = d5_b * g_r2p2(g_i_) + 0.5d0 * g_r3p2(g_i_) + 0.5d0 * g_r1p2(g_i_)
-        end do
+        enddo
         capr2 = 0.5d0 * (r1p2 + r3p2 - 0.5d0 * r2p2)
         !--------
-        if (capr2 .le. 0.d0) then
+        if( capr2 .le. 0.d0 )then
             do g_i_ = 1, g_p_
                 g_capr2(g_i_) = 0.0d0
-            end do
+            enddo
             capr2 = 0.0d0
             !--------
             do g_i_ = 1, g_p_
                 g_capr(g_i_) = 0.0d0
-            end do
+            enddo
             capr = 0.0d0
             !--------
         else
             d2_v = sqrt(capr2)
-
-            if ( capr2 .gt. 0.0d0 ) then
+            if( capr2 .gt. 0.0d0 )then
                 d1_p = 1.0d0 / (2.0d0 *  d2_v)
             else
                 d1_p = 0.0d0
-            end if
+            endif
             do g_i_ = 1, g_p_
                 g_capr(g_i_) = d1_p * g_capr2(g_i_)
-            end do
+            enddo
             capr = d2_v
             !--------
             !   Compute Chi, the angle between CAPR and RHH
@@ -443,13 +425,13 @@ subroutine g_prepot11( g_p_ )
             do g_i_ = 1, g_p_
                 g_coschi(g_i_) = d5_b * g_capr(g_i_) + d4_b * g_r(g_i_, 2) + (-d6_b) * g_r1p2(g_i_) + d6_b * &
                     & g_r3p2(g_i_)
-            end do
+            enddo
             coschi = d8_v
             !--------
             d3_b = -coschi + (-coschi)
             do g_i_ = 1, g_p_
                 g_schip2(g_i_) = d3_b * g_coschi(g_i_)
-            end do
+            enddo
             schip2 = 1.0d0 - coschi * coschi
             !--------
             d4_v = zhbrp2 * schip2
@@ -457,18 +439,18 @@ subroutine g_prepot11( g_p_ )
             d7_b = capr2 * d4_v + capr2 * schip2 * zhbrp2 + capr2 * zhbrp1
             do g_i_ = 1, g_p_
                 g_zchi(g_i_) = d7_b * g_schip2(g_i_) + d6_v * g_capr2(g_i_ )
-            end do
+            enddo
             zchi = capr2 * d6_v
             !--------
-        end if
+        endif
         do g_i_ = 1, g_p_
             g_z(g_i_, 1) = g_zchi(g_i_)
-        end do
+        enddo
         z(1) = 0.1675d0 + zchi
         !--------
         do g_i_ = 1, g_p_
             g_z(g_i_, 3) = g_z(g_i_, 1)
-        end do
+        enddo
         z(3) = z(1)
         !--------
         d3_v = zhhp2 + r2p2
@@ -476,7 +458,7 @@ subroutine g_prepot11( g_p_ )
         d4_b = (-d4_v) / d3_v + 1.0d0 / d3_v * zhhp1
         do g_i_ = 1, g_p_
             g_z(g_i_, 2) = d4_b * g_r2p2(g_i_)
-        end do
+        enddo
         z(2) = d4_v
         !--------
         !
@@ -485,55 +467,54 @@ subroutine g_prepot11( g_p_ )
         do 99998 i = 1, 3
             do g_i_ = 1, g_p_
                 g_zpo(g_i_, i) = g_z(g_i_, i)
-            end do
+            enddo
             zpo(i) = 1.0d0 + z(i)
             !--------
             do g_i_ = 1, g_p_
                 g_op3z(g_i_, i) = 3.0d0 * g_z(g_i_, i)
-            end do
+            enddo
             op3z(i) = 1.0d0 + 3.0d0 * z(i)
             !--------
             do g_i_ = 1, g_p_
                 g_top3z(g_i_, i) = 2.0d0 * g_op3z(g_i_, i)
-            end do
+            enddo
             top3z(i) = 2.0d0 * op3z(i)
             !--------
             do g_i_ = 1, g_p_
                 g_zp3(g_i_, i) = g_z(g_i_, i)
-            end do
+            enddo
             zp3(i) = z(i) + 3.0d0
             !--------
             do g_i_ = 1, g_p_
                 g_tzp3(g_i_, i) = 2.0d0 * g_zp3(g_i_, i)
-            end do
+            enddo
             tzp3(i) = 2.0d0 * zp3(i)
             !--------
             d2_v = de(i) / 4.0d0 / zpo(i)
             d2_b = (-d2_v) / zpo(i)
             do g_i_ = 1, g_p_
                 g_do4z(g_i_, i) = d2_b * g_zpo(g_i_, i)
-            end do
+            enddo
             do4z(i) = d2_v
             !--------
             b(i) = beta(i) * do4z(i) * 2.0d0
             20 continue
         99998 continue
-
         do g_i_ = 1, g_p_
             g_pe(g_i_) = 0.0d0
-        end do
+        enddo
         pe = 0.d0
         !--------
         do 99997 i = 1, 3
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-beta(i)) * g_r(g_i_, i)
-            end do
+            enddo
             d1_w = (-beta(i)) * (r(i) - re(i))
             d2_v = exp(d1_w)
             d1_p = d2_v
             do g_i_ = 1, g_p_
                 g_x(g_i_, i) = d1_p * g_d1_w(g_i_)
-            end do
+            enddo
             x(i) = d2_v
             !--------
             d6_v = zp3(i) * x(i) - top3z(i)
@@ -545,7 +526,7 @@ subroutine g_prepot11( g_p_ )
             do g_i_ = 1, g_p_
                 g_coul(g_i_, i) = (-d5_b) * g_top3z(g_i_, i) + d3_b * g_x( g_i_, i) + d8_b * g_zp3(g_i_, i) + d4_b * &
                     & g_do4z(g_i_, i)
-            end do
+            enddo
             coul(i) = d7_v * x(i)
             !--------
             d6_v = op3z(i) * x(i) - tzp3(i)
@@ -557,12 +538,12 @@ subroutine g_prepot11( g_p_ )
             do g_i_ = 1, g_p_
                 g_exch(g_i_, i) = (-d5_b) * g_tzp3(g_i_, i) + d3_b * g_x(g_i_, i) + d8_b * g_op3z(g_i_, i) + d4_b * &
                     & g_do4z(g_i_, i)
-            end do
+            enddo
             exch(i) = d7_v * x(i)
             !--------
             do g_i_ = 1, g_p_
                 g_pe(g_i_) = g_coul(g_i_, i) + g_pe(g_i_)
-            end do
+            enddo
             pe = pe + coul(i)
             !--------
             30 continue
@@ -578,30 +559,29 @@ subroutine g_prepot11( g_p_ )
         d10_b = d2_p + (-d3_p)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d5_b * g_exch(g_i_, 3) + d10_b * g_exch(g_i_, 2) + d6_b * g_exch(g_i_, 1)
-        end do
+        enddo
         d1_w = d4_v + d7_v + d10_v
         d2_v = sqrt(d1_w)
-
-        if ( d1_w .gt. 0.0d0 ) then
+        if( d1_w .gt. 0.0d0 )then
             d1_p = 1.0d0 / (2.0d0 *  d2_v)
         else
             d1_p = 0.0d0
-        end if
+        endif
         do g_i_ = 1, g_p_
             g_rad(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         rad = d2_v
         !--------
         d5_b = -(1.0d0 / r2)
         do g_i_ = 1, g_p_
             g_pe(g_i_) = d5_b * g_rad(g_i_) + g_pe(g_i_)
-        end do
+        enddo
         pe = pe - rad / r2 + de(2)
         !--------
         !   Compute the three-center term
         do g_i_ = 1, g_p_
             g_r1p3(g_i_) = g_r(g_i_, 3) + g_r(g_i_, 1)
-        end do
+        enddo
         r1p3 = r(1) + r(3)
         !--------
         a1 = v3cp1
@@ -612,24 +592,24 @@ subroutine g_prepot11( g_p_ )
         a6 = v3cp6
         do g_i_ = 1, g_p_
             g_r1m3(g_i_) = -g_r(g_i_, 3) + g_r(g_i_, 1)
-        end do
+        enddo
         r1m3 = r(1) - r(3)
         !--------
         do g_i_ = 1, g_p_
             g_r1p3m2(g_i_) = -g_r(g_i_, 2) + g_r1p3(g_i_)
-        end do
+        enddo
         r1p3m2 = r1p3 - r(2)
         !--------
         d2_b = r1m3 + r1m3
         do g_i_ = 1, g_p_
             g_r1m3p2(g_i_) = d2_b * g_r1m3(g_i_)
-        end do
+        enddo
         r1m3p2 = r1m3 * r1m3
         !--------
         d2_b = r1p3m2 + r1p3m2
         do g_i_ = 1, g_p_
             g_r132p2(g_i_) = d2_b * g_r1p3m2(g_i_)
-        end do
+        enddo
         r132p2 = r1p3m2 * r1p3m2
         !--------
         !   Compute the bond angle from the three internal coordinates
@@ -638,7 +618,7 @@ subroutine g_prepot11( g_p_ )
         d8_b = r(1) + r(1)
         do g_i_ = 1, g_p_
             g_dist(g_i_) = d4_b * g_r(g_i_, 2) + d7_b * g_r(g_i_, 3) + d8_b * g_r(g_i_, 1)
-        end do
+        enddo
         dist = r(1) * r(1) + r(3) * r(3) - r(2) * r(2)
         !--------
         d3_v = 2.0d0 * r(1)
@@ -650,35 +630,35 @@ subroutine g_prepot11( g_p_ )
         d6_b = d3_b * r(3) * 2.0d0
         do g_i_ = 1, g_p_
             g_costh(g_i_) = d5_b * g_r(g_i_, 3) + d6_b * g_r(g_i_, 1) + d2_b * g_dist(g_i_)
-        end do
+        enddo
         costh = d6_v
         !--------
         d3_b = -costh + (-costh)
         do g_i_ = 1, g_p_
             g_sintp2(g_i_) = d3_b * g_costh(g_i_)
-        end do
+        enddo
         sintp2 = 1.0d0 - costh * costh
         !--------
         d2_v = sintp2 * sintp2
         d3_b = d2_v + sintp2 * sintp2 + sintp2 * sintp2
         do g_i_ = 1, g_p_
             g_sintp6(g_i_) = d3_b * g_sintp2(g_i_)
-        end do
+        enddo
         sintp6 = d2_v * sintp2
         !--------
         do g_i_ = 1, g_p_
             g_sintp8(g_i_) = sintp6 * g_sintp2(g_i_) + sintp2 * g_sintp6 (g_i_)
-        end do
+        enddo
         sintp8 = sintp6 * sintp2
         !--------
         do g_i_ = 1, g_p_
             g_fcn4(g_i_) = a6 * g_sintp8(g_i_) + a5 * g_sintp2(g_i_)
-        end do
+        enddo
         fcn4 = 1.d0 + a5 * sintp2 + a6 * sintp8
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-a4) * g_r132p2(g_i_) + (-a3) * g_r1m3p2(g_i_) + (-a2) * g_r1p3(g_i_)
-        end do
+        enddo
         d1_w = -(a2 * r1p3 + a3 * r1m3p2 + a4 * r132p2)
         d2_v = a1 * fcn4
         d4_v = exp(d1_w)
@@ -687,18 +667,18 @@ subroutine g_prepot11( g_p_ )
         d5_b = d4_v * a1
         do g_i_ = 1, g_p_
             g_v3c(g_i_) = d4_b * g_d1_w(g_i_) + d5_b * g_fcn4(g_i_)
-        end do
+        enddo
         v3c = d2_v * d4_v
         !--------
         !   Sum all the terms that make up the energy
         do g_i_ = 1, g_p_
             g_pe(g_i_) = g_v3c(g_i_) + g_pe(g_i_)
-        end do
+        enddo
         pe = pe + v3c
         !--------
         do g_i_ = 1, g_p_
             g_e(g_i_,k) = g_pe(g_i_)
-        end do
+        enddo
         e(k) = pe + xlamb / 3.d0
         !--------
     99996 continue
@@ -723,9 +703,8 @@ subroutine prepot12
         e(k) = -dsqrt(2.d0)*xlamb/3.d0
         do j =1, 3
             de(j,k) = 0.0d0
-        end do
+        enddo
     7777 continue
-
 end subroutine prepot12
 
 !
@@ -795,7 +774,6 @@ subroutine prepot22
         der(2,k) = -2.0d0*beta(2)*de(2)*(y2**2-y2)
         der(3,k) = -2.0d0*beta(3)*de(3)*(y3**2+y3)*ccon
         e(k)     = pe
-
     7777 continue
     !
 end subroutine prepot22

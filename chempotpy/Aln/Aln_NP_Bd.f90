@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_NP_Bd potential.
@@ -68,7 +68,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !                       to the Cartesian coordinates of the system (output)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximum number of atoms (input)
-
     implicit none
     double precision :: ab, alpha, beta, bigef, cc, d_rho, d_v2, dbigefdrho, delta, &
         & dphidr, dphiqdr, dqdr, dr, drdr, drhodr, dstermdrho, dvdx, dvdy, dvdz, dx, dxxdr, dy, dz, &
@@ -137,15 +136,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
     s(3)  = 15.498062621d0
     rn    = 1.75d0*r0
     rc    = 1.95d0*r0
-
     ! Initialize
     v = 0.d0
     do i=1, natom
         dvdx(i) = 0.d0
         dvdy(i) = 0.d0
         dvdz(i) = 0.d0
-    end do
-
+    enddo
     ! Double loop (main loop)
     do 2 i=1, natom
         rho = 0.d0
@@ -154,20 +151,19 @@ subroutine pot( x, y, z, v, natom, maxatom )
             do j=1, natom
                 d_rho(k,j) = 0.d0
                 d_v2(k,j)  = 0.d0
-            end do
-        end do
+            enddo
+        enddo
         do 3 j=1, natom
-            if (i.eq.j) go to 3
+            if( i .eq. j ) go to 3
             dx = x(i)-x(j)
             dy = y(i)-y(j)
             dz = z(i)-z(j)
             rr = dsqrt(dx*dx+dy*dy+dz*dz)
-
             ! Cutoff function
-            if (rr.le.rn) then
+            if( rr .le. rn )then
                 q    = 1.d0
                 dqdr = 0.d0  ! Derivs
-            elseif(rr.ge.rc) then
+            else if( rr .ge. rc )then
                 go to 3
                 q    = 0.d0
                 dqdr = 0.d0  ! Derivs
@@ -177,8 +173,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 dxxdr = 1.d0/(rc-rn)  ! Derivs
                 dqdr  = ((1.d0-xx)**3)*(3.d0+12.d0*xx)*dxxdr &  ! Derivs
                     & -(3.d0*(1.d0-xx)**2)*(1.d0+3.d0*xx+6.d0*xx**2)*dxxdr
-            end if
-
+            endif
             ! Pair potential phi
             dr      = rr/r0-1.d0
             phi     = -0.5d0*phi0*(1.d0+delta*dr)*dexp(-gamma*dr)
@@ -186,17 +181,15 @@ subroutine pot( x, y, z, v, natom, maxatom )
             drdr    = 1.d0/r0  ! Derivs
             dphidr  = -0.5d0*phi0*(1.d0+delta*dr)*(-gamma*drdr)*dexp(-gamma*dr) -0.5d0*phi0*delta*drdr*dexp(-gamma*dr)
             dphiqdr = dqdr*phi+dphidr*q  ! Derivs
-
             ! Embedding potential rho
             drhodr = 0.d0  ! Derivs
             do l=0, 5
                 ef  = (cc(l+1)/12.d0)*(r0/rr)**l
                 rho = rho + ef*q
-                if (l.ne.0) drhodr = drhodr &  ! Derivs
+                if( l .ne. 0 ) drhodr = drhodr &! Derivs
                     & - (q/rr)*dble(l)*(cc(l+1)/12.d0)*(r0/rr)**l+ef*dqdr
-                if (l.eq.0) drhodr = drhodr + ef*dqdr  ! Derivs
-            end do
-
+                if( l .eq. 0 ) drhodr = drhodr + ef*dqdr! Derivs
+            enddo
             ! v2 (pairwise repulsion) derivs
             d_v2(1,i) = d_v2(1,i) + dphiqdr*dx/rr
             d_v2(1,j) = d_v2(1,j) - dphiqdr*dx/rr
@@ -212,10 +205,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
             d_rho(3,i) = d_rho(3,i) + drhodr*dz/rr
             d_rho(3,j) = d_rho(3,j) - drhodr*dz/rr
         3 continue
-
         sterm      = 0.d0
         dstermdrho = 0.d0  ! Derivs
-        if (rho.gt.0.d0) then
+        if( rho .gt. 0.d0 )then
             do m=1, 3
                 xm = dsqrt(dble(m))
                 sterm=sterm+s(m)*dexp(-gamma*(xm-1.d0)) *(1.d0+delta*(xm-1.d0)-xm*(delta/beta)*dlog(rho)) *(rho)**(xm* &
@@ -224,27 +216,23 @@ subroutine pot( x, y, z, v, natom, maxatom )
                     & (1.d0+delta*(xm-1.d0)-xm*(delta/beta)*dlog(rho)) &
                     & *(xm*gamma/beta)*(rho)**(xm*gamma/beta-1.d0) &
                     & +(-xm*(delta/beta)*(1.d0/rho))*(rho)**(xm*gamma/beta) )
-            end do
-        end if
-
+            enddo
+        endif
         ab         = alpha/beta
         bigef      = 0.d0
         dbigefdrho = 0.d0
-        if (rho.gt.0.d0) then
+        if( rho .gt. 0.d0 )then
             bigef      = -ec*(1.d0-ab*dlog(rho))*rho**ab + 0.5d0*phi0*sterm
             dbigefdrho = -ec*(1.d0-ab*dlog(rho))*(ab)*rho**(ab-1.d0) &  ! Deri
                 & -ec*(-ab*(1.d0/rho))*rho**ab &
                 & +0.5d0*phi0*dstermdrho
-        end if
-
+        endif
         ! Combine derivs
         do j=1, natom
             dvdx(j) = dvdx(j) + d_v2(1,j) + dbigefdrho*d_rho(1,j)
             dvdy(j) = dvdy(j) + d_v2(2,j) + dbigefdrho*d_rho(2,j)
             dvdz(j) = dvdz(j) + d_v2(3,j) + dbigefdrho*d_rho(3,j)
-        end do
-
+        enddo
         v = v + v2 + bigef
     2 continue
-
 end subroutine pot

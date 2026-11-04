@@ -45,14 +45,12 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call pes_init(path)
         call fh2o_soc_nn(tx, v, socg, vgsoc)
         deallocate(nodes)
@@ -70,17 +68,13 @@ subroutine pes( x, igrad, path, p, g, d )
         deallocate(pavgc)
     else
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
     vgsoc = vgsoc/23.0609
-
     do istate=1, nstates
         p(istate) = vgsoc
-    end do
-
+    enddo
     g = 0.d0
     d = 0.d0
-
 end subroutine
 
 !> @brief Evaluate fh2o_soc_nn.
@@ -99,66 +93,50 @@ subroutine fh2o_soc_nn( xt, vg, socg, vgsoc )
     double precision :: socrg, socrs, socpg, socps
     double precision :: r1switch, r2switch, p2switch, switch
     call fh2onn(xt, vg, vpesa, vpesb, vpesc) !xt in HHFO and angstrom
-
     vg = vg*23.0605d0
     vg = min(vg, 100.0d0)
-    if(vg.ge.100.0d0)then
+    if( vg .ge. 100.0d0 )then
         socg  = 0.0d0
         vgsoc = vg+socg/349.75d0
         return
-    end if
-
+    endif
     xt2 = xt
-
     call orderxnt(xt2, xn) !xn 1st H closer to F
-
     xvec(:,1) = xn(:,2)-xn(:,1) !  H2->H1
     xvec(:,2) = xn(:,3)-xn(:,1) !  F->H1
     xvec(:,3) = xn(:,4)-xn(:,1) !  O->H1
     xvec(:,4) = xn(:,3)-xn(:,2) !  H2->F
     xvec(:,5) = xn(:,4)-xn(:,2) !  H2->O
     xvec(:,6) = xn(:,4)-xn(:,3) !  F-O
-
-    rt(1) = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-    rt(2) = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-    rt(3) = dsqrt(dot_product(xvec(:,3), xvec(:,3))) !the breaking bond
-    rt(4) = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
-    rt(5) = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
-    rt(6) = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
-
-    xt2(:,1) = xt(:,1)
-    xt2(:,2) = xt(:,4)
-    xt2(:,3) = xt(:,2)
-    xt2(:,4) = xt(:,3)
-
+    rt(1)     = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
+    rt(2)     = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
+    rt(3)     = dsqrt(dot_product(xvec(:,3), xvec(:,3))) !the breaking bond
+    rt(4)     = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
+    rt(5)     = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
+    rt(6)     = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
+    xt2(:,1)  = xt(:,1)
+    xt2(:,2)  = xt(:,4)
+    xt2(:,3)  = xt(:,2)
+    xt2(:,4)  = xt(:,3)
     call xyztojcb3(xt2, rint) !-->xt2 in HOHF order,angstrom, rt in angstrom and radians
     rcom = rint(3)
     the2 = rint(5)
     phi  = rint(6)
-
     call soc_react_ground(rcom, the2, phi, socrg)
-
     xt2(:,1) = xn(:,2)
     xt2(:,2) = xn(:,4)
     xt2(:,3) = xn(:,1)
     xt2(:,4) = xn(:,3)
-
     call cart_dijacobi(xt2, rint) !xt2 in HOHF order,angstrom, rt in angstrom and radians
     rcom = rint(3)
     the1 = rint(4)
     the2 = rint(5)
     phi  = rint(6)
-
     call soc_product_ground(rcom, the1, the2, phi, socpg)
-
     switch = (1.d0-dtanh(20.0d0*(rt(3)-1.6d0)))/2.0d0
-
-    socg = socrg*switch+socpg*(1.0d0-switch)
-
-    vgsoc = vg+socg/349.75d0
-
-    vgsoc = min(100.0d0, vgsoc)
-
+    socg   = socrg*switch+socpg*(1.0d0-switch)
+    vgsoc  = vg+socg/349.75d0
+    vgsoc  = min(100.0d0, vgsoc)
 end subroutine fh2o_soc_nn
 
 !> @brief Evaluate orderxnt.
@@ -170,16 +148,14 @@ subroutine orderxnt( x1, x2 )
     xvec(:,2) = xt(:,2)-xt(:,3)
     r1        = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
     r2        = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-
-    if(r1.gt.r2)then
+    if( r1 .gt. r2 )then
         x2(:,1) = xt(:,2)  !-->1st H closer to F
         x2(:,2) = xt(:,1)
         x2(:,3) = xt(:,3)
         x2(:,4) = xt(:,4)
     else
         x2 = xt
-    end if
-
+    endif
 end subroutine orderxnt
 
 !> @brief Evaluate r1function.
@@ -188,14 +164,13 @@ double precision function r1function( r, n )
     double precision, parameter :: r0 = 1.8d0, c=0.45d0
     double precision            :: r
     integer                     :: n
-    if(n.eq.0)then
+    if( n .eq. 0 )then
         r1function = 1.0d0
         return
     else
         r1function = dtanh(dble(n)*c*(r-r0))
         return
-    end if
-
+    endif
 end function r1function
 
 !> @brief Evaluate r2function.
@@ -204,14 +179,13 @@ double precision function r2function( r, n )
     double precision, parameter :: r0 = 2.0d0, c=0.42d0
     double precision            :: r
     integer                     :: n
-    if(n.eq.0)then
+    if( n .eq. 0 )then
         r2function = 1.0d0
         return
     else
         r2function = dtanh(dble(n)*c*(r-r0))
         return
-    end if
-
+    endif
 end function r2function
 
 !> @brief Evaluate p2function.
@@ -220,14 +194,13 @@ double precision function p2function( r, n )
     double precision, parameter :: r0 = 2.3d0, c=0.40d0
     double precision            :: r
     integer                     :: n
-    if(n.eq.0)then
+    if( n .eq. 0 )then
         p2function = 1.0d0
         return
     else
         p2function = dtanh(dble(n)*c*(r-r0))
         return
-    end if
-
+    endif
 end function p2function
 
 !> @brief Evaluate soc_react_ground.
@@ -245,23 +218,21 @@ subroutine soc_react_ground( rcom, t2, phi, socrg )
     do n=0, 6
         do k=0, 2
             do l=0, 6
-
                 j     = j+1
                 nrcom = n
-                if(l.le.3)then
+                if( l .le. 3 )then
                     tr1basis(j) = r1function(rcom, nrcom)*dcos(dble(k)*phi)* dcos(dble(l)*t2)
                 else
                     tr1basis(j) = r1function(rcom, nrcom)*dcos(dble(k)*phi)* dsin(dble(l-3)*t2)
-                end if
-            end do
-        end do
-    end do
-    if(j.ne.nrbasissoc)then
+                endif
+            enddo
+        enddo
+    enddo
+    if( j .ne. nrbasissoc )then
         write(*, *)'error for nrbasissoc'
         stop
-    end if
+    endif
     socrg = dot_product(tr1basis(:), r1soccoef(:))
-
 end subroutine soc_react_ground
 
 !> @brief Evaluate soc_product_ground.
@@ -283,18 +254,16 @@ subroutine soc_product_ground( rcom, t1, t2, phi, socpg )
                     j           = j+1
                     nrcom       = n
                     tp2basis(j) = p2function(rcom, nrcom)*dcos(dble(k)*phi)* dcos(dble(l)*t1)*dcos(dble(m)*t2)
-                end do
-            end do
-        end do
-    end do
-    if(j.ne.npbasissoc)then
+                enddo
+            enddo
+        enddo
+    enddo
+    if( j .ne. npbasissoc )then
         write(*, *)'error for nrbasissoc'
         stop
-    end if
-
+    endif
     socps = dot_product(tp2basis(:), p2soccoef(:))
     socpg = -1.0d0*socps
-
 end subroutine soc_product_ground
 
 !> @brief Evaluate fh2oNN.
@@ -310,9 +279,8 @@ subroutine fh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHFO order and angstro
     double precision   :: txinput(1:nbasis-1)
     double precision   :: ct(3,4), xvec(3,ndim), xct(3,4), vpes
     double precision   :: vpesa, vpesb, vpesc, r12, r13, r14, r23, r24, r34
-    basis = 0.d0
-    xct   = ct
-
+    basis     = 0.d0
+    xct       = ct
     xvec(:,1) = xct(:,2)-xct(:,1) !  H2->H1
     xvec(:,2) = xct(:,3)-xct(:,1) !  F->H1
     xvec(:,3) = xct(:,4)-xct(:,1) !  O->H1
@@ -325,49 +293,40 @@ subroutine fh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHFO order and angstro
     rb(4)     = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
     rb(5)     = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
     rb(6)     = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
-
-    r12 = rb(1);r13=rb(2);r14=rb(3);r23=rb(4);r24=rb(5);r34=rb(6)
-
-    if(minval(rb(:)).le.0.67d0.or.minval(rb(:)).gt.1.45d0)then
+    r12       = rb(1);r13=rb(2);r14=rb(3);r23=rb(4);r24=rb(5);r34=rb(6)
+    if( minval(rb(:)) .le. 0.67d0.or.minval(rb(:)) .gt. 1.45d0 )then
         vpes = 5.0d0
         return
-    end if
-
-    if(r34.le.1.5d0.or.r12.le.0.8d0.or.minval(rb).eq.r12)then
+    endif
+    if( r34 .le. 1.5d0.or.r12 .le. 0.8d0.or.minval(rb) .eq. r12 )then
         vpes = 5.0d0
         return
-    end if
-
-    if(r14.lt.r24.and.r24.gt.1.9d0) then
-        if(r14.ge.1.8d0.or.r23.ge.1.8d0)then
+    endif
+    if( r14 .lt. r24.and.r24 .gt. 1.9d0 )then
+        if( r14 .ge. 1.8d0.or.r23 .ge. 1.8d0 )then
             vpes = 5.0d0
             return
-        end if
-    end if
-
-    if(r24.lt.r14.and.r14.gt.1.9d0) then
-        if(r24.ge.1.8d0.or.r13.ge.1.8d0)then
+        endif
+    endif
+    if( r24 .lt. r14.and.r14 .gt. 1.9d0 )then
+        if( r24 .ge. 1.8d0.or.r13 .ge. 1.8d0 )then
             vpes = 5.0d0
             return
-        end if
-    end if
-
-    if(r23.lt.r13.and.r13.gt.1.9d0.and.r24.gt.1.7d0) then
-        if(r14.ge.1.8d0.or.r23.ge.1.8d0)then
+        endif
+    endif
+    if( r23 .lt. r13.and.r13 .gt. 1.9d0.and.r24 .gt. 1.7d0 )then
+        if( r14 .ge. 1.8d0.or.r23 .ge. 1.8d0 )then
             vpes = 5.0d0
             return
-        end if
-    end if
-
-    if(r13.lt.r23.and.r23.gt.1.9d0.and.r14.gt.1.7d0) then
-        if(r13.ge.1.8d0.or.r24.ge.1.8d0)then
+        endif
+    endif
+    if( r13 .lt. r23.and.r23 .gt. 1.9d0.and.r14 .gt. 1.7d0 )then
+        if( r13 .ge. 1.8d0.or.r24 .ge. 1.8d0 )then
             vpes = 5.0d0
             return
-        end if
-    end if
-
+        endif
+    endif
     xbond(:) = dexp(-rb(:)/alpha)
-
     !      do j=1,nbasis
     !       tmp1=0.0d0
     !       do k=1,nterm(j)
@@ -378,21 +337,16 @@ subroutine fh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHFO order and angstro
     !       enddo
     !       basis(j)=basis(j)+tmp1
     !      enddo
-
     call bemsav(xbond, basis)
-
     do j=1, nbasis-1
         txinput(j) = basis(j)
-    end do
-
+    enddo
     call getpota(txinput, vpesa)
     call getpotb(txinput, vpesb)
     call getpotc(txinput, vpesc)
     vpes = (vpesa+vpesb+vpesc)/3.0d0
-
-    if(vpes.lt.-1.5d0)vpes=5.0d0
+    if( vpes .lt. -1.5d0 ) vpes=5.0d0
     vpes = min(vpes, 5.0d0)
-
 end subroutine fh2onn
 
 !-->  read NN weights and biases from matlab output
@@ -417,36 +371,32 @@ subroutine pes_init( path )
     character(len=1024)             :: file_path1, file_path2
     file_path1 = trim(path)//"/FH2O/weights.txt"
     file_path2 = trim(path)//"/FH2O/biases.txt"
-
     open(newunit=file_unit_4, file=file_path2, status='old')
     rewind(file_unit_4)
     read(file_unit_4, '(a100)')line
     109 read(file_unit_4, '(i4,3i3,3x,6i2)', end=121)ibasis, npd, nterm(ibasis+1), &
         &iterm, (nindex(ibasis+1,iterm,ib), ib=1, 6)
-    if(nindex(ibasis+1,iterm,1).eq.2)then
+    if( nindex(ibasis+1,iterm,1) .eq. 2 )then
         goto 121
     else
         goto 109
-    end if
+    endif
     121 continue
-
     read(file_unit_4, '(a100)')line
     do i=1, nrbasissoc
         read(file_unit_4, *)r1soccoef(i)
-    end do
-
+    enddo
     read(file_unit_4, '(a100)')line
     do i=1, npbasissoc
         read(file_unit_4, *)p2soccoef(i)
-    end do
+    enddo
     read(file_unit_4, *)line
-
     nfile = 7
     open(nfile, file=file_path1)
     read(nfile, *)line
     !       open(nfile,file='weights.txt-13')
     !       open(4,file='biases.txt-13')
-    call read_network_header( nfile, ninput, nhid, noutput )
+    call read_network_header(nfile, ninput, nhid, noutput)
     nscale = ninput+noutput
     nlayer = nhid+2 !additional one for input layer and one for output
     allocate(nodes(nlayer), pdela(nscale), pavga(nscale))
@@ -456,7 +406,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weighta(nodemax,nodemax,2:nlayer), &
         &   biasa(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -476,22 +426,20 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weighta(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasa(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     read(file_unit_4, *)line
     read(nfile, *)line
-    call read_network_header( nfile, ninput, nhid, noutput )
+    call read_network_header(nfile, ninput, nhid, noutput)
     nscale = ninput+noutput
     nlayer = nhid+2 !additional one for input layer and one for output
     allocate(pdelb(nscale), pavgb(nscale))
@@ -501,7 +449,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightb(nodemax,nodemax,2:nlayer), &
         &   biasb(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -521,22 +469,20 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weightb(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasb(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     read(file_unit_4, *)line
     read(nfile, *)line
-    call read_network_header( nfile, ninput, nhid, noutput )
+    call read_network_header(nfile, ninput, nhid, noutput)
     nscale = ninput+noutput
     nlayer = nhid+2 !additional one for input layer and one for output
     allocate(pdelc(nscale), pavgc(nscale))
@@ -546,7 +492,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightc(nodemax,nodemax,2:nlayer), &
         & biasc(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -566,21 +512,19 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weightc(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasc(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
+    endif
     close(nfile)
     close(file_unit_4)
-
 end subroutine pes_init
 
 !> @brief Evaluate getpota.
@@ -596,8 +540,7 @@ subroutine getpota( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavga(i))/pdela(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -605,11 +548,10 @@ subroutine getpota( x, vpot )
             y(inode1,ilay1) = biasa(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -617,11 +559,10 @@ subroutine getpota( x, vpot )
         y(inode1,ilay1) = biasa(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
 end subroutine getpota
@@ -639,8 +580,7 @@ subroutine getpotb( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgb(i))/pdelb(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -648,11 +588,10 @@ subroutine getpotb( x, vpot )
             y(inode1,ilay1) = biasb(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightb(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -660,11 +599,10 @@ subroutine getpotb( x, vpot )
         y(inode1,ilay1) = biasb(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightb(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelb(nscale)+pavgb(nscale)
 end subroutine getpotb
@@ -682,8 +620,7 @@ subroutine getpotc( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgc(i))/pdelc(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -691,11 +628,10 @@ subroutine getpotc( x, vpot )
             y(inode1,ilay1) = biasc(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightc(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -703,11 +639,10 @@ subroutine getpotc( x, vpot )
         y(inode1,ilay1) = biasc(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightc(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelc(nscale)+pavgc(nscale)
 end subroutine getpotc
@@ -717,13 +652,13 @@ function tranfun( x, ifunc )
     implicit none
     integer          :: ifunc
     double precision :: tranfun, x
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun = x
-    end if
+    endif
 end
 
 !> @brief Evaluate emsav.
@@ -765,7 +700,6 @@ subroutine evmono( x, m )
     m(8)  = m(3)*m(4)
     m(9)  = m(2)*m(5)
     m(10) = m(4)*m(5)
-
 end subroutine evmono
 
 !> @brief Evaluate evpoly.
@@ -791,7 +725,6 @@ subroutine evpoly( m, p )
     p(15) = p(2)*p(2)-p(6)-p(6)
     p(16) = p(3)*p(3)-p(9)-p(9)
     p(17) = p(4)*p(4)
-
 end subroutine evpoly
 
 !> @brief Evaluate xyzTOjcb3.
@@ -811,37 +744,27 @@ subroutine xyztojcb3( ct, rt )
     double precision :: ct(3,4), xab(3), xabc(3), rt(6) !ct in HOH + F= HO + HF order
     double precision :: xvec(3,6), crop1(3), crop2(3)
     double precision :: mass(4)
-    mass(1) = 1.00783d0
-    mass(2) = 15.99491d0
-    mass(3) = 1.00783d0
-    mass(4) = 18.99840d0
-
-    xab(:)  = (mass(1)*ct(:,1)+mass(2)*ct(:,2))/(mass(1)+mass(2))
-    xabc(:) = (mass(1)*ct(:,1)+mass(2)*ct(:,2)+mass(3)*ct(:,3))/ (mass(1)+mass(2)+mass(3))
-
+    mass(1)   = 1.00783d0
+    mass(2)   = 15.99491d0
+    mass(3)   = 1.00783d0
+    mass(4)   = 18.99840d0
+    xab(:)    = (mass(1)*ct(:,1)+mass(2)*ct(:,2))/(mass(1)+mass(2))
+    xabc(:)   = (mass(1)*ct(:,1)+mass(2)*ct(:,2)+mass(3)*ct(:,3))/ (mass(1)+mass(2)+mass(3))
     xvec(:,1) = ct(:,1)-ct(:,2)
     xvec(:,2) = ct(:,3)-xab(:)
     xvec(:,3) = ct(:,4)-xabc(:)
-
-    rt(1) = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-    rt(2) = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-    rt(3) = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
-
-    rt(4) = dot_product(xvec(:,1), xvec(:,2))/rt(1)/rt(2)
-    rt(5) = dot_product(xvec(:,2), xvec(:,3))/rt(2)/rt(3)
-
-    rt(4) = dacos(max(-1.0d0, min(1.0d0, rt(4))))
-    rt(5) = dacos(max(-1.0d0, min(1.0d0, rt(5))))
-
+    rt(1)     = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
+    rt(2)     = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
+    rt(3)     = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
+    rt(4)     = dot_product(xvec(:,1), xvec(:,2))/rt(1)/rt(2)
+    rt(5)     = dot_product(xvec(:,2), xvec(:,3))/rt(2)/rt(3)
+    rt(4)     = dacos(max(-1.0d0, min(1.0d0, rt(4))))
+    rt(5)     = dacos(max(-1.0d0, min(1.0d0, rt(5))))
     call crossp(xvec(:,1), xvec(:,2), crop1)
     call crossp(xvec(:,2), xvec(:,3), crop2)
-
     rt(6) = dot_product(crop1, crop2)/dsqrt(dot_product(crop1, crop1))/ dsqrt(dot_product(crop2, crop2))
-
     rt(6) = dacos(max(-1.0d0, min(1.0d0, rt(6))))
-
     rt(6) = dacos(-1.d0)-rt(6)
-
 end subroutine xyztojcb3
 
 !> @brief Evaluate jcb3tocart.
@@ -859,11 +782,10 @@ subroutine jcb3tocart( rint, cart )
     !-->-->phia is the diheral angle for r1*r2 plane and r2*r3 plane.
     !-->-->cart(3,1-4)=cartesian coordinates of four atoms A,B,C,D.
     double precision :: temp1, temp2, temp3
-    ama = 1.00783d0
-    amb = 15.99491d0
-    amc = 1.00783d0
-    amd = 18.99840d0
-
+    ama  = 1.00783d0
+    amb  = 15.99491d0
+    amc  = 1.00783d0
+    amd  = 18.99840d0
     r1   = rint(1)
     r2   = rint(2)
     r3   = rint(3)
@@ -930,41 +852,38 @@ subroutine cart_dijacobi( c1, r )
     !     dompp(5)=dsqrt(dot_product(vec(:,5),vec(:,5)))
     !     dotpp(6)=dsqrt(dot_product(vec(:,6),vec(:,6)))
     !     dotpp(7)=dsqrt(dot_product(vec(:,7),vec(:,7)))
-
     dotpp(1) = dsqrt(dot_product(vec(:,1), vec(:,1)))
     dotpp(3) = dsqrt(dot_product(vec(:,3), vec(:,3)))
     dotpp(5) = dsqrt(dot_product(vec(:,5), vec(:,5)))
-
-    if (dotpp(1)*dotpp(5).lt. 1.0d-16)then
+    if( dotpp(1)*dotpp(5) .lt. 1.0d-16 )then
         costh1 = 0.0d0
     else
         costh1 = dot_product(vec(:,1), vec(:,5))/(dotpp(1)*dotpp(5))
-    end if
-    if (dotpp(3)*dotpp(5).lt. 1.0d-16)then
+    endif
+    if( dotpp(3)*dotpp(5) .lt. 1.0d-16 )then
         costh2 = 0.0d0
     else
         costh2 = dot_product(vec(:,3), vec(:,5))/(dotpp(3)*dotpp(5))
-    end if
+    endif
     !  note the round off errors
     r(4) = dacos( max(-1.0d0, min(1.0d0, costh1))) ! in radians
     r(5) = dacos( max(-1.0d0, min(1.0d0, costh2))) ! in radians
-
-    if (dabs(dcos(r(4))*dcos(r(5))).lt.1.0d-16)then
+    if( dabs(dcos(r(4))*dcos(r(5))) .lt. 1.0d-16 )then
         !       stop
         !       return
     else
         ! compute the Jacobi dihedral angle, based on the norm of the plane
         call crossp(vec(:,1), vec(:,5), crop1) ! crossproduct for the norm
         call crossp(vec(:,3), vec(:,5), crop2) !
-        if(dsqrt( sum(crop1(:)**2))*dsqrt(sum(crop2(:)**2)).lt.1.0d-10)&
+        if( dsqrt( sum(crop1(:)**2))*dsqrt(sum(crop2(:)**2)) .lt. 1.0d-10 ) &
             &  then
         r(6) = 0.0d0
     else
         costh3 = dot_product(crop1(:), crop2(:))/(dsqrt(sum(crop1(:)**2)) *dsqrt(sum(crop2(:)**2)))
         !    write(99999,'(f20.10)') costh3
         r(6) = dacos( max(-1.0d0, min(1.0d0, costh3)))
-    end if
-    end if
+    endif
+    endif
 end subroutine cart_dijacobi
 
 !******************************************************************************
@@ -979,13 +898,11 @@ subroutine dijacobi_cart( r, c )
     double precision :: xa, xb, yc, yd, cxsin, dxsin, dotp
     double precision :: rx1, rx2, rx3, rx4, rx5, rx6
     double precision :: amass, bmass, cmass, dmass
-    pi = dacos(-1.0d0)
-
-    amass = 1.00783d0
-    bmass = 15.99491d0
-    cmass = amass
-    dmass = 18.99834d0
-
+    pi      = dacos(-1.0d0)
+    amass   = 1.00783d0
+    bmass   = 15.99491d0
+    cmass   = amass
+    dmass   = 18.99834d0
     mass(1) = amass
     mass(2) = bmass
     mass(3) = cmass
@@ -1005,7 +922,6 @@ subroutine dijacobi_cart( r, c )
     !      X\-------------------->\ Y--->
     !        \                     \ th2
     !       B \                    -/ C
-
     !   put ABY on xy plane, X origin point, X->Y (R)  on the x axis
     !   and also put A in the positive y direction
     !             ^y axis
@@ -1029,7 +945,6 @@ subroutine dijacobi_cart( r, c )
     c(1,2) = xb*dcos(pi-r(4))
     c(2,2) = -xb*dsin(pi-r(4))
     c(3,2) = 0.d0
-
     !     put ABY on xy plane, X origin point
     !               ^y
     !          A    |
@@ -1054,7 +969,6 @@ subroutine dijacobi_cart( r, c )
     c(1,4) = r(3)-yd*dcos(r(5))
     c(2,4) = dxsin*dcos(r(6))
     c(3,4) = dxsin*dsin(r(6))
-
 end subroutine dijacobi_cart
 
 !******************************************************************************

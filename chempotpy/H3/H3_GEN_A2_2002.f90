@@ -31,22 +31,17 @@ subroutine pes( x, igrad, p, g, d )
     logical, save                 :: first_time_data=.true.
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     ! input cartesian is HHH
-    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
-
+    call legacy_triatomic_distances_to_bohr(x, r(1,:))
     call pot(r, e, 1)
-
     v = legacy_energy_to_electronvolt(e(1))
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = v
-        end do
+        enddo
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
 end subroutine pes
 
 module a2data
@@ -240,7 +235,7 @@ subroutine pot( rvp, evp, nt )
         r2x = rvp(ivp,2)
         r3x = rvp(ivp,3)
         call pota2(r1x, r2x, r3x, evp(ivp))
-    end do
+    enddo
 end subroutine pot
 
 !> @brief Evaluate prepota2 for the H3_GEN_A2_2002 potential.
@@ -257,15 +252,12 @@ subroutine prepota2
     write(6, *)' Using A2 H3 PES of 8/15/01'
     write(6, *)' S. L. Mielke, B. C. Garrett, and K. A. Peterson, J. Ch&
         &em. Phys., 116 (2002) 4142'
-
     epslon = 1.d-12
     epscem = 1.d-12
     ald    = 0.02d0
     betad  = 0.72d0
-
-    call initialize_h3_basis( 12, 11, maxi2a, maxi2b )
+    call initialize_h3_basis(12, 11, maxi2a, maxi2b)
     return
-
     entry pota2(r1x, r2x, r3x, eee)
     call trip(r1x, etrip1)
     call trip(r2x, etrip2)
@@ -282,56 +274,45 @@ subroutine prepota2
     xj      = sqrt(epslon+0.5d0*((xj3-xj1)**2+(xj2-xj1)**2+(xj3-xj2)**2))
     xjs     = 0.25d0*(xj1+xj2+xj3)
     vlondon = q1+q2+q3-xj
-
-    rho1 = exp(-beta*(r1x-rnought))
-    rho2 = exp(-beta*(r2x-rnought))
-    rho3 = exp(-beta*(r3x-rnought))
-
-    if((r1x.le.betad).or.(r2x.le.betad).or.(r3x.le.betad))then
+    rho1    = exp(-beta*(r1x-rnought))
+    rho2    = exp(-beta*(r2x-rnought))
+    rho3    = exp(-beta*(r3x-rnought))
+    if( (r1x .le. betad).or.(r2x .le. betad).or.(r3x .le. betad) )then
         damper = 0.d0
     else
         rdamp1 = ald/(betad-r1x)
         rdamp2 = ald/(betad-r2x)
         rdamp3 = ald/(betad-r3x)
         damper = exp(rdamp1+rdamp2+rdamp3)
-    end if
-
-    bb   = sqrt(epscem+(r1x-r3x)**2+(r1x-r2x)**2+(r2x-r3x)**2)
-    warp = 1.d0/(1.d0/r1x+1.d0/r2x+1.d0/r3x)
-
-    v = eshift+vlondon
-
-    sum1 = 0.d0
-    sum2 = 0.d0
-    sum3 = 0.d0
-    sum4 = 0.d0
-
+    endif
+    bb       = sqrt(epscem+(r1x-r3x)**2+(r1x-r2x)**2+(r2x-r3x)**2)
+    warp     = 1.d0/(1.d0/r1x+1.d0/r2x+1.d0/r3x)
+    v        = eshift+vlondon
+    sum1     = 0.d0
+    sum2     = 0.d0
+    sum3     = 0.d0
+    sum4     = 0.d0
     rho1t(0) = 1.d0
     rho2t(0) = 1.d0
     rho3t(0) = 1.d0
-
     do it=1, 12
         rho1t(it) = rho1t(it-1)*rho1
         rho2t(it) = rho2t(it-1)*rho2
         rho3t(it) = rho3t(it-1)*rho3
-    end do
-
+    enddo
     do ii=1, maxi2a
-        call get_h3_basis_term( ii, first_power, second_power, third_power, coefficient_index )
+        call get_h3_basis_term(ii, first_power, second_power, third_power, coefficient_index)
         rprod = rho1t(third_power)*rho2t(second_power)*rho3t(first_power)
         sum1  = sum1+xlin1(coefficient_index)*rprod
         sum2  = sum2+xlin2(coefficient_index)*rprod
-    end do
-
+    enddo
     do ii=maxi2a+1, maxi2a+maxi2b
-        call get_h3_basis_term( ii, first_power, second_power, third_power, coefficient_index )
+        call get_h3_basis_term(ii, first_power, second_power, third_power, coefficient_index)
         rprod = rho1t(third_power)*rho2t(second_power)*rho3t(first_power)
         sum3  = sum3+xlin3(coefficient_index)*rprod
         sum4  = sum4+xlin4(coefficient_index)*rprod
-    end do
-
+    enddo
     eee = v+damper*(sum1+sum2*bb+sum3*warp+sum4*bb*warp)
-
 end subroutine prepota2
 
 !> @brief Evaluate trip for the H3_GEN_A2_2002 potential.
@@ -355,19 +336,17 @@ subroutine trip( r, v )
         & 2.3004916075318040d-03, 3.1740661346757730d-03, &
         & -2.3028140070272670d-03, 6.4778830165694920d-04, &
         & -8.5334197479958010d-05, 4.5529457450819180d-06/)
-    damp = 1.d0-exp(-beta*r**2)
-    xd   = damp/r
-    v    = c6*xd**6+c8*xd**8+c10*xd**10
-
+    damp   = 1.d0-exp(-beta*r**2)
+    xd     = damp/r
+    v      = c6*xd**6+c8*xd**8+c10*xd**10
     prefac = exp(- alpha*(r-re))
-    if((r-re).ne.0.d0)then
+    if( (r-re) .ne. 0.d0 )then
         do j=1, 17
             v = v+xlp(j)*(r-re)**(j-1)*prefac
-        end do
+        enddo
     else
         v = v+xlp(1)*prefac
-    end if
-
+    endif
 end subroutine trip
 
 !> @brief Evaluate singlet for the H3_GEN_A2_2002 potential.
@@ -395,13 +374,11 @@ subroutine singlet( r, v )
     xd     = damp/r
     prefac = exp(- alpha*(r-re))
     v      = c6*xd**6+c8*xd**8+c10*xd**10
-
-    if((r-re).ne.0.d0)then
+    if( (r-re) .ne. 0.d0 )then
         do j=1, 17
             v = v+xlp(j)*(r-re)**(j-1)*prefac
-        end do
+        enddo
     else
         v = v+xlp(1)*prefac
-    end if
-
+    endif
 end subroutine singlet

@@ -100,38 +100,34 @@ subroutine dpem( x, igrad, u, ug )
     integer                       :: iatom, idir, j, istate, jstate
     !initialize
     u = 0.d0; ug = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             xx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
-        end do
-    end do
-
+        enddo
+    enddo
     call pot(igrad, xx, uu, guu, vv, gvv, dvec, cc, 0)
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         do istate=1, nstates
             do jstate=1, nstates
                 u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
-            end do
-        end do
-    elseif (igrad==1) then
+            enddo
+        enddo
+    else if( igrad == 1 )then
         do istate=1, nstates
             do jstate=1, nstates
                 u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
-            end do
-        end do
+            enddo
+        enddo
         do istate=1, nstates
             do jstate=1, nstates
                 do iatom=1, natoms
                     do idir=1, 3
                         ug(istate,jstate,iatom,idir) = guu(idir,iatom,istate,jstate)*51.
-                    end do
-                end do
-            end do
-        end do
-    end if
-
+                    enddo
+                enddo
+            enddo
+        enddo
+    endif
 end subroutine dpem
 
 !***********************************************************************
@@ -162,8 +158,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         y(i) = xx(2,i)
         z(i) = xx(3,i)
         !        write(6,'(3F10.6)') xx(:,i)*0.5291772192d0
-    end do
-
+    enddo
     !     vv(:) = 0d0
     !     uu(:,:) = 0d0
     !     guu(:,:,:,:) = 0d0
@@ -171,7 +166,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     call poten(1, x, y, z, uu, guu, vv, gvv, cc)
     ! Compute the nonadiabatic coupling vectors DVEC.
     !      call getdvec3(natm,uu,guu,vv,dvec,cc)
-
     !     write(6,*) 'diabatic energy '
     !     write(6,'(5F10.6,a)') uu(1,1),uu(2,2),uu(3,3),uu(1,3),uu(2,3)
     !     write(6,'(a,5F10.6,a)') 'adiabatic energy ', vv(:)
@@ -222,19 +216,19 @@ subroutine getdvec3( nclu, pemd, gpemd, pema, dvec, cc )
                     do k = 1, nsurft
                         do l = 1, nsurft
                             dvec(i1,i2,i,j) = dvec(i1,i2,i,j) + cc(k,i)*cc(l,j)*gpemd(i1,i2,k,l)
-                        end do
-                    end do
-                    if ((pema(j) - pema(i)) .ne. 0.0d0) then
+                        enddo
+                    enddo
+                    if( (pema(j) - pema(i)) .ne. 0.0d0 )then
                         dvec(i1,i2,i,j) = dvec(i1,i2,i,j)/(pema(j)-pema(i))
                     else
                         dvec(i1,i2,i,j) = 0.0d0
-                    end if
+                    endif
                     !              write(6,*) "dvec ",i1,i2,i,j,dvec(i1,i1,i,j)
                     dvec(i1,i2,j,i) = -dvec(i1,i2,i,j)
-                end do
-            end do
-        end do
-    end do
+                enddo
+            enddo
+        enddo
+    enddo
     !       stop
 end subroutine getdvec3
 
@@ -243,7 +237,6 @@ subroutine poten( igrad, x, y, z, uu, guu, vv, gvv, cc )
     !***********************************************************************
     ! Little subroutine to call evuii and evuij
     !***********************************************************************
-
     implicit none
     double precision   :: bndlen, u12
     integer            :: i, j
@@ -278,25 +271,21 @@ subroutine poten( igrad, x, y, z, uu, guu, vv, gvv, cc )
     ! Determine rOH and determine ir, t, and dtdr
     roh = bndlen(7, 13, x, y, z)
     call tent(nap, rap, roh, ir, t, dtdr)
-
     do i=1, 3*natm
         du1dx(i) = 0.0d0
         du2dx(i) = 0.0d0
         du3dx(i) = 0.0d0
-    end do
-
+    enddo
     ! Determine u13 and u13 and their Cartesian gradients
     !      call evuij(nap,natm,igrad,ir,t,dtdr,X,Y,Z,u13,u23,
     !     $           du13dX,du23dX)
     ! Determin u12, u13, and u23 and their Cartesian gradients  !KRY 2014071
     call evuij(nap, natm, igrad, ir, t, dtdr, x, y, z, u12, u13, u23, &
         & du12dx, du13dx, du23dx)
-
     ! Determine u11, u22, u33, and their Cartesian gradients
     call evuii(igrad, natm, x, y, z, u1, du1dx, 11)
     call evuii(igrad, natm, x, y, z, u2, du2dx, 22)
     call evuii(igrad, natm, x, y, z, u3, du3dx, 33)
-
     ! KRY Born-Mayer repulsion
     call evubm(igrad, natm, x, y, z, ubm, dubmdx)
     !
@@ -317,9 +306,8 @@ subroutine poten( igrad, x, y, z, uu, guu, vv, gvv, cc )
             guu(j,i,3,1) = du13dx(3*i-3+j)
             guu(j,i,2,3) = du23dx(3*i-3+j)
             guu(j,i,3,2) = du23dx(3*i-3+j)
-        end do
-    end do
-
+        enddo
+    enddo
     uu(:,:) = 0d0
     !      uu(1,1) = u1
     !      uu(2,2) = u2
@@ -334,7 +322,6 @@ subroutine poten( igrad, x, y, z, uu, guu, vv, gvv, cc )
     uu(3,1) = u13
     uu(2,3) = u23
     uu(3,2) = u23
-
 end subroutine poten
 
 !> @brief Evaluate evuii for the PHOH_APRP_DPEM potential.
@@ -349,7 +336,6 @@ subroutine evuii( igrad, natm, x, y, z, u, dudx, ii )
     !       = 22, U22
     !       = 33, U33
     !***********************************************************************
-
     implicit none
     double precision            :: bndang, bndlen, dihedr, dudph, dudr, dudth, phi, r, theta, ub, ur, ut, uto
     integer                     :: i, ii, j
@@ -439,13 +425,11 @@ subroutine evuii( igrad, natm, x, y, z, u, dudx, ii )
     ! Evaluate internal coordinates
     call evintcoord(nblt, iblt, nbat, ibat, ntot, itot, noopt, ioopt, &
         & nqtc, qtc, x, y, z)
-
     r     = bndlen(7, 13, x, y, z)
     theta = bndang(1, 7, 13, x, y, z)
     phi   = dihedr(2, 1, 7, 13, x, y, z)
-
     ! Evaluate Wilson's B-matrix if igrad = 1
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         ! Added by J. Zheng
         !        bmt(:,:) = 0d0
         call bmat3(nblt, iblt, nbat, ibat, ntot, itot, noopt, ioopt, natm, &
@@ -454,58 +438,53 @@ subroutine evuii( igrad, natm, x, y, z, u, dudx, ii )
         !        bms(:,:) = 0d0
         call bmat3(nbls, ibls, nbas, ibas, ntos, itos, noops, ioops, natm, &
             & x, y, z, bms, ldbms)
-    end if
-
+    endif
     ! Evaluate uii from tertiary coordinates
     call evuiit(igrad, r, nqtc, qtc, ut, dut, dutdr, ii)
-
     ! Evaluate uii from reactive (rOH) and secondary coordinates
     ! (bending C-O-H and torsion C-C-O-H)
-    if (ii .eq. 11) then
+    if( ii .eq. 11 )then
         call evu1r(igrad, r, ur, durdr)
         call evu1b(igrad, r, theta, ub, dubdr, dubdth)
         call evu1to(igrad, r, phi, uto, dutodr, dtodph)
-    else if (ii .eq. 22) then
+    else if( ii .eq. 22 )then
         call evu2r(igrad, r, ur, durdr)
         call evu2b(igrad, r, theta, ub, dubdr, dubdth)
         call evu2to(igrad, r, phi, uto, dutodr, dtodph)
-    else if (ii .eq. 33) then
+    else if( ii .eq. 33 )then
         call evu3r(igrad, r, ur, durdr)
         call evu3b(igrad, r, theta, ub, dubdr, dubdth)
         call evu3to(igrad, r, phi, uto, dutodr, dtodph)
-    end if
-
+    endif
     ! Readujst zero of energy to have U1 min to be zero
     u     = ur+ub+uto+ut-u1min
     dudr  = durdr+dubdr+dutodr+dutdr
     dudth = dubdth
     dudph = dtodph
-
     ! Calculated analytical Cartesian gradient if igrad = 1
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         do i=1, 3*natm
             dudx(i) = 0.0d0
-        end do
+        enddo
         ! Contribution of dudX from dudr
         do i=1, 3*natm
             dudx(i) = dudx(i)+dudr*bms(1,i)
-        end do
+        enddo
         ! Contribution of dudX from dudth
         do i=1, 3*natm
             dudx(i) = dudx(i)+dudth*bms(2,i)
-        end do
+        enddo
         ! Contribution of dudX from dudph
         do i=1, 3*natm
             dudx(i) = dudx(i)+dudph*bms(3,i)
-        end do
+        enddo
         ! Contribution of dudX from dut
         do i=1, 3*natm
             do j=1, nqtc
                 dudx(i) = dudx(i)+dut(j)*bmt(j,i)
-            end do
-        end do
-    end if
-
+            enddo
+        enddo
+    endif
 end subroutine evuii
 
 !      subroutine evuiit(igrad,r,ntot,nqtc,qtc,ut,dut,dutdr,ii)
@@ -520,7 +499,6 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
     !       = 22, U22
     !       = 33, U33
     !***********************************************************************
-
     implicit none
     integer, parameter :: nap = 4
     !      integer nqa,nqb
@@ -574,14 +552,12 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
     ut = 0.0d0; dutdr = 0.0d0
     do i=1, nqtc
         dut(i) = 0.0d0
-    end do
-
+    enddo
     ! Get HS for stretchings, HB for bendings, and HT for torsions
     call gethess(nap, hs, nqs, hb, nqb, ht, nqt, hbs, ii)
     ! Get equilibrium parameters
     call getgeom(nap, qse, nqs, qbe, nqb, qte, nqt, ii)
-
-    if (ii .eq. 11) then
+    if( ii .eq. 11 )then
         rap(1) = 1.93206106d0 ! rOH=1.0224 using rOH=0.964A
         rap(2) = 2.49443845d0 ! rOH=1.32 A
         rap(3) = 3.77945219d0 ! rOH=2.00 A
@@ -592,7 +568,7 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
         v0(2) = -0.000346019d0
         v0(3) = 0.000672861d0
         v0(4) = -0.001758495d0
-    else if (ii .eq. 22) then
+    else if( ii .eq. 22 )then
         rap(1) = 1.93206106d0 ! rOH=1.0224 using rOH=0.964A
         rap(2) = 2.49443845d0 ! rOH=1.32 A
         rap(3) = 4.27078097d0 ! rOH=2.26 A
@@ -601,7 +577,7 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
         v0(2)  = -0.00976278d0
         v0(3)  = -0.00976278d0
         v0(4)  = -0.00976278d0
-    else if (ii .eq. 33) then
+    else if( ii .eq. 33 )then
         rap(1) = 1.93206106d0 ! rOH=1.0224 using rOH=0.964A
         rap(2) = 2.49443845d0 ! rOH=1.32 A
         rap(3) = 4.27078097d0 ! rOH=2.26 A
@@ -610,58 +586,54 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
         v0(2)  = -0.015044491d0
         v0(3)  = -0.014671263d0
         v0(4)  = -0.01433271d0
-    end if
-
+    endif
     call tent(nap, rap, r, ir, t, dtdr)
-
     do i=1, nqs
         qs(i) = qtc(i)
-    end do
+    enddo
     do i=1, nqb
         qb(i)  = qtc(i+nqs)
         sqb(i) = sin(qb(i))
-    end do
+    enddo
     do i=1, nqt
         qt(i) = qtc(i+nqs+nqb)
-    end do
-
+    enddo
     ! Initialize hessian elements of stretchings, bendings, and torsions
     do i=1, nqs
         do j=1, i
             fs1(i,j) = 0.0d0
             fs2(i,j) = 0.0d0
-        end do
-    end do
+        enddo
+    enddo
     do i=1, nqb
         do j=1, i
             fb1(i,j) = 0.0d0
             fb2(i,j) = 0.0d0
-        end do
-    end do
+        enddo
+    enddo
     do i=1, nqt
         do j=1, i
             ft1(i,j) = 0.0d0
             ft2(i,j) = 0.0d0
-        end do
-    end do
+        enddo
+    enddo
     do i=1, nqb
         do j=1, nqs
             fbs1(i,j) = 0.0d0
             fbs2(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     ! Get force constant matrices for strecthings (FS) and bending (FB)
     ! and torsions (FT)
-    if (ir .eq. 1) then
+    if( ir .eq. 1 )then
         u0 = v0(1)
         do i=1, nqs
             !          qs1(i)=qs(i)-qse(i,1)
             qse1(i) = qse(i,1)
             do j=1, i
                 fs1(i,j) = hs(i,j,1)*qse1(i)*qse1(j)
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqb
             !          qb1(i)=qb(i)-qbe(i,1)
             ! cos(theta0)-cos(theta) as variables
@@ -669,53 +641,53 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
             qb1(i)  = cos(qbe1(i))-cos(qb(i))
             do j=1, i
                 fb1(i,j) = hb(i,j,1)/(sin(qbe1(i))*sin(qbe1(j)))
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqt
             qt1(i)  = qt(i)-qte(i,1)
             sqt1(i) = sin(qt1(i))
             cqt1(i) = cos(qt1(i))
             do j=1, i
                 ft1(i,j) = ht(i,j,1)
-            end do
-        end do
+            enddo
+        enddo
         ! bend-stretch couplings
         do i=1, nqb
             do j=1, nqs
                 fbs1(i,j) = hbs(i,j,1)*qse1(j)/sin(qbe1(i))
-            end do
-        end do
-    else if (ir .eq. nap+1) then
+            enddo
+        enddo
+    else if( ir .eq. nap+1 )then
         u0 = v0(nap)
         do i=1, nqs
             qse1(i) = qse(i,nap)
             do j=1, i
                 fs1(i,j) = hs(i,j,nap)*qse1(i)*qse1(j)
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqb
             ! cos(theta0)-cos(theta) as variables
             qbe1(i) = qbe(i,nap)
             qb1(i)  = cos(qbe1(i))-cos(qb(i))
             do j=1, i
                 fb1(i,j) = hb(i,j,nap)/(sin(qbe1(i))*sin(qbe1(j)))
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqt
             qt1(i)  = qt(i)-qte(i,nap)
             sqt1(i) = sin(qt1(i))
             cqt1(i) = cos(qt1(i))
             do j=1, i
                 ft1(i,j) = ht(i,j,nap)
-            end do
-        end do
+            enddo
+        enddo
         ! bend-stretch couplings
         do i=1, nqb
             do j=1, nqs
                 fbs1(i,j) = hbs(i,j,nap)*qse1(j)/sin(qbe1(i))
-            end do
-        end do
-    else if ((ir .gt. 1) .and. (ir .lt. nap+1)) then
+            enddo
+        enddo
+    else if( (ir .gt. 1) .and. (ir .lt. nap+1) )then
         u01 = v0(ir-1)
         u02 = v0(ir)
         do i=1, nqs
@@ -724,8 +696,8 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
             do j=1, i
                 fs1(i,j) = hs(i,j,ir-1)*qse1(i)*qse1(j)
                 fs2(i,j) = hs(i,j,ir)*qse2(i)*qse2(j)
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqb
             qbe1(i) = qbe(i,ir-1)
             qbe2(i) = qbe(i,ir)
@@ -734,8 +706,8 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
             do j=1, i
                 fb1(i,j) = hb(i,j,ir-1)/(sin(qbe1(i))*sin(qbe1(j)))
                 fb2(i,j) = hb(i,j,ir)/(sin(qbe2(i))*sin(qbe2(j)))
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqt
             qt1(i)  = qt(i)-qte(i,ir-1)
             qt2(i)  = qt(i)-qte(i,ir)
@@ -746,40 +718,38 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
             do j=1, i
                 ft1(i,j) = ht(i,j,ir-1)
                 ft2(i,j) = ht(i,j,ir)
-            end do
-        end do
+            enddo
+        enddo
         ! bend-stretch couplings
         do i=1, nqb
             do j=1, nqs
                 fbs1(i,j) = hbs(i,j,ir-1)*qse1(j)/sin(qbe1(i))
                 fbs2(i,j) = hbs(i,j,ir)*qse2(j)/sin(qbe2(i))
-            end do
-        end do
-    end if
-
+            enddo
+        enddo
+    endif
     ! Get the upper parts of force matrix by symmetry
     do i=1, nqs
         do j=i+1, nqs
             fs1(i,j) = fs1(j,i)
             fs2(i,j) = fs2(j,i)
-        end do
-    end do
+        enddo
+    enddo
     do i=1, nqb
         do j=i+1, nqb
             fb1(i,j) = fb1(j,i)
             fb2(i,j) = fb2(j,i)
-        end do
-    end do
+        enddo
+    enddo
     do i=1, nqt
         do j=i+1, nqt
             ft1(i,j) = ft1(j,i)
             ft2(i,j) = ft2(j,i)
-        end do
-    end do
-
+        enddo
+    enddo
     !      write(*,'(A,I2)') "ir = ",ir
     ! Calculate potential energy
-    if ((ir .eq. 1) .or. (ir .eq. nap+1)) then
+    if( (ir .eq. 1) .or. (ir .eq. nap+1) )then
         vs  = 0.0d0
         vb  = 0.0d0
         vt  = 0.0d0
@@ -788,29 +758,28 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
             do j=1, nqs
                 !            vs=vs+0.5d0*FS1(i,j)*(qs(i)-qse1(i))*(qs(j)-qse1(j))
                 vs = vs+0.5d0*fs1(i,j) *(qs(i)-qse1(i))*(qs(j)-qse1(j))/(qs(i)*qs(j))
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqb
             do j=1, nqb
                 vb = vb+0.5d0*qb1(i)*fb1(i,j)*qb1(j)
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqt
             do j=1, nqt
                 vt = vt+0.5d0*ft1(i,j)*sqt1(i)*sqt1(j)
-            end do
+            enddo
             vt = vt-0.5d0*ft1(i,i)*sqt1(i)*sqt1(i) +2.0d0*ft1(i,i)*sin(qt1(i)/2.0d0)*sin(qt1(i)/2.0d0)
-        end do
+        enddo
         ! bend-stretch couplings
         do i=1, nqb
             do j=1, nqs
                 !            vbs=vbs+FBS1(i,j)*qb1(i)*(qs(j)-qse1(j))
                 vbs = vbs+fbs1(i,j)*qb1(i)*(qs(j)-qse1(j))/qs(j)
-            end do
-        end do
-
+            enddo
+        enddo
         ut = u0+vs+vb+vt+vbs
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             !          dvsdr=0.0d0
             !          dvbdr=0.0d0
             !          dvtdr=0.0d0
@@ -820,49 +789,48 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
                 do j=1, nqs
                     !              dvs(i)=dvs(i)+FS1(i,j)*(qs(j)-qse1(j))
                     dvs(i) = dvs(i)+fs1(i,j)*qse1(i) *(qs(j)-qse1(j))/(qs(i)*qs(i)*qs(j))
-                end do
-            end do
+                enddo
+            enddo
             do i=1, nqb
                 dvb(i) = 0.0d0
                 do j=1, nqb
                     dvb(i) = dvb(i)+sqb(i)*fb1(i,j)*qb1(j)
-                end do
-            end do
+                enddo
+            enddo
             do i=1, nqt
                 dvt(i) = 0.0d0
                 do j=1, nqt
                     dvt(i) = dvt(i)+ft1(i,j)*cqt1(i)*sqt1(j)
-                end do
+                enddo
                 dvt(i) = dvt(i)-ft1(i,i)*cqt1(i)*sqt1(i) +2.0d0*ft1(i,i)*cos(qt1(i)/2.0d0)*sin(qt1(i)/2.0d0)
-            end do
+            enddo
             ! contribution from vbs (dvs and dvb)
             do i=1, nqb
                 dvbsdb(i) = 0.0d0
                 do j=1, nqs
                     !              dvbsdb(i)=dvbsdb(i)+FBS1(i,j)*sqb(i)*(qs(j)-qse1(j))
                     dvbsdb(i) = dvbsdb(i)+fbs1(i,j)*sqb(i) *(qs(j)-qse1(j))/qs(j)
-                end do
-            end do
+                enddo
+            enddo
             do i=1, nqs
                 dvbsds(i) = 0.0d0
                 do j=1, nqb
                     !              dvbsds(i)=dvbsds(i)+FBS1(j,i)*qb1(j)
                     dvbsds(i) = dvbsds(i)+fbs1(j,i)*qse1(i) *qb1(j)/(qs(i)*qs(i))
-                end do
-            end do
-
+                enddo
+            enddo
             !          dutdr=dvsdr+dvbdr+dvtdr+dvbsdr
             dutdr = 0.0d0
             do i=1, nqs
                 dut(i) = dvs(i)+dvbsds(i)
-            end do
+            enddo
             do i=1, nqb
                 dut(nqs+i) = dvb(i)+dvbsdb(i)
-            end do
+            enddo
             do i=1, nqt
                 dut(nqs+nqb+i) = dvt(i)
-            end do
-        end if
+            enddo
+        endif
     else
         vs1  = 0.0d0
         vs2  = 0.0d0
@@ -878,22 +846,22 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
                 vs1 = vs1+0.5d0*fs1(i,j) *(qs(i)-qse1(i))*(qs(j)-qse1(j))/(qs(i)*qs(j))
                 !            vs2=vs2+0.5d0*FS2(i,j)*(qs(i)-qse2(i))*(qs(j)-qse2(j))
                 vs2 = vs2+0.5d0*fs2(i,j) *(qs(i)-qse2(i))*(qs(j)-qse2(j))/(qs(i)*qs(j))
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqb
             do j=1, nqb
                 vb1 = vb1+0.5d0*qb1(i)*fb1(i,j)*qb1(j)
                 vb2 = vb2+0.5d0*qb2(i)*fb2(i,j)*qb2(j)
-            end do
-        end do
+            enddo
+        enddo
         do i=1, nqt
             do j=1, nqt
                 vt1 = vt1+0.5d0*sqt1(i)*ft1(i,j)*sqt1(j)
                 vt2 = vt2+0.5d0*sqt2(i)*ft2(i,j)*sqt2(j)
-            end do
+            enddo
             vt1 = vt1-0.5d0*ft1(i,i)*sqt1(i)*sqt1(i) +2.0d0*ft1(i,i)*sin(qt1(i)/2.0d0)*sin(qt1(i)/2.0d0)
             vt2 = vt2-0.5d0*ft2(i,i)*sqt2(i)*sqt2(i) +2.0d0*ft2(i,i)*sin(qt2(i)/2.0d0)*sin(qt2(i)/2.0d0)
-        end do
+        enddo
         ! bend-stretch couplings
         do i=1, nqb
             do j=1, nqs
@@ -901,13 +869,12 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
                 !            vbs2=vbs2+qb2(i)*FBS2(i,j)*(qs(j)-qse2(j))
                 vbs1 = vbs1+fbs1(i,j)*qb1(i)*(qs(j)-qse1(j))/qs(j)
                 vbs2 = vbs2+fbs2(i,j)*qb2(i)*(qs(j)-qse2(j))/qs(j)
-            end do
-        end do
-
+            enddo
+        enddo
         u1 = u01+vs1+vb1+vt1+vbs1
         u2 = u02+vs2+vb2+vt2+vbs2
         ut = u1*t(ir-1)+u2*t(ir)
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             dutdr = u1*dtdr(ir-1)+u2*dtdr(ir)
             do i=1, nqs
                 dvs1(i) = 0.0d0
@@ -917,29 +884,29 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
                     !              dvs2(i)=dvs2(i)+FS2(i,j)*(qs(j)-qse2(j))
                     dvs1(i) = dvs1(i)+fs1(i,j)*qse1(i) *(qs(j)-qse1(j))/(qs(i)*qs(i)*qs(j))
                     dvs2(i) = dvs2(i)+fs2(i,j)*qse2(i) *(qs(j)-qse2(j))/(qs(i)*qs(i)*qs(j))
-                end do
+                enddo
                 dvs(i) = dvs1(i)*t(ir-1)+dvs2(i)*t(ir)
-            end do
+            enddo
             do i=1, nqb
                 dvb1(i) = 0.0d0
                 dvb2(i) = 0.0d0
                 do j=1, nqb
                     dvb1(i) = dvb1(i)+sqb(i)*fb1(i,j)*qb1(j)
                     dvb2(i) = dvb2(i)+sqb(i)*fb2(i,j)*qb2(j)
-                end do
+                enddo
                 dvb(i) = dvb1(i)*t(ir-1)+dvb2(i)*t(ir)
-            end do
+            enddo
             do i=1, nqt
                 dvt1(i) = 0.0d0
                 dvt2(i) = 0.0d0
                 do j=1, nqt
                     dvt1(i) = dvt1(i)+ft1(i,j)*cqt1(i)*sqt1(j)
                     dvt2(i) = dvt2(i)+ft2(i,j)*cqt2(i)*sqt2(j)
-                end do
+                enddo
                 dvt1(i) = dvt1(i)-ft1(i,i)*cqt1(i)*sqt1(i) +2.0d0*ft1(i,i)*sin(qt1(i)/2.0d0)*cos(qt1(i)/2.0d0)
                 dvt2(i) = dvt2(i)-ft2(i,i)*cqt2(i)*sqt2(i) +2.0d0*ft2(i,i)*sin(qt2(i)/2.0d0)*cos(qt2(i)/2.0d0)
                 dvt(i)  = dvt1(i)*t(ir-1)+dvt2(i)*t(ir)
-            end do
+            enddo
             ! contribution from vbs (dvbsdb and dvbsds)
             do i=1, nqb
                 dvbsdb1(i) = 0.0d0
@@ -949,9 +916,9 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
                     !              dvbsdb2(i)=dvbsdb2(i)+FBS2(i,j)*sqb(i)*(qs(j)-qse2(j))
                     dvbsdb1(i) = dvbsdb1(i)+fbs1(i,j)*sqb(i) *(qs(j)-qse1(j))/qs(j)
                     dvbsdb2(i) = dvbsdb2(i)+fbs2(i,j)*sqb(i) *(qs(j)-qse2(j))/qs(j)
-                end do
+                enddo
                 dvbsdb(i) = dvbsdb1(i)*t(ir-1)+dvbsdb2(i)*t(ir)
-            end do
+            enddo
             do i=1, nqs
                 dvbsds1(i) = 0.0d0
                 dvbsds2(i) = 0.0d0
@@ -960,22 +927,20 @@ subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
                     !              dvbsds2(i)=dvbsds2(i)+FBS2(j,i)*qb2(j)
                     dvbsds1(i) = dvbsds1(i)+fbs1(j,i)*qse1(i) *qb1(j)/(qs(i)*qs(i))
                     dvbsds2(i) = dvbsds2(i)+fbs2(j,i)*qse2(i) *qb2(j)/(qs(i)*qs(i))
-                end do
+                enddo
                 dvbsds(i) = dvbsds1(i)*t(ir-1)+dvbsds2(i)*t(ir)
-            end do
-
+            enddo
             do i=1, nqs
                 dut(i) = dvs(i)+dvbsds(i)
-            end do
+            enddo
             do i=1, nqb
                 dut(nqs+i) = dvb(i)+dvbsdb(i)
-            end do
+            enddo
             do i=1, nqt
                 dut(nqs+nqb+i) = dvt(i)
-            end do
-        end if
-    end if
-
+            enddo
+        endif
+    endif
 end subroutine evuiit
 
 !> @brief Evaluate gethess for the PHOH_APRP_DPEM potential.
@@ -989,7 +954,7 @@ subroutine gethess( nap, hss, nqs, hbb, nqb, htt, nqt, hbs, ii )
     double precision :: hbb(nqb,nqb,nap)
     double precision :: htt(nqt,nqt,nap)
     double precision :: hbs(nqb,nqs,nap)
-    if (ii .eq. 11) then
+    if( ii .eq. 11 )then
         ! Hessian elements for anchor point 1
         hss( 1,1,1)  = 0.40759d+00
         hss( 2,1,1)  = 0.17500d-01
@@ -4066,7 +4031,7 @@ subroutine gethess( nap, hss, nqs, hbb, nqb, htt, nqt, hbs, ii )
         hbs(18,10,4) = 0.29300d-01
         hbs(18,11,4) = -0.29500d-02
         hbs(18,12,4) = 0.22600d-02
-    else if(ii .eq. 22) then
+    else if( ii .eq. 22 )then
         ! Hessian elements for anchor point 1
         hss( 1,1,1)  = 0.35006d+00
         hss( 2,1,1)  = 0.13620d-01
@@ -7143,7 +7108,7 @@ subroutine gethess( nap, hss, nqs, hbb, nqb, htt, nqt, hbs, ii )
         hbs(18,10,4) = 0.25770d-01
         hbs(18,11,4) = -0.27500d-02
         hbs(18,12,4) = 0.16600d-02
-    else if(ii .eq. 33) then
+    else if( ii .eq. 33 )then
         ! Hessian elements for anchor point 1
         hss( 1,1,1)  = 0.32935d+00
         hss( 2,1,1)  = 0.10630d-01
@@ -10220,8 +10185,7 @@ subroutine gethess( nap, hss, nqs, hbb, nqb, htt, nqt, hbs, ii )
         hbs(18,10,4) = 0.30930d-01
         hbs(18,11,4) = -0.30400d-02
         hbs(18,12,4) = 0.20600d-02
-    end if
-
+    endif
 end subroutine gethess
 
 !> @brief Evaluate getgeom for the PHOH_APRP_DPEM potential.
@@ -10260,15 +10224,13 @@ subroutine getgeom( nap, qse, nqs, qbe, nqb, qte, nqt, ii )
     qte(22,1) = pi
     qte(23,1) = pi
     qte(24,1) = zero
-
     do i=2, nap
         do j=1, nqt
             qte(j,i) = qte(j,1)
-        end do
-    end do
-
+        enddo
+    enddo
     ! Now get equilibrium geometrical parameters for qae
-    if (ii .eq. 11) then
+    if( ii .eq. 11 )then
         ! equilibrium geometry at anchor point 1
         qse( 1,1) = 0.263789d+01
         qse( 2,1) = 0.263870d+01
@@ -10397,7 +10359,7 @@ subroutine getgeom( nap, qse, nqs, qbe, nqb, qte, nqt, ii )
         qbe(16,4) = 0.207166d+01
         qbe(17,4) = 0.208711d+01
         qbe(18,4) = 0.212441d+01
-    else if (ii .eq. 22) then
+    else if( ii .eq. 22 )then
         ! equilibrium geometry at anchor point 1
         qse( 1,1) = 0.269941d+01
         qse( 2,1) = 0.268363d+01
@@ -10526,7 +10488,7 @@ subroutine getgeom( nap, qse, nqs, qbe, nqb, qte, nqt, ii )
         qbe(16,4) = 0.205447d+01
         qbe(17,4) = 0.207468d+01
         qbe(18,4) = 0.215403d+01
-    else if(ii .eq. 33) then
+    else if( ii .eq. 33 )then
         ! equilibrium geometry at anchor point 1
         qse( 1,1) = 0.272760d+01
         qse( 2,1) = 0.272219d+01
@@ -10655,8 +10617,7 @@ subroutine getgeom( nap, qse, nqs, qbe, nqb, qte, nqt, ii )
         qbe(16,4) = 0.210758d+01
         qbe(17,4) = 0.204104d+01
         qbe(18,4) = 0.213456d+01
-    end if
-
+    endif
 end subroutine getgeom
 
 !> @brief Evaluate tent for the PHOH_APRP_DPEM potential.
@@ -10664,7 +10625,6 @@ subroutine tent( nap, rap, r, ir, t, dtdr )
     !***********************************************************************
     ! Subroutine to evaluate tent functions
     !***********************************************************************
-
     implicit none
     double precision :: dudr, dvdr
     integer          :: ir
@@ -10677,22 +10637,20 @@ subroutine tent( nap, rap, r, ir, t, dtdr )
     do i=1, nap
         t(i)    = 0.0d0
         dtdr(i) = 0.0d0
-    end do
-
+    enddo
     ! Check whether the point are end points
-    if (r .lt. rap(1)) then
+    if( r .lt. rap(1) )then
         ir      = 1
         t(1)    = 1.0d0
         dtdr(1) = 0.0d0
-    else if (r .gt. rap(nap)) then
+    else if( r .gt. rap(nap) )then
         ir        = nap+1
         t(nap)    = 1.0d0
         dtdr(nap) = 0.0d0
-    end if
-
+    endif
     ! Determine i for which r(i-1) <= r < r(i)
     do i=2, nap
-        if ((rap(i-1) .le. r) .and. (r .lt. rap(i))) then
+        if( (rap(i-1) .le. r) .and. (r .lt. rap(i)) )then
             ir        = i
             u         = (r-rap(i-1))*(r-rap(i-1))*(r-rap(i-1))*(r-rap(i-1))
             v         = (r-rap(i))*(r-rap(i))*(r-rap(i))*(r-rap(i))
@@ -10703,9 +10661,8 @@ subroutine tent( nap, rap, r, ir, t, dtdr )
             dtdr(i-1) = (u*dvdr-v*dudr)/((u+v)*(u+v))
             dtdr(i)   = (v*dudr-u*dvdr)/((u+v)*(u+v))
             exit
-        end if
-    end do
-
+        endif
+    enddo
 end subroutine tent
 
 !> @brief Evaluate evu1r for the PHOH_APRP_DPEM potential.
@@ -10713,7 +10670,6 @@ subroutine evu1r( igrad, r, v, dvdr )
     !**********************************************************************
     ! Subroutine to evaluate Varshini potential and derivative for given r
     !**********************************************************************
-
     implicit none
     double precision, parameter :: de   = 0.17596055d0
     double precision, parameter :: re   = 1.93206106d0
@@ -10724,14 +10680,12 @@ subroutine evu1r( igrad, r, v, dvdr )
     x = r/re
     y = 1.0d0-exp(-beta*(x*x-1.0d0))/x
     v = de*y*y
-
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         dvdy = 2.0d0*de*y
         dydx = (2.0d0*beta*x*x+1.0d0)*exp(-beta*(x*x-1.0d0))/(x*x)
         dxdr = 1.0d0/re
         dvdr = dvdy*dydx*dxdr
-    end if
-
+    endif
 end subroutine evu1r
 
 !> @brief Evaluate evu1b for the PHOH_APRP_DPEM potential.
@@ -10740,7 +10694,6 @@ subroutine evu1b( igrad, r, theta, vbnd, dvdr, dvdth )
     ! Subroutine to evaluate potential energy from H-O-C bending
     ! and derivatives for given rOH and aHOC
     !**********************************************************************
-
     implicit none
     double precision :: cthta, cthta0, dct0dr, dk2dr, dthta, dtxdr, dtxdx, dvdr, dvdth, dxdr, gr, &
         & sthta, theta, tx, vbnd, x
@@ -10760,36 +10713,29 @@ subroutine evu1b( igrad, r, theta, vbnd, dvdr, dvdth )
     double precision :: k2
     cthta = cos(theta)
     sthta = sin(theta)
-
-    x = a*(r-r0)
+    x     = a*(r-r0)
     !      tx=(exp(x)-exp(-x))/(exp(x)+exp(-x))
     tx     = (1.0d0-exp(-2.0d0*x))/(1.0d0+exp(-2.0d0*x))
     cthta0 = cthta1+0.5d0*(1+tx)*(cthta2-cthta1)
-
     dxdr   = a
     dtxdx  = 4.0d0/(2.0d0+exp(2.0d0*x)+exp(-2.0d0*x))
     dtxdr  = dtxdx*dxdr
     dct0dr = 0.5d0*(cthta2-cthta1)*dtxdr
-
-    k2    = 0.0d0
-    dk2dr = 0.0d0
+    k2     = 0.0d0
+    dk2dr  = 0.0d0
     do i=1, ngk2
         gr = a2(i)*exp(-alpha2(i)*(r-r2(i))*(r-r2(i)))
         k2 = k2+gr
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             dk2dr = dk2dr-2.0d0*alpha2(i)*(r-r2(i))*gr
-        end if
-    end do
-
+        endif
+    enddo
     dthta = cthta-cthta0
-
-    vbnd = k2*dthta*dthta
-
-    if (igrad .eq. 1) then
+    vbnd  = k2*dthta*dthta
+    if( igrad .eq. 1 )then
         dvdr  = dk2dr*dthta*dthta - 2.0d0*k2*dthta*dct0dr
         dvdth = -2.0d0*k2*dthta*sthta
-    end if
-
+    endif
 end subroutine evu1b
 
 !> @brief Evaluate evu1to for the PHOH_APRP_DPEM potential.
@@ -10798,7 +10744,6 @@ subroutine evu1to( igrad, r, phi, v, dvdr, dvdph )
     ! Subroutine to evaluate torsion potentials and derivatives
     ! for given r and phi
     !**********************************************************************
-
     implicit none
     double precision            :: dx1dr, dx2dr, dydph, x1, x2
     double precision, parameter :: a1     = 0.02371114d0
@@ -10814,15 +10759,13 @@ subroutine evu1to( igrad, r, phi, v, dvdr, dvdph )
     x2 = a2*exp(-alpha2*(r-r2)*(r-r2))
     y  = 1.0d0-cos(2.0d0*phi)
     v  = x1*y+x2*y*y
-
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         dx1dr = -2.0d0*alpha1*(r-r1)*x1
         dx2dr = -2.0d0*alpha2*(r-r2)*x2
         dydph = 2.0d0*sin(2.0d0*phi)
         dvdr  = dx1dr*y+dx2dr*y*y
         dvdph = x1*dydph+2.0d0*x2*y*dydph
-    end if
-
+    endif
 end subroutine evu1to
 
 !> @brief Evaluate evu2r for the PHOH_APRP_DPEM potential.
@@ -10830,7 +10773,6 @@ subroutine evu2r( igrad, r, v, dvdr )
     !**********************************************************************
     ! Subroutine to evaluate Morse potential and derivative for given r
     !**********************************************************************
-
     implicit none
     double precision, parameter :: alpha = 0.67269344d0
     double precision, parameter :: de    = 0.41866243d0
@@ -10842,14 +10784,12 @@ subroutine evu2r( igrad, r, v, dvdr )
     x = r-re
     y = 1.0d0-exp(-alpha*x)
     v = de*y*y+v0
-
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         dvdy = 2.0d0*de*y
         dydx = alpha*exp(-alpha*x)
         dxdr = 1.0d0
         dvdr = dvdy*dydx*dxdr
-    end if
-
+    endif
 end subroutine evu2r
 
 !> @brief Evaluate evu2b for the PHOH_APRP_DPEM potential.
@@ -10858,7 +10798,6 @@ subroutine evu2b( igrad, r, theta, vbnd, dvdr, dvdth )
     ! Subroutine to evaluate potential energy from H-O-C bending
     ! and derivatives for given rOH and aHOC
     !**********************************************************************
-
     implicit none
     double precision :: cthta, cthta0, dct0dr, dk2dr, dthta, dtxdr, dtxdx, dvdr, dvdth, dxdr, gr, &
         & sthta, theta, tx, vbnd, x
@@ -10878,36 +10817,29 @@ subroutine evu2b( igrad, r, theta, vbnd, dvdr, dvdth )
     double precision :: k2
     cthta = cos(theta)
     sthta = sin(theta)
-
-    x = a*(r-r0)
+    x     = a*(r-r0)
     !      tx=(exp(x)-exp(-x))/(exp(x)+exp(-x))
     tx     = (1.0d0-exp(-2.0d0*x))/(1.0d0+exp(-2.0d0*x))
     cthta0 = cthta1+0.5d0*(1+tx)*(cthta2-cthta1)
-
     dxdr   = a
     dtxdx  = 4.0d0/(2.0d0+exp(2.0d0*x)+exp(-2.0d0*x))
     dtxdr  = dtxdx*dxdr
     dct0dr = 0.5d0*(cthta2-cthta1)*dtxdr
-
-    k2    = 0.0d0
-    dk2dr = 0.0d0
+    k2     = 0.0d0
+    dk2dr  = 0.0d0
     do i=1, ngk2
         gr = a2(i)*exp(-alpha2(i)*(r-r2(i))*(r-r2(i)))
         k2 = k2+gr
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             dk2dr = dk2dr-2.0d0*alpha2(i)*(r-r2(i))*gr
-        end if
-    end do
-
+        endif
+    enddo
     dthta = cthta-cthta0
-
-    vbnd = k2*dthta*dthta
-
-    if (igrad .eq. 1) then
+    vbnd  = k2*dthta*dthta
+    if( igrad .eq. 1 )then
         dvdr  = dk2dr*dthta*dthta - 2.0d0*k2*dthta*dct0dr
         dvdth = -2.0d0*k2*dthta*sthta
-    end if
-
+    endif
 end subroutine evu2b
 
 !> @brief Evaluate evu2to for the PHOH_APRP_DPEM potential.
@@ -10916,7 +10848,6 @@ subroutine evu2to( igrad, r, phi, v, dvdr, dvdph )
     ! Subroutine to evaluate torsion potentials and derivatives
     ! for given r and phi
     !**********************************************************************
-
     implicit none
     double precision            :: dydph
     double precision, parameter :: a1     = 0.01925782d0
@@ -10928,14 +10859,12 @@ subroutine evu2to( igrad, r, phi, v, dvdr, dvdph )
     x = a1*exp(-alpha1*(r-r1)*(r-r1))
     y = 1.0d0-cos(2.0d0*phi)
     v = x*y
-
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         dxdr  = -2.0d0*alpha1*(r-r1)*x
         dydph = 2.0d0*sin(2.0d0*phi)
         dvdr  = y*dxdr
         dvdph = x*dydph
-    end if
-
+    endif
 end subroutine evu2to
 
 !> @brief Evaluate evu3r for the PHOH_APRP_DPEM potential.
@@ -10943,7 +10872,6 @@ subroutine evu3r( igrad, r, v, dvdr )
     !**********************************************************************
     ! Subroutine to evaluate Morse potential and derivative for given r
     !**********************************************************************
-
     implicit none
     double precision            :: dx1dr, dx2dr, dx3dr, dy1dx1, dy2dx2, dy3dx3, x1, x2, x3, y1, y2, y3
     double precision, parameter :: v0     = 0.15976218d0
@@ -10966,8 +10894,7 @@ subroutine evu3r( igrad, r, v, dvdr )
     x3 = r-r3
     y3 = a3*exp(-alpha3*x3)
     v  = v0+y1+y2+y3
-
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         dx1dr  = 1.0d0
         dx2dr  = 1.0d0
         dx3dr  = 1.0d0
@@ -10975,8 +10902,7 @@ subroutine evu3r( igrad, r, v, dvdr )
         dy2dx2 = -alpha2*y2
         dy3dx3 = -alpha3*y3
         dvdr   = dy1dx1*dx1dr+dy2dx2*dx2dr+dy3dx3*dx3dr
-    end if
-
+    endif
 end subroutine evu3r
 
 !> @brief Evaluate evu3b for the PHOH_APRP_DPEM potential.
@@ -10985,7 +10911,6 @@ subroutine evu3b( igrad, r, theta, vbnd, dvdr, dvdth )
     ! Subroutine to evaluate potential energy from H-O-C bending
     ! and derivatives for given rOH and aHOC
     !**********************************************************************
-
     implicit none
     double precision :: cthta, cthta0, dct0dr, dk2dr, dk3dr, dthta, dtxdr, dtxdx, dvdr, dvdth, dxdr, &
         & gr, sthta, theta, tx, vbnd, x
@@ -11009,44 +10934,38 @@ subroutine evu3b( igrad, r, theta, vbnd, dvdr, dvdth )
     double precision :: k2, k3
     cthta = cos(theta)
     sthta = sin(theta)
-
-    x = a*(r-r0)
+    x     = a*(r-r0)
     !      tx=(exp(x)-exp(-x))/(exp(x)+exp(-x))
     tx     = (1.0d0-exp(-2.0d0*x))/(1.0d0+exp(-2.0d0*x))
     cthta0 = cthta1+0.5d0*(1+tx)*(cthta2-cthta1)
-
     dxdr   = a
     dtxdx  = 4.0d0/(2.0d0+exp(2.0d0*x)+exp(-2.0d0*x))
     dtxdr  = dtxdx*dxdr
     dct0dr = 0.5d0*(cthta2-cthta1)*dtxdr
-
-    k2    = 0.0d0
-    dk2dr = 0.0d0
+    k2     = 0.0d0
+    dk2dr  = 0.0d0
     do i=1, ngk2
         gr = a2(i)*exp(-alpha2(i)*(r-r2(i))*(r-r2(i)))
         k2 = k2+gr
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             dk2dr = dk2dr-2.0d0*alpha2(i)*(r-r2(i))*gr
-        end if
-    end do
-
+        endif
+    enddo
     k3    = 0.0d0
     dk3dr = 0.0d0
     do i=1, ngk3
         gr = a3(i)*exp(-alpha3(i)*(r-r3(i))*(r-r3(i)))
         k3 = k3+gr
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             dk3dr = dk3dr-2.0d0*alpha3(i)*(r-r3(i))*gr
-        end if
-    end do
-
+        endif
+    enddo
     dthta = cthta-cthta0
     vbnd  = k2*dthta*dthta + k3*dthta*dthta*dthta
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         dvdr  = dk2dr*dthta*dthta + dk3dr*dthta*dthta*dthta - 2.0d0*k2*dthta*dct0dr - 3.0d0*k3*dthta*dthta*dct0dr
         dvdth = -2.0d0*k2*dthta*sthta - 3.0d0*k3*dthta*dthta*sthta
-    end if
-
+    endif
 end subroutine evu3b
 
 !> @brief Evaluate evu3to for the PHOH_APRP_DPEM potential.
@@ -11055,7 +10974,6 @@ subroutine evu3to( igrad, r, phi, v, dvdr, dvdph )
     ! Subroutine to evaluate torsion potentials and derivatives
     ! for given r and phi
     !**********************************************************************
-
     implicit none
     double precision            :: dx1dr, dx2dr, dydph, x1, x2
     double precision, parameter :: a1     = -0.02298368d0
@@ -11071,15 +10989,13 @@ subroutine evu3to( igrad, r, phi, v, dvdr, dvdph )
     x2 = a2*exp(-alpha2*(r-r2)*(r-r2))
     y  = 1.0d0-cos(2.0d0*phi)
     v  = x1*y+x2*y*y
-
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         dx1dr = -2.0d0*alpha1*(r-r1)*x1
         dx2dr = -2.0d0*alpha2*(r-r2)*x2
         dydph = 2.0d0*sin(2.0d0*phi)
         dvdr  = dx1dr*y+dx2dr*y*y
         dvdph = x1*dydph+2.0d0*x2*y*dydph
-    end if
-
+    endif
 end subroutine evu3to
 
 !> @brief Evaluate evubm for the PHOH_APRP_DPEM potential.
@@ -11088,7 +11004,6 @@ subroutine evubm( igrad, natm, x, y, z, ubm, dubmdx )
     ! Subroutine to evulate the Born-Mayer repulsions between non-bonded
     ! C atoms
     !***********************************************************************
-
     implicit none
     double precision, parameter :: b     = 6.693126d1
     double precision, parameter :: alpha = 1.894454d0
@@ -11110,33 +11025,27 @@ subroutine evubm( igrad, natm, x, y, z, ubm, dubmdx )
     r14 = bndlen(1, 4, x, y, z)
     r25 = bndlen(2, 5, x, y, z)
     r36 = bndlen(3, 6, x, y, z)
-
     ubm = b*(exp(-alpha*r14)+exp(-alpha*r25)+exp(-alpha*r36))
-
     !
     !      write(*,*) "ubm =",ubm
     !
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         dudr14 = -alpha*b*exp(-alpha*r14)
         dudr25 = -alpha*b*exp(-alpha*r25)
         dudr36 = -alpha*b*exp(-alpha*r36)
-
         call bmat3(nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, x, y, z, bm, 3)
         do i=1, 3*natm
             dubmdx(i) = 0.d0
-        end do
-
+        enddo
         do i=1, 3*natm
             dubmdx(i) = dubmdx(i)+dudr14*bm(1,i)+dudr25*bm(2,i) +dudr36*bm(3,i)
-        end do
-
+        enddo
         !
         !        do i=1,3*natm
         !          write(*,*) dubmdX(i)
         !        enddo
         !
-    end if
-
+    endif
 end subroutine evubm
 
 !      subroutine evuij(nap,natm,igrad,ir,t,dtdr,X,Y,Z,u13,u23,
@@ -11155,7 +11064,6 @@ subroutine evuij( nap, natm, igrad, ir, t, dtdr, x, y, z, u12, u13, u23, &
     ! bmqt: B-matrix of RICs
     ! bmst: B-matrix of NRICs
     !***********************************************************************
-
     implicit none
     double precision            :: bndlen, d13dph, d23dph, dihedr, du12dr, phi, r, u12t, u13s, u13t, u23s, u23t
     integer                     :: i, j, nap
@@ -11218,17 +11126,16 @@ subroutine evuij( nap, natm, igrad, ir, t, dtdr, x, y, z, u12, u13, u23, &
     do i=1, 9
         do j=1, 12
             ct(i,j) = 0.0d0
-        end do
-    end do
+        enddo
+    enddo
     ! Initialize Qtc vectors
     do i=1, nblt+nbat+ntot+noopt
         qtc(i) = 0.0d0
-    end do
+    enddo
     ! Initialize Stc vectors
     do i=1, nstc
         stc(i) = 0.0d0
-    end do
-
+    enddo
     ct(1,1)  = oossix
     ct(1,2)  = -oossix
     ct(1,3)  = oossix
@@ -11251,7 +11158,6 @@ subroutine evuij( nap, natm, igrad, ir, t, dtdr, x, y, z, u12, u13, u23, &
     ct(7,10) = 1.0d0
     ct(8,11) = 1.0d0
     ct(9,12) = 1.0d0
-
     ! Evaluate internal coordinates
     !Add by J. Zheng
     !      qtc(:) = 0d0
@@ -11262,16 +11168,13 @@ subroutine evuij( nap, natm, igrad, ir, t, dtdr, x, y, z, u12, u13, u23, &
     !        write(*,'(A,I2,A,F8.4)') 'qtc(',i,') = ',qtc(i)*180.d0/pi
     !      enddo
     ! End
-
     !Add by J. Zheng
     !      stc(:) = 0d0
     call matvect(stc, nstc, ct, ldct, qtc, nqtc)
-
     r   = bndlen(7, 13, x, y, z)
     phi = dihedr(2, 1, 7, 13, x, y, z)
-
     ! Evaluate Wilson's B-matrix if igrad = 1
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         !Added by J. Zheng
         !        bmt(:,:) = 0d0
         call bmat3(nblt, iblt, nbat, ibat, ntot, itot, noopt, ioopt, natm, &
@@ -11282,29 +11185,25 @@ subroutine evuij( nap, natm, igrad, ir, t, dtdr, x, y, z, u12, u13, u23, &
         !        bms(:,:) = 0d0
         call bmat3(nbls, ibls, nbas, ibas, ntos, itos, noops, ioops, natm, &
             & x, y, z, bms, ldbms)
-    end if
-
+    endif
     ! Evaluate u12 KRY 20140718
     call evuijt(nap, igrad, ir, t, dtdr, nstc, stc, u12t, du12t, d12tdr, 12)
     ! Evaluate u13 and u23 from tertiary out-of-plane coordinates
     call evuijt(nap, igrad, ir, t, dtdr, nstc, stc, u13t, du13t, d13tdr, 13)
     call evuijt(nap, igrad, ir, t, dtdr, nstc, stc, u23t, du23t, d23tdr, 23)
-
     ! Evaluate u13 and u23 from secondary out-of-plane coordinates
     call evu13to(r, phi, u13s, d13dph, d13sdr)
     call evu23to(r, phi, u23s, d23dph, d23sdr)
-
     u12 = u12t                  ! KRY 20140718
     u13 = u13t+u13s
     u23 = u23t+u23s
-
     ! Calculated analytical Cartesian gradient if igrad = 1
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         do i=1, 3*natm
             du12dx(i) = 0.0d0
             du13dx(i) = 0.0d0
             du23dx(i) = 0.0d0
-        end do
+        enddo
         du12dr = d12tdr
         du13dr = d13tdr+d13sdr
         du23dr = d23tdr+d23sdr
@@ -11313,28 +11212,26 @@ subroutine evuij( nap, natm, igrad, ir, t, dtdr, x, y, z, u12, u13, u23, &
             du12dx(i) = du12dx(i)+du12dr*bms(1,i)
             du13dx(i) = du13dx(i)+du13dr*bms(1,i)
             du23dx(i) = du23dx(i)+du23dr*bms(1,i)
-        end do
+        enddo
         ! Contribution of duijdX from dijdph
         do i=1, 3*natm
             du13dx(i) = du13dx(i)+d13dph*bms(2,i)
             du23dx(i) = du23dx(i)+d23dph*bms(2,i)
-        end do
+        enddo
         ! Contribution of duijdX from duijt
         do i=1, 3*natm
             do j=1, nstc
                 du12dx(i) = du12dx(i)+du12t(j)*bnrt(j,i)
                 du13dx(i) = du13dx(i)+du13t(j)*bnrt(j,i)
                 du23dx(i) = du23dx(i)+du23t(j)*bnrt(j,i)
-            end do
-        end do
-    end if
-
+            enddo
+        enddo
+    endif
 end subroutine evuij
 
 !> @brief Evaluate evuijt for the PHOH_APRP_DPEM potential.
 subroutine evuijt( nap, igrad, ir, t, dtdr, ntc, qtc, uij, &
         & duij, duijdr, ij )
-
     implicit none
     integer          :: nap
     integer          :: ij
@@ -11359,25 +11256,23 @@ subroutine evuijt( nap, igrad, ir, t, dtdr, ntc, qtc, uij, &
         duij(i)  = 0.0d0
         duij1(i) = 0.0d0
         duij2(i) = 0.0d0
-    end do
+    enddo
     ! Initialize duijdr
     duijdr = 0.0d0
-
     ! Initialize numerical gradients of diabatic couplings
     do i=1, nap
         uij0(i) = 0.0d0
         do j=1, 9
             a(i,j) = 0.0d0
-        end do
-    end do
+        enddo
+    enddo
     ! Assign u120 for anchor point 1 and 2
-    if (ij .eq. 12) then
+    if( ij .eq. 12 )then
         uij0(1) = -0.000616170d0
         uij0(2) = -0.001064286d0
-    end if
-
+    endif
     ! Assign parameters based ij
-    if (ij .eq. 12) then
+    if( ij .eq. 12 )then
         a(3,1) = 0.0d0
         a(3,2) = 0.0d0
         a(3,3) = 0.0d0
@@ -11387,7 +11282,7 @@ subroutine evuijt( nap, igrad, ir, t, dtdr, ntc, qtc, uij, &
         a(3,7) = 0.0d0
         a(3,8) = 0.0d0
         a(3,9) = 0.0d0
-    else if (ij .eq. 13) then
+    else if( ij .eq. 13 )then
         a(3,1) = -0.00070d0
         a(3,2) = -0.00966d0
         a(3,3) = -0.00053d0
@@ -11397,7 +11292,7 @@ subroutine evuijt( nap, igrad, ir, t, dtdr, ntc, qtc, uij, &
         a(3,7) = 0.00030d0
         a(3,8) = 0.00377d0
         a(3,9) = 0.00101d0
-    else if (ij .eq. 23) then
+    else if( ij .eq. 23 )then
         a(2,1) = 0.00452d0
         a(2,2) = -0.01212d0
         a(2,3) = -0.00088d0
@@ -11410,62 +11305,58 @@ subroutine evuijt( nap, igrad, ir, t, dtdr, ntc, qtc, uij, &
     else
         write(*, *) "Only parameters for U12, U13 and U23 are allowed!"
         stop
-    end if
-
+    endif
     ! Check for consistence
-    if (ntc .ne. 9) then
+    if( ntc .ne. 9 )then
         write(*, *) "Inconsistence in the number of out-of-plane tertiary&
             & coordinates"
         stop
-    end if
-    if (nap .ne. 4) then
+    endif
+    if( nap .ne. 4 )then
         write(*, *) "Inconsistence in the number of anchor structures"
         stop
-    end if
-
+    endif
     ! Now calculate coupling contributions from tertiary coordinates
-    if (ir .eq. 1) then
+    if( ir .eq. 1 )then
         uij = uij0(1)
         do i=1, ntc
             uij = uij+a(1,i)*qtc(i)
-        end do
-    else if (ir .eq. nap+1) then
+        enddo
+    else if( ir .eq. nap+1 )then
         uij = uij0(nap)
         do i=1, ntc
             uij = uij+a(nap,i)*qtc(i)
-        end do
-    else if ((ir .gt. 1) .and. (ir .lt. nap+1)) then
+        enddo
+    else if( (ir .gt. 1) .and. (ir .lt. nap+1) )then
         uij1 = uij0(ir-1)
         uij2 = uij0(ir)
         do i=1, ntc
             uij1 = uij1+a(ir-1,i)*qtc(i)
             uij2 = uij2+a(ir,i)*qtc(i)
-        end do
+        enddo
         uij = uij1*t(ir-1)+uij2*t(ir)
-    end if
-
+    endif
     ! Now calculate the derivatives of couplings if igrad =1
-    if (igrad .eq. 1) then
-        if (ir .eq. 1) then
+    if( igrad .eq. 1 )then
+        if( ir .eq. 1 )then
             do i=1, ntc
                 duij(i) = a(1,i)
-            end do
+            enddo
             duijdr = uij*dtdr(1)
-        else if (ir .eq. nap+1) then
+        else if( ir .eq. nap+1 )then
             do i=1, ntc
                 duij(i) = a(nap,i)
-            end do
+            enddo
             duijdr = uij*dtdr(nap)
-        else if ((ir .gt. 1) .and. (ir .lt. nap+1)) then
+        else if( (ir .gt. 1) .and. (ir .lt. nap+1) )then
             do i=1, ntc
                 duij1(i) = a(ir-1,i)
                 duij2(i) = a(ir,i)
                 duij(i)  = duij1(i)*t(ir-1)+duij2(i)*t(ir)
-            end do
+            enddo
             duijdr = uij1*dtdr(ir-1)+uij2*dtdr(ir)
-        end if
-    end if
-
+        endif
+    endif
 end subroutine evuijt
 
 !> @brief Evaluate evu13to for the PHOH_APRP_DPEM potential.
@@ -11475,7 +11366,6 @@ subroutine evu13to( r, phi, u13to, d13dph, d13dr )
     ! U13(r,phi)=f1(r)*sin(phi)+f3(r)*sin(phi)**3+f5(r)*sin(phi)**5
     ! where fi(r) are expanded with a linear combination of Gaussians
     !**********************************************************************
-
     implicit none
     double precision   :: df1rdr, df3rdr, df5rdr
     integer, parameter :: ngf = 3
@@ -11502,7 +11392,6 @@ subroutine evu13to( r, phi, u13to, d13dph, d13dr )
     u13to  = 0.0d0
     d13dph = 0.0d0
     d13dr  = 0.0d0
-
     f1r    = 0.0d0
     f3r    = 0.0d0
     f5r    = 0.0d0
@@ -11519,20 +11408,17 @@ subroutine evu13to( r, phi, u13to, d13dph, d13dr )
         g5r    = a5(i)*exp(-alpha5(i)*(r-r5(i))*(r-r5(i)))
         f5r    = f5r+g5r
         df5rdr = df5rdr-2.0d0*alpha5(i)*(r-r5(i))*g5r
-    end do
-
-    sphi  = dsin(phi)
-    cphi  = dcos(phi)
-    sphi1 = sphi
-    sphi2 = sphi*sphi1
-    sphi3 = sphi*sphi2
-    sphi4 = sphi*sphi3
-    sphi5 = sphi*sphi4
-
+    enddo
+    sphi   = dsin(phi)
+    cphi   = dcos(phi)
+    sphi1  = sphi
+    sphi2  = sphi*sphi1
+    sphi3  = sphi*sphi2
+    sphi4  = sphi*sphi3
+    sphi5  = sphi*sphi4
     u13to  = f1r*sphi1+f3r*sphi3+f5r*sphi5
     d13dph = f1r*cphi+3.0d0*f3r*sphi2*cphi+5.0d0*f5r*sphi4*cphi
     d13dr  = df1rdr*sphi1+df3rdr*sphi3+df5rdr*sphi5
-
 end subroutine evu13to
 
 !> @brief Evaluate evu23to for the PHOH_APRP_DPEM potential.
@@ -11542,7 +11428,6 @@ subroutine evu23to( r, phi, u23to, d23dph, d23dr )
     ! U23(r,phi)=f2(r)*sin(2*phi)+f4(r)*sin(4*phi)+f6(r)*sin(6*phi)
     ! where fi(r) are expanded with a linear combination of Gaussians
     !**********************************************************************
-
     implicit none
     double precision            :: c2phi, c4phi, c6phi, df2rdr, df4rdr, df6rdr, s2phi, s4phi, s6phi
     integer, parameter          :: ngf   = 1
@@ -11570,7 +11455,6 @@ subroutine evu23to( r, phi, u23to, d23dph, d23dr )
     u23to  = 0.0d0
     d23dph = 0.0d0
     d23dr  = 0.0d0
-
     f2r    = 0.0d0
     f4r    = 0.0d0
     f6r    = 0.0d0
@@ -11587,22 +11471,19 @@ subroutine evu23to( r, phi, u23to, d23dph, d23dr )
         g6r    = a6(i)*exp(-alpha6(i)*(r-r6(i))*(r-r6(i)))
         f6r    = f6r+g6r
         df6rdr = df6rdr-2.0d0*alpha6(i)*(r-r6(i))*g6r
-    end do
-
+    enddo
     s2phi = dsin(2.0d0*phi)
     c2phi = dcos(2.0d0*phi)
     s4phi = dsin(4.0d0*phi)
     c4phi = dcos(4.0d0*phi)
     s6phi = dsin(6.0d0*phi)
     c6phi = dcos(6.0d0*phi)
-
     !      u23to=f2r*s2phi+f4r*s4phi+f6r*s6phi
     !      d23dph=2.0d0*f2r*c2phi+4.0d0*f4r*c4phi+6.0d0*f6r*c6phi
     !      d23dr=df2rdr*s2phi+df4rdr*s4phi+df6rdr*s6phi
     u23to  = scale*(f2r*s2phi+f4r*s4phi+f6r*s6phi)
     d23dph = scale*(2.0d0*f2r*c2phi+4.0d0*f4r*c4phi+6.0d0*f6r*c6phi)
     d23dr  = scale*(df2rdr*s2phi+df4rdr*s4phi+df6rdr*s6phi)
-
 end subroutine evu23to
 
 !> @brief Evaluate evintcoord for the PHOH_APRP_DPEM potential.
@@ -11623,7 +11504,6 @@ subroutine evintcoord( nbl, ibl, nba, iba, nto, ito, noop, ioop, &
     ! RIC:          redundant internal coordinates
     ! X,Y,Z:        Cartesian coordinates
     !***********************************************************************
-
     implicit none
     double precision            :: bndang, bndlen, dihedr, oopba1
     integer, parameter          :: maxint = 1000
@@ -11639,53 +11519,47 @@ subroutine evintcoord( nbl, ibl, nba, iba, nto, ito, noop, ioop, &
     ! Initialize RIC
     do i=1, nbl+nba+nto+noop
         ric(i) = 0.0d0
-    end do
+    enddo
     ! Initialize rab,theta,tors, and oopb
     do i=1, maxint
         rab(i)   = 0.0d0
         theta(i) = 0.0d0
         tors(i)  = 0.0d0
         oopb(i)  = 0.0d0
-    end do
-
+    enddo
     ! Evaluate bond lengths
     do i=1, nbl
         rab(i) = bndlen(ibl(1,i), ibl(2,i), x, y, z)
-    end do
-
+    enddo
     ! Evaluate bend angles
     do i=1, nba
         theta(i) = bndang(iba(1,i), iba(2,i), iba(3,i), x, y, z)
-    end do
-
+    enddo
     ! Evaluate torsions
     do i=1, nto
         tors(i) = dihedr(ito(1,i), ito(2,i), ito(3,i), ito(4,i), x, y, z)
-    end do
-
+    enddo
     ! Evaluate out-of-plane bending angles
     do i=1, noop
         oopb(i) = oopba1(ioop(1,i), ioop(2,i), ioop(3,i), ioop(4,i), x, y, z)
-    end do
-
+    enddo
     nint = 0
     do i=1, nbl
         nint      = nint+1
         ric(nint) = rab(i)
-    end do
+    enddo
     do i=1, nba
         nint      = nint+1
         ric(nint) = theta(i)
-    end do
+    enddo
     do i=1, nto
         nint      = nint+1
         ric(nint) = tors(i)
-    end do
+    enddo
     do i=1, noop
         nint      = nint+1
         ric(nint) = oopb(i)
-    end do
-
+    enddo
 end subroutine evintcoord
 
 !> @brief Evaluate matvect for the PHOH_APRP_DPEM potential.
@@ -11693,7 +11567,6 @@ subroutine matvect( y, m, a, lda, x, n )
     !**********************************************************************
     ! Subroutien to calculate matrix A multiply vector X
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     integer          :: lda, m, n
@@ -11702,14 +11575,12 @@ subroutine matvect( y, m, a, lda, x, n )
     ! Initialize Y
     do i=1, m
         y(i) = 0.0d0
-    end do
-
+    enddo
     do i=1, m
         do j=1, n
             y(i) = y(i)+a(i,j)*x(j)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine matvect
 
 !> @brief Evaluate bmat3 for the PHOH_APRP_DPEM potential.
@@ -11718,7 +11589,6 @@ subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
     !***********************************************************************
     ! Subroutine to evaluate the Wilson B-matrix
     !***********************************************************************
-
     implicit none
     double precision :: ai, aijk, ajkl, ak, al, bndang, bndlen, ci, cijk, cjkl, ck, cl, ctheta, &
         & oopba1, rij, rji, rjk, rjl, rkl, si, sijk, sjkl, sk, sl, theta, ttheta
@@ -11736,50 +11606,42 @@ subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
     do i=1, ldbm
         do j=1, 3*natm
             bm(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     irow = 0
     ! Evaluate the B matrix contributed from bond stretchings
     do ij=1, nbl
-        irow = irow+1
-        i    = ibl(1,ij)
-        j    = ibl(2,ij)
-
-        rij = bndlen(i, j, x, y, z)
-
-        eij(1) = (x(j)-x(i))/rij
-        eij(2) = (y(j)-y(i))/rij
-        eij(3) = (z(j)-z(i))/rij
-
+        irow           = irow+1
+        i              = ibl(1,ij)
+        j              = ibl(2,ij)
+        rij            = bndlen(i, j, x, y, z)
+        eij(1)         = (x(j)-x(i))/rij
+        eij(2)         = (y(j)-y(i))/rij
+        eij(3)         = (z(j)-z(i))/rij
         bm(irow,3*i-2) = -eij(1)
         bm(irow,3*i-1) = -eij(2)
         bm(irow,3*i)   = -eij(3)
         bm(irow,3*j-2) = eij(1)
         bm(irow,3*j-1) = eij(2)
         bm(irow,3*j)   = eij(3)
-    end do
-
+    enddo
     ! Evaluate the B matrix contributed from bendings
     do ijk=1, nba
-        irow = irow+1
-        i    = iba(1,ijk)
-        j    = iba(2,ijk)
-        k    = iba(3,ijk)
-
-        rji  = bndlen(j, i, x, y, z)
-        rjk  = bndlen(j, k, x, y, z)
-        aijk = bndang(i, j, k, x, y, z)
-        cijk = cos(aijk)
-        sijk = sin(aijk)
-
-        eji(1) = (x(i)-x(j))/rji
-        eji(2) = (y(i)-y(j))/rji
-        eji(3) = (z(i)-z(j))/rji
-        ejk(1) = (x(k)-x(j))/rjk
-        ejk(2) = (y(k)-y(j))/rjk
-        ejk(3) = (z(k)-z(j))/rjk
-
+        irow           = irow+1
+        i              = iba(1,ijk)
+        j              = iba(2,ijk)
+        k              = iba(3,ijk)
+        rji            = bndlen(j, i, x, y, z)
+        rjk            = bndlen(j, k, x, y, z)
+        aijk           = bndang(i, j, k, x, y, z)
+        cijk           = cos(aijk)
+        sijk           = sin(aijk)
+        eji(1)         = (x(i)-x(j))/rji
+        eji(2)         = (y(i)-y(j))/rji
+        eji(3)         = (z(i)-z(j))/rji
+        ejk(1)         = (x(k)-x(j))/rjk
+        ejk(2)         = (y(k)-y(j))/rjk
+        ejk(3)         = (z(k)-z(j))/rjk
         bm(irow,3*i-2) = (cijk*eji(1)-ejk(1))/(rji*sijk)
         bm(irow,3*i-1) = (cijk*eji(2)-ejk(2))/(rji*sijk)
         bm(irow,3*i)   = (cijk*eji(3)-ejk(3))/(rji*sijk)
@@ -11789,29 +11651,26 @@ subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
         bm(irow,3*j-2) = -bm(irow,3*i-2)-bm(irow,3*k-2)
         bm(irow,3*j-1) = -bm(irow,3*i-1)-bm(irow,3*k-1)
         bm(irow,3*j)   = -bm(irow,3*i)  -bm(irow,3*k)
-    end do
-
+    enddo
     !
     ! Evaluate the B matrix contributed from torsions
     ! The calculations follow I. H. Williams, J. Mol. Spectros. 66, 288 (197
     !
     do ijkl=1, nto
-        irow = irow+1
-        i    = ito(1,ijkl)
-        j    = ito(2,ijkl)
-        k    = ito(3,ijkl)
-        l    = ito(4,ijkl)
-
-        rij  = bndlen(i, j, x, y, z)
-        rjk  = bndlen(j, k, x, y, z)
-        rkl  = bndlen(k, l, x, y, z)
-        aijk = bndang(i, j, k, x, y, z)
-        ajkl = bndang(j, k, l, x, y, z)
-        cijk = cos(aijk)
-        sijk = sin(aijk)
-        cjkl = cos(ajkl)
-        sjkl = sin(ajkl)
-
+        irow   = irow+1
+        i      = ito(1,ijkl)
+        j      = ito(2,ijkl)
+        k      = ito(3,ijkl)
+        l      = ito(4,ijkl)
+        rij    = bndlen(i, j, x, y, z)
+        rjk    = bndlen(j, k, x, y, z)
+        rkl    = bndlen(k, l, x, y, z)
+        aijk   = bndang(i, j, k, x, y, z)
+        ajkl   = bndang(j, k, l, x, y, z)
+        cijk   = cos(aijk)
+        sijk   = sin(aijk)
+        cjkl   = cos(ajkl)
+        sjkl   = sin(ajkl)
         eij(1) = (x(j)-x(i))/rij
         eij(2) = (y(j)-y(i))/rij
         eij(3) = (z(j)-z(i))/rij
@@ -11839,20 +11698,18 @@ subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
         bm(irow,3*l-2) = v(1)/(rkl*sjkl*sjkl)
         bm(irow,3*l-1) = v(2)/(rkl*sjkl*sjkl)
         bm(irow,3*l)   = v(3)/(rkl*sjkl*sjkl)
-    end do
-
+    enddo
     !
     ! Evaluate the B matrix contributed from out-of-plane bending
     ! The calculation follows D. F. Mclntosh and K. H. Michaelian,
     ! Can. J. Spectros. 24, 35-40 (1979).
     !
     do ijkl=1, noop
-        irow = irow+1
-        i    = ioop(1,ijkl)
-        j    = ioop(2,ijkl)
-        k    = ioop(3,ijkl)
-        l    = ioop(4,ijkl)
-
+        irow   = irow+1
+        i      = ioop(1,ijkl)
+        j      = ioop(2,ijkl)
+        k      = ioop(3,ijkl)
+        l      = ioop(4,ijkl)
         rji    = bndlen(j, i, x, y, z)
         rjk    = bndlen(j, k, x, y, z)
         rjl    = bndlen(j, l, x, y, z)
@@ -11868,7 +11725,6 @@ subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
         sl     = sin(al)
         ctheta = cos(theta)
         ttheta = tan(theta)
-
         eji(1) = (x(i)-x(j))/rji
         eji(2) = (y(i)-y(j))/rji
         eji(3) = (z(i)-z(j))/rji
@@ -11878,7 +11734,6 @@ subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
         ejl(1) = (x(l)-x(j))/rjl
         ejl(2) = (y(l)-y(j))/rjl
         ejl(3) = (z(l)-z(j))/rjl
-
         !
         ! Caculate u=ejk*ejl
         !
@@ -11896,8 +11751,7 @@ subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
         bm(irow,3*j-2) = -bm(irow,3*i-2)-bm(irow,3*k-2)-bm(irow,3*l-2)
         bm(irow,3*j-1) = -bm(irow,3*i-1)-bm(irow,3*k-1)-bm(irow,3*l-1)
         bm(irow,3*j)   = -bm(irow,3*i)  -bm(irow,3*k)  -bm(irow,3*l)
-    end do
-
+    enddo
 end subroutine bmat3
 
 !> @brief Evaluate matmult for the PHOH_APRP_DPEM potential.
@@ -11912,17 +11766,15 @@ subroutine matmult( c, ldc, a, lda, m, b, ldb, n, l )
     do i=1, m
         do j=1, l
             c(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     do i=1, m
         do j=1, l
             do k=1, n
                 c(i,j) = c(i,j)+a(i,k)*b(k,j)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
 end subroutine matmult
 
 !> @brief Evaluate bndlen for the PHOH_APRP_DPEM potential.
@@ -11931,21 +11783,18 @@ double precision function bndlen( i, j, x, y, z )
     ! Function to evaluate the bond length between atom i and j
     ! Input: i,j (indices of 2 atoms)
     !***********************************************************************
-
     implicit none
     integer                     :: i, j
     double precision, parameter :: tiny = 1.0d-13
     double precision            :: x(*), y(*), z(*)
     bndlen = sqrt( (x(i)-x(j))*(x(i)-x(j)) + (y(i)-y(j))*(y(i)-y(j)) + (z(i)-z(j))*(z(i)-z(j)))
-
-    if (bndlen .le. tiny) then
+    if( bndlen .le. tiny )then
         write(*, '('' Atom'',I3,'' and'',I3,'' are too close to each other!'')') i, j
         !DB  KRY 20140718
         write(*, '(I3,3F18.12)') i, x(i), y(i), z(i)
         write(*, '(I3,3F18.12)') j, x(j), y(j), z(j)
         stop
-    end if
-
+    endif
 end function bndlen
 
 !> @brief Evaluate bndang for the PHOH_APRP_DPEM potential.
@@ -11954,26 +11803,21 @@ double precision function bndang( i, j, k, x, y, z )
     ! Evaluate the bond angle between atoms i, j, and k
     ! Input: i,j,k (indices of 3 atoms, i-j and j-k bonds)
     !***********************************************************************
-
     implicit none
     double precision :: a, bndlen
     integer          :: i, j, k
     double precision :: x(*), y(*), z(*)
     double precision :: eji(3), ejk(3), rji, rjk
-    rji = bndlen(i, j, x, y, z)
-    rjk = bndlen(j, k, x, y, z)
-
+    rji    = bndlen(i, j, x, y, z)
+    rjk    = bndlen(j, k, x, y, z)
     eji(1) = (x(i)-x(j))/rji
     eji(2) = (y(i)-y(j))/rji
     eji(3) = (z(i)-z(j))/rji
-
     ejk(1) = (x(k)-x(j))/rjk
     ejk(2) = (y(k)-y(j))/rjk
     ejk(3) = (z(k)-z(j))/rjk
-
     call sprod(3, eji, ejk, a)
     bndang = acos(a)
-
 end function bndang
 
 !> @brief Evaluate dihedr for the PHOH_APRP_DPEM potential.
@@ -11983,7 +11827,6 @@ double precision function dihedr( i, j, k, l, x, y, z )
     ! Input: i,j,k,l (indices of 4 atoms)
     !        i--j--k--l
     !***********************************************************************
-
     implicit none
     double precision            :: a, bndang, bndlen
     integer                     :: i, j, k, l
@@ -12004,15 +11847,13 @@ double precision function dihedr( i, j, k, l, x, y, z )
     rkl  = bndlen(k, l, x, y, z)
     aijk = bndang(i, j, k, x, y, z)
     ajkl = bndang(j, k, l, x, y, z)
-
     ! Check whether i-j-k or j-k-l are collinear
-    if ((abs(aijk) .le. tiny) .or. (abs(aijk-pi) .lt. tiny)) then
+    if( (abs(aijk) .le. tiny) .or. (abs(aijk-pi) .lt. tiny) )then
         write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') i, j, k
-    end if
-    if ((abs(ajkl) .le. tiny) .or. (abs(ajkl-pi) .lt. tiny)) then
+    endif
+    if( (abs(ajkl) .le. tiny) .or. (abs(ajkl-pi) .lt. tiny) )then
         write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') j, k, l
-    end if
-
+    endif
     ! Calculate eij
     eij(1) = (x(j)-x(i))/rij
     eij(2) = (y(j)-y(i))/rij
@@ -12025,7 +11866,6 @@ double precision function dihedr( i, j, k, l, x, y, z )
     ekl(1) = (x(l)-x(k))/rkl
     ekl(2) = (y(l)-y(k))/rkl
     ekl(3) = (z(l)-z(k))/rkl
-
     !
     ! u = eij*ejk normal vector in plane i-j-k
     ! v = ejk*ekl Normal vector in plane j-k-l
@@ -12034,29 +11874,23 @@ double precision function dihedr( i, j, k, l, x, y, z )
     call xprod1(eij, ejk, u)
     call xprod1(ejk, ekl, v)
     call xprod1(u, v, w)
-
     call sprod(3, u, v, a)
-
     a      = a/(dsin(aijk)*dsin(ajkl))
     a      = max(a, -1.0d0)
     a      = min(a, 1.0d0)
     dihedr = dacos(a)
-
     ! Determine the sign of dihedr based on u,v,ejk
     ! dihedr >= 0, u,v,ejk right-hand (w*ejk >=0)
     ! dihedr < 0,  u,v,ejk left-hand (w*ejk < 0)
-
     wejk = w(1)*ejk(1)+w(2)*ejk(2)+w(3)*ejk(3)
-    if (wejk .lt. 0.0d0) then
+    if( wejk .lt. 0.0d0 )then
         dihedr = -dihedr
-    end if
-
+    endif
     ! Setting the range of dihedral angle between -90.0 degree to 270 degree
     ! to avoid discontinuity around 180 degrees
     !      if (dihedr .lt. -0.5d0*pi) then
     !        dihedr=2.0d0*pi+dihedr
     !      endif
-
 end function dihedr
 
 !> @brief Evaluate oopba1 for the PHOH_APRP_DPEM potential.
@@ -12070,7 +11904,6 @@ double precision function oopba1( i, j, k, l, x, y, z )
     !            \
     !             k
     !***********************************************************************
-
     implicit none
     double precision :: bndang, bndlen
     integer          :: i, j, k, l
@@ -12092,50 +11925,40 @@ double precision function oopba1( i, j, k, l, x, y, z )
     eji(1) = (x(i)-x(j))/rji
     eji(2) = (y(i)-y(j))/rji
     eji(3) = (z(i)-z(j))/rji
-
     rjk    = bndlen(j, k, x, y, z)
     ejk(1) = (x(k)-x(j))/rjk
     ejk(2) = (y(k)-y(j))/rjk
     ejk(3) = (z(k)-z(j))/rjk
-
     rjl    = bndlen(j, l, x, y, z)
     ejl(1) = (x(l)-x(j))/rjl
     ejl(2) = (y(l)-y(j))/rjl
     ejl(3) = (z(l)-z(j))/rjl
-
-    ai = bndang(k, j, l, x, y, z)
-
-    si = sin(ai)
-
+    ai     = bndang(k, j, l, x, y, z)
+    si     = sin(ai)
     call xprod1(ejk, ejl, u)
     ! Check if whether ai = 180
-    if (u(1)**2+u(2)**2+u(3)**2 .le. tiny) then
+    if( u(1)**2+u(2)**2+u(3)**2 .le. tiny )then
         write(*, *) "Looks like k-j-l collinear."
         write(*, *) "Out-of-plane bending angle is not defined."
         stop
-    end if
-
+    endif
     call sprod(3, u, eji, a)
     a      = a/si
     a      = max(a, -1.0d0)
     a      = min(a, 1.0d0)
     oopba1 = asin(a)
-
     ! Check whether needs to go beyond -pi/2 to pi/2
     !      write(*,*) "before correction, oopba1 = ",oopba1
-
     !      do n=1,3
     !        v(n)=ejk(n)+ejl(n)
     !      enddo
     !      call sprod(3,eji,v,b)
-
     !      if ((oopba1 .lt. 0.0d0) .and. (b .gt. 0.0d0)) then
     !        oopba1=2.0d0*asin(-1.0d0)-oopba1
     !      endif
     !      if ((oopba1 .ge. 0.0d0) .and. (b .gt. 0.0d0)) then
     !        oopba1=2.0d0*asin(1.0d0)-oopba1
     !      endif
-
 end function oopba1
 
 !> @brief Evaluate xprod1 for the PHOH_APRP_DPEM potential.
@@ -12145,13 +11968,11 @@ subroutine xprod1( x1, x2, x3 )
     ! Input: X1,X2
     ! Output: X3
     !***********************************************************************
-
     implicit none
     double precision :: x1(3), x2(3), x3(3)
     x3(1) = x1(2)*x2(3)-x1(3)*x2(2)
     x3(2) = x1(3)*x2(1)-x1(1)*x2(3)
     x3(3) = x1(1)*x2(2)-x1(2)*x2(1)
-
 end subroutine xprod1
 
 !> @brief Evaluate sprod for the PHOH_APRP_DPEM potential.
@@ -12161,7 +11982,6 @@ subroutine sprod( n, a, b, c )
     ! Input: a(n),b(n)
     ! Output: c
     !***********************************************************************
-
     implicit none
     integer          :: i
     integer          :: n
@@ -12169,6 +11989,5 @@ subroutine sprod( n, a, b, c )
     c = 0.0d0
     do i=1, n
         c = c+a(i)*b(i)
-    end do
-
+    enddo
 end subroutine sprod

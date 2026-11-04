@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
     call evaluate_reparameterized_pettifor_ward( &
-        coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the reparameterized oscillatory Pettifor-Ward energy.
@@ -49,7 +49,6 @@ subroutine evaluate_reparameterized_pettifor_ward( &
     real(real64), intent(out) :: energy_hartree
     real(real64)              :: distance_bohr, pair_energy
     integer                   :: first_atom, second_atom
-
     energy_hartree = 0.0d0
     do first_atom = 1, atom_count-1
         do second_atom = first_atom+1, atom_count
@@ -59,6 +58,6 @@ subroutine evaluate_reparameterized_pettifor_ward( &
                 & decay_rates(2)*distance_bohr) +amplitudes(3)*cos(wavevectors(3)*distance_bohr+phases(3)) *exp(- &
                 & decay_rates(3)*distance_bohr))
             energy_hartree = energy_hartree+pair_energy
-        end do
-    end do
+        enddo
+    enddo
 end subroutine evaluate_reparameterized_pettifor_ward

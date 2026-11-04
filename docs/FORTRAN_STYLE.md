@@ -19,14 +19,18 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   `distances(1,:)`.
 - Put one space inside procedure argument parentheses:
   `subroutine evaluate( coordinates, energy )`.
-- Do not put blank lines inside a procedure's initial specification section.
+- Write calls without spaces immediately inside their parentheses:
+  `call evaluate(coordinates, energy)`.
+- Do not put blank lines inside modules, subroutines, functions, programs, or
+  block-data units.
 - Use one blank line, exactly, between top-level subroutines, functions,
   modules, programs, and block-data units.
-- Use a single blank line only when it separates meaningful executable sections;
-  consecutive blank lines are forbidden.
-- Spell compound endings with spaces: `end if`, `end do`, and
-  `end subroutine evaluate`; compact forms such as `endif` and `endsubroutine`
-  are forbidden.
+- Use compact executable-block endings `endif` and `enddo`. Keep source-unit
+  endings explicit and spaced, such as `end subroutine evaluate` and
+  `end module surface_name`; forms such as `endsubroutine` remain forbidden.
+- Space the outer condition and relational operator in conditionals:
+  `if( (r-re) .ne. 0.0d0 )then`. Keep arithmetic inside the condition compact
+  when that makes the expression easier to read.
 - Keep the standard PES metadata header as one compact comment block and align
   its values after the longest label. Use the established fields `System`,
   `Functional form`, `Common name`, derivative/body/state counts, `Interface`,
@@ -87,6 +91,13 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 
 ## Public PES adapters
 
+- Give every surface a uniquely named, private-by-default module that publishes
+  the generic `evaluate` and `metadata` API defined by the PES contract.
+- Do not publish or retain an initialization procedure. Express fixed values
+  and fitted coefficients as private typed module parameters.
+- Convert authoritative coefficient files into committed Fortran parameter
+  modules, recording their source checksum and citation. PES evaluation must
+  not require runtime parameter files or file-unit setup.
 - Treat `pes` and `dpem` as thin compatibility adapters, not as numerical
   kernels.
 - Keep the public signature required by the current package while delegating

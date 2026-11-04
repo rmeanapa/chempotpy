@@ -34,33 +34,29 @@ subroutine pot( rvp, evp, dvp )
     !    If only one mass is distinct, choose the target mass as that, otherwise choose
     !    the lightest particle.  If another choice is desired, add appropriate assignment
     !    statements here
-    if(xmass1.eq.xmass2)then
+    if( xmass1 .eq. xmass2 )then
         zmass1 = xmass1
         zmass2 = xmass2
-    elseif(xmass1.eq.xmass3)then
+    else if( xmass1 .eq. xmass3 )then
         zmass1 = xmass1
         zmass2 = xmass3
-    elseif(xmass2.eq.xmass3)then
+    else if( xmass2 .eq. xmass3 )then
         zmass1 = xmass2
         zmass2 = xmass3
     else
         zmass1 = max(xmass1, xmass2, xmass3)
-        if(xmass1.lt.zmass1)then
+        if( xmass1 .lt. zmass1 )then
             zmass2 = max(xmass1, min(xmass2, xmass3))
         else
             zmass2 = max(xmass2, xmass3)
-        end if
-    end if
-
+        endif
+    endif
     xmh        = 1836.15264d0   ! H nuclear mass (after substracting 1 for electron mass)
     xmd        = 3670.48293d0   ! D nuclear mass (after substracting 1 for electron mass)
     hatom_bodc = 59.6818d0  ! the BODC in cm-1 of H with an aug-cc-pVTZ basis set
-
-    ezero = hatom_bodc*xmh*(1d0/xmass1+1d0/xmass2+1d0/xmass3)
+    ezero      = hatom_bodc*xmh*(1d0/xmass1+1d0/xmass2+1d0/xmass3)
     call golden(1.3d0, 1.4d0, 1.5d0, 1.d-14, xmin, ezero2)
-
     ezero = ezero/towave+ezero2+ccishift
-
     if( (xmass1.eq.xmd) .and. (xmass2.eq.xmh) &
         &      .and. (xmass3.eq.xmh) )then
     icase = 1  ! We are solving for D + H2 so we don't need to solve for amat
@@ -72,25 +68,20 @@ else
     xmminv(1,1) = t
     xmminv(2,2) = t
     xmminv(3,3) = t
-    end if
-
+    endif
     call prepotcbs
     call prepot_leps
     call prepotbodcdh2
-
     ! R1 is the distance between mass1 and mass2, R2 is the distance between mass2 and mass3,
     ! and R3 is the distance between mass1 and mass3.  Note that the D+H2 code requires the homonuclear
     ! diatom distance to be R3, so before calling all the various subroutines we need to switch R2 and R3
     !
-
     r1x = rvp(1)
     r3x = rvp(2)
     r2x = rvp(3)
     call potcbs(r1x, r2x, r3x, ecci, dcci)
-
     call potbodcdh2(r1x, r2x, r3x, e1, d1)
-
-    if(icase.eq.1)then
+    if( icase .eq. 1 )then
         evp    = e1 - ezero
         dvp(:) = d1(:)
     else
@@ -113,15 +104,13 @@ else
             emat(3) = d3(i)
             amat(:) = matmul(xmminv, emat)
             dvp(i)  = amat(1)/xmass1+amat(2)/xmass2+amat(3)/xmass3
-        end do
-    end if
-
+        enddo
+    endif
     evp    = evp/towave+ecci-ezero
     dvp(1) = dvp(1)/towave+dcci(1)
     t      = dvp(2)/towave+dcci(2)
     dvp(2) = dvp(3)/towave+dcci(3)
     dvp(3) = t
-
 end
 
 !> @brief Evaluate prepotbodcdh2.
@@ -690,9 +679,7 @@ subroutine prepotbodcdh2
     xlin3(178) = 1.161199705458321d-01
     xlin3(179) = -7.827610505544675d-02
     xlin3(180) = -8.180052967228596d-03
-
     !     distances are in Bohr, energies are in cm-1
-
     towave     = 219474.7d0  ! hartree to cm-1 conversion
     xmh        = 1836.15264d0   ! H nuclear mass (after substracting 1 for electron mass)
     xmd        = 3670.48293d0   ! D nuclear mass (after substracting 1 for electron mass)
@@ -700,23 +687,20 @@ subroutine prepotbodcdh2
     xma        = xmd
     xmb        = xmh
     xmc        = xmh
-
-    round    = 1.d-2
-    ald      = 0.02d0
-    betad    = 0.72d0
-    betadsum = 3.3d0
-    deldamp  = 0.25d0
-    rhodamp  = 0.01d0
-    beta     = 1.414254132358239d0
-    rnought  = 2.0d0
-    maxi2    = 0
-    maxi     = 0
+    round      = 1.d-2
+    ald        = 0.02d0
+    betad      = 0.72d0
+    betadsum   = 3.3d0
+    deldamp    = 0.25d0
+    rhodamp    = 0.01d0
+    beta       = 1.414254132358239d0
+    rnought    = 2.0d0
+    maxi2      = 0
+    maxi       = 0
     call indexa2(11, 11)
     maxi2a = maxi2
     return
-
     entry potbodcdh2(r1x, r2x, r3x, eee, dv)
-
     rsum = r1x+r2x+r3x
     if((r1x.le.betad).or.(r2x.le.betad).or.(r3x.le.betad)&
         &    .or.(rsum.le.betadsum) )then
@@ -728,7 +712,7 @@ else
     slit2 = r2x**2-r3x**2
     slit3 = slit1*slit1+3.0d0*slit2*slit2
     slit  = sqrt(slit3)/bigq
-    if(slit.le.deldamp)then
+    if( slit .le. deldamp )then
         damper     = 0.0d0
         ddamper(:) = 0.0d0
     else
@@ -738,17 +722,15 @@ else
         rdamp2   = ald/(betad-r2x)
         rdamp3   = ald/(betad-r3x)
         damper   = exp(rdampsum+rdamp1+rdamp2+rdamp3+sdamp)
-
-        dsdamp = sdamp/(deldamp-slit)
+        dsdamp   = sdamp/(deldamp-slit)
         ddamper(1)= damper*(dsdamp*slit*r1x* (4.0d0*slit1/slit3 - 2.0d0/bigq) +rdampsum/(betadsum-rsum)+rdamp1/(betad- &
             & r1x))
         ddamper(2)=damper*(-dsdamp*slit*r2x* (4.0d0*(r1x*r1x-2.0d0*r2x*r2x+r3x*r3x)/slit3+2.0d0/bigq) +rdampsum/ &
             & (betadsum-rsum)+rdamp2/(betad-r2x))
         ddamper(3)=damper*(-dsdamp*slit*r3x* (4.0d0*(r1x*r1x+r2x*r2x-2.0d0*r3x*r3x)/slit3+2.0d0/bigq) +rdampsum/ &
             & (betadsum-rsum)+rdamp3/(betad-r3x))
-    end if
-    end if
-
+    endif
+    endif
     rpass(1) = r1x
     rpass(3) = r2x
     rpass(2) = r3x
@@ -756,61 +738,50 @@ else
     sum1     = dgtot(2)
     dgtot(2) = dgtot(3)
     dgtot(3) = sum1
-
-    bb2 = towave*gtot
+    bb2      = towave*gtot
     do i = 1, 3
         dbb2(i) = towave*dgtot(i)
-    end do
-    bb3     = sqrt(round+(r1x-r3x)**2+(r1x-r2x)**2+(r2x-r3x)**2)
-    dbb3(1) = (2.0d0*r1x-r2x-r3x)/bb3
-    dbb3(2) = (2.0d0*r2x-r1x-r3x)/bb3
-    dbb3(3) = (2.0d0*r3x-r1x-r2x)/bb3
-
-    e1body = (2.d0 + xmh/xmd) * hatom_bodc
-
-    v = e1body + ((xmd+xmh)/(2.d0*xmd))*(bodc2body(r1x, dv1) +bodc2body(r2x, dv2)) + bodc2body(r3x, dv3)
-
-    dv(1) = ((xmd+xmh)/(2.d0*xmd))*dv1
-    dv(2) = ((xmd+xmh)/(2.d0*xmd))*dv2
-    dv(3) = dv3
-
+    enddo
+    bb3      = sqrt(round+(r1x-r3x)**2+(r1x-r2x)**2+(r2x-r3x)**2)
+    dbb3(1)  = (2.0d0*r1x-r2x-r3x)/bb3
+    dbb3(2)  = (2.0d0*r2x-r1x-r3x)/bb3
+    dbb3(3)  = (2.0d0*r3x-r1x-r2x)/bb3
+    e1body   = (2.d0 + xmh/xmd) * hatom_bodc
+    v        = e1body + ((xmd+xmh)/(2.d0*xmd))*(bodc2body(r1x, dv1) +bodc2body(r2x, dv2)) + bodc2body(r3x, dv3)
+    dv(1)    = ((xmd+xmh)/(2.d0*xmd))*dv1
+    dv(2)    = ((xmd+xmh)/(2.d0*xmd))*dv2
+    dv(3)    = dv3
     sum1     = 0.d0
     sum2     = 0.d0
     sum3     = 0.d0
     dsum1(:) = 0.0d0
     dsum2(:) = 0.0d0
     dsum3(:) = 0.0d0
-
-    rho1  = exp(-beta*(r1x-rnought))
-    drho1 = (1.0-beta*r1x)*rho1
-    rho1  = r1x*rho1
-    rho2  = exp(-beta*(r2x-rnought))
-    drho2 = (1.0-beta*r2x)*rho2
-    rho2  = r2x*rho2
-    rho3  = exp(-beta*(r3x-rnought))
-    drho3 = (1.0-beta*r3x)*rho3
-    rho3  = r3x*rho3
-
+    rho1     = exp(-beta*(r1x-rnought))
+    drho1    = (1.0-beta*r1x)*rho1
+    rho1     = r1x*rho1
+    rho2     = exp(-beta*(r2x-rnought))
+    drho2    = (1.0-beta*r2x)*rho2
+    rho2     = r2x*rho2
+    rho3     = exp(-beta*(r3x-rnought))
+    drho3    = (1.0-beta*r3x)*rho3
+    rho3     = r3x*rho3
     rho1t(0) = 1.d0
     rho2t(0) = 1.d0
     rho3t(0) = 1.d0
-
     do it=1, 13
-        rho1t(it) = rho1t(it-1)*rho1
-        rho2t(it) = rho2t(it-1)*rho2
-        rho3t(it) = rho3t(it-1)*rho3
-
+        rho1t(it)  = rho1t(it-1)*rho1
+        rho2t(it)  = rho2t(it-1)*rho2
+        rho3t(it)  = rho3t(it-1)*rho3
         drho1t(it) = it*rho1t(it-1)*drho1
         drho2t(it) = it*rho2t(it-1)*drho2
         drho3t(it) = it*rho3t(it-1)*drho3
-    end do
-
+    enddo
     do ii=1, maxi2a
-        rprod = rho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
-        sum1  = sum1+xlin1(ipar(ii))*rprod
-        sum2  = sum2+xlin2(ipar(ii))*rprod
-        sum3  = sum3+xlin3(ipar(ii))*rprod
-
+        rprod    = rho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
+        sum1     = sum1+xlin1(ipar(ii))*rprod
+        sum2     = sum2+xlin2(ipar(ii))*rprod
+        sum3     = sum3+xlin3(ipar(ii))*rprod
         drprod1  = drho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
         drprod2  = rho1t(kind(ii))*drho2t(jind(ii))*rho3t(iind(ii))
         drprod3  = rho1t(kind(ii))*rho2t(jind(ii))*drho3t(iind(ii))
@@ -823,15 +794,12 @@ else
         dsum3(1) = dsum3(1)+xlin3(ipar(ii))*drprod1
         dsum3(2) = dsum3(2)+xlin3(ipar(ii))*drprod2
         dsum3(3) = dsum3(3)+xlin3(ipar(ii))*drprod3
-    end do
-
+    enddo
     v3c = sum1+sum2*bb2+sum3*bb3
     eee = v+damper*v3c
-
     do i = 1, 3
         dv(i) = dv(i) +ddamper(i)*v3c +damper*(sum2*dbb2(i)+sum3*dbb3(i) +dsum1(i)+dsum2(i)*bb2+dsum3(i)*bb3)
-    end do
-
+    enddo
 end
 
 !> @brief Evaluate bodc2body.
@@ -859,20 +827,18 @@ double precision function bodc2body( r1x, dv )
     xlp(13) = 5.647782847d-1
     xlp(14) = -4.042171086d-2
     re      = 1.401d0
-
-    v    = xlp(14)
-    dv   = -beta*xlp(14)
-    indx = 14
+    v       = xlp(14)
+    dv      = -beta*xlp(14)
+    indx    = 14
     do j=2, 14
         indx = indx-1
         v    = v*(r1x-re)+xlp(indx)
         dv   = dv*(r1x-re)+indx*xlp(indx+1)-beta*xlp(indx)
-    end do
+    enddo
     t         = exp(-beta*(r1x-re))
     v         = v*t
     dv        = dv*t
     bodc2body = v
-
 end
 
 !> @brief Evaluate indexa2.
@@ -888,7 +854,7 @@ subroutine indexa2( mbig, mtop )
         do 20 j=0, min(mtop, mbig)
             do 30 k=j, min(mtop, mbig)
                 isum = i+j+k
-                if(isum.le.mbig)then
+                if( isum .le. mbig )then
                     if(((isum-i).gt.0).and.((isum-j).gt.0).and.&
                         &        ((isum-k).gt.0))then
                     l2      = l2+1
@@ -897,15 +863,15 @@ subroutine indexa2( mbig, mtop )
                     iind(l) = i
                     jind(l) = j
                     kind(l) = k
-                    if(j.ne.k)then
+                    if( j .ne. k )then
                         l       = l+1
                         ipar(l) = l2
                         iind(l) = i
                         jind(l) = k
                         kind(l) = j
-                    end if
-                end if
-                end if
+                    endif
+                endif
+                endif
             30 continue
         20 continue
     10 continue
@@ -929,15 +895,12 @@ subroutine prepot_leps
     beta(:) = 1.973536d0
     sato(:) = .132d0
     rt3     = sqrt(3d0)
-
     ! Convert to atomic units
-
     do i = 1, 3
         d(i)    = d(i)/627.509552d0
         re(i)   = re(i)/0.52917725d0
         beta(i) = beta(i)*0.52917725d0
-    end do
-
+    enddo
     !     WRITE (6,600) (D(I)*627.509552,I=1,3),Re,Beta,Sato
 end
 
@@ -974,13 +937,12 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
         vt(i)   = 0.5d0*d(i)*(ex + 2.0)*ex*(1.0-sato(i))/(1.0+sato(i))
         dvt(i)  = -d(i)*beta(i)*(ex+1.0)*ex*(1.0-sato(i))/(1.0+sato(i))
         d2vt(i) = d(i)*beta(i)*beta(i)*(2.0d0*ex+1.0)*ex *(1.0-sato(i))/(1.0+sato(i))
-    end do
+    enddo
     !
     ! Construct 2x2 DIM Hamiltonian
     h11 = d(2) + vs(2) + 0.25d0*(vs(1)+vs(3)) + 0.75d0*(vt(1)+vt(3))
     h12 = 0.25d0*rt3*(vs(1) - vs(3) - vt(1) + vt(3))
     h22 = d(2) + vt(2) + 0.75*(vs(1)+vs(3)) + 0.25d0*(vt(1)+vt(3))
-
     !
     ! Calculate eigenvalues (V1 and V2) and quantities needed for matrix elements
     !   of d/dRi
@@ -994,57 +956,48 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     delh     = sqrt(rad)
     v1       = 0.5d0*hsum - delh
     v2       = 0.5d0*hsum + delh
-
     ! derivatives
     !
-    dh11(1) = 0.25d0*dvs(1)+0.75d0*dvt(1)
-    dh11(2) = dvs(2)
-    dh11(3) = 0.25d0*dvs(3)+0.75d0*dvt(3)
-
-    dh12(1) = 0.25d0*rt3*(dvs(1)-dvt(1))
-    dh12(2) = 0.0d0
-    dh12(3) = -0.25d0*rt3*(dvs(3)-dvt(3))
-
-    dh22(1) = 0.75d0*dvs(1)+0.25d0*dvt(1)
-    dh22(2) = dvt(2)
-    dh22(3) = 0.75d0*dvs(3)+0.25d0*dvt(3)
-
-    d2h12(1) = 0.25d0*rt3*(d2vs(1)-d2vt(1))
-    d2h12(2) = 0.0d0
-    d2h12(3) = -0.25d0*rt3*(d2vs(3)-d2vt(3))
-
+    dh11(1)   = 0.25d0*dvs(1)+0.75d0*dvt(1)
+    dh11(2)   = dvs(2)
+    dh11(3)   = 0.25d0*dvs(3)+0.75d0*dvt(3)
+    dh12(1)   = 0.25d0*rt3*(dvs(1)-dvt(1))
+    dh12(2)   = 0.0d0
+    dh12(3)   = -0.25d0*rt3*(dvs(3)-dvt(3))
+    dh22(1)   = 0.75d0*dvs(1)+0.25d0*dvt(1)
+    dh22(2)   = dvt(2)
+    dh22(3)   = 0.75d0*dvs(3)+0.25d0*dvt(3)
+    d2h12(1)  = 0.25d0*rt3*(d2vs(1)-d2vt(1))
+    d2h12(2)  = 0.0d0
+    d2h12(3)  = -0.25d0*rt3*(d2vs(3)-d2vt(3))
     d2hdif(1) = 0.5d0*(d2vs(1) - d2vt(1))
     d2hdif(2) = -(d2vs(2) - d2vt(2))
     d2hdif(3) = 0.5d0*(d2vs(3) - d2vt(3))
-
-    drad(1) = 0.5d0*hdif*dhdif(1) +2.0d0*h12*dh12(1)
-    drad(2) = 0.5d0*hdif*dhdif(2) +2.0d0*h12*dh12(2)
-    drad(3) = 0.5d0*hdif*dhdif(3) +2.0d0*h12*dh12(3)
-
+    drad(1)   = 0.5d0*hdif*dhdif(1) +2.0d0*h12*dh12(1)
+    drad(2)   = 0.5d0*hdif*dhdif(2) +2.0d0*h12*dh12(2)
+    drad(3)   = 0.5d0*hdif*dhdif(3) +2.0d0*h12*dh12(3)
     ! Calculate matrix elements of d/dRi; note that at conical intersection f12
     !   diverges, but is set to zero in the code.
     do i = 1, 3
         f12(i) = 0.25d0*(h12*dhdif(i) - hdif*dh12(i))
-        if (rad.ne.0.0d0) then
+        if( rad .ne. 0.0d0 )then
             f12(i) = f12(i)/rad
             do j = 1, 3
                 df12(i,j) = (0.25d0*(dh12(j)*dhdif(i)-dhdif(j)*dh12(i)) -f12(i)*drad(j))/rad
-            end do
+            enddo
             df12(i,i) = df12(i,i) + 0.25d0*(h12*d2hdif(i)-hdif*d2h12(i))/rad
-        end if
-    end do
-
+        endif
+    enddo
     !
     ! Calculate diagonal matrix element of kinetic energy operator
     !
-    cos1 = (r(2)*r(2) + r(3)*r(3) - r(1)*r(1))/(2.0*r(2)*r(3))
-    cos2 = (r(1)*r(1) + r(3)*r(3) - r(2)*r(2))/(2.0*r(1)*r(3))
-    cos3 = (r(1)*r(1) + r(2)*r(2) - r(3)*r(3))/(2.0*r(1)*r(2))
-    ga   = (f12(1)*(f12(1) + 2.0*cos2*f12(3)) + f12(3)*f12(3))/(2.d0*xma)
-    gb   = (f12(1)*(f12(1) + 2.0*cos3*f12(2)) + f12(2)*f12(2))/(2.d0*xmb)
-    gc   = (f12(2)*(f12(2) + 2.0*cos1*f12(3)) + f12(3)*f12(3))/(2.d0*xmc)
-    gtot = ga+gb+gc
-
+    cos1     = (r(2)*r(2) + r(3)*r(3) - r(1)*r(1))/(2.0*r(2)*r(3))
+    cos2     = (r(1)*r(1) + r(3)*r(3) - r(2)*r(2))/(2.0*r(1)*r(3))
+    cos3     = (r(1)*r(1) + r(2)*r(2) - r(3)*r(3))/(2.0*r(1)*r(2))
+    ga       = (f12(1)*(f12(1) + 2.0*cos2*f12(3)) + f12(3)*f12(3))/(2.d0*xma)
+    gb       = (f12(1)*(f12(1) + 2.0*cos3*f12(2)) + f12(2)*f12(2))/(2.d0*xmb)
+    gc       = (f12(2)*(f12(2) + 2.0*cos1*f12(3)) + f12(3)*f12(3))/(2.d0*xmc)
+    gtot     = ga+gb+gc
     dcos1(1) = -r(1)/(r(2)*r(3))
     dcos1(2) = 1.0d0/r(3) - cos1/r(2)
     dcos1(3) = 1.0d0/r(2) - cos1/r(3)
@@ -1054,7 +1007,6 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     dcos3(1) = 1.0d0/r(2) - cos3/r(1)
     dcos3(2) = 1.0d0/r(1) - cos3/r(2)
     dcos3(3) = -r(3)/(r(1)*r(2))
-
     do i = 1, 3
         ! contribution from ga
         dgtot(i) = (f12(1)*(df12(1,i) + dcos2(i)*f12(3) + cos2*df12(3,i)) + cos2*df12(1,i)*f12(3) + f12(3)*df12(3, &
@@ -1065,8 +1017,7 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
         ! contribution from ga
         dgtot(i) = dgtot(i) + (f12(2)*(df12(2,i) + dcos1(i)*f12(3) + cos1*df12(3,i)) + cos1*df12(2,i)*f12(3) + f12(3)* &
             & df12(3,i))/xmc
-    end do
-
+    enddo
 end
 
 !> @brief Evaluate prepotcbs.
@@ -1413,31 +1364,25 @@ subroutine prepotcbs
     xlin4(69) = 52.11461967121677d0
     xlin4(70) = 6.929202177070909d0
     xlin4(71) = -6.322557284152793d0
-
-    epslon = 1.d-12
-    epscem = 1.d-12
-    ald    = 0.02d0
-    betad  = 0.72d0
-
-    maxi2 = 0
-    maxi  = 0
+    epslon    = 1.d-12
+    epscem    = 1.d-12
+    ald       = 0.02d0
+    betad     = 0.72d0
+    maxi2     = 0
+    maxi      = 0
     call indexa3(12, 12)
     maxi2a = maxi2
-
-    maxi = 0
+    maxi   = 0
     call indexa3(11, 11)
     maxi2b = maxi2-maxi2a
     return
-
     entry potcbs(r1x, r2x, r3x, eee, dv)
-
     call trip(r1x, etrip1, detrip1)
     call trip(r2x, etrip2, detrip2)
     call trip(r3x, etrip3, detrip3)
     call singlet(r1x, es1, des1)
     call singlet(r2x, es2, des2)
     call singlet(r3x, es3, des3)
-
     q1       = 0.5d0*(es1+etrip1)
     q2       = 0.5d0*(es2+etrip2)
     q3       = 0.5d0*(es3+etrip3)
@@ -1455,8 +1400,7 @@ subroutine prepotcbs
     dvlon(1) = dq1-0.5d0*dxj1*(2.0d0*xj1-xj2-xj3)/xj
     dvlon(2) = dq2-0.5d0*dxj2*(2.0d0*xj2-xj1-xj3)/xj
     dvlon(3) = dq3-0.5d0*dxj3*(2.0d0*xj3-xj1-xj2)/xj
-
-    if((r1x.le.betad).or.(r2x.le.betad).or.(r3x.le.betad))then
+    if( (r1x .le. betad).or.(r2x .le. betad).or.(r3x .le. betad) )then
         damper   = 0.d0
         ddamp(1) = 0.d0
         ddamp(2) = 0.d0
@@ -1469,18 +1413,15 @@ subroutine prepotcbs
         ddamp(1) = rdamp1/(betad-r1x)
         ddamp(2) = rdamp2/(betad-r2x)
         ddamp(3) = rdamp3/(betad-r3x)
-    end if
-
-    bb     = sqrt(epscem+(r1x-r3x)**2+(r1x-r2x)**2+(r2x-r3x)**2)
-    dbb(1) = (2.d0*r1x-r2x-r3x)/bb
-    dbb(2) = (2.d0*r2x-r1x-r3x)/bb
-    dbb(3) = (2.d0*r3x-r1x-r2x)/bb
-
+    endif
+    bb       = sqrt(epscem+(r1x-r3x)**2+(r1x-r2x)**2+(r2x-r3x)**2)
+    dbb(1)   = (2.d0*r1x-r2x-r3x)/bb
+    dbb(2)   = (2.d0*r2x-r1x-r3x)/bb
+    dbb(3)   = (2.d0*r3x-r1x-r2x)/bb
     warp     = 1.d0/(1.d0/r1x+1.d0/r2x+1.d0/r3x)
     dwarp(1) = (warp/r1x)**2
     dwarp(2) = (warp/r2x)**2
     dwarp(3) = (warp/r3x)**2
-
     rho1     = exp(-beta*(r1x-rnought))
     rho2     = exp(-beta*(r2x-rnought))
     rho3     = exp(-beta*(r3x-rnought))
@@ -1491,8 +1432,7 @@ subroutine prepotcbs
         rho1t(it) = rho1t(it-1)*rho1
         rho2t(it) = rho2t(it-1)*rho2
         rho3t(it) = rho3t(it-1)*rho3
-    end do
-
+    enddo
     sum1 = 0.d0
     sum2 = 0.d0
     sum3 = 0.d0
@@ -1502,8 +1442,7 @@ subroutine prepotcbs
         dsum2(i) = 0.d0
         dsum3(i) = 0.d0
         dsum4(i) = 0.d0
-    end do
-
+    enddo
     do ii=1, maxi2a
         rprod    = rho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
         t1       = xlin1(ipar(ii))*rprod
@@ -1516,8 +1455,7 @@ subroutine prepotcbs
         dsum2(1) = dsum2(1)-beta*kind(ii)*t1
         dsum2(2) = dsum2(2)-beta*jind(ii)*t1
         dsum2(3) = dsum2(3)-beta*iind(ii)*t1
-    end do
-
+    enddo
     do ii=maxi2a+1, maxi2a+maxi2b
         rprod    = rho1t(kind(ii))*rho2t(jind(ii))*rho3t(iind(ii))
         t1       = xlin3(ipar(ii))*rprod
@@ -1530,16 +1468,13 @@ subroutine prepotcbs
         dsum4(1) = dsum4(1)-beta*kind(ii)*t1
         dsum4(2) = dsum4(2)-beta*jind(ii)*t1
         dsum4(3) = dsum4(3)-beta*iind(ii)*t1
-    end do
-
+    enddo
     v3c = damper*(sum1+sum2*bb+warp*(sum3+sum4*bb))
     eee = vlondon+v3c+eshift
-
     do i = 1, 3
         dv(i)=dvlon(i) +ddamp(i)*v3c +damper*(dsum1(i)+dbb(i)*(sum2+warp*sum4)+bb*dsum2(i) +dwarp(i)*(sum3+bb*sum4)+ &
             & warp*(dsum3(i)+bb*dsum4(i)))
-    end do
-
+    enddo
 end
 
 !> @brief Evaluate indexa3.
@@ -1552,12 +1487,11 @@ subroutine indexa3( mbig, mtop )
     common /indy/iind(n2), jind(n2), kind(n2), ipar(n2), maxi, maxi2
     l  = maxi2
     l2 = maxi
-
     do  i=0, min(mtop, mbig)
         do  j=i, min(mtop, mbig)
             do  k=j, min(mtop, mbig)
                 isum = i+j+k
-                if(isum.le.mbig)then
+                if( isum .le. mbig )then
                     if(((isum-i).gt.0).and.((isum-j).gt.0).and.&
                         &        ((isum-k).gt.0))then
                     l2      = l2+1
@@ -1566,8 +1500,8 @@ subroutine indexa3( mbig, mtop )
                     iind(l) = i
                     jind(l) = j
                     kind(l) = k
-                    if(i.ne.j)then
-                        if(j.ne.k)then
+                    if( i .ne. j )then
+                        if( j .ne. k )then
                             l       = l+1
                             ipar(l) = l2
                             iind(l) = i
@@ -1604,8 +1538,8 @@ subroutine indexa3( mbig, mtop )
                             iind(l) = j
                             jind(l) = k
                             kind(l) = i
-                        end if
-                    elseif (j.ne.k)then
+                        endif
+                    else if( j .ne. k )then
                         l       = l+1
                         ipar(l) = l2
                         iind(l) = j
@@ -1616,12 +1550,12 @@ subroutine indexa3( mbig, mtop )
                         iind(l) = k
                         jind(l) = j
                         kind(l) = i
-                    end if
-                end if
-                end if
-            end do
-        end do
-    end do
+                    endif
+                endif
+                endif
+            enddo
+        enddo
+    enddo
     maxi  = l2
     maxi2 = l
 end
@@ -1658,10 +1592,9 @@ subroutine trip( r, v, dv )
     xlp(15) = 5.419433399532862d-3
     xlp(16) = -7.263483303294653d-4
     xlp(17) = 4.154351972583585d-5
-
-    t0     = r-re
-    prefac = exp(-alpha*t0)
-    if((r-re).ne.0.d0)then
+    t0      = r-re
+    prefac  = exp(-alpha*t0)
+    if( (r-re) .ne. 0.d0 )then
         vsr  = 0.0
         dvsr = 0.0
         t1   = 1.0d0
@@ -1671,13 +1604,12 @@ subroutine trip( r, v, dv )
             dvsr = dvsr+(j-1)*xlp(j)*t2*prefac
             t2   = t1
             t1   = t1*t0
-        end do
+        enddo
     else
         vsr  = xlp(1)*prefac
         dvsr = xlp(2)*prefac
-    end if
+    endif
     dvsr = dvsr-alpha*vsr
-
     t1   = r*r
     t2   = exp(-beta*t1)
     damp = 1.d0-t2
@@ -1685,10 +1617,8 @@ subroutine trip( r, v, dv )
     xd2  = xd*xd
     vlr  = (c6+xd2*(c8+xd2*c10))*xd2**3
     dvlr = -(6.0d0*c6+xd2*(8.0d0*c8+xd2*10.0d0*c10))* ((1/r)-2.0d0*beta*t2/xd)*xd2**3
-
-    v  = vlr+vsr
-    dv = dvlr+dvsr
-
+    v    = vlr+vsr
+    dv   = dvlr+dvsr
 end
 
 !> @brief Evaluate singlet.
@@ -1727,11 +1657,10 @@ subroutine singlet( r, v, dv )
     xd2     = xd*xd
     v       = (c6+xd2*(c8+xd2*c10))*xd2**3
     dv      = -(6.0d0*c6+xd2*(8.0d0*c8+xd2*10.0d0*c10))* ((1/r)-2.0d0*beta*t2/xd)*xd2**3
-
-    t0     = r-re
-    prefac = exp(-alpha*t0)
-    vsr    = 0.0
-    if((r-re).ne.0.d0)then
+    t0      = r-re
+    prefac  = exp(-alpha*t0)
+    vsr     = 0.0
+    if( (r-re) .ne. 0.d0 )then
         t1 = 1.0d0
         t2 = 0.0d0
         do j=1, 17
@@ -1739,14 +1668,13 @@ subroutine singlet( r, v, dv )
             dv  = dv+(j-1)*xlp(j)*t2*prefac
             t2  = t1
             t1  = t1*t0
-        end do
+        enddo
     else
         vsr = xlp(1)*prefac
         dv  = dv+xlp(2)*prefac
-    end if
+    endif
     v  = v+vsr
     dv = dv-alpha*vsr
-
 end
 
 !> @brief Evaluate golden.
@@ -1762,18 +1690,16 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
     fa = fcn(ax)
     fb = fcn(bx)
     fc = fcn(cx)
-    if((fb.ge.fa).or.(fb.ge.fc)) then
+    if( (fb .ge. fa).or.(fb .ge. fc) )then
         write(6, *)'bracketing error in golden'
         write(6, *)ax, fa
         write(6, *)bx, fb
         write(6, *)cx, fc
         stop
-    end if
-
+    endif
     x0 = ax
     x3 = cx
-
-    if(abs(cx-bx) .gt. abs(bx-ax))then
+    if( abs(cx-bx) .gt. abs(bx-ax) )then
         x1 = bx
         f1 = fb
         x2 = bx+c*(cx-bx)
@@ -1783,20 +1709,16 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
         f2 = fb
         x1 = bx-c*(bx-ax)
         f1 = fcn(x1)
-    end if
-
+    endif
     icount = 0
-
     do
-        if(abs(x3-x0) .le. tol*(abs(x1)+abs(x2))) exit
-
+        if( abs(x3-x0) .le. tol*(abs(x1)+abs(x2)) ) exit
         icount = icount+1
-        if(icount.ge.maxcount)then
+        if( icount .ge. maxcount )then
             write(6, *)'too many evaluations in golden'
             stop
-        end if
-
-        if(f2.lt.f1)then
+        endif
+        if( f2 .lt. f1 )then
             x0 = x1
             x1 = x2
             x2 = r*x1+c*x3
@@ -1808,17 +1730,15 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
             x1 = r*x2+c*x0
             f2 = f1
             f1 = fcn(x1)
-        end if
-    end do
-
-    if(f1.lt.f2)then
+        endif
+    enddo
+    if( f1 .lt. f2 )then
         fval = f1
         xmin = x1
     else
         fval = f2
         xmin = x2
-    end if
-
+    endif
 end
 
 !> @brief Evaluate fcn.
@@ -1853,42 +1773,34 @@ subroutine pes( x, igrad, p, g, d )
     logical, save                 :: first_time_data=.true.
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     ! input cartesian is HHH
-    call legacy_triatomic_distances_to_bohr( x, r )
-
+    call legacy_triatomic_distances_to_bohr(x, r)
     r2 = r*legacy_bohr_to_angstrom
-
     call pot(r, v, dvp)
-
     p   = v*legacy_hartree_to_electronvolt
     dvp = dvp*51.422067
-
     call evdrdx(tx, r2, drdx)
     gx = 0.d0
     do i=1, 9
         do j=1, 3
             gx(:,i) = gx(:,i)+dvp(j)*drdx(j,i)
-        end do
-    end do
-
+        enddo
+    enddo
     do iatom=1, natoms
         do idir=1, 3
             j               = (iatom-1)*3+idir
             g(:,iatom,idir) = gx(:,j)
-        end do
-    end do
-
-    if (igrad==2) then
+        enddo
+    enddo
+    if( igrad == 2 )then
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine
 
 !> @brief Evaluate EvdRdX.
@@ -1901,28 +1813,24 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 3
         do j=1, 9
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
     drdx(1,3) = (x(3)-x(6))/r(1)
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     drdx(2,4) = (x(4)-x(7))/r(2)
     drdx(2,5) = (x(5)-x(8))/r(2)
     drdx(2,6) = (x(6)-x(9))/r(2)
     drdx(2,7) = -drdx(2,4)
     drdx(2,8) = -drdx(2,5)
     drdx(2,9) = -drdx(2,6)
-
     drdx(3,1) = (x(1)-x(7))/r(3)
     drdx(3,2) = (x(2)-x(8))/r(3)
     drdx(3,3) = (x(3)-x(9))/r(3)
     drdx(3,7) = -drdx(3,1)
     drdx(3,8) = -drdx(3,2)
     drdx(3,9) = -drdx(3,3)
-
 end subroutine

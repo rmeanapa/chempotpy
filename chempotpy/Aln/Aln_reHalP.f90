@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
     call evaluate_reparameterized_halicioglu_pound( &
-        coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the generalized Lennard-Jones aluminum cluster energy.
@@ -59,7 +59,7 @@ subroutine evaluate_reparameterized_halicioglu_pound( &
             repulsive_term  = (sigma_bohr/distance_bohr) **repulsive_exponent
             attractive_term = (sigma_bohr/distance_bohr) **attractive_exponent
             pair_sum        = pair_sum+repulsive_term-attractive_term
-        end do
-    end do
+        enddo
+    enddo
     energy_hartree = well_scale_hartree*pair_sum
 end subroutine evaluate_reparameterized_halicioglu_pound

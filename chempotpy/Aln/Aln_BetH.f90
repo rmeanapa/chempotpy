@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_BetH potential.
@@ -57,7 +57,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: a, aa, b, bb, dx, dy, dz, rr, u, ud, udd, uu, v, v1, x, y, &
         & z
@@ -72,12 +71,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
     bb = 0.4865568924
     a  = 1.589647708
     b  = 0.866262749
-
     aa = 1220./autoev
     bb = 13.24/autoev
     a  = 3.004*autoang
     b  = 1.637*autoang
-
     v1 = 0d0
     do 4 i=1, natom
         ud = 0d0
@@ -86,7 +83,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dy = y(i)-y(j)
             dz = z(i)-z(j)
             rr = dsqrt(dx*dx+dy*dy+dz*dz)
-            if(j.eq.i) go to 41
+            if( j .eq. i ) go to 41
             udd = 0d0
             udd = dexp(-b*rr)
             ud  = ud+udd

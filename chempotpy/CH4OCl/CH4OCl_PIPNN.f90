@@ -34,14 +34,12 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call pes_init(path)
         call clch3ohpipnn(tx, v)
         deallocate(nodes)
@@ -51,15 +49,12 @@ subroutine pes( x, igrad, path, p, g, d )
         deallocate(pavga)
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
     g = 0.d0
     d = 0.d0
-
 end subroutine
 
 !> @brief Evaluate clch3ohpipNN.
@@ -72,34 +67,28 @@ subroutine clch3ohpipnn( ct, vpes )
     double precision :: ct(3,natom), xvec(3,ndim), cx(3,natom), cy(3,natom)
     double precision :: vpes, vpesa, vpesb, vpesc, vpesh, vnn
     basis = 0.d0
-
-    cx = ct
-
-    k = 0
+    cx    = ct
+    k     = 0
     do i=1, natom-1
         do j=i+1, natom
             k = k+1
             !        write(*,*)k,i,j
             xvec(:,k) = cx(:,i)-cx(:,j)
-        end do
-    end do
-    if(k.ne.ndim)stop 'error in bond dimension'
+        enddo
+    enddo
+    if( k .ne. ndim ) stop 'error in bond dimension'
     do i=1, ndim
         rb(i) = dsqrt(dot_product(xvec(:,i), xvec(:,i)))
-    end do
-
+    enddo
     xbond(:) = dexp(-rb(:)/alpha)
     call bemsav(xbond, basis)
-
     do j=1, nbasis-1
         txinput(j) = basis(j+1)
-    end do
+    enddo
     !        write(987,'(2000E16.8)')txinput(:)
-
     call getpota(txinput, vpes)
     !       vnn=vpes
     !       vpes=vnn
-
 end subroutine clch3ohpipnn
 
 !-->  read NN weights and biases from matlab output
@@ -119,9 +108,7 @@ subroutine pes_init( path )
     character(len=1024)             :: file_path1, file_path2
     file_path1 = trim(path)//"/CH4OCl/weights.txt"
     file_path2 = trim(path)//"/CH4OCl/biases.txt"
-
     open(newunit=file_unit_4, file=file_path2, status='old')
-
     nfile = 7
     open(nfile, file=file_path1)
     read(nfile, *)nhid, noutput
@@ -134,7 +121,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weighta(nodemax,nodemax,2:nlayer), &
         &   biasa(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -151,22 +138,19 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weighta(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasa(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     close(nfile)
     close(file_unit_4)
-
 end subroutine pes_init
 
 !> @brief Evaluate getpota.
@@ -181,8 +165,7 @@ subroutine getpota( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavga(i))/pdela(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -190,11 +173,10 @@ subroutine getpota( x, vpot )
             y(inode1,ilay1) = biasa(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -202,14 +184,12 @@ subroutine getpota( x, vpot )
         y(inode1,ilay1) = biasa(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
-
 end subroutine getpota
 
 !> @brief Evaluate tranfun.
@@ -217,13 +197,13 @@ function tranfun( x, ifunc )
     implicit none
     integer          :: ifunc
     double precision :: tranfun, x
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+dexp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun = x
-    end if
+    endif
 end
 
 !> @brief Evaluate bemsav.
@@ -2243,7 +2223,6 @@ subroutine evmono( x, m )
     m(1998) = m(16)*m(536)
     m(1999) = m(17)*m(536)
     m(2000) = m(18)*m(536)
-
 end subroutine evmono
 
 !> @brief Evaluate evpoly.
@@ -3406,5 +3385,4 @@ subroutine evpoly( m, p )
     p(1102) = p(5)*p(236)-p(1042)
     p(1103) = p(6)*p(237)-p(1064)
     p(1104) = p(7)*p(238)-p(1097)-p(1093)
-
 end subroutine evpoly

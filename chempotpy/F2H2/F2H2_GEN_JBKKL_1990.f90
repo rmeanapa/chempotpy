@@ -17,35 +17,29 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision                :: rcm, r1, r2
     logical, save                   :: first_time_data=.true.
     !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-
+    v      = 0.d0; g = 0.d0; d = 0.d0
     cartnu = 0.d0
     do iatom=1, natoms
         do idir=1, 3
             cartnu(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
-        end do
-    end do
-
-    if(first_time_data) then
+        enddo
+    enddo
+    if( first_time_data )then
         call bjinit(path)
         first_time_data = .false.
-    end if
-
+    endif
     call carttor(cartnu, r)
     rcm = r(1)
     r1  = r(2)
     r2  = r(3)
-
     call trbunk(rcm, r1, r2, v, 4, 0, 0)
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = v*legacy_hartree_to_electronvolt
-        end do
+        enddo
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
 end subroutine pes
 
 !> @brief Evaluate CARTTOR for the F2H2_GEN_JBKKL_1990 potential.
@@ -71,8 +65,8 @@ subroutine carttor( cartnu, r )
     theta1 = (xrm1*xcm3+yrm1*ycm3+zrm1*zcm3)
     theta1 = theta1/(sqrt(xrm1**2+yrm1**2+zrm1**2))
     theta1 = theta1/(sqrt(xcm3**2+ycm3**2+zcm3**2))
-    if(theta1.gt.1.0d0)theta1=1.0d0
-    if(theta1.lt.-1.0d0)theta1=-1.0d0
+    if( theta1 .gt. 1.0d0 ) theta1=1.0d0
+    if( theta1 .lt. -1.0d0 ) theta1=-1.0d0
     theta1 = acos(theta1)
     xrm2   = cartnu(3,1)-xcm2
     yrm2   = cartnu(3,2)-ycm2
@@ -80,8 +74,8 @@ subroutine carttor( cartnu, r )
     theta2 = (xrm2*(-xcm3)+yrm2*(-ycm3)+zrm2*(-zcm3))
     theta2 = theta2/(sqrt(xrm2**2+yrm2**2+zrm2**2))
     theta2 = theta2/(sqrt(xcm3**2+ycm3**2+zcm3**2))
-    if(theta2.gt.1.0d0)theta2=1.0d0
-    if(theta2.lt.-1.0d0)theta2=-1.0d0
+    if( theta2 .gt. 1.0d0 ) theta2=1.0d0
+    if( theta2 .lt. -1.0d0 ) theta2=-1.0d0
     theta2 = acos(theta2)
     pi     = acos(-1.0d0)
     theta2 = pi-theta2
@@ -96,8 +90,8 @@ subroutine carttor( cartnu, r )
     q1     = q1*sin(theta1)
     q2     = q2*sin(theta2)
     cphi   = (q1**2+q2**2-q3**2)/(2.*q1*q2)
-    if(cphi.lt.-1.0d0)cphi=-1.0d0
-    if(cphi.gt.1.0d0)cphi=1.0d0
+    if( cphi .lt. -1.0d0 ) cphi=-1.0d0
+    if( cphi .gt. 1.0d0 ) cphi=1.0d0
     phi  = acos(cphi)
     r(1) = sqrt(xcm3**2+ycm3**2+zcm3**2)
     r(2) = (sqrt(xrm1**2+yrm1**2+zrm1**2))*(flm+hym)/flm
@@ -122,7 +116,6 @@ subroutine bjinit( path )
     open(newunit=file_unit_11, file=file_path1)
     read(file_unit_11, '(5F14.10)')(c(i), i=1, 359)
     close(file_unit_11)
-
 end subroutine bjinit
 
 !
@@ -135,13 +128,10 @@ subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
     !     subroutine trbunk transforms the surface of Bunker, Jensen, Kofran
     !     Lischka and Karpfen(the angular part only; no two-body terms) to t
     !     representation of Launay et al.
-
     !     references
-
     !     Bunker potential: P.R. Bunker, P. Jensen, A. Karpfen, M. Kofranek,
     !     H. Lischka, J. Chem. Phys. 92, 7432 (1990).
     !     Launay expansion: J.M. Launay, J. Phys. B 10, 3665 (1977).
-
     implicit none
     double precision :: a, bo, c, cdenom, const, const1, const2, const3, ha, pc, phas, pi, r, r1, r2, threej, v, vl, xl, &
         & xl1, xl2, xm
@@ -167,11 +157,8 @@ subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
     pi = 3.1415926535898d0
     vl = 2.99792458d0
     pc = 6.6260755d0
-
     !     next get the a's from subroutine vcalc
-
     call vcalc(r1, r2, r)
-
     xl1 = float(iq1)
     xl2 = float(iq2)
     xm  = float(imu)
@@ -179,12 +166,11 @@ subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
     ll  = abs(iq1-iq2)
     lu  = iq1+iq2
     v   = 0.0d0
-
     do 20 l=ll, lu, 2
         xl     = float(l)
         phas   = (-1)**(iq1-iq2)
         const1 = one
-        if(imu.eq.0)const1=two
+        if( imu .eq. 0 ) const1=two
         const1 = one/dsqrt(const1)
         const2 = two*xl+one
         cdenom = (four*pi)**3
@@ -192,20 +178,16 @@ subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
         const  = phas*const1*const2*const3
         v      = v+a(iq1,iq2,l)*const*threej(xl1, xl2, xl, xm, -xm, 0.d0)
     20 continue
-
     !     divide next two terms by three because there is a bug in Bunker's
     !     function subprogram "P" which computes the associated Legendre
     !     function. (this is a very small correction).
-
-    if(iq1.eq.4.and.iq2.eq.2.and.imu.eq.2)v=v/3.d0
-    if(iq1.eq.2.and.iq2.eq.4.and.imu.eq.2)v=v/3.d0
-
+    if( iq1 .eq. 4.and.iq2 .eq. 2.and.imu .eq. 2 ) v=v/3.d0
+    if( iq1 .eq. 2.and.iq2 .eq. 4.and.imu .eq. 2 ) v=v/3.d0
     !     vpot=zero
     !     kount=kount-1
     !     do 50 j=1,kount
     !     write(65,*)v(j)
     !50   continue
-
 end subroutine trbunk
 
 !> @brief Evaluate THREEJ for the F2H2_GEN_JBKKL_1990 potential.
@@ -228,11 +210,11 @@ function threej( a, b, c, al, be, ga )
     !     (J1+J2).GE.J AND J.GE.ABS(A-B)    -M=M1+M2    J1,J2,J.GE.0
     !     ABS(M1).LE.J1    ABS(M2).LE.J2   ABS(M).LE.J
     !
-    if(c.gt.a+b)return
-    if(c.lt.dabs(a-b))return
-    if(a.lt.0.d0.or.b.lt.0.d0.or.c.lt.0.d0)return
-    if(a.lt.dabs(al).or.b.lt.dabs(be).or.c.lt.dabs(ga))return
-    if(-1.d0*ga.ne.al+be)return
+    if( c .gt. a+b ) return
+    if( c .lt. dabs(a-b) ) return
+    if( a .lt. 0.d0.or.b .lt. 0.d0.or.c .lt. 0.d0 ) return
+    if( a .lt. dabs(al).or.b .lt. dabs(be).or.c .lt. dabs(ga) ) return
+    if( -1.d0*ga .ne. al+be ) return
     !
     !
     !     COMPUTE DELTA(ABC)
@@ -345,7 +327,6 @@ subroutine vcalc( r1, r2, rab )
     !
     do 20 i=0, 4
         do 20 j=0, 4
-
             do 20 k=0, 8
     20 a(i,j,k)=0.0d0
     !
@@ -391,11 +372,9 @@ subroutine vcalc( r1, r2, rab )
     !     the zero of energy is chosen as the two monomers infinitely separa
     !     at r1=r2=1.744 a.u. thus c(11) has been omitted from a(0,0,0).
     !
-
     a(0,0,0)=c(357)*de2*rin10 +c(20)*y1y2*rout10 +(c(12)*de1+c(13)*de2+c(14)*de3+c(15)*de4)*rmiddle +(c(4)/r6 + c(5)/ &
         & (rab**7) + c(6)/(rab**8) +c(7)/(rab**9)+c(8)/(rab**10))*rin01 +(c(157)*(y1+y2)*y3 +c(158)*y1*y2*y3 + c(166)* &
         & y1* y2*y3**2 +c(167)*y1*y2*y3**3)*rmiddle
-
     a(1,0,1)=(c(22)*de1+c(23)*de2 +c(24)*de3+c(25)*de4 +c(26)*y1 +c(27)*y2 +c(21)*y1*y3 +c(156)*y2*y3 +c(28)*y1**2 + &
         & c(29)*y2**2 +c(30)*y1*y2 +c(116)*y1**3 +c(117)*y2**3 +c(118)*y1*y2**2 +c(119)*y2*y1**2 +c(159)*y1*y2*y3 + &
         & c(169)*y1*y2*y3**2 +c(179)*y1*y2**2*y3)*rmiddle
@@ -480,7 +459,7 @@ subroutine vcalc( r1, r2, rab )
             il = iabs(i-j)
             iu = i+j
             do 992 k=il, iu, 2
-                if(i.ne.4.and.j.ne.4)go to 992
+                if( i .ne. 4.and.j .ne. 4 ) go to 992
                 a(i,j,k) = a(i,j,k)*rmiddle
     992 continue
     !
@@ -530,9 +509,9 @@ function fakt( a )
     !
     ax   = a
     fakt = 1.d0
-    if(ax.eq.0.d0)return
+    if( ax .eq. 0.d0 ) return
     fakt = .1d0
-    if(ax.lt.0.d0)stop 101
+    if( ax .lt. 0.d0 ) stop 101
     !
     ic   = idnint(ax)
     ax   = ax/10.d0

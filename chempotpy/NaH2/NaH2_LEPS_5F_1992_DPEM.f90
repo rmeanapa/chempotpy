@@ -16,18 +16,15 @@ subroutine dpem( x, igrad, u, ug )
     logical, save                 :: first_time_data=.true.
     integer                       :: i, j, k, l
     !initialize
-    u = 0.d0; ug = 0.d0
-
+    u  = 0.d0; ug = 0.d0
     nt = 1
     ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
-
-    if(first_time_data) then
+    call legacy_triatomic_distances_to_bohr(x, r(1,:))
+    if( first_time_data )then
         call prepot
         first_time_data = .false.
-    end if
-
-    if (igrad==0) then
+    endif
+    if( igrad == 0 )then
         call pot(r, u11, 1, 1)
         call pot(r, u12, 1, 2)
         call pot(r, u22, 1, 3)
@@ -37,8 +34,7 @@ subroutine dpem( x, igrad, u, ug )
         u(2,2) = u22(1)*legacy_hartree_to_electronvolt
     else
         write(*, *) "Only DPEM is available"
-    end if
-
+    endif
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the NaH2_LEPS_5F_1992_DPEM potential.
@@ -51,30 +47,26 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 3
         do j=1, 9
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
     drdx(1,3) = (x(3)-x(6))/r(1)
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     drdx(2,4) = (x(4)-x(7))/r(2)
     drdx(2,5) = (x(5)-x(8))/r(2)
     drdx(2,6) = (x(6)-x(9))/r(2)
     drdx(2,7) = -drdx(2,4)
     drdx(2,8) = -drdx(2,5)
     drdx(2,9) = -drdx(2,6)
-
     drdx(3,1) = (x(1)-x(7))/r(3)
     drdx(3,2) = (x(2)-x(8))/r(3)
     drdx(3,3) = (x(3)-x(9))/r(3)
     drdx(3,7) = -drdx(3,1)
     drdx(3,8) = -drdx(3,2)
     drdx(3,9) = -drdx(3,3)
-
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the NaH2_LEPS_5F_1992_DPEM potential.
@@ -89,14 +81,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
     u_ss = a_ss
-    if (first_time_diag) then
+    if( first_time_diag )then
         lwork_d = -1
         allocate( work_d(2) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    end if
+    endif
     allocate( work_d(lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
@@ -111,7 +103,6 @@ subroutine prepot
     !   Interface:                     3-1V
     !   Number of electronic surfaces: 2
     !   Number of derivatives:         0
-
     !   Reference:       P. Halvick and D. G. Truhlar, J. Chem. Phys. 96,
     !                    2895 (1992); E 100, 4718 (1994)
     !
@@ -144,7 +135,6 @@ subroutine prepot
     call prepot11
     call prepot12
     call prepot22
-
 end subroutine prepot
 
 !
@@ -154,14 +144,13 @@ subroutine pot( r, e, nt, nsurf )
     double precision :: e, r
     integer          :: nsurf, nt
     dimension r(nt,3), e(nt)
-    if (nsurf .eq. 1) then
+    if( nsurf .eq. 1 )then
         call pot11(r, e, nt)
-    else if (nsurf .eq. 2) then
+    else if( nsurf .eq. 2 )then
         call pot12(r, e, nt)
     else
         call pot22(r, e, nt)
-    end if
-
+    endif
 end subroutine pot
 
 !
@@ -187,53 +176,42 @@ subroutine prepot11
         & c2a/1.5d0/, c2b/1.0d0/, c2c/0.15d0/, deh2/4.7469d0/
     rac2  = 1.d0/dsqrt(2.d0)
     cevau = 1.d0/27.211611d0
-
     return
     !
     entry pot11(r, e, nt)
-
     do 10 i=1, nt
-
         r1s  = r(i,1)*r(i,1)
         r2s  = r(i,2)*r(i,2)
         r3s  = r(i,3)*r(i,3)
         rnag = dsqrt(0.5d0*dabs(r1s+r3s-0.5d0*r2s))
-        if (rnag.lt.1.d-10) stop 'RNAG < 1.D-10'
-        if (r(i,2).ne.0.d0) then
+        if( rnag .lt. 1.d-10 ) stop 'RNAG < 1.D-10'
+        if( r(i,2) .ne. 0.d0 )then
             cstsq = (0.5d0*(r1s-r3s)/(r(i,2)*rnag))**2
         else
             cstsq = 0.d0
-        end if
+        endif
         c1 = y90c1+(y0c1-y90c1)*cstsq
         c2 = y90c2+(y0c2-y90c2)*cstsq
         c3 = y90c3+(y0c3-y90c3)*cstsq
         c4 = y90c4+(y0c4-y90c4)*cstsq
-
         swt=0.5d0*(1.d0-dtanh(swa*(r(i,1)-swr0))) *0.5d0*(1.d0-dtanh(swa*(r(i,3)-swr0))) *0.5d0*(1.d0+dtanh(swa2* &
             & (r(i,2)-swr20)))
-
         axs1 = dexp(-abs1*(r(i,1)-ars1))
         as1  = ads1*axs1*(axs1-2.d0)
         cxs1 = dexp(-cbs1*(r(i,1)-crs1))
         cs1  = cds1*cxs1*(cxs1-2.d0)
         s1   = as1+(cs1-as1)*swt
-
         s2=(149.480d0-59.6557d0*r(i,2))*dexp(-4.13792d0*r(i,2)) +r2s*(-23.7299d0+3.91747d0*r(i,2))*dexp(-1.41350d0* &
             & r(i,2))
-
-        axs3 = dexp(-abs1*(r(i,3)-ars1))
-        as3  = ads1*axs3*(axs3-2.d0)
-        cxs3 = dexp(-cbs1*(r(i,3)-crs1))
-        cs3  = cds1*cxs3*(cxs3-2.d0)
-        s3   = as3+(cs3-as3)*swt
-
-        t1 = c1*dexp(-c2*r(i,1)**6)+c3*dexp(-c4*r(i,1))
-
-        xt2 = dexp(-betat2*(r(i,2)-ret2))
-        t2  = dt2*xt2*(xt2-2.d0)
-
-        t3 = c1*dexp(-c2*r(i,3)**6)+c3*dexp(-c4*r(i,3))
-
+        axs3  = dexp(-abs1*(r(i,3)-ars1))
+        as3   = ads1*axs3*(axs3-2.d0)
+        cxs3  = dexp(-cbs1*(r(i,3)-crs1))
+        cs3   = cds1*cxs3*(cxs3-2.d0)
+        s3    = as3+(cs3-as3)*swt
+        t1    = c1*dexp(-c2*r(i,1)**6)+c3*dexp(-c4*r(i,1))
+        xt2   = dexp(-betat2*(r(i,2)-ret2))
+        t2    = dt2*xt2*(xt2-2.d0)
+        t3    = c1*dexp(-c2*r(i,3)**6)+c3*dexp(-c4*r(i,3))
         coul1 = 0.5d0*(s1+t1)
         coul2 = 0.5d0*(s2+t2)
         coul3 = 0.5d0*(s3+t3)
@@ -243,9 +221,7 @@ subroutine prepot11
         w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
         cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
         e(i)  = (coul1+coul2+coul3+deh2-rac2*dsqrt(w+cplg2*cplg2))*cevau
-
     10 continue
-
 end subroutine prepot11
 
 !
@@ -267,25 +243,19 @@ subroutine prepot12
         & 2.00000000d+0, 1.16830000d+1, 4.54595148d+1, -2.38192975d+0, &
         & 2.33484458d+0, 2.62222000d+0, 2.04523701d+1, 1.98941949d+0 /
     cevau = 1.d0/27.211611d0
-
     return
     !
     entry pot12(r, e, nt)
-
     do 10 i=1, nt
-
-        amp = ampn+(ampp-ampn)*0.5d0*(dtanh(ampe*(r(i,2)-ampr))+1.d0)
-        erl = erln+(erlp-erln)*0.5d0*(dtanh(erle*(r(i,2)-erlr))+1.d0)
-        ers = ersn+(ersp-ersn)*0.5d0*(dtanh(erse*(r(i,2)-ersr))+1.d0)
-        rmx = rmxn+(rmxp-rmxn)*0.5d0*(dtanh(rmxe*(r(i,2)-rmxr))+1.d0)
-        f1  = amp*dexp(-(erl+ers/(eps+r(i,1)**3))*(r(i,1)-rmx)**2)
-        f3  = amp*dexp(-(erl+ers/(eps+r(i,3)**3))*(r(i,3)-rmx)**2)
-        ang = ((r(i,1)-r(i,3))/r(i,2))**2
-
+        amp  = ampn+(ampp-ampn)*0.5d0*(dtanh(ampe*(r(i,2)-ampr))+1.d0)
+        erl  = erln+(erlp-erln)*0.5d0*(dtanh(erle*(r(i,2)-erlr))+1.d0)
+        ers  = ersn+(ersp-ersn)*0.5d0*(dtanh(erse*(r(i,2)-ersr))+1.d0)
+        rmx  = rmxn+(rmxp-rmxn)*0.5d0*(dtanh(rmxe*(r(i,2)-rmxr))+1.d0)
+        f1   = amp*dexp(-(erl+ers/(eps+r(i,1)**3))*(r(i,1)-rmx)**2)
+        f3   = amp*dexp(-(erl+ers/(eps+r(i,3)**3))*(r(i,3)-rmx)**2)
+        ang  = ((r(i,1)-r(i,3))/r(i,2))**2
         e(i) = ang*(f1+f3)*cevau
-
     10 continue
-
 end subroutine prepot12
 
 !
@@ -322,25 +292,19 @@ subroutine prepot22
         & a90g3/-1.219900d-2/, b90g3/1.002291d-2/, r90g3/1.118725d+1/
     rac2  = 1.d0/dsqrt(2.d0)
     cevau = 1.d0/27.211611d0
-
     return
     !
     entry pot22(r, e, nt)
-
     do 10 i=1, nt
-
         r1s  = r(i,1)*r(i,1)
         r2s  = r(i,2)*r(i,2)
         r3s  = r(i,3)*r(i,3)
         rnag = dsqrt(0.5d0*dabs(r1s+r3s-0.5d0*r2s))
-        if (rnag.lt.1.d-10) stop 'RNAG < 1.D-10'
+        if( rnag .lt. 1.d-10 ) stop 'RNAG < 1.D-10'
         cstsq = (0.5d0*(r1s-r3s)/(r(i,2)*rnag))**2
-
-        swa  = y90swa+(y0swa-y90swa)*cstsq
-        swr0 = y90swr0+(y0swr0-y90swr0)*cstsq
-
-        s1 = (c1s1+c2s1*r(i,1))*dexp(c3s1*r(i,1)) +r1s*(c4s1+c5s1*r(i,1))*dexp(c6s1*r(i,1))
-
+        swa   = y90swa+(y0swa-y90swa)*cstsq
+        swr0  = y90swr0+(y0swr0-y90swr0)*cstsq
+        s1    = (c1s1+c2s1*r(i,1))*dexp(c3s1*r(i,1)) +r1s*(c4s1+c5s1*r(i,1))*dexp(c6s1*r(i,1))
         x90t2 = dexp(-y90b2*(r(i,2)-y90r2))
         t902a = y90d2*x90t2*(x90t2-2.d0)
         x0t2  = dexp(-y0b2*(r(i,2)-y0r2))
@@ -351,23 +315,19 @@ subroutine prepot22
             & r(i,2))+una2p
         s2b=144.893d0*dexp(-3.85716d0*r(i,2))+r(i,2)*(37.5919d0 -4.32985d0*r(i,2)-0.003807d0*r2s)*dexp(-1.52496d0* &
             & r(i,2))
-        t2 = swt*(t2a-s2b)+s2b
-        s2 = 0.5d0*(s2a+t2-dtanh((s2a-t2)/cprime)*(s2a-t2))
-
-        s3 = (c1s1+c2s1*r(i,3))*dexp(c3s1*r(i,3)) +r3s*(c4s1+c5s1*r(i,3))*dexp(c6s1*r(i,3))
-
+        t2    = swt*(t2a-s2b)+s2b
+        s2    = 0.5d0*(s2a+t2-dtanh((s2a-t2)/cprime)*(s2a-t2))
+        s3    = (c1s1+c2s1*r(i,3))*dexp(c3s1*r(i,3)) +r3s*(c4s1+c5s1*r(i,3))*dexp(c6s1*r(i,3))
         x90t1 = dexp(-y90b1*(r(i,1)-y90r1))
         t901  = y90d1*x90t1*(x90t1+2.d0)
         x0t1  = dexp(-y0b1*(r(i,1)-y0r1))
         t01   = y0d1*x0t1*(x0t1+2.d0)
         t1    = t901+(t01-t901)*cstsq
-
         x90t3 = dexp(-y90b1*(r(i,3)-y90r1))
         t903  = y90d1*x90t3*(x90t3+2.d0)
         x0t3  = dexp(-y0b1*(r(i,3)-y0r1))
         t03   = y0d1*x0t3*(x0t3+2.d0)
         t3    = t903+(t03-t903)*cstsq
-
         coul1 = 0.5d0*(s1+t1)
         coul2 = 0.5d0*(s2+t2)
         coul3 = 0.5d0*(s3+t3)
@@ -377,7 +337,6 @@ subroutine prepot22
         w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
         cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
         e(i)  = coul1+coul2+coul3+deh2-rac2*dsqrt(w+cplg2*cplg2)
-
         g1    = a0g1*dexp(-b0g1*(rnag-r0g1)**2)
         g2    = a0g2*dexp(-b0g2*(rnag-r0g2)**2)
         g3    = a0g3*dexp(-b0g3*(rnag-r0g3)**2)
@@ -386,9 +345,6 @@ subroutine prepot22
         g6    = a90g3*dexp(-b90g3*(rnag-r90g3)**2)
         vdisp = g4+g5+g6+(g1+g2+g3-g4-g5-g6)*cstsq
         vdisp = vdisp*dexp(-0.5d0*(r(i,2)/2.d0)**7)
-
-        e(i) = (e(i)+vdisp)*cevau
-
+        e(i)  = (e(i)+vdisp)*cevau
     10 continue
-
 end subroutine prepot22

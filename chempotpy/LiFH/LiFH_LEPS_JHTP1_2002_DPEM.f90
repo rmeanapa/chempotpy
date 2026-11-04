@@ -16,18 +16,15 @@ subroutine dpem( x, igrad, u, ug )
     logical, save                 :: first_time_data=.true.
     integer                       :: i, j, k, l
     !initialize
-    u = 0.d0; ug = 0.d0
-
+    u  = 0.d0; ug = 0.d0
     nt = 1
     ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
-
-    if(first_time_data) then
+    call legacy_triatomic_distances_to_bohr(x, r(1,:))
+    if( first_time_data )then
         call prepot
         first_time_data = .false.
-    end if
-
-    if (igrad==0) then
+    endif
+    if( igrad == 0 )then
         call pot(r, u11, 1, 1)
         call pot(r, u12, 1, 2)
         call pot(r, u22, 1, 3)
@@ -37,8 +34,7 @@ subroutine dpem( x, igrad, u, ug )
         u(2,2) = u22(1)*legacy_hartree_to_electronvolt
     else
         write(*, *) "Only DPEM is available"
-    end if
-
+    endif
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the LiFH_LEPS_JHTP1_2002_DPEM potential.
@@ -51,30 +47,26 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 3
         do j=1, 9
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
     drdx(1,3) = (x(3)-x(6))/r(1)
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     drdx(2,4) = (x(4)-x(7))/r(2)
     drdx(2,5) = (x(5)-x(8))/r(2)
     drdx(2,6) = (x(6)-x(9))/r(2)
     drdx(2,7) = -drdx(2,4)
     drdx(2,8) = -drdx(2,5)
     drdx(2,9) = -drdx(2,6)
-
     drdx(3,1) = (x(1)-x(7))/r(3)
     drdx(3,2) = (x(2)-x(8))/r(3)
     drdx(3,3) = (x(3)-x(9))/r(3)
     drdx(3,7) = -drdx(3,1)
     drdx(3,8) = -drdx(3,2)
     drdx(3,9) = -drdx(3,3)
-
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the LiFH_LEPS_JHTP1_2002_DPEM potential.
@@ -89,14 +81,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
     u_ss = a_ss
-    if (first_time_diag) then
+    if( first_time_diag )then
         lwork_d = -1
         allocate( work_d(2) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    end if
+    endif
     allocate( work_d(lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
@@ -173,7 +165,6 @@ subroutine prepot
     call prepot11
     call prepot12
     call prepot22
-
 end subroutine prepot
 
 ! ********************************************************************
@@ -185,14 +176,13 @@ subroutine pot( r, e, nt, nsurf )
     double precision :: r, e
     integer          :: i, nt, nsurf
     dimension r(nt,3), e(nt)
-    if (nsurf.eq.1) call pot11(r, e, nt)
-    if (nsurf.eq.2) call pot12(r, e, nt)
-    if (nsurf.eq.3) call pot22(r, e, nt)
-    if (nsurf.gt.3.or.nsurf.lt.1) then
+    if( nsurf .eq. 1 ) call pot11(r, e, nt)
+    if( nsurf .eq. 2 ) call pot12(r, e, nt)
+    if( nsurf .eq. 3 ) call pot22(r, e, nt)
+    if( nsurf .gt. 3.or.nsurf .lt. 1 )then
         write(6, *)' WARNING:  nsurf = ', nsurf, &
             & ' in LiFHJS potential routine!'
-    end if
-
+    endif
 end subroutine pot
 
 ! ********************************************************************
@@ -264,13 +254,9 @@ subroutine prepot11
     data mass /7.016003d0, 1.00783d0, 18.9984d0/
     save
     return
-
     ! ----------------------------------------------------------------------
-
     entry pot11(r, e, nt)
-
     do i=1, nt
-
         ! PRECOMPUTE THINGS FOR USE LATER...
         !     cosine of HF bond angle (i.e., Li-F-H angle)
         costheta = (r(i,3)**2-r(i,2)**2-r(i,1)**2)/(-2.d0*r(i,1)*r(i,2))
@@ -285,86 +271,68 @@ subroutine prepot11
         r1s = r(i,1)**2
         r2s = r(i,2)**2
         r3s = r(i,3)**2
-
         ! INTERACTION REGION
         !     LiH
         xelih = dexp(-bes1*(r(i,1)-relih))
         s1a   = s1c2*xelih
         s1c   = s1c3*dexp(-bes1b*(r(i,1)-relih))
-
         r1r3  = r(i,1) - r(i,3) + r1r3al*r(i,2)
         rcut2 = 0.5d0*(1.0d0 - dtanh((r1r3-rcut2rho)/rcut2del))
-
-        s1 = s1a  + (s1c-s1a)*rcut2
-
+        s1    = s1a  + (s1c-s1a)*rcut2
         !     HF
-        yhf  = r(i,2) - yhf_r
-        behf = behf_0-behf_1*yhf+behf_2*yhf**2
-        xehf = dexp(-behf*(r(i,2)-rehf))
-        s2   = dehf*xehf*(xehf-2.0d0)
-
+        yhf   = r(i,2) - yhf_r
+        behf  = behf_0-behf_1*yhf+behf_2*yhf**2
+        xehf  = dexp(-behf*(r(i,2)-rehf))
+        s2    = dehf*xehf*(xehf-2.0d0)
         dehfm = dehf - (dehfcc+dehfc*0.5d0*(1.d0-coschi))
         xehfm = dexp(-behfm*(r(i,2)-rehfm))
         s2m   = dehfm*xehfm*(xehfm-2.0d0)
         s2    = s2m + (s2 - s2m)*0.5d0*(1.d0+dtanh((r(i,3)-s2rho)/s2alp))
-
         !     LiF
         xes3 = dexp(-bes3*(r(i,3)-res3))
         s3   = des3*xes3*(xes3-2.0d0)
-
         !     Sum of diatomics
         e(i) = s1 + s2 + s3 + dehf
-
         ! EVALUATE THE LONG-RANGE FORCES
         ! HF DIPOLE MOMENT
         hfdip_y = 1.d0 - dexp(-hfdip_a*(r(i,2)*cauang-hfdip_re))
         hfdip   = 0.d0
         do j=1, 11
             hfdip = hfdip + hfdip_m(j)*hfdip_y**dble(j-1)
-        end do
+        enddo
         hfdip = hfdip*0.5d0*(1.d0 + dtanh(20.d0*(r(i,2)-1.2d0)))
-
         ! HF POLARIZATION
         hfpol    = hfpolperp*(1.d0 - coschi**2) + hfpolpar*coschi**2
         hfpolavg = 2.d0*hfpolperp/3.d0 + hfpolpar/3.d0
-
         ! HF + Li(2s) arrangement
         !     DIPOLE-INDUCED-DIPOLE
         hf_did = -0.5d0*(3.d0*coschi**2 + 1.d0)*li2spol*hfdip**2
         hf_did = hf_did/(bigr**7 + rhf0did**7)/cevau*bigr
         !     cut off angular dependence in interaction region
         hf_did = hf_did*(1.d0 + (2.5d0/(3.d0*coschi**2 + 1.d0) - 1.d0) *dexp(-(bigr/rhf0did)**4))
-
         !     DISPERSION
         hf_disp = -1.5d0*li2sie*hfie*li2spol*hfpol/(li2sie+hfie)
         hf_disp = hf_disp/(bigr**7 + rhf0disp**7)*bigr
         !     cut off angular dependence in interaction region
         hf_disp = hf_disp*(1.d0 + (hfpolavg/hfpol - 1.d0) *dexp(-(bigr/rhf0disp)**4))
-
         !     SUM FORCES
         e_lr_hf = hf_disp + hf_did
         !     cut off LR forces for large r[hf] i.e., r(i,2)
         e_lr_hf = e_lr_hf*0.5d0*(1.d0-dtanh(r2lrcut_a*(r(i,2)-r2lrcut_r)))
-
         ! LiF + H
         !     NO LONG-RANGE FORCES
-
         ! LiH + F
         !     NO LONG-RANGE FORCES
-
         ! CUT OFF LONG-RANGE FORCES
-        if (bigr.gt.15.d0) then
+        if( bigr .gt. 15.d0 )then
             e_lr_hf = 0.d0
         else
             e_lr_hf = e_lr_hf * dexp( .2d0 / (bigr - 15.d0) )
-        end if
-
+        endif
         ! COMBINE INTERACTION REGION ENERGY AND LONG-RANGE FORCES
         e(i) = e(i) + e_lr_hf
         e(i) = e(i)*cevau
-
-    end do
-
+    enddo
 end subroutine prepot11
 
 ! ********************************************************************
@@ -404,35 +372,22 @@ subroutine prepot12
     data  gcrho /4.87097d0/, gcdel /2.d0/
     save
     return
-
     ! ----------------------------------------------------------------------
-
     entry pot12(r, e, nt)
-
     do i=1, nt
-
-        g1 = g1a*(r(i,1)/g1r)**ng1 *dexp(-dble(ng1)*(r(i,1)/g1r-1.0d0))
-
-        g3 = g3a*(r(i,3)/g3r)**ng3 *dexp(-dble(ng3)*(r(i,3)/g3r-1.0d0))
-
-        j2  = 0.5d0*(1.0d0 + dtanh( (r(i,2) - j2rho)/j2del ) )
-        j2p = 0.5d0*(1.0d0 + dtanh( (r(i,2) - j2prho)/j2pdel ) )
-
-        h1 = 0.5d0*(1.0d0 - dtanh( (r(i,1) - h1rho)/h1del ) )
-        h3 = 0.5d0*(1.0d0 - dtanh( (r(i,3) - h3rho)/h3del ) )
-
+        g1   = g1a*(r(i,1)/g1r)**ng1 *dexp(-dble(ng1)*(r(i,1)/g1r-1.0d0))
+        g3   = g3a*(r(i,3)/g3r)**ng3 *dexp(-dble(ng3)*(r(i,3)/g3r-1.0d0))
+        j2   = 0.5d0*(1.0d0 + dtanh( (r(i,2) - j2rho)/j2del ) )
+        j2p  = 0.5d0*(1.0d0 + dtanh( (r(i,2) - j2prho)/j2pdel ) )
+        h1   = 0.5d0*(1.0d0 - dtanh( (r(i,1) - h1rho)/h1del ) )
+        h3   = 0.5d0*(1.0d0 - dtanh( (r(i,3) - h3rho)/h3del ) )
         e(i) = g1*j2*(1.0d0-h3) + g3*j2p*(1.0d0-h1)
-
         gc   = r(i,2)-gcrho
         cut2 = 0.5d0 - 0.5d0*dtanh(gc/gcdel)
-
         cut3 = 0.5d0 - 0.5d0*dtanh((r(i,2) - 5.5d0)/.2d0)
-
         e(i) = e(i)*cut2*cut3
-
         e(i) = e(i)*cevau
-
-    end do
+    enddo
 end subroutine prepot12
 
 ! ********************************************************************
@@ -548,13 +503,9 @@ subroutine prepot22
     data mass /7.016003d0, 1.00783d0, 18.9984d0/
     save
     return
-
     ! ----------------------------------------------------------------------
-
     entry pot22(r, e, nt)
-
     do 10 i=1, nt
-
         ! PRECOMPUTE THINGS FOR USE LATER
         !     cosine of HF bond angle (i.e., Li-F-H angle)
         costhetahf = (r(i,3)**2-r(i,2)**2-r(i,1)**2)/(-2.d0*r(i,1)*r(i,2))
@@ -565,7 +516,6 @@ subroutine prepot22
         coschihf = -(r(i,1)**2-bigrhf**2-temp**2)/(-2.d0*bigrhf*temp)
         coschihf = max(-1.d0, coschihf)
         coschihf = min(1.d0, coschihf)
-
         !     cosine of LiF bond angle (i.e., Li-F-H angle)
         costhetalif = (r(i,1)**2-r(i,2)**2-r(i,3)**2)/(-2.d0*r(i,3)*r(i,2))
         temp        = mass(1)/(mass(1)+mass(3))*r(i,3)
@@ -584,7 +534,6 @@ subroutine prepot22
         cs = cs/(2.0d0*r(i,2)*r(i,3))
         cs = min(cs, 1.0d0)
         cs = max(cs, -1.0d0)
-
         ! INTERACTION REGION
         !     The LiH singlet
         xelih = dexp(-belihc*(r(i,1)-relih))
@@ -593,75 +542,55 @@ subroutine prepot22
         r1r3  = r(i,1) - r(i,3) + r1r3al*r(i,2)
         rcut2 = 0.5d0*(1.0d0 - dtanh((r1r3-rcut2rho)/rcut2del))
         s1    = s1 + rcut2 * s1c
-
         !     The LiH triplet
         xelih = dexp(-bet1*(r(i,1)-reliht))
         t1    = t1c1*xelih**2  + t1c2*xelih
-
         !     The HF singlet
         yhf   = r(i,2) - 2.1042d0
         behf  = 1.1622d0 -0.025647d0*yhf+0.059062d0*yhf**2
         xehfa = dexp(-behf*(r(i,2)-rehf))
-
         s2    = dehf*xehfa*(xehfa-2.0d0) + uli2p
         s2cut = (0.5d0 - 0.5d0*tanh((r(i,2)-3.d0)/0.5d0))
         s2cc  = s2cc_d*(1.d0-dexp(-s2cc_b*(r(i,2)-s2cc_r)))**2 - s2cc_d
         s2    = s2cc + (s2 - s2cc)*s2cut
-
         dehfm = dehf - (dehfcc + dehfc*0.5d0*(1.0d0-cs))
         xehfm = dexp(-behf*(r(i,2)-rehf))
-
         s2m   = dehfm*xehfm*(xehfm-2.0d0) + uli2p
         s2cut = (0.5d0 - 0.5d0*tanh((r(i,2)-2.2d0)/0.5d0))
         s2m   = s2m*s2cut
-
-        s2 = s2m + (s2 - s2m)*0.5d0*(1.d0+dtanh((r(i,3)-s2rho)/s2alp))
-
+        s2    = s2m + (s2 - s2m)*0.5d0*(1.d0+dtanh((r(i,3)-s2rho)/s2alp))
         !     The HF triplet
         xehfa     = dexp(-bet2*(r(i,2)-rehft))
         xehfa_180 = dexp(-bet2_180*(r(i,2)-rehft))
-
-        t2 = (t2a1*xehfa**2 + t2a2*xehfa)*0.5d0*(1.0d0+cs) + (t2a3*xehfa_180**2 + t2a4*xehfa_180)*0.5d0*(1.0d0-cs)
-
+        t2        = (t2a1*xehfa**2 + t2a2*xehfa)*0.5d0*(1.0d0+cs) + (t2a3*xehfa_180**2 + t2a4*xehfa_180)*0.5d0*(1.0d0- &
+            & cs)
         !     The LiF singlet
-        belif = r(i,3)*103.57d0/(4.6498d0+7.0489d0*r(i,3))**2+0.064076d0
-
-        gswt   = 0.5d0-0.5d0*dtanh((r(i,2)-grho)/gdel)
-        gswt   = gswt * 0.5d0*(1.0d0+cs)
-        beliff = belif + gswt*(belifff - belif)
-
+        belif    = r(i,3)*103.57d0/(4.6498d0+7.0489d0*r(i,3))**2+0.064076d0
+        gswt     = 0.5d0-0.5d0*dtanh((r(i,2)-grho)/gdel)
+        gswt     = gswt * 0.5d0*(1.0d0+cs)
+        beliff   = belif + gswt*(belifff - belif)
         belifmod = beliff*(belif +(r(i,3)/gam)**nb)/ (beliff+(r(i,3)/gam)**nb)
-
-        xelif = dexp(-belifmod*(r(i,3)-relif))
-        s3a   = (delif+uli2p)*xelif*(xelif-2.0d0)+uli2p
-        s3cut = 0.5d0 - 0.5d0*tanh((r(i,3)-13.d0)/0.5d0)
-        s3a   = s3a*s3cut
-
-        swit = swit_d  + (1.d0 - swit_d)*0.5d0 *(1.d0 + dtanh((r(i,2)-swit_r)/swit_a))
-        s3a  = s3a*swit
-
-        delifm = delifc1 * 0.5d0*(1.0d0-cs) + delifc2 * 0.5d0*(1.0d0+cs)
-
-        belifm = belifc1 * 0.5d0*(1.0d0-cs) + belifc2 * 0.5d0*(1.0d0+cs)
-
-        xelif = dexp(-belifm*(r(i,3)-relif))
-        s3c   = (delifm+uli2p)*xelif*(xelif-2.0d0)
-
-        rho2   = rho2_0 + (rho2_180-rho2_0)*0.5d0*(1.0d0-cs)
-        theta2 = theta2_0 + (theta2_180-theta2_0)*0.5d0*(1.0d0-cs)
-        del2   = del2_0 + (del2_180-del2_0)*0.5d0*(1.0d0-cs)
-
-        gc2  = dcos(theta2)*(rehf-r(i,2)) - dsin(theta2)*(rho2-r(i,3))
-        cut2 = 0.5d0 - 0.5d0*dtanh(gc2/del2)
-
-        s3 = s3c + (s3a-s3c)*cut2
-
+        xelif    = dexp(-belifmod*(r(i,3)-relif))
+        s3a      = (delif+uli2p)*xelif*(xelif-2.0d0)+uli2p
+        s3cut    = 0.5d0 - 0.5d0*tanh((r(i,3)-13.d0)/0.5d0)
+        s3a      = s3a*s3cut
+        swit     = swit_d  + (1.d0 - swit_d)*0.5d0 *(1.d0 + dtanh((r(i,2)-swit_r)/swit_a))
+        s3a      = s3a*swit
+        delifm   = delifc1 * 0.5d0*(1.0d0-cs) + delifc2 * 0.5d0*(1.0d0+cs)
+        belifm   = belifc1 * 0.5d0*(1.0d0-cs) + belifc2 * 0.5d0*(1.0d0+cs)
+        xelif    = dexp(-belifm*(r(i,3)-relif))
+        s3c      = (delifm+uli2p)*xelif*(xelif-2.0d0)
+        rho2     = rho2_0 + (rho2_180-rho2_0)*0.5d0*(1.0d0-cs)
+        theta2   = theta2_0 + (theta2_180-theta2_0)*0.5d0*(1.0d0-cs)
+        del2     = del2_0 + (del2_180-del2_0)*0.5d0*(1.0d0-cs)
+        gc2      = dcos(theta2)*(rehf-r(i,2)) - dsin(theta2)*(rho2-r(i,3))
+        cut2     = 0.5d0 - 0.5d0*dtanh(gc2/del2)
+        s3       = s3c + (s3a-s3c)*cut2
         !     The LiF triplet
         xelif     = dexp(-bet3*(r(i,3)-relif))
         xelif_180 = dexp(-bet3_180*(r(i,3)-relif))
         t3        = (t3a1*xelif**2 + t3a2*xelif)*0.5d0*(1.0d0+cs) + (t3a3*xelif_180**2 + t3a4*xelif_180)*0.5d0*(1.0d0- &
             & cs)
-
         !     LEPS
         coul1 = 0.5d0*(s1+t1)
         coul2 = 0.5d0*(s2+t2)
@@ -672,37 +601,31 @@ subroutine prepot22
         w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
         cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
         e(i)  = coul1+coul2+coul3-dsqrt(w+cplg2*cplg2)/dsqrt(2.0d0) + dehf
-
         ! LONG-RANGE FORCES * * * * * * * * * * * * * * * * * * * * * * * * * *
         ! HF DIPOLE
         hfdip_y = 1.d0 - dexp(-hfdip_a*(r(i,2)*cauang-hfdip_re))
         hfdip   = 0.d0
         do j=1, 11
             hfdip = hfdip + hfdip_m(j)*hfdip_y**dble(j-1)
-        end do
+        enddo
         hfdip = hfdip*0.5d0*(1.d0 + dtanh(20.d0*(r(i,2)-1.2d0)))
-
         ! HF POLARIZATION
         hfpol    = hfpolperp*(1.d0 - coschihf**2) + hfpolpar*coschihf**2
         hfpolavg = 2.d0*hfpolperp/3.d0 + hfpolpar/3.d0
-
         ! HF QUADRUPOLE
         hfqua_y = 1.d0 - dexp(-hfqua_a*(r(i,2)*cauang-hfqua_re))
         hfqua   = 0.d0
         do j=1, 10
             hfqua = hfqua + hfqua_m(j)*hfqua_y**dble(j-1)
-        end do
+        enddo
         hfqua = hfqua*0.5d0*(1.d0 + dtanh(20.d0*(r(i,2)-1.2d0)))
-
         ! LiF DIPOLE
         lifdip_y    = r(i,3) - lifdip_4
         lifdip_beta = lifdip_1 + lifdip_2*lifdip_y**8 + lifdip_3*lifdip_y
         lifdip      = lifdip_d*dexp(-lifdip_beta*(r(i,3) - lifdip_re)**2)
-
         ! Li(2p) POLARIZATION
         li2ppol    = li2ppolperp*(1.d0-coschihf**2)+li2ppolpar*coschihf**2
         li2ppolavg = 2.d0*li2ppolperp/3.d0 + li2ppolpar/3.d0
-
         ! HF + Li(2p)
         !     DIPOLE-INDUCED-DIPOLE
         hf_did = -0.5d0*(3.d0*coschihf**2 + 1.d0)*li2ppol*hfdip**2
@@ -710,67 +633,55 @@ subroutine prepot22
         !     cut off angular dependence in interaction region
         hf_did = hf_did*(1.d0 + (2.5d0*li2ppolavg/ (3.d0*coschihf**2 + 1.d0)/li2ppol - 1.d0) *dexp(-(bigrhf/rhf0did)** &
             & 4))
-
         !     DISPERSION
         hf_disp = -1.5d0*li2pie*hfie*li2ppol*hfpol/(li2pie+hfie)
         hf_disp = hf_disp/(bigrhf**7 + rhf0disp**7)*bigrhf
         !     cut off angular dependence in interaction region
         hf_disp = hf_disp*(1.d0+(li2ppolavg*hfpolavg/hfpol/li2ppol-1.d0) *dexp(-(bigrhf/rhf0disp)**4))
-
         !     QUADRUPOLE-QUADRUPOLE
         hf_qq = 3.d0/4.d0*hfqua*li2pqua*(3.d0 - 7.d0*coschihf**2)
         hf_qq = hf_qq/(bigrhf**6 + rhf0qq**6)/cevau*bigrhf
         !     cut off angular dependence in interaction region
         hf_qq = hf_qq*(1.d0 + (-.5d0/(3.d0-7.d0*coschihf**2) - 1.d0) *dexp(-(bigrhf/rhf0qq)**4))
-
         !     DIPOLE-QUADRUPOLE
         hf_dq = 3.d0/4.d0*hfdip*li2pqua*coschihf
         hf_dq = hf_dq/(bigrhf**5 + rhf0dq**5)/cevau*bigrhf
         !     cut off angular dependence in interaction region
         hf_qq = hf_qq*dexp(-(bigrhf/rhf0dq)**4)
-
         !     SUM FORCES
         e_lr_hf = hf_dq + hf_qq + hf_disp + hf_did
         !     cut off at large HF distances
         e_lr_hf = e_lr_hf*0.5d0*(1.d0-dtanh(r2lrcut_a*(r(i,2)-r2lrcut_r)))
-
         ! LiF + H
         !     DIPOLE-INDUCED-DIPOLE
         lif_did = -0.5d0*(3.d0*coschilif**2+1.d0)*hpol*lifdip**2
         lif_did = lif_did/(bigrlif**6 + rlif0did**6)/cevau
         !     cut off angular dependence in interaction region
         lif_did = lif_did*(1.d0+(2.5d0/(3.d0*coschilif**2+1.d0)-1.d0) *dexp(-(bigrlif/rlif0did)**4))
-
         !     DISPERSION
         lif_disp = -1.5d0*lifie*hie*lifpol*hpol/(lifie+hie)
         lif_disp = lif_disp/(bigrlif**6 + rlif0disp**6)
         !     no angular dependence
-
         !     SUM FORCES
         e_lr_lif = lif_disp + lif_did
         !     cut off at large LiF distances
         e_lr_lif = e_lr_lif*0.5d0*(1.d0-dtanh(r3lrcut_a*(r(i,3)-r3lrcut_r)))
-
         ! LiH + F
         ! no long-range forces included
-
         ! CUT OFF LONG-RANGE FORCES
-        if (bigrhf.gt.15.d0) then
+        if( bigrhf .gt. 15.d0 )then
             e_lr_hf = 0.d0
         else
             e_lr_hf = e_lr_hf * dexp( .2d0 / (bigrhf - 15.d0) )
-        end if
-
-        if (bigrlif.gt.15.d0) then
+        endif
+        if( bigrlif .gt. 15.d0 )then
             e_lr_lif = 0.d0
         else
             e_lr_lif = e_lr_lif * dexp( .2d0 / (bigrlif - 15.d0) )
-        end if
-
+        endif
         ! COMBINE INTERACTION REGION ENERGY AND LONG-RANGE FORCES
         e(i) = e(i) + e_lr_lif + e_lr_hf
         e(i) = e(i)*cevau
-
     10 continue
 end subroutine prepot22
 

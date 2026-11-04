@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
     call evaluate_pettifor_ward( &
-        coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the oscillatory Pettifor-Ward pair-potential energy.
@@ -48,7 +48,6 @@ subroutine evaluate_pettifor_ward( &
     real(real64)              :: distance_bohr, pair_energy, pi, twice_fermi_wavevector
     real(real64)              :: phases(3), wavevectors(3), decay_rates(3)
     integer                   :: first_atom, second_atom
-
     pi                     = acos(-1.0d0)
     phases                 = phase_factors*pi
     twice_fermi_wavevector = 3.504d0*bohr_to_angstrom
@@ -63,6 +62,6 @@ subroutine evaluate_pettifor_ward( &
                 & distance_bohr+ phases(2)) *exp(-decay_rates(2)*distance_bohr) +amplitudes(3)*cos(wavevectors(3)* &
                 & distance_bohr+ phases(3)) *exp(-decay_rates(3)*distance_bohr))
             energy_hartree = energy_hartree+pair_energy
-        end do
-    end do
+        enddo
+    enddo
 end subroutine evaluate_pettifor_ward

@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
     call evaluate_desph_morse( &
-        coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the distance-dependent de Sainte Claire Morse energy.
@@ -59,6 +59,6 @@ subroutine evaluate_desph_morse( &
             decay          = zeroth_decay+quadratic_decay*radial_offset**2 +cubic_decay*radial_offset**3
             pair_energy    = well_depth_hartree *(1.0d0-exp(-decay*radial_offset))**2-well_depth_hartree
             energy_hartree = energy_hartree+pair_energy
-        end do
-    end do
+        enddo
+    enddo
 end subroutine evaluate_desph_morse

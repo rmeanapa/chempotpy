@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2EAT potential.
@@ -57,7 +57,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !                    of the system
     !  natom   --- number of atoms in the system
     !  maxatom --- maximal number of atoms
-
     implicit none
     double precision :: a1, a2, a3, arc1, arc2, au2, au23, b1, b2, bra, bu2, co, &
         & co1, co2, co3, coij, coim, cojm, cot12, cot2, cot3, de, dx, dy, dz, ee, poly, re, rho, rij, &
@@ -69,15 +68,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
     b1   = 569.076697606  / (autoev*autoang**9)
     b2   = 5.0219833903273/ (autoev*autoang**11)
     au23 = 0.164763067904250132e-01
-
-    de  = 1.71013678553981441/autoev
-    re  = 5.08182706399609163
-    a1  = 1.24074255007327805
-    a2  = 0.551880801172447422
-    a3  = 0.129970688812896917
-    au2 = 0.143243771372740580
-    bu2 = 6.50000000000000000/autoang
-
+    de   = 1.71013678553981441/autoev
+    re   = 5.08182706399609163
+    a1   = 1.24074255007327805
+    a2   = 0.551880801172447422
+    a3   = 0.129970688812896917
+    au2  = 0.143243771372740580
+    bu2  = 6.50000000000000000/autoang
     !     potential, includes cutoff
     v = 0.d0
     do 1 i=1, natom
@@ -86,30 +83,28 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dy = y(i)-y(j)
             dz = z(i)-z(j)
             rr = dsqrt(dx*dx+dy*dy+dz*dz)
-            if (rr.le.bu2) then
+            if( rr .le. bu2 )then
                 co   = dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
                 rho  = rr-re
                 poly = 1.d0+a1*rho+a2*rho**2+a3*rho**3
                 ee   = dexp(-a1*rho)
                 v    = v-de*ee*poly*co
-            end if
+            endif
     1 continue
-
     !  2. calculate energy of three-body interactions
     u3 = 0.d0
-    if(natom.eq.2) go to 7
-
+    if( natom .eq. 2 ) go to 7
     do 6 i=1, natom
         do 4 j=1, natom
-            if (i.eq.j) go to 4
+            if( i .eq. j ) go to 4
             dx  = x(i)-x(j)
             dy  = y(i)-y(j)
             dz  = z(i)-z(j)
             rij = dsqrt(dx*dx+dy*dy+dz*dz)
-            if (rij.ge.bu2) go to 4
+            if( rij .ge. bu2 ) go to 4
             do 5 m=1, natom
-                if (i.eq.m) go to 5
-                if (j.eq.m) go to 5
+                if( i .eq. m ) go to 5
+                if( j .eq. m ) go to 5
                 dx  = x(m)-x(j)
                 dy  = y(m)-y(j)
                 dz  = z(m)-z(j)
@@ -118,33 +113,29 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 dy  = y(m)-y(i)
                 dz  = z(m)-z(i)
                 rim = dsqrt(dx*dx+dy*dy+dz*dz)
-                if (rjm.ge.bu2) go to 5
-                if (rim.ge.bu2) go to 5
-
+                if( rjm .ge. bu2 ) go to 5
+                if( rim .ge. bu2 ) go to 5
                 coij = 0.d0
                 cojm = 0.d0
                 coim = 0.d0
-                if (rij.lt.bu2) coij=dexp(au23*(1.d0-1.d0/(1.d0-rij/bu2)))
-                if (rjm.lt.bu2) cojm=dexp(au23*(1.d0-1.d0/(1.d0-rjm/bu2)))
-                if (rim.lt.bu2) coim=dexp(au23*(1.d0-1.d0/(1.d0-rim/bu2)))
+                if( rij .lt. bu2 ) coij=dexp(au23*(1.d0-1.d0/(1.d0-rij/bu2)))
+                if( rjm .lt. bu2 ) cojm=dexp(au23*(1.d0-1.d0/(1.d0-rjm/bu2)))
+                if( rim .lt. bu2 ) coim=dexp(au23*(1.d0-1.d0/(1.d0-rim/bu2)))
                 co = coij*cojm*coim
-
                 call scos(i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, co1, co2, co3)
-
                 ! at term
                 u3 = u3+b1*(1.d0+3.d0*co1*co2*co3)/((rij*rjm*rim)**3)*co
-
                 ! next term
-                if ((dabs(co1)-1.d0).le.10d-12) then
+                if( (dabs(co1)-1.d0) .le. 10d-12 )then
                     arc1 = 0.d0
                 else
                     arc1 = dacos(co1)
-                end if
-                if ((dabs(co2)-1.d0).le.10d-12) then
+                endif
+                if( (dabs(co2)-1.d0) .le. 10d-12 )then
                     arc2 = 0.d0
                 else
                     arc2 = dacos(co2)
-                end if
+                endif
                 cot12 = 6.d0*(dsin(arc1)*dsin(arc2)+co1*co2)
                 cot3  = -25.d0*(4.d0*(co3)**3-3.d0*co3)
                 cot2  = 3.d0+5.d0*(2.d0*(co3)**2-1.d0)
@@ -154,14 +145,11 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 rr3   = 1.d0/rjm
                 w2    = co*b2*bra*(rr1**3)*(rr2*rr3)**4
                 u3    = u3+w2
-
             5 continue
         4 continue
     6 continue
     !  calculate the potential energy
-
     7 v=v+u3
-
 end subroutine pot
 
 !

@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
     call evaluate_reparameterized_sutton_chen( &
-        coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the reparameterized Sutton-Chen cluster energy.
@@ -58,9 +58,8 @@ subroutine evaluate_reparameterized_sutton_chen( &
         do second_atom = first_atom+1, atom_count
             distance_bohr = cartesian_distance( coordinates_bohr(first_atom,:), coordinates_bohr(second_atom,:) )
             pair_sum      = pair_sum +(length_scale_bohr/distance_bohr)**pair_exponent
-        end do
-    end do
-
+        enddo
+    enddo
     embedding_sum = 0.0d0
     do center_atom = 1, atom_count
         density_sum = 0.0d0
@@ -68,8 +67,8 @@ subroutine evaluate_reparameterized_sutton_chen( &
             if( neighbor_atom == center_atom ) cycle
             distance_bohr = cartesian_distance( coordinates_bohr(center_atom,:), coordinates_bohr(neighbor_atom,:) )
             density_sum   = density_sum +(length_scale_bohr/distance_bohr)**density_exponent
-        end do
+        enddo
         embedding_sum = embedding_sum+sqrt(density_sum)
-    end do
+    enddo
     energy_hartree = pair_scale*pair_sum-embedding_scale*embedding_sum
 end subroutine evaluate_reparameterized_sutton_chen

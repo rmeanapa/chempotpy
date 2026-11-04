@@ -24,41 +24,36 @@ subroutine pes( x, igrad, p, g, d )
         & nasurf(isurf+1, isurf+1), nder
     logical, save :: first_time_data=.true.
     !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-
+    v      = 0.d0; g = 0.d0; d = 0.d0
     nder   = igrad
     nasurf = 1
     cart   = 0.d0
     do iatom=1, natoms
         do idir=1, 3
             cart(iatom, idir) = x(iatom,idir)/legacy_bohr_to_angstrom
-        end do
-    end do
-
-    if(first_time_data) then
+        enddo
+    enddo
+    if( first_time_data )then
         call prepot
         first_time_data = .false.
-    end if
-
+    endif
     call pot
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = pengygs*legacy_hartree_to_electronvolt
-        end do
-    else if (igrad==1) then
+        enddo
+    else if( igrad == 1 )then
         do istate=1, nstates
             p(istate) = pengygs*legacy_hartree_to_electronvolt
-        end do
+        enddo
         do iatom=1, natoms
             do idir=1, 3
                 g(1,iatom,idir) = dgscart(iatom, idir)*51.422067
-            end do
-        end do
-    else if (igrad==2) then
+            enddo
+        enddo
+    else if( igrad == 2 )then
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine pes
 
 !
@@ -162,10 +157,10 @@ subroutine prepot
     !
     !   Echo the name of the potential energy surface
     !
-    if(natoms.gt.25) then
+    if( natoms .gt. 25 )then
         write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
         stop
-    end if
+    endif
     !
     !         WRITE (NFLAG(18), 600)
     !
@@ -203,7 +198,7 @@ subroutine prepot
     !
     do i=1, 5
         ref(i) = ' '
-    end do
+    enddo
     !
     ref(1) = 'B. C. Garrett, D. G. Truhlar'
     ref(2) = 'Int. J. Quantum Chem. 29, 1463(1986)'
@@ -305,72 +300,72 @@ subroutine pot
     !             STOP 'POT 2'
     !         ENDIF
     !
-    if (r(1) .gt. tol .and. r(2) .gt. tol .and. r(3) .gt. tol) then
+    if( r(1) .gt. tol .and. r(2) .gt. tol .and. r(3) .gt. tol )then
         raccol = r(1) + r(2)
         bcoor  = 0.0d0
-        if (nder .eq. 1) then
+        if( nder .eq. 1 )then
             dbcoor(1) = 0.0d0
             dbcoor(2) = 0.0d0
             dac       = 0.0d0
-        end if
+        endif
         rob = 1.0d0
-        if(abs(rhh-rbb).gt.1.d-10) then
+        if( abs(rhh-rbb) .gt. 1.d-10 )then
             !
             !     FIRST CALCULATE SOME USEFUL NUMBERS
             !     NAB AND NBC ARE THE BOND ORDERS OF THE DIATOMICS
             !     AB AND BC RESPECTIVELY. (EQUATION 2.2)
             !
             nab = exp((req(1) - r(1))/a)
-            if (nab.lt.1.d-15) nab = 1.d-15
+            if( nab .lt. 1.d-15 ) nab = 1.d-15
             nbc = exp((req(2) - r(2))/a)
-            if (nbc.lt.1.d-15) nbc = 1.d-15
+            if( nbc .lt. 1.d-15 ) nbc = 1.d-15
             !
             !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
             !       SEE EQUATION 2.7A, 2.7B
             !
             c = 1.d0 - nab/nbc
-            if (abs(c) .lt. 1.d-14) then
+            if( abs(c) .lt. 1.d-14 )then
                 nab1 = .5d0
                 nbc1 = .5d0
             else
                 c    = c/nab
                 nab1 = (2.d0 + c - sqrt(4.d0+c*c))/(2.d0*c)
                 nbc1 = 1.d0 - nab1
-            end if
+            endif
             !
             !          ROB IS USED IN THE BENDING POTENTIAL CALCULATIONS
             !          FIRST TRAP OUT ANY ZERO ARGUMENTS
             !
-            if (nab1*nbc1 .le. 0.0d0) then
+            if( nab1*nbc1 .le. 0.0d0 )then
                 rob = 1.d0
             else
                 stuff = a * log(nab1*nbc1)
                 t     = rhh - stuff
                 rob   = 1.0d0
-                if(abs(t).gt.1.d-15) rob = (rbb - stuff)/t
-            end if
-        end if
+                if( abs(t) .gt. 1.d-15 ) rob = (rbb - stuff)/t
+            endif
+        endif
         !
         !        CALCULATE BENDING CORRECTION
         !        EVALUATE GAMMA AND DERIVATIVE
         !
         ex    = exp(raccol*(gamp(2) + gamp(3)*raccol))
         gamma = gamp(1) + ex
-        if (nder .eq. 1) dgam = (gamp(2) + 2.d0*gamp(3)*raccol)*ex
+        if( nder .eq. 1 ) dgam = (gamp(2) + 2.d0*gamp(3)*raccol)*ex
         gamma = gamma*de
-        if (nder .eq. 1) dgam = dgam*de
+        if( nder .eq. 1 ) dgam = dgam*de
         !
         !           CALCULATE V(R(3)) TERM
         !
         ex  = exp(-beta*(r(3)-req(3))/rob)
         ex1 = ex*(1.d0 + 0.5d0*ex)
-        if (nder .eq. 1) dex1 = ex*(1.d0 + ex)
+        if( nder .eq. 1 ) dex1 = ex*(1.d0 + ex)
         !
         !           CALCULATE V(R(1)+R(2)) TERM
         !
         ex  = exp(beta*(req(3)-r(2)-r(1))/rob)
         ex2 = ex*(1.d0 + 0.5d0*ex)
-        if (nder .eq. 1) dex2 = ex*(1.d0 + ex)
+        if( nder .eq. 1 ) dex2 = ex*(1.d0 + ex)
         !
         !        HERE IS THE BENDING CORRECTION
         !
@@ -380,7 +375,7 @@ subroutine pot
         !        OF BCOOR WITH RESPECT TO R(1)  R(2) AND R(3).
         !        CALCULATE DAC (THE DERIVATIVE WITH RESPECT TO R(3))
         !
-        if (nder .eq. 1) then
+        if( nder .eq. 1 )then
             gamma = gamma*beta/rob
             dac   = -gamma*dex1
             !
@@ -388,7 +383,7 @@ subroutine pot
             !
             dbcoor(1) = gamma*dex2 + dgam*(ex1-ex2)
             dbcoor(2) = dbcoor(1)
-        end if
+        endif
         !
         !       NOW CALCULATE THE COLLINEAR ENERGY
         !       STORE R(3) IN RACTMP THEN SET R(3) TO
@@ -403,29 +398,29 @@ subroutine pot
         !
         engygs = engygs + bcoor
         !
-        if (nder .eq. 1) then
+        if( nder .eq. 1 )then
             do 300 it = 1, 2
                 degsdr(it) = dbcoor(it) + degsdr(it) + degsdr(3)
             300 continue
             degsdr(3) = dac
-        end if
+        endif
     else
         engygs = 1.d30
-        if (nder .eq. 1) then
-            degsdr(1) = 0.0d0
-            if (r(1) .le. tol) degsdr(1) = -engygs
-            degsdr(2) = 0.0d0
-            if (r(1) .le. tol) degsdr(2) = -engygs
-            degsdr(3) = 0.0d0
-            if (r(1) .le. tol) degsdr(3) = -engygs
-        end if
-    end if
+        if( nder .eq. 1 )then
+            degsdr(1)                     = 0.0d0
+            if( r(1) .le. tol ) degsdr(1) = -engygs
+            degsdr(2)                     = 0.0d0
+            if( r(1) .le. tol ) degsdr(2) = -engygs
+            degsdr(3)                     = 0.0d0
+            if( r(1) .le. tol ) degsdr(3) = -engygs
+        endif
+    endif
     !
     call eunitzero
-    if(nder.ne.0) then
+    if( nder .ne. 0 )then
         call rtocart
         call dedcou
-    end if
+    endif
     !
     !
 end subroutine pot
@@ -493,7 +488,7 @@ subroutine prepot2
     !  ASSIGN PARAMETERS FOR THE ASYMPTOTIC REACTANT AND PRODUCT REGIONS
     !  IN BLOCK DATA SUBROUTINE
     !
-    if(a2inf .eq.0.0d0) a2inf = d1inf-d2inf
+    if( a2inf .eq. 0.0d0 ) a2inf = d1inf-d2inf
     !
     !  ASSIGN THE PIVOT POINT, POTENTIAL AT THE PIVOT,
     !  FLAG, AND ASYMPTOTIC EXPONENTIAL PARAMETERS
@@ -658,22 +653,22 @@ subroutine pot2
     r1 = r(1)
     r2 = r(2)
     r3 = r(3)
-    if (r1 .gt. r1s) then
-        if (r2 .gt. r2s) then
+    if( r1 .gt. r1s )then
+        if( r2 .gt. r2s )then
             !
             !   3-ATOM BREAK UP REGION
             !
             engygs = dasy
-            if (nder .eq. 1) then
+            if( nder .eq. 1 )then
                 degsdr(1) = 0.0d0
                 degsdr(2) = 0.0d0
-            end if
+            endif
         else
             !
             !   REACTANT ASYMPTOTIC REGION
             !
             dr1 = r1 - r1s
-            if (dr1*alph1 .lt. -70.0d0) write (nflag(18), '(/,2X,T5,''R1, R2, R3, DELR, ALPH1:'',/,2X,T10,5(1PE13.5,1' // &
+            if( dr1*alph1 .lt. -70.0d0 ) write (nflag(18), '(/,2X,T5,''R1, R2, R3, DELR, ALPH1:'',/,2X,T10,5(1PE13.5,1' // &
                 'X))') r1, r2, &
                 !     R3,
                 & dr1, alph1
@@ -688,31 +683,31 @@ subroutine pot2
             dreq = r1dif*t2
             bet  = b1inf + b1dif*t1
             dbet = b1dif*t2
-            if(iayes.eq.0) then
+            if( iayes .eq. 0 )then
                 aer  = vsp - dis
                 daer = -ddis
             else
                 aer  = a1inf + a1dif*t1
                 daer = a1dif*t2
-            end if
+            endif
             delr = r2 - req2
-            if (delr*bet .lt.  -70.0d0) &
+            if( delr*bet .lt. -70.0d0 ) &
                 & write (nflag(18), '(/,2X,T5,''R1, R2, R3, DR2, BET:'',/,2X,T10,5(1PE13.5,1X))') r1, r2, r3, delr, bet
             t1     = exp(-bet*delr)
             t2     = 1.0d0 - t1
             engygs = aer + dis*t2*t2
-            if (nder .eq. 1) then
+            if( nder .eq. 1 )then
                 t3        = 2.0d0*dis*t1
                 degsdr(1) = daer + t2*(ddis*t2 - t3*(bet*dreq - dbet*delr))
                 degsdr(2) = t3*bet*t2
-            end if
-        end if
-    else if (r2 .gt. r2s) then
+            endif
+        endif
+    else if( r2 .gt. r2s )then
         !
         !   PRODUCT ASYMPTOTIC REGION
         !
         dr2 = r2 - r2s
-        if (dr2*alph2 .lt.  -70.d0) &
+        if( dr2*alph2 .lt. -70.d0 ) &
             & write (nflag(18), '(/,2X,T5,''R1, R2, R3, DELR, ALPH2:'',/,2X,T10,5(1PE13.5,1X))') r1, r2, r3, dr2, alph2
         !
         !.....INTERPOLATE FOR MORSE PARAMETERS
@@ -725,25 +720,25 @@ subroutine pot2
         dreq = r2dif*t2
         bet  = b2inf + b2dif*t1
         dbet = b2dif*t2
-        if(iayes.eq.0) then
+        if( iayes .eq. 0 )then
             aer  = vsp - dis
             daer = -ddis
         else
             aer  = a2inf + a2dif*t1
             daer = a2dif*t2
-        end if
+        endif
         delr = r1 - req2
-        if (delr*bet .lt.  -70.0d0) &
+        if( delr*bet .lt. -70.0d0 ) &
             & write (nflag(18), '(/,2X,T5,''R1, R2, R3, DR2, BET:'',/,2X,T10,5(1PE13.5,1X))') r1, r2, r3, delr, bet
         t1     = exp(-bet*delr)
         t2     = 1.0d0 - t1
         engygs = aer + dis*t2*t2
-        if (nder .eq. 1) then
+        if( nder .eq. 1 )then
             t3        = 2.0d0*dis*t1
             degsdr(2) = daer + t2*(ddis*t2 - t3*(bet*dreq - dbet*delr))
             !
             degsdr(1) = t3*bet*t2
-        end if
+        endif
     else
         !
         !   SPLINE INTERPOLATION REGION
@@ -763,7 +758,7 @@ subroutine pot2
         dreq  = spline(4, nphi, phi, bsp(1, 2), csp(1, 2), scrap, angle)
         bet   = spline(3, nphi, phi, bsp(1, 3), csp(1, 3), scrap, angle)
         dbet  = spline(4, nphi, phi, bsp(1, 3), csp(1, 3), scrap, angle)
-        if(iayes.eq.0) then
+        if( iayes .eq. 0 )then
             aer  = vsp - dis
             daer = -ddis
         else
@@ -771,27 +766,27 @@ subroutine pot2
             t2   = 1.0d0 - t1
             aer  = vsp - dis*t2*t2
             daer = -t2*(ddis*t2 + 2.0d0*dis*t1*(bet*dreq + req2*dbet))
-        end if
-        if (bet*(rr-req2) .gt.  70) &
+        endif
+        if( bet*(rr-req2) .gt. 70 ) &
             & write (nflag(18), '(/,2X,T5,''R1, R2, R3, RR, ANGLE, DIS, REQ2, BET:'', /,(2X,T5,1PE20.10,T30,1PE20.10,' // &
             'T55,1PE20.10))') r1, r2, r3, rr, angle, dis, req2, bet
         delr   = rr - req2
         t1     = exp(bet*delr)
         t2     = 1.0d0 - t1
         engygs = aer + dis*t2*t2
-        if(nder.eq.1) then
+        if( nder .eq. 1 )then
             t3        = 2.0d0*dis*t1
             dvdp      = daer + t2*(ddis*t2 - t3*(dbet*delr - bet*dreq))
             t3        = t3*t2*bet
             degsdr(1) = dvdp*dphd1 - t3*drrd1
             degsdr(2) = dvdp*dphd2 - t3*drrd2
-        end if
-    end if
-    if(nder.eq.1) then
+        endif
+    endif
+    if( nder .eq. 1 )then
         degsdr(1) = degsdr(1)
         degsdr(2) = degsdr(2)
         degsdr(3) = 0.0d0
-    end if
+    endif
     !
     !
 end subroutine pot2
@@ -891,7 +886,7 @@ function spline( isw, nn, x, y, c, d, xpt )
     np1 = n+1
     np2 = n+2
     z   = xpt
-    if (isw .eq. 1) then
+    if( isw .eq. 1 )then
         c(1)   = y(1)
         d(1)   = 1.0d0
         c(np1) = 0.0d0
@@ -902,76 +897,76 @@ function spline( isw, nn, x, y, c, d, xpt )
             c(i) = y(i)-y(1)
         41 d(i) = x(i)-x(1)
         do 410 i = 3, np2
-            if(d(i-1).eq.0.0d0) then
+            if( d(i-1) .eq. 0.0d0 )then
                 write(nflag(18), '(1X,5X,'' ***** ERROR IN SPLINE ... DIVIDE FAULT *****'')')
                 stop 'SPLINE 1'
-            end if
+            endif
             pivot = 1.0d0/d(i-1)
-            if(i.lt.np2) then
+            if( i .lt. np2 )then
                 supd = x(i-1)-x(i-2)
-                if(supd.lt.0.0d0) then
+                if( supd .lt. 0.0d0 )then
                     write(nflag(18), '(1X,5X,''***** ERROR IN SPLINE ... UNORDERED X-VALUES *****'')')
                     stop 'SPLINE 2'
-                end if
+                endif
                 supd = supd*supd*supd
             else
                 supd = 1.0d0
-            end if
+            endif
             dfact = supd*pivot
             cfact = c(i-1)*pivot
-            if(i.le.n) then
+            if( i .le. n )then
                 do 47 j = i, n
                     v    = x(j)-x(i-2)
                     c(j) = c(j)-d(j)*cfact
                 47 d(j) = v*v*v-d(j)*dfact
-            end if
-            if(i.lt.np2) then
+            endif
+            if( i .lt. np2 )then
                 c(np1) = c(np1)-d(np1)*cfact
                 d(np1) = 1.0d0-d(np1)*dfact
-            end if
+            endif
             c(np2) = c(np2)-d(np2)*cfact
             d(np2) = x(i-2)-d(np2)*dfact
         410 continue
         do 411 i = 1, n
             j = np2-i
-            if(j.eq.np1) then
+            if( j .eq. np1 )then
                 v = 1.0d0
             else
                 v = x(j)-x(j-1)
                 v = v*v*v
-            end if
-            if(d(j+1).eq.0.0d0) then
+            endif
+            if( d(j+1) .eq. 0.0d0 )then
                 write(nflag(18), '(1X,5X,'' ***** ERROR IN SPLINE ... DIVIDE FAULT *****'')')
                 stop 'SPLINE 3'
-            end if
+            endif
             c(j+1) = c(j+1)/d(j+1)
             c(j)   = c(j)-c(j+1)*v
         411 continue
-        if(d(2).eq.0.0d0) then
+        if( d(2) .eq. 0.0d0 )then
             write(nflag(18), '(1X,5X,'' ***** ERROR IN SPLINE ... DIVIDE FAULT *****'')')
             stop 'SPLINE 4'
-        end if
+        endif
         c(2) = c(2)/d(2)
-    else if (isw .eq. 2) then
+    else if( isw .eq. 2 )then
         spline = c(1) + c(2)*(z-x(1))
         do 51 i = 1, n
             v = z-x(i)
-            if(v.le.0) return
+            if( v .le. 0 ) return
             spline = spline + c(i+2)*v**3
         51 continue
-    else if (isw .eq. 3) then
+    else if( isw .eq. 3 )then
         spline = c(1) + c(2)*(z-x(1))
         deriv  = c(2)/3.d0
         do 53 i = 1, n
             v = z-x(i)
-            if(v.le.0) return
+            if( v .le. 0 ) return
             v2     = v*v
             spline = spline + c(i+2)*v2*v
             deriv  = deriv + c(i+2)*v2
         53 continue
-    else if (isw .eq. 4) then
+    else if( isw .eq. 4 )then
         spline = 3.d0*deriv
-    end if
+    endif
 end function spline
 
 !
@@ -1154,45 +1149,45 @@ subroutine potinfo
     write(nflag(18), '(/)')
     do i =1, 5
         write(nflag(18), '(2x,a75)') ref(i)
-    end do
+    enddo
     write(nflag(18), '(/)')
     kmax = 0
     do i = 1, isurf+1
         do j = 1, isurf+1
-            if(nasurf(i, j).ne.0.and.kmax.lt.max(i, j)) kmax = max(i, j)
-        end do
-    end do
+            if( nasurf(i, j) .ne. 0.and.kmax .lt. max(i, j) ) kmax = max(i, j)
+        enddo
+    enddo
     write(nflag(18), '(2x,'' MAX. AND ACTUAL NO. OF EXCITED SURFACES: '',I3,5x,I3)') msurf, kmax-1
-    if(kmax-1.gt.msurf) then
+    if( kmax-1 .gt. msurf )then
         write(6, *) ' WRONG INPUT ON NUMBER OF EXCITED SURFACES'
         stop
-    end if
+    endif
     ksdiag = 0
     kediag = 0
     do i = 2, isurf+1
-        if(nasurf(i, i).ne.0) then
+        if( nasurf(i, i) .ne. 0 )then
             kediag = i-1
-            if(ksdiag.eq.0) ksdiag = i-1
-        end if
-    end do
+            if( ksdiag .eq. 0 ) ksdiag = i-1
+        endif
+    enddo
     ksoffd = 0
     keoffd = 0
     k      = 0
     do i = 1, isurf
         do j = i+1, isurf+1
             k = k+1
-            if(nasurf(i, j)+nasurf(j, i).ne.0) then
+            if( nasurf(i, j)+nasurf(j, i) .ne. 0 )then
                 keoffd = k
-                if(ksoffd.eq.0) ksoffd = k
-            end if
-        end do
-    end do
+                if( ksoffd .eq. 0 ) ksoffd = k
+            endif
+        enddo
+    enddo
     write(nflag(18), '(2x,'' MAX. AND ACTUAL ORDER OF DERIVATIVES:    '',I3,5x,I3)') mder, nder
-    if(nder.gt.mder) then
+    if( nder .gt. mder )then
         write(6, *) ' WRONG INPUT ON ORDER OF DERIVATIVES'
         stop
-    end if
-    if(nflag(19).eq.1) then
+    endif
+    if( nflag(19) .eq. 1 )then
         write(nflag(18), '(/)')
         write(nflag(18), '(2x,''Cartesian coordinates are supplied by'',/, 2x,''the user in the array CART.'',//)')
         write(nflag(18), '(2x,''Provide cartesian coordinates in the'',/, 2x,''following order using the array CART'',' // &
@@ -1233,7 +1228,7 @@ subroutine potinfo
             'REPORTED IN'',/, 2x,''                           kcal/mol/ANGSTROM'',/, 2x,''NFLAG(1' // &
             ')=2 & NFLAG(2)=5 => DERIVATIVES REPORTED IN'',/, 2x,''                           cm*' // &
             '*-1/ANGSTROM'',//)')
-    end if
+    endif
 end subroutine potinfo
 
 !> @brief Evaluate ANCVRT for the OH2_App_GEN_M21986 potential.
@@ -1292,8 +1287,8 @@ subroutine ancvrt
         do j=1, 32
             ianum(i,j)      = 0
             periodic_1(i,j) = ' '
-        end do
-    end do
+        enddo
+    enddo
     distance         = 'BOHR                '
     units            = 'HARTREE             '
     ianum(1,1)       = 1
@@ -1474,67 +1469,66 @@ subroutine ancvrt
         jsave(i) = 0
         name1(i) = '  '
         name2(i) = '  '
-    end do
+    enddo
     iblank = ' '
     do ind=1, natoms
         do i=1, 7
             do j=1, 32
-                if(indexes(ind).eq.ianum(i,j)) then
+                if( indexes(ind) .eq. ianum(i,j) )then
                     isave(ind) = i
                     jsave(ind) = j
-                end if
-            end do
-        end do
-    end do
-
+                endif
+            enddo
+        enddo
+    enddo
     do ind=1, natoms
         ind2 = nulbl(ind)
-        if(ind2.eq.0) ind2=ind
-    end do
+        if( ind2 .eq. 0 ) ind2=ind
+    enddo
     inc1 = 0
     do ind=1, irctnt-1
         inc1        = inc1+1
         name1(inc1) = periodic_1(isave(ind),jsave(ind))(:2)
-    end do
+    enddo
     inc2 = 0
     do ind=irctnt, natoms
         inc2        = inc2+1
         name2(inc2) = periodic_1(isave(ind),jsave(ind))(:2)
-    end do
-    if(nflag(1).eq.2) distance = 'ANGSTROMS           '
-    if(nflag(2).eq.2) then
+    enddo
+    if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
+    if( nflag(2) .eq. 2 )then
         units = 'MILLIHARTREE        '
-    elseif(nflag(2).eq.3) then
+    else if( nflag(2) .eq. 3 )then
         units = 'EV                  '
-    elseif(nflag(2).eq.4) then
+    else if( nflag(2) .eq. 4 )then
         units = 'KCAL PER MOLE       '
-    elseif(nflag(2).eq.5) then
+    else if( nflag(2) .eq. 5 )then
         units = 'WAVENUMBERS         '
-    elseif(nflag(2).eq.6) then
+    else if( nflag(2) .eq. 6 )then
         units = 'KILOJOULES PER MOLE '
-    end if
+    endif
     cnvrtd  = 1.d0
     cnvrte  = 1.d0
     cnvrtde = 1.d0
-    if(nflag(1).eq.2) cnvrtd = bohr_a
-    if(nflag(2).eq.2) then
+    if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
+    if( nflag(2) .eq. 2 )then
         cnvrte = cnvrte*htomillh
-    elseif(nflag(2).eq.3) then
+    else if( nflag(2) .eq. 3 )then
         cnvrte = cnvrte*htoev
-    elseif(nflag(2).eq.4) then
+    else if( nflag(2) .eq. 4 )then
         cnvrte = cnvrte*htokcal
-    elseif(nflag(2).eq.5) then
+    else if( nflag(2) .eq. 5 )then
         cnvrte = cnvrte*htowave
-    elseif(nflag(2).eq.6) then
+    else if( nflag(2) .eq. 6 )then
         cnvrte = cnvrte*htokj
-    end if
+    endif
     cnvrtde = cnvrte/cnvrtd
     isum    = 0
     do inu=1, 25
         isum = isum + nulbl(inu)
-    end do
+    enddo
     ireorder = 0
-    if(isum.ne.0) ireorder = 1
+    if( isum .ne. 0 ) ireorder = 1
 end subroutine ancvrt
 
 !> @brief Evaluate CARTOU for the OH2_App_GEN_M21986 potential.
@@ -1558,7 +1552,7 @@ subroutine cartou
     common/usricm/ cart(natom, 3), anuzero, &
         & nulbl(natom), nflag(20), &
         & nasurf(isurf+1, isurf+1), nder
-    call convert_cartesian_input( cart, nulbl, natoms, cnvrtd, ireorder == 1, cartnu )
+    call convert_cartesian_input(cart, nulbl, natoms, cnvrtd, ireorder == 1, cartnu)
 end subroutine cartou
 
 !> @brief Evaluate CARTTOR for the OH2_App_GEN_M21986 potential.
@@ -1581,11 +1575,11 @@ subroutine carttor
     common/usricm/ cart(natom, 3), anuzero, &
         & nulbl(natom), nflag(20), &
         & nasurf(isurf+1, isurf+1), nder
-    call cartesian_to_potlib_coordinates( cartnu, natoms, icartr, r, coordinate_status )
-    if (coordinate_status /= 0) then
+    call cartesian_to_potlib_coordinates(cartnu, natoms, icartr, r, coordinate_status)
+    if( coordinate_status /= 0 )then
         write(nflag(18), '(2x,''WRONG ICARTR FOR CARTNU; ICARTR ='',i5//)') icartr
         stop
-    end if
+    endif
 end subroutine carttor
 
 !> @brief Evaluate EUNITZERO for the OH2_App_GEN_M21986 potential.
@@ -1616,16 +1610,16 @@ subroutine eunitzero
         & nulbl(natom), nflag(20), &
         & nasurf(isurf+1, isurf+1), nder
     pengygs = engygs * cnvrte - anuzero
-    if(ksdiag.ne.0) then
+    if( ksdiag .ne. 0 )then
         do i=ksdiag, kediag
             pengyes(i) = engyes(i) * cnvrte - anuzero
-        end do
-    end if
-    if(ksoffd.ne.0) then
+        enddo
+    endif
+    if( ksoffd .ne. 0 )then
         do j=ksoffd, keoffd
             pengyij(j) = engyij(j) * cnvrte
-        end do
-    end if
+        enddo
+    endif
 end subroutine eunitzero
 
 !> @brief Evaluate RTOCART for the OH2_App_GEN_M21986 potential.
@@ -1656,54 +1650,54 @@ subroutine rtocart
         & nulbl(natom), nflag(20), &
         & nasurf(isurf+1, isurf+1), nder
     dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
-    if(icartr.eq.1) then
+    if( icartr .eq. 1 )then
         do i = 1, natoms
             ind             = 3*i-2
             dgscartnu(i, 1) = degsdr(ind)
             dgscartnu(i, 2) = degsdr(ind+1)
             dgscartnu(i, 3) = degsdr(ind+2)
-            if(ksdiag.ne.0) then
+            if( ksdiag .ne. 0 )then
                 do j = ksdiag, kediag
                     descartnu(i, 1, j) = deesdr(ind, j)
                     descartnu(i, 2, j) = deesdr(ind+1, j)
                     descartnu(i, 3, j) = deesdr(ind+2, j)
-                end do
-            end if
-            if(keoffd.ne.0) then
+                enddo
+            endif
+            if( keoffd .ne. 0 )then
                 do k = ksoffd, keoffd
                     dijcartnu(i, 1, k) = deijdr(ind, k)
                     dijcartnu(i, 2, k) = deijdr(ind+1, k)
                     dijcartnu(i, 3, k) = deijdr(ind+2, k)
-                end do
-            end if
-        end do
-    elseif(icartr.eq.2) then
+                enddo
+            endif
+        enddo
+    else if( icartr .eq. 2 )then
         do i = 1, natoms
             dgscartnu(i, 1) = 0.d0
             dgscartnu(i, 2) = 0.d0
             dgscartnu(i, 3) = 0.d0
-            if(ksdiag.ne.0) then
+            if( ksdiag .ne. 0 )then
                 do j1=ksdiag, kediag
                     descartnu(i, 1, j1) = 0.d0
                     descartnu(i, 2, j1) = 0.d0
                     descartnu(i, 3, j1) = 0.d0
-                end do
-            end if
-            if(ksoffd.ne.0) then
+                enddo
+            endif
+            if( ksoffd .ne. 0 )then
                 do j2=ksoffd, keoffd
                     dijcartnu(i, 1, j2) = 0.d0
                     dijcartnu(i, 2, j2) = 0.d0
                     dijcartnu(i, 3, j2) = 0.d0
-                end do
-            end if
+                enddo
+            endif
             do j = 1, natoms
-                if(j.lt.i) then
+                if( j .lt. i )then
                     m1 = natoms*(j-1) - (j*(j-1))/2 + i-j
-                elseif(j.gt.i) then
+                else if( j .gt. i )then
                     m1 = natoms*(i-1) - (i*(i-1))/2 + j-i
                 else
                     go to 20
-                end if
+                endif
                 y               = degsdr(m1)
                 termx           = (cartnu(i, 1)-cartnu(j, 1))/r(m1)
                 termy           = (cartnu(i, 2)-cartnu(j, 2))/r(m1)
@@ -1711,38 +1705,38 @@ subroutine rtocart
                 dgscartnu(i, 1) = dgscartnu(i, 1) + termx*y
                 dgscartnu(i, 2) = dgscartnu(i, 2) + termy*y
                 dgscartnu(i, 3) = dgscartnu(i, 3) + termz*y
-                if(ksdiag.gt.0) then
+                if( ksdiag .gt. 0 )then
                     y = deesdr(m1, j1)
                     do j1=ksdiag, kediag
                         descartnu(i, 1, j1) = descartnu(i, 1, j1) + termx*y
                         descartnu(i, 2, j1) = descartnu(i, 2, j1) + termy*y
                         descartnu(i, 3, j1) = descartnu(i, 3, j1) + termz*y
-                    end do
-                elseif(ksoffd.gt.0) then
+                    enddo
+                else if( ksoffd .gt. 0 )then
                     do j2=ksoffd, keoffd
                         y                   = deijdr(m1, j2)
                         dijcartnu(i, 1, j2) = dijcartnu(i, 1, j2) + termx*y
                         dijcartnu(i, 2, j2) = dijcartnu(i, 2, j2) + termy*y
                         dijcartnu(i, 3, j2) = dijcartnu(i, 3, j2) + termz*y
-                    end do
-                end if
+                    enddo
+                endif
                 20 continue
-            end do
-        end do
-    elseif(icartr.eq.3) then
+            enddo
+        enddo
+    else if( icartr .eq. 3 )then
         do i = 1, natoms
             ygs(i) = degsdr(i)/r(i)
-            if(ksdiag.ne.0) then
+            if( ksdiag .ne. 0 )then
                 do j=ksdiag, kediag
                     yes(i,j) = deesdr(i, j)/r(i)
-                end do
-            end if
-            if(ksoffd.ne.0) then
+                enddo
+            endif
+            if( ksoffd .ne. 0 )then
                 do k=ksoffd, keoffd
                     yij(i,k) = deijdr(i, k)/r(i)
-                end do
-            end if
-        end do
+                enddo
+            endif
+        enddo
         do k = 1, 3
             term12          = cartnu(1, k)-cartnu(2, k)
             term23          = cartnu(2, k)-cartnu(3, k)
@@ -1750,22 +1744,22 @@ subroutine rtocart
             dgscartnu(1, k) = term12*ygs(1) + term13*ygs(3)
             dgscartnu(2, k) = -term12*ygs(1) + term23*ygs(2)
             dgscartnu(3, k) = -term13*ygs(3) - term23*ygs(2)
-            if(ksdiag.ne.0) then
+            if( ksdiag .ne. 0 )then
                 do j1=ksdiag, kediag
                     descartnu(1, k, j1) = term12*yes(1,j1) + term13*yes(3,j1)
                     descartnu(2, k, j1) = -term12*yes(1,j1) + term23*yes(2,j1)
                     descartnu(3, k, j1) = -term13*yes(3,j1) - term23*yes(2,j1)
-                end do
-            end if
-            if(ksoffd.ne.0) then
+                enddo
+            endif
+            if( ksoffd .ne. 0 )then
                 do j2=ksoffd, keoffd
                     dijcartnu(1, k, j2) = term12*yij(1,j2) + term13*yij(3,j2)
                     dijcartnu(2, k, j2) = -term12*yij(1,j2) + term23*yij(2,j2)
                     dijcartnu(3, k, j2) = -term13*yij(3,j2) - term23*yij(2,j2)
-                end do
-            end if
-        end do
-    elseif(icartr.eq.4) then
+                enddo
+            endif
+        enddo
+    else if( icartr .eq. 4 )then
         wh   = 1.007825d0
         wf   = 18.99840d0
         sum  = wh+wf
@@ -1799,7 +1793,7 @@ subroutine rtocart
     else
         write(nflag(18), '(2X,'' WRONG ICARTR FOR DERIVATIVE; ICARTR ='',I5//)') icartr
         stop
-    end if
+    endif
 end subroutine rtocart
 
 !> @brief Evaluate DEDCOU for the OH2_App_GEN_M21986 potential.
@@ -1826,45 +1820,45 @@ subroutine dedcou
     common/usricm/ cart(natom, 3), anuzero, &
         & nulbl(natom), nflag(20), &
         & nasurf(isurf+1, isurf+1), nder
-    if (ireorder.eq.1) then
+    if( ireorder .eq. 1 )then
         do i = 1, natoms
             dgscart(i, 1) = dgscartnu(nulbl(i), 1) * cnvrtde
             dgscart(i, 2) = dgscartnu(nulbl(i), 2) * cnvrtde
             dgscart(i, 3) = dgscartnu(nulbl(i), 3) * cnvrtde
-            if(ksdiag.ne.0) then
+            if( ksdiag .ne. 0 )then
                 do j=ksdiag, kediag
                     descart(i, 1, j) = descartnu(nulbl(i), 1, j) * cnvrtde
                     descart(i, 2, j) = descartnu(nulbl(i), 2, j) * cnvrtde
                     descart(i, 3, j) = descartnu(nulbl(i), 3, j) * cnvrtde
-                end do
-            end if
-            if(ksoffd.ne.0) then
+                enddo
+            endif
+            if( ksoffd .ne. 0 )then
                 do k=ksoffd, keoffd
                     dijcart(i, 1, k) = dijcartnu(nulbl(i), 1, k) * cnvrtde
                     dijcart(i, 2, k) = dijcartnu(nulbl(i), 2, k) * cnvrtde
                     dijcart(i, 3, k) = dijcartnu(nulbl(i), 3, k) * cnvrtde
-                end do
-            end if
-        end do
+                enddo
+            endif
+        enddo
     else
         do i = 1, natoms
             dgscart(i, 1) = dgscartnu(i, 1) * cnvrtde
             dgscart(i, 2) = dgscartnu(i, 2) * cnvrtde
             dgscart(i, 3) = dgscartnu(i, 3) * cnvrtde
-            if(ksdiag.ne.0) then
+            if( ksdiag .ne. 0 )then
                 do j=ksdiag, kediag
                     descart(i, 1, j) = descartnu(i, 1, j) * cnvrtde
                     descart(i, 2, j) = descartnu(i, 2, j) * cnvrtde
                     descart(i, 3, j) = descartnu(i, 3, j) * cnvrtde
-                end do
-            end if
-            if(ksoffd.ne.0) then
+                enddo
+            endif
+            if( ksoffd .ne. 0 )then
                 do k=ksoffd, keoffd
                     dijcart(i, 1, k) = dijcartnu(i, 1, k) * cnvrtde
                     dijcart(i, 2, k) = dijcartnu(i, 2, k) * cnvrtde
                     dijcart(i, 3, k) = dijcartnu(i, 3, k) * cnvrtde
-                end do
-            end if
-        end do
-    end if
+                enddo
+            endif
+        enddo
+    endif
 end subroutine dedcou

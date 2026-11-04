@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
     call evaluate_reparameterized_streitz_mintmire( &
-        coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the reparameterized Streitz-Mintmire cluster energy.
@@ -65,13 +65,13 @@ subroutine evaluate_reparameterized_streitz_mintmire( &
             distance_bohr = cartesian_distance( coordinates_bohr(center_atom,:), coordinates_bohr(neighbor_atom,:) )
             radial_offset = distance_bohr-reference_distance_bohr
             density       = density+exp(-density_decay*radial_offset)
-            if( center_atom > neighbor_atom ) then
+            if( center_atom > neighbor_atom )then
                 first_term  = 2.0d0*first_pair_scale *exp(-0.5d0*density_decay*radial_offset)
                 second_term = -second_pair_scale *(1.0d0+pair_decay*radial_offset) *exp(-pair_decay*radial_offset)
                 pair_energy = pair_energy+first_term+second_term
-            end if
-        end do
+            endif
+        enddo
         embedding_energy = embedding_energy-embedding_scale*sqrt(density)
-    end do
+    enddo
     energy_hartree = pair_energy+embedding_energy
 end subroutine evaluate_reparameterized_streitz_mintmire

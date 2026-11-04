@@ -19,57 +19,49 @@ subroutine pes( x, igrad, p, g, d )
     logical, save    :: first_time_data=.true.
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr( x, r )
-
+    call legacy_triatomic_distances_to_bohr(x, r)
     nsurf = 0
     nder  = igrad
     der   = 0.d0
-
-    if(first_time_data) then
+    if( first_time_data )then
         call prepot
         first_time_data = .false.
-    end if
-
+    endif
     call pot
-
     energy = energy*legacy_hartree_to_electronvolt
     der    = der*51.422067
-
-    r2 = r*legacy_bohr_to_angstrom
+    r2     = r*legacy_bohr_to_angstrom
     call evdrdx(tx, r2, drdx)
     dedx = 0.d0
     do i=1, 9
         do j=1, 3
             dedx(i) = dedx(i)+der(j)*drdx(j,i)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = energy
-        end do
-    else if (igrad==1) then
+        enddo
+    else if( igrad == 1 )then
         do istate=1, nstates
             p(istate) = energy
-        end do
+        enddo
         do iatom=1, natoms
             do idir=1, 3
                 j               = (iatom-1)*3+idir
                 g(1,iatom,idir) = dedx(j)
-            end do
-        end do
-    else if (igrad==2) then
+            enddo
+        enddo
+    else if( igrad == 2 )then
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the O2H_GEN potential.
@@ -82,30 +74,26 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 3
         do j=1, 9
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
     drdx(1,3) = (x(3)-x(6))/r(1)
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     drdx(2,4) = (x(4)-x(7))/r(2)
     drdx(2,5) = (x(5)-x(8))/r(2)
     drdx(2,6) = (x(6)-x(9))/r(2)
     drdx(2,7) = -drdx(2,4)
     drdx(2,8) = -drdx(2,5)
     drdx(2,9) = -drdx(2,6)
-
     drdx(3,1) = (x(1)-x(7))/r(3)
     drdx(3,2) = (x(2)-x(8))/r(3)
     drdx(3,3) = (x(3)-x(9))/r(3)
     drdx(3,7) = -drdx(3,1)
     drdx(3,8) = -drdx(3,2)
     drdx(3,9) = -drdx(3,3)
-
 end subroutine evdrdx
 
 !
@@ -249,7 +237,7 @@ subroutine prepot
     !           RAB IS DEFINED AS THE SMALLER OF R(1) AND R(3)
     !           RAC IS DEFINED AS THE LARGER OF R(1) AND R(3)
     !
-    if (r(1).gt.r(3)) go to 40
+    if( r(1) .gt. r(3) ) go to 40
     !
     rab = r(1)
     rac = r(3)
@@ -269,11 +257,11 @@ subroutine prepot
     !
     !          AND THEIR DERIVATIVES
     !
-    if (nder .eq. 1) then
+    if( nder .eq. 1 )then
         dexpo(1) = -alpha*expo(1)
         dexpo(2) = -beta*expo(2)
         dexpo(3) = -alpha*expo(3)
-    end if
+    endif
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          CALCULATE VAB AND DV(1)
@@ -285,7 +273,7 @@ subroutine prepot
     !
     junk(1) = exp(gamma(1)*(req(1)-rab))
     vab     = de(1)*(junk(1)*junk(1)-2.0d0*junk(1))
-    if (nder .eq. 1) &
+    if( nder .eq. 1 ) &
         & dv(1) = 2.0d0*de(1)*(1.0d0-junk(1))*gamma(1)*junk(1)
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -294,7 +282,7 @@ subroutine prepot
     !
     junk(1) = exp(gamma(3)*(req(3)-rac))
     vac     = de(3)*(junk(1)*junk(1)-2.0d0*junk(1))
-    if (nder .eq. 1) &
+    if( nder .eq. 1 ) &
         & dv(3) = 2.0d0*de(3)*(1.0d0-junk(1))*gamma(3)*junk(1)
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -303,7 +291,7 @@ subroutine prepot
     !
     junk(1) = exp(gamma(2)*(req(2)-rbc))
     vbc     = de(2)*(junk(1)*junk(1)-2.0d0*junk(1))
-    if (nder .eq. 1) &
+    if( nder .eq. 1 ) &
         & dv(2) = -2.0d0*de(2)*(junk(1)-1.0d0)*gamma(2)*junk(1)
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -320,11 +308,11 @@ subroutine prepot
     !
     csth = num/denom
     !
-    if (nder .eq. 1) then
+    if( nder .eq. 1 )then
         dcsth(1) = (2.0d0*rab/denom)-(2.0d0*rbc)*csth/denom
         dcsth(2) = (2.0d0*rbc/denom)-(2.0d0*rab)*csth/denom
         dcsth(3) = -(2.0d0*rac/denom)
-    end if
+    endif
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          CALCULATE THE B IJ 'S--SEE EQUATION 5
@@ -336,11 +324,11 @@ subroutine prepot
             !
             !               CALCULATE THE DERIVATIVES TOO.
             !
-            if (nder .eq. 1) then
+            if( nder .eq. 1 )then
                 do 60 it = 1, 3
                     db(i, j, it) = c(i,j,1)*c(i,j,2)*(csth*c(i,j,3)* dcsth(it)+dcsth(it)* (1.0d0+c(i,j,3)*csth))
                 60 continue
-            end if
+            endif
         70 continue
     80 continue
     !
@@ -349,11 +337,11 @@ subroutine prepot
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !
     mew = expo(2)-0.02538745816335d0
-    if (nder .eq. 1) then
+    if( nder .eq. 1 )then
         dmew(2) = -beta*expo(2)
         dmew(1) = 0.0d0
         dmew(3) = 0.0d0
-    end if
+    endif
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          NOW CALCULATE A I 'S AND DERIVATIVES--SEE EQUATION 4
@@ -365,12 +353,12 @@ subroutine prepot
         junk(3) = 1.0d0+junk(2)*junk(1)
         !
         a(it) = b(it, 1)*junk(3)
-        if (nder .eq. 1) then
+        if( nder .eq. 1 )then
             do 90 it1 = 1, 3
                 da(it,it1) = db(it, 1, it1)*junk(3)+b(it, 1)* ((db(it, 2, it1)*mew+b(it, 2)*dmew(it1))* junk(1)+ &
                     & junk(2)* (db(it, 3, it1)*mew+ b(it, 3)*dmew(it1)))
             90 continue
-        end if
+        endif
     100 continue
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -381,7 +369,7 @@ subroutine prepot
     !
     prod2 = 1.0d0+(a(3)*rab*rac)/(rab+rac)
     !
-    if (nder .eq. 1) then
+    if( nder .eq. 1 )then
         dprod1(1) = dexpo(1)*expo(3)*a(1)+expo(1)*expo(3)*da(1,1)
         dprod1(2) = expo(1)*expo(3)*da(1,2)
         dprod1(3) = dexpo(3)*expo(1)*a(1)+expo(1)*expo(3)*da(1,3)
@@ -389,28 +377,28 @@ subroutine prepot
         dprod2(2) = (da(3,2)*rab*rac)/(rab+rac)
         dprod2(1) = ((da(3,1)*rab*rac+a(3)*rac)*(rab+rac)- (a(3)*rab*rac))/((rab+rac)*(rab+rac))
         dprod2(3) = ((da(3,3)*rab*rac+a(3)*rab)*(rab+rac)- (a(3)*rab*rac))/((rab+rac)*(rab+rac))
-    end if
+    endif
     !
     !          CALCULATE PROD3
     !
     prod3 = 1.0d0+a(2)*(rab+rac)*prod2
     !
-    if (nder .eq. 1) then
+    if( nder .eq. 1 )then
         do 120 it = 1, 3
             dprod3(it) = da(2,it)*(rab+rac)*prod2+a(2)* (rab+rac)*dprod2(it)
-            if (it.eq.2) go to 110
+            if( it .eq. 2 ) go to 110
             dprod3(it) = dprod3(it)+a(2)*prod2
             110 continue
         120 continue
-    end if
+    endif
     !
     second = prod1*prod3
     !
-    if (nder .eq. 1) then
+    if( nder .eq. 1 )then
         do 130 it = 1, 3
             dsec(it) = prod1*dprod3(it)+dprod1(it)*prod3
         130 continue
-    end if
+    endif
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          CALCULATE THE THIRD TERM
@@ -421,15 +409,15 @@ subroutine prepot
     !
     third = junk(1)*expo(2)*a(4)*junk(2)
     !
-    if (nder .eq. 1) then
+    if( nder .eq. 1 )then
         do 140 it1 = 1, 2
             it = 1
-            if (it1.eq.2) it = 3
+            if( it1 .eq. 2 ) it = 3
             dthird(it) = dexpo(it)*expo(2)*a(4)*junk(2)+ junk(1)*expo(2)*da(4,it)*junk(2)+ junk(1)*expo(2)*a(4)* &
                 & (da(5,it)* (rab+rac)+a(5))
         140 continue
         dthird(2) = junk(1)*(dexpo(2)*a(4)*junk(2)+expo(2)*(da(4,2)* junk(2)+a(4)*(da(5,2)*(rab+rac))))
-    end if
+    endif
     !
     !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
     !          FINALLY SUM IT ALL UP
@@ -438,17 +426,17 @@ subroutine prepot
     energy = vab+vac+vbc+second+third+de(2)
     energy = energy+zeroad
     !
-    if (nder .eq. 1) then
+    if( nder .eq. 1 )then
         do 150 it = 1, 3
             der(it) = dv(it)+dsec(it)+dthird(it)
         150 continue
         !
-        if (r(1).lt.r(3)) go to 160
+        if( r(1) .lt. r(3) ) go to 160
         junk(1) = der(3)
         der(3)  = der(1)
         der(1)  = junk(1)
         160 continue
-    end if
+    endif
     !
     !CCCCCCCCCCCCCCC
     !

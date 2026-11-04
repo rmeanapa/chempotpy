@@ -24,25 +24,21 @@ subroutine pes( x, igrad, p, g, d )
     logical, save                 :: first_time_data=.true.
     integer                       :: i, j, k, l
     !initialize
-    u = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
-
+    u  = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
     nt = 1
     do iatom=1, natoms
         do idir=1, 3
             j     = (iatom-1)*3+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
-
+    call legacy_triatomic_distances_to_bohr(x, r(1,:))
     nder = igrad
-
-    if(first_time_data) then
+    if( first_time_data )then
         call prepot
         first_time_data = .false.
-    end if
-
+    endif
     call pot(r, u11, de_u11, 1, 1)
     call pot(r, u12, de_u12, 1, 2)
     call pot(r, u22, de_u22, 1, 3)
@@ -55,25 +51,23 @@ subroutine pes( x, igrad, p, g, d )
     dudr(2,1,:) = de_u12(:,1)*51.422067
     dudr(2,2,:) = de_u22(:,1)*51.422067
     call diagonalize(nstates, u, p, t)
-
     do i=1, 3
         tmpmat(:,:) = dudr(:,:,i)
         tmpmat      = matmul(transpose(t), matmul(tmpmat, t))
         do j=1, nstates
             do k=j+1, nstates
-                if ((p(k)-p(j)) > 1.d-8) then
+                if( (p(k)-p(j)) > 1.d-8 )then
                     hr(j,k,i) = tmpmat(j,k)/(p(k)-p(j))
                 else
                     hr(j,k,i) = tmpmat(j,k)/1.d-8
-                end if
+                endif
                 hr(k,j,i) = -hr(j,k,i)
-            end do
-        end do
+            enddo
+        enddo
         do j=1, nstates
             gr(j,i) = tmpmat(j,j)
-        end do
-    end do
-
+        enddo
+    enddo
     r2 = r(1,:)*legacy_bohr_to_angstrom
     call evdrdx(tx, r2, drdx)
     hx = 0.d0
@@ -82,17 +76,15 @@ subroutine pes( x, igrad, p, g, d )
         do j=1, 3
             hx(:,:,i) = hx(:,:,i)+hr(:,:,j)*drdx(j,i)
             gx(:,i)   = gx(:,i)+gr(:,j)*drdx(j,i)
-        end do
-    end do
-
+        enddo
+    enddo
     do iatom=1, natoms
         do idir=1, 3
             j                 = (iatom-1)*3+idir
             g(:,iatom,idir)   = gx(:,j)
             d(:,:,iatom,idir) = hx(:,:,j)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the LiFH_LEPS_JHTP2_2002 potential.
@@ -105,30 +97,26 @@ subroutine evdrdx( x, r, drdx )
     do i=1, 3
         do j=1, 9
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     drdx(1,1) = (x(1)-x(4))/r(1)
     drdx(1,2) = (x(2)-x(5))/r(1)
     drdx(1,3) = (x(3)-x(6))/r(1)
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     drdx(2,4) = (x(4)-x(7))/r(2)
     drdx(2,5) = (x(5)-x(8))/r(2)
     drdx(2,6) = (x(6)-x(9))/r(2)
     drdx(2,7) = -drdx(2,4)
     drdx(2,8) = -drdx(2,5)
     drdx(2,9) = -drdx(2,6)
-
     drdx(3,1) = (x(1)-x(7))/r(3)
     drdx(3,2) = (x(2)-x(8))/r(3)
     drdx(3,3) = (x(3)-x(9))/r(3)
     drdx(3,7) = -drdx(3,1)
     drdx(3,8) = -drdx(3,2)
     drdx(3,9) = -drdx(3,3)
-
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the LiFH_LEPS_JHTP2_2002 potential.
@@ -143,14 +131,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
     u_ss = a_ss
-    if (first_time_diag) then
+    if( first_time_diag )then
         lwork_d = -1
         allocate( work_d(2) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    end if
+    endif
     allocate( work_d(lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
@@ -223,7 +211,6 @@ subroutine prepot
     call prepot11
     call prepot12
     call prepot22
-
 end subroutine prepot
 
 ! ********************************************************************
@@ -240,19 +227,17 @@ subroutine pot( r, e, de, nt, nsurf )
     do i=1, nt
         do j=1, 3
             do k=1, 3
-                if (j .eq. k) g_r(j,i,k)=1.0d0
-                if (j .ne. k) g_r(j,i,k)=0.0d0
-            end do
-        end do
-    end do
-
-    if (nsurf.eq.1) call pot11(3, r, g_r, 3, e, de, 3, nt)
-    if (nsurf.eq.2) call pot12(3, r, g_r, 3, e, de, 3, nt)
-    if (nsurf.eq.3) call pot22(3, r, g_r, 3, e, de, 3, nt)
-    if (nsurf.gt.3.or.nsurf.lt.1) &
+                if( j .eq. k ) g_r(j,i,k) = 1.0d0
+                if( j .ne. k ) g_r(j,i,k) = 0.0d0
+            enddo
+        enddo
+    enddo
+    if( nsurf .eq. 1 ) call pot11(3, r, g_r, 3, e, de, 3, nt)
+    if( nsurf .eq. 2 ) call pot12(3, r, g_r, 3, e, de, 3, nt)
+    if( nsurf .eq. 3 ) call pot22(3, r, g_r, 3, e, de, 3, nt)
+    if( nsurf .gt. 3.or.nsurf .lt. 1 ) &
         & write(6, *)' WARNING:  nsurf = ', nsurf, &
         & ' in LiFHJ potential routine!'
-
 end subroutine pot
 
 ! ********************************************************************
@@ -400,13 +385,13 @@ subroutine prepot11
         d11_b = d2_b * d3_p
         do g_i_ = 1, g_p_
             g_costheta(g_i_) = d6_b * g_r(g_i_,i,1) + d5_b * g_r(g_i_,i,2) + d11_b * g_r(g_i_,i,3)
-        end do
+        enddo
         costheta = d11_v
         !--------
         d2_b = mass(3) / (mass(2) + mass(3))
         do g_i_ = 1, g_p_
             g_temp(g_i_) = d2_b * g_r(g_i_,i,2)
-        end do
+        enddo
         temp = mass(3) / (mass(2) + mass(3)) * r(i,2)
         !--------
         !     Li-FH Jacobi distance
@@ -420,10 +405,9 @@ subroutine prepot11
         d8_b = (-costheta) * temp * 2.d0 + d2_p
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-d7_v) * g_costheta(g_i_) + d7_b * g_temp(g_i_) + d8_b * g_r(g_i_,i,1)
-        end do
+        enddo
         d1_w = d2_v + d4_v - d7_v * costheta
         d2_v = sqrt(d1_w)
-
         !          if ( d1_w .gt. 0.0d0 ) then
         d1_p = 1.0d0 / (2.0d0 *  d2_v)
         !          else
@@ -433,7 +417,7 @@ subroutine prepot11
         !          endif
         do g_i_ = 1, g_p_
             g_bigr(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         bigr = d2_v
         !--------
         !     cosine of HF Jacobi angle (i.e., Li--HF angle)
@@ -453,15 +437,14 @@ subroutine prepot11
         d12_b = d7_b * d3_p
         do g_i_ = 1, g_p_
             g_coschi(g_i_) = d5_b * g_temp(g_i_) + d6_b * g_bigr(g_i_) + d12_b * g_r(g_i_,i,1)
-        end do
+        enddo
         coschi = d12_v
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = 0.0d0
-        end do
+        enddo
         d1_w = -1.d0
         d3_v = max (coschi, d1_w)
-
         !          if (coschi .gt.  d1_w) then
         d1_p = 1.0d0
         d2_p = 0.0d0
@@ -476,11 +459,10 @@ subroutine prepot11
         !          endif
         do g_i_ = 1, g_p_
             g_coschi(g_i_) = d2_p * g_d1_w(g_i_) + d1_p * g_coschi(g_i_)
-        end do
+        enddo
         coschi = d3_v
         !--------
         d2_v = min (coschi, 1.d0)
-
         !          if (coschi .lt.  1.d0) then
         d1_p = 1.0d0
         d2_p = 0.0d0
@@ -495,7 +477,7 @@ subroutine prepot11
         !          endif
         do g_i_ = 1, g_p_
             g_coschi(g_i_) = d1_p * g_coschi(g_i_)
-        end do
+        enddo
         coschi = d2_v
         !--------
         !     squared!
@@ -507,49 +489,49 @@ subroutine prepot11
         !     LiH
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-bes1) * g_r(g_i_,i,1)
-        end do
+        enddo
         d1_w = (-bes1) * (r(i,1) - relih)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xelih(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xelih = d2_v
         !--------
         do g_i_ = 1, g_p_
             g_s1a(g_i_) = s1c2 * g_xelih(g_i_)
-        end do
+        enddo
         s1a = s1c2 * xelih
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-bes1b) * g_r(g_i_,i,1)
-        end do
+        enddo
         d1_w = (-bes1b) * (r(i,1) - relih)
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = s1c3 * d1_p
         do g_i_ = 1, g_p_
             g_s1c(g_i_) = d3_b * g_d1_w(g_i_)
-        end do
+        enddo
         s1c = s1c3 * d2_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_r1r3(g_i_) = r1r3al * g_r(g_i_,i,2) + (-g_r(g_i_,i,3)) + g_r(g_i_,i,1)
-        end do
+        enddo
         r1r3 = r(i,1) - r(i,3) + r1r3al * r(i,2)
         !--------
         d3_b = 1.0d0 / rcut2del
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r1r3(g_i_)
-        end do
+        enddo
         d1_w = (r1r3 - rcut2rho) / rcut2del
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_rcut2(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         rcut2 = 0.5d0 * (1.0d0 - d2_v)
         !--------
         !
@@ -557,14 +539,14 @@ subroutine prepot11
         d2_b = 1.0d0 + (-rcut2)
         do g_i_ = 1, g_p_
             g_s1(g_i_) = d3_v * g_rcut2(g_i_) + rcut2 * g_s1c(g_i_) + d2_b * g_s1a(g_i_)
-        end do
+        enddo
         s1 = s1a + d3_v * rcut2
         !--------
         !
         !     HF
         do g_i_ = 1, g_p_
             g_yhf(g_i_) = g_r(g_i_,i,2)
-        end do
+        enddo
         yhf = r(i,2) - yhf_r
         !--------
         d4_v = yhf * yhf
@@ -572,19 +554,19 @@ subroutine prepot11
         d5_b = behf_2 * d1_p + (-behf_1)
         do g_i_ = 1, g_p_
             g_behf(g_i_) = d5_b * g_yhf(g_i_)
-        end do
+        enddo
         behf = behf_0 - behf_1 * yhf + behf_2 * d4_v
         !--------
         d4_v = r(i,2) - rehf
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-behf) * g_r(g_i_,i,2) + (-d4_v) * g_behf( g_i_)
-        end do
+        enddo
         d1_w = (-behf) * d4_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xehf(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xehf = d2_v
         !--------
         d2_v = dehf * xehf
@@ -592,25 +574,25 @@ subroutine prepot11
         d4_b = d2_v + d3_v * dehf
         do g_i_ = 1, g_p_
             g_s2(g_i_) = d4_b * g_xehf(g_i_)
-        end do
+        enddo
         s2 = d2_v * d3_v
         !--------
         !
         d5_b = dehfc * 0.5d0
         do g_i_ = 1, g_p_
             g_dehfm(g_i_) = d5_b * g_coschi(g_i_)
-        end do
+        enddo
         dehfm = dehf - (dehfcc + dehfc * 0.5d0 * (1.d0 - coschi))
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-behfm) * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (-behfm) * (r(i,2) - rehfm)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xehfm(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xehfm = d2_v
         !--------
         d3_v = dehfm * xehfm
@@ -619,13 +601,13 @@ subroutine prepot11
         d4_b = d3_v + d4_v * dehfm
         do g_i_ = 1, g_p_
             g_s2m(g_i_) = d4_b * g_xehfm(g_i_) + d5_b * g_dehfm(g_i_)
-        end do
+        enddo
         s2m = d3_v * d4_v
         !--------
         d3_b = 1.0d0 / s2alp
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,3)
-        end do
+        enddo
         d1_w = (r(i,3) - s2rho) / s2alp
         d4_v = (s2 - s2m) * 0.5d0
         d6_v = tanh (d1_w)
@@ -636,20 +618,20 @@ subroutine prepot11
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_s2(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_s2(g_i_) + d2_b * g_s2m(g_i_)
-        end do
+        enddo
         s2 = s2m + d4_v * d7_v
         !--------
         !
         !     LiF
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-bes3) * g_r(g_i_,i,3)
-        end do
+        enddo
         d1_w = (-bes3) * (r(i,3) - res3)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xes3(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xes3 = d2_v
         !--------
         d2_v = des3 * xes3
@@ -657,14 +639,14 @@ subroutine prepot11
         d4_b = d2_v + d3_v * des3
         do g_i_ = 1, g_p_
             g_s3(g_i_) = d4_b * g_xes3(g_i_)
-        end do
+        enddo
         s3 = d2_v * d3_v
         !--------
         !
         !     Sum of diatomics
         do g_i_ = 1, g_p_
             g_e(g_i_, i) = g_s3(g_i_) + g_s2(g_i_) + g_s1(g_i_)
-        end do
+        enddo
         e(i) = s1 + s2 + s3 + dehf
         !--------
         !
@@ -673,23 +655,22 @@ subroutine prepot11
         d4_b = (-hfdip_a) * cauang
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (-hfdip_a) * (r(i,2) * cauang - hfdip_re)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_hfdip_y(g_i_) = (-d1_p) * g_d1_w(g_i_)
-        end do
+        enddo
         hfdip_y = 1.d0 - d2_v
         !--------
         do g_i_ = 1, g_p_
             g_hfdip(g_i_) = 0.0d0
-        end do
+        enddo
         hfdip = 0.d0
         !--------
         do j = 1, 11
             d3_v = dble(j - 1)
-
             !            if ( hfdip_y .ne. 0.0d0 ) then
             d4_v = hfdip_y ** ( d3_v - 2.0d0)
             d4_v = d4_v * hfdip_y
@@ -716,13 +697,13 @@ subroutine prepot11
             d5_b = hfdip_m(j) * d1_p
             do g_i_ = 1, g_p_
                 g_hfdip(g_i_) = d5_b * g_hfdip_y(g_i_) + g_hfdip(g_i_)
-            end do
+            enddo
             hfdip = hfdip + hfdip_m(j) * d4_v
             !--------
-        end do
+        enddo
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = 20.d0 * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = 20.d0 * (r(i,2) - 1.2d0)
         d2_v = hfdip * 0.5d0
         d4_v = tanh (d1_w)
@@ -732,7 +713,7 @@ subroutine prepot11
         d6_b = d5_v * 0.5d0
         do g_i_ = 1, g_p_
             g_hfdip(g_i_) = d5_b * g_d1_w(g_i_) + d6_b * g_hfdip(g_i_)
-        end do
+        enddo
         hfdip = d2_v * d5_v
         !--------
         !
@@ -744,7 +725,7 @@ subroutine prepot11
         d5_b = hfpolpar * d1_p + (-hfpolperp) * d2_p
         do g_i_ = 1, g_p_
             g_hfpol(g_i_) = d5_b * g_coschi(g_i_)
-        end do
+        enddo
         hfpol = hfpolperp * (1.d0 - d2_v) + hfpolpar * d5_v
         !--------
         hfpolavg = 2.d0 * hfpolperp / 3.d0 + hfpolpar / 3.d0
@@ -760,7 +741,7 @@ subroutine prepot11
         d9_b = d8_v * li2spol * (-0.5d0) * 3.d0 * d2_p
         do g_i_ = 1, g_p_
             g_hf_did(g_i_) = d4_b * g_hfdip(g_i_) + d9_b * g_coschi(g_i_ )
-        end do
+        enddo
         hf_did = d6_v * d8_v
         !--------
         d3_v = bigr ** ( 7 - 2)
@@ -775,7 +756,7 @@ subroutine prepot11
         d3_b = d6_v + d4_b * ((-d5_v) / d4_v) * d1_p
         do g_i_ = 1, g_p_
             g_hf_did(g_i_) = d3_b * g_bigr(g_i_) + d5_b * g_hf_did(g_i_)
-        end do
+        enddo
         hf_did = d6_v * bigr
         !--------
         !     cut off angular dependence in interaction region
@@ -786,7 +767,7 @@ subroutine prepot11
         d4_b = (-d1_p) * (1.0d0 / rhf0did)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_bigr(g_i_)
-        end do
+        enddo
         d1_w  = -d3_v
         d3_v  = coschi * coschi
         d2_p  = 2.0d0 * coschi
@@ -800,7 +781,7 @@ subroutine prepot11
         d12_b = hf_did * d9_v * ((-d6_v) / d5_v) * 3.d0 * d2_p
         do g_i_ = 1, g_p_
             g_hf_did(g_i_) = d7_b * g_d1_w(g_i_) + d12_b * g_coschi(g_i_ ) + d11_v * g_hf_did(g_i_)
-        end do
+        enddo
         hf_did = hf_did * d11_v
         !--------
         !
@@ -808,7 +789,7 @@ subroutine prepot11
         d3_b = 1.0d0 / (li2sie + hfie) * ((-1.5d0) * li2sie * hfie * li2spol)
         do g_i_ = 1, g_p_
             g_hf_disp(g_i_) = d3_b * g_hfpol(g_i_)
-        end do
+        enddo
         hf_disp = (-1.5d0) * li2sie * hfie * li2spol * hfpol / (li2sie + hfie)
         !--------
         d3_v = bigr ** ( 7 - 2)
@@ -821,7 +802,7 @@ subroutine prepot11
         d3_b = d5_v + bigr * ((-d5_v) / d4_v) * d1_p
         do g_i_ = 1, g_p_
             g_hf_disp(g_i_) = d3_b * g_bigr(g_i_) + d4_b * g_hf_disp(g_i_)
-        end do
+        enddo
         hf_disp = d5_v * bigr
         !--------
         !     cut off angular dependence in interaction region
@@ -832,7 +813,7 @@ subroutine prepot11
         d4_b = (-d1_p) * (1.0d0 / rhf0disp)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_bigr(g_i_)
-        end do
+        enddo
         d1_w = -d3_v
         d3_v = hfpolavg / hfpol
         d4_v = d3_v - 1.d0
@@ -843,20 +824,20 @@ subroutine prepot11
         d9_b = hf_disp * d6_v * ((-d3_v) / hfpol)
         do g_i_ = 1, g_p_
             g_hf_disp(g_i_) = d7_b * g_d1_w(g_i_) + d9_b * g_hfpol(g_i_) + d8_v * g_hf_disp(g_i_)
-        end do
+        enddo
         hf_disp = hf_disp * d8_v
         !--------
         !
         !     SUM FORCES
         do g_i_ = 1, g_p_
             g_e_lr_hf(g_i_) = g_hf_did(g_i_) + g_hf_disp(g_i_)
-        end do
+        enddo
         e_lr_hf = hf_disp + hf_did
         !--------
         !     cut off LR forces for large r[hf] i.e., r(i,2)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = r2lrcut_a * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = r2lrcut_a * (r(i,2) - r2lrcut_r)
         d2_v = e_lr_hf * 0.5d0
         d4_v = tanh (d1_w)
@@ -866,7 +847,7 @@ subroutine prepot11
         d6_b = d5_v * 0.5d0
         do g_i_ = 1, g_p_
             g_e_lr_hf(g_i_) = d5_b * g_d1_w(g_i_) + d6_b * g_e_lr_hf(g_i_)
-        end do
+        enddo
         e_lr_hf = d2_v * d5_v
         !--------
         !
@@ -879,16 +860,16 @@ subroutine prepot11
         ! COMBINE INTERACTION REGION ENERGY AND LONG-RANGE FORCES
         do g_i_ = 1, g_p_
             g_e(g_i_, i) = g_e_lr_hf(g_i_) + g_e(g_i_, i)
-        end do
+        enddo
         e(i) = e(i) + e_lr_hf
         !--------
         do g_i_ = 1, g_p_
             g_e(g_i_, i) = cevau * g_e(g_i_, i)
-        end do
+        enddo
         e(i) = e(i) * cevau
         !--------
         !
-    end do
+    enddo
     !
 end subroutine prepot11
 
@@ -982,10 +963,9 @@ subroutine prepot12
         d4_b = (-dble(ng1)) * (1.0d0 / g1r)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_r(g_i_,i,1)
-        end do
+        enddo
         d1_w = (-dble(ng1)) * (r(i,1) / g1r - 1.0d0)
-
-        if (  ng1 .ne. 0 ) then
+        if( ng1 .ne. 0 )then
             d3_v = (r(i,1) / g1r) ** ( ng1-1)
             d2_p = ng1 *  d3_v
             d3_v = d3_v * (r(i,1) / g1r)
@@ -993,7 +973,7 @@ subroutine prepot12
             !            Maybe this should be  d3_v = (r(i, 1) / g1r) **  ng1
             d3_v = 1.0d0
             d2_p = 0.0d0
-        end if
+        endif
         d4_v = g1a * d3_v
         d6_v = exp(d1_w)
         d1_p = d6_v
@@ -1001,17 +981,16 @@ subroutine prepot12
         d7_b = d6_v * g1a * d2_p * (1.0d0 / g1r)
         do g_i_ = 1, g_p_
             g_g1(g_i_) = d4_b * g_d1_w(g_i_) + d7_b * g_r(g_i_,i,1)
-        end do
+        enddo
         g1 = d4_v * d6_v
         !--------
         !
         d4_b = (-dble(ng3)) * (1.0d0 / g3r)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_r(g_i_,i,3)
-        end do
+        enddo
         d1_w = (-dble(ng3)) * (r(i,3) / g3r - 1.0d0)
-
-        if (  ng3 .ne. 0 ) then
+        if( ng3 .ne. 0 )then
             d3_v = (r(i,3) / g3r) ** ( ng3-1)
             d2_p = ng3 *  d3_v
             d3_v = d3_v * (r(i,3) / g3r)
@@ -1019,7 +998,7 @@ subroutine prepot12
             !            Maybe this should be  d3_v = (r(i, 3) / g3r) **  ng3
             d3_v = 1.0d0
             d2_p = 0.0d0
-        end if
+        endif
         d4_v = g3a * d3_v
         d6_v = exp(d1_w)
         d1_p = d6_v
@@ -1027,61 +1006,61 @@ subroutine prepot12
         d7_b = d6_v * g3a * d2_p * (1.0d0 / g3r)
         do g_i_ = 1, g_p_
             g_g3(g_i_) = d4_b * g_d1_w(g_i_) + d7_b * g_r(g_i_,i,3)
-        end do
+        enddo
         g3 = d4_v * d6_v
         !--------
         !
         d3_b = 1.0d0 / j2del
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (r(i,2) - j2rho) / j2del
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = 0.5d0 * d1_p
         do g_i_ = 1, g_p_
             g_j2(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         j2 = 0.5d0 * (1.0d0 + d2_v)
         !--------
         d3_b = 1.0d0 / j2pdel
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (r(i,2) - j2prho) / j2pdel
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = 0.5d0 * d1_p
         do g_i_ = 1, g_p_
             g_j2p(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         j2p = 0.5d0 * (1.0d0 + d2_v)
         !--------
         !
         d3_b = 1.0d0 / h1del
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,1)
-        end do
+        enddo
         d1_w = (r(i,1) - h1rho) / h1del
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_h1(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         h1 = 0.5d0 * (1.0d0 - d2_v)
         !--------
         d3_b = 1.0d0 / h3del
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,3)
-        end do
+        enddo
         d1_w = (r(i,3) - h3rho) / h3del
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_h3(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         h3 = 0.5d0 * (1.0d0 - d2_v)
         !--------
         !
@@ -1096,42 +1075,42 @@ subroutine prepot12
         do g_i_ = 1, g_p_
             g_e(g_i_, i) = (-d9_v) * g_h1(g_i_) + d8_b * g_j2p(g_i_) + d7_b * g_g3(g_i_) + (-d3_v) * g_h3(g_i_) + &
                 & d13_b * g_j2(g_i_) + d12_b * g_g1(g_i_)
-        end do
+        enddo
         e(i) = d3_v * d5_v + d9_v * d11_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_gc(g_i_) = g_r(g_i_,i,2)
-        end do
+        enddo
         gc = r(i,2) - gcrho
         !--------
         d2_b = 1.0d0 / gcdel
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d2_b * g_gc(g_i_)
-        end do
+        enddo
         d1_w = gc / gcdel
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_cut2(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         cut2 = 0.5d0 - 0.5d0 * d2_v
         !--------
         !
         do g_i_ = 1, g_p_
             g_e(g_i_, i) = e(i) * g_cut2(g_i_) + cut2 * g_e(g_i_, i)
-        end do
+        enddo
         e(i) = e(i) * cut2
         !--------
         !
         do g_i_ = 1, g_p_
             g_e(g_i_, i) = cevau * g_e(g_i_, i)
-        end do
+        enddo
         e(i) = e(i) * cevau
         !--------
         !
-    end do
+    enddo
 end subroutine prepot12
 
 !
@@ -1367,13 +1346,13 @@ subroutine prepot22
         d11_b = d2_b * d3_p
         do g_i_ = 1, g_p_
             g_costhetahf(g_i_) = d6_b * g_r(g_i_,i,1) + d5_b * g_r(g_i_,i,2) + d11_b * g_r(g_i_,i,3)
-        end do
+        enddo
         costhetahf = d11_v
         !--------
         d2_b = mass(3) / (mass(2) + mass(3))
         do g_i_ = 1, g_p_
             g_temp(g_i_) = d2_b * g_r(g_i_,i,2)
-        end do
+        enddo
         temp = mass(3) / (mass(2) + mass(3)) * r(i,2)
         !--------
         !     Li-FH Jacobi distance
@@ -1387,10 +1366,9 @@ subroutine prepot22
         d8_b = (-costhetahf) * temp * 2.d0 + d2_p
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-d7_v) * g_costhetahf(g_i_) + d7_b * g_temp( g_i_) + d8_b * g_r(g_i_,i,1)
-        end do
+        enddo
         d1_w = d2_v + d4_v - d7_v * costhetahf
         d2_v = sqrt(d1_w)
-
         !          if ( d1_w .gt. 0.0d0 ) then
         d1_p = 1.0d0 / (2.0d0 *  d2_v)
         !          else
@@ -1400,7 +1378,7 @@ subroutine prepot22
         !          endif
         do g_i_ = 1, g_p_
             g_bigrhf(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         bigrhf = d2_v
         !--------
         !     cosine of HF Jacobi angle (i.e., Li--HF angle)
@@ -1420,15 +1398,14 @@ subroutine prepot22
         d12_b = d7_b * d3_p
         do g_i_ = 1, g_p_
             g_coschihf(g_i_) = d5_b * g_temp(g_i_) + d6_b * g_bigrhf(g_i_) + d12_b * g_r(g_i_,i,1)
-        end do
+        enddo
         coschihf = d12_v
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = 0.0d0
-        end do
+        enddo
         d1_w = -1.d0
         d3_v = max (d1_w, coschihf)
-
         !          if (d1_w .gt.  coschihf) then
         !             d1_p = 1.0d0
         !             d2_p = 0.0d0
@@ -1443,11 +1420,10 @@ subroutine prepot22
         !          endif
         do g_i_ = 1, g_p_
             g_coschihf(g_i_) = d2_p * g_coschihf(g_i_) + d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         coschihf = d3_v
         !--------
         d2_v = min (1.d0, coschihf)
-
         !          if (1.d0 .lt.  coschihf) then
         !             d1_p = 1.0d0
         !             d2_p = 0.0d0
@@ -1462,7 +1438,7 @@ subroutine prepot22
         !          endif
         do g_i_ = 1, g_p_
             g_coschihf(g_i_) = d2_p * g_coschihf(g_i_)
-        end do
+        enddo
         coschihf = d2_v
         !--------
         !
@@ -1483,13 +1459,13 @@ subroutine prepot22
         d11_b = d2_b * d3_p
         do g_i_ = 1, g_p_
             g_costhetalif(g_i_) = d6_b * g_r(g_i_,i,3) + d5_b * g_r(g_i_,i,2) + d11_b * g_r(g_i_,i,1)
-        end do
+        enddo
         costhetalif = d11_v
         !--------
         d2_b = mass(1) / (mass(1) + mass(3))
         do g_i_ = 1, g_p_
             g_temp(g_i_) = d2_b * g_r(g_i_,i,3)
-        end do
+        enddo
         temp = mass(1) / (mass(1) + mass(3)) * r(i,3)
         !--------
         !     H-LiF Jacobi distance
@@ -1503,10 +1479,9 @@ subroutine prepot22
         d8_b = (-costhetalif) * temp * 2.d0 + d2_p
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-d7_v) * g_costhetalif(g_i_) + d7_b * g_temp (g_i_) + d8_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = d2_v + d4_v - d7_v * costhetalif
         d2_v = sqrt(d1_w)
-
         !          if ( d1_w .gt. 0.0d0 ) then
         d1_p = 1.0d0 / (2.0d0 *  d2_v)
         !          else
@@ -1516,7 +1491,7 @@ subroutine prepot22
         !          endif
         do g_i_ = 1, g_p_
             g_bigrlif(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         bigrlif = d2_v
         !--------
         !     cosine of LiF Jacobi angle (i.e., H--LiF angle)
@@ -1536,11 +1511,10 @@ subroutine prepot22
         d12_b = d7_b * d3_p
         do g_i_ = 1, g_p_
             g_coschilif(g_i_) = d5_b * g_temp(g_i_) + d6_b * g_bigrlif(g_i_) + d12_b * g_r(g_i_,i,2)
-        end do
+        enddo
         coschilif = d12_v
         !--------
         d2_v = min (1.d0, coschilif)
-
         !             if (1.d0 .lt.  coschilif) then
         !                d1_p = 1.0d0
         !                d2_p = 0.0d0
@@ -1555,15 +1529,14 @@ subroutine prepot22
         !                endif
         do g_i_ = 1, g_p_
             g_coschilif(g_i_) = d2_p * g_coschilif(g_i_)
-        end do
+        enddo
         coschilif = d2_v
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = 0.0d0
-        end do
+        enddo
         d1_w = -1.d0
         d3_v = max (d1_w, coschilif)
-
         !             if (d1_w .gt.  coschilif) then
         !                d1_p = 1.0d0
         !                d2_p = 0.0d0
@@ -1578,7 +1551,7 @@ subroutine prepot22
         !                endif
         do g_i_ = 1, g_p_
             g_coschilif(g_i_) = d2_p * g_coschilif(g_i_) + d1_p * g_d1_w (g_i_)
-        end do
+        enddo
         coschilif = d3_v
         !--------
         !     squared!
@@ -1586,27 +1559,27 @@ subroutine prepot22
         d1_p = 2.0d0 * r(i,1)
         do g_i_ = 1, g_p_
             g_r1s(g_i_) = d1_p * g_r(g_i_,i,1)
-        end do
+        enddo
         r1s = d2_v
         !--------
         d2_v = r(i,2) * r(i,2)
         d1_p = 2.0d0 * r(i,2)
         do g_i_ = 1, g_p_
             g_r2s(g_i_) = d1_p * g_r(g_i_,i,2)
-        end do
+        enddo
         r2s = d2_v
         !--------
         d2_v = r(i,3) * r(i,3)
         d1_p = 2.0d0 * r(i,3)
         do g_i_ = 1, g_p_
             g_r3s(g_i_) = d1_p * g_r(g_i_,i,3)
-        end do
+        enddo
         r3s = d2_v
         !--------
         !     Li-F-H bondangle
         do g_i_ = 1, g_p_
             g_cs(g_i_) = -g_r1s(g_i_) + g_r2s(g_i_) + g_r3s(g_i_)
-        end do
+        enddo
         cs = r3s + r2s - r1s
         !--------
         d3_v = 2.0d0 * r(i,2)
@@ -1618,11 +1591,10 @@ subroutine prepot22
         d6_b = d3_b * r(i,3) * 2.0d0
         do g_i_ = 1, g_p_
             g_cs(g_i_) = d5_b * g_r(g_i_,i,3) + d6_b * g_r(g_i_,i,2) + d2_b * g_cs(g_i_)
-        end do
+        enddo
         cs = d6_v
         !--------
         d2_v = min (cs, 1.0d0)
-
         !          if (cs .lt.  1.0d0) then
         d1_p = 1.0d0
         d2_p = 0.0d0
@@ -1637,15 +1609,14 @@ subroutine prepot22
         !          endif
         do g_i_ = 1, g_p_
             g_cs(g_i_) = d1_p * g_cs(g_i_)
-        end do
+        enddo
         cs = d2_v
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = 0.0d0
-        end do
+        enddo
         d1_w = -1.0d0
         d3_v = max (cs, d1_w)
-
         !          if (cs .gt.  d1_w) then
         d1_p = 1.0d0
         d2_p = 0.0d0
@@ -1660,7 +1631,7 @@ subroutine prepot22
         !          endif
         do g_i_ = 1, g_p_
             g_cs(g_i_) = d2_p * g_d1_w(g_i_) + d1_p * g_cs(g_i_)
-        end do
+        enddo
         cs = d3_v
         !--------
         !
@@ -1668,13 +1639,13 @@ subroutine prepot22
         !     The LiH singlet
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-belihc) * g_r(g_i_,i,1)
-        end do
+        enddo
         d1_w = (-belihc) * (r(i,1) - relih)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xelih(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xelih = d2_v
         !--------
         d2_v = xelih * xelih
@@ -1682,55 +1653,55 @@ subroutine prepot22
         d4_b = s1c2 + s1c1 * d1_p
         do g_i_ = 1, g_p_
             g_s1(g_i_) = d4_b * g_xelih(g_i_)
-        end do
+        enddo
         s1 = s1c1 * d2_v + s1c2 * xelih
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-bes1) * g_r(g_i_,i,1)
-        end do
+        enddo
         d1_w = (-bes1) * (r(i,1) - relih)
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = s1c3 * d1_p
         do g_i_ = 1, g_p_
             g_s1c(g_i_) = d3_b * g_d1_w(g_i_)
-        end do
+        enddo
         s1c = s1c3 * d2_v
         !--------
         do g_i_ = 1, g_p_
             g_r1r3(g_i_) = r1r3al * g_r(g_i_,i,2) + (-g_r(g_i_,i,3)) + g_r(g_i_,i,1)
-        end do
+        enddo
         r1r3 = r(i,1) - r(i,3) + r1r3al * r(i,2)
         !--------
         d3_b = 1.0d0 / rcut2del
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r1r3(g_i_)
-        end do
+        enddo
         d1_w = (r1r3 - rcut2rho) / rcut2del
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_rcut2(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         rcut2 = 0.5d0 * (1.0d0 - d2_v)
         !--------
         do g_i_ = 1, g_p_
             g_s1(g_i_) = rcut2 * g_s1c(g_i_) + s1c * g_rcut2(g_i_) + g_s1(g_i_)
-        end do
+        enddo
         s1 = s1 + rcut2 * s1c
         !--------
         !
         !     The LiH triplet
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-bet1) * g_r(g_i_,i,1)
-        end do
+        enddo
         d1_w = (-bet1) * (r(i,1) - reliht)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xelih(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xelih = d2_v
         !--------
         d2_v = xelih * xelih
@@ -1738,14 +1709,14 @@ subroutine prepot22
         d4_b = t1c2 + t1c1 * d1_p
         do g_i_ = 1, g_p_
             g_t1(g_i_) = d4_b * g_xelih(g_i_)
-        end do
+        enddo
         t1 = t1c1 * d2_v + t1c2 * xelih
         !--------
         !
         !     The HF singlet
         do g_i_ = 1, g_p_
             g_yhf(g_i_) = g_r(g_i_,i,2)
-        end do
+        enddo
         yhf = r(i,2) - 2.1042d0
         !--------
         d4_v = yhf * yhf
@@ -1753,19 +1724,19 @@ subroutine prepot22
         d5_b = 0.059062d0 * d1_p + (-0.025647d0)
         do g_i_ = 1, g_p_
             g_behf(g_i_) = d5_b * g_yhf(g_i_)
-        end do
+        enddo
         behf = 1.1622d0 - 0.025647d0 * yhf + 0.059062d0 * d4_v
         !--------
         d4_v = r(i,2) - rehf
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-behf) * g_r(g_i_,i,2) + (-d4_v) * g_behf( g_i_)
-        end do
+        enddo
         d1_w = (-behf) * d4_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xehfa(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xehfa = d2_v
         !--------
         !
@@ -1774,25 +1745,25 @@ subroutine prepot22
         d5_b = d2_v + d3_v * dehf
         do g_i_ = 1, g_p_
             g_s2(g_i_) = d5_b * g_xehfa(g_i_)
-        end do
+        enddo
         s2 = d2_v * d3_v + uli2p
         !--------
         d3_b = 1.0d0 / 0.5d0
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (r(i,2) - 3.d0) / 0.5d0
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_s2cut(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         s2cut = 0.5d0 - 0.5d0 * d2_v
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-s2cc_b) * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (-s2cc_b) * (r(i,2) - s2cc_r)
         d2_v = exp(d1_w)
         d2_p = d2_v
@@ -1801,33 +1772,33 @@ subroutine prepot22
         d6_b = (-(s2cc_d * d1_p)) * d2_p
         do g_i_ = 1, g_p_
             g_s2cc(g_i_) = d6_b * g_d1_w(g_i_)
-        end do
+        enddo
         s2cc = s2cc_d * d4_v - s2cc_d
         !--------
         d3_v = s2 - s2cc
         d2_b = 1.0d0 + (-s2cut)
         do g_i_ = 1, g_p_
             g_s2(g_i_) = d3_v * g_s2cut(g_i_) + s2cut * g_s2(g_i_) + d2_b * g_s2cc(g_i_)
-        end do
+        enddo
         s2 = s2cc + d3_v * s2cut
         !--------
         !
         d5_b = dehfc * 0.5d0
         do g_i_ = 1, g_p_
             g_dehfm(g_i_) = d5_b * g_cs(g_i_)
-        end do
+        enddo
         dehfm = dehf - (dehfcc + dehfc * 0.5d0 * (1.0d0 - cs))
         !--------
         d4_v = r(i,2) - rehf
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-behf) * g_r(g_i_,i,2) + (-d4_v) * g_behf( g_i_)
-        end do
+        enddo
         d1_w = (-behf) * d4_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xehfm(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xehfm = d2_v
         !--------
         !
@@ -1837,32 +1808,32 @@ subroutine prepot22
         d5_b = d3_v + d4_v * dehfm
         do g_i_ = 1, g_p_
             g_s2m(g_i_) = d5_b * g_xehfm(g_i_) + d6_b * g_dehfm(g_i_)
-        end do
+        enddo
         s2m = d3_v * d4_v + uli2p
         !--------
         d3_b = 1.0d0 / 0.5d0
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (r(i,2) - 2.2d0) / 0.5d0
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_s2cut(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         s2cut = 0.5d0 - 0.5d0 * d2_v
         !--------
         do g_i_ = 1, g_p_
             g_s2m(g_i_) = s2m * g_s2cut(g_i_) + s2cut * g_s2m(g_i_)
-        end do
+        enddo
         s2m = s2m * s2cut
         !--------
         !
         d3_b = 1.0d0 / s2alp
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,3)
-        end do
+        enddo
         d1_w = (r(i,3) - s2rho) / s2alp
         d4_v = (s2 - s2m) * 0.5d0
         d6_v = tanh (d1_w)
@@ -1873,31 +1844,31 @@ subroutine prepot22
         d2_b = 1.0d0 + (-d8_b)
         do g_i_ = 1, g_p_
             g_s2(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_s2(g_i_) + d2_b * g_s2m(g_i_)
-        end do
+        enddo
         s2 = s2m + d4_v * d7_v
         !--------
         !
         !     The HF triplet
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-bet2) * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (-bet2) * (r(i,2) - rehft)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xehfa(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xehfa = d2_v
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-bet2_180) * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (-bet2_180) * (r(i,2) - rehft)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xehfa_180(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xehfa_180 = d2_v
         !--------
         !
@@ -1916,7 +1887,7 @@ subroutine prepot22
         d17_b = d14_b * t2a2 + d14_b * t2a1 * d2_p
         do g_i_ = 1, g_p_
             g_t2(g_i_) = d10_b * g_xehfa_180(g_i_) + d6_b * g_cs(g_i_) + d17_b * g_xehfa(g_i_)
-        end do
+        enddo
         t2 = d6_v * d8_v + d15_v * d16_v
         !--------
         !
@@ -1927,21 +1898,21 @@ subroutine prepot22
         d7_b = (-d6_v) / d5_v * d1_p * 7.0489d0 + 1.0d0 / d5_v * 103.57d0
         do g_i_ = 1, g_p_
             g_belif(g_i_) = d7_b * g_r(g_i_,i,3)
-        end do
+        enddo
         belif = d6_v + 0.064076d0
         !--------
         !
         d3_b = 1.0d0 / gdel
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (r(i,2) - grho) / gdel
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_gswt(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         gswt = 0.5d0 - 0.5d0 * d2_v
         !--------
         d2_v = gswt * 0.5d0
@@ -1949,19 +1920,18 @@ subroutine prepot22
         d5_b = d4_v * 0.5d0
         do g_i_ = 1, g_p_
             g_gswt(g_i_) = d2_v * g_cs(g_i_) + d5_b * g_gswt(g_i_)
-        end do
+        enddo
         gswt = d2_v * d4_v
         !--------
         d3_v = belifff - belif
         d2_b = 1.0d0 + (-gswt)
         do g_i_ = 1, g_p_
             g_beliff(g_i_) = d3_v * g_gswt(g_i_) + d2_b * g_belif(g_i_)
-        end do
+        enddo
         beliff = belif + gswt * d3_v
         !--------
         !
-
-        if (  nb .ne. 0 ) then
+        if( nb .ne. 0 )then
             d5_v = (r(i,3) / gam) ** ( nb-1)
             d2_p = nb *  d5_v
             d5_v = d5_v * (r(i,3) / gam)
@@ -1969,10 +1939,9 @@ subroutine prepot22
             !            Maybe this should be  d5_v = (r(i, 3) / gam) **  nb
             d5_v = 1.0d0
             d2_p = 0.0d0
-        end if
+        endif
         d6_v = belif + d5_v
-
-        if (  nb .ne. 0 ) then
+        if( nb .ne. 0 )then
             d9_v = (r(i,3) / gam) ** ( nb-1)
             d1_p = nb *  d9_v
             d9_v = d9_v * (r(i,3) / gam)
@@ -1980,7 +1949,7 @@ subroutine prepot22
             !            Maybe this should be  d9_v = (r(i, 3) / gam) **  nb
             d9_v = 1.0d0
             d1_p = 0.0d0
-        end if
+        endif
         d10_v = beliff + d9_v
         d11_v = beliff * d6_v / d10_v
         d2_b  = 1.0d0 / d10_v
@@ -1990,20 +1959,20 @@ subroutine prepot22
         d7_b  = d3_b * d1_p * (1.0d0 / gam) + d8_b * d2_p * (1.0d0 / gam)
         do g_i_ = 1, g_p_
             g_belifmod(g_i_) = d7_b * g_r(g_i_,i,3) + d8_b * g_belif(g_i_) + d4_b * g_beliff(g_i_)
-        end do
+        enddo
         belifmod = d11_v
         !--------
         !
         d4_v = r(i,3) - relif
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-belifmod) * g_r(g_i_,i,3) + (-d4_v) * g_belifmod(g_i_)
-        end do
+        enddo
         d1_w = (-belifmod) * d4_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xelif(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xelif = d2_v
         !--------
         d2_v = (delif + uli2p) * xelif
@@ -2011,71 +1980,71 @@ subroutine prepot22
         d5_b = d2_v + d3_v * (delif + uli2p)
         do g_i_ = 1, g_p_
             g_s3a(g_i_) = d5_b * g_xelif(g_i_)
-        end do
+        enddo
         s3a = d2_v * d3_v + uli2p
         !--------
         d3_b = 1.0d0 / 0.5d0
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,3)
-        end do
+        enddo
         d1_w = (r(i,3) - 13.d0) / 0.5d0
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_s3cut(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         s3cut = 0.5d0 - 0.5d0 * d2_v
         !--------
         do g_i_ = 1, g_p_
             g_s3a(g_i_) = s3a * g_s3cut(g_i_) + s3cut * g_s3a(g_i_)
-        end do
+        enddo
         s3a = s3a * s3cut
         !--------
         !
         d3_b = 1.0d0 / swit_a
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (r(i,2) - swit_r) / swit_a
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d5_b = (1.d0 - swit_d) * 0.5d0 * d1_p
         do g_i_ = 1, g_p_
             g_swit(g_i_) = d5_b * g_d1_w(g_i_)
-        end do
+        enddo
         swit = swit_d + (1.d0 - swit_d) * 0.5d0 * (1.d0 + d2_v)
         !--------
         do g_i_ = 1, g_p_
             g_s3a(g_i_) = s3a * g_swit(g_i_) + swit * g_s3a(g_i_)
-        end do
+        enddo
         s3a = s3a * swit
         !--------
         !
         d5_b = delifc2 * 0.5d0 + (-(delifc1 * 0.5d0))
         do g_i_ = 1, g_p_
             g_delifm(g_i_) = d5_b * g_cs(g_i_)
-        end do
+        enddo
         delifm = delifc1 * 0.5d0 * (1.0d0 - cs) + delifc2 * 0.5d0 * (1.0d0 + cs)
         !--------
         !
         d5_b = belifc2 * 0.5d0 + (-(belifc1 * 0.5d0))
         do g_i_ = 1, g_p_
             g_belifm(g_i_) = d5_b * g_cs(g_i_)
-        end do
+        enddo
         belifm = belifc1 * 0.5d0 * (1.0d0 - cs) + belifc2 * 0.5d0 * (1.0d0 + cs)
         !--------
         !
         d4_v = r(i,3) - relif
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-belifm) * g_r(g_i_,i,3) + (-d4_v) * g_belifm(g_i_)
-        end do
+        enddo
         d1_w = (-belifm) * d4_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xelif(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xelif = d2_v
         !--------
         d2_v = delifm + uli2p
@@ -2085,26 +2054,26 @@ subroutine prepot22
         d6_b = d5_v * xelif
         do g_i_ = 1, g_p_
             g_s3c(g_i_) = d4_b * g_xelif(g_i_) + d6_b * g_delifm(g_i_)
-        end do
+        enddo
         s3c = d4_v * d5_v
         !--------
         !
         d4_b = -((rho2_180 - rho2_0) * 0.5d0)
         do g_i_ = 1, g_p_
             g_rho2(g_i_) = d4_b * g_cs(g_i_)
-        end do
+        enddo
         rho2 = rho2_0 + (rho2_180 - rho2_0) * 0.5d0 * (1.0d0 - cs)
         !--------
         d4_b = -((theta2_180 - theta2_0) * 0.5d0)
         do g_i_ = 1, g_p_
             g_theta2(g_i_) = d4_b * g_cs(g_i_)
-        end do
+        enddo
         theta2 = theta2_0 + (theta2_180 - theta2_0) * 0.5d0 * (1.0d0 - cs)
         !--------
         d4_b = -((del2_180 - del2_0) * 0.5d0)
         do g_i_ = 1, g_p_
             g_del2(g_i_) = d4_b * g_cs(g_i_)
-        end do
+        enddo
         del2 = del2_0 + (del2_180 - del2_0) * 0.5d0 * (1.0d0 - cs)
         !--------
         !
@@ -2118,7 +2087,7 @@ subroutine prepot22
         do g_i_ = 1, g_p_
             g_gc2(g_i_) = d6_v * g_r(g_i_,i,3) + (-d6_v) * g_rho2(g_i_ ) + (-d2_v) * g_r(g_i_,i,2) + d8_b * &
                 & g_theta2(g_i_)
-        end do
+        enddo
         gc2 = d2_v * d4_v - d6_v * d9_v
         !--------
         d3_v = gc2 / del2
@@ -2126,14 +2095,14 @@ subroutine prepot22
         d3_b = (-d3_v) / del2
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_del2(g_i_) + d2_b * g_gc2(g_i_)
-        end do
+        enddo
         d1_w = d3_v
         d2_v = tanh (d1_w)
         d1_p = 1.0d0 - ( d2_v *  d2_v)
         d4_b = (-0.5d0) * d1_p
         do g_i_ = 1, g_p_
             g_cut2(g_i_) = d4_b * g_d1_w(g_i_)
-        end do
+        enddo
         cut2 = 0.5d0 - 0.5d0 * d2_v
         !--------
         !
@@ -2141,31 +2110,31 @@ subroutine prepot22
         d2_b = 1.0d0 + (-cut2)
         do g_i_ = 1, g_p_
             g_s3(g_i_) = d3_v * g_cut2(g_i_) + cut2 * g_s3a(g_i_) + d2_b * g_s3c(g_i_)
-        end do
+        enddo
         s3 = s3c + d3_v * cut2
         !--------
         !
         !     The LiF triplet
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-bet3) * g_r(g_i_,i,3)
-        end do
+        enddo
         d1_w = (-bet3) * (r(i,3) - relif)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xelif(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xelif = d2_v
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-bet3_180) * g_r(g_i_,i,3)
-        end do
+        enddo
         d1_w = (-bet3_180) * (r(i,3) - relif)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_xelif_180(g_i_) = d1_p * g_d1_w(g_i_)
-        end do
+        enddo
         xelif_180 = d2_v
         !--------
         d2_v  = xelif * xelif
@@ -2183,39 +2152,39 @@ subroutine prepot22
         d17_b = d14_b * t3a2 + d14_b * t3a1 * d2_p
         do g_i_ = 1, g_p_
             g_t3(g_i_) = d10_b * g_xelif_180(g_i_) + d6_b * g_cs(g_i_) + d17_b * g_xelif(g_i_)
-        end do
+        enddo
         t3 = d6_v * d8_v + d15_v * d16_v
         !--------
         !
         !     LEPS
         do g_i_ = 1, g_p_
             g_coul1(g_i_) = 0.5d0 * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
-        end do
+        enddo
         coul1 = 0.5d0 * (s1 + t1)
         !--------
         do g_i_ = 1, g_p_
             g_coul2(g_i_) = 0.5d0 * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
-        end do
+        enddo
         coul2 = 0.5d0 * (s2 + t2)
         !--------
         do g_i_ = 1, g_p_
             g_coul3(g_i_) = 0.5d0 * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
-        end do
+        enddo
         coul3 = 0.5d0 * (s3 + t3)
         !--------
         do g_i_ = 1, g_p_
             g_exch1(g_i_) = (-0.5d0) * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
-        end do
+        enddo
         exch1 = 0.5d0 * (s1 - t1)
         !--------
         do g_i_ = 1, g_p_
             g_exch2(g_i_) = (-0.5d0) * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
-        end do
+        enddo
         exch2 = 0.5d0 * (s2 - t2)
         !--------
         do g_i_ = 1, g_p_
             g_exch3(g_i_) = (-0.5d0) * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
-        end do
+        enddo
         exch3 = 0.5d0 * (s3 - t3)
         !--------
         d4_v  = (exch1 - exch2) * (exch1 - exch2)
@@ -2229,28 +2198,27 @@ subroutine prepot22
         d10_b = d2_p + (-d3_p)
         do g_i_ = 1, g_p_
             g_w(g_i_) = d5_b * g_exch3(g_i_) + d10_b * g_exch2(g_i_) + d6_b * g_exch1(g_i_)
-        end do
+        enddo
         w = d4_v + d7_v + d10_v
         !--------
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = (-c2c) * g_r(g_i_,i,3) + (-c2c) * g_r(g_i_,i,2) + (-c2c) * g_r(g_i_,i,1) + (-c2b) * g_w(g_i_)
-        end do
+        enddo
         d1_w = (-c2b) * w - c2c * (r(i,1) + r(i,2) + r(i,3))
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = c2a * d1_p
         do g_i_ = 1, g_p_
             g_cplg2(g_i_) = d3_b * g_d1_w(g_i_)
-        end do
+        enddo
         cplg2 = c2a * d2_v
         !--------
         d4_b = cplg2 + cplg2
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_cplg2(g_i_) + g_w(g_i_)
-        end do
+        enddo
         d1_w = w + cplg2 * cplg2
         d7_v = sqrt(d1_w)
-
         !          if ( d1_w .gt. 0.0d0 ) then
         d1_p = 1.0d0 / (2.0d0 *  d7_v)
         !          else
@@ -2261,7 +2229,7 @@ subroutine prepot22
         d6_b = (-(1.0d0 / dsqrt(2.0d0))) * d1_p
         do g_i_ = 1, g_p_
             g_e(g_i_, i) = d6_b * g_d1_w(g_i_) + g_coul3(g_i_) + g_coul2 (g_i_) + g_coul1(g_i_)
-        end do
+        enddo
         e(i) = coul1 + coul2 + coul3 - d7_v / dsqrt(2.0d0) + dehf
         !--------
         !
@@ -2270,23 +2238,22 @@ subroutine prepot22
         d4_b = (-hfdip_a) * cauang
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (-hfdip_a) * (r(i,2) * cauang - hfdip_re)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_hfdip_y(g_i_) = (-d1_p) * g_d1_w(g_i_)
-        end do
+        enddo
         hfdip_y = 1.d0 - d2_v
         !--------
         do g_i_ = 1, g_p_
             g_hfdip(g_i_) = 0.0d0
-        end do
+        enddo
         hfdip = 0.d0
         !--------
         do j = 1, 11
             d3_v = dble(j - 1)
-
             !            if ( hfdip_y .ne. 0.0d0 ) then
             d4_v = hfdip_y ** ( d3_v - 2.0d0)
             d4_v = d4_v * hfdip_y
@@ -2313,13 +2280,13 @@ subroutine prepot22
             d5_b = hfdip_m(j) * d1_p
             do g_i_ = 1, g_p_
                 g_hfdip(g_i_) = d5_b * g_hfdip_y(g_i_) + g_hfdip(g_i_)
-            end do
+            enddo
             hfdip = hfdip + hfdip_m(j) * d4_v
             !--------
-        end do
+        enddo
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = 20.d0 * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = 20.d0 * (r(i,2) - 1.2d0)
         d2_v = hfdip * 0.5d0
         d4_v = tanh (d1_w)
@@ -2329,7 +2296,7 @@ subroutine prepot22
         d6_b = d5_v * 0.5d0
         do g_i_ = 1, g_p_
             g_hfdip(g_i_) = d5_b * g_d1_w(g_i_) + d6_b * g_hfdip(g_i_)
-        end do
+        enddo
         hfdip = d2_v * d5_v
         !--------
         !
@@ -2341,7 +2308,7 @@ subroutine prepot22
         d5_b = hfpolpar * d1_p + (-hfpolperp) * d2_p
         do g_i_ = 1, g_p_
             g_hfpol(g_i_) = d5_b * g_coschihf(g_i_)
-        end do
+        enddo
         hfpol = hfpolperp * (1.d0 - d2_v) + hfpolpar * d5_v
         !--------
         hfpolavg = 2.d0 * hfpolperp / 3.d0 + hfpolpar / 3.d0
@@ -2350,23 +2317,22 @@ subroutine prepot22
         d4_b = (-hfqua_a) * cauang
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = (-hfqua_a) * (r(i,2) * cauang - hfqua_re)
         d2_v = exp(d1_w)
         d1_p = d2_v
         do g_i_ = 1, g_p_
             g_hfqua_y(g_i_) = (-d1_p) * g_d1_w(g_i_)
-        end do
+        enddo
         hfqua_y = 1.d0 - d2_v
         !--------
         do g_i_ = 1, g_p_
             g_hfqua(g_i_) = 0.0d0
-        end do
+        enddo
         hfqua = 0.d0
         !--------
         do j = 1, 10
             d3_v = dble(j - 1)
-
             !            if ( hfqua_y .ne. 0.0d0 ) then
             d4_v = hfqua_y ** ( d3_v - 2.0d0)
             d4_v = d4_v * hfqua_y
@@ -2393,13 +2359,13 @@ subroutine prepot22
             d5_b = hfqua_m(j) * d1_p
             do g_i_ = 1, g_p_
                 g_hfqua(g_i_) = d5_b * g_hfqua_y(g_i_) + g_hfqua(g_i_)
-            end do
+            enddo
             hfqua = hfqua + hfqua_m(j) * d4_v
             !--------
-        end do
+        enddo
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = 20.d0 * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = 20.d0 * (r(i,2) - 1.2d0)
         d2_v = hfqua * 0.5d0
         d4_v = tanh (d1_w)
@@ -2409,14 +2375,14 @@ subroutine prepot22
         d6_b = d5_v * 0.5d0
         do g_i_ = 1, g_p_
             g_hfqua(g_i_) = d5_b * g_d1_w(g_i_) + d6_b * g_hfqua(g_i_)
-        end do
+        enddo
         hfqua = d2_v * d5_v
         !--------
         !
         ! LiF DIPOLE
         do g_i_ = 1, g_p_
             g_lifdip_y(g_i_) = g_r(g_i_,i,3)
-        end do
+        enddo
         lifdip_y = r(i,3) - lifdip_4
         !--------
         d2_v = lifdip_y ** ( 8 - 2)
@@ -2426,7 +2392,7 @@ subroutine prepot22
         d4_b = lifdip_3 + lifdip_2 * d1_p
         do g_i_ = 1, g_p_
             g_lifdip_beta(g_i_) = d4_b * g_lifdip_y(g_i_)
-        end do
+        enddo
         lifdip_beta = lifdip_1 + lifdip_2 * d2_v + lifdip_3 * lifdip_y
         !--------
         d5_v = (r(i,3) - lifdip_re) * (r(i,3) - lifdip_re)
@@ -2434,14 +2400,14 @@ subroutine prepot22
         d5_b = (-lifdip_beta) * d1_p
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d5_b * g_r(g_i_,i,3) + (-d5_v) * g_lifdip_beta(g_i_)
-        end do
+        enddo
         d1_w = (-lifdip_beta) * d5_v
         d2_v = exp(d1_w)
         d1_p = d2_v
         d3_b = lifdip_d * d1_p
         do g_i_ = 1, g_p_
             g_lifdip(g_i_) = d3_b * g_d1_w(g_i_)
-        end do
+        enddo
         lifdip = lifdip_d * d2_v
         !--------
         !
@@ -2453,7 +2419,7 @@ subroutine prepot22
         d5_b = li2ppolpar * d1_p + (-li2ppolperp) * d2_p
         do g_i_ = 1, g_p_
             g_li2ppol(g_i_) = d5_b * g_coschihf(g_i_)
-        end do
+        enddo
         li2ppol = li2ppolperp * (1.d0 - d2_v) + li2ppolpar * d5_v
         !--------
         li2ppolavg = 2.d0 * li2ppolperp / 3.d0 + li2ppolpar / 3.d0
@@ -2471,7 +2437,7 @@ subroutine prepot22
         d10_b = d9_v * li2ppol * (-0.5d0) * 3.d0 * d2_p
         do g_i_ = 1, g_p_
             g_hf_did(g_i_) = d4_b * g_hfdip(g_i_) + d6_b * g_li2ppol(g_i_) + d10_b * g_coschihf(g_i_)
-        end do
+        enddo
         hf_did = d7_v * d9_v
         !--------
         d3_v = bigrhf ** ( 7 - 2)
@@ -2486,7 +2452,7 @@ subroutine prepot22
         d3_b = d6_v + d4_b * ((-d5_v) / d4_v) * d1_p
         do g_i_ = 1, g_p_
             g_hf_did(g_i_) = d3_b * g_bigrhf(g_i_) + d5_b * g_hf_did(g_i_)
-        end do
+        enddo
         hf_did = d6_v * bigrhf
         !--------
         !     cut off angular dependence in interaction region
@@ -2497,7 +2463,7 @@ subroutine prepot22
         d4_b = (-d1_p) * (1.0d0 / rhf0did)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_bigrhf(g_i_)
-        end do
+        enddo
         d1_w  = -d3_v
         d3_v  = coschihf * coschihf
         d2_p  = 2.0d0 * coschihf
@@ -2515,7 +2481,7 @@ subroutine prepot22
         do g_i_ = 1, g_p_
             g_hf_did(g_i_) = d7_b * g_d1_w(g_i_) + d10_b * g_li2ppol(g_i_) + d14_b * g_coschihf(g_i_) + d13_v * &
                 & g_hf_did(g_i_)
-        end do
+        enddo
         hf_did = hf_did * d13_v
         !--------
         !
@@ -2526,7 +2492,7 @@ subroutine prepot22
         d5_b = d2_b * hfpol * ((-1.5d0) * li2pie * hfie)
         do g_i_ = 1, g_p_
             g_hf_disp(g_i_) = d4_b * g_hfpol(g_i_) + d5_b * g_li2ppol(g_i_)
-        end do
+        enddo
         hf_disp = d2_v * hfpol / (li2pie + hfie)
         !--------
         d3_v = bigrhf ** ( 7 - 2)
@@ -2539,7 +2505,7 @@ subroutine prepot22
         d3_b = d5_v + bigrhf * ((-d5_v) / d4_v) * d1_p
         do g_i_ = 1, g_p_
             g_hf_disp(g_i_) = d3_b * g_bigrhf(g_i_) + d4_b * g_hf_disp(g_i_)
-        end do
+        enddo
         hf_disp = d5_v * bigrhf
         !--------
         !     cut off angular dependence in interaction region
@@ -2550,7 +2516,7 @@ subroutine prepot22
         d4_b = (-d1_p) * (1.0d0 / rhf0disp)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_bigrhf(g_i_)
-        end do
+        enddo
         d1_w  = -d3_v
         d3_v  = li2ppolavg * hfpolavg / hfpol
         d5_v  = d3_v / li2ppol
@@ -2565,7 +2531,7 @@ subroutine prepot22
         do g_i_ = 1, g_p_
             g_hf_disp(g_i_) = d7_b * g_d1_w(g_i_) + d10_b * g_li2ppol(g_i_) + d11_b * g_hfpol(g_i_) + d10_v * &
                 & g_hf_disp(g_i_)
-        end do
+        enddo
         hf_disp = hf_disp * d10_v
         !--------
         !
@@ -2578,7 +2544,7 @@ subroutine prepot22
         d8_b = d7_v * li2pqua * (3.d0 / 4.d0)
         do g_i_ = 1, g_p_
             g_hf_qq(g_i_) = d6_b * g_coschihf(g_i_) + d8_b * g_hfqua(g_i_)
-        end do
+        enddo
         hf_qq = d3_v * d7_v
         !--------
         d3_v = bigrhf ** ( 6 - 2)
@@ -2593,7 +2559,7 @@ subroutine prepot22
         d3_b = d6_v + d4_b * ((-d5_v) / d4_v) * d1_p
         do g_i_ = 1, g_p_
             g_hf_qq(g_i_) = d3_b * g_bigrhf(g_i_) + d5_b * g_hf_qq(g_i_)
-        end do
+        enddo
         hf_qq = d6_v * bigrhf
         !--------
         !     cut off angular dependence in interaction region
@@ -2604,7 +2570,7 @@ subroutine prepot22
         d4_b = (-d1_p) * (1.0d0 / rhf0qq)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_bigrhf(g_i_)
-        end do
+        enddo
         d1_w  = -d3_v
         d3_v  = coschihf * coschihf
         d2_p  = 2.0d0 * coschihf
@@ -2618,7 +2584,7 @@ subroutine prepot22
         d12_b = (-(hf_qq * d9_v * ((-d6_v) / d5_v))) * 7.d0 * d2_p
         do g_i_ = 1, g_p_
             g_hf_qq(g_i_) = d7_b * g_d1_w(g_i_) + d12_b * g_coschihf(g_i_) + d11_v * g_hf_qq(g_i_)
-        end do
+        enddo
         hf_qq = hf_qq * d11_v
         !--------
         !
@@ -2627,7 +2593,7 @@ subroutine prepot22
         d5_b = coschihf * li2pqua * (3.d0 / 4.d0)
         do g_i_ = 1, g_p_
             g_hf_dq(g_i_) = d3_v * g_coschihf(g_i_) + d5_b * g_hfdip(g_i_)
-        end do
+        enddo
         hf_dq = d3_v * coschihf
         !--------
         d3_v = bigrhf ** ( 5 - 2)
@@ -2642,7 +2608,7 @@ subroutine prepot22
         d3_b = d6_v + d4_b * ((-d5_v) / d4_v) * d1_p
         do g_i_ = 1, g_p_
             g_hf_dq(g_i_) = d3_b * g_bigrhf(g_i_) + d5_b * g_hf_dq(g_i_)
-        end do
+        enddo
         hf_dq = d6_v * bigrhf
         !--------
         !     cut off angular dependence in interaction region
@@ -2653,27 +2619,27 @@ subroutine prepot22
         d4_b = (-d1_p) * (1.0d0 / rhf0dq)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_bigrhf(g_i_)
-        end do
+        enddo
         d1_w = -d3_v
         d3_v = exp(d1_w)
         d1_p = d3_v
         d4_b = hf_qq * d1_p
         do g_i_ = 1, g_p_
             g_hf_qq(g_i_) = d4_b * g_d1_w(g_i_) + d3_v * g_hf_qq(g_i_)
-        end do
+        enddo
         hf_qq = hf_qq * d3_v
         !--------
         !
         !     SUM FORCES
         do g_i_ = 1, g_p_
             g_e_lr_hf(g_i_) = g_hf_did(g_i_) + g_hf_disp(g_i_) + g_hf_qq (g_i_) + g_hf_dq(g_i_)
-        end do
+        enddo
         e_lr_hf = hf_dq + hf_qq + hf_disp + hf_did
         !--------
         !     cut off at large HF distances
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = r2lrcut_a * g_r(g_i_,i,2)
-        end do
+        enddo
         d1_w = r2lrcut_a * (r(i,2) - r2lrcut_r)
         d2_v = e_lr_hf * 0.5d0
         d4_v = tanh (d1_w)
@@ -2683,7 +2649,7 @@ subroutine prepot22
         d6_b = d5_v * 0.5d0
         do g_i_ = 1, g_p_
             g_e_lr_hf(g_i_) = d5_b * g_d1_w(g_i_) + d6_b * g_e_lr_hf(g_i_)
-        end do
+        enddo
         e_lr_hf = d2_v * d5_v
         !--------
         !
@@ -2698,7 +2664,7 @@ subroutine prepot22
         d9_b = d8_v * hpol * (-0.5d0) * 3.d0 * d2_p
         do g_i_ = 1, g_p_
             g_lif_did(g_i_) = d4_b * g_lifdip(g_i_) + d9_b * g_coschilif (g_i_)
-        end do
+        enddo
         lif_did = d6_v * d8_v
         !--------
         d3_v = bigrlif ** ( 6 - 2)
@@ -2712,7 +2678,7 @@ subroutine prepot22
         d6_b = d2_b * ((-d5_v) / d4_v) * d1_p
         do g_i_ = 1, g_p_
             g_lif_did(g_i_) = d6_b * g_bigrlif(g_i_) + d3_b * g_lif_did( g_i_)
-        end do
+        enddo
         lif_did = d5_v / cevau
         !--------
         !     cut off angular dependence in interaction region
@@ -2723,7 +2689,7 @@ subroutine prepot22
         d4_b = (-d1_p) * (1.0d0 / rlif0did)
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d4_b * g_bigrlif(g_i_)
-        end do
+        enddo
         d1_w  = -d3_v
         d3_v  = coschilif * coschilif
         d2_p  = 2.0d0 * coschilif
@@ -2737,14 +2703,14 @@ subroutine prepot22
         d12_b = lif_did * d9_v * ((-d6_v) / d5_v) * 3.d0 * d2_p
         do g_i_ = 1, g_p_
             g_lif_did(g_i_) = d7_b * g_d1_w(g_i_) + d12_b * g_coschilif( g_i_) + d11_v * g_lif_did(g_i_)
-        end do
+        enddo
         lif_did = lif_did * d11_v
         !--------
         !
         !     DISPERSION
         do g_i_ = 1, g_p_
             g_lif_disp(g_i_) = 0.0d0
-        end do
+        enddo
         lif_disp = (-1.5d0) * lifie * hie * lifpol * hpol / (lifie + hie)
         !--------
         d3_v = bigrlif ** ( 6 - 2)
@@ -2757,7 +2723,7 @@ subroutine prepot22
         d5_b = (-d5_v) / d4_v * d1_p
         do g_i_ = 1, g_p_
             g_lif_disp(g_i_) = d5_b * g_bigrlif(g_i_) + d2_b * g_lif_disp(g_i_)
-        end do
+        enddo
         lif_disp = d5_v
         !--------
         !     no angular dependence
@@ -2765,13 +2731,13 @@ subroutine prepot22
         !     SUM FORCES
         do g_i_ = 1, g_p_
             g_e_lr_lif(g_i_) = g_lif_did(g_i_) + g_lif_disp(g_i_)
-        end do
+        enddo
         e_lr_lif = lif_disp + lif_did
         !--------
         !     cut off at large LiF distances
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = r3lrcut_a * g_r(g_i_,i,3)
-        end do
+        enddo
         d1_w = r3lrcut_a * (r(i,3) - r3lrcut_r)
         d2_v = e_lr_lif * 0.5d0
         d4_v = tanh (d1_w)
@@ -2781,7 +2747,7 @@ subroutine prepot22
         d6_b = d5_v * 0.5d0
         do g_i_ = 1, g_p_
             g_e_lr_lif(g_i_) = d5_b * g_d1_w(g_i_) + d6_b * g_e_lr_lif(g_i_)
-        end do
+        enddo
         e_lr_lif = d2_v * d5_v
         !--------
         !
@@ -2791,12 +2757,12 @@ subroutine prepot22
         ! COMBINE INTERACTION REGION ENERGY AND LONG-RANGE FORCES
         do g_i_ = 1, g_p_
             g_e(g_i_, i) = g_e_lr_hf(g_i_) + g_e_lr_lif(g_i_) + g_e(g_i_, i)
-        end do
+        enddo
         e(i) = e(i) + e_lr_lif + e_lr_hf
         !--------
         do g_i_ = 1, g_p_
             g_e(g_i_, i) = cevau * g_e(g_i_, i)
-        end do
+        enddo
         e(i) = e(i) * cevau
         !--------
         !

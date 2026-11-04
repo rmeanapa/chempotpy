@@ -42,14 +42,12 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call pes_init(path)
         call pesh3cl(tx, v, path)
         deallocate(nodes)
@@ -67,14 +65,12 @@ subroutine pes( x, igrad, path, p, g, d )
         deallocate(pavgc)
     else
         write (*, *) 'Only energy and gradient are available'
-    end if
+    endif
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
     g = 0.d0
     d = 0.d0
-
 end subroutine pes
 
 !> @brief Evaluate pesh3cl for the H3Cl_PIPNN potential.
@@ -112,16 +108,15 @@ subroutine pot0( r0, vv0, path )
     data init/0/
     save init
     file_path1 = trim(path)//"/H3Cl/H2.dat"
-
-    if(init.eq.0)then
+    if( init .eq. 0 )then
         open(newunit=file_unit_100, file=file_path1, status='old')
         do i=1, m0
             read(file_unit_100, *)xt0(i), ym0(i)
-        end do
+        enddo
         close(file_unit_100)
         call spline(xt0, ym0, m0, dy1, dyn, yl0)
         init = 1
-    end if
+    endif
     call splint(xt0, ym0, yl0, m0, r0, vv0)
 end subroutine pot0
 
@@ -139,16 +134,15 @@ subroutine pot1( r1, vv1, path )
     data init/0/
     save init
     file_path1 = trim(path)//"/H3Cl/HCl.dat"
-
-    if(init.eq.0)then
+    if( init .eq. 0 )then
         open(newunit=file_unit_200, file=file_path1, status='old')
         do i=1, m1
             read(file_unit_200, *)xt1(i), ym1(i)
-        end do
+        enddo
         close(file_unit_200)
         call spline(xt1, ym1, m1, dy1, dyn, yl1)
         init = 1
-    end if
+    endif
     call splint(xt1, ym1, yl1, m1, r1, vv1)
 end subroutine pot1
 
@@ -168,15 +162,15 @@ subroutine splint( xa, ya, y2a, n, x, y )
     khi = n
     1 if (khi-klo.gt.1) then
         k = (khi+klo)/2
-        if(xa(k).gt.x)then
+        if( xa(k) .gt. x )then
             khi = k
         else
             klo = k
-        end if
+        endif
         goto 1
-    end if
+    endif
     h = xa(khi)-xa(klo)
-    if (h.eq.0.0d0) write(6, *) 'bad xa input in splint'
+    if( h .eq. 0.0d0 ) write(6, *) 'bad xa input in splint'
     a = (xa(khi)-x)/h
     b = (x-xa(klo))/h
     y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h** 2)/6.0d0
@@ -191,26 +185,26 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
     dimension x(n), y(n), y2(n)
     integer, parameter :: nmax = 4200
     dimension u(nmax)
-    if (yp1.gt..99d30) then
+    if( yp1 .gt. .99d30 )then
         y2(1) = 0.0d0
         u(1)  = 0.0d0
     else
         y2(1) = -0.5d0
         u(1)  = (3.0d0/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
-    end if
+    endif
     do 11 i=2, n-1
         sig   = (x(i)-x(i-1))/(x(i+1)-x(i-1))
         p     = sig*y2(i-1)+2.0d0
         y2(i) = (sig-1.0d0)/p
         u(i)  = (6.0d0*((y(i+1)-y(i))/(x(i+ 1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig* u(i-1))/p
     11 continue
-    if (ypn.gt..99d30) then
+    if( ypn .gt. .99d30 )then
         qn = 0.0d0
         un = 0.0d0
     else
         qn = 0.5d0
         un = (3.0d0/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
-    end if
+    endif
     y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0d0)
     do 12 k=n-1, 1, -1
         y2(k) = y2(k)*y2(k+1)+u(k)
@@ -231,21 +225,17 @@ subroutine clh3vlr( r1, r2, r3, theta1, theta2, phi, vint, n, path )
     data init/0/
     save init
     file_path1 = trim(path)//"/H3Cl/c.dat"
-
-    if(init.eq.0)then
+    if( init .eq. 0 )then
         open(newunit=file_unit_300, file=file_path1, status='old')
         read(file_unit_300, *)a
         close(file_unit_300)
         init = 1
-    end if
-
+    endif
     call funcs(r1, r2, r3, theta1, theta2, phi, afunc, n)
-
     vint = 0d0
     do i=1, n
         vint = vint+a(i)*afunc(i)
-    end do
-
+    enddo
 end subroutine clh3vlr
 
 !> @brief Evaluate FUNCS for the H3Cl_PIPNN potential.
@@ -265,75 +255,58 @@ subroutine funcs( ra, rb, rc, theta1, theta2, phi, afunc, ma )
         a1 = r1**i
         do l=-m, m
             a2 = (r2**l)*a1
-            if(n.gt.0)then
+            if( n .gt. 0 )then
                 j    = j+1
                 a(j) = a2
-            end if
-        end do;enddo
-
+            endif
+        enddo;enddo
         j1 = 0
         do i=-m, m
             a11 = r1**i
             do l=-m, m
                 a22 = 3d0*(r2**l)*a11/(2d0*(r2**l+a11))
-                if(n.gt.0)then
+                if( n .gt. 0 )then
                     j1       = j1+1
                     a111(j1) = a22
-                end if
-            end do;enddo
-
+                endif
+            enddo;enddo
             do i=1, m2
                 z1(i)=a(i)*(1.5d0*(dcos(th1)*(3d0*(dcos(th2)**2)-1d0) +2d0*dsin(th1)*dsin(th2)*dcos(th2)*dcos(phi)))/ &
                     & (r3**4)
-
                 z2(i)=a(i)*(0.75d0*(1d0-5d0*(dcos(th1)**2)- 5d0*(dcos(th2)**2)+17d0*(dcos(th1)**2)*(dcos(th2)**2)+ &
                     & 2d0* (dsin(th1)**2)*(dsin(th2)**2)*(dcos(phi)**2)+ 16d0*dsin(th1)*dcos(th1)*dsin(th2)*dcos(th2)* &
                     & dcos(phi)))/(r3**5)
-
                 z3(i) = a(i)*(-0.5d0*(3d0*(dcos(th1)**2)+1d0))/(r3**6)
-
                 z4(i)=a(i)*((12d0*(dcos(th1)**2)*(dcos(th2)**2)+3d0* (dsin(th1)**2)*(dsin(th2)**2)*(dcos(phi)**2)-3d0* &
                     & (cos(th1)**2)-1d0 +12d0*dsin(th1)*dcos(th1)*dsin(th2)*dcos(th2)*dcos(phi)) /-6d0)/(r3**6)
-
                 z6(i)=a(i)*(-1.5d0*(6d0*(dcos(th1)**2)*(dcos(th2)**3) -2d0*(dcos(th1)**2)*dcos(th2)+7d0*dsin(th1)* &
                     & dcos(th1)*dsin(th2)* (dcos(th2)**2)*dcos(phi)-dsin(th1)*dcos(th1)*dsin(th2)*dcos(phi) +2d0* &
                     & (dsin(th1)**2)*(dsin(th2)**2)*dcos(th2)*(dcos(phi)**2))) /(r3**7)
-
                 z7(i)=a(i)*(2d0*(6d0*(dcos(th1)**2)*(dcos(th2)**3) -5d0*(dcos(th1)**2)*dcos(th2)+7d0*dsin(th1)* &
                     & dcos(th1)*dsin(th2)* (dcos(th2)**2)*dcos(phi)-2d0*dsin(th1)*dcos(th1)*dsin(th2) *dcos(phi)+2d0* &
                     & (dsin(th1)**2)*(dsin(th2)**2)*dcos(th2) *(dcos(phi)**2)-dcos(th2)))/(r3**7)
-
-                z8(i) = -a111(i)/(r3**6)
-
-                z9(i) = (-a111(i)*(1.5d0*(dcos(th2)**2)-0.5d0)/3d0)/(r3**6)
-
-                z10(i) = (-a111(i)*(1.5d0*(dcos(th1)**2)-0.5d0)/3d0)/(r3**6)
-
-                z11(i) = -a111(i)*2d0*(dcos(th2)**3)/(r3**7)
-
-                z12(i) = -a111(i)*2d0*(dcos(th1)**3)/(r3**7)
-
-                z13(i) = -a111(i)*4d0*(3d0*dcos(th2)-2d0*(dcos(th2)**3))/ (3d0*(r3**7))
-
-                z14(i) = -a111(i)*4d0*(3d0*dcos(th1)-2d0*(dcos(th1)**3))/ (3d0*(r3**7))
-
+                z8(i)             = -a111(i)/(r3**6)
+                z9(i)             = (-a111(i)*(1.5d0*(dcos(th2)**2)-0.5d0)/3d0)/(r3**6)
+                z10(i)            = (-a111(i)*(1.5d0*(dcos(th1)**2)-0.5d0)/3d0)/(r3**6)
+                z11(i)            = -a111(i)*2d0*(dcos(th2)**3)/(r3**7)
+                z12(i)            = -a111(i)*2d0*(dcos(th1)**3)/(r3**7)
+                z13(i)            = -a111(i)*4d0*(3d0*dcos(th2)-2d0*(dcos(th2)**3))/ (3d0*(r3**7))
+                z14(i)            = -a111(i)*4d0*(3d0*dcos(th1)-2d0*(dcos(th1)**3))/ (3d0*(r3**7))
                 afunc(i)          = z1(i);afunc(m2+i)=z2(i);afunc(2*m2+i)=z3(i)
                 afunc(3*m2+i)     = z4(i);afunc(4*m2+m1+i)=z6(i)
                 afunc(5*m2+m1+i)  = z7(i);afunc(6*m2+m1+i)=z8(i)
                 afunc(7*m2+m1+i)  = z9(i);afunc(8*m2+m1+i)=z10(i)
                 afunc(9*m2+m1+i)  = z11(i);afunc(10*m2+m1+i)=z12(i)
                 afunc(11*m2+m1+i) = z13(i);afunc(12*m2+m1+i)=z14(i)
-            end do
-
+            enddo
             j = 4*m2
             do i=-m, m
                 a3 = (r1**i)*(-6d0*(dcos(th1)**3))/(r3**7)
-                if(n.gt.0)then
+                if( n .gt. 0 )then
                     j        = j+1
                     afunc(j) = a3
-                end if
-            end do
-
+                endif
+            enddo
 end subroutine funcs
 
 !> @brief Evaluate ClH3pipNN for the H3Cl_PIPNN potential.
@@ -345,20 +318,16 @@ subroutine clh3pipnn( rb, vpes, vpesa, vpesb, vpesc )
     integer          :: i, j, k, lpes
     double precision :: rb(ndim), xbond(ndim), basis(0:nbasis), tmp1, txinput(nbasis)
     double precision :: vpes, vpesa, vpesb, vpesc, vpesh, vnn
-    basis = 0.d0
-
+    basis    = 0.d0
     xbond(:) = dexp(-rb(:)/alpha)
-
     call bemsav134(xbond, basis)
     do j=1, nbasis
         txinput(j) = basis(j)
-    end do
-
+    enddo
     call getpota(txinput, vpesa)
     call getpotb(txinput, vpesb)
     call getpotc(txinput, vpesc)
     vpes = (vpesa+vpesb+vpesc)/3d0
-
 end subroutine clh3pipnn
 
 !-->  read NN weights and biases from matlab output
@@ -382,7 +351,6 @@ subroutine pes_init( path )
     character(len=1024)             :: file_path5, file_path6
     file_path1 = trim(path)//"/H3Cl/weights.txt-1"
     file_path2 = trim(path)//"/H3Cl/biases.txt-1"
-
     open(newunit=file_unit_4, file=file_path2, status='old')
     nfile = 7
     open(nfile, file=file_path1)
@@ -396,7 +364,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weighta(nodemax,nodemax,2:nlayer), &
         & biasa(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -416,24 +384,20 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weighta(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasa(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     close(file_unit_4);close(nfile)
-
     file_path3 = trim(path)//"/H3Cl/weights.txt-2"
     file_path4 = trim(path)//"/H3Cl/biases.txt-2"
-
     open(newunit=file_unit_4, file=file_path4, status='old')
     nfile = 8
     open(nfile, file=file_path3)
@@ -447,7 +411,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightb(nodemax,nodemax,2:nlayer), &
         & biasb(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -467,24 +431,20 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weightb(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasb(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     close(file_unit_4);close(nfile)
-
     file_path5 = trim(path)//"/H3Cl/weights.txt-3"
     file_path6 = trim(path)//"/H3Cl/biases.txt-3"
-
     open(newunit=file_unit_4, file=file_path6, status='old')
     nfile = 9
     open(nfile, file=file_path5)
@@ -498,7 +458,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightc(nodemax,nodemax,2:nlayer), &
         & biasc(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -518,21 +478,19 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2)
                 read(nfile, *)weightc(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasc(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
+    endif
     close(nfile)
     close(file_unit_4)
-
 end subroutine pes_init
 
 !> @brief Evaluate tranfun for the H3Cl_PIPNN potential.
@@ -544,13 +502,13 @@ function tranfun( x, ifunc )
     !    ifunc=2, transfer function is log sigmoid function, 'logsig'
     !    ifunc=3, transfer function is pure linear function, 'purelin'. It
     !is imposed to the output layer by default
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+dexp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun = x
-    end if
+    endif
 end function tranfun
 
 !-->!-->!-->!-->!-->!-->!-->!-->!-->!-->subroutine to accelerate~~~~~~
@@ -616,7 +574,6 @@ subroutine evmono134( x, m )
     m(30) = m(2)*m(24)
     m(31) = m(1)*m(26)
     m(32) = m(1)*m(28)
-
 end subroutine evmono134
 
 !> @brief Evaluate evpoly134 for the H3Cl_PIPNN potential.
@@ -675,7 +632,6 @@ subroutine evpoly134( m, p )
     p(48) = p(6)*p(8)-p(38)
     p(49) = p(1)*p(21)-p(40)
     p(50) = p(2)*p(22)-p(48)
-
 end subroutine evpoly134
 
 !> @brief Evaluate getpota for the H3Cl_PIPNN potential.
@@ -690,8 +646,7 @@ subroutine getpota( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavga(i))/pdela(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -699,11 +654,10 @@ subroutine getpota( x, vpot )
             y(inode1,ilay1) = biasa(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -711,14 +665,12 @@ subroutine getpota( x, vpot )
         y(inode1,ilay1) = biasa(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
-
 end subroutine getpota
 
 !> @brief Evaluate getpotb for the H3Cl_PIPNN potential.
@@ -733,8 +685,7 @@ subroutine getpotb( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgb(i))/pdelb(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -742,11 +693,10 @@ subroutine getpotb( x, vpot )
             y(inode1,ilay1) = biasb(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightb(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -754,14 +704,12 @@ subroutine getpotb( x, vpot )
         y(inode1,ilay1) = biasb(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightb(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelb(nscale)+pavgb(nscale)
-
 end subroutine getpotb
 
 !> @brief Evaluate getpotc for the H3Cl_PIPNN potential.
@@ -776,8 +724,7 @@ subroutine getpotc( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgc(i))/pdelc(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -785,11 +732,10 @@ subroutine getpotc( x, vpot )
             y(inode1,ilay1) = biasc(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightc(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -797,14 +743,12 @@ subroutine getpotc( x, vpot )
         y(inode1,ilay1) = biasc(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightc(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelc(nscale)+pavgc(nscale)
-
 end subroutine getpotc
 
 !> @brief Evaluate distance for the H3Cl_PIPNN potential.
@@ -816,9 +760,8 @@ double precision function distance( a, b )
     distance = 0.d0
     do i=1, 3
         distance = distance+(a(i)-b(i))**2
-    end do
+    enddo
     distance = dsqrt(distance)
-
 end function distance
 
 !> @brief Evaluate xyz_to_jaco for the H3Cl_PIPNN potential.
@@ -852,9 +795,9 @@ subroutine xyz_to_jaco( x, r1, r2, r3, theta1, theta2, phi, r )
     theta1  = dacos(str12)
     call dihedral(x(:,2), a, b, x(:,4), phi)
     phi = phi*pi/180d0
-    if ( isnan(phi) ) then
+    if( isnan(phi) )then
         phi = 0d0
-    end if
+    endif
     r(1) = distance(x(:,4), x(:,3))
     r(2) = distance(x(:,4), x(:,2))
     r(3) = distance(x(:,4), x(:,1))
@@ -873,7 +816,7 @@ subroutine dihedral( a, b, c, d, th )
         v_ab(i) = b(i)-a(i)
         v_bc(i) = c(i)-b(i)
         v_cd(i) = d(i)-c(i)
-    end do
+    enddo
     n1(1) = v_ab(2)*v_bc(3)-v_ab(3)*v_bc(2)
     n1(2) = -v_ab(1)*v_bc(3)+v_ab(3)*v_bc(1)
     n1(3) = v_ab(1)*v_bc(2)-v_ab(2)*v_bc(1)
@@ -888,12 +831,12 @@ subroutine dihedral( a, b, c, d, th )
         s1 = s1+n1(i)**2
         s2 = s2+n2(i)**2
         s3 = s3+m1(i)**2
-    end do
+    enddo
     n1 = n1/dsqrt(s1);n2=n2/dsqrt(s2);m1=m1/dsqrt(s3)
     x  = 0d0;y=0d0
     do i=1, 3
         x = x+n1(i)*n2(i)
         y = y+m1(i)*n2(i)
-    end do
+    enddo
     th = -datan2(y, x)
 end subroutine dihedral

@@ -62,9 +62,7 @@ subroutine pes( x, igrad, path, p, g, d )
     use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, nindex, ninput, &
         & nlayer, nnew, nodemax, nodes, noutput, nscale, nterm, nwe, pavga, pavgb, pavgc, pdela, &
         & pdelb, pdelc, pi, radian, weighta, weightb, weightc
-
     use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
-
     implicit none
     ! number of electronic state
     integer, parameter              :: nstates = 1
@@ -80,16 +78,12 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, j, istate
     !initialize
     p = 0.d0; g = 0.d0; d = 0.d0
-
     ! input coordinates of tx, ty, tz are in bohr
     tx(:) = x(:,1)/legacy_bohr_to_angstrom
     ty(:) = x(:,2)/legacy_bohr_to_angstrom
     tz(:) = x(:,3)/legacy_bohr_to_angstrom
-
     call pes_init(path)
-
     call n4pipnn(tx, ty, tz, v, txg, tyg, tzg, igrad)
-
     deallocate(nodes)
     deallocate(weighta)
     deallocate(biasa)
@@ -103,19 +97,15 @@ subroutine pes( x, igrad, path, p, g, d )
     deallocate(biasc)
     deallocate(pdelc)
     deallocate(pavgc)
-
     do istate=1, nstates
         p(istate) = v*legacy_hartree_to_electronvolt
-    end do
-
+    enddo
     do istate=1, nstates
         g(istate,:,1) = txg(:)*51.422067
         g(istate,:,2) = tyg(:)*51.422067
         g(istate,:,3) = tzg(:)*51.422067
-    end do
-
+    enddo
     d = 0.d0
-
 end subroutine
 
 !      subroutine n4pipNN(ct,vpes,vpesa,vpesb,vpesc,vn2) !ct in N4 order and angstrom
@@ -139,29 +129,25 @@ subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
     double precision, parameter :: econv = 0.159360144d-2
     double precision, parameter :: gconv = 0.843297564d-3
     basis = 0.d0
-
     ! Cartesians in Ang
     do i=1, 4
         cx(1,i) = x(i)*cconv
         cx(2,i) = y(i)*cconv
         cx(3,i) = z(i)*cconv
         !      write(1000,*) "cart ",cx(1,i),cx(2,i),cx(3,i)
-    end do
-
+    enddo
     dedx(:) = 0.0d0
     dedy(:) = 0.0d0
     dedz(:) = 0.0d0
-
-    k = 0
+    k       = 0
     do i=1, natom-1
         do j=i+1, natom
             k = k+1
             !        write(*,*)k,i,j
             xvec(:,k) = cx(:,i)-cx(:,j)
-        end do
-    end do
-    if(k.ne.ndim)stop 'error in bond dimension'
-
+        enddo
+    enddo
+    if( k .ne. ndim ) stop 'error in bond dimension'
     vn2 = 0d0
     do i=1, ndim
         rb(i) = dsqrt(dot_product(xvec(:,i), xvec(:,i)))
@@ -170,17 +156,14 @@ subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
         !         return
         !       endif
         !       write(1000,*) "rb(i) ",rb(i),i
-
         call ev2gm2(rb(i), vn2tmp, grad, 1, 0)
         !       write(1000,*) "vn2tmp ",vn2tmp,i
         vn2 = vn2+vn2tmp
-    end do
-
+    enddo
     vpes     = 0.0d0
     xbond(:) = dexp(-rb(:)/alpha)
     call bemsav49(xbond, basis)
     call bmx2b109(basis, bnew, nbasis, nnew)
-
     call getpota(bnew, vpesa)
     call getpotb(bnew, vpesb)
     call getpotc(bnew, vpesc)
@@ -191,20 +174,18 @@ subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
     !      write(1000,*) "vpes ",vpes
     ! vpes in au
     vpes = vpes*econv
-
     ! numerical gradient w.r.t. dr, in kcal/Ang
     dr = 1.0d-5 ! in Ang
-    if (igrad.eq.1) then
+    if( igrad .eq. 1 )then
         ! calculate evdrdx
         call evdrdx(cx, rb, drdx)
-
         do i=1, 6
             vn2   = 0.0d0
             rb(i) = rb(i)+dr
             do j=1, 6
                 call ev2gm2(rb(j), vn2tmp, grad, 1, 0)
                 vn2 = vn2+vn2tmp
-            end do
+            enddo
             !      write(*,*) "vn2p ",vn2,i
             xbond    = 0.0d0
             xbond(:) = dexp(-rb(:)/alpha)
@@ -222,7 +203,7 @@ subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
             do j=1, 6
                 call ev2gm2(rb(j), vn2tmp, grad, 1, 0)
                 vn2 = vn2+vn2tmp
-            end do
+            enddo
             !      write(*,*) "vn2m ",vn2,i
             xbond    = 0.0d0
             xbond(:) = dexp(-rb(:)/alpha)
@@ -239,32 +220,27 @@ subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
             dedr(i) = (vp(i) - vm(i))/(2*dr)
             !       write(*,*) "dedr(i) ",dedr(i),i
             rb(i) = rb(i)+dr
-        end do
-
+        enddo
         dvdx(:) = 0.0d0
-
         do i=1, 12
             do j=1, 6
                 !         write(*,*) "dedr(j) ",dedr(j),j
                 !          write(*,*) "dRdX(j,i) ",dRdX(j,i),j,i
                 dvdx(i) = dvdx(i) + dedr(j)*drdx(j,i)
-            end do
+            enddo
             !         write(*,*) "dVdX(i) ",dVdX(i)
-        end do
-
+        enddo
         ! dEdX, dEdY, and dEdZ in au/bohr
         do i=1, 4
             dedx(i) = dvdx(3*i-2)*gconv
             dedy(i) = dvdx(3*i-1)*gconv
             dedz(i) = dvdx(3*i)*gconv
             !      write(*,*) "grad ",dEdX(i),dEdY(i),dEdZ(i)
-        end do
-    end if
-
-    if (igrad.eq.2) then
+        enddo
+    endif
+    if( igrad .eq. 2 )then
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine n4pipnn
 
 !> @brief Evaluate EvdRdX.
@@ -274,7 +250,6 @@ subroutine evdrdx( cx, r, drdx )
     ! R:            R(6), 6 bond lengths
     ! X:            X(12), 12 Cartesian coordinates
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     double precision :: cx(3,4), r(6), drdx(6,12)
@@ -282,9 +257,8 @@ subroutine evdrdx( cx, r, drdx )
     do i=1, 6
         do j=1, 12
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     ! Start to calculate the non-zero dRdX
     ! dr1dx
     drdx(1,1) = (cx(1,1)-cx(1,2))/r(1)
@@ -293,7 +267,6 @@ subroutine evdrdx( cx, r, drdx )
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     ! dr2dx
     drdx(2,1) = (cx(1,1)-cx(1,3))/r(2)
     drdx(2,2) = (cx(2,1)-cx(2,3))/r(2)
@@ -301,7 +274,6 @@ subroutine evdrdx( cx, r, drdx )
     drdx(2,7) = -drdx(2,1)
     drdx(2,8) = -drdx(2,2)
     drdx(2,9) = -drdx(2,3)
-
     ! dr3dx
     drdx(3,1)  = (cx(1,1)-cx(1,4))/r(3)
     drdx(3,2)  = (cx(2,1)-cx(2,4))/r(3)
@@ -309,7 +281,6 @@ subroutine evdrdx( cx, r, drdx )
     drdx(3,10) = -drdx(3,1)
     drdx(3,11) = -drdx(3,2)
     drdx(3,12) = -drdx(3,3)
-
     ! dr4dx
     drdx(4,4) = (cx(1,2)-cx(1,3))/r(4)
     drdx(4,5) = (cx(2,2)-cx(2,3))/r(4)
@@ -317,7 +288,6 @@ subroutine evdrdx( cx, r, drdx )
     drdx(4,7) = -drdx(4,4)
     drdx(4,8) = -drdx(4,5)
     drdx(4,9) = -drdx(4,6)
-
     ! dr5dx
     drdx(5,4)  = (cx(1,2)-cx(1,4))/r(5)
     drdx(5,5)  = (cx(2,2)-cx(2,4))/r(5)
@@ -325,7 +295,6 @@ subroutine evdrdx( cx, r, drdx )
     drdx(5,10) = -drdx(5,4)
     drdx(5,11) = -drdx(5,5)
     drdx(5,12) = -drdx(5,6)
-
     ! dr6dx
     drdx(6,7)  = (cx(1,3)-cx(1,4))/r(6)
     drdx(6,8)  = (cx(2,3)-cx(2,4))/r(6)
@@ -334,13 +303,11 @@ subroutine evdrdx( cx, r, drdx )
     drdx(6,11) = -drdx(6,8)
     drdx(6,12) = -drdx(6,9)
     ! Finish the calculation of non-zero dRdX
-
     !     do i=1,6
     !       do j=1,12
     !         write(*,*) "dRdX(i,j) ",dRdX(i,j),i,j
     !       enddo
     !     enddo
-
 end subroutine evdrdx
 
 !**********************************************************************
@@ -363,15 +330,13 @@ subroutine pes_init( path )
     character(len=1024)             :: file_path1, file_path2
     file_path1 = trim(path)//"/N4/weights.txt-Noconnected"
     file_path2 = trim(path)//"/N4/biases.txt-Noconnected"
-
     open(newunit=file_unit_4, file=file_path2, status='old')
     rewind(file_unit_4)
     read(file_unit_4, '(a80)')line
-
     nfile = 7
     open(nfile, file=file_path1)
     read(nfile, '(a80)')line
-    call read_network_header( nfile, ninput, nhid, noutput )
+    call read_network_header(nfile, ninput, nhid, noutput)
     nscale = ninput+noutput
     nlayer = nhid+2 !additional one for input layer and one for output
     allocate(nodes(nlayer), pdela(nscale), pavga(nscale))
@@ -381,7 +346,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weighta(nodemax,nodemax,2:nlayer), &
         &   biasa(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -398,22 +363,20 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weighta(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasa(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     read(file_unit_4, '(a80)')line
     read(nfile, '(a80)')line
-    call read_network_header( nfile, ninput, nhid, noutput )
+    call read_network_header(nfile, ninput, nhid, noutput)
     nscale = ninput+noutput
     nlayer = nhid+2 !additional one for input layer and one for output
     allocate(pdelb(nscale), pavgb(nscale))
@@ -423,7 +386,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightb(nodemax,nodemax,2:nlayer), &
         &   biasb(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -440,22 +403,20 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weightb(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasb(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     read(file_unit_4, '(a80)')line
     read(nfile, '(a80)')line
-    call read_network_header( nfile, ninput, nhid, noutput )
+    call read_network_header(nfile, ninput, nhid, noutput)
     nscale = ninput+noutput
     nlayer = nhid+2 !additional one for input layer and one for output
     allocate(pdelc(nscale), pavgc(nscale))
@@ -465,7 +426,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightc(nodemax,nodemax,2:nlayer), &
         & biasc(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
@@ -482,21 +443,19 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weightc(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasc(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
+    endif
     close(nfile)
     close(file_unit_4)
-
 end subroutine pes_init
 
 !> @brief Evaluate getpota.
@@ -511,8 +470,7 @@ subroutine getpota( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavga(i))/pdela(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -520,11 +478,10 @@ subroutine getpota( x, vpot )
             y(inode1,ilay1) = biasa(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -532,11 +489,10 @@ subroutine getpota( x, vpot )
         y(inode1,ilay1) = biasa(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weighta(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
 end subroutine getpota
@@ -553,8 +509,7 @@ subroutine getpotb( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgb(i))/pdelb(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -562,11 +517,10 @@ subroutine getpotb( x, vpot )
             y(inode1,ilay1) = biasb(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightb(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -574,11 +528,10 @@ subroutine getpotb( x, vpot )
         y(inode1,ilay1) = biasb(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightb(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelb(nscale)+pavgb(nscale)
 end subroutine getpotb
@@ -595,8 +548,7 @@ subroutine getpotc( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgc(i))/pdelc(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -604,11 +556,10 @@ subroutine getpotc( x, vpot )
             y(inode1,ilay1) = biasc(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightc(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -616,11 +567,10 @@ subroutine getpotc( x, vpot )
         y(inode1,ilay1) = biasc(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2) *weightc(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelc(nscale)+pavgc(nscale)
 end subroutine getpotc
@@ -630,13 +580,13 @@ function tranfun( x, ifunc )
     implicit none
     integer          :: ifunc
     double precision :: tranfun, x
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun = x
-    end if
+    endif
 end
 
 !     function emsav49(x,c) result(v)
@@ -779,7 +729,6 @@ subroutine evmono49( x, m )
     m(109) = m(6)*m(85)
     m(110) = m(6)*m(86)
     m(111) = m(6)*m(87)
-
 end subroutine evmono49
 
 !> @brief Evaluate evpoly49.
@@ -1097,7 +1046,6 @@ subroutine evpoly49( m, p )
     p(303) = p(2)*p(119)-p(294)
     p(304) = p(3)*p(119)-p(295)-p(296)-p(293)
     p(305) = p(1)*p(194)-p(304)-p(303)
-
 end subroutine evpoly49
 
 !> @brief Evaluate ev2gm2.
@@ -1144,37 +1092,27 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     as(4) = -0.653389048592838d0
     as(5) = 1.03611964035396d0
     as(6) = 1.71287482791961d0
-
-    v = 0.d0
-
-    y = (r*r*r*r - re*re*re*re)/(r*r*r*r + re*re*re*re)
-
-    fy = as(0) + as(1)*y + as(2)*y*y + as(3)*y*y*y + as(4)*y*y*y*y + as(5)*y*y*y*y*y + as(6)*y*y*y*y*y*y
-
-    u = exp(-fy*(r-re))
-
-    v = de*(1.0d0-u)*(1.0d0-u)-de
-
+    v     = 0.d0
+    y     = (r*r*r*r - re*re*re*re)/(r*r*r*r + re*re*re*re)
+    fy    = as(0) + as(1)*y + as(2)*y*y + as(3)*y*y*y + as(4)*y*y*y*y + as(5)*y*y*y*y*y + as(6)*y*y*y*y*y*y
+    u     = exp(-fy*(r-re))
+    v     = de*(1.0d0-u)*(1.0d0-u)-de
     ! Add D3 dispersion correction
     dist(1) = r
     call d3disp(dist, disp, dispdr, 0, imol)
     v = v+disp
-
     ! Compute the gradient if needed
-    if (igrad.eq.1) then
+    if( igrad .eq. 1 )then
         grad = 0.d0
-
         dfdy = as(1) + 2.0d0*as(2)*y + 3.0d0*as(3)*y*y + 4.0d0*as(4)*y*y*y + 5.0d0*as(5)*y*y*y*y + 6.0d0*as(6)*y*y*y*y*y
         rr   = r*r*r*r + re*re*re*re
         dydr = 8.0d0*r*r*r*re*re*re*re/(rr*rr)
         dfdr = dfdy*dydr
         grad = 2.0d0*de*(1-u)*u*(dfdr*(r-re)+fy)
-
         ! Add analytical gradient of D3 dispersion correction
         call d3disp(dist, disp, dispdr, 1, imol)
         grad = grad + dispdr(1)
-
-    end if
+    endif
 end subroutine ev2gm2
 
 !> @brief Evaluate d3disp.
@@ -1196,7 +1134,6 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     ! The C6 values are fixed.
     !
     !**********************************************************************
-
     implicit none
     double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -1208,56 +1145,44 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     integer          :: imol
     autoang  = 0.52917726d0
     autokcal = 627.509541d0
-
     ! Generalized parameters for BJ damping from P. Verma, B. Wang,
     ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017)
     s6  = 1.0d0
     s8  = 2.0d0
     rs6 = 0.5299d0
     rs8 = 2.20d0
-
     do i=1, 1
         dist(i) = dist(i)/autoang
-    end do
-
-    if (imol.eq.1) then
+    enddo
+    if( imol .eq. 1 )then
         ! iz for N2 system
         iz(1) = 7
         iz(2) = 7
-
         ! C6 for N2 system
         c6(1) = 19.7d0
         c6(2) = 19.7d0
     else
         ! currently imol = 1 is used
         stop
-    end if
-
+    endif
     ! Calculate dispersion correction
     call edisp(94, 5, 2, dist, iz, mxc, &
         &     rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
-
     disp = 0.0d0
-
     do i=1, 1
         disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
-    end do
-
-    if (igrad .eq. 1) then
+    enddo
+    if( igrad .eq. 1 )then
         call edisp(94, 5, 2, dist, iz, mxc, &
             &     rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
-
         dispdr(:) = 0.0d0
-
         do i=1, 1
             dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
-        end do
-    end if
-
+        enddo
+    endif
     do i=1, 1
         dist(i) = dist(i)*autoang
-    end do
-
+    enddo
 end subroutine d3disp
 
 !**********************************************************************
@@ -1266,7 +1191,6 @@ end subroutine d3disp
 !> @brief Evaluate edisp.
 subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         &           rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
-
     implicit none
     integer          :: n, iz(2), max_elem, maxc, mxc(max_elem)
     double precision :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
@@ -1279,15 +1203,12 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
     double precision :: cn(n)
     double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
     integer          :: step
-    e6(:) = 0.0d0
-    e8(:) = 0.0d0
-
+    e6(:)   = 0.0d0
+    e8(:)   = 0.0d0
     e6dr(:) = 0.0d0
     e8dr(:) = 0.0d0
-
-    a1 = rs6
-    a2 = rs8
-
+    a1      = rs6
+    a2      = rs8
     !  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
     !  the large number of digits is just to keep the results consistent
     !  with older versions. They should not imply any higher accuracy than
@@ -1306,7 +1227,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & 5.88752022d0, 5.70661499d0, 5.78450695d0, 7.79780729d0, 7.26443867d0, 6.78151984d0, 6.67883169d0, &
         & 6.39024318d0, 6.09527958d0, 11.79156076d0, 11.10997644d0, 9.51377795d0, 8.67197068d0, 8.77140725d0, &
         & 8.65402716d0, 8.53923501d0, 8.85024712d0 /)
-
     ! these new data are scaled with k2=4./3. and converted to a_0 via
     ! autoang=0.52917726d0
     rcov(1:94)=(/ 0.80628308d0, 1.15903197d0, 3.02356173d0, 2.36845659d0, 1.94011865d0, 1.88972601d0, 1.78894056d0, &
@@ -1323,7 +1243,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & 2.82199085d0, 2.84718717d0, 3.32591790d0, 3.27552496d0, 3.27552496d0, 3.42670319d0, 3.30072128d0, &
         & 3.47709584d0, 3.57788113d0, 5.06446567d0, 4.56053862d0, 4.20778980d0, 3.98102289d0, 3.82984466d0, &
         & 3.85504098d0, 3.88023730d0, 3.90543362d0 /)
-
     ! DFT-D3
     step = 0
     do iat=1, n-1
@@ -1333,20 +1252,18 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
             c6   = c6a(step)
             ! r2r4 stored in main as sqrt
             c8 = 3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
-
             ! energy for BJ damping
             tmp      = sqrt(c8/c6)
             e6(step) = c6/(r**6+(a1*tmp+a2)**6)
             e8(step) = c8/(r**8+(a1*tmp+a2)**8)
             ! calculate gradients
-            if (igrad .eq. 1) then
+            if( igrad .eq. 1 )then
                 ! grad for BJ damping
                 e6dr(step) = c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
                 e8dr(step) = c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
-            end if
-        end do
-    end do
-
+            endif
+        enddo
+    enddo
 end subroutine edisp
 
 !> @brief Evaluate bmx2b109.
@@ -1359,67 +1276,50 @@ subroutine bmx2b109( bm1, bm2, nobm, nob )
     !  nob  : number of basis
     !
     !**********************************************************************
-
     implicit none
     integer          :: nob, nobm
     integer          :: i
     double precision :: bm1(nobm), bm2(nob)
     bm2(1) = bm1(4)
-
     do i=2, 4
         bm2(i) = bm1(i+4)
-    end do
-
+    enddo
     bm2(5) = bm1(10)
-
     do i=6, 11
         bm2(i) = bm1(i+6)
-    end do
-
+    enddo
     bm2(12) = bm1(19)
     bm2(13) = bm1(21)
-
     do i=14, 26
         bm2(i) = bm1(i+9)
-    end do
-
+    enddo
     bm2(27) = bm1(37)
     bm2(28) = bm1(39)
-
     do i=29, 53
         bm2(i) = bm1(i+12)
-    end do
-
+    enddo
     bm2(54) = bm1(67)
     bm2(55) = bm1(69)
     bm2(56) = bm1(71)
-
     do i=57, 97
         bm2(i) = bm1(i+16)
-    end do
-
+    enddo
     bm2(98)  = bm1(115)
     bm2(99)  = bm1(117)
     bm2(100) = bm1(119)
-
     do i=101, 166
         bm2(i) = bm1(i+20)
-    end do
-
+    enddo
     bm2(167) = bm1(188)
     bm2(168) = bm1(190)
     bm2(169) = bm1(192)
     bm2(170) = bm1(194)
-
     do i=171, 272
         bm2(i) = bm1(i+25)
-    end do
-
+    enddo
     bm2(273) = bm1(299)
     bm2(274) = bm1(301)
     bm2(275) = bm1(303)
     bm2(276) = bm1(305)
-
     !     nob=276
-
 end

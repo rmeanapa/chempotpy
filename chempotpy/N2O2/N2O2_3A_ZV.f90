@@ -63,7 +63,6 @@ module n2o2_3a_zv_par
     !        1 kcal/mol = 0.159360144 * 10^-2 hartree
     ! Gconv: kcal/(mol*Angstrom) to hartree/bohr
     !        1 kcal mol^-1 angstrom^-1 = 0.843297564 * 10^-3 hartree/bohr
-
     implicit none
     private
     public :: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, gconv, p, r, re, &
@@ -2278,41 +2277,33 @@ subroutine pes( x, igrad, potential, gradient, dvec )
     integer                       :: iatom, idir, j, istate
     !initialize
     potential = 0.d0; gradient = 0.d0; dvec = 0.d0
-
     ! Notice that this N2O surface is weird, it is using N2O2 surface
     ! and simply make the first three coordinates as zero.
     do iatom=1, natoms
         do idir=1, 3
             j     = 3*(iatom-1)+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     tg = 0.d0
-
     call n2o2pes(tx, v, tg, igrad)
-
     ! output v is in kcal/mol, but there is a reference energy that is
     ! in hartree, so convert everything in eV.
     v = v/23.0609 !+ Eref*legacy_hartree_to_electronvolt
-
     ! output g is in kcal/mol/ang
     tg = tg/23.0609
-
     do istate=1, nstates
         potential(istate) = v
-    end do
-
+    enddo
     do istate=1, nstates
         do iatom=1, natoms
             do idir=1, 3
                 j                           = 3*(iatom-1)+idir
                 gradient(istate,iatom,idir) = tg(j)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     dvec = 0.d0
-
 end subroutine
 
 !**********************************************************************
@@ -2345,25 +2336,22 @@ subroutine n2o2pes( x, v, dvdx, igrad )
     !       dim(6*18)
     ! dRdX:     The derivative of R w.r.t. X, dim(6*12)
     !**********************************************************************
-
     implicit none
     integer          :: i, igrad, j, nob, k
     double precision :: v
     double precision :: dvdx(12), x(12)
     ! Obtain Cartesian coordinates from input file
     call coord_convt(x)
-
-    if (igrad .le. 1) then
+    if( igrad .le. 1 )then
         ! Call subroutine Evv to evaluate potential energy V
         call evv(v)
-
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             ! Call subroutine EvdVdX to evaluate the derivatives of V w.r.t. X
             call evdvdx(x, dvdx)
-        end if
+        endif
     else
         write (*, *) 'Only energy and gradient are available'
-    end if
+    endif
 end subroutine n2o2pes
 
 !> @brief Evaluate coord_convt.
@@ -2378,7 +2366,6 @@ subroutine coord_convt( x )
     !  r3 = r(O1N4)    r4 = r(O2N3)
     !  r5 = r(O2N4)    r6 = r(N3N4)
     !**********************************************************************
-
     implicit none
     integer          :: i
     double precision :: x(12)
@@ -2388,7 +2375,6 @@ subroutine coord_convt( x )
     r(4) = sqrt((x(4)-x(7))**2  + (x(5)-x(8))**2  + (x(6)-x(9))**2)
     r(5) = sqrt((x(4)-x(10))**2 + (x(5)-x(11))**2 + (x(6)-x(12))**2)
     r(6) = sqrt((x(7)-x(10))**2 + (x(8)-x(11))**2 + (x(9)-x(12))**2)
-
 end subroutine coord_convt
 
 !> @brief Evaluate EvV.
@@ -2411,26 +2397,20 @@ subroutine evv( v )
     ! P(0:2253):    Array to store polynomials
     ! B(1:2153):    Array to store basis functions
     !**********************************************************************
-
     implicit none
     integer          :: i, j, k
     double precision :: dist, dv2dr, v, v21, v22, v23, v24, v25, v26
     ! Calculate the six MEG terms for each point
     call evmeg
-
     ! Calculate the monomials for each point by using six MEG terms
     call evmono
-
     ! Calculate the polynomials (basis functions) by using monomials
     call evpoly
-
     ! Calculate the basis functions by removing unconnected and 2-body terms
     call evbas
-
     ! Initialized v to be De(N2) + De(O2) = 228.4 + 120.143 kcal/mol
     v = 348.643d0
     ! Evaluate 2-body interactions
-
     dist = r(1)
     call ev2gm2(dist, v21, dv2dr, 4, 0)         ! OO
     dist = r(2)
@@ -2443,17 +2423,13 @@ subroutine evv( v )
     call ev2gm2(dist, v25, dv2dr, 3, 0)         ! NO
     dist = r(6)
     call ev2gm2(dist, v26, dv2dr, 2, 0)   ! NN
-
     v = v + v21 + v22 + v23 + v24 + v25 + v26
-
     ! Evaluate V by taken the product of C and Basis function arrays
     do i=1, 2153
         v = v + c(i)*b(i)
-    end do
-
+    enddo
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
-
 end subroutine evv
 
 !> @brief Evaluate EvdVdX.
@@ -2471,29 +2447,24 @@ subroutine evdvdx( x, dvdx )
     ! dRdX:     dRdX(6,12), derivatives of R(6) w.r.t. 12
     !       Cartesian coordinates
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     double precision :: dvdx(12), x(12)
     ! Initialize dVdX
     do i=1, 12
         dvdx(i) = 0.0d0
-    end do
-
+    enddo
     ! Call EvdVdR to evaluate dVdR(6)
     call evdvdr
-
     ! Call EvdRdX to evaluate dRdX(6,12)
     call evdrdx(x)
-
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi),
     ! j=1 to 6
     do i=1, 12
         do j=1, 6
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine evdvdx
 
 !> @brief Evaluate EvMEG.
@@ -2507,12 +2478,11 @@ subroutine evmeg
     !  a:    nonlinear parameter (Angstrom)
     !  ab:   nonlinear parameter (Angstrom^2)
     !**********************************************************************
-
     implicit none
     integer :: i
     do i=1, 6
         rms(i) = exp(-(r(i)-re(i))/a(i)-(r(i)-re(i))**2.0d0/ab(i))
-    end do
+    enddo
 end subroutine evmeg
 
 !> @brief Evaluate EvMono.
@@ -2524,7 +2494,6 @@ subroutine evmono
     !  monomials(RM) and that do not have usable decomposition.
     !  For degree 10, the number of monomials is nom.
     !**********************************************************************
-
     implicit none
     rm(0)  = 1.0d0
     rm(1)  = rms(6)
@@ -2544,7 +2513,6 @@ subroutine evmono
     rm(15) = rm(2)*rm(12)
     rm(16) = rm(3)*rm(12)
     rm(17) = rm(2)*rm(16)
-
 end subroutine evmono
 
 !> @brief Evaluate EvPoly.
@@ -2556,7 +2524,6 @@ subroutine evpoly
     !  permutationally invariant polynomials(p)
     !  For degree 10, the number of polynomials is nob.
     !**********************************************************************
-
     implicit none
     p(0)    = rm(0)
     p(1)    = rm(1)
@@ -4812,7 +4779,6 @@ subroutine evpoly
     p(2251) = p(1)*p(1432)
     p(2252) = p(2)*p(1433) - p(2232) - p(2231) - p(2230)
     p(2253) = p(3)*p(1434)
-
 end subroutine evpoly
 
 !> @brief Evaluate evbas.
@@ -4823,241 +4789,159 @@ subroutine evbas
     !  This subroutine eliminates the 2-body terms in the permutationally
     !  invariant formulation
     !**********************************************************************
-
     implicit none
     integer          :: i
     double precision :: b1(2254)
     ! Pass P(0:2253) to BM1(1:2254)
     do i=1, 2254
         b1(i) = p(i-1)
-    end do
-
+    enddo
     ! Remove unconnected terms and 2-body terms and pass to B(1:2153)
-
     b(1) = b1(5)
-
     do i=2, 3
         b(i) = b1(i+5)
-    end do
-
+    enddo
     b(4) = b1(10)
-
     do i=5, 14
         b(i) = b1(i+9)
-    end do
-
+    enddo
     do i=15, 16
         b(i) = b1(i+10)
-    end do
-
+    enddo
     b(17) = b1(28)
-
     b(18) = b1(30)
-
     do i=19, 44
         b(i) = b1(i+15)
-    end do
-
+    enddo
     do i=45, 47
         b(i) = b1(i+16)
-    end do
-
+    enddo
     do i=48, 49
         b(i) = b1(i+17)
-    end do
-
+    enddo
     b(50) = b1(68)
-
     b(51) = b1(70)
-
     b(52) = b1(72)
-
     do i=53, 112
         b(i) = b1(i+23)
-    end do
-
+    enddo
     do i=113, 115
         b(i) = b1(i+24)
-    end do
-
+    enddo
     do i=116, 117
         b(i) = b1(i+25)
-    end do
-
+    enddo
     b(118) = b1(144)
-
     b(119) = b1(146)
-
     b(120) = b1(148)
-
     b(121) = b1(150)
-
     do i=122, 235
         b(i) = b1(i+32)
-    end do
-
+    enddo
     do i=236, 238
         b(i) = b1(i+33)
-    end do
-
+    enddo
     do i=239, 241
         b(i) = b1(i+34)
-    end do
-
+    enddo
     do i=242, 243
         b(i) = b1(i+35)
-    end do
-
+    enddo
     b(244) = b1(280)
-
     b(245) = b1(282)
-
     b(246) = b1(284)
-
     b(247) = b1(286)
-
     b(248) = b1(288)
-
     do i=249, 450
         b(i) = b1(i+43)
-    end do
-
+    enddo
     do i=451, 453
         b(i) = b1(i+44)
-    end do
-
+    enddo
     do i=454, 456
         b(i) = b1(i+45)
-    end do
-
+    enddo
     do i=457, 458
         b(i) = b1(i+46)
-    end do
-
+    enddo
     b(459) = b1(506)
-
     b(460) = b1(508)
-
     b(461) = b1(510)
-
     b(462) = b1(512)
-
     b(463) = b1(514)
-
     b(464) = b1(516)
-
     do i=465, 795
         b(i) = b1(i+55)
-    end do
-
+    enddo
     do i=796, 798
         b(i) = b1(i+56)
-    end do
-
+    enddo
     do i=799, 801
         b(i) = b1(i+57)
-    end do
-
+    enddo
     do i=802, 804
         b(i) = b1(i+58)
-    end do
-
+    enddo
     do i=805, 806
         b(i) = b1(i+59)
-    end do
-
+    enddo
     b(807) = b1(867)
-
     b(808) = b1(869)
-
     b(809) = b1(871)
-
     b(810) = b1(873)
-
     b(811) = b1(875)
-
     b(812) = b1(877)
-
     b(813) = b1(879)
-
     do i=814, 1332
         b(i) = b1(i+69)
-    end do
-
+    enddo
     do i=1333, 1335
         b(i) = b1(i+70)
-    end do
-
+    enddo
     do i=1336, 1338
         b(i) = b1(i+71)
-    end do
-
+    enddo
     do i=1339, 1341
         b(i) = b1(i+72)
-    end do
-
+    enddo
     do i=1342, 1343
         b(i) = b1(i+73)
-    end do
-
+    enddo
     b(1344) = b1(1418)
-
     b(1345) = b1(1420)
-
     b(1346) = b1(1422)
-
     b(1347) = b1(1424)
-
     b(1348) = b1(1426)
-
     b(1349) = b1(1428)
-
     b(1350) = b1(1430)
-
     b(1351) = b1(1432)
-
     do i=1352, 2130
         b(i) = b1(i+84)
-    end do
-
+    enddo
     do i=2131, 2133
         b(i) = b1(i+85)
-    end do
-
+    enddo
     do i=2134, 2136
         b(i) = b1(i+86)
-    end do
-
+    enddo
     do i=2137, 2139
         b(i) = b1(i+87)
-    end do
-
+    enddo
     do i=2140, 2142
         b(i) = b1(i+88)
-    end do
-
+    enddo
     do i=2143, 2144
         b(i) = b1(i+89)
-    end do
-
+    enddo
     b(2145) = b1(2235)
-
     b(2146) = b1(2237)
-
     b(2147) = b1(2239)
-
     b(2148) = b1(2241)
-
     b(2149) = b1(2243)
-
     b(2150) = b1(2245)
-
     b(2151) = b1(2247)
-
     b(2152) = b1(2249)
-
     b(2153) = b1(2251)
-
 end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
@@ -5090,7 +4974,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     ! Dispersion variables
     double precision :: dist(1), disp, dispdr(1)
     ! O2 pairwise
-    if (imol .eq. 4) then
+    if( imol .eq. 4 )then
         ! Original parameters
         !      alpha = 0.785d0
         !      beta = 1.307d0
@@ -5116,7 +5000,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
         v     = 0.d0
         do k=0, 7
             v = v + as(k)*dexp(-alpha*beta**k*r**2)
-        end do
+        enddo
         ! From milihartree to kcal/mol
         v = v*627.509523475149d-3
         ! Add D3 dispersion correction
@@ -5125,21 +5009,20 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
         call d3disp(dist, disp, dispdr, 0, imol)
         v = v+disp
         !        write(*,*) "dispoo= ",disp
-
         ! Compute the gradient if needed
-        if (igrad.eq.1) then
+        if( igrad .eq. 1 )then
             grad = 0.d0
             do k=0, 7
                 grad = grad-2.d0*as(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
-            end do
+            enddo
             ! Convert from milihartree/A to (kcal/mol)/A
             grad = grad*627.509523475149d-3
             ! Add analytical gradient of D3 dispersion correction
             call d3disp(dist, disp, dispdr, 1, imol)
             grad = grad + dispdr(1)
-        end if
+        endif
         ! NO pairwise
-    else if (imol .eq. 3) then
+    else if( imol .eq. 3 )then
         ! Short range NO parameters for NO dissociation
         ! The long range term comes from dispersion
         ! The difference between the points of the 8th order MEG NO diatomic
@@ -5173,7 +5056,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
         v = v+disp
         !        write(*,*) "dispno= ",disp
         ! 1st derivate by r
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             ! multiplier part of the MEG derivate
             dfdr = (-2.0d0*(r-re)/c(12)-1.0d0/c(11))
             grad =  - de*(c(1)*1.0d0*dfdr*u**1.0d0 + c(2)*2.0d0*dfdr*u**2.0d0 + c(3)*3.0d0*dfdr*u**3.0d0 + c(4)*4.0d0* &
@@ -5182,9 +5065,9 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             ! Add analytical gradient of D3 dispersion correction
             call d3disp(dist, disp, dispdr, 1, imol)
             grad = grad + dispdr(1)
-        end if
+        endif
         ! N2 pairwise
-    else if (imol .eq. 2) then
+    else if( imol .eq. 2 )then
         ! Parameter for N2 dissociation with SEC (for N2O2)
         ! This is for generalized Morse equation
         ! Short range N2 parameters
@@ -5198,40 +5081,29 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
         as(4) = -0.5345112219335d0  !-4.08663480982d-1
         as(5) = 1.0857331617073d0  ! 3.92451705557d-1
         as(6) = 1.6339897930305d0  ! 1.13006674877d0
-
-        v = 0.d0
-
-        y = (r*r*r*r - re*re*re*re)/(r*r*r*r + re*re*re*re)
-
-        fy = as(0) + as(1)*y + as(2)*y*y + as(3)*y*y*y + as(4)*y*y*y*y + as(5)*y*y*y*y*y + as(6)*y*y*y*y*y*y
-
-        u = exp(-fy*(r-re))
-
-        v = de*(1.0d0-u)*(1.0d0-u)-de
-
+        v     = 0.d0
+        y     = (r*r*r*r - re*re*re*re)/(r*r*r*r + re*re*re*re)
+        fy    = as(0) + as(1)*y + as(2)*y*y + as(3)*y*y*y + as(4)*y*y*y*y + as(5)*y*y*y*y*y + as(6)*y*y*y*y*y*y
+        u     = exp(-fy*(r-re))
+        v     = de*(1.0d0-u)*(1.0d0-u)-de
         ! Add D3 dispersion correction
         dist(1) = r
         call d3disp(dist, disp, dispdr, 0, imol)
         v = v+disp
-
         ! Compute the gradient if needed
-        if (igrad.eq.1) then
+        if( igrad .eq. 1 )then
             grad = 0.d0
-
             dfdy = as(1) + 2.0d0*as(2)*y + 3.0d0*as(3)*y*y + 4.0d0*as(4)*y*y*y + 5.0d0*as(5)*y*y*y*y + 6.0d0*as(6)*y* &
                 & y* y*y*y
             rr   = r*r*r*r + re*re*re*re
             dydr = 8.0d0*r*r*r*re*re*re*re/(rr*rr)
             dfdr = dfdy*dydr
             grad = 2.0d0*de*(1-u)*u*(dfdr*(r-re)+fy)
-
             ! Add analytical gradient of D3 dispersion correction
             call d3disp(dist, disp, dispdr, 1, imol)
             grad = grad + dispdr(1)
-
-        end if
-
-    end if
+        endif
+    endif
 end subroutine ev2gm2
 
 !> @brief Evaluate EvdVdR.
@@ -5254,7 +5126,6 @@ subroutine evdvdr
     ! M(nom):   Array to store monomials
     ! P(nob):   Array to store polynomials
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     double precision :: dist, v, v21, v22, v23, v24, v25, v26
@@ -5262,53 +5133,40 @@ subroutine evdvdr
     ! Initialize dVdR(6)
     do i=1, 6
         dvdr(i) = 0.0d0
-    end do
-
+    enddo
     ! Add dV2dR(i) to dVdR
-
     dist = r(1)
     call ev2gm2(dist, v21, dv2dr1, 4, 1)  ! OO
     dvdr(1) = dv2dr1
-
-    dist = r(2)
+    dist    = r(2)
     call ev2gm2(dist, v22, dv2dr2, 3, 1)  ! NO
     dvdr(2) = dv2dr2
-
-    dist = r(3)
+    dist    = r(3)
     call ev2gm2(dist, v23, dv2dr3, 3, 1)  ! NO
     dvdr(3) = dv2dr3
-
-    dist = r(4)
+    dist    = r(4)
     call ev2gm2(dist, v24, dv2dr4, 3, 1)  ! NO
     dvdr(4) = dv2dr4
-
-    dist = r(5)
+    dist    = r(5)
     call ev2gm2(dist, v25, dv2dr5, 3, 1)  ! NO
     dvdr(5) = dv2dr5
-
-    dist = r(6)
+    dist    = r(6)
     call ev2gm2(dist, v26, dv2dr6, 2, 1)  ! NN
     dvdr(6) = dv2dr6
-
     ! Calculate dMEG/dr(6,6) for given R(6)
     call evdmsdr
-
     ! Calculate the monomials for each point by using six MEG terms
     call evdmdr
-
     ! Calculate the polynomials by using monomials
     call evdpdr
-
     ! Remove 2-body interactions and unconnected terms from polynomials
     call evdbdr
-
     ! Evaluate dVdR(6) by taking the product of C(j) and dPdR(i,j)
     do i=1, 6
         do j=1, 2153
             dvdr(i) = dvdr(i) + c(j)*dbdr(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine evdvdr
 
 !> @brief Evaluate EvdRdX.
@@ -5326,7 +5184,6 @@ subroutine evdrdx( x )
     ! M(nom):   Array to store monomials
     ! P(nob):   Array to store polynomials
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     double precision :: x(12)
@@ -5334,9 +5191,8 @@ subroutine evdrdx( x )
     do i=1, 6
         do j=1, 12
             drdx(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     ! Start to calculate the non-zero dRdX
     ! dr1dx
     drdx(1,1) = (x(1)-x(4))/r(1)
@@ -5345,7 +5201,6 @@ subroutine evdrdx( x )
     drdx(1,4) = -drdx(1,1)
     drdx(1,5) = -drdx(1,2)
     drdx(1,6) = -drdx(1,3)
-
     ! dr2dx
     drdx(2,1) = (x(1)-x(7))/r(2)
     drdx(2,2) = (x(2)-x(8))/r(2)
@@ -5353,7 +5208,6 @@ subroutine evdrdx( x )
     drdx(2,7) = -drdx(2,1)
     drdx(2,8) = -drdx(2,2)
     drdx(2,9) = -drdx(2,3)
-
     ! dr3dx
     drdx(3,1)  = (x(1)-x(10))/r(3)
     drdx(3,2)  = (x(2)-x(11))/r(3)
@@ -5361,7 +5215,6 @@ subroutine evdrdx( x )
     drdx(3,10) = -drdx(3,1)
     drdx(3,11) = -drdx(3,2)
     drdx(3,12) = -drdx(3,3)
-
     ! dr4dx
     drdx(4,4) = (x(4)-x(7))/r(4)
     drdx(4,5) = (x(5)-x(8))/r(4)
@@ -5369,7 +5222,6 @@ subroutine evdrdx( x )
     drdx(4,7) = -drdx(4,4)
     drdx(4,8) = -drdx(4,5)
     drdx(4,9) = -drdx(4,6)
-
     ! dr5dx
     drdx(5,4)  = (x(4)-x(10))/r(5)
     drdx(5,5)  = (x(5)-x(11))/r(5)
@@ -5377,7 +5229,6 @@ subroutine evdrdx( x )
     drdx(5,10) = -drdx(5,4)
     drdx(5,11) = -drdx(5,5)
     drdx(5,12) = -drdx(5,6)
-
     ! dr6dx
     drdx(6,7)  = (x(7)-x(10))/r(6)
     drdx(6,8)  = (x(8)-x(11))/r(6)
@@ -5386,7 +5237,6 @@ subroutine evdrdx( x )
     drdx(6,11) = -drdx(6,8)
     drdx(6,12) = -drdx(6,9)
     ! Finish the calculation of non-zero dRdX
-
 end subroutine evdrdx
 
 !> @brief Evaluate EvdMsdR.
@@ -5401,24 +5251,20 @@ subroutine evdmsdr
     ! ab:       Nonlinear parameter(Angstrom^2)
     ! re:       equilibrium bond length(Angstrom)
     !**********************************************************************
-
     implicit none
     integer :: i, j
     ! Initialize dmsdr
     do i=1, 6
         do j=1, 6
             dmsdr(i,j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
     ! dmsdr(i,i)= (-1/a-2*(r-re)/ab)*Exp(-(r-re)/a-(r-re)^2/ab)
-
     do i=1, 6
         dmsdr(i,i) = (-2.0d0*(r(i)-re(i))/ab(i)-1.0d0/a(i)) * exp(-(r(i)-re(i))/a(i)-((r(i)-re(i))**2.0d0)/ab(i))
-    end do
-
+    enddo
 end subroutine evdmsdr
 
 !> @brief Evaluate EvdMdR.
@@ -5430,7 +5276,6 @@ subroutine evdmdr
     !  dMdR(6,nom) that do not have usable decomposition.
     !  For degree 10, the number of monomials is nom.
     !**********************************************************************
-
     implicit none
     integer :: i
     do i=1, 6
@@ -5452,8 +5297,7 @@ subroutine evdmdr
         dmdr(i,15) = dmdr(i,2)*rm(12) +  rm(2)*dmdr(i,12)
         dmdr(i,16) = dmdr(i,3)*rm(12) +  rm(3)*dmdr(i,12)
         dmdr(i,17) = dmdr(i,2)*rm(16) +  rm(2)*dmdr(i,16)
-    end do
-
+    enddo
 end subroutine evdmdr
 
 !> @brief Evaluate EvdPdr.
@@ -5465,7 +5309,6 @@ subroutine evdpdr
     !  permutationally invariant polynomials(p)
     !  For degree 10, the number of polynomials is nob.
     !**********************************************************************
-
     implicit none
     integer :: i
     do i=1, 6
@@ -7724,8 +7567,7 @@ subroutine evdpdr
         dpdr(i,2251) = dpdr(i,1)*p(1432) + p(1)*dpdr(i,1432)
         dpdr(i,2252) = dpdr(i,2)*p(1433) + p(2)*dpdr(i,1433) - dpdr(i,2232) - dpdr(i,2231) - dpdr(i,2230)
         dpdr(i,2253) = dpdr(i,3)*p(1434) + p(3)*dpdr(i,1434)
-    end do
-
+    enddo
 end subroutine evdpdr
 
 !> @brief Evaluate evdbdr.
@@ -7736,7 +7578,6 @@ subroutine evdbdr
     !  This subroutine eliminates the 2-body terms in the permutationally
     !  invariant formulation.
     !**********************************************************************
-
     implicit none
     integer          :: i, j
     double precision :: db1dr(6,2254)
@@ -7744,237 +7585,156 @@ subroutine evdbdr
     do j=1, 6
         do i=1, 2254
             db1dr(j,i) = dpdr(j,i-1)
-        end do
-    end do
-
+        enddo
+    enddo
     ! Remove unconnected terms and 2-body terms and pass to B(1:2153)
     do j=1, 6
-
         dbdr(j,1) = db1dr(j,5)
-
         do i=2, 3
             dbdr(j,i) = db1dr(j,i+5)
-        end do
-
+        enddo
         dbdr(j,4) = db1dr(j,10)
-
         do i=5, 14
             dbdr(j,i) = db1dr(j,i+9)
-        end do
-
+        enddo
         do i=15, 16
             dbdr(j,i) = db1dr(j,i+10)
-        end do
-
+        enddo
         dbdr(j,17) = db1dr(j,28)
-
         dbdr(j,18) = db1dr(j,30)
-
         do i=19, 44
             dbdr(j,i) = db1dr(j,i+15)
-        end do
-
+        enddo
         do i=45, 47
             dbdr(j,i) = db1dr(j,i+16)
-        end do
-
+        enddo
         do i=48, 49
             dbdr(j,i) = db1dr(j,i+17)
-        end do
-
+        enddo
         dbdr(j,50) = db1dr(j,68)
-
         dbdr(j,51) = db1dr(j,70)
-
         dbdr(j,52) = db1dr(j,72)
-
         do i=53, 112
             dbdr(j,i) = db1dr(j,i+23)
-        end do
-
+        enddo
         do i=113, 115
             dbdr(j,i) = db1dr(j,i+24)
-        end do
-
+        enddo
         do i=116, 117
             dbdr(j,i) = db1dr(j,i+25)
-        end do
-
+        enddo
         dbdr(j,118) = db1dr(j,144)
-
         dbdr(j,119) = db1dr(j,146)
-
         dbdr(j,120) = db1dr(j,148)
-
         dbdr(j,121) = db1dr(j,150)
-
         do i=122, 235
             dbdr(j,i) = db1dr(j,i+32)
-        end do
-
+        enddo
         do i=236, 238
             dbdr(j,i) = db1dr(j,i+33)
-        end do
-
+        enddo
         do i=239, 241
             dbdr(j,i) = db1dr(j,i+34)
-        end do
-
+        enddo
         do i=242, 243
             dbdr(j,i) = db1dr(j,i+35)
-        end do
-
+        enddo
         dbdr(j,244) = db1dr(j,280)
-
         dbdr(j,245) = db1dr(j,282)
-
         dbdr(j,246) = db1dr(j,284)
-
         dbdr(j,247) = db1dr(j,286)
-
         dbdr(j,248) = db1dr(j,288)
-
         do i=249, 450
             dbdr(j,i) = db1dr(j,i+43)
-        end do
-
+        enddo
         do i=451, 453
             dbdr(j,i) = db1dr(j,i+44)
-        end do
-
+        enddo
         do i=454, 456
             dbdr(j,i) = db1dr(j,i+45)
-        end do
-
+        enddo
         do i=457, 458
             dbdr(j,i) = db1dr(j,i+46)
-        end do
-
+        enddo
         dbdr(j,459) = db1dr(j,506)
-
         dbdr(j,460) = db1dr(j,508)
-
         dbdr(j,461) = db1dr(j,510)
-
         dbdr(j,462) = db1dr(j,512)
-
         dbdr(j,463) = db1dr(j,514)
-
         dbdr(j,464) = db1dr(j,516)
-
         do i=465, 795
             dbdr(j,i) = db1dr(j,i+55)
-        end do
-
+        enddo
         do i=796, 798
             dbdr(j,i) = db1dr(j,i+56)
-        end do
-
+        enddo
         do i=799, 801
             dbdr(j,i) = db1dr(j,i+57)
-        end do
-
+        enddo
         do i=802, 804
             dbdr(j,i) = db1dr(j,i+58)
-        end do
-
+        enddo
         do i=805, 806
             dbdr(j,i) = db1dr(j,i+59)
-        end do
-
+        enddo
         dbdr(j,807) = db1dr(j,867)
-
         dbdr(j,808) = db1dr(j,869)
-
         dbdr(j,809) = db1dr(j,871)
-
         dbdr(j,810) = db1dr(j,873)
-
         dbdr(j,811) = db1dr(j,875)
-
         dbdr(j,812) = db1dr(j,877)
-
         dbdr(j,813) = db1dr(j,879)
-
         do i=814, 1332
             dbdr(j,i) = db1dr(j,i+69)
-        end do
-
+        enddo
         do i=1333, 1335
             dbdr(j,i) = db1dr(j,i+70)
-        end do
-
+        enddo
         do i=1336, 1338
             dbdr(j,i) = db1dr(j,i+71)
-        end do
-
+        enddo
         do i=1339, 1341
             dbdr(j,i) = db1dr(j,i+72)
-        end do
-
+        enddo
         do i=1342, 1343
             dbdr(j,i) = db1dr(j,i+73)
-        end do
-
+        enddo
         dbdr(j,1344) = db1dr(j,1418)
-
         dbdr(j,1345) = db1dr(j,1420)
-
         dbdr(j,1346) = db1dr(j,1422)
-
         dbdr(j,1347) = db1dr(j,1424)
-
         dbdr(j,1348) = db1dr(j,1426)
-
         dbdr(j,1349) = db1dr(j,1428)
-
         dbdr(j,1350) = db1dr(j,1430)
-
         dbdr(j,1351) = db1dr(j,1432)
-
         do i=1352, 2130
             dbdr(j,i) = db1dr(j,i+84)
-        end do
-
+        enddo
         do i=2131, 2133
             dbdr(j,i) = db1dr(j,i+85)
-        end do
-
+        enddo
         do i=2134, 2136
             dbdr(j,i) = db1dr(j,i+86)
-        end do
-
+        enddo
         do i=2137, 2139
             dbdr(j,i) = db1dr(j,i+87)
-        end do
-
+        enddo
         do i=2140, 2142
             dbdr(j,i) = db1dr(j,i+88)
-        end do
-
+        enddo
         do i=2143, 2144
             dbdr(j,i) = db1dr(j,i+89)
-        end do
-
+        enddo
         dbdr(j,2145) = db1dr(j,2235)
-
         dbdr(j,2146) = db1dr(j,2237)
-
         dbdr(j,2147) = db1dr(j,2239)
-
         dbdr(j,2148) = db1dr(j,2241)
-
         dbdr(j,2149) = db1dr(j,2243)
-
         dbdr(j,2150) = db1dr(j,2245)
-
         dbdr(j,2151) = db1dr(j,2247)
-
         dbdr(j,2152) = db1dr(j,2249)
-
         dbdr(j,2153) = db1dr(j,2251)
-    end do
-
+    enddo
 end subroutine evdbdr
 
 !> @brief Evaluate d3disp.
@@ -8015,21 +7775,21 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     rs8 = 2.20d0
     do i=1, 1
         dist(i) = dist(i)/autoang
-    end do
-    if (imol.eq.4) then
+    enddo
+    if( imol .eq. 4 )then
         ! iz for O2 system
         iz(1) = 8
         iz(2) = 8
         ! C6 for O2 system
         c6(1) = 12.8d0
         c6(2) = 12.8d0
-    else if (imol.eq.3) then
+    else if( imol .eq. 3 )then
         ! iz for NO system
         iz(1) = 8
         iz(2) = 7
         c6(1) = 16.7d0  !C6 for NO doubly-coordinated
         c6(2) = 16.7d0  !C6 for NO doubly-coordinated
-    else if (imol.eq.2) then
+    else if( imol .eq. 2 )then
         ! iz for N2 system
         iz(1) = 7
         iz(2) = 7
@@ -8039,25 +7799,25 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     else
         ! currently imol = 4,3,2 are used
         stop
-    end if
+    endif
     ! Calculate dispersion correction
     call edisp(94, 5, 2, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
     disp = 0.0d0
     do i=1, 1
         disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
-    end do
-    if (igrad .eq. 1) then
+    enddo
+    if( igrad .eq. 1 )then
         call edisp(94, 5, 2, dist, iz, mxc, &
             rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
         dispdr(:) = 0.0d0
         do i=1, 1
             dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
-        end do
-    end if
+        enddo
+    endif
     do i=1, 1
         dist(i) = dist(i)*autoang
-    end do
+    enddo
 end subroutine d3disp
 
 !**********************************************************************
@@ -8132,11 +7892,11 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
             e6(step) = c6/(r**6+(a1*tmp+a2)**6)
             e8(step) = c8/(r**8+(a1*tmp+a2)**8)
             ! calculate gradients
-            if (igrad .eq. 1) then
+            if( igrad .eq. 1 )then
                 ! grad for BJ damping
                 e6dr(step) = c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
                 e8dr(step) = c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
-            end if
-        end do
-    end do
+            endif
+        enddo
+    enddo
 end subroutine edisp

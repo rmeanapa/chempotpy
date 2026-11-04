@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_reCoxJM potential.
@@ -58,7 +58,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: a2, a3, c0, c1, c2, c3, c4, c5, c6, dd, dx, dy, dz, &
         & fsech, oneha, onesi, oneth, poly, q1, q2, q23, q3, q332, r, re, rij, rjk, rki, rr, &
@@ -81,23 +80,21 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !      c5=-5.3579d0
     !      c6= 1.6327d0
     ! new parameters
-    a2 = 4.75085490962383972
-    a3 = 7.73864191499755716
-    dd = 1.25012212994626282/autoev
-    re = 2.61700048851978506/autoang
-    c0 = 0.182247191011235959
-    c1 = -0.319491939423546645
-    c2 = 9.46849047386419151
-    c3 = -0.502198339032730923
-    c4 = 1.59037616023448947
-    c5 = -4.89252564728871508
-    c6 = 1.19980459208597945
-
+    a2    = 4.75085490962383972
+    a3    = 7.73864191499755716
+    dd    = 1.25012212994626282/autoev
+    re    = 2.61700048851978506/autoang
+    c0    = 0.182247191011235959
+    c1    = -0.319491939423546645
+    c2    = 9.46849047386419151
+    c3    = -0.502198339032730923
+    c4    = 1.59037616023448947
+    c5    = -4.89252564728871508
+    c6    = 1.19980459208597945
     oneth = dsqrt(1.d0/3.d0)
     oneha = dsqrt(1.d0/2.d0)
     twoth = dsqrt(2.d0/3.d0)
     onesi = dsqrt(1.d0/6.d0)
-
     do 1 i=1, natom
         r(i,i) = 0d0
         do 1 j=i+1, natom
@@ -106,7 +103,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dz     = z(i)-z(j)
             r(i,j) = dsqrt(dx*dx+dy*dy+dz*dz)
     1 r(j,i)=r(i,j)
-
     !  calculate the potential energy
     v  = 0.d0
     v2 = 0.d0
@@ -130,7 +126,5 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 poly  = c0+c1*q1+c2*q1**2+c3*q23+c4*q1**3+c5*q1*q23+c6*q332
                 v3    = v3+dd*poly*fsech
     2 continue
-
     v = v2+v3
-
 end subroutine pot

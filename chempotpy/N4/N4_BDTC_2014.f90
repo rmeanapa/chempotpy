@@ -17,36 +17,31 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: i, j, k, l
     integer                         :: istate, iatom, idir
     !initialize
-    v = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
-
+    v     = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
     x1(:) = x(:,1)/legacy_bohr_to_angstrom
     y1(:) = x(:,2)/legacy_bohr_to_angstrom
     z1(:) = x(:,3)/legacy_bohr_to_angstrom
-
-    if(first_time_data) then
+    if( first_time_data )then
         call prepot(path)
         first_time_data = .false.
-    end if
-
+    endif
     call pot(x1, y1, z1, v, dx1, dy1, dz1)
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = v*legacy_hartree_to_electronvolt
-        end do
-    else if (igrad==1) then
+        enddo
+    else if( igrad == 1 )then
         do istate=1, nstates
             p(istate) = v*legacy_hartree_to_electronvolt
-        end do
+        enddo
         do istate=1, nstates
             g(istate,:,1) = dx1(:)*51.422067
             g(istate,:,2) = dy1(:)*51.422067
             g(istate,:,3) = dz1(:)*51.422067
-        end do
+        enddo
     else
         write(*, *) "Only energy and gradients are available"
-    end if
-
+    endif
 end subroutine
 
 module falcons_vars_eval
@@ -132,10 +127,10 @@ subroutine readpes( path )
     ps         = 4d0
     file_path1 = trim(path)//"/N4/pes.dat"
     inquire(file=file_path1, exist=ex)
-    if (.not. ex) then
+    if( .not. ex )then
         write(*, '(a)') 'ERROR: No pes.dat file found.'
         stop
-    end if
+    endif
     open(fid, file=file_path1, action='read')
     read(fid, *)
     read(fid, *)
@@ -144,7 +139,7 @@ subroutine readpes( path )
     read(fid, *)
     do i=1, 20
         read(fid, *)
-    end do
+    enddo
     read(fid, *)
     read(fid, *)
     read(fid, *)
@@ -169,33 +164,33 @@ subroutine readpes( path )
     read(fid, *)
     read(fid, *)
     j = 0
-    if (pesform== 1) then
+    if( pesform == 1 )then
         do i=1, nall
             read(fid, *) oridval, e, (t(l), l=1, 6), maskval
-            if (maskval== 0) then
+            if( maskval == 0 )then
                 j = j+1
                 call default2cartesian(&
                     &    t(1), t(2), t(3), t(4), t(5), t(6), y)
                 call cartesian2rawdist(y, qr)
                 call rawdist2rawmorse(qr, qi(j, :), qeq, aa)
-            end if
-        end do
+            endif
+        enddo
     else
         write(*, '(a)') &
             &  'ERROR: pesform /= 1 is not supported in this code.'
         stop
-    end if
-    if (j /= n) then
+    endif
+    if( j /= n )then
         write(*, '(a)') 'ERROR: Bad pes.dat file.'//&
             & ' Inconsistent number of unmasked points.'
         stop
-    end if
+    endif
     read(fid, *)
     do i= 1, n
         do j= 1, m
             read(fid, *) aji(i, j)
-        end do
-    end do
+        enddo
+    enddo
     close(fid)
 end subroutine readpes
 
@@ -211,9 +206,9 @@ subroutine readcrcparameters( fid )
     read(fid, *)
     read(fid, *)
     read(fid, *) nmincrc, mcrc
-    if (allocated(crc)) then
+    if( allocated(crc) )then
         deallocate(crc)
-    end if
+    endif
     allocate(crc(mcrc))
     read(fid, *)
     read(fid, *) (crc(l), l=1, mcrc)
@@ -238,19 +233,18 @@ subroutine pot( x_, y_, z_, e_, dedx_, dedy_, dedz_ )
     epsu   = 1d-1
     pwonly = 0
     cgmeth = 1
-
-    cconv = 0.52917721092d0
-    econv = 0.159360144d-2
-    gconv = 0.843297564d-3
-    eref  = -218.4080132d0
-    x__   = x_*cconv
-    y__   = y_*cconv
-    z__   = z_*cconv
+    cconv  = 0.52917721092d0
+    econv  = 0.159360144d-2
+    gconv  = 0.843297564d-3
+    eref   = -218.4080132d0
+    x__    = x_*cconv
+    y__    = y_*cconv
+    z__    = z_*cconv
     do l=1, 4
         y(l, 1) = x__(l)
         y(l, 2) = y__(l)
         y(l, 3) = z__(l)
-    end do
+    enddo
     call calccoordinates(y, qr, xr, q, x, sd, aa, qeq, moltype, qp, qps)
     call evaluatesurface(cgmeth, y, qr, xr, q, x, moltype, pwonly, &
         & cmap, qp, qps, mcrc, crc, n, m, eta, ps, pu, epsu, aa, r, np, e, dedy)
@@ -293,110 +287,101 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
     do a=1, 6
         dedxrpart(a) = 0d0
         dwdxrsum(a)  = 0d0 !sums of the weight function derivatives
-    end do
+    enddo
     call calcqch(q, tmp)
     call calccr(tmp, mcrc, crc, r, rs, drdqch)
     call calcbj(bj, dbjdx, x, eta, m, 1)
-    if (cg /= 0) then
+    if( cg /= 0 )then
         call calcinvariantsjacobian(xr, x, dxdxr, moltype)
         call calcdqrdyjacobian(qr, y, dqrdy)
-    end if
-
+    endif
     call calcsumpairwise(qr, epw, depwdqr, moltype, cg)
-
-    if (pwonly == 0) then
+    if( pwonly == 0 )then
         do i=1, n
-
             do a=1, 6
                 qii(a) = qi(i, a)
-            end do
+            enddo
             call distance6ds_perm(q, qii, qp, qps, 0, dis, ddisdq)
-
-            if (dis <= rs) then
+            if( dis <= rs )then
                 np = np+1
-                if (cg /= 0) then
+                if( cg /= 0 )then
                     call distance6ds_perm(q, qii, qp, qps, cg, dis, ddisdq)
-                end if
+                endif
                 do j=1, m
                     aj(j) = aji(i, j)
-                end do
+                enddo
                 call weightw(wi, dwidz, dis, rs, ps, pu, epsu)
                 pi = 0d0
                 do j=1, m
                     pi = pi+ aj(j)*bj(j)
-                end do
+                enddo
                 wsum = wsum+ wi
                 e    = e+ wi*pi
-                if (cg /= 0) then
+                if( cg /= 0 )then
                     do a=1, 6
                         dpidx(a) = 0d0
-                    end do
+                    enddo
                     do j=1, m
                         do a=1, 6
                             dpidx(a) = dpidx(a)+ aj(j)*dbjdx(j, a)
-                        end do
-                    end do
+                        enddo
+                    enddo
                     do a=1, 6
                         tmp = 0d0
                         do k=1, 6
                             tmp = tmp+ dpidx(k)*dxdxr(k, a)
-                        end do
+                        enddo
                         dpidxr(a) = tmp
-                    end do
+                    enddo
                     tmp = dis*4d0*drdqch/r
                     do a=1, 6
                         dwidxr(a)   = dwidz*(ddisdq(a)- tmp*q(a))/rs
                         dwdxrsum(a) = dwdxrsum(a)+ dwidxr(a)
-                    end do
+                    enddo
                     do a=1, 6
                         dedxrpart(a) = dedxrpart(a)+ wi*dpidxr(a)+ pi*dwidxr(a)
-                    end do
-                end if
-            end if
-        end do  !end loop over data points within the cutoff radius
-    end if  !end if 'pwonly==0' computation
-
-    if (wsum== 0d0) then
+                    enddo
+                endif
+            endif
+        enddo  !end loop over data points within the cutoff radius
+    endif  !end if 'pwonly==0' computation
+    if( wsum == 0d0 )then
         wsum = 1d0
-    end if
-
+    endif
     e = e/wsum
-
-    if (cg /= 0) then
+    if( cg /= 0 )then
         do a=1, 6
             dedxr(a) = (dedxrpart(a)- e*dwdxrsum(a))/wsum
-        end do
+        enddo
         do a=1, 6
             dedqr(a) = -dedxr(a)*xr(a)/aa(a)+ depwdqr(a)
-        end do
+        enddo
         do b=1, 4
             do c=1, 3
                 tmp = 0d0
                 do k=1, 3
                     a   = cmap(b, k)
                     tmp = tmp+ dedqr(a)*dqrdy(a, b, c)
-                end do
+                enddo
                 dedy(b, c) = tmp
-            end do
-        end do
+            enddo
+        enddo
     else
         do b=1, 4
             do c=1, 3
                 dedy(b, c) = 0d0
-            end do
-        end do
-    end if
-
+            enddo
+        enddo
+    endif
     e = e+ epw
-
-    if (np==0) then
+    if( np == 0 )then
         write(*, '(a)') &
             &  ' WARNING: No points found within cutoff radius for'//&
             &  ' evaluation point:'
         write(*, '(a,6(1x,f15.5))') ' qr= ', (qr(l), l=1, 6)
         write(*, '(a,6(1x,f15.5))') ' q = ', (q(l), l=1, 6)
         write(*, '(a,6(1x,f15.5))') ' x = ', (x(l), l=1, 6)
-    end if
+    endif
 end subroutine evaluatesurface
 
 !> @brief Evaluate calcqch.
@@ -409,7 +394,7 @@ subroutine calcqch( q, qch )
     val = 0d0
     do i=1, 6
         val = val+ q(i)**2d0
-    end do
+    enddo
     qch = val
 end subroutine calcqch
 
@@ -429,7 +414,7 @@ subroutine calccr( qch, mcrc, crc, cr, crs, dcrdqch )
         dcrdqch = dcrdqch+ (crc(icrc)*dble(icrc-1)*pqch)
         pqch    = pqch*qch
         cr      = cr+ (crc(icrc)* pqch)
-    end do
+    enddo
     crs = cr*cr
 end subroutine calccr
 
@@ -461,8 +446,8 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
     do j=1, 6
         ind    = ind+1
         b(ind) = x(j) !linear terms
-    end do
-    if (eta .ge. 2) then
+    enddo
+    if( eta .ge. 2 )then
         do j= 1, 6
             ind    = ind+1
             tmp    = x(j)*x(j)
@@ -473,10 +458,10 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                 tmp      = x(j)*x(k)
                 xy(j, k) = tmp
                 b(ind)   = tmp
-            end do
-        end do
-    end if
-    if (eta .ge. 3) then
+            enddo
+        enddo
+    endif
+    if( eta .ge. 3 )then
         do j= 1, 6
             ind    = ind+1
             tmp    = xx(j)
@@ -488,8 +473,8 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                 b(ind) = tmp*x(k)
                 ind    = ind+1
                 b(ind) = x(j)*xx(k)
-            end do
-        end do
+            enddo
+        enddo
         do j= 1, 6
             do k= j+1, 6
                 tmp = xy(j, k)
@@ -498,11 +483,11 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                     tmp2         = tmp*x(l)
                     b(ind)       = tmp2
                     xyz(j, k, l) = tmp2
-                end do
-            end do
-        end do
-    end if
-    if (eta .ge. 4) then
+                enddo
+            enddo
+        enddo
+    endif
+    if( eta .ge. 4 )then
         do j= 1, 6
             ind    = ind+1
             tmp    = xxx(j)
@@ -512,8 +497,8 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                 b(ind) = tmp*x(k)
                 ind    = ind+1
                 b(ind) = x(j)*xxx(k)
-            end do
-        end do
+            enddo
+        enddo
         do j= 1, 6
             tmp = xx(j)
             do k= j+1, 6
@@ -528,9 +513,9 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                     b(ind) = tmp2*xy(j, l)
                     ind    = ind+1
                     b(ind) = xx(l)*tmp3
-                end do
-            end do
-        end do
+                enddo
+            enddo
+        enddo
         do j=1, 6
             do k= j+1, 6
                 tmp = xy(j, k)
@@ -538,165 +523,165 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                     do ll= l+1, 6
                         ind    = ind+1
                         b(ind) = tmp*xy(l, ll)
-                    end do
-                end do
-            end do
-        end do
-    end if
-    if (dflag /= 0) then
+                    enddo
+                enddo
+            enddo
+        enddo
+    endif
+    if( dflag /= 0 )then
         do j=1, 6
             x2(j) = 2d0*x(j)
             do k=j+1, 6
                 xy2(j, k) = 2d0*xy(j, k)
-            end do
-        end do
+            enddo
+        enddo
         do a=1, 6
             do j=1, m
                 dbdxa(j) = 0d0
-            end do
+            enddo
             dbdxa(a) = 1d0 !derivative of linear term
             ind      = 6
-            if (eta .ge. 2) then
+            if( eta .ge. 2 )then
                 do j= 1, 6
                     ind = ind+1
-                    if (j == a) then
+                    if( j == a )then
                         dbdxa(ind) = x2(j)
-                    end if
+                    endif
                     do k= j+1, 6
                         ind = ind+1
-                        if (j == a) then
+                        if( j == a )then
                             dbdxa(ind) = x(k)
-                        else if (k == a) then
+                        else if( k == a )then
                             dbdxa(ind) = x(j)
-                        end if
-                    end do
-                end do
-            end if
-            if (eta .ge. 3) then
+                        endif
+                    enddo
+                enddo
+            endif
+            if( eta .ge. 3 )then
                 do j= 1, 6
                     ind = ind+1
-                    if (j == a) then
+                    if( j == a )then
                         dbdxa(ind) = 3d0*xx(a)
                         do k= j+1, 6
                             ind        = ind+1
                             dbdxa(ind) = xy2(j, k)
                             ind        = ind+1
                             dbdxa(ind) = xx(k)
-                        end do
+                        enddo
                     else
                         do k= j+1, 6
-                            if (k == a) then
+                            if( k == a )then
                                 ind        = ind+1
                                 dbdxa(ind) = xx(j)
                                 ind        = ind+1
                                 dbdxa(ind) = xy2(j, k)
                             else
                                 ind = ind+2
-                            end if
-                        end do
-                    end if
-                end do
+                            endif
+                        enddo
+                    endif
+                enddo
                 do j= 1, 6
                     do k= j+1, 6
                         do l= k+1, 6
                             ind = ind+1
-                            if (j == a) then
+                            if( j == a )then
                                 dbdxa(ind) = xy(k, l)
-                            else if (k == a) then
+                            else if( k == a )then
                                 dbdxa(ind) = xy(j, l)
-                            else if (l == a) then
+                            else if( l == a )then
                                 dbdxa(ind) = xy(j, k)
-                            end if
-                        end do
-                    end do
-                end do
-            end if
-            if (eta .ge. 4) then
+                            endif
+                        enddo
+                    enddo
+                enddo
+            endif
+            if( eta .ge. 4 )then
                 do j= 1, 6
                     ind = ind+1
-                    if (j == a) then
+                    if( j == a )then
                         dbdxa(ind) = 4d0*xxx(a)
                         do k= j+1, 6
                             ind        = ind+1
                             dbdxa(ind) = 3d0*xx(j)*x(k)
                             ind        = ind+1
                             dbdxa(ind) = xxx(k)
-                        end do
+                        enddo
                     else
                         do k= j+1, 6
-                            if (k == a) then
+                            if( k == a )then
                                 ind        = ind+1
                                 dbdxa(ind) = xxx(j)
                                 ind        = ind+1
                                 dbdxa(ind) = 3d0*x(j)*xx(k)
                             else
                                 ind = ind+2
-                            end if
-                        end do
-                    end if
-                end do
+                            endif
+                        enddo
+                    endif
+                enddo
                 do j= 1, 6
                     tmp = xx(j)
                     do k= j+1, 6
                         tmp2 = xx(k)
                         ind  = ind+1
-                        if (j == a) then
+                        if( j == a )then
                             dbdxa(ind) = x2(j)*tmp2
-                        else if (k == a) then
+                        else if( k == a )then
                             dbdxa(ind) = tmp*x2(k)
-                        end if
+                        endif
                         do l= k+1, 6
                             ind = ind+1
-                            if (j == a) then
+                            if( j == a )then
                                 dbdxa(ind) = x2(j)*xy(k, l)
-                            else if (k == a) then
+                            else if( k == a )then
                                 dbdxa(ind) = tmp*x(l)
-                            else if (l == a) then
+                            else if( l == a )then
                                 dbdxa(ind) = tmp*x(k)
-                            end if
+                            endif
                             ind = ind+1
-                            if (j == a) then
+                            if( j == a )then
                                 dbdxa(ind) = tmp2*x(l)
-                            else if (k == a) then
+                            else if( k == a )then
                                 dbdxa(ind) = x2(k)*xy(j, l)
-                            else if (l == a) then
+                            else if( l == a )then
                                 dbdxa(ind) = tmp2*x(j)
-                            end if
+                            endif
                             ind = ind+1
-                            if (j == a) then
+                            if( j == a )then
                                 dbdxa(ind) = xx(l)*x(k)
-                            else if (k == a) then
+                            else if( k == a )then
                                 dbdxa(ind) = xx(l)*x(j)
-                            else if (l == a) then
+                            else if( l == a )then
                                 dbdxa(ind) = x2(l)*xy(j, k)
-                            end if
-                        end do
-                    end do
-                end do
+                            endif
+                        enddo
+                    enddo
+                enddo
                 do j= 1, 6
                     do k= j+1, 6
                         do l= k+1, 6
                             do ll= l+1, 6
                                 ind = ind+1
-                                if (j == a) then
+                                if( j == a )then
                                     dbdxa(ind) = xyz(k, l, ll)
-                                else if (k == a) then
+                                else if( k == a )then
                                     dbdxa(ind) = xyz(j, l, ll)
-                                else if (l == a) then
+                                else if( l == a )then
                                     dbdxa(ind) = xyz(j, k, ll)
-                                else if (ll == a) then
+                                else if( ll == a )then
                                     dbdxa(ind) = xyz(j, k, l)
-                                end if
-                            end do
-                        end do
-                    end do
-                end do
-            end if
+                                endif
+                            enddo
+                        enddo
+                    enddo
+                enddo
+            endif
             do j=1, m
                 dbdx(j, a) = dbdxa(j)
-            end do
-        end do !end 'do a=1,6'
-    end if !end 'if (dflag /= 0) then'
+            enddo
+        enddo !end 'do a=1,6'
+    endif !end 'if (dflag /= 0) then'
 end subroutine calcbj
 
 !> @brief Evaluate distance6ds_perm.
@@ -715,49 +700,49 @@ subroutine distance6ds_perm( q, qi, qp, qps, cg, ds, ddsdq )
     dssum  = 0d0
     do a=1, 6
         ddsdq(a) = 0d0
-    end do
+    enddo
     do i=1, qps
         do a=1, 6
             sd(a) = qp(i, a)
-        end do
+        enddo
         do a=1, 6
             qdif(a) = q(a)- qi(sd(a))
-        end do
+        enddo
         dsval = 0d0
         do a=1, 6
             dsval = dsval+ qdif(a)**2d0
-        end do
-        if (dsval > 0d0) then
+        enddo
+        if( dsval > 0d0 )then
             dsvali  = 1d0/dsval
             dsvalis = dsvali*dsvali !dsvalis= dsval^(-2)
             dssum   = dssum+ dsvalis
-            if (cg /= 0) then
+            if( cg /= 0 )then
                 mult = 2d0*dsvali*dsvalis !mult= 2*dsval^(-3)
                 do a=1, 6
                     ddsdq(a) = ddsdq(a)+ mult*qdif(a)
-                end do
-            end if
+                enddo
+            endif
         else
             iszero = 1
-        end if
-    end do
-    if (iszero /= 1) then
+        endif
+    enddo
+    if( iszero /= 1 )then
         dssumi = 1d0/dssum
         ds     = sqrt(dssumi) !ds= dssum^(-0.5)
-        if (cg /= 0) then
+        if( cg /= 0 )then
             mult = dssumi*ds  !mult= dssum^(-1.5)
             do a=1, 6
                 ddsdq(a) = mult*ddsdq(a)
-            end do
-        end if
+            enddo
+        endif
     else
         ds = 0d0
-        if (cg /= 0) then
+        if( cg /= 0 )then
             do a=1, 6
                 ddsdq(a) = 0d0
-            end do
-        end if
-    end if
+            enddo
+        endif
+    endif
 end subroutine distance6ds_perm
 
 !> @brief Evaluate weightw.
@@ -847,7 +832,7 @@ subroutine rawdist2rawmorse( qr, xr, qeq, aa )
     integer                                     :: i
     do i=1, 6
         xr(i) = exp(-(qr(i)-qeq(i))/aa(i))
-    end do
+    enddo
 end subroutine rawdist2rawmorse
 
 !> @brief Evaluate calcinvariants.
@@ -880,7 +865,6 @@ subroutine calcinvariants( vr, v, moltype )
         v(5) = v(5)       !LEGACY: **(1d0/3d0)
         v(6) = (vr(1)*vr(2)*vr(5)*vr(6)+ vr(1)*vr(3)*vr(4)*vr(6)+ vr(2)*vr(3)*vr(4)*vr(5))/3d0
         v(6) = v(6)       !LEGACY: **0.25d0
-
     case (2)
         v(1) = (vr(2)*vr(4)+ vr(3)*vr(5))/2d0
         v(2) = (vr(2)*vr(3)+ vr(4)*vr(5))/2d0
@@ -911,11 +895,11 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(6) = vr(2)*vr(4)+ vr(3)*vr(5)
         do i=1, 6
             dvdvr(4, i) = tmp(i)*mult
-        end do
+        enddo
         mult = 1d0/4d0     !LEGACY: *3d0*(v(2)**2d0))
         do i=1, 6
             dvdvr(2, i) = tmp(7-i)*mult
-        end do
+        enddo
         mult   = 1d0/12d0    !LEGACY: *2d0*v(1))
         tmp(1) = vr(2)+vr(3)+vr(4)+vr(5)
         tmp(2) = vr(1)+vr(3)+vr(4)+vr(6)
@@ -925,7 +909,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(6) = tmp(1)
         do i=1, 6
             dvdvr(1, i) = tmp(i)*mult
-        end do
+        enddo
         mult    = 1d0/12d0    !LEGACY: *3d0*(v(5)**2d0))
         tmp2(1) = vr(3)*vr(4)+ vr(2)*vr(5)
         tmp2(2) = vr(3)*vr(4)+ vr(1)*vr(6)
@@ -935,11 +919,11 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp2(6) = tmp2(1)
         do i=1, 6
             dvdvr(5, i) = (tmp(i)*vr(7-i)+ tmp2(i))*mult
-        end do
+        enddo
         mult = 1d0/3d0     !LEGACY: *4d0*(v(6)**3d0))
         do i=1, 6
             dvdvr(6, i) = vr(7-i)*tmp2(i)*mult
-        end do
+        enddo
         mult    = 1d0/24d0    !LEGACY: *3d0*(v(3)**2d0))
         tmp2(1) = vr(2)**2d0+vr(3)**2d0+vr(4)**2d0+vr(5)**2d0
         tmp2(2) = vr(1)**2d0+vr(3)**2d0+vr(4)**2d0+vr(6)**2d0
@@ -949,8 +933,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp2(6) = tmp2(1)
         do i=1, 6
             dvdvr(3, i) = (tmp2(i)+ 2d0*vr(i)*tmp(i))*mult
-        end do
-
+        enddo
     case (2)
         mult   = 1d0/2d0
         tmp(1) = 0d0
@@ -961,7 +944,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(6) = 0d0
         do i=1, 6
             dvdvr(1, i) = tmp(i)*mult
-        end do
+        enddo
         tmp(1) = 0d0
         tmp(2) = vr(3)
         tmp(3) = vr(2)
@@ -970,7 +953,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(6) = 0d0
         do i=1, 6
             dvdvr(2, i) = tmp(i)*mult
-        end do
+        enddo
         tmp(1) = 2d0*v(2)
         tmp(2) = vr(1)*vr(3)
         tmp(3) = vr(1)*vr(2)
@@ -979,7 +962,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(6) = 0d0
         do i=1, 6
             dvdvr(5, i) = tmp(i)*mult
-        end do
+        enddo
         tmp(1) = 0d0
         tmp(2) = vr(6)*vr(4)
         tmp(3) = vr(6)*vr(5)
@@ -988,7 +971,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(6) = 2d0*v(1)
         do i=1, 6
             dvdvr(6, i) = tmp(i)*mult
-        end do
+        enddo
         mult   = 1d0/4d0
         tmp(1) = vr(2)+vr(3)+vr(4)+vr(5)
         tmp(2) = vr(1)
@@ -998,7 +981,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(6) = 0d0
         do i=1, 6
             dvdvr(3, i) = tmp(i)*mult
-        end do
+        enddo
         tmp(1) = 0d0
         tmp(2) = vr(6)
         tmp(3) = vr(6)
@@ -1007,7 +990,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(6) = vr(2)+vr(3)+vr(4)+vr(5)
         do i=1, 6
             dvdvr(4, i) = tmp(i)*mult
-        end do
+        enddo
     end select
 end subroutine calcinvariantsjacobian
 
@@ -1039,10 +1022,10 @@ subroutine calcdqrdyjacobian( qr, y, dqrdy )
         val            = y(3, i)-y(4, i)
         dqrdy(6, 3, i) = val
         dqrdy(6, 4, i) = -val
-    end do
+    enddo
     do i=1, 6
         dqrdy(i, :, :) = dqrdy(i, :, :)/qr(i)
-    end do
+    enddo
 end subroutine calcdqrdyjacobian
 
 !> @brief Evaluate calcpairwise.
@@ -1095,7 +1078,6 @@ subroutine calcpairwise( r, v2, dv2dr, imol, igrad )
         c(5) = 2.40883331247d0
         c(6) = 2.09264029009d0
     end select
-
     r2  = r*r
     r4  = r2*r2
     re2 = re*re
@@ -1104,19 +1086,15 @@ subroutine calcpairwise( r, v2, dv2dr, imol, igrad )
     y   = (r4 - re4)/v
     y2  = y*y
     y4  = y2*y2
-
-    fy = c(0) + c(1)*y + c(2)*y2 + c(3)*y2*y + c(4)*y4 + c(5)*y4*y + c(6)*y4*y2
-
-    u = exp(-fy*(r-re))
-
-    v2 = de*(1.0d0-u)*(1.0d0-u)- de
-
-    if (igrad .eq. 1) then
+    fy  = c(0) + c(1)*y + c(2)*y2 + c(3)*y2*y + c(4)*y4 + c(5)*y4*y + c(6)*y4*y2
+    u   = exp(-fy*(r-re))
+    v2  = de*(1.0d0-u)*(1.0d0-u)- de
+    if( igrad .eq. 1 )then
         dfdy  = c(1)+ 2d0*c(2)*y+ 3d0*c(3)*y2+ 4d0*c(4)*y2*y+ 5d0*c(5)*y4 + 6d0*c(6)*y4*y
         dydr  = 8.0d0*r2*r*re4/(v*v)
         dfdr  = dfdy*dydr
         dv2dr = 2.0d0*de*(1d0-u)*u*(dfdr*(r-re)+fy)
-    end if
+    endif
 end subroutine calcpairwise
 
 !> @brief Evaluate calcsumpairwise.
@@ -1130,13 +1108,13 @@ subroutine calcsumpairwise( rvec, v2, dv2dr, systype, igrad )
     v2 = 0d0
     do a=1, 6
         dv2dr(a) = 0d0
-    end do
+    enddo
     select case (systype)
     case (1)
         do a=1, 6
             call calcpairwise(rvec(a), tmp, dv2dr(a), 1, igrad)
             v2 = v2+ tmp
-        end do
+        enddo
         de = 228.7d0
         v2 = v2+ 2d0*de
     case (2)
@@ -1145,7 +1123,7 @@ subroutine calcsumpairwise( rvec, v2, dv2dr, systype, igrad )
         do a=2, 5
             call calcpairwise(rvec(a), tmp, dv2dr(a), 3, igrad)
             v2 = v2+ tmp
-        end do
+        enddo
         call calcpairwise(rvec(6), tmp, dv2dr(6), 2, igrad)
         v2 = v2+ tmp
         v2 = v2+ 228.4d0+ 120.243d0

@@ -39,14 +39,12 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call pes_init(path)
         call c2h2o_pes_interface(tx, v)
         deallocate(nodes)
@@ -64,12 +62,10 @@ subroutine pes( x, igrad, path, p, g, d )
         deallocate(pavgc)
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
 end subroutine
 
 !******************************************************************
@@ -87,27 +83,24 @@ subroutine c2h2o_pes_interface( q, vpes )
     vpesb = 0.d0
     vpesc = 0.d0
     lxc   = 0
-
     call before_vpes(q, lxc)
-    if (lxc.eq.-1) then
+    if( lxc .eq. -1 )then
         vpesa = vpescut
         vpesb = vpescut
         vpesc = vpescut
         vpes  = vpescut
         return
-    end if
-
-    if (lxc.eq.0) then
+    endif
+    if( lxc .eq. 0 )then
         call c2h2onn(q, vpes, vpesa, vpesb, vpesc)
-        if (vpes.lt.-1.5 .or. vpes.gt.vpescut) then
+        if( vpes .lt. -1.5 .or. vpes .gt. vpescut )then
             vpes  = vpescut
             vpesa = vpescut
             vpesb = vpescut
             vpesc = vpescut
-        end if
+        endif
         return
-    end if
-
+    endif
 end
 
 !******************************************************************
@@ -128,9 +121,8 @@ subroutine c2h2onn( ct, vpes, vpesa, vpesb, vpesc )
     ! bohr to angstrom
     double precision, parameter :: btoa = 0.529177249d0
     double precision, parameter :: pi   = dacos(-1.d0)
-    basis = 0.d0
-    xct   = ct
-
+    basis      = 0.d0
+    xct        = ct
     qvec(:,1)  = xct(:,3)-xct(:,2) !  C3->C2
     qvec(:,2)  = xct(:,4)-xct(:,2) !  H4->C2
     qvec(:,3)  = xct(:,5)-xct(:,2) !  H5->C2
@@ -141,31 +133,25 @@ subroutine c2h2onn( ct, vpes, vpesa, vpesb, vpesc )
     qvec(:,8)  = xct(:,5)-xct(:,4) !  H5->H4
     qvec(:,9)  = xct(:,1)-xct(:,4) !  O1->H4
     qvec(:,10) = xct(:,1)-xct(:,5) !  O1->H5
-
-    rb(1)  = dsqrt(dot_product(qvec(:,1), qvec(:,1)))
-    rb(2)  = dsqrt(dot_product(qvec(:,2), qvec(:,2)))
-    rb(3)  = dsqrt(dot_product(qvec(:,3), qvec(:,3)))
-    rb(4)  = dsqrt(dot_product(qvec(:,4), qvec(:,4)))
-    rb(5)  = dsqrt(dot_product(qvec(:,5), qvec(:,5)))
-    rb(6)  = dsqrt(dot_product(qvec(:,6), qvec(:,6)))
-    rb(7)  = dsqrt(dot_product(qvec(:,7), qvec(:,7)))
-    rb(8)  = dsqrt(dot_product(qvec(:,8), qvec(:,8)))
-    rb(9)  = dsqrt(dot_product(qvec(:,9), qvec(:,9)))
-    rb(10) = dsqrt(dot_product(qvec(:,10), qvec(:,10)))
-
-    xbond(:) = dexp(-rb(:)/(alpha*btoa))
-
+    rb(1)      = dsqrt(dot_product(qvec(:,1), qvec(:,1)))
+    rb(2)      = dsqrt(dot_product(qvec(:,2), qvec(:,2)))
+    rb(3)      = dsqrt(dot_product(qvec(:,3), qvec(:,3)))
+    rb(4)      = dsqrt(dot_product(qvec(:,4), qvec(:,4)))
+    rb(5)      = dsqrt(dot_product(qvec(:,5), qvec(:,5)))
+    rb(6)      = dsqrt(dot_product(qvec(:,6), qvec(:,6)))
+    rb(7)      = dsqrt(dot_product(qvec(:,7), qvec(:,7)))
+    rb(8)      = dsqrt(dot_product(qvec(:,8), qvec(:,8)))
+    rb(9)      = dsqrt(dot_product(qvec(:,9), qvec(:,9)))
+    rb(10)     = dsqrt(dot_product(qvec(:,10), qvec(:,10)))
+    xbond(:)   = dexp(-rb(:)/(alpha*btoa))
     call bemsav(xbond, basis)
-
     do i=1, 101
         txinput(i) = basis(i)
-    end do
-
+    enddo
     call getpota(txinput, vpesa)
     call getpotb(txinput, vpesb)
     call getpotc(txinput, vpesc)
     vpes = (vpesa+vpesb+vpesc)/3.0d0
-
 end subroutine c2h2onn
 
 !******************************************************************
@@ -187,21 +173,18 @@ subroutine pes_init( path )
     character(len=1024)             :: file_path1, file_path2
     character(len=1024)             :: file_path3, file_path4
     character(len=1024)             :: file_path5, file_path6
-    wfilea = 551
-    bfilea = 661
-    wfileb = 552
-    bfileb = 662
-    wfilec = 553
-    bfilec = 663
-
+    wfilea     = 551
+    bfilea     = 661
+    wfileb     = 552
+    bfileb     = 662
+    wfilec     = 553
+    bfilec     = 663
     file_path1 = trim(path)//"/C2H2O/weightsa.txt"
     file_path2 = trim(path)//"/C2H2O/biasesa.txt"
     open(wfilea, file=file_path1, status='old')
     open(bfilea, file=file_path2, status='old')
-
     rewind(wfilea)
     rewind(bfilea)
-
     read(wfilea, *)nhid, noutput
     nscale = ninput+noutput
     nlayer = nhid+2
@@ -212,7 +195,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weighta(nodemax,nodemax,2:nlayer), biasa(nodemax,2:nlayer))
     read(wfilea, *)ifunc, nwe
     read(wfilea, *)(pdela(i), i=1, nscale)
@@ -224,28 +207,25 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2)
                 read(wfilea, *)weighta(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(bfilea, *)biasa(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
+    endif
     close(wfilea)
     close(bfilea)
-
     file_path3 = trim(path)//"/C2H2O/weightsb.txt"
     file_path4 = trim(path)//"/C2H2O/biasesb.txt"
     open(wfileb, file=file_path3, status='old')
     open(bfileb, file=file_path4, status='old')
-
     rewind(wfileb)
     rewind(bfileb)
-
     read(wfileb, *)nhid, noutput
     nscale = ninput+noutput
     nlayer = nhid+2
@@ -256,12 +236,11 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightb(nodemax,nodemax,2:nlayer), biasb(nodemax,2:nlayer))
     read(wfileb, *)ifunc, nwe
     read(wfileb, *)(pdelb(i), i=1, nscale)
     read(wfileb, *)(pavgb(i), i=1, nscale)
-
     iwe = 0
     do ilay1=2, nlayer
         ilay2 = ilay1-1
@@ -269,28 +248,25 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2)
                 read(wfileb, *)weightb(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(bfileb, *)biasb(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
+    endif
     close(wfileb)
     close(bfileb)
-
     file_path5 = trim(path)//"/C2H2O/weightsc.txt"
     file_path6 = trim(path)//"/C2H2O/biasesc.txt"
     open(wfilec, file=file_path5, status='old')
     open(bfilec, file=file_path6, status='old')
-
     rewind(wfilec)
     rewind(bfilec)
-
     read(wfilec, *)nhid, noutput
     nscale = ninput+noutput
     nlayer = nhid+2
@@ -301,12 +277,11 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightc(nodemax,nodemax,2:nlayer), biasc(nodemax,2:nlayer))
     read(wfilec, *)ifunc, nwe
     read(wfilec, *)(pdelc(i), i=1, nscale)
     read(wfilec, *)(pavgc(i), i=1, nscale)
-
     iwe = 0
     do ilay1=2, nlayer
         ilay2 = ilay1-1
@@ -314,20 +289,19 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2)
                 read(wfilec, *)weightc(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(bfilec, *)biasc(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
+    endif
     close(wfilec)
     close(bfilec)
-
 end subroutine pes_init
 
 !**************************************************************************
@@ -344,8 +318,7 @@ subroutine getpota( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavga(i))/pdela(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -353,11 +326,10 @@ subroutine getpota( x, vpot )
             y(inode1,ilay1) = biasa(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weighta(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -365,11 +337,10 @@ subroutine getpota( x, vpot )
         y(inode1,ilay1) = biasa(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weighta(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
 end subroutine getpota
@@ -388,8 +359,7 @@ subroutine getpotb( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgb(i))/pdelb(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -397,11 +367,10 @@ subroutine getpotb( x, vpot )
             y(inode1,ilay1) = biasb(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weightb(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -409,11 +378,10 @@ subroutine getpotb( x, vpot )
         y(inode1,ilay1) = biasb(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weightb(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelb(nscale)+pavgb(nscale)
 end subroutine getpotb
@@ -432,8 +400,7 @@ subroutine getpotc( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgc(i))/pdelc(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -441,11 +408,10 @@ subroutine getpotc( x, vpot )
             y(inode1,ilay1) = biasc(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weightc(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -453,11 +419,10 @@ subroutine getpotc( x, vpot )
         y(inode1,ilay1) = biasc(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weightc(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelc(nscale)+pavgc(nscale)
 end subroutine getpotc
@@ -470,13 +435,13 @@ function tranfun( x, ifunc )
     implicit none
     integer          :: ifunc
     double precision :: tranfun, x
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun = x
-    end if
+    endif
 end
 
 !**************************************************************************
@@ -492,9 +457,8 @@ subroutine before_vpes( xct, lxc )
     double precision :: min_rch, xx, yy, zz, tt
     ! lxc=-1,  unphysical point
     ! lxc=0,   normal
-    lxc = 0
-    xc  = xct
-
+    lxc        = 0
+    xc         = xct
     xvec(:,1)  = xc(:,3)-xc(:,2)  !  C3->C2
     xvec(:,2)  = xc(:,4)-xc(:,2)  !  H4->C2
     xvec(:,3)  = xc(:,5)-xc(:,2)  !  H5->C2
@@ -505,31 +469,26 @@ subroutine before_vpes( xct, lxc )
     xvec(:,8)  = xc(:,5)-xc(:,4)  !  H5->H4
     xvec(:,9)  = xc(:,1)-xc(:,4)  !  O1->H4
     xvec(:,10) = xc(:,1)-xc(:,5) !  O1->H5
-
-    rc2c3 = dsqrt(dot_product(xvec(:,1), xvec(:,1)))    !  C3->C2
-    rc2h4 = dsqrt(dot_product(xvec(:,2), xvec(:,2)))    !  H4->C2
-    rc2h5 = dsqrt(dot_product(xvec(:,3), xvec(:,3)))    !  H5->C2
-    rc2o1 = dsqrt(dot_product(xvec(:,4), xvec(:,4)))    !  O1->C2
-    rc3h4 = dsqrt(dot_product(xvec(:,5), xvec(:,5)))    !  H4->C3
-    rc3h5 = dsqrt(dot_product(xvec(:,6), xvec(:,6)))    !  H5->C3
-    rc3o1 = dsqrt(dot_product(xvec(:,7), xvec(:,7)))    !  O1->C3
-    rh4h5 = dsqrt(dot_product(xvec(:,8), xvec(:,8)))    !  H5->H4
-    rh4o1 = dsqrt(dot_product(xvec(:,9), xvec(:,9)))    !  O1->H4
-    rh5o1 = dsqrt(dot_product(xvec(:,10), xvec(:,10)))  !  O1->H5
-
-    rb(:) = (/rc2c3, rc2h4, rc2h5, rc2o1, rc3h4, rc3h5, rc3o1, rh4h5, rh4o1, rh5o1/)
-
-    min_rch = min(rc2h4, rc2h5, rc3h4, rc3h5)
-
+    rc2c3      = dsqrt(dot_product(xvec(:,1), xvec(:,1)))    !  C3->C2
+    rc2h4      = dsqrt(dot_product(xvec(:,2), xvec(:,2)))    !  H4->C2
+    rc2h5      = dsqrt(dot_product(xvec(:,3), xvec(:,3)))    !  H5->C2
+    rc2o1      = dsqrt(dot_product(xvec(:,4), xvec(:,4)))    !  O1->C2
+    rc3h4      = dsqrt(dot_product(xvec(:,5), xvec(:,5)))    !  H4->C3
+    rc3h5      = dsqrt(dot_product(xvec(:,6), xvec(:,6)))    !  H5->C3
+    rc3o1      = dsqrt(dot_product(xvec(:,7), xvec(:,7)))    !  O1->C3
+    rh4h5      = dsqrt(dot_product(xvec(:,8), xvec(:,8)))    !  H5->H4
+    rh4o1      = dsqrt(dot_product(xvec(:,9), xvec(:,9)))    !  O1->H4
+    rh5o1      = dsqrt(dot_product(xvec(:,10), xvec(:,10)))  !  O1->H5
+    rb(:)      = (/rc2c3, rc2h4, rc2h5, rc2o1, rc3h4, rc3h5, rc3o1, rh4h5, rh4o1, rh5o1/)
+    min_rch    = min(rc2h4, rc2h5, rc3h4, rc3h5)
     ! remove some unphysical points
     do i=1, 10
-        if (rb(i).le.0.7d0) then
+        if( rb(i) .le. 0.7d0 )then
             lxc = -1
             !              print*,"lxc.eq.-1, rbond too small"
             return
-        end if
-    end do
-
+        endif
+    enddo
     ! CH single bond equilibrium distance,1.1199 angstrom,
     !    1.1199*150% = 1.6798 angstrom
     xx = 1.68d0
@@ -542,13 +501,12 @@ subroutine before_vpes( xct, lxc )
     ! HO single bond equilibrium distance,0.9560 angstrom,
     !    0.9560*150% = 1.4340 angstrom
     tt = 1.43d0
-
-    if (min_rch.gt.xx) then
+    if( min_rch .gt. xx )then
         lxc = -1
         !           print*,"lxc.eq.-1, min_rCH too large"
         return
     else
-        if(rc2c3.gt.yy) then
+        if( rc2c3 .gt. yy )then
             if((rc2h4.le.xx .and. rc2h5.le.xx .and. rc3o1.le.zz).or. &
                 &          (rc3h4.le.xx .and. rc3h5.le.xx .and. rc2o1.le.zz))then
             lxc = 0
@@ -558,9 +516,9 @@ subroutine before_vpes( xct, lxc )
             lxc = -1
             !                print*,"lxc.eq.-1, CC bond break but not CH2+CO channel"
             return
-        end if
+        endif
     else
-        if((rc2h4.le.xx .and.rc3h5.le.xx) .or. (rc2h5.le.xx .and.rc3h4.le.xx))then
+        if( (rc2h4 .le. xx .and.rc3h5 .le. xx) .or. (rc2h5 .le. xx .and.rc3h4 .le. xx) )then
             lxc = 0
             !                print*,"lxc.eq.0, HCCH+O channel"
             return
@@ -584,10 +542,9 @@ subroutine before_vpes( xct, lxc )
             !                print*,"lxc.eq.-1, CC bond not break, but not HCCH+O/
             !     $                  HCCO+H/HCC+OH/H2CCO channel"
             return
-        end if
-    end if
-    end if
-
+        endif
+    endif
+    endif
 end subroutine before_vpes
 
 !**************************************************************************
@@ -610,7 +567,6 @@ subroutine bemsav( x, p )
     double precision              :: m(0:38)
     call evmono(x, m)
     call evpoly(m, p)
-
 end subroutine bemsav
 
 !********************************************************
@@ -660,7 +616,6 @@ subroutine evmono( x, m )
     m(36) = m(6)*m(24)
     m(37) = m(6)*m(26)
     m(38) = m(7)*m(26)
-
 end subroutine evmono
 
 !********************************************************
@@ -773,7 +728,6 @@ subroutine evpoly( m, p )
     p(99)  = p(3)*p(25)-p(75)
     p(100) = p(4)*p(26)-p(88)-p(86)-p(85)
     p(101) = p(5)*p(27)
-
 end subroutine evpoly
 
 !********************************************************

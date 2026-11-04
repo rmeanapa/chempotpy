@@ -19,19 +19,15 @@ program main
     geom(3,1) = -1.467
     geom(3,2) = 0.0
     geom(3,3) = 0.0
-
-    p  = 0.d0
-    g  = 0.d0
-    d  = 0.d0
-    u  = 0.d0
-    ug = 0.d0
-
-    path    = "/home/truhlard/shuxx055/test/chempotpy"
-    system  = "O3"
-    surface = "O3_6_5Ap_2023"
-
+    p         = 0.d0
+    g         = 0.d0
+    d         = 0.d0
+    u         = 0.d0
+    ug        = 0.d0
+    path      = "/home/truhlard/shuxx055/test/chempotpy"
+    system    = "O3"
+    surface   = "O3_6_5Ap_2023"
     call chempotpy(system, surface, path, geom, nstates, natoms, igrad, p, g, d, u, ug)
-
     write(*, *) "adiabats"
     write(*, *) p(1), p(2), p(3)
     write(*, *) p(4), p(5), p(6)
@@ -43,9 +39,7 @@ program main
     write(*, *) d(1,2,1,1), d(1,2,1,2), d(1,2,1,3)
     write(*, *) d(1,2,2,1), d(1,2,2,2), d(1,2,2,3)
     write(*, *) d(1,2,3,1), d(1,2,3,2), d(1,2,3,3)
-
     contains
-
     !> @brief Evaluate chempotpy.
     subroutine chempotpy( system, surface, path, geom, nstates, natoms, igrad, p, g, d, u, ug )
         implicit none
@@ -68,7 +62,6 @@ program main
                 real(kind=c_double), dimension(:, :, :), intent(inout) :: g
                 real(kind=c_double), dimension(:, :, :, :), intent(inout) :: d
             end subroutine call_pes
-
             !> @brief Evaluate call_dpem.
             subroutine call_dpem( so_name, geom, igrad, u, ug ) bind(c, name="call_dpem")
                 use iso_c_binding, only: c_char, c_int, c_double
@@ -78,19 +71,13 @@ program main
                 real(kind=c_double), dimension(:, :), intent(inout) :: u
                 real(kind=c_double), dimension(:, :, :, :), intent(inout) :: ug
             end subroutine call_dpem
-
         end interface
-
         character(len=1024) :: so_path
         so_path = trim(path)// '/' //trim(system) // '/' // trim(surface) // '.so'
-
         write(*, *) "geometry"
         write(*, *) geom(1,1), geom(1,2), geom(1,3)
         write(*, *) geom(2,1), geom(2,2), geom(2,3)
         write(*, *) geom(3,1), geom(3,2), geom(3,3)
-
         call call_pes(trim(so_path), geom, igrad, p, g, d)
-
     end subroutine
-
 end program

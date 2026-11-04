@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_CleR potential.
@@ -56,7 +56,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: a, a0, dx, dy, dz, p, q, r0, rel, rr, si, u, ud, udn, udw, &
         & ur, urr, v, x, y, z
@@ -67,17 +66,14 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !
     !  calculate the potential energy
     !
-    v = 0d0
-
+    v  = 0d0
     a  = 0.1221/autoev
     si = 1.316/autoev
     p  = 8.612
     q  = 2.516
     a0 = 4.050/autoang
-
     r0 = a0/dsqrt(2d0)
-
-    u = 0d0
+    u  = 0d0
     do 2 i=1, natom-1
         do 3 j=i+1, natom
             dx  = x(i)-x(j)
@@ -89,7 +85,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
             ur  = a*dexp(-p*(rel-1d0))
         3 u=u+ur
     2 continue
-
     ud = 0d0
     do 5 i=1, natom
         udw = 0d0
@@ -100,7 +95,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dz  = z(i)-z(j)
             rr  = dsqrt(dx*dx+dy*dy+dz*dz)
             rel = rr/r0
-            if(j.eq.i) go to 41
+            if( j .eq. i ) go to 41
             urr = (si**2)*dexp(-2d0*q*(rel-1d0))
             udw = udw+urr
             41 continue

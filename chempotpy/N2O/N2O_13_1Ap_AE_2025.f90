@@ -42,11 +42,8 @@ subroutine pes( x, igrad, p, g, d )
     integer                       :: iatom, idir, j, istate, jstate
     !initialize
     p = 0.d0; g = 0.d0; d = 0.d0
-
     ! no conversion needed, input is Angstrom, output is eV, eV/Angstrom, and 1/angstrom
-
     call energy_gradient(x, p, g, d, t, natoms, nstates)
-
 end
 
 !> @brief Evaluate energy_gradient.
@@ -65,7 +62,6 @@ subroutine energy_gradient( x, e, g, h, t, n, ns )
     ! g2b  - derivatives of two-body energy contributions w.r.t.
     ! internuclear distances
     ! drdx - dr/dx matrix for converting derivatives
-
     implicit none
     integer, intent(in)             :: n, ns
     double precision, intent(in)    :: x(n,3)
@@ -93,12 +89,11 @@ subroutine energy_gradient( x, e, g, h, t, n, ns )
     e = 0.d0
     g = 0.d0
     h = 0.d0
-
     ! get ddnn coefficients and bias
-    if(first_time_data) then
+    if( first_time_data )then
         call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4)
         first_time_data = .false.
-    end if
+    endif
     call convert_xyz_to_r(x, r, n)
     ! calculate the two-body terms
     imollist(1) = 2
@@ -111,7 +106,6 @@ subroutine energy_gradient( x, e, g, h, t, n, ns )
     ! convert from gradient_r to gradient_xyz
     call grad_r_to_xyz(g, drdx, gr, r, x, n, ns)
     !call nac_r_to_xyz(h,drdx,hr,r,x,n,ns)
-
 end subroutine energy_gradient
 
 !===========================
@@ -157,118 +151,96 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
     z2 = 0.0d0
     z3 = 0.0d0
     z4 = 0.0d0
-
     e  = 0.0d0
     g0 = 0.0d0
     g1 = 0.0d0
     g2 = 0.0d0
     g3 = 0.0d0
     g4 = 0.0d0
-
     call mproduct(r, coeff_l0, z0, 1, 3, 30)
     z0 = z0 +bias_l0
     call activation_gelu(z0, a0, 30)
-
     call mproduct(a0, coeff_l1, z1, 1, 30, 65)
     z1 = z1 +bias_l1
     call activation_gelu(z1, a1, 65)
-
     call mproduct(a1, coeff_l2, z2, 1, 65, 95)
     z2 = z2 +bias_l2
     call activation_gelu(z2, a2, 95)
-
     call mproduct(a2, coeff_l3, z3, 1, 95, 125)
     z3 = z3 +bias_l3
     call activation_gelu(z3, a3, 125)
-
     !diabatic layer, use activation functional
     call mproduct(a3, coeff_l4, z4, 1, 125, 91)
     z4 = z4 +bias_l4
     call activation_functional_heviside(z4, a4, 91, r, n*(n-1)/2, f)
-
     !construction many-body diabatic potential energy matrix (mb-dpem)
     do i=1, ns
         dpem(i,i) = a4(i)
-    end do
+    enddo
     do i=1, ns
         do j=i+1, ns
             call sumover(ns, i, sum1)
             k         = ns-1+sum1+j-i
             dpem(i,j) = a4(k)
             dpem(j,i) = dpem(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     !    mb=dpem !!!!*************
-
     !adding the two-body terms to mb-dpem
     do i=1, ns
         dpem(i,i) = dpem(i,i) + v2b(i)
-    end do
-
+    enddo
     ! diagonalize dpem
     call diagonalize(ns, dpem, e, t)
-
     ! cmpute dvdu
     do i=1, ns
         do j=1, ns
             dvdu(i,j) = t(j,i)*t(j,i)
-        end do
-    end do
+        enddo
+    enddo
     do i=1, ns
         do j=1, ns
             do k=j+1, ns
                 call sumover(ns, j, sum1)
                 l         = ns-1+sum1+k-j
                 dvdu(i,l) = 2.0*t(j,i)*t(k,i)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     ! compute gradients
     g0 = coeff_l0
     do i=1, 3
         call activation_derivative_gelu(z0, a0, g0(i,:), 30)
-    end do
-
+    enddo
     call mproduct(g0, coeff_l1, g1, 3, 30, 65)
-
     do i=1, 3
         call activation_derivative_gelu(z1, a1, g1(i,:), 65)
-    end do
-
+    enddo
     call mproduct(g1, coeff_l2, g2, 3, 65, 95)
     do i=1, 3
         call activation_derivative_gelu(z2, a2, g2(i,:), 95)
-    end do
-
+    enddo
     call mproduct(g2, coeff_l3, g3, 3, 95, 125)
     do i=1, 3
         call activation_derivative_gelu(z3, a3, g3(i,:), 125)
-    end do
-
+    enddo
     call mproduct(g3, coeff_l4, g4, 3, 125, 91)
     ! here to add actional functional derivative
     call activation_functional_derivative_terms(g4, z4, 91, r, n*(n-1)/2, dfdr)
-
     do i=1, 3
         do j=1, 91
             g4p(j,i) = g4(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     do i=1, ns
         do j=1, 3
             g4p(i,j) = g4p(i,j) + g2b(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     call mproduct(dvdu, g4p, g, ns, 91, 3)
-
     ! compute re-ordered v2b
     ! v2b_1(1,:) is NN diatomics, v2b_1(2/3,:) is NO diatomics
     ! this map can be found in Table 3 of the N2O 1A' paper
-
     map(1,1)  = 4
     map(1,2)  = 2
     map(1,3)  = 3
@@ -282,7 +254,6 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
     map(1,11) = 5
     map(1,12) = 6
     map(1,13) = 7
-
     map(2,1)  = 6
     map(2,2)  = 7
     map(2,3)  = 8
@@ -296,70 +267,58 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
     map(2,11) = 4
     map(2,12) = 10
     map(2,13) = 13
-
-    map(3,:) = map(2,:)
-
-    e_0(1) = 0.d0
-    e_0(2) = 1.97
-    e_0(3) = 1.97
-    e_0(4) = 1.97
+    map(3,:)  = map(2,:)
+    e_0(1)    = 0.d0
+    e_0(2)    = 1.97
+    e_0(3)    = 1.97
+    e_0(4)    = 1.97
     do i=5, 13
         e_0(i) = 2.38
-    end do
-
+    enddo
     sum_v2b       = 0.d0
     sum_g2b       = 0.d0
     reordered_v2b = 0.d0
     reordered_g2b = 0.d0
-
     do i=1, 13
         sum_v2b(i) = 0.d0
         do j=1, 3
             sum_v2b(i)   = sum_v2b(i)+v2b_1(j,map(j,i))
             sum_g2b(i,j) = g2b(map(j,i),j)
-        end do
-    end do
-
+        enddo
+    enddo
     sum_dis = exp(-r(1))+exp(-r(2))+exp(-r(3))
-
     do i=1, 13
-        if (sum_dis>1.d-10) then
+        if( sum_dis > 1.d-10 )then
             reordered_v2b(i) = sum_v2b(i)
             do j=1, 3
                 reordered_v2b(i) = reordered_v2b(i)+exp(-r(j))/sum_dis*e_0(map(j,i))
-            end do
+            enddo
         else
             reordered_v2b(i) = e_0(i)
-        end if
-    end do
-
+        endif
+    enddo
     do i=1, 13
-        if (sum_dis>1.d-10) then
+        if( sum_dis > 1.d-10 )then
             do j=1, 3
                 s_j                = exp(-r(j))/sum_dis
                 reordered_g2b(i,j) = sum_g2b(i,j) - s_j*(s_j-1.0)
-            end do
+            enddo
         else
             reordered_g2b(i,:) = 0.d0
-        end if
-    end do
-
+        endif
+    enddo
     call decay_function_heviside(r, n*(n-1)/2, ag_f, ag_a, ag_b, order, decay)
     call decay_function_heviside_derivative(r, n*(n-1)/2, ag_f, ag_a, ag_b, order, ddecaydr)
-
     ! asymptotic dynamics
     do i=1, ns
         do j=1, n*(n-1)/2
             ddecaydr_3b(i,j) = e(i)*ddecaydr(j)
             ddecaydr_2b(i,j) = reordered_v2b(i)*ddecaydr(j)
-        end do
-    end do
-
+        enddo
+    enddo
     e = decay*e+(1.0-decay)*reordered_v2b
     g = decay*g+(1.0-decay)*reordered_g2b+ddecaydr_3b-ddecaydr_2b
-
     h = 0.d0
-
 end subroutine backprop
 
 !=========================
@@ -372,8 +331,7 @@ subroutine activation_gelu( z, a, n )
     integer                         :: i, n
     do i=1, n
         a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.d0)))
-    end do
-
+    enddo
 end subroutine activation_gelu
 
 !> @brief Evaluate activation_derivative_gelu.
@@ -385,8 +343,7 @@ subroutine activation_derivative_gelu( z, a, b, n )
     do i=1, n
         !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
         b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
-    end do
-
+    enddo
 end subroutine activation_derivative_gelu
 
 !=============================
@@ -412,25 +369,19 @@ subroutine activation_functional_heviside( z, a, n, r, nbonds, f )
     do ibond=1, nbonds
         do jbond=ibond+1, nbonds
             pair_sum = pair_sum+(r(ibond)+r(jbond))**order
-        end do
-    end do
+        enddo
+    enddo
     pair_sum = pair_sum**(1/order)
-
     bond_sum = 0.d0
     do ibond=1, nbonds
         bond_sum = bond_sum+r(ibond)**order
-    end do
+    enddo
     bond_sum = bond_sum**(1/order)
-
-    r_in = pair_sum-bond_sum
-
-    ar = 0.5+0.5*tanh(af_f*(r_in-af_a))
-    br = 0.5+0.5*tanh(af_f*(-r_in+af_b))
-
-    f = ar*br
-
-    a = f*z
-
+    r_in     = pair_sum-bond_sum
+    ar       = 0.5+0.5*tanh(af_f*(r_in-af_a))
+    br       = 0.5+0.5*tanh(af_f*(-r_in+af_b))
+    f        = ar*br
+    a        = f*z
 end subroutine activation_functional_heviside
 
 !=============================
@@ -457,44 +408,35 @@ subroutine activation_functional_derivative_terms( g, z, n, r, nbonds, dfdr )
     do ibond=1, nbonds
         do jbond=ibond+1, nbonds
             pair_sum = pair_sum+(r(ibond)+r(jbond))**order
-        end do
-    end do
-
+        enddo
+    enddo
     bond_sum = 0.d0
     do ibond=1, nbonds
         bond_sum = bond_sum+r(ibond)**order
-    end do
-
+    enddo
     r_in = pair_sum**(1/order)-bond_sum**(1/order)
-
-    ar = 0.5+0.5*tanh(af_f*(r_in-af_a))
-    br = 0.5+0.5*tanh(af_f*(-r_in+af_b))
-
+    ar   = 0.5+0.5*tanh(af_f*(r_in-af_a))
+    br   = 0.5+0.5*tanh(af_f*(-r_in+af_b))
     dfdr_in = af_f*(-0.25*tanh(af_f*(r_in-af_a))-0.25)/((cosh(af_f*(-r_in+af_b)))**2) + af_f*(0.25+0.25*tanh(af_f*(- &
         & r_in+af_b)))/((cosh(af_f*(r_in-af_a)))**2)
-
     dr_indr = 0.d0
     do ibond=1, nbonds
         do jbond=1, nbonds
-            if (ibond.ne.jbond) then
+            if( ibond .ne. jbond )then
                 dr_indr(ibond) = dr_indr(ibond)+1/order*((pair_sum)**(-(order-1.0)/order))*order*((r(ibond)+ &
                     & r(jbond))**(order-1.0))
-            end if
-        end do
-    end do
-
+            endif
+        enddo
+    enddo
     do ibond=1, nbonds
         dr_indr(ibond) = dr_indr(ibond)-1/order*((bond_sum)**(-(order-1.0)/order))*order*(r(ibond)**(order-1.0))
-    end do
-
+    enddo
     do ibond=1, nbonds
         dfdr(ibond) = dfdr_in*dr_indr(ibond)
-    end do
-
+    enddo
     do i=1, nbonds
         g(i,:) = dfdr(i)*z(:)+ar*br*g(i,:)
-    end do
-
+    enddo
 end subroutine activation_functional_derivative_terms
 
 !=============================
@@ -518,22 +460,18 @@ subroutine decay_function_heviside( r, nbonds, af_f, af_a, af_b, order, f )
     do ibond=1, nbonds
         do jbond=ibond+1, nbonds
             pair_sum = pair_sum+(r(ibond)+r(jbond))**order
-        end do
-    end do
+        enddo
+    enddo
     pair_sum = pair_sum**(1/order)
-
     bond_sum = 0.d0
     do ibond=1, nbonds
         bond_sum = bond_sum+r(ibond)**order
-    end do
+    enddo
     bond_sum = bond_sum**(1/order)
-
-    r_in = pair_sum-bond_sum
-
-    ar = 0.5+0.5*tanh(af_f*(r_in-af_a))
-    br = 0.5+0.5*tanh(af_f*(-r_in+af_b))
-
-    f = ar*br
+    r_in     = pair_sum-bond_sum
+    ar       = 0.5+0.5*tanh(af_f*(r_in-af_a))
+    br       = 0.5+0.5*tanh(af_f*(-r_in+af_b))
+    f        = ar*br
 end subroutine decay_function_heviside
 
 !=============================
@@ -557,40 +495,32 @@ subroutine decay_function_heviside_derivative( r, nbonds, af_f, af_a, af_b, orde
     do ibond=1, nbonds
         do jbond=ibond+1, nbonds
             pair_sum = pair_sum+(r(ibond)+r(jbond))**order
-        end do
-    end do
-
+        enddo
+    enddo
     bond_sum = 0.d0
     do ibond=1, nbonds
         bond_sum = bond_sum+r(ibond)**order
-    end do
-
+    enddo
     r_in = pair_sum**(1/order)-bond_sum**(1/order)
-
-    ar = 0.5+0.5*tanh(af_f*(r_in-af_a))
-    br = 0.5+0.5*tanh(af_f*(-r_in+af_b))
-
+    ar   = 0.5+0.5*tanh(af_f*(r_in-af_a))
+    br   = 0.5+0.5*tanh(af_f*(-r_in+af_b))
     dfdr_in = af_f*(-0.25*tanh(af_f*(r_in-af_a))-0.25)/((cosh(af_f*(-r_in+af_b)))**2) + af_f*(0.25+0.25*tanh(af_f*(- &
         & r_in+af_b)))/((cosh(af_f*(r_in-af_a)))**2)
-
     dr_indr = 0.d0
     do ibond=1, nbonds
         do jbond=1, nbonds
-            if (ibond.ne.jbond) then
+            if( ibond .ne. jbond )then
                 dr_indr(ibond) = dr_indr(ibond)+1/order*((pair_sum)**(-(order-1.0)/order))*order*((r(ibond)+ &
                     & r(jbond))**(order-1.0))
-            end if
-        end do
-    end do
-
+            endif
+        enddo
+    enddo
     do ibond=1, nbonds
         dr_indr(ibond) = dr_indr(ibond)-1/order*((bond_sum)**(-(order-1.0)/order))*order*(r(ibond)**(order-1.0))
-    end do
-
+    enddo
     do ibond=1, nbonds
         dfdr(ibond) = dfdr_in*dr_indr(ibond)
-    end do
-
+    enddo
 end subroutine decay_function_heviside_derivative
 
 !==============================
@@ -604,7 +534,7 @@ subroutine sumover( a, b, sum1 )
     sum1 = 1-a
     do num=a, a-b+1, -1
         sum1 = sum1+num
-    end do
+    enddo
 end subroutine sumover
 
 !==============================
@@ -626,14 +556,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     integer, save                 :: lapack_lwork_d
     logical, save                 :: first_time_diag=.true.
     u_ss = a_ss
-    if (first_time_diag) then
+    if( first_time_diag )then
         lapack_lwork_d = -1
         allocate( lapack_work_d(2) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
         lapack_lwork_d = int(lapack_work_d(1))
         deallocate ( lapack_work_d )
         first_time_diag = .false.
-    end if
+    endif
     allocate( lapack_work_d(lapack_lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
     ! U_ss already holds the transformation matrix
@@ -642,7 +572,6 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     !   do i=1,n
     !     B_ss(i,i)=EV_s(i)
     !   enddo
-
 end subroutine diagonalize
 
 !==========================
@@ -659,7 +588,6 @@ subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
     double precision                :: gx(ns,3*n)
     integer                         :: i, j
     drdx = 0.0d0
-
     ! compute drdx
     drdx(1,1) = (x(1,1)-x(2,1))/r(1)
     drdx(1,2) = (x(1,2)-x(2,2))/r(1)
@@ -679,15 +607,12 @@ subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
     drdx(3,7) = -drdx(3,4)
     drdx(3,8) = -drdx(3,5)
     drdx(3,9) = -drdx(3,6)
-
     call mproduct(gr, drdx, gx, ns, n*(n-1)/2, 3*n)
-
     do i=1, n
         g(:,i,1) = gx(:,3*(i-1)+1)
         g(:,i,2) = gx(:,3*(i-1)+2)
         g(:,i,3) = gx(:,3*(i-1)+3)
-    end do
-
+    enddo
 end subroutine grad_r_to_xyz
 
 !==========================
@@ -705,7 +630,6 @@ subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
     double precision                :: hx(ns*ns,3*n)
     integer                         :: i, j, k, l
     drdx = 0.0d0
-
     ! compute drdx
     drdx(1,1) = (x(1,1)-x(2,1))/r(1)
     drdx(1,2) = (x(1,2)-x(2,2))/r(1)
@@ -725,15 +649,13 @@ subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
     drdx(3,7) = -drdx(3,4)
     drdx(3,8) = -drdx(3,5)
     drdx(3,9) = -drdx(3,6)
-
     do i=1, ns
         do j=1, ns
             k           = (i-1)*ns+j
             hr_vec(k,:) = hr(i,j,:)
-        end do
-    end do
+        enddo
+    enddo
     call mproduct(hr_vec, drdx, hx, ns*ns, n*(n-1)/2, 3*n)
-
     do i=1, n
         do j=1, ns
             do k=1, ns
@@ -741,10 +663,9 @@ subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
                 h(j,k,i,1) = hx(l,3*(i-1)+1)
                 h(j,k,i,2) = hx(l,3*(i-1)+2)
                 h(j,k,i,3) = hx(l,3*(i-1)+3)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
 end subroutine nac_r_to_xyz
 
 !==========================
@@ -762,9 +683,8 @@ subroutine convert_xyz_to_r( x, r, n )
         do j=i+1, n
             r(l) = sqrt((x(i,1)-x(j,1))**2+(x(i,2)-x(j,2))**2+(x(i,3)-x(j,3))**2)
             l    = l+1
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine convert_xyz_to_r
 
 !=========================
@@ -781,10 +701,9 @@ subroutine mproduct( a, b, c, l, m, n )
             c(i,j) = 0.d0
             do k=1, m
                 c(i,j) = c(i,j)+a(i,k)*b(k,j)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
 end subroutine mproduct
 
 !===========================
@@ -32680,7 +32599,6 @@ end subroutine assign_coeff_bias
 !> @brief Evaluate ev2gm2m.
 subroutine ev2gm2m( dist, v2b, v2b_1, g2b, imollist, igrad, n )
     !Bohr
-
     implicit none
     integer, intent(in)           :: imollist(3), igrad !igrad=0 /1
     integer, intent(in)           :: n
@@ -32708,23 +32626,20 @@ subroutine ev2gm2m( dist, v2b, v2b_1, g2b, imollist, igrad, n )
     v2b(11) = 2.38
     v2b(12) = 2.38
     v2b(13) = 2.38
-
-    g2b   = 0.0d0
-    v2b_1 = 0.d0
+    g2b     = 0.0d0
+    v2b_1   = 0.d0
     do i=1, n*(n-1)/2
         r    = dist(i) !!!*0.529177d0    for Bohr
         imol = imollist(i)
-
         call ev2gm2(r, v, grad, imol, igrad, disp)
         v2b_1(i,:) = v/23.061d0
         v2b        = v2b + v/23.061d0
-        if (igrad.eq.1) then
+        if( igrad .eq. 1 )then
             do j=1, 13
                 g2b(j,i) = grad(j)/23.061d0 !! (23.061d0/0.529177d0) for Bohr
-            end do
-        end if
-    end do
-
+            enddo
+        endif
+    enddo
 end subroutine ev2gm2m
 
 !> @brief Evaluate ev2gm2.
@@ -32751,15 +32666,13 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
     double precision :: dist(1), disp, dispdr(1)
     v    = 0.0d0
     grad = 0.0d0
-
     ! Calculate dispersion correction for all states
     dist(1) = r
     call d3disp(dist, disp, dispdr, 1, imol)
     do i=1, 13
-        if (imol.eq.2) then  !!! N2 data imol=2
-
+        if( imol .eq. 2 )then!!! N2 data imol=2
             ! U11 N2(A 3Sig_u+)+O(3P)
-            if (i.eq.1) then
+            if( i .eq. 1 )then
                 alpha = 9.8488
                 beta  = 0.7809
                 as(0) = 359353.5927
@@ -32770,9 +32683,8 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(5) = -469392.28
                 as(6) = 170567.2991
                 as(7) = -32565.637
-
                 ! U22 was V2 N2(X 1Sig_g+)+O(1D_1.96)
-            else if ((i.eq.2).or.(i.eq.3).or.(i.eq.4)) then
+            else if( (i .eq. 2).or.(i .eq. 3).or.(i .eq. 4) )then
                 alpha = 10.3939
                 beta  = 0.4615
                 as(0) = 17245.9669
@@ -32783,9 +32695,8 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(5) = 13.3293
                 as(6) = -3.9914
                 as(7) = 0.7002
-
                 ! N2(w 3Del_u)+O(3P)
-            else if ((i.eq.5).or.(i.eq.6).or.(i.eq.7)) then
+            else if( (i .eq. 5).or.(i .eq. 6).or.(i .eq. 7) )then
                 alpha = 3.9117
                 beta  = 0.8532
                 as(0) = 975086.6175
@@ -32796,10 +32707,9 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(5) = -3625761.788
                 as(6) = 1107721.913
                 as(7) = -160431.5751
-
                 !!0ld U5 in 0210  N2(X 1Sig_g+)+O(1S)+>1.53_V11>_1.82_V10
                 !!0ld U5 in 0210  N2(X 1Sig_g+)+O(1S)+>1.53_V11>_1.82_V10 0922
-            else if (i.eq.8) then
+            else if( i .eq. 8 )then
                 alpha = 4.6846
                 beta  = 0.9005
                 as(0) = 15208082.1866
@@ -32811,7 +32721,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(6) = 38869580.3125
                 as(7) = -5204701.5137
                 !N2(B' 3Sig_u-)+O(3P)>1.7_V11>1.82_V10
-            else if ((i.eq.9).or.(i.eq.10)) then
+            else if( (i .eq. 9).or.(i .eq. 10) )then
                 alpha = 1.6333
                 beta  = 1.2116
                 as(0) = -1341082.372
@@ -32825,7 +32735,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 gam   = 396.501
                 del   = 4.5568
                 ! N2(B 3Pi_g)+O(3P)
-            else if ((i.eq.11).or.(i.eq.12).or.(i.eq.13)) then
+            else if( (i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
                 alpha = 10.342
                 beta  = 0.7045
                 as(0) = 20065.4904
@@ -32836,11 +32746,10 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(5) = 20141.5967
                 as(6) = -9606.4985
                 as(7) = 1542.6002
-            end if
-        else if (imol.eq.3) then   ! NO data imol=3
-
+            endif
+        else if( imol .eq. 3 )then! NO data imol=3
             ! U11 NO(a 4Π_i) + N(4S）
-            if (i.eq.1) then
+            if( i .eq. 1 )then
                 alpha = 3.5124
                 beta  = 0.9476
                 as(0) = 17862980.6515
@@ -32851,9 +32760,8 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(5) = -9580810.3340
                 as(6) = 23584658.8525
                 as(7) = -7549918.6887
-
                 ! U22 NO(b 4Σ_-) + N(4S)
-            else if (i.eq.2) then
+            else if( i .eq. 2 )then
                 alpha = 3.4397
                 beta  = 0.9197
                 as(0) = 10120680.3619
@@ -32864,9 +32772,8 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(5) = 32353447.7571
                 as(6) = -15727759.4932
                 as(7) = 2747022.6440
-
                 ! U33 NO(B)V8_1.24>V9_1.28-1.36>v10_1.79>V8_2.1>v3_4
-            else if (i.eq.3) then
+            else if( i .eq. 3 )then
                 alpha = 4.6983
                 beta  = 0.8748
                 as(0) = 5957352.9891
@@ -32878,7 +32785,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(6) = 10461847.5660
                 as(7) = -1302962.9786
                 ! U44 NO(B)_V11_1.83>v9_2.2>v4
-            else if (i.eq.4) then
+            else if( i .eq. 4 )then
                 alpha = 9.2040
                 beta  = 0.7494
                 as(0) = 210952.0357
@@ -32902,9 +32809,8 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(5) = -38238.3803
                 as(6) = 10620.8346
                 as(7) = -2058.6642
-
                 !U1010 NO(B)_V12_1.85>V10
-            else if (i.eq.10) then
+            else if( i .eq. 10 )then
                 alpha = 2.3796
                 beta  = 1.3717
                 as(0) = -15872.0826
@@ -32917,9 +32823,8 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(7) = 553194.6866
                 gam   = 13.9616
                 del   = 6.5204
-
                 ! U1111-1212 v7_1.27>v8_1.29-1.78>v12_1.89
-            else if ((i.eq.11).or.(i.eq.12)) then
+            else if( (i .eq. 11).or.(i .eq. 12) )then
                 alpha = 0.6451
                 beta  = 2.9274
                 as(0) = -499.4014
@@ -32933,7 +32838,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 gam   = 63.4187
                 del   = 2.7803
                 ! U1313 NO(B)_V13
-            else if (i.eq.13) then
+            else if( i .eq. 13 )then
                 alpha = 1.9283
                 beta  = 1.1731
                 as(0) = -3647991.0178
@@ -32946,54 +32851,47 @@ subroutine ev2gm2( r, v, grad, imol, igrad, disp )
                 as(7) = 5837257.9125
                 gam   = 305.2223
                 del   = 5.5142
-
-            end if
-        end if
-
+            endif
+        endif
         do k=0, 7
             v(i) = v(i) + as(k)*dexp(-alpha*beta**k*r**2)
-        end do
-
-        if (imol.eq.2) then
-            if ((i.eq.9).or.(i.eq.10)) then
+        enddo
+        if( imol .eq. 2 )then
+            if( (i .eq. 9).or.(i .eq. 10) )then
                 v(i) = v(i) + gam*dexp(-del*(r-1.7d0)**2)
-            else if ((i.eq.2).or.(i.eq.3).or.(i.eq.4)) then
+            else if( (i .eq. 2).or.(i .eq. 3).or.(i .eq. 4) )then
                 call n2ground(r, v(i), grad(i), imol, igrad)
-            end if
-        else if (imol.eq.3) then
-            if ((i.eq.10).or.(i.eq.11).or.(i.eq.12).or.(i.eq.13)) then
+            endif
+        else if( imol .eq. 3 )then
+            if( (i .eq. 10).or.(i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
                 v(i) = v(i) + gam*dexp(-del*(r-1.7d0)**2)
-            else if ((i.eq.5).or.(i.eq.6).or.(i.eq.7).or.(i.eq.8).or.(i.eq.9)) then
+            else if( (i .eq. 5).or.(i .eq. 6).or.(i .eq. 7).or.(i .eq. 8).or.(i .eq. 9) )then
                 call noground(r, v(i), grad(i), imol, igrad)
-            end if
-        end if
-
+            endif
+        endif
         !       ! Add D3 dispersion correction
         !       v(i)=v(i)+disp  !!!
-
         ! Compute the gradient if needed
         if (igrad.eq.1 .and. .not.((imol.eq.2 .and. i.eq.2) .or. (imol.eq.2 .and. i.eq.3) .or. (imol.eq.2 .and. i.eq.4) .or. &
             (imol.eq.3 .and. i.eq.5) .or. (imol.eq.3 .and. i.eq.6) .or. &
             (imol.eq.3 .and. i.eq.7) .or. (imol.eq.3 .and. i.eq.8) .or. &
             (imol.eq.3 .and. i.eq.9))) then
-
         do k=0, 7
             grad(i) = grad(i)-2.d0*as(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
-        end do
+        enddo
         !gam del were not used, add this part if necessary
-        if (imol.eq.2) then
-            if ((i.eq.9).or.(i.eq.10)) then
+        if( imol .eq. 2 )then
+            if( (i .eq. 9).or.(i .eq. 10) )then
                 grad(i) = grad(i)-2.0d0*del*gam*(r-1.7d0)*dexp(-del*(r-1.7d0)**2)
-            end if
-        else if (imol.eq.3) then
-            if ((i.eq.10).or.(i.eq.11).or.(i.eq.12).or.(i.eq.13)) then
+            endif
+        else if( imol .eq. 3 )then
+            if( (i .eq. 10).or.(i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
                 grad(i) = grad(i)-2.0d0*del*gam*(r-1.7d0)*dexp(-del*(r-1.7d0)**2)
-            end if
-        end if
+            endif
+        endif
         !          grad(i)= grad(i) + dispdr(1)
-        end if
-
-    end do
+        endif
+    enddo
 end subroutine ev2gm2
 
 !> @brief Evaluate d3disp.
@@ -33015,7 +32913,6 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     ! The C6 values are fixed.
     !
     !**********************************************************************
-
     implicit none
     double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -33027,64 +32924,51 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     integer          :: imol
     autoang  = 0.52917726d0
     autokcal = 627.509541d0
-
     ! Generalized parameters for BJ damping from P. Verma, B. Wang,
     ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017)
     s6  = 1.0d0
     s8  = 2.0d0
     rs6 = 0.5299d0 !!it's not unit conversion
     rs8 = 2.20d0
-
     do i=1, 1
         dist(i) = dist(i)/autoang
-
-    end do
-
-    if (imol.eq.2) then !!N2
+    enddo
+    if( imol .eq. 2 )then!!N2
         ! iz for N2 system
         iz(1) = 7
         iz(2) = 7
-
         ! C6 for N2 system
         c6(1) = 19.7d0
         c6(2) = 19.7d0
-    else if (imol.eq.3) then ! NO
+    else if( imol .eq. 3 )then! NO
         ! iz for NO system
         iz(1) = 7
         iz(2) = 8
-
         ! C6 for NO system
         c6(1) = 16.7d0
         c6(2) = 16.7d0
     else
         ! currently imol = 2 & 3 are used
         stop
-    end if
-
+    endif
     ! Calculate dispersion correction
     call edisp(94, 5, 2, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
-
     disp = 0.0d0
-
     do i=1, 1
         disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
-    end do
-
-    if (igrad .eq. 1) then
+    enddo
+    if( igrad .eq. 1 )then
         call edisp(94, 5, 2, dist, iz, mxc, &
             rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
-
         dispdr(:) = 0.0d0
-
         do i=1, 1
             dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
-        end do
-    end if
+        enddo
+    endif
     do i=1, 1
         dist(i) = dist(i)*autoang
-    end do
-
+    enddo
 end subroutine d3disp
 
 !**********************************************************************
@@ -33093,7 +32977,6 @@ end subroutine d3disp
 !> @brief Evaluate edisp.
 subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
-
     implicit none
     integer          :: n, iz(2), max_elem, maxc, mxc(max_elem)
     double precision :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
@@ -33106,15 +32989,12 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
     double precision :: cn(n)
     double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
     integer          :: step
-    e6(:) = 0.0d0
-    e8(:) = 0.0d0
-
+    e6(:)   = 0.0d0
+    e8(:)   = 0.0d0
     e6dr(:) = 0.0d0
     e8dr(:) = 0.0d0
-
-    a1 = rs6
-    a2 = rs8
-
+    a1      = rs6
+    a2      = rs8
     !  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
     !  the large number of digits is just to keep the results consistent
     !  with older versions. They should not imply any higher accuracy than
@@ -33133,7 +33013,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & 5.88752022d0, 5.70661499d0, 5.78450695d0, 7.79780729d0, 7.26443867d0, 6.78151984d0, 6.67883169d0, &
         & 6.39024318d0, 6.09527958d0, 11.79156076d0, 11.10997644d0, 9.51377795d0, 8.67197068d0, 8.77140725d0, &
         & 8.65402716d0, 8.53923501d0, 8.85024712d0 /)
-
     ! these new data are scaled with k2=4./3.  and converted a_0 via
     ! autoang=0.52917726d0
     rcov(1:94)=(/ 0.80628308d0, 1.15903197d0, 3.02356173d0, 2.36845659d0, 1.94011865d0, 1.88972601d0, 1.78894056d0, &
@@ -33150,7 +33029,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & 2.82199085d0, 2.84718717d0, 3.32591790d0, 3.27552496d0, 3.27552496d0, 3.42670319d0, 3.30072128d0, &
         & 3.47709584d0, 3.57788113d0, 5.06446567d0, 4.56053862d0, 4.20778980d0, 3.98102289d0, 3.82984466d0, &
         & 3.85504098d0, 3.88023730d0, 3.90543362d0 /)
-
     ! DFT-D3
     step = 0
     do iat=1, n-1
@@ -33160,20 +33038,18 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
             c6   = c6a(step)
             ! r2r4 stored in main as sqrt
             c8 = 3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
-
             ! energy for BJ damping
             tmp      = sqrt(c8/c6)
             e6(step) = c6/(r**6+(a1*tmp+a2)**6)
             e8(step) = c8/(r**8+(a1*tmp+a2)**8)
             ! calculate gradients
-            if (igrad .eq. 1) then
+            if( igrad .eq. 1 )then
                 ! grad for BJ damping
                 e6dr(step) = c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
                 e8dr(step) = c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
-            end if
-        end do
-    end do
-
+            endif
+        enddo
+    enddo
 end subroutine edisp
 
 !> @brief Evaluate n2ground.
@@ -33210,30 +33086,22 @@ subroutine n2ground( r, v, grad, imol, igrad )
     as(4) = -0.5345112219335d0  !-4.08663480982d-1
     as(5) = 1.0857331617073d0  ! 3.92451705557d-1
     as(6) = 1.6339897930305d0  ! 1.13006674877d0
-
-    v = 0.0d0
-
-    y = (r**4 - re**4)/(r**4 + re**4)
-
-    fy = as(6)
+    v     = 0.0d0
+    y     = (r**4 - re**4)/(r**4 + re**4)
+    fy    = as(6)
     do a=5, 0, -1
         fy = fy*y
         fy = fy + as(a)
-    end do
-
+    enddo
     u = exp(-fy*(r-re))
-
     v = de*(1.0d0-u)*(1.0d0-u)-de
-
     !! Add D3 dispersion correction
     dist(1) = r
     call d3disp(dist, disp, dispdr, 0, imol)
     v = v+disp
-
     ! Compute the gradient if needed
-    if (igrad.eq.1) then
+    if( igrad .eq. 1 )then
         grad = 0.d0
-
         !      dfdy = as(1) + 2.0d0*as(2)*y + 3.0d0*as(3)*y*y &
         !           + 4.0d0*as(4)*y*y*y + 5.0d0*as(5)*y*y*y*y &
         !           + 6.0d0*as(6)*y*y*y*y*y
@@ -33241,17 +33109,15 @@ subroutine n2ground( r, v, grad, imol, igrad )
         do a=5, 1, -1
             dfdy = dfdy*y
             dfdy = dfdy + as(a)*a
-        end do
+        enddo
         rr   = r**4 + re**4
         dydr = 8.0d0*r**3*re**4/(rr*rr)
         dfdr = dfdy*dydr
         grad = 2.0d0*de*(1-u)*u*(dfdr*(r-re)+fy)
-
         ! Add analytical gradient of D3 dispersion correction
         call d3disp(dist, disp, dispdr, 1, imol)
         grad = grad + dispdr(1)
-
-    end if
+    endif
 end subroutine n2ground
 
 !> @brief Evaluate noground.
@@ -33309,7 +33175,7 @@ subroutine noground( r, v, grad, imol, igrad )
     v = v+disp
     !        write(*,*) "dispno= ",disp
     ! 1st derivate by r
-    if (igrad .eq. 1) then
+    if( igrad .eq. 1 )then
         ! multiplier part of the MEG derivate
         dfdr = (-2.0d0*(r-re)/c(12)-1.0d0/c(11))
         grad =  - de*(c(1)*1.0d0*dfdr*u**1.0d0 + c(2)*2.0d0*dfdr*u**2.0d0 + c(3)*3.0d0*dfdr*u**3.0d0 + c(4)*4.0d0* &
@@ -33318,5 +33184,5 @@ subroutine noground( r, v, grad, imol, igrad )
         ! Add analytical gradient of D3 dispersion correction
         call d3disp(dist, disp, dispdr, 1, imol)
         grad = grad + dispdr(1)
-    end if
+    endif
 end subroutine noground

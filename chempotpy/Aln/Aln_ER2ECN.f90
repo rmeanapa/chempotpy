@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2ECN potential.
@@ -57,7 +57,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !                    of the system
     !  natom   --- number of atoms in the system
     !  maxatom --- maximal number of atoms
-
     implicit none
     double precision :: a1, a1b, a2, a2b, a3, a3b, abscz1, abscz2, au2, au2b, &
         & bu2, bu2b, co, cob, cz1, cz2, de, deb, du2, dx, dy, dz, ec1, ee, eeb, es1, fu2, g1, &
@@ -68,14 +67,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
     dimension fu2(maxatom,maxatom), r(maxatom,maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-    de  = 1.71013678553981441/autoev
-    re  = 5.08182706399609163
-    a1  = 1.24074255007327805
-    a2  = 0.551880801172447422
-    a3  = 0.129970688812896917
-    au2 = 0.143243771372740580
-    bu2 = 6.50000000000000000/autoang
-
+    de    = 1.71013678553981441/autoev
+    re    = 5.08182706399609163
+    a1    = 1.24074255007327805
+    a2    = 0.551880801172447422
+    a3    = 0.129970688812896917
+    au2   = 0.143243771372740580
+    bu2   = 6.50000000000000000/autoang
     deb   = 1.26365412799218380/autoev
     reb   = 4.51734245236932086
     a1b   = 0.766243282852955510
@@ -88,7 +86,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     du2   = 2.21812408402540306
     gu2   = 0.853639472398632138
     gzero = 4.62188568637029817
-
     do 3 i=1, natom
         r(i,i)   = 0.d0
         fu2(i,i) = 0.d0
@@ -101,49 +98,42 @@ subroutine pot( x, y, z, v, natom, maxatom )
             fu2(j,i) = 0.d0
             fu2(i,j) = 0.d0
     3 continue
-
     ! CALCULATE CN FUNCTION
     !     first calculate g_alpha
     g1e = dexp(g1)
     do 20 i=1, natom                         ! alpha loop
         gcorr(i) = 0d0
         do 21 j=1, natom                        ! beta loop
-            if(i.eq.j) go to 21                   ! beta != alpha
+            if( i .eq. j ) go to 21! beta != alpha
             rij = r(i,j)
-            if (rij.ge.g2) go to 21               ! cutoff term counts nearb
+            if( rij .ge. g2 ) go to 21! cutoff term counts nearb
             term     = dexp(-g1/(1d0-(rij/g2)))         ! cutoff term counts nearb
             gcorr(i) = gcorr(i)+term                ! sum over beta
         21 continue
         gcorr(i) = gcorr(i)*g1e                  ! g_alpha
     20 continue
-
     !     then calculate CN term
     do 30 i=1, natom                         ! alpha loop
         do 31 j=1, natom                         ! beta loop
-            if(i.eq.j) go to 31                    ! beat != alpha
-            rij = r(i,j)
-
+            if( i .eq. j ) go to 31! beat != alpha
+            rij  = r(i,j)
             term = 0.d0
-            if (rij.ge.g2) go to 32                ! g_alphabeta
+            if( rij .ge. g2 ) go to 32! g_alphabeta
             term = dexp(g1*(1d0-1d0/(1d0-(rij/g2)))) ! g_alphabeta
             32 continue
-
             cz1    = (gcorr(i)-term)/gzero              ! ratio of coordination fo
             abscz1 = dabs(cz1)
-            if(abscz1.le.10d-12)cz1=abscz1         ! eliminates negative valu
-            es1 = 1d0/(1d0+cz1**gu2)                 ! compute alpha part of f
-
+            if( abscz1 .le. 10d-12 ) cz1=abscz1! eliminates negative valu
+            es1    = 1d0/(1d0+cz1**gu2)                 ! compute alpha part of f
             cz2    = (gcorr(j)-term)/gzero              ! ratio of coordination fo
             abscz2 = dabs(cz2)
-            if(abscz2.le.10d-12)cz2=abscz2         ! eliminates negative valu
+            if( abscz2 .le. 10d-12 ) cz2=abscz2! eliminates negative valu
             ec1 = 1d0/(1d0+cz2**gu2)                 ! compute beta part of f f
-
             !       fu2(i,j)=1d0+du2*(es1*ec1-1d0)         ! put alpha and beta parts together:  1 + f for regular formalism
             fu2(i,j) = du2*(es1*ec1-1d0)         ! put alpha and beta parts tog
             !       print *,es1,ec1,fu2(i,j)
         31 continue
     30 continue
-
     ! potential, includes cutoff
     v = 0.d0
     do 1 i=1, natom
@@ -160,9 +150,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
             eeb   = dexp(-a1b*rhob)
             co    = 0.d0
             cob   = 0.d0
-            if (rr.le.bu2) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
-            if (rr.le.bu2b) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
+            if( rr .le. bu2 ) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
+            if( rr .le. bu2b ) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
             v = v-de*ee*poly*co -deb*eeb*polyb*cob*fu2(i,j)
     1 continue
-
 end subroutine pot

@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_reErkVIII potential.
@@ -62,7 +62,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: a1, a2, arc1, arc2, b1, b2, bra, cot12, cot13, cot2, cot3, &
         & cote1, cote2, cote3, dx, dy, dz, em, en, r, r0, rel, rr, rr1, rr2, rr3, u, uem, uen, v, v1, &
@@ -83,7 +82,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !
     !  calculate the potential energy
     !
-
     ! original parameters
     r0 = 2.510d0  /  autoang
     a1 = 1.860d0  /  autoev
@@ -92,7 +90,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     b2 = 1921.d0  / (autoev*autoang**11)
     em = 11.d0
     en = 6.d0
-
     ! new parameters
     r0 = 2.510d0  /  autoang
     a1 = 1.49145090376160239/autoev
@@ -101,8 +98,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
     b2 = 86.8978993649242710/ (autoev*autoang**11)
     em = 6.90425012212994638
     en = 4.84269662921348321
-
-    u = 0.d0
+    u  = 0.d0
     do 2 i=1, natom-1
         do 3 j=i+1, natom
             rr  = r(i,j)
@@ -112,9 +108,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
             u   = u+(uem-uen)
         3 continue
     2 continue
-
     v1 = 0.d0
-    if(natom.eq.2) go to 55
+    if( natom .eq. 2 ) go to 55
     do 4 i=1, natom-2
         do 5 j=i+1, natom-1
             do 6 m=j+1, natom
@@ -124,12 +119,12 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 rr3   = 1.d0/r(j,m)
                 cot13 = 1.d0+3.d0*cote1*cote2*cote3
                 war   = dabs(cote1)-1.d0
-                if(war.le.10d-12) go to 69
+                if( war .le. 10d-12 ) go to 69
                 arc1 = dacos(cote1)
                 go to 66
                 69 arc1=0d0
                 66 war=dabs(cote2)-1d0
-                if(war.le.10d-12) go to 68
+                if( war .le. 10d-12 ) go to 68
                 arc2 = dacos(cote2)
                 go to 67
                 68 arc2=0d0

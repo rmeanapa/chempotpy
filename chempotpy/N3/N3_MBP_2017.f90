@@ -45,8 +45,7 @@ subroutine pes( x, igrad, p, g, d )
     integer                       :: ibond, iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         tx(1) = cartesian_distance(x(1,:), x(2,:))
         tx(2) = cartesian_distance(x(1,:), x(3,:))
         tx(3) = cartesian_distance(x(2,:), x(3,:))
@@ -54,11 +53,10 @@ subroutine pes( x, igrad, p, g, d )
         v = v/23.0609
         do istate=1, nstates
             p(istate) = v
-        end do
+        enddo
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
 end subroutine
 
 !> @brief Evaluate n3.
@@ -74,27 +72,21 @@ subroutine n3( v, rx, ry, rz )
     integer                       :: i, j, k
     double precision              :: a
     integer                       :: ii
-    re = 1.098d0
-    ae = 0.9d0
-
+    re  = 1.098d0
+    ae  = 0.9d0
     xrx = exp(-(rx-re)/ae)
     xry = exp(-(ry-re)/ae)
     xrz = exp(-(rz-re)/ae)
-
     call assign(coeff, indices)
-
-    v = 0.d0
-
+    v       = 0.d0
     mpoints = 52
-
     do ii=1, mpoints
         v = v + coeff(ii)*(xrx**(indices(ii,1))*xry**(indices(ii,2))*xrz**(indices(ii,3)) + xrx**(indices(ii,1))* &
             & xry** (indices(ii,3))*xrz**(indices(ii,2)) + xrx**(indices(ii,2))*xry**(indices(ii,3))*xrz** &
             & (indices(ii,1)) + xrx**(indices(ii,2))*xry**(indices(ii,1))*xrz**(indices(ii,3)) + xrx**(indices(ii, &
             & 3))*xry**(indices(ii,1))*xrz**(indices(ii,2)) + xrx**(indices(ii,3))*xry**(indices(ii,2))*xrz** &
             & (indices(ii,1)))
-    end do
-
+    enddo
 end subroutine
 
 !> @brief Evaluate assign.
@@ -257,58 +249,56 @@ subroutine assign( coeff, indices )
     indices(52,1) = 3.0
     indices(52,2) = 3.0
     indices(52,3) = 3.0
-
-    coeff(1)  = 76.2027492386
-    coeff(2)  = -29.2187456109
-    coeff(3)  = 478.216454362
-    coeff(4)  = -2147.2354857
-    coeff(5)  = 2855.65549848
-    coeff(6)  = -1866.34740294
-    coeff(7)  = 749.316219703
-    coeff(8)  = -185.211752171
-    coeff(9)  = 29.2339861286
-    coeff(10) = 481.859972236
-    coeff(11) = -3544.42763148
-    coeff(12) = 3643.93394468
-    coeff(13) = 2327.69020666
-    coeff(14) = -7937.75105597
-    coeff(15) = 6936.84223471
-    coeff(16) = -2809.62542808
-    coeff(17) = 460.279175648
-    coeff(18) = 3281.89897882
-    coeff(19) = -1449.68238423
-    coeff(20) = -855.567473508
-    coeff(21) = -12359.5497875
-    coeff(22) = 14201.5436577
-    coeff(23) = -3935.55084811
-    coeff(24) = 3345.76391264
-    coeff(25) = 5781.39695959
-    coeff(26) = -12081.0026827
-    coeff(27) = 3039.16420473
-    coeff(28) = 1079.60292321
-    coeff(29) = 1320.20183514
-    coeff(30) = 1005.42318879
-    coeff(31) = -2637.2433705
-    coeff(32) = -13723.319821
-    coeff(33) = 14091.6436177
-    coeff(34) = 14070.1822273
-    coeff(35) = -19986.7084944
-    coeff(36) = 5578.36737242
-    coeff(37) = 17011.6685761
-    coeff(38) = -49075.98983
-    coeff(39) = 9702.54716608
-    coeff(40) = 11609.1404971
-    coeff(41) = -3108.62534529
-    coeff(42) = 16494.8907779
-    coeff(43) = 1436.38756694
-    coeff(44) = -6583.14188182
-    coeff(45) = -2255.72399868
-    coeff(46) = 18893.0012481
-    coeff(47) = -13735.259834
-    coeff(48) = -18895.4441394
-    coeff(49) = 5348.42098676
-    coeff(50) = 10801.560473
-    coeff(51) = 10627.4574663
-    coeff(52) = -7482.93770079
-
+    coeff(1)      = 76.2027492386
+    coeff(2)      = -29.2187456109
+    coeff(3)      = 478.216454362
+    coeff(4)      = -2147.2354857
+    coeff(5)      = 2855.65549848
+    coeff(6)      = -1866.34740294
+    coeff(7)      = 749.316219703
+    coeff(8)      = -185.211752171
+    coeff(9)      = 29.2339861286
+    coeff(10)     = 481.859972236
+    coeff(11)     = -3544.42763148
+    coeff(12)     = 3643.93394468
+    coeff(13)     = 2327.69020666
+    coeff(14)     = -7937.75105597
+    coeff(15)     = 6936.84223471
+    coeff(16)     = -2809.62542808
+    coeff(17)     = 460.279175648
+    coeff(18)     = 3281.89897882
+    coeff(19)     = -1449.68238423
+    coeff(20)     = -855.567473508
+    coeff(21)     = -12359.5497875
+    coeff(22)     = 14201.5436577
+    coeff(23)     = -3935.55084811
+    coeff(24)     = 3345.76391264
+    coeff(25)     = 5781.39695959
+    coeff(26)     = -12081.0026827
+    coeff(27)     = 3039.16420473
+    coeff(28)     = 1079.60292321
+    coeff(29)     = 1320.20183514
+    coeff(30)     = 1005.42318879
+    coeff(31)     = -2637.2433705
+    coeff(32)     = -13723.319821
+    coeff(33)     = 14091.6436177
+    coeff(34)     = 14070.1822273
+    coeff(35)     = -19986.7084944
+    coeff(36)     = 5578.36737242
+    coeff(37)     = 17011.6685761
+    coeff(38)     = -49075.98983
+    coeff(39)     = 9702.54716608
+    coeff(40)     = 11609.1404971
+    coeff(41)     = -3108.62534529
+    coeff(42)     = 16494.8907779
+    coeff(43)     = 1436.38756694
+    coeff(44)     = -6583.14188182
+    coeff(45)     = -2255.72399868
+    coeff(46)     = 18893.0012481
+    coeff(47)     = -13735.259834
+    coeff(48)     = -18895.4441394
+    coeff(49)     = 5348.42098676
+    coeff(50)     = 10801.560473
+    coeff(51)     = 10627.4574663
+    coeff(52)     = -7482.93770079
 end subroutine

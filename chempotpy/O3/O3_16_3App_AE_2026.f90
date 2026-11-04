@@ -39,11 +39,8 @@ subroutine pes( x, igrad, p, g, d )
     integer                       :: iatom, idir, j, istate, jstate
     !initialize
     p = 0.d0; g = 0.d0; d = 0.d0
-
     ! no conversion needed, input is Angstrom, output is eV, eV/Angstrom, and 1/angstrom
-
     call energy_gradient(x, p, g, d, t, natoms, nstates)
-
 end
 
 !> @brief Evaluate energy_gradient.
@@ -62,7 +59,6 @@ subroutine energy_gradient( x, e, g, h, t, n, ns )
     ! g2b  - derivatives of two-body energy contributions w.r.t.
     ! internuclear distances
     ! drdx - dr/dx matrix for converting derivatives
-
     implicit none
     integer, intent(in)             :: n, ns
     double precision, intent(in)    :: x(n,3)
@@ -85,24 +81,20 @@ subroutine energy_gradient( x, e, g, h, t, n, ns )
     e = 0.d0
     g = 0.d0
     h = 0.d0
-
-    if(first_time_data) then
+    if( first_time_data )then
         call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4)
         first_time_data = .false.
-    end if
+    endif
     call convert_xyz_to_r(x, r, n)
     ! compute 2body terms, ip_states involves inoinic curve
     imol = 4
     call ev2gm2m(r, v2b, g2b, imol, 1, n)
     call ip_states(r, v2b, g2b, n, ns)
-
     ! compute many body terms and form final CPEM
     call backprop(r, n, ns, e, gr, hr, t, coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4, v2b, v2b_1, g2b)
-
     ! convert from gradient_r to gradient_xyz
     call grad_r_to_xyz(g, drdx, gr, r, x, n, ns)
     call nac_r_to_xyz(h, drdx, hr, r, x, n, ns)
-
 end subroutine energy_gradient
 
 !===========================
@@ -162,107 +154,85 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
     z2 = 0.0d0
     z3 = 0.0d0
     z4 = 0.0d0
-
     e  = 0.0d0
     g0 = 0.0d0
     g1 = 0.0d0
     g2 = 0.0d0
     g3 = 0.0d0
     g4 = 0.0d0
-
     !===================================================
     ! Step 1. Computing CPEM(0) using DDNN
     !===================================================
-
     !== Step 1.1 Computing CPEM(0)
-
     call mproduct(r, coeff_l0, z0, 1, 3, 32)
     z0 = z0 +bias_l0
     call activation_gelu(z0, a0, 32)
-
     call mproduct(a0, coeff_l1, z1, 1, 32, 64)
     z1 = z1 +bias_l1
     call activation_gelu(z1, a1, 64)
-
     call mproduct(a1, coeff_l2, z2, 1, 64, 128)
     z2 = z2 +bias_l2
     call activation_gelu(z2, a2, 128)
-
     call mproduct(a2, coeff_l3, z3, 1, 128, 256)
     z3 = z3 +bias_l3
     call activation_gelu(z3, a3, 256)
-
     !diabatic layer, use activation functional
     call mproduct(a3, coeff_l4, z4, 1, 256, 136)
     z4 = z4 +bias_l4
     call activation_functional_heviside(z4, a4, int(ns*(ns+1)/2), r, n*(n-1)/2, f)
-
     !construction many-body diabatic potential energy matrix (mb-dpem)
     do i=1, ns
         cpem0(i,i) = a4(i)
-    end do
+    enddo
     do i=1, ns
         do j=i+1, ns
             call sumover(ns, i, sum1)
             k          = ns-1+sum1+j-i
             cpem0(i,j) = a4(k)
             cpem0(j,i) = cpem0(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     do i=1, ns
         cpem0(i,i) = cpem0(i,i) + v2b(i)
-    end do
-
+    enddo
     !== Step 1.2 Computing CPEM(0) gradient
-
     g0 = coeff_l0
     do i=1, 3
         call activation_derivative_gelu(z0, a0, g0(i,:), 32)
-    end do
-
+    enddo
     call mproduct(g0, coeff_l1, g1, 3, 32, 64)
-
     do i=1, 3
         call activation_derivative_gelu(z1, a1, g1(i,:), 64)
-    end do
-
+    enddo
     call mproduct(g1, coeff_l2, g2, 3, 64, 128)
     do i=1, 3
         call activation_derivative_gelu(z2, a2, g2(i,:), 128)
-    end do
-
+    enddo
     call mproduct(g2, coeff_l3, g3, 3, 128, 256)
     do i=1, 3
         call activation_derivative_gelu(z3, a3, g3(i,:), 256)
-    end do
-
+    enddo
     call mproduct(g3, coeff_l4, g4, 3, 256, 136)
     ! here to add actional functional derivative
     call activation_functional_derivative_terms(g4, z4, int(ns*(ns+1)/2), r, n*(n-1)/2, dfdr)
-
     do i=1, 3
         do j=1, 136
             g4p_0(j,i) = g4(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     do i=1, ns
         do j=1, 3
             g4p_0(i,j) = g4p_0(i,j) + g2b(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     !===================================================
     ! Step 1 finished. cpem0 is CPEM(0); g4p_0 is CPEM(0) gradient
     !===================================================
-
     !===================================================
     ! Step 2. Computing CPEM using scalings of CPEM(0)
     !         CPEM(1) = average scaling * CPEM(0)
     !         CPEM(2) = state specific scaling * CPEM(0)
     !===================================================
-
     ! SEC scaling:
     sec_scaling(1)  = 1.024 !1.208
     sec_scaling(2)  = 1.047 !1.210
@@ -280,7 +250,6 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
     sec_scaling(14) = 1.10 !1.208
     sec_scaling(15) = 1.10 !1.208
     sec_scaling(16) = 1.10 !1.112
-
     !   sec_scaling(1)= 1.0d0     !1.024
     !   sec_scaling(2)= 1.0d0     !1.047
     !   sec_scaling(3)= 1.0d0     !1.047
@@ -297,110 +266,95 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
     !   sec_scaling(14)=1.0d0     ! 1.10
     !   sec_scaling(15)=1.0d0     ! 1.10
     !   sec_scaling(16)=1.0d0     ! 1.10
-
     averaged_sec_scaling = 0.d0
     do i=1, ns
         averaged_sec_scaling = averaged_sec_scaling+sec_scaling(i)
-    end do
+    enddo
     averaged_sec_scaling = averaged_sec_scaling/16
-
     ! cpem1 is many-body SEC cpem0
     cpem1 = averaged_sec_scaling*cpem0
     g4p_1 = averaged_sec_scaling*g4p_0
-
     ! cpem2 is SEC cpem0
     do i=1, ns
         do j=1, ns
             cpem2(i,j) = 0.5*(sec_scaling(i)+sec_scaling(j))*cpem0(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     do i=1, ns
         g4p_2(i,:) = sec_scaling(i)*g4p_0(i,:)
-    end do
+    enddo
     do i=1, ns
         do j=i+1, ns
             call sumover(ns, i, sum1)
             k          = ns-1+sum1+j-i
             g4p_2(k,:) = 0.5*(sec_scaling(i)+sec_scaling(j))*g4p_0(k,:)
-        end do
-    end do
-
+        enddo
+    enddo
     ! now use the decay
     call decay_function_heviside(r, n*(n-1)/2, ah_f, ah_a, ah_b, order, decay_h)
     call decay_function_heviside_derivative(r, n*(n-1)/2, ah_f, ah_a, ah_b, order, ddecay_hdr)
-
     ! when decay_h=1, it is many body interaction region, dpem = cpem1
     ! when decay_h=0, it is two body interaction region, dpem = cpem2
     dpem = decay_h*cpem1+(1.0-decay_h)*cpem2
-
     ! final gradient
     do i=1, ns
         cpem1_vec(i) = cpem1(i,i)
         cpem2_vec(i) = cpem2(i,i)
-    end do
+    enddo
     do i=1, ns
         do j=i+1, ns
             call sumover(ns, i, sum1)
             k            = ns-1+sum1+j-i
             cpem1_vec(k) = cpem1(i,j)
             cpem2_vec(k) = cpem2(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     do i=1, 136
         do j=1, n*(n-1)/2
             g4p_f(i,j)=ddecay_hdr(j)*cpem1_vec(i)+decay_h*g4p_1(i,j) -ddecay_hdr(j)*cpem2_vec(i)+(1.0-decay_h)* &
                 & g4p_2(i,j)
-        end do
-    end do
-
+        enddo
+    enddo
     !===================================================
     ! Step 2 finished.
     !        cpem1 is CPEM(1); g4p_1 is CPEM(1) gradient
     !        cpem2 is CPEM(2); g4p_2 is CPEM(2) gradient
     !        dpem is final CPEM; g4p_f is final gradient
     !===================================================
-
     !===================================================
     ! Step 3. Diagonalize final CPEM
     !===================================================
-
     ! diagonalize dpem
     call diagonalize(ns, dpem, e, t)
-
     ! cmpute dvdu
     do i=1, ns
         do j=1, ns
             dvdu(i,j) = t(j,i)*t(j,i)
-        end do
-    end do
+        enddo
+    enddo
     do i=1, ns
         do j=1, ns
             do k=j+1, ns
                 call sumover(ns, j, sum1)
                 l         = ns-1+sum1+k-j
                 dvdu(i,l) = 2.0*t(j,i)*t(k,i)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     call mproduct(dvdu, g4p_f, g, ns, 136, 3)
-
     ! compute NACs
     dudr(:,:,:) = 0.d0
     do i=1, ns
         dudr(i,i,:) = g4p_f(i,:)
-    end do
+    enddo
     do i=1, ns
         do j=i+1, ns
             call sumover(ns, i, sum1)
             k           = ns-1+sum1+j-i
             dudr(i,j,:) = g4p_f(k,:)
             dudr(j,i,:) = dudr(i,j,:)
-        end do
-    end do
-
+        enddo
+    enddo
     h(:,:,:) = 0.d0
     do i=1, 3
         tmpmat(:,:) = dudr(:,:,i)
@@ -409,16 +363,15 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
         ! F_ij = (C^T*dU*C)_ij / (V_j-V_i)
         do j=1, ns
             do k=j+1, ns
-                if ((e(k)-e(j)) > 1.d-8) then
+                if( (e(k)-e(j)) > 1.d-8 )then
                     h(j,k,i) = tmpmat(j,k)/(e(k)-e(j))
                 else
                     h(j,k,i) = tmpmat(j,k)/1.d-8
-                end if
+                endif
                 h(k,j,i) = -h(j,k,i)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     !===================================================
     ! Step 4. Asymptotically extended dynamics
     !===================================================
@@ -427,11 +380,10 @@ subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l
         do j=1, n*(n-1)/2
             ddecay_hdr_3b(i,j) = e(i)*ddecay_hdr(j)
             ddecay_hdr_2b(i,j) = v2b(i)*ddecay_hdr(j)
-        end do
-    end do
+        enddo
+    enddo
     e = decay_h*e+(1.0-decay_h)*v2b
     g = decay_h*g+(1.0-decay_h)*g2b+ddecay_hdr_3b-ddecay_hdr_2b
-
 end subroutine backprop
 
 !=========================
@@ -444,8 +396,7 @@ subroutine activation_gelu( z, a, n )
     integer                         :: i, n
     do i=1, n
         a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.d0)))
-    end do
-
+    enddo
 end subroutine activation_gelu
 
 !> @brief Evaluate activation_derivative_gelu.
@@ -457,8 +408,7 @@ subroutine activation_derivative_gelu( z, a, b, n )
     do i=1, n
         !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
         b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
-    end do
-
+    enddo
 end subroutine activation_derivative_gelu
 
 !=============================
@@ -484,25 +434,19 @@ subroutine activation_functional_heviside( z, a, n, r, nbonds, f )
     do ibond=1, nbonds
         do jbond=ibond+1, nbonds
             pair_sum = pair_sum+(r(ibond)+r(jbond))**order
-        end do
-    end do
+        enddo
+    enddo
     pair_sum = pair_sum**(1/order)
-
     bond_sum = 0.d0
     do ibond=1, nbonds
         bond_sum = bond_sum+r(ibond)**order
-    end do
+    enddo
     bond_sum = bond_sum**(1/order)
-
-    r_in = pair_sum-bond_sum
-
-    ar = 0.5+0.5*tanh(af_f*(r_in-af_a))
-    br = 0.5+0.5*tanh(af_f*(-r_in+af_b))
-
-    f = ar*br
-
-    a = f*z
-
+    r_in     = pair_sum-bond_sum
+    ar       = 0.5+0.5*tanh(af_f*(r_in-af_a))
+    br       = 0.5+0.5*tanh(af_f*(-r_in+af_b))
+    f        = ar*br
+    a        = f*z
 end subroutine activation_functional_heviside
 
 !=============================
@@ -529,44 +473,35 @@ subroutine activation_functional_derivative_terms( g, z, n, r, nbonds, dfdr )
     do ibond=1, nbonds
         do jbond=ibond+1, nbonds
             pair_sum = pair_sum+(r(ibond)+r(jbond))**order
-        end do
-    end do
-
+        enddo
+    enddo
     bond_sum = 0.d0
     do ibond=1, nbonds
         bond_sum = bond_sum+r(ibond)**order
-    end do
-
+    enddo
     r_in = pair_sum**(1/order)-bond_sum**(1/order)
-
-    ar = 0.5+0.5*tanh(af_f*(r_in-af_a))
-    br = 0.5+0.5*tanh(af_f*(-r_in+af_b))
-
+    ar   = 0.5+0.5*tanh(af_f*(r_in-af_a))
+    br   = 0.5+0.5*tanh(af_f*(-r_in+af_b))
     dfdr_in = af_f*(-0.25*tanh(af_f*(r_in-af_a))-0.25)/((cosh(af_f*(-r_in+af_b)))**2) + af_f*(0.25+0.25*tanh(af_f*(- &
         & r_in+af_b)))/((cosh(af_f*(r_in-af_a)))**2)
-
     dr_indr = 0.d0
     do ibond=1, nbonds
         do jbond=1, nbonds
-            if (ibond.ne.jbond) then
+            if( ibond .ne. jbond )then
                 dr_indr(ibond) = dr_indr(ibond)+1/order*((pair_sum)**(-(order-1.0)/order))*order*((r(ibond)+ &
                     & r(jbond))**(order-1.0))
-            end if
-        end do
-    end do
-
+            endif
+        enddo
+    enddo
     do ibond=1, nbonds
         dr_indr(ibond) = dr_indr(ibond)-1/order*((bond_sum)**(-(order-1.0)/order))*order*(r(ibond)**(order-1.0))
-    end do
-
+    enddo
     do ibond=1, nbonds
         dfdr(ibond) = dfdr_in*dr_indr(ibond)
-    end do
-
+    enddo
     do i=1, nbonds
         g(i,:) = dfdr(i)*z(:)+ar*br*g(i,:)
-    end do
-
+    enddo
 end subroutine activation_functional_derivative_terms
 
 !=============================
@@ -590,22 +525,18 @@ subroutine decay_function_heviside( r, nbonds, af_f, af_a, af_b, order, f )
     do ibond=1, nbonds
         do jbond=ibond+1, nbonds
             pair_sum = pair_sum+(r(ibond)+r(jbond))**order
-        end do
-    end do
+        enddo
+    enddo
     pair_sum = pair_sum**(1/order)
-
     bond_sum = 0.d0
     do ibond=1, nbonds
         bond_sum = bond_sum+r(ibond)**order
-    end do
+    enddo
     bond_sum = bond_sum**(1/order)
-
-    r_in = pair_sum-bond_sum
-
-    ar = 0.5+0.5*tanh(af_f*(r_in-af_a))
-    br = 0.5+0.5*tanh(af_f*(-r_in+af_b))
-
-    f = ar*br
+    r_in     = pair_sum-bond_sum
+    ar       = 0.5+0.5*tanh(af_f*(r_in-af_a))
+    br       = 0.5+0.5*tanh(af_f*(-r_in+af_b))
+    f        = ar*br
 end subroutine decay_function_heviside
 
 !=============================
@@ -629,40 +560,32 @@ subroutine decay_function_heviside_derivative( r, nbonds, af_f, af_a, af_b, orde
     do ibond=1, nbonds
         do jbond=ibond+1, nbonds
             pair_sum = pair_sum+(r(ibond)+r(jbond))**order
-        end do
-    end do
-
+        enddo
+    enddo
     bond_sum = 0.d0
     do ibond=1, nbonds
         bond_sum = bond_sum+r(ibond)**order
-    end do
-
+    enddo
     r_in = pair_sum**(1/order)-bond_sum**(1/order)
-
-    ar = 0.5+0.5*tanh(af_f*(r_in-af_a))
-    br = 0.5+0.5*tanh(af_f*(-r_in+af_b))
-
+    ar   = 0.5+0.5*tanh(af_f*(r_in-af_a))
+    br   = 0.5+0.5*tanh(af_f*(-r_in+af_b))
     dfdr_in = af_f*(-0.25*tanh(af_f*(r_in-af_a))-0.25)/((cosh(af_f*(-r_in+af_b)))**2) + af_f*(0.25+0.25*tanh(af_f*(- &
         & r_in+af_b)))/((cosh(af_f*(r_in-af_a)))**2)
-
     dr_indr = 0.d0
     do ibond=1, nbonds
         do jbond=1, nbonds
-            if (ibond.ne.jbond) then
+            if( ibond .ne. jbond )then
                 dr_indr(ibond) = dr_indr(ibond)+1/order*((pair_sum)**(-(order-1.0)/order))*order*((r(ibond)+ &
                     & r(jbond))**(order-1.0))
-            end if
-        end do
-    end do
-
+            endif
+        enddo
+    enddo
     do ibond=1, nbonds
         dr_indr(ibond) = dr_indr(ibond)-1/order*((bond_sum)**(-(order-1.0)/order))*order*(r(ibond)**(order-1.0))
-    end do
-
+    enddo
     do ibond=1, nbonds
         dfdr(ibond) = dfdr_in*dr_indr(ibond)
-    end do
-
+    enddo
 end subroutine decay_function_heviside_derivative
 
 !==============================
@@ -676,7 +599,7 @@ subroutine sumover( a, b, sum1 )
     sum1 = 1-a
     do num=a, a-b+1, -1
         sum1 = sum1+num
-    end do
+    enddo
 end subroutine sumover
 
 !==============================
@@ -698,14 +621,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     integer, save                 :: lapack_lwork_d
     logical, save                 :: first_time_diag=.true.
     u_ss = a_ss
-    if (first_time_diag) then
+    if( first_time_diag )then
         lapack_lwork_d = -1
         allocate( lapack_work_d(2) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
         lapack_lwork_d = int(lapack_work_d(1))
         deallocate ( lapack_work_d )
         first_time_diag = .false.
-    end if
+    endif
     allocate( lapack_work_d(lapack_lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
     ! U_ss already holds the transformation matrix
@@ -714,7 +637,6 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     !   do i=1,n
     !     B_ss(i,i)=EV_s(i)
     !   enddo
-
 end subroutine diagonalize
 
 !==========================
@@ -731,7 +653,6 @@ subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
     double precision                :: gx(ns,3*n)
     integer                         :: i, j
     drdx = 0.0d0
-
     ! compute drdx
     drdx(1,1) = (x(1,1)-x(2,1))/r(1)
     drdx(1,2) = (x(1,2)-x(2,2))/r(1)
@@ -751,15 +672,12 @@ subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
     drdx(3,7) = -drdx(3,4)
     drdx(3,8) = -drdx(3,5)
     drdx(3,9) = -drdx(3,6)
-
     call mproduct(gr, drdx, gx, ns, n*(n-1)/2, 3*n)
-
     do i=1, n
         g(:,i,1) = gx(:,3*(i-1)+1)
         g(:,i,2) = gx(:,3*(i-1)+2)
         g(:,i,3) = gx(:,3*(i-1)+3)
-    end do
-
+    enddo
 end subroutine grad_r_to_xyz
 
 !==========================
@@ -777,7 +695,6 @@ subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
     double precision                :: hx(ns*ns,3*n)
     integer                         :: i, j, k, l
     drdx = 0.0d0
-
     ! compute drdx
     drdx(1,1) = (x(1,1)-x(2,1))/r(1)
     drdx(1,2) = (x(1,2)-x(2,2))/r(1)
@@ -797,15 +714,13 @@ subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
     drdx(3,7) = -drdx(3,4)
     drdx(3,8) = -drdx(3,5)
     drdx(3,9) = -drdx(3,6)
-
     do i=1, ns
         do j=1, ns
             k           = (i-1)*ns+j
             hr_vec(k,:) = hr(i,j,:)
-        end do
-    end do
+        enddo
+    enddo
     call mproduct(hr_vec, drdx, hx, ns*ns, n*(n-1)/2, 3*n)
-
     do i=1, n
         do j=1, ns
             do k=1, ns
@@ -813,10 +728,9 @@ subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
                 h(j,k,i,1) = hx(l,3*(i-1)+1)
                 h(j,k,i,2) = hx(l,3*(i-1)+2)
                 h(j,k,i,3) = hx(l,3*(i-1)+3)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
 end subroutine nac_r_to_xyz
 
 !==========================
@@ -834,9 +748,8 @@ subroutine convert_xyz_to_r( x, r, n )
         do j=i+1, n
             r(l) = sqrt((x(i,1)-x(j,1))**2+(x(i,2)-x(j,2))**2+(x(i,3)-x(j,3))**2)
             l    = l+1
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine convert_xyz_to_r
 
 !=========================
@@ -853,10 +766,9 @@ subroutine mproduct( a, b, c, l, m, n )
             c(i,j) = 0.d0
             do k=1, m
                 c(i,j) = c(i,j)+a(i,k)*b(k,j)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
 end subroutine mproduct
 
 !===========================
@@ -79412,7 +79324,6 @@ subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, 
     bias_l4(134) = 3.7124279886e-02
     bias_l4(135) = -9.1034896672e-02
     bias_l4(136) = -5.1863927394e-02
-
 end subroutine assign_coeff_bias
 
 !> @brief Evaluate ip_states.
@@ -79455,102 +79366,86 @@ subroutine ip_states( dist, v, grad, n, ns )
     r2ip     = 1.06219636583541d0
     order    = 4.d0
     nbonds   = int(n*(n-1)/2)
-
     ! rcom
     pair_sum = 0.d0
     do ibond=1, nbonds
         do jbond=ibond+1, nbonds
             pair_sum = pair_sum+(dist(ibond)+dist(jbond))**order
-        end do
-    end do
-
+        enddo
+    enddo
     bond_sum = 0.d0
     do ibond=1, nbonds
         bond_sum = bond_sum+dist(ibond)**order
-    end do
-
+    enddo
     rcom = pair_sum**(1.d0/order)-bond_sum**(1.d0/order)
-
     ! computing r_min
     bond_sum_inv = 0.d0
     do ibond=1, nbonds
         bond_sum_inv = bond_sum_inv+dist(ibond)**(-1.d0*order)
-    end do
+    enddo
     rmin = bond_sum_inv**(-1.0/order)
-
     ! for computing ground state diatomic energy
     v2b_diatomic  = 0.d0
     grad_diatomic = 0.d0
     call ev2gm2(rmin, v_diatomic, grad_diatomic, 4, 1)
     v2b_diatomic = v2b_diatomic+v_diatomic/23.061d0
-
     ! IP(rmin)
     ip = a1/(1.d0+exp(-b1*(rmin-r1ip)))+a2/(1.d0+exp(-b2*(rmin-r2ip)))
     ip = ip+v2b_diatomic(1)
-
     ! W_IP
     ionic(1) = 27.211608*((2.0/rcom)**8)-27.211608/(rcom/0.529177)+ip-1.46
     gap      = 0.117
     ionic(2) = ionic(1)+gap
     ionic(3) = ionic(2)
-
     ! gradients: drcom/dr_k and drmin/dr_k
     do ibond=1, nbonds
         dpair_drk = 0.d0
         do jbond=1, nbonds
-            if (jbond.ne.ibond) then
+            if( jbond .ne. ibond )then
                 dpair_drk = dpair_drk+order*(dist(ibond)+dist(jbond))**(order-1.0)
-            end if
-        end do
+            endif
+        enddo
         dbond_drk = order*dist(ibond)**(order-1.0)
-
         ! drcom/dr_k = (1/4) pair_sum^{-3/4} * dpair_drk - (1/4) bond_sum^{-3/4} * dbond_drk
         drcom_dr(ibond)=(1.d0/order)*pair_sum**(-(order-1.0)/order)*dpair_drk -(1.d0/order)*bond_sum**(-(order-1.0)/ &
             & order)*dbond_drk
-
         ! For rmin = S^{-1/4}, with S = sum r_i^{-4},
         ! dS/dr_k = -4 r_k^{-5}  => drmin/dr_k = -1/4 * S^{-5/4} * (-4 r_k^{-5}) = S^{-5/4} * r_k^{-5} = rmin^5 * r_k^{-5}
         drmin_dr(ibond) = rmin**(order+1.0)*dist(ibond)**(-(order+1.0))
-    end do
-
+    enddo
     ! d(ip)/drmin
     s1        = 1.d0/(1.d0+exp(-b1*(rmin-r1ip)))
     s2        = 1.d0/(1.d0+exp(-b2*(rmin-r2ip)))
     ds1_drmin = b1*s1*(1.d0-s1)
     ds2_drmin = b2*s2*(1.d0-s2)
     dip_drmin = a1*ds1_drmin+a2*ds2_drmin+grad_diatomic(1)/23.061d0
-
     ! g_ip
     do ibond=1, nbonds
         g_ip(ibond) = (-eh*2048.d0*rcom**(-9.d0)+eh*0.529177d0*rcom**(-2.d0))*drcom_dr(ibond)+dip_drmin*drmin_dr(ibond)
-    end do
-
+    enddo
     ! pack energies and gradients: 16 neutral + 3 ionic
     do istate=1, 16
         all_e(istate)   = v(istate)
         all_g(istate,:) = grad(istate,:)
-    end do
+    enddo
     all_e(17)   = ionic(1)
     all_g(17,:) = g_ip(:)
     all_e(18)   = ionic(2)
     all_g(18,:) = g_ip(:)
     all_e(19)   = ionic(3)
     all_g(19,:) = g_ip(:)
-
     ! Select lowest 16 with matched gradients
     do istate=1, 16
         pos = 1
         do j=2, 19
-            if (all_e(j)<all_e(pos)) pos=j
-        end do
+            if( all_e(j) < all_e(pos) ) pos=j
+        enddo
         low16(istate)    = all_e(pos)
         low16g(istate,:) = all_g(pos,:)
         all_e(pos)       = huge(1.0d0)
-    end do
-
+    enddo
     v    = low16
     grad = low16g
-
 end subroutine
 
 !> @brief Evaluate ev2gm2m.
@@ -79571,15 +79466,13 @@ subroutine ev2gm2m( dist, v2b, g2b, imol, igrad, n )
     do i=1, n*(n-1)/2
         r = dist(i)
         call ev2gm2(r, v, grad, imol, igrad)
-
         v2b = v2b + v/23.061d0
-        if (igrad.eq.1) then
+        if( igrad .eq. 1 )then
             do j=1, 16
                 g2b(j,i) = grad(j)/23.061d0
-            end do
-        end if
-    end do
-
+            enddo
+        endif
+    enddo
 end subroutine ev2gm2m
 
 !> @brief Evaluate ev2gm2.
@@ -79593,9 +79486,8 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     integer                       :: i, j, k
     v    = 0.0d0
     grad = 0.0d0
-
     do i=1, 16
-        if (i.eq.1) then
+        if( i .eq. 1 )then
             as(0) = 71492.0825
             as(1) = -96462.2714
             as(2) = 124669.5962
@@ -79606,8 +79498,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             as(7) = -10165.7980
             alpha = 12.3688
             beta  = 0.7421
-
-        else if ((i.eq.2).or.(i.eq.3).or.(i.eq.4)) then
+        else if( (i .eq. 2).or.(i .eq. 3).or.(i .eq. 4) )then
             ! O2 a 1Del_g
             as(0) = 15613.5276
             as(1) = -2404.4979
@@ -79619,7 +79510,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             as(7) = -143.0212
             alpha = 8.8084
             beta  = 0.6807
-        else if ((i.eq.5).or.(i.eq.6)) then
+        else if( (i .eq. 5).or.(i .eq. 6) )then
             ! O2 b 1Sig_g^+
             as(0) = 30217.9494
             as(1) = -34209.9456
@@ -79631,7 +79522,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             as(7) = -765.4895
             alpha = 6.9556
             beta  = 0.7365
-        else if ((i.eq.13).or.(i.eq.14).or.(i.eq.15)) then
+        else if( (i .eq. 13).or.(i .eq. 14).or.(i .eq. 15) )then
             ! mixed energy curve
             as(0) = 15.7994
             as(1) = -90.8425
@@ -79645,7 +79536,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             beta  = 1.6871
             gam   = 13.9521
             del   = 27.7976
-        else if (i.eq.7) then
+        else if( i .eq. 7 )then
             ! O2 c 1Sig_u^-
             as(0) = -311583.8841
             as(1) = -272929.9302
@@ -79657,7 +79548,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             as(7) = 1355645.1238
             alpha = 1.5690
             beta  = 1.0261
-        else if (i.eq.16) then
+        else if( i .eq. 16 )then
             ! mixed energy curve 3 Del_g- + 1S
             as(0) = -1049657.501
             as(1) = 9416957.826
@@ -79671,7 +79562,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             beta  = 1.1382
             gam   = -32.5392
             del   = 21.3867
-        else if ((i.eq.8).or.(i.eq.9).or.(i.eq.10)) then
+        else if( (i .eq. 8).or.(i .eq. 9).or.(i .eq. 10) )then
             ! O2 C 3Del_u
             as(0) = 7133519.1248
             as(1) = -21842782.2951
@@ -79683,7 +79574,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             as(7) = -2047566.0842
             alpha = 3.3916
             beta  = 0.9413
-        else if ((i.eq.11).or.(i.eq.12)) then
+        else if( (i .eq. 11).or.(i .eq. 12) )then
             ! O2 A 3Sig_u^+
             alpha = 0.1044
             beta  = 5.4643
@@ -79695,25 +79586,21 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             as(5) = -2620.5113
             as(6) = -14514.4843
             as(7) = -10838.5723
-        end if
-
+        endif
         do k=0, 7
             v(i) = v(i) + as(k)*dexp(-alpha*beta**k*r**2)
-        end do
-        if ((i.eq.13).or.(i.eq.14).or.(i.eq.15).or.(i.eq.16)) then
+        enddo
+        if( (i .eq. 13).or.(i .eq. 14).or.(i .eq. 15).or.(i .eq. 16) )then
             v(i) = v(i) + gam*dexp(-del*(r-1.7d0)**2)
-        end if
-
+        endif
         ! Compute the gradient if needed
-        if (igrad.eq.1) then
+        if( igrad .eq. 1 )then
             do k=0, 7
                 grad(i) = grad(i)-2.d0*as(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
-            end do
-            if ((i.eq.13).or.(i.eq.14).or.(i.eq.15).or.(i.eq.16)) then
+            enddo
+            if( (i .eq. 13).or.(i .eq. 14).or.(i .eq. 15).or.(i .eq. 16) )then
                 grad(i) = grad(i)-2.0d0*del*gam*(r-1.7d0)*dexp(-del*(r-1.7d0)**2)
-            end if
-        end if
-
-    end do
-
+            endif
+        endif
+    enddo
 end subroutine ev2gm2

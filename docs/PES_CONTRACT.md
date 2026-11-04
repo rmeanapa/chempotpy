@@ -12,6 +12,47 @@ Legacy `ENTRY` dispatch is not part of this contract. Initializers, batch
 evaluators, and point evaluators are distinct module procedures; any state they
 share has one private module owner.
 
+## Module-per-surface architecture
+
+Each migrated surface owns one uniquely named module, for example
+`h3_gen_a2_2002_pes`. The module is `private` by default and publishes the same
+small generic vocabulary:
+
+```fortran
+module h3_gen_a2_2002_pes
+    implicit none
+    private
+    public :: evaluate, metadata
+    contains
+    subroutine evaluate( coordinates, energy, gradient, coupling, status )
+    end subroutine evaluate
+end module h3_gen_a2_2002_pes
+```
+
+The module owns fit-specific constants and private cached state. Shared
+geometry, units, validation, and status definitions remain in the bundled core.
+Standalone Fortran programs use the surface module directly. During migration,
+the historical external `pes` or `dpem` routine remains as a thin adapter to the
+module API so Python extensions and existing callers remain compatible.
+
+`evaluate` and `metadata` are the complete public lifecycle; there is no
+`initialize` procedure. Fixed values and fitted coefficients are typed private
+module parameters. A surface that historically reads coefficients at runtime
+is migrated by generating and committing a private Fortran parameter module
+from the authoritative data file. The generated source records the original
+data checksum and citation. Installed surfaces therefore require no runtime
+data file, mutable initialization flag, or file-unit setup.
+
+Programs that import more than one surface rename the generic procedures on
+import, for example `evaluate_a2 => evaluate`. A later runtime registry may
+bind these implementations through one abstract interface without changing the
+surface modules.
+
+CHEMPOTPY does not implement or depend on POLYRATE's object hierarchy. POLYRATE
+owns an adapter type that extends its abstract potential class and delegates to
+the CHEMPOTPY module procedures. Standalone programs bypass that object adapter
+and call the same CHEMPOTPY module API directly.
+
 ## Boundary
 
 The portable low-level boundary uses:

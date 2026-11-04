@@ -19,50 +19,45 @@ subroutine pes( xyz, nsi, no, nh, natoms, igrad, p, g, d )
     integer                       :: istate, iatom
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     q = 0.d0
     do iatom=1, natoms
         cx(iatom) = xyz(iatom,1)/legacy_bohr_to_angstrom
         cy(iatom) = xyz(iatom,2)/legacy_bohr_to_angstrom
         cz(iatom) = xyz(iatom,3)/legacy_bohr_to_angstrom
-    end do
+    enddo
     do iatom=1, nsi
         indexlist(iatom) = 14
-    end do
+    enddo
     do iatom=1, no
         indexlist(iatom+nsi) = 8
-    end do
+    enddo
     do iatom=1, nh
         indexlist(iatom+nsi+no) = 1
-    end do
-
+    enddo
     call siohpot(cx, cy, cz, q, indexlist, v, dcx, dcy, dcz, natoms, 10000, 0)
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = v*legacy_hartree_to_electronvolt
-        end do
-    else if (igrad==1) then
+        enddo
+    else if( igrad == 1 )then
         do istate=1, nstates
             p(istate) = v*legacy_hartree_to_electronvolt
-        end do
+        enddo
         do istate=1, nstates
             do iatom=1, natoms
                 g(istate,iatom,1) = dcx(iatom)*51.422067
                 g(istate,iatom,2) = dcy(iatom)*51.422067
                 g(istate,iatom,3) = dcz(iatom)*51.422067
-            end do
-        end do
+            enddo
+        enddo
     else
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine pes
 
 !> @brief Evaluate siohpot for the SiOH_GEN_1988 potential.
 subroutine siohpot( x, y, z, q, indmm, v, dvdx, dvdy, dvdz, natom, &
         & maxatom, ien )
-
     !   System:                        SiOH
     !   Functional form:               Two and three body interaction plus C
     !   Common name:                   SiOH
@@ -90,7 +85,6 @@ subroutine siohpot( x, y, z, q, indmm, v, dvdx, dvdy, dvdz, natom, &
     !  maxatom --- maximum number of atoms (input)
     !  ien     --- 1: just take coulombic interaction energy
     !          --- 0: take all energy
-
     implicit none
     double precision :: aa, alambda, alpha, bb, beta, cc, dx, dy, dz, e, e1, e2, e3, f, f3, f4, f5, g, gamma, h, p, q, &
         & r0, rho, rij, theta, tmp, v, v1, v2, v3
@@ -206,12 +200,10 @@ subroutine siohpot( x, y, z, q, indmm, v, dvdx, dvdy, dvdz, natom, &
     theta(14, 8, 1)  = 109.5d0/pang
     theta(1, 8, 14)  = theta(14, 8, 1)
     theta(1, 8, 1)   = 104.5d0/pang
-
     ! Initialize
     !         do i=1,natom
     !           write(6,100) indmm(i),q(i),x(i)*pdis,y(i)*pdis,z(i)*pdis
     !         enddo
-
     v1 = 0.d0
     v2 = 0.d0
     v3 = 0.d0
@@ -229,17 +221,15 @@ subroutine siohpot( x, y, z, q, indmm, v, dvdx, dvdy, dvdz, natom, &
             dx(j,i)  = -dx(i,j)
             dy(j, i) = -dy(i, j)
             dz(j, i) = -dz(i, j)
-        end do
-    end do
-
+        enddo
+    enddo
     ! Double loop (main loop)
     do 10 i=1, natom
         do 20 j=1, natom
-
             ! Cutoff function
-            if (i.eq.j) goto 20
-            if (rij(i,j).le.rn) then
-                if (i.gt.j) goto 111
+            if( i .eq. j ) goto 20
+            if( rij(i,j) .le. rn )then
+                if( i .gt. j ) goto 111
                 v1=v1+alpha(indmm(i),indmm(j))*dexp(-rij(i,j)/rho(indmm(i),indmm(j))) +(q(i)*q(j)/rij(i,j))* &
                     & erfc(rij(i,j)/ beta(indmm(i),indmm(j)))
                 e=-alpha(indmm(i),indmm(j))*dexp(-rij(i,j)/rho(indmm(i),indmm(j)))/rho(indmm(i),indmm(j)) -q(i)* q(j)* &
@@ -269,11 +259,11 @@ subroutine siohpot( x, y, z, q, indmm, v, dvdx, dvdy, dvdz, natom, &
                 111 continue
                 v3 = 0.d0
                 do 30 k=j+1, natom
-                    if (k.eq.i .or. k.eq.j) goto 30
-                    if (indmm(i).eq.1) goto 30
-                    if (indmm(i).eq.8 .and. (indmm(j).eq.8 .or. indmm(k).eq.8)) &
+                    if( k .eq. i .or. k .eq. j ) goto 30
+                    if( indmm(i) .eq. 1 ) goto 30
+                    if( indmm(i) .eq. 8 .and. (indmm(j) .eq. 8 .or. indmm(k) .eq. 8) ) &
                         & goto 30
-                    if (indmm(i).eq.14 .and. (indmm(j).ne.8 .or. indmm(k).ne.8)) &
+                    if( indmm(i) .eq. 14 .and. (indmm(j) .ne. 8 .or. indmm(k) .ne. 8) ) &
                         & goto 30
                     if (rij(i,j).ge.r0(indmm(i)+indmm(j),indmm(i)+indmm(j)+indmm(k)) &
                         & .or. rij(i,k).ge.r0(indmm(i)+indmm(k),indmm(i)+indmm(k)+&
@@ -316,19 +306,19 @@ subroutine siohpot( x, y, z, q, indmm, v, dvdx, dvdy, dvdz, natom, &
                     dvdx(k) = dvdx(k)-tmp*dx(j,k)
                     dvdy(k) = dvdy(k)-tmp*dy(j, k)
                     dvdz(k) = dvdz(k)-tmp*dz(j, k)
-            end if
+            endif
             v = v+v3
-        30 end do
-        end if
+        30 enddo
+        endif
         !        write(6,*) "i,j,v2"
         !        write(6,*) i,j,v2*autoev
-    20 end do
-    10 end do
-    if (ien.eq.1) then
+    20 enddo
+    10 enddo
+    if( ien .eq. 1 )then
         v = v1
     else
         v = v+v1+v2
-    end if
+    endif
     !
     !      do i=1,natom
     !      write(6,'(1x,i5,3f12.6)') i,dvdx(i),dvdy(i),dvdz(i)

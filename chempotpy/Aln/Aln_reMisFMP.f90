@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_reMisFMP potential.
@@ -58,7 +58,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: a, alp1, alp2, b1, b2, delta, dx, dy, dz, e1, e2, ef, em1, &
         & em2, f0, f2, h, psiarg, psicut, q1, q2, q3, r1, r2, r3, r4, rc, rho, rhobar, rr, v, v2, x, &
@@ -87,7 +86,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     q1    = -3.62530532486565704/autoev
     q2    = -23.1485100146555922/autoev
     q3    = -20.1148021494870548/autoev
-
     ! original
     !      rc = 6.78040d0   /autoang
     !      h  = 1.41584d0   /autoang
@@ -108,39 +106,33 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !      q1 = -6.24655d0   /autoev
     !      q2 = -21.52522d0   /autoev
     !      q3 = -15.30493d0   /autoev
-
     v = 0.d0
     do 2 i=1, natom
         v2     = 0.d0
         rhobar = 0.d0
         do 3 j=1, natom
-            if (i.eq.j) go to 3
+            if( i .eq. j ) go to 3
             dx = x(i)-x(j)
             dy = y(i)-y(j)
             dz = z(i)-z(j)
             rr = dsqrt(dx*dx+dy*dy+dz*dz)
-
             ! 2-body part
             psiarg = (rr-rc)/h
-            if (psiarg.ge.0.d0) then
+            if( psiarg .ge. 0.d0 )then
                 psicut = 0.d0
             else
                 psicut = psiarg**4/(1.d0+psiarg**4)
-            end if
+            endif
             em1 = dexp(-2.d0*alp1*(rr-r1))-2.d0*dexp(-alp1*(rr-r1))
             em2 = dexp(-2.d0*alp2*(rr-r2))-2.d0*dexp(-alp2*(rr-r2))
             v2  = v2 + (e1*em1+e2*em2+delta)*psicut
-
             ! rhobar
             rho    = (a*dexp(-b1*(rr-r3)**2)+dexp(-b2*(rr-r4)))*psicut
             rhobar = rhobar + rho  ! rho is 2x because we are looping j>i
-
         3 continue
         ! embedding term
         xksum = q1*(rhobar-1.d0)**3 + q2*(rhobar-1.d0)**4 + q3*(rhobar-1.d0)**5
-
-        ef = f0 + 0.5d0*f2*(rhobar-1)**2 + xksum
-        v  = v + 0.5d0*v2 + ef
+        ef    = f0 + 0.5d0*f2*(rhobar-1)**2 + xksum
+        v     = v + 0.5d0*v2 + ef
     2 continue
-
 end subroutine pot

@@ -38,35 +38,28 @@ subroutine pes( x, igrad, p, g, d )
     integer                       :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             j     = 3*(iatom-1)+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     tg = 0.d0
-
     call o4pes(tx, v, tg, igrad)
-
     v  = v/23.0609
     tg = tg/23.0609
-
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
     do istate=1, nstates
         do iatom=1, natoms
             do idir=1, 3
                 j                    = 3*(iatom-1)+idir
                 g(istate,iatom,idir) = tg(j)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     d = 0.d0
-
 end subroutine pes
 
 !
@@ -96,7 +89,6 @@ subroutine o4pes( x, v, dvdx, igrad )
     !               dim(6*112)
     ! dRdX:         The derivative of R w.r.t. X, dim(6*12)
     !**********************************************************************
-
     implicit none
     integer          :: i, igrad, j, nob, k
     double precision :: v
@@ -108,19 +100,16 @@ subroutine o4pes( x, v, dvdx, igrad )
     !      common /msprmt/   a,ab,ra,rb
     ! Read Cartesian coordinate from input file
     call coord_convt(x)
-
-    if (igrad .le. 1) then
+    if( igrad .le. 1 )then
         ! Call subroutine Evv to evaluate potential energy V
         call evv(v)
-
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             ! Call EvdVdX to evaluate the derivatives of V w.r.t. X
             call evdvdx(x, dvdx)
-        end if
+        endif
     else
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine o4pes
 
 !> @brief Evaluate coord_convt for the O4_triplet_v2 potential.
@@ -146,7 +135,6 @@ subroutine coord_convt( x )
     r(4) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
     r(5) = sqrt((x(4)-x(10))**2 + (x(5)-x(11))**2 + (x(6)-x(12))**2)
     r(6) = sqrt((x(7)-x(10))**2 + (x(8)-x(11))**2 + (x(9)-x(12))**2)
-
 end subroutine coord_convt
 
 !> @brief Evaluate EvV for the O4_triplet_v2 potential.
@@ -167,7 +155,6 @@ subroutine evv( v )
     ! P(0:305):     Array to store polynomials
     ! B(1:276):     Array to store basis functions
     !**********************************************************************
-
     implicit none
     double precision :: b, c, p, r, rm, rms
     integer          :: i, j, k
@@ -176,16 +163,12 @@ subroutine evv( v )
     common /epot/     rms(6), rm(0:111), p(0:465), c(430), b(430)
     ! Calculate the six MEG terms for each point
     call evmorse
-
     ! Calculate the monomials for each point by using six MEG terms
     call evmono
-
     ! Calculate the polynomials (basis functions) by using monomials
     call evpoly
-
     ! Calculate the basis functions by removing unconnected and 2-body terms
     call evbas
-
     ! Initialized v to be 2De 2*120.243 kcal/mol
     v = 240.486d0
     ! Evaluate 2-body interactions
@@ -193,20 +176,16 @@ subroutine evv( v )
         dist = r(i)
         call ev2gm2(dist, v2, dv2dr, 4, 0)
         v = v+v2
-    end do
-
+    enddo
     ! Add D3 dispersion correction
     call d3disp(r, disp, dispdr, 0)
     v = v+disp
-
     ! Evaluate V by taken the product of C and Basis function array
     do i=1, 430
         v = v + c(i)*b(i)
-    end do
-
+    enddo
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
-
 end subroutine evv
 
 !> @brief Evaluate EvdVdX for the O4_triplet_v2 potential.
@@ -222,7 +201,6 @@ subroutine evdvdx( x, dvdx )
     ! dRdX:         dRdX(6,12), derivatives of R(6) w.r.t. 12
     !               Cartesian coordinates
     !**********************************************************************
-
     implicit none
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, r, rm, rms
     integer          :: i, j
@@ -234,26 +212,21 @@ subroutine evdvdx( x, dvdx )
     ! Initialize dVdX
     do i=1, 12
         dvdx(i) = 0.0d0
-    end do
-
+    enddo
     ! Call EvdVdR to evaluate dVdR(6)
     call evdvdr
-
     ! Call EvdRdX to evaluate dRdX(6,12)
     call evdrdx(x)
-
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to
     ! 6
     do i=1, 12
         do j=1, 6
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j, i)
-        end do
-    end do
-
+        enddo
+    enddo
     !      write(*,*) 'The 12 dVdX are:'
     !      Write(*,9999) (dVdX(i),i=1,12)
     ! 9999 Format(1x,3F15.8)
-
 end subroutine evdvdx
 
 !> @brief Evaluate EvMorse for the O4_triplet_v2 potential.
@@ -272,8 +245,7 @@ subroutine evmorse
     ! Anstrom^2
     do i=1, 6
         rms(i) = exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
-    end do
-
+    enddo
 end subroutine evmorse
 
 !> @brief Evaluate EvMono for the O4_triplet_v2 potential.
@@ -283,7 +255,6 @@ subroutine evmono
     !  monomials (M), the polynomial is built from the monomials.
     !  For A4 with max. degree 10, the number of monomials is nom.
     !**********************************************************************
-
     implicit none
     double precision :: b, c, p, rm, rms
     common /epot/     rms(6), rm(0:111), p(0:465), c(430), b(430)
@@ -399,7 +370,6 @@ subroutine evmono
     rm(109) = rm(6)*rm(85)
     rm(110) = rm(6)*rm(86)
     rm(111) = rm(6)*rm(87)
-
 end subroutine evmono
 
 !> @brief Evaluate EvPoly for the O4_triplet_v2 potential.
@@ -409,7 +379,6 @@ subroutine evpoly
     !  permutation invariant polynomials (p).
     !  For A4 with max. degree 10, the number of polynomials is nob.
     !**********************************************************************
-
     implicit none
     double precision :: b, c, p, rm, rms
     common /epot/     rms(6), rm(0:111), p(0:465), c(430), b(430)
@@ -889,7 +858,6 @@ subroutine evpoly
     p(463) = p(2)*p(194) - p(452)
     p(464) = p(3)*p(194) - p(453) - p(454) - p(451)
     p(465) = p(1)*p(305) - p(464) - p(463)
-
 end subroutine evpoly
 
 !> @brief Evaluate evbas for the O4_triplet_v2 potential.
@@ -897,7 +865,6 @@ subroutine evbas
     !**********************************************************************
     !  This subroutine eliminates the 2-body terms in Bowman's approach.
     !**********************************************************************
-
     implicit none
     double precision :: b, c, p, rm, rms
     common /epot/     rms(6), rm(0:111), p(0:465), c(430), b(430)
@@ -906,75 +873,57 @@ subroutine evbas
     ! Pass P(0:465) to BM1(1:466)
     do i=1, 466
         b1(i) = p(i-1)
-    end do
-
+    enddo
     ! Remove unconnected terms and 2-body terms and pass to B(1:430)
     b(1) = b1(4)
-
     do i=2, 4
         b(i) = b1(i+4)
-    end do
-
+    enddo
     b(5) = b1(10)
-
     do i=6, 11
         b(i) = b1(i+6)
-    end do
-
+    enddo
     b(12) = b1(19)
     b(13) = b1(21)
-
     do i=14, 26
         b(i) = b1(i+9)
-    end do
-
+    enddo
     b(27) = b1(37)
     b(28) = b1(39)
-
     do i=29, 53
         b(i) = b1(i+12)
-    end do
-
+    enddo
     b(54) = b1(67)
     b(55) = b1(69)
     b(56) = b1(71)
-
     do i=57, 97
         b(i) = b1(i+16)
-    end do
-
+    enddo
     b(98)  = b1(115)
     b(99)  = b1(117)
     b(100) = b1(119)
-
     do i=101, 166
         b(i) = b1(i+20)
-    end do
-
+    enddo
     b(167) = b1(188)
     b(168) = b1(190)
     b(169) = b1(192)
     b(170) = b1(194)
-
     do i=171, 272
         b(i) = b1(i+25)
-    end do
-
+    enddo
     b(273) = b1(299)
     b(274) = b1(301)
     b(275) = b1(303)
     b(276) = b1(305)
-
     do i=277, 425
         b(i) = b1(i+30)
-    end do
-
+    enddo
     b(426) = b1(457)
     b(427) = b1(459)
     b(428) = b1(461)
     b(429) = b1(463)
     b(430) = b1(465)
-
 end subroutine evbas
 
 !> @brief Evaluate ev2gm2 for the O4_triplet_v2 potential.
@@ -1022,22 +971,21 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     a(5)  = 4.404104009614092d5
     a(6)  = -2.946204062950765d5
     a(7)  = 1.176861219078620d5
-
-    v = 0.d0
+    v     = 0.d0
     do k=0, 7
         v = v + a(k)*dexp(-alpha*beta**k*r**2)
-    end do
+    enddo
     ! From milihartree to kcal/mol
     v = v*627.509523475149d-3
     ! Compute the gradient if needed
-    if (igrad.eq.1) then
+    if( igrad .eq. 1 )then
         grad = 0.d0
         do k=0, 7
             grad = grad-2.d0*a(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
-        end do
+        enddo
         ! Convert from milihartree/A to i(kcal/mol)/A
         grad = grad*627.509523475149d-3
-    end if
+    endif
 end subroutine ev2gm2
 
 !> @brief Evaluate EvdVdR for the O4_triplet_v2 potential.
@@ -1058,7 +1006,6 @@ subroutine evdvdr
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
     !**********************************************************************
-
     implicit none
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, r, rm, rms
     integer          :: i, j
@@ -1070,40 +1017,32 @@ subroutine evdvdr
     ! Initialize dVdR(6)
     do i=1, 6
         dvdr(i) = 0.0d0
-    end do
-
+    enddo
     ! Add dV2dR(i) to dVdR
     do i=1, 6
         dist = r(i)
         call ev2gm2(dist, v2, dv2dr, 4, 1)
         dvdr(i) = dv2dr
-    end do
-
+    enddo
     ! Add numerical gradient of D3 dispersion correction
     call d3disp(r, disp, dispdr, 1)
     do i=1, 6
         dvdr(i) = dvdr(i) + dispdr(i)
-    end do
-
+    enddo
     ! Calculate dMEG/dr(6,6) for given R(6)
     call evdmsdr
-
     ! Calculate the monomials for each point by using six MEG terms
     call evdmdr
-
     ! Calculate the polynomials by using monomials
     call evdpdr
-
     ! Remove 2-body interactions and unconnected terms from polynomials
     call evdbdr
-
     ! Evaluate dVdR(6) by taken the product of C(j) and dPdR(i,j)
     do i=1, 6
         do j=1, 430
             dvdr(i) = dvdr(i) + c(j)*dbdr(i, j)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine evdvdr
 
 !> @brief Evaluate EvdRdX for the O4_triplet_v2 potential.
@@ -1119,7 +1058,6 @@ subroutine evdrdx( x )
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
     !**********************************************************************
-
     implicit none
     double precision :: dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, r
     integer          :: i, j
@@ -1131,9 +1069,8 @@ subroutine evdrdx( x )
     do i=1, 6
         do j=1, 12
             drdx(i, j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     ! Start to calculate the non-zero dRdX
     ! dr1dx
     drdx(1, 1) = (x(1)-x(4))/r(1)
@@ -1142,7 +1079,6 @@ subroutine evdrdx( x )
     drdx(1, 4) = -drdx(1, 1)
     drdx(1, 5) = -drdx(1, 2)
     drdx(1, 6) = -drdx(1, 3)
-
     ! dr2dx
     drdx(2, 1) = (x(1)-x(7))/r(2)
     drdx(2, 2) = (x(2)-x(8))/r(2)
@@ -1150,7 +1086,6 @@ subroutine evdrdx( x )
     drdx(2, 7) = -drdx(2, 1)
     drdx(2, 8) = -drdx(2, 2)
     drdx(2, 9) = -drdx(2, 3)
-
     ! dr3dx
     drdx(3, 1)  = (x(1)-x(10))/r(3)
     drdx(3, 2)  = (x(2)-x(11))/r(3)
@@ -1158,7 +1093,6 @@ subroutine evdrdx( x )
     drdx(3, 10) = -drdx(3, 1)
     drdx(3, 11) = -drdx(3, 2)
     drdx(3, 12) = -drdx(3, 3)
-
     ! dr4dx
     drdx(4, 4) = (x(4)-x(7))/r(4)
     drdx(4, 5) = (x(5)-x(8))/r(4)
@@ -1166,7 +1100,6 @@ subroutine evdrdx( x )
     drdx(4, 7) = -drdx(4, 4)
     drdx(4, 8) = -drdx(4, 5)
     drdx(4, 9) = -drdx(4, 6)
-
     ! dr5dx
     drdx(5, 4)  = (x(4)-x(10))/r(5)
     drdx(5, 5)  = (x(5)-x(11))/r(5)
@@ -1174,7 +1107,6 @@ subroutine evdrdx( x )
     drdx(5, 10) = -drdx(5, 4)
     drdx(5, 11) = -drdx(5, 5)
     drdx(5, 12) = -drdx(5, 6)
-
     ! dr6dx
     drdx(6, 7)  = (x(7)-x(10))/r(6)
     drdx(6, 8)  = (x(8)-x(11))/r(6)
@@ -1183,7 +1115,6 @@ subroutine evdrdx( x )
     drdx(6, 11) = -drdx(6, 8)
     drdx(6, 12) = -drdx(6, 9)
     ! Finish the calculation of non-zero dRdX
-
 end subroutine evdrdx
 
 !> @brief Evaluate EvdMsdR for the O4_triplet_v2 potential.
@@ -1196,7 +1127,6 @@ subroutine evdmsdr
     ! ab:       Nonlinear pamameter(Angstrom^2)
     ! re:           equilibrium bond length(Angstrom)
     !**********************************************************************
-
     implicit none
     double precision :: a, ab, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, r, ra, rb
     integer          :: i, j
@@ -1208,17 +1138,15 @@ subroutine evdmsdr
     do i=1, 6
         do j=1, 6
             dmsdr(i, j) = 0.0d0
-        end do
-    end do
+        enddo
+    enddo
     !
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
     !
     do i=1, 6
         dmsdr(i, i) = (-2.0d0*(r(i)-rb)/ab-1/a)* exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
-
-    end do
-
+    enddo
 end subroutine evdmsdr
 
 !> @brief Evaluate EvdMdR for the O4_triplet_v2 potential.
@@ -1228,7 +1156,6 @@ subroutine evdmdr
     !  dMdR(6,nom), the polynomial is built from the monomials.
     !  For A4 with max. degree 10, the number of monomials is nom.
     !**********************************************************************
-
     implicit none
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, rm, rms
     integer          :: i
@@ -1348,8 +1275,7 @@ subroutine evdmdr
         dmdr(i, 109) = dmdr(i, 6)*rm(85) + rm(6)*dmdr(i, 85)
         dmdr(i, 110) = dmdr(i, 6)*rm(86) + rm(6)*dmdr(i, 86)
         dmdr(i, 111) = dmdr(i, 6)*rm(87) + rm(6)*dmdr(i, 87)
-    end do
-
+    enddo
 end subroutine evdmdr
 
 !> @brief Evaluate EvdPdr for the O4_triplet_v2 potential.
@@ -1359,7 +1285,6 @@ subroutine evdpdr
     !  permutation invariant polynomials (p)
     !  For A4 with max. degree 10, the number of polynomials is nob.
     !**********************************************************************
-
     implicit none
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, rm, rms
     integer          :: i
@@ -1880,9 +1805,7 @@ subroutine evdpdr
         dpdr(i, 463) = dpdr(i, 2)*p(194) + p(2)*dpdr(i, 194) - dpdr(i, 452)
         dpdr(i, 464) = dpdr(i, 3)*p(194) + p(3)*dpdr(i, 194) - dpdr(i, 453) - dpdr(i, 454) - dpdr(i, 451)
         dpdr(i, 465) = dpdr(i, 1)*p(305) + p(1)*dpdr(i, 305) - dpdr(i, 464) - dpdr(i, 463)
-
-    end do
-
+    enddo
 end subroutine evdpdr
 
 !> @brief Evaluate evdbdr for the O4_triplet_v2 potential.
@@ -1890,7 +1813,6 @@ subroutine evdbdr
     !**********************************************************************
     !  This subroutine eliminates the 2-body terms in Bowman's approach.
     !**********************************************************************
-
     implicit none
     double precision :: dbdr, dmdr, dmsdr, dpdr, drdx, dvdr
     integer          :: j
@@ -1902,78 +1824,60 @@ subroutine evdbdr
     do j=1, 6
         do i=1, 466
             db1dr(j,i) = dpdr(j, i-1)
-        end do
-    end do
-
+        enddo
+    enddo
     ! Remove unconnected terms and 2-body terms and pass to B(1:430)
     do j=1, 6
         dbdr(j, 1) = db1dr(j,4)
-
         do i=2, 4
             dbdr(j, i) = db1dr(j,i+4)
-        end do
-
+        enddo
         dbdr(j, 5) = db1dr(j,10)
-
         do i=6, 11
             dbdr(j, i) = db1dr(j,i+6)
-        end do
-
+        enddo
         dbdr(j, 12) = db1dr(j,19)
         dbdr(j, 13) = db1dr(j,21)
-
         do i=14, 26
             dbdr(j, i) = db1dr(j,i+9)
-        end do
-
+        enddo
         dbdr(j, 27) = db1dr(j,37)
         dbdr(j, 28) = db1dr(j,39)
-
         do i=29, 53
             dbdr(j, i) = db1dr(j,i+12)
-        end do
-
+        enddo
         dbdr(j, 54) = db1dr(j,67)
         dbdr(j, 55) = db1dr(j,69)
         dbdr(j, 56) = db1dr(j,71)
-
         do i=57, 97
             dbdr(j, i) = db1dr(j,i+16)
-        end do
-
+        enddo
         dbdr(j, 98)  = db1dr(j,115)
         dbdr(j, 99)  = db1dr(j,117)
         dbdr(j, 100) = db1dr(j,119)
-
         do i=101, 166
             dbdr(j, i) = db1dr(j,i+20)
-        end do
-
+        enddo
         dbdr(j, 167) = db1dr(j,188)
         dbdr(j, 168) = db1dr(j,190)
         dbdr(j, 169) = db1dr(j,192)
         dbdr(j, 170) = db1dr(j,194)
-
         do i=171, 272
             dbdr(j, i) = db1dr(j,i+25)
-        end do
-
+        enddo
         dbdr(j, 273) = db1dr(j,299)
         dbdr(j, 274) = db1dr(j,301)
         dbdr(j, 275) = db1dr(j,303)
         dbdr(j, 276) = db1dr(j,305)
-
         do i=277, 425
             dbdr(j, i) = db1dr(j,i+30)
-        end do
-
+        enddo
         dbdr(j, 426) = db1dr(j,457)
         dbdr(j, 427) = db1dr(j,459)
         dbdr(j, 428) = db1dr(j,461)
         dbdr(j, 429) = db1dr(j,463)
         dbdr(j, 430) = db1dr(j,465)
-    end do
-
+    enddo
 end subroutine evdbdr
 
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -2006,17 +1910,14 @@ subroutine d3disp( dist, disp, dispdr, igrad )
     double precision :: autoang, autokcal
     autoang  = 0.52917726d0
     autokcal = 627.509541d0
-
     ! Generalized parameters for BJ damping
     s6  = 1.0d0
     s8  = 2.0d0
     rs6 = 0.5299d0
     rs8 = 2.20d0
-
     do i=1, 6
         dist(i) = dist(i)/autoang
-    end do
-
+    enddo
     ! iz for O4 system
     iz(1) = 8
     iz(2) = 8
@@ -2029,32 +1930,24 @@ subroutine d3disp( dist, disp, dispdr, igrad )
     c6(4) = 12.8d0
     c6(5) = 12.8d0
     c6(6) = 12.8d0
-
     ! Calculate dispersion correction
     call edisp(94, 5, 4, dist, iz, mxc, &
         & rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
-
     disp = 0.0d0
-
     do i=1, 6
         disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
-    end do
-
-    if (igrad .eq. 1) then
+    enddo
+    if( igrad .eq. 1 )then
         call edisp(94, 5, 4, dist, iz, mxc, &
             & rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
-
         dispdr(:) = 0.0d0
-
         do i=1, 6
             dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
-        end do
-    end if
-
+        enddo
+    endif
     do i=1, 6
         dist(i) = dist(i)*autoang
-    end do
-
+    enddo
 end subroutine d3disp
 
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -2064,7 +1957,6 @@ end subroutine d3disp
 !> @brief Evaluate edisp for the O4_triplet_v2 potential.
 subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
-
     implicit none
     integer          :: n, iz(4), max_elem, maxc, mxc(max_elem)
     double precision :: dist(6), r2r4(max_elem), r0ab(max_elem,max_elem)
@@ -2077,15 +1969,12 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
     double precision :: cn(n)
     double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
     integer          :: step
-    e6(:) = 0.0d0
-    e8(:) = 0.0d0
-
+    e6(:)   = 0.0d0
+    e8(:)   = 0.0d0
     e6dr(:) = 0.0d0
     e8dr(:) = 0.0d0
-
-    a1 = rs6
-    a2 = rs8
-
+    a1      = rs6
+    a2      = rs8
     !  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
     r2r4(1:94)=(/ 2.00734898, 1.56637132, 5.01986934, 3.85379032, 3.64446594, 3.10492822, 2.71175247, 2.59361680, &
         & 2.38825250, 2.21522516, 6.58585536, 5.46295967, 5.65216669, 4.88284902, 4.29727576, 4.04108902, 3.72932356, &
@@ -2098,7 +1987,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & 7.83525634, 8.20702843, 7.70559063, 7.32755997, 7.03887381, 6.68978720, 6.05450052, 5.88752022, 5.70661499, &
         & 5.78450695, 7.79780729, 7.26443867, 6.78151984, 6.67883169, 6.39024318, 6.09527958, 11.79156076, &
         & 11.10997644, 9.51377795, 8.67197068, 8.77140725, 8.65402716, 8.53923501, 8.85024712 /)
-
     ! these new data are scaled with k2=4./3. and converted to a_0 via
     ! autoang=0.52917726d0
     rcov(1:94)=(/ 0.80628308, 1.15903197, 3.02356173, 2.36845659, 1.94011865, 1.88972601, 1.78894056, 1.58736983, &
@@ -2112,7 +2000,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & 3.45189952, 3.30072128, 3.09915070, 2.97316878, 2.92277614, 2.79679452, 2.82199085, 2.84718717, 3.32591790, &
         & 3.27552496, 3.27552496, 3.42670319, 3.30072128, 3.47709584, 3.57788113, 5.06446567, 4.56053862, 4.20778980, &
         & 3.98102289, 3.82984466, 3.85504098, 3.88023730, 3.90543362 /)
-
     ! DFT-D3
     step = 0
     do iat=1, n-1
@@ -2122,20 +2009,18 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
             c6   = c6a(step)
             ! r2r4 stored in main as sqrt
             c8 = 3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
-
             ! energy for BJ damping
             tmp      = sqrt(c8/c6)
             e6(step) = c6/(r**6+(a1*tmp+a2)**6)
             e8(step) = c8/(r**8+(a1*tmp+a2)**8)
             ! calculate gradients
-            if (igrad .eq. 1) then
+            if( igrad .eq. 1 )then
                 ! grad for BJ damping
                 e6dr(step) = c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
                 e8dr(step) = c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
-            end if
-        end do
-    end do
-
+            endif
+        enddo
+    enddo
 end subroutine edisp
 
 ! Begin

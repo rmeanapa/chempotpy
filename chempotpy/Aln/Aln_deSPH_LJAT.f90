@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_deSPH_LJAT potential.
@@ -57,7 +57,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: a, aa, b, c, co1, co2, co3, dx, dy, dz, rij, rim, &
         & rjm, rr, sig, u2, u3, v, x, y, z
@@ -78,9 +77,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
     c   = 3524.899741d0 / ((autoang**9)  * autoev)
     sig = 2.3478d0  /   autoang
     aa  = 4.6d0      /                  autoev
-
-    v = 0.d0
-
+    v   = 0.d0
     !  1. calculate energy of two-body interactions L-J
     u2 = 0.d0
     do 2 i=1, natom-1
@@ -92,10 +89,9 @@ subroutine pot( x, y, z, v, natom, maxatom )
             u2 = u2 + a/rr**12 + b/rr**6
         3 continue
     2 continue
-
     !  2. calculate energy of three-body interactions
     u3 = 0.d0
-    if(natom.eq.2) go to 7
+    if( natom .eq. 2 ) go to 7
     do 6 i=1, natom-2
         do 4 j=i+1, natom-1
             do 5 m=j+1, natom

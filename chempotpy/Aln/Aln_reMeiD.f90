@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_reMeiD potential.
@@ -61,7 +61,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: ab, alpha, beta, bigef, cc, delta, dr, dx, dy, dz, ec, ef, &
         & gamma, phi, phi0, q, r0, rc, rho, rn, rr, s, sterm, v, v2, x, xm, xx, y, z
@@ -89,55 +88,48 @@ subroutine pot( x, y, z, v, natom, maxatom )
     s(3)  = 27.9106008793356146
     rn    = 1.75d0*r0
     rc    = 1.95d0*r0
-
-    v = 0.d0
+    v     = 0.d0
     do 2 i=1, natom
         rho = 0.d0
         v2  = 0.d0
         do 3 j=1, natom
-            if (i.eq.j) go to 3
+            if( i .eq. j ) go to 3
             dx = x(i)-x(j)
             dy = y(i)-y(j)
             dz = z(i)-z(j)
             rr = dsqrt(dx*dx+dy*dy+dz*dz)
-
             ! cutoff function
-            if (rr.le.rn) then
+            if( rr .le. rn )then
                 q = 1.d0
-            elseif(rr.ge.rc) then
+            else if( rr .ge. rc )then
                 q = 0.d0
             else
                 xx = (rr-rn)/(rc-rn)
                 q  = ((1.d0-xx)**3)*(1.d0+3.d0*xx+6.d0*xx**2)
-            end if
-
+            endif
             ! pair potential phi
             dr  = rr/r0-1.d0
             phi = -0.5d0*phi0*(1.d0+delta*dr)*dexp(-gamma*dr)
             v2  = v2 + phi*q
-
             ! embedding potential rho
             do l=0, 5
                 ef  = (cc(l+1)/12.d0)*(r0/rr)**l
                 rho = rho + ef*q
-            end do
+            enddo
         3 continue
-
         sterm = 0.d0
-        if (rho.ne.0.d0) then
+        if( rho .ne. 0.d0 )then
             do m=1, 3
                 xm = dsqrt(dble(m))
                 sterm=sterm+s(m)*dexp(-gamma*(xm-1.d0)) *(1.d0+delta*(xm-1.d0)-xm*(delta/beta)*dlog(rho)) *(rho)**(xm* &
                     & gamma/beta)
-            end do
-        end if
-
+            enddo
+        endif
         ab    = alpha/beta
         bigef = 0.d0
-        if (rho.ne.0.d0) then
+        if( rho .ne. 0.d0 )then
             bigef = -ec*(1.d0-ab*dlog(rho))*rho**ab + 0.5d0*phi0*sterm
-        end if
+        endif
         v = v + v2 + bigef
     2 continue
-
 end subroutine pot

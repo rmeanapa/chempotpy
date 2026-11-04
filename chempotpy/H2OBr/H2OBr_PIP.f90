@@ -13,20 +13,16 @@ subroutine pes( x, igrad, p, g, d )
     integer                       :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         call prepot
         call pot(x, v)
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
     v = v*legacy_hartree_to_electronvolt
-
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
 end subroutine
 
 !> @brief Evaluate prepot.
@@ -42,14 +38,12 @@ subroutine prepot
     integer            :: i, ncall
     data ncall/1/
     save ncall, coeff, a1, a2, a3, a4, ncoeff
-    a1 = 2.0_dp
-    a2 = 2.0_dp
-    a3 = 2.0_dp
-    a4 = 2.0_dp
-
+    a1     = 2.0_dp
+    a2     = 2.0_dp
+    a3     = 2.0_dp
+    a4     = 2.0_dp
     ncoeff = 502
-
-    if(ncall.eq.1) then
+    if( ncall .eq. 1 )then
         coeff(1)   = -4.9165536272615213d+02
         coeff(2)   = 1.7826388032603571d+00
         coeff(3)   = -1.3833480550763739d-02
@@ -553,8 +547,7 @@ subroutine prepot
         coeff(501) = 8.2003579423252120d+01
         coeff(502) = 9.3232232083933184d+02
         return
-    end if
-
+    endif
     entry pot(xyz, v)
     x(1) = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
     x(2) = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
@@ -562,26 +555,19 @@ subroutine prepot
     x(4) = sqrt((xyz(2,1)-xyz(3,1))**2+(xyz(2,2)-xyz(3,2))**2+(xyz(2,3)-xyz(3,3))**2)
     x(5) = sqrt((xyz(2,1)-xyz(4,1))**2+(xyz(2,2)-xyz(4,2))**2+(xyz(2,3)-xyz(4,3))**2)
     x(6) = sqrt((xyz(3,1)-xyz(4,1))**2+(xyz(3,2)-xyz(4,2))**2+(xyz(3,3)-xyz(4,3))**2)
-
     x(1) = x(1)/0.5291772083_dp
     x(1) = exp(-x(1)/a1)
-
     x(2) = x(2)/0.5291772083_dp
     x(2) = exp(-x(2)/a2)
-
     x(3) = x(3)/0.5291772083_dp
     x(3) = exp(-x(3)/a3)
-
     x(4) = x(4)/0.5291772083_dp
     x(4) = exp(-x(4)/a2)
-
     x(5) = x(5)/0.5291772083_dp
     x(5) = exp(-x(5)/a3)
-
     x(6) = x(6)/0.5291772083_dp
     x(6) = exp(-x(6)/a4)
-
-    v = emsav(x, coeff)
+    v    = emsav(x, coeff)
 end subroutine
 
 !> @brief Evaluate potder.
@@ -594,7 +580,6 @@ subroutine potder( xyz, dxyz )
     real(dp)              :: xyz_t(4,3)
     integer               :: i, j
     h = 0.01_dp*0.5291772_dp
-
     do i=1, 4
         do j=1, 3
             xyz_t      = xyz
@@ -603,8 +588,8 @@ subroutine potder( xyz, dxyz )
             xyz_t(i,j) = xyz(i,j)+h
             call pot(xyz_t, v2)
             dxyz(i,j) = (-0.5_dp*v1+0.5_dp*v2)/h
-        end do
-    end do
+        enddo
+    enddo
 end subroutine
 
 !> @brief Evaluate emsav.
@@ -618,7 +603,6 @@ double precision function emsav( x, c ) result(v)
     real(wp), dimension(0:501)::p
     call bemsav(x, p)
     v = dot_product(p, c)
-
 end function emsav
 
 !> @brief Evaluate bemsav.
@@ -631,7 +615,6 @@ subroutine bemsav( x, p )
     real(wp), dimension(0:10)::m
     call evmono(x, m)
     call evpoly(m, p)
-
 end subroutine bemsav
 
 !> @brief Evaluate evmono.
@@ -652,7 +635,6 @@ subroutine evmono( x, m )
     m(8)  = m(3)*m(4)
     m(9)  = m(2)*m(5)
     m(10) = m(4)*m(5)
-
 end subroutine evmono
 
 !> @brief Evaluate evpoly.
@@ -1164,5 +1146,4 @@ subroutine evpoly( m, p )
     p(499) = p(2)*p(253) - p(464)
     p(500) = p(3)*p(254) - p(481)
     p(501) = p(4)*p(255)
-
 end subroutine evpoly

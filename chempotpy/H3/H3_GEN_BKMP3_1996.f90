@@ -16,24 +16,18 @@ subroutine pes( x, igrad, p, g, d )
     logical, save                 :: first_time_data=.true.
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     ! input cartesian is HHH
-    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
-
+    call legacy_triatomic_distances_to_bohr(x, r(1,:))
     call prepot
-
     call pot(r, e, 1, 1)
-
     v = e(1)*legacy_hartree_to_electronvolt
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = v
-        end do
+        enddo
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
 end subroutine
 
 !> @brief Evaluate PREPOT.
@@ -77,8 +71,7 @@ subroutine bkmp2( r, vtot, dvtot, id )
         &          dcal(3), dcas(3), dcbnda(3), dcbndb(3)
     dimension vb(2,25), cb(2,25)
     dimension dt(3), t(3)
-    ipr = 0
-
+    ipr   = 0
     vlon  = 0.d0
     vas   = 0.d0
     vbnda = 0.d0
@@ -96,20 +89,20 @@ subroutine bkmp2( r, vtot, dvtot, id )
         dcas(i)   = 0.d0
         dcbnda(i) = 0.d0
         dcbndb(i) = 0.d0
-    end do
+    enddo
     do i=1, 25
         vb(1,i) = 0.d0
         vb(2,i) = 0.d0
         cb(1,i) = 0.d0
         cb(2,i) = 0.d0
-    end do
-    call h3lond95( r, vlon, dvlon )
-    call vascal95( r, vas, dvas )
+    enddo
+    call h3lond95(r, vlon, dvlon)
+    call vascal95(r, vas, dvas)
     call compac95(r, icompc, t, dt)
-    if(icompc.ge.1)then
-        call csym95  ( r, cal, dcal )
-        call casym95 ( r, cas, dcas, 1, t, dt)
-    end if
+    if( icompc .ge. 1 )then
+        call csym95  (r, cal, dcal)
+        call casym95 (r, cas, dcas, 1, t, dt)
+    endif
     call vbcb95(r, icompc, t, dt, ipr, &
         &          vbnda, vbndb, dvbnda, dvbndb, &
         &          cbnda, cbndb, dcbnda, dcbndb)
@@ -117,8 +110,7 @@ subroutine bkmp2( r, vtot, dvtot, id )
     dvtot(1) = dvlon(1) + dvas(1) + dvbnda(1) + dvbndb(1) +  dcal(1) + dcas(1) + dcbnda(1) + dcbndb(1)
     dvtot(2) = dvlon(2) + dvas(2) + dvbnda(2) + dvbndb(2) +  dcal(2) + dcas(2) + dcbnda(2) + dcbndb(2)
     dvtot(3) = dvlon(3) + dvas(3) + dvbnda(3) + dvbndb(3) +  dcal(3) + dcas(3) + dcbnda(3) + dcbndb(3)
-
-    if(ipr.gt.0) then
+    if( ipr .gt. 0 )then
         write(7, *)
         write(7, *) 'h3tot enter --------------------------------'
         write(7, '(5x,''    r ='',3(1x,f16.10),'' icompac = '',i1,/, 5x,''Vtot  = '',f18.12,/, 5x,''Vlon  = '',f18.12,' // &
@@ -126,13 +118,13 @@ subroutine bkmp2( r, vtot, dvtot, id )
             'x,''Vbnda = '',g18.12,''       Vbndb = '',g18.12,/, 5x,''Cbnda = '',g18.12,''       ' // &
             'Cbndb = '',g18.12)') r, icompc, vtot, &
             &             vlon, vas, cal, cas, vbnda, vbndb, cbnda, cbndb
-        if(ipr.gt.1)then
+        if( ipr .gt. 1 )then
             write(7, '('' dVtot   = '',3(1x,g18.12),/, '' dVlon   = '',3(1x,g18.12),/, '' dVas    = '',3(1x,g18.12),/,' // &
                 ' '' dVbnda  = '',3(1x,g18.12),/, '' dVbndb  = '',3(1x,g18.12),/, '' dCal    = '',3(1' // &
                 'x,g18.12),/, '' dCas    = '',3(1x,g18.12),/, '' dCbnda  = '',3(1x,g18.12),/, '' dCbn' // &
                 'db  = '',3(1x,g18.12))') dvtot, dvlon, dvas, dvbnda, dvbndb, &
                 &                           dcal, dcas, dcbnda, dcbndb
-        end if
+        endif
         write(7, '(''Vba values: '',5(1x,g12.6),/,''Vbb values: '',5(1x,g12.6))') (vb(1,i), i=1, 5), (vb(2,i), i=1, 5)
         write(7, '(''Cba values: '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''C' // &
             'bb values: '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''            '',3(1x,f' // &
@@ -143,7 +135,7 @@ subroutine bkmp2( r, vtot, dvtot, id )
             &                  dvbnda, dvbndb, dcbnda, dcbndb
         write(7, *) 'exiting subr.h3tot'
         write(7, *) 'h3tot exit ---------------------------------'
-    end if
+    endif
 end
 
 !> @brief Evaluate triplet95.
@@ -168,26 +160,26 @@ subroutine triplet95( r, e3, id )
     double precision, parameter :: c3 = 0.4303193846943223  !jun21 fit
     ipr   = 0
     e3(3) = 0.d0
-    if(r.ge.rr )then
+    if( r .ge. rr )then
         exdr  = dexp( -a4*r )
         rsq   = r*r
         ra6   = r**(-a6)
         e3(1) = a1* ( a2 + r + a3*rsq + a5*ra6 )*exdr
         ra61  = r**(-a6-z1)
         e3(2) = a1*exdr* ( z1 -a2*a4 +(z2*a3-a4)*r -a3*a4*rsq -a5*a6*ra61 -a4*a5*ra6 )
-    end if
-    if(r.lt.rr )then
+    endif
+    if( r .lt. rr )then
         dr = r- rl
         call vh2opt95(r, e1, 2)
-        if( r.le.rl ) then
+        if( r .le. rl )then
             e3(1) = e1(1) + c2*dr + c3
             e3(2) = e1(2) + c2
         else
             e3(1) = e1(1) + c1*dr*dr*dr + c2*dr + c3
             e3(2) = e1(2) + 3.d0*c1*dr*dr + c2
-        end if
-    end if
-    if(ipr.gt.0) write(7, '(''  triplet:  E3 = '',3(1x,f12.8))') e3
+        endif
+    endif
+    if( ipr .gt. 0 ) write(7, '(''  triplet:  E3 = '',3(1x,f12.8))') e3
 end
 
 !> @brief Evaluate vH2opt95.
@@ -250,7 +242,7 @@ subroutine vh2opt95( r, e, ideriv )
     vsr    = dd*(exalph-1.d0)*(exalph-1.d0) - dd
     vlr    = -c6/rr6   -c8/(rr4*rr4)   -c10/rr25
     e(1)   = vsr +  vlr
-    if(ideriv.ge.1)then
+    if( ideriv .ge. 1 )then
         r3   = r2*r
         r5   = r4*r
         rr26 = rr25*rr2
@@ -261,8 +253,8 @@ subroutine vh2opt95( r, e, ideriv )
         dvsr = 2.d0 *dd *(exalph-1.d0) *exalph *dalphr
         dvlr = 6.d0*c6*r5 / (rr6*rr6) +  8.d0*c8*r3 / rr43  + 10.d0*c10*r / rr26
         e(2) = dvsr + dvlr
-    end if
-    if(ideriv.ge.2)then
+    endif
+    if( ideriv .ge. 2 )then
         r10  = r6*r4
         rr27 = rr26*rr2
         rr44 = rr43*rr4
@@ -275,7 +267,7 @@ subroutine vh2opt95( r, e, ideriv )
         ddvlr =- 72.d0* c6 *r10 / rr63 -96.d0 *c8 *r6 / rr44 -120.d0*c10 *r2  / rr27 +30.d0 *c6 *r4 / rr62 + 24.d0* &
             & c8 * r2  / rr43 +10.d0 *c10    / rr26
         e(3) = ddvsr + ddvlr
-    end if
+    endif
 end
 
 !> @brief Evaluate h3lond95.
@@ -295,31 +287,31 @@ subroutine h3lond95( r, vlon, dvlon )
         e1(i)  = esing(1)
         de1(i) = esing(2)
         call triplet95(r(i), etrip, 2)
-        if(ipr.gt.0) write(7, '(''from subr.london: '',/, ''  using r'',i1,'':   Esinglet='',3(1x,f12.8),/, ''        ' // &
+        if( ipr .gt. 0 ) write(7, '(''from subr.london: '',/, ''  using r'',i1,'':   Esinglet='',3(1x,f12.8),/, ''        ' // &
             ' '',1x,''    Etriplet='',3(1x,f12.8))') i, esing, etrip
         e3(i)  = etrip(1)
         de3(i) = etrip(2)
         q(i)   = half*(e1(i) + e3(i))
         j(i)   = half*(e1(i) - e3(i))
-    end do
+    enddo
     sumq   = q(1) + q(2) + q(3)
     sumj   = dabs( j(2)-j(1) )**2 + dabs( j(3)-j(2) )**2 + dabs( j(3)-j(1) )**2
     jt     = half*sumj + eps2
     rootjt = dsqrt(jt)
     vlon   = sumq - rootjt
-    if(ipr.gt.0) then
+    if( ipr .gt. 0 )then
         write(7, '(''         sumQ = '',g12.6,''        sumJ = '',g12.6)') sumq, sumj
         write(7, '(''         Vlon = '',f12.8,''      rootJt = '',g12.6)') vlon, rootjt
-    end if
+    endif
     dvlon(1) = half*(de1(1)+de3(1)) - 0.25d0*(two*j(1)-j(2)-j(3))*(de1(1)-de3(1))/rootjt
     dvlon(2) = half*(de1(2)+de3(2)) - 0.25d0*(two*j(2)-j(3)-j(1))*(de1(2)-de3(2))/rootjt
     dvlon(3) = half*(de1(3)+de3(3)) - 0.25d0*(two*j(3)-j(1)-j(2))*(de1(3)-de3(3))/rootjt
-    if(ipr.gt.0) then
+    if( ipr .gt. 0 )then
         write(7, '(''             r = '',3(1x,f12.6),/, ''            E1 = '',3(1x,f12.8),/, ''            E3 = '',3(1' // &
             'x,f12.8),/, ''          vlon = '',1x,f12.8)') r, e1, e3, vlon
         write(7, '(13x,''q = '',3(1x,e12.6),/,13x,''j = '',3(1x,e12.6))') q, j
         write(7, '(''         dVlon = '',3(1x,g12.6))') dvlon
-    end if
+    endif
 end
 
 !> @brief Evaluate Vascal95.
@@ -357,7 +349,7 @@ subroutine vascal95( rpass, vas, dvas )
     dvas(2) = -3.d0*aa1*rsq*s*exp1 + ds(2)*exp1 -aa7*a2*exp6/rsq  + 2.d0*aa7*a*da(2)*exp6/r -aa6*aa7*a2*exp6/r
     ds(3)   = ( 2.d0*aa2*a  +3.d0*aa3*a2 +4.d0*aa4*a3 +5.d0*aa5*a4) * da(3)
     dvas(3) = -3.d0*aa1*rsq*s*exp1 + ds(3)*exp1 -aa7*a2*exp6/rsq  + 2.d0*aa7*a*da(3)*exp6/r -aa6*aa7*a2*exp6/r
-    if(ipr.gt.0) write(7, '(''    from subr.vascal:   Vas  = '',  1x,g12.6, /, ''                        dS   = '',3(1' // &
+    if( ipr .gt. 0 ) write(7, '(''    from subr.vascal:   Vas  = '',  1x,g12.6, /, ''                        dS   = '',3(1' // &
         'x,g12.6),/, ''                        dVas = '',3(1x,g12.6))') vas, ds, dvas
 end
 
@@ -372,13 +364,13 @@ subroutine acalc95( r1, r2, r3, a, da )
     da(1) = ( -2.d0*r1 + r2 + r3 )*(r2-r3)
     da(2) = ( -2.d0*r2 + r3 + r1 )*(r3-r1)
     da(3) = ( -2.d0*r3 + r1 + r2 )*(r1-r2)
-    if(a.lt.0.d0)then
+    if( a .lt. 0.d0 )then
         a     = -a
         da(1) = -da(1)
         da(2) = -da(2)
         da(3) = -da(3)
-    end if
-    if(ipr.gt.0) write(7, '(''Acalc enter ---------------------------------------'',/, ''     A = '',f15.10,''   dA = ' // &
+    endif
+    if( ipr .gt. 0 ) write(7, '(''Acalc enter ---------------------------------------'',/, ''     A = '',f15.10,''   dA = ' // &
         ''',3(1x,g12.6),/, ''Acalc exit ----------------------------------------'')') a, da
 end
 
@@ -393,14 +385,14 @@ subroutine compac95( r, icompc, t, dt )
     do i=1, 3
         t(i)  = 0.d0
         dt(i) = 0.d0
-    end do
+    enddo
     icompc = 0
-    if(r(1).lt.rr) icompc = icompc + 1
-    if(r(2).lt.rr) icompc = icompc + 1
-    if(r(3).lt.rr) icompc = icompc + 1
-    if(icompc.eq.0) return
+    if( r(1) .lt. rr ) icompc = icompc + 1
+    if( r(2) .lt. rr ) icompc = icompc + 1
+    if( r(3) .lt. rr ) icompc = icompc + 1
+    if( icompc .eq. 0 ) return
     do i=1, 3
-        if(r(i).lt.rr) then
+        if( r(i) .lt. rr )then
             top   = rr-r(i)
             bot   = rp-r(i)
             top2  = top  * top
@@ -408,8 +400,8 @@ subroutine compac95( r, icompc, t, dt )
             bot2  = bot  * bot
             t(i)  = top3/bot
             dt(i) = -3.d0*top2/bot + top3/bot2
-        end if
-    end do
+        endif
+    enddo
 end
 
 !> @brief Evaluate casym95.
@@ -452,7 +444,7 @@ subroutine casym95( r, cas, dcas, id, t, dt )
     term1  = u1/pr**u2
     eterm  = dexp(-u3*sr3)
     cas    = sumt * a2 * term1 * series * eterm
-    if(ipr.gt.0) then
+    if( ipr .gt. 0 )then
         write(7, *)
         write(7, *) 'Casym: ------------------'
         write(7, *) ' T(i) = ', t
@@ -461,8 +453,8 @@ subroutine casym95( r, cas, dcas, id, t, dt )
         write(7, '(''subr.Cas:   series = '',g12.6,''     term1 = '',g12.6,/, ''             eterm = '',g12.6,''      ' // &
             'Cas  = '',g12.6)') series, term1, eterm, cas
         write(7, *) ' Cas = ', cas
-    end if
-    if(id.gt.0)then
+    endif
+    if( id .gt. 0 )then
         dpr(1) = r(2)*r(3)
         dpr(2) = r(3)*r(1)
         dpr(3) = r(1)*r(2)
@@ -475,14 +467,14 @@ subroutine casym95( r, cas, dcas, id, t, dt )
             dcas(i) = dsumt(i)      * a2    * term1 * series * eterm + 2.d0*a*da(i)  * sumt  * term1 * series * &
                 & eterm + dterm1(i)     * sumt  * a2    * series * eterm + dseries(i)    * sumt  * a2    * term1  * &
                 & eterm + determ(i)     * sumt  * a2    * term1  * series
-        end do
-        if(ipr.gt.0) then
+        enddo
+        if( ipr .gt. 0 )then
             write(7, '(''    derivatives: dPr = '',3(1x,g12.6),/, ''                 dT  = '',3(1x,g12.6),/, ''       ' // &
                 '       dterm1 = '',3(1x,g12.6),/, ''              determ = '',3(1x,g12.6),/, ''     ' // &
                 '        dseries = '',3(1x,g12.6),/, ''              dCas   = '',3(1x,g12.6))') dpr, dt, dterm1, determ, dseries, dcas
             write(7, *) ' dCas = ', dcas
-        end if
-    end if
+        endif
+    endif
 end
 
 !> @brief Evaluate csym95.
@@ -514,23 +506,23 @@ subroutine csym95( r, cal, dcal )
         g(i)    = 0.d0
         dg(i)   = 0.d0
         sumv(i) = v1+v1*v2*ri
-        if(ri.lt.rr) then
+        if( ri .lt. rr )then
             g(i)  = (rrri3/rpri) *sumv(i)
             dg(i) = (rrri3/rpri2)*sumv(i) -3.d0*(rrri2/rpri)*sumv(i) + (rrri3/rpri)*v1*v2
-        end if
-    end do
+        endif
+    enddo
     sumg    = g(1) + g(2) + g(3)
     cal     = sumg*exp3
     dcal(1) = dg(1)*exp3 + sumg*dexp3
     dcal(2) = dg(2)*exp3 + sumg*dexp3
     dcal(3) = dg(3)*exp3 + sumg*dexp3
-    if(ipr.gt.0)then
+    if( ipr .gt. 0 )then
         write(7, *)
         write(7, '(''Csym enter ----------------------------------------'',/, ''    Cal = '',1x,g20.14)') cal
         write(7, '(''      G = '',3(1x,g12.6),/, ''     dG = '',3(1x,g12.6),/, ''   sumv = '',3(1x,g12.6),/, ''   dCal' // &
             ' = '',3(1x,g16.10),/, ''Csym exit -----------------------------------------'')') g, dg, sumv, dcal
         write(7, *) 'exiting subr.csym'
-    end if
+    endif
 end
 
 !> @brief Evaluate vbcb95.
@@ -801,7 +793,7 @@ subroutine vbcb95( rpass, icompc, t, dt, ipr, &
     dvbndb(2) = dvb1(2)+dvb2(2)+dvb3(2)+dvb4(2)+dvb5(2)
     dvbndb(3) = dvb1(3)+dvb2(3)+dvb3(3)+dvb4(3)+dvb5(3)
     vbndb     = vbnd(2)
-    if(icompc.eq.0) return
+    if( icompc .eq. 0 ) return
     sumt      = t(1) + t(2) + t(3)
     rcu       = rsq*r
     p         = r1*r2*r3
@@ -963,19 +955,19 @@ subroutine chgeom( r, ivalid )
     dimension r(3)
     ivalid = 1
     rhi    = dmax1(r(1), r(2))
-    if(r(3).ge.rhi)then
+    if( r(3) .ge. rhi )then
         rmid = rhi
         rhi  = r(3)
     else
         rmid = dmax1( r(3), dmin1(r(1), r(2)) )
-    end if
+    endif
     rlo = dmin1(r(1), r(2), r(3))
-    if(rlo+rmid+derr.lt.rhi)then
+    if( rlo+rmid+derr .lt. rhi )then
         write(6, *) 'Warning: invalid geometry ', r
-        if(istop1.gt.0) stop ' STOP -- geometry error '
-    end if
-    if(rlo.lt.0.2d0)then
+        if( istop1 .gt. 0 ) stop ' STOP -- geometry error '
+    endif
+    if( rlo .lt. 0.2d0 )then
         write(6, *) 'Warning: invalid geometry ', r
-        if(istop2.gt.0) stop ' STOP -- geometry error '
-    end if
+        if( istop2 .gt. 0 ) stop ' STOP -- geometry error '
+    endif
 end

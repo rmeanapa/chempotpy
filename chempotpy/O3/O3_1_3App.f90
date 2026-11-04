@@ -33,35 +33,28 @@ subroutine pes( x, igrad, p, g, d )
     integer                       :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             j     = 3*(iatom-1)+idir
             tx(j) = x(iatom,idir)
-        end do
-    end do
+        enddo
+    enddo
     tg = 0.d0
-
     call o3pes(tx, v, tg, igrad)
-
     v  = v/23.0609
     tg = tg/23.0609
-
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
     do istate=1, nstates
         do iatom=1, natoms
             do idir=1, 3
                 j                    = 3*(iatom-1)+idir
                 g(istate,iatom,idir) = tg(j)
-            end do
-        end do
-    end do
-
+            enddo
+        enddo
+    enddo
     d = 0.d0
-
 end subroutine pes
 
 !
@@ -90,7 +83,6 @@ subroutine o3pes( x, v, dvdx, igrad )
     !               dim(3*8)
     ! dRdX:         The derivative of R w.r.t. X, dim(3*9)
     !**********************************************************************
-
     implicit none
     integer          :: i, igrad, j, nob, k
     double precision :: v
@@ -102,19 +94,16 @@ subroutine o3pes( x, v, dvdx, igrad )
     !      common /msprmt/   a,ab,ra,rb
     ! Read Cartesian coordinate from input file
     call coord_convt(x)
-
-    if (igrad .le. 1) then
+    if( igrad .le. 1 )then
         ! Call subroutine Evv to evaluate potential energy V
         call evv(v)
-
-        if (igrad .eq. 1) then
+        if( igrad .eq. 1 )then
             ! Call EvdVdX to evaluate the derivatives of V w.r.t. X
             call evdvdx(x, dvdx)
-        end if
+        endif
     else
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine o3pes
 
 !> @brief Evaluate coord_convt for the O3_1_3App potential.
@@ -137,7 +126,6 @@ subroutine coord_convt( x )
     r(1) = sqrt((x(4)-x(1))**2 + (x(5)-x(2))**2 + (x(6)-x(3))**2)
     r(2) = sqrt((x(7)-x(1))**2 + (x(8)-x(2))**2 + (x(9)-x(3))**2)
     r(3) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
-
 end subroutine coord_convt
 
 !> @brief Evaluate EvV for the O3_1_3App potential.
@@ -158,7 +146,6 @@ subroutine evv( v )
     ! P(0:66):      Array to store polynomials
     ! B(1:56):      Array to store basis functions
     !**********************************************************************
-
     implicit none
     double precision :: b, c, p, r, rm, rms
     integer          :: i, j, k
@@ -167,16 +154,12 @@ subroutine evv( v )
     common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
     ! Calculate the six MEG terms for each point
     call evmorse
-
     ! Calculate the monomials for each point by using six MEG terms
     call evmono
-
     ! Calculate the polynomials (basis functions) by using monomials
     call evpoly
-
     ! Calculate the basis functions by removing unconnected and 2-body terms
     call evbas
-
     ! Initialized v to be 2De 2*120.243 kcal/mol
     v = 240.486d0
     ! Evaluate 2-body interactions
@@ -184,20 +167,16 @@ subroutine evv( v )
         dist = r(i)
         call ev2gm2(dist, v2, dv2dr, 4, 0)
         v = v+v2
-    end do
-
+    enddo
     ! Add D3 dispersion correction
     call d3disp(r, disp, dispdr, 0)
     v = v+disp
-
     ! Evaluate V by taken the product of C and Basis function array
     do i=1, 56
         v = v + c(i)*b(i)
-    end do
-
+    enddo
     !      Write(*,9999) V
     ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
-
 end subroutine evv
 
 !> @brief Evaluate EvdVdX for the O3_1_3App potential.
@@ -213,7 +192,6 @@ subroutine evdvdx( x, dvdx )
     ! dRdX:         dRdX(3,9), derivatives of R(3) w.r.t. 9
     !               Cartesian coordinates
     !**********************************************************************
-
     implicit none
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, r, rm, rms
     integer          :: i, j
@@ -225,26 +203,21 @@ subroutine evdvdx( x, dvdx )
     ! Initialize dVdX
     do i=1, 9
         dvdx(i) = 0.0d0
-    end do
-
+    enddo
     ! Call EvdVdR to evaluate dVdR(3)
     call evdvdr
-
     ! Call EvdRdX to evaluate dRdX(3,9)
     call evdrdx(x)
-
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to
     ! 3
     do i=1, 9
         do j=1, 3
             dvdx(i) = dvdx(i) + dvdr(j)*drdx(j, i)
-        end do
-    end do
-
+        enddo
+    enddo
     !      write(*,*) 'The 9 dVdX are:'
     !      Write(*,9999) (dVdX(i),i=1,9)
     ! 9999 Format(1x,3F15.8)
-
 end subroutine evdvdx
 
 !> @brief Evaluate EvMorse for the O3_1_3App potential.
@@ -262,8 +235,7 @@ subroutine evmorse
     ! ab:   nonlinear parameter, unit Anstrom^2
     do i=1, 3
         rms(i) = exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
-    end do
-
+    enddo
 end subroutine evmorse
 
 !> @brief Evaluate EvMono for the O3_1_3App potential.
@@ -273,7 +245,6 @@ subroutine evmono
     !  monomials(M) that do not have usable decomposition.
     !  For A4 with max. degree 10, the number of monomials is nom.
     !**********************************************************************
-
     implicit none
     double precision :: b, c, p, rm, rms
     common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
@@ -285,7 +256,6 @@ subroutine evmono
     rm(5) = rm(1)*rm(3)
     rm(6) = rm(2)*rm(3)
     rm(7) = rm(1)*rm(6)
-
 end subroutine evmono
 
 !> @brief Evaluate EvPoly for the O3_1_3App potential.
@@ -295,7 +265,6 @@ subroutine evpoly
     !  permutation invariant polynomials(p)
     !  For A4 with max. degree 10, the number of polynomials is nob.
     !**********************************************************************
-
     implicit none
     double precision :: b, c, p, rm, rms
     common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
@@ -366,7 +335,6 @@ subroutine evpoly
     p(64) = p( 8)*p(22) - p(57)
     p(65) = p( 2)*p(40) - p(60)
     p(66) = p( 1)*p(52) - p(65)
-
 end subroutine evpoly
 
 !> @brief Evaluate evbas for the O3_1_3App potential.
@@ -374,7 +342,6 @@ subroutine evbas
     !**********************************************************************
     !  The subroutine eliminate the 2-body terms in Bowman's approach
     !**********************************************************************
-
     implicit none
     double precision :: b, c, p, rm, rms
     common /epot/     rms(3), rm(0:7), p(0:66), c(56), b(56)
@@ -383,43 +350,33 @@ subroutine evbas
     ! Pass P(0:66) to BM1(1:67)
     do i=1, 67
         b1(i) = p(i-1)
-    end do
-
+    enddo
     ! Remove unconnected terms and 2-body terms and pass to B(1:430)
     b(1) = b1(3)
-
     do i=2, 3
         b(i) = b1(i+3)
-    end do
-
+    enddo
     do i=4, 6
         b(i) = b1(i+4)
-    end do
-
+    enddo
     do i=7, 10
         b(i) = b1(i+5)
-    end do
-
+    enddo
     do i=11, 16
         b(i) = b1(i+6)
-    end do
-
+    enddo
     do i=17, 23
         b(i) = b1(i+7)
-    end do
-
+    enddo
     do i=24, 32
         b(i) = b1(i+8)
-    end do
-
+    enddo
     do i=33, 43
         b(i) = b1(i+9)
-    end do
-
+    enddo
     do i=44, 56
         b(i) = b1(i+10)
-    end do
-
+    enddo
 end subroutine evbas
 
 !> @brief Evaluate ev2gm2 for the O3_1_3App potential.
@@ -467,22 +424,21 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     a(5)  = 4.404104009614092d5
     a(6)  = -2.946204062950765d5
     a(7)  = 1.176861219078620d5
-
-    v = 0.d0
+    v     = 0.d0
     do k=0, 7
         v = v + a(k)*dexp(-alpha*beta**k*r**2)
-    end do
+    enddo
     ! From milihartree to kcal/mol
     v = v*627.509523475149d-3
     ! Compute the gradient if needed
-    if (igrad.eq.1) then
+    if( igrad .eq. 1 )then
         grad = 0.d0
         do k=0, 7
             grad = grad-2.d0*a(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
-        end do
+        enddo
         ! Convert from milihartree/A to i(kcal/mol)/A
         grad = grad*627.509523475149d-3
-    end if
+    endif
 end subroutine ev2gm2
 
 !> @brief Evaluate EvdVdR for the O3_1_3App potential.
@@ -503,7 +459,6 @@ subroutine evdvdr
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
     !**********************************************************************
-
     implicit none
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, r, rm, rms
     integer          :: i, j
@@ -515,40 +470,32 @@ subroutine evdvdr
     ! Initialize dVdR(3)
     do i=1, 3
         dvdr(i) = 0.0d0
-    end do
-
+    enddo
     ! Add dV2dR(i) to dVdR
     do i=1, 3
         dist = r(i)
         call ev2gm2(dist, v2, dv2dr, 4, 1)
         dvdr(i) = dv2dr
-    end do
-
+    enddo
     ! Add numerical gradient of D3 dispersion correction
     call d3disp(r, disp, dispdr, 1)
     do i=1, 3
         dvdr(i) = dvdr(i) + dispdr(i)
-    end do
-
+    enddo
     ! Calculate dMEG/dr(3,3) for given R(3)
     call evdmsdr
-
     ! Calculate the monomials for each point by using six MEG terms
     call evdmdr
-
     ! Calculate the polynomials by using monomials
     call evdpdr
-
     ! Remove 2-body interactions and unconnected terms from polynomials
     call evdbdr
-
     ! Evaluate dVdR(3) by taken the product of C(j) and dPdR(i,j)
     do i=1, 3
         do j=1, 56
             dvdr(i) = dvdr(i) + c(j)*dbdr(i, j)
-        end do
-    end do
-
+        enddo
+    enddo
 end subroutine evdvdr
 
 !> @brief Evaluate EvdRdX for the O3_1_3App potential.
@@ -564,7 +511,6 @@ subroutine evdrdx( x )
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
     !**********************************************************************
-
     implicit none
     double precision :: dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, r
     integer          :: i, j
@@ -576,9 +522,8 @@ subroutine evdrdx( x )
     do i=1, 3
         do j=1, 9
             drdx(i, j) = 0.0d0
-        end do
-    end do
-
+        enddo
+    enddo
     ! Start to calculate the non-zero dRdX
     ! dr1dx
     drdx(1, 1) = (x(1)-x(4))/r(1)
@@ -587,7 +532,6 @@ subroutine evdrdx( x )
     drdx(1, 4) = -drdx(1, 1)
     drdx(1, 5) = -drdx(1, 2)
     drdx(1, 6) = -drdx(1, 3)
-
     ! dr2dx
     drdx(2, 1) = (x(1)-x(7))/r(2)
     drdx(2, 2) = (x(2)-x(8))/r(2)
@@ -595,7 +539,6 @@ subroutine evdrdx( x )
     drdx(2, 7) = -drdx(2, 1)
     drdx(2, 8) = -drdx(2, 2)
     drdx(2, 9) = -drdx(2, 3)
-
     ! dr3dx
     drdx(3, 4) = (x(4)-x(7))/r(3)
     drdx(3, 5) = (x(5)-x(8))/r(3)
@@ -604,7 +547,6 @@ subroutine evdrdx( x )
     drdx(3, 8) = -drdx(3, 5)
     drdx(3, 9) = -drdx(3, 6)
     ! Finish the calculation of non-zero dRdX
-
 end subroutine evdrdx
 
 !> @brief Evaluate EvdMsdR for the O3_1_3App potential.
@@ -618,7 +560,6 @@ subroutine evdmsdr
     ! ra:           reference bond length(Angstrom)
     ! rb:           reference bond length(Angstrom)
     !**********************************************************************
-
     implicit none
     double precision :: a, ab, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, r, ra, rb
     integer          :: i, j
@@ -630,16 +571,15 @@ subroutine evdmsdr
     do i=1, 3
         do j=1, 3
             dmsdr(i, j) = 0.0d0
-        end do
-    end do
+        enddo
+    enddo
     !
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
     !
     do i=1, 3
         dmsdr(i, i) = (-2.0d0*(r(i)-rb)/ab-1/a)* exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
-    end do
-
+    enddo
 end subroutine evdmsdr
 
 !> @brief Evaluate EvdMdR for the O3_1_3App potential.
@@ -649,7 +589,6 @@ subroutine evdmdr
     !  dMdR(3,nom) that do not have usable decomposition.
     !  For A4 with max. degree 10, the number of monomials is nom.
     !**********************************************************************
-
     implicit none
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, rm, rms
     integer          :: i
@@ -665,8 +604,7 @@ subroutine evdmdr
         dmdr(i, 5) = dmdr(i, 1)*rm(3) + rm(1)*dmdr(i, 3)
         dmdr(i, 6) = dmdr(i, 2)*rm(3) + rm(2)*dmdr(i, 3)
         dmdr(i, 7) = dmdr(i, 1)*rm(6) + rm(1)*dmdr(i, 6)
-    end do
-
+    enddo
 end subroutine evdmdr
 
 !> @brief Evaluate EvdPdr for the O3_1_3App potential.
@@ -676,7 +614,6 @@ subroutine evdpdr
     !  permutation invariant polynomials(p)
     !  For A4 with max. degree 10, the number of polynomials is nob.
     !**********************************************************************
-
     implicit none
     double precision :: b, c, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, p, rm, rms
     integer          :: i
@@ -751,8 +688,7 @@ subroutine evdpdr
         dpdr(i, 64) = dpdr(i, 8)*p(22) + p( 8)*dpdr(i, 22) - dpdr(i, 57)
         dpdr(i, 65) = dpdr(i, 2)*p(40) + p( 2)*dpdr(i, 40) - dpdr(i, 60)
         dpdr(i, 66) = dpdr(i, 1)*p(52) + p( 1)*dpdr(i, 52) - dpdr(i, 65)
-    end do
-
+    enddo
 end subroutine evdpdr
 
 !> @brief Evaluate evdbdr for the O3_1_3App potential.
@@ -760,7 +696,6 @@ subroutine evdbdr
     !**********************************************************************
     !  The subroutine eliminate the 2-body terms in Bowman's approach
     !**********************************************************************
-
     implicit none
     double precision :: dbdr, dmdr, dmsdr, dpdr, drdx, dvdr
     integer          :: j
@@ -772,48 +707,36 @@ subroutine evdbdr
     do j=1, 3
         do i=1, 67
             db1dr(j,i) = dpdr(j, i-1)
-        end do
-    end do
-
+        enddo
+    enddo
     ! Remove unconnected terms and 2-body terms and pass to B(1:56)
     do j=1, 3
-
         dbdr(j, 1) = db1dr(j,3)
-
         do i=2, 3
             dbdr(j, i) = db1dr(j,i+3)
-        end do
-
+        enddo
         do i=4, 6
             dbdr(j, i) = db1dr(j,i+4)
-        end do
-
+        enddo
         do i=7, 10
             dbdr(j, i) = db1dr(j,i+5)
-        end do
-
+        enddo
         do i=11, 16
             dbdr(j, i) = db1dr(j,i+6)
-        end do
-
+        enddo
         do i=17, 23
             dbdr(j, i) = db1dr(j,i+7)
-        end do
-
+        enddo
         do i=24, 32
             dbdr(j, i) = db1dr(j,i+8)
-        end do
-
+        enddo
         do i=33, 43
             dbdr(j, i) = db1dr(j,i+9)
-        end do
-
+        enddo
         do i=44, 56
             dbdr(j, i) = db1dr(j,i+10)
-        end do
-
-    end do
-
+        enddo
+    enddo
 end subroutine evdbdr
 
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -846,18 +769,15 @@ subroutine d3disp( dist, disp, dispdr, igrad )
     double precision :: autoang, autokcal
     autoang  = 0.52917726d0
     autokcal = 627.509541d0
-
     ! Generalized parameters for BJ damping from P. Verma, B. Wang,
     ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017).
     s6  = 1.0d0
     s8  = 2.0d0
     rs6 = 0.5299d0
     rs8 = 2.20d0
-
     do i=1, 3
         dist(i) = dist(i)/autoang
-    end do
-
+    enddo
     ! iz for O4 system
     iz(1) = 8
     iz(2) = 8
@@ -866,32 +786,24 @@ subroutine d3disp( dist, disp, dispdr, igrad )
     c6(1) = 12.8d0
     c6(2) = 12.8d0
     c6(3) = 12.8d0
-
     ! Calculate dispersion correction
     call edisp(94, 5, 3, dist, iz, mxc, &
         & rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
-
     disp = 0.0d0
-
     do i=1, 3
         disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
-    end do
-
-    if (igrad .eq. 1) then
+    enddo
+    if( igrad .eq. 1 )then
         call edisp(94, 5, 3, dist, iz, mxc, &
             & rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
-
         dispdr(:) = 0.0d0
-
         do i=1, 3
             dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
-        end do
-    end if
-
+        enddo
+    endif
     do i=1, 3
         dist(i) = dist(i)*autoang
-    end do
-
+    enddo
 end subroutine d3disp
 
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -901,7 +813,6 @@ end subroutine d3disp
 !> @brief Evaluate edisp for the O3_1_3App potential.
 subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
-
     implicit none
     integer          :: n, iz(3), max_elem, maxc, mxc(max_elem)
     double precision :: dist(3), r2r4(max_elem), r0ab(max_elem,max_elem)
@@ -914,15 +825,12 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
     double precision :: cn(n)
     double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
     integer          :: step
-    e6(:) = 0.0d0
-    e8(:) = 0.0d0
-
+    e6(:)   = 0.0d0
+    e8(:)   = 0.0d0
     e6dr(:) = 0.0d0
     e8dr(:) = 0.0d0
-
-    a1 = rs6
-    a2 = rs8
-
+    a1      = rs6
+    a2      = rs8
     !  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
     !  the large number of digits is just to keep the results consistent
     !  with older versions. They should not imply any higher accuracy than
@@ -938,7 +846,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & 7.83525634, 8.20702843, 7.70559063, 7.32755997, 7.03887381, 6.68978720, 6.05450052, 5.88752022, 5.70661499, &
         & 5.78450695, 7.79780729, 7.26443867, 6.78151984, 6.67883169, 6.39024318, 6.09527958, 11.79156076, &
         & 11.10997644, 9.51377795, 8.67197068, 8.77140725, 8.65402716, 8.53923501, 8.85024712 /)
-
     ! these new data are scaled with k2=4./3. and converted to a_0 via
     ! autoang=0.52917726d0
     rcov(1:94)=(/ 0.80628308, 1.15903197, 3.02356173, 2.36845659, 1.94011865, 1.88972601, 1.78894056, 1.58736983, &
@@ -952,7 +859,6 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         & 3.45189952, 3.30072128, 3.09915070, 2.97316878, 2.92277614, 2.79679452, 2.82199085, 2.84718717, 3.32591790, &
         & 3.27552496, 3.27552496, 3.42670319, 3.30072128, 3.47709584, 3.57788113, 5.06446567, 4.56053862, 4.20778980, &
         & 3.98102289, 3.82984466, 3.85504098, 3.88023730, 3.90543362 /)
-
     ! DFT-D3
     step = 0
     do iat=1, n-1
@@ -962,20 +868,18 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
             c6   = c6a(step)
             ! r2r4 stored in main as sqrt
             c8 = 3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
-
             ! energy for BJ damping
             tmp      = sqrt(c8/c6)
             e6(step) = c6/(r**6+(a1*tmp+a2)**6)
             e8(step) = c8/(r**8+(a1*tmp+a2)**8)
             ! calculate gradients
-            if (igrad .eq. 1) then
+            if( igrad .eq. 1 )then
                 ! grad for BJ damping
                 e6dr(step) = c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
                 e8dr(step) = c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
-            end if
-        end do
-    end do
-
+            endif
+        enddo
+    enddo
 end subroutine edisp
 
 ! Begin

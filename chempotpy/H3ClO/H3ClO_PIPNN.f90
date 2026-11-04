@@ -44,14 +44,12 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call pes_init(path)
         call evvdvdx(tx, v)
         deallocate(nodes3a)
@@ -61,12 +59,10 @@ subroutine pes( x, igrad, path, p, g, d )
         deallocate(pavg3a)
     else
         write(*, *) 'Only energy is available'
-    end if
-
+    endif
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
 end subroutine
 
 !***************************************************************************
@@ -104,8 +100,7 @@ subroutine evvdvdx( xcart, v )
     ! ::::::::::::::::::::
     do i=1, natom
         x((3*(i-1)+1):(3*(i-1)+3)) = xcart(:,i)
-    end do
-
+    enddo
     k = 0
     do i=1, natom-1
         do j=i+1, natom
@@ -113,33 +108,26 @@ subroutine evvdvdx( xcart, v )
             r(k)      = dot_product(xcart(:,i)-xcart(:,j), xcart(:,i)-xcart(:,j))
             r(k)      = dsqrt(r(k))
             xmorse(k) = dexp(-r(k)/1d0)
-        end do
-    end do
-    if(k.ne.natom*(natom-1)/2)stop "error"
-
+        enddo
+    enddo
+    if( k .ne. natom*(natom-1)/2 ) stop "error"
     call bemsav(xmorse, m, p)
-
     do j=1, ninput
         txinput(j) = p(j)
         !      write(999,*)p(j)
-    end do
-
+    enddo
     call pot3a(txinput, vpes)
     !     call pot3a(txinput,vpes,dvdg,ndriv)
-
     v = 0d0
     do i=1, npes
         v = v+vpes(i)
-    end do
-
+    enddo
     v = v/npes
-
     !      if(ndriv.eq.1)then
     !       call evdvdr(r,c,m,p,dpdr!)
     !       call evdrdx(xcart,r,x,drdx)
     !       call evdvdx(dvdg,dpdr,drdx,dvdxa,dvdx)
     !      endif
-
 end subroutine evvdvdx
 
 !****************************************************************!
@@ -154,14 +142,12 @@ subroutine pes_init( path )
     integer                         :: ibasis, npd, iterm, ib, nfile1, nfile2
     character(len=80)               :: f1
     character(len=1024)             :: file_path1, file_path2
-    nfile1 = 4
-    nfile2 = 7
-
+    nfile1     = 4
+    nfile2     = 7
     file_path1 = trim(path)//"/H3ClO/weights.txt"
     file_path2 = trim(path)//"/H3ClO/biases.txt"
     open(nfile1, file=file_path1, status='old')
     open(nfile2, file=file_path2, status='old')
-
     read(nfile1, *)
     read(nfile2, *)
     read(nfile1, *)nhid3, noutput
@@ -175,19 +161,18 @@ subroutine pes_init( path )
     nodemax3 = 0
     do i=1, nlayer3
         nodemax3 = max(nodemax3, nodes3a(i))
-    end do
+    enddo
     allocate(weight3a(nodemax3,nodemax3,2:nlayer3,npes), &
         &bias3a(nodemax3,2:nlayer3,npes))
     read(nfile1, *)ifunc3, nwe3
-
     do j=1, npes
-        if(j.gt.1) then
+        if( j .gt. 1 )then
             read(nfile1, *)
             read(nfile1, *)
             read(nfile1, *)
             read(nfile1, *)
             read(nfile2, *)
-        end if
+        endif
         read(nfile1, *)(pdel3a(i, j), i=1, nscale)
         read(nfile1, *)(pavg3a(i, j), i=1, nscale)
         iwe = 0
@@ -197,22 +182,20 @@ subroutine pes_init( path )
                 do inode2=1, nodes3a(ilay2) !
                     read(nfile1, *)weight3a(inode2,inode1,ilay1,j)
                     iwe = iwe+1
-                end do
+                enddo
                 read(nfile2, *)bias3a(inode1,ilay1,j)
                 iwe = iwe+1
-            end do
-        end do
-        if (iwe.ne.nwe3) then
+            enddo
+        enddo
+        if( iwe .ne. nwe3 )then
             write(*, *)'provided number of parameters ', nwe3
             write(*, *)'actual number of parameters ', iwe
             write(*, *)'nwe not equal to iwe, check input files or code'
             stop
-        end if
-    end do
-
+        endif
+    enddo
     close(nfile1)
     close(nfile2)
-
 end subroutine pes_init
 
 !*************************************************************************
@@ -232,12 +215,10 @@ subroutine pot3a( x, vpot3 )
     double precision, external    :: tranfun
     dvdg  = 0d0
     dvtmp = 0d0
-
     do m=1, npes
         do i=1, ninput
             y(i,1,m) = (x(i)-pavg3a(i, m))/pdel3a(i, m)
-        end do
-
+        enddo
         !-->.....evaluate the hidden layer
         do ilay1=2, nlayer3-1
             ilay2 = ilay1-1
@@ -245,11 +226,10 @@ subroutine pot3a( x, vpot3 )
                 y(inode1,ilay1,m) = bias3a(inode1,ilay1,m)
                 do inode2=1, nodes3a(ilay2)
                     y(inode1,ilay1,m) = y(inode1,ilay1,m)+y(inode2,ilay2,m) *weight3a(inode2,inode1,ilay1,m)
-                end do
+                enddo
                 y(inode1,ilay1,m) = tranfun(y(inode1,ilay1,m), ifunc3)
-            end do
-        end do
-
+            enddo
+        enddo
         !-->.....now evaluate the output
         ilay1 = nlayer3
         ilay2 = ilay1-1
@@ -257,13 +237,11 @@ subroutine pot3a( x, vpot3 )
             y(inode1,ilay1,m) = bias3a(inode1,ilay1,m)
             do inode2=1, nodes3a(ilay2)
                 y(inode1,ilay1,m) = y(inode1,ilay1,m)+y(inode2,ilay2,m) *weight3a(inode2,inode1,ilay1,m)
-            end do
-        end do
-
+            enddo
+        enddo
         !-->.....the value of output layer is the fitted potential
         vpot3(m) = y(nodes3a(nlayer3),nlayer3,m) *pdel3a(nscale, m)+pavg3a(nscale, m)
-    end do
-
+    enddo
     !      if(ndriv.eq.1)then
     !       neu1=nodes3a(2);neu2=nodes3a(3)
     !       allocate(nxw1(1:ninput,1:neu1,npes),nxw2(1:neu1,1:neu2,npes),
@@ -300,7 +278,6 @@ subroutine pot3a( x, vpot3 )
     !
     !       enddo
     !      endif
-
 end subroutine pot3a
 
 !**************************************************************************
@@ -309,13 +286,13 @@ function tranfun( x, ifunc )
     implicit none
     integer          :: ifunc
     double precision :: tranfun, x
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun = x
-    end if
+    endif
 end function tranfun
 
 !**************************************************************************
@@ -495,7 +472,6 @@ subroutine bemsav( x, m, p )
     double precision :: m(0:109)
     call evmono(x, m)
     call evpoly(m, p)
-
 end subroutine bemsav
 
 !> @brief Evaluate evmono.
@@ -613,7 +589,6 @@ subroutine evmono( x, m )
     m(107) = m(4)*m(64)
     m(108) = m(2)*m(65)
     m(109) = m(3)*m(66)
-
 end subroutine evmono
 
 !> @brief Evaluate evpoly.
@@ -852,5 +827,4 @@ subroutine evpoly( m, p )
     p(228) = p(2)*p(72) - p(198)
     p(229) = p(3)*p(73) - p(208)
     p(230) = p(4)*p(74) - p(226)
-
 end subroutine evpoly

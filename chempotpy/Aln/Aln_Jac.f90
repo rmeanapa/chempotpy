@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_Jac potential.
@@ -57,7 +57,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !              of the system (input)
     !  natom   --- number of atoms in the system (input)
     !  maxatom --- maximal number of atoms (input)
-
     implicit none
     double precision :: alpha, beta, bs, dx, dy, dz, e0, e2, e3, en, ep, eta, eta1, &
         & eta2, fra, pi, rr, s, u, ud, udno, uno, v, vv, x, y, z
@@ -66,11 +65,10 @@ subroutine pot( x, y, z, v, natom, maxatom )
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
     !  calculate the potential energy
-    eta1 = 0.3
-    en   = 0.007
-    s    = 3.0
-    eta  = 2.0
-
+    eta1  = 0.3
+    en    = 0.007
+    s     = 3.0
+    eta   = 2.0
     en    = 0.04724  *autoang**3
     s     = 1.5875   /autoang
     eta   = 3.7795   *autoang
@@ -79,20 +77,18 @@ subroutine pot( x, y, z, v, natom, maxatom )
     e3    = -0.35     /autoev
     alpha = 189.7   /(autoev*autoang**3)
     eta1  = 0.5669   *autoang
-
-    pi   = dacos(-1.d0)
-    beta = (2.d0**(-0.5))*((16.d0*pi/3.d0)**(1.d0/3.d0))
+    pi    = dacos(-1.d0)
+    beta  = (2.d0**(-0.5))*((16.d0*pi/3.d0)**(1.d0/3.d0))
     !      beta=1.81
     eta2 = (eta+eta1)/beta
     ep   = eta/(eta+eta1)
     bs   = beta*s
     fra  = 1.d0/12.d0
-
-    v = 0d0
+    v    = 0d0
     do 2 i=1, natom
         u = 0d0
         do 3 j=1, natom
-            if(j.eq.i) go to 3
+            if( j .eq. i ) go to 3
             dx = x(i)-x(j)
             dy = y(i)-y(j)
             dz = z(i)-z(j)
@@ -101,7 +97,7 @@ subroutine pot( x, y, z, v, natom, maxatom )
         3 continue
         ud = 0d0
         do 4 m=1, natom
-            if(m.eq.i) go to 4
+            if( m .eq. i ) go to 4
             dx = x(i)-x(m)
             dy = y(i)-y(m)
             dz = z(i)-z(m)

@@ -21,14 +21,13 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-
-    call evaluate_er2( coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call evaluate_er2(coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the cutoff extended-Rydberg Al-Al pair potential.
@@ -65,10 +64,10 @@ subroutine evaluate_er2( coordinates_bohr, atom_count, energy_hartree )
                 & cubic_coefficient*radial_offset**3
             exponential = exp(-linear_coefficient*radial_offset)
             cutoff      = 0.0d0
-            if( distance_bohr <= cutoff_distance_bohr ) then
+            if( distance_bohr <= cutoff_distance_bohr )then
                 cutoff = exp(cutoff_shape*(1.0d0 -1.0d0/(1.0d0-distance_bohr/cutoff_distance_bohr)))
-            end if
+            endif
             energy_hartree = energy_hartree -well_depth_hartree*exponential*polynomial*cutoff
-        end do
-    end do
+        enddo
+    enddo
 end subroutine evaluate_er2

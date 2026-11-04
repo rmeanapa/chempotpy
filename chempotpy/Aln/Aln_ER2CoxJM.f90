@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2CoxJM potential.
@@ -57,7 +57,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !                    of the system
     !  natom   --- number of atoms in the system
     !  maxatom --- maximal number of atoms
-
     implicit none
     double precision :: a1, a2, a3, au2, au23, bu2, c, c0, c1, c2, c3, c4, c5, c6, &
         & co, coij, cojk, coki, dd, de, dx, dy, dz, ee, fsech, fu2, oneha, onesi, oneth, poly, q1, &
@@ -75,7 +74,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     a3  = 0.129970688812896917
     au2 = 0.143243771372740580
     bu2 = 6.50000000000000000/autoang
-
     !     potential, includes cutoff
     v = 0.d0
     do 1 i=1, natom
@@ -84,15 +82,14 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dy = y(i)-y(j)
             dz = z(i)-z(j)
             rr = dsqrt(dx*dx+dy*dy+dz*dz)
-            if (rr.le.bu2) then
+            if( rr .le. bu2 )then
                 co   = dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
                 rho  = rr-re
                 poly = 1.d0+a1*rho+a2*rho**2+a3*rho**3
                 ee   = dexp(-a1*rho)
                 v    = v-de*ee*poly*co
-            end if
+            endif
     1 continue
-
     ! three-body
     c0  = 2.64020517830972157
     c1  = -0.641182217879824101
@@ -104,13 +101,11 @@ subroutine pot( x, y, z, v, natom, maxatom )
     dd  = 1.00000000000000000/autoev
     ree = 2.18563751831949205/autoang
     !        xa3= 0.000000000000000000E+00
-    au23 = 0.806253053248656593
-
+    au23  = 0.806253053248656593
     oneth = dsqrt(1.d0/3.d0)
     oneha = dsqrt(1.d0/2.d0)
     twoth = dsqrt(2.d0/3.d0)
     onesi = dsqrt(1.d0/6.d0)
-
     do 111 i=1, natom
         r(i,i) = 0d0
         do 111 j=i+1, natom
@@ -119,35 +114,28 @@ subroutine pot( x, y, z, v, natom, maxatom )
             dz     = z(i)-z(j)
             r(i,j) = dsqrt(dx*dx+dy*dy+dz*dz)
     111 r(j,i)=r(i,j)
-
     !  calculate the potential energy
     v3 = 0.d0
     do 2 i=1, natom
         do 3 j=i+1, natom
-
             !  two body term
-
             rr   = r(i,j)
             coij = 0.d0
-            if (rr.ge.bu2) go to 3
+            if( rr .ge. bu2 ) go to 3
             coij = dexp(au23*(1.d0-1.d0/(1.d0-rr/bu2)))
             rij  = (rr-ree)/ree
-
             do 4 k=j+1, natom
                 ! three body term
-
                 rr   = r(k,j)
                 cojk = 0.d0
-                if (rr.ge.bu2) go to 4
+                if( rr .ge. bu2 ) go to 4
                 cojk = dexp(au23*(1.d0-1.d0/(1.d0-rr/bu2)))
                 rjk  = (rr-ree)/ree
-
                 rr   = r(k,i)
                 coki = 0.d0
-                if (rr.ge.bu2) go to 4
+                if( rr .ge. bu2 ) go to 4
                 coki = dexp(au23*(1.d0-1.d0/(1.d0-rr/bu2)))
                 rki  = (rr-ree)/ree
-
                 q1   = oneth*(rij+rjk+rki)
                 q2   = oneha*(rjk-rki)
                 q3   = twoth*rij-onesi*(rjk+rki)
@@ -162,7 +150,5 @@ subroutine pot( x, y, z, v, natom, maxatom )
             4 continue
         3 continue
     2 continue
-
     v = v+v3
-
 end subroutine pot

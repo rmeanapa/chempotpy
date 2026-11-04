@@ -19,14 +19,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call pot( coordinates_bohr(:,1), coordinates_bohr(:,2), &
-        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
+        coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate pot for the Aln_ER2ES potential.
@@ -57,7 +57,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     !                    of the system
     !  natom   --- number of atoms in the system
     !  maxatom --- maximal number of atoms
-
     implicit none
     double precision :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, &
         & bu2b, c, co, cob, de, deb, dx, dy, dz, ee, eeb, fu2, poly, polyb, r, re, reb, rho, &
@@ -67,14 +66,13 @@ subroutine pot( x, y, z, v, natom, maxatom )
     dimension fu2(maxatom,maxatom), r(maxatom,maxatom)
     double precision, parameter :: autoev  = 27.2113961d0
     double precision, parameter :: autoang = 0.529177249d0
-    de  = 1.71013678553981441/autoev
-    re  = 5.08182706399609163
-    a1  = 1.24074255007327805
-    a2  = 0.551880801172447422
-    a3  = 0.129970688812896917
-    au2 = 0.143243771372740580
-    bu2 = 6.50000000000000000/autoang
-
+    de   = 1.71013678553981441/autoev
+    re   = 5.08182706399609163
+    a1   = 1.24074255007327805
+    a2   = 0.551880801172447422
+    a3   = 0.129970688812896917
+    au2  = 0.143243771372740580
+    bu2  = 6.50000000000000000/autoang
     xk1  = 2.02364435759648265
     xk2  = 0.444699560332193433
     xk3  = 2.37791890571568132
@@ -86,7 +84,6 @@ subroutine pot( x, y, z, v, natom, maxatom )
     au2b = 0.467684416218856813
     bu2b = 6.5d0/autoang
     au23 = 0.665852467024914546e-01
-
     do 3 i=1, natom
         r(i,i)   = 0.d0
         fu2(i,i) = 0.d0
@@ -99,20 +96,18 @@ subroutine pot( x, y, z, v, natom, maxatom )
             fu2(j,i) = 0.d0
             fu2(i,j) = 0.d0
     3 continue
-
     ! do BA term, needs xk1,xk2,xk3
     do 10 i=1, natom                          ! alpha loop
         do 15 j=i+1, natom                      ! beta loop
-
             s = 0.d0
             do 12 l=1, natom                      ! gamma loop
-                if(l.eq.j.or.l.eq.i) go to 12        ! gamma != alpha or beta
+                if( l .eq. j.or.l .eq. i ) go to 12! gamma != alpha or beta
                 rjl = r(l,j)
                 rij = r(i,j)
                 ril = r(l,i)
-                if(rjl.ge.bu2) go to 12              ! cutoff for Rbeta,delta
-                if(rij.ge.bu2) go to 12              ! cutoff for Rbeta,delta
-                if(ril.ge.bu2) go to 12              ! cutoff for Rbeta,delta
+                if( rjl .ge. bu2 ) go to 12! cutoff for Rbeta,delta
+                if( rij .ge. bu2 ) go to 12! cutoff for Rbeta,delta
+                if( ril .ge. bu2 ) go to 12! cutoff for Rbeta,delta
                 ac   = au23*(1d0-1d0/(1d0-rjl/bu2))       ! cutoff for Rbeta,delta
                 ac   = ac+au23*(1d0-1d0/(1d0-rij/bu2))    ! cutoff for Rbeta,delta
                 ac   = ac+au23*(1d0-1d0/(1d0-ril/bu2))    ! cutoff for Rbeta,delta
@@ -120,18 +115,14 @@ subroutine pot( x, y, z, v, natom, maxatom )
                 !          if (natom.eq.3) print *,i,j,l,rjl,rij,ril,term
                 s = s+term                         ! sum
             12 continue
-
             !        e2=dexp(-2d0*s)                       ! equivalent to 1-dtanh(s)
             !        fu2(i,j)=2d0*e2/(1d0+e2)              ! equivalent to 1-dtanh(s)
             fu2(i,j) = dtanh(s)
             fu2(j,i) = fu2(i,j)
-
             !        if (natom.eq.3) print *,i,j,fu2(i,j)
-
         15 continue
         fu2(i,i) = 1.d0                           ! shouldn't get used anywh
     10 continue
-
     ! potential, includes cutoff
     v = 0.d0
     do 1 i=1, natom
@@ -148,9 +139,8 @@ subroutine pot( x, y, z, v, natom, maxatom )
             eeb   = dexp(-a1b*rhob)
             co    = 0.d0
             cob   = 0.d0
-            if (rr.le.bu2) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
-            if (rr.le.bu2b) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
+            if( rr .le. bu2 ) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
+            if( rr .le. bu2b ) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
             v = v-de*ee*poly*co +deb*eeb*polyb*cob*fu2(i,j)
     1 continue
-
 end subroutine pot

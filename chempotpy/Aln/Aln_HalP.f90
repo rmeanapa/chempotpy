@@ -21,15 +21,14 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
     call evaluate_halicioglu_pound( &
-        coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the pairwise Halicioglu-Pound aluminum cluster energy.
@@ -59,7 +58,7 @@ subroutine evaluate_halicioglu_pound( &
             distance_bohr = cartesian_distance( coordinates_bohr(first_atom,:), coordinates_bohr(second_atom,:) )
             pair_sum = pair_sum +(sigma_bohr/distance_bohr)**repulsive_exponent -(sigma_bohr/distance_bohr)** &
                 & attractive_exponent
-        end do
-    end do
+        enddo
+    enddo
     energy_hartree = four_well_depth_hartree*pair_sum
 end subroutine evaluate_halicioglu_pound

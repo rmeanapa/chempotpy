@@ -19,13 +19,13 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call evaluate_np_d( coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call evaluate_np_d(coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the NP-D embedded-atom aluminum cluster energy.
@@ -57,13 +57,13 @@ subroutine evaluate_np_d( coordinates_bohr, atom_count, energy_hartree )
         repulsive_sum = 0.0d0
         density_sum   = 0.0d0
         do neighbor_atom = 1, atom_count
-            if( center_atom /= neighbor_atom ) then
+            if( center_atom /= neighbor_atom )then
                 distance_bohr = cartesian_distance( coordinates_bohr(center_atom,:), coordinates_bohr(neighbor_atom, &
                     & :) )
                 repulsive_sum = repulsive_sum +exp(-distance_bohr*repulsive_decay)
                 density_sum   = density_sum +exp(-distance_bohr*density_decay)
-            end if
-        end do
+            endif
+        enddo
         energy_hartree = energy_hartree +repulsive_scale*repulsive_sum -embedding_scale*density_sum**embedding_exponent
-    end do
+    enddo
 end subroutine evaluate_np_d

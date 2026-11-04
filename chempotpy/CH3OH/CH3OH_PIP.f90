@@ -7,60 +7,42 @@ module pes_shell
     integer          :: correction_count
     double precision :: coefficients(0:3337)
     contains
-
     !> @brief Evaluate prepot.
     subroutine prepot( path )
-        integer :: file_unit_20
-
+        integer                         :: file_unit_20
         character(len=1024), intent(in) :: path
         character(len=1024)             :: file_path1
         integer                         :: coefficient
-
         ! for complete 6th-order fit
         coefficient_count = 3250; correction_count = 22
-
-        file_path1 = trim(path)//"/CH3OH/coeff.dat"
+        file_path1        = trim(path)//"/CH3OH/coeff.dat"
         open(newunit=file_unit_20, file=file_path1, status='old')
-
         read(file_unit_20, *)
         read(file_unit_20, *)
         read(file_unit_20, *) (coefficients(coefficient), coefficient=0, &
             coefficient_count+4*correction_count-1)
         close(file_unit_20)
-
     end subroutine
-
     !***********************************************************
-
     !> @brief Evaluate calcpot.
     subroutine calcpot( v, xyz )
         double precision, dimension(3, 6) :: xyz
         double precision, dimension(0:2, 0:5) :: gf0
         double precision :: v
-
         call potshell(xyz, v)
-
     end subroutine calcpot
-
     !***********************************************************
-
     !> @brief Evaluate potshell.
     subroutine potshell( xn, v )
         double precision :: f0, gf0(0:2,0:5)
-
         double precision :: v, xn(0:2,0:5)
         double precision :: d0(0:5,0:5), dw(0:5,0:5)
         double precision :: vec(0:coefficient_count+4*correction_count-1)
-
         call getvec(coefficient_count, correction_count, xn, vec)
         f0 = dot_product(coefficients, vec)
-
-        v = f0
-
+        v  = f0
     end subroutine potshell
-
     !****************************************************************
-
     !> @brief Evaluate getd0.
     subroutine getd0 ( nk, r0, d0 )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -72,13 +54,10 @@ module pes_shell
             do j = i+1, nk-1
                 d0(i,j) = dexp(-r0(i,j)/3)
                 d0(j,i) = d0(i,j)
-            end do
-        end do
-
+            enddo
+        enddo
     end subroutine getd0
-
     !****************************************************************
-
     !> @brief Evaluate getr0.
     subroutine getr0 ( nk, xn, r0 )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -90,13 +69,10 @@ module pes_shell
             do j = i+1, nk-1
                 r0(i,j) = sqrt((xn(0,j)-xn(0,i))**2+(xn(1,j)-xn(1,i))**2+ (xn(2,j)-xn(2,i))**2)
                 r0(j,i) = r0(i,j)
-            end do
-        end do
-
+            enddo
+        enddo
     end subroutine getr0
-
     !******************************************************************
-
     !> @brief Evaluate getrvec.
     subroutine getrvec ( ms, r, vec )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -108,47 +84,45 @@ module pes_shell
         double precision   :: x(0:3), r1(0:nk-1,0:nk-1), t0, t1
         !-----------------------------------------------------------------------
         ! Test for compatibility
-        if (.not.(ms.eq.1.or.ms.eq.5)) then
+        if( .not.(ms .eq. 1.or.ms .eq. 5) )then
             stop 'getrvec - wrong dimension'
-        end if
+        endif
         ! Computation
         x = 0
         do i = 0, nk-1
             do j = 0, nk-1
-                if (i.eq.j) then
+                if( i .eq. j )then
                     r1(i,j) = 0
                 else
                     r1(i,j) = dexp(-r(i,j))/r(i,j)
-                end if
-            end do
-        end do
+                endif
+            enddo
+        enddo
         ! XX distance
         t0 = 0
         do i = 0, nk-3
             do j = i+1, nk-3
                 t0 = t0+r1(i,j)
-            end do
-        end do
+            enddo
+        enddo
         x(0) = t0/((nk-2)*(nk-3)/2)
         ! XY and XZ distances
         t0 = 0 ; t1 = 0
         do i = 0, nk-3
             t0 = t0+r1(i,nk-2)
             t1 = t1+r1(i,nk-1)
-        end do
+        enddo
         x(1) = t0/(nk-2)
         x(2) = t1/(nk-2)
         ! YZ distance
         x(3) = r1(nk-2,nk-1)
         ! set vec
         vec(0) = 1
-        if (5.le.ms) then
+        if( 5 .le. ms )then
             vec(1:4) = x
-        end if
+        endif
     end subroutine getrvec
-
     !*****************************************************************
-
     !> @brief Evaluate getvec.
     subroutine getvec ( ms, mr, xn, vec )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -167,13 +141,10 @@ module pes_shell
         do l = 0, mr-1
             do k = 0, 3
                 vec(ms+4*l+k) = rvec(k+1)*vec(l)
-            end do
-        end do
-
+            enddo
+        enddo
     end subroutine getvec
-
     !*************************************************************************
-
     !> @brief Evaluate getv_x4yz.
     subroutine getv_x4yz ( m, d, vec )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -245,27 +216,25 @@ module pes_shell
                 d6(j, i) = d6(i, j)
                 d7(i, j) = pol7(d(i,j))
                 d7(j, i) = d7(i, j)
-            end do
-        end do
+            enddo
+        enddo
         ! Primary Invariants
         !      x = 0 ; y = 0 ; z = 0 ; u = 0 ; v = 0 ; w = 0 ; w7 = 0
         x = 0 ; y = 0 ; z = 0 ; u = 0
-
         do i0 = 0, 3
             t0 = 0
             do i1 = 0, 3
-                if (i1.ne.i0) then
+                if( i1 .ne. i0 )then
                     t0   = t0+d(i0,i1)/3
                     x(0) = x(0)+d(i0,i1)/12
                     y(0) = y(0)+d2(i0,i1)/12
                     z(0) = z(0)+d3(i0,i1)/12
-                end if
-            end do
+                endif
+            enddo
             y(1) = y(1)+pol2(t0)/4
             z(1) = z(1)+pol3(t0)/4
             u(0) = u(0)+pol4(t0)/4
-        end do
-
+        enddo
         x(1) = sum(d(0:3,4))/4
         y(2) = sum(d2(0:3,4))/4
         z(2) = sum(d3(0:3,4))/4
@@ -283,14 +252,14 @@ module pes_shell
             x5(i) = pol5(x(i))
             x6(i) = pol6(x(i))
             x7(i) = pol7(x(i))
-        end do
+        enddo
         do i = 0, np2-1
             y2(i) = pol2(y(i))
             y3(i) = pol3(y(i))
-        end do
+        enddo
         do i = 0, np3-1
             z2(i) = pol2(z(i))
-        end do
+        enddo
         ! Secondary Invariants
         !! ys(0:2), zs(0:12), us(0:31), vs(0:61), ws(0:128), w7s(0:220)
         !! reducible: us(0:5), vs(0:38), ws(0:127), w7s(0:..)
@@ -298,17 +267,17 @@ module pes_shell
         ! Irreducible secondaries
         do i0 = 0, 3
             do i1 = 0, 3
-                if (i1.ne.i0) then
+                if( i1 .ne. i0 )then
                     us(6)  = us(6)+d4(i0,i1)/12
                     vs(39) = vs(39)+d5(i0, i1)/12
                     do i2 = 0, 3
-                        if (i2.ne.i1.and.i2.ne.i0) then
+                        if( i2 .ne. i1.and.i2 .ne. i0 )then
                             zs(0) = zs(0)+d2(i0,i1)*d(i0,i2)/24
-                        end if
-                    end do
-                end if
-            end do
-        end do
+                        endif
+                    enddo
+                endif
+            enddo
+        enddo
         j0 = 4 ; k0 = 5
         do i0 = 0, 3
             ys(2)  = ys(2)+d(i0,j0)*d(i0,k0)/4
@@ -318,7 +287,7 @@ module pes_shell
             us(27) = us(27)+d2(i0,j0)*d2(i0,k0)/4
             us(30) = us(30)+d(i0,j0)*d3(i0,k0)/4
             do i1 = 0, 3
-                if (i1.ne.i0) then
+                if( i1 .ne. i0 )then
                     ys(0)  = ys(0)+d(i0,i1)*d(i0,j0)/12
                     ys(1)  = ys(1)+d(i0,i1)*d(i0,k0)/12
                     zs(1)  = zs(1)+d2(i0,i1)*d(i0,j0)/12
@@ -360,7 +329,7 @@ module pes_shell
                     vs(60) = vs(60)+d(i0,i1)*d(i1,j0)*d3(i0,k0)/12
                     vs(61) = vs(61)+d(i0,i1)*d3(i0,k0)*d(i1,k0)/12
                     do i2 = 0, 3
-                        if (i2.ne.i1.and.i2.ne.i0) then
+                        if( i2 .ne. i1.and.i2 .ne. i0 )then
                             zs(2)   = zs(2)+d(i0,i1)*d(i0,i2)*d(i0,j0)/24
                             zs(6)   = zs(6)+d(i0,i1)*d(i0,i2)*d(i0,k0)/24
                             us(8)   = us(8)+d2(i0,i1)*d(i0,i2)*d(i0,j0)/24
@@ -378,26 +347,26 @@ module pes_shell
                             vs(51)  = vs(51)+d2(i0,i1)*d(i0,i2)*d(i1,j0)*d(i0,k0)/24
                             vs(55)  = vs(55)+d2(i0,i1)*d(i0,i2)*d2(i0,k0)/24
                             ws(128) = ws(128)+d2(i0,i1)*d2(i0,i2)*d(i1,j0)*d(i0,k0)/24
-                        end if
-                    end do
-                end if
-            end do
-        end do
+                        endif
+                    enddo
+                endif
+            enddo
+        enddo
         ! Reducible secondaries
         ! us(0:5)
         k = 0
         do j = 0, 2
             do i = 0, j-1
                 us(k) = ys(i)*ys(j) ; k = k+1
-            end do
+            enddo
             us(k) = pol2(ys(j)) ; k = k+1
-        end do
+        enddo
         ! vs(0:38)
         do j = 0, 12
             do i = 0, 2
                 vs(3*j+i) = ys(i)*zs(j)
-            end do
-        end do
+            enddo
+        enddo
         ! ws(0:127)
         ws(0)  = pol2(zs(0))
         ws(1)  = zs(0)*zs(1)
@@ -452,8 +421,8 @@ module pes_shell
         do j = 0, 25
             do i = 0, 2
                 ws(50+3*j+i) = ys(i)*us(6+j)
-            end do
-        end do
+            enddo
+        enddo
         ! w7s(0:..) !! to follow
         ! Compute vec(0:*).  The code was created using these parameters:
         ! MolienSeries(0:*): 1 4 17 65 230 736 2197 6093
@@ -464,14 +433,14 @@ module pes_shell
         ! constant term
         vec(0) = 1
         ! first degree terms
-        if (1.le.mdeg) then
+        if( 1 .le. mdeg )then
             vec(1) = x(0)
             vec(2) = x(1)
             vec(3) = x(2)
             vec(4) = x(3)
-        end if
+        endif
         ! second degree terms
-        if (2.le.mdeg) then
+        if( 2 .le. mdeg )then
             vec(5)     = x2(0)
             vec(6:8)   = x(0)*vec(2:4)
             vec(9)     = x2(1)
@@ -485,9 +454,9 @@ module pes_shell
             vec(17)    = y(2)
             vec(18)    = y(3)
             vec(19:21) = ys(0:2)
-        end if
+        endif
         ! third degree terms
-        if (3.le.mdeg) then
+        if( 3 .le. mdeg )then
             vec(22)    = x3(0)
             vec(23:25) = x2(0)*vec(2:4)
             vec(26:38) = x(0)*vec(9:21)
@@ -505,9 +474,9 @@ module pes_shell
             vec(72)    = z(2)
             vec(73)    = z(3)
             vec(74:86) = zs(0:12)
-        end if
+        endif
         ! fourth degree terms
-        if (4.le.mdeg) then
+        if( 4 .le. mdeg )then
             vec(87)      = x4(0)
             vec(88:90)   = x3(0)*vec(2:4)
             vec(91:103)  = x2(0)*vec(9:21)
@@ -536,9 +505,9 @@ module pes_shell
             vec(283)     = u(1)
             vec(284)     = u(2)
             vec(285:316) = us(0:31)
-        end if
+        endif
         ! fifth degree terms
-        if (5.le.mdeg) then
+        if( 5 .le. mdeg )then
             vec(317)      = x5(0)
             vec(318:320)  = x4(0)*vec(2:4)
             vec(321:333)  = x3(0)*vec(9:21)
@@ -568,9 +537,9 @@ module pes_shell
             vec(985:987)  = z(2)*ys(0:2)
             vec(988:990)  = z(3)*ys(0:2)
             vec(991:1052) = vs(0:61)
-        end if
+        endif
         ! sixth degree terms
-        if (6.le.mdeg) then
+        if( 6 .le. mdeg )then
             vec(1053)      = x6(0)
             vec(1054:1056) = x5(0)*vec(2:4)
             vec(1057:1069) = x4(0)*vec(9:21)
@@ -619,9 +588,9 @@ module pes_shell
             vec(3115:3117) = u(1)*ys(0:2)
             vec(3118:3120) = u(2)*ys(0:2)
             vec(3121:3249) = ws(0:128)
-        end if
+        endif
         ! seventh degree terms
-        if (7.le.mdeg) then
+        if( 7 .le. mdeg )then
             vec(3250)      = x7(0)
             vec(3251:3253) = x6(0)*vec(2:4)
             vec(3254:3266) = x5(0)*vec(9:21)
@@ -667,9 +636,8 @@ module pes_shell
             vec(9109:9121) = u(2)*zs(0:12)
             !! vec(9122:9342) = w7s(0:220)
             !! Secondaries at degree 7 yet to follow
-        end if
+        endif
     end subroutine getv_x4yz
-
 end module pes_shell
 
 !> @brief Evaluate pes.
@@ -689,24 +657,20 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call prepot(path)
         call calcpot(v, tx)
     else
         write (*, *) 'Only energy is available'
-    end if
-
+    endif
     !employ the minimum to be -115.57493896563480 hartree.
     v = (v+115.57493896563480)*legacy_hartree_to_electronvolt
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
 end subroutine

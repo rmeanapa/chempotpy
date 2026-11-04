@@ -16,58 +16,56 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
     real(8), allocatable         :: matrix(:,:), eigenvectors(:,:)
     info         = 0
     minimum_work = max(1, 3*n-1)
-    if( lwork == -1 ) then
+    if( lwork == -1 )then
         work(1) = real(minimum_work, kind=8)
         return
-    end if
+    endif
     if( jobz /= 'N' .and. jobz /= 'n' .and. &
         jobz /= 'V' .and. jobz /= 'v' ) then
     info = -1
     return
-    end if
+    endif
     if( uplo /= 'U' .and. uplo /= 'u' .and. &
         uplo /= 'L' .and. uplo /= 'l' ) then
     info = -2
     return
-    end if
-    if( n < 0 ) then
+    endif
+    if( n < 0 )then
         info = -3
         return
-    end if
-    if( lda < max(1, n) ) then
+    endif
+    if( lda < max(1, n) )then
         info = -5
         return
-    end if
-    if( lwork < minimum_work ) then
+    endif
+    if( lwork < minimum_work )then
         info = -8
         return
-    end if
+    endif
     work(1) = real(minimum_work, kind=8)
     if( n == 0 ) return
-
     allocate(matrix(n,n), eigenvectors(n,n))
     matrix       = 0.0d0
     eigenvectors = 0.0d0
     do i = 1, n
         eigenvectors(i,i) = 1.0d0
         matrix(i,i)       = a(i,i)
-    end do
-    if( uplo == 'U' .or. uplo == 'u' ) then
+    enddo
+    if( uplo == 'U' .or. uplo == 'u' )then
         do j = 2, n
             do i = 1, j-1
                 matrix(i,j) = a(i,j)
                 matrix(j,i) = a(i,j)
-            end do
-        end do
+            enddo
+        enddo
     else
         do j = 1, n-1
             do i = j+1, n
                 matrix(i,j) = a(i,j)
                 matrix(j,i) = a(i,j)
-            end do
-        end do
-    end if
-
+            enddo
+        enddo
+    endif
     scale          = max(1.0d0, maxval(abs(matrix)))
     tolerance      = epsilon(1.0d0)*scale*real(max(1, n), kind=8)
     max_iterations = max(32, 100*n*n)
@@ -77,60 +75,56 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
         q                = min(2, n)
         do j = 2, n
             do i = 1, j-1
-                if( abs(matrix(i,j)) > off_diagonal_max ) then
+                if( abs(matrix(i,j)) > off_diagonal_max )then
                     off_diagonal_max = abs(matrix(i,j))
                     p                = i
                     q                = j
-                end if
-            end do
-        end do
+                endif
+            enddo
+        enddo
         if( off_diagonal_max <= tolerance ) exit
-
         app = matrix(p,p)
         aqq = matrix(q,q)
         apq = matrix(p,q)
         tau = (aqq-app)/(2.0d0*apq)
-        if( tau >= 0.0d0 ) then
+        if( tau >= 0.0d0 )then
             tangent = 1.0d0/(tau+hypot(1.0d0, tau))
         else
             tangent = -1.0d0/(-tau+hypot(1.0d0, tau))
-        end if
+        endif
         cosine = 1.0d0/sqrt(1.0d0+tangent*tangent)
         sine   = tangent*cosine
-
         do i = 1, n
-            if( i /= p .and. i /= q ) then
+            if( i /= p .and. i /= q )then
                 updated_ip  = cosine*matrix(i,p)-sine*matrix(i,q)
                 updated_iq  = sine*matrix(i,p)+cosine*matrix(i,q)
                 matrix(i,p) = updated_ip
                 matrix(p,i) = updated_ip
                 matrix(i,q) = updated_iq
                 matrix(q,i) = updated_iq
-            end if
-        end do
+            endif
+        enddo
         matrix(p,p) = cosine*cosine*app-2.0d0*sine*cosine*apq +sine*sine*aqq
         matrix(q,q) = sine*sine*app+2.0d0*sine*cosine*apq +cosine*cosine*aqq
         matrix(p,q) = 0.0d0
         matrix(q,p) = 0.0d0
-
         do i = 1, n
             updated_ip        = cosine*eigenvectors(i,p) -sine*eigenvectors(i,q)
             updated_iq        = sine*eigenvectors(i,p) +cosine*eigenvectors(i,q)
             eigenvectors(i,p) = updated_ip
             eigenvectors(i,q) = updated_iq
-        end do
-    end do
+        enddo
+    enddo
     if( off_diagonal_max > tolerance ) info = 1
-
     do i = 1, n
         w(i) = matrix(i,i)
-    end do
+    enddo
     do i = 1, n-1
         eigen_index = i
         do j = i+1, n
             if( w(j) < w(eigen_index) ) eigen_index = j
-        end do
-        if( eigen_index /= i ) then
+        enddo
+        if( eigen_index /= i )then
             temporary_value = w(i)
             w(i)            = w(eigen_index)
             w(eigen_index)  = temporary_value
@@ -138,17 +132,16 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
                 temporary_value             = eigenvectors(j,i)
                 eigenvectors(j,i)           = eigenvectors(j,eigen_index)
                 eigenvectors(j,eigen_index) = temporary_value
-            end do
-        end if
-    end do
-
-    if( jobz == 'V' .or. jobz == 'v' ) then
+            enddo
+        endif
+    enddo
+    if( jobz == 'V' .or. jobz == 'v' )then
         a(1:n,1:n) = eigenvectors
     else
         a(1:n,1:n) = 0.0d0
         do i = 1, n
             a(i,i) = w(i)
-        end do
-    end if
+        enddo
+    endif
     deallocate(matrix, eigenvectors)
 end subroutine dsyev

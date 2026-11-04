@@ -19,13 +19,13 @@ subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
     gradient_ev_per_angstrom = 0.0d0
     coupling_per_angstrom    = 0.0d0
     call legacy_coordinates_to_bohr( &
-        coordinates_angstrom(1:atom_count,:), coordinates_bohr )
-    call evaluate_er( coordinates_bohr, atom_count, energy_hartree )
-    if( derivative_order == 0 ) then
+        coordinates_angstrom(1:atom_count,:), coordinates_bohr)
+    call evaluate_er(coordinates_bohr, atom_count, energy_hartree)
+    if( derivative_order == 0 )then
         energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
     else
         write(*, *) 'Only energy is available'
-    end if
+    endif
 end subroutine pes
 
 !> @brief Evaluate the reparameterized cutoff extended-Rydberg pair potential.
@@ -57,14 +57,14 @@ subroutine evaluate_er( coordinates_bohr, atom_count, energy_hartree )
     do first_atom = 1, atom_count-1
         do second_atom = first_atom+1, atom_count
             distance_bohr = cartesian_distance( coordinates_bohr(first_atom,:), coordinates_bohr(second_atom,:) )
-            if( distance_bohr <= cutoff_distance_bohr ) then
+            if( distance_bohr <= cutoff_distance_bohr )then
                 cutoff        = exp(cutoff_shape*(1.0d0 -1.0d0/(1.0d0-distance_bohr/cutoff_distance_bohr)))
                 radial_offset = distance_bohr-equilibrium_distance_bohr
                 polynomial = 1.0d0+linear_coefficient*radial_offset +quadratic_coefficient*radial_offset**2 + &
                     & cubic_coefficient*radial_offset**3
                 exponential    = exp(-linear_coefficient*radial_offset)
                 energy_hartree = energy_hartree -well_depth_hartree*exponential*polynomial*cutoff
-            end if
-        end do
-    end do
+            endif
+        enddo
+    enddo
 end subroutine evaluate_er

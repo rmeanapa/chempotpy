@@ -18,18 +18,15 @@ subroutine pes( x, igrad, p, g, d )
     logical, save                 :: first_time_data=.true.
     integer                       :: i, j, k, l
     !initialize
-    u = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
-
+    u  = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
     nt = 1
     ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr( x, r(1,:) )
-
-    if(first_time_data) then
+    call legacy_triatomic_distances_to_bohr(x, r(1,:))
+    if( first_time_data )then
         call prepot
         first_time_data = .false.
-    end if
-
-    if (igrad==0) then
+    endif
+    if( igrad == 0 )then
         call pot(r, u11, 1, 1)
         call pot(r, u12, 1, 2)
         call pot(r, u22, 1, 3)
@@ -40,8 +37,7 @@ subroutine pes( x, igrad, p, g, d )
         call diagonalize(nstates, u, p, t)
     else
         write(*, *) "Only energy is available"
-    end if
-
+    endif
 end subroutine pes
 
 !> @brief Evaluate diagonalize for the NaFH_LEPS_TTYPP1_1998 potential.
@@ -56,14 +52,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     integer, save                 :: lwork_d
     logical, save                 :: first_time_diag=.true.
     u_ss = a_ss
-    if (first_time_diag) then
+    if( first_time_diag )then
         lwork_d = -1
         allocate( work_d(2) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         lwork_d = int(work_d(1))
         deallocate ( work_d )
         first_time_diag = .false.
-    end if
+    endif
     allocate( work_d(lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
@@ -77,9 +73,7 @@ subroutine prepot
     !   Number of derivatives:         0
     !   Number of electronic surfaces: 2
     !   Interface:                     3-1V
-
     !   Reference:  Unpublished, M. S. Topaler and D. G. Truhlar
-
     !   Notes:  Development version of NaFH potential.
     !
     !   Protocol:
@@ -106,12 +100,10 @@ subroutine prepot
     !      Internal, Definition: R(1) = R(Na-H)
     !                            R(2) = R(H-F)
     !                            R(3) = R(Na-F)
-
     implicit none
     call prepot11
     call prepot12
     call prepot22
-
 end subroutine prepot
 
 !
@@ -121,14 +113,13 @@ subroutine pot( r, e, nt, nsurf )
     double precision :: e, r
     integer          :: nsurf, nt
     dimension r(nt,3), e(nt)
-    if (nsurf .eq. 1) then
+    if( nsurf .eq. 1 )then
         call pot11(r, e, nt)
-    else if (nsurf .eq. 2) then
+    else if( nsurf .eq. 2 )then
         call pot12(r, e, nt)
     else
         call pot22(r, e, nt)
-    end if
-
+    endif
 end subroutine pot
 
 !
@@ -157,13 +148,10 @@ subroutine prepot11
     data cfm/0.0d0/
     rac2  = 1.d0/dsqrt(2.d0)
     cevau = 1.d0/27.2113961d0
-
     return
     !
     entry pot11(r, e, nt)
-
     do 10 i=1, nt
-
         !***********************************************************************
         r2s  = r(i,2)*r(i,2)
         rr1  = r(i,1)*scale
@@ -171,7 +159,6 @@ subroutine prepot11
         rr1s = rr1**2
         rr3s = rr3**2
         !***********************************************************************
-
         !***********************************************************************
         !*****SWITCHING FUNCTION FOR THE SINGLETS BELOW, AND ITS DERIVATIVES:
         hlp1 = 1.d0-dtanh(swa*(rr1-swr0))
@@ -179,52 +166,41 @@ subroutine prepot11
         hlp3 = 1.d0-dtanh(swa*(rr3-swr0))
         swt  = 0.125d0*hlp1*hlp2*hlp3
         !***********************************************************************
-
         !***********************************************************************
         !*****SINGLETS AND THEIR DERIVATIVES:
         !-----------------------------------------------------------------------
         !*****MH SINGLET:
         axs1 = dexp(-0.5d0*abs1*(rr1-ars1))
         as1  = 0.5d0*ads1*axs1*(axs1-2.d0)
-
         cxs1 = dexp(-2.80d0*abs1*(rr1-3.500d0))
         cs1  = 0.35d0*cxs1*(cxs1+2.d0)
-
-        s1 = as1+(cs1-as1)*swt
+        s1   = as1+(cs1-as1)*swt
         !-----------------------------------------------------------------------
         !*****H2 SINGLET, AND ITS DERIVATIVES:
         !     ORIGINAL
         s2a=(109.384d0+463.033d0*r(i,2))*dexp(-6.240d0*r(i,2)) -r2s*(13.654d0+20.717d0*r(i,2))*dexp(-2.032d0*r(i,2))+ &
             & 1.34357d0
-
         hlp1 = dexp(-8.d0*(r(i,2)-1.411655d0))
         hlp2 = 0.2d0*dexp(-2.032d0*r(i,2))
         s2h  = hlp1 - hlp2
-
-        hlp = dtanh((s2a-s2h)/cprime)
+        hlp  = dtanh((s2a-s2h)/cprime)
         !      hlp1=(s2a-s2h)/(cprime*dcosh((s2a-s2h)/cprime)**2)
         s2a = 0.5d0*(s2a+s2h-hlp*(s2a-s2h))
-
         a   = 1.00075d0
         dn  = 3.39687d0
         hlp = dexp(-a*(r(i,2)-1.42d0))
         s2i = dn*hlp*(hlp-2.d0)
-
         hlp = 0.5d0*(r(i,1)+r(i,3)-8.d0)
         hlp = 0.5d0*(1.d0-dtanh(hlp))
         s2  = s2a+(s2i-s2a)*hlp
-
         !-----------------------------------------------------------------------
         !*****MF SINGLET:
         axs3 = dexp(-1.3d0*abs1*(rr3-ars1))
         as3  = ads1*axs3*(axs3-2.d0)
-
         cxs3 = dexp(-cbs1*(rr3-crs1))
         cs3  = cds1*cxs3*(cxs3-2.d0)
-
-        s3 = as3+(cs3-as3)*swt
+        s3   = as3+(cs3-as3)*swt
         !***********************************************************************
-
         !***********************************************************************
         !*****TRIPLETS AND THEIR FIRST DERIVATIVES:
         !-----------------------------------------------------------------------
@@ -232,49 +208,35 @@ subroutine prepot11
         hlp1 = dexp(-1.10d0*c2*(rr1-0.6d0))
         hlp2 = dexp(-1.65d0*c4*(rr1-0.6d0))
         t1   = c1*hlp1+c3*hlp2
-
         !-----------------------------------------------------------------------
         !     HH TRIPLET
         xt2 = dexp(-betat2*(r(i,2)-ret2))
         t2  = dt2*xt2*(xt2-2.d0)
-
         !-----------------------------------------------------------------------
         !     MF TRIPLET
         hlp1 = dexp(-c2*(rr3-0.55d0))
         hlp2 = dexp(-2.5d0*c4*(rr3-0.55d0))
         t3   = c1*hlp1+c3*hlp2
         !***********************************************************************
-
         !***********************************************************************
         !-----------------------------------------------------------------------
         !*****COULOMB INTEGRALS AND THEIR FIRST DERIVATIVES:
-
         coul1 = 0.5d0*(s1+t1)
         coul2 = 0.5d0*(s2+t2)
         coul3 = 0.5d0*(s3+t3)
-
         !-----------------------------------------------------------------------
         !*****EXCHANGE INTEGRALS AND THEIR FIRST DERIVATIVES:
-
         exch1 = 0.5d0*(s1-t1)
         exch2 = 0.5d0*(s2-t2)
         exch3 = 0.5d0*(s3-t3)
-
         !***********************************************************************
-
         !***********************************************************************
-        w = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
-
+        w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
         cplg2 = c2a*dexp(-c2b*w-c2c*(rr1+r(i,2)+rr3))
-
         rootw = rac2*dsqrt(w+cplg2*cplg2)
-
-        e(i) = ((coul1+coul2+coul3+deh2-rootw)*cevau-cfm)
-
+        e(i)  = ((coul1+coul2+coul3+deh2-rootw)*cevau-cfm)
         !***********************************************************************
-
     10 continue
-
 end subroutine prepot11
 
 !
@@ -305,34 +267,24 @@ subroutine prepot12
     !      common/ucoupl/ahf,anaf,anah,r21,r23,r13
     !      common/ucoupl1/ccMF(4),ccMH(4)
     cevau = 1.d0/27.2113961d0
-
     return
     !
     entry pot12(r, e, nt)
-
     do 10 i=1, nt
-
         hlp  = ccmf(3)/(1.d0+ccmf(4)*r(i,3))
         unaf = dexp(-ccmf(1)-ccmf(2)*r(i,3)- hlp*r(i,3))
         unaf = unaf*27.2113961d0
-
         hlp  = ccmh(3)/(1.d0+ccmh(4)*r(i,1))
         unah = dexp(-ccmh(1)-ccmh(2)*r(i,1)- hlp*r(i,1))
         !-----------------------------------------------------------------------
-
-        hlp = anah*r(i,1)-anaf*r(i,3)-r13
-        sw1 = 0.5d0*(1.d0+dtanh(hlp))
-
+        hlp  = anah*r(i,1)-anaf*r(i,3)-r13
+        sw1  = 0.5d0*(1.d0+dtanh(hlp))
         hlp  = ahf*r(i,2)-anah*r(i,1)-r21
         sw21 = 0.5d0*(1.d0+dtanh(hlp))
-
         hlp  = ahf*r(i,2)-anaf*r(i,3)-r23
         sw23 = 0.5d0*(1.d0+dtanh(hlp))
-
         e(i) = unaf*sw1*sw23+unah*(1.d0-sw1)*sw21
-
         e(i) = e(i)*cevau
-
         !***********************************************************************
         !     MODIFICATION: coupling cut-off at large H-H separations
         gmc  = 0.3d0
@@ -341,9 +293,7 @@ subroutine prepot12
         hlp  = gmc*(1.d0-dtanh(amc*(r(i,2)-rmc)))
         e(i) = e(i)*hlp
         !***********************************************************************
-
     10 continue
-
 end subroutine prepot12
 
 !
@@ -387,13 +337,10 @@ subroutine prepot22
         & h2t7/-1.59912d0/
     rac2  = 1.d0/dsqrt(2.d0)
     cevau = 1.d0/27.2113961d0
-
     return
     !
     entry pot22(r, e, nt)
-
     do 10 i=1, nt
-
         !***********************************************************************
         r1s  = r(i,1)*r(i,1)
         r2s  = r(i,2)*r(i,2)
@@ -404,13 +351,10 @@ subroutine prepot22
         rr3s = rr3**2
         !***********************************************************************
         !*****SWITCHING FUNCTION FOR THE H2 TRIPLET, AND ITS DERIVATIVES:
-
         swt = 0.5d0*(1.d0-dtanh( swa*(0.5d0*(rr1+rr3)-swr0)))
         !***********************************************************************
-
         !***********************************************************************
         !*****SINGLETS AND THEIR DERIVATIVES:
-
         !-----------------------------------------------------------------------
         !*****MH SINGLET:
         raaa     = 2.700d0
@@ -424,7 +368,6 @@ subroutine prepot22
         !*****H2 SINGLET
         s2a=(109.384d0+463.033d0*r(i,2))*dexp(-6.240d0*r(i,2)) -r2s*(13.654d0+20.717d0*r(i,2))*dexp(-2.032d0*r(i,2))+ &
             & una2p
-
         b    = 1.4d0
         a    = 2.d0*b
         r00  = 1.411655d0
@@ -432,11 +375,9 @@ subroutine prepot22
         hlp1 = dexp(-a*(r(i,2)-r00))
         hlp2 = dexp(-b*(r(i,2)-r00))
         s2i  = dn*(hlp1-(a/b)*hlp2)+una2p
-
-        hlp = 0.5d0*(r(i,1)+r(i,3)-7.0d0)
-        hlp = 0.5d0*(1.d0-dtanh(hlp))
-        s2a = s2a+(s2i-s2a)*hlp
-
+        hlp  = 0.5d0*(r(i,1)+r(i,3)-7.0d0)
+        hlp  = 0.5d0*(1.d0-dtanh(hlp))
+        s2a  = s2a+(s2i-s2a)*hlp
         !-----------------------------------------------------------------------
         !*****MF SINGLET:
         hlpnah3  = dexp(-aaa*(r(i,3)-raaa))
@@ -444,15 +385,11 @@ subroutine prepot22
         s3       = daa*(hlpnah33-2.d0*hlpnah3)
         !***********************************************************************
         !*****TRIPLETS AND THEIR DERIVATIVES:
-
         !-----------------------------------------------------------------------
         !*****H2 TRIPLET (interaction region):
-
         t2a = 0.5d0*(dexp(-h2t2*(r(i,2)-h2t1))+(h2t3+h2t5*r(i,2) +h2t6*r2s+h2t7*r2s*r(i,2))*dexp(-h2t4*r(i,2)))
-
         !*****H2 TRIPLET (asymptotic)
         s2b = 147.214d0*dexp(-3.915d0*r(i,2))+r(i,2)*(41.275d0+10.505d0 *r(i,2)+4.408d0*r2s)*dexp(-2.032d0*r(i,2))
-
         !*****H2 TRIPLET: TOTAL (switched between the asymptotic and the ineract
         t2 = swt*(t2a-s2b)+s2b
         !-----------------------------------------------------------------------
@@ -461,7 +398,6 @@ subroutine prepot22
         t1 = 3.d0*(dexp(-dnaht2*(rr1-dnaht11))+ (dnaht7+dnaht3*rr1+dnaht4*rr1s+dnaht5*rr1*rr1s) *dexp(-dnaht61*rr1))
         !-----------------------------------------------------------------------
         !!!!!!MF TRIPLET: (should be the same as the first one, t1)
-
         t3 = 3.d0*(dexp(-dnaht2*(rr3-dnaht1))+ (dnaht7+dnaht3*rr3+dnaht4*rr3s+dnaht5*rr3*rr3s) *dexp(-dnaht6*rr3))
         !-----------------------------------------------------------------------
         !***********************************************************************
@@ -474,23 +410,19 @@ subroutine prepot22
         !***********************************************************************
         !-----------------------------------------------------------------------
         !*****COULOMB INTEGRALS AND THEIR FIRST DERIVATIVES:
-
         coul1 = 0.5d0*(s1+t1)
         coul2 = 0.5d0*(s2+t2)
         coul3 = 0.5d0*(s3+t3)
         !-----------------------------------------------------------------------
         !*****EXCHANGE INTEGRALS AND THEIR FIRST DERIVATIVES:
-
         exch1 = 0.5d0*(s1-t1)
         exch2 = 0.5d0*(s2-t2)
         exch3 = 0.5d0*(s3-t3)
         !***********************************************************************
-
         w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
         cplg2 = c2a*dexp(-c2b*w-c2c*(rr1+r(i,2)+rr3))
         rootw = rac2*dsqrt(w+cplg2*cplg2)
         e(i)  = coul1+coul2+coul3+deh2-rootw
-
         !***********************************************************************
         rf1  = 3.00d0
         af1  = 0.60d0
@@ -499,7 +431,5 @@ subroutine prepot22
         !***********************************************************************
         !***********************************************************************
         !***********************************************************************
-
     10 continue
-
 end subroutine prepot22

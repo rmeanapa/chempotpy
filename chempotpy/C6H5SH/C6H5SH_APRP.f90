@@ -110,53 +110,49 @@ subroutine pes( x, igrad, p, g, d )
     integer                       :: iatom, idir, j, istate, jstate
     !initialize
     p = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             xx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
-        end do
-    end do
-
+        enddo
+    enddo
     call pot(igrad, xx, uu, guu, vv, gvv, dvec, cc, 0)
     !output is in hartree/bohr
-
-    if (igrad==0) then
+    if( igrad == 0 )then
         do istate=1, nstates
             p(istate) = vv(istate)*legacy_hartree_to_electronvolt
-        end do
-    elseif (igrad==1) then
+        enddo
+    else if( igrad == 1 )then
         do istate=1, nstates
             p(istate) = vv(istate)*legacy_hartree_to_electronvolt
-        end do
+        enddo
         do istate=1, nstates
             do iatom=1, natoms
                 do idir=1, 3
                     g(istate,iatom,idir) = gvv(idir,iatom,istate)*51.422067
-                end do
-            end do
-        end do
-    elseif (igrad==2) then
+                enddo
+            enddo
+        enddo
+    else if( igrad == 2 )then
         do istate=1, nstates
             p(istate) = vv(istate)*legacy_hartree_to_electronvolt
-        end do
+        enddo
         do istate=1, nstates
             do iatom=1, natoms
                 do idir=1, 3
                     g(istate,iatom,idir) = gvv(idir,iatom,istate)*51.422067
-                end do
-            end do
-        end do
+                enddo
+            enddo
+        enddo
         do istate=1, nstates
             do jstate=1, nstates
                 do iatom=1, natoms
                     do idir=1, 3
                         d(istate,jstate,iatom,idir) = dvec(idir,iatom,istate,jstate)/legacy_bohr_to_angstrom
-                    end do
-                end do
-            end do
-        end do
-    end if
-
+                    enddo
+                enddo
+            enddo
+        enddo
+    endif
 end subroutine
 
 !> @brief Evaluate pot.
@@ -200,14 +196,12 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     debug_notert = .false.
     !--- debug: input cartesians in Angstroms; otherwise in bohr
     debug = .false.
-
     !--- convert Cartesians from bohr to Angstrom
-    if(.not.debug) then
+    if( .not.debug )then
         x(:,:) = xx(:,:)*ang_bohr
     else
         x(:,:) = xx(:,:)
-    end if
-
+    endif
     !@01 Calculate internal coordinates
     !--- primary and secondary internals
     call calcqps(qps, x)
@@ -215,7 +209,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     call calcqtp(qtp, nqtp, itermqtptype, iqtplist, x)
     !--- nonredundant tertiary internals for diab. coupl.
     call calcqtc(qtc, nqtc, qtcsym, qtctyp, bmatqtc, x)
-
     uu  = 0d0
     guu = 0d0
     !@02 calculate prim.&sec. U elements and their grad. w.r.t. x
@@ -225,35 +218,29 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
     call calcu12_ps(uu, guu, x, qps)
     call calcu13_ps(uu, guu, x, qps)
     call calcu23_ps(uu, guu, x, qps)
-
     !@03 tertiary elements and their grad. w.r.t. x
-    if(.not.debug_notert) then
+    if( .not.debug_notert )then
         !--- calculate tertiary potential and its grad. w.r.t. x
         call calcuii_t(vt, gvt, x, qps, qtp, nqtp, itermqtptype, iqtplist)
         !=== {assuming tert. pot. are diabatic
         uu  = uu+vt
         guu = guu+gvt
         !=== }assuming tert. pot. are diabatic
-
         !--- calculate tert. diab. coupl.
         call calcuij_t(uu, guu, x, qps, qtc, nqtc, qtcsym, qtctyp, bmatqtc)
-
-    end if
-
+    endif
     !--- for dynamics the zero of energy is
     !--- setted as that of V1 at equilibrium by XQDPT
-    if(.not.debug) then
+    if( .not.debug )then
         uu = uu
     else
         do j = 1, 3
             uu(j,j) = uu(j,j) + ezero
-        end do
-    end if
-
+        enddo
+    endif
     !--- cc: eigenvectors
     call diagonalize(nstate, uu, vv, cc)
     !call diagonalize(vv, cc, uu, nstate)
-
     !--- get the nonadiabatic coupling elements
     dvec = 0d0
     do i = 1, 3
@@ -264,26 +251,23 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             !--- dV_i = (C^T*dU*C)_ii
             do ist = 1, nstate
                 gvv(i,j,ist) = tmpmat33(ist, ist)
-            end do
+            enddo
             !--- F_ij = (C^T*dU*C)_ij / (V_j-V_i)
             do ist = 1, nstate-1
                 do jst = ist+1, nstate
                     dvec(i,j,ist,jst) = tmpmat33(ist, jst)/(vv(jst)-vv(ist))
                     dvec(i,j,jst,ist) = -dvec(i,j,ist,jst)
-                end do
-            end do
-        end do
-    end do
-
+                enddo
+            enddo
+        enddo
+    enddo
     !--- convert gradients from Ang-1 to bohr-1
-    if(.not.debug) then
+    if( .not.debug )then
         guu  = guu*ang_bohr
         gvv  = gvv*ang_bohr
         dvec = dvec*ang_bohr
-    end if
-
+    endif
     contains
-
     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     !      Calculate primary & secondary diabatic potential
     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -304,9 +288,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !--- instead, use the "special" coordinate phi
         !@@@ using new definition for primary torsion
         qps(2) = 0.5*(abs(evalsp1(x, 2, 1, 6, 7, 13))+ abs(evalsp1(x, 3, 4, 5, 7, 13)))
-
     end subroutine calcqps
-
     !=================================================================
     ! *def calu1_ps
     !    Calculate prim.+sec. U1 and its grad. w.r.t. Cartesians.
@@ -331,33 +313,27 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         b(1:6)  = (/2.526, 0.9756, 0.0, 3.061, 0.0, 8.456/)
         d(0:6)  = (/3.797, 0.7851, 2.581, 0.0, 1.034, 0.0, 0.2404/)
         ra(1:6) = (/1.651, 1.132, 0.0, 1.022, 0.0, 1.11/)
-
-        r = qps(1); phi = qps(2)
-
+        r       = qps(1); phi = qps(2)
         !--- U11
         uu(1,1) = d(0)-d(1)*(1+b(1)*(r-ra(1)))*exp(-b(1)*(r-ra(1)))
         do n = 1, 3
             uu(1,1) = uu(1,1)-d(2*n)*exp(-b(2*n)*(r-ra(2*n))**2)*cos(2*n*phi)
-        end do
-
+        enddo
         !--- (d U11)/(d R)
         gradu1(1) = 0d0
         gradu1(1) = b(1)**2*d(1)*exp(-b(1)*(r-ra(1)))*(r-ra(1))
         do n = 1, 3
             gradu1(1) = gradu1(1)+2*b(2*n)*d(2*n)*(r-ra(2*n)) *exp(-b(2*n)*(r-ra(2*n))**2)*cos(2*n*phi)
-        end do
-
+        enddo
         !--- (d U11)/(d phi)
         gradu1(2) = 0d0
         do n = 1, 3
             gradu1(2) = gradu1(2)+2*n*d(2*n)*exp(-b(2*n)*(r-ra(2*n))**2)*sin(2*n*phi)
-        end do
-
+        enddo
         !convert eV to Hartree
         uu(1,1)   = uu(1,1)*ev_hartree
         gradu1(1) = gradu1(1)*ev_hartree
         gradu1(2) = gradu1(2)*ev_hartree
-
         !--- use B matrix to convert dU1/dq to dU1/dx
         iatomlist(1:4) = (/7, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
@@ -366,11 +342,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !>>> modify case(6) of calcbmat
         iatomlist(1:5) = (/2, 1, 6, 7, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
-        bmat(2,:) = bmatrow(:)
-
+        bmat(2,:)    = bmatrow(:)
         guu(:,:,1,1) = guu(:,:,1,1)+reshape(matmul(gradu1, bmat), (/3, natom/))
     end subroutine calcu1_ps
-
     !=================================================================
     ! *def calu2_ps
     !    Calculate prim.+sec. U2 and its grad. w.r.t. Cartesians.
@@ -395,33 +369,27 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         b(1:4)  = (/3.034, 8.449, 0.0, 6.72/)
         d(0:4)  = (/4.724, 1.628, 0.1262, 0.0, -0.09122/)
         ra(1:4) = (/1.309, 1.307, 0.0, 2.148/)
-
-        r = qps(1); phi = qps(2)
-
+        r       = qps(1); phi = qps(2)
         !--- U22
         uu(2,2) = d(0)+d(1)*(1-exp(-b(1)*(r-ra(1))))**2
         do n = 1, 2
             uu(2,2) = uu(2,2)-d(2*n)*exp(-b(2*n)*(r-ra(2*n))**2)*cos(2*n*phi)
-        end do
-
+        enddo
         !--- (d U22)/(d R)
         gradu2(1) = 0d0
         gradu2(1) = 2*b(1)*d(1)*exp(-b(1)*(r-ra(1)))*(1-exp(-b(1)*(r-ra(1))))
         do n = 1, 2
             gradu2(1) = gradu2(1)+2*b(2*n)*d(2*n)*(r-ra(2*n)) *exp(-b(2*n)*(r-ra(2*n))**2)*cos(2*n*phi)
-        end do
-
+        enddo
         !--- (d U22)/(d phi)
         gradu2(2) = 0d0
         do n = 1, 2
             gradu2(2) = gradu2(2)+2*n*d(2*n)*exp(-b(2*n)*(r-ra(2*n))**2)*sin(2*n*phi)
-        end do
-
+        enddo
         !convert eV to Hartree
         uu(2,2)   = uu(2,2)*ev_hartree
         gradu2(1) = gradu2(1)*ev_hartree
         gradu2(2) = gradu2(2)*ev_hartree
-
         !--- use B matrix to convert dU2/dq to dU2/dx
         iatomlist(1:4) = (/7, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
@@ -430,12 +398,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !>>> modify case(6) of calcbmat
         iatomlist(1:5) = (/2, 1, 6, 7, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
-        bmat(2,:) = bmatrow(:)
-
+        bmat(2,:)    = bmatrow(:)
         guu(:,:,2,2) = guu(:,:,2,2)+reshape(matmul(gradu2, bmat), (/3, natom/))
-
     end subroutine calcu2_ps
-
     !=================================================================
     ! *def calu3_ps
     !    Calculate prim.+sec. U3 and its grad. w.r.t. Cartesians.
@@ -460,33 +425,27 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         b(1:6)  = (/3.087, 0.9997, 0.0, 2.641, 0.0, 4.85/)
         d(0:6)  = (/3.537, 1.713, -2.544, 0.0, -0.9263, 0.0, -0.3608/)
         ra(1:6) = (/1.366, 1.066, 0.0, 1.045, 0.0, 0.913/)
-
-        r = qps(1); phi = qps(2)
-
+        r       = qps(1); phi = qps(2)
         !--- U33
         uu(3,3) = d(0)-d(1)*(1+b(1)*(r-ra(1)))*exp(-b(1)*(r-ra(1)))
         do n = 1, 3
             uu(3,3) = uu(3,3)-d(2*n)*exp(-b(2*n)*(r-ra(2*n))**2)*cos(2*n*phi)
-        end do
-
+        enddo
         !--- (d U33)/(d R)
         gradu3(1) = 0d0
         gradu3(1) = b(1)**2*d(1)*exp(-b(1)*(r-ra(1)))*(r-ra(1))
         do n = 1, 3
             gradu3(1) = gradu3(1)+2*b(2*n)*d(2*n)*(r-ra(2*n)) *exp(-b(2*n)*(r-ra(2*n))**2)*cos(2*n*phi)
-        end do
-
+        enddo
         !--- (d U33)/(d phi)
         gradu3(2) = 0d0
         do n = 1, 3
             gradu3(2) = gradu3(2)+2*n*d(2*n)*exp(-b(2*n)*(r-ra(2*n))**2)*sin(2*n*phi)
-        end do
-
+        enddo
         !convert eV to Hartree
         uu(3,3)   = uu(3,3)*ev_hartree
         gradu3(1) = gradu3(1)*ev_hartree
         gradu3(2) = gradu3(2)*ev_hartree
-
         !--- use B matrix to convert dU3/dq to dU3/dx
         iatomlist(1:4) = (/7, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
@@ -495,12 +454,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !>>> modify case(6) of calcbmat
         iatomlist(1:5) = (/2, 1, 6, 7, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
-        bmat(2,:) = bmatrow(:)
-
+        bmat(2,:)    = bmatrow(:)
         guu(:,:,3,3) = guu(:,:,3,3)+reshape(matmul(gradu3, bmat), (/3, natom/))
-
     end subroutine calcu3_ps
-
     !=================================================================
     ! *def calu12_ps
     !    Calculate prim.+sec. U12 and its grad. w.r.t. Cartesians.
@@ -525,32 +481,26 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         b(1:2)  = (/1.825, 12.01/)
         d(1:2)  = (/0.4797, -0.3624/)
         ra(1:2) = (/2.032, 1.854/)
-
-        r = qps(1); phi = qps(2)
-
+        r       = qps(1); phi = qps(2)
         !--- U12
         do n = 1, 2
             uu(1,2) = uu(1,2)+d(n)*exp(-b(n)*(r-ra(n))**2)*(sin(2*phi))**2
-        end do
-
+        enddo
         !--- (d U12)/(d R)
         gradu12(1) = 0d0
         do n = 1, 2
             gradu12(1) = gradu12(1)-2*b(n)*d(n)*(r-ra(n)) *exp(-b(n)*(r-ra(n))**2)*(sin(2*phi))**2
-        end do
-
+        enddo
         !--- (d U12)/(d phi)
         gradu12(2) = 0d0
         do n = 1, 2
             gradu12(2) = gradu12(2)+4*d(n)*exp(-b(n)*(r-ra(n))**2) *sin(2*phi)*cos(2*phi)
-        end do
-
+        enddo
         !convert eV to Hartree
         uu(1,2)    = uu(1,2)*ev_hartree
         uu(2,1)    = uu(1,2)
         gradu12(1) = gradu12(1)*ev_hartree
         gradu12(2) = gradu12(2)*ev_hartree
-
         !--- use B matrix to convert dU12/dq to dU12/dx
         iatomlist(1:4) = (/7, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
@@ -559,13 +509,10 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !>>> modify case(6) of calcbmat
         iatomlist(1:5) = (/2, 1, 6, 7, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
-        bmat(2,:) = bmatrow(:)
-
+        bmat(2,:)    = bmatrow(:)
         guu(:,:,1,2) = guu(:,:,1,2)+reshape(matmul(gradu12, bmat), (/3, natom/))
         guu(:,:,2,1) = guu(:,:,1,2)
-
     end subroutine calcu12_ps
-
     !=================================================================
     ! *def calu13_ps
     !    Calculate prim.+sec. U13 and its grad. w.r.t. Cartesians.
@@ -590,33 +537,27 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         b(2:6)  = (/0.8257, 0.0, 2.01, 0.0, 6.049/)
         d(2:6)  = (/2.554, 0.0, 1.126, 0.0, 0.2316 /)
         ra(2:6) = (/0.615, 0.0, 0.7497, 0.0, 0.9754/)
-
-        r = qps(1); phi = qps(2)
-
+        r       = qps(1); phi = qps(2)
         !--- U13
         do n = 1, 3
             uu(1,3) = uu(1,3)+d(2*n)*r*exp(-b(2*n)*(r-ra(2*n))**2)*sin(2*n*phi)
-        end do
-
+        enddo
         !--- (d U13)/(d R)
         gradu13(1) = 0d0
         do n = 1, 3
             gradu13(1) = gradu13(1)+(d(2*n)*exp(-b(2*n)*(r-ra(2*n))**2)-2*b(2*n) *d(2*n)*r*(r-ra(2*n))*exp(-b(2*n)*(r- &
                 & ra(2*n))**2)) *sin(2*n*phi)
-        end do
-
+        enddo
         !--- (d U13)/(d phi)
         gradu13(2) = 0d0
         do n = 1, 3
             gradu13(2) = gradu13(2)+2*n*d(2*n)*r*exp(-b(2*n)*(r-ra(2*n))**2) *cos(2*n*phi)
-        end do
-
+        enddo
         !convert eV to Hartree
         uu(1,3)    = uu(1,3)*ev_hartree
         uu(3,1)    = uu(1,3)
         gradu13(1) = gradu13(1)*ev_hartree
         gradu13(2) = gradu13(2)*ev_hartree
-
         !--- use B matrix to convert dU13/dq to dU13/dx
         iatomlist(1:4) = (/7, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
@@ -625,13 +566,10 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !>>> modify case(6) of calcbmat
         iatomlist(1:5) = (/2, 1, 6, 7, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
-        bmat(2,:) = bmatrow(:)
-
+        bmat(2,:)    = bmatrow(:)
         guu(:,:,1,3) = guu(:,:,1,3)+reshape(matmul(gradu13, bmat), (/3, natom/))
         guu(:,:,3,1) = guu(:,:,1,3)
-
     end subroutine calcu13_ps
-
     !=================================================================
     ! *def calu23_ps
     !    Calculate prim.+sec. U23 and its grad. w.r.t. Cartesians.
@@ -656,34 +594,28 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         b(0:4)  = (/2.575, 0.0, 4.073, 0.0, 19.18/)
         d(0:4)  = (/0.05761, 0.0, -0.3011, 0.0, -0.1517/)
         ra(0:4) = (/1.44, 0.0, 2.784, 0.0, 2.172/)
-
-        r = qps(1); phi = qps(2)
-
+        r       = qps(1); phi = qps(2)
         !--- U23
         do n = 0, 2
             uu(2,3) = uu(2,3)+d(2*n)*exp(-b(2*n)*(r-ra(2*n))**2)*sin(2**n*phi)
-        end do
-
+        enddo
         !--- 2018.08.27-modify an error in derivative
         !--- (d U23)/(d R)
         gradu23(1) = 0d0
         do n = 0, 2
             gradu23(1) = gradu23(1)-2*b(2*n)*d(2*n)*(r-ra(2*n)) *exp(-b(2*n)*(r-ra(2*n))**2) *sin(2**n*phi)
-        end do
-
+        enddo
         !--- 2018.08.27-modify an error in derivative
         !--- (d U23)/(d phi)
         gradu23(2) = 0d0
         do n = 0, 2
             gradu23(2) = gradu23(2)+2**n*d(2*n)*exp(-b(2*n)*(r-ra(2*n))**2) *cos(2**n*phi)
-        end do
-
+        enddo
         !convert eV to Hartree
         uu(2,3)    = uu(2,3)*ev_hartree
         uu(3,2)    = uu(2,3)
         gradu23(1) = gradu23(1)*ev_hartree
         gradu23(2) = gradu23(2)*ev_hartree
-
         !--- use B matrix to convert dU23/dq to dU23/dx
         iatomlist(1:4) = (/7, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
@@ -692,13 +624,10 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !>>> modify case(6) of calcbmat
         iatomlist(1:5) = (/2, 1, 6, 7, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
-        bmat(2,:) = bmatrow(:)
-
+        bmat(2,:)    = bmatrow(:)
         guu(:,:,2,3) = guu(:,:,2,3)+reshape(matmul(gradu23, bmat), (/3, natom/))
         guu(:,:,3,2) = guu(:,:,2,3)
-
     end subroutine calcu23_ps
-
     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     !             Calculate tertiary diabatic potential
     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -731,10 +660,8 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         do i = 1, nstate
             call uii_t(vt, gvt, x, qps, qtp, nterm, itypeqtp, &
                 iqtplist, i)
-        end do
-
+        enddo
     end subroutine calcuii_t
-
     !--- Actual core routine for calcuii_t
     !--- Parameters have the same meaning as in calcuii_t
     !> @brief Evaluate uii_t.
@@ -801,7 +728,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                 & - 0.0019861529/)
         end select
         !energy(:)=0d0
-
         !--- loop over anchor points
         do iap = 1, nap
             ntermap = nterm(iqtpset(iap))
@@ -820,18 +746,17 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                 call calcbmat(bmatrow, x, iatomlist, &
                     itypeqtp(iterm,iset))
                 bmat(iterm,:) = bmatrow(:)
-            end do
+            enddo
             !--- use B matrix to convert to grad. w.r.t. Cartesians
             gradc(:,:,iap) = reshape(matmul(gg, bmat), (/3, natom/))
             deallocate(bmat, gg)
-        end do
+        enddo
         !--- calculate tent func. and dtent/dR
         r = qps(1)
         do iap = 1, nap
             call calctent1(tent(iap), dtent(iap), r, r0, &
                 iap-1, iap, iap+1, nap)
-        end do
-
+        enddo
         energy(0) = 0d0; gradc(:,:,0) = 0d0; dtent(0) = 0d0
         do iap = 1, nap
             !--- interpolate anchor point values using tent func.
@@ -839,17 +764,15 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             gradc(:,:,0) = gradc(:,:,0)+gradc(:,:,iap)*tent(iap)
             !--- interpolate dtent/dR to get dV/dR
             dtent(0) = dtent(0)+dtent(iap)*energy(iap)
-        end do
+        enddo
         !--- use B matrix to convert dV/dR to dV/dx
         iatomlist(1:4) = (/7, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
         gradc(:,:,0) = gradc(:,:,0)+reshape(dtent(0)*bmatrow, (/3, natom/))
-
         !--- collect results and convert energy unit to eV
         vt(istate,istate)      = energy(0)
         gvt(:,:,istate,istate) = gradc(:,:,0)
     end subroutine uii_t
-
     !=================================================================
     ! *def calcFFterm
     !    Calculate one FF term and its gradient.
@@ -888,7 +811,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             gg = k*(q-q0)
         end select
     end subroutine calcffterm
-
     !=================================================================
     ! *def assignqtp
     !    Assign attributes of internal coordinates for tertiary potentials
@@ -918,8 +840,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         itypeqtp(13:30,2) = 2
         itypeqtp(31:54,2) = 3
         itypeqtp(55:60,2) = 5
-
-        iqtplist = 0
+        iqtplist          = 0
         !--- first set (for short R)
         !--- BEGIN generated by 'python gen_qtp.py v1_ap1.txt'
         iqtplist(1:2, 1, 1)  = (/ 1, 2/)
@@ -984,7 +905,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         iqtplist(1:4, 60, 1) = (/ 3, 5, 10, 4/)
         iqtplist(1:4, 61, 1) = (/ 4, 6, 11, 5/)
         !--- END generated by 'python gen_qtp.py v1_ap1.txt'
-
         !--- second set (for long R)
         !--- BEGIN generated by 'python gen_qtp.py v1_ap4.txt'
         iqtplist(1:2, 1, 2)  = (/ 1, 2/)
@@ -1049,7 +969,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         iqtplist(1:4, 60, 2) = (/ 4, 6, 11, 5/)
         !--- END generated by 'python gen_qtp.py v1_ap4.txt'
     end subroutine assignqtp
-
     !=================================================================
     ! *def calcqtp
     !    Calculate tertiary internal coordinates as defined
@@ -1071,7 +990,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         integer :: iterm, iset, ii, jj, kk, ll
         !--- assign attributes of tert. int. for potentials
         call assignqtp(nterm, itypeqtp, iqtplist)
-
         do iset = 1, nqtpset
             do iterm = 1, nterm(iset)
                 ii = iqtplist(1, iterm, iset)
@@ -1092,11 +1010,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                 case(5)
                     qtp(iterm,iset) = evalod(x, ii, jj, kk, ll)
                 end select
-            end do
-        end do
-
+            enddo
+        enddo
     end subroutine calcqtp
-
     !=================================================================
     ! *def assignparamuii_t
     !    Assign tertiary FF parameters to param. arrays
@@ -1303,7 +1219,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,1) = 3.538403e-05
             n ( 61,1) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 2)
             k (  1,2) =  2.326234e+00
@@ -1490,7 +1405,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,2) = 3.310474e-07
             n ( 61,2) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 3)
             k (  1,3) =  2.279548e+00
@@ -1677,7 +1591,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,3) = 1.812268e-05
             n ( 61,3) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 4)
             k (  1,4) =  2.231258e+00
@@ -1864,7 +1777,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,4) = 3.002728e-05
             n ( 61,4) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 5)
             k (  1,5) =  2.224225e+00
@@ -2051,7 +1963,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,5) = 1.847443e-06
             n ( 61,5) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 6)
             k (  1,6) =  1.030521e+00
@@ -2238,7 +2149,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,6) = 1.846245e-07
             n ( 61,6) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 1, anchor point 6)
             k (  1,7) =  2.091985e+00
@@ -2422,7 +2332,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 60,7) = 5.434899e-07
             n ( 60,7) =  0
             !--- END generated by 'gen_FFparam.py'
-
         case(2)
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 2, anchor point 1)
@@ -2610,7 +2519,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,1) = 6.254581e-05
             n ( 61,1) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 2, anchor point 2)
             k (  1,2) =  2.042088e+00
@@ -2797,7 +2705,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,2) = 1.870055e-06
             n ( 61,2) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 2, anchor point 3)
             k (  1,3) =  1.931324e+00
@@ -2984,7 +2891,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,3) = 1.773691e-05
             n ( 61,3) =  0
             !--- END generated by 'gen_FFparam.py'
-
         case(3)
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 1)
@@ -3172,7 +3078,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,1) = 2.176340e-05
             n ( 61,1) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 2)
             k (  1,2) =  2.281158e+00
@@ -3359,7 +3264,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,2) = 1.272600e-05
             n ( 61,2) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 3)
             k (  1,3) =  2.164063e+00
@@ -3546,7 +3450,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,3) = 1.254435e-05
             n ( 61,3) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 4)
             k (  1,4) =  2.130042e+00
@@ -3733,7 +3636,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,4) = 7.306042e-07
             n ( 61,4) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 5)
             k (  1,5) =  2.350003e+00
@@ -3920,7 +3822,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,5) = 3.699948e-06
             n ( 61,5) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 6)
             k (  1,6) =  2.041288e+00
@@ -4107,7 +4008,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             q0( 61,6) = 1.656789e-07
             n ( 61,6) =  0
             !--- END generated by 'gen_FFparam.py'
-
             !--- BEGIN generated by 'gen_FFparam.py'
             !--- (state 3, anchor point 7)
             k (  1,7) =  2.040746e+00
@@ -4292,9 +4192,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             n ( 60,7) =  0
             !--- END generated by 'gen_FFparam.py'
         end select
-
     end subroutine assignparamuii_t
-
     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     !             Calculate tertiary diabatic couplings
     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -4339,9 +4237,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         uu(2,3)      = uu(2,3)+uij; uu(3,2) = uu(2,3)
         guu(:,:,2,3) = guu(:,:,2,3)+duij(:,:)
         guu(:,:,3,2) = guu(:,:,2,3)
-
     end subroutine calcuij_t
-
     !--- Actual core routine of calcuij_t
     !--- Parameters have the same meaning as in calcuij_t
     !> @brief Evaluate uij_t.
@@ -4371,11 +4267,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         phi0(:) = phi0(:)/180d0*pi
         do iphi0 = 1, nphi0
             cos2phi0(iphi0) = -cos(2*phi0(iphi0))
-        end do
-
+        enddo
         !--- state-dependent params
         call assignparamuij_t(k, qtc0, nqtc, nk, nr0, nphi0, istate)
-
         ee = 0d0
         allocate(gg(nqtc), bmat(nqtc,3*natom))
         bmat(1:nqtc,:) = bmatqtc(1:nqtc, :)
@@ -4389,33 +4283,31 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                     call calctdcterm(e, g, &
                         k(:,ir0,iphi0,iqtc), nk, qtc0(iqtc), &
                         qtcv(iqtc)/pi*180d0, qtctyp(iqtc))
-                    if(iqtc.eq.13 .or. iqtc.eq.23 .or. iqtc.eq.27) then
+                    if( iqtc .eq. 13 .or. iqtc .eq. 23 .or. iqtc .eq. 27 )then
                         e = 0d0; g = 0d0
-                    end if
+                    endif
                     !--- Zero torsion and 90 deg. torsion are set to zero
-                    if (iphi0.eq.1 .or. iphi0.eq.nphi0) then
+                    if( iphi0 .eq. 1 .or. iphi0 .eq. nphi0 )then
                         e = 0d0; g = 0d0
-                    end if
-
+                    endif
                     e = e*ev_hartree
                     g = g*ev_hartree
-
                     !--- convert gg from deg^-1 to rad^-1
                     g             = g*180d0/pi
                     ee(ir0,iphi0) = ee(ir0,iphi0)+e
                     gg(iqtc)      = g
-                end do
+                enddo
                 !--- use B matrix to convert to grad. w.r.t. Cartesians
                 gradc(:,:,ir0,iphi0) = reshape(matmul(gg, bmat), (/3, natom/))
-            end do
-        end do
+            enddo
+        enddo
         deallocate(gg, bmat)
         !--- calculate tent func., sij,  and dtentR/dR & dtentphi/dphi
         !--- & dsij/dphi
         do ir0 = 1, nr0
             call calctent1(tentr(ir0), dtentr(ir0), r, r0, &
                 ir0-1, ir0, ir0+1, nr0)
-        end do
+        enddo
         do iphi0 = 1, nphi0
             call calctent1(tentphi(iphi0), dtentphi(iphi0), &
                 -cos(2*phi), cos2phi0, &
@@ -4423,15 +4315,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             !--- argument of tent func. is actually -cos(2*phi)
             !--- dtentphi/dphi = dtentphi/d-cos2phi * d-cos2phi/dphi
             dtentphi(iphi0) = dtentphi(iphi0)*(2*sin(2*phi))
-            if (istate.eq.12) then
+            if( istate .eq. 12 )then
                 sij(iphi0)  = 1d0
                 dsij(iphi0) = 0d0
             else
                 sij(iphi0)  = sign(1d0, sin(2*phi))
                 dsij(iphi0) = 0d0
-            end if
-        end do
-
+            endif
+        enddo
         uij       = 0d0; duij(:,:) = 0d0
         dtentr(0) = 0d0; dtentphi(0) = 0d0
         do ir0 = 1, nr0
@@ -4445,8 +4336,8 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                 dtentr(0) = dtentr(0) +ee(ir0,iphi0)*dtentr(ir0)*tentphi(iphi0) *sij(iphi0)
                 dtentphi(0) = dtentphi(0) +ee(ir0,iphi0)*tentr(ir0) *(dtentphi(iphi0)*sij(iphi0) +tentphi(iphi0)* &
                     & dsij(iphi0))
-            end do
-        end do
+            enddo
+        enddo
         !--- use B matrix to convert duij/dq to duij/dx
         iatomlist(1:4) = (/7, 13, 0, 0/)
         call calcbmat(bmatrow, x, iatomlist, 1)
@@ -4456,9 +4347,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         iatomlist(1:5) = (/2, 1, 6, 7, 13/)
         call calcbmat(bmatrow, x, iatomlist, 6)
         duij(:,:) = duij(:,:) +reshape(dtentphi(0)*bmatrow, (/3, natom/))
-
     end subroutine uij_t
-
     !=================================================================
     ! *def calcTDCterm
     !    Calculate tertiary diabatic coupling term and its grad.,
@@ -4490,8 +4379,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             do i = 1, nk
                 ee = ee+k(i)*dq**i
                 gg = gg+i*k(i)*dq**(i-1)
-            end do
-
+            enddo
             !--- damp the couplings at large dq
             cc   = 100d0
             expo = exp(-dq**2/cc**2)
@@ -4506,12 +4394,10 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             do i = 1, nk
                 ee = ee+k(i)*dq**i
                 gg = gg+i*k(i)*dq**(i-1)
-            end do
+            enddo
             gg = -gg*sin(qq)/180d0*pi
         end select
-
     end subroutine calctdcterm
-
     !=================================================================
     ! *def calcqtc
     !    Calculate nonredundant tert. int. coord. for diab. coupl.
@@ -4544,30 +4430,25 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !--- attributes of qtc,
         !---  esp. their relation to qnr
         call assignqtc(nqtc, qtcsym, qnrindex, qtctyp)
-
         !--- value of qtc
         !--- loop over qtc index
         do iqtc = 1, nqtc
             !--- corresponding qnr index
             iqnr = qnrindex(iqtc)
-
             !@WRONG
             !"QR has value 0 which is less than the lower bound of 1"
             !lcqr(1:nlcmax) = qr(lcindex(1:nlcmax,iqnr))
-
             !--- value of qr involved in qtc(i)
             lcqr(1:nlc(iqnr)) = qr(lcindex(1:nlc(iqnr),iqnr))
             !--- take lin.comb. of qr to get qtc
             qtc(iqtc) = dot_product(lccoef(:,iqnr), lcqr)
-        end do
-
+        enddo
         !--- B matrix for qr
         !--- loop over qr index
         do iqr = 1, nqr
             call calcbmat(bmatrow, x, iqrlist(:,iqr), itypeqr(iqr))
             bmatr(iqr, :) = bmatrow(:)
-        end do
-
+        enddo
         !--- B matrix for qtc from lin.comb. of bmatr
         bmatqtc = 0d0
         !--- loop over qtc
@@ -4578,11 +4459,9 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             do ilc = 1, nlc(iqnr)
                 !--- lin.comb. of bmatr rows
                 bmatqtc(iqtc, :) = bmatqtc(iqtc, :) +lccoef(ilc,iqnr)*bmatr(lcindex(ilc,iqnr), :)
-            end do
-        end do
-
+            enddo
+        enddo
     end subroutine calcqtc
-
     !=================================================================
     ! *def calcqr
     !    Calculate redundant q (qr) for later use of qtc
@@ -4602,7 +4481,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         integer          :: iterm, ii, jj, kk, ll
         !--- attributes of redundant q (qr)
         call assignqr(nqr, itypeqr, iqrlist)
-
         do iterm = 1, nqr
             ii = iqrlist(1,iterm)
             jj = iqrlist(2,iterm)
@@ -4622,9 +4500,8 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             case(4)
                 qr(iterm) = evalob(x, ii, jj, kk, ll)
             end select
-        end do
+        enddo
     end subroutine calcqr
-
     !=================================================================
     ! *def assignqr
     !    Assign attributes of redundant q (qr) for later use of qtc
@@ -4646,7 +4523,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         itypeqr(14:32) = 2
         itypeqr(33:39) = 3
         itypeqr(40:45) = 4
-
         !--- BEGIN generated by 'python gen_qr_forUij-t.py rdef0.txt'
         !--- bond length
         iqrlist(1:2,1)  = (/ 1, 2/)
@@ -4698,9 +4574,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         iqrlist(1:4,44) = (/11, 6, 4, 5/)
         iqrlist(1:4,45) = (/12, 1, 5, 6/)
         !--- END generated by 'python gen_qr_forUij-t.py rdef0.txt'
-
     end subroutine assignqr
-
     !=================================================================
     ! *def assignqnr
     !    Assign attributes of nonredund. q (qnr) for later use of qtc
@@ -4820,9 +4694,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         lcindex(1:nlc(33),33) = (/45/)
         lccoef (1:nlc(33),33) = (/ 1.00000/)
         !--- END generated by python gen_qnr_forUij-t.py intnred.txt
-
     end subroutine assignqnr
-
     !=================================================================
     ! *def assignqtc
     !    Assign attributes of internal coord. for tert. coupl. (qtc)
@@ -4847,7 +4719,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         !--- symm. of qtc at Cs geom. 1=a', 2=a"
         qtcsym(1:nqtc) = (/1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2/)
     end subroutine assignqtc
-
     !=================================================================
     ! *def assignparamuij_t
     !    Assign param. for tert. couplings
@@ -4882,7 +4753,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         qtc0(10) = 0.000000e+00
         qtc0(11) = 0.000000e+00
         !--- END generated by "python gen_uijparam.py u12-t_param.txt 2"
-
         !--- add the last AP
         k(:,3,:,:) = 0.000000e+00
         select case(istate)
@@ -5223,9 +5093,7 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             k(:,2,5,11) = (/-6.358518e-05, -5.136726e-06/)
             !--- END generated by "python gen_uijparam.py tert_k_para.txt"
         end select
-
     end subroutine assignparamuij_t
-
     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     !             Useful subroutines used before
     !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -5247,7 +5115,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         r(:)   = x(:,i)-x(:,j)
         evalbl = sqrt(dot_product(r, r))
     end function evalbl
-
     !=================================================================
     ! *def evalBA
     !    Get bond angle of atoms i ,j, k.
@@ -5267,15 +5134,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         ejk(:) = (x(:,k)-x(:,j))/evalbl(x, j, k)
         cosba  = dot_product(eji, ejk)
         !--- avoid numerical problem
-        if(cosba>1) then
+        if( cosba > 1 )then
             evalba = 0d0
-        else if(cosba<-1) then
+        else if( cosba < -1 )then
             evalba = pi
         else
             evalba = acos(cosba)
-        end if
+        endif
     end function evalba
-
     !=================================================================
     ! *def evalTO
     !    Get torsion of atoms i ,j, k, l.
@@ -5306,21 +5172,20 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         call xprod(cross1, eij, ejk)
         call xprod(cross2, ejk, ekl)
         call xprod(cross3, cross1, cross2)
-        if(dot_product(cross3, ejk)>0) then
+        if( dot_product(cross3, ejk) > 0 )then
             sign = 1
         else
             sign = -1
-        end if
+        endif
         !--- avoid numerical problem
-        if(costo>1) then
+        if( costo > 1 )then
             evalto = 0d0
-        else if(costo<-1) then
+        else if( costo < -1 )then
             evalto = pi
         else
             evalto = sign*acos(costo)
-        end if
+        endif
     end function evalto
-
     !=================================================================
     ! *def evalOB
     !    Get out-of-plane bend of atoms i ,j, k, l.
@@ -5344,15 +5209,14 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         call xprod(cross1, elj, elk)
         sinob = dot_product(cross1, eli)/sinjlk
         !--- avoid numerical problem
-        if(sinob>1) then
+        if( sinob > 1 )then
             evalob = pi/2
-        else if(sinob<-1) then
+        else if( sinob < -1 )then
             evalob = -pi/2
         else
             evalob = asin(sinob)
-        end if
+        endif
     end function evalob
-
     !=================================================================
     ! *def evalOD
     !    Get out-of-plane distance of atoms i ,j, k, l.
@@ -5375,7 +5239,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         sinjik = sin(evalba(x, j, i, k))
         evalod = abs(dot_product(ril, eijxeik)/sinjik)
     end function evalod
-
     !=================================================================
     ! *def evalSP1
     !    Get a special coordinate to replace torsion CCSH
@@ -5405,24 +5268,22 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         etmp(:) = e45(:)-ex(:)*dot_product(e45, ex)
         ep(:)   = etmp(:)/sqrt(dot_product(etmp, etmp))
         cossp1  = dot_product(ep, e13)
-
         !--- determine sign
         call xprod(etmp, e13, ep)
-        if(dot_product(etmp, ex)>0) then
+        if( dot_product(etmp, ex) > 0 )then
             sgn = 1
         else
             sgn = -1
-        end if
+        endif
         !--- avoid numerical problem
-        if(cossp1>1) then
+        if( cossp1 > 1 )then
             evalsp1 = 0d0
-        else if(cossp1<-1) then
+        else if( cossp1 < -1 )then
             evalsp1 = pi
         else
             evalsp1 = sgn*acos(cossp1)
-        end if
+        endif
     end function evalsp1
-
     !=================================================================
     ! *def xprod
     !    Cross product of two 3D vectors.
@@ -5439,7 +5300,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         axb(2) = a(3)*b(1)-a(1)*b(3)
         axb(3) = a(1)*b(2)-a(2)*b(1)
     end subroutine xprod
-
     !=================================================================
     ! *def calctent1
     !    Calculate tent func. and its grad. (for interpolating R)
@@ -5458,35 +5318,33 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         double precision :: t, dtdq, q, q0(:)
         integer          :: i, j, k, nq0
         !--- if j is the 1st anchor point
-        if(i.eq.0) then
-            if(q<q0(j)) then
+        if( i .eq. 0 )then
+            if( q < q0(j) )then
                 t = 1d0; dtdq = 0d0
-            else if(q>q0(k)) then
+            else if( q > q0(k) )then
                 t = 0d0; dtdq = 0d0
             else
                 call tent1(t, dtdq, q, q0(k), q0(j))
-            end if
+            endif
             !--- if j is the last anchor point
-        else if(k>nq0) then
-            if(q>q0(j)) then
+        else if( k > nq0 )then
+            if( q > q0(j) )then
                 t = 1d0; dtdq = 0d0
-            else if(q<q0(i)) then
+            else if( q < q0(i) )then
                 t = 0d0; dtdq = 0d0
             else
                 call tent1(t, dtdq, q, q0(i), q0(j))
-            end if
+            endif
         else
-            if(q<q0(i).or.q>q0(k)) then
+            if( q < q0(i).or.q > q0(k) )then
                 t = 0d0; dtdq = 0d0
-            else if(q<q0(j)) then
+            else if( q < q0(j) )then
                 call tent1(t, dtdq, q, q0(i), q0(j))
             else
                 call tent1(t, dtdq, q, q0(k), q0(j))
-            end if
-        end if
-
+            endif
+        endif
     end subroutine calctent1
-
     !--- called by calctent1
     !--- tent(q1) = 0, tent(q2) = 1
     !> @brief Evaluate tent1.
@@ -5499,7 +5357,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         t    = dq1**4/(dq1**4+dq2**4)
         dtdq = ( 4*dq1**3*(dq1**4+dq2**4)-4*dq1**4*(dq1**3+dq2**3) ) / (dq1**4+dq2**4)**2
     end subroutine tent1
-
     !> @brief Evaluate diagonalize.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
         implicit none
@@ -5512,18 +5369,17 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         integer, save                 :: lwork_d
         logical, save                 :: first_time_diag=.true.
         u_ss = a_ss
-        if (first_time_diag) then
+        if( first_time_diag )then
             lwork_d = -1
             allocate( work_d(2) )
             call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
             lwork_d = int(work_d(1))
             deallocate ( work_d )
             first_time_diag = .false.
-        end if
+        endif
         allocate( work_d(lwork_d) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
     end subroutine diagonalize
-
     !=================================================================
     ! *def calcbmat
     !    Calculate a row of B matrix for an internal coordinate.
@@ -5553,14 +5409,12 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         select case(inttype)
             !--- bond length; adapted from polyrate
         case(1)
-            i    = iatomlist(1)
-            j    = iatomlist(2)
-            rij1 = x(1,j)-x(1,i)
-            rij2 = x(2,j)-x(2,i)
-            rij3 = x(3,j)-x(3,i)
-
-            rij = evalbl(x, i, j)
-
+            i              = iatomlist(1)
+            j              = iatomlist(2)
+            rij1           = x(1,j)-x(1,i)
+            rij2           = x(2,j)-x(2,i)
+            rij3           = x(3,j)-x(3,i)
+            rij            = evalbl(x, i, j)
             bmatrow(3*i-2) = -rij1/rij
             bmatrow(3*i-1) = -rij2/rij
             bmatrow(3*i)   = -rij3/rij
@@ -5569,22 +5423,20 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             bmatrow(3*j)   = rij3/rij
             !--- bending; adapted from polyrate
         case(2)
-            i = iatomlist(1)
-            j = iatomlist(2)
-            k = iatomlist(3)
-
-            rij1 = x(1,j)-x(1,i)
-            rij2 = x(2,j)-x(2,i)
-            rij3 = x(3,j)-x(3,i)
-            rjk1 = x(1,k)-x(1,j)
-            rjk2 = x(2,k)-x(2,j)
-            rjk3 = x(3,k)-x(3,j)
-            rij  = evalbl(x, i, j)
-            rjk  = evalbl(x, j, k)
-            pijk = evalba(x, i, j, k)
-            cijk = cos(pijk)
-            sijk = sin(pijk)
-
+            i              = iatomlist(1)
+            j              = iatomlist(2)
+            k              = iatomlist(3)
+            rij1           = x(1,j)-x(1,i)
+            rij2           = x(2,j)-x(2,i)
+            rij3           = x(3,j)-x(3,i)
+            rjk1           = x(1,k)-x(1,j)
+            rjk2           = x(2,k)-x(2,j)
+            rjk3           = x(3,k)-x(3,j)
+            rij            = evalbl(x, i, j)
+            rjk            = evalbl(x, j, k)
+            pijk           = evalba(x, i, j, k)
+            cijk           = cos(pijk)
+            sijk           = sin(pijk)
             bmatrow(3*i-2) = (-cijk*rij1*rjk-rij*rjk1)/(sijk*rij**2*rjk)
             bmatrow(3*i-1) = (-cijk*rij2*rjk-rij*rjk2)/(sijk*rij**2*rjk)
             bmatrow(3*i)   = (-cijk*rij3*rjk-rij*rjk3)/(sijk*rij**2*rjk)
@@ -5594,14 +5446,12 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             bmatrow(3*k-2) = (rij1*rjk+cijk*rij*rjk1)/(sijk*rij*rjk**2)
             bmatrow(3*k-1) = (rij2*rjk+cijk*rij*rjk2)/(sijk*rij*rjk**2)
             bmatrow(3*k)   = (rij3*rjk+cijk*rij*rjk3)/(sijk*rij*rjk**2)
-
             !--- torsion; adpated from polyrate
         case(3)
-            i = iatomlist(1)
-            j = iatomlist(2)
-            k = iatomlist(3)
-            l = iatomlist(4)
-
+            i    = iatomlist(1)
+            j    = iatomlist(2)
+            k    = iatomlist(3)
+            l    = iatomlist(4)
             rij1 = x(1,j)-x(1,i)
             rij2 = x(2,j)-x(2,i)
             rij3 = x(3,j)-x(3,i)
@@ -5614,7 +5464,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             rij  = evalbl(x, i, j)
             rjk  = evalbl(x, j, k)
             rkl  = evalbl(x, k, l)
-
             pijk = evalba(x, i, j, k)
             cijk = cos(pijk)
             sijk = sin(pijk)
@@ -5661,7 +5510,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                 & rkl)- sijkl*rkl2/(cijkl*sjkl**2*rkl**2)
             bmatrow(3*l)=(-rij2*rjk1+rij1*rjk2)/ (cijkl*sijk*sjkl*rij*rjk*rkl)- cjkl*sijkl*rjk3/(cijkl*sjkl**2*rjk* &
                 & rkl)- sijkl*rkl3/(cijkl*sjkl**2*rkl**2)
-
             !--- out-of-plane bend
         case(4)
             i      = iatomlist(1)
@@ -5690,7 +5538,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             oopb  = asin(dot_product(tmpv, e41)/s243)
             coopb = cos(oopb)
             toopb = tan(oopb)
-
             call xprod(tmpv, e42, e43)
             bmv1           = (tmpv/coopb/s243-toopb*e41)/r41
             bmatrow(3*i-2) = bmv1(1)
@@ -5710,7 +5557,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             bmatrow(3*l-2) = bmv4(1)
             bmatrow(3*l-1) = bmv4(2)
             bmatrow(3*l)   = bmv4(3)
-
             !--- out-of-plane distance (aka pyramid height)
         case(5)
             i      = iatomlist(1)
@@ -5733,27 +5579,21 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             theta  = evalba(x, j, i, k)
             call xprod(tmpv2, e12, e13)
             rtmp = dot_product(v14, tmpv2)
-
             call xprod(tmpv, e13, v14)
             tmpv3(:) = (cos(theta)*e12(:)-e13(:))/r12/sin(theta)
             bmv2     = (tmpv-rtmp*e12)/sin(theta)/r12 - cos(theta)*rtmp/sin(theta)**2*tmpv3
-
             call xprod(tmpv, v14, e12)
             tmpv3(:) = (cos(theta)*e13(:)-e12(:))/r13/sin(theta)
             bmv3     = (tmpv-rtmp*e13)/sin(theta)/r13 - cos(theta)*rtmp/sin(theta)**2*tmpv3
-
             call xprod(tmpv, e12, e13)
             bmv4 = tmpv/sin(theta)
-
             bmv1 = -bmv2-bmv3-bmv4
-
-            if(rtmp/sin(theta)<0) then
+            if( rtmp/sin(theta) < 0 )then
                 bmv1 = -bmv1
                 bmv2 = -bmv2
                 bmv3 = -bmv3
                 bmv4 = -bmv4
-            end if
-
+            endif
             bmatrow(3*i-2) = bmv1(1)
             bmatrow(3*i-1) = bmv1(2)
             bmatrow(3*i)   = bmv1(3)
@@ -5766,7 +5606,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             bmatrow(3*l-2) = bmv4(1)
             bmatrow(3*l-1) = bmv4(2)
             bmatrow(3*l)   = bmv4(3)
-
             !--- special coordinate replacing torsion CCSH
             !--- numerical gradient
         case(6)
@@ -5777,7 +5616,6 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
             l            = iatomlist(4)
             m            = iatomlist(5)
             nn_iatomlist = [i, j, k, l, m, 3, 4, 5, 7, 13]
-
             !--- loop over atoms
             do ii = 1, 10
                 iii = nn_iatomlist(ii)
@@ -5789,8 +5627,8 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                     xtmp(jj, iii)       = x(jj,iii)-step
                     coord2              = 0.5*(abs(evalsp1(xtmp, i, j, k, l, m)) +abs(evalsp1(xtmp, 3, 4, 5, 7, 13)))
                     bmatrow(3*iii-3+jj) = (coord1-coord2)/step/2
-                end do
-            end do
+                enddo
+            enddo
             !--- special coordinate replacing torsion CCSH
             !--- numerical gradient
         case(7)
@@ -5811,9 +5649,8 @@ subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
                     xtmp(jj, iii)       = x(jj,iii)-step
                     coord2              = evalsp1(xtmp, i, j, k, l, m)
                     bmatrow(3*iii-3+jj) = (coord1-coord2)/step/2
-                end do
-            end do
+                enddo
+            enddo
         end select
     end subroutine calcbmat
-
 end subroutine pot

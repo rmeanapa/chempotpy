@@ -41,23 +41,20 @@ subroutine pes( x, igrad, path, p, g, d )
     integer                         :: iatom, jatom, idir, j, istate
     !initialize
     v = 0.d0; g = 0.d0; d = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             coord(idir,iatom) = x(iatom,idir)
-        end do
-    end do
-
+        enddo
+    enddo
     j = 0
     do iatom=1, natoms
         do jatom=iatom+1, natoms
             j = j+1
             r(j)=sqrt((coord(1,iatom)-coord(1,jatom))**2 + + (coord(2,iatom)-coord(2,jatom))**2 + + (coord(3,iatom)- &
                 & coord(3,jatom))**2)
-        end do
-    end do
-
-    if (igrad==0) then
+        enddo
+    enddo
+    if( igrad == 0 )then
         call pes_init(path)
         call n2chopipnn(r, v, va, vb, vc)
         deallocate(nodes)
@@ -75,14 +72,12 @@ subroutine pes( x, igrad, path, p, g, d )
         deallocate(pavgc)
     else
         write (*, *) 'Only energy is available'
-    end if
+    endif
     do istate=1, nstates
         p(istate) = v
-    end do
-
+    enddo
     g = 0.d0
     d = 0.d0
-
 end subroutine
 
 !> @brief Evaluate distance.
@@ -93,9 +88,8 @@ double precision function distance( a, b )
     distance = 0.d0
     do i=1, 3
         distance = distance+(a(i)-b(i))**2
-    end do
+    enddo
     distance = dsqrt(distance)
-
 end
 
 !> @brief Evaluate N2CHOpipNN.
@@ -107,20 +101,16 @@ subroutine n2chopipnn( rb, vpes, vpesa, vpesb, vpesc )
     integer          :: i, j, k, lpes
     double precision :: rb(ndim), xbond(ndim), basis(0:nbasis), tmp1, txinput(nbasis)
     double precision :: vpes, vpesa, vpesb, vpesc, vpesh, vnn
-    basis = 0.d0
-
+    basis    = 0.d0
     xbond(:) = dexp(-rb(:)/alpha)
-
     call bemsav21113(xbond, basis)
     do j=1, nbasis
         txinput(j) = basis(j)
-    end do
-
+    enddo
     call getpota(txinput, vpesa)
     call getpotb(txinput, vpesb)
     call getpotc(txinput, vpesc)
     vpes = (vpesa+vpesb+vpesc)/3d0
-
 end subroutine n2chopipnn
 
 !-->  read NN weights and biases from matlab output
@@ -144,7 +134,6 @@ subroutine pes_init( path )
     character(len=1024)             :: file_path5, file_path6
     file_path1 = trim(path)//"/N2HOCp/weights.txt-1"
     file_path2 = trim(path)//"/N2HOCp/biases.txt-1"
-
     open(newunit=file_unit_4, file=file_path2, status='old')
     nfile = 7
     open(nfile, file=file_path1)
@@ -158,7 +147,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weighta(nodemax,nodemax,2:nlayer), biasa(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
     !-->....ifunc hence controls the type of transfer function used for
@@ -177,21 +166,18 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weighta(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasa(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     close(file_unit_4);close(nfile)
-
     file_path3 = trim(path)//"/N2HOCp/weights.txt-2"
     file_path4 = trim(path)//"/N2HOCp/biases.txt-2"
     open(newunit=file_unit_4, file=file_path4, status='old')
@@ -207,7 +193,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightb(nodemax,nodemax,2:nlayer), biasb(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
     !-->....ifunc hence controls the type of transfer function used for
@@ -226,21 +212,18 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weightb(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasb(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
-
+    endif
     close(file_unit_4);close(nfile)
-
     file_path5 = trim(path)//"/N2HOCp/weights.txt-3"
     file_path6 = trim(path)//"/N2HOCp/biases.txt-3"
     open(newunit=file_unit_4, file=file_path6, status='old')
@@ -256,7 +239,7 @@ subroutine pes_init( path )
     nodemax = 0
     do i=1, nlayer
         nodemax = max(nodemax, nodes(i))
-    end do
+    enddo
     allocate(weightc(nodemax,nodemax,2:nlayer), biasc(nodemax,2:nlayer))
     read(nfile, *)ifunc, nwe
     !-->....ifunc hence controls the type of transfer function used for
@@ -275,21 +258,19 @@ subroutine pes_init( path )
             do inode2=1, nodes(ilay2) !
                 read(nfile, *)weightc(inode2,inode1,ilay1)
                 iwe = iwe+1
-            end do
+            enddo
             read(file_unit_4, *)biasc(inode1,ilay1)
             iwe = iwe+1
-        end do
-    end do
-
-    if (iwe.ne.nwe) then
+        enddo
+    enddo
+    if( iwe .ne. nwe )then
         write(*, *)'provided number of parameters ', nwe
         write(*, *)'actual number of parameters ', iwe
         write(*, *)'nwe not equal to iwe, check input files or code'
         stop
-    end if
+    endif
     close(nfile)
     close(file_unit_4)
-
 end
 
 !> @brief Evaluate tranfun.
@@ -297,13 +278,13 @@ function tranfun( x, ifunc )
     implicit none
     integer          :: ifunc
     double precision :: tranfun, x
-    if (ifunc.eq.1) then
+    if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if (ifunc.eq.2) then
+    else if( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+dexp(-x))
-    else if (ifunc.eq.3) then
+    else if( ifunc .eq. 3 )then
         tranfun = x
-    end if
+    endif
 end
 
 !-->!-->!-->!-->!-->!-->!-->!-->!-->!-->subroutine to accelerate~~~~~~
@@ -319,8 +300,7 @@ subroutine getpot( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavga(i))/pdela(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -328,11 +308,10 @@ subroutine getpot( x, vpot )
             y(inode1,ilay1) = biasa(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weighta(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -340,14 +319,12 @@ subroutine getpot( x, vpot )
         y(inode1,ilay1) = biasa(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weighta(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
-
 end subroutine getpot
 
 !> @brief Evaluate emsav21113.
@@ -400,7 +377,6 @@ subroutine evmono21113( x, m )
     m(19) = m(8)*m(9)
     m(20) = m(5)*m(17)
     m(21) = m(4)*m(18)
-
 end subroutine evmono21113
 
 !> @brief Evaluate evpoly21113.
@@ -576,7 +552,6 @@ subroutine evpoly21113( m, p )
     p(165) = p(5)*p(39)-p(132)
     p(166) = p(6)*p(40)-p(146)
     p(167) = p(7)*p(41)
-
 end subroutine evpoly21113
 
 !> @brief Evaluate getpota.
@@ -591,8 +566,7 @@ subroutine getpota( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavga(i))/pdela(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -600,11 +574,10 @@ subroutine getpota( x, vpot )
             y(inode1,ilay1) = biasa(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weighta(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -612,14 +585,12 @@ subroutine getpota( x, vpot )
         y(inode1,ilay1) = biasa(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weighta(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
-
 end subroutine getpota
 
 !> @brief Evaluate getpotb.
@@ -634,8 +605,7 @@ subroutine getpotb( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgb(i))/pdelb(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -643,11 +613,10 @@ subroutine getpotb( x, vpot )
             y(inode1,ilay1) = biasb(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weightb(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -655,14 +624,12 @@ subroutine getpotb( x, vpot )
         y(inode1,ilay1) = biasb(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weightb(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelb(nscale)+pavgb(nscale)
-
 end subroutine getpotb
 
 !> @brief Evaluate getpotc.
@@ -677,8 +644,7 @@ subroutine getpotc( x, vpot )
     !-->....set up the normalized input layer
     do i=1, ninput
         y(i,1) = (x(i)-pavgc(i))/pdelc(i)
-    end do
-
+    enddo
     !-->....evaluate the hidden layer
     do ilay1=2, nlayer-1
         ilay2 = ilay1-1
@@ -686,11 +652,10 @@ subroutine getpotc( x, vpot )
             y(inode1,ilay1) = biasc(inode1,ilay1)
             do inode2=1, nodes(ilay2)
                 y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weightc(inode2,inode1,ilay1)
-            end do
+            enddo
             y(inode1,ilay1) = tranfun(y(inode1,ilay1), ifunc)
-        end do
-    end do
-
+        enddo
+    enddo
     !-->....now evaluate the output
     ilay1 = nlayer
     ilay2 = ilay1-1
@@ -698,12 +663,10 @@ subroutine getpotc( x, vpot )
         y(inode1,ilay1) = biasc(inode1,ilay1)
         do inode2=1, nodes(ilay2)
             y(inode1,ilay1) = y(inode1,ilay1)+y(inode2,ilay2)*weightc(inode2,inode1,ilay1)
-        end do
+        enddo
         !-->....the transfer function is linear y=x for output layer
         !-->....so no operation is needed here
-    end do
-
+    enddo
     !-->....the value of output layer is the fitted potntial
     vpot = y(nodes(nlayer),nlayer)*pdelc(nscale)+pavgc(nscale)
-
 end subroutine getpotc

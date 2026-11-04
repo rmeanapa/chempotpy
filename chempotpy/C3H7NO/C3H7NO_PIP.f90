@@ -7,7 +7,6 @@ module pes_shell
     ! (size of c in bemsa.f90)
     save coeff
     contains
-
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)
         implicit none
@@ -18,9 +17,7 @@ module pes_shell
         double precision, dimension(0:8039)::p
         call bemsav(x, p)
         v = dot_product(p, c)
-
     end function emsav
-
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         implicit none
@@ -30,9 +27,7 @@ module pes_shell
         double precision, dimension(0:5402)::m
         call evmono(x, m)
         call evpoly(m, p)
-
     end subroutine bemsav
-
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
         implicit none
@@ -5442,9 +5437,7 @@ module pes_shell
         m(5400) = m(61)*m(594)
         m(5401) = m(62)*m(594)
         m(5402) = m(64)*m(594)
-
     end subroutine evmono
-
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
         implicit none
@@ -13735,9 +13728,7 @@ module pes_shell
         p(8037) = p(28)*p(566) - p(7862)
         p(8038) = p(29)*p(567) - p(7930)
         p(8039) = p(30)*p(568) - p(8009)
-
     end subroutine evpoly
-
     !> @brief Evaluate demsav.
     function demsav( drdx, c, m, p, flag ) result(grad)
         implicit none
@@ -13751,9 +13742,7 @@ module pes_shell
         double precision, dimension(0:8039)::dp
         call dbemsav(drdx, dp, m, p, flag)
         grad = dot_product(dp, c)
-
     end function demsav
-
     !> @brief Evaluate dbemsav.
     subroutine dbemsav( drdx, dp, m, p, flag )
         implicit none
@@ -13766,9 +13755,7 @@ module pes_shell
         double precision, dimension(0:5402)::dm
         call devmono(drdx, dm, m, flag)
         call devpoly(dm, p, dp)
-
     end subroutine dbemsav
-
     !> @brief Evaluate devmono.
     subroutine devmono( drdx, dm, m, flag )
         implicit none
@@ -13778,8 +13765,7 @@ module pes_shell
         integer :: flag
         !::::::::::::::::::::
         double precision :: a
-        a = 2.d0
-
+        a        = 2.d0
         dm(0)    = 0.0d0
         dm(1)    = -m(1)/a*drdx(flag, 66)
         dm(2)    = -m(2)/a*drdx(flag, 65)
@@ -19183,9 +19169,7 @@ module pes_shell
         dm(5400) = dm(61)*m(594) + m(61)*dm(594)
         dm(5401) = dm(62)*m(594) + m(62)*dm(594)
         dm(5402) = dm(64)*m(594) + m(64)*dm(594)
-
     end subroutine devmono
-
     !> @brief Evaluate devpoly.
     subroutine devpoly( dm, p, dp )
         implicit none
@@ -27490,9 +27474,7 @@ module pes_shell
         dp(8037) = dp(28)*p(566) + p(28)*dp(566) - dp(7862)
         dp(8038) = dp(29)*p(567) + p(29)*dp(567) - dp(7930)
         dp(8039) = dp(30)*p(568) + p(30)*dp(568) - dp(8009)
-
     end subroutine devpoly
-
     !==================================!
     ! read the coefficients of the PES !
     !==================================!
@@ -27503,17 +27485,13 @@ module pes_shell
         integer                         :: i
         character(len=1024), intent(in) :: path
         character(len=1024)             :: file_path1
-
         file_path1 = trim(path)//"/C3H7NO/coeff.dat"
-
         open(newunit=file_unit_10, file=file_path1, status='old')
-
         do i=1, size(coeff)
             read(file_unit_10, *) coeff(i)
-        end do
+        enddo
         close(file_unit_10)
     end subroutine pes_init
-
     !====================================!
     ! Function to evaluate the potential !
     !====================================!
@@ -27526,26 +27504,20 @@ module pes_shell
         double precision, dimension(3)                               :: dr
         double precision                                             :: a0  ! the same as the fitting code
         integer                                                      :: i, j, k
-
         a0 = 2.d0
-
-        k = 1
+        k  = 1
         do i=1, size(xyz, 2)-1
             do j=i+1, size(xyz, 2)
                 dr   = xyz(:, i) - xyz(:, j)
                 x(k) = sqrt(dot_product(dr, dr))
                 k    = k+1
-            end do
-        end do
-
+            enddo
+        enddo
         do i=1, size(x)
             x(i) = exp(-x(i)/a0)
-        end do
-
+        enddo
         f = emsav(x, coeff)
-
     end function f
-
     !===========================!
     ! function to calculate the !
     ! analytical gradient       !
@@ -27564,35 +27536,27 @@ module pes_shell
         ! (size of m in bemsa.f90
         double precision :: a0
         integer          :: i, j, k
-
-        a0 = 2.d0
-
+        a0   = 2.d0
         k    = 1
         drdx = 0.d0
         do i=1, size(xyz, 2)-1
             do j=i+1, size(xyz, 2)
-                dr(:, k) = xyz(:, i) - xyz(:, j)
-                r(k)     = sqrt(dot_product(dr(:, k), dr(:, k)))
-
+                dr(:, k)           = xyz(:, i) - xyz(:, j)
+                r(k)               = sqrt(dot_product(dr(:, k), dr(:, k)))
                 drdx(3*i-2:3*i, k) = dr(:, k)/r(k)
                 drdx(3*j-2:3*j, k) = -drdx(3*i-2:3*i, k)
                 k                  = k+1
-            end do
-        end do
-
+            enddo
+        enddo
         do i=1, size(x)
             x(i) = exp(-r(i)/a0)
-        end do
-
+        enddo
         call evmono(x, m)
         call evpoly(m, p)
-
         do i=1, 3*size(xyz, 2)
             g(i) = demsav(drdx, coeff, m, p, i)
-        end do
-
+        enddo
     end function g
-
 end module pes_shell
 
 !> @brief Evaluate pes.
@@ -27616,38 +27580,35 @@ subroutine pes( x, igrad, path, potential, gradient_out, dvec )
     integer                         :: iatom, idir, j, istate
     !initialize
     energy = 0.d0; gradient_out = 0.d0; dvec = 0.d0
-
     do iatom=1, natoms
         do idir=1, 3
             tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
-        end do
-    end do
-
+        enddo
+    enddo
     ! zero of energy: 247.471007349006 a.u.
     ! is taken from coeff.dat, use the biase as zero of energy
-    if (igrad==0) then
+    if( igrad == 0 )then
         call pes_init(path)
         energy = f(tx)
         do istate=1, nstates
             potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
-        end do
-    else if (igrad==1) then
+        enddo
+    else if( igrad == 1 )then
         call pes_init(path)
         energy = f(tx)
         do istate=1, nstates
             potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
-        end do
+        enddo
         grad = g(tx)
         do istate=1, nstates
             do iatom=1, natoms
                 do idir=1, 3
                     j                               = (iatom-1)*3+idir
                     gradient_out(istate,iatom,idir) = grad(j)*51.422067
-                end do
-            end do
-        end do
+                enddo
+            enddo
+        enddo
     else
         write (*, *) 'Only energy and gradient are available'
-    end if
-
+    endif
 end subroutine
