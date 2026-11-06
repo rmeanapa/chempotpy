@@ -279,10 +279,10 @@ structural formatter used during migration.
   out-of-bounds storage. Positional aliases in the OH3 shared layouts are also
   represented by named local entities rather than memory association.
 
-The migration utilities are retained under `scripts/`: the fixed-form converter,
-compiler-assisted explicit-type inserter, structural formatter, module API
-privatizer, and import normalizer can be rerun and are covered by the style and
-compilation gates.
+The one-off source transformers used for the catalog conversion were removed
+after validation. The maintained `scripts/` surface is limited to build,
+formatting, audit, fixture-capture, cleanup, and regression tooling; the style
+and compilation gates enforce the resulting source contract directly.
 
 ## Numerical preservation record
 

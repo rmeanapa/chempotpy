@@ -1,25 +1,21 @@
-"""Tests for labeled-format and redundant-return modernization."""
+"""Tests for the maintained modern Fortran formatter."""
 
 import unittest
 
 from scripts.format_fortran import format_source_text
-from scripts.inline_fortran_formats import convert_source
 
 
 class FortranFormatMigrationTests(unittest.TestCase):
-    def test_format_is_moved_into_write_statement(self) -> None:
+    def test_redundant_terminal_return_is_removed(self) -> None:
         source = """\
 subroutine report( value )
     implicit none
     double precision :: value
-    write(6, 100) value
-100 format('value = ', f12.6)
+    value = value+1.d0
     return
 end subroutine report
 """
-        converted = format_source_text(convert_source(source).text)
-        self.assertIn("write(6, '(''value = '', f12.6)') value", converted)
-        self.assertNotRegex(converted.lower(), r"\bformat\s*\(")
+        converted = format_source_text(source)
         self.assertNotRegex(
             converted.lower(), r"\breturn\s*\n\s*end subroutine"
         )
