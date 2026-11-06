@@ -77,10 +77,10 @@ module chempotpy_aln_er2s_pes
         a3  = 0.129970688812896917
         au2 = 0.143243771372740580
         bu2 = 6.50000000000000000/autoang
-        do 3 i=1, natom
+        do i=1, natom
             r(i,i)   = 0.d0
             fu2(i,i) = 1.d0
-            do 3 j=i+1, natom
+            do j=i+1, natom
                 dx       = x(i)-x(j)
                 dy       = y(i)-y(j)
                 dz       = z(i)-z(j)
@@ -88,40 +88,41 @@ module chempotpy_aln_er2s_pes
                 r(j,i)   = r(i,j)
                 fu2(j,i) = 1.d0
                 fu2(i,j) = 1.d0
-        3 continue
+            3 enddo
+        enddo
         xk1  = 2.14338055691255480
         xk2  = 0.456033219345383489
         xk3  = 2.50512945774303875
         au23 = 0.439912066438690741e-01
         ! do BA term, needs xk1,xk2,xk3
-        do 10 i=1, natom                          ! alpha loop
-            do 15 j=i+1, natom                      ! beta loop
+        do i=1, natom! alpha loop
+            do j=i+1, natom! beta loop
                 s = 0.d0
-                do 12 l=1, natom                      ! gamma loop
-                    if( l .eq. j.or.l .eq. i ) go to 12! gamma != alpha or beta
+                do l=1, natom! gamma loop
+                    if( l .eq. j.or.l .eq. i ) cycle! gamma != alpha or beta
                     rjl = r(l,j)
                     rij = r(i,j)
                     ril = r(l,i)
-                    if( rjl .ge. bu2 ) go to 12! cutoff for Rbeta,delta
-                    if( rij .ge. bu2 ) go to 12! cutoff for Rbeta,delta
-                    if( ril .ge. bu2 ) go to 12! cutoff for Rbeta,delta
+                    if( rjl .ge. bu2 ) cycle! cutoff for Rbeta,delta
+                    if( rij .ge. bu2 ) cycle! cutoff for Rbeta,delta
+                    if( ril .ge. bu2 ) cycle! cutoff for Rbeta,delta
                     ac   = au23*(1d0-1d0/(1d0-rjl/bu2))       ! cutoff for Rbeta,delta
                     ac   = ac+au23*(1d0-1d0/(1d0-rij/bu2))    ! cutoff for Rbeta,delta
                     ac   = ac+au23*(1d0-1d0/(1d0-ril/bu2))    ! cutoff for Rbeta,delta
                     term = xk1*dexp(-xk2*((ril+rjl)/rij)**xk3+ac)        ! cutoff ti
                     s    = s+term                         ! sum
-                12 continue
+                12 enddo
                 !        e2=dexp(-2d0*s)                       ! equivalent to 1-dtanh(s)
                 !        fu2(i,j)=2d0*e2/(1d0+e2)              ! equivalent to 1-dtanh(s)
                 fu2(i,j) = 1.d0-dtanh(s)
                 fu2(j,i) = fu2(i,j)
-            15 continue
+            15 enddo
             fu2(i,i) = 1.d0                           ! shouldn't get used anywh
-        10 continue
+        10 enddo
         ! potential, includes cutoff
         v = 0.d0
-        do 1 i=1, natom
-            do 1 j=i+1, natom
+        do i=1, natom
+            do j=i+1, natom
                 dx   = x(i)-x(j)
                 dy   = y(i)-y(j)
                 dz   = z(i)-z(j)
@@ -132,7 +133,8 @@ module chempotpy_aln_er2s_pes
                 co   = 0.d0
                 if( rr .le. bu2 ) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
                 v = v-de*ee*poly*co*fu2(i,j)
-        1 continue
+            1 enddo
+        enddo
     end subroutine pot
 end module chempotpy_aln_er2s_pes
 

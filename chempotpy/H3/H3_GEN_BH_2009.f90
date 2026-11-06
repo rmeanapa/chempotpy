@@ -932,9 +932,9 @@ subroutine indexa2( mbig, mtop, iind, jind, kind, ipar, maxi, maxi2 )
     integer                :: l, l2, i, j, k, isum
     l  = 0
     l2 = 0
-    do 10 i=0, min(mtop, mbig)
-        do 20 j=0, min(mtop, mbig)
-            do 30 k=j, min(mtop, mbig)
+    do i=0, min(mtop, mbig)
+        do j=0, min(mtop, mbig)
+            do k=j, min(mtop, mbig)
                 isum = i+j+k
                 if( isum .le. mbig )then
                     if(((isum-i).gt.0).and.((isum-j).gt.0).and.&
@@ -954,9 +954,9 @@ subroutine indexa2( mbig, mtop, iind, jind, kind, ipar, maxi, maxi2 )
                     endif
                 endif
                 endif
-            30 continue
-        20 continue
-    10 continue
+            30 enddo
+        20 enddo
+    10 enddo
     maxi  = l2
     maxi2 = l
 end

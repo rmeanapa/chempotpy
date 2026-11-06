@@ -364,305 +364,291 @@ module chempotpy_oh2_gen_sl1979_pes
             !         ENDIF
             !
             ic = 4
-            if( pt1cm_r(1) .gt. 30.d0 ) ic=1
-            if( pt1cm_r(2) .gt. 30.d0 ) ic=1
-            !
-            86 go to (84, 82, 83, 81), ic
-            !
-            81 soh=pt1cm_r(1)
-            sr2 = pt1cm_r(2)
-            go to 85
-            !
-            82 sr2=pt1cm_r(2)+ndercm_step
-            soh = pt1cm_r(1)
-            go to 85
-            !
-            83 sr2=pt1cm_r(2)
-            soh = pt1cm_r(1)+ndercm_step
-            go to 85
-            !
-            84 sr2=pt1cm_r(2)
-            soh        = pt1cm_r(1)
-            pt1cm_r(3) = pt1cm_r(3) + ndercm_step
-            !
-            85 sr2=sr2*0.529177d0
-            soh        = soh*0.529177d0
-            pt1cm_r(3) = pt1cm_r(3)*0.529177d0
-            pt1cm_r(1) = soh
-            pt1cm_r(2) = sr2
-            !
-            q = 1.0d0
-            !
-            do 10 i=1, 3
-                precm_x(i)   = pt1cm_r(i)
-                precm_chi(i) = (1.0d0 - exp(-precm_alf*precm_x(i)**2))
-                precm_s(i)   = precm_x(i)-1.d0
-                precm_vm(i)  = satocm_de(i)*(1.0d0-exp(-satocm_bet(i)*(precm_x(i)-satocm_xre(i))))**2-satocm_de(i)
-                q            = q*(1.0d0-tanh(precm_al(i)*precm_s(i)))
-            10 continue
-            !
-            u = precm_vm(1)*precm_chi(2)*precm_chi(3)+precm_vm(2)*precm_chi(1)*precm_chi(3) + precm_vm(3)* &
-                & precm_chi(1)*precm_chi(2)
-            !
-            bp = precm_b*(1.0d0/precm_x(1)**4+1.0d0/precm_x(3)**4)
-            !
-            check = (precm_x(1)*precm_x(3)*(precm_x(2)-0.2d0))
-            !
-            if( check .gt. 1000.d0 ) ap = 0.0d0
-            if( check .gt. 1000.d0 ) go to 112
-            !
-            ap = precm_a/(precm_x(1)*precm_x(3)*(precm_x(2)-0.2d0))**12
-            !
-            112 u = u + ap + bp
-            !
-            t = precm_c(1) + precm_c(2)*(precm_s(1)+precm_s(3)) + precm_c(3)*precm_s(2) + precm_c(4)*(precm_s(1)**2 + &
-                & precm_s(3)**2) + precm_c(5)*precm_s(2)**2 + precm_c(6)*precm_s(2)*(precm_s(1) + precm_s(3)) + &
-                & precm_c(7)* precm_s(1)*precm_s(3) + precm_c(8)*(precm_s(1)**3 + precm_s(3)**3) + precm_c(9)* &
-                & precm_s(2)**3 + precm_c(10)*precm_s(1)*precm_s(3)*(precm_s(1) + precm_s(3))
-            !
-            tt = precm_c(11)*precm_s(2)**2*(precm_s(1) + precm_s(3)) + precm_c(12)*precm_s(2)*(precm_s(1)**2 + &
-                & precm_s(3)**2) + precm_c(13)*precm_s(1)*precm_s(2)*precm_s(3) + precm_c(14)*(precm_s(1)**4 + &
-                & precm_s(3)** 4) + precm_c(15)*precm_s(2)**4 + precm_c(16)*(precm_s(1)**3*precm_s(3) + precm_s(1)* &
-                & precm_s(3)**3)
-            !
-            ww = precm_c(17)*precm_s(1)**2*precm_s(3)**2 + precm_c(18)*precm_s(2)*(precm_s(1)**3 + precm_s(3)**3) + &
-                & precm_c(19)*precm_s(2)**2*(precm_s(1)**2 + precm_s(3)**2) + precm_c(20)*precm_s(2)**3* (precm_s(1) + &
-                & precm_s(3)) + precm_c(21)*precm_s(2)**2*precm_s(1)*precm_s(3) + precm_c(22)*precm_s(2)*(precm_s(1)** &
-                & 2*precm_s(3) + precm_s(1)*precm_s(3)**2)
-            !
-            w = precm_c(23)*(precm_s(1)**5 + precm_s(3)**5) + precm_c(24)*(precm_s(1)**4*precm_s(3) + precm_s(1)* &
-                & precm_s(3)**4) + precm_c(25)*(precm_s(1)**3*precm_s(3)**2 + precm_s(1)**2*precm_s(3)**3) + &
-                & precm_c(26)*precm_s(2)*(precm_s(1)**4 + precm_s(3)**4) + precm_c(27)*precm_s(2)*(precm_s(1)**3* &
-                & precm_s(3) + precm_s(1)*precm_s(3)**3)
-            !
-            gg = precm_c(28)*precm_s(2)*precm_s(1)**2*precm_s(3)**2 + precm_c(29)*precm_s(2)**2*(precm_s(1)**3 + &
-                & precm_s(3)**3) + precm_c(30)*precm_s(2)**2*(precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)** 2) + &
-                & precm_c(31)*precm_s(2)**3*(precm_s(1)**2 + precm_s(3)**2)
-            !
-            y = precm_c(32)*precm_s(2)**3*precm_s(1)*precm_s(3) + precm_c(33)*precm_s(2)**4*(precm_s(1) + &
-                & precm_s(3)) + precm_c(34)*precm_s(2)**5 + precm_c(35)*(precm_s(1)**6 + precm_s(3)**6) + precm_c(36)* &
-                & (precm_s(1)**5*precm_s(3) + precm_s(1)*precm_s(3)**5) + precm_c(37)*(precm_s(1)**4*precm_s(3)**2 + &
-                & precm_s(1)**2*precm_s(3)**4) + precm_c(38)*precm_s(1)**3*precm_s(3)**3
-            !
-            z = precm_c(39)*precm_s(2)*(precm_s(1)**5 + precm_s(3)**5) + precm_c(40)*precm_s(2)*(precm_s(1)**4* &
-                & precm_s(3) + precm_s(1)*precm_s(3)**4) + precm_c(41)*precm_s(2)*(precm_s(1)**3*precm_s(3)**2 + &
-                & precm_s(1)** 2*precm_s(3)**3) + precm_c(42)*precm_s(2)**2*(precm_s(1)**4 + precm_s(3)**4) + &
-                & precm_c(43)*precm_s(2)**2*(precm_s(1)**3*precm_s(3) + precm_s(1)*precm_s(3)**3) + precm_c(44)* &
-                & precm_s(1)**2* precm_s(2)**2*precm_s(3)**2
-            !
-            zz = precm_c(45)*precm_s(2)**3*(precm_s(1)**3 + precm_s(3)**3) + precm_c(46)*precm_s(2)**3*(precm_s(1)**2* &
-                & precm_s(3) + precm_s(1)*precm_s(3)**2) + precm_c(47)*precm_s(2)**4*(precm_s(1)**2 + precm_s(3)**2) + &
-                & precm_c(48)*precm_s(2)**4*precm_s(1)*precm_s(3) + precm_c(49)*precm_s(2)**5*(precm_s(1) + &
-                & precm_s(3)) + precm_c(50)*precm_s(2)**6
-            !
-            p = t + tt + ww + w + gg + y + z + zz
-            !
-            temp = exp(-precm_gam*(precm_x(1) + precm_x(3))**2)
-            !
-            u = u + p*q*exp(-precm_gam*(precm_x(1) + precm_x(3))**2)
-            !
-            xter        = u + pt3cm_ezero(1)
-            precm_v(ic) = xter/hart
-            !
-            if( ic .lt. 4 ) go to 97
-            if( pt1cm_r(1) .gt. 30.d0 ) go to 77
-            if( pt1cm_r(2) .lt. 30.d0 ) go to 66
-            !
-            77 continue
-            if( usricm_nder .eq. 1 )then
-                pt1cm_degsdr(1) = (precm_v(3) - precm_v(4))/ndercm_step
-                pt1cm_degsdr(2) = (precm_v(2) - precm_v(4))/ndercm_step
-                pt1cm_degsdr(3) = (precm_v(1) - precm_v(4))/ndercm_step
-            endif
-            !
-            98 if(pt1cm_r(2).lt.20)go to 97
-            !
-            precm_v(4) = precm_v(4)*1.0d8
-            precm_v(4) = int(precm_v(4))
-            precm_v(4) = precm_v(4)*1.0d-8
-            !
-            97 ic=ic+1
-            !
-            if( ic .lt. 5 ) go to 86
-            !
+            if( pt1cm_r(1) > 30.0d0 .or. pt1cm_r(2) > 30.0d0 ) ic = 1
+            evaluation_loop: do
+                select case( ic )
+                case( 1 )
+                    sr2        = pt1cm_r(2)
+                    soh        = pt1cm_r(1)
+                    pt1cm_r(3) = pt1cm_r(3)+ndercm_step
+                case( 2 )
+                    sr2 = pt1cm_r(2)+ndercm_step
+                    soh = pt1cm_r(1)
+                case( 3 )
+                    sr2 = pt1cm_r(2)
+                    soh = pt1cm_r(1)+ndercm_step
+                case( 4 )
+                    soh = pt1cm_r(1)
+                    sr2 = pt1cm_r(2)
+                case default
+                    error stop 'OH2 SL: invalid finite-difference state'
+                end select
+                sr2        = sr2*bohr
+                soh        = soh*bohr
+                pt1cm_r(3) = pt1cm_r(3)*bohr
+                pt1cm_r(1) = soh
+                pt1cm_r(2) = sr2
+                !
+                q = 1.0d0
+                !
+                do i=1, 3
+                    precm_x(i)   = pt1cm_r(i)
+                    precm_chi(i) = (1.0d0 - exp(-precm_alf*precm_x(i)**2))
+                    precm_s(i)   = precm_x(i)-1.d0
+                    precm_vm(i)  = satocm_de(i)*(1.0d0-exp(-satocm_bet(i)*(precm_x(i)-satocm_xre(i))))**2-satocm_de(i)
+                    q            = q*(1.0d0-tanh(precm_al(i)*precm_s(i)))
+                10 enddo
+                !
+                u = precm_vm(1)*precm_chi(2)*precm_chi(3)+precm_vm(2)*precm_chi(1)*precm_chi(3) + precm_vm(3)* &
+                    & precm_chi(1)*precm_chi(2)
+                !
+                bp = precm_b*(1.0d0/precm_x(1)**4+1.0d0/precm_x(3)**4)
+                !
+                check = (precm_x(1)*precm_x(3)*(precm_x(2)-0.2d0))
+                !
+                if( check > 1000.0d0 )then
+                    ap = 0.0d0
+                else
+                    ap = precm_a/(precm_x(1)*precm_x(3)*(precm_x(2)-0.2d0))**12
+                endif
+                u = u+ap+bp
+                !
+                t = precm_c(1) + precm_c(2)*(precm_s(1)+precm_s(3)) + precm_c(3)*precm_s(2) + precm_c(4)*(precm_s(1)** &
+                    & 2 + precm_s(3)**2) + precm_c(5)*precm_s(2)**2 + precm_c(6)*precm_s(2)*(precm_s(1) + &
+                    & precm_s(3)) + precm_c(7)* precm_s(1)*precm_s(3) + precm_c(8)*(precm_s(1)**3 + precm_s(3)**3) + &
+                    & precm_c(9)* precm_s(2)**3 + precm_c(10)*precm_s(1)*precm_s(3)*(precm_s(1) + precm_s(3))
+                !
+                tt = precm_c(11)*precm_s(2)**2*(precm_s(1) + precm_s(3)) + precm_c(12)*precm_s(2)*(precm_s(1)**2 + &
+                    & precm_s(3)**2) + precm_c(13)*precm_s(1)*precm_s(2)*precm_s(3) + precm_c(14)*(precm_s(1)**4 + &
+                    & precm_s(3)** 4) + precm_c(15)*precm_s(2)**4 + precm_c(16)*(precm_s(1)**3*precm_s(3) + &
+                    & precm_s(1)* precm_s(3)**3)
+                !
+                ww = precm_c(17)*precm_s(1)**2*precm_s(3)**2 + precm_c(18)*precm_s(2)*(precm_s(1)**3 + precm_s(3)** &
+                    & 3) + precm_c(19)*precm_s(2)**2*(precm_s(1)**2 + precm_s(3)**2) + precm_c(20)*precm_s(2)**3* &
+                    & (precm_s(1) + precm_s(3)) + precm_c(21)*precm_s(2)**2*precm_s(1)*precm_s(3) + precm_c(22)* &
+                    & precm_s(2)*(precm_s(1)** 2*precm_s(3) + precm_s(1)*precm_s(3)**2)
+                !
+                w = precm_c(23)*(precm_s(1)**5 + precm_s(3)**5) + precm_c(24)*(precm_s(1)**4*precm_s(3) + precm_s(1)* &
+                    & precm_s(3)**4) + precm_c(25)*(precm_s(1)**3*precm_s(3)**2 + precm_s(1)**2*precm_s(3)**3) + &
+                    & precm_c(26)*precm_s(2)*(precm_s(1)**4 + precm_s(3)**4) + precm_c(27)*precm_s(2)*(precm_s(1)**3* &
+                    & precm_s(3) + precm_s(1)*precm_s(3)**3)
+                !
+                gg = precm_c(28)*precm_s(2)*precm_s(1)**2*precm_s(3)**2 + precm_c(29)*precm_s(2)**2*(precm_s(1)**3 + &
+                    & precm_s(3)**3) + precm_c(30)*precm_s(2)**2*(precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)** &
+                    & 2) + precm_c(31)*precm_s(2)**3*(precm_s(1)**2 + precm_s(3)**2)
+                !
+                y = precm_c(32)*precm_s(2)**3*precm_s(1)*precm_s(3) + precm_c(33)*precm_s(2)**4*(precm_s(1) + &
+                    & precm_s(3)) + precm_c(34)*precm_s(2)**5 + precm_c(35)*(precm_s(1)**6 + precm_s(3)**6) + &
+                    & precm_c(36)* (precm_s(1)**5*precm_s(3) + precm_s(1)*precm_s(3)**5) + precm_c(37)*(precm_s(1)**4* &
+                    & precm_s(3)**2 + precm_s(1)**2*precm_s(3)**4) + precm_c(38)*precm_s(1)**3*precm_s(3)**3
+                !
+                z = precm_c(39)*precm_s(2)*(precm_s(1)**5 + precm_s(3)**5) + precm_c(40)*precm_s(2)*(precm_s(1)**4* &
+                    & precm_s(3) + precm_s(1)*precm_s(3)**4) + precm_c(41)*precm_s(2)*(precm_s(1)**3*precm_s(3)**2 + &
+                    & precm_s(1)** 2*precm_s(3)**3) + precm_c(42)*precm_s(2)**2*(precm_s(1)**4 + precm_s(3)**4) + &
+                    & precm_c(43)*precm_s(2)**2*(precm_s(1)**3*precm_s(3) + precm_s(1)*precm_s(3)**3) + precm_c(44)* &
+                    & precm_s(1)**2* precm_s(2)**2*precm_s(3)**2
+                !
+                zz = precm_c(45)*precm_s(2)**3*(precm_s(1)**3 + precm_s(3)**3) + precm_c(46)*precm_s(2)**3* &
+                    & (precm_s(1)**2* precm_s(3) + precm_s(1)*precm_s(3)**2) + precm_c(47)*precm_s(2)**4*(precm_s(1)** &
+                    & 2 + precm_s(3)**2) + precm_c(48)*precm_s(2)**4*precm_s(1)*precm_s(3) + precm_c(49)*precm_s(2)** &
+                    & 5*(precm_s(1) + precm_s(3)) + precm_c(50)*precm_s(2)**6
+                !
+                p = t + tt + ww + w + gg + y + z + zz
+                !
+                temp = exp(-precm_gam*(precm_x(1) + precm_x(3))**2)
+                !
+                u = u + p*q*exp(-precm_gam*(precm_x(1) + precm_x(3))**2)
+                !
+                xter        = u + pt3cm_ezero(1)
+                precm_v(ic) = xter/hart
+                !
+                if( ic < 4 )then
+                    ic = ic+1
+                    cycle evaluation_loop
+                endif
+                if( pt1cm_r(1) > 30.0d0 .or. pt1cm_r(2) >= 30.0d0 )then
+                    if( usricm_nder == 1 )then
+                        pt1cm_degsdr(1) = (precm_v(3)-precm_v(4))/ndercm_step
+                        pt1cm_degsdr(2) = (precm_v(2)-precm_v(4))/ndercm_step
+                        pt1cm_degsdr(3) = (precm_v(1)-precm_v(4))/ndercm_step
+                    endif
+                else
+                    ! Analytic derivatives in the interaction region.
+                    if( usricm_nder .eq. 1 )then
+                        !
+                        da = precm_c(2) + 2.0d0*precm_s(1)*precm_c(4) + precm_s(2)*precm_c(6) + precm_s(3)* &
+                            & precm_c(7) + 3.0d0* precm_s(1)**2*precm_c(8) + (precm_s(3)**2 + 2.0d0*precm_s(1)* &
+                            & precm_s(3))*precm_c(10) + precm_s(2)**2*precm_c(11) + 2.0d0*precm_s(1)*precm_s(2)* &
+                            & precm_c(12) + precm_s(2)*precm_s(3)* precm_c(13) + 4.0d0*precm_s(1)**3*precm_c(14)
+                        !
+                        db = (3.0d0*precm_s(1)**2*precm_s(3) + precm_s(3)**3)*precm_c(16) + 2.0d0*precm_s(1)* &
+                            & precm_s(3)**2* precm_c(17) + 3.0d0*precm_s(1)**2*precm_s(2)*precm_c(18) + 2.0d0* &
+                            & precm_s(1)* precm_s(2)**2* precm_c(19) + precm_s(2)**3*precm_c(20) + precm_s(2)**2* &
+                            & precm_s(3)*precm_c(21) + (2.0d0* precm_s(1)*precm_s(2)*precm_s(3) + precm_s(2)* &
+                            & precm_s(3)**2)*precm_c(22)
+                        !
+                        dc = 5.0d0*precm_s(1)**4*precm_c(23) + (4.0d0*precm_s(1)**3*precm_s(3) + precm_s(3)**4)* &
+                            & precm_c(24) + (3.0d0*precm_s(1)**2*precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(3)** 3)* &
+                            & precm_c(25) + 4.0d0* precm_s(1)**3*precm_s(2)*precm_c(26) + (3.0d0*precm_s(2)* &
+                            & precm_s(1)**2*precm_s(3) + precm_s(2)* precm_s(3)**3)*precm_c(27)
+                        !
+                        dd = 2.0d0*precm_s(1)*precm_s(2)*precm_s(3)**2*precm_c(28) + 3.0d0*precm_s(1)**2*precm_s(2)** &
+                            & 2* precm_c(29) + (2.0d0*precm_s(1)*precm_s(2)**2*precm_s(3) + precm_s(2)**2*precm_s(3)** &
+                            & 2)* precm_c(30) + 2.0d0*precm_s(1)*precm_s(2)**3*precm_c(31) + precm_s(2)**3*precm_s(3)* &
+                            & precm_c(32) + precm_s(2)**4*precm_c(33) + 6.0d0*precm_s(1)**5*precm_c(35) + (5.0d0* &
+                            & precm_s(1)** 4*precm_s(3) + precm_s(3)**5)*precm_c(36)
+                        !
+                        df = (4.0d0*precm_s(1)**3*precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(3)**4)*precm_c(37) + 3.0d0* &
+                            & precm_s(1)**2*precm_s(3)**3*precm_c(38) + 5.0d0*precm_s(1)**4*precm_s(2)* precm_c(39) + &
+                            & (4.0d0* precm_s(2)*precm_s(1)**3*precm_s(3) + precm_s(2)*precm_s(3)**4)*precm_c(40) + &
+                            & (3.0d0* precm_s(1)**2*precm_s(2)*precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(2)* &
+                            & precm_s(3)**3)* precm_c(41) + 4.0d0*precm_s(1)**3*precm_s(2)**2*precm_c(42)
+                        !
+                        dg = (3.0d0*precm_s(1)**2*precm_s(2)**2*precm_s(3) + precm_s(2)**2*precm_s(3)**3)* &
+                            & precm_c(43) + 2.0d0* precm_s(1)*precm_s(2)**2*precm_s(3)**2*precm_c(44) + 3.0d0* &
+                            & precm_s(1)**2* precm_s(2)**3* precm_c(45) + (2.0d0*precm_s(1)*precm_s(2)**3*precm_s(3) + &
+                            & precm_s(2)**3*precm_s(3)**2)* precm_c(46) + 2.0d0*precm_s(1)*precm_s(2)**4*precm_c(47) + &
+                            & precm_s(2)**4* precm_s(3)* precm_c(48) + precm_s(2)**5*precm_c(49)
+                        !
+                        d1d = da + db + dc + dd + df + dg
+                        !
+                        da2 = precm_c(3) + 2.0d0*precm_s(2)*precm_c(5) + (precm_s(1) + precm_s(3))*precm_c(6) + 3.0d0* &
+                            & precm_s(2)**2*precm_c(9) + 2.0d0*precm_s(2)*(precm_s(1) + precm_s(3))*precm_c(11) + &
+                            & (precm_s(1)**2 + precm_s(3)**2)*precm_c(12) + precm_s(1)*precm_s(3)*precm_c(13) + 4.0d0* &
+                            & precm_s(2)**3*precm_c(15) + (precm_s(1)**3 + precm_s(3)**3)*precm_c(18) + 2.0d0* &
+                            & precm_s(2)* (precm_s(1)**2 + precm_s(3)**2)*precm_c(19)
+                        !
+                        db2 = 3.0d0*precm_s(2)**2*(precm_s(1) + precm_s(3))*precm_c(20) + 2.0d0*precm_s(1)*precm_s(2)* &
+                            & precm_s(3)*precm_c(21) + (precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)* &
+                            & precm_c(22) + (precm_s(1)**4 + precm_s(3)**4)*precm_c(26) + (precm_s(1)**3*precm_s(3) + &
+                            & precm_s(1)* precm_s(3)**3)*precm_c(27) + precm_s(1)**2*precm_s(3)**2*precm_c(28) + &
+                            & 2.0d0*precm_s(2)* (precm_s(1)**3 + precm_s(3)**3)*precm_c(29)
+                        !
+                        dc2 = 2.0d0*precm_s(2)*(precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)*precm_c(30) + &
+                            & 3.0d0* precm_s(2)**2*(precm_s(1)**2 + precm_s(3)**2)*precm_c(31) + 3.0d0*precm_s(2)** 2* &
+                            & precm_s(1)* precm_s(3)*precm_c(32) + 4.0d0*precm_s(2)**3*(precm_s(1) + precm_s(3))* &
+                            & precm_c(33) + 5.0d0* precm_s(2)**4*precm_c(34)
+                        !
+                        dd2 = (precm_s(1)**5 + precm_s(3)**5)*precm_c(39) + (precm_s(1)**4*precm_s(3) + precm_s(1)* &
+                            & precm_s(3)**4)*precm_c(40) + (precm_s(1)**3*precm_s(3)**2 + precm_s(1)**2*precm_s(3)** &
+                            & 3)* precm_c(41) + 2.0d0*precm_s(2)*(precm_s(1)**4 + precm_s(3)**4)*precm_c(42) + 2.0d0* &
+                            & precm_s(2)* (precm_s(1)**3*precm_s(3) + precm_s(1)*precm_s(3)**3)*precm_c(43) + 2.0d0* &
+                            & precm_s(1)**2* precm_s(2)*precm_s(3)**2*precm_c(44)
+                        !
+                        df2 = 3.0d0*precm_s(2)**2*(precm_s(1)**3 + precm_s(3)**3)*precm_c(45) + 3.0d0*precm_s(2)**2* &
+                            & (precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)*precm_c(46) + 4.0d0* precm_s(2)** &
+                            & 3* (precm_s(1)**2 + precm_s(3)**2)*precm_c(47) + 4.0d0*precm_s(2)**3*precm_s(1)* &
+                            & precm_s(3)* precm_c(48) + 5.0d0*precm_s(2)**4*(precm_s(1) + precm_s(3))*precm_c(49) + &
+                            & 6.0d0* precm_s(2)**5* precm_c(50)
+                        !
+                        d2d = da2 + db2 + dc2 + dd2 + df2
+                        !
+                        da3 = precm_c(2) + 2.0d0*precm_s(3)*precm_c(4) + precm_s(2)*precm_c(6) + precm_s(1)* &
+                            & precm_c(7) + 3.0d0*precm_s(3)**2*precm_c(8) + (2.0d0*precm_s(1)*precm_s(3) + &
+                            & precm_s(1)**2)* precm_c(10) + precm_s(2)**2*precm_c(11) + 2.0d0*precm_s(2)*precm_s(3)* &
+                            & precm_c(12) + precm_s(1)*precm_s(2)* precm_c(13) + 4.0d0*precm_s(3)**3*precm_c(14)
+                        !
+                        db3 = (precm_s(1)**3 + 3.0d0*precm_s(1)*precm_s(3)**2)*precm_c(16) + 2.0d0*precm_s(1)**2* &
+                            & precm_s(3)* precm_c(17) + 3.0d0*precm_s(2)*precm_s(3)**2*precm_c(18) + 2.0d0* &
+                            & precm_s(2)** 2*precm_s(3)* precm_c(19) + precm_s(2)**3*precm_c(20) + precm_s(2)**2* &
+                            & precm_s(1)*precm_c(21) + precm_s(2)* (precm_s(1)**2 + 2.0d0*precm_s(1)*precm_s(3))* &
+                            & precm_c(22) + 5.0d0*precm_s(3)** 4*precm_c(23) + (precm_s(1)**4 + 4.0d0*precm_s(1)* &
+                            & precm_s(3)**3)*precm_c(24)
+                        !
+                        dc3 = (2.0d0*precm_s(1)**3*precm_s(3) + 3.0d0*precm_s(1)**2*precm_s(3)**2)*precm_c(25) + &
+                            & 4.0d0* precm_s(2)*precm_s(3)**3*precm_c(26) + precm_s(2)*(precm_s(1)**3 + 3.0d0* &
+                            & precm_s(1)* precm_s(3)**2)*precm_c(27) + 2.0d0*precm_s(2)*precm_s(1)**2*precm_s(3)* &
+                            & precm_c(28) + 3.0d0* precm_s(2)**2*precm_s(3)**2*precm_c(29)
+                        !
+                        dd3 = precm_s(2)**2*(precm_s(1)**2 + 2.0d0*precm_s(1)*precm_s(3))*precm_c(30) + 2.0d0* &
+                            & precm_s(2)**3* precm_s(3)*precm_c(31) + precm_s(2)**3*precm_s(1)*precm_c(32) + &
+                            & precm_s(2)**4* precm_c(33) + 6.0d0*precm_s(3)**5*precm_c(35) + (precm_s(1)**5 + 5.0d0* &
+                            & precm_s(1)*precm_s(3)**4)*precm_c(36) + (2.0d0*precm_s(1)**4*precm_s(3) + 4.0d0* &
+                            & precm_s(1)** 2* precm_s(3)**3)*precm_c(37) + 3.0d0* precm_s(1)**3*precm_s(3)**2* &
+                            & precm_c(38)
+                        !
+                        df3 = 5.0d0*precm_s(2)*precm_s(3)**4*precm_c(39) + precm_s(2)*(precm_s(1)**4 + 4.0d0* &
+                            & precm_s(1)* precm_s(3)**3)*precm_c(40) + precm_s(2)*(2.0d0*precm_s(1)**3*precm_s(3) + &
+                            & 3.0d0* precm_s(1)**2* precm_s(3)**2)*precm_c(41) + 4.0d0*precm_s(2)**2*precm_s(3)**3* &
+                            & precm_c(42) + precm_s(2)**2* (precm_s(1)**3 + 3.0d0*precm_s(1)*precm_s(3)**2)* &
+                            & precm_c(43) + 2.0d0*precm_s(1)**2*precm_s(2)** 2*precm_s(3)*precm_c(44) + 3.0d0* &
+                            & precm_s(2)**3*precm_s(3)**2*precm_c(45) + precm_s(2)**3* (precm_s(1)**2 + 2.0d0* &
+                            & precm_s(1)*precm_s(3))* precm_c(46) + 2.0d0*precm_s(2)**4*precm_s(3)* precm_c(47) + &
+                            & precm_s(2)**4*precm_s(1)*precm_c(48) + precm_s(2)**5*precm_c(49)
+                        !
+                        d3d = da3 + db3 + dc3 + dd3 + df3
+                        !
+                        dq1 = (1.0d0 - tanh(precm_al(2)*precm_s(2)))*(1.0d0-tanh(precm_al(3)*precm_s(3)))
+                        dq2 = (1.0d0 - tanh(precm_al(1)*precm_s(1)))*(1.0d0-tanh(precm_al(3)*precm_s(3)))
+                        dq3 = (1.0d0 - tanh(precm_al(1)*precm_s(1)))*(1.0d0-tanh(precm_al(2)*precm_s(2)))
+                        !
+                        dap1 = -12.0d0*ap/pt1cm_r(1)
+                        dap2 = -12.0d0*ap/(pt1cm_r(2) - 0.2d0)
+                        dap3 = -12.0d0*ap/pt1cm_r(3)
+                        !
+                        db1 = -4.0d0*precm_b/pt1cm_r(1)**5
+                        db3 = -4.0d0*precm_b/pt1cm_r(3)**5
+                        !
+                        !      IF(DCOSH(AL(1)*S(1)).LT.1.0D-15)DCRS1=1.0D30
+                        !      IF(DCOSH(AL(1)*S(1)).LT.1.0D-15)GO TO 144
+                        !
+                        !
+                        dcsr1 = -precm_al(1)/(cosh(precm_al(1)*precm_s(1))**2)
+                        !
+                        !144   IF(COSH(AL(2)*S(2)).LT.1.0D-15)DCRS2=1.0D30
+                        !      IF(COSH(AL(2)*S(2)).LT.1.0D-15)GO TO 145
+                        !
+                        dcsr2 = -precm_al(2)/(cosh(precm_al(2)*precm_s(2))**2)
+                        !
+                        !145   IF(COSH(AL(3)*S(3)).LT.1.0D-15)DCRS3=1.0D30
+                        !      IF(COSH(AL(3)*S(3)).LT.1.0D-15)GO TO 146
+                        !
+                        dcsr3 = -precm_al(3)/(cosh(precm_al(3)*precm_s(3))**2)
+                        146 psi13=2.0d0*(-precm_gam)*temp*(pt1cm_r(1) + pt1cm_r(3))
+                        !
+                        dchi1 = 2.0d0*precm_alf*pt1cm_r(1)*exp(-precm_alf*(pt1cm_r(1)**2))
+                        dchi2 = 2.0d0*precm_alf*pt1cm_r(2)*exp(-precm_alf*(pt1cm_r(2)**2))
+                        dchi3 = 2.0d0*precm_alf*pt1cm_r(3)*exp(-precm_alf*(pt1cm_r(3)**2))
+                        !
+                        !      IF(VM(1).GT.1.0D20)DVR1=1.0D30
+                        !      IF(VM(1).GT.1.0D20)GO TO 153
+                        dvr1 = 2.0d0*satocm_de(1)*(1.0d0 - exp(-satocm_bet(1)*(pt1cm_r(1)-satocm_xre(1))))* &
+                            & satocm_bet(1)* exp(-satocm_bet(1)*(pt1cm_r(1)-satocm_xre(1)))
+                        !
+                        ! 153  IF(VM(2).GT.1.0D20)DVR2=1.0D30
+                        !      IF(VM(2).GT.1.0D20)GO TO 154
+                        !
+                        dvr2 = 2.0d0*satocm_de(2)*(1.0d0 - exp(-satocm_bet(2)*(pt1cm_r(2)-satocm_xre(2))))* &
+                            & satocm_bet(2)* exp(-satocm_bet(2)*(pt1cm_r(2)-satocm_xre(2)))
+                        !
+                        ! 154  IF(VM(3).GT.1.0D20)DVR3=1.0D30
+                        !      IF(VM(3).GT.1.0D20)GO TO 155
+                        !
+                        dvr3 = 2.0d0*satocm_de(3)*(1.0d0 - exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3))))* &
+                            & satocm_bet(3)* exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3)))
+                        !
+                        155 pt1cm_degsdr(1) = precm_vm(2)*precm_chi(3)*dchi1 + precm_chi(2)*precm_chi(3)*dvr1 +&
+                            &precm_vm(3)*precm_chi(2)*dchi1 + d1d*q*temp + p*dq1*temp*dcsr1 +&
+                            &dap1 + db1 + p*q*psi13
+                        pt1cm_degsdr(2) = dvr2*precm_chi(1)*precm_chi(3) + precm_vm(1)*precm_chi(3)*dchi2 + &
+                            & precm_vm(3)* precm_chi(1)*dchi2 + d2d*q*temp + p*dq2*temp*dcsr2 + dap2
+                        pt1cm_degsdr(3) = precm_vm(2)*precm_chi(1)*dchi3 + precm_vm(1)*precm_chi(2)*dchi3 + dvr3* &
+                            & precm_chi(1)* precm_chi(2) + d3d*q*temp + p*dq3*temp*dcsr3 + p* q* psi13 + dap3 + db3
+                        !
+                        do i=1, 3
+                            pt1cm_degsdr(i) = pt1cm_degsdr(i)/hart*bohr
+                        222 enddo
+                        !
+                        ! END OF NDER SWITCH AROUND DERIVATIVES
+                        !
+                    endif
+                endif
+                if( pt1cm_r(2) >= 20.0d0 )then
+                    precm_v(4) = int(precm_v(4)*1.0d8)*1.0d-8
+                endif
+                exit evaluation_loop
+            enddo evaluation_loop
             pt1cm_engygs = precm_v(4)
-            !
-            go to 113
-            !
-            66 continue
-            !
-            ! BEGINNING OF NDER SWITCH AROUND DERIVATIVES
-            !
-            if( usricm_nder .eq. 1 )then
-                !
-                da = precm_c(2) + 2.0d0*precm_s(1)*precm_c(4) + precm_s(2)*precm_c(6) + precm_s(3)*precm_c(7) + 3.0d0* &
-                    & precm_s(1)**2*precm_c(8) + (precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(3))*precm_c(10) + &
-                    & precm_s(2)**2*precm_c(11) + 2.0d0*precm_s(1)*precm_s(2)*precm_c(12) + precm_s(2)*precm_s(3)* &
-                    & precm_c(13) + 4.0d0*precm_s(1)**3*precm_c(14)
-                !
-                db = (3.0d0*precm_s(1)**2*precm_s(3) + precm_s(3)**3)*precm_c(16) + 2.0d0*precm_s(1)*precm_s(3)**2* &
-                    & precm_c(17) + 3.0d0*precm_s(1)**2*precm_s(2)*precm_c(18) + 2.0d0*precm_s(1)* precm_s(2)**2* &
-                    & precm_c(19) + precm_s(2)**3*precm_c(20) + precm_s(2)**2*precm_s(3)*precm_c(21) + (2.0d0* &
-                    & precm_s(1)*precm_s(2)*precm_s(3) + precm_s(2)*precm_s(3)**2)*precm_c(22)
-                !
-                dc = 5.0d0*precm_s(1)**4*precm_c(23) + (4.0d0*precm_s(1)**3*precm_s(3) + precm_s(3)**4)*precm_c(24) + &
-                    & (3.0d0*precm_s(1)**2*precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(3)** 3)* precm_c(25) + 4.0d0* &
-                    & precm_s(1)**3*precm_s(2)*precm_c(26) + (3.0d0*precm_s(2)*precm_s(1)**2*precm_s(3) + precm_s(2)* &
-                    & precm_s(3)**3)*precm_c(27)
-                !
-                dd = 2.0d0*precm_s(1)*precm_s(2)*precm_s(3)**2*precm_c(28) + 3.0d0*precm_s(1)**2*precm_s(2)**2* &
-                    & precm_c(29) + (2.0d0*precm_s(1)*precm_s(2)**2*precm_s(3) + precm_s(2)**2*precm_s(3)** 2)* &
-                    & precm_c(30) + 2.0d0*precm_s(1)*precm_s(2)**3*precm_c(31) + precm_s(2)**3*precm_s(3)* &
-                    & precm_c(32) + precm_s(2)**4*precm_c(33) + 6.0d0*precm_s(1)**5*precm_c(35) + (5.0d0* precm_s(1)** &
-                    & 4*precm_s(3) + precm_s(3)**5)*precm_c(36)
-                !
-                df = (4.0d0*precm_s(1)**3*precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(3)**4)*precm_c(37) + 3.0d0* &
-                    & precm_s(1)**2*precm_s(3)**3*precm_c(38) + 5.0d0*precm_s(1)**4*precm_s(2)* precm_c(39) + (4.0d0* &
-                    & precm_s(2)*precm_s(1)**3*precm_s(3) + precm_s(2)*precm_s(3)**4)*precm_c(40) + (3.0d0* &
-                    & precm_s(1)**2*precm_s(2)*precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(2)* precm_s(3)**3)* &
-                    & precm_c(41) + 4.0d0*precm_s(1)**3*precm_s(2)**2*precm_c(42)
-                !
-                dg = (3.0d0*precm_s(1)**2*precm_s(2)**2*precm_s(3) + precm_s(2)**2*precm_s(3)**3)*precm_c(43) + 2.0d0* &
-                    & precm_s(1)*precm_s(2)**2*precm_s(3)**2*precm_c(44) + 3.0d0*precm_s(1)**2* precm_s(2)**3* &
-                    & precm_c(45) + (2.0d0*precm_s(1)*precm_s(2)**3*precm_s(3) + precm_s(2)**3*precm_s(3)**2)* &
-                    & precm_c(46) + 2.0d0*precm_s(1)*precm_s(2)**4*precm_c(47) + precm_s(2)**4* precm_s(3)* &
-                    & precm_c(48) + precm_s(2)**5*precm_c(49)
-                !
-                d1d = da + db + dc + dd + df + dg
-                !
-                da2 = precm_c(3) + 2.0d0*precm_s(2)*precm_c(5) + (precm_s(1) + precm_s(3))*precm_c(6) + 3.0d0* &
-                    & precm_s(2)**2*precm_c(9) + 2.0d0*precm_s(2)*(precm_s(1) + precm_s(3))*precm_c(11) + &
-                    & (precm_s(1)**2 + precm_s(3)**2)*precm_c(12) + precm_s(1)*precm_s(3)*precm_c(13) + 4.0d0* &
-                    & precm_s(2)**3*precm_c(15) + (precm_s(1)**3 + precm_s(3)**3)*precm_c(18) + 2.0d0* precm_s(2)* &
-                    & (precm_s(1)**2 + precm_s(3)**2)*precm_c(19)
-                !
-                db2 = 3.0d0*precm_s(2)**2*(precm_s(1) + precm_s(3))*precm_c(20) + 2.0d0*precm_s(1)*precm_s(2)* &
-                    & precm_s(3)*precm_c(21) + (precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)*precm_c(22) + &
-                    & (precm_s(1)**4 + precm_s(3)**4)*precm_c(26) + (precm_s(1)**3*precm_s(3) + precm_s(1)* &
-                    & precm_s(3)**3)*precm_c(27) + precm_s(1)**2*precm_s(3)**2*precm_c(28) + 2.0d0*precm_s(2)* &
-                    & (precm_s(1)**3 + precm_s(3)**3)*precm_c(29)
-                !
-                dc2 = 2.0d0*precm_s(2)*(precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)*precm_c(30) + 3.0d0* &
-                    & precm_s(2)**2*(precm_s(1)**2 + precm_s(3)**2)*precm_c(31) + 3.0d0*precm_s(2)** 2* precm_s(1)* &
-                    & precm_s(3)*precm_c(32) + 4.0d0*precm_s(2)**3*(precm_s(1) + precm_s(3))*precm_c(33) + 5.0d0* &
-                    & precm_s(2)**4*precm_c(34)
-                !
-                dd2 = (precm_s(1)**5 + precm_s(3)**5)*precm_c(39) + (precm_s(1)**4*precm_s(3) + precm_s(1)* &
-                    & precm_s(3)**4)*precm_c(40) + (precm_s(1)**3*precm_s(3)**2 + precm_s(1)**2*precm_s(3)**3)* &
-                    & precm_c(41) + 2.0d0*precm_s(2)*(precm_s(1)**4 + precm_s(3)**4)*precm_c(42) + 2.0d0*precm_s(2)* &
-                    & (precm_s(1)**3*precm_s(3) + precm_s(1)*precm_s(3)**3)*precm_c(43) + 2.0d0* precm_s(1)**2* &
-                    & precm_s(2)*precm_s(3)**2*precm_c(44)
-                !
-                df2 = 3.0d0*precm_s(2)**2*(precm_s(1)**3 + precm_s(3)**3)*precm_c(45) + 3.0d0*precm_s(2)**2* &
-                    & (precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)*precm_c(46) + 4.0d0* precm_s(2)** 3* &
-                    & (precm_s(1)**2 + precm_s(3)**2)*precm_c(47) + 4.0d0*precm_s(2)**3*precm_s(1)*precm_s(3)* &
-                    & precm_c(48) + 5.0d0*precm_s(2)**4*(precm_s(1) + precm_s(3))*precm_c(49) + 6.0d0* precm_s(2)**5* &
-                    & precm_c(50)
-                !
-                d2d = da2 + db2 + dc2 + dd2 + df2
-                !
-                da3 = precm_c(2) + 2.0d0*precm_s(3)*precm_c(4) + precm_s(2)*precm_c(6) + precm_s(1)*precm_c(7) + &
-                    & 3.0d0*precm_s(3)**2*precm_c(8) + (2.0d0*precm_s(1)*precm_s(3) + precm_s(1)**2)* precm_c(10) + &
-                    & precm_s(2)**2*precm_c(11) + 2.0d0*precm_s(2)*precm_s(3)*precm_c(12) + precm_s(1)*precm_s(2)* &
-                    & precm_c(13) + 4.0d0*precm_s(3)**3*precm_c(14)
-                !
-                db3 = (precm_s(1)**3 + 3.0d0*precm_s(1)*precm_s(3)**2)*precm_c(16) + 2.0d0*precm_s(1)**2*precm_s(3)* &
-                    & precm_c(17) + 3.0d0*precm_s(2)*precm_s(3)**2*precm_c(18) + 2.0d0* precm_s(2)** 2*precm_s(3)* &
-                    & precm_c(19) + precm_s(2)**3*precm_c(20) + precm_s(2)**2*precm_s(1)*precm_c(21) + precm_s(2)* &
-                    & (precm_s(1)**2 + 2.0d0*precm_s(1)*precm_s(3))*precm_c(22) + 5.0d0*precm_s(3)** 4*precm_c(23) + &
-                    & (precm_s(1)**4 + 4.0d0*precm_s(1)*precm_s(3)**3)*precm_c(24)
-                !
-                dc3 = (2.0d0*precm_s(1)**3*precm_s(3) + 3.0d0*precm_s(1)**2*precm_s(3)**2)*precm_c(25) + 4.0d0* &
-                    & precm_s(2)*precm_s(3)**3*precm_c(26) + precm_s(2)*(precm_s(1)**3 + 3.0d0* precm_s(1)* &
-                    & precm_s(3)**2)*precm_c(27) + 2.0d0*precm_s(2)*precm_s(1)**2*precm_s(3)*precm_c(28) + 3.0d0* &
-                    & precm_s(2)**2*precm_s(3)**2*precm_c(29)
-                !
-                dd3 = precm_s(2)**2*(precm_s(1)**2 + 2.0d0*precm_s(1)*precm_s(3))*precm_c(30) + 2.0d0*precm_s(2)**3* &
-                    & precm_s(3)*precm_c(31) + precm_s(2)**3*precm_s(1)*precm_c(32) + precm_s(2)**4* precm_c(33) + &
-                    & 6.0d0*precm_s(3)**5*precm_c(35) + (precm_s(1)**5 + 5.0d0*precm_s(1)*precm_s(3)**4)*precm_c(36) + &
-                    & (2.0d0*precm_s(1)**4*precm_s(3) + 4.0d0*precm_s(1)** 2* precm_s(3)**3)*precm_c(37) + 3.0d0* &
-                    & precm_s(1)**3*precm_s(3)**2*precm_c(38)
-                !
-                df3 = 5.0d0*precm_s(2)*precm_s(3)**4*precm_c(39) + precm_s(2)*(precm_s(1)**4 + 4.0d0*precm_s(1)* &
-                    & precm_s(3)**3)*precm_c(40) + precm_s(2)*(2.0d0*precm_s(1)**3*precm_s(3) + 3.0d0* precm_s(1)**2* &
-                    & precm_s(3)**2)*precm_c(41) + 4.0d0*precm_s(2)**2*precm_s(3)**3*precm_c(42) + precm_s(2)**2* &
-                    & (precm_s(1)**3 + 3.0d0*precm_s(1)*precm_s(3)**2)*precm_c(43) + 2.0d0*precm_s(1)**2*precm_s(2)** &
-                    & 2*precm_s(3)*precm_c(44) + 3.0d0*precm_s(2)**3*precm_s(3)**2*precm_c(45) + precm_s(2)**3* &
-                    & (precm_s(1)**2 + 2.0d0*precm_s(1)*precm_s(3))* precm_c(46) + 2.0d0*precm_s(2)**4*precm_s(3)* &
-                    & precm_c(47) + precm_s(2)**4*precm_s(1)*precm_c(48) + precm_s(2)**5*precm_c(49)
-                !
-                d3d = da3 + db3 + dc3 + dd3 + df3
-                !
-                dq1 = (1.0d0 - tanh(precm_al(2)*precm_s(2)))*(1.0d0-tanh(precm_al(3)*precm_s(3)))
-                dq2 = (1.0d0 - tanh(precm_al(1)*precm_s(1)))*(1.0d0-tanh(precm_al(3)*precm_s(3)))
-                dq3 = (1.0d0 - tanh(precm_al(1)*precm_s(1)))*(1.0d0-tanh(precm_al(2)*precm_s(2)))
-                !
-                dap1 = -12.0d0*ap/pt1cm_r(1)
-                dap2 = -12.0d0*ap/(pt1cm_r(2) - 0.2d0)
-                dap3 = -12.0d0*ap/pt1cm_r(3)
-                !
-                db1 = -4.0d0*precm_b/pt1cm_r(1)**5
-                db3 = -4.0d0*precm_b/pt1cm_r(3)**5
-                !
-                !      IF(DCOSH(AL(1)*S(1)).LT.1.0D-15)DCRS1=1.0D30
-                !      IF(DCOSH(AL(1)*S(1)).LT.1.0D-15)GO TO 144
-                !
-                !
-                dcsr1 = -precm_al(1)/(cosh(precm_al(1)*precm_s(1))**2)
-                !
-                !144   IF(COSH(AL(2)*S(2)).LT.1.0D-15)DCRS2=1.0D30
-                !      IF(COSH(AL(2)*S(2)).LT.1.0D-15)GO TO 145
-                !
-                dcsr2 = -precm_al(2)/(cosh(precm_al(2)*precm_s(2))**2)
-                !
-                !145   IF(COSH(AL(3)*S(3)).LT.1.0D-15)DCRS3=1.0D30
-                !      IF(COSH(AL(3)*S(3)).LT.1.0D-15)GO TO 146
-                !
-                dcsr3 = -precm_al(3)/(cosh(precm_al(3)*precm_s(3))**2)
-                146 psi13=2.0d0*(-precm_gam)*temp*(pt1cm_r(1) + pt1cm_r(3))
-                !
-                dchi1 = 2.0d0*precm_alf*pt1cm_r(1)*exp(-precm_alf*(pt1cm_r(1)**2))
-                dchi2 = 2.0d0*precm_alf*pt1cm_r(2)*exp(-precm_alf*(pt1cm_r(2)**2))
-                dchi3 = 2.0d0*precm_alf*pt1cm_r(3)*exp(-precm_alf*(pt1cm_r(3)**2))
-                !
-                !      IF(VM(1).GT.1.0D20)DVR1=1.0D30
-                !      IF(VM(1).GT.1.0D20)GO TO 153
-                dvr1 = 2.0d0*satocm_de(1)*(1.0d0 - exp(-satocm_bet(1)*(pt1cm_r(1)-satocm_xre(1))))* satocm_bet(1)* &
-                    & exp(-satocm_bet(1)*(pt1cm_r(1)-satocm_xre(1)))
-                !
-                ! 153  IF(VM(2).GT.1.0D20)DVR2=1.0D30
-                !      IF(VM(2).GT.1.0D20)GO TO 154
-                !
-                dvr2 = 2.0d0*satocm_de(2)*(1.0d0 - exp(-satocm_bet(2)*(pt1cm_r(2)-satocm_xre(2))))* satocm_bet(2)* &
-                    & exp(-satocm_bet(2)*(pt1cm_r(2)-satocm_xre(2)))
-                !
-                ! 154  IF(VM(3).GT.1.0D20)DVR3=1.0D30
-                !      IF(VM(3).GT.1.0D20)GO TO 155
-                !
-                dvr3 = 2.0d0*satocm_de(3)*(1.0d0 - exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3))))* satocm_bet(3)* &
-                    & exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3)))
-                !
-                155 pt1cm_degsdr(1) = precm_vm(2)*precm_chi(3)*dchi1 + precm_chi(2)*precm_chi(3)*dvr1 +&
-                    &precm_vm(3)*precm_chi(2)*dchi1 + d1d*q*temp + p*dq1*temp*dcsr1 +&
-                    &dap1 + db1 + p*q*psi13
-                pt1cm_degsdr(2) = dvr2*precm_chi(1)*precm_chi(3) + precm_vm(1)*precm_chi(3)*dchi2 + precm_vm(3)* &
-                    & precm_chi(1)*dchi2 + d2d*q*temp + p*dq2*temp*dcsr2 + dap2
-                pt1cm_degsdr(3) = precm_vm(2)*precm_chi(1)*dchi3 + precm_vm(1)*precm_chi(2)*dchi3 + dvr3*precm_chi(1)* &
-                    & precm_chi(2) + d3d*q*temp + p*dq3*temp*dcsr3 + p* q* psi13 + dap3 + db3
-                !
-                do 222 i=1, 3
-                    pt1cm_degsdr(i) = pt1cm_degsdr(i)/hart*bohr
-                222 continue
-                !
-                ! END OF NDER SWITCH AROUND DERIVATIVES
-                !
-            endif
-            !
-            j = j+1
-            go to 98
-            !
-            113 continue
-            !
             call eunitzero
             if( usricm_nder .ne. 0 )then
                 call rtocart
@@ -1150,7 +1136,7 @@ module chempotpy_oh2_gen_sl1979_pes
                         else if( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y                     = pt1cm_degsdr(m1)
                         termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)

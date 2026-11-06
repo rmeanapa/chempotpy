@@ -291,11 +291,11 @@ module chempotpy_fh2_leps_no5z_1985_pes
             !
             !
             !
-            do 10 i = 1, 3
+            do i = 1, 3
                 dm(i)   = dm(i) / ckcau
                 re(i)   = re(i) / cangau
                 beta(i) = beta(i) * cangau
-            10 continue
+            10 enddo
             !
             !   Set the energy of the potential in the each of the three asymptotic
             !
@@ -390,15 +390,15 @@ module chempotpy_fh2_leps_no5z_1985_pes
             !
             !   TEST R'S FOR PHYSICAL VALUES
             !
-            do 20 i = 1, 3
+            do i = 1, 3
                 rr(i) = r(i)
-            20 continue
-            do 30 i1 = 1, 3
+            20 enddo
+            do i1 = 1, 3
                 i2                         = mod(i1, 3) + 1
                 i3                         = mod(i2, 3) + 1
                 t                          = rr(i2) + rr(i3)
                 if( rr(i1) .gt. t ) rr(i1) = t
-            30 continue
+            30 enddo
             r12 = rr(1) * rr(1)
             r22 = rr(2) * rr(2)
             r32 = rr(3) * rr(3)
@@ -431,116 +431,124 @@ module chempotpy_fh2_leps_no5z_1985_pes
             !
             z(1) = zfh0
             t    = a * (rr(2) - b)
-            if( .not.(t .lt. exlarg) ) go to 35
-            t     = exp(t)
-            t1    = 1.d0 / t
-            hsech = 1.d0/(t + t1)
-            zhh   = a1 + ha2 * ((t - t1) * hsech + 1.d0)
-            go to 36
-            35 continue
-            hsech = 0.d0
-            zhh   = a1 + a2
-            36 continue
+            if( t < exlarg )then
+                t     = exp(t)
+                t1    = 1.0d0/t
+                hsech = 1.0d0/(t+t1)
+                zhh   = a1+ha2*((t-t1)*hsech+1.0d0)
+            else
+                hsech = 0.0d0
+                zhh   = a1+a2
+            endif
             t    = rr(2) - f
             exx  = c * exp(legacy_d * t * t)
             zhh  = zhh - exx
             z(2) = zhh
-            if( .not.lderiv ) go to 50
-            do 40 i = 1, 3
-                do 40 j = 1, 3
-                    dz(i,j) = 0.d0
-            40 continue
-            !
-            !  ONLY THE HH SATO PARAMETER HAS A NONZERO DERIVATIVE - W.R.T. R2
-            !
-            dz(2,2) = 2.d0 * a * a2 * hsech * hsech - 2.d0 * legacy_d * t * exx
+            goto_block_50_458: block
+                if( .not.lderiv ) exit goto_block_50_458
+                do i = 1, 3
+                    do j = 1, 3
+                        dz(i,j) = 0.d0
+                    40 enddo
+                enddo
+                !
+                !  ONLY THE HH SATO PARAMETER HAS A NONZERO DERIVATIVE - W.R.T. R2
+                !
+                dz(2,2) = 2.d0 * a * a2 * hsech * hsech - 2.d0 * legacy_d * t * exx
+            end block goto_block_50_458
             50 continue
             !
             !   COMPUTE NONCOLLINEAR CONTRIBUTIONS TO SATO PARAMETERS
             !
-            if( lcol ) go to 160
-            !
-            !   COMPUTE Z(PHI) FOR FH SATO PARAMETER
-            !   DZPHI IS THE DERIVATIVE OF Z(PHI) W.R.T. PHI
-            !
-            zphi  = za*sinp2 + zb*sinp2*sinp2
-            tem   = 2.0d0*sinphi*cosphi
-            dzphi = (za+2.0d0*zb*sinp2)*tem
-            !
-            !   COMPUTE SCALE FACTOR TO DAMP OUT CORRECTION AT LARGE DISTANCE
-            !
-            scale1 = capr2 / (g2 + capr2)
-            z(1)   = z(1) + scale1 * zphi
-            !
-            !   COMPUTE SCALE FACTOR FOR HH SATO PARAMETER
-            !
-            scale2 = (zhh - zhh0) / zhhdif
-            !
-            !   COMPUTE PHI DEPENDENT PART OF HH SATO PARAMETER
-            !
-            cphi = (bet + betp * sinp2) * sinp2
-            !
-            !   COMPUTE HH SATO PARAMTER
-            !
-            z(2) = z(2) + scale1 * scale2 * cphi
-            if( .not.lderiv ) go to 150
-            !
-            !   FIRST, DERIVATIVES OF PHI W.R.T. R1, R2, R3
-            !
-            t     = 1.d0 / capr
-            t1    = 0.5d0 * cosphi * t
-            t2    = sgnphi / rr(2)
-            dphi1 = rr(1) * (t1 + t2)
-            dphi3 = rr(3) * (t1 - t2)
-            t1    = 1.d0 / sinphi
-            t2    = t1 * t
-            dphi1 = dphi1 * t2
-            dphi3 = dphi3 * t2
-            dphi2 = rr(2) * cosphi * t1 * (1.d0 / r22 - 0.25d0 / capr2)
-            t1    = (1.d0 - scale1) / capr2
-            t2    = t1 * zphi
-            !
-            !   NEXT, DERIVATIVES OF FH SATO PARAMETERS
-            !
-            dz(1,1) = scale1 * (t2 * rr(1) + dzphi * dphi1)
-            dz(1,2) = scale1 * (-0.5d0 * t2 * rr(2) + dzphi * dphi2)
-            dz(1,3) = scale1 * (t2 * rr(3) + dzphi * dphi3)
-            t1      = t1 * cphi
-            !
-            !   DERIVATIVE OF THE PHI DEPENDENT PART OF HH SATO W.R.T. PHI
-            !
-            dcphi = 2.d0 * (bet + 2.d0 * betp * sinp2) * sinphi * cosphi
-            t2    = scale1 * scale2
-            !
-            !   LAST, DERIVATIVES OF HH SATO PARAMETER
-            !
-            dz(2,1) = t2 * (t1 * rr(1) + dcphi * dphi1)
-            dz(2,2) = dz(2,2) * (1.d0 + scale1 * cphi / zhhdif) + t2 * (-0.5d0 * t1 * rr(2) + dcphi * dphi2)
-            dz(2,3) = t2 * (t1 * rr(3) + dcphi * dphi3)
-            150 continue
+            goto_block_160_522: block
+                if( lcol ) exit goto_block_160_522
+                !
+                !   COMPUTE Z(PHI) FOR FH SATO PARAMETER
+                !   DZPHI IS THE DERIVATIVE OF Z(PHI) W.R.T. PHI
+                !
+                zphi  = za*sinp2 + zb*sinp2*sinp2
+                tem   = 2.0d0*sinphi*cosphi
+                dzphi = (za+2.0d0*zb*sinp2)*tem
+                !
+                !   COMPUTE SCALE FACTOR TO DAMP OUT CORRECTION AT LARGE DISTANCE
+                !
+                scale1 = capr2 / (g2 + capr2)
+                z(1)   = z(1) + scale1 * zphi
+                !
+                !   COMPUTE SCALE FACTOR FOR HH SATO PARAMETER
+                !
+                scale2 = (zhh - zhh0) / zhhdif
+                !
+                !   COMPUTE PHI DEPENDENT PART OF HH SATO PARAMETER
+                !
+                cphi = (bet + betp * sinp2) * sinp2
+                !
+                !   COMPUTE HH SATO PARAMTER
+                !
+                z(2) = z(2) + scale1 * scale2 * cphi
+                goto_block_150_521: block
+                    if( .not.lderiv ) exit goto_block_150_521
+                    !
+                    !   FIRST, DERIVATIVES OF PHI W.R.T. R1, R2, R3
+                    !
+                    t     = 1.d0 / capr
+                    t1    = 0.5d0 * cosphi * t
+                    t2    = sgnphi / rr(2)
+                    dphi1 = rr(1) * (t1 + t2)
+                    dphi3 = rr(3) * (t1 - t2)
+                    t1    = 1.d0 / sinphi
+                    t2    = t1 * t
+                    dphi1 = dphi1 * t2
+                    dphi3 = dphi3 * t2
+                    dphi2 = rr(2) * cosphi * t1 * (1.d0 / r22 - 0.25d0 / capr2)
+                    t1    = (1.d0 - scale1) / capr2
+                    t2    = t1 * zphi
+                    !
+                    !   NEXT, DERIVATIVES OF FH SATO PARAMETERS
+                    !
+                    dz(1,1) = scale1 * (t2 * rr(1) + dzphi * dphi1)
+                    dz(1,2) = scale1 * (-0.5d0 * t2 * rr(2) + dzphi * dphi2)
+                    dz(1,3) = scale1 * (t2 * rr(3) + dzphi * dphi3)
+                    t1      = t1 * cphi
+                    !
+                    !   DERIVATIVE OF THE PHI DEPENDENT PART OF HH SATO W.R.T. PHI
+                    !
+                    dcphi = 2.d0 * (bet + 2.d0 * betp * sinp2) * sinphi * cosphi
+                    t2    = scale1 * scale2
+                    !
+                    !   LAST, DERIVATIVES OF HH SATO PARAMETER
+                    !
+                    dz(2,1) = t2 * (t1 * rr(1) + dcphi * dphi1)
+                    dz(2,2) = dz(2,2) * (1.d0 + scale1 * cphi / zhhdif) + t2 * (-0.5d0 * t1 * rr(2) + dcphi * dphi2)
+                    dz(2,3) = t2 * (t1 * rr(3) + dcphi * dphi3)
+                end block goto_block_150_521
+                150 continue
+            end block goto_block_160_522
             160 continue
             !
             !   COMPUTE POTENTIAL FROM LEPS FORM
             !
             engygs = 0.d0
             z(3)   = z(1)
-            if( .not.lderiv ) go to 170
-            do 165 i = 1, 3
-                dz(3,i)   = dz(1,i)
-                degsdr(i) = 0.d0
-                q(i)      = 0.d0
-                xj(i)     = 0.d0
-                do 162 j = 1, 3
-                    dq(i,j) = 0.d0
-                    dj(i,j) = 0.d0
-                162 continue
-            165 continue
+            goto_block_170_539: block
+                if( .not.lderiv ) exit goto_block_170_539
+                do i = 1, 3
+                    dz(3,i)   = dz(1,i)
+                    degsdr(i) = 0.d0
+                    q(i)      = 0.d0
+                    xj(i)     = 0.d0
+                    do j = 1, 3
+                        dq(i,j) = 0.d0
+                        dj(i,j) = 0.d0
+                    162 enddo
+                165 enddo
+            end block goto_block_170_539
             170 continue
             lzero = .true.
-            do 200 i = 1, 3
+            do i = 1, 3
                 ex    = exp(beta(i) * (re(i) - rr(i)))
                 lzero = lzero .and. ex.eq.0.0d0
-                if( ex .eq. 0.0d0 ) go to 195
+                if( ex .eq. 0.0d0 ) cycle
                 zp1  = z(i) + 1.d0
                 zp3  = zp1 + 2.d0
                 op3z = 1.d0 + 3.d0 * z(i)
@@ -557,63 +565,69 @@ module chempotpy_fh2_leps_no5z_1985_pes
                 !   PUT SUM OF Q'S IN ENERGY
                 !
                 engygs = engygs + q(i)
-                if( .not.lderiv ) go to 190
-                !
-                !   DERIVATIVE OF Q AND ZJ W.R.T. R1, R2, R3
-                !   ELEMENT I,J IS THE DERIVATIVE OF Q(I) W.R.T. RJ
-                !
-                t3 = 2.d0 * t * (ex + 2.d0) / zp1
-                do 180 j = 1, 3
-                    dq(i,j) = -t3 * dz(i,j)
-                    dj(i,j) = -dq(i,j)
-                180 continue
-                t       = 2.d0*t*beta(i)
-                dq(i,i) = dq(i,i) - t * (t1 - op3z)
-                dj(i,i) = dj(i,i) - t * (t2 - zp3)
+                goto_block_190_574: block
+                    if( .not.lderiv ) exit goto_block_190_574
+                    !
+                    !   DERIVATIVE OF Q AND ZJ W.R.T. R1, R2, R3
+                    !   ELEMENT I,J IS THE DERIVATIVE OF Q(I) W.R.T. RJ
+                    !
+                    t3 = 2.d0 * t * (ex + 2.d0) / zp1
+                    do j = 1, 3
+                        dq(i,j) = -t3 * dz(i,j)
+                        dj(i,j) = -dq(i,j)
+                    180 enddo
+                    t       = 2.d0*t*beta(i)
+                    dq(i,i) = dq(i,i) - t * (t1 - op3z)
+                    dj(i,i) = dj(i,i) - t * (t2 - zp3)
+                end block goto_block_190_574
                 190 continue
                 195 continue
-            200 continue
-            if( lzero ) go to 270
-            xjx = 0.d0
-            !
-            !   COMPUTE THE TOTAL EXCHANGE TERM
-            !
-            do 230 i1 = 1, 3
-                i2  = mod(i1, 3) + 1
-                t   = xj(i1) - xj(i2)
-                xjx = xjx + t * t
-                if( .not.lderiv ) go to 220
+            200 enddo
+            goto_block_270_618: block
+                if( lzero ) exit goto_block_270_618
+                xjx = 0.d0
                 !
-                !   PUT THE DERIVATIVES OF THE TOTAL EXCHANGE TERM IN DEGSDR
+                !   COMPUTE THE TOTAL EXCHANGE TERM
                 !
-                do 210 j = 1, 3
-                    degsdr(j) = degsdr(j) + t * (dj(i1,j) - dj(i2,j))
-                210 continue
-                220 continue
-            230 continue
-            xjx = sqrt(0.5d0 * xjx)
-            !
-            !   COMPUTE THE LEPS PART OF THE POTENTIAL ENERGY
-            !
-            engygs = engygs - xjx
-            if( .not.lderiv ) go to 260
-            !
-            !   COMPUTE DERIVATIVES OF THE LEPS PART
-            !
-            if( abs(xjx) .gt. 1.d-14 ) t = 0.5d0 / xjx
-            do 250 j = 1, 3
-                !
-                !   THE DERIVATIVE OF THE EXCHANGE PART MUST BE DIVIDED BY 2*XJX
-                !
-                degsdr(j) = -t * degsdr(j)
-                do 240  i = 1, 3
+                do i1 = 1, 3
+                    i2  = mod(i1, 3) + 1
+                    t   = xj(i1) - xj(i2)
+                    xjx = xjx + t * t
+                    if( .not.lderiv ) cycle
                     !
-                    !   THEN ADD IN THE DERIVATIVE OF Q
+                    !   PUT THE DERIVATIVES OF THE TOTAL EXCHANGE TERM IN DEGSDR
                     !
-                    degsdr(j) = degsdr(j) + dq(i,j)
-                240 continue
-            250 continue
-            260 continue
+                    do j = 1, 3
+                        degsdr(j) = degsdr(j) + t * (dj(i1,j) - dj(i2,j))
+                    210 enddo
+                    220 continue
+                230 enddo
+                xjx = sqrt(0.5d0 * xjx)
+                !
+                !   COMPUTE THE LEPS PART OF THE POTENTIAL ENERGY
+                !
+                engygs = engygs - xjx
+                goto_block_260_617: block
+                    if( .not.lderiv ) exit goto_block_260_617
+                    !
+                    !   COMPUTE DERIVATIVES OF THE LEPS PART
+                    !
+                    if( abs(xjx) .gt. 1.d-14 ) t = 0.5d0 / xjx
+                    do j = 1, 3
+                        !
+                        !   THE DERIVATIVE OF THE EXCHANGE PART MUST BE DIVIDED BY 2*XJX
+                        !
+                        degsdr(j) = -t * degsdr(j)
+                        do i = 1, 3
+                            !
+                            !   THEN ADD IN THE DERIVATIVE OF Q
+                            !
+                            degsdr(j) = degsdr(j) + dq(i,j)
+                        240 enddo
+                    250 enddo
+                end block goto_block_260_617
+                260 continue
+            end block goto_block_270_618
             270 continue
             !
             !   EZERO ADDED TO PUT ZERO AT REQ FOR REACTANTS
@@ -645,25 +659,27 @@ module chempotpy_fh2_leps_no5z_1985_pes
             !
             e3c    = (ex2 + ex3) * t * ex1
             engygs = engygs + e3c
-            if( .not.lderiv ) go to 280
-            !
-            !   COMPUTE DERIVATIVE OF THE 3C TERM
-            !   FIRST, DERIVATIVE OF COSTH
-            !
-            dcos1 = r3i - costh*r1i
-            dcos2 = - rr(2)*t4
-            dcos3 = r1i - costh*r3i
-            t4    = ex2 + ex3
-            t5    = t4 * t5
-            !
-            !   NOW, DERIVATIVES OF E3C
-            !
-            de3c1     = 2.d0*((t2 * ex2 + 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos1) * ex1
-            de3c2     = 2.d0 * t5 * dcos2 * ex1
-            de3c3     = 2.d0*((-t2 * ex2 - 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos3) * ex1
-            degsdr(1) = degsdr(1) + de3c1
-            degsdr(2) = degsdr(2) + de3c2
-            degsdr(3) = degsdr(3) + de3c3
+            goto_block_280_668: block
+                if( .not.lderiv ) exit goto_block_280_668
+                !
+                !   COMPUTE DERIVATIVE OF THE 3C TERM
+                !   FIRST, DERIVATIVE OF COSTH
+                !
+                dcos1 = r3i - costh*r1i
+                dcos2 = - rr(2)*t4
+                dcos3 = r1i - costh*r3i
+                t4    = ex2 + ex3
+                t5    = t4 * t5
+                !
+                !   NOW, DERIVATIVES OF E3C
+                !
+                de3c1     = 2.d0*((t2 * ex2 + 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos1) * ex1
+                de3c2     = 2.d0 * t5 * dcos2 * ex1
+                de3c3     = 2.d0*((-t2 * ex2 - 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos3) * ex1
+                degsdr(1) = degsdr(1) + de3c1
+                degsdr(2) = degsdr(2) + de3c2
+                degsdr(3) = degsdr(3) + de3c3
+            end block goto_block_280_668
             280 continue
             !
             call eunitzero
@@ -1055,7 +1071,7 @@ module chempotpy_fh2_leps_no5z_1985_pes
                         else if( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y              = degsdr(m1)
                         termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)

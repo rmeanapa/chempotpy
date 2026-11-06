@@ -69,9 +69,9 @@ module chempotpy_h2o2_gen_1998_pes
         integer          :: i, n3tm
         ! Changing units from bohr to angstroms
         !
-        do 10 i = 1, 12
+        do i = 1, 12
             x(i) = coord(i)*0.52918d0
-        10 continue
+        10 enddo
         do i = 1, 12
             dx(i) = 0.0d0
         enddo

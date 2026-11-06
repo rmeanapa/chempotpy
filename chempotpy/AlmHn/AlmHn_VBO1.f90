@@ -137,22 +137,24 @@ module chempotpy_almhn_vbo1_pes
             endif
         enddo
         !    Calculate all internuclear distances
-        do 1 i=1, natom-1
+        do i=1, natom-1
             r(i,i) = 0.d0
-            do 1 j=i+1, natom
+            do j=i+1, natom
                 dx     = x(i)-x(j)
                 dy     = y(i)-y(j)
                 dz     = z(i)-z(j)
                 r(i,j) = dsqrt(dx*dx+dy*dy+dz*dz)
-        1 r(j,i)=r(i,j)
+                1 r(j,i)=r(i,j)
+            enddo
+        enddo
         r(natom,natom) = 0.d0
         !    Calculate en1 which corresponds to the first term in parenthesis in
         en1 = 0d0
         en2 = 0d0
-        do 2 i=1, natom
+        do i=1, natom
             v1 = 0d0
-            do 3 j=1, natom
-                if( i .eq. j ) go to 3
+            do j=1, natom
+                if( i .eq. j ) cycle
                 if( (id(i) .eq. 1).and.(id(j) .eq. 1) )then
                     del1       = 5.29/autoang
                     gam(1,i,j) = gam1_h
@@ -236,11 +238,11 @@ module chempotpy_almhn_vbo1_pes
                         b(k,i,j) = 0.0d0
                     enddo
                 endif
-            3 continue
+            3 enddo
             en1 = en1+v1
-        2 continue
+        2 enddo
         !    Calculate en2 which corresponds to the last term in Eq. (6) (pure A
-        do 4 i=1, natom
+        do i=1, natom
             if( id(i) .eq. 1 )then
                 c3  = c3_h
                 c4  = c4_h
@@ -252,14 +254,14 @@ module chempotpy_almhn_vbo1_pes
             endif
             vi3 = 0.0d0
             vi4 = 0.0d0
-            do 5 j=1, natom
-                if( i .eq. j ) goto 5
+            do j=1, natom
+                if( i .eq. j ) cycle
                 vi3 = vi3+c3*sigma(3,i,j)*b(3,i,j)
                 vi4 = vi4+c4*sigma(4,i,j)*b(4,i,j)
-            5 continue
+            5 enddo
             add = (vi3+vi4)**esn
             en2 = en2-add
-        4 continue
+        4 enddo
         v = en1+en2
     end subroutine alhpot
 end module chempotpy_almhn_vbo1_pes

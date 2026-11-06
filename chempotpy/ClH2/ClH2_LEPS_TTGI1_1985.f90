@@ -444,8 +444,9 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         nroot = abs(nroot)
         !
         !     FOLLOWING COORDINATE DEFINITIONS PROVIDE FOR PROPER SYSTEM
-        do 15 ix=1, 3
-        15 r(ix)=q(indx(ix))
+        do ix=1, 3
+            15 r(ix)=q(indx(ix))
+        enddo
         if( idebug .eq. 1 ) write(iptprt, '(1X,''DIMIMA, Q='',1P3E13.5,/,9X,'' R='',3E13.5)') q, r
         !  CHECK FOR NEGATIVE R'S
         xter  = 1.d30
@@ -461,8 +462,10 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         !
         !     COMPUTE SINE AND COSINE OF ANGLE AXB, AND POWERS
         ct = (r(1)*r(1)+r(3)*r(3)-r(2)*r(2))/(two*r(1)*r(3))
-        if( ct .gt. -test .and. ct .lt. test ) go to 10
-        ct = sign(test, ct)
+        goto_block_10_466: block
+            if( ct .gt. -test .and. ct .lt. test ) exit goto_block_10_466
+            ct = sign(test, ct)
+        end block goto_block_10_466
         10 continue
         arg = one-ct*ct
         st  = sqrt(arg)
@@ -500,10 +503,11 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         !
         !     FILL OUT MATRIX AND DIAGONALIZE
         !
-        do 30 i=1, ndim
-            do 30 j=1, i
+        do i=1, ndim
+            do j=1, i
                 th(i,j) = th(j,i)
-        30 continue
+            30 enddo
+        enddo
         !
         call eign(ndim, th, vec, en, w, ndim)
         !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
@@ -518,9 +522,9 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         if( nder .ne. 1 ) return
         !
         !     SET  VECTOR FOR STATE OF INTEREST
-        do 40 i=1, ndim
+        do i=1, ndim
             gvec(i) = vec(i,nroot)
-        40 continue
+        40 enddo
         !     COMPUTE PARTIALS OF U=COS(THETA)
         dtdr1 = (r(1)*r(1)+r(2)*r(2)-r(3)*r(3))/(two*r(1)*r(1)*r(3))
         dtdr2 = -r(2)/(r(1)*r(3))
@@ -603,7 +607,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         dh(2,3) = zero
         dh(3,5) = zero
         dh(3,6) = zero
-        do 50 i=1, 3
+        do i=1, 3
             !
             !     SET UP DERIVATIVE MATRIX
             !
@@ -627,22 +631,25 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             dh(6,6) = dh66(i)
             !
             !     FILL OUT DERIVATIVE MATRIX
-            do 70 j=1, ndim
-                do 70 k=1, j
+            do j=1, ndim
+                do k=1, j
                     dh(j,k) = dh(k,j)
-            70 continue
+                70 enddo
+            enddo
             !
             dnumb = zero
-            do 80 j=1, ndim
-                do 80 k=1, ndim
+            do j=1, ndim
+                do k=1, ndim
                     dnumb = dnumb+gvec(j)*dh(j,k)*gvec(k)
-            80 continue
+                80 enddo
+            enddo
             dd(i) = dnumb
             !     END OF DERIVATIVE LOOP
-        50 continue
+        50 enddo
         !     PUT DERIVATIVES INTO CORRESPONDING SPOTS FOR CORRECT COORD CHOICE.
-        do 90 ix=1, 3
-        90 dq(indx(ix))=dd(ix)
+        do ix=1, 3
+            90 dq(indx(ix))=dd(ix)
+        enddo
         !
         !************************ END OF DFPOT *********************************
         !
@@ -656,8 +663,9 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             integer          :: i
             !     NOW COMPUTE SPLINE FIT DATA
             !     H2 SINGLET STATE
-            do 10 i=1, 67
-            10 r1h2(i)=dble(i+3)*0.1d0
+            do i=1, 67
+                10 r1h2(i)=dble(i+3)*0.1d0
+            enddo
             r1h2(68) = 7.2d-00
             r1h2(69) = 7.4d-00
             r1h2(70) = 7.6d-00
@@ -670,38 +678,45 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             r1h2(77) = 10.d-00
             r1h2(78) = 11.d-00
             r1h2(79) = 12.d-00
-            do 30 i=1, 79
-            30 v1h2(i)=v1h2(i)+one
+            do i=1, 79
+                30 v1h2(i)=v1h2(i)+one
+            enddo
             s2ss(1)  = 3.2006875d+1
             s2ss(79) = -7.93478d-7
             call splnin(79, r1h2, v1h2, t, ss, ss1, ss2, epsln, s2ss, s3ss, delss)
             !     H2 TRIPLET STATE
-            do 70 i=1, 81
-            70 r2h2(i)=dble(i+9)*0.1d-00
+            do i=1, 81
+                70 r2h2(i)=dble(i+9)*0.1d-00
+            enddo
             r2h2(82) = 9.25d-00
             r2h2(83) = 9.5d-00
             r2h2(84) = 9.75d-00
             r2h2(85) = 10.d-00
             r2h2(86) = 11.d-00
             r2h2(87) = 12.d-00
-            do 90 i=1, 87
-            90 v2h2(i)=v2h2(i)+one
+            do i=1, 87
+                90 v2h2(i)=v2h2(i)+one
+            enddo
             s2ts(1)  = 1.3039390d0
             s2ts(87) = -7.93478d-7
             call splnin(87, r2h2, v2h2, t, ss, ss1, ss2, epsln, s2ts, s3ts, delts)
             !     H2+ G STATE
-            do 130 i=1, 100
-            130 r3h2(i)=dble(i)*0.1d-00
-            do 140 i=1, 26
-            140 r3h2(i+100)=dble(i)*half+10.d-00
-            do 150 i=1, 126
-            150 v3h2(i)=v3h2(i)+one
+            do i=1, 100
+                130 r3h2(i)=dble(i)*0.1d-00
+            enddo
+            do i=1, 26
+                140 r3h2(i+100)=dble(i)*half+10.d-00
+            enddo
+            do i=1, 126
+                150 v3h2(i)=v3h2(i)+one
+            enddo
             s2dg(1)   = 1.0742890d+3
             s2dg(126) = -3.03938d-7
             call splnin(126, r3h2, v3h2, t, ss, ss1, ss2, epsln, s2dg, s3dg, deldg)
             !     H2+ U STATE
-            do 170 i=1, 126
-            170 v4h2(i)=v4h2(i)+one
+            do i=1, 126
+                170 v4h2(i)=v4h2(i)+one
+            enddo
             s2du(1)   = 9.0876397d+2
             s2du(126) = -3.0398d-7
             call splnin(126, r3h2, v4h2, t, ss, ss1, ss2, epsln, s2du, s3du, deldu)
@@ -718,20 +733,18 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             b1     = 7.1248778d+0
             c1     = 2.8830121
             rsmall = 0.94486d+0
-            if( r .ge. rsmall ) go to 10
-            !     SMALL R FIT USED TO BE CONSISTENT WITH BNL SPLINE FIT VERSION
-            arg    = a1*exp(-b1*r)
-            xhm2s  = arg+c1
-            dxhm2s = -b1*arg
-            go to 20
-            10 dx=one/r**7
-            x  = dx*r
-            dy = x*r
-            y  = dy*r
-            !     COMPUTE ENERGY AND DERIVATIVE
-            xhm2s  = a*x+b*y+c
-            dxhm2s = -six*a*dx-for*b*dy
-            20 return
+            if( r < rsmall )then
+                arg    = a1*exp(-b1*r)
+                xhm2s  = arg+c1
+                dxhm2s = -b1*arg
+            else
+                dx     = one/r**7
+                x      = dx*r
+                dy     = x*r
+                y      = dy*r
+                xhm2s  = a*x+b*y+c
+                dxhm2s = -six*a*dx-for*b*dy
+            endif
         end subroutine hclm
         !> @brief Evaluate HCL for the ClH2_LEPS_TTGI1_1985 potential.
         subroutine hcl( r, h, xh3s, xh1p, xh3p, dh, dxh3s, dxh1p, dxh3p )
@@ -791,28 +804,24 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             e1     = dx*omex*omex-dx
             de1    = two*dx*bx*ex*omex
             !     EXCITED STATE ADIABAT
-            if( r .gt. rv ) go to 20
-            if( r .lt. rv1 ) go to 60
-            !     MORSE FIT
-            ex   = exp(-bv*(r-rv))
-            omex = one-ex
-            e2   = dv*omex*omex+cv
-            de2  = two*dv*bv*ex*omex
-            go to 30
-            !     LONG RANGE FIT
-            20 ri=one/r
-            ri2 = ri*ri
-            ri4 = ri2*ri2
-            ri6 = ri4*ri2
-            ri8 = ri4*ri4
-            e2  = c8*ri8+c6*ri6+c4*ri4-ri+c0
-            de2 = -ri*(eht*c8*ri8+six*c6*ri6+for*c4*ri4-ri)
-            go to 30
-            !     SHORT RANGE FIT
-            60 arg=aa*exp(-bb*r)
-            e2  = arg+cc
-            de2 = -bb*arg
-            30 continue
+            if( r > rv )then
+                ri  = one/r
+                ri2 = ri*ri
+                ri4 = ri2*ri2
+                ri6 = ri4*ri2
+                ri8 = ri4*ri4
+                e2  = c8*ri8+c6*ri6+c4*ri4-ri+c0
+                de2 = -ri*(eht*c8*ri8+six*c6*ri6+for*c4*ri4-ri)
+            else if( r < rv1 )then
+                arg = aa*exp(-bb*r)
+                e2  = arg+cc
+                de2 = -bb*arg
+            else
+                ex   = exp(-bv*(r-rv))
+                omex = one-ex
+                e2   = dv*omex*omex+cv
+                de2  = two*dv*bv*ex*omex
+            endif
             !     LOWER COVALENT DIABAT
             ex      = exp(-b0*(r-r0))
             omex    = one-ex
@@ -846,7 +855,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             if( ttt .gt. 0.d0 ) root=sqrt(ttt)
             h(1,2)  = s12*h(1,1)+root
             dh(1,2) = ds12*h(1,1)+s12*dh(1,1)
-            ttt                          = half*(dfac2*fac1+fac2*(de12*h(1,1) +e12*dh(1,1)-e1*de2-de1*e2-two*h(1,1)* &
+            ttt                          = half*(dfac2*fac1+fac2*(de12*h(1,1) +e12*dh(1,1)-e1*de2-de1*e2-two* h(1,1)* &
                 & dh(1,1)))
             if( root .ne. 0.d0 ) dh(1,2) = dh(1,2) + ttt/root
             h(2,2)                       = e12*fac2+two*s12*h(1,2)-h(1,1)
@@ -884,8 +893,8 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             if( abs(y) .gt. 1.0d0 ) y = sign(1.0d0, y)
             ang  = angcon*acos(y)
             dang = zero
-            if( abs(ang) .lt. 1.d-14 ) go to 90
-            dang    = half*angcon*(dt1/(t1*t1)+dt2/(t2*t2))/sqrt(one-y*y)
+            if( abs(ang) >= 1.0d-14 ) &
+                dang = half*angcon*(dt1/(t1*t1)+dt2/(t2*t2))/sqrt(one-y*y)
             c       = cos(ang)
             s       = sin(ang)
             dc      = -s*dang
@@ -923,10 +932,11 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             !     TRIPLET PI CURVE   (SMALL A STATE)
             g  = gmax
             dg = zero
-            if( r .le. rmax ) go to 100
-            g  = gmax*exp(-gb*(r-rmax)**2)
-            dg = -two*gb*(r-rmax)*g
-            100 xh3p=xh1p-g
+            if( r > rmax )then
+                g  = gmax*exp(-gb*(r-rmax)**2)
+                dg = -two*gb*(r-rmax)*g
+            endif
+            xh3p  = xh1p-g
             dxh3p = dxh1p-dg
         end subroutine hcl
         !> @brief Evaluate H2CURV for the ClH2_LEPS_TTGI1_1985 potential.
@@ -949,23 +959,19 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             be  = 8.3d-1
             re  = 1.60d-0
             c4  = 2.25d0
-            if( r .gt. 12.d0 ) go to 20
-            if( r .ge. 0.4d0 ) go to 10
-            !     SHORT-RANGE EXPONENTIAL FIT
-            ab1s  = a1*exp(-b1*r)
-            dab1s = -b1*ab1s
-            go to 30
-            !     SPLINE FIT
-            10 call spline(79, r1h2, v1h2, r, ab1s, dab1s, ss2, epsln, s2ss, s3ss, delss)
-            go to 30
-            !     LONG-RANGE FORM
-            20 r2=one/(r*r)
-            r6    = r2**3
-            r8    = r6*r2
-            r10   = r8*r2
-            ab1s  = -(c6*r6+c8*r8+c10*r10)
-            dab1s = (six*c6*r6+eht*c8*r8+10.d0*c10*r10)/r
-            30 continue
+            if( r > 12.0d0 )then
+                r2    = one/(r*r)
+                r6    = r2**3
+                r8    = r6*r2
+                r10   = r8*r2
+                ab1s  = -(c6*r6+c8*r8+c10*r10)
+                dab1s = (six*c6*r6+eht*c8*r8+10.0d0*c10*r10)/r
+            else if( r >= 0.4d0 )then
+                call spline(79, r1h2, v1h2, r, ab1s, dab1s, ss2, epsln, s2ss, s3ss, delss)
+            else
+                ab1s  = a1*exp(-b1*r)
+                dab1s = -b1*ab1s
+            endif
             !     TRIPLET SIGMA
             !     LINES STARTING WITH C** ARE FOR CORRECT TRIPLET CURVE
             !**   IF(R.GT.12.D0) GO TO 50
@@ -995,23 +1001,16 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             dab3s = (df1-f1*tre*bfac*arg2)*f2
             !     H2+ CURVES
             !     DOUBLET G
-            60 if(r.gt.23.d0) go to 70
-            !     SPLINE FIT
-            call spline(126, r3h2, v3h2, r, ab2g, dab2g, ss2, epsln, s2dg, s3dg, deldg)
-            go to 80
-            !     LONG-RANGE FORM
-            70 r4=one/r**4
-            ab2g  = -c4*r4+half
-            dab2g = 9.d0*r4/r
-            !     DOUBLET U
-            80 if(r.gt.23.d0) go to 90
-            !     SPLINE FIT
-            call spline(126, r3h2, v4h2, r, ab2u, dab2u, ss2, epsln, s2du, s3du, deldu)
-            go to 100
-            !     LONG-RANGE FORM -- SAME AS FOR DOUBLET G STATE
-            90 ab2u=ab2g
-            dab2u = dab2g
-            100 return
+            if( r > 23.0d0 )then
+                r4    = one/r**4
+                ab2g  = -c4*r4+half
+                dab2g = 9.0d0*r4/r
+                ab2u  = ab2g
+                dab2u = dab2g
+            else
+                call spline(126, r3h2, v3h2, r, ab2g, dab2g, ss2, epsln, s2dg, s3dg, deldg)
+                call spline(126, r3h2, v4h2, r, ab2u, dab2u, ss2, epsln, s2du, s3du, deldu)
+            endif
         end subroutine h2curv
         !> @brief Evaluate SPLNIN for the ClH2_LEPS_TTGI1_1985 potential.
         subroutine splnin( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
@@ -1031,21 +1030,24 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             epsln = 1.d-12
             n1    = n-1
             knt   = 0
-            do 51 i=1, n1
+            do i=1, n1
                 h(i) = x(i+1)-x(i)
-            51 dely(i)=(y(i+1)-y(i))/h(i)
-            do 52 i=2, n1
+                51 dely(i)=(y(i+1)-y(i))/h(i)
+            enddo
+            do i=2, n1
                 h2(i)  = h(i-1)+h(i)
                 b(i)   = half*h(i-1)/h2(i)
                 delsqy = (dely(i)-dely(i-1))/h2(i)
                 s2(i)  = delsqy+delsqy
-            52 c(i)=delsqy+s2(i)
+                52 c(i)=delsqy+s2(i)
+            enddo
             5 eta=0.0d0
-            do 10 i=2, n1
+            do i=2, n1
                 w = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
                 if( abs(w)-eta ) 10, 10, 9
                 9 eta=abs(w)
-            10 s2(i)=s2(i)+w
+                10 s2(i)=s2(i)+w
+            enddo
             knt = knt+1
             if( knt .gt. 10 ) epsln=epsln*ex
             if( eta-epsln ) 14, 5, 5
@@ -1053,244 +1055,58 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             53 s3(i)=(s2(i+1)-s2(i))/h(i)
             if( idebug .eq. 1 ) write(iptprt, '(5X,11HFinal EPS =,D15.6)') epsln
         end subroutine splnin
-        !> @brief Evaluate SPLINE for the ClH2_LEPS_TTGI1_1985 potential.
+        !> @brief Interpolate a tabulated curve and its first two derivatives.
         subroutine spline( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
-            !     JIM STINE'S SPLINE INTERPOLATOR
             implicit none
-            double precision :: delsqs, dely, epsln, ht1, ht2, prod, s2, s3, ss, ss1, ss2, t, x, y
-            integer          :: i, n
-            dimension x(n), y(n), s2(n), s3(n), dely(n)
+            integer, intent(in)           :: n
+            double precision, intent(in)  :: x(n), y(n), t, epsln, s2(n), s3(n), dely(n)
+            double precision, intent(out) :: ss, ss1, ss2
+            integer                       :: i
+            double precision              :: delsqs, ht1, ht2, prod
+            if( t <= x(1) )then
+                ss  = y(1)
+                ss1 = dely(1)
+                ss2 = s2(1)
+                return
+            else if( t >= x(n) )then
+                ss  = y(n)
+                ss1 = dely(n)
+                ss2 = s2(n)
+                return
+            endif
             i = 1
-            if( t .gt. x(1) ) go to 10
-            ss  = y(1)
-            ss1 = dely(1)
-            write(iptprt, '(1X,''In the DIMIMA SPLINE routine ARG is out of range:'', /,1X,'' ARG ='',1PE13.5,'', X='',1PE13.5' // &
-                ')') t, x(1)
-            return
-            10 if(t.lt.x(n)) go to 20
-            ss  = y(n)
-            ss1 = dely(n)
-            write(iptprt, '(1X,''In the DIMIMA SPLINE routine ARG is out of range:'', /,1X,'' ARG ='',1PE13.5,'', X='',1PE13.5' // &
-                ')') t, x(1)
-            return
-            20 continue
-            56 if(t-x(i)) 60, 17, 57
-            57 i=i+1
-            go to 56
-            59 i=n
-            60 i=i-1
-            17 ht1=t-x(i)
+            do while( t > x(i) )
+                i = i+1
+            enddo
+            if( t < x(i) ) i = i-1
+            ht1    = t-x(i)
             ht2    = t-x(i+1)
             prod   = ht1*ht2
             ss2    = s2(i)+ht1*s3(i)
-            delsqs = (s2(i)+s2(i+1)+ss2)/6.d-00
+            delsqs = (s2(i)+s2(i+1)+ss2)/6.0d0
             ss     = y(i)+ht1*dely(i)+prod*delsqs
-            ss1    = dely(i)+(ht1+ht2)*delsqs+prod*s3(i)/6.d-00
-            61 return
+            ss1    = dely(i)+(ht1+ht2)*delsqs+prod*s3(i)/6.0d0
         end subroutine spline
         !> @brief Evaluate EIGN for the ClH2_LEPS_TTGI1_1985 potential.
+        !> @brief Diagonalize a real symmetric matrix with the shared core eigensolver.
         subroutine eign( nn, a, vec, eig, w, nd )
-            !     MATRIX DIAGONALIZATION ROUTINE FOR REAL SYMMETRIC CASE
-            !     HOUSEHOLDER METHOD
-            !     RHO=UPPERLIMIT FOR OFF-DIAGONAL ELEMENT
-            !     NN=SIZE OF MATRIX
-            !     A=MATRIX (ONLY LOWER TRIANGLE IS USED ,THIS IS DESTROYED)
-            !     EIG=RETURNED EIGENVALUES IN ALGEBRAIC ASCENDING ORDER
-            !     VEC=RETURNED EIGENVECTORS IN COLUMNS
             implicit none
-            double precision :: a, a2, b, beta, betasq, cosa, cosap, d, dia, dif, eig, g, gamma, p, pp, ppbr, ppbs, q, qj, &
-                & r1, r12, r2, rho, rhosq, s, sgn, shift, sina, sina2, sqrts, sum, temp, u, vec, w, wj, wtaw
-            integer :: i, i1, iord, iposv, itemp, ivpos, j, k, l, lv, m, n, n1, n2, nd, nn, np, npas, nr, nrr, nt, nv
-            dimension eig(nd), w(nd)
-            dimension gamma(6), beta(6), betasq(6)
-            dimension p(6), q(6)
-            equivalence (p(1), beta(1)), (q(1), beta(1))
-            dimension iposv(6), ivpos(6), iord(6)
-            dimension a(nd,nd), vec(nd,nd)
-            rho   = 1.0d-14
-            rhosq = rho*rho
-            n     = nn
-            if( n .eq. 0 ) go to 560
-            1 n1=n-1
-            n2       = n-2
-            gamma(1) = a(1,1)
-            if( n2 ) 280, 270, 120
-            120 do 260 nr=1, n2
-                b = a(nr+1,nr)
-                s = 0.0d0
-                do 130 i=nr, n2
-                    !     PREPARE FOR POSSIBLE BYPASS OF TRANSFORMATION
-                130 s=s+a(i+2,nr)**2
-                a(nr+1,nr) = 0.0d0
-                if( s ) 250, 250, 140
-                140 s=s+b*b
-                sgn = +1.0d0
-                if( b ) 150, 160, 160
-                150 sgn=-1.0d0
-                160 sqrts=sqrt(s)
-                d          = sgn/(sqrts+sqrts)
-                temp       = sqrt(.5d0+b*d)
-                w(nr)      = temp
-                a(nr+1,nr) = temp
-                d          = d/temp
-                b          = -sgn*sqrts
-                !     D IS FACTOR OF PROPORTIONALITY  NOW COMPUTE AND SAVE W VECTOR
-                !     EXTRA SINGLY SUBSCRIPTED W VECTOR USED FOR SPEED
-                do 170 i=nr, n2
-                    temp   = d*a(i+2,nr)
-                    w(i+1) = temp
-                170 a(i+2,nr)=temp
-                !     PREMULTIPLY VECTOR W BY MATRIX A TO OBTAIN P VECTOR
-                !     SIMULTANEOUSLY ACCUMULATE DOT PRODUCT WP,(THE SCALAR K)
-                wtaw = 0.0d0
-                do 220 i=nr, n1
-                    sum = 0.0d0
-                    do 180 j=nr, i
-                    180 sum=sum+a(i+1,j+1)*w(j)
-                    i1 = i+1
-                    if( n1-i1 ) 210, 190, 190
-                    190 do 200 j=i1, n1
-                    200 sum=sum+a(j+1,i+1)*w(j)
-                    210 p(i)=sum
-                220 wtaw=wtaw+sum*w(i)
-                !     P VECTOR AND SCALAR K NOW STORED, NEXT COMPUTE Q VECTOR.
-                do 230 i=nr, n1
-                    !     NOW FORM PAP MATRIX, REQUIRED PART
-                230 q(i)=p(i)-wtaw*w(i)
-                do 240 j=nr, n1
-                    qj = q(j)
-                    wj = w(j)
-                    do 240 i=j, n1
-                240 a(i+1,j+1)=a(i+1,j+1)-2.0d0*(w(i)*qj+wj*q(i))
-                250 beta(nr)=b
-                betasq(nr) = b*b
-            260 gamma(nr+1)=a(nr+1,nr+1)
-            270 b=a(n,n-1)
-            beta(n-1)   = b
-            betasq(n-1) = b*b
-            gamma(n)    = a(n,n)
-            280 betasq(n)=0.0d0
-            !     ADJOIN AN IDENTITY MATRIX TO BE POSTMULTIPLIED BY ROTATIONS
-            do 290 j=1, n
-                do 290 i=1, n
-            290 vec(i,j)=0.0d0
-            do 300 i=1, n
-            300 vec(i,i)=1.0d0
-            m    = n
-            sum  = 0.0d0
-            npas = 1
-            go to 400
-            310 sum=sum+shift
-            cosa = 1.0d0
-            g    = gamma(1)-shift
-            pp   = g
-            ppbs = pp*pp+betasq(1)
-            ppbr = sqrt(ppbs)
-            do 370 j=1, m
-                cosap = cosa
-                if( ppbs .ne. 0.0d0 ) go to 320
-                311 sina=0.0d0
-                sina2 = 0.0d0
-                cosa  = 1.0d0
-                go to 350
-                320 sina=beta(j)/ppbr
-                sina2 = betasq(j)/ppbs
-                cosa  = pp/ppbr
-                !     POSTMULTIPLY IDAENTITY BY P-TRANSPOSE MATRIX
-                nt = j+npas
-                if( nt .lt. n ) go to 330
-                321 nt=n
-                330 do 340 i=1, nt
-                    temp       = cosa*vec(i,j)+sina*vec(i,j+1)
-                    vec(i,j+1) = -sina*vec(i,j)+cosa*vec(i,j+1)
-                340 vec(i,j)=temp
-                350 dia=gamma(j+1)-shift
-                u        = sina2*(g+dia)
-                gamma(j) = g+u
-                g        = dia-u
-                pp       = dia*cosa-sina*cosap*beta(j)
-                if( j .ne. m ) go to 360
-                351 beta(j)=sina*pp
-                betasq(j) = sina2*pp*pp
-                go to 380
-                360 ppbs=pp*pp+betasq(j+1)
-                ppbr    = sqrt(ppbs)
-                beta(j) = sina*ppbr
-            370 betasq(j)=sina2*ppbs
-            380 gamma(m+1)=g
-            !     TEST FOR CONVERGENCE OF LAST DIAGONAL ELEMENT
-            npas = npas+1
-            if( betasq(m) .gt. rhosq ) go to 410
-            390 eig(m+1)=gamma(m+1)+sum
-            400 beta(m)=0.0d0
-            betasq(m) = 0.0d0
-            m         = m-1
-            if( m .eq. 0 ) go to 430
-            401 if(betasq(m).le.rhosq) go to 390
-            !     TAKE ROOT OF CORNER 2 BY 2 NEAREST TO LOWER DIAGONAL IN VALUE
-            !     AS ESTIMATE OF EIGENVALUE TO USE FOR SHIFT
-            410 a2=gamma(m+1)
-            r2   = .5d0*a2
-            r1   = .5d0*gamma(m)
-            r12  = r1+r2
-            dif  = r1-r2
-            temp = sqrt(dif*dif+betasq(m))
-            r1   = r12+temp
-            r2   = r12-temp
-            dif  = abs(a2-r1)-abs(a2-r2)
-            if( dif .lt. 0.0d0 ) go to 420
-            411 shift=r2
-            go to 310
-            420 shift=r1
-            go to 310
-            430 eig(1)=gamma(1)+sum
-            !     INITIALIZE AUXILARY TABLES REQUIRED FOR REARRANGING THE VECTORS
-            do 440 j=1, n
-                iposv(j) = j
-                ivpos(j) = j
-            440 iord(j)=j
-            !     USE A TRANSPOSITON SORT TO ORDER THE EIGENVALUES
-            m = n
-            go to 470
-            450 do 460 j=1, m
-                if( eig(j) .le. eig(j+1) ) go to 460
-                451 temp=eig(j)
-                eig(j)    = eig(j+1)
-                eig(j+1)  = temp
-                itemp     = iord(j)
-                iord(j)   = iord(j+1)
-                iord(j+1) = itemp
-            460 continue
-            470 m=m-1
-            if( m .ne. 0 ) go to 450
-            471 if(n1.eq.0) go to 500
-            472 do 490 l=1, n1
-                nv = iord(l)
-                np = iposv(nv)
-                if( np .eq. l ) go to 490
-                473 lv=ivpos(l)
-                ivpos(np) = lv
-                iposv(lv) = np
-                do 480 i=1, n
-                    temp     = vec(i,l)
-                    vec(i,l) = vec(i,np)
-                480 vec(i,np)=temp
-            490 continue
-            !     BACK TRANSFORM THE VECTORS OF THE TRIPLE DIAGONAL MATRIX
-            500 do 550 nrr=1, n
-                k = n1
-                510 k=k-1
-                if( k .le. 0 ) go to 550
-                511 sum=0.0d0
-                do 520 i=k, n1
-                520 sum=sum+vec(i+1,nrr)*a(i+1,k)
-                sum = sum+sum
-                do 530 i=k, n1
-                530 vec(i+1,nrr)=vec(i+1,nrr)-sum*a(i+1,k)
-                go to 510
-            550 continue
-            560 return
-            !  END OF EIGN
+            integer, intent(in)             :: nn, nd
+            double precision, intent(inout) :: a(nd,nd)
+            double precision, intent(out)   :: vec(nd,nd), eig(nd), w(nd)
+            integer                         :: ierr, lwork
+            double precision, allocatable   :: work(:)
+            external                         :: dsyev
+            vec = 0.0d0
+            eig = 0.0d0
+            w   = 0.0d0
+            if( nn == 0 ) return
+            lwork = max(1, 3*nn-1)
+            allocate(work(lwork))
+            call dsyev('V', 'L', nn, a, nd, eig, work, lwork, ierr)
+            if( ierr /= 0 ) error stop 'EIGN: symmetric eigensolver failed to converge'
+            vec(1:nn,1:nn) = a(1:nn,1:nn)
+            deallocate(work)
         end subroutine eign
     end subroutine evaluate_internal
 end module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade

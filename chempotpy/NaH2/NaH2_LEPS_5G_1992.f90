@@ -246,7 +246,7 @@ module chempotpy_nah2_leps_5g_1992_pot11_legacy_state_1a4e26e9
             & y0c3, y0c4, ads1, ars1, abs1, cds1, crs1, cbs1, swa, swr0, swa2, swr20, &
             & c2a, c2b, c2c
         !
-        do 10 i=1, nt
+        do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
             r3s  = r(i,3)*r(i,3)
@@ -288,7 +288,7 @@ module chempotpy_nah2_leps_5g_1992_pot11_legacy_state_1a4e26e9
             w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
             cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
             e(i)  = (coul1+coul2+coul3+deh2-rac2*dsqrt(w+cplg2*cplg2))*cevau-cfm
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_5g_1992_pot11_legacy_state_1a4e26e9
 
@@ -376,7 +376,7 @@ module chempotpy_nah2_leps_5g_1992_pot12_legacy_state_1a4e26e9
             'n='',e13.5,''  rmxp='',e13.5,''  rmxe='',e13.5,''  rmxr='',e13.5, /78(''=''))') ampn, ampp, ampe, ampr, erln, erlp, erle, erlr, &
             & ersn, ersp, erse, ersr, rmxn, rmxp, rmxe, rmxr
         !
-        do 10 i=1, nt
+        do i=1, nt
             amp    = ampn+(ampp-ampn)*0.5d0*(dtanh(ampe*(r(i,2)-ampr))+1.d0)
             erl    = erln+(erlp-erln)*0.5d0*(dtanh(erle*(r(i,2)-erlr))+1.d0)
             ers    = ersn+(ersp-ersn)*0.5d0*(dtanh(erse*(r(i,2)-ersr))+1.d0)
@@ -391,7 +391,7 @@ module chempotpy_nah2_leps_5g_1992_pot12_legacy_state_1a4e26e9
             fh     = 0.5d0*(1.d0+dtanh(0.75d0*(11.d0-hr)))
             ang    = (ff-fg)*fh+fg
             e(i)   = ang*(f1+f3)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_5g_1992_pot12_legacy_state_1a4e26e9
 
@@ -600,7 +600,7 @@ module chempotpy_nah2_leps_5g_1992_pot22_legacy_state_1a4e26e9
             & c5s1, c6s1, c2a, c2b, c2c, a0g1, b0g1, r0g1, a0g2, b0g2, r0g2, a0g3, b0g3, &
             & r0g3, a90g1, b90g1, r90g1, a90g2, b90g2, r90g2, a90g3, b90g3, r90g3
         !
-        do 10 i=1, nt
+        do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
             r3s  = r(i,3)*r(i,3)
@@ -664,7 +664,7 @@ module chempotpy_nah2_leps_5g_1992_pot22_legacy_state_1a4e26e9
             vdnahh = (-c6*rnag**(-6))*(1.d0-dexp((-rnag/tr0)**7))
             cof    = 0.5d0*(1.d0+dtanh(rnag-r(i,2)))
             e(i)   = e(i)*cevau+vdnahh*cof*rat-cfm
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_5g_1992_pot22_legacy_state_1a4e26e9
 

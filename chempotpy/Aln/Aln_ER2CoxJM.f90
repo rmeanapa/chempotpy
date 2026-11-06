@@ -81,8 +81,8 @@ module chempotpy_aln_er2coxjm_pes
         bu2 = 6.50000000000000000/autoang
         !     potential, includes cutoff
         v = 0.d0
-        do 1 i=1, natom
-            do 1 j=i+1, natom
+        do i=1, natom
+            do j=i+1, natom
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
@@ -94,7 +94,8 @@ module chempotpy_aln_er2coxjm_pes
                     ee   = dexp(-a1*rho)
                     v    = v-de*ee*poly*co
                 endif
-        1 continue
+            1 enddo
+        enddo
         ! three-body
         c0  = 2.64020517830972157
         c1  = -0.641182217879824101
@@ -111,34 +112,36 @@ module chempotpy_aln_er2coxjm_pes
         oneha = dsqrt(1.d0/2.d0)
         twoth = dsqrt(2.d0/3.d0)
         onesi = dsqrt(1.d0/6.d0)
-        do 111 i=1, natom
+        do i=1, natom
             r(i,i) = 0d0
-            do 111 j=i+1, natom
+            do j=i+1, natom
                 dx     = x(i)-x(j)
                 dy     = y(i)-y(j)
                 dz     = z(i)-z(j)
                 r(i,j) = dsqrt(dx*dx+dy*dy+dz*dz)
-        111 r(j,i)=r(i,j)
+                111 r(j,i)=r(i,j)
+            enddo
+        enddo
         !  calculate the potential energy
         v3 = 0.d0
-        do 2 i=1, natom
-            do 3 j=i+1, natom
+        do i=1, natom
+            do j=i+1, natom
                 !  two body term
                 rr   = r(i,j)
                 coij = 0.d0
-                if( rr .ge. bu2 ) go to 3
+                if( rr .ge. bu2 ) cycle
                 coij = dexp(au23*(1.d0-1.d0/(1.d0-rr/bu2)))
                 rij  = (rr-ree)/ree
-                do 4 k=j+1, natom
+                do k=j+1, natom
                     ! three body term
                     rr   = r(k,j)
                     cojk = 0.d0
-                    if( rr .ge. bu2 ) go to 4
+                    if( rr .ge. bu2 ) cycle
                     cojk = dexp(au23*(1.d0-1.d0/(1.d0-rr/bu2)))
                     rjk  = (rr-ree)/ree
                     rr   = r(k,i)
                     coki = 0.d0
-                    if( rr .ge. bu2 ) go to 4
+                    if( rr .ge. bu2 ) cycle
                     coki = dexp(au23*(1.d0-1.d0/(1.d0-rr/bu2)))
                     rki  = (rr-ree)/ree
                     q1   = oneth*(rij+rjk+rki)
@@ -152,9 +155,9 @@ module chempotpy_aln_er2coxjm_pes
                     fsech = 1.d0
                     co    = coij*cojk*coki
                     v3    = v3+dd*poly*co*fsech
-                4 continue
-            3 continue
-        2 continue
+                4 enddo
+            3 enddo
+        2 enddo
         v = v+v3
     end subroutine pot
 end module chempotpy_aln_er2coxjm_pes

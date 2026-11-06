@@ -387,7 +387,7 @@ subroutine pes_init( path )
     character(len=1024), intent(in) :: path
     integer                         :: file_unit_4
     integer                         :: i, ihid, iwe, inode1, inode2, ilay1, ilay2
-    integer                         :: ibasis, npd, iterm, ib, nfile
+    integer                         :: ibasis, npd, iterm, ib, nfile, read_status
     character(len=80)               :: f1
     character                       :: line
     character(len=1024)             :: file_path1, file_path2
@@ -396,14 +396,11 @@ subroutine pes_init( path )
     open(newunit=file_unit_4, file=file_path2, status='old')
     rewind(file_unit_4)
     read(file_unit_4, '(a100)')line
-    109 read(file_unit_4, '(i4,3i3,3x,6i2)', end=121)ibasis, npd, nterm(ibasis+1), &
-        &iterm, (nindex(ibasis+1,iterm,ib), ib=1, 6)
-    if( nindex(ibasis+1,iterm,1) .eq. 2 )then
-        goto 121
-    else
-        goto 109
-    endif
-    121 continue
+    do
+        read(file_unit_4, '(i4,3i3,3x,6i2)', iostat=read_status)ibasis, npd, nterm(ibasis+1), &
+            &iterm, (nindex(ibasis+1,iterm,ib), ib=1, 6)
+        if( read_status .ne. 0 .or. nindex(ibasis+1,iterm,1) .eq. 2 ) exit
+    enddo
     read(file_unit_4, '(a100)')line
     do i=1, nrbasissoc
         read(file_unit_4, *)r1soccoef(i)

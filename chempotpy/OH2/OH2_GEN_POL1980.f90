@@ -379,9 +379,9 @@ module chempotpy_oh2_gen_pol1980_pes
             !       CONVERT TO ATOMIC UNITS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !
-            do 50 it = 1, 3
+            do it = 1, 3
                 ambpcm_req(it) = ambpcm_req(it)/bohr
-            50 continue
+            50 enddo
             ambpcm_beta = ambpcm_beta * bohr
             ambpcm_de   = ambpcm_de/hrtree
             ambpcm_a    = ambpcm_a/bohr
@@ -492,27 +492,26 @@ module chempotpy_oh2_gen_pol1980_pes
             !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
             !       SEE EQUATION 2.7A, 2.7B
             !
-            c = 1.d0 - nab/nbc
-            if( abs(c) .gt. 1.d-14 ) goto 90
-            nab1 = .5d0
-            nbc1 = .5d0
-            go to 95
-            90 c = c/nab
-            nab1 = (2.d0 + c - sqrt(4.d0+c*c))/(2.d0*c)
-            nbc1 = 1.d0 - nab1
+            c = 1.0d0-nab/nbc
+            if( abs(c) <= 1.0d-14 )then
+                nab1 = 0.5d0
+                nbc1 = 0.5d0
+            else
+                c    = c/nab
+                nab1 = (2.0d0+c-sqrt(4.0d0+c*c))/(2.0d0*c)
+                nbc1 = 1.0d0-nab1
+            endif
             !
             !          ROB IS USED IN THE BENDING POTENTIAL CALCULATIONS
             !
             !          FIRST TRAP OUT ANY ZERO ARGUEMENTS
             !
-            95 if (nab1*nbc1.gt.0.0d0) go to 103
-            rob = 1.d0
-            go to 107
-            !
-            103 stuff = ambpcm_a * log(nab1*nbc1)
-            rob = (ambpcm_rbb - stuff)/(ambpcm_rhh - stuff)
-            !
-            107 continue
+            if( nab1*nbc1 > 0.0d0 )then
+                stuff = ambpcm_a * log(nab1*nbc1)
+                rob   = (ambpcm_rbb - stuff)/(ambpcm_rhh - stuff)
+            else
+                rob = 1.0d0
+            endif
             !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        CALCULATE BENDING CORRECTION
@@ -574,9 +573,9 @@ module chempotpy_oh2_gen_pol1980_pes
             pt1cm_degsdr(3) = dac
             pt1cm_r(3)      = ractmp
             !
-            do 300 it = 1, 2
+            do it = 1, 2
                 pt1cm_degsdr(it) = precm_dbcoor(it) + pt1cm_degsdr(it)
-            300 continue
+            300 enddo
             !
             !
             call eunitzero
@@ -715,253 +714,167 @@ module chempotpy_oh2_gen_pol1980_pes
             !
             character(len=20) :: title
             !
-            ic = 1
-            86 go to (81, 82, 83, 84), ic
-            !
-            81 r1=pt1cm_r(1)
-            r2 = pt1cm_r(2)
-            r3 = pt1cm_r(3)
-            go to 85
-            !
-            82 r1=pt1cm_r(1) + pre2cm_step
-            r2 = pt1cm_r(2)
-            r3 = pt1cm_r(3)
-            go to 85
-            !
-            83 r1=pt1cm_r(1)
-            r2 = pt1cm_r(2) + pre2cm_step
-            r3 = pt1cm_r(3)
-            go to 85
-            !
-            84 r1=pt1cm_r(1)
-            r2 = pt1cm_r(2)
-            r3 = pt1cm_r(3) + pre2cm_step
-            !
-            85 r1=r1*0.529177d0
-            r2 = r2*0.529177d0
-            r3 = r3*0.529177d0
-            !
-            if( r1 .gt. pre2cm_r1s ) go to 100
-            if( r2 .gt. pre2cm_r2s ) go to 102
-            !
-            !.....DO NORMAL SPLINE INTERPOLATION
-            !
-            dr1   = pre2cm_r1s-r1
-            dr2   = pre2cm_r2s-r2
-            angle = atan(dr1/dr2)
-            angle = angle/detrad
-            rr    = sqrt(dr1*dr1 + dr2*dr2)
-            dis   = spline(2, pre2cm_nphi, pre2cm_phi, pre2cm_bsp(1,1), pre2cm_csp(1,1), scrap, angle)
-            req2  = spline(2, pre2cm_nphi, pre2cm_phi, pre2cm_bsp(1,2), pre2cm_csp(1,2), scrap, angle)
-            bet   = spline(2, pre2cm_nphi, pre2cm_phi, pre2cm_bsp(1,3), pre2cm_csp(1,3), scrap, angle)
-            if( pre2cm_iayes .eq. 0 ) anu=pre2cm_vsp - dis
-            if( pre2cm_iayes .ne. 0 ) anu=pre2cm_vsp-dis*(1.0d0-exp(-bet*req2))**2.0d0
-            potsp = dis*(1.0d0-exp(bet*(rr-req2)))**2.0d0 + anu
-            go to 50
-            100 if(r2.lt.pre2cm_r2s) go to 101
-            pt1cm_engygs    = pre2cm_vsp/627.5095d0
-            pt1cm_degsdr(1) = 1.0d-9
-            pt1cm_degsdr(2) = 1.0d-9
-            pt1cm_degsdr(3) = 0.0d0
-            return
-            101 continue
-            dr    = pre2cm_d1-pre2cm_d1inf
-            dre   = pre2cm_r1e-pre2cm_r1einf
-            dbe   = pre2cm_b1-pre2cm_b1inf
-            da    = pre2cm_a1-pre2cm_a1inf
-            delr  = r1-pre2cm_r1s
-            factr = exp(-delr*pre2cm_alph1)
-            !
-            !.....INTERPOLATE FOR MORSE PARAMETERS
-            !
-            der = pre2cm_d1inf + dr*factr
-            rer = pre2cm_r1einf+dre*factr
-            ber = pre2cm_b1inf+dbe*factr
-            if( pre2cm_iayes .eq. 0 ) anu = pre2cm_vsp-der
-            if( pre2cm_iayes .ne. 0 ) anu=pre2cm_a1inf+da*factr
-            dr2   = r2-rer
-            potsp = der*(1.0d0-exp(-ber*dr2))**2.0d0 + anu
-            go to 50
-            102 continue
-            dr    = pre2cm_d2-pre2cm_d2inf
-            dre   = pre2cm_r2e-pre2cm_r2inf
-            dbe   = pre2cm_b2-pre2cm_b2inf
-            da    = pre2cm_a2-pre2cm_a2inf
-            delr  = r2-pre2cm_r2s
-            factr = exp(-delr*pre2cm_alph2)
-            der   = pre2cm_d2inf+dr*factr
-            rer   = pre2cm_r2inf + dre*factr
-            ber   = pre2cm_b2inf + dbe*factr
-            if( pre2cm_iayes .eq. 0 ) anu = pre2cm_vsp-der
-            if( pre2cm_iayes .ne. 0 ) anu=pre2cm_a2inf+da*factr
-            dr1   = r1-rer
-            potsp = der*(1.0d0-exp(-ber*dr1))**2.0d0+anu
-            50 pre2cm_v(ic)=potsp
-            ic = ic+1
-            if( ic .lt. 4 ) go to 86
-            do 33 i=1, 3
-            33 pre2cm_v(i)=pre2cm_v(i)/627.5095d0
-            pt1cm_engygs = pre2cm_v(1)
-            if( usricm_nder .ne. 1 ) return
-            pt1cm_degsdr(1) = (pre2cm_v(2)-pre2cm_v(1))/pre2cm_step
-            pt1cm_degsdr(2) = (pre2cm_v(3)-pre2cm_v(1))/pre2cm_step
-            pt1cm_degsdr(3) = 0.0d0
+            do ic = 1, 3
+                select case( ic )
+                case( 1 )
+                    r1 = pt1cm_r(1)
+                    r2 = pt1cm_r(2)
+                    r3 = pt1cm_r(3)
+                case( 2 )
+                    r1 = pt1cm_r(1)+pre2cm_step
+                    r2 = pt1cm_r(2)
+                    r3 = pt1cm_r(3)
+                case( 3 )
+                    r1 = pt1cm_r(1)
+                    r2 = pt1cm_r(2)+pre2cm_step
+                    r3 = pt1cm_r(3)
+                end select
+                r1 = r1*bohr
+                r2 = r2*bohr
+                r3 = r3*bohr
+                if( r1 > pre2cm_r1s .and. r2 >= pre2cm_r2s )then
+                    pt1cm_engygs    = pre2cm_vsp/ckcal
+                    pt1cm_degsdr(1) = 1.0d-9
+                    pt1cm_degsdr(2) = 1.0d-9
+                    pt1cm_degsdr(3) = 0.0d0
+                    return
+                else if( r1 > pre2cm_r1s )then
+                    dr    = pre2cm_d1-pre2cm_d1inf
+                    dre   = pre2cm_r1e-pre2cm_r1einf
+                    dbe   = pre2cm_b1-pre2cm_b1inf
+                    da    = pre2cm_a1-pre2cm_a1inf
+                    delr  = r1-pre2cm_r1s
+                    factr = exp(-delr*pre2cm_alph1)
+                    der   = pre2cm_d1inf+dr*factr
+                    rer   = pre2cm_r1einf+dre*factr
+                    ber   = pre2cm_b1inf+dbe*factr
+                    if( pre2cm_iayes == 0 ) anu = pre2cm_vsp-der
+                    if( pre2cm_iayes /= 0 ) anu = pre2cm_a1inf+da*factr
+                    dr2   = r2-rer
+                    potsp = der*(1.0d0-exp(-ber*dr2))**2+anu
+                else if( r2 > pre2cm_r2s )then
+                    dr    = pre2cm_d2-pre2cm_d2inf
+                    dre   = pre2cm_r2e-pre2cm_r2inf
+                    dbe   = pre2cm_b2-pre2cm_b2inf
+                    da    = pre2cm_a2-pre2cm_a2inf
+                    delr  = r2-pre2cm_r2s
+                    factr = exp(-delr*pre2cm_alph2)
+                    der   = pre2cm_d2inf+dr*factr
+                    rer   = pre2cm_r2inf+dre*factr
+                    ber   = pre2cm_b2inf+dbe*factr
+                    if( pre2cm_iayes == 0 ) anu = pre2cm_vsp-der
+                    if( pre2cm_iayes /= 0 ) anu = pre2cm_a2inf+da*factr
+                    dr1   = r1-rer
+                    potsp = der*(1.0d0-exp(-ber*dr1))**2+anu
+                else
+                    dr1   = pre2cm_r1s-r1
+                    dr2   = pre2cm_r2s-r2
+                    angle = atan(dr1/dr2)/detrad
+                    rr    = sqrt(dr1*dr1+dr2*dr2)
+                    dis   = spline(2, pre2cm_nphi, pre2cm_phi, pre2cm_bsp(1,1), pre2cm_csp(1,1), scrap, angle)
+                    req2  = spline(2, pre2cm_nphi, pre2cm_phi, pre2cm_bsp(1,2), pre2cm_csp(1,2), scrap, angle)
+                    bet   = spline(2, pre2cm_nphi, pre2cm_phi, pre2cm_bsp(1,3), pre2cm_csp(1,3), scrap, angle)
+                    if( pre2cm_iayes == 0 ) anu = pre2cm_vsp-dis
+                    if( pre2cm_iayes /= 0 ) anu = pre2cm_vsp-dis*(1.0d0-exp(-bet*req2))**2
+                    potsp = dis*(1.0d0-exp(bet*(rr-req2)))**2+anu
+                endif
+                pre2cm_v(ic) = potsp
+            enddo
+            pre2cm_v(1:3) = pre2cm_v(1:3)/ckcal
+            pt1cm_engygs  = pre2cm_v(1)
+            if( usricm_nder == 1 )then
+                pt1cm_degsdr(1) = (pre2cm_v(2)-pre2cm_v(1))/pre2cm_step
+                pt1cm_degsdr(2) = (pre2cm_v(3)-pre2cm_v(1))/pre2cm_step
+                pt1cm_degsdr(3) = 0.0d0
+            endif
         end subroutine pot2
-        !> @brief Evaluate SPLINE for the OH2_GEN_POL1980 potential.
+        !> @brief Fit or evaluate the legacy cubic-spline representation.
         double precision function spline( isw, nn, x, y, c, d, xpt )
             implicit none
-            double precision :: c, cfact, d, deriv, dfact, pivot, supd, v, v2, x, xpt, y, z
-            integer          :: i, isw, j, n, nn, np1, np2
-            !
-            !
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension x(nn), y(nn), c(nn+2), d(nn+2)
-            !     PARAMETER (IPRT = 6)
-            !
-            !
-            !  THIS IS A SUBROUTINE FOR FITTING DATA WITH A CUBIC SPLINE
-            !  POLYNOMIAL AND EVALUATING THAT POLYNOMIAL AT A GIVEN POINT
-            !  OR ITS DERIVATIVE AT A GIVEN POINT
-            !
-            !
-            !  CALLING SEQUENCE .......
-            !
-            !     ISW ... CONTROL OPTION
-            !         ISW=1  IF A CUBIC SPLINE IS TO BE FITTED TO THE SET OF KNOTS
-            !                DEFINED BY THE ARRAYS X AND Y.  THE SPLINE COEFFICIENTS
-            !                ARE STORED IN THE ARRAY C.
-            !         ISW=2  IF THE SPLINE DEFINED BY THE COEFFICIENT ARRAY 'C' IS
-            !                TO BE EVALUATED (INTERPOLATED) AT THE POINT DEFINED BY
-            !                THE PARAMETER 'XPT'.
-            !         ISW=3  AS IN ISW=2, ONLY THE DERIVATIVE/3.D0 IS ALSO CALCULATE
-            !         ISW=4  THE DERIVATIVE CALCULATED BY THE LAST USE OF SPLINE WIT
-            !                IS RETURNED.
-            !
-            !     NN ... THE NUMBER OF KNOTS (DATA POINTS) TO WHICH THE SPLINE IS TO
-            !            BE FITTED
-            !
-            !     X,Y ... THE ARRAYS DEFINING THE KNOTS.  THE X-VALUES MUST BE IN
-            !             INCREASING ORDER.  THE ARRAYS MUST BE DIMENSIONED AT LEAST
-            !             NN.
-            !
-            !     C ... THE ARRAY THAT CONTAINS THE CUBIC SPLINE COEFFICIENTS.
-            !           MUST BE DIMENSIONED AT LEAST NN+2 .
-            !
-            !     D ... A WORK SPACE.  MUST BE DIMENSIONED AT LEAST NN+2 .
-            !
-            !     XPT ... THE POINT AT WHICH THE INTERPOLATION IS DESIRED (IF ISW IS
-            !              SET TO 2).  THE VALUE OF SPLINE IS SET TO THE
-            !              INTERPOLATED VALUE.
-            !
-            !
-            ! *****  USER NOTES  *****
-            !
-            !     INTERPOLATION INVOLVES AT LEAST TWO STEPS .......
-            !
-            !       A.  CALL SPLINE WITH THE KNOTS.  THIS SETS UP THE
-            !           COEFFICIENT ARRAY C.
-            !           EG.  DUMY=SPLINE(1,NN,X,Y,C,D,XPT)
-            !
-            !       B.  CALL SPLINE WITH THE ARRAY C WHICH WAS DEFINED BY THE
-            !           PREVIOUS CALL AND WILL BE USED TO FIND THE VALUE AT THE
-            !           POINT 'XPT' .
-            !           EG.   VALUE=SPLINE(2,NN,X,Y,C,D,XPT)
-            !
-            !
-            !     STEP 'A' NEED BE EXECUTED ONLY ONCE FOR A GIVEN SET OF KNOTS.
-            !     STEP B MAY BE EXECUTED AS MANY TIMES AS NECESSARY.
-            !
-            !     Output from this subprogram is written to the file linked to
-            !     UNIT NFLAG(18)
-            !
-            !
-            2 n=nn
+            integer, intent(in)             :: isw, nn
+            double precision, intent(in)    :: x(nn), y(nn), xpt
+            double precision, intent(inout) :: c(nn+2), d(nn+2)
+            integer                         :: i, j, n, np1, np2
+            double precision                :: cfact, dfact, pivot, supd, v, v2, z
+            double precision, save          :: deriv = 0.0d0
+            n   = nn
             np1 = n+1
             np2 = n+2
             z   = xpt
-            24 go to (4, 5, 6, 7), isw
-            4 c(1)=y(1)
-            d(1)   = 1.0d0
-            c(np1) = 0.0d0
-            d(np1) = 0.0d0
-            c(np2) = 0.0d0
-            d(np2) = 0.0d0
-            do 41 i=2, n
-                c(i) = y(i)-y(1)
-            41 d(i)=x(i)-x(1)
-            do 410 i=3, np2
-                if( d(i-1) .ne. 0 ) go to 43
-                !      WRITE(NFLAG(18),1001)
-                stop 'SPLINE 1'
-                43 pivot=1.0d0/d(i-1)
-                if( i .ge. np2 ) go to 45
-                supd = x(i-1)-x(i-2)
-                if( supd .ge. 0 ) go to 44
-                !      WRITE(NFLAG(18),1000)
-                stop 'SPLINE 2'
-                44 supd=supd*supd*supd
-                go to 46
-                45 supd=1.0d0
-                46 dfact=supd*pivot
-                cfact = c(i-1)*pivot
-                if( i .gt. n ) go to 48
-                do 47 j=i, n
-                    v    = x(j)-x(i-2)
-                    c(j) = c(j)-d(j)*cfact
-                47 d(j)=v*v*v-d(j)*dfact
-                48 continue
-                if( i .ge. np2 ) go to 49
-                c(np1) = c(np1)-d(np1)*cfact
-                d(np1) = 1.0d0-d(np1)*dfact
-                49 c(np2)=c(np2)-d(np2)*cfact
-            410 d(np2)=x(i-2)-d(np2)*dfact
-            do 411 i=1, n
-                j = np2-i
-                if( j .ne. np1 ) go to 413
-                v = 1.0d0
-                go to 414
-                413 v=x(j)-x(j-1)
-                v = v*v*v
-                414 if(d(j+1).ne.0)go to 415
-                !      WRITE(NFLAG(18),1001)
-                stop 'SPLINE 3'
-                415 c(j+1)=c(j+1)/d(j+1)
-            411 c(j)=c(j)-c(j+1)*v
-            if( d(2) .ne. 0 ) go to 416
-            !      WRITE(NFLAG(18),1001)
-            stop 'SPLINE 4'
-            416 c(2)=c(2)/d(2)
-            return
-            5 spline=c(1)+c(2)*(z-x(1))
-            do 51 i=1, n
-                v = z-x(i)
-                if( v .gt. 0 ) go to 51
-                return
-            51 spline=spline+c(i+2)*v*v*v
-            return
-            6 continue
-            spline = c(1)+c(2)*(z-x(1))
-            deriv  = c(2)/3.d0
-            do 53 i = 1, n
-                v = z-x(i)
-                if( v .le. 0 ) return
-                v2     = v*v
-                spline = spline + c(i+2)*v2*v
-                deriv  = deriv + c(i+2)*v2
-            53 continue
-            return
-            7 continue
-            spline = 3.d0*deriv
+            select case( isw )
+            case( 1 )
+                c(1)   = y(1)
+                d(1)   = 1.0d0
+                c(np1) = 0.0d0
+                d(np1) = 0.0d0
+                c(np2) = 0.0d0
+                d(np2) = 0.0d0
+                do i = 2, n
+                    c(i) = y(i)-y(1)
+                    d(i) = x(i)-x(1)
+                enddo
+                do i = 3, np2
+                    if( d(i-1) == 0.0d0 ) error stop 'SPLINE: singular knot system'
+                    pivot = 1.0d0/d(i-1)
+                    if( i < np2 )then
+                        supd = x(i-1)-x(i-2)
+                        if( supd < 0.0d0 ) error stop 'SPLINE: knots must be ordered'
+                        supd = supd**3
+                    else
+                        supd = 1.0d0
+                    endif
+                    dfact = supd*pivot
+                    cfact = c(i-1)*pivot
+                    if( i <= n )then
+                        do j = i, n
+                            v    = x(j)-x(i-2)
+                            c(j) = c(j)-d(j)*cfact
+                            d(j) = v**3-d(j)*dfact
+                        enddo
+                    endif
+                    if( i < np2 )then
+                        c(np1) = c(np1)-d(np1)*cfact
+                        d(np1) = 1.0d0-d(np1)*dfact
+                    endif
+                    c(np2) = c(np2)-d(np2)*cfact
+                    d(np2) = x(i-2)-d(np2)*dfact
+                enddo
+                do i = 1, n
+                    j = np2-i
+                    if( j == np1 )then
+                        v = 1.0d0
+                    else
+                        v = (x(j)-x(j-1))**3
+                    endif
+                    if( d(j+1) == 0.0d0 ) error stop 'SPLINE: singular back substitution'
+                    c(j+1) = c(j+1)/d(j+1)
+                    c(j)   = c(j)-c(j+1)*v
+                enddo
+                if( d(2) == 0.0d0 ) error stop 'SPLINE: singular leading coefficient'
+                c(2)   = c(2)/d(2)
+                spline = 0.0d0
+            case( 2 )
+                spline = c(1)+c(2)*(z-x(1))
+                do i = 1, n
+                    v = z-x(i)
+                    if( v <= 0.0d0 ) exit
+                    spline = spline+c(i+2)*v**3
+                enddo
+            case( 3 )
+                spline = c(1)+c(2)*(z-x(1))
+                deriv  = c(2)/3.0d0
+                do i = 1, n
+                    v = z-x(i)
+                    if( v <= 0.0d0 ) exit
+                    v2     = v*v
+                    spline = spline+c(i+2)*v2*v
+                    deriv  = deriv+c(i+2)*v2
+                enddo
+            case( 4 )
+                spline = 3.0d0*deriv
+            case default
+                error stop 'SPLINE: invalid operation selector'
+            end select
         end function spline
         !> @brief Evaluate POTINFO for the OH2_GEN_POL1980 potential.
         subroutine potinfo
@@ -1439,7 +1352,7 @@ module chempotpy_oh2_gen_pol1980_pes
                         else if( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y                     = pt1cm_degsdr(m1)
                         termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)

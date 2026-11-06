@@ -1772,7 +1772,7 @@ module chempotpy_lifh_leps_jhtp2_2002_dpem_pot22_legacy_state_76bc6ffc
         ! ----------------------------------------------------------------------
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             ! PRECOMPUTE THINGS FOR USE LATER
             !     cosine of HF bond angle (i.e., Li-F-H angle)
@@ -3214,7 +3214,7 @@ module chempotpy_lifh_leps_jhtp2_2002_dpem_pot22_legacy_state_76bc6ffc
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
     end subroutine dispatch
 end module chempotpy_lifh_leps_jhtp2_2002_dpem_pot22_legacy_state_76bc6ffc
 

@@ -84,9 +84,9 @@ module chempotpy_aln_np_c_pes
         ! pairwise term
         phi = 0.d0
         ff  = 0.d0
-        do 5 i=1, natom
+        do i=1, natom
             rho = 0.d0
-            do 6 j=1, natom
+            do j=1, natom
                 if( j .ne. i )then
                     dx   = x(i)-x(j)
                     dy   = y(i)-y(j)
@@ -100,9 +100,9 @@ module chempotpy_aln_np_c_pes
                     p2  = -cc*(1.d0+alpha*rrel)*dexp(-alpha*rrel)
                     phi = phi+p1+p2
                 endif
-            6 continue
+            6 enddo
             ff = ff-aa*dsqrt(rho)
-        5 continue
+        5 enddo
         v = phi+ff
     end subroutine pot
 end module chempotpy_aln_np_c_pes

@@ -122,7 +122,7 @@ module chempotpy_h3_gen_pk2_1964_pes
             !   Check the values of NASURF and NDER for validity.
             !
             !
-            do 12 i = 1, 3
+            do i = 1, 3
                 gamr    = gam*r(i)
                 expg    = exp(-gamr)
                 zeta    = 1.0d0 + fkap*expg
@@ -146,9 +146,10 @@ module chempotpy_h3_gen_pk2_1964_pes
                 ds(i)   = -rho*(1.0d0+rho)*expr*(zeta+gamr*(1.0d0-zeta))/3.0d0
                 dj(i)   = s(i)*sume(i)*ds(i)+0.5d0*((1.0d0+ss(i))*de1(i)-(1.0d0-ss(i ))* de3(i))
                 delj(i) = (1.0d0+rr(i))*ex(i)
-            12 dq(i) = s(i)*dife(i)*ds(i)+0.5d0*((1.0d0+ss(i))*de1(i)+(1.0d0-ss(i &
-                & ))* &
-                & de3(i))
+                12 dq(i) = s(i)*dife(i)*ds(i)+0.5d0*((1.0d0+ss(i))*de1(i)+(1.0d0-ss(i &
+                    & ))* &
+                    & de3(i))
+            enddo
             dj(1)   = dj(1) + 2.0d0*s(1)*ds(1)*(delj(2)+delj(3))
             dj(2)   = dj(2) + 2.0d0*s(2)*ds(2)*(delj(1)+delj(3))
             dj(3)   = dj(3) + 2.0d0*s(3)*ds(3)*(delj(1)+delj(2))
@@ -596,7 +597,7 @@ module chempotpy_h3_gen_pk2_1964_pes
                         else if( j .gt. i )then
                             m1 = natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y              = degsdr(m1)
                         termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)

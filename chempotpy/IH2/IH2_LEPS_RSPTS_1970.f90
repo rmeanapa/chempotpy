@@ -208,11 +208,11 @@ module chempotpy_ih2_leps_rspts_1970_pes
             !
             !   Convert the potential parameters to atomic units.
             !
-            do 5 i = 1, 3
+            do i = 1, 3
                 d1(i) = d1(i)/27.21161d0
                 d3(i) = d3(i)/27.21161d0
                 c(i)  = c(i)/27.21161d0
-            5 continue
+            5 enddo
             !
             !    5 C(I) = C(I)/27.21161D0
             !
@@ -296,20 +296,20 @@ module chempotpy_ih2_leps_rspts_1970_pes
             !
             qt   = 0.0d0
             sumj = 0.0d0
-            do 2 i=1, 3
+            do i=1, 3
                 rel                      = re(i)-r(i)
                 exa                      = exp(alph(i)*rel)
                 e1(i)                    = d1(i)*(1.0d0-exa)**2-d1(i)
                 if( nder .eq. 1 ) de1(i) = 2.0d0*d1(i)*alph(i)*exa*(1.0d0-exa)
-                if( r(i) .gt. rc(i) ) go to 10
-                exb                      = exp(beta(i)*rel)
-                e3(i)                    = d3(i)*(1.0d0+exb)**2-d3(i)
-                if( nder .eq. 1 ) de3(i) = -2.0d0*d3(i)*beta(i)*exb*(1.0d0+exb)
-                go to 1
-                10 exs=exp(-sig(i)*r(i))
-                e3(i)                    = c(i)*(r(i)+a(i))*exs
-                if( nder .eq. 1 ) de3(i) = c(i)*exs*(1.0d0-sig(i)*(r(i)+a(i)))
-                1 continue
+                if( r(i) <= rc(i) )then
+                    exb   = exp(beta(i)*rel)
+                    e3(i) = d3(i)*(1.0d0+exb)**2-d3(i)
+                    if( nder == 1 ) de3(i) = -2.0d0*d3(i)*beta(i)*exb*(1.0d0+exb)
+                else
+                    exs   = exp(-sig(i)*r(i))
+                    e3(i) = c(i)*(r(i)+a(i))*exs
+                    if( nder == 1 ) de3(i) = c(i)*exs*(1.0d0-sig(i)*(r(i)+a(i)))
+                endif
                 fj(i) = 0.5d0*(e1(i)-e3(i))
                 q(i)  = 0.5d0*(e1(i)+e3(i))
                 if( nder .eq. 1 )then
@@ -318,7 +318,7 @@ module chempotpy_ih2_leps_rspts_1970_pes
                 endif
                 qt   = qt+q(i)
                 sumj = sumj+fj(i)
-            2 continue
+            2 enddo
             ex1    = (fj(1)-fj(2))**2
             ex2    = (fj(2)-fj(3))**2
             ex3    = (fj(3)-fj(1))**2
@@ -326,8 +326,9 @@ module chempotpy_ih2_leps_rspts_1970_pes
             engygs = qt-exch
             engygs = engygs + ezero(1)
             if( nder .eq. 1 )then
-                do 3 i=1, 3
-                3 degsdr(i)=dq(i)-0.5d0*dj(i)*(3.0d0*fj(i)-sumj)/exch
+                do i=1, 3
+                    3 degsdr(i)=dq(i)-0.5d0*dj(i)*(3.0d0*fj(i)-sumj)/exch
+                enddo
             endif
             !
             !
@@ -721,7 +722,7 @@ module chempotpy_ih2_leps_rspts_1970_pes
                         else if( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y              = degsdr(m1)
                         termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)

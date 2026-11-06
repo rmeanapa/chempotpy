@@ -69,6 +69,15 @@ LABELED_DO = re.compile(
     r"^(?:[a-z][a-z0-9_]*\s*:\s*)?do\s+(\d+)\s+",
     flags=re.IGNORECASE,
 )
+LABELED_DO_LINE = re.compile(
+    r"^(?P<indent>\s*)(?P<construct>[a-z][a-z0-9_]*\s*:\s*)?"
+    r"do\s+(?P<label>\d+)\s*,?\s*(?P<control>.+?)\s*$",
+    flags=re.IGNORECASE,
+)
+LABELED_STATEMENT_LINE = re.compile(
+    r"^(?P<indent>\s*)(?P<label>\d+)\s+(?P<statement>.+?)\s*$",
+    flags=re.IGNORECASE,
+)
 PES_METADATA_LABELS = {
     "system",
     "functional form",
@@ -397,6 +406,51 @@ def normalize_end_statements(source_text: str) -> str:
         flags=re.IGNORECASE | re.MULTILINE,
     )
     return normalized
+
+
+def convert_labeled_do_loops(source_text: str) -> str:
+    """Replace labeled DO ranges with structured DO/ENDDO blocks.
+
+    Fortran permits the terminal label to prefix an executable statement, not
+    only CONTINUE.  Keep such a statement in place and close the structured
+    loop immediately after it so its legacy last-iteration semantics remain
+    unchanged.
+    """
+
+    output: List[str] = []
+    loop_stack: List[tuple[str, str]] = []
+    for line in source_text.splitlines():
+        code = code_without_comment(line)
+        comment = line[len(code):]
+        loop = LABELED_DO_LINE.match(code)
+        if loop is not None:
+            label = loop.group("label")
+            loop_stack.append((label, loop.group("indent")))
+            output.append(
+                "{}{}do {}{}".format(
+                    loop.group("indent"),
+                    loop.group("construct") or "",
+                    loop.group("control").strip(),
+                    comment,
+                ).rstrip()
+            )
+            continue
+        terminal = LABELED_STATEMENT_LINE.match(code)
+        if terminal is None or not loop_stack or loop_stack[-1][0] != terminal.group("label"):
+            output.append(line)
+            continue
+        closing = []
+        while loop_stack and loop_stack[-1][0] == terminal.group("label"):
+            closing.append(loop_stack.pop())
+        if terminal.group("statement").strip().lower() == "continue":
+            label, indentation = closing[0]
+            output.append((indentation + label + " enddo" + comment).rstrip())
+            closing = closing[1:]
+        else:
+            output.append(line)
+        for _, indentation in closing:
+            output.append(indentation + "enddo")
+    return "\n".join(output) + "\n"
 
 
 def normalize_call_spacing(source_text: str) -> str:
@@ -1443,6 +1497,7 @@ def format_source_text(source_text: str) -> str:
     source_text = align_pes_metadata(source_text)
     source_text = normalize_comma_spacing(source_text)
     source_text = compact_array_commas(source_text)
+    source_text = convert_labeled_do_loops(source_text)
     source_text = normalize_end_statements(source_text)
     source_text = normalize_call_spacing(source_text)
     source_text = normalize_if_spacing(source_text)

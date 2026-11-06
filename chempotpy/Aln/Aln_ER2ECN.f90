@@ -91,10 +91,10 @@ module chempotpy_aln_er2ecn_pes
         du2   = 2.21812408402540306
         gu2   = 0.853639472398632138
         gzero = 4.62188568637029817
-        do 3 i=1, natom
+        do i=1, natom
             r(i,i)   = 0.d0
             fu2(i,i) = 0.d0
-            do 3 j=i+1, natom
+            do j=i+1, natom
                 dx       = x(i)-x(j)
                 dy       = y(i)-y(j)
                 dz       = z(i)-z(j)
@@ -102,29 +102,32 @@ module chempotpy_aln_er2ecn_pes
                 r(j,i)   = r(i,j)
                 fu2(j,i) = 0.d0
                 fu2(i,j) = 0.d0
-        3 continue
+            3 enddo
+        enddo
         ! CALCULATE CN FUNCTION
         !     first calculate g_alpha
         g1e = dexp(g1)
-        do 20 i=1, natom                         ! alpha loop
+        do i=1, natom! alpha loop
             gcorr(i) = 0d0
-            do 21 j=1, natom                        ! beta loop
-                if( i .eq. j ) go to 21! beta != alpha
+            do j=1, natom! beta loop
+                if( i .eq. j ) cycle! beta != alpha
                 rij = r(i,j)
-                if( rij .ge. g2 ) go to 21! cutoff term counts nearb
+                if( rij .ge. g2 ) cycle! cutoff term counts nearb
                 term     = dexp(-g1/(1d0-(rij/g2)))         ! cutoff term counts nearb
                 gcorr(i) = gcorr(i)+term                ! sum over beta
-            21 continue
+            21 enddo
             gcorr(i) = gcorr(i)*g1e                  ! g_alpha
-        20 continue
+        20 enddo
         !     then calculate CN term
-        do 30 i=1, natom                         ! alpha loop
-            do 31 j=1, natom                         ! beta loop
-                if( i .eq. j ) go to 31! beat != alpha
+        do i=1, natom! alpha loop
+            do j=1, natom! beta loop
+                if( i .eq. j ) cycle! beat != alpha
                 rij  = r(i,j)
                 term = 0.d0
-                if( rij .ge. g2 ) go to 32! g_alphabeta
-                term = dexp(g1*(1d0-1d0/(1d0-(rij/g2)))) ! g_alphabeta
+                goto_block_32_129: block
+                    if( rij .ge. g2 ) exit goto_block_32_129! g_alphabeta
+                    term = dexp(g1*(1d0-1d0/(1d0-(rij/g2)))) ! g_alphabeta
+                end block goto_block_32_129
                 32 continue
                 cz1    = (gcorr(i)-term)/gzero              ! ratio of coordination fo
                 abscz1 = dabs(cz1)
@@ -137,12 +140,12 @@ module chempotpy_aln_er2ecn_pes
                 !       fu2(i,j)=1d0+du2*(es1*ec1-1d0)         ! put alpha and beta parts together:  1 + f for regular formalism
                 fu2(i,j) = du2*(es1*ec1-1d0)         ! put alpha and beta parts tog
                 !       print *,es1,ec1,fu2(i,j)
-            31 continue
-        30 continue
+            31 enddo
+        30 enddo
         ! potential, includes cutoff
         v = 0.d0
-        do 1 i=1, natom
-            do 1 j=i+1, natom
+        do i=1, natom
+            do j=i+1, natom
                 dx    = x(i)-x(j)
                 dy    = y(i)-y(j)
                 dz    = z(i)-z(j)
@@ -158,7 +161,8 @@ module chempotpy_aln_er2ecn_pes
                 if( rr .le. bu2 ) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
                 if( rr .le. bu2b ) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
                 v = v-de*ee*poly*co -deb*eeb*polyb*cob*fu2(i,j)
-        1 continue
+            1 enddo
+        enddo
     end subroutine pot
 end module chempotpy_aln_er2ecn_pes
 

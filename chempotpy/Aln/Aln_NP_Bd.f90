@@ -149,7 +149,7 @@ module chempotpy_aln_np_bd_pes
             dvdz(i) = 0.d0
         enddo
         ! Double loop (main loop)
-        do 2 i=1, natom
+        do i=1, natom
             rho = 0.d0
             v2  = 0.d0
             do k=1, 3
@@ -158,8 +158,8 @@ module chempotpy_aln_np_bd_pes
                     d_v2(k,j)  = 0.d0
                 enddo
             enddo
-            do 3 j=1, natom
-                if( i .eq. j ) go to 3
+            do j=1, natom
+                if( i .eq. j ) cycle
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
@@ -169,7 +169,7 @@ module chempotpy_aln_np_bd_pes
                     q    = 1.d0
                     dqdr = 0.d0  ! Derivs
                 else if( rr .ge. rc )then
-                    go to 3
+                    cycle
                     q    = 0.d0
                     dqdr = 0.d0  ! Derivs
                 else
@@ -210,7 +210,7 @@ module chempotpy_aln_np_bd_pes
                 d_rho(2,j) = d_rho(2,j) - drhodr*dy/rr
                 d_rho(3,i) = d_rho(3,i) + drhodr*dz/rr
                 d_rho(3,j) = d_rho(3,j) - drhodr*dz/rr
-            3 continue
+            3 enddo
             sterm      = 0.d0
             dstermdrho = 0.d0  ! Derivs
             if( rho .gt. 0.d0 )then
@@ -240,7 +240,7 @@ module chempotpy_aln_np_bd_pes
                 dvdz(j) = dvdz(j) + d_v2(3,j) + dbigefdrho*d_rho(3,j)
             enddo
             v = v + v2 + bigef
-        2 continue
+        2 enddo
     end subroutine pot
 end module chempotpy_aln_np_bd_pes
 

@@ -2971,10 +2971,10 @@ module chempotpy_c2h7_vbmm_pes
             call prepare_local_context
             ! Changing units from angstrom to bohr and initialize
             !
-            do 10 i = 1, 18
+            do i = 1, 18
                 qpdot_pl_q(i)    = r(i)*0.52918d0
                 qpdot_pl_pdot(i) = 0.d0
-            10 continue
+            10 enddo
             !
             !  calculate relative coordinates and bond lengths
             !

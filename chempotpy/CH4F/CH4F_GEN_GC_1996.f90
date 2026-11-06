@@ -167,9 +167,9 @@ module chempotpy_ch4f_gen_gc_1996_pes
             !
             ! Changing units from angstrom to bohr
             !
-            do 10 i = 1, 18
+            do i = 1, 18
                 qpdot_q(i) = coord(i)
-            10 continue
+            10 enddo
             !
             !  Read the parameters from the input file CONST
             !

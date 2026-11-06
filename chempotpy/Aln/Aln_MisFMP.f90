@@ -91,11 +91,11 @@ module chempotpy_aln_misfmp_pes
         q2    = -21.52522d0   /autoev
         q3    = -15.30493d0   /autoev
         v     = 0.d0
-        do 2 i=1, natom
+        do i=1, natom
             v2     = 0.d0
             rhobar = 0.d0
-            do 3 j=1, natom
-                if( i .eq. j ) go to 3
+            do j=1, natom
+                if( i .eq. j ) cycle
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
@@ -113,12 +113,12 @@ module chempotpy_aln_misfmp_pes
                 ! rhobar
                 rho    = (a*dexp(-b1*(rr-r3)**2)+dexp(-b2*(rr-r4)))*psicut
                 rhobar = rhobar + rho  ! rho is 2x because we are looping j>i
-            3 continue
+            3 enddo
             ! embedding term
             xksum = q1*(rhobar-1.d0)**3 + q2*(rhobar-1.d0)**4 + q3*(rhobar-1.d0)**5
             ef    = f0 + 0.5d0*f2*(rhobar-1)**2 + xksum
             v     = v + 0.5d0*v2 + ef
-        2 continue
+        2 enddo
     end subroutine pot
 end module chempotpy_aln_misfmp_pes
 

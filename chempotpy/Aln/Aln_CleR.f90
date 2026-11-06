@@ -79,8 +79,8 @@ module chempotpy_aln_cler_pes
         a0 = 4.050/autoang
         r0 = a0/dsqrt(2d0)
         u  = 0d0
-        do 2 i=1, natom-1
-            do 3 j=i+1, natom
+        do i=1, natom-1
+            do j=i+1, natom
                 dx  = x(i)-x(j)
                 dy  = y(i)-y(j)
                 dz  = z(i)-z(j)
@@ -88,25 +88,28 @@ module chempotpy_aln_cler_pes
                 rel = rr/r0
                 ur  = 0d0
                 ur  = a*dexp(-p*(rel-1d0))
-            3 u=u+ur
-        2 continue
+                3 u=u+ur
+            enddo
+            2 continue
+        enddo
         ud = 0d0
-        do 5 i=1, natom
+        do i=1, natom
             udw = 0d0
-            do 4 j=1, natom
+            do j=1, natom
                 urr = 0d0
                 dx  = x(i)-x(j)
                 dy  = y(i)-y(j)
                 dz  = z(i)-z(j)
                 rr  = dsqrt(dx*dx+dy*dy+dz*dz)
                 rel = rr/r0
-                if( j .eq. i ) go to 41
+                if( j .eq. i ) cycle
                 urr = (si**2)*dexp(-2d0*q*(rel-1d0))
                 udw = udw+urr
                 41 continue
-            4 continue
+            4 enddo
             udn = dsqrt(udw)
-        5 ud=ud-udn
+            5 ud=ud-udn
+        enddo
         v = v+u+ud
     end subroutine pot
 end module chempotpy_aln_cler_pes

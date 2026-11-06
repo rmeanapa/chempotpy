@@ -464,8 +464,9 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             bigr2 = 0.5d0*(r12 - 0.5d0*r22 + r32)
             if( bigr2 .le. 1.d-8 )then
                 f = 0.5d0
-                do 3 i = 1, 3
-                3 precm_dfdr(i) = 0.0d0
+                do i = 1, 3
+                    3 precm_dfdr(i) = 0.0d0
+                enddo
             else
                 bigr   = sqrt(bigr2)
                 coschi = (r12 - r32)/(2.0d0*pt1cm_r(2)*bigr)
@@ -485,18 +486,18 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                 g    = coschi
                 dgdx = 1.0d0
                 if( precm_iopsw .gt. 0 )then
-                    do 20 i = 1, precm_iopsw
+                    do i = 1, precm_iopsw
                         t = hpi*g
                         g = sin(t)
                         if( usricm_nder .eq. 1 ) dgdx = hpi*cos(t)*dgdx
-                    20 continue
+                    20 enddo
                 endif
                 f = 0.5d0*(1.0d0 - g)
                 if( usricm_nder .eq. 1 )then
                     dfdx = -0.5d0*dgdx
-                    do 30 i = 1, 3
+                    do i = 1, 3
                         precm_dfdr(i) = dfdx*precm_dcosdr(i)
-                    30 continue
+                    30 enddo
                 endif
             endif
             omf = 1.0d0 - f
@@ -508,14 +509,16 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                 call pot2
                 v1 = pt1cm_engygs
                 if( usricm_nder .eq. 1 )then
-                    do 50 i = 1, 3
-                    50 precm_de1(i) = pt1cm_degsdr(i)
+                    do i = 1, 3
+                        50 precm_de1(i) = pt1cm_degsdr(i)
+                    enddo
                 endif
             else
                 v1 = 0.0d0
                 if( usricm_nder .eq. 1 )then
-                    do 55 i = 1, 3
-                    55 precm_de1(i) = 0.0d0
+                    do i = 1, 3
+                        55 precm_de1(i) = 0.0d0
+                    enddo
                 endif
             endif
             if( abs(f-0.5d0) .lt. 1.d-10 )then
@@ -546,8 +549,9 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             else
                 v2 = 0.0d0
                 if( usricm_nder .eq. 1 )then
-                    do 60 i = 1, 3
-                    60 precm_de2(i) = 0.0d0
+                    do i = 1, 3
+                        60 precm_de2(i) = 0.0d0
+                    enddo
                 endif
             endif
             !
@@ -561,9 +565,9 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                 return
             endif
             delv = v1 - v2
-            do 300 i = 1, 3
+            do i = 1, 3
                 pt1cm_degsdr(i) = f*precm_de1(i) + omf*precm_de2(i) + delv*precm_dfdr(i)
-            300 continue
+            300 enddo
             !
             !
             call eunitzero
@@ -628,10 +632,10 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             !
             !       CONVERT TO ATOMIC UNITS
             !
-            do 50 it = 1, 3
+            do it = 1, 3
                 ambpcm_req(it) = ambpcm_req(it)/bohr
                 ambpcm_d(it)   = ambpcm_d(it)/hartre
-            50 continue
+            50 enddo
             ambpcm_beta = ambpcm_beta * bohr
             ambpcm_de   = ambpcm_d(1)
             ambpcm_a    = ambpcm_a/bohr
@@ -780,9 +784,9 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                 pt1cm_engygs = pt1cm_engygs + bcoor
                 !
                 if( usricm_nder .eq. 1 )then
-                    do 300 it = 1, 2
+                    do it = 1, 2
                         pt1cm_degsdr(it) = pre2cm_dbcoor(it) + pt1cm_degsdr(it) + pt1cm_degsdr(3)
-                    300 continue
+                    300 enddo
                     pt1cm_degsdr(3) = dac
                 endif
             else
@@ -887,31 +891,32 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             pre22cm_vsp   = pre22cm_vsp/ckcal
             pre22cm_alph1 = pre22cm_alph1*bohr
             pre22cm_alph2 = pre22cm_alph2*bohr
-            do 50 i = 1, pre22cm_nphi
+            do i = 1, pre22cm_nphi
                 pre22cm_bsp(i,1) = pre22cm_bsp(i,1)/ckcal
                 pre22cm_bsp(i,2) = pre22cm_bsp(i,2)/bohr
                 pre22cm_bsp(i,3) = pre22cm_bsp(i,3)*bohr
-            50 continue
+            50 enddo
             nnn = pre22cm_nphi + 2
-            do 60 i = 1, nnn
+            do i = 1, nnn
                 pre22cm_csp(i,1) = pre22cm_csp(i,1)/ckcal
                 pre22cm_csp(i,2) = pre22cm_csp(i,2)/bohr
                 pre22cm_csp(i,3) = pre22cm_csp(i,3)*bohr
-            60 continue
+            60 enddo
             !
             !  CONVERT FROM DEGREES TO RADIANS
             !
             t = 1.0d0/detrad
-            do 70 j = 1, 3
+            do j = 1, 3
                 pre22cm_csp(2,j) = pre22cm_csp(2,j)*t
-            70 continue
+            70 enddo
             t = t**3
-            do 80 ii = 1, pre22cm_nphi
+            do ii = 1, pre22cm_nphi
                 pre22cm_phi(ii) = pre22cm_phi(ii)*detrad
                 i               = ii + 2
-                do 80 j = 1, 3
+                do j = 1, 3
                     pre22cm_csp(i,j) = pre22cm_csp(i,j)*t
-            80 continue
+                80 enddo
+            enddo
             !
             !  SET UP CONSTANTS
             !
@@ -1194,10 +1199,11 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                 d(np1) = 0.0d0
                 c(np2) = 0.0d0
                 d(np2) = 0.0d0
-                do 41 i = 2, n
+                do i = 2, n
                     c(i) = y(i)-y(1)
-                41 d(i) = x(i)-x(1)
-                do 410 i = 3, np2
+                    41 d(i) = x(i)-x(1)
+                enddo
+                do i = 3, np2
                     if( d(i-1) .eq. 0.0d0 )then
                         write(usricm_nflag(18), '(1X,5X,'' ***** ERROR IN POTSPL ... DIVIDE FAULT *****'')')
                         stop 'POTSPL 1'
@@ -1216,10 +1222,11 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                     dfact = supd*pivot
                     cfact = c(i-1)*pivot
                     if( i .le. n )then
-                        do 47 j = i, n
+                        do j = i, n
                             v    = x(j)-x(i-2)
                             c(j) = c(j)-d(j)*cfact
-                        47 d(j) = v*v*v-d(j)*dfact
+                            47 d(j) = v*v*v-d(j)*dfact
+                        enddo
                     endif
                     if( i .lt. np2 )then
                         c(np1) = c(np1)-d(np1)*cfact
@@ -1227,8 +1234,9 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                     endif
                     c(np2) = c(np2)-d(np2)*cfact
                     d(np2) = x(i-2)-d(np2)*dfact
-                410 continue
-                do 411 i = 1, n
+                    410 continue
+                enddo
+                do i = 1, n
                     j = np2-i
                     if( j .eq. np1 )then
                         v = 1.0d0
@@ -1242,7 +1250,7 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                     endif
                     c(j+1) = c(j+1)/d(j+1)
                     c(j)   = c(j)-c(j+1)*v
-                411 continue
+                411 enddo
                 if( d(2) .eq. 0.0d0 )then
                     write(usricm_nflag(18), '(1X,5X,'' ***** ERROR IN POTSPL ... DIVIDE FAULT *****'')')
                     stop 'POTSPL 4'
@@ -1250,21 +1258,21 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                 c(2) = c(2)/d(2)
             else if( isw .eq. 2 )then
                 potspl = c(1) + c(2)*(z-x(1))
-                do 51 i = 1, n
+                do i = 1, n
                     v = z-x(i)
                     if( v .le. 0 ) return
                     potspl = potspl + c(i+2)*v**3
-                51 continue
+                51 enddo
             else if( isw .eq. 3 )then
                 potspl = c(1) + c(2)*(z-x(1))
                 deriv  = c(2)/3.d0
-                do 53 i = 1, n
+                do i = 1, n
                     v = z-x(i)
                     if( v .le. 0 ) return
                     v2     = v*v
                     potspl = potspl + c(i+2)*v2*v
                     deriv  = deriv + c(i+2)*v2
-                53 continue
+                53 enddo
             else if( isw .eq. 4 )then
                 potspl = 3.d0*deriv
             endif
@@ -1745,7 +1753,7 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                         else if( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y                     = pt1cm_degsdr(m1)
                         termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)

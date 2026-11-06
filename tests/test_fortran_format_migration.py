@@ -215,6 +215,40 @@ endsubroutine evaluate
         self.assertIn("endif", converted)
         self.assertIn("end subroutine evaluate", converted)
 
+    def test_labeled_do_continue_is_structured(self) -> None:
+        source = """\
+subroutine evaluate( values )
+    implicit none
+    real, intent(out) :: values(2,2)
+    integer :: i, j
+    do 10 i=1, 2
+        do 10 j=1, 2
+            values(i,j) = i+j
+    10 continue
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("do i=1, 2", converted)
+        self.assertIn("do j=1, 2", converted)
+        self.assertIn("        10 enddo\n    enddo", converted)
+        self.assertNotRegex(converted, r"(?im)^\s*do\s+10\b")
+        self.assertNotIn("continue", converted.lower())
+
+    def test_labeled_do_executable_terminal_is_preserved(self) -> None:
+        source = """\
+subroutine evaluate( values )
+    implicit none
+    real, intent(out) :: values(2,2)
+    integer :: i, j
+    do 20 i=1, 2
+        do 20 j=1, 2
+    20 values(i,j) = i+j
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("20 values(i,j) = i+j\n        enddo\n    enddo", converted)
+        self.assertNotRegex(converted, r"(?im)^\s*do\s+20\b")
+
     def test_only_clauses_are_aligned(self) -> None:
         source = """\
 subroutine evaluate

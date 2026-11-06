@@ -258,7 +258,7 @@ module chempotpy_nah2_leps_7s_2000_pot11_legacy_state_7eadcd57
         cevau  = 1.d0/27.2113961d0
         onethd = 1.0d0/3.0d0
         twothd = 2.0d0/3.0d0
-        do 10 i=1, nt
+        do i=1, nt
             ! ============================================================
             ! useful quantities calculated first
             r1s  = r(i,1)*r(i,1)
@@ -298,7 +298,7 @@ module chempotpy_nah2_leps_7s_2000_pot11_legacy_state_7eadcd57
             vmid = dect*xect*(xect-2.0d0) *dexp(-bect2*rave**2)*(0.5d0*(1.0d0-cosa))**2
             e(i) = e(i)+vmid
             e(i) = e(i)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_7s_2000_pot11_legacy_state_7eadcd57
 
@@ -547,7 +547,7 @@ module chempotpy_nah2_leps_7s_2000_pot22_legacy_state_7eadcd57
         cevau  = 1.d0/27.2113961d0
         onethd = 1.0d0/3.0d0
         twothd = 2.0d0/3.0d0
-        do 10 i=1, nt
+        do i=1, nt
             ! ============================================================
             ! useful quantities calculated first
             rmid = 0.5d0*(r(i,1)+r(i,3))
@@ -636,7 +636,7 @@ module chempotpy_nah2_leps_7s_2000_pot22_legacy_state_7eadcd57
             cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
             e(i)  = coul1+coul2+coul3+deh2-dsqrt(w+cplg2*cplg2)/dsqrt(2.0d0)
             e(i)  = e(i)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_7s_2000_pot22_legacy_state_7eadcd57
 

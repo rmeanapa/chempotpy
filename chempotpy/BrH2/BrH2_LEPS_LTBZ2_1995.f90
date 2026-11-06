@@ -400,17 +400,17 @@ module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
         !
         !   Convert the constants to atomic units
         !
-        do 99999 i = 1, 3
+        do i = 1, 3
             de(i)   = d(i) / charkc
             re(i)   = re(i) / cangau
             beta(i) = betaa(i) * cangau
-        99999 continue
+        99999 enddo
         !
         !
         !
         !
         !
-        do 99996 k = 1, n
+        do k = 1, n
             do g_i_ = 1, g_p_
                 g_r(g_i_, 1) = 0.0d0
             enddo
@@ -534,7 +534,7 @@ module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
             !
             !   Compute the LEPS parameters
             !
-            do 99998 i = 1, 3
+            do i = 1, 3
                 do g_i_ = 1, g_p_
                     g_zpo(g_i_, i) = g_z(g_i_, i)
                 enddo
@@ -569,13 +569,13 @@ module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
                 !--------
                 b(i) = beta(i) * do4z(i) * 2.0d0
                 20 continue
-            99998 continue
+            99998 enddo
             do g_i_ = 1, g_p_
                 g_pe(g_i_) = 0.0d0
             enddo
             pe = 0.d0
             !--------
-            do 99997 i = 1, 3
+            do i = 1, 3
                 do g_i_ = 1, g_p_
                     g_d1_w(g_i_) = (-beta(i)) * g_r(g_i_, i)
                 enddo
@@ -617,7 +617,7 @@ module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
                 pe = pe + coul(i)
                 !--------
                 30 continue
-            99997 continue
+            99997 enddo
             d4_v  = (exch(1) - exch(2)) * (exch(1) - exch(2))
             d3_p  = 2.0d0 * (exch(1) - exch(2))
             d7_v  = (exch(2) - exch(3)) * (exch(2) - exch(3))
@@ -751,7 +751,7 @@ module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
             enddo
             e(k) = pe + xlamb / 3.d0
             !--------
-        99996 continue
+        99996 enddo
         !
     end subroutine dispatch
 end module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
@@ -785,12 +785,12 @@ module chempotpy_brh2_leps_ltbz2_1995_pot12_legacy_state_4c462471
         xlamb = 0.d0
         xlamb = 0.4568d0/27.21161d0
         !
-        do 7777 k=1, n
+        do k=1, n
             e(k) = -dsqrt(2.d0)*xlamb/3.d0
             do j =1, 3
                 de(j,k) = 0.0d0
             enddo
-        7777 continue
+        7777 enddo
     end subroutine dispatch
 end module chempotpy_brh2_leps_ltbz2_1995_pot12_legacy_state_4c462471
 
@@ -883,15 +883,15 @@ module chempotpy_brh2_leps_ltbz2_1995_pot22_legacy_state_4c462471
         !
         !   Convert the constants to atomic units
         !
-        do 10 i = 1, 3
+        do i = 1, 3
             de(i)   = d(i) / charkc
             re(i)   = re(i) / cangau
             beta(i) = betaa(i) * cangau
-        10 continue
+        10 enddo
         !
         !
         !
-        do 7777 k=1, n
+        do k=1, n
             r(1)     = rr(k,1)
             r(2)     = rr(k,2)
             r(3)     = rr(k,3)
@@ -906,7 +906,7 @@ module chempotpy_brh2_leps_ltbz2_1995_pot22_legacy_state_4c462471
             der(2,k) = -2.0d0*beta(2)*de(2)*(y2**2-y2)
             der(3,k) = -2.0d0*beta(3)*de(3)*(y3**2+y3)*ccon
             e(k)     = pe
-        7777 continue
+        7777 enddo
         !
     end subroutine dispatch
 end module chempotpy_brh2_leps_ltbz2_1995_pot22_legacy_state_4c462471

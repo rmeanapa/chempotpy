@@ -113,30 +113,30 @@ module chempotpy_aln_np_ad_pes
         au2b = 0.138211749991007299
         bu2b = 6.50000000000000000/autoang
         ! Initialize arrays
-        do 99998 i = 1, natom
+        do i = 1, natom
             dvdx(i) = 0.0d0
             dvdy(i) = 0.0d0
             dvdz(i) = 0.0d0
             v       = 0.d0
-        99998 continue
+        99998 enddo
         ! do S term, needs xk1,xk2,xk3
-        do 510 i = 1, natom
-            do 515 j = i + 1, natom
+        do i = 1, natom
+            do j = i + 1, natom
                 dx   = x(i) - x(j)
                 dy   = y(i) - y(j)
                 dz   = z(i) - z(j)
                 d1_w = dx * dx + dy * dy + dz * dz
                 d2_v = sqrt(d1_w)
                 rij  = d2_v
-                if( rij .ge. bu2 ) goto 515
+                if( rij .ge. bu2 ) cycle
                 do k = 1, natom
                     gxs(k) = 0.0d0
                     gys(k) = 0.0d0
                     gzs(k) = 0.0d0
                 enddo
                 s = 0.d0
-                do 512 l = 1, natom
-                    if( l .eq. j .or. l .eq. i ) goto 512
+                do l = 1, natom
+                    if( l .eq. j .or. l .eq. i ) cycle
                     dx   = x(i) - x(l)
                     dy   = y(i) - y(l)
                     dz   = z(i) - z(l)
@@ -149,8 +149,8 @@ module chempotpy_aln_np_ad_pes
                     d1_w = dx * dx + dy * dy + dz * dz
                     d2_v = sqrt(d1_w)
                     rjl  = d2_v
-                    if( rjl .ge. bu2 ) goto 512
-                    if( ril .ge. bu2 ) goto 512
+                    if( rjl .ge. bu2 ) cycle
+                    if( ril .ge. bu2 ) cycle
                     rrr    = (ril + rjl) / rij
                     d3_v   = 1d0 - rjl / bu2
                     d6_b1  = -au23 / (d3_v**2 * bu2)
@@ -186,7 +186,7 @@ module chempotpy_aln_np_ad_pes
                     gzs(l) = gzs(l) + (term*d8_b2+d6_b)*(z(l)-z(i))/ril
                     gzs(l) = gzs(l) + (term*d6_b1+d6_b)*(z(l)-z(j))/rjl
                     s      = s + term
-                512 continue
+                512 enddo
                 d2_v = tanh (s)
                 d1_p = 1.0d0 - ( d2_v *  d2_v)
                 fs   = d2_v
@@ -215,26 +215,26 @@ module chempotpy_aln_np_ad_pes
                     dvdz(k) = dvdz(k) + d1_p*tmpb*gzs(k)
                 enddo
                 v = v + tmpb * d2_v
-            515 continue
-        510 continue
+            515 enddo
+        510 enddo
         ! CALCULATE CN FUNCTION
         g1e = dexp(g1)
-        do 20 i = 1, natom
+        do i = 1, natom
             do j = 1, natom
                 gxgcorr(j, i) = 0.0d0
                 gygcorr(j, i) = 0.0d0
                 gzgcorr(j, i) = 0.0d0
             enddo
             gcorr(i) = 0.d0
-            do 21 j = 1, natom
-                if( i .eq. j ) goto 21
+            do j = 1, natom
+                if( i .eq. j ) cycle
                 dx   = x(i) - x(j)
                 dy   = y(i) - y(j)
                 dz   = z(i) - z(j)
                 d1_w = dx * dx + dy * dy + dz * dz
                 d2_v = sqrt(d1_w)
                 rij  = d2_v
-                if( rij .ge. g2 ) goto 21
+                if( rij .ge. g2 ) cycle
                 d3_v          = 1d0 - rij / g2
                 d4_v          = (-g1) / d3_v
                 d4_b          = (-((-d4_v) / d3_v)) * (1.0d0 / g2)
@@ -250,31 +250,33 @@ module chempotpy_aln_np_ad_pes
                 gzgcorr(i, i) = dum*(z(i)-z(j)) + gzgcorr(i, i)
                 gzgcorr(j, i) = -dum*(z(i)-z(j)) + gzgcorr(j, i)
                 gcorr(i)      = gcorr(i) + term
-            21 continue
+            21 enddo
             gcorr(i) = gcorr(i) * g1e
-        20 continue
+        20 enddo
         !     then calculate CN term
-        do 30 i = 1, natom
-            do 31 j = 1, natom
-                if( i .eq. j ) goto 31
+        do i = 1, natom
+            do j = 1, natom
+                if( i .eq. j ) cycle
                 dx   = x(i) - x(j)
                 dy   = y(i) - y(j)
                 dz   = z(i) - z(j)
                 d1_w = dx * dx + dy * dy + dz * dz
                 d2_v = sqrt(d1_w)
                 rij  = d2_v
-                if( rij .ge. bu2b ) goto 31
+                if( rij .ge. bu2b ) cycle
                 term = 0.d0
                 gdum = 0.d0
-                if( rij .ge. g2 ) goto 32
-                d3_v = 1.d0-rij/g2
-                d4_v = 1.d0/d3_v
-                d6_b = -g1*d4_v/(d3_v*g2)
-                d1_w = g1 * (1.d0 - d4_v)
-                d2_v = dexp(d1_w)
-                d1_p = d2_v
-                gdum = d1_p * d6_b /rij
-                term = d2_v
+                goto_block_32_278: block
+                    if( rij .ge. g2 ) exit goto_block_32_278
+                    d3_v = 1.d0-rij/g2
+                    d4_v = 1.d0/d3_v
+                    d6_b = -g1*d4_v/(d3_v*g2)
+                    d1_w = g1 * (1.d0 - d4_v)
+                    d2_v = dexp(d1_w)
+                    d1_p = d2_v
+                    gdum = d1_p * d6_b /rij
+                    term = d2_v
+                end block goto_block_32_278
                 32 continue
                 cz1 = (gcorr(i) - term) / gzero
                 if( cz1 .gt. 1.d-20 )then
@@ -339,11 +341,11 @@ module chempotpy_aln_np_ad_pes
                 dvdz(i) = dvdz(i) - dtmpbdrr*(z(i)-z(j))/rr*fcn
                 dvdz(j) = dvdz(j) - dtmpbdrr*(z(j)-z(i))/rr*fcn
                 v       = v - tmpb * fcn
-            31 continue
-        30 continue
+            31 enddo
+        30 enddo
         ! pairwise term
-        do 99989 i = 1, natom
-            do 99990 j = i + 1, natom
+        do i = 1, natom
+            do j = i + 1, natom
                 dx   = x(i) - x(j)
                 dy   = y(i) - y(j)
                 dz   = z(i) - z(j)
@@ -352,7 +354,7 @@ module chempotpy_aln_np_ad_pes
                 d1_p = 1.0d0 / (2.0d0 *  d2_v)
                 g_rr = d1_p * 2.d0
                 rr   = d2_v
-                if( rr .gt. bu2 ) goto 99990
+                if( rr .gt. bu2 ) cycle
                 g_rho  = g_rr
                 rho    = rr - re
                 d4_v   = rho * rho
@@ -395,8 +397,8 @@ module chempotpy_aln_np_ad_pes
                 dvdz(i) = dvdz(i) + dum * dz
                 dvdz(j) = dvdz(j) - dum * dz
                 v       = v - tmp
-            99990 continue
-        99989 continue
+            99990 enddo
+        99989 enddo
     end subroutine pot
 end module chempotpy_aln_np_ad_pes
 

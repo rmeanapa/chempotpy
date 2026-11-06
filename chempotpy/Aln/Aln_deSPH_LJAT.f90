@@ -85,40 +85,41 @@ module chempotpy_aln_desph_ljat_pes
         v   = 0.d0
         !  1. calculate energy of two-body interactions L-J
         u2 = 0.d0
-        do 2 i=1, natom-1
-            do 3 j=i+1, natom
+        do i=1, natom-1
+            do j=i+1, natom
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
                 rr = dsqrt(dx*dx+dy*dy+dz*dz)
                 u2 = u2 + a/rr**12 + b/rr**6
-            3 continue
-        2 continue
+            3 enddo
+        2 enddo
         !  2. calculate energy of three-body interactions
         u3 = 0.d0
-        if( natom .eq. 2 ) go to 7
-        do 6 i=1, natom-2
-            do 4 j=i+1, natom-1
-                do 5 m=j+1, natom
-                    dx  = x(i)-x(j)
-                    dy  = y(i)-y(j)
-                    dz  = z(i)-z(j)
-                    rij = dsqrt(dx*dx+dy*dy+dz*dz)
-                    dx  = x(m)-x(j)
-                    dy  = y(m)-y(j)
-                    dz  = z(m)-z(j)
-                    rjm = dsqrt(dx*dx+dy*dy+dz*dz)
-                    dx  = x(m)-x(i)
-                    dy  = y(m)-y(i)
-                    dz  = z(m)-z(i)
-                    rim = dsqrt(dx*dx+dy*dy+dz*dz)
-                    call scos(i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, co1, co2, co3)
-                    u3 = u3+c*(1.d0+3.d0*co1*co2*co3)/((rij*rjm*rim)**3)
-                5 continue
-            4 continue
-        6 continue
-        !  calculate the potential energy
-        7 v=u2+u3
+        if( natom /= 2 )then
+            do i=1, natom-2
+                do j=i+1, natom-1
+                    do m=j+1, natom
+                        dx  = x(i)-x(j)
+                        dy  = y(i)-y(j)
+                        dz  = z(i)-z(j)
+                        rij = dsqrt(dx*dx+dy*dy+dz*dz)
+                        dx  = x(m)-x(j)
+                        dy  = y(m)-y(j)
+                        dz  = z(m)-z(j)
+                        rjm = dsqrt(dx*dx+dy*dy+dz*dz)
+                        dx  = x(m)-x(i)
+                        dy  = y(m)-y(i)
+                        dz  = z(m)-z(i)
+                        rim = dsqrt(dx*dx+dy*dy+dz*dz)
+                        call scos(i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, co1, co2, co3)
+                        u3 = u3+c*(1.d0+3.d0*co1*co2*co3)/((rij*rjm*rim)**3)
+                    5 enddo
+                4 enddo
+            6 enddo
+            !  calculate the potential energy
+        endif
+        v = u2+u3
     end subroutine pot
     !
     !

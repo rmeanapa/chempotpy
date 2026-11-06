@@ -437,7 +437,7 @@ module chempotpy_nah2_leps_7l_2000_pot11_legacy_state_c810f3bd
         onethd    = 1.0d0/3.0d0
         twothd    = 2.0d0/3.0d0
         !
-        do 10 i=1, nt
+        do i=1, nt
             ! ============================================================
             ! useful quantities calculated first, r1^2, R2^2, R3^2, atom to diatom
             ! center of mass distances, the H-Na-H bond angle and the Jacobian
@@ -574,7 +574,7 @@ module chempotpy_nah2_leps_7l_2000_pot11_legacy_state_c810f3bd
             vmid = dect*xect*(xect-2.0d0) *dexp(-bect2*rave**2)*(0.5d0*(1.0d0-cosa))**2
             e(i) = e(i)+vmid
             e(i) = e(i)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_7l_2000_pot11_legacy_state_c810f3bd
 
@@ -1024,7 +1024,7 @@ module chempotpy_nah2_leps_7l_2000_pot22_legacy_state_c810f3bd
         cevau     = 1.d0/27.2113961d0
         onethd    = 1.0d0/3.0d0
         twothd    = 2.0d0/3.0d0
-        do 10 i=1, nt
+        do i=1, nt
             ! =========================================================
             ! this section calcluates useful quantities - the A to BC center
             ! of mass distance, the angles between A-BC and BC, the shorest
@@ -1210,7 +1210,7 @@ module chempotpy_nah2_leps_7l_2000_pot22_legacy_state_c810f3bd
             e(i)  = coul1+coul2+coul3+deh2-dsqrt(w+cplg2*cplg2)/dsqrt(2.0d0)
             elec  = elec/cevau
             e(i)  = (e(i)+elec)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_7l_2000_pot22_legacy_state_c810f3bd
 

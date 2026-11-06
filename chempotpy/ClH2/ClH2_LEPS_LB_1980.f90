@@ -389,7 +389,7 @@ module chempotpy_clh2_leps_lb_1980_pes
             !
             !
             !
-            logical :: lcol
+            logical :: lcol, matrix_is_diagonal
             !
             call cartou
             call carttor
@@ -570,49 +570,46 @@ module chempotpy_clh2_leps_lb_1980_pes
             !
             !  CHECK IF precm_h IS ALREADY DIAGONAL
             !
-            do 1112 j = 2, 4
+            matrix_is_diagonal = .true.
+            do j = 2, 4
                 jm = j - 1
-                do 1112 i = 1, jm
+                do i = 1, jm
                     index = (j*(j-1))/2 + i
-                    if( abs(precm_h(index)) .gt. 1.d-30 ) go to 1113
-            1112 continue
-            precm_e(1) = precm_h(1)
-            do 1118 j = 2, 4
-                jj         = (j*(j+1))/2
-                precm_e(1) = min(precm_e(1), precm_h(jj))
-            1118 continue
-            d1 = precm_dh1(1)
-            d2 = precm_dh2(1)
-            d3 = precm_dh3(1)
-            go to 1117
-            !
-            !    DIAGONALIZE precm_h PUT EIGENVECTORS INTO precm_u, EIGENVALUES INTO precm_e
-            !    USE EISPACK ROUTINE RSP
-            !
-            1113 continue
-            call rsp(4, 4, 10, precm_h, precm_e, 1, precm_u, precm_scr1, precm_scr2, ierr)
-            !
-            !    EVALUATE DERIVATIVES OF LOWEST ROOT
-            !
-            d1 = 0.d0
-            d2 = 0.d0
-            d3 = 0.d0
-            do 20 l = 1, 4
-                t1 = precm_u(l,1)
-                ll = (l*(l-1))/2
-                do 20 k = 1, 4
-                    t2 = t1*precm_u(k,1)
-                    kk = (k*(k-1))/2
-                    if( l .ge. k ) ind = ll + k
-                    if( k .gt. l ) ind = kk + l
-                    d1 = d1 + t2*precm_dh1(ind)
-                    d2 = d2 + t2*precm_dh2(ind)
-                    d3 = d3 + t2*precm_dh3(ind)
-            20 continue
-            !
-            !   SUPPLEMENTARY TERM
-            !
-            1117 continue
+                    if( abs(precm_h(index)) > 1.0d-30 )then
+                        matrix_is_diagonal = .false.
+                        exit
+                    endif
+                enddo
+                if( .not.matrix_is_diagonal ) exit
+            enddo
+            if( matrix_is_diagonal )then
+                precm_e(1) = precm_h(1)
+                do j = 2, 4
+                    jj         = (j*(j+1))/2
+                    precm_e(1) = min(precm_e(1), precm_h(jj))
+                enddo
+                d1 = precm_dh1(1)
+                d2 = precm_dh2(1)
+                d3 = precm_dh3(1)
+            else
+                call rsp(4, 4, 10, precm_h, precm_e, 1, precm_u, precm_scr1, precm_scr2, ierr)
+                d1 = 0.0d0
+                d2 = 0.0d0
+                d3 = 0.0d0
+                do l = 1, 4
+                    t1 = precm_u(l,1)
+                    ll = (l*(l-1))/2
+                    do k = 1, 4
+                        t2 = t1*precm_u(k,1)
+                        kk = (k*(k-1))/2
+                        if( l >= k ) ind = ll+k
+                        if( k > l ) ind  = kk+l
+                        d1 = d1+t2*precm_dh1(ind)
+                        d2 = d2+t2*precm_dh2(ind)
+                        d3 = d3+t2*precm_dh3(ind)
+                    enddo
+                enddo
+            endif
             t            = potcm_xih*r3
             ex1          = exp(-t)
             shh          = (1.d0+t*(1.d0+precm_c3*t))*ex1
@@ -678,715 +675,47 @@ module chempotpy_clh2_leps_lb_1980_pes
             dv3p  = potcm_eta3p*dv1
         end subroutine vhx
         !> @brief Evaluate RSP for the ClH2_LEPS_LB_1980 potential.
+        !> @brief Diagonalize a real symmetric packed matrix with the shared core eigensolver.
         subroutine rsp( nm, n, nv, a, w, matz, z, fv1, fv2, ierr )
             implicit none
-            double precision :: one, zero
-            integer          :: i, ierr, j, matz, n, nm, nv
-            !
-            !
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            double precision :: a(nv), w(n), z(nm,n), fv1(n), fv2(n)
-            !
-            !     THIS SUBROUTINE CALLS THE RECOMMENDED SEQUENCE OF
-            !     SUBROUTINES FROM THE EIGENSYSTEM SUBROUTINE PACKAGE (EISPACK)
-            !     TO FIND THE EIGENVALUES AND EIGENVECTORS (IF DESIRED)
-            !     OF A REAL SYMMETRIC PACKED MATRIX.
-            !
-            !     ON INPUT-
-            !
-            !        NM  MUST BE SET TO THE ROW DIMENSION OF THE TWO-DIMENSIONAL
-            !        ARRAY PARAMETERS AS DECLARED IN THE CALLING PROGRAM
-            !        DIMENSION STATEMENT,
-            !
-            !        N  IS THE ORDER OF THE MATRIX  A,
-            !
-            !        NV  IS AN INTEGER VARIABLE SET EQUAL TO THE
-            !        DIMENSION OF THE ARRAY  A  AS SPECIFIED FOR
-            !        A  IN THE CALLING PROGRAM.  NV  MUST NOT BE
-            !        LESS THAN  N*(N+1)/2,
-            !
-            !        A  CONTAINS THE LOWER TRIANGLE OF THE REAL SYMMETRIC
-            !        PACKED MATRIX STORED ROW-WISE,
-            !
-            !        MATZ  IS AN INTEGER VARIABLE SET EQUAL TO ZERO IF
-            !        ONLY EIGENVALUES ARE DESIRED,  OTHERWISE IT IS SET TO
-            !        ANY NON-ZERO INTEGER FOR BOTH EIGENVALUES AND EIGENVECTORS.
-            !
-            !     ON OUTPUT-
-            !
-            !        W  CONTAINS THE EIGENVALUES IN ASCENDING ORDER,
-            !
-            !        Z  CONTAINS THE EIGENVECTORS IF MATZ IS NOT ZERO,
-            !
-            !        IERR  IS AN INTEGER OUTPUT VARIABLE SET EQUAL TO AN
-            !        ERROR COMPLETION CODE DESCRIBED IN SECTION 2B OF THE
-            !        DOCUMENTATION.  THE NORMAL COMPLETION CODE IS ZERO,
-            !
-            !        FV1  AND  FV2  ARE TEMPORARY STORAGE ARRAYS.
-            !
-            !     QUESTIONS AND COMMENTS SHOULD BE DIRECTED TO B. S. GARBOW,
-            !     APPLIED MATHEMATICS DIVISION, ARGONNE NATIONAL LABORATORY
-            !
-            !     ------------------------------------------------------------------
-            !
-            data zero, one/0.0d0, 1.0d0/
-            if( n .le. nm ) go to 5
-            ierr = 10 * n
-            go to 50
-            5 if (nv .ge. (n * (n + 1)) / 2) go to 10
-            ierr = 20 * n
-            go to 50
-            !
-            10 call  tred3(n, nv, a, w, fv1, fv2)
-            if( matz .ne. 0 ) go to 20
-            !
-            !     ********** FIND EIGENVALUES ONLY **********
-            !
-            call  tqlrat(n, w, fv2, ierr)
-            go to 50
-            !
-            !     ********** FIND BOTH EIGENVALUES AND EIGENVECTORS **********
-            !
-            20 do 40 i = 1, n
-                !
-                do 30 j = 1, n
-                    z(j,i) = zero
-                30 continue
-                !
-                z(i,i) = one
-            40 continue
-            !
-            call  tql2(nm, n, w, fv1, z, ierr)
-            if( ierr .ne. 0 ) go to 50
-            call  trbak3(nm, n, nv, a, n, z)
-            50 return
-            !
-            !     ********** LAST CARD OF RSP **********
-            !
+            integer, intent(in)           :: nm, n, nv, matz
+            double precision, intent(in)  :: a(nv)
+            double precision, intent(out) :: w(n), z(nm,n), fv1(n), fv2(n)
+            integer, intent(out)          :: ierr
+            integer                       :: i, j, packed_index, lwork
+            double precision, allocatable :: matrix(:,:), work(:)
+            external                      :: dsyev
+            ierr = 0
+            z    = 0.0d0
+            fv1  = 0.0d0
+            fv2  = 0.0d0
+            if( n > nm )then
+                ierr = 10*n
+                return
+            endif
+            if( nv < n*(n+1)/2 )then
+                ierr = 20*n
+                return
+            endif
+            lwork = max(1, 3*n-1)
+            allocate(matrix(n,n), work(lwork))
+            matrix       = 0.0d0
+            packed_index = 0
+            do i = 1, n
+                do j = 1, i
+                    packed_index = packed_index+1
+                    matrix(i,j)  = a(packed_index)
+                    matrix(j,i)  = a(packed_index)
+                enddo
+            enddo
+            if( matz == 0 )then
+                call dsyev('N', 'L', n, matrix, n, w, work, lwork, ierr)
+            else
+                call dsyev('V', 'L', n, matrix, n, w, work, lwork, ierr)
+                if( ierr == 0 ) z(1:n,1:n) = matrix
+            endif
+            deallocate(matrix, work)
         end subroutine rsp
-        !> @brief Evaluate TRED3 for the ClH2_LEPS_LB_1980 potential.
-        subroutine tred3( n, nv, a, d, e, e2 )
-            !
-            implicit none
-            double precision :: f, g, h, hh, scale, zero
-            integer          :: i, ii, iz, j, jk, k, l, n, nv
-            !
-            !
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            double precision :: a(nv), d(n), e(n), e2(n)
-            !
-            !     THIS SUBROUTINE IS A TRANSLATION OF THE ALGOL PROCEDURE TRED3,
-            !     NUM. MATH. 11, 181-195(1968) BY MARTIN, REINSCH, AND WILKINSON.
-            !     HANDBOOK FOR AUTO. COMP., VOL.II-LINEAR ALGEBRA, 212-226(1971).
-            !
-            !     THIS SUBROUTINE REDUCES A REAL SYMMETRIC MATRIX, STORED AS
-            !     A ONE-DIMENSIONAL ARRAY, TO A SYMMETRIC TRIDIAGONAL MATRIX
-            !     USING ORTHOGONAL SIMILARITY TRANSFORMATIONS.
-            !
-            !     ON INPUT-
-            !
-            !        N IS THE ORDER OF THE MATRIX,
-            !
-            !        NV MUST BE SET TO THE DIMENSION OF THE ARRAY PARAMETER A
-            !          AS DECLARED IN THE CALLING PROGRAM DIMENSION STATEMENT,
-            !
-            !        A CONTAINS THE LOWER TRIANGLE OF THE REAL SYMMETRIC
-            !          INPUT MATRIX, STORED ROW-WISE AS A ONE-DIMENSIONAL
-            !          ARRAY, IN ITS FIRST N*(N+1)/2 POSITIONS.
-            !
-            !     ON OUTPUT-
-            !
-            !        A CONTAINS INFORMATION ABOUT THE ORTHOGONAL
-            !          TRANSFORMATIONS USED IN THE REDUCTION,
-            !
-            !        D CONTAINS THE DIAGONAL ELEMENTS OF THE TRIDIAGONAL MATRIX,
-            !
-            !        E CONTAINS THE SUBDIAGONAL ELEMENTS OF THE TRIDIAGONAL
-            !          MATRIX IN ITS LAST N-1 POSITIONS.  E(1) IS SET TO ZERO,
-            !
-            !        E2 CONTAINS THE SQUARES OF THE CORRESPONDING ELEMENTS OF E.
-            !          E2 MAY COINCIDE WITH E IF THE SQUARES ARE NOT NEEDED.
-            !
-            !     QUESTIONS AND COMMENTS SHOULD BE DIRECTED TO B. S. GARBOW,
-            !     APPLIED MATHEMATICS DIVISION, ARGONNE NATIONAL LABORATORY
-            !
-            !     ------------------------------------------------------------------
-            !
-            !     ********** FOR I=N STEP -1 UNTIL 1 DO -- **********
-            !
-            data zero/0.0d0/
-            do  300 ii = 1, n
-                i     = n + 1 - ii
-                l     = i - 1
-                iz    = (i * l) / 2
-                h     = zero
-                scale = zero
-                if( l .lt. 1 ) go to 130
-                !
-                !     ********** SCALE ROW (ALGOL TOL THEN NOT NEEDED) **********
-                !
-                do 120 k = 1, l
-                    iz    = iz + 1
-                    d(k)  = a(iz)
-                    scale = scale + abs(d(k))
-                120 continue
-                !
-                if( scale .ne. zero ) go to 140
-                130 e(i) = zero
-                e2(i) = zero
-                go to 290
-                !
-                140 do 150 k = 1, l
-                    d(k) = d(k) / scale
-                    h    = h + d(k) * d(k)
-                150 continue
-                !
-                e2(i) = scale * scale * h
-                f     = d(l)
-                g     = -sign(sqrt(h), f)
-                e(i)  = scale * g
-                h     = h - f * g
-                d(l)  = f - g
-                a(iz) = scale * d(l)
-                if( l .eq. 1 ) go to 290
-                f = zero
-                !
-                do 240 j = 1, l
-                    g  = zero
-                    jk = (j * (j-1)) / 2
-                    !
-                    !     ********** FORM ELEMENT OF A*U **********
-                    !
-                    do 180 k = 1, l
-                        jk = jk + 1
-                        if( k .gt. j ) jk = jk + k - 2
-                        g = g + a(jk) * d(k)
-                    180 continue
-                    !
-                    !     ********** FORM ELEMENT OF P **********
-                    !
-                    e(j) = g / h
-                    f    = f + e(j) * d(j)
-                240 continue
-                !
-                hh = f / (h + h)
-                jk = 0
-                !
-                !     ********** FORM REDUCED A **********
-                !
-                do 260 j = 1, l
-                    f    = d(j)
-                    g    = e(j) - hh * f
-                    e(j) = g
-                    !
-                    do 260 k = 1, j
-                        jk    = jk + 1
-                        a(jk) = a(jk) - f * e(k) - g * d(k)
-                260 continue
-                !
-                290 d(i) = a(iz+1)
-                a(iz+1) = scale * sqrt(h)
-            300 continue
-            !
-            !
-            !     ********** LAST CARD OF TRED3 **********
-            !
-        end subroutine tred3
-        !> @brief Evaluate TQLRAT for the ClH2_LEPS_LB_1980 potential.
-        subroutine tqlrat( n, d, e2, ierr )
-            !
-            implicit none
-            double precision :: b, c, d, e2, f, g, h, one, p, rr, s, two, zero
-            integer          :: i, ierr, ii, j, l, l1, m, mml, n
-            !
-            !
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension d(n), e2(n)
-            double precision :: machep
-            !
-            !     THIS SUBROUTINE IS A TRANSLATION OF THE ALGOL PROCEDURE TQLRAT,
-            !     ALGORITHM 464, COMM. ACM 16, 689(1973) BY REINSCH.
-            !
-            !     THIS SUBROUTINE FINDS THE EIGENVALUES OF A SYMMETRIC
-            !     TRIDIAGONAL MATRIX BY THE RATIONAL QL METHOD.
-            !
-            !     ON INPUT-
-            !
-            !        N IS THE ORDER OF THE MATRIX,
-            !
-            !        D CONTAINS THE DIAGONAL ELEMENTS OF THE INPUT MATRIX,
-            !
-            !        E2 CONTAINS THE SQUARES OF THE SUBDIAGONAL ELEMENTS OF THE
-            !          INPUT MATRIX IN ITS LAST N-1 POSITIONS.  E2(1) IS ARBITRARY.
-            !
-            !      ON OUTPUT-
-            !
-            !        D CONTAINS THE EIGENVALUES IN ASCENDING ORDER.  IF AN
-            !          ERROR EXIT IS MADE, THE EIGENVALUES ARE CORRECT AND
-            !          ORDERED FOR INDICES 1,2,...IERR-1, BUT MAY NOT BE
-            !          THE SMALLEST EIGENVALUES,
-            !
-            !        E2 HAS BEEN DESTROYED,
-            !
-            !        IERR IS SET TO
-            !          ZERO       FOR NORMAL RETURN,
-            !          J          IF THE J-TH EIGENVALUE HAS NOT BEEN
-            !                     DETERMINED AFTER 30 ITERATIONS.
-            !
-            !     QUESTIONS AND COMMENTS SHOULD BE DIRECTED TO B. S. GARBOW,
-            !     APPLIED MATHEMATICS DIVISION, ARGONNE NATIONAL LABORATORY
-            !
-            !     ------------------------------------------------------------------
-            !
-            !
-            data zero, one, two/0.0d0, 1.0d0, 2.0d0/
-            !
-            !     ********** MACHEP IS A MACHINE DEPENDENT PARAMETER SPECIFYING
-            !                THE RELATIVE PRECISION OF FLOATING POINT ARITHMETIC.
-            !
-            machep = two**(-37)
-            !
-            ierr = 0
-            if( n .eq. 1 ) go to 1001
-            !
-            do 100 i = 2, n
-            100 e2(i-1) = e2(i)
-            !
-            f     = zero
-            b     = zero
-            e2(n) = zero
-            !
-            do 290 l = 1, n
-                j = 0
-                h = machep * (abs(d(l)) + sqrt(e2(l)))
-                if( b .gt. h ) go to 105
-                b = h
-                c = b * b
-                !
-                !     ********** LOOK FOR SMALL SQUARED SUB-DIAGONAL ELEMENT **********
-                !
-                105 do 110 m = l, n
-                    if( e2(m) .le. c ) go to 120
-                    !
-                    !     ********** E2(N) IS ALWAYS ZERO, SO THERE IS NO EXIT
-                    !                THROUGH THE BOTTOM OF THE LOOP **********
-                    !
-                110 continue
-                !
-                120 if (m .eq. l) go to 210
-                130 if (j .eq. 30) go to 1000
-                j = j + 1
-                !
-                !     ********** FORM SHIFT **********
-                !
-                l1   = l + 1
-                s    = sqrt(e2(l))
-                g    = d(l)
-                p    = (d(l1) - g) / (two * s)
-                rr   = sqrt(p*p+one)
-                d(l) = s / (p + sign(rr, p))
-                h    = g - d(l)
-                !
-                do 140 i = l1, n
-                140 d(i) = d(i) - h
-                !
-                f = f + h
-                !
-                !     ********** RATIONAL QL TRANSFORMATION **********
-                !
-                g = d(m)
-                if( g .eq. zero ) g = b
-                h   = g
-                s   = zero
-                mml = m - l
-                !
-                !     ********** FOR I=M-1 STEP -1 UNTIL L DO -- **********
-                !
-                do 200 ii = 1, mml
-                    i       = m - ii
-                    p       = g * h
-                    rr      = p + e2(i)
-                    e2(i+1) = s * rr
-                    s       = e2(i) / rr
-                    d(i+1)  = h + s * (h + d(i))
-                    g       = d(i) - e2(i) / g
-                    if( g .eq. zero ) g = b
-                    h = g * p / rr
-                200 continue
-                !
-                e2(l) = s * g
-                d(l)  = h
-                !
-                !     ********** GUARD AGAINST UNDERFLOW IN CONVERGENCE TEST **********
-                !
-                if( h .eq. zero ) go to 210
-                if( abs(e2(l)) .le. abs(c/h) ) go to 210
-                e2(l) = h * e2(l)
-                if( e2(l) .ne. zero ) go to 130
-                210 p = d(l) + f
-                !
-                !     ********** ORDER EIGENVALUES **********
-                !
-                if( l .eq. 1 ) go to 250
-                !
-                !     ********** FOR I=L STEP -1 UNTIL 2 DO -- **********
-                !
-                do 230 ii = 2, l
-                    i = l + 2 - ii
-                    if( p .ge. d(i-1) ) go to 270
-                    d(i) = d(i-1)
-                230 continue
-                !
-                250 i = 1
-                270 d(i) = p
-            290 continue
-            !
-            go to 1001
-            !
-            !     ********** SET ERROR -- NO CONVERGENCE TO AN
-            !                EIGENVALUE AFTER 30 ITERATIONS **********
-            !
-            1000 ierr = l
-            1001 return
-            !
-            !     ********** LAST CARD OF TQLRAT **********
-            !
-        end subroutine tqlrat
-        !> @brief Evaluate TQL2 for the ClH2_LEPS_LB_1980 potential.
-        subroutine tql2( nm, n, d, e, z, ierr )
-            !
-            implicit none
-            double precision :: b, c, d, e, f, g, h, one, p, rr, s, two, z, zero
-            integer          :: i, ierr, ii, j, k, l, l1, m, mml, n, nm
-            !
-            !
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension d(n), e(n), z(nm,n)
-            double precision :: machep
-            !
-            !     THIS SUBROUTINE IS A TRANSLATION OF THE ALGOL PROCEDURE TQL2,
-            !     NUM. MATH. 11, 293-306(1968) BY BOWDLER, MARTIN, REINSCH, AND
-            !     WILKINSON.
-            !     HANDBOOK FOR AUTO. COMP., VOL.II-LINEAR ALGEBRA, 227-240(1971).
-            !
-            !     THIS SUBROUTINE FINDS THE EIGENVALUES AND EIGENVECTORS
-            !     OF A SYMMETRIC TRIDIAGONAL MATRIX BY THE QL METHOD.
-            !     THE EIGENVECTORS OF A FULL SYMMETRIC MATRIX CAN ALSO
-            !     BE FOUND IF  TRED2  HAS BEEN USED TO REDUCE THIS
-            !     FULL MATRIX TO TRIDIAGONAL FORM.
-            !
-            !     ON INPUT-
-            !
-            !        NM MUST BE SET TO THE ROW DIMENSION OF TWO-DIMENSIONAL
-            !          ARRAY PARAMETERS AS DECLARED IN THE CALLING PROGRAM
-            !          DIMENSION STATEMENT,
-            !
-            !        N IS THE ORDER OF THE MATRIX,
-            !
-            !        D CONTAINS THE DIAGONAL ELEMENTS OF THE INPUT MATRIX,
-            !
-            !        E CONTAINS THE SUBDIAGONAL ELEMENTS OF THE INPUT MATRIX
-            !          IN ITS LAST N-1 POSITIONS.  E(1) IS ARBITRARY,
-            !
-            !        Z CONTAINS THE TRANSFORMATION MATRIX PRODUCED IN THE
-            !          REDUCTION BY  TRED2, IF PERFORMED.  IF THE EIGENVECTORS
-            !          OF THE TRIDIAGONAL MATRIX ARE DESIRED, Z MUST CONTAIN
-            !          THE IDENTITY MATRIX.
-            !
-            !      ON OUTPUT-
-            !
-            !        D CONTAINS THE EIGENVALUES IN ASCENDING ORDER.  IF AN
-            !          ERROR EXIT IS MADE, THE EIGENVALUES ARE CORRECT BUT
-            !          UNORDERED FOR INDICES 1,2,...,IERR-1,
-            !
-            !        E HAS BEEN DESTROYED,
-            !
-            !        Z CONTAINS ORTHONORMAL EIGENVECTORS OF THE SYMMETRIC
-            !          TRIDIAGONAL (OR FULL) MATRIX.  IF AN ERROR EXIT IS MADE,
-            !          Z CONTAINS THE EIGENVECTORS ASSOCIATED WITH THE STORED
-            !          EIGENVALUES,
-            !
-            !        IERR IS SET TO
-            !          ZERO       FOR NORMAL RETURN,
-            !          J          IF THE J-TH EIGENVALUE HAS NOT BEEN
-            !                     DETERMINED AFTER 30 ITERATIONS.
-            !
-            !     QUESTIONS AND COMMENTS SHOULD BE DIRECTED TO B. S. GARBOW,
-            !     APPLIED MATHEMATICS DIVISION, ARGONNE NATIONAL LABORATORY
-            !
-            !     ------------------------------------------------------------------
-            !
-            !
-            data zero, one, two/0.0d0, 1.0d0, 2.0d0/
-            !
-            !     ********** MACHEP IS A MACHINE DEPENDENT PARAMETER SPECIFYING
-            !                THE RELATIVE PRECISION OF FLOATING POINT ARITHMETIC.
-            !
-            machep = two**(-37)
-            !
-            ierr = 0
-            if( n .eq. 1 ) go to 1001
-            !
-            do 100 i = 2, n
-            100 e(i-1) = e(i)
-            !
-            f    = zero
-            b    = zero
-            e(n) = zero
-            !
-            do 240 l = 1, n
-                j = 0
-                h = machep * (abs(d(l)) + abs(e(l)))
-                if( b .lt. h ) b = h
-                !
-                !     ********** LOOK FOR SMALL SUB-DIAGONAL ELEMENT **********
-                !
-                do 110 m = l, n
-                    if( abs(e(m)) .le. b ) go to 120
-                    !
-                    !     ********** E(N) IS ALWAYS ZERO, SO THERE IS NO EXIT
-                    !                THROUGH THE BOTTOM OF THE LOOP **********
-                    !
-                110 continue
-                !
-                120 if (m .eq. l) go to 220
-                130 if (j .eq. 30) go to 1000
-                j = j + 1
-                !
-                !     ********** FORM SHIFT **********
-                !
-                l1   = l + 1
-                g    = d(l)
-                p    = (d(l1) - g) / (two * e(l))
-                rr   = sqrt(p*p+one)
-                d(l) = e(l) / (p + sign(rr, p))
-                h    = g - d(l)
-                !
-                do 140 i = l1, n
-                140 d(i) = d(i) - h
-                !
-                f = f + h
-                !
-                !     ********** QL TRANSFORMATION **********
-                !
-                p   = d(m)
-                c   = one
-                s   = zero
-                mml = m - l
-                !
-                !     ********** FOR I=M-1 STEP -1 UNTIL L DO -- **********
-                !
-                do 200 ii = 1, mml
-                    i = m - ii
-                    g = c * e(i)
-                    h = c * p
-                    if( abs(p) .lt. abs(e(i)) ) go to 150
-                    c      = e(i) / p
-                    rr     = sqrt(c*c+one)
-                    e(i+1) = s * p * rr
-                    s      = c / rr
-                    c      = one / rr
-                    go to 160
-                    150 c = p / e(i)
-                    rr     = sqrt(c*c+one)
-                    e(i+1) = s * e(i) * rr
-                    s      = one / rr
-                    c      = c * s
-                    160 p = c * d(i) - s * g
-                    d(i+1) = h + s * (c * g + s * d(i))
-                    !
-                    !     ********** FORM VECTOR **********
-                    !
-                    do 180 k = 1, n
-                        h        = z(k,i+1)
-                        z(k,i+1) = s * z(k,i) + c * h
-                        z(k,i)   = c * z(k,i) - s * h
-                    180 continue
-                    !
-                200 continue
-                !
-                e(l) = s * p
-                d(l) = c * p
-                if( abs(e(l)) .gt. b ) go to 130
-                220 d(l) = d(l) + f
-            240 continue
-            !
-            !     ********** ORDER EIGENVALUES AND EIGENVECTORS **********
-            !
-            do 300 ii = 2, n
-                i = ii - 1
-                k = i
-                p = d(i)
-                !
-                do 260 j = ii, n
-                    if( d(j) .ge. p ) go to 260
-                    k = j
-                    p = d(j)
-                260 continue
-                !
-                if( k .eq. i ) go to 300
-                d(k) = d(i)
-                d(i) = p
-                !
-                do 280 j = 1, n
-                    p      = z(j,i)
-                    z(j,i) = z(j,k)
-                    z(j,k) = p
-                280 continue
-                !
-            300 continue
-            !
-            go to 1001
-            !
-            !     ********** SET ERROR -- NO CONVERGENCE TO AN
-            !                EIGENVALUE AFTER 30 ITERATIONS **********
-            !
-            1000 ierr = l
-            1001 return
-            !
-            !     ********** LAST CARD OF TQL2 **********
-            !
-        end subroutine tql2
-        !> @brief Evaluate TRBAK3 for the ClH2_LEPS_LB_1980 potential.
-        subroutine trbak3( nm, n, nv, a, m, z )
-            !
-            implicit none
-            double precision :: a, h, s, z, zero
-            integer          :: i, ik, iz, j, k, l, m, n, nm, nv
-            !
-            !
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension a(nv), z(nm,m)
-            !
-            !     THIS SUBROUTINE IS A TRANSLATION OF THE ALGOL PROCEDURE TRBAK3,
-            !     NUM. MATH. 11, 181-195(1968) BY MARTIN, REINSCH, AND WILKINSON.
-            !     HANDBOOK FOR AUTO. COMP., VOL.II-LINEAR ALGEBRA, 212-226(1971).
-            !
-            !     THIS SUBROUTINE FORMS THE EIGENVECTORS OF A REAL SYMMETRIC
-            !     MATRIX BY BACK TRANSFORMING THOSE OF THE CORRESPONDING
-            !     SYMMETRIC TRIDIAGONAL MATRIX DETERMINED BY  TRED3.
-            !
-            !     ON INPUT-
-            !
-            !        NM MUST BE SET TO THE ROW DIMENSION OF TWO-DIMENSIONAL
-            !          ARRAY PARAMETERS AS DECLARED IN THE CALLING PROGRAM
-            !          DIMENSION STATEMENT,
-            !
-            !        N IS THE ORDER OF THE MATRIX,
-            !
-            !        NV MUST BE SET TO THE DIMENSION OF THE ARRAY PARAMETER A
-            !          AS DECLARED IN THE CALLING PROGRAM DIMENSION STATEMENT,
-            !
-            !        A CONTAINS INFORMATION ABOUT THE ORTHOGONAL TRANSFORMATIONS
-            !          USED IN THE REDUCTION BY  TRED3  IN ITS FIRST
-            !          N*(N+1)/2 POSITIONS,
-            !
-            !        M IS THE NUMBER OF EIGENVECTORS TO BE BACK TRANSFORMED,
-            !
-            !        Z CONTAINS THE EIGENVECTORS TO BE BACK TRANSFORMED
-            !          IN ITS FIRST M COLUMNS.
-            !
-            !     ON OUTPUT-
-            !
-            !        Z CONTAINS THE TRANSFORMED EIGENVECTORS
-            !          IN ITS FIRST M COLUMNS.
-            !
-            !     NOTE THAT TRBAK3 PRESERVES VECTOR EUCLIDEAN NORMS.
-            !
-            !     QUESTIONS AND COMMENTS SHOULD BE DIRECTED TO B. S. GARBOW,
-            !     APPLIED MATHEMATICS DIVISION, ARGONNE NATIONAL LABORATORY
-            !
-            !     ------------------------------------------------------------------
-            !
-            data zero/0.0d0/
-            if( m .eq. 0 ) go to 200
-            if( n .eq. 1 ) go to 200
-            !
-            do 140 i = 2, n
-                l  = i - 1
-                iz = (i * l) / 2
-                ik = iz + i
-                h  = a(ik)
-                if( h .eq. zero ) go to 140
-                !
-                do 130 j = 1, m
-                    s  = zero
-                    ik = iz
-                    !
-                    do 110 k = 1, l
-                        ik = ik + 1
-                        s  = s + a(ik) * z(k,j)
-                    110 continue
-                    !
-                    !     ********** DOUBLE DIVISION AVOIDS POSSIBLE UNDERFLOW **********
-                    !
-                    s  = (s / h) / h
-                    ik = iz
-                    !
-                    do 120 k = 1, l
-                        ik     = ik + 1
-                        z(k,j) = z(k,j) - s * a(ik)
-                    120 continue
-                    !
-                130 continue
-                !
-            140 continue
-            !
-            200 return
-            !
-            !     ********** LAST CARD OF TRBAK3 **********
-            !
-        end subroutine trbak3
         !> @brief Evaluate POTINFO for the ClH2_LEPS_LB_1980 potential.
         subroutine potinfo
             implicit none
@@ -1863,7 +1192,7 @@ module chempotpy_clh2_leps_lb_1980_pes
                         else if( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y                     = pt1cm_degsdr(m1)
                         termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)

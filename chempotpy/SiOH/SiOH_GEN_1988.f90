@@ -229,48 +229,48 @@ module chempotpy_sioh_gen_1988_pes
             enddo
         enddo
         ! Double loop (main loop)
-        do 10 i=1, natom
-            do 20 j=1, natom
+        do i=1, natom
+            do j=1, natom
                 ! Cutoff function
-                if( i .eq. j ) goto 20
+                if( i .eq. j ) cycle
                 if( rij(i,j) .le. rn )then
-                    if( i .gt. j ) goto 111
-                    v1=v1+alpha(indmm(i),indmm(j))*dexp(-rij(i,j)/rho(indmm(i),indmm(j))) +(q(i)*q(j)/rij(i,j))* &
-                        & erfc(rij(i,j)/ beta(indmm(i),indmm(j)))
-                    e=-alpha(indmm(i),indmm(j))*dexp(-rij(i,j)/rho(indmm(i),indmm(j)))/rho(indmm(i),indmm(j)) -q(i)* &
-                        & q(j)* erfc(rij(i,j)/beta(indmm(i),indmm(j)))/ rij(i,j)**2 -2*q(i)*q(j)*dexp(-(rij(i,j)/ &
-                        & beta(indmm(i),indmm(j)))**2)/(dsqrt(pi)*rij(i,j)*beta(indmm(i),indmm(j)))
-                    tmp     = e/rij(i,j)
-                    dvdx(i) = dvdx(i)+tmp*dx(i,j)
-                    dvdy(i) = dvdy(i)+tmp*dy(i, j)
-                    dvdz(i) = dvdz(i)+tmp*dz(i, j)
-                    dvdx(j) = dvdx(j)-tmp*dx(i,j)
-                    dvdy(j) = dvdy(j)-tmp*dy(i, j)
-                    dvdz(j) = dvdz(j)-tmp*dz(i, j)
-                    e1      = dexp(bb(indmm(i),indmm(j),1)*(rij(i,j)-cc(indmm(i),indmm(j),1)))
-                    e2      = dexp(bb(indmm(i),indmm(j),2)*(rij(i,j)-cc(indmm(i),indmm(j),2)))
-                    e3      = dexp(bb(indmm(i),indmm(j),3)*(rij(i,j)-cc(indmm(i),indmm(j),3)))
-                    v2      = v2+aa(indmm(i),indmm(j),1)/(1+e1)+aa(indmm(i),indmm(j),2) /(1+e2)+aa(indmm(i),indmm(j), &
-                        & 3)/ (1+e3)
-                    f=-aa(indmm(i),indmm(j),1)*bb(indmm(i),indmm(j),1)*e1/(1+e1)**2 -aa(indmm(i),indmm(j),2)* &
-                        & bb(indmm(i),indmm(j),2)*e2/(1+e2)**2 -aa(indmm(i),indmm(j),3)*bb(indmm(i),indmm(j),3)*e3/ &
-                        & (1+e3)**2
-                    tmp     = f/rij(i,j)
-                    dvdx(i) = dvdx(i)+tmp*dx(i,j)
-                    dvdy(i) = dvdy(i)+tmp*dy(i, j)
-                    dvdz(i) = dvdz(i)+tmp*dz(i, j)
-                    dvdx(j) = dvdx(j)-tmp*dx(i,j)
-                    dvdy(j) = dvdy(j)-tmp*dy(i, j)
-                    dvdz(j) = dvdz(j)-tmp*dz(i, j)
+                    goto_block_111_265: block
+                        if( i .gt. j ) exit goto_block_111_265
+                        v1=v1+alpha(indmm(i),indmm(j))*dexp(-rij(i,j)/rho(indmm(i),indmm(j))) +(q(i)*q(j)/rij(i,j))* &
+                            & erfc(rij(i,j)/ beta(indmm(i),indmm(j)))
+                        e=-alpha(indmm(i),indmm(j))*dexp(-rij(i,j)/rho(indmm(i),indmm(j)))/rho(indmm(i),indmm(j)) - &
+                            & q(i)* q(j)* erfc(rij(i,j)/beta(indmm(i),indmm(j)))/ rij(i,j)**2 -2*q(i)*q(j)*dexp(- &
+                            & (rij(i,j)/ beta(indmm(i),indmm(j)))**2)/(dsqrt(pi)*rij(i,j)*beta(indmm(i),indmm(j)))
+                        tmp     = e/rij(i,j)
+                        dvdx(i) = dvdx(i)+tmp*dx(i,j)
+                        dvdy(i) = dvdy(i)+tmp*dy(i, j)
+                        dvdz(i) = dvdz(i)+tmp*dz(i, j)
+                        dvdx(j) = dvdx(j)-tmp*dx(i,j)
+                        dvdy(j) = dvdy(j)-tmp*dy(i, j)
+                        dvdz(j) = dvdz(j)-tmp*dz(i, j)
+                        e1      = dexp(bb(indmm(i),indmm(j),1)*(rij(i,j)-cc(indmm(i),indmm(j),1)))
+                        e2      = dexp(bb(indmm(i),indmm(j),2)*(rij(i,j)-cc(indmm(i),indmm(j),2)))
+                        e3      = dexp(bb(indmm(i),indmm(j),3)*(rij(i,j)-cc(indmm(i),indmm(j),3)))
+                        v2      = v2+aa(indmm(i),indmm(j),1)/(1+e1)+aa(indmm(i),indmm(j),2) /(1+e2)+aa(indmm(i), &
+                            & indmm(j),3)/ (1+e3)
+                        f=-aa(indmm(i),indmm(j),1)*bb(indmm(i),indmm(j),1)*e1/(1+e1)**2 -aa(indmm(i),indmm(j),2)* &
+                            & bb(indmm(i),indmm(j),2)*e2/(1+e2)**2 -aa(indmm(i),indmm(j),3)*bb(indmm(i),indmm(j),3)* &
+                            & e3/ (1+e3)**2
+                        tmp     = f/rij(i,j)
+                        dvdx(i) = dvdx(i)+tmp*dx(i,j)
+                        dvdy(i) = dvdy(i)+tmp*dy(i, j)
+                        dvdz(i) = dvdz(i)+tmp*dz(i, j)
+                        dvdx(j) = dvdx(j)-tmp*dx(i,j)
+                        dvdy(j) = dvdy(j)-tmp*dy(i, j)
+                        dvdz(j) = dvdz(j)-tmp*dz(i, j)
+                    end block goto_block_111_265
                     111 continue
                     v3 = 0.d0
-                    do 30 k=j+1, natom
-                        if( k .eq. i .or. k .eq. j ) goto 30
-                        if( indmm(i) .eq. 1 ) goto 30
-                        if( indmm(i) .eq. 8 .and. (indmm(j) .eq. 8 .or. indmm(k) .eq. 8) ) &
-                            & goto 30
-                        if( indmm(i) .eq. 14 .and. (indmm(j) .ne. 8 .or. indmm(k) .ne. 8) ) &
-                            & goto 30
+                    do k=j+1, natom
+                        if( k .eq. i .or. k .eq. j ) cycle
+                        if( indmm(i) .eq. 1 ) cycle
+                        if( indmm(i) == 8 .and. (indmm(j) == 8 .or. indmm(k) == 8) ) cycle
+                        if( indmm(i) == 14 .and. (indmm(j) /= 8 .or. indmm(k) /= 8) ) cycle
                         if (rij(i,j).ge.r0(indmm(i)+indmm(j),indmm(i)+indmm(j)+indmm(k)) &
                             & .or. rij(i,k).ge.r0(indmm(i)+indmm(k),indmm(i)+indmm(k)+&
                             &indmm(j))) then

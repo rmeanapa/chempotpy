@@ -884,7 +884,7 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pot22_legacy_state_a97514e1
         mass        = [ 7.016003d0, 1.00783d0, 18.9984d0]
         continue
         ! ----------------------------------------------------------------------
-        do 10 i=1, nt
+        do i=1, nt
             ! PRECOMPUTE THINGS FOR USE LATER
             !     cosine of HF bond angle (i.e., Li-F-H angle)
             costhetahf = (r(i,3)**2-r(i,2)**2-r(i,1)**2)/(-2.d0*r(i,1)*r(i,2))
@@ -1061,7 +1061,7 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pot22_legacy_state_a97514e1
             ! COMBINE INTERACTION REGION ENERGY AND LONG-RANGE FORCES
             e(i) = e(i) + e_lr_lif + e_lr_hf
             e(i) = e(i)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_lifh_leps_jhtp1_2002_dpem_pot22_legacy_state_a97514e1
 

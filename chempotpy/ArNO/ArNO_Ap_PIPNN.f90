@@ -123,7 +123,7 @@ module chempotpy_arno_ap_pipnn_pes
                     pesa_ind(i,j) = 0
                     do k=1, nroh2
                         read(file_unit_98, *)ra1, th1, ra2, ve1, ve2
-                        if( ra1+ra2 .lt. 0.1 ) goto 7
+                        if( ra1+ra2 .lt. 0.1 ) exit
                         if( k .eq. 1 )then
                             rra1 = ra1
                             rra2 = ra2
@@ -189,33 +189,33 @@ module chempotpy_arno_ap_pipnn_pes
             !$OMP PARALLEL DEFAULT(SHARED)
             !$OMP&  PRIVATE (i,j,nh,k,xt,y,y2,y3,ss,nthth,yw2)
             !$OMP DO
-            do 20 i=1, nroh1
-                do 10 j=1, nth
+            do i=1, nroh1
+                do j=1, nth
                     nh = 0
-                    do 2 k=1, pesa_ind(i,j)
+                    do k=1, pesa_ind(i,j)
                         nh     = nh+1
                         xt(nh) = pesa_roh2(i,j,k)
                         y(nh)  = pesa_ve(iop,i,j,k)
-                    2 continue
+                    2 enddo
                     r1a = r1
                     call spline(xt, y, nh, dy1, dyn, y2)
                     call splint(xt, y, y2, nh, r1a, y3)
                     22 continue
                     if( y3 .gt. bvcut_vcut ) y3=bvcut_vcut
                     ss(j) = y3
-                10 continue
+                10 enddo
                 nthth = 0
-                do 5 j=1, nth
+                do j=1, nth
                     nthth     = nthth+1
                     xt(nthth) = pesa_thth(j)
                     y(nthth)  = ss(j)
-                5 continue
+                5 enddo
                 call spline(xt, y, nthth, 0.0d0, 0.0d0, y2)
                 call splint(xt, y, y2, nthth, th, yw2)
                 33 continue
                 if( yw2 .gt. bvcut_vcut ) yw2=bvcut_vcut
                 sss(i) = yw2
-            20 continue
+            20 enddo
             !$OMP END DO NOWAIT
             !$OMP END PARALLEL
             nr1 = nroh1
@@ -245,15 +245,14 @@ module chempotpy_arno_ap_pipnn_pes
             dimension xa(n), y2a(n), ya(n)
             klo = 1
             khi = n
-            1 if (khi-klo.gt.1) then
+            do while( khi-klo .gt. 1 )
                 k = (khi+klo)/2
                 if( xa(k) .gt. x )then
                     khi = k
                 else
                     klo = k
                 endif
-                goto 1
-            endif
+            enddo
             h = xa(khi)-xa(klo)
             if( h .eq. 0.0d0 ) write(6, *) 'bad xa input in splint'
             a = (xa(khi)-x)/h
@@ -275,13 +274,13 @@ module chempotpy_arno_ap_pipnn_pes
                 y2(1) = -0.5d0
                 u(1)  = (3.0d0/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
             endif
-            do 11 i=2, n-1
+            do i=2, n-1
                 sig   = (x(i)-x(i-1))/(x(i+1)-x(i-1))
                 p     = sig*y2(i-1)+2.0d0
                 y2(i) = (sig-1.0d0)/p
                 u(i)  = (6.0d0*((y(i+1)-y(i))/(x(i+ 1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))- sig* u(i- &
                     & 1))/p
-            11 continue
+            11 enddo
             if( ypn .gt. .99d30 )then
                 qn = 0.0d0
                 un = 0.0d0
@@ -290,9 +289,9 @@ module chempotpy_arno_ap_pipnn_pes
                 un = (3.0d0/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
             endif
             y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0d0)
-            do 12 k=n-1, 1, -1
+            do k=n-1, 1, -1
                 y2(k) = y2(k)*y2(k+1)+u(k)
-            12 continue
+            12 enddo
         end
         !> @brief Evaluate longpes.
         subroutine longpes( r_no, r_arn, cthx, v, istat )

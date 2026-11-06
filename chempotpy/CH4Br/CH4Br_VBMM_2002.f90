@@ -173,9 +173,9 @@ module chempotpy_ch4br_vbmm_2002_pes
                 qpdot_pdot(i) = 0.d0
             enddo
             !
-            do 10 i = 1, 18
+            do i = 1, 18
                 qpdot_q(i) = coord(i)
-            10 continue
+            10 enddo
             !
             !  read the parameters for a leps-type pes for the
             !  reaction ch4+Br -> ch3 + Brh from the input file CONST

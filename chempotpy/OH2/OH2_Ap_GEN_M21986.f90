@@ -346,10 +346,10 @@ module chempotpy_oh2_ap_gen_m21986_pes
             !
             !       CONVERT TO ATOMIC UNITS
             !
-            do 50 it = 1, 3
+            do it = 1, 3
                 ambpcm_req(it) = ambpcm_req(it)/bohr
                 ambpcm_d(it)   = ambpcm_d(it)/hartre
-            50 continue
+            50 enddo
             ambpcm_beta = ambpcm_beta * bohr
             ambpcm_de   = ambpcm_d(1)
             ambpcm_a    = ambpcm_a/bohr
@@ -549,9 +549,9 @@ module chempotpy_oh2_ap_gen_m21986_pes
                 pt1cm_engygs = pt1cm_engygs + bcoor
                 !
                 if( usricm_nder .eq. 1 )then
-                    do 300 it = 1, 2
+                    do it = 1, 2
                         pt1cm_degsdr(it) = precm_dbcoor(it) + pt1cm_degsdr(it) + pt1cm_degsdr(3)
-                    300 continue
+                    300 enddo
                     pt1cm_degsdr(3) = dac
                 endif
             else
@@ -663,31 +663,32 @@ module chempotpy_oh2_ap_gen_m21986_pes
             pre2cm_vsp   = pre2cm_vsp/ckcal
             pre2cm_alph1 = pre2cm_alph1*bohr
             pre2cm_alph2 = pre2cm_alph2*bohr
-            do 50 i = 1, pre2cm_nphi
+            do i = 1, pre2cm_nphi
                 pre2cm_bsp(i,1) = pre2cm_bsp(i,1)/ckcal
                 pre2cm_bsp(i,2) = pre2cm_bsp(i,2)/bohr
                 pre2cm_bsp(i,3) = pre2cm_bsp(i,3)*bohr
-            50 continue
+            50 enddo
             nnn = pre2cm_nphi + 2
-            do 60 i = 1, nnn
+            do i = 1, nnn
                 pre2cm_csp(i,1) = pre2cm_csp(i,1)/ckcal
                 pre2cm_csp(i,2) = pre2cm_csp(i,2)/bohr
                 pre2cm_csp(i,3) = pre2cm_csp(i,3)*bohr
-            60 continue
+            60 enddo
             !
             !  CONVERT FROM DEGREES TO RADIANS
             !
             t = 1.0d0/detrad
-            do 70 j = 1, 3
+            do j = 1, 3
                 pre2cm_csp(2,j) = pre2cm_csp(2,j)*t
-            70 continue
+            70 enddo
             t = t**3
-            do 80 ii = 1, pre2cm_nphi
+            do ii = 1, pre2cm_nphi
                 pre2cm_phi(ii) = pre2cm_phi(ii)*detrad
                 i              = ii + 2
-                do 80 j = 1, 3
+                do j = 1, 3
                     pre2cm_csp(i,j) = pre2cm_csp(i,j)*t
-            80 continue
+                80 enddo
+            enddo
             !
             !  SET UP CONSTANTS
             !
@@ -966,10 +967,11 @@ module chempotpy_oh2_ap_gen_m21986_pes
                 d(np1) = 0.0d0
                 c(np2) = 0.0d0
                 d(np2) = 0.0d0
-                do 41 i = 2, n
+                do i = 2, n
                     c(i) = y(i)-y(1)
-                41 d(i) = x(i)-x(1)
-                do 410 i = 3, np2
+                    41 d(i) = x(i)-x(1)
+                enddo
+                do i = 3, np2
                     if( d(i-1) .eq. 0.0d0 )then
                         write(usricm_nflag(18), '(1X,5X,'' ***** ERROR IN SPLINE ... DIVIDE FAULT *****'')')
                         stop 'SPLINE 1'
@@ -988,10 +990,11 @@ module chempotpy_oh2_ap_gen_m21986_pes
                     dfact = supd*pivot
                     cfact = c(i-1)*pivot
                     if( i .le. n )then
-                        do 47 j = i, n
+                        do j = i, n
                             v    = x(j)-x(i-2)
                             c(j) = c(j)-d(j)*cfact
-                        47 d(j) = v*v*v-d(j)*dfact
+                            47 d(j) = v*v*v-d(j)*dfact
+                        enddo
                     endif
                     if( i .lt. np2 )then
                         c(np1) = c(np1)-d(np1)*cfact
@@ -999,8 +1002,9 @@ module chempotpy_oh2_ap_gen_m21986_pes
                     endif
                     c(np2) = c(np2)-d(np2)*cfact
                     d(np2) = x(i-2)-d(np2)*dfact
-                410 continue
-                do 411 i = 1, n
+                    410 continue
+                enddo
+                do i = 1, n
                     j = np2-i
                     if( j .eq. np1 )then
                         v = 1.0d0
@@ -1014,7 +1018,7 @@ module chempotpy_oh2_ap_gen_m21986_pes
                     endif
                     c(j+1) = c(j+1)/d(j+1)
                     c(j)   = c(j)-c(j+1)*v
-                411 continue
+                411 enddo
                 if( d(2) .eq. 0.0d0 )then
                     write(usricm_nflag(18), '(1X,5X,'' ***** ERROR IN SPLINE ... DIVIDE FAULT *****'')')
                     stop 'SPLINE 4'
@@ -1022,21 +1026,21 @@ module chempotpy_oh2_ap_gen_m21986_pes
                 c(2) = c(2)/d(2)
             else if( isw .eq. 2 )then
                 spline = c(1) + c(2)*(z-x(1))
-                do 51 i = 1, n
+                do i = 1, n
                     v = z-x(i)
                     if( v .le. 0 ) return
                     spline = spline + c(i+2)*v**3
-                51 continue
+                51 enddo
             else if( isw .eq. 3 )then
                 spline = c(1) + c(2)*(z-x(1))
                 deriv  = c(2)/3.d0
-                do 53 i = 1, n
+                do i = 1, n
                     v = z-x(i)
                     if( v .le. 0 ) return
                     v2     = v*v
                     spline = spline + c(i+2)*v2*v
                     deriv  = deriv + c(i+2)*v2
-                53 continue
+                53 enddo
             else if( isw .eq. 4 )then
                 spline = 3.d0*deriv
             endif
@@ -1517,7 +1521,7 @@ module chempotpy_oh2_ap_gen_m21986_pes
                         else if( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y                     = pt1cm_degsdr(m1)
                         termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)

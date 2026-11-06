@@ -307,7 +307,7 @@ module chempotpy_mxhsb_leps_modelsurface_g_pot11_legacy_state_b5a1de49
         !
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             !          cosa = 0.5d0 * (r(i, 2) ** 2 + r(i, 3) ** 2 - r(i, 1) ** 2) /
             !     *(r(i, 2) * r(i, 3))
@@ -414,7 +414,7 @@ module chempotpy_mxhsb_leps_modelsurface_g_pot11_legacy_state_b5a1de49
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
         !
     end subroutine dispatch
 end module chempotpy_mxhsb_leps_modelsurface_g_pot11_legacy_state_b5a1de49
@@ -784,7 +784,7 @@ module chempotpy_mxhsb_leps_modelsurface_g_pot22_legacy_state_b5a1de49
         !
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             cosa = 0.5d0 * (r(i,2) ** 2 + r(i,3) ** 2 - r(i,1) ** 2) / (r(i,2) * r(i,3))
             rave = 0.5d0 * (r(i,1) + r(i,3))
@@ -988,7 +988,7 @@ module chempotpy_mxhsb_leps_modelsurface_g_pot22_legacy_state_b5a1de49
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
     end subroutine dispatch
 end module chempotpy_mxhsb_leps_modelsurface_g_pot22_legacy_state_b5a1de49
 

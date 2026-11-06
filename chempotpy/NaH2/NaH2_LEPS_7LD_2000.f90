@@ -628,7 +628,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
         !
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             !
             ! ============================================================
@@ -1669,7 +1669,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
         !
     end subroutine dispatch
 end module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
@@ -2510,7 +2510,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
         !
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             ! =========================================================
             ! this section calcluates useful quantities - the A to BC center
@@ -4021,7 +4021,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
 

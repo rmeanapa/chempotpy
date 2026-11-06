@@ -268,9 +268,9 @@ module chempotpy_h3_gen_tk_1984_pes
             !       CONVERT TO ATOMIC UNITS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !
-            do 50 it = 1, 3
+            do it = 1, 3
                 req(it) = req(it)/bohr
-            50 continue
+            50 enddo
             beta = beta * bohr
             de   = de/hartre
             a    = a/bohr
@@ -390,27 +390,26 @@ module chempotpy_h3_gen_tk_1984_pes
             !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
             !       SEE EQUATION 2.7A, 2.7B
             !
-            c = 1.d0 - nab/nbc
-            if( abs(c) .gt. 1.d-14 ) goto 90
-            nab1 = .5d0
-            nbc1 = .5d0
-            go to 95
-            90 c = c/nab
-            nab1 = (2.d0 + c - sqrt(4.d0+c*c))/(2.d0*c)
-            nbc1 = 1.d0 - nab1
+            c = 1.0d0-nab/nbc
+            if( abs(c) <= 1.0d-14 )then
+                nab1 = 0.5d0
+                nbc1 = 0.5d0
+            else
+                c    = c/nab
+                nab1 = (2.0d0+c-sqrt(4.0d0+c*c))/(2.0d0*c)
+                nbc1 = 1.0d0-nab1
+            endif
             !
             !          ROB IS USED IN THE BENDING POTENTIAL CALCULATIONS
             !
             !          FIRST TRAP OUT ANY ZERO ARGUEMENTS
             !
-            95 if (nab1*nbc1.gt.0.0d0) go to 103
-            rob = 1.d0
-            go to 107
-            !
-            103 stuff = a * log(nab1*nbc1)
-            rob = (rbb - stuff)/(rhh - stuff)
-            !
-            107 continue
+            if( nab1*nbc1 > 0.0d0 )then
+                stuff = a * log(nab1*nbc1)
+                rob   = (rbb - stuff)/(rhh - stuff)
+            else
+                rob = 1.0d0
+            endif
             !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        CALCULATE BENDING CORRECTION
@@ -460,9 +459,9 @@ module chempotpy_h3_gen_tk_1984_pes
                 degsdr(1) = degsdr(1) + degsdr(3)
                 degsdr(2) = degsdr(2) + degsdr(3)
                 degsdr(3) = dac
-                do 300 it = 1, 2
+                do it = 1, 2
                     degsdr(it) = dbcoor(it) + degsdr(it)
-                300 continue
+                300 enddo
                 call rtocart
                 call dedcou
             endif
@@ -538,42 +537,42 @@ module chempotpy_h3_gen_tk_1984_pes
             !
             rabl = r(1).gt.rn
             rbcl = r(2).gt.rn
-            if( rabl.or.rbcl ) go to 12
-            rnmx  = rn-r(1)
-            rnmy  = rn - r(2)
-            theta = atan(rnmy/rnmx)
-            st    = sin(theta)
-            ct    = cos(theta)
-            stt   = 2.d0*st*ct
-            ctt   = ct*ct - st*st
-            lm4   = l-4
-            3 sttl=stt**l
-            stt4 = sttl*stt**(-lm4)
-            6 gam=legacy_d*(1.d0-a2*sttl)
-            alf   = alfn+alfdif*stt4
-            brack = r2t-rnmxn
-            rcrc  = 2.d0*rn*rn+r(1)*r(1)+r(2)*r(2)-2.d0*rn*(r(1)+r(2))
-            squig = brack*stt4+rnmxn-sqrt(rcrc)
-            !
-            ! ENERGY AND DERIVATIVE INFORMATION
-            !
-            t1     = sttl*ctt*3.d0*a2*legacy_d
-            dgamx  = -t1/rnmx
-            dgamy  = t1/rnmy
-            t2     = stt4*ctt*4.d0
-            t1     = t2*alfdif
-            dalfx  = t1/rnmx
-            dalfy  = -t1/rnmy
-            t1     = t2*brack
-            dsqigx = ct + t1/rnmx
-            dsqigy = st - t1/rnmy
-            go to 13
-            12 gam=legacy_d
-            alf = alfn
-            if( rabl ) squig = r(2)-xn
-            if( rbcl ) squig = r(1) - xn
-            if( rabl.and.rbcl ) squig = squig + r(2) - rn
-            13 continue
+            if( rabl .or. rbcl )then
+                gam = legacy_d
+                alf = alfn
+                if( rabl ) squig = r(2)-xn
+                if( rbcl ) squig = r(1)-xn
+                if( rabl .and. rbcl ) squig = squig+r(2)-rn
+            else
+                rnmx  = rn-r(1)
+                rnmy  = rn - r(2)
+                theta = atan(rnmy/rnmx)
+                st    = sin(theta)
+                ct    = cos(theta)
+                stt   = 2.d0*st*ct
+                ctt   = ct*ct - st*st
+                lm4   = l-4
+                3 sttl=stt**l
+                stt4 = sttl*stt**(-lm4)
+                6 gam=legacy_d*(1.d0-a2*sttl)
+                alf   = alfn+alfdif*stt4
+                brack = r2t-rnmxn
+                rcrc  = 2.d0*rn*rn+r(1)*r(1)+r(2)*r(2)-2.d0*rn*(r(1)+r(2))
+                squig = brack*stt4+rnmxn-sqrt(rcrc)
+                !
+                ! ENERGY AND DERIVATIVE INFORMATION
+                !
+                t1     = sttl*ctt*3.d0*a2*legacy_d
+                dgamx  = -t1/rnmx
+                dgamy  = t1/rnmy
+                t2     = stt4*ctt*4.d0
+                t1     = t2*alfdif
+                dalfx  = t1/rnmx
+                dalfy  = -t1/rnmy
+                t1     = t2*brack
+                dsqigx = ct + t1/rnmx
+                dsqigy = st - t1/rnmy
+            endif
             t1     = exp(-alf*squig)
             quan   = 1.d0-t1
             t2     = quan*quan - 1.d0
@@ -582,20 +581,21 @@ module chempotpy_h3_gen_tk_1984_pes
             !
             ! EXCLUSIVELY DERIVATIVES
             !
-            if( rabl.or.rbcl ) go to 20
-            degsdr(1) = dgamx*t2
-            degsdr(2) = dgamy * t2
-            t2        = t1*quan*2.d0*gam
-            degsdr(1) = degsdr(1) + t2*(alf*dsqigx + squig*dalfx)
-            degsdr(2) = degsdr(2) + t2*(alf*dsqigy + squig*dalfy)
-            degsdr(3) = 0.d0
-            return
-            20 t2 = 2.d0*alf*gam*t1*quan
-            degsdr(1)            = 0.d0
-            degsdr(2)            = 0.d0
-            if( rabl ) degsdr(2) = t2
-            if( rbcl ) degsdr(1) = t2
-            degsdr(3)            = 0.d0
+            if( rabl .or. rbcl )then
+                t2                   = 2.0d0*alf*gam*t1*quan
+                degsdr(1)            = 0.0d0
+                degsdr(2)            = 0.0d0
+                if( rabl ) degsdr(2) = t2
+                if( rbcl ) degsdr(1) = t2
+                degsdr(3)            = 0.0d0
+            else
+                degsdr(1) = dgamx*t2
+                degsdr(2) = dgamy * t2
+                t2        = t1*quan*2.d0*gam
+                degsdr(1) = degsdr(1) + t2*(alf*dsqigx + squig*dalfx)
+                degsdr(2) = degsdr(2) + t2*(alf*dsqigy + squig*dalfy)
+                degsdr(3) = 0.d0
+            endif
         end subroutine pot2
         !> @brief Evaluate ANCVRT for the H3_GEN_TK_1984 potential.
         subroutine ancvrt
@@ -979,7 +979,7 @@ module chempotpy_h3_gen_tk_1984_pes
                         else if( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y              = degsdr(m1)
                         termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)

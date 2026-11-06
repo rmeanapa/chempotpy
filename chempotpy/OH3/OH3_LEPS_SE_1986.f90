@@ -260,9 +260,9 @@ module chempotpy_oh3_leps_se_1986_pes
             !   with respect to the internal coordinates.
             !
             if( usricm_nder .eq. 1 )then
-                do 10 i = 1, 6
+                do i = 1, 6
                     potcm_dvdr(i) = 0.0d0
-                10 continue
+                10 enddo
             endif
             !
             !   Calculate the Morse part of the potential energy.
@@ -382,7 +382,7 @@ module chempotpy_oh3_leps_se_1986_pes
             !
             !   Compute useful constants.
             !
-            do 10 i = 1, 3
+            do i = 1, 3
                 z(i)     = concom_sato
                 zpo(i)   = 1.0d0+z(i)
                 op3z(i)  = 1.0d0+3.0d0*z(i)
@@ -391,18 +391,18 @@ module chempotpy_oh3_leps_se_1986_pes
                 tzp3(i)  = 2.0d0*zp3(i)
                 do4z(i)  = de(i)/4.0d0/zpo(i)
                 b(i)     = beta(i)*do4z(i)*2.0d0
-            10 continue
+            10 enddo
             !
             !   Initialize the variable used for storing the energy.
             !
             pot2cm_energy = 0.d0
             !
-            do 20 i = 1, 3
+            do i = 1, 3
                 x(i)          = exp(-beta(i)*(pot2cm_r(i)-re(i)))
                 coul(i)       = do4z(i)*(zp3(i)*x(i)-top3z(i))*x(i)
                 exch(i)       = do4z(i)*(op3z(i)*x(i)-tzp3(i))*x(i)
                 pot2cm_energy = pot2cm_energy + coul(i)
-            20 continue
+            20 enddo
             rad           = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+(exch(3)-exch (1))**2)
             pot2cm_energy = pot2cm_energy - rad/sqrt(2.d0)
             !
@@ -410,10 +410,10 @@ module chempotpy_oh3_leps_se_1986_pes
             !   coordinates.
             if( usricm_nder .eq. 1 )then
                 s = exch(1) + exch(2) + exch(3)
-                do 30 i = 1, 3
+                do i = 1, 3
                     pot2cm_dedr(i) = b(i)*x(i)*((3.0d0*exch(i)-s)/sqrt(2.d0)* (op3z(i)*x(i)-zp3(i))/rad- zp3(i)*x(i)+ &
                         & op3z(i))
-                30 continue
+                30 enddo
             endif
             !
         end subroutine v3pot
@@ -482,17 +482,19 @@ module chempotpy_oh3_leps_se_1986_pes
             s(1)      = pot2cm_r(1)-concom_reoh
             s(3)      = pot2cm_r(2)-concom_reoh
             s(2)      = pot2cm_r(3)-concom_rehh
-            do 30 i = 1, 3
+            do i = 1, 3
                 x(i) = 0.5d0*concom_gam(i)*s(i)
                 q(i) = 1.0d0-tanh(x(i))
-                if( x(i) .lt. xmax1 ) go to 20
-                if( x(i) .lt. xmax2 ) go to 10
-                q(i)  = 0.0d0
-                dq(i) = 0.0d0
-                go to 30
-                10 q(i) = tanlg(x(i))
-                20 dq(i) = -0.5d0*concom_gam(i)/cosh(x(i))**2
-            30 continue
+                if( x(i) < xmax1 )then
+                    dq(i) = -0.5d0*concom_gam(i)/cosh(x(i))**2
+                else if( x(i) < xmax2 )then
+                    q(i)  = tanlg(x(i))
+                    dq(i) = -0.5d0*concom_gam(i)/cosh(x(i))**2
+                else
+                    q(i)  = 0.0d0
+                    dq(i) = 0.0d0
+                endif
+            30 enddo
             p = concom_con(1)+concom_con(2)*(s(1)+s(3))+concom_con(3)*s(2)+0.5d0*concom_con(4)*(s(1)*s(1)+s(3)*s( 3))+ &
                 & 0.5d0*concom_con(5)*s(2)*s(2)+concom_con(6)*s(2)*(s(1)+s(3))+ concom_con(7)*s(1)*s(3)
             pot2cm_energy = q(1)*q(2)*q(3)*p
@@ -500,11 +502,11 @@ module chempotpy_oh3_leps_se_1986_pes
                 dp(1) = concom_con(2)+concom_con(4)*s(1)+concom_con(6)*s(2)+concom_con(7)*s(3)
                 dp(2) = concom_con(3)+concom_con(5)*s(2)+concom_con(6)*(s(1)+s(3))
                 dp(3) = concom_con(2)+concom_con(4)*s(3)+concom_con(6)*s(2)+concom_con(7)*s(1)
-                do 40 i = 1, 3
+                do i = 1, 3
                     trm1 = 0.0d0
-                    if( q(i) .eq. 0.0d0 ) go to 40
-                    trm1 = dq(i)/q(i)
-                40 pot2cm_dedr(i) = pot2cm_energy*(trm1+(dp(i)/p))
+                    if( q(i) /= 0.0d0 ) trm1 = dq(i)/q(i)
+                    pot2cm_dedr(i) = pot2cm_energy*(trm1+dp(i)/p)
+                enddo
                 temp           = pot2cm_dedr(2)
                 pot2cm_dedr(2) = pot2cm_dedr(3)
                 pot2cm_dedr(3) = temp
@@ -987,7 +989,7 @@ module chempotpy_oh3_leps_se_1986_pes
                         else if( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y                     = pt1cm_degsdr(m1)
                         termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)

@@ -2092,15 +2092,14 @@ module chempotpy_ch5p_pip_pes
         double precision               :: a, b, h
         klo = 1
         khi = n
-        1 if (khi-klo.gt.1) then
+        do while( khi-klo .gt. 1 )
             k = (khi+klo)/2
             if( xa(k) .gt. x )then
                 khi = k
             else
                 klo = k
             endif
-            goto 1
-        endif
+        enddo
         h = xa(khi)-xa(klo)
         if( h .eq. 0. ) pause 'bad xa input in splint'
         a = (xa(khi)-x)/h

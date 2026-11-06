@@ -232,7 +232,7 @@ module chempotpy_nah2_leps_5f_1992_pot11_legacy_state_3cc314c3
         rac2   = 1.d0/dsqrt(2.d0)
         cevau  = 1.d0/27.211611d0
         !
-        do 10 i=1, nt
+        do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
             r3s  = r(i,3)*r(i,3)
@@ -274,7 +274,7 @@ module chempotpy_nah2_leps_5f_1992_pot11_legacy_state_3cc314c3
             w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
             cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
             e(i)  = (coul1+coul2+coul3+deh2-rac2*dsqrt(w+cplg2*cplg2))*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_5f_1992_pot11_legacy_state_3cc314c3
 
@@ -349,7 +349,7 @@ module chempotpy_nah2_leps_5f_1992_pot12_legacy_state_3cc314c3
         rmxr  = 1.98941949d+0
         cevau = 1.d0/27.211611d0
         !
-        do 10 i=1, nt
+        do i=1, nt
             amp  = ampn+(ampp-ampn)*0.5d0*(dtanh(ampe*(r(i,2)-ampr))+1.d0)
             erl  = erln+(erlp-erln)*0.5d0*(dtanh(erle*(r(i,2)-erlr))+1.d0)
             ers  = ersn+(ersp-ersn)*0.5d0*(dtanh(erse*(r(i,2)-ersr))+1.d0)
@@ -358,7 +358,7 @@ module chempotpy_nah2_leps_5f_1992_pot12_legacy_state_3cc314c3
             f3   = amp*dexp(-(erl+ers/(eps+r(i,3)**3))*(r(i,3)-rmx)**2)
             ang  = ((r(i,1)-r(i,3))/r(i,2))**2
             e(i) = ang*(f1+f3)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_5f_1992_pot12_legacy_state_3cc314c3
 
@@ -535,7 +535,7 @@ module chempotpy_nah2_leps_5f_1992_pot22_legacy_state_3cc314c3
         rac2    = 1.d0/dsqrt(2.d0)
         cevau   = 1.d0/27.211611d0
         !
-        do 10 i=1, nt
+        do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
             r3s  = r(i,3)*r(i,3)
@@ -586,7 +586,7 @@ module chempotpy_nah2_leps_5f_1992_pot22_legacy_state_3cc314c3
             vdisp = g4+g5+g6+(g1+g2+g3-g4-g5-g6)*cstsq
             vdisp = vdisp*dexp(-0.5d0*(r(i,2)/2.d0)**7)
             e(i)  = (e(i)+vdisp)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_5f_1992_pot22_legacy_state_3cc314c3
 

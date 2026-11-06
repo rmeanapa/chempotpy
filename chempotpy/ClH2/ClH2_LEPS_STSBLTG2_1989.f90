@@ -185,11 +185,11 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
         !
         !   Compute the eLEPS part of the potential
         !
-        do 20 i = 1, 3
+        do i = 1, 3
             x(i)    = exp(-morse_exponent(i)*(r(i)-equilibrium_distance(i)))
             coul(i) = quarter_energy(i)*(sato_plus_three(i)*x(i)-two_one_plus_three_sato(i))*x(i)
             exch(i) = quarter_energy(i)*(one_plus_three_sato(i)*x(i)-two_sato_plus_three(i))*x(i)
-        20 continue
+        20 enddo
         rad    = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+ (exch(3)-exch(1))**2)
         energy = coul(1) + coul(2) + coul(3) - (rad/root_two) + dissociation_energy(2)
         !
@@ -197,16 +197,16 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
         !
         if( nder .eq. 1 )then
             sval = exch(1) + exch(2) + exch(3)
-            do 30 i = 1, 3
+            do i = 1, 3
                 dedr(i) = 0.d0
-                if( x(i) .lt. 1.d-30 ) go to 30
+                if( x(i) .lt. 1.d-30 ) cycle
                 tval = (3.0d0*exch(i)-sval)/root_two*(one_plus_three_sato(i)*x(i)-sato_plus_three(i))
                 if( abs(rad) .lt. 1.d-32 .and.abs(tval) .gt. 1.d-12 )then
                 else
                     tval = tval/rad
                 endif
                 dedr(i) = derivative_weight(i)*x(i)*(tval-sato_plus_three(i)*x(i)+one_plus_three_sato(i))
-            30 continue
+            30 enddo
         endif
         !
         !   Compute the three-center term

@@ -275,9 +275,9 @@ module chempotpy_ih2_leps_dt2_1971_pes
             !       CONVERT TO ATOMIC UNITS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !
-            do 50 it = 1, 3
+            do it = 1, 3
                 req(it) = req(it)/cangs
-            50 continue
+            50 enddo
             beta = beta * cangs
             de   = de/ckcal
             a    = a/cangs
@@ -374,27 +374,26 @@ module chempotpy_ih2_leps_dt2_1971_pes
             !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
             !       SEE EQUATION 2.7A, 2.7B
             !
-            c2 = 1.d0 - nab/nbc
-            if( abs(c2) .gt. 1.d-14 ) goto 90
-            nab1 = .5d0
-            nbc1 = .5d0
-            go to 95
-            90 c2 = c2/nab
-            nab1 = (2.d0 + c2 - sqrt(4.d0+c2*c2))/(2.d0*c2)
-            nbc1 = 1.d0 - nab1
+            c2 = 1.0d0-nab/nbc
+            if( abs(c2) <= 1.0d-14 )then
+                nab1 = 0.5d0
+                nbc1 = 0.5d0
+            else
+                c2   = c2/nab
+                nab1 = (2.0d0+c2-sqrt(4.0d0+c2*c2))/(2.0d0*c2)
+                nbc1 = 1.0d0-nab1
+            endif
             !
             !          ROB IS USED IN THE BENDING POTENTIAL CALCULATIONS
             !
             !          FIRST TRAP OUT ANY ZERO ARGUEMENTS
             !
-            95 if (nab1*nbc1.gt.0.0d0) go to 103
-            rob = 1.d0
-            go to 107
-            !
-            103 stuff = a * log(nab1*nbc1)
-            rob = (rbb - stuff)/(rhh - stuff)
-            !
-            107 continue
+            if( nab1*nbc1 > 0.0d0 )then
+                stuff = a * log(nab1*nbc1)
+                rob   = (rbb - stuff)/(rhh - stuff)
+            else
+                rob = 1.0d0
+            endif
             !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        CALCULATE BENDING CORRECTION
@@ -461,9 +460,9 @@ module chempotpy_ih2_leps_dt2_1971_pes
             degsdr(2) = degsdr(2) + degsdr(3)
             degsdr(3) = dac
             !
-            do 300 it = 1, 2
+            do it = 1, 2
                 degsdr(it) = dbcoor(it) + degsdr(it)
-            300 continue
+            300 enddo
             !
             !
             call eunitzero
@@ -519,13 +518,13 @@ module chempotpy_ih2_leps_dt2_1971_pes
             !
             !   CONVERT TO ATOMIC UNITS
             !
-            do   2 i = 1, 2
+            do i = 1, 2
                 rr(i)       = rr(i)/cangs
                 s(i)        = s(i)/cangs
                 re(i)       = re(i)/cangs
                 alpha(i)    = alpha(i)*cangs
                 legacy_d(i) = legacy_d(i)/ckcal
-            2 continue
+            2 enddo
             alfd = alfd*cangs
             !
             !   CALCULATE USEFUL CONSTANTS
@@ -534,10 +533,10 @@ module chempotpy_ih2_leps_dt2_1971_pes
             rr2ms2 = rr(2)-s(2)
             rrs1d2 = rr1ms1/rr2ms2
             sr1r2  = sqrt(rr1ms1**2+rr2ms2**2)
-            do   5 n=1, 2
+            do n=1, 2
                 rrmre(n) = rr(n)-re(n)
                 pre(n)   = sr1r2-rrmre(n)
-            5 continue
+            5 enddo
             !
             !   Initialize the asymptotic energy terms
             !
@@ -583,62 +582,49 @@ module chempotpy_ih2_leps_dt2_1971_pes
             rrmr(2) = rr(2)-r(2)
             lrr1    = rrmr(1).le.0.0d0
             lrr2    = rrmr(2).le.0.0d0
-            if( nder .eq. 1 )then
-                do 10 j = 1, 3
-                10 degsdr(j) = 0.0d0
-            endif
+            if( nder == 1 ) degsdr = 0.0d0
             engygs = ezero(1)
-            if( lrr1.and.lrr2 ) return
-            if( lrr1.or.lrr2 ) go to 50
-            phip   = atan (rrs1d2*rrmr(2)/rrmr(1))
-            sn2pp  = sin (2.0d0*phip)
-            cs2pp  = cos (2.0d0*phip)
-            tn2pp  = sn2pp/cs2pp
-            sn2pp3 = sn2pp**3
-            sn2pp4 = sn2pp3*sn2pp
-            i      = 1
-            if( phip .gt. pid4 ) i = 2
-            a2(i)   = c(i,1) + c(i,2)*(phip-pid2)*phip
-            dadp(i) = c(i,2)*(2.0d0*phip-pid2)
-            rr12    = sqrt (rrmr(1)**2+rrmr(2)**2)
-            lm3     = l(i) - 3
-            sn2ppl  = sn2pp3*sn2pp**lm3
-            alf     = alpha(i) +(alfd-alpha(i))*sn2pp4
-            gam     = legacy_d(i)*(1.0d0-a2(i)*sn2ppl)
-            xi      = pre(i)*sn2pp4+rrmre(i)-rr12
-            quan    = 1.0d0 - exp(-alf*xi)
-            quan2   = quan*quan
-            engygs  = gam*(quan2-1.0d0)+ ezero(1)
-            !
-            if( nder .ne. 1 ) return
-            !
-            !   If NDER=1, compute the derivatives of the energy with respect to the
-            !   with respect to the internal coordinates.
-            !
-            fac     = rrs1d2/(rrmr(1)**2+(rrs1d2*rrmr(2))**2)
-            dpdr(1) = fac*rrmr(2)
-            dpdr(2) = -fac*rrmr(1)
-            do 40 j = 1, 2
-                ds4dr = 8.0d0*sn2pp4/tn2pp*dpdr(j)
-                dsldr = 2.0d0*dble(l(i))*sn2ppl/tn2pp*dpdr(j)
-                daldr = (alfd-alpha(i))*ds4dr
-                dgadr = -legacy_d(i)*a2(i)*dsldr - legacy_d(i)*dadp(i)*sn2ppl*dpdr(j)
-                dxidr = pre(i)*ds4dr + rrmr(j)/rr12
-            40 degsdr(j) = dgadr*(quan2-1.0d0)+2.0d0*gam*quan*(1.0d0-quan)* &
-                & (alf*dxidr + xi*daldr)
-            return
-            50 j = 1
-            if( lrr1 ) j = 2
-            quan   = 1.0d0-exp(-alpha(j)*(r(j)-re(j)))
-            engygs = legacy_d(j)*(quan**2-1.0d0)+ ezero(1)
-            !
-            !   If NDER =1, compute the derivatives of the energy
-            !   with respect to the internal coordinates.
-            !
-            if( nder .eq. 1 ) degsdr(j) = 2.0d0*legacy_d(j)*alpha(j)*quan*(1.0d0-quan)
-            !
-            !
-            !
+            if( lrr1 .and. lrr2 ) return
+            if( lrr1 .or. lrr2 )then
+                j = 1
+                if( lrr1 ) j              = 2
+                quan   = 1.0d0-exp(-alpha(j)*(r(j)-re(j)))
+                engygs = legacy_d(j)*(quan**2-1.0d0)+ezero(1)
+                if( nder == 1 ) degsdr(j) = 2.0d0*legacy_d(j)*alpha(j)*quan*(1.0d0-quan)
+            else
+                phip   = atan(rrs1d2*rrmr(2)/rrmr(1))
+                sn2pp  = sin(2.0d0*phip)
+                cs2pp  = cos(2.0d0*phip)
+                tn2pp  = sn2pp/cs2pp
+                sn2pp3 = sn2pp**3
+                sn2pp4 = sn2pp3*sn2pp
+                i      = 1
+                if( phip > pid4 ) i = 2
+                a2(i)   = c(i,1)+c(i,2)*(phip-pid2)*phip
+                dadp(i) = c(i,2)*(2.0d0*phip-pid2)
+                rr12    = sqrt(rrmr(1)**2+rrmr(2)**2)
+                lm3     = l(i)-3
+                sn2ppl  = sn2pp3*sn2pp**lm3
+                alf     = alpha(i)+(alfd-alpha(i))*sn2pp4
+                gam     = legacy_d(i)*(1.0d0-a2(i)*sn2ppl)
+                xi      = pre(i)*sn2pp4+rrmre(i)-rr12
+                quan    = 1.0d0-exp(-alf*xi)
+                quan2   = quan*quan
+                engygs  = gam*(quan2-1.0d0)+ezero(1)
+                if( nder == 1 )then
+                    fac     = rrs1d2/(rrmr(1)**2+(rrs1d2*rrmr(2))**2)
+                    dpdr(1) = fac*rrmr(2)
+                    dpdr(2) = -fac*rrmr(1)
+                    do j = 1, 2
+                        ds4dr     = 8.0d0*sn2pp4/tn2pp*dpdr(j)
+                        dsldr     = 2.0d0*dble(l(i))*sn2ppl/tn2pp*dpdr(j)
+                        daldr     = (alfd-alpha(i))*ds4dr
+                        dgadr     = -legacy_d(i)*a2(i)*dsldr-legacy_d(i)*dadp(i)*sn2ppl*dpdr(j)
+                        dxidr     = pre(i)*ds4dr+rrmr(j)/rr12
+                        degsdr(j) = dgadr*(quan2-1.0d0)+2.0d0*gam*quan*(1.0d0-quan)*(alf*dxidr+xi*daldr)
+                    enddo
+                endif
+            endif
         end subroutine pot2
         !> @brief Evaluate ANCVRT for the IH2_LEPS_DT2_1971 potential.
         subroutine ancvrt
@@ -1022,7 +1008,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                         else if( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y              = degsdr(m1)
                         termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)

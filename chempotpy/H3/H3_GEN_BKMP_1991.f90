@@ -148,7 +148,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         cbnda = 0.d0
         cbndb = 0.d0
         !     do i=1,3
-        do 700 i=1, 3
+        do i=1, 3
             dvlon(i)  = 0.d0
             dvas(i)   = 0.d0
             dvbnda(i) = 0.d0
@@ -158,16 +158,16 @@ module chempotpy_h3_gen_bkmp_1991_pes
             dcbnda(i) = 0.d0
             dcbndb(i) = 0.d0
             !     end do
-        700 continue
+        700 enddo
         !  zero the vb and cb arrays (used only for numerical derivatives)
         !     do i=1,25
-        do 701 i=1, 25
+        do i=1, 25
             vb(1,i) = 0.d0
             vb(2,i) = 0.d0
             cb(1,i) = 0.d0
             cb(2,i) = 0.d0
             !     end do
-        701 continue
+        701 enddo
         call h3lond(r, vlon, dvlon)
         call vascal(r, vas, dvas)
         !    now do any corrections required for compact geometries:
@@ -403,7 +403,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         double precision, parameter :: eps2 = 1.d-12
         ipr = 0
         !     do i=1,3
-        do 702 i=1, 3
+        do i=1, 3
             call vh2opt(r(i), esing, 2)
             e1(i)  = esing(1)
             de1(i) = esing(2)
@@ -416,7 +416,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
             q(i)   = half*(e1(i) + e3(i))
             j(i)   = half*(e1(i) - e3(i))
             !     end do
-        702 continue
+        702 enddo
         sumq   = q(1) + q(2) + q(3)
         sumj   = abs( j(2)-j(1) )**2 + abs( j(3)-j(2) )**2 + abs( j(3)-j(1) )**2
         jt     = half*sumj + eps2
@@ -528,11 +528,11 @@ module chempotpy_h3_gen_bkmp_1991_pes
         double precision, parameter :: rp = 1.25d0
         !  first see if this is a compact geometry:
         !     do i=1,3
-        do 703 i=1, 3
+        do i=1, 3
             t(i)  = 0.d0
             dt(i) = 0.d0
             !     end do
-        703 continue
+        703 enddo
         icompc = 0
         if( r(1) .lt. rr ) icompc = icompc + 1
         if( r(2) .lt. rr ) icompc = icompc + 1
@@ -540,7 +540,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         if( icompc .eq. 0 ) return
         ! calculate the T(i) values:
         !     do i=1,3
-        do 704 i=1, 3
+        do i=1, 3
             if( r(i) .lt. rr )then
                 top   = rr-r(i)
                 bot   = rp-r(i)
@@ -551,7 +551,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
                 dt(i) = -3.d0*top2/bot + top3/bot2
             endif
             !     end do
-        704 continue
+        704 enddo
     end subroutine compac
     !
     !> @brief Evaluate casym for the H3_GEN_BKMP_1991 potential.
@@ -618,7 +618,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
             dpr(2) = r(3)*r(1)
             dpr(3) = r(1)*r(2)
             !        do i=1,3
-            do 705 i=1, 3
+            do i=1, 3
                 dsumt(i)  = dt(i)
                 dterm1(i) = -1.d0*u1*u2*pr**(-u2-1.d0)*dpr(i)
                 determ(i) = eterm *(-3.d0*u3*sr2)
@@ -633,7 +633,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
                     &+ dseris(i)     * sumt  * a2    * term1  * eterm&
                     &+ determ(i)     * sumt  * a2    * term1  * series
                 !        end do
-            705 continue
+            705 enddo
             if( ipr .gt. 0 )then
                 !           write(7,7500) dPr,dt,dterm1,determ,dseries,dCas
                 write(7, '(''    derivatives: dPr = '',3(1x,g12.6),/, ''                 dT  = '',3(1x,g12.6),/, ''       ' // &
@@ -672,7 +672,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         exp3  = exp( -v3*sr3 )
         dexp3 = -3.d0*v3*sr2*exp3
         !     do i=1,3
-        do 706 i=1, 3
+        do i=1, 3
             ri      = r(i)
             rrri    = rr-ri
             rrri2   = rrri*rrri
@@ -687,7 +687,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
                 dg(i) = (rrri3/rpri2)*sumv(i) -3.d0*(rrri2/rpri)*sumv(i) + (rrri3/rpri)*v1*v2
             endif
             !     end do
-        706 continue
+        706 enddo
         sumg    = g(1) + g(2) + g(3)
         cal     = sumg*exp3
         dcal(1) = dg(1)*exp3 + sumg*dexp3

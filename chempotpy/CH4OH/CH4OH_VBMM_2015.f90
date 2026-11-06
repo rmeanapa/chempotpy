@@ -291,11 +291,11 @@ module chempotpy_ch4oh_vbmm_2015_pes
             !
             ! Changing units from angstrom to bohr and initialize
             !
-            do 10 i = 1, 21
+            do i = 1, 21
                 q(i) = r(i)
                 !         q(I) = R(I)*0.52918d0
                 pdot(i) = 0.d0
-            10 continue
+            10 enddo
             !
             !  calculate relative coordinates and bond lengths
             !
@@ -1997,7 +1997,7 @@ module chempotpy_ch4oh_vbmm_2015_pes
                         else if( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y              = degsdr(m1)
                         termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)

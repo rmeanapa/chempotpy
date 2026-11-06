@@ -273,7 +273,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
             !
             !
             phicm_z0 = z3cm_z(1)
-            do  10 i = 1, 3
+            do i = 1, 3
                 !
                 !   CONVERT TO ATOMIC UNITS
                 !
@@ -290,7 +290,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
                 precm_tzp3(i)  = 2.0d0*precm_zp3(i)
                 precm_do4z(i)  = precm_d(i)/4.0d0/precm_zpo(i)
                 precm_b(i)     = precm_beta(i)*precm_do4z(i)*2.0d0
-            10 continue
+            10 enddo
             !
             !   10 B(I) = BETA(I)*DO4Z(I)*2.0D0
             !
@@ -369,12 +369,13 @@ module chempotpy_fh2_leps_no2a_1984_pes
             !
             !
             if( usricm_nder .eq. 1 )then
-                do 23 i=1, 3
+                do i=1, 3
                     pt1cm_degsdr(i) = 0.d0
-                    do 23 j=1, 3
+                    do j=1, 3
                         precm_dcoul(i,j) = 0.d0
                         precm_dexch(i,j) = 0.d0
-                23 continue
+                    23 enddo
+                enddo
             endif
             !
             !   Compute the angle dependent Sato parameters
@@ -384,7 +385,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
             z3cm_z(1) = fphi(phi)
             z3cm_z(3) = z3cm_z(1)
             !
-            do 11 i=1, 3, 2
+            do i=1, 3, 2
                 precm_zpo(i)   = 1.0d0 + z3cm_z(i)
                 precm_op3z(i)  = 1.0d0 + 3.0d0*z3cm_z(i)
                 precm_top3z(i) = 2.0d0*precm_op3z(i)
@@ -392,13 +393,13 @@ module chempotpy_fh2_leps_no2a_1984_pes
                 precm_tzp3(i)  = 2.0d0*precm_zp3(i)
                 precm_do4z(i)  = precm_d(i)/4.0d0/precm_zpo(i)
                 precm_b(i)     = precm_do4z(i)*precm_beta(i)*2.d0
-            11 continue
+            11 enddo
             !
-            do 21 i = 1, 3
+            do i = 1, 3
                 precm_x(i)    = exp(-precm_beta(i)*(pt1cm_r(i)-precm_re(i)))
                 precm_coul(i) = precm_do4z(i)*(precm_zp3(i)*precm_x(i)-precm_top3z(i))*precm_x(i)
                 precm_exch(i) = precm_do4z(i)*(precm_op3z(i)*precm_x(i)-precm_tzp3(i))*precm_x(i)
-            21 continue
+            21 enddo
             !
             rad    = sqrt((precm_exch(1)-precm_exch(2))**2+(precm_exch(2)-precm_exch(3))**2+ (precm_exch(3)- &
                 & precm_exch(1))**2)
@@ -418,18 +419,17 @@ module chempotpy_fh2_leps_no2a_1984_pes
             !
             s = precm_exch(1)+precm_exch(2)+precm_exch(3)
             !
-            do 22 i = 1, 3
-                if( precm_x(i) .lt. 1.d-30 ) go to 22
+            do i = 1, 3
+                if( precm_x(i) .lt. 1.d-30 ) cycle
                 t = (3.0d0*precm_exch(i)-s)/r2*(precm_op3z(i)*precm_x(i)-precm_zp3(i))
-                if( rad .ne. 0.d0 ) go to 2222
-                if( t .eq. 0.d0 ) go to 2223
-                write(usricm_nflag(18), '(/,2X,''In the potential routine: T, RAD = '',1P,2E15.7, /,2X,''T/RAD has been set equal to ' // &
-                    'T'')') t, rad
-                go to 2223
-                2222 t = t/rad
-                2223 continue
+                if( rad /= 0.0d0 )then
+                    t = t/rad
+                else if( t /= 0.0d0 )then
+                    write(usricm_nflag(18), '(/,2X,''In the potential routine: T, RAD = '',1P,2E15.7, /,2X,''T/RAD has been set equal to ' // &
+                        'T'')') t, rad
+                endif
                 pt1cm_degsdr(i) = precm_b(i)*precm_x(i)*(t-precm_zp3(i)*precm_x(i)+precm_op3z(i))
-            22 continue
+            22 enddo
             !
             !   If the angle phi is less than or equal to 10 deg. then the
             !   Sato parameter is a constant and the derivative of the potential
@@ -446,7 +446,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
                 return
             endif
             !
-            do 30 i=1, 3, 2
+            do i=1, 3, 2
                 t1 = precm_do4z(i)*precm_x(i)
                 t2 = precm_coul(i)/precm_zpo(i)
                 t3 = t1*(precm_x(i) - 6.d0)
@@ -454,15 +454,18 @@ module chempotpy_fh2_leps_no2a_1984_pes
                 t5 = t1*(3.d0*precm_x(i) - 2.0d0)
                 t6 = precm_exch(i) / precm_zpo(i)
                 s1 = 3.d0*precm_exch(i) - s
-                do 30 j=1, 3
+                do j=1, 3
                     precm_dcoul(i,j) = t4*coscm_dphi(j)
                     precm_dexch(i,j) = phicm_fder * s1* (t5 - t6) * coscm_dphi(j)
-            30 continue
+                30 enddo
+            enddo
             t = -1.d0 / (r2 * rad)
             !
-            do 33 i=1, 3
-                do 33 j=1, 3
-            33 pt1cm_degsdr(i) = pt1cm_degsdr(i) + precm_dcoul(j,i) + t*precm_dexch(j,i)
+            do i=1, 3
+                do j=1, 3
+                    33 pt1cm_degsdr(i) = pt1cm_degsdr(i) + precm_dcoul(j,i) + t*precm_dexch(j,i)
+                enddo
+            enddo
             !
             !
             call eunitzero
@@ -501,31 +504,29 @@ module chempotpy_fh2_leps_no2a_1984_pes
             if( phicm_deg .lt. 0.0d0 ) phicm_deg=-phicm_deg
             if( phicm_deg .gt. 90.0d0 ) phicm_deg=180.0d0-phicm_deg
             if( phicm_deg .lt. 0.0d0 ) stop 89
-            if( phicm_deg .gt. phicm_deg1 ) go to 200
-            !      IF (LCHI.NE.0) WRITE (IPRT,100) DEG
-            fphi       = phicm_z0
-            phicm_fder = 0.0d0
-            return
-            200 if (phicm_deg.gt.20.0d0) go to 300
-            degdif     = phicm_deg-10.0d0
-            dd2        = degdif*degdif
-            dd3        = degdif*dd2
-            fphi       = 0.175d0 +1.15d-4*dd2    -6.0d-6*dd3
-            phicm_fder = 2.30d-4*degdif -1.8d-5*dd2
-            return
-            300 if (phicm_deg.gt.60.0d0) go to 400
-            degdif     = phicm_deg-41.0d0
-            fphi       = 0.191d0 +0.0005d0*degdif
-            phicm_fder = 0.0005d0
-            return
-            400 if (phicm_deg.gt.90.0d0) go to 500
-            sindeg     = sin(phi)
-            s2         = sindeg*sindeg
-            fphi       = 0.17569d0 +3.308d-2*s2
-            cosdeg     = cos(phi)
-            phicm_fder = 6.616d-2*sindeg*cosdeg
-            return
-            500 stop 90
+            if( phicm_deg <= phicm_deg1 )then
+                !      IF (LCHI.NE.0) WRITE (IPRT,100) DEG
+                fphi       = phicm_z0
+                phicm_fder = 0.0d0
+            else if( phicm_deg <= 20.0d0 )then
+                degdif     = phicm_deg-10.0d0
+                dd2        = degdif*degdif
+                dd3        = degdif*dd2
+                fphi       = 0.175d0 +1.15d-4*dd2    -6.0d-6*dd3
+                phicm_fder = 2.30d-4*degdif -1.8d-5*dd2
+            else if( phicm_deg <= 60.0d0 )then
+                degdif     = phicm_deg-41.0d0
+                fphi       = 0.191d0 +0.0005d0*degdif
+                phicm_fder = 0.0005d0
+            else if( phicm_deg <= 90.0d0 )then
+                sindeg     = sin(phi)
+                s2         = sindeg*sindeg
+                fphi       = 0.17569d0 +3.308d-2*s2
+                cosdeg     = cos(phi)
+                phicm_fder = 6.616d-2*sindeg*cosdeg
+            else
+                error stop 'FPHI: angle exceeds 90 degrees'
+            endif
         end function fphi
         !> @brief Evaluate PHICAL for the FH2_LEPS_NO2a_1984 potential.
         subroutine phical ( phi )
@@ -571,8 +572,9 @@ module chempotpy_fh2_leps_no2a_1984_pes
             !
             if( usricm_nder .ne. 1 ) return
             !
-            do 10 i=1, 3
-            10 coscm_dphi(i) = 0.d0
+            do i=1, 3
+                10 coscm_dphi(i) = 0.d0
+            enddo
             !
             if( abs(phi*57.29577951d0) .le. 10.0d0 ) return
             !
@@ -1062,7 +1064,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
                         else if( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y                     = pt1cm_degsdr(m1)
                         termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)

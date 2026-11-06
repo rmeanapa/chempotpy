@@ -269,11 +269,11 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             !   Convert the constants to atomic units
             !
-            do 10 i = 1, 3
+            do i = 1, 3
                 de(i)   = de(i) / charkc
                 re(i)   = re(i) / cangau
                 beta(i) = beta(i) * cangau
-            10 continue
+            10 enddo
             !
             !    Initialize the energy in the three asymptotic valleys
             !
@@ -356,23 +356,23 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             !   Compute the LEPS constants
             !
-            do 20 i = 1, 3
+            do i = 1, 3
                 zpo(i)   = 1.0d0+z(i)
                 op3z(i)  = 1.0d0+3.0d0*z(i)
                 top3z(i) = 2.0d0*op3z(i)
                 zp3(i)   = z(i)+3.0d0
                 tzp3(i)  = 2.0d0*zp3(i)
                 do4z(i)  = de(i)/4.0d0/zpo(i)
-            20 continue
+            20 enddo
             !
             engygs = 0.d0
             !
-            do 30 i = 1, 3
+            do i = 1, 3
                 legacy_x(i) = exp(-beta(i)*(r(i)-re(i)))
                 coul(i)     = do4z(i) * (zp3(i)*legacy_x(i) - top3z(i)) * legacy_x(i)
                 exch(i)     = do4z(i) * (op3z(i)*legacy_x(i) - tzp3(i)) * legacy_x(i)
                 engygs      = engygs + coul(i)
-            30 continue
+            30 enddo
             !
             rad = sqrt((exch(1) - exch(2)) ** 2 + (exch(2) - exch(3)) ** 2 + (exch(3) - exch(1)) ** 2 )
             !
@@ -387,35 +387,37 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             !   Compute the derivatives if NDER = 1
             !
-            if( nder .ne. 1 ) go to 700
-            !
-            !   DCOUL computes the derivatives of the coulombic terms w.r.t. R(I)
-            !   DEXCH computes the derivatives of the exchange terms w.r.t. R(I) and
-            !         also computes the derivative of the term RAD w.r.t. R(i)
-            !
-            !   DCOUL must be called before DEXCH becaues this subprogram computes
-            !   the DXDR terms needed by both subprograms.
-            !
-            !   Compute DEQ = dE/dQ * [dQ/dX * dX/dR + dQ/dZ * dZ/dR]
-            call dcoul
-            !   Compute DERAD = dRAD/dJ * [dJ/dX * dX/dR + dJ/dZ * dZ/dR]
-            call dexch
-            !
-            !   Put all the partial derivatives together:
-            !      DEGSDR  = DEQ + DERAD
-            !      DEQ   = dE/dQ * DQ/DR
-            !      DERAD = dE/dRAD * DRAD/DR
-            !
-            do 40 i = 1, 3
-                degsdr(i) = deq(i) - derad(i)/r2
-            40 continue
-            !
-            !   Add in the derivatives of V3C w.r.t. R(I)
-            !
-            do 50 i = 1, 3
-                degsdr(i) = degsdr(i) + dv3c(i)
-            50 continue
-            !
+            goto_block_700_419: block
+                if( nder .ne. 1 ) exit goto_block_700_419
+                !
+                !   DCOUL computes the derivatives of the coulombic terms w.r.t. R(I)
+                !   DEXCH computes the derivatives of the exchange terms w.r.t. R(I) and
+                !         also computes the derivative of the term RAD w.r.t. R(i)
+                !
+                !   DCOUL must be called before DEXCH becaues this subprogram computes
+                !   the DXDR terms needed by both subprograms.
+                !
+                !   Compute DEQ = dE/dQ * [dQ/dX * dX/dR + dQ/dZ * dZ/dR]
+                call dcoul
+                !   Compute DERAD = dRAD/dJ * [dJ/dX * dX/dR + dJ/dZ * dZ/dR]
+                call dexch
+                !
+                !   Put all the partial derivatives together:
+                !      DEGSDR  = DEQ + DERAD
+                !      DEQ   = dE/dQ * DQ/DR
+                !      DERAD = dE/dRAD * DRAD/DR
+                !
+                do i = 1, 3
+                    degsdr(i) = deq(i) - derad(i)/r2
+                40 enddo
+                !
+                !   Add in the derivatives of V3C w.r.t. R(I)
+                !
+                do i = 1, 3
+                    degsdr(i) = degsdr(i) + dv3c(i)
+                50 enddo
+                !
+            end block goto_block_700_419
             700 continue
             !
             !
@@ -450,9 +452,11 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             save
             !
-            do 10 i = 1, 3
-                do 10 j = 1, 3
-            10 dz(i,j) = 0.0d0
+            do i = 1, 3
+                do j = 1, 3
+                    10 dz(i,j) = 0.0d0
+                enddo
+            enddo
             !
             r1p2 = r(1) * r(1)
             r2p2 = r(2) * r(2)
@@ -484,46 +488,50 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !   bond lengths.
             !   The HH Sato parameter depends on R(2) only
             !
-            if( nder .ne. 1 ) go to 700
-            tmp     = r(2)/(zhhp2 + r2p2)
-            dz(2,2) = 2.0d0*z(2)*(r2i - tmp)
-            !
-            !   Compute the derivative of ZHBr with respect R(i) if CHI is
-            !   is between 0 and 90 degrees.
-            !
-            if( capr .eq. 0.d0 ) go to 100
-            capri = 1.0d0/capr
-            !
-            !   Compute the derivative of R(Br-HH) with respect to R(i)
-            !
-            dcapr1 = 0.5d0*r(1)*capri
-            dcapr2 = -0.25d0*r(2)*capri
-            dcapr3 = 0.5d0*r(3)*capri
-            !
-            !   Compute the derivative of CHI with respect to R(i)
-            !   These derivatives a actually sin(CHI)*dCHI/dR(i)
-            !
-            tmp1  = coschi*capri
-            tmp2  = 1.0d0/(r(2)*capr)
-            dchi1 = r(1)*tmp2 + tmp1*dcapr1
-            dchi2 = tmp1*(capr + r(2)*dcapr2)*r2i
-            dchi3 = tmp1*dcapr3 - r(3)*tmp2
-            !
-            !   Compute the derivative of ZHBr with respect to CAPR and CHI
-            !
-            dzchir = 2.0d0*zchi*capri
-            dzchic = 2.0d0*capr2*coschi*(zhbrp1 + 2.0d0*zhbrp2*schip2)
-            !
-            !   Compute the derivative of ZHBr with respect to R(i)
-            !
-            dz(1,1) = dzchir*dcapr1 + dzchic*dchi1
-            dz(1,2) = dzchir*dcapr2 + dzchic*dchi2
-            dz(1,3) = dzchir*dcapr3 + dzchic*dchi3
-            dz(3,1) = dz(1,1)
-            dz(3,2) = dz(1,2)
-            dz(3,3) = dz(1,3)
-            !
-            100 continue
+            goto_block_700_527: block
+                if( nder .ne. 1 ) exit goto_block_700_527
+                tmp     = r(2)/(zhhp2 + r2p2)
+                dz(2,2) = 2.0d0*z(2)*(r2i - tmp)
+                !
+                !   Compute the derivative of ZHBr with respect R(i) if CHI is
+                !   is between 0 and 90 degrees.
+                !
+                goto_block_100_526: block
+                    if( capr .eq. 0.d0 ) exit goto_block_100_526
+                    capri = 1.0d0/capr
+                    !
+                    !   Compute the derivative of R(Br-HH) with respect to R(i)
+                    !
+                    dcapr1 = 0.5d0*r(1)*capri
+                    dcapr2 = -0.25d0*r(2)*capri
+                    dcapr3 = 0.5d0*r(3)*capri
+                    !
+                    !   Compute the derivative of CHI with respect to R(i)
+                    !   These derivatives a actually sin(CHI)*dCHI/dR(i)
+                    !
+                    tmp1  = coschi*capri
+                    tmp2  = 1.0d0/(r(2)*capr)
+                    dchi1 = r(1)*tmp2 + tmp1*dcapr1
+                    dchi2 = tmp1*(capr + r(2)*dcapr2)*r2i
+                    dchi3 = tmp1*dcapr3 - r(3)*tmp2
+                    !
+                    !   Compute the derivative of ZHBr with respect to CAPR and CHI
+                    !
+                    dzchir = 2.0d0*zchi*capri
+                    dzchic = 2.0d0*capr2*coschi*(zhbrp1 + 2.0d0*zhbrp2*schip2)
+                    !
+                    !   Compute the derivative of ZHBr with respect to R(i)
+                    !
+                    dz(1,1) = dzchir*dcapr1 + dzchic*dchi1
+                    dz(1,2) = dzchir*dcapr2 + dzchic*dchi2
+                    dz(1,3) = dzchir*dcapr3 + dzchic*dchi3
+                    dz(3,1) = dz(1,1)
+                    dz(3,2) = dz(1,2)
+                    dz(3,3) = dz(1,3)
+                    !
+                end block goto_block_100_526
+                100 continue
+            end block goto_block_700_527
             700 continue
             !
         end subroutine sato
@@ -581,27 +589,29 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !   Compute the derivatives of V3C with respect to the internal coordina
             !   if NDER = 1
             !
-            if( nder .ne. 1 ) go to 700
-            !
-            !   Compute the partial derivatives of the FCN terms
-            !
-            dfcn1 = -a2
-            dfcn2 = -2.0d0*a3*r1m3
-            dfcn3 = -2.0d0*a4*r1p3m2
-            dfcn4 = 2.0d0*a5*costh + 8.0d0*a6*costh*sintp6
-            !
-            !   Compute the partial derivative of THETA w.r.t. R(i)
-            !   DTHDR(i) = SIN(THETA)*DTHDR(I)
-            !
-            dthdr1 = costh/r(1) - 1.0d0/r(3)
-            dthdr2 = r(2)/(r(1)*r(3))
-            dthdr3 = costh/r(3) - 1.0d0/r(1)
-            v3cdth = a1*fcn1*fcn2*fcn3*dfcn4
-            !
-            dv3c(1) = v3c * (dfcn1 + dfcn2 + dfcn3) + v3cdth*dthdr1
-            dv3c(2) = -v3c * dfcn3 + v3cdth*dthdr2
-            dv3c(3) = v3c * (dfcn1 - dfcn2 + dfcn3) + v3cdth*dthdr3
-            !
+            goto_block_700_605: block
+                if( nder .ne. 1 ) exit goto_block_700_605
+                !
+                !   Compute the partial derivatives of the FCN terms
+                !
+                dfcn1 = -a2
+                dfcn2 = -2.0d0*a3*r1m3
+                dfcn3 = -2.0d0*a4*r1p3m2
+                dfcn4 = 2.0d0*a5*costh + 8.0d0*a6*costh*sintp6
+                !
+                !   Compute the partial derivative of THETA w.r.t. R(i)
+                !   DTHDR(i) = SIN(THETA)*DTHDR(I)
+                !
+                dthdr1 = costh/r(1) - 1.0d0/r(3)
+                dthdr2 = r(2)/(r(1)*r(3))
+                dthdr3 = costh/r(3) - 1.0d0/r(1)
+                v3cdth = a1*fcn1*fcn2*fcn3*dfcn4
+                !
+                dv3c(1) = v3c * (dfcn1 + dfcn2 + dfcn3) + v3cdth*dthdr1
+                dv3c(2) = -v3c * dfcn3 + v3cdth*dthdr2
+                dv3c(3) = v3c * (dfcn1 - dfcn2 + dfcn3) + v3cdth*dthdr3
+                !
+            end block goto_block_700_605
             700 continue
             !
         end subroutine v3cfcn
@@ -641,30 +651,32 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             save
             !
-            do 10 i = 1, 3
+            do i = 1, 3
                 deq(i)  = 0.d0
                 dqdx(i) = 0.d0
                 dqdz(i) = 0.d0
-                do 10 j = 1, 3
+                do j = 1, 3
                     dxdr(i,j) = 0.d0
-            10 continue
+                10 enddo
+            enddo
             !
             !   First compute the partial derivatives dQ/dX, dQ/dZ, and
             !   the derivative of legacy_x w.r.t. R(i), DX/DR.
             !
-            do 20 i = 1, 3
+            do i = 1, 3
                 dqdx(i)   = do4z(i)*(tzp3(i)*legacy_x(i) - top3z(i))
                 dqdz(i)   = do4z(i)*legacy_x(i)*(legacy_x(i) - 6.0d0) - coul(i)/zpo(i)
                 dxdr(i,i) = -beta(i)*legacy_x(i)
-            20 continue
+            20 enddo
             !
             !   Compute the contribution to the derivate of E w.r.t. R(i) from
             !   the coulombic terms, i.e., dE/dR(i) = dQ/dX * DX/DR(i) + dQ/dZ *DZ/D
             !
-            do 30 i = 1, 3
-                do 30 j = 1, 3
+            do i = 1, 3
+                do j = 1, 3
                     deq(i) = deq(i) + dqdx(j)*dxdr(j,i) + dqdz(j)*dz(j,i)
-            30 continue
+                30 enddo
+            enddo
             !
         end subroutine dcoul
         !> @brief Evaluate DEXCH for the BrH2_LEPS_LTBZ1_1995 potential.
@@ -705,42 +717,43 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             save
             !
-            do 10 i = 1, 3
+            do i = 1, 3
                 derad(i) = 0.d0
                 djdx(i)  = 0.d0
                 djdz(i)  = 0.d0
-            10 continue
+            10 enddo
             !
             sumj = 0.0d0
             !
             !   First compute the partial derivatives dJ/dX, dJ/dZ
             !
-            do 20 i = 1, 3
+            do i = 1, 3
                 sumj    = sumj + exch(i)
                 djdx(i) = do4z(i)*(top3z(i)*legacy_x(i) - tzp3(i))
                 djdz(i) = do4z(i)*legacy_x(i)*(3.0d0*legacy_x(i) - 2.0d0) - exch(i)/zpo(i)
-            20 continue
+            20 enddo
             !
             !   Compute the partial derivatives of the exchange term, J, w.r.t. R(i)
             !   The outer loop, I, is over the bond lengths, the inner loop is over
             !   each legacy_x and Z term.
             !
-            do 30 i = 1, 3
-                do 30 j = 1, 3
+            do i = 1, 3
+                do j = 1, 3
                     djdr(j,i) = djdx(j)*dxdr(j,i) + djdz(j)*dz(j,i)
-            30 continue
+                30 enddo
+            enddo
             !
             !   Compute the partial derivatives of the term RAD w.r.t. J(I).
             !
-            do 40 i = 1, 3
+            do i = 1, 3
                 draddj(i) = (3.0d0*exch(i) - sumj)/rad
-            40 continue
+            40 enddo
             !
-            do 60 i = 1, 3
-                do 70 j = 1, 3
+            do i = 1, 3
+                do j = 1, 3
                     derad(i) = derad(i) + draddj(j)*djdr(j,i)
-                70 continue
-            60 continue
+                70 enddo
+            60 enddo
             !
         end subroutine dexch
         !> @brief Evaluate ANCVRT for the BrH2_LEPS_LTBZ1_1995 potential.
@@ -1125,7 +1138,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                         else if( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y              = degsdr(m1)
                         termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)

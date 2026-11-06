@@ -204,7 +204,7 @@ module chempotpy_nafh_leps_ttypp1_1998_pot11_legacy_state_b37154a3
         rac2   = 1.d0/dsqrt(2.d0)
         cevau  = 1.d0/27.2113961d0
         !
-        do 10 i=1, nt
+        do i=1, nt
             r2s  = r(i,2)*r(i,2)
             rr1  = r(i,1)*scale
             rr3  = r(i,3)*scale
@@ -277,7 +277,7 @@ module chempotpy_nafh_leps_ttypp1_1998_pot11_legacy_state_b37154a3
             cplg2 = c2a*dexp(-c2b*w-c2c*(rr1+r(i,2)+rr3))
             rootw = rac2*dsqrt(w+cplg2*cplg2)
             e(i)  = ((coul1+coul2+coul3+deh2-rootw)*cevau-cfm)
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nafh_leps_ttypp1_1998_pot11_legacy_state_b37154a3
 
@@ -344,7 +344,7 @@ module chempotpy_nafh_leps_ttypp1_1998_pot12_legacy_state_b37154a3
         r13   = 1.2431d0
         cevau = 1.d0/27.2113961d0
         !
-        do 10 i=1, nt
+        do i=1, nt
             hlp  = ccmf(3)/(1.d0+ccmf(4)*r(i,3))
             unaf = dexp(-ccmf(1)-ccmf(2)*r(i,3)- hlp*r(i,3))
             unaf = unaf*27.2113961d0
@@ -365,7 +365,7 @@ module chempotpy_nafh_leps_ttypp1_1998_pot12_legacy_state_b37154a3
             rmc  = 2.7d0
             hlp  = gmc*(1.d0-dtanh(amc*(r(i,2)-rmc)))
             e(i) = e(i)*hlp
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nafh_leps_ttypp1_1998_pot12_legacy_state_b37154a3
 
@@ -574,7 +574,7 @@ module chempotpy_nafh_leps_ttypp1_1998_pot22_legacy_state_b37154a3
         rac2     = 1.d0/dsqrt(2.d0)
         cevau    = 1.d0/27.2113961d0
         !
-        do 10 i=1, nt
+        do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
             r3s  = r(i,3)*r(i,3)
@@ -653,7 +653,7 @@ module chempotpy_nafh_leps_ttypp1_1998_pot22_legacy_state_b37154a3
             af1   = 0.60d0
             fff   = 1.d0 - 0.5d0*(1.d0+dtanh(af1*(r(i,3)-rf1)))
             e(i)  = ((e(i)-1.35d0)/(1.00d0+1.80d0*fff))*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nafh_leps_ttypp1_1998_pot22_legacy_state_b37154a3
 

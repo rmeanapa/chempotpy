@@ -42,13 +42,13 @@ module chempotpy_h3_gen_bkmp3_1996_pes
         double precision              :: eee, eshift, vp(3), xxx(3)
         integer                       :: ivp, ivp1
         eshift = -0.174495770894d0
-        do 101 ivp = 1, nt
-            do 102 ivp1 = 1, 3
+        do ivp = 1, nt
+            do ivp1 = 1, 3
                 xxx(ivp1) = rvp(ivp,ivp1)
-            102 continue
+            102 enddo
             call bkmp2(xxx, eee, vp, -1)
             evp(ivp) = eee-eshift
-        101 continue
+        101 enddo
     end subroutine pot
     !> @brief Evaluate surfid.
     subroutine surfid( h3id )

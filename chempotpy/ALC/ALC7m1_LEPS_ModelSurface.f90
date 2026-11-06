@@ -203,7 +203,7 @@ module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
         z    = fit_z
         an1  = fit_an1
         fns  = fit_fns
-        do  10 i = 1, 3
+        do i = 1, 3
             !   CONVERT TO ATOMIC UNITS
             d(i)    = d(i)/ckcal
             re(i)   = re(i)/cangs
@@ -215,37 +215,40 @@ module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
             zp3(i)   = z(i) + 3.0d0
             tzp3(i)  = 2.0d0*zp3(i)
             do4z(i)  = d(i)/4.0d0/zpo(i)
-        10 b(i) = beta(i)*do4z(i)*2.0d0!
+            10 b(i) = beta(i)*do4z(i)*2.0d0!
+        enddo
         !   Check the value NDER
         !
         !    Compute the eLEPS part of the potential energy
-        do 21 i = 1, 3
+        do i = 1, 3
             x(i)    = exp(-beta(i)*(rr(i)-re(i)))
             coul(i) = do4z(i)*(zp3(i)*x(i)-top3z(i))*x(i)
             exch(i) = do4z(i)*(op3z(i)*x(i)-tzp3(i))*x(i)
-        21 continue
+        21 enddo
         rad = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+ (exch(3)-exch(1))**2)
         e   = coul(1) + coul(2) + coul(3) - (rad/root2) + d(2)
         !
         !   Compute the derivative of the eLEPS part of the potential, if NDER=1
-        if( nder .ne. 1 ) go to 700
-        s = exch(1) + exch(2) + exch(3)
-        do 22 i = 1, 3
-            dedrr(i) = 0.d0
-            if( x(i) .lt. 1.d-30 ) go to 22
-            t = (3.0d0*exch(i)-s)/root2*(op3z(i)*x(i)-zp3(i))
-            !
-            !   If RAD is very small compared to T print a warning to the file linke
-            !   to FORTRAN IPTPRT and set T/RAD equal to T.
-            if( abs(rad) .lt. 1.d-32.and.abs(t) .gt. 1.d-12 )then
-                write(*, '(/,2X,''In the potential routine: T, RAD = '',1P,2E15.7, /,2X,''T/RAD has been set equal to' // &
-                    ' T'')') t, rad
-            else if( abs(rad) .gt. 1.d-32 )then
-                t = t/rad
-            endif
-            !
-            dedrr(i) = b(i)*x(i)*(t -zp3(i)*x(i)+op3z(i))
-        22 continue
+        goto_block_700_249: block
+            if( nder .ne. 1 ) exit goto_block_700_249
+            s = exch(1) + exch(2) + exch(3)
+            do i = 1, 3
+                dedrr(i) = 0.d0
+                if( x(i) .lt. 1.d-30 ) cycle
+                t = (3.0d0*exch(i)-s)/root2*(op3z(i)*x(i)-zp3(i))
+                !
+                !   If RAD is very small compared to T print a warning to the file linke
+                !   to FORTRAN IPTPRT and set T/RAD equal to T.
+                if( abs(rad) .lt. 1.d-32.and.abs(t) .gt. 1.d-12 )then
+                    write(*, '(/,2X,''In the potential routine: T, RAD = '',1P,2E15.7, /,2X,''T/RAD has been set equal to' // &
+                        ' T'')') t, rad
+                else if( abs(rad) .gt. 1.d-32 )then
+                    t = t/rad
+                endif
+                !
+                dedrr(i) = b(i)*x(i)*(t -zp3(i)*x(i)+op3z(i))
+            22 enddo
+        end block goto_block_700_249
         700 continue
         !
         !   Compute the auxiliary barrier term, Va, where

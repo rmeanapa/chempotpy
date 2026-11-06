@@ -443,7 +443,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
         af1       = amh/(amf+amh)
         af2       = amf/(amf+amh)
         !
-        do 10 i=1, nt
+        do i=1, nt
             r1s      = r(i,1)*r(i,1)
             r2s      = r(i,2)*r(i,2)
             r3s      = r(i,3)*r(i,3)
@@ -490,7 +490,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
             danormd1 = 0.d0
             danormd2 = 0.d0
             danormd3 = 0.d0
-            do 20 l = l1, l2
+            do l = l1, l2
                 hlp1   = y(1,1,l)*dexp(-y(2,1,l)*r(i,1))
                 hlp2   = y(3,1,l)*dexp(-y(4,1,l)*r(i,1))
                 t1     = hlp1+hlp2+s1
@@ -596,7 +596,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
                 danormd1 = danormd1 + dcogd1
                 danormd2 = danormd2 + dcogd2
                 danormd3 = danormd3 + dcogd3
-            20 continue
+            20 enddo
             !     if (csb.gt.3.99d0) write(6,77)l1,l2,csb,r(i,3),
             !    &                         r(i,2),e(i),anorm
             hlp     = 1.d0/anorm
@@ -609,7 +609,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
             de(1,i) = de(1,i)*cevau
             de(2,i) = de(2,i)*cevau
             de(3,i) = de(3,i)*cevau
-        10 continue
+        10 enddo
         !-----------------------------------------------------------------------
     end subroutine dispatch
 end module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
@@ -780,7 +780,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot12_entry_stat_8d0592d8
         af1      = amh/(amf+amh)
         af2      = amf/(amf+amh)
         !
-        do 10 i=1, nt
+        do i=1, nt
             hlp1       = dexp(-xpnh*r(i,2)**2)
             hlp2       = dexp(-xpnh1*r(i,3)**2)
             ccnh(1)    = ccnha(1)+ccnhi(1)*hlp1+ccnhi1(1)*hlp2
@@ -888,7 +888,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot12_entry_stat_8d0592d8
             de(1,i) = de(1,i)*cevau
             de(2,i) = de(2,i)*cevau
             de(3,i) = de(3,i)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nafh_leps_ttypp2_1998_dpem_pot12_entry_stat_8d0592d8
 
@@ -1237,7 +1237,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot22_entry_stat_8d0592d8
         !
         !
         !
-        do 10 i=1, nt
+        do i=1, nt
             r1s      = r(i,1)*r(i,1)
             r2s      = r(i,2)*r(i,2)
             r3s      = r(i,3)*r(i,3)
@@ -1284,7 +1284,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot22_entry_stat_8d0592d8
             danormd1 = 0.d0
             danormd2 = 0.d0
             danormd3 = 0.d0
-            do 20 l = l1, l2
+            do l = l1, l2
                 hlp1  = y(1,1,l)*dexp(-y(2,1,l)*r(i,1))
                 hlp2  = y(3,1,l)*dexp(-y(4,1,l)*r(i,1))
                 t1    = hlp1+hlp2+s1
@@ -1389,7 +1389,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot22_entry_stat_8d0592d8
                 danormd1 = danormd1 + dcogd1
                 danormd2 = danormd2 + dcogd2
                 danormd3 = danormd3 + dcogd3
-            20 continue
+            20 enddo
             hlp     = 1.d0/anorm
             e(i)    = e(i)*hlp
             de(1,i) = (de(1,i) - e(i)*danormd1)*hlp
@@ -1399,7 +1399,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot22_entry_stat_8d0592d8
             de(1,i) = de(1,i)*cevau
             de(2,i) = de(2,i)*cevau
             de(3,i) = de(3,i)*cevau
-        10 continue
+        10 enddo
     end subroutine dispatch
 end module chempotpy_nafh_leps_ttypp2_1998_dpem_pot22_entry_stat_8d0592d8
 

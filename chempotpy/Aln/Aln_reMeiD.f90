@@ -94,11 +94,11 @@ module chempotpy_aln_remeid_pes
         rn    = 1.75d0*r0
         rc    = 1.95d0*r0
         v     = 0.d0
-        do 2 i=1, natom
+        do i=1, natom
             rho = 0.d0
             v2  = 0.d0
-            do 3 j=1, natom
-                if( i .eq. j ) go to 3
+            do j=1, natom
+                if( i .eq. j ) cycle
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
@@ -121,7 +121,7 @@ module chempotpy_aln_remeid_pes
                     ef  = (cc(l+1)/12.d0)*(r0/rr)**l
                     rho = rho + ef*q
                 enddo
-            3 continue
+            3 enddo
             sterm = 0.d0
             if( rho .ne. 0.d0 )then
                 do m=1, 3
@@ -136,7 +136,7 @@ module chempotpy_aln_remeid_pes
                 bigef = -ec*(1.d0-ab*dlog(rho))*rho**ab + 0.5d0*phi0*sterm
             endif
             v = v + v2 + bigef
-        2 continue
+        2 enddo
     end subroutine pot
 end module chempotpy_aln_remeid_pes
 

@@ -204,7 +204,7 @@ subroutine pot( r, e, de, nt, nsurf )
     else if( nsurf .eq. 3 )then
         call g_pot22(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
     else
-        do 10 i=1, nt
+        do i=1, nt
             call g_pot11(g_p_, r, g_r, ldg_r, v11, de, ldg_e, 1)
             call g_pot12(g_p_, r, g_r, ldg_r, v12, de, ldg_e, 1)
             call g_pot22(g_p_, r, g_r, ldg_r, v22, de, ldg_e, 1)
@@ -213,7 +213,7 @@ subroutine pot( r, e, de, nt, nsurf )
             else
                 e(i) = 0.5d0*(v11+v22+dsqrt((v11-v22)**2+4.d0*v12**2))
             endif
-        10 continue
+        10 enddo
     endif
 end subroutine pot
 
@@ -847,7 +847,7 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot11_legacy_state_7d743da0
         twothd = 2.0d0 / 3.0d0
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             ! ============================================================
             ! useful quantities calculated first, r1^2, R2^2, R3^2, atom to diatom
@@ -2547,7 +2547,7 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot11_legacy_state_7d743da0
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
         !
     end subroutine dispatch
 end module chempotpy_nah2_leps_6_2000_dpem_g_pot11_legacy_state_7d743da0
@@ -3616,7 +3616,7 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot22_legacy_state_7d743da0
         !
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             ! =========================================================
             ! this section calcluates useful quantities - the A to BC center
@@ -5040,7 +5040,7 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot22_legacy_state_7d743da0
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_6_2000_dpem_g_pot22_legacy_state_7d743da0
 

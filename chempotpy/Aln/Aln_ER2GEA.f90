@@ -85,16 +85,16 @@ module chempotpy_aln_er2gea_pes
         v  = 0.d0
         u2 = 0.d0
         ff = 0.d0
-        do 1 i=1, natom
+        do i=1, natom
             ud  = 0.d0
             ud2 = 0.d0
-            do 2 j=1, natom
-                if( i .eq. j ) go to 2
+            do j=1, natom
+                if( i .eq. j ) cycle
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
                 rr = dsqrt(dx*dx+dy*dy+dz*dz)
-                if( rr .ge. bu2 ) go to 2
+                if( rr .ge. bu2 ) cycle
                 rho  = rr-re
                 poly = 1.d0+a1*rho+a2*rho**2+a3*rho**3
                 ee   = dexp(-a1*rho)
@@ -105,9 +105,9 @@ module chempotpy_aln_er2gea_pes
                 u2  = u2-0.5d0*de*ee*poly*co
                 ud  = ud+dexp(-rr*b)*co3
                 ud2 = ud2+(co3*dexp(-rr*b))**en
-            2 continue
+            2 enddo
             ff = ff-bb*ud**en+bb*ud2
-        1 continue
+        1 enddo
         v = u2+ff
     end subroutine pot
 end module chempotpy_aln_er2gea_pes

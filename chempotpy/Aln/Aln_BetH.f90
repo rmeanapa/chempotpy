@@ -81,24 +81,24 @@ module chempotpy_aln_beth_pes
         a  = 3.004*autoang
         b  = 1.637*autoang
         v1 = 0d0
-        do 4 i=1, natom
+        do i=1, natom
             ud = 0d0
-            do 5 j=1, natom
+            do j=1, natom
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
                 rr = dsqrt(dx*dx+dy*dy+dz*dz)
-                if( j .eq. i ) go to 41
+                if( j .eq. i ) cycle
                 udd = 0d0
                 udd = dexp(-b*rr)
                 ud  = ud+udd
                 41 continue
-            5 continue
+            5 enddo
             v1 = v1+dsqrt(ud)
-        4 continue
+        4 enddo
         u = 0d0
-        do 2 i=1, natom-1
-            do 3 j=i+1, natom
+        do i=1, natom-1
+            do j=i+1, natom
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
@@ -106,8 +106,8 @@ module chempotpy_aln_beth_pes
                 uu = 0d0
                 uu = dexp(-a*rr)
                 u  = u+uu
-            3 continue
-        2 continue
+            3 enddo
+        2 enddo
         v = u*aa-v1*bb
     end subroutine pot
     !

@@ -515,14 +515,14 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             ! prefactors for polynomials
             !
             potcm_fac(0) = 1.
-            do 101 i=1, 2*4
+            do i=1, 2*4
                 potcm_fac(i) = potcm_fac(i-1)*i
-            101 continue
-            do 102 l=0, 4
-                do 103 m=0, l
+            101 enddo
+            do l=0, 4
+                do m=0, l
                     ang_pf(l,m) = (-1)**m*sqrt((2*l+1)*potcm_fac(l-m)/(4*pi*potcm_fac(l+m)))
-                103 continue
-            102 continue
+                103 enddo
+            102 enddo
             !
             ! 3j-symbols for potential energy surface
             ! (abc/d-d0)=g(a,b,c,d)
@@ -530,25 +530,24 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             !
             potcm_fct(1)  = 1.0d0
             potcm_efct(1) = 0.0d0
-            do 104 i=1, 400
+            do i=1, 400
                 x             = i
                 j             = i+1
                 potcm_efct(j) = potcm_efct(i)
                 potcm_fct(j)  = potcm_fct(i)*x
-                1 if(potcm_fct(j).ge.10.0d0) then
+                do while( potcm_fct(j) .ge. 10.0d0 )
                     potcm_fct(j)  = 0.1d0*potcm_fct(j)
                     potcm_efct(j) = potcm_efct(j)+1.0d0
-                    goto 1
-                endif
-            104 continue
+                enddo
+            104 enddo
             !
             !
             m2 = 0
             m3 = 0
-            do 108 j1=0, 4*2, 2
-                do 107 j2=0, 4*2, 2
-                    do 106 j3=iabs(j1-j2), iabs(j1+j2), 4
-                        do 105 m1=0, min(j1, j2), 2
+            do j1=0, 4*2, 2
+                do j2=0, 4*2, 2
+                    do j3=iabs(j1-j2), iabs(j1+j2), 4
+                        do m1=0, min(j1, j2), 2
                             m2 = -m1
                             i1 = max0(0, (j2-j3-m1)/2, (j1-j3+m2)/2)
                             i2 = min0((j1+j2-j3)/2, (j1-m1)/2, (j2+m2)/2)
@@ -565,11 +564,11 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                             nmax = i2-i1
                             f    = 1.0d0
                             if( nmax .gt. 0 )then
-                                do 109 i=nmax, 1, -1
+                                do i=nmax, 1, -1
                                     x = (ib-i+1)*(ic-i+1)*(id-i+1)
                                     x = x/((ia+i)*(ie+i)*(if+i))
                                     f = 1.0d0-x*f
-                                109 continue
+                                109 enddo
                             endif
                             sum = sum*f
                             f=potcm_fct((j1+j2-j3)/2+1)*potcm_fct((j1-j2+j3)/2+1)* potcm_fct((j2-j1+j3)/2+1)* &
@@ -582,10 +581,10 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                                 & potcm_efct((j1+ j2+j3)/ 2+2)
                             cg3j                       = sum*dsqrt(f)*10.0d0**(esum+0.5d0*e)* (-1)**((j2-j1-m3)/2)
                             ang_g(j1/2,j2/2,j3/2,m1/2) = cg3j
-                        105 continue
-                    106 continue
-                107 continue
-            108 continue
+                        105 enddo
+                    106 enddo
+                107 enddo
+            108 enddo
         end subroutine prepare_local_context
         !> @brief Evaluate gsrsqs for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine gsrsqs
@@ -616,15 +615,15 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             dab1 = pt1cm_r(1)-3.0d0
             dab2 = pt1cm_r(1)-4.0d0
             dab3 = pt1cm_r(1)-4.9d0
-            do 301 j1=0, 4, 1
-                do 302 j2=j1, 4, 1
-                    do 303 j3=(j2-j1), (j1+j2), 2
+            do j1=0, 4, 1
+                do j2=j1, 4, 1
+                    do j3=(j2-j1), (j1+j2), 2
                         potcm_ar(j1,j2,j3)=potcm_ac(1,j1,j2,j3)*exp(-0.20d0*dab1**2)+ potcm_ac(2,j1,j2,j3)*exp(- &
                             & 0.35d0*dab2**2)+ potcm_ac(3,j1,j2,j3)* exp(-0.80d0*dab3**2)
                         potcm_ar(j2,j1,j3) = (-1)**(j1+j2)*potcm_ar(j1,j2,j3)
-                    303 continue
-                302 continue
-            301 continue
+                    303 enddo
+                302 enddo
+            301 enddo
             !
             !
         end subroutine gsrsqs
@@ -691,9 +690,9 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             r23    = sqrt((x(3)-x(2))**2+(y(3)-y(2))**2+(z(3)-z(2))**2)
             r14    = sqrt((x(4)-x(1))**2+(y(4)-y(1))**2+(z(4)-z(1))**2)
             r34    = sqrt((x(4)-x(3))**2+(y(4)-y(3))**2+(z(4)-z(3))**2)
-            do 101 j=1, 4
+            do j=1, 4
                 cs(j) = cos(j*tau)
-            101 continue
+            101 enddo
             s       = sin(th1)
             c       = cos(th1)
             s2      = s*s
@@ -745,40 +744,40 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             p2(4,3) = ang_pf(4,3)*105.0d0*s3*c
             p2(4,4) = ang_pf(4,4)*105.0d0*s4
             icu     = 31
-            do 102 j1=0, 4, 1
-                do 103 j2=j1, 4, 1
-                    do 104 j3=(j2-j1), (j1+j2), 2
+            do j1=0, 4, 1
+                do j2=j1, 4, 1
+                    do j3=(j2-j1), (j1+j2), 2
                         potcm_ac(1,j1,j2,j3) = potcm_a(icu)
                         potcm_ac(2,j1,j2,j3) = potcm_a(icu+35)
                         potcm_ac(3,j1,j2,j3) = potcm_a(icu+70)
                         icu                  = icu+1
-                    104 continue
-                103 continue
-            102 continue
+                    104 enddo
+                103 enddo
+            102 enddo
             !
             call gsrsqs
             !
-            do 105 j1=0, 4, 1
-                do 106 j2=0, 4, 1
-                    do 107 j3=abs(j2-j1), (j2+j1), 2
+            do j1=0, 4, 1
+                do j2=0, 4, 1
+                    do j3=abs(j2-j1), (j2+j1), 2
                         vp(j1,j2,j3) = ang_g(j1,j2,j3,0)*p1(j1,0)*p2(j2,0)
-                        do 108 m=1, min(j1, j2), 1
+                        do m=1, min(j1, j2), 1
                             vp(j1,j2,j3) = vp(j1,j2,j3)+(-1)**m*2*ang_g(j1,j2,j3,m)* cs(m)*p1(j1,m)*p2(j2,m)
-                        108 continue
+                        108 enddo
                         vp(j1,j2,j3) = vp(j1,j2,j3)*(-1)**(j1-j2)*(2*j3+1)*pif
-                    107 continue
-                106 continue
-            105 continue
+                    107 enddo
+                106 enddo
+            105 enddo
             !
             e = 0.0d0
             !
-            do 109 j1=0, 4, 1
-                do 110 j2=0, 4, 1
-                    do 111 j3=abs(j2-j1), (j2+j1), 2
+            do j1=0, 4, 1
+                do j2=0, 4, 1
+                    do j3=abs(j2-j1), (j2+j1), 2
                         e = e+vp(j1,j2,j3)*potcm_ar(j1,j2,j3)
-                    111 continue
-                110 continue
-            109 continue
+                    111 enddo
+                110 enddo
+            109 enddo
             !
             !     e=e+a(1)
             !
@@ -1367,7 +1366,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                         else if( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y                     = pt1cm_degsdr(m1)
                         termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)

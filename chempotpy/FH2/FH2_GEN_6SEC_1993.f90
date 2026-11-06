@@ -521,10 +521,10 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !   Test the values of Ri
             !   If the values are unrealistic then print Ri and exit
             !
-            do 11 i=1, 3
+            do i=1, 3
                 rtmp(i) = pt1cm_r(i)
-            11 continue
-            do 12 i1=1, 3
+            11 enddo
+            do i1=1, 3
                 i2 = mod(i1, 3)+1
                 i3 = mod(i2, 3)+1
                 t  = pt1cm_r(i2) + pt1cm_r(i3)
@@ -532,7 +532,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     write(usricm_nflag(18), '(//,10X,''R1 = '',1PE20.10,5X,''R2 = '',1PE20.10,5X, ''R3 = '',1PE20.10)') pt1cm_r(i1), pt1cm_r(i2), pt1cm_r(i3)
                     stop
                 endif
-            12 continue
+            12 enddo
             !
             !   I: Compute the damping function for the N th. dispersion coefficient
             !      and, if usricm_nder = 1, compute the derivative of the damping function
@@ -583,9 +583,9 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !   Compute the derivatives of the energy with respect to the coordinate
             !
             if( usricm_nder .eq. 1 )then
-                do 10 i = 1, 3
+                do i = 1, 3
                     pt1cm_degsdr(i) = degsdrcm_dcorr2(i) + degsdrcm_dcorr3(i) + degsdrcm_dldr(i) + degsdrcm_de3c(i)
-                10 continue
+                10 enddo
             endif
             !
             !
@@ -638,20 +638,22 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !
             !   Compute the derivatives w.pt1cm_r.t. pt1cm_r(i) if usricm_nder = 1
             !
-            if( usricm_nder .ne. 1 ) go to 100
-            !
-            degsdrcm_dcorr2(1) = -atat_chf(6)*(dpc_ddp1(1)-6.0d0*dpc_dp1(1)/pt1cm_r(1))/r1p6 -atat_chf(8)* &
-                & (dpc_ddp1(2)-8.0d0*dpc_dp1(2)/pt1cm_r(1))/r1p8 -atat_chf(10)*(dpc_ddp1(3)- 10.0d0*dpc_dp1(3)/ &
-                & pt1cm_r(1))/r1p10
-            !
-            degsdrcm_dcorr2(2) = -atat_chh(6)*(dpc_ddp2(1)-6.0d0*dpc_dp2(1)/pt1cm_r(2))/r2p6 -atat_chh(8)* &
-                & (dpc_ddp2(2)-8.0d0*dpc_dp2(2)/pt1cm_r(2))/r2p8 -atat_chh(10)*(dpc_ddp2(3)- 10.0d0*dpc_dp2(3)/ &
-                & pt1cm_r(2))/r2p10
-            !
-            degsdrcm_dcorr2(3) = -atat_chf(6)*(dpc_ddp3(1)-6.0d0*dpc_dp3(1)/pt1cm_r(3))/r3p6 -atat_chf(8)* &
-                & (dpc_ddp3(2)-8.0d0*dpc_dp3(2)/pt1cm_r(3))/r3p8 -atat_chf(10)*(dpc_ddp3(3)- 10.0d0*dpc_dp3(3)/ &
-                & pt1cm_r(3))/r3p10
-            !
+            goto_block_100_655: block
+                if( usricm_nder .ne. 1 ) exit goto_block_100_655
+                !
+                degsdrcm_dcorr2(1) = -atat_chf(6)*(dpc_ddp1(1)-6.0d0*dpc_dp1(1)/pt1cm_r(1))/r1p6 -atat_chf(8)* &
+                    & (dpc_ddp1(2)-8.0d0*dpc_dp1(2)/pt1cm_r(1))/r1p8 -atat_chf(10)*(dpc_ddp1(3)- 10.0d0*dpc_dp1(3)/ &
+                    & pt1cm_r(1))/r1p10
+                !
+                degsdrcm_dcorr2(2) = -atat_chh(6)*(dpc_ddp2(1)-6.0d0*dpc_dp2(1)/pt1cm_r(2))/r2p6 -atat_chh(8)* &
+                    & (dpc_ddp2(2)-8.0d0*dpc_dp2(2)/pt1cm_r(2))/r2p8 -atat_chh(10)*(dpc_ddp2(3)- 10.0d0*dpc_dp2(3)/ &
+                    & pt1cm_r(2))/r2p10
+                !
+                degsdrcm_dcorr2(3) = -atat_chf(6)*(dpc_ddp3(1)-6.0d0*dpc_dp3(1)/pt1cm_r(3))/r3p6 -atat_chf(8)* &
+                    & (dpc_ddp3(2)-8.0d0*dpc_dp3(2)/pt1cm_r(3))/r3p8 -atat_chf(10)*(dpc_ddp3(3)- 10.0d0*dpc_dp3(3)/ &
+                    & pt1cm_r(3))/r3p10
+                !
+            end block goto_block_100_655
             100 continue
             !
         end subroutine corr2
@@ -767,7 +769,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !
             jj = 0
             !
-            do 10 i=6, 10, 2
+            do i=6, 10, 2
                 jj   = jj+1
                 fi   = dble(i)
                 r1pi = pt1cm_r(1)**i
@@ -820,7 +822,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     dc3dr2(jj) = dt1dr2+dt2dr2+dt3dr2
                     dc3dr3(jj) = dt1dr3+dt2dr3+dt3dr3
                 endif
-            10 continue
+            10 enddo
             !
             !   Compute the three-body dynamical correlation term by summing over al
             !   C6, C8, and C10 terms.
@@ -871,12 +873,12 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !   Initialize the arrays that will be used to store the partial
             !   derivatives w.pt1cm_r.t. pt1cm_r(i)
             !
-            do 11 i = 1, 3
-                do 12 j = 1, 3
+            do i = 1, 3
+                do j = 1, 3
                     detrip(i,j) = 0.0d0
                     dtscle(i,j) = 0.0d0
-                12 continue
-            11 continue
+                12 enddo
+            11 enddo
             !
             !   Compute the pseudo-angular coordinate
             !
@@ -904,10 +906,10 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 tmp1 = 2.0d0*fcsi1t*(-2.0d0*tpar_p(1)*csi-4.0d0*tpar_p(2)*csip3)
                 tmp2 = 2.0d0*fcsi2t*(-2.0d0*tpar_p(3)*csi-4.0d0*tpar_p(4)*csip3)
                 !
-                do 10 i=1, 3
+                do i=1, 3
                     dfcsi1(i) = tmp1*dcsi(i)
                     dfcsi2(i) = tmp2*dcsi(i)
-                10 continue
+                10 enddo
             endif
             !
             r1p2 = pt1cm_r(1)**2
@@ -921,7 +923,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !   infocm_ref: A. J. C. Varandas and J. diat_d. Silva, J. Chem. Soc. Faraday Trans.
             !        82, 593 (1986).
             !
-            do 20 i=1, 3
+            do i=1, 3
                 dr     = pt1cm_r(i)-dist_rm(i)
                 drp2   = dr**2
                 ehf(i) = -diat_d(i)*(1.0d0+diat_a1(i)*dr+diat_a2(i)*drp2+diat_a3(i)*drp2*dr) *exp(-diat_gamma(i)*dr)
@@ -930,7 +932,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     &3.0d0*diat_a3(i)*drp2)*exp(-diat_gamma(i)*dr) -&
                     &diat_gamma(i)*ehf(i)
                 !
-            20 continue
+            20 enddo
             !
             !   Compute the triplet state curve and the derivative of the triplet st
             !   curve w.pt1cm_r.t. pt1cm_r(i) for the H2 diatomic
@@ -961,38 +963,38 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !   Compute the triplet state curve and the derivatives of the triplet
             !   state curve w.pt1cm_r.t. pt1cm_r(i) for the HF diatomic.
             !
-            do 30 i=1, 3, 2
+            do i=1, 3, 2
                 arg      = par_bhf(2)*pt1cm_r(i)+par_bhf(3)*pt1cm_r(i)**2
                 ehft(i)  = par_bhf(1)*exp(-arg)/pt1cm_r(i)
                 x(i)     = exp(-tpar_xhf(2)*pt1cm_r(i))
                 etrip(i) = tpar_xhf(1)*(csi_fcsi1*x(i)*x(i)+csi_fcsi2*tpar_xhf(3)*x(i))/pt1cm_r(i)
-            30 continue
+            30 enddo
             !
             if( usricm_nder .eq. 1 )then
                 !
                 !   Compute the derivatives of the HF triplet state curve w.pt1cm_r.t. pt1cm_r(i)
                 !
-                do 50 i = 1, 3, 2
+                do i = 1, 3, 2
                     darg     = par_bhf(2)+2.0d0*par_bhf(3)*pt1cm_r(i)
                     dehft(i) = ehft(i)*(-1.0d0/pt1cm_r(i)-darg)
                     dx(i)    = -tpar_xhf(2)*x(i)
                     dri(i)   = 1.0d0
-                    do 40 j = 1, 3
+                    do j = 1, 3
                         if( j .ne. i )then
                             dx(j)  = 0.0d0
                             dri(j) = 0.0d0
                         endif
                         detrip(i,j) = tpar_xhf(1) * (dfcsi1(j)*x(i)*x(i) + 2.0d0*csi_fcsi1*x(i)*dx(j) + dfcsi2(j)* &
                             & tpar_xhf(3)*x(i) + csi_fcsi2* tpar_xhf(3)*dx(j))/pt1cm_r(i) - etrip(i)*dri(j)/pt1cm_r(i)
-                    40 continue
-                50 continue
+                    40 enddo
+                50 enddo
             endif
             !
             !   Compute the scaling factor for the triplet state curves
             !
-            do 51 i = 1, 3
+            do i = 1, 3
                 tscale(i) = 1.0d0
-            51 continue
+            51 enddo
             asc1      = 1.0d0
             asc2      = 0.103d0
             tmp1      = 1.0d0/0.38d0
@@ -1008,7 +1010,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !   singlet state curves to determine the eigenvalue of the
             !   London equation.
             !
-            do 60 i = 1, 3
+            do i = 1, 3
                 !
                 !   Compute the triplet state curves
                 !
@@ -1025,7 +1027,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 !   Compute the exchange integrals
                 !
                 ex(i) = 0.5d0*(ehf(i)-ti(i))
-            60 continue
+            60 enddo
             !
             !  Diagnostics
             !
@@ -1045,16 +1047,16 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 !   Compute the derivatives of the lowest eignenvalue of the London equa
                 !   w.pt1cm_r.t. pt1cm_r(i)
                 !
-                do 70 i = 1, 3
-                    do 71 j = 1, 3
+                do i = 1, 3
+                    do j = 1, 3
                         dti(i,j)                = swpar_dsw(i,j)*(ehft(i)-etrip(i)) + detrip(i,j)*(1.0d0 - swpar_sw(i))
                         if( j .eq. i ) dti(i,j) = dti(i,j) + swpar_sw(i)*dehft(i)
                         dti(i,j)                = dti(i,j)*tscale(i) + ti(i)*dtscle(i,j)/tscale(i)
-                    71 continue
-                70 continue
+                    71 enddo
+                70 enddo
                 !
-                do 80 i = 1, 3
-                    do 81 j = 1, 3
+                do i = 1, 3
+                    do j = 1, 3
                         if( j .eq. i )then
                             dq(i,j)  = 0.5d0*(dehf(j)+dti(i,j))
                             dex(i,j) = 0.5d0*(dehf(j)-dti(i,j))
@@ -1062,8 +1064,8 @@ module chempotpy_fh2_gen_6sec_1993_pes
                             dq(i,j)  = 0.5d0*dti(i,j)
                             dex(i,j) = -dq(i,j)
                         endif
-                    81 continue
-                80 continue
+                    81 enddo
+                80 enddo
                 !
                 dsumq(1) = dq(1,1)+dq(2,1)+dq(3,1)
                 dsumq(2) = dq(1,2)+dq(2,2)+dq(3,2)
@@ -1073,12 +1075,12 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 xterm2 = 2.0d0*ex(2)-ex(1)-ex(3)
                 xterm3 = 2.0d0*ex(3)-ex(1)-ex(2)
                 !
-                do 90 i = 1, 3
+                do i = 1, 3
                     texch = exch
                     if( texch .eq. 0.0d0 ) texch = 1.0d0
                     xterm            = 0.5d0*(xterm1*dex(1,i) + xterm2*dex(2,i)+ xterm3*dex(3,i))/texch
                     degsdrcm_dldr(i) = dsumq(i)-xterm
-                90 continue
+                90 enddo
             endif
             !
         end subroutine vlond
@@ -1137,24 +1139,26 @@ module chempotpy_fh2_gen_6sec_1993_pes
             engycm_e3c = (ex2 + ex3) * t * ex1
             f3         = exp(-local_betp*(pt1cm_r(1)+pt1cm_r(3)-pt1cm_r(2))**2)
             engycm_e3c = engycm_e3c*f3
-            if( usricm_nder .ne. 1 ) go to 280
-            !   COMPUTE DERIVATIVE OF THE 3C TERM
-            !   FIRST, DERIVATIVE OF COSTH
-            !
-            dcos1 = r3i - costh*r1i
-            dcos2 = - pt1cm_r(2)*t4
-            dcos3 = r1i - costh*r3i
-            t4    = ex2 + ex3
-            t5    = t4 * t5
-            !
-            !   NOW, DERIVATIVES OF engycm_e3c
-            !
-            degsdrcm_de3c(1) = 2.d0*((t2 * ex2 + 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos1) * ex1*f3+ 2.0d0* &
-                & engycm_e3c*(-local_betp*(pt1cm_r(1)+ pt1cm_r(3)-pt1cm_r(2)))
-            degsdrcm_de3c(2) = 2.d0 * t5 * dcos2 * ex1*f3+ 2.0d0*engycm_e3c*(local_betp*(pt1cm_r(1)+pt1cm_r(3)- &
-                & pt1cm_r(2)))
-            degsdrcm_de3c(3) = 2.d0*((-t2 * ex2 - 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos3) * ex1*f3+ 2.0d0* &
-                & engycm_e3c*(-local_betp*(pt1cm_r(1)+ pt1cm_r(3)-pt1cm_r(2)))
+            goto_block_280_1158: block
+                if( usricm_nder .ne. 1 ) exit goto_block_280_1158
+                !   COMPUTE DERIVATIVE OF THE 3C TERM
+                !   FIRST, DERIVATIVE OF COSTH
+                !
+                dcos1 = r3i - costh*r1i
+                dcos2 = - pt1cm_r(2)*t4
+                dcos3 = r1i - costh*r3i
+                t4    = ex2 + ex3
+                t5    = t4 * t5
+                !
+                !   NOW, DERIVATIVES OF engycm_e3c
+                !
+                degsdrcm_de3c(1) = 2.d0*((t2 * ex2 + 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos1) * ex1*f3+ &
+                    & 2.0d0* engycm_e3c*(-local_betp*(pt1cm_r(1)+ pt1cm_r(3)-pt1cm_r(2)))
+                degsdrcm_de3c(2) = 2.d0 * t5 * dcos2 * ex1*f3+ 2.0d0*engycm_e3c*(local_betp*(pt1cm_r(1)+pt1cm_r(3)- &
+                    & pt1cm_r(2)))
+                degsdrcm_de3c(3) = 2.d0*((-t2 * ex2 - 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos3) * ex1*f3+ &
+                    & 2.0d0* engycm_e3c*(-local_betp*(pt1cm_r(1)+ pt1cm_r(3)-pt1cm_r(2)))
+            end block goto_block_280_1158
             280 continue
         end subroutine thcent
         !> @brief Evaluate XTANH for the FH2_GEN_6SEC_1993 potential.
@@ -1182,7 +1186,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !
             dimension a(10)
             !
-            do 10 j = 6, 10, 2
+            do j = 6, 10, 2
                 rval = pt1cm_r(i) * a(j)
                 if( rval .gt. 0.0d0 )then
                     ex  = exp( -2.0d0 * rval)
@@ -1195,7 +1199,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 th                                         = 1.0d0/t
                 if( usricm_nder .eq. 1 ) vtanh_drtanh(i,j) = 4.0d0 * a(j) * ex * th * th
                 vtanh_rtanh(i,j)                           = sgn * th * (1.0d0 - ex)
-            10 continue
+            10 enddo
         end subroutine xtanh
         !> @brief Evaluate SWITCH for the FH2_GEN_6SEC_1993 potential.
         subroutine switch
@@ -1224,14 +1228,15 @@ module chempotpy_fh2_gen_6sec_1993_pes
             !   Initialize the array that will be used to store the derivatives of
             !   the switching function w.pt1cm_r.t. pt1cm_r(i)
             !
-            do 10 i = 1, 3
-                do 10 j = 1, 3
+            do i = 1, 3
+                do j = 1, 3
                     swpar_dsw(i,j) = 0.0d0
-            10 continue
+                10 enddo
+            enddo
             !
             !   Compute the switching function.
             !
-            do 20 i=1, 3
+            do i=1, 3
                 rmrb = pt1cm_r(i)-swpar_rb(i)
                 rval = rmrb*swpar_dec(i)
                 if( rval .gt. 0.0d0 )then
@@ -1246,23 +1251,25 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 temp1       = 1.0d0 + ex2u
                 hytan       = sgn*(1.0d0 - ex2u)/temp1
                 swpar_sw(i) = 0.5d0*(1.0d0 + hytan)
-            20 continue
-            if( usricm_nder .ne. 1 ) go to 100
-            do 30 i = 1, 3
-                rmrb = pt1cm_r(i)-swpar_rb(i)
-                rval = rmrb*swpar_dec(i)
-                if( rval .gt. 0.0d0 )then
-                    exu = exp(-rval)
-                    sgn = 1.0d0
-                else
-                    exu = exp(rval)
-                    sgn = -1.0d0
-                endif
-                temp2          = 1.0d0 + exu*exu
-                hysec          = sgn*2.0d0*exu/temp2
-                swpar_dsw(i,i) = 0.5d0*swpar_dec(i)*hysec*hysec
-            30 continue
-            !
+            20 enddo
+            goto_block_100_1267: block
+                if( usricm_nder .ne. 1 ) exit goto_block_100_1267
+                do i = 1, 3
+                    rmrb = pt1cm_r(i)-swpar_rb(i)
+                    rval = rmrb*swpar_dec(i)
+                    if( rval .gt. 0.0d0 )then
+                        exu = exp(-rval)
+                        sgn = 1.0d0
+                    else
+                        exu = exp(rval)
+                        sgn = -1.0d0
+                    endif
+                    temp2          = 1.0d0 + exu*exu
+                    hysec          = sgn*2.0d0*exu/temp2
+                    swpar_dsw(i,i) = 0.5d0*swpar_dec(i)*hysec*hysec
+                30 enddo
+                !
+            end block goto_block_100_1267
             100 continue
         end subroutine switch
         !> @brief Evaluate POTINFO for the FH2_GEN_6SEC_1993 potential.
@@ -1741,7 +1748,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                         else if( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y                     = pt1cm_degsdr(m1)
                         termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)

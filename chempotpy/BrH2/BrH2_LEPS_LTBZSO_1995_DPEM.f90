@@ -374,11 +374,11 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             !
             !   Convert the constants to atomic units
             !
-            do 10 i = 1, 3
+            do i = 1, 3
                 de11(i)   = d11(i) / charkc
                 re11(i)   = re11(i) / cangau
                 beta11(i) = betaa11(i) * cangau
-            10 continue
+            10 enddo
             !
             !    Initialize the asyptotic energy terms
             !
@@ -447,7 +447,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             !
             !   Compute the LEPS constants
             !
-            do 20 i = 1, 3
+            do i = 1, 3
                 zpo(i)   = 1.0d0+z(i)
                 op3z(i)  = 1.0d0+3.0d0*z(i)
                 top3z(i) = 2.0d0*op3z(i)
@@ -455,14 +455,14 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                 tzp3(i)  = 2.0d0*zp3(i)
                 do4z(i)  = de11(i)/4.0d0/zpo(i)
                 b(i)     = beta11(i)*do4z(i)*2.0d0
-            20 continue
+            20 enddo
             pe = 0.d0
-            do 30 i = 1, 3
+            do i = 1, 3
                 legacy_x(i) = exp(-beta11(i)*(rr(i)-re11(i)))
                 coul(i)     = do4z(i) * (zp3(i)*legacy_x(i) - top3z(i)) * legacy_x(i)
                 exch(i)     = do4z(i) * (op3z(i)*legacy_x(i) - tzp3(i)) * legacy_x(i)
                 pe          = pe + coul(i)
-            30 continue
+            30 enddo
             rad = sqrt((exch(1) - exch(2)) ** 2 + (exch(2) - exch(3)) ** 2 + (exch(3) - exch(1)) ** 2 )
             pe  = pe - (rad / r211) + ezero(1)
             !
@@ -570,11 +570,11 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             !
             !   Convert the constants to atomic units
             !
-            do 10 i = 1, 3
+            do i = 1, 3
                 de22(i)   = d22(i) / charkc
                 re22(i)   = re22(i) / cangau
                 beta22(i) = betaa22(i) * cangau
-            10 continue
+            10 enddo
             !
             !    Initialize the asyptotic energy terms
             !
@@ -1005,7 +1005,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                         else if( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y              = degsdr(m1)
                         termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)

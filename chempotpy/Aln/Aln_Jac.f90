@@ -90,29 +90,30 @@ module chempotpy_aln_jac_pes
         bs   = beta*s
         fra  = 1.d0/12.d0
         v    = 0d0
-        do 2 i=1, natom
+        do i=1, natom
             u = 0d0
-            do 3 j=1, natom
-                if( j .eq. i ) go to 3
+            do j=1, natom
+                if( j .eq. i ) cycle
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
                 rr = dsqrt(dx*dx+dy*dy+dz*dz)
                 u  = u+dexp(-eta2*(rr-bs))   ! EAS(1) w/o exponent
-            3 continue
+            3 enddo
             ud = 0d0
-            do 4 m=1, natom
-                if( m .eq. i ) go to 4
+            do m=1, natom
+                if( m .eq. i ) cycle
                 dx = x(i)-x(m)
                 dy = y(i)-y(m)
                 dz = z(i)-z(m)
                 rr = dsqrt(dx*dx+dy*dy+dz*dz)
                 ud = ud+dexp(-eta*(rr/beta-s))  ! EAS(2)
-            4 continue
+            4 enddo
             uno  = (fra*u)**ep   ! EAS(1)
             udno = fra*ud       ! EAS(2)
             vv   = e0+e2*(uno-1d0)**2+e3*(uno-1d0)**3 +alpha*en*(uno-udno)
-        2 v=v+vv
+            2 v=v+vv
+        enddo
     end subroutine pot
 end module chempotpy_aln_jac_pes
 

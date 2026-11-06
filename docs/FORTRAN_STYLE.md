@@ -158,6 +158,9 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   replaced.
 - Keep an early `return` when it expresses control flow. Omit a redundant
   `return` immediately before `end subroutine` or `end function`.
+- Use structured `do ... enddo`, `cycle`, `exit`, `if`, and `select case`
+  control flow. Labeled `do 100 ...` loops, loop-terminating `100 continue`,
+  and `goto` statements are forbidden.
 
 ## Required validation
 

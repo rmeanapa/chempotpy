@@ -100,25 +100,27 @@ module chempotpy_aln_recoxjm_pes
         oneha = dsqrt(1.d0/2.d0)
         twoth = dsqrt(2.d0/3.d0)
         onesi = dsqrt(1.d0/6.d0)
-        do 1 i=1, natom
+        do i=1, natom
             r(i,i) = 0d0
-            do 1 j=i+1, natom
+            do j=i+1, natom
                 dx     = x(i)-x(j)
                 dy     = y(i)-y(j)
                 dz     = z(i)-z(j)
                 r(i,j) = dsqrt(dx*dx+dy*dy+dz*dz)
-        1 r(j,i)=r(i,j)
+                1 r(j,i)=r(i,j)
+            enddo
+        enddo
         !  calculate the potential energy
         v  = 0.d0
         v2 = 0.d0
         v3 = 0.d0
-        do 2 i=1, natom
-            do 2 j=i+1, natom
+        do i=1, natom
+            do j=i+1, natom
                 !  two body term
                 rr  = r(i,j)
                 rij = (rr-re)/re
                 v2  = v2-dd*(1.d0+a2*rij)*dexp(-a2*rij)
-                do 2 k=j+1, natom
+                do k=j+1, natom
                     ! three body term
                     rjk   = (r(j,k)-re)/re
                     rki   = (r(k,i)-re)/re
@@ -130,7 +132,9 @@ module chempotpy_aln_recoxjm_pes
                     fsech = 1.d0/dcosh(a3*q1)
                     poly  = c0+c1*q1+c2*q1**2+c3*q23+c4*q1**3+c5*q1*q23+c6*q332
                     v3    = v3+dd*poly*fsech
-        2 continue
+                2 enddo
+            enddo
+        enddo
         v = v2+v3
     end subroutine pot
 end module chempotpy_aln_recoxjm_pes

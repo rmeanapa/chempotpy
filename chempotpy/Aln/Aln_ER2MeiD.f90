@@ -85,8 +85,8 @@ module chempotpy_aln_er2meid_pes
         bu2 = 6.50000000000000000/autoang
         !     potential, includes cutoff
         ver2 = 0.d0
-        do 1 i=1, natom
-            do 1 j=i+1, natom
+        do i=1, natom
+            do j=i+1, natom
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
@@ -98,7 +98,8 @@ module chempotpy_aln_er2meid_pes
                     ee   = dexp(-a1*rho)
                     ver2 = ver2-de*ee*poly*co
                 endif
-        1 continue
+            1 enddo
+        enddo
         !  calculate the potential energy
         ec     = 2.00214948705422557/autoev
         phi0   = 0.110210063507572065/autoev
@@ -120,10 +121,10 @@ module chempotpy_aln_er2meid_pes
         rc     = 1.95d0*r0
         v      = 0.d0
         v_pair = 0.d0
-        do 2 i=1, natom
+        do i=1, natom
             rho = 0.d0
-            do 3 j=1, natom
-                if( i .eq. j ) go to 3
+            do j=1, natom
+                if( i .eq. j ) cycle
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
@@ -158,7 +159,7 @@ module chempotpy_aln_er2meid_pes
                     bigef = -ec*(1.d0-ab*dlog(rho_pair))*rho_pair**ab + 0.5d0*phi0*sterm
                 endif
                 v_pair = v_pair + bigef
-            3 continue
+            3 enddo
             sterm = 0.d0
             if( rho .gt. 0.d0 )then
                 do m=1, 3
@@ -173,7 +174,7 @@ module chempotpy_aln_er2meid_pes
                 bigef = -ec*(1.d0-ab*dlog(rho))*rho**ab + 0.5d0*phi0*sterm
             endif
             v = v + bigef
-        2 continue
+        2 enddo
         v = v + ver2 - v_pair
     end subroutine pot
 end module chempotpy_aln_er2meid_pes

@@ -278,6 +278,16 @@ def check_source(path: Path) -> Sequence[StyleViolation]:
                 relative_path, line_number, "entry-statement",
                 "replace ENTRY with an explicit module procedure",
             ))
+        if re.match(r"^\s*(?:[a-z][a-z0-9_]*\s*:\s*)?do\s+\d+\b", code, flags=re.IGNORECASE):
+            violations.append(StyleViolation(
+                relative_path, line_number, "labeled-do",
+                "use structured do ... enddo instead of a labeled loop terminator",
+            ))
+        if re.search(r"\b(?:go\s*to|goto)\b", code, flags=re.IGNORECASE):
+            violations.append(StyleViolation(
+                relative_path, line_number, "goto-statement",
+                "replace GOTO with structured control flow",
+            ))
         if LEGACY_DECLARATION_PATTERN.match(code):
             violations.append(StyleViolation(
                 relative_path, line_number, "declaration-separator",

@@ -238,11 +238,11 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
         a      = 0.272d0
         gamma  = 0.5d0
         rbb    = 0.74127d0
-        do 50 it = 1, 3
+        do it = 1, 3
             req(it)  = req(it)/bohr
             beta(it) = beta(it) * bohr
             de(it)   = de(it)/hrtree
-        50 continue
+        50 enddo
         a     = a/bohr
         lamda = lamda/hrtree
         rhh   = 1.4007977d0
@@ -276,19 +276,20 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
         !        NAB AND NBC ARE THE BOND ORDERS OF THE DIATOMICS
         !        AB AND BC RESPECTIVELY. (EQUATION 2.2)
         !
-        c = 1.d0 - nab/nbc
-        if( abs(c) .gt. 1.d-14 ) goto 90
-        nab1 = .5d0
-        nbc1 = .5d0
-        go to 95
-        90 c = c/nab
-        nab1 = (2.d0 + c - sqrt(4.d0+c*c))/(2.d0*c)
-        nbc1 = 1.d0 - nab1
+        c = 1.0d0-nab/nbc
+        if( abs(c) <= 1.0d-14 )then
+            nab1 = 0.5d0
+            nbc1 = 0.5d0
+        else
+            c    = c/nab
+            nab1 = (2.0d0+c-sqrt(4.0d0+c*c))/(2.0d0*c)
+            nbc1 = 1.0d0-nab1
+        endif
         !
         !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
         !       SEE EQUATION 2.7A, 2.7B
         !
-        95 m = nab + nbc
+        m = nab + nbc
         !
         !        M IS THE SUM OF THE BOND ORDERS (EQUATION 2.3)
         !
@@ -302,10 +303,10 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
         !        SIGMA IS THE MYSTERY NUMBER REFERENCED IN EQUATION 3.15B
         !        SE EQUATION 2.13
         !
-        do 100 it = 1, 2
+        do it = 1, 2
             junk(it)  = exp(beta(it)*(-sigma))
             morse(it) = de(it)*(junk(it)*junk(it)-2.d0*junk(it))
-        100 continue
+        100 enddo
         !
         !        MORSE FUNCTION--EQUATION 4-16, GAS PHASE REACTION
         !        RATE THEORY, H. S. JOHNSTON.
@@ -314,12 +315,12 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
         !
         !          FIRST TRAP OUT ANY ZERO ARGUEMENTS
         !
-        if( nab1*nbc1 .gt. 0.d0 ) go to 103
-        rob = 1.d0
-        go to 107
-        !
-        103 stuff = a * log(nab1*nbc1)
-        rob = (rbb - stuff)/(rhh - stuff)
+        if( nab1*nbc1 > 0.0d0 )then
+            stuff = a * log(nab1*nbc1)
+            rob   = (rbb - stuff)/(rhh - stuff)
+        else
+            rob = 1.0d0
+        endif
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCC
         !       CALCULATE DE(OMEGA)
@@ -327,10 +328,10 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
         !
         !        THIS IS FORMULA 3.17
         !
-        107 dew = 0.d0
-        do 110 it = 1, 2
+        dew = 0.0d0
+        do it = 1, 2
             dew = omega(it)*de(it) + dew
-        110 continue
+        110 enddo
         dew = dew - lamda * bigm(omega(1))
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -340,10 +341,10 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
         vstar = 0.d0
         num   = 0.d0
         denom = 0.d0
-        do 210 it = 1, 2
+        do it = 1, 2
             num   = omega(it) * morse(it) + num
             denom = omega(it)*de(it) + denom
-        210 continue
+        210 enddo
         vstar = num/denom
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -388,43 +389,45 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
         !        NOW CALCULATE THE DERIVATIVES, IF NDER = 1
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !
-        if( nder .ne. 1 ) go to 920
-        !
-        !        NEXT CALCULATE DER(1) AND DER(2)
-        !
-        do 300 it = 1, 2
+        goto_block_920_428: block
+            if( nder .ne. 1 ) exit goto_block_920_428
             !
-            !        FIRST CALCULATE DVSTAR(1) AND DVSTAR(2) SEE EQUATION B.5
+            !        NEXT CALCULATE DER(1) AND DER(2)
             !
-            v1 = omega(it)/(de(1)*omega(1) + de(2) * omega(2))
-            !
-            if( it .eq. 1 ) go to 280
-            v2 = omega(1)*(morse(1) - morse(2) - vstar * (de(1)-de(2)))/a
-            go to 285
-            280 v2 = omega(2)*(morse(2) - morse(1) - vstar*(de(2)-de(1)))/a
-            285 continue
-            !
-            v3 = -omega(it)*2.d0*de(it)*beta(it)*(junk(it)*junk(it)-junk(it))
-            !
-            if( it .eq. 1 ) go to 290
-            v4 = -omega(1)*2.d0*de(1)*beta(1)*(junk(1)*junk(1) - junk(1))
-            go to 295
-            290 v4 = -omega(2)*2*de(2)*beta(2)*(junk(2)*junk(2) - junk(2))
-            295 continue
-            !
-            dvstar(it) = v1*(v2+v3+v4)
-            !
-            !       NOW CALCULATE THE COEFFICIENT OF VSTAR IN EQUATION B.1.
-            !
-            coef(it) = (nab*nbc/(m*m*a)) * ((de(1)-de(2)+lamda * log(nab/nbc)) * ((-1.d0)**it))
-            !
-            !       FINALLY PUT IT ALL TOGETHER TO CALCULATE THE DERIVITIVE
-            !       SEE EQUATION B.1
-            !
-            der(it) = coef(it) * vstar + dew * dvstar(it) + dbcoor(it)
-            !
-        300 continue
-        310 continue
+            do it = 1, 2
+                !
+                !        FIRST CALCULATE DVSTAR(1) AND DVSTAR(2) SEE EQUATION B.5
+                !
+                v1 = omega(it)/(de(1)*omega(1) + de(2) * omega(2))
+                !
+                if( it == 1 )then
+                    v2 = omega(2)*(morse(2) - morse(1) - vstar*(de(2)-de(1)))/a
+                else
+                    v2 = omega(1)*(morse(1) - morse(2) - vstar * (de(1)-de(2)))/a
+                endif
+                !
+                v3 = -omega(it)*2.d0*de(it)*beta(it)*(junk(it)*junk(it)-junk(it))
+                !
+                if( it == 1 )then
+                    v4 = -omega(2)*2*de(2)*beta(2)*(junk(2)*junk(2) - junk(2))
+                else
+                    v4 = -omega(1)*2.d0*de(1)*beta(1)*(junk(1)*junk(1) - junk(1))
+                endif
+                !
+                dvstar(it) = v1*(v2+v3+v4)
+                !
+                !       NOW CALCULATE THE COEFFICIENT OF VSTAR IN EQUATION B.1.
+                !
+                coef(it) = (nab*nbc/(m*m*a)) * ((de(1)-de(2)+lamda * log(nab/nbc)) * ((-1.d0)**it))
+                !
+                !       FINALLY PUT IT ALL TOGETHER TO CALCULATE THE DERIVITIVE
+                !       SEE EQUATION B.1
+                !
+                der(it) = coef(it) * vstar + dew * dvstar(it) + dbcoor(it)
+                !
+            300 enddo
+            310 continue
+        end block goto_block_920_428
         920 continue
         !
         !

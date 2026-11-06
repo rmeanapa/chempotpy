@@ -209,14 +209,14 @@ module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
         !
         ! Convert to atomic units and calculate some useful constants.
         !
-        do 10 i=1, 3
+        do i=1, 3
             de(i)  = de(i)/ckcau
             re(i)  = re(i)/cangau
             b(i)   = b(i)*cangau
             pf(i)  = 0.5d0*de(i)*((1.d0-s(i))/(1.d0+s(i)))
             pfs(i) = de(i)+pf(i)
             pfd(i) = de(i)-pf(i)
-        10 continue
+        10 enddo
         !
         !
         r1i = 1.d0/r(1)

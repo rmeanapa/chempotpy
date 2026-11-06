@@ -254,7 +254,7 @@ module chempotpy_mchtl_leps_modelsurface_dpem_g_pot11_entry__09ccda95
         !
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             !          cosa = 0.5d0 * (r(i, 2) ** 2 + r(i, 3) ** 2 - r(i, 1) ** 2) /
             !     *(r(i, 2) * r(i, 3))
@@ -360,7 +360,7 @@ module chempotpy_mchtl_leps_modelsurface_dpem_g_pot11_entry__09ccda95
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
         !
     end subroutine dispatch
 end module chempotpy_mchtl_leps_modelsurface_dpem_g_pot11_entry__09ccda95
@@ -633,7 +633,7 @@ module chempotpy_mchtl_leps_modelsurface_dpem_g_pot22_entry__09ccda95
         twothd = 2.0d0 / 3.0d0
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             cosa = 0.5d0 * (r(i,2) ** 2 + r(i,3) ** 2 - r(i,1) ** 2) / (r(i,2) * r(i,3))
             rave = 0.5d0 * (r(i,1) + r(i,3))
@@ -837,7 +837,7 @@ module chempotpy_mchtl_leps_modelsurface_dpem_g_pot22_entry__09ccda95
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
     end subroutine dispatch
 end module chempotpy_mchtl_leps_modelsurface_dpem_g_pot22_entry__09ccda95
 

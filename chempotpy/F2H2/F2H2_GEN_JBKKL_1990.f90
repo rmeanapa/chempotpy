@@ -157,7 +157,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             ll  = abs(iq1-iq2)
             lu  = iq1+iq2
             v   = 0.0d0
-            do 20 l=ll, lu, 2
+            do l=ll, lu, 2
                 xl     = float(l)
                 phas   = (-1)**(iq1-iq2)
                 const1 = one
@@ -168,7 +168,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                 const3 = dsqrt(two/cdenom)
                 const  = phas*const1*const2*const3
                 v      = v+acoef_a(iq1,iq2,l)*const*threej(xl1, xl2, xl, xm, -xm, 0.d0)
-            20 continue
+            20 enddo
             !     divide next two terms by three because there is a bug in Bunker's
             !     function subprogram "P" which computes the associated Legendre
             !     function. (this is a very small correction).
@@ -230,13 +230,13 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             summ = 0.d0
             !
             !
-            do 10 new=newmin, newmax
+            do new=newmin, newmax
                 dnew  = dfloat(new)
                 term4 = fakt(a-al-dnew)*fakt(c-b+al+dnew)
                 term5 = fakt(b+be-dnew)*fakt(c-a-be+dnew)
                 term6 = fakt(dnew)*fakt(a+b-c-dnew)
                 summ  = summ+(-1.d0)**new/(term4*term5*term6)
-            10 continue
+            10 enddo
             !
             !     SO CLEBSCH-GORDEN <J1J2M1M2LJM> IS CLEBSH
             !
@@ -306,10 +306,13 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !    X             P(L1,M,T1)*P(L2,M,T2)*DCOS(XM*TAU)
             !100  G(L1,L2,L)=COEFF*G(L1,L2,L)
             !
-            do 20 i=0, 4
-                do 20 j=0, 4
-                    do 20 k=0, 8
-            20 acoef_a(i,j,k)=0.0d0
+            do i=0, 4
+                do j=0, 4
+                    do k=0, 8
+                        20 acoef_a(i,j,k)=0.0d0
+                    enddo
+                enddo
+            enddo
             !
             d1  = r1-params_c(1)
             d2  = r2-params_c(1)
@@ -353,72 +356,72 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !     the zero of energy is chosen as the two monomers infinitely separa
             !     at r1=r2=1.744 a.u. thus c(11) has been omitted from a(0,0,0).
             !
-            acoef_a(0,0,0)=params_c(357)*de2*rin10 +params_c(20)*y1y2*rout10 +(params_c(12)*de1+params_c(13)*de2+ &
+            acoef_a(0,0,0)=params_c(357)*de2*rin10 +params_c(20)*y1y2*rout10 +(params_c(12)*de1+ params_c(13)*de2+ &
                 & params_c(14)*de3+params_c(15)*de4)*rmiddle +(params_c(4)/r6 + params_c(5)/ (rab**7) + params_c(6)/ &
-                & (rab**8) +params_c(7)/(rab**9)+params_c(8)/(rab**10))*rin01 +(params_c(157)*(y1+y2)* y3 + &
+                & (rab**8) +params_c(7)/(rab**9)+params_c(8)/(rab** 10))*rin01 +(params_c(157)*(y1+y2)* y3 + &
                 & params_c(158)*y1*y2* y3 + params_c(166)* y1* y2*y3**2 +params_c(167)*y1*y2*y3**3)*rmiddle
-            acoef_a(1,0,1)=(params_c(22)*de1+params_c(23)*de2 +params_c(24)*de3+params_c(25)*de4 +params_c(26)* y1 + &
-                & params_c(27)*y2 +params_c(21)*y1*y3 +params_c(156)*y2*y3 +params_c(28)*y1** 2 + params_c(29)*y2**2 + &
-                & params_c(30)*y1*y2 +params_c(116)*y1**3 +params_c(117)*y2**3 +params_c(118)* y1*y2**2 + &
+            acoef_a(1,0,1)=(params_c(22)*de1+params_c(23)*de2 +params_c(24)*de3+params_c(25)*de4 + params_c(26)* y1 + &
+                & params_c(27)*y2 +params_c(21)*y1*y3 +params_c(156)*y2*y3 + params_c(28)*y1** 2 + params_c(29)*y2** &
+                & 2 + params_c(30)*y1*y2 +params_c(116)*y1**3 + params_c(117)*y2**3 +params_c(118)* y1*y2**2 + &
                 & params_c(119)*y2*y1**2 +params_c(159)*y1* y2*y3 + params_c(169)*y1*y2*y3**2 + params_c(179)*y1*y2** &
                 & 2*y3)*rmiddle
-            acoef_a(0,1,1)=-(params_c(22)*de1+params_c(23)*de2 +params_c(24)*de3+params_c(25)*de4 +params_c(26)* y2 + &
-                & params_c(27)*y1 +params_c(21)*y2*y3 +params_c(156)*y1*y3 +params_c(28)*y2** 2 + params_c(29)*y1**2 + &
-                & params_c(30)*y1*y2 +params_c(116)*y2**3 +params_c(117)*y1**3 +params_c(118)* y2*y1**2 + &
+            acoef_a(0,1,1)=-(params_c(22)*de1+params_c(23)*de2 +params_c(24)*de3+params_c(25)*de4 + params_c(26)* y2 + &
+                & params_c(27)*y1 +params_c(21)*y2*y3 +params_c(156)*y1*y3 + params_c(28)*y2** 2 + params_c(29)*y1** &
+                & 2 + params_c(30)*y1*y2 +params_c(116)*y2**3 + params_c(117)*y1**3 +params_c(118)* y2*y1**2 + &
                 & params_c(119)*y1*y2**2 +params_c(159)*y1* y2* y3 + params_c(169)*y1*y2*y3**2 + params_c(179)*y1**2* &
                 & y1*y3)*rmiddle
             !
-            acoef_a(1,1,0)=(params_c(32)*de1+params_c(33)*de2 +params_c(34)*de3+params_c(35)*de4 +params_c(36)* &
+            acoef_a(1,1,0)=(params_c(32)*de1+params_c(33)*de2 +params_c(34)*de3+params_c(35)*de4 + params_c(36)* &
                 & y1y22 +params_c(37)*y1y23 +params_c(38)*y1py2 +params_c(39)*y1py2*y1y2 + params_c(40)* y1y2)* rmiddle
-            acoef_a(1,1,2)=(params_c(42)*de1+params_c(43)*de2 +params_c(44)*de3+params_c(45)*de4)*rmiddle -((8.d0* &
-                & consts_pi**1.5d0*dsqrt(2.d0/15.d0))*(params_c(41)**2)/ (cd* rab**3))*rin01 +(params_c(46)* y1y22 + &
-                & params_c(47)*y1y23 +params_c(48)*y1py2 +params_c(49)*y1py2*y1y2 +params_c(50)*y1y2)*rmiddle
+            acoef_a(1,1,2)=(params_c(42)*de1+params_c(43)*de2 +params_c(44)*de3+params_c(45)*de4)* rmiddle -((8.d0* &
+                & consts_pi**1.5d0*dsqrt(2.d0/15.d0))*(params_c(41)**2)/ (cd* rab**3))* rin01 +(params_c(46)* y1y22 + &
+                & params_c(47)*y1y23 +params_c(48)*y1py2 +params_c(49)* y1py2*y1y2 +params_c(50)*y1y2)*rmiddle
             !
-            acoef_a(2,0,2)=params_c(356)/r6+(params_c(52)*de1+params_c(53)*de2 +params_c(54)*de3+params_c(55)* de4 + &
-                & params_c(56)*y1 +params_c(57)*y2 +params_c(58)*y1**2 +params_c(59)*y2**2 + params_c(60)* y1*y2 + &
-                & params_c(126)*y1**3 +params_c(127)*y2**3 +params_c(128)*y1*y2**2 +params_c(129)*y2*y1** 2)*rmiddle
-            acoef_a(0,2,2)=params_c(356)/r6+(params_c(52)*de1+params_c(53)*de2 +params_c(54)*de3+params_c(55)* de4 + &
-                & params_c(56)*y2 +params_c(57)*y1 +params_c(58)*y2**2 +params_c(59)*y1**2 + params_c(60)* y1*y2 + &
-                & params_c(126)*y2**3 +params_c(127)*y1**3 +params_c(128)*y2*y1**2 +params_c(129)*y1*y2** 2)*rmiddle
+            acoef_a(2,0,2)=params_c(356)/r6+(params_c(52)*de1+params_c(53)*de2 +params_c(54)*de3+ params_c(55)* de4 + &
+                & params_c(56)*y1 +params_c(57)*y2 +params_c(58)*y1**2 +params_c(59)* y2**2 + params_c(60)* y1*y2 + &
+                & params_c(126)*y1**3 +params_c(127)*y2**3 +params_c(128)* y1*y2**2 +params_c(129)*y2*y1** 2)*rmiddle
+            acoef_a(0,2,2)=params_c(356)/r6+(params_c(52)*de1+params_c(53)*de2 +params_c(54)*de3+ params_c(55)* de4 + &
+                & params_c(56)*y2 +params_c(57)*y1 +params_c(58)*y2**2 +params_c(59)* y1**2 + params_c(60)* y1*y2 + &
+                & params_c(126)*y2**3 +params_c(127)*y1**3 +params_c(128)* y2*y1**2 +params_c(129)*y1*y2** 2)*rmiddle
             !
-            acoef_a(2,1,1)=(params_c(62)*de1+params_c(63)*de2 +params_c(64)*de3+params_c(65)*de4 +params_c(66)* y1 + &
-                & params_c(67)*y2 +params_c(68)*y1**2 +params_c(69)*y2**2 +params_c(70)*y1* y2 + params_c(136)*y1**3 + &
-                & params_c(137)*y2**3 +params_c(138)*y1*y2**2 +params_c(139)*y2*y1**2)*rmiddle
-            acoef_a(1,2,1)=-(params_c(62)*de1+params_c(63)*de2 +params_c(64)*de3+params_c(65)*de4 +params_c(66)* y2 + &
-                & params_c(67)*y1 +params_c(68)*y2**2 +params_c(69)*y1**2 +params_c(70)*y1* y2 + params_c(136)*y2**3 + &
-                & params_c(137)*y1**3 +params_c(138)*y2*y1**2 +params_c(139)*y1*y2**2)*rmiddle
-            acoef_a(2,1,3)=(params_c(72)*de1+params_c(73)*de2 +params_c(74)*de3+params_c(75)*de4)*rmiddle -rin01* &
+            acoef_a(2,1,1)=(params_c(62)*de1+params_c(63)*de2 +params_c(64)*de3+params_c(65)*de4 + params_c(66)* y1 + &
+                & params_c(67)*y2 +params_c(68)*y1**2 +params_c(69)*y2**2 + params_c(70)*y1* y2 + params_c(136)*y1** &
+                & 3 + params_c(137)*y2**3 +params_c(138)*y1*y2** 2 +params_c(139)*y2*y1**2)*rmiddle
+            acoef_a(1,2,1)=-(params_c(62)*de1+params_c(63)*de2 +params_c(64)*de3+params_c(65)*de4 + params_c(66)* y2 + &
+                & params_c(67)*y1 +params_c(68)*y2**2 +params_c(69)*y1**2 + params_c(70)*y1* y2 + params_c(136)*y2** &
+                & 3 + params_c(137)*y1**3 +params_c(138)*y2*y1** 2 +params_c(139)*y1*y2**2)*rmiddle
+            acoef_a(2,1,3)=(params_c(72)*de1+params_c(73)*de2 +params_c(74)*de3+params_c(75)*de4)* rmiddle -rin01* &
                 & (8.d0*consts_pi**1.5d0/dsqrt(7.d0))*params_c(41)*params_c(101)/ (cdq* rab**4) +(params_c(76)* y1 + &
-                & params_c(77)*y2 +params_c(78)*y1**2 +params_c(79)*y2**2 +params_c(80)*y1*y2 +params_c(146)* y1**3 + &
-                & params_c(147)*y2**3 + params_c(148)*y1* y2**2 +params_c(149)*y2*y1**2)*rmiddle
-            acoef_a(1,2,3)=-(params_c(72)*de1+params_c(73)*de2 +params_c(74)*de3+params_c(75)*de4)*rmiddle +rin01* &
+                & params_c(77)*y2 +params_c(78)*y1**2 +params_c(79)*y2**2 + params_c(80)*y1*y2 +params_c(146)* y1**3 + &
+                & params_c(147)*y2**3 + params_c(148)*y1* y2** 2 +params_c(149)*y2*y1**2)*rmiddle
+            acoef_a(1,2,3)=-(params_c(72)*de1+params_c(73)*de2 +params_c(74)*de3+params_c(75)*de4)* rmiddle +rin01* &
                 & (8.d0*consts_pi**1.5d0/dsqrt(7.d0))*params_c(41)*params_c(101)/ (cdq* rab**4) -(params_c(76)* y2 + &
-                & params_c(77)*y1 +params_c(78)*y2**2 +params_c(79)*y1**2 +params_c(80)*y1*y2 +params_c(146)* y2**3 + &
-                & params_c(147)*y1**3 + params_c(148)*y2* y1**2 +params_c(149)*y1*y2**2)*rmiddle
+                & params_c(77)*y1 +params_c(78)*y2**2 +params_c(79)*y1**2 + params_c(80)*y1*y2 +params_c(146)* y2**3 + &
+                & params_c(147)*y1**3 + params_c(148)*y2* y1** 2 +params_c(149)*y1*y2**2)*rmiddle
             !
-            acoef_a(2,2,0)=(params_c(82)*de1+params_c(83)*de2 +params_c(84)*de3+params_c(85)*de4 +params_c(86)* &
+            acoef_a(2,2,0)=(params_c(82)*de1+params_c(83)*de2 +params_c(84)*de3+params_c(85)*de4 + params_c(86)* &
                 & y1y22 +params_c(87)*y1y23 +params_c(88)*y1py2 +params_c(89)*y1py2*y1y2 + params_c(90)* y1y2)* rmiddle
-            acoef_a(2,2,2)=params_c(91)/r6 +(params_c(92)*de1+params_c(93)*de2 +params_c(94)*de3+params_c(95)* de4 + &
-                & params_c(96)*y1y22 +params_c(97)*y1y23 +params_c(98)*y1py2 +params_c(99)* y1py2* y1y2 + &
+            acoef_a(2,2,2)=params_c(91)/r6 +(params_c(92)*de1+params_c(93)*de2 +params_c(94)*de3+ params_c(95)* de4 + &
+                & params_c(96)*y1y22 +params_c(97)*y1y23 +params_c(98)*y1py2 + params_c(99)* y1py2* y1y2 + &
                 & params_c(100)*y1y2)*rmiddle
-            acoef_a(2,2,4)=(params_c(102)*de1+params_c(103)*de2 +params_c(104)*de3+params_c(105)*de4)*rmiddle + (8.d0* &
-                & consts_pi**1.5d0/3.d0)*dsqrt(14.d0/5.d0)* rin01* (params_c(101)**2)/(cq*rab**5) + (params_c(106)* &
-                & y1y22 +params_c(107)*y1y23 +params_c(108)*y1py2 +params_c(109)*y1py2*y1y2 + params_c(110)* y1y2)* &
-                & rmiddle
+            acoef_a(2,2,4)=(params_c(102)*de1+params_c(103)*de2 +params_c(104)*de3+params_c(105)*de4)* rmiddle + &
+                & (8.d0* consts_pi**1.5d0/3.d0)*dsqrt(14.d0/5.d0)* rin01* (params_c(101)**2)/ (cq*rab**5) + &
+                & (params_c(106)* y1y22 +params_c(107)*y1y23 +params_c(108)*y1py2 + params_c(109)*y1py2*y1y2 + &
+                & params_c(110)* y1y2)* rmiddle
             !
-            acoef_a(3,0,3) = params_c(111)/(rab**7) +(params_c(112)*de1+params_c(113)*de2 +params_c(114)*de3+ &
+            acoef_a(3,0,3) = params_c(111)/(rab**7) +(params_c(112)*de1+params_c(113)*de2 +params_c(114)* de3+ &
                 & params_c(115)*de4)*rmiddle
             acoef_a(0,3,3) = -acoef_a(3,0,3)
-            acoef_a(3,1,2) = (params_c(122)*de1+params_c(123)*de2 +params_c(124)*de3+params_c(125)*de4)*rmiddle
+            acoef_a(3,1,2) = (params_c(122)*de1+params_c(123)*de2 +params_c(124)*de3+params_c(125)*de4)* rmiddle
             acoef_a(1,3,2) = acoef_a(3,1,2)
-            acoef_a(3,1,4)=(params_c(132)*de1+params_c(133)*de2 +params_c(134)*de3+params_c(135)*de4)*rmiddle - rin01* &
-                & (16.d0*((consts_pi/3.d0)**1.5d0))*params_c(41)* params_c(131)/ (cq* rab**5)
+            acoef_a(3,1,4)=(params_c(132)*de1+params_c(133)*de2 +params_c(134)*de3+params_c(135)*de4)* rmiddle - &
+                & rin01* (16.d0*((consts_pi/3.d0)**1.5d0))*params_c(41)* params_c(131)/ (cq* rab**5)
             acoef_a(1,3,4) = acoef_a(3,1,4)
-            acoef_a(3,2,1) = (params_c(142)*de1+params_c(143)*de2 +params_c(144)*de3+params_c(145)*de4)*rmiddle
+            acoef_a(3,2,1) = (params_c(142)*de1+params_c(143)*de2 +params_c(144)*de3+params_c(145)*de4)* rmiddle
             acoef_a(2,3,1) = -acoef_a(3,2,1)
-            acoef_a(3,2,3) = (params_c(152)*de1+params_c(153)*de2 +params_c(154)*de3+params_c(155)*de4)*rmiddle
+            acoef_a(3,2,3) = (params_c(152)*de1+params_c(153)*de2 +params_c(154)*de3+params_c(155)*de4)* rmiddle
             acoef_a(2,3,3) = -acoef_a(3,2,3)
-            acoef_a(3,2,5) = (params_c(162)*dexp(-0.5d0*d3)+params_c(163)*dexp(-0.75d0*d3) +params_c(164)*de1+ &
+            acoef_a(3,2,5) = (params_c(162)*dexp(-0.5d0*d3)+params_c(163)*dexp(-0.75d0*d3) +params_c(164)* de1+ &
                 & params_c(165)*de4)*rmiddle
             acoef_a(2,3,5) = -acoef_a(3,2,5)
             acoef_a(3,3,0) = (params_c(172)*de1+params_c(173)*de2 +params_c(174)*de3+params_c(175)*de4 + &
@@ -434,14 +437,14 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             acoef_a(0,4,4) = acoef_a(4,0,4)
             acoef_a(4,1,3) = params_c(222)*de1+params_c(223)*de2 +params_c(224)*de3+params_c(225)*de4
             acoef_a(1,4,3) = -acoef_a(4,1,3)
-            acoef_a(4,1,5) = params_c(232)*dexp(-0.5d0*d3)+params_c(233)*dexp(-0.75d0*d3) +params_c(234)*de1+ &
+            acoef_a(4,1,5) = params_c(232)*dexp(-0.5d0*d3)+params_c(233)*dexp(-0.75d0*d3) +params_c(234)* de1+ &
                 & params_c(235)*de2
             acoef_a(1,4,5) = -acoef_a(4,1,5)
             acoef_a(4,2,2) = params_c(242)*de1+params_c(243)*de2 +params_c(244)*de3+params_c(245)*de4
             acoef_a(2,4,2) = acoef_a(4,2,2)
             acoef_a(4,2,4) = params_c(252)*de1+params_c(253)*de2 +params_c(254)*de3+params_c(255)*de4
             acoef_a(2,4,4) = acoef_a(4,2,4)
-            acoef_a(4,2,6) = params_c(262)*dexp(-0.5d0*d3)+params_c(263)*dexp(-0.75d0*d3) +params_c(264)*de1+ &
+            acoef_a(4,2,6) = params_c(262)*dexp(-0.5d0*d3)+params_c(263)*dexp(-0.75d0*d3) +params_c(264)* de1+ &
                 & params_c(265)*de2
             acoef_a(2,4,6) = acoef_a(4,2,6)
             acoef_a(4,3,1) = params_c(272)*de1+params_c(273)*de2 +params_c(274)*de3+params_c(275)*de4
@@ -459,14 +462,16 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             acoef_a(4,4,6) = params_c(342)*de1+params_c(343)*de2 +params_c(344)*de3+params_c(345)*de4
             acoef_a(4,4,8) = params_c(352)*de1+params_c(353)*de2 +params_c(354)*de3+params_c(355)*de4
             !
-            do 992 i=0, 4
-                do 992 j=0, 4
+            do i=0, 4
+                do j=0, 4
                     il = iabs(i-j)
                     iu = i+j
-                    do 992 k=il, iu, 2
-                        if( i .ne. 4.and.j .ne. 4 ) go to 992
+                    do k=il, iu, 2
+                        if( i .ne. 4.and.j .ne. 4 ) cycle
                         acoef_a(i,j,k) = acoef_a(i,j,k)*rmiddle
-            992 continue
+                    992 enddo
+                enddo
+            enddo
             !
             !     V = 0.0D0
             !     DO 2 I=0,4
@@ -519,9 +524,9 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             ic   = idnint(ax)
             ax   = ax/10.d0
             fakt = ax
-            do 10  i=1, ic-1
+            do i=1, ic-1
                 fakt = fakt*(ax-dfloat(i)*.1d0)
-            10 continue
+            10 enddo
         end function fakt
     end subroutine evaluate
 end module chempotpy_f2h2_gen_jbkkl_1990_pes

@@ -275,15 +275,13 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !           RAB IS DEFINED AS THE SMALLER OF R(1) AND R(3)
         !           RAC IS DEFINED AS THE LARGER OF R(1) AND R(3)
         !
-        if( r(1) .gt. r(3) ) go to 40
-        !
-        rab = r(1)
-        rac = r(3)
-        go to 50
-        !
-        40 rab = r(3)
-        rac = r(1)
-        50 continue
+        if( r(1) <= r(3) )then
+            rab = r(1)
+            rac = r(3)
+        else
+            rab = r(3)
+            rac = r(1)
+        endif
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          CALCULATE USEFUL EXPONENTIALS
@@ -356,19 +354,19 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !          CALCULATE THE B IJ 'S--SEE EQUATION 5
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !
-        do 80 i = 1, 5
-            do 70 j = 1, 3
+        do i = 1, 5
+            do j = 1, 3
                 b(i, j) = c(i,j,1)*(1.0d0+c(i,j,2)*csth*(1.0d0+c(i,j,3)* csth))
                 !
                 !               CALCULATE THE DERIVATIVES TOO.
                 !
                 if( nder .eq. 1 )then
-                    do 60 it = 1, 3
+                    do it = 1, 3
                         db(i, j, it) = c(i,j,1)*c(i,j,2)*(csth*c(i,j,3)* dcsth(it)+dcsth(it)* (1.0d0+c(i,j,3)*csth))
-                    60 continue
+                    60 enddo
                 endif
-            70 continue
-        80 continue
+            70 enddo
+        80 enddo
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          NEXT CALCULATE MEW--SEE EQUATION FOUR
@@ -385,19 +383,19 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !          NOW CALCULATE A I 'S AND DERIVATIVES--SEE EQUATION 4
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !
-        do 100 it = 1, 5
+        do it = 1, 5
             junk(1) = 1.0d0+b(it, 3)*mew
             junk(2) = mew*b(it, 2)
             junk(3) = 1.0d0+junk(2)*junk(1)
             !
             a(it) = b(it, 1)*junk(3)
             if( nder .eq. 1 )then
-                do 90 it1 = 1, 3
+                do it1 = 1, 3
                     da(it,it1) = db(it, 1, it1)*junk(3)+b(it, 1)* ((db(it, 2, it1)*mew+b(it, 2)*dmew(it1))* junk(1)+ &
                         & junk(2)* (db(it, 3, it1)*mew+ b(it, 3)*dmew(it1)))
-                90 continue
+                90 enddo
             endif
-        100 continue
+        100 enddo
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          CALCULATE THE SECOND TERM IN EQUATION THREE
@@ -422,20 +420,20 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         prod3 = 1.0d0+a(2)*(rab+rac)*prod2
         !
         if( nder .eq. 1 )then
-            do 120 it = 1, 3
+            do it = 1, 3
                 dprod3(it) = da(2,it)*(rab+rac)*prod2+a(2)* (rab+rac)*dprod2(it)
-                if( it .eq. 2 ) go to 110
+                if( it .eq. 2 ) cycle
                 dprod3(it) = dprod3(it)+a(2)*prod2
                 110 continue
-            120 continue
+            120 enddo
         endif
         !
         second = prod1*prod3
         !
         if( nder .eq. 1 )then
-            do 130 it = 1, 3
+            do it = 1, 3
                 dsec(it) = prod1*dprod3(it)+dprod1(it)*prod3
-            130 continue
+            130 enddo
         endif
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -448,12 +446,12 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         third = junk(1)*expo(2)*a(4)*junk(2)
         !
         if( nder .eq. 1 )then
-            do 140 it1 = 1, 2
+            do it1 = 1, 2
                 it = 1
                 if( it1 .eq. 2 ) it = 3
                 dthird(it) = dexpo(it)*expo(2)*a(4)*junk(2)+ junk(1)*expo(2)*da(4,it)*junk(2)+ junk(1)*expo(2)* a(4)* &
                     & (da(5,it)* (rab+rac)+a(5))
-            140 continue
+            140 enddo
             dthird(2) = junk(1)*(dexpo(2)*a(4)*junk(2)+expo(2)*(da(4,2)* junk(2)+a(4)*(da(5,2)*(rab+rac))))
         endif
         !
@@ -465,14 +463,16 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         energy = energy+zeroad
         !
         if( nder .eq. 1 )then
-            do 150 it = 1, 3
+            do it = 1, 3
                 der(it) = dv(it)+dsec(it)+dthird(it)
-            150 continue
+            150 enddo
             !
-            if( r(1) .lt. r(3) ) go to 160
-            junk(1) = der(3)
-            der(3)  = der(1)
-            der(1)  = junk(1)
+            goto_block_160_476: block
+                if( r(1) .lt. r(3) ) exit goto_block_160_476
+                junk(1) = der(3)
+                der(3)  = der(1)
+                der(1)  = junk(1)
+            end block goto_block_160_476
             160 continue
         endif
         !

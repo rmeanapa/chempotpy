@@ -253,13 +253,13 @@ module chempotpy_ih2_leps_dt1_1971_pes
             !
             !   CONVERT TO ATOMIC UNITS
             !
-            do   2 i = 1, 2
+            do i = 1, 2
                 rr(i)       = rr(i)/cangs
                 s(i)        = s(i)/cangs
                 re(i)       = re(i)/cangs
                 alpha(i)    = alpha(i)*cangs
                 legacy_d(i) = legacy_d(i)/ckcal
-            2 continue
+            2 enddo
             alfd = alfd*cangs
             !
             !   CALCULATE USEFUL CONSTANTS
@@ -268,10 +268,10 @@ module chempotpy_ih2_leps_dt1_1971_pes
             rr2ms2 = rr(2)-s(2)
             rrs1d2 = rr1ms1/rr2ms2
             sr1r2  = sqrt(rr1ms1**2+rr2ms2**2)
-            do   5 n=1, 2
+            do n=1, 2
                 rrmre(n) = rr(n)-re(n)
                 pre(n)   = sr1r2-rrmre(n)
-            5 continue
+            5 enddo
             !
             !   Initialize the asymptotic energy terms
             !
@@ -361,83 +361,61 @@ module chempotpy_ih2_leps_dt1_1971_pes
             rrmr(2) = rr(2)-r(2)
             lrr1    = rrmr(1).le.0.0d0
             lrr2    = rrmr(2).le.0.0d0
-            if( nder .eq. 1 )then
-                do 10 j = 1, 3
-                10 degsdr(j) = 0.0d0
-            endif
+            if( nder == 1 ) degsdr = 0.0d0
             engygs = ezero(1)
-            if( lrr1.and.lrr2 )then
+            if( lrr1 .and. lrr2 )then
                 call eunitzero
-                if( nder .ne. 0 )then
+                if( nder /= 0 )then
                     call rtocart
                     call dedcou
                 endif
                 return
             endif
-            if( lrr1.or.lrr2 ) go to 50
-            phip   = atan (rrs1d2*rrmr(2)/rrmr(1))
-            sn2pp  = sin (2.0d0*phip)
-            cs2pp  = cos (2.0d0*phip)
-            tn2pp  = sn2pp/cs2pp
-            sn2pp3 = sn2pp**3
-            sn2pp4 = sn2pp3*sn2pp
-            i      = 1
-            if( phip .gt. pid4 ) i = 2
-            a(i)                      = c(i,1) + c(i,2)*(phip-pid2)*phip
-            if( nder .eq. 1 ) dadp(i) = c(i,2)*(2.0d0*phip-pid2)
-            rr12                      = sqrt (rrmr(1)**2+rrmr(2)**2)
-            lm3                       = l(i) - 3
-            sn2ppl                    = sn2pp3*sn2pp**lm3
-            alf                       = alpha(i) +(alfd-alpha(i))*sn2pp4
-            gam                       = legacy_d(i)*(1.0d0-a(i)*sn2ppl)
-            xi                        = pre(i)*sn2pp4+rrmre(i)-rr12
-            quan                      = 1.0d0 - exp(-alf*xi)
-            quan2                     = quan*quan
-            engygs                    = gam*(quan2-1.0d0)+legacy_d(2)
-            if( nder .ne. 1 )then
-                call eunitzero
-                if( nder .ne. 0 )then
-                    call rtocart
-                    call dedcou
+            if( lrr1 .or. lrr2 )then
+                j = 1
+                if( lrr1 ) j                = 2
+                quan   = 1.0d0-exp(-alpha(j)*(r(j)-re(j)))
+                engygs = legacy_d(j)*(quan**2-1.0d0)+ezero(1)
+                if( nder == 1 ) degsdr(j)   = 2.0d0*legacy_d(j)*alpha(j)*quan*(1.0d0-quan)
+            else
+                phip   = atan(rrs1d2*rrmr(2)/rrmr(1))
+                sn2pp  = sin(2.0d0*phip)
+                cs2pp  = cos(2.0d0*phip)
+                tn2pp  = sn2pp/cs2pp
+                sn2pp3 = sn2pp**3
+                sn2pp4 = sn2pp3*sn2pp
+                i      = 1
+                if( phip > pid4 ) i = 2
+                a(i) = c(i,1)+c(i,2)*(phip-pid2)*phip
+                if( nder == 1 ) dadp(i)  = c(i,2)*(2.0d0*phip-pid2)
+                rr12   = sqrt(rrmr(1)**2+rrmr(2)**2)
+                lm3    = l(i)-3
+                sn2ppl = sn2pp3*sn2pp**lm3
+                alf    = alpha(i)+(alfd-alpha(i))*sn2pp4
+                gam    = legacy_d(i)*(1.0d0-a(i)*sn2ppl)
+                xi     = pre(i)*sn2pp4+rrmre(i)-rr12
+                quan   = 1.0d0-exp(-alf*xi)
+                quan2  = quan*quan
+                engygs = gam*(quan2-1.0d0)+legacy_d(2)
+                if( nder == 1 )then
+                    fac     = rrs1d2/(rrmr(1)**2+(rrs1d2*rrmr(2))**2)
+                    dpdr(1) = fac*rrmr(2)
+                    dpdr(2) = -fac*rrmr(1)
+                    do j = 1, 2
+                        ds4dr     = 8.0d0*sn2pp4/tn2pp*dpdr(j)
+                        dsldr     = 2.0d0*dble(l(i))*sn2ppl/tn2pp*dpdr(j)
+                        daldr     = (alfd-alpha(i))*ds4dr
+                        dgadr     = -legacy_d(i)*a(i)*dsldr-legacy_d(i)*dadp(i)*sn2ppl*dpdr(j)
+                        dxidr     = pre(i)*ds4dr+rrmr(j)/rr12
+                        degsdr(j) = dgadr*(quan2-1.0d0)+2.0d0*gam*quan*(1.0d0-quan)*(alf*dxidr+xi*daldr)
+                    enddo
                 endif
-                return
             endif
-            !
-            !   Compute the derivatives, if NDER = 1.
-            !
-            fac     = rrs1d2/(rrmr(1)**2+(rrs1d2*rrmr(2))**2)
-            dpdr(1) = fac*rrmr(2)
-            dpdr(2) = -fac*rrmr(1)
-            do 40 j = 1, 2
-                ds4dr = 8.0d0*sn2pp4/tn2pp*dpdr(j)
-                dsldr = 2.0d0*dble(l(i))*sn2ppl/tn2pp*dpdr(j)
-                daldr = (alfd-alpha(i))*ds4dr
-                dgadr = -legacy_d(i)*a(i)*dsldr - legacy_d(i)*dadp(i)*sn2ppl*dpdr(j)
-                dxidr = pre(i)*ds4dr + rrmr(j)/rr12
-            40 degsdr(j) = dgadr*(quan2-1.0d0)+2.0d0*gam*quan*(1.0d0-quan)* &
-                & (alf*dxidr + xi*daldr)
-            !
             call eunitzero
-            if( nder .ne. 0 )then
+            if( nder /= 0 )then
                 call rtocart
                 call dedcou
             endif
-            !
-            return
-            50 j = 1
-            if( lrr1 ) j = 2
-            quan                        = 1.0d0-exp(-alpha(j)*(r(j)-re(j)))
-            engygs                      = legacy_d(j)*(quan**2-1.0d0)+ ezero(1)
-            if( nder .eq. 1 ) degsdr(j) = 2.0d0*legacy_d(j)*alpha(j)*quan*(1.0d0-quan)
-            !
-            !
-            !
-            call eunitzero
-            if( nder .ne. 0 )then
-                call rtocart
-                call dedcou
-            endif
-            !
         end subroutine pot
         !> @brief Evaluate ANCVRT for the IH2_LEPS_DT1_1971 potential.
         subroutine ancvrt
@@ -821,7 +799,7 @@ module chempotpy_ih2_leps_dt1_1971_pes
                         else if( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
-                            go to 20
+                            cycle
                         endif
                         y              = degsdr(m1)
                         termx          = (cartnu(i,1)-cartnu(j,1))/r(m1)

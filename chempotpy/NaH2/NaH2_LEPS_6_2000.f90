@@ -856,7 +856,7 @@ module chempotpy_nah2_leps_6_2000_g_pot11_legacy_state_a1118117
         twothd = 2.0d0 / 3.0d0
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             ! ============================================================
             ! useful quantities calculated first, r1^2, R2^2, R3^2, atom to diatom
@@ -2556,7 +2556,7 @@ module chempotpy_nah2_leps_6_2000_g_pot11_legacy_state_a1118117
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
         !
     end subroutine dispatch
 end module chempotpy_nah2_leps_6_2000_g_pot11_legacy_state_a1118117
@@ -3625,7 +3625,7 @@ module chempotpy_nah2_leps_6_2000_g_pot22_legacy_state_a1118117
         !
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             ! =========================================================
             ! this section calcluates useful quantities - the A to BC center
@@ -5049,7 +5049,7 @@ module chempotpy_nah2_leps_6_2000_g_pot22_legacy_state_a1118117
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_6_2000_g_pot22_legacy_state_a1118117
 

@@ -79,11 +79,11 @@ module chempotpy_aln_er2scnm_pes
         a3  = 0.129970688812896917
         au2 = 0.143243771372740580
         bu2 = 6.50000000000000000/autoang
-        do 3 i=1, natom
+        do i=1, natom
             r(i,i)   = 0.d0
             fs(i,i)  = 1.d0
             fcn(i,i) = 1.d0
-            do 3 j=i+1, natom
+            do j=i+1, natom
                 dx       = x(i)-x(j)
                 dy       = y(i)-y(j)
                 dz       = z(i)-z(j)
@@ -93,7 +93,8 @@ module chempotpy_aln_er2scnm_pes
                 fs(i,j)  = 1.d0
                 fcn(j,i) = 1.d0
                 fcn(i,j) = 1.d0
-        3 continue
+            3 enddo
+        enddo
         xk1   = 3.84941377625793857
         xk2   = 0.242501221299462610
         xk3   = 3.78133854421104054
@@ -104,50 +105,52 @@ module chempotpy_aln_er2scnm_pes
         gzero = 10.4987787005373718
         g2    = 6.49990229604298975/autoang
         ! do S term, needs xk1,xk2,xk3
-        do 510 i=1, natom                          ! alpha loop
-            do 515 j=i+1, natom                      ! beta loop
+        do i=1, natom! alpha loop
+            do j=i+1, natom! beta loop
                 s = 0.d0
-                do 512 l=1, natom                      ! gamma loop
-                    if( l .eq. j.or.l .eq. i ) go to 512! gamma != alpha or beta
+                do l=1, natom! gamma loop
+                    if( l .eq. j.or.l .eq. i ) cycle! gamma != alpha or beta
                     rjl = r(l,j)
                     rij = r(i,j)
                     ril = r(l,i)
-                    if( rjl .ge. bu2 ) go to 512! cutoff for Rbeta,delta
-                    if( rij .ge. bu2 ) go to 512! cutoff for Rbeta,delta
-                    if( ril .ge. bu2 ) go to 512! cutoff for Rbeta,delta
+                    if( rjl .ge. bu2 ) cycle! cutoff for Rbeta,delta
+                    if( rij .ge. bu2 ) cycle! cutoff for Rbeta,delta
+                    if( ril .ge. bu2 ) cycle! cutoff for Rbeta,delta
                     ac   = au23*(1d0-1d0/(1d0-rjl/bu2))       ! cutoff for Rbeta,delta
                     ac   = ac+au23*(1d0-1d0/(1d0-rij/bu2))    ! cutoff for Rbeta,delta
                     ac   = ac+au23*(1d0-1d0/(1d0-ril/bu2))    ! cutoff for Rbeta,delta
                     term = xk1*dexp(-xk2*((ril+rjl)/rij)**xk3+ac)        ! cutoff ti
                     s    = s+term                         ! sum
-                512 continue
+                512 enddo
                 fs(i,j) = 1.d0-dtanh(s)
                 fs(j,i) = fs(i,j)
-            515 continue
+            515 enddo
             fs(i,i) = 1.d0                           ! shouldn't get used anywhe
-        510 continue
+        510 enddo
         ! CALCULATE CN FUNCTION
         !     first calculate g_alpha
         g1e = dexp(g1)
-        do 20 i=1, natom                         ! alpha loop
+        do i=1, natom! alpha loop
             gcorr(i) = 0d0
-            do 21 j=1, natom                        ! beta loop
-                if( i .eq. j ) go to 21! beta != alpha
+            do j=1, natom! beta loop
+                if( i .eq. j ) cycle! beta != alpha
                 rij = r(i,j)
-                if( rij .ge. g2 ) go to 21! cutoff term counts nearb
+                if( rij .ge. g2 ) cycle! cutoff term counts nearb
                 term     = dexp(-g1/(1d0-(rij/g2)))         ! cutoff term counts nearb
                 gcorr(i) = gcorr(i)+term                ! sum over beta
-            21 continue
+            21 enddo
             gcorr(i) = gcorr(i)*g1e                  ! g_alpha
-        20 continue
+        20 enddo
         !     then calculate CN term
-        do 30 i=1, natom                         ! alpha loop
-            do 31 j=1, natom                         ! beta loop
-                if( i .eq. j ) go to 31! beat != alpha
+        do i=1, natom! alpha loop
+            do j=1, natom! beta loop
+                if( i .eq. j ) cycle! beat != alpha
                 rij  = r(i,j)
                 term = 0.d0
-                if( rij .ge. g2 ) go to 32! g_alphabeta
-                term = dexp(g1*(1d0-1d0/(1d0-(rij/g2)))) ! g_alphabeta
+                goto_block_32_152: block
+                    if( rij .ge. g2 ) exit goto_block_32_152! g_alphabeta
+                    term = dexp(g1*(1d0-1d0/(1d0-(rij/g2)))) ! g_alphabeta
+                end block goto_block_32_152
                 32 continue
                 cz1    = (gcorr(i)-term)/gzero              ! ratio of coordination fo
                 abscz1 = dabs(cz1)
@@ -158,12 +161,12 @@ module chempotpy_aln_er2scnm_pes
                 if( abscz2 .le. 10d-12 ) cz2=abscz2! eliminates negative valu
                 ec1      = 1d0/(1d0+cz2**gu2)                 ! compute beta part of f f
                 fcn(i,j) = 1d0+du2*(es1*ec1-1d0)         ! put alpha and beta parts
-            31 continue
-        30 continue
+            31 enddo
+        30 enddo
         ! potential, includes cutoff
         v = 0.d0
-        do 1 i=1, natom
-            do 1 j=i+1, natom
+        do i=1, natom
+            do j=i+1, natom
                 dx   = x(i)-x(j)
                 dy   = y(i)-y(j)
                 dz   = z(i)-z(j)
@@ -174,7 +177,8 @@ module chempotpy_aln_er2scnm_pes
                 co   = 0.d0
                 if( rr .le. bu2 ) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
                 v = v-de*ee*poly*co*fs(i,j)*fcn(i,j)
-        1 continue
+            1 enddo
+        enddo
     end subroutine pot
 end module chempotpy_aln_er2scnm_pes
 

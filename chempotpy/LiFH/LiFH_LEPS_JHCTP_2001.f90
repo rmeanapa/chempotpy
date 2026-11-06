@@ -1179,7 +1179,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
         endif
         !
         !
-        do 99999 i = 1, nt
+        do i = 1, nt
             !
             d2_v = r(i,1) * r(i,1)
             d1_p = 2.0d0 * r(i,1)
@@ -1749,7 +1749,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
             !--------
             !
             10 continue
-        99999 continue
+        99999 enddo
     end subroutine dispatch
 end module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
 
