@@ -1,48 +1,66 @@
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_n4_bdtc_2014_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 4
+        character(len=1024), intent(in) :: path
+        integer, intent(in)             :: igrad
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: x1(4), y1(4), z1(4)
+        double precision                :: dx1(4), dy1(4), dz1(4)
+        double precision                :: v
+        integer                         :: i, j, k, l
+        integer                         :: istate, iatom, idir
+        !initialize
+        v     = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
+        x1(:) = x(:,1)/legacy_bohr_to_angstrom
+        y1(:) = x(:,2)/legacy_bohr_to_angstrom
+        z1(:) = x(:,3)/legacy_bohr_to_angstrom
+        call readpes(path)
+        call pot(x1, y1, z1, v, dx1, dy1, dz1)
+        if( igrad == 0 )then
+            do istate=1, nstates
+                p(istate) = v*legacy_hartree_to_electronvolt
+            enddo
+        else if( igrad == 1 )then
+            do istate=1, nstates
+                p(istate) = v*legacy_hartree_to_electronvolt
+            enddo
+            do istate=1, nstates
+                g(istate,:,1) = dx1(:)*51.422067
+                g(istate,:,2) = dy1(:)*51.422067
+                g(istate,:,3) = dz1(:)*51.422067
+            enddo
+        else
+            write(*, *) "Only energy and gradients are available"
+        endif
+    end subroutine evaluate
+end module chempotpy_n4_bdtc_2014_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_n4_bdtc_2014_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 4
-    character(len=1024), intent(in) :: path
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
+    character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: x1(4), y1(4), z1(4)
-    double precision                :: dx1(4), dy1(4), dz1(4)
-    double precision                :: v
-    logical, save                   :: first_time_data=.true.
-    integer                         :: i, j, k, l
-    integer                         :: istate, iatom, idir
-    !initialize
-    v     = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
-    x1(:) = x(:,1)/legacy_bohr_to_angstrom
-    y1(:) = x(:,2)/legacy_bohr_to_angstrom
-    z1(:) = x(:,3)/legacy_bohr_to_angstrom
-    if( first_time_data )then
-        call prepot(path)
-        first_time_data = .false.
-    endif
-    call pot(x1, y1, z1, v, dx1, dy1, dz1)
-    if( igrad == 0 )then
-        do istate=1, nstates
-            p(istate) = v*legacy_hartree_to_electronvolt
-        enddo
-    else if( igrad == 1 )then
-        do istate=1, nstates
-            p(istate) = v*legacy_hartree_to_electronvolt
-        enddo
-        do istate=1, nstates
-            g(istate,:,1) = dx1(:)*51.422067
-            g(istate,:,2) = dy1(:)*51.422067
-            g(istate,:,3) = dz1(:)*51.422067
-        enddo
-    else
-        write(*, *) "Only energy and gradients are available"
-    endif
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
 module falcons_vars_eval
     implicit none
@@ -70,18 +88,6 @@ module falcons_vars_main
     double precision, dimension(:), allocatable :: crc
 end module falcons_vars_main
 
-!> @brief Evaluate prepot.
-subroutine prepot( path )
-    use falcons_vars_eval, only: aji, qi
-    use falcons_vars_main, only: aa, cgmeth, cmap, crc, crcmult, dedy, e, epsnu, epsu, epw, eta, i, &
-        & ind, j, k, l, m, mcrc, moltype, n, nall, nitcrc, nma, nmincrc, nn, np, nplmax, ntar, &
-        & ntarmax, ntarmin, pesform, pnu, ps, pu, pwonly, q, qeq, qp, qps, qr, qs, r, rwfa, rwfb, sd, &
-        & systo, t, x, xr, y
-    implicit none
-    character(len=1024), intent(in) :: path
-    call readpes(path)
-end subroutine prepot
-
 !> @brief Evaluate readpes.
 subroutine readpes( path )
     use falcons_vars_eval, only: aji, qi
@@ -95,6 +101,9 @@ subroutine readpes( path )
     character(len=1024)             :: file_path1
     logical                         :: ex
     integer                         :: oridval, maskval
+    if( allocated(qi) ) deallocate(qi)
+    if( allocated(aji) ) deallocate(aji)
+    if( allocated(crc) ) deallocate(crc)
     cmap(1, :) = (/1, 2, 3/)
     cmap(2, :) = (/1, 4, 5/)
     cmap(3, :) = (/2, 4, 6/)

@@ -1,4 +1,3 @@
-!**********************************************************************
 !   System:          N2O (lowest 3A" state)
 !   Functional form: permutationally invariant polynomials
 !   Common name:     N2O-3App (adiabatic triplet ground
@@ -24,10 +23,8 @@
 !   Input: X(3),Y(3),Z(3)               in units of bohr
 !   Output: E                           in units of hartree
 !   Output: dEdX(3),dEdY(3),dEdZ(3)     hartree/bohr
-!**********************************************************************
 
 module n2o_3app_pip_par
-    !**********************************************************************
     ! This code is based on O3_1_1Ap.f (FORTRAN77 version) where some
     ! keywords were replaced by more modern ones.
     !
@@ -35,7 +32,6 @@ module n2o_3app_pip_par
     ! for each diatomic term.
     !
     ! Otherwise the surface itself was not changed.
-    !**********************************************************************
     ! Conversion factors
     ! Cconv: bohr to Angstrom
     !        1 bohr = 0.52917721092 angstrom
@@ -174,56 +170,76 @@ module n2o_3app_pip_par
         /)
 end module n2o_3app_pip_par
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, potential, gradient, dvec )
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_n2o_3app_pip_pes
     implicit none
-    ! number of electronic state
-    integer, parameter            :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, potential, gradient, dvec )
+        use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
+            & econv, eref, gconv, p, r, re, rm, rms, totdiss
+        implicit none
+        ! number of electronic state
+        integer, parameter            :: nstates = 1
+        integer, parameter            :: natoms  = 3
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: potential(nstates)
+        double precision, intent(out) :: gradient(nstates,natoms,3)
+        double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
+        double precision              :: v, tx(12), tg(12)
+        integer                       :: iatom, idir, j, istate
+        !initialize
+        potential = 0.d0; gradient = 0.d0; dvec = 0.d0
+        ! Notice that this N2O surface is weird, it is using N2O2 surface
+        ! and simply make the first three coordinates as zero.
+        do idir=1, 3
+            tx(idir) = 1.0d10
+        enddo
+        do iatom=1, 3
+            do idir=1, 3
+                j     = 3*(iatom-1)+idir+3
+                tx(j) = x(iatom,idir)
+            enddo
+        enddo
+        tg = 0.d0
+        call n2o2pes(tx, v, tg, igrad)
+        ! output v is in kcal/mol, but there is a reference energy that is
+        ! in hartree, so convert everything in eV.
+        v = v/23.0609 + eref/23.0609
+        ! output g is in kcal/mol/ang
+        tg = tg/23.0609
+        do istate=1, nstates
+            potential(istate) = v
+        enddo
+        do istate=1, nstates
+            do iatom=1, natoms
+                do idir=1, 3
+                    j                           = 3*(iatom-1)+idir+3
+                    gradient(istate,iatom,idir) = tg(j)
+                enddo
+            enddo
+        enddo
+        dvec = 0.d0
+    end subroutine evaluate
+end module chempotpy_n2o_3app_pip_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, potential, gradient, dvec )
+    use chempotpy_n2o_3app_pip_pes, only: evaluate
+    implicit none
     integer, parameter            :: natoms  = 3
+    integer, parameter            :: nstates = 1
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: potential(nstates)
     double precision, intent(out) :: gradient(nstates,natoms,3)
     double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-    double precision              :: v, tx(12), tg(12)
-    integer                       :: iatom, idir, j, istate
-    !initialize
-    potential = 0.d0; gradient = 0.d0; dvec = 0.d0
-    ! Notice that this N2O surface is weird, it is using N2O2 surface
-    ! and simply make the first three coordinates as zero.
-    do idir=1, 3
-        tx(idir) = 1.0d10
-    enddo
-    do iatom=1, 3
-        do idir=1, 3
-            j     = 3*(iatom-1)+idir+3
-            tx(j) = x(iatom,idir)
-        enddo
-    enddo
-    tg = 0.d0
-    call n2o2pes(tx, v, tg, igrad)
-    ! output v is in kcal/mol, but there is a reference energy that is
-    ! in hartree, so convert everything in eV.
-    v = v/23.0609 + eref/23.0609
-    ! output g is in kcal/mol/ang
-    tg = tg/23.0609
-    do istate=1, nstates
-        potential(istate) = v
-    enddo
-    do istate=1, nstates
-        do iatom=1, natoms
-            do idir=1, 3
-                j                           = 3*(iatom-1)+idir+3
-                gradient(istate,iatom,idir) = tg(j)
-            enddo
-        enddo
-    enddo
-    dvec = 0.d0
-end subroutine
+    call evaluate(x, igrad, potential, gradient, dvec)
+end subroutine pes
 
-!**********************************************************************
 !   System:                        N2O2
 !   Functional form:               permutationally invariant polynomials
 !   Common name:                   N2O2(adiabatic triplet ground state)
@@ -248,9 +264,7 @@ end subroutine
 !   Input: X(4),Y(4),Z(4)               in units of bohr
 !   Output: E                           in units of hartree
 !   Output: dEdX(4),dEdY(4),dEdZ(4)     hartree/bohr
-!**********************************************************************
 
-!**********************************************************************
 ! Local variables used in the N2O2 PES subroutine
 ! input coordinate matrix: X(12)in Ang
 !                          O1: X(1),X(2),X(3)
@@ -261,13 +275,11 @@ end subroutine
 !                       igrad=1 calculation of energy and gradient
 ! output potential energy:      v    in kcal/mol
 ! output gradient:              dVdX in kcal/(mol*Ang)
-!**********************************************************************
 
 !> @brief Evaluate n2o2pes.
 subroutine n2o2pes( x, v, dvdx, igrad )
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     ! Subroutine to calculate the potential energy V and gradient dVdX
     ! for given Cartesian coordinates X(12)
     ! R:            Interatomic bond distances (6)
@@ -279,7 +291,6 @@ subroutine n2o2pes( x, v, dvdx, igrad )
     ! dMdR:         The derivative of monomials w.r.t. R
     !               dim(6*18)
     ! dRdX:         The derivative of R w.r.t. X, dim(6*12)
-    !**********************************************************************
     implicit none
     integer          :: i, igrad, j, nob, k
     double precision :: v
@@ -302,14 +313,12 @@ end subroutine n2o2pes
 subroutine coord_convt( x )
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine calculates the six interatomic distances
     !  from the XYZ coordinates
     !
     !  r1 = r(O1N2)    r2 = r(O1N3)
     !  r3 = r(O1N4)    r4 = r(O2N3)
     !  r5 = r(O2N4)    r6 = r(N3N4)
-    !**********************************************************************
     implicit none
     integer          :: i
     double precision :: x(12)
@@ -325,7 +334,6 @@ end subroutine coord_convt
 subroutine evv( v )
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     ! This subroutine evaluates V for given R
     ! V(R) = C*P
     ! C:            Coefficients, stored in 'dim.inc'
@@ -340,7 +348,6 @@ subroutine evv( v )
     ! rM(0:17):     Array to store monomials
     ! P(0:2253):    Array to store polynomials
     ! B(1:2153):    Array to store basis functions
-    !**********************************************************************
     implicit none
     integer          :: i, j, k
     double precision :: dist, dv2dr, v, v21, v22, v23, v24, v25, v26
@@ -382,7 +389,6 @@ end subroutine evv
 subroutine evdvdx( x, dvdx )
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     ! This subroutine evaluates dRdX for given R and X
     ! R:            R(6), 6 bond lengths
     ! X:            X(12), 12 Cartesian coordinates
@@ -392,7 +398,6 @@ subroutine evdvdx( x, dvdx )
     ! dVdR:         dVdR(6), derivatives of V w.r.t.6 bond length
     ! dRdX:         dRdX(6,12), derivatives of R(6) w.r.t. 12
     !               Cartesian coordinates
-    !**********************************************************************
     implicit none
     integer          :: i, j
     double precision :: dvdx(12), x(12)
@@ -417,13 +422,11 @@ end subroutine evdvdx
 subroutine evmeg
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine calculates the MEG function
     !  MEG term rms = exp(-(r-re)/a-(r-re)^2/ab)
     !  re:   equilibrium bond length (Angstrom)
     !  a:    nonlinear parameter (Angstrom)
     !  ab:   nonlinear parameter (Angstrom^2)
-    !**********************************************************************
     implicit none
     integer :: i
     do i=1, 6
@@ -435,11 +438,9 @@ end subroutine evmeg
 subroutine evmono
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine takes six MEG variables(X) and calculates the
     !  monomials(RM) and that do not have usable decomposition.
     !  For degree 10, the number of monomials is nom.
-    !**********************************************************************
     implicit none
     rm(0)  = 1.0d0
     rm(1)  = rms(6)
@@ -465,11 +466,9 @@ end subroutine evmono
 subroutine evpoly
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine takes monomials(RM) and calculates the
     !  permutationally invariant polynomials(p)
     !  For degree 10, the number of polynomials is nob.
-    !**********************************************************************
     implicit none
     p(0)    = rm(0)
     p(1)    = rm(1)
@@ -2731,10 +2730,8 @@ end subroutine evpoly
 subroutine evbas
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine eliminates the 2-body terms in the permutationally
     !  invariant formulation
-    !**********************************************************************
     implicit none
     integer          :: i
     double precision :: b1(2254)
@@ -2894,9 +2891,7 @@ end subroutine evbas
 subroutine evbas2
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine eliminates unused four-body terms
-    !**********************************************************************
     implicit none
     b(  1) = b2(   1)
     b(  2) = b2(   2)
@@ -3156,7 +3151,6 @@ end subroutine evbas2
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
-    !**********************************************************************
     !
     ! This subroutine evaulates the 2-body potential energy and gradient
     ! for given r with two kinds of potentials:
@@ -3182,7 +3176,6 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
     !               (for N2O2 data)
     ! imol .eq. 4   Paramemters for O2 dissociation with SEC
     !               (for N2O2 data and future O4 data)
-    !**********************************************************************
     implicit none
     integer, intent(in)           :: igrad, imol, pairw
     double precision, intent(in)  :: r
@@ -3282,7 +3275,6 @@ end subroutine ev2gm2
 subroutine evdvdr
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     ! This subroutine evaluates dVdR for given R
     ! dVdR = dV2dR + C*dBdR
     ! C:            Coefficients, stored in 'dim.inc'
@@ -3297,7 +3289,6 @@ subroutine evdvdr
     ! nob:          number of basis functions (polynomials)
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
-    !**********************************************************************
     implicit none
     integer          :: i, j
     double precision :: dist, v, v21, v22, v23, v24, v25, v26
@@ -3347,7 +3338,6 @@ end subroutine evdvdr
 subroutine evdrdx( x )
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     ! This subroutine evaluates dRdX for given R and X
     ! R:            R(6), 6 bond lengths
     ! X:            X(12), 12 Cartesian coordinates
@@ -3357,7 +3347,6 @@ subroutine evdrdx( x )
     !               w.r.t. 6 bond lengths
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
-    !**********************************************************************
     implicit none
     integer          :: i, j
     double precision :: x(12)
@@ -3417,14 +3406,12 @@ end subroutine evdrdx
 subroutine evdmsdr
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     ! This subroutine evaluates the derivatives of MEG term X
     ! w.r.t. interatomic distances R(6)
     ! dmsdR:        Local variables, dirm(6,6)
     ! a:            Nonlinear parameter(Angstrom)
     ! ab:           Nonlinear parameter(Angstrom^2)
     ! re:           equilibrium bond length(Angstrom)
-    !**********************************************************************
     implicit none
     integer :: i, j
     ! Initialize dmsdr
@@ -3445,11 +3432,9 @@ end subroutine evdmsdr
 subroutine evdmdr
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine takes M(nom) and dMSdR(6,6) and calculates the
     !  dMdR(6,nom) that do not have usable decomposition.
     !  For degree 10, the number of monomials is nom.
-    !**********************************************************************
     implicit none
     integer :: i
     do i=1, 6
@@ -3478,11 +3463,9 @@ end subroutine evdmdr
 subroutine evdpdr
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine takes monomials(m) and calculates the
     !  permutationally invariant polynomials(p)
     !  For degree 10, the number of polynomials is nob.
-    !**********************************************************************
     implicit none
     integer :: i
     do i=1, 6
@@ -5748,10 +5731,8 @@ end subroutine evdpdr
 subroutine evdbdr
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine eliminates the 2-body terms in the permutationally
     !  invariant formulation.
-    !**********************************************************************
     implicit none
     integer          :: i, j
     double precision :: db1dr(6,2254)
@@ -5915,9 +5896,7 @@ end subroutine evdbdr
 subroutine evdbdr2
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
-    !**********************************************************************
     !  This subroutine eliminates the unused four-body terms
-    !**********************************************************************
     implicit none
     integer :: j
     do j=1, 6

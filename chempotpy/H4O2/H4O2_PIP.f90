@@ -49,44 +49,66 @@ module h4o2_pes_state
     end subroutine evaluate_h4o2_coefficients
 end module h4o2_pes_state
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_h4o2_pip_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 6
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        !     logical, save :: first_time_data=.true.
+        real    :: tx(18)
+        real    :: v
+        integer :: iatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                j     = (iatom-1)*3+idir
+                tx(j) = x(iatom,idir)/legacy_bohr_to_angstrom
+            enddo
+        enddo
+        !     if(first_time_data) then
+        call pes_init(path)
+        !       first_time_data=.false.
+        !     endif
+        if( igrad == 0 )then
+            call h4o2pot(tx, v)
+        else
+            write (*, *) 'Only energy is available'
+        endif
+        v = v*legacy_hartree_to_electronvolt
+        do istate=1, nstates
+            p(istate) = v
+        enddo
+    end subroutine evaluate
+end module chempotpy_h4o2_pip_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_h4o2_pip_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 6
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    !     logical, save :: first_time_data=.true.
-    real    :: tx(18)
-    real    :: v
-    integer :: iatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            j     = (iatom-1)*3+idir
-            tx(j) = x(iatom,idir)/legacy_bohr_to_angstrom
-        enddo
-    enddo
-    !     if(first_time_data) then
-    call pes_init(path)
-    !       first_time_data=.false.
-    !     endif
-    if( igrad == 0 )then
-        call h4o2pot(tx, v)
-    else
-        write (*, *) 'Only energy is available'
-    endif
-    v = v*legacy_hartree_to_electronvolt
-    do istate=1, nstates
-        p(istate) = v
-    enddo
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
 !=================================================!
 ! Initializing HBB water potential                !

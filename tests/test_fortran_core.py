@@ -20,14 +20,19 @@ class FortranCoreTests( unittest.TestCase ):
             "chempotpy_legacy_units.f90",
             "chempotpy_geometry.f90",
             "chempotpy_legacy_coordinates.f90",
+            "chempotpy_h3_basis.f90",
             "chempotpy_status.f90",
         )
         driver_source = """
 program test_fortran_core
     use chempotpy_geometry, only: cartesian_distance, &
-        cosine_between_vectors, dot_product_3d, fill_distance_matrix
+        cosine_between_vectors, dot_product_3d, fill_distance_matrix, &
+        flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian, &
+        triatomic_distance_jacobian
+    use chempotpy_h3_basis, only: get_h3_basis_term, primary_term_count, &
+        secondary_term_count
     use chempotpy_kinds, only: real64
-    use chempotpy_legacy_coordinates, only: &
+    use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates, &
         legacy_triatomic_distances_to_bohr
     use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, &
         legacy_coordinates_to_bohr, legacy_energy_to_electronvolt, &
@@ -39,7 +44,16 @@ program test_fortran_core
     implicit none
 
     real(real64) :: first_point(3), second_point(3), coordinates(3,3)
-    real(real64) :: distances(3,3), converted(1,3), pair_distances(3)
+    real(real64) :: distances(3,3), converted(1,3), flat_coordinates(9)
+    real(real64) :: coordinate_jacobian(2,3), internal_gradient(2)
+    real(real64) :: internal_gradient_matrix(2,2), cartesian_gradient_matrix(2,3)
+    real(real64) :: internal_gradient_tensor(2,2,2), cartesian_gradient_tensor(2,2,3)
+    real(real64) :: cartesian_gradient(3)
+    real(real64) :: potlib_coordinates(9)
+    real(real64) :: pair_distances(3)
+    real(real64) :: triatomic_jacobian(3,9)
+    integer      :: conversion_status
+    integer      :: coefficient_index, first_power, second_power, third_power
 
     if( bohr_to_angstrom /= 0.529177210903_real64 ) &
         error stop 'canonical length conversion changed'
@@ -75,6 +89,38 @@ program test_fortran_core
         [0.0_real64,1.0_real64,0.0_real64])) > epsilon(1.0_real64) ) &
         error stop 'angle cosine failed'
     coordinates = 0.0_real64
+    coordinates(1,:) = [1.0_real64, 2.0_real64, 3.0_real64]
+    coordinates(2,:) = [4.0_real64, 5.0_real64, 6.0_real64]
+    coordinates(3,:) = [7.0_real64, 8.0_real64, 9.0_real64]
+    call flatten_cartesian_coordinates(coordinates, flat_coordinates)
+    if( any(flat_coordinates /= [1.0_real64, 2.0_real64, 3.0_real64, &
+        4.0_real64, 5.0_real64, 6.0_real64, 7.0_real64, 8.0_real64, &
+        9.0_real64]) ) error stop 'Cartesian flattening order changed'
+    call cartesian_to_potlib_coordinates( &
+        coordinates, 3, 1, potlib_coordinates, conversion_status )
+    if( conversion_status /= 0 .or. any(potlib_coordinates /= flat_coordinates) ) &
+        error stop 'POTLIB Cartesian flattening changed'
+    coordinate_jacobian(1,:) = [1.0_real64, 2.0_real64, 3.0_real64]
+    coordinate_jacobian(2,:) = [4.0_real64, 5.0_real64, 6.0_real64]
+    internal_gradient = [2.0_real64, 3.0_real64]
+    call transform_internal_gradient_to_cartesian( &
+        internal_gradient, coordinate_jacobian, cartesian_gradient )
+    if( any(cartesian_gradient /= [14.0_real64, 19.0_real64, 24.0_real64]) ) &
+        error stop 'vector chain-rule transformation failed'
+    internal_gradient_matrix(1,:) = internal_gradient
+    internal_gradient_matrix(2,:) = [-1.0_real64, 4.0_real64]
+    call transform_internal_gradient_to_cartesian( &
+        internal_gradient_matrix, coordinate_jacobian, cartesian_gradient_matrix )
+    if( any(cartesian_gradient_matrix(1,:) /= cartesian_gradient) .or. &
+        any(cartesian_gradient_matrix(2,:) /= [15.0_real64, 18.0_real64, 21.0_real64]) ) &
+        error stop 'matrix chain-rule transformation failed'
+    internal_gradient_tensor = 0.0_real64
+    internal_gradient_tensor(1,2,:) = internal_gradient
+    call transform_internal_gradient_to_cartesian( &
+        internal_gradient_tensor, coordinate_jacobian, cartesian_gradient_tensor )
+    if( any(cartesian_gradient_tensor(1,2,:) /= cartesian_gradient) ) &
+        error stop 'tensor chain-rule transformation failed'
+    coordinates = 0.0_real64
     coordinates(2,1) = 3.0_real64
     coordinates(3,2) = 4.0_real64
     call fill_distance_matrix( coordinates, distances )
@@ -92,9 +138,32 @@ program test_fortran_core
     if( any(abs(pair_distances-[3.0_real64, 4.0_real64, 5.0_real64]) &
         > 8.0_real64*epsilon(1.0_real64)) ) &
         error stop 'legacy triatomic distances failed'
+    call triatomic_distance_jacobian(coordinates, pair_distances, triatomic_jacobian)
+    if( any(abs(pair_distances-legacy_bohr_to_angstrom*[3.0_real64, 4.0_real64, 5.0_real64]) &
+        > 8.0_real64*epsilon(1.0_real64)) ) &
+        error stop 'triatomic distance Jacobian distances failed'
+    if( any(abs(triatomic_jacobian(1,:)-[-1.0_real64, 0.0_real64, 0.0_real64, &
+        1.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, 0.0_real64]) &
+        > 8.0_real64*epsilon(1.0_real64)) ) &
+        error stop 'triatomic distance Jacobian orientation failed'
 
     if( status_success /= 0 .or. status_derivative_unavailable /= 1 &
         .or. status_invalid_input /= 2 ) error stop 'status contract changed'
+    if( primary_term_count /= 418 .or. secondary_term_count /= 330 ) &
+        error stop 'H3 basis term counts changed'
+    call get_h3_basis_term(1, first_power, second_power, third_power, coefficient_index)
+    if( any([first_power, second_power, third_power, coefficient_index] /= [0,1,1,1]) ) &
+        error stop 'first primary H3 basis term changed'
+    call get_h3_basis_term(primary_term_count, first_power, second_power, third_power, coefficient_index)
+    if( any([first_power, second_power, third_power, coefficient_index] /= [4,4,4,89]) ) &
+        error stop 'last primary H3 basis term changed'
+    call get_h3_basis_term(primary_term_count+1, first_power, second_power, third_power, coefficient_index)
+    if( any([first_power, second_power, third_power, coefficient_index] /= [0,1,1,1]) ) &
+        error stop 'first secondary H3 basis term changed'
+    call get_h3_basis_term(primary_term_count+secondary_term_count, &
+        first_power, second_power, third_power, coefficient_index)
+    if( any([first_power, second_power, third_power, coefficient_index] /= [4,4,3,71]) ) &
+        error stop 'last secondary H3 basis term changed'
 end program test_fortran_core
 """
         with tempfile.TemporaryDirectory(prefix="chempotpy-fortran-core-") as tmp:

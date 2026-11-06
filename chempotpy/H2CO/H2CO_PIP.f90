@@ -388,41 +388,63 @@ function v2ch( r )
     v2ch = -de*(1+a1*rho+a2*rho**2+a3*rho**3 )*exp(-a1*rho)
 end
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, gradient_out, d )
-    use shell,                  only: cof, coff, power, total
-    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_h2co_pip_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, gradient_out, d )
+        use shell,                  only: cof, coff, power, total
+        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 4
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates)
+        double precision, intent(out)   :: gradient_out(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: tx(3,natoms), v
+        integer                         :: iatom, idir, j, istate
+        logical, save                   :: first_time_data=.true.
+        !initialize
+        gradient_out = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
+            enddo
+        enddo
+        if( igrad == 0 )then
+            if( first_time_data )then
+                call pes_init(path)
+                first_time_data = .false.
+            endif
+            call getpot(tx, v, path)
+            v = v*legacy_hartree_to_electronvolt
+            do istate=1, nstates
+                p(istate) = v
+            enddo
+        else
+            write (*, *) 'Only energy is available'
+        endif
+    end subroutine evaluate
+end module chempotpy_h2co_pip_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, gradient_out, d )
+    use chempotpy_h2co_pip_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 4
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: p(nstates)
     double precision, intent(out)   :: gradient_out(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: tx(3,natoms), v
-    integer                         :: iatom, idir, j, istate
-    logical, save                   :: first_time_data=.true.
-    !initialize
-    gradient_out = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
-        enddo
-    enddo
-    if( igrad == 0 )then
-        if( first_time_data )then
-            call pes_init(path)
-            first_time_data = .false.
-        endif
-        call getpot(tx, v, path)
-        v = v*legacy_hartree_to_electronvolt
-        do istate=1, nstates
-            p(istate) = v
-        enddo
-    else
-        write (*, *) 'Only energy is available'
-    endif
-end subroutine
+    call evaluate(x, igrad, path, p, gradient_out, d)
+end subroutine pes

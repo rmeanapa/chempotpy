@@ -13,49 +13,72 @@
 !             Energy returned in Hatrees relative to the classical minim
 !
 
-!> @brief Evaluate pes for the H3_GEN_A2_2002 potential.
-subroutine pes( x, igrad, p, g, d )
-    use chempotpy_legacy_units,       only: legacy_energy_to_electronvolt
-    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_h3_gen_a2_2002_pes
     implicit none
-    ! number of electronic state
-    integer, parameter            :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_legacy_units,       only: legacy_energy_to_electronvolt
+        use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+        implicit none
+        ! number of electronic state
+        integer, parameter            :: nstates = 1
+        integer, parameter            :: natoms  = 3
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out) :: d(nstates,nstates,natoms,3)
+        integer                       :: istate
+        double precision              :: e(1), r(1,3), v
+        integer                       :: iatom, idir, i, j
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        ! input cartesian is HHH
+        call legacy_triatomic_distances_to_bohr(x, r(1,:))
+        call pot(r, e, 1)
+        v = legacy_energy_to_electronvolt(e(1))
+        if( igrad == 0 )then
+            do istate=1, nstates
+                p(istate) = v
+            enddo
+        else
+            write (*, *) 'Only energy is available'
+        endif
+    end subroutine evaluate
+end module chempotpy_h3_gen_a2_2002_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, p, g, d )
+    use chempotpy_h3_gen_a2_2002_pes, only: evaluate
+    implicit none
     integer, parameter            :: natoms  = 3
+    integer, parameter            :: nstates = 1
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out) :: p(nstates)
+    double precision, intent(out) :: g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-    integer                       :: istate
-    double precision              :: e(1), r(1,3), v
-    integer                       :: iatom, idir, i, j
-    logical, save                 :: first_time_data=.true.
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    ! input cartesian is HHH
-    call legacy_triatomic_distances_to_bohr(x, r(1,:))
-    call pot(r, e, 1)
-    v = legacy_energy_to_electronvolt(e(1))
-    if( igrad == 0 )then
-        do istate=1, nstates
-            p(istate) = v
-        enddo
-    else
-        write (*, *) 'Only energy is available'
-    endif
+    call evaluate(x, igrad, p, g, d)
 end subroutine pes
 
 module a2data
+    use chempotpy_h3_basis, only: primary_term_count, secondary_term_count
     implicit none
     private
     public :: ald, beta, betad, epscem, epslon, eshift, maxi2a, maxi2b, rnought
     public :: xlin1, xlin2, xlin3, xlin4
-    save
-    double precision                :: ald=0.d0, betad=0.d0
-    double precision                :: epscem=0.d0, epslon=0.d0
-    integer                         :: maxi2a=0, maxi2b=0
-    double precision                :: eshift=0.1662307680057728d0
-    double precision                :: beta=0.900d0
-    double precision                :: rnought=2.d0
+    double precision, parameter     :: ald     = 0.02d0
+    double precision, parameter     :: betad   = 0.72d0
+    double precision, parameter     :: epscem  = 1.d-12
+    double precision, parameter     :: epslon  = 1.d-12
+    integer, parameter              :: maxi2a  = primary_term_count
+    integer, parameter              :: maxi2b  = secondary_term_count
+    double precision, parameter     :: eshift  = 0.1662307680057728d0
+    double precision, parameter     :: beta    = 0.900d0
+    double precision, parameter     :: rnought = 2.d0
     double precision, dimension(89) :: xlin1=(/0.3122096268380428d0, &
         & -0.5091675305404870d0, 17.09937094766591d0, &
         & -47.55205835431389d0, 58.80549483490758d0, &
@@ -220,12 +243,6 @@ module a2data
         & 102.2707553778119d0, -71.61259882125256d0/)
 end module
 
-!> @brief Initialize the H3 A2 potential.
-subroutine prepot
-    implicit none
-    call prepota2
-end subroutine prepot
-
 !> @brief Evaluate a batch of H3 A2 geometries.
 subroutine pot( rvp, evp, nt )
     implicit none
@@ -241,21 +258,6 @@ subroutine pot( rvp, evp, nt )
         call pota2(r1x, r2x, r3x, evp(ivp))
     enddo
 end subroutine pot
-
-!> @brief Evaluate prepota2 for the H3_GEN_A2_2002 potential.
-subroutine prepota2
-    use a2data,             only: ald, betad, epscem, epslon, maxi2a, maxi2b
-    use chempotpy_h3_basis, only: initialize_h3_basis
-    implicit none
-    write(6, *)' Using A2 H3 PES of 8/15/01'
-    write(6, *)' S. L. Mielke, B. C. Garrett, and K. A. Peterson, J. Ch&
-        &em. Phys., 116 (2002) 4142'
-    epslon = 1.d-12
-    epscem = 1.d-12
-    ald    = 0.02d0
-    betad  = 0.72d0
-    call initialize_h3_basis(12, 11, maxi2a, maxi2b)
-end subroutine prepota2
 
 !> @brief Evaluate one H3 A2 geometry.
 subroutine pota2( r1x, r2x, r3x, eee )

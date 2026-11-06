@@ -1,67 +1,71 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Evaluate pes for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine pes( x, igrad, path, p, g, d )
-    use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
-    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_clh2_leps_ttgi2_1985_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
+        use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 3
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: dq(3), q(3), r2(3), tx(9), dedx(9), drdx(3,9), v, xter
+        integer                         :: iatom, idir, istate, j
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        call flatten_cartesian_coordinates(x, tx)
+        ! input cartesian is ClHH
+        call legacy_triatomic_distances_to_bohr(x, q)
+        dq = 0.d0
+        call pot(q, igrad, xter, dq)
+        xter = xter*legacy_hartree_to_electronvolt
+        dq   = dq*51.422067
+        r2   = q*legacy_bohr_to_angstrom
+        call evdrdx(tx, r2, drdx)
+        call transform_internal_gradient_to_cartesian(dq, drdx, dedx)
+        if( igrad == 0 )then
+            do istate=1, nstates
+                p(istate) = xter
+            enddo
+        else if( igrad == 1 )then
+            do istate=1, nstates
+                p(istate) = xter
+            enddo
+            do iatom=1, natoms
+                do idir=1, 3
+                    j               = (iatom-1)*3+idir
+                    g(1,iatom,idir) = dedx(j)
+                enddo
+            enddo
+        else if( igrad == 2 )then
+            write (*, *) 'Only energy and gradient are available'
+        endif
+    end subroutine evaluate
+end module chempotpy_clh2_leps_ttgi2_1985_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_clh2_leps_ttgi2_1985_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 3
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: dq, q, v, xter
-    integer                         :: i, iatom, idebug, idir, idum, istate, j, nder, ndum
-    common /pt1cm/ q(3), xter, dq(3)
-    common /pt2cm/ nder, ndum, idebug, idum(19)
-    double precision :: tx(9), r2(3), dedx(9), drdx(3,9)
-    logical, save    :: first_time_data=.true.
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            j     = (iatom-1)*3+idir
-            tx(j) = x(iatom,idir)
-        enddo
-    enddo
-    ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr(x, q)
-    nder = igrad
-    dq   = 0.d0
-    if( first_time_data )then
-        call prepot(path)
-        first_time_data = .false.
-    endif
-    call pot
-    xter = xter*legacy_hartree_to_electronvolt
-    dq   = dq*51.422067
-    r2   = q*legacy_bohr_to_angstrom
-    call evdrdx(tx, r2, drdx)
-    dedx = 0.d0
-    do i=1, 9
-        do j=1, 3
-            dedx(i) = dedx(i)+dq(j)*drdx(j,i)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        do istate=1, nstates
-            p(istate) = xter
-        enddo
-    else if( igrad == 1 )then
-        do istate=1, nstates
-            p(istate) = xter
-        enddo
-        do iatom=1, natoms
-            do idir=1, 3
-                j               = (iatom-1)*3+idir
-                g(1,iatom,idir) = dedx(j)
-            enddo
-        enddo
-    else if( igrad == 2 )then
-        write (*, *) 'Only energy and gradient are available'
-    endif
+    call evaluate(x, igrad, path, p, g, d)
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the ClH2_LEPS_TTGI2_1985 potential.
@@ -97,14 +101,13 @@ subroutine evdrdx( x, r, drdx )
 end subroutine evdrdx
 
 !
-!> @brief Evaluate PREPOT for the ClH2_LEPS_TTGI2_1985 potential.
 module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
     implicit none
     private
-    public :: dispatch
+    public :: evaluate_internal
     contains
     !> @brief Evaluate dispatch.
-    subroutine dispatch( path, initialize_only )
+    subroutine evaluate_internal( q, nder, xter, dq )
         !
         !   System:          ClH2
         !   Functional form: Isaacson and Muckerman's diatomics-in-molecules ver
@@ -115,7 +118,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         !                    J. Chem. Phys. 82, 4102 (1985)
         !
         !   Calling Sequence:
-        !      PREPOT - initializes the potential's variables and
         !               must be called once before any calls to POT
         !      POT    - driver for the evaluation of the energy and the derivati
         !               of the energy with respect to the coordinates for a give
@@ -136,7 +138,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         !
         !   Parameters:
         !      Set in the BLOCK DATA subprogram PTPARM and read in from the file
-        !      potclh2dims.dat that is linked to FORTRAN unit IPTRD1
         !
         !   Coordinates:
         !      Internal, Definition: R(1) = R(Cl-H)
@@ -159,7 +160,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         !        IDEBUG = 1 => print intermediate values to the file linked
         !                      to FORTRAN unit IPTPRT.
         !        IDUM   - not used
-        !      /PT4CM/ IPTPRT, IPTRD1
         !        passes the FORTRAN unit number used for potential output
         !      /PT5CM/ EASYAB, EASYBC, EASYAC
         !        passes the energy in the three asymptotic valleys for an A + BC
@@ -176,1469 +176,1101 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         !      NDER             1
         !      IDEBUG           0
         !      IPTPRT           6
-        !      IPTRD1           4
         !
-        !*****
         !
         implicit none
-        logical, intent(in) :: initialize_only
-        optional :: path
-        character(len=1024), intent(in) :: path
-        double precision                :: arg, c, cs, ct, ct2, dd, ddgab, ddsxa, ddsxb, dduab, deldsx, delgab, dels11, &
-            & dels12, dels22, delsab, delspx, deltab, deltpx, deltsx, deluab, dgab, dh, dh11, dh12, dh13, &
-            & dh14, dh15, dh16, dh22, dh24, dh25, dh26, dh33, dh34, dh44, dh45, dh46, dh55, dh56, dh66, &
-            & dnumb, dpux, dq, dsgh, dspxa, dspxb, dss11a, dss11b, dss12a, dss12b, dss22a, dss22b, dssab, &
-            & dsxa, dsxb, dsxfit, dtdr1, dtdr2, dtdr3, dtpxa, dtpxb, dtsab, dtsxa, dtsxb, duab, easyab, &
-            & easyac, easybc, en, eps, factr, forth, gabfit, gvec, half, one, q, r, s11fit, s12fit, &
-            & s22fit, s2dsx, s2gab, s2s11, s2s12, s2s22, s2sab, s2spx, s2tab, s2tpx, s2tsx, s2uab, s3, &
-            & s3dsx, s3gab, s3s11, s3s12, s3s22, s3sab, s3spx, s3tab, s3tpx, s3tsx, s3uab, sabfit, spxa, &
-            & spxb, spxfit, sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, &
-            & tabfit, test, th, tpxa, tpxb, tpxfit, tre, tsab, tsxa, tsxb, tsxfit, two, uabfit, vec, w, &
-            & x, xter, xtra, zero
-        integer :: i, idebug, idum, iflag, indx, iptprt, iptrd1, ix, j, k, nder, ndim, ndum, nroot, ns
-        common /pt4cm/ iptprt, iptrd1
-        common /pt2cm/ nder, ndum, idebug, idum(19)
-        common /pt5cm/ easyab, easybc, easyac
+        double precision, intent(in)  :: q(3)
+        integer, intent(in)           :: nder
+        double precision, intent(out) :: xter, dq(3)
+        double precision              :: quar, rt3
+        dimension c(3)
+        dimension x(121)
+        dimension sabfit(121), s2sab(121), s3sab(121), delsab(121)
+        dimension tabfit(121), s2tab(121), s3tab(121), deltab(121)
+        dimension gabfit(121), s2gab(121), s3gab(121), delgab(121)
+        dimension uabfit(121), s2uab(121), s3uab(121), deluab(121)
+        dimension s11fit(121), s2s11(121), s3s11(121), dels11(121)
+        dimension s12fit(121), s2s12(121), s3s12(121), dels12(121)
+        dimension s22fit(121), s2s22(121), s3s22(121), dels22(121)
+        dimension tsxfit(121), s2tsx(121), s3tsx(121), deltsx(121)
+        dimension spxfit(121), s2spx(121), s3spx(121), delspx(121)
+        dimension tpxfit(121), s2tpx(121), s3tpx(121), deltpx(121)
+        dimension dsxfit(121), s2dsx(121), s3dsx(121), deldsx(121)
+        double precision :: arg, c, cs, ct, ct2, dd, ddgab, ddsxa, ddsxb, dduab, deldsx, delgab, dels11, dels12, &
+            & dels22, delsab, delspx, deltab, deltpx, deltsx, deluab, dgab, dh, dh11, dh12, dh13, dh14, dh15, dh16, &
+            & dh22, dh24, dh25, dh26, dh33, dh34, dh44, dh45, dh46, dh55, dh56, dh66, dnumb, dpux, dsgh, dspxa, &
+            & dspxb, dss11a, dss11b, dss12a, dss12b, dss22a, dss22b, dssab, dsxa, dsxb, dsxfit, dtdr1, dtdr2, dtdr3, &
+            & dtpxa, dtpxb, dtsab, dtsxa, dtsxb, duab, easyab, easyac, easybc, en, eps, factr, forth, gabfit, gvec, &
+            & half, one, r, s11fit, s12fit, s22fit, s2dsx, s2gab, s2s11, s2s12, s2s22, s2sab, s2spx, s2tab, s2tpx, &
+            & s2tsx, s2uab, s3, s3dsx, s3gab, s3s11, s3s12, s3s22, s3sab, s3spx, s3tab, s3tpx, s3tsx, s3uab, sabfit, &
+            & spxa, spxb, spxfit, sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, &
+            & tabfit, test, th, tpxa, tpxb, tpxfit, tre, tsab, tsxa, tsxb, tsxfit, two, uabfit, vec, w, x, xtra, &
+            & zero
+        integer :: i, idebug, idum, iflag, indx, iptprt, ix, j, k, ndim, ndum, nroot, ns
         dimension th(6,6), vec(6,6), w(6), en(6), gvec(6), dh(6,6), r(3), dd(3)
         dimension dh11(3), dh12(3), dh13(3), dh14(3), dh15(3), dh16(3), dh22(3)
         dimension dh24(3), dh25(3), dh26(3), dh33(3), dh34(3), dh44(3), dh45(3)
         dimension dh46(3), dh55(3), dh56(3), dh66(3)
         dimension indx(3)
         character(len=80) :: title(2)
-        common /pt1cm/ q(3), xter, dq(3)
-        common /potcm2/ c(3)
-        common/potcm3/zero, one, two, tre, half, forth, sqrt3, &
-            & dpux, ssgx, dsgh, ssgh
-        common/potcm4/x(121), &
-            & sabfit(121), s2sab(121), s3sab(121), delsab(121), &
-            & tabfit(121), s2tab(121), s3tab(121), deltab(121), &
-            & gabfit(121), s2gab(121), s3gab(121), delgab(121), &
-            & uabfit(121), s2uab(121), s3uab(121), deluab(121), &
-            & s11fit(121), s2s11(121), s3s11(121), dels11(121), &
-            & s12fit(121), s2s12(121), s3s12(121), dels12(121), &
-            & s22fit(121), s2s22(121), s3s22(121), dels22(121), &
-            & tsxfit(121), s2tsx(121), s3tsx(121), deltsx(121), &
-            & spxfit(121), s2spx(121), s3spx(121), delspx(121), &
-            & tpxfit(121), s2tpx(121), s3tpx(121), deltpx(121), &
-            & dsxfit(121), s2dsx(121), s3dsx(121), deldsx(121), ns
         equivalence (th(1,1), dh(1,1))
-        character(len=1024) :: file_path1
-        data ndim/6/, nroot/1/
-        data test/0.999999999d0/
-        data indx /1, 2, 3/
-        data title(1) /'    Final BNL DIM surface for Cl+H2 -- 5 and7 kcal/mole barriers'/
-        data title(2) /'    Spline fits used in atomic units'/
         !
         !   Echo the name of the potential to the file linked to FORTRAN unit IP
         !WRITE (IPTPRT, 600)
         !WRITE (IPTPRT, 610) TITLE
-        if( initialize_only )then
-            file_path1 = trim(path)//"/ClH2/potclh2dims.dat "
-            !   Open the file with the potential input data
-            open (unit=iptrd1, file=file_path1, form='FORMATTED', &
-                & status='OLD', err=100)
-            !     SET UP SPLINE FITS TO H2 CURVES
-            call setspl
-            !
-            !   Close the input data file
-            close (unit = iptrd1)
-            !
-            !   Initialize the energies in the three asymptotic valleys
-            easyab = c(1)
-            easybc = c(2)
-            easyac = c(3)
-            !
-            return
-            100 write (iptprt, '(/,2X,T5,''Error opening input data file'')')
-            stop 'PREPOT 1'
-            !
-        else
-            !
-            !***********************************************************************
-            !
-            !     ENTRY POT GIVES NROOT-TH POTENTIAL ENERGY FOR THE CLH2 SYSTEM
-            !     ENTRY POT ALSO GIVES PARTIALS W.R.T. THREE DISTANCES
-            !
-            !     INTERNUCLEAR DISTANCES STORED IN Q(3) AND R(3)
-            !     NROOT-TH STATE ENERGY STORED IN XTER (OR TERM FOR DIATOMIC)
-            !     THREE PARTIALS STORED IN DD(3)
-            !
-            !***********************************************************************
-            !
-            !   Check the value of NDER
-            if( nder .gt. 1 )then
-                write (iptprt, '(/,1X,T5,''Error: POT has been called with NDER = '', I5, /,1X,T12,''only the first derivativ' // &
-                    'es, NDER = 1, are '', ''coded in this potential'')') nder
-                stop 'POT 1'
-            endif
-            !
-            !     IAPP=1
-            !     SET FLAG FOR EIGENVECTOR OUTPUT
-            iflag = sign(1, nroot)
-            nroot = abs(nroot)
-            !
-            !     FOLLOWING COORDINATE DEFINITIONS PROVIDE FOR PROPER SYSTEM
-            do 15 ix=1, 3
-            15 r(ix)=q(indx(ix))
-            !
-            !     ZERO OUT UNUSED HAMILTONIAN ELEMENTS
-            th(2,3) = zero
-            th(3,5) = zero
-            th(3,6) = zero
-            !
-            !     COMPUTE SINE AND COSINE OF ANGLE AXB, AND POWERS
-            ct = (r(1)*r(1)+r(3)*r(3)-r(2)*r(2))/(two*r(1)*r(3))
-            if( ct .gt. -test .and. ct .lt. test ) go to 10
-            ct = sign(test, ct)
-            10 continue
-            arg = one-ct*ct
-            if( arg .lt. zero ) arg=zero
-            st  = sqrt(arg)
-            ct2 = ct*ct
-            st2 = st*st
-            cs  = ct*st
-            !     COMPUTE DIATOMIC ENERGIES FOR R(3) ARRAY
-            call spline(ns, x, s11fit, r(1), ss11a, dss11a, s3, eps, s2s11, s3s11, &
-                & dels11)
-            call spline(ns, x, s11fit, r(3), ss11b, dss11b, s3, eps, s2s11, s3s11, &
-                & dels11)
-            call spline(ns, x, s12fit, r(1), ss12a, dss12a, s3, eps, s2s12, s3s12, &
-                & dels12)
-            call spline(ns, x, s12fit, r(3), ss12b, dss12b, s3, eps, s2s12, s3s12, &
-                & dels12)
-            call spline(ns, x, s22fit, r(1), ss22a, dss22a, s3, eps, s2s22, s3s22, &
-                & dels22)
-            call spline(ns, x, s22fit, r(3), ss22b, dss22b, s3, eps, s2s22, s3s22, &
-                & dels22)
-            call spline(ns, x, tsxfit, r(1), tsxa, dtsxa, s3, eps, s2tsx, s3tsx, deltsx)
-            call spline(ns, x, tsxfit, r(3), tsxb, dtsxb, s3, eps, s2tsx, s3tsx, deltsx)
-            call spline(ns, x, spxfit, r(1), spxa, dspxa, s3, eps, s2spx, s3spx, delspx)
-            call spline(ns, x, spxfit, r(3), spxb, dspxb, s3, eps, s2spx, s3spx, delspx)
-            call spline(ns, x, tpxfit, r(1), tpxa, dtpxa, s3, eps, s2tpx, s3tpx, deltpx)
-            call spline(ns, x, tpxfit, r(3), tpxb, dtpxb, s3, eps, s2tpx, s3tpx, deltpx)
-            call spline(ns, x, dsxfit, r(1), dsxa, ddsxa, s3, eps, s2dsx, s3dsx, deldsx)
-            call spline(ns, x, dsxfit, r(3), dsxb, ddsxb, s3, eps, s2dsx, s3dsx, deldsx)
-            call spline(ns, x, sabfit, r(2), ssab, dssab, s3, eps, s2sab, s3sab, delsab)
-            call spline(ns, x, tabfit, r(2), tsab, dtsab, s3, eps, s2tab, s3tab, deltab)
-            call spline(ns, x, gabfit, r(2), dgab, ddgab, s3, eps, s2gab, s3gab, delgab)
-            call spline(ns, x, uabfit, r(2), duab, dduab, s3, eps, s2uab, s3uab, deluab)
-            !
-            !     CONSTRUCT DIM HAMILTONIAN IN ORTHOGONAL BASIS
-            !
-            th(1,1) = ss11a+forth*((ssab+tre*tsab)+ct2*(ss11b+tre*tsxb) +st2*(spxb+tre*tpxb))-dpux-two*dsgh
-            th(1,2) = forth*sqrt3*(ssab-tsab-ct2*(ss11b-tsxb)-st2*(spxb-tpxb))
-            th(1,3) = ss12a
-            th(1,4) = -half*ct*ss12b
-            th(1,5) = forth*cs*(ss11b+tre*tsxb-spxb-tre*tpxb)
-            th(1,6) = -forth*sqrt3*cs*(ss11b-tsxb-spxb+tpxb)
-            th(2,2) = tsxa+forth*((tre*ssab+tsab)+ct2*(tre*ss11b+tsxb) +st2*(tre*spxb+tpxb))-dpux-two*dsgh
-            th(2,4) = half*sqrt3*ct*ss12b
-            th(2,5) = th(1,6)
-            th(2,6) = forth*cs*(tre*ss11b+tsxb-tre*spxb-tpxb)
-            th(3,3) = ss22a+half*(dgab+duab)+dsxb-ssgx-ssgh-dsgh
-            th(3,4) = half*(dgab-duab)
-            th(4,4) = dsxa+half*(dgab+duab)+ss22b-ssgx-ssgh-dsgh
-            th(4,5) = -half*st*ss12b
-            th(4,6) = half*sqrt3*st*ss12b
-            th(5,5) = spxa+forth*((ssab+tre*tsab)+st2*(ss11b+tre*tsxb) +ct2*(spxb+tre*tpxb))-dpux-two*dsgh
-            th(5,6) = forth*sqrt3*(ssab-tsab-st2*(ss11b-tsxb)-ct2*(spxb-tpxb))
-            th(6,6) = tpxa+forth*((tre*ssab+tsab)+st2*(tre*ss11b+tsxb) +ct2*(tre*spxb+tpxb))-dpux-two*dsgh
-            !
-            !     FILL OUT MATRIX AND DIAGONALIZE
-            !
-            do 30 i=1, ndim
-                do 30 j=1, i
-                    th(i,j) = th(j,i)
-            30 continue
-            !
-            call eign(ndim, th, vec, en, w, ndim)
-            !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
-            xter = en(nroot)+c(2)
-            if( iflag .lt. zero ) write(iptprt, '(/,2X,T5,''Vector:'',(T15,3E20.8))') (vec(i,nroot), i=1, ndim)
-            !
-            !************************* END OF FPOT3N *******************************
-            !
-            if( nder .ne. 1 ) return
-            !     IF(IAPP.EQ.0) RETURN
-            !
-            !     SET  VECTOR FOR STATE OF INTEREST
-            do 40 i=1, ndim
-                gvec(i) = vec(i,nroot)
-            40 continue
-            !     COMPUTE PARTIALS OF U=COS(THETA)
-            dtdr1 = (r(1)*r(1)+r(2)*r(2)-r(3)*r(3))/(two*r(1)*r(1)*r(3))
-            dtdr2 = -r(2)/(r(1)*r(3))
-            dtdr3 = (r(2)*r(2)+r(3)*r(3)-r(1)*r(1))/(two*r(3)*r(3)*r(1))
-            factr = -one/st
-            if( abs(st) .lt. 1.d-6 ) write(iptprt, &
-                & '(/,2X,T5,''Warning: A serious error may result because '', ''sine(THETA) = '',' // '1PE20.10)') st
-            !     COMPUTE PARTIALS OF HAMILTONIAN ELEMENTS
-            xtra    = +half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
-            dh11(1) = dss11a+xtra*dtdr1
-            dh11(2) = forth*(dssab+tre*dtsab)+xtra*dtdr2
-            dh11(3) = forth*(ct2*(dss11b+tre*dtsxb)+st2*(dspxb+tre*dtpxb))+xtra* dtdr3
-            xtra    = -half*sqrt3*ct*(ss11b-tsxb-spxb+tpxb)
-            dh12(1) = xtra*dtdr1
-            dh12(2) = forth*sqrt3*(dssab-dtsab)+xtra*dtdr2
-            dh12(3) = -forth*sqrt3*(ct2*(dss11b-dtsxb)+st2*(dspxb-dtpxb))+xtra* dtdr3
-            dh13(1) = dss12a
-            dh13(2) = zero
-            dh13(3) = zero
-            xtra    = -half*ss12b
-            dh14(1) = xtra*dtdr1
-            dh14(2) = xtra*dtdr2
-            dh14(3) = -half*ct*dss12b+xtra*dtdr3
-            xtra    = forth*(ct2-st2)*(ss11b+tre*tsxb-spxb-tre*tpxb)*factr
-            dh15(1) = xtra*dtdr1
-            dh15(2) = xtra*dtdr2
-            dh15(3) = forth*cs*(dss11b+tre*dtsxb-dspxb-tre*dtpxb)+xtra*dtdr3
-            xtra    = -forth*sqrt3*(ct2-st2)*(ss11b-tsxb-spxb+tpxb)*factr
-            dh16(1) = xtra*dtdr1
-            dh16(2) = xtra*dtdr2
-            dh16(3) = -forth*sqrt3*cs*(dss11b-dtsxb-dspxb+dtpxb)+xtra*dtdr3
-            xtra    = +half*ct*(tre*ss11b+tsxb-tre*spxb-tpxb)
-            dh22(1) = dtsxa+xtra*dtdr1
-            dh22(2) = forth*(tre*dssab+dtsab)+xtra*dtdr2
-            dh22(3) = forth*(ct2*(tre*dss11b+dtsxb)+st2*(tre*dspxb+dtpxb))+xtra* dtdr3
-            xtra    = +half*sqrt3*ss12b
-            dh24(1) = xtra*dtdr1
-            dh24(2) = xtra*dtdr2
-            dh24(3) = half*sqrt3*ct*dss12b+xtra*dtdr3
-            dh25(1) = dh16(1)
-            dh25(2) = dh16(2)
-            dh25(3) = dh16(3)
-            xtra    = forth*(ct2-st2)*(tre*ss11b+tsxb-tre*spxb-tpxb)*factr
-            dh26(1) = xtra*dtdr1
-            dh26(2) = xtra*dtdr2
-            dh26(3) = forth*cs*(tre*dss11b+dtsxb-tre*dspxb-dtpxb)+xtra*dtdr3
-            dh33(1) = dss22a
-            dh33(2) = half*(ddgab+dduab)
-            dh33(3) = ddsxb
-            dh34(1) = zero
-            dh34(2) = half*(ddgab-dduab)
-            dh34(3) = zero
-            dh44(1) = ddsxa
-            dh44(2) = half*(ddgab+dduab)
-            dh44(3) = dss22b
-            xtra    = -half*ct*ss12b*factr
-            dh45(1) = xtra*dtdr1
-            dh45(2) = xtra*dtdr2
-            dh45(3) = -half*st*dss12b+xtra*dtdr3
-            xtra    = half*sqrt3*ct*ss12b*factr
-            dh46(1) = xtra*dtdr1
-            dh46(2) = xtra*dtdr2
-            dh46(3) = half*sqrt3*st*dss12b+xtra*dtdr3
-            xtra    = -half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
-            dh55(1) = dspxa+xtra*dtdr1
-            dh55(2) = forth*(dssab+tre*dtsab)+xtra*dtdr2
-            dh55(3) = forth*(st2*(dss11b+tre*dtsxb)+ct2*(dspxb+tre*dtpxb))+xtra* dtdr3
-            xtra    = +half*sqrt3*ct*(ss11b-tsxb-spxb+tpxb)
-            dh56(1) = xtra*dtdr1
-            dh56(2) = forth*sqrt3*(dssab-dtsab)+xtra*dtdr2
-            dh56(3) = -forth*sqrt3*(st2*(dss11b-dtsxb)+ct2*(dspxb-dtpxb))+xtra* dtdr3
-            xtra    = -half*ct*(tre*ss11b+tsxb-tre*spxb-tpxb)
-            dh66(1) = dtpxa+xtra*dtdr1
-            dh66(2) = forth*(tre*dssab+dtsab)+xtra*dtdr2
-            dh66(3) = forth*(st2*(tre*dss11b+dtsxb)+ct2*(tre*dspxb+dtpxb))+xtra* dtdr3
-            !
-            !     LOOP OVER R(I) DERIVATIVES
-            !     FIRST ZERO OUT UNUSED ELEMENTS
-            dh(2,3) = zero
-            dh(3,5) = zero
-            dh(3,6) = zero
-            do 50 i=1, 3
-                !
-                !     SET UP DERIVATIVE MATRIX
-                !
-                dh(1,1) = dh11(i)
-                dh(1,2) = dh12(i)
-                dh(1,3) = dh13(i)
-                dh(1,4) = dh14(i)
-                dh(1,5) = dh15(i)
-                dh(1,6) = dh16(i)
-                dh(2,2) = dh22(i)
-                dh(2,4) = dh24(i)
-                dh(2,5) = dh25(i)
-                dh(2,6) = dh26(i)
-                dh(3,3) = dh33(i)
-                dh(3,4) = dh34(i)
-                dh(4,4) = dh44(i)
-                dh(4,5) = dh45(i)
-                dh(4,6) = dh46(i)
-                dh(5,5) = dh55(i)
-                dh(5,6) = dh56(i)
-                dh(6,6) = dh66(i)
-                !
-                !     FILL OUT DERIVATIVE MATRIX
-                do 70 j=1, ndim
-                    do 70 k=1, j
-                        dh(j,k) = dh(k,j)
-                70 continue
-                !
-                dnumb = zero
-                do 80 j=1, ndim
-                    do 80 k=1, ndim
-                        dnumb = dnumb+gvec(j)*dh(j,k)*gvec(k)
-                80 continue
-                dd(i) = dnumb
-                !     END OF DERIVATIVE LOOP
-            50 continue
-            !     PUT DERIVATIVES INTO CORRESPONDING SPOTS FOR CORRECT COORD CHOICE.
-            do 90 ix=1, 3
-            90 dq(indx(ix))=dd(ix)
-            !
-            !************************ END OF DFPOT *********************************
-            !
+        arg    = 0.d0
+        c      = 0.d0
+        cs     = 0.d0
+        ct     = 0.d0
+        ct2    = 0.d0
+        dd     = 0.d0
+        ddgab  = 0.d0
+        ddsxa  = 0.d0
+        ddsxb  = 0.d0
+        dduab  = 0.d0
+        deldsx = 0.d0
+        delgab = 0.d0
+        dels11 = 0.d0
+        dels12 = 0.d0
+        dels22 = 0.d0
+        delsab = 0.d0
+        delspx = 0.d0
+        deltab = 0.d0
+        deltpx = 0.d0
+        deltsx = 0.d0
+        deluab = 0.d0
+        dgab   = 0.d0
+        dh     = 0.d0
+        dh11   = 0.d0
+        dh12   = 0.d0
+        dh13   = 0.d0
+        dh14   = 0.d0
+        dh15   = 0.d0
+        dh16   = 0.d0
+        dh22   = 0.d0
+        dh24   = 0.d0
+        dh25   = 0.d0
+        dh26   = 0.d0
+        dh33   = 0.d0
+        dh34   = 0.d0
+        dh44   = 0.d0
+        dh45   = 0.d0
+        dh46   = 0.d0
+        dh55   = 0.d0
+        dh56   = 0.d0
+        dh66   = 0.d0
+        dnumb  = 0.d0
+        dpux   = 0.d0
+        dsgh   = 0.d0
+        dspxa  = 0.d0
+        dspxb  = 0.d0
+        dss11a = 0.d0
+        dss11b = 0.d0
+        dss12a = 0.d0
+        dss12b = 0.d0
+        dss22a = 0.d0
+        dss22b = 0.d0
+        dssab  = 0.d0
+        dsxa   = 0.d0
+        dsxb   = 0.d0
+        dsxfit = 0.d0
+        dtdr1  = 0.d0
+        dtdr2  = 0.d0
+        dtdr3  = 0.d0
+        dtpxa  = 0.d0
+        dtpxb  = 0.d0
+        dtsab  = 0.d0
+        dtsxa  = 0.d0
+        dtsxb  = 0.d0
+        duab   = 0.d0
+        easyab = 0.d0
+        easyac = 0.d0
+        easybc = 0.d0
+        en     = 0.d0
+        eps    = 0.d0
+        factr  = 0.d0
+        forth  = 0.d0
+        gabfit = 0.d0
+        gvec   = 0.d0
+        half   = 0.d0
+        one    = 0.d0
+        quar   = 0.d0
+        r      = 0.d0
+        rt3    = 0.d0
+        s11fit = 0.d0
+        s12fit = 0.d0
+        s22fit = 0.d0
+        s2dsx  = 0.d0
+        s2gab  = 0.d0
+        s2s11  = 0.d0
+        s2s12  = 0.d0
+        s2s22  = 0.d0
+        s2sab  = 0.d0
+        s2spx  = 0.d0
+        s2tab  = 0.d0
+        s2tpx  = 0.d0
+        s2tsx  = 0.d0
+        s2uab  = 0.d0
+        s3     = 0.d0
+        s3dsx  = 0.d0
+        s3gab  = 0.d0
+        s3s11  = 0.d0
+        s3s12  = 0.d0
+        s3s22  = 0.d0
+        s3sab  = 0.d0
+        s3spx  = 0.d0
+        s3tab  = 0.d0
+        s3tpx  = 0.d0
+        s3tsx  = 0.d0
+        s3uab  = 0.d0
+        sabfit = 0.d0
+        spxa   = 0.d0
+        spxb   = 0.d0
+        spxfit = 0.d0
+        sqrt3  = 0.d0
+        ss11a  = 0.d0
+        ss11b  = 0.d0
+        ss12a  = 0.d0
+        ss12b  = 0.d0
+        ss22a  = 0.d0
+        ss22b  = 0.d0
+        ssab   = 0.d0
+        ssgh   = 0.d0
+        ssgx   = 0.d0
+        st     = 0.d0
+        st2    = 0.d0
+        tabfit = 0.d0
+        test   = 0.d0
+        th     = 0.d0
+        tpxa   = 0.d0
+        tpxb   = 0.d0
+        tpxfit = 0.d0
+        tre    = 0.d0
+        tsab   = 0.d0
+        tsxa   = 0.d0
+        tsxb   = 0.d0
+        tsxfit = 0.d0
+        two    = 0.d0
+        uabfit = 0.d0
+        vec    = 0.d0
+        w      = 0.d0
+        x      = 0.d0
+        xtra   = 0.d0
+        zero   = 0.d0
+        iptprt = 6
+        idebug = 0
+        zero   = 0.d0
+        one    = 1.d0
+        two    = 2.d0
+        tre    = 3.d0
+        half   = 0.5d0
+        quar   = 0.25d0
+        rt3    = 1.73205080756888d0
+        dpux   = 0.d0
+        ssgx   = -0.132774d0
+        dsgh   = 0.d0
+        ssgh   = 0.5d0
+        c      = [0.169552d0, 0.1744734d0, 0.169552d0]
+        ndim   = 6
+        nroot  = 1
+        test   = 0.999999999d0
+        indx   = [1, 2, 3]
+        sabfit = [ 0.4281963205305d-09, 0.1369728898237d-09, 0.4382014404015d-10, 0.1300142533742d-10, &
+            & 0.7844980583647d-12, -0.4546856543768d-11, -0.6805661665091d-11, -0.7552667871978d-11, - &
+            & 0.7519407757176d-11, -0.7080597086053d-11, -0.6440412372519d-11, -0.5714809057346d-11, - &
+            & 0.4972386082825d-11, -0.4253793418225d-11, -0.3583313304483d-11, -0.2974739109064d-11, - &
+            & 0.2435324853718d-11, -0.1967218349621d-11, -0.1569150807379d-11, -0.1237028949767d-11, - &
+            & 0.9649087463054d-12, -0.7456965814268d-12, -0.5716381322980d-12, -0.4352766124799d-12, - &
+            & 0.3297116442436d-12, -0.2487738863905d-12, -0.1870821206990d-12, -0.1403769830734d-12, - &
+            & 0.1051673122523d-12, -0.7874342716355d-13, -0.5894968436353d-13, -0.4414906470064d-13, - &
+            & 0.3306614915951d-13, -0.2485870332390d-13, -0.1878946343929d-13, -0.1423232986306d-13, - &
+            & 0.1070082618845d-13, -0.8324882585492d-14, -0.6422412738375d-14, -0.4923596690452d-14, - &
+            & 0.3955574324490d-14, -0.3177242083375d-14, -0.2490786484133d-14, -0.1997467815688d-14, - &
+            & 0.1651335880107d-14, -0.1363671635357d-14, -0.1117363337522d-14, -0.9124916946690d-15, - &
+            & 0.7517072705405d-15, -0.6327560058767d-15, -0.5465613259553d-15, -0.4836302736646d-15, - &
+            & 0.4352940294497d-15, -0.3933351179768d-15, -0.3515695371016d-15, -0.3101638021840d-15, - &
+            & 0.2705235753370d-15, -0.2340545186738d-15, -0.2021622943076d-15, -0.1760444849010d-15, - &
+            & 0.1553131141129d-15, -0.1388504404126d-15, -0.1255348499598d-15, -0.1142447289141d-15, - &
+            & 0.1038888396082d-15, -0.9407874104538d-16, -0.8513109921475d-16, -0.7732848119678d-16, - &
+            & 0.7054733040078d-16, -0.6450779679544d-16, -0.5900650086737d-16, -0.5400811203232d-16, - &
+            & 0.4949819597880d-16, -0.4543886383204d-16, -0.4177223051986d-16, -0.3844360468344d-16, - &
+            & 0.3541809413878d-16, -0.3266719317292d-16, -0.3016379683176d-16, -0.2788337498376d-16, - &
+            & 0.2580197612167d-16, -0.2389976534972d-16, -0.2215988690459d-16, -0.2056618925870d-16, - &
+            & 0.1910524999183d-16, -0.1776439638180d-16, -0.1653216417616d-16, -0.1539897065215d-16, - &
+            & 0.1435551906623d-16, -0.1339384930973d-16, -0.1250682062496d-16, -0.1168762379786d-16, - &
+            & 0.1093058442844d-16, -0.1023029262901d-16, -0.9581855381157d-17, -0.8981061787692d-17, - &
+            & 0.8423813449072d-17, -0.7906588416005d-17, -0.7426163219212d-17, -0.6979475042836d-17, - &
+            & 0.6563927914067d-17, -0.6177020155964d-17, -0.5816494321762d-17, -0.5480366673805d-17, - &
+            & 0.5166704588950d-17, -0.4873837227399d-17, -0.4600207925730d-17, -0.4344344892776d-17, - &
+            & 0.4104984476720d-17, -0.3880899892350d-17, -0.3670977266795d-17, -0.3474210267484d-17, - &
+            & 0.3289625781144d-17, -0.3116420865397d-17, -0.2953854374267d-17, -0.2801155668211d-17, - &
+            & 0.2657492873938d-17, -0.2522061100842d-17, -0.2394613783965d-17, -0.2275356125765d-17, - &
+            & 0.2164042724266d-17]
+        tabfit = [ 0.1227064420376d-06, 0.7004232493207d-08, 0.7419796251802d-09, 0.1344046190086d-09, &
+            & 0.3835750704669d-10, 0.1588883190581d-10, 0.8800307588492d-11, 0.6003368631972d-11, 0.4646016919779d-11, &
+            & 0.3764564437084d-11, 0.3069059458145d-11, 0.2510487800726d-11, 0.2057612792471d-11, 0.1687352799461d-11, &
+            & 0.1382505590184d-11, 0.1130135877823d-11, 0.9204206238408d-12, 0.7458141531253d-12, 0.6004397290005d-12, &
+            & 0.4796439197105d-12, 0.3796699184730d-12, 0.2974192223072d-12, 0.2302798753652d-12, 0.1760052830494d-12, &
+            & 0.1326314019596d-12, 0.9842261723989d-13, 0.7183834473747d-13, 0.5151370421616d-13, 0.3624874464027d-13, &
+            & 0.2500180235185d-13, 0.1688368868786d-13, 0.1115051724551d-13, 0.7194030205739d-14, 0.4529188424301d-14, &
+            & 0.2779480970519d-14, 0.1660844917262d-14, 0.9652629299313d-15, 0.5450600880704d-15, 0.2987156995230d-15, &
+            & 0.1587160201916d-15, 0.8167100601222d-16, 0.4065705370858d-16, 0.1955969625095d-16, 0.9084157233699d-17, &
+            & 0.4068574881132d-17, 0.1755393538335d-17, 0.7288213031033d-18, 0.2908856488725d-18, 0.1114856221069d-18, &
+            & 0.4098752759769d-19, 0.1443983090161d-19, 0.4869579667599d-20, 0.1570295832683d-20, 0.4836976017941d-21, &
+            & 0.1421709299328d-21, 0.3983218869035d-22, 0.1062640147829d-22, 0.2696554660746d-23, 0.6501978760434d-24, &
+            & 0.1488118761020d-24, 0.3229444587053d-25, 0.6638329446974d-26, 0.1291139140868d-26, 0.2373630796997d-27, &
+            & 0.4120233137847d-28, 0.6745925883159d-29, 0.1040675102707d-29, 0.1511072421798d-30, 0.2062978096985d-31, &
+            & 0.2645366794301d-32, 0.3182745069345d-33, 0.3589097263450d-34, 0.3789472585815d-35, 0.3742184860407d-36, &
+            & 0.3452767978513d-37, 0.2973363545992d-38, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, &
+            & 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, &
+            & 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, &
+            & 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, &
+            & 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, &
+            & 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, &
+            & 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, &
+            & 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, &
+            & 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, 0.0000000000000d+00, &
+            & 0.0000000000000d+00, 0.0000000000000d+00]
+        gabfit = [ 0.1163670523196d-08, 0.1900870710543d-09, 0.7985094794732d-10, 0.4673001446549d-10, &
+            & 0.3243212471004d-10, 0.2527129913622d-10, 0.2142448507822d-10, 0.1930613831077d-10, 0.1815814185105d-10, &
+            & 0.1758185187452d-10, 0.1735289009945d-10, 0.1733838029463d-10, 0.1745650807450d-10, 0.1765538090260d-10, &
+            & 0.1790129878790d-10, 0.1817202282457d-10, 0.1845269443729d-10, 0.1873335446471d-10, 0.1900733543516d-10, &
+            & 0.1927022165615d-10, 0.1951919037280d-10, 0.1975252808233d-10, 0.1996932948997d-10, 0.2016925621910d-10, &
+            & 0.2035240924925d-10, 0.2051918457722d-10, 0.2067021838585d-10, 0.2080628621403d-10, 0.2092828998985d-10, &
+            & 0.2103718844387d-10, 0.2113398283676d-10, 0.2121967832044d-10, 0.2129527024758d-10, 0.2136172245771d-10, &
+            & 0.2141995233037d-10, 0.2147083530689d-10, 0.2151517898699d-10, 0.2155373545387d-10, 0.2158718501296d-10, &
+            & 0.2161615158674d-10, 0.2164119080909d-10, 0.2166280834544d-10, 0.2168144408523d-10, 0.2169749638169d-10, &
+            & 0.2171130985358d-10, 0.2172318635519d-10, 0.2173339950246d-10, 0.2174217128040d-10, 0.2174970870331d-10, &
+            & 0.2175618408738d-10, 0.2176174792865d-10, 0.2176653023309d-10, 0.2177064228963d-10, 0.2177418319694d-10, &
+            & 0.2177723241135d-10, 0.2177985473392d-10, 0.2178211803444d-10, 0.2178407720308d-10, 0.2178577180501d-10, &
+            & 0.2178723967326d-10, 0.2178851217139d-10, 0.2178961767980d-10, 0.2179058181989d-10, 0.2179142305142d-10, &
+            & 0.2179215858193d-10, 0.2179280334958d-10, 0.2179337001563d-10, 0.2179387059738d-10, 0.2179431370734d-10, &
+            & 0.2179470664080d-10, 0.2179505599010d-10, 0.2179536681563d-10, 0.2179564395990d-10, 0.2179589199935d-10, &
+            & 0.2179611528357d-10, 0.2179631782768d-10, 0.2179650195682d-10, 0.2179666945052d-10, 0.2179682191192d-10, &
+            & 0.2179696061977d-10, 0.2179708683701d-10, 0.2179720208763d-10, 0.2179730808455d-10, 0.2179740633379d-10, &
+            & 0.2179749743797d-10, 0.2179758176252d-10, 0.2179765993658d-10, 0.2179773299992d-10, 0.2179780194719d-10, &
+            & 0.2179786689732d-10, 0.2179792743247d-10, 0.2179798332429d-10, 0.2179803504464d-10, 0.2179808322180d-10, &
+            & 0.2179812853108d-10, 0.2179817170978d-10, 0.2179821339405d-10, 0.2179825329685d-10, 0.2179829065363d-10, &
+            & 0.2179832507192d-10, 0.2179835726957d-10, 0.2179838815221d-10, 0.2179841816716d-10, 0.2179844724802d-10, &
+            & 0.2179847526094d-10, 0.2179850178429d-10, 0.2179852627222d-10, 0.2179854854755d-10, 0.2179856934339d-10, &
+            & 0.2179858950786d-10, 0.2179860940668d-10, 0.2179862894610d-10, 0.2179864797968d-10, 0.2179866615834d-10, &
+            & 0.2179868306081d-10, 0.2179869851010d-10, 0.2179871283516d-10, 0.2179872642360d-10, 0.2179873959809d-10, &
+            & 0.2179875262871d-10, 0.2179876574011d-10]
+        uabfit = [ 0.1152800926266d-08, 0.2526702455855d-09, 0.1368001106186d-09, 0.9776213719995d-10, &
+            & 0.7780674282671d-10, 0.6539216030271d-10, 0.5673393740207d-10, 0.5025984196739d-10, 0.4521301734516d-10, &
+            & 0.4118200243332d-10, 0.3791592051256d-10, 0.3524590284074d-10, 0.3304975676735d-10, 0.3123492208459d-10, &
+            & 0.2972937951905d-10, 0.2847620229636d-10, 0.2742992229515d-10, 0.2655399976026d-10, 0.2581888843458d-10, &
+            & 0.2520058182542d-10, 0.2467950111942d-10, 0.2423959495125d-10, 0.2386765540820d-10, 0.2355277545103d-10, &
+            & 0.2328591260759d-10, 0.2305954519999d-10, 0.2286738516347d-10, 0.2270418175167d-10, 0.2256551835493d-10, &
+            & 0.2244768311315d-10, 0.2234753250585d-10, 0.2226242452994d-10, 0.2219010683807d-10, 0.2212868147489d-10, &
+            & 0.2207652509898d-10, 0.2203226919439d-10, 0.2199473439611d-10, 0.2196292442979d-10, 0.2193599283237d-10, &
+            & 0.2191320501584d-10, 0.2189395238006d-10, 0.2187769885096d-10, 0.2186399671769d-10, 0.2185246142039d-10, &
+            & 0.2184276389303d-10, 0.2183462577182d-10, 0.2182780609435d-10, 0.2182210649740d-10, 0.2181735270326d-10, &
+            & 0.2181339370938d-10, 0.2181011295326d-10, 0.2180739522435d-10, 0.2180515738973d-10, 0.2180331500984d-10, &
+            & 0.2180180986518d-10, 0.2180059286362d-10, 0.2179961003965d-10, 0.2179881902880d-10, 0.2179819116398d-10, &
+            & 0.2179769916890d-10, 0.2179732035068d-10, 0.2179703413063d-10, 0.2179682224358d-10, 0.2179667243503d-10, &
+            & 0.2179657349282d-10, 0.2179651591035d-10, 0.2179649189214d-10, 0.2179649405722d-10, 0.2179651714888d-10, &
+            & 0.2179655673240d-10, 0.2179660884944d-10, 0.2179667058012d-10, 0.2179673918322d-10, 0.2179681264081d-10, &
+            & 0.2179688955163d-10, 0.2179696850917d-10, 0.2179704797789d-10, 0.2179712638787d-10, 0.2179720289232d-10, &
+            & 0.2179727797660d-10, 0.2179735220620d-10, 0.2179742528246d-10, 0.2179749628133d-10, 0.2179756445735d-10, &
+            & 0.2179762988896d-10, 0.2179769287149d-10, 0.2179775349512d-10, 0.2179781153056d-10, 0.2179786677386d-10, &
+            & 0.2179791959634d-10, 0.2179797072191d-10, 0.2179802050935d-10, 0.2179806800315d-10, 0.2179811198365d-10, &
+            & 0.2179815233247d-10, 0.2179819038459d-10, 0.2179822745664d-10, 0.2179826383318d-10, 0.2179829926459d-10, &
+            & 0.2179833346027d-10, 0.2179836602189d-10, 0.2179839654612d-10, 0.2179842505053d-10, 0.2179845202443d-10, &
+            & 0.2179847791637d-10, 0.2179850270492d-10, 0.2179852616460d-10, 0.2179854823036d-10, 0.2179856923484d-10, &
+            & 0.2179858956338d-10, 0.2179860944160d-10, 0.2179862894305d-10, 0.2179864805431d-10, 0.2179866628607d-10, &
+            & 0.2179868297922d-10, 0.2179869802491d-10, 0.2179871245380d-10, 0.2179872736025d-10, 0.2179874258632d-10, &
+            & 0.2179875696074d-10, 0.2179876955649d-10]
+        s11fit = [ 0.8225984882010d-09, 0.5431473153574d-09, 0.3547823938809d-09, 0.2284174194735d-09, &
+            & 0.1441556590407d-09, 0.8840299855672d-10, 0.5188517650481d-10, 0.2828648303169d-10, 0.1331552588002d-10, &
+            & 0.4064407428285d-11, -0.1430568586926d-11, -0.4489815099484d-11, -0.5996405761555d-11, - &
+            & 0.6536864987664d-11, -0.6497287248655d-11, -0.6128851065268d-11, -0.5592382485485d-11, - &
+            & 0.4988592205422d-11, -0.4378528632803d-11, -0.3797359507833d-11, -0.3263613242275d-11, - &
+            & 0.2785337683865d-11, -0.2364172150724d-11, -0.1998012035541d-11, -0.1682728501531d-11, - &
+            & 0.1413257479963d-11, -0.1184270827613d-11, -0.9905733414874d-12, -0.8273222162750d-12, - &
+            & 0.6901335070194d-12, -0.5751184506634d-12, -0.4788778321344d-12, -0.3984727108203d-12, - &
+            & 0.3313832166870d-12, -0.2754627323135d-12, -0.2288918810727d-12, -0.1901348539298d-12, - &
+            & 0.1578993953821d-12, -0.1311010072475d-12, -0.1088314645754d-12, -0.9033146793788d-13, - &
+            & 0.7496711164183d-13, -0.6220978188672d-13, -0.5161908205637d-13, -0.4282839416677d-13, - &
+            & 0.3553271305715d-13, -0.2947842498437d-13, -0.2445473977049d-13, -0.2028652252708d-13, - &
+            & 0.1682830553906d-13, -0.1395929228960d-13, -0.1157919353183d-13, -0.9604759768683d-14, - &
+            & 0.7966895676029d-14, -0.6608260179247d-14, -0.5481271389337d-14, -0.4546448747260d-14, - &
+            & 0.3771035825398d-14, -0.3127856578933d-14, -0.2594365684422d-14, -0.2151860174093d-14, - &
+            & 0.1784825069447d-14, -0.1480390306158d-14, -0.1227880069156d-14, -0.1018438845445d-14, - &
+            & 0.8447211568884d-15, -0.7006341440192d-15, -0.5811240086771d-15, -0.4819988499293d-15, - &
+            & 0.3997816962813d-15, -0.3315885908468d-15, -0.2750274611514d-15, -0.2281142316734d-15, - &
+            & 0.1892032404258d-15, -0.1569295211878d-15, -0.1301609285736d-15, -0.1079584278247d-15, - &
+            & 0.8954315698008d-16, -0.7426910677375d-16, -0.6160046016966d-16, -0.5109279680248d-16, - &
+            & 0.4237750334185d-16, -0.3514884290965d-16, -0.2915322995210d-16, -0.2418033463365d-16, - &
+            & 0.2005570447844d-16, -0.1663464451175d-16, -0.1379714148253d-16, -0.1144365358951d-16, - &
+            & 0.9491618687947d-17, -0.7872557765366d-17, -0.6529672889213d-17, -0.5415854547286d-17, - &
+            & 0.4492028954046d-17, -0.3725787779682d-17, -0.3090250320290d-17, -0.2563121676823d-17, - &
+            & 0.2125909520462d-17, -0.1763276182488d-17, -0.1462500040810d-17, -0.1213029623431d-17, - &
+            & 0.1006113424271d-17, -0.8344927137224d-18, -0.6921466261852d-18, -0.5740817086654d-18, - &
+            & 0.4761560219573d-18, -0.3949343983122d-18, -0.3275673224804d-18, -0.2716915943513d-18, - &
+            & 0.2253469283672d-18, -0.1869076878612d-18, -0.1550254815900d-18, -0.1285814746635d-18, - &
+            & 0.1066484351289d-18, -0.8845656460647d-19, -0.7336797383824d-19, -0.6085283662792d-19, - &
+            & 0.5047335253607d-19, -0.4186365714947d-19, -0.3472259872740d-19, -0.2879965717799d-19]
+        s12fit = [ 0.1818100720884d-09, 0.1356559882386d-09, 0.1011376405854d-09, 0.7540504142882d-10, &
+            & 0.5626126635557d-10, 0.4203490988707d-10, 0.3146620126872d-10, 0.2361199820001d-10, 0.1776962468804d-10, &
+            & 0.1341736332263d-10, 0.1016876967256d-10, 0.7738032986459d-11, 0.5913948815744d-11, 0.4540491268227d-11, &
+            & 0.3502380724809d-11, 0.2714398745348d-11, 0.2113495255970d-11, 0.1652966599189d-11, 0.1298164475378d-11, &
+            & 0.1023078233067d-11, 0.8076987133826d-12, 0.6388459399135d-12, 0.5063210986184d-12, 0.4020654873168d-12, &
+            & 0.3197795157266d-12, 0.2545778052009d-12, 0.2026992296783d-12, 0.1612632275914d-12, 0.1280330089192d-12, &
+            & 0.1012892125305d-12, 0.7972183910386d-13, 0.6233482329336d-13, 0.4837185302271d-13, 0.3726326479798d-13, &
+            & 0.2859047005901d-13, 0.2206048026493d-13, 0.1747178787500d-13, 0.1463601500943d-13, 0.1325341023128d-13, &
+            & 0.1287109720506d-13, 0.1301892899248d-13, 0.1335472108714d-13, 0.1368533456744d-13, 0.1392089070913d-13, &
+            & 0.1402936977555d-13, 0.1400800097915d-13, 0.1386764269251d-13, 0.1362467852037d-13, 0.1329691464782d-13, &
+            & 0.1290156567798d-13, 0.1245433078802d-13, 0.1196903997370d-13, 0.1145759585734d-13, 0.1093006406018d-13, &
+            & 0.1039483259169d-13, 0.9858797099330d-14, 0.9327548857496d-14, 0.8805553507983d-14, 0.8296314871601d-14, &
+            & 0.7802521626621d-14, 0.7326176628684d-14, 0.6868709668396d-14, 0.6431074974916d-14, 0.6013834997477d-14, &
+            & 0.5617231979562d-14, 0.5241248870003d-14, 0.4885660909373d-14, 0.4550079158024d-14, 0.4233987083293d-14, &
+            & 0.3936771188367d-14, 0.3657746540092d-14, 0.3396177928519d-14, 0.3151297395775d-14, 0.2922318490015d-14, &
+            & 0.2708447965861d-14, 0.2508895240789d-14, 0.2322879784469d-14, 0.2149637205434d-14, 0.1988423753020d-14, &
+            & 0.1838519700125d-14, 0.1699232051584d-14, 0.1569896208101d-14, 0.1449876989236d-14, 0.1338569562068d-14, &
+            & 0.1235399298776d-14, 0.1139821697796d-14, 0.1051322325038d-14, 0.9694153261921d-15, 0.8936436709294d-15, &
+            & 0.8235770720042d-15, 0.7588124857891d-15, 0.6989712617544d-15, 0.6436991978334d-15, 0.5926662702826d-15, &
+            & 0.5455602799531d-15, 0.5020961952599d-15, 0.4620010245139d-15, 0.4250267082734d-15, 0.3909381562125d-15, &
+            & 0.3595205118981d-15, 0.3305720953464d-15, 0.3039029449329d-15, 0.2793370423460d-15, 0.2567190145341d-15, &
+            & 0.2358950131954d-15, 0.2167296880242d-15, 0.1990898608334d-15, 0.1828628613718d-15, 0.1679355904650d-15, &
+            & 0.1542114949859d-15, 0.1415894592694d-15, 0.1299770457848d-15, 0.1193136915704d-15, 0.1095004413621d-15, &
+            & 0.1004904457285d-15, 0.9220062557618d-16, 0.8461104888709d-16, 0.7756410568545d-16, 0.7115843655050d-16, &
+            & 0.6527494859380d-16, 0.5987181226737d-16]
+        s22fit = [ 0.9906610026899d-09, 0.6941378155093d-09, 0.4870850714320d-09, 0.3425090951473d-09, &
+            & 0.2415593694050d-09, 0.1710723428333d-09, 0.1218559728599d-09, 0.8749165241887d-10, 0.6349750304651d-10, &
+            & 0.4674405564388d-10, 0.3504619957914d-10, 0.2687823424233d-10, 0.2117489035993d-10, 0.1719238731104d-10, &
+            & 0.1441141469316d-10, 0.1246938955472d-10, 0.1111315625729d-10, 0.1016596066751d-10, 0.9504391345407d-11, &
+            & 0.9035812630922d-11, 0.8672271866557d-11, 0.8394176569241d-11, 0.8192080338642d-11, 0.8057023068960d-11, &
+            & 0.7980664195983d-11, 0.7955343578371d-11, 0.7974637735087d-11, 0.8034169633151d-11, 0.8127615019126d-11, &
+            & 0.8247652147450d-11, 0.8387376186198d-11, 0.8540837415467d-11, 0.8703162126888d-11, 0.8870488071922d-11, &
+            & 0.9039829437515d-11, 0.9208926431891d-11, 0.9376104087169d-11, 0.9540149654167d-11, 0.9700210620481d-11, &
+            & 0.9855712084239d-11, 0.1000629095312d-10, 0.1015174416301d-10, 0.1029198828142d-10, 0.1042702820362d-10, &
+            & 0.1055693302971d-10, 0.1068181756914d-10, 0.1080182823066d-10, 0.1091713231542d-10, 0.1102790994287d-10, &
+            & 0.1113434800737d-10, 0.1123663569777d-10, 0.1133496121644d-10, 0.1142950941669d-10, 0.1152046014071d-10, &
+            & 0.1160798709014d-10, 0.1169225709942d-10, 0.1177342971186d-10, 0.1185165698145d-10, 0.1192708344128d-10, &
+            & 0.1199984619292d-10, 0.1207007508223d-10, 0.1213789293496d-10, 0.1220341583197d-10, 0.1226675340896d-10, &
+            & 0.1232800916921d-10, 0.1238728080092d-10, 0.1244466049288d-10, 0.1250023524408d-10, 0.1255408716397d-10, &
+            & 0.1260629376144d-10, 0.1265692822094d-10, 0.1270605966511d-10, 0.1275375340349d-10, 0.1280007116736d-10, &
+            & 0.1284507133076d-10, 0.1288880911825d-10, 0.1293133679974d-10, 0.1297270387306d-10, 0.1301295723470d-10, &
+            & 0.1305214133962d-10, 0.1309029835047d-10, 0.1312746827701d-10, 0.1316368910637d-10, 0.1319899692460d-10, &
+            & 0.1323342603018d-10, 0.1326700903999d-10, 0.1329977698829d-10, 0.1333175941916d-10, 0.1336298447277d-10, &
+            & 0.1339347896613d-10, 0.1342326846840d-10, 0.1345237737150d-10, 0.1348082895592d-10, 0.1350864545252d-10, &
+            & 0.1353584810025d-10, 0.1356245720023d-10, 0.1358849216646d-10, 0.1361397157329d-10, 0.1363891320001d-10, &
+            & 0.1366333407262d-10, 0.1368725050309d-10, 0.1371067812622d-10, 0.1373363193426d-10, 0.1375612630947d-10, &
+            & 0.1377817505474d-10, 0.1379979142243d-10, 0.1382098814150d-10, 0.1384177744306d-10, 0.1386217108448d-10, &
+            & 0.1388218037208d-10, 0.1390181618262d-10, 0.1392108898347d-10, 0.1394000885175d-10, 0.1395858549239d-10, &
+            & 0.1397682825516d-10, 0.1399474615082d-10, 0.1401234786641d-10, 0.1402964177969d-10, 0.1404663597280d-10, &
+            & 0.1406333824528d-10, 0.1407975612631d-10]
+        tsxfit = [ 0.6651267411141d-09, 0.4599055171318d-09, 0.3195706977318d-09, 0.2233087974314d-09, &
+            & 0.1570378934266d-09, 0.1112203760129d-09, 0.7938822311186d-10, 0.5714835423414d-10, 0.4151150855718d-10, &
+            & 0.3043919381124d-10, 0.2253766542171d-10, 0.1685107093245d-10, 0.1272150382721d-10, 0.9694224883055d-11, &
+            & 0.7453392122775d-11, 0.5778412677358d-11, 0.4514245834200d-11, 0.3551154231991d-11, 0.2810861660779d-11, &
+            & 0.2237061619993d-11, 0.1788885844449d-11, 0.1436390945220d-11, 0.1157424537587d-11, 0.9354371807144d-12, &
+            & 0.7579451012757d-12, 0.6154425634630d-12, 0.5006264080002d-12, 0.4078385108139d-12, 0.3326613182400d-12, &
+            & 0.2716216622827d-12, 0.2219717602361d-12, 0.1815256948757d-12, 0.1485361323170d-12, 0.1216004975515d-12, &
+            & 0.9958892517785d-13, 0.8158846445421d-13, 0.6685953565002d-13, 0.5480170789848d-13, 0.4492663342735d-13, &
+            & 0.3683652243106d-13, 0.3020694108870d-13, 0.2477300662626d-13, 0.2031826860276d-13, 0.1666572621102d-13, &
+            & 0.1367055237560d-13, 0.1121418744052d-13, 0.9199535842907d-14, 0.7547053807803d-14, 0.6191558713228d-14, &
+            & 0.5079624248124d-14, 0.4167451945654d-14, 0.3419130708646d-14, 0.2805212747179d-14, 0.2301547828820d-14, &
+            & 0.1888328596400d-14, 0.1549308475207d-14, 0.1271160791319d-14, 0.1042953485104d-14, 0.8557184895856d-15, &
+            & 0.7020986592672d-15, 0.5760582468395d-15, 0.4726454653805d-15, 0.3877977492331d-15, 0.3181820238364d-15, &
+            & 0.2610636832919d-15, 0.2141991110614d-15, 0.1757475099650d-15, 0.1441985701508d-15, 0.1183131285147d-15, &
+            & 0.9707448515339d-16, 0.7964846224002d-16, 0.6535063491822d-16, 0.5361944605287d-16, 0.4399414814971d-16, &
+            & 0.3609670559286d-16, 0.2961694606864d-16, 0.2430037776394d-16, 0.1993819370947d-16, 0.1635907058561d-16, &
+            & 0.1342243981928d-16, 0.1101296665386d-16, 0.9036020325054d-17, 0.7413957416379d-17, 0.6083072410894d-17, &
+            & 0.4991095664087d-17, 0.4095140525078d-17, 0.3360018977930d-17, 0.2756859646381d-17, 0.2261973884666d-17, &
+            & 0.1855925418850d-17, 0.1522766998006d-17, 0.1249414075938d-17, 0.1025130923854d-17, 0.8411089926359d-18, &
+            & 0.6901209621759d-18, 0.5662368940345d-18, 0.4645913373276d-18, 0.3811922419240d-18, 0.3127641731938d-18, &
+            & 0.2566196721171d-18, 0.2105537072372d-18, 0.1727570740010d-18, 0.1417453390760d-18, 0.1163005409176d-18, &
+            & 0.9542335504007d-19, 0.7829384653029d-19, 0.6423926728459d-19, 0.5270763452388d-19, 0.4324605282849d-19, &
+            & 0.3548292570382d-19, 0.2911336271409d-19, 0.2388720404962d-19, 0.1959919646546d-19, 0.1608093199375d-19, &
+            & 0.1319423346786d-19, 0.1082572803915d-19, 0.8882394535223d-20, 0.7287910213156d-20, 0.5979652709535d-20, &
+            & 0.4906241359111d-20, 0.4025518687116d-20]
+        spxfit = [ 0.3566514894492d-09, 0.2459842180843d-09, 0.1706693906529d-09, 0.1192149692963d-09, &
+            & 0.8390252677292d-10, 0.5954101879137d-10, 0.4263343666094d-10, 0.3081930867666d-10, 0.2250154290925d-10, &
+            & 0.1659649619823d-10, 0.1236644552481d-10, 0.9307186752808d-11, 0.7072533440285d-11, 0.5423531183291d-11, &
+            & 0.4194239438463d-11, 0.3268629635555d-11, 0.2564950669730d-11, 0.2025117664793d-11, 0.1607485589313d-11, &
+            & 0.1281908341029d-11, 0.1026344742533d-11, 0.8245145885942d-12, 0.6642699148967d-12, 0.5364553857628d-12, &
+            & 0.4341047452310d-12, 0.3518694212000d-12, 0.2856084939633d-12, 0.2320916089958d-12, 0.1887815576927d-12, &
+            & 0.1536735325202d-12, 0.1251750693725d-12, 0.1020154833110d-12, 0.8317689885032d-13, 0.6784125337846d-13, &
+            & 0.5534923625427d-13, 0.4516823555862d-13, 0.3686714763465d-13, 0.3009646213980d-13, 0.2457243598405d-13, &
+            & 0.2006446022116d-13, 0.1638493700236d-13, 0.1338114143511d-13, 0.1092866116527d-13, 0.8926095614790d-14, &
+            & 0.7290764760957d-14, 0.5955229620938d-14, 0.4864467154784d-14, 0.3973573984637d-14, 0.3245898250898d-14, &
+            & 0.2651518644651d-14, 0.2166005336112d-14, 0.1769410042973d-14, 0.1445442523081d-14, 0.1180798851075d-14, &
+            & 0.9646133505571d-15, 0.7880113164708d-15, 0.6437439241529d-15, 0.5258901778513d-15, 0.4296135582589d-15, &
+            & 0.3509633102858d-15, 0.2867121687716d-15, 0.2342238314468d-15, 0.1913447199940d-15, 0.1563155739198d-15, &
+            & 0.1276992405434d-15, 0.1043216921545d-15, 0.8522384623569d-16, 0.6962220930155d-16, 0.5687672786890d-16, &
+            & 0.4646452638672d-16, 0.3795845390273d-16, 0.3100955879573d-16, 0.2533277224984d-16, 0.2069521290173d-16, &
+            & 0.1690663271097d-16, 0.1381161199975d-16, 0.1128318340291d-16, 0.9217623114101d-17, 0.7530195715239d-17, &
+            & 0.6151678006588d-17, 0.5025519222942d-17, 0.4105521126302d-17, 0.3353942801557d-17, 0.2739952404559d-17, &
+            & 0.2238362343635d-17, 0.1828596008586d-17, 0.1493843657189d-17, 0.1220372830292d-17, 0.9969650076815d-18, &
+            & 0.8144553911292d-18, 0.6653569396139d-18, 0.5435532299666d-18, 0.4440475433174d-18, 0.3627578869142d-18, &
+            & 0.2963495388478d-18, 0.2420982492196d-18, 0.1977784834415d-18, 0.1615721247701d-18, 0.1319938906792d-18, &
+            & 0.1078304020588d-18, 0.8809040752692d-19, 0.7196411919393d-19, 0.5878999304650d-19, 0.4802759104483d-19, &
+            & 0.3923541035905d-19, 0.3205277205983d-19, 0.2618502478982d-19, 0.2139145795224d-19, 0.1747542638670d-19, &
+            & 0.1427628387300d-19, 0.1166279302698d-19, 0.9527741548077d-20, 0.7783543560263d-20, 0.6358647632754d-20, &
+            & 0.5194600521266d-20, 0.4243649893312d-20, 0.3466785221496d-20, 0.2832137545744d-20, 0.2313671738283d-20, &
+            & 0.1890118972575d-20, 0.1544103904158d-20]
+        tpxfit = [ 0.3557702809532d-09, 0.2451030095883d-09, 0.1697881821569d-09, 0.1183337608003d-09, &
+            & 0.8302131827692d-10, 0.5865981029537d-10, 0.4175222816494d-10, 0.2993810018067d-10, 0.2162033441326d-10, &
+            & 0.1571528770223d-10, 0.1148523702881d-10, 0.8425978256812d-11, 0.6191324944289d-11, 0.4542322687295d-11, &
+            & 0.3321684353346d-11, 0.2432157958465d-11, 0.1789286189237d-11, 0.1329355438994d-11, 0.1003798252532d-11, &
+            & 0.7752355727294d-12, 0.6149986859496d-12, 0.5014782412678d-12, 0.4188782985184d-12, 0.3561401893102d-12, &
+            & 0.3059398121377d-12, 0.2637502551038d-12, 0.2270033388463d-12, 0.1943895092003d-12, 0.1653198545616d-12, &
+            & 0.1395508300579d-12, 0.1169518786810d-12, 0.9738392441410d-13, 0.8065354417213d-13, 0.6651143085772d-13, &
+            & 0.5467132421576d-13, 0.4483395025280d-13, 0.3670769727436d-13, 0.3002289260655d-13, 0.2453960115388d-13, &
+            & 0.2005028480475d-13, 0.1637901728251d-13, 0.1337875015330d-13, 0.1092772678287d-13, 0.8925742445602d-14, &
+            & 0.7290635637470d-14, 0.5955183955044d-14, 0.4864451532556d-14, 0.3973568815021d-14, 0.3245896596128d-14, &
+            & 0.2651518132284d-14, 0.2166005182654d-14, 0.1769409998514d-14, 0.1445442510622d-14, 0.1180798847698d-14, &
+            & 0.9646133496714d-15, 0.7880113162461d-15, 0.6437439240977d-15, 0.5258901778382d-15, 0.4296135582559d-15, &
+            & 0.3509633102852d-15, 0.2867121687714d-15, 0.2342238314468d-15, 0.1913447199940d-15, 0.1563155739198d-15, &
+            & 0.1276992405434d-15, 0.1043216921545d-15, 0.8522384623569d-16, 0.6962220930155d-16, 0.5687672786890d-16, &
+            & 0.4646452638672d-16, 0.3795845390273d-16, 0.3100955879573d-16, 0.2533277224984d-16, 0.2069521290173d-16, &
+            & 0.1690663271097d-16, 0.1381161199975d-16, 0.1128318340291d-16, 0.9217623114101d-17, 0.7530195715239d-17, &
+            & 0.6151678006588d-17, 0.5025519222942d-17, 0.4105521126302d-17, 0.3353942801557d-17, 0.2739952404559d-17, &
+            & 0.2238362343635d-17, 0.1828596008586d-17, 0.1493843657189d-17, 0.1220372830292d-17, 0.9969650076815d-18, &
+            & 0.8144553911292d-18, 0.6653569396139d-18, 0.5435532299666d-18, 0.4440475433174d-18, 0.3627578869142d-18, &
+            & 0.2963495388478d-18, 0.2420982492196d-18, 0.1977784834415d-18, 0.1615721247701d-18, 0.1319938906792d-18, &
+            & 0.1078304020588d-18, 0.8809040752692d-19, 0.7196411919393d-19, 0.5878999304650d-19, 0.4802759104483d-19, &
+            & 0.3923541035905d-19, 0.3205277205983d-19, 0.2618502478982d-19, 0.2139145795224d-19, 0.1747542638670d-19, &
+            & 0.1427628387300d-19, 0.1166279302698d-19, 0.9527741548077d-20, 0.7783543560263d-20, 0.6358647632754d-20, &
+            & 0.5194600521266d-20, 0.4243649893312d-20, 0.3466785221496d-20, 0.2832137545744d-20, 0.2313671738283d-20, &
+            & 0.1890118972575d-20, 0.1544103904158d-20]
+        dsxfit = [ 0.1086292509047d-05, 0.2827174138443d-06, 0.7364854448913d-07, 0.1925438469697d-07, &
+            & 0.5102470886840d-08, 0.1420519271913d-08, 0.4544602127345d-09, 0.1683076526087d-09, 0.6798247332653d-10, &
+            & 0.2816163191749d-10, 0.1080534406815d-10, 0.2674460861885d-11, -0.1354824693956d-11, - &
+            & 0.3440675519925d-11, -0.4556890192266d-11, -0.5168545525730d-11, -0.5508532466523d-11, - &
+            & 0.5698202049153d-11, -0.5802934734526d-11, -0.5858955825185d-11, -0.5886807658349d-11, - &
+            & 0.5898359853184d-11, -0.5900570764889d-11, -0.5897560772172d-11, -0.5891782325982d-11, - &
+            & 0.5884694018068d-11, -0.5877155937720d-11, -0.5869665158251d-11, -0.5862497833540d-11, - &
+            & 0.5855795853471d-11, -0.5849620118357d-11, -0.5843983467540d-11, -0.5838871078323d-11, - &
+            & 0.5834253083385d-11, -0.5830092324511d-11, -0.5826349053669d-11, -0.5822983715073d-11, - &
+            & 0.5819958522743d-11, -0.5817238286292d-11, -0.5814790772722d-11, -0.5812586787393d-11, - &
+            & 0.5810600090584d-11, -0.5808807223247d-11, -0.5807187288098d-11, -0.5805721714461d-11, - &
+            & 0.5804394023960d-11, -0.5803189606864d-11, -0.5802095514278d-11, -0.5801100268495d-11, - &
+            & 0.5800193692052d-11, -0.5799366754971d-11, -0.5798611439110d-11, -0.5797920618215d-11, - &
+            & 0.5797287952204d-11, -0.5796707794182d-11, -0.5796175108770d-11, -0.5795685400435d-11, - &
+            & 0.5795234650611d-11, -0.5794819262544d-11, -0.5794436012899d-11, -0.5794082009275d-11, - &
+            & 0.5793754652893d-11, -0.5793451605796d-11, -0.5793170761988d-11, -0.5792910222025d-11, - &
+            & 0.5792668270614d-11, -0.5792443356840d-11, -0.5792234076706d-11, -0.5792039157682d-11, - &
+            & 0.5791857445032d-11, -0.5791687889683d-11, -0.5791529537468d-11, -0.5791381519557d-11, - &
+            & 0.5791243043948d-11, -0.5791113387890d-11, -0.5790991891123d-11, -0.5790877949837d-11, - &
+            & 0.5790771011282d-11, -0.5790670568938d-11, -0.5790576158186d-11, -0.5790487352429d-11, - &
+            & 0.5790403759607d-11, -0.5790325019061d-11, -0.5790250798716d-11, -0.5790180792540d-11, - &
+            & 0.5790114718252d-11, -0.5790052315250d-11, -0.5789993342746d-11, -0.5789937578073d-11, - &
+            & 0.5789884815149d-11, -0.5789834863094d-11, -0.5789787544965d-11, -0.5789742696613d-11, - &
+            & 0.5789700165643d-11, -0.5789659810465d-11, -0.5789621499436d-11, -0.5789585110067d-11, - &
+            & 0.5789550528312d-11, -0.5789517647909d-11, -0.5789486369783d-11, -0.5789456601498d-11, - &
+            & 0.5789428256756d-11, -0.5789401254934d-11, -0.5789375520671d-11, -0.5789350983471d-11, - &
+            & 0.5789327577357d-11, -0.5789305240540d-11, -0.5789283915119d-11, -0.5789263546808d-11, - &
+            & 0.5789244084675d-11, -0.5789225480917d-11, -0.5789207690634d-11, -0.5789190671637d-11, - &
+            & 0.5789174384257d-11, -0.5789158791182d-11, -0.5789143857292d-11, -0.5789129549516d-11, - &
+            & 0.5789115836700d-11, -0.5789102689477d-11, -0.5789090080151d-11, -0.5789077982596d-11]
+        s2sab(1)   = 0.5562902725988d+09
+        s2tab(1)   = 0.5523963882174d+12
+        s2sab(121) = 0.0000000000000d+00
+        s2tab(121) = 0.0000000000000d+00
+        s2gab(1)   = 0.5140518768375d+10
+        s2uab(1)   = 0.3670635078695d+10
+        s2gab(121) = 0.0000000000000d+00
+        s2uab(121) = 0.0000000000000d+00
+        s2s11(1)   = 0.1192291866113d+09
+        s2s12(1)   = 0.1418979899158d+08
+        s2s22(1)   = 0.1155704168472d+09
+        s2tsx(1)   = 0.9447410607957d+08
+        s2s11(121) = 0.0000000000000d+00
+        s2s12(121) = 0.0000000000000d+00
+        s2s22(121) = 0.0000000000000d+00
+        s2tsx(121) = 0.0000000000000d+00
+        s2spx(1)   = 0.5179510170423d+08
+        s2tpx(1)   = 0.5179510170423d+08
+        s2dsx(1)   = 0.1969015835955d+13
+        s2spx(121) = 0.0000000000000d+00
+        s2tpx(121) = 0.0000000000000d+00
+        s2dsx(121) = 0.0000000000000d+00
+        forth      = quar
+        sqrt3      = rt3
+        call setspl
+        easyab = c(1)
+        easybc = c(2)
+        easyac = c(3)
+        !
+        !
+        !     ENTRY POT GIVES NROOT-TH POTENTIAL ENERGY FOR THE CLH2 SYSTEM
+        !     ENTRY POT ALSO GIVES PARTIALS W.R.T. THREE DISTANCES
+        !
+        !     INTERNUCLEAR DISTANCES STORED IN Q(3) AND R(3)
+        !     NROOT-TH STATE ENERGY STORED IN XTER (OR TERM FOR DIATOMIC)
+        !     THREE PARTIALS STORED IN DD(3)
+        !
+        !
+        !   Check the value of NDER
+        if( nder .gt. 1 )then
+            write (iptprt, '(/,1X,T5,''Error: POT has been called with NDER = '', I5, /,1X,T12,''only the first derivativ' // &
+                'es, NDER = 1, are '', ''coded in this potential'')') nder
+            stop 'POT 1'
         endif
-    end subroutine dispatch
+        !
+        !     IAPP=1
+        !     SET FLAG FOR EIGENVECTOR OUTPUT
+        iflag = sign(1, nroot)
+        nroot = abs(nroot)
+        !
+        !     FOLLOWING COORDINATE DEFINITIONS PROVIDE FOR PROPER SYSTEM
+        do 15 ix=1, 3
+        15 r(ix)=q(indx(ix))
+        !
+        !     ZERO OUT UNUSED HAMILTONIAN ELEMENTS
+        th(2,3) = zero
+        th(3,5) = zero
+        th(3,6) = zero
+        !
+        !     COMPUTE SINE AND COSINE OF ANGLE AXB, AND POWERS
+        ct = (r(1)*r(1)+r(3)*r(3)-r(2)*r(2))/(two*r(1)*r(3))
+        if( ct .gt. -test .and. ct .lt. test ) go to 10
+        ct = sign(test, ct)
+        10 continue
+        arg = one-ct*ct
+        if( arg .lt. zero ) arg=zero
+        st  = sqrt(arg)
+        ct2 = ct*ct
+        st2 = st*st
+        cs  = ct*st
+        !     COMPUTE DIATOMIC ENERGIES FOR R(3) ARRAY
+        call spline(ns, x, s11fit, r(1), ss11a, dss11a, s3, eps, s2s11, s3s11, &
+            & dels11)
+        call spline(ns, x, s11fit, r(3), ss11b, dss11b, s3, eps, s2s11, s3s11, &
+            & dels11)
+        call spline(ns, x, s12fit, r(1), ss12a, dss12a, s3, eps, s2s12, s3s12, &
+            & dels12)
+        call spline(ns, x, s12fit, r(3), ss12b, dss12b, s3, eps, s2s12, s3s12, &
+            & dels12)
+        call spline(ns, x, s22fit, r(1), ss22a, dss22a, s3, eps, s2s22, s3s22, &
+            & dels22)
+        call spline(ns, x, s22fit, r(3), ss22b, dss22b, s3, eps, s2s22, s3s22, &
+            & dels22)
+        call spline(ns, x, tsxfit, r(1), tsxa, dtsxa, s3, eps, s2tsx, s3tsx, deltsx)
+        call spline(ns, x, tsxfit, r(3), tsxb, dtsxb, s3, eps, s2tsx, s3tsx, deltsx)
+        call spline(ns, x, spxfit, r(1), spxa, dspxa, s3, eps, s2spx, s3spx, delspx)
+        call spline(ns, x, spxfit, r(3), spxb, dspxb, s3, eps, s2spx, s3spx, delspx)
+        call spline(ns, x, tpxfit, r(1), tpxa, dtpxa, s3, eps, s2tpx, s3tpx, deltpx)
+        call spline(ns, x, tpxfit, r(3), tpxb, dtpxb, s3, eps, s2tpx, s3tpx, deltpx)
+        call spline(ns, x, dsxfit, r(1), dsxa, ddsxa, s3, eps, s2dsx, s3dsx, deldsx)
+        call spline(ns, x, dsxfit, r(3), dsxb, ddsxb, s3, eps, s2dsx, s3dsx, deldsx)
+        call spline(ns, x, sabfit, r(2), ssab, dssab, s3, eps, s2sab, s3sab, delsab)
+        call spline(ns, x, tabfit, r(2), tsab, dtsab, s3, eps, s2tab, s3tab, deltab)
+        call spline(ns, x, gabfit, r(2), dgab, ddgab, s3, eps, s2gab, s3gab, delgab)
+        call spline(ns, x, uabfit, r(2), duab, dduab, s3, eps, s2uab, s3uab, deluab)
+        !
+        !     CONSTRUCT DIM HAMILTONIAN IN ORTHOGONAL BASIS
+        !
+        th(1,1) = ss11a+forth*((ssab+tre*tsab)+ct2*(ss11b+tre*tsxb) +st2*(spxb+tre*tpxb))-dpux-two*dsgh
+        th(1,2) = forth*sqrt3*(ssab-tsab-ct2*(ss11b-tsxb)-st2*(spxb-tpxb))
+        th(1,3) = ss12a
+        th(1,4) = -half*ct*ss12b
+        th(1,5) = forth*cs*(ss11b+tre*tsxb-spxb-tre*tpxb)
+        th(1,6) = -forth*sqrt3*cs*(ss11b-tsxb-spxb+tpxb)
+        th(2,2) = tsxa+forth*((tre*ssab+tsab)+ct2*(tre*ss11b+tsxb) +st2*(tre*spxb+tpxb))-dpux-two*dsgh
+        th(2,4) = half*sqrt3*ct*ss12b
+        th(2,5) = th(1,6)
+        th(2,6) = forth*cs*(tre*ss11b+tsxb-tre*spxb-tpxb)
+        th(3,3) = ss22a+half*(dgab+duab)+dsxb-ssgx-ssgh-dsgh
+        th(3,4) = half*(dgab-duab)
+        th(4,4) = dsxa+half*(dgab+duab)+ss22b-ssgx-ssgh-dsgh
+        th(4,5) = -half*st*ss12b
+        th(4,6) = half*sqrt3*st*ss12b
+        th(5,5) = spxa+forth*((ssab+tre*tsab)+st2*(ss11b+tre*tsxb) +ct2*(spxb+tre*tpxb))-dpux-two*dsgh
+        th(5,6) = forth*sqrt3*(ssab-tsab-st2*(ss11b-tsxb)-ct2*(spxb-tpxb))
+        th(6,6) = tpxa+forth*((tre*ssab+tsab)+st2*(tre*ss11b+tsxb) +ct2*(tre*spxb+tpxb))-dpux-two*dsgh
+        !
+        !     FILL OUT MATRIX AND DIAGONALIZE
+        !
+        do 30 i=1, ndim
+            do 30 j=1, i
+                th(i,j) = th(j,i)
+        30 continue
+        !
+        call eign(ndim, th, vec, en, w, ndim)
+        !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
+        xter = en(nroot)+c(2)
+        if( iflag .lt. zero ) write(iptprt, '(/,2X,T5,''Vector:'',(T15,3E20.8))') (vec(i,nroot), i=1, ndim)
+        !
+        !************************* END OF FPOT3N *******************************
+        !
+        if( nder .ne. 1 ) return
+        !     IF(IAPP.EQ.0) RETURN
+        !
+        !     SET  VECTOR FOR STATE OF INTEREST
+        do 40 i=1, ndim
+            gvec(i) = vec(i,nroot)
+        40 continue
+        !     COMPUTE PARTIALS OF U=COS(THETA)
+        dtdr1 = (r(1)*r(1)+r(2)*r(2)-r(3)*r(3))/(two*r(1)*r(1)*r(3))
+        dtdr2 = -r(2)/(r(1)*r(3))
+        dtdr3 = (r(2)*r(2)+r(3)*r(3)-r(1)*r(1))/(two*r(3)*r(3)*r(1))
+        factr = -one/st
+        if( abs(st) .lt. 1.d-6 ) write(iptprt, &
+            & '(/,2X,T5,''Warning: A serious error may result because '', ''sine(THETA) = '',' // '1PE20.10)') st
+        !     COMPUTE PARTIALS OF HAMILTONIAN ELEMENTS
+        xtra    = +half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
+        dh11(1) = dss11a+xtra*dtdr1
+        dh11(2) = forth*(dssab+tre*dtsab)+xtra*dtdr2
+        dh11(3) = forth*(ct2*(dss11b+tre*dtsxb)+st2*(dspxb+tre*dtpxb))+xtra* dtdr3
+        xtra    = -half*sqrt3*ct*(ss11b-tsxb-spxb+tpxb)
+        dh12(1) = xtra*dtdr1
+        dh12(2) = forth*sqrt3*(dssab-dtsab)+xtra*dtdr2
+        dh12(3) = -forth*sqrt3*(ct2*(dss11b-dtsxb)+st2*(dspxb-dtpxb))+xtra* dtdr3
+        dh13(1) = dss12a
+        dh13(2) = zero
+        dh13(3) = zero
+        xtra    = -half*ss12b
+        dh14(1) = xtra*dtdr1
+        dh14(2) = xtra*dtdr2
+        dh14(3) = -half*ct*dss12b+xtra*dtdr3
+        xtra    = forth*(ct2-st2)*(ss11b+tre*tsxb-spxb-tre*tpxb)*factr
+        dh15(1) = xtra*dtdr1
+        dh15(2) = xtra*dtdr2
+        dh15(3) = forth*cs*(dss11b+tre*dtsxb-dspxb-tre*dtpxb)+xtra*dtdr3
+        xtra    = -forth*sqrt3*(ct2-st2)*(ss11b-tsxb-spxb+tpxb)*factr
+        dh16(1) = xtra*dtdr1
+        dh16(2) = xtra*dtdr2
+        dh16(3) = -forth*sqrt3*cs*(dss11b-dtsxb-dspxb+dtpxb)+xtra*dtdr3
+        xtra    = +half*ct*(tre*ss11b+tsxb-tre*spxb-tpxb)
+        dh22(1) = dtsxa+xtra*dtdr1
+        dh22(2) = forth*(tre*dssab+dtsab)+xtra*dtdr2
+        dh22(3) = forth*(ct2*(tre*dss11b+dtsxb)+st2*(tre*dspxb+dtpxb))+xtra* dtdr3
+        xtra    = +half*sqrt3*ss12b
+        dh24(1) = xtra*dtdr1
+        dh24(2) = xtra*dtdr2
+        dh24(3) = half*sqrt3*ct*dss12b+xtra*dtdr3
+        dh25(1) = dh16(1)
+        dh25(2) = dh16(2)
+        dh25(3) = dh16(3)
+        xtra    = forth*(ct2-st2)*(tre*ss11b+tsxb-tre*spxb-tpxb)*factr
+        dh26(1) = xtra*dtdr1
+        dh26(2) = xtra*dtdr2
+        dh26(3) = forth*cs*(tre*dss11b+dtsxb-tre*dspxb-dtpxb)+xtra*dtdr3
+        dh33(1) = dss22a
+        dh33(2) = half*(ddgab+dduab)
+        dh33(3) = ddsxb
+        dh34(1) = zero
+        dh34(2) = half*(ddgab-dduab)
+        dh34(3) = zero
+        dh44(1) = ddsxa
+        dh44(2) = half*(ddgab+dduab)
+        dh44(3) = dss22b
+        xtra    = -half*ct*ss12b*factr
+        dh45(1) = xtra*dtdr1
+        dh45(2) = xtra*dtdr2
+        dh45(3) = -half*st*dss12b+xtra*dtdr3
+        xtra    = half*sqrt3*ct*ss12b*factr
+        dh46(1) = xtra*dtdr1
+        dh46(2) = xtra*dtdr2
+        dh46(3) = half*sqrt3*st*dss12b+xtra*dtdr3
+        xtra    = -half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
+        dh55(1) = dspxa+xtra*dtdr1
+        dh55(2) = forth*(dssab+tre*dtsab)+xtra*dtdr2
+        dh55(3) = forth*(st2*(dss11b+tre*dtsxb)+ct2*(dspxb+tre*dtpxb))+xtra* dtdr3
+        xtra    = +half*sqrt3*ct*(ss11b-tsxb-spxb+tpxb)
+        dh56(1) = xtra*dtdr1
+        dh56(2) = forth*sqrt3*(dssab-dtsab)+xtra*dtdr2
+        dh56(3) = -forth*sqrt3*(st2*(dss11b-dtsxb)+ct2*(dspxb-dtpxb))+xtra* dtdr3
+        xtra    = -half*ct*(tre*ss11b+tsxb-tre*spxb-tpxb)
+        dh66(1) = dtpxa+xtra*dtdr1
+        dh66(2) = forth*(tre*dssab+dtsab)+xtra*dtdr2
+        dh66(3) = forth*(st2*(tre*dss11b+dtsxb)+ct2*(tre*dspxb+dtpxb))+xtra* dtdr3
+        !
+        !     LOOP OVER R(I) DERIVATIVES
+        !     FIRST ZERO OUT UNUSED ELEMENTS
+        dh(2,3) = zero
+        dh(3,5) = zero
+        dh(3,6) = zero
+        do 50 i=1, 3
+            !
+            !     SET UP DERIVATIVE MATRIX
+            !
+            dh(1,1) = dh11(i)
+            dh(1,2) = dh12(i)
+            dh(1,3) = dh13(i)
+            dh(1,4) = dh14(i)
+            dh(1,5) = dh15(i)
+            dh(1,6) = dh16(i)
+            dh(2,2) = dh22(i)
+            dh(2,4) = dh24(i)
+            dh(2,5) = dh25(i)
+            dh(2,6) = dh26(i)
+            dh(3,3) = dh33(i)
+            dh(3,4) = dh34(i)
+            dh(4,4) = dh44(i)
+            dh(4,5) = dh45(i)
+            dh(4,6) = dh46(i)
+            dh(5,5) = dh55(i)
+            dh(5,6) = dh56(i)
+            dh(6,6) = dh66(i)
+            !
+            !     FILL OUT DERIVATIVE MATRIX
+            do 70 j=1, ndim
+                do 70 k=1, j
+                    dh(j,k) = dh(k,j)
+            70 continue
+            !
+            dnumb = zero
+            do 80 j=1, ndim
+                do 80 k=1, ndim
+                    dnumb = dnumb+gvec(j)*dh(j,k)*gvec(k)
+            80 continue
+            dd(i) = dnumb
+            !     END OF DERIVATIVE LOOP
+        50 continue
+        !     PUT DERIVATIVES INTO CORRESPONDING SPOTS FOR CORRECT COORD CHOICE.
+        do 90 ix=1, 3
+        90 dq(indx(ix))=dd(ix)
+        !
+        !************************ END OF DFPOT *********************************
+        !
+        contains
+        !> @brief Evaluate SETSPL for the ClH2_LEPS_TTGI2_1985 potential.
+        subroutine setspl
+            !     SETS UP SPLINE FITS FOR DIATOMIC CURVES
+            implicit none
+            double precision :: angta0, auterg, eps, fac, r, r1, r2, r3
+            integer          :: i
+            auterg = 4.3598283d-11
+            angta0 = 1.88972634d0
+            ns     = 121
+            !     SET UP X ARRAY IN BOHR
+            fac = 0.1d0*angta0
+            do 20 i=1, ns
+            20 x(i)=dble(i-1)*fac
+            !     READ IN FIT DATA
+            !     CONVERT TO ATOMIC UNITS
+            fac = one/auterg
+            do 10 i=1, ns
+                sabfit(i) = sabfit(i)*fac
+                tabfit(i) = tabfit(i)*fac
+                gabfit(i) = gabfit(i)*fac
+                uabfit(i) = uabfit(i)*fac
+                s11fit(i) = s11fit(i)*fac
+                s12fit(i) = s12fit(i)*fac
+                s22fit(i) = s22fit(i)*fac
+                tsxfit(i) = tsxfit(i)*fac
+                spxfit(i) = spxfit(i)*fac
+                tpxfit(i) = tpxfit(i)*fac
+                dsxfit(i) = dsxfit(i)*fac
+            10 continue
+            !     READ IN SECOND DERIVATIVES AT ENDS OF FIT CURVES
+            !     AND CONVERT TO ATOMIC UNITS
+            fac      = fac*1.d-16/(angta0*angta0)
+            s2sab(1) = s2sab(1)*fac
+            s2tab(1) = s2tab(1)*fac
+            s2gab(1) = s2gab(1)*fac
+            s2uab(1) = s2uab(1)*fac
+            s2s11(1) = s2s11(1)*fac
+            s2s12(1) = s2s12(1)*fac
+            s2s22(1) = s2s22(1)*fac
+            s2tsx(1) = s2tsx(1)*fac
+            s2spx(1) = s2spx(1)*fac
+            s2tpx(1) = s2tpx(1)*fac
+            s2dsx(1) = s2dsx(1)*fac
+            !     GENERATE SPLINE FITS
+            call splnin(ns, x, sabfit, r, r1, r2, r3, eps, s2sab, s3sab, delsab)
+            call splnin(ns, x, tabfit, r, r1, r2, r3, eps, s2tab, s3tab, deltab)
+            call splnin(ns, x, gabfit, r, r1, r2, r3, eps, s2gab, s3gab, delgab)
+            call splnin(ns, x, uabfit, r, r1, r2, r3, eps, s2uab, s3uab, deluab)
+            call splnin(ns, x, s11fit, r, r1, r2, r3, eps, s2s11, s3s11, dels11)
+            call splnin(ns, x, s12fit, r, r1, r2, r3, eps, s2s12, s3s12, dels12)
+            call splnin(ns, x, s22fit, r, r1, r2, r3, eps, s2s22, s3s22, dels22)
+            call splnin(ns, x, tsxfit, r, r1, r2, r3, eps, s2tsx, s3tsx, deltsx)
+            call splnin(ns, x, spxfit, r, r1, r2, r3, eps, s2spx, s3spx, delspx)
+            call splnin(ns, x, tpxfit, r, r1, r2, r3, eps, s2tpx, s3tpx, deltpx)
+            call splnin(ns, x, dsxfit, r, r1, r2, r3, eps, s2dsx, s3dsx, deldsx)
+        end subroutine setspl
+        !> @brief Evaluate SPLINE for the ClH2_LEPS_TTGI2_1985 potential.
+        subroutine spline( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
+            !     JIM STINE'S SPLINE INTERPOLATOR
+            implicit none
+            double precision :: delsqs, dely, epsln, ht1, ht2, prod, s2, s3, ss, ss1, ss2, t, x, y
+            integer          :: i, n
+            dimension x(n), y(n), s2(n), s3(n), dely(n)
+            i = 1
+            if( t .gt. x(1) ) go to 10
+            ss  = y(1)
+            ss1 = dely(1)
+            return
+            10 if(t.lt.x(n)) go to 20
+            ss  = y(n)
+            ss1 = dely(n)
+            return
+            20 continue
+            56 if(t-x(i)) 60, 17, 57
+            57 i=i+1
+            go to 56
+            59 i=n
+            60 i=i-1
+            17 ht1=t-x(i)
+            ht2    = t-x(i+1)
+            prod   = ht1*ht2
+            ss2    = s2(i)+ht1*s3(i)
+            delsqs = (s2(i)+s2(i+1)+ss2)/6.d-00
+            ss     = y(i)+ht1*dely(i)+prod*delsqs
+            ss1    = dely(i)+(ht1+ht2)*delsqs+prod*s3(i)/6.d-00
+            61 return
+        end subroutine spline
+        !> @brief Evaluate SPLNIN for the ClH2_LEPS_TTGI2_1985 potential.
+        subroutine splnin( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
+            !     JIM STINE'S INITIALIZATION ROUTINE FOR SPLINE FITTING
+            !     N=NO. POINTS (X,Y); T=ARGUMENT; SS=VALUE; SS1=1ST DERIV;
+            !     SS2=2ND DERIV; S2,S3, AND DELY ARE COEFFICIENT ARRAYS
+            !     SECOND DERIV'S AT ENDS STORED IN S2(1) AND S2(N) ON INPUT
+            !     EPSLN IS OVERALL FIT CRITERION
+            implicit none
+            double precision :: b, c, delsqy, dely, epsln, eta, ex, h, h2, half, omega, s2, s3, ss, ss1, ss2, t, w, x, y
+            integer          :: i, knt, n, n1
+            dimension c(121), h(121), h2(121), b(121)
+            dimension x(n), y(n), s2(n), s3(n), dely(n)
+            ex    = 1.1d0
+            omega = 1.0717968d0
+            half  = 0.5d0
+            epsln = 6.4229d-13
+            n1    = n-1
+            knt   = 0
+            do 51 i=1, n1
+                h(i) = x(i+1)-x(i)
+            51 dely(i)=(y(i+1)-y(i))/h(i)
+            do 52 i=2, n1
+                h2(i)  = h(i-1)+h(i)
+                b(i)   = half*h(i-1)/h2(i)
+                delsqy = (dely(i)-dely(i-1))/h2(i)
+                s2(i)  = delsqy+delsqy
+            52 c(i)=delsqy+s2(i)
+            5 eta=0.0d0
+            do 10 i=2, n1
+                w = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
+                if( abs(w)-eta ) 10, 10, 9
+                9 eta=abs(w)
+            10 s2(i)=s2(i)+w
+            knt = knt+1
+            if( knt .gt. 10 ) epsln=epsln*ex
+            if( eta-epsln ) 14, 5, 5
+            14 do 53 i=1, n1
+            53 s3(i)=(s2(i+1)-s2(i))/h(i)
+            if( idebug .eq. 1 ) write(iptprt, '(2X,T5,''Final EPS = '', 1PE15.6)') epsln
+        end subroutine splnin
+        !> @brief Evaluate EIGN for the ClH2_LEPS_TTGI2_1985 potential.
+        subroutine eign( nn, a, vec, eig, w, nd )
+            !     MATRIX DIAGONALIZATION ROUTINE FOR REAL SYMMETRIC CASE
+            !     HOUSEHOLDER METHOD
+            !     RHO=UPPERLIMIT FOR OFF-DIAGONAL ELEMENT
+            !     NN=SIZE OF MATRIX
+            !     A=MATRIX (ONLY LOWER TRIANGLE IS USED ,THIS IS DESTROYED)
+            !     EIG=RETURNED EIGENVALUES IN ALGEBRAIC ASCENDING ORDER
+            !     VEC=RETURNED EIGENVECTORS IN COLUMNS
+            implicit none
+            double precision :: a, a2, b, beta, betasq, cosa, cosap, d, dia, dif, eig, g, gamma, p, pp, ppbr, ppbs, q, qj, &
+                & r1, r12, r2, rho, rhosq, s, sgn, shift, sina, sina2, sqrts, sum, temp, u, vec, w, wj, wtaw
+            integer :: i, i1, iord, iposv, itemp, ivpos, j, k, l, lv, m, n, n1, n2, nd, nn, np, npas, nr, nrr, nt, nv
+            dimension eig(nd), w(nd)
+            dimension gamma(6), beta(6), betasq(6)
+            dimension p(6), q(6)
+            equivalence (p(1), beta(1)), (q(1), beta(1))
+            dimension iposv(6), ivpos(6), iord(6)
+            dimension a(nd,nd), vec(nd,nd)
+            rho   = 1.0d-14
+            rhosq = rho*rho
+            n     = nn
+            if( n .eq. 0 ) go to 560
+            1 n1=n-1
+            n2       = n-2
+            gamma(1) = a(1,1)
+            if( n2 ) 280, 270, 120
+            120 do 260 nr=1, n2
+                b = a(nr+1,nr)
+                s = 0.0d0
+                do 130 i=nr, n2
+                    !     PREPARE FOR POSSIBLE BYPASS OF TRANSFORMATION
+                130 s=s+a(i+2,nr)**2
+                a(nr+1,nr) = 0.0d0
+                if( s ) 250, 250, 140
+                140 s=s+b*b
+                sgn = +1.0d0
+                if( b ) 150, 160, 160
+                150 sgn=-1.0d0
+                160 sqrts=sqrt(s)
+                d          = sgn/(sqrts+sqrts)
+                temp       = sqrt(.5d0+b*d)
+                w(nr)      = temp
+                a(nr+1,nr) = temp
+                d          = d/temp
+                b          = -sgn*sqrts
+                !     D IS FACTOR OF PROPORTIONALITY  NOW COMPUTE AND SAVE W VECTOR
+                !     EXTRA SINGLY SUBSCRIPTED W VECTOR USED FOR SPEED
+                do 170 i=nr, n2
+                    temp   = d*a(i+2,nr)
+                    w(i+1) = temp
+                170 a(i+2,nr)=temp
+                !     PREMULTIPLY VECTOR W BY MATRIX A TO OBTAIN P VECTOR
+                !     SIMULTANEOUSLY ACCUMULATE DOT PRODUCT WP,(THE SCALAR K)
+                wtaw = 0.0d0
+                do 220 i=nr, n1
+                    sum = 0.0d0
+                    do 180 j=nr, i
+                    180 sum=sum+a(i+1,j+1)*w(j)
+                    i1 = i+1
+                    if( n1-i1 ) 210, 190, 190
+                    190 do 200 j=i1, n1
+                    200 sum=sum+a(j+1,i+1)*w(j)
+                    210 p(i)=sum
+                220 wtaw=wtaw+sum*w(i)
+                !     P VECTOR AND SCALAR K NOW STORED, NEXT COMPUTE Q VECTOR.
+                do 230 i=nr, n1
+                    !     NOW FORM PAP MATRIX, REQUIRED PART
+                230 q(i)=p(i)-wtaw*w(i)
+                do 240 j=nr, n1
+                    qj = q(j)
+                    wj = w(j)
+                    do 240 i=j, n1
+                240 a(i+1,j+1)=a(i+1,j+1)-2.0d0*(w(i)*qj+wj*q(i))
+                250 beta(nr)=b
+                betasq(nr) = b*b
+            260 gamma(nr+1)=a(nr+1,nr+1)
+            270 b=a(n,n-1)
+            beta(n-1)   = b
+            betasq(n-1) = b*b
+            gamma(n)    = a(n,n)
+            280 betasq(n)=0.0d0
+            !     ADJOIN AN IDENTITY MATRIX TO BE POSTMULTIPLIED BY ROTATIONS
+            do 290 j=1, n
+                do 290 i=1, n
+            290 vec(i,j)=0.0d0
+            do 300 i=1, n
+            300 vec(i,i)=1.0d0
+            m    = n
+            sum  = 0.0d0
+            npas = 1
+            go to 400
+            310 sum=sum+shift
+            cosa = 1.0d0
+            g    = gamma(1)-shift
+            pp   = g
+            ppbs = pp*pp+betasq(1)
+            ppbr = sqrt(ppbs)
+            do 370 j=1, m
+                cosap = cosa
+                if( ppbs .ne. 0.0d0 ) go to 320
+                311 sina=0.0d0
+                sina2 = 0.0d0
+                cosa  = 1.0d0
+                go to 350
+                320 sina=beta(j)/ppbr
+                sina2 = betasq(j)/ppbs
+                cosa  = pp/ppbr
+                !     POSTMULTIPLY IDAENTITY BY P-TRANSPOSE MATRIX
+                nt = j+npas
+                if( nt .lt. n ) go to 330
+                321 nt=n
+                330 do 340 i=1, nt
+                    temp       = cosa*vec(i,j)+sina*vec(i,j+1)
+                    vec(i,j+1) = -sina*vec(i,j)+cosa*vec(i,j+1)
+                340 vec(i,j)=temp
+                350 dia=gamma(j+1)-shift
+                u        = sina2*(g+dia)
+                gamma(j) = g+u
+                g        = dia-u
+                pp       = dia*cosa-sina*cosap*beta(j)
+                if( j .ne. m ) go to 360
+                351 beta(j)=sina*pp
+                betasq(j) = sina2*pp*pp
+                go to 380
+                360 ppbs=pp*pp+betasq(j+1)
+                ppbr    = sqrt(ppbs)
+                beta(j) = sina*ppbr
+            370 betasq(j)=sina2*ppbs
+            380 gamma(m+1)=g
+            !     TEST FOR CONVERGENCE OF LAST DIAGONAL ELEMENT
+            npas = npas+1
+            if( betasq(m) .gt. rhosq ) go to 410
+            390 eig(m+1)=gamma(m+1)+sum
+            400 beta(m)=0.0d0
+            betasq(m) = 0.0d0
+            m         = m-1
+            if( m .eq. 0 ) go to 430
+            401 if(betasq(m).le.rhosq) go to 390
+            !     TAKE ROOT OF CORNER 2 BY 2 NEAREST TO LOWER DIAGONAL IN VALUE
+            !     AS ESTIMATE OF EIGENVALUE TO USE FOR SHIFT
+            410 a2=gamma(m+1)
+            r2   = .5d0*a2
+            r1   = .5d0*gamma(m)
+            r12  = r1+r2
+            dif  = r1-r2
+            temp = sqrt(dif*dif+betasq(m))
+            r1   = r12+temp
+            r2   = r12-temp
+            dif  = abs(a2-r1)-abs(a2-r2)
+            if( dif .lt. 0.0d0 ) go to 420
+            411 shift=r2
+            go to 310
+            420 shift=r1
+            go to 310
+            430 eig(1)=gamma(1)+sum
+            !     INITIALIZE AUXILARY TABLES REQUIRED FOR REARRANGING THE VECTORS
+            do 440 j=1, n
+                iposv(j) = j
+                ivpos(j) = j
+            440 iord(j)=j
+            !     USE A TRANSPOSITON SORT TO ORDER THE EIGENVALUES
+            m = n
+            go to 470
+            450 do 460 j=1, m
+                if( eig(j) .le. eig(j+1) ) go to 460
+                451 temp=eig(j)
+                eig(j)    = eig(j+1)
+                eig(j+1)  = temp
+                itemp     = iord(j)
+                iord(j)   = iord(j+1)
+                iord(j+1) = itemp
+            460 continue
+            470 m=m-1
+            if( m .ne. 0 ) go to 450
+            471 if(n1.eq.0) go to 500
+            472 do 490 l=1, n1
+                nv = iord(l)
+                np = iposv(nv)
+                if( np .eq. l ) go to 490
+                473 lv=ivpos(l)
+                ivpos(np) = lv
+                iposv(lv) = np
+                do 480 i=1, n
+                    temp     = vec(i,l)
+                    vec(i,l) = vec(i,np)
+                480 vec(i,np)=temp
+            490 continue
+            !     BACK TRANSFORM THE VECTORS OF THE TRIPLE DIAGONAL MATRIX
+            500 do 550 nrr=1, n
+                k = n1
+                510 k=k-1
+                if( k .le. 0 ) go to 550
+                511 sum=0.0d0
+                do 520 i=k, n1
+                520 sum=sum+vec(i+1,nrr)*a(i+1,k)
+                sum = sum+sum
+                do 530 i=k, n1
+                530 vec(i+1,nrr)=vec(i+1,nrr)-sum*a(i+1,k)
+                go to 510
+            550 continue
+            560 return
+            !  END OF EIGN
+        end subroutine eign
+    end subroutine evaluate_internal
 end module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
 
-!> @brief Compatibility interface for prepot.
-subroutine prepot( path )
-    use chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59, only: dispatch
+!> @brief Evaluate TTGI2 for one set of internal distances.
+subroutine pot( q, nder, xter, dq )
+    use chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59, only: evaluate_internal
     implicit none
-    character(len=1024) :: path
-    call dispatch(path=path, initialize_only=.true.)
-end subroutine prepot
-
-!> @brief Compatibility interface for pot.
-subroutine pot
-    use chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59, only: dispatch
-    implicit none
-    call dispatch(initialize_only=.false.)
+    double precision, intent(in)  :: q(3)
+    integer, intent(in)           :: nder
+    double precision, intent(out) :: xter, dq(3)
+    call evaluate_internal(q, nder, xter, dq)
 end subroutine pot
 
-!> @brief Evaluate SETSPL for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine setspl
-    !     SETS UP SPLINE FITS FOR DIATOMIC CURVES
-    implicit none
-    double precision :: angta0, auterg, deldsx, delgab, dels11, dels12, dels22, delsab, delspx, &
-        & deltab, deltpx, deltsx, deluab, dpux, dsgh, dsxfit, eps, fac, gabfit, half, one, quar, r, &
-        & r1, r2, r3, rt3, s11fit, s12fit, s22fit, s2dsx, s2gab, s2s11, s2s12, s2s22, s2sab, s2spx, &
-        & s2tab, s2tpx, s2tsx, s2uab, s3dsx, s3gab, s3s11, s3s12, s3s22, s3sab, s3spx, s3tab, s3tpx, &
-        & s3tsx, s3uab, sabfit, spxfit, ssgh, ssgx, tabfit, tpxfit, tre, tsxfit, two, uabfit, x, &
-        & zero
-    integer :: i, iptprt, iptrd1, ns
-    common /pt4cm/ iptprt, iptrd1
-    common/potcm4/x(121), &
-        & sabfit(121), s2sab(121), s3sab(121), delsab(121), &
-        & tabfit(121), s2tab(121), s3tab(121), deltab(121), &
-        & gabfit(121), s2gab(121), s3gab(121), delgab(121), &
-        & uabfit(121), s2uab(121), s3uab(121), deluab(121), &
-        & s11fit(121), s2s11(121), s3s11(121), dels11(121), &
-        & s12fit(121), s2s12(121), s3s12(121), dels12(121), &
-        & s22fit(121), s2s22(121), s3s22(121), dels22(121), &
-        & tsxfit(121), s2tsx(121), s3tsx(121), deltsx(121), &
-        & spxfit(121), s2spx(121), s3spx(121), delspx(121), &
-        & tpxfit(121), s2tpx(121), s3tpx(121), deltpx(121), &
-        & dsxfit(121), s2dsx(121), s3dsx(121), deldsx(121), ns
-    common/potcm3/zero, one, two, tre, half, quar, rt3, &
-        & dpux, ssgx, dsgh, ssgh
-    data auterg/4.3598283d-11/, angta0/1.88972634d0/
-    ns = 121
-    !     SET UP X ARRAY IN BOHR
-    fac = 0.1d0*angta0
-    do 20 i=1, ns
-    20 x(i)=dble(i-1)*fac
-    !     READ IN FIT DATA
-    read(iptrd1, '(2D20.13)') (sabfit(i), tabfit(i), i=1, ns)
-    read(iptrd1, '(2D20.13)') (gabfit(i), uabfit(i), i=1, ns)
-    read(iptrd1, '(4D20.13)') (s11fit(i), s12fit(i), s22fit(i), tsxfit(i), i=1, ns)
-    read(iptrd1, '(3D20.13)') (spxfit(i), tpxfit(i), dsxfit(i), i=1, ns)
-    !     CONVERT TO ATOMIC UNITS
-    fac = one/auterg
-    do 10 i=1, ns
-        sabfit(i) = sabfit(i)*fac
-        tabfit(i) = tabfit(i)*fac
-        gabfit(i) = gabfit(i)*fac
-        uabfit(i) = uabfit(i)*fac
-        s11fit(i) = s11fit(i)*fac
-        s12fit(i) = s12fit(i)*fac
-        s22fit(i) = s22fit(i)*fac
-        tsxfit(i) = tsxfit(i)*fac
-        spxfit(i) = spxfit(i)*fac
-        tpxfit(i) = tpxfit(i)*fac
-        dsxfit(i) = dsxfit(i)*fac
-    10 continue
-    !     READ IN SECOND DERIVATIVES AT ENDS OF FIT CURVES
-    !     AND CONVERT TO ATOMIC UNITS
-    fac = fac*1.d-16/(angta0*angta0)
-    read(iptrd1, '(2D20.13)') s2sab(1), s2tab(1), s2sab(ns), s2tab(ns)
-    read(iptrd1, '(2D20.13)') s2gab(1), s2uab(1), s2gab(ns), s2uab(ns)
-    read(iptrd1, '(4D20.13)') s2s11(1), s2s12(1), s2s22(1), s2tsx(1)
-    read(iptrd1, '(4D20.13)') s2s11(ns), s2s12(ns), s2s22(ns), s2tsx(ns)
-    read(iptrd1, '(3D20.13)') s2spx(1), s2tpx(1), s2dsx(1)
-    read(iptrd1, '(3D20.13)') s2spx(ns), s2tpx(ns), s2dsx(ns)
-    s2sab(1) = s2sab(1)*fac
-    s2tab(1) = s2tab(1)*fac
-    s2gab(1) = s2gab(1)*fac
-    s2uab(1) = s2uab(1)*fac
-    s2s11(1) = s2s11(1)*fac
-    s2s12(1) = s2s12(1)*fac
-    s2s22(1) = s2s22(1)*fac
-    s2tsx(1) = s2tsx(1)*fac
-    s2spx(1) = s2spx(1)*fac
-    s2tpx(1) = s2tpx(1)*fac
-    s2dsx(1) = s2dsx(1)*fac
-    !     GENERATE SPLINE FITS
-    call splnin(ns, x, sabfit, r, r1, r2, r3, eps, s2sab, s3sab, delsab)
-    call splnin(ns, x, tabfit, r, r1, r2, r3, eps, s2tab, s3tab, deltab)
-    call splnin(ns, x, gabfit, r, r1, r2, r3, eps, s2gab, s3gab, delgab)
-    call splnin(ns, x, uabfit, r, r1, r2, r3, eps, s2uab, s3uab, deluab)
-    call splnin(ns, x, s11fit, r, r1, r2, r3, eps, s2s11, s3s11, dels11)
-    call splnin(ns, x, s12fit, r, r1, r2, r3, eps, s2s12, s3s12, dels12)
-    call splnin(ns, x, s22fit, r, r1, r2, r3, eps, s2s22, s3s22, dels22)
-    call splnin(ns, x, tsxfit, r, r1, r2, r3, eps, s2tsx, s3tsx, deltsx)
-    call splnin(ns, x, spxfit, r, r1, r2, r3, eps, s2spx, s3spx, delspx)
-    call splnin(ns, x, tpxfit, r, r1, r2, r3, eps, s2tpx, s3tpx, deltpx)
-    call splnin(ns, x, dsxfit, r, r1, r2, r3, eps, s2dsx, s3dsx, deldsx)
-end subroutine setspl
-
-!> @brief Evaluate SPLINE for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine spline( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
-    !     JIM STINE'S SPLINE INTERPOLATOR
-    implicit none
-    double precision :: delsqs, dely, epsln, ht1, ht2, prod, s2, s3, ss, ss1, ss2, t, x, y
-    integer          :: i, n
-    dimension x(n), y(n), s2(n), s3(n), dely(n)
-    i = 1
-    if( t .gt. x(1) ) go to 10
-    ss  = y(1)
-    ss1 = dely(1)
-    return
-    10 if(t.lt.x(n)) go to 20
-    ss  = y(n)
-    ss1 = dely(n)
-    return
-    20 continue
-    56 if(t-x(i)) 60, 17, 57
-    57 i=i+1
-    go to 56
-    59 i=n
-    60 i=i-1
-    17 ht1=t-x(i)
-    ht2    = t-x(i+1)
-    prod   = ht1*ht2
-    ss2    = s2(i)+ht1*s3(i)
-    delsqs = (s2(i)+s2(i+1)+ss2)/6.d-00
-    ss     = y(i)+ht1*dely(i)+prod*delsqs
-    ss1    = dely(i)+(ht1+ht2)*delsqs+prod*s3(i)/6.d-00
-    61 return
-end subroutine spline
-
-!> @brief Evaluate SPLNIN for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine splnin( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
-    !     JIM STINE'S INITIALIZATION ROUTINE FOR SPLINE FITTING
-    !     N=NO. POINTS (X,Y); T=ARGUMENT; SS=VALUE; SS1=1ST DERIV;
-    !     SS2=2ND DERIV; S2,S3, AND DELY ARE COEFFICIENT ARRAYS
-    !     SECOND DERIV'S AT ENDS STORED IN S2(1) AND S2(N) ON INPUT
-    !     EPSLN IS OVERALL FIT CRITERION
-    implicit none
-    double precision :: b, c, delsqy, dely, epsln, eta, ex, h, h2, half, omega, s2, s3, ss, ss1, ss2, &
-        & t, w, x, y
-    integer :: i, idebug, idum, iptprt, iptrd1, knt, n, n1, nder, ndum
-    common /pt4cm/ iptprt, iptrd1
-    common /pt2cm/ nder, ndum, idebug, idum(19)
-    dimension c(121), h(121), h2(121), b(121)
-    dimension x(n), y(n), s2(n), s3(n), dely(n)
-    data ex/1.1d0/, omega/1.0717968d0/, half/0.5d0/
-    epsln = 6.4229d-13
-    n1    = n-1
-    knt   = 0
-    do 51 i=1, n1
-        h(i) = x(i+1)-x(i)
-    51 dely(i)=(y(i+1)-y(i))/h(i)
-    do 52 i=2, n1
-        h2(i)  = h(i-1)+h(i)
-        b(i)   = half*h(i-1)/h2(i)
-        delsqy = (dely(i)-dely(i-1))/h2(i)
-        s2(i)  = delsqy+delsqy
-    52 c(i)=delsqy+s2(i)
-    5 eta=0.0d0
-    do 10 i=2, n1
-        w = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
-        if( abs(w)-eta ) 10, 10, 9
-        9 eta=abs(w)
-    10 s2(i)=s2(i)+w
-    knt = knt+1
-    if( knt .gt. 10 ) epsln=epsln*ex
-    if( eta-epsln ) 14, 5, 5
-    14 do 53 i=1, n1
-    53 s3(i)=(s2(i+1)-s2(i))/h(i)
-    if( idebug .eq. 1 ) write(iptprt, '(2X,T5,''Final EPS = '', 1PE15.6)') epsln
-end subroutine splnin
-
-!> @brief Evaluate EIGN for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine eign( nn, a, vec, eig, w, nd )
-    !     MATRIX DIAGONALIZATION ROUTINE FOR REAL SYMMETRIC CASE
-    !     HOUSEHOLDER METHOD
-    !     RHO=UPPERLIMIT FOR OFF-DIAGONAL ELEMENT
-    !     NN=SIZE OF MATRIX
-    !     A=MATRIX (ONLY LOWER TRIANGLE IS USED ,THIS IS DESTROYED)
-    !     EIG=RETURNED EIGENVALUES IN ALGEBRAIC ASCENDING ORDER
-    !     VEC=RETURNED EIGENVECTORS IN COLUMNS
-    implicit none
-    double precision :: a, a2, b, beta, betasq, cosa, cosap, d, dia, dif, eig, g, gamma, p, pp, ppbr, &
-        & ppbs, q, qj, r1, r12, r2, rho, rhosq, s, sgn, shift, sina, sina2, sqrts, sum, temp, u, vec, &
-        & w, wj, wtaw
-    integer :: i, i1, iord, iposv, itemp, ivpos, j, k, l, lv, m, n, n1, n2, nd, nn, np, npas, nr, &
-        & nrr, nt, nv
-    dimension eig(nd), w(nd)
-    dimension gamma(6), beta(6), betasq(6)
-    dimension p(6), q(6)
-    equivalence (p(1), beta(1)), (q(1), beta(1))
-    dimension iposv(6), ivpos(6), iord(6)
-    dimension a(nd,nd), vec(nd,nd)
-    rho   = 1.0d-14
-    rhosq = rho*rho
-    n     = nn
-    if( n .eq. 0 ) go to 560
-    1 n1=n-1
-    n2       = n-2
-    gamma(1) = a(1,1)
-    if( n2 ) 280, 270, 120
-    120 do 260 nr=1, n2
-        b = a(nr+1,nr)
-        s = 0.0d0
-        do 130 i=nr, n2
-            !     PREPARE FOR POSSIBLE BYPASS OF TRANSFORMATION
-        130 s=s+a(i+2,nr)**2
-        a(nr+1,nr) = 0.0d0
-        if( s ) 250, 250, 140
-        140 s=s+b*b
-        sgn = +1.0d0
-        if( b ) 150, 160, 160
-        150 sgn=-1.0d0
-        160 sqrts=sqrt(s)
-        d          = sgn/(sqrts+sqrts)
-        temp       = sqrt(.5d0+b*d)
-        w(nr)      = temp
-        a(nr+1,nr) = temp
-        d          = d/temp
-        b          = -sgn*sqrts
-        !     D IS FACTOR OF PROPORTIONALITY  NOW COMPUTE AND SAVE W VECTOR
-        !     EXTRA SINGLY SUBSCRIPTED W VECTOR USED FOR SPEED
-        do 170 i=nr, n2
-            temp   = d*a(i+2,nr)
-            w(i+1) = temp
-        170 a(i+2,nr)=temp
-        !     PREMULTIPLY VECTOR W BY MATRIX A TO OBTAIN P VECTOR
-        !     SIMULTANEOUSLY ACCUMULATE DOT PRODUCT WP,(THE SCALAR K)
-        wtaw = 0.0d0
-        do 220 i=nr, n1
-            sum = 0.0d0
-            do 180 j=nr, i
-            180 sum=sum+a(i+1,j+1)*w(j)
-            i1 = i+1
-            if( n1-i1 ) 210, 190, 190
-            190 do 200 j=i1, n1
-            200 sum=sum+a(j+1,i+1)*w(j)
-            210 p(i)=sum
-        220 wtaw=wtaw+sum*w(i)
-        !     P VECTOR AND SCALAR K NOW STORED, NEXT COMPUTE Q VECTOR.
-        do 230 i=nr, n1
-            !     NOW FORM PAP MATRIX, REQUIRED PART
-        230 q(i)=p(i)-wtaw*w(i)
-        do 240 j=nr, n1
-            qj = q(j)
-            wj = w(j)
-            do 240 i=j, n1
-        240 a(i+1,j+1)=a(i+1,j+1)-2.0d0*(w(i)*qj+wj*q(i))
-        250 beta(nr)=b
-        betasq(nr) = b*b
-    260 gamma(nr+1)=a(nr+1,nr+1)
-    270 b=a(n,n-1)
-    beta(n-1)   = b
-    betasq(n-1) = b*b
-    gamma(n)    = a(n,n)
-    280 betasq(n)=0.0d0
-    !     ADJOIN AN IDENTITY MATRIX TO BE POSTMULTIPLIED BY ROTATIONS
-    do 290 j=1, n
-        do 290 i=1, n
-    290 vec(i,j)=0.0d0
-    do 300 i=1, n
-    300 vec(i,i)=1.0d0
-    m    = n
-    sum  = 0.0d0
-    npas = 1
-    go to 400
-    310 sum=sum+shift
-    cosa = 1.0d0
-    g    = gamma(1)-shift
-    pp   = g
-    ppbs = pp*pp+betasq(1)
-    ppbr = sqrt(ppbs)
-    do 370 j=1, m
-        cosap = cosa
-        if( ppbs .ne. 0.0d0 ) go to 320
-        311 sina=0.0d0
-        sina2 = 0.0d0
-        cosa  = 1.0d0
-        go to 350
-        320 sina=beta(j)/ppbr
-        sina2 = betasq(j)/ppbs
-        cosa  = pp/ppbr
-        !     POSTMULTIPLY IDAENTITY BY P-TRANSPOSE MATRIX
-        nt = j+npas
-        if( nt .lt. n ) go to 330
-        321 nt=n
-        330 do 340 i=1, nt
-            temp       = cosa*vec(i,j)+sina*vec(i,j+1)
-            vec(i,j+1) = -sina*vec(i,j)+cosa*vec(i,j+1)
-        340 vec(i,j)=temp
-        350 dia=gamma(j+1)-shift
-        u        = sina2*(g+dia)
-        gamma(j) = g+u
-        g        = dia-u
-        pp       = dia*cosa-sina*cosap*beta(j)
-        if( j .ne. m ) go to 360
-        351 beta(j)=sina*pp
-        betasq(j) = sina2*pp*pp
-        go to 380
-        360 ppbs=pp*pp+betasq(j+1)
-        ppbr    = sqrt(ppbs)
-        beta(j) = sina*ppbr
-    370 betasq(j)=sina2*ppbs
-    380 gamma(m+1)=g
-    !     TEST FOR CONVERGENCE OF LAST DIAGONAL ELEMENT
-    npas = npas+1
-    if( betasq(m) .gt. rhosq ) go to 410
-    390 eig(m+1)=gamma(m+1)+sum
-    400 beta(m)=0.0d0
-    betasq(m) = 0.0d0
-    m         = m-1
-    if( m .eq. 0 ) go to 430
-    401 if(betasq(m).le.rhosq) go to 390
-    !     TAKE ROOT OF CORNER 2 BY 2 NEAREST TO LOWER DIAGONAL IN VALUE
-    !     AS ESTIMATE OF EIGENVALUE TO USE FOR SHIFT
-    410 a2=gamma(m+1)
-    r2   = .5d0*a2
-    r1   = .5d0*gamma(m)
-    r12  = r1+r2
-    dif  = r1-r2
-    temp = sqrt(dif*dif+betasq(m))
-    r1   = r12+temp
-    r2   = r12-temp
-    dif  = abs(a2-r1)-abs(a2-r2)
-    if( dif .lt. 0.0d0 ) go to 420
-    411 shift=r2
-    go to 310
-    420 shift=r1
-    go to 310
-    430 eig(1)=gamma(1)+sum
-    !     INITIALIZE AUXILARY TABLES REQUIRED FOR REARRANGING THE VECTORS
-    do 440 j=1, n
-        iposv(j) = j
-        ivpos(j) = j
-    440 iord(j)=j
-    !     USE A TRANSPOSITON SORT TO ORDER THE EIGENVALUES
-    m = n
-    go to 470
-    450 do 460 j=1, m
-        if( eig(j) .le. eig(j+1) ) go to 460
-        451 temp=eig(j)
-        eig(j)    = eig(j+1)
-        eig(j+1)  = temp
-        itemp     = iord(j)
-        iord(j)   = iord(j+1)
-        iord(j+1) = itemp
-    460 continue
-    470 m=m-1
-    if( m .ne. 0 ) go to 450
-    471 if(n1.eq.0) go to 500
-    472 do 490 l=1, n1
-        nv = iord(l)
-        np = iposv(nv)
-        if( np .eq. l ) go to 490
-        473 lv=ivpos(l)
-        ivpos(np) = lv
-        iposv(lv) = np
-        do 480 i=1, n
-            temp     = vec(i,l)
-            vec(i,l) = vec(i,np)
-        480 vec(i,np)=temp
-    490 continue
-    !     BACK TRANSFORM THE VECTORS OF THE TRIPLE DIAGONAL MATRIX
-    500 do 550 nrr=1, n
-        k = n1
-        510 k=k-1
-        if( k .le. 0 ) go to 550
-        511 sum=0.0d0
-        do 520 i=k, n1
-        520 sum=sum+vec(i+1,nrr)*a(i+1,k)
-        sum = sum+sum
-        do 530 i=k, n1
-        530 vec(i+1,nrr)=vec(i+1,nrr)-sum*a(i+1,k)
-        go to 510
-    550 continue
-    560 return
-    !  END OF EIGN
-end subroutine eign
-
-block data ptparm
-    implicit none
-    double precision :: c, dpux, dsgh, half, one, quar, rt3, ssgh, ssgx, tre, two, zero
-    integer          :: idebug, idum, iptprt, iptrd1, nder, ndum
-    common /pt4cm/iptprt, iptrd1
-    common /pt2cm/ nder, ndum, idebug, idum(19)
-    common /potcm2/ c(3)
-    common/potcm3/zero, one, two, tre, half, quar, rt3, &
-        & dpux, ssgx, dsgh, ssgh
-    !   Initialize the control flags for the potenetial
-    data iptprt, iptrd1 /6, 4/
-    data ndum, nder /0, 1/
-    data idebug /0/
-    data idum /19*0/
-    !   Initialize the parameters for the potential
-    data zero, one, two, tre/0.d0, 1.d0, 2.d0, 3.d0/
-    data half, quar/0.5d0, 0.25d0/
-    data rt3/1.73205080756888d0/
-    data dpux, ssgx, dsgh, ssgh/0.d0, -0.132774d0, 0.d0, 0.5d0/
-    data c/0.169552d0, 0.1744734d0, 0.169552d0/
-end
-
 !> @brief Evaluate POTINFO for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine potinfo
-    implicit none
-    double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, deesdr, degsdr, deijdr, descart, descartnu, &
-        & dgscart, dgscartnu, dijcart, dijcartnu, engyes, engygs, engyij, ezero, pengyes, pengygs, pengyij, r
-    integer :: i, icartr, indexes, irctnt, ireorder, j, k, kediag, keoffd, kmax, ksdiag, ksoffd, mder, msurf, nasurf, &
-        & natoms, nder, nflag, nulbl
-    character(len=75)           :: ref(5)
-    integer, parameter          :: n3atom = 75
-    integer, parameter          :: natom  = 25
-    integer, parameter          :: isurf  = 5
-    integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-    double precision, parameter :: pi     = 3.141592653589793d0
-    common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
-    common /pt3cm/  ezero(isurf+1)
-    common /pt4cm/  engyes(isurf), deesdr(n3atom, isurf)
-    common /pt5cm/  engyij(jsurf), deijdr(n3atom, jsurf)
-    common/infocm/ cartnu(natom, 3), indexes(natom), &
-        & irctnt, natoms, icartr, mder, msurf, ref
-    common/usrocm/ pengygs, pengyes(isurf), &
-        & pengyij(jsurf), &
-        & dgscart(natom, 3), descart(natom, 3, isurf), &
-        & dijcart(natom, 3, jsurf)
-    common/usricm/ cart(natom, 3), anuzero, &
-        & nulbl(natom), nflag(20), &
-        & nasurf(isurf+1, isurf+1), nder
-    common/utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
-        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, &
-        & cnvrtde, ireorder, ksdiag, kediag, ksoffd, keoffd
-    write(nflag(18), '(/)')
-    do i =1, 5
-        write(nflag(18), '(2x,a75)') ref(i)
-    enddo
-    write(nflag(18), '(/)')
-    kmax = 0
-    do i = 1, isurf+1
-        do j = 1, isurf+1
-            if( nasurf(i, j) .ne. 0.and.kmax .lt. max(i, j) ) kmax = max(i, j)
-        enddo
-    enddo
-    write(nflag(18), '(2x,'' MAX. AND ACTUAL NO. OF EXCITED SURFACES: '',I3,5x,I3)') msurf, kmax-1
-    if( kmax-1 .gt. msurf )then
-        write(6, *) ' WRONG INPUT ON NUMBER OF EXCITED SURFACES'
-        stop
-    endif
-    ksdiag = 0
-    kediag = 0
-    do i = 2, isurf+1
-        if( nasurf(i, i) .ne. 0 )then
-            kediag = i-1
-            if( ksdiag .eq. 0 ) ksdiag = i-1
-        endif
-    enddo
-    ksoffd = 0
-    keoffd = 0
-    k      = 0
-    do i = 1, isurf
-        do j = i+1, isurf+1
-            k = k+1
-            if( nasurf(i, j)+nasurf(j, i) .ne. 0 )then
-                keoffd = k
-                if( ksoffd .eq. 0 ) ksoffd = k
-            endif
-        enddo
-    enddo
-    write(nflag(18), '(2x,'' MAX. AND ACTUAL ORDER OF DERIVATIVES:    '',I3,5x,I3)') mder, nder
-    if( nder .gt. mder )then
-        write(6, *) ' WRONG INPUT ON ORDER OF DERIVATIVES'
-        stop
-    endif
-    if( nflag(19) .eq. 1 )then
-        write(nflag(18), '(/)')
-        write(nflag(18), '(2x,''Cartesian coordinates are supplied by'',/, 2x,''the user in the array CART.'',//)')
-        write(nflag(18), '(2x,''Provide cartesian coordinates in the'',/, 2x,''following order using the array CART'',' // &
-            '//, 2x,'' CART(1,1)...CART(1,3)   => ATOM 1'',/, 2x,'' CART(2,1)...CART(2,3)   => AT' // &
-            'OM 2'',/, 2x,'' CART(3,1)...CART(3,3)   => ATOM 3'',/, 2x,'' CART(N,1)...CART(N,3)  ' // &
-            ' => ATOM N'',/, 2x,''CART(25,1)...CART(25,3)  => ATOM 25'',/)')
-        write(nflag(18), '(2x,''If the user wishes to relabel the atoms,'',/, 2x,''set the variable IREORDER equal to ' // &
-            '1'',/, 2x,''in the PARAMETER statement.  The user'',/, 2x,''must also specify the ne' // &
-            'w labeling'',/, 2x,''scheme.  This is done using the array'',/, 2x,''NULBL in the fo' // &
-            'llowing manner:'',//, 2x,''NULBL(i) = j'',/, 2x,''where:  i => old index'',/, 2x,'' ' // &
-            '       j => new index'',//)')
-        write(nflag(18), '(2x,''Cartesian coordinates can be provided to'',/, 2x,''the potential routine in a variety ' // &
-            'of units.'',/, 2x,''The input units will be converted to Bohr'',/, 2x,''based on the' // &
-            ' following values of the NFLAG'',/, 2x,''variable:'',//, 2x,''NFLAG(1)  =  1  =>  CA' // &
-            'RTESIANS IN BOHR (no'',/, 2x,''                    conversion required)'',/, 2x,''NF' // &
-            'LAG(1)  =  2  =>  CARTESIANS IN ANGSTROMS'',//)')
-        write(nflag(18), '(2x,''The value of the energy and derivatives'',/, 2x,''(if computed) can be reported in a v' // &
-            'ariety'',/, 2x,''units.  A units conversion will take place'',/, 2x,''as specified b' // &
-            'y the following values of the'',/, 2x,''NFLAG variable:'',//, 2x,''NFLAG(2) = 1 =>  ' // &
-            'ENERGIES REPORTED IN HARTEEE'',/, 2x,''NFLAG(2) = 2 =>  ENERGIES REPORTED IN mHARTRE' // &
-            'E'',/, 2x,''NFLAG(2) = 3 =>  ENERGIES REPORTED IN eV'',/, 2x,''NFLAG(2) = 4 =>  ENER' // &
-            'GIES REPORTED IN kcal/mol'',/, 2x,''NFLAG(2) = 5 =>  ENERGIES REPORTED IN cm**-1'',/' // &
-            '/)')
-        write(nflag(18), '(2x,''A units conversion will take place'',/, 2x,''as specified by the following values of t' // &
-            'he'',/, 2x,''NFLAG variable:'',//, 2x,''NFLAG(1)=1 & NFLAG(2)=1 => DERIVATIVES REPOR' // &
-            'TED IN'',/, 2x,''                           HARTEEE/BOHR'',/, 2x,''NFLAG(1)=1 & NFLA' // &
-            'G(2)=2 => DERIVATIVES REPORTED IN'',/, 2x,''                           mHARTREE/BOHR' // &
-            ''',/, 2x,''NFLAG(1)=1 & NFLAG(2)=3 => DERIVATIVES REPORTED IN'',/, 2x,''            ' // &
-            '               eV/BOHR'',/, 2x,''NFLAG(1)=1 & NFLAG(2)=4 => DERIVATIVES REPORTED IN' // &
-            ''',/, 2x,''                           kcal/mol/BOHR'',/, 2x,''NFLAG(1)=1 & NFLAG(2)=' // &
-            '5 => DERIVATIVES REPORTED IN'',/, 2x,''                           cm**-1/BOHR'',//)')
-        write(nflag(18), '(2x,''A units conversion will take place'',/, 2x,''as specified by the following values of t' // &
-            'he'',/, 2x,''NFLAG variable:'',//, 2x,''NFLAG(1)=2 & NFLAG(2)=1 => DERIVATIVES REPOR' // &
-            'TED IN'',/, 2x,''                           HARTEEE/ANGSTROM'',/, 2x,''NFLAG(1)=2 & ' // &
-            'NFLAG(2)=2 => DERIVATIVES REPORTED IN'',/, 2x,''                           mHARTREE/' // &
-            'ANGSTROM'',/, 2x,''NFLAG(1)=2 & NFLAG(2)=3 => DERIVATIVES REPORTED IN'',/, 2x,''    ' // &
-            '                       eV/ANGSTROM'',/, 2x,''NFLAG(1)=2 & NFLAG(2)=4 => DERIVATIVES ' // &
-            'REPORTED IN'',/, 2x,''                           kcal/mol/ANGSTROM'',/, 2x,''NFLAG(1' // &
-            ')=2 & NFLAG(2)=5 => DERIVATIVES REPORTED IN'',/, 2x,''                           cm*' // &
-            '*-1/ANGSTROM'',//)')
-    endif
-end subroutine potinfo
-
-!> @brief Evaluate ANCVRT for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine ancvrt
-    implicit none
-    double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, deesdr, degsdr, deijdr, descart, descartnu, &
-        & dgscart, dgscartnu, dijcart, dijcartnu, engyes, engygs, engyij, ezero, pengyes, pengygs, pengyij, r
-    integer :: i, ianum, icartr, inc1, inc2, ind, ind2, indexes, inu, irctnt, ireorder, isave, isum, j, jsave, kediag, &
-        & keoffd, ksdiag, ksoffd, mder, msurf, nasurf, natoms, nder, nflag, nulbl
-    character(len=75)  :: ref(5)
-    character(len=3)   :: periodic_1(7,32)
-    integer, parameter :: n3atom = 75
-    integer, parameter :: natom  = 25
-    integer, parameter :: isurf  = 5
-    integer, parameter :: jsurf  = isurf*(isurf+1)/2
-    character(len=2)   :: name1(natom)
-    character(len=2)   :: name2(natom)
-    character(len=1)   :: iblank
-    character(len=20)  :: distance
-    character(len=20)  :: units
-    common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
-    common /pt3cm/  ezero(isurf+1)
-    common /pt4cm/  engyes(isurf), deesdr(n3atom, isurf)
-    common /pt5cm/  engyij(jsurf), deijdr(n3atom, jsurf)
-    common/usrocm/ pengygs, pengyes(isurf), &
-        & pengyij(jsurf), &
-        & dgscart(natom, 3), descart(natom, 3, isurf), &
-        & dijcart(natom, 3, jsurf)
-    common/utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
-        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, &
-        & cnvrtde, ireorder, ksdiag, kediag, ksoffd, keoffd
-    common/infocm/ cartnu(natom, 3), indexes(natom), &
-        & irctnt, natoms, icartr, mder, msurf, ref
-    common/usricm/ cart(natom, 3), anuzero, &
-        & nulbl(natom), nflag(20), &
-        & nasurf(isurf+1, isurf+1), nder
-    dimension ianum(7,32)
-    dimension isave(natom), jsave(natom)
-    double precision, parameter :: pi         = 3.141592653589793d0
-    double precision, parameter :: clight     = 2.99792458d08
-    double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
-    double precision, parameter :: cepsilon_0 = 1.0d0/(cmu_0*clight**2)
-    double precision, parameter :: ce         = 1.602176462d-19
-    double precision, parameter :: cplanck    = 6.62606876d-34
-    double precision, parameter :: cm_e       = 9.10938188d-31
-    double precision, parameter :: cang       = 1.0d-10
-    double precision, parameter :: cavogadro  = 6.02214199d23
-    double precision, parameter :: ckcal      = 4.184d10
-    double precision, parameter :: htomillh   = 1000.d0
-    double precision, parameter :: htoev      = 27.2113834d0
-    double precision, parameter :: htokcal    = 627.509470d0
-    double precision, parameter :: htowave    = 219474.631d0
-    double precision, parameter :: htokj      = 2625.49962d0
-    double precision, parameter :: bohr_a     = .5291772083d0
-    do i=1, 7
-        do j=1, 32
-            ianum(i,j)      = 0
-            periodic_1(i,j) = ' '
-        enddo
-    enddo
-    distance         = 'BOHR                '
-    units            = 'HARTREE             '
-    ianum(1,1)       = 1
-    ianum(1,32)      = 2
-    ianum(2,1)       = 3
-    ianum(2,2)       = 4
-    ianum(2,27)      = 5
-    ianum(2,28)      = 6
-    ianum(2,29)      = 7
-    ianum(2,30)      = 8
-    ianum(2,31)      = 9
-    ianum(2,32)      = 10
-    ianum(3,1)       = 11
-    ianum(3,2)       = 12
-    ianum(3,27)      = 13
-    ianum(3,28)      = 14
-    ianum(3,29)      = 15
-    ianum(3,30)      = 16
-    ianum(3,31)      = 17
-    ianum(3,32)      = 18
-    ianum(4,1)       = 19
-    ianum(4,2)       = 20
-    ianum(4,17)      = 21
-    ianum(4,18)      = 22
-    ianum(4,19)      = 23
-    ianum(4,20)      = 24
-    ianum(4,21)      = 25
-    ianum(4,22)      = 26
-    ianum(4,23)      = 27
-    ianum(4,24)      = 28
-    ianum(4,25)      = 29
-    ianum(4,26)      = 30
-    ianum(4,27)      = 31
-    ianum(4,28)      = 32
-    ianum(4,29)      = 33
-    ianum(4,30)      = 34
-    ianum(4,31)      = 35
-    ianum(4,32)      = 36
-    ianum(5,1)       = 37
-    ianum(5,2)       = 38
-    ianum(5,17)      = 39
-    ianum(5,18)      = 40
-    ianum(5,19)      = 41
-    ianum(5,20)      = 42
-    ianum(5,21)      = 43
-    ianum(5,22)      = 44
-    ianum(5,23)      = 45
-    ianum(5,24)      = 46
-    ianum(5,25)      = 47
-    ianum(5,26)      = 48
-    ianum(5,27)      = 49
-    ianum(5,28)      = 50
-    ianum(5,29)      = 51
-    ianum(5,30)      = 52
-    ianum(5,31)      = 53
-    ianum(5,32)      = 54
-    ianum(6,1)       = 55
-    ianum(6,2)       = 56
-    ianum(6,3)       = 57
-    ianum(6,4)       = 58
-    ianum(6,5)       = 59
-    ianum(6,6)       = 60
-    ianum(6,7)       = 61
-    ianum(6,8)       = 62
-    ianum(6,9)       = 63
-    ianum(6,10)      = 64
-    ianum(6,11)      = 65
-    ianum(6,12)      = 66
-    ianum(6,13)      = 67
-    ianum(6,14)      = 68
-    ianum(6,15)      = 69
-    ianum(6,16)      = 70
-    ianum(6,17)      = 71
-    ianum(6,18)      = 72
-    ianum(6,19)      = 73
-    ianum(6,20)      = 74
-    ianum(6,21)      = 75
-    ianum(6,22)      = 76
-    ianum(6,23)      = 77
-    ianum(6,24)      = 78
-    ianum(6,25)      = 79
-    ianum(6,26)      = 80
-    ianum(6,27)      = 81
-    ianum(6,28)      = 82
-    ianum(6,29)      = 83
-    ianum(6,30)      = 84
-    ianum(6,31)      = 85
-    ianum(6,32)      = 86
-    ianum(7,1)       = 87
-    ianum(7,2)       = 88
-    ianum(7,3)       = 89
-    ianum(7,4)       = 90
-    ianum(7,5)       = 91
-    ianum(7,6)       = 92
-    ianum(7,7)       = 93
-    ianum(7,8)       = 94
-    ianum(7,9)       = 95
-    ianum(7,10)      = 96
-    ianum(7,11)      = 97
-    ianum(7,12)      = 98
-    ianum(7,13)      = 99
-    ianum(7,14)      = 100
-    ianum(7,15)      = 101
-    ianum(7,16)      = 102
-    ianum(7,17)      = 103
-    ianum(7,18)      = 104
-    ianum(7,19)      = 105
-    ianum(7,20)      = 106
-    ianum(7,21)      = 107
-    ianum(7,22)      = 108
-    ianum(7,23)      = 109
-    ianum(7,24)      = 110
-    ianum(7,25)      = 111
-    ianum(7,26)      = 112
-    ianum(7,27)      = 113
-    ianum(7,28)      = 114
-    ianum(7,29)      = 115
-    ianum(7,30)      = 116
-    ianum(7,31)      = 117
-    ianum(7,32)      = 120
-    periodic_1(1,1)  = 'H  '
-    periodic_1(1,32) = 'He '
-    periodic_1(2,1)  = 'Li '
-    periodic_1(2,2)  = 'Be '
-    periodic_1(2,27) = 'B  '
-    periodic_1(2,28) = 'C  '
-    periodic_1(2,29) = 'N  '
-    periodic_1(2,30) = 'O  '
-    periodic_1(2,31) = 'F  '
-    periodic_1(2,32) = 'Ne '
-    periodic_1(3,1)  = 'Na '
-    periodic_1(3,2)  = 'Mg '
-    periodic_1(3,27) = 'Al '
-    periodic_1(3,28) = 'Si '
-    periodic_1(3,29) = 'P  '
-    periodic_1(3,30) = 'S  '
-    periodic_1(3,31) = 'Cl '
-    periodic_1(3,32) = 'Ar '
-    periodic_1(4,1)  = 'K  '
-    periodic_1(4,2)  = 'Ca '
-    periodic_1(4,17) = 'Sc '
-    periodic_1(4,18) = 'Ti '
-    periodic_1(4,19) = 'V  '
-    periodic_1(4,20) = 'Cr '
-    periodic_1(4,21) = 'Mn '
-    periodic_1(4,22) = 'Fe '
-    periodic_1(4,23) = 'Co '
-    periodic_1(4,24) = 'Ni '
-    periodic_1(4,25) = 'Cu '
-    periodic_1(4,26) = 'Zn '
-    periodic_1(4,27) = 'Ga '
-    periodic_1(4,28) = 'Ge '
-    periodic_1(4,29) = 'As '
-    periodic_1(4,30) = 'Se '
-    periodic_1(4,31) = 'Br '
-    periodic_1(4,32) = 'Kr '
-    periodic_1(5,1)  = 'Rb '
-    periodic_1(5,2)  = 'Sr '
-    periodic_1(5,17) = 'Y  '
-    periodic_1(5,18) = 'Zr '
-    periodic_1(5,19) = 'Nb '
-    periodic_1(5,20) = 'Mo '
-    periodic_1(5,21) = 'Tc '
-    periodic_1(5,22) = 'Ru '
-    periodic_1(5,23) = 'Rh '
-    periodic_1(5,24) = 'Pd '
-    periodic_1(5,25) = 'Ag '
-    periodic_1(5,26) = 'Cd '
-    periodic_1(5,27) = 'In '
-    periodic_1(5,28) = 'Sn '
-    periodic_1(5,29) = 'Sb '
-    periodic_1(5,30) = 'Te '
-    periodic_1(5,31) = 'I  '
-    periodic_1(5,32) = 'Xe '
-    periodic_1(5,32) = 'Xe '
-    do i=1, natoms
-        isave(i) = 0
-        jsave(i) = 0
-        name1(i) = '  '
-        name2(i) = '  '
-    enddo
-    iblank = ' '
-    do ind=1, natoms
-        do i=1, 7
-            do j=1, 32
-                if( indexes(ind) .eq. ianum(i,j) )then
-                    isave(ind) = i
-                    jsave(ind) = j
-                endif
-            enddo
-        enddo
-    enddo
-    do ind=1, natoms
-        ind2 = nulbl(ind)
-        if( ind2 .eq. 0 ) ind2=ind
-    enddo
-    inc1 = 0
-    do ind=1, irctnt-1
-        inc1        = inc1+1
-        name1(inc1) = periodic_1(isave(ind),jsave(ind))(:2)
-    enddo
-    inc2 = 0
-    do ind=irctnt, natoms
-        inc2        = inc2+1
-        name2(inc2) = periodic_1(isave(ind),jsave(ind))(:2)
-    enddo
-    if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
-    if( nflag(2) .eq. 2 )then
-        units = 'MILLIHARTREE        '
-    else if( nflag(2) .eq. 3 )then
-        units = 'EV                  '
-    else if( nflag(2) .eq. 4 )then
-        units = 'KCAL PER MOLE       '
-    else if( nflag(2) .eq. 5 )then
-        units = 'WAVENUMBERS         '
-    else if( nflag(2) .eq. 6 )then
-        units = 'KILOJOULES PER MOLE '
-    endif
-    cnvrtd  = 1.d0
-    cnvrte  = 1.d0
-    cnvrtde = 1.d0
-    if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
-    if( nflag(2) .eq. 2 )then
-        cnvrte = cnvrte*htomillh
-    else if( nflag(2) .eq. 3 )then
-        cnvrte = cnvrte*htoev
-    else if( nflag(2) .eq. 4 )then
-        cnvrte = cnvrte*htokcal
-    else if( nflag(2) .eq. 5 )then
-        cnvrte = cnvrte*htowave
-    else if( nflag(2) .eq. 6 )then
-        cnvrte = cnvrte*htokj
-    endif
-    cnvrtde = cnvrte/cnvrtd
-    isum    = 0
-    do inu=1, 25
-        isum = isum + nulbl(inu)
-    enddo
-    ireorder = 0
-    if( isum .ne. 0 ) ireorder = 1
-end subroutine ancvrt
-
-!> @brief Evaluate CARTOU for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine cartou
-    use chempotpy_legacy_coordinates, only: convert_cartesian_input
-    implicit none
-    double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, descartnu, dgscartnu, &
-        & dijcartnu
-    integer :: i, icartr, indexes, irctnt, ireorder, j, kediag, keoffd, ksdiag, ksoffd, mder, msurf, nasurf, natoms, &
-        & nder, nflag, nulbl
-    character(len=75)  :: ref(5)
-    integer, parameter :: n3atom = 75
-    integer, parameter :: natom  = 25
-    integer, parameter :: isurf  = 5
-    integer, parameter :: jsurf  = isurf*(isurf+1)/2
-    common/infocm/ cartnu(natom, 3), indexes(natom), &
-        & irctnt, natoms, icartr, mder, msurf, ref
-    common/utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
-        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, &
-        & cnvrtde, ireorder, ksdiag, kediag, ksoffd, keoffd
-    common/usricm/ cart(natom, 3), anuzero, &
-        & nulbl(natom), nflag(20), &
-        & nasurf(isurf+1, isurf+1), nder
-    call convert_cartesian_input(cart, nulbl, natoms, cnvrtd, ireorder == 1, cartnu)
-end subroutine cartou
-
-!> @brief Evaluate CARTTOR for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine carttor
-    use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
-    implicit none
-    integer          :: coordinate_status
-    double precision :: anuzero, cart, cartnu, cmm, cphi, degsdr, engygs, flm, hhd, hym, phi, pi, q, &
-        & q1, q2, q3, r, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, &
-        & zcm1, zcm2, zcm3, zrm1, zrm2
-    integer :: i, icartr, ind, indexes, irctnt, k, l, mder, msurf, nasurf, &
-        & natoms, nder, nflag, nulbl
-    character(len=75)  :: ref(5)
-    integer, parameter :: n3atom = 75
-    integer, parameter :: natom  = 25
-    integer, parameter :: isurf  = 5
-    common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
-    common/infocm/ cartnu(natom, 3), indexes(natom), &
-        & irctnt, natoms, icartr, mder, msurf, ref
-    common/usricm/ cart(natom, 3), anuzero, &
-        & nulbl(natom), nflag(20), &
-        & nasurf(isurf+1, isurf+1), nder
-    call cartesian_to_potlib_coordinates(cartnu, natoms, icartr, r, coordinate_status)
-    if( coordinate_status /= 0 )then
-        write(nflag(18), '(2x,''WRONG ICARTR FOR CARTNU; ICARTR ='',i5//)') icartr
-        stop
-    endif
-end subroutine carttor
-
-!> @brief Evaluate EUNITZERO for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine eunitzero
-    implicit none
-    double precision :: anuzero, cart, cnvrtd, cnvrtde, cnvrte, deesdr, degsdr, deijdr, descart, &
-        & descartnu, dgscart, dgscartnu, dijcart, dijcartnu, engyes, engygs, engyij, ezero, pengyes, &
-        & pengygs, pengyij, r
-    integer :: i, ireorder, j, kediag, keoffd, ksdiag, ksoffd, nasurf, &
-        & nder, nflag, nulbl
-    character(len=75)  :: ref(5)
-    integer, parameter :: n3atom = 75
-    integer, parameter :: natom  = 25
-    integer, parameter :: isurf  = 5
-    integer, parameter :: jsurf  = isurf*(isurf+1)/2
-    common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
-    common /pt3cm/  ezero(isurf+1)
-    common /pt4cm/  engyes(isurf), deesdr(n3atom, isurf)
-    common /pt5cm/  engyij(jsurf), deijdr(n3atom, jsurf)
-    common/utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
-        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, &
-        & cnvrtde, ireorder, ksdiag, kediag, ksoffd, keoffd
-    common/usrocm/ pengygs, pengyes(isurf), &
-        & pengyij(jsurf), &
-        & dgscart(natom, 3), descart(natom, 3, isurf), &
-        & dijcart(natom, 3, jsurf)
-    common/usricm/ cart(natom, 3), anuzero, &
-        & nulbl(natom), nflag(20), &
-        & nasurf(isurf+1, isurf+1), nder
-    pengygs = engygs * cnvrte - anuzero
-    if( ksdiag .ne. 0 )then
-        do i=ksdiag, kediag
-            pengyes(i) = engyes(i) * cnvrte - anuzero
-        enddo
-    endif
-    if( ksoffd .ne. 0 )then
-        do j=ksoffd, keoffd
-            pengyij(j) = engyij(j) * cnvrte
-        enddo
-    endif
-end subroutine eunitzero
-
-!> @brief Evaluate RTOCART for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine rtocart
-    implicit none
-    double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, deesdr, degsdr, deijdr, &
-        & descartnu, dgscartnu, dijcartnu, engyes, engygs, engyij, eps, epsp, ezero, phi, r, r1, r2, &
-        & rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, &
-        & theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, &
-        & zd
-    integer :: i, icartr, ind, indexes, irctnt, ireorder, j, j1, j2, k, kediag, keoffd, ksdiag, ksoffd, m1, mder, msurf, &
-        & nasurf, natoms, nder, nflag, nulbl
-    character(len=75)  :: ref(5)
-    integer, parameter :: n3atom = 75
-    integer, parameter :: natom  = 25
-    integer, parameter :: isurf  = 5
-    integer, parameter :: jsurf  = isurf*(isurf+1)/2
-    common /pt1cm/  r(n3atom), engygs, degsdr(n3atom)
-    common /pt3cm/  ezero(isurf+1)
-    common /pt4cm/  engyes(isurf), deesdr(n3atom, isurf)
-    common /pt5cm/  engyij(jsurf), deijdr(n3atom, jsurf)
-    common /utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
-        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, cnvrtde, &
-        & ireorder, ksdiag, kediag, ksoffd, keoffd
-    common/infocm/ cartnu(natom, 3), indexes(natom), &
-        & irctnt, natoms, icartr, mder, msurf, ref
-    common/usricm/ cart(natom, 3), anuzero, &
-        & nulbl(natom), nflag(20), &
-        & nasurf(isurf+1, isurf+1), nder
-    dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
-    if( icartr .eq. 1 )then
-        do i = 1, natoms
-            ind             = 3*i-2
-            dgscartnu(i, 1) = degsdr(ind)
-            dgscartnu(i, 2) = degsdr(ind+1)
-            dgscartnu(i, 3) = degsdr(ind+2)
-            if( ksdiag .ne. 0 )then
-                do j = ksdiag, kediag
-                    descartnu(i, 1, j) = deesdr(ind, j)
-                    descartnu(i, 2, j) = deesdr(ind+1, j)
-                    descartnu(i, 3, j) = deesdr(ind+2, j)
-                enddo
-            endif
-            if( keoffd .ne. 0 )then
-                do k = ksoffd, keoffd
-                    dijcartnu(i, 1, k) = deijdr(ind, k)
-                    dijcartnu(i, 2, k) = deijdr(ind+1, k)
-                    dijcartnu(i, 3, k) = deijdr(ind+2, k)
-                enddo
-            endif
-        enddo
-    else if( icartr .eq. 2 )then
-        do i = 1, natoms
-            dgscartnu(i, 1) = 0.d0
-            dgscartnu(i, 2) = 0.d0
-            dgscartnu(i, 3) = 0.d0
-            if( ksdiag .ne. 0 )then
-                do j1=ksdiag, kediag
-                    descartnu(i, 1, j1) = 0.d0
-                    descartnu(i, 2, j1) = 0.d0
-                    descartnu(i, 3, j1) = 0.d0
-                enddo
-            endif
-            if( ksoffd .ne. 0 )then
-                do j2=ksoffd, keoffd
-                    dijcartnu(i, 1, j2) = 0.d0
-                    dijcartnu(i, 2, j2) = 0.d0
-                    dijcartnu(i, 3, j2) = 0.d0
-                enddo
-            endif
-            do j = 1, natoms
-                if( j .lt. i )then
-                    m1 = natoms*(j-1) - (j*(j-1))/2 + i-j
-                else if( j .gt. i )then
-                    m1 = natoms*(i-1) - (i*(i-1))/2 + j-i
-                else
-                    go to 20
-                endif
-                y               = degsdr(m1)
-                termx           = (cartnu(i, 1)-cartnu(j, 1))/r(m1)
-                termy           = (cartnu(i, 2)-cartnu(j, 2))/r(m1)
-                termz           = (cartnu(i, 3)-cartnu(j, 3))/r(m1)
-                dgscartnu(i, 1) = dgscartnu(i, 1) + termx*y
-                dgscartnu(i, 2) = dgscartnu(i, 2) + termy*y
-                dgscartnu(i, 3) = dgscartnu(i, 3) + termz*y
-                if( ksdiag .gt. 0 )then
-                    y = deesdr(m1, j1)
-                    do j1=ksdiag, kediag
-                        descartnu(i, 1, j1) = descartnu(i, 1, j1) + termx*y
-                        descartnu(i, 2, j1) = descartnu(i, 2, j1) + termy*y
-                        descartnu(i, 3, j1) = descartnu(i, 3, j1) + termz*y
-                    enddo
-                else if( ksoffd .gt. 0 )then
-                    do j2=ksoffd, keoffd
-                        y                   = deijdr(m1, j2)
-                        dijcartnu(i, 1, j2) = dijcartnu(i, 1, j2) + termx*y
-                        dijcartnu(i, 2, j2) = dijcartnu(i, 2, j2) + termy*y
-                        dijcartnu(i, 3, j2) = dijcartnu(i, 3, j2) + termz*y
-                    enddo
-                endif
-                20 continue
-            enddo
-        enddo
-    else if( icartr .eq. 3 )then
-        do i = 1, natoms
-            ygs(i) = degsdr(i)/r(i)
-            if( ksdiag .ne. 0 )then
-                do j=ksdiag, kediag
-                    yes(i,j) = deesdr(i, j)/r(i)
-                enddo
-            endif
-            if( ksoffd .ne. 0 )then
-                do k=ksoffd, keoffd
-                    yij(i,k) = deijdr(i, k)/r(i)
-                enddo
-            endif
-        enddo
-        do k = 1, 3
-            term12          = cartnu(1, k)-cartnu(2, k)
-            term23          = cartnu(2, k)-cartnu(3, k)
-            term13          = cartnu(1, k)-cartnu(3, k)
-            dgscartnu(1, k) = term12*ygs(1) + term13*ygs(3)
-            dgscartnu(2, k) = -term12*ygs(1) + term23*ygs(2)
-            dgscartnu(3, k) = -term13*ygs(3) - term23*ygs(2)
-            if( ksdiag .ne. 0 )then
-                do j1=ksdiag, kediag
-                    descartnu(1, k, j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                    descartnu(2, k, j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                    descartnu(3, k, j1) = -term13*yes(3,j1) - term23*yes(2,j1)
-                enddo
-            endif
-            if( ksoffd .ne. 0 )then
-                do j2=ksoffd, keoffd
-                    dijcartnu(1, k, j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                    dijcartnu(2, k, j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                    dijcartnu(3, k, j2) = -term13*yij(3,j2) - term23*yij(2,j2)
-                enddo
-            endif
-        enddo
-    else if( icartr .eq. 4 )then
-        wh   = 1.007825d0
-        wf   = 18.99840d0
-        sum  = wh+wf
-        eps  = wf/sum
-        epsp = wh/sum
-        u1   = cos(theta1)
-        u2   = cos(theta2)
-        u3   = cos(phi)
-        ss1  = sin(theta1)
-        ss2  = sin(theta2)
-        ss3  = sin(phi)
-        ya   = 0.0d0
-        yb   = 0.0d0
-        t0   = r1*u1
-        za   = -epsp*t0
-        zb   = eps*t0
-        t0   = r1*ss1
-        xa   = -epsp*t0
-        xbb  = eps*t0
-        t0   = r2*ss2
-        t1   = t0*u3
-        xc   = -epsp*t1
-        xd   = eps*t1
-        t1   = t0*ss3
-        yc   = -epsp*t1
-        yd   = eps*t1
-        t0   = r2*u2
-        zc   = -epsp*t0+rcm
-        zd   = eps*t0+rcm
-        rff  = sqrt((xa-xc)**2+yc**2+(za-zc)**2)
-    else
-        write(nflag(18), '(2X,'' WRONG ICARTR FOR DERIVATIVE; ICARTR ='',I5//)') icartr
-        stop
-    endif
-end subroutine rtocart
-
-!> @brief Evaluate DEDCOU for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine dedcou
-    implicit none
-    double precision :: anuzero, cart, cartnu, cnvrtd, cnvrtde, cnvrte, descart, descartnu, dgscart, &
-        & dgscartnu, dijcart, dijcartnu, pengyes, pengygs, pengyij
-    integer :: i, icartr, indexes, irctnt, ireorder, j, k, kediag, keoffd, ksdiag, ksoffd, mder, msurf, nasurf, natoms, &
-        & nder, nflag, nulbl
-    character(len=75)  :: ref(5)
-    integer, parameter :: n3atom = 75
-    integer, parameter :: natom  = 25
-    integer, parameter :: isurf  = 5
-    integer, parameter :: jsurf  = isurf*(isurf+1)/2
-    common /utilcm/ dgscartnu(natom, 3), descartnu(natom, 3, isurf), &
-        & dijcartnu(natom, 3, jsurf), cnvrtd, cnvrte, cnvrtde, &
-        & ireorder, ksdiag, kediag, ksoffd, keoffd
-    common/usrocm/ pengygs, pengyes(isurf), &
-        & pengyij(jsurf), &
-        & dgscart(natom, 3), descart(natom, 3, isurf), &
-        & dijcart(natom, 3, jsurf)
-    common/infocm/ cartnu(natom, 3), indexes(natom), &
-        & irctnt, natoms, icartr, mder, msurf, ref
-    common/usricm/ cart(natom, 3), anuzero, &
-        & nulbl(natom), nflag(20), &
-        & nasurf(isurf+1, isurf+1), nder
-    if( ireorder .eq. 1 )then
-        do i = 1, natoms
-            dgscart(i, 1) = dgscartnu(nulbl(i), 1) * cnvrtde
-            dgscart(i, 2) = dgscartnu(nulbl(i), 2) * cnvrtde
-            dgscart(i, 3) = dgscartnu(nulbl(i), 3) * cnvrtde
-            if( ksdiag .ne. 0 )then
-                do j=ksdiag, kediag
-                    descart(i, 1, j) = descartnu(nulbl(i), 1, j) * cnvrtde
-                    descart(i, 2, j) = descartnu(nulbl(i), 2, j) * cnvrtde
-                    descart(i, 3, j) = descartnu(nulbl(i), 3, j) * cnvrtde
-                enddo
-            endif
-            if( ksoffd .ne. 0 )then
-                do k=ksoffd, keoffd
-                    dijcart(i, 1, k) = dijcartnu(nulbl(i), 1, k) * cnvrtde
-                    dijcart(i, 2, k) = dijcartnu(nulbl(i), 2, k) * cnvrtde
-                    dijcart(i, 3, k) = dijcartnu(nulbl(i), 3, k) * cnvrtde
-                enddo
-            endif
-        enddo
-    else
-        do i = 1, natoms
-            dgscart(i, 1) = dgscartnu(i, 1) * cnvrtde
-            dgscart(i, 2) = dgscartnu(i, 2) * cnvrtde
-            dgscart(i, 3) = dgscartnu(i, 3) * cnvrtde
-            if( ksdiag .ne. 0 )then
-                do j=ksdiag, kediag
-                    descart(i, 1, j) = descartnu(i, 1, j) * cnvrtde
-                    descart(i, 2, j) = descartnu(i, 2, j) * cnvrtde
-                    descart(i, 3, j) = descartnu(i, 3, j) * cnvrtde
-                enddo
-            endif
-            if( ksoffd .ne. 0 )then
-                do k=ksoffd, keoffd
-                    dijcart(i, 1, k) = dijcartnu(i, 1, k) * cnvrtde
-                    dijcart(i, 2, k) = dijcartnu(i, 2, k) * cnvrtde
-                    dijcart(i, 3, k) = dijcartnu(i, 3, k) * cnvrtde
-                enddo
-            endif
-        enddo
-    endif
-end subroutine dedcou

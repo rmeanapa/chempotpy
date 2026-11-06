@@ -1,1400 +1,1262 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Evaluate pes for the CH4F_GEN_GCSO_1996 potential.
-subroutine pes( x, igrad, path, p, g, d )
-    use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_ch4f_gen_gcso_1996_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use chempotpy_geometry,     only: flatten_cartesian_coordinates
+        use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 6
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: angles_dtheta0(4,4,4)
+        double precision                :: angles_theta0(4,4)
+        double precision                :: bonds_r0ch
+        double precision                :: bonds_r0hh
+        double precision                :: bonds_rbh(4)
+        double precision                :: bonds_rcb
+        double precision                :: bonds_rch(4)
+        double precision                :: coords_tbh(4,3)
+        double precision                :: coords_tcb(3)
+        double precision                :: coords_tch(4,3)
+        double precision                :: delta1_fdelta(4)
+        double precision                :: delta1_hdelta(4)
+        double precision                :: delta2_dfdelta(4,4)
+        double precision                :: delta2_dhdelta(4,4)
+        double precision                :: force1_dfdc(4,4,4)
+        double precision                :: force1_dfdh(4,4,4)
+        double precision                :: force1_f1(4)
+        double precision                :: force1_fk0(4,4)
+        double precision                :: force2_aa1
+        double precision                :: force2_aa2
+        double precision                :: force2_aa3
+        double precision                :: force2_aa4
+        double precision                :: force2_ak
+        double precision                :: force2_bk
+        double precision                :: force2_fkinf
+        double precision                :: fsw1_a1s
+        double precision                :: fsw1_a2s
+        double precision                :: fsw1_a3s
+        double precision                :: fsw1_b1s
+        double precision                :: fsw1_b2s
+        double precision                :: fsw1_b3s
+        double precision                :: ip1_ds1(4)
+        double precision                :: ip1_ds2(4)
+        double precision                :: ip1_s1(4)
+        double precision                :: ip1_s2(4)
+        integer                         :: ndx_nc(3)
+        integer                         :: ndx_nh(4,3)
+        integer                         :: ndx_nhb(3)
+        integer                         :: ndx_nnb
+        integer                         :: ndx_nnc
+        integer                         :: ndx_nnh(4)
+        double precision                :: op1_ds3(4)
+        double precision                :: op1_s3(4)
+        double precision                :: params_fch3
+        double precision                :: params_hch3
+        double precision                :: qpdot_pdot(150)
+        double precision                :: qpdot_q(150)
+        double precision                :: sphi1_aphi
+        double precision                :: sphi1_bphi
+        double precision                :: sphi1_cphi
+        double precision                :: stheta1_atheta
+        double precision                :: stheta1_btheta
+        double precision                :: stheta1_ctheta
+        double precision                :: stret1_a1ch
+        double precision                :: stret1_acb
+        double precision                :: stret1_ahh
+        double precision                :: stret1_b1ch
+        double precision                :: stret1_c1ch
+        double precision                :: stret1_d1cb
+        double precision                :: stret1_d1ch
+        double precision                :: stret1_d1hh
+        double precision                :: stret1_d3cb
+        double precision                :: stret1_d3ch
+        double precision                :: stret1_d3hh
+        double precision                :: switch1_dsphi(4)
+        double precision                :: switch1_dstheta(4)
+        double precision                :: switch1_sphi(4)
+        double precision                :: switch1_stheta(4)
+        integer                         :: istate
+        double precision                :: tx(18), dx(18), v
+        integer                         :: iatom, idir, i, j
+        !initialize
+        angles_dtheta0 = 0.d0; angles_theta0 = 0.d0; bonds_r0ch = 0.d0; bonds_r0hh = 0.d0; bonds_rbh = 0.d0
+        bonds_rcb      = 0.d0; bonds_rch = 0.d0; coords_tbh = 0.d0; coords_tcb = 0.d0; coords_tch = 0.d0
+        delta1_fdelta  = 0.d0; delta1_hdelta = 0.d0; delta2_dfdelta = 0.d0; delta2_dhdelta = 0.d0; force1_dfdc = 0.d0
+        force1_dfdh    = 0.d0; force1_f1 = 0.d0; force1_fk0 = 0.d0; force2_aa1 = 0.d0; force2_aa2 = 0.d0; force2_aa3 = 0.d0
+        force2_aa4     = 0.d0; force2_ak = 0.d0; force2_bk = 0.d0; force2_fkinf = 0.d0; fsw1_a1s = 0.d0; fsw1_a2s = 0.d0
+        fsw1_a3s       = 0.d0; fsw1_b1s = 0.d0; fsw1_b2s = 0.d0; fsw1_b3s = 0.d0; ip1_ds1 = 0.d0; ip1_ds2 = 0.d0
+        ip1_s1         = 0.d0; ip1_s2 = 0.d0; ndx_nc = 0; ndx_nh = 0; ndx_nhb = 0; ndx_nnb = 0; ndx_nnc = 0; ndx_nnh = 0
+        op1_ds3        = 0.d0; op1_s3 = 0.d0; params_fch3 = 0.d0; params_hch3 = 0.d0; qpdot_pdot = 0.d0; qpdot_q = 0.d0
+        sphi1_aphi     = 0.d0; sphi1_bphi = 0.d0; sphi1_cphi = 0.d0; stheta1_atheta = 0.d0; stheta1_btheta = 0.d0
+        stheta1_ctheta = 0.d0; stret1_a1ch = 0.d0; stret1_acb = 0.d0; stret1_ahh = 0.d0; stret1_b1ch = 0.d0
+        stret1_c1ch    = 0.d0; stret1_d1cb = 0.d0; stret1_d1ch = 0.d0; stret1_d1hh = 0.d0; stret1_d3cb = 0.d0
+        stret1_d3ch    = 0.d0; stret1_d3hh = 0.d0; switch1_dsphi = 0.d0; switch1_dstheta = 0.d0; switch1_sphi = 0.d0
+        switch1_stheta = 0.d0
+        v              = 0.d0; g = 0.d0; d = 0.d0
+        call flatten_cartesian_coordinates(x, tx)
+        call surf(v, tx, dx, 18, path)
+        v  = v*legacy_hartree_to_electronvolt
+        dx = dx*51.422067
+        if( igrad == 0 )then
+            do istate=1, nstates
+                p(istate) = v
+            enddo
+        else if( igrad == 1 )then
+            do istate=1, nstates
+                p(istate) = v
+            enddo
+            do iatom=1, natoms
+                do idir=1, 3
+                    j               = (iatom-1)*3+idir
+                    g(1,iatom,idir) = dx(j)
+                enddo
+            enddo
+        else if( igrad == 2 )then
+            write (*, *) 'Only energy and gradient are available'
+        endif
+        contains
+        !> @brief Evaluate SURF for the CH4F_GEN_GCSO_1996 potential.
+        subroutine surf( v, coord, dx, n3tm, path )
+            !
+            !              CH5, see  Espinosa-Garcia, J.; Corchado, J.C.
+            !              J. Phys. Chem., 100 (1996) 16561
+            !              Prepared for Polyrate by JEG and JCC ,march 1996.
+            !              Modified by CRD May,(2004).(unpublished results)
+            !
+            !              Based on Jordan y Gilbert, JCP, 102, 5669 (1995).
+            !
+            !   All the information passed to and from the potential energy surface
+            !   routine is in hartree atomic units.
+            !
+            !        This potential is written such that:
+            !                       X(1)  - X(3)  : X, Y, Z for H1
+            !                       X(4)  - X(6)  : X, Y, Z for C
+            !                       X(7)  - X(9)  : X, Y, Z for H3
+            !                       X(10) - X(12) : X, Y, Z for H4
+            !                       X(13) - X(15) : X, Y, Z for H2
+            !                       X(16) - X(18) : X, Y, Z for F
+            !
+            implicit none
+            character(len=1024), intent(in) :: path
+            integer                         :: file_unit_7
+            double precision                :: aa5, comlin, coord, dx, en, fact1, fact2, r0cb, rphi, v, vip, vop, vstr
+            integer                         :: i, icount, ind, n, n3tm
+            character(len=1024)             :: file_path1
+            dimension coord(n3tm), dx(n3tm)
+            !
+            !
+            !     PUT COORDINATES IN PROPER ARRAYS
+            !
+            ! Inicialization de variables
+            do i=1, 150
+                qpdot_q(i)    = 0.d0
+                qpdot_pdot(i) = 0.d0
+            enddo
+            !
+            ! Changing units from angstrom to bohr
+            !
+            do 10 i = 1, 18
+                qpdot_q(i) = coord(i)
+            10 continue
+            !
+            !  Read the parameters from the input file CONST
+            !
+            !  FORMATTED read statements
+            !
+            file_path1 = trim(path)//"/CH4F/CONST-so"
+            open(newunit=file_unit_7, file=file_path1, status='old')
+            !
+            !  read in indices for the carbon and hydrogen atoms
+            !
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(6i4)')ndx_nnc, ndx_nnb, (ndx_nnh(i), i=1, 4)
+            !
+            !  calculate indexes for coordinates
+            !
+            do ind=1, 3
+                icount       = ind-3
+                ndx_nc(ind)  = 3*ndx_nnc+icount
+                ndx_nhb(ind) = 3*ndx_nnb+icount
+                do i=1, 4
+                    ndx_nh(i,ind) = 3*ndx_nnh(i)+icount
+                enddo
+            enddo
+            !
+            !  read in parameters for the stretching term
+            !
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(8f10.5)')bonds_r0ch, stret1_d1ch, stret1_d3ch
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(8f10.5)')stret1_a1ch, stret1_b1ch, stret1_c1ch
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(8f10.5)')bonds_r0hh, stret1_d1hh, stret1_d3hh, stret1_ahh
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(8f10.5)')r0cb, stret1_d1cb, stret1_d3cb, stret1_acb
+            !
+            !  read in parameters for the out of plane bending term
+            !
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(8f10.5)')fsw1_a3s, fsw1_b3s, sphi1_aphi, sphi1_bphi, sphi1_cphi, rphi
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(8f10.5)')stheta1_atheta, stheta1_btheta, stheta1_ctheta
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(8f10.5)')params_fch3, params_hch3
+            !
+            !  read in parameters for the in plane bending term
+            !
+            read(file_unit_7, '(a79)')comlin
+            read(file_unit_7, '(8f10.5)')force2_fkinf, force2_ak, force2_bk, force2_aa1, force2_aa2, force2_aa3, force2_aa4, aa5
+            !
+            !  convert to appropriate units:
+            !
+            !  From:
+            !
+            !  kcal/mol
+            !  mdyn A-1        -> 1.0d+05 j/mol...
+            !  mdyn A rad-1
+            !
+            !  To
+            !
+            !  energy   in 1.0d+05 j/mol
+            !  distance in 1.0d-10 m
+            !  angles   in radians
+            !  mass     in amu
+            !
+            fact1 = 0.041840d0
+            fact2 = 6.022045d0
+            !
+            stret1_d1ch  = stret1_d1ch*fact1
+            stret1_d3ch  = stret1_d3ch*fact1
+            stret1_d1cb  = stret1_d1cb*fact1
+            stret1_d3cb  = stret1_d3cb*fact1
+            stret1_d1hh  = stret1_d1hh*fact1
+            stret1_d3hh  = stret1_d3hh*fact1
+            params_fch3  = params_fch3*fact2
+            params_hch3  = params_hch3*fact2
+            force2_fkinf = force2_fkinf*fact2
+            force2_ak    = force2_ak*fact2
+            close(unit=file_unit_7)
+            !
+            !  calculate relative coordinates and bond lengths
+            !
+            en = 0.0d0
+            call coorden
+            !
+            !  calculate switching functions
+            !
+            call switchf
+            !
+            !  calculate reference angles and their derivatives
+            !
+            call refangles
+            !
+            !  calculate stretching potential
+            !
+            call stretch(vstr)
+            !
+            !  calculate out of plane bending potential
+            !
+            call opbend(vop)
+            !
+            !  calculate in plane bending potential
+            !
+            call ipbend(vip)
+            !
+            !  total potential energy is vstr+vop+vip
+            !
+            en = vstr+vop+vip
+            !
+            !  convert from 10(5) j/mol to au
+            !
+            en = en*0.03812d0
+            v  = en
+            !
+            !  Initialize derivatives
+            !
+            do n=1, n3tm
+                dx(n) = 0.0d0
+            enddo
+            !
+            !  copy the pdots to the
+            !  appropriate elements in dx and
+            !  convert from 10(5) j/mol/A to au/bohr
+            !
+            do ind=1, 18
+                dx(ind) = qpdot_pdot(ind)*0.0201723d0
+            enddo
+            !
+        end subroutine surf
+        !> @brief Evaluate coorden for the CH4F_GEN_GCSO_1996 potential.
+        subroutine coorden
+            !
+            !  calculates relative coordinates and bond lengths
+            !
+            implicit none
+            integer :: i, ind
+            !
+            !  calculate relative coordinates
+            !
+            do ind=1, 3
+                coords_tcb(ind) = qpdot_q(ndx_nc(ind))-qpdot_q(ndx_nhb(ind))
+                do i=1, 4
+                    coords_tch(i,ind) = qpdot_q(ndx_nc(ind))-qpdot_q(ndx_nh(i,ind))
+                    coords_tbh(i,ind) = qpdot_q(ndx_nhb(ind))-qpdot_q(ndx_nh(i,ind))
+                enddo
+            enddo
+            !
+            !  calculate bond lengths
+            !
+            bonds_rcb = sqrt(coords_tcb(1)*coords_tcb(1)+coords_tcb(2)*coords_tcb(2)+coords_tcb(3)*coords_tcb(3))
+            do i=1, 4
+                bonds_rch(i) = sqrt(coords_tch(i,1)*coords_tch(i,1)+coords_tch(i,2)*coords_tch(i,2)+ coords_tch(i,3)* &
+                    & coords_tch(i,3))
+                bonds_rbh(i) = sqrt(coords_tbh(i,1)*coords_tbh(i,1)+coords_tbh(i,2)*coords_tbh(i,2)+ coords_tbh(i,3)* &
+                    & coords_tbh(i,3))
+                !      write (*,*) 'rch(i) y rbh(i) = ',rch(i),rbh(i)
+            enddo
+        end subroutine coorden
+        !> @brief Evaluate refangles for the CH4F_GEN_GCSO_1996 potential.
+        subroutine refangles
+            !
+            !  subroutine calculates reference angles for the "in-plane" potential
+            !
+            implicit none
+            double precision :: ddr, halfpi, pi, sumd2, sumd4, tau, twopi
+            integer          :: i, j, k
+            !
+            dimension sumd2(4), sumd4(4), ddr(4,4)
+            tau    = acos(-1.0d0/3.0d0)
+            pi     = 4.0d0*atan(1.0d0)
+            halfpi = 0.5d0*pi
+            twopi  = 2.0d0*pi
+            !
+            !  set diagonal elements to zero
+            !
+            do i=1, 4
+                angles_theta0(i,i) = 0.0d0
+                do k=1, 4
+                    angles_dtheta0(i,i,k) = 0.0d0
+                enddo
+            enddo
+            !
+            !  calculate reference angles
+            !
+            angles_theta0(1,2) = tau+(tau-halfpi)*(switch1_sphi(1)*switch1_sphi(2)-1.0d0) +(tau-twopi/3.0d0)* &
+                & (switch1_stheta(3)*switch1_stheta(4)-1.0d0)
+            angles_theta0(1,3) = tau+(tau-halfpi)*(switch1_sphi(1)*switch1_sphi(3)-1.0d0) +(tau-twopi/3.0d0)* &
+                & (switch1_stheta(2)*switch1_stheta(4)-1.0d0)
+            angles_theta0(1,4) = tau+(tau-halfpi)*(switch1_sphi(1)*switch1_sphi(4)-1.0d0) +(tau-twopi/3.0d0)* &
+                & (switch1_stheta(2)*switch1_stheta(3)-1.0d0)
+            angles_theta0(2,3) = tau+(tau-halfpi)*(switch1_sphi(2)*switch1_sphi(3)-1.0d0) +(tau-twopi/3.0d0)* &
+                & (switch1_stheta(1)*switch1_stheta(4)-1.0d0)
+            angles_theta0(2,4) = tau+(tau-halfpi)*(switch1_sphi(2)*switch1_sphi(4)-1.0d0) +(tau-twopi/3.0d0)* &
+                & (switch1_stheta(1)*switch1_stheta(3)-1.0d0)
+            angles_theta0(3,4) = tau+(tau-halfpi)*(switch1_sphi(3)*switch1_sphi(4)-1.0d0) +(tau-twopi/3.0d0)* &
+                & (switch1_stheta(1)*switch1_stheta(2)-1.0d0)
+            !
+            !  calculate the derivatives of theta0(i,j) in terms of rch(k)
+            !  quantity calulated is dtheta0(i,j,k)
+            !
+            !  derivatives wrt rch(1)
+            !
+            angles_dtheta0(1,2,1) = (tau-halfpi)*switch1_dsphi(1)*switch1_sphi(2)
+            angles_dtheta0(1,3,1) = (tau-halfpi)*switch1_dsphi(1)*switch1_sphi(3)
+            angles_dtheta0(1,4,1) = (tau-halfpi)*switch1_dsphi(1)*switch1_sphi(4)
+            angles_dtheta0(2,3,1) = (tau-twopi/3.0d0)*switch1_dstheta(1)*switch1_stheta(4)
+            angles_dtheta0(2,4,1) = (tau-twopi/3.0d0)*switch1_dstheta(1)*switch1_stheta(3)
+            angles_dtheta0(3,4,1) = (tau-twopi/3.0d0)*switch1_dstheta(1)*switch1_stheta(2)
+            !
+            !  derivatives wrt rch(2)
+            !
+            angles_dtheta0(1,2,2) = (tau-halfpi)*switch1_sphi(1)*switch1_dsphi(2)
+            angles_dtheta0(1,3,2) = (tau-twopi/3.0d0)*switch1_dstheta(2)*switch1_stheta(4)
+            angles_dtheta0(1,4,2) = (tau-twopi/3.0d0)*switch1_dstheta(2)*switch1_stheta(3)
+            angles_dtheta0(2,3,2) = (tau-halfpi)*switch1_dsphi(2)*switch1_sphi(3)
+            angles_dtheta0(2,4,2) = (tau-halfpi)*switch1_dsphi(2)*switch1_sphi(4)
+            angles_dtheta0(3,4,2) = (tau-twopi/3.0d0)*switch1_stheta(1)*switch1_dstheta(2)
+            !
+            !  derivatives wrt rch(3)
+            !
+            angles_dtheta0(1,2,3) = (tau-twopi/3.0d0)*switch1_dstheta(3)*switch1_stheta(4)
+            angles_dtheta0(1,3,3) = (tau-halfpi)*switch1_sphi(1)*switch1_dsphi(3)
+            angles_dtheta0(1,4,3) = (tau-twopi/3.0d0)*switch1_stheta(2)*switch1_dstheta(3)
+            angles_dtheta0(2,3,3) = (tau-halfpi)*switch1_sphi(2)*switch1_dsphi(3)
+            angles_dtheta0(2,4,3) = (tau-twopi/3.0d0)*switch1_stheta(1)*switch1_dstheta(3)
+            angles_dtheta0(3,4,3) = (tau-halfpi)*switch1_dsphi(3)*switch1_sphi(4)
+            !
+            !  derivatives wrt rch(4)
+            !
+            angles_dtheta0(1,2,4) = (tau-twopi/3.0d0)*switch1_stheta(3)*switch1_dstheta(4)
+            angles_dtheta0(1,3,4) = (tau-twopi/3.0d0)*switch1_stheta(2)*switch1_dstheta(4)
+            angles_dtheta0(1,4,4) = (tau-halfpi)*switch1_sphi(1)*switch1_dsphi(4)
+            angles_dtheta0(2,3,4) = (tau-twopi/3.0d0)*switch1_stheta(1)*switch1_dstheta(4)
+            angles_dtheta0(2,4,4) = (tau-halfpi)*switch1_sphi(2)*switch1_dsphi(4)
+            angles_dtheta0(3,4,4) = (tau-halfpi)*switch1_sphi(3)*switch1_dsphi(4)
+            !
+            !  fill in the other half of the matrix
+            !
+            do i=1, 3
+                do j=i+1, 4
+                    angles_theta0(j,i) = angles_theta0(i,j)
+                    do k=1, 4
+                        angles_dtheta0(j,i,k) = angles_dtheta0(i,j,k)
+                    enddo
+                enddo
+            enddo
+        end subroutine refangles
+        !> @brief Evaluate stretch for the CH4F_GEN_GCSO_1996 potential.
+        subroutine stretch( vstr )
+            !
+            !  subroutine to calculate leps-type stretching potential and its
+            !  derivatives
+            !
+            implicit none
+            double precision :: ach, achdc, achdh, arga, dumach, dumjbh, dumjcb, dumjch, dumjhi, dumjhj, dumqbh, dumqcb, dumqch, dumqhi, dumqhj, e1, e3, factj, rav, vj, vjbh, vjcb, vjch, vq, vqbh, vqcb, vqch, vstr
+            integer          :: i, ind, j, k
+            !
+            dimension vqch(4), vjch(4), vqbh(4), vjbh(4), vq(4), vj(4), achdc(3), achdh(4,3)
+            !
+            !  calculate avergage bond length for the methane moiety
+            !
+            rav = (bonds_rch(1)+bonds_rch(2)+bonds_rch(3)+bonds_rch(4))/4.0d0
+            !
+            !  initialise:
+            !
+            vstr = 0.0d0
+            !
+            !  ach:
+            !
+            !  nb: in double precision tanh(19.0d0)=1.0d0 and we put the if statemen
+            !  in to avoid overflow/underflow errors
+            !
+            arga = stret1_c1ch*(rav-bonds_r0ch)
+            if( arga .lt. 19.0d0 )then
+                ach    = stret1_a1ch+stret1_b1ch*(tanh(arga)+1.0d0)*0.5d0
+                dumach = stret1_b1ch*stret1_c1ch/(2.0d0*cosh(arga)**2)
+            else
+                ach    = stret1_a1ch+stret1_b1ch
+                dumach = 0.0d0
+            endif
+            !
+            !  calculate singlet: e1, triplet: e3 energies and vq and vj
+            !  terms for each bond
+            !
+            e1   = stret1_d1cb*(exp(-2.0d0*stret1_acb*(bonds_rcb-bonds_r0ch))-2.0d0*exp(-stret1_acb*(bonds_rcb- &
+                & bonds_r0ch)))
+            e3   = stret1_d3cb*(exp(-2.0d0*stret1_acb*(bonds_rcb-bonds_r0ch))+2.0d0*exp(-stret1_acb*(bonds_rcb- &
+                & bonds_r0ch)))
+            vqcb = (e1+e3)*0.5d0
+            vjcb = (e1-e3)*0.5d0
+            do i=1, 4
+                e1      = stret1_d1ch*(exp(-2.0d0*ach*(bonds_rch(i)-bonds_r0ch)) -2.0d0*exp(-ach*(bonds_rch(i)- &
+                    & bonds_r0ch)))
+                e3      = stret1_d3ch*(exp(-2.0d0*ach*(bonds_rch(i)-bonds_r0ch)) +2.0d0*exp(-ach*(bonds_rch(i)- &
+                    & bonds_r0ch)))
+                vqch(i) = (e1+e3)*0.5d0
+                vjch(i) = (e1-e3)*0.5d0
+                e1      = stret1_d1hh*(exp(-2.0d0*stret1_ahh*(bonds_rbh(i)-bonds_r0hh)) -2.0d0*exp(-stret1_ahh* &
+                    & (bonds_rbh(i)-bonds_r0hh)))
+                e3      = stret1_d3hh*(exp(-2.0d0*stret1_ahh*(bonds_rbh(i)-bonds_r0hh)) +2.0d0*exp(-stret1_ahh* &
+                    & (bonds_rbh(i)-bonds_r0hh)))
+                vqbh(i) = (e1+e3)*0.5d0
+                vjbh(i) = (e1-e3)*0.5d0
+                !
+                !  calculate 3 body potential
+                !
+                vq(i) = vqch(i)+vqcb+vqbh(i)
+                vj(i) = -sqrt(((vjch(i)-vjcb)**2+(vjcb-vjbh(i))**2 +(vjbh(i)-vjch(i))**2)*0.5d0)
+                vstr  = vstr+vq(i)+vj(i)
+            enddo
+            !
+            !  partial derivatives
+            !  first we need the derivative of ach:
+            !
+            do ind=1, 3
+                achdc(ind) = dumach*(coords_tch(1,ind)/bonds_rch(1)+coords_tch(2,ind)/bonds_rch(2) +coords_tch(3, &
+                    & ind)/bonds_rch(3)+coords_tch(4,ind)/bonds_rch(4))/4.0d0
+                do i=1, 4
+                    achdh(i,ind) = -dumach*coords_tch(i,ind)/bonds_rch(i)/4.0d0
+                enddo
+            enddo
+            dumqcb = -stret1_acb*((stret1_d1cb+stret1_d3cb)*exp(-2.0d0*stret1_acb*(bonds_rcb-bonds_r0ch))- &
+                & (stret1_d1cb-stret1_d3cb)*exp(-stret1_acb*(bonds_rcb-bonds_r0ch)))/bonds_rcb
+            !
+            !  calculate cartesian derivatives:
+            !  looping over ch(i) and bh(i)
+            !
+            do i=1, 4
+                dumqbh = -stret1_ahh*((stret1_d1hh+stret1_d3hh)*exp(-2.0d0*stret1_ahh*(bonds_rbh(i)-bonds_r0hh))- &
+                    & (stret1_d1hh-stret1_d3hh)*exp(-stret1_ahh*(bonds_rbh(i)-bonds_r0hh)))/bonds_rbh(i)
+                factj = 0.5d0/vj(i)
+                dumjcb = -stret1_acb*((stret1_d1cb-stret1_d3cb)*exp(-2.0d0*stret1_acb*(bonds_rcb-bonds_r0ch)) - &
+                    & (stret1_d1cb+stret1_d3cb)*exp(-stret1_acb*(bonds_rcb-bonds_r0ch)))*factj/bonds_rcb
+                dumjbh = -stret1_ahh*((stret1_d1hh-stret1_d3hh)*exp(-2.0d0*stret1_ahh*(bonds_rbh(i)-bonds_r0hh)) - &
+                    & (stret1_d1hh+stret1_d3hh)*exp(-stret1_ahh*(bonds_rbh(i)-bonds_r0hh)))*factj/bonds_rbh(i)
+                do ind=1, 3
+                    !
+                    !  deriv wrt hb:
+                    !
+                    qpdot_pdot(ndx_nhb(ind))=qpdot_pdot(ndx_nhb(ind)) -coords_tcb(ind)*dumqcb+coords_tbh(i,ind)* &
+                        & dumqbh +(vjch(i)-vjcb)*(dumjcb*coords_tcb(ind)) + (vjcb- vjbh(i))*(-dumjcb* coords_tcb(ind)- &
+                        & dumjbh*coords_tbh(i,ind)) +(vjbh(i)-vjch(i))*dumjbh*coords_tbh(i,ind)
+                    !
+                    !  dvqch(i)/dc
+                    !
+                    dumqch=-(ach*coords_tch(i,ind)/bonds_rch(i)+achdc(ind)*(bonds_rch(i)-bonds_r0ch)) * ((stret1_d1ch+ &
+                        & stret1_d3ch)*exp(-2.0d0*ach*(bonds_rch(i)- bonds_r0ch)) - (stret1_d1ch- stret1_d3ch)*exp(- &
+                        & ach*(bonds_rch(i)-bonds_r0ch)))
+                    qpdot_pdot(ndx_nc(ind)) = qpdot_pdot(ndx_nc(ind))+dumqch+coords_tcb(ind)*dumqcb
+                    !
+                    !  dvqch(i)/dh(i)
+                    !
+                    dumqhi=(ach*coords_tch(i,ind)/bonds_rch(i)-achdh(i,ind)*(bonds_rch(i)-bonds_r0ch)) * &
+                        & ((stret1_d1ch+stret1_d3ch)*exp(-2.0d0*ach*(bonds_rch(i)- bonds_r0ch)) - (stret1_d1ch- &
+                        & stret1_d3ch)*exp(-ach*(bonds_rch(i)-bonds_r0ch)))
+                    qpdot_pdot(ndx_nh(i,ind)) = qpdot_pdot(ndx_nh(i,ind))+dumqhi-coords_tbh(i,ind)*dumqbh
+                    !
+                    !  dvjch(i)/dc
+                    !
+                    dumjch=-(ach*coords_tch(i,ind)/bonds_rch(i)+achdc(ind)*(bonds_rch(i)-bonds_r0ch)) * ((stret1_d1ch- &
+                        & stret1_d3ch)*exp(-2.0d0*ach*(bonds_rch(i)- bonds_r0ch)) - (stret1_d1ch+ stret1_d3ch)*exp(- &
+                        & ach*(bonds_rch(i)-bonds_r0ch)))*factj
+                    !
+                    !  dvj(i)/dnc(ind)
+                    !
+                    qpdot_pdot(ndx_nc(ind))=qpdot_pdot(ndx_nc(ind)) +(vjch(i)-vjcb)*(dumjch-dumjcb* coords_tcb(ind)) + &
+                        & (vjcb-vjbh(i))*dumjcb*coords_tcb(ind) - (vjbh(i)-vjch(i))*dumjch
+                    !
+                    !  dvjch(i)/dh(i)
+                    !
+                    dumjhi=(ach*coords_tch(i,ind)/bonds_rch(i)-achdh(i,ind)*(bonds_rch(i)-bonds_r0ch)) * &
+                        & ((stret1_d1ch-stret1_d3ch)*exp(-2.0d0*ach*(bonds_rch(i)- bonds_r0ch)) - (stret1_d1ch+ &
+                        & stret1_d3ch)*exp(-ach*(bonds_rch(i)-bonds_r0ch)))*factj
+                    !
+                    !  dvj(i)/dnh(i,ind)
+                    !
+                    qpdot_pdot(ndx_nh(i,ind))=qpdot_pdot(ndx_nh(i,ind)) +(vjch(i)-vjcb)*dumjhi +(vjcb-vjbh(i))* &
+                        & dumjbh*coords_tbh(i,ind) +(vjbh(i)- vjch(i))* (-dumjbh*coords_tbh(i,ind)-dumjhi)
+                    !
+                    !  dv(i)/dh(j)
+                    !
+                    do k=1, 3
+                        j = i+k
+                        if( j .gt. 4 ) j=j-4
+                        dumqhj=-achdh(j,ind)*(bonds_rch(i)-bonds_r0ch) *((stret1_d1ch+stret1_d3ch)*exp(-2.0d0*ach* &
+                            & (bonds_rch(i)-bonds_r0ch)) -(stret1_d1ch-stret1_d3ch)*exp(- ach* (bonds_rch(i)- &
+                            & bonds_r0ch)))
+                        dumjhj=-achdh(j,ind)*(bonds_rch(i)-bonds_r0ch) *((stret1_d1ch-stret1_d3ch)*exp(-2.0d0*ach* &
+                            & (bonds_rch(i)-bonds_r0ch)) -(stret1_d1ch+stret1_d3ch)*exp(- ach* (bonds_rch(i)- &
+                            & bonds_r0ch)))*factj
+                        qpdot_pdot(ndx_nh(j,ind)) = qpdot_pdot(ndx_nh(j,ind))+dumqhj +(vjch(i)-vjcb)*dumjhj - &
+                            & (vjbh(i)-vjch(i))*dumjhj
+                    enddo
+                enddo
+            enddo
+        end subroutine stretch
+        !> @brief Evaluate opbend for the CH4F_GEN_GCSO_1996 potential.
+        subroutine opbend( vop )
+            !
+            !  subroutine calculates symmetrized vop potential and derivatives
+            !
+            implicit none
+            double precision :: a, argd, axb, b, c, ddr, sum2, sum4, sumd2, sumd4, vop
+            integer          :: i, in, ind, itemp, j, k, l
+            !
+            double precision :: norma
+            dimension sumd2(4), sumd4(4)
+            dimension in(3), a(3), b(3), axb(3), c(4,3), argd(4)
+            !
+            !
+            vop = 0.0d0
+            !
+            !  calculate force constants and their derivatives
+            !
+            call opforce
+            !
+            !  calculate out-of-plane angle and derivatives
+            !
+            do i=1, 4
+                j = i+1
+                if( j .gt. 4 ) j=j-4
+                k = j+1
+                if( k .gt. 4 ) k=k-4
+                l = k+1
+                if( l .gt. 4 ) l=l-4
+                !
+                !  if i is an even number then we have switched the vectors
+                !  from a right handed set to a left handed set
+                !
+                !  in this case we need to switch vectors k and l around
+                !
+                if( (i .eq. 2).or.(i .eq. 4) )then
+                    itemp = k
+                    k     = l
+                    l     = itemp
+                endif
+                !
+                !  subroutine performs sum over j, k, l
+                !  sum2 = sum delta**2
+                !  sum4 = sum delta**4
+                !
+                call calcdelta(i, j, k, l, sum2, sum4)
+                sumd2(i) = sum2
+                sumd4(i) = sum4
+                vop      = vop+delta1_fdelta(i)*sumd2(i)+delta1_hdelta(i)*sumd4(i)
+            enddo
+            do i=1, 4
+                do j=1, 4
+                    !
+                    !  overall derivatives of force constants i wrt the bond-length rch(j)
+                    !
+                    ddr = delta2_dfdelta(i,j)*sumd2(i)+delta2_dhdelta(i,j)*sumd4(i)
+                    !
+                    !  calculate derivatives in terms of cartesian coordinates:
+                    !
+                    do ind=1, 3
+                        qpdot_pdot(ndx_nh(j,ind)) = qpdot_pdot(ndx_nh(j,ind))-coords_tch(j,ind)*ddr/bonds_rch(j)
+                        qpdot_pdot(ndx_nc(ind))   = qpdot_pdot(ndx_nc(ind))+coords_tch(j,ind)*ddr/bonds_rch(j)
+                    enddo
+                enddo
+            enddo
+        end subroutine opbend
+        !> @brief Evaluate ipbend for the CH4F_GEN_GCSO_1996 potential.
+        subroutine ipbend( vip )
+            !
+            !  subroutine calculates symmetrised in plane bend term
+            !  and its derivatives
+            !
+            implicit none
+            double precision :: costh, dth, dth0c, dth0k, dthc, dthi, dthj, termth, theta, vip
+            integer          :: i, ind, j, k
+            !
+            dimension costh(4,4), theta(4,4), dth(4,4)
+            !
+            !  initialise
+            !
+            vip = 0.0d0
+            !
+            !  calculate force constants: fk0(i,j), f1(i)
+            !  and derivatives wrt rch(k) and rbh(k): dfdc(i,j,k), dfdh(i,j,k)
+            !
+            call ipforce
+            !
+            !  calculate theta(i,j) and in plane bend potential
+            !
+            do i=1, 3
+                do j=i+1, 4
+                    costh(i,j) = coords_tch(i,1)*coords_tch(j,1)+coords_tch(i,2)*coords_tch(j,2) +coords_tch(i,3)* &
+                        & coords_tch(j,3)
+                    costh(i,j) = costh(i,j)/bonds_rch(i)/bonds_rch(j)
+                    theta(i,j) = acos(costh(i,j))
+                    dth(i,j)   = theta(i,j)-angles_theta0(i,j)
+                    vip        = vip+0.5d0*force1_fk0(i,j)*force1_f1(i)*force1_f1(j)*dth(i,j)**2
+                    !
+                    !  calculate partial derivatives wrt cartesian coordinates
+                    !
+                    !  calculate pdots wrt theta:
+                    !
+                    termth = -1.0d0/sqrt(1.0d0-costh(i,j)*costh(i,j))
+                    do ind=1, 3
+                        dthi             = -coords_tch(j,ind)/bonds_rch(i)/bonds_rch(j) +costh(i,j)*coords_tch(i, &
+                            & ind)/bonds_rch(i)/bonds_rch(i)
+                        dthi = dthi*termth
+                        dthj             = -coords_tch(i,ind)/bonds_rch(i)/bonds_rch(j) +costh(i,j)*coords_tch(j, &
+                            & ind)/bonds_rch(j)/bonds_rch(j)
+                        dthj = dthj*termth
+                        dthc = -(dthi+dthj)
+                        qpdot_pdot(ndx_nh(i,ind)) = qpdot_pdot(ndx_nh(i,ind)) +force1_fk0(i,j)*force1_f1(i)* &
+                            & force1_f1(j)*dthi*dth(i,j)
+                        qpdot_pdot(ndx_nh(j,ind)) = qpdot_pdot(ndx_nh(j,ind)) +force1_fk0(i,j)*force1_f1(i)* &
+                            & force1_f1(j)*dthj*dth(i,j)
+                        qpdot_pdot(ndx_nc(ind))    = qpdot_pdot(ndx_nc(ind)) +force1_fk0(i,j)*force1_f1(i)* &
+                            & force1_f1(j)*dthc*dth(i,j)
+                        do k=1, 4
+                            !
+                            !  calculate pdots wrt force constants and wrt theta0
+                            !
+                            dth0k = -angles_dtheta0(i,j,k)*coords_tch(k,ind)/bonds_rch(k)
+                            dth0c = -dth0k
+                            qpdot_pdot(ndx_nh(k,ind))=qpdot_pdot(ndx_nh(k,ind)) -0.5d0*coords_tch(k,ind)* &
+                                & force1_dfdc(i,j,k)*dth(i,j)**2/bonds_rch(k) -0.5d0* coords_tbh(k,ind)* &
+                                & force1_dfdh(i,j,k)*dth(i,j)**2/bonds_rbh(k) -force1_fk0(i,j)*force1_f1(i)* &
+                                & force1_f1(j)*dth0k*dth(i,j)
+                            qpdot_pdot(ndx_nc(ind))=qpdot_pdot(ndx_nc(ind)) +0.5d0*coords_tch(k,ind)* force1_dfdc(i,j, &
+                                & k)*dth(i,j)**2/bonds_rch(k) -force1_fk0(i,j)* force1_f1(i)* force1_f1(j)* dth0c* &
+                                & dth(i,j)
+                            qpdot_pdot(ndx_nhb(ind)) = qpdot_pdot(ndx_nhb(ind)) +0.5d0*coords_tbh(k,ind)* &
+                                & force1_dfdh(i,j,k)*dth(i,j)**2/bonds_rbh(k)
+                        enddo
+                    enddo
+                enddo
+            enddo
+        end subroutine ipbend
+        !> @brief Evaluate calcdelta for the CH4F_GEN_GCSO_1996 potential.
+        subroutine calcdelta( i, j, k, l, sum2, sum4 )
+            !
+            !  subroutine calculates out of plane angle delta, loops
+            !  through delta(i,j), delta(i,k), delta(i,l)
+            !
+            !   also calculates the derivatives wrt delta
+            !
+            implicit none
+            double precision :: a, argd, atemp1, atemp2, atemp3, atemp4, atemp5, axb, b, c, cdot, daxb, deldot, delta, sum2, sum4
+            integer          :: i, ii, in, ind, j, jj, k, l
+            double precision :: norma
+            !
+            dimension delta(4), in(3), a(3), b(3), axb(3), c(4,3), argd(4), daxb(4,3,3), cdot(4,3,3), atemp2(3)
+            !
+            !  initialise
+            !
+            sum2 = 0.0d0
+            sum4 = 0.0d0
+            !
+            !  set j,k,l indices
+            !
+            in(1) = j
+            in(2) = k
+            in(3) = l
+            !
+            !  vector a is rk-rj, vector b is rl-rj
+            !
+            do ind=1, 3
+                a(ind) = qpdot_q(ndx_nh(k,ind))-qpdot_q(ndx_nh(j,ind))
+                b(ind) = qpdot_q(ndx_nh(l,ind))-qpdot_q(ndx_nh(j,ind))
+            enddo
+            !
+            !  axb is vector a cross b
+            !
+            axb(1) = a(2)*b(3)-a(3)*b(2)
+            axb(2) = a(3)*b(1)-a(1)*b(3)
+            axb(3) = a(1)*b(2)-a(2)*b(1)
+            norma  = axb(1)*axb(1)+axb(2)*axb(2)+axb(3)*axb(3)
+            norma  = sqrt(norma)
+            !
+            !  c is position vector of h(ii): calculate c(j),c(k),c(l)
+            !
+            do ii=1, 3
+                do ind=1, 3
+                    c(in(ii),ind) = -coords_tch(in(ii),ind)/bonds_rch(in(ii))
+                enddo
+            enddo
+            !
+            !  argd is the dot product axb dot c
+            !
+            do ii=1, 3
+                argd(in(ii))  = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
+                argd(in(ii))  = argd(in(ii))/norma
+                delta(in(ii)) = acos(argd(in(ii)))-angles_theta0(i,in(ii))
+                !        write(*,*) 'theta,delta',theta0(i,in(ii)),delta(in(ii))
+                sum2 = sum2+delta(in(ii))**2
+                sum4 = sum4+delta(in(ii))**4
+            enddo
+            !
+            !  derivatives of axb wrt hj:
+            !
+            daxb(j,1,1) = 0.0d0
+            daxb(j,1,2) = b(3)-a(3)
+            daxb(j,1,3) = -b(2)+a(2)
+            daxb(j,2,1) = -b(3)+a(3)
+            daxb(j,2,2) = 0.0d0
+            daxb(j,2,3) = b(1)-a(1)
+            daxb(j,3,1) = b(2)-a(2)
+            daxb(j,3,2) = -b(1)+a(1)
+            daxb(j,3,3) = 0.0d0
+            !
+            !  derivatives of axb wrt hk:
+            !
+            daxb(k,1,1) = 0.0d0
+            daxb(k,1,2) = -b(3)
+            daxb(k,1,3) = b(2)
+            daxb(k,2,1) = b(3)
+            daxb(k,2,2) = 0.0d0
+            daxb(k,2,3) = -b(1)
+            daxb(k,3,1) = -b(2)
+            daxb(k,3,2) = b(1)
+            daxb(k,3,3) = 0.0d0
+            !
+            !  derivatives of axb wrt hl:
+            !
+            daxb(l,1,1) = 0.0d0
+            daxb(l,1,2) = a(3)
+            daxb(l,1,3) = -a(2)
+            daxb(l,2,1) = -a(3)
+            daxb(l,2,2) = 0.0d0
+            daxb(l,2,3) = a(1)
+            daxb(l,3,1) = a(2)
+            daxb(l,3,2) = -a(1)
+            daxb(l,3,3) = 0.0d0
+            !
+            !   loop over cdot(in(ii),ind,jind) where we consider deriv of c(in(ii))
+            !   wrt h(in(ii),jind) with components jind
+            !
+            do ii=1, 3
+                !
+                !  deriv of cdot(in(ii),x) wrt x, y, z
+                !
+                cdot(in(ii),1,1) = 1.0d0/bonds_rch(in(ii)) +coords_tch(in(ii),1)*c(in(ii),1)/bonds_rch(in(ii))**2
+                cdot(in(ii),1,2) = coords_tch(in(ii),2)*c(in(ii),1)/bonds_rch(in(ii))**2
+                cdot(in(ii),1,3) = coords_tch(in(ii),3)*c(in(ii),1)/bonds_rch(in(ii))**2
+                !
+                !  deriv of cdot(in(ii),y) wrt x, y, z
+                !
+                cdot(in(ii),2,1) = coords_tch(in(ii),1)*c(in(ii),2)/bonds_rch(in(ii))**2
+                cdot(in(ii),2,2) = 1.0d0/bonds_rch(in(ii)) +coords_tch(in(ii),2)*c(in(ii),2)/bonds_rch(in(ii))**2
+                cdot(in(ii),2,3) = coords_tch(in(ii),3)*c(in(ii),2)/bonds_rch(in(ii))**2
+                !
+                !  deriv of cdot(in(ii),z) wrt x, y, z
+                !
+                cdot(in(ii),3,1) = coords_tch(in(ii),1)*c(in(ii),3)/bonds_rch(in(ii))**2
+                cdot(in(ii),3,2) = coords_tch(in(ii),2)*c(in(ii),3)/bonds_rch(in(ii))**2
+                cdot(in(ii),3,3) = 1.0d0/bonds_rch(in(ii)) +coords_tch(in(ii),3)*c(in(ii),3)/bonds_rch(in(ii))**2
+            enddo
+            !
+            do ii=1, 3
+                do ind=1, 3
+                    deldot = -angles_dtheta0(i,in(ii),i)
+                    !
+                    !  derivative wrt h(i,ind)
+                    !  for  rch(i) only terms are from the derivatives of theta0
+                    !
+                    deldot = -deldot*coords_tch(i,ind)/bonds_rch(i)
+                    qpdot_pdot(ndx_nh(i,ind))=qpdot_pdot(ndx_nh(i,ind)) +2.0d0*delta1_fdelta(i)*delta(in(ii))* &
+                        & deldot +4.0d0*delta1_hdelta(i)* delta(in(ii))**3* deldot
+                    !
+                    !  derivative wrt c(ind)
+                    !
+                    deldot = -deldot
+                    qpdot_pdot(ndx_nc(ind)) = qpdot_pdot(ndx_nc(ind)) +2.0d0*delta1_fdelta(i)*delta(in(ii))* deldot + &
+                        & 4.0d0*delta1_hdelta(i)*delta(in(ii))**3* deldot
+                    do jj=1, 3
+                        !
+                        !  partial derivatives wrt h(in(jj),ind), loop over delta(i,in(ii))
+                        !
+                        !   atemp1 is axb dot daxb wrt h(in(jj))
+                        !
+                        atemp1 = axb(1)*daxb(in(jj),ind,1) +axb(2)*daxb(in(jj),ind,2) +axb(3)*daxb(in(jj),ind,3)
+                        atemp1 = atemp1/(norma**3)
+                        !
+                        !  atemp2 is deriv of normalised axb
+                        !
+                        atemp2(1) = daxb(in(jj),ind,1)/norma-atemp1*axb(1)
+                        atemp2(2) = daxb(in(jj),ind,2)/norma-atemp1*axb(2)
+                        atemp2(3) = daxb(in(jj),ind,3)/norma-atemp1*axb(3)
+                        !
+                        !  atemp3 is daxb dot c(in(ii))
+                        atemp3 = atemp2(1)*c(in(ii),1)+atemp2(2)*c(in(ii),2) +atemp2(3)*c(in(ii),3)
+                        !
+                        !  atemp4 is axb dot cdot
+                        !
+                        atemp4 = 0.0d0
+                        if( ii .eq. jj )then
+                            !
+                            !  ie deriv of c(in(ii)) wrt h(in(jj)) is non zero only for ii = jj
+                            !
+                            atemp4 = axb(1)*cdot(in(ii),1,ind) +axb(2)*cdot(in(ii),2,ind) +axb(3)*cdot(in(ii),3,ind)
+                            atemp4 = atemp4/norma
+                        endif
+                        !
+                        !  atemp5 is deriv of theta0(i,in(ii)) wrt to nh(in(jj),ind)
+                        !
+                        atemp5 = -angles_dtheta0(i,in(ii),in(jj))
+                        !
+                        !  deriv wrt h(in(jj)),ind):
+                        !
+                        atemp5 = -atemp5*coords_tch(in(jj),ind)/bonds_rch(in(jj))
+                        deldot = atemp3+atemp4
+                        deldot = -1.0d0/sqrt(1.0d0-argd(in(ii))**2)*deldot
+                        deldot = deldot+atemp5
+                        qpdot_pdot(ndx_nh(in(jj),ind))=qpdot_pdot(ndx_nh(in(jj),ind)) +2.0d0*delta1_fdelta(i)* &
+                            & delta(in(ii))*deldot +4.0d0* delta1_hdelta(i)* delta(in(ii))**3*deldot
+                        !
+                        !  for carbon the only contributions are from axb dot cdot term and
+                        !  from theta0 and derivative cdot wrt carbon=-cdot wrt hydrogen
+                        !
+                        deldot = 1.0d0/sqrt(1.0d0-argd(in(ii))**2)*atemp4
+                        deldot = deldot-atemp5
+                        qpdot_pdot(ndx_nc(ind))=qpdot_pdot(ndx_nc(ind)) +2.0d0*delta1_fdelta(i)*delta(in(ii))* &
+                            & deldot +4.0d0*delta1_hdelta(i)*delta(in(ii))** 3* deldot
+                    enddo
+                enddo
+            enddo
+        end subroutine calcdelta
+        !> @brief Evaluate opforce for the CH4F_GEN_GCSO_1996 potential.
+        subroutine opforce
+            !
+            !  calculates the out-of-plane bending force constants
+            !  and their derivatives
+            !
+            implicit none
+            double precision :: dswitch, switch
+            integer          :: i, j
+            !
+            dimension switch(4), dswitch(4,4)
+            !
+            !  calculate switching functions:
+            !
+            switch(1) = (1.0d0-op1_s3(1))*op1_s3(2)*op1_s3(3)*op1_s3(4)
+            switch(2) = (1.0d0-op1_s3(2))*op1_s3(3)*op1_s3(4)*op1_s3(1)
+            switch(3) = (1.0d0-op1_s3(3))*op1_s3(4)*op1_s3(1)*op1_s3(2)
+            switch(4) = (1.0d0-op1_s3(4))*op1_s3(1)*op1_s3(2)*op1_s3(3)
+            !
+            !  calculate derivatives:
+            !  derivative of switch(1) wrt the 4 rch bond lengths
+            !
+            dswitch(1,1) = -op1_ds3(1)*op1_s3(2)*op1_s3(3)*op1_s3(4)
+            dswitch(1,2) = (1.0d0-op1_s3(1))*op1_ds3(2)*op1_s3(3)*op1_s3(4)
+            dswitch(1,3) = (1.0d0-op1_s3(1))*op1_s3(2)*op1_ds3(3)*op1_s3(4)
+            dswitch(1,4) = (1.0d0-op1_s3(1))*op1_s3(2)*op1_s3(3)*op1_ds3(4)
+            !
+            !  derivative of switch(2) wrt the 4 rch bond lengths
+            !
+            dswitch(2,1) = (1.0d0-op1_s3(2))*op1_s3(3)*op1_s3(4)*op1_ds3(1)
+            dswitch(2,2) = -op1_ds3(2)*op1_s3(3)*op1_s3(4)*op1_s3(1)
+            dswitch(2,3) = (1.0d0-op1_s3(2))*op1_ds3(3)*op1_s3(4)*op1_s3(1)
+            dswitch(2,4) = (1.0d0-op1_s3(2))*op1_s3(3)*op1_ds3(4)*op1_s3(1)
+            !
+            !  derivative of switch(3) wrt the 4 rch bond lengths
+            !
+            dswitch(3,1) = (1.0d0-op1_s3(3))*op1_s3(4)*op1_ds3(1)*op1_s3(2)
+            dswitch(3,2) = (1.0d0-op1_s3(3))*op1_s3(4)*op1_s3(1)*op1_ds3(2)
+            dswitch(3,3) = -op1_ds3(3)*op1_s3(4)*op1_s3(1)*op1_s3(2)
+            dswitch(3,4) = (1.0d0-op1_s3(3))*op1_ds3(4)*op1_s3(1)*op1_s3(2)
+            !
+            !  derivative of switch(3) wrt the 4 rch bond lengths
+            !
+            dswitch(4,1) = (1.0d0-op1_s3(4))*op1_ds3(1)*op1_s3(2)*op1_s3(3)
+            dswitch(4,2) = (1.0d0-op1_s3(4))*op1_s3(1)*op1_ds3(2)*op1_s3(3)
+            dswitch(4,3) = (1.0d0-op1_s3(4))*op1_s3(1)*op1_s3(2)*op1_ds3(3)
+            dswitch(4,4) = -op1_ds3(4)*op1_s3(1)*op1_s3(2)*op1_s3(3)
+            !
+            !  calculate the force constants and their derivatives
+            !
+            do i=1, 4
+                delta1_fdelta(i) = switch(i)*params_fch3
+                delta1_hdelta(i) = switch(i)*params_hch3
+                do j=1, 4
+                    delta2_dfdelta(i,j) = dswitch(i,j)*params_fch3
+                    delta2_dhdelta(i,j) = dswitch(i,j)*params_hch3
+                enddo
+            enddo
+        end subroutine opforce
+        !> @brief Evaluate ipforce for the CH4F_GEN_GCSO_1996 potential.
+        subroutine ipforce
+            !
+            !  calculates the symmetrised in plane bend force constants and
+            !  all partial derivatives involving them
+            !
+            implicit none
+            double precision :: a1, a2, arga1, arga2, df1dc, df1dh, dfk0, duma1, duma2, f0, f2
+            integer          :: i
+            !
+            dimension dfk0(4,4,4), df1dc(4), df1dh(4)
+            !
+            !  set force constant at asymptotes
+            !
+            f0 = force2_fkinf+force2_ak
+            f2 = force2_fkinf
+            !
+            force1_fk0(1,2) = f0+f0*(ip1_s1(1)*ip1_s1(2)-1.0d0)+(f0-f2)*(ip1_s2(3)*ip1_s2(4)-1.0d0)
+            force1_fk0(1,3) = f0+f0*(ip1_s1(1)*ip1_s1(3)-1.0d0)+(f0-f2)*(ip1_s2(2)*ip1_s2(4)-1.0d0)
+            force1_fk0(1,4) = f0+f0*(ip1_s1(1)*ip1_s1(4)-1.0d0)+(f0-f2)*(ip1_s2(2)*ip1_s2(3)-1.0d0)
+            force1_fk0(2,3) = f0+f0*(ip1_s1(2)*ip1_s1(3)-1.0d0)+(f0-f2)*(ip1_s2(1)*ip1_s2(4)-1.0d0)
+            force1_fk0(2,4) = f0+f0*(ip1_s1(2)*ip1_s1(4)-1.0d0)+(f0-f2)*(ip1_s2(1)*ip1_s2(3)-1.0d0)
+            force1_fk0(3,4) = f0+f0*(ip1_s1(3)*ip1_s1(4)-1.0d0)+(f0-f2)*(ip1_s2(1)*ip1_s2(2)-1.0d0)
+            !
+            !  derivative of fk0
+            !
+            dfk0(1,2,1) = f0*ip1_ds1(1)*ip1_s1(2)
+            dfk0(1,2,2) = f0*ip1_s1(1)*ip1_ds1(2)
+            dfk0(1,2,3) = (f0-f2)*ip1_ds2(3)*ip1_s2(4)
+            dfk0(1,2,4) = (f0-f2)*ip1_s2(3)*ip1_ds2(4)
+            !
+            dfk0(1,3,1) = f0*ip1_ds1(1)*ip1_s1(3)
+            dfk0(1,3,2) = (f0-f2)*ip1_ds2(2)*ip1_s2(4)
+            dfk0(1,3,3) = f0*ip1_s1(1)*ip1_ds1(3)
+            dfk0(1,3,4) = (f0-f2)*ip1_s2(2)*ip1_ds2(4)
+            !
+            dfk0(1,4,1) = f0*ip1_ds1(1)*ip1_s1(4)
+            dfk0(1,4,2) = (f0-f2)*ip1_ds2(2)*ip1_s2(3)
+            dfk0(1,4,3) = (f0-f2)*ip1_s2(2)*ip1_ds2(3)
+            dfk0(1,4,4) = f0*ip1_s1(1)*ip1_ds1(4)
+            !
+            dfk0(2,3,1) = (f0-f2)*ip1_ds2(1)*ip1_s2(4)
+            dfk0(2,3,2) = f0*ip1_ds1(2)*ip1_s1(3)
+            dfk0(2,3,3) = f0*ip1_s1(2)*ip1_ds1(3)
+            dfk0(2,3,4) = (f0-f2)*ip1_s2(1)*ip1_ds2(4)
+            !
+            dfk0(2,4,1) = (f0-f2)*ip1_ds2(1)*ip1_s2(3)
+            dfk0(2,4,2) = f0*ip1_ds1(2)*ip1_s1(4)
+            dfk0(2,4,3) = (f0-f2)*ip1_s2(1)*ip1_ds2(3)
+            dfk0(2,4,4) = f0*ip1_s1(2)*ip1_ds1(4)
+            !
+            dfk0(3,4,1) = (f0-f2)*ip1_ds2(1)*ip1_s2(2)
+            dfk0(3,4,2) = (f0-f2)*ip1_s2(1)*ip1_ds2(2)
+            dfk0(3,4,3) = f0*ip1_ds1(3)*ip1_s1(4)
+            dfk0(3,4,4) = f0*ip1_s1(3)*ip1_ds1(4)
+            !
+            !       argfk0=bk*((rch(1)-r0ch)**2+(rch(2)-r0ch)**2
+            !     *              +(rch(3)-r0ch)**2+(rch(4)-r0ch)**2)
+            !       fk0=fkinf+ak*exp(-argfk0)
+            do i=1, 4
+                !
+                !  calc derivatives of fk0 wrt each of the rch(i) bonds
+                !
+                !         dfk0(i)=-2.0d0*ak*bk*(rch(i)-r0ch)*exp(-argfk0)
+                !
+                !  calculate the terms f1(i)
+                !
+                arga1        = force2_aa1*bonds_rbh(i)*bonds_rbh(i)
+                arga2        = force2_aa4*(bonds_rbh(i)-bonds_r0hh)*(bonds_rbh(i)-bonds_r0hh)
+                a1           = 1.0d0-exp(-arga1)
+                a2           = force2_aa2+force2_aa3*exp(-arga2)
+                force1_f1(i) = a1*exp(-a2*(bonds_rch(i)-bonds_r0ch)**2)
+                !
+                !  and calculate the derivatives wrt rch(i) and rbh(i)
+                !
+                duma1    = 2.0d0*force2_aa1*bonds_rbh(i)*exp(-arga1)
+                duma2    = -2.0d0*force2_aa3*force2_aa4*(bonds_rbh(i)-bonds_r0hh)*exp(-arga2)
+                df1dc(i) = -2.0d0*(bonds_rch(i)-bonds_r0ch)*a1*a2*exp(-a2*(bonds_rch(i)-bonds_r0ch)**2)
+                df1dh(i) = duma1*exp(-a2*(bonds_rch(i)-bonds_r0ch)**2) -duma2*(bonds_rch(i)-bonds_r0ch)**2*a1* exp(- &
+                    & a2*(bonds_rch(i)-bonds_r0ch)**2)
+            enddo
+            !
+            !  derivative of total force constant f(i,j) wrt bond length rch(k)
+            !  is given by dfdc(i,j,k)
+            !
+            force1_dfdc(1,2,1) = dfk0(1,2,1)*force1_f1(1)*force1_f1(2)+force1_fk0(1,2)*df1dc(1)*force1_f1(2)
+            force1_dfdc(1,2,2) = dfk0(1,2,2)*force1_f1(1)*force1_f1(2)+force1_fk0(1,2)*force1_f1(1)*df1dc(2)
+            force1_dfdc(1,2,3) = dfk0(1,2,3)*force1_f1(1)*force1_f1(2)
+            force1_dfdc(1,2,4) = dfk0(1,2,4)*force1_f1(1)*force1_f1(2)
+            !
+            force1_dfdc(1,3,1) = dfk0(1,3,1)*force1_f1(1)*force1_f1(3)+force1_fk0(1,3)*df1dc(1)*force1_f1(3)
+            force1_dfdc(1,3,2) = dfk0(1,3,2)*force1_f1(1)*force1_f1(3)
+            force1_dfdc(1,3,3) = dfk0(1,3,3)*force1_f1(1)*force1_f1(3)+force1_fk0(1,3)*force1_f1(1)*df1dc(3)
+            force1_dfdc(1,3,4) = dfk0(1,3,4)*force1_f1(1)*force1_f1(3)
+            !
+            force1_dfdc(1,4,1) = dfk0(1,4,1)*force1_f1(1)*force1_f1(4)+force1_fk0(1,4)*df1dc(1)*force1_f1(4)
+            force1_dfdc(1,4,2) = dfk0(1,4,2)*force1_f1(1)*force1_f1(4)
+            force1_dfdc(1,4,3) = dfk0(1,4,3)*force1_f1(1)*force1_f1(4)
+            force1_dfdc(1,4,4) = dfk0(1,4,4)*force1_f1(1)*force1_f1(4)+force1_fk0(1,4)*force1_f1(1)*df1dc(4)
+            !
+            force1_dfdc(2,3,1) = dfk0(2,3,1)*force1_f1(2)*force1_f1(3)
+            force1_dfdc(2,3,2) = dfk0(2,3,2)*force1_f1(2)*force1_f1(3)+force1_fk0(2,3)*df1dc(2)*force1_f1(3)
+            force1_dfdc(2,3,3) = dfk0(2,3,3)*force1_f1(2)*force1_f1(3)+force1_fk0(2,3)*force1_f1(2)*df1dc(3)
+            force1_dfdc(2,3,4) = dfk0(2,3,4)*force1_f1(2)*force1_f1(3)
+            !
+            force1_dfdc(2,4,1) = dfk0(2,4,1)*force1_f1(2)*force1_f1(4)
+            force1_dfdc(2,4,2) = dfk0(2,4,2)*force1_f1(2)*force1_f1(4)+force1_fk0(2,4)*df1dc(2)*force1_f1(4)
+            force1_dfdc(2,4,3) = dfk0(2,4,3)*force1_f1(2)*force1_f1(4)
+            force1_dfdc(2,4,4) = dfk0(2,4,4)*force1_f1(2)*force1_f1(4)+force1_fk0(2,4)*force1_f1(2)*df1dc(4)
+            !
+            force1_dfdc(3,4,1) = dfk0(3,4,1)*force1_f1(3)*force1_f1(4)
+            force1_dfdc(3,4,2) = dfk0(3,4,2)*force1_f1(3)*force1_f1(4)
+            force1_dfdc(3,4,3) = dfk0(3,4,3)*force1_f1(3)*force1_f1(4)+force1_fk0(3,4)*df1dc(3)*force1_f1(4)
+            force1_dfdc(3,4,4) = dfk0(3,4,4)*force1_f1(3)*force1_f1(4)+force1_fk0(3,4)*force1_f1(3)*df1dc(4)
+            !
+            !  derivative of total force constant f(i,j) wrt bond length rbh(k)
+            !  is given by dfdh(i,j,k)
+            !
+            !  nb only non-zero derivatives are those from rbh(i) and rbh(j)
+            !
+            force1_dfdh(1,2,1) = force1_fk0(1,2)*df1dh(1)*force1_f1(2)
+            force1_dfdh(1,2,2) = force1_fk0(1,2)*force1_f1(1)*df1dh(2)
+            force1_dfdh(1,2,3) = 0.0d0
+            force1_dfdh(1,2,4) = 0.0d0
+            !
+            force1_dfdh(1,3,1) = force1_fk0(1,3)*df1dh(1)*force1_f1(3)
+            force1_dfdh(1,3,2) = 0.0d0
+            force1_dfdh(1,3,3) = force1_fk0(1,3)*force1_f1(1)*df1dh(3)
+            force1_dfdh(1,3,4) = 0.0d0
+            !
+            force1_dfdh(1,4,1) = force1_fk0(1,4)*df1dh(1)*force1_f1(4)
+            force1_dfdh(1,4,2) = 0.0d0
+            force1_dfdh(1,4,3) = 0.0d0
+            force1_dfdh(1,4,4) = force1_fk0(1,4)*force1_f1(1)*df1dh(4)
+            !
+            force1_dfdh(2,3,1) = 0.0d0
+            force1_dfdh(2,3,2) = force1_fk0(2,3)*df1dh(2)*force1_f1(3)
+            force1_dfdh(2,3,3) = force1_fk0(2,3)*force1_f1(2)*df1dh(3)
+            force1_dfdh(2,3,4) = 0.0d0
+            !
+            force1_dfdh(2,4,1) = 0.0d0
+            force1_dfdh(2,4,2) = force1_fk0(2,4)*df1dh(2)*force1_f1(4)
+            force1_dfdh(2,4,3) = 0.0d0
+            force1_dfdh(2,4,4) = force1_fk0(2,4)*force1_f1(2)*df1dh(4)
+            !
+            force1_dfdh(3,4,1) = 0.0d0
+            force1_dfdh(3,4,2) = 0.0d0
+            force1_dfdh(3,4,3) = force1_fk0(3,4)*df1dh(3)*force1_f1(4)
+            force1_dfdh(3,4,4) = force1_fk0(3,4)*force1_f1(3)*df1dh(4)
+            !
+        end subroutine ipforce
+        !> @brief Evaluate switchf for the CH4F_GEN_GCSO_1996 potential.
+        subroutine switchf
+            !
+            !  calculates switching functions: s3,sphi,stheta
+            !  and their derivatives ds3,dsphi,dstheta
+            !
+            implicit none
+            double precision :: argmax, args1, args2, args3, argsphi, argstheta
+            integer          :: i
+            !
+            !  nb remember that integration units are:
+            !  energy in   1.0d+05 j/mol
+            !  time in     1.0d-14 s
+            !
+            fsw1_a1s = 1.5313681d-7
+            fsw1_b1s = -4.6696246d0
+            fsw1_a2s = 1.0147402d-7
+            fsw1_b2s = -12.363798d0
+            !
+            !  use double precision criterion:
+            !
+            !  tanh(19.0d0)=1.0d0
+            !
+            argmax = 19.0d0
+            do i=1, 4
+                args1 = fsw1_a1s*(bonds_rch(i)-bonds_r0ch)*(bonds_rch(i)-fsw1_b1s)**8
+                if( args1 .lt. argmax )then
+                    ip1_s1(i) = 1.0d0-tanh(args1)
+                    ip1_ds1(i) = fsw1_a1s*((bonds_rch(i)-fsw1_b1s)**8 +8.0d0*(bonds_rch(i)-bonds_r0ch)* (bonds_rch(i)- &
+                        & fsw1_b1s)**7)
+                    ip1_ds1(i) = -ip1_ds1(i)/cosh(args1)**2
+                else
+                    ip1_s1(i)  = 0.0d0
+                    ip1_ds1(i) = 0.0d0
+                endif
+                !
+                args2 = fsw1_a2s*(bonds_rch(i)-bonds_r0ch)*(bonds_rch(i)-fsw1_b2s)**6
+                if( args2 .lt. argmax )then
+                    ip1_s2(i) = 1.0d0-tanh(args2)
+                    ip1_ds2(i) = fsw1_a2s*((bonds_rch(i)-fsw1_b2s)**6 +6.0d0*(bonds_rch(i)-bonds_r0ch)* (bonds_rch(i)- &
+                        & fsw1_b2s)**5)
+                    ip1_ds2(i) = -ip1_ds2(i)/cosh(args2)**2
+                else
+                    ip1_s2(i)  = 0.0d0
+                    ip1_ds2(i) = 0.0d0
+                endif
+                !
+                !  calculate s3 and ds3
+                !
+                args3 = fsw1_a3s*(bonds_rch(i)-bonds_r0ch)*(bonds_rch(i)-fsw1_b3s)**2
+                if( args3 .lt. argmax )then
+                    op1_s3(i) = 1.0d0-tanh(args3)
+                    op1_ds3(i) = fsw1_a3s*(3.0d0*bonds_rch(i)**2-2.0d0*bonds_rch(i)*(bonds_r0ch+2.0d0*fsw1_b3s) + &
+                        & fsw1_b3s*(fsw1_b3s+2.0d0*bonds_r0ch))
+                    op1_ds3(i) = -op1_ds3(i)/cosh(args3)**2
+                else
+                    op1_s3(i)  = 0.0d0
+                    op1_ds3(i) = 0.0d0
+                endif
+                !
+                !  calculate sphi and dsphi
+                !
+                !  condition here is on the bondlength rch(i)
+                !  st argsphi is lt approx 19.0d0
+                !
+                if( bonds_rch(i) .lt. 3.8d0 )then
+                    argsphi         = sphi1_aphi*(bonds_rch(i)-bonds_r0ch)*exp(sphi1_bphi*(bonds_rch(i)-sphi1_cphi)**3)
+                    switch1_sphi(i) = 1.0d0-tanh(argsphi)
+                    switch1_dsphi(i) = sphi1_aphi*(1.0d0+3.0d0*sphi1_bphi*(bonds_rch(i)-bonds_r0ch) * (bonds_rch(i)- &
+                        & sphi1_cphi)**2)
+                    switch1_dsphi(i) = switch1_dsphi(i)*exp(sphi1_bphi*(bonds_rch(i)-sphi1_cphi)**3)
+                    switch1_dsphi(i) = -switch1_dsphi(i)/cosh(argsphi)**2
+                else
+                    switch1_sphi(i)  = 0.0d0
+                    switch1_dsphi(i) = 0.0d0
+                endif
+                !
+                !  calculate stheta and dstheta
+                !
+                if( bonds_rch(i) .lt. 3.8d0 )then
+                    argstheta  = stheta1_atheta*(bonds_rch(i)-bonds_r0ch)*exp(stheta1_btheta*(bonds_rch(i)- &
+                        & stheta1_ctheta)**3)
+                    switch1_stheta(i) = 1.0d0-tanh(argstheta)
+                    switch1_dstheta(i) = stheta1_atheta*(1.0d0+3.0d0*stheta1_btheta*(bonds_rch(i)-bonds_r0ch) * &
+                        & (bonds_rch(i)-stheta1_ctheta)**2)
+                    switch1_dstheta(i) = switch1_dstheta(i)*exp(stheta1_btheta*(bonds_rch(i)-stheta1_ctheta)**3)
+                    switch1_dstheta(i) = -switch1_dstheta(i)/cosh(argstheta)**2
+                else
+                    switch1_stheta(i)  = 0.0d0
+                    switch1_dstheta(i) = 0.0d0
+                endif
+            enddo
+        end subroutine switchf
+        !> @brief Evaluate SETUP for the CH4F_GEN_GCSO_1996 potential.
+        subroutine setup( n3tm )
+            !
+            implicit none
+            integer :: n3tm
+            !
+            !   N3TMMN = 3 * NATOMS
+            !   NATOMS = the number of atoms represented by this potential function
+            !
+            !   The variable N3TMMN is the minimum value of N3TM allowed to be
+            !   passed by the calling routine for the number of cartesian
+            !   coordinates needed to represent the full system represented by this
+            !   potential energy surface routine.
+            !   N3TM must be greater than or equal to N3TMMN.
+            !
+            integer, parameter :: n3tmmn = 18
+            !
+            !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
+            !
+            write (6, '(/,2X,T5,''SETUP has been called for the CH5 '', ''potential energy surface'')')
+            if( n3tm .lt. n3tmmn )then
+                write (6, '(/,2X,T5,''Warning: N3TM is set equal to '',I3, '' but this potential routine'', /,2X,T14,''requir' // &
+                    'es N3TM be greater than or '', ''equal to '',I3,/)') n3tm, n3tmmn
+                stop 'SETUP 1'
+            endif
+            !
+            !
+            !
+        end subroutine setup
+    end subroutine evaluate
+    ! System:          CH4F
+    ! Functional form:
+    ! Common name: ch4f-so
+    ! Reference  : Espinosa-Garcia, J.; Corchado, J.C. J. Phys. Chem., 100 (
+    !
+    ! Number of bodies: 6
+    ! Number of electronic states: 1
+    ! Number of derivatives: 0
+    ! Interface: Section-2
+    ! Data file:  ch4f-so.tar
+    !
+    ! Notes:  CH4+F based on the surface by
+    !         Jordan and Gilbert, JCP, 102, 5669 (1995).
+    !         Prepared for Polyrate by J. E. Garcia and J. C. Corchado, Marc
+    !         Modified by CRD May,(2004).(unpublished results)
+    !         This potential requires three data files (ch4f-so.inc, ch4f-so
+    !         and CONST-so), which may be downloaded along with the main sub
+    !         tarred together as the file ch4f-so.tar.
+    !
+end module chempotpy_ch4f_gen_gcso_1996_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_ch4f_gen_gcso_1996_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 6
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    integer                         :: istate
-    double precision                :: tx(18), dx(18), v
-    integer                         :: iatom, idir, i, j
-    logical, save                   :: first_time_data=.true.
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            j     = (iatom-1)*3+idir
-            tx(j) = x(iatom,idir)
-        enddo
-    enddo
-    call surf(v, tx, dx, 18, path)
-    v  = v*legacy_hartree_to_electronvolt
-    dx = dx*51.422067
-    if( igrad == 0 )then
-        do istate=1, nstates
-            p(istate) = v
-        enddo
-    else if( igrad == 1 )then
-        do istate=1, nstates
-            p(istate) = v
-        enddo
-        do iatom=1, natoms
-            do idir=1, 3
-                j               = (iatom-1)*3+idir
-                g(1,iatom,idir) = dx(j)
-            enddo
-        enddo
-    else if( igrad == 2 )then
-        write (*, *) 'Only energy and gradient are available'
-    endif
+    call evaluate(x, igrad, path, p, g, d)
 end subroutine pes
-
-! System:          CH4F
-! Functional form:
-! Common name: ch4f-so
-! Reference  : Espinosa-Garcia, J.; Corchado, J.C. J. Phys. Chem., 100 (
-!
-! Number of bodies: 6
-! Number of electronic states: 1
-! Number of derivatives: 0
-! Interface: Section-2
-! Data file:  ch4f-so.tar
-!
-! Notes:  CH4+F based on the surface by
-!         Jordan and Gilbert, JCP, 102, 5669 (1995).
-!         Prepared for Polyrate by J. E. Garcia and J. C. Corchado, Marc
-!         Modified by CRD May,(2004).(unpublished results)
-!         This potential requires three data files (ch4f-so.inc, ch4f-so
-!         and CONST-so), which may be downloaded along with the main sub
-!         tarred together as the file ch4f-so.tar.
-!
-!***********************************************************************
-
-!> @brief Evaluate SURF for the CH4F_GEN_GCSO_1996 potential.
-subroutine surf( v, coord, dx, n3tm, path )
-    !
-    !              CH5, see  Espinosa-Garcia, J.; Corchado, J.C.
-    !              J. Phys. Chem., 100 (1996) 16561
-    !              Prepared for Polyrate by JEG and JCC ,march 1996.
-    !              Modified by CRD May,(2004).(unpublished results)
-    !
-    !              Based on Jordan y Gilbert, JCP, 102, 5669 (1995).
-    !
-    !   All the information passed to and from the potential energy surface
-    !   routine is in hartree atomic units.
-    !
-    !        This potential is written such that:
-    !                       X(1)  - X(3)  : X, Y, Z for H1
-    !                       X(4)  - X(6)  : X, Y, Z for C
-    !                       X(7)  - X(9)  : X, Y, Z for H3
-    !                       X(10) - X(12) : X, Y, Z for H4
-    !                       X(13) - X(15) : X, Y, Z for H2
-    !                       X(16) - X(18) : X, Y, Z for F
-    !
-    implicit none
-    character(len=1024), intent(in) :: path
-    integer                         :: file_unit_7
-    double precision                :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, aa5, acb, ahh, ak, aphi, atheta, &
-        & b1ch, b1s, b2s, b3s, bk, bphi, btheta, c1ch, comlin, coord, cphi, ctheta, d1cb, d1ch, d1hh, &
-        & d3cb, d3ch, d3hh, dfdc, dfdelta, dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, dtheta0, dx, &
-        & en, f1, fact1, fact2, fch3, fdelta, fk0, fkinf, hch3, hdelta, pdot, q, r0cb, r0ch, r0hh, &
-        & rbh, rcb, rch, rphi, s1, s2, s3, sphi, stheta, tbh, tcb, tch, theta0, v, vip, vop, vstr
-    integer             :: i, icount, ind, n, n3tm, nc, nh, nhb, nnb, nnc, nnh
-    character(len=1024) :: file_path1
-    dimension coord(n3tm), dx(n3tm)
-    !
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    !     PUT COORDINATES IN PROPER ARRAYS
-    !
-    ! Inicialization de variables
-    do i=1, 150
-        q(i)    = 0.d0
-        pdot(i) = 0.d0
-    enddo
-    !
-    ! Changing units from angstrom to bohr
-    !
-    do 10 i = 1, 18
-        q(i) = coord(i)
-    10 continue
-    !
-    !  Read the parameters from the input file CONST
-    !
-    !  FORMATTED read statements
-    !
-    file_path1 = trim(path)//"/CH4F/CONST-so"
-    open(newunit=file_unit_7, file=file_path1, status='old')
-    !
-    !  read in indices for the carbon and hydrogen atoms
-    !
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(6i4)')nnc, nnb, (nnh(i), i=1, 4)
-    !
-    !  calculate indexes for coordinates
-    !
-    do ind=1, 3
-        icount   = ind-3
-        nc(ind)  = 3*nnc+icount
-        nhb(ind) = 3*nnb+icount
-        do i=1, 4
-            nh(i, ind) = 3*nnh(i)+icount
-        enddo
-    enddo
-    !
-    !  read in parameters for the stretching term
-    !
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(8f10.5)')r0ch, d1ch, d3ch
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(8f10.5)')a1ch, b1ch, c1ch
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(8f10.5)')r0hh, d1hh, d3hh, ahh
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(8f10.5)')r0cb, d1cb, d3cb, acb
-    !
-    !  read in parameters for the out of plane bending term
-    !
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(8f10.5)')a3s, b3s, aphi, bphi, cphi, rphi
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(8f10.5)')atheta, btheta, ctheta
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(8f10.5)')fch3, hch3
-    !
-    !  read in parameters for the in plane bending term
-    !
-    read(file_unit_7, '(a79)')comlin
-    read(file_unit_7, '(8f10.5)')fkinf, ak, bk, aa1, aa2, aa3, aa4, aa5
-    !
-    !  convert to appropriate units:
-    !
-    !  From:
-    !
-    !  kcal/mol
-    !  mdyn A-1        -> 1.0d+05 j/mol...
-    !  mdyn A rad-1
-    !
-    !  To
-    !
-    !  energy   in 1.0d+05 j/mol
-    !  distance in 1.0d-10 m
-    !  angles   in radians
-    !  mass     in amu
-    !
-    fact1 = 0.041840d0
-    fact2 = 6.022045d0
-    !
-    d1ch  = d1ch*fact1
-    d3ch  = d3ch*fact1
-    d1cb  = d1cb*fact1
-    d3cb  = d3cb*fact1
-    d1hh  = d1hh*fact1
-    d3hh  = d3hh*fact1
-    fch3  = fch3*fact2
-    hch3  = hch3*fact2
-    fkinf = fkinf*fact2
-    ak    = ak*fact2
-    close(unit=file_unit_7)
-    !
-    !  calculate relative coordinates and bond lengths
-    !
-    en = 0.0d0
-    call coorden
-    !
-    !  calculate switching functions
-    !
-    call switchf
-    !
-    !  calculate reference angles and their derivatives
-    !
-    call refangles
-    !
-    !  calculate stretching potential
-    !
-    call stretch(vstr)
-    !
-    !  calculate out of plane bending potential
-    !
-    call opbend(vop)
-    !
-    !  calculate in plane bending potential
-    !
-    call ipbend(vip)
-    !
-    !  total potential energy is vstr+vop+vip
-    !
-    en = vstr+vop+vip
-    !
-    !  convert from 10(5) j/mol to au
-    !
-    en = en*0.03812d0
-    v  = en
-    !
-    !  Initialize derivatives
-    !
-    do n=1, n3tm
-        dx(n) = 0.0d0
-    enddo
-    !
-    !  copy the pdots to the
-    !  appropriate elements in dx and
-    !  convert from 10(5) j/mol/A to au/bohr
-    !
-    do ind=1, 18
-        dx(ind) = pdot(ind)*0.0201723d0
-    enddo
-    !
-end subroutine surf
-
-!
-!******************************************************
-!
-!> @brief Evaluate coorden for the CH4F_GEN_GCSO_1996 potential.
-subroutine coorden
-    !
-    !  calculates relative coordinates and bond lengths
-    !
-    implicit none
-    double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, aphi, atheta, b1ch, &
-        & b1s, b2s, b3s, bk, bphi, btheta, c1ch, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, &
-        & dfdc, dfdelta, dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, dtheta0, f1, fch3, fdelta, &
-        & fk0, fkinf, hch3, hdelta, pdot, q, r0ch, r0hh, rbh, rcb, rch, s1, s2, s3, sphi, stheta, &
-        & tbh, tcb, tch, theta0
-    integer :: i, ind, nc, nh, nhb, nnb, nnc, nnh
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    !  calculate relative coordinates
-    !
-    do ind=1, 3
-        tcb(ind) = q(nc(ind))-q(nhb(ind))
-        do i=1, 4
-            tch(i, ind) = q(nc(ind))-q(nh(i, ind))
-            tbh(i, ind) = q(nhb(ind))-q(nh(i, ind))
-        enddo
-    enddo
-    !
-    !  calculate bond lengths
-    !
-    rcb = sqrt(tcb(1)*tcb(1)+tcb(2)*tcb(2)+tcb(3)*tcb(3))
-    do i=1, 4
-        rch(i) = sqrt(tch(i, 1)*tch(i, 1)+tch(i, 2)*tch(i, 2)+ tch(i, 3)*tch(i, 3))
-        rbh(i) = sqrt(tbh(i, 1)*tbh(i, 1)+tbh(i, 2)*tbh(i, 2)+ tbh(i, 3)*tbh(i, 3))
-        !      write (*,*) 'rch(i) y rbh(i) = ',rch(i),rbh(i)
-    enddo
-end subroutine coorden
-
-!
-!******************************************************
-!
-!
-!> @brief Evaluate refangles for the CH4F_GEN_GCSO_1996 potential.
-subroutine refangles
-    !
-    !  subroutine calculates reference angles for the "in-plane" potential
-    !
-    implicit none
-    double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, aphi, atheta, b1ch, &
-        & b1s, b2s, b3s, bk, bphi, btheta, c1ch, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, &
-        & ddr, dfdc, dfdelta, dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, dtheta0, f1, fch3, &
-        & fdelta, fk0, fkinf, halfpi, hch3, hdelta, pdot, pi, q, r0ch, r0hh, rbh, rcb, rch, s1, s2, &
-        & s3, sphi, stheta, sumd2, sumd4, tau, tbh, tcb, tch, theta0, twopi
-    integer :: i, j, k, nc, nh, nhb, nnb, nnc, nnh
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    dimension sumd2(4), sumd4(4), ddr(4,4)
-    tau    = acos(-1.0d0/3.0d0)
-    pi     = 4.0d0*atan(1.0d0)
-    halfpi = 0.5d0*pi
-    twopi  = 2.0d0*pi
-    !
-    !  set diagonal elements to zero
-    !
-    do i=1, 4
-        theta0(i, i) = 0.0d0
-        do k=1, 4
-            dtheta0(i, i, k) = 0.0d0
-        enddo
-    enddo
-    !
-    !  calculate reference angles
-    !
-    theta0(1, 2) = tau+(tau-halfpi)*(sphi(1)*sphi(2)-1.0d0) +(tau-twopi/3.0d0)*(stheta(3)*stheta(4)-1.0d0)
-    theta0(1, 3) = tau+(tau-halfpi)*(sphi(1)*sphi(3)-1.0d0) +(tau-twopi/3.0d0)*(stheta(2)*stheta(4)-1.0d0)
-    theta0(1, 4) = tau+(tau-halfpi)*(sphi(1)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(2)*stheta(3)-1.0d0)
-    theta0(2, 3) = tau+(tau-halfpi)*(sphi(2)*sphi(3)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(4)-1.0d0)
-    theta0(2, 4) = tau+(tau-halfpi)*(sphi(2)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(3)-1.0d0)
-    theta0(3, 4) = tau+(tau-halfpi)*(sphi(3)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(2)-1.0d0)
-    !
-    !  calculate the derivatives of theta0(i,j) in terms of rch(k)
-    !  quantity calulated is dtheta0(i,j,k)
-    !
-    !  derivatives wrt rch(1)
-    !
-    dtheta0(1, 2, 1) = (tau-halfpi)*dsphi(1)*sphi(2)
-    dtheta0(1, 3, 1) = (tau-halfpi)*dsphi(1)*sphi(3)
-    dtheta0(1, 4, 1) = (tau-halfpi)*dsphi(1)*sphi(4)
-    dtheta0(2, 3, 1) = (tau-twopi/3.0d0)*dstheta(1)*stheta(4)
-    dtheta0(2, 4, 1) = (tau-twopi/3.0d0)*dstheta(1)*stheta(3)
-    dtheta0(3, 4, 1) = (tau-twopi/3.0d0)*dstheta(1)*stheta(2)
-    !
-    !  derivatives wrt rch(2)
-    !
-    dtheta0(1, 2, 2) = (tau-halfpi)*sphi(1)*dsphi(2)
-    dtheta0(1, 3, 2) = (tau-twopi/3.0d0)*dstheta(2)*stheta(4)
-    dtheta0(1, 4, 2) = (tau-twopi/3.0d0)*dstheta(2)*stheta(3)
-    dtheta0(2, 3, 2) = (tau-halfpi)*dsphi(2)*sphi(3)
-    dtheta0(2, 4, 2) = (tau-halfpi)*dsphi(2)*sphi(4)
-    dtheta0(3, 4, 2) = (tau-twopi/3.0d0)*stheta(1)*dstheta(2)
-    !
-    !  derivatives wrt rch(3)
-    !
-    dtheta0(1, 2, 3) = (tau-twopi/3.0d0)*dstheta(3)*stheta(4)
-    dtheta0(1, 3, 3) = (tau-halfpi)*sphi(1)*dsphi(3)
-    dtheta0(1, 4, 3) = (tau-twopi/3.0d0)*stheta(2)*dstheta(3)
-    dtheta0(2, 3, 3) = (tau-halfpi)*sphi(2)*dsphi(3)
-    dtheta0(2, 4, 3) = (tau-twopi/3.0d0)*stheta(1)*dstheta(3)
-    dtheta0(3, 4, 3) = (tau-halfpi)*dsphi(3)*sphi(4)
-    !
-    !  derivatives wrt rch(4)
-    !
-    dtheta0(1, 2, 4) = (tau-twopi/3.0d0)*stheta(3)*dstheta(4)
-    dtheta0(1, 3, 4) = (tau-twopi/3.0d0)*stheta(2)*dstheta(4)
-    dtheta0(1, 4, 4) = (tau-halfpi)*sphi(1)*dsphi(4)
-    dtheta0(2, 3, 4) = (tau-twopi/3.0d0)*stheta(1)*dstheta(4)
-    dtheta0(2, 4, 4) = (tau-halfpi)*sphi(2)*dsphi(4)
-    dtheta0(3, 4, 4) = (tau-halfpi)*sphi(3)*dsphi(4)
-    !
-    !  fill in the other half of the matrix
-    !
-    do i=1, 3
-        do j=i+1, 4
-            theta0(j, i) = theta0(i, j)
-            do k=1, 4
-                dtheta0(j, i, k) = dtheta0(i, j, k)
-            enddo
-        enddo
-    enddo
-end subroutine refangles
-
-!
-!******************************************************
-!
-!
-!> @brief Evaluate stretch for the CH4F_GEN_GCSO_1996 potential.
-subroutine stretch( vstr )
-    !
-    !  subroutine to calculate leps-type stretching potential and its
-    !  derivatives
-    !
-    implicit none
-    double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ach, achdc, achdh, ahh, ak, &
-        & aphi, arga, atheta, b1ch, b1s, b2s, b3s, bk, bphi, btheta, c1ch, cphi, ctheta, d1cb, d1ch, &
-        & d1hh, d3cb, d3ch, d3hh, dfdc, dfdelta, dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, &
-        & dtheta0, dumach, dumjbh, dumjcb, dumjch, dumjhi, dumjhj, dumqbh, dumqcb, dumqch, dumqhi, &
-        & dumqhj, e1, e3, f1, factj, fch3, fdelta, fk0, fkinf, hch3, hdelta, pdot, q, r0ch, r0hh, &
-        & rav, rbh, rcb, rch, s1, s2, s3, sphi, stheta, tbh, tcb, tch, theta0, vj, vjbh, vjcb, vjch, &
-        & vq, vqbh, vqcb, vqch, vstr
-    integer :: i, ind, j, k, nc, nh, nhb, nnb, nnc, nnh
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    dimension vqch(4), vjch(4), vqbh(4), vjbh(4), vq(4), vj(4), &
-        & achdc(3), achdh(4, 3)
-    !
-    !  calculate avergage bond length for the methane moiety
-    !
-    rav = (rch(1)+rch(2)+rch(3)+rch(4))/4.0d0
-    !
-    !  initialise:
-    !
-    vstr = 0.0d0
-    !
-    !  ach:
-    !
-    !  nb: in double precision tanh(19.0d0)=1.0d0 and we put the if statemen
-    !  in to avoid overflow/underflow errors
-    !
-    arga = c1ch*(rav-r0ch)
-    if( arga .lt. 19.0d0 )then
-        ach    = a1ch+b1ch*(tanh(arga)+1.0d0)*0.5d0
-        dumach = b1ch*c1ch/(2.0d0*cosh(arga)**2)
-    else
-        ach    = a1ch+b1ch
-        dumach = 0.0d0
-    endif
-    !
-    !  calculate singlet: e1, triplet: e3 energies and vq and vj
-    !  terms for each bond
-    !
-    e1   = d1cb*(exp(-2.0d0*acb*(rcb-r0ch))-2.0d0*exp(-acb*(rcb-r0ch)))
-    e3   = d3cb*(exp(-2.0d0*acb*(rcb-r0ch))+2.0d0*exp(-acb*(rcb-r0ch)))
-    vqcb = (e1+e3)*0.5d0
-    vjcb = (e1-e3)*0.5d0
-    do i=1, 4
-        e1      = d1ch*(exp(-2.0d0*ach*(rch(i)-r0ch)) -2.0d0*exp(-ach*(rch(i)-r0ch)))
-        e3      = d3ch*(exp(-2.0d0*ach*(rch(i)-r0ch)) +2.0d0*exp(-ach*(rch(i)-r0ch)))
-        vqch(i) = (e1+e3)*0.5d0
-        vjch(i) = (e1-e3)*0.5d0
-        e1      = d1hh*(exp(-2.0d0*ahh*(rbh(i)-r0hh)) -2.0d0*exp(-ahh*(rbh(i)-r0hh)))
-        e3      = d3hh*(exp(-2.0d0*ahh*(rbh(i)-r0hh)) +2.0d0*exp(-ahh*(rbh(i)-r0hh)))
-        vqbh(i) = (e1+e3)*0.5d0
-        vjbh(i) = (e1-e3)*0.5d0
-        !
-        !  calculate 3 body potential
-        !
-        vq(i) = vqch(i)+vqcb+vqbh(i)
-        vj(i) = -sqrt(((vjch(i)-vjcb)**2+(vjcb-vjbh(i))**2 +(vjbh(i)-vjch(i))**2)*0.5d0)
-        vstr  = vstr+vq(i)+vj(i)
-    enddo
-    !
-    !  partial derivatives
-    !  first we need the derivative of ach:
-    !
-    do ind=1, 3
-        achdc(ind) = dumach*(tch(1, ind)/rch(1)+tch(2, ind)/rch(2) +tch(3, ind)/rch(3)+tch(4, ind)/rch(4))/4.0d0
-        do i=1, 4
-            achdh(i, ind) = -dumach*tch(i, ind)/rch(i)/4.0d0
-        enddo
-    enddo
-    dumqcb = -acb*((d1cb+d3cb)*exp(-2.0d0*acb*(rcb-r0ch))- (d1cb-d3cb)*exp(-acb*(rcb-r0ch)))/rcb
-    !
-    !  calculate cartesian derivatives:
-    !  looping over ch(i) and bh(i)
-    !
-    do i=1, 4
-        dumqbh = -ahh*((d1hh+d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh))- (d1hh-d3hh)*exp(-ahh*(rbh(i)-r0hh)))/rbh(i)
-        factj  = 0.5d0/vj(i)
-        dumjcb = -acb*((d1cb-d3cb)*exp(-2.0d0*acb*(rcb-r0ch)) -(d1cb+d3cb)*exp(-acb*(rcb-r0ch)))*factj/rcb
-        dumjbh = -ahh*((d1hh-d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh)) -(d1hh+d3hh)*exp(-ahh*(rbh(i)-r0hh)))*factj/rbh(i)
-        do ind=1, 3
-            !
-            !  deriv wrt hb:
-            !
-            pdot(nhb(ind))=pdot(nhb(ind)) -tcb(ind)*dumqcb+tbh(i, ind)*dumqbh +(vjch(i)-vjcb)*(dumjcb*tcb(ind)) + &
-                & (vjcb- vjbh(i))*(-dumjcb*tcb(ind)-dumjbh*tbh(i, ind)) +(vjbh(i)-vjch(i))*dumjbh*tbh(i, ind)
-            !
-            !  dvqch(i)/dc
-            !
-            dumqch=-(ach*tch(i, ind)/rch(i)+achdc(ind)*(rch(i)-r0ch)) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
-                & (d1ch- d3ch)*exp(-ach*(rch(i)-r0ch)))
-            pdot(nc(ind)) = pdot(nc(ind))+dumqch+tcb(ind)*dumqcb
-            !
-            !  dvqch(i)/dh(i)
-            !
-            dumqhi=(ach*tch(i, ind)/rch(i)-achdh(i, ind)*(rch(i)-r0ch)) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
-                & (d1ch-d3ch)*exp(-ach*(rch(i)-r0ch)))
-            pdot(nh(i, ind)) = pdot(nh(i, ind))+dumqhi-tbh(i, ind)*dumqbh
-            !
-            !  dvjch(i)/dc
-            !
-            dumjch=-(ach*tch(i, ind)/rch(i)+achdc(ind)*(rch(i)-r0ch)) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
-                & (d1ch+ d3ch)*exp(-ach*(rch(i)-r0ch)))*factj
-            !
-            !  dvj(i)/dnc(ind)
-            !
-            pdot(nc(ind))=pdot(nc(ind)) +(vjch(i)-vjcb)*(dumjch-dumjcb*tcb(ind)) +(vjcb-vjbh(i))*dumjcb*tcb(ind) - &
-                & (vjbh(i)-vjch(i))*dumjch
-            !
-            !  dvjch(i)/dh(i)
-            !
-            dumjhi=(ach*tch(i, ind)/rch(i)-achdh(i, ind)*(rch(i)-r0ch)) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) - &
-                & (d1ch+d3ch)*exp(-ach*(rch(i)-r0ch)))*factj
-            !
-            !  dvj(i)/dnh(i,ind)
-            !
-            pdot(nh(i, ind))=pdot(nh(i, ind)) +(vjch(i)-vjcb)*dumjhi +(vjcb-vjbh(i))*dumjbh*tbh(i, ind) +(vjbh(i)- &
-                & vjch(i))* (-dumjbh*tbh(i, ind)-dumjhi)
-            !
-            !  dv(i)/dh(j)
-            !
-            do k=1, 3
-                j = i+k
-                if( j .gt. 4 ) j=j-4
-                dumqhj=-achdh(j, ind)*(rch(i)-r0ch) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) -(d1ch-d3ch)*exp(-ach* &
-                    & (rch(i)-r0ch)))
-                dumjhj=-achdh(j, ind)*(rch(i)-r0ch) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)-r0ch)) -(d1ch+d3ch)*exp(-ach* &
-                    & (rch(i)-r0ch)))*factj
-                pdot(nh(j, ind)) = pdot(nh(j, ind))+dumqhj +(vjch(i)-vjcb)*dumjhj -(vjbh(i)-vjch(i))*dumjhj
-            enddo
-        enddo
-    enddo
-end subroutine stretch
-
-!
-!******************************************************
-!
-!> @brief Evaluate opbend for the CH4F_GEN_GCSO_1996 potential.
-subroutine opbend( vop )
-    !
-    !  subroutine calculates symmetrized vop potential and derivatives
-    !
-    implicit none
-    double precision :: a, a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, aphi, argd, atheta, &
-        & axb, b, b1ch, b1s, b2s, b3s, bk, bphi, btheta, c, c1ch, cphi, ctheta, d1cb, d1ch, d1hh, &
-        & d3cb, d3ch, d3hh, ddr, dfdc, dfdelta, dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, &
-        & dtheta0, f1, fch3, fdelta, fk0, fkinf, hch3, hdelta, pdot, q, r0ch, r0hh, rbh, rcb, rch, &
-        & s1, s2, s3, sphi, stheta, sum2, sum4, sumd2, sumd4, tbh, tcb, tch, theta0, vop
-    integer :: i, in, ind, itemp, j, k, l, nc, nh, nhb, nnb, nnc, nnh
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    double precision :: norma
-    dimension sumd2(4), sumd4(4)
-    dimension in(3), a(3), b(3), axb(3), c(4,3), argd(4)
-    !
-    !
-    vop = 0.0d0
-    !
-    !  calculate force constants and their derivatives
-    !
-    call opforce
-    !
-    !  calculate out-of-plane angle and derivatives
-    !
-    do i=1, 4
-        j = i+1
-        if( j .gt. 4 ) j=j-4
-        k = j+1
-        if( k .gt. 4 ) k=k-4
-        l = k+1
-        if( l .gt. 4 ) l=l-4
-        !
-        !  if i is an even number then we have switched the vectors
-        !  from a right handed set to a left handed set
-        !
-        !  in this case we need to switch vectors k and l around
-        !
-        if( (i .eq. 2).or.(i .eq. 4) )then
-            itemp = k
-            k     = l
-            l     = itemp
-        endif
-        !
-        !  subroutine performs sum over j, k, l
-        !  sum2 = sum delta**2
-        !  sum4 = sum delta**4
-        !
-        call calcdelta(i, j, k, l, sum2, sum4)
-        sumd2(i) = sum2
-        sumd4(i) = sum4
-        vop      = vop+fdelta(i)*sumd2(i)+hdelta(i)*sumd4(i)
-    enddo
-    do i=1, 4
-        do j=1, 4
-            !
-            !  overall derivatives of force constants i wrt the bond-length rch(j)
-            !
-            ddr = dfdelta(i, j)*sumd2(i)+dhdelta(i, j)*sumd4(i)
-            !
-            !  calculate derivatives in terms of cartesian coordinates:
-            !
-            do ind=1, 3
-                pdot(nh(j, ind)) = pdot(nh(j, ind))-tch(j, ind)*ddr/rch(j)
-                pdot(nc(ind))    = pdot(nc(ind))+tch(j, ind)*ddr/rch(j)
-            enddo
-        enddo
-    enddo
-end subroutine opbend
-
-!
-!
-!******************************************************
-!
-!
-!> @brief Evaluate ipbend for the CH4F_GEN_GCSO_1996 potential.
-subroutine ipbend( vip )
-    !
-    !  subroutine calculates symmetrised in plane bend term
-    !  and its derivatives
-    !
-    implicit none
-    double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, aphi, atheta, b1ch, &
-        & b1s, b2s, b3s, bk, bphi, btheta, c1ch, costh, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, &
-        & d3hh, dfdc, dfdelta, dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, dth, dth0c, dth0k, dthc, &
-        & dtheta0, dthi, dthj, f1, fch3, fdelta, fk0, fkinf, hch3, hdelta, pdot, q, r0ch, r0hh, rbh, &
-        & rcb, rch, s1, s2, s3, sphi, stheta, tbh, tcb, tch, termth, theta, theta0, vip
-    integer :: i, ind, j, k, nc, nh, nhb, nnb, nnc, nnh
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    dimension costh(4,4), theta(4,4), dth(4,4)
-    !
-    !  initialise
-    !
-    vip = 0.0d0
-    !
-    !  calculate force constants: fk0(i,j), f1(i)
-    !  and derivatives wrt rch(k) and rbh(k): dfdc(i,j,k), dfdh(i,j,k)
-    !
-    call ipforce
-    !
-    !  calculate theta(i,j) and in plane bend potential
-    !
-    do i=1, 3
-        do j=i+1, 4
-            costh(i,j) = tch(i, 1)*tch(j, 1)+tch(i, 2)*tch(j, 2) +tch(i, 3)*tch(j, 3)
-            costh(i,j) = costh(i,j)/rch(i)/rch(j)
-            theta(i,j) = acos(costh(i,j))
-            dth(i,j)   = theta(i,j)-theta0(i, j)
-            vip        = vip+0.5d0*fk0(i, j)*f1(i)*f1(j)*dth(i,j)**2
-            !
-            !  calculate partial derivatives wrt cartesian coordinates
-            !
-            !  calculate pdots wrt theta:
-            !
-            termth = -1.0d0/sqrt(1.0d0-costh(i,j)*costh(i,j))
-            do ind=1, 3
-                dthi             = -tch(j, ind)/rch(i)/rch(j) +costh(i,j)*tch(i, ind)/rch(i)/rch(i)
-                dthi             = dthi*termth
-                dthj             = -tch(i, ind)/rch(i)/rch(j) +costh(i,j)*tch(j, ind)/rch(j)/rch(j)
-                dthj             = dthj*termth
-                dthc             = -(dthi+dthj)
-                pdot(nh(i, ind)) = pdot(nh(i, ind)) +fk0(i, j)*f1(i)*f1(j)*dthi*dth(i,j)
-                pdot(nh(j, ind)) = pdot(nh(j, ind)) +fk0(i, j)*f1(i)*f1(j)*dthj*dth(i,j)
-                pdot(nc(ind))    = pdot(nc(ind)) +fk0(i, j)*f1(i)*f1(j)*dthc*dth(i,j)
-                do k=1, 4
-                    !
-                    !  calculate pdots wrt force constants and wrt theta0
-                    !
-                    dth0k = -dtheta0(i, j, k)*tch(k, ind)/rch(k)
-                    dth0c = -dth0k
-                    pdot(nh(k, ind))=pdot(nh(k, ind)) -0.5d0*tch(k, ind)*dfdc(i, j, k)*dth(i,j)**2/rch(k) -0.5d0* &
-                        & tbh(k, ind)* dfdh(i, j, k)*dth(i,j)**2/rbh(k) -fk0(i, j)*f1(i)*f1(j)*dth0k*dth(i,j)
-                    pdot(nc(ind))=pdot(nc(ind)) +0.5d0*tch(k, ind)*dfdc(i, j, k)*dth(i,j)**2/rch(k) -fk0(i, j)*f1(i)* &
-                        & f1(j)* dth0c*dth(i,j)
-                    pdot(nhb(ind)) = pdot(nhb(ind)) +0.5d0*tbh(k, ind)*dfdh(i, j, k)*dth(i,j)**2/rbh(k)
-                enddo
-            enddo
-        enddo
-    enddo
-end subroutine ipbend
-
-!
-!***********************************************************************
-!
-!> @brief Evaluate calcdelta for the CH4F_GEN_GCSO_1996 potential.
-subroutine calcdelta( i, j, k, l, sum2, sum4 )
-    !
-    !  subroutine calculates out of plane angle delta, loops
-    !  through delta(i,j), delta(i,k), delta(i,l)
-    !
-    !   also calculates the derivatives wrt delta
-    !
-    implicit none
-    double precision :: a, a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, aphi, argd, atemp1, &
-        & atemp2, atemp3, atemp4, atemp5, atheta, axb, b, b1ch, b1s, b2s, b3s, bk, bphi, btheta, c, &
-        & c1ch, cdot, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, daxb, deldot, delta, dfdc, &
-        & dfdelta, dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, dtheta0, f1, fch3, fdelta, fk0, &
-        & fkinf, hch3, hdelta, pdot, q, r0ch, r0hh, rbh, rcb, rch, s1, s2, s3, sphi, stheta, sum2, &
-        & sum4, tbh, tcb, tch, theta0
-    integer          :: i, ii, in, ind, j, jj, k, l, nc, nh, nhb, nnb, nnc, nnh
-    double precision :: norma
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    dimension  delta(4), in(3), a(3), b(3), axb(3), c(4,3), argd(4), &
-        & daxb(4, 3, 3), cdot(4, 3, 3), atemp2(3)
-    !
-    !  initialise
-    !
-    sum2 = 0.0d0
-    sum4 = 0.0d0
-    !
-    !  set j,k,l indices
-    !
-    in(1) = j
-    in(2) = k
-    in(3) = l
-    !
-    !  vector a is rk-rj, vector b is rl-rj
-    !
-    do ind=1, 3
-        a(ind) = q(nh(k, ind))-q(nh(j, ind))
-        b(ind) = q(nh(l, ind))-q(nh(j, ind))
-    enddo
-    !
-    !  axb is vector a cross b
-    !
-    axb(1) = a(2)*b(3)-a(3)*b(2)
-    axb(2) = a(3)*b(1)-a(1)*b(3)
-    axb(3) = a(1)*b(2)-a(2)*b(1)
-    norma  = axb(1)*axb(1)+axb(2)*axb(2)+axb(3)*axb(3)
-    norma  = sqrt(norma)
-    !
-    !  c is position vector of h(ii): calculate c(j),c(k),c(l)
-    !
-    do ii=1, 3
-        do ind=1, 3
-            c(in(ii),ind) = -tch(in(ii), ind)/rch(in(ii))
-        enddo
-    enddo
-    !
-    !  argd is the dot product axb dot c
-    !
-    do ii=1, 3
-        argd(in(ii))  = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
-        argd(in(ii))  = argd(in(ii))/norma
-        delta(in(ii)) = acos(argd(in(ii)))-theta0(i, in(ii))
-        !        write(*,*) 'theta,delta',theta0(i,in(ii)),delta(in(ii))
-        sum2 = sum2+delta(in(ii))**2
-        sum4 = sum4+delta(in(ii))**4
-    enddo
-    !
-    !  derivatives of axb wrt hj:
-    !
-    daxb(j, 1, 1) = 0.0d0
-    daxb(j, 1, 2) = b(3)-a(3)
-    daxb(j, 1, 3) = -b(2)+a(2)
-    daxb(j, 2, 1) = -b(3)+a(3)
-    daxb(j, 2, 2) = 0.0d0
-    daxb(j, 2, 3) = b(1)-a(1)
-    daxb(j, 3, 1) = b(2)-a(2)
-    daxb(j, 3, 2) = -b(1)+a(1)
-    daxb(j, 3, 3) = 0.0d0
-    !
-    !  derivatives of axb wrt hk:
-    !
-    daxb(k, 1, 1) = 0.0d0
-    daxb(k, 1, 2) = -b(3)
-    daxb(k, 1, 3) = b(2)
-    daxb(k, 2, 1) = b(3)
-    daxb(k, 2, 2) = 0.0d0
-    daxb(k, 2, 3) = -b(1)
-    daxb(k, 3, 1) = -b(2)
-    daxb(k, 3, 2) = b(1)
-    daxb(k, 3, 3) = 0.0d0
-    !
-    !  derivatives of axb wrt hl:
-    !
-    daxb(l, 1, 1) = 0.0d0
-    daxb(l, 1, 2) = a(3)
-    daxb(l, 1, 3) = -a(2)
-    daxb(l, 2, 1) = -a(3)
-    daxb(l, 2, 2) = 0.0d0
-    daxb(l, 2, 3) = a(1)
-    daxb(l, 3, 1) = a(2)
-    daxb(l, 3, 2) = -a(1)
-    daxb(l, 3, 3) = 0.0d0
-    !
-    !   loop over cdot(in(ii),ind,jind) where we consider deriv of c(in(ii))
-    !   wrt h(in(ii),jind) with components jind
-    !
-    do ii=1, 3
-        !
-        !  deriv of cdot(in(ii),x) wrt x, y, z
-        !
-        cdot(in(ii), 1, 1) = 1.0d0/rch(in(ii)) +tch(in(ii), 1)*c(in(ii),1)/rch(in(ii))**2
-        cdot(in(ii), 1, 2) = tch(in(ii), 2)*c(in(ii),1)/rch(in(ii))**2
-        cdot(in(ii), 1, 3) = tch(in(ii), 3)*c(in(ii),1)/rch(in(ii))**2
-        !
-        !  deriv of cdot(in(ii),y) wrt x, y, z
-        !
-        cdot(in(ii), 2, 1) = tch(in(ii), 1)*c(in(ii),2)/rch(in(ii))**2
-        cdot(in(ii), 2, 2) = 1.0d0/rch(in(ii)) +tch(in(ii), 2)*c(in(ii),2)/rch(in(ii))**2
-        cdot(in(ii), 2, 3) = tch(in(ii), 3)*c(in(ii),2)/rch(in(ii))**2
-        !
-        !  deriv of cdot(in(ii),z) wrt x, y, z
-        !
-        cdot(in(ii), 3, 1) = tch(in(ii), 1)*c(in(ii),3)/rch(in(ii))**2
-        cdot(in(ii), 3, 2) = tch(in(ii), 2)*c(in(ii),3)/rch(in(ii))**2
-        cdot(in(ii), 3, 3) = 1.0d0/rch(in(ii)) +tch(in(ii), 3)*c(in(ii),3)/rch(in(ii))**2
-    enddo
-    !
-    do ii=1, 3
-        do ind=1, 3
-            deldot = -dtheta0(i, in(ii), i)
-            !
-            !  derivative wrt h(i,ind)
-            !  for  rch(i) only terms are from the derivatives of theta0
-            !
-            deldot = -deldot*tch(i, ind)/rch(i)
-            pdot(nh(i, ind))=pdot(nh(i, ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)*delta(in(ii))**3* &
-                & deldot
-            !
-            !  derivative wrt c(ind)
-            !
-            deldot        = -deldot
-            pdot(nc(ind)) = pdot(nc(ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)*delta(in(ii))**3*deldot
-            do jj=1, 3
-                !
-                !  partial derivatives wrt h(in(jj),ind), loop over delta(i,in(ii))
-                !
-                !   atemp1 is axb dot daxb wrt h(in(jj))
-                !
-                atemp1 = axb(1)*daxb(in(jj), ind, 1) +axb(2)*daxb(in(jj), ind, 2) +axb(3)*daxb(in(jj), ind, 3)
-                atemp1 = atemp1/(norma**3)
-                !
-                !  atemp2 is deriv of normalised axb
-                !
-                atemp2(1) = daxb(in(jj), ind, 1)/norma-atemp1*axb(1)
-                atemp2(2) = daxb(in(jj), ind, 2)/norma-atemp1*axb(2)
-                atemp2(3) = daxb(in(jj), ind, 3)/norma-atemp1*axb(3)
-                !
-                !  atemp3 is daxb dot c(in(ii))
-                atemp3 = atemp2(1)*c(in(ii),1)+atemp2(2)*c(in(ii),2) +atemp2(3)*c(in(ii),3)
-                !
-                !  atemp4 is axb dot cdot
-                !
-                atemp4 = 0.0d0
-                if( ii .eq. jj )then
-                    !
-                    !  ie deriv of c(in(ii)) wrt h(in(jj)) is non zero only for ii = jj
-                    !
-                    atemp4 = axb(1)*cdot(in(ii), 1, ind) +axb(2)*cdot(in(ii), 2, ind) +axb(3)*cdot(in(ii), 3, ind)
-                    atemp4 = atemp4/norma
-                endif
-                !
-                !  atemp5 is deriv of theta0(i,in(ii)) wrt to nh(in(jj),ind)
-                !
-                atemp5 = -dtheta0(i, in(ii), in(jj))
-                !
-                !  deriv wrt h(in(jj)),ind):
-                !
-                atemp5 = -atemp5*tch(in(jj), ind)/rch(in(jj))
-                deldot = atemp3+atemp4
-                deldot = -1.0d0/sqrt(1.0d0-argd(in(ii))**2)*deldot
-                deldot = deldot+atemp5
-                pdot(nh(in(jj), ind))=pdot(nh(in(jj), ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)* &
-                    & delta(in(ii))**3*deldot
-                !
-                !  for carbon the only contributions are from axb dot cdot term and
-                !  from theta0 and derivative cdot wrt carbon=-cdot wrt hydrogen
-                !
-                deldot = 1.0d0/sqrt(1.0d0-argd(in(ii))**2)*atemp4
-                deldot = deldot-atemp5
-                pdot(nc(ind))=pdot(nc(ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)*delta(in(ii))**3* &
-                    & deldot
-            enddo
-        enddo
-    enddo
-end subroutine calcdelta
-
-!******************************************************
-!
-!> @brief Evaluate opforce for the CH4F_GEN_GCSO_1996 potential.
-subroutine opforce
-    !
-    !  calculates the out-of-plane bending force constants
-    !  and their derivatives
-    !
-    implicit none
-    double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, aphi, atheta, b1ch, &
-        & b1s, b2s, b3s, bk, bphi, btheta, c1ch, cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, &
-        & dfdc, dfdelta, dfdh, dhdelta, ds1, ds2, ds3, dsphi, dstheta, dswitch, dtheta0, f1, fch3, &
-        & fdelta, fk0, fkinf, hch3, hdelta, pdot, q, r0ch, r0hh, rbh, rcb, rch, s1, s2, s3, sphi, &
-        & stheta, switch, tbh, tcb, tch, theta0
-    integer :: i, j, nc, nh, nhb, nnb, nnc, nnh
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    dimension switch(4), dswitch(4,4)
-    !
-    !  calculate switching functions:
-    !
-    switch(1) = (1.0d0-s3(1))*s3(2)*s3(3)*s3(4)
-    switch(2) = (1.0d0-s3(2))*s3(3)*s3(4)*s3(1)
-    switch(3) = (1.0d0-s3(3))*s3(4)*s3(1)*s3(2)
-    switch(4) = (1.0d0-s3(4))*s3(1)*s3(2)*s3(3)
-    !
-    !  calculate derivatives:
-    !  derivative of switch(1) wrt the 4 rch bond lengths
-    !
-    dswitch(1,1) = -ds3(1)*s3(2)*s3(3)*s3(4)
-    dswitch(1,2) = (1.0d0-s3(1))*ds3(2)*s3(3)*s3(4)
-    dswitch(1,3) = (1.0d0-s3(1))*s3(2)*ds3(3)*s3(4)
-    dswitch(1,4) = (1.0d0-s3(1))*s3(2)*s3(3)*ds3(4)
-    !
-    !  derivative of switch(2) wrt the 4 rch bond lengths
-    !
-    dswitch(2,1) = (1.0d0-s3(2))*s3(3)*s3(4)*ds3(1)
-    dswitch(2,2) = -ds3(2)*s3(3)*s3(4)*s3(1)
-    dswitch(2,3) = (1.0d0-s3(2))*ds3(3)*s3(4)*s3(1)
-    dswitch(2,4) = (1.0d0-s3(2))*s3(3)*ds3(4)*s3(1)
-    !
-    !  derivative of switch(3) wrt the 4 rch bond lengths
-    !
-    dswitch(3,1) = (1.0d0-s3(3))*s3(4)*ds3(1)*s3(2)
-    dswitch(3,2) = (1.0d0-s3(3))*s3(4)*s3(1)*ds3(2)
-    dswitch(3,3) = -ds3(3)*s3(4)*s3(1)*s3(2)
-    dswitch(3,4) = (1.0d0-s3(3))*ds3(4)*s3(1)*s3(2)
-    !
-    !  derivative of switch(3) wrt the 4 rch bond lengths
-    !
-    dswitch(4,1) = (1.0d0-s3(4))*ds3(1)*s3(2)*s3(3)
-    dswitch(4,2) = (1.0d0-s3(4))*s3(1)*ds3(2)*s3(3)
-    dswitch(4,3) = (1.0d0-s3(4))*s3(1)*s3(2)*ds3(3)
-    dswitch(4,4) = -ds3(4)*s3(1)*s3(2)*s3(3)
-    !
-    !  calculate the force constants and their derivatives
-    !
-    do i=1, 4
-        fdelta(i) = switch(i)*fch3
-        hdelta(i) = switch(i)*hch3
-        do j=1, 4
-            dfdelta(i, j) = dswitch(i,j)*fch3
-            dhdelta(i, j) = dswitch(i,j)*hch3
-        enddo
-    enddo
-end subroutine opforce
-
-!
-!******************************************************
-!
-!
-!> @brief Evaluate ipforce for the CH4F_GEN_GCSO_1996 potential.
-subroutine ipforce
-    !
-    !  calculates the symmetrised in plane bend force constants and
-    !  all partial derivatives involving them
-    !
-    implicit none
-    double precision :: a1, a1ch, a1s, a2, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, aphi, arga1, &
-        & arga2, atheta, b1ch, b1s, b2s, b3s, bk, bphi, btheta, c1ch, cphi, ctheta, d1cb, d1ch, d1hh, &
-        & d3cb, d3ch, d3hh, df1dc, df1dh, dfdc, dfdelta, dfdh, dfk0, dhdelta, ds1, ds2, ds3, dsphi, &
-        & dstheta, dtheta0, duma1, duma2, f0, f1, f2, fch3, fdelta, fk0, fkinf, hch3, hdelta, pdot, &
-        & q, r0ch, r0hh, rbh, rcb, rch, s1, s2, s3, sphi, stheta, tbh, tcb, tch, theta0
-    integer :: i, nc, nh, nhb, nnb, nnc, nnh
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    dimension dfk0(4,4,4), df1dc(4), df1dh(4)
-    !
-    !  set force constant at asymptotes
-    !
-    f0 = fkinf+ak
-    f2 = fkinf
-    !
-    fk0(1, 2) = f0+f0*(s1(1)*s1(2)-1.0d0)+(f0-f2)*(s2(3)*s2(4)-1.0d0)
-    fk0(1, 3) = f0+f0*(s1(1)*s1(3)-1.0d0)+(f0-f2)*(s2(2)*s2(4)-1.0d0)
-    fk0(1, 4) = f0+f0*(s1(1)*s1(4)-1.0d0)+(f0-f2)*(s2(2)*s2(3)-1.0d0)
-    fk0(2, 3) = f0+f0*(s1(2)*s1(3)-1.0d0)+(f0-f2)*(s2(1)*s2(4)-1.0d0)
-    fk0(2, 4) = f0+f0*(s1(2)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(3)-1.0d0)
-    fk0(3, 4) = f0+f0*(s1(3)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(2)-1.0d0)
-    !
-    !  derivative of fk0
-    !
-    dfk0(1,2,1) = f0*ds1(1)*s1(2)
-    dfk0(1,2,2) = f0*s1(1)*ds1(2)
-    dfk0(1,2,3) = (f0-f2)*ds2(3)*s2(4)
-    dfk0(1,2,4) = (f0-f2)*s2(3)*ds2(4)
-    !
-    dfk0(1,3,1) = f0*ds1(1)*s1(3)
-    dfk0(1,3,2) = (f0-f2)*ds2(2)*s2(4)
-    dfk0(1,3,3) = f0*s1(1)*ds1(3)
-    dfk0(1,3,4) = (f0-f2)*s2(2)*ds2(4)
-    !
-    dfk0(1,4,1) = f0*ds1(1)*s1(4)
-    dfk0(1,4,2) = (f0-f2)*ds2(2)*s2(3)
-    dfk0(1,4,3) = (f0-f2)*s2(2)*ds2(3)
-    dfk0(1,4,4) = f0*s1(1)*ds1(4)
-    !
-    dfk0(2,3,1) = (f0-f2)*ds2(1)*s2(4)
-    dfk0(2,3,2) = f0*ds1(2)*s1(3)
-    dfk0(2,3,3) = f0*s1(2)*ds1(3)
-    dfk0(2,3,4) = (f0-f2)*s2(1)*ds2(4)
-    !
-    dfk0(2,4,1) = (f0-f2)*ds2(1)*s2(3)
-    dfk0(2,4,2) = f0*ds1(2)*s1(4)
-    dfk0(2,4,3) = (f0-f2)*s2(1)*ds2(3)
-    dfk0(2,4,4) = f0*s1(2)*ds1(4)
-    !
-    dfk0(3,4,1) = (f0-f2)*ds2(1)*s2(2)
-    dfk0(3,4,2) = (f0-f2)*s2(1)*ds2(2)
-    dfk0(3,4,3) = f0*ds1(3)*s1(4)
-    dfk0(3,4,4) = f0*s1(3)*ds1(4)
-    !
-    !       argfk0=bk*((rch(1)-r0ch)**2+(rch(2)-r0ch)**2
-    !     *              +(rch(3)-r0ch)**2+(rch(4)-r0ch)**2)
-    !       fk0=fkinf+ak*exp(-argfk0)
-    do i=1, 4
-        !
-        !  calc derivatives of fk0 wrt each of the rch(i) bonds
-        !
-        !         dfk0(i)=-2.0d0*ak*bk*(rch(i)-r0ch)*exp(-argfk0)
-        !
-        !  calculate the terms f1(i)
-        !
-        arga1 = aa1*rbh(i)*rbh(i)
-        arga2 = aa4*(rbh(i)-r0hh)*(rbh(i)-r0hh)
-        a1    = 1.0d0-exp(-arga1)
-        a2    = aa2+aa3*exp(-arga2)
-        f1(i) = a1*exp(-a2*(rch(i)-r0ch)**2)
-        !
-        !  and calculate the derivatives wrt rch(i) and rbh(i)
-        !
-        duma1    = 2.0d0*aa1*rbh(i)*exp(-arga1)
-        duma2    = -2.0d0*aa3*aa4*(rbh(i)-r0hh)*exp(-arga2)
-        df1dc(i) = -2.0d0*(rch(i)-r0ch)*a1*a2*exp(-a2*(rch(i)-r0ch)**2)
-        df1dh(i) = duma1*exp(-a2*(rch(i)-r0ch)**2) -duma2*(rch(i)-r0ch)**2*a1*exp(-a2*(rch(i)-r0ch)**2)
-    enddo
-    !
-    !  derivative of total force constant f(i,j) wrt bond length rch(k)
-    !  is given by dfdc(i,j,k)
-    !
-    dfdc(1, 2, 1) = dfk0(1,2,1)*f1(1)*f1(2)+fk0(1, 2)*df1dc(1)*f1(2)
-    dfdc(1, 2, 2) = dfk0(1,2,2)*f1(1)*f1(2)+fk0(1, 2)*f1(1)*df1dc(2)
-    dfdc(1, 2, 3) = dfk0(1,2,3)*f1(1)*f1(2)
-    dfdc(1, 2, 4) = dfk0(1,2,4)*f1(1)*f1(2)
-    !
-    dfdc(1, 3, 1) = dfk0(1,3,1)*f1(1)*f1(3)+fk0(1, 3)*df1dc(1)*f1(3)
-    dfdc(1, 3, 2) = dfk0(1,3,2)*f1(1)*f1(3)
-    dfdc(1, 3, 3) = dfk0(1,3,3)*f1(1)*f1(3)+fk0(1, 3)*f1(1)*df1dc(3)
-    dfdc(1, 3, 4) = dfk0(1,3,4)*f1(1)*f1(3)
-    !
-    dfdc(1, 4, 1) = dfk0(1,4,1)*f1(1)*f1(4)+fk0(1, 4)*df1dc(1)*f1(4)
-    dfdc(1, 4, 2) = dfk0(1,4,2)*f1(1)*f1(4)
-    dfdc(1, 4, 3) = dfk0(1,4,3)*f1(1)*f1(4)
-    dfdc(1, 4, 4) = dfk0(1,4,4)*f1(1)*f1(4)+fk0(1, 4)*f1(1)*df1dc(4)
-    !
-    dfdc(2, 3, 1) = dfk0(2,3,1)*f1(2)*f1(3)
-    dfdc(2, 3, 2) = dfk0(2,3,2)*f1(2)*f1(3)+fk0(2, 3)*df1dc(2)*f1(3)
-    dfdc(2, 3, 3) = dfk0(2,3,3)*f1(2)*f1(3)+fk0(2, 3)*f1(2)*df1dc(3)
-    dfdc(2, 3, 4) = dfk0(2,3,4)*f1(2)*f1(3)
-    !
-    dfdc(2, 4, 1) = dfk0(2,4,1)*f1(2)*f1(4)
-    dfdc(2, 4, 2) = dfk0(2,4,2)*f1(2)*f1(4)+fk0(2, 4)*df1dc(2)*f1(4)
-    dfdc(2, 4, 3) = dfk0(2,4,3)*f1(2)*f1(4)
-    dfdc(2, 4, 4) = dfk0(2,4,4)*f1(2)*f1(4)+fk0(2, 4)*f1(2)*df1dc(4)
-    !
-    dfdc(3, 4, 1) = dfk0(3,4,1)*f1(3)*f1(4)
-    dfdc(3, 4, 2) = dfk0(3,4,2)*f1(3)*f1(4)
-    dfdc(3, 4, 3) = dfk0(3,4,3)*f1(3)*f1(4)+fk0(3, 4)*df1dc(3)*f1(4)
-    dfdc(3, 4, 4) = dfk0(3,4,4)*f1(3)*f1(4)+fk0(3, 4)*f1(3)*df1dc(4)
-    !
-    !  derivative of total force constant f(i,j) wrt bond length rbh(k)
-    !  is given by dfdh(i,j,k)
-    !
-    !  nb only non-zero derivatives are those from rbh(i) and rbh(j)
-    !
-    dfdh(1, 2, 1) = fk0(1, 2)*df1dh(1)*f1(2)
-    dfdh(1, 2, 2) = fk0(1, 2)*f1(1)*df1dh(2)
-    dfdh(1, 2, 3) = 0.0d0
-    dfdh(1, 2, 4) = 0.0d0
-    !
-    dfdh(1, 3, 1) = fk0(1, 3)*df1dh(1)*f1(3)
-    dfdh(1, 3, 2) = 0.0d0
-    dfdh(1, 3, 3) = fk0(1, 3)*f1(1)*df1dh(3)
-    dfdh(1, 3, 4) = 0.0d0
-    !
-    dfdh(1, 4, 1) = fk0(1, 4)*df1dh(1)*f1(4)
-    dfdh(1, 4, 2) = 0.0d0
-    dfdh(1, 4, 3) = 0.0d0
-    dfdh(1, 4, 4) = fk0(1, 4)*f1(1)*df1dh(4)
-    !
-    dfdh(2, 3, 1) = 0.0d0
-    dfdh(2, 3, 2) = fk0(2, 3)*df1dh(2)*f1(3)
-    dfdh(2, 3, 3) = fk0(2, 3)*f1(2)*df1dh(3)
-    dfdh(2, 3, 4) = 0.0d0
-    !
-    dfdh(2, 4, 1) = 0.0d0
-    dfdh(2, 4, 2) = fk0(2, 4)*df1dh(2)*f1(4)
-    dfdh(2, 4, 3) = 0.0d0
-    dfdh(2, 4, 4) = fk0(2, 4)*f1(2)*df1dh(4)
-    !
-    dfdh(3, 4, 1) = 0.0d0
-    dfdh(3, 4, 2) = 0.0d0
-    dfdh(3, 4, 3) = fk0(3, 4)*df1dh(3)*f1(4)
-    dfdh(3, 4, 4) = fk0(3, 4)*f1(3)*df1dh(4)
-    !
-end subroutine ipforce
-
-!
-!******************************************************
-!
-!
-!> @brief Evaluate switchf for the CH4F_GEN_GCSO_1996 potential.
-subroutine switchf
-    !
-    !  calculates switching functions: s3,sphi,stheta
-    !  and their derivatives ds3,dsphi,dstheta
-    !
-    implicit none
-    double precision :: a1ch, a1s, a2s, a3s, aa1, aa2, aa3, aa4, acb, ahh, ak, aphi, argmax, args1, &
-        & args2, args3, argsphi, argstheta, atheta, b1ch, b1s, b2s, b3s, bk, bphi, btheta, c1ch, &
-        & cphi, ctheta, d1cb, d1ch, d1hh, d3cb, d3ch, d3hh, dfdc, dfdelta, dfdh, dhdelta, ds1, ds2, &
-        & ds3, dsphi, dstheta, dtheta0, f1, fch3, fdelta, fk0, fkinf, hch3, hdelta, pdot, q, r0ch, &
-        & r0hh, rbh, rcb, rch, s1, s2, s3, sphi, stheta, tbh, tcb, tch, theta0
-    integer :: i, nc, nh, nhb, nnb, nnc, nnh
-    common /angles/ theta0(4, 4), dtheta0(4, 4, 4)
-    common /bonds/ rcb, rch(4), r0ch, rbh(4), r0hh
-    common /coords/ tcb(3), tch(4, 3), tbh(4, 3)
-    common /delta1/ fdelta(4), hdelta(4)
-    common /delta2/ dfdelta(4, 4), dhdelta(4, 4)
-    common /force1/ fk0(4, 4), f1(4), dfdc(4, 4, 4), dfdh(4, 4, 4)
-    common /force2/ fkinf, ak, bk, aa1, aa2, aa3, aa4
-    common /fsw1/ a1s, b1s, a2s, b2s, a3s, b3s
-    common /ip1/ s1(4), ds1(4), s2(4), ds2(4)
-    common /ndx/ nnc, nnb, nnh(4), nc(3), nhb(3), nh(4, 3)
-    common /op1/ s3(4), ds3(4)
-    common /params/ fch3, hch3
-    common /qpdot/ q(150), pdot(150)
-    common /sphi1/ aphi, bphi, cphi
-    common /stheta1/ atheta, btheta, ctheta
-    common /stret1/ d1ch, d3ch, a1ch, b1ch, c1ch, &
-        & d1hh, d3hh, ahh, &
-        & d1cb, d3cb, acb
-    common /switch1/ sphi(4), dsphi(4), stheta(4), dstheta(4)
-    !
-    !  nb remember that integration units are:
-    !  energy in   1.0d+05 j/mol
-    !  time in     1.0d-14 s
-    !
-    a1s = 1.5313681d-7
-    b1s = -4.6696246d0
-    a2s = 1.0147402d-7
-    b2s = -12.363798d0
-    !
-    !  use double precision criterion:
-    !
-    !  tanh(19.0d0)=1.0d0
-    !
-    argmax = 19.0d0
-    do i=1, 4
-        args1 = a1s*(rch(i)-r0ch)*(rch(i)-b1s)**8
-        if( args1 .lt. argmax )then
-            s1(i)  = 1.0d0-tanh(args1)
-            ds1(i) = a1s*((rch(i)-b1s)**8 +8.0d0*(rch(i)-r0ch)*(rch(i)-b1s)**7)
-            ds1(i) = -ds1(i)/cosh(args1)**2
-        else
-            s1(i)  = 0.0d0
-            ds1(i) = 0.0d0
-        endif
-        !
-        args2 = a2s*(rch(i)-r0ch)*(rch(i)-b2s)**6
-        if( args2 .lt. argmax )then
-            s2(i)  = 1.0d0-tanh(args2)
-            ds2(i) = a2s*((rch(i)-b2s)**6 +6.0d0*(rch(i)-r0ch)*(rch(i)-b2s)**5)
-            ds2(i) = -ds2(i)/cosh(args2)**2
-        else
-            s2(i)  = 0.0d0
-            ds2(i) = 0.0d0
-        endif
-        !
-        !  calculate s3 and ds3
-        !
-        args3 = a3s*(rch(i)-r0ch)*(rch(i)-b3s)**2
-        if( args3 .lt. argmax )then
-            s3(i)  = 1.0d0-tanh(args3)
-            ds3(i) = a3s*(3.0d0*rch(i)**2-2.0d0*rch(i)*(r0ch+2.0d0*b3s) +b3s*(b3s+2.0d0*r0ch))
-            ds3(i) = -ds3(i)/cosh(args3)**2
-        else
-            s3(i)  = 0.0d0
-            ds3(i) = 0.0d0
-        endif
-        !
-        !  calculate sphi and dsphi
-        !
-        !  condition here is on the bondlength rch(i)
-        !  st argsphi is lt approx 19.0d0
-        !
-        if( rch(i) .lt. 3.8d0 )then
-            argsphi  = aphi*(rch(i)-r0ch)*exp(bphi*(rch(i)-cphi)**3)
-            sphi(i)  = 1.0d0-tanh(argsphi)
-            dsphi(i) = aphi*(1.0d0+3.0d0*bphi*(rch(i)-r0ch) *(rch(i)-cphi)**2)
-            dsphi(i) = dsphi(i)*exp(bphi*(rch(i)-cphi)**3)
-            dsphi(i) = -dsphi(i)/cosh(argsphi)**2
-        else
-            sphi(i)  = 0.0d0
-            dsphi(i) = 0.0d0
-        endif
-        !
-        !  calculate stheta and dstheta
-        !
-        if( rch(i) .lt. 3.8d0 )then
-            argstheta  = atheta*(rch(i)-r0ch)*exp(btheta*(rch(i)-ctheta)**3)
-            stheta(i)  = 1.0d0-tanh(argstheta)
-            dstheta(i) = atheta*(1.0d0+3.0d0*btheta*(rch(i)-r0ch) *(rch(i)-ctheta)**2)
-            dstheta(i) = dstheta(i)*exp(btheta*(rch(i)-ctheta)**3)
-            dstheta(i) = -dstheta(i)/cosh(argstheta)**2
-        else
-            stheta(i)  = 0.0d0
-            dstheta(i) = 0.0d0
-        endif
-    enddo
-end subroutine switchf
-
-!
-!> @brief Evaluate SETUP for the CH4F_GEN_GCSO_1996 potential.
-subroutine setup( n3tm )
-    !
-    implicit none
-    integer :: n3tm
-    !
-    !   N3TMMN = 3 * NATOMS
-    !   NATOMS = the number of atoms represented by this potential function
-    !
-    !   The variable N3TMMN is the minimum value of N3TM allowed to be
-    !   passed by the calling routine for the number of cartesian
-    !   coordinates needed to represent the full system represented by this
-    !   potential energy surface routine.
-    !   N3TM must be greater than or equal to N3TMMN.
-    !
-    integer, parameter :: n3tmmn = 18
-    !
-    !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
-    !
-    write (6, '(/,2X,T5,''SETUP has been called for the CH5 '', ''potential energy surface'')')
-    if( n3tm .lt. n3tmmn )then
-        write (6, '(/,2X,T5,''Warning: N3TM is set equal to '',I3, '' but this potential routine'', /,2X,T14,''requir' // &
-            'es N3TM be greater than or '', ''equal to '',I3,/)') n3tm, n3tmmn
-        stop 'SETUP 1'
-    endif
-    !
-    !
-    !
-end subroutine setup

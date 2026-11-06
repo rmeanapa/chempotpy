@@ -1,4 +1,3 @@
-!**********************************************************************
 !   System:                        OH3 (lowest 3 state)
 !   Functional form:               permutationally invariant polynomials
 !   Common name:                   OH3 three states PES
@@ -15,9 +14,7 @@
 !   Notes:    -PES of OH3
 !             -Including diabatic states, diabatic couplings, and transformed adiabatic states
 !
-!**********************************************************************
 
-!***************************************************************************
 ! PES program for OH3
 !
 ! Authors: Yinan Shu, Antonio Gustavo Sampaio de Oliveira Filho
@@ -32,7 +29,6 @@
 !      Bina Fu, Joel Bowman, and Donald G. Truhlar
 !   to be published
 !
-!***************************************************************************
 
 !===========================================================================
 ! *def oh3_pes
@@ -92,134 +88,155 @@
 !  10. rv: the diabatic to adiabatic rotation matrix
 !===========================================================================
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, p, g, d )
-    use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_oh3_pip_ffw1_2019_pes
     implicit none
-    ! number of electronic state
-    integer, parameter            :: nstates = 3
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
+        implicit none
+        ! number of electronic state
+        integer, parameter            :: nstates = 3
+        integer, parameter            :: natoms  = 4
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out) :: d(nstates,nstates,natoms,3)
+        character (len=1)             :: symb
+        integer                       :: iatom, idir, istate, jstate
+        integer                       :: i, j, k, l
+        double precision              :: u11, u22, u33
+        double precision              :: u12, u13, u23
+        double precision              :: s12, s23
+        double precision              :: xyz(4,3)
+        character(len=32)             :: fname, bname
+        double precision              :: du11dx(4,3), du22dx(4,3), du33dx(4,3)
+        double precision              :: du12dx(4,3), du13dx(4,3), du23dx(4,3)
+        double precision              :: gu(4,3,3,3)
+        double precision              :: u(3,3), rv(3,3), a(3)
+        double precision              :: ga(4,3,3), f(4,3,3,3)
+        double precision              :: tmpgu(3,3), tmpga(3,3)
+        xyz = x
+        !compute diabatic states
+        call u11_prepot_8
+        call u11_pot_8(xyz, u11, du11dx)
+        call u22_prepot_8
+        call u22_pot_8(xyz, u22, du22dx)
+        call u33_prepot_8
+        call u33_pot_8(xyz, u33, du33dx)
+        !compute diabatic couplings
+        call u12_order10
+        call u13_order12
+        call u23_order10
+        call u12_dc_10(xyz, u12, s12)
+        call u13_dc_12(xyz, u13)
+        call u23_dc_10(xyz, u23, s23)
+        !compute the adiabatic states and eigenvectors
+        u(1,1) = u11
+        u(1,2) = u12
+        u(1,3) = u13
+        u(2,1) = u12
+        u(2,2) = u22
+        u(2,3) = u23
+        u(3,1) = u13
+        u(3,2) = u23
+        u(3,3) = u33
+        call dsyevj3(u, rv, a)
+        call order(a, rv)
+        p = (a+76.80042447)*legacy_hartree_to_electronvolt
+        if( igrad .ne. 0 )then
+            !compute diabatic couplings derivatives
+            call u12_dvdx(xyz, u12, s12, du12dx)
+            call u13_dvdx(xyz, u13, du13dx)
+            call u23_dvdx(xyz, u23, s23, du23dx)
+            !assign dudx to gu
+            do i=1, 4
+                do j=1, 3
+                    gu(i,j,1,1) = du11dx(i,j)
+                    gu(i,j,1,2) = du12dx(i,j)
+                    gu(i,j,1,3) = du13dx(i,j)
+                    gu(i,j,2,1) = du12dx(i,j)
+                    gu(i,j,2,2) = du22dx(i,j)
+                    gu(i,j,2,3) = du23dx(i,j)
+                    gu(i,j,3,1) = du13dx(i,j)
+                    gu(i,j,3,2) = du23dx(i,j)
+                    gu(i,j,3,3) = du33dx(i,j)
+                enddo
+            enddo
+            !initialize the ga and f matrices
+            do i=1, 4
+                do j=1, 3
+                    do k=1, 3
+                        do l=1, 3
+                            ga(i,j,k)  = 0.000
+                            f(i,j,k,l) = 0.000
+                        enddo
+                    enddo
+                enddo
+            enddo
+            !compute the adiabatic states gradients,nonadiabatic coupling vectors
+            do i=1, 4
+                do j=1, 3
+                    tmpgu(1,1) = du11dx(i,j)
+                    tmpgu(1,2) = du12dx(i,j)
+                    tmpgu(1,3) = du13dx(i,j)
+                    tmpgu(2,1) = du12dx(i,j)
+                    tmpgu(2,2) = du22dx(i,j)
+                    tmpgu(2,3) = du23dx(i,j)
+                    tmpgu(3,1) = du13dx(i,j)
+                    tmpgu(3,2) = du23dx(i,j)
+                    tmpgu(3,3) = du33dx(i,j)
+                    !C^T*dU*C
+                    tmpga = matmul(transpose(rv), matmul(tmpgu, rv))
+                    !dV_i = (C^T*dU*C)_ii
+                    do k=1, 3
+                        ga(i,j,k) = tmpga(k,k)
+                    enddo
+                    !F_ij = (C^T*dU*C)_ij / (V_j-V_i)
+                    do k=1, 2
+                        do l=k+1, 3
+                            f(i,j,k,l) = tmpga(k,l)/(a(l)-a(k))
+                            f(i,j,l,k) = -f(i,j,k,l)
+                        enddo
+                    enddo
+                enddo
+            enddo
+            do iatom=1, 4
+                do idir=1, 3
+                    do istate=1, 3
+                        g(istate,iatom,idir) = ga(iatom,idir,istate)*legacy_hartree_to_electronvolt
+                    enddo
+                enddo
+            enddo
+            do iatom=1, 4
+                do idir=1, 3
+                    do istate=1, 3
+                        do jstate=1, 3
+                            d(istate,jstate,iatom,idir) = f(iatom,idir,istate,jstate)
+                        enddo
+                    enddo
+                enddo
+            enddo
+        endif
+    end subroutine evaluate
+end module chempotpy_oh3_pip_ffw1_2019_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, p, g, d )
+    use chempotpy_oh3_pip_ffw1_2019_pes, only: evaluate
+    implicit none
     integer, parameter            :: natoms  = 4
+    integer, parameter            :: nstates = 3
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out) :: p(nstates)
+    double precision, intent(out) :: g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-    character (len=1)             :: symb
-    integer                       :: iatom, idir, istate, jstate
-    integer                       :: i, j, k, l
-    double precision              :: u11, u22, u33
-    double precision              :: u12, u13, u23
-    double precision              :: s12, s23
-    double precision              :: xyz(4,3)
-    character(len=32)             :: fname, bname
-    double precision              :: du11dx(4,3), du22dx(4,3), du33dx(4,3)
-    double precision              :: du12dx(4,3), du13dx(4,3), du23dx(4,3)
-    double precision              :: gu(4,3,3,3)
-    double precision              :: u(3,3), rv(3,3), a(3)
-    double precision              :: ga(4,3,3), f(4,3,3,3)
-    double precision              :: tmpgu(3,3), tmpga(3,3)
-    xyz = x
-    !compute diabatic states
-    call u11_prepot_8
-    call u11_pot_8(xyz, u11, du11dx)
-    call u22_prepot_8
-    call u22_pot_8(xyz, u22, du22dx)
-    call u33_prepot_8
-    call u33_pot_8(xyz, u33, du33dx)
-    !compute diabatic couplings
-    call u12_order10
-    call u13_order12
-    call u23_order10
-    call u12_dc_10(xyz, u12, s12)
-    call u13_dc_12(xyz, u13)
-    call u23_dc_10(xyz, u23, s23)
-    !compute the adiabatic states and eigenvectors
-    u(1,1) = u11
-    u(1,2) = u12
-    u(1,3) = u13
-    u(2,1) = u12
-    u(2,2) = u22
-    u(2,3) = u23
-    u(3,1) = u13
-    u(3,2) = u23
-    u(3,3) = u33
-    call dsyevj3(u, rv, a)
-    call order(a, rv)
-    p = (a+76.80042447)*legacy_hartree_to_electronvolt
-    if( igrad .ne. 0 )then
-        !compute diabatic couplings derivatives
-        call u12_dvdx(xyz, u12, s12, du12dx)
-        call u13_dvdx(xyz, u13, du13dx)
-        call u23_dvdx(xyz, u23, s23, du23dx)
-        !assign dudx to gu
-        do i=1, 4
-            do j=1, 3
-                gu(i,j,1,1) = du11dx(i,j)
-                gu(i,j,1,2) = du12dx(i,j)
-                gu(i,j,1,3) = du13dx(i,j)
-                gu(i,j,2,1) = du12dx(i,j)
-                gu(i,j,2,2) = du22dx(i,j)
-                gu(i,j,2,3) = du23dx(i,j)
-                gu(i,j,3,1) = du13dx(i,j)
-                gu(i,j,3,2) = du23dx(i,j)
-                gu(i,j,3,3) = du33dx(i,j)
-            enddo
-        enddo
-        !initialize the ga and f matrices
-        do i=1, 4
-            do j=1, 3
-                do k=1, 3
-                    do l=1, 3
-                        ga(i,j,k)  = 0.000
-                        f(i,j,k,l) = 0.000
-                    enddo
-                enddo
-            enddo
-        enddo
-        !compute the adiabatic states gradients,nonadiabatic coupling vectors
-        do i=1, 4
-            do j=1, 3
-                tmpgu(1,1) = du11dx(i,j)
-                tmpgu(1,2) = du12dx(i,j)
-                tmpgu(1,3) = du13dx(i,j)
-                tmpgu(2,1) = du12dx(i,j)
-                tmpgu(2,2) = du22dx(i,j)
-                tmpgu(2,3) = du23dx(i,j)
-                tmpgu(3,1) = du13dx(i,j)
-                tmpgu(3,2) = du23dx(i,j)
-                tmpgu(3,3) = du33dx(i,j)
-                !C^T*dU*C
-                tmpga = matmul(transpose(rv), matmul(tmpgu, rv))
-                !dV_i = (C^T*dU*C)_ii
-                do k=1, 3
-                    ga(i,j,k) = tmpga(k,k)
-                enddo
-                !F_ij = (C^T*dU*C)_ij / (V_j-V_i)
-                do k=1, 2
-                    do l=k+1, 3
-                        f(i,j,k,l) = tmpga(k,l)/(a(l)-a(k))
-                        f(i,j,l,k) = -f(i,j,k,l)
-                    enddo
-                enddo
-            enddo
-        enddo
-        do iatom=1, 4
-            do idir=1, 3
-                do istate=1, 3
-                    g(istate,iatom,idir) = ga(iatom,idir,istate)*legacy_hartree_to_electronvolt
-                enddo
-            enddo
-        enddo
-        do iatom=1, 4
-            do idir=1, 3
-                do istate=1, 3
-                    do jstate=1, 3
-                        d(istate,jstate,iatom,idir) = f(iatom,idir,istate,jstate)
-                    enddo
-                enddo
-            enddo
-        enddo
-    endif
-end
+    call evaluate(x, igrad, p, g, d)
+end subroutine pes
 
 !===========================================================================
 ! *def u11_prepot_8

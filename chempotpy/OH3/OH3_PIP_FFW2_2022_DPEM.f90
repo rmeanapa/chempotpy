@@ -1,4 +1,3 @@
-!***************************************************************************
 ! PES program for OH3
 !
 ! Authors: Shanyu Han, Antonio Gustavo Sampaio de Oliveira Filho, Yinan Shu
@@ -12,7 +11,6 @@
 !      Yinan Shu, Donald G. Truhlar, and Hua Guo
 !   ChemPhysChem 2022, 23, e202200039
 !
-!***************************************************************************
 
 !===========================================================================
 ! *def oh3_pes
@@ -73,77 +71,97 @@
 !  10. rv: the diabatic to adiabatic rotation matrix
 !===========================================================================
 
-!> @brief Evaluate dpem.
-subroutine dpem( x, igrad, u, ug )
-    use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_oh3_pip_ffw2_2022_dpem_pes
     implicit none
-    ! number of electronic state
-    integer, parameter            :: nstates = 3
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, u, ug )
+        use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
+        implicit none
+        ! number of electronic state
+        integer, parameter            :: nstates = 3
+        integer, parameter            :: natoms  = 4
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: u(nstates,nstates)
+        double precision, intent(out) :: ug(nstates,nstates,natoms,3)
+        character (len=1)             :: symb
+        integer                       :: iatom, idir, istate, jstate
+        integer                       :: i, j, k, l
+        double precision              :: u11, u22, u33
+        double precision              :: u12, u13, u23
+        double precision              :: s12, s23
+        double precision              :: xyz(4,3)
+        character(len=32)             :: fname, bname
+        double precision              :: du11dx(4,3), du22dx(4,3), du33dx(4,3)
+        double precision              :: du12dx(4,3), du13dx(4,3), du23dx(4,3)
+        double precision              :: gu(4,3,3,3)
+        double precision              :: rv(3,3), a(3)
+        double precision              :: ga(4,3,3), f(4,3,3,3)
+        double precision              :: tmpgu(3,3), tmpga(3,3)
+        xyz = x
+        !compute diabatic states
+        call u11_prepot_8
+        call u11_pot_8(xyz, u11, du11dx)
+        call u22_prepot_8
+        call u22_pot_8(xyz, u22, du22dx)
+        call u33_prepot_8
+        call u33_pot_8(xyz, u33, du33dx)
+        !compute diabatic couplings
+        call u12_order10
+        call u13_order12
+        call u23_order10
+        call u12_dc_10(xyz, u12, s12)
+        call u13_dc_12(xyz, u13)
+        call u23_dc_10(xyz, u23, s23)
+        !compute the adiabatic states and eigenvectors
+        u(1,1) = u11
+        u(1,2) = u12
+        u(1,3) = u13
+        u(2,1) = u12
+        u(2,2) = u22
+        u(2,3) = u23
+        u(3,1) = u13
+        u(3,2) = u23
+        u(3,3) = u33
+        u      = u*legacy_hartree_to_electronvolt
+        !compute diabatic couplings derivatives
+        call u12_dvdx(xyz, u12, s12, du12dx)
+        call u13_dvdx(xyz, u13, du13dx)
+        call u23_dvdx(xyz, u23, s23, du23dx)
+        !assign dudx to gu
+        do i=1, 4
+            do j=1, 3
+                ug(1,1,i,j) = du11dx(i,j)
+                ug(1,2,i,j) = du12dx(i,j)
+                ug(1,3,i,j) = du13dx(i,j)
+                ug(2,1,i,j) = du12dx(i,j)
+                ug(2,2,i,j) = du22dx(i,j)
+                ug(2,3,i,j) = du23dx(i,j)
+                ug(3,1,i,j) = du13dx(i,j)
+                ug(3,2,i,j) = du23dx(i,j)
+                ug(3,3,i,j) = du33dx(i,j)
+            enddo
+        enddo
+        ug = ug*legacy_hartree_to_electronvolt
+    end subroutine evaluate
+end module chempotpy_oh3_pip_ffw2_2022_dpem_pes
+
+!> @brief Preserve the historical Python-facing dpem entry point.
+subroutine dpem( x, igrad, u, ug )
+    use chempotpy_oh3_pip_ffw2_2022_dpem_pes, only: evaluate
+    implicit none
     integer, parameter            :: natoms  = 4
+    integer, parameter            :: nstates = 3
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-    character (len=1)             :: symb
-    integer                       :: iatom, idir, istate, jstate
-    integer                       :: i, j, k, l
-    double precision              :: u11, u22, u33
-    double precision              :: u12, u13, u23
-    double precision              :: s12, s23
-    double precision              :: xyz(4,3)
-    character(len=32)             :: fname, bname
-    double precision              :: du11dx(4,3), du22dx(4,3), du33dx(4,3)
-    double precision              :: du12dx(4,3), du13dx(4,3), du23dx(4,3)
-    double precision              :: gu(4,3,3,3)
-    double precision              :: rv(3,3), a(3)
-    double precision              :: ga(4,3,3), f(4,3,3,3)
-    double precision              :: tmpgu(3,3), tmpga(3,3)
-    xyz = x
-    !compute diabatic states
-    call u11_prepot_8
-    call u11_pot_8(xyz, u11, du11dx)
-    call u22_prepot_8
-    call u22_pot_8(xyz, u22, du22dx)
-    call u33_prepot_8
-    call u33_pot_8(xyz, u33, du33dx)
-    !compute diabatic couplings
-    call u12_order10
-    call u13_order12
-    call u23_order10
-    call u12_dc_10(xyz, u12, s12)
-    call u13_dc_12(xyz, u13)
-    call u23_dc_10(xyz, u23, s23)
-    !compute the adiabatic states and eigenvectors
-    u(1,1) = u11
-    u(1,2) = u12
-    u(1,3) = u13
-    u(2,1) = u12
-    u(2,2) = u22
-    u(2,3) = u23
-    u(3,1) = u13
-    u(3,2) = u23
-    u(3,3) = u33
-    u      = u*legacy_hartree_to_electronvolt
-    !compute diabatic couplings derivatives
-    call u12_dvdx(xyz, u12, s12, du12dx)
-    call u13_dvdx(xyz, u13, du13dx)
-    call u23_dvdx(xyz, u23, s23, du23dx)
-    !assign dudx to gu
-    do i=1, 4
-        do j=1, 3
-            ug(1,1,i,j) = du11dx(i,j)
-            ug(1,2,i,j) = du12dx(i,j)
-            ug(1,3,i,j) = du13dx(i,j)
-            ug(2,1,i,j) = du12dx(i,j)
-            ug(2,2,i,j) = du22dx(i,j)
-            ug(2,3,i,j) = du23dx(i,j)
-            ug(3,1,i,j) = du13dx(i,j)
-            ug(3,2,i,j) = du23dx(i,j)
-            ug(3,3,i,j) = du33dx(i,j)
-        enddo
-    enddo
-    ug = ug*legacy_hartree_to_electronvolt
-end
+    call evaluate(x, igrad, u, ug)
+end subroutine dpem
 
 !===========================================================================
 ! *def DSYEVJ3(A, Q, W)

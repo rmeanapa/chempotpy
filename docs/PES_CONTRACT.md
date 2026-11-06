@@ -99,7 +99,10 @@ The maintained bundled core currently contains:
 - `chempotpy_legacy_units`: the released Python wrapper conversions, including
   their original default-real rounding behavior.
 - `chempotpy_geometry`: Cartesian distance, three-component dot product, angle
-  cosine, and symmetric distance-matrix operations.
+  cosine, symmetric distance-matrix operations, and the atom-major
+  `(natoms,3)` to `(3*natoms)` Cartesian layout adapter. Its generic chain-rule
+  interface maps vector, multi-state, and matrix-valued internal gradients to
+  Cartesian gradients through a supplied `dq/dx` Jacobian.
 - `chempotpy_h3_basis`: private symmetric-polynomial index storage and a
   procedural initialization/lookup API for the H3 2002 fit family.
 - `chempotpy_legacy_coordinates`: explicit-argument implementations of the
@@ -209,9 +212,20 @@ structural formatter used during migration.
 
 ## Repository-wide modernization status
 
-- The package contains 373 free-form `.f90` sources and no fixed-form `.f`
+- The package contains 375 free-form `.f90` sources and no fixed-form `.f`
   sources. The registry identifies 363 independently callable PES sources with
   no competing duplicate stems.
+- All 363 callable surfaces have a uniquely named private owning module that
+  publishes `evaluate` and a thin historical external `pes` or `dpem` adapter.
+  The catalog regression suite enforces exactly one owner module per surface.
+  Structural ownership does not by itself complete coefficient-lifecycle
+  migration: legacy setup routines are tracked separately and must still be
+  replaced by private compile-time parameters where they only assign constants.
+- Of the 363 owners, 236 are fully encapsulated: `evaluate` and every file-local
+  helper are private module procedures, and only the compatibility adapter is
+  external. The other 127 retain private support modules or external helper
+  procedures, but no surface uses `COMMON`, `BLOCK DATA`, `ENTRY`, or a
+  `PREPOT` lifecycle.
 - Every procedure scope uses `implicit none`; all variables formerly inferred
   by `implicit double precision(a-h,o-z)`, `implicit real*8`, or default Fortran
   rules now have explicit declarations.
@@ -224,9 +238,21 @@ structural formatter used during migration.
 - All 10,601 legacy `PARAMETER(...)` statements are now typed declarations.
   Legacy star-sized intrinsic types and entity-level character lengths have
   also been removed, and active `OPEN` statements no longer hard-code units.
+- ADIFOR disclaimer blocks, generator-provenance boilerplate, and decorative
+  star separators have been removed. The 40 formerly ADIFOR-bearing sources no
+  longer use explicit `INTRINSIC` statements. Required procedure-local `DATA`
+  and saved coefficient caches remain visible where they are part of a kernel's
+  current private implementation; none is transported through legacy shared
+  storage or a public setup routine.
 - The 120 identical `CARTOU` and 120 identical POTLIB `CARTTOR` implementations
   are compatibility wrappers over `chempotpy_legacy_coordinates`; the distinct
   F2H2 derivative variant remains local pending its dedicated derivative test.
+- The 71 wrappers that require atom-major one-dimensional Cartesian vectors use
+  `flatten_cartesian_coordinates`; the style gate rejects reintroduction of the
+  duplicated `(iatom-1)*3+idir` packing loop.
+- The 67 standard wrappers that contract internal gradients with `dq/dx` use
+  `transform_internal_gradient_to_cartesian`; its explicit loops preserve the
+  released accumulation order and numerical results.
 - Every module has a `private` default. Its `public` list is limited to entry
   points and names that compiler-resolved consumers import.
 - Every module import has an `only:` list. Core dependencies remain discoverable
@@ -235,12 +261,23 @@ structural formatter used during migration.
   conversion behavior were preserved. Descriptive renaming and algorithmic
   restructuring remain separate changes that require their own numerical
   review.
-- `COMMON` removal is intentionally incomplete: 18,485 active declarations
-  remain in 159 sources, primarily POTLIB families whose `BLOCK DATA` state and
-  aliased layouts must be migrated together. H4O2 and CH3OH now keep their
-  mutable PES state private to modules, H3Cl uses explicit saved locals, the
-  four H3 2002 fits use the private bundled basis-index module, and 30 dead
-  parallel-control blocks have been removed.
+- Legacy shared storage and setup dispatch have been eliminated catalog-wide.
+  The final POTLIB migration localized each former named block inside its
+  evaluator, preserved aliased layouts explicitly, and converted block-data
+  values into ordinary typed initialization. The last CH4F, CH4Br, F2H2, ArNO,
+  and ClH2 kernels now communicate through host association or explicit
+  arguments rather than shared storage. The source gate fixes the inventory at
+  zero active `COMMON` declarations, `BLOCK DATA` units, `ENTRY` statements,
+  `prepot*` definitions, and `prepot*` calls.
+- N4 BDTC deliberately reloads its packaged multi-megabyte `pes.dat` table for
+  each evaluation instead of hiding mutable first-call state. The data file
+  remains part of the self-contained Python package; embedding that table would
+  materially inflate the Fortran source without improving portability.
+- The POTLIB local-context migration made intentional legacy array overreach
+  explicit for the C2H6F, CH4OCl, and CH5O2 VBMM kernels. Corrected local bounds
+  preserve the released indexing and eliminate dependence on compiler-specific
+  out-of-bounds storage. Positional aliases in the OH3 shared layouts are also
+  represented by named local entities rather than memory association.
 
 The migration utilities are retained under `scripts/`: the fixed-form converter,
 compiler-assisted explicit-type inserter, structural formatter, module API
@@ -248,6 +285,18 @@ privatizer, and import normalizer can be rerun and are covered by the style and
 compilation gates.
 
 ## Numerical preservation record
+
+- The H3 A2, A3, A4, and CCI wrappers previously skipped their required legacy
+  setup, leaving the polynomial correction counts and damping settings at zero.
+  Their stateless implementations intentionally correct those four outputs and
+  match the pre-migration kernels with `prepot` invoked exactly at both catalog
+  geometries. The catalog fixture records the corrected initialized behavior;
+  the frozen release fixture remains unchanged as evidence of the wrapper bug.
+- ClH2 ALTG2 previously called setup before every evaluation even though the
+  kernel requires exactly one call. Its second catalog geometry therefore used
+  constants converted twice. The stateless result intentionally corrects that
+  value and matches the legacy kernel with one setup followed by both
+  evaluations exactly.
 
 - Before conversion, 205 fixed-form sources were compiled and evaluated. The
   fixture records each source's SHA-256 digest and 656 formatted outputs. The

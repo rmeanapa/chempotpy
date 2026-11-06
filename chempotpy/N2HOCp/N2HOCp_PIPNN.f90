@@ -22,63 +22,85 @@ module nnparam
     double precision, allocatable :: pdelc(:), pavgc(:)
 end module nnparam
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, &
-        & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
-        & weighta, weightb, weightc
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_n2hocp_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, &
+            & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
+            & weighta, weightb, weightc
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 5
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v, va, vb, vc
+        double precision                :: coord(3,natoms), r(10)
+        integer                         :: iatom, jatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                coord(idir,iatom) = x(iatom,idir)
+            enddo
+        enddo
+        j = 0
+        do iatom=1, natoms
+            do jatom=iatom+1, natoms
+                j = j+1
+                r(j)=sqrt((coord(1,iatom)-coord(1,jatom))**2 + + (coord(2,iatom)-coord(2,jatom))**2 + + (coord(3, &
+                    & iatom)- coord(3,jatom))**2)
+            enddo
+        enddo
+        if( igrad == 0 )then
+            call pes_init(path)
+            call n2chopipnn(r, v, va, vb, vc)
+            deallocate(nodes)
+            deallocate(weighta)
+            deallocate(biasa)
+            deallocate(pdela)
+            deallocate(pavga)
+            deallocate(weightb)
+            deallocate(biasb)
+            deallocate(pdelb)
+            deallocate(pavgb)
+            deallocate(weightc)
+            deallocate(biasc)
+            deallocate(pdelc)
+            deallocate(pavgc)
+        else
+            write (*, *) 'Only energy is available'
+        endif
+        do istate=1, nstates
+            p(istate) = v
+        enddo
+        g = 0.d0
+        d = 0.d0
+    end subroutine evaluate
+end module chempotpy_n2hocp_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_n2hocp_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 5
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v, va, vb, vc
-    double precision                :: coord(3,natoms), r(10)
-    integer                         :: iatom, jatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            coord(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
-    j = 0
-    do iatom=1, natoms
-        do jatom=iatom+1, natoms
-            j = j+1
-            r(j)=sqrt((coord(1,iatom)-coord(1,jatom))**2 + + (coord(2,iatom)-coord(2,jatom))**2 + + (coord(3,iatom)- &
-                & coord(3,jatom))**2)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        call pes_init(path)
-        call n2chopipnn(r, v, va, vb, vc)
-        deallocate(nodes)
-        deallocate(weighta)
-        deallocate(biasa)
-        deallocate(pdela)
-        deallocate(pavga)
-        deallocate(weightb)
-        deallocate(biasb)
-        deallocate(pdelb)
-        deallocate(pavgb)
-        deallocate(weightc)
-        deallocate(biasc)
-        deallocate(pdelc)
-        deallocate(pavgc)
-    else
-        write (*, *) 'Only energy is available'
-    endif
-    do istate=1, nstates
-        p(istate) = v
-    enddo
-    g = 0.d0
-    d = 0.d0
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
 !> @brief Evaluate distance.
 double precision function distance( a, b )

@@ -1,6 +1,4 @@
-!***************************************************************************
 !                         PIP-NN PES for HCl+H2O
-!***************************************************************************
 !-->  program to get potential energy for a given geometry after NN fitting
 !-->  global variables are declared in this module
 module nnparam
@@ -8,11 +6,9 @@ module nnparam
     private
     public :: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
-    !***************************************************************************
     !natom     ==>Number of atoms
     !npes      ==>Number of PESs
     !nmorse    ==>Number of morse-like potential
-    !***************************************************************************
     double precision, parameter :: alpha = 1.0d0, pi=3.141592653589793238d0, &
         &radian=pi/180.0d0, bohr=0.5291772d0
     integer, parameter            :: natom  = 5, npes=3, nmorse=110
@@ -26,50 +22,70 @@ module nnparam
         &pdel3a(:, :), pavg3a(:, :)
 end module nnparam
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
-        & nodemax3, nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_h3clo_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
+            & nodemax3, nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 5
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v
+        double precision                :: tx(3,natoms), tg(3,natoms)
+        integer                         :: iatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)
+            enddo
+        enddo
+        if( igrad == 0 )then
+            call pes_init(path)
+            call evvdvdx(tx, v)
+            deallocate(nodes3a)
+            deallocate(weight3a)
+            deallocate(bias3a)
+            deallocate(pdel3a)
+            deallocate(pavg3a)
+        else
+            write(*, *) 'Only energy is available'
+        endif
+        do istate=1, nstates
+            p(istate) = v
+        enddo
+    end subroutine evaluate
+end module chempotpy_h3clo_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_h3clo_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 5
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v
-    double precision                :: tx(3,natoms), tg(3,natoms)
-    integer                         :: iatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        call pes_init(path)
-        call evvdvdx(tx, v)
-        deallocate(nodes3a)
-        deallocate(weight3a)
-        deallocate(bias3a)
-        deallocate(pdel3a)
-        deallocate(pavg3a)
-    else
-        write(*, *) 'Only energy is available'
-    endif
-    do istate=1, nstates
-        p(istate) = v
-    enddo
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
-!***************************************************************************
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v )
     !     subroutine evvdvdx(xcart,v,vpes,dvdxa,dvdx,ndriv)
-    !***************************************************************************
     !Subroutine to calculate the average potential energy v and analytical gradient dvdxa
     !Call pes_init to read files and initialize before calling evvdvdx().
     !Xcart     ==>Cartesian coordinates in angstrom
@@ -87,7 +103,6 @@ subroutine evvdvdx( xcart, v )
     !PES2: totrmse=1.551, errmax=70.610, trainrmse=1.310, validrmse=2.332, testrmse=3.440 meV
     !PES3: totrmse=1.724, errmax=89.420, trainrmse=1.438, validrmse=3.773, testrmse=2.827 meV
     !Average potential energy surface: totormse=1.266 meV
-    !***************************************************************************
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
         & nodemax3, nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
@@ -130,7 +145,6 @@ subroutine evvdvdx( xcart, v )
     !      endif
 end subroutine evvdvdx
 
-!****************************************************************!
 !-->  read NN weights and biases from matlab output
 !> @brief Evaluate pes_init.
 subroutine pes_init( path )
@@ -198,7 +212,6 @@ subroutine pes_init( path )
     close(nfile2)
 end subroutine pes_init
 
-!*************************************************************************
 !> @brief Evaluate pot3a.
 subroutine pot3a( x, vpot3 )
     !     subroutine pot3a(x,vpot3,dvdg,ndriv)
@@ -280,7 +293,6 @@ subroutine pot3a( x, vpot3 )
     !      endif
 end subroutine pot3a
 
-!**************************************************************************
 !> @brief Evaluate tranfun.
 function tranfun( x, ifunc )
     implicit none
@@ -295,7 +307,6 @@ function tranfun( x, ifunc )
     endif
 end function tranfun
 
-!**************************************************************************
 !> @brief Evaluate LOGSIG.
 function logsig( x )
     implicit none
@@ -303,7 +314,6 @@ function logsig( x )
     logsig = 1.d0/(1.d0+dexp(-x))
 end function logsig
 
-!!**************************************************************************
 !      subroutine evdvdx(dvdg,dpdr,drdx,dvdxa,dvdx)
 !      use nnparam
 !      implicit none
@@ -344,7 +354,6 @@ end function logsig
 !
 !      return
 !      end subroutine evdvdx
-!!***********************************************************************
 !      subroutine evdvdr(r,c,m,p,dpdr)
 !      use nnparam
 !      implicit none
@@ -360,7 +369,6 @@ end function logsig
 !
 !      return
 !      end subroutine evdvdr
-!!***********************************************************************
 !      subroutine evdrdx(xcart,r,x,drdx)
 !      use nnparam
 !      implicit none
@@ -405,7 +413,6 @@ end function logsig
 !
 !      return
 !      end subroutine evdrdx
-!!*************************************************************************
 !      subroutine evdmsdr(r,dmsdr)
 !      use nnparam
 !      implicit none
@@ -420,7 +427,6 @@ end function logsig
 !
 !      return
 !      end subroutine evdmsdr
-!!**************************************************************************
 !      subroutine evdmdr(m,dmsdr,dmdr)
 !      use nnparam
 !      implicit none
@@ -437,7 +443,6 @@ end function logsig
 !
 !      return
 !      end subroutine evdmdr
-!!*************************************************************************
 !      subroutine evdpdr(p,dmdr,dpdr)
 !      use nnparam
 !      implicit none
@@ -463,7 +468,6 @@ end function logsig
 !
 !      return
 !      end subroutine evdpdr
-!**********************************************************************
 !> @brief Evaluate bemsav.
 subroutine bemsav( x, m, p )
     implicit none

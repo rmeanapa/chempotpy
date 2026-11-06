@@ -5,7 +5,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "1e65446d8370a4cef96b0b8420e951627ff41e7f05b97e45b89defa607115f50",
+      "source_sha256": "bba1d5c30d6988afb0f7b9a29d72542c8d1b5d007acbb457e8d7e106e205b3d9",
       "values": [
         "5.15566773842010129E+000",
         "3.59322328206100794E+000"
@@ -16,7 +16,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "98fe2f1de300fa02147ecad9c96d574262ae0d4c83c997919bb2228b5616ccc0",
+      "source_sha256": "3592da7f57f6e876a525ecf53e4312c1e5197ba47d4b3aa2a4c2b502b2c99b66",
       "values": [
         "5.15422437156299917E+000",
         "3.59322328206100794E+000"
@@ -27,7 +27,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3f10cb6282e6eafb4a8930bc574081017a1d4e922d912651acb5501ab46b83ef",
+      "source_sha256": "4a62fa4d3c66460ff057fe8353edbe17c0ced06924d05b9a405547538c4bd7b6",
       "values": [
         "5.16028651236282876E+000",
         "3.59322328206100794E+000"
@@ -38,7 +38,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "fd1e877a6ad4660166d10fc9d415cd28106c06d0e60c12b49f46be0386b67618",
+      "source_sha256": "6179398a9ee6f105a586f9118f438c96bb31e8f0d889bfa226ec236e033ee37e",
       "values": [
         "4.89950372048864491E+000",
         "3.40192972277979644E+000"
@@ -49,7 +49,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "e8151854cf0cd1443faadfcad47570ff2f88e60192a98db3a843e77456b70347",
+      "source_sha256": "bf7ac4c9803ea9eeea02057b354c41d18c662cf6ea9fbc2502b7ef2536b54692",
       "values": [
         "5.13864864116709441E+000",
         "3.57819261096862817E+000"
@@ -60,7 +60,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "829ea313876b53aeab8163d2bfcbc5c8b18fc9fb5ea5e60d7aa71978bbc783d0",
+      "source_sha256": "942d9f415678ce8629a3c05d41e842059de76596e4c64b7cbc45f3e8bee66d09",
       "values": [
         "5.06678168725125389E+000",
         "3.52708178391615990E+000"
@@ -71,7 +71,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "a7424c24cf96a891015c2e1373c6892180a0011fdab1bf50051a21077c31c3b3",
+      "source_sha256": "58e1cb5aca63d22676c2e07f5aa2cb7009248d33ecf7cfaf7cbf3a134ea35edd",
       "values": [
         "5.04090066296217731E+000",
         "3.50823593466673556E+000"
@@ -82,7 +82,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "6d410f7f105b75cde865ce17b01b793e236b1120efab4082479135ec63f81ecc",
+      "source_sha256": "bc9d8ed54ff815e19ae175f55bfdf7f483093c4b3445f1c1385247b725762cf0",
       "values": [
         "4.98659199203473325E+000",
         "3.46803360356962820E+000"
@@ -93,7 +93,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "4e08d796bebb23777067680a7a50a0735919f568564b9bcb3f7aa4ca21ea7ea1",
+      "source_sha256": "9a73a21713c829ecdec6416050c714bb177ba4b480ddeca45a300cd09eec41ef",
       "values": [
         "5.08375222045886677E+000",
         "3.53368346118453314E+000"
@@ -104,7 +104,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "763ffdd0c4a60aacb20e88c1a755f79c5a1741e01bd91f19c21af6e21f455bb4",
+      "source_sha256": "b0aca92141a28c4e62bdadf367d94b28e92c8eaebc84c7e81c60434c6e5db40d",
       "values": [
         "5.04293498840568333E+000",
         "3.50224310560640761E+000"
@@ -115,7 +115,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "cf6f8fa7f4b89decccdfc71115b1a2931743b9c4e3cd8c0fa1ea506d0b5898f8",
+      "source_sha256": "9985811d7aaa751fd6a77f7e56fb2306945fb8d8f923def95293c023ea005f76",
       "values": [
         "4.95605957672257524E+000",
         "3.43591068946854694E+000"
@@ -126,7 +126,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "5d6b86fc49a68450cb7b3be37bb4d90bbdf2e603a9009b5ba9432e6ba4ce1491",
+      "source_sha256": "3791ae51f6b5f8e374a4444c103283b3f3a879d9b600497023248623c35c21fe",
       "values": [
         "2.82472132317508651E+000",
         "1.80856814447300529E+000"
@@ -137,7 +137,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "xyz,nal,nh,natoms,igrad,p,g,d",
-      "source_sha256": "1cb5796d480f7052933255eb5302cbfc985d813617008ec2e8159b57f84fae04",
+      "source_sha256": "8962eac8c17def777f167e2ac9fa6ef0d48791137b0d8587f296c51d0536524f",
       "values": [
         "3.46068499093064075E+000",
         "1.69453709968413246E+000"
@@ -148,7 +148,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "xyz,nal,nh,natoms,igrad,p,g,d",
-      "source_sha256": "cc0bf6aee03d72c78095b60ca9f877fd3b2be4136c73ca8c1c8e72b42fe57a8f",
+      "source_sha256": "2604e5bde002a204c1d3a7e5bd788c4421d5267439bad7b1fffa8cd2688e4530",
       "values": [
         "3.56903579623329614E+000",
         "1.92597091415831922E+000"
@@ -159,7 +159,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "c2b1faa3eac41514e88b30b879daba9bf6de205b2a6698230fca46a66b463307",
+      "source_sha256": "bf890b51caf32a52ac204c69abc1e9bc7dc4008e326c9a9df72dd71a06fbbaad",
       "values": [
         "2.05062552264277315E+002",
         "2.36058185150142947E+002"
@@ -170,7 +170,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "8f0e4f0c7ec9436c7aea379dc1c546d9791208c6775a18700aa6eb43ba0e5c48",
+      "source_sha256": "8b2eb2f51f41deb586433d87b7c7c48550ad5e6236ba4fb1181dcc30b07008c7",
       "values": [
         "8.81451130069044240E+001",
         "1.02801019275059886E+002"
@@ -181,7 +181,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "fb8dd700b0d480248e29cac2792cb8095c71bcc37b238ba902a0b42074e294d5",
+      "source_sha256": "01f9ffa7a1440be187a3a72eecd3001638dc07fe74c9d8e14e669a7091336f96",
       "values": [
         "1.05565637848224992E+003",
         "1.19166893067876936E+003"
@@ -192,7 +192,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "1745db7154f85f5f33c625a8afbe46e0471f420fa1f2f1b5c48b14072f9847fd",
+      "source_sha256": "5c49211ed4f5b210212737d9d2718aba78b0f737903aa11edb11b23346ce3019",
       "values": [
         "1.82858112357124196E+003",
         "1.76553443022031092E+003"
@@ -203,7 +203,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "eb696a17a5b9073c952092e53e63c29815384dd01535deabe723ce31ed55170d",
+      "source_sha256": "0e47371b8a8d773991cd1821a99910a8308bf43350fed8c3a68b9c56e64eb99e",
       "values": [
         "4.92312040098052705E+002",
         "5.25348895763880250E+002"
@@ -214,7 +214,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "9234a254c3061054db165558e9784f774a2320efd4e20ce463ee6c0c1be003b0",
+      "source_sha256": "ea653d629e6766e26fbd75dc6305568d800ba85ed19fef724cb028d1ddd74074",
       "values": [
         "2.55170807347609724E+002",
         "2.56084563703610820E+003"
@@ -225,7 +225,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "f3fc1486ddc315ce6c860974d9e846a4a401e567b8eaa35c44df8a8bf64ad5b0",
+      "source_sha256": "bc7725e08145c6aaeff393f50b5b0001bad1f01f6ee1dbbc3ffc2ae91b017d21",
       "values": [
         "4.45704640900505069E+002",
         "4.59295598050695048E+002"
@@ -236,7 +236,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "00f9fb79a539792dee0051ff31af203eb2b131a2b394c0c5546726b9dd1d16e7",
+      "source_sha256": "0001863f3e8384dfeae00fc8a28a84a7bfbffc26c967684617a22dc6c1519048",
       "values": [
         "2.54635100684773278E+002",
         "2.59537583899521053E+002"
@@ -247,7 +247,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "7b1005d03c713716e38bbdf41409d425b307270d2e97edc3cf061f46e3e420e3",
+      "source_sha256": "fcd5c9e9fb66b62ff22892e63ccc15adca71f97b955c1ff8d15462b85983a060",
       "values": [
         "5.04181512485134419E+002",
         "5.43009229333797862E+002"
@@ -258,7 +258,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "fe9b036e13ae9aff85e534eee3233f4d2276e6019a6f9363b84c16e52cc44789",
+      "source_sha256": "bbbb0d679c2e4b2e5003ac059bc77ff6d430de2997ca189aaf2b5633029bfd51",
       "values": [
         "4.22081029833327250E+002",
         "4.48073632651615981E+002"
@@ -269,7 +269,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "b9a95235ecd61da73fdf63f4a10090311a661ca9b09cf3806403044ae440cf9e",
+      "source_sha256": "47465d9cca30f5209a46534e81efc387179b384bff8635478f94b76d08d2a0d7",
       "values": [
         "2.51961446074464504E+002",
         "2.67402110969968226E+003"
@@ -280,7 +280,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "8abdcb38f3bdbf54709d3b804229aaa10668fe32c8ff95218b7d2e193133805d",
+      "source_sha256": "a8be3c73c35469b46a24037d8877db618967d400a548e06d819268858c58bf56",
       "values": [
         "4.03453661434853586E+002",
         "4.29278865769036884E+002"
@@ -291,7 +291,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "39cd194f35a87e8351f3e3180bbb4768c784363bf48ce5673c099126a733d6e2",
+      "source_sha256": "cb164b1b3a8a553779caddd7d6b131a3ded865784b8f2243e36dbcfe5b1206c0",
       "values": [
         "4.04788153471846840E+002",
         "4.26558729876910775E+002"
@@ -302,7 +302,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "fc58e36a53d724f0d4018872d6e6c0469f97d8d6274d6496d38af2dddedc00da",
+      "source_sha256": "2ce4df5c6bfb0c8d578d52eb29d2784e346c93eee13be09702b208f3073c97e2",
       "values": [
         "4.05498043918133135E+002",
         "3.31265834444999086E+002"
@@ -313,7 +313,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "6d83d619ee76d39675b7be2990050b4ef05cb3660ce6c619ddb65f1650e15930",
+      "source_sha256": "789710bf1990bdc67b7bad2f71bfbff35eac14f427310378b516355f518f2fa6",
       "values": [
         "3.40233898188025989E+002",
         "3.55515046264602972E+002"
@@ -324,7 +324,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "d012f351645fcf223a4b68f1674cf16b3d6bb95272ef4eb56d09880236e37a66",
+      "source_sha256": "948a72184bfb599245fd3260a07bce941dce1de0f09292e9d68f622e6af96f93",
       "values": [
         "3.26164524443330095E+002",
         "3.43073972865779297E+002"
@@ -335,7 +335,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "5d1129a2f43c89b9854b345eac9b556f43018d467c8f56d926178e99cfaebb2e",
+      "source_sha256": "8c8fb1602df89aeb7084dbecca6f5f60c216eba8c57d95ac92ad0d6d1551969a",
       "values": [
         "5.04513158168542361E+002",
         "5.39789660723627435E+002"
@@ -346,7 +346,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "e8082de50041619473939e1a23f1a080a3657f342b61413bb4616c00c573ed01",
+      "source_sha256": "dd4354639ae2ab3f8b848130addc3d8fac2ee298efb1417a20b98edd0f2be990",
       "values": [
         "4.97788190281858760E+002",
         "5.28686715711336319E+002"
@@ -357,7 +357,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "6fb79d5d137e566a18fa325aaf72dd66104f663e7350d9a50d19d0c0b154e571",
+      "source_sha256": "cc4b01c213cc8757dbbc04b2374ec89202ad98bc4c2d309baab4650853fad5fa",
       "values": [
         "3.10802492927128959E+001",
         "1.63979559090624861E+002"
@@ -368,7 +368,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "995674d965b1728a9297478bfdeefafd6c857ac0871f23eb92bec3c0d428d506",
+      "source_sha256": "1f2bf660560c06522c8daf4594cd6893464477079e22f56bdf34833dcf0b04e4",
       "values": [
         "4.70074011264286014E+002",
         "4.72032610664432866E+002"
@@ -379,7 +379,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "2b91d5369d7be40d72f503494de9f65d74f9726b3d9075943dfe7cec849323af",
+      "source_sha256": "9a39d8bb95fb819ab826e27d5eb263f6864dfd5ec0212e31843657f073d0982f",
       "values": [
         "2.86933059754108797E+002",
         "2.89136867507492525E+002"
@@ -390,7 +390,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "fde06ea39e0d63b53c02b9924675f95cf1e6aca6498e224b25e01ce349cb19b7",
+      "source_sha256": "099116b0bc88b5d4eb9d8e6227c27873d9cbc5f1f31cdfc464ae74695840189f",
       "values": [
         "3.27371987611577765E+002",
         "3.38191894458588081E+002"
@@ -401,7 +401,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "9d55cb7db752fc1c5793898cb1b11a07f420f758c0909d05ab52faeaaab16784",
+      "source_sha256": "f07467b09575989cba1da9b9e239fa669e0f971e9ceca5e87d2dcf38df82d689",
       "values": [
         "-4.23369689033771522E+002",
         "-7.78344407300012222E+002"
@@ -412,7 +412,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "bd26d49a2d9bc301655f38cbdc868766a545d4d330b24c36559163635bc3cd9c",
+      "source_sha256": "e5c247ac077f99f9bb0b879702b3caf5bcd39cc2473d6dd82929861b15a2c172",
       "values": [
         "4.56491918872747888E+001",
         "9.00141637818030382E+000"
@@ -423,7 +423,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "738d629384684aba1ad376283b83aef7cd8037b9bbe37ec54863af74547754d5",
+      "source_sha256": "61e689aef41e342c69560e4f6b25e6bb3559b2d3deb1b85bd07af300ed42b107",
       "values": [
         "1.51734577817211510E+005",
         "1.30162672984316130E+005"
@@ -434,7 +434,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "b390ca3f0a031fa92b7612b3b6b5806a2bbe9d61bbbc5a61f2c4277beb459759",
+      "source_sha256": "df89cdc14397a01ceb4ff2d7384370318dbb99b20bca5e1439ce040002d3106d",
       "values": [
         "1.54692393872831957E+002",
         "1.80237351144486979E+002"
@@ -445,7 +445,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "00cb58cf0da550a5cebc9da1fe5cf5d32aecfb4e533675dcf557aeb01608c615",
+      "source_sha256": "12be095fc173bf2ae8eee4e40fd008e296d0bd547984f7c7052d2da10c9ebc38",
       "values": [
         "5.67172598114378750E+005",
         "4.19770048831381195E+005"
@@ -456,7 +456,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "63f96dee8a61c9bc316b529bfca87941110dc4bbe3ca55d58471b2386cedcd7a",
+      "source_sha256": "3cad5f36f051f3e5ce52d8e1a5a9b314b411e39e24f9891950bb51cc0bbacb25",
       "values": [
         "-8.29554066447881041E+002",
         "-1.21512033510953347E+003"
@@ -467,7 +467,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "92df54c3a29fa3256a9ba965217d11219a1f281a2b5722af4ef7128871314b6d",
+      "source_sha256": "aeeff51b25a620da76adf4c4ddd6be949d478e4bfd9b9b8cff2570303fa98329",
       "values": [
         "NaN",
         "NaN"
@@ -478,7 +478,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "8425a7553d4121b3e2f5440fc174f701fc33250c2257b48f555966b35a692e8a",
+      "source_sha256": "ee2e6a1dc60aeb5961cc06db3524feca1e359dae323aee27b6d0ec5751ecb141",
       "values": [
         "1.19355211056200619E+003",
         "1.27858552818127532E+003"
@@ -489,7 +489,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "94e4acae8797ea9cabbd658a793082d7c9183eebc3ae737009f0bdb68449746a",
+      "source_sha256": "ff8a9cf752754212bcfcb2eeb949b586678519fcd1aee07ea0950561edad3c61",
       "values": [
         "3.11664648306127901E+002",
         "3.30150448780477348E+002"
@@ -500,7 +500,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "e07cc9a70a65e0f6e82f3674fb27e75a3b0dd573eb2f577be7bf782a6e201442",
+      "source_sha256": "f1b0657b768a819f768e4326c17d3fc5b2d541de0f3ecbe8b3fb90fc9f6ef41e",
       "values": [
         "3.11664648306128015E+002",
         "3.30150448780477404E+002"
@@ -511,7 +511,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "f36332eee7e6218fc375f43a5cc3096183ee26ff3c41ca0946cadfb7b6d71ddd",
+      "source_sha256": "4cff1f7d59e4dddeaf96cdeba598c134d8a7cc4ab4881bee109f0f23b3f6cb42",
       "values": [
         "1.63680869575315967E+002",
         "1.89386809786577714E+002"
@@ -522,7 +522,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "5c1f92d1200dc6fb46fdf29411bfae54062ca26e01811b3b1b4198e73548b714",
+      "source_sha256": "82855da087f2a4cfde10a4bf2713a3f3b4fca519f9b3071f8fdce54bbe3daa88",
       "values": [
         "1.63680869575315967E+002",
         "1.89386809786577714E+002"
@@ -533,7 +533,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "0096aab3cd1e0f34962c9106fca475fe16c3d49a74ef865c9167867006e1249a",
+      "source_sha256": "5f060227736a195ded9fa3488df7fd2f85ae69ed7adff598ce88aa0faa7bd556",
       "values": [
         "1.95507887057667062E+002",
         "2.26632064522641770E+002"
@@ -544,7 +544,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "06577d9479e8c3d5383b5e48775f4ce3027c9ce8999dd07479cb0efce8f8484e",
+      "source_sha256": "98da21877da48323666900b517b8d586ccd72fbd39cfeac6aef915fa1a6f4ac7",
       "values": [
         "2.58626041770199208E+002",
         "2.96660224213959282E+002"
@@ -555,7 +555,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "9922f4b267b27f4773b71b96974ec9e2c3d66eacf55d6ee1d0dc69d068bbe474",
+      "source_sha256": "3b78f9e499e3704ad35a7de6cdf4a38dc3a81a46aa2b049b5edb816201287057",
       "values": [
         "8.57202210617379592E+002",
         "8.93503047820173606E+002"
@@ -566,7 +566,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "a922c703ddfa8e4eeea7e127b67e362bdad43750bfee4754323011fb515d64c1",
+      "source_sha256": "3f4e2ed985d9fc2aa524bc502a4c2a6715c58245d0a3bb5260e0382949462ad2",
       "values": [
         "4.63882611146421027E+002",
         "5.08861790920207625E+002"
@@ -577,7 +577,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "77b06acb6398b95ac837a2a9db0f8899fdad3f09d4a354e35fa56bcf89ef6cf1",
+      "source_sha256": "2caee52bb46bebaeb166780ede3cabfabc16683c6b149003d18debdc90977a16",
       "values": [
         "2.92870587192021048E+003",
         "2.99662957901741993E+003"
@@ -588,7 +588,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "7871e5bc055cd59858afba2d3a5786c3c12985958da169662705249a2aed65a6",
+      "source_sha256": "84b9ce996a0657ae2666fe8b0ac24ce1ef7b99bb70157455b6a66eb57a9a8d95",
       "values": [
         "2.74071661470793653E+005",
         "2.03914504897087085E+005"
@@ -599,7 +599,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "d56737c2f6f57e3e2141beb34f5b2e413e2111864ed80a278fb1639eb17ef4da",
+      "source_sha256": "65d17d24a237ca73c45092b81d7753c42247a86761030e1c95edecdea707ef54",
       "values": [
         "3.77747868628530227E+002",
         "4.44506980959798739E+002"
@@ -610,7 +610,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "f669634a5051d936ab66ecaf34b07f870ead0223a2a9123a8a84dcafd0d739a3",
+      "source_sha256": "0aae9ff26e9e82223b614b44e6a3a2865a69a65c0db432843375a331b7d088f1",
       "values": [
         "9.65956365563053225E+001",
         "1.18664479624759565E+002"
@@ -621,7 +621,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "64c6a1fedd3564790d2ec29cb6f9105898b03d36900776cf5df0a2ee56a9b0db",
+      "source_sha256": "90231d6ce612d351fcc3259a2108a2f35dc981c28fb4ee680d0a315056d4419e",
       "values": [
         "1.89114792607144386E+003",
         "1.77686091816099270E+003"
@@ -632,7 +632,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "3affe2fc7c90b0eca285c8e18c28a46fe7ce8784602cb493b0914604b06713ff",
+      "source_sha256": "58ad914be352231aa112ee248008e9162be5cc88d929a22f3bd654e66f6404d0",
       "values": [
         "4.44266274269018613E+005",
         "3.30696595582367387E+005"
@@ -643,7 +643,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "6d3429b422b7bfb055c74870764a2cb3f53218f1c5cd3c077ee29b7d6b20b878",
+      "source_sha256": "2affe390a2c09e0c69c7e3eea4cdb6c4939371c203a3ec30a8ce6b30a90c44ac",
       "values": [
         "-1.47213104402584150E+000",
         "-7.80297024942709028E-001"
@@ -654,7 +654,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "68d823d38c7c8f08357cf4e8ee18f8b04aa588748f29bc8388ccc48355cb0ff3",
+      "source_sha256": "2e48b33c91f7f51de243edd35c3e01db629c37ddbf6071787ee4f98a81234261",
       "values": [
         "1.79301608321711058E+002",
         "2.08783758747387481E+002"
@@ -665,7 +665,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "0b3d7299f27b36a2fcc1d7e9baf79e18bfaa289dc37e7753dd24177f024c2efb",
+      "source_sha256": "961c60defe6d597d82181dd81bff72e25fbf78eea11844ff74ffb5fb267988fa",
       "values": [
         "-6.38921846504684822E+002",
         "-1.16773785283899474E+003"
@@ -676,7 +676,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "0df33c95036f6a5ab98538a8adfd49740fd97a2c2e545f2ef7668607eef2c123",
+      "source_sha256": "1b66e210c93881c8ba7087835d563d45e680b945bcf0f8e60531c74fbc0161df",
       "values": [
         "1.61381866939722954E+003",
         "3.64700723963308701E+003"
@@ -687,7 +687,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "bc9c2e1f48bc1ceb56b2169efc3dbeab85a04dfad848cda281b7ebab0e84f586",
+      "source_sha256": "fe00ea757a0ccc9d9d8faa534fd7ec9e8874b21776659682679168d322e3680c",
       "values": [
         "2.76680415559923688E+002",
         "3.10086723088911299E+002"
@@ -698,7 +698,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "43a7bfb6c0213153ceeee8310ade918e1937110db7f87b119d9d3cab64380054",
+      "source_sha256": "8007a134c276b54c064c5f6cb7e40233c57cf338a9abfe4aad545f88297e372f",
       "values": [
         "2.21567584973829753E+002",
         "2.53938522391999385E+002"
@@ -709,7 +709,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "34bd3ac25b06ad17edd10e3151c1b1c9c088627861f43c09c0b6b5974af74193",
+      "source_sha256": "1efb7ba7137381c5e795eefa3d379ee56dcaa52025e696229d8721480edd0822",
       "values": [
         "1.45108937572625632E+003",
         "1.27683909466053274E+003"
@@ -720,7 +720,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "91879a58cf5bbed9382deb6b41979d9c15315fbac38e7165967c5b682f4ac88c",
+      "source_sha256": "b7d44f14c1d2d7b3da2928e0ccb951b95445cef70b09ba98e27b65f115f8aafd",
       "values": [
         "-2.41366452763202204E+002",
         "-4.00400922821817232E+002"
@@ -731,7 +731,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "cc695e189764db4cd8c157360173b53849535f0170525518af3fc724a7617da9",
+      "source_sha256": "6b531d393f0c7fa1fc08fb0b744e6ff967b6165d50082c9e4504ab091b819a94",
       "values": [
         "3.95576230554597487E+003",
         "5.21105954730062513E+003"
@@ -742,7 +742,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "24d574ddfadf0b901f44c3f200502826780951adc089342cd9edb420ca7b40d0",
+      "source_sha256": "24cda3152b48a7a9bbfbc7a47eaaf909bb024e9dd552553c172d090fb07b8d52",
       "values": [
         "NaN",
         "NaN"
@@ -753,7 +753,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "0eb1eeae8585b1a53d305b8ca9f4ddc2e266e1b83a0fe1661329d68eb82fea9f",
+      "source_sha256": "774fc97ce44ea284ad4a6a72ac464d8e2b607996fdac7dbf1f053dabed3a4b09",
       "values": [
         "2.16237544316512952E+002",
         "2.48511171743260491E+002"
@@ -764,7 +764,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "1987ea351386b5b30455af5e06e7fbf603ef0e5118eeb9cd188962c4be12453c",
+      "source_sha256": "2b85e774c71d8d1b84bc233cc1b3f7116f892cf1850ae1b79a836014b10356d1",
       "values": [
         "1.65176495380373666E+002",
         "1.69260214014133169E+002"
@@ -775,7 +775,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "b3bda1fd8f8a5a8b67c28fa2fe73e61f77416f258d387c02d5af405410f296df",
+      "source_sha256": "2c3de44f56440540f96d4973b20598c2a1b0cc4594442a265eafa31cdb192fff",
       "values": [
         "1.81411076018987700E+002",
         "2.11545990597572285E+002"
@@ -786,7 +786,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "20bf7ff04b0035972a2c7bf91e64cb5278eea7be9699c17a7b38653d90787350",
+      "source_sha256": "271e4fcd3c13c75ec260bb5d3443ced272a3e4417e1781f8066589211d4b87f3",
       "values": [
         "1.12691075279225811E+003",
         "1.06943243124823948E+003"
@@ -797,7 +797,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "coordinates_angstrom,atom_count,derivative_order,energy_ev,gradient_ev_per_angstrom,coupling_per_angstrom",
-      "source_sha256": "9271fbad733097be024163f043b5ec4f499ff0789e074ebabc65ff6362591133",
+      "source_sha256": "2dbdbfc326bd52b34a629a127ae1df81d37d1a391136069b6e47126ca07a7dc3",
       "values": [
         "-2.52939898368961469E+000",
         "-1.40859710751552103E+000"
@@ -808,7 +808,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "15715ca90b58e38a7c81fec2cb07d8f34a7e9576505e8f7fe96c950019af6e91",
+      "source_sha256": "add3163228b5d6a4af631b2af00093a847867900e41fce946057ad61ba074341",
       "values": [
         "5.42701503575119570E+000",
         "5.31012374745255133E+000"
@@ -819,7 +819,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "c98cf1f1450f2570ee9373da0bd9da43afc8ac897935dc369c55a230929a8c13",
+      "source_sha256": "fff0026fde2f054834b6b92283dcaead1cb881dd71b0c4ebbb6d1bda70dc0bae",
       "values": [
         "4.80716038419111502E+000",
         "5.31057933007294647E+000"
@@ -830,7 +830,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "1a956aece43ada877ecc938c910a3431b1679c577de987b10a9d39a5eecb9352",
+      "source_sha256": "df6ced1a13992cd8118aa36c9ab77cac3fa963ed2ffe3abb0dbbb935ed93e5ae",
       "values": [
         "7.77706919703123400E+000",
         "5.79126177076493054E+000"
@@ -841,7 +841,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3395ed4ef7ab49a6aec5da153e9b31b4f8f46e966b2e7e6220473bec2beae05a",
+      "source_sha256": "bcc42477e01ad0f12329b9b84dc1e677166bbce37c4efd4fdb49bf2ba15f641f",
       "values": [
         "8.10905371509294426E+000",
         "5.93161731630592204E+000"
@@ -852,7 +852,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "f10b9b91de33b6baf73ba5c516a88ad3b629633a8f3761ab2d9e0dfaf8d902e9",
+      "source_sha256": "11a8404c798976d400ad687401bff8e109bf93a848c9d5494609cda9e10757d4",
       "values": [
         "8.25785718003896285E+000",
         "2.16553758038227322E+001",
@@ -865,7 +865,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "1c5449632ad24f45c1a844eab82523d367ff26c98bb2c427eeb78258d5935df5",
+      "source_sha256": "6a47c806c1464e3316b476e7b5fc145532cb3130d980282d7e87a7cf20909b59",
       "values": [
         "8.26131912680582481E+000",
         "-2.15335810324679189E-001",
@@ -882,7 +882,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "0b53a3733784076188dd1a23c70b13b805722303c0cc50c42e4a94efa2ecebd1",
+      "source_sha256": "2c3eaa3de5e4047c125c2b1d539a89244c2c2cf805c85f9a293cad2ea676f735",
       "values": [
         "8.25785718003896285E+000",
         "2.16553758038227357E+001",
@@ -895,7 +895,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "ab635ad7133155b026c5cf99adf459a0399cf41e18834c7e2deeea9c8145df39",
+      "source_sha256": "5e35a66e23d6e3c0b46f0b3cf65162ef271014376b7842bbd25e0e127735f8ab",
       "values": [
         "8.26131912680582481E+000",
         "-2.15335810324679189E-001",
@@ -912,7 +912,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "0a9c126ed5f6bace7f019f6bf494a320adccb3c6fff6819a5f873a67159613cc",
+      "source_sha256": "92f070a42a1ffc758163ddff3856c7204ba770063e3300fe6e465269d6070d65",
       "values": [
         "7.71139469465193006E+000",
         "5.58679619914170367E+000"
@@ -923,10 +923,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "13fc715c48f0d0ac46f031c30758ffe11a52665697e252e9e6e4fc853fc73a16",
+      "source_sha256": "8078b48be04f231e6037c47f6be299eb1aa9c3cc765821cd6fc4841db54c97ae",
       "values": [
-        "1.51570867236617985E+001",
-        "1.11841011867773599E+001"
+        "1.51570867236617932E+001",
+        "1.11841011867773652E+001"
       ]
     },
     "BrHCl/BrHCl_LEPS2": {
@@ -934,10 +934,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "2c6bc43e871c53773b96c1faa8df01b6953aac3b1743810fa0af92b95e9c61ce",
+      "source_sha256": "9d2805480c30c9fe15435bbb58bb1d44b648007ab4820eb2dd7ca47c780c1377",
       "values": [
-        "1.87758329678513043E+001",
-        "1.40255610686673720E+001"
+        "1.87758329678513007E+001",
+        "1.40255610686673773E+001"
       ]
     },
     "BrHCl/BrHCl_LEPS3": {
@@ -945,10 +945,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "04322b4703dfbb6af076ec79cb872a39c928ff5952d0524e6602db817b870920",
+      "source_sha256": "0a8bc14db502c496c791103bae46eebe74e73fb8bcf5f7e81e36ae9f0cb93c7d",
       "values": [
-        "1.87260221848927806E+001",
-        "1.39767806813312596E+001"
+        "1.87260221848927735E+001",
+        "1.39767806813312632E+001"
       ]
     },
     "C2H2N2O/C2H2N2O_PIPNN": {
@@ -956,7 +956,7 @@
       "natoms": 7,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "f393f73f890ec547ecd90e0850e68bb1ae1a303373323830a404cbe29f674864",
+      "source_sha256": "c16eac943a4900bd04eb32f1d61e2985ec1c3e922cfcb7921a01cb80bf5cdd76",
       "values": [
         "-9.15569206409581859E+000",
         "2.87672765458127202E+001"
@@ -967,7 +967,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "0175acd6f662d626666815533bf1f5d2dc27357742e6f5208e90e6b305b711da",
+      "source_sha256": "f75b6bbc02f0aa08c7a0623f010c8d300eb96c476050016123c3b9e2d93f38c5",
       "values": [
         "5.00000000000000000E+000",
         "5.00000000000000000E+000"
@@ -978,7 +978,7 @@
       "natoms": 9,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "cab7b426b931d3d2d7f6b183844e5089c2166f9c2f0713bb93a4e965f40197a2",
+      "source_sha256": "ae8bce28bc7fe4cc1ca55a96e91d19cd37009a49f973dba7628e841ca074b1e3",
       "values": [
         "3.22143822425967352E+000",
         "-6.91065856307109350E+000"
@@ -989,7 +989,7 @@
       "natoms": 9,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "63bf322ed8cdaaec7b5f7f392570406663543aa849f7af7eaa174486b7f7046c",
+      "source_sha256": "2d7ca6d7d24383aff6ba99c0984e4a034e520e7a1360e88fa8a739ce064a0e46",
       "values": [
         "4.65265134981161310E+000",
         "-8.05003147723429002E+000"
@@ -1000,7 +1000,7 @@
       "natoms": 9,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "a24d9c6c58f9ff5fa80e5edd17d9977c3f1a4040e4daf044484249afd34872eb",
+      "source_sha256": "94344fded3769f40fa33bc4caa7f38ec5330d04d6451f1ee4e8df5ef31f3c55a",
       "values": [
         "8.78100342901309183E+000",
         "-1.50539046922526598E+000"
@@ -1011,7 +1011,7 @@
       "natoms": 9,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "4431a56d3b7aa3dfbf53970a30babfba78306dbacda23a8310fa99e2d48b2f3d",
+      "source_sha256": "a0290f14230691bd69eff09bbde2f06a8d75733e3328dd02402facf09ff3b21a",
       "values": [
         "2.46968006069360468E+000",
         "-9.13014542505495896E+000"
@@ -1022,7 +1022,7 @@
       "natoms": 10,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3b1988886916fe77a9f777025399cf67b2f3bd1191aa8ccf501e365a284ccfce",
+      "source_sha256": "3a6630cbad95b3d48a38aa8a331dbb6a6e0449bb67a8e99a6d19645a325887b5",
       "values": [
         "1.13414407694805721E+001",
         "7.14903531088297739E-001"
@@ -1033,7 +1033,7 @@
       "natoms": 9,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "650c560b340282fb4fd95e06293962f6534952eed9038f7565f87bb9e4b694a8",
+      "source_sha256": "da97de49db11f432667aa0a1496d7157437331ec05db20eff6a7272e6c91dc7b",
       "values": [
         "4.09889233133384209E+002",
         "8.17660556701176375E+001"
@@ -1044,7 +1044,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "0392ada5abed96ead784007218fd4ffdbf0c8ac8816c7f9b014c25428a7fb64e",
+      "source_sha256": "098c55186ef654cadf08ad99275636ff4931f616f125ea047d9fd3a585a71323",
       "values": [
         "4.85151792377525570E+000",
         "7.45229137154017174E-001"
@@ -1055,7 +1055,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "9c2e6e89fb21271922ed87b6fab4056c63914da8b32c470e3154c3aa7b26b28e",
+      "source_sha256": "9f241c2741cf93c89721f0c3c46e5ae44084e17e3832cc0b8a8ec232dc9e5909",
       "values": [
         "3.93800557103964755E+000",
         "7.64974745699439240E-001"
@@ -1066,7 +1066,7 @@
       "natoms": 12,
       "nstates": 1,
       "signature": "x,igrad,path,potential,gradient_out,dvec",
-      "source_sha256": "d043003a5aebb5c2a957f967eb0b11c6af9472b98c51fafaa8888ff5cebeee0b",
+      "source_sha256": "73f79d69e1d98e59c709b3b2a966594a339cbee184f2af3a42b73b118343a6aa",
       "values": [
         "-6.79360446807509197E+003",
         "9.78291852775317420E+003"
@@ -1077,7 +1077,7 @@
       "natoms": 13,
       "nstates": 3,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "4e14c93883e23d2449a80b58b2a94317d5b503b9c0ebbd1f9a3350909910ec19",
+      "source_sha256": "7bd34c4da9ef56a5086b9af6110cdf0f2043fe35808f1d686dca7dcf64fb191c",
       "values": [
         "1.18821422170489086E+002",
         "1.28829265402522253E+002",
@@ -1092,7 +1092,7 @@
       "natoms": 13,
       "nstates": 3,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "ef8a60e69fa02d1a7733ed44288fcca3c171be6783f26d97b2361e345dd0fb63",
+      "source_sha256": "b2437fbccb827d76c3972b62110f6c00ba05d4c3858ccdff75c2e954916502b5",
       "values": [
         "1.28901547638411330E+002",
         "1.09258314593437642E-001",
@@ -1119,7 +1119,7 @@
       "natoms": 13,
       "nstates": 3,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "738ceabb1b8f55060ea95457fd8b91e82df3614b4e786d4c0517f9359bd286db",
+      "source_sha256": "fa3c30cb0ce4251fb3bac421fc2283ca0ddfba2b4b8969205407e4774c1b9d9c",
       "values": [
         "1.23156319592066581E+002",
         "1.24052421632699151E+002",
@@ -1134,7 +1134,7 @@
       "natoms": 13,
       "nstates": 3,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "609582bed75956c8f4127f98abab7c3dd8f36a8390083d0e93436a0f2548899d",
+      "source_sha256": "91946498a9fcb1446907cb62747d67923ea4f2ed3cd9ad375b37f82bb0eba2f1",
       "values": [
         "1.24009772398818697E+002",
         "0.00000000000000000E+000",
@@ -1161,7 +1161,7 @@
       "natoms": 16,
       "nstates": 3,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "c9300312f648b8b0c15f6c1ab58901ea1c04b97a61f7a8005da691e3ce790bff",
+      "source_sha256": "080dc806cf8357fc16dec96c3ac3ffb6c2c483424427167369b8085064d114a9",
       "values": [
         "1.53949476781594001E+002",
         "1.66300686535342322E+002",
@@ -1176,7 +1176,7 @@
       "natoms": 16,
       "nstates": 3,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "cf17f45ffaabc8a0a6ab01e06e8bb2be3b10b702f4970ad6a43f12339c76a6eb",
+      "source_sha256": "73273a79974b9b9d01f236b37fdd324c9fd0d63ab5f75cff524523753fb2f4ec",
       "values": [
         "1.66303984651870849E+002",
         "-9.53137352205580407E-003",
@@ -1203,7 +1203,7 @@
       "natoms": 16,
       "nstates": 3,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "71f439f84b3328d76cb2eed0f90ec671d397d4b5baa881fa8801ab5866a08576",
+      "source_sha256": "579a6d7c3d4b34157b0bf479f016feb8e6cad1f3cb4af36f8d690003838ce8b4",
       "values": [
         "1.53949476711827174E+002",
         "1.66300580284348001E+002",
@@ -1218,7 +1218,7 @@
       "natoms": 16,
       "nstates": 3,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "c697c9fedc1d8bc981f1682580398ed323748499bece1262a946724269a3c645",
+      "source_sha256": "0a6baf121734668082a89c63d7c19340fb8eb80544cb6bf32e89c5e3e5b83daa",
       "values": [
         "1.66303984651870849E+002",
         "-9.53137352205580407E-003",
@@ -1245,7 +1245,7 @@
       "natoms": 16,
       "nstates": 3,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "f17cc6c6d293824f74eb012dab0171e3f25786d014699da237defefc3f445b90",
+      "source_sha256": "3b94d4424b57a4b73a061a510ff11e063548d527fc7f0da7feba3ebfdf22dafe",
       "values": [
         "1.53949476925862115E+002",
         "1.66300761104277854E+002",
@@ -1260,7 +1260,7 @@
       "natoms": 16,
       "nstates": 3,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "daa8147d1d326ff11d9be6fb8ab576ca3f43d296951563c7c4b990b75f2beb36",
+      "source_sha256": "82e8fb28bf57764658ee6d41e38dab81eae60df182fb76d00a5e706ab98536b4",
       "values": [
         "1.66303984651870849E+002",
         "-9.53137352205580407E-003",
@@ -1287,7 +1287,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "c65bc6e011a1f067ce72ff9ef32a4012dc0b5a6ea002e0dcbd759a841e585d4c",
+      "source_sha256": "9563f43ebb8773a167cb9503713549f2b1edd7eb3bce97b283f9671ce5b0de69",
       "values": [
         "2.06305910492403832E+001",
         "2.30132060053381782E+000"
@@ -1298,7 +1298,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "9ff3910ab7edab83de912db78914d231b449dcec06340645e07ddb3322e83118",
+      "source_sha256": "0443561461433d460a442da490a201a3fe622543f52c93eb7fe6d35c8fecab17",
       "values": [
         "-2.24234287715973082E+001",
         "6.11271203808804930E+000"
@@ -1309,7 +1309,7 @@
       "natoms": 7,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "5db32336130fc4abc1831d4169234f70f1a4e56eff5de1adbd9da30e94c9fa89",
+      "source_sha256": "58bdf1ccab5494a8c54d383eaa9b3f6a0c17bbcaea957d7d13804dabc04570a2",
       "values": [
         "4.32097942145299569E+001",
         "5.75935467837403650E+001",
@@ -1322,7 +1322,7 @@
       "natoms": 7,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "9fecbeb49bacc9084596a92d32d79543b3a6f973a52a80e90ac021c5bebac821",
+      "source_sha256": "0c4ae185cd05d30efe9f4cbdcc39ec3f35c7afe2876520f36f9344b5bc3f857e",
       "values": [
         "5.67061444359622939E+001",
         "3.46073588604129201E+000",
@@ -1339,7 +1339,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "78ef75f6b606e2a2b8d5307c4335945b19214a3149916fede7449114e30addd7",
+      "source_sha256": "dce4664c6dc367cf8ccae0744312863075f2283993710af2b4828285fadf7f07",
       "values": [
         "-1.53880453794310984E+003",
         "1.36543202329912496E+001"
@@ -1350,7 +1350,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "817e2cda6faf3042cccd89a821fdf634e3b0bbed7e969d042f7868b37b59d871",
+      "source_sha256": "4f91871b62c664f640491b80a5fa0337a50855839ad06aff8afa33909d4ca464",
       "values": [
         "1.29711291888660529E+001",
         "8.34885389821196711E+000"
@@ -1361,7 +1361,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "1a272c57cf027c76ea336c63bb044ce02d024ab6864d4d8fdc2275e47c0b9744",
+      "source_sha256": "d8efa41bcc92b03f96b66b030aa5bc6f2d377d4de81ee716b8e9fb57923f5ad1",
       "values": [
         "7.59057278363923587E+001",
         "1.49745305852806521E+001"
@@ -1372,7 +1372,7 @@
       "natoms": 7,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "44c61da6d5bb6626046991de36dc5bfdc950687d7abbf4cebe268ac9aa5074bd",
+      "source_sha256": "5611b80ff2aaa0a701375e726b75bc9c9f4d7855b8534e5677ddbeedae236541",
       "values": [
         "2.37069077320696408E+002",
         "3.81392024162767953E+001"
@@ -1383,7 +1383,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "defd27261afacead592fe14ca029baca9ecb66fc8f6784414eac73f8234084c2",
+      "source_sha256": "d72c5fe5d531190dabec47740805603981dd73cf4b2ff6390c1db4f205180884",
       "values": [
         "-8.70125310756760761E+000",
         "-8.87806181928405103E+000"
@@ -1394,7 +1394,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "21610ec86c144cf1de98a0ff93c422007b8f037d33c5e9f9a6f3fd1b53e426d9",
+      "source_sha256": "a1407da518905c192e8b26d3e898cf7fede22ff5e2f6933e33d6a09931d5e707",
       "values": [
         "1.14622700438948630E+001",
         "-4.11800624705782869E+000"
@@ -1405,7 +1405,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "1e59e3b98a479fcdf6cf2a6f5a694bf3a46caacccfa7db6476ecb6c475618f14",
+      "source_sha256": "e3d9cd2408ccc964778027d830aa4aa813807c27251a202565c32d3f6d174d8d",
       "values": [
         "-1.17782425927648706E+001",
         "-1.27635082180151613E+001"
@@ -1416,7 +1416,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "99cd87ef0ddc962a4a88e8f6959ad88178b1b76e0e83dc59d75cc3f46172f577",
+      "source_sha256": "6ec1a925b0a9743769ecc2e32d8d21b298a1fa2d644f3409e04677af55e985e7",
       "values": [
         "-1.20071668823497522E+001",
         "-1.30951670625563086E+001"
@@ -1427,7 +1427,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "69c7ca4be9f87aa4f98007f9be4467984ef02fdb1425a8f14e88511390992648",
+      "source_sha256": "43ec0401840fcef7e515f5250d6db10e25431a0d53c24a9ddf7bffd758a5fefd",
       "values": [
         "-9.88108835078438830E+000",
         "-1.38292250042960383E+001"
@@ -1438,7 +1438,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "7e18e760da9691bf66967d6ccf0f07c70813c1ff2678d960586e8764e7ad60d5",
+      "source_sha256": "746ce2150d23e5dc29a04269f3e2c1b9358dd4dce3f73daa7559ba69741282ad",
       "values": [
         "-9.59950958615012340E+000",
         "-9.71239283769595652E+000"
@@ -1449,7 +1449,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "215f2123e0c8922b2f5a14e78a142a46395244ac9e8853e8c5910be85a00413b",
+      "source_sha256": "ff4fc88fddaf5fa84200fd119ab65911c1eee5174497c2659eebc6617b42abfd",
       "values": [
         "-1.34574230189198563E+000",
         "-8.26460195317287116E+000"
@@ -1460,7 +1460,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "01349bc79b684468934995ada77563084d52221f1e8c588aee6bd614133a1048",
+      "source_sha256": "fa0b45a7248410cf3e20df3233b2ed0d870c8f1d6085ec3a4a0691a974403a0e",
       "values": [
         "-1.35269770726344829E+000",
         "-8.31795544971887857E+000"
@@ -1471,7 +1471,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "71a17dc616449830cf87bb10052c15231ae5a20eaee80fefcdda8a048ca36f77",
+      "source_sha256": "b0281c124b040589a835bd1c2de26210a83a933129dc6446df5b11f34ee9eb03",
       "values": [
         "-1.86331478415452843E+001",
         "-1.34893911802092621E+001"
@@ -1482,7 +1482,7 @@
       "natoms": 7,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "553cbf689de9a10a62ffbcb1cb0850fa2eeb540894fe59bfc969ca615ee31798",
+      "source_sha256": "c65ee9bb3f11b73ee2897396e2febdb0d12c87804f10faf989313438a5b82e24",
       "values": [
         "2.49385297058123072E+001",
         "2.12987205477490988E+001"
@@ -1493,7 +1493,7 @@
       "natoms": 7,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "be8003330a8badd57899451dfb9f4b4e56cf68ca5281c3da33ee32dfb7ffa94e",
+      "source_sha256": "a64dc48e1d68b39c1d1661b2b7964fabea9c2386734760bd00b5f4c352d7f494",
       "values": [
         "2.52616118844977766E+000",
         "2.29718578452798496E+001"
@@ -1504,7 +1504,7 @@
       "natoms": 7,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "bf5578d1744d380bb49ff3837912b6563660290501cd5269b3aa1793d10a3266",
+      "source_sha256": "df8fcbe68ce53b7fc871d266e673c0aa0bf21ace961ec5e8e4532793c810abbd",
       "values": [
         "5.52916331600371649E+001",
         "3.90034881272798728E+001"
@@ -1515,7 +1515,7 @@
       "natoms": 7,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "e4c4ad86d7ec1b82a1236b28d23f72a37fc5a7cae76f3a39a905f607a260acb2",
+      "source_sha256": "529ddf9bff4cd5f8b6cbb9510f8448f9b2a623b6d8cab596b08bbeb27b70354e",
       "values": [
         "2.09519524611246020E+001",
         "2.02981560702853514E+000"
@@ -1526,7 +1526,7 @@
       "natoms": 7,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "d9438cd4b0b0477ddad07f2bbeed7d806bf44d31c97e26907f9411d48278a137",
+      "source_sha256": "f9a0c2d3cb8bcb13e328baac59d9a648cd2b2a746b6a27970a9d32953d860242",
       "values": [
         "1.79093646829524971E+002",
         "8.05359796701585418E-001"
@@ -1537,7 +1537,7 @@
       "natoms": 11,
       "nstates": 1,
       "signature": "x,igrad,path,p,gradient_out,d",
-      "source_sha256": "cbe1707f739c1315a3e832c1afaf6cce56bf063fb799f454dbc72764a863ac84",
+      "source_sha256": "c7a931d34cefca62105b39b6b9c2abe8e61131241f51cf97731802291fae1fc9",
       "values": [
         "3.26317501035999840E+002",
         "-3.34020930889876482E+001"
@@ -1548,7 +1548,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "e075be527a3b6aa5c22b95e79823b1f66f2843c6edf3e345666f337026ca3d36",
+      "source_sha256": "dffa6c99a219021ef1c42c3c2419b41091bc782b4b143353a2cbb6427175d56f",
       "values": [
         "5.32862732278827611E+000",
         "1.03064041077460420E+001"
@@ -1559,7 +1559,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "8d013091528daeda33ede2ec5dc056a802316fcbb110f9d1a3da239cd3284e4e",
+      "source_sha256": "8eac44cf535416b0e5eb1fa4725e706e1de1e8d98dd04fbe7ec184b1e083a8b0",
       "values": [
         "5.31302001974057347E+000",
         "1.02040045578670728E+001"
@@ -1570,7 +1570,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3240b9d76a3a27d25fa0df5132a64dcc1befdaf9ae42d07058f8893473f9e16f",
+      "source_sha256": "a97c74dff9d3f14e27966b461750a262142217051ad9aa27bcc8cd949c5d84bb",
       "values": [
         "-8.37690479625458195E+000",
         "-1.05093274961066676E+001"
@@ -1581,7 +1581,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "b251ce23c0cf8995b81fa0cfef3f197a767d3987ef21ec5ccdda6f97702b8bd0",
+      "source_sha256": "0f384f922720de3c794eaeb9ab056bc7690c13eccbdee665e2597aeabc6aa470",
       "values": [
         "-7.72570060808561898E+000",
         "-1.01294799938481663E+001"
@@ -1592,7 +1592,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "0f71fa2fa522fc322d1c9adb73c07c5a1dd93733561cc2014ccc70708b2f23dd",
+      "source_sha256": "049d8d2e1764540c67b9012fec3d74677867249383e3ca1a62e36d97e94dde9e",
       "values": [
         "-7.52939833067185127E+000",
         "-1.01561639210587327E+001"
@@ -1603,7 +1603,7 @@
       "natoms": 8,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "890de4d944670ca83c93c0659a51df66211e2c381b64f41a952dd69405987cb0",
+      "source_sha256": "54e5613399fe3a9712ed9c86152a9b7c039deb932a4403eab01dad802b4805f8",
       "values": [
         "2.72770506746611652E+000",
         "4.15910055640893539E+000"
@@ -1614,7 +1614,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,gradient_out,d",
-      "source_sha256": "6af8171c08de170893deb21545d782bac0ef1032dc0bc9f58ec155a18459f3b6",
+      "source_sha256": "e54d0c59f3f137d66cd25985a08c050da9a10ed6db661a28ef8ab881c77b21bc",
       "values": [
         "2.27026310341919269E+000",
         "8.77306456656367750E-001"
@@ -1625,7 +1625,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "639373b58da253c70655f6f0d4fa6a79c1b1111bcb54d8bf642eaaecf2fb5e5e",
+      "source_sha256": "ddabffa398d2fdfdd026fa8536da4e1e1751920d379913f1b021aeebb1dbb90c",
       "values": [
         "1.26031850445564100E+001",
         "-5.87176926611410521E-001"
@@ -1636,10 +1636,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "6a1696227f485eb829629972be9431da3efb32d1153327f708aed37dc5c76660",
+      "source_sha256": "cf45c8c8d6b71f7c0f3cb2313d1fbd6c7536007360a499e605c14b21bc311672",
       "values": [
-        "1.08373999509711378E+001",
-        "7.93885804630432279E+000"
+        "1.08373999509711307E+001",
+        "7.93885804630432901E+000"
       ]
     },
     "Cl2H/Cl2H_LEPS_KNPRY_1966": {
@@ -1647,10 +1647,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "448a372a1b22ddf3f5cd7115f80d0dd58fcf4a24a94d6eceb4346813bc47981b",
+      "source_sha256": "5601c88757a51adc3765133d0ea30f6907f5efe4bafe77445a7deda1d015cdbf",
       "values": [
-        "8.60690630399247709E+001",
-        "8.17846009927748696E+001"
+        "8.60690630399247283E+001",
+        "8.17846009927749122E+001"
       ]
     },
     "Cl2H/Cl2H_LEPS_PK2_1987": {
@@ -1658,10 +1658,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "0d61247987319d920aefea9e6e59a69d3d933e04ec91943db314f59f947e601b",
+      "source_sha256": "9826bd9b948a038ca78b7e409ef0e38eaee775f49c92c0a55028e68fac5ce0fd",
       "values": [
-        "1.24283220853581184E+001",
-        "8.77541506547918893E+000"
+        "1.24283220853581131E+001",
+        "8.77541506547920136E+000"
       ]
     },
     "Cl2H/Cl2H_LEPS_PK3_1987": {
@@ -1669,10 +1669,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "cccff6d74b6561b31ff56ca17eb5af0b9143eaf6e3abc53cdec54c819e8eb156",
+      "source_sha256": "7e5a3dc43f0f944977bd59cbe2468418a3e34247bd9f2a210294939bcc911086",
       "values": [
-        "1.40039117410832912E+001",
-        "9.61011330406289765E+000"
+        "1.40039117410832823E+001",
+        "9.61011330406290476E+000"
       ]
     },
     "ClH2/ClH2_LEPS_ALTG1_1996": {
@@ -1680,7 +1680,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "7924b37d99bfb168174c4808a8bef925104b89885f61ab504c08f8f888f7ce1e",
+      "source_sha256": "7e33c31d02dde40b7b01461b43488e37c539e0aa323088070fe1d7d533f0e022",
       "values": [
         "3.85498601228146409E+000",
         "9.29244654152113631E-002"
@@ -1691,10 +1691,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "40f243a95808868ff63f3f2420202d7121c602d8cf07a9ebcbbde92242522639",
+      "source_sha256": "aadf21738ba1c24cfdcf12d12e6bca127c1e9a82c0d302d717c0f5616612e29f",
       "values": [
         "3.85497619023016469E+000",
-        "9.29243690331856692E-002"
+        "2.50328966056197944E+000"
       ]
     },
     "ClH2/ClH2_LEPS_GTM1_1981": {
@@ -1702,7 +1702,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "baddfc949a9f08af2c0751cc453396de70815eeba983d29ac3127d71906d7380",
+      "source_sha256": "a6d16d0067ea4a04aac12ceee542b077ff83b1308fd81ff7f269c329ed894274",
       "values": [
         "3.72873704766426517E+000",
         "2.42010491038763842E+000"
@@ -1713,7 +1713,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "c5c49d14e244de81adfa0b6d229d33da405af12af7c3457d280af9c8b7b19c40",
+      "source_sha256": "a3ca51a11c5b8d55c17931f654f2bbe21fb0c8d9956483fe3efa6c07601a1929",
       "values": [
         "3.81361999648285366E+000",
         "2.50401233578985050E+000"
@@ -1724,7 +1724,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "632981b12901f70c1c282ad35abbf8b402f76cbb614be5061589d07188594b58",
+      "source_sha256": "2b34ef51e26f54f64261d56c9d76ca05e489265ff379653a73914307ee69b725",
       "values": [
         "3.70957678900774779E+000",
         "2.39509500250023777E+000"
@@ -1735,7 +1735,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "5cdfb35737a1ab8a21968d7c24366d9915b6d66b78af4806abe2f255f766abb1",
+      "source_sha256": "45f3b839f4a37907d107cdae71435a3658a26ecdf167c8db768b10024518b893",
       "values": [
         "3.79231892263181347E+000",
         "2.48209862520594937E+000"
@@ -1746,7 +1746,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "628857a0d20ee925d3299341219ca65ef206584a6aa6c71cd04ab16f10dab767",
+      "source_sha256": "7f28bd8edaf19f93f2f7d304f3f22590707aed23b48c6121391b0f776df6caef",
       "values": [
         "3.80015674528444292E+000",
         "2.50385833971852811E+000"
@@ -1757,7 +1757,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "c694a180d0e71e5d42bf351a8143c4cb194f29894b9b6c5065b66779b8c1d813",
+      "source_sha256": "5f2b8c79fef7297f10e7662ae053d287e80cd67615941fb0212281cb5aeb56c7",
       "values": [
         "3.92950128401367582E+000",
         "2.58229232622562366E+000"
@@ -1768,7 +1768,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "ebcebabf5116295d95c4da60110e1639848c37630b88ebece9d99e8c42fa10b1",
+      "source_sha256": "02e3b24c74e08cd7e06f33149113b95e11f9b7d84f302aba1bac009649523698",
       "values": [
         "3.80015674528444292E+000",
         "2.50385833971852811E+000"
@@ -1779,7 +1779,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "26ac28ab0d15cf6dc964bd4c2fef8334f469745686baccb3d3413426d729ec97",
+      "source_sha256": "e4c62b620d640319283238cc5dafcf37b3622d4791db62b3603c26a92bf53af2",
       "values": [
         "3.79905990047191766E+000",
         "2.49617994680089605E+000"
@@ -1790,7 +1790,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "1c9546518c6e9b577e023b2be36b6695d5028957504b939733565fc15780f7ed",
+      "source_sha256": "46e53614047c1960b90b01d2f32636c10a59cc4f8df2be88c97839265aa11d72",
       "values": [
         "3.77829585981998628E+000",
         "2.46621608595417463E+000"
@@ -1801,7 +1801,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "ee6ff0df8d32d93eb40da0224885b0f66630e625594c48f7c4c7f84784473c2d",
+      "source_sha256": "4096f99a3694e74dda44e7fa5d1139171ff0ae3ff1fee7f443f6ec3e27f5b50d",
       "values": [
         "3.84892435294729296E+000",
         "2.49286738122936891E+000"
@@ -1812,7 +1812,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "d0e10d936ad4e39cfb9bbb9617fac31601ac71b384d8533e7b9072d0a92dab2c",
+      "source_sha256": "8fd095f1f2a2b75407550b624b3fcce5695c9e0f6108f0760a68935d75ff3936",
       "values": [
         "3.85416013035679272E+000",
         "2.49286738122936891E+000"
@@ -1823,7 +1823,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "e34d590d3ee7b53a1c5b6f2eee32f5635a340080400adf66760abc342dc61b6a",
+      "source_sha256": "af9d37ed4bfc0fd4450d9a82dc8aad23de4299980609a3f0ad3db7e06d653e58",
       "values": [
         "3.67636679172584424E+000",
         "2.37404747929351201E+000"
@@ -1834,7 +1834,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "e880fe02ba55afc85c56015ff3219196e2f976bd840555e67bce5401d3d1d828",
+      "source_sha256": "6e793518be53f83e4e9e10aac5c87984f897d2bd19296a525d37e10ee995f8ba",
       "values": [
         "3.67579555646346057E+000",
         "2.37360288137135056E+000"
@@ -1845,7 +1845,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "73fa9e82f6f29c163c7f0524b5571a985c0fb87b703874d5276d1308a804f894",
+      "source_sha256": "1861bae77f8f4f8b8059adc52df54785e84c71e00f8ea2f06e02daf99a83e7fe",
       "values": [
         "5.00000000000000000E+000",
         "5.00000000000000000E+000"
@@ -1856,7 +1856,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "fb5ac993cad140ba10bbde62cf1bb085f37922565e0ed435298210da2ff51964",
+      "source_sha256": "b4e0ab3b6790fb08c6699e27f5e1952e816dd6c34021c2ba40839810cba889c2",
       "values": [
         "-4.46873140605965080E+000",
         "4.03252182382905033E+000"
@@ -1867,7 +1867,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "7b146047e6d82703dd7e84caa0b50426998f256afd602f92de7c6725b3e2d652",
+      "source_sha256": "2f097ae8ad19bc90d218893bbe303647f853e0dc8314217b6fad431be0ab09d6",
       "values": [
         "1.12122634039011118E+001",
         "9.81607048603465593E+000"
@@ -1878,10 +1878,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "d6d455a2162f8a10cd8da2560e0c666b19e0c14bb87ebd809dbc03a451d10621",
+      "source_sha256": "e04846fd07a1b0e1f3cf1dc3bc4019077f7258855aeaac763b516999cee1bab8",
       "values": [
-        "1.12122005752459266E+001",
-        "9.81601724655698327E+000"
+        "1.12122005752459142E+001",
+        "9.81601724655699215E+000"
       ]
     },
     "F2H2/F2H2_GEN_JBKKL_1990": {
@@ -1889,7 +1889,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "14be3c435836ffd6405d8e3ab3ad91d6a7a6be0bda82b3bb94b1c5ee1af0fb9e",
+      "source_sha256": "15c5cf548e80590e232017ae919c4660010e16e90e2a9a79a094ae5733e4c45e",
       "values": [
         "-1.37961350830752478E-003",
         "-1.14418339339420388E-004"
@@ -1900,7 +1900,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "f9df2e34c25d3268f88a9e947d2567999d169b83e2d6b4d4c38c1752191ccc9f",
+      "source_sha256": "884aab8ddba34025fef5f47ca7bac820c5f8e2ce987d681969185727af41d15d",
       "values": [
         "6.70654283012972375E-006",
         "1.21379643435324267E-003"
@@ -1911,7 +1911,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "447efff8b47ac3671a68bac969f72c1c6ea38d8e6edf0966de38d757201bdab0",
+      "source_sha256": "af7333269336e2653918461f8f9d89ff3ba66e1f576c647f74db166d414d2b0b",
       "values": [
         "6.68912049385714541E-006",
         "1.21375819827094860E-003"
@@ -1922,7 +1922,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "240de7f27e2fdec780235a93903546aa9de6c9c09edd4f210947605e7b5ee40d",
+      "source_sha256": "c74d5f5376fe0528b823d6f0cf6da5e4385f0e3b1e78e12027c79521c2f8d547",
       "values": [
         "-9.44853089858046280E-001",
         "-9.52326313349759479E-001"
@@ -1933,7 +1933,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "237567ef48cbc12a372e60e10263025c712c6e6bd44ad83d05a7a718d3ea3c50",
+      "source_sha256": "7f76181b44dc2a4c86c599c6ab1651f6625caac3c4f1555b1fa64d1bffd4a1bd",
       "values": [
         "-9.44853089858046280E-001",
         "-9.52326313349759479E-001"
@@ -1944,7 +1944,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "e5c3e3313392f315048d957045c87d4487dfcb1f91510c79036eabaf1f9dca42",
+      "source_sha256": "24430c622befc552e18ca8a7588c2b908906f3699af18eee4b871eefc15e3a6c",
       "values": [
         "-9.44853089858046280E-001",
         "-9.52326313349759479E-001"
@@ -1955,7 +1955,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "6eb9583772b466090b26780e9e21b2f9b714616d50e63adfea94278efc26228f",
+      "source_sha256": "0206fe0a872f5d2029ddbc1a51e20831f0cc5c624e8f0a5df49f35b8aa59fbd9",
       "values": [
         "-8.84067034009311858E-001",
         "-8.98914185126774123E-001"
@@ -1966,7 +1966,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "194847af781490573807eadcee2845160a1714c6190aee1a955db1a11b026b08",
+      "source_sha256": "5178da159d586d33951aa96ae3a5d99ac27a4f052de02671b4c16b62eb80747e",
       "values": [
         "-8.34207704271345385E-001",
         "-8.48525868468279043E-001"
@@ -1977,7 +1977,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "2459c55171080f231f4cfa49cdc95513ce8fa646c82b436d356aa38726b44636",
+      "source_sha256": "2941121cda9efd8be42e886a8824f22d1e63d856819b0b8502a9bac33cb918e8",
       "values": [
         "-7.67726750771885680E-001",
         "-7.83902581497932793E-001"
@@ -1988,7 +1988,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "9cb95ca6cb220de5223390e74f718091e6c55bf36180746f9ad4c8285639f7f9",
+      "source_sha256": "8063d5c1bac01a2903760d8102353be06084ca5a8602be62519c98ff980b3c68",
       "values": [
         "-9.00031089131830053E-001",
         "-9.10862335358032849E-001"
@@ -1999,7 +1999,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "42c0255301ec7d2f3638f292aae84b222da038a00c54637720d3730a9d7afeb5",
+      "source_sha256": "02a342dadfe6921e09b0affdd1387b58529e1e2fad2b3fb91ae30db4537dc7a4",
       "values": [
         "-8.80947339348770453E-001",
         "-8.93212416716928637E-001"
@@ -2010,7 +2010,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "c80b74dd128b6b1a4d93b99637db7234f4edba538baeeaf7879a6d044e3423dd",
+      "source_sha256": "b6c7a370cafa47fa12ec2951f10aece05f9265dd23e434ee8b566307787437f9",
       "values": [
         "-8.68266776626240966E-001",
         "-8.81485927075094766E-001"
@@ -2021,7 +2021,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3a54e5aaf1984d8b0924378b57efe059d81ce9d6a415d404d23deca57c0de49b",
+      "source_sha256": "ad74c3cc166d193065dd7e68807f5dbd3c447843a0ba076a05118d28fbd40226",
       "values": [
         "-9.34358643913930642E-001",
         "-9.50078688966715545E-001"
@@ -2032,7 +2032,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "980e6e82f44b59cd21dd8be34153a1eb2f895a6b5bd10318278a3effb6000b83",
+      "source_sha256": "714c2363c7160ff8009e8a5b6b0803dd9943d8597f17902d7098c1522b81e4a4",
       "values": [
         "-9.44853089858046946E-001",
         "-9.52326313349759479E-001"
@@ -2043,7 +2043,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "cfffafafa6a5aea49c7087146173639f43c1c20c5395b7582e70b8d22b2538bb",
+      "source_sha256": "82a3503d47f9d0381f71a3267e4856662286f7a3d1ab60629a4b0ffda052f09b",
       "values": [
         "-8.14415880092358879E-001",
         "-8.31517568273978380E-001"
@@ -2054,10 +2054,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "b4e0ffba9f9471026cd1bf2c74822c381dd133d20aa60549a682bd8ab7291bde",
+      "source_sha256": "97ed18e0da5a0eafaf31907bcec456978f5a2908063ddb61e8e194d5020d2451",
       "values": [
         "-6.02063227548658486E-001",
-        "-6.44711663643991018E-001"
+        "-6.44711663643989463E-001"
       ]
     },
     "FH2/FH2_LEPS_M5_1991": {
@@ -2065,10 +2065,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "42260fd36bd697ca8d58d4d3ba0bad2c77da7aa7ed2f9dcf1df29cc7794165e5",
+      "source_sha256": "33fb4d1ba73f30646a33a745f0f91e9ff47dc1006888d41e7b43fc3d2bb88aff",
       "values": [
-        "-6.06160100986251060E-001",
-        "-6.47008101179915029E-001"
+        "-6.06160100986251837E-001",
+        "-6.47008101179915696E-001"
       ]
     },
     "FH2/FH2_LEPS_NO1_1984": {
@@ -2076,10 +2076,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "24e3d3a2178966af2114b2d8187531a86ac8faad4faf348c1e0c0240976e928d",
+      "source_sha256": "acaf061f9842381453950a7bbec6d022dde7e867c53ef6ad47f3f6dd7d9770fd",
       "values": [
         "-6.15214164371026828E-001",
-        "-6.54898977152875150E-001"
+        "-6.54898977152876705E-001"
       ]
     },
     "FH2/FH2_LEPS_NO2_1984": {
@@ -2087,7 +2087,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "d876638d6e57fdc2d7ff46cdc9da0d22e83bf6e3f337d71d5cc4fc375f970714",
+      "source_sha256": "59d4d87fa5dfbb6abdad42efdc2642925778eea2eb907cf05fd6f617e98b3b33",
       "values": [
         "-6.30315817966402236E-001",
         "-6.54899053514768403E-001"
@@ -2098,7 +2098,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3bc0eefee8b78334cfb9e5882571efc6fa8af3763dfc4c1b872a177db8b3db2e",
+      "source_sha256": "0fb648119b0ac169a8a4edb0ab9ca367dc609997a10d012e1d40f6ff343c621b",
       "values": [
         "-6.30315817966402236E-001",
         "-6.54899053514768403E-001"
@@ -2109,7 +2109,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "001bb16069a3a6fdecf947d1e57df25b8b772e7ffd0a29918824ec62c9fa5f03",
+      "source_sha256": "e2afd34e3652ec2452b81a54023d3de6f7fc11dc16dacd37515982552680e167",
       "values": [
         "-8.09245746944661226E-001",
         "-8.15873441728290572E-001"
@@ -2120,7 +2120,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "85e21674781324442d26241f517b6ebe7b437836676820aba80bfdc5e9a8d784",
+      "source_sha256": "7c6c23673791b0ec0faae833201fdbd69ff46b1cb9c70f2fc59a01d63066a8ee",
       "values": [
         "-6.76769822024206102E-001",
         "-7.28527686167885768E-001"
@@ -2131,7 +2131,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "19449006123f47787a3f1d1d0d807470dc0b2f8f23f1f52f031baa38b40c62a5",
+      "source_sha256": "ddab35b8e7df1ccd4837d38c68795fcd2abdca3091b4f44c65f78ed801d73bad",
       "values": [
         "-7.67760368422174766E-001",
         "-8.32157526366539280E-001"
@@ -2142,7 +2142,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "70f03c58f2ec556f313f11c936d8c2bfd646cd8521b5a0f0a167d8a0c6b4e8b5",
+      "source_sha256": "63e279eeaf8fb664832cd60c6c348a38f9a2d0e4706107c637686f570a3e4eed",
       "values": [
         "-7.59075139628585749E-001",
         "-8.24709643580371576E-001"
@@ -2153,7 +2153,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "1de71a648b28850be4db876eb6464854d3cd693a6bd4e54fd3996ee5b3bffb4d",
+      "source_sha256": "b40a7003a475f546c0854c1d480eb8b3c7308db811e7a582f4a09cf4015de0a1",
       "values": [
         "-7.30615688625803505E-001",
         "-7.89198861359186266E-001"
@@ -2164,7 +2164,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "cad12c69250064329afc1d29c3550e616c2623abc1b244247b9979f826ba95f4",
+      "source_sha256": "f8b9ac4a552890e63143bb4f843488caf0d9bf23afdaa96dcf178e61e1473635",
       "values": [
         "-7.05431242494876209E-001",
         "-7.71611618059612425E-001"
@@ -2175,10 +2175,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "f7f53c12210b859c5c72fd0c85a52ceafcb76feb47c852044fe9ccc54c4d57cf",
+      "source_sha256": "c6036448db4964f0a71882ab919e6e7aebc1e225007d8b713cfceb54b79ec2e5",
       "values": [
         "-6.02063227548658486E-001",
-        "-6.44711663643991018E-001"
+        "-6.44711663643989463E-001"
       ]
     },
     "FH2O/FH2O_PIPNN": {
@@ -2186,7 +2186,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "4ca1290dd9c234699475e3837d9b7bd69b11c6054ba4713184de8e715c0e1029",
+      "source_sha256": "f9a411402ebcd3a339c35b7d067a52e8e6cd92a3ce84dcf7cbf45fc0fa6e656c",
       "values": [
         "5.00000000000000000E+000",
         "5.00000000000000000E+000"
@@ -2197,7 +2197,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "d031a8a003e44edabf16a0f3fd939e324dbf2378ed797cdb7cde0bd2ef156923",
+      "source_sha256": "f6236526eb7140454ce38d8efef2b7849db7a89d7b705c900497c353550e2e6c",
       "values": [
         "4.33634425158220616E+000",
         "4.33634425158220616E+000"
@@ -2208,7 +2208,7 @@
       "natoms": 7,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "16cab1ee1fae0679cf7396a9be47baecbb3d326e1ee2ef6338b3f883bd63fb10",
+      "source_sha256": "b16a74fdceaa62678f60a92a5fd5dce9f5c889825bdbfa216f83fff9ed194cc6",
       "values": [
         "6.69513743420686058E+000",
         "1.12521609809304870E+001"
@@ -2219,7 +2219,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "8320aba65037979c5e04e1b2070e9d4bbbd22484e82fdb220cab63742c3f0c0b",
+      "source_sha256": "82cdbab3ee651c89c59575177a61201f2e5b2c208f817cbc063194a6a75d36dc",
       "values": [
         "9.62559511732348483E+000",
         "3.31681044978644701E+000"
@@ -2230,7 +2230,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,gradient_out,d",
-      "source_sha256": "9a5e74936e5d33d40883d37bcfa074c82da9eb4bd53ee4c84692a1f63efd29d2",
+      "source_sha256": "989b3c8ccceeaa6fd2f3f26670035861cac3295c3fecd48e489225c2d2eaa8da",
       "values": [
         "1.10753499445658463E+002",
         "1.01724162225678505E+001"
@@ -2241,7 +2241,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "2cd159918e09ef632909d312710800f009ba47557f44d25aaaecea20189d14c8",
+      "source_sha256": "1674e2a3193aef39b20bb3e6d0edf271883064f97e89a7545cc44350f1717ce8",
       "values": [
         "1.54962150888533500E+002",
         "1.05286659396394995E+002"
@@ -2252,7 +2252,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "7b23f44cf03c6f5e2bd45f0d3cd93de4ef6c35ec045fc6409c8a6130a57953ac",
+      "source_sha256": "d3ed9d29122fd6015b558d672ddc55cb2ef1da22bf5ebaee7172d9176eed46a5",
       "values": [
         "-1.33217538310383043E+004",
         "-1.33852236415006410E+004"
@@ -2263,10 +2263,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "de63c92336fd902c7902564895324e5e0d88d531de5d6f939efa6007def72456",
+      "source_sha256": "23cd35622b07aedc6f073609260594b151c3bc961ced1576e0db829bd36e50c1",
       "values": [
-        "6.55274403623902102E-001",
-        "6.03816575722219362E-001"
+        "5.25459088704119393E-001",
+        "4.87261550575933011E-001"
       ]
     },
     "H3/H3_GEN_A3_2002": {
@@ -2274,10 +2274,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "8cfad456a1a5c87e27b98021680767592b2e8970c6f2bcb1a3b02e8936221820",
+      "source_sha256": "ac0630399beed556e9f22cebf204b45bdfc2e68d995100bed5b47fba66b73af0",
       "values": [
-        "6.63129592912931498E-001",
-        "6.24060876004593701E-001"
+        "5.58475196600794588E-001",
+        "5.35016594053392747E-001"
       ]
     },
     "H3/H3_GEN_A4_2002": {
@@ -2285,10 +2285,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "afaeebac069c6b6c2ff10600fc2d20f3c1127a0cbd4e63811f7989123a06a4ec",
+      "source_sha256": "419c16dc8d8ad71f3dfab3b96f160b00ac726d1c6d440e0e72d29f2c320dfe1a",
       "values": [
-        "6.55221076072249664E-001",
-        "6.17626190751268123E-001"
+        "5.56554524813657303E-001",
+        "5.35268464705464853E-001"
       ]
     },
     "H3/H3_GEN_BH_2009": {
@@ -2296,7 +2296,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "552ef97b6ca949d4d4b9004feaf11b4fc69b03a29fb639f79710224f0a3eaee3",
+      "source_sha256": "32450f8723f7c1b4e227df201fdd8c6f5dc80c339df0d6f296ac3b092e16e90b",
       "values": [
         "5.62199559650912284E-001",
         "5.42120418944017746E-001"
@@ -2307,7 +2307,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "47656987249781ec9dcd49e21b98766b31dcb039ddbfb5d7f21282cae5575207",
+      "source_sha256": "a3cecfb0db090f35c14a0dc1e40f65d28526b338f55970560dd27ac28d5c58be",
       "values": [
         "5.62402040753105403E-001",
         "5.36378121667137608E-001"
@@ -2318,7 +2318,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "de5a9d1bf39ae83c6d20f364a3256f40bee58e7c16c6853799f04299823a81b7",
+      "source_sha256": "16aafabe35a0b6be21b70e13dc21c023e5099563bc106a2ce4cfdf2117b4bda5",
       "values": [
         "5.58682807940597437E-001",
         "5.33137935350443182E-001"
@@ -2329,10 +2329,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "0fc4cb9356d58741f7f3845fa4aa29c63d89aaaa50a2e46fe8c850bb84de988a",
+      "source_sha256": "e3678a40497a5b6a944beb31102ef49334269e794b63ea20cb494fde70116d59",
       "values": [
-        "6.52318226566882986E-001",
-        "6.15418470081232072E-001"
+        "5.55896650189018793E-001",
+        "5.35434886933361942E-001"
       ]
     },
     "H3/H3_GEN_DMBE_1987": {
@@ -2340,7 +2340,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3b4c0fdf3e130d5b0d9aa51826ecfaaf5c51cb6d54f03c88e6f92fb09e51b8a2",
+      "source_sha256": "20e31de804eb44f8949687be8fa3a05b0506acabab6f48d6d43551d0f6dc1618",
       "values": [
         "5.68321810785632486E-001",
         "6.41011889424933301E+000",
@@ -2353,7 +2353,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "9e2142b75cc704341fe3edede78669b54e5f0b889b5056edfbbd1bb8d542595d",
+      "source_sha256": "5061e1dbfae90dc986d5509f38e67d2e9323d2d723a091a48140feac624eecd8",
       "values": [
         "6.16325223501085984E-001",
         "6.07601645446436800E-001"
@@ -2364,7 +2364,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3aa437885aeb6fc5de5c17eecce66418cdb3d315d4539ada23e32750cb894100",
+      "source_sha256": "728daccf1e633a68e86d8365506d096f5eb385b9e97db808b3332d493b388e2c",
       "values": [
         "5.22937815504801340E-001",
         "5.30766608759935865E-001"
@@ -2375,7 +2375,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "21c16f7b9b2563ea78f66bc0de767fc5863ee0ea5d6735d0554814dccddf5fb8",
+      "source_sha256": "1a146586bc0a5a9cfc85628d0c254252d9b91c189e437a1eab66e87f253652bc",
       "values": [
         "4.04838975406039392E+000",
         "3.48461799500846681E+000"
@@ -2386,7 +2386,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "94d4da9e0085bbed6b84451c3f6f90b559c402f7e72a11768faf148308ed3274",
+      "source_sha256": "be1055d0096d8c6eb58dd75ceedabd4bee912574fab55cd30013f26f1e923b22",
       "values": [
         "1.02180697578023434E+001",
         "1.90268625183437372E+001"
@@ -2397,7 +2397,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "b0295a5b9a20e0d12c847fdc30e37dac108516dd29c40ba423a5fe6703f59d0f",
+      "source_sha256": "2408d7e47353ed7f003efd4b1c7eddc2c15ff990e734de21978acb094f85c19f",
       "values": [
         "2.01126639577369620E-001",
         "9.03278726747868133E-002"
@@ -2408,7 +2408,7 @@
       "natoms": 3,
       "nstates": 3,
       "signature": "x,igrad,pin,grad,dvec",
-      "source_sha256": "69998d8fc345dbd098e5d03b6da7a4632d284780bd6d83ed68302fb9e6267044",
+      "source_sha256": "9bf4d821a6c1ee7376f603ae9fb3e07608d652c410a64bd3063fdd5e49eabc06",
       "values": [
         "-2.54425189446154620E+000",
         "5.78423833993707603E+000",
@@ -2423,7 +2423,7 @@
       "natoms": 3,
       "nstates": 3,
       "signature": "x,igrad,pin,grad,dvec",
-      "source_sha256": "892e06cc686df682b6e8bbb9a0cc197a3803736de328b9b2b3aea9ca6f423898",
+      "source_sha256": "44f360b99a711540fa2ad2371f66d15d1ae1039ed936966c5c7164ed2697feb4",
       "values": [
         "-2.58009861469044877E+000",
         "8.00916171900431095E+000",
@@ -2438,7 +2438,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "8114c9ba97be321d5dea3c906a80c356d91be8df15f06c20df2167e362ca3a30",
+      "source_sha256": "efe8be36720f54fb38dd8cc13f3b0b888d7d44b71ae0c15e7365ce275dd094db",
       "values": [
         "-1.62609845399856567E-001",
         "-1.56299620866775513E-001"
@@ -2449,7 +2449,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "907d9343f85b5f9281b848642979b068604f07e742c7424476ce46d9b65efecc",
+      "source_sha256": "3d3d15fc364d096c31902c11044b92847646b26bdb1a51b13baadb4dd8c36789",
       "values": [
         "5.00000000000000000E+000",
         "5.00000000000000000E+000"
@@ -2460,7 +2460,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "ba9b94fe5d53aaf7bdde3fb58f426b6af2cb629b45909e452be4cb859d53425e",
+      "source_sha256": "46765f9f9ac4068276d68463dfc145b5b20d25795fb96630e34e3d940fc6a08f",
       "values": [
         "6.00000000000000000E+000",
         "6.00000000000000000E+000"
@@ -2471,7 +2471,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "27456f79ba20de3601367711344be23bc0222501c1b5ade3328e5475abbb9b2f",
+      "source_sha256": "fa6aa976c5b2b23add2ff3eed3657e6ab8db53c64138387d7bf0bfa1b90a7025",
       "values": [
         "2.70921445934091594E+002",
         "2.38394241050706484E+002"
@@ -2482,7 +2482,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,path,p,gradient_out,d",
-      "source_sha256": "7fc0da0cebb28145bb14fe73c59069c7e18122be9eaaedee397a6ceff298c728",
+      "source_sha256": "e1c9752a9d93ca1de9caca2c817eea0d457e5f2590e70be78074ef79dfd8cb69",
       "values": [
         "8.20268973581333171E+002",
         "-9.61669651135768930E+001"
@@ -2493,7 +2493,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "e859dff6bea062a9892a0470a7baf4dd641dea2861b9fa60d723e9ec61b9e82c",
+      "source_sha256": "7352ee5fb12e00ec067c6ea9b1e59940e8bca87d08efc3b267210cdb7d5b3fe8",
       "values": [
         "4.09944633993074987E+001",
         "3.04752488246594382E+001"
@@ -2504,9 +2504,9 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "09b4359f749b52f9f87b6a3a7a59c793d166dddcfdc3df6168c0dd127bd9a996",
+      "source_sha256": "4564c650815505d913f26938442cf881ded32efb4b8bdef33b8ca82f5cc381ee",
       "values": [
-        "4.09930469816631913E+001",
+        "4.09930469816631842E+001",
         "3.04752609065273710E+001"
       ]
     },
@@ -2515,10 +2515,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3f0bb9e07034666514b4a181667e762ac3fed9f4566704a5cf0cc842f38c3316",
+      "source_sha256": "cd61ec80581e9822b9eb38f246bc1b6e6fcaf04eeb994f9ee258bc60c62bac89",
       "values": [
-        "4.00492372166036503E+001",
-        "2.96719831398241034E+001"
+        "4.00492372166036361E+001",
+        "2.96719831398241176E+001"
       ]
     },
     "IH2/IH2_LEPS_DT1_1971": {
@@ -2526,7 +2526,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "a8814ad2f837c4c652dadcc1d68c850fbbaae29f529bf79e7e36ba28c8dc5663",
+      "source_sha256": "996ad3a8bf8bb31316a3e03fc37091faf47bea6bbf57938ef2dee7edd776501f",
       "values": [
         "1.56919392583468245E+001",
         "1.26489046917239385E+001"
@@ -2537,7 +2537,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "f8c63a2e8e03926ec1bfe843e0b0e5854ca065fdcf43d5ac55e025f2ea7f3f54",
+      "source_sha256": "97d259cf3a565ccd70ecaa978007d8b598ab30cc5e2c650e59b7e324126236d7",
       "values": [
         "1.59621681526114507E+001",
         "1.26489046917239385E+001"
@@ -2548,10 +2548,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "373e9db4edd2b9fcf51b3aee9c7af5f26704036d8ebd1669e6282f63cdb9346d",
+      "source_sha256": "6196bc3fb5b33bc4eed2f328190c6d977be4c5f5a13abee793fd2e1fd4aefaab",
       "values": [
-        "1.62345468796156069E+001",
-        "1.24775109745211861E+001"
+        "1.62345468796156034E+001",
+        "1.24775109745211950E+001"
       ]
     },
     "IH2/IH2_LEPS_PPW1_1974": {
@@ -2559,10 +2559,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "1ede10c37b488600ccb7fb892ce4d6d42eddcf630076735e19b5b000fb0fa924",
+      "source_sha256": "0cdcebfb4afbf4cf321d42358873726d14103de2b94ad2634bbeaf9b5c69e6e7",
       "values": [
         "1.62260386706318265E+001",
-        "1.24694404403422840E+001"
+        "1.24694404403422983E+001"
       ]
     },
     "IH2/IH2_LEPS_RSPTS_1970": {
@@ -2570,7 +2570,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "8d36f513c345746de39d8bf49c621c96bbe9a9de72552aecd1e4eb2a7c9b771c",
+      "source_sha256": "458a2ce0547907adf69bc9aa03be7844fe1bbe8a8010fcc6078e9b4ddb8e293a",
       "values": [
         "1.74870938618552358E+001",
         "1.36942513961052512E+001"
@@ -2581,7 +2581,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "0cf733b8ecb2b51fe2eeef38faf547c95e44d3fb369a248f846ad1284db274f4",
+      "source_sha256": "1030fbec5f003967ca51ad816748766057fa557dafe00cd01ae29729721329f8",
       "values": [
         "6.19908119204214736E-001",
         "2.99264702632410173E-001"
@@ -2592,7 +2592,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "6147d9d2f2b58a698f09a694d4e972cc45db318aaddf1728c9073fdc2806617c",
+      "source_sha256": "bc567d115e2b97a55cac1f76ca8e3044f6db722457eef7e8cb6efc92be413800",
       "values": [
         "3.54399349326334612E+000",
         "5.20747851042386056E+000",
@@ -2605,7 +2605,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "755d0e719fee24ba0b99ea48c87ad270f2babac46fee7f3f7d1d512b7071ffbd",
+      "source_sha256": "80fb8ce5019f6e4776ba889264ca8a04c97a0ebfa75ac394449f13f0f9300bab",
       "values": [
         "4.83396783006703235E+000",
         "6.94131970292677036E-001",
@@ -2622,7 +2622,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "359afaf1238be7a5d3c6fc77b381c06c5da8f03421eff56354fa2fd9ee706d42",
+      "source_sha256": "6334fcdee0235bda27a05fc8403460529ed1a19032e1f4d28efb01e28b716bde",
       "values": [
         "3.34765713404922494E+000",
         "6.37366274609379779E+000",
@@ -2635,7 +2635,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "232b102567199154e4e52eb30c61b0207bc2f9796f5eba18c6f7a27759a3a277",
+      "source_sha256": "fc4a5171a4ae8acd243464690ef206627b77c4f3b42ce49b9c64625d6c963147",
       "values": [
         "6.30199730735121122E+000",
         "4.60134854922486014E-001",
@@ -2652,7 +2652,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "e719fb24a7d76932dfcdb1b4ec0e587cef4d9c0ff195d7f093fb5c9f148ea796",
+      "source_sha256": "8d327edf4facd0354882e24f4e91d76bf1cd121ace565d42bed29deb869239a7",
       "values": [
         "3.34454113055676761E+000",
         "6.37195783039508346E+000",
@@ -2665,7 +2665,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "5c945d4bd5b10acf2e4cca518a7d0a5a8e54e01e2108bb711344894f3b81f0ef",
+      "source_sha256": "703083ca6e9e0e052e3662d1f3461d7637e0cc932ad16376db807c7b2d839f2d",
       "values": [
         "6.30032745475486422E+000",
         "4.60134854922486070E-001",
@@ -2682,7 +2682,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "626ede4cc1e1781e1a5255bc50ba381d5ea2d5c2af5a70ed5b7e0335e2e668eb",
+      "source_sha256": "fed4c99fb2370629c8909bd6577f22d1fc9d5422d900533be10c2f798dceb6f3",
       "values": [
         "7.51860117425904750E+000",
         "1.67006375224787043E+001",
@@ -2695,7 +2695,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "2a56158025d2fc5b12bf2c5c2b1a38251584414f0df099b4c5e92f8e7a9f1344",
+      "source_sha256": "01a2ae9b6fb7fed5747cf5d6dd2135a1f4610bb58cc0d47c09be2152b05f0895",
       "values": [
         "7.52003097845496438E+000",
         "1.14570806742791298E-001",
@@ -2712,7 +2712,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "b4fb60d704f89a5ede2466a04a0400ee799eb04833cc1fb8e1443ce81da13f6f",
+      "source_sha256": "b5474ef3420f75bf33ec0a8e411f7979977cc88d4642e51672506265ccff5177",
       "values": [
         "7.51903873844753612E+000",
         "1.67001999582902130E+001",
@@ -2725,7 +2725,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "a341cb5a7f3e08b79b025f0f6f6a7c1801c13bc358d6c054f1737bdbb0020314",
+      "source_sha256": "8dcdcf8aa1fa5c2a4132eb57184e2afd4193f8da09998202278ea47937ddc6a0",
       "values": [
         "7.52003097845496438E+000",
         "9.54407194898303224E-002",
@@ -2742,7 +2742,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "afb7e9d143819f5f23202c733fb1f0d16255f853a9db7e14d8d00eac95ba3027",
+      "source_sha256": "be5c6ca818d9b40006157d4817517741d04000d88099003487336ee622f9b20a",
       "values": [
         "7.51760815158043716E+000",
         "1.67016305451573110E+001",
@@ -2755,7 +2755,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "2467384df92543bce61da05bb6320c608d348d11bace1fc896999588f71fa43b",
+      "source_sha256": "cd59eaef61c0cd38e000bb047a920267bf0b17bd7f98ff55fb01e3a752f1fd61",
       "values": [
         "7.52003097845496438E+000",
         "1.49149006638769982E-001",
@@ -2772,7 +2772,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "54084294c07a918838a8dc656999161ab573315ec31d93e95f25b80f7e06a768",
+      "source_sha256": "20b5d32f88ad95e6217dc2b5bc53f114b24c6256d48fb6e526a213b98939591d",
       "values": [
         "9.57738108782159117E+001",
         "5.19252088340214073E+002",
@@ -2785,7 +2785,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "de4282b3fa5d01866e666d93b1f40a71cbef8cab7dab5ce59f0b8b0f5139793e",
+      "source_sha256": "dab50b7d9967b9d5abbc0ebcfd09f4966bbbd46e6546fc29774c1b591763e183",
       "values": [
         "9.57738109960390602E+001",
         "-7.06367763095775911E-003",
@@ -2802,7 +2802,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "e91ab3ea8e23b5f050bdd11c064ac52f75ad91878ca00133abe21b5b32d19726",
+      "source_sha256": "ba160372bc89f113da6df3b3bab99622fe27cd5345c9432b09110295469ee437",
       "values": [
         "7.51994166807003772E+000",
         "1.66992970286677220E+001",
@@ -2815,7 +2815,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "5d6dad32b2de573b3f163801024f5fcb4535b447a7a2f8e0d1f89c18f0cd3b4d",
+      "source_sha256": "f2eb3e6fdc7a9960b3c9af8952156f043f6d3b7e13bc03d23527d95701e593f0",
       "values": [
         "7.52003097845496438E+000",
         "2.86322158469491002E-002",
@@ -2832,7 +2832,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "72634270654f8c26ac7688b87793fae6ba21a8330604580a6c50547fee295dbe",
+      "source_sha256": "024eb218ad5880434c9dc475849b60b5c623bf87a19a704c6cddb75ef915bff4",
       "values": [
         "7.51126368614368634E+000",
         "1.67079750105940654E+001",
@@ -2845,7 +2845,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "63b40b1764f325d69637074f53e5578ed675ce6db0baa0a67be05aa5d730d89d",
+      "source_sha256": "d6a3d41305cf2fbd19d7c3750868e1a4a405ce2d2e0308b704f0eaa44419195b",
       "values": [
         "7.52003097845496438E+000",
         "2.83819292983087668E-001",
@@ -2862,7 +2862,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "cecdb1d978c981a2f639f87e0527d46244da76f95c633d150169fcbf7acd4561",
+      "source_sha256": "a0f4aa1be1e587eeaf8b29ed9893d199d72ffb417c088f462ebe54864d501297",
       "values": [
         "7.51394526185150724E+000",
         "1.67052934348862507E+001",
@@ -2875,7 +2875,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "278ae61d2d6ba8394b121ace958072f2960f47a0f6b455207ac0eba3f544ab2e",
+      "source_sha256": "5482ed5377a3004ad2d04a96115adbe8e5bbdf67bc61292f4e7edf007a57f7ba",
       "values": [
         "7.52003097845496438E+000",
         "2.36429491050129059E-001",
@@ -2892,7 +2892,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "2d985bf0bd75eaff74494668de68fd4b9272d7928ec67e34bf14961d28e2857d",
+      "source_sha256": "819754cc416867372074f773c34e9084f85ce7a866001a94c0c92e6fad536139",
       "values": [
         "7.51948293355172215E+000",
         "1.66997557631860332E+001",
@@ -2905,7 +2905,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "bf6bc030e1b0196034e479f7f42504ef821fc95b7e794ea33e7d76dd7275c6cf",
+      "source_sha256": "75ae7829c26606f6153609200bfa351096cba5c9c0febc6eff7927874b4d588d",
       "values": [
         "7.52003097845496438E+000",
         "7.09288473150387205E-002",
@@ -2922,7 +2922,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "9c77e6fd02b0a8e4f1efcb57ac9f57d279e19ef5b37b1ef043d2c6411f205a40",
+      "source_sha256": "77b811e34b20393b59a63f4615597bb3b90e4e044cd35360f627d25aed88c60c",
       "values": [
         "9.68053326595880570E+000",
         "1.48104337500868066E+001"
@@ -2933,7 +2933,7 @@
       "natoms": 3,
       "nstates": 11,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "7b6ef0c7655bf50b3b78259d24d1da2ad858e931bc3673a25c8fb1a3eb3a1f27",
+      "source_sha256": "9827390d72b9dd8acdf6b61970f053f44e7caf3630276e59c2400b1292903ed0",
       "values": [
         "1.59743613675439389E+000",
         "4.23332833890615401E+000",
@@ -2964,7 +2964,7 @@
       "natoms": 3,
       "nstates": 11,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "6975f6e815fa59a5d2489cb370217b92c46cddddce685dc9520691dacefe3a0c",
+      "source_sha256": "9bcb3a1352784a30fb4cb9cfdb6ad91c9459209dd864f0c95e0f434e6a90cc6e",
       "values": [
         "1.59439222436725903E+000",
         "4.22970999731252828E+000",
@@ -2995,7 +2995,7 @@
       "natoms": 3,
       "nstates": 13,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "47a948d9d1888bfe9838f16c454c6d6e4508067a9b78054de4c13ca58e506c82",
+      "source_sha256": "42677f47235b696e95f3964577ac568deac780052e14e693a1fb41f11cb610e3",
       "values": [
         "-5.43476717067204262E+000",
         "1.34317831045190617E+000",
@@ -3030,7 +3030,7 @@
       "natoms": 3,
       "nstates": 13,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "b73066cb74b5cdd3a04efda336264535f3675b582f7a92f52cfbd22faacfbc9b",
+      "source_sha256": "b81cedda5aa6c0f3e4d7b4b456dc720067923a16ac7e49d30ccae4d15031c801",
       "values": [
         "-5.51167923708341423E+000",
         "1.20873490106375181E+000",
@@ -3065,7 +3065,7 @@
       "natoms": 3,
       "nstates": 13,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "d4d254dcea426c70c40c81c6b7a00f1b18371364248c748603b49fe339fcf919",
+      "source_sha256": "7e2bbddcfb5d61e85672ef4a5fa593f03212d3235e9c12417f9cadc89f219ec5",
       "values": [
         "-5.43627858375496942E+000",
         "1.34018980743291150E+000",
@@ -3100,7 +3100,7 @@
       "natoms": 3,
       "nstates": 13,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "04302108cce1717bd815caff33f0ccc56f7306bb70f9366078ce917a039b01a7",
+      "source_sha256": "bafbc66cda5d9c72391ae252aac993484304f1d905413649bc62b611375679d1",
       "values": [
         "-5.51317388903428807E+000",
         "1.20577569674707497E+000",
@@ -3135,7 +3135,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "bdc88ab944619f84f099f355c4de66fcaf6841ee8cbdfd1217923628a2fc0e92",
+      "source_sha256": "549c46ee563a6f0d23f605072febb5214afbfd6d02bdf67420d45c1c54d1e2be",
       "values": [
         "1.47634044198518328E+001",
         "1.44833937893556133E+001"
@@ -3146,7 +3146,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "d8621c95066dbc9fd42f1a64468b5a9a51cfddbd129fb7f03b6c3135c04d5e7e",
+      "source_sha256": "ba70f144386026d28d7abc273b7c660b6f6d3092dd8653c49da66c7129081dd6",
       "values": [
         "1.47832984340339468E+001",
         "1.45040600619526874E+001"
@@ -3157,7 +3157,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "486bb8fcab20a6026cfe5d41414c26c8eff45747e7572ba5c5cffc523d9f548b",
+      "source_sha256": "35d10340d1dc828d41eaca43a8ffdc8652e2c517b0e477e1aeb7df1f5bc1f93d",
       "values": [
         "1.60066696084004398E+001",
         "1.48125900180654853E+001"
@@ -3168,7 +3168,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "937735bc6fe9cc549fcdaeecd8d74109f2f70b8537276d170859590dbcd6477b",
+      "source_sha256": "85bd9bbaa04f89128f9176bec417b7bdf62d821a819b27b9c3f33c751516aebb",
       "values": [
         "1.60238762679893476E+001",
         "1.48331448873815237E+001"
@@ -3179,7 +3179,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "effc8e88e02c070946bac2906926aa8089cdc232258c72beff02c82f77ed4ccd",
+      "source_sha256": "f8827bbb6f81f3c56d51e1516051ee37c700c87ca7a0c212c9a175612f1e6f43",
       "values": [
         "2.13136695578105986E+001",
         "2.28341645121749686E+001"
@@ -3190,7 +3190,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "5d108c0e146a9a65015f73df71d9a7a24aaaa7bb2c324bd582e8d340fe5a8d7f",
+      "source_sha256": "ba50cf000bcf3c6569ffa63a4f57567cb11ca122f6cf498d193adfc34729bef7",
       "values": [
         "2.14217235215328827E+001",
         "2.26469006835598528E+001"
@@ -3201,7 +3201,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "7be7673ffc3ef17c4f07141f3a22d3b6648b641d8c18392261c38a944a421a35",
+      "source_sha256": "cb0577abc599ef977cde7ed7036205f68dd7d7ea25e885cb5b94dab8026cc740",
       "values": [
         "2.14234908608982799E+001",
         "2.00071819589092001E+001"
@@ -3212,7 +3212,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "0675b66177953a1501954575aa517958a8e40ce4054c9cd8369b9fdabbb9aa65",
+      "source_sha256": "3af55a33388895de0f77a429a08fd1adf679b2a4ab01884b73dd428859a83e88",
       "values": [
         "1.92188848396578962E+001",
         "1.62394091895286579E+001"
@@ -3223,7 +3223,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "ed31fa2abcd6f389a03990480c19c050e673c94c555ac364286a79869548745d",
+      "source_sha256": "3310e4ddc17767226f72af4660d2b1a3bc789749fbd5b6c92d496ffab8cb405d",
       "values": [
         "2.02243474633821663E+001",
         "1.58192098908696686E+001"
@@ -3234,7 +3234,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "6c2456cedccb7155f1f35af1e288bbe95709968bd4197e3d0f1eb64dbf519643",
+      "source_sha256": "0890d995a37834d846fd93d925c758dce683853c170d87c43e02d83c3a0a7d87",
       "values": [
         "1.92213570166335330E+001",
         "1.52557274966336980E+001"
@@ -3245,7 +3245,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "9eadfce2644e1dcf5bb89d45b8b09bb0304b3d204503dbd6101f819d00131c1f",
+      "source_sha256": "81a595760e339b549968e64edb92fc1742eea56712ae6bddf2c54db20ef6e780",
       "values": [
         "1.94619823082437087E+001",
         "1.63966385595459414E+001"
@@ -3256,7 +3256,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "04d660b1981402b6d2b48b22f7c6533e8d45985030333caeb1729b0a353d6a2f",
+      "source_sha256": "ea0c8b293115256a48a3f95f8180e80208446dbdbaffe721feb79cbcc32fb4a4",
       "values": [
         "1.98376211867738022E+001",
         "1.57221647701250227E+001"
@@ -3267,7 +3267,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "c47cee58ab6602aeba5441939a3eb03b5f80d721493c9edb0f9444440dc1ea47",
+      "source_sha256": "40085f8ebbcaff306c8ec3d59d3e76e2843767396e510a42dda1790fa8bb8e01",
       "values": [
         "-5.92289374395735558E+003",
         "-5.92770027228236722E+003"
@@ -3278,7 +3278,7 @@
       "natoms": 4,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "59d30dfe992b07192918c6a124cf5a1d64f79ebcd70667bc8c93d88bf0e817a4",
+      "source_sha256": "0e4e0a8a402eb5c2fb5f6b26ec6bb3936b151e39f39535f69c2a43879724d7b1",
       "values": [
         "1.06733906237309881E+001",
         "1.09706646246639785E+001",
@@ -3291,7 +3291,7 @@
       "natoms": 4,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "f77311558dad7cf68a9655edb12811570566ab1dfcce7ada86c4c3473abd06ed",
+      "source_sha256": "2d4377a1d02c5b7be6297f8985694813c1e8282e3c30af4ca45a2a86b98d5b7f",
       "values": [
         "1.09687529198931504E+001",
         "-2.37622707394639365E-002",
@@ -3308,7 +3308,7 @@
       "natoms": 4,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "cb86954ff0751091b9b0c5c08c4f646614ed98017f81cb566dd828c471c04d96",
+      "source_sha256": "99ea70aafaac7c93e1116f219d648ac3eb2bd0d633b6ab2bf01c0d075e6f6a0c",
       "values": [
         "1.06733906531548683E+001",
         "1.09706646540942536E+001",
@@ -3321,7 +3321,7 @@
       "natoms": 4,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "aee0ffcb28831e7867f61349e13b7743f1b8c7e8750a6ec49edb815a0ef984c3",
+      "source_sha256": "6c49feeff2464665de0f86d6982edf974ca01d2c28e2abbf33f8e0d05bd0a27b",
       "values": [
         "1.09687529493234663E+001",
         "-2.37622707394635271E-002",
@@ -3338,7 +3338,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "539e341294c1e0e57e3b20ecea83b143f1c4cdfe5728f522f24d89eefe2c3302",
+      "source_sha256": "78e98790b18a9a5cdcbf0b6c827c23ae1a562282e076cc13a96cb01ca081dfea",
       "values": [
         "-1.93872776933587310E+000",
         "-1.83220971796901844E+000"
@@ -3349,7 +3349,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "de509ea28b52ebf37f4238058f520b108ab5c719df1e58c7947c7cb4317370de",
+      "source_sha256": "4b4cd07679a8acdf5441e287ffef4146bae3cc2da8f5f30f50691c5d4968b4dc",
       "values": [
         "2.83826091847431794E+000",
         "2.62839904619825901E+001"
@@ -3360,7 +3360,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "441ef76d5fe1551281e516cf65af3c7754123bac525a2c23f23e74639254517e",
+      "source_sha256": "5f2a0763a4faebc226127a74165aa2004fcb2e98ffc8301e6f9d4b0913376af0",
       "values": [
         "-9.91604355559102579E+000",
         "-6.80374882249813240E+000"
@@ -3371,7 +3371,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "37b2992311d564e5d002b02176701649b5eefcea79f785053912868616583fe7",
+      "source_sha256": "c1b39be8bdef74917cf5fdb66f43c0ccbe67b62fd2a4d6e7406965007018ab9a",
       "values": [
         "-4.13907854381628404E+000",
         "-5.07828654462931972E+000"
@@ -3382,7 +3382,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "21e90898459e12ba45f812bea5e8a7baef99b45c43afbef9b37b7d9a15ac7f31",
+      "source_sha256": "6037bd6abed2ddb184f88868b10f002166ca95ad4d6e253b0be241ce319cf318",
       "values": [
         "1.24779264852282239E+001",
         "1.04959207290307415E+001"
@@ -3393,7 +3393,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "cca855b3620996a87818dfbd4871d30eca219e55619fa96d7b156ffca48d6cb0",
+      "source_sha256": "1a251af65f6e54ef250c99fe90248cba5a46c328821812881bb2afb57a26053f",
       "values": [
         "1.80958439365311747E+001",
         "1.53401679008743450E+001"
@@ -3404,7 +3404,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "8c456a39efa9e2ad31c5078f0931928fdb32953a0e68d62a6539916392b46781",
+      "source_sha256": "a52ef968c9478a16d9e3ce01a4fbc1b42dc1aff052c6da619f00e592febf9f50",
       "values": [
         "1.82420696612378528E+001",
         "1.64177766841201098E+001"
@@ -3415,7 +3415,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "05ad66e637629dd357772a013d1ce2e5b4d26efcdf2540ea9beb94c88023b7c2",
+      "source_sha256": "dde88f81093ae85acf02b8821623c7d039b4d3653845f2e36b1f3c12e7fdd91f",
       "values": [
         "2.32685103199935170E+001",
         "2.20461599791828746E+001"
@@ -3426,7 +3426,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "ab863d46737457df9a5b9492c7785cb1c75e2cfd85026031a666d77d82c275da",
+      "source_sha256": "bb86a27d34e1b3808e194d88441503ee504d9a651ebcae0712ba72e7af79bfbc",
       "values": [
         "2.66026215514018531E+001",
         "2.48163065468685424E+001"
@@ -3437,7 +3437,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "d0c723a12443f10054ce90ca13be4f0e4878aec204a45cc8fd7817c4dd36519a",
+      "source_sha256": "3cd06b1d366477b4c27fe8d8bf7f548160345f7664d867b82792834191a3a558",
       "values": [
         "3.17119251656255194E+001",
         "3.03568810032661354E+001"
@@ -3448,7 +3448,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "6f22b0a968fffcedb132abbe2a6e46dce07ff2dae75d5590f36c35789c5300f8",
+      "source_sha256": "2483c17809902b402798fa0a93c8ac6c49a4db21af5f4ca03a58a3bef1916eb8",
       "values": [
         "8.13216963125819170E+000",
         "1.00201058159613936E+001",
@@ -3461,7 +3461,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "1f4c635ed9cd49a7f1df7dbde1e868dc6b4b9dbdba56a41c782ebf8f35429643",
+      "source_sha256": "404bda56bc32cc1d9aa6728c3acf70a5754fc1fe4dd28a27e82fca691e785b69",
       "values": [
         "8.61389397782783917E+000",
         "8.23047069652391827E-001",
@@ -3478,7 +3478,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "a0163dce91ac61c443899618974e25ad921625a2a24b4479085ca9a07ce913cf",
+      "source_sha256": "934669dd76a0e264f4c4a14599cebcc92d7a6cb304f10dda7b1716e30fff4281",
       "values": [
         "5.82257777451538772E+000",
         "1.99044016295437594E+001",
@@ -3491,7 +3491,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "8d795f77eca0f656a9f4ffa65042fc7880867fb2a8a7149d08702c5779c7ab20",
+      "source_sha256": "e7dcce8432560c36c41c9f18368423c9ff862d40eccd2c7edd64eff75143045c",
       "values": [
         "1.98886714968156895E+001",
         "4.70384439811935062E-001",
@@ -3508,7 +3508,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "4b90ade09692de0e02aefc112a4ce56b36fa21a0e722260f786e9420ab1e5f28",
+      "source_sha256": "532a868a04bbb602696c8c16a69c5c5b16d85da76c80ccbd8dc9c4ef7cb328a7",
       "values": [
         "8.22733364241938148E+000",
         "1.01009417447332961E+001",
@@ -3521,7 +3521,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "d355f2b1f915f84bb8c7a005f0c8e79fd66fa8f13c26a85a59debfc8d53db075",
+      "source_sha256": "3c99d90766048b5192ced0637f7a57f042d261caba2d326ae3109ecae5d9ad3b",
       "values": [
         "8.71940915487424562E+000",
         "8.24510980598796905E-001",
@@ -3538,7 +3538,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "e573250caa620f3076caf7566f3e7873f35d5e924f02b8629fa3ac6a8d115a54",
+      "source_sha256": "48c214cd2516ed8f2ee0ce7c473bf0606ed308f70225fe3c56f6b1d39d8eea5e",
       "values": [
         "6.95520662925378108E+000",
         "9.83582535453197515E+000",
@@ -3551,7 +3551,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "5d3045d91f12f654d8ac969b96208bdec4d1b3f94be759a6bdc8d869d986919c",
+      "source_sha256": "bcf5266ecbe55b8ade6dc81eef438f7c381612213171cc1a47033d194f7a1b8e",
       "values": [
         "9.80304089004814472E+000",
         "3.05556412432881841E-001",
@@ -3568,7 +3568,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "5956d4b55e4aecb35cd4b6f6d08ddde7da64b8c0d7ecd5b91bbaf3d6fa77f09d",
+      "source_sha256": "4a42d536e65d8c6b7cc8a75fbdbbca081c5125d91396e1afd897297f59f14750",
       "values": [
         "6.91864806568803292E+000",
         "9.83052882644056858E+000",
@@ -3581,7 +3581,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "74c22404d4f7eda81dc78448c6a4869e40caf82a0a48b9d55bdedac597b0bb8b",
+      "source_sha256": "a925defb4f16e648b17a28183d0c219915ca60a53e2bb1893f73e50202da0cc5",
       "values": [
         "9.79810384118311894E+000",
         "3.05559014054408440E-001",
@@ -3598,7 +3598,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "a23f41e6099dd229eb0773f02d7e0320382b0d711d2ebe8194f7d51b9e4bb77c",
+      "source_sha256": "6d675fb08a55cae4823e606488f966f8c2d893dbd637be39cb4fa2bf3cf3edb7",
       "values": [
         "8.24084054783190822E+000",
         "8.95421097115071341E+000",
@@ -3611,7 +3611,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "5333afd7c41dc57d6ca70eace0d6eddd80af387d2027afa88d286dcc90fbe287",
+      "source_sha256": "abd7b09d8e31bc803f8079395e1ffa821e74e7089edfb7081809314a7edd842c",
       "values": [
         "8.45905582526687994E+000",
         "3.28710233385567874E-001",
@@ -3628,7 +3628,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "cc55cb5f5d49bd8afa9aeec0a2472de72824f2ea155044340f98e247fedb5e7a",
+      "source_sha256": "9e904691bac7b03812602c55446f6274e9eee10138609400df3062135429edf5",
       "values": [
         "7.42519362655087711E+000",
         "8.77608941597958037E+000",
@@ -3641,7 +3641,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "9efbf2006bf4dd57bff61be0c656866599b11ce1b9df8ca243faae20b701fd31",
+      "source_sha256": "5e2b9e0f90ffa32903fd8b8094e0c7a28442d152cedd0fb25fa3857a87bf3017",
       "values": [
         "7.89915406759015060E+000",
         "6.44695792204030727E-001",
@@ -3658,7 +3658,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "1a3fa0bf68b6106cdd8023b3a9334da506a8cd21d4143c47ec7c66072796ce10",
+      "source_sha256": "5d9e950510f9b41a415e941c6b933e5790f5f1bbeae95b34a1537c8c7b5380fd",
       "values": [
         "7.42519362655087711E+000",
         "8.77608941597958037E+000",
@@ -3671,7 +3671,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "a07e47e1473b57eb2fca3fea1bf6fefb04987e73a97bdd93fdc19bafdc6721e0",
+      "source_sha256": "8d8c059ca4e63567b40f36bcc0f96d12fdc9774a5864ea1c529983582ae79933",
       "values": [
         "7.89915406759015060E+000",
         "6.44695792204030727E-001",
@@ -3688,7 +3688,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "0ea63a330920e0a58cb41faafe10893d2bd589c1ccc12be9744d908125387696",
+      "source_sha256": "ec1bce14443a87865a2d61c7da34eac4792c6b6b3613081aae5f0687b9fdece2",
       "values": [
         "7.42657216660250974E+000",
         "8.77713191258470360E+000",
@@ -3701,7 +3701,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "60a7939cd2d6ca26774e66dbe542c0209977663c941d94827820e31e56f5e5ea",
+      "source_sha256": "27e61a73c8e09f1c35fa11a3b84d7bc129f9a2783195b1621d3efb27a5f647ec",
       "values": [
         "7.90092856565069024E+000",
         "6.44695792204030727E-001",
@@ -3718,7 +3718,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "50cd3499abdd0ee1c893191c2919c2428bf11479d72dce6109e6c615067ad59c",
+      "source_sha256": "ea73783aeeea1e1e44d990a53af2b7a2022cdd5770f60f42a8a0acf2ea223004",
       "values": [
         "7.42657216660250974E+000",
         "8.77713191258470360E+000",
@@ -3731,7 +3731,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "50593cec718f03c9c4325947e61d02910f4d7208b0820853ae4a8ddc04795352",
+      "source_sha256": "bf699f4bdf7546d0c643ae21f9554f8273770549a7fe41b85fe4cecbaf42b976",
       "values": [
         "7.90092856565069024E+000",
         "6.44695792204030727E-001",
@@ -3748,7 +3748,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3f2c452f31ab64b2e7ab11a07277ca758de52430767b818814215022b042f750",
+      "source_sha256": "4af20921e0b945a14dd074f33159e0dcb7f0d4da5c8709d3ad2a0fc7cf0ef848",
       "values": [
         "3.06947172724990436E+000",
         "6.43032363536319629E+000"
@@ -3759,7 +3759,7 @@
       "natoms": 5,
       "nstates": 1,
       "signature": "x,igrad,path,p,g,d",
-      "source_sha256": "406b02c681f8349b2858c0ccd885642b6ef71e7f9766ed1fdd2f001a19c848b8",
+      "source_sha256": "dc48a8b2dafe47944baa95123cbd30e33a350f330f108356ca0d2a28299c3850",
       "values": [
         "5.41993042379151646E+000",
         "-7.54913977272717673E+000"
@@ -3770,7 +3770,7 @@
       "natoms": 3,
       "nstates": 14,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "25628b6ab986bcda2789cb5e1befdf3fecd87b21e61763880cceb7483884d8be",
+      "source_sha256": "8859a3d5cf749d08c91cb2099ee70d59b68d1b3f8d76bde71bbacf4e6bfffa56",
       "values": [
         "1.37976294639362038E+001",
         "1.45285855212105854E+001",
@@ -3807,7 +3807,7 @@
       "natoms": 3,
       "nstates": 14,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "24a2f47d60e8a092733779b3b597dde605ce5d2279570b435e4346b0f1c67d9f",
+      "source_sha256": "ebc72921a5b5e7da524a80cd4a4bad5cc7d5bb2fea05056f1a4c9b339fce5a7a",
       "values": [
         "1.88396171969289696E+001",
         "1.72658405341775983E-001",
@@ -4208,7 +4208,7 @@
       "natoms": 3,
       "nstates": 14,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "fb4475dcb585531efb882131c99722b13498f7ca11d7103efdadb714497960b8",
+      "source_sha256": "8a9abcdd35e562da68a53341f8009762527558a95445c2d0a3a7384a8f87139c",
       "values": [
         "1.35850010577932530E+001",
         "1.41169639825167845E+001",
@@ -4245,7 +4245,7 @@
       "natoms": 3,
       "nstates": 14,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "81275151ddaa7f4e7cef7c62243f6f903bda9466b9aa6e09ae1eedfea36e8eb8",
+      "source_sha256": "90c37a1254ca9a17a0563f3a26ea5b0ba2610d52f21589d09208a7bfe5a089f4",
       "values": [
         "1.81443672121843989E+001",
         "-1.84865270626321881E-001",
@@ -4646,7 +4646,7 @@
       "natoms": 3,
       "nstates": 14,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "85cdb4fca1f8e2308ec1ca31b7291cce35e880375a4850a3a28432d977b9a75f",
+      "source_sha256": "5c8a6c0709b308b6cad9ce86ef3358902fd068f66642f355b214621781a614ee",
       "values": [
         "1.38394787616761032E+001",
         "1.39780039631067279E+001",
@@ -4683,7 +4683,7 @@
       "natoms": 3,
       "nstates": 14,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "f128b9471a4598bc979e1b17e8410d14799f12bfb2ac7a637a93016b33467ac1",
+      "source_sha256": "f66a6812b5176c137704f48510dda31e175ac683579433a67eb2ec7dcf332a6f",
       "values": [
         "1.56119193337234279E+001",
         "-8.63202430556256672E-001",
@@ -5084,7 +5084,7 @@
       "natoms": 3,
       "nstates": 14,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "6a9409e72c1c2c8062af3901378246788548ad6739dc4d4a931d48bf0bb237ce",
+      "source_sha256": "a75faabb8c03486994fa93014ebfaac9eb034e835fbd851a9f1dab77725bec11",
       "values": [
         "1.39676805105849908E+001",
         "1.41720329263271285E+001",
@@ -5121,7 +5121,7 @@
       "natoms": 3,
       "nstates": 14,
       "signature": "x,igrad,v,tg,td,t,u,ug",
-      "source_sha256": "01321f99b90d6d94840847d3fc6049b61c43127083f3d0a5c7623cc4afd5f050",
+      "source_sha256": "d36f72ffbe1fc4899a03d5b36e6badfa00ceb7c992407e3bbb0015ba40397019",
       "values": [
         "1.68029586882571849E+001",
         "5.73761433098131990E-001",
@@ -5522,7 +5522,7 @@
       "natoms": 3,
       "nstates": 16,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "ea0232ab1ea759d1c0df89467f69545cb83d7c89a0231a6b025e03a289a84b24",
+      "source_sha256": "c9ab0776314ea41280097458873e9bc6b340a40afd80f7f53e8d22c901cfa467",
       "values": [
         "5.28435924509580612E+000",
         "1.02319225518747814E+001",
@@ -5563,7 +5563,7 @@
       "natoms": 3,
       "nstates": 16,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "bfac65751004fed63335c1712ede842af8cb74a78cd86f6a157ed0bc5c9936f0",
+      "source_sha256": "d1d801acafcb3248ac062f77162fc7a8fe85bd7beecda7df590490d8461d00b5",
       "values": [
         "5.28435870711818012E+000",
         "1.02319218824387459E+001",
@@ -5604,7 +5604,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "3799f68fe2bcb83040eef0a7ec843948e59c0e70cd0e42066cc9022b551141c7",
+      "source_sha256": "eaf0262b3b62f3789c8420dabafe164081f973260b6a7559564de0deeab6a902",
       "values": [
         "1.36633127759115407E+001",
         "1.45507662547341994E+001"
@@ -5615,7 +5615,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "ba9271c8b3094908edf3eb71abe77d9412ea4b62eaa7b5403c9c6c46db09aa9d",
+      "source_sha256": "12a514eb56787953ab893e3832e0d5aa76971fcae0655fc08e2dbbb8e8307f8a",
       "values": [
         "1.36633127973864514E+001",
         "1.45507662747249498E+001"
@@ -5626,7 +5626,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "5812b108ec694c4b48807124856f50389e5b70c6881335114a957d765d0f640e",
+      "source_sha256": "526b045d0185604ed2624b05ab23abaf3f0b05e9da7cdb4c3f436157ad8f5de0",
       "values": [
         "1.64283579788702987E+001",
         "1.41542096908540014E+001"
@@ -5637,7 +5637,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "a0dcae9da3e8f7db992ad538712d8ab4402a41a09f2eb38b6785a58ed90a351c",
+      "source_sha256": "a494879573df215d5bf26ee834e85da529d32567dd4dd65910ba0e86e9e5baa3",
       "values": [
         "1.64283580003452094E+001",
         "1.41542097108397016E+001"
@@ -5648,7 +5648,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "b782690042c2650a77b1a2cf321b28e0ac7488625f7906a4c622b1b3c7d569d6",
+      "source_sha256": "a001e53a742edd9e17c1d6a2c339c878ba7a62ea5cfc313a276563f761735cb9",
       "values": [
         "1.89354094937028918E+001",
         "1.77211388968238381E+001"
@@ -5659,7 +5659,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "42e8f794eb6a9e500acd7fedcd921905625916369dd8c818944abcc08799dbed",
+      "source_sha256": "4ebfd3e13f8e32e0ff60f80a018207c552891484bac8cb17904331c176b641a2",
       "values": [
         "1.89354095151677093E+001",
         "1.77211389168044882E+001"
@@ -5670,7 +5670,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "757d2165487809aa3ab14ac7ac200e34d91a6b97d2c7bb0943af49cbf8239e56",
+      "source_sha256": "27443624f6024483e9b7f1f407ec7010a0655b5a9c5c0883238be22f3f33a17b",
       "values": [
         "1.53621806414502160E+001",
         "1.33555560133041311E+001"
@@ -5681,7 +5681,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "a5ff54a2cf5315225d3d8d02f4d1f53e74f6a13f4b5723a21e8363bb8cdfebb2",
+      "source_sha256": "c27e431736ed202ea25ed4824b4dbbcba0c9c8a870f04f2aa58708e7515be45a",
       "values": [
         "1.53621806629150317E+001",
         "1.33555560332898313E+001"
@@ -5692,7 +5692,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "130a640da07f72b5ada2212afb5fbeea525a87c0f1eba83e872e1d21c7d4b163",
+      "source_sha256": "59abdca35715f65f9eb79a853383045ac08bd68584dcfca1e71a05385f12b0e0",
       "values": [
         "2.57424685845350290E+001",
         "2.27808964721961722E+001"
@@ -5703,7 +5703,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "9fe318d3b160ba079f12ba02584b9470d72c6e8748d2f8da33deae396602684d",
+      "source_sha256": "47009d47f5dde518e1fd976b20ad177a9bbfccdb31fef7fd7a02cb4b96b49e39",
       "values": [
         "2.57424686060200365E+001",
         "2.27808964921667290E+001"
@@ -5714,7 +5714,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "1869e172c325732e3ede78d1dbd77996e084bfe7ffe5c84b815f6d60b73f6d52",
+      "source_sha256": "74414bf1a1a385ed99911ce2a576aca71d2ccf82313134d2190762a61c74b5bf",
       "values": [
         "2.50610353198535876E+001",
         "2.30372918830450679E+001"
@@ -5725,7 +5725,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "acccb9caea0ab81f651d9c33ebac29267f32a47d373fc9fbb9a40bb37a0fc9a7",
+      "source_sha256": "d68010345244716613d0085ece26882cb22f22660b9536844910001794a3c198",
       "values": [
         "2.50610353413385951E+001",
         "2.30372919029954346E+001"
@@ -5736,7 +5736,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "4a678652db2257c80a7812bbb8db83a697490238f692af855f9e8d6e0249a268",
+      "source_sha256": "bed5656c3a272d1ec4eab88b6e9d21198453c35bd71bb84ebf4f2e34565c281f",
       "values": [
         "1.88004520642259685E+001",
         "1.45561915143004690E+001"
@@ -5747,7 +5747,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "5aaffa6e477bd8d18f8a32a35e6fc8fca6147c409d5394b19505f192c1c53dad",
+      "source_sha256": "e44296404cb212f37873474831a5b4cbbe28f76538262f5bfeffec7fa06bea9e",
       "values": [
         "1.88004520856907824E+001",
         "1.45561915342912194E+001"
@@ -5758,7 +5758,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "c01387f3aa369b527a2e6a0487a5e9bfd2d5b282046aa20bc986a9d02771d165",
+      "source_sha256": "7b1aa8be6c019c0cbe21218828ae09d1c57c37711c852f2cc9c2e5c0053b6b93",
       "values": [
         "2.04017711394630972E+001",
         "1.97328874790160036E+001"
@@ -5769,7 +5769,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "4c98cdc85bdaf9d7f561260cde0ff59754656a960654a7c8969319b4fee070ab",
+      "source_sha256": "0ba4d9256bb3b45efe34e8233420b8939c76da239b7ce31e299f3ece9f72e46b",
       "values": [
         "2.04017711609279111E+001",
         "1.97328874990017056E+001"
@@ -5780,7 +5780,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "c951f5ca48d6a993d6a8f69471fcba076fc19413e077809259a1e09f8a1f44b4",
+      "source_sha256": "47bafeb0c16e58d4521fda6abbbc21c1758a2fbbeeea505edc84fcb672c67a8e",
       "values": [
         "2.71725796536720701E+001",
         "2.38109466496767865E+001"
@@ -5791,7 +5791,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "463b33568c3ba03c53ad737ac67749a28148146c6e4d4b110ac4cdc296a83068",
+      "source_sha256": "a9fb053f7bde413ccd623b28dd409d9ff53ceade20ab6cf1567a5db355ea5219",
       "values": [
         "2.71725796751368875E+001",
         "2.38109466696675334E+001"
@@ -5802,7 +5802,7 @@
       "natoms": 3,
       "nstates": 6,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "841de5a99eb0047bfab2b2f46299c423e172045f8e3e62bc4c3453fa6cd52f63",
+      "source_sha256": "131655b112b8a3567667fe98cbe3c8b449112a3e346476281e0aadafabbb0a95",
       "values": [
         "1.72184984835804116E+001",
         "1.78980307761343482E+001",
@@ -5823,7 +5823,7 @@
       "natoms": 3,
       "nstates": 6,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "c0800cf907fdfefef2acfa851b1297a81788242730045f8e426e884c08d66640",
+      "source_sha256": "e30360018b7fcff6f056f60d764e95073208227f93b6b1acf22e4c55bddc2009",
       "values": [
         "1.70051295481911815E+001",
         "1.78989967948652833E+001",
@@ -5844,7 +5844,7 @@
       "natoms": 3,
       "nstates": 6,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "36460345b72c661e3dcce8f6bf841b26342930da0ac7a9cf72f31ee72e35031b",
+      "source_sha256": "58bb5ea74a6a64848d1c6ff3c85f20fd870ef5612f68923f4c153303d39b2e83",
       "values": [
         "1.23551992646496398E+001",
         "1.31131869866129342E+001",
@@ -5865,7 +5865,7 @@
       "natoms": 3,
       "nstates": 6,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "28aaf784297ba07f29e7e58120b60aef95dde769fcc1572a9b4d2ced8e3e1550",
+      "source_sha256": "da8930e5e58c9b14b3b4f0ce11a6579c62b9fd6222f4eca74e6ff7f9b25105a6",
       "values": [
         "1.57068578653740687E+001",
         "1.00011174516856416E+000",
@@ -5946,7 +5946,7 @@
       "natoms": 3,
       "nstates": 6,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "7d2aaca1d76bd92efd7a8dbb2cee8c2098cbe66fb4a99967d2bd964b2b381190",
+      "source_sha256": "b093f3a468da66f98f19b40d079bdb381fd09e90d5f83c8ebc688924e91212ba",
       "values": [
         "-4.77320715272375011E+001",
         "-2.49069964873384784E+001",
@@ -5967,7 +5967,7 @@
       "natoms": 3,
       "nstates": 6,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "bb94fa55f04a8e027057c89a0595e8ea4106375724b9f7e51505e6b54d8d4f17",
+      "source_sha256": "6d7b3b52c4d27228cd7d80e356a88e038b948c89230d4e872fa46ca1c794bfcd",
       "values": [
         "1.27751424645844147E+000",
         "1.80773379352845126E-001",
@@ -6048,7 +6048,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "85543e8bd26c055679471f7bd9eb6ac09a65f3b8b34fa3ca37f0a2a7cb579f7c",
+      "source_sha256": "d0001800150e3024defaa00a06e4a24863f89dbeca1a34bb907596711ce976c6",
       "values": [
         "1.34617695836620399E+001",
         "1.55009830705816505E+001"
@@ -6059,7 +6059,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "9b455557b5ca2c2fac232725d969578f484eb8352f33be1c386e3c1ce4b745cf",
+      "source_sha256": "eaf4963aa46046a66fb1758184db96e8360f71ed3e5498a783b1d214c9898845",
       "values": [
         "3.17372060518076253E+001",
         "2.88019305917571735E+001"
@@ -6070,7 +6070,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "253107e105574879cd5a5e1708bdb888f2c2b30c51019e66785eec8d3e67df47",
+      "source_sha256": "c92fe8f3c99088bce0914e53993a585632a50cbde2f49eef31a7b9a6fc6ed8e4",
       "values": [
         "3.21137538961634732E+001",
         "2.57691015266434604E+001"
@@ -6081,7 +6081,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "416c1977dd3b6209540df530a765899965ced256104df3f35987c67b1849bb40",
+      "source_sha256": "e2004ff02c5e8f35c22a8dabcbd2ffe2d5c7022a1f6d671a2409f7444f45ecd5",
       "values": [
         "3.21137539309756477E+001",
         "2.57691015632275437E+001"
@@ -6092,7 +6092,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "a257563a3796cd8d5a5ee2c5149f57809f945671e31d9188c8c0ab8a3df58cd3",
+      "source_sha256": "fe6020933c46c9049455ff76aa7b00cf61d1e67b89654b4b899ba8421cd2f069",
       "values": [
         "2.12426966355720062E+001",
         "1.81160530685884105E+001"
@@ -6103,7 +6103,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "3ec04d94ec48c226a133017da2ef9511fc2d85e6d4f868de73cd60f9788f5aa5",
+      "source_sha256": "5503fe7e5c16e1fc6467f0bf2247f358012da65852f4df84f7c2fc622b0fe7ff",
       "values": [
         "2.12426966703942774E+001",
         "1.81160531051724902E+001"
@@ -6114,7 +6114,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,potential,gradient,dvec",
-      "source_sha256": "d66be861a1bd2a95091a2c6f59315976933e1059242640c89152d477ef8777e6",
+      "source_sha256": "6f8040d6704233e4490dbf0b6bc0e8294fbfc2d2d9acaca67c93f32098061aab",
       "values": [
         "2.28978391640246350E+001",
         "1.94392811429974195E+001"
@@ -6125,7 +6125,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "fbf1ca57cf24b796c55d1e09871405ee1a9525fe313080da1dc45ffc9f63b5fc",
+      "source_sha256": "e693c07e798be4eb6b49541b3a6ffbc4e6b858b21563510da258558bec87e6db",
       "values": [
         "2.28978391292023638E+001",
         "1.94392811064183846E+001"
@@ -6136,7 +6136,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "19678e7e890eeef6216d9b80b51ba163639a8fe7944ed775919f61b89e34fe8c",
+      "source_sha256": "bf25a8c45645d72fcfd1d75f2a1e86dd18b73976a28486ddf7e2e89785856b2d",
       "values": [
         "8.45286178101584906E-001",
         "4.98568855787981768E-001"
@@ -6147,7 +6147,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "4763cf478125dc6ba6d781fffbd11547fe5bbb681aa97609ab2c13e9971e7ea8",
+      "source_sha256": "2660be91d4f8cbfcaa3b8f7760aec3457b4b2f2fb718ad4cf8afe7e443f9782d",
       "values": [
         "8.37195917734613215E-001",
         "4.98568855787981768E-001"
@@ -6158,7 +6158,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "15a381312e10ec40d9fe071d5ca826dac3a84dd0b292ac79ef3120d3d21e753d",
+      "source_sha256": "337ff73741fc078a17c57b2c2d0a69b2bf548a9167eb490d749229ef10d4a954",
       "values": [
         "8.44845013685467050E-001",
         "4.98568855787981768E-001"
@@ -6169,7 +6169,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "028e91d14685ad72850ce6bbed5c79c79b465132c5d10bebe1c571f8d6020fc7",
+      "source_sha256": "353b59dcc4bef8206161ec4050a3625e8289015c2d61da773751f71e4d1566ac",
       "values": [
         "8.37354360889538629E-001",
         "4.98568866631518171E-001"
@@ -6180,7 +6180,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "c7fa8dcd13471ed33ec88db44cda55f9d7f9a502a9681fbda048976eb5868366",
+      "source_sha256": "002bd611bf33500f57f773642fc5650aca7696b72d92a29b5f270fcc2987dca2",
       "values": [
         "8.40601306292555694E-001",
         "6.26212608348599931E-001"
@@ -6191,7 +6191,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "55199fdd7d72c1add972364046e66177d541b90f4243cd5b6b6797d21018a95f",
+      "source_sha256": "16d3f8e24621647c2fa08d83ef619d50b14cab38627b3ee4e9178d32fd2692ca",
       "values": [
         "7.11936734817824379E-001",
         "5.04667349851645075E-001"
@@ -6202,7 +6202,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "a84b95b76a25dd938ca3b1513f5b93dbd0c36dabd8cf2c9d96eefdb4ce43e309",
+      "source_sha256": "a0f86fc7854961e9e9d67ee92b0b9854c140dab6ebe217d9c9eddf7cbfb21a30",
       "values": [
         "8.49120225814132823E-001",
         "6.15629867269210207E-001"
@@ -6213,10 +6213,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "afb51b9a8164e94342b7d9f138c899b46ab82224af6a249e0f1079d6fe537c9c",
+      "source_sha256": "0688093e3df048780e1e391fa1f32fac123ac43446e977cfed805649fab99e66",
       "values": [
         "7.37492935055234944E-001",
-        "5.32716084688336200E-001"
+        "5.32716084688336977E-001"
       ]
     },
     "OH2/OH2_LEPS_JWS1985": {
@@ -6224,10 +6224,10 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "58c7fefbfe7c5831ee2073f7ec4ed6258f801dd5fc004651844636d42423225a",
+      "source_sha256": "0c902b9e4ec6e36cb949ed8fcace5d897e27006ce93adcad01cd14d4af8dea04",
       "values": [
-        "7.47476042551004971E-001",
-        "5.36545607680984582E-001"
+        "7.47476042551003306E-001",
+        "5.36545607680985359E-001"
       ]
     },
     "OH3/OH3_LEPS_SE_1986": {
@@ -6235,7 +6235,7 @@
       "natoms": 4,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "bf0d5508ab0bdad5430b30e86a69d8b8403c519287d64d02fb542b7a8e955f93",
+      "source_sha256": "b8e9de6383938732942a2a1901a3185b9cb671325d9bb12960b64f296be626f8",
       "values": [
         "3.09448765132430292E+000",
         "2.29794721729558482E+000"
@@ -6246,7 +6246,7 @@
       "natoms": 4,
       "nstates": 3,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "89567b002380e255879cfed6fd50f57926767f232dd4eacff31aa6b681565001",
+      "source_sha256": "80e4c0ef8e65c47849772ed1faa411235c41f4eb6a5d7ac621f39ad2a8f3f9cb",
       "values": [
         "1.38094652067465096E+000",
         "1.65329059617228480E+000",
@@ -6261,7 +6261,7 @@
       "natoms": 4,
       "nstates": 3,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "17379458c400fb47eec3be1c2832df8a110543ef03019baa843bff192b6748d7",
+      "source_sha256": "3402d4657ea6f14b2bb19461e67605a935ac9ddd7d2e09a215417262033dce19",
       "values": [
         "-2.08819156113762938E+003",
         "-7.01378546162240574E-002",
@@ -6288,7 +6288,7 @@
       "natoms": 4,
       "nstates": 3,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "6600a532d104106a7305ce3bec84e3847ae4d4889fcc2bf6b703064d1465a65b",
+      "source_sha256": "fb30ffd1b81ef867a59849483e76c1fe49b0c13355cf73548ca629b21b79d2a1",
       "values": [
         "1.27939854857324531E+000",
         "1.81842988576742837E+000",
@@ -6303,7 +6303,7 @@
       "natoms": 4,
       "nstates": 3,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "d0b50a26fc207947fcc048d78564fe758b01b0cf927c6786284bd418728aed1d",
+      "source_sha256": "25b2593c2138bc7dba7ce98ab6775fec80478b9f7862303a4ba96c71de8bcf6e",
       "values": [
         "-2.08796830996436984E+003",
         "1.48625624919876964E-001",
@@ -6330,7 +6330,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "32f36da5cacc639abe79a0ad498a023d3b9f2c183685274caa3941b8ed42def9",
+      "source_sha256": "a03cf9bf4428f0ba851b00c84a4acabe8961483ab0bbe320a911548f9e76f164",
       "values": [
         "2.62943231613286876E+001",
         "7.58142372008196919E+000"
@@ -6341,7 +6341,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "71c8bbfcb4f3b6e008edf9d3147931d5f2315ab88485d493b2dbdefc260018bd",
+      "source_sha256": "348840688cc614806b1f727cd8e8fa42d077d221769e221889a1229c8ac42188",
       "values": [
         "3.61109993303086840E+000",
         "-9.21929135163276792E-001"
@@ -6352,7 +6352,7 @@
       "natoms": 6,
       "nstates": 1,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "13715bf186ef83e3ff94bc043652a306427ea9ccb3d42031be84de7905026e43",
+      "source_sha256": "fd38399a3539ccd8accedeada389371aa3bad1d2f96d36e657d029c12fcf3e5a",
       "values": [
         "3.61570373296903069E+000",
         "-8.88748351304846418E-001"
@@ -6363,7 +6363,7 @@
       "natoms": 3,
       "nstates": 1,
       "signature": "xyz,nsi,no,nh,natoms,igrad,p,g,d",
-      "source_sha256": "1942d4c9acd17eb200e96cde07f2cbe47b22544f2489b040730ea096ca3cf4db",
+      "source_sha256": "a813417c9d55885156a0ae2e4630432314d797cda8cd1263b4000b7deaf89150",
       "values": [
         "7.25811792402407292E+001",
         "6.20902273473061257E+001"
@@ -6374,7 +6374,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,p,g,d",
-      "source_sha256": "9bb258a61427f029117b0d90e6d9300c045d35bf58057d8369b88e22b8b11fb4",
+      "source_sha256": "b0a83f43fb77e5ff20f8c982eecabd35f58c80f03450998894b480e136f35075",
       "values": [
         "1.21995758440629753E+000",
         "1.69229984754059704E+000",
@@ -6387,7 +6387,7 @@
       "natoms": 3,
       "nstates": 2,
       "signature": "x,igrad,u,ug",
-      "source_sha256": "f7777fc75d1007503d56b926a1cc6eaf11475f88e81ee17a82d2719b7356be1d",
+      "source_sha256": "aa8bb9f852ede294f9d0520d4b5d0b7b373ec46df0d2800c42e0bdfaf9e6a5ae",
       "values": [
         "1.26008156239450986E+000",
         "1.31690231070131392E-001",

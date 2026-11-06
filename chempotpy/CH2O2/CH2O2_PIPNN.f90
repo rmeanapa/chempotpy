@@ -1,5 +1,3 @@
-!******************************************************************************
-!******************************************************************************
 !-->  program to get potential energy for a given geometry after NN fitting
 !-->  global variables are declared in this module
 module nnparam1
@@ -22,44 +20,66 @@ module nnparam1
         &pdel3a1(:), pavg3a1(:)
 end module nnparam1
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use nnparam1, only: alpha, bias3a1, bohr, ifunc31, natom, nbasis, nbond, ndata, nhid3, ninput1, &
-        & nlayer31, nodemax31, nodes3a1, noutput1, nscale1, nwe3, para2, pavg3a1, pdel3a1, pi, &
-        & radian, vpesmin, weight3a1
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_ch2o2_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use nnparam1, only: alpha, bias3a1, bohr, ifunc31, natom, nbasis, nbond, ndata, nhid3, ninput1, &
+            & nlayer31, nodemax31, nodes3a1, noutput1, nscale1, nwe3, para2, pavg3a1, pdel3a1, pi, &
+            & radian, vpesmin, weight3a1
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 5
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v, tx(3,natoms)
+        integer                         :: iatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)
+            enddo
+        enddo
+        if( igrad == 0 )then
+            call pes_init(path)
+            call evvdvdx(tx, v)
+            deallocate(nodes3a1)
+            deallocate(weight3a1)
+            deallocate(bias3a1)
+            deallocate(pdel3a1)
+            deallocate(pavg3a1)
+        else
+            write (*, *) 'Only energy is available'
+        endif
+        do istate=1, nstates
+            p(istate) = v
+        enddo
+    end subroutine evaluate
+end module chempotpy_ch2o2_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_ch2o2_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 5
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v, tx(3,natoms)
-    integer                         :: iatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        call pes_init(path)
-        call evvdvdx(tx, v)
-        deallocate(nodes3a1)
-        deallocate(weight3a1)
-        deallocate(bias3a1)
-        deallocate(pdel3a1)
-        deallocate(pavg3a1)
-    else
-        write (*, *) 'Only energy is available'
-    endif
-    do istate=1, nstates
-        p(istate) = v
-    enddo
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
 !> @brief Evaluate pes_init.
 subroutine pes_init( path )
@@ -220,7 +240,6 @@ subroutine evvdvdx( xcart, v )
     call pot3a1(txinput, v)
 end subroutine evvdvdx
 
-!********************************************************
 !> @brief Evaluate bemsav1.
 subroutine bemsav1( x, p )
     implicit none

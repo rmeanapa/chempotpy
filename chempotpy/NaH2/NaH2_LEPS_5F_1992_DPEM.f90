@@ -1,40 +1,55 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Evaluate dpem for the NaH2_LEPS_5F_1992_DPEM potential.
-subroutine dpem( x, igrad, u, ug )
-    use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
-    use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_nah2_leps_5f_1992_dpem_pes
     implicit none
-    ! number of electronic state
-    integer, parameter            :: nstates = 2
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, u, ug )
+        use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
+        use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+        implicit none
+        ! number of electronic state
+        integer, parameter            :: nstates = 2
+        integer, parameter            :: natoms  = 3
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: u(nstates,nstates)
+        double precision, intent(out) :: ug(nstates,nstates,natoms,3)
+        double precision              :: nt, r(1,3), v(1)
+        double precision              :: u11(1), u12(1), u22(1)
+        integer                       :: i, j, k, l
+        !initialize
+        u  = 0.d0; ug = 0.d0
+        nt = 1
+        ! input cartesian is ClHH
+        call legacy_triatomic_distances_to_bohr(x, r(1,:))
+        if( igrad == 0 )then
+            call pot(r, u11, 1, 1)
+            call pot(r, u12, 1, 2)
+            call pot(r, u22, 1, 3)
+            u(1,1) = u11(1)*legacy_hartree_to_electronvolt
+            u(1,2) = u12(1)*legacy_hartree_to_electronvolt
+            u(2,1) = u12(1)*legacy_hartree_to_electronvolt
+            u(2,2) = u22(1)*legacy_hartree_to_electronvolt
+        else
+            write(*, *) "Only DPEM is available"
+        endif
+    end subroutine evaluate
+end module chempotpy_nah2_leps_5f_1992_dpem_pes
+
+!> @brief Preserve the historical Python-facing dpem entry point.
+subroutine dpem( x, igrad, u, ug )
+    use chempotpy_nah2_leps_5f_1992_dpem_pes, only: evaluate
+    implicit none
     integer, parameter            :: natoms  = 3
+    integer, parameter            :: nstates = 2
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: u(nstates,nstates)
     double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-    double precision              :: nt, r(1,3), v(1)
-    double precision              :: u11(1), u12(1), u22(1)
-    logical, save                 :: first_time_data=.true.
-    integer                       :: i, j, k, l
-    !initialize
-    u  = 0.d0; ug = 0.d0
-    nt = 1
-    ! input cartesian is ClHH
-    call legacy_triatomic_distances_to_bohr(x, r(1,:))
-    if( first_time_data )then
-        call prepot
-        first_time_data = .false.
-    endif
-    if( igrad == 0 )then
-        call pot(r, u11, 1, 1)
-        call pot(r, u12, 1, 2)
-        call pot(r, u22, 1, 3)
-        u(1,1) = u11(1)*legacy_hartree_to_electronvolt
-        u(1,2) = u12(1)*legacy_hartree_to_electronvolt
-        u(2,1) = u12(1)*legacy_hartree_to_electronvolt
-        u(2,2) = u22(1)*legacy_hartree_to_electronvolt
-    else
-        write(*, *) "Only DPEM is available"
-    endif
+    call evaluate(x, igrad, u, ug)
 end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the NaH2_LEPS_5F_1992_DPEM potential.
@@ -78,64 +93,16 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     double precision, intent(out) :: ev_s(n)
     integer                       :: io, i
     double precision, allocatable :: work_d(:)
-    integer, save                 :: lwork_d
-    logical, save                 :: first_time_diag=.true.
-    u_ss = a_ss
-    if( first_time_diag )then
-        lwork_d = -1
-        allocate( work_d(2) )
-        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-        lwork_d = int(work_d(1))
-        deallocate ( work_d )
-        first_time_diag = .false.
-    endif
+    integer                       :: lwork_d
+    u_ss    = a_ss
+    lwork_d = -1
+    allocate( work_d(1) )
+    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
+    lwork_d = int(work_d(1))
+    deallocate( work_d )
     allocate( work_d(lwork_d) )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
-
-!> @brief Evaluate prepot for the NaH2_LEPS_5F_1992_DPEM potential.
-subroutine prepot
-    !
-    !
-    !   System:                        NaH2
-    !   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
-    !   Common name:                   NaH2 surface set 5F
-    !   Interface:                     3-1V
-    !   Number of electronic surfaces: 2
-    !   Number of derivatives:         0
-    !   Reference:       P. Halvick and D. G. Truhlar, J. Chem. Phys. 96,
-    !                    2895 (1992); E 100, 4718 (1994)
-    !
-    !   Note:            This is a vectorized version of the 5F surface
-    !                    without derivatives.
-    !
-    !   Calling Sequence:
-    !      PREPOT - initializes the potential's variables and
-    !               must be called once before any calls to POT
-    !      POT    - driver for the evaluation of the energy
-    !
-    !   Units:
-    !      energies    - hartrees
-    !      coordinates - bohr
-    !      derivatives - hartrees/bohr
-    !
-    !   Surfaces:
-    !      ground and first excited electronic states, diabatic representati
-    !
-    !   Zero of energy:
-    !      The zero of energy occurs on the lower adiabatic surface when
-    !      the Na atom is "infinitely" far from the H2 diatom and the
-    !      H2 diatom is at its equilibrium geometry.  On this surface this o
-    !      at R(H-H)=1.402721754031838 bohr with an energy of 1.842768357662
-    !      hartrees (=5.014430 meV)
-    !
-    !
-    !
-    implicit none
-    call prepot11
-    call prepot12
-    call prepot22
-end subroutine prepot
 
 !
 !> @brief Evaluate pot for the NaH2_LEPS_5F_1992_DPEM potential.
@@ -156,16 +123,15 @@ end subroutine pot
 !
 !  U11 surface - lower diabatic surface
 !
-!> @brief Evaluate prepot11 for the NaH2_LEPS_5F_1992_DPEM potential.
+!> @brief Own the stateless g_pot11 evaluator.
 module chempotpy_nah2_leps_5f_1992_dpem_pot11_legacy_state_49cb98d5
     implicit none
     private
     public :: dispatch
     contains
     !> @brief Evaluate dispatch.
-    subroutine dispatch( r, e, nt, initialize_only )
+    subroutine dispatch( r, e, nt )
         implicit none
-        logical, intent(in) :: initialize_only
         optional :: r, e, nt
         double precision :: abs1, ads1, ars1, as1, as3, axs1, axs3, betat2, c1, c2, c2a, c2b, c2c, c3, &
             & c4, cbs1, cds1, cevau, coul1, coul2, coul3, cplg2, crs1, cs1, cs3, cstsq, cxs1, cxs3, deh2, &
@@ -173,73 +139,139 @@ module chempotpy_nah2_leps_5f_1992_dpem_pot11_legacy_state_49cb98d5
             & swr0, swr20, swt, t1, t2, t3, w, xt2, y0c1, y0c2, y0c3, y0c4, y90c1, y90c2, y90c3, y90c4
         integer :: i, nt
         dimension r(:,:), e(:)
-        save
-        data dt2/2.885656d-2/, ret2/1.237624d0/, betat2/1.038036d+1/, &
-            & y90c1/6.279847d0/, y90c2/3.849003d-3/, y90c3/5.546257d0/, &
-            & y90c4/5.573967d-1/, y0c1/1.060311d+1/, y0c2/6.058605d-3/, &
-            & y0c3/4.573378d0/, y0c4/5.182708d-1/
-        data ads1/0.08d0/, ars1/5.015440d0/, abs1/7.536929d-1/, &
-            & cds1/1.323042d0/, crs1/4.00d0/, cbs1/5.4070d-1/
-        data swa/0.7d0/, swr0/6.5d0/, swa2/1.1d0/, swr20/1.9d0/, &
-            & c2a/1.5d0/, c2b/1.0d0/, c2c/0.15d0/, deh2/4.7469d0/
-        if( initialize_only )then
-            rac2  = 1.d0/dsqrt(2.d0)
-            cevau = 1.d0/27.211611d0
-            !
-        else
-            do 10 i=1, nt
-                r1s  = r(i,1)*r(i,1)
-                r2s  = r(i,2)*r(i,2)
-                r3s  = r(i,3)*r(i,3)
-                rnag = dsqrt(0.5d0*dabs(r1s+r3s-0.5d0*r2s))
-                if( rnag .lt. 1.d-10 ) stop 'RNAG < 1.D-10'
-                if( r(i,2) .ne. 0.d0 )then
-                    cstsq = (0.5d0*(r1s-r3s)/(r(i,2)*rnag))**2
-                else
-                    cstsq = 0.d0
-                endif
-                c1 = y90c1+(y0c1-y90c1)*cstsq
-                c2 = y90c2+(y0c2-y90c2)*cstsq
-                c3 = y90c3+(y0c3-y90c3)*cstsq
-                c4 = y90c4+(y0c4-y90c4)*cstsq
-                swt=0.5d0*(1.d0-dtanh(swa*(r(i,1)-swr0))) *0.5d0*(1.d0-dtanh(swa*(r(i,3)-swr0))) *0.5d0*(1.d0+ &
-                    & dtanh(swa2* (r(i,2)-swr20)))
-                axs1 = dexp(-abs1*(r(i,1)-ars1))
-                as1  = ads1*axs1*(axs1-2.d0)
-                cxs1 = dexp(-cbs1*(r(i,1)-crs1))
-                cs1  = cds1*cxs1*(cxs1-2.d0)
-                s1   = as1+(cs1-as1)*swt
-                s2=(149.480d0-59.6557d0*r(i,2))*dexp(-4.13792d0*r(i,2)) +r2s*(-23.7299d0+3.91747d0*r(i,2))*dexp(- &
-                    & 1.41350d0* r(i,2))
-                axs3  = dexp(-abs1*(r(i,3)-ars1))
-                as3   = ads1*axs3*(axs3-2.d0)
-                cxs3  = dexp(-cbs1*(r(i,3)-crs1))
-                cs3   = cds1*cxs3*(cxs3-2.d0)
-                s3    = as3+(cs3-as3)*swt
-                t1    = c1*dexp(-c2*r(i,1)**6)+c3*dexp(-c4*r(i,1))
-                xt2   = dexp(-betat2*(r(i,2)-ret2))
-                t2    = dt2*xt2*(xt2-2.d0)
-                t3    = c1*dexp(-c2*r(i,3)**6)+c3*dexp(-c4*r(i,3))
-                coul1 = 0.5d0*(s1+t1)
-                coul2 = 0.5d0*(s2+t2)
-                coul3 = 0.5d0*(s3+t3)
-                exch1 = 0.5d0*(s1-t1)
-                exch2 = 0.5d0*(s2-t2)
-                exch3 = 0.5d0*(s3-t3)
-                w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
-                cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
-                e(i)  = (coul1+coul2+coul3+deh2-rac2*dsqrt(w+cplg2*cplg2))*cevau
-            10 continue
-        endif
+        abs1   = 0.d0
+        ads1   = 0.d0
+        ars1   = 0.d0
+        as1    = 0.d0
+        as3    = 0.d0
+        axs1   = 0.d0
+        axs3   = 0.d0
+        betat2 = 0.d0
+        c1     = 0.d0
+        c2     = 0.d0
+        c2a    = 0.d0
+        c2b    = 0.d0
+        c2c    = 0.d0
+        c3     = 0.d0
+        c4     = 0.d0
+        cbs1   = 0.d0
+        cds1   = 0.d0
+        cevau  = 0.d0
+        coul1  = 0.d0
+        coul2  = 0.d0
+        coul3  = 0.d0
+        cplg2  = 0.d0
+        crs1   = 0.d0
+        cs1    = 0.d0
+        cs3    = 0.d0
+        cstsq  = 0.d0
+        cxs1   = 0.d0
+        cxs3   = 0.d0
+        deh2   = 0.d0
+        dt2    = 0.d0
+        exch1  = 0.d0
+        exch2  = 0.d0
+        exch3  = 0.d0
+        r1s    = 0.d0
+        r2s    = 0.d0
+        r3s    = 0.d0
+        rac2   = 0.d0
+        ret2   = 0.d0
+        rnag   = 0.d0
+        s1     = 0.d0
+        s2     = 0.d0
+        s3     = 0.d0
+        swa    = 0.d0
+        swa2   = 0.d0
+        swr0   = 0.d0
+        swr20  = 0.d0
+        swt    = 0.d0
+        t1     = 0.d0
+        t2     = 0.d0
+        t3     = 0.d0
+        w      = 0.d0
+        xt2    = 0.d0
+        y0c1   = 0.d0
+        y0c2   = 0.d0
+        y0c3   = 0.d0
+        y0c4   = 0.d0
+        y90c1  = 0.d0
+        y90c2  = 0.d0
+        y90c3  = 0.d0
+        y90c4  = 0.d0
+        dt2    = 2.885656d-2
+        ret2   = 1.237624d0
+        betat2 = 1.038036d+1
+        y90c1  = 6.279847d0
+        y90c2  = 3.849003d-3
+        y90c3  = 5.546257d0
+        y90c4  = 5.573967d-1
+        y0c1   = 1.060311d+1
+        y0c2   = 6.058605d-3
+        y0c3   = 4.573378d0
+        y0c4   = 5.182708d-1
+        ads1   = 0.08d0
+        ars1   = 5.015440d0
+        abs1   = 7.536929d-1
+        cds1   = 1.323042d0
+        crs1   = 4.00d0
+        cbs1   = 5.4070d-1
+        swa    = 0.7d0
+        swr0   = 6.5d0
+        swa2   = 1.1d0
+        swr20  = 1.9d0
+        c2a    = 1.5d0
+        c2b    = 1.0d0
+        c2c    = 0.15d0
+        deh2   = 4.7469d0
+        rac2   = 1.d0/dsqrt(2.d0)
+        cevau  = 1.d0/27.211611d0
+        !
+        do 10 i=1, nt
+            r1s  = r(i,1)*r(i,1)
+            r2s  = r(i,2)*r(i,2)
+            r3s  = r(i,3)*r(i,3)
+            rnag = dsqrt(0.5d0*dabs(r1s+r3s-0.5d0*r2s))
+            if( rnag .lt. 1.d-10 ) stop 'RNAG < 1.D-10'
+            if( r(i,2) .ne. 0.d0 )then
+                cstsq = (0.5d0*(r1s-r3s)/(r(i,2)*rnag))**2
+            else
+                cstsq = 0.d0
+            endif
+            c1 = y90c1+(y0c1-y90c1)*cstsq
+            c2 = y90c2+(y0c2-y90c2)*cstsq
+            c3 = y90c3+(y0c3-y90c3)*cstsq
+            c4 = y90c4+(y0c4-y90c4)*cstsq
+            swt=0.5d0*(1.d0-dtanh(swa*(r(i,1)-swr0))) *0.5d0*(1.d0-dtanh(swa*(r(i,3)-swr0))) *0.5d0*(1.d0+ dtanh(swa2* &
+                & (r(i,2)-swr20)))
+            axs1 = dexp(-abs1*(r(i,1)-ars1))
+            as1  = ads1*axs1*(axs1-2.d0)
+            cxs1 = dexp(-cbs1*(r(i,1)-crs1))
+            cs1  = cds1*cxs1*(cxs1-2.d0)
+            s1   = as1+(cs1-as1)*swt
+            s2=(149.480d0-59.6557d0*r(i,2))*dexp(-4.13792d0*r(i,2)) +r2s*(-23.7299d0+3.91747d0*r(i,2))*dexp(- &
+                & 1.41350d0* r(i,2))
+            axs3  = dexp(-abs1*(r(i,3)-ars1))
+            as3   = ads1*axs3*(axs3-2.d0)
+            cxs3  = dexp(-cbs1*(r(i,3)-crs1))
+            cs3   = cds1*cxs3*(cxs3-2.d0)
+            s3    = as3+(cs3-as3)*swt
+            t1    = c1*dexp(-c2*r(i,1)**6)+c3*dexp(-c4*r(i,1))
+            xt2   = dexp(-betat2*(r(i,2)-ret2))
+            t2    = dt2*xt2*(xt2-2.d0)
+            t3    = c1*dexp(-c2*r(i,3)**6)+c3*dexp(-c4*r(i,3))
+            coul1 = 0.5d0*(s1+t1)
+            coul2 = 0.5d0*(s2+t2)
+            coul3 = 0.5d0*(s3+t3)
+            exch1 = 0.5d0*(s1-t1)
+            exch2 = 0.5d0*(s2-t2)
+            exch3 = 0.5d0*(s3-t3)
+            w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
+            cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
+            e(i)  = (coul1+coul2+coul3+deh2-rac2*dsqrt(w+cplg2*cplg2))*cevau
+        10 continue
     end subroutine dispatch
 end module chempotpy_nah2_leps_5f_1992_dpem_pot11_legacy_state_49cb98d5
-
-!> @brief Compatibility interface for prepot11.
-subroutine prepot11
-    use chempotpy_nah2_leps_5f_1992_dpem_pot11_legacy_state_49cb98d5, only: dispatch
-    implicit none
-    call dispatch(initialize_only=.true.)
-end subroutine prepot11
 
 !> @brief Compatibility interface for pot11.
 subroutine pot11( r, e, nt )
@@ -248,59 +280,82 @@ subroutine pot11( r, e, nt )
     double precision :: r(nt,3)
     double precision :: e(nt)
     integer          :: nt
-    call dispatch(r=r, e=e, nt=nt, initialize_only=.false.)
+    call dispatch(r=r, e=e, nt=nt)
 end subroutine pot11
 
 !
 !  U12 surface - coupling surface
 !
-!> @brief Evaluate prepot12 for the NaH2_LEPS_5F_1992_DPEM potential.
+!> @brief Own the stateless g_pot12 evaluator.
 module chempotpy_nah2_leps_5f_1992_dpem_pot12_legacy_state_49cb98d5
     implicit none
     private
     public :: dispatch
     contains
     !> @brief Evaluate dispatch.
-    subroutine dispatch( r, e, nt, initialize_only )
+    subroutine dispatch( r, e, nt )
         implicit none
-        logical, intent(in) :: initialize_only
         optional :: r, e, nt
         double precision :: amp, ampe, ampn, ampp, ampr, ang, cevau, e, eps, erl, erle, erln, erlp, erlr, &
             & ers, erse, ersn, ersp, ersr, f1, f3, r, rmx, rmxe, rmxn, rmxp, rmxr
         integer :: i, nt
         dimension r(:,:), e(:)
-        save
-        data eps/1.d-4/
-        data ampn, ampp, ampe, ampr, erln, erlp, erle, erlr, &
-            & ersn, ersp, erse, ersr, rmxn, rmxp, rmxe, rmxr / &
-            & 2.35737419d-1, 1.51495000d+0, 5.02447648d-1, 4.05991868d+0, &
-            & 2.30065420d+2, 7.10000000d-2, 3.46985415d+0, 8.95373168d-1, &
-            & 2.00000000d+0, 1.16830000d+1, 4.54595148d+1, -2.38192975d+0, &
-            & 2.33484458d+0, 2.62222000d+0, 2.04523701d+1, 1.98941949d+0 /
-        if( initialize_only )then
-            cevau = 1.d0/27.211611d0
-            !
-        else
-            do 10 i=1, nt
-                amp  = ampn+(ampp-ampn)*0.5d0*(dtanh(ampe*(r(i,2)-ampr))+1.d0)
-                erl  = erln+(erlp-erln)*0.5d0*(dtanh(erle*(r(i,2)-erlr))+1.d0)
-                ers  = ersn+(ersp-ersn)*0.5d0*(dtanh(erse*(r(i,2)-ersr))+1.d0)
-                rmx  = rmxn+(rmxp-rmxn)*0.5d0*(dtanh(rmxe*(r(i,2)-rmxr))+1.d0)
-                f1   = amp*dexp(-(erl+ers/(eps+r(i,1)**3))*(r(i,1)-rmx)**2)
-                f3   = amp*dexp(-(erl+ers/(eps+r(i,3)**3))*(r(i,3)-rmx)**2)
-                ang  = ((r(i,1)-r(i,3))/r(i,2))**2
-                e(i) = ang*(f1+f3)*cevau
-            10 continue
-        endif
+        amp   = 0.d0
+        ampe  = 0.d0
+        ampn  = 0.d0
+        ampp  = 0.d0
+        ampr  = 0.d0
+        ang   = 0.d0
+        cevau = 0.d0
+        eps   = 0.d0
+        erl   = 0.d0
+        erle  = 0.d0
+        erln  = 0.d0
+        erlp  = 0.d0
+        erlr  = 0.d0
+        ers   = 0.d0
+        erse  = 0.d0
+        ersn  = 0.d0
+        ersp  = 0.d0
+        ersr  = 0.d0
+        f1    = 0.d0
+        f3    = 0.d0
+        rmx   = 0.d0
+        rmxe  = 0.d0
+        rmxn  = 0.d0
+        rmxp  = 0.d0
+        rmxr  = 0.d0
+        eps   = 1.d-4
+        ampn  = 2.35737419d-1
+        ampp  = 1.51495000d+0
+        ampe  = 5.02447648d-1
+        ampr  = 4.05991868d+0
+        erln  = 2.30065420d+2
+        erlp  = 7.10000000d-2
+        erle  = 3.46985415d+0
+        erlr  = 8.95373168d-1
+        ersn  = 2.00000000d+0
+        ersp  = 1.16830000d+1
+        erse  = 4.54595148d+1
+        ersr  = -2.38192975d+0
+        rmxn  = 2.33484458d+0
+        rmxp  = 2.62222000d+0
+        rmxe  = 2.04523701d+1
+        rmxr  = 1.98941949d+0
+        cevau = 1.d0/27.211611d0
+        !
+        do 10 i=1, nt
+            amp  = ampn+(ampp-ampn)*0.5d0*(dtanh(ampe*(r(i,2)-ampr))+1.d0)
+            erl  = erln+(erlp-erln)*0.5d0*(dtanh(erle*(r(i,2)-erlr))+1.d0)
+            ers  = ersn+(ersp-ersn)*0.5d0*(dtanh(erse*(r(i,2)-ersr))+1.d0)
+            rmx  = rmxn+(rmxp-rmxn)*0.5d0*(dtanh(rmxe*(r(i,2)-rmxr))+1.d0)
+            f1   = amp*dexp(-(erl+ers/(eps+r(i,1)**3))*(r(i,1)-rmx)**2)
+            f3   = amp*dexp(-(erl+ers/(eps+r(i,3)**3))*(r(i,3)-rmx)**2)
+            ang  = ((r(i,1)-r(i,3))/r(i,2))**2
+            e(i) = ang*(f1+f3)*cevau
+        10 continue
     end subroutine dispatch
 end module chempotpy_nah2_leps_5f_1992_dpem_pot12_legacy_state_49cb98d5
-
-!> @brief Compatibility interface for prepot12.
-subroutine prepot12
-    use chempotpy_nah2_leps_5f_1992_dpem_pot12_legacy_state_49cb98d5, only: dispatch
-    implicit none
-    call dispatch(initialize_only=.true.)
-end subroutine prepot12
 
 !> @brief Compatibility interface for pot12.
 subroutine pot12( r, e, nt )
@@ -309,22 +364,21 @@ subroutine pot12( r, e, nt )
     double precision :: r(nt,3)
     double precision :: e(nt)
     integer          :: nt
-    call dispatch(r=r, e=e, nt=nt, initialize_only=.false.)
+    call dispatch(r=r, e=e, nt=nt)
 end subroutine pot12
 
 !
 !  U22 surface - upper diabatic surface
 !
-!> @brief Evaluate prepot22 for the NaH2_LEPS_5F_1992_DPEM potential.
+!> @brief Own the stateless g_pot22 evaluator.
 module chempotpy_nah2_leps_5f_1992_dpem_pot22_legacy_state_49cb98d5
     implicit none
     private
     public :: dispatch
     contains
     !> @brief Evaluate dispatch.
-    subroutine dispatch( r, e, nt, initialize_only )
+    subroutine dispatch( r, e, nt )
         implicit none
-        logical, intent(in) :: initialize_only
         optional :: r, e, nt
         double precision :: a0g1, a0g2, a0g3, a90g1, a90g2, a90g3, b0g1, b0g2, b0g3, b90g1, b90g2, b90g3, &
             & c1s1, c2a, c2b, c2c, c2s1, c3s1, c4s1, c5s1, c6s1, cevau, coul1, coul2, coul3, cplg2, &
@@ -335,90 +389,201 @@ module chempotpy_nah2_leps_5f_1992_dpem_pot22_legacy_state_49cb98d5
             & y90d2, y90r1, y90r2, y90swa, y90swr0
         integer :: i, nt
         dimension r(:,:), e(:)
-        save
-        data c1s1/2.614452d+2/, c2s1/-3.155166d-4/, c3s1/-1.785467d+0/, &
-            & c4s1/-3.548074d+0/, c5s1/3.356766d-1/, c6s1/-7.621511d-1/
-        data deh2/4.7469d0/, una2p/2.1037d0/, c2a/0.8d0/, c2b/0.8d0/, &
-            & c2c/0.15d0/, cprime/1.0d-1/
-        data y0d1/2.417800d-1/, y0r1/3.708055d0/, y0b1/6.960127d-1/, &
-            & y90d1/1.372065d-2/, y90r1/7.233552d0/, y90b1/5.127734d-1/, &
-            & y0d2/8.870172d-1/, y0r2/2.300265d0/, y0b2/8.497374d-1/, &
-            & y90d2/1.106187d0/, y90r2/2.002516d0/, y90b2/9.514887d-1/, &
-            & y0swa/0.614393d0/, y0swr0/9.006323d0/, &
-            & y90swa/0.872116d0/, y90swr0/8.194467d0/
-        data a0g1/-8.210245d-2/, b0g1/4.658698d0/, r0g1/4.552860d0/, &
-            & a0g2/3.546427d-2/, b0g2/6.456787d-1/, r0g2/6.332225d0/, &
-            & a0g3/-1.562327d-2/, b0g3/1.170537d-1/, r0g3/1.097310d+1/
-        data a90g1/-9.929297d-2/, b90g1/4.367220d0/, r90g1/4.402447d0/, &
-            & a90g2/4.696181d-2/, b90g2/5.470459d-1/, r90g2/6.289526d0/, &
-            & a90g3/-1.219900d-2/, b90g3/1.002291d-2/, r90g3/1.118725d+1/
-        if( initialize_only )then
-            rac2  = 1.d0/dsqrt(2.d0)
-            cevau = 1.d0/27.211611d0
-            !
-        else
-            do 10 i=1, nt
-                r1s  = r(i,1)*r(i,1)
-                r2s  = r(i,2)*r(i,2)
-                r3s  = r(i,3)*r(i,3)
-                rnag = dsqrt(0.5d0*dabs(r1s+r3s-0.5d0*r2s))
-                if( rnag .lt. 1.d-10 ) stop 'RNAG < 1.D-10'
-                cstsq = (0.5d0*(r1s-r3s)/(r(i,2)*rnag))**2
-                swa   = y90swa+(y0swa-y90swa)*cstsq
-                swr0  = y90swr0+(y0swr0-y90swr0)*cstsq
-                s1    = (c1s1+c2s1*r(i,1))*dexp(c3s1*r(i,1)) +r1s*(c4s1+c5s1*r(i,1))*dexp(c6s1*r(i,1))
-                x90t2 = dexp(-y90b2*(r(i,2)-y90r2))
-                t902a = y90d2*x90t2*(x90t2-2.d0)
-                x0t2  = dexp(-y0b2*(r(i,2)-y0r2))
-                t02a  = y0d2*x0t2*(x0t2-2.d0)
-                t2a   = t902a+(t02a-t902a)*cstsq
-                swt   = 0.5d0*(1.d0-dtanh( swa*(0.5d0*(r(i,1)+r(i,3))-swr0)))
-                s2a=(149.480d0-59.6557d0*r(i,2))*dexp(-4.13792d0*r(i,2))+r2s *(-23.7299d0+3.91747d0*r(i,2))*dexp(- &
-                    & 1.41350d0* r(i,2))+una2p
-                s2b=144.893d0*dexp(-3.85716d0*r(i,2))+r(i,2)*(37.5919d0 -4.32985d0*r(i,2)-0.003807d0*r2s)*dexp(- &
-                    & 1.52496d0* r(i,2))
-                t2    = swt*(t2a-s2b)+s2b
-                s2    = 0.5d0*(s2a+t2-dtanh((s2a-t2)/cprime)*(s2a-t2))
-                s3    = (c1s1+c2s1*r(i,3))*dexp(c3s1*r(i,3)) +r3s*(c4s1+c5s1*r(i,3))*dexp(c6s1*r(i,3))
-                x90t1 = dexp(-y90b1*(r(i,1)-y90r1))
-                t901  = y90d1*x90t1*(x90t1+2.d0)
-                x0t1  = dexp(-y0b1*(r(i,1)-y0r1))
-                t01   = y0d1*x0t1*(x0t1+2.d0)
-                t1    = t901+(t01-t901)*cstsq
-                x90t3 = dexp(-y90b1*(r(i,3)-y90r1))
-                t903  = y90d1*x90t3*(x90t3+2.d0)
-                x0t3  = dexp(-y0b1*(r(i,3)-y0r1))
-                t03   = y0d1*x0t3*(x0t3+2.d0)
-                t3    = t903+(t03-t903)*cstsq
-                coul1 = 0.5d0*(s1+t1)
-                coul2 = 0.5d0*(s2+t2)
-                coul3 = 0.5d0*(s3+t3)
-                exch1 = 0.5d0*(s1-t1)
-                exch2 = 0.5d0*(s2-t2)
-                exch3 = 0.5d0*(s3-t3)
-                w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
-                cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
-                e(i)  = coul1+coul2+coul3+deh2-rac2*dsqrt(w+cplg2*cplg2)
-                g1    = a0g1*dexp(-b0g1*(rnag-r0g1)**2)
-                g2    = a0g2*dexp(-b0g2*(rnag-r0g2)**2)
-                g3    = a0g3*dexp(-b0g3*(rnag-r0g3)**2)
-                g4    = a90g1*dexp(-b90g1*(rnag-r90g1)**2)
-                g5    = a90g2*dexp(-b90g2*(rnag-r90g2)**2)
-                g6    = a90g3*dexp(-b90g3*(rnag-r90g3)**2)
-                vdisp = g4+g5+g6+(g1+g2+g3-g4-g5-g6)*cstsq
-                vdisp = vdisp*dexp(-0.5d0*(r(i,2)/2.d0)**7)
-                e(i)  = (e(i)+vdisp)*cevau
-            10 continue
-        endif
+        a0g1    = 0.d0
+        a0g2    = 0.d0
+        a0g3    = 0.d0
+        a90g1   = 0.d0
+        a90g2   = 0.d0
+        a90g3   = 0.d0
+        b0g1    = 0.d0
+        b0g2    = 0.d0
+        b0g3    = 0.d0
+        b90g1   = 0.d0
+        b90g2   = 0.d0
+        b90g3   = 0.d0
+        c1s1    = 0.d0
+        c2a     = 0.d0
+        c2b     = 0.d0
+        c2c     = 0.d0
+        c2s1    = 0.d0
+        c3s1    = 0.d0
+        c4s1    = 0.d0
+        c5s1    = 0.d0
+        c6s1    = 0.d0
+        cevau   = 0.d0
+        coul1   = 0.d0
+        coul2   = 0.d0
+        coul3   = 0.d0
+        cplg2   = 0.d0
+        cprime  = 0.d0
+        cstsq   = 0.d0
+        deh2    = 0.d0
+        exch1   = 0.d0
+        exch2   = 0.d0
+        exch3   = 0.d0
+        g1      = 0.d0
+        g2      = 0.d0
+        g3      = 0.d0
+        g4      = 0.d0
+        g5      = 0.d0
+        g6      = 0.d0
+        r0g1    = 0.d0
+        r0g2    = 0.d0
+        r0g3    = 0.d0
+        r1s     = 0.d0
+        r2s     = 0.d0
+        r3s     = 0.d0
+        r90g1   = 0.d0
+        r90g2   = 0.d0
+        r90g3   = 0.d0
+        rac2    = 0.d0
+        rnag    = 0.d0
+        s1      = 0.d0
+        s2      = 0.d0
+        s2a     = 0.d0
+        s2b     = 0.d0
+        s3      = 0.d0
+        swa     = 0.d0
+        swr0    = 0.d0
+        swt     = 0.d0
+        t01     = 0.d0
+        t02a    = 0.d0
+        t03     = 0.d0
+        t1      = 0.d0
+        t2      = 0.d0
+        t2a     = 0.d0
+        t3      = 0.d0
+        t901    = 0.d0
+        t902a   = 0.d0
+        t903    = 0.d0
+        una2p   = 0.d0
+        vdisp   = 0.d0
+        w       = 0.d0
+        x0t1    = 0.d0
+        x0t2    = 0.d0
+        x0t3    = 0.d0
+        x90t1   = 0.d0
+        x90t2   = 0.d0
+        x90t3   = 0.d0
+        y0b1    = 0.d0
+        y0b2    = 0.d0
+        y0d1    = 0.d0
+        y0d2    = 0.d0
+        y0r1    = 0.d0
+        y0r2    = 0.d0
+        y0swa   = 0.d0
+        y0swr0  = 0.d0
+        y90b1   = 0.d0
+        y90b2   = 0.d0
+        y90d1   = 0.d0
+        y90d2   = 0.d0
+        y90r1   = 0.d0
+        y90r2   = 0.d0
+        y90swa  = 0.d0
+        y90swr0 = 0.d0
+        c1s1    = 2.614452d+2
+        c2s1    = -3.155166d-4
+        c3s1    = -1.785467d+0
+        c4s1    = -3.548074d+0
+        c5s1    = 3.356766d-1
+        c6s1    = -7.621511d-1
+        deh2    = 4.7469d0
+        una2p   = 2.1037d0
+        c2a     = 0.8d0
+        c2b     = 0.8d0
+        c2c     = 0.15d0
+        cprime  = 1.0d-1
+        y0d1    = 2.417800d-1
+        y0r1    = 3.708055d0
+        y0b1    = 6.960127d-1
+        y90d1   = 1.372065d-2
+        y90r1   = 7.233552d0
+        y90b1   = 5.127734d-1
+        y0d2    = 8.870172d-1
+        y0r2    = 2.300265d0
+        y0b2    = 8.497374d-1
+        y90d2   = 1.106187d0
+        y90r2   = 2.002516d0
+        y90b2   = 9.514887d-1
+        y0swa   = 0.614393d0
+        y0swr0  = 9.006323d0
+        y90swa  = 0.872116d0
+        y90swr0 = 8.194467d0
+        a0g1    = -8.210245d-2
+        b0g1    = 4.658698d0
+        r0g1    = 4.552860d0
+        a0g2    = 3.546427d-2
+        b0g2    = 6.456787d-1
+        r0g2    = 6.332225d0
+        a0g3    = -1.562327d-2
+        b0g3    = 1.170537d-1
+        r0g3    = 1.097310d+1
+        a90g1   = -9.929297d-2
+        b90g1   = 4.367220d0
+        r90g1   = 4.402447d0
+        a90g2   = 4.696181d-2
+        b90g2   = 5.470459d-1
+        r90g2   = 6.289526d0
+        a90g3   = -1.219900d-2
+        b90g3   = 1.002291d-2
+        r90g3   = 1.118725d+1
+        rac2    = 1.d0/dsqrt(2.d0)
+        cevau   = 1.d0/27.211611d0
+        !
+        do 10 i=1, nt
+            r1s  = r(i,1)*r(i,1)
+            r2s  = r(i,2)*r(i,2)
+            r3s  = r(i,3)*r(i,3)
+            rnag = dsqrt(0.5d0*dabs(r1s+r3s-0.5d0*r2s))
+            if( rnag .lt. 1.d-10 ) stop 'RNAG < 1.D-10'
+            cstsq = (0.5d0*(r1s-r3s)/(r(i,2)*rnag))**2
+            swa   = y90swa+(y0swa-y90swa)*cstsq
+            swr0  = y90swr0+(y0swr0-y90swr0)*cstsq
+            s1    = (c1s1+c2s1*r(i,1))*dexp(c3s1*r(i,1)) +r1s*(c4s1+c5s1*r(i,1))*dexp(c6s1*r(i,1))
+            x90t2 = dexp(-y90b2*(r(i,2)-y90r2))
+            t902a = y90d2*x90t2*(x90t2-2.d0)
+            x0t2  = dexp(-y0b2*(r(i,2)-y0r2))
+            t02a  = y0d2*x0t2*(x0t2-2.d0)
+            t2a   = t902a+(t02a-t902a)*cstsq
+            swt   = 0.5d0*(1.d0-dtanh( swa*(0.5d0*(r(i,1)+r(i,3))-swr0)))
+            s2a=(149.480d0-59.6557d0*r(i,2))*dexp(-4.13792d0*r(i,2))+r2s *(-23.7299d0+3.91747d0*r(i,2))*dexp(- &
+                & 1.41350d0* r(i,2))+una2p
+            s2b=144.893d0*dexp(-3.85716d0*r(i,2))+r(i,2)*(37.5919d0 -4.32985d0*r(i,2)-0.003807d0*r2s)*dexp(- &
+                & 1.52496d0* r(i,2))
+            t2    = swt*(t2a-s2b)+s2b
+            s2    = 0.5d0*(s2a+t2-dtanh((s2a-t2)/cprime)*(s2a-t2))
+            s3    = (c1s1+c2s1*r(i,3))*dexp(c3s1*r(i,3)) +r3s*(c4s1+c5s1*r(i,3))*dexp(c6s1*r(i,3))
+            x90t1 = dexp(-y90b1*(r(i,1)-y90r1))
+            t901  = y90d1*x90t1*(x90t1+2.d0)
+            x0t1  = dexp(-y0b1*(r(i,1)-y0r1))
+            t01   = y0d1*x0t1*(x0t1+2.d0)
+            t1    = t901+(t01-t901)*cstsq
+            x90t3 = dexp(-y90b1*(r(i,3)-y90r1))
+            t903  = y90d1*x90t3*(x90t3+2.d0)
+            x0t3  = dexp(-y0b1*(r(i,3)-y0r1))
+            t03   = y0d1*x0t3*(x0t3+2.d0)
+            t3    = t903+(t03-t903)*cstsq
+            coul1 = 0.5d0*(s1+t1)
+            coul2 = 0.5d0*(s2+t2)
+            coul3 = 0.5d0*(s3+t3)
+            exch1 = 0.5d0*(s1-t1)
+            exch2 = 0.5d0*(s2-t2)
+            exch3 = 0.5d0*(s3-t3)
+            w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
+            cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
+            e(i)  = coul1+coul2+coul3+deh2-rac2*dsqrt(w+cplg2*cplg2)
+            g1    = a0g1*dexp(-b0g1*(rnag-r0g1)**2)
+            g2    = a0g2*dexp(-b0g2*(rnag-r0g2)**2)
+            g3    = a0g3*dexp(-b0g3*(rnag-r0g3)**2)
+            g4    = a90g1*dexp(-b90g1*(rnag-r90g1)**2)
+            g5    = a90g2*dexp(-b90g2*(rnag-r90g2)**2)
+            g6    = a90g3*dexp(-b90g3*(rnag-r90g3)**2)
+            vdisp = g4+g5+g6+(g1+g2+g3-g4-g5-g6)*cstsq
+            vdisp = vdisp*dexp(-0.5d0*(r(i,2)/2.d0)**7)
+            e(i)  = (e(i)+vdisp)*cevau
+        10 continue
     end subroutine dispatch
 end module chempotpy_nah2_leps_5f_1992_dpem_pot22_legacy_state_49cb98d5
-
-!> @brief Compatibility interface for prepot22.
-subroutine prepot22
-    use chempotpy_nah2_leps_5f_1992_dpem_pot22_legacy_state_49cb98d5, only: dispatch
-    implicit none
-    call dispatch(initialize_only=.true.)
-end subroutine prepot22
 
 !> @brief Compatibility interface for pot22.
 subroutine pot22( r, e, nt )
@@ -427,5 +592,5 @@ subroutine pot22( r, e, nt )
     double precision :: r(nt,3)
     double precision :: e(nt)
     integer          :: nt
-    call dispatch(r=r, e=e, nt=nt, initialize_only=.false.)
+    call dispatch(r=r, e=e, nt=nt)
 end subroutine pot22

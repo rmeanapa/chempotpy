@@ -35,6 +35,9 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   its values after the longest label. Use the established fields `System`,
   `Functional form`, `Common name`, derivative/body/state counts, `Interface`,
   and `Data file`.
+- Remove generator disclaimers, repeated star-bar comments, and other purely
+  decorative banners. Keep concise scientific provenance in the PES metadata
+  or documentation instead of generated boilerplate in numerical kernels.
 
 ## Procedure documentation and declarations
 
@@ -51,6 +54,12 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 - Declare constants with a type and `parameter`, for example
   `integer, parameter :: atom_count = 3`. Separate `PARAMETER(...)` statements
   are forbidden.
+- Do not redeclare standard intrinsic procedures with `INTRINSIC` statements.
+- Do not add `DATA` inside a procedure. Use typed `parameter` constants for
+  fixed coefficients and ordinary assignments for explicit initialization.
+  Existing procedure `DATA` statements are migration debt until fixed values
+  become typed parameters or mutable work values become explicit local
+  initialization. `BLOCK DATA` is forbidden and absent from the catalog.
 - Prefer descriptive physical names and include units in a name when ambiguity
   would otherwise remain. Retain established scientific acronyms where useful.
 
@@ -58,11 +67,27 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 
 - Modules are `private` by default. Publish only the procedures and types that
   form the supported API; mutable storage stays private.
+- Each PES implementation belongs to one private owning module that publishes
+  `evaluate`. The historical external `pes` or `dpem` routine is only a thin
+  compatibility adapter.
+- File-local numerical helpers belong under the owning module's `contains`
+  section and remain private. Do not leave global helper procedures beside a
+  surface merely for legacy linkage. When a distinct support module is still
+  required during migration, it is private by default and exposes only the
+  narrow operation used by the owner.
+- Fixed fit coefficients are private typed `parameter` data. Do not expose an
+  initialization procedure merely to assign constants; `evaluate` must be
+  callable immediately after import.
 - Every `use` statement has an `only:` list.
 - Align `only:` across consecutive `use` statements so imported APIs scan as
   one declaration group.
-- Do not add `COMMON` or `BLOCK DATA`. Migrate shared mutable state into a
-  private owning module with a small procedural API.
+- `COMMON` and `BLOCK DATA` are forbidden and absent from the catalog. Pass
+  values explicitly or keep one evaluation's workspace local to its owning
+  evaluator; fixed fit data belongs in private typed parameters.
+- Do not introduce implicit persistent state with blanket `SAVE` statements.
+  During legacy migration, preserve required state until it can be named and
+  moved into private module storage; do not delete `SAVE` independently of the
+  initialization/evaluation lifecycle that consumes it.
 - Published fit coefficients and model-specific constants belong beside their
   owning PES. General geometry, unit conversion, numerical kinds, linear
   algebra, status handling, and reusable I/O belong in the bundled core.
@@ -72,8 +97,15 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 ## Geometry, units, and numerical expressions
 
 - Use `chempotpy_geometry` for Cartesian distances, dot products, angle cosines,
-  and distance matrices. Do not repeat hand-written Cartesian distance formulas
-  in public wrappers.
+  distance matrices, and atom-major Cartesian flattening. Use
+  `flatten_cartesian_coordinates` to transform `x(natoms,3)` into
+  `[x1, y1, z1, x2, y2, z2, ...]`; do not repeat indexing loops for this
+  layout conversion or hand-written Cartesian distance formulas in public
+  wrappers.
+- Use `transform_internal_gradient_to_cartesian` to apply the chain rule
+  `dE/dx = (dE/dq)(dq/dx)`. The generic core interface supports scalar-surface,
+  multi-state, and matrix-valued gradients. Do not repeat Jacobian-contraction
+  loops in public wrappers.
 - Use `chempotpy_units` for new canonical atomic-unit interfaces.
 - Use `chempotpy_legacy_units` when a compatibility wrapper must preserve the
   released rounded conversion literals exactly.

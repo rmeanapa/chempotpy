@@ -1,8 +1,5 @@
-!**************************************************************************!
 !                          PIP-NN PES for N2OC2H2                          !
-!**************************************************************************!
 
-!******************************************************************************
 !-->  program to get potential energy for a given geometry after NN
 !fitting
 !-->  global variables are declared in this module
@@ -24,48 +21,69 @@ module nnparam1
         &pdel3a1(:), pavg3a1(:)
 end module nnparam1
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use nnparam1, only: alpha, bias3a1, bohr, ifunc31, natom, nbasis, nbond, nhid3, ninput1, &
-        & nlayer31, nodemax31, nodes3a1, noutput1, nscale1, nwe3, para2, pavg3a1, pdel3a1, pi, &
-        & radian, weight3a1
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_c2h2n2o_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use nnparam1, only: alpha, bias3a1, bohr, ifunc31, natom, nbasis, nbond, nhid3, ninput1, &
+            & nlayer31, nodemax31, nodes3a1, noutput1, nscale1, nwe3, para2, pavg3a1, pdel3a1, pi, &
+            & radian, weight3a1
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 7
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v, tx(3,natoms)
+        integer                         :: iatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)
+            enddo
+        enddo
+        if( igrad == 0 )then
+            call pes_init(path)
+            call evvdvdx(tx, v)
+            deallocate(nodes3a1)
+            deallocate(weight3a1)
+            deallocate(bias3a1)
+            deallocate(pdel3a1)
+            deallocate(pavg3a1)
+        else
+            write (*, *) 'Only energy is available'
+        endif
+        do istate=1, nstates
+            p(istate) = v
+        enddo
+    end subroutine evaluate
+end module chempotpy_c2h2n2o_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_c2h2n2o_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 7
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v, tx(3,natoms)
-    integer                         :: iatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        call pes_init(path)
-        call evvdvdx(tx, v)
-        deallocate(nodes3a1)
-        deallocate(weight3a1)
-        deallocate(bias3a1)
-        deallocate(pdel3a1)
-        deallocate(pavg3a1)
-    else
-        write (*, *) 'Only energy is available'
-    endif
-    do istate=1, nstates
-        p(istate) = v
-    enddo
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v )
-    !**************************************************************************!
     !Subroutine to calculate the potential energy
     !Xcart     ==>Cartesian coordinates in angstrom
     !             H1: xcart(1,1), xcart(2,1), xcart(3,1)
@@ -84,7 +102,6 @@ subroutine evvdvdx( xcart, v )
     !A Model for 1,3-Dipolar Cycloadditions”,
     !Yang Liu, Jun Li*, ACS Omega, 2020, 5, 23343-23350.
     !https://pubs.acs.org/doi/10.1021/acsomega.0c03210
-    !***************************************************************************
     implicit none
     double precision, parameter :: alpha = 1.8d0, para=0.5291772d0
     integer, parameter          :: natom = 7
@@ -237,7 +254,6 @@ function logsig1( x )
     logsig1 = 1.d0/(1.d0+dexp(-x))
 end function logsig1
 
-!********************************************************
 !> @brief Evaluate bemsav.
 subroutine bemsav( x, p )
     implicit none

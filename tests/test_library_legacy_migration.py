@@ -12,6 +12,28 @@ from scripts.capture_library_references import capture_source
 
 
 CORRECTED_RELEASE_DEFECTS = {
+    # The released wrapper reapplied its unit conversion before every point.
+    "ClH2/ClH2_LEPS_ALTG2_1996": [
+        "3.85497619023016469E+000",
+        "2.50328966056197944E+000",
+    ],
+    # The released wrappers skipped the basis and damping setup completely.
+    "H3/H3_GEN_A2_2002": [
+        "5.25459088704119393E-001",
+        "4.87261550575933011E-001",
+    ],
+    "H3/H3_GEN_A3_2002": [
+        "5.58475196600794588E-001",
+        "5.35016594053392747E-001",
+    ],
+    "H3/H3_GEN_A4_2002": [
+        "5.56554524813657303E-001",
+        "5.35268464705464853E-001",
+    ],
+    "H3/H3_GEN_CCI_2002": [
+        "5.55896650189018793E-001",
+        "5.35434886933361942E-001",
+    ],
     "BrH2/BrH2_LEPS_LTBZSO_1995": [
         "8.25785718003896285E+000",
         "2.16553758038227357E+001",

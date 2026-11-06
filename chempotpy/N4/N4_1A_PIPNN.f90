@@ -1,4 +1,3 @@
-!**********************************************************************
 !   System:                        N4
 !   Functional form:               permutation-invariant polynomials
 !   Common name:                   N4(adiabatic ground state)
@@ -32,7 +31,6 @@
 !                                       0 - gradient is not calculated
 !   Output: Vpes                        in units of hartree
 !   Output: dEdX(4),dEdY(4),dEdZ(4)     hartree/bohr
-!**********************************************************************
 
 !-->  program to get potential energy for a given geometry after NN fitting
 !-->  global variables are declared in this module
@@ -57,56 +55,78 @@ module nnparam
     double precision, allocatable :: pdelc(:), pavgc(:)
 end module nnparam
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, nindex, ninput, &
-        & nlayer, nnew, nodemax, nodes, noutput, nscale, nterm, nwe, pavga, pavgb, pavgc, pdela, &
-        & pdelb, pdelc, pi, radian, weighta, weightb, weightc
-    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_n4_1a_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, nindex, ninput, &
+            & nlayer, nnew, nodemax, nodes, noutput, nscale, nterm, nwe, pavga, pavgb, pavgc, pdela, &
+            & pdelb, pdelc, pi, radian, weighta, weightb, weightc
+        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 4
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v
+        double precision                :: tx(natoms), ty(natoms), tz(natoms)
+        double precision                :: txg(natoms), tyg(natoms), tzg(natoms)
+        integer                         :: iatom, idir, j, istate
+        !initialize
+        p = 0.d0; g = 0.d0; d = 0.d0
+        ! input coordinates of tx, ty, tz are in bohr
+        tx(:) = x(:,1)/legacy_bohr_to_angstrom
+        ty(:) = x(:,2)/legacy_bohr_to_angstrom
+        tz(:) = x(:,3)/legacy_bohr_to_angstrom
+        call pes_init(path)
+        call n4pipnn(tx, ty, tz, v, txg, tyg, tzg, igrad)
+        deallocate(nodes)
+        deallocate(weighta)
+        deallocate(biasa)
+        deallocate(pdela)
+        deallocate(pavga)
+        deallocate(weightb)
+        deallocate(biasb)
+        deallocate(pdelb)
+        deallocate(pavgb)
+        deallocate(weightc)
+        deallocate(biasc)
+        deallocate(pdelc)
+        deallocate(pavgc)
+        do istate=1, nstates
+            p(istate) = v*legacy_hartree_to_electronvolt
+        enddo
+        do istate=1, nstates
+            g(istate,:,1) = txg(:)*51.422067
+            g(istate,:,2) = tyg(:)*51.422067
+            g(istate,:,3) = tzg(:)*51.422067
+        enddo
+        d = 0.d0
+    end subroutine evaluate
+end module chempotpy_n4_1a_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_n4_1a_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 4
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v
-    double precision                :: tx(natoms), ty(natoms), tz(natoms)
-    double precision                :: txg(natoms), tyg(natoms), tzg(natoms)
-    integer                         :: iatom, idir, j, istate
-    !initialize
-    p = 0.d0; g = 0.d0; d = 0.d0
-    ! input coordinates of tx, ty, tz are in bohr
-    tx(:) = x(:,1)/legacy_bohr_to_angstrom
-    ty(:) = x(:,2)/legacy_bohr_to_angstrom
-    tz(:) = x(:,3)/legacy_bohr_to_angstrom
-    call pes_init(path)
-    call n4pipnn(tx, ty, tz, v, txg, tyg, tzg, igrad)
-    deallocate(nodes)
-    deallocate(weighta)
-    deallocate(biasa)
-    deallocate(pdela)
-    deallocate(pavga)
-    deallocate(weightb)
-    deallocate(biasb)
-    deallocate(pdelb)
-    deallocate(pavgb)
-    deallocate(weightc)
-    deallocate(biasc)
-    deallocate(pdelc)
-    deallocate(pavgc)
-    do istate=1, nstates
-        p(istate) = v*legacy_hartree_to_electronvolt
-    enddo
-    do istate=1, nstates
-        g(istate,:,1) = txg(:)*51.422067
-        g(istate,:,2) = tyg(:)*51.422067
-        g(istate,:,3) = tzg(:)*51.422067
-    enddo
-    d = 0.d0
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
 !      subroutine n4pipNN(ct,vpes,vpesa,vpesb,vpesc,vn2) !ct in N4 order and angstrom
 !> @brief Evaluate n4pipNN.
@@ -245,11 +265,9 @@ end subroutine n4pipnn
 
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( cx, r, drdx )
-    !**********************************************************************
     ! Subroutine to evaluate dRdX for given R and X
     ! R:            R(6), 6 bond lengths
     ! X:            X(12), 12 Cartesian coordinates
-    !**********************************************************************
     implicit none
     integer          :: i, j
     double precision :: cx(3,4), r(6), drdx(6,12)
@@ -310,7 +328,6 @@ subroutine evdrdx( cx, r, drdx )
     !     enddo
 end subroutine evdrdx
 
-!**********************************************************************
 !-->  read NN weights and biases from matlab output
 !-->  weights saved in 'weights.txt'
 !-->  biases saved in 'biases.txt'
@@ -1050,7 +1067,6 @@ end subroutine evpoly49
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v, grad, imol, igrad )
-    !**********************************************************************
     !
     ! Compute the diatomic potential of ground-state N2 (singlet)
     !
@@ -1061,7 +1077,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     ! Output: V      potential in kcal/mol
     !         grad   gradient (kcal/mol)/Angstrom
     !
-    !**********************************************************************
     implicit none
     integer, intent(in) :: imol, igrad
     double precision    :: r
@@ -1117,7 +1132,6 @@ end subroutine ev2gm2
 
 !> @brief Evaluate d3disp.
 subroutine d3disp( dist, disp, dispdr, igrad, imol )
-    !**********************************************************************
     ! Dispersion correction based on Grimme's D3(BJ) calculation for
     ! diatomic pairs
     !
@@ -1133,7 +1147,6 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     !
     ! The C6 values are fixed.
     !
-    !**********************************************************************
     implicit none
     double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -1185,9 +1198,7 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     enddo
 end subroutine d3disp
 
-!**********************************************************************
 ! compute energy
-!**********************************************************************
 !> @brief Evaluate edisp.
 subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         &           rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
@@ -1268,14 +1279,12 @@ end subroutine edisp
 
 !> @brief Evaluate bmx2b109.
 subroutine bmx2b109( bm1, bm2, nobm, nob )
-    !**********************************************************************
     !  The subroutine eliminate the 2-body terms in Bowman's approach
     !  as well as the the nonconnected terms in Bowman's approach
     !
     !  nobm : maximum number of basis
     !  nob  : number of basis
     !
-    !**********************************************************************
     implicit none
     integer          :: nob, nobm
     integer          :: i

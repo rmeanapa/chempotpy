@@ -1,4 +1,3 @@
-!**********************************************************************
 !   System:                        OHBr_3App
 !   Functional form:               permutationally invariant polynomials
 !   Common name:                   OHBr (3A")
@@ -6,7 +5,6 @@
 !   Number of bodies:              3
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!**********************************************************************
 !
 !   References: A. G. S. de Oliveira-Filho, F. R. Ornellas and K. A.
 !   Peterson  "Accurate ab initio potential energy surfaces for the
@@ -22,83 +20,94 @@
 !   Input: r1,r2,r3                     in units of bohr
 !   Output: value                       in units of hartree
 !   Output: dr1,dr2,dr3                 in units of hartree/bohr
-!**********************************************************************
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use chempotpy_geometry,     only: cartesian_distance
-    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_hobr_3app_pip_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use chempotpy_geometry,     only: cartesian_distance, flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
+        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 3
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v
+        double precision                :: r_oh, r_hbr, r_obr
+        double precision                :: dr_oh, dr_hbr, dr_obr
+        double precision                :: r(3), tx(9)
+        double precision                :: dr(3), drdx(3,9), dx(9)
+        integer                         :: iatom, idir, i, j, istate
+        logical, save                   :: first_time_data=.true.
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        ! x: H, O, Br order
+        r_obr = cartesian_distance(x(2,:), x(3,:))
+        !      r_OBr=r_OBr/legacy_bohr_to_angstrom
+        r_oh = cartesian_distance(x(1,:), x(2,:))
+        !      r_OH=r_OH/legacy_bohr_to_angstrom
+        r_hbr = cartesian_distance(x(1,:), x(3,:))
+        !      r_HBr=r_HBr/legacy_bohr_to_angstrom
+        call flatten_cartesian_coordinates(x, tx)
+        r(1) = r_oh
+        r(2) = r_hbr
+        r(3) = r_obr
+        if( first_time_data )then
+            call myprepot(path)
+            first_time_data = .false.
+        endif
+        call mypot(r_oh, r_hbr, r_obr, v, dr_oh, dr_hbr, dr_obr)
+        v     = v*legacy_hartree_to_electronvolt
+        dr(1) = dr_oh*legacy_hartree_to_electronvolt
+        dr(2) = dr_hbr*legacy_hartree_to_electronvolt
+        dr(3) = dr_obr*legacy_hartree_to_electronvolt
+        !      dr(1)=dr_OH*51.422067
+        !      dr(2)=dr_HBr*51.422067
+        !      dr(3)=dr_OBr*51.422067
+        call evdrdx(tx, r, drdx)
+        call transform_internal_gradient_to_cartesian(dr, drdx, dx)
+        if( igrad == 0 )then
+            do istate=1, nstates
+                p(istate) = v
+            enddo
+        else if( igrad == 1 )then
+            do istate=1, nstates
+                p(istate) = v
+            enddo
+            do iatom=1, natoms
+                do idir=1, 3
+                    j               = (iatom-1)*3+idir
+                    g(1,iatom,idir) = dx(j)
+                enddo
+            enddo
+        else if( igrad == 2 )then
+            write (*, *) 'Only energy and gradient are available'
+        endif
+    end subroutine evaluate
+end module chempotpy_hobr_3app_pip_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_hobr_3app_pip_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 3
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v
-    double precision                :: r_oh, r_hbr, r_obr
-    double precision                :: dr_oh, dr_hbr, dr_obr
-    double precision                :: r(3), tx(9)
-    double precision                :: dr(3), drdx(3,9), dx(9)
-    integer                         :: iatom, idir, i, j, istate
-    logical, save                   :: first_time_data=.true.
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    ! x: H, O, Br order
-    r_obr = cartesian_distance(x(2,:), x(3,:))
-    !      r_OBr=r_OBr/legacy_bohr_to_angstrom
-    r_oh = cartesian_distance(x(1,:), x(2,:))
-    !      r_OH=r_OH/legacy_bohr_to_angstrom
-    r_hbr = cartesian_distance(x(1,:), x(3,:))
-    !      r_HBr=r_HBr/legacy_bohr_to_angstrom
-    do iatom=1, natoms
-        do idir=1, 3
-            j     = (iatom-1)*3+idir
-            tx(j) = x(iatom,idir)
-        enddo
-    enddo
-    r(1) = r_oh
-    r(2) = r_hbr
-    r(3) = r_obr
-    if( first_time_data )then
-        call myprepot(path)
-        first_time_data = .false.
-    endif
-    call mypot(r_oh, r_hbr, r_obr, v, dr_oh, dr_hbr, dr_obr)
-    v     = v*legacy_hartree_to_electronvolt
-    dr(1) = dr_oh*legacy_hartree_to_electronvolt
-    dr(2) = dr_hbr*legacy_hartree_to_electronvolt
-    dr(3) = dr_obr*legacy_hartree_to_electronvolt
-    !      dr(1)=dr_OH*51.422067
-    !      dr(2)=dr_HBr*51.422067
-    !      dr(3)=dr_OBr*51.422067
-    call evdrdx(tx, r, drdx)
-    dx = 0.d0
-    do i=1, 9
-        do j=1, 3
-            dx(i) = dx(i)+dr(j)*drdx(j,i)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        do istate=1, nstates
-            p(istate) = v
-        enddo
-    else if( igrad == 1 )then
-        do istate=1, nstates
-            p(istate) = v
-        enddo
-        do iatom=1, natoms
-            do idir=1, 3
-                j               = (iatom-1)*3+idir
-                g(1,iatom,idir) = dx(j)
-            enddo
-        enddo
-    else if( igrad == 2 )then
-        write (*, *) 'Only energy and gradient are available'
-    endif
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( x, r, drdx )

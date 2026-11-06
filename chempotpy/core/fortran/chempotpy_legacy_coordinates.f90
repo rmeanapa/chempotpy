@@ -1,7 +1,7 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Provide explicit-argument adapters for released POTLIB coordinates.
 module chempotpy_legacy_coordinates
-    use chempotpy_geometry,     only: cartesian_distance
+    use chempotpy_geometry,     only: cartesian_distance, flatten_cartesian_coordinates
     use chempotpy_kinds,        only: real64
     use chempotpy_legacy_units, only: legacy_bohr_to_angstrom
     implicit none
@@ -65,10 +65,7 @@ module chempotpy_legacy_coordinates
         case (0)
             return
         case (1)
-            do atom_1 = 1, atom_count
-                coordinate                           = 3*atom_1-2
-                coordinates(coordinate:coordinate+2) = cartesian_coordinates(atom_1,1:3)
-            enddo
+            call flatten_cartesian_coordinates(cartesian_coordinates(1:atom_count,1:3), coordinates(1:3*atom_count))
         case (2)
             coordinate = 1
             do atom_1 = 1, atom_count-1

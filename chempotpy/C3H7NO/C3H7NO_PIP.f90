@@ -27559,56 +27559,78 @@ module pes_shell
     end function g
 end module pes_shell
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, potential, gradient_out, dvec )
-    use pes_shell, only: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, &
-        & g, pes_init
-    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_c3h7no_pip_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, potential, gradient_out, dvec )
+        use pes_shell, only: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, &
+            & g, pes_init
+        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 12
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: potential(nstates)
+        double precision, intent(out)   :: gradient_out(nstates,natoms,3)
+        double precision, intent(out)   :: dvec(nstates,nstates,natoms,3)
+        double precision                :: tx(3,natoms)
+        double precision                :: energy
+        double precision                :: grad(3*natoms)
+        integer                         :: iatom, idir, j, istate
+        !initialize
+        energy = 0.d0; gradient_out = 0.d0; dvec = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
+            enddo
+        enddo
+        ! zero of energy: 247.471007349006 a.u.
+        ! is taken from coeff.dat, use the biase as zero of energy
+        if( igrad == 0 )then
+            call pes_init(path)
+            energy = f(tx)
+            do istate=1, nstates
+                potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
+            enddo
+        else if( igrad == 1 )then
+            call pes_init(path)
+            energy = f(tx)
+            do istate=1, nstates
+                potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
+            enddo
+            grad = g(tx)
+            do istate=1, nstates
+                do iatom=1, natoms
+                    do idir=1, 3
+                        j                               = (iatom-1)*3+idir
+                        gradient_out(istate,iatom,idir) = grad(j)*51.422067
+                    enddo
+                enddo
+            enddo
+        else
+            write (*, *) 'Only energy and gradient are available'
+        endif
+    end subroutine evaluate
+end module chempotpy_c3h7no_pip_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, potential, gradient_out, dvec )
+    use chempotpy_c3h7no_pip_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 12
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
     double precision, intent(out)   :: potential(nstates)
     double precision, intent(out)   :: gradient_out(nstates,natoms,3)
     double precision, intent(out)   :: dvec(nstates,nstates,natoms,3)
-    double precision                :: tx(3,natoms)
-    double precision                :: energy
-    double precision                :: grad(3*natoms)
-    integer                         :: iatom, idir, j, istate
-    !initialize
-    energy = 0.d0; gradient_out = 0.d0; dvec = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
-        enddo
-    enddo
-    ! zero of energy: 247.471007349006 a.u.
-    ! is taken from coeff.dat, use the biase as zero of energy
-    if( igrad == 0 )then
-        call pes_init(path)
-        energy = f(tx)
-        do istate=1, nstates
-            potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
-        enddo
-    else if( igrad == 1 )then
-        call pes_init(path)
-        energy = f(tx)
-        do istate=1, nstates
-            potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
-        enddo
-        grad = g(tx)
-        do istate=1, nstates
-            do iatom=1, natoms
-                do idir=1, 3
-                    j                               = (iatom-1)*3+idir
-                    gradient_out(istate,iatom,idir) = grad(j)*51.422067
-                enddo
-            enddo
-        enddo
-    else
-        write (*, *) 'Only energy and gradient are available'
-    endif
-end subroutine
+    call evaluate(x, igrad, path, potential, gradient_out, dvec)
+end subroutine pes

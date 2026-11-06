@@ -1,4 +1,3 @@
-!**********************************************************************
 !   System: O3
 !   Name of this surface:       PES_O3_1_3Ap_umn_v1
 !   Functional form:               permutation-invariant polynomials
@@ -40,10 +39,8 @@
 !   Input: X(3),Y(3),Z(3)               in unit of bohr
 !   Output: E                           in unit of hartree
 !   Output: dEdX(3),dEdY(3),dEdZ(3)     hartree/bohr
-!**********************************************************************
 
 module o3_1_3ap_zv_par
-    !**********************************************************************
     ! This code is based on O3_1_3Ap.f (FORTRAN77 version) where some
     ! keywords were replaced by more modern ones.
     !
@@ -51,7 +48,6 @@ module o3_1_3ap_zv_par
     ! for each diatomic term.
     !
     ! Otherwise the surface itself was not changed.
-    !**********************************************************************
     ! Conversion factors
     ! Cconv: bohr to Angstrom
     !        1 bohr = 0.52917721092 angstrom
@@ -120,51 +116,71 @@ module o3_1_3ap_zv_par
         /)
 end module o3_1_3ap_zv_par
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, potential, gradient, dvec )
-    use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
-        & gconv, p, r, ra, rb, rm, rms, totdiss
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_o3_1_3ap_zv_pes
     implicit none
-    ! number of electronic state
-    integer, parameter            :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, potential, gradient, dvec )
+        use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
+            & gconv, p, r, ra, rb, rm, rms, totdiss
+        implicit none
+        ! number of electronic state
+        integer, parameter            :: nstates = 1
+        integer, parameter            :: natoms  = 3
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: potential(nstates)
+        double precision, intent(out) :: gradient(nstates,natoms,3)
+        double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
+        double precision              :: v, tx(9), tg(9)
+        integer                       :: iatom, idir, j, istate
+        !initialize
+        potential = 0.d0; gradient = 0.d0; dvec = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                j     = 3*(iatom-1)+idir
+                tx(j) = x(iatom,idir)
+            enddo
+        enddo
+        tg = 0.d0
+        ! o3pes reads in angstrom for coordinates
+        ! o3pes outputs in kcal/mol for energy
+        call o3pes(tx, v, tg, igrad)
+        ! add a reference energy, which is in hartree
+        v  = v/23.0609 !+Eref*27.211386d0
+        tg = tg/23.0609
+        do istate=1, nstates
+            potential(istate) = v
+        enddo
+        do istate=1, nstates
+            do iatom=1, natoms
+                do idir=1, 3
+                    j                           = 3*(iatom-1)+idir
+                    gradient(istate,iatom,idir) = tg(j)
+                enddo
+            enddo
+        enddo
+        dvec = 0.d0
+    end subroutine evaluate
+end module chempotpy_o3_1_3ap_zv_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, potential, gradient, dvec )
+    use chempotpy_o3_1_3ap_zv_pes, only: evaluate
+    implicit none
     integer, parameter            :: natoms  = 3
+    integer, parameter            :: nstates = 1
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
     double precision, intent(out) :: potential(nstates)
     double precision, intent(out) :: gradient(nstates,natoms,3)
     double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-    double precision              :: v, tx(9), tg(9)
-    integer                       :: iatom, idir, j, istate
-    !initialize
-    potential = 0.d0; gradient = 0.d0; dvec = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            j     = 3*(iatom-1)+idir
-            tx(j) = x(iatom,idir)
-        enddo
-    enddo
-    tg = 0.d0
-    ! o3pes reads in angstrom for coordinates
-    ! o3pes outputs in kcal/mol for energy
-    call o3pes(tx, v, tg, igrad)
-    ! add a reference energy, which is in hartree
-    v  = v/23.0609 !+Eref*27.211386d0
-    tg = tg/23.0609
-    do istate=1, nstates
-        potential(istate) = v
-    enddo
-    do istate=1, nstates
-        do iatom=1, natoms
-            do idir=1, 3
-                j                           = 3*(iatom-1)+idir
-                gradient(istate,iatom,idir) = tg(j)
-            enddo
-        enddo
-    enddo
-    dvec = 0.d0
-end subroutine
+    call evaluate(x, igrad, potential, gradient, dvec)
+end subroutine pes
 
-!**********************************************************************
 ! Local variables used in the O3 PES subroutine
 ! input coordinate matrix: X(9)in Ang
 !                          o1: X(1),X(2),X(3)
@@ -174,12 +190,10 @@ end subroutine
 !                       igrad=1 energy + gradient
 ! output potential energy:      v    in kcal/mol
 ! output gradient:              dVdX in kcal/(mol*Ang)
-!**********************************************************************
 !> @brief Evaluate o3pes.
 subroutine o3pes( x, v, dvdx, igrad )
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     ! Subroutine to calculate the potential energy V and gradient dVdX
     ! for given Cartesian coordinates X(9)
     ! R:            Interatomic bond distance (3)
@@ -191,7 +205,6 @@ subroutine o3pes( x, v, dvdx, igrad )
     ! dMdR:         The derivative of monomials w.r.t. R
     !               dim(3*8)
     ! dRdX:         The derivative of R w.r.t. X, dim(3*9)
-    !**********************************************************************
     implicit none
     integer          :: i, igrad, j, nob, k
     double precision :: v
@@ -214,19 +227,15 @@ end subroutine o3pes
 subroutine coord_convt( x )
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     !  Program to calculate the six interatomic distance
     !  by reading XYZ coordinate
-    !**********************************************************************
     implicit none
     integer          :: i
     double precision :: x(9)
-    !**********************************************************************
     !  Now, calculate the inter-atomic distance
     !  r1 = r(O1O2)
     !  r2 = r(O1O3)
     !  r3 = r(O2O3)
-    !**********************************************************************
     r(1) = sqrt((x(4)-x(1))**2 + (x(5)-x(2))**2 + (x(6)-x(3))**2)
     r(2) = sqrt((x(7)-x(1))**2 + (x(8)-x(2))**2 + (x(9)-x(3))**2)
     r(3) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
@@ -236,7 +245,6 @@ end subroutine coord_convt
 subroutine evv( v )
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     ! Subroutine to evaluate V for given R
     ! V(R) = C*P
     ! C:            Coefficients, stored in 'dim.inc'
@@ -251,7 +259,6 @@ subroutine evv( v )
     ! rM(0:7):      Array to store monomials
     ! P(0:66):      Array to store polynomials
     ! B(1:56):      Array to store basis functions
-    !**********************************************************************
     implicit none
     integer          :: i, j, k
     double precision :: dist, dv2dr, v, v2
@@ -287,7 +294,6 @@ end subroutine evv
 subroutine evdvdx( x, dvdx )
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     ! Subroutine to evaluate dRdX for given R and X
     ! R:            R(3), 3 bond lengths
     ! X:            X(9), 9 Cartesian coordinates
@@ -297,7 +303,6 @@ subroutine evdvdx( x, dvdx )
     ! dVdR:         dVdR(3), derivatives of V w.r.t. 3 bond lengths
     ! dRdX:         dRdX(3,9), derivatives of R(3) w.r.t. 9
     !               Cartesian coordinates
-    !**********************************************************************
     implicit none
     integer          :: i, j
     double precision :: dvdx(9), x(9)
@@ -325,13 +330,11 @@ end subroutine evdvdx
 subroutine evmorse
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     ! mixed exponential-Gaussian terms = exp(-(r-ra)/a-(r-rb)^2/ab)
     ! ra:   reference bond length
     ! rb:   reference bond length
     ! a:    nonlinear parameter, unit Anstrom
     ! ab:   nonlinear parameter, unit Anstrom^2
-    !**********************************************************************
     implicit none
     integer :: i
     do i=1, 3
@@ -343,11 +346,9 @@ end subroutine evmorse
 subroutine evmono
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     !  The subroutine reads six MEG variables(X) and calculates the
     !  monomials(M) that do not have usable decomposition.
     !  For A4 with max. degree 10, the number of monomials is nom.
-    !**********************************************************************
     implicit none
     rm(0) = 1.0d0
     rm(1) = rms(3)
@@ -363,11 +364,9 @@ end subroutine evmono
 subroutine evpoly
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     !  The subroutine reads monomials(m) and calculates the
     !  permutation invariant polynomials(p)
     !  For A4 with max. degree 10, the number of polynomials is nob.
-    !**********************************************************************
     implicit none
     p( 0) = rm(0)
     p( 1) = rm(1) + rm(2) + rm(3)
@@ -442,9 +441,7 @@ end subroutine evpoly
 subroutine evbas
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     !  The subroutine eliminate the 2-body terms in Bowman's approach
-    !**********************************************************************
     implicit none
     integer          :: i
     double precision :: b1(67)
@@ -482,7 +479,6 @@ end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v, grad, imol, igrad )
-    !**********************************************************************
     !
     ! Compute the diatomic potential of ground-state triplet O2
     !
@@ -492,7 +488,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     ! Output: V      potential in kcal/mol
     !         grad   gradient (kcal/mol)/Angstrom
     !
-    !**********************************************************************
     implicit none
     integer, intent(in)           :: imol, igrad
     double precision, intent(in)  :: r
@@ -554,7 +549,6 @@ end subroutine ev2gm2
 subroutine evdvdr
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     ! Subroutine to evaluate dVdR for given R
     ! dVdR = dV2dR + C*dBdR
     ! C:            Coefficients, stored in 'dim.inc'
@@ -569,7 +563,6 @@ subroutine evdvdr
     ! nob:          number of basis functions(polynomials)
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
-    !**********************************************************************
     implicit none
     integer          :: i, j
     double precision :: dist, v2, dv2dr
@@ -609,7 +602,6 @@ end subroutine evdvdr
 subroutine evdrdx( x )
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     ! Subroutine to evaluate dRdX for given R and X
     ! R:            R(3), 3 bond lengths
     ! X:            X(9), 9 Cartesian coordinates
@@ -619,7 +611,6 @@ subroutine evdrdx( x )
     !               w.r.t. 3 bond lengths
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
-    !**********************************************************************
     implicit none
     integer          :: i, j
     double precision :: x(9)
@@ -658,7 +649,6 @@ end subroutine evdrdx
 subroutine evdmsdr
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     ! Subroutine to evaluate the derivatives of MEG term X
     ! w.r.t. interatomic distance R(3)
     ! dmsdR:        Local variables, dirm(3,3)
@@ -666,7 +656,6 @@ subroutine evdmsdr
     ! ab:           Nonlinear pamameter(Angstrom^2)
     ! ra:           reference bond length(Angstrom)
     ! rb:           reference bond length(Angstrom)
-    !**********************************************************************
     implicit none
     integer :: i, j
     ! Initialize dmsdr
@@ -686,11 +675,9 @@ end subroutine evdmsdr
 subroutine evdmdr
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     !  The subroutine reads M(nom) and dMSdR(3,3) and calculates the
     !  dMdR(3,nom) that do not have usable decomposition.
     !  For A4 with max. degree 10, the number of monomials is nom.
-    !**********************************************************************
     implicit none
     integer :: i
     do i=1, 3
@@ -709,11 +696,9 @@ end subroutine evdmdr
 subroutine evdpdr
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     !  The subroutine reads monomials(m) and calculates the
     !  permutation invariant polynomials(p)
     !  For A4 with max. degree 10, the number of polynomials is nob.
-    !**********************************************************************
     implicit none
     integer :: i
     do i=1, 3
@@ -791,9 +776,7 @@ end subroutine evdpdr
 subroutine evdbdr
     use o3_1_3ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !**********************************************************************
     !  The subroutine eliminate the 2-body terms in Bowman's approach
-    !**********************************************************************
     implicit none
     integer          :: i, j
     double precision :: db1dr(3,67)
@@ -835,7 +818,6 @@ end subroutine evdbdr
 
 !> @brief Evaluate d3disp.
 subroutine d3disp( dist, disp, dispdr, igrad, imol )
-    !**********************************************************************
     ! Dispersion correction based on Grimme's D3(BJ) calculation for
     ! diatomic pairs
     !
@@ -851,7 +833,6 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     !
     ! The C6 values are fixed.
     !
-    !**********************************************************************
     implicit none
     double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -903,9 +884,7 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     enddo
 end subroutine d3disp
 
-!**********************************************************************
 ! compute energy
-!**********************************************************************
 !> @brief Evaluate edisp.
 subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )

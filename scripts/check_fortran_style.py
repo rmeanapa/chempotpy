@@ -36,6 +36,78 @@ LEGACY_DECLARATION_PATTERN = re.compile(
     r"(?!function\b|subroutine\b)(?!.*::)",
     flags=re.IGNORECASE,
 )
+FLATTEN_LOOP = re.compile(
+    r"(?P<indent>^[ \t]*)do\s+(?P<atom>\w+)\s*=\s*1\s*,\s*(?P<count>\w+)\s*\n"
+    r"[ \t]*do\s+(?P<direction>\w+)\s*=\s*1\s*,\s*3\s*\n"
+    r"[ \t]*(?P<index>\w+)\s*=\s*\(\s*(?P=atom)\s*-\s*1\s*\)\s*\*\s*3\s*\+\s*(?P=direction)\s*\n"
+    r"[ \t]*(?P<flat>\w+)\s*\(\s*(?P=index)\s*\)\s*=\s*"
+    r"(?P<matrix>\w+)\s*\(\s*(?P=atom)\s*,\s*(?P=direction)\s*\)\s*\n"
+    r"[ \t]*enddo\s*\n[ \t]*enddo",
+    flags=re.IGNORECASE | re.MULTILINE,
+)
+CHAIN_RULE_LOOP_HEADER = (
+    r"[ \t]*do\s+(?P<cart_index>\w+)\s*=\s*1\s*,[^\n]+\n"
+    r"[ \t]*do\s+(?P<internal_index>\w+)\s*=\s*1\s*,[^\n]+\n"
+)
+CHAIN_RULE_LOOP_END = r"[ \t]*enddo\s*\n[ \t]*enddo"
+CHAIN_RULE_PATTERNS = (
+    re.compile(
+        r"(?P<indent>^[ \t]*)(?P<tensor_output>\w+)\s*=\s*0\.d0\s*\n"
+        r"[ \t]*(?P<matrix_output>\w+)\s*=\s*0\.d0\s*\n"
+        + CHAIN_RULE_LOOP_HEADER
+        + r"[ \t]*(?P=tensor_output)\(:,:\s*,\s*(?P=cart_index)\)\s*=\s*"
+        r"(?P=tensor_output)\(:,:\s*,\s*(?P=cart_index)\)\s*\+\s*"
+        r"(?P<tensor_input>\w+)\(:,:\s*,\s*(?P=internal_index)\)\s*\*\s*"
+        r"(?P<jacobian>\w+)\((?P=internal_index)\s*,\s*(?P=cart_index)\)\s*\n"
+        r"[ \t]*(?P=matrix_output)\(:,\s*(?P=cart_index)\)\s*=\s*"
+        r"(?P=matrix_output)\(:,\s*(?P=cart_index)\)\s*\+\s*"
+        r"(?P<matrix_input>\w+)\(:,\s*(?P=internal_index)\)\s*\*\s*"
+        r"(?P=jacobian)\((?P=internal_index)\s*,\s*(?P=cart_index)\)\s*\n"
+        + CHAIN_RULE_LOOP_END,
+        flags=re.IGNORECASE | re.MULTILINE,
+    ),
+    re.compile(
+        r"(?P<indent>^[ \t]*)(?P<output>\w+)\s*=\s*0\.d0\s*\n"
+        + CHAIN_RULE_LOOP_HEADER
+        + r"[ \t]*(?P=output)\((?P=cart_index)\)\s*=\s*(?P=output)\((?P=cart_index)\)\s*\+\s*"
+        r"(?P<input>\w+)\((?P=internal_index)\)\s*\*\s*"
+        r"(?P<jacobian>\w+)\((?P=internal_index)\s*,\s*(?P=cart_index)\)\s*\n"
+        + CHAIN_RULE_LOOP_END,
+        flags=re.IGNORECASE | re.MULTILINE,
+    ),
+    re.compile(
+        r"(?P<indent>^[ \t]*)(?P<output>\w+)\s*=\s*0\.d0\s*\n"
+        + CHAIN_RULE_LOOP_HEADER
+        + r"[ \t]*(?P=output)\(:,\s*(?P=cart_index)\)\s*=\s*"
+        r"(?P=output)\(:,\s*(?P=cart_index)\)\s*\+\s*"
+        r"(?P<input>\w+)(?:\(:,\s*|\()(?P=internal_index)\)\s*\*\s*"
+        r"(?P<jacobian>\w+)\((?P=internal_index)\s*,\s*(?P=cart_index)\)\s*\n"
+        + CHAIN_RULE_LOOP_END,
+        flags=re.IGNORECASE | re.MULTILINE,
+    ),
+    re.compile(
+        r"(?P<indent>^[ \t]*)(?P<output>\w+)\s*=\s*0\.d0\s*\n"
+        + CHAIN_RULE_LOOP_HEADER
+        + r"[ \t]*(?P=output)\(:,:\s*,\s*(?P=cart_index)\)\s*=\s*"
+        r"(?P=output)\(:,:\s*,\s*(?P=cart_index)\)\s*\+\s*"
+        r"(?P<input>\w+)\(:,:\s*,\s*(?P=internal_index)\)\s*\*\s*"
+        r"(?P<jacobian>\w+)\((?P=internal_index)\s*,\s*(?P=cart_index)\)\s*\n"
+        + CHAIN_RULE_LOOP_END,
+        flags=re.IGNORECASE | re.MULTILINE,
+    ),
+)
+
+
+def has_duplicated_gradient_chain_rule(source: str) -> bool:
+    """Return whether a wrapper still contains a migrated chain-rule loop."""
+
+    if "call flatten_cartesian_coordinates" not in source.lower():
+        return False
+    wrapper = re.search(
+        r"(?ims)^subroutine\s+(?:pes|dpem)\b.*?^end\s+subroutine(?:\s+(?:pes|dpem))?\s*$",
+        source,
+    )
+    return wrapper is not None and any(pattern.search(wrapper.group(0)) for pattern in CHAIN_RULE_PATTERNS)
 
 
 @dataclass(frozen=True)
@@ -107,9 +179,24 @@ def check_source(path: Path) -> Sequence[StyleViolation]:
             relative_path, 1, "structural-indent",
             "source does not match four-space structural indentation",
         ))
+    for match in FLATTEN_LOOP.finditer(source_text):
+        violations.append(StyleViolation(
+            relative_path,
+            source_text.count("\n", 0, match.start())+1,
+            "duplicated-cartesian-flattening",
+            "use chempotpy_geometry flatten_cartesian_coordinates",
+        ))
+    if has_duplicated_gradient_chain_rule(source_text):
+        violations.append(StyleViolation(
+            relative_path,
+            1,
+            "duplicated-gradient-chain-rule",
+            "use chempotpy_geometry transform_internal_gradient_to_cartesian",
+        ))
     modules = []
     for line_number, line in enumerate(lines, start=1):
         stripped = line.lstrip()
+        code = line.split("!", 1)[0]
         if "\t" in line:
             violations.append(StyleViolation(
                 relative_path, line_number, "indent-tabs",
@@ -164,14 +251,28 @@ def check_source(path: Path) -> Sequence[StyleViolation]:
             ))
         if re.search(
             r"\b(?:real|integer|complex|logical|character)\s*\*",
-            line.split("!", 1)[0],
+            code,
             flags=re.IGNORECASE,
         ):
             violations.append(StyleViolation(
                 relative_path, line_number, "star-kind",
                 "legacy star-sized intrinsic declarations are forbidden",
             ))
-        code = line.split("!", 1)[0]
+        if re.search(r"\b(?:ADIFOR|DISCLAIMER)\b", line, flags=re.IGNORECASE):
+            violations.append(StyleViolation(
+                relative_path, line_number, "generated-disclaimer",
+                "remove obsolete generator disclaimers and provenance boilerplate",
+            ))
+        if re.match(r"^\s*!+\s*\*{5,}\s*!?\s*$", line):
+            violations.append(StyleViolation(
+                relative_path, line_number, "decorative-separator",
+                "decorative star separator comments are forbidden",
+            ))
+        if re.match(r"^\s*intrinsic\b", code, flags=re.IGNORECASE):
+            violations.append(StyleViolation(
+                relative_path, line_number, "intrinsic-declaration",
+                "do not redeclare standard intrinsic procedures",
+            ))
         if re.match(r"^\s*entry\b", code, flags=re.IGNORECASE):
             violations.append(StyleViolation(
                 relative_path, line_number, "entry-statement",

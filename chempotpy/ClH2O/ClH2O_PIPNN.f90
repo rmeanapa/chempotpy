@@ -31,55 +31,76 @@ module nnparam
     double precision, allocatable :: pdelc(:), pavgc(:)
 end module nnparam
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, p, g, d )
-    use nnparam, only: alpha, biasa, biasb, biasc, bohr, dp0hcl, dp0hcl2, dp0ho, dp0ho2, exhohcl, &
-        & exhohcl2, ifunc, n0hcl, n0ho, n2n, nbasis, nhid, nindex, ninput, nlayer, nodemax, nodes, &
-        & noutput, nscale, nterm, nwe, nxhcl, nxho, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, &
-        & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_clh2o_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter            :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, p, g, d )
+        use nnparam, only: alpha, biasa, biasb, biasc, bohr, dp0hcl, dp0hcl2, dp0ho, dp0ho2, exhohcl, &
+            & exhohcl2, ifunc, n0hcl, n0ho, n2n, nbasis, nhid, nindex, ninput, nlayer, nodemax, nodes, &
+            & noutput, nscale, nterm, nwe, nxhcl, nxho, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, &
+            & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
+        implicit none
+        ! number of electronic state
+        integer, parameter            :: nstates = 1
+        integer, parameter            :: natoms  = 4
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out) :: d(nstates,nstates,natoms,3)
+        double precision              :: v, va, vb, vc
+        double precision              :: tx(3,natoms)
+        integer                       :: iatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)
+            enddo
+        enddo
+        if( igrad == 0 )then
+            call pes_init
+            call hohcl_pes_interface(tx, v)
+            deallocate(nodes)
+            deallocate(weighta)
+            deallocate(biasa)
+            deallocate(pdela)
+            deallocate(pavga)
+            deallocate(weightb)
+            deallocate(biasb)
+            deallocate(pdelb)
+            deallocate(pavgb)
+            deallocate(weightc)
+            deallocate(biasc)
+            deallocate(pdelc)
+            deallocate(pavgc)
+        else
+            write (*, *) 'Only energy and gradient are available'
+        endif
+        do istate=1, nstates
+            p(istate) = v
+        enddo
+        g = 0.d0
+        d = 0.d0
+    end subroutine evaluate
+end module chempotpy_clh2o_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, p, g, d )
+    use chempotpy_clh2o_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter            :: natoms  = 4
+    integer, parameter            :: nstates = 1
     integer, intent(in)           :: igrad
     double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out) :: p(nstates)
+    double precision, intent(out) :: g(nstates,natoms,3)
     double precision, intent(out) :: d(nstates,nstates,natoms,3)
-    double precision              :: v, va, vb, vc
-    double precision              :: tx(3,natoms)
-    integer                       :: iatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        call pes_init
-        call hohcl_pes_interface(tx, v)
-        deallocate(nodes)
-        deallocate(weighta)
-        deallocate(biasa)
-        deallocate(pdela)
-        deallocate(pavga)
-        deallocate(weightb)
-        deallocate(biasb)
-        deallocate(pdelb)
-        deallocate(pavgb)
-        deallocate(weightc)
-        deallocate(biasc)
-        deallocate(pdelc)
-        deallocate(pavgc)
-    else
-        write (*, *) 'Only energy and gradient are available'
-    endif
-    do istate=1, nstates
-        p(istate) = v
-    enddo
-    g = 0.d0
-    d = 0.d0
-end subroutine
+    call evaluate(x, igrad, p, g, d)
+end subroutine pes
 
 !> @brief Evaluate clh2oNN.
 subroutine clh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHClO order and angstrom
@@ -1247,7 +1268,6 @@ subroutine pes_init
     dp0ho(  20) = 0.55745569d0
     r0ho(  20)  = 5.35659746d0
     call spline(r0ho, dp0ho, n0ho, dy1, dyn, dp0ho2)
-    !******************************************************************************
     nhid   = 2;noutput=  1
     nscale = ninput+noutput
     nlayer = nhid+2

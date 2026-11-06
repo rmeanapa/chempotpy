@@ -23,54 +23,76 @@ module nnparam
     double precision, allocatable :: pdelc(:), pavgc(:)
 end module nnparam
 
-!> @brief Evaluate pes for the H3Cl_PIPNN potential.
-subroutine pes( x, igrad, path, p, g, d )
-    use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, &
-        & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
-        & weighta, weightb, weightc
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_h3cl_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, &
+            & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
+            & weighta, weightb, weightc
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 4
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v
+        double precision                :: tx(3,natoms)
+        integer                         :: iatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)
+            enddo
+        enddo
+        if( igrad == 0 )then
+            call pes_init(path)
+            call pesh3cl(tx, v, path)
+            deallocate(nodes)
+            deallocate(weighta)
+            deallocate(biasa)
+            deallocate(pdela)
+            deallocate(pavga)
+            deallocate(weightb)
+            deallocate(biasb)
+            deallocate(pdelb)
+            deallocate(pavgb)
+            deallocate(weightc)
+            deallocate(biasc)
+            deallocate(pdelc)
+            deallocate(pavgc)
+        else
+            write (*, *) 'Only energy and gradient are available'
+        endif
+        do istate=1, nstates
+            p(istate) = v
+        enddo
+        g = 0.d0
+        d = 0.d0
+    end subroutine evaluate
+end module chempotpy_h3cl_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_h3cl_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 4
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v
-    double precision                :: tx(3,natoms)
-    integer                         :: iatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        call pes_init(path)
-        call pesh3cl(tx, v, path)
-        deallocate(nodes)
-        deallocate(weighta)
-        deallocate(biasa)
-        deallocate(pdela)
-        deallocate(pavga)
-        deallocate(weightb)
-        deallocate(biasb)
-        deallocate(pdelb)
-        deallocate(pavgb)
-        deallocate(weightc)
-        deallocate(biasc)
-        deallocate(pdelc)
-        deallocate(pavgc)
-    else
-        write (*, *) 'Only energy and gradient are available'
-    endif
-    do istate=1, nstates
-        p(istate) = v
-    enddo
-    g = 0.d0
-    d = 0.d0
+    call evaluate(x, igrad, path, p, g, d)
 end subroutine pes
 
 !> @brief Evaluate pesh3cl for the H3Cl_PIPNN potential.

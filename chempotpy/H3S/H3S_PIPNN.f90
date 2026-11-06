@@ -15,47 +15,69 @@ module nnparam
     double precision, allocatable :: pdela(:), pavga(:)
 end module nnparam
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndata, ndim, nhid, ninput, nlayer, &
-        & nodemax, nodes, noutput, nscale, nwe, para2, pavga, pdela, pi, radian, vpesmin, weighta
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_h3s_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndata, ndim, nhid, ninput, nlayer, &
+            & nodemax, nodes, noutput, nscale, nwe, para2, pavga, pdela, pi, radian, vpesmin, weighta
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 4
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v, va, vb, vc
+        double precision                :: tx(3,natoms), tg(3,natoms)
+        integer                         :: iatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)
+            enddo
+        enddo
+        call pes_init(path)
+        call evvdvdx(tx, v, tg, igrad)
+        deallocate(nodes)
+        deallocate(weighta)
+        deallocate(biasa)
+        deallocate(pdela)
+        deallocate(pavga)
+        do istate=1, nstates
+            p(istate) = v/23.0609d0
+        enddo
+        do iatom=1, natoms
+            do idir=1, 3
+                g(1,iatom,idir) = tg(idir,iatom)/23.0609d0
+            enddo
+        enddo
+        !g=0.d0
+        d = 0.d0
+    end subroutine evaluate
+end module chempotpy_h3s_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_h3s_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 4
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v, va, vb, vc
-    double precision                :: tx(3,natoms), tg(3,natoms)
-    integer                         :: iatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
-    call pes_init(path)
-    call evvdvdx(tx, v, tg, igrad)
-    deallocate(nodes)
-    deallocate(weighta)
-    deallocate(biasa)
-    deallocate(pdela)
-    deallocate(pavga)
-    do istate=1, nstates
-        p(istate) = v/23.0609d0
-    enddo
-    do iatom=1, natoms
-        do idir=1, 3
-            g(1,iatom,idir) = tg(idir,iatom)/23.0609d0
-        enddo
-    enddo
-    !g=0.d0
-    d = 0.d0
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
 !> @brief Evaluate pipNN.
 subroutine pipnn( ct, vpes, vpesa, vpesb, vpesc )

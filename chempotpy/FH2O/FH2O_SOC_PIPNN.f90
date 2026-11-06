@@ -25,57 +25,79 @@ module nnparam
     double precision, allocatable :: pdelc(:), pavgc(:)
 end module nnparam
 
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use nnparam, only: alpha, biasa, biasb, biasc, bohr, ifunc, nbasis, nhid, nindex, ninput, nlayer, &
-        & nodemax, nodes, noutput, npbasissoc, nrbasissoc, nscale, nterm, nwe, p2soccoef, pavga, &
-        & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
-        & weightb, weightc
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_fh2o_soc_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use nnparam, only: alpha, biasa, biasb, biasc, bohr, ifunc, nbasis, nhid, nindex, ninput, nlayer, &
+            & nodemax, nodes, noutput, npbasissoc, nrbasissoc, nscale, nterm, nwe, p2soccoef, pavga, &
+            & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
+            & weightb, weightc
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 4
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v, va, vb, vc, socg, vgsoc
+        double precision                :: tx(3,natoms)
+        integer                         :: iatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)
+            enddo
+        enddo
+        if( igrad == 0 )then
+            call pes_init(path)
+            call fh2o_soc_nn(tx, v, socg, vgsoc)
+            deallocate(nodes)
+            deallocate(weighta)
+            deallocate(biasa)
+            deallocate(pdela)
+            deallocate(pavga)
+            deallocate(weightb)
+            deallocate(biasb)
+            deallocate(pdelb)
+            deallocate(pavgb)
+            deallocate(weightc)
+            deallocate(biasc)
+            deallocate(pdelc)
+            deallocate(pavgc)
+        else
+            write (*, *) 'Only energy and gradient are available'
+        endif
+        vgsoc = vgsoc/23.0609
+        do istate=1, nstates
+            p(istate) = vgsoc
+        enddo
+        g = 0.d0
+        d = 0.d0
+    end subroutine evaluate
+end module chempotpy_fh2o_soc_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_fh2o_soc_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 4
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v, va, vb, vc, socg, vgsoc
-    double precision                :: tx(3,natoms)
-    integer                         :: iatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        call pes_init(path)
-        call fh2o_soc_nn(tx, v, socg, vgsoc)
-        deallocate(nodes)
-        deallocate(weighta)
-        deallocate(biasa)
-        deallocate(pdela)
-        deallocate(pavga)
-        deallocate(weightb)
-        deallocate(biasb)
-        deallocate(pdelb)
-        deallocate(pavgb)
-        deallocate(weightc)
-        deallocate(biasc)
-        deallocate(pdelc)
-        deallocate(pavgc)
-    else
-        write (*, *) 'Only energy and gradient are available'
-    endif
-    vgsoc = vgsoc/23.0609
-    do istate=1, nstates
-        p(istate) = vgsoc
-    enddo
-    g = 0.d0
-    d = 0.d0
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
 !> @brief Evaluate fh2o_soc_nn.
 subroutine fh2o_soc_nn( xt, vg, socg, vgsoc )
@@ -821,8 +843,6 @@ subroutine jcb3tocart( rint, cart )
     cart(3,4) = r3*cth2+amc*r2/(ama+amb+amc)
 end subroutine jcb3tocart
 
-!******************************************************************************
-
 !> @brief Evaluate cart_diJacobi.
 subroutine cart_dijacobi( c1, r )
     ! convert the diatom-diatom Jacobi coordinates to XYZ coordinates
@@ -885,8 +905,6 @@ subroutine cart_dijacobi( c1, r )
     endif
     endif
 end subroutine cart_dijacobi
-
-!******************************************************************************
 
 !> @brief Evaluate diJacobi_cart.
 subroutine dijacobi_cart( r, c )
@@ -971,8 +989,6 @@ subroutine dijacobi_cart( r, c )
     c(3,4) = dxsin*dsin(r(6))
 end subroutine dijacobi_cart
 
-!******************************************************************************
-!******************************************************************************
 !> @brief Evaluate crossp.
 subroutine crossp( v1, v2, v3 )
     implicit none

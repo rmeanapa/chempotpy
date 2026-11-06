@@ -447,10 +447,21 @@ def main() -> int:
     """Capture all requested sources and write one deterministic JSON fixture."""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("sources", nargs="+", type=Path)
+    parser.add_argument("sources", nargs="*", type=Path)
+    parser.add_argument("--all", action="store_true")
     parser.add_argument("--jobs", type=int, default=min(4, os.cpu_count() or 1))
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
+    if args.all and args.sources:
+        parser.error("sources and --all are mutually exclusive")
+    if not args.all and not args.sources:
+        parser.error("provide sources or --all")
+    if args.all:
+        from chempotpy.core.registry import discover_surface_sources
+
+        args.sources = [
+            item.path for item in discover_surface_sources() if item.is_surface
+        ]
     compiler = shutil.which("gfortran")
     if compiler is None:
         parser.error("gfortran is required")

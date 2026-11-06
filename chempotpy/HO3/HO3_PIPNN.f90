@@ -1,4 +1,3 @@
-!******************************************************************
 !-->  program to get potential energy for a given geometry after NN
 !     fitting
 !-->  global variables are declared in this module
@@ -20,55 +19,74 @@ module nnparam
     double precision, parameter   :: vpescut = 6.d0 ! eV
 end module nnparam
 
-!******************************************************************
-
-!> @brief Evaluate pes.
-subroutine pes( x, igrad, path, p, g, d )
-    use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
-        & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
+!> @brief Own the public evaluator for this potential energy surface.
+module chempotpy_ho3_pipnn_pes
     implicit none
-    ! number of electronic state
-    integer, parameter              :: nstates = 1
+    private
+    public :: evaluate
+    contains
+    !> @brief Evaluate this surface through the modern module contract.
+    subroutine evaluate( x, igrad, path, p, g, d )
+        use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
+            & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
+        implicit none
+        ! number of electronic state
+        integer, parameter              :: nstates = 1
+        integer, parameter              :: natoms  = 4
+        integer, intent(in)             :: igrad
+        character(len=1024), intent(in) :: path
+        double precision, intent(in)    :: x(natoms,3)
+        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        double precision                :: v, tx(3,natoms)
+        integer                         :: iatom, idir, j, istate
+        !initialize
+        v = 0.d0; g = 0.d0; d = 0.d0
+        do iatom=1, natoms
+            do idir=1, 3
+                tx(idir,iatom) = x(iatom,idir)
+            enddo
+        enddo
+        if( igrad == 0 )then
+            call pes_init(path)
+            call ho3_pes_interface(tx, v)
+            deallocate(nodes)
+            deallocate(weighta)
+            deallocate(biasa)
+            deallocate(pdela)
+            deallocate(pavga)
+            deallocate(weightb)
+            deallocate(biasb)
+            deallocate(pdelb)
+            deallocate(pavgb)
+            deallocate(weightc)
+            deallocate(biasc)
+            deallocate(pdelc)
+            deallocate(pavgc)
+        else
+            write (*, *) 'Only energy is available'
+        endif
+        do istate=1, nstates
+            p(istate) = v
+        enddo
+    end subroutine evaluate
+end module chempotpy_ho3_pipnn_pes
+
+!> @brief Preserve the historical Python-facing pes entry point.
+subroutine pes( x, igrad, path, p, g, d )
+    use chempotpy_ho3_pipnn_pes, only: evaluate
+    implicit none
     integer, parameter              :: natoms  = 4
+    integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
     double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
+    double precision, intent(out)   :: p(nstates)
+    double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    double precision                :: v, tx(3,natoms)
-    integer                         :: iatom, idir, j, istate
-    !initialize
-    v = 0.d0; g = 0.d0; d = 0.d0
-    do iatom=1, natoms
-        do idir=1, 3
-            tx(idir,iatom) = x(iatom,idir)
-        enddo
-    enddo
-    if( igrad == 0 )then
-        call pes_init(path)
-        call ho3_pes_interface(tx, v)
-        deallocate(nodes)
-        deallocate(weighta)
-        deallocate(biasa)
-        deallocate(pdela)
-        deallocate(pavga)
-        deallocate(weightb)
-        deallocate(biasb)
-        deallocate(pdelb)
-        deallocate(pavgb)
-        deallocate(weightc)
-        deallocate(biasc)
-        deallocate(pdelc)
-        deallocate(pavgc)
-    else
-        write (*, *) 'Only energy is available'
-    endif
-    do istate=1, nstates
-        p(istate) = v
-    enddo
-end subroutine
+    call evaluate(x, igrad, path, p, g, d)
+end subroutine pes
 
-!******************************************************************
 !> @brief Evaluate ho3_pes_interface.
 subroutine ho3_pes_interface( q, vpes )
     use nnparam, only: vpescut
@@ -101,9 +119,6 @@ subroutine ho3_pes_interface( q, vpes )
     endif
 end
 
-!******************************************************************
-
-!******************************************************************
 !> @brief Evaluate ho3NN.
 subroutine ho3nn( ct, vpes, vpesa, vpesb, vpesc )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
@@ -142,9 +157,6 @@ subroutine ho3nn( ct, vpes, vpesa, vpesb, vpesc )
     vpes = (vpesa+vpesb+vpesc)/3.0d0
 end subroutine ho3nn
 
-!******************************************************************
-
-!******************************************************************
 !-->  read NN weights and biases from matlab output
 !-->  weights saved in 'weightsa.txt','weightsb.txt','weightsc.txt'
 !-->  biases saved in 'biasesa.txt','biasesb.txt','biasesc.txt'
@@ -295,9 +307,6 @@ subroutine pes_init( path )
     close(bfilec)
 end subroutine pes_init
 
-!**************************************************************************
-
-!**************************************************************************
 !> @brief Evaluate getpota.
 subroutine getpota( x, vpot )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
@@ -336,9 +345,6 @@ subroutine getpota( x, vpot )
     vpot = y(nodes(nlayer),nlayer)*pdela(nscale)+pavga(nscale)
 end subroutine getpota
 
-!**************************************************************************
-
-!**************************************************************************
 !> @brief Evaluate getpotb.
 subroutine getpotb( x, vpot )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
@@ -377,9 +383,6 @@ subroutine getpotb( x, vpot )
     vpot = y(nodes(nlayer),nlayer)*pdelb(nscale)+pavgb(nscale)
 end subroutine getpotb
 
-!**************************************************************************
-
-!**************************************************************************
 !> @brief Evaluate getpotc.
 subroutine getpotc( x, vpot )
     use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
@@ -418,9 +421,6 @@ subroutine getpotc( x, vpot )
     vpot = y(nodes(nlayer),nlayer)*pdelc(nscale)+pavgc(nscale)
 end subroutine getpotc
 
-!**************************************************************************
-
-!**************************************************************************
 !> @brief Evaluate tranfun.
 function tranfun( x, ifunc )
     implicit none
@@ -435,9 +435,6 @@ function tranfun( x, ifunc )
     endif
 end
 
-!**************************************************************************
-
-!**************************************************************************
 !> @brief Evaluate before_vpes.
 subroutine before_vpes( xct, lxc )
     implicit none
@@ -469,14 +466,11 @@ subroutine before_vpes( xct, lxc )
     endif
 end subroutine before_vpes
 
-!**************************************************************************
-
 !------>
 !This program used to generate PIPs for molecule of A3B1 type
 !up to 3rd order.
 !------>
 
-!********************************************************
 !> @brief Evaluate bemsav.
 subroutine bemsav( x, p )
     implicit none
@@ -487,9 +481,6 @@ subroutine bemsav( x, p )
     call evpoly(m, p)
 end subroutine bemsav
 
-!********************************************************
-
-!********************************************************
 !> @brief Evaluate evmono.
 subroutine evmono( x, m )
     implicit none
@@ -527,9 +518,6 @@ subroutine evmono( x, m )
     m(29) = m(4)*m(15)
 end subroutine evmono
 
-!********************************************************
-
-!********************************************************
 !> @brief Evaluate evpoly.
 subroutine evpoly( m, p )
     implicit none
@@ -559,5 +547,3 @@ subroutine evpoly( m, p )
     p(21) = p(1)*p(7) - p(15)
     p(22) = p(2)*p(8) - p(20)
 end subroutine evpoly
-
-!********************************************************
