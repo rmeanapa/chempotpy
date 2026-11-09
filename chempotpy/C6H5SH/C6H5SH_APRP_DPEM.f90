@@ -4397,13 +4397,10 @@ module chempotpy_c6h5sh_aprp_dpem_pes
             do iqtc = 1, nqtc
                 !--- corresponding qnr index
                 iqnr = qnrindex(iqtc)
-                !@WRONG
-                !"QR has value 0 which is less than the lower bound of 1"
-                !lcqr(1:nlcmax) = qr(lcindex(1:nlcmax,iqnr))
                 !--- value of qr involved in qtc(i)
                 lcqr(1:nlc(iqnr)) = qr(lcindex(1:nlc(iqnr),iqnr))
                 !--- take lin.comb. of qr to get qtc
-                qtc(iqtc) = dot_product(lccoef(:,iqnr), lcqr)
+                qtc(iqtc) = dot_product(lccoef(1:nlc(iqnr),iqnr), lcqr(1:nlc(iqnr)))
             enddo
             !--- B matrix for qr
             !--- loop over qr index

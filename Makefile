@@ -1,4 +1,4 @@
-.PHONY: all audit build check check-binaries check-fortran check-modernization check-modernization-source check-style clean test test-surfaces
+.PHONY: all audit build check check-binaries check-conda check-fortran check-modernization check-modernization-source check-python-extensions check-style clean test test-surfaces
 
 PYTHON ?= python3
 BUILD_FLAGS ?=
@@ -12,6 +12,11 @@ check-fortran:
 
 check-binaries:
 	$(PYTHON) scripts/check_binaries.py --output-root $(BUILD_OUTPUT)
+
+check-python-extensions:
+	$(PYTHON) scripts/check_python_extensions.py --output-root $(BUILD_OUTPUT)
+
+check-conda: build check-binaries check-python-extensions
 
 check-style:
 	$(PYTHON) scripts/check_fortran_style.py

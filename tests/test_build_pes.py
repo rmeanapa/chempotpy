@@ -8,6 +8,7 @@ from chempotpy.core.registry import SurfaceSource
 from scripts.build_pes import (
     copy_ascii_source,
     core_fortran_dependencies,
+    extract_entry_point_source,
     existing_result,
     f2py_command,
     normalized_sources,
@@ -16,6 +17,26 @@ from scripts.build_pes import (
 
 
 class BuildPESTests( unittest.TestCase ):
+    def test_entry_point_extraction_omits_internal_modules( self ) -> None:
+        source = """\
+module owner
+contains
+    subroutine evaluate( x )
+        real(8), intent(in) :: x
+    end subroutine evaluate
+end module owner
+
+subroutine pes( x )
+    use owner, only: evaluate
+    real(8), intent(in) :: x
+    call evaluate(x)
+end subroutine pes
+"""
+        interface = extract_entry_point_source(source, "pes")
+        self.assertTrue(interface.startswith("subroutine pes"))
+        self.assertIn("call evaluate(x)", interface)
+        self.assertNotIn("module owner", interface)
+
     def test_build_command_uses_selected_backend( self ) -> None:
         source = SurfaceSource(
             system_name="H3",
@@ -32,6 +53,7 @@ class BuildPESTests( unittest.TestCase ):
         )
         self.assertIn("meson", command)
         self.assertIn("example.f90", command)
+        self.assertTrue(any("-O0" in argument for argument in command))
         self.assertNotIn("-llapack", command)
         self.assertEqual(command[-3:], ["only:", "pes", ":"])
 
@@ -47,6 +69,7 @@ class BuildPESTests( unittest.TestCase ):
             source, (Path("example.f90"),), "python3", "meson", debug=True
         )
         self.assertIn("--debug", command)
+        self.assertTrue(any("-fcheck=all" in argument for argument in command))
 
     def test_f2py_kind_map_keeps_real64_at_double_precision( self ) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

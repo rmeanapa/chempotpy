@@ -1381,6 +1381,9 @@ _runtime = _LegacyRuntime(
     variable_atom_surfaces=Al_list,
     aluminium_hydride_surfaces=AlmHn_list,
     silicon_oxygen_hydride_surfaces=SiOH_list,
+    diabatic_workspace_state_counts={
+        "O3_14_3Ap_2024_DPEM": 14,
+    },
 )
 
 

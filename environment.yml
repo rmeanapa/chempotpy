@@ -1,0 +1,11 @@
+name: chempotpy
+channels:
+    - conda-forge
+dependencies:
+    - conda
+    - gfortran
+    - meson
+    - ninja
+    - numpy
+    - pip
+    - python

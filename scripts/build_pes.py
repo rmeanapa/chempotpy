@@ -55,6 +55,10 @@ USE_PATTERN = re.compile(
     r"^\s*use(?:\s*,[^:]*)?\s*(?:::\s*)?([a-z][a-z0-9_]*)",
     flags=re.IGNORECASE | re.MULTILINE,
 )
+ENTRY_POINT_SOURCE_PATTERN = r"""
+    ^[ \t]*(?:recursive[ \t]+)?subroutine[ \t]+{entry_point}[ \t]*\(.*?
+    ^[ \t]*end[ \t]+subroutine(?:[ \t]+{entry_point})?[ \t]*$
+"""
 F2PY_KIND_MAP = {
     "real": {
         "real32": "float",
@@ -81,6 +85,65 @@ def write_f2py_kind_map(build_directory: Path) -> Path:
     mapping_path = build_directory / ".f2py_f2cmap"
     mapping_path.write_text(repr(F2PY_KIND_MAP) + "\n")
     return mapping_path
+
+
+def extract_entry_point_source(
+    source_text: str, entry_point: str
+) -> str:
+    """Return only the external Python-facing PES adapter procedure."""
+
+    pattern = re.compile(
+        ENTRY_POINT_SOURCE_PATTERN.format(
+            entry_point=re.escape(entry_point)
+        ),
+        flags=re.IGNORECASE | re.MULTILINE | re.DOTALL | re.VERBOSE,
+    )
+    matches = tuple(pattern.finditer(source_text))
+    if not matches:
+        raise ValueError(
+            "could not isolate external {} adapter".format(entry_point)
+        )
+    return matches[-1].group(0).rstrip() + "\n"
+
+
+def generate_f2py_signature(
+    source: SurfaceSource,
+    build_directory: Path,
+    python: str,
+    environment: dict,
+) -> tuple[Path, List[str], subprocess.CompletedProcess]:
+    """Generate a signature that exposes only the historical PES adapter."""
+
+    if source.entry_point is None:
+        raise ValueError("a callable surface must have an entry point")
+    adapter_path = build_directory / (
+        source.surface_name + "_f2py_interface.f90"
+    )
+    adapter_path.write_text(extract_entry_point_source(
+        source.path.read_text(errors="replace"), source.entry_point
+    ))
+    signature_path = build_directory / (source.surface_name + ".pyf")
+    command = [
+        python,
+        "-m",
+        "numpy.f2py",
+        "-m",
+        source.surface_name,
+        "-h",
+        str(signature_path),
+        str(adapter_path),
+        "only:",
+        source.entry_point,
+        ":",
+    ]
+    process = subprocess.run(
+        command,
+        cwd=build_directory,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    return signature_path, command, process
 
 
 @dataclass(frozen=True)
@@ -153,6 +216,9 @@ def f2py_command(
 ) -> List[str]:
     """Return the f2py command for one normalized source set."""
 
+    compiler_flags = "-fallow-argument-mismatch -std=legacy -O0"
+    if debug:
+        compiler_flags += " -g -fcheck=all -fbacktrace"
     command = [
         python,
         "-m",
@@ -162,8 +228,8 @@ def f2py_command(
         backend,
         "-m",
         source.surface_name,
-        "--f77flags=-fallow-argument-mismatch -std=legacy",
-        "--f90flags=-fallow-argument-mismatch -std=legacy",
+        "--f77flags={}".format(compiler_flags),
+        "--f90flags={}".format(compiler_flags),
     ]
     if debug:
         command.append("--debug")
@@ -229,14 +295,48 @@ def build_surface(
     build_directory.mkdir(parents=True, exist_ok=True)
     write_f2py_kind_map(build_directory)
     local_sources = normalized_sources(source, build_directory)
-    command = f2py_command(
-        source, local_sources, python, backend, debug
-    )
     environment = os.environ.copy()
     environment["PATH"] = "{}{}{}".format(
         Path(python).absolute().parent,
         os.pathsep,
         environment.get("PATH", ""),
+    )
+    signature_command = []
+    signature_output = ""
+    if not any(path.suffix == ".pyf" for path in local_sources):
+        signature_path, signature_command, signature_process = (
+            generate_f2py_signature(
+                source, build_directory, python, environment
+            )
+        )
+        signature_output = "$ {}\n\n{}{}\n".format(
+            shlex.join(signature_command),
+            signature_process.stdout,
+            signature_process.stderr,
+        )
+        if signature_process.returncode == 0:
+            local_sources = (signature_path,) + tuple(local_sources)
+        else:
+            log_path = (
+                log_root / source.system_name
+                / (source.surface_name + ".log")
+            )
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            log_path.write_text(signature_output)
+            return BuildResult(
+                system_name=source.system_name,
+                surface_name=source.surface_name,
+                source_path=str(source.path.relative_to(REPOSITORY_ROOT)),
+                entry_point=source.entry_point or "",
+                passed=False,
+                skipped=False,
+                artifact_path=None,
+                log_path=str(log_path),
+                command=signature_command,
+                duration_seconds=time.monotonic()-started,
+            )
+    command = f2py_command(
+        source, local_sources, python, backend, debug
     )
     process = subprocess.run(
         command,
@@ -248,8 +348,11 @@ def build_surface(
     log_path = log_root / source.system_name / (source.surface_name + ".log")
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log_path.write_text(
-        "$ {}\n\n{}{}".format(
-            shlex.join(command), process.stdout, process.stderr
+        "{}$ {}\n\n{}{}".format(
+            signature_output,
+            shlex.join(command),
+            process.stdout,
+            process.stderr,
         )
     )
 

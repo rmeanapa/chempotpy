@@ -6,7 +6,7 @@ import sys
 
 def intro():
 
-    print("""
+    print(r"""
     SHORT List of potential energy surfaces for CH3NH2:
     P: potential energy, G: Gradient, D: Nonadiabatic coupling vector 
     U: diabatic potential energy matrix 
@@ -33,7 +33,7 @@ def intro():
 
 def intro_detail():
 
-    print("""
+    print(r"""
     DETAILED List of potential energy surfaces for CH3NH2:
     GEN: General
     LEPS: London–Eyring–Polanyi-Sato function

@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, Mapping, Optional
 
 import numpy as np
 
@@ -40,6 +40,9 @@ class LegacyRuntime:
         variable_atom_surfaces: Iterable[str] = (),
         aluminium_hydride_surfaces: Iterable[str] = (),
         silicon_oxygen_hydride_surfaces: Iterable[str] = (),
+        diabatic_workspace_state_counts: Optional[
+            Mapping[str, int]
+        ] = None,
         importer: Callable[[str], Any] = importlib.import_module,
         data_root: Optional[Path] = None,
     ) -> None:
@@ -50,6 +53,9 @@ class LegacyRuntime:
         )
         self._silicon_oxygen_hydride_surfaces = frozenset(
             silicon_oxygen_hydride_surfaces
+        )
+        self._diabatic_workspace_state_counts = dict(
+            diabatic_workspace_state_counts or {}
         )
         self._importer = importer
         self._data_root = data_root or Path(__file__).resolve().parents[1]
@@ -260,6 +266,30 @@ class LegacyRuntime:
         if prepared.surface_name in self._requires_data_path:
             return kernel(
                 coordinates, derivative_order, str(self._data_root)
+            )
+        state_count = self._diabatic_workspace_state_counts.get(
+            prepared.surface_name
+        )
+        if state_count is not None:
+            atom_count = len(coordinates)
+            energy = np.zeros(state_count, dtype=np.float64)
+            gradient = np.zeros(
+                (state_count, atom_count, 3), dtype=np.float64
+            )
+            coupling = np.zeros(
+                (state_count, state_count, atom_count, 3),
+                dtype=np.float64,
+            )
+            transformation = np.zeros(
+                (state_count, state_count), dtype=np.float64
+            )
+            return kernel(
+                coordinates,
+                derivative_order,
+                energy,
+                gradient,
+                coupling,
+                transformation,
             )
         return kernel(coordinates, derivative_order)
 

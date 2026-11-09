@@ -6,7 +6,7 @@ import sys
 
 def intro():
 
-    print("""
+    print(r"""
     SHORT List of potential energy surfaces for C6H6O:
     P: potential energy, G: Gradient, D: Nonadiabatic coupling vector 
     U: diabatic potential energy matrix 
@@ -38,7 +38,7 @@ def intro():
 
 def intro_detail():
 
-    print("""
+    print(r"""
     DETAILED List of potential energy surfaces for C6H6O:
     LEP: London–Eyring–Polanyi function
     VBMM: valence bond molecular mechanics

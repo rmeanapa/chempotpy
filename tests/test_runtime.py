@@ -119,6 +119,41 @@ class RuntimeTests( unittest.TestCase ):
             gradient, expected, rtol=0.0, atol=1.0e-10
         )
 
+    def test_dispatches_legacy_diabatic_workspace( self ) -> None:
+        def dpem(
+            coordinates,
+            derivative_order,
+            energy,
+            gradient,
+            coupling,
+            transformation,
+        ):
+            self.calls.append((
+                coordinates,
+                derivative_order,
+                energy,
+                gradient,
+                coupling,
+                transformation,
+            ))
+            return (
+                np.zeros((3, 3)),
+                np.zeros((3, 3, 2, 3)),
+            )
+
+        extension = types.SimpleNamespace(dpem=dpem)
+        runtime, prepared = self._runtime(
+            "workspace",
+            extension,
+            diabatic_workspace_state_counts={"workspace": 3},
+        )
+        runtime.diabatic(prepared, 0)
+        self.assertEqual(len(self.calls[-1]), 6)
+        self.assertEqual(self.calls[-1][2].shape, (3,))
+        self.assertEqual(self.calls[-1][3].shape, (3, 2, 3))
+        self.assertEqual(self.calls[-1][4].shape, (3, 3, 2, 3))
+        self.assertEqual(self.calls[-1][5].shape, (3, 3))
+
     def test_rejects_missing_entry_point( self ) -> None:
         runtime, prepared = self._runtime("missing", types.SimpleNamespace())
         with self.assertRaises(SurfaceRuntimeError):

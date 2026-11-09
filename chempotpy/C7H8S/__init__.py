@@ -6,7 +6,7 @@ import sys
 
 def intro():
 
-    print("""
+    print(r"""
     SHORT List of potential energy surfaces for C7H8S:
     P: potential energy, G: Gradient, D: Nonadiabatic coupling vector 
     U: diabatic potential energy matrix 
@@ -42,7 +42,7 @@ def intro():
 
 def intro_detail():
 
-    print("""
+    print(r"""
     DETAILED List of potential energy surfaces for C7H8S:
     LEP: London–Eyring–Polanyi function
     VBMM: valence bond molecular mechanics

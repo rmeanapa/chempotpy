@@ -15,13 +15,11 @@ All fortran source code are stored in folder chempotpy
 
 How to install
 --------------
-* Create a virtual environment with Python, NumPy, Meson, and gfortran:
+* Create a virtual environment with the newest mutually compatible Python,
+  Conda, NumPy, Meson, Ninja, and gfortran packages from conda-forge:
     
-       conda create --name chempotpy
+       conda env create --file environment.yml
        conda activate chempotpy
-       conda install python=3.11
-       conda install -c conda-forge gfortran
-       pip install numpy meson
 
 * Install stable release:
   
@@ -37,8 +35,13 @@ How to install
         make build
         make check-modernization
 
-  `make build BUILD_FLAGS="--debug --jobs 4"` provides a faster, unoptimized
-  development build. The default remains the optimized release build.
+  `make build` uses an unoptimized compatibility profile so the modern Python
+  extensions preserve the released Fortran results. Add `--debug` to enable
+  bounds checks and Fortran backtraces while diagnosing a kernel.
+
+  `make check-conda BUILD_FLAGS="--jobs 4"` builds every extension, checks its
+  native-library linkage, imports each binary in an isolated Python process,
+  and evaluates all surfaces at both catalog regression geometries.
 
   CHEMPOTPY carries the numerical support routines used by its PES kernels.
   Building the extensions does not require MKL, LAPACK, or BLAS. A Fortran

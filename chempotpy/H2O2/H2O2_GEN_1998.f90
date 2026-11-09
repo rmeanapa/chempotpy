@@ -269,7 +269,7 @@ module chempotpy_h2o2_gen_1998_pes
         !
         !  Calculate first derivatives using a analytic gradients
         !
-        call g_surf(12, v, gv, 1, x, gx, 12)
+        call g_surf(12, v, gv, 12, x, gx, 12)
         !  TRANSPOSE GV
         tempx     = gv(2,1)
         gv(2,1)   = gv(1,2)
@@ -646,7 +646,7 @@ module chempotpy_h2o2_gen_1998_pes
         !
         !  Calculate first derivatives using a analytic gradients
         !
-        call g_analytic(12, 12, v, gv, gvv, 1, 1, x, gx, gxx, 12, 12)
+        call g_analytic(12, 12, v, gv, gvv, 12, 12, x, gx, gxx, 12, 12)
         !  TRANSPOSE GVV
         do i = 1, 12
             dxx(i) = gvv(1,i,i)/0.529177d0

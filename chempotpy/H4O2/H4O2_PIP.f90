@@ -41,10 +41,17 @@ module h4o2_pes_state
     subroutine evaluate_h4o2_coefficients( potential, cartesian_coordinates )
         real, intent(out) :: potential
         real, intent(in)  :: cartesian_coordinates(3,6)
-        double precision  :: basis(0:coefficient_count &
+        real              :: legacy_basis(0:coefficient_count &
             +3*correction_count-1)
+        real :: zero_padding(0:coefficient_count &
+            +3*correction_count-1)
+        double precision :: basis(0:coefficient_count &
+            +3*correction_count-1)
+        zero_padding = 0.0
         call getvec(coefficient_count, correction_count, &
-            cartesian_coordinates, basis)
+            cartesian_coordinates, legacy_basis)
+        ! Preserve the released single-to-double storage layout explicitly.
+        basis     = transfer([legacy_basis, zero_padding], basis)
         potential = dot_product(coefficients, basis)
     end subroutine evaluate_h4o2_coefficients
 end module h4o2_pes_state
