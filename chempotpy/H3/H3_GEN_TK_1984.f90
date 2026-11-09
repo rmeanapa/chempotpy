@@ -270,7 +270,7 @@ module chempotpy_h3_gen_tk_1984_pes
             !
             do it = 1, 3
                 req(it) = req(it)/bohr
-            50 enddo
+            enddo
             beta = beta * bohr
             de   = de/hartre
             a    = a/bohr
@@ -362,8 +362,8 @@ module chempotpy_h3_gen_tk_1984_pes
             !
             if( nasurf(1,1) .eq. 0 )then
                 write(nflag(18), &
-                    & '(/,2X,T5,13HNASURF(1,1) =,I5, /,2X,T5,24HThis value is unallowed. /,2X,T5,31HOnly gs surfac' // &
-                    & 'e=>NASURF(1,1)=1 )') nasurf(1,1)
+                    & '(/,2X,T5,"NASURF(1,1) =",I5, /,2X,T5,"This value is unallowed.", /,2X,T5, &
+                    & "Only gs surface=>NASURF(1,1)=1")') nasurf(1,1)
                 stop
             endif
             if( nder .gt. 1 )then
@@ -461,7 +461,7 @@ module chempotpy_h3_gen_tk_1984_pes
                 degsdr(3) = dac
                 do it = 1, 2
                     degsdr(it) = dbcoor(it) + degsdr(it)
-                300 enddo
+                enddo
                 call rtocart
                 call dedcou
             endif
@@ -552,9 +552,9 @@ module chempotpy_h3_gen_tk_1984_pes
                 stt   = 2.d0*st*ct
                 ctt   = ct*ct - st*st
                 lm4   = l-4
-                3 sttl=stt**l
-                stt4 = sttl*stt**(-lm4)
-                6 gam=legacy_d*(1.d0-a2*sttl)
+                sttl  = stt**l
+                stt4  = sttl*stt**(-lm4)
+                gam   = legacy_d*(1.d0-a2*sttl)
                 alf   = alfn+alfdif*stt4
                 brack = r2t-rnmxn
                 rcrc  = 2.d0*rn*rn+r(1)*r(1)+r(2)*r(2)-2.d0*rn*(r(1)+r(2))
@@ -1003,7 +1003,6 @@ module chempotpy_h3_gen_tk_1984_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

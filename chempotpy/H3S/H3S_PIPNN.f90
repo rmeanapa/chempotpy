@@ -81,30 +81,19 @@ end subroutine pes
 
 !> @brief Evaluate pipNN.
 subroutine pipnn( ct, vpes, vpesa, vpesb, vpesc )
-    use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndata, ndim, nhid, ninput, nlayer, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: alpha, biasa, ifunc, natom, nbasis, ndata, ndim, nhid, ninput, nlayer, &
         & nodemax, nodes, noutput, nscale, nwe, para2, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-    integer          :: i, j, k, lpes
+    integer          :: j, lpes
     double precision :: rb(ndim), xbond(ndim), basis(nbasis), tmp1, txinput(nbasis-1)
-    double precision :: ct(3,natom), xvec(3,ndim), cx(3,natom), cy(3,natom)
+    double precision :: ct(3,natom), cy(3,natom)
     double precision :: m(30)
     double precision :: vpes, vpesa, vpesb, vpesc, vpesh, vnn
     double precision :: dvdg(ninput)
     integer          :: ndriv
     basis = 0.d0
-    cx    = ct
-    k     = 0
-    do i=1, natom-1
-        do j=i+1, natom
-            k = k+1
-            !        write(*,*)k,i,j
-            xvec(:,k) = cx(:,i)-cx(:,j)
-        enddo
-    enddo
-    if( k .ne. ndim ) stop 'error in bond dimension'
-    do i=1, ndim
-        rb(i) = dsqrt(dot_product(xvec(:,i), xvec(:,i)))
-    enddo
+    call all_pair_distances(transpose(ct), rb)
     xbond(:) = dexp(-rb(:)/alpha)
     call bemsav(xbond, m, basis)
     do j=1, nbasis-1
@@ -273,27 +262,16 @@ end
 
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v, dvdx, ndriv )
+    use chempotpy_geometry, only: all_pair_distance_jacobian, all_pair_distances
     implicit none
     double precision, parameter :: alpha = 1d0
-    integer                     :: i, j, k, ndriv
+    integer                     :: j, ndriv
     double precision            :: v, dvdx(1:12), p(0:22), r(1:6)
     double precision            :: xcart(1:3,1:4), m(0:29), xmorse(1:6)
-    double precision            :: dvdr(1:6), x(1:12), drdx(1:6,1:12)
+    double precision            :: dvdr(1:6), drdx(1:6,1:12)
     double precision            :: txinput(1:22), dvdg(1:22), dpdr(1:6,0:22)
-    ! ::::::::::::::::::::
-    do i=1, 4
-        x((3*(i-1)+1):(3*(i-1)+3)) = xcart(:,i)
-    enddo
-    k = 0
-    do i=1, 3
-        do j=i+1, 4
-            k         = k+1
-            r(k)      = dot_product(xcart(:,i)-xcart(:,j), xcart(:,i)-xcart(:,j))
-            r(k)      = dsqrt(r(k))
-            xmorse(k) = dexp(-r(k)/alpha)
-        enddo
-    enddo
-    if( k .ne. 6 ) stop "error"
+    call all_pair_distances(transpose(xcart), r)
+    xmorse = dexp(-r/alpha)
     call bemsav(xmorse, m, p)
     do j=1, 22
         txinput(j) = p(j)
@@ -303,7 +281,7 @@ subroutine evvdvdx( xcart, v, dvdx, ndriv )
     call getpota(txinput, v, dvdg, ndriv)
     if( ndriv .eq. 1 )then
         call evdvdr(r, m, p, dpdr)
-        call evdrdx(r, x, drdx)
+        call all_pair_distance_jacobian(transpose(xcart), r, drdx)
         call evdvdx(dvdg, dpdr, drdx, dvdx)
     endif
     if( ndriv .eq. 2 )then
@@ -391,26 +369,13 @@ end subroutine evpoly
 
 !> @brief Evaluate evdvdx.
 subroutine evdvdx( dvdg, dpdr, drdx, dvdx )
+    use chempotpy_geometry, only: transform_internal_gradient_to_cartesian
     implicit none
-    integer          :: i, j, k
-    double precision :: dvdx(1:12), xcart(1:3,1:4), drdx(1:6,1:12), x(1:12)
-    double precision :: dvdr(1:6), dpdr(1:6,0:22), rtmp
-    double precision :: dgdx(1:12,1:22), dgdr(1:6,1:22), dvdg(1:22)
-    dgdx           = 0d0
-    dgdr(1:6,1:22) = dpdr(1:6,1:22)
-    do i=1, 12
-        do j=1, 22
-            do k=1, 6
-                dgdx(i,j) = dgdx(i,j)+dgdr(k,j)*drdx(k,i)
-            enddo
-        enddo
-    enddo
-    dvdx = 0d0
-    do i=1, 12
-        do j=1, 22
-            dvdx(i) = dvdx(i)+dvdg(j)*dgdx(i,j)
-        enddo
-    enddo
+    double precision, intent(in)  :: dvdg(1:22), dpdr(1:6,0:22), drdx(1:6,1:12)
+    double precision, intent(out) :: dvdx(1:12)
+    double precision              :: dvdr(1:6)
+    dvdr = matmul(dpdr(:,1:22), dvdg)
+    call transform_internal_gradient_to_cartesian(dvdr, drdx, dvdx)
 end subroutine evdvdx
 
 !> @brief Evaluate evdvdr.
@@ -428,24 +393,10 @@ end subroutine evdvdr
 
 !> @brief Evaluate evdrdx.
 subroutine evdrdx( r, x, drdx )
+    use chempotpy_geometry, only: all_pair_distance_jacobian
     implicit none
-    integer          :: i, j, k
     double precision :: r(1:6), drdx(1:6,1:12), x(1:12)
-    drdx(:,:) = 0d0
-    k         = 0
-    do i=1, 3
-        do j=i+1, 4
-            k = k+1
-            !drdx
-            drdx(k,3*(i-1)+1) = (x(3*(i-1)+1)-x(3*(j-1)+1))/r(k)
-            drdx(k,3*(i-1)+2) = (x(3*(i-1)+2)-x(3*(j-1)+2))/r(k)
-            drdx(k,3*(i-1)+3) = (x(3*(i-1)+3)-x(3*(j-1)+3))/r(k)
-            drdx(k,3*(j-1)+1) = -drdx(k,3*(i-1)+1)
-            drdx(k,3*(j-1)+2) = -drdx(k,3*(i-1)+2)
-            drdx(k,3*(j-1)+3) = -drdx(k,3*(i-1)+3)
-        enddo
-    enddo
-    if( k .ne. 6 ) stop "error"
+    call all_pair_distance_jacobian(x, r, drdx)
 end subroutine evdrdx
 
 !> @brief Evaluate evdmsdr.

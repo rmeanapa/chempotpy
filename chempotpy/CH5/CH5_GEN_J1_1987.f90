@@ -322,8 +322,8 @@ module chempotpy_ch5_gen_j1_1987_pes
             !
             !
             !
-            data evcon / 2.721161d+1 /
             !
+            evcon = 2.721161d+1
             call cartou
             call carttor
             !
@@ -331,7 +331,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             !
             do i=1, 18
                 coord(i) = pt1cm_r(i)
-            1 enddo
+            enddo
             !
             ipt = 1
             do i = 1, 6
@@ -339,7 +339,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 potxcm_y(i) = coord(ipt+1)
                 potxcm_z(i) = coord(ipt+2)
                 ipt         = ipt+3
-            5 enddo
+            enddo
             !
             ! COMPUTE THE INTERPARTICLE DISTANCES R
             !
@@ -364,7 +364,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             !
             do i = 1, 15
                 icorcm_der(i) = 0.0d0
-            50 enddo
+            enddo
             !
             !  COMPUTE THE MORSE RANGE PARAMETERS ALPH:
             !
@@ -469,12 +469,12 @@ module chempotpy_ch5_gen_j1_1987_pes
                 y1(i) = o
                 y2(i) = o*o
                 sum   = sum+dk(i)*y2(i)
-            60 enddo
+            enddo
             do i = 4, 6
                 y1(i) = potrcm_ag(i)-asb
                 y2(i) = y1(i)*y1(i)
                 sum   = sum+dk(i)*y2(i)
-            70 enddo
+            enddo
             ee = ee+0.5d0*sum
             !
             ! COMPUTE DERIVATIVES OF THE ANGLE ATTENUATION TERMS WITH RESPECT TO R6,
@@ -510,7 +510,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 if( abs(f(i+1)) .gt. 1.0d-10 ) icorcm_der(i+6) = icorcm_der(i+6)+stp*dfr(i+1)/f(i +1)
                 !
                 icorcm_der(i+9) = icorcm_der(i+9)+w*icorcm_ar(i+9)/(icorcm_ar(1)*icorcm_ar(i+1)*potrcm_ass(i))
-            80 enddo
+            enddo
             !
             ! FOURTH AND FIFTH ANGLE TERMS
             !
@@ -527,7 +527,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 if( abs(f(i-1)) .gt. 1.0d-10 ) icorcm_der(i+4) = icorcm_der(i+4)+stp*dfr(i-1)/f(i -1)
                 !
                 icorcm_der(i+9) = icorcm_der(i+9)+w*icorcm_ar(i+9)/(icorcm_ar(2)*icorcm_ar(i-1)*potrcm_ass(i))
-            90 enddo
+            enddo
             !
             ! CONTRIBUTION FROM SIXTH ANGLE TERM
             !
@@ -547,7 +547,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             do klm = 1, 4
                 icorcm_der(klm) = icorcm_der(klm)-(dk(if1)*y1(if1)+dk(if2)*y1(if2)+dk(if3)*y1 (if3))*dasf-(dk(ib1)* &
                     & y1(ib1)+dk(ib2)*y1(ib2)+ dk(ib3)*y1(ib3) )*dasb
-            100 enddo
+            enddo
             icorcm_der(5) = icorcm_der(5)-(dk(if1)*y1(if1)+dk(if2)*y1(if2)+dk(if3)*y1(if3))* daa-(dk(ib1)*y1(ib1)+ &
                 & dk(ib2)*y1(ib2)+dk(ib3)* y1(ib3))*3.0d0* sin(asf)*cos(asf)*daa/sin(asb)
             !
@@ -556,7 +556,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             potxcm_energy = ee/evcon+pdatcm_refv
             do i = 1, 15
                 icorcm_der(i) = icorcm_der(i)/evcon
-            110 enddo
+            enddo
             !
             !      CALCULATE DRDX ARRAY
             !
@@ -571,7 +571,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 dxx(ipt+1) = potxcm_dedx(i+6)
                 dxx(ipt+2) = potxcm_dedx(i+12)
                 ipt        = ipt+3
-            120 enddo
+            enddo
             !
             !     NOW ADD IN THE OUT OF PLANE BEND TERM
             !
@@ -579,7 +579,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             potxcm_energy = potxcm_energy+voop
             do i = 1, 18
                 dxx(i) = dxx(i)+dvoop(i)
-            130 enddo
+            enddo
             !
             pt1cm_engygs = potxcm_energy
             call eunitzero
@@ -620,13 +620,13 @@ module chempotpy_ch5_gen_j1_1987_pes
                 potrcm_acs(i) = x
                 potrcm_ass(i) = sqrt(1.0d0-x*x)
                 potrcm_ag(i)  = acos(x)
-            10 enddo
+            enddo
             do i = 1, 2
                 x               = (potrcm_r2(2)+potrcm_r2(i+2)-potrcm_r2(i+12))/(2.0d0*icorcm_ar(2)*icorcm_ar(i+2))
                 potrcm_acs(i+3) = x
                 potrcm_ass(i+3) = sqrt(1.0d0-x*x)
                 potrcm_ag(i+3)  = acos(x)
-            20 enddo
+            enddo
             x             = (potrcm_r2(3)+potrcm_r2(4)-potrcm_r2(15))/(2.0d0*icorcm_ar(3)*icorcm_ar(4))
             potrcm_acs(6) = x
             potrcm_ass(6) = sqrt(1.0d0-x*x)
@@ -704,7 +704,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 df(i,3)      = potxcm_z(i)-potxcm_z(5)
                 potrcm_r2(i) = df(i,1)*df(i,1)+df(i,2)*df(i,2)+df(i,3)*df(i,3)
                 icorcm_ar(i) = sqrt(potrcm_r2(i))
-            10 enddo
+            enddo
             df(5,1)      = potxcm_x(5)-potxcm_x(6)
             df(5,2)      = potxcm_y(5)-potxcm_y(6)
             df(5,3)      = potxcm_z(5)-potxcm_z(6)
@@ -717,7 +717,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 df(j,3)      = potxcm_z(i)-potxcm_z(6)
                 potrcm_r2(j) = df(j,1)*df(j,1)+df(j,2)*df(j,2)+df(j,3)*df(j,3)
                 icorcm_ar(j) = sqrt(potrcm_r2(j))
-            20 enddo
+            enddo
             do i = 1, 3
                 j            = i+1
                 k            = i+9
@@ -726,7 +726,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 df(k,3)      = potxcm_z(1)-potxcm_z(j)
                 potrcm_r2(k) = df(k,1)*df(k,1)+df(k,2)*df(k,2)+df(k,3)*df(k,3)
                 icorcm_ar(k) = sqrt(potrcm_r2(k))
-            30 enddo
+            enddo
             do i = 1, 2
                 j            = i+2
                 k            = i+12
@@ -735,7 +735,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 df(k,3)      = potxcm_z(2)-potxcm_z(j)
                 potrcm_r2(k) = df(k,1)*df(k,1)+df(k,2)*df(k,2)+df(k,3)*df(k,3)
                 icorcm_ar(k) = sqrt(potrcm_r2(k))
-            40 enddo
+            enddo
             df(15,1)      = potxcm_x(3)-potxcm_x(4)
             df(15,2)      = potxcm_y(3)-potxcm_y(4)
             df(15,3)      = potxcm_z(3)-potxcm_z(4)
@@ -773,7 +773,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             do i = 1, 18
                 do j = 1, 15
                     potxcm_drdx(j,i) = 0.0d0
-                10 enddo
+                enddo
             enddo
             !
             ! CALCULATE DRDX FOR C - H(1,2,3,4) BONDS
@@ -785,7 +785,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 potxcm_drdx(i,11)   = -potxcm_drdx(i,i+6)
                 potxcm_drdx(i,i+12) = (potxcm_z(i)-potxcm_z(5))/icorcm_ar(i)
                 potxcm_drdx(i,17)   = -potxcm_drdx(i,i+12)
-            20 enddo
+            enddo
             !
             ! CALCULATE DRDX FOR C - H' BOND
             !
@@ -805,7 +805,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 potxcm_drdx(5+i,12)   = -potxcm_drdx(5+i,i+6)
                 potxcm_drdx(5+i,i+12) = (potxcm_z(i)-potxcm_z(6))/icorcm_ar(5+i)
                 potxcm_drdx(5+i,18)   = -potxcm_drdx(5+i,i+12)
-            30 enddo
+            enddo
             !
             ! CALCULATE DRDX FOR H1 - H(2,3,4) BONDS
             !
@@ -816,7 +816,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 potxcm_drdx(9+i,7)    = -potxcm_drdx(9+i,i+7)
                 potxcm_drdx(9+i,i+13) = -(potxcm_z(1)-potxcm_z(i+1))/icorcm_ar(9+i)
                 potxcm_drdx(9+i,13)   = -potxcm_drdx(9+i,i+13)
-            40 enddo
+            enddo
             !
             ! CALCULATE DRDX FOR H2 - H(3,4)
             !
@@ -827,7 +827,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 potxcm_drdx(12+i,8)    = -potxcm_drdx(12+i,i+8)
                 potxcm_drdx(12+i,i+14) = -(potxcm_z(2)-potxcm_z(i+2))/icorcm_ar(12+i)
                 potxcm_drdx(12+i,14)   = -potxcm_drdx(12+i,i+14)
-            50 enddo
+            enddo
             !
             ! CALCULATE DRDX FOR H3 - H4
             !
@@ -889,12 +889,12 @@ module chempotpy_ch5_gen_j1_1987_pes
                     do k = 1, ma
                         !
                         sum = sum+a(i,k)*b(k,j)
-                    10 enddo
+                    enddo
                     !
                     c(i,j) = sum
-                20 enddo
+                enddo
                 !
-            30 enddo
+            enddo
         end subroutine mult
         !> @brief Evaluate OOPB for the CH5_GEN_J1_1987 potential.
         subroutine oopb ( voop, dvoop, v, x, dx )
@@ -948,7 +948,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 rv(i,2) = x(j+4)-x(14)
                 rv(i,3) = x(j+5)-x(15)
                 j       = j+3
-            10 enddo
+            enddo
             !
             !     RSTAR IS THE C-H4 BOND LENGTH
             !
@@ -968,7 +968,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 xmagr(i)        = sqrt(rv(i,1)**2+rv(i,2)**2+rv(i,3)**2)
                 top(i)          = crossx*rv(i,1)+crossy*rv(i,2)+crossz*rv(i,3)
                 testcm_gamma(i) = +top(i)/(gcross*xmagr(i))
-            20 enddo
+            enddo
             !
             !     NOW THE SECOND TERM IN DELTA--PHINOT
             !     FIRST THE SWITCHING FUNCTION SPHI THEN PHINOT
@@ -985,7 +985,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             !
             do i = 1, 3
                 delta(i) = acos(testcm_gamma(i))-phinot
-            30 enddo
+            enddo
             !
             !     NEXT COMPUTE THE PARTIALS OF DELTA W/R TO EACH X(I)
             !      IN DOING THIS COMPUTATION FIRST FOR EACH TERM CALCULATED
@@ -998,10 +998,10 @@ module chempotpy_ch5_gen_j1_1987_pes
             do i = 1, 3
                 do j = 1, 3
                     dcross(i,j) = 0.0d0
-                40 enddo
+                enddo
                 do j = 13, 18
                     dcross(i,j) = 0.0d0
-                50 enddo
+                enddo
                 if( i .eq. 1 )then
                     dcross(i,4)  = 0.0d0
                     dcross(i,5)  = zdif(1)-zdif(2)
@@ -1033,7 +1033,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                     dcross(i,11) = xdif(1)
                     dcross(i,12) = 0.0d0
                 endif
-            60 enddo
+            enddo
             !
             !     NOW COMPUTE THE PARTIALS FOR THE THREE R VECTORS
             !
@@ -1044,22 +1044,22 @@ module chempotpy_ch5_gen_j1_1987_pes
                     !          platforms.
                     do k = 1, 18
                         drv(i,j,k) = 0.0d0
-                    70 enddo
+                    enddo
                 enddo
             enddo
             do k = 4, 6
                 drv(1,k-3,k) = 1.0d0
-            80 enddo
+            enddo
             do k = 7, 9
                 drv(2,k-6,k) = 1.0d0
-            90 enddo
+            enddo
             do k = 10, 12
                 drv(3,k-9,k) = 1.0d0
-            100 enddo
+            enddo
             do i = 1, 3
                 do j = 1, 3
                     drv(i,j,j+12) = -1.0d0
-                110 enddo
+                enddo
             enddo
             !
             !     NOW COMPUTE THE PARTIALS FOR THE TRIPLE PRODUCT  (TOP)
@@ -1068,14 +1068,14 @@ module chempotpy_ch5_gen_j1_1987_pes
                 do j = 1, 3
                     dtop(j,i) = dcross(1,i)*rv(j,1)+crossx*drv(j,1,i)+dcross(2,i )*rv(j,2)+crossy*drv(j,2,i)+ &
                         & dcross(3,i)* rv(j,3)+crossz* drv(j,3,i)
-                120 enddo
+                enddo
             enddo
             !
             !     PARTIALS FOR THE MAGNITUDE OF THE CROSS PRODUCT  (GCROSS)
             !
             do i = 1, 18
                 dgcros(i) = (1.0d0/gcross)*(dcross(1,i)*crossx+dcross(2,i)* crossy+dcross(3,i)*crossz)
-            130 enddo
+            enddo
             !
             !     PARTIALS FOR THE MAGNITUDE OF R1, R2 AND R3
             !
@@ -1084,8 +1084,8 @@ module chempotpy_ch5_gen_j1_1987_pes
                     dxmagr(i,j) = 0.0d0
                     do k = 1, 3
                         dxmagr(i,j) = dxmagr(i,j)+(1.0d0/xmagr(i))*(rv(i,k)*drv(i,k,j))
-                    140 enddo
-                150 enddo
+                    enddo
+                enddo
             enddo
             !
             !     NOW WE'RE READY FOR THE PARTIALS OF GAMMA
@@ -1095,7 +1095,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                     testcm_dgamma(i,j) = +gcross*xmagr(i)*dtop(i,j)-top(i)*(xmagr(i)* dgcros(j)+gcross*dxmagr(i,j))
                     testcm_dgamma(i,j) = testcm_dgamma(i,j)/(gcross*xmagr(i))**2
                     testcm_dgamma(i,j) = testcm_dgamma(i,j)*(-1.0d0)/(sqrt(1.0d0-testcm_gamma(i)**2) )
-                160 enddo
+                enddo
             enddo
             !
             !     NOW THE PARTIAL FOR THE SECOND TERM IN DELTA -- PHINOT
@@ -1113,7 +1113,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             do i = 1, 18
                 drdx(i) = 0.0d0
                 dphi(i) = 0.0d0
-            170 enddo
+            enddo
             !
             cst = 1.0d0/(2.0d0*rstar)
             do i = 1, 3
@@ -1121,14 +1121,14 @@ module chempotpy_ch5_gen_j1_1987_pes
                 drdx(i+12) = -drdx(i)
                 dphi(i)    = drdx(i)*dsdr*(pdt2cm_pch4-pi/2.0d0)
                 dphi(i+12) = -dphi(i)
-            180 enddo
+            enddo
             !
             !     NOW PUT BOTH TERMS TOGETHER TO GET THE PARTIALS OF DELTA
             !
             do i = 1, 3
                 do j = 1, 18
                     ddelta(i,j) = testcm_dgamma(i,j)-dphi(j)
-                190 enddo
+                enddo
             enddo
             !
             !     WE HAVE NOW COMPUTED ALL THE DELTA TERMS.  NEXT COMPUTE THE
@@ -1143,7 +1143,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             voop = 0.0d0
             do i = 1, 3
                 voop = voop+f*(delta(i)**2)+h*(delta(i)**4)
-            200 enddo
+            enddo
             !
             !     PARTIAL OF THE SWITCHING FUNCTION W/R TO RSTAR
             !
@@ -1157,13 +1157,13 @@ module chempotpy_ch5_gen_j1_1987_pes
             do i = 1, 18
                 dfdx(i) = 0.0d0
                 dhdx(i) = 0.0d0
-            210 enddo
+            enddo
             do i = 1, 3
                 dfdx(i)    = dfds*dsdr*drdx(i)
                 dhdx(i)    = dhds*dsdr*drdx(i)
                 dfdx(i+12) = -dfdx(i)
                 dhdx(i+12) = -dhdx(i)
-            220 enddo
+            enddo
             !
             !    NOW WE ARE READY FOR THE FULL PARTIAL DERIVATIVES OF VOOP
             !
@@ -1171,17 +1171,17 @@ module chempotpy_ch5_gen_j1_1987_pes
                 term1 = 0.0d0
                 do j = 1, 3
                     term1 = term1+dfdx(i)*delta(j)**2
-                230 enddo
+                enddo
                 term2 = 2.0d0*delta(1)*ddelta(1,i)+2.0d0*delta(2)*ddelta(2,i) +2.0d0*delta(3)*ddelta(3,i)
                 term2 = term2*f
                 term3 = 0.0d0
                 do j = 1, 3
                     term3 = term3+dhdx(i)*delta(j)**4
-                240 enddo
+                enddo
                 term4    = 4.0d0*delta(1)**3*ddelta(1,i)+4.0d0*delta(2)**3* ddelta(2,i)+4.0d0*delta(3)**3*ddelta(3,i)
                 term4    = term4*h
                 dvoop(i) = term1+term2+term3+term4
-            250 enddo
+            enddo
         end subroutine oopb
         !> @brief Evaluate SECH for the CH5_GEN_J1_1987 potential.
         function sech ( x )
@@ -1268,7 +1268,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             !
             ! SWITCH R AND R2 MATRICES
             !
-            60 store = icorcm_ar(k)
+            store         = icorcm_ar(k)
             icorcm_ar(k)  = icorcm_ar(kk)
             icorcm_ar(kk) = store
             store         = icorcm_ar(l)
@@ -1288,23 +1288,23 @@ module chempotpy_ch5_gen_j1_1987_pes
             potrcm_r2(mm) = icorcm_ar(mm)*icorcm_ar(mm)
             potrcm_r2(n)  = icorcm_ar(n)*icorcm_ar(n)
             potrcm_r2(nn) = icorcm_ar(nn)*icorcm_ar(nn)
-            if( lmg-1 ) 80, 80, 70
-            !
-            ! SWITCH DER MATRIX *******
-            !
-            70 store = icorcm_der(k)
-            icorcm_der(k)  = icorcm_der(kk)
-            icorcm_der(kk) = store
-            store          = icorcm_der(l)
-            icorcm_der(l)  = icorcm_der(ll)
-            icorcm_der(ll) = store
-            store          = icorcm_der(m)
-            icorcm_der(m)  = icorcm_der(mm)
-            icorcm_der(mm) = store
-            store          = icorcm_der(n)
-            icorcm_der(n)  = icorcm_der(nn)
-            icorcm_der(nn) = store
-            80 return
+            if( lmg > 1 )then
+                !
+                ! SWITCH DER MATRIX *******
+                !
+                store          = icorcm_der(k)
+                icorcm_der(k)  = icorcm_der(kk)
+                icorcm_der(kk) = store
+                store          = icorcm_der(l)
+                icorcm_der(l)  = icorcm_der(ll)
+                icorcm_der(ll) = store
+                store          = icorcm_der(m)
+                icorcm_der(m)  = icorcm_der(mm)
+                icorcm_der(mm) = store
+                store          = icorcm_der(n)
+                icorcm_der(n)  = icorcm_der(nn)
+                icorcm_der(nn) = store
+            endif
         end subroutine switch
         !> @brief Evaluate THETA for the CH5_GEN_J1_1987 potential.
         subroutine theta ( asf, dasf, asb, dasb )
@@ -1587,10 +1587,10 @@ module chempotpy_ch5_gen_j1_1987_pes
             !
             !
             !
-            data evcon / 2.721161d+1 /
             !
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
             !
+            evcon = 2.721161d+1
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
@@ -2119,7 +2119,6 @@ module chempotpy_ch5_gen_j1_1987_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

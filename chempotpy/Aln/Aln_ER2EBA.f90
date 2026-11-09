@@ -100,7 +100,7 @@ module chempotpy_aln_er2eba_pes
                 r(j,i)   = r(i,j)
                 fu2(j,i) = 1.d0
                 fu2(i,j) = 1.d0
-            3 enddo
+            enddo
         enddo
         ! do BA term, needs xk1,xk2,xk3
         do i=1, natom! alpha loop
@@ -112,7 +112,7 @@ module chempotpy_aln_er2eba_pes
                 ac   = au23*(1.d0-1.d0/(1.d0-ril/bu2))   ! cutoff for Ralpha,gamma
                 term = dexp(-xk2*ril**xk3+ac)          ! cutoff times Ralpha,gam
                 sil  = sil+term                         ! sum
-            11 enddo
+            enddo
             do j=i+1, natom! beta loop
                 slj = 0.d0
                 do l=1, natom! delta loop
@@ -122,7 +122,7 @@ module chempotpy_aln_er2eba_pes
                     ac   = au23*(1d0-1d0/(1d0-rlj/bu2))      ! cutoff for Rbeta,delta
                     term = dexp(-xk2*rlj**xk3+ac)          ! cutoff times Rbeta,delt
                     slj  = slj+term                         ! sum
-                12 enddo
+                enddo
                 rij = r(i,j)
                 sij = 0.d0
                 goto_block_13_131: block
@@ -130,7 +130,6 @@ module chempotpy_aln_er2eba_pes
                     ac  = au23*(1d0-1d0/(1d0-rij/bu2))      ! cutoff for Ralpha,beta
                     sij = dexp(-xk2*rij**xk3+ac)           ! cutoff times overcounte
                 end block goto_block_13_131
-                13 continue
                 !         s=chi, need to subtract off overcounted Ralpha,beta term (sij)
                 !         and mutiply the two sums to get the double sum
                 s        = xk1*(sil-sij)*(slj-sij)
@@ -138,9 +137,9 @@ module chempotpy_aln_er2eba_pes
                 fu2(i,j) = 2d0*e2/(1d0+e2)            ! equivalent to 1-dtanh(s)
                 fu2(i,j) = 1.d0-fu2(i,j)
                 fu2(j,i) = fu2(i,j)
-            15 enddo
+            enddo
             fu2(i,i) = 1.d0                           ! shouldn't get used anywh
-        10 enddo
+        enddo
         ! potential, includes cutoff
         v = 0.d0
         do i=1, natom
@@ -160,7 +159,7 @@ module chempotpy_aln_er2eba_pes
                 if( rr .le. bu2 ) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
                 if( rr .le. bu2b ) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
                 v = v-de*ee*poly*co +deb*eeb*polyb*cob*fu2(i,j)
-            1 enddo
+            enddo
         enddo
     end subroutine pot
 end module chempotpy_aln_er2eba_pes

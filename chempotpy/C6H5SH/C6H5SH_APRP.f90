@@ -5366,17 +5366,13 @@ module chempotpy_c6h5sh_aprp_pes
             double precision, intent(out) :: ev_s(n)
             integer                       :: io, i
             double precision, allocatable :: work_d(:)
-            integer, save                 :: lwork_d
-            logical, save                 :: first_time_diag=.true.
-            u_ss = a_ss
-            if( first_time_diag )then
-                lwork_d = -1
-                allocate( work_d(2) )
-                call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-                lwork_d = int(work_d(1))
-                deallocate ( work_d )
-                first_time_diag = .false.
-            endif
+            integer                       :: lwork_d
+            u_ss    = a_ss
+            lwork_d = -1
+            allocate( work_d(2) )
+            call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
+            lwork_d = int(work_d(1))
+            deallocate ( work_d )
             allocate( work_d(lwork_d) )
             call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         end subroutine diagonalize

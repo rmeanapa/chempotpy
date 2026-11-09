@@ -249,18 +249,18 @@ module chempotpy_phoh_aprp_pes
     subroutine poten( igrad, x, y, z, uu, guu, vv, gvv, cc )
         ! Little subroutine to call evuii and evuij
         implicit none
-        double precision   :: u12
-        integer            :: i, i1, i2, j, k
-        integer, parameter :: natm = 13
-        integer, parameter :: nap  = 4
-        double precision   :: rap(nap)
-        data rap/1.93206106d0, 2.49443845d0, 4.27078097d0, 9.44863047d0/
-        integer, intent(in)          :: igrad
-        double precision, intent(in) :: x(natm), y(natm), z(natm)
-        integer                      :: ir
-        double precision             :: roh
-        double precision             :: t(nap), dtdr(nap)
-        double precision             :: u1, u2, u3
+        integer, parameter            :: natm = 13
+        integer, parameter            :: nap  = 4
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natm), y(natm), z(natm)
+        double precision, intent(out) :: uu(3,3), vv(3), guu(3,natm,3,3)
+        double precision              :: u12
+        integer                       :: i, i1, i2, j, k
+        double precision              :: rap(nap)
+        integer                       :: ir
+        double precision              :: roh
+        double precision              :: t(nap), dtdr(nap)
+        double precision              :: u1, u2, u3
         ! Add by KRY
         double precision :: ubm
         double precision :: dubmdx(3*natm)
@@ -271,7 +271,6 @@ module chempotpy_phoh_aprp_pes
         double precision :: du12dx(3*natm), du13dx(3*natm), du23dx(3*natm)
         ! add by J. Zheng
         integer                       :: lwork, info
-        double precision, intent(out) :: uu(3,3), vv(3), guu(3,natm,3,3)
         double precision              :: cc(3,3)
         double precision, allocatable :: work(:)
         !C add by K. Yang
@@ -279,6 +278,7 @@ module chempotpy_phoh_aprp_pes
         double precision :: gvv(3,natm,3)
         double precision :: fad(3*natm,3,3)
         ! Determine rOH and determine ir, t, and dtdr
+        rap = reshape([ 1.93206106d0, 2.49443845d0, 4.27078097d0, 9.44863047d0 ], shape(rap))
         roh = bndlen(7, 13, x, y, z)
         call tent(nap, rap, roh, ir, t, dtdr)
         do i=1, 3*natm
@@ -404,76 +404,35 @@ module chempotpy_phoh_aprp_pes
         double precision :: x(*), y(*), z(*)
         double precision :: dudx(3*natm)
         ! Local variables
-        integer :: nqtc
-        integer :: nblt, nbat, ntot, noopt
-        data nblt/12/, nbat/18/ntot/24/, noopt/0/
-        integer :: iblt(2,12), ibat(3,18), itot(4,24), ioopt(4,0)
-        data iblt  /1, 2, &
-            & 1, 6, &
-            & 1, 7, &
-            & 2, 3, &
-            & 2, 8, &
-            & 3, 4, &
-            & 3, 9, &
-            & 4, 5, &
-            & 4, 10, &
-            & 5, 6, &
-            & 5, 11, &
-            & 6, 12/
-        data ibat  /2, 1, 6, &
-            & 2, 1, 7, &
-            & 6, 1, 7, &
-            & 1, 2, 3, &
-            & 1, 2, 8, &
-            & 3, 2, 8, &
-            & 2, 3, 4, &
-            & 2, 3, 9, &
-            & 4, 3, 9, &
-            & 3, 4, 5, &
-            & 3, 4, 10, &
-            & 5, 4, 10, &
-            & 4, 5, 6, &
-            & 4, 5, 11, &
-            & 6, 5, 11, &
-            & 1, 6, 5, &
-            & 1, 6, 12, &
-            & 5, 6, 12/
-        data itot  /6, 1, 2, 3, &
-            & 6, 1, 2, 8, &
-            & 7, 1, 2, 3, &
-            & 7, 1, 2, 8, &
-            & 2, 1, 6, 5, &
-            & 2, 1, 6, 12, &
-            & 7, 1, 6, 5, &
-            & 7, 1, 6, 12, &
-            & 1, 2, 3, 4, &
-            & 1, 2, 3, 9, &
-            & 8, 2, 3, 4, &
-            & 8, 2, 3, 9, &
-            & 2, 3, 4, 5, &
-            & 2, 3, 4, 10, &
-            & 9, 3, 4, 5, &
-            & 9, 3, 4, 10, &
-            & 3, 4, 5, 6, &
-            & 3, 4, 5, 11, &
-            & 10, 4, 5, 6, &
-            & 10, 4, 5, 11, &
-            & 4, 5, 6, 1, &
-            & 4, 5, 6, 12, &
-            & 11, 5, 6, 1, &
-            & 11, 5, 6, 12/
-        integer :: nbls, nbas, ntos, noops
-        data nbls/1/, nbas/1/, ntos/1/, noops/0/
-        integer :: ibls(2,1), ibas(3,1), itos(4,1), ioops(4,0)
-        data ibls /7, 13/
-        data ibas /1, 7, 13/
-        data itos /2, 1, 7, 13/
+        integer          :: nqtc
+        integer          :: nblt, nbat, ntot, noopt
+        integer          :: iblt(2,12), ibat(3,18), itot(4,24), ioopt(4,0)
+        integer          :: nbls, nbas, ntos, noops
+        integer          :: ibls(2,1), ibas(3,1), itos(4,1), ioops(4,0)
         double precision :: qtc(maxdim), qsc(maxdim)
         double precision :: dutdr, dubdr, dutodr, durdr
         double precision :: dtodph, dubdth
         double precision :: dut(maxdim)
         double precision :: bmt(ldbmt,3*natm), bms(ldbms,3*natm)
         ! Evaluate internal coordinates
+        nblt  = 12
+        nbat  = 18
+        ntot  = 24
+        noopt = 0
+        iblt  = reshape([ 1, 2, 1, 6, 1, 7, 2, 3, 2, 8, 3, 4, 3, 9, 4, 5, 4, 10, 5, 6, 5, 11, 6, 12 ], shape(iblt))
+        ibat = reshape([ 2, 1, 6, 2, 1, 7, 6, 1, 7, 1, 2, 3, 1, 2, 8, 3, 2, 8, 2, 3, 4, 2, 3, 9, 4, 3, 9, 3, 4, 5, 3, &
+            & 4, 10, 5, 4, 10, 4, 5, 6, 4, 5, 11, 6, 5, 11, 1, 6, 5, 1, 6, 12, 5, 6, 12 ], shape(ibat))
+        itot = reshape([ 6, 1, 2, 3, 6, 1, 2, 8, 7, 1, 2, 3, 7, 1, 2, 8, 2, 1, 6, 5, 2, 1, 6, 12, 7, 1, 6, 5, 7, 1, 6, &
+            & 12, 1, 2, 3, 4, 1, 2, 3, 9, 8, 2, 3, 4, 8, 2, 3, 9, 2, 3, 4, 5, 2, 3, 4, 10, 9, 3, 4, 5, 9, 3, 4, 10, 3, &
+            & 4, 5, 6, 3, 4, 5, 11, 10, 4, 5, 6, 10, 4, 5, 11, 4, 5, 6, 1, 4, 5, 6, 12, 11, 5, 6, 1, 11, 5, 6, 12 ], &
+            & shape(itot))
+        nbls  = 1
+        nbas  = 1
+        ntos  = 1
+        noops = 0
+        ibls  = reshape([ 7, 13 ], shape(ibls))
+        ibas  = reshape([ 1, 7, 13 ], shape(ibas))
+        itos  = reshape([ 2, 1, 7, 13 ], shape(itos))
         call evintcoord(nblt, iblt, nbat, ibat, ntot, itot, noopt, ioopt, &
             & nqtc, qtc, x, y, z)
         r     = bndlen(7, 13, x, y, z)
@@ -10736,20 +10695,22 @@ module chempotpy_phoh_aprp_pes
         integer            :: igrad
         integer, parameter :: ngk2 = 1
         double precision   :: a2(ngk2)
-        data a2/0.10449356d0/
-        double precision :: alpha2(ngk2)
-        data alpha2/0.27051185d0/
-        double precision :: r2(ngk2)
-        data r2/2.28431658d0/
-        double precision :: cthta1, cthta2, a, r0
-        data cthta1/-0.39964587d0/, cthta2/-0.24769126d0/
-        data a/4.01097890d0/, r0/1.83449325d0/
-        integer          :: i, j, k
-        double precision :: r
-        double precision :: k2
-        cthta = cos(theta)
-        sthta = sin(theta)
-        x     = a*(r-r0)
+        double precision   :: alpha2(ngk2)
+        double precision   :: r2(ngk2)
+        double precision   :: cthta1, cthta2, a, r0
+        integer            :: i, j, k
+        double precision   :: r
+        double precision   :: k2
+        a2     = 0.10449356d0
+        alpha2 = 0.27051185d0
+        r2     = 2.28431658d0
+        cthta1 = -0.39964587d0
+        cthta2 = -0.24769126d0
+        a      = 4.01097890d0
+        r0     = 1.83449325d0
+        cthta  = cos(theta)
+        sthta  = sin(theta)
+        x      = a*(r-r0)
         !      tx=(exp(x)-exp(-x))/(exp(x)+exp(-x))
         tx     = (1.0d0-exp(-2.0d0*x))/(1.0d0+exp(-2.0d0*x))
         cthta0 = cthta1+0.5d0*(1+tx)*(cthta2-cthta1)
@@ -10830,20 +10791,22 @@ module chempotpy_phoh_aprp_pes
         integer            :: igrad
         integer, parameter :: ngk2 = 1
         double precision   :: a2(ngk2)
-        data a2/0.10090668d0/
-        double precision :: alpha2(ngk2)
-        data alpha2/0.21154184d0/
-        double precision :: r2(ngk2)
-        data r2/1.80972781d0/
-        double precision :: cthta1, cthta2, a, r0
-        data cthta1/-0.31835353d0/, cthta2/-0.22230161d0/
-        data a/4.73544047d0/, r0/2.01933829d0/
-        integer          :: i, j, k
-        double precision :: r
-        double precision :: k2
-        cthta = cos(theta)
-        sthta = sin(theta)
-        x     = a*(r-r0)
+        double precision   :: alpha2(ngk2)
+        double precision   :: r2(ngk2)
+        double precision   :: cthta1, cthta2, a, r0
+        integer            :: i, j, k
+        double precision   :: r
+        double precision   :: k2
+        a2     = 0.10090668d0
+        alpha2 = 0.21154184d0
+        r2     = 1.80972781d0
+        cthta1 = -0.31835353d0
+        cthta2 = -0.22230161d0
+        a      = 4.73544047d0
+        r0     = 2.01933829d0
+        cthta  = cos(theta)
+        sthta  = sin(theta)
+        x      = a*(r-r0)
         !      tx=(exp(x)-exp(-x))/(exp(x)+exp(-x))
         tx     = (1.0d0-exp(-2.0d0*x))/(1.0d0+exp(-2.0d0*x))
         cthta0 = cthta1+0.5d0*(1+tx)*(cthta2-cthta1)
@@ -10934,23 +10897,25 @@ module chempotpy_phoh_aprp_pes
         integer, parameter :: ngk2 = 1
         integer, parameter :: ngk3 = 1
         double precision   :: a2(ngk2), a3(ngk3)
-        data a2/3.00968695d0/
-        data a3/0.06538039d0/
-        double precision :: alpha2(ngk2), alpha3(ngk3)
-        data alpha2/0.04954325d0/
-        data alpha3/14.94793100d0/
-        double precision :: r2(ngk2), r3(ngk3)
-        data r2/-6.33258333d0/
-        data r3/2.09315608d0/
-        double precision :: cthta1, cthta2, a, r0
-        data cthta1/-0.30362526d0/, cthta2/-0.65443171d0/
-        data a/0.90134535d0/, r0/2.95896455d0/
-        integer          :: i, j, k
-        double precision :: r
-        double precision :: k2, k3
-        cthta = cos(theta)
-        sthta = sin(theta)
-        x     = a*(r-r0)
+        double precision   :: alpha2(ngk2), alpha3(ngk3)
+        double precision   :: r2(ngk2), r3(ngk3)
+        double precision   :: cthta1, cthta2, a, r0
+        integer            :: i, j, k
+        double precision   :: r
+        double precision   :: k2, k3
+        a2     = 3.00968695d0
+        a3     = 0.06538039d0
+        alpha2 = 0.04954325d0
+        alpha3 = 14.94793100d0
+        r2     = -6.33258333d0
+        r3     = 2.09315608d0
+        cthta1 = -0.30362526d0
+        cthta2 = -0.65443171d0
+        a      = 0.90134535d0
+        r0     = 2.95896455d0
+        cthta  = cos(theta)
+        sthta  = sin(theta)
+        x      = a*(r-r0)
         !      tx=(exp(x)-exp(-x))/(exp(x)+exp(-x))
         tx     = (1.0d0-exp(-2.0d0*x))/(1.0d0+exp(-2.0d0*x))
         cthta0 = cthta1+0.5d0*(1+tx)*(cthta2-cthta1)
@@ -11023,17 +10988,20 @@ module chempotpy_phoh_aprp_pes
         double precision            :: x(natm), y(natm), z(natm)
         double precision            :: dubmdx(3*natm)
         ! Local variables
-        integer :: nbl, nba, nto, noop
-        data nbl/3/, nba/0/, nto/0/, noop/0/
-        integer :: ibl(2,3), iba(3,0), ito(4,0), ioop(4,0)
-        data ibl /1, 4, 2, 5, 3, 6/
+        integer          :: nbl, nba, nto, noop
+        integer          :: ibl(2,3), iba(3,0), ito(4,0), ioop(4,0)
         double precision :: r14, r25, r36
         double precision :: dudr14, dudr25, dudr36
         double precision :: bm(3,3*natm)
-        r14 = bndlen(1, 4, x, y, z)
-        r25 = bndlen(2, 5, x, y, z)
-        r36 = bndlen(3, 6, x, y, z)
-        ubm = b*(exp(-alpha*r14)+exp(-alpha*r25)+exp(-alpha*r36))
+        nbl  = 3
+        nba  = 0
+        nto  = 0
+        noop = 0
+        ibl  = reshape([ 1, 4, 2, 5, 3, 6 ], shape(ibl))
+        r14  = bndlen(1, 4, x, y, z)
+        r25  = bndlen(2, 5, x, y, z)
+        r36  = bndlen(3, 6, x, y, z)
+        ubm  = b*(exp(-alpha*r14)+exp(-alpha*r25)+exp(-alpha*r36))
         !
         !      write(*,*) "ubm =",ubm
         !
@@ -11092,27 +11060,10 @@ module chempotpy_phoh_aprp_pes
         integer :: nqtc
         integer :: nblt, nbat, ntot, noopt
         !     data(nblt=0,nbat=0,ntot=6,noopt=6)
-        data nblt/0/, nbat/0/, ntot/6/, noopt/6/
-        data nblt/0/, nbat/0/, ntot/6/, noopt/6/
         integer :: iblt(2,0), ibat(3,0), itot(4,6), ioopt(4,6)
-        data itot  /2, 1, 6, 5, &
-            & 1, 6, 5, 4, &
-            & 6, 5, 4, 3, &
-            & 5, 4, 3, 2, &
-            & 4, 3, 2, 1, &
-            & 3, 2, 1, 6/
-        data ioopt /7, 1, 2, 6, &
-            & 12, 6, 1, 5, &
-            & 11, 5, 6, 4, &
-            & 10, 4, 5, 3, &
-            & 9, 3, 4, 2, &
-            & 8, 2, 3, 1/
         integer :: nbls, nbas, ntos, noops
         !      data(nbls=1,nbas=0,ntos=1,noops=0)
-        data nbls/1/, nbas/0/, ntos/1/, noops/0/
-        integer :: ibls(2,1), ibas(3,0), itos(4,1), ioops(4,0)
-        data ibls /7, 13/
-        data itos /2, 1, 7, 13/
+        integer                     :: ibls(2,1), ibas(3,0), itos(4,1), ioops(4,0)
         double precision, parameter :: half   = 0.5d0
         double precision, parameter :: oossix = 0.408248290463863d0
         double precision, parameter :: oostlv = 0.288675134594813d0
@@ -11128,6 +11079,15 @@ module chempotpy_phoh_aprp_pes
         double precision :: bnrt(ldbnrt,3*natm)
         double precision :: ct(ldct,maxdim)
         ! Initialize Ct matrix
+        nblt  = 0; nbat = 0; ntot = 6; noopt = 6; nblt = 0; nbat = 0; ntot = 6; noopt = 6
+        itot  = reshape([ 2, 1, 6, 5, 1, 6, 5, 4, 6, 5, 4, 3, 5, 4, 3, 2, 4, 3, 2, 1, 3, 2, 1, 6 ], shape(itot))
+        ioopt = reshape([ 7, 1, 2, 6, 12, 6, 1, 5, 11, 5, 6, 4, 10, 4, 5, 3, 9, 3, 4, 2, 8, 2, 3, 1 ], shape(ioopt))
+        nbls  = 1
+        nbas  = 0
+        ntos  = 1
+        noops = 0
+        ibls  = reshape([ 7, 13 ], shape(ibls))
+        itos  = reshape([ 2, 1, 7, 13 ], shape(itos))
         do i=1, 9
             do j=1, 12
                 ct(i,j) = 0.0d0
@@ -11371,18 +11331,9 @@ module chempotpy_phoh_aprp_pes
         double precision   :: df1rdr, df3rdr, df5rdr
         integer, parameter :: ngf = 3
         double precision   :: a1(ngf), a3(ngf), a5(ngf)
-        data a1/0.068885d0, 0.034221d0, 0.001544d0/
-        data a3/-0.082676d0, -0.021770d0, 0.0d0/
-        data a5/0.053915d0, -0.008539d0, .0d0/
-        double precision :: alpha1(ngf), alpha3(ngf), alpha5(ngf)
-        data alpha1/0.2956970d1, 0.4695508d1, 0.1167016d1/
-        data alpha3/0.5029657d1, 0.8744002d1, 0.0d0/
-        data alpha5/0.7263172d1, 0.27942459d2, 0.0d0/
-        double precision :: r1(ngf), r3(ngf), r5(ngf)
-        data r1/0.3162075d1, 0.2255351d1, 0.4480427d1/
-        data r3/0.3286539d1, 0.2060405d1, 0.0d0/
-        data r5/0.3275937d1, 0.2498052d1, 0.0d0/
-        double precision :: r, phi, u13to, d13dph, d13dr
+        double precision   :: alpha1(ngf), alpha3(ngf), alpha5(ngf)
+        double precision   :: r1(ngf), r3(ngf), r5(ngf)
+        double precision   :: r, phi, u13to, d13dph, d13dr
         ! Local variables
         integer          :: i
         double precision :: sphi, cphi
@@ -11390,6 +11341,15 @@ module chempotpy_phoh_aprp_pes
         double precision :: f1r, f3r, f5r
         double precision :: df1dr, df3dr, df5dr
         double precision :: g1r, g3r, g5r
+        a1     = reshape([ 0.068885d0, 0.034221d0, 0.001544d0 ], shape(a1))
+        a3     = reshape([ -0.082676d0, -0.021770d0, 0.0d0 ], shape(a3))
+        a5     = reshape([ 0.053915d0, -0.008539d0, .0d0 ], shape(a5))
+        alpha1 = reshape([ 0.2956970d1, 0.4695508d1, 0.1167016d1 ], shape(alpha1))
+        alpha3 = reshape([ 0.5029657d1, 0.8744002d1, 0.0d0 ], shape(alpha3))
+        alpha5 = reshape([ 0.7263172d1, 0.27942459d2, 0.0d0 ], shape(alpha5))
+        r1     = reshape([ 0.3162075d1, 0.2255351d1, 0.4480427d1 ], shape(r1))
+        r3     = reshape([ 0.3286539d1, 0.2060405d1, 0.0d0 ], shape(r3))
+        r5     = reshape([ 0.3275937d1, 0.2498052d1, 0.0d0 ], shape(r5))
         u13to  = 0.0d0
         d13dph = 0.0d0
         d13dr  = 0.0d0
@@ -11431,18 +11391,9 @@ module chempotpy_phoh_aprp_pes
         integer, parameter          :: ngf   = 1
         double precision, parameter :: scale = 1.0d0
         double precision            :: a2(ngf), a4(ngf), a6(ngf)
-        data a2/0.016924d0/
-        data a4/0.007145d0/
-        data a6/0.003113d0/
-        double precision :: alpha2(ngf), alpha4(ngf), alpha6(ngf)
-        data alpha2/0.10841076d2/
-        data alpha4/0.12574937d2/
-        data alpha6/0.25329325d2/
-        double precision :: r2(ngf), r4(ngf), r6(ngf)
-        data r2/0.2151852d1/
-        data r4/0.2197436d1/
-        data r6/0.2285492d1/
-        double precision :: r, phi, u23to, d23dph, d23dr
+        double precision            :: alpha2(ngf), alpha4(ngf), alpha6(ngf)
+        double precision            :: r2(ngf), r4(ngf), r6(ngf)
+        double precision            :: r, phi, u23to, d23dph, d23dr
         ! Local variables
         integer          :: i
         double precision :: sphi, cphi
@@ -11450,6 +11401,15 @@ module chempotpy_phoh_aprp_pes
         double precision :: f2r, f4r, f6r
         double precision :: df2dr, df4dr, df6dr
         double precision :: g2r, g4r, g6r
+        a2     = 0.016924d0
+        a4     = 0.007145d0
+        a6     = 0.003113d0
+        alpha2 = 0.10841076d2
+        alpha4 = 0.12574937d2
+        alpha6 = 0.25329325d2
+        r2     = 0.2151852d1
+        r4     = 0.2197436d1
+        r6     = 0.2285492d1
         u23to  = 0.0d0
         d23dph = 0.0d0
         d23dr  = 0.0d0
@@ -11880,7 +11840,6 @@ module chempotpy_phoh_aprp_pes
         implicit none
         integer          :: i, j, k, l
         double precision :: tiny
-        data tiny/1.0d-30/
         double precision :: x(*), y(*), z(*)
         double precision :: eji(3), ejk(3), ejl(3), u(3)
         double precision :: v(3), w(3)
@@ -11893,6 +11852,7 @@ module chempotpy_phoh_aprp_pes
         !          al \
         !              \
         !               k
+        tiny   = 1.0d-30
         rji    = bndlen(j, i, x, y, z)
         eji(1) = (x(i)-x(j))/rji
         eji(2) = (y(i)-y(j))/rji

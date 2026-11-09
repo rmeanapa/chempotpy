@@ -290,7 +290,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
                 precm_tzp3(i)  = 2.0d0*precm_zp3(i)
                 precm_do4z(i)  = precm_d(i)/4.0d0/precm_zpo(i)
                 precm_b(i)     = precm_beta(i)*precm_do4z(i)*2.0d0
-            10 enddo
+            enddo
             !
             !   10 B(I) = BETA(I)*DO4Z(I)*2.0D0
             !
@@ -374,7 +374,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
                     do j=1, 3
                         precm_dcoul(i,j) = 0.d0
                         precm_dexch(i,j) = 0.d0
-                    23 enddo
+                    enddo
                 enddo
             endif
             !
@@ -393,13 +393,13 @@ module chempotpy_fh2_leps_no2a_1984_pes
                 precm_tzp3(i)  = 2.0d0*precm_zp3(i)
                 precm_do4z(i)  = precm_d(i)/4.0d0/precm_zpo(i)
                 precm_b(i)     = precm_do4z(i)*precm_beta(i)*2.d0
-            11 enddo
+            enddo
             !
             do i = 1, 3
                 precm_x(i)    = exp(-precm_beta(i)*(pt1cm_r(i)-precm_re(i)))
                 precm_coul(i) = precm_do4z(i)*(precm_zp3(i)*precm_x(i)-precm_top3z(i))*precm_x(i)
                 precm_exch(i) = precm_do4z(i)*(precm_op3z(i)*precm_x(i)-precm_tzp3(i))*precm_x(i)
-            21 enddo
+            enddo
             !
             rad    = sqrt((precm_exch(1)-precm_exch(2))**2+(precm_exch(2)-precm_exch(3))**2+ (precm_exch(3)- &
                 & precm_exch(1))**2)
@@ -429,7 +429,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
                         'T'')') t, rad
                 endif
                 pt1cm_degsdr(i) = precm_b(i)*precm_x(i)*(t-precm_zp3(i)*precm_x(i)+precm_op3z(i))
-            22 enddo
+            enddo
             !
             !   If the angle phi is less than or equal to 10 deg. then the
             !   Sato parameter is a constant and the derivative of the potential
@@ -457,13 +457,13 @@ module chempotpy_fh2_leps_no2a_1984_pes
                 do j=1, 3
                     precm_dcoul(i,j) = t4*coscm_dphi(j)
                     precm_dexch(i,j) = phicm_fder * s1* (t5 - t6) * coscm_dphi(j)
-                30 enddo
+                enddo
             enddo
             t = -1.d0 / (r2 * rad)
             !
             do i=1, 3
                 do j=1, 3
-                    33 pt1cm_degsdr(i) = pt1cm_degsdr(i) + precm_dcoul(j,i) + t*precm_dexch(j,i)
+                    pt1cm_degsdr(i) = pt1cm_degsdr(i) + precm_dcoul(j,i) + t*precm_dexch(j,i)
                 enddo
             enddo
             !
@@ -573,7 +573,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
             if( usricm_nder .ne. 1 ) return
             !
             do i=1, 3
-                10 coscm_dphi(i) = 0.d0
+                coscm_dphi(i) = 0.d0
             enddo
             !
             if( abs(phi*57.29577951d0) .le. 10.0d0 ) return
@@ -1088,7 +1088,6 @@ module chempotpy_fh2_leps_no2a_1984_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

@@ -212,7 +212,7 @@ module chempotpy_ih2_leps_rspts_1970_pes
                 d1(i) = d1(i)/27.21161d0
                 d3(i) = d3(i)/27.21161d0
                 c(i)  = c(i)/27.21161d0
-            5 enddo
+            enddo
             !
             !    5 C(I) = C(I)/27.21161D0
             !
@@ -284,8 +284,8 @@ module chempotpy_ih2_leps_rspts_1970_pes
             !
             if( nasurf(1,1) .eq. 0 )then
                 write(nflag(18), &
-                    & '(/,2X,T5,13HNASURF(1,1) =,I5, /,2X,T5,24HThis value is unallowed. /,2X,T5,31HOnly gs surfac' // &
-                    & 'e=>NASURF(1,1)=1 )') nasurf(1,1)
+                    & '(/,2X,T5,"NASURF(1,1) =",I5, /,2X,T5,"This value is unallowed.", /,2X,T5, &
+                    & "Only gs surface=>NASURF(1,1)=1")') nasurf(1,1)
                 stop
             endif
             if( nder .gt. 1 )then
@@ -318,7 +318,7 @@ module chempotpy_ih2_leps_rspts_1970_pes
                 endif
                 qt   = qt+q(i)
                 sumj = sumj+fj(i)
-            2 enddo
+            enddo
             ex1    = (fj(1)-fj(2))**2
             ex2    = (fj(2)-fj(3))**2
             ex3    = (fj(3)-fj(1))**2
@@ -327,7 +327,7 @@ module chempotpy_ih2_leps_rspts_1970_pes
             engygs = engygs + ezero(1)
             if( nder .eq. 1 )then
                 do i=1, 3
-                    3 degsdr(i)=dq(i)-0.5d0*dj(i)*(3.0d0*fj(i)-sumj)/exch
+                    degsdr(i) = dq(i)-0.5d0*dj(i)*(3.0d0*fj(i)-sumj)/exch
                 enddo
             endif
             !
@@ -746,7 +746,6 @@ module chempotpy_ih2_leps_rspts_1970_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

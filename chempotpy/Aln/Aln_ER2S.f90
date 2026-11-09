@@ -88,7 +88,7 @@ module chempotpy_aln_er2s_pes
                 r(j,i)   = r(i,j)
                 fu2(j,i) = 1.d0
                 fu2(i,j) = 1.d0
-            3 enddo
+            enddo
         enddo
         xk1  = 2.14338055691255480
         xk2  = 0.456033219345383489
@@ -111,14 +111,14 @@ module chempotpy_aln_er2s_pes
                     ac   = ac+au23*(1d0-1d0/(1d0-ril/bu2))    ! cutoff for Rbeta,delta
                     term = xk1*dexp(-xk2*((ril+rjl)/rij)**xk3+ac)        ! cutoff ti
                     s    = s+term                         ! sum
-                12 enddo
+                enddo
                 !        e2=dexp(-2d0*s)                       ! equivalent to 1-dtanh(s)
                 !        fu2(i,j)=2d0*e2/(1d0+e2)              ! equivalent to 1-dtanh(s)
                 fu2(i,j) = 1.d0-dtanh(s)
                 fu2(j,i) = fu2(i,j)
-            15 enddo
+            enddo
             fu2(i,i) = 1.d0                           ! shouldn't get used anywh
-        10 enddo
+        enddo
         ! potential, includes cutoff
         v = 0.d0
         do i=1, natom
@@ -133,7 +133,7 @@ module chempotpy_aln_er2s_pes
                 co   = 0.d0
                 if( rr .le. bu2 ) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
                 v = v-de*ee*poly*co*fu2(i,j)
-            1 enddo
+            enddo
         enddo
     end subroutine pot
 end module chempotpy_aln_er2s_pes

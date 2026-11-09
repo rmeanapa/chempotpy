@@ -567,7 +567,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
             if( usricm_nder .eq. 1 )then
                 do i = 1, 3
                     pt1cm_degsdr(i) = degsdrcm_dcorr2(i) + degsdrcm_dcorr3(i) + degsdrcm_dldr(i) + degsdrcm_de3c(i)
-                10 enddo
+                enddo
             endif
             !
             !
@@ -636,7 +636,6 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                     & pt1cm_r(3))/r3p10
                 !
             end block goto_block_100_637
-            100 continue
             !
         end subroutine corr2
         !> @brief Evaluate DAMP for the FH2_GEN_5SECS1_1993 potential.
@@ -802,7 +801,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                     dc3dr2(jj) = dt1dr2+dt2dr2+dt3dr2
                     dc3dr3(jj) = dt1dr3+dt2dr3+dt3dr3
                 endif
-            10 enddo
+            enddo
             !
             !   Compute the three-body dynamical correlation term by summing over al
             !   C6, C8, and C10 terms.
@@ -855,8 +854,8 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                 do j = 1, 3
                     detrip(i,j) = 0.0d0
                     dtscle(i,j) = 0.0d0
-                12 enddo
-            11 enddo
+                enddo
+            enddo
             !
             !   Compute the pseudo-angular coordinate
             !
@@ -887,7 +886,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                 do i=1, 3
                     dfcsi1(i) = tmp1*dcsi(i)
                     dfcsi2(i) = tmp2*dcsi(i)
-                10 enddo
+                enddo
             endif
             !
             r2p2 = pt1cm_r(2)**2
@@ -908,7 +907,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                     &3.0d0*diat_a3(i)*drp2)*exp(-diat_gamma(i)*dr) -&
                     &diat_gamma(i)*ehf(i)
                 !
-            20 enddo
+            enddo
             !
             !   Compute the triplet state curve and the derivative of the triplet st
             !   curve w.pt1cm_r.t. pt1cm_r(i) for the H2 diatomic
@@ -944,7 +943,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                 ehft(i)  = par_bhf(1)*exp(-arg)/pt1cm_r(i)
                 x(i)     = exp(-tpar_xhf(2)*pt1cm_r(i))
                 etrip(i) = tpar_xhf(1)*(fcsi1*x(i)*x(i)+fcsi2*tpar_xhf(3)*x(i))/pt1cm_r(i)
-            30 enddo
+            enddo
             !
             if( usricm_nder .eq. 1 )then
                 !
@@ -962,15 +961,15 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                         endif
                         detrip(i,j) = tpar_xhf(1) * (dfcsi1(j)*x(i)*x(i) + 2.0d0*fcsi1*x(i)*dx(j) + dfcsi2(j)* &
                             & tpar_xhf(3)*x(i) + fcsi2* tpar_xhf(3)*dx(j))/pt1cm_r(i) - etrip(i)*dri(j)/pt1cm_r(i)
-                    40 enddo
-                50 enddo
+                    enddo
+                enddo
             endif
             !
             !   Compute the scaling factor for the triplet state curves
             !
             do i = 1, 3
                 tscale(i) = 1.0d0
-            51 enddo
+            enddo
             tscale(2) = 1.035d0
             !
             !   Compute the triplet state curves and combine the triplet and the
@@ -986,7 +985,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                 q(i) = 0.5d0*(ehf(i)+ti(i))
                 !   Compute the exchange integrals
                 ex(i) = 0.5d0*(ehf(i)-ti(i))
-            60 enddo
+            enddo
             !
             ff1 = (ex(1) - ex(2)) ** 2
             ff2 = (ex(2) - ex(3)) ** 2
@@ -1006,8 +1005,8 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                         dti(i,j)                = swpar_dsw(i,j)*(ehft(i)-etrip(i)) + detrip(i,j)*(1.0d0 - swpar_sw(i))
                         if( j .eq. i ) dti(i,j) = dti(i,j) + swpar_sw(i)*dehft(i)
                         dti(i,j)                = dti(i,j)*tscale(i) + ti(i)*dtscle(i,j)/tscale(i)
-                    71 enddo
-                70 enddo
+                    enddo
+                enddo
                 !
                 do i = 1, 3
                     do j = 1, 3
@@ -1018,8 +1017,8 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                             dq(i,j)  = 0.5d0*dti(i,j)
                             dex(i,j) = -dq(i,j)
                         endif
-                    81 enddo
-                80 enddo
+                    enddo
+                enddo
                 !
                 dsumq(1) = dq(1,1)+dq(2,1)+dq(3,1)
                 dsumq(2) = dq(1,2)+dq(2,2)+dq(3,2)
@@ -1034,7 +1033,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                     if( texch .eq. 0.0d0 ) texch = 1.0d0
                     xterm            = 0.5d0*(xterm1*dex(1,i) + xterm2*dex(2,i)+ xterm3*dex(3,i))/texch
                     degsdrcm_dldr(i) = dsumq(i)-xterm
-                90 enddo
+                enddo
             endif
             !
         end subroutine vlond
@@ -1113,7 +1112,6 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                 degsdrcm_de3c(3) = 2.d0*((-t2 * ex2 - 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos3) * ex1*f3+ &
                     & 2.0d0* engycm_e3c*(-local_betp*(pt1cm_r(1)+ pt1cm_r(3)-pt1cm_r(2)))
             end block goto_block_280_1112
-            280 continue
         end subroutine thcent
         !> @brief Evaluate XTANH for the FH2_GEN_5SECS1_1993 potential.
         subroutine xtanh( i, a )
@@ -1152,7 +1150,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                 th                                         = 1.0d0/t
                 if( usricm_nder .eq. 1 ) vtanh_drtanh(i,j) = 4.0d0 * a(j) * ex * th * th
                 vtanh_rtanh(i,j)                           = sgn * th * (1.0d0 - ex)
-            10 enddo
+            enddo
         end subroutine xtanh
         !> @brief Evaluate SWITCH for the FH2_GEN_5SECS1_1993 potential.
         subroutine switch
@@ -1183,7 +1181,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
             do i = 1, 3
                 do j = 1, 3
                     swpar_dsw(i,j) = 0.0d0
-                10 enddo
+                enddo
             enddo
             !
             !   Compute the switching function.
@@ -1203,7 +1201,7 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                 temp1       = 1.0d0 + ex2u
                 hytan       = sgn*(1.0d0 - ex2u)/temp1
                 swpar_sw(i) = 0.5d0*(1.0d0 + hytan)
-            20 enddo
+            enddo
             goto_block_100_1219: block
                 if( usricm_nder .ne. 1 ) exit goto_block_100_1219
                 do i = 1, 3
@@ -1219,10 +1217,9 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                     temp2          = 1.0d0 + exu*exu
                     hysec          = sgn*2.0d0*exu/temp2
                     swpar_dsw(i,i) = 0.5d0*swpar_dec(i)*hysec*hysec
-                30 enddo
+                enddo
                 !
             end block goto_block_100_1219
-            100 continue
         end subroutine switch
         !> @brief Evaluate POTINFO for the FH2_GEN_5SECS1_1993 potential.
         subroutine potinfo
@@ -1724,7 +1721,6 @@ module chempotpy_fh2_gen_5secs1_1993_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

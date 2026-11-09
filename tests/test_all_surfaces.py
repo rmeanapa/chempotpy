@@ -145,6 +145,156 @@ class AllSurfaceRegressionTests(unittest.TestCase):
                     r"initialize_only|first_time_data|first_time_diag)\b",
                 )
 
+    def test_triatomic_internal_kernels_use_shared_driver(self) -> None:
+        targets = (
+            self.sources["BrH2/BrH2_LEPS_W_1959"],
+            *(self.sources["BrHCl/BrHCl_LEPS{}".format(index)] for index in range(1, 4)),
+            *(self.sources["Cl2H/{}".format(name)] for name in (
+                "Cl2H_LEPS_BCMR_1983",
+                "Cl2H_LEPS_KNPRY_1966",
+                "Cl2H_LEPS_PK2_1987",
+                "Cl2H_LEPS_PK3_1987",
+            )),
+            *(self.sources["ClH2/{}".format(name)] for name in (
+                "ClH2_LEPS_GTM1_1981",
+                "ClH2_LEPS_GTM2_1981",
+                "ClH2_LEPS_GTM3_1981",
+                "ClH2_LEPS_KNPRY_1966",
+                "ClH2_LEPS_PK1_1966",
+                "ClH2_LEPS_PK2_1966",
+                "ClH2_LEPS_SPK_1973",
+            )),
+            self.sources["F2H/F2H_LEPS_KNPRY_1966"],
+            *(self.sources["FH2/{}".format(name)] for name in (
+                "FH2_LEPS_M5SK_1966",
+                "FH2_LEPS_M5_1991",
+                "FH2_LEPS_NO1_1984",
+                "FH2_LEPS_SK_1980",
+            )),
+            self.sources["I2H/I2H_LEPS_PT1_1971"],
+            self.sources["I2H/I2H_LEPS_PT2_1971"],
+            self.sources["IH2/IH2_LEPS_KNPRY_1966"],
+            self.sources["IH2/IH2_LEPS_PPW1_1974"],
+            self.sources["OH2/OH2_LEPS_JW1977"],
+            self.sources["OH2/OH2_LEPS_JWS1985"],
+        )
+        self.assertEqual(len(targets), 26)
+        for source in targets:
+            with self.subTest(source=source.name):
+                text = source.read_text(errors="replace")
+                self.assertRegex(
+                    text,
+                    r"(?im)^\s*use\s+chempotpy_internal_coordinates,\s*"
+                    r"only:\s*finalize_legacy_triatomic_surface,\s*&\s*$",
+                )
+                self.assertRegex(
+                    text,
+                    r"(?im)^\s*&\s*prepare_legacy_triatomic_coordinates\s*$",
+                )
+                self.assertRegex(
+                    text,
+                    r"(?im)^\s*call\s+prepare_legacy_triatomic_coordinates\("
+                    r"x,\s*distances_bohr,\s*distance_jacobian\)\s*$",
+                )
+                self.assertRegex(
+                    text,
+                    r"(?im)^\s*call\s+finalize_legacy_triatomic_surface\(",
+                )
+                self.assertRegex(
+                    text,
+                    r"(?im)^\s*pure\s+subroutine\s+evaluate_internal\(",
+                )
+                self.assertNotRegex(text, r"(?im)^\s*(?:subroutine|call)\s+pot\b")
+
+    def test_all_pair_distance_kernels_use_shared_geometry(self) -> None:
+        distance_targets = (
+            self.sources["C2H2N2O/C2H2N2O_PIPNN"],
+            self.sources["C2H2O/C2H2O_PIPNN"],
+            self.sources["CH2O/CH2O_PIPNN"],
+            self.sources["CH2O2/CH2O2_PIPNN"],
+            self.sources["CH4OCl/CH4OCl_PIPNN"],
+            self.sources["CH4OF/CH4OF_PIPNN"],
+            self.sources["ClH2O/ClH2O_PIPNN"],
+            self.sources["FH2O/FH2O_PIPNN"],
+            self.sources["FH2O/FH2O_SOC_PIPNN"],
+            self.sources["H3ClO/H3ClO_PIPNN"],
+            self.sources["H3S/H3S_PIPNN"],
+            self.sources["HClOH/HClOH_PIPNN"],
+            self.sources["HO3/HO3_PIPNN"],
+            self.sources["K2Rb2/K2Rb2_PIPNN"],
+            self.sources["N4/N4_1A_PIPNN"],
+            self.sources["O2H3/O2H3_PIPNN"],
+        )
+        jacobian_targets = (
+            self.sources["N2O2/N2O2_3A_PIP"],
+            self.sources["N2O2/N2O2_3A_ZV"],
+            self.sources["N4/N4_1A_PIP"],
+            self.sources["N4/N4_1A_PIPNN"],
+            self.sources["N4/N4_1A_PIP_2013"],
+            self.sources["N4/N4_1A_ZV"],
+            self.sources["O4/O4_quintet"],
+            self.sources["O4/O4_quintet_ZV"],
+            self.sources["O4/O4_singlet"],
+            self.sources["O4/O4_singlet_ZV"],
+            self.sources["O4/O4_triplet_ZV"],
+            self.sources["O4/O4_triplet_v2"],
+            self.sources["OH3/OH3_PIP_FFW1_2019"],
+            self.sources["OH3/OH3_PIP_FFW1_2019_DPEM"],
+            self.sources["OH3/OH3_PIP_FFW2_2022"],
+            self.sources["OH3/OH3_PIP_FFW2_2022_DPEM"],
+            self.sources["H3S/H3S_PIPNN"],
+        )
+        for source in distance_targets:
+            with self.subTest(operation="distances", source=source.name):
+                text = source.read_text(errors="replace")
+                self.assertRegex(
+                    text,
+                    r"(?im)^\s*call\s+all_pair_distances\(",
+                )
+        for source in jacobian_targets:
+            with self.subTest(operation="jacobian", source=source.name):
+                text = source.read_text(errors="replace")
+                self.assertRegex(
+                    text,
+                    r"(?im)^\s*call\s+all_pair_distance_jacobian\(",
+                )
+        coco = self.sources["COCO/COCO_PIPNN"].read_text(errors="replace")
+        self.assertRegex(
+            coco,
+            r"(?im)^\s*call\s+all_pair_distances_and_jacobian\(",
+        )
+        self.assertRegex(
+            coco,
+            r"(?im)^\s*call\s+transform_internal_gradient_to_cartesian\(",
+        )
+
+    def test_distance_derivative_adapters_are_centralized(self) -> None:
+        manual_jacobian = re.compile(
+            r"(?im)^\s*(?!\!)\w*drdx\s*\([^\n]*\)\s*=\s*"
+            r"\([^\n]*-[^\n]*\)\s*/"
+        )
+        manual_chain_rule = re.compile(
+            r"(?im)^\s*(?!\!)(?:dvdx|dedx|dgdx|cartesian_gradient)\s*"
+            r"\([^\n]*\)\s*=\s*[^\n]*\+[^\n]*(?:drdx|dqdx|jacob)"
+        )
+        manual_flatten = re.compile(
+            r"(?ims)^\s*do\s+\w+\s*=\s*1\s*,\s*(?:natom|natoms|[0-9]+)"
+            r"[\s\S]{0,250}?\(\s*3\s*\*\s*\([^\n]*-\s*1\)\s*\+\s*1"
+        )
+        component_major_exceptions = {
+            self.sources["CH5/CH5_GEN_J1_1987"],
+            self.sources["CH5/CH5_GEN_J2_1987"],
+        }
+        for source in self.sources.values():
+            text = source.read_text(errors="replace")
+            with self.subTest(source=source.name, operation="chain_rule"):
+                self.assertNotRegex(text, manual_chain_rule)
+            with self.subTest(source=source.name, operation="flatten"):
+                self.assertNotRegex(text, manual_flatten)
+            if source not in component_major_exceptions:
+                with self.subTest(source=source.name, operation="jacobian"):
+                    self.assertNotRegex(text, manual_jacobian)
+
     def test_every_surface_has_one_private_owner_module(self) -> None:
         for key, source in self.sources.items():
             with self.subTest(surface=key):

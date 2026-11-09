@@ -776,7 +776,7 @@ module chempotpy_fh2_gen_5sec_1991_pes
                     dc3dr3(jj) = dt1dr3+dt2dr3+dt3dr3
                 endif
                 !
-            10 enddo
+            enddo
             !
             thbc = co3(1)+co3(2)+co3(3)
             !
@@ -842,7 +842,7 @@ module chempotpy_fh2_gen_5sec_1991_pes
                 do i=1, 3
                     dfcsi1(i) = tmp1*dcsi(i)
                     dfcsi2(i) = tmp2*dcsi(i)
-                10 enddo
+                enddo
             endif
             !
             r1p2 = r(1)**2
@@ -878,7 +878,7 @@ module chempotpy_fh2_gen_5sec_1991_pes
                 if( nder .eq. 1 ) dehf(i) = -legacy_d(i)*(a1(i)+2.0d0*a2(i)*dr+ 3.0d0*a3(i)*drp2)*exp(-gamma(i)*dr)- &
                     & gamma(i)*ehf(i)
                 !
-            20 enddo
+            enddo
             !
             !     CALCULATE THE DIATOMIC TRIPLET STATE CURVES ETRIP(I)
             !
@@ -941,8 +941,8 @@ module chempotpy_fh2_gen_5sec_1991_pes
                     endif
                     detrip(i,j) = xhf(1)*(dfcsi1(j)*xip2+2.0d0*fcsi1*x(i)*dx(j)+ dfcsi2(j)*xhf(3)*x(i)+fcsi2*xhf(3)* &
                         & dx(j))/ r(i)- etrip(i)*dri(j)/r(i)
-                31 enddo
-            30 enddo
+                enddo
+            enddo
             !
             !
             !     FINALLY:
@@ -972,8 +972,8 @@ module chempotpy_fh2_gen_5sec_1991_pes
                         dq(i,j)  = 0.5d0*dti(i,j)
                         dex(i,j) = -dq(i,j)
                     endif
-                41 enddo
-            40 enddo
+                enddo
+            enddo
             !
             if( nder .eq. 1 )then
                 dsumq(1) = dq(1,1)+dq(2,1)+dq(3,1)
@@ -1000,10 +1000,9 @@ module chempotpy_fh2_gen_5sec_1991_pes
                     if( texch .eq. 0.0d0 ) texch = 1.0d0
                     xterm    = 0.5d0*(xterm1*dex(1,i)+xterm2*dex(2,i)+ xterm3*dex(3,i))/texch
                     dleps(i) = dsumq(i)-xterm
-                50 enddo
+                enddo
                 !
             end block goto_block_700_1004
-            700 continue
             call thcent(de3c1, de3c2, de3c3)
             !
             eleps = eleps + e3c
@@ -1039,8 +1038,8 @@ module chempotpy_fh2_gen_5sec_1991_pes
             !
             !
             logical :: lderiv
-            data lderiv /.false./
             !
+            lderiv = .false.
             if( nder .eq. 1 ) lderiv = .true.
             omp3c = 1.d0 - p3c
             omq3c = 1.d0 - q3c
@@ -1097,7 +1096,6 @@ module chempotpy_fh2_gen_5sec_1991_pes
                 de3c3 = 2.d0*((-t2 * ex2 - 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos3) * ex1*f3+ 2.0d0*e3c*(- &
                     & betp* (r(1)+ r(3)-r(2)))
             end block goto_block_280_1096
-            280 continue
         end subroutine thcent
         !> @brief Evaluate XTANH for the FH2_GEN_5SEC_1991 potential.
         subroutine xtanh( i, a )
@@ -1133,7 +1131,7 @@ module chempotpy_fh2_gen_5sec_1991_pes
                 th                            = 1.0d0/t
                 if( nder .eq. 1 ) drtanh(i,j) = 4.0d0*a(j)*ex*th*th
                 rtanh(i,j)                    = sgn * th * (1.0d0 - ex)
-            10 enddo
+            enddo
         end subroutine xtanh
         !> @brief Evaluate SWITCH for the FH2_GEN_5SEC_1991 potential.
         subroutine switch
@@ -1172,7 +1170,7 @@ module chempotpy_fh2_gen_5sec_1991_pes
                 sw(i)                    = 0.5d0*(1.0d0+th)
                 if( nder .eq. 1 ) dsw(i) = 0.5d0*dth
                 !
-            20 enddo
+            enddo
             !
         end subroutine switch
         !> @brief Evaluate POTINFO for the FH2_GEN_5SEC_1991 potential.
@@ -1675,7 +1673,6 @@ module chempotpy_fh2_gen_5sec_1991_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

@@ -397,7 +397,7 @@ module chempotpy_oh2_gen_sl1979_pes
                     precm_s(i)   = precm_x(i)-1.d0
                     precm_vm(i)  = satocm_de(i)*(1.0d0-exp(-satocm_bet(i)*(precm_x(i)-satocm_xre(i))))**2-satocm_de(i)
                     q            = q*(1.0d0-tanh(precm_al(i)*precm_s(i)))
-                10 enddo
+                enddo
                 !
                 u = precm_vm(1)*precm_chi(2)*precm_chi(3)+precm_vm(2)*precm_chi(1)*precm_chi(3) + precm_vm(3)* &
                     & precm_chi(1)*precm_chi(2)
@@ -604,7 +604,7 @@ module chempotpy_oh2_gen_sl1979_pes
                         !      IF(COSH(AL(3)*S(3)).LT.1.0D-15)GO TO 146
                         !
                         dcsr3 = -precm_al(3)/(cosh(precm_al(3)*precm_s(3))**2)
-                        146 psi13=2.0d0*(-precm_gam)*temp*(pt1cm_r(1) + pt1cm_r(3))
+                        psi13 = 2.0d0*(-precm_gam)*temp*(pt1cm_r(1) + pt1cm_r(3))
                         !
                         dchi1 = 2.0d0*precm_alf*pt1cm_r(1)*exp(-precm_alf*(pt1cm_r(1)**2))
                         dchi2 = 2.0d0*precm_alf*pt1cm_r(2)*exp(-precm_alf*(pt1cm_r(2)**2))
@@ -627,9 +627,8 @@ module chempotpy_oh2_gen_sl1979_pes
                         dvr3 = 2.0d0*satocm_de(3)*(1.0d0 - exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3))))* &
                             & satocm_bet(3)* exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3)))
                         !
-                        155 pt1cm_degsdr(1) = precm_vm(2)*precm_chi(3)*dchi1 + precm_chi(2)*precm_chi(3)*dvr1 +&
-                            &precm_vm(3)*precm_chi(2)*dchi1 + d1d*q*temp + p*dq1*temp*dcsr1 +&
-                            &dap1 + db1 + p*q*psi13
+                        pt1cm_degsdr(1) = precm_vm(2)*precm_chi(3)*dchi1 + precm_chi(2)*precm_chi(3)*dvr1 + &
+                            & precm_vm(3)*precm_chi(2)*dchi1 + d1d*q*temp + p*dq1*temp*dcsr1 + dap1 + db1 + p*q*psi13
                         pt1cm_degsdr(2) = dvr2*precm_chi(1)*precm_chi(3) + precm_vm(1)*precm_chi(3)*dchi2 + &
                             & precm_vm(3)* precm_chi(1)*dchi2 + d2d*q*temp + p*dq2*temp*dcsr2 + dap2
                         pt1cm_degsdr(3) = precm_vm(2)*precm_chi(1)*dchi3 + precm_vm(1)*precm_chi(2)*dchi3 + dvr3* &
@@ -637,7 +636,7 @@ module chempotpy_oh2_gen_sl1979_pes
                         !
                         do i=1, 3
                             pt1cm_degsdr(i) = pt1cm_degsdr(i)/hart*bohr
-                        222 enddo
+                        enddo
                         !
                         ! END OF NDER SWITCH AROUND DERIVATIVES
                         !
@@ -1160,7 +1159,6 @@ module chempotpy_oh2_gen_sl1979_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

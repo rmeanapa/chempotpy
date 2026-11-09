@@ -110,6 +110,7 @@ end subroutine pes
 
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v, vpes, dvdxa, dvdx, ndriv )
+    use chempotpy_geometry, only: all_pair_distances, flatten_cartesian_coordinates
     !Subroutine to calculate the average potential energy v and gradient dvdxa
     !Xcart     ==>Cartesian coordinates in angstrom
     !             O1: xcart(1,1), xcart(2,1), xcart(3,1)
@@ -127,27 +128,16 @@ subroutine evvdvdx( xcart, v, vpes, dvdxa, dvdx, ndriv )
     use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-    integer          :: i, j, k, ndriv
+    integer          :: i, j, ndriv
     double precision :: v, vpes(npes), c(0:ninput), dvdx(1:natom*3,npes)
     double precision :: xcart(1:3,1:natom), m(0:4), xmorse(1:nbond), r(1:nbond)
     double precision :: dvdr(1:nbond), x(1:natom*3), drdx(1:nbond,1:natom*3)
     double precision :: txinput(1:ninput), dvdg(1:ninput,npes), p(0:ninput)
     double precision :: dpdr(1:nbond,0:ninput), dvdxa(1:natom*3)
     double precision :: vpf, dvpfdr(3)
-    ! ::::::::::::::::::::
-    do i=1, 3
-        x((3*(i-1)+1):(3*(i-1)+3)) = xcart(:,i)
-    enddo
-    k = 0
-    do i=1, 2
-        do j=i+1, 3
-            k         = k+1
-            r(k)      = dot_product(xcart(:,i)-xcart(:,j), xcart(:,i)-xcart(:,j))
-            r(k)      = dsqrt(r(k))
-            xmorse(k) = dexp(-r(k)/alpha)
-        enddo
-    enddo
-    if( k .ne. 3 ) stop "error"
+    call flatten_cartesian_coordinates(transpose(xcart), x)
+    call all_pair_distances(transpose(xcart), r)
+    xmorse = dexp(-r/alpha)
     call bemsav(xmorse, m, p)
     do j=1, 12
         txinput(j) = p(j)
@@ -445,7 +435,8 @@ end subroutine evpoly
 
 !> @brief Evaluate evdvdx.
 subroutine evdvdx( dvdg, dpdr, drdx, dvdxa, dvdx, dvpfdr )
-    use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
+    use chempotpy_geometry, only: transform_internal_gradient_to_cartesian
+    use nnparam,            only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
     integer          :: i, j, k
@@ -454,16 +445,9 @@ subroutine evdvdx( dvdg, dpdr, drdx, dvdxa, dvdx, dvpfdr )
     double precision :: dvdr(1:nbond), dpdr(1:nbond,0:ninput), dvdp(0:ninput)
     double precision :: dgdx(1:natom*3,1:ninput), dgdr(1:nbond,1:ninput)
     double precision :: dvdxa(1:natom*3), dvdg(1:ninput,npes), rtmp
-    double precision :: dvpfdr(3)
-    dgdx           = 0d0
-    dgdr(1:3,1:12) = dpdr(1:3,1:12)
-    do i=1, 9
-        do j=1, 12
-            do k=1, 3
-                dgdx(i,j) = dgdx(i,j) + dgdr(k,j)*drdx(k,i)
-            enddo
-        enddo
-    enddo
+    double precision :: dvpfdr(3), basis_cartesian(ninput,natom*3), patch_cartesian(natom*3)
+    call transform_internal_gradient_to_cartesian(transpose(dpdr(:,1:ninput)), drdx, basis_cartesian)
+    dgdx = transpose(basis_cartesian)
     dvdx = 0d0;dvdxa=0
     do k=1, npes
         do i=1, 9
@@ -474,13 +458,9 @@ subroutine evdvdx( dvdg, dpdr, drdx, dvdxa, dvdx, dvpfdr )
     enddo
     ! Add the derivative of patch function to get the barrier
     ! between 2A1 and 2B2 minima
+    call transform_internal_gradient_to_cartesian(dvpfdr, drdx, patch_cartesian)
     do k=1, npes
-        do i=1, 9
-            do j=1, 3
-                dvdx(i,k) = dvdx(i,k) + dvpfdr(j)*drdx(j,i)
-                !write(*,*) "drdx ",drdx(j,i),j,i
-            enddo
-        enddo
+        dvdx(:,k) = dvdx(:,k)+patch_cartesian
     enddo
     do i=1, 9
         do k=1, npes
@@ -507,34 +487,15 @@ end subroutine evdvdr
 
 !> @brief Evaluate evdrdx.
 subroutine evdrdx( xcart, r, x, drdx )
-    use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
+    use nnparam,            only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
         & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-    integer          :: i, j, k
-    double precision :: r(1:nbond), xcart(1:3,1:natom), drdx(1:nbond,1:natom*3)
-    double precision :: x(1:natom*3)
-    drdx(:,:) = 0d0
-    !dr1dx
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    !dr2dx
-    drdx(2,1) = (x(1)-x(7))/r(2)
-    drdx(2,2) = (x(2)-x(8))/r(2)
-    drdx(2,3) = (x(3)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,1)
-    drdx(2,8) = -drdx(2,2)
-    drdx(2,9) = -drdx(2,3)
-    !dr3dx
-    drdx(3,4) = (x(4)-x(7))/r(3)
-    drdx(3,5) = (x(5)-x(8))/r(3)
-    drdx(3,6) = (x(6)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,4)
-    drdx(3,8) = -drdx(3,5)
-    drdx(3,9) = -drdx(3,6)
+    integer, parameter            :: first_atoms(3)  = [1, 1, 2]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
+    double precision, intent(in)  :: xcart(1:3,1:natom), r(1:nbond), x(1:natom*3)
+    double precision, intent(out) :: drdx(1:nbond,1:natom*3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !> @brief Evaluate evdmsdr.

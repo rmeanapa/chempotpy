@@ -118,7 +118,7 @@ module chempotpy_aln_np_ad_pes
             dvdy(i) = 0.0d0
             dvdz(i) = 0.0d0
             v       = 0.d0
-        99998 enddo
+        enddo
         ! do S term, needs xk1,xk2,xk3
         do i = 1, natom
             do j = i + 1, natom
@@ -186,7 +186,7 @@ module chempotpy_aln_np_ad_pes
                     gzs(l) = gzs(l) + (term*d8_b2+d6_b)*(z(l)-z(i))/ril
                     gzs(l) = gzs(l) + (term*d6_b1+d6_b)*(z(l)-z(j))/rjl
                     s      = s + term
-                512 enddo
+                enddo
                 d2_v = tanh (s)
                 d1_p = 1.0d0 - ( d2_v *  d2_v)
                 fs   = d2_v
@@ -215,8 +215,8 @@ module chempotpy_aln_np_ad_pes
                     dvdz(k) = dvdz(k) + d1_p*tmpb*gzs(k)
                 enddo
                 v = v + tmpb * d2_v
-            515 enddo
-        510 enddo
+            enddo
+        enddo
         ! CALCULATE CN FUNCTION
         g1e = dexp(g1)
         do i = 1, natom
@@ -250,9 +250,9 @@ module chempotpy_aln_np_ad_pes
                 gzgcorr(i, i) = dum*(z(i)-z(j)) + gzgcorr(i, i)
                 gzgcorr(j, i) = -dum*(z(i)-z(j)) + gzgcorr(j, i)
                 gcorr(i)      = gcorr(i) + term
-            21 enddo
+            enddo
             gcorr(i) = gcorr(i) * g1e
-        20 enddo
+        enddo
         !     then calculate CN term
         do i = 1, natom
             do j = 1, natom
@@ -277,7 +277,6 @@ module chempotpy_aln_np_ad_pes
                     gdum = d1_p * d6_b /rij
                     term = d2_v
                 end block goto_block_32_278
-                32 continue
                 cz1 = (gcorr(i) - term) / gzero
                 if( cz1 .gt. 1.d-20 )then
                     d2_v = cz1 ** ( gu2 - 2.0d0)
@@ -341,8 +340,8 @@ module chempotpy_aln_np_ad_pes
                 dvdz(i) = dvdz(i) - dtmpbdrr*(z(i)-z(j))/rr*fcn
                 dvdz(j) = dvdz(j) - dtmpbdrr*(z(j)-z(i))/rr*fcn
                 v       = v - tmpb * fcn
-            31 enddo
-        30 enddo
+            enddo
+        enddo
         ! pairwise term
         do i = 1, natom
             do j = i + 1, natom
@@ -397,8 +396,8 @@ module chempotpy_aln_np_ad_pes
                 dvdz(i) = dvdz(i) + dum * dz
                 dvdz(j) = dvdz(j) - dum * dz
                 v       = v - tmp
-            99990 enddo
-        99989 enddo
+            enddo
+        enddo
     end subroutine pot
 end module chempotpy_aln_np_ad_pes
 

@@ -81,26 +81,19 @@ module chempotpy_o3_14_3ap_2022_dpem_pes
         double precision, intent(inout) :: u(ns,ns)
         double precision, intent(inout) :: ug(ns,ns,n,3)
         ! layers and their sizes
-        double precision, save :: coeff_l0(3,15), coeff_l1(15,35)
-        double precision, save :: coeff_l2(35,55), coeff_l3(55,105)
-        double precision, save :: bias_l0(15), bias_l1(35), bias_l2(55), bias_l3(105)
-        double precision       :: r(n*(n-1)/2), expr(n*(n-1)/2)
-        double precision       :: a
-        double precision       :: gr(ns,n*(n-1)/2)
-        double precision       :: hr(ns,ns,n*(n-1)/2)
-        double precision       :: ur(ns,ns,n*(n-1)/2)
-        double precision       :: v2b(ns), g2b(ns,n*(n-1)/2)
-        double precision       :: drdx(n*(n-1)/2,3*n)
-        integer                :: i, j, k, l, m
-        logical, save          :: first_time_data=.true.
-        e = 0.d0
-        g = 0.d0
-        ! get ddnn coefficients and bias
-        if( first_time_data )then
-            call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, &
-                bias_l0, bias_l1, bias_l2, bias_l3)
-            first_time_data = .false.
-        endif
+        double precision :: coeff_l0(3,15), coeff_l1(15,35)
+        double precision :: coeff_l2(35,55), coeff_l3(55,105)
+        double precision :: bias_l0(15), bias_l1(35), bias_l2(55), bias_l3(105)
+        double precision :: r(n*(n-1)/2), expr(n*(n-1)/2)
+        double precision :: a
+        double precision :: gr(ns,n*(n-1)/2)
+        double precision :: hr(ns,ns,n*(n-1)/2)
+        double precision :: ur(ns,ns,n*(n-1)/2)
+        double precision :: v2b(ns), g2b(ns,n*(n-1)/2)
+        double precision :: drdx(n*(n-1)/2,3*n)
+        integer          :: i, j, k, l, m
+        call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, &
+            bias_l0, bias_l1, bias_l2, bias_l3)
         ! input x is in bohr
         ! convert xyz coordinates to exp of internuclear distances,
         ! expr=exp(-a*r), where a = 1.0 1/bohr
@@ -327,17 +320,13 @@ module chempotpy_o3_14_3ap_2022_dpem_pes
         double precision, intent(out) :: ev_s(n)
         integer                       :: io, i
         double precision, allocatable :: lapack_work_d(:)
-        integer, save                 :: lapack_lwork_d
-        logical, save                 :: first_time_diag=.true.
-        u_ss = a_ss
-        if( first_time_diag )then
-            lapack_lwork_d = -1
-            allocate( lapack_work_d(2) )
-            call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
-            lapack_lwork_d = int(lapack_work_d(1))
-            deallocate ( lapack_work_d )
-            first_time_diag = .false.
-        endif
+        integer                       :: lapack_lwork_d
+        u_ss           = a_ss
+        lapack_lwork_d = -1
+        allocate( lapack_work_d(2) )
+        call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
+        lapack_lwork_d = int(lapack_work_d(1))
+        deallocate ( lapack_work_d )
         allocate( lapack_work_d(lapack_lwork_d) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
         ! U_ss already holds the transformation matrix
@@ -351,6 +340,7 @@ module chempotpy_o3_14_3ap_2022_dpem_pes
     ! convert de/dr to de/dxyz
     !> @brief Evaluate grad_r_to_xyz.
     subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
+        use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
         implicit none
         integer, intent(in)             :: n, ns
         double precision, intent(in)    :: x(n,3)
@@ -360,27 +350,8 @@ module chempotpy_o3_14_3ap_2022_dpem_pes
         double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
         double precision                :: gx(ns,3*n)
         integer                         :: i, j
-        drdx = 0.0d0
-        ! compute drdx
-        drdx(1,1) = (x(1,1)-x(2,1))/r(1)
-        drdx(1,2) = (x(1,2)-x(2,2))/r(1)
-        drdx(1,3) = (x(1,3)-x(2,3))/r(1)
-        drdx(1,4) = -drdx(1,1)
-        drdx(1,5) = -drdx(1,2)
-        drdx(1,6) = -drdx(1,3)
-        drdx(2,1) = (x(1,1)-x(3,1))/r(2)
-        drdx(2,2) = (x(1,2)-x(3,2))/r(2)
-        drdx(2,3) = (x(1,3)-x(3,3))/r(2)
-        drdx(2,7) = -drdx(2,1)
-        drdx(2,8) = -drdx(2,2)
-        drdx(2,9) = -drdx(2,3)
-        drdx(3,4) = (x(2,1)-x(3,1))/r(3)
-        drdx(3,5) = (x(2,2)-x(3,2))/r(3)
-        drdx(3,6) = (x(2,3)-x(3,3))/r(3)
-        drdx(3,7) = -drdx(3,4)
-        drdx(3,8) = -drdx(3,5)
-        drdx(3,9) = -drdx(3,6)
-        call mproduct(gr, drdx, gx, ns, n*(n-1)/2, 3*n)
+        call all_pair_distance_jacobian(x, r, drdx)
+        call transform_internal_gradient_to_cartesian(gr, drdx, gx)
         do i=1, n
             g(:,i,1) = gx(:,3*(i-1)+1)
             g(:,i,2) = gx(:,3*(i-1)+2)
@@ -391,6 +362,7 @@ module chempotpy_o3_14_3ap_2022_dpem_pes
     ! convert de/dr to de/dxyz
     !> @brief Evaluate nac_r_to_xyz.
     subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
+        use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
         implicit none
         integer, intent(in)             :: n, ns
         double precision, intent(in)    :: x(n,3)
@@ -400,29 +372,8 @@ module chempotpy_o3_14_3ap_2022_dpem_pes
         double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
         double precision                :: hx(ns,ns,3*n)
         integer                         :: i, j
-        drdx = 0.0d0
-        ! compute drdx
-        drdx(1,1) = (x(1,1)-x(2,1))/r(1)
-        drdx(1,2) = (x(1,2)-x(2,2))/r(1)
-        drdx(1,3) = (x(1,3)-x(2,3))/r(1)
-        drdx(1,4) = -drdx(1,1)
-        drdx(1,5) = -drdx(1,2)
-        drdx(1,6) = -drdx(1,3)
-        drdx(2,1) = (x(1,1)-x(3,1))/r(2)
-        drdx(2,2) = (x(1,2)-x(3,2))/r(2)
-        drdx(2,3) = (x(1,3)-x(3,3))/r(2)
-        drdx(2,7) = -drdx(2,1)
-        drdx(2,8) = -drdx(2,2)
-        drdx(2,9) = -drdx(2,3)
-        drdx(3,4) = (x(2,1)-x(3,1))/r(3)
-        drdx(3,5) = (x(2,2)-x(3,2))/r(3)
-        drdx(3,6) = (x(2,3)-x(3,3))/r(3)
-        drdx(3,7) = -drdx(3,4)
-        drdx(3,8) = -drdx(3,5)
-        drdx(3,9) = -drdx(3,6)
-        do i=1, ns
-            call mproduct(hr(i,:,:), drdx, hx(i,:,:), ns, n*(n-1)/2, 3*n)
-        enddo
+        call all_pair_distance_jacobian(x, r, drdx)
+        call transform_internal_gradient_to_cartesian(hr, drdx, hx)
         do i=1, n
             h(:,:,i,1) = hx(:,:,3*(i-1)+1)
             h(:,:,i,2) = hx(:,:,3*(i-1)+2)

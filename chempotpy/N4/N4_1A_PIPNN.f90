@@ -131,14 +131,15 @@ end subroutine pes
 !      subroutine n4pipNN(ct,vpes,vpesa,vpesb,vpesc,vn2) !ct in N4 order and angstrom
 !> @brief Evaluate n4pipNN.
 subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
-    use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, nindex, ninput, &
+    use chempotpy_geometry, only: all_pair_distances, transform_internal_gradient_to_cartesian
+    use nnparam,            only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, nindex, ninput, &
         & nlayer, nnew, nodemax, nodes, noutput, nscale, nterm, nwe, pavga, pavgb, pavgc, pdela, &
         & pdelb, pdelc, pi, radian, weighta, weightb, weightc
     implicit none
-    integer          :: i, j, k
+    integer          :: i, j
     double precision :: rb(ndim), xbond(ndim), basis(1:nbasis), tmp1, &
         &  txinput(nbasis-1), bnew(1:nnew)
-    double precision :: ct(3,natom), xvec(3,ndim), cx(3,natom)
+    double precision :: cx(3,natom)
     double precision :: vpes, vpesa, vpesb, vpesc
     double precision :: vn2, vn2tmp, grad
     integer          :: imol, igrad
@@ -159,18 +160,9 @@ subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
     dedx(:) = 0.0d0
     dedy(:) = 0.0d0
     dedz(:) = 0.0d0
-    k       = 0
-    do i=1, natom-1
-        do j=i+1, natom
-            k = k+1
-            !        write(*,*)k,i,j
-            xvec(:,k) = cx(:,i)-cx(:,j)
-        enddo
-    enddo
-    if( k .ne. ndim ) stop 'error in bond dimension'
+    call all_pair_distances(transpose(cx), rb)
     vn2 = 0d0
     do i=1, ndim
-        rb(i) = dsqrt(dot_product(xvec(:,i), xvec(:,i)))
         !       if(rb(i).le.0.6d0)then
         !         vpes=1000.0d0/23.0605d0
         !         return
@@ -241,15 +233,7 @@ subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
             !       write(*,*) "dedr(i) ",dedr(i),i
             rb(i) = rb(i)+dr
         enddo
-        dvdx(:) = 0.0d0
-        do i=1, 12
-            do j=1, 6
-                !         write(*,*) "dedr(j) ",dedr(j),j
-                !          write(*,*) "dRdX(j,i) ",dRdX(j,i),j,i
-                dvdx(i) = dvdx(i) + dedr(j)*drdx(j,i)
-            enddo
-            !         write(*,*) "dVdX(i) ",dVdX(i)
-        enddo
+        call transform_internal_gradient_to_cartesian(dedr, drdx, dvdx)
         ! dEdX, dEdY, and dEdZ in au/bohr
         do i=1, 4
             dedx(i) = dvdx(3*i-2)*gconv
@@ -265,67 +249,11 @@ end subroutine n4pipnn
 
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( cx, r, drdx )
-    ! Subroutine to evaluate dRdX for given R and X
-    ! R:            R(6), 6 bond lengths
-    ! X:            X(12), 12 Cartesian coordinates
+    use chempotpy_geometry, only: all_pair_distance_jacobian
     implicit none
-    integer          :: i, j
-    double precision :: cx(3,4), r(6), drdx(6,12)
-    ! Initialize dRdX(6,12)
-    do i=1, 6
-        do j=1, 12
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    ! Start to calculate the non-zero dRdX
-    ! dr1dx
-    drdx(1,1) = (cx(1,1)-cx(1,2))/r(1)
-    drdx(1,2) = (cx(2,1)-cx(2,2))/r(1)
-    drdx(1,3) = (cx(3,1)-cx(3,2))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    ! dr2dx
-    drdx(2,1) = (cx(1,1)-cx(1,3))/r(2)
-    drdx(2,2) = (cx(2,1)-cx(2,3))/r(2)
-    drdx(2,3) = (cx(3,1)-cx(3,3))/r(2)
-    drdx(2,7) = -drdx(2,1)
-    drdx(2,8) = -drdx(2,2)
-    drdx(2,9) = -drdx(2,3)
-    ! dr3dx
-    drdx(3,1)  = (cx(1,1)-cx(1,4))/r(3)
-    drdx(3,2)  = (cx(2,1)-cx(2,4))/r(3)
-    drdx(3,3)  = (cx(3,1)-cx(3,4))/r(3)
-    drdx(3,10) = -drdx(3,1)
-    drdx(3,11) = -drdx(3,2)
-    drdx(3,12) = -drdx(3,3)
-    ! dr4dx
-    drdx(4,4) = (cx(1,2)-cx(1,3))/r(4)
-    drdx(4,5) = (cx(2,2)-cx(2,3))/r(4)
-    drdx(4,6) = (cx(3,2)-cx(3,3))/r(4)
-    drdx(4,7) = -drdx(4,4)
-    drdx(4,8) = -drdx(4,5)
-    drdx(4,9) = -drdx(4,6)
-    ! dr5dx
-    drdx(5,4)  = (cx(1,2)-cx(1,4))/r(5)
-    drdx(5,5)  = (cx(2,2)-cx(2,4))/r(5)
-    drdx(5,6)  = (cx(3,2)-cx(3,4))/r(5)
-    drdx(5,10) = -drdx(5,4)
-    drdx(5,11) = -drdx(5,5)
-    drdx(5,12) = -drdx(5,6)
-    ! dr6dx
-    drdx(6,7)  = (cx(1,3)-cx(1,4))/r(6)
-    drdx(6,8)  = (cx(2,3)-cx(2,4))/r(6)
-    drdx(6,9)  = (cx(3,3)-cx(3,4))/r(6)
-    drdx(6,10) = -drdx(6,7)
-    drdx(6,11) = -drdx(6,8)
-    drdx(6,12) = -drdx(6,9)
-    ! Finish the calculation of non-zero dRdX
-    !     do i=1,6
-    !       do j=1,12
-    !         write(*,*) "dRdX(i,j) ",dRdX(i,j),i,j
-    !       enddo
-    !     enddo
+    double precision, intent(in)  :: cx(3,4), r(6)
+    double precision, intent(out) :: drdx(6,12)
+    call all_pair_distance_jacobian(transpose(cx), r, drdx)
 end subroutine evdrdx
 
 !-->  read NN weights and biases from matlab output

@@ -277,7 +277,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
             !
             do it = 1, 3
                 req(it) = req(it)/cangs
-            50 enddo
+            enddo
             beta = beta * cangs
             de   = de/ckcal
             a    = a/cangs
@@ -462,7 +462,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
             !
             do it = 1, 2
                 degsdr(it) = dbcoor(it) + degsdr(it)
-            300 enddo
+            enddo
             !
             !
             call eunitzero
@@ -524,7 +524,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                 re(i)       = re(i)/cangs
                 alpha(i)    = alpha(i)*cangs
                 legacy_d(i) = legacy_d(i)/ckcal
-            2 enddo
+            enddo
             alfd = alfd*cangs
             !
             !   CALCULATE USEFUL CONSTANTS
@@ -536,7 +536,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
             do n=1, 2
                 rrmre(n) = rr(n)-re(n)
                 pre(n)   = sr1r2-rrmre(n)
-            5 enddo
+            enddo
             !
             !   Initialize the asymptotic energy terms
             !
@@ -1032,7 +1032,6 @@ module chempotpy_ih2_leps_dt2_1971_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

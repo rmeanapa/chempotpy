@@ -36,6 +36,7 @@ module chempotpy_aln_reerkviii_pes
     end subroutine evaluate
     !> @brief Evaluate pot for the Aln_reErkVIII potential.
     subroutine pot( x, y, z, v, natom, maxatom )
+        use chempotpy_geometry, only: fill_distance_matrix
         !   System:                        Aln
         !   Functional form:               Lennard-Jones plus Axilrod-Teller
         !   Common name:                   reErkVIII
@@ -76,16 +77,7 @@ module chempotpy_aln_reerkviii_pes
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
         !  calculate and tabulate the distances between all atoms
-        do i=1, natom
-            r(i,i) = 0d0
-            do j=i+1, natom
-                dx     = x(i)-x(j)
-                dy     = y(i)-y(j)
-                dz     = z(i)-z(j)
-                r(i,j) = dsqrt(dx*dx+dy*dy+dz*dz)
-                1 r(j,i)=r(i,j)
-            enddo
-        enddo
+        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
         !
         !  calculate the potential energy
         !
@@ -113,8 +105,8 @@ module chempotpy_aln_reerkviii_pes
                 uem = a1*rel**em
                 uen = a2*rel**en
                 u   = u+(uem-uen)
-            3 enddo
-        2 enddo
+            enddo
+        enddo
         v1 = 0.d0
         if( natom /= 2 )then
             do i=1, natom-2
@@ -144,9 +136,9 @@ module chempotpy_aln_reerkviii_pes
                         w1    = b1*cot13*(rr1*rr2*rr3)**3     ! AT term
                         w2    = b2*bra*(rr1**3)*(rr2*rr3)**4
                         v1    = v1+w1+w2
-                    6 enddo
-                5 enddo
-            4 enddo
+                    enddo
+                enddo
+            enddo
         endif
         v = u+v1
     end subroutine pot

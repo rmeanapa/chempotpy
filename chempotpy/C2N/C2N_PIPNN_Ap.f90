@@ -92,22 +92,17 @@ module chempotpy_c2n_pipnn_ap_pes
         double precision, intent(in)    :: r0(ndim,ntot)
         double precision, intent(out)   :: vx(ntot)
         character(len=1024), intent(in) :: path
-        double precision, save          :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
-        double precision, save          :: rg(2,s0), vg(2)
+        double precision                :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
+        double precision                :: rg(2,s0), vg(2)
         character(len=1024)             :: file_path1
         double precision                :: dv(ndim,ntot)
-        integer                         :: i
-        integer, save                   :: init=0
-        integer, save                   :: fid
+        integer                         :: fid, i
         if( ndim .ne. s0 ) stop "ndim .ne. s0"
         file_path1 = trim(path)//"/C2N/c2n_2a_prime_para_a.txt"
-        if( init .eq. 0 )then
-            init = 1
-            fid  = 123456
-            open(fid, file=file_path1, status='old', action='read')
-            read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
-            close(fid)
-        endif
+        fid        = 123456
+        open(fid, file=file_path1, status='old', action='read')
+        read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
+        close(fid)
         if( ntot .ge. 24 )then
             call nsimx(ntot, r0, vx, 0, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
         else
@@ -126,22 +121,17 @@ module chempotpy_c2n_pipnn_ap_pes
         double precision, intent(in)    :: r0(ndim,ntot)
         double precision, intent(out)   :: vx(ntot)
         character(len=1024), intent(in) :: path
-        double precision, save          :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
-        double precision, save          :: rg(2,s0), vg(2)
+        double precision                :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
+        double precision                :: rg(2,s0), vg(2)
         character(len=1024)             :: file_path1
         double precision                :: dv(ndim,ntot)
-        integer                         :: i
-        integer, save                   :: init=0
-        integer, save                   :: fid
+        integer                         :: fid, i
         if( ndim .ne. s0 ) stop "ndim .ne. s0"
         file_path1 = trim(path)//"/C2N/c2n_2a_prime_para_b.txt"
-        if( init .eq. 0 )then
-            init = 1
-            fid  = 123456
-            open(fid, file=file_path1, status='old', action='read')
-            read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
-            close(fid)
-        endif
+        fid        = 123456
+        open(fid, file=file_path1, status='old', action='read')
+        read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
+        close(fid)
         if( ntot .ge. 24 )then
             call nsimx(ntot, r0, vx, 0, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
         else
@@ -160,22 +150,17 @@ module chempotpy_c2n_pipnn_ap_pes
         double precision, intent(in)    :: r0(ndim,ntot)
         double precision, intent(out)   :: vx(ntot)
         character(len=1024), intent(in) :: path
-        double precision, save          :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
-        double precision, save          :: rg(2,s0), vg(2)
+        double precision                :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
+        double precision                :: rg(2,s0), vg(2)
         character(len=1024)             :: file_path1
         double precision                :: dv(ndim,ntot)
-        integer                         :: i
-        integer, save                   :: init=0
-        integer, save                   :: fid
+        integer                         :: fid, i
         if( ndim .ne. s0 ) stop "ndim .ne. s0"
         file_path1 = trim(path)//"/C2N/c2n_2a_prime_para_c.txt"
-        if( init .eq. 0 )then
-            init = 1
-            fid  = 123456
-            open(fid, file=file_path1, status='old', action='read')
-            read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
-            close(fid)
-        endif
+        fid        = 123456
+        open(fid, file=file_path1, status='old', action='read')
+        read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
+        close(fid)
         if( ntot .ge. 24 )then
             call nsimx(ntot, r0, vx, 0, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
         else

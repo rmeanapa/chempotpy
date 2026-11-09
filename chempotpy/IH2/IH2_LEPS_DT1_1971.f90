@@ -259,7 +259,7 @@ module chempotpy_ih2_leps_dt1_1971_pes
                 re(i)       = re(i)/cangs
                 alpha(i)    = alpha(i)*cangs
                 legacy_d(i) = legacy_d(i)/ckcal
-            2 enddo
+            enddo
             alfd = alfd*cangs
             !
             !   CALCULATE USEFUL CONSTANTS
@@ -271,7 +271,7 @@ module chempotpy_ih2_leps_dt1_1971_pes
             do n=1, 2
                 rrmre(n) = rr(n)-re(n)
                 pre(n)   = sr1r2-rrmre(n)
-            5 enddo
+            enddo
             !
             !   Initialize the asymptotic energy terms
             !
@@ -347,8 +347,8 @@ module chempotpy_ih2_leps_dt1_1971_pes
             !
             if( nasurf(1,1) .eq. 0 )then
                 write(nflag(18), &
-                    & '(/,2X,T5,13HNASURF(1,1) =,I5, /,2X,T5,24HThis value is unallowed. /,2X,T5,31HOnly gs surfac' // &
-                    & 'e=>NASURF(1,1)=1 )') nasurf(1,1)
+                    & '(/,2X,T5,"NASURF(1,1) =",I5, /,2X,T5,"This value is unallowed.", /,2X,T5, &
+                    & "Only gs surface=>NASURF(1,1)=1")') nasurf(1,1)
                 stop
             endif
             if( nder .gt. 1 )then
@@ -823,7 +823,6 @@ module chempotpy_ih2_leps_dt1_1971_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

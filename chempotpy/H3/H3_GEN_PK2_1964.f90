@@ -146,9 +146,7 @@ module chempotpy_h3_gen_pk2_1964_pes
                 ds(i)   = -rho*(1.0d0+rho)*expr*(zeta+gamr*(1.0d0-zeta))/3.0d0
                 dj(i)   = s(i)*sume(i)*ds(i)+0.5d0*((1.0d0+ss(i))*de1(i)-(1.0d0-ss(i ))* de3(i))
                 delj(i) = (1.0d0+rr(i))*ex(i)
-                12 dq(i) = s(i)*dife(i)*ds(i)+0.5d0*((1.0d0+ss(i))*de1(i)+(1.0d0-ss(i &
-                    & ))* &
-                    & de3(i))
+                dq(i)   = s(i)*dife(i)*ds(i)+0.5d0*((1.0d0+ss(i))*de1(i)+(1.0d0-ss(i ))* de3(i))
             enddo
             dj(1)   = dj(1) + 2.0d0*s(1)*ds(1)*(delj(2)+delj(3))
             dj(2)   = dj(2) + 2.0d0*s(2)*ds(2)*(delj(1)+delj(3))
@@ -621,7 +619,6 @@ module chempotpy_h3_gen_pk2_1964_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

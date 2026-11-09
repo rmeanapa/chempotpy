@@ -68,24 +68,17 @@ module chempotpy_o3_5app_ae_2026_pes
         double precision, intent(inout) :: t(ns,ns)
         double precision, intent(inout) :: h(ns,ns,n,3)
         ! layers and their sizes
-        double precision, save :: coeff_l0(3,35), coeff_l1(35,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,21)
-        double precision, save :: bias_l0(35), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(21)
-        double precision       :: r(n*(n-1)/2)
-        double precision       :: gr(ns,n*(n-1)/2)
-        double precision       :: hr(ns,ns,n*(n-1)/2)
-        double precision       :: v2b(ns), g2b(ns,n*(n-1)/2)  !!!!
-        double precision       :: v2b_1(n*(n-1)/2,ns)
-        double precision       :: drdx(n*(n-1)/2,3*n)
-        integer                :: i, j, k, l, m
-        integer                :: imol
-        logical, save          :: first_time_data=.true.
-        e = 0.d0
-        g = 0.d0
-        h = 0.d0
-        if( first_time_data )then
-            call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4)
-            first_time_data = .false.
-        endif
+        double precision :: coeff_l0(3,35), coeff_l1(35,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,21)
+        double precision :: bias_l0(35), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(21)
+        double precision :: r(n*(n-1)/2)
+        double precision :: gr(ns,n*(n-1)/2)
+        double precision :: hr(ns,ns,n*(n-1)/2)
+        double precision :: v2b(ns), g2b(ns,n*(n-1)/2)  !!!!
+        double precision :: v2b_1(n*(n-1)/2,ns)
+        double precision :: drdx(n*(n-1)/2,3*n)
+        integer          :: i, j, k, l, m
+        integer          :: imol
+        call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4)
         call convert_xyz_to_r(x, r, n)
         ! compute 2body terms,
         imol = 4
@@ -583,17 +576,13 @@ module chempotpy_o3_5app_ae_2026_pes
         double precision, intent(out) :: ev_s(n)
         integer                       :: io, i
         double precision, allocatable :: lapack_work_d(:)
-        integer, save                 :: lapack_lwork_d
-        logical, save                 :: first_time_diag=.true.
-        u_ss = a_ss
-        if( first_time_diag )then
-            lapack_lwork_d = -1
-            allocate( lapack_work_d(2) )
-            call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
-            lapack_lwork_d = int(lapack_work_d(1))
-            deallocate ( lapack_work_d )
-            first_time_diag = .false.
-        endif
+        integer                       :: lapack_lwork_d
+        u_ss           = a_ss
+        lapack_lwork_d = -1
+        allocate( lapack_work_d(2) )
+        call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
+        lapack_lwork_d = int(lapack_work_d(1))
+        deallocate ( lapack_work_d )
         allocate( lapack_work_d(lapack_lwork_d) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
         ! U_ss already holds the transformation matrix
@@ -607,6 +596,7 @@ module chempotpy_o3_5app_ae_2026_pes
     ! convert de/dr to de/dxyz
     !> @brief Evaluate grad_r_to_xyz.
     subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
+        use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
         implicit none
         integer, intent(in)             :: n, ns
         double precision, intent(in)    :: x(n,3)
@@ -616,27 +606,8 @@ module chempotpy_o3_5app_ae_2026_pes
         double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
         double precision                :: gx(ns,3*n)
         integer                         :: i, j
-        drdx = 0.0d0
-        ! compute drdx
-        drdx(1,1) = (x(1,1)-x(2,1))/r(1)
-        drdx(1,2) = (x(1,2)-x(2,2))/r(1)
-        drdx(1,3) = (x(1,3)-x(2,3))/r(1)
-        drdx(1,4) = -drdx(1,1)
-        drdx(1,5) = -drdx(1,2)
-        drdx(1,6) = -drdx(1,3)
-        drdx(2,1) = (x(1,1)-x(3,1))/r(2)
-        drdx(2,2) = (x(1,2)-x(3,2))/r(2)
-        drdx(2,3) = (x(1,3)-x(3,3))/r(2)
-        drdx(2,7) = -drdx(2,1)
-        drdx(2,8) = -drdx(2,2)
-        drdx(2,9) = -drdx(2,3)
-        drdx(3,4) = (x(2,1)-x(3,1))/r(3)
-        drdx(3,5) = (x(2,2)-x(3,2))/r(3)
-        drdx(3,6) = (x(2,3)-x(3,3))/r(3)
-        drdx(3,7) = -drdx(3,4)
-        drdx(3,8) = -drdx(3,5)
-        drdx(3,9) = -drdx(3,6)
-        call mproduct(gr, drdx, gx, ns, n*(n-1)/2, 3*n)
+        call all_pair_distance_jacobian(x, r, drdx)
+        call transform_internal_gradient_to_cartesian(gr, drdx, gx)
         do i=1, n
             g(:,i,1) = gx(:,3*(i-1)+1)
             g(:,i,2) = gx(:,3*(i-1)+2)
@@ -647,6 +618,7 @@ module chempotpy_o3_5app_ae_2026_pes
     ! convert d/dr to d/dxyz for NAC
     !> @brief Evaluate nac_r_to_xyz.
     subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
+        use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
         implicit none
         integer, intent(in)             :: n, ns
         double precision, intent(in)    :: x(n,3)
@@ -654,64 +626,26 @@ module chempotpy_o3_5app_ae_2026_pes
         double precision, intent(in)    :: hr(ns,ns,n*(n-1)/2)
         double precision, intent(inout) :: h(ns,ns,n,3)
         double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
-        double precision                :: hr_vec(ns*ns,n*(n-1)/2)
-        double precision                :: hx(ns*ns,3*n)
+        double precision                :: hx(ns,ns,3*n)
         integer                         :: i, j, k, l
-        drdx = 0.0d0
-        ! compute drdx
-        drdx(1,1) = (x(1,1)-x(2,1))/r(1)
-        drdx(1,2) = (x(1,2)-x(2,2))/r(1)
-        drdx(1,3) = (x(1,3)-x(2,3))/r(1)
-        drdx(1,4) = -drdx(1,1)
-        drdx(1,5) = -drdx(1,2)
-        drdx(1,6) = -drdx(1,3)
-        drdx(2,1) = (x(1,1)-x(3,1))/r(2)
-        drdx(2,2) = (x(1,2)-x(3,2))/r(2)
-        drdx(2,3) = (x(1,3)-x(3,3))/r(2)
-        drdx(2,7) = -drdx(2,1)
-        drdx(2,8) = -drdx(2,2)
-        drdx(2,9) = -drdx(2,3)
-        drdx(3,4) = (x(2,1)-x(3,1))/r(3)
-        drdx(3,5) = (x(2,2)-x(3,2))/r(3)
-        drdx(3,6) = (x(2,3)-x(3,3))/r(3)
-        drdx(3,7) = -drdx(3,4)
-        drdx(3,8) = -drdx(3,5)
-        drdx(3,9) = -drdx(3,6)
-        do i=1, ns
-            do j=1, ns
-                k           = (i-1)*ns+j
-                hr_vec(k,:) = hr(i,j,:)
-            enddo
-        enddo
-        call mproduct(hr_vec, drdx, hx, ns*ns, n*(n-1)/2, 3*n)
+        call all_pair_distance_jacobian(x, r, drdx)
+        call transform_internal_gradient_to_cartesian(hr, drdx, hx)
         do i=1, n
-            do j=1, ns
-                do k=1, ns
-                    l          = (j-1)*ns+k
-                    h(j,k,i,1) = hx(l,3*(i-1)+1)
-                    h(j,k,i,2) = hx(l,3*(i-1)+2)
-                    h(j,k,i,3) = hx(l,3*(i-1)+3)
-                enddo
-            enddo
+            h(:,:,i,1) = hx(:,:,3*(i-1)+1)
+            h(:,:,i,2) = hx(:,:,3*(i-1)+2)
+            h(:,:,i,3) = hx(:,:,3*(i-1)+3)
         enddo
     end subroutine nac_r_to_xyz
     !==========================
     ! convert xyz to r
     !> @brief Evaluate convert_xyz_to_r.
     subroutine convert_xyz_to_r( x, r, n )
+        use chempotpy_geometry, only: all_pair_distances
         implicit none
         integer, intent(in)           :: n
         double precision, intent(in)  :: x(n,3)
         double precision, intent(out) :: r(n*(n-1)/2)
-        integer                       :: i, j, l
-        l = 1
-        !pairs of distances
-        do i=1, n
-            do j=i+1, n
-                r(l) = sqrt((x(i,1)-x(j,1))**2+(x(i,2)-x(j,2))**2+(x(i,3)-x(j,3))**2)
-                l    = l+1
-            enddo
-        enddo
+        call all_pair_distances(x, r)
     end subroutine convert_xyz_to_r
     !=========================
     ! matrix vector product

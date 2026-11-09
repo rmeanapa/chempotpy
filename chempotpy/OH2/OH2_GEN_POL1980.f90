@@ -381,7 +381,7 @@ module chempotpy_oh2_gen_pol1980_pes
             !
             do it = 1, 3
                 ambpcm_req(it) = ambpcm_req(it)/bohr
-            50 enddo
+            enddo
             ambpcm_beta = ambpcm_beta * bohr
             ambpcm_de   = ambpcm_de/hrtree
             ambpcm_a    = ambpcm_a/bohr
@@ -575,7 +575,7 @@ module chempotpy_oh2_gen_pol1980_pes
             !
             do it = 1, 2
                 pt1cm_degsdr(it) = precm_dbcoor(it) + pt1cm_degsdr(it)
-            300 enddo
+            enddo
             !
             !
             call eunitzero
@@ -796,7 +796,7 @@ module chempotpy_oh2_gen_pol1980_pes
             double precision, intent(inout) :: c(nn+2), d(nn+2)
             integer                         :: i, j, n, np1, np2
             double precision                :: cfact, dfact, pivot, supd, v, v2, z
-            double precision, save          :: deriv = 0.0d0
+            double precision                :: deriv = 0.0d0
             n   = nn
             np1 = n+1
             np2 = n+2
@@ -1376,7 +1376,6 @@ module chempotpy_oh2_gen_pol1980_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

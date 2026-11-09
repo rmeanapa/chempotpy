@@ -123,12 +123,11 @@ subroutine pot0( r0, vv0, path )
     character(len=1024), intent(in) :: path
     integer                         :: file_unit_100
     double precision                :: dy1, dyn, r0, vv0
-    double precision, save          :: xt0(m0), yl0(m0), ym0(m0)
+    double precision                :: xt0(m0), yl0(m0), ym0(m0)
     integer                         :: i, init
     character(len=1024)             :: file_path1
-    data dy1, dyn/1.0d30, 1.0d30/
-    data init/0/
-    save init
+    dy1        = 1.0d30; dyn = 1.0d30
+    init       = 0
     file_path1 = trim(path)//"/H3Cl/H2.dat"
     if( init .eq. 0 )then
         open(newunit=file_unit_100, file=file_path1, status='old')
@@ -149,12 +148,11 @@ subroutine pot1( r1, vv1, path )
     character(len=1024), intent(in) :: path
     integer                         :: file_unit_200
     double precision                :: dy1, dyn, r1, vv1
-    double precision, save          :: xt1(m1), yl1(m1), ym1(m1)
+    double precision                :: xt1(m1), yl1(m1), ym1(m1)
     integer                         :: i, init
     character(len=1024)             :: file_path1
-    data dy1, dyn/1.0d30, 1.0d30/
-    data init/0/
-    save init
+    dy1        = 1.0d30; dyn = 1.0d30
+    init       = 0
     file_path1 = trim(path)//"/H3Cl/HCl.dat"
     if( init .eq. 0 )then
         open(newunit=file_unit_200, file=file_path1, status='old')
@@ -218,7 +216,7 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
         p     = sig*y2(i-1)+2.0d0
         y2(i) = (sig-1.0d0)/p
         u(i)  = (6.0d0*((y(i+1)-y(i))/(x(i+ 1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig* u(i-1))/p
-    11 enddo
+    enddo
     if( ypn .gt. .99d30 )then
         qn = 0.0d0
         un = 0.0d0
@@ -229,7 +227,7 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
     y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0d0)
     do k=n-1, 1, -1
         y2(k) = y2(k)*y2(k+1)+u(k)
-    12 enddo
+    enddo
 end subroutine spline
 
 !> @brief Evaluate ClH3vlr for the H3Cl_PIPNN potential.
@@ -239,12 +237,11 @@ subroutine clh3vlr( r1, r2, r3, theta1, theta2, phi, vint, n, path )
     character(len=1024), intent(in) :: path
     integer                         :: file_unit_300
     double precision                :: phi, r1, r2, r3, theta1, theta2, vint
-    double precision, save          :: a(m)
+    double precision                :: a(m)
     integer                         :: i, init, n
     character(len=1024)             :: file_path1
     double precision                :: afunc(n)
-    data init/0/
-    save init
+    init       = 0
     file_path1 = trim(path)//"/H3Cl/c.dat"
     if( init .eq. 0 )then
         open(newunit=file_unit_300, file=file_path1, status='old')

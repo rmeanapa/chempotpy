@@ -44,34 +44,13 @@ module chempotpy_h3_gen_bkmp_1991_pes
     end subroutine evaluate
     !> @brief Evaluate EvdRdX for the H3_GEN_BKMP_1991 potential.
     subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
         implicit none
+        integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter            :: second_atoms(3) = [2, 3, 3]
         double precision, intent(in)  :: x(9), r(3)
         double precision, intent(out) :: drdx(3,9)
-        integer                       :: i, j
-        ! Initialize dRdX(3,9)
-        do i=1, 3
-            do j=1, 9
-                drdx(i,j) = 0.0d0
-            enddo
-        enddo
-        drdx(1,1) = (x(1)-x(4))/r(1)
-        drdx(1,2) = (x(2)-x(5))/r(1)
-        drdx(1,3) = (x(3)-x(6))/r(1)
-        drdx(1,4) = -drdx(1,1)
-        drdx(1,5) = -drdx(1,2)
-        drdx(1,6) = -drdx(1,3)
-        drdx(2,4) = (x(4)-x(7))/r(2)
-        drdx(2,5) = (x(5)-x(8))/r(2)
-        drdx(2,6) = (x(6)-x(9))/r(2)
-        drdx(2,7) = -drdx(2,4)
-        drdx(2,8) = -drdx(2,5)
-        drdx(2,9) = -drdx(2,6)
-        drdx(3,1) = (x(1)-x(7))/r(3)
-        drdx(3,2) = (x(2)-x(8))/r(3)
-        drdx(3,3) = (x(3)-x(9))/r(3)
-        drdx(3,7) = -drdx(3,1)
-        drdx(3,8) = -drdx(3,2)
-        drdx(3,9) = -drdx(3,3)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
     end subroutine evdrdx
     !
     !
@@ -158,7 +137,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
             dcbnda(i) = 0.d0
             dcbndb(i) = 0.d0
             !     end do
-        700 enddo
+        enddo
         !  zero the vb and cb arrays (used only for numerical derivatives)
         !     do i=1,25
         do i=1, 25
@@ -167,7 +146,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
             cb(1,i) = 0.d0
             cb(2,i) = 0.d0
             !     end do
-        701 enddo
+        enddo
         call h3lond(r, vlon, dvlon)
         call vascal(r, vas, dvas)
         !    now do any corrections required for compact geometries:
@@ -416,7 +395,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
             q(i)   = half*(e1(i) + e3(i))
             j(i)   = half*(e1(i) - e3(i))
             !     end do
-        702 enddo
+        enddo
         sumq   = q(1) + q(2) + q(3)
         sumj   = abs( j(2)-j(1) )**2 + abs( j(3)-j(2) )**2 + abs( j(3)-j(1) )**2
         jt     = half*sumj + eps2
@@ -532,7 +511,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
             t(i)  = 0.d0
             dt(i) = 0.d0
             !     end do
-        703 enddo
+        enddo
         icompc = 0
         if( r(1) .lt. rr ) icompc = icompc + 1
         if( r(2) .lt. rr ) icompc = icompc + 1
@@ -551,7 +530,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
                 dt(i) = -3.d0*top2/bot + top3/bot2
             endif
             !     end do
-        704 enddo
+        enddo
     end subroutine compac
     !
     !> @brief Evaluate casym for the H3_GEN_BKMP_1991 potential.
@@ -633,7 +612,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
                     &+ dseris(i)     * sumt  * a2    * term1  * eterm&
                     &+ determ(i)     * sumt  * a2    * term1  * series
                 !        end do
-            705 enddo
+            enddo
             if( ipr .gt. 0 )then
                 !           write(7,7500) dPr,dt,dterm1,determ,dseries,dCas
                 write(7, '(''    derivatives: dPr = '',3(1x,g12.6),/, ''                 dT  = '',3(1x,g12.6),/, ''       ' // &
@@ -687,7 +666,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
                 dg(i) = (rrri3/rpri2)*sumv(i) -3.d0*(rrri2/rpri)*sumv(i) + (rrri3/rpri)*v1*v2
             endif
             !     end do
-        706 enddo
+        enddo
         sumg    = g(1) + g(2) + g(3)
         cal     = sumg*exp3
         dcal(1) = dg(1)*exp3 + sumg*dexp3

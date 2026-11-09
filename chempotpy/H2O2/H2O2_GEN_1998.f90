@@ -20,7 +20,6 @@ module chempotpy_h2o2_gen_1998_pes
         integer                       :: istate
         double precision              :: tx(12), dx(12), v
         integer                       :: iatom, idir, i, j
-        logical, save                 :: first_time_data=.true.
         !initialize
         v = 0.d0; g = 0.d0; d = 0.d0
         call flatten_cartesian_coordinates(x, tx)
@@ -71,7 +70,7 @@ module chempotpy_h2o2_gen_1998_pes
         !
         do i = 1, 12
             x(i) = coord(i)*0.52918d0
-        10 enddo
+        enddo
         do i = 1, 12
             dx(i) = 0.0d0
         enddo

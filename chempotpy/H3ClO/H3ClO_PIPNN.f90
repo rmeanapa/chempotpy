@@ -103,29 +103,18 @@ subroutine evvdvdx( xcart, v )
     !PES2: totrmse=1.551, errmax=70.610, trainrmse=1.310, validrmse=2.332, testrmse=3.440 meV
     !PES3: totrmse=1.724, errmax=89.420, trainrmse=1.438, validrmse=3.773, testrmse=2.827 meV
     !Average potential energy surface: totormse=1.266 meV
-    use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
         & nodemax3, nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
     implicit none
-    integer          :: i, j, k, ndriv
+    integer          :: i, j, ndriv
     double precision :: v, vpes(npes), c(0:ninput), dvdx(1:natom*3,npes)
     double precision :: xcart(1:3,1:natom), m(0:nmorse-1), xmorse(1:nbond), r(1:nbond)
     double precision :: dvdr(1:nbond), x(1:natom*3), drdx(1:nbond,1:natom*3)
     double precision :: txinput(1:ninput), dvdg(1:ninput,npes), p(0:ninput)
     double precision :: dpdr(1:nbond,0:ninput), dvdxa(1:natom*3)
-    ! ::::::::::::::::::::
-    do i=1, natom
-        x((3*(i-1)+1):(3*(i-1)+3)) = xcart(:,i)
-    enddo
-    k = 0
-    do i=1, natom-1
-        do j=i+1, natom
-            k         = k+1
-            r(k)      = dot_product(xcart(:,i)-xcart(:,j), xcart(:,i)-xcart(:,j))
-            r(k)      = dsqrt(r(k))
-            xmorse(k) = dexp(-r(k)/1d0)
-        enddo
-    enddo
-    if( k .ne. natom*(natom-1)/2 ) stop "error"
+    call all_pair_distances(transpose(xcart), r)
+    xmorse = dexp(-r)
     call bemsav(xmorse, m, p)
     do j=1, ninput
         txinput(j) = p(j)

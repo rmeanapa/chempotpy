@@ -98,7 +98,7 @@ module chempotpy_aln_er2meid_pes
                     ee   = dexp(-a1*rho)
                     ver2 = ver2-de*ee*poly*co
                 endif
-            1 enddo
+            enddo
         enddo
         !  calculate the potential energy
         ec     = 2.00214948705422557/autoev
@@ -159,7 +159,7 @@ module chempotpy_aln_er2meid_pes
                     bigef = -ec*(1.d0-ab*dlog(rho_pair))*rho_pair**ab + 0.5d0*phi0*sterm
                 endif
                 v_pair = v_pair + bigef
-            3 enddo
+            enddo
             sterm = 0.d0
             if( rho .gt. 0.d0 )then
                 do m=1, 3
@@ -174,7 +174,7 @@ module chempotpy_aln_er2meid_pes
                 bigef = -ec*(1.d0-ab*dlog(rho))*rho**ab + 0.5d0*phi0*sterm
             endif
             v = v + bigef
-        2 enddo
+        enddo
         v = v + ver2 - v_pair
     end subroutine pot
 end module chempotpy_aln_er2meid_pes

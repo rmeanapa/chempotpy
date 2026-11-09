@@ -46,25 +46,13 @@ module chempotpy_hobr_3app_pip_pes
         double precision                :: r(3), tx(9)
         double precision                :: dr(3), drdx(3,9), dx(9)
         integer                         :: iatom, idir, i, j, istate
-        logical, save                   :: first_time_data=.true.
-        !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
-        ! x: H, O, Br order
+        v     = 0.d0; g = 0.d0; d = 0.d0
         r_obr = cartesian_distance(x(2,:), x(3,:))
-        !      r_OBr=r_OBr/legacy_bohr_to_angstrom
-        r_oh = cartesian_distance(x(1,:), x(2,:))
-        !      r_OH=r_OH/legacy_bohr_to_angstrom
+        r_oh  = cartesian_distance(x(1,:), x(2,:))
         r_hbr = cartesian_distance(x(1,:), x(3,:))
-        !      r_HBr=r_HBr/legacy_bohr_to_angstrom
         call flatten_cartesian_coordinates(x, tx)
-        r(1) = r_oh
-        r(2) = r_hbr
-        r(3) = r_obr
-        if( first_time_data )then
-            call myprepot(path)
-            first_time_data = .false.
-        endif
-        call mypot(r_oh, r_hbr, r_obr, v, dr_oh, dr_hbr, dr_obr)
+        r = [r_oh, r_hbr, r_obr]
+        call mypot(path, r_oh, r_hbr, r_obr, v, dr_oh, dr_hbr, dr_obr)
         v     = v*legacy_hartree_to_electronvolt
         dr(1) = dr_oh*legacy_hartree_to_electronvolt
         dr(2) = dr_hbr*legacy_hartree_to_electronvolt
@@ -111,35 +99,14 @@ end subroutine pes
 
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 1, 2]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,1) = (x(1)-x(7))/r(2)
-    drdx(2,2) = (x(2)-x(8))/r(2)
-    drdx(2,3) = (x(3)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,1)
-    drdx(2,8) = -drdx(2,2)
-    drdx(2,9) = -drdx(2,3)
-    drdx(3,4) = (x(4)-x(7))/r(3)
-    drdx(3,5) = (x(5)-x(8))/r(3)
-    drdx(3,6) = (x(6)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,4)
-    drdx(3,8) = -drdx(3,5)
-    drdx(3,9) = -drdx(3,6)
-end subroutine
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+end subroutine evdrdx
 
 !> @brief Evaluate myprepot.
 module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
@@ -241,27 +208,20 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
         real(dp)                        :: x_1_max, x_2_max, y_1_max
         real(dp)                        :: x_1_min, x_2_min, y_1_min
         real(dp)                        :: q_1, q_2, q_3, dq_1, dq_2, dq_3
-        integer                         :: i, ncall
-        data ncall/1/
-        save ncall
-        save phi_oh, phi_hbr, x_1, x_2, y_1, amn
-        if( initialize_only )then
-            file_path1 = trim(path)//"/HOBr/o_hbr_a_pp.par"
-            if( ncall .eq. 1 )then
-                open(newunit=file_unit_45, file=file_path1, status="old")
-                do i=1, 14
-                    read(file_unit_45, *) phi_oh(i)
-                enddo
-                do i=1, 14
-                    read(file_unit_45, *) phi_hbr(i)
-                enddo
-                do i=1, 1110
-                    read(file_unit_45, *) x_1(i), x_2(i), y_1(i), amn(i)
-                enddo
-                close(file_unit_45)
-                ncall = 2
-            endif
-        else
+        integer                         :: i
+        file_path1 = trim(path)//"/HOBr/o_hbr_a_pp.par"
+        open(newunit=file_unit_45, file=file_path1, status="old")
+        do i=1, 14
+            read(file_unit_45, *) phi_oh(i)
+        enddo
+        do i=1, 14
+            read(file_unit_45, *) phi_hbr(i)
+        enddo
+        do i=1, 1110
+            read(file_unit_45, *) x_1(i), x_2(i), y_1(i), amn(i)
+        enddo
+        close(file_unit_45)
+        if( .not. initialize_only )then
             r_oh    = r1
             r_hbr   = r2
             r_bro   = r3
@@ -356,24 +316,19 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
 end module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
 
 !> @brief Compatibility interface for myprepot.
-subroutine myprepot( path )
-    use chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804, only: dispatch
-    implicit none
-    character(len=1024) :: path
-    call dispatch(path=path, initialize_only=.true.)
-end subroutine myprepot
 
 !> @brief Compatibility interface for mypot.
-subroutine mypot( r1, r2, r3, value, dr1, dr2, dr3 )
+subroutine mypot( path, r1, r2, r3, value, dr1, dr2, dr3 )
     use chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804, only: dispatch
     implicit none
-    integer, parameter :: dp = kind(0.d0)
-    real(dp)           :: r1
-    real(dp)           :: r2
-    real(dp)           :: r3
-    real(dp)           :: value
-    real(dp)           :: dr1
-    real(dp)           :: dr2
-    real(dp)           :: dr3
-    call dispatch(r1=r1, r2=r2, r3=r3, value=value, dr1=dr1, dr2=dr2, dr3=dr3, initialize_only=.false.)
+    integer, parameter              :: dp = kind(0.d0)
+    character(len=1024), intent(in) :: path
+    real(dp)                        :: r1
+    real(dp)                        :: r2
+    real(dp)                        :: r3
+    real(dp)                        :: value
+    real(dp)                        :: dr1
+    real(dp)                        :: dr2
+    real(dp)                        :: dr3
+    call dispatch(path=path, r1=r1, r2=r2, r3=r3, value=value, dr1=dr1, dr2=dr2, dr3=dr3, initialize_only=.false.)
 end subroutine mypot

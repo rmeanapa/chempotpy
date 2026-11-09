@@ -209,27 +209,16 @@ end function logsig1
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v )
+    use chempotpy_geometry, only: all_pair_distances
     implicit none
     double precision, parameter :: alpha = 1.8d0, para=0.5291772d0
     integer, parameter          :: natom = 5
-    integer                     :: i, j, k, ndriv
+    integer                     :: j, ndriv
     double precision            :: v, p(0:101), r(1:10)
     double precision            :: xcart(1:3,1:5), m(0:38), xmorse(1:10)
-    double precision            :: x(1:15)
     double precision            :: txinput(1:101)
-    do i=1, natom
-        x((3*(i-1)+1):(3*(i-1)+3)) = xcart(:,i)
-    enddo
-    k = 0
-    do i=1, natom-1
-        do j=i+1, natom
-            k    = k+1
-            r(k) = dsqrt(dot_product(xcart(:,i)-xcart(:,j), xcart(:,i)-xcart(:,j)))
-            !        r(k)=dsqrt(r(k))
-            xmorse(k) = dexp(-r(k)/(para*alpha))
-        enddo
-    enddo
-    if( k .ne. (natom*(natom-1)/2) ) stop "error"
+    call all_pair_distances(transpose(xcart), r)
+    xmorse = dexp(-r/(para*alpha))
     call bemsav1(xmorse, p)
     do j=1, 101
         txinput(j) = p(j)

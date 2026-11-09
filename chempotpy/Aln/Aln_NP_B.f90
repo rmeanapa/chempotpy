@@ -126,7 +126,7 @@ module chempotpy_aln_np_b_pes
                     ef  = (cc(l+1)/12.d0)*(r0/rr)**l
                     rho = rho + ef*q
                 enddo
-            3 enddo
+            enddo
             sterm = 0.d0
             if( rho .gt. 0.d0 )then
                 do m=1, 3
@@ -141,7 +141,7 @@ module chempotpy_aln_np_b_pes
                 bigef = -ec*(1.d0-ab*dlog(rho))*rho**ab + 0.5d0*phi0*sterm
             endif
             v = v + v2 + bigef
-        2 enddo
+        enddo
     end subroutine pot
 end module chempotpy_aln_np_b_pes
 

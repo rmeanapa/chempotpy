@@ -121,32 +121,22 @@ end
 
 !> @brief Evaluate ho3NN.
 subroutine ho3nn( ct, vpes, vpesa, vpesb, vpesc )
-    use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
     integer                     :: i
     double precision            :: rb(6), xbond(6), basis(0:22)
     double precision            :: txinput(22)
-    double precision            :: ct(3,4), qvec(3,6), xct(3,4)
+    double precision            :: ct(3,4), pair_distances(6)
     double precision            :: vpesa, vpesb, vpesc, vpes
     double precision, parameter :: alpha = 2.5d0 ! bohr
     double precision, parameter :: btoa  = 0.529177249d0
     double precision, parameter :: pi    = dacos(-1.d0)
-    basis     = 0.d0
-    xct       = ct
-    qvec(:,1) = xct(:,3)-xct(:,4) !  O3->O4
-    qvec(:,2) = xct(:,2)-xct(:,4) !  O2->O4
-    qvec(:,3) = xct(:,1)-xct(:,4) !  H1->O4
-    qvec(:,4) = xct(:,2)-xct(:,3) !  O2->O3
-    qvec(:,5) = xct(:,1)-xct(:,3) !  H1->O3
-    qvec(:,6) = xct(:,1)-xct(:,2) !  H1->O2
-    rb(1)     = dsqrt(dot_product(qvec(:,1), qvec(:,1)))
-    rb(2)     = dsqrt(dot_product(qvec(:,2), qvec(:,2)))
-    rb(3)     = dsqrt(dot_product(qvec(:,3), qvec(:,3)))
-    rb(4)     = dsqrt(dot_product(qvec(:,4), qvec(:,4)))
-    rb(5)     = dsqrt(dot_product(qvec(:,5), qvec(:,5)))
-    rb(6)     = dsqrt(dot_product(qvec(:,6), qvec(:,6)))
-    xbond(:)  = dexp(-rb(:)/(alpha*btoa))
+    basis = 0.d0
+    call all_pair_distances(transpose(ct), pair_distances)
+    rb       = pair_distances([6,5,3,4,2,1])
+    xbond(:) = dexp(-rb(:)/(alpha*btoa))
     call bemsav(xbond, basis)
     do i=1, 22
         txinput(i) = basis(i)

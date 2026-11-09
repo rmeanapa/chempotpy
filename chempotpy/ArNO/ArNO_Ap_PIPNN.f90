@@ -110,8 +110,8 @@ module chempotpy_arno_ap_pipnn_pes
             integer                         :: i, ii, j, k
             character(len=1024)             :: file_path1
             dimension xt(m), y(m), y2(l)
-            data vmin1/-656.852768990000d0/
-            data dy1, dyn/1.0d30, 1.0d30/
+            vmin1      = -656.852768990000d0
+            dy1        = 1.0d30; dyn = 1.0d30
             file_path1 = trim(path)//"/ArNO/spline.dat"
             open(newunit=file_unit_98, file=file_path1, status='old')
             !        open(66,file='check.txt')
@@ -148,7 +148,6 @@ module chempotpy_arno_ap_pipnn_pes
                         pesa_ve(1,i,j,k) = (ve1-vmin1)*27.2114d0
                         pesa_ve(2,i,j,k) = (ve2-vmin1)*27.2114d0
                     enddo
-                    7 continue
                 enddo
             enddo
             !        write(*,*)r1m,r2m,thm,pesmin
@@ -183,8 +182,8 @@ module chempotpy_arno_ap_pipnn_pes
             dimension dny(n), ddny(n), s2(l), ds2(l), dds2(l), h2(n)
             dimension dhy(m), ddhy(m), s3(l), ds3(l), dds3(l), h3(m)
             dimension y(m), ss(m), sss(m), y2(l)
-            data dy1, dyn/1.0d30, 1.0d30/
             !        do iop=istate,istate
+            dy1 = 1.0d30; dyn = 1.0d30
             iop = istate
             !$OMP PARALLEL DEFAULT(SHARED)
             !$OMP&  PRIVATE (i,j,nh,k,xt,y,y2,y3,ss,nthth,yw2)
@@ -196,26 +195,24 @@ module chempotpy_arno_ap_pipnn_pes
                         nh     = nh+1
                         xt(nh) = pesa_roh2(i,j,k)
                         y(nh)  = pesa_ve(iop,i,j,k)
-                    2 enddo
+                    enddo
                     r1a = r1
                     call spline(xt, y, nh, dy1, dyn, y2)
                     call splint(xt, y, y2, nh, r1a, y3)
-                    22 continue
                     if( y3 .gt. bvcut_vcut ) y3=bvcut_vcut
                     ss(j) = y3
-                10 enddo
+                enddo
                 nthth = 0
                 do j=1, nth
                     nthth     = nthth+1
                     xt(nthth) = pesa_thth(j)
                     y(nthth)  = ss(j)
-                5 enddo
+                enddo
                 call spline(xt, y, nthth, 0.0d0, 0.0d0, y2)
                 call splint(xt, y, y2, nthth, th, yw2)
-                33 continue
                 if( yw2 .gt. bvcut_vcut ) yw2=bvcut_vcut
                 sss(i) = yw2
-            20 enddo
+            enddo
             !$OMP END DO NOWAIT
             !$OMP END PARALLEL
             nr1 = nroh1
@@ -232,7 +229,6 @@ module chempotpy_arno_ap_pipnn_pes
             !$OMP END PARALLEL
             call spline(xt, y, nr1, dy1, dyn, y2)
             call splint(xt, y, y2, nr1, r2, yw2)
-            44 continue
             if( yw2 .gt. bvcut_vcut ) yw2=bvcut_vcut
             v = yw2
             !       enddo
@@ -280,7 +276,7 @@ module chempotpy_arno_ap_pipnn_pes
                 y2(i) = (sig-1.0d0)/p
                 u(i)  = (6.0d0*((y(i+1)-y(i))/(x(i+ 1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))- sig* u(i- &
                     & 1))/p
-            11 enddo
+            enddo
             if( ypn .gt. .99d30 )then
                 qn = 0.0d0
                 un = 0.0d0
@@ -291,7 +287,7 @@ module chempotpy_arno_ap_pipnn_pes
             y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0d0)
             do k=n-1, 1, -1
                 y2(k) = y2(k)*y2(k+1)+u(k)
-            12 enddo
+            enddo
         end
         !> @brief Evaluate longpes.
         subroutine longpes( r_no, r_arn, cthx, v, istat )
@@ -299,20 +295,20 @@ module chempotpy_arno_ap_pipnn_pes
             double precision :: a1, a2, amn, amo, cth, cthx, de, dy1, dyn, r, r1, r2, r_arn, r_no, s, t, tocm, v, vmin1, x, y, y2
             integer          :: i, istat
             dimension x(17), a1(4,17), a2(4,17), y(17), y2(17), de(17)
-            data vmin1/-656.852768990000d0/
             !       R in angstrom
-            amn  = 14.0030740d0
-            amo  = 15.9949146d0
-            r2   = r_no
-            r1   = r_arn
-            t    = amo/(amo+amn)*r2
-            s    = dsqrt(r1**2+t**2-2d0*r1*t*cthx) ! in bohr
-            r    = s*0.5291772083d0
-            cth  = (t**2+s**2-r1**2)/2d0/t/s
-            cth  = min(1d0, cth);cth=max(-1d0, cth)
-            tocm = 219474.63067d0
-            dy1  = 1d30
-            dyn  = 1d30
+            vmin1 = -656.852768990000d0
+            amn   = 14.0030740d0
+            amo   = 15.9949146d0
+            r2    = r_no
+            r1    = r_arn
+            t     = amo/(amo+amn)*r2
+            s     = dsqrt(r1**2+t**2-2d0*r1*t*cthx) ! in bohr
+            r     = s*0.5291772083d0
+            cth   = (t**2+s**2-r1**2)/2d0/t/s
+            cth   = min(1d0, cth);cth=max(-1d0, cth)
+            tocm  = 219474.63067d0
+            dy1   = 1d30
+            dyn   = 1d30
             if( r2 .lt. 1.6d0 ) r2=1.6d0
             if( r2 .gt. 4d0 ) r2=4d0
             x(1)     = 1.60000000000000d0
@@ -559,11 +555,11 @@ module chempotpy_arno_ap_pipnn_pes
             double precision :: a1, a2, de, dy1, dyn, r2, r_no, tocm, v, vmin1, x, y, y2
             integer          :: i, istat
             dimension x(17), a1(4,17), a2(4,17), y(17), y2(17), de(17)
-            data vmin1/-656.852768990000d0/
-            r2   = r_no
-            tocm = 219474.63067d0
-            dy1  = 1d30
-            dyn  = 1d30
+            vmin1 = -656.852768990000d0
+            r2    = r_no
+            tocm  = 219474.63067d0
+            dy1   = 1d30
+            dyn   = 1d30
             if( r2 .lt. 1.6d0 ) r2=1.6d0
             if( r2 .gt. 4d0 ) r2=4d0
             x(1)  = 1.60000000000000d0

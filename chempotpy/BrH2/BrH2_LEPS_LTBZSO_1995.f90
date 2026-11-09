@@ -191,17 +191,13 @@ module chempotpy_brh2_leps_ltbzso_1995_pes
             double precision, intent(out) :: ev_s(n)
             integer                       :: io, i
             double precision, allocatable :: work_d(:)
-            integer, save                 :: lwork_d
-            logical, save                 :: first_time_diag=.true.
-            u_ss = a_ss
-            if( first_time_diag )then
-                lwork_d = -1
-                allocate( work_d(2) )
-                call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-                lwork_d = int(work_d(1))
-                deallocate ( work_d )
-                first_time_diag = .false.
-            endif
+            integer                       :: lwork_d
+            u_ss    = a_ss
+            lwork_d = -1
+            allocate( work_d(2) )
+            call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
+            lwork_d = int(work_d(1))
+            deallocate ( work_d )
             allocate( work_d(lwork_d) )
             call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         end subroutine diagonalize
@@ -380,7 +376,7 @@ module chempotpy_brh2_leps_ltbzso_1995_pes
                 de11(i)   = d11(i) / charkc
                 re11(i)   = re11(i) / cangau
                 beta11(i) = betaa11(i) * cangau
-            10 enddo
+            enddo
             !
             !    Initialize the asyptotic energy terms
             !
@@ -457,14 +453,14 @@ module chempotpy_brh2_leps_ltbzso_1995_pes
                 tzp3(i)  = 2.0d0*zp3(i)
                 do4z(i)  = de11(i)/4.0d0/zpo(i)
                 b(i)     = beta11(i)*do4z(i)*2.0d0
-            20 enddo
+            enddo
             pe = 0.d0
             do i = 1, 3
                 legacy_x(i) = exp(-beta11(i)*(rr(i)-re11(i)))
                 coul(i)     = do4z(i) * (zp3(i)*legacy_x(i) - top3z(i)) * legacy_x(i)
                 exch(i)     = do4z(i) * (op3z(i)*legacy_x(i) - tzp3(i)) * legacy_x(i)
                 pe          = pe + coul(i)
-            30 enddo
+            enddo
             rad = sqrt((exch(1) - exch(2)) ** 2 + (exch(2) - exch(3)) ** 2 + (exch(3) - exch(1)) ** 2 )
             pe  = pe - (rad / r211) + ezero(1)
             !
@@ -576,7 +572,7 @@ module chempotpy_brh2_leps_ltbzso_1995_pes
                 de22(i)   = d22(i) / charkc
                 re22(i)   = re22(i) / cangau
                 beta22(i) = betaa22(i) * cangau
-            10 enddo
+            enddo
             !
             !    Initialize the asyptotic energy terms
             !
@@ -1031,7 +1027,6 @@ module chempotpy_brh2_leps_ltbzso_1995_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

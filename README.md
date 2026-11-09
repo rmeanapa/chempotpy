@@ -35,7 +35,7 @@ How to install
   get into the parent directory of chempotpy 
    
         make build
-        make check
+        make check-modernization
 
   `make build BUILD_FLAGS="--debug --jobs 4"` provides a faster, unoptimized
   development build. The default remains the optimized release build.
@@ -86,9 +86,12 @@ fixed-form source. The detailed contract, migration, and numerical-parity rules
 are in `docs/PES_CONTRACT.md`; the required source conventions are collected in
 `docs/FORTRAN_STYLE.md`.
 
-Run `make test-surfaces` for the slower catalog gate, which independently
-compiles and evaluates all 363 callable PES interfaces at two deterministic
-geometries.
+Run `make check-modernization` for the complete repeatable modernization gate.
+It audits the catalog, rejects forbidden legacy Fortran constructs, runs the
+Python and core tests, strictly compiles all 363 callable PES interfaces, checks
+formatting, and evaluates every surface at two deterministic geometries in the
+same process. `make test-surfaces` runs only the slower catalog-wide numerical
+and architecture regression portion.
 
 
 Compile Chempotpy subroutine

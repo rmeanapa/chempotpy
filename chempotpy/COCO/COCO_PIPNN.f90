@@ -16,6 +16,7 @@ module chempotpy_coco_pipnn_pes
     contains
     !> @brief Evaluate this surface through the modern module contract.
     subroutine evaluate( x, igrad, path, p, g, d )
+        use chempotpy_geometry,     only: all_pair_distances_and_jacobian, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom
         implicit none
         ! number of electronic state
@@ -27,112 +28,23 @@ module chempotpy_coco_pipnn_pes
         double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
         double precision, intent(out)   :: d(nstates,nstates,natoms,3)
         double precision                :: v
-        double precision                :: r_bond(6), r2(6), dvdr(6), drdx(6,12)
-        double precision                :: tx(3,natoms), txx(12), dvdx(12)
-        integer                         :: iatom, idir, i, j, k, istate
+        double precision                :: r_bond(6), dvdr(6), drdx(6,12)
+        double precision                :: tx(natoms,3), dvdx(12)
         !initialize
-        v = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
-        do iatom=1, natoms
-            do idir=1, 3
-                tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
-            enddo
-        enddo
-        k = 0
-        do i=1, 3
-            do j=i+1, 4
-                k         = k+1
-                r_bond(k) = dsqrt(dot_product((tx(:,i)-tx(:,j)), (tx(:,i)-tx(:,j))))
-            enddo
-        enddo
+        v  = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
+        tx = x/legacy_bohr_to_angstrom
+        call all_pair_distances_and_jacobian(tx, r_bond, drdx)
         call pes_ococ(r_bond, v, igrad, dvdr, path)
         dvdr = dvdr/8065.7112013/legacy_bohr_to_angstrom
-        ! convert dvdr to dvdx
-        do iatom=1, natoms
-            do idir=1, 3
-                j      = 3*(iatom-1)+idir
-                txx(j) = x(iatom,idir)
-            enddo
-        enddo
-        r2 = r_bond*legacy_bohr_to_angstrom
-        call evdrdx(txx, r2, drdx)
-        dvdx = 0.d0
-        do i=1, 12
-            do j=1, 6
-                dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-            enddo
-        enddo
+        call transform_internal_gradient_to_cartesian(dvdr, drdx, dvdx)
         if( igrad == 0 )then
-            do istate=1, nstates
-                p(istate) = v/8065.7112013
-            enddo
+            p(1) = v/8065.7112013
         else if( igrad == 1 )then
-            do istate=1, nstates
-                p(istate) = v/8065.7112013
-            enddo
-            do iatom=1, natoms
-                do idir=1, 3
-                    j               = 3*(iatom-1)+idir
-                    g(1,iatom,idir) = dvdx(j)
-                enddo
-            enddo
+            p(1)     = v/8065.7112013
+            g(1,:,:) = transpose(reshape(dvdx, [3, natoms]))
         endif
         d = 0.d0
     end subroutine evaluate
-    !> @brief Evaluate EvdRdX.
-    subroutine evdrdx( x, r, drdx )
-        implicit none
-        integer          :: i, j
-        double precision :: x(12), r(6), drdx(6,12)
-        do i=1, 6
-            do j=1, 12
-                drdx(i,j) = 0.0d0
-            enddo
-        enddo
-        ! Start to calculate the non-zero dRdX
-        ! dr1dx
-        drdx(1,1) = (x(1)-x(4))/r(1)
-        drdx(1,2) = (x(2)-x(5))/r(1)
-        drdx(1,3) = (x(3)-x(6))/r(1)
-        drdx(1,4) = -drdx(1,1)
-        drdx(1,5) = -drdx(1,2)
-        drdx(1,6) = -drdx(1,3)
-        ! dr2dx
-        drdx(2,1) = (x(1)-x(7))/r(2)
-        drdx(2,2) = (x(2)-x(8))/r(2)
-        drdx(2,3) = (x(3)-x(9))/r(2)
-        drdx(2,7) = -drdx(2,1)
-        drdx(2,8) = -drdx(2,2)
-        drdx(2,9) = -drdx(2,3)
-        ! dr3dx
-        drdx(3,1)  = (x(1)-x(10))/r(3)
-        drdx(3,2)  = (x(2)-x(11))/r(3)
-        drdx(3,3)  = (x(3)-x(12))/r(3)
-        drdx(3,10) = -drdx(3,1)
-        drdx(3,11) = -drdx(3,2)
-        drdx(3,12) = -drdx(3,3)
-        ! dr4dx
-        drdx(4,4) = (x(4)-x(7))/r(4)
-        drdx(4,5) = (x(5)-x(8))/r(4)
-        drdx(4,6) = (x(6)-x(9))/r(4)
-        drdx(4,7) = -drdx(4,4)
-        drdx(4,8) = -drdx(4,5)
-        drdx(4,9) = -drdx(4,6)
-        ! dr5dx
-        drdx(5,4)  = (x(4)-x(10))/r(5)
-        drdx(5,5)  = (x(5)-x(11))/r(5)
-        drdx(5,6)  = (x(6)-x(12))/r(5)
-        drdx(5,10) = -drdx(5,4)
-        drdx(5,11) = -drdx(5,5)
-        drdx(5,12) = -drdx(5,6)
-        ! dr6dx
-        drdx(6,7)  = (x(7)-x(10))/r(6)
-        drdx(6,8)  = (x(8)-x(11))/r(6)
-        drdx(6,9)  = (x(9)-x(12))/r(6)
-        drdx(6,10) = -drdx(6,7)
-        drdx(6,11) = -drdx(6,8)
-        drdx(6,12) = -drdx(6,9)
-        ! Finish the calculation of non-zero dRdX
-    end subroutine evdrdx
     !> @brief Evaluate pes_ococ.
     subroutine pes_ococ( r, v, idv, dvdr, path )
         implicit none
@@ -203,20 +115,15 @@ module chempotpy_coco_pipnn_pes
             double precision, intent(out)   :: vx(ntot)
             integer, intent(in)             :: idv
             double precision, intent(out)   :: dv(ndim,ntot)
-            double precision, save          :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3, rg(2,s0), vg(2)
-            integer                         :: i
-            integer, save                   :: init=0
-            integer, save                   :: fid
+            double precision                :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3, rg(2,s0), vg(2)
+            integer                         :: fid, i
             character(len=1024)             :: file_path1
             file_path1 = trim(path)//"/COCO/nn_ococ_w20.txt"
             if( ndim .ne. s0 ) stop "ndim .ne. s0"
-            if( init .eq. 0 )then
-                init = 1
-                fid  = 870711
-                open(fid, file=file_path1, status='old', action='read')
-                read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
-                close(fid)
-            endif
+            fid = 870711
+            open(fid, file=file_path1, status='old', action='read')
+            read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
+            close(fid)
             if( ntot .ge. 24 )then
                 call nsimx(ntot, r0, vx, idv, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
             else

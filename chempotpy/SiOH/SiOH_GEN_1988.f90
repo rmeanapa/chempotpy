@@ -264,7 +264,6 @@ module chempotpy_sioh_gen_1988_pes
                         dvdy(j) = dvdy(j)-tmp*dy(i, j)
                         dvdz(j) = dvdz(j)-tmp*dz(i, j)
                     end block goto_block_111_265
-                    111 continue
                     v3 = 0.d0
                     do k=j+1, natom
                         if( k .eq. i .or. k .eq. j ) cycle
@@ -316,12 +315,12 @@ module chempotpy_sioh_gen_1988_pes
                         dvdz(k) = dvdz(k)-tmp*dz(j, k)
                 endif
                 v = v+v3
-            30 enddo
+            enddo
             endif
             !        write(6,*) "i,j,v2"
             !        write(6,*) i,j,v2*autoev
-        20 enddo
-        10 enddo
+        enddo
+        enddo
         if( ien .eq. 1 )then
             v = v1
         else

@@ -76,34 +76,13 @@ end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the LiFH_LEPS_JHTP2_2002_DPEM potential.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,4) = (x(4)-x(7))/r(2)
-    drdx(2,5) = (x(5)-x(8))/r(2)
-    drdx(2,6) = (x(6)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,4)
-    drdx(2,8) = -drdx(2,5)
-    drdx(2,9) = -drdx(2,6)
-    drdx(3,1) = (x(1)-x(7))/r(3)
-    drdx(3,2) = (x(2)-x(8))/r(3)
-    drdx(3,3) = (x(3)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,1)
-    drdx(3,8) = -drdx(3,2)
-    drdx(3,9) = -drdx(3,3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the LiFH_LEPS_JHTP2_2002_DPEM potential.
@@ -450,7 +429,6 @@ module chempotpy_lifh_leps_jhtp2_2002_dpem_pot11_legacy_state_76bc6ffc
         cauang    = 0.52917706d0
         caudeb    = 2.54177d0
         mass      = [ 7.016003d0, 1.00783d0, 18.9984d0]
-        continue
         !
         ! ----------------------------------------------------------------------
         !
@@ -1100,7 +1078,6 @@ module chempotpy_lifh_leps_jhtp2_2002_dpem_pot12_legacy_state_76bc6ffc
         j2pdel = 0.98387d0
         gcrho  = 4.87097d0
         gcdel  = 2.d0
-        continue
         !
         ! ----------------------------------------------------------------------
         !
@@ -1767,7 +1744,6 @@ module chempotpy_lifh_leps_jhtp2_2002_dpem_pot22_legacy_state_76bc6ffc
         cauang      = 0.52917706d0
         caudeb      = 2.54177d0
         mass        = [ 7.016003d0, 1.00783d0, 18.9984d0]
-        continue
         !
         ! ----------------------------------------------------------------------
         !
@@ -3213,8 +3189,7 @@ module chempotpy_lifh_leps_jhtp2_2002_dpem_pot22_legacy_state_76bc6ffc
             e(i) = e(i) * cevau
             !--------
             !
-            10 continue
-        99999 enddo
+        enddo
     end subroutine dispatch
 end module chempotpy_lifh_leps_jhtp2_2002_dpem_pot22_legacy_state_76bc6ffc
 

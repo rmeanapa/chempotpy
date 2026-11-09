@@ -121,12 +121,12 @@ module chempotpy_aln_er2misfmp_pes
                 ! subtract two-body part
                 xksum2 = q1*(rho-1.d0)**3 + q2*(rho-1.d0)**4 + q3*(rho-1.d0)**5
                 ef2    = f0 + 0.5d0*f2*(rho-1.d0)**2 + xksum2
-            3 enddo
+            enddo
             ! embedding term
             xksum = q1*(rhobar-1.d0)**3 + q2*(rhobar-1.d0)**4 + q3*(rhobar-1.d0)**5
             ef    = f0 + 0.5d0*f2*(rhobar-1.d0)**2 + xksum
             v     = v + 0.5d0*v2 + ef - ef2
-        2 enddo
+        enddo
     end subroutine pot
 end module chempotpy_aln_er2misfmp_pes
 

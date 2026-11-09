@@ -25,12 +25,15 @@ from chempotpy.core.registry import SurfaceSource, discover_surface_sources
 
 
 SUPPORT_SOURCES = {
-    ("CH4", "CH4_GEN_SP_2001"): ("ch4T8.F",),
+    ("CH4", "CH4_GEN_SP_2001"): ("ch4_t8.f90",),
 }
 CORE_FORTRAN_ROOT = REPOSITORY_ROOT / "chempotpy" / "core" / "fortran"
 CORE_MODULE_SOURCES = {
     "chempotpy_geometry": CORE_FORTRAN_ROOT / "chempotpy_geometry.f90",
     "chempotpy_h3_basis": CORE_FORTRAN_ROOT / "chempotpy_h3_basis.f90",
+    "chempotpy_internal_coordinates": (
+        CORE_FORTRAN_ROOT / "chempotpy_internal_coordinates.f90"
+    ),
     "chempotpy_kinds": CORE_FORTRAN_ROOT / "chempotpy_kinds.f90",
     "chempotpy_legacy_coordinates": (
         CORE_FORTRAN_ROOT / "chempotpy_legacy_coordinates.f90"

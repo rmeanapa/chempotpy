@@ -282,7 +282,7 @@ module chempotpy_fh2_leps_no2_1984_pes
                 precm_tzp3(i)  = 2.0d0*precm_zp3(i)
                 precm_do4z(i)  = precm_d(i)/4.0d0/precm_zpo(i)
                 precm_b(i)     = precm_beta(i)*precm_do4z(i)*2.0d0
-            10 enddo
+            enddo
             !
             !   10 B(I) = BETA(I)*DO4Z(I)*2.0D0
             !
@@ -361,8 +361,8 @@ module chempotpy_fh2_leps_no2_1984_pes
             !
             if( usricm_nasurf(1,1) .eq. 0 )then
                 write(usricm_nflag(18), &
-                    & '(/,2X,T5,13HNASURF(1,1) =,I5, /,2X,T5,24HThis value is unallowed. /,2X,T5,31HOnly gs surfac' // &
-                    & 'e=>NASURF(1,1)=1 )') usricm_nasurf(1,1)
+                    & '(/,2X,T5,"NASURF(1,1) =",I5, /,2X,T5,"This value is unallowed.", /,2X,T5, &
+                    & "Only gs surface=>NASURF(1,1)=1")') usricm_nasurf(1,1)
                 stop
             endif
             !
@@ -379,14 +379,14 @@ module chempotpy_fh2_leps_no2_1984_pes
                 precm_top3z(i) = 2.0d0*precm_op3z(i)
                 precm_zp3(i)   = z3cm_z(i) + 3.0d0
                 precm_tzp3(i)  = 2.0d0*precm_zp3(i)
-                11 precm_do4z(i) = precm_d(i)/4.0d0/precm_zpo(i)
+                precm_do4z(i)  = precm_d(i)/4.0d0/precm_zpo(i)
             enddo
             s = 0.0d0
             do i = 1, 3
                 precm_x(i)    = exp(-precm_beta(i)*(pt1cm_r(i)-precm_re(i)))
                 precm_coul(i) = precm_do4z(i)*(precm_zp3(i)*precm_x(i)-precm_top3z(i))*precm_x(i)
                 precm_exch(i) = precm_do4z(i)*(precm_op3z(i)*precm_x(i)-precm_tzp3(i))*precm_x(i)
-                21 s = s+precm_exch(i)
+                s             = s+precm_exch(i)
             enddo
             rad    = sqrt((precm_exch(1)-precm_exch(2))**2+(precm_exch(2)-precm_exch(3))**2+ (precm_exch(3)- &
                 & precm_exch(1))**2)
@@ -403,7 +403,7 @@ module chempotpy_fh2_leps_no2_1984_pes
                             ' T'')') t, rad
                     endif
                     pt1cm_degsdr(i) = precm_b(i)*precm_x(i)*(t-precm_zp3(i)*precm_x(i)+precm_op3z(i))
-                22 enddo
+                enddo
             endif
             pt1cm_engygs = pt1cm_engygs + precm_coul(1) + precm_coul(2) + precm_coul(3) + pt3cm_ezero(1) - &
                 & usricm_anuzero
@@ -1016,7 +1016,6 @@ module chempotpy_fh2_leps_no2_1984_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

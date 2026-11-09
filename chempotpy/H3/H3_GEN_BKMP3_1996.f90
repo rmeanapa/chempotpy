@@ -45,10 +45,10 @@ module chempotpy_h3_gen_bkmp3_1996_pes
         do ivp = 1, nt
             do ivp1 = 1, 3
                 xxx(ivp1) = rvp(ivp,ivp1)
-            102 enddo
+            enddo
             call bkmp2(xxx, eee, vp, -1)
             evp(ivp) = eee-eshift
-        101 enddo
+        enddo
     end subroutine pot
     !> @brief Evaluate surfid.
     subroutine surfid( h3id )

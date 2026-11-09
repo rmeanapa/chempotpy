@@ -517,12 +517,12 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             potcm_fac(0) = 1.
             do i=1, 2*4
                 potcm_fac(i) = potcm_fac(i-1)*i
-            101 enddo
+            enddo
             do l=0, 4
                 do m=0, l
                     ang_pf(l,m) = (-1)**m*sqrt((2*l+1)*potcm_fac(l-m)/(4*pi*potcm_fac(l+m)))
-                103 enddo
-            102 enddo
+                enddo
+            enddo
             !
             ! 3j-symbols for potential energy surface
             ! (abc/d-d0)=g(a,b,c,d)
@@ -539,7 +539,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     potcm_fct(j)  = 0.1d0*potcm_fct(j)
                     potcm_efct(j) = potcm_efct(j)+1.0d0
                 enddo
-            104 enddo
+            enddo
             !
             !
             m2 = 0
@@ -568,7 +568,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                                     x = (ib-i+1)*(ic-i+1)*(id-i+1)
                                     x = x/((ia+i)*(ie+i)*(if+i))
                                     f = 1.0d0-x*f
-                                109 enddo
+                                enddo
                             endif
                             sum = sum*f
                             f=potcm_fct((j1+j2-j3)/2+1)*potcm_fct((j1-j2+j3)/2+1)* potcm_fct((j2-j1+j3)/2+1)* &
@@ -581,10 +581,10 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                                 & potcm_efct((j1+ j2+j3)/ 2+2)
                             cg3j                       = sum*dsqrt(f)*10.0d0**(esum+0.5d0*e)* (-1)**((j2-j1-m3)/2)
                             ang_g(j1/2,j2/2,j3/2,m1/2) = cg3j
-                        105 enddo
-                    106 enddo
-                107 enddo
-            108 enddo
+                        enddo
+                    enddo
+                enddo
+            enddo
         end subroutine prepare_local_context
         !> @brief Evaluate gsrsqs for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine gsrsqs
@@ -621,9 +621,9 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                         potcm_ar(j1,j2,j3)=potcm_ac(1,j1,j2,j3)*exp(-0.20d0*dab1**2)+ potcm_ac(2,j1,j2,j3)*exp(- &
                             & 0.35d0*dab2**2)+ potcm_ac(3,j1,j2,j3)* exp(-0.80d0*dab3**2)
                         potcm_ar(j2,j1,j3) = (-1)**(j1+j2)*potcm_ar(j1,j2,j3)
-                    303 enddo
-                302 enddo
-            301 enddo
+                    enddo
+                enddo
+            enddo
             !
             !
         end subroutine gsrsqs
@@ -652,10 +652,11 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             dimension p1(0:4,0:4), p2(0:4,0:4), cs(4)
             dimension vp(0:4,0:4,0:2*4)
             !
-            data amh/1837.152756d0/amf/34631.9678d0/
             !
             !     PUT COORDINATES IN PROPER ARRAYS
             !
+            amh = 1837.152756d0
+            amf = 34631.9678d0
             call cartou
             call carttor
             !
@@ -692,7 +693,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             r34    = sqrt((x(4)-x(3))**2+(y(4)-y(3))**2+(z(4)-z(3))**2)
             do j=1, 4
                 cs(j) = cos(j*tau)
-            101 enddo
+            enddo
             s       = sin(th1)
             c       = cos(th1)
             s2      = s*s
@@ -751,9 +752,9 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                         potcm_ac(2,j1,j2,j3) = potcm_a(icu+35)
                         potcm_ac(3,j1,j2,j3) = potcm_a(icu+70)
                         icu                  = icu+1
-                    104 enddo
-                103 enddo
-            102 enddo
+                    enddo
+                enddo
+            enddo
             !
             call gsrsqs
             !
@@ -763,11 +764,11 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                         vp(j1,j2,j3) = ang_g(j1,j2,j3,0)*p1(j1,0)*p2(j2,0)
                         do m=1, min(j1, j2), 1
                             vp(j1,j2,j3) = vp(j1,j2,j3)+(-1)**m*2*ang_g(j1,j2,j3,m)* cs(m)*p1(j1,m)*p2(j2,m)
-                        108 enddo
+                        enddo
                         vp(j1,j2,j3) = vp(j1,j2,j3)*(-1)**(j1-j2)*(2*j3+1)*pif
-                    107 enddo
-                106 enddo
-            105 enddo
+                    enddo
+                enddo
+            enddo
             !
             e = 0.0d0
             !
@@ -775,9 +776,9 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                 do j2=0, 4, 1
                     do j3=abs(j2-j1), (j2+j1), 2
                         e = e+vp(j1,j2,j3)*potcm_ar(j1,j2,j3)
-                    111 enddo
-                110 enddo
-            109 enddo
+                    enddo
+                enddo
+            enddo
             !
             !     e=e+a(1)
             !
@@ -1390,7 +1391,6 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

@@ -5,7 +5,6 @@ module pes_shell
         & pes_init
     double precision :: coeff(1:8040) ! change to number of coefficients
     ! (size of c in bemsa.f90)
-    save coeff
     contains
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)

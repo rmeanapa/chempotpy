@@ -225,20 +225,14 @@ end subroutine o3pes
 
 !> @brief Evaluate coord_convt.
 subroutine coord_convt( x )
-    use o3_1_1app_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
+    use chempotpy_geometry, only: all_pair_distances
+    use o3_1_1app_zv_par,   only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
     !  Program to calculate the six interatomic distance
     !  by reading XYZ coordinate
     implicit none
-    integer          :: i
-    double precision :: x(9)
-    !  Now, calculate the inter-atomic distance
-    !  r1 = r(O1O2)
-    !  r2 = r(O1O3)
-    !  r3 = r(O2O3)
-    r(1) = sqrt((x(4)-x(1))**2 + (x(5)-x(2))**2 + (x(6)-x(3))**2)
-    r(2) = sqrt((x(7)-x(1))**2 + (x(8)-x(2))**2 + (x(9)-x(3))**2)
-    r(3) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
+    double precision, intent(in) :: x(9)
+    call all_pair_distances(x, r)
 end subroutine coord_convt
 
 !> @brief Evaluate EvV.
@@ -292,7 +286,8 @@ end subroutine evv
 
 !> @brief Evaluate EvdVdX.
 subroutine evdvdx( x, dvdx )
-    use o3_1_1app_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
+    use chempotpy_geometry, only: transform_internal_gradient_to_cartesian
+    use o3_1_1app_zv_par,   only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
     ! Subroutine to evaluate dRdX for given R and X
     ! R:            R(3), 3 bond lengths
@@ -304,26 +299,11 @@ subroutine evdvdx( x, dvdx )
     ! dRdX:         dRdX(3,9), derivatives of R(3) w.r.t. 9
     !               Cartesian coordinates
     implicit none
-    integer          :: i, j
-    double precision :: dvdx(9), x(9)
-    ! Initialize dVdX
-    do i=1, 9
-        dvdx(i) = 0.0d0
-    enddo
-    ! Call EvdVdR to evaluate dVdR(3)
+    double precision, intent(in)  :: x(9)
+    double precision, intent(out) :: dvdx(9)
     call evdvdr
-    ! Call EvdRdX to evaluate dRdX(3,9)
     call evdrdx(x)
-    ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi),
-    ! j = 1 to 3
-    do i=1, 9
-        do j=1, 3
-            dvdx(i) = dvdx(i) + dvdr(j)*drdx(j,i)
-        enddo
-    enddo
-    !      write(*,*) 'The 9 dVdX are:'
-    !      Write(*,9999) (dVdX(i),i=1,9)
-    ! 9999 Format(1x,3F15.8)
+    call transform_internal_gradient_to_cartesian(dvdr, drdx, dvdx)
 end subroutine evdvdx
 
 !> @brief Evaluate EvMorse.
@@ -600,7 +580,8 @@ end subroutine evdvdr
 
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( x )
-    use o3_1_1app_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
+    use o3_1_1app_zv_par,   only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
     ! Subroutine to evaluate dRdX for given R and X
     ! R:            R(3), 3 bond lengths
@@ -612,37 +593,10 @@ subroutine evdrdx( x )
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
     implicit none
-    integer          :: i, j
-    double precision :: x(9)
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    ! Start to calculate the non-zero dRdX
-    ! dr1dx
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    ! dr2dx
-    drdx(2,1) = (x(1)-x(7))/r(2)
-    drdx(2,2) = (x(2)-x(8))/r(2)
-    drdx(2,3) = (x(3)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,1)
-    drdx(2,8) = -drdx(2,2)
-    drdx(2,9) = -drdx(2,3)
-    ! dr3dx
-    drdx(3,4) = (x(4)-x(7))/r(3)
-    drdx(3,5) = (x(5)-x(8))/r(3)
-    drdx(3,6) = (x(6)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,4)
-    drdx(3,8) = -drdx(3,5)
-    drdx(3,9) = -drdx(3,6)
-    ! Finish the calculation of non-zero dRdX
+    integer, parameter           :: first_atoms(3)  = [1, 1, 2]
+    integer, parameter           :: second_atoms(3) = [2, 3, 3]
+    double precision, intent(in) :: x(9)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !> @brief Evaluate EvdMsdR.

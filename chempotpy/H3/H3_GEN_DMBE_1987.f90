@@ -299,34 +299,13 @@ module chempotpy_h3_gen_dmbe_1987_pes
         contains
         !> @brief Evaluate EvdRdX for the H3_GEN_DMBE_1987 potential.
         subroutine evdrdx( x, r, drdx )
+            use chempotpy_geometry, only: ordered_pair_distance_jacobian
             implicit none
+            integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+            integer, parameter            :: second_atoms(3) = [2, 3, 3]
             double precision, intent(in)  :: x(9), r(3)
             double precision, intent(out) :: drdx(3,9)
-            integer                       :: i, j
-            ! Initialize dRdX(3,9)
-            do i=1, 3
-                do j=1, 9
-                    drdx(i,j) = 0.0d0
-                enddo
-            enddo
-            drdx(1,1) = (x(1)-x(4))/r(1)
-            drdx(1,2) = (x(2)-x(5))/r(1)
-            drdx(1,3) = (x(3)-x(6))/r(1)
-            drdx(1,4) = -drdx(1,1)
-            drdx(1,5) = -drdx(1,2)
-            drdx(1,6) = -drdx(1,3)
-            drdx(2,4) = (x(4)-x(7))/r(2)
-            drdx(2,5) = (x(5)-x(8))/r(2)
-            drdx(2,6) = (x(6)-x(9))/r(2)
-            drdx(2,7) = -drdx(2,4)
-            drdx(2,8) = -drdx(2,5)
-            drdx(2,9) = -drdx(2,6)
-            drdx(3,1) = (x(1)-x(7))/r(3)
-            drdx(3,2) = (x(2)-x(8))/r(3)
-            drdx(3,3) = (x(3)-x(9))/r(3)
-            drdx(3,7) = -drdx(3,1)
-            drdx(3,8) = -drdx(3,2)
-            drdx(3,9) = -drdx(3,3)
+            call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
         end subroutine evdrdx
         !> @brief Evaluate prepare_local_context for the H3_GEN_DMBE_1987 potential.
         subroutine prepare_local_context
@@ -466,7 +445,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 nexp             = nexp + 2
                 h3dmcm_dampa(id) = h3dmcm_alph0/dble(nexp)**h3dmcm_alph1
                 h3dmcm_dampb(id) = h3dmcm_bet0*exp(-h3dmcm_bet1*dble(nexp))
-            10 enddo
+            enddo
             !
             !
             do i=1, 5
@@ -589,7 +568,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     do i = 1, 3
                         t               = dva(i) + dv2(i) + dv3(i) + h3crcm_dcorrs(i) + dc3(i)
                         pt1cm_degsdr(i) = ( dlep(i) + t)
-                    20 enddo
+                    enddo
                 endif
             endif
             !
@@ -603,7 +582,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     do i = 1, 3
                         t                     = dva(i) + dv2(i) + dv3(i) + h3crcm_dcorrs(i) + dc3(i)
                         pt4cm_deesdr(i,indes) = ( dlep2(i) + t)
-                    30 enddo
+                    enddo
                 endif
             endif
             !
@@ -740,7 +719,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 coupcm_dphi(2)   = -h3cocm_dcphi2/(coupcm_sphi3*3.d0)
                 coupcm_dphi(3)   = -h3cocm_dcphi3/(coupcm_sphi3*3.d0)
             end block goto_block_10_741
-            10 continue
         end subroutine h3coor
         !> @brief Evaluate H3COR2 for the H3_GEN_DMBE_1987 potential.
         subroutine h3cor2
@@ -847,8 +825,8 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     dd               = 2.0d0*fnexp*dpol*tt*tt2/denom
                     h3crcm_corrt(j)  = h3crcm_corrt(j) - h3dmcm_chh(id)*d*t2
                     h3crcm_dcorrt(j) = h3crcm_dcorrt(j) - h3dmcm_chh(id)*(dd*t2 - fnexp*d*t1)
-                1 enddo
-            10 enddo
+                enddo
+            enddo
         end subroutine h3cor2
         !> @brief Evaluate H3COR3 for the H3_GEN_DMBE_1987 potential.
         subroutine h3cor3 ( ce3, dc3 )
@@ -925,7 +903,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     t1    = hytan**5
                     h(i)  = hytan*t1
                     hd(i) = 6.0d0*h3dmcm_ck1(id)*t1*hysec*hysec
-                10 enddo
+                enddo
                 do i = 1, 3
                     i2      = mod(i, 3) + 1
                     i3      = mod(i+1, 3) + 1
@@ -934,8 +912,8 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     dc3(i)  = dc3(i) + t*h3crcm_ddamp(id,i)
                     dc3(i2) = dc3(i2) - 0.5d0*(gd(i2)*h(i3)+g(i3)*hd(i2))*h3crcm_damp(id,i)
                     dc3(i3) = dc3(i3) - 0.5d0*(g(i2)*hd(i3)+gd(i3)*h(i2))*h3crcm_damp(id,i)
-                20 enddo
-            30 enddo
+                enddo
+            enddo
         end subroutine h3cor3
         !> @brief Evaluate H3LEPS for the H3_GEN_DMBE_1987 potential.
         subroutine h3leps ( vleps, vleps2, dlep, dlep2 )
@@ -1011,7 +989,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             qsum = 0.0d0
             do i = 1, 3
                 dq(i) = 0.0d0
-            10 enddo
+            enddo
             !
             !  Loop over 3 coordinates
             !
@@ -1069,11 +1047,11 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     t        = 0.5d0*fterm*df(j)
                     dq(j)    = dq(j) + t
                     dxj(i,j) = -t
-                20 enddo
+                enddo
                 t        = f*dwe + omf*dat
                 dq(i)    = dq(i) + 0.5d0*(desdr + t)
                 dxj(i,i) = dxj(i,i) + 0.5d0*(desdr - t)
-            50 enddo
+            enddo
             !
             f1     = (xj(1) - xj(2))**2
             f2     = (xj(2) - xj(3))**2
@@ -1090,7 +1068,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 xterm    = 0.5d0/texch*(xterm1*dxj(1,i)  + xterm2*dxj(2,i) + xterm3*dxj(3,i))
                 dlep(i)  = dq(i) - xterm
                 dlep2(i) = dq(i) + xterm
-            80 enddo
+            enddo
         end subroutine h3leps
         !> @brief Evaluate H3VA for the H3_GEN_DMBE_1987 potential.
         subroutine h3va ( r1, r2, r3, va, dva )
@@ -1153,7 +1131,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     dv = dv + t4*h3dmcm_xpar(j)*t3
                     t3 = t3*t1
                     t4 = t4 + 2.0d0
-                1 enddo
+                enddo
                 va     = va*expva
                 t1     = dv*expva
                 t2     = 3.0d0*t*va
@@ -1436,7 +1414,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 darg            = -arg*(dfz(i)+h3cocm_cphi3*brak+h3cocm_s*(gz*dcphi(i)+h3cocm_s*dfu(i)+ 2.0d0*fu*ds(i)))
                 darg            = (darg+gz*h3cocm_s*coupcm_dsphi3(i)+coupcm_sphi3*brak)/denom
                 pt5cm_engyij(i) = coupcm_dphi(i)-1.0d0/(1.0d0+arg**2)*darg
-            10 enddo
+            enddo
         end subroutine capf
         !> @brief Evaluate H2COR2 for the H3_GEN_DMBE_1987 potential.
         subroutine h2cor2 ( rr )
@@ -1484,7 +1462,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             cor2cm_corrt = 0.0d0
             dcorrt       = 0.0d0
             do j=1, 4
-                11 cor2cm_dcor2(j)=0.0d0
+                cor2cm_dcor2(j) = 0.0d0
             enddo
             t1   = 1.0d0/rsave
             t    = t1*t1
@@ -1540,10 +1518,8 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 cor2cm_dcor2(2) = cor2cm_dcor2(2)+h3dmcm_chh(id)*(d2-tem2)
                 cor2cm_dcor2(3) = cor2cm_dcor2(3)+h3dmcm_chh(id)*(d3-tem3)
                 cor2cm_dcor2(4) = cor2cm_dcor2(4)+h3dmcm_chh(id)*(d4-tem4)
-                3 continue
-            1 enddo
+            enddo
             cor2cm_dcor2(1) = dcorrt-dcorrs
-            10 continue
         end subroutine h2cor2
         !> @brief Evaluate DAMP for the H3_GEN_DMBE_1987 potential.
         subroutine damp( rmp, n, d2, d3, d4 )
@@ -2236,7 +2212,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

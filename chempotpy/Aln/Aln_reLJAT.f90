@@ -88,8 +88,8 @@ module chempotpy_aln_reljat_pes
                 rel = sig/rr
                 um  = um+rel**em
                 un  = un+rel**en
-            3 enddo
-        2 enddo
+            enddo
+        enddo
         u = aa*(um-un)
         !  2. calculate energy of three-body interactions
         utr = 0
@@ -111,9 +111,9 @@ module chempotpy_aln_reljat_pes
                         r3 = dsqrt(dx*dx+dy*dy+dz*dz)
                         call scos(i, j, m, x, y, z, r1, r2, r3, natom, maxatom, cote1, cote2, cote3)
                         utr = utr+zet*(1.d0+3.d0*cote1*cote2*cote3)/((r1*r2*r3)**3)
-                    5 enddo
-                4 enddo
-            6 enddo
+                    enddo
+                enddo
+            enddo
             !  calculate the potential energy
         endif
         v = u+utr

@@ -89,7 +89,7 @@ module chempotpy_aln_er2cn_pes
                 r(j,i)   = r(i,j)
                 fu2(j,i) = 1.d0
                 fu2(i,j) = 1.d0
-            3 enddo
+            enddo
         enddo
         g1    = 1.02042012701514406
         g2    = 6.15510503175378609/autoang
@@ -107,9 +107,9 @@ module chempotpy_aln_er2cn_pes
                 if( rij .ge. g2 ) cycle! cutoff term counts nearb
                 term     = dexp(-g1/(1d0-(rij/g2)))         ! cutoff term counts nearb
                 gcorr(i) = gcorr(i)+term                ! sum over beta
-            21 enddo
+            enddo
             gcorr(i) = gcorr(i)*g1e                  ! g_alpha
-        20 enddo
+        enddo
         !     then calculate CN term
         do i=1, natom! alpha loop
             do j=1, natom! beta loop
@@ -120,7 +120,6 @@ module chempotpy_aln_er2cn_pes
                     if( rij .ge. g2 ) exit goto_block_32_121! g_alphabeta
                     term = dexp(g1*(1d0-1d0/(1d0-(rij/g2)))) ! g_alphabeta
                 end block goto_block_32_121
-                32 continue
                 cz1    = (gcorr(i)-term)/gzero              ! ratio of coordination fo
                 abscz1 = dabs(cz1)
                 if( abscz1 .le. 10d-12 ) cz1=abscz1! eliminates negative valu
@@ -131,8 +130,8 @@ module chempotpy_aln_er2cn_pes
                 ec1      = 1d0/(1d0+cz2**gu2)                 ! compute beta part of f f
                 fu2(i,j) = 1d0+du2*(es1*ec1-1d0)         ! put alpha and beta parts
                 !       print *,es1,ec1,fu2(i,j)
-            31 enddo
-        30 enddo
+            enddo
+        enddo
         ! potential, includes cutoff
         v = 0.d0
         do i=1, natom
@@ -147,7 +146,7 @@ module chempotpy_aln_er2cn_pes
                 co   = 0.d0
                 if( rr .le. bu2 ) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
                 v = v-de*ee*poly*co*fu2(i,j)
-            1 enddo
+            enddo
         enddo
     end subroutine pot
 end module chempotpy_aln_er2cn_pes

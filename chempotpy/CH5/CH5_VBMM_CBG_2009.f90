@@ -263,7 +263,7 @@ module chempotpy_ch5_vbmm_cbg_2009_pes
             do i = 1, 18
                 q(i)    = r(i)
                 pdot(i) = 0.d0
-            10 enddo
+            enddo
             !
             !  calculate relative coordinates and bond lengths
             !
@@ -1822,7 +1822,6 @@ module chempotpy_ch5_vbmm_cbg_2009_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

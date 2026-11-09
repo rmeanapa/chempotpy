@@ -210,7 +210,7 @@ module chempotpy_aln_np_bd_pes
                 d_rho(2,j) = d_rho(2,j) - drhodr*dy/rr
                 d_rho(3,i) = d_rho(3,i) + drhodr*dz/rr
                 d_rho(3,j) = d_rho(3,j) - drhodr*dz/rr
-            3 enddo
+            enddo
             sterm      = 0.d0
             dstermdrho = 0.d0  ! Derivs
             if( rho .gt. 0.d0 )then
@@ -240,7 +240,7 @@ module chempotpy_aln_np_bd_pes
                 dvdz(j) = dvdz(j) + d_v2(3,j) + dbigefdrho*d_rho(3,j)
             enddo
             v = v + v2 + bigef
-        2 enddo
+        enddo
     end subroutine pot
 end module chempotpy_aln_np_bd_pes
 

@@ -78,31 +78,16 @@ end subroutine pes
 
 !> @brief Evaluate h3o2pipNN.
 subroutine h3o2pipnn( ct, vpes )
-    use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
         & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
     implicit none
-    integer          :: i, j, k, lpes
+    integer          :: j, lpes
     double precision :: rb(ndim), xbond(ndim), basis(nbasis), tmp1, txinput(nbasis-1)
-    double precision :: ct(3,natom), xvec(3,ndim), cx(3,natom), cy(3,natom)
+    double precision :: ct(3,natom), cy(3,natom)
     double precision :: vpes, vpesa, vpesb, vpesc, vpesh, vnn, rfx(6)
     basis = 0.d0
-    cx    = ct
-    k     = 0
-    do i=1, natom-1
-        do j=i+1, natom
-            k = k+1
-            !        write(*,*)k,i,j
-            xvec(:,k) = cx(:,i)-cx(:,j)
-        enddo
-    enddo
-    if( k .ne. ndim ) stop 'error in bond dimension'
-    do i=1, ndim
-        rb(i) = dsqrt(dot_product(xvec(:,i), xvec(:,i)))
-        !       if(rb(i).lt.0.65d0)then
-        !         vpes=5d0
-        !         return
-        !       endif
-    enddo
+    call all_pair_distances(transpose(ct), rb)
     xbond(:) = dexp(-rb(:)/alpha)
     call bemsav(xbond, basis)
     do j=1, nbasis-1

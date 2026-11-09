@@ -51,17 +51,13 @@ module chempotpy_ch4_gen_sp_2001_pes
         real(8), parameter   :: unitconvm = 5.48579903d-4
         real(8), intent(in)  :: coordinates(5,3)
         real(8), intent(out) :: radau_coordinates(10)
-        real(8), save        :: alpha0 = 0.0d0
-        logical, save        :: initialized = .false.
+        real(8)              :: alpha0
         real(8)              :: carbon_mass, hydrogen_mass
         real(8)              :: relative(4,3), shifted(4,3), shift(3)
         integer              :: atom_index
-        if( .not. initialized )then
-            carbon_mass   = 12.0d0/unitconvm-6.0d0
-            hydrogen_mass = 1.007825d0/unitconvm-1.0d0
-            alpha0        = sqrt(carbon_mass/(carbon_mass+4.0d0*hydrogen_mass))
-            initialized   = .true.
-        endif
+        carbon_mass   = 12.0d0/unitconvm-6.0d0
+        hydrogen_mass = 1.007825d0/unitconvm-1.0d0
+        alpha0        = sqrt(carbon_mass/(carbon_mass+4.0d0*hydrogen_mass))
         do atom_index = 1, 4
             relative(atom_index,:) = coordinates(atom_index+1,:)-coordinates(1,:)
         enddo

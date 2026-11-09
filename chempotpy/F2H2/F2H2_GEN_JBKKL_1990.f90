@@ -168,7 +168,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                 const3 = dsqrt(two/cdenom)
                 const  = phas*const1*const2*const3
                 v      = v+acoef_a(iq1,iq2,l)*const*threej(xl1, xl2, xl, xm, -xm, 0.d0)
-            20 enddo
+            enddo
             !     divide next two terms by three because there is a bug in Bunker's
             !     function subprogram "P" which computes the associated Legendre
             !     function. (this is a very small correction).
@@ -236,7 +236,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                 term5 = fakt(b+be-dnew)*fakt(c-a-be+dnew)
                 term6 = fakt(dnew)*fakt(a+b-c-dnew)
                 summ  = summ+(-1.d0)**new/(term4*term5*term6)
-            10 enddo
+            enddo
             !
             !     SO CLEBSCH-GORDEN <J1J2M1M2LJM> IS CLEBSH
             !
@@ -309,7 +309,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             do i=0, 4
                 do j=0, 4
                     do k=0, 8
-                        20 acoef_a(i,j,k)=0.0d0
+                        acoef_a(i,j,k) = 0.0d0
                     enddo
                 enddo
             enddo
@@ -469,7 +469,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                     do k=il, iu, 2
                         if( i .ne. 4.and.j .ne. 4 ) cycle
                         acoef_a(i,j,k) = acoef_a(i,j,k)*rmiddle
-                    992 enddo
+                    enddo
                 enddo
             enddo
             !
@@ -526,7 +526,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             fakt = ax
             do i=1, ic-1
                 fakt = fakt*(ax-dfloat(i)*.1d0)
-            10 enddo
+            enddo
         end function fakt
     end subroutine evaluate
 end module chempotpy_f2h2_gen_jbkkl_1990_pes

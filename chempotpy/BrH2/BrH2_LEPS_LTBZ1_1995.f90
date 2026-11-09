@@ -259,7 +259,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             double precision, parameter :: r2     = 1.41421356d0
             !
             !
-            save
             !
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
@@ -273,7 +272,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 de(i)   = de(i) / charkc
                 re(i)   = re(i) / cangau
                 beta(i) = beta(i) * cangau
-            10 enddo
+            enddo
             !
             !    Initialize the energy in the three asymptotic valleys
             !
@@ -363,7 +362,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 zp3(i)   = z(i)+3.0d0
                 tzp3(i)  = 2.0d0*zp3(i)
                 do4z(i)  = de(i)/4.0d0/zpo(i)
-            20 enddo
+            enddo
             !
             engygs = 0.d0
             !
@@ -372,7 +371,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 coul(i)     = do4z(i) * (zp3(i)*legacy_x(i) - top3z(i)) * legacy_x(i)
                 exch(i)     = do4z(i) * (op3z(i)*legacy_x(i) - tzp3(i)) * legacy_x(i)
                 engygs      = engygs + coul(i)
-            30 enddo
+            enddo
             !
             rad = sqrt((exch(1) - exch(2)) ** 2 + (exch(2) - exch(3)) ** 2 + (exch(3) - exch(1)) ** 2 )
             !
@@ -409,16 +408,15 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 !
                 do i = 1, 3
                     degsdr(i) = deq(i) - derad(i)/r2
-                40 enddo
+                enddo
                 !
                 !   Add in the derivatives of V3C w.r.t. R(I)
                 !
                 do i = 1, 3
                     degsdr(i) = degsdr(i) + dv3c(i)
-                50 enddo
+                enddo
                 !
             end block goto_block_700_419
-            700 continue
             !
             !
             call eunitzero
@@ -450,11 +448,10 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             !
             !
-            save
             !
             do i = 1, 3
                 do j = 1, 3
-                    10 dz(i,j) = 0.0d0
+                    dz(i,j) = 0.0d0
                 enddo
             enddo
             !
@@ -530,9 +527,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                     dz(3,3) = dz(1,3)
                     !
                 end block goto_block_100_526
-                100 continue
             end block goto_block_700_527
-            700 continue
             !
         end subroutine sato
         !> @brief Evaluate V3CFCN for the BrH2_LEPS_LTBZ1_1995 potential.
@@ -556,7 +551,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             !
             !
-            save
             !
             a1 = v3cp1
             a2 = v3cp2
@@ -612,7 +606,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 dv3c(3) = v3c * (dfcn1 - dfcn2 + dfcn3) + v3cdth*dthdr3
                 !
             end block goto_block_700_605
-            700 continue
             !
         end subroutine v3cfcn
         !> @brief Evaluate DCOUL for the BrH2_LEPS_LTBZ1_1995 potential.
@@ -649,7 +642,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             dimension dqdx(3), dqdz(3)
             !
-            save
             !
             do i = 1, 3
                 deq(i)  = 0.d0
@@ -657,7 +649,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 dqdz(i) = 0.d0
                 do j = 1, 3
                     dxdr(i,j) = 0.d0
-                10 enddo
+                enddo
             enddo
             !
             !   First compute the partial derivatives dQ/dX, dQ/dZ, and
@@ -667,7 +659,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 dqdx(i)   = do4z(i)*(tzp3(i)*legacy_x(i) - top3z(i))
                 dqdz(i)   = do4z(i)*legacy_x(i)*(legacy_x(i) - 6.0d0) - coul(i)/zpo(i)
                 dxdr(i,i) = -beta(i)*legacy_x(i)
-            20 enddo
+            enddo
             !
             !   Compute the contribution to the derivate of E w.r.t. R(i) from
             !   the coulombic terms, i.e., dE/dR(i) = dQ/dX * DX/DR(i) + dQ/dZ *DZ/D
@@ -675,7 +667,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             do i = 1, 3
                 do j = 1, 3
                     deq(i) = deq(i) + dqdx(j)*dxdr(j,i) + dqdz(j)*dz(j,i)
-                30 enddo
+                enddo
             enddo
             !
         end subroutine dcoul
@@ -715,13 +707,12 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !
             dimension djdx(3), djdz(3), djdr(3,3), draddj(3)
             !
-            save
             !
             do i = 1, 3
                 derad(i) = 0.d0
                 djdx(i)  = 0.d0
                 djdz(i)  = 0.d0
-            10 enddo
+            enddo
             !
             sumj = 0.0d0
             !
@@ -731,7 +722,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 sumj    = sumj + exch(i)
                 djdx(i) = do4z(i)*(top3z(i)*legacy_x(i) - tzp3(i))
                 djdz(i) = do4z(i)*legacy_x(i)*(3.0d0*legacy_x(i) - 2.0d0) - exch(i)/zpo(i)
-            20 enddo
+            enddo
             !
             !   Compute the partial derivatives of the exchange term, J, w.r.t. R(i)
             !   The outer loop, I, is over the bond lengths, the inner loop is over
@@ -740,20 +731,20 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             do i = 1, 3
                 do j = 1, 3
                     djdr(j,i) = djdx(j)*dxdr(j,i) + djdz(j)*dz(j,i)
-                30 enddo
+                enddo
             enddo
             !
             !   Compute the partial derivatives of the term RAD w.r.t. J(I).
             !
             do i = 1, 3
                 draddj(i) = (3.0d0*exch(i) - sumj)/rad
-            40 enddo
+            enddo
             !
             do i = 1, 3
                 do j = 1, 3
                     derad(i) = derad(i) + draddj(j)*djdr(j,i)
-                70 enddo
-            60 enddo
+                enddo
+            enddo
             !
         end subroutine dexch
         !> @brief Evaluate ANCVRT for the BrH2_LEPS_LTBZ1_1995 potential.
@@ -1162,7 +1153,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

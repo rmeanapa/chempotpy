@@ -71,34 +71,13 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
     end subroutine evaluate
     !> @brief Evaluate EvdRdX for the ClH2_LEPS_STSBLTG2_1989 potential.
     subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
         implicit none
+        integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter            :: second_atoms(3) = [2, 3, 3]
         double precision, intent(in)  :: x(9), r(3)
         double precision, intent(out) :: drdx(3,9)
-        integer                       :: i, j
-        ! Initialize dRdX(3,9)
-        do i=1, 3
-            do j=1, 9
-                drdx(i,j) = 0.0d0
-            enddo
-        enddo
-        drdx(1,1) = (x(1)-x(4))/r(1)
-        drdx(1,2) = (x(2)-x(5))/r(1)
-        drdx(1,3) = (x(3)-x(6))/r(1)
-        drdx(1,4) = -drdx(1,1)
-        drdx(1,5) = -drdx(1,2)
-        drdx(1,6) = -drdx(1,3)
-        drdx(2,4) = (x(4)-x(7))/r(2)
-        drdx(2,5) = (x(5)-x(8))/r(2)
-        drdx(2,6) = (x(6)-x(9))/r(2)
-        drdx(2,7) = -drdx(2,4)
-        drdx(2,8) = -drdx(2,5)
-        drdx(2,9) = -drdx(2,6)
-        drdx(3,1) = (x(1)-x(7))/r(3)
-        drdx(3,2) = (x(2)-x(8))/r(3)
-        drdx(3,3) = (x(3)-x(9))/r(3)
-        drdx(3,7) = -drdx(3,1)
-        drdx(3,8) = -drdx(3,2)
-        drdx(3,9) = -drdx(3,3)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
     end subroutine evdrdx
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, nder, energy, dedr )
@@ -189,7 +168,7 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
             x(i)    = exp(-morse_exponent(i)*(r(i)-equilibrium_distance(i)))
             coul(i) = quarter_energy(i)*(sato_plus_three(i)*x(i)-two_one_plus_three_sato(i))*x(i)
             exch(i) = quarter_energy(i)*(one_plus_three_sato(i)*x(i)-two_sato_plus_three(i))*x(i)
-        20 enddo
+        enddo
         rad    = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+ (exch(3)-exch(1))**2)
         energy = coul(1) + coul(2) + coul(3) - (rad/root_two) + dissociation_energy(2)
         !
@@ -206,7 +185,7 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
                     tval = tval/rad
                 endif
                 dedr(i) = derivative_weight(i)*x(i)*(tval-sato_plus_three(i)*x(i)+one_plus_three_sato(i))
-            30 enddo
+            enddo
         endif
         !
         !   Compute the three-center term

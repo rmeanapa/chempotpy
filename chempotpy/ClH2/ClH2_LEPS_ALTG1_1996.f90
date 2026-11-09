@@ -69,34 +69,13 @@ end subroutine pes
 
 !> @brief Evaluate EvdRdX for the ClH2_LEPS_ALTG1_1996 potential.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,4) = (x(4)-x(7))/r(2)
-    drdx(2,5) = (x(5)-x(8))/r(2)
-    drdx(2,6) = (x(6)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,4)
-    drdx(2,8) = -drdx(2,5)
-    drdx(2,9) = -drdx(2,6)
-    drdx(3,1) = (x(1)-x(7))/r(3)
-    drdx(3,2) = (x(2)-x(8))/r(3)
-    drdx(3,3) = (x(3)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,1)
-    drdx(3,8) = -drdx(3,2)
-    drdx(3,9) = -drdx(3,3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !
@@ -106,9 +85,9 @@ module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
     private
     public :: evaluate
     ! Temporary private state preserves the legacy PREPOT conversion on every call.
-    double precision, save      :: de(3) = [106.447d0, 109.458d0, 106.447d0]
-    double precision, save      :: re(3) = [1.2732d0, 0.74127d0, 1.2732d0]
-    double precision, save      :: b(3)  = [1.8674d0, 1.9413d0, 1.8674d0]
+    double precision            :: de(3) = [106.447d0, 109.458d0, 106.447d0]
+    double precision            :: re(3) = [1.2732d0, 0.74127d0, 1.2732d0]
+    double precision            :: b(3)  = [1.8674d0, 1.9413d0, 1.8674d0]
     double precision, parameter :: s(3)   = [0.1835d0, 0.167d0, 0.1835d0]
     double precision, parameter :: rj     = 0.0758016022d0
     double precision, parameter :: ap     = 0.0008627355d0
@@ -216,7 +195,7 @@ module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
             pf(i)  = 0.5d0*de(i)*((1.d0-s(i))/(1.d0+s(i)))
             pfs(i) = de(i)+pf(i)
             pfd(i) = de(i)-pf(i)
-        10 enddo
+        enddo
         !
         !
         r1i = 1.d0/r(1)

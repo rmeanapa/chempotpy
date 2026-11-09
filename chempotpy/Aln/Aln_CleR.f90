@@ -88,9 +88,8 @@ module chempotpy_aln_cler_pes
                 rel = rr/r0
                 ur  = 0d0
                 ur  = a*dexp(-p*(rel-1d0))
-                3 u=u+ur
+                u   = u+ur
             enddo
-            2 continue
         enddo
         ud = 0d0
         do i=1, natom
@@ -105,10 +104,9 @@ module chempotpy_aln_cler_pes
                 if( j .eq. i ) cycle
                 urr = (si**2)*dexp(-2d0*q*(rel-1d0))
                 udw = udw+urr
-                41 continue
-            4 enddo
+            enddo
             udn = dsqrt(udw)
-            5 ud=ud-udn
+            ud  = ud-udn
         enddo
         v = v+u+ud
     end subroutine pot

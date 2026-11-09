@@ -290,7 +290,7 @@ module chempotpy_fh2_leps_no5_1985_pes
                 dm(i)   = dm(i) / ckcau
                 re(i)   = re(i) / cangau
                 beta(i) = beta(i) * cangau
-            10 enddo
+            enddo
             !
             !   Set the energy of the potential in the each of the three asymptotic
             !
@@ -371,10 +371,10 @@ module chempotpy_fh2_leps_no5_1985_pes
             !
             logical :: lcol, lderiv, lzero
             !
-            data lderiv /.false./
             !
             !
             !
+            lderiv = .false.
             call cartou
             call carttor
             !
@@ -390,13 +390,13 @@ module chempotpy_fh2_leps_no5_1985_pes
             !
             do i = 1, 3
                 rr(i) = r(i)
-            20 enddo
+            enddo
             do i1 = 1, 3
                 i2                         = mod(i1, 3) + 1
                 i3                         = mod(i2, 3) + 1
                 t                          = rr(i2) + rr(i3)
                 if( rr(i1) .gt. t ) rr(i1) = t
-            30 enddo
+            enddo
             r12 = rr(1) * rr(1)
             r22 = rr(2) * rr(2)
             r32 = rr(3) * rr(3)
@@ -447,14 +447,13 @@ module chempotpy_fh2_leps_no5_1985_pes
                 do i = 1, 3
                     do j = 1, 3
                         dz(i,j) = 0.d0
-                    40 enddo
+                    enddo
                 enddo
                 !
                 !  ONLY THE HH SATO PARAMETER HAS A NONZERO DERIVATIVE - W.R.T. R2
                 !
                 dz(2,2) = 2.d0 * a * a2 * hsech * hsech - 2.d0 * legacy_d * t * exx
             end block goto_block_50_456
-            50 continue
             !
             !   COMPUTE NONCOLLINEAR CONTRIBUTIONS TO SATO PARAMETERS
             !
@@ -471,7 +470,6 @@ module chempotpy_fh2_leps_no5_1985_pes
                         'ater than zero.'')') deg
                     stop 'POT 3'
                 end block goto_block_60_470
-                60 continue
                 if( deg <= deg1 )then
                     zphi  = 0.0d0
                     dzphi = 0.0d0
@@ -546,9 +544,7 @@ module chempotpy_fh2_leps_no5_1985_pes
                     dz(2,2) = dz(2,2) * (1.d0 + scale1 * cphi / zhhdif) + t2 * (-0.5d0 * t1 * rr(2) + dcphi * dphi2)
                     dz(2,3) = t2 * (t1 * rr(3) + dcphi * dphi3)
                 end block goto_block_150_554
-                150 continue
             end block goto_block_160_555
-            160 continue
             !
             !   COMPUTE POTENTIAL FROM LEPS FORM
             !
@@ -564,10 +560,9 @@ module chempotpy_fh2_leps_no5_1985_pes
                     do j = 1, 3
                         dq(i,j) = 0.d0
                         dj(i,j) = 0.d0
-                    162 enddo
-                165 enddo
+                    enddo
+                enddo
             end block goto_block_170_572
-            170 continue
             lzero = .true.
             do i = 1, 3
                 ex    = exp(beta(i) * (re(i) - rr(i)))
@@ -599,14 +594,12 @@ module chempotpy_fh2_leps_no5_1985_pes
                     do j = 1, 3
                         dq(i,j) = -t3 * dz(i,j)
                         dj(i,j) = -dq(i,j)
-                    180 enddo
+                    enddo
                     t       = 2.d0*t*beta(i)
                     dq(i,i) = dq(i,i) - t * (t1 - op3z)
                     dj(i,i) = dj(i,i) - t * (t2 - zp3)
                 end block goto_block_190_607
-                190 continue
-                195 continue
-            200 enddo
+            enddo
             goto_block_270_651: block
                 if( lzero ) exit goto_block_270_651
                 xjx = 0.d0
@@ -623,9 +616,8 @@ module chempotpy_fh2_leps_no5_1985_pes
                     !
                     do j = 1, 3
                         degsdr(j) = degsdr(j) + t * (dj(i1,j) - dj(i2,j))
-                    210 enddo
-                    220 continue
-                230 enddo
+                    enddo
+                enddo
                 xjx = sqrt(0.5d0 * xjx)
                 !
                 !   COMPUTE THE LEPS PART OF THE POTENTIAL ENERGY
@@ -647,12 +639,10 @@ module chempotpy_fh2_leps_no5_1985_pes
                             !   THEN ADD IN THE DERIVATIVE OF Q
                             !
                             degsdr(j) = degsdr(j) + dq(i,j)
-                        240 enddo
-                    250 enddo
+                        enddo
+                    enddo
                 end block goto_block_260_650
-                260 continue
             end block goto_block_270_651
-            270 continue
             !
             !   EZERO ADDED TO PUT ZERO AT REQ FOR REACTANTS
             !
@@ -704,7 +694,6 @@ module chempotpy_fh2_leps_no5_1985_pes
                 degsdr(2) = degsdr(2) + de3c2
                 degsdr(3) = degsdr(3) + de3c3
             end block goto_block_280_701
-            280 continue
             !
             !
             call eunitzero
@@ -1120,7 +1109,6 @@ module chempotpy_fh2_leps_no5_1985_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

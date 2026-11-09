@@ -76,34 +76,13 @@ end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the NaH2_LEPS_6_2000_DPEM potential.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,4) = (x(4)-x(7))/r(2)
-    drdx(2,5) = (x(5)-x(8))/r(2)
-    drdx(2,6) = (x(6)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,4)
-    drdx(2,8) = -drdx(2,5)
-    drdx(2,9) = -drdx(2,6)
-    drdx(3,1) = (x(1)-x(7))/r(3)
-    drdx(3,2) = (x(2)-x(8))/r(3)
-    drdx(3,3) = (x(3)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,1)
-    drdx(3,8) = -drdx(3,2)
-    drdx(3,9) = -drdx(3,3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the NaH2_LEPS_6_2000_DPEM potential.
@@ -213,7 +192,7 @@ subroutine pot( r, e, de, nt, nsurf )
             else
                 e(i) = 0.5d0*(v11+v22+dsqrt((v11-v22)**2+4.d0*v12**2))
             endif
-        10 enddo
+        enddo
     endif
 end subroutine pot
 
@@ -2546,8 +2525,7 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot11_legacy_state_7d743da0
             e(i) = e(i) + elec
             !--------
             !
-            10 continue
-        99999 enddo
+        enddo
         !
     end subroutine dispatch
 end module chempotpy_nah2_leps_6_2000_dpem_g_pot11_legacy_state_7d743da0
@@ -5039,8 +5017,7 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot22_legacy_state_7d743da0
             e(i) = e(i) * cevau + elec
             !--------
             !
-            10 continue
-        99999 enddo
+        enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_6_2000_dpem_g_pot22_legacy_state_7d743da0
 

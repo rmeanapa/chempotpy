@@ -123,34 +123,23 @@ end
 
 !> @brief Evaluate k2rb2NN.
 subroutine k2rb2nn( ct, vpes, vpesa, vpesb, vpesc )
-    use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
     integer          :: i
     double precision :: rb(6), xbond(6), basis(0:32)
     double precision :: txinput(32)
     ! ct in KKRbRb order and angstrom
-    double precision            :: ct(3,4), qvec(3,6), xct(3,4)
+    double precision            :: ct(3,4)
     double precision            :: vpesa, vpesb, vpesc, vpes
     double precision, parameter :: alpha = 10.d0 ! bohr
     ! bohr to angstrom
     double precision, parameter :: btoa = 0.529177249d0
     double precision, parameter :: pi   = dacos(-1.d0)
-    basis     = 0.d0
-    xct       = ct
-    qvec(:,1) = xct(:,2)-xct(:,1)  !  K2 ->K1
-    qvec(:,2) = xct(:,3)-xct(:,1)  !  Rb3->K1
-    qvec(:,3) = xct(:,4)-xct(:,1)  !  Rb4->K1
-    qvec(:,4) = xct(:,3)-xct(:,2)  !  Rb3->K2
-    qvec(:,5) = xct(:,4)-xct(:,2)  !  Rb4->K2
-    qvec(:,6) = xct(:,4)-xct(:,3)  !  Rb4->Rb3
-    rb(1)     = dsqrt(dot_product(qvec(:,1), qvec(:,1)))
-    rb(2)     = dsqrt(dot_product(qvec(:,2), qvec(:,2)))
-    rb(3)     = dsqrt(dot_product(qvec(:,3), qvec(:,3)))
-    rb(4)     = dsqrt(dot_product(qvec(:,4), qvec(:,4)))
-    rb(5)     = dsqrt(dot_product(qvec(:,5), qvec(:,5)))
-    rb(6)     = dsqrt(dot_product(qvec(:,6), qvec(:,6)))
-    xbond(:)  = dexp(-rb(:)/(alpha*btoa))
+    basis = 0.d0
+    call all_pair_distances(transpose(ct), rb)
+    xbond(:) = dexp(-rb(:)/(alpha*btoa))
     call bemsav(xbond, basis)
     do i=1, 32
         txinput(i) = basis(i)

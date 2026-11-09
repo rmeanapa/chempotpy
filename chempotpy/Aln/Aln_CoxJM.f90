@@ -36,6 +36,7 @@ module chempotpy_aln_coxjm_pes
     end subroutine evaluate
     !> @brief Evaluate pot for the Aln_CoxJM potential.
     subroutine pot( x, y, z, v, natom, maxatom )
+        use chempotpy_geometry, only: fill_distance_matrix
         !   System:                        Aln
         !   Functional form:               Extended Rydberg plus generalized three-body
         !   Common name:                   CoxJM
@@ -85,16 +86,7 @@ module chempotpy_aln_coxjm_pes
         oneha = dsqrt(1.d0/2.d0)
         twoth = dsqrt(2.d0/3.d0)
         onesi = dsqrt(1.d0/6.d0)
-        do i=1, natom
-            r(i,i) = 0d0
-            do j=i+1, natom
-                dx     = x(i)-x(j)
-                dy     = y(i)-y(j)
-                dz     = z(i)-z(j)
-                r(i,j) = dsqrt(dx*dx+dy*dy+dz*dz)
-                1 r(j,i)=r(i,j)
-            enddo
-        enddo
+        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
         !  calculate the potential energy
         v  = 0.d0
         v2 = 0.d0
@@ -117,7 +109,7 @@ module chempotpy_aln_coxjm_pes
                     fsech = 1.d0/dcosh(a3*q1)
                     poly  = c0+c1*q1+c2*q1**2+c3*q23+c4*q1**3+c5*q1*q23+c6*q332
                     v3    = v3+dd*poly*fsech
-                2 enddo
+                enddo
             enddo
         enddo
         v = v2+v3

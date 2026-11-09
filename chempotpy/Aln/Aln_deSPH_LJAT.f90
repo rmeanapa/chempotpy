@@ -92,8 +92,8 @@ module chempotpy_aln_desph_ljat_pes
                 dz = z(i)-z(j)
                 rr = dsqrt(dx*dx+dy*dy+dz*dz)
                 u2 = u2 + a/rr**12 + b/rr**6
-            3 enddo
-        2 enddo
+            enddo
+        enddo
         !  2. calculate energy of three-body interactions
         u3 = 0.d0
         if( natom /= 2 )then
@@ -114,9 +114,9 @@ module chempotpy_aln_desph_ljat_pes
                         rim = dsqrt(dx*dx+dy*dy+dz*dz)
                         call scos(i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, co1, co2, co3)
                         u3 = u3+c*(1.d0+3.d0*co1*co2*co3)/((rij*rjm*rim)**3)
-                    5 enddo
-                4 enddo
-            6 enddo
+                    enddo
+                enddo
+            enddo
             !  calculate the potential energy
         endif
         v = u2+u3

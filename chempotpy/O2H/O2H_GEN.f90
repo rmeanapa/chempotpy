@@ -69,34 +69,13 @@ end subroutine pes
 
 !> @brief Evaluate EvdRdX for the O2H_GEN potential.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,4) = (x(4)-x(7))/r(2)
-    drdx(2,5) = (x(5)-x(8))/r(2)
-    drdx(2,6) = (x(6)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,4)
-    drdx(2,8) = -drdx(2,5)
-    drdx(2,9) = -drdx(2,6)
-    drdx(3,1) = (x(1)-x(7))/r(3)
-    drdx(3,2) = (x(2)-x(8))/r(3)
-    drdx(3,3) = (x(3)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,1)
-    drdx(3,8) = -drdx(3,2)
-    drdx(3,9) = -drdx(3,3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !
@@ -363,10 +342,10 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
                 if( nder .eq. 1 )then
                     do it = 1, 3
                         db(i, j, it) = c(i,j,1)*c(i,j,2)*(csth*c(i,j,3)* dcsth(it)+dcsth(it)* (1.0d0+c(i,j,3)*csth))
-                    60 enddo
+                    enddo
                 endif
-            70 enddo
-        80 enddo
+            enddo
+        enddo
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          NEXT CALCULATE MEW--SEE EQUATION FOUR
@@ -393,9 +372,9 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
                 do it1 = 1, 3
                     da(it,it1) = db(it, 1, it1)*junk(3)+b(it, 1)* ((db(it, 2, it1)*mew+b(it, 2)*dmew(it1))* junk(1)+ &
                         & junk(2)* (db(it, 3, it1)*mew+ b(it, 3)*dmew(it1)))
-                90 enddo
+                enddo
             endif
-        100 enddo
+        enddo
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          CALCULATE THE SECOND TERM IN EQUATION THREE
@@ -424,8 +403,7 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
                 dprod3(it) = da(2,it)*(rab+rac)*prod2+a(2)* (rab+rac)*dprod2(it)
                 if( it .eq. 2 ) cycle
                 dprod3(it) = dprod3(it)+a(2)*prod2
-                110 continue
-            120 enddo
+            enddo
         endif
         !
         second = prod1*prod3
@@ -433,7 +411,7 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         if( nder .eq. 1 )then
             do it = 1, 3
                 dsec(it) = prod1*dprod3(it)+dprod1(it)*prod3
-            130 enddo
+            enddo
         endif
         !
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -451,7 +429,7 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
                 if( it1 .eq. 2 ) it = 3
                 dthird(it) = dexpo(it)*expo(2)*a(4)*junk(2)+ junk(1)*expo(2)*da(4,it)*junk(2)+ junk(1)*expo(2)* a(4)* &
                     & (da(5,it)* (rab+rac)+a(5))
-            140 enddo
+            enddo
             dthird(2) = junk(1)*(dexpo(2)*a(4)*junk(2)+expo(2)*(da(4,2)* junk(2)+a(4)*(da(5,2)*(rab+rac))))
         endif
         !
@@ -465,7 +443,7 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         if( nder .eq. 1 )then
             do it = 1, 3
                 der(it) = dv(it)+dsec(it)+dthird(it)
-            150 enddo
+            enddo
             !
             goto_block_160_476: block
                 if( r(1) .lt. r(3) ) exit goto_block_160_476
@@ -473,7 +451,6 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
                 der(3)  = der(1)
                 der(1)  = junk(1)
             end block goto_block_160_476
-            160 continue
         endif
         !
         !CCCCCCCCCCCCCCC

@@ -104,33 +104,22 @@ end subroutine pes
 
 !> @brief Evaluate clh2oNN.
 subroutine clh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHClO order and angstrom
-    use nnparam, only: alpha, biasa, biasb, biasc, bohr, dp0hcl, dp0hcl2, dp0ho, dp0ho2, exhohcl, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: alpha, biasa, biasb, biasc, bohr, dp0hcl, dp0hcl2, dp0ho, dp0ho2, exhohcl, &
         & exhohcl2, ifunc, n0hcl, n0ho, n2n, nbasis, nhid, nindex, ninput, nlayer, nodemax, nodes, &
         & noutput, nscale, nterm, nwe, nxhcl, nxho, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, &
         & r0hcl, r0ho, radian, rxhcl, rxho, vpescut, vpesmin, weighta, weightb, weightc
     implicit none
     integer, parameter :: ndim = 6
-    integer            :: j, k
+    integer            :: j
     double precision   :: rb(ndim), xbond(ndim), basis(0:nbasis-1), tmp1
     double precision   :: txinput(1:nbasis-1)
-    double precision   :: ct(3,4), xvec(3,ndim), xct(3,4), vpes
+    double precision   :: ct(3,4), vpes
     double precision   :: vpesa, vpesb, vpesc, r12, r13, r14, r23, r24, r34
-    basis     = 0.d0
-    xct       = ct
-    xvec(:,1) = xct(:,2)-xct(:,1) !  H2->H1
-    xvec(:,2) = xct(:,3)-xct(:,1) !  x->H1
-    xvec(:,3) = xct(:,4)-xct(:,1) !  O->H1
-    xvec(:,4) = xct(:,3)-xct(:,2) !  H2->x
-    xvec(:,5) = xct(:,4)-xct(:,2) !  H2->O
-    xvec(:,6) = xct(:,4)-xct(:,3) !  x-O
-    rb(1)     = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-    rb(2)     = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-    rb(3)     = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
-    rb(4)     = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
-    rb(5)     = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
-    rb(6)     = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
-    r12       = rb(1);r13=rb(2);r14=rb(3);r23=rb(4);r24=rb(5);r34=rb(6)
-    xbond(:)  = dexp(-rb(:)/alpha)
+    basis = 0.d0
+    call all_pair_distances(transpose(ct), rb)
+    r12      = rb(1);r13=rb(2);r14=rb(3);r23=rb(4);r24=rb(5);r34=rb(6)
+    xbond(:) = dexp(-rb(:)/alpha)
     call bemsav(xbond, basis)
     do j=1, nbasis-1
         txinput(j) = basis(j)
@@ -32373,7 +32362,7 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
         p     = sig*y2(i-1)+2.0d0
         y2(i) = (sig-1.0d0)/p
         u(i)  = (6.0d0*((y(i+1)-y(i))/(x(i+ 1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig* u(i-1))/p
-    11 enddo
+    enddo
     if( ypn .gt. .99d30 )then
         qn = 0.0d0
         un = 0.0d0
@@ -32384,7 +32373,7 @@ subroutine spline( x, y, n, yp1, ypn, y2 )
     y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0d0)
     do k=n-1, 1, -1
         y2(k) = y2(k)*y2(k+1)+u(k)
-    12 enddo
+    enddo
 end
 
 !-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->

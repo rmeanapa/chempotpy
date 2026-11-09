@@ -330,7 +330,7 @@ module chempotpy_oh2_gen_dim1981_pes
             !
             do it = 1, 3
                 potcm_req(it) = potcm_req(it)/bohr
-            50 enddo
+            enddo
             potcm_beta = potcm_beta * bohr
             potcm_de   = potcm_de/hrtree
             potcm_a    = potcm_a/bohr
@@ -513,7 +513,7 @@ module chempotpy_oh2_gen_dim1981_pes
             if( usricm_nder .eq. 1 )then
                 do it = 1, 2
                     pt1cm_degsdr(it) = potcm_dbcoor(it) + pt1cm_degsdr(it)
-                300 enddo
+                enddo
             endif
             !
             !
@@ -698,7 +698,7 @@ module chempotpy_oh2_gen_dim1981_pes
             double precision, intent(inout) :: c(nn+2), d(nn+2)
             integer                         :: i, j, n, np1, np2
             double precision                :: cfact, dfact, pivot, supd, v, v2, z
-            double precision, save          :: deriv = 0.0d0
+            double precision                :: deriv = 0.0d0
             n   = nn
             np1 = n+1
             np2 = n+2
@@ -1278,7 +1278,6 @@ module chempotpy_oh2_gen_dim1981_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

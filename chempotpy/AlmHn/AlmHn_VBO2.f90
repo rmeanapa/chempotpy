@@ -44,6 +44,7 @@ module chempotpy_almhn_vbo2_pes
     end subroutine evaluate
     !> @brief Evaluate alhpot for the AlmHn_VBO2 potential.
     subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
+        use chempotpy_geometry, only: fill_distance_matrix
         !   System:                        AlmHn
         !   Functional form:               Valence--Bond Order
         !   Common name:                   VBO2.beta1
@@ -171,17 +172,7 @@ module chempotpy_almhn_vbo2_pes
         kap5(2,1,2) = 0.d0
         kap5(2,2,1) = 0.d0
         !    Calculate all internuclear distances
-        do i=1, natom-1
-            r(i,i) = 0.d0
-            do j=i+1, natom
-                dx     = x(i)-x(j)
-                dy     = y(i)-y(j)
-                dz     = z(i)-z(j)
-                r(i,j) = dsqrt(dx*dx+dy*dy+dz*dz)
-                1 r(j,i)=r(i,j)
-            enddo
-        enddo
-        r(natom,natom) = 0.d0
+        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
         !    Calculate en1 which corresponds to the term in brackets in Eq. (11)
         en1 = 0d0
         en2 = 0d0
@@ -274,9 +265,9 @@ module chempotpy_almhn_vbo2_pes
                         b(k,i,j) = 0.0d0
                     enddo
                 endif
-            3 enddo
+            enddo
             en1 = en1+v1
-        2 enddo
+        enddo
         !    Calculate en2 which corresponds to the second term in Eq. (11) (pur
         do i=1, natom
             if( id(i) .eq. 1 )then
@@ -313,12 +304,12 @@ module chempotpy_almhn_vbo2_pes
                     if( kap5(id(i),id(j),id(k)) .ne. 0.0d0 )then
                         vi5 = vi5+kap5(id(i),id(j),id(k))*b(5,i,j)*b(5,i,k)
                     endif
-                6 enddo
-            5 enddo
+                enddo
+            enddo
             add = vi3**ca_bar+cb*vi4**cb_bar
             if( vi5 .ne. 0.0d0 ) add=add+cgam*vi5**cgam_bar
             en2 = en2-ca*add
-        4 enddo
+        enddo
         v = en1+en2
     end subroutine alhpot
 end module chempotpy_almhn_vbo2_pes

@@ -33,7 +33,7 @@ def intro_detail():
     1.  CH4_GEN_SP_2001:      single-state surface of CH4, ground state,
                               availability: potential energy,
                               functional form: GEN
-                              corresponding surface in POTLIB: ch4T8.F
+                              corresponding legacy source: ch4_t8.f90
                               ref: D. W. Schwenke, and H. Partridge,
                                    "Vibrational energy levels for CH4 from 
                                    an ab initio potential",

@@ -27488,7 +27488,6 @@ module pes_shell
     public :: coeff, f, g, pes_init
     real :: coeff(1:8040) ! change to number of coefficients
     ! (size of c in bemsa.f90)
-    save coeff
     contains
     !==================================!
     ! read the coefficients of the PES !

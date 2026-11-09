@@ -101,12 +101,13 @@ end subroutine pes
 
 !> @brief Evaluate fh2o_soc_nn.
 subroutine fh2o_soc_nn( xt, vg, socg, vgsoc )
-    use nnparam, only: alpha, biasa, biasb, biasc, bohr, ifunc, nbasis, nhid, nindex, ninput, nlayer, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: alpha, biasa, biasb, biasc, bohr, ifunc, nbasis, nhid, nindex, ninput, nlayer, &
         & nodemax, nodes, noutput, npbasissoc, nrbasissoc, nscale, nterm, nwe, p2soccoef, pavga, &
         & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
         & weightb, weightc
     implicit none
-    double precision :: xt(3,4), xt2(3,4), xn(3,4), xvec(3,6), rint(6), rt(6)
+    double precision :: xt(3,4), xt2(3,4), xn(3,4), rint(6), rt(6)
     double precision :: tr1basis(nrbasissoc), tr2basis(nrbasissoc)
     double precision :: r1function, r2function, rcom, the1, the2, phi
     double precision :: p2function, tp2basis(npbasissoc)
@@ -124,22 +125,11 @@ subroutine fh2o_soc_nn( xt, vg, socg, vgsoc )
     endif
     xt2 = xt
     call orderxnt(xt2, xn) !xn 1st H closer to F
-    xvec(:,1) = xn(:,2)-xn(:,1) !  H2->H1
-    xvec(:,2) = xn(:,3)-xn(:,1) !  F->H1
-    xvec(:,3) = xn(:,4)-xn(:,1) !  O->H1
-    xvec(:,4) = xn(:,3)-xn(:,2) !  H2->F
-    xvec(:,5) = xn(:,4)-xn(:,2) !  H2->O
-    xvec(:,6) = xn(:,4)-xn(:,3) !  F-O
-    rt(1)     = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-    rt(2)     = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-    rt(3)     = dsqrt(dot_product(xvec(:,3), xvec(:,3))) !the breaking bond
-    rt(4)     = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
-    rt(5)     = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
-    rt(6)     = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
-    xt2(:,1)  = xt(:,1)
-    xt2(:,2)  = xt(:,4)
-    xt2(:,3)  = xt(:,2)
-    xt2(:,4)  = xt(:,3)
+    call all_pair_distances(transpose(xn), rt)
+    xt2(:,1) = xt(:,1)
+    xt2(:,2) = xt(:,4)
+    xt2(:,3) = xt(:,2)
+    xt2(:,4) = xt(:,3)
     call xyztojcb3(xt2, rint) !-->xt2 in HOHF order,angstrom, rt in angstrom and radians
     rcom = rint(3)
     the2 = rint(5)
@@ -290,32 +280,21 @@ end subroutine soc_product_ground
 
 !> @brief Evaluate fh2oNN.
 subroutine fh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHFO order and angstrom
-    use nnparam, only: alpha, biasa, biasb, biasc, bohr, ifunc, nbasis, nhid, nindex, ninput, nlayer, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: alpha, biasa, biasb, biasc, bohr, ifunc, nbasis, nhid, nindex, ninput, nlayer, &
         & nodemax, nodes, noutput, npbasissoc, nrbasissoc, nscale, nterm, nwe, p2soccoef, pavga, &
         & pavgb, pavgc, pdela, pdelb, pdelc, pi, r1soccoef, r2soccoef, radian, vpesmin, weighta, &
         & weightb, weightc
     implicit none
     integer, parameter :: ndim = 6
-    integer            :: j, k
+    integer            :: j
     double precision   :: rb(ndim), xbond(ndim), basis(0:nbasis-1), tmp1
     double precision   :: txinput(1:nbasis-1)
-    double precision   :: ct(3,4), xvec(3,ndim), xct(3,4), vpes
+    double precision   :: ct(3,4), vpes
     double precision   :: vpesa, vpesb, vpesc, r12, r13, r14, r23, r24, r34
-    basis     = 0.d0
-    xct       = ct
-    xvec(:,1) = xct(:,2)-xct(:,1) !  H2->H1
-    xvec(:,2) = xct(:,3)-xct(:,1) !  F->H1
-    xvec(:,3) = xct(:,4)-xct(:,1) !  O->H1
-    xvec(:,4) = xct(:,3)-xct(:,2) !  H2->F
-    xvec(:,5) = xct(:,4)-xct(:,2) !  H2->O
-    xvec(:,6) = xct(:,4)-xct(:,3) !  F-O
-    rb(1)     = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-    rb(2)     = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-    rb(3)     = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
-    rb(4)     = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
-    rb(5)     = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
-    rb(6)     = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
-    r12       = rb(1);r13=rb(2);r14=rb(3);r23=rb(4);r24=rb(5);r34=rb(6)
+    basis = 0.d0
+    call all_pair_distances(transpose(ct), rb)
+    r12 = rb(1);r13=rb(2);r14=rb(3);r23=rb(4);r24=rb(5);r34=rb(6)
     if( minval(rb(:)) .le. 0.67d0.or.minval(rb(:)) .gt. 1.45d0 )then
         vpes = 5.0d0
         return

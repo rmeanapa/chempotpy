@@ -102,7 +102,7 @@ module chempotpy_aln_er2ecn_pes
                 r(j,i)   = r(i,j)
                 fu2(j,i) = 0.d0
                 fu2(i,j) = 0.d0
-            3 enddo
+            enddo
         enddo
         ! CALCULATE CN FUNCTION
         !     first calculate g_alpha
@@ -115,9 +115,9 @@ module chempotpy_aln_er2ecn_pes
                 if( rij .ge. g2 ) cycle! cutoff term counts nearb
                 term     = dexp(-g1/(1d0-(rij/g2)))         ! cutoff term counts nearb
                 gcorr(i) = gcorr(i)+term                ! sum over beta
-            21 enddo
+            enddo
             gcorr(i) = gcorr(i)*g1e                  ! g_alpha
-        20 enddo
+        enddo
         !     then calculate CN term
         do i=1, natom! alpha loop
             do j=1, natom! beta loop
@@ -128,7 +128,6 @@ module chempotpy_aln_er2ecn_pes
                     if( rij .ge. g2 ) exit goto_block_32_129! g_alphabeta
                     term = dexp(g1*(1d0-1d0/(1d0-(rij/g2)))) ! g_alphabeta
                 end block goto_block_32_129
-                32 continue
                 cz1    = (gcorr(i)-term)/gzero              ! ratio of coordination fo
                 abscz1 = dabs(cz1)
                 if( abscz1 .le. 10d-12 ) cz1=abscz1! eliminates negative valu
@@ -140,8 +139,8 @@ module chempotpy_aln_er2ecn_pes
                 !       fu2(i,j)=1d0+du2*(es1*ec1-1d0)         ! put alpha and beta parts together:  1 + f for regular formalism
                 fu2(i,j) = du2*(es1*ec1-1d0)         ! put alpha and beta parts tog
                 !       print *,es1,ec1,fu2(i,j)
-            31 enddo
-        30 enddo
+            enddo
+        enddo
         ! potential, includes cutoff
         v = 0.d0
         do i=1, natom
@@ -161,7 +160,7 @@ module chempotpy_aln_er2ecn_pes
                 if( rr .le. bu2 ) co=dexp(au2*(1.d0-1.d0/(1.d0-rr/bu2)))
                 if( rr .le. bu2b ) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
                 v = v-de*ee*poly*co -deb*eeb*polyb*cob*fu2(i,j)
-            1 enddo
+            enddo
         enddo
     end subroutine pot
 end module chempotpy_aln_er2ecn_pes

@@ -54,34 +54,13 @@ end subroutine dpem
 
 !> @brief Evaluate EvdRdX for the NaH2_LEPS_5G_1992_DPEM potential.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,4) = (x(4)-x(7))/r(2)
-    drdx(2,5) = (x(5)-x(8))/r(2)
-    drdx(2,6) = (x(6)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,4)
-    drdx(2,8) = -drdx(2,5)
-    drdx(2,9) = -drdx(2,6)
-    drdx(3,1) = (x(1)-x(7))/r(3)
-    drdx(3,2) = (x(2)-x(8))/r(3)
-    drdx(3,3) = (x(3)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,1)
-    drdx(3,8) = -drdx(3,2)
-    drdx(3,9) = -drdx(3,3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the NaH2_LEPS_5G_1992_DPEM potential.
@@ -283,7 +262,7 @@ module chempotpy_nah2_leps_5g_1992_dpem_pot11_legacy_state_dd307a13
             w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
             cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
             e(i)  = (coul1+coul2+coul3+deh2-rac2*dsqrt(w+cplg2*cplg2))*cevau-cfm
-        10 enddo
+        enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_5g_1992_dpem_pot11_legacy_state_dd307a13
 
@@ -386,7 +365,7 @@ module chempotpy_nah2_leps_5g_1992_dpem_pot12_legacy_state_dd307a13
             fh     = 0.5d0*(1.d0+dtanh(0.75d0*(11.d0-hr)))
             ang    = (ff-fg)*fh+fg
             e(i)   = ang*(f1+f3)*cevau
-        10 enddo
+        enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_5g_1992_dpem_pot12_legacy_state_dd307a13
 
@@ -659,7 +638,7 @@ module chempotpy_nah2_leps_5g_1992_dpem_pot22_legacy_state_dd307a13
             vdnahh = (-c6*rnag**(-6))*(1.d0-dexp((-rnag/tr0)**7))
             cof    = 0.5d0*(1.d0+dtanh(rnag-r(i,2)))
             e(i)   = e(i)*cevau+vdnahh*cof*rat-cfm
-        10 enddo
+        enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_5g_1992_dpem_pot22_legacy_state_dd307a13
 

@@ -67,7 +67,7 @@ module chempotpy_h4o2_pip_pes
         double precision, intent(in)    :: x(natoms,3)
         double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
         double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-        !     logical, save :: first_time_data=.true.
+        !     logical :: first_time_data=.true.
         real    :: tx(18)
         real    :: v
         integer :: iatom, idir, j, istate

@@ -95,34 +95,13 @@ end subroutine pes
 
 !> @brief Evaluate EvdRdX for the BrH2_LEPS_LTBZ2_1995 potential.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,4) = (x(4)-x(7))/r(2)
-    drdx(2,5) = (x(5)-x(8))/r(2)
-    drdx(2,6) = (x(6)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,4)
-    drdx(2,8) = -drdx(2,5)
-    drdx(2,9) = -drdx(2,6)
-    drdx(3,1) = (x(1)-x(7))/r(3)
-    drdx(3,2) = (x(2)-x(8))/r(3)
-    drdx(3,3) = (x(3)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,1)
-    drdx(3,8) = -drdx(3,2)
-    drdx(3,9) = -drdx(3,3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !> @brief Evaluate diagonalize for the BrH2_LEPS_LTBZ2_1995 potential.
@@ -404,7 +383,7 @@ module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
             de(i)   = d(i) / charkc
             re(i)   = re(i) / cangau
             beta(i) = betaa(i) * cangau
-        99999 enddo
+        enddo
         !
         !
         !
@@ -568,8 +547,7 @@ module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
                 do4z(i) = d2_v
                 !--------
                 b(i) = beta(i) * do4z(i) * 2.0d0
-                20 continue
-            99998 enddo
+            enddo
             do g_i_ = 1, g_p_
                 g_pe(g_i_) = 0.0d0
             enddo
@@ -616,8 +594,7 @@ module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
                 enddo
                 pe = pe + coul(i)
                 !--------
-                30 continue
-            99997 enddo
+            enddo
             d4_v  = (exch(1) - exch(2)) * (exch(1) - exch(2))
             d3_p  = 2.0d0 * (exch(1) - exch(2))
             d7_v  = (exch(2) - exch(3)) * (exch(2) - exch(3))
@@ -751,7 +728,7 @@ module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
             enddo
             e(k) = pe + xlamb / 3.d0
             !--------
-        99996 enddo
+        enddo
         !
     end subroutine dispatch
 end module chempotpy_brh2_leps_ltbz2_1995_g_pot11_legacy_state_4c462471
@@ -790,7 +767,7 @@ module chempotpy_brh2_leps_ltbz2_1995_pot12_legacy_state_4c462471
             do j =1, 3
                 de(j,k) = 0.0d0
             enddo
-        7777 enddo
+        enddo
     end subroutine dispatch
 end module chempotpy_brh2_leps_ltbz2_1995_pot12_legacy_state_4c462471
 
@@ -887,7 +864,7 @@ module chempotpy_brh2_leps_ltbz2_1995_pot22_legacy_state_4c462471
             de(i)   = d(i) / charkc
             re(i)   = re(i) / cangau
             beta(i) = betaa(i) * cangau
-        10 enddo
+        enddo
         !
         !
         !
@@ -906,7 +883,7 @@ module chempotpy_brh2_leps_ltbz2_1995_pot22_legacy_state_4c462471
             der(2,k) = -2.0d0*beta(2)*de(2)*(y2**2-y2)
             der(3,k) = -2.0d0*beta(3)*de(3)*(y3**2+y3)*ccon
             e(k)     = pe
-        7777 enddo
+        enddo
         !
     end subroutine dispatch
 end module chempotpy_brh2_leps_ltbz2_1995_pot22_legacy_state_4c462471

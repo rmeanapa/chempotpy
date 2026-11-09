@@ -105,9 +105,9 @@ module chempotpy_aln_er2gea_pes
                 u2  = u2-0.5d0*de*ee*poly*co
                 ud  = ud+dexp(-rr*b)*co3
                 ud2 = ud2+(co3*dexp(-rr*b))**en
-            2 enddo
+            enddo
             ff = ff-bb*ud**en+bb*ud2
-        1 enddo
+        enddo
         v = u2+ff
     end subroutine pot
 end module chempotpy_aln_er2gea_pes

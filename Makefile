@@ -1,4 +1,4 @@
-.PHONY: all audit build check check-binaries check-fortran check-style clean test test-surfaces
+.PHONY: all audit build check check-binaries check-fortran check-modernization check-modernization-source check-style clean test test-surfaces
 
 PYTHON ?= python3
 BUILD_FLAGS ?=
@@ -16,12 +16,17 @@ check-binaries:
 check-style:
 	$(PYTHON) scripts/check_fortran_style.py
 
+check-modernization-source:
+	$(PYTHON) scripts/check_modernization.py
+
 build:
 	$(PYTHON) scripts/build_pes.py $(BUILD_FLAGS)
 
 all: build
 
-check: audit test check-fortran check-style
+check: audit check-modernization-source test check-fortran check-style
+
+check-modernization: check
 
 test:
 	$(PYTHON) -m unittest discover -s tests -v

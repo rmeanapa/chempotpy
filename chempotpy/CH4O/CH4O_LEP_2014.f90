@@ -290,7 +290,7 @@ module chempotpy_ch4o_lep_2014_pes
                 q(i) = r(i)
                 !         q(I) = R(I)*0.52918d0
                 pdot(i) = 0.d0
-            10 enddo
+            enddo
             !
             !  calculate relative coordinates and bond lengths
             !
@@ -1918,7 +1918,6 @@ module chempotpy_ch4o_lep_2014_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

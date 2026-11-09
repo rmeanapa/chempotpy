@@ -2974,7 +2974,7 @@ module chempotpy_c2h7_vbmm_pes
             do i = 1, 18
                 qpdot_pl_q(i)    = r(i)*0.52918d0
                 qpdot_pl_pdot(i) = 0.d0
-            10 enddo
+            enddo
             !
             !  calculate relative coordinates and bond lengths
             !

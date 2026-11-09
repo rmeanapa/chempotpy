@@ -69,34 +69,13 @@ end subroutine pes
 
 !> @brief Evaluate EvdRdX for the ALC6m0_LEPS_ModelSurface potential.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,4) = (x(4)-x(7))/r(2)
-    drdx(2,5) = (x(5)-x(8))/r(2)
-    drdx(2,6) = (x(6)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,4)
-    drdx(2,8) = -drdx(2,5)
-    drdx(2,9) = -drdx(2,6)
-    drdx(3,1) = (x(1)-x(7))/r(3)
-    drdx(3,2) = (x(2)-x(8))/r(3)
-    drdx(3,3) = (x(3)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,1)
-    drdx(3,8) = -drdx(3,2)
-    drdx(3,9) = -drdx(3,3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !
@@ -216,7 +195,7 @@ module chempotpy_alc6m0_leps_modelsurface_pot_legacy_state_8cd45204
             zp3(i)   = z(i) + 3.0d0
             tzp3(i)  = 2.0d0*zp3(i)
             do4z(i)  = d(i)/4.0d0/zpo(i)
-            10 b(i) = beta(i)*do4z(i)*2.0d0!
+            b(i)     = beta(i)*do4z(i)*2.0d0!
         enddo
         !   Check the value NDER
         !
@@ -225,7 +204,7 @@ module chempotpy_alc6m0_leps_modelsurface_pot_legacy_state_8cd45204
             x(i)    = exp(-beta(i)*(rr(i)-re(i)))
             coul(i) = do4z(i)*(zp3(i)*x(i)-top3z(i))*x(i)
             exch(i) = do4z(i)*(op3z(i)*x(i)-tzp3(i))*x(i)
-        21 enddo
+        enddo
         rad = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+ (exch(3)-exch(1))**2)
         e   = coul(1) + coul(2) + coul(3) - (rad/root2) + d(2)
         !
@@ -248,9 +227,8 @@ module chempotpy_alc6m0_leps_modelsurface_pot_legacy_state_8cd45204
                 endif
                 !
                 dedrr(i) = b(i)*x(i)*(t -zp3(i)*x(i)+op3z(i))
-            22 enddo
+            enddo
         end block goto_block_700_250
-        700 continue
         !
         !   Compute the auxiliary barrier term, Va, where
         !   Va = a{[(R1-R2)*(R2-R3)*(R3-R1)]^2}*exp[-alpha*{(R1+R2+R3)^3}]

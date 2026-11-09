@@ -231,7 +231,7 @@ module chempotpy_i2h_leps_kk_1981_pes
                 hpf(i) = 0.5d0*pf
                 pfs(i) = -de(i)*b(i)
                 pft(i) = -pf*b(i)
-            10 enddo
+            enddo
             easyab = de(1)
             easybc = de(2)
             easyac = de(3)
@@ -752,7 +752,6 @@ module chempotpy_i2h_leps_kk_1981_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

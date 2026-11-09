@@ -19,23 +19,27 @@ class FortranCoreTests( unittest.TestCase ):
             "chempotpy_units.f90",
             "chempotpy_legacy_units.f90",
             "chempotpy_geometry.f90",
+            "chempotpy_internal_coordinates.f90",
             "chempotpy_legacy_coordinates.f90",
             "chempotpy_h3_basis.f90",
             "chempotpy_status.f90",
         )
         driver_source = """
 program test_fortran_core
-    use chempotpy_geometry, only: cartesian_distance, &
-        cosine_between_vectors, dot_product_3d, fill_distance_matrix, &
-        flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian, &
+    use chempotpy_geometry, only: all_pair_distance_jacobian, all_pair_distances, &
+        all_pair_distances_and_jacobian, cartesian_distance, cosine_between_vectors, dot_product_3d, fill_distance_matrix, &
+        flatten_cartesian_coordinates, ordered_pair_distance_jacobian, transform_internal_gradient_to_cartesian, &
         triatomic_distance_jacobian
     use chempotpy_h3_basis, only: get_h3_basis_term, primary_term_count, &
         secondary_term_count
+    use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
+        prepare_legacy_triatomic_coordinates
     use chempotpy_kinds, only: real64
     use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates, &
         legacy_triatomic_distances_to_bohr
     use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, &
         legacy_coordinates_to_bohr, legacy_energy_to_electronvolt, &
+        legacy_gradient_to_electronvolt_per_angstrom, &
         legacy_hartree_to_electronvolt
     use chempotpy_status, only: status_derivative_unavailable, &
         status_invalid_input, status_success
@@ -52,6 +56,11 @@ program test_fortran_core
     real(real64) :: potlib_coordinates(9)
     real(real64) :: pair_distances(3)
     real(real64) :: triatomic_jacobian(3,9)
+    real(real64) :: four_atom_coordinates(4,3), six_distances(6)
+    real(real64) :: six_distance_jacobian(6,12), flat_four_atom_coordinates(12)
+    real(real64) :: surface_energy(1), surface_gradient(1,3,3)
+    real(real64) :: surface_coupling(1,1,3,3)
+    real(real64) :: surface_energy_hartree, surface_internal_gradient(3)
     integer      :: conversion_status
     integer      :: coefficient_index, first_power, second_power, third_power
 
@@ -130,6 +139,9 @@ program test_fortran_core
         error stop 'distance matrix failed'
     if( any(distances /= transpose(distances)) ) &
         error stop 'distance matrix is not symmetric'
+    call fill_distance_matrix(coordinates(:,1), coordinates(:,2), coordinates(:,3), distances)
+    if( distances(1,2) /= 3.0_real64 .or. distances(1,3) /= 4.0_real64 .or. &
+        distances(2,3) /= 5.0_real64 ) error stop 'component-array distance matrix failed'
     coordinates = 0.0_real64
     coordinates(2,1) = 3.0_real64*legacy_bohr_to_angstrom
     coordinates(3,1) = 3.0_real64*legacy_bohr_to_angstrom
@@ -146,6 +158,52 @@ program test_fortran_core
         1.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, 0.0_real64]) &
         > 8.0_real64*epsilon(1.0_real64)) ) &
         error stop 'triatomic distance Jacobian orientation failed'
+    four_atom_coordinates = 0.0_real64
+    four_atom_coordinates(2,1) = 3.0_real64
+    four_atom_coordinates(3,2) = 4.0_real64
+    four_atom_coordinates(4,3) = 12.0_real64
+    call all_pair_distances(four_atom_coordinates, six_distances)
+    if( any(six_distances /= [3.0_real64, 4.0_real64, 12.0_real64, 5.0_real64, &
+        sqrt(153.0_real64), sqrt(160.0_real64)]) ) error stop 'distance-only matrix operation failed'
+    call flatten_cartesian_coordinates(four_atom_coordinates, flat_four_atom_coordinates)
+    call all_pair_distances(flat_four_atom_coordinates, six_distances)
+    if( any(six_distances /= [3.0_real64, 4.0_real64, 12.0_real64, 5.0_real64, &
+        sqrt(153.0_real64), sqrt(160.0_real64)]) ) error stop 'distance-only vector operation failed'
+    call all_pair_distances_and_jacobian(four_atom_coordinates, six_distances, six_distance_jacobian)
+    if( any(six_distances /= [3.0_real64, 4.0_real64, 12.0_real64, 5.0_real64,  &
+        sqrt(153.0_real64), sqrt(160.0_real64)]) ) error stop 'all-pair matrix distances failed'
+    call all_pair_distances_and_jacobian(flat_four_atom_coordinates, six_distances, six_distance_jacobian)
+    if( any(six_distances /= [3.0_real64, 4.0_real64, 12.0_real64, 5.0_real64, &
+        sqrt(153.0_real64), sqrt(160.0_real64)]) ) error stop 'all-pair vector distances failed'
+    if( any(abs(six_distance_jacobian(1,:)-[-1.0_real64, 0.0_real64, 0.0_real64, &
+        1.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, &
+        0.0_real64, 0.0_real64, 0.0_real64]) > 8.0_real64*epsilon(1.0_real64)) ) &
+        error stop 'all-pair Jacobian orientation failed'
+    six_distance_jacobian = 0.0_real64
+    call all_pair_distance_jacobian(flat_four_atom_coordinates, six_distances, six_distance_jacobian)
+    if( any(abs(six_distance_jacobian(1,:)-[-1.0_real64, 0.0_real64, 0.0_real64, &
+        1.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, 0.0_real64, &
+        0.0_real64, 0.0_real64, 0.0_real64]) > 8.0_real64*epsilon(1.0_real64)) ) &
+        error stop 'supplied-distance all-pair Jacobian failed'
+    call ordered_pair_distance_jacobian(flat_four_atom_coordinates, [1, 3, 1], [2, 4, 4], &
+        six_distances([1, 6, 3]), six_distance_jacobian(1:3,:))
+    if( any(abs(six_distance_jacobian(2,7:12)-[0.0_real64, 4.0_real64/sqrt(160.0_real64), &
+        -12.0_real64/sqrt(160.0_real64), 0.0_real64, -4.0_real64/sqrt(160.0_real64), &
+        12.0_real64/sqrt(160.0_real64)]) > 8.0_real64*epsilon(1.0_real64)) ) &
+        error stop 'ordered-pair Jacobian failed'
+    call prepare_legacy_triatomic_coordinates(coordinates, pair_distances, triatomic_jacobian)
+    call test_triatomic_kernel(pair_distances, 1, surface_energy_hartree, surface_internal_gradient)
+    call finalize_legacy_triatomic_surface( &
+        1, surface_energy_hartree, surface_internal_gradient, triatomic_jacobian, &
+        surface_energy, surface_gradient, surface_coupling)
+    if( surface_energy(1) /= 12.0_real64*legacy_hartree_to_electronvolt ) &
+        error stop 'internal-coordinate driver energy conversion failed'
+    if( any(abs(surface_gradient(1,:,:)-legacy_gradient_to_electronvolt_per_angstrom*reshape([ &
+        -2.8_real64, 1.0_real64, 1.8_real64, -2.4_real64, -2.0_real64, 4.4_real64, &
+        0.0_real64, 0.0_real64, 0.0_real64], [3,3])) > 64.0_real64*epsilon(1.0_real64)) ) &
+        error stop 'internal-coordinate driver gradient transformation failed'
+    if( any(surface_coupling /= 0.0_real64) ) &
+        error stop 'internal-coordinate driver coupling initialization failed'
 
     if( status_success /= 0 .or. status_derivative_unavailable /= 1 &
         .or. status_invalid_input /= 2 ) error stop 'status contract changed'
@@ -164,6 +222,15 @@ program test_fortran_core
         first_power, second_power, third_power, coefficient_index)
     if( any([first_power, second_power, third_power, coefficient_index] /= [4,4,3,71]) ) &
         error stop 'last secondary H3 basis term changed'
+    contains
+    subroutine test_triatomic_kernel( distances_bohr, derivative_order, energy_hartree, gradient_hartree_per_bohr )
+        real(real64), intent(in)  :: distances_bohr(3)
+        integer, intent(in)       :: derivative_order
+        real(real64), intent(out) :: energy_hartree, gradient_hartree_per_bohr(3)
+        energy_hartree = sum(distances_bohr)
+        gradient_hartree_per_bohr = 0.0_real64
+        if( derivative_order == 1 ) gradient_hartree_per_bohr = [1.0_real64, 2.0_real64, 3.0_real64]
+    end subroutine test_triatomic_kernel
 end program test_fortran_core
 """
         with tempfile.TemporaryDirectory(prefix="chempotpy-fortran-core-") as tmp:

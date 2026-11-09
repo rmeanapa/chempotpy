@@ -123,42 +123,24 @@ end
 
 !> @brief Evaluate c2h2oNN.
 subroutine c2h2onn( ct, vpes, vpesa, vpesb, vpesc )
-    use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
     integer          :: i
     double precision :: rb(10), xbond(10), basis(0:101)
     double precision :: txinput(101)
     ! ct in OCCHH order and angstrom
-    double precision            :: ct(3,5), qvec(3,10), xct(3,5)
+    double precision            :: ct(3,5), pair_distances(10)
     double precision            :: vpesa, vpesb, vpesc, vpes
     double precision, parameter :: alpha = 2.d0 ! bohr
     ! bohr to angstrom
     double precision, parameter :: btoa = 0.529177249d0
     double precision, parameter :: pi   = dacos(-1.d0)
-    basis      = 0.d0
-    xct        = ct
-    qvec(:,1)  = xct(:,3)-xct(:,2) !  C3->C2
-    qvec(:,2)  = xct(:,4)-xct(:,2) !  H4->C2
-    qvec(:,3)  = xct(:,5)-xct(:,2) !  H5->C2
-    qvec(:,4)  = xct(:,1)-xct(:,2) !  O1->C2
-    qvec(:,5)  = xct(:,4)-xct(:,3) !  H4->C3
-    qvec(:,6)  = xct(:,5)-xct(:,3) !  H5->C3
-    qvec(:,7)  = xct(:,1)-xct(:,3) !  O1->C3
-    qvec(:,8)  = xct(:,5)-xct(:,4) !  H5->H4
-    qvec(:,9)  = xct(:,1)-xct(:,4) !  O1->H4
-    qvec(:,10) = xct(:,1)-xct(:,5) !  O1->H5
-    rb(1)      = dsqrt(dot_product(qvec(:,1), qvec(:,1)))
-    rb(2)      = dsqrt(dot_product(qvec(:,2), qvec(:,2)))
-    rb(3)      = dsqrt(dot_product(qvec(:,3), qvec(:,3)))
-    rb(4)      = dsqrt(dot_product(qvec(:,4), qvec(:,4)))
-    rb(5)      = dsqrt(dot_product(qvec(:,5), qvec(:,5)))
-    rb(6)      = dsqrt(dot_product(qvec(:,6), qvec(:,6)))
-    rb(7)      = dsqrt(dot_product(qvec(:,7), qvec(:,7)))
-    rb(8)      = dsqrt(dot_product(qvec(:,8), qvec(:,8)))
-    rb(9)      = dsqrt(dot_product(qvec(:,9), qvec(:,9)))
-    rb(10)     = dsqrt(dot_product(qvec(:,10), qvec(:,10)))
-    xbond(:)   = dexp(-rb(:)/(alpha*btoa))
+    basis = 0.d0
+    call all_pair_distances(transpose(ct), pair_distances)
+    rb       = pair_distances([5,6,7,1,8,9,2,10,3,4])
+    xbond(:) = dexp(-rb(:)/(alpha*btoa))
     call bemsav(xbond, basis)
     do i=1, 101
         txinput(i) = basis(i)

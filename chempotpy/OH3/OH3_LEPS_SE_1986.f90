@@ -262,7 +262,7 @@ module chempotpy_oh3_leps_se_1986_pes
             if( usricm_nder .eq. 1 )then
                 do i = 1, 6
                     potcm_dvdr(i) = 0.0d0
-                10 enddo
+                enddo
             endif
             !
             !   Calculate the Morse part of the potential energy.
@@ -391,7 +391,7 @@ module chempotpy_oh3_leps_se_1986_pes
                 tzp3(i)  = 2.0d0*zp3(i)
                 do4z(i)  = de(i)/4.0d0/zpo(i)
                 b(i)     = beta(i)*do4z(i)*2.0d0
-            10 enddo
+            enddo
             !
             !   Initialize the variable used for storing the energy.
             !
@@ -402,7 +402,7 @@ module chempotpy_oh3_leps_se_1986_pes
                 coul(i)       = do4z(i)*(zp3(i)*x(i)-top3z(i))*x(i)
                 exch(i)       = do4z(i)*(op3z(i)*x(i)-tzp3(i))*x(i)
                 pot2cm_energy = pot2cm_energy + coul(i)
-            20 enddo
+            enddo
             rad           = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+(exch(3)-exch (1))**2)
             pot2cm_energy = pot2cm_energy - rad/sqrt(2.d0)
             !
@@ -413,7 +413,7 @@ module chempotpy_oh3_leps_se_1986_pes
                 do i = 1, 3
                     pot2cm_dedr(i) = b(i)*x(i)*((3.0d0*exch(i)-s)/sqrt(2.d0)* (op3z(i)*x(i)-zp3(i))/rad- zp3(i)*x(i)+ &
                         & op3z(i))
-                30 enddo
+                enddo
             endif
             !
         end subroutine v3pot
@@ -474,7 +474,6 @@ module chempotpy_oh3_leps_se_1986_pes
             !     XMAX1 FOR WHEN TANH SET=1.0 ON VAX
             !     XMAX2 FOR PREVENTING OVERFLOWS ON VAX
             !
-            data xmax1, xmax2 / 15.0d0, 43.0d0 /
             !
             !     STATEMENT FUNCTION
             !
@@ -482,6 +481,7 @@ module chempotpy_oh3_leps_se_1986_pes
             s(1)      = pot2cm_r(1)-concom_reoh
             s(3)      = pot2cm_r(2)-concom_reoh
             s(2)      = pot2cm_r(3)-concom_rehh
+            xmax1     = 15.0d0; xmax2 = 43.0d0
             do i = 1, 3
                 x(i) = 0.5d0*concom_gam(i)*s(i)
                 q(i) = 1.0d0-tanh(x(i))
@@ -494,7 +494,7 @@ module chempotpy_oh3_leps_se_1986_pes
                     q(i)  = 0.0d0
                     dq(i) = 0.0d0
                 endif
-            30 enddo
+            enddo
             p = concom_con(1)+concom_con(2)*(s(1)+s(3))+concom_con(3)*s(2)+0.5d0*concom_con(4)*(s(1)*s(1)+s(3)*s( 3))+ &
                 & 0.5d0*concom_con(5)*s(2)*s(2)+concom_con(6)*s(2)*(s(1)+s(3))+ concom_con(7)*s(1)*s(3)
             pot2cm_energy = q(1)*q(2)*q(3)*p
@@ -1013,7 +1013,6 @@ module chempotpy_oh3_leps_se_1986_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

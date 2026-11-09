@@ -830,7 +830,7 @@ module chempotpy_fh2_gen_5secw_1991_pes
                     dc3dr3(jj) = dt1dr3+dt2dr3+dt3dr3
                 endif
                 !
-            10 enddo
+            enddo
             !
             ecorr_thbc = co3(1)+co3(2)+co3(3)
             !
@@ -897,7 +897,7 @@ module chempotpy_fh2_gen_5secw_1991_pes
                 do i=1, 3
                     dfcsi1(i) = tmp1*dcsi(i)
                     dfcsi2(i) = tmp2*dcsi(i)
-                10 enddo
+                enddo
             endif
             !
             r1p2 = pt1cm_r(1)**2
@@ -934,7 +934,7 @@ module chempotpy_fh2_gen_5secw_1991_pes
                 if( usricm_nder .eq. 1 ) dehf(i) = -diat_d(i)*(diat_a1(i)+2.0d0*diat_a2(i)*dr+ 3.0d0*diat_a3(i)*drp2)* &
                     & exp(-diat_gamma(i)*dr)-diat_gamma(i)*ehf(i)
                 !
-            20 enddo
+            enddo
             !
             !     CALCULATE THE DIATOMIC TRIPLET STATE CURVES ETRIP(I)
             !
@@ -997,8 +997,8 @@ module chempotpy_fh2_gen_5secw_1991_pes
                     endif
                     detrip(i,j) = tpar_xhf(1)*(dfcsi1(j)*xip2+2.0d0*csi_fcsi1*x(i)*dx(j)+ dfcsi2(j)*tpar_xhf(3)*x(i)+ &
                         & csi_fcsi2*tpar_xhf(3)*dx(j))/ pt1cm_r(i)- etrip(i)*dri(j)/pt1cm_r(i)
-                31 enddo
-            30 enddo
+                enddo
+            enddo
             !
             !
             !     FINALLY:
@@ -1029,8 +1029,8 @@ module chempotpy_fh2_gen_5secw_1991_pes
                         dq(i,j)  = 0.5d0*dti(i,j)
                         dex(i,j) = -dq(i,j)
                     endif
-                41 enddo
-            40 enddo
+                enddo
+            enddo
             !
             if( usricm_nder .eq. 1 )then
                 dsumq(1) = dq(1,1)+dq(2,1)+dq(3,1)
@@ -1057,10 +1057,9 @@ module chempotpy_fh2_gen_5secw_1991_pes
                     if( texch .eq. 0.0d0 ) texch = 1.0d0
                     xterm        = 0.5d0*(xterm1*dex(1,i)+xterm2*dex(2,i)+ xterm3*dex(3,i))/texch
                     der_dleps(i) = dsumq(i)-xterm
-                50 enddo
+                enddo
                 !
             end block goto_block_700_1061
-            700 continue
             call thcent(de3c1, de3c2, de3c3)
             !
             engygs_eleps = engygs_eleps + engygs_e3c
@@ -1096,8 +1095,8 @@ module chempotpy_fh2_gen_5secw_1991_pes
             !
             !
             logical :: lderiv
-            data lderiv /.false./
             !
+            lderiv = .false.
             if( usricm_nder .eq. 1 ) lderiv = .true.
             omp3c = 1.d0 - local_p3c
             omq3c = 1.d0 - local_q3c
@@ -1154,7 +1153,6 @@ module chempotpy_fh2_gen_5secw_1991_pes
                 de3c3 = 2.d0*((-t2 * ex2 - 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos3) * ex1*f3+ 2.0d0* &
                     & engygs_e3c* (-local_betp*(pt1cm_r(1)+ pt1cm_r(3)-pt1cm_r(2)))
             end block goto_block_280_1153
-            280 continue
         end subroutine thcent
         !> @brief Evaluate XTANH for the FH2_GEN_5SECW_1991 potential.
         subroutine xtanh( i, a )
@@ -1190,7 +1188,7 @@ module chempotpy_fh2_gen_5secw_1991_pes
                 th                                         = 1.0d0/t
                 if( usricm_nder .eq. 1 ) vtanh_drtanh(i,j) = 4.0d0*a(j)*ex*th*th
                 vtanh_rtanh(i,j)                           = sgn * th * (1.0d0 - ex)
-            10 enddo
+            enddo
         end subroutine xtanh
         !> @brief Evaluate SWITCH for the FH2_GEN_5SECW_1991 potential.
         subroutine switch
@@ -1229,7 +1227,7 @@ module chempotpy_fh2_gen_5secw_1991_pes
                 swpar_sw(i)                           = 0.5d0*(1.0d0+th)
                 if( usricm_nder .eq. 1 ) swpar_dsw(i) = 0.5d0*dth
                 !
-            20 enddo
+            enddo
             !
         end subroutine switch
         !> @brief Evaluate POTINFO for the FH2_GEN_5SECW_1991 potential.
@@ -1732,7 +1730,6 @@ module chempotpy_fh2_gen_5secw_1991_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then

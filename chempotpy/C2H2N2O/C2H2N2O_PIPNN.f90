@@ -84,6 +84,7 @@ end subroutine pes
 
 !> @brief Evaluate evvdvdx.
 subroutine evvdvdx( xcart, v )
+    use chempotpy_geometry, only: all_pair_distances
     !Subroutine to calculate the potential energy
     !Xcart     ==>Cartesian coordinates in angstrom
     !             H1: xcart(1,1), xcart(2,1), xcart(3,1)
@@ -105,23 +106,12 @@ subroutine evvdvdx( xcart, v )
     implicit none
     double precision, parameter :: alpha = 1.8d0, para=0.5291772d0
     integer, parameter          :: natom = 7
-    integer                     :: i, j, k, ndriv
+    integer                     :: j, ndriv
     double precision            :: v, p(0:2389), r(1:21)
     double precision            :: xcart(1:3,1:7), m(0:707), xmorse(1:21)
-    double precision            :: x(1:21)
     double precision            :: txinput(1:456)
-    do i=1, natom
-        x((3*(i-1)+1):(3*(i-1)+3)) = xcart(:,i)
-    enddo
-    k = 0
-    do i=1, natom-1
-        do j=i+1, natom
-            k         = k+1
-            r(k)      = dsqrt(dot_product(xcart(:,i)-xcart(:,j), xcart(:,i)-xcart(:,j)))
-            xmorse(k) = dexp(-r(k)/(para*alpha))
-        enddo
-    enddo
-    if( k .ne. (natom*(natom-1)/2) ) stop "error"
+    call all_pair_distances(transpose(xcart), r)
+    xmorse = dexp(-r/(para*alpha))
     call bemsav(xmorse, p)
     do j=1, 456
         txinput(j) = p(j)

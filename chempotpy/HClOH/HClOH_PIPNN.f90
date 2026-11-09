@@ -132,30 +132,19 @@ end
 !> @brief Evaluate hclohNN.
 subroutine hclohnn( ct, vpes, vpesa, vpesb, vpesc )
     ! ct in HHClO order and angstrom
-    use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
+    use chempotpy_geometry, only: all_pair_distances
+    use nnparam,            only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
         & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
     implicit none
     integer                     :: i
     double precision            :: rb(6), xbond(6), basis(0:17)
     double precision            :: txinput(17)
-    double precision            :: ct(3,4), xvec(3,6), xct(3,4)
+    double precision            :: ct(3,4)
     double precision            :: vpesa, vpesb, vpesc, vpes
     double precision, parameter :: alpha = 2.d0*0.5291772d0
-    basis     = 0.d0
-    xct       = ct
-    xvec(:,1) = xct(:,2)-xct(:,1) !  H2->H1
-    xvec(:,2) = xct(:,3)-xct(:,1) !  Cl->H1
-    xvec(:,3) = xct(:,4)-xct(:,1) !  O ->H1
-    xvec(:,4) = xct(:,3)-xct(:,2) !  Cl->H2
-    xvec(:,5) = xct(:,4)-xct(:,2) !  O ->H2
-    xvec(:,6) = xct(:,4)-xct(:,3) !  O ->Cl
-    rb(1)     = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-    rb(2)     = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-    rb(3)     = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
-    rb(4)     = dsqrt(dot_product(xvec(:,4), xvec(:,4)))
-    rb(5)     = dsqrt(dot_product(xvec(:,5), xvec(:,5)))
-    rb(6)     = dsqrt(dot_product(xvec(:,6), xvec(:,6)))
-    xbond(:)  = dexp(-rb(:)/alpha)
+    basis = 0.d0
+    call all_pair_distances(transpose(ct), rb)
+    xbond(:) = dexp(-rb(:)/alpha)
     call bemsav(xbond, basis)
     do i=1, 17
         txinput(i) = basis(i)

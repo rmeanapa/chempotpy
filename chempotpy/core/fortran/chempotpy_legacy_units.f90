@@ -7,12 +7,15 @@ module chempotpy_legacy_units
     public :: legacy_bohr_to_angstrom
     public :: legacy_coordinates_to_bohr
     public :: legacy_energy_to_electronvolt
+    public :: legacy_gradient_to_electronvolt_per_angstrom
     public :: legacy_hartree_to_electronvolt
     ! The released literals were default real and then promoted to real64.
     real(real64), parameter :: legacy_bohr_to_angstrom = &
         real(0.529177211_real32, real64)
     real(real64), parameter :: legacy_hartree_to_electronvolt = &
         real(27.211386_real32, real64)
+    ! Preserve the independently rounded gradient factor used by released PES wrappers.
+    real(real64), parameter :: legacy_gradient_to_electronvolt_per_angstrom = 51.422067_real64
     contains
     !> @brief Convert wrapper coordinates using the released rounded factor.
     pure subroutine legacy_coordinates_to_bohr( &

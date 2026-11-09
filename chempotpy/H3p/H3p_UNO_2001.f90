@@ -32,7 +32,6 @@ module chempotpy_h3p_uno_2001_pes
         double precision              :: hr(nstates,nstates,3), gr(nstates,3)
         double precision              :: tx(9), drdx(3,9)
         double precision              :: hx(nstates,nstates,9), gx(nstates,9)
-        logical, save                 :: first_time_data=.true.
         integer                       :: i, j, k, l
         !initialize
         u  = 0.d0; pin = 0.d0; grad = 0.d0; dvec = 0.d0
@@ -96,34 +95,13 @@ module chempotpy_h3p_uno_2001_pes
     end subroutine evaluate
     !> @brief Evaluate EvdRdX for the H3p_UNO_2001 potential.
     subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
         implicit none
+        integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter            :: second_atoms(3) = [2, 3, 3]
         double precision, intent(in)  :: x(9), r(3)
         double precision, intent(out) :: drdx(3,9)
-        integer                       :: i, j
-        ! Initialize dRdX(3,9)
-        do i=1, 3
-            do j=1, 9
-                drdx(i,j) = 0.0d0
-            enddo
-        enddo
-        drdx(1,1) = (x(1)-x(4))/r(1)
-        drdx(1,2) = (x(2)-x(5))/r(1)
-        drdx(1,3) = (x(3)-x(6))/r(1)
-        drdx(1,4) = -drdx(1,1)
-        drdx(1,5) = -drdx(1,2)
-        drdx(1,6) = -drdx(1,3)
-        drdx(2,4) = (x(4)-x(7))/r(2)
-        drdx(2,5) = (x(5)-x(8))/r(2)
-        drdx(2,6) = (x(6)-x(9))/r(2)
-        drdx(2,7) = -drdx(2,4)
-        drdx(2,8) = -drdx(2,5)
-        drdx(2,9) = -drdx(2,6)
-        drdx(3,1) = (x(1)-x(7))/r(3)
-        drdx(3,2) = (x(2)-x(8))/r(3)
-        drdx(3,3) = (x(3)-x(9))/r(3)
-        drdx(3,7) = -drdx(3,1)
-        drdx(3,8) = -drdx(3,2)
-        drdx(3,9) = -drdx(3,3)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
     end subroutine evdrdx
     !> @brief Evaluate diagonalize for the H3p_UNO_2001 potential.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
@@ -134,17 +112,13 @@ module chempotpy_h3p_uno_2001_pes
         double precision, intent(out) :: ev_s(n)
         integer                       :: io, i
         double precision, allocatable :: work_d(:)
-        integer, save                 :: lwork_d
-        logical, save                 :: first_time_diag=.true.
-        u_ss = a_ss
-        if( first_time_diag )then
-            lwork_d = -1
-            allocate( work_d(2) )
-            call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-            lwork_d = int(work_d(1))
-            deallocate ( work_d )
-            first_time_diag = .false.
-        endif
+        integer                       :: lwork_d
+        u_ss    = a_ss
+        lwork_d = -1
+        allocate( work_d(2) )
+        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
+        lwork_d = int(work_d(1))
+        deallocate ( work_d )
         allocate( work_d(lwork_d) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
     end subroutine diagonalize

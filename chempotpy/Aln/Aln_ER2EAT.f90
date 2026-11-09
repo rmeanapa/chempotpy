@@ -95,7 +95,7 @@ module chempotpy_aln_er2eat_pes
                     ee   = dexp(-a1*rho)
                     v    = v-de*ee*poly*co
                 endif
-            1 enddo
+            enddo
         enddo
         !  2. calculate energy of three-body interactions
         u3 = 0.d0
@@ -151,9 +151,9 @@ module chempotpy_aln_er2eat_pes
                         rr3   = 1.d0/rjm
                         w2    = co*b2*bra*(rr1**3)*(rr2*rr3)**4
                         u3    = u3+w2
-                    5 enddo
-                4 enddo
-            6 enddo
+                    enddo
+                enddo
+            enddo
             !  calculate the potential energy
         endif
         v = v+u3

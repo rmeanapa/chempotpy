@@ -95,7 +95,7 @@ module chempotpy_aln_rejac_pes
                 dz = z(i)-z(j)
                 rr = dsqrt(dx*dx+dy*dy+dz*dz)
                 u  = u+dexp(-eta2*(rr-bs))   ! EAS(1) w/o exponent
-            3 enddo
+            enddo
             ud = 0d0
             do m=1, natom
                 if( m .eq. i ) cycle
@@ -104,11 +104,11 @@ module chempotpy_aln_rejac_pes
                 dz = z(i)-z(m)
                 rr = dsqrt(dx*dx+dy*dy+dz*dz)
                 ud = ud+dexp(-eta*(rr/beta-s))  ! EAS(2)
-            4 enddo
+            enddo
             uno  = (fra*u)**ep   ! EAS(1)
             udno = fra*ud       ! EAS(2)
             vv   = e0+e2*(uno-1d0)**2+e3*(uno-1d0)**3 +alpha*en*(uno-udno)
-            2 v=v+vv
+            v    = v+vv
         enddo
     end subroutine pot
 end module chempotpy_aln_rejac_pes

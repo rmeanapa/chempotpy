@@ -89,10 +89,9 @@ module chempotpy_aln_regea_pes
                 udd = 0d0
                 udd = dexp(-b*rr)
                 ud  = ud+udd
-                41 continue
-            5 enddo
+            enddo
             v1 = v1+dsqrt(ud)
-        4 enddo
+        enddo
         u = 0d0
         do i=1, natom-1
             do j=i+1, natom
@@ -103,8 +102,8 @@ module chempotpy_aln_regea_pes
                 uu = 0d0
                 uu = dexp(-a*rr)
                 u  = u+uu
-            3 enddo
-        2 enddo
+            enddo
+        enddo
         v = u*v0-v1*cc
     end subroutine pot
     !

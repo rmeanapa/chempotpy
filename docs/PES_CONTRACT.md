@@ -100,9 +100,18 @@ The maintained bundled core currently contains:
   their original default-real rounding behavior.
 - `chempotpy_geometry`: Cartesian distance, three-component dot product, angle
   cosine, symmetric distance-matrix operations, and the atom-major
-  `(natoms,3)` to `(3*natoms)` Cartesian layout adapter. Its generic chain-rule
-  interface maps vector, multi-state, and matrix-valued internal gradients to
-  Cartesian gradients through a supplied `dq/dx` Jacobian.
+  `(natoms,3)` to `(3*natoms)` Cartesian layout adapter. It provides
+  dimension-independent lexicographic all-pair distances and distance
+  Jacobians for matrix or atom-major vector coordinates, explicitly ordered
+  pair Jacobians for published model-specific coordinate orders, and symmetric
+  distance matrices from either coordinate matrices or separate component
+  arrays. Its generic
+  chain-rule interface maps vector, multi-state, and matrix-valued internal
+  gradients to Cartesian gradients through a supplied `dq/dx` Jacobian.
+- `chempotpy_internal_coordinates`: family-level adapters that connect private
+  internal-coordinate kernels to the Cartesian compatibility contract. The
+  triatomic adapter builds the 1-2, 2-3, 1-3 distances and Jacobian, applies the
+  released unit factors, and packs energy, gradient, and coupling outputs.
 - `chempotpy_h3_basis`: private symmetric-polynomial index storage and a
   procedural initialization/lookup API for the H3 2002 fit family.
 - `chempotpy_legacy_coordinates`: explicit-argument implementations of the
@@ -127,6 +136,14 @@ same build path used by the complete catalog.
 Published PES fit coefficients, cutoffs, and fit-specific internal conversions
 remain in their owning surface. Moving those values into the core would obscure
 model ownership and could silently change a published fit.
+
+Internal-coordinate kernels remain private procedures in their owning surface
+modules. Compatible families use a descriptive common signature such as
+`evaluate_internal`; the owning evaluator calls that equation between the
+core preparation and finalization procedures. A universal numerical `pot`
+routine is intentionally not part of the contract because single-state,
+diabatic, Cartesian, and specialized fitted kernels have different scientific
+outputs.
 
 ### Adding a new PES
 

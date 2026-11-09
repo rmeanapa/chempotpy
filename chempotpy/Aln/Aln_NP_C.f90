@@ -100,9 +100,9 @@ module chempotpy_aln_np_c_pes
                     p2  = -cc*(1.d0+alpha*rrel)*dexp(-alpha*rrel)
                     phi = phi+p1+p2
                 endif
-            6 enddo
+            enddo
             ff = ff-aa*dsqrt(rho)
-        5 enddo
+        enddo
         v = phi+ff
     end subroutine pot
 end module chempotpy_aln_np_c_pes

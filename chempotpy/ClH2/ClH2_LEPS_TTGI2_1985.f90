@@ -70,34 +70,13 @@ end subroutine pes
 
 !> @brief Evaluate EvdRdX for the ClH2_LEPS_TTGI2_1985 potential.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,4) = (x(4)-x(7))/r(2)
-    drdx(2,5) = (x(5)-x(8))/r(2)
-    drdx(2,6) = (x(6)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,4)
-    drdx(2,8) = -drdx(2,5)
-    drdx(2,9) = -drdx(2,6)
-    drdx(3,1) = (x(1)-x(7))/r(3)
-    drdx(3,2) = (x(2)-x(8))/r(3)
-    drdx(3,3) = (x(3)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,1)
-    drdx(3,8) = -drdx(3,2)
-    drdx(3,9) = -drdx(3,3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !
@@ -718,7 +697,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         !
         !     FOLLOWING COORDINATE DEFINITIONS PROVIDE FOR PROPER SYSTEM
         do ix=1, 3
-            15 r(ix)=q(indx(ix))
+            r(ix) = q(indx(ix))
         enddo
         !
         !     ZERO OUT UNUSED HAMILTONIAN ELEMENTS
@@ -732,7 +711,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             if( ct .gt. -test .and. ct .lt. test ) exit goto_block_10_732
             ct = sign(test, ct)
         end block goto_block_10_732
-        10 continue
         arg = one-ct*ct
         if( arg .lt. zero ) arg=zero
         st  = sqrt(arg)
@@ -791,7 +769,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         do i=1, ndim
             do j=1, i
                 th(i,j) = th(j,i)
-            30 enddo
+            enddo
         enddo
         !
         call eign(ndim, th, vec, en, w, ndim)
@@ -807,7 +785,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         !     SET  VECTOR FOR STATE OF INTEREST
         do i=1, ndim
             gvec(i) = vec(i,nroot)
-        40 enddo
+        enddo
         !     COMPUTE PARTIALS OF U=COS(THETA)
         dtdr1 = (r(1)*r(1)+r(2)*r(2)-r(3)*r(3))/(two*r(1)*r(1)*r(3))
         dtdr2 = -r(2)/(r(1)*r(3))
@@ -916,21 +894,21 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             do j=1, ndim
                 do k=1, j
                     dh(j,k) = dh(k,j)
-                70 enddo
+                enddo
             enddo
             !
             dnumb = zero
             do j=1, ndim
                 do k=1, ndim
                     dnumb = dnumb+gvec(j)*dh(j,k)*gvec(k)
-                80 enddo
+                enddo
             enddo
             dd(i) = dnumb
             !     END OF DERIVATIVE LOOP
-        50 enddo
+        enddo
         !     PUT DERIVATIVES INTO CORRESPONDING SPOTS FOR CORRECT COORD CHOICE.
         do ix=1, 3
-            90 dq(indx(ix))=dd(ix)
+            dq(indx(ix)) = dd(ix)
         enddo
         !
         !************************ END OF DFPOT *********************************
@@ -948,7 +926,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             !     SET UP X ARRAY IN BOHR
             fac = 0.1d0*angta0
             do i=1, ns
-                20 x(i)=dble(i-1)*fac
+                x(i) = dble(i-1)*fac
             enddo
             !     READ IN FIT DATA
             !     CONVERT TO ATOMIC UNITS
@@ -965,7 +943,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
                 spxfit(i) = spxfit(i)*fac
                 tpxfit(i) = tpxfit(i)*fac
                 dsxfit(i) = dsxfit(i)*fac
-            10 enddo
+            enddo
             !     READ IN SECOND DERIVATIVES AT ENDS OF FIT CURVES
             !     AND CONVERT TO ATOMIC UNITS
             fac      = fac*1.d-16/(angta0*angta0)
@@ -1044,28 +1022,30 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             n1    = n-1
             knt   = 0
             do i=1, n1
-                h(i) = x(i+1)-x(i)
-                51 dely(i)=(y(i+1)-y(i))/h(i)
+                h(i)    = x(i+1)-x(i)
+                dely(i) = (y(i+1)-y(i))/h(i)
             enddo
             do i=2, n1
                 h2(i)  = h(i-1)+h(i)
                 b(i)   = half*h(i-1)/h2(i)
                 delsqy = (dely(i)-dely(i-1))/h2(i)
                 s2(i)  = delsqy+delsqy
-                52 c(i)=delsqy+s2(i)
+                c(i)   = delsqy+s2(i)
             enddo
-            5 eta=0.0d0
-            do i=2, n1
-                w = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
-                if( abs(w)-eta ) 10, 10, 9
-                9 eta=abs(w)
-                10 s2(i)=s2(i)+w
+            do
+                eta = 0.0d0
+                do i=2, n1
+                    w     = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
+                    eta   = max(eta, abs(w))
+                    s2(i) = s2(i)+w
+                enddo
+                knt = knt+1
+                if( knt .gt. 10 ) epsln=epsln*ex
+                if( eta < epsln ) exit
             enddo
-            knt = knt+1
-            if( knt .gt. 10 ) epsln=epsln*ex
-            if( eta-epsln ) 14, 5, 5
-            14 do 53 i=1, n1
-            53 s3(i)=(s2(i+1)-s2(i))/h(i)
+            do i=1, n1
+                s3(i) = (s2(i+1)-s2(i))/h(i)
+            enddo
             if( idebug .eq. 1 ) write(iptprt, '(2X,T5,''Final EPS = '', 1PE15.6)') epsln
         end subroutine splnin
         !> @brief Evaluate EIGN for the ClH2_LEPS_TTGI2_1985 potential.

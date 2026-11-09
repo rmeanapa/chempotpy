@@ -616,6 +616,7 @@ module chempotpy_o4_quintet_pes
         end subroutine evv
         !> @brief Evaluate EvdVdX for the O4_quintet potential.
         subroutine evdvdx( x, dvdx )
+            use chempotpy_geometry, only: transform_internal_gradient_to_cartesian
             ! Subroutine to evaluate dRdX for given R and X
             ! R:            R(6), 6 bond lengths
             ! X:            X(12), 12 Cartesian coordinates
@@ -626,26 +627,11 @@ module chempotpy_o4_quintet_pes
             ! dRdX:         dRdX(6,12), derivatives of R(6) w.r.t. 12
             !               Cartesian coordinates
             implicit none
-            integer          :: i, j
-            double precision :: dvdx(12), x(12)
-            ! Initialize dVdX
-            do i=1, 12
-                dvdx(i) = 0.0d0
-            enddo
-            ! Call EvdVdR to evaluate dVdR(6)
+            double precision, intent(in)  :: x(12)
+            double precision, intent(out) :: dvdx(12)
             call evdvdr
-            ! Call EvdRdX to evaluate dRdX(6,12)
             call evdrdx(x)
-            ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to
-            ! 6
-            do i=1, 12
-                do j=1, 6
-                    dvdx(i) = dvdx(i) + gradt_dvdr(j)*gradt_drdx(j,i)
-                enddo
-            enddo
-            !      write(*,*) 'The 12 dVdX are:'
-            !      Write(*,9999) (dVdX(i),i=1,12)
-            ! 9999 Format(1x,3F15.8)
+            call transform_internal_gradient_to_cartesian(gradt_dvdr, gradt_drdx, dvdx)
         end subroutine evdvdx
         !> @brief Evaluate EvMorse for the O4_quintet potential.
         subroutine evmorse
@@ -1458,68 +1444,10 @@ module chempotpy_o4_quintet_pes
         end subroutine evdvdr
         !> @brief Evaluate EvdRdX for the O4_quintet potential.
         subroutine evdrdx( x )
-            ! Subroutine to evaluate dRdX for given R and X
-            ! R:            R(6), 6 bond lengths
-            ! X:            X(12), 12 Cartesian coordinates
-            !
-            ! dMdR:         dMdR(6,nom), nom monomials w.r.t.6 bond length
-            ! dPdR:         dPdR(6,nob), nop polynomial basis functions
-            !               w.r.t. 6 bond length
-            ! M(nom):       Array to store monomials
-            ! P(nob):       Array to store polynomials
+            use chempotpy_geometry, only: all_pair_distance_jacobian
             implicit none
-            integer          :: i, j
-            double precision :: x(12)
-            ! Initialize dRdX(6,12)
-            do i=1, 6
-                do j=1, 12
-                    gradt_drdx(i,j) = 0.0d0
-                enddo
-            enddo
-            ! Start to calculate the non-zero dRdX
-            ! dr1dx
-            gradt_drdx(1,1) = (x(1)-x(4))/coord_r(1)
-            gradt_drdx(1,2) = (x(2)-x(5))/coord_r(1)
-            gradt_drdx(1,3) = (x(3)-x(6))/coord_r(1)
-            gradt_drdx(1,4) = -gradt_drdx(1,1)
-            gradt_drdx(1,5) = -gradt_drdx(1,2)
-            gradt_drdx(1,6) = -gradt_drdx(1,3)
-            ! dr2dx
-            gradt_drdx(2,1) = (x(1)-x(7))/coord_r(2)
-            gradt_drdx(2,2) = (x(2)-x(8))/coord_r(2)
-            gradt_drdx(2,3) = (x(3)-x(9))/coord_r(2)
-            gradt_drdx(2,7) = -gradt_drdx(2,1)
-            gradt_drdx(2,8) = -gradt_drdx(2,2)
-            gradt_drdx(2,9) = -gradt_drdx(2,3)
-            ! dr3dx
-            gradt_drdx(3,1)  = (x(1)-x(10))/coord_r(3)
-            gradt_drdx(3,2)  = (x(2)-x(11))/coord_r(3)
-            gradt_drdx(3,3)  = (x(3)-x(12))/coord_r(3)
-            gradt_drdx(3,10) = -gradt_drdx(3,1)
-            gradt_drdx(3,11) = -gradt_drdx(3,2)
-            gradt_drdx(3,12) = -gradt_drdx(3,3)
-            ! dr4dx
-            gradt_drdx(4,4) = (x(4)-x(7))/coord_r(4)
-            gradt_drdx(4,5) = (x(5)-x(8))/coord_r(4)
-            gradt_drdx(4,6) = (x(6)-x(9))/coord_r(4)
-            gradt_drdx(4,7) = -gradt_drdx(4,4)
-            gradt_drdx(4,8) = -gradt_drdx(4,5)
-            gradt_drdx(4,9) = -gradt_drdx(4,6)
-            ! dr5dx
-            gradt_drdx(5,4)  = (x(4)-x(10))/coord_r(5)
-            gradt_drdx(5,5)  = (x(5)-x(11))/coord_r(5)
-            gradt_drdx(5,6)  = (x(6)-x(12))/coord_r(5)
-            gradt_drdx(5,10) = -gradt_drdx(5,4)
-            gradt_drdx(5,11) = -gradt_drdx(5,5)
-            gradt_drdx(5,12) = -gradt_drdx(5,6)
-            ! dr6dx
-            gradt_drdx(6,7)  = (x(7)-x(10))/coord_r(6)
-            gradt_drdx(6,8)  = (x(8)-x(11))/coord_r(6)
-            gradt_drdx(6,9)  = (x(9)-x(12))/coord_r(6)
-            gradt_drdx(6,10) = -gradt_drdx(6,7)
-            gradt_drdx(6,11) = -gradt_drdx(6,8)
-            gradt_drdx(6,12) = -gradt_drdx(6,9)
-            ! Finish the calculation of non-zero dRdX
+            double precision, intent(in) :: x(12)
+            call all_pair_distance_jacobian(x, coord_r, gradt_drdx)
         end subroutine evdrdx
         !> @brief Evaluate EvdMsdR for the O4_quintet potential.
         subroutine evdmsdr

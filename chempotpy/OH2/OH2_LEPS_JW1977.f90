@@ -1,15 +1,14 @@
 !> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate the OH2_LEPS_JW1977 potential energy surface.
 module chempotpy_oh2_leps_jw1977_pes
-    use chempotpy_geometry,     only: transform_internal_gradient_to_cartesian, triatomic_distance_jacobian
-    use chempotpy_kinds,        only: real64
-    use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+    use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
+        & prepare_legacy_triatomic_coordinates
+    use chempotpy_kinds, only: real64
     implicit none
     private
     public :: evaluate
     real(real64), parameter :: energy_per_hartree         = 627.5095_real64
     real(real64), parameter :: bohr_per_angstrom          = 0.529177106_real64
-    real(real64), parameter :: gradient_conversion        = 51.422067_real64
     real(real64), parameter :: root_two                   = 1.41421356_real64
     real(real64), parameter :: dissociation_energy(3)     = [106.6d0, 109.4d0, 106.6d0]/energy_per_hartree
     real(real64), parameter :: equilibrium_distance(3)    = [0.9706d0, 0.7417d0, 0.9706d0]/bohr_per_angstrom
@@ -28,29 +27,14 @@ module chempotpy_oh2_leps_jw1977_pes
         integer, intent(in)       :: igrad
         real(real64), intent(in)  :: x(3,3)
         real(real64), intent(out) :: p(1), g(1,3,3), d(1,1,3,3)
-        real(real64)              :: cartesian_gradient(9), distance_jacobian(3,9)
-        real(real64)              :: distances_angstrom(3), distances_bohr(3)
+        real(real64)              :: distance_jacobian(3,9), distances_bohr(3)
         real(real64)              :: energy_hartree, internal_gradient(3)
-        integer                   :: atom, coordinate
-        g = 0.0_real64; d = 0.0_real64
-        call triatomic_distance_jacobian(x, distances_angstrom, distance_jacobian)
-        distances_bohr = distances_angstrom/legacy_bohr_to_angstrom
-        call leps_energy_gradient(distances_bohr, igrad, energy_hartree, internal_gradient)
-        p(1) = energy_hartree*legacy_hartree_to_electronvolt
-        if( igrad == 1 )then
-            call transform_internal_gradient_to_cartesian( &
-                internal_gradient*gradient_conversion, distance_jacobian, cartesian_gradient)
-            do atom = 1, 3
-                do coordinate = 1, 3
-                    g(1,atom,coordinate) = cartesian_gradient(3*atom-3+coordinate)
-                enddo
-            enddo
-        else if( igrad == 2 )then
-            write(*, *) "Only energy and gradient are available"
-        endif
+        call prepare_legacy_triatomic_coordinates(x, distances_bohr, distance_jacobian)
+        call evaluate_internal(distances_bohr, igrad, energy_hartree, internal_gradient)
+        call finalize_legacy_triatomic_surface(igrad, energy_hartree, internal_gradient, distance_jacobian, p, g, d)
     end subroutine evaluate
     !> @brief Evaluate the extended LEPS energy and optional internal-coordinate gradient.
-    pure subroutine leps_energy_gradient( distances, derivative_order, energy, gradient )
+    pure subroutine evaluate_internal( distances, derivative_order, energy, gradient )
         real(real64), intent(in)  :: distances(3)
         integer, intent(in)       :: derivative_order
         real(real64), intent(out) :: energy, gradient(3)
@@ -77,7 +61,7 @@ module chempotpy_oh2_leps_jw1977_pes
                     & sato_plus_three(bond)*exponential(bond)+one_plus_three_sato(bond) )
             enddo
         endif
-    end subroutine leps_energy_gradient
+    end subroutine evaluate_internal
 end module chempotpy_oh2_leps_jw1977_pes
 
 !> @brief Preserve the historical Python-facing PES entry point.

@@ -414,26 +414,10 @@ module chempotpy_ch3nh2_aprp_pes
         double precision :: ang1, ang2, ang3
         double precision :: len1, len2, len3
         integer          :: bonds(2,8), bends(3,8)
-        data bonds   /2, 3, &
-            & 3, 4, &
-            & 4, 5, &
-            & 4, 6, &
-            & 4, 7, &
-            !
-            & 5, 6, &
-            & 6, 7, &
-            & 7, 5/
-        data bends   /1, 3, 4, &
-            & 2, 3, 4, &
-            & 3, 4, 5, &
-            & 3, 4, 6, &
-            & 3, 4, 7, &
-            !
-            & 5, 4, 6, &
-            & 6, 4, 7, &
-            & 7, 4, 5/
-        r1 = bndlen(1, 3, x, y, z)
-        t2 = dihedr2(1, 3, 4, 2, x, y, z)
+        bonds = reshape([ 2, 3, 3, 4, 4, 5, 4, 6, 4, 7, 5, 6, 6, 7, 7, 5 ], shape(bonds))
+        bends = reshape([ 1, 3, 4, 2, 3, 4, 3, 4, 5, 3, 4, 6, 3, 4, 7, 5, 4, 6, 6, 4, 7, 7, 4, 5 ], shape(bends))
+        r1    = bndlen(1, 3, x, y, z)
+        t2    = dihedr2(1, 3, 4, 2, x, y, z)
         call calcgeom(x, y, z, qc)
         torh1 = qc(11)
         torh2 = qc(12)

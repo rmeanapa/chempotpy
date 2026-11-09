@@ -68,34 +68,13 @@ end subroutine pes
 
 !> @brief Evaluate EvdRdX for the ClH2_LEPS_TTGI1_1985 potential.
 subroutine evdrdx( x, r, drdx )
+    use chempotpy_geometry, only: ordered_pair_distance_jacobian
     implicit none
+    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter            :: second_atoms(3) = [2, 3, 3]
     double precision, intent(in)  :: x(9), r(3)
     double precision, intent(out) :: drdx(3,9)
-    integer                       :: i, j
-    ! Initialize dRdX(3,9)
-    do i=1, 3
-        do j=1, 9
-            drdx(i,j) = 0.0d0
-        enddo
-    enddo
-    drdx(1,1) = (x(1)-x(4))/r(1)
-    drdx(1,2) = (x(2)-x(5))/r(1)
-    drdx(1,3) = (x(3)-x(6))/r(1)
-    drdx(1,4) = -drdx(1,1)
-    drdx(1,5) = -drdx(1,2)
-    drdx(1,6) = -drdx(1,3)
-    drdx(2,4) = (x(4)-x(7))/r(2)
-    drdx(2,5) = (x(5)-x(8))/r(2)
-    drdx(2,6) = (x(6)-x(9))/r(2)
-    drdx(2,7) = -drdx(2,4)
-    drdx(2,8) = -drdx(2,5)
-    drdx(2,9) = -drdx(2,6)
-    drdx(3,1) = (x(1)-x(7))/r(3)
-    drdx(3,2) = (x(2)-x(8))/r(3)
-    drdx(3,3) = (x(3)-x(9))/r(3)
-    drdx(3,7) = -drdx(3,1)
-    drdx(3,8) = -drdx(3,2)
-    drdx(3,9) = -drdx(3,3)
+    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !
@@ -445,7 +424,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         !
         !     FOLLOWING COORDINATE DEFINITIONS PROVIDE FOR PROPER SYSTEM
         do ix=1, 3
-            15 r(ix)=q(indx(ix))
+            r(ix) = q(indx(ix))
         enddo
         if( idebug .eq. 1 ) write(iptprt, '(1X,''DIMIMA, Q='',1P3E13.5,/,9X,'' R='',3E13.5)') q, r
         !  CHECK FOR NEGATIVE R'S
@@ -466,7 +445,6 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             if( ct .gt. -test .and. ct .lt. test ) exit goto_block_10_466
             ct = sign(test, ct)
         end block goto_block_10_466
-        10 continue
         arg = one-ct*ct
         st  = sqrt(arg)
         ct2 = ct*ct
@@ -506,7 +484,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         do i=1, ndim
             do j=1, i
                 th(i,j) = th(j,i)
-            30 enddo
+            enddo
         enddo
         !
         call eign(ndim, th, vec, en, w, ndim)
@@ -524,7 +502,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         !     SET  VECTOR FOR STATE OF INTEREST
         do i=1, ndim
             gvec(i) = vec(i,nroot)
-        40 enddo
+        enddo
         !     COMPUTE PARTIALS OF U=COS(THETA)
         dtdr1 = (r(1)*r(1)+r(2)*r(2)-r(3)*r(3))/(two*r(1)*r(1)*r(3))
         dtdr2 = -r(2)/(r(1)*r(3))
@@ -634,21 +612,21 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             do j=1, ndim
                 do k=1, j
                     dh(j,k) = dh(k,j)
-                70 enddo
+                enddo
             enddo
             !
             dnumb = zero
             do j=1, ndim
                 do k=1, ndim
                     dnumb = dnumb+gvec(j)*dh(j,k)*gvec(k)
-                80 enddo
+                enddo
             enddo
             dd(i) = dnumb
             !     END OF DERIVATIVE LOOP
-        50 enddo
+        enddo
         !     PUT DERIVATIVES INTO CORRESPONDING SPOTS FOR CORRECT COORD CHOICE.
         do ix=1, 3
-            90 dq(indx(ix))=dd(ix)
+            dq(indx(ix)) = dd(ix)
         enddo
         !
         !************************ END OF DFPOT *********************************
@@ -664,7 +642,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             !     NOW COMPUTE SPLINE FIT DATA
             !     H2 SINGLET STATE
             do i=1, 67
-                10 r1h2(i)=dble(i+3)*0.1d0
+                r1h2(i) = dble(i+3)*0.1d0
             enddo
             r1h2(68) = 7.2d-00
             r1h2(69) = 7.4d-00
@@ -679,14 +657,14 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             r1h2(78) = 11.d-00
             r1h2(79) = 12.d-00
             do i=1, 79
-                30 v1h2(i)=v1h2(i)+one
+                v1h2(i) = v1h2(i)+one
             enddo
             s2ss(1)  = 3.2006875d+1
             s2ss(79) = -7.93478d-7
             call splnin(79, r1h2, v1h2, t, ss, ss1, ss2, epsln, s2ss, s3ss, delss)
             !     H2 TRIPLET STATE
             do i=1, 81
-                70 r2h2(i)=dble(i+9)*0.1d-00
+                r2h2(i) = dble(i+9)*0.1d-00
             enddo
             r2h2(82) = 9.25d-00
             r2h2(83) = 9.5d-00
@@ -695,27 +673,27 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             r2h2(86) = 11.d-00
             r2h2(87) = 12.d-00
             do i=1, 87
-                90 v2h2(i)=v2h2(i)+one
+                v2h2(i) = v2h2(i)+one
             enddo
             s2ts(1)  = 1.3039390d0
             s2ts(87) = -7.93478d-7
             call splnin(87, r2h2, v2h2, t, ss, ss1, ss2, epsln, s2ts, s3ts, delts)
             !     H2+ G STATE
             do i=1, 100
-                130 r3h2(i)=dble(i)*0.1d-00
+                r3h2(i) = dble(i)*0.1d-00
             enddo
             do i=1, 26
-                140 r3h2(i+100)=dble(i)*half+10.d-00
+                r3h2(i+100) = dble(i)*half+10.d-00
             enddo
             do i=1, 126
-                150 v3h2(i)=v3h2(i)+one
+                v3h2(i) = v3h2(i)+one
             enddo
             s2dg(1)   = 1.0742890d+3
             s2dg(126) = -3.03938d-7
             call splnin(126, r3h2, v3h2, t, ss, ss1, ss2, epsln, s2dg, s3dg, deldg)
             !     H2+ U STATE
             do i=1, 126
-                170 v4h2(i)=v4h2(i)+one
+                v4h2(i) = v4h2(i)+one
             enddo
             s2du(1)   = 9.0876397d+2
             s2du(126) = -3.0398d-7
@@ -918,7 +896,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             dh(1,1) = dh11
             dh(2,2) = dh22
             dh(1,2) = dh12
-            90 dh(2,1)=dh12
+            dh(2,1) = dh12
             !     TRIPLET SIGMA CURVE   (T STATE)
             ex    = exp(-bt*(r-rt))
             opex  = one+ex
@@ -1031,29 +1009,31 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             n1    = n-1
             knt   = 0
             do i=1, n1
-                h(i) = x(i+1)-x(i)
-                51 dely(i)=(y(i+1)-y(i))/h(i)
+                h(i)    = x(i+1)-x(i)
+                dely(i) = (y(i+1)-y(i))/h(i)
             enddo
             do i=2, n1
                 h2(i)  = h(i-1)+h(i)
                 b(i)   = half*h(i-1)/h2(i)
                 delsqy = (dely(i)-dely(i-1))/h2(i)
                 s2(i)  = delsqy+delsqy
-                52 c(i)=delsqy+s2(i)
+                c(i)   = delsqy+s2(i)
             enddo
-            5 eta=0.0d0
-            do i=2, n1
-                w = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
-                if( abs(w)-eta ) 10, 10, 9
-                9 eta=abs(w)
-                10 s2(i)=s2(i)+w
+            do
+                eta = 0.0d0
+                do i=2, n1
+                    w     = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
+                    eta   = max(eta, abs(w))
+                    s2(i) = s2(i)+w
+                enddo
+                knt = knt+1
+                if( knt .gt. 10 ) epsln=epsln*ex
+                if( eta < epsln ) exit
             enddo
-            knt = knt+1
-            if( knt .gt. 10 ) epsln=epsln*ex
-            if( eta-epsln ) 14, 5, 5
-            14 do 53 i=1, n1
-            53 s3(i)=(s2(i+1)-s2(i))/h(i)
-            if( idebug .eq. 1 ) write(iptprt, '(5X,11HFinal EPS =,D15.6)') epsln
+            do i=1, n1
+                s3(i) = (s2(i+1)-s2(i))/h(i)
+            enddo
+            if( idebug .eq. 1 ) write(iptprt, '(5X,"Final EPS =",D15.6)') epsln
         end subroutine splnin
         !> @brief Interpolate a tabulated curve and its first two derivatives.
         subroutine spline( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )

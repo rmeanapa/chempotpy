@@ -102,10 +102,29 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   `[x1, y1, z1, x2, y2, z2, ...]`; do not repeat indexing loops for this
   layout conversion or hand-written Cartesian distance formulas in public
   wrappers.
+- Use `all_pair_distances` for lexicographically ordered unique pairs
+  `1-2, 1-3, ..., 2-3, ...`. Use `all_pair_distances_and_jacobian` when both
+  distances and `dr/dx` are needed, or `all_pair_distance_jacobian` when a PES
+  has already computed the distances. The generic interfaces accept either
+  `(natoms,3)` matrices or atom-major `(3*natoms)` vectors.
+- Use `ordered_pair_distance_jacobian` when a published fit uses a different
+  pair order. Pass the model-owned first-atom and second-atom index arrays;
+  never reproduce the Cartesian derivative assignments in the PES. Use the
+  component-array overload of `fill_distance_matrix` for legacy algorithms
+  that store Cartesian coordinates as separate `x`, `y`, and `z` arrays.
 - Use `transform_internal_gradient_to_cartesian` to apply the chain rule
   `dE/dx = (dE/dq)(dq/dx)`. The generic core interface supports scalar-surface,
   multi-state, and matrix-valued gradients. Do not repeat Jacobian-contraction
   loops in public wrappers.
+- Use `chempotpy_internal_coordinates` for a supported Cartesian-to-internal
+  evaluation workflow. A single-state triatomic distance kernel implements the
+  private `evaluate_internal` contract and delegates Cartesian construction,
+  legacy unit conversion, chain-rule transformation, and output packing to
+  `prepare_legacy_triatomic_coordinates` and
+  `finalize_legacy_triatomic_surface`.
+- Do not use the generic legacy name `pot` for a newly migrated internal-coordinate
+  kernel. Name the private surface equation `evaluate_internal`, or
+  `evaluate_diabatic_internal` when it returns a diabatic matrix.
 - Use `chempotpy_units` for new canonical atomic-unit interfaces.
 - Use `chempotpy_legacy_units` when a compatibility wrapper must preserve the
   released rounded conversion literals exactly.
@@ -164,6 +183,11 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 
 ## Required validation
 
+- Run `make check-modernization` for the complete periodic modernization gate.
+- The source audit rejects `DATA`, `SAVE`, `COMMON`, `ENTRY`, `BLOCK DATA`,
+  `GOTO`, arithmetic `IF`, numeric statement labels, `CONTINUE`, setup-style
+  `prepot` procedures, implicit typing, standalone `FORMAT`, Hollerith edit
+  descriptors, ADIFOR boilerplate, and fixed-form Fortran sources.
 - Run `make check-style` after formatting.
 - Run the strict compiler gate for every affected surface.
 - Compare affected numerical outputs with the stored reference fixture.

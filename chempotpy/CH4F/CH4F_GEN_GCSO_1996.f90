@@ -168,7 +168,7 @@ module chempotpy_ch4f_gen_gcso_1996_pes
             !
             do i = 1, 18
                 qpdot_q(i) = coord(i)
-            10 enddo
+            enddo
             !
             !  Read the parameters from the input file CONST
             !

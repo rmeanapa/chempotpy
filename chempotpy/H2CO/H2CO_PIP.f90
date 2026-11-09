@@ -143,7 +143,7 @@ subroutine pot3in( path )
     integer                         :: file_unit_10
     character(len=1024)             :: file_path1
     double precision                :: v, pothco
-    double precision, save          :: g = 0d0, r = 1d0, rkl = 1d0
+    double precision                :: g = 0d0, r = 1d0, rkl = 1d0
     external pothco
     file_path1 = trim(path)//"/H2CO/pothco_hmk.para"
     open(newunit=file_unit_10, file=file_path1, status='old')
@@ -184,7 +184,7 @@ function pothco( rhc, rco, rcos, istate )
     double precision :: xcos(nwin), nucos(nwin), kk(maxlin,2), aa(maxtan,2), v2ch, v2oh
     external v2ch, v2oh
     integer          :: i, j, k, l, ll, jj, j1, j2, j3, ks, i1, i2
-    logical, save    :: qinit(2) = [.false., .false.] ! zeigt an ob Parameter initialisiert.
+    logical          :: qinit(2) = [.false., .false.] ! zeigt an ob Parameter initialisiert.
     double precision :: pq, a, b, c, nenn, rhcsin, rhccos, konus
     double precision :: phc, pco, pcos, poh, rhci, rcoi, rcosi, rohi
     double precision :: thy, aco, ahc, vplus, pi
@@ -353,7 +353,6 @@ function pothco( rhc, rco, rcos, istate )
     endif
     pothco = min( 20d0/au2ev, pq )   ! nach oben begrenzen (20eV)
     endif
-    999 return
 end
 
 !> @brief Evaluate V2OH.
@@ -410,8 +409,6 @@ module chempotpy_h2co_pip_pes
         double precision, intent(out)   :: d(nstates,nstates,natoms,3)
         double precision                :: tx(3,natoms), v
         integer                         :: iatom, idir, j, istate
-        logical, save                   :: first_time_data=.true.
-        !initialize
         gradient_out = 0.d0; d = 0.d0
         do iatom=1, natoms
             do idir=1, 3
@@ -419,10 +416,7 @@ module chempotpy_h2co_pip_pes
             enddo
         enddo
         if( igrad == 0 )then
-            if( first_time_data )then
-                call pes_init(path)
-                first_time_data = .false.
-            endif
+            call pes_init(path)
             call getpot(tx, v, path)
             v = v*legacy_hartree_to_electronvolt
             do istate=1, nstates

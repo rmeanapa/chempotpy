@@ -549,7 +549,7 @@ module chempotpy_brh2_leps_c_1982_pes
                     d1 = d1 + t2*dh1(index)
                     d2 = d2 + t2*dh2(index)
                     d3 = d3 + t2*dh3(index)
-                20 enddo
+                enddo
             enddo
             !
             !   SUPPLEMENTARY TERM
@@ -1160,7 +1160,6 @@ module chempotpy_brh2_leps_c_1982_pes
                                 dijcartnu(i,3,j2) = dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( icartr .eq. 3 )then

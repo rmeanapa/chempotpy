@@ -349,7 +349,7 @@ module chempotpy_oh2_app_gen_m21986_pes
             do it = 1, 3
                 ambpcm_req(it) = ambpcm_req(it)/bohr
                 ambpcm_d(it)   = ambpcm_d(it)/hartre
-            50 enddo
+            enddo
             !
             ambpcm_beta = ambpcm_beta * bohr
             ambpcm_de   = ambpcm_d(1)
@@ -549,7 +549,7 @@ module chempotpy_oh2_app_gen_m21986_pes
                 if( usricm_nder .eq. 1 )then
                     do it = 1, 2
                         pt1cm_degsdr(it) = precm_dbcoor(it) + pt1cm_degsdr(it) + pt1cm_degsdr(3)
-                    300 enddo
+                    enddo
                     pt1cm_degsdr(3) = dac
                 endif
             else
@@ -666,27 +666,27 @@ module chempotpy_oh2_app_gen_m21986_pes
                 pre2cm_bsp(i,1) = pre2cm_bsp(i,1)/ckcal
                 pre2cm_bsp(i,2) = pre2cm_bsp(i,2)/bohr
                 pre2cm_bsp(i,3) = pre2cm_bsp(i,3)*bohr
-            50 enddo
+            enddo
             nnn = pre2cm_nphi + 2
             do i = 1, nnn
                 pre2cm_csp(i,1) = pre2cm_csp(i,1)/ckcal
                 pre2cm_csp(i,2) = pre2cm_csp(i,2)/bohr
                 pre2cm_csp(i,3) = pre2cm_csp(i,3)*bohr
-            60 enddo
+            enddo
             !
             !  CONVERT FROM DEGREES TO RADIANS
             !
             t = 1.0d0/detrad
             do j = 1, 3
                 pre2cm_csp(2,j) = pre2cm_csp(2,j)*t
-            70 enddo
+            enddo
             t = t**3
             do ii = 1, pre2cm_nphi
                 pre2cm_phi(ii) = pre2cm_phi(ii)*detrad
                 i              = ii + 2
                 do j = 1, 3
                     pre2cm_csp(i,j) = pre2cm_csp(i,j)*t
-                80 enddo
+                enddo
             enddo
             !
             !  SET UP CONSTANTS
@@ -974,7 +974,7 @@ module chempotpy_oh2_app_gen_m21986_pes
                 d(np2) = 0.0d0
                 do i = 2, n
                     c(i) = y(i)-y(1)
-                    41 d(i) = x(i)-x(1)
+                    d(i) = x(i)-x(1)
                 enddo
                 do i = 3, np2
                     if( d(i-1) .eq. 0.0d0 )then
@@ -998,7 +998,7 @@ module chempotpy_oh2_app_gen_m21986_pes
                         do j = i, n
                             v    = x(j)-x(i-2)
                             c(j) = c(j)-d(j)*cfact
-                            47 d(j) = v*v*v-d(j)*dfact
+                            d(j) = v*v*v-d(j)*dfact
                         enddo
                     endif
                     if( i .lt. np2 )then
@@ -1007,7 +1007,6 @@ module chempotpy_oh2_app_gen_m21986_pes
                     endif
                     c(np2) = c(np2)-d(np2)*cfact
                     d(np2) = x(i-2)-d(np2)*dfact
-                    410 continue
                 enddo
                 do i = 1, n
                     j = np2-i
@@ -1023,7 +1022,7 @@ module chempotpy_oh2_app_gen_m21986_pes
                     endif
                     c(j+1) = c(j+1)/d(j+1)
                     c(j)   = c(j)-c(j+1)*v
-                411 enddo
+                enddo
                 if( d(2) .eq. 0.0d0 )then
                     write(usricm_nflag(18), '(1X,5X,'' ***** ERROR IN SPLINE ... DIVIDE FAULT *****'')')
                     stop 'SPLINE 4'
@@ -1035,7 +1034,7 @@ module chempotpy_oh2_app_gen_m21986_pes
                     v = z-x(i)
                     if( v .le. 0 ) return
                     spline = spline + c(i+2)*v**3
-                51 enddo
+                enddo
             else if( isw .eq. 3 )then
                 spline = c(1) + c(2)*(z-x(1))
                 deriv  = c(2)/3.d0
@@ -1045,7 +1044,7 @@ module chempotpy_oh2_app_gen_m21986_pes
                     v2     = v*v
                     spline = spline + c(i+2)*v2*v
                     deriv  = deriv + c(i+2)*v2
-                53 enddo
+                enddo
             else if( isw .eq. 4 )then
                 spline = 3.d0*deriv
             endif
@@ -1550,7 +1549,6 @@ module chempotpy_oh2_app_gen_m21986_pes
                                 utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
                             enddo
                         endif
-                        20 continue
                     enddo
                 enddo
             else if( infocm_icartr .eq. 3 )then
