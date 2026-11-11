@@ -1,7 +1,10 @@
-"""Shared interfaces for CHEMPOTPY potential-energy surfaces."""
+"""Shared CHEMPOTPY core with compatibility imports for its Python API."""
 
-from .adapters import LegacyAdiabaticF2PyAdapter
-from .contract import (
+import sys
+
+from .python import adapters, contract, registry, runtime, units
+from .python.adapters import LegacyAdiabaticF2PyAdapter
+from .python.contract import (
     PESCapabilities,
     PESContractError,
     PESMetadata,
@@ -10,8 +13,16 @@ from .contract import (
     PotentialEnergySurface,
     Representation,
 )
-from .registry import SurfaceSource, discover_surface_sources
-from .runtime import LegacyRuntime, SurfaceRuntimeError
+from .python.registry import SurfaceSource, discover_surface_sources
+from .python.runtime import LegacyRuntime, SurfaceRuntimeError
+
+# Preserve the established chempotpy.core.<module> import paths while keeping
+# their implementations together under chempotpy/core/python.
+sys.modules[__name__ + ".adapters"] = adapters
+sys.modules[__name__ + ".contract"] = contract
+sys.modules[__name__ + ".registry"] = registry
+sys.modules[__name__ + ".runtime"] = runtime
+sys.modules[__name__ + ".units"] = units
 
 __all__ = [
     "LegacyAdiabaticF2PyAdapter",

@@ -4,9 +4,7 @@
 !   It was finalized on 02/19/2026
 !   The ground-state diatomic potential for N2 contains damped dispersion.
 !   In the coordinate array the first index is 1 for the first N, 2 for the second N, and 3 for O.
-!
 !   This subroutine is used for asymptotically extended dynamics!!
-!
 !   Functional form: parametrically managed compatibilization by
 !                               deep neural network (PM-CDNN)
 !   Common name:           N2O 13-states singlet A’ 2026
@@ -15,7 +13,6 @@
 !   Number of surfaces:         13
 !   Notes:                      -Compile the subroutine requires LAPACK
 !                                subroutine DSYEV
-!
 !   Input:                      Cartesian coordinates in angstrom
 !   Output:                     Adiabatic energies (e) in eV,
 !                               derivatives of adiabataic energies (g) in
@@ -23,13 +20,15 @@
 !   Reference:
 !   Q. Meng, Y. Shu, Z. Varga, D. Zhang, and D. G. Truhlar, to be published.
 
-!> @brief Own the complete implementation of this potential energy surface.
+!> @brief Implement N2O_13_1Ap_AE_2026, a potential energy surface for N2O.
 module chempotpy_n2o_13_1ap_ae_2026_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this PES through the modern module contract.
+
+    !> @brief Evaluate the N2O_13_1Ap_AE_2026 potential energy surface for N2O.
     subroutine evaluate( x, igrad, p, g, d )
         implicit none
         ! number of electronic state
@@ -95,7 +94,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         !call nac_r_to_xyz(h,drdx,hr,r,x,n,ns)
         ! output is eV, eV/angstrom, and 1/angstrom
     end subroutine energy_gradient
-    !===========================
+
     ! back propagation
     !> @brief Evaluate backprop.
     subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4, v2b, v2b_1, g2b )
@@ -333,7 +332,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             enddo
         enddo
     end subroutine backprop
-    !=========================
+
     !activation function, geluG
     !> @brief Evaluate activation_gelu.
     subroutine activation_gelu( z, a, n )
@@ -345,6 +344,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.d0)))
         enddo
     end subroutine activation_gelu
+
     !> @brief Evaluate activation_derivative_gelu.
     subroutine activation_derivative_gelu( z, a, b, n )
         implicit none
@@ -356,7 +356,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
         enddo
     end subroutine activation_derivative_gelu
-    !=============================
+
     !activation functional heviside
     ! A(r)*B(r)*dpem_layer
     ! the f,a,b parameters are 2, -1, and 4.0
@@ -393,7 +393,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         f        = ar*br
         a        = f*z
     end subroutine activation_functional_heviside
-    !=============================
+
     !add activation functional derivative terms
     !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate activation_functional_derivative_terms.
@@ -447,7 +447,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             g(i,:) = dfdr(i)*z(:)+ar*br*g(i,:)
         enddo
     end subroutine activation_functional_derivative_terms
-    !=============================
+
     !decay function
     ! A(r)*B(r)*dpem_layer
     ! the f,a,b parameters are 2, -1, and 4.0
@@ -481,7 +481,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         br       = 0.5+0.5*tanh(af_f*(-r_in+af_b))
         f        = ar*br
     end subroutine decay_function_heviside
-    !=============================
+
     !add activation functional derivative terms
     !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate decay_function_heviside_derivative.
@@ -529,7 +529,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             dfdr(ibond) = dfdr_in*dr_indr(ibond)
         enddo
     end subroutine decay_function_heviside_derivative
-    !==============================
+
     ! used to compute index in DPEM
     !> @brief Evaluate sumover.
     subroutine sumover( a, b, sum1 )
@@ -542,7 +542,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             sum1 = sum1+num
         enddo
     end subroutine sumover
-    !==============================
+
     ! matrix diagonalization
     ! subroutine diagonalize(n,A_ss,B_ss,U_ss)
     !> @brief Evaluate diagonalize.
@@ -574,7 +574,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         !     B_ss(i,i)=EV_s(i)
         !   enddo
     end subroutine diagonalize
-    !==========================
+
     ! convert de/dr to de/dxyz
     !> @brief Evaluate grad_r_to_xyz.
     subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
@@ -596,7 +596,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             g(:,i,3) = gx(:,3*(i-1)+3)
         enddo
     end subroutine grad_r_to_xyz
-    !==========================
+
     ! convert d/dr to d/dxyz for NAC
     !> @brief Evaluate nac_r_to_xyz.
     subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
@@ -618,7 +618,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             h(:,:,i,3) = hx(:,:,3*(i-1)+3)
         enddo
     end subroutine nac_r_to_xyz
-    !==========================
+
     ! convert xyz to r
     !> @brief Evaluate convert_xyz_to_r.
     subroutine convert_xyz_to_r( x, r, n )
@@ -629,7 +629,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         double precision, intent(out) :: r(n*(n-1)/2)
         call all_pair_distances(x, r)
     end subroutine convert_xyz_to_r
-    !=========================
+
     ! matrix vector product
     !> @brief Evaluate mproduct.
     subroutine mproduct( a, b, c, l, m, n )
@@ -647,7 +647,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             enddo
         enddo
     end subroutine mproduct
-    !===========================
+
     ! assign coefficients
     !> @brief Evaluate assign_coeff_bias.
     subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4 )
@@ -32536,6 +32536,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         bias_l4(90) = -1.2172462046e-01
         bias_l4(91) = 4.7979688644e-01
     end subroutine assign_coeff_bias
+
     !> @brief Evaluate ev2gm2m.
     subroutine ev2gm2m( dist, v2b, v2b_1, g2b, imollist, igrad, n )
         !Bohr
@@ -32581,17 +32582,14 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             endif
         enddo
     end subroutine ev2gm2m
+
     !> @brief Evaluate ev2gm2.
     subroutine ev2gm2( r, v, grad, imol, igrad, disp )
-        !
         ! Compute the diatomic potential of groupd-state triplet O2
-        !
         ! References: J. Chem. Phys. 132, 074307 (2010)
-        !
         ! Input:  r      interatomic distance in Angstrom
         ! Output: V      potential in kcal/mol
         !         grad   gradient (kcal/mol)/Angstrom
-        !
         implicit none
         integer, intent(in)           :: imol, igrad
         double precision, intent(in)  :: r
@@ -32621,7 +32619,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     alpha = 3.3187
                     beta  = 0.8887
                     ! U22 was V2 N2(X 1Sig_g+)+O(1D_1.96)
-                else if( (i .eq. 2).or.(i .eq. 3).or.(i .eq. 4) )then
+                elseif( (i .eq. 2).or.(i .eq. 3).or.(i .eq. 4) )then
                     alpha = 10.3939
                     beta  = 0.4615
                     as(0) = 17245.9669
@@ -32633,7 +32631,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     as(6) = -3.9914
                     as(7) = 0.7002
                     ! N2(w 3Del_u)+O(3P)
-                else if( (i .eq. 5).or.(i .eq. 6).or.(i .eq. 7) )then
+                elseif( (i .eq. 5).or.(i .eq. 6).or.(i .eq. 7) )then
                     as(0) = 145721.6205
                     as(1) = -15108.2989
                     as(2) = 13756.3574
@@ -32645,7 +32643,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     alpha = 19.3171
                     beta  = 0.5429
                     !u8 (N2_x) + O 1s_4.13 Ev(V9)
-                else if( i .eq. 8 )then
+                elseif( i .eq. 8 )then
                     alpha = 4.6846
                     beta  = 0.9005
                     as(0) = 15208082.1866
@@ -32669,7 +32667,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     !gam =  9.263
                     !del =  20.1794
                     !N2(B' 3Sig_u-)+O(3P)(n2_B') + O(3p) +N2P
-                else if( (i .eq. 9).or.(i .eq. 10) )then
+                elseif( (i .eq. 9).or.(i .eq. 10) )then
                     as(0) = 15443.4359
                     as(1) = 974.6327
                     as(2) = 2458.0317
@@ -32681,7 +32679,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     alpha = 6.6960
                     beta  = 0.5026
                     ! N2(B 3Pi_g)+O(3P)
-                else if( (i .eq. 13).or.(i .eq. 12).or.(i .eq. 11) )then
+                elseif( (i .eq. 13).or.(i .eq. 12).or.(i .eq. 11) )then
                     as(0) = 16098.9989
                     as(1) = 2983.9167
                     as(2) = 3891.1504
@@ -32693,7 +32691,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     alpha = 9.2448
                     beta  = 0.5080
                 endif
-            else if( imol .eq. 3 )then! NO data imol=3
+            elseif( imol .eq. 3 )then! NO data imol=3
                 ! U11 NO(a 4Π_i) + N(4S）
                 if( i .eq. 1 )then
                     as(0) = 84282.3385
@@ -32707,7 +32705,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     alpha = 7.2232
                     beta  = 0.7583
                     ! U22 NO(b 4Σ_-) + N(4S)
-                else if( i .eq. 2 )then
+                elseif( i .eq. 2 )then
                     as(0) = 27433.5549
                     as(1) = 9529.7486
                     as(2) = 1966.6217
@@ -32719,7 +32717,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     alpha = 13.8190
                     beta  = 0.3973
                     ! U33 NO(B)V8_1.24>V9_1.28-1.36>v10_1.79>V8_2.1>v3_4
-                else if( i .eq. 3 )then
+                elseif( i .eq. 3 )then
                     as(0) = 115911.2928
                     as(1) = -283917.4091
                     as(2) = 369598.5084
@@ -32731,7 +32729,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     alpha = 3.6069
                     beta  = 0.7496
                     ! U44 NO(B)_V11_1.83>v9_2.2>v4
-                else if( i .eq. 4 )then
+                elseif( i .eq. 4 )then
                     as(0) = 123262.0128
                     as(1) = -299719.1066
                     as(2) = 376445.5442
@@ -32743,7 +32741,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     alpha = 3.6196
                     beta  = 0.7611
                     ! U55-99 NO(X 2Π_r) +N(2D_2.365)
-                else if ((i.eq.5).or.(i.eq.6).or.(i.eq.7) &
+                elseif ((i.eq.5).or.(i.eq.6).or.(i.eq.7) &
                         .or.(i.eq.8).or.(i.eq.9))  then
                     alpha = 6.9634
                     beta  = 0.7557
@@ -32756,7 +32754,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     as(6) = 10620.8346
                     as(7) = -2058.6642
                     !U1010 NO(X)_V12_1.85>V10
-                else if( i .eq. 10 )then
+                elseif( i .eq. 10 )then
                     as(0) = 89409.7997
                     as(1) = -191557.1860
                     as(2) = 222796.8573
@@ -32768,7 +32766,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                     alpha = 3.8083
                     beta  = 0.7418
                     ! U1111-1212 X v7_1.27>v8_1.29-1.78>v12_1.89
-                else if( (i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
+                elseif( (i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
                     as(0) = 1037945.0954
                     as(1) = -3833076.3354
                     as(2) = 7301659.5040
@@ -32789,14 +32787,14 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             if( imol .eq. 2 )then
                 if( i .eq. 14 )then
                     v(i) = v(i) + gam*dexp(-del*(r-1.7d0)**2)
-                else if( (i .eq. 2).or.(i .eq. 3).or.(i .eq. 4) )then
+                elseif( (i .eq. 2).or.(i .eq. 3).or.(i .eq. 4) )then
                     call n2ground(r, v(i), grad(i), imol, igrad)
                 endif
-            else if( imol .eq. 3 )then
+            elseif( imol .eq. 3 )then
                 if( (i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
                     !          if ((i.eq.3).or.(i.eq.4).or.(i.eq.10).or.(i.eq.11).or.(i.eq.12).or.(i.eq.13)) then
                     v(i) = v(i) + gam*dexp(-del*(r-1.7d0)**2)
-                else if( (i .eq. 5).or.(i .eq. 6).or.(i .eq. 7).or.(i .eq. 8).or.(i .eq. 9) )then
+                elseif( (i .eq. 5).or.(i .eq. 6).or.(i .eq. 7).or.(i .eq. 8).or.(i .eq. 9) )then
                     call noground(r, v(i), grad(i), imol, igrad)
                 endif
             endif
@@ -32815,7 +32813,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
                 if( i .eq. 14 )then
                     grad(i) = grad(i)-2.0d0*del*gam*(r-1.7d0)*dexp(-del*(r-1.7d0)**2)
                 endif
-            else if( imol .eq. 3 )then
+            elseif( imol .eq. 3 )then
                 !               if ((i.eq.3).or.(i.eq.4).or.(i.eq.10).or.(i.eq.11).or.(i.eq.12).or.(i.eq.13)) then
                 if( (i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
                     grad(i) = grad(i)-2.0d0*del*gam*(r-1.7d0)*dexp(-del*(r-1.7d0)**2)
@@ -32825,23 +32823,20 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             endif
         enddo
     end subroutine ev2gm2
+
     !> @brief Evaluate d3disp.
     subroutine d3disp( dist, disp, dispdr, igrad, imol )
         ! Dispersion correction based on Grimme's D3(BJ) calculation for
         ! diatomic pairs
-        !
         ! Several subroutines of DFTD3 V3.1 Rev 1 by Grimme were merged into
         ! subroutine edisp and they have been heavily modified to calculate only
         ! that dispersion energy correction that is needed.
-        !
         ! S. Grimme, J. Antony, S. Ehrlich and H. Krieg
         ! J. Chem. Phys, 132 (2010), 154104
         ! and
         ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
         ! 1456-1465
-        !
         ! The C6 values are fixed.
-        !
         implicit none
         double precision :: cn(2), s6, s8, rs6, rs8
         double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -32869,7 +32864,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             ! C6 for N2 system
             c6(1) = 19.7d0
             c6(2) = 19.7d0
-        else if( imol .eq. 3 )then! NO
+        elseif( imol .eq. 3 )then! NO
             ! iz for NO system
             iz(1) = 7
             iz(2) = 8
@@ -32899,6 +32894,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             dist(i) = dist(i)*autoang
         enddo
     end subroutine d3disp
+
     ! compute energy
     !> @brief Evaluate edisp.
     subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
@@ -32977,11 +32973,10 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             enddo
         enddo
     end subroutine edisp
+
     !> @brief Evaluate n2ground.
     subroutine n2ground( r, v, grad, imol, igrad )
-        !
         ! Compute the diatomic potential of ground-state N2 (singlet)
-        !
         ! Input:  r      interatomic distance in Angstrom
         !         imol   1 - stands for N2 for N4 PES
         !         igrad  1 - gradient is calculated
@@ -33042,18 +33037,16 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
             grad = grad + dispdr(1)
         endif
     end subroutine n2ground
+
     !> @brief Evaluate noground.
     subroutine noground( r, v, grad, imol, igrad )
-        !
         ! Compute the diatomic potential of ground-state NO (doublet)
-        !
         ! Input:  r      interatomic distance in Angstrom
         !         imol   3 - stands for NO for N2O2 PES
         !         igrad  1 - gradient is calculated
         !                0 - gradient is not calculated
         ! Output: V      potential in kcal/mol
         !         grad   gradient (kcal/mol)/Angstrom
-        !
         ! Short range NO parameters for NO dissociation
         ! The long range term comes from dispersion
         ! The difference between the points of the 8th order MEG NO diatomic
@@ -33108,7 +33101,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
     end subroutine noground
 end module chempotpy_n2o_13_1ap_ae_2026_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose N2O_13_1Ap_AE_2026 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_n2o_13_1ap_ae_2026_pes, only: evaluate
     implicit none

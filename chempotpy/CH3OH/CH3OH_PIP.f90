@@ -1119,7 +1119,9 @@ module pes_shell
         & -1719.71871187d0, -1699.17131215d0, -591.056896816d0, &
         & 5944.06247178d0, 2463.71792654d0, 1361.10264550d0, &
         & 840.945507057d0, -6195.24955013d0]
+
     contains
+
     !> @brief Evaluate calcpot.
     subroutine calcpot( v, xyz )
         double precision, dimension(3, 6) :: xyz
@@ -1127,6 +1129,7 @@ module pes_shell
         double precision :: v
         call potshell(xyz, v)
     end subroutine calcpot
+
     !> @brief Evaluate potshell.
     subroutine potshell( xn, v )
         double precision :: f0, gf0(0:2,0:5)
@@ -1137,6 +1140,7 @@ module pes_shell
         f0 = dot_product(coefficients, vec)
         v  = f0
     end subroutine potshell
+
     !> @brief Evaluate getd0.
     subroutine getd0 ( nk, r0, d0 )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -1151,6 +1155,7 @@ module pes_shell
             enddo
         enddo
     end subroutine getd0
+
     !> @brief Evaluate getr0.
     subroutine getr0 ( nk, xn, r0 )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -1165,6 +1170,7 @@ module pes_shell
             enddo
         enddo
     end subroutine getr0
+
     !> @brief Evaluate getrvec.
     subroutine getrvec ( ms, r, vec )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -1174,7 +1180,6 @@ module pes_shell
         double precision   :: r(0:nk-1,0:nk-1), vec(0:ms-1)
         integer            :: i, j
         double precision   :: x(0:3), r1(0:nk-1,0:nk-1), t0, t1
-        !-----------------------------------------------------------------------
         ! Test for compatibility
         if( .not.(ms .eq. 1.or.ms .eq. 5) )then
             stop 'getrvec - wrong dimension'
@@ -1214,6 +1219,7 @@ module pes_shell
             vec(1:4) = x
         endif
     end subroutine getrvec
+
     !> @brief Evaluate getvec.
     subroutine getvec ( ms, mr, xn, vec )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -1223,7 +1229,6 @@ module pes_shell
         double precision   :: xn(0:2,0:nk-1), vec(0:ms+4*mr-1)
         integer            :: k, l
         double precision   :: rvec(0:4), d0(0:nk-1,0:nk-1), r0(0:nk-1,0:nk-1)
-        !-----------------------------------------------------------------------
         vec = 0
         call getr0 (nk, xn, r0)
         call getd0 (nk, r0, d0)
@@ -1235,6 +1240,7 @@ module pes_shell
             enddo
         enddo
     end subroutine getvec
+
     !> @brief Evaluate getv_x4yz.
     subroutine getv_x4yz ( m, d, vec )
         integer, parameter :: wp = selected_real_kind(12, 300)
@@ -1269,7 +1275,6 @@ module pes_shell
         pol5(t0) = t0**5
         pol6(t0) = t0**6
         pol7(t0) = t0**7
-        !-----------------------------------------------------------------------
         ! Test for compatibility, set mdeg
         select case (m)
         case (l0)
@@ -1730,13 +1735,15 @@ module pes_shell
     end subroutine getv_x4yz
 end module pes_shell
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement CH3OH_PIP, a potential energy surface for CH3OH.
 module chempotpy_ch3oh_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the CH3OH_PIP potential energy surface for CH3OH.
     subroutine evaluate( x, igrad, path, p, g, d )
         use pes_shell,              only: calcpot
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -1771,7 +1778,7 @@ module chempotpy_ch3oh_pip_pes
     end subroutine evaluate
 end module chempotpy_ch3oh_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose CH3OH_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_ch3oh_pip_pes, only: evaluate
     implicit none

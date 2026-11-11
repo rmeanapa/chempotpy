@@ -1,10 +1,37 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Extended Rydberg plus Extended Screening and Coordination Number
+!   Common name:                   NP-A
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  The functional
+!           form is from Ref. 2.  The parameters were re-optimized in Ref. 1
+!           against a data set of energies for aluminum clusters and
+!           nanoparticles and bulk data.  This PEF has a cutoff at 6.5 A.
+!  References: (1) A. W. Jasper, N. E. Schultz, and D. G. Truhlar, "Analytic
+!              Potential Energy Functions for Simulating Aluminum
+!              Nanoparticles," in preparation.
+!              (2) A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potential Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!                    of the system
+!  natom   --- number of atoms in the system
+!  maxatom --- maximal number of atoms
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_np_a_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,45 +61,15 @@ module chempotpy_aln_np_a_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_NP_A potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Extended Rydberg plus Extended Screening and Coordination Number
-        !   Common name:                   NP-A
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  The functional
-        !           form is from Ref. 2.  The parameters were re-optimized in Ref. 1
-        !           against a data set of energies for aluminum clusters and
-        !           nanoparticles and bulk data.  This PEF has a cutoff at 6.5 A.
-        !
-        !  References: (1) A. W. Jasper, N. E. Schultz, and D. G. Truhlar, "Analytic
-        !              Potential Energy Functions for Simulating Aluminum
-        !              Nanoparticles," in preparation.
-        !              (2) A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potential Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !                    of the system
-        !  natom   --- number of atoms in the system
-        !  maxatom --- maximal number of atoms
         implicit none
         double precision :: a1, a1b, a2, a2b, a3, a3b, abscz1, abscz2, ac, au2, au23, au2b, bu2, bu2b, co, cob, cz1, cz2, de, &
-            & deb, du2, dx, dy, dz, ec1, ee, eeb, es1, fcn, fs, g1, g1e, g2, gcorr, gu2, gzero, poly, polyb, r, re, reb, rho, &
-            & rhob, rij, ril, rjl, rr, s, term, tmp, tmpb, v, x, xk1, xk2, xk3, y, z
+            & deb, du2, dx, dy, dz, ec1, ee, eeb, es1, fcn(maxatom,maxatom), fs(maxatom,maxatom), g1, g1e, g2, gcorr(maxatom), &
+            & gu2, gzero, poly, polyb, r(maxatom,maxatom), re, reb, rho, rhob, rij, ril, rjl, rr, s, term, tmp, tmpb, v, &
+            & x(maxatom), xk1, xk2, xk3, y(maxatom), z(maxatom)
         integer :: i, j, l, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom), gcorr(maxatom)
-        dimension fs(maxatom,maxatom), r(maxatom,maxatom)
-        dimension fcn(maxatom,maxatom)
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
         de    = 1.71013678553981441/autoev
@@ -200,7 +197,7 @@ module chempotpy_aln_np_a_pes
     end subroutine pot
 end module chempotpy_aln_np_a_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_NP_A through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_np_a_pes, only: evaluate

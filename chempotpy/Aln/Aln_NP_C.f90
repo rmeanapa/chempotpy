@@ -1,10 +1,39 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Embedded atom
+!   Common name:                   NP-C
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  The functional
+!           form is from Ref. 1.  The parameters were re-optimized in Ref. 2
+!           against a data set of energies for aluminum clusters and
+!           nanoparticles and bulk data.  Reference 3 provides futher
+!           background but is not a required reference for this potential.
+!  References: (1) F. H. Streitz, and J. W. Mintmire, Phys. Rev. B, 50, 11996 (1994).
+!              (2) A. W. Jasper, N. E. Schultz, and D. G. Truhlar, "Analytic
+!              Potential Energy Functions for Simulating Aluminum
+!              Nanoparticles," in preparation.
+!              (3) A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potential Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_np_c_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,44 +63,13 @@ module chempotpy_aln_np_c_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_NP_C potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Embedded atom
-        !   Common name:                   NP-C
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  The functional
-        !           form is from Ref. 1.  The parameters were re-optimized in Ref. 2
-        !           against a data set of energies for aluminum clusters and
-        !           nanoparticles and bulk data.  Reference 3 provides futher
-        !           background but is not a required reference for this potential.
-        !
-        !  References: (1) F. H. Streitz, and J. W. Mintmire, Phys. Rev. B, 50, 11996 (1994).
-        !              (2) A. W. Jasper, N. E. Schultz, and D. G. Truhlar, "Analytic
-        !              Potential Energy Functions for Simulating Aluminum
-        !              Nanoparticles," in preparation.
-        !              (3) A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potential Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: aa, alpha, bb, beta, cc, dx, dy, dz, ff, p1, p2, phi, rho, &
-            & rr, rrel, rstar, v, x, y, z
+        double precision :: aa, alpha, bb, beta, cc, dx, dy, dz, ff, p1, p2, phi, rho, rr, rrel, rstar, v, x(maxatom), &
+            & y(maxatom), z(maxatom)
         integer :: i, j, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom)
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
         rstar = 2.85655354324007371 / autoang
@@ -107,7 +105,7 @@ module chempotpy_aln_np_c_pes
     end subroutine pot
 end module chempotpy_aln_np_c_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_NP_C through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_np_c_pes, only: evaluate

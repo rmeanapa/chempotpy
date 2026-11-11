@@ -6,19 +6,19 @@
 !   Number of electronic surfaces: 1
 !   Interface:                     3-1V
 !   Data file:
-!
 !   References:      SL Mielke, BC Garrett, and KA Peterson, J. Chem. Ph
-!
 !   Notes:    3 H-H distances passed in bohr.
 !             Energy returned in Hatrees relative to the classical minim
-!
-!> @brief Own the public evaluator for this potential energy surface.
+
+!> @brief Implement H3_GEN_A3_2002, a potential energy surface for H3.
 module chempotpy_h3_gen_a3_2002_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H3_GEN_A3_2002 potential energy surface for H3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units,       only: legacy_energy_to_electronvolt
         use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
@@ -49,7 +49,7 @@ module chempotpy_h3_gen_a3_2002_pes
     end subroutine evaluate
 end module chempotpy_h3_gen_a3_2002_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H3_GEN_A3_2002 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_h3_gen_a3_2002_pes, only: evaluate
     implicit none

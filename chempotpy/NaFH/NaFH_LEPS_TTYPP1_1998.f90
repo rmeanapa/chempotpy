@@ -1,11 +1,12 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement NaFH_LEPS_TTYPP1_1998, a potential energy surface for NaFH.
 module chempotpy_nafh_leps_ttypp1_1998_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the NaFH_LEPS_TTYPP1_1998 potential energy surface for NaFH.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
@@ -42,7 +43,7 @@ module chempotpy_nafh_leps_ttypp1_1998_pes
     end subroutine evaluate
 end module chempotpy_nafh_leps_ttypp1_1998_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose NaFH_LEPS_TTYPP1_1998 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_nafh_leps_ttypp1_1998_pes, only: evaluate
     implicit none
@@ -76,42 +77,38 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!
 !> @brief Evaluate pot for the NaFH_LEPS_TTYPP1_1998 potential.
 subroutine pot( r, e, nt, nsurf )
     implicit none
-    double precision :: e, r
+    double precision :: e(nt), r(nt,3)
     integer          :: nsurf, nt
-    dimension r(nt,3), e(nt)
     if( nsurf .eq. 1 )then
         call pot11(r, e, nt)
-    else if( nsurf .eq. 2 )then
+    elseif( nsurf .eq. 2 )then
         call pot12(r, e, nt)
     else
         call pot22(r, e, nt)
     endif
 end subroutine pot
 
-!
 !  U11 surface - lower diabatic surface
-!
 !> @brief Own the stateless g_pot11 evaluator.
 module chempotpy_nafh_leps_ttypp1_1998_pot11_legacy_state_b37154a3
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: a, abs1, ads1, ars1, as1, as3, axs1, axs3, betat2, c1, c2, c2a, c2b, c2c, c3, &
-            & c4, cbs1, cds1, cevau, cfm, coul1, coul2, coul3, cplg2, cprime, crs1, cs1, cs3, cxs1, cxs3, &
-            & deh2, dn, dt2, e, exch1, exch2, exch3, hlp, hlp1, hlp2, hlp3, r, r2s, rac2, ret2, rootw, &
-            & rr1, rr1s, rr3, rr3s, s1, s2, s2a, s2h, s2i, s3, scale, swa, swa2, swr0, swr20, swt, t1, &
-            & t2, t3, w, xt2
+        double precision :: a, abs1, ads1, ars1, as1, as3, axs1, axs3, betat2, c1, c2, c2a, c2b, c2c, c3, c4, cbs1, cds1, cevau, &
+            & cfm, coul1, coul2, coul3, cplg2, cprime, crs1, cs1, cs3, cxs1, cxs3, deh2, dn, dt2, e(:), exch1, exch2, exch3, &
+            & hlp, hlp1, hlp2, hlp3, r(:,:), r2s, rac2, ret2, rootw, rr1, rr1s, rr3, rr3s, s1, s2, s2a, s2h, s2i, s3, scale, &
+            & swa, swa2, swr0, swr20, swt, t1, t2, t3, w, xt2
         integer :: i, nt
-        dimension r(:,:), e(:)
         a      = 0.d0
         abs1   = 0.d0
         ads1   = 0.d0
@@ -203,7 +200,6 @@ module chempotpy_nafh_leps_ttypp1_1998_pot11_legacy_state_b37154a3
         cfm    = 0.0d0
         rac2   = 1.d0/dsqrt(2.d0)
         cevau  = 1.d0/27.2113961d0
-        !
         do i=1, nt
             r2s  = r(i,2)*r(i,2)
             rr1  = r(i,1)*scale
@@ -216,14 +212,12 @@ module chempotpy_nafh_leps_ttypp1_1998_pot11_legacy_state_b37154a3
             hlp3 = 1.d0-dtanh(swa*(rr3-swr0))
             swt  = 0.125d0*hlp1*hlp2*hlp3
             !*****SINGLETS AND THEIR DERIVATIVES:
-            !-----------------------------------------------------------------------
             !*****MH SINGLET:
             axs1 = dexp(-0.5d0*abs1*(rr1-ars1))
             as1  = 0.5d0*ads1*axs1*(axs1-2.d0)
             cxs1 = dexp(-2.80d0*abs1*(rr1-3.500d0))
             cs1  = 0.35d0*cxs1*(cxs1+2.d0)
             s1   = as1+(cs1-as1)*swt
-            !-----------------------------------------------------------------------
             !*****H2 SINGLET, AND ITS DERIVATIVES:
             !     ORIGINAL
             s2a=(109.384d0+463.033d0*r(i,2))*dexp(-6.240d0*r(i,2)) -r2s*(13.654d0+20.717d0*r(i,2))*dexp(-2.032d0* r(i, &
@@ -241,7 +235,6 @@ module chempotpy_nafh_leps_ttypp1_1998_pot11_legacy_state_b37154a3
             hlp = 0.5d0*(r(i,1)+r(i,3)-8.d0)
             hlp = 0.5d0*(1.d0-dtanh(hlp))
             s2  = s2a+(s2i-s2a)*hlp
-            !-----------------------------------------------------------------------
             !*****MF SINGLET:
             axs3 = dexp(-1.3d0*abs1*(rr3-ars1))
             as3  = ads1*axs3*(axs3-2.d0)
@@ -249,26 +242,21 @@ module chempotpy_nafh_leps_ttypp1_1998_pot11_legacy_state_b37154a3
             cs3  = cds1*cxs3*(cxs3-2.d0)
             s3   = as3+(cs3-as3)*swt
             !*****TRIPLETS AND THEIR FIRST DERIVATIVES:
-            !-----------------------------------------------------------------------
             !     MH TRIPLET
             hlp1 = dexp(-1.10d0*c2*(rr1-0.6d0))
             hlp2 = dexp(-1.65d0*c4*(rr1-0.6d0))
             t1   = c1*hlp1+c3*hlp2
-            !-----------------------------------------------------------------------
             !     HH TRIPLET
             xt2 = dexp(-betat2*(r(i,2)-ret2))
             t2  = dt2*xt2*(xt2-2.d0)
-            !-----------------------------------------------------------------------
             !     MF TRIPLET
             hlp1 = dexp(-c2*(rr3-0.55d0))
             hlp2 = dexp(-2.5d0*c4*(rr3-0.55d0))
             t3   = c1*hlp1+c3*hlp2
-            !-----------------------------------------------------------------------
             !*****COULOMB INTEGRALS AND THEIR FIRST DERIVATIVES:
             coul1 = 0.5d0*(s1+t1)
             coul2 = 0.5d0*(s2+t2)
             coul3 = 0.5d0*(s3+t3)
-            !-----------------------------------------------------------------------
             !*****EXCHANGE INTEGRALS AND THEIR FIRST DERIVATIVES:
             exch1 = 0.5d0*(s1-t1)
             exch2 = 0.5d0*(s2-t2)
@@ -291,22 +279,21 @@ subroutine pot11( r, e, nt )
     call dispatch(r=r, e=e, nt=nt)
 end subroutine pot11
 
-!
 !  U12 surface - coupling surface
-!
 !> @brief Own the stateless g_pot12 evaluator.
 module chempotpy_nafh_leps_ttypp1_1998_pot12_legacy_state_b37154a3
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: amc, cevau, e, gmc, hlp, r, rmc, sw1, sw21, sw23, unaf, unah
+        double precision :: amc, cevau, e(:), gmc, hlp, r(:,:), rmc, sw1, sw21, sw23, unaf, unah
         integer          :: i, nt
-        dimension r(:,:), e(:)
         !      BLOCK DATA UONETWO
         double precision :: ahf, anaf, anah, r21, r23, r13
         double precision :: ccmf(4), ccmh(4)
@@ -343,14 +330,12 @@ module chempotpy_nafh_leps_ttypp1_1998_pot12_legacy_state_b37154a3
         r23   = -3.3006d-1
         r13   = 1.2431d0
         cevau = 1.d0/27.2113961d0
-        !
         do i=1, nt
             hlp  = ccmf(3)/(1.d0+ccmf(4)*r(i,3))
             unaf = dexp(-ccmf(1)-ccmf(2)*r(i,3)- hlp*r(i,3))
             unaf = unaf*27.2113961d0
             hlp  = ccmh(3)/(1.d0+ccmh(4)*r(i,1))
             unah = dexp(-ccmh(1)-ccmh(2)*r(i,1)- hlp*r(i,1))
-            !-----------------------------------------------------------------------
             hlp  = anah*r(i,1)-anaf*r(i,3)-r13
             sw1  = 0.5d0*(1.d0+dtanh(hlp))
             hlp  = ahf*r(i,2)-anah*r(i,1)-r21
@@ -379,29 +364,27 @@ subroutine pot12( r, e, nt )
     call dispatch(r=r, e=e, nt=nt)
 end subroutine pot12
 
-!
 !  U22 surface - upper diabatic surface
-!
 !> @brief Own the stateless g_pot22 evaluator.
 module chempotpy_nafh_leps_ttypp1_1998_pot22_legacy_state_b37154a3
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: a, a0g1, a0g2, a0g3, a90g1, a90g2, a90g3, aaa, aaa1, af1, b, b0g1, b0g2, &
-            & b0g3, b90g1, b90g2, b90g3, c1s1, c2a, c2b, c2c, c2s1, c3s1, c4s1, c5s1, c6s1, cevau, coul1, &
-            & coul2, coul3, cplg2, cprime, daa, deh2, dn, dnaht1, dnaht11, dnaht2, dnaht3, dnaht4, &
-            & dnaht5, dnaht6, dnaht61, dnaht7, e, exch1, exch2, exch3, fff, h2t1, h2t2, h2t3, h2t4, h2t5, &
-            & h2t6, h2t7, hlp, hlp1, hlp2, hlpnah1, hlpnah11, hlpnah3, hlpnah33, r, r00, r0g1, r0g2, &
-            & r0g3, r1s, r2s, r3s, r90g1, r90g2, r90g3, raaa, rac2, rf1, rootw, rr1, rr1s, rr3, rr3s, s1, &
-            & s2, s2a, s2b, s2i, s3, scale, swa, swr0, swt, t1, t2, t2a, t3, una2p, w, y0b1, y0b2, y0d1, &
-            & y0d2, y0r1, y0r2, y90b1, y90b2, y90d1, y90d2, y90r1, y90r2
+        double precision :: a, a0g1, a0g2, a0g3, a90g1, a90g2, a90g3, aaa, aaa1, af1, b, b0g1, b0g2, b0g3, b90g1, b90g2, b90g3, &
+            & c1s1, c2a, c2b, c2c, c2s1, c3s1, c4s1, c5s1, c6s1, cevau, coul1, coul2, coul3, cplg2, cprime, daa, deh2, dn, &
+            & dnaht1, dnaht11, dnaht2, dnaht3, dnaht4, dnaht5, dnaht6, dnaht61, dnaht7, e(:), exch1, exch2, exch3, fff, h2t1, &
+            & h2t2, h2t3, h2t4, h2t5, h2t6, h2t7, hlp, hlp1, hlp2, hlpnah1, hlpnah11, hlpnah3, hlpnah33, r(:,:), r00, r0g1, &
+            & r0g2, r0g3, r1s, r2s, r3s, r90g1, r90g2, r90g3, raaa, rac2, rf1, rootw, rr1, rr1s, rr3, rr3s, s1, s2, s2a, s2b, &
+            & s2i, s3, scale, swa, swr0, swt, t1, t2, t2a, t3, una2p, w, y0b1, y0b2, y0d1, y0d2, y0r1, y0r2, y90b1, y90b2, &
+            & y90d1, y90d2, y90r1, y90r2
         integer :: i, nt
-        dimension r(:,:), e(:)
         a        = 0.d0
         a0g1     = 0.d0
         a0g2     = 0.d0
@@ -573,7 +556,6 @@ module chempotpy_nafh_leps_ttypp1_1998_pot22_legacy_state_b37154a3
         h2t7     = -1.59912d0
         rac2     = 1.d0/dsqrt(2.d0)
         cevau    = 1.d0/27.2113961d0
-        !
         do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
@@ -585,7 +567,6 @@ module chempotpy_nafh_leps_ttypp1_1998_pot22_legacy_state_b37154a3
             !*****SWITCHING FUNCTION FOR THE H2 TRIPLET, AND ITS DERIVATIVES:
             swt = 0.5d0*(1.d0-dtanh( swa*(0.5d0*(rr1+rr3)-swr0)))
             !*****SINGLETS AND THEIR DERIVATIVES:
-            !-----------------------------------------------------------------------
             !*****MH SINGLET:
             raaa     = 2.700d0
             aaa      = 2.40d0
@@ -594,7 +575,6 @@ module chempotpy_nafh_leps_ttypp1_1998_pot22_legacy_state_b37154a3
             hlpnah1  = dexp(-aaa1*(r(i,1)-raaa))
             hlpnah11 = dexp(-1.65d0*aaa*(r(i,1)-raaa))
             s1       = 0.30d0*daa*(hlpnah11-2.d0*hlpnah1)
-            !-----------------------------------------------------------------------
             !*****H2 SINGLET
             s2a=(109.384d0+463.033d0*r(i,2))*dexp(-6.240d0*r(i,2)) -r2s*(13.654d0+20.717d0*r(i,2))*dexp(-2.032d0* r(i, &
                 & 2))+ una2p
@@ -608,39 +588,32 @@ module chempotpy_nafh_leps_ttypp1_1998_pot22_legacy_state_b37154a3
             hlp  = 0.5d0*(r(i,1)+r(i,3)-7.0d0)
             hlp  = 0.5d0*(1.d0-dtanh(hlp))
             s2a  = s2a+(s2i-s2a)*hlp
-            !-----------------------------------------------------------------------
             !*****MF SINGLET:
             hlpnah3  = dexp(-aaa*(r(i,3)-raaa))
             hlpnah33 = dexp(-1.65d0*aaa*(r(i,3)-raaa))
             s3       = daa*(hlpnah33-2.d0*hlpnah3)
             !*****TRIPLETS AND THEIR DERIVATIVES:
-            !-----------------------------------------------------------------------
             !*****H2 TRIPLET (interaction region):
             t2a = 0.5d0*(dexp(-h2t2*(r(i,2)-h2t1))+(h2t3+h2t5*r(i,2) +h2t6*r2s+h2t7*r2s*r(i,2))*dexp(-h2t4*r(i,2)))
             !*****H2 TRIPLET (asymptotic)
             s2b = 147.214d0*dexp(-3.915d0*r(i,2))+r(i,2)*(41.275d0+10.505d0 *r(i,2)+4.408d0*r2s)*dexp(-2.032d0* r(i,2))
             !*****H2 TRIPLET: TOTAL (switched between the asymptotic and the ineract
             t2 = swt*(t2a-s2b)+s2b
-            !-----------------------------------------------------------------------
             !*****TRIPLETS AND THEIR DERIVATIVES:
             !!!!!!MH TRIPLET:
             t1 = 3.d0*(dexp(-dnaht2*(rr1-dnaht11))+ (dnaht7+dnaht3*rr1+dnaht4*rr1s+dnaht5*rr1*rr1s) *dexp(- dnaht61* &
                 & rr1))
-            !-----------------------------------------------------------------------
             !!!!!!MF TRIPLET: (should be the same as the first one, t1)
             t3 = 3.d0*(dexp(-dnaht2*(rr3-dnaht1))+ (dnaht7+dnaht3*rr3+dnaht4*rr3s+dnaht5*rr3*rr3s) *dexp(-dnaht6* rr3))
-            !-----------------------------------------------------------------------
             !*****TOTAL H2 SINGLET:
             !!!!!!H2 SINGLET: total (switched between the true singlet and a triplet
             !                        in the asymptotic region at large HH distances)
             hlp = dtanh((s2a-t2)/cprime)
             s2  = 0.5d0*(s2a+t2-hlp*(s2a-t2))
-            !-----------------------------------------------------------------------
             !*****COULOMB INTEGRALS AND THEIR FIRST DERIVATIVES:
             coul1 = 0.5d0*(s1+t1)
             coul2 = 0.5d0*(s2+t2)
             coul3 = 0.5d0*(s3+t3)
-            !-----------------------------------------------------------------------
             !*****EXCHANGE INTEGRALS AND THEIR FIRST DERIVATIVES:
             exch1 = 0.5d0*(s1-t1)
             exch2 = 0.5d0*(s2-t2)

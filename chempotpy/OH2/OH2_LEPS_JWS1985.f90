@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Evaluate the OH2_LEPS_JWS1985 potential energy surface.
 module chempotpy_oh2_leps_jws1985_pes
     use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
@@ -22,8 +21,10 @@ module chempotpy_oh2_leps_jws1985_pes
     real(real64), parameter :: two_sato_plus_three(3)     = 2.0_real64*sato_plus_three
     real(real64), parameter :: quarter_energy(3)          = dissociation_energy/(4.0_real64*one_plus_sato)
     real(real64), parameter :: derivative_weight(3)       = 2.0_real64*morse_exponent*quarter_energy
+
     contains
-    !> @brief Evaluate the surface through the common CHEMPOTPY Cartesian contract.
+
+    !> @brief Evaluate the OH2_LEPS_JWS1985 potential energy surface for OH2.
     subroutine evaluate( x, igrad, p, g, d )
         integer, intent(in)       :: igrad
         real(real64), intent(in)  :: x(3,3)
@@ -34,6 +35,7 @@ module chempotpy_oh2_leps_jws1985_pes
         call evaluate_internal(distances_bohr, igrad, energy_hartree, internal_gradient)
         call finalize_legacy_triatomic_surface(igrad, energy_hartree, internal_gradient, distance_jacobian, p, g, d)
     end subroutine evaluate
+
     !> @brief Evaluate the extended LEPS energy and optional internal-coordinate gradient.
     pure subroutine evaluate_internal( distances, derivative_order, energy, gradient )
         real(real64), intent(in)  :: distances(3)
@@ -77,7 +79,7 @@ module chempotpy_oh2_leps_jws1985_pes
     end subroutine evaluate_internal
 end module chempotpy_oh2_leps_jws1985_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose OH2_LEPS_JWS1985 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_oh2_leps_jws1985_pes, only: evaluate
     implicit none

@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Self-contained symmetric eigensolver implementing the LAPACK DSYEV ABI.
 subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
     implicit none

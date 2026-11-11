@@ -5,15 +5,12 @@
 !   Number of bodies:              16
 !   Number of electronic surfaces: 3
 !   Interface:                     Section-2
-!
 !   Reference: "Full-dimensional ground- and excited-state potential energy surfaces and
 ! state couplings for photodissociation of thioanisole"
 ! Shaohong L. Li and Donald G. Truhlar, J. Chem. Phys., 146, 064301 (2017).
-!
 ! "Improved Potential Energy Surfaces of Thioanisole and the Effect of Upper Surface
 ! Variations on the Product Distribution Upon Photodissociation"
 ! Yinan Shu and Donald G. Truhlar, Chem. Phys., Submitted Mar. 2018
-!
 !   Notes:
 !   Coupled 42-dimensional PESs for electronically nonadiabatic
 !   photodissociation of thioanisole (C7H8S) into thiophenoxyl and methyl radicals.
@@ -21,13 +18,9 @@
 !   energies and their gradients, nonadiabatic vector couplings, and the
 !   diabatic-to-adiabatic transformation matrix for the three lowest diabatic or
 !   adiabatic electronic states are available.
-
 !                Shaohong L. Li, Oct. 2016
 !                  Yinan Shu, Mar. 2018
-!
 ! This surface corresponds to the surface S-2.2 in the 2nd ref.
-!
-!
 ! Reference for this potential energy surface:
 !   "Full-dimensional ground- and excited-state potential energy
 !   surfaces and state couplings for photodissociation of
@@ -42,24 +35,19 @@
 ! Coordinates and diabatic surfaces are identical to those in
 ! this reference, but the numbering of atoms is different
 ! (see "Important notes" below).
-!
 ! This PES subroutine has been tested with the following compiler
 ! and software:
 ! * Intel ifort 13.1.3 with MKL
 ! * GCC gfortran 4.8.0 with LAPACK
 ! * ANT 2014-2
 ! * POLYRATE 2010-A
-!
 !*this*line*is*66*characters*long*********************************
-
-!=================================================================
 !  Important notes:
 !  * Variable 'debug' should be set to .false. for production runs.
 !  * Internal working units (for all subroutines except pot):
 !    Angstrom, radian, hartree.
 !  * LAPACK routine dsyev is needed for diagonalization.
 !  * Internal numbering of atoms:
-!
 !        H10      H9   H14,15
 !         \      /      \
 !          C5---C4       C13---H16
@@ -69,9 +57,6 @@
 !          C1---C2
 !         /      \
 !        H7       H8
-!=================================================================
-
-!=================================================================
 ! *def pot
 !    Main PES subroutine for calculating potential energies and
 !      gradients of thioanisole. Designed to interface with ANT.
@@ -96,16 +81,16 @@
 !          dvec(i,j,k,l) = component of coupling between adiabatic
 !          states k & l corresp. to coord. i of atom j
 !    cc: 3*3 diab. to adiab. matrix (unitless)
-!
-!=================================================================
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement C7H8S_S22_APRP, a diabatic potential matrix for C7H8S.
 module chempotpy_c7h8s_s22_aprp_dpem_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the C7H8S_S22_APRP diabatic potential matrix for C7H8S.
     subroutine evaluate( x, igrad, u, ug )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -136,7 +121,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                     u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
                 enddo
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 do jstate=1, nstates
                     u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
@@ -153,6 +138,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             enddo
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot.
     subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         implicit none
@@ -255,15 +241,15 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             gvv  = gvv*ang_bohr
             dvec = dvec*ang_bohr
         endif
+
         contains
-        !=================================================================
+
         ! *def calcqps
         !    Calculate primary & secondary internal coordinates.
         !  Input:
         !    x: Cartesian coordinates in Angstroms
         !  Output:
         !    qps: values of primary & secondary internal coordinates
-        !=================================================================
         !> @brief Evaluate calcqps.
         subroutine calcqps( qps, x )
             implicit none
@@ -276,7 +262,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             !--- qps(3) is obsolete, keep it just in case
             qps(3) = evalba(x, 3, 12, 13)
         end subroutine calcqps
-        !=================================================================
+
         ! *def calcqtp
         !    Calculate tertiary int. coord. as defined by QFF for potential.
         !  Input:
@@ -286,7 +272,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    nterm: number of terms in each qtp set
         !    itypeqtp: type of each term (and coord.)
         !    iqtplist: atom index list array
-        !=================================================================
         !> @brief Evaluate calcqtp.
         subroutine calcqtp( qtp, nterm, itypeqtp, iqtplist, x )
             implicit none
@@ -319,7 +304,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 enddo
             enddo
         end subroutine calcqtp
-        !=================================================================
+
         ! *def calcqtc
         !    Calculate nonred. tert. int. coord. for diab. coupl.
         !  Input:
@@ -330,7 +315,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    qtcsym: symmetry (a' or a") of qtc
         !    qtctyp: type of qtc (CSC bend or other)
         !    bmatqtc: B matrix, B(i, j) = dqtc(i)/dx(j)
-        !=================================================================
         !> @brief Evaluate calcqtc.
         subroutine calcqtc( qtc, nqtc, qtcsym, qtctyp, bmatqtc, x )
             implicit none
@@ -380,7 +364,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 enddo
             enddo
         end subroutine calcqtc
-        !=================================================================
+
         ! *def calcqr
         !    Calculate redundant q (qr) for later use of qtc
         !  Input:
@@ -390,7 +374,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    iqrlist: atom index list array
         !  Output:
         !    qr: values of qr
-        !=================================================================
         !> @brief Evaluate calcqr.
         subroutine calcqr( qr, x, nqr, itypeqr, iqrlist )
             implicit none
@@ -420,7 +403,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 end select
             enddo
         end subroutine calcqr
-        !=================================================================
+
         ! *def calu1_ps
         !    Calculate prim.+sec. U1 and its grad. w.r.t. Cartesians.
         !  Input:
@@ -431,7 +414,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    uu: primary+secondary U w/ calculated U1_PS added
         !    guu: grad. array w/ calculated dU1/dx added to guu(:,:,1,1)
-        !=================================================================
         !> @brief Evaluate calcu1_ps.
         subroutine calcu1_ps( uu, guu, x, qps )
             implicit none
@@ -501,7 +483,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             bmat(2,:)    = bmatrow(:)
             guu(:,:,1,1) = guu(:,:,1,1) +reshape(matmul(gradu1, bmat), (/3, natom/))
         end subroutine calcu1_ps
-        !=================================================================
+
         ! *def calu2_ps
         !    Calculate prim.+sec. U2 and its grad. w.r.t. Cartesians.
         !  Input:
@@ -512,7 +494,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    uu: primary+secondary U w/ calculated U2_PS added
         !    guu: grad. array w/ calculated dU2/dx added to guu(:,:,2,2)
-        !=================================================================
         !> @brief Evaluate calcu2_ps.
         subroutine calcu2_ps( uu, guu, x, qps )
             implicit none
@@ -573,7 +554,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             bmat(2,:)    = bmatrow(:)
             guu(:,:,2,2) = guu(:,:,2,2) +reshape(matmul(gradu2, bmat), (/3, natom/))
         end subroutine calcu2_ps
-        !=================================================================
+
         ! *def calu3_ps
         !    Calculate prim.+sec. U3 and its grad. w.r.t. Cartesians.
         !  Input:
@@ -584,7 +565,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    uu: primary+secondary U w/ calculated U3_PS added
         !    guu: grad. array w/ calculated dU3/dx added to guu(:,:,3,3)
-        !=================================================================
         !> @brief Evaluate calcu3_ps.
         subroutine calcu3_ps( uu, guu, x, qps )
             implicit none
@@ -649,7 +629,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             bmat(2,:)    = bmatrow(:)
             guu(:,:,3,3) = guu(:,:,3,3) +reshape(matmul(gradu3, bmat), (/3, natom/))
         end subroutine calcu3_ps
-        !=================================================================
+
         ! *def calu12_ps
         !    Calculate prim.+sec. U12 and its grad. w.r.t. Cartesians.
         !  Input:
@@ -660,7 +640,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    uu: primary+secondary U w/ calculated U12_PS added
         !    guu: grad. array w/ calculated dU12/dx added to guu(:,:,1,2)
-        !=================================================================
         !> @brief Evaluate calcu12_ps.
         subroutine calcu12_ps( uu, guu, x, qps )
             implicit none
@@ -710,7 +689,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             guu(:,:,1,2) = guu(:,:,1,2) +reshape(matmul(gradu12, bmat), (/3, natom/))
             guu(:,:,2,1) = guu(:,:,1,2)
         end subroutine calcu12_ps
-        !=================================================================
+
         ! *def calu13_ps
         !    Calculate prim.+sec. U13 and its grad. w.r.t. Cartesians.
         !  Input:
@@ -721,7 +700,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    uu: primary+secondary U w/ calculated U13_PS added
         !    guu: grad. array w/ calculated dU13/dx added to guu(:,:,1,3)
-        !=================================================================
         !> @brief Evaluate calcu13_ps.
         subroutine calcu13_ps( uu, guu, x, qps )
             implicit none
@@ -771,7 +749,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             guu(:,:,1,3) = guu(:,:,1,3) +reshape(matmul(gradu13, bmat), (/3, natom/))
             guu(:,:,3,1) = guu(:,:,1,3)
         end subroutine calcu13_ps
-        !=================================================================
+
         ! *def calu23_ps
         !    Calculate prim.+sec. U23 and its grad. w.r.t. Cartesians.
         !  Input:
@@ -782,7 +760,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    uu: primary+secondary U w/ calculated U23_PS added
         !    guu: grad. array w/ calculated dU23/dx added to guu(:,:,2,3)
-        !=================================================================
         !> @brief Evaluate calcu23_ps.
         subroutine calcu23_ps( uu, guu, x, qps )
             implicit none
@@ -830,7 +807,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             guu(:,:,2,3) = guu(:,:,2,3) +reshape(matmul(gradu23, bmat), (/3, natom/))
             guu(:,:,3,2) = guu(:,:,2,3)
         end subroutine calcu23_ps
-        !=================================================================
+
         ! *def calcuii_t
         !    Calculate tert. diab. pot. and its grad. w.r.t. Cartesians.
         !  Input:
@@ -843,7 +820,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    vt: tertiary Uii in hartrees
         !    gvt: grad. array w/ calculated dU/dx
-        !=================================================================
         !> @brief Evaluate calcuii_t.
         subroutine calcuii_t( vt, gvt, x, qps, qtp, nterm, itypeqtp, &
                 iqtplist )
@@ -862,6 +838,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                     iqtplist, i)
             enddo
         end subroutine calcuii_t
+
         !--- Actual core routine for calcuii_t
         !--- Parameters have the same meaning as in calcuii_t
         !> @brief Evaluate uii_t.
@@ -988,7 +965,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 gvt(:, :, istate, istate) = gradc(:,:,1)
             endif
         end subroutine uii_t
-        !=================================================================
+
         ! *def calcuij_t
         !    Calculate tert. diab. coupl. and its grad. w.r.t. Cart.
         !  Input:
@@ -1004,7 +981,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    uu: diab. matrix w/ calculated uij added
         !    guu: grad. array w/ calculated duij/dx added
-        !=================================================================
         !> @brief Evaluate calcuij_t.
         subroutine calcuij_t( uu, guu, x, qps, qtc, nqtc, &
                 qtcsym, qtctyp, bmatqtc )
@@ -1030,6 +1006,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             guu(:,:,2,3) = guu(:,:,2,3)+duij(:,:)
             guu(:,:,3,2) = guu(:,:,2,3)
         end subroutine calcuij_t
+
         !--- Actual core routine of calcuij_t
         !--- Parameters have the same meaning as in calcuij_t
         !> @brief Evaluate uij_t.
@@ -1129,14 +1106,14 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             do ir0 = 1, nr0
                 if( ir0 < nr0 )then
                     atten(ir0) = 1d0; datten(ir0) = 0d0
-                else if( ir0 .eq. nr0 )then
+                elseif( ir0 .eq. nr0 )then
                     if( r < r0(nr0) )then
                         atten(ir0)  = 1d0
                         datten(ir0) = 0d0
-                    else if( r .eq. r0(nr0) )then
+                    elseif( r .eq. r0(nr0) )then
                         atten(ir0)  = 1d0
                         datten(ir0) = 0d0
-                    else if( r > r0(nr0)+0.2 )then
+                    elseif( r > r0(nr0)+0.2 )then
                         atten(ir0)  = exp(-2d0*(r-r0(nr0)))
                         datten(ir0) = -2d0*exp(-2*(r-r0(nr0)))
                     else
@@ -1178,7 +1155,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 duij(:,:) = gradc(:,:,1,1)
             endif
         end subroutine uij_t
-        !=================================================================
+
         ! *def calcbornmayer
         !    Calculate Born-Mayer potential for nonbonded para C atoms
         !  Input:
@@ -1188,7 +1165,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    uu: diab. matrix w/ calculated B-M potential added
         !    guu: grad. array w/ calculated grad. of B-M pot. added
-        !=================================================================
         !> @brief Evaluate calcbornmayer.
         subroutine calcbornmayer( uu, guu, x )
             implicit none
@@ -1212,7 +1188,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 enddo
             enddo
         end subroutine calcbornmayer
-        !=================================================================
+
         ! *def calcFFterm
         !    Calculate one FF term and its gradient.
         !  Input:
@@ -1224,7 +1200,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    ee: energy
         !    gg: gradient w.r.t. the internal coordinate
-        !=================================================================
         !> @brief Evaluate calcFFterm.
         subroutine calcffterm( ee, gg, k, q0, n, q, itype )
             implicit none
@@ -1249,7 +1224,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 gg = k*(q-q0)
             end select
         end subroutine calcffterm
-        !=================================================================
+
         ! *def calcTDCterm
         !    Calculate tert. diab. coupl. term and its grad.,
         !      which is a nk-degree polynomial (w/ intercept=0).
@@ -1264,7 +1239,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    ee: diab. coupling
         !    gg: gradient w.r.t. the internal coordinate
-        !=================================================================
         !> @brief Evaluate calcTDCterm.
         subroutine calctdcterm( ee, gg, k, nk, q0, q, ityp )
             implicit none
@@ -1301,7 +1275,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 gg = -gg*sin(qq) /180d0*pi
             end select
         end subroutine calctdcterm
-        !=================================================================
+
         ! *def calctent1
         !    Calculate tent func. and its grad.
         !                        (for interpolating R)
@@ -1313,7 +1287,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    t: tent function value (unitless)
         !    dtdq: dt/dq
-        !=================================================================
         !> @brief Evaluate calctent1.
         subroutine calctent1( t, dtdq, q, q0, i, j, k, nq0 )
             implicit none
@@ -1323,16 +1296,16 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             if( i .eq. 0 )then
                 if( q < q0(j) )then
                     t = 1d0; dtdq = 0d0
-                else if( q > q0(k) )then
+                elseif( q > q0(k) )then
                     t = 0d0; dtdq = 0d0
                 else
                     call tent1(t, dtdq, q, q0(k), q0(j))
                 endif
                 !--- if j is the last anchor point
-            else if( k > nq0 )then
+            elseif( k > nq0 )then
                 if( q > q0(j) )then
                     t = 1d0; dtdq = 0d0
-                else if( q < q0(i) )then
+                elseif( q < q0(i) )then
                     t = 0d0; dtdq = 0d0
                 else
                     call tent1(t, dtdq, q, q0(i), q0(j))
@@ -1340,13 +1313,14 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             else
                 if( q < q0(i).or.q > q0(k) )then
                     t = 0d0; dtdq = 0d0
-                else if( q < q0(j) )then
+                elseif( q < q0(j) )then
                     call tent1(t, dtdq, q, q0(i), q0(j))
                 else
                     call tent1(t, dtdq, q, q0(k), q0(j))
                 endif
             endif
         end subroutine calctent1
+
         !--- called by calctent1
         !--- tent(q1) = 0, tent(q2) = 1
         !> @brief Evaluate tent1.
@@ -1359,7 +1333,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             t    = dq1**4/(dq1**4+dq2**4)
             dtdq = ( 4*dq1**3*(dq1**4+dq2**4)-4*dq1**4*(dq1**3+dq2**3) ) / (dq1**4+dq2**4)**2
         end subroutine tent1
-        !=================================================================
+
         ! *def evalBL
         !    Get bond length of atoms i and j.
         !  Input:
@@ -1367,7 +1341,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    i, j: atom indices
         !  Return:
         !    bond length in Angstroms
-        !=================================================================
         !> @brief Evaluate evalBL.
         double precision function evalbl( x, i, j )
             implicit none
@@ -1377,7 +1350,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             r(:)   = x(:,i)-x(:,j)
             evalbl = sqrt(dot_product(r, r))
         end function evalbl
-        !=================================================================
+
         ! *def evalBA
         !    Get bond angle of atoms i ,j, k.
         !  Input:
@@ -1385,7 +1358,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    i, j, k: atom indices
         !  Return:
         !    bond angle in radians
-        !=================================================================
         !> @brief Evaluate evalBA.
         double precision function evalba( x, i, j, k )
             implicit none
@@ -1398,13 +1370,13 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             !--- avoid numerical problem
             if( cosba > 1 )then
                 evalba = 0d0
-            else if( cosba < -1 )then
+            elseif( cosba < -1 )then
                 evalba = pi
             else
                 evalba = acos(cosba)
             endif
         end function evalba
-        !=================================================================
+
         ! *def evalTO
         !    Get torsion of atoms i ,j, k, l.
         !  Input:
@@ -1412,7 +1384,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    i, j, k, l: atom indices
         !  Return:
         !    torsion in radians
-        !=================================================================
         !> @brief Evaluate evalTO.
         double precision function evalto( x, i, j, k, l )
             implicit none
@@ -1442,13 +1413,13 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             !--- avoid numerical problem
             if( costo > 1 )then
                 evalto = 0d0
-            else if( costo < -1 )then
+            elseif( costo < -1 )then
                 evalto = pi
             else
                 evalto = sign*acos(costo)
             endif
         end function evalto
-        !=================================================================
+
         ! *def evalOB
         !    Get out-of-plane bend of atoms i ,j, k, l.
         !  Input:
@@ -1456,7 +1427,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    i, j, k, l: atom indices
         !  Return:
         !    oop bend in radians
-        !=================================================================
         !> @brief Evaluate evalOB.
         double precision function evalob( x, i, j, k, l )
             implicit none
@@ -1473,13 +1443,13 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             !--- avoid numerical problem
             if( sinob > 1 )then
                 evalob = pi/2
-            else if( sinob < -1 )then
+            elseif( sinob < -1 )then
                 evalob = -pi/2
             else
                 evalob = asin(sinob)
             endif
         end function evalob
-        !=================================================================
+
         ! *def evalOD
         !    Get out-of-plane distance of atoms i ,j, k, l.
         !  Input:
@@ -1487,7 +1457,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    i, j, k, l: atom indices
         !  Return:
         !    oop distance in Angstroms
-        !=================================================================
         !> @brief Evaluate evalOD.
         double precision function evalod( x, i, j, k, l )
             implicit none
@@ -1501,7 +1470,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             sinjik = sin(evalba(x, j, i, k))
             evalod = abs(dot_product(ril, eijxeik)/sinjik)
         end function evalod
-        !=================================================================
+
         ! *def evalSP1
         !    Get a special coordinate to replace torsion CCSC
         !  Input:
@@ -1509,7 +1478,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    i, j, k, l, m: atom indices
         !  Return:
         !    The coordinate
-        !=================================================================
         !> @brief Evaluate evalSP1.
         double precision function evalsp1( x, i, j, k, l, m )
             implicit none
@@ -1540,20 +1508,19 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             !--- avoid numerical problem
             if( cossp1 > 1 )then
                 evalsp1 = 0d0
-            else if( cossp1 < -1 )then
+            elseif( cossp1 < -1 )then
                 evalsp1 = pi
             else
                 evalsp1 = sgn*acos(cossp1)
             endif
         end function evalsp1
-        !=================================================================
+
         ! *def xprod
         !    Cross product of two 3D vectors.
         !  Input:
         !    a(3), b(3): two vectors
         !  Return:
         !    axb(3): = a x b
-        !=================================================================
         !> @brief Evaluate xprod.
         subroutine xprod( axb, a, b )
             implicit none
@@ -1562,7 +1529,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             axb(2) = a(3)*b(1)-a(1)*b(3)
             axb(3) = a(1)*b(2)-a(2)*b(1)
         end subroutine xprod
-        !=================================================================
+
         ! *def diagonalize
         !    Diagonalize a matrix and get all eigen-values and -vectors.
         !  Input:
@@ -1571,7 +1538,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    eigval: ndim vector containing eigenvalues
         !    eigvec: ndim*ndim matrix containing eigenvectors
-        !=================================================================
         !> @brief Evaluate diagonalize.
         subroutine diagonalize( eigval, eigvec, mat, ndim )
             implicit none
@@ -1594,7 +1560,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 stop
             endif
         end subroutine diagonalize
-        !=================================================================
+
         ! *def calcbmat
         !    Calculate a row of B matrix for an internal coordinate.
         !  Input:
@@ -1603,7 +1569,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    inttype: type of the internal coordinate
         !  Output:
         !    bmatrow: row of B matrix
-        !=================================================================
         !> @brief Evaluate calcbmat.
         subroutine calcbmat( bmatrow, x, iatomlist, inttype )
             implicit none
@@ -1843,7 +1808,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 enddo
             end select
         end subroutine calcbmat
-        !=================================================================
+
         ! *def assignqtp
         !    Assign attributes of tert. int. for potentials
         !  Input:
@@ -1852,9 +1817,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    nterm: number of terms in each qtp set
         !    itypeqtp: type of each term (and coord.)
         !    iqtplist: atom index list array
-        !
         !  ~200 lines of params
-        !=================================================================
         !> @brief Evaluate assignqtp.
         subroutine assignqtp( nterm, itypeqtp, iqtplist )
             implicit none
@@ -2023,7 +1986,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             iqtplist(1:4, 67, 2) = (/14, 15, 16, 13/)
             !--- END generated by 'python gen_qtp.py qr_tert_pot_2.txt'
         end subroutine assignqtp
-        !=================================================================
+
         ! *def assignqr
         !    Assign attributes of redundant q (qr) for later use of qtc
         !  Input:
@@ -2032,9 +1995,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    nqr: number of qr
         !    itypeqr: type of each qr
         !    iqrlist: atom index list array
-        !
         !  ~50 lines of params
-        !=================================================================
         !> @brief Evaluate assignqr.
         subroutine assignqr( nqr, itypeqr, iqrlist )
             implicit none
@@ -2109,7 +2070,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             iqrlist(1:4,55) = (/12, 4, 2, 3/)
             !--- END generated by 'python gen_qr_forUij-t.py rdef0.txt'
         end subroutine assignqr
-        !=================================================================
+
         ! *def assignqnr
         !    Assign attributes of nonredund. q (qnr) for later use of qtc
         !  Input:
@@ -2119,9 +2080,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    lcindex: index of qr involved in lin.comb. to get each qnr
         !    lccoef: coefficients of lin.comb. to get each qnr
         !    nlc: number of terms in lin.comb. to get each qnr
-        !
         !  ~200 lines of params
-        !=================================================================
         !> @brief Evaluate assignqnr.
         subroutine assignqnr( nqnr, lcindex, lccoef, nlc )
             implicit none
@@ -2299,7 +2258,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 (/  1.00000/)
             !--- END generated by python gen_qnr_forUij-t.py intnrdef.txt
         end subroutine assignqnr
-        !=================================================================
+
         ! *def assignqtc
         !    Assign attributes of internal coord. for tert. coupl. (qtc)
         !  Input:
@@ -2309,7 +2268,6 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    qtcsym: symmetry (a' or a") of qtc
         !    qnrindex: qnr index to which each qtc corresponds
         !    qtctyp: type of qtc; used for choosing form of Uij[3] term
-        !=================================================================
         !> @brief Evaluate assignqtc.
         subroutine assignqtc( nqtc, qtcsym, qnrindex, qtctyp )
             implicit none
@@ -2324,7 +2282,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
             !---  1=a', 2=a"
             qtcsym(1:nqtc) = (/2, 2, 2, 2, 1, 1, 1, 1, 2, 1, 2/)
         end subroutine assignqtc
-        !=================================================================
+
         ! *def assignparamuii_t
         !    Assign tert. FF parameters to param. arrays
         !  Input:
@@ -2333,9 +2291,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !    k: force constants
         !    q0: rest values
         !    n: multiplicities (for torsion) or dummy (for others)
-        !
         !  ~2200 lines of params
-        !=================================================================
         !> @brief Evaluate assignparamuii_t.
         subroutine assignparamuii_t( k, q0, n, istate )
             implicit none
@@ -4533,7 +4489,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
                 !--- END generated by 'gen_FFparam.py'
             end select
         end subroutine assignparamuii_t
-        !=================================================================
+
         ! *def assignparamuij_t
         !    Assign param. for tert. couplings
         !  Input:
@@ -4545,10 +4501,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
         !  Output:
         !    k: force coefficients
         !    qtc0: rest values
-        !
         !  ~400 lines of params
-        !=================================================================
-        !***
         !> @brief Evaluate assignparamuij_t.
         subroutine assignparamuij_t( k, qtc0, nqtc, nk, nr0, nphi0, istate )
             implicit none
@@ -4921,7 +4874,7 @@ module chempotpy_c7h8s_s22_aprp_dpem_pes
     end subroutine pot
 end module chempotpy_c7h8s_s22_aprp_dpem_pes
 
-!> @brief Preserve the historical Python-facing dpem entry point.
+!> @brief Expose C7H8S_S22_APRP through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_c7h8s_s22_aprp_dpem_pes, only: evaluate
     implicit none

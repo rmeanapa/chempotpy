@@ -1,10 +1,33 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Embedded atom
+!   Common name:                   CleR
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  For a recent
+!           discussion of this potential, see:
+!           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!           and D. G. Truhlar, "Analytic Potentials Energy Functions
+!           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  References: F. Cleri and V. Rosato, Phys. Rev. B 48, 22 (1993).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_cler_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,43 +57,16 @@ module chempotpy_aln_cler_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_CleR potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Embedded atom
-        !   Common name:                   CleR
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  For a recent
-        !           discussion of this potential, see:
-        !           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !           and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  References: F. Cleri and V. Rosato, Phys. Rev. B 48, 22 (1993).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: a, a0, dx, dy, dz, p, q, r0, rel, rr, si, u, ud, udn, udw, &
-            & ur, urr, v, x, y, z
+        double precision :: a, a0, dx, dy, dz, p, q, r0, rel, rr, si, u, ud, udn, udw, ur, urr, v, x(maxatom), y(maxatom), &
+            & z(maxatom)
         integer :: i, j, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom)
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
-        !
         !  calculate the potential energy
-        !
         v  = 0d0
         a  = 0.1221/autoev
         si = 1.316/autoev
@@ -112,7 +108,7 @@ module chempotpy_aln_cler_pes
     end subroutine pot
 end module chempotpy_aln_cler_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_CleR through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_cler_pes, only: evaluate

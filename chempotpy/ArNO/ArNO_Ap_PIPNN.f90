@@ -1,14 +1,14 @@
-!======================================================================
 !       1A' and 1A'' PESs of ArNO at the MRCI+Q level
-!======================================================================
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement ArNO_Ap_PIPNN, a potential energy surface for ArNO.
 module chempotpy_arno_ap_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the ArNO_Ap_PIPNN potential energy surface for ArNO.
     subroutine evaluate( x, igrad, path, p, g, d )
         use chempotpy_geometry,     only: cartesian_distance
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom
@@ -57,7 +57,9 @@ module chempotpy_arno_ap_pipnn_pes
         do istate=1, nstates
             p(istate) = vtm
         enddo
+
         contains
+
         !> @brief Evaluate ArNOpes.
         subroutine arnopes( r_no, r_arn, cthx, vtot, vint, istat )
             implicit none
@@ -106,10 +108,10 @@ module chempotpy_arno_ap_pipnn_pes
             integer, parameter              :: l     = 100
             character(len=1024), intent(in) :: path
             integer                         :: file_unit_98
-            double precision                :: dal, dy1, dyn, r1m, r2m, ra1, ra2, rra1, rra2, th1, thm, tth1, ve1, ve2, vmin1, xt, y, y2
+            double precision                :: dal, dy1, dyn, r1m, r2m, ra1, ra2, rra1, rra2, th1, thm, tth1, ve1, ve2, vmin1, &
+                & xt(m), y(m), y2(l)
             integer                         :: i, ii, j, k
             character(len=1024)             :: file_path1
-            dimension xt(m), y(m), y2(l)
             vmin1      = -656.852768990000d0
             dy1        = 1.0d30; dyn = 1.0d30
             file_path1 = trim(path)//"/ArNO/spline.dat"
@@ -168,8 +170,6 @@ module chempotpy_arno_ap_pipnn_pes
         !> @brief Evaluate spl3.
         subroutine spl3( r1, th, r2, v, istate )
             implicit none
-            double precision   :: ddhy, ddny, dds1, dds2, dds3, ddty, dhy, dny, ds1, ds2, ds3, dty, dy1, dyn, h1, h2, h3, r1, r1a, r2, s1, s2, s3, ss, sss, th, v, xt, y, y2, y3, yw2
-            integer            :: i, iop, istate, j, k, nh, nr1, nthth
             integer, parameter :: nroh1 = 17
             integer, parameter :: nth   = 13
             integer, parameter :: nroh2 = 70
@@ -177,11 +177,10 @@ module chempotpy_arno_ap_pipnn_pes
             integer, parameter :: m     = 100
             integer, parameter :: n     = 100
             integer, parameter :: l     = 100
-            dimension xt(m)
-            dimension dty(l), ddty(l), s1(l), ds1(l), dds1(l), h1(l)
-            dimension dny(n), ddny(n), s2(l), ds2(l), dds2(l), h2(n)
-            dimension dhy(m), ddhy(m), s3(l), ds3(l), dds3(l), h3(m)
-            dimension y(m), ss(m), sss(m), y2(l)
+            double precision   :: ddhy(m), ddny(n), dds1(l), dds2(l), dds3(l), ddty(l), dhy(m), dny(n), ds1(l), ds2(l), ds3(l), &
+                & dty(l), dy1, dyn, h1(l), h2(n), h3(m), r1, r1a, r2, s1(l), s2(l), s3(l), ss(m), sss(m), th, v, xt(m), y(m), y2(l), &
+                & y3, yw2
+            integer            :: i, iop, istate, j, k, nh, nr1, nthth
             !        do iop=istate,istate
             dy1 = 1.0d30; dyn = 1.0d30
             iop = istate
@@ -236,9 +235,8 @@ module chempotpy_arno_ap_pipnn_pes
         !> @brief Evaluate splint.
         subroutine splint( xa, ya, y2a, n, x, y )
             implicit none
-            double precision :: a, b, h, x, xa, y, y2a, ya
+            double precision :: a, b, h, x, xa(n), y, y2a(n), ya(n)
             integer          :: k, khi, klo, n
-            dimension xa(n), y2a(n), ya(n)
             klo = 1
             khi = n
             do while( khi-klo .gt. 1 )
@@ -258,11 +256,9 @@ module chempotpy_arno_ap_pipnn_pes
         !> @brief Evaluate spline.
         subroutine spline( x, y, n, yp1, ypn, y2 )
             implicit none
-            double precision :: p, qn, sig, u, un, x, y, y2, yp1, ypn
-            integer          :: i, k, n
-            dimension x(n), y(n), y2(n)
             integer, parameter :: nmax = 100
-            dimension u(nmax)
+            double precision :: p, qn, sig, u(nmax), un, x(n), y(n), y2(n), yp1, ypn
+            integer          :: i, k, n
             if( yp1 .gt. .99d30 )then
                 y2(1) = 0.0d0
                 u(1)  = 0.0d0
@@ -292,9 +288,9 @@ module chempotpy_arno_ap_pipnn_pes
         !> @brief Evaluate longpes.
         subroutine longpes( r_no, r_arn, cthx, v, istat )
             implicit none
-            double precision :: a1, a2, amn, amo, cth, cthx, de, dy1, dyn, r, r1, r2, r_arn, r_no, s, t, tocm, v, vmin1, x, y, y2
+            double precision :: a1(4,17), a2(4,17), amn, amo, cth, cthx, de(17), dy1, dyn, r, r1, r2, r_arn, r_no, s, t, tocm, v, &
+                & vmin1, x(17), y(17), y2(17)
             integer          :: i, istat
-            dimension x(17), a1(4,17), a2(4,17), y(17), y2(17), de(17)
             !       R in angstrom
             vmin1 = -656.852768990000d0
             amn   = 14.0030740d0
@@ -518,9 +514,8 @@ module chempotpy_arno_ap_pipnn_pes
         !> @brief Evaluate VFUNCS.
         subroutine vfuncs( theta, r, c, v )
             implicit none
-            double precision :: afunc, c, cth, f, r, theta, v
+            double precision :: afunc(4), c(4), cth, f, r, theta, v
             integer          :: i
-            dimension afunc(4), c(4)
             cth = theta
             call fval(r, cth, f)
             afunc(1) = f/r**6
@@ -552,9 +547,8 @@ module chempotpy_arno_ap_pipnn_pes
         !> @brief Evaluate pes1D.
         subroutine pes1d( r_no, v, istat )
             implicit none
-            double precision :: a1, a2, de, dy1, dyn, r2, r_no, tocm, v, vmin1, x, y, y2
+            double precision :: a1(4,17), a2(4,17), de(17), dy1, dyn, r2, r_no, tocm, v, vmin1, x(17), y(17), y2(17)
             integer          :: i, istat
-            dimension x(17), a1(4,17), a2(4,17), y(17), y2(17), de(17)
             vmin1 = -656.852768990000d0
             r2    = r_no
             tocm  = 219474.63067d0
@@ -631,7 +625,7 @@ module chempotpy_arno_ap_pipnn_pes
     end subroutine evaluate
 end module chempotpy_arno_ap_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose ArNO_Ap_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_arno_ap_pipnn_pes, only: evaluate
     implicit none

@@ -8,20 +8,21 @@
 !   Notes:                      -Diatomic potentials contain dispersion terms
 !                               -Compile the subroutine requires LAPACK
 !                                subroutine DSYEV
-!
 !   Input:                      Cartesian coordinates in bohr
 !   Output:                     Adiabatic energies (e) in hartrees,
 !                               derivatives of adiabataic energies (g) in
 !                               hartrees/bohr, and NACs (h) in inverse bohrs.
 !   Reference:
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement O3_6_5Ap_2023a, a diabatic potential matrix for O3.
 module chempotpy_o3_6_5ap_2023a_dpem_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the O3_6_5Ap_2023a diabatic potential matrix for O3.
     subroutine evaluate( x, igrad, u, ug )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -50,6 +51,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
         u  = u*legacy_hartree_to_electronvolt
         ug = ug*51.422067
     end subroutine evaluate
+
     !> @brief Evaluate energy_gradient.
     subroutine energy_gradient( x, e, g, h, t, u, ug, n, ns )
         ! n    - number of atoms: 3
@@ -104,7 +106,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
         g(:,:,:)    = g(:,:,:)*0.0367502d0
         ug(:,:,:,:) = ug(:,:,:,:)*0.0367502d0
     end subroutine energy_gradient
-    !===========================
+
     ! back propagation
     !> @brief Evaluate backprop.
     subroutine backprop( r, n, ns, e, g, h, u, ur, t, coeff_l0, coeff_l1, coeff_l2, coeff_l3, &
@@ -254,7 +256,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             enddo
         enddo
     end subroutine backprop
-    !=========================
+
     !activation function, gelu
     !> @brief Evaluate activation_gelu.
     subroutine activation_gelu( z, a, n )
@@ -266,6 +268,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.d0)))
         enddo
     end subroutine activation_gelu
+
     !> @brief Evaluate activation_derivative_gelu.
     subroutine activation_derivative_gelu( z, a, b, n )
         implicit none
@@ -277,7 +280,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
         enddo
     end subroutine activation_derivative_gelu
-    !=============================
+
     !activation functional heviside
     ! A(r)*B(r)*dpem_layer
     ! the f,a,b parameters are 2, -2, and 7.5
@@ -305,7 +308,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             a(i) = ar*br*z(i)
         enddo
     end subroutine activation_functional_heviside
-    !=============================
+
     !add activation functional derivative terms
     !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate activation_functional_derivative_terms.
@@ -337,7 +340,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             g(i,:) = dfdr(i)*z(:)+ar*br*g(i,:)
         enddo
     end subroutine activation_functional_derivative_terms
-    !==============================
+
     ! used to compute index in DPEM
     !> @brief Evaluate sumover.
     subroutine sumover( a, b, sum1 )
@@ -350,7 +353,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             sum1 = sum1+num
         enddo
     end subroutine sumover
-    !==============================
+
     ! matrix diagonalization
     ! subroutine diagonalize(n,A_ss,B_ss,U_ss)
     !> @brief Evaluate diagonalize.
@@ -382,7 +385,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
         !     B_ss(i,i)=EV_s(i)
         !   enddo
     end subroutine diagonalize
-    !==========================
+
     ! convert de/dr to de/dxyz
     !> @brief Evaluate grad_r_to_xyz.
     subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
@@ -404,7 +407,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             g(:,i,3) = gx(:,3*(i-1)+3)
         enddo
     end subroutine grad_r_to_xyz
-    !==========================
+
     ! convert d/dr to d/dxyz for NAC
     !> @brief Evaluate nac_r_to_xyz.
     subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
@@ -426,7 +429,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             h(:,:,i,3) = hx(:,:,3*(i-1)+3)
         enddo
     end subroutine nac_r_to_xyz
-    !==========================
+
     ! convert xyz to r
     !> @brief Evaluate convert_xyz_to_r.
     subroutine convert_xyz_to_r( x, r, n )
@@ -437,7 +440,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
         double precision, intent(out) :: r(n*(n-1)/2)
         call all_pair_distances(x, r)
     end subroutine convert_xyz_to_r
-    !=========================
+
     ! matrix vector product
     !> @brief Evaluate mproduct.
     subroutine mproduct( a, b, c, l, m, n )
@@ -455,7 +458,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             enddo
         enddo
     end subroutine mproduct
-    !===========================
+
     ! assign coefficients
     !> @brief Evaluate assign_coeff_bias.
     subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4 )
@@ -7810,6 +7813,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
         bias_l4(20) = -7.4511907995e-02
         bias_l4(21) = -2.5444023311e-02
     end subroutine assign_coeff_bias
+
     !> @brief Evaluate ev2gm2m.
     subroutine ev2gm2m( dist, v2b, g2b, imol, igrad, n )
         implicit none
@@ -7838,17 +7842,14 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             endif
         enddo
     end subroutine ev2gm2m
+
     !> @brief Evaluate ev2gm2.
     subroutine ev2gm2( r, v, grad, imol, igrad )
-        !
         ! Compute the diatomic potential of groupd-state triplet O2
-        !
         ! References: J. Chem. Phys. 132, 074307 (2010)
-        !
         ! Input:  r      interatomic distance in Angstrom
         ! Output: V      potential in kcal/mol
         !         grad   gradient (kcal/mol)/Angstrom
-        !
         implicit none
         integer, intent(in)           :: imol, igrad
         double precision, intent(in)  :: r
@@ -7898,7 +7899,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
                 as(5) = -1.54421054d4
                 as(6) = 5.10053268d3
                 as(7) = 1.52168614d4
-            else if( (i .eq. 3).or.(i .eq. 4).or.(i .eq. 5) )then
+            elseif( (i .eq. 3).or.(i .eq. 4).or.(i .eq. 5) )then
                 ! O2 C 3Del_u
                 alpha = 1.1139979735d0
                 beta  = 1.6318488356d0
@@ -7910,7 +7911,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
                 as(5) = 2.6278224100d6
                 as(6) = -6.8125724300d7
                 as(7) = 4.2103491800d9
-            else if( i .eq. 6 )then
+            elseif( i .eq. 6 )then
                 ! O2 A 3Sig_u^+
                 alpha = 1.2488894868d0
                 beta  = 1.6163073021d0
@@ -7945,23 +7946,20 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             endif
         enddo
     end subroutine ev2gm2
+
     !> @brief Evaluate d3disp.
     subroutine d3disp( dist, disp, dispdr, igrad, imol )
         ! Dispersion correction based on Grimme's D3(BJ) calculation for
         ! diatomic pairs
-        !
         ! Several subroutines of DFTD3 V3.1 Rev 1 by Grimme were merged into
         ! subroutine edisp and they have been heavily modified to calculate only
         ! that dispersion energy correction that is needed.
-        !
         ! S. Grimme, J. Antony, S. Ehrlich and H. Krieg
         ! J. Chem. Phys, 132 (2010), 154104
         ! and
         ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
         ! 1456-1465
-        !
         ! The C6 values are fixed.
-        !
         implicit none
         double precision :: cn(2), s6, s8, rs6, rs8
         double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -8012,6 +8010,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
             dist(i) = dist(i)*autoang
         enddo
     end subroutine d3disp
+
     ! compute energy
     !> @brief Evaluate edisp.
     subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
@@ -8092,7 +8091,7 @@ module chempotpy_o3_6_5ap_2023a_dpem_pes
     end subroutine edisp
 end module chempotpy_o3_6_5ap_2023a_dpem_pes
 
-!> @brief Preserve the historical Python-facing dpem entry point.
+!> @brief Expose O3_6_5Ap_2023a through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_o3_6_5ap_2023a_dpem_pes, only: evaluate
     implicit none

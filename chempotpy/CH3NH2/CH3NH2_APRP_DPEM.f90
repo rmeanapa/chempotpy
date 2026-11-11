@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !   System:          CH3NH2
 !   Functional form: Anchor-Points Reactive Potential (APRP)
 !                               (2x2 diabatic potential energy matrix)
@@ -7,10 +6,8 @@
 !   Number of bodies:              7
 !   Number of electronic surfaces: 2
 !   Interface:                     Section-2
-!
 !   Reference: Kelsey A. Parker,and Donald G. Truhlar
 !              J. Chem. Phys. 152, 244309 (2020).
-!
 !   Notes:
 !    1. This routine calculates two coupled singlet PESs for
 !       nonadiabatic NH photodissociation of CH3NH2 to produce
@@ -21,19 +18,16 @@
 !    2. Only the first H is allowed to dissociate.
 !    3. The final version of this potential was added to POTLIB
 !       in March, 2020.
-!
 !   Numbering of atoms:
 !       H5         H1
 !         \       /
 !       H6--C4---N3
 !         /       \
 !       H7         H2
-!
 !   Units:      input:   angstrom for coordinates
 !               output:  hartree for energy
 !                        hartree/bohr for gradients
 !                        1/bohr for nonadiabatic coupling vector
-!
 !   Input:
 !   igrad = 0           Energy only calculation
 !         = 1           Energy + Analytic gradient
@@ -42,7 +36,6 @@
 !   xx(1,i)             X coordinate of atom i
 !   xx(2,i)             Y coordinate of atom i
 !   xx(3,i)             Z coordinate of atom i
-!
 !   Output:
 !   uu(j,j)             diabatic potential of diabatic state j
 !   uu(j,k)             diabatic coupling between state j and k
@@ -58,7 +51,6 @@
 !                       coupling between state j and k at atom i
 !   guu(3,i,j,k)        Z component of the gradients of diabatic
 !                       coupling between state j and k at atom i
-!
 !   vv(j)               adiabatic potential of adiabatic state j
 !   gvv(1,i,j)          X component of the gradients of adiabatic
 !                       potential of state j at atom i
@@ -75,18 +67,18 @@
 !   eigvec(2,2)         2*2 orthogonal matrix diagonalizing UU matrix
 !                       (CC^T*UU*CC yield diagonal matrix with adiabatic
 !                       energies as diagonal elements)
-!
 !   Note:       LAPACK library is needed to diagonize diabatic potential
 !               matrix (UU) to yield adiabatic potenitials VV(2)
-!
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement CH3NH2_APRP, a diabatic potential matrix for CH3NH2.
 module chempotpy_ch3nh2_aprp_dpem_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the CH3NH2_APRP diabatic potential matrix for CH3NH2.
     subroutine evaluate( x, igrad, u, ug )
         use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
         implicit none
@@ -123,7 +115,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                     u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
                 enddo
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 do jstate=1, nstates
                     u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
@@ -140,6 +132,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             enddo
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the CH3NH2_APRP_DPEM potential.
     subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
         implicit none
@@ -217,15 +210,12 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             guu(1,i,1,1) = (dux(i,1)/evtohartree)*bohrtoang
             guu(2,i,1,1) = (duy(i,1)/evtohartree)*bohrtoang
             guu(3,i,1,1) = (duz(i,1)/evtohartree)*bohrtoang
-            !
             guu(1,i,2,2) = (dux(i,2)/evtohartree)*bohrtoang
             guu(2,i,2,2) = (duy(i,2)/evtohartree)*bohrtoang
             guu(3,i,2,2) = (duz(i,2)/evtohartree)*bohrtoang
-            !
             guu(1,i,1,2) = (dux(i,3)/evtohartree)*bohrtoang
             guu(2,i,1,2) = (duy(i,3)/evtohartree)*bohrtoang
             guu(3,i,1,2) = (duz(i,3)/evtohartree)*bohrtoang
-            !
             guu(1,i,2,1) = (dux(i,3)/evtohartree)*bohrtoang
             guu(2,i,2,1) = (duy(i,3)/evtohartree)*bohrtoang
             guu(3,i,2,1) = (duz(i,3)/evtohartree)*bohrtoang
@@ -239,7 +229,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                 do ist=1, 2
                     gvv(i,j,ist) = tmpmat22(ist,ist)
                 enddo
-                !
                 ist               = 1
                 jst               = 2
                 dvec(i,j,ist,jst) = tmpmat22(ist,jst)/ (vv(jst)-vv(ist))
@@ -247,6 +236,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             enddo
         enddo
     end subroutine pot
+
     !> @brief Evaluate dihedr1 for the CH3NH2_APRP_DPEM potential.
     double precision function dihedr1( i, j, k, l, x, y, z )
         ! Evaluate the dihedral angle between atoms i, j, k, and l
@@ -293,11 +283,9 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ekl(1) = (x(l)-x(k))/rkl
         ekl(2) = (y(l)-y(k))/rkl
         ekl(3) = (z(l)-z(k))/rkl
-        !
         ! u = eij*ejk normal vector in plane i-j-k
         ! v = ejk*ekl Normal vector in plane j-k-l
         ! w = u*v used to determine the sign of dihedral angle
-        !
         call xprod1(eij, ejk, u)
         call xprod1(ejk, ekl, v)
         call xprod1(u, v, w)
@@ -319,6 +307,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        dihedr=2.0d0*pi+dihedr
         !      endif
     end function dihedr1
+
     !> @brief Evaluate bndlen for the CH3NH2_APRP_DPEM potential.
     double precision function bndlen( i, j, x, y, z )
         !* Function to evaluate the bond length between atom i and j
@@ -336,6 +325,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             stop
         endif
     end function bndlen
+
     !> @brief Evaluate bndang for the CH3NH2_APRP_DPEM potential.
     double precision function bndang( i, j, k, x, y, z )
         !* Evaluate the bond angle between atoms i, j, and k
@@ -356,6 +346,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         call sprod(3, eji, ejk, a)
         bndang = acos(a)
     end function bndang
+
     !> @brief Evaluate xprod1 for the CH3NH2_APRP_DPEM potential.
     subroutine xprod1( x1, x2, x3 )
         !* Calculate cross product of x1 and x2 and return x3
@@ -367,6 +358,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         x3(2) = x1(3)*x2(1)-x1(1)*x2(3)
         x3(3) = x1(1)*x2(2)-x1(2)*x2(1)
     end subroutine xprod1
+
     !> @brief Evaluate sprod for the CH3NH2_APRP_DPEM potential.
     subroutine sprod( n, a, b, c )
         !* Calculate scalar product of a and b and return c
@@ -381,6 +373,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             c = c+a(i)*b(i)
         enddo
     end subroutine sprod
+
     !> @brief Evaluate convertit for the CH3NH2_APRP_DPEM potential.
     subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
         ! this subroutine deals with the tertiary derivatives and converts these
@@ -446,16 +439,13 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dx1(5) = dx1(5)+dk(11)*((x(5)-x(1))/rh1hx)
         dy1(5) = dy1(5)+dk(11)*((y(5)-y(1))/rh1hx)
         dz1(5) = dz1(5)+dk(11)*((z(5)-z(1))/rh1hx)
-        !!!!!!!!
         dx1(2) = dx1(2)+dk(12)*((x(2)-x(5))/rh2hx)
         dy1(2) = dy1(2)+dk(12)*((y(2)-y(5))/rh2hx)
         dz1(2) = dz1(2)+dk(12)*((z(2)-z(5))/rh2hx)
         dx1(5) = dx1(5)+dk(12)*((x(5)-x(2))/rh2hx)
         dy1(5) = dy1(5)+dk(12)*((y(5)-y(2))/rh2hx)
         dz1(5) = dz1(5)+dk(12)*((z(5)-z(2))/rh2hx)
-        !!!!
         ! 13th/14th dk COORD
-        !!!!
         ! H1
         dx1(1) = dx1(1)+dk(13)*dihedrix(1, 3, 4, 5, x, y, z)
         dy1(1) = dy1(1)+dk(13)*dihedriy(1, 3, 4, 5, x, y, z)
@@ -472,7 +462,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dx1(5) = dx1(5)+dk(13)*dihedrlx(1, 3, 4, 5, x, y, z)
         dy1(5) = dy1(5)+dk(13)*dihedrly(1, 3, 4, 5, x, y, z)
         dz1(5) = dz1(5)+dk(13)*dihedrlz(1, 3, 4, 5, x, y, z)
-        !!!!
         ! H2
         dx1(2) = dx1(2)+dk(14)*dihedrix(2, 3, 4, 5, x, y, z)
         dy1(2) = dy1(2)+dk(14)*dihedriy(2, 3, 4, 5, x, y, z)
@@ -533,6 +522,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dy1(4) = dy1(4)+dk(22)*dihedrky(1, 3, 4, 2, x, y, z)
         dz1(4) = dz1(4)+dk(22)*dihedrkz(1, 3, 4, 2, x, y, z)
     end subroutine convertit
+
     !> @brief Evaluate angder for the CH3NH2_APRP_DPEM potential.
     subroutine angder( x, y, z, i, j, k, dngx, dngy, dngz )
         ! This subroutine converts a bond angle derivative to XYZ
@@ -565,6 +555,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dngy(i) = cgo*( -(y(j)-y(k))*be -(((y(i)-y(j))/ra)*rb*to))/(be**2d0)
         dngz(i) = cgo*( -(z(j)-z(k))*be -(((z(i)-z(j))/ra)*rb*to))/(be**2d0)
     end subroutine angder
+
     !> @brief Evaluate disder for the CH3NH2_APRP_DPEM potential.
     subroutine disder( x, y, z, i, j, dngx, dngy, dngz )
         ! This subroutine converts a distance derivative to XYZ
@@ -584,6 +575,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dngy(j) = (y(j)-y(i))/bndlen(i, j, x, y, z)
         dngz(j) = (z(j)-z(i))/bndlen(i, j, x, y, z)
     end subroutine disder
+
     !> @brief Evaluate solver for the CH3NH2_APRP_DPEM potential.
     subroutine solver( igrad, ra1, ra2, qc, ii, nrap, ntap, ut, dut )
         ! Subroutine to evaluate the tertiary contributions to the
@@ -618,7 +610,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         double precision :: kcnha1(nrap,ntap), kcnha2(nrap,ntap)
         double precision :: kcnhb1(nrap,ntap), kcnhb2(nrap,ntap)
         double precision :: knch1(nrap,ntap), knch2(nrap,ntap)
-        !
         double precision :: jnhb1(nrap,ntap), jnhb2(nrap,ntap)
         double precision :: jnhb3(nrap,ntap)
         double precision :: jnc1(nrap,ntap), jnc2(nrap,ntap)
@@ -627,13 +618,10 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         double precision :: jcnha3(nrap,ntap)
         double precision :: jcnhb1(nrap,ntap), jcnhb2(nrap,ntap)
         double precision :: jcnhb3(nrap,ntap)
-        !
         double precision :: gnhb1(nrap,ntap), gnhb2(nrap,ntap)
         double precision :: gnhb3(nrap,ntap)
-        !
         double precision :: gnc1(nrap,ntap), gnc2(nrap,ntap)
         double precision :: gnc3(nrap,ntap)
-        !
         double precision :: v3, v4
         double precision :: torh1, torh2, rh1hx, rh2hx
         double precision :: ang1, ang2, ang3
@@ -713,7 +701,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             fa2 = -2.0d0
             v4=(fa1(ra1,ra2)*(ang1-dd2)**2d0) *exp(((len1-rr)**2d0)/fa2) +(fa1(ra1,ra2)*(ang2-dd2)**2d0) *exp(((len2- &
                 & rr)** 2d0)/fa2) +(fa1(ra1,ra2)*(ang3-dd2)**2d0) *exp(((len3-rr)**2d0)/fa2)
-        else if( ii .eq. 3 )then
+        elseif( ii .eq. 3 )then
             ! STRETCHES
             ! STRETCH 1 (NHB)
             vs = jnhb1(ra1,ra2)*exp(jnhb2(ra1,ra2) *(qc(1)-jnhb3(ra1,ra2))**2d0)
@@ -729,8 +717,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         endif
         ! COMBINE
         ut = vs+vb+u0+v3+v4
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !!!! GRADIENT
         if( igrad .eq. 1 )then
             if( (ii .eq. 1) .or. (ii .eq. 2) )then
@@ -768,13 +754,11 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                 dut(16) = 2d0*fa1(ra1,ra2)*(ang2-dd2) *exp(((len2-rr)**2d0)/fa2)
                 dut(17) = 2d0*fa1(ra1,ra2)*(ang3-dd2) *exp(((len3-rr)**2d0)/fa2)
                 dut(18) = (fa1(ra1,ra2)*(ang1-dd2)**2d0) *2d0*((len1-rr)/fa2)*exp(((len1-rr)**2d0)/fa2)
-                !
                 dut(19) = (fa1(ra1,ra2)*(ang2-dd2)**2d0) *2d0*((len2-rr)/fa2)*exp(((len2-rr)**2d0)/fa2)
-                !
                 dut(20) = (fa1(ra1,ra2)*(ang3-dd2)**2d0) *2d0*((len3-rr)/fa2)*exp(((len3-rr)**2d0)/fa2)
                 dut(11) = 0d0
                 dut(13) = 0d0
-            else if( ii .eq. 3 )then
+            elseif( ii .eq. 3 )then
                 ! STRETCH 1 (NHB)
                 dut(1)=jnhb2(ra1,ra2)*(qc(1)-jnhb3(ra1,ra2))*2d0* jnhb1(ra1,ra2)*exp(jnhb2(ra1,ra2) *(qc(1)-jnhb3(ra1, &
                     & ra2))**2d0)
@@ -791,6 +775,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             endif
         endif
     end subroutine solver
+
     !> @brief Evaluate getV0 for the CH3NH2_APRP_DPEM potential.
     subroutine getv0( ii, nrap, ntap, v0 )
         ! subrountine gives constants in tertiary eqns
@@ -806,46 +791,41 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             v0(2,1) = -0.2243d0
             v0(2,2) = -0.0108d0
             v0(2,3) = -0.3548d0
-            !!!!!!!!!!!!!
             v0(3,1) = -0.1393d0
             v0(3,2) = -0.1971d0
             v0(3,3) = -0.4208d0
-            !!!!!!!!!!!!
             v0(4,1) = -0.5648d0
             v0(4,2) = -0.5648d0
             v0(4,3) = -0.5648d0
-        else if( ii .eq. 2 )then
+        elseif( ii .eq. 2 )then
             v0(1,1) = -0.1853d0
             v0(1,2) = -0.1269d0
             v0(1,3) = -0.3474d0
             v0(2,1) = -0.1265d0
             v0(2,2) = -0.1550d0
             v0(2,3) = -0.2869d0
-            !!!!!!!!!!!
             v0(3,1) = -0.1910d0
             v0(3,2) = -0.0865d0
             v0(3,3) = -0.0470d0
-            !!!!!!!!!!!
             v0(4,1) = -0.0481d0
             v0(4,2) = -0.0481d0
             v0(4,3) = -0.0481d0
-        else if( ii .eq. 3 )then
+        elseif( ii .eq. 3 )then
             v0(1,1) = -0.4000d0
             v0(1,2) = -0.2125d0
             v0(1,3) = -0.0093d0
             v0(2,1) = -0.1812d0
             v0(2,2) = -0.0606d0
             v0(2,3) = -0.0090d0
-            !!!!!!!!!!!!
             v0(3,1) = -5.0661d0
             v0(3,2) = -3.5468d0
             v0(3,3) = -0.0369d0
-            !!!!!!!!!!!
             v0(4,1) = -0.0000d0
             v0(4,2) = -0.0000d0
             v0(4,3) = -0.0000d0
         endif
     end subroutine getv0
+
     !> @brief Evaluate getpara for the CH3NH2_APRP_DPEM potential.
     subroutine getpara( ii, nrap, ntap, &
             & knhb1, knhb2, &
@@ -873,7 +853,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         double precision :: kcnha1(nrap,ntap), kcnha2(nrap,ntap)
         double precision :: kcnhb1(nrap,ntap), kcnhb2(nrap,ntap)
         double precision :: knch1(nrap,ntap), knch2(nrap,ntap)
-        !
         double precision :: jnhb1(nrap,ntap), jnhb2(nrap,ntap)
         double precision :: jnhb3(nrap,ntap)
         double precision :: jnc1(nrap,ntap), jnc2(nrap,ntap)
@@ -882,10 +861,8 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         double precision :: jcnha3(nrap,ntap)
         double precision :: jcnhb1(nrap,ntap), jcnhb2(nrap,ntap)
         double precision :: jcnhb3(nrap,ntap)
-        !
         double precision :: gnhb1(nrap,ntap), gnhb2(nrap,ntap)
         double precision :: gnhb3(nrap,ntap)
-        !
         double precision :: gnc1(nrap,ntap), gnc2(nrap,ntap)
         double precision :: gnc3(nrap,ntap)
         double precision :: ft1(nrap,ntap), fa1(nrap,ntap)
@@ -1174,7 +1151,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             fa1(2,1) = 0.5d0
             fa1(3,1) = fa1(3,2)
             fa1(4,1) = fa1(4,2)
-        else if( ii .eq. 2 )then
+        elseif( ii .eq. 2 )then
             ! STRETCH 1 (NHB)
             gnhb1(1,2) = 1.0d0
             gnhb1(2,2) = 1.0d0
@@ -1434,7 +1411,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             fa1(2,1) = 0.5d0
             fa1(3,1) = fa1(3,2)
             fa1(4,1) = fa1(4,2)
-        else if( ii .eq. 3 )then
+        elseif( ii .eq. 3 )then
             ! STRETCH 1 (NHB)
             jnhb1(1,2) = 1.4d0
             jnhb1(2,2) = 1.4d0
@@ -1585,6 +1562,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             jcnhb3(4,1) = jcnhb3(4,2)
         endif
     end subroutine getpara
+
     !> @brief Evaluate tert for the CH3NH2_APRP_DPEM potential.
     subroutine tert( igrad, ii, x, y, z, nrap, ntap, en, dx1, dy1, dz1 )
         ! Subroutine to calculate the tertiary contribution
@@ -1627,9 +1605,9 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         h = 0d0
         if( tk .eq. 1 )then
             call calchess1(igrad, nrap, ntap, fg, x, y, z, ii, h, dh)
-        else if( tk .eq. 2 )then
+        elseif( tk .eq. 2 )then
             call calchess2(igrad, nrap, ntap, fg, x, y, z, ii, h, dh)
-        else if( tk .eq. 3 )then
+        elseif( tk .eq. 3 )then
             call calchess3(igrad, nrap, ntap, fg, x, y, z, ii, h, dh)
         endif
         ! Combines the tent functions and contribution from the anchor points
@@ -1661,12 +1639,8 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             dx(22) = dtr(2)
             call convertit(x, y, z, dx, dx1, dy1, dz1)
         endif
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     end subroutine tert
-    !-------------------------------------------------!
-    !-------------------------------------------------!
-    !-------------------------------------------------!
-    !-------------------------------------------------!
+
     !> @brief Evaluate calcHess1 for the CH3NH2_APRP_DPEM potential.
     subroutine calchess1( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
         ! calcs the tertiary contribution for case 1: corners of the 2D tent
@@ -1700,7 +1674,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             do i=1, 20
                 dh(4,i) = dhs(i)
             enddo
-        else if( (fg(1) .eq. nrap+1) .and. (fg(2) .eq. ntap+1) )then
+        elseif( (fg(1) .eq. nrap+1) .and. (fg(2) .eq. ntap+1) )then
             ra1 = nrap
             ra2 = ntap
             call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
@@ -1708,7 +1682,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             do i=1, 20
                 dh(1,i) = dhs(i)
             enddo
-        else if( (fg(1)-1 .eq. 0) .and. (fg(2) .eq. ntap+1) )then
+        elseif( (fg(1)-1 .eq. 0) .and. (fg(2) .eq. ntap+1) )then
             ra1 = 1
             ra2 = ntap
             call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
@@ -1716,7 +1690,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             do i=1, 20
                 dh(3,i) = dhs(i)
             enddo
-        else if( (fg(1) .eq. nrap+1) .and. (fg(2)-1 .eq. 0) )then
+        elseif( (fg(1) .eq. nrap+1) .and. (fg(2)-1 .eq. 0) )then
             ra1 = nrap
             ra2 = 1
             call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
@@ -1726,6 +1700,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             enddo
         endif
     end subroutine calchess1
+
     !> @brief Evaluate calcHess2 for the CH3NH2_APRP_DPEM potential.
     subroutine calchess2( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
         ! calcs the tertiary contribution for case 2: sides of the 2D tent
@@ -1764,7 +1739,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             do i=1, 20
                 dh(4,i) = dhs(i)
             enddo
-        else if( (fg(1) .eq. nrap+1) )then
+        elseif( (fg(1) .eq. nrap+1) )then
             ra1 = nrap
             ra2 = fg(2)
             call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
@@ -1777,7 +1752,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             do i=1, 20
                 dh(2,i) = dhs(i)
             enddo
-        else if( (fg(2)-1 .eq. 0) )then
+        elseif( (fg(2)-1 .eq. 0) )then
             ra2 = 1
             ra1 = fg(1)
             call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
@@ -1790,7 +1765,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             do i=1, 20
                 dh(4,i) = dhs(i)
             enddo
-        else if( (fg(2) .eq. ntap+1) )then
+        elseif( (fg(2) .eq. ntap+1) )then
             ra2 = ntap
             ra1 = fg(1)
             call solver(igrad, ra1, ra2, qc, ii, nrap, ntap, hs, dhs)
@@ -1805,6 +1780,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             enddo
         endif
     end subroutine calchess2
+
     !> @brief Evaluate calcHess3 for the CH3NH2_APRP_DPEM potential.
     subroutine calchess3( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
         ! calcs the tertiary contribution for case 3: between 4 anchor points
@@ -1851,6 +1827,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             dh(4,i) = dhs(i)
         enddo
     end subroutine calchess3
+
     !> @brief Evaluate calcgeom for the CH3NH2_APRP_DPEM potential.
     subroutine calcgeom( x, y, z, qc )
         ! get the internal coords for tertiary calcs
@@ -1879,6 +1856,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         qc(19) = bndlen(6, 7, x, y, z)
         qc(20) = bndlen(7, 5, x, y, z)
     end subroutine calcgeom
+
     !> @brief Evaluate bigtent for the CH3NH2_APRP_DPEM potential.
     subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
         ! Subroutine to evaluate 2D tent functions
@@ -1899,7 +1877,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ! Check whether the point are end points
         if( r1 .lt. rap(1,si) )then
             fg(1) = 1
-        else if( r1 .ge. rap(nrap,si) )then
+        elseif( r1 .ge. rap(nrap,si) )then
             fg(1) = nrap+1
         endif
         do i=2, nrap
@@ -1910,7 +1888,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ! Check whether the point are end points
         if( t2 .lt. tap(1,si) )then
             fg(2) = 1
-        else if( t2 .ge. tap(ntap,si) )then
+        elseif( t2 .ge. tap(ntap,si) )then
             fg(2) = ntap+1
         endif
         do i=2, ntap
@@ -1927,25 +1905,25 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             vp = 1d0
             up = 1d0
             tk = 1
-        else if( (fg(1) .eq. nrap+1) .and. (fg(2) .eq. ntap+1) )then
+        elseif( (fg(1) .eq. nrap+1) .and. (fg(2) .eq. ntap+1) )then
             un = 1d0
             vn = 1d0
             tk = 1
-        else if( (fg(1)-1 .eq. 0) .and. (fg(2) .eq. ntap+1) )then
+        elseif( (fg(1)-1 .eq. 0) .and. (fg(2) .eq. ntap+1) )then
             up = 1d0
             vn = 1d0
             tk = 1
-        else if( (fg(1) .eq. nrap+1) .and. (fg(2)-1 .eq. 0) )then
+        elseif( (fg(1) .eq. nrap+1) .and. (fg(2)-1 .eq. 0) )then
             un = 1d0
             vp = 1d0
             tk = 1
             !****** SIDES
-        else if( (fg(1)-1 .eq. 0) )then
+        elseif( (fg(1)-1 .eq. 0) )then
             up = (r1-rap(fg(1),si))**4d0
             vn = (t2-tap(fg(2)-1,si))**4d0
             vp = (t2-tap(fg(2),si))**4d0
             tk = 2
-        else if( (fg(1) .eq. nrap+1) )then
+        elseif( (fg(1) .eq. nrap+1) )then
             un = (r1-rap((fg(1)-1),si))**4d0
             vn = (t2-tap(fg(2)-1,si))**4d0
             vp = (t2-tap(fg(2),si))**4d0
@@ -1954,12 +1932,12 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                 un = 1d0
             endif
             tk = 2
-        else if( (fg(2)-1 .eq. 0) )then
+        elseif( (fg(2)-1 .eq. 0) )then
             un = (r1-rap((fg(1)-1),si))**4d0
             up = (r1-rap(fg(1),si))**4d0
             vp = (t2-tap(fg(2),si))**4d0
             tk = 2
-        else if( (fg(2) .eq. ntap+1) )then
+        elseif( (fg(2) .eq. ntap+1) )then
             un = (r1-rap((fg(1)-1),si))**4d0
             up = (r1-rap(fg(1),si))**4d0
             vn = (t2-tap(fg(2)-1,si))**4d0
@@ -1983,27 +1961,27 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         f(4) = up*vp/dnom
         df   = 0d0
         if( (fg(1)-1 .eq. 0) .and. (fg(2)-1 .eq. 0) )then
-        else if( (fg(1) .eq. nrap+1) .and. (fg(2) .eq. ntap+1) )then
-        else if( (fg(1)-1 .eq. 0) .and. (fg(2) .eq. ntap+1) )then
-        else if( (fg(1) .eq. nrap+1) .and. (fg(2)-1 .eq. 0) )then
+        elseif( (fg(1) .eq. nrap+1) .and. (fg(2) .eq. ntap+1) )then
+        elseif( (fg(1)-1 .eq. 0) .and. (fg(2) .eq. ntap+1) )then
+        elseif( (fg(1) .eq. nrap+1) .and. (fg(2)-1 .eq. 0) )then
             ! THEN nothing for corners
             !****** CORNERS
             ! all derivatives equal zero
             !****** SIDES
             !      if( (fg(1)-1.eq.0) ) then
-        else if( (fg(1)-1 .eq. 0) )then
+        elseif( (fg(1)-1 .eq. 0) )then
             dup = 4d0*(r1-rap(fg(1),si))**3d0
             dvn = 4d0*(t2-tap(fg(2)-1,si))**3d0
             dvp = 4d0*(t2-tap(fg(2),si))**3d0
-        else if( (fg(1) .eq. nrap+1) )then
+        elseif( (fg(1) .eq. nrap+1) )then
             dun = 4d0*(r1-rap((fg(1)-1),si))**3d0
             dvn = 4d0*(t2-tap(fg(2)-1,si))**3d0
             dvp = 4d0*(t2-tap(fg(2),si))**3d0
-        else if( (fg(2)-1 .eq. 0) )then
+        elseif( (fg(2)-1 .eq. 0) )then
             dun = 4d0*(r1-rap((fg(1)-1),si))**3d0
             dup = 4d0*(r1-rap(fg(1),si))**3d0
             dvp = 4d0*(t2-tap(fg(2),si))**3d0
-        else if( (fg(2) .eq. nrap+1) )then
+        elseif( (fg(2) .eq. nrap+1) )then
             dun = 4d0*(r1-rap((fg(1)-1),si))**3d0
             dup = 4d0*(r1-rap(fg(1),si))**3d0
             dvn = 4d0*(t2-tap(fg(2)-1,si))**3d0
@@ -2025,6 +2003,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         df(3,2)  = ((up*dvn)*dnom-ddnom(2)*up*vn)/(dnom**2d0)
         df(4,2)  = ((up*dvp)*dnom-ddnom(2)*up*vp)/(dnom**2d0)
     end subroutine bigtent
+
     !> @brief Evaluate KPev2gm2 for the CH3NH2_APRP_DPEM potential.
     subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
         ! gives the primary coordinate contribution
@@ -2068,7 +2047,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             if( igrad .eq. 1 )then
                 dv2dr = -2.0d0*e1*e2*exp(e2*(rr-e3)) *(1-exp(e2*(rr-e3))) + 2d0*f1*f2*(rr-f3)*exp(f2*(rr-f3)**2d0)
             endif
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             ak  = 0.945760042d0
             tt0 = 0.482599385d0
             gr1 = 1.472234651d0
@@ -2079,7 +2057,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                 dv2dr = dv2dr+ ak*(tt-tt0)**2d0* 2d0*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2d0)
                 dv2dt = ak*(tt-tt0)*2d0* gr1*exp(gr2*(rr-gr3)**2d0)
             endif
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             fr1(1) = 3.067752289d0
             fr1(2) = 1076.860912d0
             fr1(3) = 0.792499074d0
@@ -2113,7 +2090,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                         & ft3(i))** 2d0))
                 enddo
             endif
-        else if( imol .eq. 2 )then! EXCITED STATE
+        elseif( imol .eq. 2 )then! EXCITED STATE
             e1 = 4.509566d0
             n4 = 1.650445177d0
             e2 = -1.460739955d0
@@ -2129,7 +2106,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                 dv2dr=e2*n4*exp(e2*(rr-e3)) + (n2*(rr-n3)*2d0) *f1*exp(f2*((rr-f3)**2d0)) +(n1+n2*(rr-n3)**2d0) *2d0* &
                     & f1* f2* (rr-f3)*exp(f2*(rr-f3)**2d0)
             endif
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             ak  = 1.233643227d0
             tt0 = 1.0d0
             gr1 = 0.978308804d0
@@ -2140,7 +2116,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                 dv2dr = dv2dr+ ak*(tt-tt0)**2d0* 2d0*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2d0)
                 dv2dt = ak*(tt-tt0)*2d0* gr1*exp(gr2*(rr-gr3)**2d0)
             endif
-            !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             fr1(1) = 5.402431748d0
             fr1(2) = -5.542582536d0
             fr1(3) = -3.460058164d0
@@ -2179,7 +2154,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                         & ft3(i))** 2d0))
                 enddo
             endif
-        else if( imol .eq. 3 )then! COUPLING
+        elseif( imol .eq. 3 )then! COUPLING
             a12(1)   = -0.16290134d0
             ga1(1)   = -0.231270633d0
             ga2(1)   = -42.62845833d0
@@ -2256,6 +2231,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dy(4) = dv2dt*dihedrky(1, 3, 4, 2, x, y, z)
         dz(4) = dv2dt*dihedrkz(1, 3, 4, 2, x, y, z)
     end subroutine kpev2gm2
+
     !> @brief Evaluate dihedr2 for the CH3NH2_APRP_DPEM potential.
     double precision function dihedr2( i, j, k, l, x, y, z )
         ! Evaluate the dihedral angle between atoms i, j, k, and l
@@ -2319,8 +2295,8 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !       ra=sab
         !       dihedr2=acos(ra)
         dihedr2 = ra
-        !--------------------------------------------------!
     end function dihedr2
+
     !> @brief Evaluate dihedrIX for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrix( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -2397,6 +2373,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedrix = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Xi---------------------------
     end function dihedrix
+
     !> @brief Evaluate dihedrIY for the CH3NH2_APRP_DPEM potential.
     double precision function dihedriy( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -2468,6 +2445,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedriy = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Yi---------------------------
     end function dihedriy
+
     !> @brief Evaluate dihedrIZ for the CH3NH2_APRP_DPEM potential.
     double precision function dihedriz( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -2542,6 +2520,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedriz = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Zi---------------------------
     end function dihedriz
+
     !> @brief Evaluate dihedrLX for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrlx( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -2616,6 +2595,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedrlx = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Xl---------------------------
     end function dihedrlx
+
     !> @brief Evaluate dihedrLY for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrly( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -2690,6 +2670,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedrly = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Yl---------------------------
     end function dihedrly
+
     !> @brief Evaluate dihedrLZ for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrlz( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -2764,6 +2745,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedrlz = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Zl---------------------------
     end function dihedrlz
+
     !> @brief Evaluate dihedrJX for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrjx( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -2841,6 +2823,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedrjx = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Xj---------------------------
     end function dihedrjx
+
     !> @brief Evaluate dihedrJY for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrjy( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -2918,6 +2901,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedrjy = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Yj---------------------------
     end function dihedrjy
+
     !> @brief Evaluate dihedrJZ for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrjz( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -2995,6 +2979,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedrjz = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Zj---------------------------
     end function dihedrjz
+
     !> @brief Evaluate dihedrKX for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrkx( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -3072,6 +3057,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedrkx = id!(-id)/(1d0-ra**2d0)**(0.5d0)
         !------------------Xk---------------------------
     end function dihedrkx
+
     !> @brief Evaluate dihedrKY for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrky( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -3149,6 +3135,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dihedrky = id!(-id)/(1d0-ra**2d0)**(0.5d0)
         !------------------Yk---------------------------
     end function dihedrky
+
     !> @brief Evaluate dihedrKZ for the CH3NH2_APRP_DPEM potential.
     double precision function dihedrkz( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
@@ -3228,7 +3215,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
     end function dihedrkz
 end module chempotpy_ch3nh2_aprp_dpem_pes
 
-!> @brief Preserve the historical Python-facing dpem entry point.
+!> @brief Expose CH3NH2_APRP through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_ch3nh2_aprp_dpem_pes, only: evaluate
     implicit none

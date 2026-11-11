@@ -5,27 +5,19 @@
 !   Number of bodies:              4
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:: Bender, Valentini, Nompelis, Paukku, Varga, Truhlar,
 !                Schwartzentruber, and Candler, Journal of Chemical
 !                Physics, submitted. Manuscript no. A15.02.0237
-!
 !   Notes:    PES of N4 with special emphasize for
 !             N2 + N2 --> N2 + N + N
 !            - New fit based on extended dataset
-!
 !            - Instead of Morse variables
 !              mixed-exponential- gaussian (MEG)
 !              variable is applied to describe the
 !              long-range interactions in a better way
 !             (named n4pes-gpip-meg)
-!
 !     N1--N2
-!
 !     N3--N4
-!
-!
-!
 !   Input: X(4),Y(4),Z(4)               in units of bohr
 !   Output: E                           in units of hartree
 !   Output: dEdX(4),dEdY(4),dEdZ(4)     hartree/bohr
@@ -173,13 +165,15 @@ module n4_1a_pip_par
         /)
 end module n4_1a_pip_par
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement N4_1A_PIP, a potential energy surface for N4.
 module chempotpy_n4_1a_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the N4_1A_PIP potential energy surface for N4.
     subroutine evaluate( x, igrad, potential, gradient, dvec )
         use n4_1a_pip_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
             & gconv, p, r, re, rm, rms, totdiss
@@ -224,7 +218,7 @@ module chempotpy_n4_1a_pip_pes
     end subroutine evaluate
 end module chempotpy_n4_1a_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose N4_1A_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, potential, gradient, dvec )
     use chempotpy_n4_1a_pip_pes, only: evaluate
     implicit none
@@ -869,14 +863,12 @@ end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
-    !
     ! Subroutine to evaluate the 2-body potential energy and gradient
     ! for given r with generalized Morse potential with Scheme 2.
     ! V(r) = 0 for r -> infinity
     ! V(r) = De*(1-exp(-f(y)*(r-re)))^2 - De
     ! f(y) = c0 + c1*y + c2*y^2 + c3*y^3 + c4*y^4 + c5*y^5 + c6*y^6
     ! y = (r^4 - re^4)/(r^4 + re^4)
-    !
     ! imol .eq. 1   Parameters for N2 dissociation without SEC
     !               (for N4 data)
     ! imol .eq. 2   Parameters for N2 dissociation with SEC
@@ -903,7 +895,7 @@ subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
         cs(4) = -5.02002309588d-1
         cs(5) = 3.80734244606d-1
         cs(6) = 1.21001628750d0
-    else if( imol .eq. 2 )then
+    elseif( imol .eq. 2 )then
         ! Parameter for N2 dissociation with SEC (for N2O2)
         red   = 1.098d0
         de    = 228.4d0
@@ -914,7 +906,7 @@ subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
         cs(4) = -4.08663480982d-1
         cs(5) = 3.92451705557d-1
         cs(6) = 1.13006674877d0
-    else if( imol .eq. 3 )then
+    elseif( imol .eq. 3 )then
         ! Parameter for NO dissociation with SEC (for N2O2)
         red   = 1.1508d0
         de    = 152.2d0
@@ -925,7 +917,7 @@ subroutine ev2gm2( rx, v2, dv2dr, imol, igrad )
         cs(4) = 9.29495534058d-1
         cs(5) = 2.66966672332d-1
         cs(6) = -3.68118714223d-1
-    else if( imol .eq. 4 )then
+    elseif( imol .eq. 4 )then
         ! Parameter for O2 dissociation with SEC (for N2O2 and O4)
         red   = 1.208d0
         de    = 120.243d0

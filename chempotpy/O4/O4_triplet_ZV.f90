@@ -6,11 +6,9 @@
 !   Number of bodies:              4
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   Reference - "Potential energy surface of triplet O4," Yuliya
 !   Paukku, Zoltan Varga, and Donald G. Truhlar, to be published
 !   (Feb. 09, 2018)
-!
 !   Notes:    PES of triplet O4 with special emphasis on
 !                  O2 + O2 -> O2 + O + O
 !            - Fit is based on a dataset of 10180 points
@@ -39,25 +37,17 @@
 !                 PES_O4_triplet_umn_v2
 !                 NO2_2Ap_MB-PIP-MEG
 !                 NO2_4Ap_MB-PIP-MEG
-!
 !     O1--O2
-!
 !     O3--O4
-!
-!
-!
 !   Input: X(4),Y(4),Z(4)               in unit of bohr
 !   Output: E                           in unit of hartree
 !   Output: dEdX(4),dEdY(4),dEdZ(4)     hartree/bohr
-!
 
 module o4_triplet_zv_par
     ! This code is based on O4_triplet_v2.f (FORTRAN77 version) where some
     ! keywords were replaced by more modern ones.
-    !
     ! The dispersion term is called inside the subroutine ev2gm2
     ! for each diatomic term.
-    !
     ! Otherwise the surface itself was not changed.
     ! Conversion factors
     ! Cconv: bohr to Angstrom
@@ -252,13 +242,15 @@ module o4_triplet_zv_par
         /)
 end module o4_triplet_zv_par
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement O4_triplet_ZV, a potential energy surface for O4.
 module chempotpy_o4_triplet_zv_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the O4_triplet_ZV potential energy surface for O4.
     subroutine evaluate( x, igrad, potential, gradient, dvec )
         use o4_triplet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
             & eref, gconv, p, r, ra, rb, rm, rms, totdiss
@@ -300,7 +292,7 @@ module chempotpy_o4_triplet_zv_pes
     end subroutine evaluate
 end module chempotpy_o4_triplet_zv_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose O4_triplet_ZV through the Python-facing PES entry point.
 subroutine pes( x, igrad, potential, gradient, dvec )
     use chempotpy_o4_triplet_zv_pes, only: evaluate
     implicit none
@@ -1131,15 +1123,11 @@ end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v, grad, imol, igrad )
-    !
     ! Compute the diatomic potential of ground-state triplet O2
-    !
     ! References: J. Chem. Phys. 132, 074307 (2010)
-    !
     ! Input:  r      interatomic distance in Angstrom
     ! Output: V      potential in kcal/mol
     !         grad   gradient (kcal/mol)/Angstrom
-    !
     implicit none
     integer, intent(in)           :: imol, igrad
     double precision, intent(in)  :: r
@@ -1277,10 +1265,8 @@ subroutine evdmsdr
             dmsdr(i,j) = 0.0d0
         enddo
     enddo
-    !
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
-    !
     do i=1, 6
         dmsdr(i,i) = (-2.0d0*(r(i)-rb)/ab-1/a) *exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
     enddo
@@ -2007,19 +1993,15 @@ end subroutine evdbdr
 subroutine d3disp( dist, disp, dispdr, igrad, imol )
     ! Dispersion correction based on Grimme's D3(BJ) calculation for
     ! diatomic pairs
-    !
     ! Several subroutines of DFTD3 V3.1 Rev 1 by Grimme were merged into
     ! subroutine edisp and they have been heavily modified to calculate
     ! only dispersion energy corrections that are needed.
-    !
     ! S. Grimme, J. Antony, S. Ehrlich and H. Krieg
     ! J. Chem. Phys, 132 (2010), 154104
     ! and
     ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
     ! 1456-1465
-    !
     ! The C6 values are fixed.
-    !
     implicit none
     double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)

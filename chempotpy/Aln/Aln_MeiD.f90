@@ -1,10 +1,29 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Embedded atom
+!   Common name:                   MeiD
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.
+!  References: J. Mei and J. W. Davenport, Phys. Rev. B, 46, 21, (1992).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_meid_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,37 +53,15 @@ module chempotpy_aln_meid_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_MeiD potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Embedded atom
-        !   Common name:                   MeiD
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.
-        !
-        !  References: J. Mei and J. W. Davenport, Phys. Rev. B, 46, 21, (1992).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: ab, alpha, beta, bigef, cc, delta, dr, dx, dy, dz, ec, ef, &
-            & gamma, phi, phi0, q, r0, rc, rho, rn, rr, s, sterm, v, v2, x, xm, xx, y, z
+        double precision :: ab, alpha, beta, bigef, cc(6), delta, dr, dx, dy, dz, ec, ef, gamma, phi, phi0, q, r0, rc, rho, rn, &
+            & rr, s(3), sterm, v, v2, x(maxatom), xm, xx, y(maxatom), z(maxatom)
         integer                     :: i, j, l, m, maxatom, natom
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
-        dimension x(maxatom), y(maxatom), z(maxatom)
-        dimension cc(6), s(3)
         !  calculate the potential energy
         ec    = 3.39d0/autoev
         phi0  = 0.1318d0/autoev
@@ -97,7 +94,7 @@ module chempotpy_aln_meid_pes
                 ! cutoff function
                 if( rr .le. rn )then
                     q = 1.d0
-                else if( rr .ge. rc )then
+                elseif( rr .ge. rc )then
                     q = 0.d0
                 else
                     xx = (rr-rn)/(rc-rn)
@@ -131,7 +128,7 @@ module chempotpy_aln_meid_pes
     end subroutine pot
 end module chempotpy_aln_meid_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_MeiD through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_meid_pes, only: evaluate

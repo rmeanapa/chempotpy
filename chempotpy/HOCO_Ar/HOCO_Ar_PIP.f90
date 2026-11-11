@@ -462,7 +462,9 @@ module bemsa
         & 554.41064370056233d0, 1232.2966354902248d0, 244.67334710691102d0, &
         & 54.524094580760391d0, 50.247453349200924d0, 8.2543160126563819d0, &
         & -296.07864822707103d0, -195.55137548221165d0]
+
     contains
+
     !> @brief Evaluate the embedded HOCO-Ar polynomial fit.
     function evaluate_fit( x ) result(energy)
         implicit none
@@ -470,13 +472,13 @@ module bemsa
         double precision             :: energy
         energy = emsav(x, coeff)
     end function evaluate_fit
+
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)
         implicit none
         double precision, dimension(1:10)::x
         double precision, dimension(1:1376)::c
         double precision :: v
-        ! ::::::::::::::::::::
         double precision, dimension(1:1376)::p
         integer :: i
         call bemsav(x, p)
@@ -485,23 +487,23 @@ module bemsa
             v = v+p(i)*c(i)
         enddo
     end function emsav
+
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         implicit none
         double precision, dimension(1:10), intent(in)::x
         double precision, dimension(1:1376), intent(out)::p
-        ! ::::::::::::::::::::
         double precision, dimension(1:21)::m
         integer :: i
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
+
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
         implicit none
         double precision, dimension(1:10), intent(in)::x
         double precision, dimension(1:21), intent(out)::m
-        !::::::::::::::::::::
         !    m(0) = 1.0D0
         m(1)  = x(10)
         m(2)  = x(9)
@@ -525,13 +527,13 @@ module bemsa
         m(20) = m(5)*m(17)
         m(21) = m(4)*m(18)
     end subroutine evmono
+
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
         implicit none
         double precision, dimension(1:21), intent(in)::m
         double precision, dimension(1:1376), intent(out)::p
         double precision, dimension(1:1631)::d
-        !::::::::::::::::::::
         !    p(0) = m(0)
         d( 3)   = m( 3)
         d( 5)   = m( 6) + m( 7)
@@ -2167,13 +2169,15 @@ module bemsa
     end subroutine evpoly
 end module bemsa
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement HOCO_Ar_PIP, a potential energy surface for HOCO_Ar.
 module chempotpy_hoco_ar_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the HOCO_Ar_PIP potential energy surface for HOCO_Ar.
     subroutine evaluate( x, igrad, path, p, gradient_out, d )
         use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
         implicit none
@@ -2202,7 +2206,7 @@ module chempotpy_hoco_ar_pip_pes
     end subroutine evaluate
 end module chempotpy_hoco_ar_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose HOCO_Ar_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, gradient_out, d )
     use chempotpy_hoco_ar_pip_pes, only: evaluate
     implicit none

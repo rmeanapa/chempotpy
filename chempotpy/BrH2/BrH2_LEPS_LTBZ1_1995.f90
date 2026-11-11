@@ -1,11 +1,69 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          BrH2
+!   Functional form: extended-LEPS plus three-center term
+!   Common name:     BrH2SEC
+!   Interface:       potlib2001
+!   Reference:       G. C. Lynch, D. G. Truhlar, F. B. Brown, and J.-g.
+!                    J. Phys. Chem. 99, 207 (1995)
+!   Number of bodies:              3
+!   Number of derivatives:         1
+!   Number of electronic surfaces: 1
+!   Calling Sequence:
+!      prepare_local_context - initializes the potential's variables and
+!               must be called once before any calls to POT
+!      POT    - driver for the evaluation of the energy and the derivati
+!               of the energy with respect to the coordinates for a give
+!               geometric configuration
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      ground electronic state
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Br
+!      infinitely far from the H2 diatomic and R(H2) set equal to the
+!      H2 equilibrium diatomic value.
+!   Parameters:
+!      Set in the BLOCK DATA subprogram PTPACM
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Br-H)
+!                            R(2) = R(H-H)
+!                            R(3) = R(Br-H)
+!   Common Blocks (used between the calling program and this potential):
+!        passes the coordinates, ground state electronic energy, and
+!        derivatives of the ground electronic state energy with respect
+!        to the coordinates.
+!        passes the control flags where
+!          NSURF  - not used
+!        NDER  = 0 => no derivatives are computed
+!              = 1 => derivatives of the energy for the ground electroni
+!                     state with respect to the coordinates are computed
+!          NFLAG  - Control flags
+!      NFLAG(18-20)
+!        passes the FORTRAN unit number used for potential output
+!      /ASYCM/ EASYAB, EASYBC, EASYAC
+!        passes the energy in the three asymptotic valleys for an A + BC
+!        The energy in the AB valley, EASYAB, is equal to the energy of
+!        C atom "infinitely" far from the AB diatomic and R(AB) set equa
+!        Re(AB), the equilibrium bond length for the AB diatomic.
+!        In this potential the AB valley represents H infinitely far fro
+!        the BrH diatomic and R(BrH) equal to Re(BrH).  Similarly, the t
+!        EASYBC and EASYAC represent the energies in the H2 and the BrH
+!        valleys, respectively.
+!   Default Parameter Values:
+!      Variable      Default value
+!      NDER             1
+!      NFLAG(18)        6
+
+!> @brief Implement BrH2_LEPS_LTBZ1_1995, a potential energy surface for BrH2.
 module chempotpy_brh2_leps_ltbz1_1995_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the BrH2_LEPS_LTBZ1_1995 potential energy surface for BrH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -156,7 +214,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
@@ -165,196 +223,84 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                     g(1,iatom,idir) = dgscart(iatom,idir)*51.422067
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
+
         contains
+
         !> @brief Evaluate prepare_local_context for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine prepare_local_context
-            !
-            !   System:          BrH2
-            !   Functional form: extended-LEPS plus three-center term
-            !   Common name:     BrH2SEC
-            !   Interface:       potlib2001
-            !   Reference:       G. C. Lynch, D. G. Truhlar, F. B. Brown, and J.-g.
-            !                    J. Phys. Chem. 99, 207 (1995)
-            !
-            !   Number of bodies:              3
-            !   Number of derivatives:         1
-            !   Number of electronic surfaces: 1
-            !
-            !   Calling Sequence:
-            !      prepare_local_context - initializes the potential's variables and
-            !               must be called once before any calls to POT
-            !      POT    - driver for the evaluation of the energy and the derivati
-            !               of the energy with respect to the coordinates for a give
-            !               geometric configuration
-            !
-            !   Units:
-            !      energies    - hartrees
-            !      coordinates - bohr
-            !      derivatives - hartrees/bohr
-            !
-            !   Surfaces:
-            !      ground electronic state
-            !
-            !   Zero of energy:
-            !      The classical potential energy is set equal to zero for the Br
-            !      infinitely far from the H2 diatomic and R(H2) set equal to the
-            !      H2 equilibrium diatomic value.
-            !
-            !   Parameters:
-            !      Set in the BLOCK DATA subprogram PTPACM
-            !
-            !   Coordinates:
-            !      Internal, Definition: R(1) = R(Br-H)
-            !                            R(2) = R(H-H)
-            !                            R(3) = R(Br-H)
-            !
-            !   Common Blocks (used between the calling program and this potential):
-            !        passes the coordinates, ground state electronic energy, and
-            !        derivatives of the ground electronic state energy with respect
-            !        to the coordinates.
-            !        passes the control flags where
-            !          NSURF  - not used
-            !        NDER  = 0 => no derivatives are computed
-            !              = 1 => derivatives of the energy for the ground electroni
-            !                     state with respect to the coordinates are computed
-            !          NFLAG  - Control flags
-            !      NFLAG(18-20)
-            !        passes the FORTRAN unit number used for potential output
-            !      /ASYCM/ EASYAB, EASYBC, EASYAC
-            !        passes the energy in the three asymptotic valleys for an A + BC
-            !        The energy in the AB valley, EASYAB, is equal to the energy of
-            !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
-            !        Re(AB), the equilibrium bond length for the AB diatomic.
-            !        In this potential the AB valley represents H infinitely far fro
-            !        the BrH diatomic and R(BrH) equal to Re(BrH).  Similarly, the t
-            !        EASYBC and EASYAC represent the energies in the H2 and the BrH
-            !        valleys, respectively.
-            !
-            !   Default Parameter Values:
-            !      Variable      Default value
-            !      NDER             1
-            !      NFLAG(18)        6
-            !
-            !
             implicit none
-            integer :: i
-            !
-            !
+            integer                     :: i
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             double precision, parameter :: cangau = 0.52917706d0
             double precision, parameter :: charkc = 627.5095d0
             double precision, parameter :: r2     = 1.41421356d0
-            !
-            !
-            !
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
-            !
             !   Convert the constants to atomic units
-            !
             do i = 1, 3
                 de(i)   = de(i) / charkc
                 re(i)   = re(i) / cangau
                 beta(i) = beta(i) * cangau
             enddo
-            !
             !    Initialize the energy in the three asymptotic valleys
-            !
-            easyab = de(1)
-            easybc = de(2)
-            easyac = de(3)
-            !
-            !
+            easyab   = de(1)
+            easybc   = de(2)
+            easyac   = de(3)
             ezero(1) = de(2)
-            !
             do i=1, 5
                 ref(i) = ' '
             enddo
-            !
-            ref(1) = 'G. C. Lynch, D. G. Truhlar, F. B. Brown, and J.-g. Zhao'
-            ref(2) = 'J. Phys. Chem. 99, 207 (1995)'
-            !
+            ref(1)     = 'G. C. Lynch, D. G. Truhlar, F. B. Brown, and J.-g. Zhao'
+            ref(2)     = 'J. Phys. Chem. 99, 207 (1995)'
             indexes(1) = 35
             indexes(2) = 1
             indexes(3) = 1
-            !
-            !
-            !
-            irctnt = 2
-            !
+            irctnt     = 2
             !CALL POTINFO
-            !
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POT for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine pot
-            !
             !   The potential parameters must be passed through the COMMON BLOCKS
             !   PT1CM, ASYCM, PT2CM,  All information passed through the
             !   COMMON BLOCKS PT1CM, ASYCM must be in Hartree atomic units.
-            !
             !   Coordinates:
             !      Internal, Definition: R(1) = R(Br-H)
             !                            R(2) = R(H-H)
             !                            R(3) = R(Br-H)
-            !
             !        The energy in the AB valley, EASYAB, is equal to the energy of
             !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
             !        Re(AB), the equilibrium bond length for the AB diatomic.
-            !
             !        In this potential the AB valley represents H infinitely far fro
             !        the BrH diatomic and R(BrH) equal to Re(BrH).  Similarly, the t
             !        EASYBC and EASYAC represent the energies in the H2 and the HBr
             !        valleys, respectively.
-            !
             implicit none
-            integer :: i
-            !
-            !
+            integer                     :: i
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             double precision, parameter :: cangau = 0.52917706d0
             double precision, parameter :: charkc = 627.5095d0
             double precision, parameter :: r2     = 1.41421356d0
-            !
-            !
             call cartou
             call carttor
-            !
             !   Check the value of NDER
-            !
             !   Compute bond dependent Sato parameters
-            !
             call sato
-            !
             !   Compute the LEPS constants
-            !
             do i = 1, 3
                 zpo(i)   = 1.0d0+z(i)
                 op3z(i)  = 1.0d0+3.0d0*z(i)
@@ -363,286 +309,198 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 tzp3(i)  = 2.0d0*zp3(i)
                 do4z(i)  = de(i)/4.0d0/zpo(i)
             enddo
-            !
             engygs = 0.d0
-            !
             do i = 1, 3
                 legacy_x(i) = exp(-beta(i)*(r(i)-re(i)))
                 coul(i)     = do4z(i) * (zp3(i)*legacy_x(i) - top3z(i)) * legacy_x(i)
                 exch(i)     = do4z(i) * (op3z(i)*legacy_x(i) - tzp3(i)) * legacy_x(i)
                 engygs      = engygs + coul(i)
             enddo
-            !
-            rad = sqrt((exch(1) - exch(2)) ** 2 + (exch(2) - exch(3)) ** 2 + (exch(3) - exch(1)) ** 2 )
-            !
+            rad    = sqrt((exch(1) - exch(2)) ** 2 + (exch(2) - exch(3)) ** 2 + (exch(3) - exch(1)) ** 2 )
             engygs = engygs - (rad / r2) + ezero(1)
-            !
             !   Compute the three-center term
             call v3cfcn
-            !
             !   Sum all the terms that make up the energy
-            !
             engygs = engygs + v3c
-            !
             !   Compute the derivatives if NDER = 1
-            !
             goto_block_700_419: block
                 if( nder .ne. 1 ) exit goto_block_700_419
-                !
                 !   DCOUL computes the derivatives of the coulombic terms w.r.t. R(I)
                 !   DEXCH computes the derivatives of the exchange terms w.r.t. R(I) and
                 !         also computes the derivative of the term RAD w.r.t. R(i)
-                !
                 !   DCOUL must be called before DEXCH becaues this subprogram computes
                 !   the DXDR terms needed by both subprograms.
-                !
                 !   Compute DEQ = dE/dQ * [dQ/dX * dX/dR + dQ/dZ * dZ/dR]
                 call dcoul
                 !   Compute DERAD = dRAD/dJ * [dJ/dX * dX/dR + dJ/dZ * dZ/dR]
                 call dexch
-                !
                 !   Put all the partial derivatives together:
                 !      DEGSDR  = DEQ + DERAD
                 !      DEQ   = dE/dQ * DQ/DR
                 !      DERAD = dE/dRAD * DRAD/DR
-                !
                 do i = 1, 3
                     degsdr(i) = deq(i) - derad(i)/r2
                 enddo
-                !
                 !   Add in the derivatives of V3C w.r.t. R(I)
-                !
                 do i = 1, 3
                     degsdr(i) = degsdr(i) + dv3c(i)
                 enddo
-                !
             end block goto_block_700_419
-            !
-            !
             call eunitzero
             if( nder .ne. 0 )then
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate SATO for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine sato
-            !
             !   This subroutine determines the Sato parameters as a function of the
             !   bond lengths.
-            !
             implicit none
-            double precision :: capr, capr2, capri, coschi, dcapr1, dcapr2, dcapr3, dchi1, dchi2, dchi3, dzchic, dzchir, r1p2, r2i, r2p2, r3p2, schip2, tmp, tmp1, tmp2, zchi
-            integer          :: i, j
-            !
-            !
+            double precision            :: capr, capr2, capri, coschi, dcapr1, dcapr2, dcapr3, dchi1, dchi2, dchi3, dzchic, dzchir, r1p2, r2i, r2p2, r3p2, schip2, tmp, tmp1, tmp2, zchi
+            integer                     :: i, j
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
             do i = 1, 3
                 do j = 1, 3
                     dz(i,j) = 0.0d0
                 enddo
             enddo
-            !
             r1p2 = r(1) * r(1)
             r2p2 = r(2) * r(2)
             r3p2 = r(3) * r(3)
             r2i  = 1.0d0/r(2)
             zchi = 0.0d0
-            !
             !   CAPR IS THE Br TO H2 DISTANCE
-            !
             capr2 = 0.5d0 * (r1p2 + r3p2 - 0.5d0 * r2p2)
             if( capr2 .le. 0.d0 )then
                 capr2 = 0.0d0
                 capr  = 0.0d0
             else
                 capr = sqrt(capr2)
-                !
                 !   Compute Chi, the angle between CAPR and RHH
-                !
                 coschi = 0.5d0*(r3p2 - r1p2)/(r(2)*capr)
                 schip2 = 1.0d0 - coschi*coschi
                 zchi   = capr2*(zhbrp1*schip2 + zhbrp2*schip2*schip2)
             endif
-            !
             z(1) = 0.1675d0 + zchi
             z(3) = z(1)
             z(2) = zhhp1*r2p2/(zhhp2+r2p2)
-            !
             !   Compute the derivative of the Sato parameters with respect to
             !   bond lengths.
             !   The HH Sato parameter depends on R(2) only
-            !
             goto_block_700_527: block
                 if( nder .ne. 1 ) exit goto_block_700_527
                 tmp     = r(2)/(zhhp2 + r2p2)
                 dz(2,2) = 2.0d0*z(2)*(r2i - tmp)
-                !
                 !   Compute the derivative of ZHBr with respect R(i) if CHI is
                 !   is between 0 and 90 degrees.
-                !
                 goto_block_100_526: block
                     if( capr .eq. 0.d0 ) exit goto_block_100_526
                     capri = 1.0d0/capr
-                    !
                     !   Compute the derivative of R(Br-HH) with respect to R(i)
-                    !
                     dcapr1 = 0.5d0*r(1)*capri
                     dcapr2 = -0.25d0*r(2)*capri
                     dcapr3 = 0.5d0*r(3)*capri
-                    !
                     !   Compute the derivative of CHI with respect to R(i)
                     !   These derivatives a actually sin(CHI)*dCHI/dR(i)
-                    !
                     tmp1  = coschi*capri
                     tmp2  = 1.0d0/(r(2)*capr)
                     dchi1 = r(1)*tmp2 + tmp1*dcapr1
                     dchi2 = tmp1*(capr + r(2)*dcapr2)*r2i
                     dchi3 = tmp1*dcapr3 - r(3)*tmp2
-                    !
                     !   Compute the derivative of ZHBr with respect to CAPR and CHI
-                    !
                     dzchir = 2.0d0*zchi*capri
                     dzchic = 2.0d0*capr2*coschi*(zhbrp1 + 2.0d0*zhbrp2*schip2)
-                    !
                     !   Compute the derivative of ZHBr with respect to R(i)
-                    !
                     dz(1,1) = dzchir*dcapr1 + dzchic*dchi1
                     dz(1,2) = dzchir*dcapr2 + dzchic*dchi2
                     dz(1,3) = dzchir*dcapr3 + dzchic*dchi3
                     dz(3,1) = dz(1,1)
                     dz(3,2) = dz(1,2)
                     dz(3,3) = dz(1,3)
-                    !
                 end block goto_block_100_526
             end block goto_block_700_527
-            !
         end subroutine sato
+
         !> @brief Evaluate V3CFCN for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine v3cfcn
-            !
             !   This subroutine computes the energy and the derivatives of the
             !   three-center term for the H-Br-H barrier as a function of the geomet
-            !
             implicit none
-            double precision :: a1, a2, a3, a4, a5, a6, costh, dfcn1, dfcn2, dfcn3, dfcn4, dist, dthdr1, dthdr2, dthdr3, fcn1, fcn2, fcn3, fcn4, r132p2, r1m3, r1m3p2, r1p3, r1p3m2, sintp2, sintp6, sintp8, v3cdth
-            !
-            !
+            double precision            :: a1, a2, a3, a4, a5, a6, costh, dfcn1, dfcn2, dfcn3, dfcn4, dist, dthdr1, dthdr2, dthdr3, fcn1, fcn2, fcn3, fcn4, r132p2, r1m3, r1m3p2, r1p3, r1p3m2, sintp2, sintp6, sintp8, v3cdth
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            a1 = v3cp1
-            a2 = v3cp2
-            a3 = v3cp3
-            a4 = v3cp4
-            a5 = v3cp5
-            a6 = v3cp6
-            !
+            a1     = v3cp1
+            a2     = v3cp2
+            a3     = v3cp3
+            a4     = v3cp4
+            a5     = v3cp5
+            a6     = v3cp6
             r1p3   = r(1) + r(3)
             r1m3   = r(1) - r(3)
             r1p3m2 = r1p3 - r(2)
             r1m3p2 = r1m3*r1m3
             r132p2 = r1p3m2*r1p3m2
-            !
             !   Compute the bond angle from the three internal coordinates
-            !
             dist   = r(1)*r(1) + r(3)*r(3) - r(2)*r(2)
             costh  = dist/(2.0d0*r(1)*r(3))
             sintp2 = 1.0d0 - costh*costh
             sintp6 = sintp2*sintp2*sintp2
             sintp8 = sintp6*sintp2
-            !
-            fcn1 = exp(-a2*r1p3)
-            fcn2 = exp(-a3*r1m3p2)
-            fcn3 = exp(-a4*r132p2)
-            fcn4 = 1.d0 + a5*sintp2 + a6*sintp8
-            !
-            v3c = a1*fcn1*fcn2*fcn3*fcn4
-            !
+            fcn1   = exp(-a2*r1p3)
+            fcn2   = exp(-a3*r1m3p2)
+            fcn3   = exp(-a4*r132p2)
+            fcn4   = 1.d0 + a5*sintp2 + a6*sintp8
+            v3c    = a1*fcn1*fcn2*fcn3*fcn4
             !   Compute the derivatives of V3C with respect to the internal coordina
             !   if NDER = 1
-            !
             goto_block_700_605: block
                 if( nder .ne. 1 ) exit goto_block_700_605
-                !
                 !   Compute the partial derivatives of the FCN terms
-                !
                 dfcn1 = -a2
                 dfcn2 = -2.0d0*a3*r1m3
                 dfcn3 = -2.0d0*a4*r1p3m2
                 dfcn4 = 2.0d0*a5*costh + 8.0d0*a6*costh*sintp6
-                !
                 !   Compute the partial derivative of THETA w.r.t. R(i)
                 !   DTHDR(i) = SIN(THETA)*DTHDR(I)
-                !
-                dthdr1 = costh/r(1) - 1.0d0/r(3)
-                dthdr2 = r(2)/(r(1)*r(3))
-                dthdr3 = costh/r(3) - 1.0d0/r(1)
-                v3cdth = a1*fcn1*fcn2*fcn3*dfcn4
-                !
+                dthdr1  = costh/r(1) - 1.0d0/r(3)
+                dthdr2  = r(2)/(r(1)*r(3))
+                dthdr3  = costh/r(3) - 1.0d0/r(1)
+                v3cdth  = a1*fcn1*fcn2*fcn3*dfcn4
                 dv3c(1) = v3c * (dfcn1 + dfcn2 + dfcn3) + v3cdth*dthdr1
                 dv3c(2) = -v3c * dfcn3 + v3cdth*dthdr2
                 dv3c(3) = v3c * (dfcn1 - dfcn2 + dfcn3) + v3cdth*dthdr3
-                !
             end block goto_block_700_605
-            !
         end subroutine v3cfcn
+
         !> @brief Evaluate DCOUL for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine dcoul
-            !
             !    This subprogram computes the contribution to the derivative of
             !    the energy with respect to R(i) from the coulombic terms.
             !    That is:
             !            DE/DR(j) = DE/DQ(i) * DQ(i)/DR(j)
-            !
             !    In this subprogram the following convention is assumed for the
             !    numbering of the internal coordinates:
             !    For Br + AB -> ABr + B
             !                   R(1) = R(Br-A)
             !                   R(2) = R(A-B)
             !                   R(3) = R(Br-B)
-            !
             implicit none
-            double precision :: dqdx, dqdz
-            integer          :: i, j
-            !
-            !
+            double precision            :: dqdx(3), dqdz(3)
+            integer                     :: i, j
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension dqdx(3), dqdz(3)
-            !
-            !
             do i = 1, 3
                 deq(i)  = 0.d0
                 dqdx(i) = 0.d0
@@ -651,118 +509,82 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                     dxdr(i,j) = 0.d0
                 enddo
             enddo
-            !
             !   First compute the partial derivatives dQ/dX, dQ/dZ, and
             !   the derivative of legacy_x w.r.t. R(i), DX/DR.
-            !
             do i = 1, 3
                 dqdx(i)   = do4z(i)*(tzp3(i)*legacy_x(i) - top3z(i))
                 dqdz(i)   = do4z(i)*legacy_x(i)*(legacy_x(i) - 6.0d0) - coul(i)/zpo(i)
                 dxdr(i,i) = -beta(i)*legacy_x(i)
             enddo
-            !
             !   Compute the contribution to the derivate of E w.r.t. R(i) from
             !   the coulombic terms, i.e., dE/dR(i) = dQ/dX * DX/DR(i) + dQ/dZ *DZ/D
-            !
             do i = 1, 3
                 do j = 1, 3
                     deq(i) = deq(i) + dqdx(j)*dxdr(j,i) + dqdz(j)*dz(j,i)
                 enddo
             enddo
-            !
         end subroutine dcoul
+
         !> @brief Evaluate DEXCH for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine dexch
-            !
             !    This subprogram computes the contribution to the derivative of
             !    the energy with respect to R(i) from the exchange terms.
             !    That is:
             !            DE/DR(j) = DE/DJ(i) * DJ(i)/DR(j)
             !    where
             !            E(LEPS)  = Q1 + Q2 + Q3 - RAD/SQRT(2)
-            !
             !    In this subprogram the following convention is assumed for the
             !    numbering of the internal coordinates:
             !    For Br + AB -> ABr + B
             !                   R(1) = R(Br-A)
             !                   R(2) = R(A-B)
             !                   R(3) = R(Br-B)
-            !
             implicit none
-            double precision :: djdr, djdx, djdz, draddj, sumj
-            integer          :: i, j
-            !
-            !
+            double precision            :: djdr(3,3), djdx(3), djdz(3), draddj(3), sumj
+            integer                     :: i, j
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension djdx(3), djdz(3), djdr(3,3), draddj(3)
-            !
-            !
             do i = 1, 3
                 derad(i) = 0.d0
                 djdx(i)  = 0.d0
                 djdz(i)  = 0.d0
             enddo
-            !
             sumj = 0.0d0
-            !
             !   First compute the partial derivatives dJ/dX, dJ/dZ
-            !
             do i = 1, 3
                 sumj    = sumj + exch(i)
                 djdx(i) = do4z(i)*(top3z(i)*legacy_x(i) - tzp3(i))
                 djdz(i) = do4z(i)*legacy_x(i)*(3.0d0*legacy_x(i) - 2.0d0) - exch(i)/zpo(i)
             enddo
-            !
             !   Compute the partial derivatives of the exchange term, J, w.r.t. R(i)
             !   The outer loop, I, is over the bond lengths, the inner loop is over
             !   each legacy_x and Z term.
-            !
             do i = 1, 3
                 do j = 1, 3
                     djdr(j,i) = djdx(j)*dxdr(j,i) + djdz(j)*dz(j,i)
                 enddo
             enddo
-            !
             !   Compute the partial derivatives of the term RAD w.r.t. J(I).
-            !
             do i = 1, 3
                 draddj(i) = (3.0d0*exch(i) - sumj)/rad
             enddo
-            !
             do i = 1, 3
                 do j = 1, 3
                     derad(i) = derad(i) + draddj(j)*djdr(j,i)
                 enddo
             enddo
-            !
         end subroutine dexch
+
         !> @brief Evaluate ANCVRT for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -779,6 +601,13 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -994,13 +823,13 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             cnvrtd  = 1.d0
@@ -1009,13 +838,13 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
             if( nflag(2) .eq. 2 )then
                 cnvrte = cnvrte*htomillh
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 cnvrte = cnvrte*htoev
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 cnvrte = cnvrte*htokcal
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 cnvrte = cnvrte*htowave
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 cnvrte = cnvrte*htokj
             endif
             cnvrtde = cnvrte/cnvrtd
@@ -1026,6 +855,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             ireorder = 0
             if( isum .ne. 0 ) ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -1037,6 +867,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -1053,6 +884,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine eunitzero
             implicit none
@@ -1073,16 +905,18 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( icartr .eq. 1 )then
                 do i = 1, legacy_natoms
                     ind            = 3*i-2
@@ -1104,7 +938,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 2 )then
+            elseif( icartr .eq. 2 )then
                 do i = 1, legacy_natoms
                     dgscartnu(i,1) = 0.d0
                     dgscartnu(i,2) = 0.d0
@@ -1126,7 +960,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                     do j = 1, legacy_natoms
                         if( j .lt. i )then
                             m1 = legacy_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1145,7 +979,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                                 descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
                                 descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( ksoffd .gt. 0 )then
+                        elseif( ksoffd .gt. 0 )then
                             do j2=ksoffd, keoffd
                                 y                 = deijdr(m1,j2)
                                 dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
@@ -1155,7 +989,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                         endif
                     enddo
                 enddo
-            else if( icartr .eq. 3 )then
+            elseif( icartr .eq. 3 )then
                 do i = 1, legacy_natoms
                     ygs(i) = degsdr(i)/r(i)
                     if( ksdiag .ne. 0 )then
@@ -1191,7 +1025,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 4 )then
+            elseif( icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1227,6 +1061,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine dedcou
             implicit none
@@ -1280,7 +1115,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
     end subroutine evaluate
 end module chempotpy_brh2_leps_ltbz1_1995_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose BrH2_LEPS_LTBZ1_1995 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_brh2_leps_ltbz1_1995_pes, only: evaluate
     implicit none

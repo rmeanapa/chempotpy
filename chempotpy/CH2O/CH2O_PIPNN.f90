@@ -16,13 +16,15 @@ module nnparam
     double precision, allocatable :: pdela(:), pavga(:)
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement CH2O_PIPNN, a potential energy surface for CH2O.
 module chempotpy_ch2o_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the CH2O_PIPNN potential energy surface for CH2O.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
@@ -61,7 +63,7 @@ module chempotpy_ch2o_pipnn_pes
     end subroutine evaluate
 end module chempotpy_ch2o_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose CH2O_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_ch2o_pipnn_pes, only: evaluate
     implicit none
@@ -207,21 +209,19 @@ function tranfun( x, ifunc )
     double precision :: tranfun, x
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+dexp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !> @brief Evaluate emsav.
 function emsav( x, c ) result(v)
     implicit none
     double precision, dimension(1:6)::x
     double precision, dimension(0:17)::c
     double precision :: v
-    ! ::::::::::::::::::::
     double precision, dimension(0:17)::p
     call bemsav(x, p)
     v = dot_product(p, c)
@@ -232,7 +232,6 @@ subroutine bemsav( x, p )
     implicit none
     double precision, dimension(1:6), intent(in)::x
     double precision, dimension(0:17), intent(out)::p
-    ! ::::::::::::::::::::
     double precision, dimension(0:10)::m
     call evmono(x, m)
     call evpoly(m, p)
@@ -243,7 +242,6 @@ subroutine evmono( x, m )
     implicit none
     double precision, dimension(1:6), intent(in)::x
     double precision, dimension(0:10), intent(out)::m
-    !::::::::::::::::::::
     m(0)  = 1.0d0
     m(1)  = x(6)
     m(2)  = x(5)
@@ -262,7 +260,6 @@ subroutine evpoly( m, p )
     implicit none
     double precision, dimension(0:10), intent(in)::m
     double precision, dimension(0:17), intent(out)::p
-    !::::::::::::::::::::
     p(0)  = m(0)
     p(1)  = m(1)
     p(2)  = m(2) + m(3)

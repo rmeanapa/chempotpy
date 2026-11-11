@@ -1,11 +1,58 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        F2H2
+!   Common name:                   SQSBDE
+!   Number of derivatives:         0
+!   Number of bodies:              4
+!   Number of electronic surfaces: 1
+!   Interface:                     potlib2001
+!   References:      M. Quack, M. Suhm Mol. Phys. 69 (1990) P791
+!                    Kofranek et al Chem. Phys. 121 (1988) 137
+!                    Rijks and Wormer J. Chem. Phys. 90(1989) 6507
+!   Protocol:
+!      prepare_local_context - initializes the potential's variables
+!               must be called once before any calls to POT
+!      POT    - driver for the evaluation of the energy
+!   Units:
+!      energies    - cm-1
+!      coordinates - distances: bohr; angles: degrees
+!   Surfaces:
+!      ground electronic state
+! M. A. SUHM  SEPTEMBER 1990
+! INPUT : SIX INTERNAL COORDINATES
+! --R1,R2,R IN ATOMIC UNITS (BOHR)
+! --TH1,TH2,TAU IN DEGREES
+! DEFINITION AS IN QUACK+SUHM MOL.PHYS. 69 (1990) P791
+! OUTPUT : HF DIMER (SQSBDE) POTENTIAL ENERGY IN CM-1
+! THE PARAMETERS OF THE POTENTIAL ARE READ IN FROM UNIT 1
+! (FILENAME GA.IN)
+! THE 6-D POTENTIAL IS BASED ON 1070 AB INITIO POINTS FROM
+! KOFRANEK ET AL (CHEM PHYS 121(1988) 137) UP TO 42000 CM-1
+! AND A PERTURBATION TREATMENT BY RIJKS AND WORMER
+! (JCP 90(1989) 6507) AS WELL AS MONOMER We,WeXe FROM
+! HUBER/HERZBERG. 29 FREE, 15 MONOMER OR AB INITIO
+! BASED AND 18 CONSTRAINED PARAMETERS ARE USED.
+! SQSBDE IS AN EMPIRICALLY REFINED VERSION WHICH HAS THE
+! CORRECT EXPERIMENTAL HYDROGEN BOND WAVENUMBER OF
+! 1062CM-1 (MILLER, ACC. CHEM. RES. 23 (1990) P10) AND
+! B ROTATIONAL CONSTANT. FOR THIS PURPOSE, THE AB INITIO
+! RAB COORDINATES WERE SCALED BY 1/1.035.
+! THE RMS OF THE WEIGHTED FIT (W=1 FOR R1,2=/=1.7374 OR
+! R1,2=1.7374 AND E<2220CM-1, W=0.1 FOR R1,2=1.7374 AND
+! 2220<E<3210CM-1, W=0.001 FOR R1,2=1.7374 AND E>3210CM-1)
+! IS 32.8CM-1.
+! E(1.7445,1.7404,5.1440,9.0007,64.1361,180)=-1.307CM-1 IS
+! THE ABSOLUTE MINIMUM OF THE POTENTIAL
+! M. A. SUHM  SEPTEMBER 1989
+! preparatory calculations for gssqs-routine
+
+!> @brief Implement F2H2_GEN_SQSBDE_1995, a potential energy surface for F2H2.
 module chempotpy_f2h2_gen_sqsbde_1995_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the F2H2_GEN_SQSBDE_1995 potential energy surface for F2H2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom
         implicit none
@@ -409,111 +456,37 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
         else
             write (*, *) 'Only energy is available'
         endif
+
         contains
+
         !> @brief Evaluate prepare_local_context for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine prepare_local_context
-            !
-            !   System:                        F2H2
-            !   Common name:                   SQSBDE
-            !   Number of derivatives:         0
-            !   Number of bodies:              4
-            !   Number of electronic surfaces: 1
-            !   Interface:                     potlib2001
-            !   References:      M. Quack, M. Suhm Mol. Phys. 69 (1990) P791
-            !                    Kofranek et al Chem. Phys. 121 (1988) 137
-            !                    Rijks and Wormer J. Chem. Phys. 90(1989) 6507
-            !
-            !   Protocol:
-            !
-            !      prepare_local_context - initializes the potential's variables
-            !               must be called once before any calls to POT
-            !      POT    - driver for the evaluation of the energy
-            !
-            !   Units:
-            !
-            !      energies    - cm-1
-            !      coordinates - distances: bohr; angles: degrees
-            !
-            !   Surfaces:
-            !
-            !      ground electronic state
-            !
-            ! M. A. SUHM  SEPTEMBER 1990
-            !
-            ! INPUT : SIX INTERNAL COORDINATES
-            ! --R1,R2,R IN ATOMIC UNITS (BOHR)
-            ! --TH1,TH2,TAU IN DEGREES
-            ! DEFINITION AS IN QUACK+SUHM MOL.PHYS. 69 (1990) P791
-            ! OUTPUT : HF DIMER (SQSBDE) POTENTIAL ENERGY IN CM-1
-            !
-            ! THE PARAMETERS OF THE POTENTIAL ARE READ IN FROM UNIT 1
-            ! (FILENAME GA.IN)
-            !
-            ! THE 6-D POTENTIAL IS BASED ON 1070 AB INITIO POINTS FROM
-            ! KOFRANEK ET AL (CHEM PHYS 121(1988) 137) UP TO 42000 CM-1
-            ! AND A PERTURBATION TREATMENT BY RIJKS AND WORMER
-            ! (JCP 90(1989) 6507) AS WELL AS MONOMER We,WeXe FROM
-            ! HUBER/HERZBERG. 29 FREE, 15 MONOMER OR AB INITIO
-            ! BASED AND 18 CONSTRAINED PARAMETERS ARE USED.
-            ! SQSBDE IS AN EMPIRICALLY REFINED VERSION WHICH HAS THE
-            ! CORRECT EXPERIMENTAL HYDROGEN BOND WAVENUMBER OF
-            ! 1062CM-1 (MILLER, ACC. CHEM. RES. 23 (1990) P10) AND
-            ! B ROTATIONAL CONSTANT. FOR THIS PURPOSE, THE AB INITIO
-            ! RAB COORDINATES WERE SCALED BY 1/1.035.
-            ! THE RMS OF THE WEIGHTED FIT (W=1 FOR R1,2=/=1.7374 OR
-            ! R1,2=1.7374 AND E<2220CM-1, W=0.1 FOR R1,2=1.7374 AND
-            ! 2220<E<3210CM-1, W=0.001 FOR R1,2=1.7374 AND E>3210CM-1)
-            ! IS 32.8CM-1.
-            !
-            ! E(1.7445,1.7404,5.1440,9.0007,64.1361,180)=-1.307CM-1 IS
-            ! THE ABSOLUTE MINIMUM OF THE POTENTIAL
-            !
-            ! M. A. SUHM  SEPTEMBER 1989
-            !
-            ! preparatory calculations for gssqs-routine
-            !
             implicit none
-            double precision :: cg3j, e, esum, f, sum, x
-            integer          :: i, i1, i2, ia, ib, ic, id, ie, if, j, j1, j2, j3, l, m, m1, m2, m3, nmax
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            integer, parameter          :: ma    = 135
-            !
-            !
-            !
-            !
-            !
-            !
+            double precision            :: cg3j, e, esum, f, sum, x
+            integer                     :: i, i1, i2, ia, ib, ic, id, ie, if, j, j1, j2, j3, l, m, m1, m2, m3, nmax
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
+            integer, parameter          :: ma     = 135
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
-            !
             !   References:      M. Quack, M. Suhm Mol. Phys. 69 (1990) P791
             !                    Kofranek et al Chem. Phys. 121 (1988) 137
             !                    Rijks and Wormer J. Chem. Phys. 90(1989) 6507
-            infocm_ref(1) = 'M. Quack, M. Suhm, Mol. Phys. 69, P791(1990)'
-            infocm_ref(2) = 'Kofranek et al., Chem. Phys. 121, 137(1988)'
-            infocm_ref(3) = 'Rijks and Wormer, J. Chem. Phys. 90, 6507(1989)'
-            !
+            infocm_ref(1)     = 'M. Quack, M. Suhm, Mol. Phys. 69, P791(1990)'
+            infocm_ref(2)     = 'Kofranek et al., Chem. Phys. 121, 137(1988)'
+            infocm_ref(3)     = 'Rijks and Wormer, J. Chem. Phys. 90, 6507(1989)'
             infocm_indexes(1) = 1
             infocm_indexes(2) = 9
             infocm_indexes(3) = 1
             infocm_indexes(4) = 9
-            !
-            infocm_irctnt = 3
-            !
+            infocm_irctnt     = 3
             !      CALL POTINFO
-            !
             call ancvrt
-            !
             ! prefactors for polynomials
-            !
             potcm_fac(0) = 1.
             do i=1, 2*4
                 potcm_fac(i) = potcm_fac(i-1)*i
@@ -523,11 +496,8 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     ang_pf(l,m) = (-1)**m*sqrt((2*l+1)*potcm_fac(l-m)/(4*pi*potcm_fac(l+m)))
                 enddo
             enddo
-            !
             ! 3j-symbols for potential energy surface
             ! (abc/d-d0)=g(a,b,c,d)
-            !
-            !
             potcm_fct(1)  = 1.0d0
             potcm_efct(1) = 0.0d0
             do i=1, 400
@@ -540,8 +510,6 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     potcm_efct(j) = potcm_efct(j)+1.0d0
                 enddo
             enddo
-            !
-            !
             m2 = 0
             m3 = 0
             do j1=0, 4*2, 2
@@ -586,32 +554,22 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                 enddo
             enddo
         end subroutine prepare_local_context
+
         !> @brief Evaluate gsrsqs for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine gsrsqs
-            !
             implicit none
-            double precision :: dab1, dab2, dab3
-            integer          :: j1, j2, j3
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: ndmax  = 1100
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            integer, parameter          :: ma    = 135
-            !
-            !
-            !
-            !
-            !
-            !
+            double precision            :: dab1, dab2, dab3
+            integer                     :: j1, j2, j3
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter          :: ndmax  = 1100
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
+            integer, parameter          :: ma     = 135
             !      dab1=r-3.d0
             !      dab2=r-4.d0
             !      dab3=r-4.9d0
-            !
             dab1 = pt1cm_r(1)-3.0d0
             dab2 = pt1cm_r(1)-4.0d0
             dab3 = pt1cm_r(1)-4.9d0
@@ -624,48 +582,30 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     enddo
                 enddo
             enddo
-            !
-            !
         end subroutine gsrsqs
+
         !> @brief Evaluate pot for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine pot
-            !
             implicit none
-            double precision :: amf, amh, c, c2, c3, c4, c5, cs, e, fac2, p1, p2, phicon, pif, r1, r12, r14, r2, r23, r34, rcm, s, s2, s3, s4, s5, tau, th1, th2, vp, x, y, z
-            integer          :: icu, j, j1, j2, j3, m
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            integer, parameter          :: ma    = 135
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension x(4), y(4), z(4)
-            dimension p1(0:4,0:4), p2(0:4,0:4), cs(4)
-            dimension vp(0:4,0:4,0:2*4)
-            !
-            !
+            double precision            :: amf, amh, c, c2, c3, c4, c5, cs(4), e, fac2, p1(0:4,0:4), p2(0:4,0:4), phicon, pif, r1, &
+                & r12, r14, r2, r23, r34, rcm, s, s2, s3, s4, s5, tau, th1, th2, vp(0:4,0:4,0:2*4), x(4), y(4), z(4)
+            integer                     :: icu, j, j1, j2, j3, m
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
+            integer, parameter          :: ma     = 135
             !     PUT COORDINATES IN PROPER ARRAYS
-            !
             amh = 1837.152756d0
             amf = 34631.9678d0
             call cartou
             call carttor
-            !
             !                                *
             !   Assign entries from R-array  *
             !   to variables used internally *
             !   by the POT subroutine        *
             !                                *
-            !
             rcm    = pt1cm_r(1)
             r1     = pt1cm_r(2)
             r2     = pt1cm_r(3)
@@ -755,9 +695,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     enddo
                 enddo
             enddo
-            !
             call gsrsqs
-            !
             do j1=0, 4, 1
                 do j2=0, 4, 1
                     do j3=abs(j2-j1), (j2+j1), 2
@@ -769,9 +707,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     enddo
                 enddo
             enddo
-            !
             e = 0.0d0
-            !
             do j1=0, 4, 1
                 do j2=0, 4, 1
                     do j3=abs(j2-j1), (j2+j1), 2
@@ -779,9 +715,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     enddo
                 enddo
             enddo
-            !
             !     e=e+a(1)
-            !
             if( rcm .lt. 7.2d0 )then
                 e = e+vp(0,0,0)*exp(-((7.2d0-rcm)/rcm)**2)*potcm_a(2)/rcm**6
             else
@@ -824,73 +758,51 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             else
                 e = e+potcm_a(18)/rcm**6*((3.0d0*(cos(th1))**2+1.0d0)+ (3.0d0*(cos(th2))**2+1.0d0))
             endif
-            !
             ! monomer terms
-            !
             e=e+47635d0*(1.0d0-potcm_a(19)*exp(-0.1d0*(r23-3.0d0)**2))* (1.0d0-exp(-1.1953d0* (1.0d0-potcm_a(26)* &
                 & (1.0d0-tanh(potcm_a(27)*(r14- 3.0d0))) )* (r1-1.7374d0*(1.0d0 -potcm_a(20)* (1.0d0-tanh(potcm_a(21)* &
                 & (r14-3.0d0))) ))))**2
             e=e+47635d0*(1.0d0-potcm_a(19)*exp(-0.1d0*(r14-3.0d0)**2))* (1.0d0-exp(-1.1953d0* (1.0d0-potcm_a(26)* &
                 & (1.0d0-tanh(potcm_a(27)*(r23- 3.0d0))) )* (r2-1.7374d0*(1.0d0 -potcm_a(20)* (1.0d0-tanh(potcm_a(21)* &
                 & (r23-3.0d0))) ))))**2
-            !
             !     next line corrects for asymptotic diatomic potential which is
             !     added in separately.
-            !
             e = e-(ptntl(r1-1.7374d0)+ptntl(r2-1.7374d0))*219474.63067d0
             e = e+potcm_a(28)*(exp(-4.0d0*(r14-r1)**2)+exp(-4.0d0*(r23-r2)**2))
             e = e+potcm_a(22)*exp(-4.0d0*r14)*exp(-4.0d0*r23)
             e = e+potcm_a(23)
             e = e+potcm_a(24)*(exp(-r14)+exp(-r23))* (exp(-15.0d0*r1)+exp(-15.0d0*r2))
-            !
             !   Units conversion:  Conversion to atomic units
-            !
-            e = e/219474.63067d0
-            !
+            e            = e/219474.63067d0
             pt1cm_engygs = e
-            !
-            !
             call eunitzero
-            !
             if( usricm_nder .ne. 0 )then
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate PTNTL for the F2H2_GEN_SQSBDE_1995 potential.
         function ptntl( x )
-            !
             !     HF DIATOMIC POTENTIAL CURVE FOR SQSBDE SURFACE, CALCULATED USING
             !     PARAMETERS GIVEN IN JCP, VOL. 95(5), P. 31.
             !     NOTICE THAT THE PARAMETER DM IS GIVEN IN ATOMIC UNITS HERE AND
             !     IN CM-1 IN THE ICP REFERENCE.
-            !
             implicit none
-            double precision :: ptntl, x
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            integer, parameter          :: ma    = 135
-            double precision, parameter :: am    = 1.1953d0
-            double precision, parameter :: dm    = 0.21704d0
-            double precision, parameter :: one   = 1.0d0
-            !
-            !
-            !
-            !
-            !
-            !
+            double precision            :: ptntl, x
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
+            integer, parameter          :: ma     = 135
+            double precision, parameter :: am     = 1.1953d0
+            double precision, parameter :: dm     = 0.21704d0
+            double precision, parameter :: one    = 1.0d0
             !      SAVE
-            !
             ptntl = dm*(one-exp(-am*x))**2
-            !
         end function ptntl
+
         !> @brief Evaluate POTINFO for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine potinfo
             implicit none
@@ -984,22 +896,14 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     '*-1/ANGSTROM'',//)')
             endif
         end subroutine potinfo
+
         !> @brief Evaluate ANCVRT for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -1016,6 +920,13 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -1231,13 +1142,13 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             if( usricm_nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( usricm_nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             utilcm_cnvrtd  = 1.d0
@@ -1246,13 +1157,13 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 utilcm_cnvrte = utilcm_cnvrte*htoev
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokcal
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 utilcm_cnvrte = utilcm_cnvrte*htowave
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokj
             endif
             utilcm_cnvrtde = utilcm_cnvrte/utilcm_cnvrtd
@@ -1263,6 +1174,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             utilcm_ireorder = 0
             if( isum .ne. 0 ) utilcm_ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -1274,6 +1186,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(usricm_cart, usricm_nulbl, infocm_natoms, utilcm_cnvrtd, utilcm_ireorder == 1, infocm_cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -1290,6 +1203,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine eunitzero
             implicit none
@@ -1311,16 +1225,18 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -1342,7 +1258,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 2 )then
+            elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
                     utilcm_dgscartnu(i,1) = 0.d0
                     utilcm_dgscartnu(i,2) = 0.d0
@@ -1364,7 +1280,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     do j = 1, infocm_natoms
                         if( j .lt. i )then
                             m1 = infocm_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1383,7 +1299,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                                 utilcm_descartnu(i,2,j1) = utilcm_descartnu(i,2,j1) + termy*y
                                 utilcm_descartnu(i,3,j1) = utilcm_descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( utilcm_ksoffd .gt. 0 )then
+                        elseif( utilcm_ksoffd .gt. 0 )then
                             do j2=utilcm_ksoffd, utilcm_keoffd
                                 y                        = pt5cm_deijdr(m1,j2)
                                 utilcm_dijcartnu(i,1,j2) = utilcm_dijcartnu(i,1,j2) + termx*y
@@ -1393,7 +1309,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                         endif
                     enddo
                 enddo
-            else if( infocm_icartr .eq. 3 )then
+            elseif( infocm_icartr .eq. 3 )then
                 do i = 1, infocm_natoms
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
@@ -1429,7 +1345,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 4 )then
+            elseif( infocm_icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1465,6 +1381,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the F2H2_GEN_SQSBDE_1995 potential.
         subroutine dedcou
             implicit none
@@ -1518,7 +1435,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
     end subroutine evaluate
 end module chempotpy_f2h2_gen_sqsbde_1995_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose F2H2_GEN_SQSBDE_1995 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_f2h2_gen_sqsbde_1995_pes, only: evaluate
     implicit none

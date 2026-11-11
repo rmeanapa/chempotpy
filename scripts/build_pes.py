@@ -26,8 +26,19 @@ from chempotpy.core.registry import SurfaceSource, discover_surface_sources
 
 SUPPORT_SOURCES = {
     ("CH4", "CH4_GEN_SP_2001"): ("ch4_t8.f90",),
+    ("C3H7NO", "C3H7NO_PIP"): ("chempotpy_c3h7no_pip_parameters.f90",),
+    ("COCO", "COCO_PIPNN"): ("chempotpy_coco_pipnn_parameters.f90",),
+    ("FH2O", "FH2O_PIPNN"): ("chempotpy_fh2o_pipnn_parameters.f90",),
+    ("FH2O", "FH2O_SOC_PIPNN"): (
+        "chempotpy_fh2o_pipnn_parameters.f90",
+    ),
+    ("F2H2", "F2H2_GEN_JBKKL_1990"): (
+        "chempotpy_f2h2_jbkkl_parameters.f90",
+    ),
+    ("N4", "N4_1A_PIPNN"): ("chempotpy_n4_pipnn_parameters.f90",),
+    ("HOBr", "HOBr_3App_PIP"): ("chempotpy_hobr_3app_parameters.f90",),
 }
-CORE_FORTRAN_ROOT = REPOSITORY_ROOT / "chempotpy" / "core" / "fortran"
+CORE_FORTRAN_ROOT = REPOSITORY_ROOT / "chempotpy" / "core"
 CORE_MODULE_SOURCES = {
     "chempotpy_geometry": CORE_FORTRAN_ROOT / "chempotpy_geometry.f90",
     "chempotpy_h3_basis": CORE_FORTRAN_ROOT / "chempotpy_h3_basis.f90",
@@ -40,9 +51,6 @@ CORE_MODULE_SOURCES = {
     ),
     "chempotpy_legacy_units": (
         CORE_FORTRAN_ROOT / "chempotpy_legacy_units.f90"
-    ),
-    "chempotpy_neural_network_io": (
-        CORE_FORTRAN_ROOT / "chempotpy_neural_network_io.f90"
     ),
     "chempotpy_status": CORE_FORTRAN_ROOT / "chempotpy_status.f90",
     "chempotpy_units": CORE_FORTRAN_ROOT / "chempotpy_units.f90",
@@ -258,7 +266,6 @@ def normalized_sources(
         local_core = build_directory / core_source.name
         copy_ascii_source(core_source, local_core)
         local_sources.append(local_core)
-    local_sources.append(local_source)
     for support_name in SUPPORT_SOURCES.get(
         (source.system_name, source.surface_name), ()
     ):
@@ -266,6 +273,7 @@ def normalized_sources(
         local_support = build_directory / support_name
         copy_ascii_source(support_source, local_support)
         local_sources.append(local_support)
+    local_sources.append(local_source)
     if re.search(r"\bcall\s+dsyev\b", source_text, flags=re.IGNORECASE):
         local_dsyev = build_directory / INTERNAL_DSYEV.name
         copy_ascii_source(INTERNAL_DSYEV, local_dsyev)

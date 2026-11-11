@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !   System:                        O4
 !   Functional form:               permutation-invariant polynomials
 !   Common name:                   O4 quintet (adiabatic ground state)
@@ -6,10 +5,8 @@
 !   Number of bodies:              4
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:: Y. Paukku, K. R. Yang, Z. Varga, G. Song, J. D. Bender,
 !                D. G. Truhlar, J. Chem. Phys. 147, 034301/1-11 (2017)
-!
 !   Notes:    PES of quintet O4 with special emphasize for
 !             O2 + O2 --> O2 + O + O
 !            - Fit is based on extended dataset
@@ -18,20 +15,18 @@
 !              variables are applied to describe the
 !              long-range interactions
 !            - D3 dispersion correction is implemented for diatoms
-!
 !     O1--O2
-!
 !     O3--O4
-!
-!
-!
-!> @brief Own the public evaluator for this potential energy surface.
+
+!> @brief Implement O4_quintet, a potential energy surface for O4.
 module chempotpy_o4_quintet_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the O4_quintet potential energy surface for O4.
     subroutine evaluate( x, igrad, p, g, d )
         implicit none
         ! number of electronic state
@@ -515,7 +510,9 @@ module chempotpy_o4_quintet_pes
             enddo
         enddo
         d = 0.d0
+
         contains
+
         !> @brief Evaluate o4pes for the O4_quintet potential.
         subroutine o4pes( x, v, dvdx, igrad )
             ! Subroutine to calculate the potential energy V and gradient dVdX
@@ -551,6 +548,7 @@ module chempotpy_o4_quintet_pes
                 write (*, *) 'Only energy and gradient are available'
             endif
         end subroutine o4pes
+
         !> @brief Evaluate coord_convt for the O4_quintet potential.
         subroutine coord_convt( x )
             !  Program to calculate the six interatomic distance
@@ -569,6 +567,7 @@ module chempotpy_o4_quintet_pes
             coord_r(5) = sqrt((x(4)-x(10))**2 + (x(5)-x(11))**2 + (x(6)-x(12))**2)
             coord_r(6) = sqrt((x(7)-x(10))**2 + (x(8)-x(11))**2 + (x(9)-x(12))**2)
         end subroutine coord_convt
+
         !> @brief Evaluate EvV for the O4_quintet potential.
         subroutine evv( v )
             ! Subroutine to evaluate V for given R
@@ -614,6 +613,7 @@ module chempotpy_o4_quintet_pes
             !      Write(*,9999) V
             ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
         end subroutine evv
+
         !> @brief Evaluate EvdVdX for the O4_quintet potential.
         subroutine evdvdx( x, dvdx )
             use chempotpy_geometry, only: transform_internal_gradient_to_cartesian
@@ -633,6 +633,7 @@ module chempotpy_o4_quintet_pes
             call evdrdx(x)
             call transform_internal_gradient_to_cartesian(gradt_dvdr, gradt_drdx, dvdx)
         end subroutine evdvdx
+
         !> @brief Evaluate EvMorse for the O4_quintet potential.
         subroutine evmorse
             implicit none
@@ -647,6 +648,7 @@ module chempotpy_o4_quintet_pes
                 epot_rms(i) = exp(-(coord_r(i)-msprmt_re)/msprmt_a-((coord_r(i)-msprmt_re)**2.0d0)/msprmt_ab)
             enddo
         end subroutine evmorse
+
         !> @brief Evaluate EvMono for the O4_quintet potential.
         subroutine evmono
             !  The subroutine reads six MEG variables(X) and calculates the
@@ -766,6 +768,7 @@ module chempotpy_o4_quintet_pes
             epot_rm(110) = epot_rm(6)*epot_rm(86)
             epot_rm(111) = epot_rm(6)*epot_rm(87)
         end subroutine evmono
+
         !> @brief Evaluate EvPoly for the O4_quintet potential.
         subroutine evpoly
             !  The subroutine reads monomials(m) and calculates the
@@ -1273,6 +1276,7 @@ module chempotpy_o4_quintet_pes
             epot_p(464) = epot_p(3)*epot_p(194) - epot_p(453) - epot_p(454) - epot_p(451)
             epot_p(465) = epot_p(1)*epot_p(305) - epot_p(464) - epot_p(463)
         end subroutine evpoly
+
         !> @brief Evaluate evbas for the O4_quintet potential.
         subroutine evbas
             !  The subroutine eliminate the 2-body terms in Bowman's approach
@@ -1334,17 +1338,14 @@ module chempotpy_o4_quintet_pes
             epot_b(429) = b1(463)
             epot_b(430) = b1(465)
         end subroutine evbas
+
         !> @brief Evaluate ev2gm2 for the O4_quintet potential.
         subroutine ev2gm2( r, v, grad, imol, igrad )
-            !
             ! Compute the diatomic potential of ground-state triplet O2
-            !
             ! References: J. Chem. Phys. 132, 074307 (2010)
-            !
             ! Input:  r      interatomic distance in Angstrom
             ! Output: V      potential in kcal/mol
             !         grad   gradient (kcal/mol)/Angstrom
-            !
             implicit none
             integer          :: imol
             double precision :: r
@@ -1393,6 +1394,7 @@ module chempotpy_o4_quintet_pes
                 grad = grad*627.509523475149d-3
             endif
         end subroutine ev2gm2
+
         !> @brief Evaluate EvdVdR for the O4_quintet potential.
         subroutine evdvdr
             ! Subroutine to evaluate dVdR for given R
@@ -1442,6 +1444,7 @@ module chempotpy_o4_quintet_pes
                 enddo
             enddo
         end subroutine evdvdr
+
         !> @brief Evaluate EvdRdX for the O4_quintet potential.
         subroutine evdrdx( x )
             use chempotpy_geometry, only: all_pair_distance_jacobian
@@ -1449,6 +1452,7 @@ module chempotpy_o4_quintet_pes
             double precision, intent(in) :: x(12)
             call all_pair_distance_jacobian(x, coord_r, gradt_drdx)
         end subroutine evdrdx
+
         !> @brief Evaluate EvdMsdR for the O4_quintet potential.
         subroutine evdmsdr
             ! Subroutine to evaluate the derivatives of MEG term X
@@ -1465,15 +1469,14 @@ module chempotpy_o4_quintet_pes
                     gradt_dmsdr(i,j) = 0.0d0
                 enddo
             enddo
-            !
             ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
             ! dmsdr(i,j)=0  i!=j
-            !
             do i=1, 6
                 gradt_dmsdr(i,i) = (-2.0d0*(coord_r(i)-msprmt_re)/msprmt_ab-1/msprmt_a)* exp(-(coord_r(i)-msprmt_re)/ &
                     & msprmt_a-((coord_r(i)-msprmt_re)**2.0d0)/msprmt_ab)
             enddo
         end subroutine evdmsdr
+
         !> @brief Evaluate EvdMdR for the O4_quintet potential.
         subroutine evdmdr
             !  The subroutine reads M(nom) and dMSdR(6,6) and calculates the
@@ -1596,6 +1599,7 @@ module chempotpy_o4_quintet_pes
                 gradt_dmdr(i,111) = gradt_dmdr(i,6)*epot_rm(87) + epot_rm(6)*gradt_dmdr(i,87)
             enddo
         end subroutine evdmdr
+
         !> @brief Evaluate EvdPdr for the O4_quintet potential.
         subroutine evdpdr
             !  The subroutine reads monomials(m) and calculates the
@@ -2353,6 +2357,7 @@ module chempotpy_o4_quintet_pes
                     & gradt_dpdr(i,463)
             enddo
         end subroutine evdpdr
+
         !> @brief Evaluate evdbdr for the O4_quintet potential.
         subroutine evdbdr
             !  The subroutine eliminate the 2-body terms in Bowman's approach
@@ -2419,6 +2424,7 @@ module chempotpy_o4_quintet_pes
                 gradt_dbdr(j,430) = db1dr(j,465)
             enddo
         end subroutine evdbdr
+
         !> @brief Evaluate d3disp for the O4_quintet potential.
         subroutine d3disp( dist, disp, dispdr, igrad )
             implicit none
@@ -2470,6 +2476,7 @@ module chempotpy_o4_quintet_pes
                 dist(i) = dist(i)*autoang
             enddo
         end subroutine d3disp
+
         !> @brief Evaluate edisp for the O4_quintet potential.
         subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
                 & rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
@@ -2546,7 +2553,7 @@ module chempotpy_o4_quintet_pes
     end subroutine evaluate
 end module chempotpy_o4_quintet_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose O4_quintet through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_o4_quintet_pes, only: evaluate
     implicit none

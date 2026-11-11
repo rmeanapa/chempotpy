@@ -1,11 +1,46 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        LiFH
+!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
+!   Common name:                   LiFH surface fit H
+!   Number of derivatives:         1
+!   Number of electronic surfaces: 2
+!   Interface:                     3-2V
+!   References:      A. W. Jasper, M. D. Hack, A. Chakraborty, D. G. Tru
+!                    and P. Piecuch, J. Chem. Phys. 115, 7945 (2001).
+!   Notes:        This fit is qualitatively correct.
+!                 It is quantitatively incorrect near the saddle point.
+!   Protocol: POT evaluates the stateless diabatic surfaces.
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      ground and first excited electronic states, diabatic representati
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Li
+!      infinitely far from the HF diatomic and R(HF) set equal to the
+!      HF equilibrium diatomic value.
+!   Parameters:
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Li-H)
+!                            R(2) = R(H-F)
+!                            R(3) = R(Li-F)
+!  all surfaces.  The potential is called by calling POT with the parame
+!  r, e, nt, nsurf.  r(nt,3) and ei(nt) are double precision arrays of
+!  dimension nt which is an integer representing the number of geometrie
+!  input.  The integer nsurf selects the desired surface.  nsurf=1 is th
+!  lower diabatic surface, nsurf=2 is the coupling surface, nsurf=3 is
+!  the upper diabatic surface, nsurf = 4 selects the lower adiabatic
+!  surface, and nsurf = 5 selects the upper adiabatic surface
+
+!> @brief Implement LiFH_LEPS_JHCTP_2001, a potential energy surface for LiFH.
 module chempotpy_lifh_leps_jhctp_2001_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the LiFH_LEPS_JHCTP_2001 potential energy surface for LiFH.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -79,7 +114,7 @@ module chempotpy_lifh_leps_jhctp_2001_pes
     end subroutine evaluate
 end module chempotpy_lifh_leps_jhctp_2001_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose LiFH_LEPS_JHCTP_2001 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_lifh_leps_jhctp_2001_pes, only: evaluate
     implicit none
@@ -124,64 +159,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!
-!   System:                        LiFH
-!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
-!   Common name:                   LiFH surface fit H
-!   Number of derivatives:         1
-!   Number of electronic surfaces: 2
-!   Interface:                     3-2V
-
-!   References:      A. W. Jasper, M. D. Hack, A. Chakraborty, D. G. Tru
-!                    and P. Piecuch, J. Chem. Phys. 115, 7945 (2001).
-
-!   Notes:        This fit is qualitatively correct.
-!                 It is quantitatively incorrect near the saddle point.
-!
-!   Protocol: POT evaluates the stateless diabatic surfaces.
-!
-!   Units:
-!      energies    - hartrees
-!      coordinates - bohr
-!      derivatives - hartrees/bohr
-!
-!   Surfaces:
-!      ground and first excited electronic states, diabatic representati
-!
-!   Zero of energy:
-!      The classical potential energy is set equal to zero for the Li
-!      infinitely far from the HF diatomic and R(HF) set equal to the
-!      HF equilibrium diatomic value.
-!
-!   Parameters:
-!
-!   Coordinates:
-!      Internal, Definition: R(1) = R(Li-H)
-!                            R(2) = R(H-F)
-!                            R(3) = R(Li-F)
-!
-!
-!  all surfaces.  The potential is called by calling POT with the parame
-!  r, e, nt, nsurf.  r(nt,3) and ei(nt) are double precision arrays of
-!  dimension nt which is an integer representing the number of geometrie
-!  input.  The integer nsurf selects the desired surface.  nsurf=1 is th
-!  lower diabatic surface, nsurf=2 is the coupling surface, nsurf=3 is
-!  the upper diabatic surface, nsurf = 4 selects the lower adiabatic
-!  surface, and nsurf = 5 selects the upper adiabatic surface
-!
-
-!
 !> @brief Evaluate pot for the LiFH_LEPS_JHCTP_2001 potential.
 subroutine pot( r, e, de, nt, nsurf )
     implicit none
-    double precision :: ddis, de, de1, de2, de3, e, g_e, g_r, r
-    dimension r(nt,3), e(nt), de(3,nt)
-    integer            :: i, j, k, nsurf, nt
     integer, parameter :: g_p_  = 3
     integer, parameter :: ldg_r = 3
     integer, parameter :: ldg_e = 3
-    dimension g_r(ldg_r,nt,3), g_e(ldg_e,nt)
-    dimension de1(3,1), de2(3,1), de3(3,1), ddis(3)
+    double precision :: ddis(3), de(3,nt), de1(3,1), de2(3,1), de3(3,1), e(nt), g_e(ldg_e,nt), g_r(ldg_r,nt,3), r(nt,3)
+    integer            :: i, j, k, nsurf, nt
     ! initialize seed matrix here
     do i=1, nt
         do j=1, 3
@@ -196,47 +181,40 @@ subroutine pot( r, e, de, nt, nsurf )
     enddo
     if( nsurf .eq. 1 )then
         call g_pot11(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
-    else if( nsurf .eq. 2 )then
+    elseif( nsurf .eq. 2 )then
         call g_pot12(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
-    else if( nsurf .eq. 3 )then
+    elseif( nsurf .eq. 3 )then
         call g_pot22(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
     endif
 end subroutine pot
 
 !  U11 surface - lower diabatic surface
-!
 !> @brief Own the stateless g_pot11 evaluator.
 module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
-        !
         integer :: i, nt
-        !
         ! misc variables
         double precision :: r1s, r2s, r3s
-        !
         ! LiH variables
         double precision :: s1, relih, bes1, s1c2, s1c3, s1a, xelih, bes1b, &
             & s1c
         double precision :: rcut2del, rcut2rho, rcut2, r1r3, r1r3al
-        !
         ! HF variables
         double precision :: s2, behf, yhf, rehf, dehf, xehf
-        !
         ! LiF variables
         double precision :: s3, res3, bes3, des3, res3c, bes3c, s3c, s3a, xes3, des3c
         double precision :: rcutdel, rcutrho, rcut, r1r3al2
-        !
         double precision :: cevau
-        !
         double precision :: r(:,:), e(:)
-        !
         !! values of variables:
         ! LiH singlet:
         integer, parameter :: g_pmax_ = 3
@@ -246,15 +224,8 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
         double precision :: g_r(:,:,:), g_d1_w(g_pmax_), g_rcut2(g_pmax_), g_rcut(g_pmax_), g_xelih(g_pmax_), g_s1a(g_pmax_), g_s1c(g_pmax_), g_s1(g_pmax_), g_yhf(g_pmax_), g_behf(g_pmax_)
         double precision :: g_xehf(g_pmax_), g_s2(g_pmax_), g_xes3(g_pmax_), g_s3a(g_pmax_), g_s3c(g_pmax_), g_s3(g_pmax_), g_e(:,:)
         integer          :: g_ehfid
-        !
         ! HF singlet
-        !
         ! LiF singlet
-        !
-        !
-        !
-        !
-        !
         behf     = 0.d0
         bes1     = 0.d0
         bes1b    = 0.d0
@@ -343,20 +314,14 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
             print *, 'Parameter g_p_ is greater than g_pmax_'
             stop
         endif
-        !
-        !
-        !
         do i = 1, nt
-            !
             r1s = r(i,1) ** 2
             r2s = r(i,2) ** 2
             r3s = r(i,3) ** 2
-            !
             do g_i_ = 1, g_p_
                 g_r1r3(g_i_) = r1r3al * g_r(g_i_,i,2) + (-g_r(g_i_,i,3)) + g_r(g_i_,i,1)
             enddo
             r1r3 = r(i,1) - r(i,3) + r1r3al * r(i,2)
-            !--------
             d3_b = 1.0d0 / rcut2del
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d3_b * g_r1r3(g_i_)
@@ -369,12 +334,10 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
                 g_rcut2(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             rcut2 = 0.5d0 * (1.0d0 - d2_v)
-            !--------
             do g_i_ = 1, g_p_
                 g_r1r3(g_i_) = r1r3al2 * g_r(g_i_,i,2) + (-g_r(g_i_,i,3) ) + g_r(g_i_,i,1)
             enddo
             r1r3 = r(i,1) - r(i,3) + r1r3al2 * r(i,2)
-            !--------
             d3_v = (r1r3 - rcutrho) * (r1r3 - rcutrho)
             d1_p = 2.0d0 * (r1r3 - rcutrho)
             d5_b = (-(1.0d0 / rcutdel ** 2)) * d1_p
@@ -388,14 +351,9 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
                 g_rcut(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             rcut = d2_v
-            !--------
-            !
-            !
             !==============================================================k
             !This section contains the diatomic curves
-            !
             ! The  MH singlet
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bes1) * g_r(g_i_,i,1)
             enddo
@@ -406,12 +364,10 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
                 g_xelih(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xelih = d2_v
-            !--------
             do g_i_ = 1, g_p_
                 g_s1a(g_i_) = s1c2 * g_xelih(g_i_)
             enddo
             s1a = s1c2 * xelih
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bes1b) * g_r(g_i_,i,1)
             enddo
@@ -422,26 +378,20 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
             do g_i_ = 1, g_p_
                 g_s1c(g_i_) = d3_b * g_d1_w(g_i_)
             enddo
-            s1c = s1c3 * d2_v
-            !--------
+            s1c  = s1c3 * d2_v
             d3_v = s1c - s1a
             d2_b = 1.0d0 + (-rcut2)
             do g_i_ = 1, g_p_
                 g_s1(g_i_) = d3_v * g_rcut2(g_i_) + rcut2 * g_s1c(g_i_) + d2_b * g_s1a(g_i_)
             enddo
             s1 = s1a + d3_v * rcut2
-            !--------
-            !
             ! The HF singlet
-            !
             rehf = 1.733d0
             dehf = 6.122d0
-            !
             do g_i_ = 1, g_p_
                 g_yhf(g_i_) = g_r(g_i_,i,2)
             enddo
-            yhf = r(i,2) - 2.1042d0
-            !--------
+            yhf  = r(i,2) - 2.1042d0
             d4_v = yhf * yhf
             d1_p = 2.0d0 * yhf
             d5_b = 0.059062d0 * d1_p + (-0.025647d0)
@@ -449,8 +399,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
                 g_behf(g_i_) = d5_b * g_yhf(g_i_)
             enddo
             behf = 1.1622d0 - 0.025647d0 * yhf + 0.059062d0 * d4_v
-            !--------
-            !
             d4_v = r(i,2) - rehf
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-behf) * g_r(g_i_,i,2) + (-d4_v) * g_behf( g_i_)
@@ -462,7 +410,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
                 g_xehf(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xehf = d2_v
-            !--------
             d2_v = dehf * xehf
             d3_v = xehf - 2.0d0
             d4_b = d2_v + d3_v * dehf
@@ -470,10 +417,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
                 g_s2(g_i_) = d4_b * g_xehf(g_i_)
             enddo
             s2 = d2_v * d3_v
-            !--------
-            !
             ! The MF singlet
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bes3) * g_r(g_i_,i,3)
             enddo
@@ -484,7 +428,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
                 g_xes3(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xes3 = d2_v
-            !--------
             d2_v = des3 * xes3
             d3_v = xes3 - 2.0d0
             d4_b = d2_v + d3_v * des3
@@ -492,8 +435,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
                 g_s3a(g_i_) = d4_b * g_xes3(g_i_)
             enddo
             s3a = d2_v * d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bes3c) * g_r(g_i_,i,3)
             enddo
@@ -504,41 +445,29 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
                 g_xes3(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xes3 = d2_v
-            !--------
             d2_v = des3c * xes3
             d3_v = xes3 - 2.0d0
             d4_b = d2_v + d3_v * des3c
             do g_i_ = 1, g_p_
                 g_s3c(g_i_) = d4_b * g_xes3(g_i_)
             enddo
-            s3c = d2_v * d3_v
-            !--------
-            !
+            s3c  = d2_v * d3_v
             d3_v = s3c - s3a
             d2_b = 1.0d0 + (-rcut)
             do g_i_ = 1, g_p_
                 g_s3(g_i_) = d3_v * g_rcut(g_i_) + rcut * g_s3c(g_i_) + d2_b * g_s3a(g_i_)
             enddo
             s3 = s3a + d3_v * rcut
-            !--------
-            !
-            ! ===============================================================
             ! The final form
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = g_s3(g_i_) + g_s2(g_i_) + g_s1(g_i_)
             enddo
             e(i) = s1 + s2 + s3 + dehf
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = cevau * g_e(g_i_,i)
             enddo
             e(i) = e(i) * cevau
-            !--------
-            !
         enddo
-        !
     end subroutine dispatch
 end module chempotpy_lifh_leps_jhctp_2001_g_pot11_legacy_state_356f5432
 
@@ -557,40 +486,32 @@ subroutine g_pot11( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
     call dispatch(g_p_=g_p_, r=r, g_r=g_r, ldg_r=ldg_r, e=e, g_e=g_e, ldg_e=ldg_e, nt=nt)
 end subroutine g_pot11
 
-!
-!
 ! U12 coupling surface
-!
 !> @brief Own the stateless g_pot12 evaluator.
 module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
-        !
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
-        !
         integer          :: i, nt
         double precision :: r(:,:), e(:)
-        !
         ! LiH variables
         integer          :: ng1
         double precision :: g1, g1r, g1a, h1, h1del, h1rho
-        !
         ! HF variables
         double precision :: j2p, j2, j2pdel, j2rho, j2prho, j2del
-        !
         ! LiF variables
         integer          :: ng3
         double precision :: g3, g3r, g3a, h3, h3del, h3rho
-        !
         ! cutoff variables
         double precision :: gcrho, theta, cevau, gcdel
         double precision :: cut2, gc
-        !
         ! LiH data
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
@@ -598,17 +519,9 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
         double precision   :: d4_v, d2_p, d2_b, d3_b, d4_b, d5_v, d6_v, d11_v, g_d1_w(g_pmax_), g_r(:,:,:)
         double precision   :: g_g1(g_pmax_), g_g3(g_pmax_), g_j2(g_pmax_), g_j2p(g_pmax_), g_h1(g_pmax_), g_h3(g_pmax_), g_e(:,:), g_gc(g_pmax_), g_cut2(g_pmax_)
         integer            :: g_ehfid
-        !
         ! LiF data
-        !
         ! HF data
-        !
         ! cutoff data
-        !
-        !
-        !
-        !
-        !
         cevau   = 0.d0
         cut2    = 0.d0
         d11_v   = 0.d0
@@ -683,10 +596,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
             print *, 'Parameter g_p_ is greater than g_pmax_'
             stop
         endif
-        !
-        !
         do i = 1, nt
-            !
             d4_b = (-dble(ng1)) * (1.0d0 / g1r)
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d4_b * g_r(g_i_,i,1)
@@ -709,9 +619,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
             do g_i_ = 1, g_p_
                 g_g1(g_i_) = d4_b * g_d1_w(g_i_) + d7_b * g_r(g_i_,i,1)
             enddo
-            g1 = d4_v * d6_v
-            !--------
-            !
+            g1   = d4_v * d6_v
             d4_b = (-dble(ng3)) * (1.0d0 / g3r)
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d4_b * g_r(g_i_,i,3)
@@ -734,9 +642,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
             do g_i_ = 1, g_p_
                 g_g3(g_i_) = d4_b * g_d1_w(g_i_) + d7_b * g_r(g_i_,i,3)
             enddo
-            g3 = d4_v * d6_v
-            !--------
-            !
+            g3   = d4_v * d6_v
             d3_b = 1.0d0 / j2del
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d3_b * g_r(g_i_,i,2)
@@ -748,8 +654,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
             do g_i_ = 1, g_p_
                 g_j2(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
-            j2 = 0.5d0 * (1.0d0 + d2_v)
-            !--------
+            j2   = 0.5d0 * (1.0d0 + d2_v)
             d3_b = 1.0d0 / j2pdel
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d3_b * g_r(g_i_,i,2)
@@ -761,9 +666,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
             do g_i_ = 1, g_p_
                 g_j2p(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
-            j2p = 0.5d0 * (1.0d0 + d2_v)
-            !--------
-            !
+            j2p  = 0.5d0 * (1.0d0 + d2_v)
             d3_b = 1.0d0 / h1del
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d3_b * g_r(g_i_,i,1)
@@ -775,8 +678,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
             do g_i_ = 1, g_p_
                 g_h1(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
-            h1 = 0.5d0 * (1.0d0 - d2_v)
-            !--------
+            h1   = 0.5d0 * (1.0d0 - d2_v)
             d3_b = 1.0d0 / h3del
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d3_b * g_r(g_i_,i,3)
@@ -788,10 +690,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
             do g_i_ = 1, g_p_
                 g_h3(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
-            h3 = 0.5d0 * (1.0d0 - d2_v)
-            !--------
-            !
-            !
+            h3    = 0.5d0 * (1.0d0 - d2_v)
             d3_v  = g1 * j2
             d5_v  = 1.0d0 - h3
             d9_v  = g3 * j2p
@@ -805,15 +704,12 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
                     & d13_b * g_j2(g_i_) + d12_b * g_g1(g_i_)
             enddo
             e(i) = d3_v * d5_v + d9_v * d11_v
-            !--------
-            !
             d5_b = -dsin(theta)
             d7_b = dcos(theta)
             do g_i_ = 1, g_p_
                 g_gc(g_i_) = d5_b * g_r(g_i_,i,3) + d7_b * g_r(g_i_,i,2)
             enddo
-            gc = (r(i,2) - gcrho) * dcos(theta) - (r(i,3) - 2.9553d0) * dsin(theta)
-            !--------
+            gc   = (r(i,2) - gcrho) * dcos(theta) - (r(i,3) - 2.9553d0) * dsin(theta)
             d2_b = 1.0d0 / gcdel
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d2_b * g_gc(g_i_)
@@ -826,20 +722,14 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
                 g_cut2(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             cut2 = 0.5d0 - 0.5d0 * d2_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = e(i) * g_cut2(g_i_) + cut2 * g_e(g_i_,i)
             enddo
             e(i) = e(i) * cut2
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = cevau * g_e(g_i_,i)
             enddo
             e(i) = e(i) * cevau
-            !--------
-            !
         enddo
     end subroutine dispatch
 end module chempotpy_lifh_leps_jhctp_2001_g_pot12_legacy_state_356f5432
@@ -859,39 +749,34 @@ subroutine g_pot12( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
     call dispatch(g_p_=g_p_, r=r, g_r=g_r, ldg_r=ldg_r, e=e, g_e=g_e, ldg_e=ldg_e, nt=nt)
 end subroutine g_pot12
 
-!
-!
 ! the upper diabatic surface  U22
-!
 !> @brief Own the stateless g_pot22 evaluator.
 module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
-        !
         ! misc variables
         integer          :: i, j, k, nt
         double precision :: r(:,:), e(:), r1s, r2s, r3s, cs, cevau, uli2p
         double precision :: c2a, c2b, c2c, w, cplg2
-        !
         ! LiH variables
         double precision :: r1r3, xelih, s1c, bes1, rcut2del, rcut2rho, s1c3
         double precision :: s1c1, belihc, bet1, relih, s1c2, t1c1, t1c2
         double precision :: r1r3al, rcut2
         double precision :: coul1, exch1, s1, t1
-        !
         ! HF variables
         double precision :: behf, xehfa, dehfm, yhf, xehfa_180, t2a3, t2a2, &
             & bet2
         double precision :: t2a1, t2a4, dehf, rehf
         double precision :: s2alp, rehft, bet2_180, s2rho, dehfc
         double precision :: coul2, exch2, t2, s2
-        !
         ! LiF variables
         integer          :: nb
         double precision :: bet3, bet3_180, t3a2, t3a3, t3a4, belihc1
@@ -903,8 +788,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
         double precision :: belifc1, t3a1, gswt, delif, rho2, del2, theta2, &
             & gdel
         double precision :: coul3, exch3, s3, t3
-        !
-        !
         ! LiH singlets and triplets
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
@@ -924,16 +807,9 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
             & g_coul1(g_pmax_), g_coul2(g_pmax_), g_coul3(g_pmax_), g_exch1(g_pmax_), g_exch2(g_pmax_), g_exch3(g_pmax_), g_w(g_pmax_)
         double precision :: g_cplg2(g_pmax_), g_e(:,:)
         integer          :: g_ehfid
-        !
         ! HF singlet & triplet
-        !
         ! LiF singlets and triplets
-        !
         ! misc constants
-        !
-        !
-        !
-        !
         behf        = 0.d0
         belif       = 0.d0
         belifc1     = 0.d0
@@ -1156,36 +1032,29 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
             print *, 'Parameter g_p_ is greater than g_pmax_'
             stop
         endif
-        !
-        !
         do i = 1, nt
-            !
             d2_v = r(i,1) * r(i,1)
             d1_p = 2.0d0 * r(i,1)
             do g_i_ = 1, g_p_
                 g_r1s(g_i_) = d1_p * g_r(g_i_,i,1)
             enddo
-            r1s = d2_v
-            !--------
+            r1s  = d2_v
             d2_v = r(i,2) * r(i,2)
             d1_p = 2.0d0 * r(i,2)
             do g_i_ = 1, g_p_
                 g_r2s(g_i_) = d1_p * g_r(g_i_,i,2)
             enddo
-            r2s = d2_v
-            !--------
+            r2s  = d2_v
             d2_v = r(i,3) * r(i,3)
             d1_p = 2.0d0 * r(i,3)
             do g_i_ = 1, g_p_
                 g_r3s(g_i_) = d1_p * g_r(g_i_,i,3)
             enddo
             r3s = d2_v
-            !--------
             do g_i_ = 1, g_p_
                 g_cs(g_i_) = -g_r1s(g_i_) + g_r2s(g_i_) + g_r3s(g_i_)
             enddo
-            cs = r3s + r2s - r1s
-            !--------
+            cs   = r3s + r2s - r1s
             d3_v = 2.0d0 * r(i,2)
             d5_v = d3_v * r(i,3)
             d6_v = cs / d5_v
@@ -1196,13 +1065,12 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
             do g_i_ = 1, g_p_
                 g_cs(g_i_) = d5_b * g_r(g_i_,i,3) + d6_b * g_r(g_i_,i,2) + d2_b * g_cs(g_i_)
             enddo
-            cs = d6_v
-            !--------
+            cs   = d6_v
             d2_v = min (cs, 1.0d0)
             if( cs .le. 1.0d0 )then
                 d1_p = 1.0d0
                 d2_p = 0.0d0
-            else if( cs .gt. 1.0d0 )then
+            elseif( cs .gt. 1.0d0 )then
                 d1_p = 0.0d0
                 d2_p = 1.0d0
             endif
@@ -1210,7 +1078,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_cs(g_i_) = d1_p * g_cs(g_i_)
             enddo
             cs = d2_v
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = 0.0d0
             enddo
@@ -1219,7 +1086,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
             if( cs .ge. d1_w )then
                 d1_p = 1.0d0
                 d2_p = 0.0d0
-            else if( cs .lt. d1_w )then
+            elseif( cs .lt. d1_w )then
                 d1_p = 0.0d0
                 d2_p = 1.0d0
             endif
@@ -1227,13 +1094,10 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_cs(g_i_) = d2_p * g_d1_w(g_i_) + d1_p * g_cs(g_i_)
             enddo
             cs = d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_r1r3(g_i_) = r1r3al * g_r(g_i_,i,2) + (-g_r(g_i_,i,3)) + g_r(g_i_,i,1)
             enddo
             r1r3 = r(i,1) - r(i,3) + r1r3al * r(i,2)
-            !--------
             d3_b = 1.0d0 / rcut2del
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d3_b * g_r1r3(g_i_)
@@ -1246,13 +1110,8 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_rcut2(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             rcut2 = 0.5d0 * (1.0d0 - d2_v)
-            !--------
-            !
-            ! =========================================================
             ! The diatomic curves . . .
-            !
             ! The MH singlet & triplet
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-belihc) * g_r(g_i_,i,1)
             enddo
@@ -1263,16 +1122,13 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_xelih(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xelih = d2_v
-            !--------
-            d2_v = xelih * xelih
-            d1_p = 2.0d0 * xelih
-            d4_b = s1c2 + s1c1 * d1_p
+            d2_v  = xelih * xelih
+            d1_p  = 2.0d0 * xelih
+            d4_b  = s1c2 + s1c1 * d1_p
             do g_i_ = 1, g_p_
                 g_s1(g_i_) = d4_b * g_xelih(g_i_)
             enddo
             s1 = s1c1 * d2_v + s1c2 * xelih
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet1) * g_r(g_i_,i,1)
             enddo
@@ -1283,16 +1139,13 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_xelih(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xelih = d2_v
-            !--------
-            d2_v = xelih * xelih
-            d1_p = 2.0d0 * xelih
-            d4_b = t1c2 + t1c1 * d1_p
+            d2_v  = xelih * xelih
+            d1_p  = 2.0d0 * xelih
+            d4_b  = t1c2 + t1c1 * d1_p
             do g_i_ = 1, g_p_
                 g_t1(g_i_) = d4_b * g_xelih(g_i_)
             enddo
             t1 = t1c1 * d2_v + t1c2 * xelih
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bes1) * g_r(g_i_,i,1)
             enddo
@@ -1304,20 +1157,15 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_s1c(g_i_) = d3_b * g_d1_w(g_i_)
             enddo
             s1c = s1c3 * d2_v
-            !--------
             do g_i_ = 1, g_p_
                 g_s1(g_i_) = rcut2 * g_s1c(g_i_) + s1c * g_rcut2(g_i_) + g_s1(g_i_)
             enddo
             s1 = s1 + rcut2 * s1c
-            !--------
-            !
             ! The HF singlet and triplet
-            !
             do g_i_ = 1, g_p_
                 g_yhf(g_i_) = g_r(g_i_,i,2)
             enddo
-            yhf = r(i,2) - 2.1042d0
-            !--------
+            yhf  = r(i,2) - 2.1042d0
             d4_v = yhf * yhf
             d1_p = 2.0d0 * yhf
             d5_b = 0.059062d0 * d1_p + (-0.025647d0)
@@ -1325,8 +1173,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_behf(g_i_) = d5_b * g_yhf(g_i_)
             enddo
             behf = 1.1622d0 - 0.025647d0 * yhf + 0.059062d0 * d4_v
-            !--------
-            !
             d4_v = r(i,2) - rehf
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-behf) * g_r(g_i_,i,2) + (-d4_v) * g_behf( g_i_)
@@ -1338,9 +1184,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_xehfa(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xehfa = d2_v
-            !--------
-            !
-            d3_b = 1.0d0 / s2alp
+            d3_b  = 1.0d0 / s2alp
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d3_b * g_r(g_i_,i,3)
             enddo
@@ -1355,18 +1199,14 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_dehfm(g_i_) = d6_b * g_d1_w(g_i_) + d9_b * g_cs(g_i_)
             enddo
             dehfm = dehf - d4_v * d7_v
-            !--------
-            !
-            d3_v = dehfm * xehfa
-            d4_v = xehfa - 2.0d0
-            d5_b = d4_v * xehfa
-            d4_b = d3_v + d4_v * dehfm
+            d3_v  = dehfm * xehfa
+            d4_v  = xehfa - 2.0d0
+            d5_b  = d4_v * xehfa
+            d4_b  = d3_v + d4_v * dehfm
             do g_i_ = 1, g_p_
                 g_s2(g_i_) = d4_b * g_xehfa(g_i_) + d5_b * g_dehfm(g_i_)
             enddo
             s2 = d3_v * d4_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet2) * g_r(g_i_,i,2)
             enddo
@@ -1377,7 +1217,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_xehfa(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xehfa = d2_v
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet2_180) * g_r(g_i_,i,2)
             enddo
@@ -1388,29 +1227,24 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_xehfa_180(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xehfa_180 = d2_v
-            !--------
-            !
-            d2_v  = xehfa * xehfa
-            d2_p  = 2.0d0 * xehfa
-            d6_v  = (t2a1 * d2_v + t2a2 * xehfa) * 0.5d0
-            d8_v  = 1.0d0 + cs
-            d11_v = xehfa_180 * xehfa_180
-            d1_p  = 2.0d0 * xehfa_180
-            d15_v = (t2a3 * d11_v + t2a4 * xehfa_180) * 0.5d0
-            d16_v = 1.0d0 - cs
-            d7_b  = d16_v * 0.5d0
-            d10_b = d7_b * t2a4 + d7_b * t2a3 * d1_p
-            d6_b  = -d15_v + d6_v
-            d14_b = d8_v * 0.5d0
-            d17_b = d14_b * t2a2 + d14_b * t2a1 * d2_p
+            d2_v      = xehfa * xehfa
+            d2_p      = 2.0d0 * xehfa
+            d6_v      = (t2a1 * d2_v + t2a2 * xehfa) * 0.5d0
+            d8_v      = 1.0d0 + cs
+            d11_v     = xehfa_180 * xehfa_180
+            d1_p      = 2.0d0 * xehfa_180
+            d15_v     = (t2a3 * d11_v + t2a4 * xehfa_180) * 0.5d0
+            d16_v     = 1.0d0 - cs
+            d7_b      = d16_v * 0.5d0
+            d10_b     = d7_b * t2a4 + d7_b * t2a3 * d1_p
+            d6_b      = -d15_v + d6_v
+            d14_b     = d8_v * 0.5d0
+            d17_b     = d14_b * t2a2 + d14_b * t2a1 * d2_p
             do g_i_ = 1, g_p_
                 g_t2(g_i_) = d10_b * g_xehfa_180(g_i_) + d6_b * g_cs(g_i_) + d17_b * g_xehfa(g_i_)
             enddo
             t2 = d6_v * d8_v + d15_v * d16_v
-            !--------
-            !
             ! The Modified HF singlet
-            !
             ! The  LiF singlet & triplet
             d5_v = (4.6498d0 + 7.0489d0 * r(i,3)) * (4.6498d0 + 7.0489d0 * r(i,3))
             d1_p = 2.0d0 * (4.6498d0 + 7.0489d0 * r(i,3))
@@ -1420,9 +1254,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_belif(g_i_) = d7_b * g_r(g_i_,i,3)
             enddo
             belif = d6_v + dble(0.064076)
-            !--------
-            !
-            d3_b = 1.0d0 / gdel
+            d3_b  = 1.0d0 / gdel
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d3_b * g_r(g_i_,i,2)
             enddo
@@ -1434,7 +1266,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_gswt(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             gswt = 0.5d0 - 0.5d0 * d2_v
-            !--------
             d2_v = gswt * 0.5d0
             d4_v = 1.0d0 + cs
             d5_b = d4_v * 0.5d0
@@ -1442,15 +1273,12 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_gswt(g_i_) = d2_v * g_cs(g_i_) + d5_b * g_gswt(g_i_)
             enddo
             gswt = d2_v * d4_v
-            !--------
             d3_v = belifff - belif
             d2_b = 1.0d0 + (-gswt)
             do g_i_ = 1, g_p_
                 g_beliff(g_i_) = d3_v * g_gswt(g_i_) + d2_b * g_belif(g_i_)
             enddo
             beliff = belif + gswt * d3_v
-            !--------
-            !
             if( nb .ne. 0 )then
                 d5_v = (r(i,3) / gam) ** ( nb-1)
                 d2_p = nb *  d5_v
@@ -1481,9 +1309,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_belifmod(g_i_) = d7_b * g_r(g_i_,i,3) + d8_b * g_belif(g_i_) + d4_b * g_beliff(g_i_)
             enddo
             belifmod = d11_v
-            !--------
-            !
-            d4_v = r(i,3) - relif
+            d4_v     = r(i,3) - relif
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-belifmod) * g_r(g_i_,i,3) + (-d4_v) * g_belifmod(g_i_)
             enddo
@@ -1494,31 +1320,24 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_xelif(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xelif = d2_v
-            !--------
-            d2_v = (delif + uli2p) * xelif
-            d3_v = xelif - 2.0d0
-            d4_b = d2_v + d3_v * (delif + uli2p)
+            d2_v  = (delif + uli2p) * xelif
+            d3_v  = xelif - 2.0d0
+            d4_b  = d2_v + d3_v * (delif + uli2p)
             do g_i_ = 1, g_p_
                 g_s3a(g_i_) = d4_b * g_xelif(g_i_)
             enddo
-            s3a = d2_v * d3_v
-            !--------
-            !
+            s3a  = d2_v * d3_v
             d5_b = delifc2 * 0.5d0 + (-(delifc1 * 0.5d0))
             do g_i_ = 1, g_p_
                 g_delifm(g_i_) = d5_b * g_cs(g_i_)
             enddo
             delifm = delifc1 * 0.5d0 * (1.0d0 - cs) + delifc2 * 0.5d0 * (1.0d0 + cs)
-            !--------
-            !
-            d5_b = belifc2 * 0.5d0 + (-(belifc1 * 0.5d0))
+            d5_b   = belifc2 * 0.5d0 + (-(belifc1 * 0.5d0))
             do g_i_ = 1, g_p_
                 g_belifm(g_i_) = d5_b * g_cs(g_i_)
             enddo
             belifm = belifc1 * 0.5d0 * (1.0d0 - cs) + belifc2 * 0.5d0 * (1.0d0 + cs)
-            !--------
-            !
-            d4_v = r(i,3) - relif
+            d4_v   = r(i,3) - relif
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-belifm) * g_r(g_i_,i,3) + (-d4_v) * g_belifm(g_i_)
             enddo
@@ -1529,19 +1348,15 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_xelif(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xelif = d2_v
-            !--------
-            d2_v = delifm + uli2p
-            d4_v = d2_v * xelif
-            d5_v = xelif - 2.0d0
-            d4_b = d4_v + d5_v * d2_v
-            d6_b = d5_v * xelif
+            d2_v  = delifm + uli2p
+            d4_v  = d2_v * xelif
+            d5_v  = xelif - 2.0d0
+            d4_b  = d4_v + d5_v * d2_v
+            d6_b  = d5_v * xelif
             do g_i_ = 1, g_p_
                 g_s3c(g_i_) = d4_b * g_xelif(g_i_) + d6_b * g_delifm(g_i_)
             enddo
             s3c = d4_v * d5_v
-            !--------
-            !
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet3) * g_r(g_i_,i,3)
             enddo
@@ -1552,7 +1367,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_xelif(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xelif = d2_v
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet3_180) * g_r(g_i_,i,3)
             enddo
@@ -1563,45 +1377,38 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_xelif_180(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xelif_180 = d2_v
-            !--------
-            d2_v  = xelif * xelif
-            d2_p  = 2.0d0 * xelif
-            d6_v  = (t3a1 * d2_v + t3a2 * xelif) * 0.5d0
-            d8_v  = 1.0d0 + cs
-            d11_v = xelif_180 * xelif_180
-            d1_p  = 2.0d0 * xelif_180
-            d15_v = (t3a3 * d11_v + t3a4 * xelif_180) * 0.5d0
-            d16_v = 1.0d0 - cs
-            d7_b  = d16_v * 0.5d0
-            d10_b = d7_b * t3a4 + d7_b * t3a3 * d1_p
-            d6_b  = -d15_v + d6_v
-            d14_b = d8_v * 0.5d0
-            d17_b = d14_b * t3a2 + d14_b * t3a1 * d2_p
+            d2_v      = xelif * xelif
+            d2_p      = 2.0d0 * xelif
+            d6_v      = (t3a1 * d2_v + t3a2 * xelif) * 0.5d0
+            d8_v      = 1.0d0 + cs
+            d11_v     = xelif_180 * xelif_180
+            d1_p      = 2.0d0 * xelif_180
+            d15_v     = (t3a3 * d11_v + t3a4 * xelif_180) * 0.5d0
+            d16_v     = 1.0d0 - cs
+            d7_b      = d16_v * 0.5d0
+            d10_b     = d7_b * t3a4 + d7_b * t3a3 * d1_p
+            d6_b      = -d15_v + d6_v
+            d14_b     = d8_v * 0.5d0
+            d17_b     = d14_b * t3a2 + d14_b * t3a1 * d2_p
             do g_i_ = 1, g_p_
                 g_t3(g_i_) = d10_b * g_xelif_180(g_i_) + d6_b * g_cs(g_i_) + d17_b * g_xelif(g_i_)
             enddo
-            t3 = d6_v * d8_v + d15_v * d16_v
-            !--------
-            !
+            t3   = d6_v * d8_v + d15_v * d16_v
             d4_b = -((rho2_180 - rho2_0) * 0.5d0)
             do g_i_ = 1, g_p_
                 g_rho2(g_i_) = d4_b * g_cs(g_i_)
             enddo
             rho2 = rho2_0 + (rho2_180 - rho2_0) * 0.5d0 * (1.0d0 - cs)
-            !--------
             d4_b = -((theta2_180 - theta2_0) * 0.5d0)
             do g_i_ = 1, g_p_
                 g_theta2(g_i_) = d4_b * g_cs(g_i_)
             enddo
             theta2 = theta2_0 + (theta2_180 - theta2_0) * 0.5d0 * (1.0d0 - cs)
-            !--------
-            d4_b = -((del2_180 - del2_0) * 0.5d0)
+            d4_b   = -((del2_180 - del2_0) * 0.5d0)
             do g_i_ = 1, g_p_
                 g_del2(g_i_) = d4_b * g_cs(g_i_)
             enddo
             del2 = del2_0 + (del2_180 - del2_0) * 0.5d0 * (1.0d0 - cs)
-            !--------
-            !
             d2_v = cos(theta2)
             d2_p = -sin(theta2)
             d4_v = rehf - r(i,2)
@@ -1613,8 +1420,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_gc2(g_i_) = d6_v * g_r(g_i_,i,3) + (-d6_v) * g_rho2(g_i_ ) + (-d2_v) * g_r(g_i_,i,2) + d8_b * &
                     & g_theta2(g_i_)
             enddo
-            gc2 = d2_v * d4_v - d6_v * d9_v
-            !--------
+            gc2  = d2_v * d4_v - d6_v * d9_v
             d3_v = gc2 / del2
             d2_b = 1.0d0 / del2
             d3_b = (-d3_v) / del2
@@ -1629,50 +1435,37 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_cut2(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             cut2 = 0.5d0 - 0.5d0 * d2_v
-            !--------
-            !
             d3_v = s3a - s3c
             d2_b = 1.0d0 + (-cut2)
             do g_i_ = 1, g_p_
                 g_s3(g_i_) = d3_v * g_cut2(g_i_) + cut2 * g_s3a(g_i_) + d2_b * g_s3c(g_i_)
             enddo
             s3 = s3c + d3_v * cut2
-            !--------
-            !
-            !
-            ! ===============================================================
             ! The final LEPS form
-            !
             do g_i_ = 1, g_p_
                 g_coul1(g_i_) = 0.5d0 * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
             enddo
             coul1 = 0.5d0 * (s1 + t1)
-            !--------
             do g_i_ = 1, g_p_
                 g_coul2(g_i_) = 0.5d0 * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
             enddo
             coul2 = 0.5d0 * (s2 + t2)
-            !--------
             do g_i_ = 1, g_p_
                 g_coul3(g_i_) = 0.5d0 * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
             enddo
             coul3 = 0.5d0 * (s3 + t3)
-            !--------
             do g_i_ = 1, g_p_
                 g_exch1(g_i_) = (-0.5d0) * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
             enddo
             exch1 = 0.5d0 * (s1 - t1)
-            !--------
             do g_i_ = 1, g_p_
                 g_exch2(g_i_) = (-0.5d0) * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
             enddo
             exch2 = 0.5d0 * (s2 - t2)
-            !--------
             do g_i_ = 1, g_p_
                 g_exch3(g_i_) = (-0.5d0) * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
             enddo
             exch3 = 0.5d0 * (s3 - t3)
-            !--------
             d4_v  = (exch1 - exch2) * (exch1 - exch2)
             d3_p  = 2.0d0 * (exch1 - exch2)
             d7_v  = (exch2 - exch3) * (exch2 - exch3)
@@ -1686,7 +1479,6 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_w(g_i_) = d5_b * g_exch3(g_i_) + d10_b * g_exch2(g_i_) + d6_b * g_exch1(g_i_)
             enddo
             w = d4_v + d7_v + d10_v
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-c2c) * g_r(g_i_,i,3) + (-c2c) * g_r(g_i_,i,2) + (-c2c) * g_r(g_i_,i,1) + (-c2b) * &
                     & g_w(g_i_)
@@ -1699,8 +1491,7 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_cplg2(g_i_) = d3_b * g_d1_w(g_i_)
             enddo
             cplg2 = c2a * d2_v
-            !--------
-            d4_b = cplg2 + cplg2
+            d4_b  = cplg2 + cplg2
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d4_b * g_cplg2(g_i_) + g_w(g_i_)
             enddo
@@ -1716,17 +1507,10 @@ module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
                 g_e(g_i_,i) = d7_b * g_d1_w(g_i_) + g_coul3(g_i_) + g_coul2 (g_i_) + g_coul1(g_i_)
             enddo
             e(i) = coul1 + coul2 + coul3 - d7_v / dsqrt(2.0d0) + uli2p + dehf
-            !--------
-            !
-            !
-            ! ===============================================================
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = cevau * g_e(g_i_,i)
             enddo
             e(i) = e(i) * cevau
-            !--------
-            !
         enddo
     end subroutine dispatch
 end module chempotpy_lifh_leps_jhctp_2001_g_pot22_legacy_state_356f5432
@@ -1745,7 +1529,3 @@ subroutine g_pot22( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
     integer          :: nt
     call dispatch(g_p_=g_p_, r=r, g_r=g_r, ldg_r=ldg_r, e=e, g_e=g_e, ldg_e=ldg_e, nt=nt)
 end subroutine g_pot22
-
-!
-!
-!

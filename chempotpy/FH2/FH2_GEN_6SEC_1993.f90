@@ -1,11 +1,62 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          FH2
+!   Functional form: Double many-body expansion
+!   Common name:     6SEC
+!   Reference:          S. L. Mielke, G. C. Lynch,
+!                       diat_d. G. Truhlar, and diat_d. W. Schwenke
+!                       Chem. Phys. Lett. 216, 441-446 (1993)
+! Number of bodies: 3
+! Interface: potlib2001
+! Number of electronic states: 1
+! Number of derivatives: 1
+!   prepare_local_context must be called once before any call to POT.
+!   The potential parameters are included through the subprogram
+!   BLOCK DATA PTPACM.
+!   The coordinates, potential energy for the ground electronic state, a
+!   the derivatives of the potential energy for the ground electronic st
+!   with respect to the coordinates are passed through the common block
+!   The potential energy in the three asymptotic valleys are
+!   stored in the common block ASYCM:
+!                  COMMON /PT5COM/ asycm_easyab, asycm_easybc, asycm_easyac
+!   The potential energy in the AB valley, asycm_easyab, is equal to the poten
+!   energy of the H "infinitely" far from the FH diatomic, with the
+!   FH diatomic at its equilibrium configuration.  Similarly, the terms
+!   asycm_easybc and asycm_easyac represent the H2 and the FH asymptotic valleys,
+!   respectively.
+!   All the information passed through the common blocks PT1CM and ASYCM
+!   is in Hartree atomic units.
+!        This potential is written such that:
+!                       R(1) = R(F-H)
+!                       R(2) = R(H-H)
+!                       R(3) = R(H-F)
+!   The flags that indicate what calculations should be carried out in
+!   the potential routine are passed through the common block PT2CM:
+!   where:
+!        usricm_nasurf - which electronic states availalble
+!                 (1,1) = 1 as only gs state available
+!        usricm_nder  = 0 => no derivatives should be calculated
+!        usricm_nder  = 1 => calculate first derivatives
+!        usricm_nflag - these integer values can be used to flag options
+!                 within the potential;
+!   Potential parameters' default settings
+!                  Variable            Default value
+!                  usricm_nder                1
+!                  usricm_nflag(18)           6
+!   ENERGY  = E(EHF) + E(CORR) + De(H2)
+!   E(EHF)  = E(London) + E(3-body)
+!   E(CORR) = ECORR(2-body) + ECORR(3-body)
+!   Note:  The zero of energy for this surface is F infinitely far
+!          from H2 at R(H2) = Re(H2).
+!          To get the zero of energy R1 must be at least 50 a.u.
+
+!> @brief Implement FH2_GEN_6SEC_1993, a potential energy surface for FH2.
 module chempotpy_fh2_gen_6sec_1993_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the FH2_GEN_6SEC_1993 potential energy surface for FH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -321,7 +372,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
             do istate=1, nstates
                 p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
             enddo
@@ -330,197 +381,87 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*51.422067
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
+
         contains
+
         !> @brief Evaluate prepare_local_context for the FH2_GEN_6SEC_1993 potential.
         subroutine prepare_local_context
-            !
-            !   System:          FH2
-            !   Functional form: Double many-body expansion
-            !   Common name:     6SEC
-            !   Reference:          S. L. Mielke, G. C. Lynch,
-            !                       diat_d. G. Truhlar, and diat_d. W. Schwenke
-            !                       Chem. Phys. Lett. 216, 441-446 (1993)
-            !
-            ! Number of bodies: 3
-            ! Interface: potlib2001
-            ! Number of electronic states: 1
-            ! Number of derivatives: 1
-            !
-            !
-            !   prepare_local_context must be called once before any call to POT.
-            !   The potential parameters are included through the subprogram
-            !   BLOCK DATA PTPACM.
-            !   The coordinates, potential energy for the ground electronic state, a
-            !   the derivatives of the potential energy for the ground electronic st
-            !   with respect to the coordinates are passed through the common block
-            !   The potential energy in the three asymptotic valleys are
-            !   stored in the common block ASYCM:
-            !                  COMMON /PT5COM/ asycm_easyab, asycm_easybc, asycm_easyac
-            !   The potential energy in the AB valley, asycm_easyab, is equal to the poten
-            !   energy of the H "infinitely" far from the FH diatomic, with the
-            !   FH diatomic at its equilibrium configuration.  Similarly, the terms
-            !   asycm_easybc and asycm_easyac represent the H2 and the FH asymptotic valleys,
-            !   respectively.
-            !   All the information passed through the common blocks PT1CM and ASYCM
-            !   is in Hartree atomic units.
-            !
-            !        This potential is written such that:
-            !                       R(1) = R(F-H)
-            !                       R(2) = R(H-H)
-            !                       R(3) = R(H-F)
-            !
-            !   The flags that indicate what calculations should be carried out in
-            !   the potential routine are passed through the common block PT2CM:
-            !   where:
-            !        usricm_nasurf - which electronic states availalble
-            !                 (1,1) = 1 as only gs state available
-            !        usricm_nder  = 0 => no derivatives should be calculated
-            !        usricm_nder  = 1 => calculate first derivatives
-            !        usricm_nflag - these integer values can be used to flag options
-            !                 within the potential;
-            !
-            !
-            !   Potential parameters' default settings
-            !                  Variable            Default value
-            !                  usricm_nder                1
-            !                  usricm_nflag(18)           6
-            !
-            !   ENERGY  = E(EHF) + E(CORR) + De(H2)
-            !   E(EHF)  = E(London) + E(3-body)
-            !   E(CORR) = ECORR(2-body) + ECORR(3-body)
-            !
-            !   Note:  The zero of energy for this surface is F infinitely far
-            !          from H2 at R(H2) = Re(H2).
-            !          To get the zero of energy R1 must be at least 50 a.u.
-            !
             implicit none
-            double precision :: rtmp
-            integer          :: i
-            !
-            !
+            double precision            :: rtmp(3)
+            integer                     :: i
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension rtmp(3)
-            !
-            !
             double precision, parameter :: deh2 = 0.174472692d0
             double precision, parameter :: dehf = 0.224989333d0
-            !
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
             !     CONSTANTS NEEDED FOR THE DAMPING FUNCTION
             !     A=dispc_alph0/DBLE(N)**dispc_alph1        N=6,8,10
             !     B=dispc_bet0*EXP(-dispc_bet1*DBLE(N))     N=6,8,10
-            !
             dampc_ad1 = dispc_alph0/6.0d0**dispc_alph1
             dampc_ad2 = dispc_alph0/8.0d0**dispc_alph1
             dampc_ad3 = dispc_alph0/10.0d0**dispc_alph1
             dampc_bd1 = dispc_bet0*exp(-dispc_bet1*6.0d0)
             dampc_bd2 = dispc_bet0*exp(-dispc_bet1*8.0d0)
             dampc_bd3 = dispc_bet0*exp(-dispc_bet1*10.0d0)
-            !
             !   Initialize the energy in the asymptotic valleys
-            !
-            asycm_easyab = decm_disse(1)
-            asycm_easybc = decm_disse(2)
-            asycm_easyac = decm_disse(3)
-            !
-            !
-            !
-            !
+            asycm_easyab   = decm_disse(1)
+            asycm_easybc   = decm_disse(2)
+            asycm_easyac   = decm_disse(3)
             pt3cm_ezero(1) = decm_disse(2)
-            !
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
             !   Reference:
             !                       diat_d. G. Truhlar, and diat_d. W. Schwenke
-            !
-            !
-            infocm_ref(1) = 'S. L. Mielke, G. C. Lynch,'
-            infocm_ref(2) = 'diat_d. G. Truhlar, diat_d. W. Schwenke,'
-            infocm_ref(3) = 'Chem. Phys. Lett. 216, 441(1993)'
-            !
+            infocm_ref(1)     = 'S. L. Mielke, G. C. Lynch,'
+            infocm_ref(2)     = 'diat_d. G. Truhlar, diat_d. W. Schwenke,'
+            infocm_ref(3)     = 'Chem. Phys. Lett. 216, 441(1993)'
             infocm_indexes(1) = 9
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
-            !
-            !
-            !
-            infocm_irctnt = 2
-            !
+            infocm_irctnt     = 2
             !      CALL POTINFO
-            !
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POT for the FH2_GEN_6SEC_1993 potential.
         subroutine pot
-            !
             !        This potential is written such that:
             !                       pt1cm_r(1) = pt1cm_r(F-H)
             !                       pt1cm_r(2) = pt1cm_r(H-H)
             !                       pt1cm_r(3) = pt1cm_r(H-F)
-            !
             !   The potential energy in the AB valley, asycm_easyab, is equal to the poten
             !   energy of the H "infinitely" far from the FH diatomic, with the
             !   FH diatomic at its equilibrium configuration.  Similarly, the terms
             !   asycm_easybc and asycm_easyac represent the H2 and the FH asymptotic valleys,
             !   respectively.
-            !
             !   Note:  The zero of energy for this surface is F infinitely far
             !          from H2 at pt1cm_r(H2) = Re(H2).
             !          To get the zero of energy R1 must be at least 50 a.u.
-            !
             implicit none
-            double precision :: rtmp, t
-            integer          :: i, i1, i2, i3
-            !
-            !
+            double precision            :: rtmp(3), t
+            integer                     :: i, i1, i2, i3
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension rtmp(3)
-            !
-            !
             double precision, parameter :: deh2 = 0.174472692d0
             double precision, parameter :: dehf = 0.224989333d0
-            !
             call cartou
             call carttor
-            !
             !   Check the values of usricm_nasurf and usricm_nder for validity.
-            !
-            !
-            !
             !   Test the values of Ri
             !   If the values are unrealistic then print Ri and exit
-            !
             do i=1, 3
                 rtmp(i) = pt1cm_r(i)
             enddo
@@ -533,395 +474,261 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     stop
                 endif
             enddo
-            !
             !   I: Compute the damping function for the N th. dispersion coefficient
             !      and, if usricm_nder = 1, compute the derivative of the damping function
             !      w.pt1cm_r.t. pt1cm_r(i)
-            !
             call damp(pt1cm_r, dist_rm)
-            !
             !   II: Compute the two-body dynamical correlation term and, if usricm_nder = 1
             !       compute the derivative of the two-body dynamical correlation ter
             !       w.pt1cm_r.t. pt1cm_r(i)
-            !
             call corr2
-            !
             !   III: Compute the auxiliary function, hn(pt1cm_r), and, if usricm_nder = 1,
             !            compute the derivative of hn(pt1cm_r) w.pt1cm_r.t. pt1cm_r
-            !
             call xtanh(1, trial_eta1)
             call xtanh(2, trial_eta2)
             call xtanh(3, trial_eta3)
-            !
             !   IV: Compute the three-body dynamical correlation term and, if usricm_nder =
             !       compute the derivative of the three-body dynamical correlation t
             !       w.pt1cm_r.t. pt1cm_r(i)
-            !
             call corr3
-            !
             !   V: Compute the switching function, S(pt1cm_r), which is used in the comput
             !      of the H2 triplet state curves.  If usricm_nder = 1, compute the derivat
             !      of S w.pt1cm_r.t. pt1cm_r
-            !
             call switch
-            !
             !   VI: Compute the lower eigenvalue of the London eq. and, if usricm_nder = 1,
             !       compute the derivatives of the London energy w.pt1cm_r.t. pt1cm_r.
-            !
             call vlond
-            !
             !   VII: Compute the three-body term and, if usricm_nder = 1, compute the
             !        the derivatives of the three-body energy w.pt1cm_r.t. pt1cm_r.
-            !
             call thcent
-            !
             !   IX: Compute the total energy which is a sum of the extended-Hartree-
             !       and the dynamical correlation terms.
-            !
             pt1cm_engygs = engycm_ecor2b + engycm_ecor3b + engycm_elond + engycm_e3c + pt3cm_ezero(1) - usricm_anuzero
-            !
             !   Compute the derivatives of the energy with respect to the coordinate
-            !
             if( usricm_nder .eq. 1 )then
                 do i = 1, 3
                     pt1cm_degsdr(i) = degsdrcm_dcorr2(i) + degsdrcm_dcorr3(i) + degsdrcm_dldr(i) + degsdrcm_de3c(i)
                 enddo
             endif
-            !
-            !
             call eunitzero
             if( usricm_nder .ne. 0 )then
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate CORR2 for the FH2_GEN_6SEC_1993 potential.
         subroutine corr2
-            !=======================================================================
             !   Compute the two-body dynamical energies and derivatives.
-            !=======================================================================
-            !
             implicit none
-            double precision :: cor2r1, cor2r2, cor2r3, r1p10, r1p6, r1p8, r2p10, r2p6, r2p8, r3p10, r3p6, r3p8
-            !
-            !
+            double precision            :: cor2r1, cor2r2, cor2r3, r1p10, r1p6, r1p8, r2p10, r2p6, r2p8, r3p10, r3p6, r3p8
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            r1p6  = pt1cm_r(1)**6
-            r1p8  = pt1cm_r(1)**8
-            r1p10 = pt1cm_r(1)**10
-            r2p6  = pt1cm_r(2)**6
-            r2p8  = pt1cm_r(2)**8
-            r2p10 = pt1cm_r(2)**10
-            r3p6  = pt1cm_r(3)**6
-            r3p8  = pt1cm_r(3)**8
-            r3p10 = pt1cm_r(3)**10
-            !
-            cor2r1 = -dpc_dp1(1)*atat_chf(6)/r1p6 -dpc_dp1(2)*atat_chf(8)/r1p8 -dpc_dp1(3)*atat_chf(10)/r1p10
-            !
-            cor2r2 = -dpc_dp2(1)*atat_chh(6)/r2p6 -dpc_dp2(2)*atat_chh(8)/r2p8 -dpc_dp2(3)*atat_chh(10)/r2p10
-            !
-            cor2r3 = -dpc_dp3(1)*atat_chf(6)/r3p6 -dpc_dp3(2)*atat_chf(8)/r3p8 -dpc_dp3(3)*atat_chf(10)/r3p10
-            !
+            r1p6          = pt1cm_r(1)**6
+            r1p8          = pt1cm_r(1)**8
+            r1p10         = pt1cm_r(1)**10
+            r2p6          = pt1cm_r(2)**6
+            r2p8          = pt1cm_r(2)**8
+            r2p10         = pt1cm_r(2)**10
+            r3p6          = pt1cm_r(3)**6
+            r3p8          = pt1cm_r(3)**8
+            r3p10         = pt1cm_r(3)**10
+            cor2r1        = -dpc_dp1(1)*atat_chf(6)/r1p6 -dpc_dp1(2)*atat_chf(8)/r1p8 -dpc_dp1(3)*atat_chf(10)/r1p10
+            cor2r2        = -dpc_dp2(1)*atat_chh(6)/r2p6 -dpc_dp2(2)*atat_chh(8)/r2p8 -dpc_dp2(3)*atat_chh(10)/r2p10
+            cor2r3        = -dpc_dp3(1)*atat_chf(6)/r3p6 -dpc_dp3(2)*atat_chf(8)/r3p8 -dpc_dp3(3)*atat_chf(10)/r3p10
             engycm_ecor2b = cor2r1 + cor2r2 + cor2r3
-            !
             !   Compute the derivatives w.pt1cm_r.t. pt1cm_r(i) if usricm_nder = 1
-            !
             goto_block_100_655: block
                 if( usricm_nder .ne. 1 ) exit goto_block_100_655
-                !
                 degsdrcm_dcorr2(1) = -atat_chf(6)*(dpc_ddp1(1)-6.0d0*dpc_dp1(1)/pt1cm_r(1))/r1p6 -atat_chf(8)* &
                     & (dpc_ddp1(2)-8.0d0*dpc_dp1(2)/pt1cm_r(1))/r1p8 -atat_chf(10)*(dpc_ddp1(3)- 10.0d0*dpc_dp1(3)/ &
                     & pt1cm_r(1))/r1p10
-                !
                 degsdrcm_dcorr2(2) = -atat_chh(6)*(dpc_ddp2(1)-6.0d0*dpc_dp2(1)/pt1cm_r(2))/r2p6 -atat_chh(8)* &
                     & (dpc_ddp2(2)-8.0d0*dpc_dp2(2)/pt1cm_r(2))/r2p8 -atat_chh(10)*(dpc_ddp2(3)- 10.0d0*dpc_dp2(3)/ &
                     & pt1cm_r(2))/r2p10
-                !
                 degsdrcm_dcorr2(3) = -atat_chf(6)*(dpc_ddp3(1)-6.0d0*dpc_dp3(1)/pt1cm_r(3))/r3p6 -atat_chf(8)* &
                     & (dpc_ddp3(2)-8.0d0*dpc_dp3(2)/pt1cm_r(3))/r3p8 -atat_chf(10)*(dpc_ddp3(3)- 10.0d0*dpc_dp3(3)/ &
                     & pt1cm_r(3))/r3p10
-                !
             end block goto_block_100_655
-            !
         end subroutine corr2
+
         !> @brief Evaluate DAMP for the FH2_GEN_6SEC_1993 potential.
         subroutine damp( rt1, rt2 )
-            !
-            !=======================================================================
             !   Compute the damping function for the Nth. dispersion coefficient and
             !   derivative w.pt1cm_r.t. pt1cm_r(i)
-            !=======================================================================
-            !
             implicit none
-            double precision :: dpol1, dpol2, dpol3, dx, pol1, pol2, pol3, rt1, rt2, x
-            !
-            !
+            double precision            :: dpol1(3), dpol2(3), dpol3(3), dx(3), pol1(3), pol2(3), pol3(3), rt1(3), rt2(3), x(3)
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension rt1(3), rt2(3), x(3), dx(3), pol1(3), pol2(3), pol3(3)
-            dimension dpol1(3), dpol2(3), dpol3(3)
-            !
-            x(1) = 2.0d0*rt1(1)/(rt2(1)+2.5d0*dist_r0(1))
-            x(2) = 2.0d0*rt1(2)/(rt2(2)+2.5d0*dist_r0(2))
-            x(3) = 2.0d0*rt1(3)/(rt2(3)+2.5d0*dist_r0(3))
-            !
-            pol1(1) = dampc_ad1*x(1)+dampc_bd1*x(1)**2
-            pol2(1) = dampc_ad2*x(1)+dampc_bd2*x(1)**2
-            pol3(1) = dampc_ad3*x(1)+dampc_bd3*x(1)**2
-            !
-            pol1(2) = dampc_ad1*x(2)+dampc_bd1*x(2)**2
-            pol2(2) = dampc_ad2*x(2)+dampc_bd2*x(2)**2
-            pol3(2) = dampc_ad3*x(2)+dampc_bd3*x(2)**2
-            !
-            pol1(3) = dampc_ad1*x(3)+dampc_bd1*x(3)**2
-            pol2(3) = dampc_ad2*x(3)+dampc_bd2*x(3)**2
-            pol3(3) = dampc_ad3*x(3)+dampc_bd3*x(3)**2
-            !
+            x(1)       = 2.0d0*rt1(1)/(rt2(1)+2.5d0*dist_r0(1))
+            x(2)       = 2.0d0*rt1(2)/(rt2(2)+2.5d0*dist_r0(2))
+            x(3)       = 2.0d0*rt1(3)/(rt2(3)+2.5d0*dist_r0(3))
+            pol1(1)    = dampc_ad1*x(1)+dampc_bd1*x(1)**2
+            pol2(1)    = dampc_ad2*x(1)+dampc_bd2*x(1)**2
+            pol3(1)    = dampc_ad3*x(1)+dampc_bd3*x(1)**2
+            pol1(2)    = dampc_ad1*x(2)+dampc_bd1*x(2)**2
+            pol2(2)    = dampc_ad2*x(2)+dampc_bd2*x(2)**2
+            pol3(2)    = dampc_ad3*x(2)+dampc_bd3*x(2)**2
+            pol1(3)    = dampc_ad1*x(3)+dampc_bd1*x(3)**2
+            pol2(3)    = dampc_ad2*x(3)+dampc_bd2*x(3)**2
+            pol3(3)    = dampc_ad3*x(3)+dampc_bd3*x(3)**2
             dpc_dp1(1) = (1.0d0-exp(-pol1(1)))**6
             dpc_dp1(2) = (1.0d0-exp(-pol2(1)))**8
             dpc_dp1(3) = (1.0d0-exp(-pol3(1)))**10
-            !
             dpc_dp2(1) = (1.0d0-exp(-pol1(2)))**6
             dpc_dp2(2) = (1.0d0-exp(-pol2(2)))**8
             dpc_dp2(3) = (1.0d0-exp(-pol3(2)))**10
-            !
             dpc_dp3(1) = (1.0d0-exp(-pol1(3)))**6
             dpc_dp3(2) = (1.0d0-exp(-pol2(3)))**8
             dpc_dp3(3) = (1.0d0-exp(-pol3(3)))**10
-            !
             if( usricm_nder .eq. 1 )then
-                dx(1) = 2.0d0/(rt2(1)+2.5d0*dist_r0(1))
-                dx(2) = 2.0d0/(rt2(2)+2.5d0*dist_r0(2))
-                dx(3) = 2.0d0/(rt2(3)+2.5d0*dist_r0(3))
-                !
-                dpol1(1) = dampc_ad1+2.0d0*dampc_bd1*x(1)
-                dpol2(1) = dampc_ad2+2.0d0*dampc_bd2*x(1)
-                dpol3(1) = dampc_ad3+2.0d0*dampc_bd3*x(1)
-                !
-                dpol1(2) = dampc_ad1+2.0d0*dampc_bd1*x(2)
-                dpol2(2) = dampc_ad2+2.0d0*dampc_bd2*x(2)
-                dpol3(2) = dampc_ad3+2.0d0*dampc_bd3*x(2)
-                !
-                dpol1(3) = dampc_ad1+2.0d0*dampc_bd1*x(3)
-                dpol2(3) = dampc_ad2+2.0d0*dampc_bd2*x(3)
-                dpol3(3) = dampc_ad3+2.0d0*dampc_bd3*x(3)
-                !
+                dx(1)       = 2.0d0/(rt2(1)+2.5d0*dist_r0(1))
+                dx(2)       = 2.0d0/(rt2(2)+2.5d0*dist_r0(2))
+                dx(3)       = 2.0d0/(rt2(3)+2.5d0*dist_r0(3))
+                dpol1(1)    = dampc_ad1+2.0d0*dampc_bd1*x(1)
+                dpol2(1)    = dampc_ad2+2.0d0*dampc_bd2*x(1)
+                dpol3(1)    = dampc_ad3+2.0d0*dampc_bd3*x(1)
+                dpol1(2)    = dampc_ad1+2.0d0*dampc_bd1*x(2)
+                dpol2(2)    = dampc_ad2+2.0d0*dampc_bd2*x(2)
+                dpol3(2)    = dampc_ad3+2.0d0*dampc_bd3*x(2)
+                dpol1(3)    = dampc_ad1+2.0d0*dampc_bd1*x(3)
+                dpol2(3)    = dampc_ad2+2.0d0*dampc_bd2*x(3)
+                dpol3(3)    = dampc_ad3+2.0d0*dampc_bd3*x(3)
                 dpc_ddp1(1) = 6.0d0*dpc_dp1(1)*exp(-pol1(1))*dpol1(1)*dx(1)/ (1.0d0-exp(-pol1(1)))
                 dpc_ddp1(2) = 8.0d0*dpc_dp1(2)*exp(-pol2(1))*dpol2(1)*dx(1)/ (1.0d0-exp(-pol2(1)))
                 dpc_ddp1(3) = 10.0d0*dpc_dp1(3)*exp(-pol3(1))*dpol3(1)*dx(1)/ (1.0d0-exp(-pol3(1)))
-                !
                 dpc_ddp2(1) = 6.0d0*dpc_dp2(1)*exp(-pol1(2))*dpol1(2)*dx(2)/ (1.0d0-exp(-pol1(2)))
                 dpc_ddp2(2) = 8.0d0*dpc_dp2(2)*exp(-pol2(2))*dpol2(2)*dx(2)/ (1.0d0-exp(-pol2(2)))
                 dpc_ddp2(3) = 10.0d0*dpc_dp2(3)*exp(-pol3(2))*dpol3(2)*dx(2)/ (1.0d0-exp(-pol3(2)))
-                !
                 dpc_ddp3(1) = 6.0d0*dpc_dp3(1)*exp(-pol1(3))*dpol1(3)*dx(3)/ (1.0d0-exp(-pol1(3)))
                 dpc_ddp3(2) = 8.0d0*dpc_dp3(2)*exp(-pol2(3))*dpol2(3)*dx(3)/ (1.0d0-exp(-pol2(3)))
                 dpc_ddp3(3) = 10.0d0*dpc_dp3(3)*exp(-pol3(3))*dpol3(3)*dx(3)/ (1.0d0-exp(-pol3(3)))
             endif
-            !
         end subroutine damp
+
         !> @brief Evaluate CORR3 for the FH2_GEN_6SEC_1993 potential.
         subroutine corr3
-            !
-            !=======================================================================
             !   Compute the three-body dynamical energies and derivatives.
-            !=======================================================================
-            !
             implicit none
-            double precision :: co3, dc3dr1, dc3dr2, dc3dr3, dg1, dg2, dg3, dh1, dh2, dh3, dt1dr1, dt1dr2, dt1dr3, dt2dr1, dt2dr2, dt2dr3, dt3dr1, dt3dr2, dt3dr3, fi, g1, g2, g3, h1, h2, h3, r1pi, r2pi, r3pi, t1, t2, t3
-            integer          :: i, jj
-            !
-            !
+            double precision            :: co3(3), dc3dr1(3), dc3dr2(3), dc3dr3(3), dg1, dg2, dg3, dh1, dh2, dh3, dt1dr1, dt1dr2, &
+                & dt1dr3, dt2dr1, dt2dr2, dt2dr3, dt3dr1, dt3dr2, dt3dr3, fi, g1, g2, g3, h1, h2, h3, r1pi, r2pi, r3pi, t1, t2, t3
+            integer                     :: i, jj
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension co3(3), dc3dr1(3), dc3dr2(3), dc3dr3(3)
-            !
             jj = 0
-            !
             do i=6, 10, 2
                 jj   = jj+1
                 fi   = dble(i)
                 r1pi = pt1cm_r(1)**i
                 r2pi = pt1cm_r(2)**i
                 r3pi = pt1cm_r(3)**i
-                !
                 !   Compute the auxiliary function gn(pt1cm_r)
-                !
                 g1 = 1.0d0+kkp_ck1(i)*exp(-kkp_ckp1(i)*(pt1cm_r(1)-ref_ro(1)))
                 g2 = 1.0d0+kkp_ck2(i)*exp(-kkp_ckp2(i)*(pt1cm_r(2)-ref_ro(2)))
                 g3 = 1.0d0+kkp_ck3(i)*exp(-kkp_ckp3(i)*(pt1cm_r(3)-ref_ro(3)))
-                !
                 !   Compute the auxiliary function hn(pt1cm_r)
-                !
-                h1 = vtanh_rtanh(1,i)**trial_etap1(i)
-                h2 = vtanh_rtanh(2,i)**trial_etap2(i)
-                h3 = vtanh_rtanh(3,i)**trial_etap3(i)
-                !
-                t1 = atat_chf(i)*(1.0d0-0.5d0*(g2*h3+g3*h2)) *dpc_dp1(jj)/r1pi
-                t2 = atat_chh(i)*(1.0d0-0.5d0*(g3*h1+g1*h3)) *dpc_dp2(jj)/r2pi
-                t3 = atat_chf(i)*(1.0d0-0.5d0*(g1*h2+g2*h1)) *dpc_dp3(jj)/r3pi
-                !
+                h1      = vtanh_rtanh(1,i)**trial_etap1(i)
+                h2      = vtanh_rtanh(2,i)**trial_etap2(i)
+                h3      = vtanh_rtanh(3,i)**trial_etap3(i)
+                t1      = atat_chf(i)*(1.0d0-0.5d0*(g2*h3+g3*h2)) *dpc_dp1(jj)/r1pi
+                t2      = atat_chh(i)*(1.0d0-0.5d0*(g3*h1+g1*h3)) *dpc_dp2(jj)/r2pi
+                t3      = atat_chf(i)*(1.0d0-0.5d0*(g1*h2+g2*h1)) *dpc_dp3(jj)/r3pi
                 co3(jj) = t1+t2+t3
-                !
                 if( usricm_nder .eq. 1 )then
-                    !
                     !   Compute the partial derivatives w.pt1cm_r.t. pt1cm_r(i)
-                    !
-                    dg1 = -kkp_ckp1(i)*(g1-1.0d0)
-                    dg2 = -kkp_ckp2(i)*(g2-1.0d0)
-                    dg3 = -kkp_ckp3(i)*(g3-1.0d0)
-                    !
-                    dh1 = trial_etap1(i)*(vtanh_rtanh(1,i)**(trial_etap1(i)-1))*vtanh_drtanh(1,i)
-                    dh2 = trial_etap2(i)*(vtanh_rtanh(2,i)**(trial_etap2(i)-1))*vtanh_drtanh(2,i)
-                    dh3 = trial_etap3(i)*(vtanh_rtanh(3,i)**(trial_etap3(i)-1))*vtanh_drtanh(3,i)
-                    !
-                    dt1dr1 = t1*(dpc_ddp1(jj)/dpc_dp1(jj)-fi/pt1cm_r(1))
-                    dt1dr2 = -0.5d0*atat_chf(i)*dpc_dp1(jj)*(dg2*h3+g3*dh2)/r1pi
-                    dt1dr3 = -0.5d0*atat_chf(i)*dpc_dp1(jj)*(g2*dh3+dg3*h2)/r1pi
-                    !
-                    dt2dr1 = -0.5d0*atat_chh(i)*dpc_dp2(jj)*(g3*dh1+dg1*h3)/r2pi
-                    dt2dr2 = t2*dpc_ddp2(jj)/dpc_dp2(jj)-t2*fi/pt1cm_r(2)
-                    dt2dr3 = -0.5d0*atat_chh(i)*dpc_dp2(jj)*(dg3*h1+g1*dh3)/r2pi
-                    !
-                    dt3dr1 = -0.5d0*atat_chf(i)*dpc_dp3(jj)*(dg1*h2+g2*dh1)/r3pi
-                    dt3dr2 = -0.5d0*atat_chf(i)*dpc_dp3(jj)*(g1*dh2+dg2*h1)/r3pi
-                    dt3dr3 = t3*(dpc_ddp3(jj)/dpc_dp3(jj)-fi/pt1cm_r(3))
-                    !
+                    dg1        = -kkp_ckp1(i)*(g1-1.0d0)
+                    dg2        = -kkp_ckp2(i)*(g2-1.0d0)
+                    dg3        = -kkp_ckp3(i)*(g3-1.0d0)
+                    dh1        = trial_etap1(i)*(vtanh_rtanh(1,i)**(trial_etap1(i)-1))*vtanh_drtanh(1,i)
+                    dh2        = trial_etap2(i)*(vtanh_rtanh(2,i)**(trial_etap2(i)-1))*vtanh_drtanh(2,i)
+                    dh3        = trial_etap3(i)*(vtanh_rtanh(3,i)**(trial_etap3(i)-1))*vtanh_drtanh(3,i)
+                    dt1dr1     = t1*(dpc_ddp1(jj)/dpc_dp1(jj)-fi/pt1cm_r(1))
+                    dt1dr2     = -0.5d0*atat_chf(i)*dpc_dp1(jj)*(dg2*h3+g3*dh2)/r1pi
+                    dt1dr3     = -0.5d0*atat_chf(i)*dpc_dp1(jj)*(g2*dh3+dg3*h2)/r1pi
+                    dt2dr1     = -0.5d0*atat_chh(i)*dpc_dp2(jj)*(g3*dh1+dg1*h3)/r2pi
+                    dt2dr2     = t2*dpc_ddp2(jj)/dpc_dp2(jj)-t2*fi/pt1cm_r(2)
+                    dt2dr3     = -0.5d0*atat_chh(i)*dpc_dp2(jj)*(dg3*h1+g1*dh3)/r2pi
+                    dt3dr1     = -0.5d0*atat_chf(i)*dpc_dp3(jj)*(dg1*h2+g2*dh1)/r3pi
+                    dt3dr2     = -0.5d0*atat_chf(i)*dpc_dp3(jj)*(g1*dh2+dg2*h1)/r3pi
+                    dt3dr3     = t3*(dpc_ddp3(jj)/dpc_dp3(jj)-fi/pt1cm_r(3))
                     dc3dr1(jj) = dt1dr1+dt2dr1+dt3dr1
                     dc3dr2(jj) = dt1dr2+dt2dr2+dt3dr2
                     dc3dr3(jj) = dt1dr3+dt2dr3+dt3dr3
                 endif
             enddo
-            !
             !   Compute the three-body dynamical correlation term by summing over al
             !   C6, C8, and C10 terms.
-            !
             engycm_ecor3b = co3(1)+co3(2)+co3(3)
-            !
             if( usricm_nder .eq. 1 )then
-                !
                 !   Sum all the partial derivatives.
-                !
                 degsdrcm_dcorr3(1) = dc3dr1(1)+dc3dr1(2)+dc3dr1(3)
                 degsdrcm_dcorr3(2) = dc3dr2(1)+dc3dr2(2)+dc3dr2(3)
                 degsdrcm_dcorr3(3) = dc3dr3(1)+dc3dr3(2)+dc3dr3(3)
             endif
-            !
         end subroutine corr3
+
         !> @brief Evaluate VLOND for the FH2_GEN_6SEC_1993 potential.
         subroutine vlond
-            !
-            !=======================================================================
             !   Compute the energy expressed by the lower eignenvalue of the London
-            !=======================================================================
-            !
             implicit none
-            double precision :: arg, asc1, asc2, asc3, csi, csip2, csip3, csip4, darg, dcsi, dehf, dehft, detrip, dex, dfcsi1, dfcsi2, dq, dr, dri, drp2, dscale, dsumq, dti, dtscle, dx, ehf, ehft, etrip, ex, exch, fcsi1t, fcsi2t, ff1, ff2, ff3, q, r1p2, r2p2, r2p3, r2p4, r3p2, scale, texch, ti, tmp1, tmp1p2, tmp2, tscale, x, xterm, xterm1, xterm2, xterm3
-            integer          :: i, j
-            !
-            !
+            double precision            :: arg, asc1, asc2, asc3, csi, csip2, csip3, csip4, darg, dcsi(3), dehf(3), dehft(3), &
+                & detrip(3,3), dex(3,3), dfcsi1(3), dfcsi2(3), dq(3,3), dr, dri(3), drp2, dscale, dsumq(3), dti(3,3), dtscle(3,3), &
+                & dx(3), ehf(3), ehft(3), etrip(3), ex(3), exch, fcsi1t, fcsi2t, ff1, ff2, ff3, q(3), r1p2, r2p2, r2p3, r2p4, r3p2, &
+                & scale, texch, ti(3), tmp1, tmp1p2, tmp2, tscale(3), x(3), xterm, xterm1, xterm2, xterm3
+            integer                     :: i, j
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension dcsi(3), dfcsi1(3), dfcsi2(3), ehf(3), dehf(3)
-            dimension ehft(3), dehft(3), dsumq(3), ti(3), dti(3,3)
-            dimension etrip(3), detrip(3,3), dx(3), dri(3), x(3)
-            dimension q(3), dq(3,3), ex(3), dex(3,3)
-            dimension tscale(3), dtscle(3,3)
-            !
             !   Initialize the arrays that will be used to store the partial
             !   derivatives w.pt1cm_r.t. pt1cm_r(i)
-            !
             do i = 1, 3
                 do j = 1, 3
                     detrip(i,j) = 0.0d0
                     dtscle(i,j) = 0.0d0
                 enddo
             enddo
-            !
             !   Compute the pseudo-angular coordinate
-            !
             csi   = (pt1cm_r(1)-pt1cm_r(3))/pt1cm_r(2)
             csip2 = csi**2
             csip3 = csi**3
             csip4 = csi**4
-            !
             !    Compute the F1 and F2 terms
-            !
-            fcsi1t = 1.0d0+tpar_p(1)*(1.0d0-csip2)+tpar_p(2)*(1.0d0-csip4)
-            fcsi2t = 1.0d0+tpar_p(3)*(1.0d0-csip2)+tpar_p(4)*(1.0d0-csip4)
-            !
+            fcsi1t    = 1.0d0+tpar_p(1)*(1.0d0-csip2)+tpar_p(2)*(1.0d0-csip4)
+            fcsi2t    = 1.0d0+tpar_p(3)*(1.0d0-csip2)+tpar_p(4)*(1.0d0-csip4)
             csi_fcsi1 = fcsi1t**2
             csi_fcsi2 = fcsi2t**2
-            !
             if( usricm_nder .eq. 1 )then
-                !
                 !   Compute the derivatives w.pt1cm_r.t. pt1cm_r of the terms computed to this point
-                !
                 dcsi(1) = 1.0d0/pt1cm_r(2)
                 dcsi(2) = -csi/pt1cm_r(2)
                 dcsi(3) = -1.0d0/pt1cm_r(2)
-                !
-                tmp1 = 2.0d0*fcsi1t*(-2.0d0*tpar_p(1)*csi-4.0d0*tpar_p(2)*csip3)
-                tmp2 = 2.0d0*fcsi2t*(-2.0d0*tpar_p(3)*csi-4.0d0*tpar_p(4)*csip3)
-                !
+                tmp1    = 2.0d0*fcsi1t*(-2.0d0*tpar_p(1)*csi-4.0d0*tpar_p(2)*csip3)
+                tmp2    = 2.0d0*fcsi2t*(-2.0d0*tpar_p(3)*csi-4.0d0*tpar_p(4)*csip3)
                 do i=1, 3
                     dfcsi1(i) = tmp1*dcsi(i)
                     dfcsi2(i) = tmp2*dcsi(i)
                 enddo
             endif
-            !
             r1p2 = pt1cm_r(1)**2
             r2p2 = pt1cm_r(2)**2
             r2p3 = pt1cm_r(2)**3
             r2p4 = pt1cm_r(2)**4
             r3p2 = pt1cm_r(3)**2
-            !
             !   Compute the extended-Hartree-Fock curves and the derivatives w.pt1cm_r.t.
             !   for the singlet state of H2 and HF.
             !   infocm_ref: A. J. C. Varandas and J. diat_d. Silva, J. Chem. Soc. Faraday Trans.
             !        82, 593 (1986).
-            !
             do i=1, 3
                 dr     = pt1cm_r(i)-dist_rm(i)
                 drp2   = dr**2
@@ -930,49 +737,34 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     & dehf(i) = -diat_d(i)*(diat_a1(i) + 2.0d0*diat_a2(i)*dr +&
                     &3.0d0*diat_a3(i)*drp2)*exp(-diat_gamma(i)*dr) -&
                     &diat_gamma(i)*ehf(i)
-                !
             enddo
-            !
             !   Compute the triplet state curve and the derivative of the triplet st
             !   curve w.pt1cm_r.t. pt1cm_r(i) for the H2 diatomic
             !   infocm_ref.: A. J. C. Varandas and J. Brando
             !         Mol. Phys. 45, 857 (1982)
-            !
-            scale = 1.0d0+tpar_xhh(1)*pt1cm_r(2)+tpar_xhh(2)*r2p2+tpar_xhh(3)*r2p3
-            !
-            arg = par_bhh(2)*pt1cm_r(2)+par_bhh(3)*r2p2+par_bhh(4)*r2p3+par_bhh(5)*r2p4
-            !
-            ehft(2) = par_bhh(1)*exp(-arg)/pt1cm_r(2)
-            !
+            scale    = 1.0d0+tpar_xhh(1)*pt1cm_r(2)+tpar_xhh(2)*r2p2+tpar_xhh(3)*r2p3
+            arg      = par_bhh(2)*pt1cm_r(2)+par_bhh(3)*r2p2+par_bhh(4)*r2p3+par_bhh(5)*r2p4
+            ehft(2)  = par_bhh(1)*exp(-arg)/pt1cm_r(2)
             etrip(2) = scale*ehft(2)
-            !
             if( usricm_nder .eq. 1 )then
-                !
                 !   Compute the derivatives of the H2 triplet curve w.pt1cm_r.t. pt1cm_r(i)
-                !
-                dscale   = tpar_xhh(1)+2.0d0*tpar_xhh(2)*pt1cm_r(2)+3.0d0*tpar_xhh(3)*r2p2
-                darg     = par_bhh(2)+2.0d0*par_bhh(3)*pt1cm_r(2)+3.0d0*par_bhh(4)*r2p2+ 4.0d0*par_bhh(5)*r2p3
-                dehft(2) = ehft(2)*(-darg-1.0d0/pt1cm_r(2))
-                !
+                dscale      = tpar_xhh(1)+2.0d0*tpar_xhh(2)*pt1cm_r(2)+3.0d0*tpar_xhh(3)*r2p2
+                darg        = par_bhh(2)+2.0d0*par_bhh(3)*pt1cm_r(2)+3.0d0*par_bhh(4)*r2p2+ 4.0d0*par_bhh(5)*r2p3
+                dehft(2)    = ehft(2)*(-darg-1.0d0/pt1cm_r(2))
                 detrip(2,2) = dscale*ehft(2)+scale*dehft(2)
                 detrip(2,1) = 0.0d0
                 detrip(2,3) = 0.0d0
             endif
-            !
             !   Compute the triplet state curve and the derivatives of the triplet
             !   state curve w.pt1cm_r.t. pt1cm_r(i) for the HF diatomic.
-            !
             do i=1, 3, 2
                 arg      = par_bhf(2)*pt1cm_r(i)+par_bhf(3)*pt1cm_r(i)**2
                 ehft(i)  = par_bhf(1)*exp(-arg)/pt1cm_r(i)
                 x(i)     = exp(-tpar_xhf(2)*pt1cm_r(i))
                 etrip(i) = tpar_xhf(1)*(csi_fcsi1*x(i)*x(i)+csi_fcsi2*tpar_xhf(3)*x(i))/pt1cm_r(i)
             enddo
-            !
             if( usricm_nder .eq. 1 )then
-                !
                 !   Compute the derivatives of the HF triplet state curve w.pt1cm_r.t. pt1cm_r(i)
-                !
                 do i = 1, 3, 2
                     darg     = par_bhf(2)+2.0d0*par_bhf(3)*pt1cm_r(i)
                     dehft(i) = ehft(i)*(-1.0d0/pt1cm_r(i)-darg)
@@ -988,9 +780,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     enddo
                 enddo
             endif
-            !
             !   Compute the scaling factor for the triplet state curves
-            !
             do i = 1, 3
                 tscale(i) = 1.0d0
             enddo
@@ -1004,48 +794,30 @@ module chempotpy_fh2_gen_6sec_1993_pes
             tscale(2) = asc1 + asc2*tmp2
             if( usricm_nder .eq. 1 ) &
                 & dtscle(2,2) = asc2*tmp2*(-asc3*4.0d0*tmp1p2*tmp1)
-            !
             !   Compute the triplet state curves and combine the triplet and the
             !   singlet state curves to determine the eigenvalue of the
             !   London equation.
-            !
             do i = 1, 3
-                !
                 !   Compute the triplet state curves
-                !
                 ti(i) = (1.0d0-swpar_sw(i))*etrip(i)+swpar_sw(i)*ehft(i)
-                !
                 !   Scale the triplet state curves
-                !
                 ti(i) = ti(i)*tscale(i)
-                !
                 !   Compute the coulomb integrals
-                !
                 q(i) = 0.5d0*(ehf(i)+ti(i))
-                !
                 !   Compute the exchange integrals
-                !
                 ex(i) = 0.5d0*(ehf(i)-ti(i))
             enddo
-            !
             !  Diagnostics
-            !
             potdcm_vdum(1) = tscale(2)
             potdcm_vdum(2) = ti(2)
-            !
-            ff1 = (ex(1) - ex(2)) ** 2
-            ff2 = (ex(2) - ex(3)) ** 2
-            ff3 = (ex(3) - ex(1)) ** 2
-            !
-            exch = sqrt(0.5d0*(ff1+ff2+ff3))
-            !
-            engycm_elond = q(1) + q(2) + q(3) - exch
-            !
+            ff1            = (ex(1) - ex(2)) ** 2
+            ff2            = (ex(2) - ex(3)) ** 2
+            ff3            = (ex(3) - ex(1)) ** 2
+            exch           = sqrt(0.5d0*(ff1+ff2+ff3))
+            engycm_elond   = q(1) + q(2) + q(3) - exch
             if( usricm_nder .eq. 1 )then
-                !
                 !   Compute the derivatives of the lowest eignenvalue of the London equa
                 !   w.pt1cm_r.t. pt1cm_r(i)
-                !
                 do i = 1, 3
                     do j = 1, 3
                         dti(i,j)                = swpar_dsw(i,j)*(ehft(i)-etrip(i)) + detrip(i,j)*(1.0d0 - swpar_sw(i))
@@ -1053,7 +825,6 @@ module chempotpy_fh2_gen_6sec_1993_pes
                         dti(i,j)                = dti(i,j)*tscale(i) + ti(i)*dtscle(i,j)/tscale(i)
                     enddo
                 enddo
-                !
                 do i = 1, 3
                     do j = 1, 3
                         if( j .eq. i )then
@@ -1065,15 +836,12 @@ module chempotpy_fh2_gen_6sec_1993_pes
                         endif
                     enddo
                 enddo
-                !
                 dsumq(1) = dq(1,1)+dq(2,1)+dq(3,1)
                 dsumq(2) = dq(1,2)+dq(2,2)+dq(3,2)
                 dsumq(3) = dq(1,3)+dq(2,3)+dq(3,3)
-                !
-                xterm1 = 2.0d0*ex(1)-ex(2)-ex(3)
-                xterm2 = 2.0d0*ex(2)-ex(1)-ex(3)
-                xterm3 = 2.0d0*ex(3)-ex(1)-ex(2)
-                !
+                xterm1   = 2.0d0*ex(1)-ex(2)-ex(3)
+                xterm2   = 2.0d0*ex(2)-ex(1)-ex(3)
+                xterm3   = 2.0d0*ex(3)-ex(1)-ex(2)
                 do i = 1, 3
                     texch = exch
                     if( texch .eq. 0.0d0 ) texch = 1.0d0
@@ -1081,31 +849,18 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     degsdrcm_dldr(i) = dsumq(i)-xterm
                 enddo
             endif
-            !
         end subroutine vlond
+
         !> @brief Evaluate THCENT for the FH2_GEN_6SEC_1993 potential.
         subroutine thcent
-            !
-            !=======================================================================
             !   Compute the localized three-body term and the derivatives w.pt1cm_r.t. pt1cm_r(i
-            !=======================================================================
-            !
             implicit none
-            double precision :: costh, dcos1, dcos2, dcos3, ex1, ex2, ex3, f3, omp3c, omq3c, r12, r1i, r22, r32, r3i, rdif, rdif2, rsum, t, t1, t2, t3, t4, t5
-            !
-            !
+            double precision            :: costh, dcos1, dcos2, dcos3, ex1, ex2, ex3, f3, omp3c, omq3c, r12, r1i, r22, r32, r3i, rdif, rdif2, rsum, t, t1, t2, t3, t4, t5
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
             omp3c = 1.d0 - local_p3c
             omq3c = 1.d0 - local_q3c
             r12   = pt1cm_r(1) * pt1cm_r(1)
@@ -1123,18 +878,12 @@ module chempotpy_fh2_gen_6sec_1993_pes
             r1i   = 1.d0 / pt1cm_r(1)
             r3i   = 1.d0 / pt1cm_r(3)
             t4    = r1i*r3i
-            !
             !   COSTH IS THE ANGLE BETWEEN R1 AND R3
-            !
             costh = 0.5d0 * (r12 + r32 - r22) * t4
             t5    = omq3c * costh
-            !
             !   SET MODIFICATION ...
-            !
             t = local_q3c + t5 * costh
-            !
             !   engycm_e3c CONTAINS THE THREE CENTER CORRECTION TO V
-            !
             engycm_e3c = (ex2 + ex3) * t * ex1
             f3         = exp(-local_betp*(pt1cm_r(1)+pt1cm_r(3)-pt1cm_r(2))**2)
             engycm_e3c = engycm_e3c*f3
@@ -1142,15 +891,12 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 if( usricm_nder .ne. 1 ) exit goto_block_280_1158
                 !   COMPUTE DERIVATIVE OF THE 3C TERM
                 !   FIRST, DERIVATIVE OF COSTH
-                !
                 dcos1 = r3i - costh*r1i
                 dcos2 = - pt1cm_r(2)*t4
                 dcos3 = r1i - costh*r3i
                 t4    = ex2 + ex3
                 t5    = t4 * t5
-                !
                 !   NOW, DERIVATIVES OF engycm_e3c
-                !
                 degsdrcm_de3c(1) = 2.d0*((t2 * ex2 + 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos1) * ex1*f3+ &
                     & 2.0d0* engycm_e3c*(-local_betp*(pt1cm_r(1)+ pt1cm_r(3)-pt1cm_r(2)))
                 degsdrcm_de3c(2) = 2.d0 * t5 * dcos2 * ex1*f3+ 2.0d0*engycm_e3c*(local_betp*(pt1cm_r(1)+pt1cm_r(3)- &
@@ -1159,31 +905,18 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     & 2.0d0* engycm_e3c*(-local_betp*(pt1cm_r(1)+ pt1cm_r(3)-pt1cm_r(2)))
             end block goto_block_280_1158
         end subroutine thcent
+
         !> @brief Evaluate XTANH for the FH2_GEN_6SEC_1993 potential.
         subroutine xtanh( i, a )
-            !
-            !=======================================================================
             !   Compute the auxiliary function, hn, and the derivatives of hn w.pt1cm_r.t.
-            !=======================================================================
-            !
             implicit none
-            double precision :: a, ex, rval, sgn, t, th
-            integer          :: i, j
-            !
-            !
+            double precision            :: a(10), ex, rval, sgn, t, th
+            integer                     :: i, j
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension a(10)
-            !
             do j = 6, 10, 2
                 rval = pt1cm_r(i) * a(j)
                 if( rval .gt. 0.0d0 )then
@@ -1199,41 +932,26 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 vtanh_rtanh(i,j)                           = sgn * th * (1.0d0 - ex)
             enddo
         end subroutine xtanh
+
         !> @brief Evaluate SWITCH for the FH2_GEN_6SEC_1993 potential.
         subroutine switch
-            !
-            !=======================================================================
             !   Compute the switching function, S, and the derivatives of S w.pt1cm_r.t. pt1cm_r
-            !=======================================================================
-            !
             implicit none
-            double precision :: ex2u, exu, hysec, hytan, rmrb, rval, sgn, temp1, temp2
-            integer          :: i, j
-            !
-            !
+            double precision            :: ex2u, exu, hysec, hytan, rmrb, rval, sgn, temp1, temp2
+            integer                     :: i, j
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
             !   Initialize the array that will be used to store the derivatives of
             !   the switching function w.pt1cm_r.t. pt1cm_r(i)
-            !
             do i = 1, 3
                 do j = 1, 3
                     swpar_dsw(i,j) = 0.0d0
                 enddo
             enddo
-            !
             !   Compute the switching function.
-            !
             do i=1, 3
                 rmrb = pt1cm_r(i)-swpar_rb(i)
                 rval = rmrb*swpar_dec(i)
@@ -1266,9 +984,9 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     hysec          = sgn*2.0d0*exu/temp2
                     swpar_dsw(i,i) = 0.5d0*swpar_dec(i)*hysec*hysec
                 enddo
-                !
             end block goto_block_100_1267
         end subroutine switch
+
         !> @brief Evaluate POTINFO for the FH2_GEN_6SEC_1993 potential.
         subroutine potinfo
             implicit none
@@ -1362,22 +1080,14 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     '*-1/ANGSTROM'',//)')
             endif
         end subroutine potinfo
+
         !> @brief Evaluate ANCVRT for the FH2_GEN_6SEC_1993 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -1394,6 +1104,13 @@ module chempotpy_fh2_gen_6sec_1993_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -1609,13 +1326,13 @@ module chempotpy_fh2_gen_6sec_1993_pes
             if( usricm_nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( usricm_nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             utilcm_cnvrtd  = 1.d0
@@ -1624,13 +1341,13 @@ module chempotpy_fh2_gen_6sec_1993_pes
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 utilcm_cnvrte = utilcm_cnvrte*htoev
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokcal
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 utilcm_cnvrte = utilcm_cnvrte*htowave
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokj
             endif
             utilcm_cnvrtde = utilcm_cnvrte/utilcm_cnvrtd
@@ -1641,6 +1358,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
             utilcm_ireorder = 0
             if( isum .ne. 0 ) utilcm_ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the FH2_GEN_6SEC_1993 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -1652,6 +1370,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(usricm_cart, usricm_nulbl, infocm_natoms, utilcm_cnvrtd, utilcm_ireorder == 1, infocm_cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the FH2_GEN_6SEC_1993 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -1668,6 +1387,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the FH2_GEN_6SEC_1993 potential.
         subroutine eunitzero
             implicit none
@@ -1689,16 +1409,18 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the FH2_GEN_6SEC_1993 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -1720,7 +1442,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 2 )then
+            elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
                     utilcm_dgscartnu(i,1) = 0.d0
                     utilcm_dgscartnu(i,2) = 0.d0
@@ -1742,7 +1464,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                     do j = 1, infocm_natoms
                         if( j .lt. i )then
                             m1 = infocm_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1761,7 +1483,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                                 utilcm_descartnu(i,2,j1) = utilcm_descartnu(i,2,j1) + termy*y
                                 utilcm_descartnu(i,3,j1) = utilcm_descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( utilcm_ksoffd .gt. 0 )then
+                        elseif( utilcm_ksoffd .gt. 0 )then
                             do j2=utilcm_ksoffd, utilcm_keoffd
                                 y                        = pt5cm_deijdr(m1,j2)
                                 utilcm_dijcartnu(i,1,j2) = utilcm_dijcartnu(i,1,j2) + termx*y
@@ -1771,7 +1493,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                         endif
                     enddo
                 enddo
-            else if( infocm_icartr .eq. 3 )then
+            elseif( infocm_icartr .eq. 3 )then
                 do i = 1, infocm_natoms
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
@@ -1807,7 +1529,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 4 )then
+            elseif( infocm_icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1843,6 +1565,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the FH2_GEN_6SEC_1993 potential.
         subroutine dedcou
             implicit none
@@ -1896,7 +1619,7 @@ module chempotpy_fh2_gen_6sec_1993_pes
     end subroutine evaluate
 end module chempotpy_fh2_gen_6sec_1993_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose FH2_GEN_6SEC_1993 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_fh2_gen_6sec_1993_pes, only: evaluate
     implicit none

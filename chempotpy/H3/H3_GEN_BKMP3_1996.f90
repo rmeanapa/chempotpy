@@ -1,10 +1,12 @@
-!> @brief Own the complete implementation of this potential energy surface.
+!> @brief Implement H3_GEN_BKMP3_1996, a potential energy surface for H3.
 module chempotpy_h3_gen_bkmp3_1996_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this PES through the modern module contract.
+
+    !> @brief Evaluate the H3_GEN_BKMP3_1996 potential energy surface for H3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
@@ -33,6 +35,7 @@ module chempotpy_h3_gen_bkmp3_1996_pes
             write (*, *) 'Only energy is available'
         endif
     end subroutine
+
     !> @brief Evaluate a batch of BKMP3 geometries.
     subroutine pot( rvp, evp, nt, nsurf )
         implicit none
@@ -50,6 +53,7 @@ module chempotpy_h3_gen_bkmp3_1996_pes
             evp(ivp) = eee-eshift
         enddo
     end subroutine pot
+
     !> @brief Evaluate surfid.
     subroutine surfid( h3id )
         implicit none
@@ -59,14 +63,9 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate bkmp2.
     subroutine bkmp2( r, vtot, dvtot, id )
         implicit none
-        double precision :: cal, cas, cb, cbnda, cbndb, dcal, dcas, dcbnda, dcbndb, dt, dvas, &
-            & dvbnda, dvbndb, dvlon, dvtot, r, t, vas, vb, vbnda, vbndb, vlon, vtot
+        double precision :: cal, cas, cb(2,25), cbnda, cbndb, dcal(3), dcas(3), dcbnda(3), dcbndb(3), dt(3), dvas(3), dvbnda(3), &
+            & dvbndb(3), dvlon(3), dvtot(3), r(3), t(3), vas, vb(2,25), vbnda, vbndb, vlon, vtot
         integer :: i, icompc, id, ipr
-        dimension r(3), dvtot(3)
-        dimension dvlon(3), dvas(3), dvbnda(3), dvbndb(3), &
-            &          dcal(3), dcas(3), dcbnda(3), dcbndb(3)
-        dimension vb(2,25), cb(2,25)
-        dimension dt(3), t(3)
         ipr   = 0
         vlon  = 0.d0
         vas   = 0.d0
@@ -136,9 +135,8 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate triplet95.
     subroutine triplet95( r, e3, id )
         implicit none
-        double precision :: dr, e1, e3, exdr, r, ra6, ra61, rsq
+        double precision :: dr, e1(3), e3(3), exdr, r, ra6, ra61, rsq
         integer          :: id, ipr
-        dimension e3(3), e1(3)
         double precision, parameter :: rl = 0.95d0
         double precision, parameter :: rr = 1.15d0
         double precision, parameter :: z1 = 1.d0
@@ -179,11 +177,9 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate vH2opt95.
     subroutine vh2opt95( r, e, ideriv )
         implicit none
-        double precision :: alphar, dalphr, ddalph, ddvlr, ddvsr, dvlr, dvsr, e, exalph, r, r02, r04, r06, r10, r11, r12, &
-            & r13, r14, r15, r2, r3, r4, r5, r6, r7, r8, r9, rr2, rr25, rr26, rr27, rr4, rr43, rr44, rr6, rr62, rr63, vlr, &
-            & vsr
+        double precision :: alphar, dalphr, ddalph, ddvlr, ddvsr, dvlr, dvsr, e(3), exalph, r, r02, r04, r06, r10, r11, r12, &
+            & r13, r14, r15, r2, r3, r4, r5, r6, r7, r8, r9, rr2, rr25, rr26, rr27, rr4, rr43, rr44, rr6, rr62, rr63, vlr, vsr
         integer :: ideriv
-        dimension e(3)
         double precision, parameter :: a0  = 0.03537359271649620
         double precision, parameter :: a1  = 2.013977588700072
         double precision, parameter :: a2  = -2.827452449964767
@@ -266,11 +262,9 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate h3lond95.
     subroutine h3lond95( r, vlon, dvlon )
         implicit none
-        double precision :: de1, de3, dvlon, e1, e3, esing, etrip, r, rootjt, sumj, sumq, vlon
+        double precision :: de1(3), de3(3), dvlon(3), e1(3), e3(3), esing(3), etrip(3), r(3), rootjt, sumj, sumq, vlon
         integer          :: i, ipr
         double precision :: q(3), j(3), jt
-        dimension r(3), e1(3), e3(3), esing(3), etrip(3), dvlon(3)
-        dimension de1(3), de3(3)
         double precision, parameter :: half = 0.5d0
         double precision, parameter :: two  = 2.d0
         double precision, parameter :: eps2 = 1.d-12
@@ -309,9 +303,8 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate Vascal95.
     subroutine vascal95( rpass, vas, dvas )
         implicit none
-        double precision :: a, a2, a3, a4, a5, da, ds, dvas, exp1, exp6, r, r1, r2, r3, rcu, rpass, rsq, s, vas
+        double precision :: a, a2, a3, a4, a5, da(3), ds(3), dvas(3), exp1, exp6, r, r1, r2, r3, rcu, rpass(3), rsq, s, vas
         integer          :: ipr
-        dimension dvas(3), da(3), ds(3), rpass(3)
         double precision, parameter :: aa1 = 0.3788951192e-02
         double precision, parameter :: aa2 = 0.1478100901e-02
         double precision, parameter :: aa3 = -.1848513849e-03
@@ -347,9 +340,8 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate acalc95.
     subroutine acalc95( r1, r2, r3, a, da )
         implicit none
-        double precision :: a, da, r1, r2, r3
+        double precision :: a, da(3), r1, r2, r3
         integer          :: ipr
-        dimension da(3)
         ipr   = 0
         a     = (r1-r2)*(r2-r3)*(r3-r1)
         da(1) = ( -2.d0*r1 + r2 + r3 )*(r2-r3)
@@ -367,9 +359,8 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate compac95.
     subroutine compac95( r, icompc, t, dt )
         implicit none
-        double precision :: bot, bot2, dt, r, t, top, top2, top3
+        double precision :: bot, bot2, dt(3), r(3), t(3), top, top2, top3
         integer          :: i, icompc
-        dimension r(3), t(3), dt(3)
         double precision, parameter :: rr = 1.15d0
         double precision, parameter :: rp = 1.25d0
         do i=1, 3
@@ -396,12 +387,9 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate casym95.
     subroutine casym95( r, cas, dcas, id, t, dt )
         implicit none
-        double precision :: a, a2, cas, da, dcas, determ, dpr, dseries, dsumt, dt, dterm1, eterm, pr, pr2, pr3, r, series, &
-            & sr, sr2, sr3, sumt, t, term1
+        double precision :: a, a2, cas, da(3), dcas(3), determ(3), dpr(3), dseries(3), dsumt(3), dt(3), dterm1(3), eterm, pr, &
+            & pr2, pr3, r(3), series, sr, sr2, sr3, sumt, t(3), term1
         integer :: i, id, ipr
-        dimension r(3), t(3)
-        dimension dpr(3), dt(3), dsumt(3), dterm1(3), determ(3), dseries(3), &
-            &          dcas(3), da(3)
         double precision, parameter :: u1  = 0.2210243144e+00
         double precision, parameter :: u2  = 0.4367417579e+00
         double precision, parameter :: u3  = 0.6994985432e-02
@@ -468,10 +456,9 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate csym95.
     subroutine csym95( r, cal, dcal )
         implicit none
-        double precision :: cal, dcal, dexp3, dg, exp3, g, r, ri, rpri, rpri2, rrri, rrri2, rrri3, sr, sr2, sr3, sumg, sumv
+        double precision :: cal, dcal(3), dexp3, dg(3), exp3, g(3), r(3), ri, rpri, rpri2, rrri, rrri2, rrri3, sr, sr2, sr3, &
+            & sumg, sumv(3)
         integer          :: i, ipr
-        dimension r(3), dcal(3), g(3)
-        dimension dg(3), sumv(3)
         double precision, parameter :: rr = 1.15d0
         double precision, parameter :: rp = 1.25d0
         double precision, parameter :: v1 = -.2071708868e+00
@@ -518,23 +505,13 @@ module chempotpy_h3_gen_bkmp3_1996_pes
             &                  cbnda, cbndb, dcbnda, dcbndb )
         implicit none
         double precision :: aasum, asum, b1, b12, b13, b14, b15, b1a, b1b, b2, b3, b3b, bsum, c1, c1cube, c2, c2cube, c3, &
-            & c3cube, cb, cbnda, cbndb, cbnds, cos3t1, cos3t2, cos3t3, csum, cx1, d1, d2, d3, daasum, dasum, db1a, db1b, db2, &
-            & db3, dbsum, dc1dr1, dc1dr2, dc1dr3, dc2dr1, dc2dr2, dc2dr3, dc3dr1, dc3dr2, dc3dr3, dcb1, dcb2, dcb3, dcb4, &
-            & dcb5, dcb6, dcb7, dcb8, dcbnda, dcbndb, dcbnds, ddsum1, ddsum2, dexp1, dexp2, dexp7, dffsum, dfsum, dgsum, dp, &
-            & dsum1, dsum2, dt, dvb1, dvb2, dvb3, dvb4, dvb5, dvbnda, dvbndb, dx1, eps2, exp1, exp2, exp7, ffsum, fsum, gsum, &
-            & p, pcu, psq, r, r1, r2, r3, rcu, rpass, rsq, sum, sumb, sumt, t, t1, t2, t3, vb, vbnd, vbnda, vbndb
+            & c3cube, cb(2,25), cbnda, cbndb, cbnds(2), cos3t1, cos3t2, cos3t3, csum, cx1, d1, d2, d3, daasum, dasum, db1a(3), &
+            & db1b(3), db2(3), db3(6), dbsum, dc1dr1, dc1dr2, dc1dr3, dc2dr1, dc2dr2, dc2dr3, dc3dr1, dc3dr2, dc3dr3, dcb1(3), &
+            & dcb2(3), dcb3(3), dcb4(3), dcb5(3), dcb6(3), dcb7(3), dcb8(3), dcbnda(3), dcbndb(3), dcbnds(2,3), ddsum1, ddsum2, &
+            & dexp1, dexp2, dexp7, dffsum, dfsum, dgsum, dp(3), dsum1, dsum2, dt(3), dvb1(3), dvb2(3), dvb3(3), dvb4(3), &
+            & dvb5(3), dvbnda(3), dvbndb(3), dx1, eps2, exp1, exp2, exp7, ffsum, fsum, gsum, p, pcu, psq, r, r1, r2, r3, rcu, &
+            & rpass(3), rsq, sum, sumb, sumt, t(3), t1, t2, t3, vb(2,25), vbnd(2), vbnda, vbndb
         integer :: icompc, ipr
-        dimension rpass(3), db1a(3), db1b(3), db2(3), db3(6)
-        dimension dvbnda(3), dvbndb(3)
-        dimension dvb1(3), dvb2(3), dvb3(3), dvb4(3), dvb5(3)
-        dimension vbnd(2)
-        dimension vb(2,25)
-        dimension cbnds(2), dcbnds(2,3)
-        dimension dcb1(3), dcb2(3), dcb3(3), dcb4(3), dcb5(3), dcb6(3), &
-            &          dcb7(3), dcb8(3)
-        dimension t(3), dp(3)
-        dimension dt(3), dcbnda(3), dcbndb(3)
-        dimension cb(2,25)
         double precision, parameter :: z58   = 0.625d0
         double precision, parameter :: z38   = 0.375d0
         double precision, parameter :: beta1 = 0.52d0
@@ -933,12 +910,11 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     !> @brief Evaluate chgeom.
     subroutine chgeom( r, ivalid )
         implicit none
-        double precision            :: r, rhi, rlo, rmid
+        double precision            :: r(3), rhi, rlo, rmid
         integer                     :: ivalid
         double precision, parameter :: derr   = 1.d-5
         integer, parameter          :: istop1 = 1
         integer, parameter          :: istop2 = 1
-        dimension r(3)
         ivalid = 1
         rhi    = dmax1(r(1), r(2))
         if( r(3) .ge. rhi )then
@@ -959,7 +935,7 @@ module chempotpy_h3_gen_bkmp3_1996_pes
     end
 end module chempotpy_h3_gen_bkmp3_1996_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose H3_GEN_BKMP3_1996 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_h3_gen_bkmp3_1996_pes, only: evaluate
     implicit none

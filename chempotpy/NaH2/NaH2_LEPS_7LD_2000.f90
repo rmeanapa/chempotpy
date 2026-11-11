@@ -1,11 +1,51 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        NaH2
+!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
+!   Common name:                   NaH2 surface set 7ld
+!   Interface:                     3-2V
+!   Number of electronic surfaces: 2
+!   Number of derivatives:         1
+!   Notes:               This version contains long range forces,
+!                        and also has derivatives.  This fit is based on
+!                        surface set 6 fit.
+!   References:         Unpublished, M. D. Hack and D. G. Truhlar (2000)
+!   Protocol: POT evaluates the stateless diabatic surfaces.
+!               of the energy with respect to the coordinates for a give
+!               geometric configuration
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      Ground diabatic electronic state, first-excited diabatic electron
+! and the potential coupling.
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Na
+!      infinitely far from the H2 diatomic and R(H2) set equal to the
+!      H2 equilibrium diatomic value.
+!   Parameters:
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Na-H)
+!                            R(2) = R(H-H')
+!                            R(3) = R(Na-H')
+! This is NaH2 potential matrix 7ld, finalized on 5/17/99
+! This version contains analytic derivatives.
+!  all surfaces.  The potential is called by calling POT with the parame
+!  r, e, nt, nsurf.  r(nt,3) and ei(nt) are double precision arrays of
+!  dimension nt which is an integer representing the number of geometrie
+!  input.  The integer nsurf selects the desired surface.  nsurf=1 is th
+!  lower diabatic surface, nsurf=2 is the coupling surface, nsurf=3 is
+!  the upper diabatic surface, nsurf = 4 selects the lower adiabatic
+!  surface, and nsurf = 5 selects the upper adiabatic surface
+
+!> @brief Implement NaH2_LEPS_7LD_2000, a potential energy surface for NaH2.
 module chempotpy_nah2_leps_7ld_2000_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the NaH2_LEPS_7LD_2000 potential energy surface for NaH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -80,7 +120,7 @@ module chempotpy_nah2_leps_7ld_2000_pes
     end subroutine evaluate
 end module chempotpy_nah2_leps_7ld_2000_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose NaH2_LEPS_7LD_2000 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_nah2_leps_7ld_2000_pes, only: evaluate
     implicit none
@@ -125,70 +165,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!   System:                        NaH2
-!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
-!   Common name:                   NaH2 surface set 7ld
-!   Interface:                     3-2V
-!   Number of electronic surfaces: 2
-!   Number of derivatives:         1
-
-!   Notes:               This version contains long range forces,
-!                        and also has derivatives.  This fit is based on
-!                        surface set 6 fit.
-
-!   References:         Unpublished, M. D. Hack and D. G. Truhlar (2000)
-
-!   Protocol: POT evaluates the stateless diabatic surfaces.
-!               of the energy with respect to the coordinates for a give
-!               geometric configuration
-!
-!   Units:
-!      energies    - hartrees
-!      coordinates - bohr
-!      derivatives - hartrees/bohr
-!
-!   Surfaces:
-!      Ground diabatic electronic state, first-excited diabatic electron
-! and the potential coupling.
-!
-!   Zero of energy:
-!      The classical potential energy is set equal to zero for the Na
-!      infinitely far from the H2 diatomic and R(H2) set equal to the
-!      H2 equilibrium diatomic value.
-!
-!   Parameters:
-!
-!   Coordinates:
-!      Internal, Definition: R(1) = R(Na-H)
-!                            R(2) = R(H-H')
-!                            R(3) = R(Na-H')
-
-!
-! This is NaH2 potential matrix 7ld, finalized on 5/17/99
-! This version contains analytic derivatives.
-
-!
-!  all surfaces.  The potential is called by calling POT with the parame
-!  r, e, nt, nsurf.  r(nt,3) and ei(nt) are double precision arrays of
-!  dimension nt which is an integer representing the number of geometrie
-!  input.  The integer nsurf selects the desired surface.  nsurf=1 is th
-!  lower diabatic surface, nsurf=2 is the coupling surface, nsurf=3 is
-!  the upper diabatic surface, nsurf = 4 selects the lower adiabatic
-!  surface, and nsurf = 5 selects the upper adiabatic surface
-!
-
-!
 !> @brief Evaluate pot for the NaH2_LEPS_7LD_2000 potential.
 subroutine pot( r, e, de, nt, nsurf )
     implicit none
-    double precision :: ddis, de, de1, de2, de3, e, g_e, g_r, r
-    dimension r(nt,3), e(nt), de(3,nt)
-    integer            :: i, j, k, nsurf, nt
     integer, parameter :: g_p_  = 3
     integer, parameter :: ldg_r = 3
     integer, parameter :: ldg_e = 3
-    dimension g_r(ldg_r,nt,3), g_e(ldg_e,nt)
-    dimension de1(3,1), de2(3,1), de3(3,1), ddis(3)
+    double precision :: ddis(3), de(3,nt), de1(3,1), de2(3,1), de3(3,1), e(nt), g_e(ldg_e,nt), g_r(ldg_r,nt,3), r(nt,3)
+    integer            :: i, j, k, nsurf, nt
     ! initialize seed matrix here
     do i=1, nt
         do j=1, 3
@@ -203,41 +187,37 @@ subroutine pot( r, e, de, nt, nsurf )
     enddo
     if( nsurf .eq. 1 )then
         call g_pot11(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
-    else if( nsurf .eq. 2 )then
+    elseif( nsurf .eq. 2 )then
         call g_pot12(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
-    else if( nsurf .eq. 3 )then
+    elseif( nsurf .eq. 3 )then
         call g_pot22(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
     endif
 end subroutine pot
 
 !  U11 surface - lower diabatic surface
-!
 !> @brief Own the stateless g_pot11 evaluator.
 module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
-        double precision :: al1, al2, alb, alhh, alt, b0, balp, bect, bect2, beh2, bes1, bf, brho, c6, &
-            & c60, c61, c63, c690, c6swt1, c6swt3, cevau, cind1, cind3, cos1, cos2, cosa, coscos, cosg, &
-            & cstsq, cstsq1, cstsq3, dalp, dect, deh2, deh2m, des1, des20, dexp1, dexp3, div1, div3, &
-            & drho, e, elec, f0, f90, frac, gamh2a, gamh2b, h2a1, h2a2, h2a3, h2a4, h2a5, h2a6, h2a7, &
-            & h2a8, h2a9, h2b1, h2b2, h2b3, h2b4, h2b5, h2b6, h2b7, h2b8, h2b9, h2i1, h2i2, h2i3, h2i4, &
-            & h2i5, h2i6, h2ie, hie, hnaa1, hnaa2, hnaa3, hnaa4, hnaa5, hnab1, hnab2, hnab3, hnab4, &
-            & hnab5, hnai1, hnai2, hnai3, hnai4, hnai5, hnai6, hnau1, hnau2, hnau3, hnau4, hnau5, hnau6, &
-            & hpol, onethd, r, r1s, r2s, r3s, rac2, rave, rb0, rb90, rd, rect, reh2, res1, rexp1, rexp2, &
-            & rexp3, rmid, rmuimu1, rmuimu3, rnag, rnag1, rnag1c, rnag3, rnag3c, rnagc, rnags, rnahie1, &
-            & rnahie3, rnahmu1, rnahmu3, rnahpar1, rnahpar3, rnahperp1, rnahperp3, rnahpol1, rnahpol1b, &
-            & rnahpol3, rnahpol3b, rnaie, rnapol, rsm1, rsm2, rsm3, s1, s2, s2a, s2alp, s2rho, s3, sswt, &
-            & twothd, vmid, xect, xeh2, xes1, xes3
+        double precision :: al1, al2, alb, alhh, alt, b0, balp, bect, bect2, beh2, bes1, bf, brho, c6, c60, c61, c63, c690, &
+            & c6swt1, c6swt3, cevau, cind1, cind3, cos1, cos2, cosa, coscos, cosg, cstsq, cstsq1, cstsq3, dalp, dect, deh2, &
+            & deh2m, des1, des20, dexp1, dexp3, div1, div3, drho, e(:), elec, f0, f90, frac, gamh2a, gamh2b, h2a1, h2a2, h2a3, &
+            & h2a4, h2a5, h2a6, h2a7, h2a8, h2a9, h2b1, h2b2, h2b3, h2b4, h2b5, h2b6, h2b7, h2b8, h2b9, h2i1, h2i2, h2i3, h2i4, &
+            & h2i5, h2i6, h2ie, hie, hnaa1, hnaa2, hnaa3, hnaa4, hnaa5, hnab1, hnab2, hnab3, hnab4, hnab5, hnai1, hnai2, hnai3, &
+            & hnai4, hnai5, hnai6, hnau1, hnau2, hnau3, hnau4, hnau5, hnau6, hpol, onethd, r(:,:), r1s, r2s, r3s, rac2, rave, &
+            & rb0, rb90, rd, rect, reh2, res1, rexp1, rexp2, rexp3, rmid, rmuimu1, rmuimu3, rnag, rnag1, rnag1c, rnag3, rnag3c, &
+            & rnagc, rnags, rnahie1, rnahie3, rnahmu1, rnahmu3, rnahpar1, rnahpar3, rnahperp1, rnahperp3, rnahpol1, rnahpol1b, &
+            & rnahpol3, rnahpol3b, rnaie, rnapol, rsm1, rsm2, rsm3, s1, s2, s2a, s2alp, s2rho, s3, sswt, twothd, vmid, xect, &
+            & xeh2, xes1, xes3
         integer :: i, nt
-        !
-        dimension r(:,:), e(:)
-        !
         ! NaH singlet
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
@@ -258,17 +238,10 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
             & g_c60(g_pmax_), g_c6(g_pmax_), g_c61(g_pmax_), g_dexp1(g_pmax_)
         double precision :: g_c63(g_pmax_), g_dexp3(g_pmax_), g_cind1(g_pmax_), g_cind3(g_pmax_), g_c6swt1(g_pmax_), g_c6swt3(g_pmax_), g_elec(g_pmax_), g_e(:,:), g_xect(g_pmax_), g_vmid(g_pmax_)
         integer          :: g_ehfid
-        !
         ! H2 singlet
-        !
         ! H-Na-H term
-        !
         ! data blocks for the long range forces
-        !
         ! misc constants
-        !
-        !
-        !
         al1         = 0.d0
         al2         = 0.d0
         alb         = 0.d0
@@ -603,36 +576,25 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
         cevau  = 1.d0 / 27.2113961d0
         onethd = 1.0d0 / 3.0d0
         twothd = 2.0d0 / 3.0d0
-        !
-        !
-        !
-        !
         do i = 1, nt
-            !
-            !
-            ! ============================================================
             ! useful quantities calculated first, r1^2, R2^2, R3^2, atom to diatom
             ! center of mass distances, the H-Na-H bond angle and the Jacobian
             ! angle chi.
-            !
             d2_b = r(i,1) + r(i,1)
             do g_i_ = 1, g_p_
                 g_r1s(g_i_) = d2_b * g_r(g_i_,i,1)
             enddo
-            r1s = r(i,1) * r(i,1)
-            !--------
+            r1s  = r(i,1) * r(i,1)
             d2_b = r(i,2) + r(i,2)
             do g_i_ = 1, g_p_
                 g_r2s(g_i_) = d2_b * g_r(g_i_,i,2)
             enddo
-            r2s = r(i,2) * r(i,2)
-            !--------
+            r2s  = r(i,2) * r(i,2)
             d2_b = r(i,3) + r(i,3)
             do g_i_ = 1, g_p_
                 g_r3s(g_i_) = d2_b * g_r(g_i_,i,3)
             enddo
             r3s = r(i,3) * r(i,3)
-            !--------
             do g_i_ = 1, g_p_
                 g_d2_w(g_i_) = (-0.5d0) * g_r2s(g_i_) + g_r3s(g_i_) + g_r1s( g_i_)
             enddo
@@ -640,7 +602,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
             d2_v = abs(d2_w)
             if( d2_w .gt. 0.0d0 )then
                 d1_p = 1.0d0
-            else if( d2_w .lt. 0.0d0 )then
+            elseif( d2_w .lt. 0.0d0 )then
                 d1_p = -1.0d0
             else
                 d1_p = 0.0d0
@@ -660,32 +622,24 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_rnag(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             rnag = d2_v
-            !--------
             d2_b = rnag + rnag
             do g_i_ = 1, g_p_
                 g_rnags(g_i_) = d2_b * g_rnag(g_i_)
             enddo
             rnags = rnag * rnag
-            !--------
             do g_i_ = 1, g_p_
                 g_rnagc(g_i_) = rnags * g_rnag(g_i_) + rnag * g_rnags(g_i_)
             enddo
             rnagc = rnags * rnag
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_rmid(g_i_) = 0.5d0 * g_r(g_i_,i,3) + 0.5d0 * g_r(g_i_,i,1)
             enddo
             rmid = 0.5d0 * (r(i,1) + r(i,3))
-            !--------
             do g_i_ = 1, g_p_
                 g_rave(g_i_) = (-0.5d0) * g_r(g_i_,i,3) + 0.5d0 * g_r(g_i_,i,1)
             enddo
             rave = 0.5d0 * (r(i,1) - r(i,3))
-            !--------
-            !
             ! cosg = 0.5*(cos1-cos2) looks like cos(chi), but it never blows up
-            !
             d7_v  = 2.0d0 * r(i,1)
             d9_v  = d7_v * r(i,2)
             d10_v = (r1s + r2s - r3s) / d9_v
@@ -697,8 +651,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_cos1(g_i_) = d5_b * g_r(g_i_,i,2) + d6_b * g_r(g_i_,i,1) + (-d2_b) * g_r3s(g_i_) + d2_b * &
                     & g_r2s(g_i_) + d2_b * g_r1s(g_i_)
             enddo
-            cos1 = d10_v
-            !--------
+            cos1  = d10_v
             d7_v  = 2.0d0 * r(i,3)
             d9_v  = d7_v * r(i,2)
             d10_v = (r3s + r2s - r1s) / d9_v
@@ -711,13 +664,10 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                     & g_r2s(g_i_) + d2_b * g_r3s(g_i_)
             enddo
             cos2 = d10_v
-            !--------
             do g_i_ = 1, g_p_
                 g_cosg(g_i_) = (-0.5d0) * g_cos2(g_i_) + 0.5d0 * g_cos1(g_i_ )
             enddo
             cosg = 0.5d0 * (cos1 - cos2)
-            !--------
-            !
             frac = 0.958d0
             ! H to NaH center of masses
             d5_b = frac * frac + (-frac)
@@ -729,7 +679,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
             d2_v = abs(d2_w)
             if( d2_w .gt. 0.0d0 )then
                 d1_p = 1.0d0
-            else if( d2_w .lt. 0.0d0 )then
+            elseif( d2_w .lt. 0.0d0 )then
                 d1_p = -1.0d0
             else
                 d1_p = 0.0d0
@@ -748,9 +698,8 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_rnag1(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             rnag1 = d2_v
-            !--------
-            d5_b = frac * frac + (-frac)
-            d6_b = 1.0d0 + (-frac)
+            d5_b  = frac * frac + (-frac)
+            d6_b  = 1.0d0 + (-frac)
             do g_i_ = 1, g_p_
                 g_d2_w(g_i_) = d5_b * g_r3s(g_i_) + frac * g_r1s(g_i_) + d6_b * g_r2s(g_i_)
             enddo
@@ -758,7 +707,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
             d2_v = abs(d2_w)
             if( d2_w .gt. 0.0d0 )then
                 d1_p = 1.0d0
-            else if( d2_w .lt. 0.0d0 )then
+            elseif( d2_w .lt. 0.0d0 )then
                 d1_p = -1.0d0
             else
                 d1_p = 0.0d0
@@ -777,41 +726,31 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_rnag3(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             rnag3 = d2_v
-            !--------
-            !
-            d2_v = rnag1 * rnag1
-            d3_b = d2_v + rnag1 * rnag1 + rnag1 * rnag1
+            d2_v  = rnag1 * rnag1
+            d3_b  = d2_v + rnag1 * rnag1 + rnag1 * rnag1
             do g_i_ = 1, g_p_
                 g_rnag1c(g_i_) = d3_b * g_rnag1(g_i_)
             enddo
             rnag1c = d2_v * rnag1
-            !--------
-            d2_v = rnag3 * rnag3
-            d3_b = d2_v + rnag3 * rnag3 + rnag3 * rnag3
+            d2_v   = rnag3 * rnag3
+            d3_b   = d2_v + rnag3 * rnag3 + rnag3 * rnag3
             do g_i_ = 1, g_p_
                 g_rnag3c(g_i_) = d3_b * g_rnag3(g_i_)
             enddo
             rnag3c = d2_v * rnag3
-            !--------
-            !
             ! the shortest of any two distances . . .
-            rsm1 = r(i,3) + (r(i,2) - r(i,3)) * (0.5d0 + 0.5d0 * dtanh( 0.5d0 * (r(i,3) - r(i,2))))
-            !
-            rsm2 = r(i,3) + (r(i,1) - r(i,3)) * (0.5d0 + 0.5d0 * dtanh( 0.5d0 * (r(i,3) - r(i,1))))
-            !
-            rsm3 = r(i,1) + (r(i,2) - r(i,1)) * (0.5d0 + 0.5d0 * dtanh( 0.5d0 * (r(i,1) - r(i,2))))
-            !
+            rsm1  = r(i,3) + (r(i,2) - r(i,3)) * (0.5d0 + 0.5d0 * dtanh( 0.5d0 * (r(i,3) - r(i,2))))
+            rsm2  = r(i,3) + (r(i,1) - r(i,3)) * (0.5d0 + 0.5d0 * dtanh( 0.5d0 * (r(i,3) - r(i,1))))
+            rsm3  = r(i,1) + (r(i,2) - r(i,1)) * (0.5d0 + 0.5d0 * dtanh( 0.5d0 * (r(i,1) - r(i,2))))
             rexp1 = dexp(-r(i,1))
             rexp2 = dexp(-r(i,2))
             rexp3 = dexp(-r(i,3))
-            !
             ! checks on angles . . .
             if( rnag .eq. 0.0d0 )then
                 do g_i_ = 1, g_p_
                     g_cstsq(g_i_) = 0.0d0
                 enddo
                 cstsq = 1.0d0
-                !--------
             else
                 d7_v = r(i,2) * rnag
                 d8_v = 0.5d0 * (r3s - r1s) / d7_v
@@ -826,9 +765,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                         & g_r3s(g_i_)
                 enddo
                 cstsq = d9_v
-                !--------
             endif
-            !
             d7_v  = dble(2) * r(i,1)
             d9_v  = d7_v * r(i,3)
             d10_v = (r1s + r3s - r2s) / d9_v
@@ -840,17 +777,13 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_cosa(g_i_) = d5_b * g_r(g_i_,i,3) + d6_b * g_r(g_i_,i,1) + (-d2_b) * g_r2s(g_i_) + d2_b * &
                     & g_r3s(g_i_) + d2_b * g_r1s(g_i_)
             enddo
-            cosa = d10_v
-            !--------
-            !
+            cosa   = d10_v
             coscos = cstsq * (0.5d0 + 0.5d0 * cosa) * (1.0d0 - dexp((-10.0d0) * rnags))
-            !
             if( rnag1 .eq. 0.0d0 )then
                 do g_i_ = 1, g_p_
                     g_cstsq1(g_i_) = 0.0d0
                 enddo
                 cstsq1 = 1.0d0
-                !--------
             else
                 d11_v = r(i,1) * rnag1
                 d12_v = (r3s - r2s - r1s + 2.0d0 * r3s * frac) / d11_v
@@ -867,15 +800,12 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                         & g_r2s(g_i_) + d11_b * g_r3s(g_i_)
                 enddo
                 cstsq1 = 0.25d0 * d13_v
-                !--------
             endif
-            !
             if( rnag3 .eq. 0.0d0 )then
                 do g_i_ = 1, g_p_
                     g_cstsq3(g_i_) = 0.0d0
                 enddo
                 cstsq3 = 1.0d0
-                !--------
             else
                 d11_v = r(i,3) * rnag3
                 d12_v = (r1s - r2s - r3s + 2.0d0 * r1s * frac) / d11_v
@@ -892,14 +822,10 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                         & g_r2s(g_i_) + d11_b * g_r1s(g_i_)
                 enddo
                 cstsq3 = 0.25d0 * d13_v
-                !--------
             endif
-            !
             !==============================================================k
             !This section contains the diatomic curves
-            !
             ! The first NaH singlet
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bes1) * g_r(g_i_,i,1)
             enddo
@@ -910,7 +836,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_xes1(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xes1 = d2_v
-            !--------
             d2_v = des1 * onethd * xes1
             d3_v = xes1 + 2.0d0
             d4_b = d2_v + d3_v * (des1 * onethd)
@@ -918,33 +843,27 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_s1(g_i_) = d4_b * g_xes1(g_i_)
             enddo
             s1 = d2_v * d3_v
-            !--------
-            !
             ! The H2 singlet
-            !
             ! new singlet, designed to minic lower adiabatic behavior
             reh2   = 1.401d0
             bf     = 1.627d0
             b0     = 1.194d0
             gamh2a = 2.323d0
             gamh2b = 3.126d0
-            !
-            d5_v  = (r(i,2) / gamh2b) * (r(i,2) / gamh2b)
-            d2_p  = 2.0d0 * (r(i,2) / gamh2b)
-            d11_v = (r(i,2) / gamh2b) * (r(i,2) / gamh2b)
-            d1_p  = 2.0d0 * (r(i,2) / gamh2b)
-            d12_v = bf - r(i,2) / gamh2a + d11_v
-            d13_v = bf * (b0 - r(i,2) / gamh2a + d5_v) / d12_v
-            d3_b  = (-d13_v) / d12_v
-            d9_b  = 1.0d0 / d12_v * bf
+            d5_v   = (r(i,2) / gamh2b) * (r(i,2) / gamh2b)
+            d2_p   = 2.0d0 * (r(i,2) / gamh2b)
+            d11_v  = (r(i,2) / gamh2b) * (r(i,2) / gamh2b)
+            d1_p   = 2.0d0 * (r(i,2) / gamh2b)
+            d12_v  = bf - r(i,2) / gamh2a + d11_v
+            d13_v  = bf * (b0 - r(i,2) / gamh2a + d5_v) / d12_v
+            d3_b   = (-d13_v) / d12_v
+            d9_b   = 1.0d0 / d12_v * bf
             d7_b  = d3_b * d1_p * (1.0d0 / gamh2b) + (-d3_b) * (1.0d0 / gamh2a) + d9_b * d2_p * (1.0d0 / gamh2b) + (- &
                 & d9_b) * (1.0d0 / gamh2a)
             do g_i_ = 1, g_p_
                 g_beh2(g_i_) = d7_b * g_r(g_i_,i,2)
             enddo
             beh2 = d13_v
-            !--------
-            !
             d3_b = 1.0d0 / s2alp
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d3_b * g_rmid(g_i_)
@@ -961,15 +880,12 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_sswt(g_i_) = d4_b * g_cosg(g_i_) + d7_b * g_d1_w(g_i_)
             enddo
             sswt = d4_v * d6_v
-            !--------
             d3_b = deh2 * (des20 - 1.0d0)
             do g_i_ = 1, g_p_
                 g_deh2m(g_i_) = d3_b * g_sswt(g_i_)
             enddo
             deh2m = deh2 + deh2 * (des20 - 1.0d0) * sswt
-            !--------
-            !
-            d4_v = r(i,2) - reh2
+            d4_v  = r(i,2) - reh2
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-beh2) * g_r(g_i_,i,2) + (-d4_v) * g_beh2( g_i_)
             enddo
@@ -980,7 +896,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_xeh2(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xeh2 = d2_v
-            !--------
             d3_v = deh2m * xeh2
             d4_v = xeh2 - 2.0d0
             d5_b = d4_v * xeh2
@@ -989,10 +904,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_s2(g_i_) = d4_b * g_xeh2(g_i_) + d5_b * g_deh2m(g_i_)
             enddo
             s2 = d3_v * d4_v
-            !--------
-            !
             ! The second NaH singlet
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bes1) * g_r(g_i_,i,3)
             enddo
@@ -1003,7 +915,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_xes3(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xes3 = d2_v
-            !--------
             d2_v = des1 * onethd * xes3
             d3_v = xes3 + 2.0d0
             d4_b = d2_v + d3_v * (des1 * onethd)
@@ -1011,15 +922,8 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_s3(g_i_) = d4_b * g_xes3(g_i_)
             enddo
             s3 = d2_v * d3_v
-            !--------
-            !
-            !
-            ! ===============================================================
             ! this long section contains data pertinent to long range forces
-            !
-            !
             !  H2 ionization energy:
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-h2i3) * g_r(g_i_,i,2)
             enddo
@@ -1043,15 +947,11 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_h2ie(g_i_) = d8_b * g_d2_w(g_i_) + d9_b * g_r2s(g_i_) + d15_b * g_d1_w(g_i_) + d12_b * g_r(g_i_,i,2)
             enddo
             h2ie = d3_v * d5_v + d10_v * d12_v - s2a + hie
-            !--------
-            !
             !  H2 polarizability:
-            !
             !   al1 is the parallel polarizability for h2
             !   al2 is the perpendicaular polarizability for h2
             !   alt is the anisotropic? polarizability
             !   alb is the mean polarizability
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-h2a1) * g_r(g_i_,i,2)
             enddo
@@ -1075,8 +975,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_al1(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_,i,2) + d24_b * g_d1_w(g_i_)
             enddo
             al1 = d2_v * d22_v + 2.0d0 * hpol
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-h2b1) * g_r(g_i_,i,2)
             enddo
@@ -1099,22 +997,14 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_al2(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_,i,2) + d24_b * g_d1_w(g_i_)
             enddo
-            al2 = d2_v * d22_v + 2.0d0 * hpol
-            !--------
-            !
-            alt = twothd * (al1 - al2)
-            alb = onethd * al1 + twothd * al2
-            !
+            al2  = d2_v * d22_v + 2.0d0 * hpol
+            alt  = twothd * (al1 - al2)
+            alb  = onethd * al1 + twothd * al2
             alhh = alb + alt * (1.5d0 * cstsq - 0.5d0)
-            !
-            !
             !  The NaH + H dispersion and NaH + H induction terms must go on the low
             !t,
             !  so that the adiabat is fitted correctly in the region of the coupling
-            !
             ! NaH properties
-            !
-            !
             d9_v  = hnai6 * r(i,1)
             d11_v = hnai3 + hnai4 * r(i,1) + hnai5 * r1s + d9_v * r1s
             d12_v = (hnai1 + hnai2 * r(i,1)) / d11_v
@@ -1125,46 +1015,38 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_rnahie1(g_i_) = d8_b * g_r1s(g_i_) + d9_b * g_r(g_i_,i,1 )
             enddo
             rnahie1 = d12_v + rnaie
-            !--------
-            !
-            d9_v  = hnai6 * r(i,3)
-            d11_v = hnai3 + hnai4 * r(i,3) + hnai5 * r3s + d9_v * r3s
-            d12_v = (hnai1 + hnai2 * r(i,3)) / d11_v
-            d4_b  = (-d12_v) / d11_v
-            d8_b  = d4_b * d9_v + d4_b * hnai5
-            d9_b  = d4_b * r3s * hnai6 + d4_b * hnai4 + 1.0d0 / d11_v * hnai2
+            d9_v    = hnai6 * r(i,3)
+            d11_v   = hnai3 + hnai4 * r(i,3) + hnai5 * r3s + d9_v * r3s
+            d12_v   = (hnai1 + hnai2 * r(i,3)) / d11_v
+            d4_b    = (-d12_v) / d11_v
+            d8_b    = d4_b * d9_v + d4_b * hnai5
+            d9_b    = d4_b * r3s * hnai6 + d4_b * hnai4 + 1.0d0 / d11_v * hnai2
             do g_i_ = 1, g_p_
                 g_rnahie3(g_i_) = d8_b * g_r3s(g_i_) + d9_b * g_r(g_i_,i,3 )
             enddo
             rnahie3 = d12_v + rnaie
-            !--------
-            !
-            d10_v = hnau6 * r(i,1)
-            d12_v = hnau3 + hnau4 * r(i,1) + hnau5 * r1s + d10_v * r1s
-            d13_v = (hnau1 * r(i,1) + hnau2 * r1s) / d12_v
-            d2_b  = 1.0d0 / d12_v
-            d3_b  = (-d13_v) / d12_v
-            d7_b  = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
-            d8_b  = d3_b * r1s * hnau6 + d3_b * hnau4 + d2_b * hnau1
+            d10_v   = hnau6 * r(i,1)
+            d12_v   = hnau3 + hnau4 * r(i,1) + hnau5 * r1s + d10_v * r1s
+            d13_v   = (hnau1 * r(i,1) + hnau2 * r1s) / d12_v
+            d2_b    = 1.0d0 / d12_v
+            d3_b    = (-d13_v) / d12_v
+            d7_b    = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
+            d8_b    = d3_b * r1s * hnau6 + d3_b * hnau4 + d2_b * hnau1
             do g_i_ = 1, g_p_
                 g_rnahmu1(g_i_) = d7_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1 )
             enddo
             rnahmu1 = d13_v
-            !--------
-            !
-            d10_v = hnau6 * r(i,3)
-            d12_v = hnau3 + hnau4 * r(i,3) + hnau5 * r3s + d10_v * r3s
-            d13_v = (hnau1 * r(i,3) + hnau2 * r3s) / d12_v
-            d2_b  = 1.0d0 / d12_v
-            d3_b  = (-d13_v) / d12_v
-            d7_b  = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
-            d8_b  = d3_b * r3s * hnau6 + d3_b * hnau4 + d2_b * hnau1
+            d10_v   = hnau6 * r(i,3)
+            d12_v   = hnau3 + hnau4 * r(i,3) + hnau5 * r3s + d10_v * r3s
+            d13_v   = (hnau1 * r(i,3) + hnau2 * r3s) / d12_v
+            d2_b    = 1.0d0 / d12_v
+            d3_b    = (-d13_v) / d12_v
+            d7_b    = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
+            d8_b    = d3_b * r3s * hnau6 + d3_b * hnau4 + d2_b * hnau1
             do g_i_ = 1, g_p_
                 g_rnahmu3(g_i_) = d7_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3 )
             enddo
             rnahmu3 = d13_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_,i,1)
             enddo
@@ -1180,8 +1062,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_rnahpar1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1) + d13_b * g_d1_w(g_i_)
             enddo
             rnahpar1 = rnapol + hpol + d2_v * d11_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_,i,3)
             enddo
@@ -1197,8 +1077,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_rnahpar3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3) + d13_b * g_d1_w(g_i_)
             enddo
             rnahpar3 = rnapol + hpol + d2_v * d11_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-hnab1) * g_r(g_i_,i,1)
             enddo
@@ -1214,8 +1092,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_rnahperp1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1) + d13_b * g_d1_w(g_i_)
             enddo
             rnahperp1 = rnapol + hpol + d2_v * d11_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-hnab1) * g_r(g_i_,i,3)
             enddo
@@ -1231,37 +1107,28 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_rnahperp3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3) + d13_b * g_d1_w(g_i_)
             enddo
             rnahperp3 = rnapol + hpol + d2_v * d11_v
-            !--------
-            !
-            d3_v = rnahpar1 - rnahperp1
-            d2_b = 1.0d0 + (-cstsq1)
+            d3_v      = rnahpar1 - rnahperp1
+            d2_b      = 1.0d0 + (-cstsq1)
             do g_i_ = 1, g_p_
                 g_rnahpol1(g_i_) = d3_v * g_cstsq1(g_i_) + cstsq1 * g_rnahpar1(g_i_) + d2_b * g_rnahperp1(g_i_)
             enddo
             rnahpol1 = rnahperp1 + d3_v * cstsq1
-            !--------
             do g_i_ = 1, g_p_
                 g_rnahpol1b(g_i_) = twothd * g_rnahperp1(g_i_) + onethd * g_rnahpar1(g_i_)
             enddo
             rnahpol1b = onethd * rnahpar1 + twothd * rnahperp1
-            !--------
-            !
-            d3_v = rnahpar3 - rnahperp3
-            d2_b = 1.0d0 + (-cstsq3)
+            d3_v      = rnahpar3 - rnahperp3
+            d2_b      = 1.0d0 + (-cstsq3)
             do g_i_ = 1, g_p_
                 g_rnahpol3(g_i_) = d3_v * g_cstsq3(g_i_) + cstsq3 * g_rnahpar3(g_i_) + d2_b * g_rnahperp3(g_i_)
             enddo
             rnahpol3 = rnahperp3 + d3_v * cstsq3
-            !--------
             do g_i_ = 1, g_p_
                 g_rnahpol3b(g_i_) = twothd * g_rnahperp3(g_i_) + onethd * g_rnahpar3(g_i_)
             enddo
             rnahpol3b = onethd * rnahpar3 + twothd * rnahperp3
-            !--------
-            !
             ! induction forces
             ! dipole induced dipole
-            !
             d2_v = rnag1c * rnag1c
             d4_v = d2_v * rnag1c + rd
             d5_v = 1.0d0 / d4_v
@@ -1271,8 +1138,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_div1(g_i_) = d5_b * g_rnag1c(g_i_)
             enddo
-            div1 = d5_v
-            !--------
+            div1  = d5_v
             d2_v  = rnahmu1 * rnahmu1
             d1_p  = 2.0d0 * rnahmu1
             d4_v  = (-d2_v) * hpol
@@ -1288,19 +1154,16 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                     & g_rnahmu1(g_i_)
             enddo
             rmuimu1 = d10_v * div1
-            !--------
-            !
-            d2_v = rnag3c * rnag3c
-            d4_v = d2_v * rnag3c + rd
-            d5_v = 1.0d0 / d4_v
-            d3_b = (-d5_v) / d4_v
-            d4_b = d3_b * rnag3c
-            d5_b = d3_b * d2_v + d4_b * rnag3c + d4_b * rnag3c
+            d2_v    = rnag3c * rnag3c
+            d4_v    = d2_v * rnag3c + rd
+            d5_v    = 1.0d0 / d4_v
+            d3_b    = (-d5_v) / d4_v
+            d4_b    = d3_b * rnag3c
+            d5_b    = d3_b * d2_v + d4_b * rnag3c + d4_b * rnag3c
             do g_i_ = 1, g_p_
                 g_div3(g_i_) = d5_b * g_rnag3c(g_i_)
             enddo
-            div3 = d5_v
-            !--------
+            div3  = d5_v
             d2_v  = rnahmu3 * rnahmu3
             d1_p  = 2.0d0 * rnahmu3
             d4_v  = (-d2_v) * hpol
@@ -1316,8 +1179,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                     & g_rnahmu3(g_i_)
             enddo
             rmuimu3 = d10_v * div3
-            !--------
-            !
             ! dispersion forces
             d3_v  = (-1.5d0) * rnaie * h2ie * rnapol
             d6_v  = rnaie + h2ie
@@ -1336,15 +1197,12 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_c690(g_i_) = d8_b * g_rnagc(g_i_) + d11_b * g_al2(g_i_) + d9_b * g_h2ie(g_i_)
             enddo
             c690 = d12_v
-            !--------
             d2_v = c690 * f90
             d4_b = rnagc * f90
             do g_i_ = 1, g_p_
                 g_c690(g_i_) = d2_v * g_rnagc(g_i_) + d4_b * g_c690(g_i_)
             enddo
-            c690 = d2_v * rnagc
-            !--------
-            !
+            c690  = d2_v * rnagc
             d3_v  = (-1.5d0) * rnaie * h2ie * rnapol
             d6_v  = rnaie + h2ie
             d8_v  = rnagc * rnagc
@@ -1361,16 +1219,13 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_c60(g_i_) = d8_b * g_rnagc(g_i_) + d11_b * g_al1(g_i_) + d9_b * g_h2ie(g_i_)
             enddo
-            c60 = d12_v
-            !--------
+            c60  = d12_v
             d2_v = c60 * f0
             d4_b = rnagc * f0
             do g_i_ = 1, g_p_
                 g_c60(g_i_) = d2_v * g_rnagc(g_i_) + d4_b * g_c60(g_i_)
             enddo
-            c60 = d2_v * rnagc
-            !--------
-            !
+            c60  = d2_v * rnagc
             d2_v = (-39.0625d0) * rnag
             d4_b = rnagc * (-39.0625d0)
             do g_i_ = 1, g_p_
@@ -1389,9 +1244,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_c6(g_i_) = d7_b * g_d1_w(g_i_) + d9_b * g_cstsq(g_i_) + d8_b * g_c60(g_i_) + d2_b * g_c690(g_i_)
             enddo
-            c6 = c690 + d5_v * d8_v
-            !--------
-            !
+            c6    = c690 + d5_v * d8_v
             d3_v  = (-1.5d0) * rnahie1 * hie
             d6_v  = rnahie1 + hie
             d7_v  = d3_v * rnag1c / d6_v
@@ -1406,8 +1259,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_c61(g_i_) = d10_v * g_div1(g_i_) + d6_b * g_rnahpol1(g_i_) + d11_b * g_rnag1c(g_i_) + d9_b * &
                     & g_rnahie1(g_i_)
             enddo
-            c61 = d10_v * div1
-            !--------
+            c61  = d10_v * div1
             d2_v = (-39.0625d0) * rnag1c
             d4_b = rnag1 * (-39.0625d0)
             do g_i_ = 1, g_p_
@@ -1420,22 +1272,18 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_dexp1(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             dexp1 = d2_v
-            !--------
-            d4_v = rnahpol1b / rnahpol1
-            d5_v = d4_v - 1.0d0
-            d8_v = 1.0d0 + d5_v * dexp1
-            d6_b = c61 * d5_v
-            d7_b = c61 * dexp1
-            d8_b = d7_b * (1.0d0 / rnahpol1)
-            d9_b = d7_b * ((-d4_v) / rnahpol1)
+            d4_v  = rnahpol1b / rnahpol1
+            d5_v  = d4_v - 1.0d0
+            d8_v  = 1.0d0 + d5_v * dexp1
+            d6_b  = c61 * d5_v
+            d7_b  = c61 * dexp1
+            d8_b  = d7_b * (1.0d0 / rnahpol1)
+            d9_b  = d7_b * ((-d4_v) / rnahpol1)
             do g_i_ = 1, g_p_
                 g_c61(g_i_) = d6_b * g_dexp1(g_i_) + d9_b * g_rnahpol1(g_i_) + d8_b * g_rnahpol1b(g_i_) + d8_v * &
                     & g_c61(g_i_)
             enddo
-            c61 = c61 * d8_v
-            !--------
-            !
-            !
+            c61   = c61 * d8_v
             d3_v  = (-1.5d0) * rnahie3 * hie
             d6_v  = rnahie3 + hie
             d7_v  = d3_v * rnag3c / d6_v
@@ -1450,8 +1298,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_c63(g_i_) = d10_v * g_div3(g_i_) + d6_b * g_rnahpol3(g_i_) + d11_b * g_rnag3c(g_i_) + d9_b * &
                     & g_rnahie3(g_i_)
             enddo
-            c63 = d10_v * div3
-            !--------
+            c63  = d10_v * div3
             d2_v = (-39.0625d0) * rnag3c
             d4_b = rnag3 * (-39.0625d0)
             do g_i_ = 1, g_p_
@@ -1464,21 +1311,18 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_dexp3(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             dexp3 = d2_v
-            !--------
-            d4_v = rnahpol3b / rnahpol3
-            d5_v = d4_v - 1.0d0
-            d8_v = 1.0d0 + d5_v * dexp3
-            d6_b = c63 * d5_v
-            d7_b = c63 * dexp3
-            d8_b = d7_b * (1.0d0 / rnahpol3)
-            d9_b = d7_b * ((-d4_v) / rnahpol3)
+            d4_v  = rnahpol3b / rnahpol3
+            d5_v  = d4_v - 1.0d0
+            d8_v  = 1.0d0 + d5_v * dexp3
+            d6_b  = c63 * d5_v
+            d7_b  = c63 * dexp3
+            d8_b  = d7_b * (1.0d0 / rnahpol3)
+            d9_b  = d7_b * ((-d4_v) / rnahpol3)
             do g_i_ = 1, g_p_
                 g_c63(g_i_) = d6_b * g_dexp3(g_i_) + d9_b * g_rnahpol3(g_i_) + d8_b * g_rnahpol3b(g_i_) + d8_v * &
                     & g_c63(g_i_)
             enddo
-            c63 = c63 * d8_v
-            !--------
-            !
+            c63   = c63 * d8_v
             d4_v  = 1.5d0 * cstsq1 + 0.5d0
             d5_v  = 1.0d0 / d4_v
             d6_v  = d5_v - 1.0d0
@@ -1489,8 +1333,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_cind1(g_i_) = d6_b * g_dexp1(g_i_) + d10_b * g_cstsq1(g_i_ ) + d9_v * g_rmuimu1(g_i_)
             enddo
             cind1 = rmuimu1 * d9_v
-            !--------
-            !
             d4_v  = 1.5d0 * cstsq3 + 0.5d0
             d5_v  = 1.0d0 / d4_v
             d6_v  = d5_v - 1.0d0
@@ -1501,8 +1343,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_cind3(g_i_) = d6_b * g_dexp3(g_i_) + d10_b * g_cstsq3(g_i_ ) + d9_v * g_rmuimu3(g_i_)
             enddo
             cind3 = rmuimu3 * d9_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = balp * g_r(g_i_,i,2)
             enddo
@@ -1517,8 +1357,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_c6(g_i_) = d5_b * g_d1_w(g_i_) + d7_b * g_c6(g_i_)
             enddo
             c6 = d3_v * d6_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = dalp * g_r(g_i_,i,1)
             enddo
@@ -1530,7 +1368,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_c6swt1(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             c6swt1 = 0.5d0 * (1.0d0 - d2_v)
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = dalp * g_r(g_i_,i,3)
             enddo
@@ -1542,62 +1379,44 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_c6swt3(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             c6swt3 = 0.5d0 * (1.0d0 - d2_v)
-            !--------
-            !
-            !
-            d3_b = cevau * c6swt1
-            d4_b = cevau * c61
+            d3_b   = cevau * c6swt1
+            d4_b   = cevau * c61
             do g_i_ = 1, g_p_
                 g_c61(g_i_) = d4_b * g_c6swt1(g_i_) + d3_b * g_c61(g_i_)
             enddo
-            c61 = c61 * c6swt1 * cevau
-            !--------
+            c61  = c61 * c6swt1 * cevau
             d3_b = cevau * c6swt3
             d4_b = cevau * c63
             do g_i_ = 1, g_p_
                 g_c63(g_i_) = d4_b * g_c6swt3(g_i_) + d3_b * g_c63(g_i_)
             enddo
             c63 = c63 * c6swt3 * cevau
-            !--------
             do g_i_ = 1, g_p_
                 g_cind1(g_i_) = cind1 * g_c6swt1(g_i_) + c6swt1 * g_cind1(g_i_)
             enddo
             cind1 = cind1 * c6swt1
-            !--------
             do g_i_ = 1, g_p_
                 g_cind3(g_i_) = cind3 * g_c6swt3(g_i_) + c6swt3 * g_cind3(g_i_)
             enddo
             cind3 = cind3 * c6swt3
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_elec(g_i_) = g_c6(g_i_) + g_cind3(g_i_) + g_cind1(g_i_) + g_c63(g_i_) + g_c61(g_i_)
             enddo
             elec = c61 + c63 + cind1 + cind3 + c6
-            !--------
-            !
-            ! =========================================================
             ! here is where it all gets put together . . .
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = g_s3(g_i_) + g_s2(g_i_) + g_s1(g_i_)
             enddo
             e(i) = s1 + s2 + s3 + deh2
-            !--------
-            !
             d2_b = 1.0d0 / cevau
             do g_i_ = 1, g_p_
                 g_elec(g_i_) = d2_b * g_elec(g_i_)
             enddo
             elec = elec / cevau
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = g_elec(g_i_) + g_e(g_i_,i)
             enddo
             e(i) = e(i) + elec
-            !--------
-            !
             ! here we will try a post-LEPS correction term
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bect) * g_rmid(g_i_)
@@ -1609,7 +1428,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_xect(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xect = d2_v
-            !--------
             d2_v = rave * rave
             d1_p = 2.0d0 * rave
             d3_b = (-bect2) * d1_p
@@ -1633,22 +1451,15 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
                 g_vmid(g_i_) = d6_b * g_cosa(g_i_) + d9_b * g_d1_w(g_i_) + d12_b * g_xect(g_i_)
             enddo
             vmid = d7_v * d11_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = g_vmid(g_i_) + g_e(g_i_,i)
             enddo
             e(i) = e(i) + vmid
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = cevau * g_e(g_i_,i)
             enddo
             e(i) = e(i) * cevau
-            !--------
-            !
         enddo
-        !
     end subroutine dispatch
 end module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
 
@@ -1667,33 +1478,26 @@ subroutine g_pot11( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
     call dispatch(g_p_=g_p_, r=r, g_r=g_r, ldg_r=ldg_r, e=e, g_e=g_e, ldg_e=ldg_e, nt=nt)
 end subroutine g_pot11
 
-!
-!
-!
 ! U12 coupling surface . . .
-!
 !> @brief Own the stateless g_pot12 evaluator.
 module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
-        !
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
-        !
-        double precision :: ap, alp, bet, rnagsq, rnag, cosg, rd0, r20
-        double precision :: r1s, r2s, r3s, cos1, cos2, theta
-        double precision :: gc, gc2
-        !
-        double precision :: cevau
-        !
-        integer          :: nt, i, j, k
-        logical          :: leven
-        double precision :: r(:,:), e(:)
-        !
+        double precision   :: ap, alp, bet, rnagsq, rnag, cosg, rd0, r20
+        double precision   :: r1s, r2s, r3s, cos1, cos2, theta
+        double precision   :: gc, gc2
+        double precision   :: cevau
+        integer            :: nt, i, j, k
+        logical            :: leven
+        double precision   :: r(:,:), e(:)
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
         double precision   :: d2_p, d2_w, d1_w, d4_b, d5_b, d10_v, d9_v, d2_v, d8_b, d2_b
@@ -1702,10 +1506,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
         double precision :: g_r2s(g_pmax_), g_r3s(g_pmax_), g_rnagsq(g_pmax_), g_rnag(g_pmax_), g_cos1(g_pmax_), g_cos2(g_pmax_), g_cosg(g_pmax_), g_gc(g_pmax_), g_gc2(g_pmax_), g_d1_w(g_pmax_)
         double precision :: g_d2_w(g_pmax_), g_e(:,:)
         integer          :: g_ehfid
-        !
-        !
-        !
-        !
         alp      = 0.d0
         ap       = 0.d0
         bet      = 0.d0
@@ -1764,45 +1564,34 @@ module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
             stop
         endif
         theta = 15.6d0 * dacos(-1.0d0) / 180.0d0
-        !
         cevau = 1.d0 / 27.2113961d0
-        !
         ! set leven true for an even U12 surface, and false for an odd
         ! surface
         leven = .true.
-        !
-        !
         do i = 1, nt
-            !
             d2_v = r(i,1) * r(i,1)
             d1_p = 2.0d0 * r(i,1)
             do g_i_ = 1, g_p_
                 g_r1s(g_i_) = d1_p * g_r(g_i_,i,1)
             enddo
-            r1s = d2_v
-            !--------
+            r1s  = d2_v
             d2_v = r(i,2) * r(i,2)
             d1_p = 2.0d0 * r(i,2)
             do g_i_ = 1, g_p_
                 g_r2s(g_i_) = d1_p * g_r(g_i_,i,2)
             enddo
-            r2s = d2_v
-            !--------
+            r2s  = d2_v
             d2_v = r(i,3) * r(i,3)
             d1_p = 2.0d0 * r(i,3)
             do g_i_ = 1, g_p_
                 g_r3s(g_i_) = d1_p * g_r(g_i_,i,3)
             enddo
             r3s = d2_v
-            !--------
-            !
             ! here we do the function evaluations . . .
-            !
             do g_i_ = 1, g_p_
                 g_rnagsq(g_i_) = (-0.25d0) * g_r2s(g_i_) + 0.5d0 * g_r3s(g_i_) + 0.5d0 * g_r1s(g_i_)
             enddo
             rnagsq = 0.5d0 * r1s + 0.5d0 * r3s - 0.25d0 * r2s
-            !--------
             if( rnagsq .gt. 0.0d0 )then
                 d2_v = sqrt(rnagsq)
                 if( rnagsq .gt. 0.0d0 )then
@@ -1814,17 +1603,13 @@ module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
                     g_rnag(g_i_) = d1_p * g_rnagsq(g_i_)
                 enddo
                 rnag = d2_v
-                !--------
             else
                 do g_i_ = 1, g_p_
                     g_rnag(g_i_) = 0.0d0
                 enddo
                 rnag = 0.0d0
-                !--------
             endif
-            !
             ! cosg = 0.5*(cos1-cos2) looks like cos(chi), but it never blows up
-            !
             d7_v  = 2.0d0 * r(i,1)
             d9_v  = d7_v * r(i,2)
             d10_v = (r1s + r2s - r3s) / d9_v
@@ -1836,8 +1621,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
                 g_cos1(g_i_) = d5_b * g_r(g_i_,i,2) + d6_b * g_r(g_i_,i,1) + (-d2_b) * g_r3s(g_i_) + d2_b * &
                     & g_r2s(g_i_) + d2_b * g_r1s(g_i_)
             enddo
-            cos1 = d10_v
-            !--------
+            cos1  = d10_v
             d7_v  = 2.0d0 * r(i,3)
             d9_v  = d7_v * r(i,2)
             d10_v = (r3s + r2s - r1s) / d9_v
@@ -1850,27 +1634,22 @@ module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
                     & g_r2s(g_i_) + d2_b * g_r3s(g_i_)
             enddo
             cos2 = d10_v
-            !--------
             do g_i_ = 1, g_p_
                 g_cosg(g_i_) = (-0.5d0) * g_cos2(g_i_) + 0.5d0 * g_cos1(g_i_ )
             enddo
             cosg = 0.5d0 * (cos1 - cos2)
-            !--------
-            !
             d4_b = dsin(theta)
             d5_b = dcos(theta)
             do g_i_ = 1, g_p_
                 g_gc(g_i_) = d4_b * g_r(g_i_,i,2) + d5_b * g_rnag(g_i_)
             enddo
-            gc = dcos(theta) * rnag + dsin(theta) * r(i,2)
-            !--------
+            gc   = dcos(theta) * rnag + dsin(theta) * r(i,2)
             d4_b = -dcos(theta)
             d5_b = dsin(theta)
             do g_i_ = 1, g_p_
                 g_gc2(g_i_) = d4_b * g_r(g_i_,i,2) + d5_b * g_rnag(g_i_)
             enddo
-            gc2 = dsin(theta) * rnag - dcos(theta) * r(i,2)
-            !--------
+            gc2  = dsin(theta) * rnag - dcos(theta) * r(i,2)
             d3_v = (gc - rd0) ** ( 4 - 2)
             d3_v = d3_v * (gc - rd0)
             d1_p = 4 *  d3_v
@@ -1900,14 +1679,10 @@ module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
                 g_e(g_i_,i) = d4_b * g_d2_w(g_i_) + d7_b * g_d1_w(g_i_) + d8_b * g_cosg(g_i_)
             enddo
             e(i) = d5_v * d7_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = cevau * g_e(g_i_,i)
             enddo
             e(i) = e(i) * cevau
-            !--------
-            !
             ! set leven equal to true for an even surface, false for an odd one
             if( leven )then
                 d2_v = e(i) ** ( 4 - 2)
@@ -1933,9 +1708,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
                     g_e(g_i_,i) = d1_p * g_d1_w(g_i_)
                 enddo
                 e(i) = d2_v
-                !--------
             endif
-            !
         enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
@@ -1955,41 +1728,33 @@ subroutine g_pot12( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
     call dispatch(g_p_=g_p_, r=r, g_r=g_r, ldg_r=ldg_r, e=e, g_e=g_e, ldg_e=ldg_e, nt=nt)
 end subroutine g_pot12
 
-!
-!
 ! the upper diabatic surface  U22
-!
 !> @brief Own the stateless g_pot22 evaluator.
 module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
-        double precision :: al1, al2, alb, alhh, alt, b0, balp, beh2, bet1, bet10, bet10b, bet190, bet1c, &
-            & bet20, bet290, beta, bf, brho, c2a, c2b, c2c, c6, c61, c63, c6swt1, c6swt3, cevau, cind1, &
-            & cind3, cos1, cos2, cosa, coscos, cosg, coul1, coul2, coul3, cplg2, cstsq, cstsq1, cstsq3, &
-            & dalp, deh2, deh2m, denah, des290, det1, det190, det1c, det20, det290, dexp1, dexp2, dexp3, &
-            & div1, div3, drho, e, elec, exch1, exch2, exch3, f10, frac, g10, g30, gamh2a, gamh2b, &
-            & gamnah, h2a1, h2a2, h2a3, h2a4, h2a5, h2a6, h2a7, h2a8, h2a9, h2b1, h2b2, h2b3, h2b4, h2b5, &
-            & h2b6, h2b7, h2b8, h2b9, h2hc1, h2hc2, h2hc3, h2hc4, h2hc5, h2hex, h2i1, h2i2, h2i3, h2i4, &
-            & h2i5, h2i6, h2ie, h2qc1, h2qc2, h2qc3, h2qc4, h2qc5, h2quad, hie, hnaa1, hnaa2, hnaa3, &
-            & hnaa4, hnaa5, hnab1, hnab2, hnab3, hnab4, hnab5, hnai1, hnai2, hnai3, hnai4, hnai5, hnai6, &
-            & hnau1, hnau2, hnau3, hnau4, hnau5, hnau6, hpol, onethd, pi, qh, qhint, qq, qqint, r, r1s, &
-            & r2s, r3s, rave, rb, rd, reh2, renah, ret1, ret10, ret190, ret1c, ret20, ret290, rmid, &
-            & rmuimu1, rmuimu3, rnag, rnag1, rnag1c, rnag3, rnag3c, rnagc, rnags, rnahie1, rnahie3, &
-            & rnahmu1, rnahmu3, rnahpar1, rnahpar3, rnahperp1, rnahperp3, rnahpol1, rnahpol1b, rnahpol3, &
-            & rnahpol3b, rnaie, rnapol1, rnaquad, rqh, rqq, s1, s2, s20alp, s20b, s20rho, s2a, s2alp, &
-            & s2rho, s3, sswt, t1, t10, t190, t1alp, t1c, t1m, t1rho, t2, t20, t290, t2alp, t2rho, t3, &
-            & t30, t390, t3c, t3m, twothd, una2p, w, xeh2, xenah, xet190, xet1c, xet20, xet290, xet3, &
-            & xet390, xet3c
+        double precision :: al1, al2, alb, alhh, alt, b0, balp, beh2, bet1, bet10, bet10b, bet190, bet1c, bet20, bet290, beta, &
+            & bf, brho, c2a, c2b, c2c, c6, c61, c63, c6swt1, c6swt3, cevau, cind1, cind3, cos1, cos2, cosa, coscos, cosg, coul1, &
+            & coul2, coul3, cplg2, cstsq, cstsq1, cstsq3, dalp, deh2, deh2m, denah, des290, det1, det190, det1c, det20, det290, &
+            & dexp1, dexp2, dexp3, div1, div3, drho, e(:), elec, exch1, exch2, exch3, f10, frac, g10, g30, gamh2a, gamh2b, &
+            & gamnah, h2a1, h2a2, h2a3, h2a4, h2a5, h2a6, h2a7, h2a8, h2a9, h2b1, h2b2, h2b3, h2b4, h2b5, h2b6, h2b7, h2b8, &
+            & h2b9, h2hc1, h2hc2, h2hc3, h2hc4, h2hc5, h2hex, h2i1, h2i2, h2i3, h2i4, h2i5, h2i6, h2ie, h2qc1, h2qc2, h2qc3, &
+            & h2qc4, h2qc5, h2quad, hie, hnaa1, hnaa2, hnaa3, hnaa4, hnaa5, hnab1, hnab2, hnab3, hnab4, hnab5, hnai1, hnai2, &
+            & hnai3, hnai4, hnai5, hnai6, hnau1, hnau2, hnau3, hnau4, hnau5, hnau6, hpol, onethd, pi, qh, qhint, qq, qqint, &
+            & r(:,:), r1s, r2s, r3s, rave, rb, rd, reh2, renah, ret1, ret10, ret190, ret1c, ret20, ret290, rmid, rmuimu1, &
+            & rmuimu3, rnag, rnag1, rnag1c, rnag3, rnag3c, rnagc, rnags, rnahie1, rnahie3, rnahmu1, rnahmu3, rnahpar1, rnahpar3, &
+            & rnahperp1, rnahperp3, rnahpol1, rnahpol1b, rnahpol3, rnahpol3b, rnaie, rnapol1, rnaquad, rqh, rqq, s1, s2, s20alp, &
+            & s20b, s20rho, s2a, s2alp, s2rho, s3, sswt, t1, t10, t190, t1alp, t1c, t1m, t1rho, t2, t20, t290, t2alp, t2rho, t3, &
+            & t30, t390, t3c, t3m, twothd, una2p, w, xeh2, xenah, xet190, xet1c, xet20, xet290, xet3, xet390, xet3c
         integer :: i, nt
-        !
-        dimension r(:,:), e(:)
-        !
         ! NaH triplets
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
@@ -2013,20 +1778,10 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             & ), g_dexp3(g_pmax_), g_cind1(g_pmax_), g_cind3(g_pmax_), g_elec(g_pmax_), g_c6swt1(g_pmax_), g_c6swt3(g_pmax_), g_coul1(g_pmax_)
         double precision :: g_coul2(g_pmax_), g_coul3(g_pmax_), g_exch1(g_pmax_), g_exch2(g_pmax_), g_exch3(g_pmax_), g_w(g_pmax_), g_cplg2(g_pmax_), g_e(:,:)
         integer          :: g_ehfid
-        !
         ! H2 triplets
-        !
         ! H2 singlets
-        !
         ! misc constants
-        !
-        !
         ! data blocks for the long range forces
-        !
-        !
-        !
-        !
-        !
         al1         = 0.d0
         al2         = 0.d0
         alb         = 0.d0
@@ -2485,43 +2240,31 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
         cevau  = 1.d0 / 27.2113961d0
         onethd = 1.0d0 / 3.0d0
         twothd = 2.0d0 / 3.0d0
-        !
-        !
-        !
         do i = 1, nt
-            !
-            ! =========================================================
             ! this section calcluates useful quantities - the A to BC center
             ! of mass distance, the angles between A-BC and BC, the shorest
             ! of any of the three diatomic distances, and the bond angle
             ! H-Na-H
-            !
             do g_i_ = 1, g_p_
                 g_rmid(g_i_) = 0.5d0 * g_r(g_i_,i,3) + 0.5d0 * g_r(g_i_,i,1)
             enddo
             rmid = 0.5d0 * (r(i,1) + r(i,3))
-            !--------
             rave = 0.5d0 * (r(i,1) - r(i,3))
-            !
             d2_b = r(i,1) + r(i,1)
             do g_i_ = 1, g_p_
                 g_r1s(g_i_) = d2_b * g_r(g_i_,i,1)
             enddo
-            r1s = r(i,1) * r(i,1)
-            !--------
+            r1s  = r(i,1) * r(i,1)
             d2_b = r(i,2) + r(i,2)
             do g_i_ = 1, g_p_
                 g_r2s(g_i_) = d2_b * g_r(g_i_,i,2)
             enddo
-            r2s = r(i,2) * r(i,2)
-            !--------
+            r2s  = r(i,2) * r(i,2)
             d2_b = r(i,3) + r(i,3)
             do g_i_ = 1, g_p_
                 g_r3s(g_i_) = d2_b * g_r(g_i_,i,3)
             enddo
             r3s = r(i,3) * r(i,3)
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d2_w(g_i_) = (-0.5d0) * g_r2s(g_i_) + g_r3s(g_i_) + g_r1s( g_i_)
             enddo
@@ -2529,7 +2272,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             d2_v = abs(d2_w)
             if( d2_w .gt. 0.0d0 )then
                 d1_p = 1.0d0
-            else if( d2_w .lt. 0.0d0 )then
+            elseif( d2_w .lt. 0.0d0 )then
                 d1_p = -1.0d0
             else
                 d1_p = 0.0d0
@@ -2549,25 +2292,20 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_rnag(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             rnag = d2_v
-            !--------
             d2_b = rnag + rnag
             do g_i_ = 1, g_p_
                 g_rnags(g_i_) = d2_b * g_rnag(g_i_)
             enddo
             rnags = rnag * rnag
-            !--------
             do g_i_ = 1, g_p_
                 g_rnagc(g_i_) = rnags * g_rnag(g_i_) + rnag * g_rnags(g_i_)
             enddo
             rnagc = rnags * rnag
-            !--------
-            !
             if( rnag .eq. 0.0d0 )then
                 do g_i_ = 1, g_p_
                     g_cstsq(g_i_) = 0.0d0
                 enddo
                 cstsq = 0.0d0
-                !--------
             else
                 d7_v = r(i,2) * rnag
                 d8_v = 0.5d0 * (r3s - r1s) / d7_v
@@ -2582,15 +2320,10 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                         & g_r3s(g_i_)
                 enddo
                 cstsq = d9_v
-                !--------
             endif
-            !
-            cosa = (r1s + r3s - r2s) / (2 * r(i,1) * r(i,3))
-            !
+            cosa   = (r1s + r3s - r2s) / (2 * r(i,1) * r(i,3))
             coscos = cstsq * (0.5d0 + 0.5d0 * cosa) * (1.0d0 - dexp((-10.0d0) * rnags))
-            !
             ! cosg = 0.5*(cos1-cos2) looks like cos(chi), but it never blows up
-            !
             d7_v  = 2.0d0 * r(i,1)
             d9_v  = d7_v * r(i,2)
             d10_v = (r1s + r2s - r3s) / d9_v
@@ -2602,8 +2335,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_cos1(g_i_) = d5_b * g_r(g_i_,i,2) + d6_b * g_r(g_i_,i,1) + (-d2_b) * g_r3s(g_i_) + d2_b * &
                     & g_r2s(g_i_) + d2_b * g_r1s(g_i_)
             enddo
-            cos1 = d10_v
-            !--------
+            cos1  = d10_v
             d7_v  = 2.0d0 * r(i,3)
             d9_v  = d7_v * r(i,2)
             d10_v = (r3s + r2s - r1s) / d9_v
@@ -2616,14 +2348,10 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                     & g_r2s(g_i_) + d2_b * g_r3s(g_i_)
             enddo
             cos2 = d10_v
-            !--------
             do g_i_ = 1, g_p_
                 g_cosg(g_i_) = (-0.5d0) * g_cos2(g_i_) + 0.5d0 * g_cos1(g_i_ )
             enddo
             cosg = 0.5d0 * (cos1 - cos2)
-            !--------
-            !
-            !
             frac = 0.958d0
             d5_b = frac * frac + (-frac)
             d6_b = 1.0d0 + (-frac)
@@ -2634,7 +2362,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             d2_v = abs(d2_w)
             if( d2_w .gt. 0.0d0 )then
                 d1_p = 1.0d0
-            else if( d2_w .lt. 0.0d0 )then
+            elseif( d2_w .lt. 0.0d0 )then
                 d1_p = -1.0d0
             else
                 d1_p = 0.0d0
@@ -2653,9 +2381,8 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_rnag1(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             rnag1 = d2_v
-            !--------
-            d5_b = frac * frac + (-frac)
-            d6_b = 1.0d0 + (-frac)
+            d5_b  = frac * frac + (-frac)
+            d6_b  = 1.0d0 + (-frac)
             do g_i_ = 1, g_p_
                 g_d2_w(g_i_) = d5_b * g_r3s(g_i_) + frac * g_r1s(g_i_) + d6_b * g_r2s(g_i_)
             enddo
@@ -2663,7 +2390,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             d2_v = abs(d2_w)
             if( d2_w .gt. 0.0d0 )then
                 d1_p = 1.0d0
-            else if( d2_w .lt. 0.0d0 )then
+            elseif( d2_w .lt. 0.0d0 )then
                 d1_p = -1.0d0
             else
                 d1_p = 0.0d0
@@ -2682,29 +2409,23 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_rnag3(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             rnag3 = d2_v
-            !--------
-            !
-            d2_v = rnag1 * rnag1
-            d3_b = d2_v + rnag1 * rnag1 + rnag1 * rnag1
+            d2_v  = rnag1 * rnag1
+            d3_b  = d2_v + rnag1 * rnag1 + rnag1 * rnag1
             do g_i_ = 1, g_p_
                 g_rnag1c(g_i_) = d3_b * g_rnag1(g_i_)
             enddo
             rnag1c = d2_v * rnag1
-            !--------
-            d2_v = rnag3 * rnag3
-            d3_b = d2_v + rnag3 * rnag3 + rnag3 * rnag3
+            d2_v   = rnag3 * rnag3
+            d3_b   = d2_v + rnag3 * rnag3 + rnag3 * rnag3
             do g_i_ = 1, g_p_
                 g_rnag3c(g_i_) = d3_b * g_rnag3(g_i_)
             enddo
             rnag3c = d2_v * rnag3
-            !--------
-            !
             if( rnag1 .eq. 0.0d0 )then
                 do g_i_ = 1, g_p_
                     g_cstsq1(g_i_) = 0.0d0
                 enddo
                 cstsq1 = 1.0d0
-                !--------
             else
                 d11_v = r(i,1) * rnag1
                 d12_v = (r3s - r2s - r1s + 2.0d0 * r3s * frac) / d11_v
@@ -2721,15 +2442,12 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                         & g_r2s(g_i_) + d11_b * g_r3s(g_i_)
                 enddo
                 cstsq1 = 0.25d0 * d13_v
-                !--------
             endif
-            !
             if( rnag3 .eq. 0.0d0 )then
                 do g_i_ = 1, g_p_
                     g_cstsq3(g_i_) = 0.0d0
                 enddo
                 cstsq3 = 1.0d0
-                !--------
             else
                 d11_v = r(i,3) * rnag3
                 d12_v = (r1s - r2s - r3s + 2.0d0 * r1s * frac) / d11_v
@@ -2746,36 +2464,29 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                         & g_r2s(g_i_) + d11_b * g_r1s(g_i_)
                 enddo
                 cstsq3 = 0.25d0 * d13_v
-                !--------
             endif
-            !
-            ! =========================================================
-            !
             ! The first NaH singlet
-            !
             ! new singlet, designed to minic lower adiabatic behavior
             denah  = 1.97134878d0
             renah  = 3.566044d0
             bf     = 0.864d0
             b0     = 0.594d0
             gamnah = 7.376d0
-            !
-            d3_v = (r(i,1) / gamnah) ** ( 8 - 2)
-            d3_v = d3_v * (r(i,1) / gamnah)
-            d2_p = 8 *  d3_v
-            d3_v = d3_v * (r(i,1) / gamnah)
-            d7_v = (r(i,1) / gamnah) ** ( 8 - 2)
-            d7_v = d7_v * (r(i,1) / gamnah)
-            d1_p = 8 *  d7_v
-            d7_v = d7_v * (r(i,1) / gamnah)
-            d8_v = bf + d7_v
-            d9_v = bf * (b0 + d3_v) / d8_v
-            d6_b = (-d9_v) / d8_v * d1_p * (1.0d0 / gamnah) + 1.0d0 / d8_v * bf * d2_p * (1.0d0 / gamnah)
+            d3_v   = (r(i,1) / gamnah) ** ( 8 - 2)
+            d3_v   = d3_v * (r(i,1) / gamnah)
+            d2_p   = 8 *  d3_v
+            d3_v   = d3_v * (r(i,1) / gamnah)
+            d7_v   = (r(i,1) / gamnah) ** ( 8 - 2)
+            d7_v   = d7_v * (r(i,1) / gamnah)
+            d1_p   = 8 *  d7_v
+            d7_v   = d7_v * (r(i,1) / gamnah)
+            d8_v   = bf + d7_v
+            d9_v   = bf * (b0 + d3_v) / d8_v
+            d6_b   = (-d9_v) / d8_v * d1_p * (1.0d0 / gamnah) + 1.0d0 / d8_v * bf * d2_p * (1.0d0 / gamnah)
             do g_i_ = 1, g_p_
                 g_beta(g_i_) = d6_b * g_r(g_i_,i,1)
             enddo
             beta = d9_v
-            !--------
             d4_v = r(i,1) - renah
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-beta) * g_r(g_i_,i,1) + (-d4_v) * g_beta( g_i_)
@@ -2787,25 +2498,18 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xenah(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xenah = d2_v
-            !--------
-            !
-            d2_v = denah * xenah
-            d3_v = xenah - 2.0d0
-            d4_b = d2_v + d3_v * denah
+            d2_v  = denah * xenah
+            d3_v  = xenah - 2.0d0
+            d4_b  = d2_v + d3_v * denah
             do g_i_ = 1, g_p_
                 g_s1(g_i_) = d4_b * g_xenah(g_i_)
             enddo
             s1 = d2_v * d3_v
-            !--------
-            !
             ! The first NaH triplet
-            !
-            !
             do g_i_ = 1, g_p_
                 g_g10(g_i_) = g_r(g_i_,i,1)
             enddo
             g10 = r(i,1) - ret10
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet10) * g_g10(g_i_)
             enddo
@@ -2822,15 +2526,12 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_t10(g_i_) = d1_p * g_d2_w(g_i_) + d6_b * g_d1_w(g_i_)
             enddo
-            t10 = f10 * d2_v + d5_v
-            !--------
+            t10  = f10 * d2_v + d5_v
             d2_b = 1.0d0 / (1.0d0 + f10)
             do g_i_ = 1, g_p_
                 g_t10(g_i_) = d2_b * g_t10(g_i_)
             enddo
             t10 = t10 / (1.0d0 + f10)
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet190) * g_r(g_i_,i,1)
             enddo
@@ -2841,16 +2542,13 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xet190(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xet190 = d2_v
-            !--------
-            d2_v = det190 * onethd * xet190
-            d3_v = xet190 + 2.0d0
-            d4_b = d2_v + d3_v * (det190 * onethd)
+            d2_v   = det190 * onethd * xet190
+            d3_v   = xet190 + 2.0d0
+            d4_b   = d2_v + d3_v * (det190 * onethd)
             do g_i_ = 1, g_p_
                 g_t190(g_i_) = d4_b * g_xet190(g_i_)
             enddo
             t190 = d2_v * d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet1c) * g_r(g_i_,i,1)
             enddo
@@ -2861,16 +2559,13 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xet1c(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xet1c = d2_v
-            !--------
-            d2_v = det1c * onethd * xet1c
-            d3_v = xet1c + 2.0d0
-            d4_b = d2_v + d3_v * (det1c * onethd)
+            d2_v  = det1c * onethd * xet1c
+            d3_v  = xet1c + 2.0d0
+            d4_b  = d2_v + d3_v * (det1c * onethd)
             do g_i_ = 1, g_p_
                 g_t1c(g_i_) = d4_b * g_xet1c(g_i_)
             enddo
             t1c = d2_v * d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = t1alp * g_r(g_i_,i,2)
             enddo
@@ -2885,9 +2580,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_t1m(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_t1c(g_i_) + d2_b * g_t190(g_i_)
             enddo
-            t1m = t190 + d4_v * d7_v
-            !--------
-            !
+            t1m  = t190 + d4_v * d7_v
             d3_v = t10 - t1m
             d5_v = cosg * cosg
             d1_p = 2.0d0 * cosg
@@ -2897,11 +2590,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_t1(g_i_) = d6_b * g_cosg(g_i_) + d5_v * g_t10(g_i_) + d2_b * g_t1m(g_i_)
             enddo
             t1 = t1m + d3_v * d5_v
-            !--------
-            !
-            !
             ! The H2 triplet
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet20) * g_r(g_i_,i,2)
             enddo
@@ -2912,16 +2601,13 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xet20(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xet20 = d2_v
-            !--------
-            d2_v = det20 * onethd * xet20
-            d3_v = xet20 + 2.0d0
-            d4_b = d2_v + d3_v * (det20 * onethd)
+            d2_v  = det20 * onethd * xet20
+            d3_v  = xet20 + 2.0d0
+            d4_b  = d2_v + d3_v * (det20 * onethd)
             do g_i_ = 1, g_p_
                 g_t20(g_i_) = d4_b * g_xet20(g_i_)
             enddo
             t20 = d2_v * d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet290) * g_r(g_i_,i,2)
             enddo
@@ -2932,16 +2618,13 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xet290(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xet290 = d2_v
-            !--------
-            d2_v = det290 * onethd * xet290
-            d3_v = xet290 + 2.0d0
-            d4_b = d2_v + d3_v * (det290 * onethd)
+            d2_v   = det290 * onethd * xet290
+            d3_v   = xet290 + 2.0d0
+            d4_b   = d2_v + d3_v * (det290 * onethd)
             do g_i_ = 1, g_p_
                 g_t290(g_i_) = d4_b * g_xet290(g_i_)
             enddo
             t290 = d2_v * d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = t2alp * g_rmid(g_i_)
             enddo
@@ -2963,8 +2646,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_t2(g_i_) = d7_b * g_d1_w(g_i_) + d12_b * g_cosg(g_i_) + d9_b * g_t290(g_i_) + d2_b * g_t20(g_i_)
             enddo
             t2 = t20 + d8_v * d11_v
-            !--------
-            !
             ! The H2 singlet
             ! new singlet, designed to minic lower adiabatic behavior
             reh2   = 1.401d0
@@ -2972,23 +2653,20 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             b0     = 1.194d0
             gamh2a = 2.323d0
             gamh2b = 3.126d0
-            !
-            d5_v  = (r(i,2) / gamh2b) * (r(i,2) / gamh2b)
-            d2_p  = 2.0d0 * (r(i,2) / gamh2b)
-            d11_v = (r(i,2) / gamh2b) * (r(i,2) / gamh2b)
-            d1_p  = 2.0d0 * (r(i,2) / gamh2b)
-            d12_v = bf - r(i,2) / gamh2a + d11_v
-            d13_v = bf * (b0 - r(i,2) / gamh2a + d5_v) / d12_v
-            d3_b  = (-d13_v) / d12_v
-            d9_b  = 1.0d0 / d12_v * bf
+            d5_v   = (r(i,2) / gamh2b) * (r(i,2) / gamh2b)
+            d2_p   = 2.0d0 * (r(i,2) / gamh2b)
+            d11_v  = (r(i,2) / gamh2b) * (r(i,2) / gamh2b)
+            d1_p   = 2.0d0 * (r(i,2) / gamh2b)
+            d12_v  = bf - r(i,2) / gamh2a + d11_v
+            d13_v  = bf * (b0 - r(i,2) / gamh2a + d5_v) / d12_v
+            d3_b   = (-d13_v) / d12_v
+            d9_b   = 1.0d0 / d12_v * bf
             d7_b  = d3_b * d1_p * (1.0d0 / gamh2b) + (-d3_b) * (1.0d0 / gamh2a) + d9_b * d2_p * (1.0d0 / gamh2b) + (- &
                 & d9_b) * (1.0d0 / gamh2a)
             do g_i_ = 1, g_p_
                 g_beh2(g_i_) = d7_b * g_r(g_i_,i,2)
             enddo
             beh2 = d13_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = s2alp * g_rmid(g_i_)
             enddo
@@ -3000,15 +2678,12 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_sswt(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             sswt = 0.5d0 * (1.0d0 - d2_v)
-            !--------
             d3_b = deh2 * (des290 - 1.0d0)
             do g_i_ = 1, g_p_
                 g_deh2m(g_i_) = d3_b * g_sswt(g_i_)
             enddo
             deh2m = deh2 + deh2 * (des290 - 1.0d0) * sswt
-            !--------
-            !
-            d4_v = r(i,2) - reh2
+            d4_v  = r(i,2) - reh2
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-beh2) * g_r(g_i_,i,2) + (-d4_v) * g_beh2( g_i_)
             enddo
@@ -3019,7 +2694,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xeh2(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xeh2 = d2_v
-            !--------
             d3_v = deh2m * xeh2
             d4_v = xeh2 - 2.0d0
             d6_b = d4_v * xeh2
@@ -3027,9 +2701,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_s2a(g_i_) = d5_b * g_xeh2(g_i_) + d6_b * g_deh2m(g_i_)
             enddo
-            s2a = d3_v * d4_v + una2p
-            !--------
-            !
+            s2a  = d3_v * d4_v + una2p
             d2_b = 1.0d0 / 0.1d0
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-d2_b) * g_t2(g_i_) + d2_b * g_s2a(g_i_)
@@ -3045,9 +2717,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_s2(g_i_) = d9_b * g_d1_w(g_i_) + d8_b * g_t2(g_i_) + d7_b * g_s2a(g_i_)
             enddo
-            s2 = 0.5d0 * (s2a + t2 - d5_v * d6_v)
-            !--------
-            !
+            s2   = 0.5d0 * (s2a + t2 - d5_v * d6_v)
             d2_v = (-1.34d0) * beh2
             d4_v = r(i,2) - reh2
             d5_b = d4_v * (-1.34d0)
@@ -3061,7 +2731,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xeh2(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xeh2 = d2_v
-            !--------
             d2_v = (deh2 - una2p) * xeh2
             d3_v = xeh2 - 2.0d0
             d4_b = d2_v + d3_v * (deh2 - una2p)
@@ -3069,8 +2738,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_s20b(g_i_) = d4_b * g_xeh2(g_i_)
             enddo
             s20b = d2_v * d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = s20alp * g_rmid(g_i_)
             enddo
@@ -3091,9 +2758,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_s2(g_i_) = d7_b * g_d1_w(g_i_) + d11_b * g_cosg(g_i_) + d9_b * g_s20b(g_i_) + d2_b * g_s2(g_i_)
             enddo
             s2 = s2 + d7_v * d10_v
-            !--------
-            !
-            !
             ! The second NaH singlet
             ! new singlet, designed to minic lower adiabatic behavior
             denah  = 1.97134878d0
@@ -3101,23 +2765,21 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             bf     = 0.864d0
             b0     = 0.594d0
             gamnah = 7.376d0
-            !
-            d3_v = (r(i,3) / gamnah) ** ( 8 - 2)
-            d3_v = d3_v * (r(i,3) / gamnah)
-            d2_p = 8 *  d3_v
-            d3_v = d3_v * (r(i,3) / gamnah)
-            d7_v = (r(i,3) / gamnah) ** ( 8 - 2)
-            d7_v = d7_v * (r(i,3) / gamnah)
-            d1_p = 8 *  d7_v
-            d7_v = d7_v * (r(i,3) / gamnah)
-            d8_v = bf + d7_v
-            d9_v = bf * (b0 + d3_v) / d8_v
-            d6_b = (-d9_v) / d8_v * d1_p * (1.0d0 / gamnah) + 1.0d0 / d8_v * bf * d2_p * (1.0d0 / gamnah)
+            d3_v   = (r(i,3) / gamnah) ** ( 8 - 2)
+            d3_v   = d3_v * (r(i,3) / gamnah)
+            d2_p   = 8 *  d3_v
+            d3_v   = d3_v * (r(i,3) / gamnah)
+            d7_v   = (r(i,3) / gamnah) ** ( 8 - 2)
+            d7_v   = d7_v * (r(i,3) / gamnah)
+            d1_p   = 8 *  d7_v
+            d7_v   = d7_v * (r(i,3) / gamnah)
+            d8_v   = bf + d7_v
+            d9_v   = bf * (b0 + d3_v) / d8_v
+            d6_b   = (-d9_v) / d8_v * d1_p * (1.0d0 / gamnah) + 1.0d0 / d8_v * bf * d2_p * (1.0d0 / gamnah)
             do g_i_ = 1, g_p_
                 g_beta(g_i_) = d6_b * g_r(g_i_,i,3)
             enddo
             beta = d9_v
-            !--------
             d4_v = r(i,3) - renah
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-beta) * g_r(g_i_,i,3) + (-d4_v) * g_beta( g_i_)
@@ -3129,19 +2791,14 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xenah(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xenah = d2_v
-            !--------
-            !
-            d2_v = denah * xenah
-            d3_v = xenah - 2.0d0
-            d4_b = d2_v + d3_v * denah
+            d2_v  = denah * xenah
+            d3_v  = xenah - 2.0d0
+            d4_b  = d2_v + d3_v * denah
             do g_i_ = 1, g_p_
                 g_s3(g_i_) = d4_b * g_xenah(g_i_)
             enddo
             s3 = d2_v * d3_v
-            !--------
-            !
             ! The second NaH triplet
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet1) * g_r(g_i_,i,3)
             enddo
@@ -3152,7 +2809,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xet3(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xet3 = d2_v
-            !--------
             d2_v = det1 * onethd * xet3
             d3_v = xet3 + 2.0d0
             d4_b = d2_v + d3_v * (det1 * onethd)
@@ -3160,13 +2816,10 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_t30(g_i_) = d4_b * g_xet3(g_i_)
             enddo
             t30 = d2_v * d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_g30(g_i_) = g_r(g_i_,i,3)
             enddo
             g30 = r(i,3) - ret10
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet10) * g_g30(g_i_)
             enddo
@@ -3183,15 +2836,12 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_t30(g_i_) = d1_p * g_d2_w(g_i_) + d6_b * g_d1_w(g_i_)
             enddo
-            t30 = f10 * d2_v + d5_v
-            !--------
+            t30  = f10 * d2_v + d5_v
             d2_b = 1.0d0 / (1.0d0 + f10)
             do g_i_ = 1, g_p_
                 g_t30(g_i_) = d2_b * g_t30(g_i_)
             enddo
             t30 = t30 / (1.0d0 + f10)
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet190) * g_r(g_i_,i,3)
             enddo
@@ -3202,16 +2852,13 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xet390(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xet390 = d2_v
-            !--------
-            d2_v = det190 * onethd * xet390
-            d3_v = xet390 + 2.0d0
-            d4_b = d2_v + d3_v * (det190 * onethd)
+            d2_v   = det190 * onethd * xet390
+            d3_v   = xet390 + 2.0d0
+            d4_b   = d2_v + d3_v * (det190 * onethd)
             do g_i_ = 1, g_p_
                 g_t390(g_i_) = d4_b * g_xet390(g_i_)
             enddo
             t390 = d2_v * d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bet1c) * g_r(g_i_,i,3)
             enddo
@@ -3222,16 +2869,13 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_xet3c(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xet3c = d2_v
-            !--------
-            d2_v = det1c * onethd * xet3c
-            d3_v = xet3c + 2.0d0
-            d4_b = d2_v + d3_v * (det1c * onethd)
+            d2_v  = det1c * onethd * xet3c
+            d3_v  = xet3c + 2.0d0
+            d4_b  = d2_v + d3_v * (det1c * onethd)
             do g_i_ = 1, g_p_
                 g_t3c(g_i_) = d4_b * g_xet3c(g_i_)
             enddo
             t3c = d2_v * d3_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = t1alp * g_r(g_i_,i,2)
             enddo
@@ -3246,9 +2890,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_t3m(g_i_) = d7_b * g_d1_w(g_i_) + d8_b * g_t3c(g_i_) + d2_b * g_t390(g_i_)
             enddo
-            t3m = t390 + d4_v * d7_v
-            !--------
-            !
+            t3m  = t390 + d4_v * d7_v
             d3_v = t30 - t3m
             d5_v = cosg * cosg
             d1_p = 2.0d0 * cosg
@@ -3258,14 +2900,8 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_t3(g_i_) = d6_b * g_cosg(g_i_) + d5_v * g_t30(g_i_) + d2_b * g_t3m(g_i_)
             enddo
             t3 = t3m + d3_v * d5_v
-            !--------
-            !
-            !
-            ! =========================================================
             ! this long section contains data pertinent to long range forces
-            !
             !  H2 ionization energy:
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-h2i3) * g_r(g_i_,i,2)
             enddo
@@ -3290,15 +2926,11 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                     & d13_b * g_r(g_i_,i,2)
             enddo
             h2ie = d3_v * d5_v + d10_v * d12_v - s2a + hie
-            !--------
-            !
             !  H2 polarizability:
-            !
             !   al1 is the parallel polarizability for h2
             !   al2 is the perpendicaular polarizability for h2
             !   alt is the anisotropic? polarizability
             !   alb is the mean polarizability
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-h2a1) * g_r(g_i_,i,2)
             enddo
@@ -3322,8 +2954,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_al1(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_,i,2) + d24_b * g_d1_w(g_i_)
             enddo
             al1 = d2_v * d22_v + 2.0d0 * hpol
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-h2b1) * g_r(g_i_,i,2)
             enddo
@@ -3350,32 +2980,23 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_al2(g_i_) = d8_b * g_r2s(g_i_) + d13_b * g_r(g_i_,i,2) + d24_b * g_d1_w(g_i_)
             enddo
             al2 = d2_v * d22_v + 2.0d0 * hpol
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_alt(g_i_) = (-twothd) * g_al2(g_i_) + twothd * g_al1(g_i_)
             enddo
             alt = twothd * (al1 - al2)
-            !--------
             do g_i_ = 1, g_p_
                 g_alb(g_i_) = twothd * g_al2(g_i_) + onethd * g_al1(g_i_)
             enddo
-            alb = onethd * al1 + twothd * al2
-            !--------
+            alb  = onethd * al1 + twothd * al2
             d5_v = 1.5d0 * cstsq - 0.5d0
             d7_b = alt * 1.5d0
             do g_i_ = 1, g_p_
                 g_alhh(g_i_) = d7_b * g_cstsq(g_i_) + d5_v * g_alt(g_i_) + g_alb(g_i_)
             enddo
             alhh = alb + alt * d5_v
-            !--------
-            !
-            !
             ! here follow properties necesary for the long range forces in
             ! the Na + H2 channel:
-            !
             ! H2 properties:
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-h2hc1) * g_r(g_i_,i,2)
             enddo
@@ -3392,8 +3013,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_h2hex(g_i_) = d7_b * g_r2s(g_i_) + d11_b * g_r(g_i_,i,2) + d14_b * g_d1_w(g_i_)
             enddo
             h2hex = d2_v * d13_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-h2qc1) * g_r(g_i_,i,2)
             enddo
@@ -3410,10 +3029,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_h2quad(g_i_) = d7_b * g_r2s(g_i_) + d11_b * g_r(g_i_,i,2 ) + d14_b * g_d1_w(g_i_)
             enddo
             h2quad = d2_v * d13_v
-            !--------
-            !
             ! NaH properties
-            !
             d9_v  = hnai6 * r(i,1)
             d11_v = hnai3 + hnai4 * r(i,1) + hnai5 * r1s + d9_v * r1s
             d12_v = (hnai1 + hnai2 * r(i,1)) / d11_v
@@ -3424,46 +3040,38 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_rnahie1(g_i_) = d9_b * g_r1s(g_i_) + d10_b * g_r(g_i_,i,1)
             enddo
             rnahie1 = d12_v + rnaie + una2p
-            !--------
-            !
-            d9_v  = hnai6 * r(i,3)
-            d11_v = hnai3 + hnai4 * r(i,3) + hnai5 * r3s + d9_v * r3s
-            d12_v = (hnai1 + hnai2 * r(i,3)) / d11_v
-            d5_b  = (-d12_v) / d11_v
-            d9_b  = d5_b * d9_v + d5_b * hnai5
-            d10_b = d5_b * r3s * hnai6 + d5_b * hnai4 + 1.0d0 / d11_v * hnai2
+            d9_v    = hnai6 * r(i,3)
+            d11_v   = hnai3 + hnai4 * r(i,3) + hnai5 * r3s + d9_v * r3s
+            d12_v   = (hnai1 + hnai2 * r(i,3)) / d11_v
+            d5_b    = (-d12_v) / d11_v
+            d9_b    = d5_b * d9_v + d5_b * hnai5
+            d10_b   = d5_b * r3s * hnai6 + d5_b * hnai4 + 1.0d0 / d11_v * hnai2
             do g_i_ = 1, g_p_
                 g_rnahie3(g_i_) = d9_b * g_r3s(g_i_) + d10_b * g_r(g_i_,i,3)
             enddo
             rnahie3 = d12_v + rnaie + una2p
-            !--------
-            !
-            d10_v = hnau6 * r(i,1)
-            d12_v = hnau3 + hnau4 * r(i,1) + hnau5 * r1s + d10_v * r1s
-            d13_v = (hnau1 * r(i,1) + hnau2 * r1s) / d12_v
-            d2_b  = 1.0d0 / d12_v
-            d3_b  = (-d13_v) / d12_v
-            d7_b  = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
-            d8_b  = d3_b * r1s * hnau6 + d3_b * hnau4 + d2_b * hnau1
+            d10_v   = hnau6 * r(i,1)
+            d12_v   = hnau3 + hnau4 * r(i,1) + hnau5 * r1s + d10_v * r1s
+            d13_v   = (hnau1 * r(i,1) + hnau2 * r1s) / d12_v
+            d2_b    = 1.0d0 / d12_v
+            d3_b    = (-d13_v) / d12_v
+            d7_b    = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
+            d8_b    = d3_b * r1s * hnau6 + d3_b * hnau4 + d2_b * hnau1
             do g_i_ = 1, g_p_
                 g_rnahmu1(g_i_) = d7_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1 )
             enddo
             rnahmu1 = d13_v
-            !--------
-            !
-            d10_v = hnau6 * r(i,3)
-            d12_v = hnau3 + hnau4 * r(i,3) + hnau5 * r3s + d10_v * r3s
-            d13_v = (hnau1 * r(i,3) + hnau2 * r3s) / d12_v
-            d2_b  = 1.0d0 / d12_v
-            d3_b  = (-d13_v) / d12_v
-            d7_b  = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
-            d8_b  = d3_b * r3s * hnau6 + d3_b * hnau4 + d2_b * hnau1
+            d10_v   = hnau6 * r(i,3)
+            d12_v   = hnau3 + hnau4 * r(i,3) + hnau5 * r3s + d10_v * r3s
+            d13_v   = (hnau1 * r(i,3) + hnau2 * r3s) / d12_v
+            d2_b    = 1.0d0 / d12_v
+            d3_b    = (-d13_v) / d12_v
+            d7_b    = d3_b * d10_v + d3_b * hnau5 + d2_b * hnau2
+            d8_b    = d3_b * r3s * hnau6 + d3_b * hnau4 + d2_b * hnau1
             do g_i_ = 1, g_p_
                 g_rnahmu3(g_i_) = d7_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3 )
             enddo
             rnahmu3 = d13_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_,i,1)
             enddo
@@ -3479,8 +3087,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_rnahpar1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1) + d13_b * g_d1_w(g_i_)
             enddo
             rnahpar1 = 159.267d0 + hpol + d2_v * d11_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-hnaa1) * g_r(g_i_,i,3)
             enddo
@@ -3496,8 +3102,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_rnahpar3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3) + d13_b * g_d1_w(g_i_)
             enddo
             rnahpar3 = 159.267d0 + hpol + d2_v * d11_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-hnab1) * g_r(g_i_,i,1)
             enddo
@@ -3513,8 +3117,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_rnahperp1(g_i_) = d9_b * g_r1s(g_i_) + d8_b * g_r(g_i_,i,1) + d13_b * g_d1_w(g_i_)
             enddo
             rnahperp1 = 159.267d0 + hpol + d2_v * d11_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-hnab1) * g_r(g_i_,i,3)
             enddo
@@ -3530,42 +3132,32 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_rnahperp3(g_i_) = d9_b * g_r3s(g_i_) + d8_b * g_r(g_i_,i,3) + d13_b * g_d1_w(g_i_)
             enddo
             rnahperp3 = 159.267d0 + hpol + d2_v * d11_v
-            !--------
-            !
-            d3_v = rnahpar1 - rnahperp1
-            d2_b = 1.0d0 + (-cstsq1)
+            d3_v      = rnahpar1 - rnahperp1
+            d2_b      = 1.0d0 + (-cstsq1)
             do g_i_ = 1, g_p_
                 g_rnahpol1(g_i_) = d3_v * g_cstsq1(g_i_) + cstsq1 * g_rnahpar1(g_i_) + d2_b * g_rnahperp1(g_i_)
             enddo
             rnahpol1 = rnahperp1 + d3_v * cstsq1
-            !--------
             do g_i_ = 1, g_p_
                 g_rnahpol1b(g_i_) = twothd * g_rnahperp1(g_i_) + onethd * g_rnahpar1(g_i_)
             enddo
             rnahpol1b = onethd * rnahpar1 + twothd * rnahperp1
-            !--------
-            !
-            d3_v = rnahpar3 - rnahperp3
-            d2_b = 1.0d0 + (-cstsq3)
+            d3_v      = rnahpar3 - rnahperp3
+            d2_b      = 1.0d0 + (-cstsq3)
             do g_i_ = 1, g_p_
                 g_rnahpol3(g_i_) = d3_v * g_cstsq3(g_i_) + cstsq3 * g_rnahpar3(g_i_) + d2_b * g_rnahperp3(g_i_)
             enddo
             rnahpol3 = rnahperp3 + d3_v * cstsq3
-            !--------
             do g_i_ = 1, g_p_
                 g_rnahpol3b(g_i_) = twothd * g_rnahperp3(g_i_) + onethd * g_rnahpar3(g_i_)
             enddo
             rnahpol3b = onethd * rnahpar3 + twothd * rnahperp3
-            !--------
-            !
             ! electrostatic forces
-            !
             ! quadrupole quadrupole
             do g_i_ = 1, g_p_
                 g_qqint(g_i_) = (-7.0d0) * g_cstsq(g_i_)
             enddo
             qqint = 3.0d0 - 7.0d0 * cstsq
-            !--------
             d5_v  = rnagc * rnag
             d7_v  = d5_v * rnag + rqq
             d8_v  = 0.75d0 * rnaquad * h2quad / d7_v
@@ -3577,8 +3169,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_qq(g_i_) = d8_v * g_qqint(g_i_) + d8_b * g_rnag(g_i_) + d9_b * g_rnagc(g_i_) + d10_b * g_h2quad(g_i_)
             enddo
-            qq = d8_v * qqint
-            !--------
+            qq   = d8_v * qqint
             d2_v = (-39.0625d0) * rnagc
             d4_b = rnag * (-39.0625d0)
             do g_i_ = 1, g_p_
@@ -3591,19 +3182,16 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_dexp2(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             dexp2 = d2_v
-            !--------
-            d3_v = 3.0d0 * qqint
-            d4_v = (-4.0d0) * pi / d3_v
-            d5_v = d4_v - 1.0d0
-            d8_v = 1.0d0 + d5_v * dexp2
-            d6_b = qq * d5_v
-            d9_b = qq * dexp2 * ((-d4_v) / d3_v) * 3.0d0
+            d3_v  = 3.0d0 * qqint
+            d4_v  = (-4.0d0) * pi / d3_v
+            d5_v  = d4_v - 1.0d0
+            d8_v  = 1.0d0 + d5_v * dexp2
+            d6_b  = qq * d5_v
+            d9_b  = qq * dexp2 * ((-d4_v) / d3_v) * 3.0d0
             do g_i_ = 1, g_p_
                 g_qq(g_i_) = d6_b * g_dexp2(g_i_) + d9_b * g_qqint(g_i_) + d8_v * g_qq(g_i_)
             enddo
             qq = qq * d8_v
-            !--------
-            !
             ! quadrupole hexadecapole
             d2_v = 147.0d0 * cstsq
             d4_b = 162.0d0 + (-d2_v) + (-cstsq) * 147.0d0
@@ -3611,7 +3199,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_qhint(g_i_) = d4_b * g_cstsq(g_i_)
             enddo
             qhint = -45.0d0 - d2_v * cstsq + 162.0d0 * cstsq
-            !--------
             d4_v  = rnagc * rnagc
             d7_v  = d4_v * rnag + rqh
             d8_v  = 0.3125d0 * rnaquad * h2hex / d7_v
@@ -3623,8 +3210,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_qh(g_i_) = d8_v * g_qhint(g_i_) + d8_b * g_rnag(g_i_) + d9_b * g_rnagc(g_i_) + d10_b * g_h2hex(g_i_)
             enddo
-            qh = d8_v * qhint
-            !--------
+            qh   = d8_v * qhint
             d3_v = (-40.8d0) * pi / qhint
             d4_v = d3_v - 1.0d0
             d7_v = 1.0d0 + d4_v * dexp2
@@ -3634,11 +3220,8 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_qh(g_i_) = d6_b * g_dexp2(g_i_) + d8_b * g_qhint(g_i_) + d7_v * g_qh(g_i_)
             enddo
             qh = qh * d7_v
-            !--------
-            !
             ! induction forces
             ! dipole induced dipole
-            !
             d2_v = rnag1c * rnag1c
             d4_v = d2_v * rnag1c + rd
             d5_v = 1.0d0 / d4_v
@@ -3648,8 +3231,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_div1(g_i_) = d5_b * g_rnag1c(g_i_)
             enddo
-            div1 = d5_v
-            !--------
+            div1  = d5_v
             d2_v  = rnahmu1 * rnahmu1
             d1_p  = 2.0d0 * rnahmu1
             d4_v  = (-d2_v) * hpol
@@ -3665,19 +3247,16 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                     & g_rnahmu1(g_i_)
             enddo
             rmuimu1 = d10_v * div1
-            !--------
-            !
-            d2_v = rnag3c * rnag3c
-            d4_v = d2_v * rnag3c + rd
-            d5_v = 1.0d0 / d4_v
-            d3_b = (-d5_v) / d4_v
-            d4_b = d3_b * rnag3c
-            d5_b = d3_b * d2_v + d4_b * rnag3c + d4_b * rnag3c
+            d2_v    = rnag3c * rnag3c
+            d4_v    = d2_v * rnag3c + rd
+            d5_v    = 1.0d0 / d4_v
+            d3_b    = (-d5_v) / d4_v
+            d4_b    = d3_b * rnag3c
+            d5_b    = d3_b * d2_v + d4_b * rnag3c + d4_b * rnag3c
             do g_i_ = 1, g_p_
                 g_div3(g_i_) = d5_b * g_rnag3c(g_i_)
             enddo
-            div3 = d5_v
-            !--------
+            div3  = d5_v
             d2_v  = rnahmu3 * rnahmu3
             d1_p  = 2.0d0 * rnahmu3
             d4_v  = (-d2_v) * hpol
@@ -3693,10 +3272,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                     & g_rnahmu3(g_i_)
             enddo
             rmuimu3 = d10_v * div3
-            !--------
-            !
             ! dispersion forces
-            !
             d3_v  = rnaie + h2ie
             d4_v  = (-1.5d0) * rnaie * h2ie / d3_v
             d5_v  = d4_v * rnapol1
@@ -3711,8 +3287,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_c6(g_i_) = d5_b * g_rnagc(g_i_) + d7_b * g_alhh(g_i_) + d11_b * g_h2ie(g_i_)
             enddo
-            c6 = d11_v
-            !--------
+            c6   = d11_v
             d4_v = alb / alhh
             d5_v = d4_v - 1.0d0
             d8_v = 1.0d0 + d5_v * dexp2
@@ -3723,9 +3298,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
             do g_i_ = 1, g_p_
                 g_c6(g_i_) = d6_b * g_dexp2(g_i_) + d9_b * g_alhh(g_i_) + d8_b * g_alb(g_i_) + d8_v * g_c6(g_i_)
             enddo
-            c6 = c6 * d8_v
-            !--------
-            !
+            c6    = c6 * d8_v
             d4_v  = rnahie1 + hie
             d5_v  = (-1.5d0) * rnahie1 * hie / d4_v
             d8_v  = d5_v * rnahpol1 * hpol
@@ -3739,8 +3312,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_c61(g_i_) = d10_v * g_div1(g_i_) + d5_b * g_rnag1c(g_i_) + d8_b * g_rnahpol1(g_i_) + d11_b * &
                     & g_rnahie1(g_i_)
             enddo
-            c61 = d10_v * div1
-            !--------
+            c61  = d10_v * div1
             d2_v = (-39.0625d0) * rnag1c
             d4_b = rnag1 * (-39.0625d0)
             do g_i_ = 1, g_p_
@@ -3753,21 +3325,18 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_dexp1(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             dexp1 = d2_v
-            !--------
-            d4_v = rnahpol1b / rnahpol1
-            d5_v = d4_v - 1.0d0
-            d8_v = 1.0d0 + d5_v * dexp1
-            d6_b = c61 * d5_v
-            d7_b = c61 * dexp1
-            d8_b = d7_b * (1.0d0 / rnahpol1)
-            d9_b = d7_b * ((-d4_v) / rnahpol1)
+            d4_v  = rnahpol1b / rnahpol1
+            d5_v  = d4_v - 1.0d0
+            d8_v  = 1.0d0 + d5_v * dexp1
+            d6_b  = c61 * d5_v
+            d7_b  = c61 * dexp1
+            d8_b  = d7_b * (1.0d0 / rnahpol1)
+            d9_b  = d7_b * ((-d4_v) / rnahpol1)
             do g_i_ = 1, g_p_
                 g_c61(g_i_) = d6_b * g_dexp1(g_i_) + d9_b * g_rnahpol1(g_i_) + d8_b * g_rnahpol1b(g_i_) + d8_v * &
                     & g_c61(g_i_)
             enddo
-            c61 = c61 * d8_v
-            !--------
-            !
+            c61   = c61 * d8_v
             d4_v  = rnahie3 + hie
             d5_v  = (-1.5d0) * rnahie3 * hie / d4_v
             d8_v  = d5_v * rnahpol3 * hpol
@@ -3781,8 +3350,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_c63(g_i_) = d10_v * g_div3(g_i_) + d5_b * g_rnag3c(g_i_) + d8_b * g_rnahpol3(g_i_) + d11_b * &
                     & g_rnahie3(g_i_)
             enddo
-            c63 = d10_v * div3
-            !--------
+            c63  = d10_v * div3
             d2_v = (-39.0625d0) * rnag3c
             d4_b = rnag3 * (-39.0625d0)
             do g_i_ = 1, g_p_
@@ -3795,21 +3363,18 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_dexp3(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             dexp3 = d2_v
-            !--------
-            d4_v = rnahpol3b / rnahpol3
-            d5_v = d4_v - 1.0d0
-            d8_v = 1.0d0 + d5_v * dexp3
-            d6_b = c63 * d5_v
-            d7_b = c63 * dexp3
-            d8_b = d7_b * (1.0d0 / rnahpol3)
-            d9_b = d7_b * ((-d4_v) / rnahpol3)
+            d4_v  = rnahpol3b / rnahpol3
+            d5_v  = d4_v - 1.0d0
+            d8_v  = 1.0d0 + d5_v * dexp3
+            d6_b  = c63 * d5_v
+            d7_b  = c63 * dexp3
+            d8_b  = d7_b * (1.0d0 / rnahpol3)
+            d9_b  = d7_b * ((-d4_v) / rnahpol3)
             do g_i_ = 1, g_p_
                 g_c63(g_i_) = d6_b * g_dexp3(g_i_) + d9_b * g_rnahpol3(g_i_) + d8_b * g_rnahpol3b(g_i_) + d8_v * &
                     & g_c63(g_i_)
             enddo
-            c63 = c63 * d8_v
-            !--------
-            !
+            c63   = c63 * d8_v
             d4_v  = 1.5d0 * cstsq1 + 0.5d0
             d5_v  = 1.0d0 / d4_v
             d6_v  = d5_v - 1.0d0
@@ -3820,8 +3385,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_cind1(g_i_) = d6_b * g_dexp1(g_i_) + d10_b * g_cstsq1(g_i_ ) + d9_v * g_rmuimu1(g_i_)
             enddo
             cind1 = rmuimu1 * d9_v
-            !--------
-            !
             d4_v  = 1.5d0 * cstsq3 + 0.5d0
             d5_v  = 1.0d0 / d4_v
             d6_v  = d5_v - 1.0d0
@@ -3832,9 +3395,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_cind3(g_i_) = d6_b * g_dexp3(g_i_) + d10_b * g_cstsq3(g_i_ ) + d9_v * g_rmuimu3(g_i_)
             enddo
             cind3 = rmuimu3 * d9_v
-            !--------
-            !
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = balp * g_r(g_i_,i,2)
             enddo
@@ -3850,8 +3410,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_elec(g_i_) = d5_b * g_d1_w(g_i_) + d9_b * g_c6(g_i_) + d6_b * g_qh(g_i_) + d6_b * g_qq(g_i_)
             enddo
             elec = d7_v * d10_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = dalp * g_r(g_i_,i,1)
             enddo
@@ -3863,7 +3421,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_c6swt1(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             c6swt1 = 0.5d0 * (1.0d0 - d2_v)
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = dalp * g_r(g_i_,i,3)
             enddo
@@ -3875,71 +3432,54 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_c6swt3(g_i_) = d4_b * g_d1_w(g_i_)
             enddo
             c6swt3 = 0.5d0 * (1.0d0 - d2_v)
-            !--------
-            !
-            !
-            d3_b = cevau * c6swt1
-            d4_b = cevau * c61
+            d3_b   = cevau * c6swt1
+            d4_b   = cevau * c61
             do g_i_ = 1, g_p_
                 g_c61(g_i_) = d4_b * g_c6swt1(g_i_) + d3_b * g_c61(g_i_)
             enddo
-            c61 = c61 * c6swt1 * cevau
-            !--------
+            c61  = c61 * c6swt1 * cevau
             d3_b = cevau * c6swt3
             d4_b = cevau * c63
             do g_i_ = 1, g_p_
                 g_c63(g_i_) = d4_b * g_c6swt3(g_i_) + d3_b * g_c63(g_i_)
             enddo
             c63 = c63 * c6swt3 * cevau
-            !--------
             do g_i_ = 1, g_p_
                 g_cind1(g_i_) = cind1 * g_c6swt1(g_i_) + c6swt1 * g_cind1(g_i_)
             enddo
             cind1 = cind1 * c6swt1
-            !--------
             do g_i_ = 1, g_p_
                 g_cind3(g_i_) = cind3 * g_c6swt3(g_i_) + c6swt3 * g_cind3(g_i_)
             enddo
             cind3 = cind3 * c6swt3
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_elec(g_i_) = g_cind3(g_i_) + g_cind1(g_i_) + g_c63(g_i_) + g_c61(g_i_) + g_elec(g_i_)
             enddo
             elec = elec + c61 + c63 + cind1 + cind3
-            !--------
-            ! ===============================================================
-            !
             do g_i_ = 1, g_p_
                 g_coul1(g_i_) = 0.5d0 * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
             enddo
             coul1 = 0.5d0 * (s1 + t1)
-            !--------
             do g_i_ = 1, g_p_
                 g_coul2(g_i_) = 0.5d0 * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
             enddo
             coul2 = 0.5d0 * (s2 + t2)
-            !--------
             do g_i_ = 1, g_p_
                 g_coul3(g_i_) = 0.5d0 * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
             enddo
             coul3 = 0.5d0 * (s3 + t3)
-            !--------
             do g_i_ = 1, g_p_
                 g_exch1(g_i_) = (-0.5d0) * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
             enddo
             exch1 = 0.5d0 * (s1 - t1)
-            !--------
             do g_i_ = 1, g_p_
                 g_exch2(g_i_) = (-0.5d0) * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
             enddo
             exch2 = 0.5d0 * (s2 - t2)
-            !--------
             do g_i_ = 1, g_p_
                 g_exch3(g_i_) = (-0.5d0) * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
             enddo
             exch3 = 0.5d0 * (s3 - t3)
-            !--------
             d4_v  = (exch1 - exch2) * (exch1 - exch2)
             d3_p  = 2.0d0 * (exch1 - exch2)
             d7_v  = (exch2 - exch3) * (exch2 - exch3)
@@ -3953,7 +3493,6 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_w(g_i_) = d5_b * g_exch3(g_i_) + d10_b * g_exch2(g_i_) + d6_b * g_exch1(g_i_)
             enddo
             w = d4_v + d7_v + d10_v
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-c2c) * g_r(g_i_,i,3) + (-c2c) * g_r(g_i_,i,2) + (-c2c) * g_r(g_i_,i,1) + (-c2b) * &
                     & g_w(g_i_)
@@ -3966,8 +3505,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_cplg2(g_i_) = d3_b * g_d1_w(g_i_)
             enddo
             cplg2 = c2a * d2_v
-            !--------
-            d4_b = cplg2 + cplg2
+            d4_b  = cplg2 + cplg2
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d4_b * g_cplg2(g_i_) + g_w(g_i_)
             enddo
@@ -3983,21 +3521,15 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
                 g_e(g_i_,i) = d5_b * g_d1_w(g_i_) + g_coul3(g_i_) + g_coul2 (g_i_) + g_coul1(g_i_)
             enddo
             e(i) = coul1 + coul2 + coul3 + deh2 - d8_v / dsqrt(2.0d0)
-            !--------
-            !
             d2_b = 1.0d0 / cevau
             do g_i_ = 1, g_p_
                 g_elec(g_i_) = d2_b * g_elec(g_i_)
             enddo
             elec = elec / cevau
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = cevau * g_elec(g_i_) + cevau * g_e(g_i_,i)
             enddo
             e(i) = (e(i) + elec) * cevau
-            !--------
-            !
         enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
@@ -4016,7 +3548,3 @@ subroutine g_pot22( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
     integer          :: nt
     call dispatch(g_p_=g_p_, r=r, g_r=g_r, ldg_r=ldg_r, e=e, g_e=g_e, ldg_e=ldg_e, nt=nt)
 end subroutine g_pot22
-
-!
-!
-!

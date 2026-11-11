@@ -39,7 +39,9 @@ program main
     write(*, *) d(1,2,1,1), d(1,2,1,2), d(1,2,1,3)
     write(*, *) d(1,2,2,1), d(1,2,2,2), d(1,2,2,3)
     write(*, *) d(1,2,3,1), d(1,2,3,2), d(1,2,3,3)
+
     contains
+
     !> @brief Evaluate chempotpy.
     subroutine chempotpy( system, surface, path, geom, nstates, natoms, igrad, p, g, d, u, ug )
         implicit none
@@ -62,6 +64,7 @@ program main
                 real(kind=c_double), dimension(:, :, :), intent(inout) :: g
                 real(kind=c_double), dimension(:, :, :, :), intent(inout) :: d
             end subroutine call_pes
+
             !> @brief Evaluate call_dpem.
             subroutine call_dpem( so_name, geom, igrad, u, ug ) bind(c, name="call_dpem")
                 use iso_c_binding, only: c_char, c_int, c_double

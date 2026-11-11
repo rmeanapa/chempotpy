@@ -1,10 +1,12 @@
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement H2OBr_PIP, a potential energy surface for H2OBr.
 module chempotpy_h2obr_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H2OBr_PIP potential energy surface for H2OBr.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
         implicit none
@@ -31,7 +33,7 @@ module chempotpy_h2obr_pip_pes
     end subroutine evaluate
 end module chempotpy_h2obr_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H2OBr_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_h2obr_pip_pes, only: evaluate
     implicit none
@@ -181,7 +183,9 @@ module chempotpy_h2obr_pip_pot_legacy_state_d2626f5f
         & 7.3291362818343202d+01, 5.9132873816693848d+02, -4.3682494509311041d+01, -9.7316062879863171d+02, - &
         & 4.5354207378611846d+02, -9.7751221731949869d+01, -3.3962572317524206d+01, -1.7647591915450901d+03, - &
         & 1.8742758908600936d+03, 1.2254204433089751d+03, 8.2003579423252120d+01, 9.3232232083933184d+02]
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( xyz, v )
         implicit none
@@ -249,7 +253,6 @@ double precision function emsav( x, c ) result(v)
     real(wp), dimension(1:6)::x
     real(wp), dimension(0:501)::c
     !  real(wp)::v
-    ! ::::::::::::::::::::
     real(wp), dimension(0:501)::p
     call bemsav(x, p)
     v = dot_product(p, c)
@@ -261,7 +264,6 @@ subroutine bemsav( x, p )
     integer, parameter :: wp = kind(1.0d0)
     real(wp), dimension(1:6), intent(in)::x
     real(wp), dimension(0:501), intent(out)::p
-    ! ::::::::::::::::::::
     real(wp), dimension(0:10)::m
     call evmono(x, m)
     call evpoly(m, p)
@@ -273,7 +275,6 @@ subroutine evmono( x, m )
     integer, parameter :: wp = kind(1.0d0)
     real(wp), dimension(1:6), intent(in)::x
     real(wp), dimension(0:10), intent(out)::m
-    !::::::::::::::::::::
     m(0)  = 1.0d0
     m(1)  = x(6)
     m(2)  = x(5)
@@ -293,7 +294,6 @@ subroutine evpoly( m, p )
     integer, parameter :: wp = kind(1.0d0)
     real(wp), dimension(0:10), intent(in)::m
     real(wp), dimension(0:501), intent(out)::p
-    !::::::::::::::::::::
     p(0)   = m(0)
     p(1)   = m(1)
     p(2)   = m(2) + m(3)

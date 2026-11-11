@@ -1,11 +1,72 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          ClH2
+!   Functional form: Isaacson and Muckerman's diatomics-in-molecules ver
+!   Common name:     ClH2 DIMS
+!   Reference:       unpublished
+!   Cross Reference: S. C. Tucker, D. G. Truhlar,
+!                    B. C. Garrett, and A. D. Isaacson
+!                    J. Chem. Phys. 82, 4102 (1985)
+!   Calling Sequence:
+!               must be called once before any calls to POT
+!      POT    - driver for the evaluation of the energy and the derivati
+!               of the energy with respect to the coordinates for a give
+!               geometric configuration
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      ground electronic state
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Cl
+!      infinitely far from the H2 diatomic and R(H2) set equal to the
+!      H2 equilibrium diatomic value.
+!   Parameters:
+!      Set in the BLOCK DATA subprogram PTPARM and read in from the file
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Cl-H)
+!                            R(2) = R(H-H)
+!                            R(3) = R(Cl-H)
+!   Common Blocks (used between the calling program and this potential):
+!      /PT1CM/ R(3), ENERGY, DEDR(3)
+!        passes the coordinates, ground state electronic energy, and
+!        derivatives of the ground electronic state energy with respect
+!        to the coordinates.
+!      /PT2CM/ NDER, NDUM, IDEBUG, IDUM(19)
+!        passes the control flags where
+!        NDER   = 0 => no derivatives are computed
+!               = 1 => derivatives of the energy for the ground electron
+!                     state with respect to the coordinates are computed
+!        NDUM   - not used
+!        IDEBUG - control flag for priniting extra information
+!        IDEBUG = 0 => do not print extra debug information
+!        IDEBUG = 1 => print intermediate values to the file linked
+!                      to FORTRAN unit IPTPRT.
+!        IDUM   - not used
+!        passes the FORTRAN unit number used for potential output
+!      /PT5CM/ EASYAB, EASYBC, EASYAC
+!        passes the energy in the three asymptotic valleys for an A + BC
+!        The energy in the AB valley, EASYAB, is equal to the energy of
+!        C atom "infinitely" far from the AB diatomic and R(AB) set equa
+!        Re(AB), the equilibrium bond length for the AB diatomic.
+!        In this potential the AB valley represents H infinitely far fro
+!        the ClH diatomic and R(ClH) equal to Re(ClH).  Similarly, the t
+!        EASYBC and EASYAC represent the energies in the H2 and the othe
+!        valleys, respectively.
+!   Default Parameter Values:
+!      Variable      Default value
+!      NDER             1
+!      IDEBUG           0
+!      IPTPRT           6
+
+!> @brief Implement ClH2_LEPS_TTGI2_1985, a potential energy surface for ClH2.
 module chempotpy_clh2_leps_ttgi2_1985_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the ClH2_LEPS_TTGI2_1985 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, path, p, g, d )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -37,7 +98,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pes
             do istate=1, nstates
                 p(istate) = xter
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = xter
             enddo
@@ -47,13 +108,13 @@ module chempotpy_clh2_leps_ttgi2_1985_pes
                     g(1,iatom,idir) = dedx(j)
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine evaluate
 end module chempotpy_clh2_leps_ttgi2_1985_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose ClH2_LEPS_TTGI2_1985 through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_clh2_leps_ttgi2_1985_pes, only: evaluate
     implicit none
@@ -79,121 +140,34 @@ subroutine evdrdx( x, r, drdx )
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
-!
 module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
     implicit none
     private
     public :: evaluate_internal
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine evaluate_internal( q, nder, xter, dq )
-        !
-        !   System:          ClH2
-        !   Functional form: Isaacson and Muckerman's diatomics-in-molecules ver
-        !   Common name:     ClH2 DIMS
-        !   Reference:       unpublished
-        !   Cross Reference: S. C. Tucker, D. G. Truhlar,
-        !                    B. C. Garrett, and A. D. Isaacson
-        !                    J. Chem. Phys. 82, 4102 (1985)
-        !
-        !   Calling Sequence:
-        !               must be called once before any calls to POT
-        !      POT    - driver for the evaluation of the energy and the derivati
-        !               of the energy with respect to the coordinates for a give
-        !               geometric configuration
-        !
-        !   Units:
-        !      energies    - hartrees
-        !      coordinates - bohr
-        !      derivatives - hartrees/bohr
-        !
-        !   Surfaces:
-        !      ground electronic state
-        !
-        !   Zero of energy:
-        !      The classical potential energy is set equal to zero for the Cl
-        !      infinitely far from the H2 diatomic and R(H2) set equal to the
-        !      H2 equilibrium diatomic value.
-        !
-        !   Parameters:
-        !      Set in the BLOCK DATA subprogram PTPARM and read in from the file
-        !
-        !   Coordinates:
-        !      Internal, Definition: R(1) = R(Cl-H)
-        !                            R(2) = R(H-H)
-        !                            R(3) = R(Cl-H)
-        !
-        !   Common Blocks (used between the calling program and this potential):
-        !      /PT1CM/ R(3), ENERGY, DEDR(3)
-        !        passes the coordinates, ground state electronic energy, and
-        !        derivatives of the ground electronic state energy with respect
-        !        to the coordinates.
-        !      /PT2CM/ NDER, NDUM, IDEBUG, IDUM(19)
-        !        passes the control flags where
-        !        NDER   = 0 => no derivatives are computed
-        !               = 1 => derivatives of the energy for the ground electron
-        !                     state with respect to the coordinates are computed
-        !        NDUM   - not used
-        !        IDEBUG - control flag for priniting extra information
-        !        IDEBUG = 0 => do not print extra debug information
-        !        IDEBUG = 1 => print intermediate values to the file linked
-        !                      to FORTRAN unit IPTPRT.
-        !        IDUM   - not used
-        !        passes the FORTRAN unit number used for potential output
-        !      /PT5CM/ EASYAB, EASYBC, EASYAC
-        !        passes the energy in the three asymptotic valleys for an A + BC
-        !        The energy in the AB valley, EASYAB, is equal to the energy of
-        !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
-        !        Re(AB), the equilibrium bond length for the AB diatomic.
-        !        In this potential the AB valley represents H infinitely far fro
-        !        the ClH diatomic and R(ClH) equal to Re(ClH).  Similarly, the t
-        !        EASYBC and EASYAC represent the energies in the H2 and the othe
-        !        valleys, respectively.
-        !
-        !   Default Parameter Values:
-        !      Variable      Default value
-        !      NDER             1
-        !      IDEBUG           0
-        !      IPTPRT           6
-        !
-        !
         implicit none
         double precision, intent(in)  :: q(3)
         integer, intent(in)           :: nder
         double precision, intent(out) :: xter, dq(3)
         double precision              :: quar, rt3
-        dimension c(3)
-        dimension x(121)
-        dimension sabfit(121), s2sab(121), s3sab(121), delsab(121)
-        dimension tabfit(121), s2tab(121), s3tab(121), deltab(121)
-        dimension gabfit(121), s2gab(121), s3gab(121), delgab(121)
-        dimension uabfit(121), s2uab(121), s3uab(121), deluab(121)
-        dimension s11fit(121), s2s11(121), s3s11(121), dels11(121)
-        dimension s12fit(121), s2s12(121), s3s12(121), dels12(121)
-        dimension s22fit(121), s2s22(121), s3s22(121), dels22(121)
-        dimension tsxfit(121), s2tsx(121), s3tsx(121), deltsx(121)
-        dimension spxfit(121), s2spx(121), s3spx(121), delspx(121)
-        dimension tpxfit(121), s2tpx(121), s3tpx(121), deltpx(121)
-        dimension dsxfit(121), s2dsx(121), s3dsx(121), deldsx(121)
-        double precision :: arg, c, cs, ct, ct2, dd, ddgab, ddsxa, ddsxb, dduab, deldsx, delgab, dels11, dels12, &
-            & dels22, delsab, delspx, deltab, deltpx, deltsx, deluab, dgab, dh, dh11, dh12, dh13, dh14, dh15, dh16, &
-            & dh22, dh24, dh25, dh26, dh33, dh34, dh44, dh45, dh46, dh55, dh56, dh66, dnumb, dpux, dsgh, dspxa, &
-            & dspxb, dss11a, dss11b, dss12a, dss12b, dss22a, dss22b, dssab, dsxa, dsxb, dsxfit, dtdr1, dtdr2, dtdr3, &
-            & dtpxa, dtpxb, dtsab, dtsxa, dtsxb, duab, easyab, easyac, easybc, en, eps, factr, forth, gabfit, gvec, &
-            & half, one, r, s11fit, s12fit, s22fit, s2dsx, s2gab, s2s11, s2s12, s2s22, s2sab, s2spx, s2tab, s2tpx, &
-            & s2tsx, s2uab, s3, s3dsx, s3gab, s3s11, s3s12, s3s22, s3sab, s3spx, s3tab, s3tpx, s3tsx, s3uab, sabfit, &
-            & spxa, spxb, spxfit, sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, &
-            & tabfit, test, th, tpxa, tpxb, tpxfit, tre, tsab, tsxa, tsxb, tsxfit, two, uabfit, vec, w, x, xtra, &
-            & zero
-        integer :: i, idebug, idum, iflag, indx, iptprt, ix, j, k, ndim, ndum, nroot, ns
-        dimension th(6,6), vec(6,6), w(6), en(6), gvec(6), dh(6,6), r(3), dd(3)
-        dimension dh11(3), dh12(3), dh13(3), dh14(3), dh15(3), dh16(3), dh22(3)
-        dimension dh24(3), dh25(3), dh26(3), dh33(3), dh34(3), dh44(3), dh45(3)
-        dimension dh46(3), dh55(3), dh56(3), dh66(3)
-        dimension indx(3)
+        double precision :: arg, c(3), cs, ct, ct2, dd(3), ddgab, ddsxa, ddsxb, dduab, deldsx(121), delgab(121), dels11(121), &
+            & dels12(121), dels22(121), delsab(121), delspx(121), deltab(121), deltpx(121), deltsx(121), deluab(121), dgab, &
+            & dh(6,6), dh11(3), dh12(3), dh13(3), dh14(3), dh15(3), dh16(3), dh22(3), dh24(3), dh25(3), dh26(3), dh33(3), &
+            & dh34(3), dh44(3), dh45(3), dh46(3), dh55(3), dh56(3), dh66(3), dnumb, dpux, dsgh, dspxa, dspxb, dss11a, dss11b, &
+            & dss12a, dss12b, dss22a, dss22b, dssab, dsxa, dsxb, dsxfit(121), dtdr1, dtdr2, dtdr3, dtpxa, dtpxb, dtsab, dtsxa, &
+            & dtsxb, duab, easyab, easyac, easybc, en(6), eps, factr, forth, gabfit(121), gvec(6), half, one, r(3), s11fit(121), &
+            & s12fit(121), s22fit(121), s2dsx(121), s2gab(121), s2s11(121), s2s12(121), s2s22(121), s2sab(121), s2spx(121), &
+            & s2tab(121), s2tpx(121), s2tsx(121), s2uab(121), s3, s3dsx(121), s3gab(121), s3s11(121), s3s12(121), s3s22(121), &
+            & s3sab(121), s3spx(121), s3tab(121), s3tpx(121), s3tsx(121), s3uab(121), sabfit(121), spxa, spxb, spxfit(121), &
+            & sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, tabfit(121), test, th(6,6), tpxa, &
+            & tpxb, tpxfit(121), tre, tsab, tsxa, tsxb, tsxfit(121), two, uabfit(121), vec(6,6), w(6), x(121), xtra, zero
+        integer :: i, idebug, idum, iflag, indx(3), iptprt, ix, j, k, ndim, ndum, nroot, ns
         character(len=80) :: title(2)
         equivalence (th(1,1), dh(1,1))
-        !
         !   Echo the name of the potential to the file linked to FORTRAN unit IP
         !WRITE (IPTPRT, 600)
         !WRITE (IPTPRT, 610) TITLE
@@ -673,38 +647,29 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         easyab = c(1)
         easybc = c(2)
         easyac = c(3)
-        !
-        !
         !     ENTRY POT GIVES NROOT-TH POTENTIAL ENERGY FOR THE CLH2 SYSTEM
         !     ENTRY POT ALSO GIVES PARTIALS W.R.T. THREE DISTANCES
-        !
         !     INTERNUCLEAR DISTANCES STORED IN Q(3) AND R(3)
         !     NROOT-TH STATE ENERGY STORED IN XTER (OR TERM FOR DIATOMIC)
         !     THREE PARTIALS STORED IN DD(3)
-        !
-        !
         !   Check the value of NDER
         if( nder .gt. 1 )then
             write (iptprt, '(/,1X,T5,''Error: POT has been called with NDER = '', I5, /,1X,T12,''only the first derivativ' // &
                 'es, NDER = 1, are '', ''coded in this potential'')') nder
             stop 'POT 1'
         endif
-        !
         !     IAPP=1
         !     SET FLAG FOR EIGENVECTOR OUTPUT
         iflag = sign(1, nroot)
         nroot = abs(nroot)
-        !
         !     FOLLOWING COORDINATE DEFINITIONS PROVIDE FOR PROPER SYSTEM
         do ix=1, 3
             r(ix) = q(indx(ix))
         enddo
-        !
         !     ZERO OUT UNUSED HAMILTONIAN ELEMENTS
         th(2,3) = zero
         th(3,5) = zero
         th(3,6) = zero
-        !
         !     COMPUTE SINE AND COSINE OF ANGLE AXB, AND POWERS
         ct = (r(1)*r(1)+r(3)*r(3)-r(2)*r(2))/(two*r(1)*r(3))
         goto_block_10_732: block
@@ -742,9 +707,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         call spline(ns, x, tabfit, r(2), tsab, dtsab, s3, eps, s2tab, s3tab, deltab)
         call spline(ns, x, gabfit, r(2), dgab, ddgab, s3, eps, s2gab, s3gab, delgab)
         call spline(ns, x, uabfit, r(2), duab, dduab, s3, eps, s2uab, s3uab, deluab)
-        !
         !     CONSTRUCT DIM HAMILTONIAN IN ORTHOGONAL BASIS
-        !
         th(1,1) = ss11a+forth*((ssab+tre*tsab)+ct2*(ss11b+tre*tsxb) +st2*(spxb+tre*tpxb))-dpux-two*dsgh
         th(1,2) = forth*sqrt3*(ssab-tsab-ct2*(ss11b-tsxb)-st2*(spxb-tpxb))
         th(1,3) = ss12a
@@ -763,25 +726,19 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         th(5,5) = spxa+forth*((ssab+tre*tsab)+st2*(ss11b+tre*tsxb) +ct2*(spxb+tre*tpxb))-dpux-two*dsgh
         th(5,6) = forth*sqrt3*(ssab-tsab-st2*(ss11b-tsxb)-ct2*(spxb-tpxb))
         th(6,6) = tpxa+forth*((tre*ssab+tsab)+st2*(tre*ss11b+tsxb) +ct2*(tre*spxb+tpxb))-dpux-two*dsgh
-        !
         !     FILL OUT MATRIX AND DIAGONALIZE
-        !
         do i=1, ndim
             do j=1, i
                 th(i,j) = th(j,i)
             enddo
         enddo
-        !
         call eign(ndim, th, vec, en, w, ndim)
         !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
         xter = en(nroot)+c(2)
         if( iflag .lt. zero ) write(iptprt, '(/,2X,T5,''Vector:'',(T15,3E20.8))') (vec(i,nroot), i=1, ndim)
-        !
         !************************* END OF FPOT3N *******************************
-        !
         if( nder .ne. 1 ) return
         !     IF(IAPP.EQ.0) RETURN
-        !
         !     SET  VECTOR FOR STATE OF INTEREST
         do i=1, ndim
             gvec(i) = vec(i,nroot)
@@ -861,16 +818,13 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         dh66(1) = dtpxa+xtra*dtdr1
         dh66(2) = forth*(tre*dssab+dtsab)+xtra*dtdr2
         dh66(3) = forth*(st2*(tre*dss11b+dtsxb)+ct2*(tre*dspxb+dtpxb))+xtra* dtdr3
-        !
         !     LOOP OVER R(I) DERIVATIVES
         !     FIRST ZERO OUT UNUSED ELEMENTS
         dh(2,3) = zero
         dh(3,5) = zero
         dh(3,6) = zero
         do i=1, 3
-            !
             !     SET UP DERIVATIVE MATRIX
-            !
             dh(1,1) = dh11(i)
             dh(1,2) = dh12(i)
             dh(1,3) = dh13(i)
@@ -889,14 +843,12 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             dh(5,5) = dh55(i)
             dh(5,6) = dh56(i)
             dh(6,6) = dh66(i)
-            !
             !     FILL OUT DERIVATIVE MATRIX
             do j=1, ndim
                 do k=1, j
                     dh(j,k) = dh(k,j)
                 enddo
             enddo
-            !
             dnumb = zero
             do j=1, ndim
                 do k=1, ndim
@@ -910,10 +862,10 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         do ix=1, 3
             dq(indx(ix)) = dd(ix)
         enddo
-        !
         !************************ END OF DFPOT *********************************
-        !
+
         contains
+
         !> @brief Evaluate SETSPL for the ClH2_LEPS_TTGI2_1985 potential.
         subroutine setspl
             !     SETS UP SPLINE FITS FOR DIATOMIC CURVES
@@ -971,6 +923,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             call splnin(ns, x, tpxfit, r, r1, r2, r3, eps, s2tpx, s3tpx, deltpx)
             call splnin(ns, x, dsxfit, r, r1, r2, r3, eps, s2dsx, s3dsx, deldsx)
         end subroutine setspl
+
         !> @brief Interpolate a tabulated curve and its first two derivatives.
         subroutine spline( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
             implicit none
@@ -984,7 +937,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
                 ss1 = dely(1)
                 ss2 = s2(1)
                 return
-            else if( t >= x(n) )then
+            elseif( t >= x(n) )then
                 ss  = y(n)
                 ss1 = dely(n)
                 ss2 = s2(n)
@@ -1003,6 +956,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             ss     = y(i)+ht1*dely(i)+prod*delsqs
             ss1    = dely(i)+(ht1+ht2)*delsqs+prod*s3(i)/6.0d0
         end subroutine spline
+
         !> @brief Evaluate SPLNIN for the ClH2_LEPS_TTGI2_1985 potential.
         subroutine splnin( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
             !     JIM STINE'S INITIALIZATION ROUTINE FOR SPLINE FITTING
@@ -1011,10 +965,9 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             !     SECOND DERIV'S AT ENDS STORED IN S2(1) AND S2(N) ON INPUT
             !     EPSLN IS OVERALL FIT CRITERION
             implicit none
-            double precision :: b, c, delsqy, dely, epsln, eta, ex, h, h2, half, omega, s2, s3, ss, ss1, ss2, t, w, x, y
+            double precision :: b(121), c(121), delsqy, dely(n), epsln, eta, ex, h(121), h2(121), half, omega, s2(n), s3(n), ss, &
+                & ss1, ss2, t, w, x(n), y(n)
             integer          :: i, knt, n, n1
-            dimension c(121), h(121), h2(121), b(121)
-            dimension x(n), y(n), s2(n), s3(n), dely(n)
             ex    = 1.1d0
             omega = 1.0717968d0
             half  = 0.5d0
@@ -1048,6 +1001,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             enddo
             if( idebug .eq. 1 ) write(iptprt, '(2X,T5,''Final EPS = '', 1PE15.6)') epsln
         end subroutine splnin
+
         !> @brief Evaluate EIGN for the ClH2_LEPS_TTGI2_1985 potential.
         !> @brief Diagonalize a real symmetric matrix with the shared core eigensolver.
         subroutine eign( nn, a, vec, eig, w, nd )

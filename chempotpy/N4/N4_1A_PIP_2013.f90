@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !   System:                        N4
 !   Functional form:               permutation-invariant polynomials
 !   Common name:                   N4(adiabatic ground state)
@@ -6,27 +5,24 @@
 !   Number of bodies:              4
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:: Yuliya, Paukku, Ke R. Yang, Zoltan Varga,
 !   and Donald G. Truhlar J. Chem. Phys. 139, 044309 (2013).
-!
 !   Notes:    PES of N4 with special emphasize for
 !             N2 + N2 --> N2 + N + N
 !             (Refit with the corrected data points on 12/05/2013)
 !             (named n4pes-gpip-version2)
-!
 !     N1--N2
-!
 !     N3--N4
-!
-!
-!> @brief Own the public evaluator for this potential energy surface.
+
+!> @brief Implement N4_1A_PIP_2013, a potential energy surface for N4.
 module chempotpy_n4_1a_pip_2013_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the N4_1A_PIP_2013 potential energy surface for N4.
     subroutine evaluate( x, igrad, p, g, d )
         implicit none
         ! number of electronic state
@@ -356,7 +352,9 @@ module chempotpy_n4_1a_pip_2013_pes
             enddo
         enddo
         d = 0.d0
+
         contains
+
         !> @brief Evaluate n4pes for the N4_1A_PIP_2013 potential.
         subroutine n4pes( x, v, dvdx, igrad )
             ! Subroutine to calculate the potential energy V and gradient dVdX
@@ -392,6 +390,7 @@ module chempotpy_n4_1a_pip_2013_pes
                 write (*, *) 'Only energy and gradient are available'
             endif
         end subroutine n4pes
+
         !> @brief Evaluate coord_convt for the N4_1A_PIP_2013 potential.
         subroutine coord_convt( x )
             !  Program to calculate the six interatomic distance
@@ -410,6 +409,7 @@ module chempotpy_n4_1a_pip_2013_pes
             coord_r(5) = sqrt((x(4)-x(10))**2 + (x(5)-x(11))**2 + (x(6)-x(12))**2)
             coord_r(6) = sqrt((x(7)-x(10))**2 + (x(8)-x(11))**2 + (x(9)-x(12))**2)
         end subroutine coord_convt
+
         !> @brief Evaluate EvV for the N4_1A_PIP_2013 potential.
         subroutine evv( v )
             ! Subroutine to evaluate V for given R
@@ -451,6 +451,7 @@ module chempotpy_n4_1a_pip_2013_pes
             !      Write(*,9999) V
             ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
         end subroutine evv
+
         !> @brief Evaluate EvdVdX for the N4_1A_PIP_2013 potential.
         subroutine evdvdx( x, dvdx )
             use chempotpy_geometry, only: transform_internal_gradient_to_cartesian
@@ -470,6 +471,7 @@ module chempotpy_n4_1a_pip_2013_pes
             call evdrdx(x)
             call transform_internal_gradient_to_cartesian(gradt_dvdr, gradt_drdx, dvdx)
         end subroutine evdvdx
+
         !> @brief Evaluate EvMorse for the N4_1A_PIP_2013 potential.
         subroutine evmorse
             implicit none
@@ -481,6 +483,7 @@ module chempotpy_n4_1a_pip_2013_pes
                 epot_rms(i) = exp(-(coord_r(i)-msprmt_re)/msprmt_a)
             enddo
         end subroutine evmorse
+
         !> @brief Evaluate EvMono for the N4_1A_PIP_2013 potential.
         subroutine evmono
             !  The subroutine reads six Morse variables(X) and calculates the
@@ -600,6 +603,7 @@ module chempotpy_n4_1a_pip_2013_pes
             epot_rm(110) = epot_rm(6)*epot_rm(86)
             epot_rm(111) = epot_rm(6)*epot_rm(87)
         end subroutine evmono
+
         !> @brief Evaluate EvPoly for the N4_1A_PIP_2013 potential.
         subroutine evpoly
             !  The subroutine reads monomials(m) and calculates the
@@ -942,6 +946,7 @@ module chempotpy_n4_1a_pip_2013_pes
             epot_p(304) = epot_p(3)*epot_p(119) - epot_p(295) - epot_p(296) - epot_p(293)
             epot_p(305) = epot_p(1)*epot_p(194) - epot_p(304) - epot_p(303)
         end subroutine evpoly
+
         !> @brief Evaluate evbas for the N4_1A_PIP_2013 potential.
         subroutine evbas
             !  The subroutine eliminate the 2-body terms in Bowman's approach
@@ -995,16 +1000,15 @@ module chempotpy_n4_1a_pip_2013_pes
             epot_b(275) = b1(303)
             epot_b(276) = b1(305)
         end subroutine evbas
+
         !> @brief Evaluate ev2gm2 for the N4_1A_PIP_2013 potential.
         subroutine ev2gm2( r, v2, dv2dr, imol, igrad )
-            !
             ! Subroutine to evaluate the 2-body potential energy and gradient
             ! for given r with generalized Morse potential with Scheme 2.
             ! V(r) = 0 for r -> inifity
             ! V(r) = De*(1-exp(-f(y)*(r-re)))^2 - De
             ! f(y) = c0 + c1*y + c2*y^2 + c3*y^3 + c4*y^4 + c5*y^5 + c6*y^6
             ! y = (r^4 - re^4)/(r^4 + re^4)
-            !
             ! imol .eq. 1   Paramemters for N2 dissociation without SEC
             !               (for Yuliya's N4 data)
             ! imol .eq. 2   Paramemters for N2 dissociation with SEC
@@ -1030,7 +1034,7 @@ module chempotpy_n4_1a_pip_2013_pes
                 c(4) = -5.02002309588d-1
                 c(5) = 3.80734244606d-1
                 c(6) = 1.21001628750d0
-            else if( imol .eq. 2 )then
+            elseif( imol .eq. 2 )then
                 ! Parameter for N2 dissociation with SEC (for Zoltan's N2O2)
                 re   = 1.098d0
                 de   = 228.4d0
@@ -1041,7 +1045,7 @@ module chempotpy_n4_1a_pip_2013_pes
                 c(4) = -4.08663480982d-1
                 c(5) = 3.92451705557d-1
                 c(6) = 1.13006674877d0
-            else if( imol .eq. 3 )then
+            elseif( imol .eq. 3 )then
                 ! Parameter for NO dissociation with SEC (for Zoltan's N2O2)
                 re   = 1.1508d0
                 de   = 149.9d0
@@ -1052,7 +1056,7 @@ module chempotpy_n4_1a_pip_2013_pes
                 c(4) = 9.29495534058d-1
                 c(5) = 2.66966672332d-1
                 c(6) = -3.68118714223d-1
-            else if( imol .eq. 4 )then
+            elseif( imol .eq. 4 )then
                 ! Parameter for O2 dissociation with SEC (for Zoltan's N2O2 and KRY's O4
                 re   = 1.208d0
                 de   = 120.243d0
@@ -1077,6 +1081,7 @@ module chempotpy_n4_1a_pip_2013_pes
                 dv2dr = 2.0d0*de*(1-u)*u*(dfdr*(r-re)+fy)
             endif
         end subroutine ev2gm2
+
         !> @brief Evaluate EvdVdR for the N4_1A_PIP_2013 potential.
         subroutine evdvdr
             ! Subroutine to evaluate dVdR for given R
@@ -1121,6 +1126,7 @@ module chempotpy_n4_1a_pip_2013_pes
                 enddo
             enddo
         end subroutine evdvdr
+
         !> @brief Evaluate EvdRdX for the N4_1A_PIP_2013 potential.
         subroutine evdrdx( x )
             use chempotpy_geometry, only: all_pair_distance_jacobian
@@ -1128,6 +1134,7 @@ module chempotpy_n4_1a_pip_2013_pes
             double precision, intent(in) :: x(12)
             call all_pair_distance_jacobian(x, coord_r, gradt_drdx)
         end subroutine evdrdx
+
         !> @brief Evaluate EvdMsdR for the N4_1A_PIP_2013 potential.
         subroutine evdmsdr
             ! Subroutine to evaluate the derivatives of Morse term X
@@ -1143,15 +1150,14 @@ module chempotpy_n4_1a_pip_2013_pes
                     gradt_dmsdr(i,j) = 0.0d0
                 enddo
             enddo
-            !
             ! Morse term dmsdr = exp(-(r-re)/a)
             ! dmsdr(i,j)=0  i!=j
             ! dmsdr(i,i)= -(1/a)*Exp(-r(i)-re)/a)
-            !
             do i=1, 6
                 gradt_dmsdr(i,i) = -(1/msprmt_a)*exp(-(coord_r(i)-msprmt_re)/msprmt_a)
             enddo
         end subroutine evdmsdr
+
         !> @brief Evaluate EvdMdR for the N4_1A_PIP_2013 potential.
         subroutine evdmdr
             !  The subroutine reads M(nom) and dMSdR(6,6) and calculates the
@@ -1274,6 +1280,7 @@ module chempotpy_n4_1a_pip_2013_pes
                 gradt_dmdr(i,111) = gradt_dmdr(i,6)*epot_rm(87) + epot_rm(6)*gradt_dmdr(i,87)
             enddo
         end subroutine evdmdr
+
         !> @brief Evaluate EvdPdr for the N4_1A_PIP_2013 potential.
         subroutine evdpdr
             !  The subroutine reads monomials(m) and calculates the
@@ -1782,6 +1789,7 @@ module chempotpy_n4_1a_pip_2013_pes
                     & gradt_dpdr(i,303)
             enddo
         end subroutine evdpdr
+
         !> @brief Evaluate evdbdr for the N4_1A_PIP_2013 potential.
         subroutine evdbdr
             !  The subroutine eliminate the 2-body terms in Bowman's approach
@@ -1843,7 +1851,7 @@ module chempotpy_n4_1a_pip_2013_pes
     end subroutine evaluate
 end module chempotpy_n4_1a_pip_2013_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose N4_1A_PIP_2013 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_n4_1a_pip_2013_pes, only: evaluate
     implicit none

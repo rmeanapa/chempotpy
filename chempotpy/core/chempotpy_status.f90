@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Define status values shared by modern PES interfaces.
 module chempotpy_status
     implicit none

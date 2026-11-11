@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !   System:                        O3
 !   Functional form:               permutation-invariant polynomials
 !   Common name:                   O3 1 3Ap (1st adiab. triplet A' state)
@@ -6,24 +5,23 @@
 !   Number of bodies:              3
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:: Z. Varga, Y. Paukku, and D. G. Truhlar,
 !     "Potential energy surfaces for O + O2 collisions"
 !      J. Chem. Phys. 147, 154312/1-17 (2017).
-!
 !   Notes:    -Mixed-exponential-Gaussian (MEG)
 !              variables are applied
 !             -Diatomic potential contains
 !              dispersion correction
-!
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement O3_1_3Ap, a potential energy surface for O3.
 module chempotpy_o3_1_3ap_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the O3_1_3Ap potential energy surface for O3.
     subroutine evaluate( x, igrad, p, g, d )
         implicit none
         ! number of electronic state
@@ -135,7 +133,9 @@ module chempotpy_o3_1_3ap_pes
             enddo
         enddo
         d = 0.d0
+
         contains
+
         !> @brief Evaluate o3pes for the O3_1_3Ap potential.
         subroutine o3pes( x, v, dvdx, igrad )
             ! Subroutine to calculate the potential energy V and gradient dVdX
@@ -171,6 +171,7 @@ module chempotpy_o3_1_3ap_pes
                 write (*, *) 'Only energy and gradient are available'
             endif
         end subroutine o3pes
+
         !> @brief Evaluate coord_convt for the O3_1_3Ap potential.
         subroutine coord_convt( x )
             !  Program to calculate the six interatomic distance
@@ -186,6 +187,7 @@ module chempotpy_o3_1_3ap_pes
             coord_r(2) = sqrt((x(7)-x(1))**2 + (x(8)-x(2))**2 + (x(9)-x(3))**2)
             coord_r(3) = sqrt((x(4)-x(7))**2 + (x(5)-x(8))**2 + (x(6)-x(9))**2)
         end subroutine coord_convt
+
         !> @brief Evaluate EvV for the O3_1_3Ap potential.
         subroutine evv( v )
             ! Subroutine to evaluate V for given R
@@ -231,6 +233,7 @@ module chempotpy_o3_1_3ap_pes
             !      Write(*,9999) V
             ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
         end subroutine evv
+
         !> @brief Evaluate EvdVdX for the O3_1_3Ap potential.
         subroutine evdvdx( x, dvdx )
             use chempotpy_geometry, only: transform_internal_gradient_to_cartesian
@@ -250,6 +253,7 @@ module chempotpy_o3_1_3ap_pes
             call evdrdx(x)
             call transform_internal_gradient_to_cartesian(gradt_dvdr, gradt_drdx, dvdx)
         end subroutine evdvdx
+
         !> @brief Evaluate EvMorse for the O3_1_3Ap potential.
         subroutine evmorse
             implicit none
@@ -263,6 +267,7 @@ module chempotpy_o3_1_3ap_pes
                 epot_rms(i) = exp(-(coord_r(i)-msprmt_ra)/msprmt_a-((coord_r(i)-msprmt_rb)**2.0d0)/msprmt_ab)
             enddo
         end subroutine evmorse
+
         !> @brief Evaluate EvMono for the O3_1_3Ap potential.
         subroutine evmono
             !  The subroutine reads six MEG variables(X) and calculates the
@@ -278,6 +283,7 @@ module chempotpy_o3_1_3ap_pes
             epot_rm(6) = epot_rm(2)*epot_rm(3)
             epot_rm(7) = epot_rm(1)*epot_rm(6)
         end subroutine evmono
+
         !> @brief Evaluate EvPoly for the O3_1_3Ap potential.
         subroutine evpoly
             !  The subroutine reads monomials(m) and calculates the
@@ -352,6 +358,7 @@ module chempotpy_o3_1_3ap_pes
             epot_p(65) = epot_p( 2)*epot_p(40) - epot_p(60)
             epot_p(66) = epot_p( 1)*epot_p(52) - epot_p(65)
         end subroutine evpoly
+
         !> @brief Evaluate evbas for the O3_1_3Ap potential.
         subroutine evbas
             !  The subroutine eliminate the 2-body terms in Bowman's approach
@@ -389,17 +396,14 @@ module chempotpy_o3_1_3ap_pes
                 epot_b(i) = b1(i+10)
             enddo
         end subroutine evbas
+
         !> @brief Evaluate ev2gm2 for the O3_1_3Ap potential.
         subroutine ev2gm2( r, v, grad, imol, igrad )
-            !
             ! Compute the diatomic potential of ground-state triplet O2
-            !
             ! References: J. Chem. Phys. 132, 074307 (2010)
-            !
             ! Input:  r      interatomic distance in Angstrom
             ! Output: V      potential in kcal/mol
             !         grad   gradient (kcal/mol)/Angstrom
-            !
             implicit none
             integer          :: imol
             double precision :: r
@@ -448,6 +452,7 @@ module chempotpy_o3_1_3ap_pes
                 grad = grad*627.509523475149d-3
             endif
         end subroutine ev2gm2
+
         !> @brief Evaluate EvdVdR for the O3_1_3Ap potential.
         subroutine evdvdr
             ! Subroutine to evaluate dVdR for given R
@@ -497,13 +502,13 @@ module chempotpy_o3_1_3ap_pes
                 enddo
             enddo
         end subroutine evdvdr
+
         !> @brief Evaluate EvdRdX for the O3_1_3Ap potential.
         subroutine evdrdx( x )
             use chempotpy_geometry, only: ordered_pair_distance_jacobian
             ! Subroutine to evaluate dRdX for given R and X
             ! R:            R(3), 3 bond lengths
             ! X:            X(9), 9 Cartesian coordinates
-            !
             ! dMdR:         dMdR(3,nom), nom monomials w.r.t.3 bond length
             ! dPdR:         dPdR(3,nob), nop polynomial basis functions
             !               w.r.t. 3 bond lengths
@@ -515,6 +520,7 @@ module chempotpy_o3_1_3ap_pes
             double precision, intent(in) :: x(9)
             call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, coord_r, gradt_drdx)
         end subroutine evdrdx
+
         !> @brief Evaluate EvdMsdR for the O3_1_3Ap potential.
         subroutine evdmsdr
             ! Subroutine to evaluate the derivatives of MEG term X
@@ -532,15 +538,14 @@ module chempotpy_o3_1_3ap_pes
                     gradt_dmsdr(i,j) = 0.0d0
                 enddo
             enddo
-            !
             ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
             ! dmsdr(i,j)=0  i!=j
-            !
             do i=1, 3
                 gradt_dmsdr(i,i) = (-2.0d0*(coord_r(i)-msprmt_rb)/msprmt_ab-1/msprmt_a)* exp(-(coord_r(i)-msprmt_ra)/ &
                     & msprmt_a-((coord_r(i)-msprmt_rb)**2.0d0)/msprmt_ab)
             enddo
         end subroutine evdmsdr
+
         !> @brief Evaluate EvdMdR for the O3_1_3Ap potential.
         subroutine evdmdr
             !  The subroutine reads M(nom) and dMSdR(3,3) and calculates the
@@ -559,6 +564,7 @@ module chempotpy_o3_1_3ap_pes
                 gradt_dmdr(i,7) = gradt_dmdr(i,1)*epot_rm(6) + epot_rm(1)*gradt_dmdr(i,6)
             enddo
         end subroutine evdmdr
+
         !> @brief Evaluate EvdPdr for the O3_1_3Ap potential.
         subroutine evdpdr
             !  The subroutine reads monomials(m) and calculates the
@@ -641,6 +647,7 @@ module chempotpy_o3_1_3ap_pes
                 gradt_dpdr(i,66) = gradt_dpdr(i,1)*epot_p(52) + epot_p( 1)*gradt_dpdr(i,52) - gradt_dpdr(i,65)
             enddo
         end subroutine evdpdr
+
         !> @brief Evaluate evdbdr for the O3_1_3Ap potential.
         subroutine evdbdr
             !  The subroutine eliminate the 2-body terms in Bowman's approach
@@ -683,6 +690,7 @@ module chempotpy_o3_1_3ap_pes
                 enddo
             enddo
         end subroutine evdbdr
+
         !> @brief Evaluate d3disp for the O3_1_3Ap potential.
         subroutine d3disp( dist, disp, dispdr, igrad )
             implicit none
@@ -731,6 +739,7 @@ module chempotpy_o3_1_3ap_pes
                 dist(i) = dist(i)*autoang
             enddo
         end subroutine d3disp
+
         !> @brief Evaluate edisp for the O3_1_3Ap potential.
         subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
                 & rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
@@ -807,7 +816,7 @@ module chempotpy_o3_1_3ap_pes
     end subroutine evaluate
 end module chempotpy_o3_1_3ap_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose O3_1_3Ap through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_o3_1_3ap_pes, only: evaluate
     implicit none

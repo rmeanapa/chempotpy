@@ -1,11 +1,22 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        OH3
+!   Functional form:
+!   Common name:
+!   Number of derivatives:         1
+!   Number of bodies:              4
+!   Number of electronic surfaces: 1
+!   Interface:                     4-XS
+!   Reference: G. C. Schatz and H. Elgersma
+!              Chem. Phys. Lett. 73, 21 (1980).
+
+!> @brief Implement OH3_LEPS_SE_1986, a potential energy surface for OH3.
 module chempotpy_oh3_leps_se_1986_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the OH3_LEPS_SE_1986 potential energy surface for OH3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -160,7 +171,7 @@ module chempotpy_oh3_leps_se_1986_pes
             do istate=1, nstates
                 p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
             enddo
@@ -169,102 +180,67 @@ module chempotpy_oh3_leps_se_1986_pes
                     g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*51.422067
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
+
         contains
+
         !> @brief Evaluate prepare_local_context for the OH3_LEPS_SE_1986 potential.
         subroutine prepare_local_context
-            !
-            !   System:                        OH3
-            !   Functional form:
-            !   Common name:
-            !   Number of derivatives:         1
-            !   Number of bodies:              4
-            !   Number of electronic surfaces: 1
-            !   Interface:                     4-XS
-            !   Reference: G. C. Schatz and H. Elgersma
-            !              Chem. Phys. Lett. 73, 21 (1980).
-            !
             implicit none
-            integer :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer                     :: i
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
-            !
-            infocm_ref(1) = 'OH + H2 potential energy function'
-            infocm_ref(2) = 'G. C. Schatz and H. Elgersma'
-            infocm_ref(3) = 'Chem. Phys. Lett. 73, 21 (1980)'
-            !
+            infocm_ref(1)     = 'OH + H2 potential energy function'
+            infocm_ref(2)     = 'G. C. Schatz and H. Elgersma'
+            infocm_ref(3)     = 'Chem. Phys. Lett. 73, 21 (1980)'
             infocm_irctnt     = 3
             infocm_indexes(1) = 8
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_indexes(4) = 1
-            !
             !      CALL POTINFO
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate pot for the OH3_LEPS_SE_1986 potential.
         subroutine pot
-            !
             !   This subprogram evaluates the OH + H2 potential energy and derivativ
             !   of the potential with respect to the internal coordinates.
             !   The subprogram PREPEF must be called once before any calls to this
             !   subprogram.
             !   All calculations in this subprogram are in hartree atomic units.
-            !
             implicit none
-            double precision :: b, d, dvmor, rr, t, vmor
-            integer          :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 1
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
+            double precision            :: b, d, dvmor, rr, t, vmor
+            integer                     :: i
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 1
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !   Define the statement functions VMOR and DVMOR which evaluate the Mor
             !   diatomic potential energy  and the derivatives of the Morse potentia
-            !
             vmor(d, b, t, rr)  = d*(1.0d0-exp(-b*(rr-t)))**2
             dvmor(d, b, t, rr) = 2.0d0*b*d*(1.0d0-exp(-b*(rr-t)))*exp(-b*(rr-t))
-            !
             call cartou
             call carttor
-            !
             do i = 1, 6
                 potcm_r(i) = pt1cm_r(i)
             enddo
-            !
             !   Zero the array which will contain the derivatives of the energy
             !   with respect to the internal coordinates.
-            !
             if( usricm_nder .eq. 1 )then
                 do i = 1, 6
                     potcm_dvdr(i) = 0.0d0
                 enddo
             endif
-            !
             !   Calculate the Morse part of the potential energy.
             potcm_vtot = vmor(concom_de(1), concom_beta(1), concom_re(1), potcm_r(1))+vmor(concom_de(2), &
                 & concom_beta(2), concom_re(2), potcm_r(4 ))+vmor(concom_de(2), concom_beta(2), concom_re(2), &
@@ -279,7 +255,6 @@ module chempotpy_oh3_leps_se_1986_pes
             pot2cm_r(1) = potcm_r(2)
             pot2cm_r(2) = potcm_r(3)
             pot2cm_r(3) = potcm_r(6)
-            !
             !   Calculate the three-body LEPS portion of the potential and update th
             !   energy term.
             call v3pot
@@ -331,45 +306,32 @@ module chempotpy_oh3_leps_se_1986_pes
                 potcm_dvdr(4) = potcm_dvdr(4)+pot2cm_dedr(3)
                 potcm_dvdr(5) = potcm_dvdr(5)+pot2cm_dedr(4)
             endif
-            !
             !   Adjust the potential to the correct zero, which corresponds to
             !   OH(R=RE) and H2(R=RE) at infinity.
-            !
-            potcm_vtot = potcm_vtot-2.0d0*concom_de(2)+concom_de(3)
-            !
+            potcm_vtot   = potcm_vtot-2.0d0*concom_de(2)+concom_de(3)
             pt1cm_engygs = potcm_vtot
             do i = 1, 6
                 pt1cm_degsdr(i) = potcm_dvdr(i)
             enddo
-            !
             call eunitzero
             if( usricm_nder .ne. 0 )then
                 call rtocart
                 if( usricm_nflag(1)+usricm_nflag(2) .ne. 0 ) call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate V3POT for the OH3_LEPS_SE_1986 potential.
         subroutine v3pot
-            !
             implicit none
-            double precision :: b, beta, coul, de, do4z, exch, op3z, rad, re, s, top3z, tzp3, x, z, zp3, zpo
-            integer          :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            dimension de(3), beta(3), re(3), z(3), zpo(3), op3z(3), zp3(3), tzp3(3), top3z(3), do4z(3), b(3), x(3), coul(3), exch(3)
-            !
+            double precision            :: b(3), beta(3), coul(3), de(3), do4z(3), exch(3), op3z(3), rad, re(3), s, top3z(3), &
+                & tzp3(3), x(3), z(3), zp3(3), zpo(3)
+            integer                     :: i
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !   Set up the values of DE, BETA, and RE for the three-body LEPS potent
-            !
             de(1)   = concom_de(1)
             beta(1) = concom_beta(1)
             re(1)   = concom_re(1)
@@ -379,9 +341,7 @@ module chempotpy_oh3_leps_se_1986_pes
             de(3)   = concom_de(3)
             beta(3) = concom_beta(3)
             re(3)   = concom_re(3)
-            !
             !   Compute useful constants.
-            !
             do i = 1, 3
                 z(i)     = concom_sato
                 zpo(i)   = 1.0d0+z(i)
@@ -392,11 +352,8 @@ module chempotpy_oh3_leps_se_1986_pes
                 do4z(i)  = de(i)/4.0d0/zpo(i)
                 b(i)     = beta(i)*do4z(i)*2.0d0
             enddo
-            !
             !   Initialize the variable used for storing the energy.
-            !
             pot2cm_energy = 0.d0
-            !
             do i = 1, 3
                 x(i)          = exp(-beta(i)*(pot2cm_r(i)-re(i)))
                 coul(i)       = do4z(i)*(zp3(i)*x(i)-top3z(i))*x(i)
@@ -405,7 +362,6 @@ module chempotpy_oh3_leps_se_1986_pes
             enddo
             rad           = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+(exch(3)-exch (1))**2)
             pot2cm_energy = pot2cm_energy - rad/sqrt(2.d0)
-            !
             !   Compute the derivatives of the energy with respect to the internal
             !   coordinates.
             if( usricm_nder .eq. 1 )then
@@ -415,24 +371,17 @@ module chempotpy_oh3_leps_se_1986_pes
                         & op3z(i))
                 enddo
             endif
-            !
         end subroutine v3pot
+
         !> @brief Evaluate V4POT for the OH3_LEPS_SE_1986 potential.
         subroutine v4pot
             implicit none
-            double precision :: t1, t2
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            double precision            :: t1, t2
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             t1 = exp(-concom_clam(1)*(pot2cm_r(1)-concom_alp(1))**2-concom_clam(1)*(pot2cm_r(2)-concom_alp(1))**2- &
                 & concom_clam(3)*(pot2cm_r(3)-concom_alp(3)) **2-concom_clam(3)*(pot2cm_r(4)-concom_alp(3))**2)* &
                 & concom_acon(1)
@@ -450,33 +399,21 @@ module chempotpy_oh3_leps_se_1986_pes
                 pot2cm_dedr(4) = -2.0d0*(t1*concom_clam(3)*(pot2cm_r(4)-concom_alp(3))+t2*concom_clam(4)*(pot2cm_r(4)- &
                     & concom_alp(4)))
             endif
-            !
         end subroutine v4pot
+
         !> @brief Evaluate VH2O for the OH3_LEPS_SE_1986 potential.
         subroutine vh2o
             implicit none
-            double precision :: dp, dq, p, q, s, tanlg, temp, trm1, x, xmax1, xmax2, xx
+            double precision :: dp(3), dq(3), p, q(3), s(3), tanlg, temp, trm1, x(3), xmax1, xmax2, xx
             integer          :: i
-            !
-            dimension s(3), q(3), dq(3), x(3), dp(3)
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !     XMAX1 FOR WHEN TANH SET=1.0 ON VAX
             !     XMAX2 FOR PREVENTING OVERFLOWS ON VAX
-            !
-            !
             !     STATEMENT FUNCTION
-            !
             tanlg(xx) = 2.0d0/(1.0d0+exp(2.0d0*xx))
             s(1)      = pot2cm_r(1)-concom_reoh
             s(3)      = pot2cm_r(2)-concom_reoh
@@ -487,7 +424,7 @@ module chempotpy_oh3_leps_se_1986_pes
                 q(i) = 1.0d0-tanh(x(i))
                 if( x(i) < xmax1 )then
                     dq(i) = -0.5d0*concom_gam(i)/cosh(x(i))**2
-                else if( x(i) < xmax2 )then
+                elseif( x(i) < xmax2 )then
                     q(i)  = tanlg(x(i))
                     dq(i) = -0.5d0*concom_gam(i)/cosh(x(i))**2
                 else
@@ -511,8 +448,8 @@ module chempotpy_oh3_leps_se_1986_pes
                 pot2cm_dedr(2) = pot2cm_dedr(3)
                 pot2cm_dedr(3) = temp
             endif
-            !
         end subroutine vh2o
+
         !> @brief Evaluate POTINFO for the OH3_LEPS_SE_1986 potential.
         subroutine potinfo
             implicit none
@@ -606,22 +543,14 @@ module chempotpy_oh3_leps_se_1986_pes
                     '*-1/ANGSTROM'',//)')
             endif
         end subroutine potinfo
+
         !> @brief Evaluate ANCVRT for the OH3_LEPS_SE_1986 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -638,6 +567,13 @@ module chempotpy_oh3_leps_se_1986_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -853,13 +789,13 @@ module chempotpy_oh3_leps_se_1986_pes
             if( usricm_nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( usricm_nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             utilcm_cnvrtd  = 1.d0
@@ -868,13 +804,13 @@ module chempotpy_oh3_leps_se_1986_pes
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 utilcm_cnvrte = utilcm_cnvrte*htoev
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokcal
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 utilcm_cnvrte = utilcm_cnvrte*htowave
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokj
             endif
             utilcm_cnvrtde = utilcm_cnvrte/utilcm_cnvrtd
@@ -885,6 +821,7 @@ module chempotpy_oh3_leps_se_1986_pes
             utilcm_ireorder = 0
             if( isum .ne. 0 ) utilcm_ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the OH3_LEPS_SE_1986 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -896,6 +833,7 @@ module chempotpy_oh3_leps_se_1986_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(usricm_cart, usricm_nulbl, infocm_natoms, utilcm_cnvrtd, utilcm_ireorder == 1, infocm_cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the OH3_LEPS_SE_1986 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -912,6 +850,7 @@ module chempotpy_oh3_leps_se_1986_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the OH3_LEPS_SE_1986 potential.
         subroutine eunitzero
             implicit none
@@ -933,16 +872,18 @@ module chempotpy_oh3_leps_se_1986_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the OH3_LEPS_SE_1986 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -964,7 +905,7 @@ module chempotpy_oh3_leps_se_1986_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 2 )then
+            elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
                     utilcm_dgscartnu(i,1) = 0.d0
                     utilcm_dgscartnu(i,2) = 0.d0
@@ -986,7 +927,7 @@ module chempotpy_oh3_leps_se_1986_pes
                     do j = 1, infocm_natoms
                         if( j .lt. i )then
                             m1 = infocm_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1005,7 +946,7 @@ module chempotpy_oh3_leps_se_1986_pes
                                 utilcm_descartnu(i,2,j1) = utilcm_descartnu(i,2,j1) + termy*y
                                 utilcm_descartnu(i,3,j1) = utilcm_descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( utilcm_ksoffd .gt. 0 )then
+                        elseif( utilcm_ksoffd .gt. 0 )then
                             do j2=utilcm_ksoffd, utilcm_keoffd
                                 y                        = pt5cm_deijdr(m1,j2)
                                 utilcm_dijcartnu(i,1,j2) = utilcm_dijcartnu(i,1,j2) + termx*y
@@ -1015,7 +956,7 @@ module chempotpy_oh3_leps_se_1986_pes
                         endif
                     enddo
                 enddo
-            else if( infocm_icartr .eq. 3 )then
+            elseif( infocm_icartr .eq. 3 )then
                 do i = 1, infocm_natoms
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
@@ -1051,7 +992,7 @@ module chempotpy_oh3_leps_se_1986_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 4 )then
+            elseif( infocm_icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1087,6 +1028,7 @@ module chempotpy_oh3_leps_se_1986_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the OH3_LEPS_SE_1986 potential.
         subroutine dedcou
             implicit none
@@ -1140,7 +1082,7 @@ module chempotpy_oh3_leps_se_1986_pes
     end subroutine evaluate
 end module chempotpy_oh3_leps_se_1986_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose OH3_LEPS_SE_1986 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_oh3_leps_se_1986_pes, only: evaluate
     implicit none

@@ -1,10 +1,34 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Extended Rydberg plus Embedded Atom
+!   Common name:                   ER2+MisFMP
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  The parameters
+!           for this PEF have been parameterized against a data set of
+!           aluminum cluster energies and bulk data.
+!           This PEF has a cutoff at 6.5 angstroms.
+!  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potentials Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!                    of the system
+!  natom   --- number of atoms in the system
+!  maxatom --- maximal number of atoms
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_er2misfmp_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,45 +58,16 @@ module chempotpy_aln_er2misfmp_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_ER2MisFMP potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Extended Rydberg plus Embedded Atom
-        !   Common name:                   ER2+MisFMP
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  The parameters
-        !           for this PEF have been parameterized against a data set of
-        !           aluminum cluster energies and bulk data.
-        !           This PEF has a cutoff at 6.5 angstroms.
-        !
-        !  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !                    of the system
-        !  natom   --- number of atoms in the system
-        !  maxatom --- maximal number of atoms
         implicit none
-        double precision :: a, a1, a2, a3, au2, au23, b1, b2, bu2, co, co3, de, dx, dy, &
-            & dz, ee, ef, ef2, f0, f2, poly, q1, q2, q3, r3, r4, re, rh, rho, rhobar, rr, v, v2, x, &
-            & xksum, xksum2, y, z
+        double precision :: a, a1, a2, a3, au2, au23, b1, b2, bu2, co, co3, de, dx, dy, dz, ee, ef, ef2, f0, f2, poly, q1, q2, &
+            & q3, r3, r4, re, rh, rho, rhobar, rr, v, v2, x(maxatom), xksum, xksum2, y(maxatom), z(maxatom)
         integer                     :: i, j, maxatom, natom
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
-        dimension x(maxatom), y(maxatom), z(maxatom)
-        !
         !  calculate the potential energy
-        !
         de   = 1.71013678553981441/autoev
         re   = 5.08182706399609163
         a1   = 1.24074255007327805
@@ -130,7 +125,7 @@ module chempotpy_aln_er2misfmp_pes
     end subroutine pot
 end module chempotpy_aln_er2misfmp_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_ER2MisFMP through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_er2misfmp_pes, only: evaluate

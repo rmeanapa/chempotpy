@@ -1,11 +1,70 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          ALC
+!   Functional form: eLEPS + Va
+!                    Extended LEPS plus an auxiliary barrier term
+!   Common name: CHC7M1
+!   Reference:       M. M. Kreevoy, D. Ostovic,
+!                    D. G. Truhlar, and B. C. Garrett
+!                    J. Phys. Chem. 90, 3766-3774 (1986)
+!   Note:            In A-L-C, A = acceptor group, L = H (D),
+!                    and C = methyl donor
+!   Calling Sequence:
+!      PREPOT - initializes the potential's variables and
+!               must be called once before any calls to POT
+!      POT    - driver for the evaluation of the energy and the derivati
+!               of the energy with respect to the coordinates for a give
+!               geometric configuration
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      ground electronic state
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Al
+!      infinitely far from the LC diatomic and R(LC) set equal to the
+!      LC equilibrium diatomic value.
+!   Parameters:
+!      Set in the BLOCK DATA subprogram PTPARM
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Al-L)
+!                            R(2) = R(L-C)
+!                            R(3) = R(Al-C)
+!   Common Blocks (used between the calling program and this potential):
+!      /PT1CM/ R(3), ENERGY, DEDR(3)
+!        passes the coordinates, ground state electronic energy, and
+!        derivatives of the ground electronic state energy with respect
+!        to the coordinates.
+!      /PT2CM/ NSURF, NDER, NDUM(21)
+!        passes the control flags where
+!        NDER  = 0 => no derivatives are computed
+!              = 1 => derivatives of the energy for the ground electroni
+!                     state with respect to the coordinates are computed
+!        NDUM  - not used
+!      /PT4CM/ IPTPRT, IDUM(19)
+!        IPTPRT passes the FORTRAN unit number used for potential output
+!        IDUM   not used
+!      /PT5CM/ EASYAB, EASYBC, EASYAC
+!        passes the energy in the three asymptotic valleys for an A + BC
+!        The energy in the AB valley, EASYAB, is equal to the energy of
+!        C atom "infinitely" far from the AB diatomic and R(AB) set equa
+!        Re(AB), the equilibrium bond length for the AB diatomic.
+!        Similarly, the terms EASYBC and EASYAC represent the energies
+!        in the BC and the AC valleys, respectively.
+!   Default Parameter Values:
+!      Variable      Default value
+!      NSURF            0
+!      NDER             1
+!      IPTPRT           6
+
+!> @brief Implement ALC7m1_LEPS_ModelSurface, a potential energy surface for ALC.
 module chempotpy_alc7m1_leps_modelsurface_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the ALC7m1_LEPS_ModelSurface potential energy surface for ALC.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -37,7 +96,7 @@ module chempotpy_alc7m1_leps_modelsurface_pes
             do istate=1, nstates
                 p(istate) = e
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = e
             enddo
@@ -47,13 +106,13 @@ module chempotpy_alc7m1_leps_modelsurface_pes
                     g(1,iatom,idir) = dedx(j)
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine evaluate
 end module chempotpy_alc7m1_leps_modelsurface_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose ALC7m1_LEPS_ModelSurface through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_alc7m1_leps_modelsurface_pes, only: evaluate
     implicit none
@@ -78,7 +137,6 @@ subroutine evdrdx( x, r, drdx )
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
-!
 !> @brief Evaluate PREPOT for the ALC7m1_LEPS_ModelSurface potential.
 module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
     implicit none
@@ -90,78 +148,11 @@ module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
     double precision, parameter :: fit_z(3)    = [0.00000d0, 0.00000d0, -0.18900d0]
     double precision, parameter :: fit_an1     = 0.026d0
     double precision, parameter :: fit_fns     = 0.004d0
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine evaluate( rr, nder, e, dedrr )
-        !
-        !   System:          ALC
-        !   Functional form: eLEPS + Va
-        !                    Extended LEPS plus an auxiliary barrier term
-        !   Common name: CHC7M1
-        !   Reference:       M. M. Kreevoy, D. Ostovic,
-        !                    D. G. Truhlar, and B. C. Garrett
-        !                    J. Phys. Chem. 90, 3766-3774 (1986)
-        !
-        !   Note:            In A-L-C, A = acceptor group, L = H (D),
-        !                    and C = methyl donor
-        !
-        !
-        !   Calling Sequence:
-        !      PREPOT - initializes the potential's variables and
-        !               must be called once before any calls to POT
-        !      POT    - driver for the evaluation of the energy and the derivati
-        !               of the energy with respect to the coordinates for a give
-        !               geometric configuration
-        !
-        !   Units:
-        !      energies    - hartrees
-        !      coordinates - bohr
-        !      derivatives - hartrees/bohr
-        !
-        !   Surfaces:
-        !      ground electronic state
-        !
-        !   Zero of energy:
-        !      The classical potential energy is set equal to zero for the Al
-        !      infinitely far from the LC diatomic and R(LC) set equal to the
-        !      LC equilibrium diatomic value.
-        !
-        !   Parameters:
-        !      Set in the BLOCK DATA subprogram PTPARM
-        !
-        !   Coordinates:
-        !      Internal, Definition: R(1) = R(Al-L)
-        !                            R(2) = R(L-C)
-        !                            R(3) = R(Al-C)
-        !
-        !   Common Blocks (used between the calling program and this potential):
-        !      /PT1CM/ R(3), ENERGY, DEDR(3)
-        !        passes the coordinates, ground state electronic energy, and
-        !        derivatives of the ground electronic state energy with respect
-        !        to the coordinates.
-        !      /PT2CM/ NSURF, NDER, NDUM(21)
-        !        passes the control flags where
-        !        NDER  = 0 => no derivatives are computed
-        !              = 1 => derivatives of the energy for the ground electroni
-        !                     state with respect to the coordinates are computed
-        !        NDUM  - not used
-        !      /PT4CM/ IPTPRT, IDUM(19)
-        !        IPTPRT passes the FORTRAN unit number used for potential output
-        !        IDUM   not used
-        !      /PT5CM/ EASYAB, EASYBC, EASYAC
-        !        passes the energy in the three asymptotic valleys for an A + BC
-        !        The energy in the AB valley, EASYAB, is equal to the energy of
-        !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
-        !        Re(AB), the equilibrium bond length for the AB diatomic.
-        !        Similarly, the terms EASYBC and EASYAC represent the energies
-        !        in the BC and the AC valleys, respectively.
-        !
-        !   Default Parameter Values:
-        !      Variable      Default value
-        !      NSURF            0
-        !      NDER             1
-        !      IPTPRT           6
-        !
         implicit none
         double precision, parameter   :: root2 = 1.41421356d0
         double precision, parameter   :: ckcal = 627.5095d0
@@ -173,9 +164,7 @@ module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
             & enspr, enspwn, exch(3), exns, fns, op3z(3), r, r2, r3, rad, re(3), s, t, top3z(3), tzp3(3), wn, wn2, &
             & wnp1, wnp2, wnp3, wnt, x(3), x21, x22, x23, z(3), zp3(3), zpo(3)
         integer :: i
-        !
         !   Echo the potential parameters to the file linked to FORTRAN unit IPT
-        !
         d    = fit_d
         re   = fit_re
         beta = fit_beta
@@ -197,7 +186,6 @@ module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
             b(i)     = beta(i)*do4z(i)*2.0d0!
         enddo
         !   Check the value NDER
-        !
         !    Compute the eLEPS part of the potential energy
         do i = 1, 3
             x(i)    = exp(-beta(i)*(rr(i)-re(i)))
@@ -206,7 +194,6 @@ module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
         enddo
         rad = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+ (exch(3)-exch(1))**2)
         e   = coul(1) + coul(2) + coul(3) - (rad/root2) + d(2)
-        !
         !   Compute the derivative of the eLEPS part of the potential, if NDER=1
         goto_block_700_249: block
             if( nder .ne. 1 ) exit goto_block_700_249
@@ -215,20 +202,17 @@ module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
                 dedrr(i) = 0.d0
                 if( x(i) .lt. 1.d-30 ) cycle
                 t = (3.0d0*exch(i)-s)/root2*(op3z(i)*x(i)-zp3(i))
-                !
                 !   If RAD is very small compared to T print a warning to the file linke
                 !   to FORTRAN IPTPRT and set T/RAD equal to T.
                 if( abs(rad) .lt. 1.d-32.and.abs(t) .gt. 1.d-12 )then
                     write(*, '(/,2X,''In the potential routine: T, RAD = '',1P,2E15.7, /,2X,''T/RAD has been set equal to' // &
                         ' T'')') t, rad
-                else if( abs(rad) .gt. 1.d-32 )then
+                elseif( abs(rad) .gt. 1.d-32 )then
                     t = t/rad
                 endif
-                !
                 dedrr(i) = b(i)*x(i)*(t -zp3(i)*x(i)+op3z(i))
             enddo
         end block goto_block_700_249
-        !
         !   Compute the auxiliary barrier term, Va, where
         !   Va = a{[(R1-R2)*(R2-R3)*(R3-R1)]^2}*exp[-alpha*{(R1+R2+R3)^3}]
         r    = rr(1)+rr(2)+rr(3)
@@ -242,7 +226,6 @@ module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
         ens  = (an1*wn2)*exns
         !    Add the energy terms together
         e = e+ens
-        !
         !    Compute the derivative of the Va term with respect to the
         !    coordinates, if NDER = 1
         if( nder .eq. 1 )then
@@ -267,8 +250,6 @@ module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
             dedrr(2) = dedrr(2)+ensp2
             dedrr(3) = dedrr(3)+ensp3
         endif
-        !
-        !
     end subroutine evaluate
 end module chempotpy_alc7m1_leps_modelsurface_pot_legacy_state_1d5d89da
 
@@ -282,5 +263,4 @@ subroutine pot( rr, nder, e, dedrr )
     call evaluate(rr, nder, e, dedrr)
 end subroutine pot
 
-!
 !> @brief Evaluate POTINFO for the ALC7m1_LEPS_ModelSurface potential.

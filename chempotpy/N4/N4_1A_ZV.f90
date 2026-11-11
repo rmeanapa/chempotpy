@@ -6,14 +6,12 @@
 !   Number of bodies:              4
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:: J. Li, Z. Varga, D. G. Truhlar, and H. Guo
 !                J. Chem. Theory Comput. 16, 4822 (2020).
 !                Z. Varga, J. Li, D. G. Truhlar, and H. Guo,
 !                MEG3 surface for N4,
 !                in: POTLIB: An Online Library of Potential Energy Surfaces,
 !                comp.chem.umn.edu/potlib/
-!
 !   Notes:    -PES of N4 with special emphasize for N2 + N2 --> N2 + N + N
 !             -Instead of Morse variables mixed-exponential- gaussian (MEG)
 !              variable is applied to describe the  long-range interactions
@@ -45,14 +43,8 @@
 !                 PES_O4_triplet_umn_v2
 !                 NO2_2Ap_MB-PIP-MEG
 !                 NO2_4Ap_MB-PIP-MEG
-!
-!
 !     N1--N2
-!
 !     N3--N4
-!
-!
-!
 !   Input: X(4),Y(4),Z(4)               in units of bohr
 !   Output: E                           in units of hartree
 !   Output: dEdX(4),dEdY(4),dEdZ(4)     hartree/bohr
@@ -384,13 +376,15 @@ module n4_1a_zv_par
         /)
 end module n4_1a_zv_par
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement N4_1A_ZV, a potential energy surface for N4.
 module chempotpy_n4_1a_zv_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the N4_1A_ZV potential energy surface for N4.
     subroutine evaluate( x, igrad, potential, gradient, dvec )
         use n4_1a_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
             & gconv, p, r, re, rm, rms, totdiss
@@ -437,7 +431,7 @@ module chempotpy_n4_1a_zv_pes
     end subroutine evaluate
 end module chempotpy_n4_1a_zv_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose N4_1A_ZV through the Python-facing PES entry point.
 subroutine pes( x, igrad, potential, gradient, dvec )
     use chempotpy_n4_1a_zv_pes, only: evaluate
     implicit none
@@ -1082,16 +1076,13 @@ end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v, grad, imol, igrad )
-    !
     ! Compute the diatomic potential of ground-state N2 (singlet)
-    !
     ! Input:  r      interatomic distance in Angstrom
     !         imol   1 - stands for N2 for N4 PES
     !         igrad  1 - gradient is calculated
     !                0 - gradient is not calculated
     ! Output: V      potential in kcal/mol
     !         grad   gradient (kcal/mol)/Angstrom
-    !
     implicit none
     integer, intent(in) :: imol, igrad
     double precision    :: r
@@ -1760,19 +1751,15 @@ end subroutine evdbdr
 subroutine d3disp( dist, disp, dispdr, igrad, imol )
     ! Dispersion correction based on Grimme's D3(BJ) calculation for
     ! diatomic pairs
-    !
     ! Several subroutines of DFTD3 V3.1 Rev 1 by Grimme were merged into
     ! subroutine edisp and they have been heavily modified to calculate
     ! only dispersion energy corrections that are needed.
-    !
     ! S. Grimme, J. Antony, S. Ehrlich and H. Krieg
     ! J. Chem. Phys, 132 (2010), 154104
     ! and
     ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
     ! 1456-1465
-    !
     ! The C6 values are fixed.
-    !
     implicit none
     double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)

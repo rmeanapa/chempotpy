@@ -22,13 +22,15 @@ module nnparam
         &pdel3a(:, :), pavg3a(:, :)
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement H3ClO_PIPNN, a potential energy surface for H3ClO.
 module chempotpy_h3clo_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H3ClO_PIPNN potential energy surface for H3ClO.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nmorse, &
             & nodemax3, nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
@@ -68,7 +70,7 @@ module chempotpy_h3clo_pipnn_pes
     end subroutine evaluate
 end module chempotpy_h3clo_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H3ClO_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_h3clo_pipnn_pes, only: evaluate
     implicit none
@@ -266,7 +268,6 @@ subroutine pot3a( x, vpot3 )
     !         bx(k,m)=y(k,3,m)
     !         nxw3(k,m)=weight3a(k,1,4,m)
     !        enddo
-    !
     !        do i=1,ninput
     !         do k=1,neu2
     !          dvtmp=0d0
@@ -277,7 +278,6 @@ subroutine pot3a( x, vpot3 )
     !         enddo
     !         dvdg(i,m)=dvdg(i,m)*pdel3a(nscale,m)/pdel3a(i,m)
     !        enddo
-    !
     !       enddo
     !      endif
 end subroutine pot3a
@@ -289,9 +289,9 @@ function tranfun( x, ifunc )
     double precision :: tranfun, x
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end function tranfun
@@ -312,7 +312,6 @@ end function logsig
 !      real*8 dvdr(1:nbond),dpdr(1:nbond,0:ninput),dvdp(0:ninput)
 !      real*8 dgdx(1:natom*3,1:ninput),dgdr(1:nbond,1:ninput)
 !      real*8 dvdxa(1:natom*3),dvdg(1:ninput,npes),rtmp
-!
 !      dgdx=0d0
 !      dgdr(1:3,1:12)=dpdr(1:3,1:12)
 !      do i=1,9
@@ -322,9 +321,7 @@ end function logsig
 !        enddo
 !       enddo
 !      enddo
-!
 !      dvdx=0d0;dvdxa=0
-!
 !      do k=1,npes
 !       do i=1,9
 !        do j=1,12
@@ -332,15 +329,12 @@ end function logsig
 !        enddo
 !       enddo
 !      enddo
-!
 !      do i=1,9
 !       do k=1,npes
 !        dvdxa(i)=dvdxa(i)+dvdx(i,k)
 !       enddo
 !      enddo
-!
 !      dvdxa=dvdxa/dble(npes)
-!
 !      return
 !      end subroutine evdvdx
 !      subroutine evdvdr(r,c,m,p,dpdr)
@@ -350,12 +344,10 @@ end function logsig
 !      real*8 r(1:nbond),dmsdr(1:nbond,1:nbond),dmdr(1:nbond,0:4)
 !      real*8 dvdr(1:nbond),dpdr(1:nbond,0:ninput),c(0:ninput)
 !      real*8 m(0:nmorse-1),p(0:ninput)
-!
 !      dvdr(:)=0d0
 !      call evdmsdr(r,dmsdr)
 !      call evdmdr(m,dmsdr,dmdr)
 !      call evdpdr(p,dmdr,dpdr)
-!
 !      return
 !      end subroutine evdvdr
 !      subroutine evdrdx(xcart,r,x,drdx)
@@ -365,7 +357,6 @@ end function logsig
 !      real*8 r(1:nbond),xcart(1:3,1:natom),drdx(1:nbond,1:natom*3)
 !      real*8 x(1:natom*3)
 !      drdx(:,:)=0d0
-!
 !!      do i=1,natom-1
 !!       do j=i+1,natom
 !!        k=k+1
@@ -377,7 +368,6 @@ end function logsig
 !!        drdx(k,(j-1)*3+3)=-1d0*drdx(k,(i-1)*3+3)
 !!       enddo
 !!      enddo
-!
 !!dr1dx
 !      drdx(1,1)=(x(1)-x(4))/r(1)
 !      drdx(1,2)=(x(2)-x(5))/r(1)
@@ -399,7 +389,6 @@ end function logsig
 !      drdx(3,7)=-drdx(3,4)
 !      drdx(3,8)=-drdx(3,5)
 !      drdx(3,9)=-drdx(3,6)
-!
 !      return
 !      end subroutine evdrdx
 !      subroutine evdmsdr(r,dmsdr)
@@ -408,12 +397,10 @@ end function logsig
 !      integer i,j
 !      real*8 dmsdr(1:nbond,1:nbond),r(1:nbond)
 !      dmsdr(:,:)=0d0
-!
 !      do i=1,nbond
 !       dmsdr(i,i)=-(1d0/1d0)*dexp(-r(i)/1.0d0)
 !!      dmsdr(i,i)=-(1d0/alpha)*dexp(-r(i)/alpha)
 !      enddo
-!
 !      return
 !      end subroutine evdmsdr
 !      subroutine evdmdr(m,dmsdr,dmdr)
@@ -421,7 +408,6 @@ end function logsig
 !      implicit none
 !      integer i,j
 !      real*8 dmsdr(1:nbond,1:nbond),dmdr(1:nbond,0:4),m(0:nmorse-1)
-!
 !      do i=1,nbond
 !       dmdr(i,0)=0.D0
 !       dmdr(i,1)=dmsdr(i,3)
@@ -429,7 +415,6 @@ end function logsig
 !       dmdr(i,3)=dmsdr(i,1)
 !       dmdr(i,4)=dmdr(i,1)*m(2)+m(1)*dmdr(i,2)
 !      enddo
-!
 !      return
 !      end subroutine evdmdr
 !      subroutine evdpdr(p,dmdr,dpdr)
@@ -438,7 +423,6 @@ end function logsig
 !      integer i,j
 !      real*8 dmdr(1:nbond,0:4),dpdr(1:nbond,0:ninput)
 !      real*8 p(0:ninput)
-!
 !      do i=1,nbond
 !       dpdr(i,0)=dmdr(i,0)
 !       dpdr(i,1)=dmdr(i,1)+dmdr(i,2)
@@ -454,7 +438,6 @@ end function logsig
 !       dpdr(i,11)=dpdr(i,1)*P(5)+P(1)*dpdr(i,5)-dpdr(i,8)
 !       dpdr(i,12)=dpdr(i,2)*P(6)+P(2)*dpdr(i,6)
 !      enddo
-!
 !      return
 !      end subroutine evdpdr
 !> @brief Evaluate bemsav.

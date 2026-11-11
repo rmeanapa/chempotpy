@@ -23,7 +23,9 @@ module h4o2_pes_state
     integer          :: coefficient_count
     integer          :: correction_count
     double precision :: coefficients(0:5226)
+
     contains
+
     !> @brief Load the fitted H4O2 coefficients from the package data file.
     subroutine load_h4o2_coefficients( file_name )
         integer                      :: file_unit_20
@@ -37,6 +39,7 @@ module h4o2_pes_state
             coefficient = 0, coefficient_count+3*correction_count-1)
         close(file_unit_20)
     end subroutine load_h4o2_coefficients
+
     !> @brief Evaluate the fitted H4O2 expansion for Cartesian coordinates.
     subroutine evaluate_h4o2_coefficients( potential, cartesian_coordinates )
         real, intent(out) :: potential
@@ -56,13 +59,15 @@ module h4o2_pes_state
     end subroutine evaluate_h4o2_coefficients
 end module h4o2_pes_state
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement H4O2_PIP, a potential energy surface for H4O2.
 module chempotpy_h4o2_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H4O2_PIP potential energy surface for H4O2.
     subroutine evaluate( x, igrad, path, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -102,7 +107,7 @@ module chempotpy_h4o2_pip_pes
     end subroutine evaluate
 end module chempotpy_h4o2_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H4O2_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_h4o2_pip_pes, only: evaluate
     implicit none
@@ -117,9 +122,7 @@ subroutine pes( x, igrad, path, p, g, d )
     call evaluate(x, igrad, path, p, g, d)
 end subroutine pes
 
-!=================================================!
 ! Initializing HBB water potential                !
-!=================================================!
 !> @brief Evaluate pes_init.
 subroutine pes_init( path )
     use h4o2_pes_state, only: load_h4o2_coefficients
@@ -131,18 +134,15 @@ subroutine pes_init( path )
     call load_h4o2_coefficients(file_path1)
 end subroutine pes_init
 
-!==================================================!
 ! water potential                                  !
-!==================================================!
 !> @brief Evaluate h4o2pot.
 subroutine h4o2pot( x, v )
     use h4o2_pes_state, only: evaluate_h4o2_coefficients
     ! x(1:18) Cartesian coordinates in bohr, must in order H H H H O O
     ! f: potential in hartree
     implicit none
-    real, intent(in)    :: x(18)
-    real, intent(inout) :: v
-    ! ::::::::::::::::::::
+    real, intent(in)      :: x(18)
+    real, intent(inout)   :: v
     real, dimension(3, 6) :: xn
     real                  :: pot
     xn = reshape(x, (/3, 6/))
@@ -188,7 +188,6 @@ subroutine getrvec ( m, r, vec )
     real               :: r(0:nk-1,0:nk-1), vec(0:m-1)
     integer            :: i, j
     real               :: x(0:2), r1(0:nk-1,0:nk-1), t0, t1
-    !-----------------------------------------------------------------------
     ! Test for compatibility
     if( .not.(m .eq. 1.or.m .eq. 4) )then
         stop 'getrvec - wrong dimension'
@@ -234,7 +233,6 @@ subroutine getvec ( ms, mr, xn, vec )
     real               :: xn(0:2,0:nk-1), vec(0:ms+3*mr-1)
     integer            :: k, l, deg
     real               :: rvec(0:3), x0(0:nk-1,0:nk-1), r0(0:nk-1,0:nk-1)
-    !-----------------------------------------------------------------------
     deg = -1
     do k = 9, 0, -1
         if( ms .eq. mg42_ivb(k) )then
@@ -279,8 +277,7 @@ subroutine inv_base ( mxd, u, v, w )
     integer, intent (in) :: mxd
     real, intent (in)    :: u(0:mg42_ivp(mxd)-1), v(0:mg42_ivs(mxd)-1)
     real, intent (out)   :: w(0:mg42_ivb(mxd)-1)
-    !-----------------------------------------------------------------------
-    integer :: l(0:mxd,0:mg42_ivp(mxd)), ind, i, k, d, inc
+    integer              :: l(0:mxd,0:mg42_ivp(mxd)), ind, i, k, d, inc
     l(0,0:mg42_ivp(mxd)) = 0
     w(0)                 = v(0)
     ind                  = 1
@@ -307,8 +304,7 @@ subroutine mg42_base ( mxd, x, w )
     integer, intent (in) :: mxd
     real, intent (in)    :: x(0:mg42_nr-1)
     real, intent (out)   :: w(0:mg42_ivb(mxd)-1)
-    !-----------------------------------------------------------------------
-    real :: u(0:mg42_nr-1), v(0:mg42_ivs(mxd)-1)
+    real                 :: u(0:mg42_nr-1), v(0:mg42_ivs(mxd)-1)
     call mg42_prims (x, u)
     call mg42_secs (mxd, x, v)
     call inv_base (mxd, u, v, w)
@@ -322,8 +318,7 @@ subroutine mg42_gens ( ind, x, y )
     integer, intent (in) :: ind
     real, intent (in)    :: x(0:mg42_nr-1)
     real, intent (out)   :: y(0:mg42_nr-1)
-    !-----------------------------------------------------------------------
-    integer :: iord(0:mg42_nr-1)
+    integer              :: iord(0:mg42_nr-1)
     ! Numbering (block revlex):
     ! ( 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14)
     ! (01, 02, 12, 03, 13, 23, 04, 14, 24, 34, 05, 15, 25, 35, 45)
@@ -352,7 +347,6 @@ subroutine mg42_prims ( x, u )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
     implicit none
-    !-----------------------------------------------------------------------
     integer, parameter :: m = 4, n=2, m2=m*(m-1)/2, n2=n*(n-1)/2
     real, intent (in)  :: x(0:mg42_nr-1)
     real, intent (out) :: u(0:mg42_nr-1)
@@ -395,7 +389,6 @@ subroutine mg42_secs ( mxd, x, v )
         & mg42_ngrp, mg42_nr
     implicit none
     !! Note: We stop at degree 7 for now.
-    !-----------------------------------------------------------------------
     integer, parameter :: m = 4, n=2, nk=6, npv=107, &
         m2=m*(m-1), m3=m*(m-1)*(m-2), n2=n*(n-1), mn=m*n, m2n=m*(m-1)*n, mn2=m*n*(n-1), m2n2=m2n*(n-1), m3n=m*(m-1)* &
         & (m- 2)*n, m3n2 = m*(m-1)*(m-2)*n*(n-1)
@@ -821,7 +814,9 @@ subroutine mg42_secs ( mxd, x, v )
     if( 8 .le. mxd )then
         stop 'mg42: degree 8 not implemented'
     endif
+
     contains
+
     !> @brief Evaluate mg42_setd.
     subroutine mg42_setd ( )
         integer :: i, j, k, l0, l1
@@ -863,18 +858,22 @@ subroutine mg42_secs ( mxd, x, v )
             d7(i, i) = 0
         enddo
     end subroutine mg42_setd
+
     !> @brief Evaluate mg42_deg2_i1j0.
     subroutine mg42_deg2_i1j0 ( )
         pv(0) = pv(0)+d(i0,i1)*d(i0,j0)/m2n
     end subroutine mg42_deg2_i1j0
+
     !> @brief Evaluate mg42_deg3_i2.
     subroutine mg42_deg3_i2 ( )
         pv(1) = pv(1)+d2(i0,i1)*d(i0,i2)/m3
     end subroutine mg42_deg3_i2
+
     !> @brief Evaluate mg42_deg3_i0j0.
     subroutine mg42_deg3_i0j0 ( )
         pv(5) = pv(5)+d3(i0, j0)/mn
     end subroutine mg42_deg3_i0j0
+
     !> @brief Evaluate mg42_deg3_i1j0.
     subroutine mg42_deg3_i1j0 ( )
         pv(2) = pv(2)+d2(i0,i1)*d(i0,j0)/m2n
@@ -882,20 +881,24 @@ subroutine mg42_secs ( mxd, x, v )
         pv(6) = pv(6)+d(i0,i1)*d(i0,j0)*d(i1,j0)/m2n
         pv(8) = pv(8)+d2(i0,j0)*d(i1,j0)/m2n
     end subroutine mg42_deg3_i1j0
+
     !> @brief Evaluate mg42_deg3_i1j1.
     subroutine mg42_deg3_i1j1 ( )
         pv(9)  = pv(9)+d(i0,i1)*d(i0,j0)*d(i0,j1)/m2n2
         pv(10) = pv(10)+d(i0,i1)*d(i1,j0)*d(i0,j1)/m2n2
     end subroutine mg42_deg3_i1j1
+
     !> @brief Evaluate mg42_deg3_i2j0.
     subroutine mg42_deg3_i2j0 ( )
         pv(3) = pv(3)+d(i0,i1)*d(i0,i2)*d(i0,j0)/m3n
         pv(7) = pv(7)+d(i0,i2)*d(i0,j0)*d(i1,j0)/m3n
     end subroutine mg42_deg3_i2j0
+
     !> @brief Evaluate mg42_deg4_i1.
     subroutine mg42_deg4_i1 ( )
         pv(11) = pv(11)+d4(i0, i1)/m2
     end subroutine mg42_deg4_i1
+
     !> @brief Evaluate mg42_deg4_i1j0.
     subroutine mg42_deg4_i1j0 ( )
         pv(12) = pv(12)+d3(i0, i1)*d(i0,j0)/m2n
@@ -906,6 +909,7 @@ subroutine mg42_secs ( mxd, x, v )
         pv(25) = pv(25)+d3(i0, j0)*d(i1,j0)/m2n
         pv(26) = pv(26)+d2(i0,j0)*d2(i1,j0)/m2n
     end subroutine mg42_deg4_i1j0
+
     !> @brief Evaluate mg42_deg4_i2j0.
     subroutine mg42_deg4_i2j0 ( )
         pv(13) = pv(13)+d2(i0,i1)*d(i0,i2)*d(i0,j0)/m3n
@@ -917,10 +921,12 @@ subroutine mg42_secs ( mxd, x, v )
         pv(23) = pv(23)+d(i0,i2)*d2(i0,j0)*d(i1,j0)/m3n
         pv(24) = pv(24)+d(i1,i2)*d2(i0,j0)*d(i1,j0)/m3n
     end subroutine mg42_deg4_i2j0
+
     !> @brief Evaluate mg42_deg4_i0j1.
     subroutine mg42_deg4_i0j1 ( )
         pv(30) = pv(30)+d3(i0, j0)*d(i0,j1)/mn2
     end subroutine mg42_deg4_i0j1
+
     !> @brief Evaluate mg42_deg4_i1j1.
     subroutine mg42_deg4_i1j1 ( )
         pv(27) = pv(27)+d2(i0,i1)*d(i0,j0)*d(i0,j1)/m2n2
@@ -929,18 +935,22 @@ subroutine mg42_secs ( mxd, x, v )
         pv(32) = pv(32)+d(i0,i1)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
         pv(33) = pv(33)+d2(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
     end subroutine mg42_deg4_i1j1
+
     !> @brief Evaluate mg42_deg4_i2j1.
     subroutine mg42_deg4_i2j1 ( )
         pv(28) = pv(28)+d(i0,i1)*d(i0,i2)*d(i0,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg4_i2j1
+
     !> @brief Evaluate mg42_deg5_i1.
     subroutine mg42_deg5_i1 ( )
         pv(34) = pv(34)+d5(i0, i1)/m2
     end subroutine mg42_deg5_i1
+
     !> @brief Evaluate mg42_deg5_i0j0.
     subroutine mg42_deg5_i0j0 ( )
         pv(43) = pv(43)+d5(i0, j0)/mn
     end subroutine mg42_deg5_i0j0
+
     !> @brief Evaluate mg42_deg5_i1j0.
     subroutine mg42_deg5_i1j0 ( )
         pv(35) = pv(35)+d4(i0, i1)*d(i0,j0)/m2n
@@ -953,6 +963,7 @@ subroutine mg42_secs ( mxd, x, v )
         pv(57) = pv(57)+d4(i0, j0)*d(i1,j0)/m2n
         pv(58) = pv(58)+d(i0,i1)*d2(i0,j0)*d2(i1,j0)/m2n
     end subroutine mg42_deg5_i1j0
+
     !> @brief Evaluate mg42_deg5_i2j0.
     subroutine mg42_deg5_i2j0 ( )
         pv(36) = pv(36)+d3(i0, i1)*d(i0,i2)*d(i0,j0)/m3n
@@ -970,10 +981,12 @@ subroutine mg42_secs ( mxd, x, v )
         pv(55) = pv(55)+d(i0,i2)*d3(i0, j0)*d(i1,j0)/m3n
         pv(56) = pv(56)+d(i1,i2)*d3(i0, j0)*d(i1,j0)/m3n
     end subroutine mg42_deg5_i2j0
+
     !> @brief Evaluate mg42_deg5_i0j1.
     subroutine mg42_deg5_i0j1 ( )
         pv(63) = pv(63)+d4(i0, j0)*d(i0,j1)/mn2
     end subroutine mg42_deg5_i0j1
+
     !> @brief Evaluate mg42_deg5_i1j1.
     subroutine mg42_deg5_i1j1 ( )
         pv(59) = pv(59)+d3(i0, i1)*d(i0,j0)*d(i0,j1)/m2n2
@@ -985,12 +998,14 @@ subroutine mg42_secs ( mxd, x, v )
         pv(69) = pv(69)+d(i0,i1)*d(i0,j0)*d2(i1,j0)*d(i0,j1)/m2n2
         pv(70) = pv(70)+d(i0,i1)*d(i0,j0)*d(i1,j0)*d2(i0,j1)/m2n2
     end subroutine mg42_deg5_i1j1
+
     !> @brief Evaluate mg42_deg5_i2j1.
     subroutine mg42_deg5_i2j1 ( )
         pv(60) = pv(60)+d2(i0,i1)*d(i0,i2)*d(i0,j0)*d(i0,j1)/m3n2
         pv(65) = pv(65)+d(i0,i1)*d(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
         pv(67) = pv(67)+d(i0,i2)*d2(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg5_i2j1
+
     !> @brief Evaluate mg42_deg6_i1j0.
     subroutine mg42_deg6_i1j0 ( )
         pv(71) = pv(71)+d4(i0, i1)*d2(i0,j0)/m2n
@@ -1004,6 +1019,7 @@ subroutine mg42_secs ( mxd, x, v )
         pv(92) = pv(92)+d(i0,i1)*d3(i0, j0)*d2(i1,j0)/m2n
         pv(94) = pv(94)+d4(i0, j0)*d2(i1,j0)/m2n
     end subroutine mg42_deg6_i1j0
+
     !> @brief Evaluate mg42_deg6_i2j0.
     subroutine mg42_deg6_i2j0 ( )
         pv(72) = pv(72)+d3(i0, i1)*d(i0,i2)*d2(i0,j0)/m3n
@@ -1021,10 +1037,12 @@ subroutine mg42_secs ( mxd, x, v )
         pv(91) = pv(91)+d(i1,i2)*d4(i0, j0)*d(i1,j0)/m3n
         pv(93) = pv(93)+d(i0,i2)*d3(i0, j0)*d2(i1,j0)/m3n
     end subroutine mg42_deg6_i2j0
+
     !> @brief Evaluate mg42_deg6_i0j1.
     subroutine mg42_deg6_i0j1 ( )
         pv(96) = pv(96)+d5(i0, j0)*d(i0,j1)/mn2
     end subroutine mg42_deg6_i0j1
+
     !> @brief Evaluate mg42_deg6_i1j1.
     subroutine mg42_deg6_i1j1 ( )
         pv(95)  = pv(95)+d2(i0,i1)*d3(i0, j0)*d(i0,j1)/m2n2
@@ -1032,24 +1050,29 @@ subroutine mg42_secs ( mxd, x, v )
         pv(100) = pv(100)+d(i0,i1)*d3(i0, j0)*d(i1,j0)*d(i0,j1)/m2n2
         pv(101) = pv(101)+d(i0,i1)*d2(i0,j0)*d2(i1,j0)*d(i0,j1)/m2n2
     end subroutine mg42_deg6_i1j1
+
     !> @brief Evaluate mg42_deg6_i2j1.
     subroutine mg42_deg6_i2j1 ( )
         pv(97) = pv(97)+d2(i0,i1)*d(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
         pv(99) = pv(99)+d(i0,i1)*d(i0,i2)*d2(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg6_i2j1
+
     !> @brief Evaluate mg42_deg7_i0j0.
     subroutine mg42_deg7_i0j0 ( )
         pv(103) = pv(103)+d7(i0, j0)/mn
     end subroutine mg42_deg7_i0j0
+
     !> @brief Evaluate mg42_deg7_i1j0.
     subroutine mg42_deg7_i1j0 ( )
         pv(102) = pv(102)+d(i0,i1)*d6(i0, j0)/m2n
         pv(105) = pv(105)+d2(i0,i1)*d4(i0, j0)*d(i1,j0)/m2n
     end subroutine mg42_deg7_i1j0
+
     !> @brief Evaluate mg42_deg7_i2j0.
     subroutine mg42_deg7_i2j0 ( )
         pv(104) = pv(104)+d2(i0,i1)*d2(i0,i2)*d2(i0,j0)*d(i1,j0)/m3n
     end subroutine mg42_deg7_i2j0
+
     !> @brief Evaluate mg42_deg7_i2j1.
     subroutine mg42_deg7_i2j1 ( )
         pv(106) = pv(106)+d2(i0,i1)*d2(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2

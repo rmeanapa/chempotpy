@@ -1,11 +1,36 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        SiOH
+!   Functional form:               Two and three body interaction plus C
+!   Common name:                   SiOH
+!   Number of derivatives:         1
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:
+!   Notes:  Many-body silica  potential energy function.  The functional
+!           form is from Ref. 1.
+!  References: (1) JApplPhys89(11) 2001 6013
+!              (2) JChemPhys 89(9) 1988 5818
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  dvdx,dvdy,dvdz   --- one-dimensional arrays of the gradients with res
+!                       to the Cartesian coordinates of the system (outp
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximum number of atoms (input)
+!  ien     --- 1: just take coulombic interaction energy
+!          --- 0: take all energy
+
+!> @brief Implement SiOH_GEN_1988, a potential energy surface for SiOH.
 module chempotpy_sioh_gen_1988_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the SiOH_GEN_1988 potential energy surface for SiOH.
     subroutine evaluate( xyz, nsi, no, nh, natoms, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -45,7 +70,7 @@ module chempotpy_sioh_gen_1988_pes
             do istate=1, nstates
                 p(istate) = v*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = v*legacy_hartree_to_electronvolt
             enddo
@@ -60,52 +85,21 @@ module chempotpy_sioh_gen_1988_pes
             write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate siohpot for the SiOH_GEN_1988 potential.
     subroutine siohpot( x, y, z, q, indmm, v, dvdx, dvdy, dvdz, natom, &
             & maxatom, ien )
-        !   System:                        SiOH
-        !   Functional form:               Two and three body interaction plus C
-        !   Common name:                   SiOH
-        !   Number of derivatives:         1
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:
-        !
-        !   Notes:  Many-body silica  potential energy function.  The functional
-        !           form is from Ref. 1.
-        !
-        !  References: (1) JApplPhys89(11) 2001 6013
-        !              (2) JChemPhys 89(9) 1988 5818
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  dvdx,dvdy,dvdz   --- one-dimensional arrays of the gradients with res
-        !                       to the Cartesian coordinates of the system (outp
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximum number of atoms (input)
-        !  ien     --- 1: just take coulombic interaction energy
-        !          --- 0: take all energy
         implicit none
-        double precision :: aa, alambda, alpha, bb, beta, cc, dx, dy, dz, e, e1, e2, e3, f, f3, f4, f5, g, gamma, h, p, q, &
-            & r0, rho, rij, theta, tmp, v, v1, v2, v3
-        integer :: i, ien, indmm, j, k, maxatom, natom
+        double precision :: aa(14,14,3), alambda(14,14,14), alpha(14,14), bb(14,14,3), beta(14,14), cc(14,14,3), &
+            & dx(maxatom,maxatom), dy(maxatom,maxatom), dz(maxatom,maxatom), e, e1, e2, e3, f, f3, f4, f5, g, gamma(22,36), h, &
+            & p, q(maxatom), r0(22,36), rho(14,14), rij(maxatom,maxatom), theta(14,14,14), tmp, v, v1, v2, v3
+        integer :: i, ien, indmm(maxatom), j, k, maxatom, natom
         !     include 'param.f'
         double precision, parameter :: rn    = 10.393496649d0
         double precision, parameter :: pi    = 3.1415926536d0
         double precision, parameter :: pener = 4.3597482d-11
         double precision, parameter :: pdis  = 0.52917706d0
         double precision, parameter :: pang  = 57.2957795d0
-        dimension alpha(14,14), beta(14,14), rho(14,14), q(maxatom)
-        dimension aa(14,14,3), bb(14,14,3), cc(14,14,3)
-        dimension alambda(14,14,14), gamma(22,36), r0(22,36), &
-            & theta(14, 14, 14)
-        dimension dx(maxatom,maxatom), rij(maxatom,maxatom), &
-            & dy(maxatom, maxatom), dz(maxatom, maxatom), indmm(maxatom)
         double precision :: dvdy(maxatom), dvdz(maxatom), dvdx(maxatom), &
             & x(maxatom), y(maxatom), z(maxatom)
         ! Nanoparticle-parameterized Parameters in two-body term(Ref. 1)
@@ -289,9 +283,7 @@ module chempotpy_sioh_gen_1988_pes
                             & indmm(j))* p** 2 /(rij(i,k)-r0(indmm(i)+indmm(k),indmm(i)+indmm(k)+indmm(j)))**2 +2* &
                             & alambda(indmm(j),indmm(i),indmm(k))*g*p*(rij(i,k)**2 -rij(i,j)**2+rij(j,k)**2)/(2* &
                             & rij(i,j)*rij(i,k)**2)
-                        f5 = -2*alambda(indmm(j),indmm(i),indmm(k))*g*p*rij(j,k) /(rij(i,j)*rij(i,k))
-                        !
-                        !
+                        f5      = -2*alambda(indmm(j),indmm(i),indmm(k))*g*p*rij(j,k) /(rij(i,j)*rij(i,k))
                         tmp     = f3/rij(i,j)
                         dvdx(i) = dvdx(i)+tmp*dx(i,j)
                         dvdy(i) = dvdy(i)+tmp*dy(i, j)
@@ -326,14 +318,13 @@ module chempotpy_sioh_gen_1988_pes
         else
             v = v+v1+v2
         endif
-        !
         !      do i=1,natom
         !      write(6,'(1x,i5,3f12.6)') i,dvdx(i),dvdy(i),dvdz(i)
         !      enddo
     end subroutine siohpot
 end module chempotpy_sioh_gen_1988_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose SiOH_GEN_1988 through the Python-facing PES entry point.
 subroutine pes( xyz, nsi, no, nh, natoms, igrad, p, g, d )
     use chempotpy_sioh_gen_1988_pes, only: evaluate
     implicit none

@@ -5,14 +5,10 @@
 !   Number of bodies:              3
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References: doi 10.1063/1.4983813
 !               Author:  Tapan K. Mankodi, Upendra V. Bhandarkar,
 !               Bhalchandra P. Puranik
-!
 !   Notes:
-!
-
 ! Global Potential energy surface for N3 system using CASSCF+CASPT2     !
 ! Permutational Invariant Global Least Square fit                       !
 ! Input Variable: Interatomic distance R1-R2-R3 in Angstrom             !
@@ -26,13 +22,15 @@
 ! Corresponding Address: tapan.mankodi@iitb.ac.in                       !
 !                        bhandarkar@iitb.ac.in  !
 
-!> @brief Own the complete implementation of this potential energy surface.
+!> @brief Implement N3_MBP_2017, a potential energy surface for N3.
 module chempotpy_n3_mbp_2017_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this PES through the modern module contract.
+
+    !> @brief Evaluate the N3_MBP_2017 potential energy surface for N3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry, only: cartesian_distance
         implicit none
@@ -60,6 +58,7 @@ module chempotpy_n3_mbp_2017_pes
             write (*, *) 'Only energy is available'
         endif
     end subroutine
+
     !> @brief Evaluate n3.
     subroutine n3( v, rx, ry, rz )
         implicit none
@@ -89,6 +88,7 @@ module chempotpy_n3_mbp_2017_pes
                 & (indices(ii,1)))
         enddo
     end subroutine
+
     !> @brief Evaluate assign.
     subroutine assign( coeff, indices )
         implicit none
@@ -304,7 +304,7 @@ module chempotpy_n3_mbp_2017_pes
     end subroutine
 end module chempotpy_n3_mbp_2017_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose N3_MBP_2017 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_n3_mbp_2017_pes, only: evaluate
     implicit none

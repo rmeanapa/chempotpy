@@ -23,13 +23,15 @@ module nnparam
     double precision, allocatable :: pdelc(:), pavgc(:)
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement H3Cl_PIPNN, a potential energy surface for H3Cl.
 module chempotpy_h3cl_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H3Cl_PIPNN potential energy surface for H3Cl.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, &
             & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
@@ -80,7 +82,7 @@ module chempotpy_h3cl_pipnn_pes
     end subroutine evaluate
 end module chempotpy_h3cl_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H3Cl_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_h3cl_pipnn_pes, only: evaluate
     implicit none
@@ -99,9 +101,8 @@ end subroutine pes
 subroutine pesh3cl( x, vtot, path )
     implicit none
     character(len=1024), intent(in) :: path
-    double precision                :: phi, r, r1, r2, r3, s, th1, th2, v, v0, v1, vint, vpes, vpesa, vpesb, vpesc, &
-        & vpip, vtot, x
-    dimension r(6), x(3,4)
+    double precision                :: phi, r(6), r1, r2, r3, s, th1, th2, v, v0, v1, vint, vpes, vpesa, vpesb, vpesc, vpip, &
+        & vtot, x(3,4)
     double precision, parameter :: tocm = 219474.63137d0
     integer, parameter          :: n    = 644
     call xyz_to_jaco(x, r1, r2, r3, th1, th2, phi, r)
@@ -166,18 +167,15 @@ subroutine pot1( r1, vv1, path )
     call splint(xt1, ym1, yl1, m1, r1, vv1)
 end subroutine pot1
 
-!##################################################################
 !# SPLINE ROUTINES
 !#            Numerical recipes in fortran
 !#            Cambrige University Press
 !#            York, 2nd edition, 1992.
-!##################################################################
 !> @brief Evaluate splint for the H3Cl_PIPNN potential.
 subroutine splint( xa, ya, y2a, n, x, y )
     implicit none
-    double precision :: a, b, h, x, xa, y, y2a, ya
+    double precision :: a, b, h, x, xa(n), y, y2a(n), ya(n)
     integer          :: k, khi, klo, n
-    dimension xa(n), y2a(n), ya(n)
     klo = 1
     khi = n
     do while( khi-klo .gt. 1 )
@@ -195,15 +193,12 @@ subroutine splint( xa, ya, y2a, n, x, y )
     y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h** 2)/6.0d0
 end subroutine splint
 
-!#######################################################################
 !> @brief Evaluate spline for the H3Cl_PIPNN potential.
 subroutine spline( x, y, n, yp1, ypn, y2 )
     implicit none
-    double precision :: p, qn, sig, u, un, x, y, y2, yp1, ypn
-    integer          :: i, k, n
-    dimension x(n), y(n), y2(n)
     integer, parameter :: nmax = 4200
-    dimension u(nmax)
+    double precision :: p, qn, sig, u(nmax), un, x(n), y(n), y2(n), yp1, ypn
+    integer          :: i, k, n
     if( yp1 .gt. .99d30 )then
         y2(1) = 0.0d0
         u(1)  = 0.0d0
@@ -522,22 +517,20 @@ function tranfun( x, ifunc )
     !is imposed to the output layer by default
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+dexp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end function tranfun
 
 !-->!-->!-->!-->!-->!-->!-->!-->!-->!-->subroutine to accelerate~~~~~~
-
 !> @brief Evaluate emsav134 for the H3Cl_PIPNN potential.
 function emsav134( x, c ) result(v )
     implicit none
     double precision, dimension(1:6)::x
     double precision, dimension(0:50)::c
     double precision :: v
-    ! ::::::::::::::::::::
     double precision, dimension(0:50)::p
     call bemsav134(x, p)
     v = dot_product(p, c)
@@ -548,7 +541,6 @@ subroutine bemsav134( x, p )
     implicit none
     double precision, dimension(1:6), intent(in)::x
     double precision, dimension(0:50), intent(out)::p
-    ! ::::::::::::::::::::
     double precision, dimension(0:32)::m
     call evmono134(x, m)
     call evpoly134(m, p)
@@ -772,9 +764,8 @@ end subroutine getpotc
 !> @brief Evaluate distance for the H3Cl_PIPNN potential.
 double precision function distance( a, b )
     implicit none
-    double precision :: a, b
+    double precision :: a(3), b(3)
     integer          :: i
-    dimension a(3), b(3)
     distance = 0.d0
     do i=1, 3
         distance = distance+(a(i)-b(i))**2

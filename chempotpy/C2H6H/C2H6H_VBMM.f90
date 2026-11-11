@@ -1,25 +1,24 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !   System:                        C2H6H
 !   Common name:                   C2H6+H
 !   Number of derivatives:         1
 !   Number of bodies:              9
 !   Number of electronic surfaces: 1
 !   Interface:                     potlib2001
-!
 !   References:: J. Espinosa-Garcia, M. Garcia-Chamorro, and J. C. Corch
 !                Phys. Chem. Chem. Phys. 2019, 21, 13165 (original fit)
 !                J. Espinosa-Garcia, M. Garcia-Chamorro, J. C. Corchado,
 !                S. Bhowmick, and Y. V. Suleimanov, Phys. Chem. Chem. Ph
 !                2020, 22, 13790 (revised fit)
-!
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement C2H6H_VBMM, a potential energy surface for C2H6H.
 module chempotpy_c2h6h_vbmm_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the C2H6H_VBMM potential energy surface for C2H6H.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
         implicit none
@@ -407,7 +406,7 @@ module chempotpy_c2h6h_vbmm_pes
             do istate=1, nstates
                 p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             write (*, *) 'Only energy is available'
             !       do istate=1,nstates
             !         p(istate)=usrocm_pengygs*legacy_hartree_to_electronvolt
@@ -417,21 +416,19 @@ module chempotpy_c2h6h_vbmm_pes
             !         g(1,iatom,idir)=usrocm_dgscart(iatom,idir)*51.422067
             !       enddo
             !       enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             !       write (*,*) 'Only energy and gradient are available'
             write (*, *) 'Only energy is available'
         endif
+
         contains
+
         !> @brief Evaluate POT for the C2H6H_VBMM potential.
         subroutine pot
-            !
             !   System: C2H6 + H --> C2H5 + H2.
             !              Joaquin Espinosa-Garcia 2018
-            !
-            !
             !   All the information passed to and from the potential energy surface
             !   routine is in hartree atomic units.
-            !
             !        This potential is written such that:
             !                       X(1)  - X(3)  : X, Y, Z for C1
             !                       X(4)  - X(6)  : X, Y, Z for C2
@@ -442,29 +439,19 @@ module chempotpy_c2h6h_vbmm_pes
             !                       X(19) - X(21) : X, Y, Z for H5
             !                       X(22) - X(24) : X, Y, Z for H6
             !                       X(25) - X(27) : X, Y, Z for Hb
-            !
             implicit none
-            double precision :: coord, dx, en, vip, vop, vstr, vtor
+            double precision :: coord(27), dx(27), en, vip, vop, vstr, vtor
             integer          :: i, n
-            !
-            dimension coord(27), dx(27)
             !      DIMENSION COORD(27),DX(27)
             !      DIMENSION dxvstr(27),dxvtor(27),dxvop(27),dxvip(27)
-            !
             !C      include 'c2h6cl.inc'
             !     write(97,*) 'pasa'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
@@ -476,69 +463,45 @@ module chempotpy_c2h6h_vbmm_pes
             !c call de venus
             call cartou
             call carttor
-            !
             !     PUT COORDINATES IN PROPER ARRAYS
-            !
             ! Inicialization de variables
-            !
             do i=1, 27
                 qpdot_q(i) = pt1cm_r(i)
                 !          qpdot_q(I) = pt1cm_r(I)*0.52918d0
                 qpdot_pdot(i) = 0.d0
             enddo
-            !
             ! Changing units from angstrom to bohr
-            !
             !      DO  I = 1, 27
             !c         qpdot_q(I) = COORD(I)*0.52918d0
             !        qpdot_q(I) = pt1cm_r(I)*0.52918d0
             !      enddo
-            !
             ! End of corrections by EMN
             en = 0.0d0
             call coorden
-            !
             !  calculate switching functions
-            !
             call switchf
-            !
             !  calculate reference angles and their derivatives
-            !
             call refangles
-            !
             ! CRD 2011 incluimos los terminos de potencial de torsion
-            !
             call torsion(vtor)
             !     write(*,*) 'vtor', vtor*0.03812D0
-            !
             !  calculate stretching potential
-            !
             call stretch(vstr)
             !     write(*,*) 'vstr', vstr*0.03812D0
-            !
             !  calculate out of plane bending potential
-            !
             call opbend(vop)
             !     write(*,*) 'vop', vop*0.03812D0
-            !
             !  calculate in plane bending potential
-            !
             call ipbend(vip)
             !     write(*,*) 'vip', vip*0.03812D0
-            !
             en = vstr+vop+vip+vtor
-            !
             !  convert from 10(5) j/mol to au
-            !
             en = en*0.03812d0
             !      V = en
             pt1cm_engygs = en
-            !
             call eunitzero
             if( usricm_nder .ne. 0 )then
-                !
                 !  Initialize derivatives
-                !
                 do n=1, 27
                     !          DX(n)=0.0d0
                     pt1cm_degsdr(i) = qpdot_pdot(i)*0.0201723d0
@@ -546,7 +509,6 @@ module chempotpy_c2h6h_vbmm_pes
                 ! Start of changes by EMN.
                 ! The lines below are not needed because the derivatives are calculated
                 ! in venuspotlib_3.f. Anyway usricm_nder=1
-                !
                 !      PASO= 1.0D-8
                 !     PASO= 1.0D-6
                 !      do I=1,27
@@ -572,10 +534,8 @@ module chempotpy_c2h6h_vbmm_pes
                 !        qpdot_q(I)=qpdot_q(I)-PASO
                 !      enddo
                 !c
-                !
                 ! 0.0201723 conversion factor from 10(5)j/mol/A to hartrees/bohr
                 ! qpdot_pdot sale de la derivada en hartrees/bohr por eso no lo multiplico
-                !
                 !        do i=1,27
                 !           pt1cm_degsdr(i)=qpdot_pdot(i)*0.0201723d0
                 !           pt1cm_degsdr(i)=qpdot_pdot(i)
@@ -584,43 +544,31 @@ module chempotpy_c2h6h_vbmm_pes
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate coorden for the C2H6H_VBMM potential.
         subroutine coorden
-            !------------------------------------------------------
-            !
             !  calculates relative coordinates and bond lengths
-            !
             implicit none
             double precision :: argmax, argp3, argp4, p3, p4, t3tmp, t4tmp
             integer          :: i, ind
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
             !  calculate relative coordinates
-            !
             do ind=1, 3
                 coords3_tc1b(ind) = qpdot_q(ndx2_nc1(ind))-qpdot_q(ndx_nhb(ind))
                 coords3_tc2b(ind) = qpdot_q(ndx2_nc2(ind))-qpdot_q(ndx_nhb(ind))
                 coords2_tcc(ind)  = qpdot_q(ndx2_nc1(ind))-qpdot_q(ndx2_nc2(ind))
             enddo
-            !
             do ind=1, 3
                 do i=1, 3
                     coords1_tc1h(i,ind)  = qpdot_q(ndx2_nc1(ind))-qpdot_q(ndx_nh(i,ind))
@@ -629,10 +577,7 @@ module chempotpy_c2h6h_vbmm_pes
                     coords1_tbh(i+3,ind) = qpdot_q(ndx_nhb(ind))-qpdot_q(ndx_nh(i+3,ind))
                 enddo
             enddo
-            !
-            !
             ! coordenadas entre los hidrogenos de los dos carbonos
-            !
             !      do i=1,3
             !         do j=4,6
             !            do ind=1,3
@@ -640,29 +585,22 @@ module chempotpy_c2h6h_vbmm_pes
             !            enddo
             !         enddo
             !      enddo
-            !
             !  calculate bond lengths
-            !
             bonds3_rc1b = sqrt(coords3_tc1b(1)*coords3_tc1b(1)+coords3_tc1b(2)*coords3_tc1b(2)+coords3_tc1b(3)* &
                 & coords3_tc1b(3))
             bonds3_rc2b = sqrt(coords3_tc2b(1)*coords3_tc2b(1)+coords3_tc2b(2)*coords3_tc2b(2)+coords3_tc2b(3)* &
                 & coords3_tc2b(3))
             potcm_rcc = sqrt(coords2_tcc(1)*coords2_tcc(1)+coords2_tcc(2)*coords2_tcc(2)+coords2_tcc(3)*coords2_tcc(3))
-            !
             !      write(*,*) bonds3_rc1b, bonds3_rc2b
-            !
             do i=1, 3
                 bonds2_rc1h(i) = sqrt(coords1_tc1h(i,1)*coords1_tc1h(i,1)+coords1_tc1h(i,2)*coords1_tc1h(i,2)+ &
                     & coords1_tc1h(i,3)*coords1_tc1h(i,3))
-                !
                 ! redondeo para corregir las frecuencias
                 !       bonds2_rc1h(i)=(anint(bonds2_rc1h(i)*100000))/100000
-                !
                 bonds2_rc2h(i) = sqrt(coords1_tc2h(i,1)*coords1_tc2h(i,1)+coords1_tc2h(i,2)*coords1_tc2h(i,2)+ &
                     & coords1_tc2h(i,3)*coords1_tc2h(i,3))
                 ! redondeo para corregir las frecuencias
                 !       bonds2_rc2h(i)=(anint(bonds2_rc2h(i)*100000))/100000
-                !
             enddo
             !      write(*,*) 'bonds2_rc1h(1)',bonds2_rc1h(1),'bonds2_rc1h(2)',bonds2_rc1h(2),'bonds2_rc1h(3)',bonds2_rc1h(3)
             !      write(*,*) 'bonds2_rc2h(1)',bonds2_rc2h(1),'bonds2_rc2h(2)',bonds2_rc2h(2),'bonds2_rc2h(3)',bonds2_rc2h(3)
@@ -671,7 +609,6 @@ module chempotpy_c2h6h_vbmm_pes
                     & coords1_tbh(i,3)*coords1_tbh(i,3))
             enddo
             ! calculamos las distancias H-H
-            !
             !      do i=1,3
             !         do j=4,6
             !        bonds2_rhh(i,j)=sqrt(coords2_thh(i,j,1)*coords2_thh(i,j,1)+coords2_thh(i,j,2)*coords2_thh(i,j,2)+
@@ -679,7 +616,6 @@ module chempotpy_c2h6h_vbmm_pes
             !      write(55,*) 'bonds2_rhh', i, j, '=', bonds2_rhh(i,j)
             !         enddo
             !      enddo
-            !
             ! crd 2013 modificaciones de las distancias
             argmax = 19.d0
             p3     = 1.d0
@@ -694,7 +630,6 @@ module chempotpy_c2h6h_vbmm_pes
             enddo
             bonds_r0c1h = p3*potcm_r0c1hr+(1-p3)*potcm_r0c1hp
             !      bonds_r0c1h=potcm_r0c1hr
-            !
             p4 = 1.d0
             do i=1, 3
                 argp4 = (potcm_w5*(bonds2_rc2h(i)-potcm_w6))
@@ -708,39 +643,28 @@ module chempotpy_c2h6h_vbmm_pes
             bonds_r0c2h = p4*potcm_r0c2hr+(1-p4)*potcm_r0c2hp
             !      bonds_r0c2h=potcm_r0c2hr
             !      write(*,*) 'bonds_r0c1h', bonds_r0c1h, 'bonds_r0c2h',bonds_r0c2h
-            !
         end subroutine coorden
+
         !> @brief Evaluate torsion for the C2H6H_VBMM potential.
         subroutine torsion( vtor )
-            !------------------------------------------------------
-            !
             implicit none
-            double precision :: dihed, t1, t2, vtor
+            double precision :: dihed, t1(3), t2(3), vtor
             integer          :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            dimension t1(3), t2(3)
             !      double precision pi
             !      pi=4.0d0*atan(1.0d0)
-            !
             ! CRD 2011 incluimos un apartado para calcular los angulos dihedro
             ! para poder calcular despues vtorsion
-            !
             call dihedro(3, 1, 2, 6, dihed)
             thetahcch_thetahcch(1) = dihed*pi/180.0d0
             call dihedro(3, 1, 2, 7, dihed)
@@ -759,9 +683,7 @@ module chempotpy_c2h6h_vbmm_pes
             thetahcch_thetahcch(8) = dihed*pi/180.0d0
             call dihedro(5, 1, 2, 8, dihed)
             thetahcch_thetahcch(9) = dihed*pi/180.0d0
-            !
             ! CRD 2011 calculamos los terminos switching t1 y t2
-            !
             do i=1, 3
                 t1(i) = 0.5d0*(1-tanh(potcm_w1*(bonds2_rc1h(i)-potcm_w2)))
                 t2(i) = 0.5d0*(1-tanh(potcm_w1*(bonds2_rc2h(i)-potcm_w2)))
@@ -769,11 +691,8 @@ module chempotpy_c2h6h_vbmm_pes
                 !       t1(i)=1-tanh(potcm_w1*(bonds2_rc1h(i)-potcm_w2))
                 !       t2(i)=1-tanh(potcm_w1*(bonds2_rc2h(i)-potcm_w2))
             enddo
-            !
             ! CRD 2011 inicializamos vtor
-            !
             vtor = 0.0d0
-            !
             vtor = vtor+(potcm_v3/3.0d0)*(1+cos(3*thetahcch_thetahcch(1)))*t1(1)*t2(1)
             vtor = vtor+(potcm_v3/3.0d0)*(1+cos(3*thetahcch_thetahcch(2)))*t1(1)*t2(2)
             vtor = vtor+(potcm_v3/3.0d0)*(1+cos(3*thetahcch_thetahcch(3)))*t1(1)*t2(3)
@@ -784,25 +703,18 @@ module chempotpy_c2h6h_vbmm_pes
             vtor = vtor+(potcm_v3/3.0d0)*(1+cos(3*thetahcch_thetahcch(8)))*t1(3)*t2(2)
             vtor = vtor+(potcm_v3/3.0d0)*(1+cos(3*thetahcch_thetahcch(9)))*t1(3)*t2(3)
         end subroutine torsion
+
         !> @brief Evaluate dihedro for the C2H6H_VBMM potential.
         subroutine dihedro( i, j, k, l, dihed )
-            !------------------------------------------------------
-            !
             implicit none
             double precision :: dihed
             !        include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
@@ -815,13 +727,10 @@ module chempotpy_c2h6h_vbmm_pes
             !        double precision p,qpdot_q
             !        double precision p
             !        double precision pi
-            !
             double precision :: rij(3), rjk(3), rkj(3), rkl(3)
             double precision :: zijjk(3), zijkj(3), zkjkl(3), zjkkl(3)
             double precision :: tmpsign(3), tmp, arg1, arg2
-            !
             !        pi=4.0d0*atan(1.0d0)
-            !
             do m = 1, 3
                 rij(m) = qpdot_q((i-1)*3+m)-qpdot_q((j-1)*3+m)
                 rjk(m) = qpdot_q((j-1)*3+m)-qpdot_q((k-1)*3+m)
@@ -831,8 +740,6 @@ module chempotpy_c2h6h_vbmm_pes
             call crosprod(rij, rjk, zijjk)
             arg2 = anorm(rjk)*dotprod(rij, zjkkl)
             arg1 = dotprod(zijjk, zjkkl)
-            !
-            !
             if( abs(arg1) .lt. 1.d-6 )then
                 if( arg2 .gt. 0.d0 ) dihed = 90.d0
                 if( arg2 .lt. 0.d0 ) dihed = -90.d0
@@ -850,85 +757,63 @@ module chempotpy_c2h6h_vbmm_pes
                 dihed = -180.d0 + atan(arg2/arg1) *180.d0/pi
                 return
             endif
-            !
         end subroutine dihedro
+
         !> @brief Evaluate crosprod for the C2H6H_VBMM potential.
         subroutine crosprod( x, y, z )
-            !------------------------------------------------------
-            !
             implicit none
             double precision :: x(3), y(3), z(3)
-            !
             z(1) = x(2)*y(3)-x(3)*y(2)
             z(2) = x(3)*y(1)-x(1)*y(3)
             z(3) = x(1)*y(2)-x(2)*y(1)
-            !
         end subroutine crosprod
+
         !> @brief Evaluate dotprod for the C2H6H_VBMM potential.
         double precision function dotprod( x, y )
-            !------------------------------------------------------
-            !
             implicit none
             integer          :: k
             double precision :: x(3), y(3), tmp
-            !
             tmp = 0.d0
             do k = 1, 3
                 tmp = tmp + x(k)*y(k)
             enddo
             dotprod = tmp
-            !
         end function dotprod
+
         !> @brief Evaluate anorm for the C2H6H_VBMM potential.
         double precision function anorm( x )
-            !------------------------------------------------------
             implicit none
             integer          :: k
             double precision :: x(3), tmp
-            !
             tmp = 0.d0
             do k = 1, 3
                 tmp = tmp + x(k)*x(k)
             enddo
             anorm = dsqrt(tmp)
-            !
         end function anorm
+
         !> @brief Evaluate refangles for the C2H6H_VBMM potential.
         subroutine refangles
-            !------------------------------------------------------
-            !
             !  subroutine calculates reference angles for the "in-plane" potential
-            !
             implicit none
-            double precision :: ddr, halfpi, sumd2, sumd4, tau, taucc, twopi
+            double precision :: ddr(4,4), halfpi, sumd2(4), sumd4(4), tau, taucc, twopi
             integer          :: i, j
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
-            dimension sumd2(4), sumd4(4), ddr(4,4)
             tau = acos(-1.0d0/3.0d0)
-            !
             ! CRD 2012 taucc para el angulo H-C-C
-            !
             taucc = acos(-0.3616d0)
             !      write(*,*) 'tau', tau, 'acostau', tau*57.2957795
             !      write(*,*) 'taucc', taucc, 'acostaucc', taucc*57.2957795
-            !
             !      pi=4.0d0*atan(1.0d0)
             halfpi = 0.5d0*pi
             twopi  = 2.0d0*pi
@@ -939,16 +824,11 @@ module chempotpy_c2h6h_vbmm_pes
             !      tausih = pi - asin ( sin(anghch/2.d0) / sin(pi/3.d0) )
             !      tausih=acos(-0.4648d0)
             ! jcc-2010
-            !
-            !
             !  set diagonal elements to zero
-            !
             do i=1, 8
                 angles_theta0(i,i) = 0.0d0
             enddo
-            !
             !  calculate reference angles
-            !
             !      angles_theta0(1,2)=tau+(tau-tausih)*(switch1_sphi(1)*switch1_sphi(2)-1.0d0)
             !    *             +(tau-anghch/3.0d0)*(switch1_stheta(3)*switch1_stheta(4)-1.0d0)
             !      angles_theta0(1,3)=tau+(tau-tausih)*(switch1_sphi(1)*switch1_sphi(3)-1.0d0)
@@ -973,9 +853,7 @@ module chempotpy_c2h6h_vbmm_pes
             !    *             +(tau-anghch/3.0d0)*(switch1_stheta(5)*switch1_stheta(7)-1.0d0)
             !      angles_theta0(7,8)=taucc+(tau-tausih)*(switch1_sphi(7)*switch1_sphi(8)-1.0d0)
             !    *             +(tau-anghch/3.0d0)*(switch1_stheta(5)*switch1_stheta(6)-1.0d0)
-            !
             ! el atomo 4 es el c2
-            !
             angles_theta0(1,2) = tau+(tau-halfpi)*(switch1_sphi(1)*switch1_sphi(2)-1.0d0) +(tau-twopi/3.0d0)* &
                 & (switch1_stheta(3)*switch1_stheta(4)-1.0d0)
             angles_theta0(1,3) = tau+(tau-halfpi)*(switch1_sphi(1)*switch1_sphi(3)-1.0d0) +(tau-twopi/3.0d0)* &
@@ -988,9 +866,7 @@ module chempotpy_c2h6h_vbmm_pes
                 & (switch1_stheta(1)*switch1_stheta(3)-1.0d0)
             angles_theta0(3,4) = taucc+(tau-halfpi)*(switch1_sphi(3)*switch1_sphi(4)-1.0d0) +(tau-twopi/3.0d0)* &
                 & (switch1_stheta(1)*switch1_stheta(2)-1.0d0)
-            !
             !  el atomo 8 es el c1
-            !
             angles_theta0(5,6) = tau+(tau-halfpi)*(switch1_sphi(5)*switch1_sphi(6)-1.0d0) +(tau-twopi/3.0d0)* &
                 & (switch1_stheta(7)*switch1_stheta(8)-1.0d0)
             angles_theta0(5,7) = tau+(tau-halfpi)*(switch1_sphi(5)*switch1_sphi(7)-1.0d0) +(tau-twopi/3.0d0)* &
@@ -1003,9 +879,7 @@ module chempotpy_c2h6h_vbmm_pes
                 & (switch1_stheta(5)*switch1_stheta(7)-1.0d0)
             angles_theta0(7,8) = taucc+(tau-halfpi)*(switch1_sphi(7)*switch1_sphi(8)-1.0d0) +(tau-twopi/3.0d0)* &
                 & (switch1_stheta(5)*switch1_stheta(6)-1.0d0)
-            !
             !  fill in the other half of the matrix
-            !
             do i=1, 3
                 do j=i+1, 4
                     angles_theta0(j,i) = angles_theta0(i,j)
@@ -1027,35 +901,26 @@ module chempotpy_c2h6h_vbmm_pes
             !         enddo
             !      enddo
         end subroutine refangles
+
         !> @brief Evaluate stretch for the C2H6H_VBMM potential.
         subroutine stretch( vstr )
-            !------------------------------------------------------
-            !
             !  subroutine to calculate leps-type stretching potential and its
             !  derivatives
-            !
             implicit none
-            double precision :: ach1, ach2, achdc, achdh, achdx, arga1, arga2, dt, e1, e3, expterm, factj, rav1, rav2, vcc, vj, vjbh, vjc1b, vjc1h, vjc2b, vjc2h, vq, vqbh, vqc1b, vqc1h, vqc2b, vqc2h, vstr
+            double precision :: ach1, ach2, achdc(3), achdh(4,3), achdx(3), arga1, arga2, dt, e1, e3, expterm, factj(4), rav1, rav2, &
+                & vcc, vj(3), vjbh(6), vjc1b, vjc1h(3), vjc2b, vjc2h(3), vq(3), vqbh(6), vqc1b, vqc1h(3), vqc2b, vqc2h(3), vstr
             integer          :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
-            dimension vqbh(6), vjbh(6), vq(3), vj(3), achdc(3), achdh(4,3), achdx(3), factj(4), vqc1h(3), vqc2h(3), vjc1h(3), vjc2h(3)
             !      write(*,*) potcm_nnc1,potcm_nnc2,potcm_nnb
             !      write(*,*) potcm_r0c1hr,potcm_r0c1hp,potcm_w3,potcm_w4,potcm_d1c1h,potcm_d3c1h
             !      write(*,*) potcm_a1c1h,potcm_b1c1h,potcm_c1c1h
@@ -1072,23 +937,16 @@ module chempotpy_c2h6h_vbmm_pes
             !      write(*,*) potcm_v3,potcm_w1,potcm_w2
             !      write(*,*) potcm_a1s,potcm_b1s,potcm_a2s,potcm_b2s
             !      write(*,*) potcm_a1scc,potcm_b1scc,potcm_a2scc,potcm_b2scc,potcm_a3scc,potcm_b3scc
-            !
             !  calculate avergage bond length for the methane moiety
-            !
             !C       rav=(bonds2_rc1h(1)+bonds2_rc1h(2)+bonds2_rc1h(3)+bonds2_rc2h(1)+bonds2_rc2h(2)+bonds2_rc2h(3))/6.0d0
             rav1 = (bonds2_rc1h(1)+bonds2_rc1h(2)+bonds2_rc1h(3))/3.0d0
             rav2 = (bonds2_rc2h(1)+bonds2_rc2h(2)+bonds2_rc2h(3))/3.0d0
             !      write(*,*) 'rav1',rav1,'rav2', rav2
-            !
             !  initialise:
-            !
             vstr = 0.0d0
-            !
             !  ach:
-            !
             !  nb: in double precision tanh(19.0d0)=1.0d0 and we put the if statemen
             !  in to avoid overflow/underflow errors
-            !
             !     write(*,*) 'bonds_r0c1h',bonds_r0c1h,'bonds_r0c2h',bonds_r0c2h
             arga1 = potcm_c1c1h*(rav1-bonds_r0c1h)
             arga2 = potcm_c1c2h*(rav2-bonds_r0c2h)
@@ -1104,24 +962,20 @@ module chempotpy_c2h6h_vbmm_pes
                 ach2 = potcm_a1c2h+potcm_b1c2h
             endif
             !      write(6,*) bonds_r0c1h, rav1, bonds_r0c2h, rav2, ach1, ach2
-            !
             !      argac=stret1_c1cc*(potcm_rcc-potcm_r0cc)
             !      if(argac.lt.19.0d0)then
             !        potcm_acc=stret1_a1cc+stret1_b1cc*(tanh(argac)+1.0d0)*0.5d0
             !      else
             !        potcm_acc=stret1_a1cc+stret1_b1cc
             !      endif
-            !
             !  calculate singlet: e1, triplet: e3 energies and vq and vj
             !  terms for each bond
-            !
             e1    = potcm_d1cb*(exp(-2.0d0*potcm_acb*(bonds3_rc1b-potcm_r0cb))-2.0d0*exp(-potcm_acb*(bonds3_rc1b- &
                 & potcm_r0cb)))
             e3    = potcm_d3cb*(exp(-2.0d0*potcm_acb*(bonds3_rc1b-potcm_r0cb))+2.0d0*exp(-potcm_acb*(bonds3_rc1b- &
                 & potcm_r0cb)))
             vqc1b = (e1+e3)*0.5d0
             vjc1b = (e1-e3)*0.5d0
-            !
             e1    = potcm_d1cb*(exp(-2.0d0*potcm_acb*(bonds3_rc2b-potcm_r0cb))-2.0d0*exp(-potcm_acb*(bonds3_rc2b- &
                 & potcm_r0cb)))
             e3    = potcm_d3cb*(exp(-2.0d0*potcm_acb*(bonds3_rc2b-potcm_r0cb))+2.0d0*exp(-potcm_acb*(bonds3_rc2b- &
@@ -1129,12 +983,10 @@ module chempotpy_c2h6h_vbmm_pes
             vqc2b = (e1+e3)*0.5d0
             vjc2b = (e1-e3)*0.5d0
             !     write(*,*) 'vqc1b',vqc1b,'vqc2b',vqc2b,'vjc1b',vjc1b,'vjc2b',vjc2b
-            !
             !      e1=potcm_d1cc*(exp(-2.0d0*potcm_acc*(potcm_rcc-potcm_r0cc))-2.0d0*exp(-potcm_acc*(potcm_rcc-potcm_r0cc)))
             !      e3=d3cc*(exp(-2.0d0*potcm_acc*(potcm_rcc-potcm_r0cc))+2.0d0*exp(-potcm_acc*(potcm_rcc-potcm_r0cc)))
             !      vqcc=(e1+e3)*0.5d0
             !      vjcc=(e1-e3)*0.5d0
-            !
             do i=1, 3
                 e1       = potcm_d1c1h*(exp(-2.0d0*ach1*(bonds2_rc1h(i)-bonds_r0c1h)) -2.0d0*exp(-ach1* &
                     & (bonds2_rc1h(i)-bonds_r0c1h)))
@@ -1142,7 +994,6 @@ module chempotpy_c2h6h_vbmm_pes
                     & (bonds2_rc1h(i)-bonds_r0c1h)))
                 vqc1h(i) = (e1+e3)*0.5d0
                 vjc1h(i) = (e1-e3)*0.5d0
-                !
                 e1       = potcm_d1c2h*(exp(-2.0d0*ach2*(bonds2_rc2h(i)-bonds_r0c2h)) -2.0d0*exp(-ach2* &
                     & (bonds2_rc2h(i)-bonds_r0c2h)))
                 e3       = potcm_d3c2h*(exp(-2.0d0*ach2*(bonds2_rc2h(i)-bonds_r0c2h)) +2.0d0*exp(-ach2* &
@@ -1150,7 +1001,6 @@ module chempotpy_c2h6h_vbmm_pes
                 vqc2h(i) = (e1+e3)*0.5d0
                 vjc2h(i) = (e1-e3)*0.5d0
             enddo
-            !
             do i=1, 6
                 e1      = potcm_d1hh*(exp(-2.0d0*potcm_ahh*(bonds2_rbh(i)-potcm_r0hh)) -2.0d0*exp(-potcm_ahh* &
                     & (bonds2_rbh(i)-potcm_r0hh)))
@@ -1159,75 +1009,49 @@ module chempotpy_c2h6h_vbmm_pes
                 vqbh(i) = (e1+e3)*0.5d0
                 vjbh(i) = (e1-e3)*0.5d0
             enddo
-            !
             !  calculate 3 body potential
-            !
             do i=1, 3
                 vq(i) = vqc1h(i)+vqc1b+vqbh(i)
                 vj(i) = -sqrt(((vjc1h(i)-vjc1b)**2+(vjc1b-vjbh(i))**2 +(vjbh(i)-vjc1h(i))**2)*0.5d0)
                 vstr  = vstr+vq(i)+vj(i)
             enddo
-            !
-            !
             do i=1, 3
                 vq(i) = vqc2h(i)+vqc2b+vqbh(i+3)
                 vj(i) = -sqrt(((vjc2h(i)-vjc2b)**2+(vjc2b-vjbh(i+3))**2 +(vjbh(i+3)-vjc2h(i))**2)*0.5d0)
                 vstr  = vstr+vq(i)+vj(i)
             enddo
-            !
             ! CRD 2012 potencial morse para el enlace C-C
-            !
             dt      = (potcm_rcc-potcm_r0cc)
             expterm = exp(-potcm_acc*dt)
             vcc     = potcm_d1cc*(1.0d0-expterm)**2.0d0
             vstr    = vstr + vcc
-            !
         end subroutine stretch
+
         !> @brief Evaluate opbend for the C2H6H_VBMM potential.
         subroutine opbend( vop )
-            !------------------------------------------------------
-            !
             !  subroutine calculates symmetrized vop potential and derivatives
-            !
             implicit none
-            double precision :: a, argd, axb, b, c, sum2, sum4, sumd2, sumd4, vop
-            integer          :: i, in, j, k, l
+            double precision :: a(3), argd(8), axb(3), b(3), c(8,3), sum2, sum4, sumd2(8), sumd4(8), vop
+            integer          :: i, in(3), j, k, l
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
             double precision :: norma
-            dimension sumd2(8), sumd4(8)
-            dimension in(3), a(3), b(3), axb(3), c(8,3), argd(8)
-            !
-            !
             vop = 0.0d0
-            !
             !  calculate force constants and their derivatives
-            !
             call opforce
-            !
             !  calculate out-of-plane angle and derivatives
-            !
             ! CRD 2012 cambiamos el bucle a 3 para no incluir que salga el C2
-            !
             !      do i=1,4
             i = 4
-            !
             !      do i=1,3
             j = i+1
             if( j .gt. 4 ) j=j-4
@@ -1235,7 +1059,6 @@ module chempotpy_c2h6h_vbmm_pes
             if( k .gt. 4 ) k=k-4
             l = k+1
             if( l .gt. 4 ) l=l-4
-            !
             call calcdelta1(i, j, k, l, sum2, sum4)
             sumd2(i) = sum2
             sumd4(i) = sum4
@@ -1244,12 +1067,9 @@ module chempotpy_c2h6h_vbmm_pes
             vop = vop+delta1_fdelta(i)*sumd2(i)+delta1_hdelta(i)*sumd4(i)
             !      write(*,*) i,j,k,l,sumd2(i),delta1_fdelta(i),sumd4(i),delta1_hdelta(i)
             !      enddo
-            !
             ! CRD 2012 cambiamos el bucle a 3 para no incluir que salga el C1
-            !
             !      do i=5,8
             i = 8
-            !
             !      do i=4,6
             j = i+1
             if( j .gt. 8 ) j=j-4
@@ -1257,7 +1077,6 @@ module chempotpy_c2h6h_vbmm_pes
             if( k .gt. 8 ) k=k-4
             l = k+1
             if( l .gt. 8 ) l=l-4
-            !
             call calcdelta2(i, j, k, l, sum2, sum4)
             sumd2(i) = sum2
             sumd4(i) = sum4
@@ -1266,56 +1085,37 @@ module chempotpy_c2h6h_vbmm_pes
             vop = vop+delta1_fdelta(i)*sumd2(i)+delta1_hdelta(i)*sumd4(i)
             !      write(*,*) i,j,k,l,sumd2(i),delta1_fdelta(i),sumd4(i),delta1_hdelta(i)
             !      enddo
-            !
         end subroutine opbend
+
         !> @brief Evaluate ipbend for the C2H6H_VBMM potential.
         subroutine ipbend( vip )
-            !------------------------------------------------------
-            !
             !  subroutine calculates symmetrised in plane bend term
             !  and its derivatives
-            !
             implicit none
-            double precision :: costh, dth, theta, vip
+            double precision :: costh(8,8), dth(8,8), theta(8,8), vip
             integer          :: i, j
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
-            dimension costh(8,8), theta(8,8), dth(8,8)
-            !
             !  initialise
-            !
             vip = 0.0d0
-            !
             !  calculate force constants: force1_fk0(i,j), force1_f1(i)
             !  and derivatives wrt rch(k) and bonds2_rbh(k): force1_dfdc(i,j,k), force1_dfdh(i,j,k)
-            !
             call ipforce
             !      do i=1,8
             !      write(*,*) force1_f1(i)
             !      enddo
             !      write(*,*) 'fin force1_f1(i)'
-            !
             !  calculate theta(i,j) and in plane bend potential
-            !
-            !
             ! bucle para el c1
-            !
             do i=1, 3
                 do j=i+1, 4
                     if( j .lt. 4.0 )then
@@ -1345,9 +1145,7 @@ module chempotpy_c2h6h_vbmm_pes
                     !      write(*,*) 'costh',i,j,'=',costh(i,j)
                 enddo
             enddo
-            !
             ! bucle para el c2 para los theta 5,6,7,8
-            !
             do i=1, 3
                 do j=i+1, 4
                     if( j .lt. 4.0 )then
@@ -1370,58 +1168,38 @@ module chempotpy_c2h6h_vbmm_pes
                     endif
                 enddo
             enddo
-            !
         end subroutine ipbend
+
         !> @brief Evaluate calcdelta1 for the C2H6H_VBMM potential.
         subroutine calcdelta1( i, j, k, l, sum2, sum4 )
-            !------------------------------------------------------
-            !
             !  subroutine calculates out of plane angle delta, loops
             !  through delta(i,j), delta(i,k), delta(i,l)
-            !
             !   also calculates the derivatives wrt delta
-            !
             implicit none
-            double precision :: a, argd, atemp2, axb, b, c, cdot, daxb, delta, sum2, sum4
-            integer          :: i, ii, in, ind, j, k, l
+            double precision :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
+            integer          :: i, ii, in(3), ind, j, k, l
             double precision :: norma
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
-            dimension delta(8), in(3), a(3), b(3), axb(3), c(8,3), argd(8), daxb(8,3,3), cdot(8,3,3), atemp2(3)
-            !
             !  initialise
-            !
-            sum2 = 0.0d0
-            sum4 = 0.0d0
-            !
+            sum2 = 0.0d0; sum4 = 0.0d0
             !  set j,k,l indices
-            !
             in(1) = j
             in(2) = k
             in(3) = l
-            !
             ! CRD 2005 incluimos bucles if para asegurar que siempre
             ! que una de los valores j, k o l sea 4 las coordenadas
             ! corresponden al atomo nuevo.
-            !
             !  vector a is rk-rj, vector b is rl-rj
-            !
             if( j .eq. 4 )then
                 do ind=1, 3
                     a(ind) = qpdot_q(ndx_nh(k,ind))-qpdot_q(ndx2_nc2(ind))
@@ -1434,7 +1212,6 @@ module chempotpy_c2h6h_vbmm_pes
                 norma  = sqrt(norma)
             else
             endif
-            !
             if( k .eq. 4 )then
                 do ind=1, 3
                     a(ind) = qpdot_q(ndx2_nc2(ind))-qpdot_q(ndx_nh(j,ind))
@@ -1447,7 +1224,6 @@ module chempotpy_c2h6h_vbmm_pes
                 norma  = sqrt(norma)
             else
             endif
-            !
             if( l .eq. 4 )then
                 do ind=1, 3
                     a(ind) = qpdot_q(ndx_nh(k,ind))-qpdot_q(ndx_nh(j,ind))
@@ -1456,19 +1232,15 @@ module chempotpy_c2h6h_vbmm_pes
                 axb(1) = a(2)*b(3)-a(3)*b(2)
                 axb(2) = a(3)*b(1)-a(1)*b(3)
                 axb(3) = a(1)*b(2)-a(2)*b(1)
-                !
                 ! modificacion para que hiciese vxu
                 !      axb(1)=b(2)*a(3)-b(3)*a(2)
                 !      axb(2)=a(1)*b(3)-b(1)*a(3)
                 !      axb(3)=b(1)*a(2)-a(1)*b(2)
-                !
                 norma = axb(1)*axb(1)+axb(2)*axb(2)+axb(3)*axb(3)
                 norma = sqrt(norma)
             else
             endif
-            !
             ! CRD 2012 eliminamos porque seria la salida del C2
-            !
             if( k .lt. 4.and.j .lt. 4.and.l .lt. 4 )then
                 do ind=1, 3
                     a(ind) = qpdot_q(ndx_nh(k,ind))-qpdot_q(ndx_nh(j,ind))
@@ -1482,9 +1254,7 @@ module chempotpy_c2h6h_vbmm_pes
                 !      write(*,*) 'norma=',norma
             else
             endif
-            !
             !  c is position vector of h(ii): calculate c(j),c(k),c(l)
-            !
             do ii=1, 3
                 if( in(ii) .eq. 4 )then
                     do ind=1, 3
@@ -1497,9 +1267,7 @@ module chempotpy_c2h6h_vbmm_pes
                     enddo
                 endif
             enddo
-            !
             !  argd is the dot product axb dot c
-            !
             do ii=1, 3
                 argd(in(ii)) = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
                 argd(in(ii)) = argd(in(ii))/norma
@@ -1515,61 +1283,41 @@ module chempotpy_c2h6h_vbmm_pes
                 !      write(*,*) 'calcdelta1 sum2', sum2
                 !      write(*,*) 'calcdelta1 sum4', sum4
             enddo
-            !
         end subroutine calcdelta1
+
         !> @brief Evaluate calcdelta2 for the C2H6H_VBMM potential.
         subroutine calcdelta2( i, j, k, l, sum2, sum4 )
-            !------------------------------------------------------
-            !
             !  subroutine calculates out of plane angle delta, loops
             !  through delta(i,j), delta(i,k), delta(i,l)
-            !
             !   also calculates the derivatives wrt delta
-            !
             implicit none
-            double precision :: a, argd, atemp2, axb, b, c, cdot, daxb, delta, sum2, sum4
-            integer          :: i, ii, in, ind, j, k, l
+            double precision :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
+            integer          :: i, ii, in(3), ind, j, k, l
             double precision :: norma
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
-            dimension delta(8), in(3), a(3), b(3), axb(3), c(8,3), argd(8), daxb(8,3,3), cdot(8,3,3), atemp2(3)
-            !
             !  initialise
-            !
-            sum2 = 0.0d0
-            sum4 = 0.0d0
-            !
+            sum2 = 0.0d0; sum4 = 0.0d0
             !  set j,k,l indices
-            !
             !      in(1)=j
             !      in(2)=k
             !      in(3)=l
             in(1) = 4
             in(2) = 5
             in(3) = 6
-            !
             ! CRD 2005 incluimos bucles if para asegurar que siempre
             ! que una de los valores j, k o l sea 4 las coordenadas
             ! corresponden al atomo nuevo.
-            !
             !  vector a is rk-rj, vector b is rl-rj
-            !
             if( j .eq. 8 )then
                 do ind=1, 3
                     a(ind) = qpdot_q(ndx_nh(k,ind))-qpdot_q(ndx2_nc1(ind))
@@ -1582,7 +1330,6 @@ module chempotpy_c2h6h_vbmm_pes
                 norma  = sqrt(norma)
             else
             endif
-            !
             if( k .eq. 8 )then
                 do ind=1, 3
                     a(ind) = qpdot_q(ndx2_nc1(ind))-qpdot_q(ndx_nh(j,ind))
@@ -1595,7 +1342,6 @@ module chempotpy_c2h6h_vbmm_pes
                 norma  = sqrt(norma)
             else
             endif
-            !
             if( l .eq. 8 )then
                 do ind=1, 3
                     a(ind) = qpdot_q(ndx_nh(k,ind))-qpdot_q(ndx_nh(j,ind))
@@ -1608,9 +1354,7 @@ module chempotpy_c2h6h_vbmm_pes
                 norma  = sqrt(norma)
             else
             endif
-            !
             ! CRD 2012 eliminamos porque seria la salida del C1
-            !
             if( k .lt. 8.and.j .lt. 8.and.l .lt. 8 )then
                 do ind=1, 3
                     a(ind) = qpdot_q(ndx_nh(k,ind))-qpdot_q(ndx_nh(j,ind))
@@ -1624,9 +1368,7 @@ module chempotpy_c2h6h_vbmm_pes
                 !      write(*,*) 'calcdelta2 norma',norma
             else
             endif
-            !
             !  c is position vector of h(ii): calculate c(j),c(k),c(l)
-            !
             do ii=1, 3
                 if( in(ii) .eq. 4 )then
                     do ind=1, 3
@@ -1638,9 +1380,7 @@ module chempotpy_c2h6h_vbmm_pes
                     enddo
                 endif
             enddo
-            !
             !  argd is the dot product axb dot c
-            !
             do ii=1, 3
                 argd(in(ii)) = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
                 argd(in(ii)) = argd(in(ii))/norma
@@ -1654,40 +1394,27 @@ module chempotpy_c2h6h_vbmm_pes
                 sum2          = sum2+delta(in(ii))**2
                 sum4          = sum4+delta(in(ii))**4
             enddo
-            !
         end subroutine calcdelta2
+
         !> @brief Evaluate opforce for the C2H6H_VBMM potential.
         subroutine opforce
-            !------------------------------------------------------
-            !
             !  calculates the out-of-plane bending force constants
             !  and their derivatives
-            !
             implicit none
-            double precision :: switch
+            double precision :: switch(8)
             integer          :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
-            dimension switch(8)
-            !
             !  calculate switching functions:
-            !
             switch(1) = (1.0d0-op1_s3(1))*op1_s3(2)*op1_s3(3)*op1_s3(4)
             switch(2) = (1.0d0-op1_s3(2))*op1_s3(3)*op1_s3(4)*op1_s3(1)
             switch(3) = (1.0d0-op1_s3(3))*op1_s3(4)*op1_s3(1)*op1_s3(2)
@@ -1700,161 +1427,116 @@ module chempotpy_c2h6h_vbmm_pes
             !       write(*,*) 'switch',i,'=',switch(i)
             !      enddo
             !       write(*,*) 'pasa'
-            !
             !  calculate the force constants
-            !
             do i=1, 8
                 delta1_fdelta(i) = switch(i)*potcm_fch3
                 delta1_hdelta(i) = switch(i)*potcm_hch3
             enddo
-            !
         end subroutine opforce
+
         !> @brief Evaluate ipforce for the C2H6H_VBMM potential.
         subroutine ipforce
-            !------------------------------------------------------
-            !
             !  calculates the symmetrised in plane bend force constants and
             !  all partial derivatives involving them
-            !
             implicit none
             double precision :: a1, a2, arga1, arga2, f0, f2
             integer          :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
             !  set force constant at asymptotes
-            !
-            f0 = potcm_fkinf+potcm_ak
-            f2 = potcm_fkinf
-            !
+            f0              = potcm_fkinf+potcm_ak
+            f2              = potcm_fkinf
             force1_fk0(1,2) = f0+f0*(ip1_s1(1)*ip1_s1(2)-1.0d0)+(f0-f2)*(ip1_s2(3)*ip1_s2(4)-1.0d0)
             force1_fk0(1,3) = f0+f0*(ip1_s1(1)*ip1_s1(3)-1.0d0)+(f0-f2)*(ip1_s2(2)*ip1_s2(4)-1.0d0)
             force1_fk0(1,4) = f0+f0*(ip1_s1(1)*ip1_s1(4)-1.0d0)+(f0-f2)*(ip1_s2(2)*ip1_s2(3)-1.0d0)
             force1_fk0(2,3) = f0+f0*(ip1_s1(2)*ip1_s1(3)-1.0d0)+(f0-f2)*(ip1_s2(1)*ip1_s2(4)-1.0d0)
             force1_fk0(2,4) = f0+f0*(ip1_s1(2)*ip1_s1(4)-1.0d0)+(f0-f2)*(ip1_s2(1)*ip1_s2(3)-1.0d0)
             force1_fk0(3,4) = f0+f0*(ip1_s1(3)*ip1_s1(4)-1.0d0)+(f0-f2)*(ip1_s2(1)*ip1_s2(2)-1.0d0)
-            !
             force1_fk0(5,6) = f0+f0*(ip1_s1(5)*ip1_s1(6)-1.0d0)+(f0-f2)*(ip1_s2(7)*ip1_s2(8)-1.0d0)
             force1_fk0(5,7) = f0+f0*(ip1_s1(5)*ip1_s1(7)-1.0d0)+(f0-f2)*(ip1_s2(6)*ip1_s2(8)-1.0d0)
             force1_fk0(5,8) = f0+f0*(ip1_s1(5)*ip1_s1(8)-1.0d0)+(f0-f2)*(ip1_s2(6)*ip1_s2(7)-1.0d0)
             force1_fk0(6,7) = f0+f0*(ip1_s1(6)*ip1_s1(7)-1.0d0)+(f0-f2)*(ip1_s2(5)*ip1_s2(8)-1.0d0)
             force1_fk0(6,8) = f0+f0*(ip1_s1(6)*ip1_s1(8)-1.0d0)+(f0-f2)*(ip1_s2(5)*ip1_s2(7)-1.0d0)
             force1_fk0(7,8) = f0+f0*(ip1_s1(7)*ip1_s1(8)-1.0d0)+(f0-f2)*(ip1_s2(5)*ip1_s2(6)-1.0d0)
-            !
             ! force1_f1 para los h del c1
-            !
             do i=1, 3
-                !
                 !  calc derivatives of force1_fk0 wrt each of the rch(i) bonds
                 !  calculate the terms force1_f1(i)
-                !
                 arga1        = potcm_aa1*bonds2_rbh(i)*bonds2_rbh(i)
                 arga2        = potcm_aa4*(bonds2_rbh(i)-potcm_r0hh)*(bonds2_rbh(i)-potcm_r0hh)
                 a1           = 1.0d0-exp(-arga1)
                 a2           = potcm_aa2+potcm_aa3*exp(-arga2)
                 force1_f1(i) = a1*exp(-a2*(bonds2_rc1h(i)-bonds_r0c1h)**2)
             enddo
-            !
             ! force1_f1 para el c2
-            !
             ! CRD 2012 eliminamos el calculo de potcm_a1c y potcm_a2c pq es constante
             ! lo incluimos en el CONST
-            !
             !        arga1c=potcm_aa1*rbc*rbc
             !        arga2c=potcm_aa4*(rbc-potcm_r0cb)*(rbc-potcm_r0cb)
             !        potcm_a1c=1.0d0-exp(-arga1c)
             !        potcm_a2c=potcm_aa2+potcm_aa3*exp(-arga2c)
             force1_f1(4) = potcm_a1c*exp(-potcm_a2c*(potcm_rcc-potcm_r0cc)**2)
             force1_f1(8) = force1_f1(4)
-            !
             ! force1_f1 para los h del c2
-            !
             do i=5, 7
-                !
                 !  calc derivatives of force1_fk0 wrt each of the rch(i) bonds
                 !  calculate the terms force1_f1(i)
-                !
                 arga1        = potcm_aa1*bonds2_rbh(i-1)*bonds2_rbh(i-1)
                 arga2        = potcm_aa4*(bonds2_rbh(i-1)-potcm_r0hh)*(bonds2_rbh(i-1)-potcm_r0hh)
                 a1           = 1.0d0-exp(-arga1)
                 a2           = potcm_aa2+potcm_aa3*exp(-arga2)
                 force1_f1(i) = a1*exp(-a2*(bonds2_rc2h(i-4)-bonds_r0c2h)**2)
             enddo
-            !
             ! force1_f1 para el c2
-            !
             ! CRD 2012 eliminamos el calculo de potcm_a1c y potcm_a2c pq es constante
             ! lo incluimos en el CONST
-            !
             !        arga1c=potcm_aa1*rcb*rcb
             !        arga2c=potcm_aa4*(rcb-potcm_r0cb)*(rcb-potcm_r0cb)
             !        potcm_a1c=1.0d0-exp(-arga1c)
             !        potcm_a2c=potcm_aa2+potcm_aa3*exp(-arga2c)
             !        force1_f1(8)=potcm_a1c*exp(-potcm_a2c*(potcm_rcc-potcm_r0cc)**2)
-            !
         end subroutine ipforce
+
         !> @brief Evaluate switchf for the C2H6H_VBMM potential.
         subroutine switchf
-            !------------------------------------------------------
-            !
             !  calculates switching functions: op1_s3,switch1_sphi,switch1_stheta
             !  and their derivatives op1_ds3,switch1_dsphi,switch1_dstheta
-            !
             implicit none
             double precision :: argmax, args1, args2, args3, argsc1, argsc2, argsc3, argsphi, argsphic, argstheta, argsthetac
             integer          :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
             !  nb remember that integration units are:
             !  energy in   1.0d+05 j/mol
             !  time in     1.0d-14 s
-            !
             ! original     potcm_a1s=1.5313681d-7
             !      potcm_a1s=1.5313681d-8
             !      potcm_b1s=-4.6696246d0
             ! original      potcm_a2s=1.0147402d-7
             !      potcm_a2s=1.0147402d-8
             !      potcm_b2s=-12.363798d0
-            !
             !  use double precision criterion:
-            !
             !  tanh(19.0d0)=1.0d0
-            !
             argmax = 19.0d0
-            !
             !  calculate ip1_s1 and ip1_ds1
-            !
             do i=1, 3
                 args1 = potcm_a1s*(bonds2_rc1h(i)-bonds_r0c1h)*(bonds2_rc1h(i)-potcm_b1s)**8
                 if( args1 .lt. argmax )then
@@ -1863,7 +1545,6 @@ module chempotpy_c2h6h_vbmm_pes
                     ip1_s1(i) = 0.0d0
                 endif
             enddo
-            !
             do i=1, 3
                 args1 = potcm_a1s*(bonds2_rc2h(i)-bonds_r0c2h)*(bonds2_rc2h(i)-potcm_b1s)**8
                 if( args1 .lt. argmax )then
@@ -1872,9 +1553,7 @@ module chempotpy_c2h6h_vbmm_pes
                     ip1_s1(i+4) = 0.0d0
                 endif
             enddo
-            !
             ! CRD 2012 todos los S de los carbonos son 1
-            !
             !      ip1_s1(4)=1.0d0
             !      ip1_s1(8)=1.0d0
             argsc1 = potcm_a1scc*(potcm_rcc-potcm_r0cc)*(potcm_rcc-potcm_b1scc)**8
@@ -1885,9 +1564,7 @@ module chempotpy_c2h6h_vbmm_pes
                 ip1_s1(4) = 0.0d0
                 ip1_s1(8) = ip1_s1(4)
             endif
-            !
             !  calculate ip1_s2 and ip1_ds2
-            !
             do i=1, 3
                 args2 = potcm_a2s*(bonds2_rc1h(i)-bonds_r0c1h)*(bonds2_rc1h(i)-potcm_b2s)**6
                 if( args2 .lt. argmax )then
@@ -1896,7 +1573,6 @@ module chempotpy_c2h6h_vbmm_pes
                     ip1_s2(i) = 0.0d0
                 endif
             enddo
-            !
             do i=1, 3
                 args2 = potcm_a2s*(bonds2_rc2h(i)-bonds_r0c2h)*(bonds2_rc2h(i)-potcm_b2s)**6
                 if( args2 .lt. argmax )then
@@ -1905,11 +1581,8 @@ module chempotpy_c2h6h_vbmm_pes
                     ip1_s2(i+4) = 0.0d0
                 endif
             enddo
-            !
             ! CRD 2005 ip1_s2(4)for the new atom
-            !
             ! CRD 2012 todos los S de los carbonos son 1
-            !
             !      ip1_s2(4)=1.0d0
             !      ip1_s2(8)=1.0d0
             argsc2 = potcm_a2scc*(potcm_rcc-potcm_r0cc)*(potcm_rcc-potcm_b2scc)**6
@@ -1920,9 +1593,7 @@ module chempotpy_c2h6h_vbmm_pes
                 ip1_s2(4) = 0.0d0
                 ip1_s2(8) = ip1_s2(4)
             endif
-            !
             !  calculate op1_s3 and op1_ds3
-            !
             do i=1, 3
                 args3 = potcm_a3s*(bonds2_rc1h(i)-bonds_r0c1h)*(bonds2_rc1h(i)-potcm_b3s)**2
                 if( args3 .lt. argmax )then
@@ -1931,7 +1602,6 @@ module chempotpy_c2h6h_vbmm_pes
                     op1_s3(i) = 0.0d0
                 endif
             enddo
-            !
             do i=1, 3
                 args3 = potcm_a3s*(bonds2_rc2h(i)-bonds_r0c2h)*(bonds2_rc2h(i)-potcm_b3s)**2
                 if( args3 .lt. argmax )then
@@ -1940,11 +1610,8 @@ module chempotpy_c2h6h_vbmm_pes
                     op1_s3(i+4) = 0.0d0
                 endif
             enddo
-            !
             ! CRD 2005 op1_s3(4) for the new atom
-            !
             ! CRD 2012 todos los S de los carbonos son 1
-            !
             !      op1_s3(4)=1.0d0
             !      op1_s3(8)=1.0d0
             argsc3 = potcm_a3scc*(potcm_rcc-potcm_r0cc)*(potcm_rcc-potcm_b3scc)**2
@@ -1959,13 +1626,9 @@ module chempotpy_c2h6h_vbmm_pes
             op1_s3(4) = 1.0d0
             op1_s3(8) = 1.0d0
             ! JEG 2019 No hay cambios en las k(T) !!
-            !
-            !
             !  calculate switch1_sphi and switch1_dsphi
-            !
             !  condition here is on the bondlength rch(i)
             !  st argsphi is lt approx 19.0d0
-            !
             do i=1, 3
                 if( bonds2_rc1h(i) .lt. 3.8d0 )then
                     argsphi         = potcm_aphi*(bonds2_rc1h(i)-bonds_r0c1h)*exp(potcm_bphi*(bonds2_rc1h(i)- &
@@ -1975,7 +1638,6 @@ module chempotpy_c2h6h_vbmm_pes
                     switch1_sphi(i) = 0.0d0
                 endif
             enddo
-            !
             do i=1, 3
                 if( bonds2_rc2h(i) .lt. 3.8d0 )then
                     argsphi           = potcm_aphi*(bonds2_rc2h(i)-bonds_r0c2h)*exp(potcm_bphi*(bonds2_rc2h(i)- &
@@ -1985,9 +1647,7 @@ module chempotpy_c2h6h_vbmm_pes
                     switch1_sphi(i+4) = 0.0d0
                 endif
             enddo
-            !
             ! CRD 2012 todos los S de los carbonos son 1
-            !
             !      switch1_sphi(4)=1.0d0
             !      switch1_sphi(8)=1.0d0
             if( potcm_rcc .lt. 3.8d0 )then
@@ -1998,9 +1658,7 @@ module chempotpy_c2h6h_vbmm_pes
                 switch1_sphi(4) = 0.0d0
                 switch1_sphi(8) = switch1_sphi(4)
             endif
-            !
             !  calculate switch1_stheta and switch1_dstheta
-            !
             do i=1, 3
                 if( bonds2_rc1h(i) .lt. 3.8d0 )then
                     argstheta = potcm_atheta*(bonds2_rc1h(i)-bonds_r0c1h)*exp(potcm_btheta*(bonds2_rc1h(i)- &
@@ -2010,7 +1668,6 @@ module chempotpy_c2h6h_vbmm_pes
                     switch1_stheta(i) = 0.0d0
                 endif
             enddo
-            !
             do i=1, 3
                 if( bonds2_rc2h(i) .lt. 3.8d0 )then
                     argstheta   = potcm_atheta*(bonds2_rc2h(i)-bonds_r0c2h)*exp(potcm_btheta*(bonds2_rc2h(i)- &
@@ -2020,9 +1677,7 @@ module chempotpy_c2h6h_vbmm_pes
                     switch1_stheta(i+4) = 0.0d0
                 endif
             enddo
-            !
             ! CRD 2012 todos los S de los carbonos son 1
-            !
             !      switch1_stheta(4)=1.0d0
             !      switch1_stheta(8)=1.0d0
             if( potcm_rcc .lt. 3.8d0 )then
@@ -2034,12 +1689,11 @@ module chempotpy_c2h6h_vbmm_pes
                 switch1_stheta(8) = switch1_stheta(4)
             endif
         end subroutine switchf
+
         !> @brief Evaluate prepare_local_context for the C2H6H_VBMM potential.
         subroutine prepare_local_context
-            !
             !   N3TMMN = 3 * infocm_natoms
             !   infocm_natoms = the number of atoms represented by this potential function
-            !
             !   The variable N3TMMN is the minimum value of N3TM allowed to be
             !   passed by the calling routine for the number of cartesian
             !   coordinates needed to represent the full system represented by this
@@ -2049,37 +1703,26 @@ module chempotpy_c2h6h_vbmm_pes
             double precision :: d1bc, d3bc, fact1, fact2, vdwc2
             integer          :: i, icount, ind
             !C INCLUDE DEL VENUS
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
             integer, parameter          :: n3tmmn = 27
-            !
-            !
-            !
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            !
-            !
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
-            !
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
-            !
             !      infocm_ref(1)='J. Espinosa-Garcia and J. C. Corchado'
             !      infocm_ref(2)='J. Chem. Phys., Vol. 112, p. 5731, 2000'
-            !
             infocm_indexes(1) = 6
             infocm_indexes(2) = 6
             infocm_indexes(3) = 1
@@ -2089,43 +1732,29 @@ module chempotpy_c2h6h_vbmm_pes
             infocm_indexes(7) = 1
             infocm_indexes(8) = 1
             infocm_indexes(9) = 17
-            !
-            !
-            !
-            infocm_irctnt = 9
-            !
+            infocm_irctnt     = 9
             call potinfo
-            !
             call ancvrt
-            !
             !  calculate infocm_indexes for coordinates
-            !
             do ind=1, 3
                 icount        = ind-3
                 ndx2_nc1(ind) = 3*potcm_nnc1+icount
                 ndx2_nc2(ind) = 3*potcm_nnc2+icount
                 ndx_nhb(ind)  = 3*potcm_nnb+icount
-                !
                 do i=1, 6
                     ndx_nh(i,ind) = 3*ndx2_nnh(i)+icount
                 enddo
             enddo
-            !
             !  convert to appropriate units:
-            !
             !  From:
-            !
             !  kcal/mol
             !  mdyn A-1        -> 1.0d+05 j/mol...
             !  mdyn A rad-1
-            !
             !  To
-            !
             !  energy   in 1.0d+05 j/mol
             !  distance in 1.0d-10 m
             !  angles   in radians
             !  mass     in amu
-            !
             fact1       = 0.041840d0
             fact2       = 6.022045d0
             stret1_d1ch = stret1_d1ch*fact1
@@ -2146,14 +1775,13 @@ module chempotpy_c2h6h_vbmm_pes
             potcm_hch3  = potcm_hch3*fact2
             potcm_fkinf = potcm_fkinf*fact2
             potcm_ak    = potcm_ak*fact2
-            !
             potcm_a1s   = potcm_a1s*1.d-8
             potcm_a2s   = potcm_a2s*1.d-8
             potcm_a1scc = potcm_a1scc*1.d-8
             potcm_a2scc = potcm_a2scc*1.d-8
             vdwc2       = vdwc2*1.d+4
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POTINFO for the C2H6H_VBMM potential.
         subroutine potinfo
             implicit none
@@ -2247,22 +1875,14 @@ module chempotpy_c2h6h_vbmm_pes
                     '*-1/ANGSTROM'',//)')
             endif
         end subroutine potinfo
+
         !> @brief Evaluate ANCVRT for the C2H6H_VBMM potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -2279,6 +1899,13 @@ module chempotpy_c2h6h_vbmm_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -2494,13 +2121,13 @@ module chempotpy_c2h6h_vbmm_pes
             if( usricm_nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( usricm_nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             utilcm_cnvrtd  = 1.d0
@@ -2509,13 +2136,13 @@ module chempotpy_c2h6h_vbmm_pes
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 utilcm_cnvrte = utilcm_cnvrte*htoev
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokcal
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 utilcm_cnvrte = utilcm_cnvrte*htowave
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokj
             endif
             utilcm_cnvrtde = utilcm_cnvrte/utilcm_cnvrtd
@@ -2526,6 +2153,7 @@ module chempotpy_c2h6h_vbmm_pes
             utilcm_ireorder = 0
             if( isum .ne. 0 ) utilcm_ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the C2H6H_VBMM potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -2537,6 +2165,7 @@ module chempotpy_c2h6h_vbmm_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(usricm_cart, usricm_nulbl, infocm_natoms, utilcm_cnvrtd, utilcm_ireorder == 1, infocm_cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the C2H6H_VBMM potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -2553,6 +2182,7 @@ module chempotpy_c2h6h_vbmm_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the C2H6H_VBMM potential.
         subroutine eunitzero
             implicit none
@@ -2574,16 +2204,18 @@ module chempotpy_c2h6h_vbmm_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the C2H6H_VBMM potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -2605,7 +2237,7 @@ module chempotpy_c2h6h_vbmm_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 2 )then
+            elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
                     utilcm_dgscartnu(i,1) = 0.d0
                     utilcm_dgscartnu(i,2) = 0.d0
@@ -2627,7 +2259,7 @@ module chempotpy_c2h6h_vbmm_pes
                     do j = 1, infocm_natoms
                         if( j .lt. i )then
                             m1 = infocm_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -2646,7 +2278,7 @@ module chempotpy_c2h6h_vbmm_pes
                                 utilcm_descartnu(i,2,j1) = utilcm_descartnu(i,2,j1) + termy*y
                                 utilcm_descartnu(i,3,j1) = utilcm_descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( utilcm_ksoffd .gt. 0 )then
+                        elseif( utilcm_ksoffd .gt. 0 )then
                             do j2=utilcm_ksoffd, utilcm_keoffd
                                 y                        = pt5cm_deijdr(m1,j2)
                                 utilcm_dijcartnu(i,1,j2) = utilcm_dijcartnu(i,1,j2) + termx*y
@@ -2656,7 +2288,7 @@ module chempotpy_c2h6h_vbmm_pes
                         endif
                     enddo
                 enddo
-            else if( infocm_icartr .eq. 3 )then
+            elseif( infocm_icartr .eq. 3 )then
                 do i = 1, infocm_natoms
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
@@ -2692,7 +2324,7 @@ module chempotpy_c2h6h_vbmm_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 4 )then
+            elseif( infocm_icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -2728,6 +2360,7 @@ module chempotpy_c2h6h_vbmm_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the C2H6H_VBMM potential.
         subroutine dedcou
             implicit none
@@ -2781,7 +2414,7 @@ module chempotpy_c2h6h_vbmm_pes
     end subroutine evaluate
 end module chempotpy_c2h6h_vbmm_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose C2H6H_VBMM through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_c2h6h_vbmm_pes, only: evaluate
     implicit none

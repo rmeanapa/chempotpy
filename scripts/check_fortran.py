@@ -18,7 +18,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from chempotpy.core.registry import SurfaceSource, discover_surface_sources
-from scripts.build_pes import core_fortran_dependencies
+from scripts.build_pes import SUPPORT_SOURCES, core_fortran_dependencies
 
 
 @dataclass(frozen=True)
@@ -64,6 +64,12 @@ def compiler_command(
     )
     command.extend(
         str(path) for path in core_fortran_dependencies(source_text)
+    )
+    command.extend(
+        str(source.path.parent / support_name)
+        for support_name in SUPPORT_SOURCES.get(
+            (source.system_name, source.surface_name), ()
+        )
     )
     command.append(str(source.path))
     return command

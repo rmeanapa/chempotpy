@@ -69,7 +69,7 @@ subroutine getpot( cood, v, path )
     x3 = x2*z2
     if( x .ge. 10 )then
         s = 1.0
-    else if( x .le. 8 )then
+    elseif( x .le. 8 )then
         s = 0.0d0
     else
         s = 10*x3-15*x3*z2+6*x3*x2
@@ -193,10 +193,10 @@ function pothco( rhc, rco, rcos, istate )
         if( istate .eq. 0 )then
             i1 = 1                         ! 1. Flaeche in Datei (Unit 10).
             i2 = 2                         ! letzte Flaeche     "           .
-        else if( istate .eq. -1 )then
+        elseif( istate .eq. -1 )then
             i1 = 1                         ! 1. Flaeche in Datei (Unit 10).
             i2 = 1                         ! letzte Flaeche        "        .
-        else if( istate .eq. -2 )then
+        elseif( istate .eq. -2 )then
             i1 = 2                         ! 1. Flaeche in Datei (Unit 10).
             i2 = 2                         ! letzte Flaeche        "        .
         endif
@@ -387,13 +387,15 @@ function v2ch( r )
     v2ch = -de*(1+a1*rho+a2*rho**2+a3*rho**3 )*exp(-a1*rho)
 end
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement H2CO_PIP, a potential energy surface for H2CO.
 module chempotpy_h2co_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H2CO_PIP potential energy surface for H2CO.
     subroutine evaluate( x, igrad, path, p, gradient_out, d )
         use shell,                  only: cof, coff, power, total
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -428,7 +430,7 @@ module chempotpy_h2co_pip_pes
     end subroutine evaluate
 end module chempotpy_h2co_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H2CO_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, gradient_out, d )
     use chempotpy_h2co_pip_pes, only: evaluate
     implicit none

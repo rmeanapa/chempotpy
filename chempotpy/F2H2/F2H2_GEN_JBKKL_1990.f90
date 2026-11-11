@@ -1,44 +1,41 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement F2H2_GEN_JBKKL_1990, a potential energy surface for F2H2.
 module chempotpy_f2h2_gen_jbkkl_1990_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
-    subroutine evaluate( x, igrad, path, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+
+    !> @brief Evaluate the F2H2_GEN_JBKKL_1990 potential energy surface for F2H2.
+    subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_f2h2_jbkkl_parameters, only: params_c => jbkkl_coefficients
+        use chempotpy_legacy_units,          only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
         ! number of electronic state
-        integer, parameter              :: nstates = 1
-        integer, parameter              :: natoms  = 4
-        integer, intent(in)             :: igrad
-        character(len=1024), intent(in) :: path
-        double precision, intent(in)    :: x(natoms,3)
-        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-        double precision                :: acoef_a(0:4,0:4,0:8)
-        double precision                :: consts_bo
-        double precision                :: consts_ha
-        double precision                :: consts_pc
-        double precision                :: consts_pi
-        double precision                :: consts_vl
-        double precision                :: params_c(359)
-        integer                         :: iatom, idir, istate
-        double precision                :: cartnu(natoms,3), r(6), v
-        double precision                :: rcm, r1, r2
+        integer, parameter            :: nstates = 1
+        integer, parameter            :: natoms  = 4
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out) :: d(nstates,nstates,natoms,3)
+        double precision              :: acoef_a(0:4,0:4,0:8)
+        double precision              :: consts_bo
+        double precision              :: consts_ha
+        double precision              :: consts_pc
+        double precision              :: consts_pi
+        double precision              :: consts_vl
+        integer                       :: iatom, idir, istate
+        double precision              :: cartnu(natoms,3), r(6), v
+        double precision              :: rcm, r1, r2
         !initialize
-        acoef_a  = 0.d0; consts_bo = 0.d0; consts_ha = 0.d0; consts_pc = 0.d0; consts_pi = 0.d0; consts_vl = 0.d0
-        params_c = 0.d0
-        v        = 0.d0; g = 0.d0; d = 0.d0
-        cartnu   = 0.d0
+        acoef_a = 0.d0; consts_bo = 0.d0; consts_ha = 0.d0; consts_pc = 0.d0; consts_pi = 0.d0; consts_vl = 0.d0
+        v       = 0.d0; g = 0.d0; d = 0.d0
+        cartnu  = 0.d0
         do iatom=1, natoms
             do idir=1, 3
                 cartnu(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
             enddo
         enddo
-        call bjinit(path)
         call carttor(cartnu, r)
         rcm = r(1)
         r1  = r(2)
@@ -51,7 +48,9 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
         else
             write (*, *) 'Only energy is available'
         endif
+
         contains
+
         !> @brief Evaluate CARTTOR for the F2H2_GEN_JBKKL_1990 potential.
         subroutine carttor( cartnu, r )
             implicit none
@@ -109,18 +108,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             r(5) = theta2
             r(6) = phi
         end subroutine carttor
-        !> @brief Evaluate bjinit for the F2H2_GEN_JBKKL_1990 potential.
-        subroutine bjinit( path )
-            implicit none
-            character(len=1024), intent(in) :: path
-            integer                         :: file_unit_11
-            integer                         :: i
-            character(len=1024)             :: file_path1
-            file_path1 = trim(path)//"/F2H2/bjkkl.par"
-            open(newunit=file_unit_11, file=file_path1)
-            read(file_unit_11, '(5F14.10)')(params_c(i), i=1, 359)
-            close(file_unit_11)
-        end subroutine bjinit
+
         !> @brief Evaluate trbunk for the F2H2_GEN_JBKKL_1990 potential.
         subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )
             !     subroutine trbunk transforms the surface of Bunker, Jensen, Kofran
@@ -180,56 +168,37 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !     write(65,*)v(j)
             !50   continue
         end subroutine trbunk
+
         !> @brief Evaluate THREEJ for the F2H2_GEN_JBKKL_1990 potential.
         double precision function threej( a, b, c, al, be, ga )
-            !
             !     CALCULATES WIGNER 3-J SYMBOLS USING FORMULA OF P34 OF BRINK &
             !     SATCHLER IN "ANGULAT MOMENTUM"
             !     NOTE FAKT(A)=FACT(A)/10**A
             !     A=J1,B=J2,C=J,AL=M1,BE=M2,GA=-M
-            !
-            !
             implicit none
             double precision :: a, al, b, be, c, clebsh, delta, dnew, ga, summ, term, term1, term2, term3, term4, term5, term6
             integer          :: iphase, new, newmax, newmin
-            !
             threej = 0.d0
-            !
             !     (J1+J2).GE.J AND J.GE.ABS(A-B)    -M=M1+M2    J1,J2,J.GE.0
             !     ABS(M1).LE.J1    ABS(M2).LE.J2   ABS(M).LE.J
-            !
             if( c .gt. a+b ) return
             if( c .lt. dabs(a-b) ) return
             if( a .lt. 0.d0.or.b .lt. 0.d0.or.c .lt. 0.d0 ) return
             if( a .lt. dabs(al).or.b .lt. dabs(be).or.c .lt. dabs(ga) ) return
             if( -1.d0*ga .ne. al+be ) return
-            !
-            !
             !     COMPUTE DELTA(ABC)
-            !
             delta = dsqrt(fakt(a+b-c)*fakt(a+c-b)*fakt(b+c-a)/fakt(a+b+c+1.d0))
-            !
-            !
             term1 = fakt(a+al)*fakt(a-al)
             term2 = fakt(b-be)*fakt(b+be)
             term3 = fakt(c+ga)*fakt(c-ga)
             term  = dsqrt((2.d0*c+1.d0)*term1*term2*term3)
-            !
-            !
             !     NOW COMPUTE SUMMATION TERM
-            !
             !     SUM TO GET SUMMATION IN EQ(2.34) OF BRINK AND SATCHLER.  SUM UNTIL
             !     A TERM INSIDE FACTORIAL GOES NEGATIVE.  NEW IS INDEX FOR SUMMATION
             !     .  NOW FIND WHAT THE RANGE OF NEW IS.
-            !
-            !
             newmin = idnint(dmax1((a+be-c), (b-c-al), 0.d0))
             newmax = idnint(dmin1((a-al), (b+be), (a+b-c)))
-            !
-            !
-            summ = 0.d0
-            !
-            !
+            summ   = 0.d0
             do new=newmin, newmax
                 dnew  = dfloat(new)
                 term4 = fakt(a-al-dnew)*fakt(c-b+al+dnew)
@@ -237,34 +206,25 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                 term6 = fakt(dnew)*fakt(a+b-c-dnew)
                 summ  = summ+(-1.d0)**new/(term4*term5*term6)
             enddo
-            !
             !     SO CLEBSCH-GORDEN <J1J2M1M2LJM> IS CLEBSH
-            !
             clebsh = delta*term*summ/dsqrt(10.d0)
-            !
             !     CONVERT CLEBSCH-GORDEN TO THREEJ
-            !
             iphase = idnint(a-b-ga)
             threej = (-1.d0)**(iphase)*clebsh/dsqrt(2.d0*c+1.d0)
-            !
-            !
         end function threej
+
         !> @brief Evaluate VCALC for the F2H2_GEN_JBKKL_1990 potential.
         subroutine vcalc( r1, r2, rab )
-            !
             !  CALCULATES V AT POINT (R1,R2,RAB,THETA1,THETA2,TAU)
             !  USING THE CURRENT VALUES OF THE PARAMETERS.
             !    V CALCULATED USING GREEN'S EXPRESSION; SEE JCP 62,2271 (1975).
             !       G IS THE SCRIPT I USED BY GREEN IN HIS EQ.(A9)
-            !
             implicit none
-            double precision :: cd, cdq, cq, d1, d2, d3, de1, de2, de3, de4, g, r1, r2, r6, rab, req, rin01, rin10, rmiddle, rout10, t1, t1deg, t2, t2deg, tau, taudeg, y1, y1py2, y1y2, y1y22, y1y23, y1y24, y2, y3
+            double precision :: cd, cdq, cq, d1, d2, d3, de1, de2, de3, de4, g(0:4,0:4,0:8), r1, r2, r6, rab, req(6), rin01, rin10, &
+                & rmiddle, rout10, t1, t1deg, t2, t2deg, tau, taudeg, y1, y1py2, y1y2, y1y22, y1y23, y1y24, y2, y3
             integer          :: i, il, iu, j, k
             integer          :: out
-            dimension g(0:4,0:4,0:8), req(6)
-            !
             out = 6
-            !
             !     R1=REQ(1)
             !     R2=REQ(2)
             !     RAB=REQ(3)
@@ -274,8 +234,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !     T1=T1DEG*PI/180.D0
             !     T2=T2DEG*PI/180.D0
             !     TAU=TAUDEG*PI/180.D0
-            !
-            !
             !     NEXT CALL SUBROUTINE HF2INT WHICH CALCULATES THE RELEVANT ATOM-ATO
             !     DISTANCES NEEDED TO COMPUTE THE TWO-BODY TERMS. THE ANGLES MUST
             !     BE IN DEGREES SO CONVERT THEM HERE.                           WCN
@@ -283,7 +241,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             t2deg  = t2*180.d0/consts_pi
             taudeg = tau*180.d0/consts_pi
             !     CALL HF2INT(R1,RAB,R2,T1DEG,T2DEG,TAUDEG,RHH,RHF1,RHF2,RFF)
-            !
             !     DO 100 L1=0,4
             !     DO 100 L2=0,4
             !     LL=IABS(L1-L2)
@@ -305,7 +262,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !    X             ((-1)**M)*2.0D0*THREEJ(XL1,XL2,XL,XM,-XM,0.D0)*
             !    X             P(L1,M,T1)*P(L2,M,T2)*DCOS(XM*TAU)
             !100  G(L1,L2,L)=COEFF*G(L1,L2,L)
-            !
             do i=0, 4
                 do j=0, 4
                     do k=0, 8
@@ -313,7 +269,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                     enddo
                 enddo
             enddo
-            !
             d1  = r1-params_c(1)
             d2  = r2-params_c(1)
             d3  = rab-params_c(2)
@@ -325,37 +280,27 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             de3 = dexp(-3.0d0*d3)
             de4 = dexp(-4.0d0*d3)
             r6  = rab**6
-            !
             !  DAMPING FACTORS AROUND RIN AND ROUT
-            !
             rout10  = 0.5d0*(1.d0-dtanh(0.5d0*(rab-7.5d0)))
             rin10   = 0.5d0*(1.d0-dtanh(2.d0*(rab-4.0d0)))
             rin01   = 0.5d0*(1.d0-dtanh(2.d0*(4.0d0-rab)))
             rmiddle = rin01*rout10
-            !
-            y1y22 = y1**2+y2**2
-            y1y23 = y1**3+y2**3
-            y1y24 = y1**4+y2**4
-            y1py2 = y1+y2
-            y1y2  = y1*y2
-            !
+            y1y22   = y1**2+y2**2
+            y1y23   = y1**3+y2**3
+            y1y24   = y1**4+y2**4
+            y1py2   = y1+y2
+            y1y2    = y1*y2
             !    CD, CQ AND CMQ ARE CONVERSION FACTORS FOR MULTIPOLE MOMENTS
-            !
             cd  = (consts_bo**3)*consts_pc*consts_vl*consts_ha/100000.d0
             cq  = cd*consts_bo*consts_bo
             cdq = cd*consts_bo
-            !
             !    C(4) TO C(9), C(91) AND C(111) DESCRIBE THE DISPERSION INTERACTION
             !    C(9) IS IN A(2,2,4).
-            !
             !    C(41) IS THE HF DIPOLE MOMENT IN DEBYE
             !    C(101) IS THE HF QUADRUPOLE MOMENT IN DEBYE.ANGSTROM
             !    C(131) IS THE HF OCTUPOLE MOMENT IN DEBYE.ANGSTROM**2
-            !
-            !
             !     the zero of energy is chosen as the two monomers infinitely separa
             !     at r1=r2=1.744 a.u. thus c(11) has been omitted from a(0,0,0).
-            !
             acoef_a(0,0,0)=params_c(357)*de2*rin10 +params_c(20)*y1y2*rout10 +(params_c(12)*de1+ params_c(13)*de2+ &
                 & params_c(14)*de3+params_c(15)*de4)*rmiddle +(params_c(4)/r6 + params_c(5)/ (rab**7) + params_c(6)/ &
                 & (rab**8) +params_c(7)/(rab**9)+params_c(8)/(rab** 10))*rin01 +(params_c(157)*(y1+y2)* y3 + &
@@ -370,20 +315,17 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                 & 2 + params_c(30)*y1*y2 +params_c(116)*y2**3 + params_c(117)*y1**3 +params_c(118)* y2*y1**2 + &
                 & params_c(119)*y1*y2**2 +params_c(159)*y1* y2* y3 + params_c(169)*y1*y2*y3**2 + params_c(179)*y1**2* &
                 & y1*y3)*rmiddle
-            !
             acoef_a(1,1,0)=(params_c(32)*de1+params_c(33)*de2 +params_c(34)*de3+params_c(35)*de4 + params_c(36)* &
                 & y1y22 +params_c(37)*y1y23 +params_c(38)*y1py2 +params_c(39)*y1py2*y1y2 + params_c(40)* y1y2)* rmiddle
             acoef_a(1,1,2)=(params_c(42)*de1+params_c(43)*de2 +params_c(44)*de3+params_c(45)*de4)* rmiddle -((8.d0* &
                 & consts_pi**1.5d0*dsqrt(2.d0/15.d0))*(params_c(41)**2)/ (cd* rab**3))* rin01 +(params_c(46)* y1y22 + &
                 & params_c(47)*y1y23 +params_c(48)*y1py2 +params_c(49)* y1py2*y1y2 +params_c(50)*y1y2)*rmiddle
-            !
             acoef_a(2,0,2)=params_c(356)/r6+(params_c(52)*de1+params_c(53)*de2 +params_c(54)*de3+ params_c(55)* de4 + &
                 & params_c(56)*y1 +params_c(57)*y2 +params_c(58)*y1**2 +params_c(59)* y2**2 + params_c(60)* y1*y2 + &
                 & params_c(126)*y1**3 +params_c(127)*y2**3 +params_c(128)* y1*y2**2 +params_c(129)*y2*y1** 2)*rmiddle
             acoef_a(0,2,2)=params_c(356)/r6+(params_c(52)*de1+params_c(53)*de2 +params_c(54)*de3+ params_c(55)* de4 + &
                 & params_c(56)*y2 +params_c(57)*y1 +params_c(58)*y2**2 +params_c(59)* y1**2 + params_c(60)* y1*y2 + &
                 & params_c(126)*y2**3 +params_c(127)*y1**3 +params_c(128)* y2*y1**2 +params_c(129)*y1*y2** 2)*rmiddle
-            !
             acoef_a(2,1,1)=(params_c(62)*de1+params_c(63)*de2 +params_c(64)*de3+params_c(65)*de4 + params_c(66)* y1 + &
                 & params_c(67)*y2 +params_c(68)*y1**2 +params_c(69)*y2**2 + params_c(70)*y1* y2 + params_c(136)*y1** &
                 & 3 + params_c(137)*y2**3 +params_c(138)*y1*y2** 2 +params_c(139)*y2*y1**2)*rmiddle
@@ -398,7 +340,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                 & (8.d0*consts_pi**1.5d0/dsqrt(7.d0))*params_c(41)*params_c(101)/ (cdq* rab**4) -(params_c(76)* y2 + &
                 & params_c(77)*y1 +params_c(78)*y2**2 +params_c(79)*y1**2 + params_c(80)*y1*y2 +params_c(146)* y2**3 + &
                 & params_c(147)*y1**3 + params_c(148)*y2* y1** 2 +params_c(149)*y1*y2**2)*rmiddle
-            !
             acoef_a(2,2,0)=(params_c(82)*de1+params_c(83)*de2 +params_c(84)*de3+params_c(85)*de4 + params_c(86)* &
                 & y1y22 +params_c(87)*y1y23 +params_c(88)*y1py2 +params_c(89)*y1py2*y1y2 + params_c(90)* y1y2)* rmiddle
             acoef_a(2,2,2)=params_c(91)/r6 +(params_c(92)*de1+params_c(93)*de2 +params_c(94)*de3+ params_c(95)* de4 + &
@@ -408,7 +349,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                 & (8.d0* consts_pi**1.5d0/3.d0)*dsqrt(14.d0/5.d0)* rin01* (params_c(101)**2)/ (cq*rab**5) + &
                 & (params_c(106)* y1y22 +params_c(107)*y1y23 +params_c(108)*y1py2 + params_c(109)*y1py2*y1y2 + &
                 & params_c(110)* y1y2)* rmiddle
-            !
             acoef_a(3,0,3) = params_c(111)/(rab**7) +(params_c(112)*de1+params_c(113)*de2 +params_c(114)* de3+ &
                 & params_c(115)*de4)*rmiddle
             acoef_a(0,3,3) = -acoef_a(3,0,3)
@@ -432,7 +372,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                 & params_c(196)*y1y22+params_c(197)*y1y2)*rmiddle
             acoef_a(3,3,6) = (params_c(202)*de1+params_c(203)*de2 +params_c(204)*de3+params_c(205)*de4 + &
                 & params_c(206)*y1y22+params_c(207)*y1y2)*rmiddle
-            !
             acoef_a(4,0,4) = params_c(212)*de1+params_c(213)*de2 +params_c(214)*de3+params_c(215)*de4
             acoef_a(0,4,4) = acoef_a(4,0,4)
             acoef_a(4,1,3) = params_c(222)*de1+params_c(223)*de2 +params_c(224)*de3+params_c(225)*de4
@@ -461,7 +400,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             acoef_a(4,4,4) = params_c(332)*de1+params_c(333)*de2 +params_c(334)*de3+params_c(335)*de4
             acoef_a(4,4,6) = params_c(342)*de1+params_c(343)*de2 +params_c(344)*de3+params_c(345)*de4
             acoef_a(4,4,8) = params_c(352)*de1+params_c(353)*de2 +params_c(354)*de3+params_c(355)*de4
-            !
             do i=0, 4
                 do j=0, 4
                     il = iabs(i-j)
@@ -472,7 +410,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                     enddo
                 enddo
             enddo
-            !
             !     V = 0.0D0
             !     DO 2 I=0,4
             !     DO 2 J=0,4
@@ -480,7 +417,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !     IU=I+J
             !     DO 2 K=IL,IU,2
             !2    V = V + A(I,J,K)*G(I,J,K)
-            !
             !  HH, FF, HF1 AND HF2 2-BODY TERMS COMBINED IN TERM VSRG.
             !  VSRG IS DAMPED TO ZERO IF RHF.GT.3.0
             !  IN ORDER TO PREVENT SPURIOUS 'HOLES' IN V.
@@ -488,39 +424,32 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !  SO THAT BOUND STATES CAN BE CALCULATED WITH THE NEGLECT
             !  OF VSRG AND CLOSE COUPLING PROGRAM 'BOUND' USED WITH V.
             !  eliminate two-body terms completely in this version wcn 3/10/92
-            !
             !     YRHF=0.25D0*(1.D0-DTANH(7.D0*(R1-3.0D0)))
             !    X           *(1.D0-DTANH(7.D0*(R2-3.0D0)))
             !     YRHH=0.50D0*(1.D0-DTANH(7.D0*(RHH-2.3D0)))
             !     YRFF=0.50D0*(1.D0-DTANH(7.D0*(RFF-2.3D0)))
             !     YRHF1=0.50D0*(1.D0-DTANH(7.D0*(RHF1-2.3D0)))
             !     YRHF2=0.50D0*(1.D0-DTANH(7.D0*(RHF2-2.3D0)))
-            !
             !     VHH=C(161)*DEXP(-C(171)*RHH)+C(181)*DEXP(-C(191)*RHH)
             !     VHF1=C(201)*DEXP(-C(211)*RHF1)+C(221)*DEXP(-C(231)*RHF1)
             !     VHF2=C(201)*DEXP(-C(211)*RHF2)+C(221)*DEXP(-C(231)*RHF2)
             !     VFF=C(241)*DEXP(-C(251)*RFF)+C(261)*DEXP(-C(271)*RFF)
-            !
             !     VSRG=(VHH*YRHH+VHF1*YRHF1+VHF2*YRHF2+VFF*YRFF)*YRHF
-            !
             !     V=V+VSRG
-            !
         end subroutine vcalc
+
         !> @brief Evaluate FAKT for the F2H2_GEN_JBKKL_1990 potential.
         double precision function fakt( a )
             !     THIS FUNCTION COMPUTES N!/(10**N).  STOP 101 IMPLIES TRIED
             !     TO TAKE FACTORIAL OF A NEGATIVE NO.
-            !
             implicit none
             double precision :: a, ax
             integer          :: i, ic
-            !
             ax   = a
             fakt = 1.d0
             if( ax .eq. 0.d0 ) return
             fakt = .1d0
             if( ax .lt. 0.d0 ) stop 101
-            !
             ic   = idnint(ax)
             ax   = ax/10.d0
             fakt = ax
@@ -531,7 +460,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
     end subroutine evaluate
 end module chempotpy_f2h2_gen_jbkkl_1990_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose F2H2_GEN_JBKKL_1990 through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_f2h2_gen_jbkkl_1990_pes, only: evaluate
     implicit none
@@ -543,5 +472,5 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(out)   :: p(nstates)
     double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    call evaluate(x, igrad, path, p, g, d)
+    call evaluate(x, igrad, p, g, d)
 end subroutine pes

@@ -1,10 +1,11 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_strm_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate the Streitz-Mintmire aluminum potential through Python.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,6 +35,7 @@ module chempotpy_aln_strm_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate the Streitz-Mintmire embedded-atom cluster energy.
     subroutine evaluate_streitz_mintmire( &
             coordinates_bohr, atom_count, energy_hartree )
@@ -76,7 +78,7 @@ module chempotpy_aln_strm_pes
     end subroutine evaluate_streitz_mintmire
 end module chempotpy_aln_strm_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_StrM through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_strm_pes, only: evaluate

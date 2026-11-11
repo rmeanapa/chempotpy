@@ -13,7 +13,7 @@ class FortranCoreTests( unittest.TestCase ):
         if compiler is None:
             self.skipTest("gfortran is not available")
         repository = Path(__file__).resolve().parents[1]
-        core = repository / "chempotpy" / "core" / "fortran"
+        core = repository / "chempotpy" / "core"
         source_names = (
             "chempotpy_kinds.f90",
             "chempotpy_units.f90",

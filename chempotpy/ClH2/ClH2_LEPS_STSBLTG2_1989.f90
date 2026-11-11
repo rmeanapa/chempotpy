@@ -1,3 +1,57 @@
+!   System:          ClH2
+!   Functional form: eLEPS (extended-London-Eyring-Polanyi-Sato)
+!                    plus E3C (a three-center term).
+!   Common name: GQQ
+!   Reference:       D. W. Schwenke, S. C. Tucker, R. Steckler, F. B. Br
+!                    G. C. Lynch, D. G. Truhlar, and B. C. Garrett
+!                    J. Chem. Phys. 90, 3110-3120 (1989)
+!   Calling Sequence:
+!               must be called once before any calls to POT
+!      POT    - driver for the evaluation of the energy and the derivati
+!               of the energy with respect to the coordinates for a give
+!               geometric configuration
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      ground electronic state
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Cl
+!      infinitely far from the H2 diatomic and R(H2) set equal to the
+!      H2 equilibrium diatomic value.
+!   Parameters:
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Cl-H)
+!                            R(2) = R(H-H)
+!                            R(3) = R(Cl-H)
+!   Common Blocks (used between the calling program and this potential):
+!      /PT1CM/ R(3), ENERGY, DEDR(3)
+!        passes the coordinates, ground state electronic energy, and
+!        derivatives of the ground electronic state energy with respect
+!        to the coordinates.
+!      /PT2CM/ NSURF, NDER, NDUM(21)
+!        passes the control flags where
+!        NDER  = 0 => no derivatives are computed
+!              = 1 => derivatives of the energy for the ground electroni
+!                     state with respect to the coordinates are computed
+!        NDUM  - not used
+!      /PT4CM/ IPTPRT, IDUM(19)
+!        IPTPRT passes the FORTRAN unit number used for potential output
+!        IDUM   not used
+!      /PT5CM/ EASYAB, EASYBC, EASYAC
+!        passes the energy in the three asymptotic valleys for an A + BC
+!        The energy in the AB valley, EASYAB, is equal to the energy of
+!        C atom "infinitely" far from the AB diatomic and R(AB) set equa
+!        equilibrium_distance(AB), the equilibrium bond length for the AB diatomic.
+!        Similarly, the terms EASYBC and EASYAC represent the energies
+!        in the BC and the AC valleys, respectively.
+!   Default Parameter Values:
+!      Variable      Default value
+!      NSURF            0
+!      NDER             1
+!      IPTPRT           6
+
 module chempotpy_clh2_leps_stsbltg2_1989_pes
     implicit none
     private
@@ -22,8 +76,10 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
     double precision, parameter :: bond_decay                 = 0.15d0
     double precision, parameter :: bend_quadratic             = 0.6804d0
     double precision, parameter :: bend_quartic               = 1.725d0
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the ClH2_LEPS_STSBLTG2_1989 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -55,7 +111,7 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
             do istate=1, nstates
                 p(istate) = energy
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = energy
             enddo
@@ -65,10 +121,11 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
                     g(1,iatom,idir) = dedx(j)
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate EvdRdX for the ClH2_LEPS_STSBLTG2_1989 potential.
     subroutine evdrdx( x, r, drdx )
         use chempotpy_geometry, only: ordered_pair_distance_jacobian
@@ -79,91 +136,24 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
         double precision, intent(out) :: drdx(3,9)
         call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
     end subroutine evdrdx
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, nder, energy, dedr )
-        !
-        !   System:          ClH2
-        !   Functional form: eLEPS (extended-London-Eyring-Polanyi-Sato)
-        !                    plus E3C (a three-center term).
-        !   Common name: GQQ
-        !   Reference:       D. W. Schwenke, S. C. Tucker, R. Steckler, F. B. Br
-        !                    G. C. Lynch, D. G. Truhlar, and B. C. Garrett
-        !                    J. Chem. Phys. 90, 3110-3120 (1989)
-        !
-        !   Calling Sequence:
-        !               must be called once before any calls to POT
-        !      POT    - driver for the evaluation of the energy and the derivati
-        !               of the energy with respect to the coordinates for a give
-        !               geometric configuration
-        !
-        !   Units:
-        !      energies    - hartrees
-        !      coordinates - bohr
-        !      derivatives - hartrees/bohr
-        !
-        !   Surfaces:
-        !      ground electronic state
-        !
-        !   Zero of energy:
-        !      The classical potential energy is set equal to zero for the Cl
-        !      infinitely far from the H2 diatomic and R(H2) set equal to the
-        !      H2 equilibrium diatomic value.
-        !
-        !   Parameters:
-        !
-        !   Coordinates:
-        !      Internal, Definition: R(1) = R(Cl-H)
-        !                            R(2) = R(H-H)
-        !                            R(3) = R(Cl-H)
-        !
-        !   Common Blocks (used between the calling program and this potential):
-        !      /PT1CM/ R(3), ENERGY, DEDR(3)
-        !        passes the coordinates, ground state electronic energy, and
-        !        derivatives of the ground electronic state energy with respect
-        !        to the coordinates.
-        !      /PT2CM/ NSURF, NDER, NDUM(21)
-        !        passes the control flags where
-        !        NDER  = 0 => no derivatives are computed
-        !              = 1 => derivatives of the energy for the ground electroni
-        !                     state with respect to the coordinates are computed
-        !        NDUM  - not used
-        !      /PT4CM/ IPTPRT, IDUM(19)
-        !        IPTPRT passes the FORTRAN unit number used for potential output
-        !        IDUM   not used
-        !      /PT5CM/ EASYAB, EASYBC, EASYAC
-        !        passes the energy in the three asymptotic valleys for an A + BC
-        !        The energy in the AB valley, EASYAB, is equal to the energy of
-        !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
-        !        equilibrium_distance(AB), the equilibrium bond length for the AB diatomic.
-        !        Similarly, the terms EASYBC and EASYAC represent the energies
-        !        in the BC and the AC valleys, respectively.
-        !
-        !   Default Parameter Values:
-        !      Variable      Default value
-        !      NSURF            0
-        !      NDER             1
-        !      IPTPRT           6
-        !
         implicit none
         double precision, intent(in)  :: r(3)
         integer, intent(in)           :: nder
         double precision, intent(out) :: energy, dedr(3)
         double precision              :: abcval, ang1, ang11, ang12, ang13, ang14, ang2, ang21, ang22
         double precision              :: ang3, ang31, ang32, ang33, ang34, ctheta, d3cdr1, d3cdr2, d3cdr3
-        double precision              :: dist, e3c, exch, f1val, f2val, f3val, f4val
+        double precision              :: dist, e3c, exch(3), f1val, f2val, f3val, f4val
         double precision              :: r1p2, r1p3, r1p4, r1p5, r3p2, r3p3, r3p4, r3p5
-        double precision              :: rad, rco, rdif, rsum3, stheta, sval, theta, trm1, trm2, trm3, tval, x
+        double precision              :: rad, rco, rdif, rsum3, stheta, sval, theta, trm1, trm2, trm3, tval, x(3)
         integer                       :: i
-        dimension x(3), exch(3)
         double precision :: coul(3)
-        !
         !WRITE (IPTPRT, 600) D, RE, BETA, Z
         !WRITE (IPTPRT, 610) three_center_energy, symmetric_decay, bond_decay, asymmetric_decay, bend_quadratic, bend_quartic
-        !
         !   Check the value of NDER
-        !
         !   Compute the eLEPS part of the potential
-        !
         do i = 1, 3
             x(i)    = exp(-morse_exponent(i)*(r(i)-equilibrium_distance(i)))
             coul(i) = quarter_energy(i)*(sato_plus_three(i)*x(i)-two_one_plus_three_sato(i))*x(i)
@@ -171,9 +161,7 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
         enddo
         rad    = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+ (exch(3)-exch(1))**2)
         energy = coul(1) + coul(2) + coul(3) - (rad/root_two) + dissociation_energy(2)
-        !
         !   Compute the derivatives of the eLEPS energy w.r.t. the bond lengths
-        !
         if( nder .eq. 1 )then
             sval = exch(1) + exch(2) + exch(3)
             do i = 1, 3
@@ -187,34 +175,28 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
                 dedr(i) = derivative_weight(i)*x(i)*(tval-sato_plus_three(i)*x(i)+one_plus_three_sato(i))
             enddo
         endif
-        !
         !   Compute the three-center term
-        !
         !   F1VAL is equal to f1 in the literature reference,
         !   similarly F2VAL = f2, and F3VAL = f3
         f1val = exp(-asymmetric_decay*(r(1)-r(3))**2)
         f2val = exp(-symmetric_decay*(r(1)+r(3))**4)
         f3val = exp(-bond_decay*(r(1)+r(3)-r(2))**2)
         e3c   = three_center_energy * f1val * f2val * f3val
-        !
         !   Compute the angular dependent term, f4, which is called F4VAL
         dist   = r(1)**2 + r(3)**2 - r(2)**2
         ctheta = dist/(2.0d0*r(1)*r(3))
         if( ctheta .lt. -1.0d0 )then
             theta = acos(-1.0d0)
-        else if( ctheta .ge. 1.0d0 )then
+        elseif( ctheta .ge. 1.0d0 )then
             theta = 0.0d0
         else
             theta = acos(ctheta)
         endif
         stheta = sin(theta)
-        !
         f4val  = (bend_quadratic*(stheta**2))+(bend_quartic * (stheta**4)) + 1.0d0
         e3c    = e3c * f4val
         energy = e3c + energy
-        !
         !   Compute the derivatives of the three-center term
-        !
         if( nder .eq. 1 )then
             !   Recall DIST = R(1)**2 + R(3)**2 - R(2)**2
             rsum3   = (r(1) + r(3))**3
@@ -252,12 +234,10 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
             dedr(2) = dedr(2) + d3cdr2
             dedr(3) = dedr(3) + d3cdr3
         endif
-        !
-        !
     end subroutine dispatch
 end module chempotpy_clh2_leps_stsbltg2_1989_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose ClH2_LEPS_STSBLTG2_1989 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_clh2_leps_stsbltg2_1989_pes, only: evaluate
     implicit none

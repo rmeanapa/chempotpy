@@ -1,11 +1,56 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          IH2
+!   Functional form:
+!   Common name:     RMC
+!   References:
+!   Note: This is the three-dimensional version of the IH2
+!         RMC potential energy surface; the potential energy is
+!         defined as E = Ecollinear + Ebend.
+! Number of bodies: 3
+! Interface: potlib2001
+! Number of electronic states: 1
+! Number of derivatives: 1
+!   prepare_local_context must be called once before any calls to POT.
+!   The potential parameters are included in the block data subprogram P
+!   Coordinates, potential energy, and derivatives are passed
+!   The potential energy in the three asymptotic valleys are
+!   stored in the common block ASYCM:
+!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
+!   The potential energy in the AB valley, EASYAB, is equal to the poten
+!   energy of the H "infinitely" far from the IH diatomic, with the
+!   IH diatomic at its equilibrium configuration.  Similarly, the terms
+!   EASYBC and EASYAC represent the H2 and the IH asymptotic valleys,
+!   respectively.
+!   All the information passed through the common blocks PT1CM and ASYCM
+!   is in Hartree atomic units.
+!        This potential is written such that:
+!                       R(1) = R(I-H)
+!                       R(2) = R(H-H)
+!                       R(3) = R(H-I)
+!   The classical potential energy is set equal to zero for the I
+!   infinitely far from the equilibrium H2 diatomic.
+!   The flags that indicate what calculations should be carried out in
+!   the potential routine are passed through the common block PT2CM:
+!   where:
+!        NASURF - which electronic states availalble
+!                 (1,1) = 1 as only gs state available
+!        NDER  = 0 => no derivatives should be calculated
+!        NDER  = 1 => calculate first derivatives
+!        NFLAG - these integer values can be used to flag options
+!                within the potential;
+!   Potential parameters' default settings
+!                  Variable            Default value
+!                  NDER                1
+!                  NFLAG(18)           6
+
+!> @brief Implement IH2_LEPS_DT2_1971, a potential energy surface for IH2.
 module chempotpy_ih2_leps_dt2_1971_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the IH2_LEPS_DT2_1971 potential energy surface for IH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -155,7 +200,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
@@ -164,117 +209,43 @@ module chempotpy_ih2_leps_dt2_1971_pes
                     g(1,iatom,idir) = dgscart(iatom,idir)*51.422067
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
+
         contains
+
         !> @brief Evaluate prepare_local_context for the IH2_LEPS_DT2_1971 potential.
         subroutine prepare_local_context
-            !
-            !   System:          IH2
-            !   Functional form:
-            !   Common name:     RMC
-            !   References:
-            !
-            !   Note: This is the three-dimensional version of the IH2
-            !         RMC potential energy surface; the potential energy is
-            !         defined as E = Ecollinear + Ebend.
-            !
-            !
-            ! Number of bodies: 3
-            ! Interface: potlib2001
-            ! Number of electronic states: 1
-            ! Number of derivatives: 1
-            !
-            !   prepare_local_context must be called once before any calls to POT.
-            !   The potential parameters are included in the block data subprogram P
-            !   Coordinates, potential energy, and derivatives are passed
-            !   The potential energy in the three asymptotic valleys are
-            !   stored in the common block ASYCM:
-            !                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
-            !   The potential energy in the AB valley, EASYAB, is equal to the poten
-            !   energy of the H "infinitely" far from the IH diatomic, with the
-            !   IH diatomic at its equilibrium configuration.  Similarly, the terms
-            !   EASYBC and EASYAC represent the H2 and the IH asymptotic valleys,
-            !   respectively.
-            !   All the information passed through the common blocks PT1CM and ASYCM
-            !   is in Hartree atomic units.
-            !
-            !        This potential is written such that:
-            !                       R(1) = R(I-H)
-            !                       R(2) = R(H-H)
-            !                       R(3) = R(H-I)
-            !   The classical potential energy is set equal to zero for the I
-            !   infinitely far from the equilibrium H2 diatomic.
-            !
-            !   The flags that indicate what calculations should be carried out in
-            !   the potential routine are passed through the common block PT2CM:
-            !   where:
-            !        NASURF - which electronic states availalble
-            !                 (1,1) = 1 as only gs state available
-            !        NDER  = 0 => no derivatives should be calculated
-            !        NDER  = 1 => calculate first derivatives
-            !        NFLAG - these integer values can be used to flag options
-            !                within the potential;
-            !
-            !
-            !   Potential parameters' default settings
-            !                  Variable            Default value
-            !                  NDER                1
-            !                  NFLAG(18)           6
-            !
-            !
             implicit none
-            integer :: i, it
-            !
-            !
+            integer                     :: i, it
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            double precision :: nab, nab1, nbc, nbc1
-            !
+            double precision            :: nab, nab1, nbc, nbc1
             !   Conversion constants: kcal/mol/Hartree and Angstroms/Bohr
-            !
             double precision, parameter :: ckcal = 627.5095d0
             double precision, parameter :: cangs = 0.52917706d0
-            !
-            !
-            !
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !      COLLINEAR POTENTIAL PARAMETERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             !   Initialize the parameters for the collinear part of the potential
-            !
             call prepare_local_context_2
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !      BENDING POTENTIAL PARAMETERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             !   Echo the parameters for the bend potential to the
             !   file linked to UNIT NFLAG(18)
-            !
             ! WRITE (NFLAG(18), 650) REQ,DE,BETA,A,GAMMA,RBB
-            !
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !       CONVERT TO ATOMIC UNITS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             do it = 1, 3
                 req(it) = req(it)/cangs
             enddo
@@ -283,97 +254,61 @@ module chempotpy_ih2_leps_dt2_1971_pes
             a    = a/cangs
             rhh  = 1.4007977d0
             rbb  = rbb /cangs
-            !
             !CCCCCCCCCCC
-            !
             ezero(1) = legacy_d(2)
-            !
             do i=1, 5
                 ref(i) = ' '
             enddo
-            !
-            ref(1) = 'No Reference'
-            !
+            ref(1)     = 'No Reference'
             indexes(1) = 53
             indexes(2) = 1
             indexes(3) = 1
-            !
-            !
-            !
-            irctnt = 2
-            !
+            irctnt     = 2
             !CALL POTINFO
-            !
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POT for the IH2_LEPS_DT2_1971 potential.
         subroutine pot
-            !
             !   The potential energy in the AB valley, EASYAB, is equal to the poten
             !   energy of the H "infinitely" far from the IH diatomic, with the
             !   IH diatomic at its equilibrium configuration.  Similarly, the terms
             !   EASYBC and EASYAC represent the H2 and the IH asymptotic valleys,
             !   respectively.
-            !
             !        This potential is written such that:
             !                       R(1) = R(I-H)
             !                       R(2) = R(H-H)
             !                       R(3) = R(H-I)
             !   The classical potential energy is set equal to zero for the I
             !   infinitely far from the equilibrium H2 diatomic.
-            !
             !CCCCCCCCCCCCCCC
             !CCCCCCCCCCCCCCC
             implicit none
-            double precision :: bcoor, c2, dac, ractmp, rob, stuff, vabbc, vac
-            integer          :: it
-            !
-            !
+            double precision            :: bcoor, c2, dac, ractmp, rob, stuff, vabbc, vac
+            integer                     :: it
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            double precision :: nab, nab1, nbc, nbc1
-            !
+            double precision            :: nab, nab1, nbc, nbc1
             !   Conversion constants: kcal/mol/Hartree and Angstroms/Bohr
-            !
             double precision, parameter :: ckcal = 627.5095d0
             double precision, parameter :: cangs = 0.52917706d0
-            !
-            !
-            !
             call cartou
             call carttor
-            !
             !   Check the values of NASURF and NDER for validity.
-            !
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        FIRST CALCULATE SOME USEFUL NUMBERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             !        NAB AND NBC ARE THE BOND ORDERS OF THE DIATOMICS
             !        AB AND BC RESPECTIVELY. (EQUATION 2.2)
-            !
             nab = exp((req(1) - r(1))/a)
-            !
             if( nab .lt. 1.d-15 ) nab = 1.d-15
-            !
             nbc = exp((req(2) - r(2))/a)
-            !
             if( nbc .lt. 1.d-15 ) nbc = 1.d-15
-            !
             !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
             !       SEE EQUATION 2.7A, 2.7B
-            !
             c2 = 1.0d0-nab/nbc
             if( abs(c2) <= 1.0d-14 )then
                 nab1 = 0.5d0
@@ -383,67 +318,45 @@ module chempotpy_ih2_leps_dt2_1971_pes
                 nab1 = (2.0d0+c2-sqrt(4.0d0+c2*c2))/(2.0d0*c2)
                 nbc1 = 1.0d0-nab1
             endif
-            !
             !          ROB IS USED IN THE BENDING POTENTIAL CALCULATIONS
-            !
             !          FIRST TRAP OUT ANY ZERO ARGUEMENTS
-            !
             if( nab1*nbc1 > 0.0d0 )then
                 stuff = a * log(nab1*nbc1)
                 rob   = (rbb - stuff)/(rhh - stuff)
             else
                 rob = 1.0d0
             endif
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        CALCULATE BENDING CORRECTION
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             !        CALCULATE V(R(3))
-            !
             junk(3) = exp(-beta*(r(3)-req(3))/rob)
             vac     = gamma * de * junk(3)* (1.d0 + 0.5d0*junk(3))
-            !
             !        CALCULATE V(R(1)+R(2))
-            !
             junk(4) = exp(beta*(req(3)-r(2)-r(1))/rob)
             vabbc   = gamma * de * junk(4) * (1.d0 + 0.5d0*junk(4))
-            !
             !        HERE IS THE BENDING CORRECTION
-            !
             bcoor = vac - vabbc
-            !
             !          WHILE IT'S CONVENIENT, CALCULATE THE DERIVATIVE
             !          OF BCOOR WITH RESPECT TO R(1), R(2), AND R(3).
-            !
             !        CALCULATE DAC (THE DERIVATIVE WITH RESPECT TO R(3))
-            !
             if( nder .eq. 1 )then
                 dac       = -gamma*de*beta*junk(3)*(1.d0+junk(3))/rob
                 dbcoor(1) = gamma * de * beta * junk(4) * (1.d0 + junk(4))/rob
                 dbcoor(2) = dbcoor(1)
             endif
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        NOW CALCULATE THE COLLINEAR ENERGY
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             !          STORE R(3) IN RACTMP THEN SET R(3) TO THE COLLINEAR
             !          GEOMETRY AND CALL POT
-            !
             ractmp = r(3)
             r(3)   = r(2) + r(1)
-            !
             call pot2
-            !
             !   Reset R(3) the its correct value
-            !
             r(3) = ractmp
-            !
             !   Add the energy terms together, i.e., E = Ecollinear + Ebend
-            !
             engygs = engygs + bcoor
-            !
             if( nder .ne. 1 )then
                 call eunitzero
                 if( nder .ne. 0 )then
@@ -452,54 +365,36 @@ module chempotpy_ih2_leps_dt2_1971_pes
                 endif
                 return
             endif
-            !
             !   If NDER = 1, then compute the derivatives of the energy with respect
             !   the internal coordinates, i.e., dE/dRi = dEcollinear/dRi + dEbend/dR
-            !
             degsdr(1) = degsdr(1) + degsdr(3)
             degsdr(2) = degsdr(2) + degsdr(3)
             degsdr(3) = dac
-            !
             do it = 1, 2
                 degsdr(it) = dbcoor(it) + degsdr(it)
             enddo
-            !
-            !
             call eunitzero
             if( nder .ne. 0 )then
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate prepare_local_context_2 for the IH2_LEPS_DT2_1971 potential.
         subroutine prepare_local_context_2
             implicit none
-            integer :: i, m, n
-            !
-            !
+            integer                     :: i, m, n
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             !   Conversion constants: kcal/mol/Hartree and Angstroms/Bohr
-            !
             double precision, parameter :: ckcal = 627.5095d0
             double precision, parameter :: cangs = 0.52917706d0
-            !
-            !
             !   This subprogram initializes the constants
             !   for the collinear part of the potential.
             !   prepare_local_context_2 must be called once before any calls to POT2.
-            !
-            !
             pid4 = atan(1.d0)
             pid2 = 2.d0*pid4
             m    = irxn
@@ -511,13 +406,8 @@ module chempotpy_ih2_leps_dt2_1971_pes
             dmdn                     = legacy_d(m)/legacy_d(n)
             c(n,2)                   = 2.0d0*dmdn*c(m,1)*dble(l(n)-l(m)) + 2.0d0*dble(l(n))*(1.0d0-dmdn)
             c(n,1)                   = 1.0d0-dmdn*(1.0d0-c(m,1))+pid4*pid4*c(n,2)
-            !
             !   Echo the potential parameters to the file linked to UNIT NFLAG(18).
-            !
-            !
-            !
             !   CONVERT TO ATOMIC UNITS
-            !
             do i = 1, 2
                 rr(i)       = rr(i)/cangs
                 s(i)        = s(i)/cangs
@@ -526,9 +416,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                 legacy_d(i) = legacy_d(i)/ckcal
             enddo
             alfd = alfd*cangs
-            !
             !   CALCULATE USEFUL CONSTANTS
-            !
             rr1ms1 = rr(1)-s(1)
             rr2ms2 = rr(2)-s(2)
             rrs1d2 = rr1ms1/rr2ms2
@@ -537,47 +425,30 @@ module chempotpy_ih2_leps_dt2_1971_pes
                 rrmre(n) = rr(n)-re(n)
                 pre(n)   = sr1r2-rrmre(n)
             enddo
-            !
             !   Initialize the asymptotic energy terms
-            !
             easyab = legacy_d(1)
             easybc = legacy_d(2)
             easyac = legacy_d(1)
         end subroutine prepare_local_context_2
+
         !> @brief Evaluate POT2 for the IH2_LEPS_DT2_1971 potential.
         subroutine pot2
-            !
             implicit none
-            double precision :: alf, cs2pp, daldr, dgadr, ds4dr, dsldr, dxidr, fac, gam, phip, quan, quan2, rr12, sn2pp, sn2pp3, sn2pp4, sn2ppl, tn2pp, xi
-            integer          :: i, j, lm3
-            !
-            !
+            double precision            :: alf, cs2pp, daldr, dgadr, ds4dr, dsldr, dxidr, fac, gam, phip, quan, quan2, rr12, sn2pp, sn2pp3, sn2pp4, sn2ppl, tn2pp, xi
+            integer                     :: i, j, lm3
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
             !   Conversion constants: kcal/mol/Hartree and Angstroms/Bohr
-            !
             double precision, parameter :: ckcal = 627.5095d0
             double precision, parameter :: cangs = 0.52917706d0
-            !
-            !
             !   This subprogram initializes the constants
             !   for the collinear part of the potential.
             !   PREPT2 must be called once before any calls to POT2.
-            !
             logical :: lrr1, lrr2
-            !
             !   This subprogram computes the collinear part of the potential energy
-            !
             rrmr(1) = rr(1)-r(1)
             rrmr(2) = rr(2)-r(2)
             lrr1    = rrmr(1).le.0.0d0
@@ -626,22 +497,14 @@ module chempotpy_ih2_leps_dt2_1971_pes
                 endif
             endif
         end subroutine pot2
+
         !> @brief Evaluate ANCVRT for the IH2_LEPS_DT2_1971 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -658,6 +521,13 @@ module chempotpy_ih2_leps_dt2_1971_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -873,13 +743,13 @@ module chempotpy_ih2_leps_dt2_1971_pes
             if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             cnvrtd  = 1.d0
@@ -888,13 +758,13 @@ module chempotpy_ih2_leps_dt2_1971_pes
             if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
             if( nflag(2) .eq. 2 )then
                 cnvrte = cnvrte*htomillh
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 cnvrte = cnvrte*htoev
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 cnvrte = cnvrte*htokcal
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 cnvrte = cnvrte*htowave
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 cnvrte = cnvrte*htokj
             endif
             cnvrtde = cnvrte/cnvrtd
@@ -905,6 +775,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
             ireorder = 0
             if( isum .ne. 0 ) ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the IH2_LEPS_DT2_1971 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -916,6 +787,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the IH2_LEPS_DT2_1971 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -932,6 +804,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the IH2_LEPS_DT2_1971 potential.
         subroutine eunitzero
             implicit none
@@ -952,16 +825,18 @@ module chempotpy_ih2_leps_dt2_1971_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the IH2_LEPS_DT2_1971 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( icartr .eq. 1 )then
                 do i = 1, legacy_natoms
                     ind            = 3*i-2
@@ -983,7 +858,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 2 )then
+            elseif( icartr .eq. 2 )then
                 do i = 1, legacy_natoms
                     dgscartnu(i,1) = 0.d0
                     dgscartnu(i,2) = 0.d0
@@ -1005,7 +880,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                     do j = 1, legacy_natoms
                         if( j .lt. i )then
                             m1 = legacy_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1024,7 +899,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                                 descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
                                 descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( ksoffd .gt. 0 )then
+                        elseif( ksoffd .gt. 0 )then
                             do j2=ksoffd, keoffd
                                 y                 = deijdr(m1,j2)
                                 dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
@@ -1034,7 +909,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                         endif
                     enddo
                 enddo
-            else if( icartr .eq. 3 )then
+            elseif( icartr .eq. 3 )then
                 do i = 1, legacy_natoms
                     ygs(i) = degsdr(i)/r(i)
                     if( ksdiag .ne. 0 )then
@@ -1070,7 +945,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 4 )then
+            elseif( icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1106,6 +981,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the IH2_LEPS_DT2_1971 potential.
         subroutine dedcou
             implicit none
@@ -1159,7 +1035,7 @@ module chempotpy_ih2_leps_dt2_1971_pes
     end subroutine evaluate
 end module chempotpy_ih2_leps_dt2_1971_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose IH2_LEPS_DT2_1971 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_ih2_leps_dt2_1971_pes, only: evaluate
     implicit none

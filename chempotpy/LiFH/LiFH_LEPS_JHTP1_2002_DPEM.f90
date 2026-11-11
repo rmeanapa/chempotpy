@@ -1,11 +1,46 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        LiFH
+!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
+!   Common name:                   LiFH surface fit JS
+!   Number of derivatives:         0
+!   Number of electronic surfaces: 2
+!   Interface:                     3-1V
+!   References:      A. W. Jasper, M. D. Hack, D. G. Truhlar, and P. Pie
+!                    J. Chem. Phys., Vol. 116, 8353 (2002).
+!   Notes:    This fit contains cut-off long-range forces.
+!   Protocol: POT evaluates the stateless diabatic surfaces.
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      ground and first excited electronic states, diabatic representati
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Li
+!      infinitely far from the HF diatomic and R(HF) set equal to the
+!      HF equilibrium diatomic value.
+!   Parameters:
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Li-H)
+!                            R(2) = R(H-F)
+!                            R(3) = R(Li-F)
+!                   LiFHJS POTENTIAL ENERGY MATRIX
+!  Created by A. Jasper on August 22, 2001.
+!  Based on the LiFHJ potential energy matrix, which was
+!  based on the LiFHH potential energy matrix created by M. Hack,
+!  which was based on the ab initio calculations of P. Piecuch.
+!  This surface has the long-range forces cut off.
+!  Reference: A. W. Jasper, M. D. Hack, D. G. Truhlar, and P. Piecuch,
+!  J. Chem. Phys., in preparation.
+
+!> @brief Implement LiFH_LEPS_JHTP1_2002, a diabatic potential matrix for LiFH.
 module chempotpy_lifh_leps_jhtp1_2002_dpem_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the LiFH_LEPS_JHTP1_2002 diabatic potential matrix for LiFH.
     subroutine evaluate( x, igrad, u, ug )
         use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
@@ -39,7 +74,7 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pes
     end subroutine evaluate
 end module chempotpy_lifh_leps_jhtp1_2002_dpem_pes
 
-!> @brief Preserve the historical Python-facing dpem entry point.
+!> @brief Expose LiFH_LEPS_JHTP1_2002 through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_lifh_leps_jhtp1_2002_dpem_pes, only: evaluate
     implicit none
@@ -83,63 +118,11 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!
-!   System:                        LiFH
-!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
-!   Common name:                   LiFH surface fit JS
-!   Number of derivatives:         0
-!   Number of electronic surfaces: 2
-!   Interface:                     3-1V
-
-!   References:      A. W. Jasper, M. D. Hack, D. G. Truhlar, and P. Pie
-!                    J. Chem. Phys., Vol. 116, 8353 (2002).
-
-!   Notes:    This fit contains cut-off long-range forces.
-!
-!   Protocol: POT evaluates the stateless diabatic surfaces.
-!
-!   Units:
-!      energies    - hartrees
-!      coordinates - bohr
-!      derivatives - hartrees/bohr
-!
-!   Surfaces:
-!      ground and first excited electronic states, diabatic representati
-!
-!   Zero of energy:
-!      The classical potential energy is set equal to zero for the Li
-!      infinitely far from the HF diatomic and R(HF) set equal to the
-!      HF equilibrium diatomic value.
-!
-!   Parameters:
-!
-!   Coordinates:
-!      Internal, Definition: R(1) = R(Li-H)
-!                            R(2) = R(H-F)
-!                            R(3) = R(Li-F)
-!
-!
-!
-!
-!                   LiFHJS POTENTIAL ENERGY MATRIX
-!
-!  Created by A. Jasper on August 22, 2001.
-!  Based on the LiFHJ potential energy matrix, which was
-!  based on the LiFHH potential energy matrix created by M. Hack,
-!  which was based on the ab initio calculations of P. Piecuch.
-!
-!  This surface has the long-range forces cut off.
-!
-!  Reference: A. W. Jasper, M. D. Hack, D. G. Truhlar, and P. Piecuch,
-!  J. Chem. Phys., in preparation.
-!
-
 !> @brief Evaluate pot for the LiFH_LEPS_JHTP1_2002_DPEM potential.
 subroutine pot( r, e, nt, nsurf )
     implicit none
-    double precision :: r, e
+    double precision :: r(nt,3), e(nt)
     integer          :: i, nt, nsurf
-    dimension r(nt,3), e(nt)
     if( nsurf .eq. 1 ) call pot11(r, e, nt)
     if( nsurf .eq. 2 ) call pot12(r, e, nt)
     if( nsurf .eq. 3 ) call pot22(r, e, nt)
@@ -156,7 +139,9 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pot11_legacy_state_a97514e1
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
@@ -325,7 +310,6 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pot11_legacy_state_a97514e1
         cauang    = 0.52917706d0
         caudeb    = 2.54177d0
         mass      = [ 7.016003d0, 1.00783d0, 18.9984d0]
-        ! ----------------------------------------------------------------------
         do i=1, nt
             ! PRECOMPUTE THINGS FOR USE LATER...
             !     cosine of HF bond angle (i.e., Li-F-H angle)
@@ -423,7 +407,9 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pot12_legacy_state_a97514e1
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
@@ -488,7 +474,6 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pot12_legacy_state_a97514e1
         j2pdel = 0.98387d0
         gcrho  = 4.87097d0
         gcdel  = 2.d0
-        ! ----------------------------------------------------------------------
         do i=1, nt
             g1   = g1a*(r(i,1)/g1r)**ng1 *dexp(-dble(ng1)*(r(i,1)/g1r-1.0d0))
             g3   = g3a*(r(i,3)/g3r)**ng3 *dexp(-dble(ng3)*(r(i,3)/g3r-1.0d0))
@@ -523,7 +508,9 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pot22_legacy_state_a97514e1
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
@@ -859,7 +846,6 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pot22_legacy_state_a97514e1
         cauang      = 0.52917706d0
         caudeb      = 2.54177d0
         mass        = [ 7.016003d0, 1.00783d0, 18.9984d0]
-        ! ----------------------------------------------------------------------
         do i=1, nt
             ! PRECOMPUTE THINGS FOR USE LATER
             !     cosine of HF bond angle (i.e., Li-F-H angle)

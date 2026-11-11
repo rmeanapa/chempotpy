@@ -1,11 +1,12 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 module chempotpy_h3_basis
     implicit none
     private
     integer, parameter, public :: primary_term_count   = 418
     integer, parameter, public :: secondary_term_count = 330
     public :: get_h3_basis_term
+
     contains
+
     !> @brief Return one term from the fixed order-12/order-11 symmetric H3 basis.
     pure subroutine get_h3_basis_term( term_index, first_power, second_power, third_power, coefficient_index )
         integer, intent(in)  :: term_index
@@ -72,7 +73,7 @@ module chempotpy_h3_basis
                                 & coefficient_index, found)
                             if( found ) return
                         endif
-                    else if( second_candidate /= third_candidate )then
+                    elseif( second_candidate /= third_candidate )then
                         call select_term(first_candidate, third_candidate, second_candidate, current_coefficient, &
                             & requested_term, current_term, first_power, second_power, third_power, coefficient_index, found)
                         if( found ) return
@@ -84,6 +85,7 @@ module chempotpy_h3_basis
             enddo
         enddo
     end subroutine get_h3_basis_term
+
     !> @brief Match one generated basis term to the requested stateless lookup index.
     pure subroutine select_term( first_candidate, second_candidate, third_candidate, current_coefficient, &
             & requested_term, current_term, first_power, second_power, third_power, coefficient_index, found )

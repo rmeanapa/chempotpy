@@ -1,10 +1,11 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement CH4_GEN_SP_2001, a potential energy surface for CH4.
 module chempotpy_ch4_gen_sp_2001_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate the Schwenke-Partridge methane potential.
     subroutine evaluate( x, igrad, path, p, g, d )
         implicit none
@@ -31,6 +32,7 @@ module chempotpy_ch4_gen_sp_2001_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Convert methane Cartesian coordinates and call the T8 kernel.
     subroutine getpot( potential_energy, coordinates, path )
         implicit none
@@ -45,6 +47,7 @@ module chempotpy_ch4_gen_sp_2001_pes
         call vibpot(radau_coordinates, energy_hartree, 1, path)
         potential_energy = energy_hartree-zero_point_shift
     end subroutine getpot
+
     !> @brief Convert CH4 Cartesian coordinates to the T8 Radau coordinates.
     subroutine methaneradau( coordinates, radau_coordinates )
         implicit none
@@ -84,7 +87,9 @@ module chempotpy_ch4_gen_sp_2001_pes
         call radau_angle(relative(3,:), relative(4,:), &
             radau_coordinates(3), radau_coordinates(4), &
             radau_coordinates(10))
+
         contains
+
         !> @brief Calculate one H-C-H angle from relative Cartesian vectors.
         subroutine radau_angle( first, second, first_norm, second_norm, angle )
             real(8), intent(in)  :: first(3), second(3)
@@ -99,7 +104,7 @@ module chempotpy_ch4_gen_sp_2001_pes
     end subroutine methaneradau
 end module chempotpy_ch4_gen_sp_2001_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose CH4_GEN_SP_2001 through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_ch4_gen_sp_2001_pes, only: evaluate
     implicit none

@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Provide explicit-argument adapters for released POTLIB coordinates.
 module chempotpy_legacy_coordinates
     use chempotpy_geometry,     only: cartesian_distance, flatten_cartesian_coordinates
@@ -9,7 +8,9 @@ module chempotpy_legacy_coordinates
     public :: convert_cartesian_input
     public :: cartesian_to_potlib_coordinates
     public :: legacy_triatomic_distances_to_bohr
+
     contains
+
     !> @brief Return the 1-2, 2-3, and 1-3 distances in legacy bohr.
     pure subroutine legacy_triatomic_distances_to_bohr( &
             coordinates_angstrom, distances_bohr )
@@ -22,6 +23,7 @@ module chempotpy_legacy_coordinates
         distances_bohr(3) = cartesian_distance( coordinates_angstrom(1,:), coordinates_angstrom(3,:) )/ &
             & legacy_bohr_to_angstrom
     end subroutine legacy_triatomic_distances_to_bohr
+
     !> @brief Convert user Cartesian coordinates to POTLIB distance units.
     pure subroutine convert_cartesian_input( cartesian_coordinates, &
             atom_labels, atom_count, distance_conversion, reorder_atoms, &
@@ -41,6 +43,7 @@ module chempotpy_legacy_coordinates
             internal_coordinates(1:atom_count,1:3) = cartesian_coordinates(1:atom_count,1:3)/distance_conversion
         endif
     end subroutine convert_cartesian_input
+
     !> @brief Build a released POTLIB coordinate vector from Cartesian input.
     pure subroutine cartesian_to_potlib_coordinates( &
             cartesian_coordinates, atom_count, coordinate_mode, coordinates, &

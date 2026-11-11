@@ -1,11 +1,44 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        H3plus
+!   Functional form:               DIM
+!   Common name:                   H3+ UNO with derivatives
+!   Number of derivatives:         1
+!   Number of bodies:              3
+!   Number of electronic surfaces: 3
+!   Interface:                     3-2V
+!   References: V. G. Ushakov, K. Nobusada, and V. I. Osherov,
+!               Phys. Chem. Chem. Phys., Vol. 3, 63 (2001)
+!   Notes: This is a 3x3 diabatic representation of the h3+ system.
+!     Coded May 28, 2002 by A. G. Anderson, A. W. Jasper,
+!                        and D. G. Truhlar
+!     definitions for parameters:
+!     r -> array with dimensions R(nt,3)
+!          R(i,1) is distance between atoms 1 and 2 (A-B)
+!          R(i,2) is distance between atoms 2 and 3 (B-C)
+!          R(i,3) is distance between atoms 1 and 3 (A-C)
+!          where 1 <= i <= nt
+!          and distances are in atomic units
+!     De -> array of the derivatives of the diabatic potential
+!     nt -> number of geometries to be computed. in this program, nt is
+!          always = 1
+!     e ->  array dimension nt containing the diabatic potential energy(
+!     nsurf -> which surface we want the energy(ies) for.
+!              nsurf = 1: U11
+!              nsurf = 2: U12
+!              nsurf = 3: U22
+!              nsurf = 4: U13
+!              nsurf = 5: U23
+!              nsurf = 6: U33
+!      subroutine g_prepot(g_p_)
+
+!> @brief Implement H3p_UNO_2001, a potential energy surface for H3p.
 module chempotpy_h3p_uno_2001_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H3p_UNO_2001 potential energy surface for H3p.
     subroutine evaluate( x, igrad, pin, grad, dvec )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -93,6 +126,7 @@ module chempotpy_h3p_uno_2001_pes
             enddo
         enddo
     end subroutine evaluate
+
     !> @brief Evaluate EvdRdX for the H3p_UNO_2001 potential.
     subroutine evdrdx( x, r, drdx )
         use chempotpy_geometry, only: ordered_pair_distance_jacobian
@@ -103,6 +137,7 @@ module chempotpy_h3p_uno_2001_pes
         double precision, intent(out) :: drdx(3,9)
         call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
     end subroutine evdrdx
+
     !> @brief Evaluate diagonalize for the H3p_UNO_2001 potential.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
         implicit none
@@ -122,50 +157,12 @@ module chempotpy_h3p_uno_2001_pes
         allocate( work_d(lwork_d) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
     end subroutine diagonalize
-    !   System:                        H3plus
-    !   Functional form:               DIM
-    !   Common name:                   H3+ UNO with derivatives
-    !   Number of derivatives:         1
-    !   Number of bodies:              3
-    !   Number of electronic surfaces: 3
-    !   Interface:                     3-2V
-    !
-    !   References: V. G. Ushakov, K. Nobusada, and V. I. Osherov,
-    !               Phys. Chem. Chem. Phys., Vol. 3, 63 (2001)
-    !
-    !   Notes: This is a 3x3 diabatic representation of the h3+ system.
-    !
-    !     Coded May 28, 2002 by A. G. Anderson, A. W. Jasper,
-    !                        and D. G. Truhlar
-    !
-    !     definitions for parameters:
-    !     r -> array with dimensions R(nt,3)
-    !          R(i,1) is distance between atoms 1 and 2 (A-B)
-    !          R(i,2) is distance between atoms 2 and 3 (B-C)
-    !          R(i,3) is distance between atoms 1 and 3 (A-C)
-    !          where 1 <= i <= nt
-    !          and distances are in atomic units
-    !     De -> array of the derivatives of the diabatic potential
-    !     nt -> number of geometries to be computed. in this program, nt is
-    !          always = 1
-    !     e ->  array dimension nt containing the diabatic potential energy(
-    !     nsurf -> which surface we want the energy(ies) for.
-    !              nsurf = 1: U11
-    !              nsurf = 2: U12
-    !              nsurf = 3: U22
-    !              nsurf = 4: U13
-    !              nsurf = 5: U23
-    !              nsurf = 6: U33
-    !
-    !      subroutine g_prepot(g_p_)
+
     !> @brief Evaluate pot for the H3p_UNO_2001 potential.
     subroutine pot( r, e, de, nt, nsurf )
-        !
         implicit none
-        double precision :: a, b, b_g, b_h, b_u, d_g, d_h, d_u, de, e, r, r1, r2, r3, r_g, r_h, r_u
+        double precision :: a, b, b_g, b_h, b_u, d_g, d_h, d_u, de(3,nt), e(nt), r(nt,3), r1, r2, r3, r_g, r_h, r_u
         integer          :: i, ii, j, k, l, nsurf, nt
-        dimension r(nt,3), de(3,nt), e(nt)
-        !
         !     Table 2: fitting parameters of eqns 10 and 11
         double precision :: c1(3), c2(3), c3(3), c4(3), c5(3), c6(3), c7(3)
         double precision :: c8(3), c9(3), c10(3), c11(3), c12(3), c13(3), c&
@@ -175,7 +172,6 @@ module chempotpy_h3p_uno_2001_pes
         double precision :: osg(3), tsg(3), tsu(3)
         double precision :: h(3), g(3), u(3)
         double precision :: potential(3,3)
-        !
         !     Table 2: fitting params for eqns 10 and 11
         integer            :: g_i_, g_p_
         integer, parameter :: g_pmax_ = 3
@@ -190,33 +186,24 @@ module chempotpy_h3p_uno_2001_pes
         double precision :: d12_b, d21_b, d27_v, d28_v, d29_v, d2_b, d3_b, &
             & d32_v, d4_b, d34_v
         double precision :: d5_b, d6_b, d37_v, g_r1(g_pmax_), g_r(ldg_r,nt &
-            &,3), g_r2(g_pmax_), g_r3(g_pmax_), g_p(g_pmax_, 3, 3), g_d1_w(g_p&
-            &max_), g_c(g_pmax_, 3, 3)
+            &,3), g_r2(g_pmax_), g_r3(g_pmax_), g_p(g_pmax_,3,3), g_d1_w(g_p&
+            &max_), g_c(g_pmax_,3,3)
         double precision :: g_osg(g_pmax_,3), g_d2_w(g_pmax_), g_d3_w(g_pm&
-            &ax_), g_tsg(g_pmax_, 3), g_tsu(g_pmax_, 3), g_h(g_pmax_, 3), g_g(g&
-            &_pmax_, 3), g_u(g_pmax_, 3), g_potential(g_pmax_, 3, 3), g_e(ldg_e &
+            &ax_), g_tsg(g_pmax_,3), g_tsu(g_pmax_,3), g_h(g_pmax_,3), g_g(g&
+            &_pmax_, 3), g_u(g_pmax_,3), g_potential(g_pmax_,3,3), g_e(ldg_e &
             &, nt)
         integer :: g_ehfid
         !        save g_tsu, g_h, g_g, g_u, g_potential
         !        save g_r1, g_r2, g_r3, g_p, g_d1_w, g_c, g_osg, g_d2_w, g_d3_w,
         !     *g_tsg
-        !
         !     Table 1: diatomic parameters for eqns 7-9
-        !
-        !
-        !
-        !
         !        call ehsfid(g_ehfid, 'prepot','g_h3+UNO.f')
-        !
         !        if (g_p_ .gt. g_pmax_) then
         !          print *, 'Parameter g_p_ is greater than g_pmax_'
         !          stop
         !        endif
         !        write (6, *) 'Prepot called for H3+UNO surface'
         !        write (6, *) 'Version finalized May 28, 2002'
-        !
-        !
-        !
         !        entry g_pot(g_p_, r, g_r, ldg_r, e, g_e, ldg_e, de, nt, nsurf)
         c1      = [ 8.13033d0, -6.22155d0, -3.94414d0]
         c2      = [ -3.02555d0, 3.70543d0, 0.57600d0]
@@ -253,25 +240,19 @@ module chempotpy_h3p_uno_2001_pes
                 enddo
             enddo
         enddo
-        !
         do ii = 1, nt
-            !
             do g_i_ = 1, g_p_
                 g_r1(g_i_) = g_r(g_i_,ii,1)
             enddo
             r1 = r(ii,1)
-            !--------
             do g_i_ = 1, g_p_
                 g_r2(g_i_) = g_r(g_i_,ii,2)
             enddo
             r2 = r(ii,2)
-            !--------
             do g_i_ = 1, g_p_
                 g_r3(g_i_) = g_r(g_i_,ii,3)
             enddo
             r3 = r(ii,3)
-            !--------
-            !
             !     equation 11
             do l = 1, 3
                 d4_v  = c4(l) * r1
@@ -312,8 +293,6 @@ module chempotpy_h3p_uno_2001_pes
                 enddo
                 p(l,1) = c1(l) + c2(l) * r1 + d4_v * r1 + c5(l) * d10_v + d13_v * r3 + d16_v * d17_v + c8(l) * d20_v + &
                     & c9(l) * d24_v + d28_v * d29_v + d32_v * d34_v + d38_v * r3 + d42_v * d43_v + c3(l) * (r2 + r3)
-                !--------
-                !
                 d4_v  = c4(l) * r2
                 d10_v = (r3 + r1) * (r3 + r1)
                 d4_p  = 2.0d0 * (r3 + r1)
@@ -352,8 +331,6 @@ module chempotpy_h3p_uno_2001_pes
                 enddo
                 p(l,2) = c1(l) + c2(l) * r2 + d4_v * r2 + c5(l) * d10_v + d13_v * r1 + d16_v * d17_v + c8(l) * d20_v + &
                     & c9(l) * d24_v + d28_v * d29_v + d32_v * d34_v + d38_v * r1 + d42_v * d43_v + c3(l) * (r3 + r1)
-                !--------
-                !
                 d4_v  = c4(l) * r3
                 d10_v = (r1 + r2) * (r1 + r2)
                 d4_p  = 2.0d0 * (r1 + r2)
@@ -392,9 +369,7 @@ module chempotpy_h3p_uno_2001_pes
                 enddo
                 p(l,3) = c1(l) + c2(l) * r3 + d4_v * r3 + c5(l) * d10_v + d13_v * r2 + d16_v * d17_v + c8(l) * d20_v + &
                     & c9(l) * d24_v + d28_v * d29_v + d32_v * d34_v + d38_v * r2 + d42_v * d43_v + c3(l) * (r1 + r2)
-                !--------
             enddo
-            !
             !     equation 10
             do l = 1, 3
                 d2_b = (-c14(l)) * c14(l)
@@ -409,8 +384,7 @@ module chempotpy_h3p_uno_2001_pes
                     g_c(g_i_, l, 1) = d4_b * g_d1_w(g_i_) + d3_v * g_p(g_i_, l, 1)
                 enddo
                 c(l,1) = p(l,1) * d3_v
-                !--------
-                d2_b = (-c14(l)) * c14(l)
+                d2_b   = (-c14(l)) * c14(l)
                 do g_i_ = 1, g_p_
                     g_d1_w(g_i_) = d2_b * g_r1(g_i_) + d2_b * g_r3(g_i_)
                 enddo
@@ -422,8 +396,7 @@ module chempotpy_h3p_uno_2001_pes
                     g_c(g_i_, l, 2) = d4_b * g_d1_w(g_i_) + d3_v * g_p(g_i_, l, 2)
                 enddo
                 c(l,2) = p(l,2) * d3_v
-                !--------
-                d2_b = (-c14(l)) * c14(l)
+                d2_b   = (-c14(l)) * c14(l)
                 do g_i_ = 1, g_p_
                     g_d1_w(g_i_) = d2_b * g_r2(g_i_) + d2_b * g_r1(g_i_)
                 enddo
@@ -435,9 +408,7 @@ module chempotpy_h3p_uno_2001_pes
                     g_c(g_i_, l, 3) = d4_b * g_d1_w(g_i_) + d3_v * g_p(g_i_, l, 3)
                 enddo
                 c(l,3) = p(l,3) * d3_v
-                !--------
             enddo
-            !
             !     equations 7,8,9
             do k = 1, 3
                 do g_i_ = 1, g_p_
@@ -460,8 +431,7 @@ module chempotpy_h3p_uno_2001_pes
                     g_osg(g_i_,k) = d8_b * g_r(g_i_,ii,k) + d16_b * g_d1_w( g_i_)
                 enddo
                 osg(k) = d3_v * d15_v
-                !--------
-                d3_b = (-2.0d0) * b_g
+                d3_b   = (-2.0d0) * b_g
                 do g_i_ = 1, g_p_
                     g_d1_w(g_i_) = d3_b * g_r(g_i_,ii,k)
                 enddo
@@ -489,8 +459,7 @@ module chempotpy_h3p_uno_2001_pes
                     g_tsg(g_i_, k) = d6_b * g_d3_w(g_i_) + d10_b * g_d2_w(g_i_ ) + d11_b * g_d1_w(g_i_)
                 enddo
                 tsg(k) = d_g * (d2_v - 2.0d0 * d4_v + 0.0015d0 * d8_v)
-                !--------
-                d3_b = (-2.0d0) * b_u
+                d3_b   = (-2.0d0) * b_u
                 do g_i_ = 1, g_p_
                     g_d1_w(g_i_) = d3_b * g_r(g_i_,ii,k)
                 enddo
@@ -509,144 +478,115 @@ module chempotpy_h3p_uno_2001_pes
                     g_tsu(g_i_, k) = d6_b * g_d2_w(g_i_) + d7_b * g_d1_w(g_i_)
                 enddo
                 tsu(k) = d_u * (d2_v + 2.0d0 * d4_v)
-                !--------
             enddo
-            !
             !     eqns 4,5,6
             do i = 1, 3
                 do g_i_ = 1, g_p_
                     g_h(g_i_, i) = g_c(g_i_, 1, i) + g_osg(g_i_,i)
                 enddo
                 h(i) = osg(i) + c(1,i)
-                !--------
                 do g_i_ = 1, g_p_
                     g_g(g_i_, i) = g_c(g_i_, 2, i) + g_tsg(g_i_, i)
                 enddo
                 g(i) = tsg(i) + c(2,i)
-                !--------
                 do g_i_ = 1, g_p_
                     g_u(g_i_, i) = g_c(g_i_, 3, i) + g_tsu(g_i_, i)
                 enddo
                 u(i) = tsu(i) + c(3,i)
-                !--------
             enddo
-            !
             !     this 'potential' 3X3 is the potential matrix
             do g_i_ = 1, g_p_
                 g_potential(g_i_, 1, 1) = 0.5d0 * g_u(g_i_, 3) + 0.5d0 * g_g (g_i_, 3) + 0.5d0 * g_u(g_i_, 2) + &
                     & 0.5d0 * g_g(g_i_, 2) + g_h(g_i_, 1)
             enddo
             potential(1,1) = h(1) + 0.5d0 * (g(2) + u(2) + g(3) + u(3))
-            !--------
             do g_i_ = 1, g_p_
                 g_potential(g_i_, 2, 2) = 0.5d0 * g_u(g_i_, 3) + 0.5d0 * g_g (g_i_, 3) + 0.5d0 * g_u(g_i_, 1) + &
                     & 0.5d0 * g_g(g_i_, 1) + g_h(g_i_, 2)
             enddo
             potential(2,2) = h(2) + 0.5d0 * (g(1) + u(1) + g(3) + u(3))
-            !--------
             do g_i_ = 1, g_p_
                 g_potential(g_i_, 3, 3) = 0.5d0 * g_u(g_i_, 2) + 0.5d0 * g_g (g_i_, 2) + 0.5d0 * g_u(g_i_, 1) + &
                     & 0.5d0 * g_g(g_i_, 1) + g_h(g_i_, 3)
             enddo
             potential(3,3) = h(3) + 0.5d0 * (g(1) + u(1) + g(2) + u(2))
-            !--------
             do g_i_ = 1, g_p_
                 g_potential(g_i_, 1, 2) = (-0.5d0) * g_u(g_i_, 3) + 0.5d0 * g_g(g_i_, 3)
             enddo
             potential(1,2) = 0.5d0 * (g(3) - u(3))
-            !--------
             do g_i_ = 1, g_p_
                 g_potential(g_i_, 1, 3) = (-0.5d0) * g_u(g_i_, 2) + 0.5d0 * g_g(g_i_, 2)
             enddo
             potential(1,3) = 0.5d0 * (g(2) - u(2))
-            !--------
             do g_i_ = 1, g_p_
                 g_potential(g_i_, 2, 1) = (-0.5d0) * g_u(g_i_, 3) + 0.5d0 * g_g(g_i_, 3)
             enddo
             potential(2,1) = 0.5d0 * (g(3) - u(3))
-            !--------
             do g_i_ = 1, g_p_
                 g_potential(g_i_, 2, 3) = (-0.5d0) * g_u(g_i_, 1) + 0.5d0 * g_g(g_i_, 1)
             enddo
             potential(2,3) = 0.5d0 * (g(1) - u(1))
-            !--------
             do g_i_ = 1, g_p_
                 g_potential(g_i_, 3, 1) = (-0.5d0) * g_u(g_i_, 2) + 0.5d0 * g_g(g_i_, 2)
             enddo
             potential(3,1) = 0.5d0 * (g(2) - u(2))
-            !--------
             do g_i_ = 1, g_p_
                 g_potential(g_i_, 3, 2) = (-0.5d0) * g_u(g_i_, 1) + 0.5d0 * g_g(g_i_, 1)
             enddo
             potential(3,2) = 0.5d0 * (g(1) - u(1))
-            !--------
-            !
             if( nsurf .eq. 1 )then
                 do g_i_ = 1, g_p_
                     g_e(g_i_, ii) = g_potential(g_i_, 1, 1)
                 enddo
                 e(ii) = potential(1,1) - d_h
-                !--------
             endif
             if( nsurf .eq. 2 )then
                 do g_i_ = 1, g_p_
                     g_e(g_i_, ii) = g_potential(g_i_, 1, 2)
                 enddo
                 e(ii) = potential(1,2)
-                !--------
             endif
             if( nsurf .eq. 3 )then
                 do g_i_ = 1, g_p_
                     g_e(g_i_, ii) = g_potential(g_i_, 2, 2)
                 enddo
                 e(ii) = potential(2,2) - d_h
-                !--------
             endif
             if( nsurf .eq. 4 )then
                 do g_i_ = 1, g_p_
                     g_e(g_i_, ii) = g_potential(g_i_, 1, 3)
                 enddo
                 e(ii) = potential(1,3)
-                !--------
             endif
             if( nsurf .eq. 5 )then
                 do g_i_ = 1, g_p_
                     g_e(g_i_, ii) = g_potential(g_i_, 2, 3)
                 enddo
                 e(ii) = potential(2,3)
-                !--------
             endif
             if( nsurf .eq. 6 )then
                 do g_i_ = 1, g_p_
                     g_e(g_i_, ii) = g_potential(g_i_, 3, 3)
                 enddo
                 e(ii) = potential(3,3) - d_h
-                !--------
             endif
             if( nsurf .gt. 6 .or. nsurf .lt. 1 )then
                 do g_i_ = 1, g_p_
                     g_e(g_i_, ii) = 0.0d0
                 enddo
                 e(ii) = 0.d0
-                !--------
                 write (6, *) 'WARN:  NSURF = ', nsurf
             endif
-            !
             ! derivatives
             do i = 1, 3
                 de(i,ii) = g_e(i, ii)
             enddo
-            !
             ! end nt loop
         enddo
-        !
     end subroutine pot
-    !
-    !
-    !
 end module chempotpy_h3p_uno_2001_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H3p_UNO_2001 through the Python-facing PES entry point.
 subroutine pes( x, igrad, pin, grad, dvec )
     use chempotpy_h3p_uno_2001_pes, only: evaluate
     implicit none

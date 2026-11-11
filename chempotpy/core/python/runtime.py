@@ -58,7 +58,7 @@ class LegacyRuntime:
             diabatic_workspace_state_counts or {}
         )
         self._importer = importer
-        self._data_root = data_root or Path(__file__).resolve().parents[1]
+        self._data_root = data_root or Path(__file__).resolve().parents[2]
 
     def prepare(
         self, system_name: str, surface_name: str, geometry: Any

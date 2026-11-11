@@ -279,6 +279,239 @@ def split_top_level_entities(text: str) -> List[str]:
     return entities
 
 
+def logical_statement_spans(lines: Sequence[str]):
+    """Return physical spans and joined code for Fortran statements."""
+
+    statements = []
+    index = 0
+    while index < len(lines):
+        if (
+            not lines[index].strip()
+            or lines[index].lstrip().startswith(("!", "#"))
+        ):
+            index += 1
+            continue
+        start = index
+        segments = []
+        while True:
+            code = code_without_comment(lines[index]).strip()
+            if index > start:
+                code = re.sub(r"^&\s*", "", code)
+            continued = code.endswith("&")
+            if continued:
+                code = code[:-1].rstrip()
+            segments.append(code)
+            index += 1
+            if not continued or index >= len(lines):
+                break
+        statements.append((start, index, " ".join(segments)))
+    return statements
+
+
+def wrap_declaration(prefix: str, entities: Sequence[str]) -> List[str]:
+    """Wrap one typed declaration at entity boundaries."""
+
+    indentation = re.match(r"^\s*", prefix).group(0)
+    continuation = indentation+"    & "
+    output = []
+    current = prefix
+    for entity_index, entity in enumerate(entities):
+        suffix = "," if entity_index < len(entities)-1 else ""
+        addition = ("" if current.endswith(" ") else " ")+entity.strip()+suffix
+        if len(current)+len(addition) <= 120 or current == prefix:
+            current += addition
+            continue
+        output.append(current+" &")
+        current = continuation+entity.strip()+suffix
+    output.append(current)
+    return output
+
+
+def compact_dimension_shape(shape: str) -> str:
+    """Remove legacy spacing inside an array-shape suffix."""
+
+    shape = re.sub(r"\(\s*", "(", shape)
+    shape = re.sub(r"\s*,\s*", ",", shape)
+    return re.sub(r"\s*\)", ")", shape)
+
+
+def hoist_shape_parameter_declarations(source_text: str) -> str:
+    """Move named constants ahead of declarations whose shapes use them."""
+
+    lines = source_text.splitlines()
+    implicit_none_lines = [
+        index
+        for index, line in enumerate(lines)
+        if re.match(r"^\s*implicit\s+none\b", line, re.I)
+    ]
+    for implicit_index in reversed(implicit_none_lines):
+        specification_end = implicit_index+1
+        while (
+            specification_end < len(lines)
+            and not executable_statement(lines[specification_end])
+        ):
+            specification_end += 1
+        local_lines = lines[implicit_index+1:specification_end]
+        statements = logical_statement_spans(local_lines)
+        parameter_statements = []
+        declarations = []
+        for start, end, statement in statements:
+            declaration = DECLARATION.match(statement)
+            if declaration is None:
+                continue
+            attributes = declaration.group("attributes") or ""
+            if re.search(r"(?:^|,)\s*parameter\s*(?:,|$)", attributes, re.I):
+                parameter_statements.append((start, end, statement, declaration))
+            else:
+                declarations.append((start, statement))
+        needs_hoist = False
+        for parameter_start, _, _, declaration in parameter_statements:
+            names = []
+            for entity in split_top_level_entities(declaration.group("entities")):
+                name = re.match(r"\s*([a-z][a-z0-9_]*)", entity, re.I)
+                if name is not None:
+                    names.append(name.group(1))
+            if any(
+                declaration_start < parameter_start
+                and any(
+                    re.search(r"\b{}\b".format(re.escape(name)), statement, re.I)
+                    for name in names
+                )
+                for declaration_start, statement in declarations
+            ):
+                needs_hoist = True
+                break
+        if not needs_hoist:
+            continue
+        chunks = [local_lines[start:end] for start, end, _, _ in parameter_statements]
+        for start, end, _, _ in reversed(parameter_statements):
+            del local_lines[start:end]
+        insertion = [line for chunk in chunks for line in chunk]
+        local_lines[0:0] = insertion
+        lines[implicit_index+1:specification_end] = local_lines
+    return "\n".join(lines)+"\n"
+
+
+def fold_standalone_dimensions(source_text: str) -> str:
+    """Move standalone DIMENSION shapes into typed declarations."""
+
+    lines = source_text.splitlines()
+    statements = logical_statement_spans(lines)
+    declarations = {}
+    declaration_updates = {}
+    removed_spans = set()
+    for statement_index, (start, end, statement) in enumerate(statements):
+        normalized = statement.strip()
+        if (
+            re.match(r"^(?:module\s+(?!procedure\b)|program\b|block\s+data\b)", normalized, re.I)
+            or PROCEDURE_DECLARATION.match(normalized) is not None
+            or re.match(r"^contains\b", normalized, re.I)
+        ):
+            declarations = {}
+        if re.match(r"^implicit\s+none\b", normalized, re.I):
+            declarations = {}
+            continue
+        declaration = DECLARATION.match(statement)
+        if declaration is not None:
+            for entity in split_top_level_entities(declaration.group("entities")):
+                declarator = entity.split("=", 1)[0].strip()
+                name = re.match(r"([a-z][a-z0-9_]*)", declarator, re.I)
+                if name is not None:
+                    declarations[name.group(1).lower()] = statement_index
+            continue
+        dimension = re.match(r"^\s*dimension\s+(.+)$", statement, re.I)
+        if dimension is None:
+            continue
+        for entity in split_top_level_entities(dimension.group(1)):
+            match = re.match(
+                r"\s*([a-z][a-z0-9_]*)\s*(\(.*\))\s*$", entity, re.I
+            )
+            if match is None:
+                raise ValueError("invalid DIMENSION entity: {}".format(entity))
+            name = match.group(1).lower()
+            if name not in declarations:
+                for future_index in range(statement_index+1, len(statements)):
+                    _, _, future = statements[future_index]
+                    future_normalized = future.strip()
+                    if (
+                        re.match(r"^(?:contains|end\b)", future_normalized, re.I)
+                        or PROCEDURE_DECLARATION.match(future_normalized)
+                        is not None
+                    ):
+                        break
+                    future_declaration = DECLARATION.match(future)
+                    if future_declaration is None:
+                        continue
+                    for future_entity in split_top_level_entities(
+                        future_declaration.group("entities")
+                    ):
+                        future_name = re.match(
+                            r"\s*([a-z][a-z0-9_]*)", future_entity, re.I
+                        )
+                        if (
+                            future_name is not None
+                            and future_name.group(1).lower() == name
+                        ):
+                            declarations[name] = future_index
+                            break
+                    if name in declarations:
+                        break
+            if name not in declarations:
+                raise ValueError(
+                    "no typed declaration found for DIMENSION variable {}".format(name)
+                )
+            declaration_updates.setdefault(declarations[name], {})[name] = (
+                compact_dimension_shape(match.group(2))
+            )
+        removed_spans.add((start, end))
+
+    replacements = {}
+    for statement_index, updates in declaration_updates.items():
+        start, end, statement = statements[statement_index]
+        declaration = DECLARATION.match(statement)
+        entities = split_top_level_entities(declaration.group("entities"))
+        converted = []
+        for entity in entities:
+            match = re.match(r"\s*([a-z][a-z0-9_]*)(.*)$", entity, re.I)
+            name = match.group(1).lower()
+            remainder = match.group(2)
+            if name in updates and not remainder.lstrip().startswith("("):
+                assignment = remainder.find("=")
+                if assignment >= 0:
+                    remainder = (
+                        remainder[:assignment].rstrip()
+                        + updates[name]
+                        + " "
+                        + remainder[assignment:].lstrip()
+                    )
+                else:
+                    remainder = remainder.rstrip()+updates[name]
+            converted.append(match.group(1)+remainder)
+        indentation = re.match(r"^\s*", lines[start]).group(0)
+        prefix = indentation+statement[:declaration.start("entities")]
+        replacements[(start, end)] = wrap_declaration(prefix, converted)
+
+    output = []
+    index = 0
+    while index < len(lines):
+        matching = next(
+            (span for span in replacements if span[0] == index), None
+        )
+        if matching is not None:
+            output.extend(replacements[matching])
+            index = matching[1]
+            continue
+        removed = next(
+            (span for span in removed_spans if span[0] == index), None
+        )
+        if removed is not None:
+            index = removed[1]
+            continue
+        output.append(lines[index])
+        index += 1
+    return hoist_shape_parameter_declarations("\n".join(output)+"\n")
+
+
 def declared_array_names(source_text: str) -> set[str]:
     """Return array names declared in modern and legacy declarations."""
 
@@ -607,14 +840,19 @@ def normalize_if_spacing(source_text: str) -> str:
                 depth -= 1
             closing += 1
         if depth:
-            output.append(line)
+            keyword = re.sub(
+                r"\s+", "", match.group("keyword").lower()
+            )
+            code = (
+                code[:match.start("keyword")] + keyword
+                + code[match.end("keyword"):]
+            )
+            output.append(code + comment)
             continue
         condition = code[opening+1:closing-1].strip()
         condition = space_relations(condition)
         suffix = code[closing:].strip()
-        keyword = match.group("keyword").lower()
-        if keyword == "elseif":
-            keyword = "else if"
+        keyword = re.sub(r"\s+", "", match.group("keyword").lower())
         prefix = "{}{}{}( {} )".format(
             match.group("indent"), match.group("label") or "", keyword, condition
         )
@@ -1107,6 +1345,100 @@ def normalize_unit_blank_lines(lines: Sequence[str]) -> List[str]:
     return normalized
 
 
+def normalize_contains_blank_lines(source_text: str) -> str:
+    """Surround every standalone CONTAINS statement with one blank line."""
+
+    lines = source_text.splitlines()
+    output = []
+    for line in lines:
+        code = code_without_comment(line).strip()
+        if re.fullmatch(r"contains", code, re.I) is not None:
+            while output and not output[-1].strip():
+                output.pop()
+            if output:
+                output.append("")
+            output.append(line)
+            output.append("")
+            continue
+        if not line.strip() and output and not output[-1].strip():
+            continue
+        output.append(line)
+    while output and not output[-1].strip():
+        output.pop()
+    return "\n".join(output)+"\n"
+
+
+def normalize_procedure_separator_blank_lines(source_text: str) -> str:
+    """Put one blank line between adjacent subroutines or functions."""
+
+    lines = source_text.splitlines()
+    endings = [
+        index
+        for index, line in enumerate(lines)
+        if re.fullmatch(
+            r"\s*end\s+(?:subroutine|function)(?:\s+[a-z][a-z0-9_]*)?\s*",
+            code_without_comment(line),
+            re.I,
+        )
+    ]
+    for end_index in reversed(endings):
+        next_code = end_index+1
+        while next_code < len(lines) and (
+            not lines[next_code].strip()
+            or lines[next_code].lstrip().startswith("!")
+        ):
+            next_code += 1
+        if (
+            next_code >= len(lines)
+            or PROCEDURE_DECLARATION.match(
+                code_without_comment(lines[next_code]).strip()
+            )
+            is None
+        ):
+            continue
+        documentation = [
+            line for line in lines[end_index+1:next_code] if line.strip()
+        ]
+        lines[end_index+1:next_code] = [""]+documentation
+    return "\n".join(lines)+"\n"
+
+
+def hoist_pes_metadata(source_text: str) -> str:
+    """Move the first PES metadata block to the beginning of its source."""
+
+    lines = source_text.splitlines()
+    system_line = next(
+        (
+            index
+            for index, line in enumerate(lines)
+            if re.match(r"^\s*!\s*System\s*:", line, re.I)
+        ),
+        None,
+    )
+    if system_line is None:
+        return source_text if source_text.endswith("\n") else source_text+"\n"
+    block_end = system_line
+    while block_end < len(lines):
+        stripped = lines[block_end].lstrip()
+        if stripped.startswith("!>"):
+            break
+        if stripped.startswith("!") or not stripped:
+            block_end += 1
+            continue
+        break
+    metadata = [
+        line.lstrip()
+        for line in lines[system_line:block_end]
+        if line.strip()
+    ]
+    del lines[system_line:block_end]
+    while system_line < len(lines) and not lines[system_line].strip():
+        del lines[system_line]
+    while lines and not lines[0].strip():
+        del lines[0]
+    return "\n".join(metadata+[""]+lines)+"\n"
+
+
 def remove_terminal_returns(lines: Sequence[str]) -> List[str]:
     """Remove unlabeled RETURN statements immediately before procedure ends."""
 
@@ -1490,11 +1822,95 @@ def align_assignments(lines: Sequence[str]) -> List[str]:
     return aligned
 
 
+def remove_uninformative_comment_lines(source_text: str) -> str:
+    """Remove empty comments and repeated punctuation separator bars."""
+
+    output = []
+    decoration_characters = frozenset("-=*_.:~+#/\\|")
+    for line in source_text.splitlines():
+        stripped = line.lstrip()
+        if not stripped.startswith("!"):
+            output.append(line)
+            continue
+        body = stripped.lstrip("!").strip()
+        compact = re.sub(r"\s+", "", body).strip("!")
+        if not compact:
+            continue
+        if (
+            len(compact) >= 3
+            and len(set(compact)) == 1
+            and compact[0] in decoration_characters
+        ):
+            continue
+        output.append(line)
+    return "\n".join(output) + "\n"
+
+
+GENERIC_PES_BRIEFS = {
+    "own the public evaluator for this potential energy surface.": "module",
+    "own the complete implementation of this potential energy surface.": "module",
+    "evaluate this surface through the modern module contract.": "evaluate",
+    "evaluate this pes through the modern module contract.": "evaluate",
+    "evaluate the surface through the common chempotpy cartesian contract.": "evaluate",
+    "preserve the historical python-facing pes entry point.": "pes_adapter",
+    "preserve the historical python-facing dpem entry point.": "dpem_adapter",
+}
+
+
+def specialize_pes_documentation(source_text: str, path: Path) -> str:
+    """Replace migration markers and generic briefs with PES-specific text."""
+
+    system = path.parent.name
+    if system.lower() == "save":
+        system = path.parent.parent.name
+    surface = path.stem
+    is_dpem = surface.upper().endswith("_DPEM")
+    model = surface[:-5] if is_dpem else surface
+    if is_dpem:
+        module_brief = (
+            f"Implement {model}, a diabatic potential matrix for {system}."
+        )
+        evaluate_brief = (
+            f"Evaluate the {model} diabatic potential matrix for {system}."
+        )
+    else:
+        module_brief = (
+            f"Implement {surface}, a potential energy surface for {system}."
+        )
+        evaluate_brief = (
+            f"Evaluate the {surface} potential energy surface for {system}."
+        )
+    replacements = {
+        "module": module_brief,
+        "evaluate": evaluate_brief,
+        "pes_adapter": (
+            f"Expose {surface} through the Python-facing PES entry point."
+        ),
+        "dpem_adapter": (
+            f"Expose {model} through the Python-facing DPEM entry point."
+        ),
+    }
+    output = []
+    for line in source_text.splitlines():
+        stripped = line.strip()
+        if re.match(r"!>\s*@modern\b", stripped, flags=re.IGNORECASE):
+            continue
+        brief = re.match(r"(?P<prefix>\s*!>\s*@brief\s+)(?P<body>.*)", line)
+        if brief is not None:
+            category = GENERIC_PES_BRIEFS.get(brief.group("body").lower())
+            if category is not None:
+                line = brief.group("prefix") + replacements[category]
+        output.append(line)
+    return "\n".join(output) + "\n"
+
+
 def format_source_text(source_text: str) -> str:
     """Return structurally indented free-form Fortran source."""
 
     source_text = lowercase_fortran_code(source_text)
+    source_text = fold_standalone_dimensions(source_text)
     source_text = align_pes_metadata(source_text)
+    source_text = remove_uninformative_comment_lines(source_text)
     source_text = normalize_comma_spacing(source_text)
     source_text = compact_array_commas(source_text)
     source_text = convert_labeled_do_loops(source_text)
@@ -1575,14 +1991,32 @@ def format_source_text(source_text: str) -> str:
     output = compact_unit_headers(output)
     output = compact_specification_sections(output)
     output = combine_initialization_assignments(output)
-    return "\n".join(output) + "\n"
+    source_text = normalize_contains_blank_lines("\n".join(output) + "\n")
+    source_text = normalize_procedure_separator_blank_lines(source_text)
+    return hoist_pes_metadata(source_text)
 
 
-def format_source(path: Path, write: bool) -> bool:
+def format_source(
+    path: Path,
+    write: bool,
+    dimensions_only: bool = False,
+    contains_only: bool = False,
+    procedure_separators_only: bool = False,
+    metadata_only: bool = False,
+) -> bool:
     """Format one source and optionally write it."""
 
     original = path.read_text(errors="strict")
-    formatted = format_source_text(original)
+    if dimensions_only:
+        formatted = fold_standalone_dimensions(original)
+    elif contains_only:
+        formatted = normalize_contains_blank_lines(original)
+    elif procedure_separators_only:
+        formatted = normalize_procedure_separator_blank_lines(original)
+    elif metadata_only:
+        formatted = hoist_pes_metadata(original)
+    else:
+        formatted = specialize_pes_documentation(format_source_text(original), path)
     changed = formatted != original
     if write and changed:
         path.write_text(formatted)
@@ -1595,8 +2029,39 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("sources", nargs="+", type=Path)
     parser.add_argument("--write", action="store_true")
+    focused_mode = parser.add_mutually_exclusive_group()
+    focused_mode.add_argument(
+        "--dimensions-only",
+        action="store_true",
+        help="fold standalone DIMENSION statements without other formatting",
+    )
+    focused_mode.add_argument(
+        "--contains-only",
+        action="store_true",
+        help="surround CONTAINS statements without other formatting",
+    )
+    focused_mode.add_argument(
+        "--procedure-separators-only",
+        action="store_true",
+        help="separate adjacent procedures without other formatting",
+    )
+    focused_mode.add_argument(
+        "--metadata-only",
+        action="store_true",
+        help="move the PES metadata block without other formatting",
+    )
     arguments = parser.parse_args()
-    changed = sum(format_source(path, arguments.write) for path in arguments.sources)
+    changed = sum(
+        format_source(
+            path,
+            arguments.write,
+            arguments.dimensions_only,
+            arguments.contains_only,
+            arguments.procedure_separators_only,
+            arguments.metadata_only,
+        )
+        for path in arguments.sources
+    )
     print("fortran_sources_changed: {}".format(changed))
     return 0
 

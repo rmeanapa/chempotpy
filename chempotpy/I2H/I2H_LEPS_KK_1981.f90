@@ -1,11 +1,64 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+! System:          HI2
+! Functional form: eLEPS (extended London-Eyring-Polanyi-Sato)
+! Common name:     KK
+! Reference:       J. A. Kaye and A. Kuppermann, Chem. Phys. Lett.
+!                  77, 573 (1981).
+! Number of bodies: 3
+! Interface: potlib2001
+! Number of electronic states: 1
+! Number of derivatives: 1
+! prepare_local_context must be called once before any calls to POT are made.  It shoul
+! never be called more than once.
+! The potential parameters are included in DATA statements.
+! Coordinates, potential energy, derivatives, and other information
+! is passed through three common blocks:
+!           COMMON /PT1CM/ R(3), ENGYGS, DEGSDR(3)
+!           COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
+! The common block PT1CM contains the internal coordinates, the potentia
+! energy, and the derivatives with respect to internal coordinates.  The
+! common block PT2CM contains the a several variables which control
+! various aspects of the calculation as outlined below.  The last common
+! block, ASYCM, contains information about the differences in the
+! dissociation energies which is useful for certain calculations.
+! Internuclear distances should be expressed in bohr and energies, etc.
+! returned in Hartree atomic units.
+! The coordinates are defined as follows:
+!           R(1) = R(I-H)
+!           R(2) = R(H-I')
+!           R(3) = R(I-I')
+! The zero of energy for this potential occurs when the I atom is
+! "infinitely" far from the HI molecule, and the HI molecule is at
+! its equilibrium separation.
+! The array DEGSDR contains the analytic first derivatives of the potent
+! energy with respect to the internal coordinates if the variable NDER i
+! equal to 1 (see not below).  The derivatives are defined as follows:
+!           DEGSDR(1) = dV(R)/dR(1)
+!           DEGSDR(2) = dV(R)/dR(2)
+!           DEGSDR(3) = dV(R)/dR(3)
+! where V(R) = V { R(1), R(2), R(3) }.
+! The variable NDER controls whether derivatives are calculated.
+! If NDER = 1 first derivatives are calculated, otherwise no derivatives
+! are calculated.  Note:  the default value of NDER is 1.
+! The array NFLAG is unused in this potential surface.
+! The common block ASYCM is defined as follows:
+!           EASYAB = DE(I-H)
+!           EASYBC = DE(H-I')
+!           EASYAC = DE(I-I')
+! where DE is the dissociation energy in atomic units.
+!   Potential parameters' default settings
+!                  Variable            Default value
+!                  NDER                1
+!                  NFLAG(18)           6
+
+!> @brief Implement I2H_LEPS_KK_1981, a potential energy surface for I2H.
 module chempotpy_i2h_leps_kk_1981_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the I2H_LEPS_KK_1981 potential energy surface for I2H.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -111,7 +164,7 @@ module chempotpy_i2h_leps_kk_1981_pes
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
@@ -120,110 +173,32 @@ module chempotpy_i2h_leps_kk_1981_pes
                     g(1,iatom,idir) = dgscart(iatom,idir)*51.422067
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
+
         contains
+
         !> @brief Evaluate prepare_local_context for the I2H_LEPS_KK_1981 potential.
         subroutine prepare_local_context
-            !
-            ! System:          HI2
-            ! Functional form: eLEPS (extended London-Eyring-Polanyi-Sato)
-            ! Common name:     KK
-            ! Reference:       J. A. Kaye and A. Kuppermann, Chem. Phys. Lett.
-            !                  77, 573 (1981).
-            !
-            ! Number of bodies: 3
-            ! Interface: potlib2001
-            ! Number of electronic states: 1
-            ! Number of derivatives: 1
-            !
-            ! prepare_local_context must be called once before any calls to POT are made.  It shoul
-            ! never be called more than once.
-            ! The potential parameters are included in DATA statements.
-            ! Coordinates, potential energy, derivatives, and other information
-            ! is passed through three common blocks:
-            !           COMMON /PT1CM/ R(3), ENGYGS, DEGSDR(3)
-            !           COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
-            ! The common block PT1CM contains the internal coordinates, the potentia
-            ! energy, and the derivatives with respect to internal coordinates.  The
-            ! common block PT2CM contains the a several variables which control
-            ! various aspects of the calculation as outlined below.  The last common
-            ! block, ASYCM, contains information about the differences in the
-            ! dissociation energies which is useful for certain calculations.
-            !
-            ! Internuclear distances should be expressed in bohr and energies, etc.
-            ! returned in Hartree atomic units.
-            !
-            ! The coordinates are defined as follows:
-            !           R(1) = R(I-H)
-            !           R(2) = R(H-I')
-            !           R(3) = R(I-I')
-            !
-            ! The zero of energy for this potential occurs when the I atom is
-            ! "infinitely" far from the HI molecule, and the HI molecule is at
-            ! its equilibrium separation.
-            !
-            ! The array DEGSDR contains the analytic first derivatives of the potent
-            ! energy with respect to the internal coordinates if the variable NDER i
-            ! equal to 1 (see not below).  The derivatives are defined as follows:
-            !           DEGSDR(1) = dV(R)/dR(1)
-            !           DEGSDR(2) = dV(R)/dR(2)
-            !           DEGSDR(3) = dV(R)/dR(3)
-            ! where V(R) = V { R(1), R(2), R(3) }.
-            !
-            ! The variable NDER controls whether derivatives are calculated.
-            ! If NDER = 1 first derivatives are calculated, otherwise no derivatives
-            ! are calculated.  Note:  the default value of NDER is 1.
-            !
-            ! The array NFLAG is unused in this potential surface.
-            !
-            ! The common block ASYCM is defined as follows:
-            !           EASYAB = DE(I-H)
-            !           EASYBC = DE(H-I')
-            !           EASYAC = DE(I-I')
-            ! where DE is the dissociation energy in atomic units.
-            !
-            !   Potential parameters' default settings
-            !                  Variable            Default value
-            !                  NDER                1
-            !                  NFLAG(18)           6
-            !
             implicit none
-            integer :: i
-            !
-            !
+            integer                     :: i
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            double precision, parameter :: cevau = 27.2113961d0
-            !
-            !
-            !
+            double precision, parameter :: cevau  = 27.2113961d0
             !      save de,re,b,s,cevau
-            !
             ! Write header potential parameters to UNIT NFLAG(18).
-            !
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
             ! Calculate first derivatives (default).  If no first derivatives are
             ! desired, nder should be set equal to zero after prepare_local_context is called.
-            !
             !      nder=1
-            !
             ! Convert to atomic units and calculate some useful constants.
-            !
             do i=1, 3
                 de(i)  = de(i)/cevau
                 pf     = 0.5d0*de(i)*((1.d0-s(i))/(1.d0+s(i)))
@@ -232,71 +207,44 @@ module chempotpy_i2h_leps_kk_1981_pes
                 pfs(i) = -de(i)*b(i)
                 pft(i) = -pf*b(i)
             enddo
-            easyab = de(1)
-            easybc = de(2)
-            easyac = de(3)
-            !
+            easyab   = de(1)
+            easybc   = de(2)
+            easyac   = de(3)
             ezero(1) = de(2)
-            !
             do i=1, 5
                 ref(i) = ' '
             enddo
-            !
-            ref(1) = 'J. A. Kaye and A. Kuppermann,'
-            ref(2) = 'Chem. Phys. Lett. 77, 573(1981)'
-            !
+            ref(1)     = 'J. A. Kaye and A. Kuppermann,'
+            ref(2)     = 'Chem. Phys. Lett. 77, 573(1981)'
             indexes(1) = 53
             indexes(2) = 1
             indexes(3) = 53
-            !
-            !
-            !
-            irctnt = 2
-            !
+            irctnt     = 2
             !CALL POTINFO
-            !
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POT for the I2H_LEPS_KK_1981 potential.
         subroutine pot
-            !
-            !
             ! The coordinates are defined as follows:
             !           R(1) = R(I-H)
             !           R(2) = R(H-I')
             !           R(3) = R(I-I')
-            !
             ! The zero of energy for this potential occurs when the I atom is
             ! "infinitely" far from the HI molecule, and the HI molecule is at
             ! its equilibrium separation.
-            !
             implicit none
-            double precision :: dj1dr1, dj2dr2, dj3dr3, dq1dr1, dq2dr2, dq3dr3, hds1dr1, hds2dr2, hds3dr3, hdt1dr1, hdt2dr2, hdt3dr3, hradi, hs1, hs2, hs3, ht1, ht2, ht3, rad, radi, wj1, wj2, wj3, wq1, wq2, wq3, y1, y2, y3
-            !
-            !
+            double precision            :: dj1dr1, dj2dr2, dj3dr3, dq1dr1, dq2dr2, dq3dr3, hds1dr1, hds2dr2, hds3dr3, hdt1dr1, hdt2dr2, hdt3dr3, hradi, hs1, hs2, hs3, ht1, ht2, ht3, rad, radi, wj1, wj2, wj3, wq1, wq2, wq3, y1, y2, y3
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            double precision, parameter :: cevau = 27.2113961d0
-            !
-            !
-            !
+            double precision, parameter :: cevau  = 27.2113961d0
             !      save de,re,b,s,cevau
-            !
             call cartou
             call carttor
-            !
             ! compute coulomb and exchange terms
-            !
             y1  = dexp(b(1)*(re(1)-r(1)))
             hs1 = hde(1)*(y1-2.d0)*y1
             ht1 = hpf(1)*(y1+2.d0)*y1
@@ -312,14 +260,10 @@ module chempotpy_i2h_leps_kk_1981_pes
             ht3 = hpf(3)*(y3+2.d0)*y3
             wq3 = hs3+ht3
             wj3 = hs3-ht3
-            !
             ! compute potential energy
-            !
             rad    = dsqrt(wj1*(wj1-wj2)+wj2*(wj2-wj3)+wj3*(wj3-wj1))
             engygs = ezero(1)  +wq1+wq2+wq3-rad
-            !
             !  compute first derivatives if necessary
-            !
             if( nder .eq. 1 )then
                 radi      = 1.d0/rad
                 hradi     = 0.5d0*radi
@@ -344,24 +288,15 @@ module chempotpy_i2h_leps_kk_1981_pes
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate ANCVRT for the I2H_LEPS_KK_1981 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -378,6 +313,13 @@ module chempotpy_i2h_leps_kk_1981_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -593,13 +535,13 @@ module chempotpy_i2h_leps_kk_1981_pes
             if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             cnvrtd  = 1.d0
@@ -608,13 +550,13 @@ module chempotpy_i2h_leps_kk_1981_pes
             if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
             if( nflag(2) .eq. 2 )then
                 cnvrte = cnvrte*htomillh
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 cnvrte = cnvrte*htoev
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 cnvrte = cnvrte*htokcal
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 cnvrte = cnvrte*htowave
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 cnvrte = cnvrte*htokj
             endif
             cnvrtde = cnvrte/cnvrtd
@@ -625,6 +567,7 @@ module chempotpy_i2h_leps_kk_1981_pes
             ireorder = 0
             if( isum .ne. 0 ) ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the I2H_LEPS_KK_1981 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -636,6 +579,7 @@ module chempotpy_i2h_leps_kk_1981_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the I2H_LEPS_KK_1981 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -652,6 +596,7 @@ module chempotpy_i2h_leps_kk_1981_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the I2H_LEPS_KK_1981 potential.
         subroutine eunitzero
             implicit none
@@ -672,16 +617,18 @@ module chempotpy_i2h_leps_kk_1981_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the I2H_LEPS_KK_1981 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( icartr .eq. 1 )then
                 do i = 1, legacy_natoms
                     ind            = 3*i-2
@@ -703,7 +650,7 @@ module chempotpy_i2h_leps_kk_1981_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 2 )then
+            elseif( icartr .eq. 2 )then
                 do i = 1, legacy_natoms
                     dgscartnu(i,1) = 0.d0
                     dgscartnu(i,2) = 0.d0
@@ -725,7 +672,7 @@ module chempotpy_i2h_leps_kk_1981_pes
                     do j = 1, legacy_natoms
                         if( j .lt. i )then
                             m1 = legacy_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -744,7 +691,7 @@ module chempotpy_i2h_leps_kk_1981_pes
                                 descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
                                 descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( ksoffd .gt. 0 )then
+                        elseif( ksoffd .gt. 0 )then
                             do j2=ksoffd, keoffd
                                 y                 = deijdr(m1,j2)
                                 dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
@@ -754,7 +701,7 @@ module chempotpy_i2h_leps_kk_1981_pes
                         endif
                     enddo
                 enddo
-            else if( icartr .eq. 3 )then
+            elseif( icartr .eq. 3 )then
                 do i = 1, legacy_natoms
                     ygs(i) = degsdr(i)/r(i)
                     if( ksdiag .ne. 0 )then
@@ -790,7 +737,7 @@ module chempotpy_i2h_leps_kk_1981_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 4 )then
+            elseif( icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -826,6 +773,7 @@ module chempotpy_i2h_leps_kk_1981_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the I2H_LEPS_KK_1981 potential.
         subroutine dedcou
             implicit none
@@ -879,7 +827,7 @@ module chempotpy_i2h_leps_kk_1981_pes
     end subroutine evaluate
 end module chempotpy_i2h_leps_kk_1981_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose I2H_LEPS_KK_1981 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_i2h_leps_kk_1981_pes, only: evaluate
     implicit none

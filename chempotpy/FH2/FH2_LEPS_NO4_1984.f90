@@ -1,11 +1,61 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          FH2
+!   Functional form: eLEPS (extended-London-Eyring-Polanyi-Sato) plus
+!                    a three-centered term
+!   Common name: no. 4
+!   Reference:       F. B. Brown, R. Steckler, legacy_d. W. Schwenke,
+!                    legacy_d. legacy_g. Truhlar, and B. C. Garrett,
+!                    J. Chem. Phys. 82, 188-201 (1985).
+!   Notes:           In this version of the FH2 potential the AB and AC
+!                    Sato parameters are functions of PHI, where PHI is
+!                    the angle of F-to-BC vector with the BC axis.
+!                    The BC Sato parameter is a function of R(BC), the
+!                    BC bond length, and PHI.
+! Number of bodies: 3
+! Interface: potlib2001
+! Number of electronic states: 1
+! Number of derivatives: 1
+!   prepare_local_context must be called once before any calls to POT.
+!   The potential parameters are included in DATA statements
+!   and in the block data subprogram PTPACM.
+!   Coordinates, potential energy, and derivatives are passed
+!   The potential energy in the three asymptotic valleys are
+!   stored in the common block ASYCM:
+!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
+!   The potential energy in the AB valley, EASYAB, is equal to the poten
+!   energy of the H "infinitely" far from the FH diatomic, with the
+!   FH diatomic at its equilibrium configuration.  Similarly, the terms
+!   EASYBC and EASYAC represent the H2 and the FH asymptotic valleys,
+!   respectively.
+!   All the information passed through the common blocks PT1CM and ASYCM
+!   is in Hartree atomic units.
+!   This potential is written such that:
+!                  R(1) = R(F-H)
+!                  R(2) = R(H-H)
+!                  R(3) = R(H-F)
+!   The zero of energy is defined at F "infinitely" far from the H2 diat
+!   The flags that indicate what calculations should be carried out in
+!   the potential routine are passed through the common block PT2CM:
+!   where:
+!        NASURF - which electronic states availalble
+!                 (1,1) = 1 as only gs state available
+!        NDER  = 0 => no derivatives should be calculated
+!        NDER  = 1 => calculate first derivatives
+!        NFLAG - these integer values can be used to flag options
+!                within the potential;
+!   Potential parameters' default settings
+!                  Variable            Default value
+!                  NDER                1
+!                  NFLAG(18)           6
+
+!> @brief Implement FH2_LEPS_NO4_1984, a potential energy surface for FH2.
 module chempotpy_fh2_leps_no4_1984_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the FH2_LEPS_NO4_1984 potential energy surface for FH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -185,7 +235,7 @@ module chempotpy_fh2_leps_no4_1984_pes
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
@@ -194,201 +244,96 @@ module chempotpy_fh2_leps_no4_1984_pes
                     g(1,iatom,idir) = dgscart(iatom,idir)*51.422067
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
+
         contains
+
         !> @brief Evaluate prepare_local_context for the FH2_LEPS_NO4_1984 potential.
         subroutine prepare_local_context
-            !
-            !   System:          FH2
-            !   Functional form: eLEPS (extended-London-Eyring-Polanyi-Sato) plus
-            !                    a three-centered term
-            !   Common name: no. 4
-            !   Reference:       F. B. Brown, R. Steckler, legacy_d. W. Schwenke,
-            !                    legacy_d. legacy_g. Truhlar, and B. C. Garrett,
-            !                    J. Chem. Phys. 82, 188-201 (1985).
-            !
-            !   Notes:           In this version of the FH2 potential the AB and AC
-            !                    Sato parameters are functions of PHI, where PHI is
-            !                    the angle of F-to-BC vector with the BC axis.
-            !                    The BC Sato parameter is a function of R(BC), the
-            !                    BC bond length, and PHI.
-            !
-            ! Number of bodies: 3
-            ! Interface: potlib2001
-            ! Number of electronic states: 1
-            ! Number of derivatives: 1
-            !
-            !   prepare_local_context must be called once before any calls to POT.
-            !   The potential parameters are included in DATA statements
-            !   and in the block data subprogram PTPACM.
-            !   Coordinates, potential energy, and derivatives are passed
-            !   The potential energy in the three asymptotic valleys are
-            !   stored in the common block ASYCM:
-            !                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
-            !   The potential energy in the AB valley, EASYAB, is equal to the poten
-            !   energy of the H "infinitely" far from the FH diatomic, with the
-            !   FH diatomic at its equilibrium configuration.  Similarly, the terms
-            !   EASYBC and EASYAC represent the H2 and the FH asymptotic valleys,
-            !   respectively.
-            !   All the information passed through the common blocks PT1CM and ASYCM
-            !   is in Hartree atomic units.
-            !
-            !   This potential is written such that:
-            !                  R(1) = R(F-H)
-            !                  R(2) = R(H-H)
-            !                  R(3) = R(H-F)
-            !   The zero of energy is defined at F "infinitely" far from the H2 diat
-            !
-            !   The flags that indicate what calculations should be carried out in
-            !   the potential routine are passed through the common block PT2CM:
-            !   where:
-            !        NASURF - which electronic states availalble
-            !                 (1,1) = 1 as only gs state available
-            !        NDER  = 0 => no derivatives should be calculated
-            !        NDER  = 1 => calculate first derivatives
-            !        NFLAG - these integer values can be used to flag options
-            !                within the potential;
-            !
-            !
-            !   Potential parameters' default settings
-            !                  Variable            Default value
-            !                  NDER                1
-            !                  NFLAG(18)           6
-            !
             implicit none
-            integer :: i
-            !
-            !
+            integer                     :: i
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             double precision, parameter :: ckcau  = 627.5095d0
             double precision, parameter :: cangau = 0.52917706d0
             double precision, parameter :: tdeg   = 57.29577951d0
-            !
-            !
             !      LOGICAL LCOL, LDERIV, LZERO
-            !
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
-            !
-            !
             do i = 1, 3
                 dm(i)   = dm(i) / ckcau
                 re(i)   = re(i) / cangau
                 beta(i) = beta(i) * cangau
             enddo
-            !
             !   USEFUL CONSTANTS
-            !
             zhhdif = zhhst - zhh0
             omp3c  = 1.d0 - p3c
             omq3c  = 1.d0 - q3c
             ha2    = 0.5d0 * a2
             g2     = legacy_g * legacy_g
-            !
             !    Set the values of the classical energy in the three asymptotic vall
-            !
-            easyab = dm(1)
-            easybc = dm(2)
-            easyac = dm(3)
-            !
-            !
+            easyab   = dm(1)
+            easybc   = dm(2)
+            easyac   = dm(3)
             ezero(1) = dm(2)
-            !
             do i=1, 5
                 ref(i) = ' '
             enddo
-            !
-            ref(1) = 'F. B. Brown, R. Steckler, legacy_d. W. Schwenke,'
-            ref(2) = 'legacy_d. legacy_g. Truhlar, B. C. Garrett,'
-            ref(3) = 'J. Chem. Phys. 82, 188(1985)'
-            !
+            ref(1)     = 'F. B. Brown, R. Steckler, legacy_d. W. Schwenke,'
+            ref(2)     = 'legacy_d. legacy_g. Truhlar, B. C. Garrett,'
+            ref(3)     = 'J. Chem. Phys. 82, 188(1985)'
             indexes(1) = 9
             indexes(2) = 1
             indexes(3) = 1
-            !
-            !
-            !
-            irctnt = 2
-            !
+            irctnt     = 2
             !      CALL POTINFO
-            !
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POT for the FH2_LEPS_NO4_1984 potential.
         subroutine pot
-            !
             !   The potential energy in the AB valley, EASYAB, is equal to the poten
             !   energy of the H "infinitely" far from the FH diatomic, with the
             !   FH diatomic at its equilibrium configuration.  Similarly, the terms
             !   EASYBC and EASYAC represent the H2 and the FH asymptotic valleys,
             !   respectively.
-            !
-            !
             !   This potential is written such that:
             !                  R(1) = R(F-H)
             !                  R(2) = R(H-H)
             !                  R(3) = R(H-F)
             !   The zero of energy is defined at F "infinitely" far from the H2 diat
-            !
             implicit none
-            double precision :: capr, capr2, cosphi, costh, cphi, dcos1, dcos2, dcos3, dcphi, dd2, de3c1, de3c2, de3c3, deg, degdif, dphi1, dphi2, dphi3, dzphi, e3c, ex, ex1, ex2, ex3, exx, hsech, op3z, phi, r12, r1i, r22, r32, r3i, rdif, rdif2, rsum, scale1, scale2, sgnphi, sinp2, sinphi, t, t1, t2, t3, t4, t5, xjx, zhh, zp1, zp3, zphi
-            integer          :: i, i1, i2, i3, j
-            !
-            !
+            double precision            :: capr, capr2, cosphi, costh, cphi, dcos1, dcos2, dcos3, dcphi, dd2, de3c1, de3c2, de3c3, deg, degdif, dphi1, dphi2, dphi3, dzphi, e3c, ex, ex1, ex2, ex3, exx, hsech, op3z, phi, r12, r1i, r22, r32, r3i, rdif, rdif2, rsum, scale1, scale2, sgnphi, sinp2, sinphi, t, t1, t2, t3, t4, t5, xjx, zhh, zp1, zp3, zphi
+            integer                     :: i, i1, i2, i3, j
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             double precision, parameter :: ckcau  = 627.5095d0
             double precision, parameter :: cangau = 0.52917706d0
             double precision, parameter :: tdeg   = 57.29577951d0
             double precision, parameter :: exlarg = 80.d0
-            !
             !   EXLARG IS LN(LARGEST FLOATING POINT NUMBER ALLOWED)
-            !
-            !
             logical :: lcol, lderiv, lzero
-            !
-            !
             call cartou
             call carttor
-            !
             !   Check the values of NASURF and NDER for validity.
-            !
             !   Set the logical flag LDERIV which is the variable that actually
             !   controls the calculation of the derivatives.
-            !
             if( nder .eq. 1 )then
                 lderiv = .true.
             else
                 lderiv = .false.
             endif
-            !
             !   TEST R'S FOR PHYSICAL VALUES
-            !
             do i = 1, 3
                 rr(i) = r(i)
             enddo
@@ -401,16 +346,12 @@ module chempotpy_fh2_leps_no4_1984_pes
             r12 = rr(1) * rr(1)
             r22 = rr(2) * rr(2)
             r32 = rr(3) * rr(3)
-            !
             !   CAPR IS THE F TO H2 DISTANCE
-            !
             capr2 = 0.5d0 * (r12 + r32 - 0.5d0 * r22)
             if( capr2 .lt. 0.d0 ) capr2 = 0.0d0
             capr = sqrt(capr2)
-            !
             !   PHI IS THE ANGLE BETWEEN CAPR AND RHH
             !   PHI IS RESTRICTED TO BE BETWEEN O AND 90 DEGREES
-            !
             t = 0.5d0 * (r32 - r12)
             if( abs(t) .gt. 1.d-7 ) t = t / (rr(2) * capr)
             t2     = 1.0d0
@@ -421,13 +362,9 @@ module chempotpy_fh2_leps_no4_1984_pes
             sinp2  = 1.d0 - cosphi * cosphi
             if( sinp2 .lt. 0.d0 ) sinp2 = 0.d0
             sinphi = sqrt(sinp2)
-            !
             !   LCOL IS SET TRUE IF COLLINEAR GEOMETRY
-            !
             lcol = abs(sinphi) .lt. 1.d-6 .or. abs(capr) .lt. 1.d-6
-            !
             !   COMPUTE COLLINEAR SATO PARAMETERS
-            !
             z(1) = zfh0
             t    = a * (rr(2) - b)
             if( t < exlarg )then
@@ -450,20 +387,14 @@ module chempotpy_fh2_leps_no4_1984_pes
                         dz(i,j) = 0.d0
                     enddo
                 enddo
-                !
                 !  ONLY THE HH SATO PARAMETER HAS A NONZERO DERIVATIVE - W.R.T. R2
-                !
                 dz(2,2) = 2.d0 * a * a2 * hsech * hsech - 2.d0 * legacy_d * t * exx
             end block goto_block_50_457
-            !
             !   COMPUTE NONCOLLINEAR CONTRIBUTIONS TO SATO PARAMETERS
-            !
             goto_block_160_556: block
                 if( lcol ) exit goto_block_160_556
-                !
                 !   COMPUTE Z(PHI) FOR FH SATO PARAMETER
                 !   DZPHI IS THE DERIVATIVE OF Z(PHI) W.R.T. PHI
-                !
                 deg = tdeg * phi
                 goto_block_60_471: block
                     if( .not.(deg .lt. 0. .or. deg .gt. 90.d0) ) exit goto_block_60_471
@@ -474,16 +405,16 @@ module chempotpy_fh2_leps_no4_1984_pes
                 if( deg <= deg1 )then
                     zphi  = 0.0d0
                     dzphi = 0.0d0
-                else if( deg <= deg2 )then
+                elseif( deg <= deg2 )then
                     degdif = deg-deg1
                     dd2    = degdif*degdif
                     zphi   = dd2*(c1+c2*degdif)
                     if( lderiv ) dzphi = tdeg*degdif*(2.0d0*c1+3.0d0*c2*degdif)
-                else if( deg <= deg3 )then
+                elseif( deg <= deg3 )then
                     degdif = deg-deg3p
                     zphi   = c3+c4*degdif
                     if( lderiv ) dzphi = c4*tdeg
-                else if( deg <= deg4 )then
+                elseif( deg <= deg4 )then
                     zphi = c5+c6*sinphi*sinphi
                     if( lderiv ) dzphi = 2.0d0*c6*sinphi*cosphi
                 else
@@ -491,29 +422,19 @@ module chempotpy_fh2_leps_no4_1984_pes
                         'ss than 90 degrees.'')') deg
                     stop 'POT 2'
                 endif
-                !
                 !   COMPUTE SCALE FACTOR TO DAMP OUT CORRECTION AT LARGE DISTANCE
-                !
                 scale1 = capr2 / (g2 + capr2)
                 z(1)   = z(1) + scale1 * zphi
-                !
                 !   COMPUTE SCALE FACTOR FOR HH SATO PARAMETER
-                !
                 scale2 = (zhh - zhh0) / zhhdif
-                !
                 !   COMPUTE PHI DEPENDENT PART OF HH SATO PARAMETER
-                !
                 cphi = (bet + betp * sinp2) * sinp2
-                !
                 !   COMPUTE HH SATO PARAMTER
-                !
                 z(2) = z(2) + scale1 * scale2 * cphi
                 goto_block_150_555: block
                     if( .not.lderiv ) exit goto_block_150_555
-                    !
                     !   COMPUTE DERIVATIVES
                     !   FIRST, DERIVATIVES OF PHI W.R.T. R1, R2, R3
-                    !
                     t     = 1.d0 / capr
                     t1    = 0.5d0 * cosphi * t
                     t2    = sgnphi / rr(2)
@@ -526,29 +447,21 @@ module chempotpy_fh2_leps_no4_1984_pes
                     dphi2 = rr(2) * cosphi * t1 * (1.d0 / r22 - 0.25d0 / capr2)
                     t1    = (1.d0 - scale1) / capr2
                     t2    = t1 * zphi
-                    !
                     !   NEXT, DERIVATIVES OF FH SATO PARAMETERS
-                    !
                     dz(1,1) = scale1 * (t2 * rr(1) + dzphi * dphi1)
                     dz(1,2) = scale1 * (-0.5d0 * t2 * rr(2) + dzphi * dphi2)
                     dz(1,3) = scale1 * (t2 * rr(3) + dzphi * dphi3)
                     t1      = t1 * cphi
-                    !
                     !   DERIVATIVE OF THE PHI DEPENDENT PART OF HH SATO W.R.T. PHI
-                    !
                     dcphi = 2.d0 * (bet + 2.d0 * betp * sinp2) * sinphi * cosphi
                     t2    = scale1 * scale2
-                    !
                     !   LAST, DERIVATIVES OF HH SATO PARAMETER
-                    !
                     dz(2,1) = t2 * (t1 * rr(1) + dcphi * dphi1)
                     dz(2,2) = dz(2,2) * (1.d0 + scale1 * cphi / zhhdif) + t2 * (-0.5d0 * t1 * rr(2) + dcphi * dphi2)
                     dz(2,3) = t2 * (t1 * rr(3) + dcphi * dphi3)
                 end block goto_block_150_555
             end block goto_block_160_556
-            !
             !   COMPUTE POTENTIAL FROM LEPS FORM
-            !
             engygs = 0.d0
             z(3)   = z(1)
             goto_block_170_573: block
@@ -575,22 +488,16 @@ module chempotpy_fh2_leps_no4_1984_pes
                 t    = 0.25d0 * dm(i) * ex / zp1
                 t1   = zp3 * ex
                 t2   = op3z * ex
-                !
                 !   Q AND XJ ARE THE COULUMB AND EXCHANGE PARTS, INDEX I RUNS OVER THE
                 !   COORDINATES OF WHICH THEY ARE EXPLICIT FUNCTIONS
-                !
                 q(i)  = t * (t1 - 2.d0  * op3z)
                 xj(i) = t * (t2 - 2.d0  * zp3)
-                !
                 !   PUT SUM OF Q'S IN ENERGY
-                !
                 engygs = engygs + q(i)
                 goto_block_190_608: block
                     if( .not.lderiv ) exit goto_block_190_608
-                    !
                     !   DERIVATIVE OF Q AND ZJ W.R.T. R1, R2, R3
                     !   ELEMENT I,J IS THE DERIVATIVE OF Q(I) W.R.T. RJ
-                    !
                     t3 = 2.d0 * t * (ex + 2.d0) / zp1
                     do j = 1, 3
                         dq(i,j) = -t3 * dz(i,j)
@@ -604,53 +511,37 @@ module chempotpy_fh2_leps_no4_1984_pes
             goto_block_270_652: block
                 if( lzero ) exit goto_block_270_652
                 xjx = 0.d0
-                !
                 !   COMPUTE THE TOTAL EXCHANGE TERM
-                !
                 do i1 = 1, 3
                     i2  = mod(i1, 3) + 1
                     t   = xj(i1) - xj(i2)
                     xjx = xjx + t * t
                     if( .not.lderiv ) cycle
-                    !
                     !   PUT THE DERIVATIVES OF THE TOTAL EXCHANGE TERM IN DV
-                    !
                     do j = 1, 3
                         degsdr(j) = degsdr(j) + t * (dj(i1,j) - dj(i2,j))
                     enddo
                 enddo
                 xjx = sqrt(0.5d0 * xjx)
-                !
                 !   COMPUTE THE LEPS PART OF THE POTENTIAL ENERGY
-                !
                 engygs = engygs - xjx
                 goto_block_260_651: block
                     if( .not.lderiv ) exit goto_block_260_651
-                    !
                     !   COMPUTE DERIVATIVES OF THE LEPS PART
-                    !
                     if( abs(xjx) .gt. 1.d-14 ) t = 0.5d0 / xjx
                     do j = 1, 3
-                        !
                         !   THE DERIVATIVE OF THE EXCHANGE PART MUST BE DIVIDED BY 2*XJX
-                        !
                         degsdr(j) = -t * degsdr(j)
                         do i = 1, 3
-                            !
                             !   THEN ADD IN THE DERIVATIVE OF Q
-                            !
                             degsdr(j) = degsdr(j) + dq(i,j)
                         enddo
                     enddo
                 end block goto_block_260_651
             end block goto_block_270_652
-            !
             !   EZERO ADDED TO PUT ZERO AT REQ FOR REACTANTS
-            !
             engygs = engygs + ezero(1)
-            !
             !   COMPUTE THE 3-CENTER TERM
-            !
             rsum  = rr(1) + rr(3)
             rdif  = rr(1) - rr(3)
             rdif2 = rdif * rdif
@@ -663,31 +554,23 @@ module chempotpy_fh2_leps_no4_1984_pes
             r1i   = 1.d0 / rr(1)
             r3i   = 1.d0 / rr(3)
             t4    = r1i*r3i
-            !
             !   COSTH IS THE ANGLE BETWEEN R1 AND R3
-            !
             costh = 0.5d0 * (r12 + r32 - r22) * t4
             t5    = omq3c * costh
             t     = q3c + t5 * costh
-            !
             !   E3C CONTAINS THE THREE CENTER CORRECTION TO THE ENERGY
-            !
             e3c    = (ex2 + ex3) * t * ex1
             engygs = engygs + e3c
             goto_block_280_702: block
                 if( .not.lderiv ) exit goto_block_280_702
-                !
                 !   COMPUTE DERIVATIVE OF THE 3C TERM
                 !   FIRST, DERIVATIVE OF COSTH
-                !
                 dcos1 = r3i - costh*r1i
                 dcos2 = - rr(2)*t4
                 dcos3 = r1i - costh*r3i
                 t4    = ex2 + ex3
                 t5    = t4 * t5
-                !
                 !   NOW, DERIVATIVES OF E3C
-                !
                 de3c1     = 2.d0*((t2 * ex2 + 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos1) * ex1
                 de3c2     = 2.d0 * t5 * dcos2 * ex1
                 de3c3     = 2.d0*((-t2 * ex2 - 2.d0 * t3 * rdif * ex3 + t1 * t4) * t + t5 * dcos3) * ex1
@@ -695,32 +578,20 @@ module chempotpy_fh2_leps_no4_1984_pes
                 degsdr(2) = degsdr(2) + de3c2
                 degsdr(3) = degsdr(3) + de3c3
             end block goto_block_280_702
-            !
-            !
             call eunitzero
             if( nder .ne. 0 )then
                 call rtocart
                 call dedcou
             endif
-            !
-            !
         end subroutine pot
+
         !> @brief Evaluate ANCVRT for the FH2_LEPS_NO4_1984 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -737,6 +608,13 @@ module chempotpy_fh2_leps_no4_1984_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -952,13 +830,13 @@ module chempotpy_fh2_leps_no4_1984_pes
             if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             cnvrtd  = 1.d0
@@ -967,13 +845,13 @@ module chempotpy_fh2_leps_no4_1984_pes
             if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
             if( nflag(2) .eq. 2 )then
                 cnvrte = cnvrte*htomillh
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 cnvrte = cnvrte*htoev
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 cnvrte = cnvrte*htokcal
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 cnvrte = cnvrte*htowave
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 cnvrte = cnvrte*htokj
             endif
             cnvrtde = cnvrte/cnvrtd
@@ -984,6 +862,7 @@ module chempotpy_fh2_leps_no4_1984_pes
             ireorder = 0
             if( isum .ne. 0 ) ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the FH2_LEPS_NO4_1984 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -995,6 +874,7 @@ module chempotpy_fh2_leps_no4_1984_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the FH2_LEPS_NO4_1984 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -1011,6 +891,7 @@ module chempotpy_fh2_leps_no4_1984_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the FH2_LEPS_NO4_1984 potential.
         subroutine eunitzero
             implicit none
@@ -1031,16 +912,18 @@ module chempotpy_fh2_leps_no4_1984_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the FH2_LEPS_NO4_1984 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( icartr .eq. 1 )then
                 do i = 1, legacy_natoms
                     ind            = 3*i-2
@@ -1062,7 +945,7 @@ module chempotpy_fh2_leps_no4_1984_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 2 )then
+            elseif( icartr .eq. 2 )then
                 do i = 1, legacy_natoms
                     dgscartnu(i,1) = 0.d0
                     dgscartnu(i,2) = 0.d0
@@ -1084,7 +967,7 @@ module chempotpy_fh2_leps_no4_1984_pes
                     do j = 1, legacy_natoms
                         if( j .lt. i )then
                             m1 = legacy_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1103,7 +986,7 @@ module chempotpy_fh2_leps_no4_1984_pes
                                 descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
                                 descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( ksoffd .gt. 0 )then
+                        elseif( ksoffd .gt. 0 )then
                             do j2=ksoffd, keoffd
                                 y                 = deijdr(m1,j2)
                                 dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
@@ -1113,7 +996,7 @@ module chempotpy_fh2_leps_no4_1984_pes
                         endif
                     enddo
                 enddo
-            else if( icartr .eq. 3 )then
+            elseif( icartr .eq. 3 )then
                 do i = 1, legacy_natoms
                     ygs(i) = degsdr(i)/r(i)
                     if( ksdiag .ne. 0 )then
@@ -1149,7 +1032,7 @@ module chempotpy_fh2_leps_no4_1984_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 4 )then
+            elseif( icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1185,6 +1068,7 @@ module chempotpy_fh2_leps_no4_1984_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the FH2_LEPS_NO4_1984 potential.
         subroutine dedcou
             implicit none
@@ -1238,7 +1122,7 @@ module chempotpy_fh2_leps_no4_1984_pes
     end subroutine evaluate
 end module chempotpy_fh2_leps_no4_1984_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose FH2_LEPS_NO4_1984 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_fh2_leps_no4_1984_pes, only: evaluate
     implicit none

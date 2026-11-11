@@ -1,11 +1,63 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          OH2
+!   Functional form: Anti-Morse Bends plus Bowman's collinear spline
+!   Common name:     OH2DIM
+!   Interface:       potlib2001
+!   Reference:
+!   Number of bodies:              3
+!   Number of derivatives:         1
+!   Number of electronic surfaces: 1
+!   prepare_local_context must be called once before any calls to POT.
+!   The control flags for the potential, such as IPRT, are
+!   initialized in the block data subprogram PTPACM.
+!   Coordinates, potential energy, and derivatives are passed
+!   The potential energy in the three asymptotic valleys are
+!   stored in the common block ASYCM:
+!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
+!   The potential energy in the AB valley, EASYAB, is equal to the poten
+!   energy of the H "infinitely" far from the OH diatomic, with the
+!   OH diatomic at its equilibrium configuration.  Similarly, the terms
+!   EASYBC and EASYAC represent the H2 and the OH asymptotic valleys,
+!   respectively.
+!   All the information passed through the common blocks PT1CM and ASYCM
+!   is in Hartree atomic units.
+!   This potential is written such that:
+!                  R(1) = R(O-H)
+!                  R(2) = R(H-H)
+!                  R(3) = R(H-O)
+!   The zero of energy is defined at O "infinitely" far from the H2 diat
+!   The flags that indicate what calculations should be carried out in
+!   the potential routine are passed through the common block PT2CM:
+!   where:
+!        NASURF - which electronic states availalble
+!                 (1,1) = 1 as only gs state available
+!        NDER  = 0 => no derivatives should be calculated
+!        NDER  = 1 => calculate first derivatives
+!        NFLAG - these integer values can be used to flag options
+!                within the potential;
+!   Potential parameters' default settings
+!                  Variable            Default value
+!                  NDER                1
+!                  NFLAG(18)           6
+!CCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+!          GENERAL INFORMATION
+!CCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+!   POTA.FOR HAS ANTI-MORSE BEND PLUS BOWMAN'S COLLINEAR SPLINE ROUTINE.
+!   ANTI-MORSE BENDING POTENTIAL IS ADDED TO COLLINEAR POTENTIAL.
+!   THIS SUBROUTINE CAN BE USED TO ADD A BENDING CORRECTION TO
+!   ANY COLLINEAR POTENTIAL SUBROUTINE.
+!CCCCCCCCCCCCCCCCCCCCCCCCCC
+!          DEFINE VARIABLES
+!CCCCCCCCCCCCCCCCCCCCCCCCCC
+
+!> @brief Implement OH2_GEN_DIM1981, a potential energy surface for OH2.
 module chempotpy_oh2_gen_dim1981_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the OH2_GEN_DIM1981 potential energy surface for OH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -195,7 +247,7 @@ module chempotpy_oh2_gen_dim1981_pes
             do istate=1, nstates
                 p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
             enddo
@@ -204,130 +256,46 @@ module chempotpy_oh2_gen_dim1981_pes
                     g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*51.422067
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
+
         contains
+
         !> @brief Evaluate prepare_local_context for the OH2_GEN_DIM1981 potential.
         subroutine prepare_local_context
-            !
-            !
-            !   System:          OH2
-            !   Functional form: Anti-Morse Bends plus Bowman's collinear spline
-            !   Common name:     OH2DIM
-            !   Interface:       potlib2001
-            !   Reference:
-            !
-            !   Number of bodies:              3
-            !   Number of derivatives:         1
-            !   Number of electronic surfaces: 1
-            !
-            !   prepare_local_context must be called once before any calls to POT.
-            !   The control flags for the potential, such as IPRT, are
-            !   initialized in the block data subprogram PTPACM.
-            !   Coordinates, potential energy, and derivatives are passed
-            !   The potential energy in the three asymptotic valleys are
-            !   stored in the common block ASYCM:
-            !                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
-            !   The potential energy in the AB valley, EASYAB, is equal to the poten
-            !   energy of the H "infinitely" far from the OH diatomic, with the
-            !   OH diatomic at its equilibrium configuration.  Similarly, the terms
-            !   EASYBC and EASYAC represent the H2 and the OH asymptotic valleys,
-            !   respectively.
-            !   All the information passed through the common blocks PT1CM and ASYCM
-            !   is in Hartree atomic units.
-            !
-            !   This potential is written such that:
-            !                  R(1) = R(O-H)
-            !                  R(2) = R(H-H)
-            !                  R(3) = R(H-O)
-            !   The zero of energy is defined at O "infinitely" far from the H2 diat
-            !
-            !   The flags that indicate what calculations should be carried out in
-            !   the potential routine are passed through the common block PT2CM:
-            !   where:
-            !        NASURF - which electronic states availalble
-            !                 (1,1) = 1 as only gs state available
-            !        NDER  = 0 => no derivatives should be calculated
-            !        NDER  = 1 => calculate first derivatives
-            !        NFLAG - these integer values can be used to flag options
-            !                within the potential;
-            !
-            !
-            !   Potential parameters' default settings
-            !                  Variable            Default value
-            !                  NDER                1
-            !                  NFLAG(18)           6
-            !
-            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !          GENERAL INFORMATION
-            !CCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
-            !   POTA.FOR HAS ANTI-MORSE BEND PLUS BOWMAN'S COLLINEAR SPLINE ROUTINE.
-            !   ANTI-MORSE BENDING POTENTIAL IS ADDED TO COLLINEAR POTENTIAL.
-            !   THIS SUBROUTINE CAN BE USED TO ADD A BENDING CORRECTION TO
-            !   ANY COLLINEAR POTENTIAL SUBROUTINE.
-            !
-            !CCCCCCCCCCCCCCCCCCCCCCCCCC
-            !          DEFINE VARIABLES
-            !CCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             implicit none
-            integer :: i, it
-            !
-            double precision :: nab, nab1, nbc, nbc1, junk
-            dimension junk(4)
-            !
-            !
+            integer          :: i, it
+            double precision :: nab, nab1, nbc, nbc1, junk(4)
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
-            !
             double precision, parameter :: bohr = .52917706d0
-            !
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
-            !
             double precision, parameter :: hrtree = 627.5095d0
-            !
-            !
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
             !      WRITE(NFLAG(18), 600)
-            !
             call prepare_local_context_2
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !      BENDING POTENTIAL PARAMETERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             !      WRITE(NFLAG(18),3)
-            !
             !   Echo the potential parameters to the file linked to UNIT NFLAG(18)
-            !
             !      WRITE (NFLAG(18),25) (REQ(IT), IT = 1,3)
             !      WRITE(NFLAG(18),10) DE
             !      WRITE(NFLAG(18),21) BETA
             !      WRITE (NFLAG(18),30) A
             !      WRITE (NFLAG(18),31) GAMMA
             !      WRITE(NFLAG(18),35) RBB
-            !
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !       CONVERT TO ATOMIC UNITS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             do it = 1, 3
                 potcm_req(it) = potcm_req(it)/bohr
             enddo
@@ -336,82 +304,50 @@ module chempotpy_oh2_gen_dim1981_pes
             potcm_a    = potcm_a/bohr
             potcm_rhh  = 1.4007977d0
             potcm_rbb  = potcm_rbb /bohr
-            !
             !CCCCCCCCCCC
-            !
-            !
             pt3cm_ezero(1) = potcm_vsp
-            !
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
-            !
-            infocm_ref(1) = 'No Reference'
-            !
+            infocm_ref(1)     = 'No Reference'
             infocm_indexes(1) = 8
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
-            !
-            !
-            !
-            infocm_irctnt = 2
-            !
+            infocm_irctnt     = 2
             !      CALL POTINFO
-            !
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POT for the OH2_GEN_DIM1981 potential.
         subroutine pot
-            !
             !   The potential energy in the AB valley, EASYAB, is equal to the poten
             !   energy of the H "infinitely" far from the OH diatomic, with the
             !   OH diatomic at its equilibrium configuration.  Similarly, the terms
             !   EASYBC and EASYAC represent the H2 and the OH asymptotic valleys,
             !   respectively.
-            !
             !   This potential is written such that:
             !                  R(1) = R(O-H)
             !                  R(2) = R(H-H)
             !                  R(3) = R(H-O)
             !   The zero of energy is defined at O "infinitely" far from the H2 diat
-            !
             !CCCCCCCCCCCCCCC
             !CCCCCCCCCCCCCCC
-            !
             implicit none
             double precision :: bcoor, c, dac, ractmp, rob, stuff, vabbc, vac
             integer          :: it
-            !
-            double precision :: nab, nab1, nbc, nbc1, junk
-            dimension junk(4)
-            !
-            !
+            double precision :: nab, nab1, nbc, nbc1, junk(4)
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
-            !
             double precision, parameter :: bohr = .52917706d0
-            !
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
-            !
             double precision, parameter :: hrtree = 627.5095d0
-            !
-            !
             call cartou
             call carttor
-            !
             !   Check the values of NASURF and NDER for validity.
-            !
             !      IF (NASURF(1,1) .EQ. 0) THEN
             !         WRITE(NFLAG(18), 900) NASURF(1,1)
             !         STOP
@@ -420,25 +356,17 @@ module chempotpy_oh2_gen_dim1981_pes
             !             WRITE (NFLAG(18), 910) NDER
             !             STOP 'POT 2'
             !         ENDIF
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        FIRST CALCULATE SOME USEFUL NUMBERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             !        NAB AND NBC ARE THE BOND ORDERS OF THE DIATOMICS
             !        AB AND BC RESPECTIVELY. (EQUATION 2.2)
-            !
             nab = exp((potcm_req(1) - pt1cm_r(1))/potcm_a)
-            !
             if( nab .lt. 1.d-15 ) nab = 1.d-15
-            !
             nbc = exp((potcm_req(2) - pt1cm_r(2))/potcm_a)
-            !
             if( nbc .lt. 1.d-15 ) nbc = 1.d-15
-            !
             !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
             !       SEE EQUATION 2.7A, 2.7B
-            !
             c = 1.0d0-nab/nbc
             if( abs(c) <= 1.0d-14 )then
                 nab1 = 0.5d0
@@ -448,125 +376,81 @@ module chempotpy_oh2_gen_dim1981_pes
                 nab1 = (2.0d0+c-sqrt(4.0d0+c*c))/(2.0d0*c)
                 nbc1 = 1.0d0-nab1
             endif
-            !
             !          ROB IS USED IN THE BENDING POTENTIAL CALCULATIONS
-            !
             !          FIRST TRAP OUT ANY ZERO ARGUEMENTS
-            !
             if( nab1*nbc1 > 0.0d0 )then
                 stuff = potcm_a * log(nab1*nbc1)
                 rob   = (potcm_rbb - stuff)/(potcm_rhh - stuff)
             else
                 rob = 1.0d0
             endif
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        CALCULATE BENDING CORRECTION
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             !        CALCULATE V(R(3))
-            !
             junk(3) = exp(-potcm_beta*(pt1cm_r(3)-potcm_req(3))/rob)
             vac     = potcm_gamma *1.0d-14 * potcm_de * junk(3)* (1.d0 + 0.5d0*junk(3))
-            !
             !        CALCULATE V(R(1)+R(2))
-            !
             junk(4) = exp(potcm_beta*(potcm_req(3)-pt1cm_r(2)-pt1cm_r(1))/rob)
             vabbc   = potcm_gamma *1.0d-14 * potcm_de * junk(4) * (1.d0 + 0.5d0*junk(4))
-            !
             !        HERE IS THE BENDING CORRECTION
-            !
             bcoor = (vac - vabbc)*1.0d14
-            !
             !          WHILE IT'S CONVENIENT, CALCULATE THE DERIVATIVE
             !          OF BCOOR WITH RESPECT TO R(1), R(2), AND R(3).
-            !
             !        CALCULATE DAC (THE DERIVATIVE WITH RESPECT TO R(3))
-            !
             if( usricm_nder .eq. 1 )then
                 dac             = -potcm_gamma*potcm_de*potcm_beta*junk(3)*(1.d0+junk(3))/rob
                 potcm_dbcoor(1) = potcm_gamma * potcm_de * potcm_beta * junk(4) * (1.d0 + junk(4))/rob
                 potcm_dbcoor(2) = potcm_dbcoor(1)
             endif
-            !
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        NOW CALCULATE THE COLLINEAR ENERGY
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !
             !          STORE R(3) IN RACTMP THEN SET R(3) TO THE COLLINEAR
             !          GEOMETRY AND CALL POT2
-            !
             ractmp     = pt1cm_r(3)
             pt1cm_r(3) = pt1cm_r(2) + pt1cm_r(1)
-            !
             call pot2
-            !
             if( usricm_nder .eq. 1 )then
                 pt1cm_degsdr(1) = pt1cm_degsdr(1) + pt1cm_degsdr(3)
                 pt1cm_degsdr(2) = pt1cm_degsdr(2) + pt1cm_degsdr(3)
                 pt1cm_degsdr(3) = dac
             endif
-            pt1cm_r(3) = ractmp
-            !
+            pt1cm_r(3)   = ractmp
             pt1cm_engygs = pt1cm_engygs + bcoor
-            !
             if( usricm_nder .eq. 1 )then
                 do it = 1, 2
                     pt1cm_degsdr(it) = potcm_dbcoor(it) + pt1cm_degsdr(it)
                 enddo
             endif
-            !
-            !
             call eunitzero
             if( usricm_nder .ne. 0 )then
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate prepare_local_context_2 for the OH2_GEN_DIM1981 potential.
         subroutine prepare_local_context_2
-            !
             !   POTENTIAL FUNCTION FOR RATE1D SERIES
             !   RMO-SPLINE TYPE FIT WITH BEBO TYPE CONTINUATION INTO THE ASYMBTOTIC
             !   POTENTIAL ROUTINE INTERACTS WITH REST OF PROGRAM WITH UNITS OF EV/BO
             !   POTENTIAL ROUTINE ASSUMES SPLINE INFO IS IN UNITS OF KCAL/ANGSTROM
-            !
             implicit none
-            double precision :: csp, scrap, v
-            !
-            double precision :: nab, nab1, nbc, nbc1, junk
-            dimension junk(4)
-            !
-            !
+            double precision :: csp(48,3), scrap(48), v(4)
+            double precision :: nab, nab1, nbc, nbc1, junk(4)
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
-            !
             double precision, parameter :: bohr = .52917706d0
-            !
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
-            !
             double precision, parameter :: hrtree = 627.5095d0
-            !
             double precision, parameter :: detrad = .0174532d0
-            !
-            !
-            dimension v(4), csp(48,3), scrap(48)
-            !
             character(len=80) :: title
-            !
             title = ' RMOFIT to DIM surface with BEBO continuations '
-            !
             !      WRITE(NFLAG(18),845)TITLE
             !      WRITE(NFLAG(18),125)STEP
             !      WRITE(NFLAG(18),111)XAB(1), XBC(1), XAB(1),
@@ -576,45 +460,27 @@ module chempotpy_oh2_gen_dim1981_pes
             !      WRITE(NFLAG(18),113)(PHI(I),(BSP(I,J),J = 1,3),I = 1,NPHI)
             !      WRITE(NFLAG(18),117)(CBC(I),ABC(I),I = 1,3),
             !     +                    (CAB(I),AAB(I),I = 1,3)
-            !
             !   Initialize the energy in the asymptotic valleys
-            !
             asycm_easyab = potcm_xab(1)/hrtree
             asycm_easybc = potcm_xbc(1)/hrtree
             asycm_easyac = asycm_easyab
-            !
-            !
         end subroutine prepare_local_context_2
+
         !> @brief Evaluate POT2 for the OH2_GEN_DIM1981 potential.
         subroutine pot2
-            !
             ! COCK SPLINES
-            !
             implicit none
-            double precision :: angle, bet, betpr, betrg, csp, dbc, depr, derg, dis, dr1, dr2, ppp, r1, r2, r3, repr, req2, rerg, rr, scrap, sep, v, x
+            double precision :: angle, bet, betpr, betrg, csp(48,3), dbc, depr, derg, dis, dr1, dr2, ppp, r1, r2, r3, repr, req2, &
+                & rerg, rr, scrap(48), sep, v(4), x
             integer          :: i, ic, j, k
-            !
-            double precision :: nab, nab1, nbc, nbc1, junk, bohr
-            dimension junk(4)
-            !
-            !
+            double precision :: nab, nab1, nbc, nbc1, junk(4), bohr
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             double precision, parameter :: hrtree = 627.5095d0
             double precision, parameter :: detrad = .0174532d0
-            !
-            !
-            dimension v(4), csp(48,3), scrap(48)
-            !
             do ic = 1, 4
                 select case( ic )
                 case( 1 )
@@ -658,13 +524,13 @@ module chempotpy_oh2_gen_dim1981_pes
                         pt1cm_degsdr(3) = 0.0d0
                     endif
                     return
-                else if( r1 > potcm_r1s )then
+                elseif( r1 > potcm_r1s )then
                     rr   = potcm_r2s-r2
                     sep  = r1-potcm_r1s
                     dis  = potcm_xbc(1)+potcm_cbc(1)*exp(-min(potcm_abc(1)*sep, 25.0d0))
                     req2 = potcm_xbc(2)+potcm_cbc(2)*exp(-min(potcm_abc(2)*sep, 25.0d0))
                     bet  = potcm_xbc(3)+potcm_cbc(3)*exp(-min(potcm_abc(3)*sep, 25.0d0))
-                else if( r2 > potcm_r2s )then
+                elseif( r2 > potcm_r2s )then
                     rr   = potcm_r1s-r1
                     sep  = r2-potcm_r2s
                     dis  = potcm_xab(1)+potcm_cab(1)*exp(-min(potcm_aab(1)*sep, 25.0d0))
@@ -690,6 +556,7 @@ module chempotpy_oh2_gen_dim1981_pes
                 pt1cm_degsdr(3) = 0.0d0
             endif
         end subroutine pot2
+
         !> @brief Fit or evaluate the legacy cubic-spline representation.
         double precision function spline( isw, nn, x, y, c, d, xpt )
             implicit none
@@ -778,6 +645,7 @@ module chempotpy_oh2_gen_dim1981_pes
                 error stop 'SPLINE: invalid operation selector'
             end select
         end function spline
+
         !> @brief Evaluate POTINFO for the OH2_GEN_DIM1981 potential.
         subroutine potinfo
             implicit none
@@ -871,22 +739,14 @@ module chempotpy_oh2_gen_dim1981_pes
                     '*-1/ANGSTROM'',//)')
             endif
         end subroutine potinfo
+
         !> @brief Evaluate ANCVRT for the OH2_GEN_DIM1981 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -903,6 +763,13 @@ module chempotpy_oh2_gen_dim1981_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -1118,13 +985,13 @@ module chempotpy_oh2_gen_dim1981_pes
             if( usricm_nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( usricm_nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             utilcm_cnvrtd  = 1.d0
@@ -1133,13 +1000,13 @@ module chempotpy_oh2_gen_dim1981_pes
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 utilcm_cnvrte = utilcm_cnvrte*htoev
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokcal
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 utilcm_cnvrte = utilcm_cnvrte*htowave
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokj
             endif
             utilcm_cnvrtde = utilcm_cnvrte/utilcm_cnvrtd
@@ -1150,6 +1017,7 @@ module chempotpy_oh2_gen_dim1981_pes
             utilcm_ireorder = 0
             if( isum .ne. 0 ) utilcm_ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the OH2_GEN_DIM1981 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -1161,6 +1029,7 @@ module chempotpy_oh2_gen_dim1981_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(usricm_cart, usricm_nulbl, infocm_natoms, utilcm_cnvrtd, utilcm_ireorder == 1, infocm_cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the OH2_GEN_DIM1981 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -1177,6 +1046,7 @@ module chempotpy_oh2_gen_dim1981_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the OH2_GEN_DIM1981 potential.
         subroutine eunitzero
             implicit none
@@ -1198,16 +1068,18 @@ module chempotpy_oh2_gen_dim1981_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the OH2_GEN_DIM1981 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -1229,7 +1101,7 @@ module chempotpy_oh2_gen_dim1981_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 2 )then
+            elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
                     utilcm_dgscartnu(i,1) = 0.d0
                     utilcm_dgscartnu(i,2) = 0.d0
@@ -1251,7 +1123,7 @@ module chempotpy_oh2_gen_dim1981_pes
                     do j = 1, infocm_natoms
                         if( j .lt. i )then
                             m1 = infocm_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1270,7 +1142,7 @@ module chempotpy_oh2_gen_dim1981_pes
                                 utilcm_descartnu(i,2,j1) = utilcm_descartnu(i,2,j1) + termy*y
                                 utilcm_descartnu(i,3,j1) = utilcm_descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( utilcm_ksoffd .gt. 0 )then
+                        elseif( utilcm_ksoffd .gt. 0 )then
                             do j2=utilcm_ksoffd, utilcm_keoffd
                                 y                        = pt5cm_deijdr(m1,j2)
                                 utilcm_dijcartnu(i,1,j2) = utilcm_dijcartnu(i,1,j2) + termx*y
@@ -1280,7 +1152,7 @@ module chempotpy_oh2_gen_dim1981_pes
                         endif
                     enddo
                 enddo
-            else if( infocm_icartr .eq. 3 )then
+            elseif( infocm_icartr .eq. 3 )then
                 do i = 1, infocm_natoms
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
@@ -1316,7 +1188,7 @@ module chempotpy_oh2_gen_dim1981_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 4 )then
+            elseif( infocm_icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1352,6 +1224,7 @@ module chempotpy_oh2_gen_dim1981_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the OH2_GEN_DIM1981 potential.
         subroutine dedcou
             implicit none
@@ -1405,7 +1278,7 @@ module chempotpy_oh2_gen_dim1981_pes
     end subroutine evaluate
 end module chempotpy_oh2_gen_dim1981_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose OH2_GEN_DIM1981 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_oh2_gen_dim1981_pes, only: evaluate
     implicit none

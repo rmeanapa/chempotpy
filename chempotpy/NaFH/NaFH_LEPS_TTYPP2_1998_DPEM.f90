@@ -1,11 +1,12 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement NaFH_LEPS_TTYPP2_1998, a diabatic potential matrix for NaFH.
 module chempotpy_nafh_leps_ttypp2_1998_dpem_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the NaFH_LEPS_TTYPP2_1998 diabatic potential matrix for NaFH.
     subroutine evaluate( x, igrad, u, ug )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -61,7 +62,7 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pes
     end subroutine evaluate
 end module chempotpy_nafh_leps_ttypp2_1998_dpem_pes
 
-!> @brief Preserve the historical Python-facing dpem entry point.
+!> @brief Expose NaFH_LEPS_TTYPP2_1998 through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_nafh_leps_ttypp2_1998_dpem_pes, only: evaluate
     implicit none
@@ -105,12 +106,8 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!
-
-!
 !> @brief Evaluate pot for the NaFH_LEPS_TTYPP2_1998_DPEM potential.
 subroutine pot( r, e, de, nt, nsurf )
-    !
     !         R     is an array with dimensions R(NT,3)
     !               this array contains the geometry(ies) to be computed  (i
     !               Geometries are specified in terms of interatomic distanc
@@ -135,50 +132,40 @@ subroutine pot( r, e, de, nt, nsurf )
     !               NSURF = 2  diabatic coupling surface
     !               NSURF = 3  diabatic surface which is the upper one
     !                          in the reactant channel
-    !
     implicit none
-    double precision :: de, e, r
+    double precision :: de(3,nt), e(nt), r(nt,3)
     integer          :: nsurf, nt
-    dimension r(nt,3), e(nt)
-    dimension de(3,nt)
     if( nsurf .eq. 1 )then
         call pot11(r, e, de, nt)
-    else if( nsurf .eq. 2 )then
+    elseif( nsurf .eq. 2 )then
         call pot12(r, e, de, nt)
     else
         call pot22(r, e, de, nt)
     endif
 end subroutine pot
 
-!
-!
 !  U11 surface - lower diabatic surface
-!
 module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, de, nt )
         implicit none
         optional :: r, e, de, nt
-        double precision :: abs1, ac, acut1, adip1, ads1, af1, af2, al2, al2n, aln0, aln0n1, aln0n2, amf, &
-            & amh, amna, amu, anorm, ars1, asmall, axs1, bc, c2a, c2b, c2c, cevau, chf, cnf, cnf1, cog, &
-            & coul1, coul2, coul3, cplg2, csb, danormd1, danormd2, danormd3, dcd1, dcd2, dcd3, dcl1d1, &
-            & dcl2d2, dcl3d3, dcog, dcogd1, dcogd2, dcogd3, dcsbd1, dcsbd2, dcsbd3, de, dehf, denf, &
-            & dex1d1, dex2d2, dex3d3, dip1, dipn, dipnn, drnag2d1, drnag2d2, drnag2d3, ds1d1, ds2d2, &
-            & ds3d3, dsurfd1, dsurfd2, dsurfd3, dt1d1, dt2d2, dt3d3, dwd1, dwd2, dwd3, e, exch1, exch2, &
-            & exch3, hlp, hlp1, hlp11, hlp2, hlp22, hlp23, hlp3, r, r1s, r2s, r3s, rac2, rcut1, rdip1, &
-            & rehf, renf, rn0n, rnag2, rootw, s1, s2, s3, surf, t1, t2, t3, una2p, w, y, y2, y3
+        double precision :: abs1, ac(4), acut1(4), adip1(4), ads1, af1, af2, al2(4), al2n(4), aln0(4), aln0n1(4), aln0n2(4), &
+            & amf, amh, amna, amu, anorm, ars1, asmall, axs1, bc(0:5), c2a(4), c2b(4), c2c(4), cevau, chf(6), cnf(6), cnf1(5), &
+            & cog, coul1, coul2, coul3, cplg2, csb, danormd1, danormd2, danormd3, dcd1, dcd2, dcd3, dcl1d1, dcl2d2, dcl3d3, &
+            & dcog, dcogd1, dcogd2, dcogd3, dcsbd1, dcsbd2, dcsbd3, de(:,:), dehf, denf, dex1d1, dex2d2, dex3d3, dip1(4), &
+            & dipn(4), dipnn(4), drnag2d1, drnag2d2, drnag2d3, ds1d1, ds2d2, ds3d3, dsurfd1, dsurfd2, dsurfd3, dt1d1, dt2d2, &
+            & dt3d3, dwd1, dwd2, dwd3, e(:), exch1, exch2, exch3, hlp, hlp1, hlp11, hlp2, hlp22, hlp23, hlp3, r(:,:), r1s, r2s, &
+            & r3s, rac2, rcut1(4), rdip1(4), rehf, renf, rn0n(4), rnag2, rootw, s1, s2, s3, surf, t1, t2, t3, una2p, w, &
+            & y(4,3,4), y2, y3
         integer :: i, l, l1, l2, nt
-        dimension r(:,:), e(:)
-        dimension de(:,:)
         integer :: g_myrank, g_nprocs
-        dimension cnf(6), cnf1(5), chf(6), bc(0:5)
-        dimension y(4,3,4), c2a(4), c2b(4), c2c(4), dip1(4), adip1(4), rdip1(4), acut1(4), rcut1(4), dipn(4), al2(4), aln0(4), dipnn(4), al2n(4), aln0n1(4), aln0n2(4), rn0n(4)
-        dimension ac(4)
-        !-----------------------------------------------------------------------
         abs1      = 0.d0
         ac        = 0.d0
         acut1     = 0.d0
@@ -421,7 +408,6 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
         rac2      = 1.d0/dsqrt(2.d0)
         af1       = amh/(amf+amh)
         af2       = amf/(amf+amh)
-        !
         do i=1, nt
             r1s      = r(i,1)*r(i,1)
             r2s      = r(i,2)*r(i,2)
@@ -443,24 +429,21 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
             if( l1 .eq. 4 ) l2=l1
             if( csb .le. bc(l1) ) csb = bc(l1)+1.d-13
             if( csb .ge. bc(l1+1) ) csb = bc(l1+1)-1.d-13
-            axs1  = dexp(-abs1*(r(i,1)-ars1))
-            s1    = ads1*axs1*(axs1-2.d0)
-            ds1d1 = 2.d0*ads1*abs1*axs1*(1.d0-axs1)
-            !-----------------------------------------------------------------------
-            y2    = r(i,2)-rehf
-            hlp1  = chf(1)*dexp(-chf(2)*y2)
-            hlp2  = dexp(-chf(6)*y2)
-            hlp22 = (-1.d0-chf(1)+chf(3)*y2+chf(4)*y2**2+chf(5)*y2**3)*hlp2
-            s2    = dehf*(hlp1+hlp22)
-            ds2d2 = dehf*(-chf(2)*hlp1 - chf(6)*hlp22 + (chf(3)+2.d0*chf(4)*y2+3.d0*chf(5)*y2**2)*hlp2)
-            !-----------------------------------------------------------------------
-            y3    = r(i,3)-renf
-            hlp1  = dexp(-cnf1(3)*y3)
-            hlp11 = (cnf1(1)+cnf1(2)*y3)*hlp1
-            hlp2  = cnf1(4)*dexp(-cnf1(5)*y3)
-            s3    = hlp11+hlp2
-            ds3d3 = -cnf1(3)*hlp11+cnf1(2)*hlp1-cnf1(5)*hlp2
-            !-----------------------------------------------------------------------
+            axs1     = dexp(-abs1*(r(i,1)-ars1))
+            s1       = ads1*axs1*(axs1-2.d0)
+            ds1d1    = 2.d0*ads1*abs1*axs1*(1.d0-axs1)
+            y2       = r(i,2)-rehf
+            hlp1     = chf(1)*dexp(-chf(2)*y2)
+            hlp2     = dexp(-chf(6)*y2)
+            hlp22    = (-1.d0-chf(1)+chf(3)*y2+chf(4)*y2**2+chf(5)*y2**3)*hlp2
+            s2       = dehf*(hlp1+hlp22)
+            ds2d2    = dehf*(-chf(2)*hlp1 - chf(6)*hlp22 + (chf(3)+2.d0*chf(4)*y2+3.d0*chf(5)*y2**2)*hlp2)
+            y3       = r(i,3)-renf
+            hlp1     = dexp(-cnf1(3)*y3)
+            hlp11    = (cnf1(1)+cnf1(2)*y3)*hlp1
+            hlp2     = cnf1(4)*dexp(-cnf1(5)*y3)
+            s3       = hlp11+hlp2
+            ds3d3    = -cnf1(3)*hlp11+cnf1(2)*hlp1-cnf1(5)*hlp2
             e(i)     = 0.d0
             de(1,i)  = 0.d0
             de(2,i)  = 0.d0
@@ -504,7 +487,6 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
                 dcd3   = (-c2b(l)*dwd3 - c2c(l))*cplg2
                 rootw  = rac2*dsqrt(w+cplg2*cplg2)
                 surf   = (coul1+coul2+coul3+dehf-rootw)
-                !
                 ! check for zero by zero division (a case when all three atoms are asymp
                 ! separated)
                 if( (dwd1+2.d0*cplg2*dcd1) .eq. 0.0d0 )then
@@ -558,12 +540,11 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
                 dsurfd1 = dsurfd1 + 2.d0*dipnn(l)*hlp1 *(aln0n1(l)*hlp2-aln0n2(l)*hlp3)*hlp23*drnag2d1
                 dsurfd2=dsurfd2 + 2.d0*dipnn(l)*hlp1 *(aln0n1(l)*hlp2-aln0n2(l)*hlp3)*hlp23*drnag2d2 + 2.d0* dipnn(l)* &
                     & hlp1* hlp11*al2n(l)/(hlp2+hlp3)
-                dsurfd3 = dsurfd3 + 2.d0*dipnn(l)*hlp1 *(aln0n1(l)*hlp2-aln0n2(l)*hlp3)*hlp23*drnag2d3
-                hlp     = 1.d0/( (1.d0-(csb-bc(l))/(bc(l-1)-bc(l))) * (1.d0-(csb-bc(l))/(bc(l+1)-bc(l))) )
-                hlp1    = (csb-bc(l))**2*hlp
-                cog     = dexp(-ac(l)*hlp1)
-                dcog    = -cog*ac(l)*(2.d0*(csb-bc(l))*hlp +hlp1*(1.d0/(bc(l-1)-csb)+1.d0/(bc(l+1)-csb)))
-                !-----------------------------------------------------------------------
+                dsurfd3  = dsurfd3 + 2.d0*dipnn(l)*hlp1 *(aln0n1(l)*hlp2-aln0n2(l)*hlp3)*hlp23*drnag2d3
+                hlp      = 1.d0/( (1.d0-(csb-bc(l))/(bc(l-1)-bc(l))) * (1.d0-(csb-bc(l))/(bc(l+1)-bc(l))) )
+                hlp1     = (csb-bc(l))**2*hlp
+                cog      = dexp(-ac(l)*hlp1)
+                dcog     = -cog*ac(l)*(2.d0*(csb-bc(l))*hlp +hlp1*(1.d0/(bc(l-1)-csb)+1.d0/(bc(l+1)-csb)))
                 dcogd1   = dcog*dcsbd1
                 dcogd2   = dcog*dcsbd2
                 dcogd3   = dcog*dcsbd3
@@ -589,7 +570,6 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
             de(2,i) = de(2,i)*cevau
             de(3,i) = de(3,i)*cevau
         enddo
-        !-----------------------------------------------------------------------
     end subroutine dispatch
 end module chempotpy_nafh_leps_ttypp2_1998_dpem_pot11_entry_stat_8d0592d8
 
@@ -604,35 +584,27 @@ subroutine pot11( r, e, de, nt )
     call dispatch(r=r, e=e, de=de, nt=nt)
 end subroutine pot11
 
-!
 !  U12 surface - coupling surface
-!
 module chempotpy_nafh_leps_ttypp2_1998_dpem_pot12_entry_stat_8d0592d8
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, de, nt )
         implicit none
         optional :: r, e, de, nt
-        double precision :: abs1, ads1, af1, af2, ahf, ahft, amf, amh, amna, amu, anaf, anaft, anah, &
-            & anaht, ars1, asmall, bc, ccnf, ccnh, ccnha, ccnhi, ccnhi1, cevau, chf, cnf, cnf1, cstsq, &
-            & dahftd1, dahftd2, dahftd3, danaftd1, danaftd2, danaftd3, danahtd1, danahtd2, danahtd3, &
-            & dccnhd2, dccnhd3, dcstsqd1, dcstsqd2, dcstsqd3, de, dehf, denf, dr13td1, dr13td2, dr13td3, &
-            & dr21td1, dr21td2, dr21td3, dr23td1, dr23td2, dr23td3, drnag2d1, drnag2d2, drnag2d3, dsw1d1, &
-            & dsw1d2, dsw1d3, dsw21d1, dsw21d2, dsw21d3, dsw23d1, dsw23d2, dsw23d3, dunafd3, dunahd1, &
-            & dunahd2, dunahd3, e, hlp, hlp1, hlp2, r, r13, r13t, r1s, r21, r21t, r23, r23t, r2s, r3s, &
-            & rehf, renf, rnag2, sw1, sw21, sw23, una2p, unaf, unah, xpnh, xpnh1
+        double precision :: abs1, ads1, af1, af2, ahf(3), ahft, amf, amh, amna, amu, anaf(3), anaft, anah(3), anaht, ars1, &
+            & asmall, bc(0:5), ccnf(4), ccnh(4), ccnha(4), ccnhi(4), ccnhi1(4), cevau, chf(6), cnf(6), cnf1(5), cstsq, dahftd1, &
+            & dahftd2, dahftd3, danaftd1, danaftd2, danaftd3, danahtd1, danahtd2, danahtd3, dccnhd2(4), dccnhd3(4), dcstsqd1, &
+            & dcstsqd2, dcstsqd3, de(:,:), dehf, denf, dr13td1, dr13td2, dr13td3, dr21td1, dr21td2, dr21td3, dr23td1, dr23td2, &
+            & dr23td3, drnag2d1, drnag2d2, drnag2d3, dsw1d1, dsw1d2, dsw1d3, dsw21d1, dsw21d2, dsw21d3, dsw23d1, dsw23d2, &
+            & dsw23d3, dunafd3, dunahd1, dunahd2, dunahd3, e(:), hlp, hlp1, hlp2, r(:,:), r13(3), r13t, r1s, r21(3), r21t, &
+            & r23(3), r23t, r2s, r3s, rehf, renf, rnag2, sw1, sw21, sw23, una2p, unaf, unah, xpnh, xpnh1
         integer :: i, nt
-        dimension r(:,:), e(:)
-        dimension de(:,:)
         integer :: g_myrank, g_nprocs
-        dimension cnf(6), cnf1(5), chf(6), bc(0:5)
-        dimension ahf(3), anaf(3), anah(3), r21(3), r23(3), r13(3)
-        dimension ccnf(4), ccnha(4), ccnhi(4), ccnhi1(4)
-        dimension ccnh(4)
-        dimension dccnhd2(4), dccnhd3(4)
         abs1     = 0.d0
         ads1     = 0.d0
         af1      = 0.d0
@@ -758,7 +730,6 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot12_entry_stat_8d0592d8
         g_nprocs = 1
         af1      = amh/(amf+amh)
         af2      = amf/(amf+amh)
-        !
         do i=1, nt
             hlp1       = dexp(-xpnh*r(i,2)**2)
             hlp2       = dexp(-xpnh1*r(i,3)**2)
@@ -787,7 +758,6 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot12_entry_stat_8d0592d8
                 & dccnhd2(4)* hlp*hlp)
             dunahd3    = -unah*(dccnhd3(1)+dccnhd3(2)*r(i,1) + dccnhd3(3)*r(i,1)*hlp-ccnh(3)*r(i,1)*r(i,1)* &
                 & dccnhd3(4)* hlp*hlp)
-            !-----------------------------------------------------------------------
             r1s      = r(i,1)*r(i,1)
             r2s      = r(i,2)*r(i,2)
             r3s      = r(i,3)*r(i,3)
@@ -882,36 +852,29 @@ subroutine pot12( r, e, de, nt )
     call dispatch(r=r, e=e, de=de, nt=nt)
 end subroutine pot12
 
-!
 !  U22 surface - upper diabatic surface
-!
 module chempotpy_nafh_leps_ttypp2_1998_dpem_pot22_entry_stat_8d0592d8
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, de, nt )
         implicit none
         optional :: r, e, de, nt
-        double precision :: abs1, ac, acut2, acut2n, adip2, adip2n, ads1, af1, af2, al20, al20a, al20i, &
-            & al20i1, al2a, aly, amf, amh, amna, amu, anorm, ars1, asmall, bc, c2a, c2b, c2c, cevau, chf, &
-            & cnf, cnf1, cog, coul1, coul2, coul3, cplg2, csb, ctanh, cy, dal20, danormd1, danormd2, &
-            & danormd3, dcd1, dcd2, dcd3, dcl1d1, dcl2d1, dcl2d2, dcl2d3, dcl3d3, dcog, dcogd1, dcogd2, &
-            & dcogd3, dcsbd1, dcsbd2, dcsbd3, dctanh, dcyd3, de, dehf, denf, dex1d1, dex2d1, dex2d2, &
-            & dex2d3, dex3d3, dip2, dip2n, dr20, drnag2d1, drnag2d2, drnag2d3, ds1d1, ds2ad2, ds2d1, &
-            & ds2d2, ds2d3, ds3d3, dsurfd1, dsurfd2, dsurfd3, dt1d1, dt2d1, dt2d2, dt2d3, dt3d3, dwd1, &
-            & dwd2, dwd3, dy, dy1, dy2, e, exch1, exch2, exch3, hlp, hlp1, hlp11, hlp2, hlp22, hlp3, psi, &
-            & r, r1s, r20, r20a, r20i, r2s, r3s, rac2, rcut2, rcut2n, rdip2, rdip2n, rehf, renf, rnag2, &
-            & rootw, rr0a, rsi, ry, s1, s2, s2a, s3, surf, t1, t2, t3, una2p, w, y, y2, y3
+        double precision :: abs1, ac(4), acut2(4), acut2n(4), adip2(4), adip2n(4), ads1, af1, af2, al20, al20a, al20i(4), &
+            & al20i1(4), al2a(4), aly(4), amf, amh, amna, amu, anorm, ars1, asmall, bc(0:5), c2a(4), c2b(4), c2c(4), cevau, &
+            & chf(6), cnf(6), cnf1(5), cog, coul1, coul2, coul3, cplg2, csb, ctanh, cy, dal20, danormd1, danormd2, danormd3, &
+            & dcd1, dcd2, dcd3, dcl1d1, dcl2d1, dcl2d2, dcl2d3, dcl3d3, dcog, dcogd1, dcogd2, dcogd3, dcsbd1, dcsbd2, dcsbd3, &
+            & dctanh, dcyd3, de(:,:), dehf, denf, dex1d1, dex2d1, dex2d2, dex2d3, dex3d3, dip2(4), dip2n(4), dr20, drnag2d1, &
+            & drnag2d2, drnag2d3, ds1d1, ds2ad2, ds2d1, ds2d2, ds2d3, ds3d3, dsurfd1, dsurfd2, dsurfd3, dt1d1, dt2d1, dt2d2, &
+            & dt2d3, dt3d3, dwd1, dwd2, dwd3, dy(4), dy1(4), dy2(4), e(:), exch1, exch2, exch3, hlp, hlp1, hlp11, hlp2, hlp22, &
+            & hlp3, psi, r(:,:), r1s, r20, r20a, r20i(4), r2s, r3s, rac2, rcut2(4), rcut2n(4), rdip2(4), rdip2n(4), rehf, renf, &
+            & rnag2, rootw, rr0a(4), rsi, ry(4), s1, s2, s2a, s3, surf, t1, t2, t3, una2p, w, y(4,3,4), y2, y3
         integer :: i, l, l1, l2, nt
-        dimension r(:,:), e(:)
-        dimension de(:,:)
         integer :: g_myrank, g_nprocs
-        dimension cnf(6), cnf1(5), chf(6), bc(0:5)
-        dimension y(4,3,4), c2a(4), c2b(4), c2c(4), r20i(4), al20i(4), al20i1(4), al2a(4), rr0a(4), dip2(4), adip2(4), rdip2(4), acut2(4), rcut2(4), ry(4), aly(4), dy(4), dy1(4), dy2(4), dip2n(4), adip2n(4), rdip2n(4), acut2n(4), rcut2n(4)
-        dimension ac(4)
-        !-----------------------------------------------------------------------
         abs1      = 0.d0
         ac        = 0.d0
         acut2     = 0.d0
@@ -1213,9 +1176,6 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot22_entry_stat_8d0592d8
         rac2      = 1.d0/dsqrt(2.d0)
         af1       = amh/(amf+amh)
         af2       = amf/(amf+amh)
-        !
-        !
-        !
         do i=1, nt
             r1s      = r(i,1)*r(i,1)
             r2s      = r(i,2)*r(i,2)
@@ -1237,24 +1197,20 @@ module chempotpy_nafh_leps_ttypp2_1998_dpem_pot22_entry_stat_8d0592d8
             if( l1 .eq. 4 ) l2=l1
             if( csb .le. bc(l1) ) csb = bc(l1)+1.d-13
             if( csb .ge. bc(l1+1) ) csb = bc(l1+1)-1.d-13
-            !-----------------------------------------------------------------------
-            s1    = 0.d0
-            ds1d1 = 0.d0
-            !-----------------------------------------------------------------------
-            y2     = r(i,2)-rehf
-            hlp1   = chf(1)*dexp(-chf(2)*y2)
-            hlp2   = dexp(-chf(6)*y2)
-            hlp22  = (-1.d0-chf(1)+chf(3)*y2+chf(4)*y2**2+chf(5)*y2**3)*hlp2
-            s2a    = dehf*(hlp1+hlp22) + una2p
-            ds2ad2 = dehf*(-chf(2)*hlp1-chf(6)*hlp22 + (chf(3)+2.d0*chf(4)*y2+3.d0*chf(5)*y2**2)*hlp2)
-            !-----------------------------------------------------------------------
-            y3    = r(i,3)-renf
-            hlp1  = cnf(1)*dexp(-cnf(2)*y3)
-            hlp2  = dexp(-cnf(6)*y3)
-            hlp22 = (-1.d0-cnf(1)+cnf(3)*y3+cnf(4)*y3*y3+cnf(5)*y3**3)*hlp2
-            s3    = denf*(hlp1+hlp22)
-            ds3d3 = denf*(-cnf(2)*hlp1-cnf(6)*hlp22 + (cnf(3)+2.d0*cnf(4)*y3+3.d0*cnf(5)*y3**2)*hlp2)
-            !-----------------------------------------------------------------------
+            s1       = 0.d0
+            ds1d1    = 0.d0
+            y2       = r(i,2)-rehf
+            hlp1     = chf(1)*dexp(-chf(2)*y2)
+            hlp2     = dexp(-chf(6)*y2)
+            hlp22    = (-1.d0-chf(1)+chf(3)*y2+chf(4)*y2**2+chf(5)*y2**3)*hlp2
+            s2a      = dehf*(hlp1+hlp22) + una2p
+            ds2ad2   = dehf*(-chf(2)*hlp1-chf(6)*hlp22 + (chf(3)+2.d0*chf(4)*y2+3.d0*chf(5)*y2**2)*hlp2)
+            y3       = r(i,3)-renf
+            hlp1     = cnf(1)*dexp(-cnf(2)*y3)
+            hlp2     = dexp(-cnf(6)*y3)
+            hlp22    = (-1.d0-cnf(1)+cnf(3)*y3+cnf(4)*y3*y3+cnf(5)*y3**3)*hlp2
+            s3       = denf*(hlp1+hlp22)
+            ds3d3    = denf*(-cnf(2)*hlp1-cnf(6)*hlp22 + (cnf(3)+2.d0*cnf(4)*y3+3.d0*cnf(5)*y3**2)*hlp2)
             e(i)     = 0.d0
             de(1,i)  = 0.d0
             de(2,i)  = 0.d0

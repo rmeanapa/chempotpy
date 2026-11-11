@@ -1,12 +1,66 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          BrH2
+!   Functional form: Diatomics-in-molecules plus three-center term
+!   Common name:     BrH2 DIM-3C
+!   Interface:       potlib2001
+!   References:      D. C. Clary
+!                    Chem. Phys. 71, 117 (1982)
+!                    I. Last and M. Baer
+!                    in Potential Energy Surfaces and Dynamics
+!                    edited by D. legacy_g. Truhlar (Plenum, New York, 1981)
+!                    p. 519
+!   Number of bodies:              3
+!   Number of derivatives:         1
+!   Number of electronic surfaces: 1
+!   Calling Sequence:
+!      prepare_local_context - initializes the potential's variables and
+!               must be called once before any calls to POT
+!      POT    - driver for the evaluation of the energy and the derivati
+!               of the energy with respect to the coordinates for a give
+!               geometric configuration
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      ground electronic state
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Br
+!      infinitely far from the H2 diatomic and R(H2) set equal to the
+!      H2 equilibrium diatomic value.
+!   Parameters:
+!      Set in data statements
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Br-H)
+!                            R(2) = R(H-H)
+!                            R(3) = R(Br-H)
+!   Common Blocks (used between the calling program and this potential):
+!        passes the coordinates, ground state electronic energy, and
+!        derivatives of the ground electronic state energy with respect
+!        to the coordinates.
+!      NFLAG(18-20)
+!        passes the FORTRAN unit number used for output from the potenti
+!      /ASYCM/ EASYAB, EASYBC, EASYAC
+!        passes the energy in the three asymptotic valleys for an A + BC
+!        The energy in the AB valley, EASYAB, is equal to the energy of
+!        C atom "infinitely" far from the AB diatomic and R(AB) set equa
+!        Re(AB), the equilibrium bond length for the AB diatomic.
+!        In this potential the AB valley represents H infinitely far fro
+!        the BrH diatomic and R(BrH) equal to Re(BrH).  Similarly, the t
+!        EASYBC and EASYAC represent the energies in the H2 and the HBr
+!        valleys, respectively.
+!   Default Parameter Values:
+!      Variable      Default value
+!      NFLAG(18)        6
+
+!> @brief Implement BrH2_LEPS_C_1982, a potential energy surface for BrH2.
 module chempotpy_brh2_leps_c_1982_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the BrH2_LEPS_C_1982 potential energy surface for BrH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -157,7 +211,7 @@ module chempotpy_brh2_leps_c_1982_pes
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
@@ -166,111 +220,35 @@ module chempotpy_brh2_leps_c_1982_pes
                     g(1,iatom,idir) = dgscart(iatom,idir)*51.422067
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
+
         contains
+
         !> @brief Evaluate prepare_local_context for the BrH2_LEPS_C_1982 potential.
         subroutine prepare_local_context
-            !
-            !   System:          BrH2
-            !   Functional form: Diatomics-in-molecules plus three-center term
-            !   Common name:     BrH2 DIM-3C
-            !   Interface:       potlib2001
-            !   References:      D. C. Clary
-            !                    Chem. Phys. 71, 117 (1982)
-            !                    I. Last and M. Baer
-            !                    in Potential Energy Surfaces and Dynamics
-            !                    edited by D. legacy_g. Truhlar (Plenum, New York, 1981)
-            !                    p. 519
-            !
-            !   Number of bodies:              3
-            !   Number of derivatives:         1
-            !   Number of electronic surfaces: 1
-            !
-            !   Calling Sequence:
-            !      prepare_local_context - initializes the potential's variables and
-            !               must be called once before any calls to POT
-            !      POT    - driver for the evaluation of the energy and the derivati
-            !               of the energy with respect to the coordinates for a give
-            !               geometric configuration
-            !
-            !   Units:
-            !      energies    - hartrees
-            !      coordinates - bohr
-            !      derivatives - hartrees/bohr
-            !
-            !   Surfaces:
-            !      ground electronic state
-            !
-            !   Zero of energy:
-            !      The classical potential energy is set equal to zero for the Br
-            !      infinitely far from the H2 diatomic and R(H2) set equal to the
-            !      H2 equilibrium diatomic value.
-            !
-            !   Parameters:
-            !      Set in data statements
-            !
-            !   Coordinates:
-            !      Internal, Definition: R(1) = R(Br-H)
-            !                            R(2) = R(H-H)
-            !                            R(3) = R(Br-H)
-            !
-            !   Common Blocks (used between the calling program and this potential):
-            !        passes the coordinates, ground state electronic energy, and
-            !        derivatives of the ground electronic state energy with respect
-            !        to the coordinates.
-            !      NFLAG(18-20)
-            !        passes the FORTRAN unit number used for output from the potenti
-            !      /ASYCM/ EASYAB, EASYBC, EASYAC
-            !        passes the energy in the three asymptotic valleys for an A + BC
-            !        The energy in the AB valley, EASYAB, is equal to the energy of
-            !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
-            !        Re(AB), the equilibrium bond length for the AB diatomic.
-            !        In this potential the AB valley represents H infinitely far fro
-            !        the BrH diatomic and R(BrH) equal to Re(BrH).  Similarly, the t
-            !        EASYBC and EASYAC represent the energies in the H2 and the HBr
-            !        valleys, respectively.
-            !
-            !   Default Parameter Values:
-            !      Variable      Default value
-            !      NFLAG(18)        6
-            !
-            !
             implicit none
-            double precision :: t
-            integer          :: i
-            !
-            !
+            double precision            :: t
+            integer                     :: i
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
             !      LOGICAL LCOL
             !      DIMENSION H(10),DH1(10),DH2(10),DH3(10),legacy_u(4,4),E(4),SCR1(4),
             !     1          SCR2(4)
             !      COMMON /POTCOM/ EPS,ONE,RHH,AHH,DHH,BHH,XIH,XIX,legacy_g,ALFW,RHX,AHX,
             !     &                DHX,BHX,ETAHH,ETA3S,ETA1P,ETA3P
-            !
             !   Echo potential parameters to UNIT NFLAG(18)
-            !
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
-            easyab = dhx
-            easybc = dhh
-            easyac = dhx
-            !
+            easyab   = dhx
+            easybc   = dhh
+            easyac   = dhx
             xib      = 0.5d0*(xih + xix)
             t        = xib*rhx
             c3       = 1.d0/3.d0
@@ -278,82 +256,54 @@ module chempotpy_brh2_leps_c_1982_pes
             legacy_g = legacy_g/rhx
             rt34     = 0.25d0*sqrt(3.d0)
             rt38     = 0.5d0*rt34
-            !
-            !
-            !
             ezero(1) = dhh
-            !
             do i=1, 5
                 ref(i) = ' '
             enddo
-            !
-            ref(1) = 'D. C. Clary, Chem. Phys. 71, 117 (1982)'
-            ref(2) = 'I. Last and M. Baer in'
-            ref(3) = 'Potential Energy Surfaces and Dynamics'
-            ref(4) = 'D. legacy_g. Truhlar (Ed.) (Plenum, New York, 1981), p. 519'
-            !
+            ref(1)     = 'D. C. Clary, Chem. Phys. 71, 117 (1982)'
+            ref(2)     = 'I. Last and M. Baer in'
+            ref(3)     = 'Potential Energy Surfaces and Dynamics'
+            ref(4)     = 'D. legacy_g. Truhlar (Ed.) (Plenum, New York, 1981), p. 519'
             indexes(1) = 35
             indexes(2) = 1
             indexes(3) = 1
-            !
-            !
-            !
-            irctnt = 2
-            !
+            irctnt     = 2
             !CALL POTINFO
-            !
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POT for the BrH2_LEPS_C_1982 potential.
         subroutine pot
-            !
             !   The potential parameters must be passed through the COMMON BLOCKS
             !   PT1CM, ASYCM, PT2CM,  All information passed through the
             !   COMMON BLOCKS PT1CM, ASYCM must be in Hartree atomic units.
-            !
             !   Coordinates:
             !      Internal, Definition: R(1) = R(Br-H)
             !                            R(2) = R(H-H)
             !                            R(3) = R(Br-H)
-            !
             !        The energy in the AB valley, EASYAB, is equal to the energy of
             !        C atom "infinitely" far from the AB diatomic and R(AB) set equa
             !        Re(AB), the equilibrium bond length for the AB diatomic.
-            !
             !        In this potential the AB valley represents H infinitely far fro
             !        the BrH diatomic and R(BrH) equal to Re(BrH).  Similarly, the t
             !        EASYBC and EASYAC represent the energies in the H2 and the HBr
             !        valleys, respectively.
-            !
             implicit none
-            double precision :: csa, csa2, csb, csb2, csg2, d1, d2, d3, dcsa21, dcsa22, dcsa23, dcsb21, dcsb22, dcsb23, dcsg21, dcsg22, dcsg23, dp11, dp12, dp21, dp22, dp31, dp32, ds11, ds12, ds21, ds22, ds31, ds32, dshh, dshx1, dshx2, dsn2a1, dsn2a2, dsn2a3, dsn2b1, dsn2b2, dsn2b3, dv1hh, dv1p1, dv1p2, dv1s1, dv1s2, dv3hh, dv3p1, dv3p2, dv3s1, dv3s2, ex1, ex2, p11, p12, p21, p22, p31, p32, r1, r12, r13, r1s, r2, r23, r2s, r3, r3s, rdif, rdif2, s11, s12, s21, s22, s31, s32, shh, shx1, shx2, sn2a, sn2b, sna, sna2, snb, snb2, t, t1, t11, t12, t2, t21, t22, t3, t31, t32, v1hh, v1p1, v1p2, v1s1, v1s2, v3hh, v3p1, v3p2, v3s1, v3s2
-            integer          :: ierr, index, k, kk, l, ll
-            !
-            !
+            double precision            :: csa, csa2, csb, csb2, csg2, d1, d2, d3, dcsa21, dcsa22, dcsa23, dcsb21, dcsb22, dcsb23, dcsg21, dcsg22, dcsg23, dp11, dp12, dp21, dp22, dp31, dp32, ds11, ds12, ds21, ds22, ds31, ds32, dshh, dshx1, dshx2, dsn2a1, dsn2a2, dsn2a3, dsn2b1, dsn2b2, dsn2b3, dv1hh, dv1p1, dv1p2, dv1s1, dv1s2, dv3hh, dv3p1, dv3p2, dv3s1, dv3s2, ex1, ex2, p11, p12, p21, p22, p31, p32, r1, r12, r13, r1s, r2, r23, r2s, r3, r3s, rdif, rdif2, s11, s12, s21, s22, s31, s32, shh, shx1, shx2, sn2a, sn2b, sna, sna2, snb, snb2, t, t1, t11, t12, t2, t21, t22, t3, t31, t32, v1hh, v1p1, v1p2, v1s1, v1s2, v3hh, v3p1, v3p2, v3s1, v3s2
+            integer                     :: ierr, index, k, kk, l, ll
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            logical :: lcol
-            !
+            logical                     :: lcol
             call cartou
             call carttor
-            !
             !   The potential routines define R1=R(Br-H), R2=R(H-Br), and R3=R(H-H);
             !   rearrange the input coordinates to match these definitions
-            !
             r1 = r(1)
             r2 = r(3)
             r3 = r(2)
-            !
             if( r1 .gt. r2+r3 ) r1 = r2+r3
             if( r2 .gt. r1+r3 ) r2 = r1+r3
             if( r3 .gt. r1+r2 ) r3 = r1+r2
@@ -409,11 +359,8 @@ module chempotpy_brh2_leps_c_1982_pes
             dcsg21 = t*t2/(r1*r12)
             dcsg22 = t*t1/(r12*r2)
             dcsg23 = -t*r3/r12
-            !
             !  DIATOMIC CURVES
-            !
             !    HH
-            !
             rdif  = r3 - rhh
             ex1   = exp(-ahh*rdif)
             rdif2 = rdif*rdif
@@ -425,25 +372,21 @@ module chempotpy_brh2_leps_c_1982_pes
             t2    = 3.d0*bhh*rdif2
             dv1hh = t1*(1.d0-ex1) - t2*v1hh
             dv3hh = -t1*etahh*(1.d0+ex1) - t2*v3hh
-            !
             !    HX
-            !
             call vhx(r1, v1s1, v3s1, v1p1, v3p1, dv1s1, dv3s1, dv1p1, dv3p1)
             call vhx(r2, v1s2, v3s2, v1p2, v3p2, dv1s2, dv3s2, dv1p2, dv3p2)
-            !
-            s11 = v1s1 + 3.d0*v3s1
-            s12 = v1s2 + 3.d0*v3s2
-            s21 = 3.d0*v1s1 + v3s1
-            s22 = 3.d0*v1s2 + v3s2
-            s31 = v1s1 - v3s1
-            s32 = v1s2 - v3s2
-            p11 = v1p1 + 3.d0*v3p1
-            p12 = v1p2 + 3.d0*v3p2
-            p21 = 3.d0*v1p1 + v3p1
-            p22 = 3.d0*v1p2 + v3p2
-            p31 = v1p1 - v3p1
-            p32 = v1p2 - v3p2
-            !
+            s11  = v1s1 + 3.d0*v3s1
+            s12  = v1s2 + 3.d0*v3s2
+            s21  = 3.d0*v1s1 + v3s1
+            s22  = 3.d0*v1s2 + v3s2
+            s31  = v1s1 - v3s1
+            s32  = v1s2 - v3s2
+            p11  = v1p1 + 3.d0*v3p1
+            p12  = v1p2 + 3.d0*v3p2
+            p21  = 3.d0*v1p1 + v3p1
+            p22  = 3.d0*v1p2 + v3p2
+            p31  = v1p1 - v3p1
+            p32  = v1p2 - v3p2
             ds11 = dv1s1 + 3.d0*dv3s1
             ds12 = dv1s2 + 3.d0*dv3s2
             ds21 = 3.d0*dv1s1 + dv3s1
@@ -456,9 +399,7 @@ module chempotpy_brh2_leps_c_1982_pes
             dp22 = 3.d0*dv1p2 + dv3p2
             dp31 = dv1p1 - dv3p1
             dp32 = dv1p2 - dv3p2
-            !
             !    CONSTRUCT 4X4 HAMILTONIAN PUT IN PACKED ARRAY
-            !
             h(1)                 = v1hh + 0.25d0*(s11*csa2 + p11*sna2 + s12*csb2 + p12*snb2)
             h(3)                 = v1hh + 0.25d0*(s11*sna2 + p11*csa2 + s12*snb2 + p12*csb2)
             h(6)                 = v3hh + 0.25d0*(s21*csa2 + p21*sna2 + s22*csb2 + p22*snb2)
@@ -478,9 +419,7 @@ module chempotpy_brh2_leps_c_1982_pes
             t22                  = s22 - p22
             h(9)                 = 0.d0
             if( .not.lcol ) h(9) = 0.125d0*(t21*sn2a - t22*sn2b)
-            !
             !   CONSTRUCT DERIVATIVE OF HAMILTONIAN MATRIX
-            !
             t       = t11*dcsa21 + t12*dcsb21
             dh1(1)  = 0.25d0*(ds11*csa2 + dp11*sna2 + t)
             dh1(2)  = 0.125d0*((ds11-dp11)*sn2a + t11*dsn2a1 - t12*dsn2b1)
@@ -520,10 +459,8 @@ module chempotpy_brh2_leps_c_1982_pes
             dh3(5)  = rt38*(t31*dsn2a3 + t32*dsn2b3)
             dh3(7)  = dh3(5)
             dh3(8)  = -dh3(4)
-            !
             !    DIAGONALIZE H PUT EIGENVECTORS INTO legacy_u, EIGENVALUES INTO E
             !    USE EISPACK ROUTINE RSP
-            !
             call rsp(4, 4, 10, h, e, 1, legacy_u, scr1, scr2, ierr)
             if( ierr .ne. 0 )then
                 write(nflag(18), '(/,2X,''Error returned by the subprogram RSP in POT'', /,2X,''R = '',T10,3(1PE13.5,1X), /,2X' // &
@@ -532,9 +469,7 @@ module chempotpy_brh2_leps_c_1982_pes
                     & v3s2, v1p1, v3p1, v1p2, v3p2
                 stop 'POT 3'
             endif
-            !
             !    EVALUATE DERIVATIVES OF LOWEST ROOT
-            !
             d1 = 0.d0
             d2 = 0.d0
             d3 = 0.d0
@@ -551,9 +486,7 @@ module chempotpy_brh2_leps_c_1982_pes
                     d3 = d3 + t2*dh3(index)
                 enddo
             enddo
-            !
             !   SUPPLEMENTARY TERM
-            !
             t      = xih*r3
             ex1    = exp(-t)
             shh    = (1.d0+t*(1.d0+c3*t))*ex1
@@ -570,7 +503,6 @@ module chempotpy_brh2_leps_c_1982_pes
             t1     = legacy_g*exp(-alfw*rdif*rdif)
             t2     = shh*(shx1+shx2) + shx1*shx2
             engygs = e(1) + t2*t1*csg2 + ezero(1)
-            !
             call eunitzero
             if( nder .ne. 0 )then
                 t3        = 2.d0*alfw*rdif*csg2
@@ -580,26 +512,17 @@ module chempotpy_brh2_leps_c_1982_pes
                 call rtocart
                 call dedcou
             endif
-            !
-            !
         end subroutine pot
+
         !> @brief Evaluate VHX for the BrH2_LEPS_C_1982 potential.
         subroutine vhx( rr, v1s, v3s, v1p, v3p, dv1s, dv3s, dv1p, dv3p )
             implicit none
-            double precision :: dv1, dv1p, dv1s, dv3p, dv3s, ex1, ex2, rdif, rdif2, rr, t1, t2, v1, v1p, v1s, v3p, v3s
-            !
-            !
+            double precision            :: dv1, dv1p, dv1s, dv3p, dv3s, ex1, ex2, rdif, rdif2, rr, t1, t2, v1, v1p, v1s, v3p, v3s
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             rdif  = rr - rhx
             rdif2 = rdif*rdif
             ex1   = exp(-ahx*rdif)
@@ -618,6 +541,7 @@ module chempotpy_brh2_leps_c_1982_pes
             dv1p  = eta1p*dv1
             dv3p  = eta3p*dv1
         end subroutine vhx
+
         !> @brief Evaluate RSP for the BrH2_LEPS_C_1982 potential.
         !> @brief Diagonalize a real symmetric packed matrix with the shared core eigensolver.
         subroutine rsp( nm, n, nv, a, w, matz, z, fv1, fv2, ierr )
@@ -660,6 +584,7 @@ module chempotpy_brh2_leps_c_1982_pes
             endif
             deallocate(matrix, work)
         end subroutine rsp
+
         !> @brief Evaluate POTINFO for the BrH2_LEPS_C_1982 potential.
         subroutine potinfo
             implicit none
@@ -753,22 +678,14 @@ module chempotpy_brh2_leps_c_1982_pes
                     '*-1/ANGSTROM'',//)')
             endif
         end subroutine potinfo
+
         !> @brief Evaluate ANCVRT for the BrH2_LEPS_C_1982 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -785,6 +702,13 @@ module chempotpy_brh2_leps_c_1982_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -1000,13 +924,13 @@ module chempotpy_brh2_leps_c_1982_pes
             if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             cnvrtd  = 1.d0
@@ -1015,13 +939,13 @@ module chempotpy_brh2_leps_c_1982_pes
             if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
             if( nflag(2) .eq. 2 )then
                 cnvrte = cnvrte*htomillh
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 cnvrte = cnvrte*htoev
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 cnvrte = cnvrte*htokcal
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 cnvrte = cnvrte*htowave
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 cnvrte = cnvrte*htokj
             endif
             cnvrtde = cnvrte/cnvrtd
@@ -1032,6 +956,7 @@ module chempotpy_brh2_leps_c_1982_pes
             ireorder = 0
             if( isum .ne. 0 ) ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the BrH2_LEPS_C_1982 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -1043,6 +968,7 @@ module chempotpy_brh2_leps_c_1982_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the BrH2_LEPS_C_1982 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -1059,6 +985,7 @@ module chempotpy_brh2_leps_c_1982_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the BrH2_LEPS_C_1982 potential.
         subroutine eunitzero
             implicit none
@@ -1080,16 +1007,18 @@ module chempotpy_brh2_leps_c_1982_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the BrH2_LEPS_C_1982 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( icartr .eq. 1 )then
                 do i = 1, legacy_natoms
                     ind            = 3*i-2
@@ -1111,7 +1040,7 @@ module chempotpy_brh2_leps_c_1982_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 2 )then
+            elseif( icartr .eq. 2 )then
                 do i = 1, legacy_natoms
                     dgscartnu(i,1) = 0.d0
                     dgscartnu(i,2) = 0.d0
@@ -1133,7 +1062,7 @@ module chempotpy_brh2_leps_c_1982_pes
                     do j = 1, legacy_natoms
                         if( j .lt. i )then
                             m1 = legacy_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1152,7 +1081,7 @@ module chempotpy_brh2_leps_c_1982_pes
                                 descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
                                 descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( ksoffd .gt. 0 )then
+                        elseif( ksoffd .gt. 0 )then
                             do j2=ksoffd, keoffd
                                 y                 = deijdr(m1,j2)
                                 dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
@@ -1162,7 +1091,7 @@ module chempotpy_brh2_leps_c_1982_pes
                         endif
                     enddo
                 enddo
-            else if( icartr .eq. 3 )then
+            elseif( icartr .eq. 3 )then
                 do i = 1, legacy_natoms
                     ygs(i) = degsdr(i)/r(i)
                     if( ksdiag .ne. 0 )then
@@ -1198,7 +1127,7 @@ module chempotpy_brh2_leps_c_1982_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 4 )then
+            elseif( icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1234,6 +1163,7 @@ module chempotpy_brh2_leps_c_1982_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the BrH2_LEPS_C_1982 potential.
         subroutine dedcou
             implicit none
@@ -1287,7 +1217,7 @@ module chempotpy_brh2_leps_c_1982_pes
     end subroutine evaluate
 end module chempotpy_brh2_leps_c_1982_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose BrH2_LEPS_C_1982 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_brh2_leps_c_1982_pes, only: evaluate
     implicit none

@@ -1,10 +1,35 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Embedded atom
+!   Common name:                   reMisFMP
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  The parameters
+!           for this PEF have been parameterized against a data set of
+!           aluminum cluster energies and bulk data.
+!  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potentials Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!              Y. Mishin, D. Farkas, M. J. Mehl, and D. A. Papaconstantopoulos
+!              Mat. Res. Soc. Symp. Proc. 583, 535, (1999).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_remisfmp_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,43 +59,15 @@ module chempotpy_aln_remisfmp_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_reMisFMP potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Embedded atom
-        !   Common name:                   reMisFMP
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  The parameters
-        !           for this PEF have been parameterized against a data set of
-        !           aluminum cluster energies and bulk data.
-        !
-        !  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !              Y. Mishin, D. Farkas, M. J. Mehl, and D. A. Papaconstantopoulos
-        !              Mat. Res. Soc. Symp. Proc. 583, 535, (1999).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: a, alp1, alp2, b1, b2, delta, dx, dy, dz, e1, e2, ef, em1, &
-            & em2, f0, f2, h, psiarg, psicut, q1, q2, q3, r1, r2, r3, r4, rc, rho, rhobar, rr, v, v2, x, &
-            & xksum, y, z
+        double precision :: a, alp1, alp2, b1, b2, delta, dx, dy, dz, e1, e2, ef, em1, em2, f0, f2, h, psiarg, psicut, q1, q2, &
+            & q3, r1, r2, r3, r4, rc, rho, rhobar, rr, v, v2, x(maxatom), xksum, y(maxatom), z(maxatom)
         integer                     :: i, j, maxatom, natom
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
-        dimension x(maxatom), y(maxatom), z(maxatom)
         !  calculate the potential energy
         rc    = 6.11700048851978462/autoang
         h     = 4.78798241328773777/autoang
@@ -143,7 +140,7 @@ module chempotpy_aln_remisfmp_pes
     end subroutine pot
 end module chempotpy_aln_remisfmp_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_reMisFMP through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_remisfmp_pes, only: evaluate

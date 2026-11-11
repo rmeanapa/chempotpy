@@ -6,11 +6,9 @@
 !   Number of bodies:              3
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:: Z. Varga, Y. Paukku, and D. G. Truhlar,
 !     "Potential energy surfaces for O + O2 collisions"
 !      J. Chem. Phys. 147, 154312/1-17 (2017).
-!
 !   Notes:    -Mixed-exponential-Gaussian (MEG)
 !              variables are applied
 !             -Diatomic potential contains
@@ -35,7 +33,6 @@
 !                 PES_O4_triplet_umn_v2
 !                 NO2_2Ap_MB-PIP-MEG
 !                 NO2_4Ap_MB-PIP-MEG
-!
 !   Input: X(3),Y(3),Z(3)               in unit of bohr
 !   Output: E                           in unit of hartree
 !   Output: dEdX(3),dEdY(3),dEdZ(3)     hartree/bohr
@@ -43,10 +40,8 @@
 module o3_1_5app_zv_par
     ! This code is based on O3_1_5App.f (FORTRAN77 version) where some
     ! keywords were replaced by more modern ones.
-    !
     ! The dispersion term is called inside the subroutine ev2gm2
     ! for each diatomic term.
-    !
     ! Otherwise the surface itself was not changed.
     ! Conversion factors
     ! Cconv: bohr to Angstrom
@@ -116,13 +111,15 @@ module o3_1_5app_zv_par
         /)
 end module o3_1_5app_zv_par
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement O3_1_5App_ZV, a potential energy surface for O3.
 module chempotpy_o3_1_5app_zv_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the O3_1_5App_ZV potential energy surface for O3.
     subroutine evaluate( x, igrad, potential, gradient, dvec )
         use o3_1_5app_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
             & gconv, p, r, ra, rb, rm, rms, totdiss
@@ -167,7 +164,7 @@ module chempotpy_o3_1_5app_zv_pes
     end subroutine evaluate
 end module chempotpy_o3_1_5app_zv_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose O3_1_5App_ZV through the Python-facing PES entry point.
 subroutine pes( x, igrad, potential, gradient, dvec )
     use chempotpy_o3_1_5app_zv_pes, only: evaluate
     implicit none
@@ -459,15 +456,11 @@ end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v, grad, imol, igrad )
-    !
     ! Compute the diatomic potential of ground-state triplet O2
-    !
     ! References: J. Chem. Phys. 132, 074307 (2010)
-    !
     ! Input:  r      interatomic distance in Angstrom
     ! Output: V      potential in kcal/mol
     !         grad   gradient (kcal/mol)/Angstrom
-    !
     implicit none
     integer, intent(in)           :: imol, igrad
     double precision, intent(in)  :: r
@@ -586,7 +579,6 @@ subroutine evdrdx( x )
     ! Subroutine to evaluate dRdX for given R and X
     ! R:            R(3), 3 bond lengths
     ! X:            X(9), 9 Cartesian coordinates
-    !
     ! dMdR:         dMdR(3,nom), nom monomials w.r.t.3 bond length
     ! dPdR:         dPdR(3,nob), nop polynomial basis functions
     !               w.r.t. 3 bond lengths
@@ -774,19 +766,15 @@ end subroutine evdbdr
 subroutine d3disp( dist, disp, dispdr, igrad, imol )
     ! Dispersion correction based on Grimme's D3(BJ) calculation for
     ! diatomic pairs
-    !
     ! Several subroutines of DFTD3 V3.1 Rev 1 by Grimme were merged into
     ! subroutine edisp and they have been heavily modified to calculate
     ! only dispersion energy corrections that are needed.
-    !
     ! S. Grimme, J. Antony, S. Ehrlich and H. Krieg
     ! J. Chem. Phys, 132 (2010), 154104
     ! and
     ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
     ! 1456-1465
-    !
     ! The C6 values are fixed.
-    !
     implicit none
     double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)

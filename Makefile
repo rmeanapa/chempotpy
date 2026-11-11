@@ -1,4 +1,4 @@
-.PHONY: all audit build check check-binaries check-conda check-fortran check-modernization check-modernization-source check-python-extensions check-style clean test test-surfaces
+.PHONY: all audit build check check-binaries check-conda check-embedded-parameters check-fortran check-modernization check-modernization-source check-python-extensions check-style clean test test-surfaces
 
 PYTHON ?= python3
 BUILD_FLAGS ?=
@@ -24,12 +24,16 @@ check-style:
 check-modernization-source:
 	$(PYTHON) scripts/check_modernization.py
 
+check-embedded-parameters:
+	$(PYTHON) scripts/generate_embedded_network_parameters.py --check
+	$(PYTHON) scripts/generate_embedded_pes_parameters.py --check
+
 build:
 	$(PYTHON) scripts/build_pes.py $(BUILD_FLAGS)
 
 all: build
 
-check: audit check-modernization-source test check-fortran check-style
+check: audit check-modernization-source check-embedded-parameters test check-fortran check-style
 
 check-modernization: check
 

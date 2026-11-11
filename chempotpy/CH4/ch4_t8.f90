@@ -6,9 +6,7 @@
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
 !   Data file:                     ch4T8datafile.tar
-!
 !   References:      D. W. Schwenke and H. Partridge, Spectrochim. Acta
-!
 !   Notes:
 !      The data file (ch4T8datafile.tar) contains two files:
 !      ch4pes is a data file read once by the PES routine
@@ -16,7 +14,6 @@
 !      (the required input for the T8 PES), calls the surface, zeroes it
 !      and returns the energy.
 !      There are no derivatives.  One should use nuclear rather than ato
-!
 
 !> @brief Evaluate vibpot.
 subroutine vibpot( rij, v, n, path )
@@ -39,9 +36,7 @@ subroutine vibpot( rij, v, n, path )
     real(8)                         :: s3x, s3y, s3z, s4x, s4y, s4z, sr12, srh
     real(8)                         :: t1, t2, t3, t4, t5, t6, t12, t22, t32, t42, t52, t62
     real(8)                         :: thrd, vs, y1, y2, y3, y4
-    !
     !     ch4 potential based on Radau coordinates
-    !
     !     rij(i,1) - ch1
     !     rij(i,2) - ch2
     !     rij(i,3) - ch3
@@ -212,7 +207,7 @@ subroutine setupvp( file_unit, nx, ixp, ixw, ccc, idx, reau, ex, thrd, exa, srh,
         j1 = in+i2; j2 = in+i1
         if( j1 == 0 .and. lm /= 0 )then
             cs(i1) = coef*6d0; ix1 = max(ix1, i1); coef = 0d0
-        else if( j2 == 0 .and. lm /= 0 )then
+        elseif( j2 == 0 .and. lm /= 0 )then
             cb(i2) = coef*4d0; ix2 = max(ix2, i2); coef = 0d0
         endif
         nexp = nexp+1

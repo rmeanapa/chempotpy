@@ -1,10 +1,38 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Heuristic
+!   Common name:                   ErkIV
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  For a recent
+!           discussion of this potential, see:
+!           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!           and D. G. Truhlar, "Analytic Potentials Energy Functions
+!           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  References: S. Erkoc, Phys. Stat. Sol. (b) 161 (1990), 211.
+!              S. Erkoc, Empirical Potential Energy Functions
+!                 Used in the Simulations of Materials Properties,
+!                 Annual Reviews of Computational Physics IX,
+!                 D. Stauffer, ed., World Scientific, Singapore 2001,
+!                 pp. 1-103.
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_erkiv_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,44 +62,13 @@ module chempotpy_aln_erkiv_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_ErkIV potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Heuristic
-        !   Common name:                   ErkIV
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  For a recent
-        !           discussion of this potential, see:
-        !           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !           and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  References: S. Erkoc, Phys. Stat. Sol. (b) 161 (1990), 211.
-        !              S. Erkoc, Empirical Potential Energy Functions
-        !                 Used in the Simulations of Materials Properties,
-        !                 Annual Reviews of Computational Physics IX,
-        !                 D. Stauffer, ed., World Scientific, Singapore 2001,
-        !                 pp. 1-103.
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: aa, alpha, c2, c3, dist, dx, dy, dz, en, en2, fijk, fikj, fjki, r0, r02, r1, r2, rr, temp1, &
-            & temp2, u, v, vmany, vpair, wijk, x, y, z
+        double precision :: aa, alpha, c2, c3, dist(natom,natom), dx, dy, dz, en, en2, fijk, fikj, fjki, r0, r02, r1, r2, rr, &
+            & temp1, temp2, u(natom,natom), v, vmany, vpair, wijk, x(natom), y(natom), z(natom)
         integer :: i, j, k, maxatom, natom
-        dimension x(natom), y(natom), z(natom), dist(natom,natom)
-        dimension u(natom,natom)
         double precision, parameter :: autoang = 0.5291277249d0
         double precision, parameter :: autoev  = 27.2113961d0
         en    = 2.073d0
@@ -119,7 +116,7 @@ module chempotpy_aln_erkiv_pes
     end subroutine pot
 end module chempotpy_aln_erkiv_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_ErkIV through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_erkiv_pes, only: evaluate

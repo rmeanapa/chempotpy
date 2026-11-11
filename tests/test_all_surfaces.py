@@ -69,7 +69,7 @@ class AllSurfaceRegressionTests(unittest.TestCase):
 
     def test_migrated_fits_have_no_initialization_lifecycle(self) -> None:
         targets = (
-            self.repository / "chempotpy" / "core" / "fortran" / "chempotpy_h3_basis.f90",
+            self.repository / "chempotpy" / "core" / "chempotpy_h3_basis.f90",
             self.sources["ClH2/ClH2_LEPS_ALTG2_1996"],
             self.sources["ClH2/ClH2_LEPS_STSBLTG1_1989"],
             self.sources["ClH2/ClH2_LEPS_STSBLTG2_1989"],
@@ -341,7 +341,7 @@ class AllSurfaceRegressionTests(unittest.TestCase):
                 self.assertIsNotNone(module)
                 outside = text[:module.start()]+text[module.end():]
                 adapter = re.search(
-                    r"^!>\s*@brief\s+Preserve the historical.*?"
+                    r"^!>\s*@brief\s+.*?Python-facing\s+(?:PES|DPEM)\s+entry point\..*?"
                     r"^\s*end\s+subroutine(?:\s+(?:pes|dpem))?\s*$",
                     outside,
                     flags=re.IGNORECASE | re.MULTILINE | re.DOTALL,

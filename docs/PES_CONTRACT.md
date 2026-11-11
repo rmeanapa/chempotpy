@@ -117,7 +117,6 @@ The maintained bundled core currently contains:
 - `chempotpy_legacy_coordinates`: explicit-argument implementations of the
   historical POTLIB Cartesian input and internal-coordinate setup algorithms,
   including the shared legacy triatomic 1-2, 2-3, 1-3 distance adapter.
-- `chempotpy_neural_network_io`: shared parsing of neural-network headers.
 - `chempotpy_status`: status values for future non-printing modern interfaces.
 - `chempotpy_blas`: the small BLAS subset required by bundled legacy kernels.
 - `chempotpy_dsyev`: the standalone historical `DSYEV` ABI implementation.
@@ -127,6 +126,18 @@ Fortran `use` statements and compiles the dependency-first source set into each
 extension. It does not link a shared CHEMPOTPY core library. A surface therefore
 remains independently loadable while the maintained source has one definition
 of each core tool.
+
+Immutable fitted neural-network parameters belong to the owning PES rather
+than the general-purpose core. N4_1A_PIPNN, FH2O_PIPNN, and FH2O_SOC_PIPNN
+therefore compile generated, private-by-default parameter modules into their
+standalone artifacts. Their released text files remain under `tests/data` as
+provenance inputs, while runtime evaluation performs no file I/O or mutable
+initialization.
+
+The same ownership rule applies to every immutable fitted coefficient or
+constant table distributed with a PES. The migration policy, provenance
+requirements, and current inventory are maintained in
+`docs/EXTERNAL_DATA_MIGRATION.md`.
 
 NumPy f2py does not infer that an imported `real64` kind maps to a C/Python
 double. Every isolated build writes an explicit `.f2py_f2cmap` declaring

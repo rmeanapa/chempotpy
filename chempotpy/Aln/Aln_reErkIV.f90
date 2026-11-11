@@ -1,10 +1,39 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Heuristic
+!   Common name:                   reErkIV
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  The parameters
+!           for this PEF have been parameterized against a data set of
+!           aluminum cluster energies and bulk data.
+!  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potentials Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!              S. Erkoc, Phys. Stat. Sol. (b) 161 (1990), 211.
+!              S. Erkoc, Empirical Potential Energy Functions
+!                 Used in the Simulations of Materials Properties,
+!                 Annual Reviews of Computational Physics IX,
+!                 D. Stauffer, ed., World Scientific, Singapore 2001,
+!                 pp. 1-103.
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_reerkiv_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,45 +63,13 @@ module chempotpy_aln_reerkiv_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_reErkIV potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Heuristic
-        !   Common name:                   reErkIV
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  The parameters
-        !           for this PEF have been parameterized against a data set of
-        !           aluminum cluster energies and bulk data.
-        !
-        !  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !              S. Erkoc, Phys. Stat. Sol. (b) 161 (1990), 211.
-        !              S. Erkoc, Empirical Potential Energy Functions
-        !                 Used in the Simulations of Materials Properties,
-        !                 Annual Reviews of Computational Physics IX,
-        !                 D. Stauffer, ed., World Scientific, Singapore 2001,
-        !                 pp. 1-103.
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: aa, alpha, c2, c3, dist, dx, dy, dz, en, en2, fijk, fikj, fjki, r0, r02, r1, r2, rr, temp1, &
-            & temp2, u, v, vmany, vpair, wijk, x, y, z
+        double precision :: aa, alpha, c2, c3, dist(maxatom,maxatom), dx, dy, dz, en, en2, fijk, fikj, fjki, r0, r02, r1, r2, &
+            & rr, temp1, temp2, u(maxatom,maxatom), v, vmany, vpair, wijk, x(maxatom), y(maxatom), z(maxatom)
         integer :: i, j, k, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom), dist(maxatom,maxatom)
-        dimension u(maxatom,maxatom)
         double precision, parameter :: autoang = 0.5291277249d0
         double precision, parameter :: autoev  = 27.2113961d0
         alpha = dlog(2.d0)
@@ -127,7 +124,7 @@ module chempotpy_aln_reerkiv_pes
     end subroutine pot
 end module chempotpy_aln_reerkiv_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_reErkIV through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_reerkiv_pes, only: evaluate

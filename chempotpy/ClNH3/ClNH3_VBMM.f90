@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !   System:                        ClNH3
 !   Number of electronic surfaces: 1
 !   Number of derivatives:         0
@@ -6,17 +5,18 @@
 !   Interface:                     potlib2001
 !   Common name:                   ClNH3
 !   Notes:
-!
 !   References: M. Monge-Palacios, C. Rangel, J.C. Corchado and J. Espin
 !   Int.J.Quantum.Chem. 112, 1887 (2012)
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement ClNH3_VBMM, a potential energy surface for ClNH3.
 module chempotpy_clnh3_vbmm_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the ClNH3_VBMM potential energy surface for ClNH3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
         implicit none
@@ -242,7 +242,7 @@ module chempotpy_clnh3_vbmm_pes
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = pengygs*legacy_hartree_to_electronvolt
             enddo
@@ -251,126 +251,80 @@ module chempotpy_clnh3_vbmm_pes
                     g(1,iatom,idir) = dgscart(iatom,idir)*51.422067
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
+
         contains
+
         !> @brief Evaluate POT for the ClNH3_VBMM potential.
         subroutine pot
-            !
             !        This potential is written such that:
-            !
             !                       X(1)  - X(3)  : X, Y, Z for H1
             !                       X(4)  - X(6)  : X, Y, Z for N
             !                       X(7)  - X(9)  : X, Y, Z for H2
             !                       X(10) - X(12) : X, Y, Z for H3
             !                       X(13) - X(15) : X, Y, Z for Cl (Hb)
-            !
             implicit none
-            double precision :: en, vip, vstr
-            integer          :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
+            double precision            :: en, vip, vstr
+            integer                     :: i
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !      DIMENSION COORD(N3TM),DX(N3TM)
-            !
-            !
             call cartou
             call carttor
-            !
             ! Changing units from angstrom to bohr and initialize
-            !
             do i = 1, 15
                 q(i) = r(i)
                 !         q(I) = R(I)*0.52918d0
                 pdot(i) = 0.d0
             enddo
-            !
             !  calculate relative coordinates and bond lengths
-            !
             en = 0.0d0
             call coorden
-            !
             !  calculate switching functions
-            !
             call switchf
-            !
             !  calculate reference angles and their derivatives
-            !
             call refangles
             call oprefangles
-            !
             !  calculate stretching potential
-            !
             call stretch(vstr)
-            !
             !  calculate out of plane bending potential
-            !
             !      call opbend(vop)
-            !
             !  calculate in plane bending potential
-            !
             call ipbend(vip)
-            !
             !  total potential energy is vstr+vop+vip
-            !
             en = vstr+vip
             !      en=vstr+vop+vip
-            !
             ! 0.03812 conversion factor from 10(5) j/mol to hartrees
-            !
             en     = en*0.03812d0
             engygs = en
-            !
             call eunitzero
             if( nder .ne. 0 )then
-                !
                 ! 0.0201723 conversion factor from 10(5)j/mol/A to hartrees/bohr
-                !
                 do i=1, 15
                     degsdr(i) = pdot(i)*0.0201723d0
                 enddo
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate coorden for the ClNH3_VBMM potential.
         subroutine coorden
-            !
             !  calculates relative coordinates and bond lengths
-            !
             implicit none
-            double precision :: argmax, argp1, p1, t1tmp
-            integer          :: i, ind
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
+            double precision            :: argmax, argp1, p1, t1tmp
+            integer                     :: i, ind
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !  calculate relative coordinates
-            !
             do ind=1, 3
                 tcb(ind) = q(nc(ind))-q(nhb(ind))
                 do i=1, 3
@@ -378,9 +332,7 @@ module chempotpy_clnh3_vbmm_pes
                     tbh(i,ind) = q(nhb(ind))-q(nh(i,ind))
                 enddo
             enddo
-            !
             !  calculate bond lengths
-            !
             rcb = sqrt(tcb(1)*tcb(1)+tcb(2)*tcb(2)+tcb(3)*tcb(3))
             do i=1, 3
                 rch(i) = sqrt(tch(i,1)*tch(i,1)+tch(i,2)*tch(i,2)+ tch(i,3)*tch(i,3))
@@ -401,73 +353,49 @@ module chempotpy_clnh3_vbmm_pes
             r0ch = p1 * r0chr + (1-p1) * r0chp
             ! jcc-2010
         end subroutine coorden
+
         !> @brief Evaluate refangles for the ClNH3_VBMM potential.
         subroutine refangles
-            !
             !  subroutine calculates reference angles for the "in-plane" potential
-            !
             implicit none
-            double precision :: halfpi, twopi
-            integer          :: i, j, k
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
+            double precision            :: halfpi, twopi
+            integer                     :: i, j, k
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !      tau=acos(-1.0d0/3.0d0)
             !      pi=4.0d0*atan(1.0d0)
             halfpi = 0.5d0*pi
             twopi  = 2.0d0*pi
             ppito  = (twopi-taunh2)/2.0d0
-            !
             !  set diagonal elements to zero
-            !
             do i=1, 3
                 theta0(i,i) = 0.0d0
                 do k=1, 4
                     dtheta0(i,i,k) = 0.0d0
                 enddo
             enddo
-            !
             !  calculate reference angles
-            !
             theta0(1,2) = tau+(tau-ppito)*(sphi(1)*sphi(2)-1.0d0) +(tau-taunh2)*(stheta(3)-1.0d0)
             theta0(1,3) = tau+(tau-ppito)*(sphi(1)*sphi(3)-1.0d0) +(tau-taunh2)*(stheta(2)-1.0d0)
             theta0(2,3) = tau+(tau-ppito)*(sphi(2)*sphi(3)-1.0d0) +(tau-taunh2)*(stheta(1)-1.0d0)
-            !
             !  calculate the derivatives of theta0(i,j) in terms of rch(k)
             !  quantity calulated is dtheta0(i,j,k)
-            !
             !  derivatives wrt rch(1)
-            !
             dtheta0(1,2,1) = (tau-ppito)*dsphi(1)*sphi(2)
             dtheta0(1,3,1) = (tau-ppito)*dsphi(1)*sphi(3)
             dtheta0(2,3,1) = (tau-taunh2)*dstheta(1)
-            !
             !  derivatives wrt rch(2)
-            !
             dtheta0(1,2,2) = (tau-ppito)*sphi(1)*dsphi(2)
             dtheta0(1,3,2) = (tau-taunh2)*dstheta(2)
             dtheta0(2,3,2) = (tau-ppito)*dsphi(2)*sphi(3)
-            !
             !  derivatives wrt rch(3)
-            !
             dtheta0(1,2,3) = (tau-taunh2)*dstheta(3)
             dtheta0(1,3,3) = (tau-ppito)*sphi(1)*dsphi(3)
             dtheta0(2,3,3) = (tau-ppito)*sphi(2)*dsphi(3)
-            !
             !  fill in the other half of the matrix
-            !
             do i=1, 2
                 do j=i+1, 3
                     theta0(j,i) = theta0(i,j)
@@ -477,93 +405,63 @@ module chempotpy_clnh3_vbmm_pes
                 enddo
             enddo
         end subroutine refangles
+
         !> @brief Evaluate oprefangles for the ClNH3_VBMM potential.
         subroutine oprefangles
-            !
             !  subroutine calculates reference angles for the "out-plane" potential
-            !
             implicit none
-            double precision :: halfpi, twopi
-            integer          :: i, j, k
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
+            double precision            :: halfpi, twopi
+            integer                     :: i, j, k
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !       pi=4.0d0*atan(1.0d0)
             halfpi = 0.5d0*pi
             twopi  = 2.0d0*pi
             ppito  = (twopi-taunh2)/2.0d0
-            !
             !  set diagonal elements to zero
-            !
             do i=1, 2
                 optheta0(i,i) = 0.0d0
                 do k=1, 3
                     doptheta0(i,i,k) = 0.0d0
                 enddo
             enddo
-            !
             !  calculate reference angles
-            !
             optheta0(1,1)=optau+(optau-halfpi)*(sphi(1) -1.0d0)+(optau-halfpi)*(stheta(3)-1.0d0) +(optau-halfpi)* &
                 & (stheta(2)- 1.0d0)
             optheta0(2,2)=optau+(optau-halfpi)*(sphi(2) -1.0d0)+(optau-halfpi)*(stheta(3)-1.0d0) +(optau-halfpi)* &
                 & (stheta(1)- 1.0d0)
             optheta0(3,3)=optau+(optau-halfpi)*(sphi(3) -1.0d0)+(optau-halfpi)*(stheta(1)-1.0d0) +(optau-halfpi)* &
                 & (stheta(2)- 1.0d0)
-            !
             optheta0(1,2) = optau+(optau-halfpi)*(sphi(1)*sphi(2) -1.0d0)+(optau-halfpi)*(stheta(3)-1.0d0)
             optheta0(1,3) = optau+(optau-halfpi)*(sphi(1)*sphi(3) -1.0d0)+(optau-halfpi)*(stheta(2)-1.0d0)
             optheta0(2,3) = optau+(optau-halfpi)*(sphi(2)*sphi(3) -1.0d0)+(optau-halfpi)*(stheta(1)-1.0d0)
-            !
             !  calculate the derivatives of optheta0(i,j) in terms of rch(k)
             !  quantity calulated is doptheta0(i,j,k)
-            !
             !  derivatives wrt rch(1)
-            !
             doptheta0(1,1,1) = (optau-halfpi)*dsphi(1)
             doptheta0(2,2,1) = (optau-halfpi)*dstheta(1)
             doptheta0(3,3,1) = (optau-halfpi)*dstheta(1)
-            !
             doptheta0(1,2,1) = (optau-halfpi)*dsphi(1)* sphi(2)
             doptheta0(1,3,1) = (optau-halfpi)*dsphi(1)* sphi(3)
             doptheta0(2,3,1) = (optau-halfpi)* dstheta(1)
-            !
             !  derivatives wrt rch(2)
-            !
             doptheta0(1,1,2) = (optau-halfpi)*dstheta(2)
             doptheta0(2,2,2) = (optau-halfpi)*dsphi(2)
             doptheta0(3,3,2) = (optau-halfpi)*dstheta(2)
-            !
             doptheta0(1,2,2) = (optau-halfpi)*sphi(1)* dsphi(2)
             doptheta0(1,3,2) = (optau-halfpi)* dstheta(2)
             doptheta0(2,3,2) = (optau-halfpi)*dsphi(2)* sphi(3)
-            !
             !  derivatives wrt rch(3)
-            !
-            !
             doptheta0(1,1,3) = (optau-halfpi)*dstheta(3)
             doptheta0(2,2,3) = (optau-halfpi)*dstheta(3)
             doptheta0(3,3,3) = (optau-halfpi)*dsphi(3)
-            !
             doptheta0(1,2,3) = (optau-halfpi)* dstheta(3)
             doptheta0(1,3,3) = (optau-halfpi)*sphi(1)* dsphi(3)
             doptheta0(2,3,3) = (optau-halfpi)*sphi(2)* dsphi(3)
-            !
-            !
             !  fill in the other half of the matrix
-            !
             do i=1, 2
                 do j=i+1, 3
                     optheta0(j,i) = optheta0(i,j)
@@ -573,46 +471,28 @@ module chempotpy_clnh3_vbmm_pes
                 enddo
             enddo
         end subroutine oprefangles
+
         !> @brief Evaluate stretch for the ClNH3_VBMM potential.
         subroutine stretch( vstr )
-            !
             !  subroutine to calculate leps-type stretching potential and its
             !  derivatives
-            !
             implicit none
-            double precision :: ach, achdc, achdh, arga, dumach, dumjbh, dumjcb, dumjch, dumjhi, dumjhj, dumqbh, dumqcb, dumqch, dumqhi, dumqhj, e1, e3, factj, rav, vj, vjbh, vjcb, vjch, vq, vqbh, vqcb, vqch, vstr
-            integer          :: i, ind, j, k
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension vqch(4), vjch(4), vqbh(4), vjbh(4), vq(4), vj(4), &
-                & achdc(3), achdh(4, 3)
-            !
+            double precision            :: ach, achdc(3), achdh(4,3), arga, dumach, dumjbh, dumjcb, dumjch, dumjhi, dumjhj, dumqbh, &
+                & dumqcb, dumqch, dumqhi, dumqhj, e1, e3, factj, rav, vj(4), vjbh(4), vjcb, vjch(4), vq(4), vqbh(4), vqcb, vqch(4), &
+                & vstr
+            integer                     :: i, ind, j, k
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !  calculate avergage bond length for the nh3 moiety
-            !
             rav = (rch(1)+rch(2)+rch(3))/3.0d0
-            !
             !  initialise:
-            !
             vstr = 0.0d0
-            !
             !  ach:
-            !
             !  in double precision tanh(19.0d0)=1.0d0 and we put the if statement
             !  in to avoid overflow/underflow errors
-            !
             arga = c1ch*(rav-r0ch)
             if( arga .lt. 19.0d0 )then
                 ach    = a1ch+b1ch*(tanh(arga)+1.0d0)*0.5d0
@@ -621,10 +501,8 @@ module chempotpy_clnh3_vbmm_pes
                 ach    = a1ch+b1ch
                 dumach = 0.0d0
             endif
-            !
             !  calculate singlet: e1, triplet: e3 energies and vq and vj
             !  terms for each bond
-            !
             e1   = d1cb*(exp(-2.0d0*acb*(rcb-r0cb))-2.0d0*exp(-acb*(rcb-r0cb)))
             e3   = d3cb*(exp(-2.0d0*acb*(rcb-r0cb))+2.0d0*exp(-acb*(rcb-r0cb)))
             vqcb = (e1+e3)*0.5d0
@@ -638,17 +516,13 @@ module chempotpy_clnh3_vbmm_pes
                 e3      = d3hh*(exp(-2.0d0*ahh*(rbh(i)-r0hh)) +2.0d0*exp(-ahh*(rbh(i)-r0hh)))
                 vqbh(i) = (e1+e3)*0.5d0
                 vjbh(i) = (e1-e3)*0.5d0
-                !
                 !  calculate 3 body potential
-                !
                 vq(i) = vqch(i)+vqcb+vqbh(i)
                 vj(i) = -sqrt(((vjch(i)-vjcb)**2+(vjcb-vjbh(i))**2 +(vjbh(i)-vjch(i))**2)*0.5d0)
                 vstr  = vstr+vq(i)+vj(i)
             enddo
-            !
             !  partial derivatives
             !  first we need the derivative of ach:
-            !
             do ind=1, 3
                 achdc(ind) = dumach*(tch(1,ind)/rch(1)+tch(2,ind)/rch(2) +tch(3,ind)/rch(3))/3.0d0
                 do i=1, 3
@@ -656,10 +530,8 @@ module chempotpy_clnh3_vbmm_pes
                 enddo
             enddo
             dumqcb = -acb*((d1cb+d3cb)*exp(-2.0d0*acb*(rcb-r0cb))- (d1cb-d3cb)*exp(-acb*(rcb-r0cb)))/rcb
-            !
             !  calculate cartesian derivatives:
             !  looping over ch(i) and bh(i)
-            !
             do i=1, 3
                 dumqbh = -ahh*((d1hh+d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh))- (d1hh-d3hh)*exp(-ahh*(rbh(i)-r0hh)))/rbh(i)
                 factj  = 0.5d0/vj(i)
@@ -667,47 +539,31 @@ module chempotpy_clnh3_vbmm_pes
                 dumjbh = -ahh*((d1hh-d3hh)*exp(-2.0d0*ahh*(rbh(i)-r0hh)) -(d1hh+d3hh)*exp(-ahh*(rbh(i)-r0hh)))*factj/ &
                     & rbh(i)
                 do ind=1, 3
-                    !
                     !  deriv wrt hb:
-                    !
                     pdot(nhb(ind))=pdot(nhb(ind)) -tcb(ind)*dumqcb+tbh(i,ind)*dumqbh +(vjch(i)-vjcb)*(dumjcb* &
                         & tcb(ind)) + (vjcb- vjbh(i))*(-dumjcb*tcb(ind)-dumjbh*tbh(i,ind)) +(vjbh(i)-vjch(i))*dumjbh* &
                         & tbh(i,ind)
-                    !
                     !  dvqch(i)/dc
-                    !
                     dumqch=-(ach*tch(i,ind)/rch(i)+achdc(ind)*(rch(i)-r0ch)) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)- &
                         & r0ch)) - (d1ch- d3ch)*exp(-ach*(rch(i)-r0ch)))
                     pdot(nc(ind)) = pdot(nc(ind))+dumqch+tcb(ind)*dumqcb
-                    !
                     !  dvqch(i)/dh(i)
-                    !
                     dumqhi=(ach*tch(i,ind)/rch(i)-achdh(i, ind)*(rch(i)-r0ch)) *((d1ch+d3ch)*exp(-2.0d0*ach*(rch(i)- &
                         & r0ch)) - (d1ch-d3ch)*exp(-ach*(rch(i)-r0ch)))
                     pdot(nh(i,ind)) = pdot(nh(i,ind))+dumqhi-tbh(i,ind)*dumqbh
-                    !
                     !  dvjch(i)/dc
-                    !
                     dumjch=-(ach*tch(i,ind)/rch(i)+achdc(ind)*(rch(i)-r0ch)) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)- &
                         & r0ch)) - (d1ch+ d3ch)*exp(-ach*(rch(i)-r0ch)))*factj
-                    !
                     !  dvj(i)/dnc(ind)
-                    !
                     pdot(nc(ind))=pdot(nc(ind)) +(vjch(i)-vjcb)*(dumjch-dumjcb*tcb(ind)) +(vjcb-vjbh(i))*dumjcb* &
                         & tcb(ind) - (vjbh(i)-vjch(i))*dumjch
-                    !
                     !  dvjch(i)/dh(i)
-                    !
                     dumjhi=(ach*tch(i,ind)/rch(i)-achdh(i, ind)*(rch(i)-r0ch)) *((d1ch-d3ch)*exp(-2.0d0*ach*(rch(i)- &
                         & r0ch)) - (d1ch+d3ch)*exp(-ach*(rch(i)-r0ch)))*factj
-                    !
                     !  dvj(i)/dnh(i,ind)
-                    !
                     pdot(nh(i,ind))=pdot(nh(i,ind)) +(vjch(i)-vjcb)*dumjhi +(vjcb-vjbh(i))*dumjbh*tbh(i,ind) + &
                         & (vjbh(i)- vjch(i))* (-dumjbh*tbh(i,ind)-dumjhi)
-                    !
                     !  dv(i)/dh(j)
-                    !
                     do k=1, 2
                         j = i+k
                         if( j .gt. 3 ) j=j-3
@@ -720,111 +576,73 @@ module chempotpy_clnh3_vbmm_pes
                 enddo
             enddo
         end subroutine stretch
+
         !> @brief Evaluate opbend for the ClNH3_VBMM potential.
         subroutine opbend( vop )
-            !
             !  subroutine calculates symmetrized vop potential and derivatives
-            !
             implicit none
-            double precision :: a, argd, axb, b, c, ddr, sum2, sum4, sumd2, sumd4, vop
-            integer          :: i, ii, in, ind, itemp, j, k
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            double precision :: norma
-            dimension sumd2(4), sumd4(4)
-            dimension in(3), a(3), b(3), axb(3), c(4,3), argd(4)
-            !
-            !
+            double precision            :: a(3), argd(4), axb(3), b(3), c(4,3), ddr, sum2, sum4, sumd2(4), sumd4(4), vop
+            integer                     :: i, ii, in(3), ind, itemp, j, k
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
+            double precision            :: norma
             vop = 0.0d0
-            !
             !  calculate force constants and their derivatives
-            !
             call opforce
-            !
             !  calculate out-of-plane angle and derivatives
-            !
             do i=1, 3
                 j = i+1
                 if( j .gt. 3 ) j=j-3
                 k = j+1
                 if( k .gt. 3 ) k=k-3
-                !
                 !  modification to ensure that the set of methane CH bond vector
                 !  (rj,rk,rl) is a right-handed set
-                !
                 in(1) = i
                 in(2) = j
                 in(3) = k
-                !
                 !  vector a is rk-rj, vector b is rl-rj
-                !
                 do ind=1, 3
                     a(ind) = q(nh(j,ind))-q(nh(i,ind))
                     b(ind) = q(nh(k,ind))-q(nh(i,ind))
                 enddo
-                !
                 !  axb is vector a cross b
-                !
                 axb(1) = a(2)*b(3)-a(3)*b(2)
                 axb(2) = a(3)*b(1)-a(1)*b(3)
                 axb(3) = a(1)*b(2)-a(2)*b(1)
                 norma  = axb(1)*axb(1)+axb(2)*axb(2)+axb(3)*axb(3)
                 norma  = sqrt(norma)
-                !
                 !  c is position vector of h(ii): calculate c(j),c(k),c(l)
-                !
                 do ii=1, 3
                     do ind=1, 3
                         c(in(ii),ind) = -tch(in(ii),ind)/rch(in(ii))
                     enddo
                 enddo
-                !
                 !  argd is the dot product axb dot c
-                !
                 do ii=1, 3
                     argd(in(ii)) = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
                     argd(in(ii)) = argd(in(ii))/norma
-                    !
                     !  if argd < 0 we need to switch vectors k and l around
-                    !
                     if( argd(in(ii)) .lt. 0.d0 )then
                         itemp = j
                         j     = k
                         k     = itemp
                     endif
                 enddo
-                !
                 !  sum2 = sum delta**2
                 !  sum4 = sum delta**4
-                !
                 call calcdelta(i, j, k, sum2, sum4)
                 sumd2(i) = sum2
                 sumd4(i) = sum4
                 vop      = vop+fdelta(i)*sumd2(i)+hdelta(i)*sumd4(i)
             enddo
-            !
             do i=1, 3
                 do j=1, 3
-                    !
                     !  overall derivatives of force constants i wrt the bond-length rch(j)
-                    !
                     ddr = dfdelta(i,j)*sumd2(i)+dhdelta(i,j)*sumd4(i)
-                    !
                     !  calculate derivatives in terms of cartesian coordinates:
-                    !
                     do ind=1, 3
                         pdot(nh(j,ind)) = pdot(nh(j,ind))-tch(j,ind)*ddr/rch(j)
                         pdot(nc(ind))   = pdot(nc(ind))+tch(j,ind)*ddr/rch(j)
@@ -832,43 +650,25 @@ module chempotpy_clnh3_vbmm_pes
                 enddo
             enddo
         end subroutine opbend
+
         !> @brief Evaluate ipbend for the ClNH3_VBMM potential.
         subroutine ipbend( vip )
-            !
             !  subroutine calculates symmetrised in plane bend term
             !  and its derivatives
-            !
             implicit none
-            double precision :: costh, dth, dth0c, dth0k, dthc, dthi, dthj, termth, theta, vip
-            integer          :: i, ind, j, k
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension costh(4,4), theta(4,4), dth(4,4)
-            !
+            double precision            :: costh(4,4), dth(4,4), dth0c, dth0k, dthc, dthi, dthj, termth, theta(4,4), vip
+            integer                     :: i, ind, j, k
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !  initialise
-            !
             vip = 0.0d0
-            !
             !  calculate force constants: fk0(i,j), f1(i)
             !  and derivatives wrt rch(k) and rbh(k): dfdc(i,j,k), dfdh(i,j,k)
-            !
             call ipforce
-            !
             !  calculate theta(i,j) and in plane bend potential
-            !
             do i=1, 2
                 do j=i+1, 3
                     costh(i,j) = tch(i,1)*tch(j,1)+tch(i,2)*tch(j,2) +tch(i,3)*tch(j,3)
@@ -876,11 +676,8 @@ module chempotpy_clnh3_vbmm_pes
                     theta(i,j) = acos(costh(i,j))
                     dth(i,j)   = theta(i,j)-theta0(i,j)
                     vip        = vip+0.5d0*fk0(i,j)*f1(i)*f1(j)*dth(i,j)**2
-                    !
                     !  calculate partial derivatives wrt cartesian coordinates
-                    !
                     !  calculate pdots wrt theta:
-                    !
                     termth = -1.0d0/sqrt(1.0d0-costh(i,j)*costh(i,j))
                     do ind=1, 3
                         dthi            = -tch(j,ind)/rch(i)/rch(j) +costh(i,j)*tch(i,ind)/rch(i)/rch(i)
@@ -892,9 +689,7 @@ module chempotpy_clnh3_vbmm_pes
                         pdot(nh(j,ind)) = pdot(nh(j,ind)) +fk0(i,j)*f1(i)*f1(j)*dthj*dth(i,j)
                         pdot(nc(ind))   = pdot(nc(ind)) +fk0(i,j)*f1(i)*f1(j)*dthc*dth(i,j)
                         do k=1, 3
-                            !
                             !  calculate pdots wrt force constants and wrt theta0
-                            !
                             dth0k = -dtheta0(i,j,k)*tch(k,ind)/rch(k)
                             dth0c = -dth0k
                             pdot(nh(k,ind))=pdot(nh(k,ind)) -0.5d0*tch(k,ind)*dfdc(i,j,k)*dth(i,j)**2/rch(k) -0.5d0* &
@@ -907,83 +702,54 @@ module chempotpy_clnh3_vbmm_pes
                 enddo
             enddo
         end subroutine ipbend
+
         !> @brief Evaluate calcdelta for the ClNH3_VBMM potential.
         subroutine calcdelta( i, j, k, sum2, sum4 )
-            !
             !  subroutine calculates out of plane angle delta, loops
             !  through delta(i,j), delta(i,k), delta(i,l)
-            !
             !   also calculates the derivatives wrt delta
-            !
             implicit none
-            double precision :: a, argd, atemp1, atemp2, atemp3, atemp4, atemp5, axb, b, c, cdot, daxb, deldot, delta, sum2, sum4
-            integer          :: i, ii, in, ind, j, jj, k
-            double precision :: norma
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension  delta(4), in(3), a(3), b(3), axb(3), c(4,3), argd(4), &
-                & daxb(4, 3, 3), cdot(4, 3, 3), atemp2(3)
-            !
+            double precision            :: a(3), argd(4), atemp1, atemp2(3), atemp3, atemp4, atemp5, axb(3), b(3), c(4,3), &
+                & cdot(4,3,3), daxb(4,3,3), deldot, delta(4), sum2, sum4
+            integer                     :: i, ii, in(3), ind, j, jj, k
+            double precision            :: norma
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !  set i,j,k indices
-            !
             in(1) = i
             in(2) = j
             in(3) = k
-            !
             !  vector a is rj-ri, vector b is rk-ri
-            !
             do ind=1, 3
                 a(ind) = q(nh(j,ind))-q(nh(i,ind))
                 b(ind) = q(nh(k,ind))-q(nh(i,ind))
             enddo
-            !
             !  axb is vector a cross b
-            !
             axb(1) = a(2)*b(3)-a(3)*b(2)
             axb(2) = a(3)*b(1)-a(1)*b(3)
             axb(3) = a(1)*b(2)-a(2)*b(1)
             norma  = axb(1)*axb(1)+axb(2)*axb(2)+axb(3)*axb(3)
             norma  = sqrt(norma)
-            !
             !  c is position vector of h(ii): calculate c(j),c(k),c(l)
-            !
             do ii=1, 3
                 do ind=1, 3
                     c(in(ii),ind) = -tch(in(ii),ind)/rch(in(ii))
                 enddo
             enddo
-            !
             !  initialise
-            !
-            sum2 = 0.0d0
-            sum4 = 0.0d0
-            !
+            sum2 = 0.0d0; sum4 = 0.0d0
             !  argd is the dot product axb dot c
-            !
             do ii=1, 3
                 argd(in(ii))  = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
                 argd(in(ii))  = argd(in(ii))/norma
                 delta(in(ii)) = acos(argd(in(ii)))-optheta0(i,in(ii))
-                !
-                sum2 = sum2+delta(in(ii))**2
-                sum4 = sum4+delta(in(ii))**4
+                sum2          = sum2+delta(in(ii))**2
+                sum4          = sum4+delta(in(ii))**4
             enddo
-            !
             !  derivatives of axb wrt hi:
-            !
             daxb(i, 1, 1) = 0.0d0
             daxb(i, 1, 2) = b(3)-a(3)
             daxb(i, 1, 3) = -b(2)+a(2)
@@ -993,9 +759,7 @@ module chempotpy_clnh3_vbmm_pes
             daxb(i, 3, 1) = b(2)-a(2)
             daxb(i, 3, 2) = -b(1)+a(1)
             daxb(i, 3, 3) = 0.0d0
-            !
             !  derivatives of axb wrt hj:
-            !
             daxb(j, 1, 1) = 0.0d0
             daxb(j, 1, 2) = -b(3)
             daxb(j, 1, 3) = b(2)
@@ -1005,9 +769,7 @@ module chempotpy_clnh3_vbmm_pes
             daxb(j, 3, 1) = -b(2)
             daxb(j, 3, 2) = b(1)
             daxb(j, 3, 3) = 0.0d0
-            !
             !  derivatives of axb wrt hl:
-            !
             daxb(k, 1, 1) = 0.0d0
             daxb(k, 1, 2) = a(3)
             daxb(k, 1, 3) = -a(2)
@@ -1017,90 +779,60 @@ module chempotpy_clnh3_vbmm_pes
             daxb(k, 3, 1) = a(2)
             daxb(k, 3, 2) = -a(1)
             daxb(k, 3, 3) = 0.0d0
-            !
             !   loop over cdot(in(ii),ind,jind) where we consider deriv of c(in(ii))
             !   wrt h(in(ii),jind) with components jind
-            !
             do ii=1, 3
-                !
                 !  deriv of cdot(in(ii),x) wrt x, y, z
-                !
                 cdot(in(ii), 1, 1) = 1.0d0/rch(in(ii)) +tch(in(ii),1)*c(in(ii),1)/rch(in(ii))**2
                 cdot(in(ii), 1, 2) = tch(in(ii),2)*c(in(ii),1)/rch(in(ii))**2
                 cdot(in(ii), 1, 3) = tch(in(ii),3)*c(in(ii),1)/rch(in(ii))**2
-                !
                 !  deriv of cdot(in(ii),y) wrt x, y, z
-                !
                 cdot(in(ii), 2, 1) = tch(in(ii),1)*c(in(ii),2)/rch(in(ii))**2
                 cdot(in(ii), 2, 2) = 1.0d0/rch(in(ii)) +tch(in(ii),2)*c(in(ii),2)/rch(in(ii))**2
                 cdot(in(ii), 2, 3) = tch(in(ii),3)*c(in(ii),2)/rch(in(ii))**2
-                !
                 !  deriv of cdot(in(ii),z) wrt x, y, z
-                !
                 cdot(in(ii), 3, 1) = tch(in(ii),1)*c(in(ii),3)/rch(in(ii))**2
                 cdot(in(ii), 3, 2) = tch(in(ii),2)*c(in(ii),3)/rch(in(ii))**2
                 cdot(in(ii), 3, 3) = 1.0d0/rch(in(ii)) +tch(in(ii),3)*c(in(ii),3)/rch(in(ii))**2
             enddo
-            !
             do ii=1, 3
                 do ind=1, 3
                     deldot = -doptheta0(i,ii,i)
-                    !
                     !  derivative wrt h(i,ind)
                     !  for  rch(i) only terms are from the derivatives of theta0
-                    !
                     deldot = -deldot*tch(i,ind)/rch(i)
-                    !
                     !  derivative wrt c(ind)
-                    !
                     deldot = -deldot
-                    !
                     do jj=1, 3
-                        !
                         !  partial derivatives wrt h(in(jj),ind), loop over delta(i,in(ii))
-                        !
                         !   atemp1 is axb dot daxb wrt h(in(jj))
-                        !
                         atemp1 = axb(1)*daxb(in(jj), ind, 1) +axb(2)*daxb(in(jj), ind, 2) +axb(3)*daxb(in(jj), ind, 3)
                         atemp1 = atemp1/(norma**3)
-                        !
                         !  atemp2 is deriv of normalised axb
-                        !
                         atemp2(1) = daxb(in(jj), ind, 1)/norma-atemp1*axb(1)
                         atemp2(2) = daxb(in(jj), ind, 2)/norma-atemp1*axb(2)
                         atemp2(3) = daxb(in(jj), ind, 3)/norma-atemp1*axb(3)
-                        !
                         !  atemp3 is daxb dot c(in(ii))
                         atemp3 = atemp2(1)*c(in(ii),1)+atemp2(2)*c(in(ii),2) +atemp2(3)*c(in(ii),3)
-                        !
                         !  atemp4 is axb dot cdot
-                        !
                         atemp4 = 0.0d0
                         if( ii .eq. jj )then
-                            !
                             !  ie deriv of c(in(ii)) wrt h(in(jj)) is non zero only for ii = jj
-                            !
                             atemp4 = axb(1)*cdot(in(ii), 1, ind) +axb(2)*cdot(in(ii), 2, ind) +axb(3)*cdot(in(ii), 3, &
                                 & ind)
                             atemp4 = atemp4/norma
                         endif
-                        !
                         !  atemp5 is deriv of theta0(i,in(ii)) wrt to nh(in(jj),ind)
-                        !
                         atemp5 = -doptheta0(i,in(ii),in(jj))
-                        !
                         !  deriv wrt h(in(jj)),ind):
-                        !
                         atemp5 = -atemp5*tch(in(jj),ind)/rch(in(jj))
                         deldot = atemp3+atemp4
                         deldot = -1.0d0/sqrt(1.0d0-argd(in(ii))**2)*deldot
                         deldot = deldot+atemp5
                         pdot(nh(in(jj),ind))=pdot(nh(in(jj),ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0* &
                             & hdelta(i)* delta(in(ii))**3*deldot
-                        !
                         !  for carbon the only contributions are from axb dot cdot term and
                         !  from theta0 and derivative cdot wrt carbon=-cdot wrt hydrogen
-                        !
                         deldot = 1.0d0/sqrt(1.0d0-argd(in(ii))**2)*atemp4
                         deldot = deldot-atemp5
                         pdot(nc(ind))=pdot(nc(ind)) +2.0d0*fdelta(i)*delta(in(ii))*deldot +4.0d0*hdelta(i)* &
@@ -1109,59 +841,37 @@ module chempotpy_clnh3_vbmm_pes
                 enddo
             enddo
         end subroutine calcdelta
+
         !> @brief Evaluate opforce for the ClNH3_VBMM potential.
         subroutine opforce
-            !
             !  calculates the out-of-plane bending force constants
             !  and their derivatives
-            !
             implicit none
-            double precision :: dswitch, switch
-            integer          :: i, j
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension switch(4), dswitch(4,4)
-            !
+            double precision            :: dswitch(4,4), switch(4)
+            integer                     :: i, j
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !  calculate switching functions:
-            !
             switch(1) = s3(1)*s3(2)*s3(3)
             switch(2) = s3(2)*s3(3)*s3(1)
             switch(3) = s3(3)*s3(1)*s3(2)
-            !
             !  calculate derivatives:
             !  derivative of switch(1) wrt the 3 rch bond lengths
-            !
             dswitch(1,1) = ds3(1)*s3(2)*s3(3)
             dswitch(1,2) = s3(1)*ds3(2)*s3(3)
             dswitch(1,3) = s3(1)*s3(2)*ds3(3)
-            !
             !  derivative of switch(2) wrt the 3 rch bond lengths
-            !
             dswitch(2,1) = s3(2)*s3(3)*ds3(1)
             dswitch(2,2) = ds3(2)*s3(3)*s3(1)
             dswitch(2,3) = s3(2)*ds3(3)*s3(1)
-            !
             !  derivative of switch(3) wrt the 3 rch bond lengths
-            !
             dswitch(3,1) = s3(3)*ds3(1)*s3(2)
             dswitch(3,2) = s3(3)*s3(1)*ds3(2)
             dswitch(3,3) = ds3(3)*s3(1)*s3(2)
-            !
             !  calculate the force constants and their derivatives
-            !
             do i=1, 3
                 fdelta(i) = switch(i)*fch3
                 hdelta(i) = switch(i)*hch3
@@ -1171,37 +881,22 @@ module chempotpy_clnh3_vbmm_pes
                 enddo
             enddo
         end subroutine opforce
+
         !> @brief Evaluate ipforce for the ClNH3_VBMM potential.
         subroutine ipforce
-            !
             !  calculates the symmetrised in plane bend force constants and
             !  all partial derivatives involving them
-            !
             implicit none
-            double precision :: a1, a2, arga1, arga2, argfk0, df1dc, df1dh, dfko, duma1, duma2, f0, f2, fko
-            integer          :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension dfko(4), df1dc(4), df1dh(4)
-            !
+            double precision            :: a1, a2, arga1, arga2, argfk0, df1dc(4), df1dh(4), dfko(4), duma1, duma2, f0, f2, fko
+            integer                     :: i
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             !  set force constant at asymptotes
-            !
-            f0 = fkinf+ak
-            f2 = fkinf
-            !
+            f0       = fkinf+ak
+            f2       = fkinf
             argfk0   = bk*((rch(1)-r0ch)**2+(rch(2)-r0ch)**2 +(rch(3)-r0ch)**2)
             fko      = fkinf+ak*exp(-argfk0)
             fk0(1,2) = fko
@@ -1210,95 +905,64 @@ module chempotpy_clnh3_vbmm_pes
             fk0(2,3) = fko
             fk0(2,4) = fko
             fk0(3,4) = fko
-            !
             do i=1, 3
-                !
                 !  calc derivatives of fko wrt each of the rch(i) bonds
-                !
                 dfko(i) = -2.0d0*ak*bk*(rch(i)-r0ch)*exp(-argfk0)
-                !
                 !  calculate the terms f1(i)
-                !
                 arga1 = aa1*rbh(i)*rbh(i)
                 arga2 = aa4*(rbh(i)-r0hh)*(rbh(i)-r0hh)
                 a1    = 1.0d0-exp(-arga1)
                 a2    = aa2+aa3*exp(-arga2)
                 f1(i) = a1*exp(-a2*(rch(i)-r0ch)**2)
-                !
                 !  and calculate the derivatives wrt rch(i) and rbh(i)
-                !
                 duma1    = 2.0d0*aa1*rbh(i)*exp(-arga1)
                 duma2    = -2.0d0*aa3*aa4*(rbh(i)-r0hh)*exp(-arga2)
                 df1dc(i) = -2.0d0*(rch(i)-r0ch)*a1*a2*exp(-a2*(rch(i)-r0ch)**2)
                 df1dh(i) = duma1*exp(-a2*(rch(i)-r0ch)**2) -duma2*(rch(i)-r0ch)**2*a1*exp(-a2*(rch(i)-r0ch)**2)
             enddo
-            !
             !  derivative of total force constant f(i,j) wrt bond length rch(k)
             !  is given by dfdc(i,j,k)
-            !
             dfdc(1,2,1) = dfko(1)*f1(1)*f1(2)+fko*df1dc(1)*f1(2)
             dfdc(1,2,2) = dfko(2)*f1(1)*f1(2)+fko*f1(1)*df1dc(2)
             dfdc(1,2,3) = dfko(3)*f1(1)*f1(2)
-            !
             dfdc(1,3,1) = dfko(1)*f1(1)*f1(3)+fko*df1dc(1)*f1(3)
             dfdc(1,3,2) = dfko(2)*f1(1)*f1(3)
             dfdc(1,3,3) = dfko(3)*f1(1)*f1(3)+fko*f1(1)*df1dc(3)
-            !
             dfdc(2,3,1) = dfko(1)*f1(2)*f1(3)
             dfdc(2,3,2) = dfko(2)*f1(2)*f1(3)+fko*df1dc(2)*f1(3)
             dfdc(2,3,3) = dfko(3)*f1(2)*f1(3)+fko*f1(2)*df1dc(3)
-            !
             !  derivative of total force constant f(i,j) wrt bond length rbh(k)
             !  is given by dfdh(i,j,k)
-            !
             !  only non-zero derivatives are those from rbh(i) and rbh(j)
-            !
             dfdh(1,2,1) = fko*df1dh(1)*f1(2)
             dfdh(1,2,2) = fko*f1(1)*df1dh(2)
             dfdh(1,2,3) = 0.0d0
-            !
             dfdh(1,3,1) = fko*df1dh(1)*f1(3)
             dfdh(1,3,2) = 0.0d0
             dfdh(1,3,3) = fko*f1(1)*df1dh(3)
-            !
             dfdh(2,3,1) = 0.0d0
             dfdh(2,3,2) = fko*df1dh(2)*f1(3)
             dfdh(2,3,3) = fko*f1(2)*df1dh(3)
-            !
         end subroutine ipforce
+
         !> @brief Evaluate switchf for the ClNH3_VBMM potential.
         subroutine switchf
-            !
             !  calculates switching functions: s3,sphi,stheta
             !  and their derivatives ds3,dsphi,dstheta
-            !
             implicit none
-            double precision :: argmax, args1, args2, args3, argsphi, argstheta
-            integer          :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
+            double precision            :: argmax, args1, args2, args3, argsphi, argstheta
+            integer                     :: i
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             a1s = 1.5313681d-7
             b1s = -4.6696246d0
             a2s = 1.0147402d-7
             b2s = -12.363798d0
-            !
             !  use double precision criterion:
-            !
             !  tanh(19.0d0)=1.0d0
-            !
             argmax = 19.0d0
             do i=1, 3
                 args1 = a1s*(rch(i)-r0ch)*(rch(i)-b1s)**8
@@ -1310,7 +974,6 @@ module chempotpy_clnh3_vbmm_pes
                     s1(i)  = 0.0d0
                     ds1(i) = 0.0d0
                 endif
-                !
                 args2 = a2s*(rch(i)-r0ch)*(rch(i)-b2s)**6
                 if( args2 .lt. argmax )then
                     s2(i)  = 1.0d0-tanh(args2)
@@ -1320,9 +983,7 @@ module chempotpy_clnh3_vbmm_pes
                     s2(i)  = 0.0d0
                     ds2(i) = 0.0d0
                 endif
-                !
                 !  calculate s3 and ds3
-                !
                 args3 = a3s*(rch(i)-r0ch)*(rch(i)-b3s)**2
                 if( args3 .lt. argmax )then
                     s3(i)  = 1.0d0-tanh(args3)
@@ -1332,12 +993,9 @@ module chempotpy_clnh3_vbmm_pes
                     s3(i)  = 0.0d0
                     ds3(i) = 0.0d0
                 endif
-                !
                 !  calculate sphi and dsphi
-                !
                 !  condition here is on the bondlength rch(i)
                 !  st argsphi is lt approx 19.0d0
-                !
                 if( rch(i) .lt. 3.8d0 )then
                     argsphi  = aphi*(rch(i)-r0ch)*exp(bphi*(rch(i)-cphi)**3)
                     sphi(i)  = 1.0d0-tanh(argsphi)
@@ -1348,9 +1006,7 @@ module chempotpy_clnh3_vbmm_pes
                     sphi(i)  = 0.0d0
                     dsphi(i) = 0.0d0
                 endif
-                !
                 !  calculate stheta and dstheta
-                !
                 if( rch(i) .lt. 3.8d0 )then
                     argstheta  = atheta*(rch(i)-r0ch)*exp(btheta*(rch(i)-ctheta)**3)
                     stheta(i)  = 1.0d0-tanh(argstheta)
@@ -1363,67 +1019,44 @@ module chempotpy_clnh3_vbmm_pes
                 endif
             enddo
         end subroutine switchf
+
         !> @brief Evaluate prepare_local_context for the ClNH3_VBMM potential.
         subroutine prepare_local_context
-            !
             !   N3TMMN = 3 * legacy_natoms
             !   legacy_natoms = the number of atoms represented by this potential function
-            !
             !   The variable N3TMMN is the minimum value of N3TM allowed to be
             !   passed by the calling routine for the number of cartesian
             !   coordinates needed to represent the full system represented by this
             !   potential energy surface routine.
             !   N3TM must be greater than or equal to N3TMMN.
-            !
             implicit none
-            double precision :: fact1, fact2
-            integer          :: i, icount, ind
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
+            double precision            :: fact1, fact2
+            integer                     :: i, icount, ind
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
             integer, parameter          :: n3tmmn = 15
-            !
-            !
-            !
-            !
-            !
-            !
-            !
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
-            !
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
             do i=1, 5
                 ref(i) = ' '
             enddo
-            !
-            ref(1) = 'J. Espinosa-Garcia'
-            ref(2) = 'unpublished results, 2008'
-            !
+            ref(1)     = 'J. Espinosa-Garcia'
+            ref(2)     = 'unpublished results, 2008'
             indexes(1) = 1
             indexes(2) = 7
             indexes(3) = 1
             indexes(4) = 1
             indexes(5) = 1
-            !
-            !
-            !
-            irctnt = 5
-            !
+            irctnt     = 5
             !CALL POTINFO
-            !
             call ancvrt
-            !
             !  calculate indexes for coordinates
-            !
             do ind=1, 3
                 icount   = ind-3
                 nc(ind)  = 3*nnc+icount
@@ -1432,18 +1065,14 @@ module chempotpy_clnh3_vbmm_pes
                     nh(i,ind) = 3*nnh(i)+icount
                 enddo
             enddo
-            !
             !  convert to appropriate units:
-            !
             !  energy   in 1.0d+05 j/mol
             !  time     in 1.0d-14 s
             !  distance in 1.0d-10 m
             !  angles   in radians
             !  mass     in amu
-            !
             fact1 = 0.041840d0
             fact2 = 6.022045d0
-            !
             d1ch  = d1ch*fact1
             d3ch  = d3ch*fact1
             d1cb  = d1cb*fact1
@@ -1454,24 +1083,15 @@ module chempotpy_clnh3_vbmm_pes
             hch3  = hch3*fact2
             fkinf = fkinf*fact2
             ak    = ak*fact2
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate ANCVRT for the ClNH3_VBMM potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -1488,6 +1108,13 @@ module chempotpy_clnh3_vbmm_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -1703,13 +1330,13 @@ module chempotpy_clnh3_vbmm_pes
             if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             cnvrtd  = 1.d0
@@ -1718,13 +1345,13 @@ module chempotpy_clnh3_vbmm_pes
             if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
             if( nflag(2) .eq. 2 )then
                 cnvrte = cnvrte*htomillh
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 cnvrte = cnvrte*htoev
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 cnvrte = cnvrte*htokcal
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 cnvrte = cnvrte*htowave
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 cnvrte = cnvrte*htokj
             endif
             cnvrtde = cnvrte/cnvrtd
@@ -1735,6 +1362,7 @@ module chempotpy_clnh3_vbmm_pes
             ireorder = 0
             if( isum .ne. 0 ) ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the ClNH3_VBMM potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -1746,6 +1374,7 @@ module chempotpy_clnh3_vbmm_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the ClNH3_VBMM potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -1762,6 +1391,7 @@ module chempotpy_clnh3_vbmm_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the ClNH3_VBMM potential.
         subroutine eunitzero
             implicit none
@@ -1782,16 +1412,18 @@ module chempotpy_clnh3_vbmm_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the ClNH3_VBMM potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( icartr .eq. 1 )then
                 do i = 1, legacy_natoms
                     ind            = 3*i-2
@@ -1813,7 +1445,7 @@ module chempotpy_clnh3_vbmm_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 2 )then
+            elseif( icartr .eq. 2 )then
                 do i = 1, legacy_natoms
                     dgscartnu(i,1) = 0.d0
                     dgscartnu(i,2) = 0.d0
@@ -1835,7 +1467,7 @@ module chempotpy_clnh3_vbmm_pes
                     do j = 1, legacy_natoms
                         if( j .lt. i )then
                             m1 = legacy_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1854,7 +1486,7 @@ module chempotpy_clnh3_vbmm_pes
                                 descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
                                 descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( ksoffd .gt. 0 )then
+                        elseif( ksoffd .gt. 0 )then
                             do j2=ksoffd, keoffd
                                 y                 = deijdr(m1,j2)
                                 dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
@@ -1864,7 +1496,7 @@ module chempotpy_clnh3_vbmm_pes
                         endif
                     enddo
                 enddo
-            else if( icartr .eq. 3 )then
+            elseif( icartr .eq. 3 )then
                 do i = 1, legacy_natoms
                     ygs(i) = degsdr(i)/r(i)
                     if( ksdiag .ne. 0 )then
@@ -1900,7 +1532,7 @@ module chempotpy_clnh3_vbmm_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 4 )then
+            elseif( icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1936,6 +1568,7 @@ module chempotpy_clnh3_vbmm_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the ClNH3_VBMM potential.
         subroutine dedcou
             implicit none
@@ -1989,7 +1622,7 @@ module chempotpy_clnh3_vbmm_pes
     end subroutine evaluate
 end module chempotpy_clnh3_vbmm_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose ClNH3_VBMM through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_clnh3_vbmm_pes, only: evaluate
     implicit none

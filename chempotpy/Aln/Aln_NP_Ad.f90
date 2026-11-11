@@ -1,10 +1,39 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Extended Rydberg with Screening and Coordination Number
+!   Common name:                   NP-A
+!   Number of derivatives:         1
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-1
+!  Notes:  Many-body aluminum potential energy function.  The functional
+!           form is from Ref. 2.  The parameters were re-optimized in Ref. 1
+!           against a data set of energies for aluminum clusters and
+!           nanoparticles and bulk data.  This PEF has a cutoff at 6.5 A.
+!  References: (1) A. W. Jasper, N. E. Schultz, and D. G. Truhlar, "Analytic
+!              Potential Energy Functions for Simulating Aluminum
+!              Nanoparticles," in preparation.
+!              (2) A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potential Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!                    of the system
+!  dvdx,dvdy,dvdz   --- one-dimensional arrays of the gradients with respect
+!                       to the Cartesian coordinates of the system (output)
+!  natom   --- number of atoms in the system
+!  maxatom --- maximal number of atoms
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_np_ad_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,55 +63,21 @@ module chempotpy_aln_np_ad_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_NP_Ad potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Extended Rydberg with Screening and Coordination Number
-        !   Common name:                   NP-A
-        !   Number of derivatives:         1
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-1
-        !
-        !  Notes:  Many-body aluminum potential energy function.  The functional
-        !           form is from Ref. 2.  The parameters were re-optimized in Ref. 1
-        !           against a data set of energies for aluminum clusters and
-        !           nanoparticles and bulk data.  This PEF has a cutoff at 6.5 A.
-        !
-        !  References: (1) A. W. Jasper, N. E. Schultz, and D. G. Truhlar, "Analytic
-        !              Potential Energy Functions for Simulating Aluminum
-        !              Nanoparticles," in preparation.
-        !              (2) A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potential Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !                    of the system
-        !  dvdx,dvdy,dvdz   --- one-dimensional arrays of the gradients with respect
-        !                       to the Cartesian coordinates of the system (output)
-        !  natom   --- number of atoms in the system
-        !  maxatom --- maximal number of atoms
-        !
-        !
         implicit none
-        double precision :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, bu2b, &
-            & co, cob, cz1, cz2, d1_p, d1_w, d2_p, d2_v, d3_v, d4_b, d4_ba, d4_bb, d4_v, d5_b, d5_v, &
-            & d6_b, d6_b1, d7_b, d7_v, d8_b1, d8_b2, dcobdrr, de, deb, deebdrr, dpolybdrr, dtmpbdrr, du2, &
-            & dum, dx, dy, dz, ec1, ee, eeb, es1, fcn, fs, g1, g1e, g2, g_co, g_ee, g_poly, g_rho, g_rr, &
-            & g_tmp, gdum, gu2, gzero, poly, polyb, re, reb, rho, rhob, rij, ril, rjl, rr, rrr, s, term, &
-            & tmp, tmpb, tt1, tt2, v, x, xk1, xk2, xk3, y, z
+        double precision :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, bu2b, co, cob, cz1, cz2, d1_p, d1_w, d2_p, &
+            & d2_v, d3_v, d4_b, d4_ba, d4_bb, d4_v, d5_b, d5_v, d6_b, d6_b1, d7_b, d7_v, d8_b1, d8_b2, dcobdrr, de, deb, &
+            & deebdrr, dpolybdrr, dtmpbdrr, du2, dum, dx, dy, dz, ec1, ee, eeb, es1, fcn, fs, g1, g1e, g2, g_co, g_ee, g_poly, &
+            & g_rho, g_rr, g_tmp, gdum, gu2, gzero, poly, polyb, re, reb, rho, rhob, rij, ril, rjl, rr, rrr, s, term, tmp, tmpb, &
+            & tt1, tt2, v, x(maxatom), xk1, xk2, xk3, y(maxatom), z(maxatom)
         integer                     :: i, j, k, l, maxatom, natom
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
-        dimension x(maxatom), y(maxatom), z(maxatom)
         double precision :: gxs(maxatom), gys(maxatom), gzs(maxatom), &
-            & gxgcorr(maxatom, maxatom), gygcorr(maxatom, maxatom), &
-            & gzgcorr(maxatom, maxatom), gcorr(maxatom)
+            & gxgcorr(maxatom,maxatom), gygcorr(maxatom,maxatom), &
+            & gzgcorr(maxatom,maxatom), gcorr(maxatom)
         double precision :: dvdy(maxatom), dvdz(maxatom), dvdx(maxatom)
         ! Nanoparticle parameters (Ref. 2)
         !       two-body interaction
@@ -401,7 +396,7 @@ module chempotpy_aln_np_ad_pes
     end subroutine pot
 end module chempotpy_aln_np_ad_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_NP_Ad through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_np_ad_pes, only: evaluate

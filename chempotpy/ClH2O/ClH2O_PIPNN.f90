@@ -31,13 +31,15 @@ module nnparam
     double precision, allocatable :: pdelc(:), pavgc(:)
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement ClH2O_PIPNN, a potential energy surface for ClH2O.
 module chempotpy_clh2o_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the ClH2O_PIPNN potential energy surface for ClH2O.
     subroutine evaluate( x, igrad, p, g, d )
         use nnparam, only: alpha, biasa, biasb, biasc, bohr, dp0hcl, dp0hcl2, dp0ho, dp0ho2, exhohcl, &
             & exhohcl2, ifunc, n0hcl, n0ho, n2n, nbasis, nhid, nindex, ninput, nlayer, nodemax, nodes, &
@@ -88,7 +90,7 @@ module chempotpy_clh2o_pipnn_pes
     end subroutine evaluate
 end module chempotpy_clh2o_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose ClH2O_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_clh2o_pipnn_pes, only: evaluate
     implicit none
@@ -31929,9 +31931,9 @@ function tranfun( x, ifunc )
     double precision :: tranfun, x
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end
@@ -31942,7 +31944,6 @@ function emsav( x, c ) result(v)
     double precision, dimension(1:6)::x
     double precision, dimension(0:17)::c
     double precision :: v
-    ! ::::::::::::::::::::
     double precision, dimension(0:17)::p
     call bemsav(x, p)
     v = dot_product(p, c)
@@ -31953,7 +31954,6 @@ subroutine bemsav( x, p )
     implicit none
     double precision, dimension(1:6), intent(in)::x
     double precision, dimension(0:17), intent(out)::p
-    ! ::::::::::::::::::::
     double precision, dimension(0:10)::m
     call evmono(x, m)
     call evpoly(m, p)
@@ -32001,8 +32001,6 @@ subroutine evpoly( m, p )
     p(16) = p(3)*p(3)-p(9)-p(9)
     p(17) = p(4)*p(4)
 end subroutine evpoly
-
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief Evaluate HOHCl_pes_interface.
 subroutine hohcl_pes_interface( xc, vpes )
@@ -32065,7 +32063,6 @@ subroutine hohcl_pes_interface( xc, vpes )
     endif
 end subroutine hohcl_pes_interface
 
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !make sure that 1st H linked or near to Cl
 !> @brief Evaluate HO_HCl_correction.
 subroutine ho_hcl_correction( xc, vdp )
@@ -32131,7 +32128,6 @@ subroutine ho_hcl_correction( xc, vdp )
     vdp       = vdp/23.0605d0
 end subroutine ho_hcl_correction
 
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ! determine if need to call correction from dipole interaction of HO and HCl
 ! or, switch HHFO in the order of H1-Cl3, H2-O4 if possible
 !> @brief Evaluate before_vpes.
@@ -32225,14 +32221,11 @@ subroutine before_vpes( xct, lxc )
     !     endif
     !check if HO and HCl were produced
     !     if(r12.ge.3.5d0)then
-    !
     !       xcom1(:)=xct2(:,1)+(mass(3)/(mass(1)+mass(3)))*
     !    $ (xct2(:,3)-xct2(:,1))
     !       xcom2(:)=xct2(:,2)+(mass(4)/(mass(2)+mass(4)))*
     !    $ (xct2(:,4)-xct2(:,2))
-    !
     !       rcom=dsqrt(dot_product(xcom1-xcom2,xcom1-xcom2))
-    !
     !       if(rcom.ge.5.0d0.and.rcom.le.16.0d0)then
     !         lxc=1
     !         return
@@ -32246,8 +32239,6 @@ subroutine before_vpes( xct, lxc )
     !     endif
     lxc = 0
 end subroutine before_vpes
-
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief Evaluate ho_dipole.
 subroutine ho_dipole( rt, dpt )
@@ -32265,8 +32256,6 @@ subroutine ho_dipole( rt, dpt )
     call splint(r0ho, dp0ho, y2, n0ho, rt, dpt)
 end  subroutine ho_dipole
 
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 !> @brief Evaluate hcl_dipole.
 subroutine hcl_dipole( rt, dpt )
     use nnparam, only: alpha, biasa, biasb, biasc, bohr, dp0hcl, dp0hcl2, dp0ho, dp0ho2, exhohcl, &
@@ -32282,8 +32271,6 @@ subroutine hcl_dipole( rt, dpt )
     if( rt .gt. r0hcl(n0hcl) ) rt=r0hcl(n0hcl)
     call splint(r0hcl, dp0hcl, y2, n0hcl, rt, dpt)
 end  subroutine hcl_dipole
-
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 !> @brief Evaluate HO_HCl_pes_spline.
 subroutine ho_hcl_pes_spline( r1, r2, vpes )
@@ -32317,14 +32304,11 @@ subroutine ho_hcl_pes_spline( r1, r2, vpes )
     vpes = y
 end subroutine  ho_hcl_pes_spline
 
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 !> @brief Evaluate splint.
 subroutine splint( xa, ya, y2a, n, x, y )
     implicit none
-    double precision :: a, b, h, x, xa, y, y2a, ya
+    double precision :: a, b, h, x, xa(n), y, y2a(n), ya(n)
     integer          :: k, khi, klo, n
-    dimension xa(n), y2a(n), ya(n)
     klo = 1
     khi = n
     do while( khi-klo .gt. 1 )
@@ -32345,11 +32329,9 @@ end
 !> @brief Evaluate spline.
 subroutine spline( x, y, n, yp1, ypn, y2 )
     implicit none
-    double precision :: p, qn, sig, u, un, x, y, y2, yp1, ypn
-    integer          :: i, k, n
-    dimension x(n), y(n), y2(n)
     integer, parameter :: nmax = 100
-    dimension u(nmax)
+    double precision :: p, qn, sig, u(nmax), un, x(n), y(n), y2(n), yp1, ypn
+    integer          :: i, k, n
     if( yp1 .gt. .99d30 )then
         y2(1) = 0.0d0
         u(1)  = 0.0d0

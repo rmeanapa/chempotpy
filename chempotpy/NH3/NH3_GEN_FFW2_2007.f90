@@ -1,5 +1,41 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        NH3
+!   Functional form:               polynomial 2x2 diabatic fit
+!   Common name:                   NH3 (code 2, optimized)
+!   Number of derivatives:         1
+!   Number of bodies:              4
+!   Number of electronic surfaces: 2
+!   Interface:                     Section-2
+!  Notes: This set of coupled potentials is from Ref. 2.  The earlier
+!  potentials in  Ref. 1 are not included in POTLIB because they are
+!  not recommended.  The potential routines give the ground (U11) and
+!  first singlet excited (U22) diabats, the diabatic coupling (U12),
+!  the ground (V1) and first singlet excited (V2) adiabats, and the
+!  Cartesian gradients of U11, U22, U12, V1, and V2.
+!  This potential has additional correction terms used for fitting
+!  to the experimental dissociation limits.
+!  This is code 2 for the ammonia potentials and diabatic coupling.
+!  Code 2 differs from code 1 in the order in which the terms are
+!  evaluated and so these two codes give slightly different answers
+!  due to roundoff; both are correct within the limits of round off
+!  error.  Code 2 is more efficient than code 1 (it runs faster).
+!  For the convenience of users who may wish to modify the potential,
+!  we include both versions in POTLIB.  We recommend using code 2 for
+!  applications because it runs faster.
+! References:
+!      1) Nangia, S.; Truhlar, D.G. J. Chem. Phys. 2006, 124, 124309
+!      2) Li, Z.H.; Valero, R., Truhlar, D.G. Theor. Chem. Acc. 2007,
+!         118, 9-24.
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  All gradients are in hartree/bohr
+!  Format for   Xcart
+!  Xcart(1:3)   is N
+!  Xcart(4:6)   is H1
+!  Xcart(7:9)   is H2
+!  Xcart(10:12) is H3
+
+!> @brief Implement NH3_GEN_FFW2_2007, a potential energy surface for NH3.
 module chempotpy_nh3_gen_ffw2_2007_pes
     implicit none
     private
@@ -51,8 +87,10 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         & .1524235094d+00, .1114227008d+00, -.3191010676d+00, .5041174980d+00, &
         & -.2955290687d+00, -.7789245841d+00, .5060705599d+00, -.2054781302d+00, &
         & .1836178250d+00]
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the NH3_GEN_FFW2_2007 potential energy surface for NH3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -114,6 +152,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             enddo
         enddo
     end subroutine evaluate
+
     !> @brief Evaluate diagonalize for the NH3_GEN_FFW2_2007 potential.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
         implicit none
@@ -133,47 +172,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         allocate( work_d(lwork_d) )
         call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
     end subroutine diagonalize
+
     !> @brief Evaluate pot for the NH3_GEN_FFW2_2007 potential.
     subroutine pot( xcart, u11, u22, u12, v1, v2, gu11, gu22, gu12, gv1, gv2 )
-        !   System:                        NH3
-        !   Functional form:               polynomial 2x2 diabatic fit
-        !   Common name:                   NH3 (code 2, optimized)
-        !   Number of derivatives:         1
-        !   Number of bodies:              4
-        !   Number of electronic surfaces: 2
-        !   Interface:                     Section-2
-        !
-        !  Notes: This set of coupled potentials is from Ref. 2.  The earlier
-        !  potentials in  Ref. 1 are not included in POTLIB because they are
-        !  not recommended.  The potential routines give the ground (U11) and
-        !  first singlet excited (U22) diabats, the diabatic coupling (U12),
-        !  the ground (V1) and first singlet excited (V2) adiabats, and the
-        !  Cartesian gradients of U11, U22, U12, V1, and V2.
-        !  This potential has additional correction terms used for fitting
-        !  to the experimental dissociation limits.
-        !  This is code 2 for the ammonia potentials and diabatic coupling.
-        !  Code 2 differs from code 1 in the order in which the terms are
-        !  evaluated and so these two codes give slightly different answers
-        !  due to roundoff; both are correct within the limits of round off
-        !  error.  Code 2 is more efficient than code 1 (it runs faster).
-        !  For the convenience of users who may wish to modify the potential,
-        !  we include both versions in POTLIB.  We recommend using code 2 for
-        !  applications because it runs faster.
-        !
-        ! References:
-        !      1) Nangia, S.; Truhlar, D.G. J. Chem. Phys. 2006, 124, 124309
-        !      2) Li, Z.H.; Valero, R., Truhlar, D.G. Theor. Chem. Acc. 2007,
-        !         118, 9-24.
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !  All gradients are in hartree/bohr
-        !  Format for   Xcart
-        !  Xcart(1:3)   is N
-        !  Xcart(4:6)   is H1
-        !  Xcart(7:9)   is H2
-        !  Xcart(10:12) is H3
         implicit none
         ! I/O variables
         integer, parameter :: natom = 4
@@ -217,16 +218,13 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             gv2(i)  = gv2(i)  * gconv
         enddo
     end subroutine pot
+
     !23456789
-    !!*************************************************************!!
     !> @brief Evaluate packpot for the NH3_GEN_FFW2_2007 potential.
     subroutine packpot( coord, u11, u22, u12, v1, v2, &
             & gcu11, gcu22, gcu12, gcv1, gcv2 )
-        !!*************************************************************!!
         implicit none
-        !--------------------------------------------------------------!
         ! I/O variables
-        !--------------------------------------------------------------!
         ! coord: x1,y1,z1...x4,y4,z4
         double precision :: coord(12)
         double precision :: u11, u22, u12, v1, v2
@@ -235,9 +233,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision :: gcu12(12)
         double precision :: gcv1(12)
         double precision :: gcv2(12)
-        !--------------------------------------------------------------!
         ! Common blocks for coefficients and indices
-        !--------------------------------------------------------------!
         integer, parameter :: nv    = 7
         integer, parameter :: ncu1  = 62
         integer, parameter :: ncu2  = 71
@@ -256,13 +252,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision :: gu12(12)
         double precision :: gv1(12)
         double precision :: gv2(12)
-        !--------------------------------------------------------------!
         ! Parameter List
-        !--------------------------------------------------------------!
         double precision, parameter :: pi = 3.1415926535897930d0
-        !--------------------------!
         ! Internal coordinates used
-        !--------------------------!
         ! internal coodinates: three bond distances, three bond angles, one
         ! trisector angle
         double precision :: angint(7)
@@ -273,21 +265,16 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision :: bowint(7)
         ! gradients of bowman internal coordinates to cartesian coordinates
         double precision :: gbowint(12,7)
-        !-------------------------!
         ! Misc
-        !-------------------------!
         integer          :: i, ii, j, k, n
         double precision :: erep
         ! to save the first three bond distances. If they are calculated in any
         ! subroutines, avoid to calculate them again
-        !=======================================================================
         ! This code computes the fitted pot using the polynomial funcs as
         ! described by Bowman for NH3
-        !
         ! INPUT FILES : TWO INPUT FILES ARE NEEDED
         !       [1]. Coefficient File
         !       [2]. Index File (contains the powers for the polynomial)
-        !
         ! Initialize energy derivatives
         call calcindu1(nhindu1, 2, 2, 2, 2, 2, 2, 2, ncu1)
         call calcindu2(nhindu2, 3, 3, 3, 2, 2, 2, 2, ncu2)
@@ -351,10 +338,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         call getadiabat(12, u11, u22, u12, v1, v2, &
             & gcu11, gcu22, gcu12, gcv1, gcv2)
     end subroutine packpot
-    !!******************************************!!
+
     !> @brief Evaluate sumpoly for the NH3_GEN_FFW2_2007 potential.
     subroutine sumpoly( nc, ind0, bowint, coeff, v, gv, cpot )
-        !!******************************************!!
         !    This part are all the same for U,U1,U12 except the poly normial
         !    called
         implicit none
@@ -423,7 +409,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 x7(i)  = dcos( dble(i) * dbeta )
                 dx7(i) = -dble(i)*dsin( dble(i) * dbeta )*deg2au
             enddo
-        else if( cpot .eq. 'U22' )then
+        elseif( cpot .eq. 'U22' )then
             frb    = .1633658498d+01
             frc    = .1987056751d+00
             alp    = .3037603850d+00
@@ -448,7 +434,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 dx7(i) = -dble(i)*dsin( dble(i) * dbeta ) * deg2au + dk*dbeta*deg2au/(0.05d0+dbeta*dbeta) - dk*dbeta** &
                     & 3* deg2au/(0.05d0+dbeta*dbeta)**2
             enddo
-        else if( cpot .eq. 'U12' )then
+        elseif( cpot .eq. 'U12' )then
             fru12c = .1501070926d+01
             fru12b = 1.00d0
             g(1)   = dtanh(fru12b*(bowint(1)-fru12c))
@@ -491,10 +477,10 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                         if( cpot .eq. 'U11' )then
                             call u11poly(indp, geoint, xin, dxin, gin, x7(p), &
                                 & dx7(p), fval, dfval)
-                        else if( cpot .eq. 'U22' )then
+                        elseif( cpot .eq. 'U22' )then
                             call u22poly(indp, geoint, xin, dxin, gin, g1in, &
                                 & x7(p), dx7(p), fval, dfval)
-                        else if( cpot .eq. 'U12' )then
+                        elseif( cpot .eq. 'U12' )then
                             call u12poly(indp, geoint, gin, x7(p), &
                                 & dx7(p), fval, dfval)
                         endif
@@ -510,10 +496,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             enddo
         enddo
     end subroutine sumpoly
-    !!**********************************************!!
+
     !> @brief Evaluate symOpt for the NH3_GEN_FFW2_2007 potential.
     subroutine symopt( n, ip, s )
-        !!**********************************************!!
         implicit none
         integer          :: n, ip(n)
         double precision :: s(n,n)
@@ -527,10 +512,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             s(i,ip(i)) = 1.d0
         enddo
     end subroutine symopt
-    !!****************************************!!
+
     !> @brief Evaluate getSym7g for the NH3_GEN_FFW2_2007 potential.
     subroutine getsym7g( s, x, y, dy )
-        !!****************************************!!
         implicit none
         integer, parameter :: n = 7
         double precision   :: x(n)
@@ -556,10 +540,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         y(7)    = x(7)
         dy(7,7) = 1.d0
     end subroutine getsym7g
-    !!****************************************!!
+
     !> @brief Evaluate getSym7 for the NH3_GEN_FFW2_2007 potential.
     subroutine getsym7( s, x, y )
-        !!****************************************!!
         implicit none
         integer, parameter :: n = 7
         double precision   :: x(n)
@@ -577,10 +560,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         enddo
         y(7) = x(7)
     end subroutine getsym7
-    !!****************************************!!
+
     !> @brief Evaluate getSym3 for the NH3_GEN_FFW2_2007 potential.
     subroutine getsym3( s, x, y )
-        !!****************************************!!
         implicit none
         double precision :: x(3)
         double precision :: y(3)
@@ -595,11 +577,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             enddo
         enddo
     end subroutine getsym3
-    !
-    !!****************************************************************!!
+
     !> @brief Evaluate repulsive for the NH3_GEN_FFW2_2007 potential.
     subroutine repulsive( rr, erep, derep, cpot )
-        !!****************************************************************!!
         ! Additional repuslive terms
         implicit none
         double precision :: rr(6), erep, derep(6)
@@ -664,7 +644,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             bnh2   = 209.83d0
             eshift = shiftu11
             deltae = deu11
-        else if( cpot .eq. 'U22' )then
+        elseif( cpot .eq. 'U22' )then
             ! Adjust AlpNH and BNH to make sure that  (U22)
             !     rNH = 0.4, erepNH= 20.00
             !     rNH = 0.5, erepNH=  3.83
@@ -725,19 +705,16 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             erep       = erepnh + erephh + ecorrlimit
         endif
     end subroutine repulsive
-    !!****************************************************************!!
+
     !> @brief Evaluate U11poly for the NH3_GEN_FFW2_2007 potential.
     subroutine u11poly( ind0, geoint, xin, dxin, gin, x7, dx7, ans, g_ans )
-        !!****************************************************************!!
         implicit none
         integer          :: ind0(7)
         double precision :: geoint(7), gin(3)
         double precision :: xin(7), dxin(3)
         double precision :: ans
         double precision :: g_ans(7)
-        !-------------------------------!
         ! Parameter List
-        !-------------------------------!
         double precision            :: frb, frc, alp
         double precision, parameter :: pi     = 3.1415926535897930d0
         double precision, parameter :: deg2au = pi/180.d0
@@ -749,9 +726,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ! CoS(GTa) = CoS(106.28)
         double precision, parameter :: cosgta = -0.2870261592d0
         double precision, parameter :: hba    = 0.5d0*pi
-        !-------------------------------!
         ! Local Variables
-        !-------------------------------!
         double precision :: g1
         double precision :: g2
         double precision :: g3
@@ -766,9 +741,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision :: beta, r1, r2, r3, the1, the2, the3
         integer          :: i, j, k, l, m, n, p
         integer          :: ind
-        !-------------------------------!
         ! Derivatives
-        !-------------------------------!
         double precision :: y123, y4567
         double precision :: dg1, dg2, dg3
         double precision :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
@@ -783,7 +756,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         frb = .1872506360d+01
         frc = .4278236310d+00
         alp = .1009053173d+00
-        !=======================================================================
         ! geoInt contains the internals in the following format
         ! geoInt(1) : r1
         ! geoInt(2) : r2
@@ -792,7 +764,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ! geoInt(5) : theta2
         ! geoInt(6) : theta3
         ! geoInt(7) : beta
-        !=======================================================================
         l = ind0(4)
         m = ind0(5)
         n = ind0(6)
@@ -920,19 +891,16 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         !     dans / dbeta
         g_ans(7) = y123 * y(4) * y(5) * y(6) * dy77
     end subroutine u11poly
-    !!****************************************************************!!
+
     !> @brief Evaluate U22poly for the NH3_GEN_FFW2_2007 potential.
     subroutine u22poly( ind0, geoint, xin, dxin, gin, g1in, x7, dx7, ans, g_ans )
-        !!****************************************************************!!
         implicit none
         integer          :: ind0(7)
         double precision :: geoint(7), gin(3), g1in(3)
         double precision :: xin(7), dxin(3)
         double precision :: ans
         double precision :: g_ans(7)
-        !-------------------------------!
         ! Parameter List
-        !-------------------------------!
         double precision :: pi
         double precision :: frb, frc, gta, hba, alp, re, frd, cosgta
         !      double precision deg2au
@@ -945,9 +913,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ! Correction to umbralla bending vibration mode
         double precision :: dk
         ! FRd, and Re: used for Gaussian function
-        !-------------------------------!
         ! Local varibales
-        !-------------------------------!
         double precision :: g1
         double precision :: g2
         double precision :: g3
@@ -962,9 +928,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision :: beta, r1, r2, r3, the1, the2, the3
         integer          :: i, j, k, l, m, n, p
         integer          :: ind
-        !-------------------------------!
         ! Derivatives
-        !-------------------------------!
         double precision :: y123, y4567
         double precision :: dg1, dg2, dg3, g1g2, g2g3, g1g3
         double precision :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
@@ -978,7 +942,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision :: dy61, dy62, dy66
         double precision :: tmp, dtmp(3)
         double precision :: dr
-        !
         ! Wed Oct 18 14:57:07 CDT 2006, with additional NH2 (linear)
         frb = .1633658498d+01
         frc = .1987056751d+00
@@ -986,7 +949,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         re  = .7147714247d+00
         frd = .4546981630d+01
         dk  = -.2617146615d+00
-        !======================================================================!
         ! geoInt contains the internals in the following format
         ! geoInt(1) : r1
         ! geoInt(2) : r2
@@ -995,7 +957,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ! geoInt(5) : theta2
         ! geoInt(6) : theta3
         ! geoInt(7) : beta
-        !======================================================================!
         l = ind0(4)
         m = ind0(5)
         n = ind0(6)
@@ -1029,7 +990,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             if( ind .eq. 0 )then
                 dy(i) = 0.d0
                 y(i)  = 1.d0
-            else if( ind .le. 2 )then
+            elseif( ind .le. 2 )then
                 !          x1   = dexp(-FRb*(geoInt(i) - FRc))
                 x1    = xin(i)
                 dx1   = frb*x1
@@ -1177,23 +1138,18 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         !     dans / dbeta
         g_ans(7) = y123 * y(4) * y(5) * y(6) * dy77
     end subroutine u22poly
-    !!****************************************************************!!
+
     !> @brief Evaluate U12poly for the NH3_GEN_FFW2_2007 potential.
     subroutine u12poly( ind0, geoint, gin, hbu12, d7, ans, g_ans )
-        !!****************************************************************!!
         implicit none
         integer          :: ind0(7)
         double precision :: geoint(7), gin(3)
         double precision :: ans
         ! Derivatives of 7 internal coordinates
         double precision :: g_ans(7)
-        !-------------------------------!
         ! Parameter List
-        !-------------------------------!
         double precision, parameter :: pi = 3.1415926535897930d0
-        !-------------------------------!
         !! Parameter List (U12)
-        !!------------------------------!!
         ! FRU12a    parameters used to define angular for U22
         ! FRU12b    parameters used to define angular for U22
         ! FRU12c    parameters used to define angular for U22
@@ -1204,9 +1160,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         !      parameter ( FRU12c = 2.0150d0        )
         double precision, parameter :: gtu12a = 2.0d0*pi/3.0d0
         double precision, parameter :: hbu12a = 0.5d0*pi
-        !-------------------------------!
         ! Misc
-        !-------------------------------!
         integer          :: i, j, ind
         double precision :: z1(6), tz, tf, z123, z456
         double precision :: hbu12, fru121, fru122, fru123
@@ -1219,7 +1173,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         !  parameters to be optimized:
         !                 FRU12c(r04)
         fru12c = .1501070926d+01
-        !======================================================================!
         ! geoInt contains the internals in the following format
         ! geoInt(1) : r1
         ! geoInt(2) : r2
@@ -1228,8 +1181,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ! geoInt(5) : theta2
         ! geoInt(6) : theta3
         ! geoInt(7) : beta
-        !======================================================================!
-        !
         do i=1, 3
             ind = ind0(i)
             if( ind .eq. 0 )then
@@ -1288,11 +1239,10 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         g_ans(6) = z123*z1(4)*z1(5)*dz1(6)*tf*hbu12
         g_ans(7) = tz * tf * d7
     end subroutine u12poly
-    !!**************************************************!!
+
     !> @brief Evaluate getAdiabat for the NH3_GEN_FFW2_2007 potential.
     subroutine getadiabat( nv, u11, u22, u12, v1, v2, &
             & gu11, gu22, gu12, gv1, gv2 )
-        !!**************************************************!!
         implicit none
         ! input
         integer          :: nv
@@ -1315,10 +1265,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             gv2(i) = 0.5d0 * (dx + dy)
         enddo
     end subroutine getadiabat
-    !!***************************************************************!!
+
     !> @brief Evaluate calcindU1 for the NH3_GEN_FFW2_2007 potential.
     subroutine calcindu1( ind, m1, m2, m3, m4, m5, m6, m7, nc )
-        !!***************************************************************!!
         implicit none
         integer :: nc
         integer :: m1
@@ -1357,10 +1306,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             enddo
         enddo
     end subroutine calcindu1
-    !!***************************************************************!!
+
     !> @brief Evaluate calcindU2 for the NH3_GEN_FFW2_2007 potential.
     subroutine calcindu2( ind, m1, m2, m3, m4, m5, m6, m7, nc )
-        !!***************************************************************!!
         implicit none
         integer :: nc
         integer :: mnc
@@ -1405,10 +1353,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         enddo
         !      NC=iNC
     end subroutine calcindu2
-    !!***************************************************************!!
+
     !> @brief Evaluate calcindU12 for the NH3_GEN_FFW2_2007 potential.
     subroutine calcindu12( ind, m1, m2, m3, m4, m5, m6, m7, nc )
-        !!***************************************************************!!
         implicit none
         integer :: nc
         integer :: m1
@@ -1447,6 +1394,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             enddo
         enddo
     end subroutine calcindu12
+
     !> @brief Evaluate toBowman for the NH3_GEN_FFW2_2007 potential.
     subroutine tobowman( x, bow, g_bow )
         implicit none
@@ -1457,11 +1405,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision, parameter :: pi = 3.1415926535897930d0
         ! to save the first three bond distances. If they are calculated in any
         ! subroutines, avoid to calculate them again
-        !
         ! This function returns the Bowman
         ! coordinates from cartesian coordinates
         ! All angles are in DEGREES
-        !
         ! Output:
         ! bow(1) : r1
         ! bow(2) : r2
@@ -1470,62 +1416,40 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ! bow(5) : theta2
         ! bow(6) : theta3
         ! bow(7) : beta
-        !
         ! Input:
         ! coord(1,:) : N
         ! coord(2,:) : H1
         ! coord(3,:) : H2
         ! coord(4,:) : H3
-        !
         double precision :: r(3)
         double precision :: beta(3)
         double precision :: theta(3)
-        !
-        !------------------------!
         ! Parameter list
-        !------------------------!
         integer, parameter          :: iout1 = 0
         integer, parameter          :: inp1  = 5
         double precision, parameter :: tol   = 1.0d-4
-        !
-        !------------------------!
         ! Geometry
-        !------------------------!
         double precision :: cartn(natom,3)
         double precision :: cartp(natom,3)
-        !
-        !------------------------!
         ! Unit Vectors
-        !------------------------!
         double precision :: ua(3), ub(3), uc(3)
         double precision :: ut(3)
         double precision :: uba(3), uca(3), ucb(3)
-        !
-        !------------------------!
         ! Eq. of Plane
-        !------------------------!
         double precision :: a1
         double precision :: a2
         double precision :: a3
         double precision :: d
         double precision :: dist
-        !
-        !------------------------!
         ! Misc
-        !------------------------!
         integer          :: i, j, k, n, m
         double precision :: xt, yt, zt, w
         double precision :: b(3,3)
         double precision :: a(3,3)
-        !
-        !=====================================================================
         ! Get data from user
-        !
-        !---------------------------------------------------------------------
         ! Now we will evaluate the direction of the trisector vector
         ! the unit vectors along Ha, Hb and Hc bonds are labelled as
         ! uA, uB, and uC. The trisector direction is refered as uT
-        !
         ! cartN has the origin on the N atom
         integer, parameter :: g_pmax_ = 12
         integer            :: g_i_
@@ -1535,7 +1459,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision   :: g_a1(g_pmax_), g_a2(g_pmax_), g_a3(g_pmax_), g_d(g_pmax_), g_xt(g_pmax_), g_yt(g_pmax_), g_zt(g_pmax_), g_cartp(g_pmax_,natom,3), g_dist(g_pmax_), g_theta(g_pmax_,3)
         double precision   :: g_bow(g_pmax_,7)
         integer            :: g_ehfid
-        !
         !        call ehsfid(g_ehfid, 'toBowman','g_toBowman.f')
         g_ehfid = 0
         do i=1, 12
@@ -1547,25 +1470,20 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 endif
             enddo
         enddo
-        !
         do i = 1, natom
             do g_i_ = 1, g_pmax_
                 g_cartn(g_i_,i,1) = -g_x(g_i_,1) + g_x(g_i_,3 * i - 2)
             enddo
             cartn(i,1) = x(3 * i - 2) - x(1)
-            !--------
             do g_i_ = 1, g_pmax_
                 g_cartn(g_i_,i,2) = -g_x(g_i_,2) + g_x(g_i_,3 * i - 1)
             enddo
             cartn(i,2) = x(3 * i - 1) - x(2)
-            !--------
             do g_i_ = 1, g_pmax_
                 g_cartn(g_i_,i,3) = -g_x(g_i_,3) + g_x(g_i_,3 * i)
             enddo
             cartn(i,3) = x(3 * i) - x(3)
-            !--------
         enddo
-        !
         ! Get the bond distances
         do i = 2, natom
             d2_v = cartn(i,1) * cartn(i,1)
@@ -1588,9 +1506,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 g_r(g_i_,i - 1) = d1_p * g_d1_w(g_i_)
             enddo
             r(i - 1) = d2_v
-            !--------
         enddo
-        !
         ! get the units vectors along Ha, Hb, and Hc
         do i = 1, 3
             d3_v = cartn(2,i) / r(1)
@@ -1600,87 +1516,69 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 g_ua(g_i_,i) = d3_b * g_r(g_i_,1) + d2_b * g_cartn(g_i_,2,i)
             enddo
             ua(i) = d3_v
-            !--------
-            d3_v = cartn(3,i) / r(2)
-            d2_b = 1.0d0 / r(2)
-            d3_b = (-d3_v) / r(2)
+            d3_v  = cartn(3,i) / r(2)
+            d2_b  = 1.0d0 / r(2)
+            d3_b  = (-d3_v) / r(2)
             do g_i_ = 1, g_pmax_
                 g_ub(g_i_,i) = d3_b * g_r(g_i_,2) + d2_b * g_cartn(g_i_,3,i)
             enddo
             ub(i) = d3_v
-            !--------
-            d3_v = cartn(4,i) / r(3)
-            d2_b = 1.0d0 / r(3)
-            d3_b = (-d3_v) / r(3)
+            d3_v  = cartn(4,i) / r(3)
+            d2_b  = 1.0d0 / r(3)
+            d3_b  = (-d3_v) / r(3)
             do g_i_ = 1, g_pmax_
                 g_uc(g_i_,i) = d3_b * g_r(g_i_,3) + d2_b * g_cartn(g_i_,4,i)
             enddo
             uc(i) = d3_v
-            !--------
         enddo
-        !
         ! The trisector direction satisfies the following eq
         ! (by definition of it being trisector)
         ! uT . uA = cos(beta)
         ! uT . uB = cos(beta)
         ! uT . uC = cos(beta)
-        !
         ! These three equation can be modified to:
         ! uT . (uB-uA) = 0
         ! uT . (uC-uA) = 0
         ! uT . (uC-uB) = 0
-        !
         do i = 1, 3
             do g_i_ = 1, g_pmax_
                 g_uba(g_i_,i) = -g_ua(g_i_,i) + g_ub(g_i_,i)
             enddo
             uba(i) = ub(i) - ua(i)
-            !--------
             do g_i_ = 1, g_pmax_
                 g_uca(g_i_,i) = -g_ua(g_i_,i) + g_uc(g_i_,i)
             enddo
             uca(i) = uc(i) - ua(i)
-            !--------
             do g_i_ = 1, g_pmax_
                 g_ucb(g_i_,i) = -g_ub(g_i_,i) + g_uc(g_i_,i)
             enddo
             ucb(i) = uc(i) - ub(i)
-            !--------
         enddo
-        !
         ! Find the eq of the plane defined by
         ! points uBA, uCA, and uCB.
         ! The normal to that plane is the trisector
         ! directions
-        !
         ! The eq of a plane
         !      Ax + By + Cz + D = 0
         ! defined by points:
         ! (x1,y1,z1) (x2,y2,z2) and (x3,y3,z3) is
-        !
         !     | 1 y1 z1 |      | x1 1 z1 |      | x1 y1 1 |   | x1 y1 z1 |
         ! A = | 1 y2 z2 |  B = | x2 1 z2 |  C = | x2 y2 1 |  D = -| x2 y2 z2 |
         !     | 1 y3 z3 |      | x3 1 z3 |      | x3 y3 1 |       | x3 y3 z3 |
-        !
-        !
         ! The eq of the normal to the plane is given by the vector {A,B,C}
-        !
         do i = 1, 3
             do g_i_ = 1, g_pmax_
                 g_a(g_i_,1,i) = g_uba(g_i_,i)
             enddo
             a(1,i) = uba(i)
-            !--------
             do g_i_ = 1, g_pmax_
                 g_a(g_i_,2,i) = g_uca(g_i_,i)
             enddo
             a(2,i) = uca(i)
-            !--------
             do g_i_ = 1, g_pmax_
                 g_a(g_i_,3,i) = g_ucb(g_i_,i)
             enddo
             a(3,i) = ucb(i)
-            !--------
         enddo
         do i = 1, 3
             do j = 1, 3
@@ -1689,7 +1587,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                         g_b(g_i_,j,k) = g_a(g_i_,j,k)
                     enddo
                     b(j,k) = a(j,k)
-                    !--------
                 enddo
             enddo
             do j = 1, 3
@@ -1697,11 +1594,9 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                     g_b(g_i_,j,i) = 0.0d0
                 enddo
                 b(j,i) = 1.0d0
-                !--------
             enddo
             call g_det3(b, g_b, ut(i), g_ut(1,i))
         enddo
-        !
         d4_b = ut(3) + ut(3)
         d7_b = ut(2) + ut(2)
         d8_b = ut(1) + ut(1)
@@ -1721,7 +1616,6 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             g_w(g_i_) = d1_p * g_d1_w(g_i_)
         enddo
         w = d2_v
-        !--------
         do i = 1, 3
             d3_v = ut(i) / w
             d2_b = 1.0d0 / w
@@ -1730,16 +1624,13 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 g_ut(g_i_,i) = d3_b * g_w(g_i_) + d2_b * g_ut(g_i_,i)
             enddo
             ut(i) = d3_v
-            !--------
         enddo
-        !
         ! Get the value of  beta (angle between any H-N and {A,B,C})
         do g_i_ = 1, g_pmax_
             g_w(g_i_) = ut(3) * g_ua(g_i_,3) + ua(3) * g_ut(g_i_,3) + ut (2) * g_ua(g_i_,2) + ua(2) * g_ut(g_i_,2) + &
                 & ut(1) * g_ua(g_i_,1 ) + ua(1) * g_ut(g_i_,1)
         enddo
-        w = ut(1) * ua(1) + ut(2) * ua(2) + ut(3) * ua(3)
-        !--------
+        w    = ut(1) * ua(1) + ut(2) * ua(2) + ut(3) * ua(3)
         d2_v = acos(w)
         if( abs(w) .lt. 1.0d0 )then
             d1_p = -1.0d0 / sqrt ((1.0d0-w)*(1.0d0+w))
@@ -1753,72 +1644,55 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             g_beta(g_i_,1) = d4_b * g_w(g_i_)
         enddo
         beta(1) = d2_v * 180.0d0 / pi
-        !--------
         !     beta(2) = dacos( dot_product(uT,uB) ) * 180.0d0/PI
         !     beta(3) = dacos( dot_product(uT,uC) ) * 180.0d0/PI
-        !
-        !---------------------------------------------------------------------!
         ! Now we define the eq. of the plane
         !     a1x + a2y + a3z + d = 0
         ! such that the normal to the plane is uT and
         ! the Ha hydrogen lies on that plane
-        !
         ! The values of {a1,a2,a3} are the same as
         ! the values of uT(1),uT(2),uT(3). We will use
         ! the coordinates of Ha to find the value of d
-        !
         do g_i_ = 1, g_pmax_
             g_a1(g_i_) = g_ut(g_i_,1)
         enddo
         a1 = ut(1)
-        !--------
         do g_i_ = 1, g_pmax_
             g_a2(g_i_) = g_ut(g_i_,2)
         enddo
         a2 = ut(2)
-        !--------
         do g_i_ = 1, g_pmax_
             g_a3(g_i_) = g_ut(g_i_,3)
         enddo
         a3 = ut(3)
-        !--------
         do g_i_ = 1, g_pmax_
             g_w(g_i_) = ut(3) * g_cartn(g_i_,2,3) + cartn(2,3) * g_ut(g_i_,3) + ut(2) * g_cartn(g_i_,2,2) + cartn(2, &
                 & 2) * g_ut(g_i_,2 ) + ut(1) * g_cartn(g_i_,2,1) + cartn(2,1) * g_ut(g_i_,1)
         enddo
         w = ut(1) * cartn(2,1) + ut(2) * cartn(2,2) + ut(3) * cartn(2,3)
-        !--------
         do g_i_ = 1, g_pmax_
             g_d(g_i_) = -g_w(g_i_)
         enddo
         d = -w
-        !--------
-        !
-        !---------------------------------------------------------------------!
         ! Project all the atoms on the plane
         ! The projected geometry is known as cartP
-        !
         ! The project of a point A on the plane P is denoted by point B
         ! The relation between rA and rB is given as :
         ! rB = rA - (dist*uT)
         ! where dist is the distance of point A from the plane.
-        !
         do i = 1, natom
             do g_i_ = 1, g_pmax_
                 g_xt(g_i_) = g_cartn(g_i_,i,1)
             enddo
             xt = cartn(i,1)
-            !--------
             do g_i_ = 1, g_pmax_
                 g_yt(g_i_) = g_cartn(g_i_,i,2)
             enddo
             yt = cartn(i,2)
-            !--------
             do g_i_ = 1, g_pmax_
                 g_zt(g_i_) = g_cartn(g_i_,i,3)
             enddo
             zt = cartn(i,3)
-            !--------
             call g_distplane(a1, g_a1, a2, g_a2, a3, g_a3, d, g_d, xt, g_x&
                 &t, yt, g_yt, zt, g_zt, dist, g_dist)
             do j = 1, 3
@@ -1826,38 +1700,29 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                     g_cartp(g_i_,i,j) = (-dist) * g_ut(g_i_,j) + (-ut(j)) * g_dist(g_i_) + g_cartn(g_i_,i,j)
                 enddo
                 cartp(i,j) = cartn(i,j) - dist * ut(j)
-                !--------
             enddo
         enddo
-        !
         do i = 2, natom
             do j = 1, 3
                 do g_i_ = 1, g_pmax_
                     g_cartp(g_i_,i,j) = -g_cartp(g_i_,1,j) + g_cartp(g_i_,i,j)
                 enddo
                 cartp(i,j) = cartp(i,j) - cartp(1,j)
-                !--------
             enddo
         enddo
-        !
         do i = 1, 3
             do g_i_ = 1, g_pmax_
                 g_cartp(g_i_,1,i) = 0.0d0
             enddo
             cartp(1,i) = 0.0d0
-            !--------
         enddo
-        !---------------------------------------------------------
         ! The theta are labelled as:
         ! H1-N-H2 : theta(1)
         ! H1-N-H3 : theta(2)
         ! H2-N-H3 : theta(3)
-        !
         ! Note that theta <= 180 because we are using acos
         ! and acos gives angle in the range [-PI,PI]
         ! Also all the angles are +ve
-        !
-        !
         k = 0
         do j = 2, natom
             do i = j + 1, natom
@@ -1883,8 +1748,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 do g_i_ = 1, g_pmax_
                     g_xt(g_i_) = d1_p * g_d1_w(g_i_)
                 enddo
-                xt = d2_v
-                !--------
+                xt   = d2_v
                 d2_v = cartp(j,1) * cartp(j,1)
                 d3_p = 2.0d0 * cartp(j,1)
                 d4_v = cartp(j,2) * cartp(j,2)
@@ -1907,14 +1771,12 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                     g_yt(g_i_) = d1_p * g_d1_w(g_i_)
                 enddo
                 yt = d2_v
-                !--------
                 do g_i_ = 1, g_pmax_
                     g_zt(g_i_) = cartp(i,3) * g_cartp(g_i_,j,3) + cartp(j,3) * g_cartp(g_i_,i,3) + cartp(i,2) * &
                         & g_cartp(g_i_,j,2) + cartp(j,2) * g_cartp(g_i_,i,2) + cartp(i,1) * g_cartp(g_i_,j,1) + &
                         & cartp(j,1) * g_cartp(g_i_,i,1)
                 enddo
-                zt = cartp(i,1) * cartp(j,1) + cartp(i,2) * cartp(j,2) + cartp(i,3) * cartp(j,3)
-                !--------
+                zt   = cartp(i,1) * cartp(j,1) + cartp(i,2) * cartp(j,2) + cartp(i,3) * cartp(j,3)
                 d4_v = xt * yt
                 d5_v = zt / d4_v
                 d2_b = 1.0d0 / d4_v
@@ -1925,20 +1787,17 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                     g_w(g_i_) = d5_b * g_yt(g_i_) + d4_b * g_xt(g_i_) + d2_b * g_zt(g_i_)
                 enddo
                 w = d5_v
-                !--------
                 if( w .gt. 1.0d0 )then
                     do g_i_ = 1, g_pmax_
                         g_w(g_i_) = 0.0d0
                     enddo
                     w = 1.0d0
-                    !--------
                 endif
                 if( w .lt. (-1.0d0) )then
                     do g_i_ = 1, g_pmax_
                         g_w(g_i_) = 0.0d0
                     enddo
                     w = -1.0d0
-                    !--------
                 endif
                 d2_v = acos(w)
                 if( abs(w) .lt. 1.0d0 )then
@@ -1955,7 +1814,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 d2_v = abs(d1_w)
                 if( d1_w .gt. 0.0d0 )then
                     d1_p = 1.0d0
-                else if( d1_w .lt. 0.0d0 )then
+                elseif( d1_w .lt. 0.0d0 )then
                     d1_p = -1.0d0
                 else
                     !               call ehufDO (3,d1_w, d2_v, d1_p,
@@ -1967,10 +1826,8 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                     g_theta(g_i_,k) = d4_b * g_d1_w(g_i_)
                 enddo
                 theta(k) = d2_v * 180.0d0 / pi
-                !--------
             enddo
         enddo
-        !---------------------------------------------------------
         ! Now we we will relabel theta such that
         ! H1-N-H2 : theta(3)
         ! H1-N-H3 : theta(2)
@@ -1979,71 +1836,53 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             g_xt(g_i_) = g_theta(g_i_,1)
         enddo
         xt = theta(1)
-        !--------
         do g_i_ = 1, g_pmax_
             g_theta(g_i_,1) = g_theta(g_i_,3)
         enddo
         theta(1) = theta(3)
-        !--------
         do g_i_ = 1, g_pmax_
             g_theta(g_i_,3) = g_xt(g_i_)
         enddo
         theta(3) = xt
-        !--------
-        !---------------------------------------------------------
         ! all theta should be +ve and <= 180
         !    do k=1,3
         !        if(theta(k) < 0.0d0) theta(k) = -theta(k)
         !        !if(theta(k) > 180.0d0) theta(k) = theta(k) - 180.0d0
         !    end do
-        !
-        !
-        !
         do g_i_ = 1, g_pmax_
             g_bow(g_i_,1) = g_r(g_i_,1)
         enddo
         bow(1) = r(1)
-        !--------
         do g_i_ = 1, g_pmax_
             g_bow(g_i_,2) = g_r(g_i_,2)
         enddo
         bow(2) = r(2)
-        !--------
         do g_i_ = 1, g_pmax_
             g_bow(g_i_,3) = g_r(g_i_,3)
         enddo
         bow(3) = r(3)
-        !--------
         do g_i_ = 1, g_pmax_
             g_bow(g_i_,4) = g_theta(g_i_,1)
         enddo
         bow(4) = theta(1)
-        !--------
         do g_i_ = 1, g_pmax_
             g_bow(g_i_,5) = g_theta(g_i_,2)
         enddo
         bow(5) = theta(2)
-        !--------
         do g_i_ = 1, g_pmax_
             g_bow(g_i_,6) = g_theta(g_i_,3)
         enddo
         bow(6) = theta(3)
-        !--------
         do g_i_ = 1, g_pmax_
             g_bow(g_i_,7) = g_beta(g_i_,1)
         enddo
         bow(7) = beta(1)
-        !--------
-        !
     end subroutine tobowman
-    !
-    !!********************************************************!!
+
     !> @brief Evaluate g_distplane for the NH3_GEN_FFW2_2007 potential.
     subroutine g_distplane( a1, g_a1, a2, g_a2, a3, g_a3, d, g_d, x, g_&
             &x, y, g_y, z, g_z, dist, g_dist )
-        !!********************************************************!!
         implicit none
-        !
         double precision :: a1
         double precision :: a2
         double precision :: a3
@@ -2052,23 +1891,17 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision :: y
         double precision :: z
         double precision :: dist
-        !
         ! This subroutine calculates the dist between the
         ! point (x,y,z) and the plane (a1x+a2y+a3z+d=0)
-        !
         ! dist = a1x + a2y + a3z + d
-        !      ----------------------
         !      sqrt(a**2+b**2+c**2)
-        !
         integer, parameter :: g_pmax_ = 12
         integer            :: g_i_
         double precision   :: d16_b, d15_b, d14_b, d13_b, d1_w, d3_p, d2_v, d1_p, d4_v, d10_b
         double precision   :: d9_b, d7_v, d16_v, d15_v, d2_b, d2_p, d4_b, g_d1_w(g_pmax_), g_a1(g_pmax_), g_a2(g_pmax_)
         double precision   :: g_a3(g_pmax_), g_dist(g_pmax_), g_x(g_pmax_), g_y(g_pmax_), g_z(g_pmax_), g_d(g_pmax_)
         integer            :: g_ehfid
-        !
         !        call ehsfid(g_ehfid, 'distplane','g_toBowman.f')
-        !
         g_ehfid = 0
         d2_v    = a1 * a1
         d3_p    = 2.0d0 * a1
@@ -2102,30 +1935,20 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 & g_y(g_i_) + d13_b * g_a2 (g_i_) + d16_b * g_x(g_i_) + d15_b * g_a1(g_i_)
         enddo
         dist = d16_v
-        !--------
-        !
-        !
     end subroutine g_distplane
-    !
-    !!********************************************************!!
+
     !> @brief Evaluate g_det3 for the NH3_GEN_FFW2_2007 potential.
     subroutine g_det3( a, g_a, ans, g_ans )
-        !!********************************************************!!
         implicit none
         double precision :: a(3,3)
         double precision :: ans
-        !
         ! Compute determinant of a 3x3 matrix
-        !
-        double precision :: x, y, z
-        !
+        double precision   :: x, y, z
         integer, parameter :: g_pmax_ = 12
         integer            :: g_i_
         double precision   :: d9_b, d8_b, d7_b, d6_b, d8_v, g_x(g_pmax_), g_a (g_pmax_,3,3), g_y(g_pmax_), g_z(g_pmax_), g_ans(g_pmax_)
         integer            :: g_ehfid
-        !
         !        call ehsfid(g_ehfid, 'det3','g_toBowman.f')
-        !
         g_ehfid = 0
         d8_v    = a(2,2) * a(3,3) - a(2,3) * a(3,2)
         d6_b    = (-a(1,1)) * a(3,2)
@@ -2136,8 +1959,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             g_x(g_i_) = d7_b * g_a(g_i_,3,2) + d6_b * g_a(g_i_,2,3) + d9_b * g_a(g_i_,3,3) + d8_b * g_a(g_i_,2,2) + &
                 & d8_v * g_a(g_i_,1,1)
         enddo
-        x = a(1,1) * d8_v
-        !--------
+        x    = a(1,1) * d8_v
         d8_v = a(2,1) * a(3,3) - a(2,3) * a(3,1)
         d6_b = (-a(1,2)) * a(3,1)
         d7_b = (-a(1,2)) * a(2,3)
@@ -2147,8 +1969,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             g_y(g_i_) = d7_b * g_a(g_i_,3,1) + d6_b * g_a(g_i_,2,3) + d9_b * g_a(g_i_,3,3) + d8_b * g_a(g_i_,2,1) + &
                 & d8_v * g_a(g_i_,1,2)
         enddo
-        y = a(1,2) * d8_v
-        !--------
+        y    = a(1,2) * d8_v
         d8_v = a(2,1) * a(3,2) - a(2,2) * a(3,1)
         d6_b = (-a(1,3)) * a(3,1)
         d7_b = (-a(1,3)) * a(2,2)
@@ -2159,39 +1980,27 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 & d8_v * g_a(g_i_,1,3)
         enddo
         z = a(1,3) * d8_v
-        !--------
-        !
         do g_i_ = 1, g_pmax_
             g_ans(g_i_) = g_z(g_i_) + (-g_y(g_i_)) + g_x(g_i_)
         enddo
         ans = x - y + z
-        !--------
-        !
-        !
-        !
     end subroutine g_det3
-    !!******************************************!!
+
     !> @brief Evaluate carttoang for the NH3_GEN_FFW2_2007 potential.
     subroutine carttoang( cart, ans, gangint )
-        !!******************************************!!
-        !
         ! This function converts cartesian coordinates
         ! to internal coordinates (dist and bond angles)
-        !
         ! Cartesian coordinate format: x1,y1,z1,x2,y2,z2....xn,yn,zn
         ! N  : cart(1-3)
         ! H1 : cart(4-6)
         ! H2 : cart(7-9)
         ! H3 : cart(10-11)
-        !
         ! Dist in Ang. Angles in degrees
         ! Internal coordinate format:
         ! H1-N-H2 : theta3
         ! H1-N-H3 : theta2
         ! H2-N-H3 : theta1
-        !
         ![r1,r2,r3,theta1,theta2,theta3]
-        !-----------------------------------------------------
         implicit none
         ! I/O variables
         integer, parameter          :: natom = 4
@@ -2236,9 +2045,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 gangint(j,i) = -gangint(k,i)
             enddo
         enddo
-        !------------------------------------------------------
         ! calculate bond angles
-        !
         t(1) = (carth(2,1)*carth(3,1)+carth(2,2)*carth(3,2)+ carth(2,3)*carth(3,3))/(r(2)*r(3))
         t(2) = (carth(1,1)*carth(3,1)+carth(1,2)*carth(3,2)+ carth(1,3)*carth(3,3))/(r(1)*r(3))
         t(3) = (carth(1,1)*carth(2,1)+carth(1,2)*carth(2,2)+ carth(1,3)*carth(2,3))/(r(1)*r(2))
@@ -2247,7 +2054,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             !        by definition 0 <= dacos(t) <= PI
             if( t(i) .gt. 1.d0 )then
                 t(i) = 1.d0
-            else if( t(i) .lt. -1.d0 )then
+            elseif( t(i) .lt. -1.d0 )then
                 t(i) = -1.d0
             endif
             theta(i) = dacos( t(i) )
@@ -2312,17 +2119,16 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             gangint(j,6) = dt(3) * gangint(j,6)
         enddo
     end subroutine carttoang
+
     !> @brief Evaluate cart_to_polar for the NH3_GEN_FFW2_2007 potential.
     subroutine cart_to_polar( x, ans )
         implicit none
         double precision            :: x(3)
         double precision            :: ans(3)
         double precision, parameter :: pi = 3.1415926535897930d0
-        !
         ! ans(1) : r
         ! ans(2) : phi (0-2PI)  !in degrees
         ! ans(3) : theta (0-PI) !in degrees
-        !
         double precision :: t
         ans(1) = dsqrt( x(1)*x(1) + x(2)*x(2) + x(3)*x(3) )
         if( ans(1) .ne. 0.d0 )then
@@ -2342,17 +2148,16 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             ans(3) = 0.d0
         endif
     end subroutine cart_to_polar
+
     !> @brief Evaluate polar_to_cart for the NH3_GEN_FFW2_2007 potential.
     subroutine polar_to_cart( p, ans )
         implicit none
         double precision            :: p(3)
         double precision            :: ans(3)
         double precision, parameter :: pi = 3.1415926535897930d0
-        !
         ! p(1) : r
         ! p(2) : phi (0-2PI)  !in degrees
         ! p(3) : theta (0-PI) !in degrees
-        !
         double precision :: phi, theta
         double precision :: sinth
         phi    = p(2) * pi/180.0d0
@@ -2362,17 +2167,16 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ans(2) = p(1) * dsin(phi) * sinth
         ans(3) = p(1) * dcos(theta)
     end subroutine polar_to_cart
+
     !> @brief Evaluate fromBowman for the NH3_GEN_FFW2_2007 potential.
     subroutine frombowman( bow, coord )
         implicit none
         double precision            :: bow(7)
         double precision            :: coord(12)
         double precision, parameter :: pi = 3.1415926535897930d0
-        !
         ! This function returns the cartesian
         ! coordinates from bowman coordinates for 4 atom systems ONLY
         ! All angles are in DEGREES
-        !
         ! Input:
         ! bow(1) : r1
         ! bow(2) : r2
@@ -2381,13 +2185,11 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ! bow(5) : theta2
         ! bow(5) : theta3
         ! bow(7) : beta
-        !
         ! Output:
         ! coord(1:3)   : N   x,y,z
         ! coord(4:6)   : H1  x,y,z
         ! coord(7:9)   : H2  x,y,z
         ! coord(10:12) : H3  x,y,z
-        !
         double precision :: r1, r2, r3
         double precision :: theta1, theta2, theta3
         double precision :: phi1, phi2, phi3
@@ -2407,22 +2209,18 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         theta2 = bow(5)
         theta3 = bow(6)
         beta   = bow(7)
-        !
         ! z-axis is the trisector vector
         ! G1, G2, G3 are the projection of H1, H2 and H3
         ! in the xy plane
-        !
         !  G2
         !   \
         !    N--G1-------> x-axis
         !   /
         !  G3
-        !
         ! Angle definitions:
         ! G1-N-G2 : theta3
         ! G1-N-G3 : theta2
         ! G2-N-G3 : theta1
-        !
         ! define phi
         phi1 = 0.0d0
         phi2 = theta3
@@ -2431,11 +2229,11 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         !      phi3 = theta1+theta3
         if( dabs(360.d0-(theta1+theta2+theta3)) .lt. small )then
             phi3 = theta1+theta3
-        else if( dabs(theta1-theta2-theta3) .lt. small )then
+        elseif( dabs(theta1-theta2-theta3) .lt. small )then
             phi3 = 360.d0-theta2
-        else if( dabs(theta2-theta1-theta3) .lt. small )then
+        elseif( dabs(theta2-theta1-theta3) .lt. small )then
             phi3 = theta2
-        else if( dabs(theta3-theta1-theta2) .lt. small )then
+        elseif( dabs(theta3-theta1-theta2) .lt. small )then
             phi3 = theta2
         else
             write(6, *) "Is this geometry possible?"
@@ -2475,38 +2273,27 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             coord(9+i) = ans(i)
         enddo
     end subroutine frombowman
-    !!************************************************************!!
+
     !> @brief Evaluate angle_to_cart for the NH3_GEN_FFW2_2007 potential.
     subroutine angle_to_cart( angint, coord )
-        !!************************************************************!!
-        !
         ! Convert Valence Internal Coordinates (VIC)
         ! to cartesian coordinates. for 4 atom systems only
-        !
-        !
         ! Cartesian coordinate format:
         ! N  : cart(1:3)
         ! H1 : cart(4:6)
         ! H2 : cart(7:9)
         ! H3 : cart(10:12)
-        !
         ! Dist in Ang. Angles in degrees
         ! Internal coordinate format:
         ! H1-N-H2 : theta3
         ! H1-N-H3 : theta2
         ! H2-N-H3 : theta1
-        !
         ![r1,r2,r3,theta1,theta2,theta3]
-        !
         implicit none
-        !--------------------
         ! I/O variables
-        !--------------------
         double precision :: angint(7)
         double precision :: coord(12)
-        !--------------------
         ! Local variables
-        !--------------------
         double precision :: r1
         double precision :: r2
         double precision :: r3
@@ -2514,9 +2301,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         double precision :: theta2
         double precision :: theta3
         double precision :: uh3(3)
-        !--------------------
         ! Misc
-        !--------------------
         double precision, parameter :: degtopi = 3.1415926535897930d0/180.d0
         double precision            :: x
         double precision            :: costh1, costh2, costh3, sinth3
@@ -2558,7 +2343,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                 uh3(3) = dsqrt(1.0d0-x)
                 !  Due to numerical errors, x may be just marginally larger than 1.d0
                 !  (planar structure)
-            else if( (x-1.d0) .le. small )then
+            elseif( (x-1.d0) .le. small )then
                 uh3(3) = 0.d0
             else
                 write(*, *)'ERROR: Set of three bond angles is unphysical'
@@ -2571,7 +2356,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         coord(11) = r3 * uh3(2)
         coord(12) = r3 * uh3(3)
     end subroutine angle_to_cart
-    !--------------------------------------------
+
     !> @brief Evaluate rarray for the NH3_GEN_FFW2_2007 potential.
     subroutine rarray( natoms, x, mx, r, dr, mr )
         ! calculate the rij array N(N-1)/2 elements
@@ -2616,7 +2401,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
     end subroutine rarray
 end module chempotpy_nh3_gen_ffw2_2007_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose NH3_GEN_FFW2_2007 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_nh3_gen_ffw2_2007_pes, only: evaluate
     implicit none

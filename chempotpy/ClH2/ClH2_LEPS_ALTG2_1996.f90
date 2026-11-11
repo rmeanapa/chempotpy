@@ -1,11 +1,32 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+! System:          ClH2
+! Functional form: eLEPS (extended London-Eyring-Polanyi-Sato)
+!                  plus E3C (a three-center term)
+!                  and modifications to improve the saddle point
+!                  bend potential; based on GQQ surface
+! Interface:       3-1V
+! Number of derivatives: 0
+! Common name:     G3
+! Reference:       Allison, T. C.; Lynch, G. C.; Truhlar, D. G.;
+!                  Gordon, M. S.,  J. Phys. Chem., Vol. 100, 13575 (1996
+! Note:            This is the modified clh2 potential code.
+!                  Vector version, includes no derivatives.
+! The coordinates are defined as follows:
+!           R(1) = R(H-Cl)
+!           R(2) = R(H-H')
+!           R(3) = R(H'-Cl)
+! The zero of energy for this potential occurs when the Cl atom is
+! "infinitely" far from the the H2 diatom, and the H2 diatom is at
+! its equilibrium seperation.
+
+!> @brief Implement ClH2_LEPS_ALTG2_1996, a potential energy surface for ClH2.
 module chempotpy_clh2_leps_altg2_1996_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the ClH2_LEPS_ALTG2_1996 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
@@ -36,7 +57,7 @@ module chempotpy_clh2_leps_altg2_1996_pes
     end subroutine evaluate
 end module chempotpy_clh2_leps_altg2_1996_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose ClH2_LEPS_ALTG2_1996 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_clh2_leps_altg2_1996_pes, only: evaluate
     implicit none
@@ -71,34 +92,11 @@ module chempotpy_clh2_leps_altg2_1996_pot
     double precision, parameter :: bend_quartic        = 1.6963092005d0
     double precision, parameter :: first_modifier      = 3.1053877618397071175758280546d0
     double precision, parameter :: second_modifier     = -1.8942608491155350536449828878d0
+
     contains
+
     !> @brief Evaluate a batch of ClH2 ALTG2 internal-coordinate geometries.
     subroutine dispatch( rr, e, nt, nsurf )
-        !
-        ! System:          ClH2
-        ! Functional form: eLEPS (extended London-Eyring-Polanyi-Sato)
-        !                  plus E3C (a three-center term)
-        !                  and modifications to improve the saddle point
-        !                  bend potential; based on GQQ surface
-        !
-        ! Interface:       3-1V
-        ! Number of derivatives: 0
-        ! Common name:     G3
-        ! Reference:       Allison, T. C.; Lynch, G. C.; Truhlar, D. G.;
-        !                  Gordon, M. S.,  J. Phys. Chem., Vol. 100, 13575 (1996
-        !
-        ! Note:            This is the modified clh2 potential code.
-        !                  Vector version, includes no derivatives.
-        !
-        ! The coordinates are defined as follows:
-        !           R(1) = R(H-Cl)
-        !           R(2) = R(H-H')
-        !           R(3) = R(H'-Cl)
-        !
-        ! The zero of energy for this potential occurs when the Cl atom is
-        ! "infinitely" far from the the H2 diatom, and the H2 diatom is at
-        ! its equilibrium seperation.
-        !
         implicit none
         integer, intent(in)           :: nt
         integer, intent(in)           :: nsurf
@@ -118,7 +116,7 @@ module chempotpy_clh2_leps_altg2_1996_pot
             cosine_theta  = (distances(1)**2+distances(3)**2-distances(2)**2)/(2.d0*distances(1)*distances(3))
             if( cosine_theta .lt. -1.d0 )then
                 cosine_theta = -1.d0
-            else if( cosine_theta .gt. 1.d0 )then
+            elseif( cosine_theta .gt. 1.d0 )then
                 cosine_theta = 1.d0
             endif
             sine_theta         = sin(acos(cosine_theta))

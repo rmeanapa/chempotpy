@@ -1,11 +1,12 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement NaH2_LEPS_5F_1992, a diabatic potential matrix for NaH2.
 module chempotpy_nah2_leps_5f_1992_dpem_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the NaH2_LEPS_5F_1992 diabatic potential matrix for NaH2.
     subroutine evaluate( x, igrad, u, ug )
         use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
@@ -39,7 +40,7 @@ module chempotpy_nah2_leps_5f_1992_dpem_pes
     end subroutine evaluate
 end module chempotpy_nah2_leps_5f_1992_dpem_pes
 
-!> @brief Preserve the historical Python-facing dpem entry point.
+!> @brief Expose NaH2_LEPS_5F_1992 through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_nah2_leps_5f_1992_dpem_pes, only: evaluate
     implicit none
@@ -83,41 +84,38 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!
 !> @brief Evaluate pot for the NaH2_LEPS_5F_1992_DPEM potential.
 subroutine pot( r, e, nt, nsurf )
     implicit none
-    double precision :: e, r
+    double precision :: e(nt), r(nt,3)
     integer          :: nsurf, nt
-    dimension r(nt,3), e(nt)
     if( nsurf .eq. 1 )then
         call pot11(r, e, nt)
-    else if( nsurf .eq. 2 )then
+    elseif( nsurf .eq. 2 )then
         call pot12(r, e, nt)
     else
         call pot22(r, e, nt)
     endif
 end subroutine pot
 
-!
 !  U11 surface - lower diabatic surface
-!
 !> @brief Own the stateless g_pot11 evaluator.
 module chempotpy_nah2_leps_5f_1992_dpem_pot11_legacy_state_49cb98d5
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: abs1, ads1, ars1, as1, as3, axs1, axs3, betat2, c1, c2, c2a, c2b, c2c, c3, &
-            & c4, cbs1, cds1, cevau, coul1, coul2, coul3, cplg2, crs1, cs1, cs3, cstsq, cxs1, cxs3, deh2, &
-            & dt2, e, exch1, exch2, exch3, r, r1s, r2s, r3s, rac2, ret2, rnag, s1, s2, s3, swa, swa2, &
-            & swr0, swr20, swt, t1, t2, t3, w, xt2, y0c1, y0c2, y0c3, y0c4, y90c1, y90c2, y90c3, y90c4
+        double precision :: abs1, ads1, ars1, as1, as3, axs1, axs3, betat2, c1, c2, c2a, c2b, c2c, c3, c4, cbs1, cds1, cevau, &
+            & coul1, coul2, coul3, cplg2, crs1, cs1, cs3, cstsq, cxs1, cxs3, deh2, dt2, e(:), exch1, exch2, exch3, r(:,:), r1s, &
+            & r2s, r3s, rac2, ret2, rnag, s1, s2, s3, swa, swa2, swr0, swr20, swt, t1, t2, t3, w, xt2, y0c1, y0c2, y0c3, y0c4, &
+            & y90c1, y90c2, y90c3, y90c4
         integer :: i, nt
-        dimension r(:,:), e(:)
         abs1   = 0.d0
         ads1   = 0.d0
         ars1   = 0.d0
@@ -205,7 +203,6 @@ module chempotpy_nah2_leps_5f_1992_dpem_pot11_legacy_state_49cb98d5
         deh2   = 4.7469d0
         rac2   = 1.d0/dsqrt(2.d0)
         cevau  = 1.d0/27.211611d0
-        !
         do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
@@ -262,23 +259,22 @@ subroutine pot11( r, e, nt )
     call dispatch(r=r, e=e, nt=nt)
 end subroutine pot11
 
-!
 !  U12 surface - coupling surface
-!
 !> @brief Own the stateless g_pot12 evaluator.
 module chempotpy_nah2_leps_5f_1992_dpem_pot12_legacy_state_49cb98d5
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: amp, ampe, ampn, ampp, ampr, ang, cevau, e, eps, erl, erle, erln, erlp, erlr, &
-            & ers, erse, ersn, ersp, ersr, f1, f3, r, rmx, rmxe, rmxn, rmxp, rmxr
+        double precision :: amp, ampe, ampn, ampp, ampr, ang, cevau, e(:), eps, erl, erle, erln, erlp, erlr, ers, erse, ersn, &
+            & ersp, ersr, f1, f3, r(:,:), rmx, rmxe, rmxn, rmxp, rmxr
         integer :: i, nt
-        dimension r(:,:), e(:)
         amp   = 0.d0
         ampe  = 0.d0
         ampn  = 0.d0
@@ -322,7 +318,6 @@ module chempotpy_nah2_leps_5f_1992_dpem_pot12_legacy_state_49cb98d5
         rmxe  = 2.04523701d+1
         rmxr  = 1.98941949d+0
         cevau = 1.d0/27.211611d0
-        !
         do i=1, nt
             amp  = ampn+(ampp-ampn)*0.5d0*(dtanh(ampe*(r(i,2)-ampr))+1.d0)
             erl  = erln+(erlp-erln)*0.5d0*(dtanh(erle*(r(i,2)-erlr))+1.d0)
@@ -346,28 +341,26 @@ subroutine pot12( r, e, nt )
     call dispatch(r=r, e=e, nt=nt)
 end subroutine pot12
 
-!
 !  U22 surface - upper diabatic surface
-!
 !> @brief Own the stateless g_pot22 evaluator.
 module chempotpy_nah2_leps_5f_1992_dpem_pot22_legacy_state_49cb98d5
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: a0g1, a0g2, a0g3, a90g1, a90g2, a90g3, b0g1, b0g2, b0g3, b90g1, b90g2, b90g3, &
-            & c1s1, c2a, c2b, c2c, c2s1, c3s1, c4s1, c5s1, c6s1, cevau, coul1, coul2, coul3, cplg2, &
-            & cprime, cstsq, deh2, e, exch1, exch2, exch3, g1, g2, g3, g4, g5, g6, r, r0g1, r0g2, r0g3, &
-            & r1s, r2s, r3s, r90g1, r90g2, r90g3, rac2, rnag, s1, s2, s2a, s2b, s3, swa, swr0, swt, t01, &
-            & t02a, t03, t1, t2, t2a, t3, t901, t902a, t903, una2p, vdisp, w, x0t1, x0t2, x0t3, x90t1, &
-            & x90t2, x90t3, y0b1, y0b2, y0d1, y0d2, y0r1, y0r2, y0swa, y0swr0, y90b1, y90b2, y90d1, &
-            & y90d2, y90r1, y90r2, y90swa, y90swr0
+        double precision :: a0g1, a0g2, a0g3, a90g1, a90g2, a90g3, b0g1, b0g2, b0g3, b90g1, b90g2, b90g3, c1s1, c2a, c2b, c2c, &
+            & c2s1, c3s1, c4s1, c5s1, c6s1, cevau, coul1, coul2, coul3, cplg2, cprime, cstsq, deh2, e(:), exch1, exch2, exch3, &
+            & g1, g2, g3, g4, g5, g6, r(:,:), r0g1, r0g2, r0g3, r1s, r2s, r3s, r90g1, r90g2, r90g3, rac2, rnag, s1, s2, s2a, &
+            & s2b, s3, swa, swr0, swt, t01, t02a, t03, t1, t2, t2a, t3, t901, t902a, t903, una2p, vdisp, w, x0t1, x0t2, x0t3, &
+            & x90t1, x90t2, x90t3, y0b1, y0b2, y0d1, y0d2, y0r1, y0r2, y0swa, y0swr0, y90b1, y90b2, y90d1, y90d2, y90r1, y90r2, &
+            & y90swa, y90swr0
         integer :: i, nt
-        dimension r(:,:), e(:)
         a0g1    = 0.d0
         a0g2    = 0.d0
         a0g3    = 0.d0
@@ -508,7 +501,6 @@ module chempotpy_nah2_leps_5f_1992_dpem_pot22_legacy_state_49cb98d5
         r90g3   = 1.118725d+1
         rac2    = 1.d0/dsqrt(2.d0)
         cevau   = 1.d0/27.211611d0
-        !
         do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)

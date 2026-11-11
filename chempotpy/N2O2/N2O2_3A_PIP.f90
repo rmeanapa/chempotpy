@@ -5,21 +5,16 @@
 !   Number of bodies:              4
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:: Z. Varga, R. Meana-Pañeda, G. Song, Y. Paukku,
 !                D. G. Truhlar
 !                "Potential Energy Surface of Triplet N2O2"
 !                J. Chem. Phys. 144, 024310/1-14 (2016)
 !                dx.doi.org/10.1063/1.4939008.
-!
 !   Notes:    -Mixed-exponential-Gaussian (MEG)
 !              variables are applied
 !             (named n2o2pes-gpip)
-!
 !     O1--O2
-!
 !     N3--N4
-!
 !   Input: X(4),Y(4),Z(4)               in units of bohr
 !   Output: E                           in units of hartree
 !   Output: dEdX(4),dEdY(4),dEdZ(4)     in units of hartree/bohr
@@ -27,10 +22,8 @@
 module n2o2_3a_pip_par
     ! This code is based on O3_1_1Ap.f (FORTRAN77 version) where some
     ! keywords were replaced by more modern ones.
-    !
     ! The dispersion term is called inside the subroutine ev2gm2
     ! for each diatomic term.
-    !
     ! Otherwise the surface itself was not changed.
     ! Conversion factors
     ! Cconv: bohr to Angstrom
@@ -800,13 +793,15 @@ module n2o2_3a_pip_par
         /)
 end module n2o2_3a_pip_par
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement N2O2_3A_PIP, a potential energy surface for N2O2.
 module chempotpy_n2o2_3a_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the N2O2_3A_PIP potential energy surface for N2O2.
     subroutine evaluate( x, igrad, potential, gradient, dvec )
         use n2o2_3a_pip_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
             & gconv, p, r, re, rm, rms, totdiss
@@ -853,7 +848,7 @@ module chempotpy_n2o2_3a_pip_pes
     end subroutine evaluate
 end module chempotpy_n2o2_3a_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose N2O2_3A_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, potential, gradient, dvec )
     use chempotpy_n2o2_3a_pip_pes, only: evaluate
     implicit none
@@ -877,7 +872,6 @@ end subroutine pes
 !                       igrad=1 calculation of energy and gradient
 ! output potential energy:      v    in kcal/mol
 ! output gradient:              dVdX in kcal/(mol*Ang)
-
 !> @brief Evaluate n2o2pes.
 subroutine n2o2pes( x, v, dvdx, igrad )
     use n2o2_3a_pip_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -918,7 +912,6 @@ subroutine coord_convt( x )
         & gconv, p, r, re, rm, rms, totdiss
     !  This subroutine calculates the six interatomic distances
     !  from the XYZ coordinates
-    !
     !  r1 = r(O1N2)    r2 = r(O1N3)
     !  r3 = r(O1N4)    r4 = r(O2N3)
     !  r5 = r(O2N4)    r6 = r(N3N4)
@@ -3473,23 +3466,19 @@ end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
-    !
     ! This subroutine evaulates the 2-body potential energy and gradient
     ! for given r with two kinds of potentials:
-    !
     ! pairw=1  (except N2, that is generalized Morse potential)
     ! A polinomial based on MEG variables and a Lennard-Jones term
     ! V(r) = 0 for r -> inifity
     ! u=exp(-(r-red)/alpha-(r-red)^2/beta))
     ! V(r)=-De*(cs1*u^1+cs2*u^2+cs3*u^3+cs4*u^4+cs5*u^5+cs6*u^6)
-    !
     ! pairw=2
     ! generalized Morse potential with Scheme 2.
     ! V(r) = 0 for r -> inifity
     ! V(r) = De*(1-exp(-f(y)*(r-red)))^2 - De
     ! f(y) = cs0 + cs1*y + cs2*y^2 + cs3*y^3 + cs4*y^4 + cs5*y^5 + cs6*y^6
     ! y = (r^4 - red^4)/(r^4 + red^4)
-    !
     ! imol .eq. 1   Paramemters for N2 dissociation without SEC
     !               (for N4 data)
     ! imol .eq. 2   Paramemters for N2 dissociation with SEC
@@ -3519,7 +3508,7 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
             cs(4) = -5.02002309588d-1
             cs(5) = 3.80734244606d-1
             cs(6) = 1.21001628750d0
-        else if( imol .eq. 2 )then
+        elseif( imol .eq. 2 )then
             ! Parameter for N2 dissociation with SEC (for N2O2)
             ! This is for generalized Morse equation
             red   = 1.098d0
@@ -3531,7 +3520,7 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
             cs(4) = -4.08663480982d-1
             cs(5) = 3.92451705557d-1
             cs(6) = 1.13006674877d0
-        else if( imol .eq. 3 )then
+        elseif( imol .eq. 3 )then
             ! Parameter for NO dissociation with SEC (for N2O2)
             red    = 1.1508d0
             de     = 152.6d0
@@ -3545,7 +3534,7 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
             cs(8)  = -0.037783d0
             cs(9)  = 0.48294d0   ! delta b
             cs(10) = 1.98697d0   ! delta c
-        else if( imol .eq. 4 )then
+        elseif( imol .eq. 4 )then
             ! Parameter for O2 dissociation with SEC (for N2O2 and O4)
             red    = 1.2080d0
             de     = 120.243d0

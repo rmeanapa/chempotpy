@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Provide small Cartesian geometry operations used by PES kernels.
 module chempotpy_geometry
     use chempotpy_kinds, only: real64
@@ -40,7 +39,9 @@ module chempotpy_geometry
         module procedure fill_distance_matrix_from_components
         module procedure fill_distance_matrix_from_matrix
     end interface fill_distance_matrix
+
     contains
+
     !> @brief Return a Cartesian Jacobian for an explicitly ordered list of atom pairs.
     pure subroutine ordered_pair_jacobian_from_matrix( coordinates, first_atoms, second_atoms, distances, jacobian )
         real(real64), intent(in)  :: coordinates(:,:), distances(:)
@@ -58,6 +59,7 @@ module chempotpy_geometry
             jacobian(pair,second_coordinate:second_coordinate+2) = -displacement/distances(pair)
         enddo
     end subroutine ordered_pair_jacobian_from_matrix
+
     !> @brief Return a Cartesian Jacobian for ordered pairs and atom-major vector coordinates.
     pure subroutine ordered_pair_jacobian_from_vector( coordinates, first_atoms, second_atoms, distances, jacobian )
         real(real64), intent(in)  :: coordinates(:), distances(:)
@@ -75,6 +77,7 @@ module chempotpy_geometry
             jacobian(pair,second_coordinate:second_coordinate+2) = -displacement/distances(pair)
         enddo
     end subroutine ordered_pair_jacobian_from_vector
+
     !> @brief Return all unique pair distances from matrix coordinates.
     pure subroutine pair_distances_from_matrix( coordinates, distances )
         real(real64), intent(in)  :: coordinates(:,:)
@@ -90,6 +93,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine pair_distances_from_matrix
+
     !> @brief Return all unique pair distances from atom-major coordinates.
     pure subroutine pair_distances_from_vector( coordinates, distances )
         real(real64), intent(in)  :: coordinates(:)
@@ -109,6 +113,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine pair_distances_from_vector
+
     !> @brief Return all unique pair distances and their Cartesian Jacobian from matrix coordinates.
     pure subroutine all_pair_distances_from_matrix( coordinates, distances, jacobian )
         real(real64), intent(in)  :: coordinates(:,:)
@@ -131,6 +136,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine all_pair_distances_from_matrix
+
     !> @brief Return all unique pair distances and their Cartesian Jacobian from atom-major coordinates.
     pure subroutine all_pair_distances_from_vector( coordinates, distances, jacobian )
         real(real64), intent(in)  :: coordinates(:)
@@ -154,6 +160,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine all_pair_distances_from_vector
+
     !> @brief Return the Cartesian Jacobian for supplied all-pair distances and matrix coordinates.
     pure subroutine all_pair_jacobian_from_matrix( coordinates, distances, jacobian )
         real(real64), intent(in)  :: coordinates(:,:), distances(:)
@@ -174,6 +181,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine all_pair_jacobian_from_matrix
+
     !> @brief Return the Cartesian Jacobian for supplied all-pair distances and atom-major coordinates.
     pure subroutine all_pair_jacobian_from_vector( coordinates, distances, jacobian )
         real(real64), intent(in)  :: coordinates(:), distances(:)
@@ -195,6 +203,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine all_pair_jacobian_from_vector
+
     !> @brief Flatten atom-major Cartesian coordinates as x1, y1, z1, x2, y2, z2, and so on.
     pure subroutine flatten_cartesian_coordinates( coordinates, flat_coordinates )
         real(real64), intent(in)  :: coordinates(:,:)
@@ -205,6 +214,7 @@ module chempotpy_geometry
             flat_coordinates(first_coordinate:first_coordinate+2) = coordinates(atom,1:3)
         enddo
     end subroutine flatten_cartesian_coordinates
+
     !> @brief Return the 1-2, 2-3, and 1-3 distances and their Cartesian Jacobian.
     pure subroutine triatomic_distance_jacobian( coordinates, distances, jacobian )
         real(real64), intent(in)  :: coordinates(3,3)
@@ -223,6 +233,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine triatomic_distance_jacobian
+
     !> @brief Apply dq/dx to one internal-coordinate gradient using the chain rule.
     pure subroutine transform_gradient_vector( internal_gradient, coordinate_jacobian, cartesian_gradient )
         real(real64), intent(in)  :: internal_gradient(:), coordinate_jacobian(:,:)
@@ -236,6 +247,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine transform_gradient_vector
+
     !> @brief Apply dq/dx to multiple internal-coordinate gradients using the chain rule.
     pure subroutine transform_gradient_matrix( internal_gradient, coordinate_jacobian, cartesian_gradient )
         real(real64), intent(in)  :: internal_gradient(:,:), coordinate_jacobian(:,:)
@@ -249,6 +261,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine transform_gradient_matrix
+
     !> @brief Apply dq/dx to a matrix-valued internal gradient using the chain rule.
     pure subroutine transform_gradient_tensor( internal_gradient, coordinate_jacobian, cartesian_gradient )
         real(real64), intent(in)  :: internal_gradient(:,:,:), coordinate_jacobian(:,:)
@@ -263,6 +276,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine transform_gradient_tensor
+
     !> @brief Return the Euclidean distance between two Cartesian points.
     pure function cartesian_distance( first_point, second_point ) &
             result(distance)
@@ -274,6 +288,7 @@ module chempotpy_geometry
         delta_z  = first_point(3)-second_point(3)
         distance = sqrt(delta_x*delta_x+delta_y*delta_y+delta_z*delta_z)
     end function cartesian_distance
+
     !> @brief Return the Cartesian dot product of two three-component vectors.
     pure function dot_product_3d( first_vector, second_vector ) &
             result(product)
@@ -281,6 +296,7 @@ module chempotpy_geometry
         real(real64)             :: product
         product = first_vector(1)*second_vector(1) +first_vector(2)*second_vector(2) +first_vector(3)*second_vector(3)
     end function dot_product_3d
+
     !> @brief Return the cosine of the angle between two Cartesian vectors.
     pure function cosine_between_vectors( &
             first_vector, second_vector ) result(cosine)
@@ -291,6 +307,7 @@ module chempotpy_geometry
         second_norm = sqrt(dot_product_3d(second_vector, second_vector))
         cosine      = dot_product_3d(first_vector, second_vector) /(first_norm*second_norm)
     end function cosine_between_vectors
+
     !> @brief Fill a symmetric Cartesian distance matrix for a geometry.
     pure subroutine fill_distance_matrix_from_matrix( coordinates, distances )
         real(real64), intent(in)  :: coordinates(:,:)
@@ -306,6 +323,7 @@ module chempotpy_geometry
             enddo
         enddo
     end subroutine fill_distance_matrix_from_matrix
+
     !> @brief Fill a symmetric distance matrix from separate Cartesian component arrays.
     pure subroutine fill_distance_matrix_from_components( x_coordinates, y_coordinates, z_coordinates, distances )
         real(real64), intent(in)  :: x_coordinates(:), y_coordinates(:), z_coordinates(:)

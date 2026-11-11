@@ -1,10 +1,11 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the complete implementation of this potential energy surface.
+!> @brief Implement H3_GEN_BKMP_1991, a potential energy surface for H3.
 module chempotpy_h3_gen_bkmp_1991_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate pes for the H3_GEN_BKMP_1991 potential.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
@@ -42,6 +43,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
             write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate EvdRdX for the H3_GEN_BKMP_1991 potential.
     subroutine evdrdx( x, r, drdx )
         use chempotpy_geometry, only: ordered_pair_distance_jacobian
@@ -52,8 +54,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         double precision, intent(out) :: drdx(3,9)
         call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
     end subroutine evdrdx
-    !
-    !
+
     !> @brief Evaluate POT for the H3_GEN_BKMP_1991 potential.
     subroutine pot( rval, energy, dedr )
         implicit none
@@ -73,19 +74,15 @@ module chempotpy_h3_gen_bkmp_1991_pes
                 'his '', ''version of the potential.'')') nder
             stop 'POT 2'
         endif
-        !
         call h3tot (rval, energy, dedr, nder, idbug)
         !    Put the zero of energy at the BC asymptotic valley, i.e., at
         !    H infinitely far from the H2 diatomic
         energy = energy + easybc
-        !
-        !
     end subroutine pot
-    !
+
     !     subroutine h3tot(r,Vtot,dVtot,id)
     !> @brief Evaluate h3tot for the H3_GEN_BKMP_1991 potential.
     subroutine h3tot( r, vtot, dvtot, id, ipr )
-        !-----------------------------------------------------------------
         !     calculate total h3 potential from all of its parts
         !     calculate the derivative too (if id.gt.0)
         ! version of july27/91 ... surf706d.out Cbend values put in
@@ -101,21 +98,14 @@ module chempotpy_h3_gen_bkmp_1991_pes
         ! any questions/problems could be addressed to:
         !     wkeogh@alchemy.chem.utoronto.ca
         ! all distances are in bohrs and all energies are in hartrees
-        !
         !  if ipr.gt.0 print out some details of various contributions to Vtot
         !  if ipr.gt.1  also print out some details about derivatives
-        !----------------------------------------------------------------------
         implicit none
-        double precision :: cal, cas, cb, cbnda, cbndb, cbp, db1a, db1b, db2, db3, dcal, dcas, dcbnda, dcbndb, dt, &
-            & dvas, dvbnda, dvbndb, dvlon, dvtot, expass, r, t, vas, vb, vbnda, vbndb, vbp, vlon, vtot
+        double precision :: cal, cas, cb(2,25), cbnda, cbndb, cbp(2,25), db1a(3), db1b(3), db2(3), db3(6), dcal(3), dcas(3), &
+            & dcbnda(3), dcbndb(3), dt(3), dvas(3), dvbnda(3), dvbndb(3), dvlon(3), dvtot(3), expass(4), r(3), t(3), vas, &
+            & vb(2,25), vbnda, vbndb, vbp(2,25), vlon, vtot
         integer :: i, icompc, id, ipr
-        dimension r(3), dvtot(3)
-        dimension dvlon(3), dvas(3), dvbnda(3), dvbndb(3), &
-            & dcal(3), dcas(3), dcbnda(3), dcbndb(3)
         !     dimension vb(2,25),cb(2,25),vbp(2,25),cbp(2,25)    {debugging}
-        dimension vb(2,25), cb(2,25), vbp(2,25), cbp(2,25)
-        dimension db1a(3), db1b(3), dt(3), t(3)
-        dimension db2(3), db3(6), expass(4)
         !     ipr = 0
         !  zero everything to avoid any 'funny' values:
         vlon  = 0.d0
@@ -192,11 +182,10 @@ module chempotpy_h3_gen_bkmp_1991_pes
             write(7, *) 'h3tot exit ---------------------------------'
         endif
     end subroutine h3tot
-    !
+
     !     subroutine triplet(r,E3,id)
     !> @brief Evaluate triplt for the H3_GEN_BKMP_1991 potential.
     subroutine triplt( r, e3, id )
-        !--------------------------------------------------------------------
         !  version of oct4/90  surface626 values
         !  H2 triplet curve and derivatives:
         !  calculates triplet potential and first derivative
@@ -205,11 +194,9 @@ module chempotpy_h3_gen_bkmp_1991_pes
         !     if r .ge. rr         use modified t/h triplet equation
         !     if r .le. rl         use the Johnson correction
         !     in between           use the transition equation
-        !--------------------------------------------------------------------
         implicit none
-        double precision :: dr, e1, e3, exdr, r, ra6, ra61, rsq
+        double precision :: dr, e1(3), e3(3), exdr, r, ra6, ra61, rsq
         integer          :: id, ipr
-        dimension e3(3), e1(3)
         double precision, parameter :: rl = 0.95d0
         double precision, parameter :: rr = 1.15d0
         double precision, parameter :: z1 = 1.d0
@@ -257,22 +244,17 @@ module chempotpy_h3_gen_bkmp_1991_pes
         endif
         if( ipr .gt. 0 ) write(7, '(''  triplet:  E3 = '',3(1x,f12.8))') e3
     end subroutine triplt
-    !
-    !
+
     !> @brief Evaluate vH2opt for the H3_GEN_BKMP_1991 potential.
     subroutine vh2opt( r, e, ideriv )
-        !-----------------------------------------------------------------
         !  version of jul 09/90 ... super duper speedy version
         ! self-contained version of schwenke's H2 potential
         ! all distances in bohrs and all energies in Hartrees
         ! (1st deriv added on May 2 1989; 2nd deriv on May 28 1989)
-        !-----------------------------------------------------------------
         implicit none
-        double precision :: alphar, dalphr, ddalph, ddvlr, ddvsr, dvlr, dvsr, e, exalph, r, r02, r04, r06, r10, r11, &
-            & r12, r13, r14, r15, r2, r3, r4, r5, r6, r7, r8, r9, rr2, rr25, rr26, rr27, rr4, rr43, rr44, rr6, rr62, &
-            & rr63, vlr, vsr
+        double precision :: alphar, dalphr, ddalph, ddvlr, ddvsr, dvlr, dvsr, e(3), exalph, r, r02, r04, r06, r10, r11, r12, &
+            & r13, r14, r15, r2, r3, r4, r5, r6, r7, r8, r9, rr2, rr25, rr26, rr27, rr4, rr43, rr44, rr6, rr62, rr63, vlr, vsr
         integer :: ideriv
-        dimension e(3)
         double precision, parameter :: a0  = 0.03537359271649620d0
         double precision, parameter :: a1  = 2.013977588700072d0
         double precision, parameter :: a2  = -2.827452449964767d0
@@ -327,7 +309,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         vsr    = dd*(exalph-1.d0)*(exalph-1.d0) - dd
         vlr    = -c6/rr6   -c8/(rr4*rr4)   -c10/rr25
         e(1)   = vsr +  vlr
-        !
         !  calculate first derivative if required:
         if( ideriv .ge. 1 )then
             r3   = r2*r
@@ -342,7 +323,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
             dvlr = 6.d0*c6*r5 / (rr6*rr6) +  8.d0*c8*r3 / rr43  + 10.d0*c10*r / rr26
             e(2) = dvsr + dvlr
         endif
-        !
         !  calculate second derivative if required:
         if( ideriv .ge. 2 )then
             r10  = r6*r4
@@ -360,23 +340,20 @@ module chempotpy_h3_gen_bkmp_1991_pes
             e(3) = ddvsr + ddvlr
         endif
     end subroutine vh2opt
-    !
+
     !> @brief Evaluate h3lond for the H3_GEN_BKMP_1991 potential.
     subroutine h3lond( r, vlon, dvlon )
-        !----------------------------------------------------------------------
         ! version of may 12/90  ... derivatives corrected (0.5 changed to 0.25)
         ! calculates the h3 london terms and derivatives
         ! modified oct 7/89 to include eps**2 term which rounds off the
         ! cusp in the h3 potential which occurs at equilateral triangle
         ! configurations
-        !----------------------------------------------------------------------
         implicit none
-        double precision :: de1, de3, dj1, dj2, dj3, dvlon, e1, e3, esing, etrip, r, rootjt, sumj, sumq, vlon
+        double precision :: de1(3), de3(3), dj1(3), dj2(3), dj3(3), dvlon(3), e1(3), e3(3), esing(3), etrip(3), r(3), rootjt, &
+            & sumj, sumq, vlon
         integer          :: i, ipr
         !     real*8 Q(3),J(3),Jt
         double precision :: q(3), j(3), jt
-        dimension r(3), e1(3), e3(3), esing(3), etrip(3), dvlon(3)
-        dimension de1(3), de3(3), dj1(3), dj2(3), dj3(3)
         double precision, parameter :: half = 0.5d0
         double precision, parameter :: two  = 2.d0
         double precision, parameter :: eps2 = 1.d-12
@@ -416,19 +393,16 @@ module chempotpy_h3_gen_bkmp_1991_pes
             write(7, '(''         dVlon = '',3(1x,g12.6))') dvlon
         endif
     end subroutine h3lond
-    !
+
     !> @brief Evaluate Vascal for the H3_GEN_BKMP_1991 potential.
     subroutine vascal( rpass, vas, dvas )
-        !------------------------------------------------------------------
         !  version of oct11/90  fit632c.out values
         !  version of oct5/90   surf626 values
         !  calculate the asymmetric correction term and its derivatives
         !  see equations [14] to [16] of truhlar/horowitz 1978 paper
-        !------------------------------------------------------------------
         implicit none
-        double precision :: a, a2, a3, a4, a5, da, ds, dvas, exp1, exp6, r, r1, r2, r3, rcu, rpass, rsq, s, vas
+        double precision :: a, a2, a3, a4, a5, da(3), ds(3), dvas(3), exp1, exp6, r, r1, r2, r3, rcu, rpass(3), rsq, s, vas
         integer          :: ipr
-        dimension dvas(3), da(3), ds(3), rpass(3)
         !--- Vasym values from fit632c ----------------------
         double precision, parameter :: aa1 = 0.3438222224d-02
         double precision, parameter :: aa2 = 0.1398145763d-02
@@ -463,19 +437,16 @@ module chempotpy_h3_gen_bkmp_1991_pes
         if( ipr .gt. 0 ) write(7, '(''    from subr.vascal:   Vas  = '',  1x,g12.6, /, ''                        dS   = '',3(1' // &
             'x,g12.6),/, ''                        dVas = '',3(1x,g12.6))') vas, ds, dvas
     end subroutine vascal
-    !
+
     !> @brief Evaluate acalc for the H3_GEN_BKMP_1991 potential.
     subroutine acalc( r1, r2, r3, a, da )
-        !---------------------------------------------------------------------
         !  version of may 1, 1990
         !  based on equations from notes date april 4, 1990
         !  calculate the A value and its derivatives
         !           A  = dabs[ (r1-r2)*(r2-r3)*(r3-r1) ]
-        !---------------------------------------------------------------------
         implicit none
-        double precision :: a, da, r1, r2, r3
+        double precision :: a, da(3), r1, r2, r3
         integer          :: ipr
-        dimension da(3)
         ipr   = 0
         a     = (r1-r2)*(r2-r3)*(r3-r1)
         da(1) = ( -2.d0*r1 + r2 + r3 )*(r2-r3)
@@ -490,19 +461,16 @@ module chempotpy_h3_gen_bkmp_1991_pes
         if( ipr .gt. 0 ) write(7, '(''Acalc enter ---------------------------------------'',/, ''     A = '',f15.10,''   dA = ' // &
             ''',3(1x,g12.6),/, ''Acalc exit ----------------------------------------'')') a, da
     end subroutine acalc
-    !
+
     !> @brief Evaluate compac for the H3_GEN_BKMP_1991 potential.
     subroutine compac( r, icompc, t, dt )
-        !---------------------------------------------------------------
         !  version of may 14/90 ... calculates T and dT values also
         !  decide whether or not this particular geometry is compact,
         !  that is, are any of the three distances smaller than the
         !  rr value from the johnson correction.
-        !-----------------------------------------------------------------
         implicit none
-        double precision :: bot, bot2, dt, r, t, top, top2, top3
+        double precision :: bot, bot2, dt(3), r(3), t(3), top, top2, top3
         integer          :: i, icompc
-        dimension r(3), t(3), dt(3)
         double precision, parameter :: rr = 1.15d0
         double precision, parameter :: rp = 1.25d0
         !  first see if this is a compact geometry:
@@ -532,21 +500,16 @@ module chempotpy_h3_gen_bkmp_1991_pes
             !     end do
         enddo
     end subroutine compac
-    !
+
     !> @brief Evaluate casym for the H3_GEN_BKMP_1991 potential.
     subroutine casym ( r, cas, dcas, id, t, dt )
-        !---------------------------------------------------------------
         !  version of sept14/90
         !  the compact asymmetric correction term and derivatives
-        !---------------------------------------------------------------
         implicit none
-        double precision :: a, a2, cas, da, dcas, determ, dpr, dseris, dsumt, dt, dterm1, eterm, pr, pr2, pr3, r, &
-            & series, sr, sr2, sr3, sumt, t, term1
+        double precision :: a, a2, cas, da(3), dcas(3), determ(3), dpr(3), dseris(3), dsumt(3), dt(3), dterm1(3), eterm, pr, &
+            & pr2, pr3, r(3), series, sr, sr2, sr3, sumt, t(3), term1
         integer :: i, id, ipr
-        dimension r(3), t(3)
         !     dimension dPr(3),dT(3),dsumT(3),dterm1(3),determ(3),dseries(3),
-        dimension dpr(3), dt(3), dsumt(3), dterm1(3), determ(3), dseris(3), &
-            & dcas(3), da(3)
         !---- Casym values from fit633a
         double precision, parameter :: u1  = 0.1537481166d+00
         double precision, parameter :: u2  = 0.2745950036d+00
@@ -622,21 +585,17 @@ module chempotpy_h3_gen_bkmp_1991_pes
             endif
         endif
     end subroutine casym
-    !
+
     !> @brief Evaluate csym for the H3_GEN_BKMP_1991 potential.
     subroutine csym( r, cal, dcal )
-        !---------------------------------------------------------------
         !  version of oct12/90  surf636 values
         !  calculate the 'compact all' correction term and derivatives
         !  a correction term (added sept 11/89), which adds a small
         !  correction to all compact geometries
-        !---------------------------------------------------------------
         implicit none
-        double precision :: cal, dcal, dexp3, dg, exp3, g, r, ri, rpri, rpri2, rrri, rrri2, rrri3, sr, sr2, sr3, &
-            & sumg, sumv, t
+        double precision :: cal, dcal(3), dexp3, dg(3), exp3, g(3), r(3), ri, rpri, rpri2, rrri, rrri2, rrri3, sr, sr2, sr3, &
+            & sumg, sumv(3), t(3)
         integer :: i, ipr
-        dimension r(3), t(3), dcal(3), g(3)
-        dimension dg(3), sumv(3)
         double precision, parameter :: rr = 1.15d0
         double precision, parameter :: rp = 1.25d0
         !---- Csym values from fit633a
@@ -680,12 +639,11 @@ module chempotpy_h3_gen_bkmp_1991_pes
             write(7, *) 'exiting subr.csym'
         endif
     end subroutine csym
-    !
+
     !> @brief Evaluate VbCb for the H3_GEN_BKMP_1991 potential.
     subroutine vbcb( rpass, icompc, t, dt, ipr, &
             & vbnda, vbndb, dvbnda, dvbndb, &
             & cbnda, cbndb, dcbnda, dcbndb )
-        !---------------------------------------------------------------
         !  jul24/91 fit705 cbend values added
         !  feb27/91 modified to match equation in h3 paper more closely
         !  nov 4/90 Vbend coefficients now a,g  Cbend coeff's still c,d
@@ -695,33 +653,20 @@ module chempotpy_h3_gen_bkmp_1991_pes
         !  around B1a,B1b,B2,B3a,B3b functions and derivatives
         !   B1a = 1 - sum of [ P1(cos(theta(i))) ]
         !   B1b = 1 - sum of [ P3(cos(theta(i))) ]
-        !--------------------------------------------------------------
         implicit none
-        double precision :: aasum, asum, b1, b12, b13, b14, b15, b1a, b1b, b2, b3, b3b, bsum, c1, c1cube, c2, &
-            & c2cube, c3, c3cube, cb, cbnda, cbndb, cbnds, cos3t1, cos3t2, cos3t3, csum, cx1, d1, d2, d3, daasum, &
-            & dasum, db1a, db1b, db2, db3, dbsum, dc1dr1, dc1dr2, dc1dr3, dc2dr1, dc2dr2, dc2dr3, dc3dr1, dc3dr2, &
-            & dc3dr3, dcb1, dcb2, dcb3, dcb4, dcb5, dcb6, dcb7, dcb8, dcbnda, dcbndb, dcbnds, ddsum1, ddsum2, dexp1, &
-            & dexp2, dexp7, dffsum, dfsum, dgsum, dp, dsum1, dsum2, dt, dvb1, dvb2, dvb3, dvb4, dvb5, dvbnd, dvbnda, &
-            & dvbndb, dx1, eps2, exp1, exp2, exp7, ffsum, fsum, gsum, p, pcu, psq, r, r1, r2, r3, rcu, rpass, rsq, &
-            & sum, sumb, sumt, t, t1, t2, t3, th, vb, vbnd, vbnda, vbndb
+        double precision :: aasum, asum, b1, b12, b13, b14, b15, b1a, b1b, b2, b3, b3b, bsum, c1, c1cube, c2, c2cube, c3, &
+            & c3cube, cb(2,25), cbnda, cbndb, cbnds(2), cos3t1, cos3t2, cos3t3, csum, cx1, d1, d2, d3, daasum, dasum, db1a(3), &
+            & db1b(3), db2(3), db3(6), dbsum, dc1dr1, dc1dr2, dc1dr3, dc2dr1, dc2dr2, dc2dr3, dc3dr1, dc3dr2, dc3dr3, dcb1(3), &
+            & dcb2(3), dcb3(3), dcb4(3), dcb5(3), dcb6(3), dcb7(3), dcb8(3), dcbnda(3), dcbndb(3), dcbnds(2,3), ddsum1, ddsum2, &
+            & dexp1, dexp2, dexp7, dffsum, dfsum, dgsum, dp(3), dsum1, dsum2, dt(3), dvb1(3), dvb2(3), dvb3(3), dvb4(3), &
+            & dvb5(3), dvbnd(3), dvbnda(3), dvbndb(3), dx1, eps2, exp1, exp2, exp7, ffsum, fsum, gsum, p, pcu, psq, r, r1, r2, &
+            & r3, rcu, rpass(3), rsq, sum, sumb, sumt, t(3), t1, t2, t3, th(3), vb(2,25), vbnd(2), vbnda, vbndb
         integer :: icompc, ipr
         !    arrays required for B1,B2,B3 calculations:
-        dimension rpass(3), db1a(3), db1b(3), th(3), &
-            & db2(3), db3(6)
         !    arrays required for Vbend calculations:
-        dimension dvbnda(3), dvbndb(3)
-        dimension dvb1(3), dvb2(3), dvb3(3), dvb4(3), dvb5(3), dvbnd(3)
-        dimension vbnd(2)
-        dimension vb(2,25)
         !     dimension vb(2,25)   {passed out for debugging only}
         !    arrays required for Cbend calculations:
-        dimension cbnds(2), dcbnds(2,3)
-        dimension dcb1(3), dcb2(3), dcb3(3), dcb4(3), dcb5(3), dcb6(3), &
-            & dcb7(3), dcb8(3)
-        dimension t(3), dp(3)
-        dimension dt(3), dcbnda(3), dcbndb(3)
         !     dimension cb(2,25)   {passed out for debugging only}
-        dimension cb(2,25)
         !     parameter( z58=0.625d0, z38=0.375d0 )  {3/8 and 5/8}
         double precision, parameter :: z58 = 0.625d0
         double precision, parameter :: z38 = 0.375d0
@@ -929,9 +874,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         !d            write(7,7010) t1,t2,t3,c1,c2,c3,d1,d2,d3
         !d         end if
         !d     end if
-        !
         !  calculate the quantities used by both Vbend and Cbend:
-        !
         r      = r1 + r2 + r3
         rsq    = r*r
         b2     = 1.d0/r1 + 1.d0/r2 + 1.d0/r3
@@ -971,7 +914,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         vb(1,4) = b1*b3*dsum1 + b1*b3b*dsum2
         vb(1,5) = b1* fsum  *exp7
         vbnd(1) = vb(1,1)+vb(1,2)+vb(1,3)+vb(1,4)+vb(1,5)
-        !
         dasum   = a12+2.d0*a13*r
         dbsum   = 2.d0* a21*b1  + 3.d0* a22*b12 + 4.d0* a23*b13 + 5.d0* a24*b14
         ddsum1  = a41*dexp1 +  a42*dexp2
@@ -980,16 +922,13 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dvb1(1) = db1a(1)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
         dvb1(2) = db1a(2)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
         dvb1(3) = db1a(3)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
-        !
         dvb2(1) = dbsum*db1a(1)*exp2 + bsum*dexp2
         dvb2(2) = dbsum*db1a(2)*exp2 + bsum*dexp2
         dvb2(3) = dbsum*db1a(3)*exp2 + bsum*dexp2
-        !
         ! calculate the Vb3 derivatives:
         dvb3(1) = db2(1)*csum + b2*(  a31*db1a(1)*exp1 +  a31*b1*dexp1 +2.d0* a32*b1*db1a(1)*exp2 +  a32*b12*dexp2)
         dvb3(2) = db2(2)*csum + b2*(  a31*db1a(2)*exp1 +  a31*b1*dexp1 +2.d0* a32*b1*db1a(2)*exp2 +  a32*b12*dexp2)
         dvb3(3) = db2(3)*csum + b2*(  a31*db1a(3)*exp1 +  a31*b1*dexp1 +2.d0* a32*b1*db1a(3)*exp2 +  a32*b12*dexp2)
-        !
         ! calculate the Vb4 derivatives (may 27/90):
         dvb4(1) = db1a(1)*b3 *dsum1+  b1*db3(1)*dsum1 + b1*b3 *ddsum1 + db1a(1)*b3b*dsum2 + b1*db3(4)*dsum2 + b1*b3b* &
             & ddsum2
@@ -997,18 +936,15 @@ module chempotpy_h3_gen_bkmp_1991_pes
             & ddsum2
         dvb4(3) = db1a(3)*b3 *dsum1+  b1*db3(3)*dsum1 + b1*b3 *ddsum1 + db1a(3)*b3b*dsum2 + b1*db3(6)*dsum2 + b1*b3b* &
             & ddsum2
-        !
         ! calculate the Vb5 derivatives:
         dvb5(1) = db1a(1)*fsum*exp7 + b1*dfsum*exp7 + b1*fsum*dexp7
         dvb5(2) = db1a(2)*fsum*exp7 + b1*dfsum*exp7 + b1*fsum*dexp7
         dvb5(3) = db1a(3)*fsum*exp7 + b1*dfsum*exp7 + b1*fsum*dexp7
-        !
         ! calculate the overall derivatives:
         dvbnda(1) = dvb1(1)+dvb2(1)+dvb3(1)+dvb4(1)+dvb5(1)
         dvbnda(2) = dvb1(2)+dvb2(2)+dvb3(2)+dvb4(2)+dvb5(2)
         dvbnda(3) = dvb1(3)+dvb2(3)+dvb3(3)+dvb4(3)+dvb5(3)
         vbnda     = vbnd(1)
-        !
         !---- now do the vbendb calculations --------
         b1      = b1b
         b12     = b1*b1
@@ -1027,7 +963,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         vb(2,4) = b1*b3*dsum1 + b1*b3b*dsum2
         vb(2,5) = b1* fsum  *exp7
         vbnd(2) = vb(2,1)+vb(2,2)+vb(2,3)+vb(2,4)+vb(2,5)
-        !
         dasum   = g12+2.d0*g13*r
         dbsum   = 2.d0* g21*b1  + 3.d0* g22*b12 +4.d0* g23*b13 + 5.d0* g24*b14
         ddsum1  = g41*dexp1 +  g42*dexp2
@@ -1036,16 +971,13 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dvb1(1) = db1b(1)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
         dvb1(2) = db1b(2)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
         dvb1(3) = db1b(3)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
-        !
         dvb2(1) = dbsum*db1b(1)*exp2 + bsum*dexp2
         dvb2(2) = dbsum*db1b(2)*exp2 + bsum*dexp2
         dvb2(3) = dbsum*db1b(3)*exp2 + bsum*dexp2
-        !
         ! calculate the Vb3 derivatives:
         dvb3(1) = db2(1)*csum + b2*(  g31*db1b(1)*exp1 +  g31*b1*dexp1 +2.d0* g32*b1*db1b(1)*exp2 +  g32*b12*dexp2)
         dvb3(2) = db2(2)*csum + b2*(  g31*db1b(2)*exp1 +  g31*b1*dexp1 +2.d0* g32*b1*db1b(2)*exp2 +  g32*b12*dexp2)
         dvb3(3) = db2(3)*csum + b2*(  g31*db1b(3)*exp1 +  g31*b1*dexp1 +2.d0* g32*b1*db1b(3)*exp2 +  g32*b12*dexp2)
-        !
         ! calculate the Vb4 derivatives (may 27/90):
         dvb4(1) = db1b(1)*b3 *dsum1+  b1*db3(1)*dsum1 + b1*b3 *ddsum1 + db1b(1)*b3b*dsum2 + b1*db3(4)*dsum2 + b1*b3b* &
             & ddsum2
@@ -1053,18 +985,15 @@ module chempotpy_h3_gen_bkmp_1991_pes
             & ddsum2
         dvb4(3) = db1b(3)*b3 *dsum1+  b1*db3(3)*dsum1 + b1*b3 *ddsum1 + db1b(3)*b3b*dsum2 + b1*db3(6)*dsum2 + b1*b3b* &
             & ddsum2
-        !
         ! calculate the Vb5 derivatives:
         dvb5(1) = db1b(1)*fsum*exp7 + b1*dfsum*exp7 + b1*fsum*dexp7
         dvb5(2) = db1b(2)*fsum*exp7 + b1*dfsum*exp7 + b1*fsum*dexp7
         dvb5(3) = db1b(3)*fsum*exp7 + b1*dfsum*exp7 + b1*fsum*dexp7
-        !
         ! calculate the overall derivatives:
         dvbndb(1) = dvb1(1)+dvb2(1)+dvb3(1)+dvb4(1)+dvb5(1)
         dvbndb(2) = dvb1(2)+dvb2(2)+dvb3(2)+dvb4(2)+dvb5(2)
         dvbndb(3) = dvb1(3)+dvb2(3)+dvb3(3)+dvb4(3)+dvb5(3)
         vbndb     = vbnd(2)
-        !
         !  now calculate the Cbend correction terms:
         !  Cbnda uses the B1a formula and Cbndb uses the B1b formula
         if( icompc .eq. 0 ) return
@@ -1123,11 +1052,9 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcb1(1) = db1a(1)*asum*exp1/p + b1*dasum*exp1/p +b1*asum*dexp1/p - b1*asum*exp1*dp(1)/psq
         dcb1(2) = db1a(2)*asum*exp1/p + b1*dasum*exp1/p +b1*asum*dexp1/p - b1*asum*exp1*dp(2)/psq
         dcb1(3) = db1a(3)*asum*exp1/p + b1*dasum*exp1/p +b1*asum*dexp1/p - b1*asum*exp1*dp(3)/psq
-        !
         dcb2(1) = dbsum*db1a(1)*exp2 + bsum*dexp2
         dcb2(2) = dbsum*db1a(2)*exp2 + bsum*dexp2
         dcb2(3) = dbsum*db1a(3)*exp2 + bsum*dexp2
-        !
         dcb3(1) = db2(1)*csum + b2*( c31*db1a(1)*exp1 +c31*b1*dexp1 +c32 *2.d0*b1*db1a(1)*exp2 + c32 *b12*dexp2 )
         dcb3(2) = db2(2)*csum + b2*( c31 *db1a(2)*exp1 +c31 *b1*dexp1 +c32 *2.d0*b1*db1a(2)*exp2 + c32 *b12*dexp2 )
         dcb3(3) = db2(3)*csum + b2*( c31 *db1a(3)*exp1 +c31 *b1*dexp1 +c32 *2.d0*b1*db1a(3)*exp2 + c32 *b12*dexp2 )
@@ -1139,14 +1066,12 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcb4(3) = db1a(3)*b3 *dsum1 + b1*db3(3)*dsum1 + b1*b3 *ddsum1 + db1a(3)*b3b*dsum2 + b1*db3(6)*dsum2 + b1*b3b* &
             & ddsum2
         !          dCb5 equations may 27/90: (corrected jun01)
-        dcb5(1) = db1a(1)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(1)/psq
-        dcb5(2) = db1a(2)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(2)/psq
-        dcb5(3) = db1a(3)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(3)/psq
-        !
-        dcb6(1) = db1a(1)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb6(2) = db1a(2)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb6(3) = db1a(3)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        !
+        dcb5(1)     = db1a(1)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(1)/psq
+        dcb5(2)     = db1a(2)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(2)/psq
+        dcb5(3)     = db1a(3)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(3)/psq
+        dcb6(1)     = db1a(1)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb6(2)     = db1a(2)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb6(3)     = db1a(3)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
         dcb7(1)     = db1a(1)*aasum*exp2 + b1*daasum*dp(1)*exp2 + b1* aasum*dexp2
         dcb7(2)     = db1a(2)*aasum*exp2 + b1*daasum*dp(2)*exp2 + b1* aasum*dexp2
         dcb7(3)     = db1a(3)*aasum*exp2 + b1*daasum*dp(3)*exp2 + b1* aasum*dexp2
@@ -1156,7 +1081,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcbnds(1,1) = dcb1(1) +dcb2(1) +dcb3(1) +dcb4(1) +dcb5(1) +dcb6(1) +dcb7(1) +dcb8(1)
         dcbnds(1,2) = dcb1(2) +dcb2(2) +dcb3(2) +dcb4(2) +dcb5(2) +dcb6(2) +dcb7(2) +dcb8(2)
         dcbnds(1,3) = dcb1(3) +dcb2(3) +dcb3(3) +dcb4(3) +dcb5(3) +dcb6(3) +dcb7(3) +dcb8(3)
-        !
         ! ----- calculate the Cbndb correction term ----------------
         b1       = b1b
         b12      = b1*b1
@@ -1193,11 +1117,9 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcb1(1) = db1b(1)*asum*exp1/p + b1*dasum*exp1/p +b1*asum*dexp1/p - b1*asum*exp1*dp(1)/psq
         dcb1(2) = db1b(2)*asum*exp1/p + b1*dasum*exp1/p +b1*asum*dexp1/p - b1*asum*exp1*dp(2)/psq
         dcb1(3) = db1b(3)*asum*exp1/p + b1*dasum*exp1/p +b1*asum*dexp1/p - b1*asum*exp1*dp(3)/psq
-        !
         dcb2(1) = dbsum*db1b(1)*exp2 + bsum*dexp2
         dcb2(2) = dbsum*db1b(2)*exp2 + bsum*dexp2
         dcb2(3) = dbsum*db1b(3)*exp2 + bsum*dexp2
-        !
         dcb3(1) = db2(1)*csum + b2*( d31 *db1b(1)*exp1 +d31 *b1*dexp1 +d32 *2.d0*b1*db1b(1)*exp2 + d32 *b12*dexp2 )
         dcb3(2) = db2(2)*csum + b2*( d31 *db1b(2)*exp1 +d31 *b1*dexp1 +d32 *2.d0*b1*db1b(2)*exp2 + d32 *b12*dexp2 )
         dcb3(3) = db2(3)*csum + b2*( d31 *db1b(3)*exp1 +d31 *b1*dexp1 +d32 *2.d0*b1*db1b(3)*exp2 + d32 *b12*dexp2 )
@@ -1209,14 +1131,12 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcb4(3) = db1b(3)*b3 *dsum1 + b1*db3(3)*dsum1 + b1*b3 *ddsum1 + db1b(3)*b3b*dsum2 + b1*db3(6)*dsum2 + b1*b3b* &
             & ddsum2
         !          dCb5 equations may 27/90:
-        dcb5(1) = db1b(1)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(1)/psq
-        dcb5(2) = db1b(2)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(2)/psq
-        dcb5(3) = db1b(3)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(3)/psq
-        !
-        dcb6(1) = db1b(1)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb6(2) = db1b(2)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb6(3) = db1b(3)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        !
+        dcb5(1)     = db1b(1)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(1)/psq
+        dcb5(2)     = db1b(2)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(2)/psq
+        dcb5(3)     = db1b(3)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(3)/psq
+        dcb6(1)     = db1b(1)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb6(2)     = db1b(2)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb6(3)     = db1b(3)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
         dcb7(1)     = db1b(1)*aasum*exp2 + b1*daasum*dp(1)*exp2 + b1* aasum*dexp2
         dcb7(2)     = db1b(2)*aasum*exp2 + b1*daasum*dp(2)*exp2 + b1* aasum*dexp2
         dcb7(3)     = db1b(3)*aasum*exp2 + b1*daasum*dp(3)*exp2 + b1* aasum*dexp2
@@ -1226,7 +1146,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcbnds(2,1) = dcb1(1) +dcb2(1) +dcb3(1) +dcb4(1) +dcb5(1) +dcb6(1) +dcb7(1) +dcb8(1)
         dcbnds(2,2) = dcb1(2) +dcb2(2) +dcb3(2) +dcb4(2) +dcb5(2) +dcb6(2) +dcb7(2) +dcb8(2)
         dcbnds(2,3) = dcb1(3) +dcb2(3) +dcb3(3) +dcb4(3) +dcb5(3) +dcb6(3) +dcb7(3) +dcb8(3)
-        !
         !  calculate the total derivative from the pieces:
         dcbnda(1) = dt(1) * cbnds(1)    + sumt * dcbnds(1,1)
         dcbndb(1) = dt(1) * cbnds(2)    + sumt * dcbnds(2,1)
@@ -1272,10 +1191,9 @@ module chempotpy_h3_gen_bkmp_1991_pes
         !d        write(7,*)
         !d     end if
     end subroutine vbcb
-    !
 end module chempotpy_h3_gen_bkmp_1991_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose H3_GEN_BKMP_1991 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_h3_gen_bkmp_1991_pes, only: evaluate
     implicit none

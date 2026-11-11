@@ -19,13 +19,15 @@ module nnparam
     double precision, parameter   :: vpescut = 6.d0 ! eV
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement HO3_PIPNN, a potential energy surface for HO3.
 module chempotpy_ho3_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the HO3_PIPNN potential energy surface for HO3.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
             & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
@@ -72,7 +74,7 @@ module chempotpy_ho3_pipnn_pes
     end subroutine evaluate
 end module chempotpy_ho3_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose HO3_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_ho3_pipnn_pes, only: evaluate
     implicit none
@@ -418,9 +420,9 @@ function tranfun( x, ifunc )
     double precision :: tranfun, x
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end
@@ -460,7 +462,6 @@ end subroutine before_vpes
 !This program used to generate PIPs for molecule of A3B1 type
 !up to 3rd order.
 !------>
-
 !> @brief Evaluate bemsav.
 subroutine bemsav( x, p )
     implicit none

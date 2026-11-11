@@ -5,21 +5,15 @@
 !   Number of bodies:              4
 !   Number of electronic surfaces: 3
 !   Interface:                     Section-2
-!
 !   References:  Yinan Shu, Joanna Kryven, Antonio Gustavo Sampaio de Oliveira Filho,
 !                Steven L. Mielke, Linyao Zhang, Guo-Liang Song, Shaohong L. Li,
 !                Rubén Meana-Pañeda, Bina Fu, Joel M. Bowman, and Donald G. Truhlar
 !                to be published
-!
 !   Notes:    -PES of OH3
 !             -Including diabatic states, diabatic couplings, and transformed adiabatic states
-!
-
 ! PES program for OH3
-!
 ! Authors: Yinan Shu, Antonio Gustavo Sampaio de Oliveira Filho
 ! Dec. 2018
-!
 ! Reference for this potential energy surface:
 !   "Direct  Diabatization and Analytic Representation of Coupled
 !    Potential Energy Surfaces and Couplings for the Reactive
@@ -28,9 +22,6 @@
 !      Steven L. Mielke, Guo-Liang Song, Shaohong L. Li, Rubén Meana-Pañeda,
 !      Bina Fu, Joel Bowman, and Donald G. Truhlar
 !   to be published
-!
-
-!===========================================================================
 ! *def oh3_pes
 !  1. Main PES program for calculating:
 !     energies and gradients for diabatic states and diabatic couplings
@@ -40,7 +31,6 @@
 !     the format of ****.xyz should be a standard xyz format that is readbale
 !     by Molden with 3 hydrogen atoms first, the oxygen at last, for example:
 !     4
-!
 !     H  X Y Z
 !     H  X Y Z
 !     H  X Y Z
@@ -55,9 +45,7 @@
 !     u(1,2) u(1,3) u(2,3)
 !     a(1)   a(2)   a(3)
 !  4. The zero of energy is: -76.80042447 hartree
-!
 !  ==========================definition of variables========================
-!
 !  4. xyz: the xyz coordinate
 !          unit: in angstroms
 !          xyz is a 4 by 3 matrix
@@ -86,15 +74,16 @@
 !          "f(:,:,i,j)" is the non-adiabatic coupling of state i and j
 !          f(:,:,i,j)=-f(:,:,j,i), and f(:,:,i,i)=0
 !  10. rv: the diabatic to adiabatic rotation matrix
-!===========================================================================
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement OH3_PIP_FFW1_2019, a potential energy surface for OH3.
 module chempotpy_oh3_pip_ffw1_2019_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the OH3_PIP_FFW1_2019 potential energy surface for OH3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
         implicit none
@@ -221,7 +210,7 @@ module chempotpy_oh3_pip_ffw1_2019_pes
     end subroutine evaluate
 end module chempotpy_oh3_pip_ffw1_2019_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose OH3_PIP_FFW1_2019 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_oh3_pip_ffw1_2019_pes, only: evaluate
     implicit none
@@ -235,16 +224,16 @@ subroutine pes( x, igrad, p, g, d )
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
 
-!===========================================================================
 ! *def u11_prepot_8
 ! subtoutine of computing u11 and gradient of u11
-!===========================================================================
 !> @brief Evaluate u11_prepot_8.
 module chempotpy_oh3_pip_ffw1_2019_u11_pot_8_legacy_state_a74f07e5
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( xyz, v, dxyz, initialize_only )
         implicit none
@@ -868,16 +857,16 @@ subroutine u11_pot_8( xyz, v, dxyz )
     call dispatch(xyz=xyz, v=v, dxyz=dxyz, initialize_only=.false.)
 end subroutine u11_pot_8
 
-!===========================================================================
 ! *def u22_prepot_8
 ! subtoutine of computing u11 and gradient of u11
-!===========================================================================
 !> @brief Evaluate u22_prepot_8.
 module chempotpy_oh3_pip_ffw1_2019_u22_pot_8_legacy_state_a74f07e5
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( xyz, v, dxyz, initialize_only )
         implicit none
@@ -1507,16 +1496,16 @@ subroutine u22_pot_8( xyz, v, dxyz )
     call dispatch(xyz=xyz, v=v, dxyz=dxyz, initialize_only=.false.)
 end subroutine u22_pot_8
 
-!===========================================================================
 ! *def u11_prepot_8
 ! subtoutine of computing u11 and gradient of u11
-!===========================================================================
 !> @brief Evaluate u33_prepot_8.
 module chempotpy_oh3_pip_ffw1_2019_u33_pot_8_legacy_state_a74f07e5
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( xyz, v, dxyz, initialize_only )
         implicit none
@@ -2387,10 +2376,8 @@ double precision function grad_ohstar( r )
     grad_ohstar = gfs*(vsr - vlr) + fs*gsr + (1.0 - fs)*glr
 end function grad_ohstar
 
-!===========================================================================
 ! *def ev_pol_con_8(x,q)
 ! subtoutine of evaluating polynomials at 8th order
-!===========================================================================
 !> @brief Evaluate ev_pol_con_8.
 subroutine ev_pol_con_8( x, p )
     implicit none
@@ -3143,10 +3130,8 @@ subroutine ev_pol_con_8( x, p )
     p(546) = x2*x4**7+x1*x4**7+x2**7*x4+x1**7*x4+x1*x2**7+x1**7*x2
 end subroutine ev_pol_con_8
 
-!===========================================================================
 ! *def grad_ev_pol_con_8(x,dpdx1,dpdx2,dpdx3,dpdx4,dpdx5,dpdx6)
 ! subtoutine of evaluating polynomials gradient at 8th order
-!===========================================================================
 !> @brief Evaluate grad_ev_pol_con_8.
 subroutine grad_ev_pol_con_8( x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6 )
     implicit none
@@ -6621,16 +6606,16 @@ subroutine grad_ev_pol_con_8( x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6 )
     dpdx6(546) = 0
 end subroutine grad_ev_pol_con_8
 
-!===========================================================================
 ! *def u12_order10
 ! subtoutine of computing u12
-!===========================================================================
 !> @brief Evaluate u12_order10.
 module chempotpy_oh3_pip_ffw1_2019_u12_dc_10_legacy_state_a74f07e5
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( xyz, v, s, initialize_only )
         implicit none
@@ -8006,16 +7991,16 @@ subroutine u12_dc_10( xyz, v, s )
     call dispatch(xyz=xyz, v=v, s=s, initialize_only=.false.)
 end subroutine u12_dc_10
 
-!===========================================================================
 ! *def u13_order12
 ! subtoutine of computing u13
-!===========================================================================
 !> @brief Evaluate u13_order12.
 module chempotpy_oh3_pip_ffw1_2019_u13_dc_12_legacy_state_a74f07e5
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( xyz, v, initialize_only )
         implicit none
@@ -11145,16 +11130,16 @@ subroutine u13_dc_12( xyz, v )
     call dispatch(xyz=xyz, v=v, initialize_only=.false.)
 end subroutine u13_dc_12
 
-!===========================================================================
 ! *def u23_order10
 ! subtoutine of computing u23
-!===========================================================================
 !> @brief Evaluate u23_order10.
 module chempotpy_oh3_pip_ffw1_2019_u23_dc_10_legacy_state_a74f07e5
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( xyz, v, s, initialize_only )
         implicit none
@@ -12536,10 +12521,8 @@ subroutine u23_dc_10( xyz, v, s )
     call dispatch(xyz=xyz, v=v, s=s, initialize_only=.false.)
 end subroutine u23_dc_10
 
-!===========================================================================
 ! *def ev_pol_con_12(x,q)
 ! subtoutine of evaluating polynomials at 12th order
-!===========================================================================
 !> @brief Evaluate ev_pol_con_12.
 subroutine ev_pol_con_12( x, q )
     implicit none
@@ -19058,10 +19041,8 @@ subroutine ev_pol_con_12( x, q )
     enddo
 end subroutine ev_pol_con_12
 
-!===========================================================================
 ! *def ev_pol_con_10(x,q)
 ! subtoutine of evaluating polynomials at 10th order
-!===========================================================================
 !> @brief Evaluate ev_pol_con_10.
 subroutine ev_pol_con_10( x, q )
     implicit none
@@ -21918,13 +21899,11 @@ subroutine ev_pol_con_10( x, q )
     enddo
 end subroutine ev_pol_con_10
 
-!===========================================================================
 ! *def DSYEVJ3(A, Q, W)
 !  subroutine of diagonalizing a 3 by 3 matrix
 !  A is the input matirx
 !  Q is the eigenvector matrix
 !  W is the eigenvalue
-!===========================================================================
 !> @brief Evaluate DSYEVJ3.
 subroutine dsyevj3( a, q, w )
     implicit none
@@ -21972,7 +21951,7 @@ subroutine dsyevj3( a, q, w )
                 g = 100.0d0 * ( abs(a(x,y)) )
                 if( i .gt. 4 .and. abs(w(x)) + g .eq. abs(w(x)) .and. abs(w(y)) + g .eq. abs(w(y)) )then
                     a(x,y) = 0.0d0
-                else if( abs(a(x,y)) .gt. thresh )then
+                elseif( abs(a(x,y)) .gt. thresh )then
                     h = w(y) - w(x)
                     if( abs(h) + g .eq. abs(h) )then
                         t = a(x,y) / h
@@ -22017,12 +21996,10 @@ subroutine dsyevj3( a, q, w )
     print *, "DSYEVJ3: No convergence."
 end subroutine
 
-!===========================================================================
 ! *def order(a,rv)
 !  subroutine of ordering three eigenstates
 !  a is the eigenvalue
 !  rv is the eigenvector
-!===========================================================================
 !> @brief Evaluate order.
 subroutine order( a, rv )
     implicit none
@@ -22128,14 +22105,12 @@ subroutine order( a, rv )
     a(3) = s2
 end subroutine
 
-!===========================================================================
 ! *def u12_dvdx(xyz,u12,s12,du12dx)
 !  main subtoutine of evaluating derivative of u12 w.r.t. the xyz coordinates
 !  xyz is the coordinate
 !  u12 is u12
 !  s12 is u12 devided by the hyperbolic function
 !  du12dx is the gradient of u12
-!===========================================================================
 !> @brief Evaluate u12_dvdx.
 subroutine u12_dvdx( xyz, u12, s12, du12dx )
     use chempotpy_geometry, only: all_pair_distances_and_jacobian, flatten_cartesian_coordinates, &
@@ -22192,13 +22167,11 @@ subroutine u12_dvdx( xyz, u12, s12, du12dx )
     enddo
 end subroutine u12_dvdx
 
-!===========================================================================
 ! *def EvU12O10dVdR(coord,r,dvdr)
 !  subtoutine of evaluating derivative of u12 w.r.t. the 6 nuclear distances
 !  coord is the xyz coordinate
 !  r is the nuclear distances
 !  dvdr is the derivative of u12 w.r.t. the 6 nuclear distances
-!===========================================================================
 !> @brief Evaluate EvU12O10dVdR.
 subroutine evu12o10dvdr( coord, r, dvdr )
     implicit none
@@ -27929,13 +27902,11 @@ subroutine evu12o10dvdr( coord, r, dvdr )
     enddo
 end subroutine evu12o10dvdr
 
-!===========================================================================
 ! *def EvdRdX(coord,r,dvdr)
 !  subtoutine of evaluating derivative of 6 nuclear distances w.r.t. xyz
 !  coord is the xyz coordinate
 !  r is the nuclear distances
 !  drdx is the derivative of 6 nuclear distances w.r.t. xyz
-!===========================================================================
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( coord, r, drdx )
     use chempotpy_geometry, only: all_pair_distance_jacobian
@@ -27945,12 +27916,10 @@ subroutine evdrdx( coord, r, drdx )
     call all_pair_distance_jacobian(coord, r, drdx)
 end subroutine evdrdx
 
-!===========================================================================
 ! *def Num_dtdx(xyz,dtdx)
 !  subtoutine of evaluating derivative of hyperbolic function
 !  coord is the xyz coordinate
 !  dtdx is the derivative of hyperbolic function
-!===========================================================================
 !> @brief Evaluate Num_dtdx.
 subroutine num_dtdx( xyz, dtdx )
     implicit none
@@ -27980,12 +27949,10 @@ subroutine num_dtdx( xyz, dtdx )
     enddo
 end subroutine num_dtdx
 
-!===========================================================================
 ! *def P_volume(xyz,volume)
 !  subtoutine of evaluating hyperbolic function
 !  coord is the xyz coordinate
 !  volume is the hyperbolic function
-!===========================================================================
 !> @brief Evaluate P_volume.
 subroutine p_volume( xyz, volume )
     implicit none
@@ -28008,13 +27975,11 @@ subroutine p_volume( xyz, volume )
     volume = tanh(15.4*volume)
 end subroutine p_volume
 
-!===========================================================================
 ! *def u13_dvdx(xyz,u13,du13dx)
 !  main subtoutine of evaluating derivative of u13 w.r.t. the xyz coordinates
 !  xyz is the coordinate
 !  u13 is u13
 !  du13dx is the gradient of u13
-!===========================================================================
 !> @brief Evaluate u13_dvdx.
 subroutine u13_dvdx( xyz, u13, du13dx )
     use chempotpy_geometry, only: all_pair_distances_and_jacobian, flatten_cartesian_coordinates, &
@@ -28059,13 +28024,11 @@ subroutine u13_dvdx( xyz, u13, du13dx )
     enddo
 end subroutine u13_dvdx
 
-!===========================================================================
 ! *def EvU13O10dVdR(coord,r,dvdr)
 !  subtoutine of evaluating derivative of u12 w.r.t. the 6 nuclear distances
 !  coord is the xyz coordinate
 !  r is the nuclear distances
 !  dvdr is the derivative of u13 w.r.t. the 6 nuclear distances
-!===========================================================================
 !> @brief Evaluate EvU13O10dVdR.
 subroutine evu13o10dvdr( coord, r, dvdr )
     implicit none
@@ -41121,14 +41084,12 @@ subroutine evu13o10dvdr( coord, r, dvdr )
     enddo
 end subroutine evu13o10dvdr
 
-!===========================================================================
 ! *def u23_dvdx(xyz,u23,s23,du23dx)
 !  main subtoutine of evaluating derivative of u23 w.r.t. the xyz coordinates
 !  xyz is the coordinate
 !  u23 is u23
 !  s23 is u23 devided by the hyperbolic function
 !  du23dx is the gradient of u23
-!===========================================================================
 !> @brief Evaluate u23_dvdx.
 subroutine u23_dvdx( xyz, u23, s23, du23dx )
     use chempotpy_geometry, only: all_pair_distances_and_jacobian, flatten_cartesian_coordinates, &
@@ -41185,13 +41146,11 @@ subroutine u23_dvdx( xyz, u23, s23, du23dx )
     enddo
 end subroutine u23_dvdx
 
-!===========================================================================
 ! *def EvU23O10dVdR(coord,r,dvdr)
 !  subtoutine of evaluating derivative of u23 w.r.t. the 6 nuclear distances
 !  coord is the xyz coordinate
 !  r is the nuclear distances
 !  dvdr is the derivative of u23 w.r.t. the 6 nuclear distances
-!===========================================================================
 !> @brief Evaluate EvU23O10dVdR.
 subroutine evu23o10dvdr( coord, r, dvdr )
     implicit none

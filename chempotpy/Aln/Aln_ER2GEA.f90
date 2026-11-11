@@ -1,10 +1,34 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Extended Rydberg plus generalized embedded-atom
+!   Common name:                   ER2+GEA
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  The parameters
+!           for this PEF have been parameterized against a data set of
+!           aluminum cluster energies and bulk data.
+!           This PEF has a cutoff at 6.5 angstroms.
+!  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potentials Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!                    of the system
+!  natom   --- number of atoms in the system
+!  maxatom --- maximal number of atoms
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_er2gea_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,40 +58,13 @@ module chempotpy_aln_er2gea_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_ER2GEA potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Extended Rydberg plus generalized embedded-atom
-        !   Common name:                   ER2+GEA
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  The parameters
-        !           for this PEF have been parameterized against a data set of
-        !           aluminum cluster energies and bulk data.
-        !           This PEF has a cutoff at 6.5 angstroms.
-        !
-        !  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !                    of the system
-        !  natom   --- number of atoms in the system
-        !  maxatom --- maximal number of atoms
         implicit none
-        double precision :: a1, a2, a3, au2, au23, b, bb, bu2, c, co, co3, de, dx, &
-            & dy, dz, ee, en, ff, fu2, poly, r, re, rho, rr, u2, ud, ud2, v, x, y, z
+        double precision :: a1, a2, a3, au2, au23, b, bb, bu2, c(4), co, co3, de, dx, dy, dz, ee, en, ff, fu2(maxatom,maxatom), &
+            & poly, r(maxatom,maxatom), re, rho, rr, u2, ud, ud2, v, x(maxatom), y(maxatom), z(maxatom)
         integer :: i, j, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom)
-        dimension fu2(maxatom,maxatom), r(maxatom,maxatom), c(4)
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
         de   = 1.71013678553981441/autoev
@@ -112,7 +109,7 @@ module chempotpy_aln_er2gea_pes
     end subroutine pot
 end module chempotpy_aln_er2gea_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_ER2GEA through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_er2gea_pes, only: evaluate

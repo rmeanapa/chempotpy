@@ -17,7 +17,6 @@ class InternalLinearAlgebraTests( unittest.TestCase ):
             repository
             / "chempotpy"
             / "core"
-            / "fortran"
             / "chempotpy_dsyev.f90"
         )
         driver_source = """

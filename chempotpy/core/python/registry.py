@@ -8,6 +8,7 @@ import re
 from typing import Dict, Iterable, List, Optional, Tuple
 
 SOURCE_SUFFIXES = {".f", ".f90", ".F", ".F90"}
+NON_SYSTEM_DIRECTORIES = {"core"}
 ENTRY_POINT_PATTERN = re.compile(
     r"^\s*(?:recursive\s+)?subroutine\s+(pes|dpem)\s*\(",
     re.IGNORECASE | re.MULTILINE,
@@ -37,12 +38,14 @@ def discover_surface_sources(
 ) -> Tuple[SurfaceSource, ...]:
     """Return every visible Fortran PES source in deterministic order."""
 
-    root = package_root or Path(__file__).resolve().parents[1]
+    root = package_root or Path(__file__).resolve().parents[2]
     sources = []
     for system_directory in sorted(root.iterdir()):
         if not system_directory.is_dir():
             continue
         if system_directory.name.startswith((".", "_")):
+            continue
+        if system_directory.name in NON_SYSTEM_DIRECTORIES:
             continue
         if not (system_directory / "__init__.py").is_file():
             continue

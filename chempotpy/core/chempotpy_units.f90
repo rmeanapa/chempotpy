@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Provide canonical unit conversions for new atomic-unit interfaces.
 module chempotpy_units
     use chempotpy_kinds, only: real64

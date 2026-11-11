@@ -5,22 +5,17 @@
 !   Number of bodies:              3
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:: Z. Varga, Y. Liu, J. Li, Y. Paukku, H. Guo, and
 !                D. G. Truhlar, in preparation
-!
 !   Notes:    -Sextet A' (6Ap) surface
 !             -Neural network fit
 !             -the code requires files weights.txt and biases.txt
-!
 !     O1--O2
-!
 !     N3
-!
-
 !                         PIP-NN PES for NO2(6A')
 !-->  program to get potential energy for a given geometry after NN fitting
 !-->  global variables are declared in this module
+
 module nnparam
     implicit none
     private
@@ -41,13 +36,15 @@ module nnparam
         &pdel3a(:, :), pavg3a(:, :)
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement NO2_6Ap_PIPNN, a potential energy surface for NO2.
 module chempotpy_no2_6ap_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the NO2_6Ap_PIPNN potential energy surface for NO2.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam, only: alpha, bias3a, bohr, ifunc3, natom, nbond, nhid3, ninput, nlayer3, nodemax3, &
             & nodes3a, noutput, npes, nscale, nwe3, pavg3a, pdel3a, pi, radian, weight3a
@@ -93,7 +90,7 @@ module chempotpy_no2_6ap_pipnn_pes
     end subroutine evaluate
 end module chempotpy_no2_6ap_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose NO2_6Ap_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_no2_6ap_pipnn_pes, only: evaluate
     implicit none
@@ -313,9 +310,9 @@ function tranfun( x, ifunc )
     double precision :: tranfun, x
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end function tranfun
@@ -336,11 +333,9 @@ end function logsig
 !      real*8 dvdr(1:nbond),x(1:natom*3),drdx(1:nbond,1:natom*3)
 !      real*8 txinput(1:ninput),dvdg(1:ninput,npes),p(0:ninput)
 !      real*8 dpdr(1:nbond,0:ninput),dvdxa(1:natom*3)
-!      ! ::::::::::::::::::::
 !      do i=1,3
 !       x((3*(i-1)+1):(3*(i-1)+3))=xcart(:,i)
 !      enddo
-!
 !      k=0
 !      do i=1,2
 !       do j=i+1,3
@@ -352,28 +347,21 @@ end function logsig
 !       enddo
 !      enddo
 !      if(k.ne.3)stop "error"
-!
 !      call bemsav(xmorse,m,p)
-!
 !      do j=1,12
 !      txinput(j)=p(j)
 !      enddo
-!
 !      call pot3a(txinput,vpes,dvdg,ndriv)
-!
 !      v=0d0
 !      do i=1,npes
 !       v=v+vpes(i)
 !      enddo
-!
 !      v=v/npes
-!
 !      if(ndriv.eq.1)then
 !       call evdvdr(r,c,m,p,dpdr)
 !       call evdrdx(xcart,r,x,drdx)
 !       call evdvdx(dvdg,dpdr,drdx,dvdxa,dvdx)
 !      endif
-!
 !      return
 !      end subroutine evvdvdx
 !> @brief Evaluate bemsav.
@@ -483,7 +471,6 @@ subroutine evdmsdr( r, dmsdr )
     implicit none
     integer          :: i, j
     double precision :: dmsdr(1:nbond,1:nbond), r(1:nbond)
-    ! ::::::::::::::::::::
     dmsdr(:,:) = 0d0
     !Morse term ms = exp(-r/alpha)
     ! dmsdr(i,j)=0  i!=j

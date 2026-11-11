@@ -1,10 +1,38 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Lennard-Jones plus Axilrod-Teller
+!   Common name:                   ErkVIII
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  For a recent
+!           discussion of this potential, see:
+!           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!           and D. G. Truhlar, "Analytic Potentials Energy Functions
+!           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  References: S. Erkoc, Docga(A1), 9, 203 (1985).
+!              S. Erkoc, Empirical Potential Energy Functions
+!                 Used in the Simulations of Materials Properties,
+!                 Annual Reviews of Computational Physics IX,
+!                 D. Stauffer, ed., World Scientific, Singapore 2001,
+!                 pp. 1-103.
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_erkviii_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,45 +62,15 @@ module chempotpy_aln_erkviii_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_ErkVIII potential.
     subroutine pot( x, y, z, v, natom, maxatom )
         use chempotpy_geometry, only: fill_distance_matrix
-        !   System:                        Aln
-        !   Functional form:               Lennard-Jones plus Axilrod-Teller
-        !   Common name:                   ErkVIII
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  For a recent
-        !           discussion of this potential, see:
-        !           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !           and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  References: S. Erkoc, Docga(A1), 9, 203 (1985).
-        !              S. Erkoc, Empirical Potential Energy Functions
-        !                 Used in the Simulations of Materials Properties,
-        !                 Annual Reviews of Computational Physics IX,
-        !                 D. Stauffer, ed., World Scientific, Singapore 2001,
-        !                 pp. 1-103.
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: a1, a2, arc1, arc2, b1, b2, bra, cot12, cot13, cot2, cot3, &
-            & cote1, cote2, cote3, dx, dy, dz, em, en, r, r0, rel, rr, rr1, rr2, rr3, u, uem, uen, v, v1, &
-            & w1, w2, war, x, y, z
+        double precision :: a1, a2, arc1, arc2, b1, b2, bra, cot12, cot13, cot2, cot3, cote1, cote2, cote3, dx, dy, dz, em, en, &
+            & r(maxatom,maxatom), r0, rel, rr, rr1, rr2, rr3, u, uem, uen, v, v1, w1, w2, war, x(maxatom), y(maxatom), &
+            & z(maxatom)
         integer :: i, j, m, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom), r(maxatom,maxatom)
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
         !  calculate and tabulate the distances between all atoms
@@ -130,17 +128,14 @@ module chempotpy_aln_erkviii_pes
         endif
         v = u+v1
     end subroutine pot
-    !
-    !
+
     !> @brief Evaluate scos for the Aln_ErkVIII potential.
     subroutine scos( i, j, m, x, y, z, r, natom, maxatom, cote1, cote2, cote3 )
         !  The subroutine calculates the cosines of the bound angles
         !  using scalar products of the position vectors of two
         !  atoms originating from the third atom.
-        !
         !  Units:
         !  coordinates - bohrs
-        !
         !  i,j,m   --- natural indices running from 1 to natom
         !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
         !              of the system
@@ -150,11 +145,10 @@ module chempotpy_aln_erkviii_pes
         !  cote1   --- cosine of the angle between bonds ij and im
         !  cote2   --- cosine of the angle between bonds ji and jm
         !  cote3   --- cosine of the angle between bonds mi and mj
-        !
         implicit none
-        double precision :: cote1, cote2, cote3, r, scalar1, scalar2, scalar3, x, y, z
+        double precision :: cote1, cote2, cote3, r(maxatom,maxatom), scalar1, scalar2, scalar3, x(maxatom), y(maxatom), &
+            & z(maxatom)
         integer          :: i, j, m, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom), r(maxatom,maxatom)
         !  calculate scalar products of the position vectors of two atoms
         !  originating from the third atom
         scalar1 = (x(j)-x(i))*(x(m)-x(i)) +(y(j)-y(i))*(y(m)-y(i)) +(z(j)-z(i))*(z(m)-z(i))
@@ -169,7 +163,7 @@ module chempotpy_aln_erkviii_pes
     end subroutine scos
 end module chempotpy_aln_erkviii_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_ErkVIII through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_erkviii_pes, only: evaluate

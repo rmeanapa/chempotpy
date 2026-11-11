@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Return a double-precision vector dot product through the BLAS ABI.
 function ddot( element_count, first, first_stride, second, second_stride ) &
         result(product)

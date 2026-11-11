@@ -16,13 +16,15 @@ module nnparam
     double precision, allocatable :: pdela(:), pavga(:)
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement CH4OCl_PIPNN, a potential energy surface for CH4OCl.
 module chempotpy_ch4ocl_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the CH4OCl_PIPNN potential energy surface for CH4OCl.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, nwe, pavga, pdela, pi, radian, vpesmin, weighta
@@ -64,7 +66,7 @@ module chempotpy_ch4ocl_pipnn_pes
     end subroutine evaluate
 end module chempotpy_ch4ocl_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose CH4OCl_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_ch4ocl_pipnn_pes, only: evaluate
     implicit none
@@ -210,9 +212,9 @@ function tranfun( x, ifunc )
     double precision :: tranfun, x
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+dexp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end
@@ -222,7 +224,6 @@ subroutine bemsav( xmorse, p )
     implicit none
     double precision, dimension(1:21), intent(in)::xmorse
     double precision, dimension(0:1104), intent(out)::p
-    ! ::::::::::::::::::::
     double precision, dimension(0:2000)::m
     call evmono(xmorse, m)
     call evpoly(m, p)

@@ -5,16 +5,11 @@
 !   Number of bodies:              3
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References: doi 10.1063/1.4983813
 !               Author:  Tapan K. Mankodi, Upendra V. Bhandarkar,
 !               Bhalchandra P. Puranik
-!
 !   Notes:
-!
 !   Data file: coeff_n3_o3.txt
-!
-
 ! Global Potential energy surface for O3 system using CASSCF+CASPT2     !
 ! Permutational Invariant Global Least Square fit           !
 ! Input Variable: Interatomic distance R1-R2-R3 in Angstrom     !
@@ -28,13 +23,15 @@
 ! Corresponding Address: tapan.mankodi@iitb.ac.in           !
 !            bhandarkar@iitb.ac.in              !
 
-!> @brief Own the complete implementation of this potential energy surface.
+!> @brief Implement O3_MBP_2017, a potential energy surface for O3.
 module chempotpy_o3_mbp_2017_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this PES through the modern module contract.
+
+    !> @brief Evaluate the O3_MBP_2017 potential energy surface for O3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry, only: cartesian_distance
         implicit none
@@ -62,6 +59,7 @@ module chempotpy_o3_mbp_2017_pes
             write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine
+
     !> @brief Evaluate o3.
     subroutine o3( v, rx, ry, rz )
         implicit none
@@ -91,6 +89,7 @@ module chempotpy_o3_mbp_2017_pes
                 & (indices(ii,1)))
         enddo
     end subroutine
+
     !> @brief Evaluate assign.
     subroutine assign( coeff, indices )
         implicit none
@@ -306,7 +305,7 @@ module chempotpy_o3_mbp_2017_pes
     end subroutine
 end module chempotpy_o3_mbp_2017_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose O3_MBP_2017 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_o3_mbp_2017_pes, only: evaluate
     implicit none

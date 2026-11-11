@@ -1,10 +1,34 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Lennard-Jones plus Axilrod-Teller
+!   Common name:                   deSPH/LJAT
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  For a recent
+!           discussion of this potential, see:
+!           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!           and D. G. Truhlar, "Analytic Potentials Energy Functions
+!           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  References: P. de Sainte Claire, G. H. Peslherbe, and W. L. Hase
+!              J. Phys. Chem., 99, 8147 (1995).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_desph_ljat_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,43 +58,16 @@ module chempotpy_aln_desph_ljat_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_deSPH_LJAT potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Lennard-Jones plus Axilrod-Teller
-        !   Common name:                   deSPH/LJAT
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  For a recent
-        !           discussion of this potential, see:
-        !           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !           and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  References: P. de Sainte Claire, G. H. Peslherbe, and W. L. Hase
-        !              J. Phys. Chem., 99, 8147 (1995).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: a, aa, b, c, co1, co2, co3, dx, dy, dz, rij, rim, &
-            & rjm, rr, sig, u2, u3, v, x, y, z
+        double precision :: a, aa, b, c, co1, co2, co3, dx, dy, dz, rij, rim, rjm, rr, sig, u2, u3, v, x(maxatom), y(maxatom), &
+            & z(maxatom)
         integer                     :: i, j, m, maxatom, natom
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
         double precision, parameter :: autokpm = 627.5095d0
-        dimension x(maxatom), y(maxatom), z(maxatom)
-        !
         !  calculate the potential energy
         ! in kJ/mol
         !      a = 2975343.77d0 / ((autoang**12) * autokpm)
@@ -121,19 +118,15 @@ module chempotpy_aln_desph_ljat_pes
         endif
         v = u2+u3
     end subroutine pot
-    !
-    !
-    !
+
     !> @brief Evaluate scos for the Aln_deSPH_LJAT potential.
     subroutine scos( i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, &
             & co1, co2, co3 )
         !  The subroutine calculates the cosines of the bound angles
         !  using scalar products of the position vectors of two
         !  atoms originating from the third atom.
-        !
         !  Units:
         !  coordinates - bohrs
-        !
         !  i,j,m   --- natural indices running from 1 to natom
         !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
         !              of the system
@@ -143,11 +136,9 @@ module chempotpy_aln_desph_ljat_pes
         !  co1     --- cosine of the angle between bonds ij and im
         !  co2     --- cosine of the angle between bonds ji and jm
         !  co3     --- cosine of the angle between bonds mi and mj
-        !
         implicit none
-        double precision :: co1, co2, co3, rij, rim, rjm, scalar1, scalar2, scalar3, x, y, z
+        double precision :: co1, co2, co3, rij, rim, rjm, scalar1, scalar2, scalar3, x(maxatom), y(maxatom), z(maxatom)
         integer          :: i, j, m, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom)
         !  calculate scalar products of the position vectors of two atoms
         !  originating from the third atom
         scalar1 = (x(j)-x(i))*(x(m)-x(i)) +(y(j)-y(i))*(y(m)-y(i)) +(z(j)-z(i))*(z(m)-z(i))
@@ -162,7 +153,7 @@ module chempotpy_aln_desph_ljat_pes
     end subroutine scos
 end module chempotpy_aln_desph_ljat_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_deSPH_LJAT through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_desph_ljat_pes, only: evaluate

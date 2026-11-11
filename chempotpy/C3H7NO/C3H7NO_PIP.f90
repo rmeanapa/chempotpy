@@ -1,38 +1,38 @@
 module pes_shell
+    use chempotpy_c3h7no_pip_parameters, only: coeff => pip_coefficients
     implicit none
     private
-    public :: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, g, &
-        & pes_init
-    double precision :: coeff(1:8040) ! change to number of coefficients
+    public :: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, g
     ! (size of c in bemsa.f90)
+
     contains
+
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)
         implicit none
         double precision, dimension(1:66)::x
         double precision, dimension(0:8039)::c
         double precision :: v
-        ! ::::::::::::::::::::
         double precision, dimension(0:8039)::p
         call bemsav(x, p)
         v = dot_product(p, c)
     end function emsav
+
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         implicit none
         double precision, dimension(1:66), intent(in)::x
         double precision, dimension(0:8039), intent(out)::p
-        ! ::::::::::::::::::::
         double precision, dimension(0:5402)::m
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
+
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
         implicit none
         double precision, dimension(1:66), intent(in)::x
         double precision, dimension(0:5402), intent(out)::m
-        !::::::::::::::::::::
         m(0)    = 1.0d0
         m(1)    = x(66)
         m(2)    = x(65)
@@ -5437,12 +5437,12 @@ module pes_shell
         m(5401) = m(62)*m(594)
         m(5402) = m(64)*m(594)
     end subroutine evmono
+
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
         implicit none
         double precision, dimension(0:5402), intent(in)::m
         double precision, dimension(0:8039), intent(out)::p
-        !::::::::::::::::::::
         p(0)   = m(0)
         p(1)   = m(1) + m(2) + m(3)
         p(2)   = m(4) + m(5) + m(6)
@@ -13728,6 +13728,7 @@ module pes_shell
         p(8038) = p(29)*p(567) - p(7930)
         p(8039) = p(30)*p(568) - p(8009)
     end subroutine evpoly
+
     !> @brief Evaluate demsav.
     function demsav( drdx, c, m, p, flag ) result(grad)
         implicit none
@@ -13737,11 +13738,11 @@ module pes_shell
         double precision, dimension(0:8039)::p
         double precision :: grad
         integer          :: flag
-        ! ::::::::::::::::::::
         double precision, dimension(0:8039)::dp
         call dbemsav(drdx, dp, m, p, flag)
         grad = dot_product(dp, c)
     end function demsav
+
     !> @brief Evaluate dbemsav.
     subroutine dbemsav( drdx, dp, m, p, flag )
         implicit none
@@ -13750,19 +13751,18 @@ module pes_shell
         double precision, dimension(0:5402), intent(in)::m
         double precision, dimension(0:8039), intent(in)::p
         integer :: flag
-        ! ::::::::::::::::::::
         double precision, dimension(0:5402)::dm
         call devmono(drdx, dm, m, flag)
         call devpoly(dm, p, dp)
     end subroutine dbemsav
+
     !> @brief Evaluate devmono.
     subroutine devmono( drdx, dm, m, flag )
         implicit none
         double precision, dimension(36, 66), intent(in) :: drdx
         double precision, dimension(0:5402), intent(out)::dm
         double precision, dimension(0:5402), intent(in)::m
-        integer :: flag
-        !::::::::::::::::::::
+        integer          :: flag
         double precision :: a
         a        = 2.d0
         dm(0)    = 0.0d0
@@ -19169,13 +19169,13 @@ module pes_shell
         dm(5401) = dm(62)*m(594) + m(62)*dm(594)
         dm(5402) = dm(64)*m(594) + m(64)*dm(594)
     end subroutine devmono
+
     !> @brief Evaluate devpoly.
     subroutine devpoly( dm, p, dp )
         implicit none
         double precision, dimension(0:5402), intent(in)::dm
         double precision, dimension(0:8039), intent(in)::p
         double precision, dimension(0:8039), intent(out)::dp
-        !::::::::::::::::::::
         dp(0)   = dm(0)
         dp(1)   = dm(1) + dm(2) + dm(3)
         dp(2)   = dm(4) + dm(5) + dm(6)
@@ -27474,31 +27474,12 @@ module pes_shell
         dp(8038) = dp(29)*p(567) + p(29)*dp(567) - dp(7930)
         dp(8039) = dp(30)*p(568) + p(30)*dp(568) - dp(8009)
     end subroutine devpoly
-    !==================================!
-    ! read the coefficients of the PES !
-    !==================================!
-    !> @brief Evaluate pes_init.
-    subroutine pes_init( path )
-        integer :: file_unit_10
-        !::::::::::::::::::
-        integer                         :: i
-        character(len=1024), intent(in) :: path
-        character(len=1024)             :: file_path1
-        file_path1 = trim(path)//"/C3H7NO/coeff.dat"
-        open(newunit=file_unit_10, file=file_path1, status='old')
-        do i=1, size(coeff)
-            read(file_unit_10, *) coeff(i)
-        enddo
-        close(file_unit_10)
-    end subroutine pes_init
-    !====================================!
+
     ! Function to evaluate the potential !
-    !====================================!
     !> @brief Evaluate f.
     function f( xyz )
         double precision, dimension(:, :), intent(in)::xyz
-        double precision :: f
-        !::::::::::::::::::::::::::::::
+        double precision                                             :: f
         double precision, dimension(size(xyz, 2)*(size(xyz, 2)-1)/2) :: x
         double precision, dimension(3)                               :: dr
         double precision                                             :: a0  ! the same as the fitting code
@@ -27517,15 +27498,13 @@ module pes_shell
         enddo
         f = emsav(x, coeff)
     end function f
-    !===========================!
+
     ! function to calculate the !
     ! analytical gradient       !
-    !===========================!
     !> @brief Evaluate g.
     function g( xyz )
         double precision, dimension(:, :), intent(in)::xyz
-        double precision, dimension(size(xyz, 2)*3) :: g
-        !::::::::::::::::::::
+        double precision, dimension(size(xyz, 2)*3)                                  :: g
         double precision, dimension(size(xyz, 2)*(size(xyz, 2)-1)/2)                 :: r, x
         double precision, dimension(3, size(xyz, 2)*(size(xyz, 2)-1)/2)              :: dr
         double precision, dimension(size(xyz, 2)*3, size(xyz, 2)*(size(xyz, 2)-1)/2) :: drdx
@@ -27558,31 +27537,32 @@ module pes_shell
     end function g
 end module pes_shell
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement C3H7NO_PIP, a potential energy surface for C3H7NO.
 module chempotpy_c3h7no_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
-    subroutine evaluate( x, igrad, path, potential, gradient_out, dvec )
+
+    !> @brief Evaluate the C3H7NO_PIP potential energy surface for C3H7NO.
+    subroutine evaluate( x, igrad, potential, gradient_out, dvec )
         use pes_shell, only: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, &
-            & g, pes_init
+            & g
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
         ! number of electronic state
-        integer, parameter              :: nstates = 1
-        integer, parameter              :: natoms  = 12
-        integer, intent(in)             :: igrad
-        character(len=1024), intent(in) :: path
-        double precision, intent(in)    :: x(natoms,3)
-        double precision, intent(out)   :: potential(nstates)
-        double precision, intent(out)   :: gradient_out(nstates,natoms,3)
-        double precision, intent(out)   :: dvec(nstates,nstates,natoms,3)
-        double precision                :: tx(3,natoms)
-        double precision                :: energy
-        double precision                :: grad(3*natoms)
-        integer                         :: iatom, idir, j, istate
+        integer, parameter            :: nstates = 1
+        integer, parameter            :: natoms  = 12
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: potential(nstates)
+        double precision, intent(out) :: gradient_out(nstates,natoms,3)
+        double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
+        double precision              :: tx(3,natoms)
+        double precision              :: energy
+        double precision              :: grad(3*natoms)
+        integer                       :: iatom, idir, j, istate
         !initialize
         energy = 0.d0; gradient_out = 0.d0; dvec = 0.d0
         do iatom=1, natoms
@@ -27593,13 +27573,11 @@ module chempotpy_c3h7no_pip_pes
         ! zero of energy: 247.471007349006 a.u.
         ! is taken from coeff.dat, use the biase as zero of energy
         if( igrad == 0 )then
-            call pes_init(path)
             energy = f(tx)
             do istate=1, nstates
                 potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
-            call pes_init(path)
+        elseif( igrad == 1 )then
             energy = f(tx)
             do istate=1, nstates
                 potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
@@ -27619,7 +27597,7 @@ module chempotpy_c3h7no_pip_pes
     end subroutine evaluate
 end module chempotpy_c3h7no_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose C3H7NO_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, potential, gradient_out, dvec )
     use chempotpy_c3h7no_pip_pes, only: evaluate
     implicit none
@@ -27631,5 +27609,5 @@ subroutine pes( x, igrad, path, potential, gradient_out, dvec )
     double precision, intent(out)   :: potential(nstates)
     double precision, intent(out)   :: gradient_out(nstates,natoms,3)
     double precision, intent(out)   :: dvec(nstates,nstates,natoms,3)
-    call evaluate(x, igrad, path, potential, gradient_out, dvec)
+    call evaluate(x, igrad, potential, gradient_out, dvec)
 end subroutine pes

@@ -1,11 +1,22 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          BrH2
+!   Functional form: extended LEPS plus three-center term
+!   Common name:     BrH2SO
+!   Interface:       potlib2001
+!   Reference:        G. C. Lynch, D. G. Truhlar, F. B. Brown, and J.-g.
+!                     J. Phys. Chem. 99, 207 (1995)
+!   Number of bodies:              3
+!   Number of derivatives:         0
+!   Number of electronic surfaces: 2
+
+!> @brief Implement BrH2_LEPS_LTBZSO_1995, a diabatic potential matrix for BrH2.
 module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the BrH2_LEPS_LTBZSO_1995 diabatic potential matrix for BrH2.
     subroutine evaluate( x, igrad, u, ug )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -179,7 +190,9 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
         else
             write (*, *) 'Only energy is available'
         endif
+
         contains
+
         !> @brief Evaluate diagonalize for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine diagonalize( n, a_ss, ev_s, u_ss )
             implicit none
@@ -199,112 +212,68 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             allocate( work_d(lwork_d) )
             call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
         end subroutine diagonalize
+
         !> @brief Evaluate prepare_local_context for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine prepare_local_context
-            !
-            !   System:          BrH2
-            !   Functional form: extended LEPS plus three-center term
-            !   Common name:     BrH2SO
-            !   Interface:       potlib2001
-            !   Reference:        G. C. Lynch, D. G. Truhlar, F. B. Brown, and J.-g.
-            !                     J. Phys. Chem. 99, 207 (1995)
-            !
-            !   Number of bodies:              3
-            !   Number of derivatives:         0
-            !   Number of electronic surfaces: 2
-            !
             implicit none
-            integer :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
-            !
-            !
+            integer                     :: i
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
             call prepare_local_context_11
             call prepare_local_context_12
             call prepare_local_context_22
-            !
             ezero(1) = de11(2)
             ezero(2) = de22(2)
-            !
             do i=1, 5
                 ref(i) = ' '
             enddo
-            !
-            ref(1) = 'No Reference'
-            !
+            ref(1)     = 'No Reference'
             indexes(1) = 35
             indexes(2) = 1
             indexes(3) = 1
-            !
-            irctnt = 2
-            !
+            irctnt     = 2
             !CALL POTINFO
-            !
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POT for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine pot
             implicit none
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
-            !
-            !
-            !
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             call cartou
             call carttor
-            !
             if( nasurf(1,1) .ne. 0 ) call pot11
             if( nasurf(2,2) .ne. 0 ) call pot22
             if( nasurf(1,2)+nasurf(2,1) .ne. 0 ) call pot12
-            !
             call eunitzero
             if( nder .ne. 0 )then
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate prepare_local_context_11 for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine prepare_local_context_11
-            !
-            !
             !   System:          BrH2
             !   Functional form: extended-LEPS plus three-center term
             !   Common name:     BrH2SEC
             !   Reference:       G. C. Lynch, D. G. Truhlar, F. B. Brown, et. al.
             !                    to be published
-            !
-            !
             !   prepare_local_context must be called once before any calls to POT.
             !   The potential parameters are included in DATA statements.
             !   Coordinates, potential energy, and derivatives are passed
             !   through the common block POTCM:
-            !
             !   The potential energy in the three asymptotic valleys are
             !   stored in the common block ASYCOM:
             !                  COMMON /ASYCM/ EASYBC, EASYAC, EASYBA
@@ -314,13 +283,11 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             !   which is also the energy value in the BA valley.
             !   All the information passed through the common blocks PV1CM and ASYCM
             !   is in Hartree atomic units.
-            !
             !   This potential is written such that:
             !                  R(1) = R(Br-H)
             !                  R(2) = R(H-H)
             !                  R(3) = R(H-Br)
             !   The zero of energy is defined at Br "infinitely" far from the H2 dia
-            !
             !   The flags that indicate what calculations should be carried out in
             !   the potential routine are passed through the common block PT2CM:
             !   where:
@@ -329,110 +296,73 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             !        NDER  = 1 => calculate first derivatives
             !        NFLAG  - these 20 integer values can be used to flag options
             !                within the potential;
-            !
-            !
             !   IPRT - FORTRAN unit number to which all output will be written
-            !
             !   Potential parameters' default settings
             !                  Variable            Default value
             !                  NASURF(1,1)         1
             !                  NDER                1
             !                  NFLAG(18)           6
-            !
             implicit none
-            integer :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
+            integer                     :: i
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             double precision, parameter :: cangau = 0.52917706d0
             double precision, parameter :: charkc = 627.5095d0
-            !
-            !
-            !
-            !
-            !
             !         A1  =  V3CP1
             !         A2  =  V3CP2
             !         A3  =  V3CP3
             !         A4  =  V3CP4
             !         A5  =  V3CP5
             !         A6  =  V3CP6
-            !
             !         WRITE (NFLAG(18),100) D11, RE11, BETAA11,
             !     +                    ZHHP1, ZHHP2, ZHBRP1, ZHBRP2,
             !     +                    V3CP1, V3CP2, V3CP3, V3CP4, V3CP5
-            !
             !   Convert the constants to atomic units
-            !
             do i = 1, 3
                 de11(i)   = d11(i) / charkc
                 re11(i)   = re11(i) / cangau
                 beta11(i) = betaa11(i) * cangau
             enddo
-            !
             !    Initialize the asyptotic energy terms
-            !
             easybc = de11(2)
             easyac = de11(3)
             easyba = de11(1)
-            !
-            !
         end subroutine prepare_local_context_11
+
         !> @brief Evaluate POT11 for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine pot11
-            !
             implicit none
-            double precision :: a1, a2, a3, a4, a5, a6, b, capr, capr2, coschi, costh, dist, fcn4, pe, r132p2, r1m3, r1m3p2, r1p2, r1p3, r1p3m2, r2i, r2p2, r3p2, rr, schip2, sintp2, sintp6, sintp8, zchi
-            integer          :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
+            double precision            :: a1, a2, a3, a4, a5, a6, b(3), capr, capr2, coschi, costh, dist, fcn4, pe, r132p2, r1m3, &
+                & r1m3p2, r1p2, r1p3, r1p3m2, r2i, r2p2, r3p2, rr(3), schip2, sintp2, sintp6, sintp8, zchi
+            integer                     :: i
+            integer, parameter          :: n3atom  = 75
+            integer, parameter          :: isurf   = 5
+            integer, parameter          :: jsurf   = isurf*(isurf+1)/2
+            double precision, parameter :: pi      = 3.141592653589793d0
+            integer, parameter          :: natom   = 25
             double precision, parameter :: cangau  = 0.52917706d0
             double precision, parameter :: charkc  = 627.5095d0
             double precision, parameter :: xlamb11 = 0.4568d0/27.21161d0
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension rr(3), b(3)
-            !
             rr(1) = r(1)
             rr(2) = r(2)
             rr(3) = r(3)
-            !
             !   Compute bond dependent Sato parameters
-            !
             r1p2 = rr(1) * rr(1)
             r2p2 = rr(2) * rr(2)
             r3p2 = rr(3) * rr(3)
             r2i  = 1.0d0/rr(2)
             zchi = 0.0d0
-            !
             !   CAPR IS THE Br TO H2 DISTANCE
-            !
             capr2 = 0.5d0 * (r1p2 + r3p2 - 0.5d0 * r2p2)
             if( capr2 .le. 0.d0 )then
                 capr2 = 0.0d0
                 capr  = 0.0d0
             else
                 capr = sqrt(capr2)
-                !
                 !   Compute Chi, the angle between CAPR and RHH
-                !
                 coschi = 0.5d0*(r3p2 - r1p2)/(rr(2)*capr)
                 schip2 = 1.0d0 - coschi*coschi
                 zchi   = capr2*(zhbrp1*schip2 + zhbrp2*schip2*schip2)
@@ -440,9 +370,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             z(1) = 0.1675d0 + zchi
             z(3) = z(1)
             z(2) = zhhp1*r2p2/(zhhp2+r2p2)
-            !
             !   Compute the LEPS constants
-            !
             do i = 1, 3
                 zpo(i)   = 1.0d0+z(i)
                 op3z(i)  = 1.0d0+3.0d0*z(i)
@@ -461,151 +389,95 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             enddo
             rad = sqrt((exch(1) - exch(2)) ** 2 + (exch(2) - exch(3)) ** 2 + (exch(3) - exch(1)) ** 2 )
             pe  = pe - (rad / r211) + ezero(1)
-            !
             !   Compute the three-center term
-            !
-            r1p3 = rr(1) + rr(3)
-            a1   = v3cp1
-            a2   = v3cp2
-            a3   = v3cp3
-            a4   = v3cp4
-            a5   = v3cp5
-            a6   = v3cp6
-            !
+            r1p3   = rr(1) + rr(3)
+            a1     = v3cp1
+            a2     = v3cp2
+            a3     = v3cp3
+            a4     = v3cp4
+            a5     = v3cp5
+            a6     = v3cp6
             r1m3   = rr(1) - rr(3)
             r1p3m2 = r1p3 - rr(2)
             r1m3p2 = r1m3*r1m3
             r132p2 = r1p3m2*r1p3m2
-            !
             !   Compute the bond angle from the three internal coordinates
-            !
             dist   = rr(1)*rr(1) + rr(3)*rr(3) - rr(2)*rr(2)
             costh  = dist/(2.0d0*rr(1)*rr(3))
             sintp2 = 1.0d0 - costh*costh
             sintp6 = sintp2*sintp2*sintp2
             sintp8 = sintp6*sintp2
             fcn4   = 1.d0 + a5*sintp2 + a6*sintp8
-            !
-            v3c = a1*fcn4*exp(-(a2*r1p3+a3*r1m3p2+a4*r132p2))
-            !
+            v3c    = a1*fcn4*exp(-(a2*r1p3+a3*r1m3p2+a4*r132p2))
             !   Sum all the terms that make up the energy
-            !
             pe     = pe + v3c
             engygs = pe+xlamb11/3.d0
-            !
         end subroutine pot11
+
         !> @brief Evaluate prepare_local_context_12 for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine prepare_local_context_12
             implicit none
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             double precision, parameter :: cangau = 0.52917706d0
             double precision, parameter :: charkc = 627.5095d0
-            !
-            !
-            !
-            !
-            !
         end subroutine prepare_local_context_12
+
         !> @brief Evaluate POT12 for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine pot12
-            !
             implicit none
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
+            integer, parameter          :: n3atom  = 75
+            integer, parameter          :: isurf   = 5
+            integer, parameter          :: jsurf   = isurf*(isurf+1)/2
+            double precision, parameter :: pi      = 3.141592653589793d0
+            integer, parameter          :: natom   = 25
             double precision, parameter :: cangau  = 0.52917706d0
             double precision, parameter :: charkc  = 627.5095d0
             double precision, parameter :: xlamb12 = 0.4568d0/27.21161d0
-            !
-            !
-            !
-            !
-            !
-            !
             engyij(1) = -dsqrt(2.d0)*xlamb12/3.d0
-            !
         end subroutine pot12
+
         !> @brief Evaluate prepare_local_context_22 for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine prepare_local_context_22
             implicit none
-            integer :: i
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
+            integer                     :: i
+            integer, parameter          :: n3atom = 75
+            integer, parameter          :: isurf  = 5
+            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
+            double precision, parameter :: pi     = 3.141592653589793d0
+            integer, parameter          :: natom  = 25
             double precision, parameter :: cangau = 0.52917706d0
             double precision, parameter :: charkc = 627.5095d0
-            !
-            !
-            !
-            !
-            !
-            !
             !         WRITE (NFLAG(18),100) D22, RE22, BETAA22,
             !     +                 ZHHP1, ZHHP2, ZHBRP1, ZHBRP2,
             !     +                 V3CP1, V3CP2, V3CP3, V3CP4, V3CP5
-            !
             !   Convert the constants to atomic units
-            !
             do i = 1, 3
                 de22(i)   = d22(i) / charkc
                 re22(i)   = re22(i) / cangau
                 beta22(i) = betaa22(i) * cangau
             enddo
-            !
             !    Initialize the asyptotic energy terms
-            !
             easybc = de22(2)
             easyac = de22(3)
             easyba = de22(1)
-            !
-            !
         end subroutine prepare_local_context_22
+
         !> @brief Evaluate POT22 for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine pot22
-            !
             implicit none
-            double precision :: pe, rr, vanti1, vanti3, vmorse, y1, y2, y3
-            !
-            !
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !
-            double precision, parameter :: pi    = 3.141592653589793d0
-            integer, parameter          :: natom = 25
-            !
+            double precision            :: pe, rr(3), vanti1, vanti3, vmorse, y1, y2, y3
+            integer, parameter          :: n3atom  = 75
+            integer, parameter          :: isurf   = 5
+            integer, parameter          :: jsurf   = isurf*(isurf+1)/2
+            double precision, parameter :: pi      = 3.141592653589793d0
+            integer, parameter          :: natom   = 25
             double precision, parameter :: cangau  = 0.52917706d0
             double precision, parameter :: charkc  = 627.5095d0
             double precision, parameter :: xlamb22 = 0.4568d0/27.21161d0
-            !
-            !
-            !
-            !
-            !
-            !
-            !
-            dimension rr(3)
-            !
             rr(1)     = r(1)
             rr(2)     = r(2)
             rr(3)     = r(3)
@@ -617,24 +489,15 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             vanti3    = de22(3)*(y3**2+2.d0*y3)
             pe        = ezero(2)  + vmorse+(vanti1+vanti3)*ccon+2.d0*xlamb22/3.d0
             engyes(1) = pe
-            !
         end subroutine pot22
+
         !> @brief Evaluate ANCVRT for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -651,6 +514,13 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -866,13 +736,13 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             cnvrtd  = 1.d0
@@ -881,13 +751,13 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
             if( nflag(2) .eq. 2 )then
                 cnvrte = cnvrte*htomillh
-            else if( nflag(2) .eq. 3 )then
+            elseif( nflag(2) .eq. 3 )then
                 cnvrte = cnvrte*htoev
-            else if( nflag(2) .eq. 4 )then
+            elseif( nflag(2) .eq. 4 )then
                 cnvrte = cnvrte*htokcal
-            else if( nflag(2) .eq. 5 )then
+            elseif( nflag(2) .eq. 5 )then
                 cnvrte = cnvrte*htowave
-            else if( nflag(2) .eq. 6 )then
+            elseif( nflag(2) .eq. 6 )then
                 cnvrte = cnvrte*htokj
             endif
             cnvrtde = cnvrte/cnvrtd
@@ -898,6 +768,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             ireorder = 0
             if( isum .ne. 0 ) ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -909,6 +780,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -925,6 +797,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine eunitzero
             implicit none
@@ -945,16 +818,18 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( icartr .eq. 1 )then
                 do i = 1, legacy_natoms
                     ind            = 3*i-2
@@ -976,7 +851,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 2 )then
+            elseif( icartr .eq. 2 )then
                 do i = 1, legacy_natoms
                     dgscartnu(i,1) = 0.d0
                     dgscartnu(i,2) = 0.d0
@@ -998,7 +873,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                     do j = 1, legacy_natoms
                         if( j .lt. i )then
                             m1 = legacy_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = legacy_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -1017,7 +892,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                                 descartnu(i,2,j1) = descartnu(i,2,j1) + termy*y
                                 descartnu(i,3,j1) = descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( ksoffd .gt. 0 )then
+                        elseif( ksoffd .gt. 0 )then
                             do j2=ksoffd, keoffd
                                 y                 = deijdr(m1,j2)
                                 dijcartnu(i,1,j2) = dijcartnu(i,1,j2) + termx*y
@@ -1027,7 +902,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                         endif
                     enddo
                 enddo
-            else if( icartr .eq. 3 )then
+            elseif( icartr .eq. 3 )then
                 do i = 1, legacy_natoms
                     ygs(i) = degsdr(i)/r(i)
                     if( ksdiag .ne. 0 )then
@@ -1063,7 +938,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                         enddo
                     endif
                 enddo
-            else if( icartr .eq. 4 )then
+            elseif( icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -1099,6 +974,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine dedcou
             implicit none
@@ -1152,7 +1028,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
     end subroutine evaluate
 end module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
 
-!> @brief Preserve the historical Python-facing dpem entry point.
+!> @brief Expose BrH2_LEPS_LTBZSO_1995 through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_brh2_leps_ltbzso_1995_dpem_pes, only: evaluate
     implicit none

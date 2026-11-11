@@ -6,6 +6,7 @@ from pathlib import Path
 
 from chempotpy.core.registry import SurfaceSource
 from scripts.build_pes import (
+    CORE_FORTRAN_ROOT,
     copy_ascii_source,
     core_fortran_dependencies,
     extract_entry_point_source,
@@ -14,9 +15,15 @@ from scripts.build_pes import (
     normalized_sources,
     write_f2py_kind_map,
 )
+from scripts.check_fortran import compiler_command
 
 
 class BuildPESTests( unittest.TestCase ):
+    def test_core_fortran_sources_live_directly_under_core( self ) -> None:
+        self.assertEqual(CORE_FORTRAN_ROOT.name, "core")
+        self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_kinds.f90").is_file())
+        self.assertFalse((CORE_FORTRAN_ROOT / "fortran").exists())
+
     def test_entry_point_extraction_omits_internal_modules( self ) -> None:
         source = """\
 module owner
@@ -126,6 +133,35 @@ end subroutine pes
                 "example.f90",
             ],
         )
+
+    def test_neural_network_parameters_precede_their_consumer( self ) -> None:
+        source_path = (
+            Path(__file__).resolve().parents[1]
+            / "chempotpy" / "N4" / "N4_1A_PIPNN.f90"
+        )
+        source = SurfaceSource(
+            system_name="N4",
+            surface_name="N4_1A_PIPNN",
+            path=source_path,
+            source_form="free",
+            entry_point="pes",
+        )
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            normalized = normalized_sources(
+                source, Path(temporary_directory)
+            )
+        self.assertEqual(
+            [path.name for path in normalized[-2:]],
+            [
+                "chempotpy_n4_pipnn_parameters.f90",
+                "N4_1A_PIPNN.f90",
+            ],
+        )
+        command = compiler_command(source, Path("modules"), "gfortran")
+        support_index = command.index(str(source_path.parent / (
+            "chempotpy_n4_pipnn_parameters.f90"
+        )))
+        self.assertLess(support_index, command.index(str(source_path)))
 
     def test_resume_recognizes_one_existing_extension( self ) -> None:
         source = SurfaceSource(

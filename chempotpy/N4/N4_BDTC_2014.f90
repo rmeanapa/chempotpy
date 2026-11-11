@@ -1,10 +1,12 @@
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement N4_BDTC_2014, a potential energy surface for N4.
 module chempotpy_n4_bdtc_2014_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the N4_BDTC_2014 potential energy surface for N4.
     subroutine evaluate( x, igrad, path, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -32,7 +34,7 @@ module chempotpy_n4_bdtc_2014_pes
             do istate=1, nstates
                 p(istate) = v*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = v*legacy_hartree_to_electronvolt
             enddo
@@ -47,7 +49,7 @@ module chempotpy_n4_bdtc_2014_pes
     end subroutine evaluate
 end module chempotpy_n4_bdtc_2014_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose N4_BDTC_2014 through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_n4_bdtc_2014_pes, only: evaluate
     implicit none
@@ -560,7 +562,7 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                         ind = ind+1
                         if( j == a )then
                             dbdxa(ind) = x(k)
-                        else if( k == a )then
+                        elseif( k == a )then
                             dbdxa(ind) = x(j)
                         endif
                     enddo
@@ -596,9 +598,9 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                             ind = ind+1
                             if( j == a )then
                                 dbdxa(ind) = xy(k, l)
-                            else if( k == a )then
+                            elseif( k == a )then
                                 dbdxa(ind) = xy(j, l)
-                            else if( l == a )then
+                            elseif( l == a )then
                                 dbdxa(ind) = xy(j, k)
                             endif
                         enddo
@@ -636,32 +638,32 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                         ind  = ind+1
                         if( j == a )then
                             dbdxa(ind) = x2(j)*tmp2
-                        else if( k == a )then
+                        elseif( k == a )then
                             dbdxa(ind) = tmp*x2(k)
                         endif
                         do l= k+1, 6
                             ind = ind+1
                             if( j == a )then
                                 dbdxa(ind) = x2(j)*xy(k, l)
-                            else if( k == a )then
+                            elseif( k == a )then
                                 dbdxa(ind) = tmp*x(l)
-                            else if( l == a )then
+                            elseif( l == a )then
                                 dbdxa(ind) = tmp*x(k)
                             endif
                             ind = ind+1
                             if( j == a )then
                                 dbdxa(ind) = tmp2*x(l)
-                            else if( k == a )then
+                            elseif( k == a )then
                                 dbdxa(ind) = x2(k)*xy(j, l)
-                            else if( l == a )then
+                            elseif( l == a )then
                                 dbdxa(ind) = tmp2*x(j)
                             endif
                             ind = ind+1
                             if( j == a )then
                                 dbdxa(ind) = xx(l)*x(k)
-                            else if( k == a )then
+                            elseif( k == a )then
                                 dbdxa(ind) = xx(l)*x(j)
-                            else if( l == a )then
+                            elseif( l == a )then
                                 dbdxa(ind) = x2(l)*xy(j, k)
                             endif
                         enddo
@@ -674,11 +676,11 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                                 ind = ind+1
                                 if( j == a )then
                                     dbdxa(ind) = xyz(k, l, ll)
-                                else if( k == a )then
+                                elseif( k == a )then
                                     dbdxa(ind) = xyz(j, l, ll)
-                                else if( l == a )then
+                                elseif( l == a )then
                                     dbdxa(ind) = xyz(j, k, ll)
-                                else if( ll == a )then
+                                elseif( ll == a )then
                                     dbdxa(ind) = xyz(j, k, l)
                                 endif
                             enddo

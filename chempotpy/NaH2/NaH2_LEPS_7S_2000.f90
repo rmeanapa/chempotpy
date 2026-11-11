@@ -1,11 +1,51 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        NaH2
+!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
+!   Common name:                   NaH2 surface set 7s
+!   Interface:                     3-1V
+!   Number of electronic surfaces: 2
+!   Number of derivatives:         0
+!   Notes:               This version does not contain long range forces
+!                        and has no derivatives.  It is based on the sur
+!                        set 6 fit.
+!   References:         Unpublished, M. D. Hack and D. G. Truhlar (2000)
+!   Protocol: POT evaluates the stateless diabatic surfaces.
+!               of the energy with respect to the coordinates for a give
+!               geometric configuration
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      Ground diabatic electronic state, first-excited diabatic electron
+!   and the potential coupling.
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Na
+!      infinitely far from the H2 diatomic and R(H2) set equal to the
+!      H2 equilibrium diatomic value.
+!   Parameters:
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Na-H)
+!                            R(2) = R(H-H)
+!                            R(3) = R(Na-H)
+! This is NaH2 potential matrix 7s, finalized on 5/17/99
+! This version does not contain any long range forces.
+!  all surfaces.  The potential is called by calling POT with the parame
+!  r, e, nt, nsurf.  r(nt,3) and ei(nt) are double precision arrays of
+!  dimension nt which is an integer representing the number of geometrie
+!  input.  The integer nsurf selects the desired surface.  nsurf=1 is th
+!  lower diabatic surface, nsurf=2 is the coupling surface, nsurf=3 is
+!  the upper diabatic surface, nsurf = 4 selects the lower adiabatic
+!  surface, and nsurf = 5 selects the upper adiabatic surface
+
+!> @brief Implement NaH2_LEPS_7S_2000, a potential energy surface for NaH2.
 module chempotpy_nah2_leps_7s_2000_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the NaH2_LEPS_7S_2000 potential energy surface for NaH2.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
@@ -43,7 +83,7 @@ module chempotpy_nah2_leps_7s_2000_pes
     end subroutine evaluate
 end module chempotpy_nah2_leps_7s_2000_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose NaH2_LEPS_7S_2000 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_nah2_leps_7s_2000_pes, only: evaluate
     implicit none
@@ -88,91 +128,37 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!   System:                        NaH2
-!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
-!   Common name:                   NaH2 surface set 7s
-!   Interface:                     3-1V
-!   Number of electronic surfaces: 2
-!   Number of derivatives:         0
-
-!   Notes:               This version does not contain long range forces
-!                        and has no derivatives.  It is based on the sur
-!                        set 6 fit.
-
-!   References:         Unpublished, M. D. Hack and D. G. Truhlar (2000)
-
-!   Protocol: POT evaluates the stateless diabatic surfaces.
-!               of the energy with respect to the coordinates for a give
-!               geometric configuration
-!
-!   Units:
-!      energies    - hartrees
-!      coordinates - bohr
-!      derivatives - hartrees/bohr
-!
-!   Surfaces:
-!      Ground diabatic electronic state, first-excited diabatic electron
-!   and the potential coupling.
-!
-!   Zero of energy:
-!      The classical potential energy is set equal to zero for the Na
-!      infinitely far from the H2 diatomic and R(H2) set equal to the
-!      H2 equilibrium diatomic value.
-!
-!   Parameters:
-!
-!   Coordinates:
-!      Internal, Definition: R(1) = R(Na-H)
-!                            R(2) = R(H-H)
-!                            R(3) = R(Na-H)
-
-!
-! This is NaH2 potential matrix 7s, finalized on 5/17/99
-! This version does not contain any long range forces.
-
-!
-!  all surfaces.  The potential is called by calling POT with the parame
-!  r, e, nt, nsurf.  r(nt,3) and ei(nt) are double precision arrays of
-!  dimension nt which is an integer representing the number of geometrie
-!  input.  The integer nsurf selects the desired surface.  nsurf=1 is th
-!  lower diabatic surface, nsurf=2 is the coupling surface, nsurf=3 is
-!  the upper diabatic surface, nsurf = 4 selects the lower adiabatic
-!  surface, and nsurf = 5 selects the upper adiabatic surface
-!
-
-!
 !> @brief Evaluate pot for the NaH2_LEPS_7S_2000 potential.
 subroutine pot( r, e, nt, nsurf )
     implicit none
-    double precision :: e, r
+    double precision :: e(nt), r(nt,3)
     integer          :: nsurf, nt
-    dimension r(nt,3), e(nt)
     if( nsurf .eq. 1 )then
         call pot11(r, e, nt)
-    else if( nsurf .eq. 2 )then
+    elseif( nsurf .eq. 2 )then
         call pot12(r, e, nt)
-    else if( nsurf .eq. 3 )then
+    elseif( nsurf .eq. 3 )then
         call pot22(r, e, nt)
     endif
 end subroutine pot
 
 !  U11 surface - lower diabatic surface
-!
 !> @brief Own the stateless g_pot11 evaluator.
 module chempotpy_nah2_leps_7s_2000_pot11_legacy_state_7eadcd57
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: b0, bect, bect2, beh2, bes1, bf, cevau, cos1, cos2, cosa, cosg, dect, deh2, &
-            & deh2m, des1, des20, e, gamh2a, gamh2b, onethd, r, r1s, r2s, r3s, rac2, rave, rect, reh2, &
-            & res1, rmid, s1, s2, s2alp, s2rho, s3, sswt, twothd, vmid, xect, xeh2, xes1, xes3
+        double precision :: b0, bect, bect2, beh2, bes1, bf, cevau, cos1, cos2, cosa, cosg, dect, deh2, deh2m, des1, des20, &
+            & e(:), gamh2a, gamh2b, onethd, r(:,:), r1s, r2s, r3s, rac2, rave, rect, reh2, res1, rmid, s1, s2, s2alp, s2rho, s3, &
+            & sswt, twothd, vmid, xect, xeh2, xes1, xes3
         integer :: i, nt
-        dimension r(:,:), e(:)
         ! NaH singlet
         ! H2 singlet
         ! H-Na-H term
@@ -238,7 +224,6 @@ module chempotpy_nah2_leps_7s_2000_pot11_legacy_state_7eadcd57
         onethd = 1.0d0/3.0d0
         twothd = 2.0d0/3.0d0
         do i=1, nt
-            ! ============================================================
             ! useful quantities calculated first
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
@@ -269,7 +254,6 @@ module chempotpy_nah2_leps_7s_2000_pot11_legacy_state_7eadcd57
             ! The second NaH singlet
             xes3 = dexp(-bes1*(r(i,3)-res1))
             s3   = des1*onethd*xes3*(xes3+2.0d0)
-            ! =========================================================
             ! here is where it all gets put together . . .
             e(i) = s1 + s2 + s3 + deh2
             ! here we will try a post-LEPS correction term
@@ -298,7 +282,9 @@ module chempotpy_nah2_leps_7s_2000_pot12_legacy_state_7eadcd57
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
@@ -381,20 +367,20 @@ module chempotpy_nah2_leps_7s_2000_pot22_legacy_state_7eadcd57
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: b0, beh2, bet1, bet10, bet10b, bet190, bet1c, bet20, bet290, beta, bf, c2a, &
-            & c2b, c2c, cevau, cos1, cos2, cosa, cosg, coul1, coul2, coul3, cplg2, deh2, deh2m, denah, &
-            & des290, det1, det190, det1c, det20, det290, e, exch1, exch2, exch3, f10, g10, g30, gamh2a, &
-            & gamh2b, gamnah, onethd, r, r1s, r2s, r3s, rave, reh2, renah, ret1, ret10, ret190, ret1c, &
-            & ret20, ret290, rmid, s1, s2, s20alp, s20b, s20rho, s2a, s2alp, s2rho, s3, sswt, t1, t10, &
-            & t190, t1alp, t1c, t1m, t1rho, t2, t20, t290, t2alp, t2rho, t3, t30, t390, t3c, t3m, twothd, &
-            & una2p, w, xeh2, xenah, xet190, xet1c, xet20, xet290, xet3, xet390, xet3c
+        double precision :: b0, beh2, bet1, bet10, bet10b, bet190, bet1c, bet20, bet290, beta, bf, c2a, c2b, c2c, cevau, cos1, &
+            & cos2, cosa, cosg, coul1, coul2, coul3, cplg2, deh2, deh2m, denah, des290, det1, det190, det1c, det20, det290, &
+            & e(:), exch1, exch2, exch3, f10, g10, g30, gamh2a, gamh2b, gamnah, onethd, r(:,:), r1s, r2s, r3s, rave, reh2, &
+            & renah, ret1, ret10, ret190, ret1c, ret20, ret290, rmid, s1, s2, s20alp, s20b, s20rho, s2a, s2alp, s2rho, s3, sswt, &
+            & t1, t10, t190, t1alp, t1c, t1m, t1rho, t2, t20, t290, t2alp, t2rho, t3, t30, t390, t3c, t3m, twothd, una2p, w, &
+            & xeh2, xenah, xet190, xet1c, xet20, xet290, xet3, xet390, xet3c
         integer :: i, nt
-        dimension r(:,:), e(:)
         ! NaH triplets
         ! H2 triplets
         ! H2 singlets
@@ -527,7 +513,6 @@ module chempotpy_nah2_leps_7s_2000_pot22_legacy_state_7eadcd57
         onethd = 1.0d0/3.0d0
         twothd = 2.0d0/3.0d0
         do i=1, nt
-            ! ============================================================
             ! useful quantities calculated first
             rmid = 0.5d0*(r(i,1)+r(i,3))
             rave = 0.5d0*(r(i,1)-r(i,3))
@@ -539,7 +524,6 @@ module chempotpy_nah2_leps_7s_2000_pot22_legacy_state_7eadcd57
             cos1 = (r1s+r2s-r3s)/(2.0d0*r(i,1)*r(i,2))
             cos2 = (r3s+r2s-r1s)/(2.0d0*r(i,3)*r(i,2))
             cosg = 0.5d0*(cos1-cos2)
-            ! =========================================================
             ! The diatomic curves . . .
             ! The first NaH singlet
             denah  = 1.97134878d0
@@ -603,7 +587,6 @@ module chempotpy_nah2_leps_7s_2000_pot22_legacy_state_7eadcd57
             t3c    = det1c*onethd*xet3c*(xet3c + 2.0d0)
             t3m    = t390 + (t3c - t390)* 0.5d0*(1.0d0+dtanh(t1alp*(r(i,2)-t1rho)))
             t3     = t3m + (t30 - t3m)*cosg**2
-            ! ===============================================================
             ! The final LEPS form
             coul1 = 0.5d0*(s1+t1)
             coul2 = 0.5d0*(s2+t2)

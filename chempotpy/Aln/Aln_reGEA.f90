@@ -1,10 +1,33 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Embedded atom
+!   Common name:                   reGEA
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  The parameters
+!           for this PEF have been parameterized against a data set of
+!           aluminum cluster energies and bulk data.
+!  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potentials Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_regea_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,38 +57,12 @@ module chempotpy_aln_regea_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_reGEA potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Embedded atom
-        !   Common name:                   reGEA
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  The parameters
-        !           for this PEF have been parameterized against a data set of
-        !           aluminum cluster energies and bulk data.
-        !
-        !  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: a, b, cc, dx, dy, dz, rr, u, ud, udd, uu, v, v0, v1, x, y, z
+        double precision :: a, b, cc, dx, dy, dz, rr, u, ud, udd, uu, v, v0, v1, x(maxatom), y(maxatom), z(maxatom)
         integer          :: i, j, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom)
-        !
         !  calculate the potential energy
         ! new parameters
         a  = 1.82725940400586229
@@ -106,10 +103,9 @@ module chempotpy_aln_regea_pes
         enddo
         v = u*v0-v1*cc
     end subroutine pot
-    !
 end module chempotpy_aln_regea_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_reGEA through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_regea_pes, only: evaluate

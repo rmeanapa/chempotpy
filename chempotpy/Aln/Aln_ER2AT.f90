@@ -1,10 +1,34 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Extended Rydberg plus Axilrod-Teller
+!   Common name:                   ER2+AT
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  The parameters
+!           for this PEF have been parameterized against a data set of
+!           aluminum cluster energies and bulk data.
+!           This PEF has a cutoff at 6.5 angstroms.
+!  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potentials Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!                    of the system
+!  natom   --- number of atoms in the system
+!  maxatom --- maximal number of atoms
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_er2at_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,40 +58,14 @@ module chempotpy_aln_er2at_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_ER2AT potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Extended Rydberg plus Axilrod-Teller
-        !   Common name:                   ER2+AT
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  The parameters
-        !           for this PEF have been parameterized against a data set of
-        !           aluminum cluster energies and bulk data.
-        !           This PEF has a cutoff at 6.5 angstroms.
-        !
-        !  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !                    of the system
-        !  natom   --- number of atoms in the system
-        !  maxatom --- maximal number of atoms
         implicit none
-        double precision :: a1, a2, a3, arc1, arc2, au2, au23, b1, b2, bra, bu2, co, &
-            & co1, co2, co3, coij, coim, cojm, cot12, cot2, cot3, de, dx, dy, dz, ee, poly, re, rho, rij, &
-            & rim, rjm, rr, rr1, rr2, rr3, u3, v, w2, x, y, z
+        double precision :: a1, a2, a3, arc1, arc2, au2, au23, b1, b2, bra, bu2, co, co1, co2, co3, coij, coim, cojm, cot12, &
+            & cot2, cot3, de, dx, dy, dz, ee, poly, re, rho, rij, rim, rjm, rr, rr1, rr2, rr3, u3, v, w2, x(maxatom), &
+            & y(maxatom), z(maxatom)
         integer :: i, j, m, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom)
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
         b1   = 3536.39472398632142/ (autoev*autoang**9)
@@ -155,19 +153,15 @@ module chempotpy_aln_er2at_pes
         endif
         v = v+u3
     end subroutine pot
-    !
-    !
-    !
+
     !> @brief Evaluate scos for the Aln_ER2AT potential.
     subroutine scos( i, j, m, x, y, z, rij, rjm, rim, natom, maxatom, &
             & co1, co2, co3 )
         !  The subroutine calculates the cosines of the bound angles
         !  using scalar products of the position vectors of two
         !  atoms originating from the third atom.
-        !
         !  Units:
         !  coordinates - bohrs
-        !
         !  i,j,m   --- natural indices running from 1 to natom
         !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
         !              of the system
@@ -177,11 +171,9 @@ module chempotpy_aln_er2at_pes
         !  co1     --- cosine of the angle between bonds ij and im
         !  co2     --- cosine of the angle between bonds ji and jm
         !  co3     --- cosine of the angle between bonds mi and mj
-        !
         implicit none
-        double precision :: co1, co2, co3, rij, rim, rjm, scalar1, scalar2, scalar3, x, y, z
+        double precision :: co1, co2, co3, rij, rim, rjm, scalar1, scalar2, scalar3, x(maxatom), y(maxatom), z(maxatom)
         integer          :: i, j, m, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom)
         !  calculate scalar products of the position vectors of two atoms
         !  originating from the third atom
         scalar1 = (x(j)-x(i))*(x(m)-x(i)) +(y(j)-y(i))*(y(m)-y(i)) +(z(j)-z(i))*(z(m)-z(i))
@@ -196,7 +188,7 @@ module chempotpy_aln_er2at_pes
     end subroutine scos
 end module chempotpy_aln_er2at_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_ER2AT through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_er2at_pes, only: evaluate

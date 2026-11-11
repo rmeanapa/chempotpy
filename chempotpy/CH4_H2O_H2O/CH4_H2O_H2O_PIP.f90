@@ -1940,7 +1940,9 @@ module bemsa
         & -0.84492652361232246d0, -9.6180169911864777d0, 3.6670856205947544d0, &
         & 1.4012407249815428d0, -0.89854400896123132d0, -0.84846979972237124d0, &
         & 4.4801345844562031d0]
+
     contains
+
     !> @brief Evaluate the embedded CH4-water polynomial fit.
     subroutine evaluate_fit( x, energy )
         implicit none
@@ -1948,12 +1950,12 @@ module bemsa
         double precision, intent(out) :: energy
         call emsav(x, coeff, energy)
     end subroutine evaluate_fit
+
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
         implicit none
         double precision, dimension(1:55), intent(in)::x
         double precision, dimension(1:16422), intent(out)::m
-        !::::::::::::::::::::
         m( 1)    = x(55)
         m( 2)    = x(54)
         m( 3)    = x(53)
@@ -18377,13 +18379,13 @@ module bemsa
         m(16421) = m(   39) * m ( 2436)
         m(16422) = m(   39) * m ( 2438)
     end subroutine evmono
+
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
         implicit none
         double precision, dimension(1:16422), intent(in)::m
         double precision, dimension(1:5809), intent(out)::p
         double precision, dimension(1:231)::d
-        !::::::::::::::::::::
         d(    1) = m(    1)
         d(    2) = m(    2)
         d(    3) = m(    3)
@@ -25944,16 +25946,17 @@ module bemsa
         p( 5808) = d(    9) * d(  231) - p( 5806)
         p( 5809) = d(   11) * d(  231) - p( 5807)
     end subroutine evpoly
+
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         implicit none
         double precision, dimension(1:55), intent(in)::x
         double precision, dimension(1:5809), intent(out)::p
-        ! ::::::::::::::::::::
         double precision, dimension(1:16422)::m
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
+
     !> @brief Evaluate emsav.
     subroutine emsav( x, c, energy )
         implicit none
@@ -25969,13 +25972,15 @@ module bemsa
     end subroutine emsav
 end module bemsa
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement CH4_H2O_H2O_PIP, a potential energy surface for CH4_H2O_H2O.
 module chempotpy_ch4_h2o_h2o_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the CH4_H2O_H2O_PIP potential energy surface for CH4_H2O_H2O.
     subroutine evaluate( x, igrad, path, p, gradient_out, d )
         use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
         implicit none
@@ -26004,7 +26009,7 @@ module chempotpy_ch4_h2o_h2o_pip_pes
     end subroutine evaluate
 end module chempotpy_ch4_h2o_h2o_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose CH4_H2O_H2O_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, gradient_out, d )
     use chempotpy_ch4_h2o_h2o_pip_pes, only: evaluate
     implicit none

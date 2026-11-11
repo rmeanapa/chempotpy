@@ -1,10 +1,11 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_halp_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate the Halicioglu-Pound potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -36,6 +37,7 @@ module chempotpy_aln_halp_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate the pairwise Halicioglu-Pound aluminum cluster energy.
     subroutine evaluate_halicioglu_pound( &
             coordinates_bohr, atom_count, energy_hartree )
@@ -69,7 +71,7 @@ module chempotpy_aln_halp_pes
     end subroutine evaluate_halicioglu_pound
 end module chempotpy_aln_halp_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_HalP through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_halp_pes, only: evaluate

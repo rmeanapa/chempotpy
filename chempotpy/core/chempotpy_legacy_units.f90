@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Preserve conversion behavior of the released CHEMPOTPY wrappers.
 module chempotpy_legacy_units
     use chempotpy_kinds, only: real32, real64
@@ -16,7 +15,9 @@ module chempotpy_legacy_units
         real(27.211386_real32, real64)
     ! Preserve the independently rounded gradient factor used by released PES wrappers.
     real(real64), parameter :: legacy_gradient_to_electronvolt_per_angstrom = 51.422067_real64
+
     contains
+
     !> @brief Convert wrapper coordinates using the released rounded factor.
     pure subroutine legacy_coordinates_to_bohr( &
             coordinates_angstrom, coordinates_bohr )
@@ -25,6 +26,7 @@ module chempotpy_legacy_units
             size(coordinates_angstrom, 1),size(coordinates_angstrom, 2))
         coordinates_bohr = coordinates_angstrom/legacy_bohr_to_angstrom
     end subroutine legacy_coordinates_to_bohr
+
     !> @brief Convert wrapper energy using the released rounded factor.
     pure function legacy_energy_to_electronvolt( &
             energy_hartree ) result(energy_electronvolt)

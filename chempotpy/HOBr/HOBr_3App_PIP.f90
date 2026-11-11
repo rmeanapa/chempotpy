@@ -5,54 +5,51 @@
 !   Number of bodies:              3
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References: A. G. S. de Oliveira-Filho, F. R. Ornellas and K. A.
 !   Peterson  "Accurate ab initio potential energy surfaces for the
 !   3A" and 3A' electronic states of the O(3P)+HBr system"
 !   J. Chem. Phys. 136, 174316 (2012).
-!
 !   Notes:
-!
 !      r1 = R(O-H)
 !      r2 = R(H-Br)
 !      r3 = R(Br-O)
-!
 !   Input: r1,r2,r3                     in units of bohr
 !   Output: value                       in units of hartree
 !   Output: dr1,dr2,dr3                 in units of hartree/bohr
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement HOBr_3App_PIP, a potential energy surface for HOBr.
 module chempotpy_hobr_3app_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
-    subroutine evaluate( x, igrad, path, p, g, d )
+
+    !> @brief Evaluate the HOBr_3App_PIP potential energy surface for HOBr.
+    subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,     only: cartesian_distance, flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
         ! number of electronic state
-        integer, parameter              :: nstates = 1
-        integer, parameter              :: natoms  = 3
-        integer, intent(in)             :: igrad
-        character(len=1024), intent(in) :: path
-        double precision, intent(in)    :: x(natoms,3)
-        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-        double precision                :: v
-        double precision                :: r_oh, r_hbr, r_obr
-        double precision                :: dr_oh, dr_hbr, dr_obr
-        double precision                :: r(3), tx(9)
-        double precision                :: dr(3), drdx(3,9), dx(9)
-        integer                         :: iatom, idir, i, j, istate
+        integer, parameter            :: nstates = 1
+        integer, parameter            :: natoms  = 3
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out) :: d(nstates,nstates,natoms,3)
+        double precision              :: v
+        double precision              :: r_oh, r_hbr, r_obr
+        double precision              :: dr_oh, dr_hbr, dr_obr
+        double precision              :: r(3), tx(9)
+        double precision              :: dr(3), drdx(3,9), dx(9)
+        integer                       :: iatom, idir, i, j, istate
         v     = 0.d0; g = 0.d0; d = 0.d0
         r_obr = cartesian_distance(x(2,:), x(3,:))
         r_oh  = cartesian_distance(x(1,:), x(2,:))
         r_hbr = cartesian_distance(x(1,:), x(3,:))
         call flatten_cartesian_coordinates(x, tx)
         r = [r_oh, r_hbr, r_obr]
-        call mypot(path, r_oh, r_hbr, r_obr, v, dr_oh, dr_hbr, dr_obr)
+        call mypot(r_oh, r_hbr, r_obr, v, dr_oh, dr_hbr, dr_obr)
         v     = v*legacy_hartree_to_electronvolt
         dr(1) = dr_oh*legacy_hartree_to_electronvolt
         dr(2) = dr_hbr*legacy_hartree_to_electronvolt
@@ -66,7 +63,7 @@ module chempotpy_hobr_3app_pip_pes
             do istate=1, nstates
                 p(istate) = v
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = v
             enddo
@@ -76,13 +73,13 @@ module chempotpy_hobr_3app_pip_pes
                     g(1,iatom,idir) = dx(j)
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine evaluate
 end module chempotpy_hobr_3app_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose HOBr_3App_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_hobr_3app_pip_pes, only: evaluate
     implicit none
@@ -94,7 +91,7 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(out)   :: p(nstates)
     double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    call evaluate(x, igrad, path, p, g, d)
+    call evaluate(x, igrad, p, g, d)
 end subroutine pes
 
 !> @brief Evaluate EvdRdX.
@@ -113,10 +110,12 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
-    subroutine dispatch( path, r1, r2, r3, value, dr1, dr2, dr3, initialize_only )
-        !-----------------------------------------------------------------------------
+    subroutine dispatch( r1, r2, r3, value, dr1, dr2, dr3, initialize_only )
+        use chempotpy_hobr_3app_parameters, only: amn => rkhs_coefficients, phi_hbr, phi_oh, x_1 => rkhs_x_1, x_2 => rkhs_x_2, y_1 => rkhs_y_1
         !..
         !.. The O(3P) + HBr --> OH + Br MRCI+Q/CBS(aug-cc-pVnZ(-PP); n = Q,5)+SO 3A"
         !.. potential surface of A. G. S. de Oliveira-Filho, F. R. Ornellas
@@ -131,14 +130,11 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
         !.. O-H-Br angles of 60-180 deg.  This surface does not contain the
         !.. H + BrO arrangement and no claims of accuracy are made for O-H-Br
         !.. angles smaller than 60 deg.
-        !-----------------------------------------------------------------------------
         !  USAGE:
-        !
         !  On Input:
         !      r1 = R(O-H)
         !      r2 = R(H-Br)
         !      r3 = R(Br-O).
-        !
         ! On Output:
         !      value = Energy, relative to the asymptotic reactants
         !              valley (O + HBr(r_e)), in hartree
@@ -148,79 +144,49 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
         !            in hartree/bohr
         !      dr3 = Derivative of the potential with respect to r3 (R(O-Br))
         !            in hartree/bohr
-        !
         !  NOTE:
         !    Before any actual potential energy calculations are made, a single
         !    call to myprepot must be made:
         !      call myprepot
-        !
         !    Later, the potential energy is computed by calling mypot:
         !      call mypot(r1,r2,r3,value,dr1,dr2,dr3)
-        !
         !   The parameters are read from the o_hbr_a_pp.par file
-        !
-        !-----------------------------------------------------------------------------
-        !
         !                              Saddle point
-        !
         !        r1                          r2                        r3
         !   2.6289099999999999        2.8486750000000001        5.1064215904894388
         !        energy
         !   7.9866812204093529E-003
         !        dr1                         dr2                       dr3
         !   1.5320730578638475E-007   1.5109533511581397E-006  -1.5577335148869720E-007
-        !
         !                             Reactants side vdW well
-        !
         !        r1                          r2                        r3
         !   4.3746320000000001        2.6855400000000000        7.0601719999996142
         !        energy
         !  -2.5958471320488563E-003
         !        dr1                         dr2                       dr3
         !   1.4650519388234480E-003   1.4648796113941348E-003  -1.4650322069311608E-003
-        !
         !                             Products  side vdW well
-        !
         !        r1                          r2                        r3
         !   1.8372599999999999        4.8222319999999996        4.4678939513580840
         !        energy
         !  -3.3549004949264938E-002
         !        dr1                         dr2                       dr3
         !   6.5041529057150577E-007  -4.8876198921465885E-010   6.6615884752874166E-009
-        !
-        ! ----------------------------------------------------------------------------
         implicit none
         logical, intent(in) :: initialize_only
-        optional :: path, r1, r2, r3, value, dr1, dr2, dr3
-        integer, parameter              :: dp = kind(0.d0)                   ! double precision
-        character(len=1024), intent(in) :: path
-        integer                         :: file_unit_45
-        character(len=1024)             :: file_path1
-        real(dp), dimension(14)         :: phi_oh, phi_hbr
-        real(dp), dimension(1110)       :: x_1, x_2, y_1, amn
-        real(dp)                        :: r1, r2, r3, value, dr1, dr2, dr3
-        real(dp)                        :: r_oh, r_hbr, r_bro
-        real(dp)                        :: sum1, sum2, dzdr, dfdr
-        real(dp)                        :: dbetadz, dedr_oh, dedr_hbr
-        real(dp)                        :: v_oh, v_hbr, v_bro, v3
-        real(dp)                        :: th_y, theta
-        real(dp)                        :: z, re, de, phi_inf, alpha_s, r_s, z_i, phi_z, f_s
-        real(dp)                        :: x_1_max, x_2_max, y_1_max
-        real(dp)                        :: x_1_min, x_2_min, y_1_min
-        real(dp)                        :: q_1, q_2, q_3, dq_1, dq_2, dq_3
-        integer                         :: i
-        file_path1 = trim(path)//"/HOBr/o_hbr_a_pp.par"
-        open(newunit=file_unit_45, file=file_path1, status="old")
-        do i=1, 14
-            read(file_unit_45, *) phi_oh(i)
-        enddo
-        do i=1, 14
-            read(file_unit_45, *) phi_hbr(i)
-        enddo
-        do i=1, 1110
-            read(file_unit_45, *) x_1(i), x_2(i), y_1(i), amn(i)
-        enddo
-        close(file_unit_45)
+        optional :: r1, r2, r3, value, dr1, dr2, dr3
+        integer, parameter :: dp = kind(0.d0)                   ! double precision
+        real(dp)           :: r1, r2, r3, value, dr1, dr2, dr3
+        real(dp)           :: r_oh, r_hbr, r_bro
+        real(dp)           :: sum1, sum2, dzdr, dfdr
+        real(dp)           :: dbetadz, dedr_oh, dedr_hbr
+        real(dp)           :: v_oh, v_hbr, v_bro, v3
+        real(dp)           :: th_y, theta
+        real(dp)           :: z, re, de, phi_inf, alpha_s, r_s, z_i, phi_z, f_s
+        real(dp)           :: x_1_max, x_2_max, y_1_max
+        real(dp)           :: x_1_min, x_2_min, y_1_min
+        real(dp)           :: q_1, q_2, q_3, dq_1, dq_2, dq_3
+        integer            :: i
         if( .not. initialize_only )then
             r_oh    = r1
             r_hbr   = r2
@@ -318,17 +284,16 @@ end module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
 !> @brief Compatibility interface for myprepot.
 
 !> @brief Compatibility interface for mypot.
-subroutine mypot( path, r1, r2, r3, value, dr1, dr2, dr3 )
+subroutine mypot( r1, r2, r3, value, dr1, dr2, dr3 )
     use chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804, only: dispatch
     implicit none
-    integer, parameter              :: dp = kind(0.d0)
-    character(len=1024), intent(in) :: path
-    real(dp)                        :: r1
-    real(dp)                        :: r2
-    real(dp)                        :: r3
-    real(dp)                        :: value
-    real(dp)                        :: dr1
-    real(dp)                        :: dr2
-    real(dp)                        :: dr3
-    call dispatch(path=path, r1=r1, r2=r2, r3=r3, value=value, dr1=dr1, dr2=dr2, dr3=dr3, initialize_only=.false.)
+    integer, parameter :: dp = kind(0.d0)
+    real(dp)           :: r1
+    real(dp)           :: r2
+    real(dp)           :: r3
+    real(dp)           :: value
+    real(dp)           :: dr1
+    real(dp)           :: dr2
+    real(dp)           :: dr3
+    call dispatch(r1=r1, r2=r2, r3=r3, value=value, dr1=dr1, dr2=dr2, dr3=dr3, initialize_only=.false.)
 end subroutine mypot

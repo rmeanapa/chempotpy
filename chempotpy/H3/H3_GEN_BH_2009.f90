@@ -33,10 +33,10 @@ subroutine pot( rvp, evp, dvp )
     if( xmass1 .eq. xmass2 )then
         zmass1 = xmass1
         zmass2 = xmass2
-    else if( xmass1 .eq. xmass3 )then
+    elseif( xmass1 .eq. xmass3 )then
         zmass1 = xmass1
         zmass2 = xmass3
-    else if( xmass2 .eq. xmass3 )then
+    elseif( xmass2 .eq. xmass3 )then
         zmass1 = xmass2
         zmass2 = xmass3
     else
@@ -68,7 +68,6 @@ else
     ! R1 is the distance between mass1 and mass2, R2 is the distance between mass2 and mass3,
     ! and R3 is the distance between mass1 and mass3.  Note that the D+H2 code requires the homonuclear
     ! diatom distance to be R3, so before calling all the various subroutines we need to switch R2 and R3
-    !
     r1x = rvp(1)
     r3x = rvp(2)
     r2x = rvp(3)
@@ -110,14 +109,15 @@ module chempotpy_h3_gen_bh_2009_potbodcdh2_legacy_state_b8d1df42
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r1x, r2x, r3x, eee, dv )
         implicit none
         optional :: r1x, r2x, r3x, eee, dv
         integer, parameter :: n2 = 5000
-        dimension iind(n2), jind(n2), kind(n2), ipar(n2)
-        integer          :: iind, jind, kind, ipar  ! arrays of length n2
+        integer          :: iind(n2), jind(n2), kind(n2), ipar(n2)
         integer          :: ii, it, maxi, maxi2, maxi2a, i
         double precision :: r1x, r2x, r3x, rho1, rho2, rho3, eee, dv(:)
         double precision :: drho1, drho2, drho3
@@ -890,10 +890,8 @@ double precision function bodc2body( r1x, dv )
     implicit none
     double precision :: xlp(14), beta, re, v, r1x, dv, t
     integer          :: j, indx
-    !
     !     distances are in Bohr, energies are in cm-1
     !     The global minimum is at: R=2.3178250879779552  E= -17.5988842162493135 cm-1
-    !
     beta    = 3.4059169d0
     xlp( 1) = -4.942622126d0
     xlp( 2) = -4.742197464d1
@@ -963,7 +961,6 @@ end
 
 !> @brief Evaluate leps.
 subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
-    !
     !   r1 is the distance between A and B
     !   r2 is the distance between B and C
     !   r3 is the distance between A and C
@@ -972,7 +969,6 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     !   xma, xmb, xmc are the atomic masses
     !   ga, gb, gc are the contributions to the nonadiabatic corrections
     !      from each atom
-    !
     implicit none
     integer          :: i, j
     double precision :: r(3), v1, v2, xma, xmb, xmc, gtot, dgtot(3)
@@ -988,7 +984,6 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     beta = 1.973536d0*0.52917725d0
     sato = 0.132d0
     rt3  = sqrt(3.d0)
-    !
     ! Compute single and triplet diatomic potentials
     do i = 1, 3
         ex      = exp(-beta(i)*(r(i)-re(i)))
@@ -999,15 +994,12 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
         dvt(i)  = -d(i)*beta(i)*(ex+1.0)*ex*(1.0-sato(i))/(1.0+sato(i))
         d2vt(i) = d(i)*beta(i)*beta(i)*(2.0d0*ex+1.0)*ex *(1.0-sato(i))/(1.0+sato(i))
     enddo
-    !
     ! Construct 2x2 DIM Hamiltonian
     h11 = d(2) + vs(2) + 0.25d0*(vs(1)+vs(3)) + 0.75d0*(vt(1)+vt(3))
     h12 = 0.25d0*rt3*(vs(1) - vs(3) - vt(1) + vt(3))
     h22 = d(2) + vt(2) + 0.75*(vs(1)+vs(3)) + 0.25d0*(vt(1)+vt(3))
-    !
     ! Calculate eigenvalues (V1 and V2) and quantities needed for matrix elements
     !   of d/dRi
-    !
     hsum     = h11 + h22
     hdif     = h22 - h11
     dhdif(1) = 0.5d0*(dvs(1)-dvt(1))
@@ -1018,7 +1010,6 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     v1       = 0.5d0*hsum - delh
     v2       = 0.5d0*hsum + delh
     ! derivatives
-    !
     dh11(1)   = 0.25d0*dvs(1)+0.75d0*dvt(1)
     dh11(2)   = dvs(2)
     dh11(3)   = 0.25d0*dvs(3)+0.75d0*dvt(3)
@@ -1049,9 +1040,7 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
             df12(i,i) = df12(i,i) + 0.25d0*(h12*d2hdif(i)-hdif*d2h12(i))/rad
         endif
     enddo
-    !
     ! Calculate diagonal matrix element of kinetic energy operator
-    !
     cos1     = (r(2)*r(2) + r(3)*r(3) - r(1)*r(1))/(2.0*r(2)*r(3))
     cos2     = (r(1)*r(1) + r(3)*r(3) - r(2)*r(2))/(2.0*r(1)*r(3))
     cos3     = (r(1)*r(1) + r(2)*r(2) - r(3)*r(3))/(2.0*r(1)*r(2))
@@ -1085,15 +1074,19 @@ module chempotpy_h3_gen_bh_2009_potcbs_legacy_state_b8d1df42
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r1x, r2x, r3x, eee, dv )
         implicit none
-        optional :: r1x, r2x, r3x, eee, dv
-        integer            :: iind, jind, kind, ipar, maxi, maxi2
-        integer            :: maxi2a, maxi2b, ii, i, it
         integer, parameter :: n2 = 5000
-        dimension iind(n2), jind(n2), kind(n2), ipar(n2)
+        double precision, parameter :: eshift  = 0.1744759989649372d0
+        double precision, parameter :: beta    = 0.9246250191375499d0
+        double precision, parameter :: rnought = 2.d0
+        optional :: r1x, r2x, r3x, eee, dv
+        integer            :: iind(n2), jind(n2), kind(n2), ipar(n2), maxi, maxi2
+        integer            :: maxi2a, maxi2b, ii, i, it
         double precision            :: epslon, epscem, ald, betad
         double precision            :: r1x, r2x, r3x, eee, dv(:)
         double precision            :: etrip1, etrip2, etrip3, detrip1, detrip2, detrip3
@@ -1106,9 +1099,6 @@ module chempotpy_h3_gen_bh_2009_potcbs_legacy_state_b8d1df42
         double precision            :: sum1, sum2, sum3, sum4
         double precision            :: dsum1(3), dsum2(3), dsum3(3), dsum4(3)
         double precision            :: rprod, t1, v3c
-        double precision, parameter :: eshift  = 0.1744759989649372d0
-        double precision, parameter :: beta    = 0.9246250191375499d0
-        double precision, parameter :: rnought = 2.d0
         double precision            :: xlin1(89), xlin2(89), xlin3(71), xlin4(71)
         ald       = 0.d0
         bb        = 0.d0
@@ -1675,7 +1665,7 @@ subroutine indexa3( mbig, mtop, iind, jind, kind, ipar, maxi, maxi2 )
                             jind(l) = k
                             kind(l) = i
                         endif
-                    else if( j .ne. k )then
+                    elseif( j .ne. k )then
                         l       = l+1
                         ipar(l) = l2
                         iind(l) = j
@@ -1890,13 +1880,15 @@ double precision function fcn( x )
     fcn = massfact*bodc2body(x, dv)/towave+v
 end
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement H3_GEN_BH_2009, a potential energy surface for H3.
 module chempotpy_h3_gen_bh_2009_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H3_GEN_BH_2009 potential energy surface for H3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -1936,7 +1928,7 @@ module chempotpy_h3_gen_bh_2009_pes
     end subroutine evaluate
 end module chempotpy_h3_gen_bh_2009_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H3_GEN_BH_2009 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_h3_gen_bh_2009_pes, only: evaluate
     implicit none

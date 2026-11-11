@@ -15,13 +15,15 @@ module nnparam
     double precision, allocatable :: pdela(:), pavga(:)
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement H3S_PIPNN, a potential energy surface for H3S.
 module chempotpy_h3s_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H3S_PIPNN potential energy surface for H3S.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam, only: alpha, biasa, ifunc, natom, nbasis, ndata, ndim, nhid, ninput, nlayer, &
             & nodemax, nodes, noutput, nscale, nwe, para2, pavga, pdela, pi, radian, vpesmin, weighta
@@ -64,7 +66,7 @@ module chempotpy_h3s_pipnn_pes
     end subroutine evaluate
 end module chempotpy_h3s_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H3S_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_h3s_pipnn_pes, only: evaluate
     implicit none
@@ -253,9 +255,9 @@ function tranfun( x, ifunc )
     double precision :: tranfun, x
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end
@@ -294,7 +296,6 @@ subroutine bemsav( xmorse, m, p )
     implicit none
     double precision, dimension(1:6), intent(in)::xmorse
     double precision, dimension(0:22), intent(out)::p
-    ! ::::::::::::::::::::
     double precision, dimension(0:29)::m
     call evmono(xmorse, m)
     call evpoly(m, p)
@@ -405,7 +406,6 @@ subroutine evdmsdr( r, dmsdr )
     double precision, parameter :: alpha = 1d0
     integer                     :: i, j
     double precision            :: dmsdr(1:6,1:6), r(1:6)
-    ! ::::::::::::::::::::
     dmsdr(:,:) = 0d0
     !Morse term ms = exp(-r/alpha)
     ! dmsdr(i,j)=0  i!=j

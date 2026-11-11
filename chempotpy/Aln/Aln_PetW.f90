@@ -1,10 +1,11 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_petw_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate the Pettifor-Ward aluminum potential through Python.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,6 +35,7 @@ module chempotpy_aln_petw_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate the oscillatory Pettifor-Ward pair-potential energy.
     subroutine evaluate_pettifor_ward( &
             coordinates_bohr, atom_count, energy_hartree )
@@ -72,7 +74,7 @@ module chempotpy_aln_petw_pes
     end subroutine evaluate_pettifor_ward
 end module chempotpy_aln_petw_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_PetW through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_petw_pes, only: evaluate

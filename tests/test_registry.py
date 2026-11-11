@@ -21,7 +21,21 @@ class RegistryTests( unittest.TestCase ):
         self.assertEqual(
             sum(source.entry_point == "dpem" for source in sources), 40
         )
-        self.assertEqual(sum(not source.is_surface for source in sources), 1)
+        support_sources = {
+            source.path.name for source in sources if not source.is_surface
+        }
+        self.assertEqual(
+            support_sources,
+            {
+                "ch4_t8.f90",
+                "chempotpy_c3h7no_pip_parameters.f90",
+                "chempotpy_coco_pipnn_parameters.f90",
+                "chempotpy_f2h2_jbkkl_parameters.f90",
+                "chempotpy_fh2o_pipnn_parameters.f90",
+                "chempotpy_n4_pipnn_parameters.f90",
+                "chempotpy_hobr_3app_parameters.f90",
+            },
+        )
 
     def test_reports_competing_fixed_and_free_form_sources( self ) -> None:
         duplicates = duplicate_surface_sources(discover_surface_sources())

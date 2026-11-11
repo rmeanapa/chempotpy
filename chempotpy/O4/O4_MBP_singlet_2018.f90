@@ -5,16 +5,11 @@
 !   Number of bodies:              4
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:  doi 10.1063/1.5008973
 !    Tapan K. Mankodi, Upendra V. Bhandarkar,
 !        Bhalchandra P. Puranik
-!
 !   Notes:
-!
 !   Data file: coeff_o4.txt
-!
-
 ! Global Potential energy surface for                                   !
 ! singlet O4 system using CASSCF+CASPT2                                 !
 ! Permutational Invariant Global Least Square fit                       !
@@ -29,13 +24,15 @@
 ! Corresponding Address: tapan.mankodi@iitb.ac.in                       !
 !                        bhandarkar@iitb.ac.in                          !
 
-!> @brief Own the complete implementation of this potential energy surface.
+!> @brief Implement O4_MBP_singlet_2018, a potential energy surface for O4.
 module chempotpy_o4_mbp_singlet_2018_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this PES through the modern module contract.
+
+    !> @brief Evaluate the O4_MBP_singlet_2018 potential energy surface for O4.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry, only: cartesian_distance
         implicit none
@@ -66,6 +63,7 @@ module chempotpy_o4_mbp_singlet_2018_pes
             write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine
+
     !> @brief Evaluate o4.
     subroutine o4( v, r )
         implicit none
@@ -98,6 +96,7 @@ module chempotpy_o4_mbp_singlet_2018_pes
             enddo
         enddo
     end subroutine
+
     !> @brief Evaluate assign.
     subroutine assign( coeff, indices, permutation )
         implicit none
@@ -2392,7 +2391,7 @@ module chempotpy_o4_mbp_singlet_2018_pes
     end subroutine
 end module chempotpy_o4_mbp_singlet_2018_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose O4_MBP_singlet_2018 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_o4_mbp_singlet_2018_pes, only: evaluate
     implicit none

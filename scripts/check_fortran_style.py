@@ -197,6 +197,29 @@ def check_source(path: Path) -> Sequence[StyleViolation]:
     for line_number, line in enumerate(lines, start=1):
         stripped = line.lstrip()
         code = line.split("!", 1)[0]
+        if re.match(r"^\s*else\s+if\s*\(", code, flags=re.IGNORECASE):
+            violations.append(StyleViolation(
+                relative_path, line_number, "split-elseif-keyword",
+                "write ELSEIF as one keyword",
+            ))
+        if re.match(r"^\s*!>\s*@modern\b", line, flags=re.IGNORECASE):
+            violations.append(StyleViolation(
+                relative_path, line_number, "migration-marker",
+                "replace tooling markers with scientific PES documentation",
+            ))
+        if re.match(
+            r"^\s*!>\s*@brief\s+(?:Own the (?:public evaluator|complete implementation) "
+            r"for this potential energy surface\.|Evaluate this (?:surface|PES) through "
+            r"the modern module contract\.|Evaluate the surface through the common "
+            r"CHEMPOTPY Cartesian contract\.|Preserve the historical Python-facing "
+            r"(?:PES|DPEM) entry point\.)\s*$",
+            line,
+            flags=re.IGNORECASE,
+        ):
+            violations.append(StyleViolation(
+                relative_path, line_number, "generic-pes-brief",
+                "name the exact surface and chemical system in the brief",
+            ))
         if "\t" in line:
             violations.append(StyleViolation(
                 relative_path, line_number, "indent-tabs",

@@ -1,11 +1,50 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        NaH2
+!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
+!   Common name:                   NaH2 surface set 7l
+!   Interface:                     3-1V
+!   Number of electronic surfaces: 2
+!   Number of derivatives:         0
+!   Notes:              This version contains long range forces,
+!                       no derivatives.  This fit is based on the surfac
+!                       set 6 fit.
+!   References:         Unpublished,  M. D. Hack and D. G. Truhlar (2000
+!   Protocol: POT evaluates the stateless diabatic surfaces.
+!               of the energy with respect to the coordinates for a give
+!               geometric configuration
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      Ground diabatic electronic state, first-excited diabatic electron
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the Na
+!      infinitely far from the H2 diatomic and R(H2) set equal to the
+!      H2 equilibrium diatomic value.
+!   Parameters:
+!   Coordinates:
+!      Internal, Definition: R(1) = R(Na-H)
+!                            R(2) = R(H-H')
+!                            R(3) = R(Na-H')
+! This is NaH2 potential matrix 7l, finalized on 5/17/99
+! This version contains long range forces.
+!  all surfaces.  The potential is called by calling POT with the parame
+!  r, e, nt, nsurf.  r(nt,3) and ei(nt) are double precision arrays of
+!  dimension nt which is an integer representing the number of geometrie
+!  input.  The integer nsurf selects the desired surface.  nsurf=1 is th
+!  lower diabatic surface, nsurf=2 is the coupling surface, nsurf=3 is
+!  the upper diabatic surface, nsurf = 4 selects the lower adiabatic
+!  surface, and nsurf = 5 selects the upper adiabatic surface
+
+!> @brief Implement NaH2_LEPS_7L_2000, a diabatic potential matrix for NaH2.
 module chempotpy_nah2_leps_7l_2000_dpem_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the NaH2_LEPS_7L_2000 diabatic potential matrix for NaH2.
     subroutine evaluate( x, igrad, u, ug )
         use chempotpy_legacy_units,       only: legacy_hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
@@ -39,7 +78,7 @@ module chempotpy_nah2_leps_7l_2000_dpem_pes
     end subroutine evaluate
 end module chempotpy_nah2_leps_7l_2000_dpem_pes
 
-!> @brief Preserve the historical Python-facing dpem entry point.
+!> @brief Expose NaH2_LEPS_7L_2000 through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_nah2_leps_7l_2000_dpem_pes, only: evaluate
     implicit none
@@ -83,97 +122,44 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!   System:                        NaH2
-!   Functional form:               Modified Extended LEPS (2x2 diabatic fit)
-!   Common name:                   NaH2 surface set 7l
-!   Interface:                     3-1V
-!   Number of electronic surfaces: 2
-!   Number of derivatives:         0
-
-!   Notes:              This version contains long range forces,
-!                       no derivatives.  This fit is based on the surfac
-!                       set 6 fit.
-
-!   References:         Unpublished,  M. D. Hack and D. G. Truhlar (2000
-
-!   Protocol: POT evaluates the stateless diabatic surfaces.
-!               of the energy with respect to the coordinates for a give
-!               geometric configuration
-!
-!   Units:
-!      energies    - hartrees
-!      coordinates - bohr
-!      derivatives - hartrees/bohr
-!
-!   Surfaces:
-!      Ground diabatic electronic state, first-excited diabatic electron
-!
-!   Zero of energy:
-!      The classical potential energy is set equal to zero for the Na
-!      infinitely far from the H2 diatomic and R(H2) set equal to the
-!      H2 equilibrium diatomic value.
-!
-!   Parameters:
-!
-!   Coordinates:
-!      Internal, Definition: R(1) = R(Na-H)
-!                            R(2) = R(H-H')
-!                            R(3) = R(Na-H')
-
-! This is NaH2 potential matrix 7l, finalized on 5/17/99
-! This version contains long range forces.
-!  all surfaces.  The potential is called by calling POT with the parame
-!  r, e, nt, nsurf.  r(nt,3) and ei(nt) are double precision arrays of
-!  dimension nt which is an integer representing the number of geometrie
-!  input.  The integer nsurf selects the desired surface.  nsurf=1 is th
-!  lower diabatic surface, nsurf=2 is the coupling surface, nsurf=3 is
-!  the upper diabatic surface, nsurf = 4 selects the lower adiabatic
-!  surface, and nsurf = 5 selects the upper adiabatic surface
-
-!
-
-!
 !> @brief Evaluate pot for the NaH2_LEPS_7L_2000_DPEM potential.
 subroutine pot( r, e, nt, nsurf )
     implicit none
-    double precision :: e, r
+    double precision :: e(nt), r(nt,3)
     integer          :: nsurf, nt
-    dimension r(nt,3), e(nt)
     if( nsurf .eq. 1 )then
         call pot11(r, e, nt)
-    else if( nsurf .eq. 2 )then
+    elseif( nsurf .eq. 2 )then
         call pot12(r, e, nt)
-    else if( nsurf .eq. 3 )then
+    elseif( nsurf .eq. 3 )then
         call pot22(r, e, nt)
     endif
 end subroutine pot
 
 !  U11 surface - lower diabatic surface
-!
 !> @brief Own the stateless g_pot11 evaluator.
 module chempotpy_nah2_leps_7l_2000_dpem_pot11_legacy_state_f8f175af
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: al1, al2, alb, alhh, alt, b0, balp, bect, bect2, beh2, bes1, bf, brho, c6, &
-            & c60, c61, c63, c690, c6swt1, c6swt3, cevau, cind1, cind3, cos1, cos2, cosa, coscos, cosg, &
-            & cstsq, cstsq1, cstsq3, dalp, dect, deh2, deh2m, des1, des20, dexp1, dexp3, div1, div3, &
-            & drho, e, elec, f0, f90, frac, gamh2a, gamh2b, h2a1, h2a2, h2a3, h2a4, h2a5, h2a6, h2a7, &
-            & h2a8, h2a9, h2b1, h2b2, h2b3, h2b4, h2b5, h2b6, h2b7, h2b8, h2b9, h2i1, h2i2, h2i3, h2i4, &
-            & h2i5, h2i6, h2ie, hie, hnaa1, hnaa2, hnaa3, hnaa4, hnaa5, hnab1, hnab2, hnab3, hnab4, &
-            & hnab5, hnai1, hnai2, hnai3, hnai4, hnai5, hnai6, hnau1, hnau2, hnau3, hnau4, hnau5, hnau6, &
-            & hpol, onethd, r, r1s, r2s, r3s, rac2, rave, rb0, rb90, rd, rect, reh2, res1, rexp1, rexp2, &
-            & rexp3, rmid, rmuimu1, rmuimu3, rnag, rnag1, rnag1c, rnag3, rnag3c, rnagc, rnags, rnahie1, &
-            & rnahie3, rnahmu1, rnahmu3, rnahpar1, rnahpar3, rnahperp1, rnahperp3, rnahpol1, rnahpol1b, &
-            & rnahpol3, rnahpol3b, rnaie, rnapol, rsm1, rsm2, rsm3, s1, s2, s2a, s2alp, s2rho, s3, sswt, &
-            & twothd, vmid, xect, xeh2, xes1, xes3
+        double precision :: al1, al2, alb, alhh, alt, b0, balp, bect, bect2, beh2, bes1, bf, brho, c6, c60, c61, c63, c690, &
+            & c6swt1, c6swt3, cevau, cind1, cind3, cos1, cos2, cosa, coscos, cosg, cstsq, cstsq1, cstsq3, dalp, dect, deh2, &
+            & deh2m, des1, des20, dexp1, dexp3, div1, div3, drho, e(:), elec, f0, f90, frac, gamh2a, gamh2b, h2a1, h2a2, h2a3, &
+            & h2a4, h2a5, h2a6, h2a7, h2a8, h2a9, h2b1, h2b2, h2b3, h2b4, h2b5, h2b6, h2b7, h2b8, h2b9, h2i1, h2i2, h2i3, h2i4, &
+            & h2i5, h2i6, h2ie, hie, hnaa1, hnaa2, hnaa3, hnaa4, hnaa5, hnab1, hnab2, hnab3, hnab4, hnab5, hnai1, hnai2, hnai3, &
+            & hnai4, hnai5, hnai6, hnau1, hnau2, hnau3, hnau4, hnau5, hnau6, hpol, onethd, r(:,:), r1s, r2s, r3s, rac2, rave, &
+            & rb0, rb90, rd, rect, reh2, res1, rexp1, rexp2, rexp3, rmid, rmuimu1, rmuimu3, rnag, rnag1, rnag1c, rnag3, rnag3c, &
+            & rnagc, rnags, rnahie1, rnahie3, rnahmu1, rnahmu3, rnahpar1, rnahpar3, rnahperp1, rnahperp3, rnahpol1, rnahpol1b, &
+            & rnahpol3, rnahpol3b, rnaie, rnapol, rsm1, rsm2, rsm3, s1, s2, s2a, s2alp, s2rho, s3, sswt, twothd, vmid, xect, &
+            & xeh2, xes1, xes3
         integer :: i, nt
-        dimension r(:,:), e(:)
         ! NaH singlet
         ! H2 singlet
         ! H-Na-H term
@@ -410,9 +396,7 @@ module chempotpy_nah2_leps_7l_2000_dpem_pot11_legacy_state_f8f175af
         cevau     = 1.d0/27.2113961d0
         onethd    = 1.0d0/3.0d0
         twothd    = 2.0d0/3.0d0
-        !
         do i=1, nt
-            ! ============================================================
             ! useful quantities calculated first, r1^2, R2^2, R3^2, atom to diatom
             ! center of mass distances, the H-Na-H bond angle and the Jacobian
             ! angle chi.
@@ -479,7 +463,6 @@ module chempotpy_nah2_leps_7l_2000_dpem_pot11_legacy_state_f8f175af
             ! The second NaH singlet
             xes3 = dexp(-bes1*(r(i,3)-res1))
             s3   = des1*onethd*xes3*(xes3+2.0d0)
-            ! ===============================================================
             ! this long section contains data pertinent to long range forces
             !  H2 ionization energy:
             h2ie = (h2i1+h2i2*r(i,2))*dexp(-h2i3*r(i,2))+ r2s*(h2i4+h2i5*r(i,2))*dexp(-h2i6*r(i,2))-s2a+hie
@@ -538,7 +521,6 @@ module chempotpy_nah2_leps_7l_2000_dpem_pot11_legacy_state_f8f175af
             cind1  = cind1*c6swt1
             cind3  = cind3*c6swt3
             elec   = c61+c63+cind1+cind3+c6
-            ! =========================================================
             ! here is where it all gets put together . . .
             e(i) = s1 + s2 + s3 + deh2
             elec = elec/cevau
@@ -569,7 +551,9 @@ module chempotpy_nah2_leps_7l_2000_dpem_pot12_legacy_state_f8f175af
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
@@ -652,30 +636,27 @@ module chempotpy_nah2_leps_7l_2000_dpem_pot22_legacy_state_f8f175af
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( r, e, nt )
         implicit none
         optional :: r, e, nt
-        double precision :: al1, al2, alb, alhh, alt, b0, balp, beh2, bet1, bet10, bet10b, bet190, bet1c, &
-            & bet20, bet290, beta, bf, brho, c2a, c2b, c2c, c6, c61, c63, c6swt1, c6swt3, cevau, cind1, &
-            & cind3, cos1, cos2, cosa, coscos, cosg, coul1, coul2, coul3, cplg2, cstsq, cstsq1, cstsq3, &
-            & dalp, deh2, deh2m, denah, des290, det1, det190, det1c, det20, det290, dexp1, dexp2, dexp3, &
-            & div1, div3, drho, e, elec, exch1, exch2, exch3, f10, frac, g10, g30, gamh2a, gamh2b, &
-            & gamnah, h2a1, h2a2, h2a3, h2a4, h2a5, h2a6, h2a7, h2a8, h2a9, h2b1, h2b2, h2b3, h2b4, h2b5, &
-            & h2b6, h2b7, h2b8, h2b9, h2hc1, h2hc2, h2hc3, h2hc4, h2hc5, h2hex, h2i1, h2i2, h2i3, h2i4, &
-            & h2i5, h2i6, h2ie, h2qc1, h2qc2, h2qc3, h2qc4, h2qc5, h2quad, hie, hnaa1, hnaa2, hnaa3, &
-            & hnaa4, hnaa5, hnab1, hnab2, hnab3, hnab4, hnab5, hnai1, hnai2, hnai3, hnai4, hnai5, hnai6, &
-            & hnau1, hnau2, hnau3, hnau4, hnau5, hnau6, hpol, onethd, pi, qh, qhint, qq, qqint, r, r1s, &
-            & r2s, r3s, rave, rb, rd, reh2, renah, ret1, ret10, ret190, ret1c, ret20, ret290, rmid, &
-            & rmuimu1, rmuimu3, rnag, rnag1, rnag1c, rnag3, rnag3c, rnagc, rnags, rnahie1, rnahie3, &
-            & rnahmu1, rnahmu3, rnahpar1, rnahpar3, rnahperp1, rnahperp3, rnahpol1, rnahpol1b, rnahpol3, &
-            & rnahpol3b, rnaie, rnapol1, rnaquad, rqh, rqq, s1, s2, s20alp, s20b, s20rho, s2a, s2alp, &
-            & s2rho, s3, sswt, t1, t10, t190, t1alp, t1c, t1m, t1rho, t2, t20, t290, t2alp, t2rho, t3, &
-            & t30, t390, t3c, t3m, twothd, una2p, w, xeh2, xenah, xet190, xet1c, xet20, xet290, xet3, &
-            & xet390, xet3c
+        double precision :: al1, al2, alb, alhh, alt, b0, balp, beh2, bet1, bet10, bet10b, bet190, bet1c, bet20, bet290, beta, &
+            & bf, brho, c2a, c2b, c2c, c6, c61, c63, c6swt1, c6swt3, cevau, cind1, cind3, cos1, cos2, cosa, coscos, cosg, coul1, &
+            & coul2, coul3, cplg2, cstsq, cstsq1, cstsq3, dalp, deh2, deh2m, denah, des290, det1, det190, det1c, det20, det290, &
+            & dexp1, dexp2, dexp3, div1, div3, drho, e(:), elec, exch1, exch2, exch3, f10, frac, g10, g30, gamh2a, gamh2b, &
+            & gamnah, h2a1, h2a2, h2a3, h2a4, h2a5, h2a6, h2a7, h2a8, h2a9, h2b1, h2b2, h2b3, h2b4, h2b5, h2b6, h2b7, h2b8, &
+            & h2b9, h2hc1, h2hc2, h2hc3, h2hc4, h2hc5, h2hex, h2i1, h2i2, h2i3, h2i4, h2i5, h2i6, h2ie, h2qc1, h2qc2, h2qc3, &
+            & h2qc4, h2qc5, h2quad, hie, hnaa1, hnaa2, hnaa3, hnaa4, hnaa5, hnab1, hnab2, hnab3, hnab4, hnab5, hnai1, hnai2, &
+            & hnai3, hnai4, hnai5, hnai6, hnau1, hnau2, hnau3, hnau4, hnau5, hnau6, hpol, onethd, pi, qh, qhint, qq, qqint, &
+            & r(:,:), r1s, r2s, r3s, rave, rb, rd, reh2, renah, ret1, ret10, ret190, ret1c, ret20, ret290, rmid, rmuimu1, &
+            & rmuimu3, rnag, rnag1, rnag1c, rnag3, rnag3c, rnagc, rnags, rnahie1, rnahie3, rnahmu1, rnahmu3, rnahpar1, rnahpar3, &
+            & rnahperp1, rnahperp3, rnahpol1, rnahpol1b, rnahpol3, rnahpol3b, rnaie, rnapol1, rnaquad, rqh, rqq, s1, s2, s20alp, &
+            & s20b, s20rho, s2a, s2alp, s2rho, s3, sswt, t1, t10, t190, t1alp, t1c, t1m, t1rho, t2, t20, t290, t2alp, t2rho, t3, &
+            & t30, t390, t3c, t3m, twothd, una2p, w, xeh2, xenah, xet190, xet1c, xet20, xet290, xet3, xet390, xet3c
         integer :: i, nt
-        dimension r(:,:), e(:)
         ! NaH triplets
         ! H2 triplets
         ! H2 singlets
@@ -999,7 +980,6 @@ module chempotpy_nah2_leps_7l_2000_dpem_pot22_legacy_state_f8f175af
         onethd    = 1.0d0/3.0d0
         twothd    = 2.0d0/3.0d0
         do i=1, nt
-            ! =========================================================
             ! this section calcluates useful quantities - the A to BC center
             ! of mass distance, the angles between A-BC and BC, the shorest
             ! of any of the three diatomic distances, and the bond angle
@@ -1038,7 +1018,6 @@ module chempotpy_nah2_leps_7l_2000_dpem_pot22_legacy_state_f8f175af
             else
                 cstsq3 = 0.25d0*((r1s-r2s-r3s+2.0d0*r1s*frac)/(r(i,3)*rnag3)) **2
             endif
-            ! =========================================================
             ! The first NaH singlet
             ! new singlet, designed to minic lower adiabatic behavior
             denah  = 1.97134878d0
@@ -1103,7 +1082,6 @@ module chempotpy_nah2_leps_7l_2000_dpem_pot22_legacy_state_f8f175af
             t3c    = det1c*onethd*xet3c*(xet3c + 2.0d0)
             t3m    = t390 + (t3c - t390)* 0.5d0*(1.0d0+dtanh(t1alp*(r(i,2)-t1rho)))
             t3     = t3m + (t30 - t3m)*cosg**2
-            ! =========================================================
             ! this long section contains data pertinent to long range forces
             !  H2 ionization energy:
             h2ie = (h2i1+h2i2*r(i,2))*dexp(-h2i3*r(i,2))+ r2s*(h2i4+h2i5*r(i,2))*dexp(-h2i6*r(i,2))-s2a+hie
@@ -1172,18 +1150,17 @@ module chempotpy_nah2_leps_7l_2000_dpem_pot22_legacy_state_f8f175af
             cind1  = cind1*c6swt1
             cind3  = cind3*c6swt3
             elec   = elec+c61+c63+cind1+cind3
-            ! ===============================================================
-            coul1 = 0.5d0*(s1+t1)
-            coul2 = 0.5d0*(s2+t2)
-            coul3 = 0.5d0*(s3+t3)
-            exch1 = 0.5d0*(s1-t1)
-            exch2 = 0.5d0*(s2-t2)
-            exch3 = 0.5d0*(s3-t3)
-            w     = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
-            cplg2 = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
-            e(i)  = coul1+coul2+coul3+deh2-dsqrt(w+cplg2*cplg2)/dsqrt(2.0d0)
-            elec  = elec/cevau
-            e(i)  = (e(i)+elec)*cevau
+            coul1  = 0.5d0*(s1+t1)
+            coul2  = 0.5d0*(s2+t2)
+            coul3  = 0.5d0*(s3+t3)
+            exch1  = 0.5d0*(s1-t1)
+            exch2  = 0.5d0*(s2-t2)
+            exch3  = 0.5d0*(s3-t3)
+            w      = (exch1-exch2)**2+(exch2-exch3)**2+(exch3-exch1)**2
+            cplg2  = c2a*dexp(-c2b*w-c2c*(r(i,1)+r(i,2)+r(i,3)))
+            e(i)   = coul1+coul2+coul3+deh2-dsqrt(w+cplg2*cplg2)/dsqrt(2.0d0)
+            elec   = elec/cevau
+            e(i)   = (e(i)+elec)*cevau
         enddo
     end subroutine dispatch
 end module chempotpy_nah2_leps_7l_2000_dpem_pot22_legacy_state_f8f175af

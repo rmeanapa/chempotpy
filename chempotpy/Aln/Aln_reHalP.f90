@@ -1,10 +1,11 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_rehalp_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate the reparameterized Halicioglu-Pound potential through Python.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,6 +35,7 @@ module chempotpy_aln_rehalp_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate the generalized Lennard-Jones aluminum cluster energy.
     subroutine evaluate_reparameterized_halicioglu_pound( &
             coordinates_bohr, atom_count, energy_hartree )
@@ -70,7 +72,7 @@ module chempotpy_aln_rehalp_pes
     end subroutine evaluate_reparameterized_halicioglu_pound
 end module chempotpy_aln_rehalp_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_reHalP through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_rehalp_pes, only: evaluate

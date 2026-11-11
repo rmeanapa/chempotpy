@@ -8,60 +8,63 @@
 !! input: r O1-C1-O2-C2 Bohr
 !! output: v (interaction energy only) cm-1
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement COCO_PIPNN, a potential energy surface for COCO.
 module chempotpy_coco_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
-    subroutine evaluate( x, igrad, path, p, g, d )
+
+    !> @brief Evaluate the COCO_PIPNN potential energy surface for COCO.
+    subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,     only: all_pair_distances_and_jacobian, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom
         implicit none
         ! number of electronic state
-        integer, parameter              :: nstates = 1
-        integer, parameter              :: natoms  = 4
-        integer, intent(in)             :: igrad
-        character(len=1024), intent(in) :: path
-        double precision, intent(in)    :: x(natoms,3)
-        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-        double precision                :: v
-        double precision                :: r_bond(6), dvdr(6), drdx(6,12)
-        double precision                :: tx(natoms,3), dvdx(12)
+        integer, parameter            :: nstates = 1
+        integer, parameter            :: natoms  = 4
+        integer, intent(in)           :: igrad
+        double precision, intent(in)  :: x(natoms,3)
+        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
+        double precision, intent(out) :: d(nstates,nstates,natoms,3)
+        double precision              :: v
+        double precision              :: r_bond(6), dvdr(6), drdx(6,12)
+        double precision              :: tx(natoms,3), dvdx(12)
         !initialize
         v  = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
         tx = x/legacy_bohr_to_angstrom
         call all_pair_distances_and_jacobian(tx, r_bond, drdx)
-        call pes_ococ(r_bond, v, igrad, dvdr, path)
+        call pes_ococ(r_bond, v, igrad, dvdr)
         dvdr = dvdr/8065.7112013/legacy_bohr_to_angstrom
         call transform_internal_gradient_to_cartesian(dvdr, drdx, dvdx)
         if( igrad == 0 )then
             p(1) = v/8065.7112013
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             p(1)     = v/8065.7112013
             g(1,:,:) = transpose(reshape(dvdx, [3, natoms]))
         endif
         d = 0.d0
     end subroutine evaluate
+
     !> @brief Evaluate pes_ococ.
-    subroutine pes_ococ( r, v, idv, dvdr, path )
+    subroutine pes_ococ( r, v, idv, dvdr )
         implicit none
-        double precision, parameter     :: pi = dacos(-1.d0)
-        integer, parameter              :: np = 7
-        character(len=1024), intent(in) :: path
-        double precision, intent(in)    :: r(6)
-        integer, intent(in)             :: idv
-        double precision, intent(out)   :: v, dvdr(6)
-        double precision                :: p(np,1), vp(1), dvdp(np,1), dpdr(np,6)
+        double precision, parameter   :: pi = dacos(-1.d0)
+        integer, parameter            :: np = 7
+        double precision, intent(in)  :: r(6)
+        integer, intent(in)           :: idv
+        double precision, intent(out) :: v, dvdr(6)
+        double precision              :: p(np,1), vp(1), dvdp(np,1), dpdr(np,6)
         if( idv .ne. 0 .and. idv .ne. 1 ) stop "Only energy and gradient are available"
         call pip_ococ(r, p(:,1), idv, dpdr)
-        call nnfit_ococ(np, 1, p, vp, idv, dvdp, path)
+        call nnfit_ococ(np, 1, p, vp, idv, dvdp)
         if( idv .eq. 1 ) call dgemv('t', 7, 6, 1.d0, dpdr, 7, dvdp, 1, 0.d0, dvdr, 1)
         v = vp(1)
         return
+
         contains
+
         !> @brief Evaluate pip_ococ.
         subroutine pip_ococ( r, p, idv, dpdr )
             ! molecular based fundamental invariants
@@ -105,25 +108,19 @@ module chempotpy_coco_pipnn_pes
                 dpdr(:,i) = dpdr(:,i)*g(i)*(-1.d0*ita)
             enddo
         end subroutine pip_ococ
+
         !> @brief Evaluate nnfit_ococ.
-        subroutine nnfit_ococ( ndim, ntot, r0, vx, idv, dv, path )
+        subroutine nnfit_ococ( ndim, ntot, r0, vx, idv, dv )
+            use chempotpy_coco_pipnn_parameters, only: b1 => hidden_1_biases, b2 => hidden_2_biases, b3 => output_bias, rg => input_ranges, vg => output_range, w1 => input_weights, w2 => hidden_weights, w3 => output_weights
             implicit none
-            integer, parameter              :: s0 = 7, s1=45, s2=45
-            character(len=1024), intent(in) :: path
-            integer, intent(in)             :: ndim, ntot
-            double precision, intent(in)    :: r0(ndim,ntot)
-            double precision, intent(out)   :: vx(ntot)
-            integer, intent(in)             :: idv
-            double precision, intent(out)   :: dv(ndim,ntot)
-            double precision                :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3, rg(2,s0), vg(2)
-            integer                         :: fid, i
-            character(len=1024)             :: file_path1
-            file_path1 = trim(path)//"/COCO/nn_ococ_w20.txt"
+            integer, parameter            :: s0 = 7, s1=45, s2=45
+            integer, intent(in)           :: ndim, ntot
+            double precision, intent(in)  :: r0(ndim,ntot)
+            double precision, intent(out) :: vx(ntot)
+            integer, intent(in)           :: idv
+            double precision, intent(out) :: dv(ndim,ntot)
+            integer                       :: i
             if( ndim .ne. s0 ) stop "ndim .ne. s0"
-            fid = 870711
-            open(fid, file=file_path1, status='old', action='read')
-            read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
-            close(fid)
             if( ntot .ge. 24 )then
                 call nsimx(ntot, r0, vx, idv, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
             else
@@ -132,6 +129,7 @@ module chempotpy_coco_pipnn_pes
                 enddo
             endif
         end subroutine nnfit_ococ
+
         !> @brief Evaluate nsim.
         subroutine nsim( r0, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
             ! ---- simulate a neural network with two hidden layers
@@ -190,6 +188,7 @@ module chempotpy_coco_pipnn_pes
                 dv(i) = dv(i)*vgg/rgg(i)
             enddo
         end subroutine nsim
+
         !> @brief Evaluate nsimx.
         subroutine nsimx( nt, r, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
             ! ---- simulate a neural network with two hidden layers
@@ -197,7 +196,6 @@ module chempotpy_coco_pipnn_pes
             ! ---- blas routines used in this subroutine: dgemm, dgemv
             ! ---- the syntax keeps the same with nsim, except input nt at first
             ! ---- Chen Jun, 2013/11/26
-            !
             ! ---- description of parameters
             ! ---- nt  : total number of points in r,v and dv
             ! ---- r   : input of nn, r(n0,nt), r(1:n0,i) is the i-th input
@@ -267,6 +265,7 @@ module chempotpy_coco_pipnn_pes
             enddo
         end subroutine nsimx
     end subroutine pes_ococ
+
     !> @brief Evaluate potco.
     subroutine potco( r, v, dv )
         ! 2020/4/21  C-O AE-CCSD(T)(short range) MRCI(long range) / ACVTZ Energy in cm-1
@@ -319,7 +318,7 @@ module chempotpy_coco_pipnn_pes
     end subroutine potco
 end module chempotpy_coco_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose COCO_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_coco_pipnn_pes, only: evaluate
     implicit none
@@ -331,5 +330,5 @@ subroutine pes( x, igrad, path, p, g, d )
     double precision, intent(out)   :: p(nstates)
     double precision, intent(out)   :: g(nstates,natoms,3)
     double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    call evaluate(x, igrad, path, p, g, d)
+    call evaluate(x, igrad, p, g, d)
 end subroutine pes

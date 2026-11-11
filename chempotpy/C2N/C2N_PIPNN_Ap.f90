@@ -1,13 +1,13 @@
-!=======================================================================
 !     The ^2A prime PES for C2N system at the MC-PDFT/AVTZ level.
-!=======================================================================
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement C2N_PIPNN_Ap, a potential energy surface for C2N.
 module chempotpy_c2n_pipnn_ap_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the C2N_PIPNN_Ap potential energy surface for C2N.
     subroutine evaluate( x, igrad, path, p, g, d )
         use chempotpy_geometry, only: cartesian_distance
         implicit none
@@ -40,13 +40,12 @@ module chempotpy_c2n_pipnn_ap_pes
         g = 0.d0
         d = 0.d0
     end subroutine evaluate
-    !=======================================================================
+
     !     PIP-NN PES of total energy for the C2N(^2A') system.
     !     where,
     !       rNC,rCC: angstrom
     !       theta: degree
     !       Vpes: total energy, eV
-    !-----------------------------------------------------------------------
     !> @brief Evaluate c2n_2a_prime.
     subroutine c2n_2a_prime( rb, path, vpes )
         implicit none
@@ -82,8 +81,7 @@ module chempotpy_c2n_pipnn_ap_pes
             endif
         endif
     end subroutine c2n_2a_prime
-    !=======================================================================
-    !=======================================================================
+
     !> @brief Evaluate nnfit_a.
     subroutine nnfit_a( ndim, ntot, r0, path, vx )
         implicit none
@@ -111,8 +109,7 @@ module chempotpy_c2n_pipnn_ap_pes
             enddo
         endif
     end subroutine
-    !=======================================================================
-    !=======================================================================
+
     !> @brief Evaluate nnfit_b.
     subroutine nnfit_b( ndim, ntot, r0, path, vx )
         implicit none
@@ -140,8 +137,7 @@ module chempotpy_c2n_pipnn_ap_pes
             enddo
         endif
     end subroutine
-    !=======================================================================
-    !=======================================================================
+
     !> @brief Evaluate nnfit_c.
     subroutine nnfit_c( ndim, ntot, r0, path, vx )
         implicit none
@@ -169,11 +165,9 @@ module chempotpy_c2n_pipnn_ap_pes
             enddo
         endif
     end subroutine
-    !=======================================================================
-    !=======================================================================
+
     ! Simulate a neural network with two hidden layers: n0-n1-n2-1
     ! Blas routines used in this subroutine: dgemv, ddot
-    !-----------------------------------------------------------------------
     !> @brief Evaluate nsim.
     subroutine nsim( r0, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
         implicit none
@@ -221,14 +215,12 @@ module chempotpy_c2n_pipnn_ap_pes
             dv(i) = dv(i)*vgg/rgg(i)
         enddo
     end subroutine nsim
-    !=======================================================================
-    !=======================================================================
+
     ! Simulate a neural network with two hidden layers:
     !    n0-n1(tansig)-n2(tansig)-1(pureline)
     ! Blas routines used in this subroutine: dgemm, dgemv
     ! The syntax keeps the same with nsim, except input nt at first.
     ! Chen Jun, 2013/11/26
-    !-----------------------------------------------------------------------
     ! Description of parameters:
     !    nt  : total number of points in r,v and dv
     !    r   : input of nn, r(n0,nt), r(1:n0,i) is the i-th input
@@ -246,7 +238,6 @@ module chempotpy_c2n_pipnn_ap_pes
     !    w3  : weights connect 2-nd hidden layer with output layer
     !    b3  : biase of output layer
     !    vg  : output range of the training set, vg(2)
-    !-----------------------------------------------------------------------
     !> @brief Evaluate nsimx.
     subroutine nsimx( nt, r, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
         implicit none
@@ -300,16 +291,12 @@ module chempotpy_c2n_pipnn_ap_pes
             enddo
         enddo
     end subroutine nsimx
-    !=======================================================================
-    !=======================================================================
+
     !------->This is the subroutine for PIPs up to the order of 3 of A2B1
     !------->type molecule.
-    !-----------------------------------------------------------------------
     !        double precision :: x(1:3)
     !        double precision :: p(0:12)
     !        call bemsav(x,p)
-    !-----------------------------------------------------------------------
-    !-----------------------------------------------------------------------
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         implicit none
@@ -319,8 +306,7 @@ module chempotpy_c2n_pipnn_ap_pes
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
-    !-----------------------------------------------------------------------
-    !-----------------------------------------------------------------------
+
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
         implicit none
@@ -332,8 +318,7 @@ module chempotpy_c2n_pipnn_ap_pes
         m(3) = x(1)
         m(4) = m(1)*m(2)
     end subroutine evmono
-    !-----------------------------------------------------------------------
-    !-----------------------------------------------------------------------
+
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
         implicit none
@@ -353,10 +338,9 @@ module chempotpy_c2n_pipnn_ap_pes
         p(11) = p(1)*p(5)-p(8)
         p(12) = p(2)*p(6)
     end subroutine evpoly
-    !=======================================================================
 end module chempotpy_c2n_pipnn_ap_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose C2N_PIPNN_Ap through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_c2n_pipnn_ap_pes, only: evaluate
     implicit none

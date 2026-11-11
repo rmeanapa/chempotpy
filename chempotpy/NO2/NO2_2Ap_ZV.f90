@@ -6,10 +6,8 @@
 !   Number of bodies:              3
 !   Number of electronic surfaces: 1
 !   Interface:                     Section-2
-!
 !   References:: Z. Varga, Y. Liu, J. Li, Y. Paukku, H. Guo, and
 !                D. G. Truhlar, in preparation
-!
 !   Notes:    -Doublet A' (2Ap) surface
 !             -Mixed-exponential-Gaussian (MEG)
 !              variables are applied
@@ -34,14 +32,12 @@
 !                 PES_O4_triplet_umn_v2
 !                 NO2_2Ap_MB-PIP-MEG
 !                 NO2_4Ap_MB-PIP-MEG
-!
 !     O1--O2
-!
 !     N3
-!
 !   Input: X(3),Y(3),Z(3)               in units of bohr
 !   Output: E                           in units of hartree
 !   Output: dEdX(3),dEdY(3),dEdZ(3)     in units of hartree/bohr
+
 module no2_2ap_zv_par
     ! Conversion factors
     ! Cconv: bohr to Angstrom
@@ -318,13 +314,15 @@ module no2_2ap_zv_par
         /)
 end module no2_2ap_zv_par
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement NO2_2Ap_ZV, a potential energy surface for NO2.
 module chempotpy_no2_2ap_zv_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the NO2_2Ap_ZV potential energy surface for NO2.
     subroutine evaluate( x, igrad, potential, gradient, dvec )
         use no2_2ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
             & gconv, p, r, re, rm, rms, totdiss
@@ -366,7 +364,7 @@ module chempotpy_no2_2ap_zv_pes
     end subroutine evaluate
 end module chempotpy_no2_2ap_zv_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose NO2_2Ap_ZV through the Python-facing PES entry point.
 subroutine pes( x, igrad, potential, gradient, dvec )
     use chempotpy_no2_2ap_zv_pes, only: evaluate
     implicit none
@@ -389,7 +387,6 @@ end subroutine pes
 !                       igrad=1 calculation of energy and gradient
 ! output potential energy:      v    in kcal/mol
 ! output gradient:              dVdX in kcal/(mol*Ang)
-
 !> @brief Evaluate no2pes.
 subroutine no2pes( x, v, dvdx, igrad )
     use no2_2ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
@@ -430,11 +427,9 @@ subroutine coord_convt( x )
         & gconv, p, r, re, rm, rms, totdiss
     !  This subroutine calculates the three interatomic distances
     !  from the XYZ coordinates
-    !
     !  r1 = r(O1O2)
     !  r2 = r(O1N3)
     !  r3 = r(O1N3)
-    !
     implicit none
     double precision, intent(in) :: x(9)
     call all_pair_distances(x, r)
@@ -858,15 +853,11 @@ end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v, grad, imol, igrad )
-    !
     ! Compute the diatomic potential of ground-state triplet O2
-    !
     ! References: J. Chem. Phys. 132, 074307 (2010)
-    !
     ! Input:  r      interatomic distance in Angstrom
     ! Output: V      potential in kcal/mol
     !         grad   gradient (kcal/mol)/Angstrom
-    !
     implicit none
     integer, intent(in)           :: imol, igrad
     double precision, intent(in)  :: r
@@ -929,7 +920,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             grad = grad + dispdr(1)
         endif
         ! NO pairwise
-    else if( imol .eq. 3 )then
+    elseif( imol .eq. 3 )then
         ! Short range NO parameters for NO dissociation
         ! The long range term comes from dispersion
         ! The difference between the points of the 8th order MEG NO diatomic
@@ -1079,7 +1070,6 @@ subroutine evdrdx( x )
     ! Subroutine to evaluate dRdX for given R and X
     ! R:            R(3), 3 bond lengths
     ! X:            X(9), 9 Cartesian coordinates
-    !
     ! dMdR:         dMdR(3,nom), nom monomials w.r.t.3 bond length
     ! dPdR:         dPdR(3,nob), nop polynomial basis functions
     !               w.r.t. 3 bond lengths
@@ -1458,19 +1448,15 @@ end subroutine evdbdr
 subroutine d3disp( dist, disp, dispdr, igrad, imol )
     ! Dispersion correction based on Grimme's D3(BJ) calculation for
     ! diatomic pairs
-    !
     ! Several subroutines of DFTD3 V3.1 Rev 1 by Grimme were merged into
     ! subroutine edisp and they have been heavily modified to calculate
     ! only dispersion energy corrections that are needed.
-    !
     ! S. Grimme, J. Antony, S. Ehrlich and H. Krieg
     ! J. Chem. Phys, 132 (2010), 154104
     ! and
     ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
     ! 1456-1465
-    !
     ! The C6 values are fixed.
-    !
     implicit none
     double precision :: cn(2), s6, s8, rs6, rs8
     double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
@@ -1498,7 +1484,7 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
         ! C6 for O2 system
         c6(1) = 12.8d0
         c6(2) = 12.8d0
-    else if( imol .eq. 3 )then
+    elseif( imol .eq. 3 )then
         ! iz for NO system
         iz(1) = 8
         iz(2) = 7

@@ -1,10 +1,11 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_gol_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate the Gollisch aluminum potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -33,6 +34,7 @@ module chempotpy_aln_gol_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate the Gollisch embedded-atom aluminum cluster energy.
     subroutine evaluate_gollisch( coordinates_bohr, atom_count, energy_hartree )
         use chempotpy_geometry, only: cartesian_distance
@@ -70,7 +72,7 @@ module chempotpy_aln_gol_pes
     end subroutine evaluate_gollisch
 end module chempotpy_aln_gol_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_Gol through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_gol_pes, only: evaluate

@@ -1,11 +1,68 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:          H3
+!   Functional Form: Double many-body expansion
+!   Common Name:     DMBE
+!   Reference:       A. J. C. Varandas, F. B. Brown, C. A. Mead,
+!                    D. G. Truhlar, and N. C. Blais
+!                    J. Chem. Phys. 86, 6258 (1987).
+!   Interface: potlib2001
+! Number of bodies: 3
+! Number of electronic states: 1
+! Number of derivatives: 1
+!   Calling Sequence:
+!      prepare_local_context - initializes the potential'h3cocm_s variables and
+!               must be called once before any calls to POT
+!      POT    - driver for the evaluation of the energy and the derivati
+!               of the energy with respect to the coordinates for a give
+!               geometric configuration
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohrs
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      ground electronic state
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for the H
+!      infinitely far from the H2 diatomic and R(H2) set equal to the
+!      H2 equilibrium diatomic value.
+!   Parameters:
+!      Set in the BLOCK DATA subprogram PTPACM
+!   Coordinates:
+!      Internal, Definition: R(1) = R( first H -- second H)
+!                            R(2) = R(second H -- third H )
+!                            R(3) = R( third H -- first H )
+!   Common Blocks (used between the calling program and this potential):
+!        passes the coordinates, ground state electronic energy, and
+!        derivatives of the ground electronic state energy with respect
+!        to the coordinates.
+!        passes the control flags where
+!              = 1, first excited electronic state energy and derivative
+!              = 2, ground and first excited electronic state energies a
+!                   derivatives
+!        usricm_nder  - not used
+!        usricm_nflag - Control flags
+!              derivatives for the excited electronic states
+!              derivatives for the nonadiabatic coupling between ground
+!              excited states.
+!   Default Parameter Values:
+!      Variable      Default value
+!      usricm_nflag(18)        6
+!     Calculates double many-body expansion of the H3 potential.
+!        ENGYGS  - energy of surface 1 (Ground State).        [ARRAY]
+!        DEGSDR  - derivatives for surface 1 (Ground State).  [ARRAY]
+!        ENGYES  - energy of surface 2 (Excited State).       [ARRAY]
+!        DEESDR  - derivatives for surface 2 (Excited State). [ARRAY]
+!        ENGYIJ  - nonadiabatic coupling energy.              [ARRAY]
+!        CAPF   - nonadiabatic coupling.  [SUBROUTINE TO CALCULATE ENGYI
+
+!> @brief Implement H3_GEN_DMBE_1987, a potential energy surface for H3.
 module chempotpy_h3_gen_dmbe_1987_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the H3_GEN_DMBE_1987 potential energy surface for H3.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,     only: cartesian_distance, flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -259,7 +316,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
         enddo
         if( igrad .eq. 0 )then
             usricm_nder = 0
-        else if( igrad .eq. 1 .or. igrad .eq. 2 )then
+        elseif( igrad .eq. 1 .or. igrad .eq. 2 )then
             usricm_nder = 1
         endif
         usricm_nasurf = 1
@@ -296,7 +353,9 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 d(:,:,iatom,idir) = hx(:,:,j)
             enddo
         enddo
+
         contains
+
         !> @brief Evaluate EvdRdX for the H3_GEN_DMBE_1987 potential.
         subroutine evdrdx( x, r, drdx )
             use chempotpy_geometry, only: ordered_pair_distance_jacobian
@@ -307,124 +366,36 @@ module chempotpy_h3_gen_dmbe_1987_pes
             double precision, intent(out) :: drdx(3,9)
             call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
         end subroutine evdrdx
+
         !> @brief Evaluate prepare_local_context for the H3_GEN_DMBE_1987 potential.
         subroutine prepare_local_context
-            !
-            !   System:          H3
-            !   Functional Form: Double many-body expansion
-            !   Common Name:     DMBE
-            !   Reference:       A. J. C. Varandas, F. B. Brown, C. A. Mead,
-            !                    D. G. Truhlar, and N. C. Blais
-            !                    J. Chem. Phys. 86, 6258 (1987).
-            !   Interface: potlib2001
-            ! Number of bodies: 3
-            ! Number of electronic states: 1
-            ! Number of derivatives: 1
-            !
-            !   Calling Sequence:
-            !      prepare_local_context - initializes the potential'h3cocm_s variables and
-            !               must be called once before any calls to POT
-            !      POT    - driver for the evaluation of the energy and the derivati
-            !               of the energy with respect to the coordinates for a give
-            !               geometric configuration
-            !
-            !   Units:
-            !      energies    - hartrees
-            !      coordinates - bohrs
-            !      derivatives - hartrees/bohr
-            !
-            !   Surfaces:
-            !      ground electronic state
-            !
-            !   Zero of energy:
-            !      The classical potential energy is set equal to zero for the H
-            !      infinitely far from the H2 diatomic and R(H2) set equal to the
-            !      H2 equilibrium diatomic value.
-            !
-            !   Parameters:
-            !      Set in the BLOCK DATA subprogram PTPACM
-            !
-            !   Coordinates:
-            !      Internal, Definition: R(1) = R( first H -- second H)
-            !                            R(2) = R(second H -- third H )
-            !                            R(3) = R( third H -- first H )
-            !
-            !   Common Blocks (used between the calling program and this potential):
-            !        passes the coordinates, ground state electronic energy, and
-            !        derivatives of the ground electronic state energy with respect
-            !        to the coordinates.
-            !        passes the control flags where
-            !              = 1, first excited electronic state energy and derivative
-            !              = 2, ground and first excited electronic state energies a
-            !                   derivatives
-            !        usricm_nder  - not used
-            !        usricm_nflag - Control flags
-            !
-            !              derivatives for the excited electronic states
-            !
-            !
-            !              derivatives for the nonadiabatic coupling between ground
-            !              excited states.
-            !
-            !   Default Parameter Values:
-            !      Variable      Default value
-            !      usricm_nflag(18)        6
-            !
-            !     Calculates double many-body expansion of the H3 potential.
-            !        ENGYGS  - energy of surface 1 (Ground State).        [ARRAY]
-            !        DEGSDR  - derivatives for surface 1 (Ground State).  [ARRAY]
-            !        ENGYES  - energy of surface 2 (Excited State).       [ARRAY]
-            !        DEESDR  - derivatives for surface 2 (Excited State). [ARRAY]
-            !        ENGYIJ  - nonadiabatic coupling energy.              [ARRAY]
-            !        CAPF   - nonadiabatic coupling.  [SUBROUTINE TO CALCULATE ENGYI
-            !
             implicit none
-            double precision :: cnvrtd, cnvrte
-            integer          :: i, id, nexp
-            !
-            !
+            double precision            :: cnvrtd, cnvrte
+            integer                     :: i, id, nexp
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
-            !
             !                                                 *
             !  units conversion for anomalous adiabatic       *
             !  coupling pengyij                               *
             !                                                 *
-            !
-            !
             !     DIMENSION DLEP(3), DLEP2(3), DV2(3), DV3(3), DVA(3), DC3(3)
             !     DIMENSION R(3)
-            !
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !
             ! NON STANDARD COUPLING BETWEEN SURFACES
-            !
             ijconvert_icouple  = 1
             usricm_nasurf(1,2) = 0
             usricm_nasurf(2,1) = 0
@@ -439,128 +410,80 @@ module chempotpy_h3_gen_dmbe_1987_pes
             ijconvert_cnvrtq   = cnvrte/cnvrtd
             ijconvert_cnvrts   = cnvrte/cnvrtd
             ijconvert_cnvrtchi = cnvrte
-            !
-            nexp = 4
+            nexp               = 4
             do id = 1, 3
                 nexp             = nexp + 2
                 h3dmcm_dampa(id) = h3dmcm_alph0/dble(nexp)**h3dmcm_alph1
                 h3dmcm_dampb(id) = h3dmcm_bet0*exp(-h3dmcm_bet1*dble(nexp))
             enddo
-            !
-            !
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
-            !
-            infocm_ref(1) = 'A. J. C. Varandas, F. B. Brown, C. A. Mead,'
-            infocm_ref(2) = 'D. G. Truhlar, N. C. Blais,'
-            infocm_ref(3) = 'J. Chem. Phys. 86, 6258(1987)'
-            !
+            infocm_ref(1)     = 'A. J. C. Varandas, F. B. Brown, C. A. Mead,'
+            infocm_ref(2)     = 'D. G. Truhlar, N. C. Blais,'
+            infocm_ref(3)     = 'J. Chem. Phys. 86, 6258(1987)'
             infocm_indexes(1) = 1
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
-            !
-            infocm_irctnt = 2
-            !
+            infocm_irctnt     = 2
             !      CALL POTINFO
-            !
             call ancvrt
-            !
         end subroutine prepare_local_context
+
         !> @brief Evaluate POT for the H3_GEN_DMBE_1987 potential.
         subroutine pot
-            !
             !   Surfaces:
             !      ground electronic state
-            !
             !   Zero of energy:
             !      The classical potential energy is set equal to zero for the H
             !      infinitely far from the H2 diatomic and pt1cm_r(H2) set equal to the
             !      H2 equilibrium diatomic value.
-            !
             !   Coordinates:
             !      Internal, Definition: pt1cm_r(1) = pt1cm_r( first H -- second H)
             !                            pt1cm_r(2) = pt1cm_r(second H -- third H )
             !                            pt1cm_r(3) = pt1cm_r( third H -- first H )
-            !
             implicit none
-            double precision :: ce2, ce3, dc3, dlep, dlep2, dv2, dv3, dva, t, va, vc, vii, viii, vleps, vleps2
-            integer          :: i, indes
-            !
-            !
+            double precision            :: ce2, ce3, dc3(3), dlep(3), dlep2(3), dv2(3), dv3(3), dva(3), t, va, vc, vii, viii, vleps, &
+                & vleps2
+            integer                     :: i, indes
             integer, parameter          :: n3atom = 75
             integer, parameter          :: natom  = 25
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
-            !
-            !
-            !
-            !
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
-            !
             !                                                 *
             !  units conversion for anomalous adiabatic       *
             !  coupling usrocm_pengyij                               *
             !                                                 *
-            !
-            !
-            dimension dlep(3), dlep2(3), dv2(3), dv3(3), dva(3), dc3(3)
             !     DIMENSION pt1cm_r(3)
-            !
             call cartou
             call carttor
-            !
             ! Set up symmetry coordinates and their derivatives
-            !
             call h3coor (pt1cm_r(1), pt1cm_r(2), pt1cm_r(3))
-            !
             ! Set up 2-body correlation energies, dispersion damping terms, and
             !    their derivatives
-            !
             call h3cor2
-            !
             ! Get Leps potentials and derivatives
-            !
             call h3leps (vleps, vleps2, dlep, dlep2)
-            !
             ! Get VA term and its derivatives
-            !
             call h3va (pt1cm_r(1), pt1cm_r(2), pt1cm_r(3), va, dva)
-            !
             ! Get VII term and its derivatives
-            !
             call h3vii (pt1cm_r(1), pt1cm_r(2), pt1cm_r(3), vii, dv2)
-            !
             ! Get VIII term and its derivatives
-            !
             call h3viii (viii, dv3)
-            !
             ! Get 3-body correlation and its derivative
-            !
             call h3cor3 (ce3, dc3)
-            !
             ! 2-body correlation term
-            !
             ce2 = h3crcm_corrs(1) + h3crcm_corrs(2) + h3crcm_corrs(3)
-            !
             ! ground state
-            !
             if( usricm_nasurf(1,1) .gt. 0 )then
                 vc           = va + vii + viii + ce2 + ce3
                 pt1cm_engygs = vleps + vc + pt3cm_ezero(1)
@@ -571,9 +494,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     enddo
                 endif
             endif
-            !
             ! first electronic state
-            !
             if( usricm_nasurf(2,2) .gt. 0 )then
                 indes               = 1
                 vc                  = va + vii + viii + ce2 + ce3
@@ -585,68 +506,45 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     enddo
                 endif
             endif
-            !
             ! nonadiabatic coupling in an anomalous form where usrocm_pengyij is treated as
             ! -  a vector with <psi|dpsi/dQ>,<psi|dpsi/ds>,<psi|dpsi/dchi>
             ! -  already transformed to the user'h3cocm_s units
             !    (thus no RTOCART, DEDCOU calls via setting is usricm_nasurf(i,j))
             ! -  having no coded derivatives (no matter what usricm_nder is set to )
-            !
             if( ijconvert_icouple .gt. 0 )then
                 call capf(pt1cm_r(1), pt1cm_r(2), pt1cm_r(3))
                 usrocm_pengyij(1) = pt5cm_engyij(1) * ijconvert_cnvrtq
                 usrocm_pengyij(2) = pt5cm_engyij(2) * ijconvert_cnvrts
                 usrocm_pengyij(3) = pt5cm_engyij(3) * ijconvert_cnvrtchi
             endif
-            !
             call eunitzero
             if( usricm_nder .ne. 0 )then
                 call rtocart
                 call dedcou
             endif
-            !
         end subroutine pot
+
         !> @brief Evaluate H3COOR for the H3_GEN_DMBE_1987 potential.
         subroutine h3coor ( r1, r2, r3 )
-            !
             !   Calculates D3H symmetry coordinates and derivatives
-            !
             implicit none
-            double precision :: arg, bet2, beta, dbt1, dbt2, dbt3, dgm1, dgm2, dgm3, gam2, gamma, phi3, r1, r2, r3, rtan, t, t1, t12, t2, t3, theta
-            !
-            !
+            double precision            :: arg, bet2, beta, dbt1, dbt2, dbt3, dgm1, dgm2, dgm3, gam2, gamma, phi3, r1, r2, r3, rtan, t, t1, t12, t2, t3, theta
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
-            !
-            !
             h3cocm_per  = r1+r2+r3
             h3cocm_per2 = h3cocm_per*h3cocm_per
-            !
             !   h3cocm_qcoord and its derivatives
-            !
             h3cocm_r12    = r1*r1
             h3cocm_r22    = r2*r2
             h3cocm_r32    = r3*r3
@@ -654,17 +552,13 @@ module chempotpy_h3_gen_dmbe_1987_pes
             h3cocm_dq1    = 2.0d0*r1
             h3cocm_dq2    = 2.0d0*r2
             h3cocm_dq3    = 2.0d0*r3
-            !
             !   h3cocm_rho and its derivatives
-            !
             h3cocm_rho   = sqrt(h3cocm_qcoord/3.0d0)
             t            = 1.0d0/(6.0d0*h3cocm_rho)
             h3cocm_drho1 = t*h3cocm_dq1
             h3cocm_drho2 = t*h3cocm_dq2
             h3cocm_drho3 = t*h3cocm_dq3
-            !
             !   h3cocm_s, h3cocm_cphi3 (cos(phi3)), and their derivatives
-            !
             gamma     = 2.0d0*h3cocm_r12-h3cocm_r22-h3cocm_r32
             gam2      = gamma*gamma
             dgm1      = 2.0d0*h3cocm_dq1
@@ -683,10 +577,8 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 h3cocm_ds1 = 0.0d0
                 h3cocm_ds2 = 0.0d0
                 h3cocm_ds3 = 0.0d0
-                !
                 !   For h3cocm_s=0, h3cocm_cphi3 and its derivative should not be
                 !   used anywhere but set to zero anyway.
-                !
                 h3cocm_cphi3  = 0.0d0
                 h3cocm_dcphi1 = 0.0d0
                 h3cocm_dcphi2 = 0.0d0
@@ -720,49 +612,30 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 coupcm_dphi(3)   = -h3cocm_dcphi3/(coupcm_sphi3*3.d0)
             end block goto_block_10_741
         end subroutine h3coor
+
         !> @brief Evaluate H3COR2 for the H3_GEN_DMBE_1987 potential.
         subroutine h3cor2
-            !
             !     Calculates 2-body correlation energies for singlet and triplet
             !     states of H2, the damping factors for the dispersion terms, and
             !     their 1st derivatives
-            !
             implicit none
-            double precision :: d, dd, denom, dpol, fnexp, pol, rsave, t, t1, t2, tt, tt1, tt2, x
-            integer          :: id, j, nexp
-            !
-            !
+            double precision            :: d, dd, denom, dpol, fnexp, pol, rsave, t, t1, t2, tt, tt1, tt2, x
+            integer                     :: id, j, nexp
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
             !      DIMENSION RR(3)
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COR2)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
-            !
-            !
             !   Loop over three coordinates
-            !
             do j = 1, 3
                 rsave            = pt1cm_r(j)
                 h3crcm_corrs(j)  = 0.0d0
@@ -774,20 +647,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 t2               = t*t
                 t1               = t2*t1
                 nexp             = 4
-                !
                 !      Loop over terms in dispersion expansion
-                !
                 do id = 1, 3
                     nexp  = nexp + 2
                     fnexp = dble(nexp)
                     t2    = t2*t
                     t1    = t1*t
-                    !
                     !     singlet
-                    !
                     !        Calculate damping function for the nth dispersion coefficient
                     !        and its 1st derivative
-                    !
                     denom = h3dmcm_h2rm + 2.5d0*h3dmcm_h2r0
                     x     = 2.0d0*rsave/denom
                     tt    = h3dmcm_dampb(id)*x
@@ -799,19 +667,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     tt2   = tt1**(nexp-1)
                     d     = tt1*tt2
                     dd    = 2.0d0*fnexp*dpol*tt*tt2/denom
-                    !
                     !     store damping factors (including h3dmcm_chh coeff and 1/pt1cm_r**NEXP)
                     !     FOR later use in computing the 3-body correlation energy.
-                    !
                     h3crcm_damp(id,j)  = h3dmcm_chh(id)*d*t2
                     h3crcm_ddamp(id,j) = h3dmcm_chh(id)*(dd*t2 - fnexp*d*t1)
                     h3crcm_corrs(j)    = h3crcm_corrs(j) - h3crcm_damp(id,j)
                     h3crcm_dcorrs(j)   = h3crcm_dcorrs(j) - h3crcm_ddamp(id,j)
-                    !
                     !     triplet
                     !        Calculate damping function for the nth dispersion
                     !        coefficient and its 1st derivative
-                    !
                     denom            = h3dmcm_h2rmt + 2.5d0*h3dmcm_h2r0
                     x                = 2.0d0*rsave/denom
                     tt               = h3dmcm_dampb(id)*x
@@ -828,67 +692,41 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 enddo
             enddo
         end subroutine h3cor2
+
         !> @brief Evaluate H3COR3 for the H3_GEN_DMBE_1987 potential.
         subroutine h3cor3 ( ce3, dc3 )
-            !
             !     Calculates 3-body correlation energy and its 1st derivatives
-            !
             implicit none
-            double precision :: ce3, dc3, g, gd, h, hd, hysec, hytan, rr, sgnt, t, t1, t2
-            integer          :: i, i2, i3, id
-            !
-            !
+            double precision            :: ce3, dc3(3), g(3), gd(3), h(3), hd(3), hysec, hytan, rr, sgnt, t, t1, t2
+            integer                     :: i, i2, i3, id
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            dimension dc3(3), g(3), gd(3), h(3), hd(3)
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
-            !
             ce3    = 0.0d0
             dc3(1) = 0.0d0
             dc3(2) = 0.0d0
             dc3(3) = 0.0d0
-            !
             !   Loop over terms in dispersion expansion; dispersion damping
             !   FACTORS are computed in H3COR2 and passed through COMMON /H3CRCM/.
-            !
             do id = 1, 3
-                !
                 !   Loop over 3 coordinates
-                !
                 do i = 1, 3
                     rr = pt1cm_r(i)
-                    !
                     !     Calculate G function and its 1st derivative
-                    !
                     t     = h3dmcm_ck0(id)*exp(-h3dmcm_ck1(id)*(rr-h3dmcm_h2rm))
                     g(i)  = 1.0d0 + t
                     gd(i) = -h3dmcm_ck1(id)*t
-                    !
                     !     Calculate H function and its 1st derivative.
-                    !
                     t    = h3dmcm_ck1(id)*rr
                     sgnt = 1.0d0
                     if( t .lt. 0.0d0 )then
@@ -915,56 +753,37 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 enddo
             enddo
         end subroutine h3cor3
+
         !> @brief Evaluate H3LEPS for the H3_GEN_DMBE_1987 potential.
         subroutine h3leps ( vleps, vleps2, dlep, dlep2 )
-            !
             !     Calculates 3-body extended-Hartree-Fock energy defined by a
             !     LEPS-type function.
-            !
             !   VLEPS  IS LEPS LOWER SURFACE.
             !   VLEPS2 IS LEPS UPPER SURFACE.
             !   DLEP(3) ARE LEPS LOWER SURFACE DERIVATIVES
             !   DLEP2(3) "   "   UPPER    "       "
-            !
             implicit none
-            double precision :: at, dat, desdr, df, dlep, dlep2, dq, dr, dwe, dxj, es, et, exch, f, f1, f2, f3, fterm, omf, qsum, rr, rri, t, t1, t2, tdc, tdq, tds, texch, vleps, vleps2, we, xj, xterm, xterm1, xterm2, xterm3
-            integer          :: i, j
-            !
-            !
+            double precision            :: at, dat, desdr, df(3), dlep(3), dlep2(3), dq(3), dr, dwe, dxj(3,3), es, et, exch, f, f1, &
+                & f2, f3, fterm, omf, qsum, rr, rri, t, t1, t2, tdc, tdq, tds, texch, vleps, vleps2, we, xj(3), xterm, xterm1, &
+                & xterm2, xterm3
+            integer                     :: i, j
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
-            !
-            dimension dlep(3), dlep2(3)
-            dimension df(3), dq(3), xj(3), dxj(3,3)
-            !
             !  Calculate switching term for the Hartree-Fock component of the
             !  diatomic triplet state function.  The notation of Thompson et al.
             !  (J. Chem. Phys., 82,5597,1985; and references therein) is used
             !  throughout.
-            !
             t1 = -h3dmcm_az2*h3cocm_qcoord
             if( h3cocm_s .eq. 0.0d0 )then
                 f     = exp(t1*h3cocm_qcoord)
@@ -984,64 +803,45 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 df(2) = t1*(tdq*h3cocm_dq2 + tds*h3cocm_ds2 + tdc*h3cocm_dcphi2)
                 df(3) = t1*(tdq*h3cocm_dq3 + tds*h3cocm_ds3 + tdc*h3cocm_dcphi3)
             endif
-            omf = 1.0d0 - f
-            !
+            omf  = 1.0d0 - f
             qsum = 0.0d0
             do i = 1, 3
                 dq(i) = 0.0d0
             enddo
-            !
             !  Loop over 3 coordinates
-            !
             do i = 1, 3
                 rr  = pt1cm_r(i)
                 rri = 1.0d0/rr
-                !
                 !     Calculate extended-Hartree-Fock curve for ground singlet state of
                 !     H2 [A.J.C. Varandas & J.D. Silva, J. Chem. Soc. Faraday II
                 !     (submitted)] and 1st derivative of 2-body extended-Hartree-Fock
                 !     curve for the ground-singlet state of H2.
-                !
                 dr    = rr - h3dmcm_h2rm
                 t     = exp(-h3dmcm_hfgam*dr)
                 es    = -h3dmcm_hfd*(1.0d0 + dr*(h3dmcm_hfa1 + dr*(h3dmcm_hfa2 + dr*h3dmcm_hfa3)))*t
                 desdr = -h3dmcm_hfgam*es - h3dmcm_hfd*(h3dmcm_hfa1 + dr*(2.0d0*h3dmcm_hfa2 + 3.0d0*dr*h3dmcm_hfa3))*t
-                !
                 !     Compute the HFACE (Hartree-Fock-approximate correlation energy)
                 !     potential for the lowest triplet state of H2 [A.J.C. Varandas &
                 !     J. Brandao Mol. Phys.,45,1982,857] without the 2-body correlation
                 !     energy.
-                !
                 t   = rr*(h3dmcm_h2tb1 + rr*(h3dmcm_h2tb2 + rr*(h3dmcm_h2tb3 + rr*h3dmcm_h2tb4)))
                 at  = h3dmcm_h2ta*exp(-t)*rri
                 t   = h3dmcm_h2tb1 + rr*(2.0d0*h3dmcm_h2tb2 + rr*(3.0d0*h3dmcm_h2tb3 + rr*4.0d0*h3dmcm_h2tb4))
                 dat = -at*(t + rri)
-                !
                 !     Add in triplet and subtract singlet 2-body correlation terms
-                !
                 at  = at + h3crcm_corrt(i) - h3crcm_corrs(i)
                 dat = dat + h3crcm_dcorrt(i) - h3crcm_dcorrs(i)
-                !
                 !     Calculate effective diatomic triplet state curve.
-                !
                 t   = exp(-h3dmcm_al3*rr)
                 we  = (h3dmcm_al0 + rr*(h3dmcm_al1 + rr*h3dmcm_al2))*t
                 dwe = (h3dmcm_al1 + 2.0d0*h3dmcm_al2*rr)*t - h3dmcm_al3*we
-                !
                 !     Triplet energy
-                !
                 et = f*we + omf*at
-                !
                 !     Contribution to coulomb term
-                !
                 qsum = qsum + 0.5d0*(es + et)
-                !
                 !     Contribution to exchange term
-                !
                 xj(i) = 0.5d0*(es - et)
-                !
                 !     Derivatives of coulomb and exchange parts
-                !
                 fterm = we - at
                 do j = 1, 3
                     t        = 0.5d0*fterm*df(j)
@@ -1052,7 +852,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 dq(i)    = dq(i) + 0.5d0*(desdr + t)
                 dxj(i,i) = dxj(i,i) + 0.5d0*(desdr - t)
             enddo
-            !
             f1     = (xj(1) - xj(2))**2
             f2     = (xj(2) - xj(3))**2
             f3     = (xj(3) - xj(1))**2
@@ -1070,47 +869,29 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 dlep2(i) = dq(i) + xterm
             enddo
         end subroutine h3leps
+
         !> @brief Evaluate H3VA for the H3_GEN_DMBE_1987 potential.
         subroutine h3va ( r1, r2, r3, va, dva )
-            !
             !     Calculates Va correction energy and its 1st derivative.
-            !
             implicit none
-            double precision :: dv, dva, expva, r1, r2, r3, t, t1, t2, t3, t4, va
-            integer          :: j
-            !
-            !
+            double precision            :: dv, dva(3), expva, r1, r2, r3, t, t1, t2, t3, t4, va
+            integer                     :: j
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            dimension dva(3)
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
             !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
             !     +                CORRT(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
-            !
             t     = h3dmcm_alpha5*h3cocm_per2
             expva = exp(-t*h3cocm_per)
             if( expva .eq. 0.0d0 )then
@@ -1140,48 +921,32 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 dva(3) = t1*(r1-r2)*(r1+r2-2.0d0*r3) - t2
             endif
         end subroutine h3va
+
         !> @brief Evaluate H3VII for the H3_GEN_DMBE_1987 potential.
         subroutine h3vii ( r1, r2, r3, e, dv2 )
-            !
             !     Calculates VII correction energy and its 1st derivative.
-            !
             implicit none
-            double precision :: cos1, cos2, cos3, dr12, dr23, dr31, dv2, e, eb1, eb1p1, eb1p2, eb1p3, eb1pr, eb1pwb, eb1t, eb2, eb2p1, eb2p2, eb2p3, eb2pr, eb2pwb, eb3t, eb4, eb4a, eb4ap1, eb4ap2, eb4ap3, eb4apr, eb4apw, eb4b, eb4bp1, eb4bp2, eb4bp3, eb4bpr, eb4bpw, eb4p1, eb4p2, eb4p3, eq, eqp1, eqp2, eqp3, exp1, exp2, exp3, r1, r1i, r2, r2i, r3, r3i, ri, t1, t2, t3, wb, wb1p, wb2, wb2p, wb3p
-            !
-            !
+            double precision            :: cos1, cos2, cos3, dr12, dr23, dr31, dv2(3), e, eb1, eb1p1, eb1p2, eb1p3, eb1pr, eb1pwb, &
+                & eb1t, eb2, eb2p1, eb2p2, eb2p3, eb2pr, eb2pwb, eb3t, eb4, eb4a, eb4ap1, eb4ap2, eb4ap3, eb4apr, eb4apw, eb4b, &
+                & eb4bp1, eb4bp2, eb4bp3, eb4bpr, eb4bpw, eb4p1, eb4p2, eb4p3, eq, eqp1, eqp2, eqp3, exp1, exp2, exp3, r1, r1i, r2, &
+                & r2i, r3, r3i, ri, t1, t2, t3, wb, wb1p, wb2, wb2p, wb3p
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            dimension dv2(3)
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
             !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
             !     +                CORRT(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
-            !
             !   Compute B1 function.
-            !
             r1i  = 1.0d0/r1
             r2i  = 1.0d0/r2
             r3i  = 1.0d0/r3
@@ -1190,67 +955,49 @@ module chempotpy_h3_gen_dmbe_1987_pes
             cos3 = 0.5d0*r1i*r2i*(h3cocm_r32-h3cocm_r12-h3cocm_r22)
             wb   = 1.0d0+cos1+cos2+cos3
             wb2  = wb*wb
-            !
             !   WB derivatives
-            !
             wb1p = (r1*r3i - 1.0d0)*r2i - r3i - (cos2+cos3)*r1i
             wb2p = (r2*r3i - 1.0d0)*r1i - r3i - (cos1+cos3)*r2i
             wb3p = (r3*r2i - 1.0d0)*r1i - r2i - (cos1+cos2)*r3i
-            !
             !   EB1 term
-            !
             exp1 = exp(-h3dmcm_beta1*h3cocm_per)
             exp3 = exp(-h3dmcm_beta3*h3cocm_per)
             eb1t = (h3dmcm_xpar(5) + h3dmcm_xpar(6)*h3cocm_per)*exp1
             eb3t = (h3dmcm_xpar(14) + h3dmcm_xpar(15)*h3cocm_per2)*exp3
             eb1  = wb*(eb1t + eb3t)
-            !
             !   EB1 derivatives
-            !
             eb1pr  = wb*(-h3dmcm_beta1*eb1t - h3dmcm_beta3*eb3t + h3dmcm_xpar(6)*exp1 + 2.0d0*h3cocm_per* &
                 & h3dmcm_xpar(15)*exp3)
             eb1pwb = eb1t + eb3t
             eb1p1  = eb1pwb*wb1p + eb1pr
             eb1p2  = eb1pwb*wb2p + eb1pr
             eb1p3  = eb1pwb*wb3p + eb1pr
-            !
             !   EB2 term
-            !
             t1   = h3dmcm_beta2*h3cocm_per
             exp2 = exp(-t1*h3cocm_per)
             eb2  = wb2*(h3dmcm_xpar(7) + wb*(h3dmcm_xpar(8) + wb*h3dmcm_xpar(9)))*exp2
-            !
             !   EB2 derivatives
-            !
             eb2pwb = wb*(2.0d0*h3dmcm_xpar(7) + wb*(3.0d0*h3dmcm_xpar(8) + wb*4.0d0*h3dmcm_xpar(9)) )*exp2
             eb2pr  = -2.0d0*t1*eb2
             eb2p1  = eb2pwb*wb1p + eb2pr
             eb2p2  = eb2pwb*wb2p + eb2pr
             eb2p3  = eb2pwb*wb3p + eb2pr
-            !
             !   EB4 term
             !      EB4A
-            !
             t2   = h3dmcm_xpar(10)*exp1
             t3   = wb*h3dmcm_xpar(11)*exp2
             eb4a = wb*(t2 + t3)
-            !
             !      EB4A derivatives
-            !
             eb4apw = t2 + 2.0d0*t3
             eb4apr = -wb*(h3dmcm_beta1*t2 + 2.0d0*t1*t3)
             eb4ap1 = eb4apw*wb1p + eb4apr
             eb4ap2 = eb4apw*wb2p + eb4apr
             eb4ap3 = eb4apw*wb3p + eb4apr
-            !
             !      EB4B
-            !
             t2   = h3dmcm_xpar(12)*exp1
             t3   = h3dmcm_xpar(13)*exp2
             eb4b = wb*(t2 + t3)
-            !
             !      EB4B derivatives
-            !
             eb4bpw = t2 + t3
             eb4bpr = -wb*(h3dmcm_beta1*t2 + 2.0d0*t1*t3)
             eb4bp1 = eb4bpw*wb1p + eb4bpr
@@ -1265,9 +1012,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             eqp3   = 2.0d0*(-dr23 + dr31)
             ri     = r1i + r2i + r3i
             eb4    = eb4a*ri + eb4b*eq
-            !
             !   EB4 derivatives
-            !
             eb4p1  = eb4ap1*ri - eb4a/h3cocm_r12 + eb4bp1*eq + eb4b*eqp1
             eb4p2  = eb4ap2*ri - eb4a/h3cocm_r22 + eb4bp2*eq + eb4b*eqp2
             eb4p3  = eb4ap3*ri - eb4a/h3cocm_r32 + eb4bp3*eq + eb4b*eqp3
@@ -1276,46 +1021,28 @@ module chempotpy_h3_gen_dmbe_1987_pes
             dv2(2) = eb1p2 + eb2p2 + eb4p2
             dv2(3) = eb1p3 + eb2p3 + eb4p3
         end subroutine h3vii
+
         !> @brief Evaluate H3VIII for the H3_GEN_DMBE_1987 potential.
         subroutine h3viii ( viii, dv3 )
-            !
             !     Calculates VIII correction energy and it 1st derivatives
-            !
             implicit none
-            double precision :: dv3, expv3, t1, t2, t3, t4, t5, tdcph, tdrho, tds, viii
-            !
-            !
+            double precision            :: dv3(3), expv3, t1, t2, t3, t4, t5, tdcph, tdrho, tds, viii
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            dimension dv3(3)
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
             !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
             !     +                CORRT(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
-            !
             if( h3cocm_s .eq. 0.0d0 )then
                 viii   = 0.0d0
                 dv3(1) = 0.0d0
@@ -1345,59 +1072,43 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 endif
             endif
         end subroutine h3viii
+
         !> @brief Evaluate CAPF for the H3_GEN_DMBE_1987 potential.
         subroutine capf( r1, r2, r3 )
             implicit none
-            double precision :: arg, brak, capk, darg, dcapk, dcphi, denom, dfu, dfz, dgz, ds, dx, f, fu, fz, gz, r1, r2, r3, rcapf, x, x2, xi, xi3
-            integer          :: i
-            !
-            !
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
+            double precision            :: arg, brak, capk, darg, dcapk(4), dcphi(3), denom, dfu(3), dfz(3), dgz(3), ds(3), dx(3), &
+                & f(3,jsurf), fu, fz, gz, r1, r2, r3, rcapf(3), x, x2, xi, xi3
+            integer                     :: i
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
             !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
             !     +                CORRT(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
-            !
-            dimension dx(3), dcapk(4), dfz(3), dfu(3), dgz(3), f(3,jsurf), rcapf(3), ds(3), dcphi(3)
             rcapf(1) = r1
             rcapf(2) = r2
             rcapf(3) = r3
             call h3coor(rcapf(1), rcapf(2), rcapf(3))
-            !
             ds(1)    = h3cocm_ds1
             ds(2)    = h3cocm_ds2
             ds(3)    = h3cocm_ds3
             dcphi(1) = h3cocm_dcphi1
             dcphi(2) = h3cocm_dcphi2
             dcphi(3) = h3cocm_dcphi3
-            !
-            x   = sqrt(h3cocm_qcoord/3.0d0)
-            xi  = 1.0d0/x
-            xi3 = x/3.0d0
-            x2  = x*x
+            x        = sqrt(h3cocm_qcoord/3.0d0)
+            xi       = 1.0d0/x
+            xi3      = x/3.0d0
+            x2       = x*x
             call kappa(x, capk, dcapk)
             fz    = 0.375d0*x*dcapk(1)
             fu    = 0.03515625d0*(x*dcapk(1)-x2*dcapk(2)+x2*xi3*dcapk(3))
@@ -1416,46 +1127,30 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 pt5cm_engyij(i) = coupcm_dphi(i)-1.0d0/(1.0d0+arg**2)*darg
             enddo
         end subroutine capf
+
         !> @brief Evaluate H2COR2 for the H3_GEN_DMBE_1987 potential.
         subroutine h2cor2 ( rr )
-            !
             !     CALCULATES 1-4 DERIVATIVES OF 2-BODY CORRELATION TERMS FOR
             !     BOTH SINGLET AND TRIPLET STATES AND RETURNS THEIR DIFFERENCE
-            !
             implicit none
-            double precision :: d, d2, d3, d4, dcorrs, dcorrt, dd, denom, fnexp, pol, rr, rsave, t, t1, t2, tem2, tem3, tem4, tt2, x
-            integer          :: id, j, nexp
-            !
-            !
+            double precision            :: d, d2, d3, d4, dcorrs, dcorrt, dd, denom, fnexp, pol, rr, rsave, t, t1, t2, tem2, tem3, tem4, tt2, x
+            integer                     :: id, j, nexp
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
             !      COMMON /H3CRCM/ cor2cm_corrs(3),DCORRS(3),
             !     +                cor2cm_corrt(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
-            !
             rsave        = rr
             cor2cm_corrs = 0.0d0
             dcorrs       = 0.0d0
@@ -1475,9 +1170,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 fnexp = dble(nexp)
                 t2    = t2*t
                 t1    = t1*t
-                !
                 !******SINGLET
-                !
                 denom        = h3dmcm_h2rm + 2.5d0*h3dmcm_h2r0
                 dmpcm_y      = 2.0d0/denom
                 x            = rsave*dmpcm_y
@@ -1497,9 +1190,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 tem2 = d2
                 tem3 = d3
                 tem4 = d4
-                !
                 !*****TRIPLET
-                !
                 denom        = h3dmcm_h2rmt + 2.5d0*h3dmcm_h2r0
                 dmpcm_y      = 2.0d0/denom
                 x            = rsave*dmpcm_y
@@ -1521,32 +1212,21 @@ module chempotpy_h3_gen_dmbe_1987_pes
             enddo
             cor2cm_dcor2(1) = dcorrt-dcorrs
         end subroutine h2cor2
+
         !> @brief Evaluate DAMP for the H3_GEN_DMBE_1987 potential.
         subroutine damp( rmp, n, d2, d3, d4 )
-            !
             !      CALCULATES 2ND,3RD AND 4TH DERIVATIVES OF 2-BODY CORRELATION
             !      ENERGIES FOR SINGLET AND TRIPLET STATES FOR USE IN NON-ADIABATIC
             !      COUPLINGS OF H3 SURFACES 1 AND 2. SENT TO SUBROUTINE H3COR2
-            !
             implicit none
-            double precision :: bm2, bm3, bm4, d1b, d2, d2b, d3, d3b, d4, d4b, dpol2, fr, rmp, rr, rrn, t, th, tm, tm2, tm3, tp, tp2, tp3, tw
-            integer          :: n
-            !
-            !
+            double precision            :: bm2, bm3, bm4, d1b, d2, d2b, d3, d3b, d4, d4b, dpol2, fr, rmp, rr, rrn, t, th, tm, tm2, tm3, tp, tp2, tp3, tw
+            integer                     :: n
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
             !      COMMON /H3DMCM/ ALPH2,ALPHA5,ALPH0,ALPH1,
             !     +                AL0,AL1,AL2,AL3,AZ2,
             !     +                BETA1,BETA2,BETA3,BET0,BET1,
@@ -1555,26 +1235,21 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     +                HFD,HFA1,HFA2,HFA3,HFGAM,
             !     +                H2RM,H2RMT,H2R0,H2TA,H2TB1,H2TB2,H2TB3,H2TB4,
             !     +                RHOL,SQRT3,XPAR(15)
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
             !      COMMON /H3COCM/ PER,PER2,R12,R22,R32,
             !     +                QCOORD,DQ1,DQ2,DQ3,
             !     +                RHO,DRHO1,DRHO2,DRHO3,
             !     +                S,S2,DS1,DS2,DS3,
             !     +                CPHI3,DCPHI1,DCPHI2,DCPHI3
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
             !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
             !     +                CORRT(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
-            !
             dpol2 = dmpcm_dpol**2
             d1b   = dmpcm_y*dmpcm_dpol*dmpcm_texp
             d2b   = dmpcm_y**2*(2.0d0*dmpcm_dampb-dpol2)*dmpcm_texp
@@ -1603,55 +1278,35 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 & rr*d1b*d2b-tw*th*tm2*tm*dmpcm_b*d1b*d1b*d2b+fr*t* rr*dmpcm_b**3*d3b-tm3*tm2*tm* d1b**4-th*tm* &
                 & (dmpcm_b*d2b)**2-fr*tm*dmpcm_b*dmpcm_b*d1b *d3b-dmpcm_b**3*d4b)*rrn
         end subroutine damp
+
         !> @brief Evaluate KAPPA for the H3_GEN_DMBE_1987 potential.
         subroutine kappa( qlc, capk, dcapk )
-            !
             !     CALCULATES FUNCTION CAPK AND ITS FIRST ROUR DERIVATIVES
-            !
             implicit none
-            double precision :: at, capk, d1uehf, d1vhf, d1w, d2uehf, d2vhf, d2w, d3uehf, d3vhf, d3w, d4uehf, d4vhf, d4w, dat, dcapk, desdr, dr, dwe, es, fzero, o1, o2, omfz, p1, p2, p3, q1, q2, q3, qlc, rr, rri, t, t1, we
-            !
-            !
+            double precision            :: at, capk, d1uehf, d1vhf, d1w, d2uehf, d2vhf, d2w, d3uehf, d3vhf, d3w, d4uehf, d4vhf, d4w, &
+                & dat, dcapk(4), desdr, dr, dwe, es, fzero, o1, o2, omfz, p1, p2, p3, q1, q2, q3, qlc, rr, rri, t, t1, we
             integer, parameter          :: n3atom = 75
             integer, parameter          :: isurf  = 5
             integer, parameter          :: jsurf  = isurf*(isurf+1)/2
             double precision, parameter :: pi     = 3.141592653589793d0
             integer, parameter          :: natom  = 25
-            !
-            !
-            !
-            !
-            !
-            !
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !
-            !
-            !
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !
-            !
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !
             !      COMMON /H3CRCM/ cor2cm_corrs(3),DCORRS(3),
             !     +                cor2cm_corrt(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
-            !
-            !
-            !
-            dimension dcapk(4)
             call h2cor2(qlc)
             t1    = -h3dmcm_az2*h3cocm_qcoord
             fzero = exp(t1*h3cocm_qcoord)
             rr    = qlc
             rri   = 1.0d0/rr
-            !
             !*****CALCULATE 1-4 DERIVATIVES OF VEHF
-            !
             dr    = rr - h3dmcm_h2rm
             t     = exp(-h3dmcm_hfgam*dr)
             es    = -h3dmcm_hfd*(1.0d0 + dr*(h3dmcm_hfa1 + dr*(h3dmcm_hfa2 + dr*h3dmcm_hfa3)))*t
@@ -1668,9 +1323,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             dcapk(2) = d2vhf
             dcapk(3) = d3vhf
             dcapk(4) = d4vhf
-            !
             !*****CALCULATE 1-4 DERIVATIVES OF UEHF
-            !
             t      = rr*(h3dmcm_h2tb1 + rr*(h3dmcm_h2tb2 + rr*(h3dmcm_h2tb3 + rr*h3dmcm_h2tb4)))
             at     = h3dmcm_h2ta*exp(-t)*rri
             t      = h3dmcm_h2tb1 + rr*(2.0d0*h3dmcm_h2tb2 + rr*(3.0d0*h3dmcm_h2tb3 + rr*4.0d0*h3dmcm_h2tb4))+rri
@@ -1682,21 +1335,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
             d2uehf = -t*d1uehf-at*q1
             d3uehf = -t*d2uehf-2.d0*q1*d1uehf-at*q2
             d4uehf = -t*d3uehf-3.d0*q1*d2uehf-3.d0*q2*d1uehf-at*q3
-            !
             !     Add in triplet and subtract singlet 2-body correlation terms
-            !
             at = at + cor2cm_corrt - cor2cm_corrs
-            !
             !*****INCLUDE CORRELATION PART OF CAPK,(USUBC-VSUBC)*(1-FZERO)
-            !
             omfz     = 1.0d0-fzero
             dcapk(1) = dcapk(1)-(d1uehf+cor2cm_dcor2(1))*omfz
             dcapk(2) = dcapk(2)-(d2uehf+cor2cm_dcor2(2))*omfz
             dcapk(3) = dcapk(3)-(d3uehf+cor2cm_dcor2(3))*omfz
             dcapk(4) = dcapk(4)-(d4uehf+cor2cm_dcor2(4))*omfz
-            !
             !*****CALCULATE 1-4 DERIVATIVES OF W-EFFECTIVE
-            !
             t        = exp(-h3dmcm_al3*rr)
             we       = (h3dmcm_al0 + rr*(h3dmcm_al1 + rr*h3dmcm_al2))*t
             dwe      = (h3dmcm_al1 + 2.0d0*h3dmcm_al2*rr)*t - h3dmcm_al3*we
@@ -1712,6 +1359,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             dcapk(4) = dcapk(4)-fzero*d4w
             capk     = es-fzero*we-omfz*at
         end subroutine kappa
+
         !> @brief Evaluate POTINFO for the H3_GEN_DMBE_1987 potential.
         subroutine potinfo
             implicit none
@@ -1805,22 +1453,14 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     '*-1/ANGSTROM'',//)')
             endif
         end subroutine potinfo
+
         !> @brief Evaluate ANCVRT for the H3_GEN_DMBE_1987 potential.
         subroutine ancvrt
             implicit none
-            integer            :: i, ianum, inc1, inc2, ind, ind2, inu, isave, isum, j, jsave
-            character(len=3)   :: periodic_1(7,32)
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
-            dimension ianum(7,32)
-            dimension isave(natom), jsave(natom)
             double precision, parameter :: pi         = 3.141592653589793d0
             double precision, parameter :: clight     = 2.99792458d08
             double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
@@ -1837,6 +1477,13 @@ module chempotpy_h3_gen_dmbe_1987_pes
             double precision, parameter :: htowave    = 219474.631d0
             double precision, parameter :: htokj      = 2625.49962d0
             double precision, parameter :: bohr_a     = .5291772083d0
+            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)   :: periodic_1(7,32)
+            character(len=2)   :: name1(natom)
+            character(len=2)   :: name2(natom)
+            character(len=1)   :: iblank
+            character(len=20)  :: distance
+            character(len=20)  :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -2052,13 +1699,13 @@ module chempotpy_h3_gen_dmbe_1987_pes
             if( usricm_nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
             if( usricm_nflag(2) .eq. 2 )then
                 units = 'MILLIHARTREE        '
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 units = 'EV                  '
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 units = 'KCAL PER MOLE       '
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 units = 'WAVENUMBERS         '
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
             utilcm_cnvrtd  = 1.d0
@@ -2067,13 +1714,13 @@ module chempotpy_h3_gen_dmbe_1987_pes
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
-            else if( usricm_nflag(2) .eq. 3 )then
+            elseif( usricm_nflag(2) .eq. 3 )then
                 utilcm_cnvrte = utilcm_cnvrte*htoev
-            else if( usricm_nflag(2) .eq. 4 )then
+            elseif( usricm_nflag(2) .eq. 4 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokcal
-            else if( usricm_nflag(2) .eq. 5 )then
+            elseif( usricm_nflag(2) .eq. 5 )then
                 utilcm_cnvrte = utilcm_cnvrte*htowave
-            else if( usricm_nflag(2) .eq. 6 )then
+            elseif( usricm_nflag(2) .eq. 6 )then
                 utilcm_cnvrte = utilcm_cnvrte*htokj
             endif
             utilcm_cnvrtde = utilcm_cnvrte/utilcm_cnvrtd
@@ -2084,6 +1731,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             utilcm_ireorder = 0
             if( isum .ne. 0 ) utilcm_ireorder = 1
         end subroutine ancvrt
+
         !> @brief Evaluate CARTOU for the H3_GEN_DMBE_1987 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
@@ -2095,6 +1743,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(usricm_cart, usricm_nulbl, infocm_natoms, utilcm_cnvrtd, utilcm_ireorder == 1, infocm_cartnu)
         end subroutine cartou
+
         !> @brief Evaluate CARTTOR for the H3_GEN_DMBE_1987 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
@@ -2111,6 +1760,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 stop
             endif
         end subroutine carttor
+
         !> @brief Evaluate EUNITZERO for the H3_GEN_DMBE_1987 potential.
         subroutine eunitzero
             implicit none
@@ -2132,16 +1782,18 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 enddo
             endif
         end subroutine eunitzero
+
         !> @brief Evaluate RTOCART for the H3_GEN_DMBE_1987 potential.
         subroutine rtocart
             implicit none
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes, ygs, yij, za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            dimension ygs(n3atom), yes(n3atom,isurf), yij(n3atom,jsurf)
+            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
+                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
+            integer            :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -2163,7 +1815,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 2 )then
+            elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
                     utilcm_dgscartnu(i,1) = 0.d0
                     utilcm_dgscartnu(i,2) = 0.d0
@@ -2185,7 +1837,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     do j = 1, infocm_natoms
                         if( j .lt. i )then
                             m1 = infocm_natoms*(j-1) - (j*(j-1))/2 + i-j
-                        else if( j .gt. i )then
+                        elseif( j .gt. i )then
                             m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
@@ -2204,7 +1856,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                                 utilcm_descartnu(i,2,j1) = utilcm_descartnu(i,2,j1) + termy*y
                                 utilcm_descartnu(i,3,j1) = utilcm_descartnu(i,3,j1) + termz*y
                             enddo
-                        else if( utilcm_ksoffd .gt. 0 )then
+                        elseif( utilcm_ksoffd .gt. 0 )then
                             do j2=utilcm_ksoffd, utilcm_keoffd
                                 y                        = pt5cm_deijdr(m1,j2)
                                 utilcm_dijcartnu(i,1,j2) = utilcm_dijcartnu(i,1,j2) + termx*y
@@ -2214,7 +1866,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                         endif
                     enddo
                 enddo
-            else if( infocm_icartr .eq. 3 )then
+            elseif( infocm_icartr .eq. 3 )then
                 do i = 1, infocm_natoms
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
@@ -2250,7 +1902,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                         enddo
                     endif
                 enddo
-            else if( infocm_icartr .eq. 4 )then
+            elseif( infocm_icartr .eq. 4 )then
                 wh   = 1.007825d0
                 wf   = 18.99840d0
                 sum  = wh+wf
@@ -2286,6 +1938,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 stop
             endif
         end subroutine rtocart
+
         !> @brief Evaluate DEDCOU for the H3_GEN_DMBE_1987 potential.
         subroutine dedcou
             implicit none
@@ -2339,7 +1992,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
     end subroutine evaluate
 end module chempotpy_h3_gen_dmbe_1987_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose H3_GEN_DMBE_1987 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_h3_gen_dmbe_1987_pes, only: evaluate
     implicit none

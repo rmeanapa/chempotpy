@@ -21,13 +21,15 @@ module nnparam1
         &pdel3a1(:), pavg3a1(:)
 end module nnparam1
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement C2H2N2O_PIPNN, a potential energy surface for C2H2N2O.
 module chempotpy_c2h2n2o_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the C2H2N2O_PIPNN potential energy surface for C2H2N2O.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam1, only: alpha, bias3a1, bohr, ifunc31, natom, nbasis, nbond, nhid3, ninput1, &
             & nlayer31, nodemax31, nodes3a1, noutput1, nscale1, nwe3, para2, pavg3a1, pdel3a1, pi, &
@@ -67,7 +69,7 @@ module chempotpy_c2h2n2o_pipnn_pes
     end subroutine evaluate
 end module chempotpy_c2h2n2o_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose C2H2N2O_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_c2h2n2o_pipnn_pes, only: evaluate
     implicit none
@@ -219,7 +221,6 @@ subroutine pot3a( x, vpot3 ) ! fhcl, a
 end subroutine pot3a
 
 !-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->
-
 !> @brief Evaluate tranfun1.
 function tranfun1( x, ifunc )
     implicit none
@@ -230,9 +231,9 @@ function tranfun1( x, ifunc )
     !    ifunc=3, transfer function is pure linear function, 'purelin'. It is imposed to the output layer by default
     if( ifunc .eq. 1 )then
         tranfun1 = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun1 = 1d0/(1d0+dexp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun1 = x
     endif
 end function tranfun1

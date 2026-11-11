@@ -16,7 +16,7 @@ setup(
     python_requires=">=3.8",
     packages=find_packages(),
     package_data={
-        'chempotpy': ['*/*', 'core/fortran/*.f90']
+        'chempotpy': ['*/*', 'core/*.f90']
     },
     install_requires=[
         'numpy',

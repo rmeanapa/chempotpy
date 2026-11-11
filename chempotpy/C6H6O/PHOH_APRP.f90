@@ -1,4 +1,3 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !   System:          C6H6O
 !   Functional form: Anchor-Points Reactive Potential (APRP)
 !                               (3x3 diabatic fit)
@@ -7,10 +6,8 @@
 !   Number of bodies:              13
 !   Number of electronic surfaces: 3
 !   Interface:                     Section-2
-!
 !   Reference: Ke R. Yang, Xuefei Xu, Jingjing Zheng,
 !   and Donald G. Truhlar Chem. Sci. (to be published).
-!
 !   Notes:
 !    1. This routine calculates three coupled singlet PESs for
 !       nonadiabatic photodissociation of PhOH to produce
@@ -18,7 +15,6 @@
 !    2. The final version of this potential was added to POTLIB
 !       on Aug. 3, 2014. A preliminary version in the library before
 !       that is not correct.
-!
 !   Numbering of atoms:
 !        H11      H12
 !         \      /
@@ -29,11 +25,8 @@
 !          C3---C2       H13
 !         /      \
 !        H9       H8
-!
-!
 !   Units:      bohr for length
 !               hartree for energy
-!
 !   Input:
 !   igrad = 0           Energy only calculation
 !         = 1           Energy + Analytic gradient
@@ -42,7 +35,6 @@
 !   xx(1,i)             X coordinate of atom i
 !   xx(2,i)             Y coordinate of atom i
 !   xx(3,i)             Z coordinate of atom i
-!
 !   Output:
 !   uu(j,j)             diabatic potential of diabatic state j
 !   uu(j,k)             diabatic coupling between state j and k
@@ -58,7 +50,6 @@
 !                       coupling between state j and k at atom i
 !   guu(3,i,j,k)        Z component of the gradients of diabatical
 !                       coupling between state j and k at atom i
-!
 !   vv(j)               adiabatic potential of adiabatic state j
 !   gvv(1,i,j)          X component of the gradients of adiabatic
 !                       potential of state j at atom i
@@ -75,18 +66,18 @@
 !   cc(3,3)             3*3 orghtonal matrix diagonalizing UU matrix
 !                       (CC^T*UU*CC yield diagonal matrix with adiabatic
 !                       energies as diagonal elements)
-!
 !   Note:       LAPACK library is needed to diagonize diabatic potential
 !               matrix (UU) to yield adiabatic potenitials VV(3)
-!
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement PHOH_APRP, a potential energy surface for C6H6O.
 module chempotpy_phoh_aprp_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the PHOH_APRP potential energy surface for C6H6O.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -115,7 +106,7 @@ module chempotpy_phoh_aprp_pes
             do istate=1, nstates
                 p(istate) = vv(istate)*legacy_hartree_to_electronvolt
             enddo
-        else if( igrad == 1 )then
+        elseif( igrad == 1 )then
             do istate=1, nstates
                 p(istate) = vv(istate)*legacy_hartree_to_electronvolt
             enddo
@@ -126,7 +117,7 @@ module chempotpy_phoh_aprp_pes
                     enddo
                 enddo
             enddo
-        else if( igrad == 2 )then
+        elseif( igrad == 2 )then
             do istate=1, nstates
                 p(istate) = vv(istate)*legacy_hartree_to_electronvolt
             enddo
@@ -148,9 +139,9 @@ module chempotpy_phoh_aprp_pes
             enddo
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the PHOH_APRP potential.
     subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
-        !
         implicit none
         integer            :: i, j, k, l, m
         integer            :: igrad, repflag
@@ -208,6 +199,7 @@ module chempotpy_phoh_aprp_pes
         !     enddo
         !     stop
     end subroutine pot
+
     !> @brief Evaluate getdvec3 for the PHOH_APRP potential.
     subroutine getdvec3( nclu, pemd, gpemd, pema, dvec, cc )
         implicit none
@@ -219,7 +211,6 @@ module chempotpy_phoh_aprp_pes
         !     Program to compute nonadiabatic coupling vectors from the adiabati
         !     the gradients of diabatic potential matrix elements for a multisur
         !     The formula is taken from ANT07 and is described in M.D. Hack et a
-        !
         ! compute d
         dvec(:,:,:,:) = 0d0
         do i1 = 1, 3
@@ -245,6 +236,7 @@ module chempotpy_phoh_aprp_pes
         enddo
         !       stop
     end subroutine getdvec3
+
     !> @brief Evaluate poten for the PHOH_APRP potential.
     subroutine poten( igrad, x, y, z, uu, guu, vv, gvv, cc )
         ! Little subroutine to call evuii and evuij
@@ -264,7 +256,6 @@ module chempotpy_phoh_aprp_pes
         ! Add by KRY
         double precision :: ubm
         double precision :: dubmdx(3*natm)
-        !
         double precision :: du1dx(3*natm), du2dx(3*natm), du3dx(3*natm)
         double precision :: u13, u23
         !      double precision du13dX(3*natm),du23dX(3*natm)
@@ -298,7 +289,6 @@ module chempotpy_phoh_aprp_pes
         call evuii(igrad, natm, x, y, z, u3, du3dx, 33)
         ! KRY Born-Mayer repulsion
         call evubm(igrad, natm, x, y, z, ubm, dubmdx)
-        !
         ! add by J. Zheng
         guu(:,:,:,:) = 0d0
         do i = 1, natm
@@ -334,13 +324,11 @@ module chempotpy_phoh_aprp_pes
         uu(3,2) = u23
         ! diagonalization to get adiabatic energies
         ! Diagonalize the coupling matrix (from LAPACK)
-        !---------------------------------------------------------!
         !Calls the LAPACK diagonalization subroutine DSYEV        !
         !input:  u(n,n) = real symmetric matrix to be diagonalized!
         !            n  = size of u                               !
         !output: cc(n,n) = orthonormal eigenvectors of u          !
         !        vv(n) = eigenvalues of u in ascending order      !
-        !---------------------------------------------------------!
         cc(:,:) = uu(:,:)
         lwork   = -1
         allocate (work (1) )
@@ -377,6 +365,7 @@ module chempotpy_phoh_aprp_pes
         endif
         ! END
     end subroutine poten
+
     !> @brief Evaluate evuii for the PHOH_APRP potential.
     subroutine evuii( igrad, natm, x, y, z, u, dudx, ii )
         ! Subroutine to evaluate the diabatic potentials and gradients
@@ -457,11 +446,11 @@ module chempotpy_phoh_aprp_pes
             call evu1r(igrad, r, ur, durdr)
             call evu1b(igrad, r, theta, ub, dubdr, dubdth)
             call evu1to(igrad, r, phi, uto, dutodr, dtodph)
-        else if( ii .eq. 22 )then
+        elseif( ii .eq. 22 )then
             call evu2r(igrad, r, ur, durdr)
             call evu2b(igrad, r, theta, ub, dubdr, dubdth)
             call evu2to(igrad, r, phi, uto, dutodr, dtodph)
-        else if( ii .eq. 33 )then
+        elseif( ii .eq. 33 )then
             call evu3r(igrad, r, ur, durdr)
             call evu3b(igrad, r, theta, ub, dubdr, dubdth)
             call evu3to(igrad, r, phi, uto, dutodr, dtodph)
@@ -496,6 +485,7 @@ module chempotpy_phoh_aprp_pes
             enddo
         endif
     end subroutine evuii
+
     !      subroutine evuiit(igrad,r,ntot,nqtc,qtc,ut,dut,dutdr,ii)
     !> @brief Evaluate evuiit for the PHOH_APRP potential.
     subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
@@ -575,7 +565,7 @@ module chempotpy_phoh_aprp_pes
             v0(2) = -0.000346019d0
             v0(3) = 0.000672861d0
             v0(4) = -0.001758495d0
-        else if( ii .eq. 22 )then
+        elseif( ii .eq. 22 )then
             rap(1) = 1.93206106d0 ! rOH=1.0224 using rOH=0.964A
             rap(2) = 2.49443845d0 ! rOH=1.32 A
             rap(3) = 4.27078097d0 ! rOH=2.26 A
@@ -584,7 +574,7 @@ module chempotpy_phoh_aprp_pes
             v0(2)  = -0.00976278d0
             v0(3)  = -0.00976278d0
             v0(4)  = -0.00976278d0
-        else if( ii .eq. 33 )then
+        elseif( ii .eq. 33 )then
             rap(1) = 1.93206106d0 ! rOH=1.0224 using rOH=0.964A
             rap(2) = 2.49443845d0 ! rOH=1.32 A
             rap(3) = 4.27078097d0 ! rOH=2.26 A
@@ -664,7 +654,7 @@ module chempotpy_phoh_aprp_pes
                     fbs1(i,j) = hbs(i,j,1)*qse1(j)/sin(qbe1(i))
                 enddo
             enddo
-        else if( ir .eq. nap+1 )then
+        elseif( ir .eq. nap+1 )then
             u0 = v0(nap)
             do i=1, nqs
                 qse1(i) = qse(i,nap)
@@ -694,7 +684,7 @@ module chempotpy_phoh_aprp_pes
                     fbs1(i,j) = hbs(i,j,nap)*qse1(j)/sin(qbe1(i))
                 enddo
             enddo
-        else if( (ir .gt. 1) .and. (ir .lt. nap+1) )then
+        elseif( (ir .gt. 1) .and. (ir .lt. nap+1) )then
             u01 = v0(ir-1)
             u02 = v0(ir)
             do i=1, nqs
@@ -949,6 +939,7 @@ module chempotpy_phoh_aprp_pes
             endif
         endif
     end subroutine evuiit
+
     !> @brief Evaluate gethess for the PHOH_APRP potential.
     subroutine gethess( nap, hss, nqs, hbb, nqb, htt, nqt, hbs, ii )
         ! Global variables
@@ -4037,7 +4028,7 @@ module chempotpy_phoh_aprp_pes
             hbs(18,10,4) = 0.29300d-01
             hbs(18,11,4) = -0.29500d-02
             hbs(18,12,4) = 0.22600d-02
-        else if( ii .eq. 22 )then
+        elseif( ii .eq. 22 )then
             ! Hessian elements for anchor point 1
             hss( 1,1,1)  = 0.35006d+00
             hss( 2,1,1)  = 0.13620d-01
@@ -7114,7 +7105,7 @@ module chempotpy_phoh_aprp_pes
             hbs(18,10,4) = 0.25770d-01
             hbs(18,11,4) = -0.27500d-02
             hbs(18,12,4) = 0.16600d-02
-        else if( ii .eq. 33 )then
+        elseif( ii .eq. 33 )then
             ! Hessian elements for anchor point 1
             hss( 1,1,1)  = 0.32935d+00
             hss( 2,1,1)  = 0.10630d-01
@@ -10193,6 +10184,7 @@ module chempotpy_phoh_aprp_pes
             hbs(18,12,4) = 0.20600d-02
         endif
     end subroutine gethess
+
     !> @brief Evaluate getgeom for the PHOH_APRP potential.
     subroutine getgeom( nap, qse, nqs, qbe, nqb, qte, nqt, ii )
         implicit none
@@ -10364,7 +10356,7 @@ module chempotpy_phoh_aprp_pes
             qbe(16,4) = 0.207166d+01
             qbe(17,4) = 0.208711d+01
             qbe(18,4) = 0.212441d+01
-        else if( ii .eq. 22 )then
+        elseif( ii .eq. 22 )then
             ! equilibrium geometry at anchor point 1
             qse( 1,1) = 0.269941d+01
             qse( 2,1) = 0.268363d+01
@@ -10493,7 +10485,7 @@ module chempotpy_phoh_aprp_pes
             qbe(16,4) = 0.205447d+01
             qbe(17,4) = 0.207468d+01
             qbe(18,4) = 0.215403d+01
-        else if( ii .eq. 33 )then
+        elseif( ii .eq. 33 )then
             ! equilibrium geometry at anchor point 1
             qse( 1,1) = 0.272760d+01
             qse( 2,1) = 0.272219d+01
@@ -10624,6 +10616,7 @@ module chempotpy_phoh_aprp_pes
             qbe(18,4) = 0.213456d+01
         endif
     end subroutine getgeom
+
     !> @brief Evaluate tent for the PHOH_APRP potential.
     subroutine tent( nap, rap, r, ir, t, dtdr )
         ! Subroutine to evaluate tent functions
@@ -10645,7 +10638,7 @@ module chempotpy_phoh_aprp_pes
             ir      = 1
             t(1)    = 1.0d0
             dtdr(1) = 0.0d0
-        else if( r .gt. rap(nap) )then
+        elseif( r .gt. rap(nap) )then
             ir        = nap+1
             t(nap)    = 1.0d0
             dtdr(nap) = 0.0d0
@@ -10666,6 +10659,7 @@ module chempotpy_phoh_aprp_pes
             endif
         enddo
     end subroutine tent
+
     !> @brief Evaluate evu1r for the PHOH_APRP potential.
     subroutine evu1r( igrad, r, v, dvdr )
         ! Subroutine to evaluate Varshini potential and derivative for given r
@@ -10686,6 +10680,7 @@ module chempotpy_phoh_aprp_pes
             dvdr = dvdy*dydx*dxdr
         endif
     end subroutine evu1r
+
     !> @brief Evaluate evu1b for the PHOH_APRP potential.
     subroutine evu1b( igrad, r, theta, vbnd, dvdr, dvdth )
         ! Subroutine to evaluate potential energy from H-O-C bending
@@ -10734,6 +10729,7 @@ module chempotpy_phoh_aprp_pes
             dvdth = -2.0d0*k2*dthta*sthta
         endif
     end subroutine evu1b
+
     !> @brief Evaluate evu1to for the PHOH_APRP potential.
     subroutine evu1to( igrad, r, phi, v, dvdr, dvdph )
         ! Subroutine to evaluate torsion potentials and derivatives
@@ -10761,6 +10757,7 @@ module chempotpy_phoh_aprp_pes
             dvdph = x1*dydph+2.0d0*x2*y*dydph
         endif
     end subroutine evu1to
+
     !> @brief Evaluate evu2r for the PHOH_APRP potential.
     subroutine evu2r( igrad, r, v, dvdr )
         ! Subroutine to evaluate Morse potential and derivative for given r
@@ -10782,6 +10779,7 @@ module chempotpy_phoh_aprp_pes
             dvdr = dvdy*dydx*dxdr
         endif
     end subroutine evu2r
+
     !> @brief Evaluate evu2b for the PHOH_APRP potential.
     subroutine evu2b( igrad, r, theta, vbnd, dvdr, dvdth )
         ! Subroutine to evaluate potential energy from H-O-C bending
@@ -10830,6 +10828,7 @@ module chempotpy_phoh_aprp_pes
             dvdth = -2.0d0*k2*dthta*sthta
         endif
     end subroutine evu2b
+
     !> @brief Evaluate evu2to for the PHOH_APRP potential.
     subroutine evu2to( igrad, r, phi, v, dvdr, dvdph )
         ! Subroutine to evaluate torsion potentials and derivatives
@@ -10852,6 +10851,7 @@ module chempotpy_phoh_aprp_pes
             dvdph = x*dydph
         endif
     end subroutine evu2to
+
     !> @brief Evaluate evu3r for the PHOH_APRP potential.
     subroutine evu3r( igrad, r, v, dvdr )
         ! Subroutine to evaluate Morse potential and derivative for given r
@@ -10887,6 +10887,7 @@ module chempotpy_phoh_aprp_pes
             dvdr   = dy1dx1*dx1dr+dy2dx2*dx2dr+dy3dx3*dx3dr
         endif
     end subroutine evu3r
+
     !> @brief Evaluate evu3b for the PHOH_APRP potential.
     subroutine evu3b( igrad, r, theta, vbnd, dvdr, dvdth )
         ! Subroutine to evaluate potential energy from H-O-C bending
@@ -10948,6 +10949,7 @@ module chempotpy_phoh_aprp_pes
             dvdth = -2.0d0*k2*dthta*sthta - 3.0d0*k3*dthta*dthta*sthta
         endif
     end subroutine evu3b
+
     !> @brief Evaluate evu3to for the PHOH_APRP potential.
     subroutine evu3to( igrad, r, phi, v, dvdr, dvdph )
         ! Subroutine to evaluate torsion potentials and derivatives
@@ -10975,6 +10977,7 @@ module chempotpy_phoh_aprp_pes
             dvdph = x1*dydph+2.0d0*x2*y*dydph
         endif
     end subroutine evu3to
+
     !> @brief Evaluate evubm for the PHOH_APRP potential.
     subroutine evubm( igrad, natm, x, y, z, ubm, dubmdx )
         ! Subroutine to evulate the Born-Mayer repulsions between non-bonded
@@ -11002,9 +11005,7 @@ module chempotpy_phoh_aprp_pes
         r25  = bndlen(2, 5, x, y, z)
         r36  = bndlen(3, 6, x, y, z)
         ubm  = b*(exp(-alpha*r14)+exp(-alpha*r25)+exp(-alpha*r36))
-        !
         !      write(*,*) "ubm =",ubm
-        !
         if( igrad .eq. 1 )then
             dudr14 = -alpha*b*exp(-alpha*r14)
             dudr25 = -alpha*b*exp(-alpha*r25)
@@ -11016,13 +11017,12 @@ module chempotpy_phoh_aprp_pes
             do i=1, 3*natm
                 dubmdx(i) = dubmdx(i)+dudr14*bm(1,i)+dudr25*bm(2,i) +dudr36*bm(3,i)
             enddo
-            !
             !        do i=1,3*natm
             !          write(*,*) dubmdX(i)
             !        enddo
-            !
         endif
     end subroutine evubm
+
     !      subroutine evuij(nap,natm,igrad,ir,t,dtdr,X,Y,Z,u13,u23,
     !     $                 du13dX,du23dX)
     ! Add u12
@@ -11193,6 +11193,7 @@ module chempotpy_phoh_aprp_pes
             enddo
         endif
     end subroutine evuij
+
     !> @brief Evaluate evuijt for the PHOH_APRP potential.
     subroutine evuijt( nap, igrad, ir, t, dtdr, ntc, qtc, uij, &
             & duij, duijdr, ij )
@@ -11246,7 +11247,7 @@ module chempotpy_phoh_aprp_pes
             a(3,7) = 0.0d0
             a(3,8) = 0.0d0
             a(3,9) = 0.0d0
-        else if( ij .eq. 13 )then
+        elseif( ij .eq. 13 )then
             a(3,1) = -0.00070d0
             a(3,2) = -0.00966d0
             a(3,3) = -0.00053d0
@@ -11256,7 +11257,7 @@ module chempotpy_phoh_aprp_pes
             a(3,7) = 0.00030d0
             a(3,8) = 0.00377d0
             a(3,9) = 0.00101d0
-        else if( ij .eq. 23 )then
+        elseif( ij .eq. 23 )then
             a(2,1) = 0.00452d0
             a(2,2) = -0.01212d0
             a(2,3) = -0.00088d0
@@ -11286,12 +11287,12 @@ module chempotpy_phoh_aprp_pes
             do i=1, ntc
                 uij = uij+a(1,i)*qtc(i)
             enddo
-        else if( ir .eq. nap+1 )then
+        elseif( ir .eq. nap+1 )then
             uij = uij0(nap)
             do i=1, ntc
                 uij = uij+a(nap,i)*qtc(i)
             enddo
-        else if( (ir .gt. 1) .and. (ir .lt. nap+1) )then
+        elseif( (ir .gt. 1) .and. (ir .lt. nap+1) )then
             uij1 = uij0(ir-1)
             uij2 = uij0(ir)
             do i=1, ntc
@@ -11307,12 +11308,12 @@ module chempotpy_phoh_aprp_pes
                     duij(i) = a(1,i)
                 enddo
                 duijdr = uij*dtdr(1)
-            else if( ir .eq. nap+1 )then
+            elseif( ir .eq. nap+1 )then
                 do i=1, ntc
                     duij(i) = a(nap,i)
                 enddo
                 duijdr = uij*dtdr(nap)
-            else if( (ir .gt. 1) .and. (ir .lt. nap+1) )then
+            elseif( (ir .gt. 1) .and. (ir .lt. nap+1) )then
                 do i=1, ntc
                     duij1(i) = a(ir-1,i)
                     duij2(i) = a(ir,i)
@@ -11322,6 +11323,7 @@ module chempotpy_phoh_aprp_pes
             endif
         endif
     end subroutine evuijt
+
     !> @brief Evaluate evu13to for the PHOH_APRP potential.
     subroutine evu13to( r, phi, u13to, d13dph, d13dr )
         ! Little subroutine to evaluate U13 from C-C-O-H torsion
@@ -11381,6 +11383,7 @@ module chempotpy_phoh_aprp_pes
         d13dph = f1r*cphi+3.0d0*f3r*sphi2*cphi+5.0d0*f5r*sphi4*cphi
         d13dr  = df1rdr*sphi1+df3rdr*sphi3+df5rdr*sphi5
     end subroutine evu13to
+
     !> @brief Evaluate evu23to for the PHOH_APRP potential.
     subroutine evu23to( r, phi, u23to, d23dph, d23dr )
         ! Little subroutine to evaluate U23 from C-C-O-H torsion
@@ -11443,6 +11446,7 @@ module chempotpy_phoh_aprp_pes
         d23dph = scale*(2.0d0*f2r*c2phi+4.0d0*f4r*c4phi+6.0d0*f6r*c6phi)
         d23dr  = scale*(df2rdr*s2phi+df4rdr*s4phi+df6rdr*s6phi)
     end subroutine evu23to
+
     !> @brief Evaluate evintcoord for the PHOH_APRP potential.
     subroutine evintcoord( nbl, ibl, nba, iba, nto, ito, noop, ioop, &
             & nint, ric, x, y, z )
@@ -11514,6 +11518,7 @@ module chempotpy_phoh_aprp_pes
             ric(nint) = oopb(i)
         enddo
     end subroutine evintcoord
+
     !> @brief Evaluate matvect for the PHOH_APRP potential.
     subroutine matvect( y, m, a, lda, x, n )
         ! Subroutien to calculate matrix A multiply vector X
@@ -11532,6 +11537,7 @@ module chempotpy_phoh_aprp_pes
             enddo
         enddo
     end subroutine matvect
+
     !> @brief Evaluate bmat3 for the PHOH_APRP potential.
     subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
             & x, y, z, bm, ldbm )
@@ -11598,10 +11604,8 @@ module chempotpy_phoh_aprp_pes
             bm(irow,3*j-1) = -bm(irow,3*i-1)-bm(irow,3*k-1)
             bm(irow,3*j)   = -bm(irow,3*i)  -bm(irow,3*k)
         enddo
-        !
         ! Evaluate the B matrix contributed from torsions
         ! The calculations follow I. H. Williams, J. Mol. Spectros. 66, 288 (197
-        !
         do ijkl=1, nto
             irow   = irow+1
             i      = ito(1,ijkl)
@@ -11626,12 +11630,9 @@ module chempotpy_phoh_aprp_pes
             ekl(1) = (x(l)-x(k))/rkl
             ekl(2) = (y(l)-y(k))/rkl
             ekl(3) = (z(l)-z(k))/rkl
-            !
             ! Caculate u=eij*ejk, v=ejk*ekl
-            !
             call xprod1(eij, ejk, u)
             call xprod1(ejk, ekl, v)
-            !
             bm(irow,3*i-2) = -u(1)/(rij*sijk*sijk)
             bm(irow,3*i-1) = -u(2)/(rij*sijk*sijk)
             bm(irow,3*i)   = -u(3)/(rij*sijk*sijk)
@@ -11645,11 +11646,9 @@ module chempotpy_phoh_aprp_pes
             bm(irow,3*l-1) = v(2)/(rkl*sjkl*sjkl)
             bm(irow,3*l)   = v(3)/(rkl*sjkl*sjkl)
         enddo
-        !
         ! Evaluate the B matrix contributed from out-of-plane bending
         ! The calculation follows D. F. Mclntosh and K. H. Michaelian,
         ! Can. J. Spectros. 24, 35-40 (1979).
-        !
         do ijkl=1, noop
             irow   = irow+1
             i      = ioop(1,ijkl)
@@ -11680,11 +11679,8 @@ module chempotpy_phoh_aprp_pes
             ejl(1) = (x(l)-x(j))/rjl
             ejl(2) = (y(l)-y(j))/rjl
             ejl(3) = (z(l)-z(j))/rjl
-            !
             ! Caculate u=ejk*ejl
-            !
             call xprod1(ejk, ejl, u)
-            !
             bm(irow,3*i-2) = (1.0d0/rji)*(u(1)/(ctheta*si)-ttheta*eji(1))
             bm(irow,3*i-1) = (1.0d0/rji)*(u(2)/(ctheta*si)-ttheta*eji(2))
             bm(irow,3*i)   = (1.0d0/rji)*(u(3)/(ctheta*si)-ttheta*eji(3))
@@ -11699,6 +11695,7 @@ module chempotpy_phoh_aprp_pes
             bm(irow,3*j)   = -bm(irow,3*i)  -bm(irow,3*k)  -bm(irow,3*l)
         enddo
     end subroutine bmat3
+
     !> @brief Evaluate matmult for the PHOH_APRP potential.
     subroutine matmult( c, ldc, a, lda, m, b, ldb, n, l )
         ! Global variables
@@ -11721,6 +11718,7 @@ module chempotpy_phoh_aprp_pes
             enddo
         enddo
     end subroutine matmult
+
     !> @brief Evaluate bndlen for the PHOH_APRP potential.
     double precision function bndlen( i, j, x, y, z )
         ! Function to evaluate the bond length between atom i and j
@@ -11738,6 +11736,7 @@ module chempotpy_phoh_aprp_pes
             stop
         endif
     end function bndlen
+
     !> @brief Evaluate bndang for the PHOH_APRP potential.
     double precision function bndang( i, j, k, x, y, z )
         ! Evaluate the bond angle between atoms i, j, and k
@@ -11758,6 +11757,7 @@ module chempotpy_phoh_aprp_pes
         call sprod(3, eji, ejk, a)
         bndang = acos(a)
     end function bndang
+
     !> @brief Evaluate dihedr for the PHOH_APRP potential.
     double precision function dihedr( i, j, k, l, x, y, z )
         ! Evaluate the dihedral angle between atoms i, j, k, and l
@@ -11802,11 +11802,9 @@ module chempotpy_phoh_aprp_pes
         ekl(1) = (x(l)-x(k))/rkl
         ekl(2) = (y(l)-y(k))/rkl
         ekl(3) = (z(l)-z(k))/rkl
-        !
         ! u = eij*ejk normal vector in plane i-j-k
         ! v = ejk*ekl Normal vector in plane j-k-l
         ! w = u*v used to determine the sign of dihedral angle
-        !
         call xprod1(eij, ejk, u)
         call xprod1(ejk, ekl, v)
         call xprod1(u, v, w)
@@ -11828,6 +11826,7 @@ module chempotpy_phoh_aprp_pes
         !        dihedr=2.0d0*pi+dihedr
         !      endif
     end function dihedr
+
     !> @brief Evaluate oopba1 for the PHOH_APRP potential.
     double precision function oopba1( i, j, k, l, x, y, z )
         ! Evaluate the out-of-plane bending angle between atoms i, j, k, and l
@@ -11892,6 +11891,7 @@ module chempotpy_phoh_aprp_pes
         !        oopba1=2.0d0*asin(1.0d0)-oopba1
         !      endif
     end function oopba1
+
     !> @brief Evaluate xprod1 for the PHOH_APRP potential.
     subroutine xprod1( x1, x2, x3 )
         ! Calculate cross-product x1 and x2 and return x3
@@ -11903,6 +11903,7 @@ module chempotpy_phoh_aprp_pes
         x3(2) = x1(3)*x2(1)-x1(1)*x2(3)
         x3(3) = x1(1)*x2(2)-x1(2)*x2(1)
     end subroutine xprod1
+
     !> @brief Evaluate sprod for the PHOH_APRP potential.
     subroutine sprod( n, a, b, c )
         ! Calculate scalar-product a and b and return c
@@ -11919,7 +11920,7 @@ module chempotpy_phoh_aprp_pes
     end subroutine sprod
 end module chempotpy_phoh_aprp_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose PHOH_APRP through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_phoh_aprp_pes, only: evaluate
     implicit none

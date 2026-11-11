@@ -1,11 +1,35 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        AlmHn
+!   Functional form:               Valence--Bond Order
+!   Common name:                   VBO2.beta1
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!     Notes:  Valence--Bond Order potential energy function. The functio
+!             form is from Ref. 1.
+!    References: (1) Valence--Bond Order(VBO): A New Approach to Modelin
+!                   Reactive Potential Energy Surfaces for Materials and
+!                   Meiyu Zhao, Mark A. Iron, Przemyslaw Staszewski, Nat
+!                  Rosendo Valero, and Donald G. Truhlar, manuscript in
+!    Units:
+!         energies    - hartrees
+!         coordinates - bohrs
+!    v       --- energy of the system (output)
+!    x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!                of the system (input)
+!    natom   --- number of atoms in the system (input)
+!    maxatom --- maximal number of atoms (input)
+!    symbol  --- character*2 array of dimension holds the atomic symbols
+
+!> @brief Implement AlmHn_VBO2, a potential energy surface for AlmHn.
 module chempotpy_almhn_vbo2_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the AlmHn_VBO2 potential energy surface for AlmHn.
     subroutine evaluate( xyz, nal, nh, natoms, igrad, p, g, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -42,48 +66,20 @@ module chempotpy_almhn_vbo2_pes
             write (*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate alhpot for the AlmHn_VBO2 potential.
     subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
         use chempotpy_geometry, only: fill_distance_matrix
-        !   System:                        AlmHn
-        !   Functional form:               Valence--Bond Order
-        !   Common name:                   VBO2.beta1
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !     Notes:  Valence--Bond Order potential energy function. The functio
-        !             form is from Ref. 1.
-        !
-        !    References: (1) Valence--Bond Order(VBO): A New Approach to Modelin
-        !                   Reactive Potential Energy Surfaces for Materials and
-        !                   Meiyu Zhao, Mark A. Iron, Przemyslaw Staszewski, Nat
-        !                  Rosendo Valero, and Donald G. Truhlar, manuscript in
-        !
-        !    Units:
-        !         energies    - hartrees
-        !         coordinates - bohrs
-        !
-        !    v       --- energy of the system (output)
-        !    x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !                of the system (input)
-        !    natom   --- number of atoms in the system (input)
-        !    maxatom --- maximal number of atoms (input)
-        !    symbol  --- character*2 array of dimension holds the atomic symbols
         implicit none
-        double precision :: add, alpha, alpha_al, alpha_alh, alpha_h, beta, beta_al, &
-            & beta_alh, beta_h, ca, ca_al, ca_bar, ca_bar_al, ca_bar_h, ca_h, cb, cb_al, cb_bar, &
-            & cb_bar_al, cb_bar_h, cb_h, cgam, cgam_al, cgam_bar, cgam_bar_al, cgam_bar_h, cgam_h, del1, &
-            & den1, den2, den3, den4, den5, dx, dy, dz, en, en1, en2, fa, gam1_al, gam1_alh, gam1_h, &
-            & gam2_al, gam2_alh, gam2_h, gam3_al, gam3_h, gam4_al, gam4_alh, gam4_h, gam5_alh, r, r1, &
-            & rij, sig5_alh, v, v1, vi3, vi4, vi5, x, y, z
-        integer                     :: i, id, j, k, maxatom, natom
+        double precision :: add, alpha, alpha_al, alpha_alh, alpha_h, beta, beta_al, beta_alh, beta_h, ca, ca_al, ca_bar, &
+            & ca_bar_al, ca_bar_h, ca_h, cb, cb_al, cb_bar, cb_bar_al, cb_bar_h, cb_h, cgam, cgam_al, cgam_bar, cgam_bar_al, &
+            & cgam_bar_h, cgam_h, del1, den1, den2, den3, den4, den5, dx, dy, dz, en, en1, en2, fa, gam1_al, gam1_alh, gam1_h, &
+            & gam2_al, gam2_alh, gam2_h, gam3_al, gam3_h, gam4_al, gam4_alh, gam4_h, gam5_alh, r(maxatom,maxatom), r1, rij, &
+            & sig5_alh, v, v1, vi3, vi4, vi5, x(maxatom), y(maxatom), z(maxatom)
+        integer                     :: i, id(maxatom), j, k, maxatom, natom
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
         character(len=2)            :: symbol(maxatom)
-        dimension x(maxatom), y(maxatom), z(maxatom), r(maxatom,maxatom)
-        dimension id(maxatom)
         double precision :: b(5,maxatom,maxatom), sigma(5,maxatom,maxatom)
         double precision :: kap3(2,2,2), kap4(2,2,2), kap5(2,2,2)
         double precision :: kap4_hhal, kap4_halal
@@ -153,7 +149,6 @@ module chempotpy_almhn_vbo2_pes
         kap3(1,2,2) = 0.d0
         kap3(2,1,2) = 0.d0
         kap3(2,2,1) = 0.d0
-        !
         kap4(1,1,1) = 0.0d0
         kap4(2,2,2) = 0.0d0
         kap4(1,1,2) = kap4_hhal
@@ -162,7 +157,6 @@ module chempotpy_almhn_vbo2_pes
         kap4(1,2,2) = kap4_halal
         kap4(2,1,2) = kap4_halal
         kap4(2,2,1) = kap4_halal
-        !
         kap5(1,1,1) = 0.0d0
         kap5(2,2,2) = 0.0d0
         kap5(1,1,2) = 0.d0
@@ -201,7 +195,7 @@ module chempotpy_almhn_vbo2_pes
                     sigma(3,i,j) = 1.0
                     sigma(4,i,j) = 1.0
                     sigma(5,i,j) = 0.0
-                else if( (id(i) .eq. 2).and.(id(j) .eq. 2) )then
+                elseif( (id(i) .eq. 2).and.(id(j) .eq. 2) )then
                     del1         = 6.88/autoang
                     gam(1,i,j)   = gam1_al
                     gam(2,i,j)   = gam2_al
@@ -277,7 +271,7 @@ module chempotpy_almhn_vbo2_pes
                 cb_bar   = cb_bar_h
                 cgam     = cgam_h
                 cgam_bar = cgam_bar_h
-            else if( id(i) .eq. 2 )then
+            elseif( id(i) .eq. 2 )then
                 ca       = ca_al
                 cb       = cb_al
                 ca_bar   = ca_bar_al
@@ -314,7 +308,7 @@ module chempotpy_almhn_vbo2_pes
     end subroutine alhpot
 end module chempotpy_almhn_vbo2_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose AlmHn_VBO2 through the Python-facing PES entry point.
 subroutine pes( xyz, nal, nh, natoms, igrad, p, g, d )
     use chempotpy_almhn_vbo2_pes, only: evaluate
     implicit none

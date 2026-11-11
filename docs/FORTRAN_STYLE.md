@@ -21,16 +21,29 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   `subroutine evaluate( coordinates, energy )`.
 - Write calls without spaces immediately inside their parentheses:
   `call evaluate(coordinates, energy)`.
-- Do not put blank lines inside modules, subroutines, functions, programs, or
-  block-data units.
-- Use one blank line, exactly, between top-level subroutines, functions,
-  modules, programs, and block-data units.
+- Put exactly one blank line before and after every standalone `contains`
+  statement. Otherwise, do not put blank lines inside modules, subroutines,
+  functions, programs, or block-data units.
+- Remove empty comment records and punctuation-only separator bars such as
+  `!`, `!-----`, and `!====`. Preserve comments that communicate scientific,
+  algorithmic, provenance, unit, or diagram information.
+- Do not retain migration markers such as `@modern` or generic ownership
+  comments. A PES module brief names the exact surface and chemical system;
+  a DPEM module brief identifies the implementation as a diabatic potential
+  matrix.
+- Use one blank line, exactly, between adjacent subroutines or functions,
+  placing it before the documentation for the following procedure. Apply the
+  same separation to top-level modules, programs, and block-data units.
+- Put the PES metadata and scientific provenance block at the very beginning
+  of its source file, before the module brief and implementation.
 - Use compact executable-block endings `endif` and `enddo`. Keep source-unit
   endings explicit and spaced, such as `end subroutine evaluate` and
   `end module surface_name`; forms such as `endsubroutine` remain forbidden.
 - Space the outer condition and relational operator in conditionals:
   `if( (r-re) .ne. 0.0d0 )then`. Keep arithmetic inside the condition compact
   when that makes the expression easier to read.
+- Write the conditional continuation as the single keyword
+  `elseif( condition )then`; the split form `else if` is forbidden.
 - Keep the standard PES metadata header as one compact comment block and align
   its values after the longest label. Use the established fields `System`,
   `Functional form`, `Common name`, derivative/body/state counts, `Interface`,
@@ -49,6 +62,9 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   `intent(inout)` for every dummy argument. Do not guess direction during a
   mechanical legacy conversion; verify actual reads and writes first.
 - Use the `::` declaration separator and align it within a declaration group.
+- Put every array shape on its typed declaration, for example
+  `double precision :: switch(4), dswitch(4,4)`. Standalone `dimension`
+  statements are forbidden.
 - Use standard intrinsic syntax such as `real(real64)` and
   `character(len=80)`. Star-sized and entity-sized declarations are forbidden.
 - Declare constants with a type and `parameter`, for example

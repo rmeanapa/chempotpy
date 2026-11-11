@@ -1,11 +1,38 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
-!> @brief Own the public evaluator for this potential energy surface.
+!   System:                        MXH
+!   Common name:                   MXH-WL
+!   Functional form:               Modified extended LEPS
+!   Number of derivatives:         1
+!   Number of electronic surfaces: 2
+!   Interface:                     3-2V
+!   Reference:  Y. L. Volobuev, M. D. Hack, M. S. Topaler, and D. G. Tru
+!               J. Chem. Phys. 112 9716 (2000).
+!   Notes:
+!   Protocol: POT evaluates the stateless diabatic surfaces.
+!   Units:
+!      energies    - hartrees
+!      coordinates - bohr
+!      derivatives - hartrees/bohr
+!   Surfaces:
+!      ground and first excited electronic states, diabatic representati
+!   Zero of energy:
+!      The classical potential energy is set equal to zero for M
+!      infinitely far from the HX diatomic and R(HX) set equal to the
+!      HX equilibrium diatomic value.
+!   Parameters:
+!   Coordinates:
+!      Internal, Definition: R(1) = R(M-H)
+!                            R(2) = R(H-X)
+!                            R(3) = R(M-X))
+
+!> @brief Implement MXHWL_LEPS_ModelSurface, a potential energy surface for MXH.
 module chempotpy_mxhwl_leps_modelsurface_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the MXHWL_LEPS_ModelSurface potential energy surface for MXH.
     subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
@@ -79,7 +106,7 @@ module chempotpy_mxhwl_leps_modelsurface_pes
     end subroutine evaluate
 end module chempotpy_mxhwl_leps_modelsurface_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose MXHWL_LEPS_ModelSurface through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_mxhwl_leps_modelsurface_pes, only: evaluate
     implicit none
@@ -124,54 +151,14 @@ subroutine diagonalize( n, a_ss, ev_s, u_ss )
     call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
 end subroutine diagonalize
 
-!
-!   System:                        MXH
-!   Common name:                   MXH-WL
-!   Functional form:               Modified extended LEPS
-!   Number of derivatives:         1
-!   Number of electronic surfaces: 2
-!   Interface:                     3-2V
-
-!   Reference:  Y. L. Volobuev, M. D. Hack, M. S. Topaler, and D. G. Tru
-!               J. Chem. Phys. 112 9716 (2000).
-
-!   Notes:
-!
-!   Protocol: POT evaluates the stateless diabatic surfaces.
-!
-!   Units:
-!      energies    - hartrees
-!      coordinates - bohr
-!      derivatives - hartrees/bohr
-!
-!   Surfaces:
-!      ground and first excited electronic states, diabatic representati
-!
-!   Zero of energy:
-!      The classical potential energy is set equal to zero for M
-!      infinitely far from the HX diatomic and R(HX) set equal to the
-!      HX equilibrium diatomic value.
-!
-!   Parameters:
-!
-!   Coordinates:
-!      Internal, Definition: R(1) = R(M-H)
-!                            R(2) = R(H-X)
-!                            R(3) = R(M-X))
-
-!
-!
 !> @brief Evaluate pot for the MXHWL_LEPS_ModelSurface potential.
 subroutine pot( r, e, de, nt, nsurf )
     implicit none
-    double precision :: ddis, de, de1, de2, de3, e, g_e, g_r, r
-    dimension r(nt,3), e(nt), de(3,nt)
-    integer            :: i, j, k, nsurf, nt
     integer, parameter :: g_p_  = 3
     integer, parameter :: ldg_r = 3
     integer, parameter :: ldg_e = 3
-    dimension g_r(ldg_r,nt,3), g_e(ldg_e,nt)
-    dimension de1(3,1), de2(3,1), de3(3,1), ddis(3)
+    double precision :: ddis(3), de(3,nt), de1(3,1), de2(3,1), de3(3,1), e(nt), g_e(ldg_e,nt), g_r(ldg_r,nt,3), r(nt,3)
+    integer            :: i, j, k, nsurf, nt
     ! initialize seed matrix here
     do i=1, nt
         do j=1, 3
@@ -186,9 +173,9 @@ subroutine pot( r, e, de, nt, nsurf )
     enddo
     if( nsurf .eq. 1 )then
         call g_pot11(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
-    else if( nsurf .eq. 2 )then
+    elseif( nsurf .eq. 2 )then
         call g_pot12(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
-    else if( nsurf .eq. 3 )then
+    elseif( nsurf .eq. 3 )then
         call g_pot22(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
     else
         write(*, *)'Error!'
@@ -197,25 +184,22 @@ subroutine pot( r, e, de, nt, nsurf )
 end subroutine pot
 
 !  U11 surface - lower diabatic surface
-!
 !> @brief Own the stateless g_pot11 evaluator.
 module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
-        double precision :: r, e, des1, bes1, res1, rehf, dehf, des3, bes3, &
-            & res3
+        double precision :: r(:,:), e(:), des1, bes1, res1, rehf, dehf, des3, bes3, res3
         double precision :: s1, s2, s3, xes1, xehf, xes3, yhf, behf
         double precision :: cevau, cosa
         integer          :: i, nt
-        !
-        dimension r(:,:), e(:)
-        !
         ! MH singlet
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
@@ -223,18 +207,10 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
         double precision   :: g_s1(g_pmax_), g_yhf(g_pmax_), g_behf(g_pmax_), &
             & g_xehf(g_pmax_), g_s2(g_pmax_), g_xes3(g_pmax_), g_s3(g_pmax_), g_e(:,:)
         integer :: g_ehfid
-        !
         ! HF singlet
-        !
         ! MF singlet
-        !
-        !
         !  misc constants
-        !
-        !
         ! Common blocks for the diatomic potential
-        !
-        !
         behf    = 0.d0
         bes1    = 0.d0
         bes3    = 0.d0
@@ -283,16 +259,11 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
             stop
         endif
         cevau = 1.d0 / 27.2113961d0
-        !
-        !
-        !
         do i = 1, nt
-            !
             !          cosa = 0.5d0 * (r(i, 2) ** 2 + r(i, 3) ** 2 - r(i, 1) ** 2) /
             !     *(r(i, 2) * r(i, 3))
             !==============================================================k
             !This section contains the diatomic curves
-            !
             ! The  MH singlet
             res1 = 2.0d0
             do g_i_ = 1, g_p_
@@ -305,7 +276,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
                 g_xes1(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xes1 = d2_v
-            !--------
             d2_v = des1 * xes1
             d3_v = xes1 + 2.0d0
             d4_b = d2_v + d3_v * des1
@@ -313,18 +283,13 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
                 g_s1(g_i_) = d4_b * g_xes1(g_i_)
             enddo
             s1 = d2_v * d3_v
-            !--------
-            !
             ! The HF singlet
-            !
             rehf = 1.733d0
             dehf = 6.122d0
-            !
             do g_i_ = 1, g_p_
                 g_yhf(g_i_) = g_r(g_i_,i,2)
             enddo
-            yhf = r(i,2) - 2.1042d0
-            !--------
+            yhf  = r(i,2) - 2.1042d0
             d4_v = yhf * yhf
             d1_p = 2.0d0 * yhf
             d5_b = 0.059062d0 * d1_p + (-0.025647d0)
@@ -332,8 +297,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
                 g_behf(g_i_) = d5_b * g_yhf(g_i_)
             enddo
             behf = 1.1622d0 - 0.025647d0 * yhf + 0.059062d0 * d4_v
-            !--------
-            !
             d4_v = r(i,2) - rehf
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-behf) * g_r(g_i_,i,2) + (-d4_v) * g_behf( g_i_)
@@ -345,7 +308,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
                 g_xehf(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xehf = d2_v
-            !--------
             d2_v = dehf * xehf
             d3_v = xehf - 2.0d0
             d4_b = d2_v + d3_v * dehf
@@ -353,10 +315,7 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
                 g_s2(g_i_) = d4_b * g_xehf(g_i_)
             enddo
             s2 = d2_v * d3_v
-            !--------
-            !
             ! The MF singlet
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bes3) * g_r(g_i_,i,3)
             enddo
@@ -367,7 +326,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
                 g_xes3(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xes3 = d2_v
-            !--------
             des3 = 0.060
             d2_v = des3 * xes3
             d3_v = xes3 - 2.0d0
@@ -376,24 +334,15 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
                 g_s3(g_i_) = d4_b * g_xes3(g_i_)
             enddo
             s3 = d2_v * d3_v
-            !--------
-            !
-            ! =========================================================
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = g_s3(g_i_) + g_s2(g_i_) + g_s1(g_i_)
             enddo
             e(i) = s1 + s2 + s3 + dehf
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = cevau * g_e(g_i_,i)
             enddo
             e(i) = e(i) * cevau
-            !--------
-            !
         enddo
-        !
     end subroutine dispatch
 end module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
 
@@ -412,31 +361,24 @@ subroutine g_pot11( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
     call dispatch(g_p_=g_p_, r=r, g_r=g_r, ldg_r=ldg_r, e=e, g_e=g_e, ldg_e=ldg_e, nt=nt)
 end subroutine g_pot11
 
-!
-!
-!
 ! U12 coupling surface
-!
 !> @brief Own the stateless g_pot12 evaluator.
 module chempotpy_mxhwl_leps_modelsurface_g_pot12_legacy_state_3d77fc80
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
-        !
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
-        !
-        double precision :: alp, bet, rd0, r20, theta
-        double precision :: gc, gc2, rnag, r1s, r2s, r3s
-        !
-        double precision :: cevau
-        !
-        integer          :: nt, i
-        double precision :: r(:,:), e(:)
-        !
+        double precision   :: alp, bet, rd0, r20, theta
+        double precision   :: gc, gc2, rnag, r1s, r2s, r3s
+        double precision   :: cevau
+        integer            :: nt, i
+        double precision   :: r(:,:), e(:)
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
         double precision   :: d2_p, d2_w, d8_b, d7_b, d6_b, d5_b, d4_b, d2_v, &
@@ -445,10 +387,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot12_legacy_state_3d77fc80
         double precision            :: g_gc2(g_pmax_), g_d2_w(g_pmax_), g_e(:,:)
         integer                     :: g_ehfid
         double precision, parameter :: ap = 0.09051d0
-        !
-        !
-        !
-        !
         alp     = 0.d0
         bet     = 0.d0
         cevau   = 0.d0
@@ -492,35 +430,26 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot12_legacy_state_3d77fc80
             stop
         endif
         theta = 15.6d0 * dacos(-1.0d0) / 180.0d0
-        !
         cevau = 1.d0 / 27.2113961d0
-        !
-        !
-        !
         do i = 1, nt
             d2_v = r(i,1) * r(i,1)
             d1_p = 2.0d0 * r(i,1)
             do g_i_ = 1, g_p_
                 g_r1s(g_i_) = d1_p * g_r(g_i_,i,1)
             enddo
-            r1s = d2_v
-            !--------
+            r1s  = d2_v
             d2_v = r(i,2) * r(i,2)
             d1_p = 2.0d0 * r(i,2)
             do g_i_ = 1, g_p_
                 g_r2s(g_i_) = d1_p * g_r(g_i_,i,2)
             enddo
-            r2s = d2_v
-            !--------
+            r2s  = d2_v
             d2_v = r(i,3) * r(i,3)
             d1_p = 2.0d0 * r(i,3)
             do g_i_ = 1, g_p_
                 g_r3s(g_i_) = d1_p * g_r(g_i_,i,3)
             enddo
-            r3s = d2_v
-            !--------
-            !
-            !
+            r3s  = d2_v
             d4_b = -(2.0d0 / 9.0d0)
             d7_b = 1.0d0 / 3.0d0
             d8_b = 2.0d0 / 3.0d0
@@ -538,24 +467,18 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot12_legacy_state_3d77fc80
                 g_rnag(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             rnag = d2_v
-            !--------
-            !
-            !
             d4_b = dsin(theta)
             d5_b = dcos(theta)
             do g_i_ = 1, g_p_
                 g_gc(g_i_) = d4_b * g_r(g_i_,i,2) + d5_b * g_rnag(g_i_)
             enddo
-            gc = dcos(theta) * rnag + dsin(theta) * r(i,2)
-            !--------
+            gc   = dcos(theta) * rnag + dsin(theta) * r(i,2)
             d4_b = -dcos(theta)
             d5_b = dsin(theta)
             do g_i_ = 1, g_p_
                 g_gc2(g_i_) = d4_b * g_r(g_i_,i,2) + d5_b * g_rnag(g_i_)
             enddo
-            gc2 = dsin(theta) * rnag - dcos(theta) * r(i,2)
-            !--------
-            !
+            gc2  = dsin(theta) * rnag - dcos(theta) * r(i,2)
             d4_v = ((gc - rd0) / alp) ** ( 4 - 2)
             d4_v = d4_v * ((gc - rd0) / alp)
             d1_p = 4 *  d4_v
@@ -583,14 +506,10 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot12_legacy_state_3d77fc80
                 g_e(g_i_,i) = d4_b * g_d2_w(g_i_) + d6_b * g_d1_w(g_i_)
             enddo
             e(i) = d3_v * d5_v
-            !--------
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = cevau * g_e(g_i_,i)
             enddo
             e(i) = e(i) * cevau
-            !--------
-            !
         enddo
     end subroutine dispatch
 end module chempotpy_mxhwl_leps_modelsurface_g_pot12_legacy_state_3d77fc80
@@ -610,21 +529,20 @@ subroutine g_pot12( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
     call dispatch(g_p_=g_p_, r=r, g_r=g_r, ldg_r=ldg_r, e=e, g_e=g_e, ldg_e=ldg_e, nt=nt)
 end subroutine g_pot12
 
-!
-!
 ! the upper diabatic surface  U22
-!
 !> @brief Own the stateless g_pot22 evaluator.
 module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
     implicit none
     private
     public :: dispatch
+
     contains
+
     !> @brief Evaluate dispatch.
     subroutine dispatch( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
-        double precision :: r, e, denah, renah, benah, rehf, dehf, demf, remf, bemf
+        double precision :: r(:,:), e(:), denah, renah, benah, rehf, dehf, demf, remf, bemf
         double precision :: c2a, c2b, c2c, um2p, cevau, onethd, twothd
         double precision :: s1, s2, s3, t1, t2, t3, s2a, s2b, s2m
         double precision :: coul1, coul2, coul3, exch1, exch2, exch3, cplg2, w
@@ -632,9 +550,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
         double precision :: yhf, behf
         double precision :: cosa, rave
         integer          :: i, j, k, nt
-        dimension r(:,:), e(:)
-        !
-        !
         ! MH singlet & triplet
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
@@ -645,21 +560,10 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
             & g_t3(g_pmax_), g_s3(g_pmax_), g_coul1(g_pmax_)
         double precision :: g_coul2(g_pmax_), g_coul3(g_pmax_), g_exch1(g_pmax_), g_exch2(g_pmax_), g_exch3(g_pmax_), g_w(g_pmax_), g_cplg2(g_pmax_), g_e(:,:)
         integer          :: g_ehfid
-        !
         ! HF singlet & triplet
-        !
         ! LiF singlet & triplet
-        !
-        !
         ! H2 singlets
-        !
         ! misc constants
-        !
-        !
-        !
-        !
-        !
-        !
         behf    = 0.d0
         bemf    = 0.d0
         benah   = 0.d0
@@ -757,19 +661,11 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
         cevau  = 1.d0 / 27.2113961d0
         onethd = 1.0d0 / 3.0d0
         twothd = 2.0d0 / 3.0d0
-        !
-        !
-        !
         do i = 1, nt
-            !
             cosa = 0.5d0 * (r(i,2) ** 2 + r(i,3) ** 2 - r(i,1) ** 2) / (r(i,2) * r(i,3))
             rave = 0.5d0 * (r(i,1) + r(i,3))
-            !
-            ! =========================================================
             ! The diatomic curves . . .
-            !
             ! The MH singlet & triplet
-            !
             benah = 2.0d0
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-benah) * g_r(g_i_,i,1)
@@ -781,15 +677,13 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_xenah(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xenah = d2_v
-            !--------
-            d2_v = denah * xenah
-            d3_v = xenah - 2.0d0
-            d4_b = d2_v + d3_v * denah
+            d2_v  = denah * xenah
+            d3_v  = xenah - 2.0d0
+            d4_b  = d2_v + d3_v * denah
             do g_i_ = 1, g_p_
                 g_s1(g_i_) = d4_b * g_xenah(g_i_)
             enddo
-            s1 = d2_v * d3_v
-            !--------
+            s1   = d2_v * d3_v
             d2_v = 0.05d0 * denah * xenah
             d3_v = xenah + 2.0d0
             d4_b = d2_v + d3_v * (0.05d0 * denah)
@@ -797,16 +691,11 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_t1(g_i_) = d4_b * g_xenah(g_i_)
             enddo
             t1 = d2_v * d3_v
-            !--------
-            !
             ! The HF singlet and triplet
-            !
-            !
             do g_i_ = 1, g_p_
                 g_yhf(g_i_) = g_r(g_i_,i,2)
             enddo
-            yhf = r(i,2) - 2.1042d0
-            !--------
+            yhf  = r(i,2) - 2.1042d0
             d4_v = yhf * yhf
             d1_p = 2.0d0 * yhf
             d5_b = 0.059062d0 * d1_p + (-0.025647d0)
@@ -814,7 +703,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_behf(g_i_) = d5_b * g_yhf(g_i_)
             enddo
             behf = 1.1622d0 - 0.025647d0 * yhf + 0.059062d0 * d4_v
-            !--------
             d4_v = r(i,2) - rehf
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-behf) * g_r(g_i_,i,2) + (-d4_v) * g_behf( g_i_)
@@ -826,15 +714,13 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_xehfa(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xehfa = d2_v
-            !--------
-            d2_v = dehf * xehfa
-            d3_v = xehfa - 2.0d0
-            d4_b = d2_v + d3_v * dehf
+            d2_v  = dehf * xehfa
+            d3_v  = xehfa - 2.0d0
+            d4_b  = d2_v + d3_v * dehf
             do g_i_ = 1, g_p_
                 g_s2(g_i_) = d4_b * g_xehfa(g_i_)
             enddo
-            s2 = d2_v * d3_v
-            !--------
+            s2   = d2_v * d3_v
             d2_v = xehfa * xehfa
             d1_p = 2.0d0 * xehfa
             d2_b = 0.5d0 * dehf
@@ -843,12 +729,8 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_t2(g_i_) = d5_b * g_xehfa(g_i_)
             enddo
             t2 = 0.5d0 * dehf * (d2_v + 1.1d0 * xehfa)
-            !--------
-            !
             ! The Modified HF singlet
-            !
             ! The  LiF singlet & triplet
-            !
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-bemf) * g_r(g_i_,i,3)
             enddo
@@ -859,7 +741,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_xemf(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
             xemf = d2_v
-            !--------
             d2_v = xemf * xemf
             d1_p = 2.0d0 * xemf
             d2_b = 0.5d0 * (demf + um2p)
@@ -867,8 +748,7 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
             do g_i_ = 1, g_p_
                 g_t3(g_i_) = d5_b * g_xemf(g_i_)
             enddo
-            t3 = 0.5d0 * (demf + um2p) * (d2_v + 1.3d0 * xemf)
-            !--------
+            t3   = 0.5d0 * (demf + um2p) * (d2_v + 1.3d0 * xemf)
             d2_v = (demf + um2p) * xemf
             d3_v = xemf - 2.0d0
             d4_b = d2_v + d3_v * (demf + um2p)
@@ -876,41 +756,31 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_s3(g_i_) = d4_b * g_xemf(g_i_)
             enddo
             s3 = d2_v * d3_v
-            !--------
-            !
-            ! ===============================================================
             ! The final LEPS form
-            !
             do g_i_ = 1, g_p_
                 g_coul1(g_i_) = 0.5d0 * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
             enddo
             coul1 = 0.5d0 * (s1 + t1)
-            !--------
             do g_i_ = 1, g_p_
                 g_coul2(g_i_) = 0.5d0 * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
             enddo
             coul2 = 0.5d0 * (s2 + t2)
-            !--------
             do g_i_ = 1, g_p_
                 g_coul3(g_i_) = 0.5d0 * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
             enddo
             coul3 = 0.5d0 * (s3 + t3)
-            !--------
             do g_i_ = 1, g_p_
                 g_exch1(g_i_) = (-0.5d0) * g_t1(g_i_) + 0.5d0 * g_s1(g_i_)
             enddo
             exch1 = 0.5d0 * (s1 - t1)
-            !--------
             do g_i_ = 1, g_p_
                 g_exch2(g_i_) = (-0.5d0) * g_t2(g_i_) + 0.5d0 * g_s2(g_i_)
             enddo
             exch2 = 0.5d0 * (s2 - t2)
-            !--------
             do g_i_ = 1, g_p_
                 g_exch3(g_i_) = (-0.5d0) * g_t3(g_i_) + 0.5d0 * g_s3(g_i_)
             enddo
             exch3 = 0.5d0 * (s3 - t3)
-            !--------
             d4_v  = (exch1 - exch2) * (exch1 - exch2)
             d3_p  = 2.0d0 * (exch1 - exch2)
             d7_v  = (exch2 - exch3) * (exch2 - exch3)
@@ -924,7 +794,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_w(g_i_) = d5_b * g_exch3(g_i_) + d10_b * g_exch2(g_i_) + d6_b * g_exch1(g_i_)
             enddo
             w = d4_v + d7_v + d10_v
-            !--------
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = (-c2c) * g_r(g_i_,i,3) + (-c2c) * g_r(g_i_,i,2) + (-c2c) * g_r(g_i_,i,1) + (-c2b) * &
                     & g_w(g_i_)
@@ -937,8 +806,7 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_cplg2(g_i_) = d3_b * g_d1_w(g_i_)
             enddo
             cplg2 = c2a * d2_v
-            !--------
-            d4_b = cplg2 + cplg2
+            d4_b  = cplg2 + cplg2
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d4_b * g_cplg2(g_i_) + g_w(g_i_)
             enddo
@@ -954,15 +822,10 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
                 g_e(g_i_,i) = d7_b * g_d1_w(g_i_) + g_coul3(g_i_) + g_coul2 (g_i_) + g_coul1(g_i_)
             enddo
             e(i) = coul1 + coul2 + coul3 - d7_v / dsqrt(2.0d0) + um2p + dehf
-            !--------
-            !
-            !
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = cevau * g_e(g_i_,i)
             enddo
             e(i) = e(i) * cevau
-            !--------
-            !
         enddo
     end subroutine dispatch
 end module chempotpy_mxhwl_leps_modelsurface_g_pot22_legacy_state_3d77fc80
@@ -981,7 +844,3 @@ subroutine g_pot22( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
     integer          :: nt
     call dispatch(g_p_=g_p_, r=r, g_r=g_r, ldg_r=ldg_r, e=e, g_e=g_e, ldg_e=ldg_e, nt=nt)
 end subroutine g_pot22
-
-!
-!
-!

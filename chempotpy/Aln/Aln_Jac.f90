@@ -1,10 +1,34 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Embedded atom/Effective medium theory
+!   Common name:                   Jac
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  For a recent
+!           discussion of this potential, see:
+!           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!           and D. G. Truhlar, "Analytic Potentials Energy Functions
+!           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  References: K. W. Jacobsen, Comments Cond. Mat. Phys. 14,
+!                 129 (1988).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system (output)
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!              of the system (input)
+!  natom   --- number of atoms in the system (input)
+!  maxatom --- maximal number of atoms (input)
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_jac_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,39 +58,13 @@ module chempotpy_aln_jac_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_Jac potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Embedded atom/Effective medium theory
-        !   Common name:                   Jac
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  For a recent
-        !           discussion of this potential, see:
-        !           A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !           and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !           for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  References: K. W. Jacobsen, Comments Cond. Mat. Phys. 14,
-        !                 129 (1988).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system (output)
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !              of the system (input)
-        !  natom   --- number of atoms in the system (input)
-        !  maxatom --- maximal number of atoms (input)
         implicit none
-        double precision :: alpha, beta, bs, dx, dy, dz, e0, e2, e3, en, ep, eta, eta1, &
-            & eta2, fra, pi, rr, s, u, ud, udno, uno, v, vv, x, y, z
+        double precision :: alpha, beta, bs, dx, dy, dz, e0, e2, e3, en, ep, eta, eta1, eta2, fra, pi, rr, s, u, ud, udno, uno, &
+            & v, vv, x(maxatom), y(maxatom), z(maxatom)
         integer :: i, j, m, maxatom, natom
-        dimension x(maxatom), y(maxatom), z(maxatom)
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
         !  calculate the potential energy
@@ -117,7 +115,7 @@ module chempotpy_aln_jac_pes
     end subroutine pot
 end module chempotpy_aln_jac_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_Jac through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_jac_pes, only: evaluate

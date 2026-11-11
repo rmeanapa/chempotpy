@@ -1,10 +1,38 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
+!   System:                        Aln
+!   Functional form:               Extended Rydberg plus Embedded Atom
+!   Common name:                   ER2+MeiD
+!   Number of derivatives:         0
+!   Number of bodies:              variable
+!   Number of electronic surfaces: 1
+!   Interface:                     HO-MM-0
+!   Notes:  Many-body aluminum potential energy function.  The parameters
+!           for this PEF have been parameterized against a data set of
+!           aluminum cluster energies and bulk data.
+!           This PEF has a cutoff at 6.5 angstroms.
+!           Note that eq 37 of J. Phys. Chem. B 108, 8896 (2004) has two
+!           typos related to this potential. A minus sign is missing in
+!           front of phi-sub-0, and the sign in front of the variable "d"
+!           should be "+".
+!  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
+!              and D. G. Truhlar, "Analytic Potentials Energy Functions
+!              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
+!  Units:
+!       energies    - hartrees
+!       coordinates - bohrs
+!  v       --- energy of the system
+!  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
+!                    of the system
+!  natom   --- number of atoms in the system
+!  maxatom --- maximal number of atoms
+
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_er2meid_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -34,47 +62,16 @@ module chempotpy_aln_er2meid_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate pot for the Aln_ER2MeiD potential.
     subroutine pot( x, y, z, v, natom, maxatom )
-        !   System:                        Aln
-        !   Functional form:               Extended Rydberg plus Embedded Atom
-        !   Common name:                   ER2+MeiD
-        !   Number of derivatives:         0
-        !   Number of bodies:              variable
-        !   Number of electronic surfaces: 1
-        !   Interface:                     HO-MM-0
-        !
-        !   Notes:  Many-body aluminum potential energy function.  The parameters
-        !           for this PEF have been parameterized against a data set of
-        !           aluminum cluster energies and bulk data.
-        !           This PEF has a cutoff at 6.5 angstroms.
-        !           Note that eq 37 of J. Phys. Chem. B 108, 8896 (2004) has two
-        !           typos related to this potential. A minus sign is missing in
-        !           front of phi-sub-0, and the sign in front of the variable "d"
-        !           should be "+".
-        !
-        !  References: A. W. Jasper, P. Staszewski, G. Staszewska, N. E. Schultz,
-        !              and D. G. Truhlar, "Analytic Potentials Energy Functions
-        !              for Aluminum Clusters," J. Phys. Chem. B 108, 8996(2004).
-        !
-        !  Units:
-        !       energies    - hartrees
-        !       coordinates - bohrs
-        !
-        !  v       --- energy of the system
-        !  x,y,z   --- one-dimensional arrays of the Cartesian coordinates
-        !                    of the system
-        !  natom   --- number of atoms in the system
-        !  maxatom --- maximal number of atoms
         implicit none
-        double precision :: a1, a2, a3, ab, alpha, au2, beta, bigef, bu2, cc, co, de, &
-            & delta, dx, dy, dz, ec, ee, ef, gamma, phi0, poly, q, r0, rc, re, rho, rho_pair, rn, rr, s, &
-            & sterm, v, v_pair, ver2, x, xm, xx, y, z
+        double precision :: a1, a2, a3, ab, alpha, au2, beta, bigef, bu2, cc(6), co, de, delta, dx, dy, dz, ec, ee, ef, gamma, &
+            & phi0, poly, q, r0, rc, re, rho, rho_pair, rn, rr, s(3), sterm, v, v_pair, ver2, x(maxatom), xm, xx, y(maxatom), &
+            & z(maxatom)
         integer                     :: i, j, l, m, maxatom, natom
         double precision, parameter :: autoev  = 27.2113961d0
         double precision, parameter :: autoang = 0.529177249d0
-        dimension x(maxatom), y(maxatom), z(maxatom)
-        dimension cc(6), s(3)
         ! accurate two-body
         de  = 1.71013678553981441/autoev
         re  = 5.08182706399609163
@@ -132,7 +129,7 @@ module chempotpy_aln_er2meid_pes
                 ! cutoff function
                 if( rr .le. rn )then
                     q = 1.d0
-                else if( rr .ge. rc )then
+                elseif( rr .ge. rc )then
                     q = 0.d0
                 else
                     xx = (rr-rn)/(rc-rn)
@@ -179,7 +176,7 @@ module chempotpy_aln_er2meid_pes
     end subroutine pot
 end module chempotpy_aln_er2meid_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_ER2MeiD through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_er2meid_pes, only: evaluate

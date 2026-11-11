@@ -1,10 +1,11 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_np_d_pes
     implicit none
     private
     public :: evaluate
+
     contains
+
     !> @brief Evaluate the NP-D aluminum potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
@@ -33,6 +34,7 @@ module chempotpy_aln_np_d_pes
             write(*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate the NP-D embedded-atom aluminum cluster energy.
     subroutine evaluate_np_d( coordinates_bohr, atom_count, energy_hartree )
         use chempotpy_geometry, only: cartesian_distance
@@ -75,7 +77,7 @@ module chempotpy_aln_np_d_pes
     end subroutine evaluate_np_d
 end module chempotpy_aln_np_d_pes
 
-!> @brief Preserve the historical Python-facing PES entry point.
+!> @brief Expose Aln_NP_D through the Python-facing PES entry point.
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_np_d_pes, only: evaluate

@@ -19,13 +19,15 @@ module nnparam
     double precision, parameter   :: vpescut = 5000.d0 ! cm-1
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement K2Rb2_PIPNN, a potential energy surface for K2Rb2.
 module chempotpy_k2rb2_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the K2Rb2_PIPNN potential energy surface for K2Rb2.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam, only: biasa, biasb, biasc, ifunc, nhid, ninput, nlayer, nodemax, nodes, noutput, &
             & nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, vpescut, weighta, weightb, weightc
@@ -73,7 +75,7 @@ module chempotpy_k2rb2_pipnn_pes
     end subroutine evaluate
 end module chempotpy_k2rb2_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose K2Rb2_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_k2rb2_pipnn_pes, only: evaluate
     implicit none
@@ -421,9 +423,9 @@ function tranfun( x, ifunc )
     double precision :: tranfun, x
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+exp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end
@@ -465,7 +467,6 @@ end subroutine before_vpes
 !        double precision :: x(1:6)
 !        double precision :: p(0:32)
 !        call bemsav(x,p)
-
 !> @brief Evaluate bemsav.
 subroutine bemsav( x, p )
     implicit none

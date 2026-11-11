@@ -1,29 +1,27 @@
-!> @modern CHEMPOTPY modern Fortran style is enforced for this file.
 !.... Subroutine to obtain potential energy and gradient from a fit to
 !.... the ab initio data
-!
 !.... The long range interaction is added. The transition is between
 !.... 13 and 14 Bohr and in order to making it smoother, a switching
 !.... function is used.
 
 !.... x is defined as x(natoms,3)
 !.... xn is defined as xn(3,natoms)
-!
 !.....History:
 !.... Date     Modified by  Comment
 !.... ----     -----------  -------
 !.... 02/05/05   Zhong      code modified based on AB's getpot code
 !.... 03/01/05   Zhong      code finished
 !.... 03/04/05   Zhong      code refined
-!
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement CH5p_PIP, a potential energy surface for CH5p.
 module chempotpy_ch5p_pip_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the CH5p_PIP potential energy surface for CH5p.
     subroutine evaluate( x, igrad, p, gradient_out, d )
         use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
         implicit none
@@ -55,6 +53,7 @@ module chempotpy_ch5p_pip_pes
             write (*, *) 'Only energy is available'
         endif
     end subroutine evaluate
+
     !> @brief Evaluate mycalcpot for the CH5p_PIP potential.
     subroutine mycalcpot( x, v )
         implicit none
@@ -66,11 +65,10 @@ module chempotpy_ch5p_pip_pes
         call getpot(x, r, v)
         v = v-emin !vmin is in H
     end subroutine mycalcpot
+
     !> @brief Evaluate getpot for the CH5p_PIP potential.
     subroutine getpot( x, r, epot )
-        !
         implicit none
-        !
         integer, parameter                     :: natoms = 6
         integer                                :: i, j, k, l, m
         double precision                       :: a, b, theta
@@ -113,6 +111,7 @@ module chempotpy_ch5p_pip_pes
             endif
         endif
     end subroutine getpot
+
     !> @brief Evaluate sw for the CH5p_PIP potential.
     double precision function sw( a, b, x )
         implicit none
@@ -120,9 +119,8 @@ module chempotpy_ch5p_pip_pes
         sw = 0.5d0*a*x**2 + (10.d0 + b/2.d0 - 3.d0*a/2.d0)*x**3 + (3.d0*a/2.d0 - b - 15.d0)*x**4 + (6.d0 + b/2.d0 - a/ &
             & 2.d0)* x**5
     end function sw
-    !
+
     !.... Subroutine to obtain the long-range interaction
-    !
     !.... 02/14/05   Zhong      SUBROUTINE created
     !.... 02/22/05   Zhong      Modified for the long range effect
     !> @brief Evaluate getlr for the CH5p_PIP potential.
@@ -143,11 +141,11 @@ module chempotpy_ch5p_pip_pes
         u4    = -(0.5d0*alpha + 1.d0/3.d0*(alpha0 - alpha90)*p2)/r**4
         elr   = u3 + u4
     end subroutine getlr
+
     !> @brief Evaluate geth2pot for the CH5p_PIP potential.
     subroutine geth2pot( xyz1, v )
         !...  program is to calculate the potential energy of H2
         !...  Based on pes6n4
-        !...
         implicit none
         integer, parameter :: natoms  = 6
         integer, parameter :: natoms1 = 2
@@ -189,12 +187,10 @@ module chempotpy_ch5p_pip_pes
             v = 0.d0
         endif
     end subroutine geth2pot
+
     !> @brief Evaluate getfit for the CH5p_PIP potential.
     subroutine getfit( xn, f0 )
-        !
         implicit none
-        !
-        !
         integer, parameter :: m  = 2239
         integer, parameter :: mr = 32
         double precision, dimension(0:2, 0:5) :: xn
@@ -206,12 +202,11 @@ module chempotpy_ch5p_pip_pes
         double precision            :: f0
         double precision            :: t0, t1
         double precision, parameter :: dd = 1.0d-6
-        !
-        integer          :: i, j, l, k
-        double precision :: dc0 = 0.30547300513
-        double precision :: dc1 = 0.19476072488
-        double precision :: dw0 = 0.09846745640
-        double precision :: dw1 = 0.12149234254
+        integer                     :: i, j, l, k
+        double precision            :: dc0 = 0.30547300513
+        double precision            :: dc1 = 0.19476072488
+        double precision            :: dw0 = 0.09846745640
+        double precision            :: dw1 = 0.12149234254
         !   coef = the coefficients of the fit
         double precision, dimension(0:m+2*mr-1) :: coef = (/ &
             & 22.9504077130000, 100.8520699000000, &
@@ -1367,8 +1362,6 @@ module chempotpy_ch5p_pip_pes
             & -0.0321062485789, 6.5608113839000, &
             & 0.0497926550622 &
             & /)
-        !
-        !     -----------------------------------------------------------------
         ! The following lines are the code that evaluates my fitted function.
         ! The xnuc are the nuclear coordinates, as found in your table.
         ! Routine getd0 evaluates my internal coordinates d0(0:5,0:5), which are
@@ -1378,7 +1371,6 @@ module chempotpy_ch5p_pip_pes
         ! functions at the configuration described by d0, and finally f0 is the
         ! fitted potential.  The basis functions are polynomials of the entries
         ! in d0, obeying all the expected symmetries.
-        !
         call getd0 (xn, dc0, dc1, dw0, dw1, d0, r0)
         call getvec (m, d0, vec(0:m-1))
         call getrvec (3, r0, rvec)
@@ -1412,14 +1404,12 @@ module chempotpy_ch5p_pip_pes
         !             enddo
         !          enddo
         !           t1 = dot_product(coef,vec)
-        !
         ! Note that gf0 will be the negative gradient
-        !
         !           gf0(i,j) = -(t1-t0)/(2*dd)
         !         enddo
         !       enddo
-        !
     end subroutine getfit
+
     !> @brief Evaluate getd0 for the CH5p_PIP potential.
     subroutine getd0 ( xn, dc0, dc1, dw0, dw1, d0, r0 )
         implicit none
@@ -1455,6 +1445,7 @@ module chempotpy_ch5p_pip_pes
             enddo
         enddo
     end subroutine getd0
+
     !> @brief Evaluate getvec for the CH5p_PIP potential.
     subroutine getvec ( m, d, vec )
         implicit none
@@ -1477,7 +1468,6 @@ module chempotpy_ch5p_pip_pes
         her5(t0) = ((32*t0**2-160)*t0**2+120)*t0/sqrt(dble(64*120))
         her6(t0) = (((64*t0**2-480)*t0**2+720)*t0**2-120)/sqrt(dble( 128*720))
         her7(t0) = (((128*t0**2-1344)*t0**2+3360)*t0**2-1680)*t0/ sqrt(dble(256*5040))
-        !     ------------------------------------------------------------------
         !     Test for compatibility
         if (.not.(m.eq.1.or.m.eq.3.or.m.eq.10.or.m.eq.32.or.&
             &m.eq.101.or.m.eq.299.or.m.eq.849.or.m.eq.2239)) then
@@ -1897,6 +1887,7 @@ module chempotpy_ch5p_pip_pes
             enddo
         endif
     end subroutine getvec
+
     !> @brief Evaluate getrvec for the CH5p_PIP potential.
     subroutine getrvec ( m, r, vec )
         implicit none
@@ -1906,7 +1897,6 @@ module chempotpy_ch5p_pip_pes
         integer :: j0, j1, j2, i, j, k
         double precision, dimension(0:1) :: x
         double precision, dimension(0:3) :: y
-        !     ------------------------------------------------------------------
         !     Test for compatibility
         if( .not.(m .eq. 1.or.m .eq. 3.or.m .eq. 10) )then
             stop 'getrvec - wrong dimension'
@@ -1958,11 +1948,11 @@ module chempotpy_ch5p_pip_pes
             enddo
         endif
     end subroutine getrvec
+
     !> @brief Evaluate getch3pot for the CH5p_PIP potential.
     subroutine getch3pot( xyz1, v )
         !...  program is to calculate the potential energy of CH3+
         !...  Based on pes6n4
-        !...
         implicit none
         integer, parameter                      :: natoms  = 6
         integer, parameter                      :: natoms1 = 4
@@ -1999,6 +1989,7 @@ module chempotpy_ch5p_pip_pes
             v = 0.d0
         endif
     end subroutine getch3pot
+
     !...  subroutine for cubic spline
     !...  driver for routine splint, which calls spline
     !...  x ....       H-H bond distance
@@ -2042,11 +2033,11 @@ module chempotpy_ch5p_pip_pes
         close(file_unit_70)
         close(file_unit_71)
     end subroutine cspline
+
     !...  Cubic spline code
     !...  Original cubic spline code from Numerial Recipe has been modified
     !...  to adapt double precision
     !...  02/23/05    Zhong
-    !
     !> @brief Evaluate spline for the CH5p_PIP potential.
     subroutine spline( x, y, n, yp1, ypn, y2 )
         implicit none
@@ -2082,6 +2073,7 @@ module chempotpy_ch5p_pip_pes
             y2(k) = y2(k)*y2(k+1)+u(k)
         enddo
     end subroutine spline
+
     !> @brief Evaluate splint for the CH5p_PIP potential.
     subroutine splint( xa, ya, y2a, n, x, y )
         implicit none
@@ -2106,10 +2098,9 @@ module chempotpy_ch5p_pip_pes
         b = (x-xa(klo))/h
         y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h** 2)/6.d0
     end subroutine splint
-    !
+
     !.... Subroutine to calculate R, which is the distance between C and the
     !.... center of H2 in CH5+
-    !
     !.....History:
     !.... Date     Modified by  Comment
     !.... ----     -----------  -------
@@ -2118,7 +2109,6 @@ module chempotpy_ch5p_pip_pes
     !.... dist ....  R
     !.... h2dist ... bond length of H2
     !.... theta ...  the angle between H2 and axis of C-center of H2
-    !
     !> @brief Evaluate calcr for the CH5p_PIP potential.
     subroutine calcr( x, xch3, xh2a, dist, h2dist, theta )
         implicit none
@@ -2195,16 +2185,17 @@ module chempotpy_ch5p_pip_pes
         h2dist5 = h2dist/2.d0
         call calcangle(rch(npp2), dist, h2dist5, theta)
     end subroutine calcr
+
     !> @brief Evaluate calcdist for the CH5p_PIP potential.
     subroutine calcdist( x1, x2, dist )
         !.... a subroutine to calculate the bond length
         !.... x1, x2 are Cartisian coordinate
-        !....
         implicit none
         double precision, dimension(3) :: x1, x2
         double precision               :: dist
         dist = dsqrt((x1(1) - x2(1))**2 + (x1(2) - x2(2))**2 + (x1(3) - x2(3))**2)
     end subroutine calcdist
+
     !> @brief Evaluate calcangle for the CH5p_PIP potential.
     subroutine calcangle( a, b, c, theta )
         !.... program to calculate theta
@@ -2221,7 +2212,7 @@ module chempotpy_ch5p_pip_pes
     end subroutine calcangle
 end module chempotpy_ch5p_pip_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose CH5p_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, gradient_out, d )
     use chempotpy_ch5p_pip_pes, only: evaluate
     implicit none

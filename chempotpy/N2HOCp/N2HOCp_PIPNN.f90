@@ -22,13 +22,15 @@ module nnparam
     double precision, allocatable :: pdelc(:), pavgc(:)
 end module nnparam
 
-!> @brief Own the public evaluator for this potential energy surface.
+!> @brief Implement N2HOCp_PIPNN, a potential energy surface for N2HOCp.
 module chempotpy_n2hocp_pipnn_pes
     implicit none
     private
     public :: evaluate
+
     contains
-    !> @brief Evaluate this surface through the modern module contract.
+
+    !> @brief Evaluate the N2HOCp_PIPNN potential energy surface for N2HOCp.
     subroutine evaluate( x, igrad, path, p, g, d )
         use nnparam, only: alpha, biasa, biasb, biasc, ifunc, natom, nbasis, ndim, nhid, ninput, nlayer, &
             & nodemax, nodes, noutput, nscale, nwe, pavga, pavgb, pavgc, pdela, pdelb, pdelc, pi, radian, &
@@ -87,7 +89,7 @@ module chempotpy_n2hocp_pipnn_pes
     end subroutine evaluate
 end module chempotpy_n2hocp_pipnn_pes
 
-!> @brief Preserve the historical Python-facing pes entry point.
+!> @brief Expose N2HOCp_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_n2hocp_pipnn_pes, only: evaluate
     implicit none
@@ -302,9 +304,9 @@ function tranfun( x, ifunc )
     double precision :: tranfun, x
     if( ifunc .eq. 1 )then
         tranfun = dtanh(x)
-    else if( ifunc .eq. 2 )then
+    elseif( ifunc .eq. 2 )then
         tranfun = 1d0/(1d0+dexp(-x))
-    else if( ifunc .eq. 3 )then
+    elseif( ifunc .eq. 3 )then
         tranfun = x
     endif
 end
@@ -355,7 +357,6 @@ function emsav21113( x, c ) result(v)
     double precision, dimension(1:10)::x
     double precision, dimension(0:167)::c
     double precision :: v
-    ! ::::::::::::::::::::
     double precision, dimension(0:167)::p
     call bemsav21113(x, p)
     v = dot_product(p, c)
@@ -366,7 +367,6 @@ subroutine bemsav21113( x, p )
     implicit none
     double precision, dimension(1:10), intent(in)::x
     double precision, dimension(0:167), intent(out)::p
-    ! ::::::::::::::::::::
     double precision, dimension(0:21)::m
     call evmono21113(x, m)
     call evpoly21113(m, p)
