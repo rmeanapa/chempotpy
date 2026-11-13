@@ -2,6 +2,8 @@
 ChemPotPy, CHEMical library of POTential energy surfaces in PYthon 
 ==================================================================
 
+[![All PES numerical regression](https://github.com/rmeanapa/chempotpy/actions/workflows/all-pes-numerical-regression.yml/badge.svg?branch=main)](https://github.com/rmeanapa/chempotpy/actions/workflows/all-pes-numerical-regression.yml?query=branch%3Amain)
+
 Jan. 17, 2025
 
 Authors: Yinan Shu, Zoltan Varga, Dayou Zhang, Donald G. Truhlar
