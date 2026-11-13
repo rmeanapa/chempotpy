@@ -64,9 +64,19 @@ jobs:
 
             - name: Compile and compare every PES
               run: |
+                  set +e
+                  output="${RUNNER_TEMP}/numerical-regression.txt"
                   python scripts/check_numerical_regression.py \
                       --baseline "${{ steps.baseline.outputs.fixture }}" \
-                      --jobs 4
+                      --jobs 4 2>&1 | tee "$output"
+                  status=${PIPESTATUS[0]}
+                  {
+                      echo "## All PES numerical regression"
+                      echo '```text'
+                      tail -200 "$output"
+                      echo '```'
+                  } >> "$GITHUB_STEP_SUMMARY"
+                  exit "$status"
 
             - name: Report the protected baseline
               if: always()
