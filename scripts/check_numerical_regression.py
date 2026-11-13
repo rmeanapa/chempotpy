@@ -26,6 +26,35 @@ METADATA_FIELDS = ("entry_point", "natoms", "nstates", "signature")
 RELATIVE_TOLERANCE = 1.0e-13
 ABSOLUTE_TOLERANCE = 1.0e-13
 BASELINE_VERSION = 1
+MAX_WORKFLOW_ANNOTATIONS = 50
+
+
+def escape_workflow_command(value: str) -> str:
+    """Escape text for the data field of a GitHub workflow command."""
+
+    return value.replace("%", "%25").replace("\r", "%0D").replace(
+        "\n", "%0A"
+    )
+
+
+def emit_workflow_annotations(diagnostics: List[str]) -> None:
+    """Expose regression details as GitHub check annotations when in Actions."""
+
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        return
+    for diagnostic in diagnostics[:MAX_WORKFLOW_ANNOTATIONS]:
+        print(
+            "::error title=CHEMPOTPY numerical regression::{}".format(
+                escape_workflow_command(diagnostic)
+            )
+        )
+    omitted = len(diagnostics) - MAX_WORKFLOW_ANNOTATIONS
+    if omitted > 0:
+        print(
+            "::error title=CHEMPOTPY numerical regression::{}".format(
+                "{} additional diagnostics omitted".format(omitted)
+            )
+        )
 
 
 def load_fixture(path: Path) -> Tuple[Optional[int], Dict[str, dict]]:
@@ -200,6 +229,7 @@ def main() -> int:
     if diagnostics:
         for diagnostic in diagnostics:
             print("FAIL {}".format(diagnostic))
+        emit_workflow_annotations(diagnostics)
         return 1
 
     ordered_sources = [sources[key] for key in sorted(sources)]
@@ -245,6 +275,7 @@ def main() -> int:
         print("FAIL ... {} additional diagnostics omitted".format(
             len(diagnostics) - 100
         ))
+    emit_workflow_annotations(diagnostics)
     return 1 if diagnostics else 0
 
 

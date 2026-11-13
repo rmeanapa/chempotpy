@@ -3,7 +3,11 @@
 import unittest
 
 from scripts.capture_library_references import coordinates
-from scripts.check_numerical_regression import compare_records, select_baseline
+from scripts.check_numerical_regression import (
+    compare_records,
+    escape_workflow_command,
+    select_baseline,
+)
 
 
 def record(values):
@@ -63,6 +67,12 @@ class NumericalRegressionTests(unittest.TestCase):
         diagnostics, _ = compare_records("H3/example", actual, expected)
         self.assertEqual(len(diagnostics), 1)
         self.assertIn("natoms changed", diagnostics[0])
+
+    def test_workflow_command_text_is_escaped(self) -> None:
+        self.assertEqual(
+            escape_workflow_command("100%\r\nfailed"),
+            "100%25%0D%0Afailed",
+        )
 
     def test_legacy_fixture_bootstraps_version_one_once(self) -> None:
         current = {"H3/example": record(["1.0"])}
