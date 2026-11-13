@@ -258,7 +258,6 @@ module chempotpy_nh4_vbmm_2010_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             call cartou
             call carttor
             ! Changing units from angstrom to bohr and initialize
@@ -1032,7 +1031,6 @@ module chempotpy_nh4_vbmm_2010_pes
             indexes(4) = 1
             indexes(5) = 1
             irctnt     = 5
-            !CALL POTINFO
             call ancvrt
             !  calculate indexes for coordinates
             do ind=1, 3

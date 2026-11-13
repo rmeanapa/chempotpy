@@ -245,7 +245,6 @@ module chempotpy_brh2_leps_ltbzso_1995_pes
             indexes(2) = 1
             indexes(3) = 1
             irctnt     = 2
-            !CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -283,7 +282,6 @@ module chempotpy_brh2_leps_ltbzso_1995_pes
             !   through the common block POTCM:
             !   The potential energy in the three asymptotic valleys are
             !   stored in the common block ASYCOM:
-            !                  COMMON /ASYCM/ EASYBC, EASYAC, EASYBA
             !   For the this potential energy surface the potential energy in the
             !   BC valley is equal to the energy of the HH diatomic.
             !   The energy in the AC valley is equal to the energy of the HBr diatom
@@ -325,9 +323,6 @@ module chempotpy_brh2_leps_ltbzso_1995_pes
             !         A4  =  V3CP4
             !         A5  =  V3CP5
             !         A6  =  V3CP6
-            !         WRITE (NFLAG(18),100) D11, RE11, BETAA11,
-            !     +                    ZHHP1, ZHHP2, ZHBRP1, ZHBRP2,
-            !     +                    V3CP1, V3CP2, V3CP3, V3CP4, V3CP5
             !   Convert the constants to atomic units
             do i = 1, 3
                 de11(i)   = d11(i) / charkc
@@ -463,9 +458,6 @@ module chempotpy_brh2_leps_ltbzso_1995_pes
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: charkc = 627.5095e0_wp
-            !         WRITE (NFLAG(18),100) D22, RE22, BETAA22,
-            !     +                 ZHHP1, ZHHP2, ZHBRP1, ZHBRP2,
-            !     +                 V3CP1, V3CP2, V3CP3, V3CP4, V3CP5
             !   Convert the constants to atomic units
             do i = 1, 3
                 de22(i)   = d22(i) / charkc

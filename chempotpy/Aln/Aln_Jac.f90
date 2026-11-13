@@ -84,12 +84,11 @@ module chempotpy_aln_jac_pes
         eta1  = 0.5669   *autoang
         pi    = acos(-1.e0_wp)
         beta  = (2.e0_wp**(-0.5))*((16.e0_wp*pi/3.e0_wp)**(1.e0_wp/3.e0_wp))
-        !      beta=1.81
-        eta2 = (eta+eta1)/beta
-        ep   = eta/(eta+eta1)
-        bs   = beta*s
-        fra  = 1.e0_wp/12.e0_wp
-        v    = 0e0_wp
+        eta2  = (eta+eta1)/beta
+        ep    = eta/(eta+eta1)
+        bs    = beta*s
+        fra   = 1.e0_wp/12.e0_wp
+        v     = 0e0_wp
         do i=1, natom
             u = 0e0_wp
             do j=1, natom

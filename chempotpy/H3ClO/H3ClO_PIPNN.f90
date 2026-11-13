@@ -40,7 +40,6 @@ module chempotpy_h3clo_pipnn_pes
 
     !> @brief Evaluate evvdvdx.
     subroutine evvdvdx( xcart, v )
-        !     subroutine evvdvdx(xcart,v,vpes,dvdxa,dvdx,ndriv)
         !Subroutine to calculate the average potential energy v and analytical gradient dvdxa
         !Xcart     ==>Cartesian coordinates in angstrom
         !             H1: xcart(1,1), xcart(2,1), xcart(3,1)
@@ -72,20 +71,13 @@ module chempotpy_h3clo_pipnn_pes
         call bemsav(xmorse, m, p)
         do j=1, ninput
             txinput(j) = p(j)
-            !      write(999,*)p(j)
         enddo
         call pot3a(txinput, vpes)
-        !     call pot3a(txinput,vpes,dvdg,ndriv)
         v = 0e0_wp
         do i=1, network_count
             v = v+vpes(i)
         enddo
         v = v/network_count
-        !      if(ndriv.eq.1)then
-        !       call evdvdr(r,c,m,p,dpdr!)
-        !       call evdrdx(xcart,r,x,drdx)
-        !       call evdvdx(dvdg,dpdr,drdx,dvdxa,dvdx)
-        !      endif
     end subroutine evvdvdx
 
     !> @brief Evaluate pot3a.
@@ -152,10 +144,6 @@ module chempotpy_h3clo_pipnn_pes
         logsig = 1.e0_wp/(1.e0_wp+exp(-x))
     end function logsig
 
-    !      subroutine evdvdx(dvdg,dpdr,drdx,dvdxa,dvdx)
-    !      use nnparam
-    !      implicit none
-    !      integer i,j,k
     !      real*8 dvdx(1:natom*3,npes),xcart(1:3,1:natom)
     !      real*8 drdx(1:nbond,1:natom*3),x(1:ninput)
     !      real*8 dvdr(1:nbond),dpdr(1:nbond,0:ninput),dvdp(0:ninput)
@@ -163,46 +151,15 @@ module chempotpy_h3clo_pipnn_pes
     !      real*8 dvdxa(1:natom*3),dvdg(1:ninput,npes),rtmp
     !      dgdx=0d0
     !      dgdr(1:3,1:12)=dpdr(1:3,1:12)
-    !      do i=1,9
-    !       do j=1,12
-    !        do k=1,3
     !         dgdx(i,j)=dgdx(i,j) + dgdr(k,j)*drdx(k,i)
-    !        enddo
-    !       enddo
-    !      enddo
     !      dvdx=0d0;dvdxa=0
-    !      do k=1,npes
-    !       do i=1,9
-    !        do j=1,12
     !         dvdx(i,k)=dvdx(i,k) + dvdg(j,k)*dgdx(i,j)
-    !        enddo
-    !       enddo
-    !      enddo
-    !      do i=1,9
-    !       do k=1,npes
     !        dvdxa(i)=dvdxa(i)+dvdx(i,k)
-    !       enddo
-    !      enddo
     !      dvdxa=dvdxa/dble(npes)
-    !      return
-    !      end subroutine evdvdx
-    !      subroutine evdvdr(r,c,m,p,dpdr)
-    !      use nnparam
-    !      implicit none
-    !      integer i,j
     !      real*8 r(1:nbond),dmsdr(1:nbond,1:nbond),dmdr(1:nbond,0:4)
     !      real*8 dvdr(1:nbond),dpdr(1:nbond,0:ninput),c(0:ninput)
     !      real*8 m(0:nmorse-1),p(0:ninput)
     !      dvdr(:)=0d0
-    !      call evdmsdr(r,dmsdr)
-    !      call evdmdr(m,dmsdr,dmdr)
-    !      call evdpdr(p,dmdr,dpdr)
-    !      return
-    !      end subroutine evdvdr
-    !      subroutine evdrdx(xcart,r,x,drdx)
-    !      use nnparam
-    !      implicit none
-    !      integer i,j,k
     !      real*8 r(1:nbond),xcart(1:3,1:natom),drdx(1:nbond,1:natom*3)
     !      real*8 x(1:natom*3)
     !      drdx(:,:)=0d0
@@ -238,41 +195,18 @@ module chempotpy_h3clo_pipnn_pes
     !      drdx(3,7)=-drdx(3,4)
     !      drdx(3,8)=-drdx(3,5)
     !      drdx(3,9)=-drdx(3,6)
-    !      return
-    !      end subroutine evdrdx
-    !      subroutine evdmsdr(r,dmsdr)
-    !      use nnparam
-    !      implicit none
-    !      integer i,j
     !      real*8 dmsdr(1:nbond,1:nbond),r(1:nbond)
     !      dmsdr(:,:)=0d0
-    !      do i=1,nbond
     !       dmsdr(i,i)=-(1d0/1d0)*dexp(-r(i)/1.0d0)
     !!      dmsdr(i,i)=-(1d0/alpha)*dexp(-r(i)/alpha)
-    !      enddo
-    !      return
-    !      end subroutine evdmsdr
-    !      subroutine evdmdr(m,dmsdr,dmdr)
-    !      use nnparam
-    !      implicit none
-    !      integer i,j
     !      real*8 dmsdr(1:nbond,1:nbond),dmdr(1:nbond,0:4),m(0:nmorse-1)
-    !      do i=1,nbond
     !       dmdr(i,0)=0.D0
     !       dmdr(i,1)=dmsdr(i,3)
     !       dmdr(i,2)=dmsdr(i,2)
     !       dmdr(i,3)=dmsdr(i,1)
     !       dmdr(i,4)=dmdr(i,1)*m(2)+m(1)*dmdr(i,2)
-    !      enddo
-    !      return
-    !      end subroutine evdmdr
-    !      subroutine evdpdr(p,dmdr,dpdr)
-    !      use nnparam
-    !      implicit none
-    !      integer i,j
     !      real*8 dmdr(1:nbond,0:4),dpdr(1:nbond,0:ninput)
     !      real*8 p(0:ninput)
-    !      do i=1,nbond
     !       dpdr(i,0)=dmdr(i,0)
     !       dpdr(i,1)=dmdr(i,1)+dmdr(i,2)
     !       dpdr(i,2)=dmdr(i,3)
@@ -286,9 +220,6 @@ module chempotpy_h3clo_pipnn_pes
     !       dpdr(i,10)=dpdr(i,2)*P(4)+P(2)*dpdr(i,4)
     !       dpdr(i,11)=dpdr(i,1)*P(5)+P(1)*dpdr(i,5)-dpdr(i,8)
     !       dpdr(i,12)=dpdr(i,2)*P(6)+P(2)*dpdr(i,6)
-    !      enddo
-    !      return
-    !      end subroutine evdpdr
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, m, p )
         use chempotpy_kinds, only: wp

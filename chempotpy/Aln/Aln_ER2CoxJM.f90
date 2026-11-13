@@ -97,16 +97,15 @@ module chempotpy_aln_er2coxjm_pes
             enddo
         enddo
         ! three-body
-        c0  = 2.64020517830972157
-        c1  = -0.641182217879824101
-        c2  = 1.87493893502686859
-        c3  = -2.79115779189057145
-        c4  = 0.000000000000000000e+00
-        c5  = 0.000000000000000000e+00
-        c6  = 0.000000000000000000e+00
-        dd  = 1.00000000000000000/autoev
-        ree = 2.18563751831949205/autoang
-        !        xa3= 0.000000000000000000E+00
+        c0    = 2.64020517830972157
+        c1    = -0.641182217879824101
+        c2    = 1.87493893502686859
+        c3    = -2.79115779189057145
+        c4    = 0.000000000000000000e+00
+        c5    = 0.000000000000000000e+00
+        c6    = 0.000000000000000000e+00
+        dd    = 1.00000000000000000/autoev
+        ree   = 2.18563751831949205/autoang
         au23  = 0.806253053248656593
         oneth = sqrt(1.e0_wp/3.e0_wp)
         oneha = sqrt(1.e0_wp/2.e0_wp)
@@ -133,16 +132,14 @@ module chempotpy_aln_er2coxjm_pes
                     rr   = r(k, i)
                     coki = 0.e0_wp
                     if( rr .ge. bu2 ) cycle
-                    coki = exp(au23*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2)))
-                    rki  = (rr-ree)/ree
-                    q1   = oneth*(rij+rjk+rki)
-                    q2   = oneha*(rjk-rki)
-                    q3   = twoth*rij-onesi*(rjk+rki)
-                    q23  = q2**2+q3**2
-                    q332 = q3**3-3.e0_wp*q3*q2**2
-                    poly = c0+c1*q1+c2*q1**2+c3*q23+c4*q1**3+c5*q1*q23+c6*q332
-                    !      poly=c0+c1*q1+c2*q1**2+c3*q23
-                    !      fsech=1.d0/dcosh(xa3*q1)
+                    coki  = exp(au23*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2)))
+                    rki   = (rr-ree)/ree
+                    q1    = oneth*(rij+rjk+rki)
+                    q2    = oneha*(rjk-rki)
+                    q3    = twoth*rij-onesi*(rjk+rki)
+                    q23   = q2**2+q3**2
+                    q332  = q3**3-3.e0_wp*q3*q2**2
+                    poly  = c0+c1*q1+c2*q1**2+c3*q23+c4*q1**3+c5*q1*q23+c6*q332
                     fsech = 1.e0_wp
                     co    = coij*cojk*coki
                     v3    = v3+dd*poly*co*fsech

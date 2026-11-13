@@ -267,8 +267,6 @@ subroutine evv( v )
     enddo
     !! D3 dispersion correction is called inside the ev2gm2 !!
     ! Add D3 dispersion correction
-    !        call d3disp(r,disp,dispdr,0)
-    !        v=v+disp
     ! Evaluate V by taken the product of C and Basis function array
     do i=1, 56
         v = v + c(i)*b(i)
@@ -276,8 +274,6 @@ subroutine evv( v )
     ! Add a patch function to get the D3h structure
     call patchfunc(vpf, dvpfdr, 0)
     v = v - vpf
-    !      Write(*,9999) V
-    ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
 end subroutine evv
 
 !> @brief Evaluate EvdVdX.
@@ -595,14 +591,6 @@ subroutine patchfunc( vpf, dvpfdr, igrad )
         dvpfdr(1) = v0*(tmp(1,1)*exp(tmp1) + tmp(1,2)*exp(tmp2) + tmp(1,3)*exp(tmp3))
         dvpfdr(2) = v0*(tmp(2,1)*exp(tmp1) + tmp(2,2)*exp(tmp2) + tmp(2,3)*exp(tmp3))
         dvpfdr(3) = v0*(tmp(3,1)*exp(tmp1) + tmp(3,2)*exp(tmp2) + tmp(3,3)*exp(tmp3))
-        !      do i=1,3
-        !       if(isnan(dVpfdR(i))) then
-        !        dVpfdR(i) = 0.0d0
-        !       endif
-        !      enddo
-        !      write(*,*) "dVpfdR(1) ",dVpfdR(1)
-        !      write(*,*) "dVpfdR(2) ",dVpfdR(2)
-        !      write(*,*) "dVpfdR(3) ",dVpfdR(3)
     endif
 end subroutine patchfunc
 
@@ -641,10 +629,6 @@ subroutine evdvdr
     enddo
     !! D3 dispersion correction is called inside the ev2gm2 !!
     ! Add numerical gradient of D3 dispersion correction
-    !     do i=1,3
-    !       call d3disp(R,disp,dispdr,1)
-    !       dVdR(i)= dVdR(i) + dispdr(i)
-    !     enddo
     ! Calculate dMEG/dr(3,3) for given R(3)
     call evdmsdr
     ! Calculate the monomials for each point by using six MEG terms

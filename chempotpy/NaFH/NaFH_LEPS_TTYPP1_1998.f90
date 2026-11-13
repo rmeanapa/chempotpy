@@ -233,15 +233,14 @@ module chempotpy_nafh_leps_ttypp1_1998_pot11_legacy_state_b37154a3
             hlp2 = 0.2e0_wp*exp(-2.032e0_wp*r(i,2))
             s2h  = hlp1 - hlp2
             hlp  = tanh((s2a-s2h)/cprime)
-            !      hlp1=(s2a-s2h)/(cprime*dcosh((s2a-s2h)/cprime)**2)
-            s2a = 0.5e0_wp*(s2a+s2h-hlp*(s2a-s2h))
-            a   = 1.00075e0_wp
-            dn  = 3.39687e0_wp
-            hlp = exp(-a*(r(i,2)-1.42e0_wp))
-            s2i = dn*hlp*(hlp-2.e0_wp)
-            hlp = 0.5e0_wp*(r(i,1)+r(i,3)-8.e0_wp)
-            hlp = 0.5e0_wp*(1.e0_wp-tanh(hlp))
-            s2  = s2a+(s2i-s2a)*hlp
+            s2a  = 0.5e0_wp*(s2a+s2h-hlp*(s2a-s2h))
+            a    = 1.00075e0_wp
+            dn   = 3.39687e0_wp
+            hlp  = exp(-a*(r(i,2)-1.42e0_wp))
+            s2i  = dn*hlp*(hlp-2.e0_wp)
+            hlp  = 0.5e0_wp*(r(i,1)+r(i,3)-8.e0_wp)
+            hlp  = 0.5e0_wp*(1.e0_wp-tanh(hlp))
+            s2   = s2a+(s2i-s2a)*hlp
             !*****MF SINGLET:
             axs3 = exp(-1.3e0_wp*abs1*(rr3-ars1))
             as3  = ads1*axs3*(axs3-2.e0_wp)
@@ -307,12 +306,8 @@ module chempotpy_nafh_leps_ttypp1_1998_pot12_legacy_state_b37154a3
         !      BLOCK DATA UONETWO
         real(wp) :: ahf, anaf, anah, r21, r23, r13
         real(wp) :: ccmf(4), ccmh(4)
-        !      common/ucoupl/ahf,anaf,anah,r21,r23,r13
-        !      common/ucoupl1/ccMF(4),ccMH(4)
         !      END
         !      save /ucoupl/,/ucoupl1/
-        !      common/ucoupl/ahf,anaf,anah,r21,r23,r13
-        !      common/ucoupl1/ccMF(4),ccMH(4)
         ahf   = 0.e0_wp
         amc   = 0.e0_wp
         anaf  = 0.e0_wp

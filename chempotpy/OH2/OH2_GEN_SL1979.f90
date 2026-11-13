@@ -17,10 +17,8 @@
 !   The potential parameters are assigned in the Block Data Subprogram P
 !   Coordinates, potential energy, and derivatives are passed
 !   through the common block PT1CM:
-!                  COMMON /PT1CM/ R(3), ENGYGS, DEGSDR(3)
 !   The potential energy in the three asymptotic valleys are
 !   stored in the common block ASYCM:
-!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 !   The potential energy in the AB valley, EASYAB, is equal to the poten
 !   energy of the H "infinitely" far from the OH diatomic, with the
 !   OH diatomic at its equilibrium configuration.  Similarly, the terms
@@ -243,8 +241,7 @@ module chempotpy_oh2_gen_sl1979_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            integer :: i, j
-            !        IMPLICIT REAL*16(L)
+            integer             :: i, j
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -252,15 +249,11 @@ module chempotpy_oh2_gen_sl1979_pes
             integer, parameter  :: natom  = 25
             real(wp), parameter :: bohr   = 0.529177e0_wp
             real(wp), parameter :: hart   = 27.21161e0_wp
-            !      DIMENSION C(50),AL(3),X(3),S(3),VM(3),R(3),CHI(3)
             !   Echo potential data to the file linked to UNIT NFLAG(18)
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !      WRITE (NFLAG(18),600)
-            !      WRITE (NFLAG(18),601) STEP
-            !      WRITE (NFLAG(18),602)
             j = 1
             !    Set the values of the classical energy in the three asymptotic vall
             asycm_easyab   = satocm_de(1)/hart
@@ -275,7 +268,6 @@ module chempotpy_oh2_gen_sl1979_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -294,9 +286,8 @@ module chempotpy_oh2_gen_sl1979_pes
             !   The zero of energy is defined at O "infinitely" far from the H2 diat
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: ap, bp, check, d1d, d2d, d3d, da, da2, da3, dap1, dap2, dap3, db, db1, db2, db3, dc, dc2, dc3, dchi1, dchi2, dchi3, dcsr1, dcsr2, dcsr3, dd, dd2, dd3, df, df2, df3, dg, dq1, dq2, dq3, dvr1, dvr2, dvr3, gg, p, psi13, q, soh, sr2, t, temp, tt, u, w, ww, xter, y, z, zz
-            integer  :: i, ic, j
-            !        IMPLICIT REAL*16(L)
+            real(wp)            :: ap, bp, check, d1d, d2d, d3d, da, da2, da3, dap1, dap2, dap3, db, db1, db2, db3, dc, dc2, dc3, dchi1, dchi2, dchi3, dcsr1, dcsr2, dcsr3, dd, dd2, dd3, df, df2, df3, dg, dq1, dq2, dq3, dvr1, dvr2, dvr3, gg, p, psi13, q, soh, sr2, t, temp, tt, u, w, ww, xter, y, z, zz
+            integer             :: i, ic, j
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -307,14 +298,6 @@ module chempotpy_oh2_gen_sl1979_pes
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
-            !      IF (NASURF(1,1) .EQ. 0) THEN
-            !         WRITE(NFLAG(18), 900) NASURF(1,1)
-            !         STOP
-            !      ENDIF
-            !         IF (NDER .GT. 1) THEN
-            !             WRITE (NFLAG(18), 910) NDER
-            !             STOP 'POT 2'
-            !         ENDIF
             ic = 4
             if( pt1cm_r(1) > 30.0e0_wp .or. pt1cm_r(2) > 30.0e0_wp ) ic = 1
             evaluation_loop: do
@@ -495,38 +478,30 @@ module chempotpy_oh2_gen_sl1979_pes
                             & precm_c(44) + 3.0e0_wp* precm_s(2)**3*precm_s(3)**2*precm_c(45) + precm_s(2)**3* &
                             & (precm_s(1)**2 + 2.0e0_wp* precm_s(1)*precm_s(3))* precm_c(46) + 2.0e0_wp*precm_s(2)**4* &
                             & precm_s(3)* precm_c(47) + precm_s(2)**4*precm_s(1)*precm_c(48) + precm_s(2)**5*precm_c(49)
-                        d3d  = da3 + db3 + dc3 + dd3 + df3
-                        dq1  = (1.0e0_wp - tanh(precm_al(2)*precm_s(2)))*(1.0e0_wp-tanh(precm_al(3)*precm_s(3)))
-                        dq2  = (1.0e0_wp - tanh(precm_al(1)*precm_s(1)))*(1.0e0_wp-tanh(precm_al(3)*precm_s(3)))
-                        dq3  = (1.0e0_wp - tanh(precm_al(1)*precm_s(1)))*(1.0e0_wp-tanh(precm_al(2)*precm_s(2)))
-                        dap1 = -12.0e0_wp*ap/pt1cm_r(1)
-                        dap2 = -12.0e0_wp*ap/(pt1cm_r(2) - 0.2e0_wp)
-                        dap3 = -12.0e0_wp*ap/pt1cm_r(3)
-                        db1  = -4.0e0_wp*precm_b/pt1cm_r(1)**5
-                        db3  = -4.0e0_wp*precm_b/pt1cm_r(3)**5
-                        !      IF(DCOSH(AL(1)*S(1)).LT.1.0D-15)DCRS1=1.0D30
-                        !      IF(DCOSH(AL(1)*S(1)).LT.1.0D-15)GO TO 144
+                        d3d   = da3 + db3 + dc3 + dd3 + df3
+                        dq1   = (1.0e0_wp - tanh(precm_al(2)*precm_s(2)))*(1.0e0_wp-tanh(precm_al(3)*precm_s(3)))
+                        dq2   = (1.0e0_wp - tanh(precm_al(1)*precm_s(1)))*(1.0e0_wp-tanh(precm_al(3)*precm_s(3)))
+                        dq3   = (1.0e0_wp - tanh(precm_al(1)*precm_s(1)))*(1.0e0_wp-tanh(precm_al(2)*precm_s(2)))
+                        dap1  = -12.0e0_wp*ap/pt1cm_r(1)
+                        dap2  = -12.0e0_wp*ap/(pt1cm_r(2) - 0.2e0_wp)
+                        dap3  = -12.0e0_wp*ap/pt1cm_r(3)
+                        db1   = -4.0e0_wp*precm_b/pt1cm_r(1)**5
+                        db3   = -4.0e0_wp*precm_b/pt1cm_r(3)**5
                         dcsr1 = -precm_al(1)/(cosh(precm_al(1)*precm_s(1))**2)
                         !144   IF(COSH(AL(2)*S(2)).LT.1.0D-15)DCRS2=1.0D30
-                        !      IF(COSH(AL(2)*S(2)).LT.1.0D-15)GO TO 145
                         dcsr2 = -precm_al(2)/(cosh(precm_al(2)*precm_s(2))**2)
                         !145   IF(COSH(AL(3)*S(3)).LT.1.0D-15)DCRS3=1.0D30
-                        !      IF(COSH(AL(3)*S(3)).LT.1.0D-15)GO TO 146
                         dcsr3 = -precm_al(3)/(cosh(precm_al(3)*precm_s(3))**2)
                         psi13 = 2.0e0_wp*(-precm_gam)*temp*(pt1cm_r(1) + pt1cm_r(3))
                         dchi1 = 2.0e0_wp*precm_alf*pt1cm_r(1)*exp(-precm_alf*(pt1cm_r(1)**2))
                         dchi2 = 2.0e0_wp*precm_alf*pt1cm_r(2)*exp(-precm_alf*(pt1cm_r(2)**2))
                         dchi3 = 2.0e0_wp*precm_alf*pt1cm_r(3)*exp(-precm_alf*(pt1cm_r(3)**2))
-                        !      IF(VM(1).GT.1.0D20)DVR1=1.0D30
-                        !      IF(VM(1).GT.1.0D20)GO TO 153
                         dvr1 = 2.0e0_wp*satocm_de(1)*(1.0e0_wp - exp(-satocm_bet(1)*(pt1cm_r(1)-satocm_xre(1))))* &
                             & satocm_bet(1)* exp(-satocm_bet(1)*(pt1cm_r(1)-satocm_xre(1)))
                         ! 153  IF(VM(2).GT.1.0D20)DVR2=1.0D30
-                        !      IF(VM(2).GT.1.0D20)GO TO 154
                         dvr2 = 2.0e0_wp*satocm_de(2)*(1.0e0_wp - exp(-satocm_bet(2)*(pt1cm_r(2)-satocm_xre(2))))* &
                             & satocm_bet(2)* exp(-satocm_bet(2)*(pt1cm_r(2)-satocm_xre(2)))
                         ! 154  IF(VM(3).GT.1.0D20)DVR3=1.0D30
-                        !      IF(VM(3).GT.1.0D20)GO TO 155
                         dvr3 = 2.0e0_wp*satocm_de(3)*(1.0e0_wp - exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3))))* &
                             & satocm_bet(3)* exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3)))
                         pt1cm_degsdr(1) = precm_vm(2)*precm_chi(3)*dchi1 + precm_chi(2)*precm_chi(3)*dvr1 + &

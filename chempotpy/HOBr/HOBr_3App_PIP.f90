@@ -57,9 +57,6 @@ module chempotpy_hobr_3app_pip_pes
         dr(1) = dr_oh*hartree_to_electronvolt
         dr(2) = dr_hbr*hartree_to_electronvolt
         dr(3) = dr_obr*hartree_to_electronvolt
-        !      dr(1)=dr_OH*hartree_per_bohr_to_ev_per_angstrom
-        !      dr(2)=dr_HBr*hartree_per_bohr_to_ev_per_angstrom
-        !      dr(3)=dr_OBr*hartree_per_bohr_to_ev_per_angstrom
         call evdrdx(tx, r, drdx)
         call transform_internal_gradient_to_cartesian(dr, drdx, dx)
         if( igrad == 0 )then
@@ -152,10 +149,7 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
         !            in hartree/bohr
         !  NOTE:
         !    Before any actual potential energy calculations are made, a single
-        !    call to myprepot must be made:
-        !      call myprepot
         !    Later, the potential energy is computed by calling mypot:
-        !      call mypot(r1,r2,r3,value,dr1,dr2,dr3)
         !   The released o_hbr_a_pp.par parameters are embedded in the parameter module
         !                              Saddle point
         !        r1                          r2                        r3

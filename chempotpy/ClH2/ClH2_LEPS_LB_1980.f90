@@ -286,18 +286,12 @@ module chempotpy_clh2_leps_lb_1980_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      LOGICAL LCOL
-            !      DIMENSION precm_h(10),precm_dh1(10),precm_dh2(10),precm_dh3(10),precm_u(4,4),precm_e(4),precm_scr1(4),
             !     1           precm_scr2(4)
-            !      COMMON /POTCOM/ potcm_eps,potcm_one,potcm_rhh,potcm_ahh,potcm_dhh,potcm_bhh,potcm_xih,potcm_xix,potcm_g,potcm_alfw,potcm_rhx,potcm_ahx,
-            !     &                potcm_dhx,potcm_bhx,potcm_etahh,potcm_eta3s,potcm_eta1p,potcm_eta3p
             !   Echo potential parameters to UNIT usricm_nflag(18)
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !WRITE (usricm_nflag(18), 600) potcm_rhh,potcm_ahh,potcm_dhh,potcm_bhh,potcm_rhx,potcm_ahx,potcm_dhx,potcm_bhx
-            !WRITE (usricm_nflag(18), 610) potcm_etahh,potcm_eta3s,potcm_eta1p,potcm_eta3p,
             ! *                    potcm_xih,potcm_xix,potcm_g,potcm_alfw
             asycm_easyab   = potcm_dhx
             asycm_easybc   = potcm_dhh
@@ -320,7 +314,6 @@ module chempotpy_clh2_leps_lb_1980_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

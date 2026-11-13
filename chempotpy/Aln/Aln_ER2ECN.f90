@@ -136,7 +136,6 @@ module chempotpy_aln_er2ecn_pes
                 ec1 = 1e0_wp/(1e0_wp+cz2**gu2)                 ! compute beta part of f f
                 !       fu2(i,j)=1d0+du2*(es1*ec1-1d0)         ! put alpha and beta parts together:  1 + f for regular formalism
                 fu2(i, j) = du2*(es1*ec1-1e0_wp)         ! put alpha and beta parts tog
-                !       print *,es1,ec1,fu2(i,j)
             enddo
         enddo
         ! potential, includes cutoff

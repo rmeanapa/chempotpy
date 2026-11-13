@@ -12,8 +12,6 @@
 ! The potential parameters are included in DATA statements.
 ! Coordinates, potential energy, derivatives, and other information
 ! is passed through three common blocks:
-!           COMMON /PT1CM/ R(3), ENGYGS, DEGSDR(3)
-!           COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 ! The common block PT1CM contains the internal coordinates, the potentia
 ! energy, and the derivatives with respect to internal coordinates.  The
 ! common block PT2CM contains the a several variables which control
@@ -193,7 +191,6 @@ module chempotpy_i2h_leps_kk_1981_pes
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cevau  = 27.2113961e0_wp
-            !      save de,re,b,s,cevau
             ! Write header potential parameters to UNIT NFLAG(18).
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
@@ -201,7 +198,6 @@ module chempotpy_i2h_leps_kk_1981_pes
             endif
             ! Calculate first derivatives (default).  If no first derivatives are
             ! desired, nder should be set equal to zero after prepare_local_context is called.
-            !      nder=1
             ! Convert to atomic units and calculate some useful constants.
             do i=1, 3
                 de(i)  = de(i)/cevau
@@ -224,7 +220,6 @@ module chempotpy_i2h_leps_kk_1981_pes
             indexes(2) = 1
             indexes(3) = 53
             irctnt     = 2
-            !CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -246,7 +241,6 @@ module chempotpy_i2h_leps_kk_1981_pes
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cevau  = 27.2113961e0_wp
-            !      save de,re,b,s,cevau
             call cartou
             call carttor
             ! compute coulomb and exchange terms

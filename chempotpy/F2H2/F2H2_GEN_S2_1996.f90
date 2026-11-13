@@ -492,7 +492,6 @@ module chempotpy_f2h2_gen_s2_1996_pes
             infocm_indexes(3) = 1
             infocm_indexes(4) = 9
             infocm_irctnt     = 3
-            !      CALL POTINFO
             call ancvrt
             ! prefactors for polynomials
             potcm_fac(0) = 1.
@@ -616,18 +615,12 @@ module chempotpy_f2h2_gen_s2_1996_pes
             !   to variables used internally *
             !   by the POT subroutine        *
             !                                *
-            rcm = pt1cm_r(1)
-            r1  = pt1cm_r(2)
-            r2  = pt1cm_r(3)
-            th1 = pt1cm_r(4)
-            th2 = pt1cm_r(5)
-            tau = pt1cm_r(6)
-            !         rcm=2.5d0
-            !         r1=0.9d0
-            !         r2=0.9d0
-            !         th1=1.04719755120d0
-            !         th2=1.04719755120d0
-            !         tau=0.78539816340d0
+            rcm    = pt1cm_r(1)
+            r1     = pt1cm_r(2)
+            r2     = pt1cm_r(3)
+            th1    = pt1cm_r(4)
+            th2    = pt1cm_r(5)
+            tau    = pt1cm_r(6)
             phicon = 0.01745329252e0_wp
             pif    = 1.0e0_wp/(2.0e0_wp*sqrt(pi))
             fac2   = amh/(amh+amf)
@@ -731,7 +724,6 @@ module chempotpy_f2h2_gen_s2_1996_pes
                     enddo
                 enddo
             enddo
-            !     e=e+a(1)
             if( rcm .lt. 7.2e0_wp )then
                 e = e+vp(0, 0, 0)*exp(-((7.2e0_wp-rcm)/rcm)**2)*potcm_a(2)/rcm**6
             else

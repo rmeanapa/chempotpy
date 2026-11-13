@@ -117,14 +117,12 @@ module chempotpy_aln_er2es_pes
                     ac   = ac+au23*(1e0_wp-1e0_wp/(1e0_wp-rij/bu2))    ! cutoff for Rbeta,delta
                     ac   = ac+au23*(1e0_wp-1e0_wp/(1e0_wp-ril/bu2))    ! cutoff for Rbeta,delta
                     term = xk1*exp(-xk2*((ril+rjl)/rij)**xk3+ac)        ! cutoff ti
-                    !          if (natom.eq.3) print *,i,j,l,rjl,rij,ril,term
-                    s = s+term                         ! sum
+                    s    = s+term                         ! sum
                 enddo
                 !        e2=dexp(-2d0*s)                       ! equivalent to 1-dtanh(s)
                 !        fu2(i,j)=2d0*e2/(1d0+e2)              ! equivalent to 1-dtanh(s)
                 fu2(i, j) = tanh(s)
                 fu2(j, i) = fu2(i, j)
-                !        if (natom.eq.3) print *,i,j,fu2(i,j)
             enddo
             fu2(i, i) = 1.e0_wp                           ! shouldn't get used anywh
         enddo

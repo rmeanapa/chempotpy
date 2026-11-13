@@ -12,7 +12,6 @@
 !   Coordinates, potential energy, and derivatives are passed
 !   The potential energy in the three asymptotic valleys are
 !   stored in the common block ASYCM:
-!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 !   The potential energy in the AB valley, EASYAB, is equal to the poten
 !   energy of the H "infinitely" far from the OH diatomic, with the
 !   OH diatomic at its equilibrium configuration.  Similarly, the terms
@@ -288,19 +287,11 @@ module chempotpy_oh2_gen_dim1981_pes
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !      WRITE(NFLAG(18), 600)
             call prepare_local_context_2
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !      BENDING POTENTIAL PARAMETERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !      WRITE(NFLAG(18),3)
             !   Echo the potential parameters to the file linked to UNIT NFLAG(18)
-            !      WRITE (NFLAG(18),25) (REQ(IT), IT = 1,3)
-            !      WRITE(NFLAG(18),10) DE
-            !      WRITE(NFLAG(18),21) BETA
-            !      WRITE (NFLAG(18),30) A
-            !      WRITE (NFLAG(18),31) GAMMA
-            !      WRITE(NFLAG(18),35) RBB
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !       CONVERT TO ATOMIC UNITS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -322,7 +313,6 @@ module chempotpy_oh2_gen_dim1981_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -357,14 +347,6 @@ module chempotpy_oh2_gen_dim1981_pes
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
-            !      IF (NASURF(1,1) .EQ. 0) THEN
-            !         WRITE(NFLAG(18), 900) NASURF(1,1)
-            !         STOP
-            !      ENDIF
-            !         IF (NDER .GT. 1) THEN
-            !             WRITE (NFLAG(18), 910) NDER
-            !             STOP 'POT 2'
-            !         ENDIF
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        FIRST CALCULATE SOME USEFUL NUMBERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -461,15 +443,8 @@ module chempotpy_oh2_gen_dim1981_pes
             real(wp), parameter :: detrad = .0174532e0_wp
             character(len=80)   :: title
             title = ' RMOFIT to DIM surface with BEBO continuations '
-            !      WRITE(NFLAG(18),845)TITLE
-            !      WRITE(NFLAG(18),125)STEP
-            !      WRITE(NFLAG(18),111)XAB(1), XBC(1), XAB(1),
             !     *               XAB(2), XBC(2), XAB(2),
             !     *               XAB(3), XBC(3), XAB(3)
-            !      WRITE(NFLAG(18),105)R1S,R2S,VSP
-            !      WRITE(NFLAG(18),113)(PHI(I),(BSP(I,J),J = 1,3),I = 1,NPHI)
-            !      WRITE(NFLAG(18),117)(CBC(I),ABC(I),I = 1,3),
-            !     +                    (CAB(I),AAB(I),I = 1,3)
             !   Initialize the energy in the asymptotic valleys
             asycm_easyab = potcm_xab(1)/hrtree
             asycm_easybc = potcm_xbc(1)/hrtree

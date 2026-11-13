@@ -155,8 +155,6 @@ module chempotpy_clh2_leps_stsbltg2_1989_pes
         real(wp)              :: rad, rco, rdif, rsum3, stheta, sval, theta, trm1, trm2, trm3, tval, x(3)
         integer               :: i
         real(wp)              :: coul(3)
-        !WRITE (IPTPRT, 600) D, RE, BETA, Z
-        !WRITE (IPTPRT, 610) three_center_energy, symmetric_decay, bond_decay, asymmetric_decay, bend_quadratic, bend_quartic
         !   Check the value of NDER
         !   Compute the eLEPS part of the potential
         do i = 1, 3

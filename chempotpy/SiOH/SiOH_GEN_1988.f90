@@ -97,8 +97,7 @@ module chempotpy_sioh_gen_1988_pes
         real(wp) :: aa(14,14,3), alambda(14,14,14), alpha(14,14), bb(14,14,3), beta(14,14), cc(14,14,3), &
             & dx(maxatom, maxatom), dy(maxatom, maxatom), dz(maxatom, maxatom), e, e1, e2, e3, f, f3, f4, f5, g, gamma(22, 36), h, &
             & p, q(maxatom), r0(22, 36), rho(14, 14), rij(maxatom, maxatom), theta(14, 14, 14), tmp, v, v1, v2, v3
-        integer :: i, ien, indmm(maxatom), j, k, maxatom, natom
-        !     include 'param.f'
+        integer             :: i, ien, indmm(maxatom), j, k, maxatom, natom
         real(wp), parameter :: rn    = 10.393496649e0_wp
         real(wp), parameter :: pi    = 3.1415926536e0_wp
         real(wp), parameter :: pener = 4.3597482e-11_wp
@@ -134,54 +133,51 @@ module chempotpy_sioh_gen_1988_pes
         rho(8, 1)    = 0.29e0_wp/pdis
         rho(1, 8)    = rho(8, 1)
         rho(1, 1)    = 0.35e0_wp/pdis
-        !        q(14)    =   4.0d0
-        !        q(8)     =  -2.0d0
-        !        q(1)     =   1.0d0
-        aa(14,1,1) = -4.6542e-12_wp/pener
-        aa(1,14,1) = aa(14,1,1)
-        aa(14,1,2) = 0.e0_wp
-        aa(1,14,2) = aa(14,1,2)
-        aa(14,1,3) = 0.e0_wp
-        aa(1,14,3) = aa(14,1,3)
-        aa(1,1,1)  = -5.2793e-12_wp/pener
-        aa(1,1,2)  = 0.3473e-12_wp/pener
-        aa(1,1,3)  = 0.e0_wp
-        aa(8,1,1)  = -2.0840e-12_wp/pener
-        aa(8,1,2)  = 7.6412e-12_wp/pener
-        aa(8,1,3)  = -0.8336e-12_wp/pener
-        aa(1,8,1)  = aa(8,1,1)
-        aa(1,8,2)  = aa(8,1,2)
-        aa(1,8,3)  = aa(8,1,3)
-        bb(14,1,1) = 6.0e0_wp*pdis
-        bb(14,1,2) = 0.e0_wp
-        bb(14,1,3) = 0.e0_wp
-        bb(1,14,1) = bb(14,1,1)
-        bb(1,14,2) = bb(14,1,2)
-        bb(1,14,3) = bb(14,1,3)
-        bb(1,1,1)  = 6.0e0_wp*pdis
-        bb(1,1,2)  = 2.0e0_wp*pdis
-        bb(1,1,3)  = 0.e0_wp
-        bb(8,1,1)  = 15.0e0_wp*pdis
-        bb(8,1,2)  = 3.2e0_wp*pdis
-        bb(8,1,3)  = 5.0e0_wp*pdis
-        bb(1,8,1)  = bb(8,1,1)
-        bb(1,8,2)  = bb(8,1,2)
-        bb(1,8,3)  = bb(8,1,3)
-        cc(14,1,1) = 2.20e0_wp/pdis
-        cc(14,1,2) = 0.e0_wp
-        cc(14,1,3) = 0.e0_wp
-        cc(1,14,1) = cc(14,1,1)
-        cc(1,14,2) = cc(14,1,2)
-        cc(1,14,3) = cc(14,1,3)
-        cc(1,1,1)  = 1.51e0_wp/pdis
-        cc(1,1,2)  = 2.42e0_wp/pdis
-        cc(1,1,3)  = 0.e0_wp
-        cc(8,1,1)  = 1.05e0_wp/pdis
-        cc(8,1,2)  = 1.50e0_wp/pdis
-        cc(8,1,3)  = 2.00e0_wp/pdis
-        cc(1,8,1)  = cc(8,1,1)
-        cc(1,8,2)  = cc(8,1,2)
-        cc(1,8,3)  = cc(8,1,3)
+        aa(14,1,1)   = -4.6542e-12_wp/pener
+        aa(1,14,1)   = aa(14,1,1)
+        aa(14,1,2)   = 0.e0_wp
+        aa(1,14,2)   = aa(14,1,2)
+        aa(14,1,3)   = 0.e0_wp
+        aa(1,14,3)   = aa(14,1,3)
+        aa(1,1,1)    = -5.2793e-12_wp/pener
+        aa(1,1,2)    = 0.3473e-12_wp/pener
+        aa(1,1,3)    = 0.e0_wp
+        aa(8,1,1)    = -2.0840e-12_wp/pener
+        aa(8,1,2)    = 7.6412e-12_wp/pener
+        aa(8,1,3)    = -0.8336e-12_wp/pener
+        aa(1,8,1)    = aa(8,1,1)
+        aa(1,8,2)    = aa(8,1,2)
+        aa(1,8,3)    = aa(8,1,3)
+        bb(14,1,1)   = 6.0e0_wp*pdis
+        bb(14,1,2)   = 0.e0_wp
+        bb(14,1,3)   = 0.e0_wp
+        bb(1,14,1)   = bb(14,1,1)
+        bb(1,14,2)   = bb(14,1,2)
+        bb(1,14,3)   = bb(14,1,3)
+        bb(1,1,1)    = 6.0e0_wp*pdis
+        bb(1,1,2)    = 2.0e0_wp*pdis
+        bb(1,1,3)    = 0.e0_wp
+        bb(8,1,1)    = 15.0e0_wp*pdis
+        bb(8,1,2)    = 3.2e0_wp*pdis
+        bb(8,1,3)    = 5.0e0_wp*pdis
+        bb(1,8,1)    = bb(8,1,1)
+        bb(1,8,2)    = bb(8,1,2)
+        bb(1,8,3)    = bb(8,1,3)
+        cc(14,1,1)   = 2.20e0_wp/pdis
+        cc(14,1,2)   = 0.e0_wp
+        cc(14,1,3)   = 0.e0_wp
+        cc(1,14,1)   = cc(14,1,1)
+        cc(1,14,2)   = cc(14,1,2)
+        cc(1,14,3)   = cc(14,1,3)
+        cc(1,1,1)    = 1.51e0_wp/pdis
+        cc(1,1,2)    = 2.42e0_wp/pdis
+        cc(1,1,3)    = 0.e0_wp
+        cc(8,1,1)    = 1.05e0_wp/pdis
+        cc(8,1,2)    = 1.50e0_wp/pdis
+        cc(8,1,3)    = 2.00e0_wp/pdis
+        cc(1,8,1)    = cc(8,1,1)
+        cc(1,8,2)    = cc(8,1,2)
+        cc(1,8,3)    = cc(8,1,3)
         ! parameters in the three-body term
         alambda(8,14,8)  = 19.0e-11_wp/pener
         alambda(14,8,14) = 0.3e-11_wp/pener
@@ -204,9 +200,6 @@ module chempotpy_sioh_gen_1988_pes
         theta(1, 8, 14)  = theta(14, 8, 1)
         theta(1, 8, 1)   = 104.5e0_wp/pang
         ! Initialize
-        !         do i=1,natom
-        !           write(6,100) indmm(i),q(i),x(i)*pdis,y(i)*pdis,z(i)*pdis
-        !         enddo
         v1 = 0.e0_wp
         v2 = 0.e0_wp
         v3 = 0.e0_wp
@@ -313,8 +306,6 @@ module chempotpy_sioh_gen_1988_pes
                 v = v+v3
             enddo
             endif
-            !        write(6,*) "i,j,v2"
-            !        write(6,*) i,j,v2*autoev
         enddo
         enddo
         if( ien .eq. 1 )then
@@ -322,9 +313,6 @@ module chempotpy_sioh_gen_1988_pes
         else
             v = v+v1+v2
         endif
-        !      do i=1,natom
-        !      write(6,'(1x,i5,3f12.6)') i,dvdx(i),dvdy(i),dvdz(i)
-        !      enddo
     end subroutine siohpot
 end module chempotpy_sioh_gen_1988_pes
 

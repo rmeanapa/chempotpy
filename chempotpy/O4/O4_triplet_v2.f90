@@ -537,11 +537,7 @@ module chempotpy_o4_triplet_v2_pes
             integer  :: i, igrad, j, nob, k
             real(wp) :: v
             real(wp) :: dvdx(12), x(12)
-            !      common /coord/    R(6)
-            !      common /epot/     rMs(6),rM(0:111),P(0:305),C(430),B(430)
-            !      common /gradt/    dMsdR(6,6),dMdR(6,0:111),dPdR(6,0:305),dVdR(6),
             !     $                  dRdX(6,12),dBdR(6,276)
-            !      common /msprmt/   a,ab,ra,rb
             ! Convert the Cartesian coordinate array to pair distances
             call coord_convt(x)
             if( igrad .le. 1 )then
@@ -619,8 +615,6 @@ module chempotpy_o4_triplet_v2_pes
             do i=1, 430
                 v = v + epot_c(i)*epot_b(i)
             enddo
-            !      Write(*,9999) V
-            ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
         end subroutine evv
 
         !> @brief Evaluate EvdVdX for the O4_triplet_v2 potential.
@@ -1371,7 +1365,6 @@ module chempotpy_o4_triplet_v2_pes
             ! Anstromgs^-2, beta=dimensionless, a_k in milihartree.
             real(wp) :: alpha, beta, a(0:7)
             integer  :: k, igrad
-            ! Original parameters
             !      alpha = 0.785d0
             !      beta = 1.307d0
             !      a(0) = -2388.5641690d0

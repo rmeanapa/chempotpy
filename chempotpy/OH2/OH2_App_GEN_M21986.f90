@@ -15,7 +15,6 @@
 !   Coordinates, potential energy, and derivatives are passed
 !   The potential energy in the three asymptotic valleys are
 !   stored in the common block ASYCM:
-!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 !   The potential energy in the AB valley, EASYAB, is equal to the poten
 !   energy of the H "infinitely" far from the OH diatomic, with the
 !   OH diatomic at its equilibrium configuration.  Similarly, the terms
@@ -318,12 +317,9 @@ module chempotpy_oh2_app_gen_m21986_pes
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !         WRITE (NFLAG(18), 600)
             !   Assign the parameters for the collinear part of the potential
             call prepare_local_context_2
             !   Echo the parameters for the bending potential
-            !      WRITE (NFLAG(18), 620) REQ,D
-            !      WRITE (NFLAG(18), 630) BETA,A,RBB,GAMP
             !       CONVERT TO ATOMIC UNITS
             do it = 1, 3
                 ambpcm_req(it) = ambpcm_req(it)/bohr
@@ -348,7 +344,6 @@ module chempotpy_oh2_app_gen_m21986_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -384,14 +379,6 @@ module chempotpy_oh2_app_gen_m21986_pes
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
-            !      IF (NASURF(1,1) .EQ. 0) THEN
-            !         WRITE(NFLAG(18), 900) NASURF(1,1)
-            !         STOP
-            !      ENDIF
-            !         IF (NDER .GT. 1) THEN
-            !             WRITE (NFLAG(18), 910) NDER
-            !             STOP 'POT 2'
-            !         ENDIF
             if( pt1cm_r(1) .gt. tol .and. pt1cm_r(2) .gt. tol .and. pt1cm_r(3) .gt. tol )then
                 raccol = pt1cm_r(1) + pt1cm_r(2)
                 bcoor  = 0.0e0_wp
@@ -521,23 +508,10 @@ module chempotpy_oh2_app_gen_m21986_pes
             !  ASSIGN THE PIVOT POINT, POTENTIAL AT THE PIVOT,
             !  FLAG, AND ASYMPTOTIC EXPONENTIAL PARAMETERS
             !  IN BLOCK DATA SUBROUTINE.  ECHO.
-            !      WRITE (NFLAG(18), 600) TITLE
-            !      WRITE (NFLAG(18), 601) D1INF,R1INF,B1INF,D2INF,R2INF,B2INF,A1INF,
             !     2INF
-            !      WRITE (NFLAG(18), 602) R1S,R2S,VSP,ALPH1,ALPH2
-            !      IF(IAYES.NE.0) WRITE (NFLAG(18), 603)
-            !      IF(IAYES.EQ.0) WRITE (NFLAG(18), 604)
             nphip2 = pre2cm_nphi + 2
             !  ECHO POTENTIAL PARAMTERS ASSIGNED BY BLOCK DATA SUBROUTINE
-            !      WRITE (NFLAG(18), 605) NPHI
-            !      WRITE (NFLAG(18), 610)
-            !      DO 30 I = 1,NPHI
-            !         WRITE (NFLAG(18), 606) I,PHI(I),(BSP(I,J),CSP(I,J),J=1,3)
             !   30 CONTINUE
-            !      WRITE (NFLAG(18), 611)
-            !      DO 40 I=1,2
-            !         K = I + NPHI
-            !         WRITE (NFLAG(18), 607) K,(CSP(K,J),J=1,3)
             !   40 CONTINUE
             !  CONVERT TO ATOMIC UNITS
             pre2cm_d1inf = pre2cm_d1inf/ckcal
@@ -755,7 +729,6 @@ module chempotpy_oh2_app_gen_m21986_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !     PARAMETER (IPRT = 6)
             !  THIS IS A SUBROUTINE FOR FITTING DATA WITH A CUBIC SPLINE
             !  POLYNOMIAL AND EVALUATING THAT POLYNOMIAL AT A GIVEN POINT
             !  OR ITS DERIVATIVE AT A GIVEN POINT

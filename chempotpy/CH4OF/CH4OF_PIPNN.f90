@@ -60,10 +60,7 @@ module chempotpy_ch4of_pipnn_pes
         do j=1, nbasis-1
             txinput(j) = basis(j+1)
         enddo
-        !        write(987,'(2000E16.8)')txinput(:)
         call getpota(txinput, vpes)
-        !       vnn=vpes
-        !       vpes=vnn
     end subroutine fch3ohpipnn
 
     !> @brief Evaluate the immutable CH4OF neural network.

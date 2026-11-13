@@ -91,23 +91,18 @@ module chempotpy_ch5p_pip_pes
             enddo
         enddo
         call calcr(xn, xch3, xh2, r, rh2, theta)
-        !     write(*,'a2,2x,f9.2') 'r=', r
         a = 0.e0_wp
         b = 0.e0_wp
         if( r <= rmax )then
             call getfit(xn, vfit)
         endif
         rp = (r - rmin)/(rmax - rmin)
-        !      write(*,*) 'rp=', rp
         if( r < rmin )then
             epot = vfit
         else
             call getlr(r, rh2, theta, elr)
             call getch3pot(xch3, epotch3)
             call geth2pot(xh2, epoth2)
-            !        write(*,'a8,f9.3')'epotch3=', epotch3
-            !        write(*,'a7,1x,f9.3')'epoth2=', epoth2
-            !        write(*,'a10,e20.10')'longrange=',elr
             if( r > rmax )then
                 epot = elr + epoth2 + epotch3 + de
             else
@@ -174,9 +169,8 @@ module chempotpy_ch5p_pip_pes
         enddo
         call getfit(xyzt, v)
         ch3pot = -39.4046592e0_wp + 0.0006415e0_wp/2.e0_wp
-        !      ch3potab = -39.40570072d0
-        h20 = -1.1745554e0_wp + 0.0006728e0_wp/2.e0_wp
-        v   = v - ch3pot - h20
+        h20    = -1.1745554e0_wp + 0.0006728e0_wp/2.e0_wp
+        v      = v - ch3pot - h20
         if( (v*ang .le. 5.e0_wp).and.(v*ang .ge. -5.e0_wp) )then
             v = 0.e0_wp
         endif
@@ -1377,32 +1371,9 @@ module chempotpy_ch5p_pip_pes
         f0 = dot_product(coef, vec)
         !.... Now the code is serving for PE calculation, gradient
         !...  is ignored for decreasing computational cost
-        !       do i = 0, 2
-        !          do j = 0, 5
         !             xn1 = xn ; xn1(i,j) = xn1(i,j)-dd
-        !             call getd0 (xn1, dc0, dc1, dw0, dw1, d0, r0)
-        !             call getvec (m, d0, vec(0:m-1))
-        !             call getrvec (3, r0, rvec)
-        !             do l = 0, mr-1
-        !                do k = 0, 1
-        !                vec(m+2*l+k) = rvec(k+1)*vec(l)
-        !             enddo
-        !          enddo
-        !           t0 = dot_product(coef,vec)
         !           xn1 = xn ; xn1(i,j) = xn1(i,j)+dd
-        !           call getd0 (xn1, dc0, dc1, dw0, dw1, d0, r0)
-        !           call getvec (m, d0, vec(0:m-1))
-        !           call getrvec (3, r0, rvec)
-        !          do l = 0, mr-1
-        !             do k = 0, 1
-        !                vec(m+2*l+k) = rvec(k+1)*vec(l)
-        !             enddo
-        !          enddo
-        !           t1 = dot_product(coef,vec)
         ! Note that gf0 will be the negative gradient
-        !           gf0(i,j) = -(t1-t0)/(2*dd)
-        !         enddo
-        !       enddo
     end subroutine getfit
 
     !> @brief Evaluate getd0 for the CH5p_PIP potential.
@@ -1419,9 +1390,7 @@ module chempotpy_ch5p_pip_pes
         d0(0, 0) = 0.e0_wp
         r0(0, 0) = 0.e0_wp
         do j = 1, 5
-            t0 = sqrt((xn(0, j)-xn(0, 0))**2+(xn(1, j)-xn(1, 0))**2+ (xn(2, j)-xn(2, 0))**2)
-            !         d0(0,j) = (log(t0)-dc0)/dw0
-            !         d0(0,j) = (dexp(-t0/3.d0)-dc0)/dw0
+            t0       = sqrt((xn(0, j)-xn(0, 0))**2+(xn(1, j)-xn(1, 0))**2+ (xn(2, j)-xn(2, 0))**2)
             d0(0, j) = (exp(-t0/p)-dc0)/dw0
             d0(j, 0) = d0(0, j)
             r0(0, j) = t0
@@ -1431,9 +1400,7 @@ module chempotpy_ch5p_pip_pes
             d0(i, i) = 0.e0_wp
             r0(i, i) = 0.e0_wp
             do j = i+1, 5
-                t0 = sqrt((xn(0, j)-xn(0, i))**2+(xn(1, j)-xn(1, i))**2+ (xn(2, j)-xn(2, i))**2)
-                !           d0(i,j) = (log(t0)-dc1)/dw1
-                !           d0(i,j) = (dexp(-t0/p)-dc1)/dw1
+                t0       = sqrt((xn(0, j)-xn(0, i))**2+(xn(1, j)-xn(1, i))**2+ (xn(2, j)-xn(2, i))**2)
                 d0(i, j) = (exp(-t0/p)-dc1)/dw1
                 d0(j, i) = d0(i, j)
                 r0(i, j) = t0
@@ -1980,10 +1947,8 @@ module chempotpy_ch5p_pip_pes
         enddo
         call getfit(xyzt, v)
         h2pot = -1.1745554e0_wp + 0.0006728e0_wp/2.e0_wp
-        !      h2potab = -1.17263405d0
-        ch30 = -39.4046592e0_wp + 0.0006415e0_wp/2.e0_wp
-        !      ch30 = -39.40570072d0
-        v = v - h2pot - ch30
+        ch30  = -39.4046592e0_wp + 0.0006415e0_wp/2.e0_wp
+        v     = v - h2pot - ch30
         if( (v*ang .le. 5.e0_wp).and.(v*ang .ge. -5.e0_wp) )then
             v = 0.e0_wp
         endif

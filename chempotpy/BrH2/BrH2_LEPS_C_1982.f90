@@ -240,11 +240,7 @@ module chempotpy_brh2_leps_c_1982_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      LOGICAL LCOL
-            !      DIMENSION H(10),DH1(10),DH2(10),DH3(10),legacy_u(4,4),E(4),SCR1(4),
             !     1          SCR2(4)
-            !      COMMON /POTCOM/ EPS,ONE,RHH,AHH,DHH,BHH,XIH,XIX,legacy_g,ALFW,RHX,AHX,
-            !     &                DHX,BHX,ETAHH,ETA3S,ETA1P,ETA3P
             !   Echo potential parameters to UNIT NFLAG(18)
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
@@ -272,7 +268,6 @@ module chempotpy_brh2_leps_c_1982_pes
             indexes(2) = 1
             indexes(3) = 1
             irctnt     = 2
-            !CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

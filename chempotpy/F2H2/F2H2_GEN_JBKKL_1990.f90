@@ -133,8 +133,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             real(wp), parameter :: two     = 2.e0_wp
             real(wp), parameter :: four    = 4.e0_wp
             integer, parameter  :: izero   = 0
-            !     dimension a(0:4,0:4,0:8),v(ipara)
-            !     dimension iq1(ipara),iq2(ipara),imu(ipara)
             consts_bo = 0.529177249e0_wp
             consts_ha = 219474.63067e0_wp
             consts_pi = 3.1415926535898e0_wp
@@ -166,10 +164,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !     function. (this is a very small correction).
             if( iq1 .eq. 4.and.iq2 .eq. 2.and.imu .eq. 2 ) v=v/3.e0_wp
             if( iq1 .eq. 2.and.iq2 .eq. 4.and.imu .eq. 2 ) v=v/3.e0_wp
-            !     vpot=zero
-            !     kount=kount-1
-            !     do 50 j=1,kount
-            !     write(65,*)v(j)
             !50   continue
         end subroutine trbunk
 
@@ -231,39 +225,13 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             integer :: i, il, iu, j, k
             integer :: out
             out = 6
-            !     R1=REQ(1)
-            !     R2=REQ(2)
-            !     RAB=REQ(3)
-            !     T1DEG=REQ(4)
-            !     T2DEG=REQ(5)
-            !     TAUDEG=REQ(6)
-            !     T1=T1DEG*PI/180.D0
-            !     T2=T2DEG*PI/180.D0
-            !     TAU=TAUDEG*PI/180.D0
             !     NEXT CALL SUBROUTINE HF2INT WHICH CALCULATES THE RELEVANT ATOM-ATO
             !     DISTANCES NEEDED TO COMPUTE THE TWO-BODY TERMS. THE ANGLES MUST
             !     BE IN DEGREES SO CONVERT THEM HERE.                           WCN
             t1deg  = t1*180.e0_wp/consts_pi
             t2deg  = t2*180.e0_wp/consts_pi
             taudeg = tau*180.e0_wp/consts_pi
-            !     CALL HF2INT(R1,RAB,R2,T1DEG,T2DEG,TAUDEG,RHH,RHF1,RHF2,RFF)
-            !     DO 100 L1=0,4
-            !     DO 100 L2=0,4
-            !     LL=IABS(L1-L2)
-            !     LU=L1+L2
-            !     LM=L2
-            !     IF(L1.LT.L2)LM=L1
-            !     DO 100 L=LL,LU,2
-            !     XL=DFLOAT(L)
-            !     ZZ=((2.D0*XL+1.D0)/2.D0)/DSQRT(PI)
-            !     XL1=DFLOAT(L1)
-            !     XL2=DFLOAT(L2)
-            !     COEFF=((-1)**(L1-L2))*ZZ
-            !     G(L1,L2,L)=THREEJ(XL1,XL2,XL,0.D0,0.D0,0.D0)*P(L1,0,T1)*
             !    X           P(L2,0,T2)
-            !     IF(LM.EQ.0)GO TO 100
-            !       DO 90 M=1,LM
-            !       XM=DFLOAT(M)
             ! 90    G(L1,L2,L)=G(L1,L2,L)+
             !    X             ((-1)**M)*2.0D0*THREEJ(XL1,XL2,XL,XM,-XM,0.D0)*
             !    X             P(L1,M,T1)*P(L2,M,T2)*DCOS(XM*TAU)
@@ -416,12 +384,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                     enddo
                 enddo
             enddo
-            !     V = 0.0D0
-            !     DO 2 I=0,4
-            !     DO 2 J=0,4
-            !     IL=IABS(I-J)
-            !     IU=I+J
-            !     DO 2 K=IL,IU,2
             !2    V = V + A(I,J,K)*G(I,J,K)
             !  HH, FF, HF1 AND HF2 2-BODY TERMS COMBINED IN TERM VSRG.
             !  VSRG IS DAMPED TO ZERO IF RHF.GT.3.0
@@ -430,18 +392,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !  SO THAT BOUND STATES CAN BE CALCULATED WITH THE NEGLECT
             !  OF VSRG AND CLOSE COUPLING PROGRAM 'BOUND' USED WITH V.
             !  eliminate two-body terms completely in this version wcn 3/10/92
-            !     YRHF=0.25D0*(1.D0-DTANH(7.D0*(R1-3.0D0)))
             !    X           *(1.D0-DTANH(7.D0*(R2-3.0D0)))
-            !     YRHH=0.50D0*(1.D0-DTANH(7.D0*(RHH-2.3D0)))
-            !     YRFF=0.50D0*(1.D0-DTANH(7.D0*(RFF-2.3D0)))
-            !     YRHF1=0.50D0*(1.D0-DTANH(7.D0*(RHF1-2.3D0)))
-            !     YRHF2=0.50D0*(1.D0-DTANH(7.D0*(RHF2-2.3D0)))
-            !     VHH=C(161)*DEXP(-C(171)*RHH)+C(181)*DEXP(-C(191)*RHH)
-            !     VHF1=C(201)*DEXP(-C(211)*RHF1)+C(221)*DEXP(-C(231)*RHF1)
-            !     VHF2=C(201)*DEXP(-C(211)*RHF2)+C(221)*DEXP(-C(231)*RHF2)
-            !     VFF=C(241)*DEXP(-C(251)*RFF)+C(261)*DEXP(-C(271)*RFF)
-            !     VSRG=(VHH*YRHH+VHF1*YRHF1+VHF2*YRHF2+VFF*YRFF)*YRHF
-            !     V=V+VSRG
         end subroutine vcalc
 
         !> @brief Evaluate FAKT for the F2H2_GEN_JBKKL_1990 potential.

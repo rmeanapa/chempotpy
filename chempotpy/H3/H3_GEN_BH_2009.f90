@@ -22,12 +22,9 @@ subroutine pot( rvp, evp, dvp )
     real(wp)              :: xmh, xmd, xmminv(3,3), amat(3), t
     real(wp)              :: e1, e2, e3, emat(3), ezero, hatom_bodc, xmin
     real(wp)              :: ezero2
-    !     write(6,*)present(newmasses)
-    !     if(present(newmasses))then
     !       xmass1=newmasses(1)
     !       xmass2=newmasses(2)
     !       xmass3=newmasses(3)
-    !     endif
     !    We need to zero the PES with respect to one arrangement
     !    If only one mass is distinct, choose the target mass as that, otherwise choose
     !    the lightest particle.  If another choice is desired, add appropriate assignment

@@ -149,8 +149,6 @@ module chempotpy_h3s_pipnn_pes
         do j=1, 22
             txinput(j) = p(j)
         enddo
-        !      write(*,*)txinput(:)
-        !      stop
         call getpota(txinput, v, dvdg, ndriv)
         if( ndriv .eq. 1 )then
             call evdvdr(r, m, p, dpdr)

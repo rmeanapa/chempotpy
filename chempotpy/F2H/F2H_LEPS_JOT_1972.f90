@@ -12,8 +12,6 @@
 ! The potential parameters are included in DATA statements.
 ! Coordinates, potential energy, derivatives, and other information
 ! is passed through three common blocks:
-!           COMMON /PT1CM/ R(3), ENGYGS, DEGSDR(3)
-!           COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 ! The common block PT1CM contains the internal coordinates, the potentia
 ! energy, and the derivatives with respect to internal coordinates.  The
 ! common block PT2CM contains the a several variables which control
@@ -196,8 +194,6 @@ module chempotpy_f2h_leps_jot_1972_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      dimension de(3),re(3),b(3),s(3),hde(3),hpf(3),pfs(3),pft(3)
-            !      save de,re,b,s,cevau,canau
             ! Write header potential parameters to UNIT NFLAG(18).
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
@@ -230,7 +226,6 @@ module chempotpy_f2h_leps_jot_1972_pes
             indexes(2) = 9
             indexes(3) = 9
             irctnt     = 2
-            !CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

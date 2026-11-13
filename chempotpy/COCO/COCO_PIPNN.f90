@@ -242,14 +242,12 @@ module chempotpy_coco_pipnn_pes
                 x1(1:nt,i) = b1(i)
             enddo
             ! ---- x1=trans(x0(n0,nt))*w1(n0,n1)+x1(nt,n1)
-            !call gpu_dgemm('t','n',nt,n1,n0,1.d0,x0,n0,w1,n0,1.d0,x1,nt)
             call dgemm('t', 'n', nt, n1, n0, 1.e0_wp, x0, n0, w1, n0, 1.e0_wp, x1, nt)
             x1 = tanh(x1)
             do i=1, n2
                 x2(1:nt,i) = b2(i)
             enddo
             ! ---- x2=x1(nt,n1)*w2(n1,n2)+x2(nt,n2)
-            !call gpu_dgemm('n','n',nt,n2,n1,1.d0,x1,nt,w2,n1,1.d0,x2,nt)
             call dgemm('n', 'n', nt, n2, n1, 1.e0_wp, x1, nt, w2, n1, 1.e0_wp, x2, nt)
             x2      = tanh(x2)
             v(1:nt) = b3

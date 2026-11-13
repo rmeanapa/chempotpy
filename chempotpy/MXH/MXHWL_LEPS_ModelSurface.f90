@@ -269,7 +269,6 @@ module chempotpy_mxhwl_leps_modelsurface_g_pot11_legacy_state_3d77fc80
         endif
         cevau = 1.e0_wp / 27.2113961e0_wp
         do i = 1, nt
-            !          cosa = 0.5d0 * (r(i, 2) ** 2 + r(i, 3) ** 2 - r(i, 1) ** 2) /
             !     *(r(i, 2) * r(i, 3))
             !==============================================================k
             !This section contains the diatomic curves

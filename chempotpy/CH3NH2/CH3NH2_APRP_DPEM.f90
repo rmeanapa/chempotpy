@@ -307,9 +307,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         endif
         ! Setting the range of dihedral angle between -90.0 degree to 270 degree
         ! to avoid discontinuity around 180 degrees
-        !      if (dihedr .lt. -0.5d0*pi) then
-        !        dihedr=2.0d0*pi+dihedr
-        !      endif
     end function dihedr1
 
     !> @brief Evaluate bndlen for the CH3NH2_APRP_DPEM potential.
@@ -463,7 +460,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dx1(3) = dx1(3)+dk(13)*dihedrjx(1, 3, 4, 5, x, y, z)
         dy1(3) = dy1(3)+dk(13)*dihedrjy(1, 3, 4, 5, x, y, z)
         dz1(3) = dz1(3)+dk(13)*dihedrjz(1, 3, 4, 5, x, y, z)
-        ! C
         dx1(4) = dx1(4)+dk(13)*dihedrkx(1, 3, 4, 5, x, y, z)
         dy1(4) = dy1(4)+dk(13)*dihedrky(1, 3, 4, 5, x, y, z)
         dz1(4) = dz1(4)+dk(13)*dihedrkz(1, 3, 4, 5, x, y, z)
@@ -479,7 +475,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dx1(3) = dx1(3)+dk(14)*dihedrjx(2, 3, 4, 5, x, y, z)
         dy1(3) = dy1(3)+dk(14)*dihedrjy(2, 3, 4, 5, x, y, z)
         dz1(3) = dz1(3)+dk(14)*dihedrjz(2, 3, 4, 5, x, y, z)
-        ! C
         dx1(4) = dx1(4)+dk(14)*dihedrkx(2, 3, 4, 5, x, y, z)
         dy1(4) = dy1(4)+dk(14)*dihedrky(2, 3, 4, 5, x, y, z)
         dz1(4) = dz1(4)+dk(14)*dihedrkz(2, 3, 4, 5, x, y, z)
@@ -526,7 +521,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         dx1(3) = dx1(3)+dk(22)*dihedrjx(1, 3, 4, 2, x, y, z)
         dy1(3) = dy1(3)+dk(22)*dihedrjy(1, 3, 4, 2, x, y, z)
         dz1(3) = dz1(3)+dk(22)*dihedrjz(1, 3, 4, 2, x, y, z)
-        ! C
         dx1(4) = dx1(4)+dk(22)*dihedrkx(1, 3, 4, 2, x, y, z)
         dy1(4) = dy1(4)+dk(22)*dihedrky(1, 3, 4, 2, x, y, z)
         dz1(4) = dz1(4)+dk(22)*dihedrkz(1, 3, 4, 2, x, y, z)
@@ -686,7 +680,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         if( (ii .eq. 1) .or. (ii .eq. 2) )then
             ! STRETCHES
             ! STRETCH 1 (NHB)
-            !       if (ii .eq. 1) then
             vs = gnhb1(ra1,ra2) *(1e0_wp-exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2))))**2e0_wp
             vs = vs+knhb1(ra1,ra2)*(qc(1)-knhb2(ra1,ra2))**4e0_wp
             ! STRETCH 2 (NC)
@@ -734,7 +727,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             if( (ii .eq. 1) .or. (ii .eq. 2) )then
                 ! STRETCHES
                 ! STRETCH 1 (NHB)
-                !       if (ii .eq. 1) then
                 dut(1)=-2e0_wp*gnhb2(ra1,ra2)*gnhb1(ra1,ra2)* exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2)))* (1e0_wp- &
                     & exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2))))
                 dut(1) = dut(1)+4e0_wp*knhb1(ra1,ra2)*(qc(1)-knhb2(ra1,ra2))**3e0_wp
@@ -1988,7 +1980,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             !****** CORNERS
             ! all derivatives equal zero
             !****** SIDES
-            !      if( (fg(1)-1.eq.0) ) then
         elseif( (fg(1)-1 .eq. 0) )then
             dup = 4e0_wp*(r1-rap(fg(1),si))**3e0_wp
             dvn = 4e0_wp*(t2-tap(fg(2)-1,si))**3e0_wp
@@ -2281,42 +2272,40 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !          \ ajkl
         !           k----l
         !             kl
-        kkx    = x(i)-x(j)
-        kky    = y(i)-y(j)
-        kkz    = z(i)-z(j)
-        yyx    = x(k)-x(j)
-        yyy    = y(k)-y(j)
-        yyz    = z(k)-z(j)
-        llx    = x(l)-x(k)
-        lly    = y(l)-y(k)
-        llz    = z(l)-z(k)
-        eex    = x(j)-x(k)
-        eey    = y(j)-y(k)
-        eez    = z(j)-z(k)
-        oo1(1) = kky*yyz-kkz*yyy
-        oo1(2) = kkz*yyx-kkx*yyz
-        oo1(3) = kkx*yyy-kky*yyx
-        oo2(1) = lly*eez-llz*eey
-        oo2(2) = llz*eex-llx*eez
-        oo2(3) = llx*eey-lly*eex
-        so1(1) = oo1(1)**2e0_wp
-        so1(2) = oo1(2)**2e0_wp
-        so1(3) = oo1(3)**2e0_wp
-        sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5e0_wp)
-        so2(1) = oo2(1)**2e0_wp
-        so2(2) = oo2(2)**2e0_wp
-        so2(3) = oo2(3)**2e0_wp
-        sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5e0_wp)
-        ab(1)  = oo1(1)*oo2(1)
-        ab(2)  = oo1(2)*oo2(2)
-        ab(3)  = oo1(3)*oo2(3)
-        sab    = ab(1)+ab(2)+ab(3)
-        p1p2   = rso1*rso2
-        ra     = sab/p1p2
-        !       ra=sab
-        !       dihedr2=acos(ra)
+        kkx     = x(i)-x(j)
+        kky     = y(i)-y(j)
+        kkz     = z(i)-z(j)
+        yyx     = x(k)-x(j)
+        yyy     = y(k)-y(j)
+        yyz     = z(k)-z(j)
+        llx     = x(l)-x(k)
+        lly     = y(l)-y(k)
+        llz     = z(l)-z(k)
+        eex     = x(j)-x(k)
+        eey     = y(j)-y(k)
+        eez     = z(j)-z(k)
+        oo1(1)  = kky*yyz-kkz*yyy
+        oo1(2)  = kkz*yyx-kkx*yyz
+        oo1(3)  = kkx*yyy-kky*yyx
+        oo2(1)  = lly*eez-llz*eey
+        oo2(2)  = llz*eex-llx*eez
+        oo2(3)  = llx*eey-lly*eex
+        so1(1)  = oo1(1)**2e0_wp
+        so1(2)  = oo1(2)**2e0_wp
+        so1(3)  = oo1(3)**2e0_wp
+        sso1    = so1(1)+so1(2)+so1(3)
+        rso1    = (sso1)**(0.5e0_wp)
+        so2(1)  = oo2(1)**2e0_wp
+        so2(2)  = oo2(2)**2e0_wp
+        so2(3)  = oo2(3)**2e0_wp
+        sso2    = so2(1)+so2(2)+so2(3)
+        rso2    = (sso2)**(0.5e0_wp)
+        ab(1)   = oo1(1)*oo2(1)
+        ab(2)   = oo1(2)*oo2(2)
+        ab(3)   = oo1(3)*oo2(3)
+        sab     = ab(1)+ab(2)+ab(3)
+        p1p2    = rso1*rso2
+        ra      = sab/p1p2
         dihedr2 = ra
     end function dihedr2
 
@@ -2382,8 +2371,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
-        !       dihedr2=ra
         !------------------Xi---------------------------
         !top (sab deriv for Xi)
         td = -1e0_wp*kjz*lkz*jkx +kjz*lkx*jkz +kjy*lkx*jky -kjy*lky*jkx
@@ -2392,8 +2379,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ld = 2e0_wp*(x(i)-x(j))*(kjz**2e0_wp+kjy**2e0_wp) -2*(kjz*ijz*kjx +kjy*ijy*kjx)
         bd = (sso2*ld)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrIX=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrix = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Xi---------------------------
     end function dihedrix
@@ -2457,7 +2443,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Yi---------------------------
         !top (sab deriv for Yi)
         td = -1e0_wp*kjz*lkz*jky +kjz*lky*jkz +kjx*lky*jkx -kjx*lkx*jky
@@ -2465,8 +2450,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ld = 2e0_wp*(y(i)-y(j))*(kjz**2+kjx**2) -2*(kjz*ijz*kjy +kjx*ijx*kjy)
         bd = (sso2*ld)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrIY=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedriy = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Yi---------------------------
     end function dihedriy
@@ -2533,7 +2517,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Zi---------------------------
         !top (sab deriv for Zi)
         td = -1e0_wp*kjy*lky*jkz +kjy*lkz*jky +kjx*lkz*jkx -kjx*lkx*jkz
@@ -2541,8 +2524,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ld = 2e0_wp*(z(i)-z(j))*(kjx**2+kjy**2) -2*(kjx*ijx*kjz +kjy*ijy*kjz)
         bd = (sso2*ld)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrIZ=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedriz = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Zi---------------------------
     end function dihedriz
@@ -2609,7 +2591,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Xl---------------------------
         !top (sab deriv for Xl)
         td = -1e0_wp*ijz*kjx*jkz +ijx*kjz*jkz +ijx*kjy*jky -ijy*kjx*jky
@@ -2617,8 +2598,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         rd = 2e0_wp*(x(l)-x(k))*(jky**2+jkz**2) -2*(jky*lky*jkx +jkz*lkz*jkx)
         bd = (sso1*rd)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrLX=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrlx = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Xl---------------------------
     end function dihedrlx
@@ -2685,7 +2665,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Yl---------------------------
         !top (sab deriv for Yl)
         td = -1e0_wp*ijz*kjy*jkz +ijy*kjz*jkz +ijy*kjx*jkx -ijx*kjy*jkx
@@ -2693,8 +2672,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         rd = 2e0_wp*(y(l)-y(k))*(jkx**2+jkz**2) -2*(jkx*lkx*jky +jkz*lkz*jky)
         bd = (sso1*rd)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrLY=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrly = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Yl---------------------------
     end function dihedrly
@@ -2761,7 +2739,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Zl---------------------------
         !top (sab deriv for Zl)
         td = -1e0_wp*ijy*kjz*jky +ijz*kjy*jky +ijz*kjx*jkx -ijx*kjz*jkx
@@ -2769,8 +2746,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         rd = 2e0_wp*(z(l)-z(k))*(jky**2+jkx**2) -2*(jky*lky*jkz +jkx*lkx*jkz)
         bd = (sso1*rd)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrLZ=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrlz = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Zl---------------------------
     end function dihedrlz
@@ -2837,7 +2813,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Xj---------------------------
         !top (sab deriv for Xj)
         td=(-2e0_wp*x(j)+2e0_wp*x(k))*ijz*lkz +ijz*lkx*jkz -(-2e0_wp*x(j)+x(k)+x(i))*kjz*lkz -kjz*lkx*jkz -kjy*lkx* &
@@ -2849,8 +2824,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         rd = 2e0_wp*(x(j)-x(k))*(lkz**2+lky**2) -2*(lkz*lkx*jkz +lky*lkx*jky)
         bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrJX=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrjx = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Xj---------------------------
     end function dihedrjx
@@ -2917,7 +2891,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Yj---------------------------
         !top (sab deriv for Yj)
         td=-kjz*lky*jkz -(-2e0_wp*y(j)+y(k)+y(i))*kjz*lkz +ijz*lky*jkz +(-2e0_wp*y(j)+2e0_wp*y(k))*ijz*lkz +(-2e0_wp* &
@@ -2929,8 +2902,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         rd = 2e0_wp*(y(j)-y(k))*(lkz**2+lkx**2) -2*(lkz*lky*jkz +lkx*lky*jkx)
         bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrJY=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrjy = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Yj---------------------------
     end function dihedrjy
@@ -2997,7 +2969,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Zj---------------------------
         !top (sab deriv for Zj)
         td=(-2e0_wp*z(j)+2e0_wp*z(k))*ijy*lky +ijy*lkz*jky -(-2e0_wp*z(j)+z(k)+z(i))*kjy*lky -kjy*lkz*jky -kjx*lkz* &
@@ -3009,8 +2980,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         rd = 2e0_wp*(z(j)-z(k))*(lky**2+lkx**2) -2*(lky*lkz*jky +lkx*lkz*jkx)
         bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrJZ=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrjz = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Zj---------------------------
     end function dihedrjz
@@ -3077,7 +3047,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Xk---------------------------
         !top (sab deriv for Xk)
         td=(-2e0_wp*x(k)+2e0_wp*x(j))*ijz*lkz -(-2e0_wp*x(k)+x(j)+x(l))*ijz*jkz +ijx*kjz*lkz -ijx*kjz*jkz -ijx*kjy* &
@@ -3089,8 +3058,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             & jkz +lky*jky)
         bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrKX=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrkx = id!(-id)/(1d0-ra**2d0)**(0.5d0)
         !------------------Xk---------------------------
     end function dihedrkx
@@ -3157,7 +3125,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Yk---------------------------
         !top (sab deriv for Yk)
         td=(-2e0_wp*y(k)+2e0_wp*y(j))*ijz*lkz -(-2e0_wp*y(k)+y(j)+y(l))*ijz*jkz +ijy*kjz*lkz -ijy*kjz*jkz -ijy*kjx* &
@@ -3169,8 +3136,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             & jkz +lkx*jkx)
         bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrKY=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrky = id!(-id)/(1d0-ra**2d0)**(0.5d0)
         !------------------Yk---------------------------
     end function dihedrky
@@ -3237,7 +3203,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         sab    = ab(1)+ab(2)+ab(3)
         p1p2   = rso1*rso2
         ra     = sab/p1p2
-        !       dihedr2=acos(ra)
         !------------------Zk---------------------------
         !top (sab deriv for Zk)
         td=(-2e0_wp*z(k)+2e0_wp*z(j))*ijy*lky -(-2e0_wp*z(k)+z(j)+z(l))*ijy*jky +ijz*kjy*lky -ijz*kjy*jky -ijz*kjx* &
@@ -3249,8 +3214,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
             & jky +lkx*jkx)
         bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
-        !       dihedrKZ=(-id)/(1d0-ra**2d0)**(0.5d0)
+        id       = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         dihedrkz = id!(-id)/(1d0-ra**2d0)**(0.5d0)
         !------------------Zk---------------------------
     end function dihedrkz

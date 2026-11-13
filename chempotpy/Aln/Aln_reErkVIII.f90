@@ -79,7 +79,6 @@ module chempotpy_aln_reerkviii_pes
         !  calculate and tabulate the distances between all atoms
         call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
         !  calculate the potential energy
-        ! original parameters
         r0 = 2.510e0_wp  /  autoang
         a1 = 1.860e0_wp  /  autoev
         a2 = 3.410e0_wp  /  autoev

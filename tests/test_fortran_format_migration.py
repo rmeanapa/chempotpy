@@ -9,6 +9,7 @@ from scripts.format_fortran import (
     hoist_pes_metadata,
     normalize_contains_blank_lines,
     normalize_procedure_separator_blank_lines,
+    remove_dead_commented_code,
     specialize_pes_documentation,
 )
 
@@ -130,6 +131,74 @@ end subroutine evaluate
         self.assertNotIn("! ================== !", converted)
         self.assertIn("! Keep this scientific explanation.", converted)
         self.assertIn("! \\       /", converted)
+
+    def test_commented_legacy_code_is_removed(self) -> None:
+        source = """\
+module example
+contains
+    subroutine evaluate
+        implicit none
+        real :: value
+        value = 1.0
+        !      if( value > 0.0 )then
+        !          value = old_value
+        !          call old_evaluator(value, old_value)
+        !     +        old_argument
+        !     *        another_old_argument
+        !      endif
+        !      write(*,*) value
+        !      call old_no_argument_path
+        !      if( value > 0.0 ) write(*,*) value
+        !      parameter(old_threshold=2.0)
+        !d     write(7,*) value
+        !c     call old_fixed_form_path(value)
+        !C old_value = 2.0
+        ! C
+        ! Original parameters
+    end subroutine evaluate
+end module example
+"""
+        converted = remove_dead_commented_code(source)
+        self.assertNotIn("old_value", converted)
+        self.assertNotIn("old_evaluator", converted)
+        self.assertNotIn("another_old_argument", converted)
+        self.assertNotIn("old_fixed_form_path", converted)
+        self.assertNotIn("old_no_argument_path", converted)
+        self.assertNotIn("old_threshold", converted)
+        self.assertNotIn("old_value = 2.0", converted)
+        self.assertNotIn("! C", converted)
+        self.assertNotIn("write(*,*)", converted)
+        self.assertNotIn("Original parameters", converted)
+
+    def test_commented_common_block_is_removed_from_header(self) -> None:
+        source = """\
+! System: H3
+! COMMON /PT1CM/ R(3), ENERGY
+module example
+end module example
+"""
+        converted = remove_dead_commented_code(source)
+        self.assertIn("! System: H3", converted)
+        self.assertNotIn("COMMON /PT1CM/", converted)
+
+    def test_scientific_comment_equations_are_preserved(self) -> None:
+        source = """\
+module example
+contains
+    subroutine evaluate
+        ! R(1) = R(O-H) ! first bond distance
+        implicit none
+        real :: value
+        value = 1.0
+        ! d(tanh) = (sech)**2 = 1-(tanh)**2
+        ! CPEM(1) = average scaling * CPEM(0)
+    end subroutine evaluate
+end module example
+"""
+        converted = remove_dead_commented_code(source)
+        self.assertIn("R(1) = R(O-H)", converted)
+        self.assertIn("d(tanh) = (sech)**2", converted)
+        self.assertIn("CPEM(1) = average scaling", converted)
 
     def test_pes_documentation_names_surface_and_system(self) -> None:
         source = """\

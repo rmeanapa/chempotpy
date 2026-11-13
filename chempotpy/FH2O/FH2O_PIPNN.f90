@@ -292,16 +292,7 @@ module chempotpy_fh2o_pipnn_pes
             endif
         endif
         xbond(:) = exp(-rb(:)/alpha)
-        !      do j=1,nbasis
-        !       tmp1=0.0d0
-        !       do k=1,nterm(j)
-        !        tmp1=tmp1+
         !    $  (xbond(1)**nindex(j,k,1))*(xbond(2)**nindex(j,k,2))
-        !    & *(xbond(3)**nindex(j,k,3))*(xbond(4)**nindex(j,k,4))
-        !    & *(xbond(5)**nindex(j,k,5))*(xbond(6)**nindex(j,k,6))
-        !       enddo
-        !       basis(j)=basis(j)+tmp1
-        !      enddo
         call bemsav(xbond, basis)
         do j=1, nbasis-1
             txinput(j) = basis(j)
@@ -488,7 +479,6 @@ module chempotpy_fh2o_pipnn_pes
         real(wp) :: wa, wb, wc, wd, abm, cdm, ama, amb, amc, amd
         !-->-->rint(1-6)=r1,r2,r3,th1,th2,phi
         !-->-->r1 is vector A->B, r2 is a vector pointing from the COM of AB to
-        !C
         !-->-->r3 is a vector pointing from the COM of ABC to D
         !-->-->th1 is the angle for r1 and r2
         !-->-->th2 is the angle for r2 and r3
@@ -562,9 +552,6 @@ module chempotpy_fh2o_pipnn_pes
         vec(:,6) = c(:,3)-c(:,2) ! vector  O->C
         vec(:,7) = c(:,2)-c(:,3) ! vector  C->O
         vec(:,8) = c(:,4)-c(:,3) ! vector  C->O'
-        !     dompp(5)=dsqrt(dot_product(vec(:,5),vec(:,5)))
-        !     dotpp(6)=dsqrt(dot_product(vec(:,6),vec(:,6)))
-        !     dotpp(7)=dsqrt(dot_product(vec(:,7),vec(:,7)))
         dotpp(1) = sqrt(dot_product(vec(:,1), vec(:,1)))
         dotpp(3) = sqrt(dot_product(vec(:,3), vec(:,3)))
         dotpp(5) = sqrt(dot_product(vec(:,5), vec(:,5)))
@@ -582,7 +569,6 @@ module chempotpy_fh2o_pipnn_pes
         r(4) = acos( max(-1.0e0_wp, min(1.0e0_wp, costh1))) ! in radians
         r(5) = acos( max(-1.0e0_wp, min(1.0e0_wp, costh2))) ! in radians
         if( abs(cos(r(4))*cos(r(5))) .lt. 1.0e-16_wp )then
-            !       return
         else
             ! compute the Jacobi dihedral angle, based on the norm of the plane
             call crossp(vec(:,1), vec(:,5), crop1) ! crossproduct for the norm
@@ -592,8 +578,7 @@ module chempotpy_fh2o_pipnn_pes
             r(6) = 0.0e0_wp
         else
             costh3 = dot_product(crop1(:), crop2(:))/(sqrt(sum(crop1(:)**2)) *sqrt(sum(crop2(:)**2)))
-            !    write(99999,'(f20.10)') costh3
-            r(6) = acos( max(-1.0e0_wp, min(1.0e0_wp, costh3)))
+            r(6)   = acos( max(-1.0e0_wp, min(1.0e0_wp, costh3)))
         endif
         endif
     end subroutine cart_dijacobi
@@ -667,11 +652,10 @@ module chempotpy_fh2o_pipnn_pes
         !                 \                |-\/C
         !                  B
         !      C in +z and -z phase is identical, so put it in +z
-        yc    = dmass/(cmass+dmass)*r(2)
-        yd    = cmass/(cmass+dmass)*r(2)
-        cxsin = yc*sin(r(5))
-        dxsin = -yd*sin(r(5))
-        !     C
+        yc     = dmass/(cmass+dmass)*r(2)
+        yd     = cmass/(cmass+dmass)*r(2)
+        cxsin  = yc*sin(r(5))
+        dxsin  = -yd*sin(r(5))
         c(1,3) = r(3)+yc*cos(r(5))
         c(2,3) = cxsin*cos(r(6))
         c(3,3) = cxsin*sin(r(6))

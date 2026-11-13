@@ -394,8 +394,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  units conversion for anomalous adiabatic       *
             !  coupling pengyij                               *
             !                                                 *
-            !     DIMENSION DLEP(3), DLEP2(3), DV2(3), DV3(3), DVA(3), DC3(3)
-            !     DIMENSION R(3)
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
@@ -431,7 +429,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -469,7 +466,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  units conversion for anomalous adiabatic       *
             !  coupling usrocm_pengyij                               *
             !                                                 *
-            !     DIMENSION pt1cm_r(3)
             call cartou
             call carttor
             ! Set up symmetry coordinates and their derivatives
@@ -634,7 +630,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION RR(3)
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COR2)  *
@@ -901,9 +896,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
-            !     +                CORRT(3),DCORRT(3),
-            !     +                DAMP(3,3),DDAMP(3,3)
             t     = h3dmcm_alpha5*h3cocm_per2
             expva = exp(-t*h3cocm_per)
             if( expva .eq. 0.0e0_wp )then
@@ -956,9 +948,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
-            !     +                CORRT(3),DCORRT(3),
-            !     +                DAMP(3,3),DDAMP(3,3)
             !   Compute B1 function.
             r1i  = 1.0e0_wp/r1
             r2i  = 1.0e0_wp/r2
@@ -1054,9 +1043,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
-            !     +                CORRT(3),DCORRT(3),
-            !     +                DAMP(3,3),DDAMP(3,3)
             if( h3cocm_s .eq. 0.0e0_wp )then
                 viii   = 0.0e0_wp
                 dv3(1) = 0.0e0_wp
@@ -1107,9 +1093,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
-            !     +                CORRT(3),DCORRT(3),
-            !     +                DAMP(3,3),DDAMP(3,3)
             rcapf(1) = r1
             rcapf(2) = r2
             rcapf(3) = r3
@@ -1130,7 +1113,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             gz    = 0.046875e0_wp*(-x*dcapk(1)+x2*dcapk(2))
             denom = fz+gz*h3cocm_cphi3*h3cocm_s+fu*h3cocm_s2
             arg   = gz*coupcm_sphi3*h3cocm_s/denom
-            !     FCT=coupcm_phi-ATAN(ARG)
             do i=1, 3
                 dx(i)  = rcapf(i)*xi
                 dfz(i) = 0.125e0_wp*dx(i)*(dcapk(1)+x*dcapk(2))
@@ -1165,9 +1147,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !      COMMON /H3CRCM/ cor2cm_corrs(3),DCORRS(3),
-            !     +                cor2cm_corrt(3),DCORRT(3),
-            !     +                DAMP(3,3),DDAMP(3,3)
             rsave        = rr
             cor2cm_corrs = 0.0e0_wp
             dcorrs       = 0.0e0_wp
@@ -1245,29 +1224,13 @@ module chempotpy_h3_gen_dmbe_1987_pes
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
-            !      COMMON /H3DMCM/ ALPH2,ALPHA5,ALPH0,ALPH1,
-            !     +                AL0,AL1,AL2,AL3,AZ2,
-            !     +                BETA1,BETA2,BETA3,BET0,BET1,
-            !     +                CD0,CD1,CHH(3),CK0(3),CK1(3),
-            !     +                DAMPA(3),dmpcm_dampb(3),
-            !     +                HFD,HFA1,HFA2,HFA3,HFGAM,
-            !     +                H2RM,H2RMT,H2R0,H2TA,H2TB1,H2TB2,H2TB3,H2TB4,
-            !     +                RHOL,SQRT3,XPAR(15)
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
             !                                                     *
-            !      COMMON /H3COCM/ PER,PER2,R12,R22,R32,
-            !     +                QCOORD,DQ1,DQ2,DQ3,
-            !     +                RHO,DRHO1,DRHO2,DRHO3,
-            !     +                S,S2,DS1,DS2,DS3,
-            !     +                CPHI3,DCPHI1,DCPHI2,DCPHI3
             !                                                 *
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
-            !     +                CORRT(3),DCORRT(3),
-            !     +                DAMP(3,3),DDAMP(3,3)
             dpol2 = dmpcm_dpol**2
             d1b   = dmpcm_y*dmpcm_dpol*dmpcm_texp
             d2b   = dmpcm_y**2*(2.0e0_wp*dmpcm_dampb-dpol2)*dmpcm_texp
@@ -1317,9 +1280,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            !      COMMON /H3CRCM/ cor2cm_corrs(3),DCORRS(3),
-            !     +                cor2cm_corrt(3),DCORRT(3),
-            !     +                DAMP(3,3),DDAMP(3,3)
             call h2cor2(qlc)
             t1    = -h3dmcm_az2*h3cocm_qcoord
             fzero = exp(t1*h3cocm_qcoord)

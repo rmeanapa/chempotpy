@@ -369,14 +369,10 @@ subroutine evv( v )
     enddo
     !! D3 dispersion correction is called inside the ev2gm2 !!
     ! Add D3 dispersion correction
-    !       call d3disp(r,disp,dispdr,0)
-    !       v=v+disp
     ! Evaluate V by taken the product of C and Basis function array
     do i=1, 430
         v = v + c(i)*b(i)
     enddo
-    !      Write(*,9999) V
-    ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
 end subroutine evv
 
 !> @brief Evaluate EvdVdX.
@@ -1114,7 +1110,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     integer  :: k
     ! Dispersion variables
     real(wp) :: dist(1), disp, dispdr(1)
-    ! Original parameters
     !      alpha = 0.785d0
     !      beta = 1.307d0
     !      as(0) = -2388.5641690d0
@@ -1194,10 +1189,6 @@ subroutine evdvdr
     enddo
     !! D3 dispersion correction is called inside the ev2gm2 !!
     ! Add numerical gradient of D3 dispersion correction
-    !     call d3disp(R,disp,dispdr,1)
-    !     do i=1,6
-    !       dVdR(i)= dVdR(i) + dispdr(i)
-    !     enddo
     ! Calculate dMEG/dr(6,6) for given R(6)
     call evdmsdr
     ! Calculate the monomials for each point by using six MEG terms

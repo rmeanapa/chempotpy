@@ -7,7 +7,6 @@
 !   The cartesian coordinates, potential energy, and derivatives of the
 !   with respect to the cartesian coordinates are passed by the calling
 !   via COMMON BlOCKS
-!        CALL POT
 !   where X and DX are arrays dimensioned N3TM, and N3TM must be greater
 !   than or equal to 18 (3*number of atoms).
 !   All the information passed to and from the potential energy surface
@@ -273,8 +272,7 @@ module chempotpy_ch4o_lep_1998_pes
             call carttor
             ! Changing to angstroms and initialize
             do i = 1, 18
-                q(i) = r(i)
-                !         q(I) = R(I)*0.52918d0
+                q(i)    = r(i)
                 pdot(i) = 0.e0_wp
             enddo
             !  calculate relative coordinates and bond lengths
@@ -318,14 +316,6 @@ module chempotpy_ch4o_lep_1998_pes
                 do ind=1, 3
                     degsdr(ind+15) = pdot(nhb(ind))*0.0201723e0_wp
                 enddo
-                !         do ind=1,3
-                !            DGSCART(1,ind)=pdot(nh(4,ind))*0.0201723d0
-                !            DGSCART(2,ind)=pdot(nc(ind))*0.0201723d0
-                !            DGSCART(3,ind)=pdot(nh(1,ind))*0.0201723d0
-                !            DGSCART(4,ind)=pdot(nh(2,ind))*0.0201723d0
-                !            DGSCART(5,ind)=pdot(nh(3,ind))*0.0201723d0
-                !            DGSCART(6,ind)=pdot(nhb(ind))*0.0201723d0
-                !         enddo
                 call rtocart
                 call dedcou
             endif
@@ -368,8 +358,7 @@ module chempotpy_ch4o_lep_1998_pes
             integer, parameter :: n3atom = 75
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            !      PARAMETER (PI = 3.141592653589793D0)
-            integer, parameter :: natom = 25
+            integer, parameter :: natom  = 25
             tau    = acos(-1.0e0_wp/3.0e0_wp)
             pi     = 4.0e0_wp*atan(1.0e0_wp)
             halfpi = 0.5e0_wp*pi
@@ -471,31 +460,20 @@ module chempotpy_ch4o_lep_1998_pes
             e3   = d3cb*(exp(-2.0e0_wp*acb*(rcb-r0cb))+2.0e0_wp*exp(-acb*(rcb-r0cb)))
             vqcb = (e1+e3)*0.5e0_wp
             vjcb = (e1-e3)*0.5e0_wp
-            !      write (23,*) "stretch C-Cl"
-            !      write (23,*) rcb
-            !      write (23,*) e1,e3
             do i=1, 4
                 e1      = d1ch*(exp(-2.0e0_wp*ach*(rch(i)-r0ch)) -2.0e0_wp*exp(-ach*(rch(i)-r0ch)))
                 e3      = d3ch*(exp(-2.0e0_wp*ach*(rch(i)-r0ch)) +2.0e0_wp*exp(-ach*(rch(i)-r0ch)))
                 vqch(i) = (e1+e3)*0.5e0_wp
                 vjch(i) = (e1-e3)*0.5e0_wp
-                !        espi1 =e1
-                !        espi3=e3
                 e1      = d1hh*(exp(-2.0e0_wp*ahh*(rbh(i)-r0hh)) -2.0e0_wp*exp(-ahh*(rbh(i)-r0hh)))
                 e3      = d3hh*(exp(-2.0e0_wp*ahh*(rbh(i)-r0hh)) +2.0e0_wp*exp(-ahh*(rbh(i)-r0hh)))
                 vqbh(i) = (e1+e3)*0.5e0_wp
                 vjbh(i) = (e1-e3)*0.5e0_wp
-                !        espa1=e1
-                !        espa3=e3
                 !  calculate 3 body potential
                 vq(i) = vqch(i)+vqcb+vqbh(i)
                 vj(i) = -sqrt(((vjch(i)-vjcb)**2+(vjcb-vjbh(i))**2 +(vjbh(i)-vjch(i))**2)*0.5e0_wp)
                 vstr  = vstr+vq(i)+vj(i)
             enddo
-            !      write (23,*) "stretch C-H"
-            !      write (23,*) espi1,espi3
-            !      write (23,*) "stretch Cl-H"
-            !      write (23,*) espa1,espa3
             !  partial derivatives
             !  first we need the derivative of ach:
             do ind=1, 3
@@ -614,11 +592,6 @@ module chempotpy_ch4o_lep_1998_pes
                 !  if i is an even number then we have switched the vectors
                 !  from a right handed set to a left handed set
                 !  in this case we need to switch vectors k and l around
-                !        if((i.eq.2).or.(i.eq.4))then
-                !          itemp=k
-                !          k=l
-                !          l=itemp
-                !        endif
                 !  subroutine performs sum over j, k, l
                 !  sum2 = sum delta**2
                 !  sum4 = sum delta**4
@@ -738,9 +711,8 @@ module chempotpy_ch4o_lep_1998_pes
                 argd(in(ii))  = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
                 argd(in(ii))  = argd(in(ii))/norma
                 delta(in(ii)) = acos(argd(in(ii)))-theta0(i,in(ii))
-                !        write(*,*) 'theta,delta',theta0(i,in(ii)),delta(in(ii))
-                sum2 = sum2+delta(in(ii))**2
-                sum4 = sum4+delta(in(ii))**4
+                sum2          = sum2+delta(in(ii))**2
+                sum4          = sum4+delta(in(ii))**4
             enddo
             !  derivatives of axb wrt hj:
             daxb(j, 1, 1) = 0.0e0_wp
@@ -936,12 +908,9 @@ module chempotpy_ch4o_lep_1998_pes
             dfk0(3,4,2) = (f0-f2)*s2(1)*ds2(2)
             dfk0(3,4,3) = f0*ds1(3)*s1(4)
             dfk0(3,4,4) = f0*s1(3)*ds1(4)
-            !       argfk0=bk*((rch(1)-r0ch)**2+(rch(2)-r0ch)**2
             !     *              +(rch(3)-r0ch)**2+(rch(4)-r0ch)**2)
-            !       fk0=fkinf+ak*exp(-argfk0)
             do i=1, 4
                 !  calc derivatives of fk0 wrt each of the rch(i) bonds
-                !         dfk0(i)=-2.0d0*ak*bk*(rch(i)-r0ch)*exp(-argfk0)
                 !  calculate the terms f1(i)
                 arga1 = aa1*rbh(i)*rbh(i)
                 arga2 = aa4*(rbh(i)-r0hh)*(rbh(i)-r0hh)
@@ -1123,7 +1092,6 @@ module chempotpy_ch4o_lep_1998_pes
             indexes(5) = 1
             indexes(6) = 8
             irctnt     = 6
-            !CALL POTINFO
             call ancvrt
             !  calculate indexes for coordinates
             do ind=1, 3

@@ -147,61 +147,31 @@ module chempotpy_phoh_aprp_pes
     subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         use chempotpy_kinds, only: wp
         implicit none
-        integer            :: i, j, k, l, m
-        integer            :: igrad, repflag
-        integer, parameter :: natm   = 13
-        integer, parameter :: nsurft = 3
-        real(wp)           :: uu(3,3), vv(3)
-        real(wp)           :: guu(3,natm,3,3), uup(3,3), vvp(3), vvm(3)
-        real(wp)           :: guup(3,natm,3,3), gvv(3,natm,nsurft)
-        real(wp)           :: guum(3,natm,3,3)
-        real(wp)           :: xx(3,natm), x(natm), y(natm), z(natm)
-        real(wp)           :: dvec(3,natm,nsurft,nsurft)
-        !     double precision cc(nsurft,nsurft),ccp(nsurft,nsurft)
+        integer             :: i, j, k, l, m
+        integer             :: igrad, repflag
+        integer, parameter  :: natm   = 13
+        integer, parameter  :: nsurft = 3
+        real(wp)            :: uu(3,3), vv(3)
+        real(wp)            :: guu(3,natm,3,3), uup(3,3), vvp(3), vvm(3)
+        real(wp)            :: guup(3,natm,3,3), gvv(3,natm,nsurft)
+        real(wp)            :: guum(3,natm,3,3)
+        real(wp)            :: xx(3,natm), x(natm), y(natm), z(natm)
+        real(wp)            :: dvec(3,natm,nsurft,nsurft)
         real(wp)            :: cc(3,3), ccp(3,3)
         real(wp)            :: tmp
         real(wp), parameter :: stp = 1.e-4_wp
         ! calculate adiabatic and diabatic energies in hartree
-        !     write(6,*) 'input geometry'
         do i = 1, natm
             x(i) = xx(1,i)
             y(i) = xx(2,i)
             z(i) = xx(3,i)
-            !        write(6,'(3F10.6)') xx(:,i)*0.5291772192d0
         enddo
-        !     vv(:) = 0d0
-        !     uu(:,:) = 0d0
-        !     guu(:,:,:,:) = 0d0
-        !     cc(:,:) = 0d0
         call poten(1, x, y, z, uu, guu, vv, gvv, cc)
         ! Compute the nonadiabatic coupling vectors DVEC.
         call getdvec3(natm, uu, guu, vv, dvec, cc)
-        !     write(6,*) 'diabatic energy '
-        !     write(6,'(5F10.6,a)') uu(1,1),uu(2,2),uu(3,3),uu(1,3),uu(2,3)
-        !     write(6,'(a,5F10.6,a)') 'adiabatic energy ', vv(:)
-        !     write(6,'(5F10.6,a)') vv(:)
-        !     write(6,*) 'diabatic gradients'
-        !     do i = 1,natm
-        !        write(6,'(5F12.8)') guu(1,i,1,1),guu(1,i,2,2),guu(1,i,3,3),
         !    $                       guu(1,i,1,3),guu(1,i,2,3)
-        !        write(6,'(5F12.8)') guu(2,i,1,1),guu(2,i,2,2),guu(2,i,3,3),
         !    $                       guu(2,i,1,3),guu(2,i,2,3)
-        !        write(6,'(5F12.8)') guu(3,i,1,1),guu(3,i,2,2),guu(3,i,3,3),
         !    $                       guu(3,i,1,3),guu(3,i,2,3)
-        !     enddo
-        !     write(6,*) 'adiabatic gradients'
-        !     do i = 1,natm
-        !       write(6,'(5F10.6,a)') gvv(1,i,1),gvv(1,i,2),gvv(1,i,3)
-        !       write(6,'(5F10.6,a)') gvv(2,i,1),gvv(2,i,2),gvv(2,i,3)
-        !       write(6,'(5F10.6,a)') gvv(3,i,1),gvv(3,i,2),gvv(3,i,3)
-        !     enddo
-        !     write(6,*) 'adiabatic coupling dvec'
-        !     do i = 1, natm
-        !       write(6,'(5F10.6,a)') dvec(1,i,1,3),dvec(1,i,2,3)
-        !       write(6,'(5F10.6,a)') dvec(2,i,1,3),dvec(2,i,2,3)
-        !       write(6,'(5F10.6,a)') dvec(3,i,1,3),dvec(3,i,2,3)
-        !     enddo
-        !     stop
     end subroutine pot
 
     !> @brief Evaluate getdvec3 for the PHOH_APRP potential.
@@ -222,7 +192,6 @@ module chempotpy_phoh_aprp_pes
             do i2 = 1, nclu
                 do i = 2, nsurft
                     do j = 1, i-1
-                        !            dvec(i1,i2,i,j) = 0.d0
                         do k = 1, nsurft
                             do l = 1, nsurft
                                 dvec(i1,i2,i,j) = dvec(i1,i2,i,j) + cc(k,i)*cc(l,j)*gpemd(i1,i2,k,l)
@@ -233,13 +202,11 @@ module chempotpy_phoh_aprp_pes
                         else
                             dvec(i1,i2,i,j) = 0.0e0_wp
                         endif
-                        !              write(6,*) "dvec ",i1,i2,i,j,dvec(i1,i1,i,j)
                         dvec(i1,i2,j,i) = -dvec(i1,i2,i,j)
                     enddo
                 enddo
             enddo
         enddo
-        !       stop
     end subroutine getdvec3
 
     !> @brief Evaluate poten for the PHOH_APRP potential.
@@ -264,7 +231,6 @@ module chempotpy_phoh_aprp_pes
         real(wp) :: dubmdx(3*natm)
         real(wp) :: du1dx(3*natm), du2dx(3*natm), du3dx(3*natm)
         real(wp) :: u13, u23
-        !      double precision du13dX(3*natm),du23dX(3*natm)
         real(wp) :: du12dx(3*natm), du13dx(3*natm), du23dx(3*natm)
         ! add by J. Zheng
         integer               :: lwork, info
@@ -284,7 +250,6 @@ module chempotpy_phoh_aprp_pes
             du3dx(i) = 0.0e0_wp
         enddo
         ! Determine u13 and u13 and their Cartesian gradients
-        !      call evuij(nap,natm,igrad,ir,t,dtdr,X,Y,Z,u13,u23,
         !     $           du13dX,du23dX)
         ! Determin u12, u13, and u23 and their Cartesian gradients  !KRY 2014071
         call evuij(nap, natm, igrad, ir, t, dtdr, x, y, z, u12, u13, u23, &
@@ -299,9 +264,6 @@ module chempotpy_phoh_aprp_pes
         guu(:,:,:,:) = 0e0_wp
         do i = 1, natm
             do j = 1, 3
-                !        guu(j,i,1,1) = du1dx(3*i-3+j)
-                !        guu(j,i,2,2) = du2dx(3*i-3+j)
-                !        guu(j,i,3,3) = du3dx(3*i-3+j)
                 guu(j,i,1,1) = du1dx(3*i-3+j)+dubmdx(3*i-3+j)
                 guu(j,i,2,2) = du2dx(3*i-3+j)+dubmdx(3*i-3+j)
                 guu(j,i,3,3) = du3dx(3*i-3+j)+dubmdx(3*i-3+j)
@@ -315,9 +277,6 @@ module chempotpy_phoh_aprp_pes
             enddo
         enddo
         uu(:,:) = 0e0_wp
-        !      uu(1,1) = u1
-        !      uu(2,2) = u2
-        !      uu(3,3) = u3
         uu(1,1) = u1+ubm
         uu(2,2) = u2+ubm
         uu(3,3) = u3+ubm
@@ -350,13 +309,7 @@ module chempotpy_phoh_aprp_pes
         endif
         ! Test
         if( igrad .eq. 1 )then
-            !     write(*,*) "C matrix:"
-            !     do i=1,3
-            !       write(*,'(3F12.8)') (cc(i,j),j=1,3)
-            !     enddo
             gvv(:,:,:) = 0e0_wp
-            !      do i1=1,natm
-            !      do i2=1,3
             do i1=1, 3
                 do i2=1, natm
                     do j=1, 3
@@ -437,11 +390,9 @@ module chempotpy_phoh_aprp_pes
         ! Evaluate Wilson's B-matrix if igrad = 1
         if( igrad .eq. 1 )then
             ! Added by J. Zheng
-            !        bmt(:,:) = 0d0
             call bmat3(nblt, iblt, nbat, ibat, ntot, itot, noopt, ioopt, natm, &
                 & x, y, z, bmt, ldbmt)
             ! Added by J. Zheng
-            !        bms(:,:) = 0d0
             call bmat3(nbls, ibls, nbas, ibas, ntos, itos, noops, ioops, natm, &
                 & x, y, z, bms, ldbms)
         endif
@@ -493,7 +444,6 @@ module chempotpy_phoh_aprp_pes
         endif
     end subroutine evuii
 
-    !      subroutine evuiit(igrad,r,ntot,nqtc,qtc,ut,dut,dutdr,ii)
     !> @brief Evaluate evuiit for the PHOH_APRP potential.
     subroutine evuiit( igrad, r, nqtc, qtc, ut, dut, dutdr, ii )
         ! Subroutine to evaluate the diabatic potentials and gradients
@@ -506,9 +456,6 @@ module chempotpy_phoh_aprp_pes
         use chempotpy_kinds, only: wp
         implicit none
         integer, parameter :: nap = 4
-        !      integer nqa,nqb
-        !      parameter (nqa=30,nqb=24)
-        !      parameter (nqs=12,nqb=18,nqt=24)
         integer, parameter :: nqs = 12
         integer, parameter :: nqb = 18
         integer, parameter :: nqt = 24
@@ -633,14 +580,12 @@ module chempotpy_phoh_aprp_pes
         if( ir .eq. 1 )then
             u0 = v0(1)
             do i=1, nqs
-                !          qs1(i)=qs(i)-qse(i,1)
                 qse1(i) = qse(i,1)
                 do j=1, i
                     fs1(i,j) = hs(i,j,1)*qse1(i)*qse1(j)
                 enddo
             enddo
             do i=1, nqb
-                !          qb1(i)=qb(i)-qbe(i,1)
                 ! cos(theta0)-cos(theta) as variables
                 qbe1(i) = qbe(i,1)
                 qb1(i)  = cos(qbe1(i))-cos(qb(i))
@@ -752,7 +697,6 @@ module chempotpy_phoh_aprp_pes
                 ft2(i,j) = ft2(j,i)
             enddo
         enddo
-        !      write(*,'(A,I2)') "ir = ",ir
         ! Calculate potential energy
         if( (ir .eq. 1) .or. (ir .eq. nap+1) )then
             vs  = 0.0e0_wp
@@ -761,7 +705,6 @@ module chempotpy_phoh_aprp_pes
             vbs = 0.0e0_wp
             do i=1, nqs
                 do j=1, nqs
-                    !            vs=vs+0.5d0*FS1(i,j)*(qs(i)-qse1(i))*(qs(j)-qse1(j))
                     vs = vs+0.5e0_wp*fs1(i,j) *(qs(i)-qse1(i))*(qs(j)-qse1(j))/(qs(i)*qs(j))
                 enddo
             enddo
@@ -779,20 +722,14 @@ module chempotpy_phoh_aprp_pes
             ! bend-stretch couplings
             do i=1, nqb
                 do j=1, nqs
-                    !            vbs=vbs+FBS1(i,j)*qb1(i)*(qs(j)-qse1(j))
                     vbs = vbs+fbs1(i,j)*qb1(i)*(qs(j)-qse1(j))/qs(j)
                 enddo
             enddo
             ut = u0+vs+vb+vt+vbs
             if( igrad .eq. 1 )then
-                !          dvsdr=0.0d0
-                !          dvbdr=0.0d0
-                !          dvtdr=0.0d0
-                !          dvbsdr=0.0d0
                 do i=1, nqs
                     dvs(i) = 0.0e0_wp
                     do j=1, nqs
-                        !              dvs(i)=dvs(i)+FS1(i,j)*(qs(j)-qse1(j))
                         dvs(i) = dvs(i)+fs1(i,j)*qse1(i) *(qs(j)-qse1(j))/(qs(i)*qs(i)*qs(j))
                     enddo
                 enddo
@@ -814,18 +751,15 @@ module chempotpy_phoh_aprp_pes
                 do i=1, nqb
                     dvbsdb(i) = 0.0e0_wp
                     do j=1, nqs
-                        !              dvbsdb(i)=dvbsdb(i)+FBS1(i,j)*sqb(i)*(qs(j)-qse1(j))
                         dvbsdb(i) = dvbsdb(i)+fbs1(i,j)*sqb(i) *(qs(j)-qse1(j))/qs(j)
                     enddo
                 enddo
                 do i=1, nqs
                     dvbsds(i) = 0.0e0_wp
                     do j=1, nqb
-                        !              dvbsds(i)=dvbsds(i)+FBS1(j,i)*qb1(j)
                         dvbsds(i) = dvbsds(i)+fbs1(j,i)*qse1(i) *qb1(j)/(qs(i)*qs(i))
                     enddo
                 enddo
-                !          dutdr=dvsdr+dvbdr+dvtdr+dvbsdr
                 dutdr = 0.0e0_wp
                 do i=1, nqs
                     dut(i) = dvs(i)+dvbsds(i)
@@ -848,9 +782,7 @@ module chempotpy_phoh_aprp_pes
             vbs2 = 0.0e0_wp
             do i=1, nqs
                 do j=1, nqs
-                    !            vs1=vs1+0.5d0*FS1(i,j)*(qs(i)-qse1(i))*(qs(j)-qse1(j))
                     vs1 = vs1+0.5e0_wp*fs1(i,j) *(qs(i)-qse1(i))*(qs(j)-qse1(j))/(qs(i)*qs(j))
-                    !            vs2=vs2+0.5d0*FS2(i,j)*(qs(i)-qse2(i))*(qs(j)-qse2(j))
                     vs2 = vs2+0.5e0_wp*fs2(i,j) *(qs(i)-qse2(i))*(qs(j)-qse2(j))/(qs(i)*qs(j))
                 enddo
             enddo
@@ -871,8 +803,6 @@ module chempotpy_phoh_aprp_pes
             ! bend-stretch couplings
             do i=1, nqb
                 do j=1, nqs
-                    !            vbs1=vbs1+qb1(i)*FBS1(i,j)*(qs(j)-qse1(j))
-                    !            vbs2=vbs2+qb2(i)*FBS2(i,j)*(qs(j)-qse2(j))
                     vbs1 = vbs1+fbs1(i,j)*qb1(i)*(qs(j)-qse1(j))/qs(j)
                     vbs2 = vbs2+fbs2(i,j)*qb2(i)*(qs(j)-qse2(j))/qs(j)
                 enddo
@@ -886,8 +816,6 @@ module chempotpy_phoh_aprp_pes
                     dvs1(i) = 0.0e0_wp
                     dvs2(i) = 0.0e0_wp
                     do j=1, nqs
-                        !              dvs1(i)=dvs1(i)+FS1(i,j)*(qs(j)-qse1(j))
-                        !              dvs2(i)=dvs2(i)+FS2(i,j)*(qs(j)-qse2(j))
                         dvs1(i) = dvs1(i)+fs1(i,j)*qse1(i) *(qs(j)-qse1(j))/(qs(i)*qs(i)*qs(j))
                         dvs2(i) = dvs2(i)+fs2(i,j)*qse2(i) *(qs(j)-qse2(j))/(qs(i)*qs(i)*qs(j))
                     enddo
@@ -920,8 +848,6 @@ module chempotpy_phoh_aprp_pes
                     dvbsdb1(i) = 0.0e0_wp
                     dvbsdb2(i) = 0.0e0_wp
                     do j=1, nqs
-                        !              dvbsdb1(i)=dvbsdb1(i)+FBS1(i,j)*sqb(i)*(qs(j)-qse1(j))
-                        !              dvbsdb2(i)=dvbsdb2(i)+FBS2(i,j)*sqb(i)*(qs(j)-qse2(j))
                         dvbsdb1(i) = dvbsdb1(i)+fbs1(i,j)*sqb(i) *(qs(j)-qse1(j))/qs(j)
                         dvbsdb2(i) = dvbsdb2(i)+fbs2(i,j)*sqb(i) *(qs(j)-qse2(j))/qs(j)
                     enddo
@@ -931,8 +857,6 @@ module chempotpy_phoh_aprp_pes
                     dvbsds1(i) = 0.0e0_wp
                     dvbsds2(i) = 0.0e0_wp
                     do j=1, nqb
-                        !              dvbsds1(i)=dvbsds1(i)+FBS1(j,i)*qb1(j)
-                        !              dvbsds2(i)=dvbsds2(i)+FBS2(j,i)*qb2(j)
                         dvbsds1(i) = dvbsds1(i)+fbs1(j,i)*qse1(i) *qb1(j)/(qs(i)*qs(i))
                         dvbsds2(i) = dvbsds2(i)+fbs2(j,i)*qse2(i) *qb2(j)/(qs(i)*qs(i))
                     enddo
@@ -10722,7 +10646,6 @@ module chempotpy_phoh_aprp_pes
         cthta  = cos(theta)
         sthta  = sin(theta)
         x      = a*(r-r0)
-        !      tx=(exp(x)-exp(-x))/(exp(x)+exp(-x))
         tx     = (1.0e0_wp-exp(-2.0e0_wp*x))/(1.0e0_wp+exp(-2.0e0_wp*x))
         cthta0 = cthta1+0.5e0_wp*(1+tx)*(cthta2-cthta1)
         dxdr   = a
@@ -10824,7 +10747,6 @@ module chempotpy_phoh_aprp_pes
         cthta  = cos(theta)
         sthta  = sin(theta)
         x      = a*(r-r0)
-        !      tx=(exp(x)-exp(-x))/(exp(x)+exp(-x))
         tx     = (1.0e0_wp-exp(-2.0e0_wp*x))/(1.0e0_wp+exp(-2.0e0_wp*x))
         cthta0 = cthta1+0.5e0_wp*(1+tx)*(cthta2-cthta1)
         dxdr   = a
@@ -10939,7 +10861,6 @@ module chempotpy_phoh_aprp_pes
         cthta  = cos(theta)
         sthta  = sin(theta)
         x      = a*(r-r0)
-        !      tx=(exp(x)-exp(-x))/(exp(x)+exp(-x))
         tx     = (1.0e0_wp-exp(-2.0e0_wp*x))/(1.0e0_wp+exp(-2.0e0_wp*x))
         cthta0 = cthta1+0.5e0_wp*(1+tx)*(cthta2-cthta1)
         dxdr   = a
@@ -11030,7 +10951,6 @@ module chempotpy_phoh_aprp_pes
         r25  = bndlen(2, 5, x, y, z)
         r36  = bndlen(3, 6, x, y, z)
         ubm  = b*(exp(-alpha*r14)+exp(-alpha*r25)+exp(-alpha*r36))
-        !      write(*,*) "ubm =",ubm
         if( igrad .eq. 1 )then
             dudr14 = -alpha*b*exp(-alpha*r14)
             dudr25 = -alpha*b*exp(-alpha*r25)
@@ -11042,13 +10962,9 @@ module chempotpy_phoh_aprp_pes
             do i=1, 3*natm
                 dubmdx(i) = dubmdx(i)+dudr14*bm(1,i)+dudr25*bm(2,i) +dudr36*bm(3,i)
             enddo
-            !        do i=1,3*natm
-            !          write(*,*) dubmdX(i)
-            !        enddo
         endif
     end subroutine evubm
 
-    !      subroutine evuij(nap,natm,igrad,ir,t,dtdr,X,Y,Z,u13,u23,
     !     $                 du13dX,du23dX)
     ! Add u12
     !> @brief Evaluate evuij for the PHOH_APRP potential.
@@ -11074,13 +10990,11 @@ module chempotpy_phoh_aprp_pes
         integer, parameter  :: nstc   = 9
         real(wp), parameter :: pi     = 3.1415926535898e0_wp
         ! Global variables
-        integer :: igrad, ir
-        integer :: natm
-        !      double precision u13,u23
+        integer  :: igrad, ir
+        integer  :: natm
         real(wp) :: u12, u13, u23
         real(wp) :: t(*), dtdr(*)
         real(wp) :: x(*), y(*), z(*)
-        !      double precision du13dX(3*natm),du23dX(3*natm)
         real(wp) :: du12dx(3*natm), du13dx(3*natm), du23dx(3*natm)
         ! Local variables
         integer :: nqtc
@@ -11099,7 +11013,6 @@ module chempotpy_phoh_aprp_pes
         real(wp) :: d12tdr, d12sdr
         real(wp) :: d13tdr, d13sdr, du13dr, du13dph
         real(wp) :: d23tdr, d23sdr, du23dr, du23dph
-        !      double precision du13t(maxdim),du23t(maxdim)
         real(wp) :: du12t(maxdim), du13t(maxdim), du23t(maxdim)
         real(wp) :: bmt(ldbmt,3*natm), bms(ldbms,3*natm)
         real(wp) :: bnrt(ldbnrt,3*natm)
@@ -11151,29 +11064,22 @@ module chempotpy_phoh_aprp_pes
         ct(9,12) = 1.0e0_wp
         ! Evaluate internal coordinates
         !Add by J. Zheng
-        !      qtc(:) = 0d0
         call evintcoord(nblt, iblt, nbat, ibat, ntot, itot, noopt, ioopt, &
             & nqtc, qtc, x, y, z)
         ! Test
-        !      do i=1,nqtc
-        !        write(*,'(A,I2,A,F8.4)') 'qtc(',i,') = ',qtc(i)*180.d0/pi
-        !      enddo
         ! End
         !Add by J. Zheng
-        !      stc(:) = 0d0
         call matvect(stc, nstc, ct, ldct, qtc, nqtc)
         r   = bndlen(7, 13, x, y, z)
         phi = dihedr(2, 1, 7, 13, x, y, z)
         ! Evaluate Wilson's B-matrix if igrad = 1
         if( igrad .eq. 1 )then
             !Added by J. Zheng
-            !        bmt(:,:) = 0d0
             call bmat3(nblt, iblt, nbat, ibat, ntot, itot, noopt, ioopt, natm, &
                 & x, y, z, bmt, ldbmt)
             ! Evalate the Wilson's B-matrix in nonredundant internal coordinates
             call matmult(bnrt, ldbnrt, ct, ldct, nstc, bmt, ldbmt, nqtc, 3*natm)
             !Added by J. Zheng
-            !        bms(:,:) = 0d0
             call bmat3(nbls, ibls, nbas, ibas, ntos, itos, noops, ioops, natm, &
                 & x, y, z, bms, ldbms)
         endif
@@ -11462,15 +11368,12 @@ module chempotpy_phoh_aprp_pes
             f6r    = f6r+g6r
             df6rdr = df6rdr-2.0e0_wp*alpha6(i)*(r-r6(i))*g6r
         enddo
-        s2phi = sin(2.0e0_wp*phi)
-        c2phi = cos(2.0e0_wp*phi)
-        s4phi = sin(4.0e0_wp*phi)
-        c4phi = cos(4.0e0_wp*phi)
-        s6phi = sin(6.0e0_wp*phi)
-        c6phi = cos(6.0e0_wp*phi)
-        !      u23to=f2r*s2phi+f4r*s4phi+f6r*s6phi
-        !      d23dph=2.0d0*f2r*c2phi+4.0d0*f4r*c4phi+6.0d0*f6r*c6phi
-        !      d23dr=df2rdr*s2phi+df4rdr*s4phi+df6rdr*s6phi
+        s2phi  = sin(2.0e0_wp*phi)
+        c2phi  = cos(2.0e0_wp*phi)
+        s4phi  = sin(4.0e0_wp*phi)
+        c4phi  = cos(4.0e0_wp*phi)
+        s6phi  = sin(6.0e0_wp*phi)
+        c6phi  = cos(6.0e0_wp*phi)
         u23to  = scale*(f2r*s2phi+f4r*s4phi+f6r*s6phi)
         d23dph = scale*(2.0e0_wp*f2r*c2phi+4.0e0_wp*f4r*c4phi+6.0e0_wp*f6r*c6phi)
         d23dr  = scale*(df2rdr*s2phi+df4rdr*s4phi+df6rdr*s6phi)
@@ -11858,9 +11761,6 @@ module chempotpy_phoh_aprp_pes
         endif
         ! Setting the range of dihedral angle between -90.0 degree to 270 degree
         ! to avoid discontinuity around 180 degrees
-        !      if (dihedr .lt. -0.5d0*pi) then
-        !        dihedr=2.0d0*pi+dihedr
-        !      endif
     end function dihedr
 
     !> @brief Evaluate oopba1 for the PHOH_APRP potential.
@@ -11916,17 +11816,6 @@ module chempotpy_phoh_aprp_pes
         a      = min(a, 1.0e0_wp)
         oopba1 = asin(a)
         ! Check whether needs to go beyond -pi/2 to pi/2
-        !      write(*,*) "before correction, oopba1 = ",oopba1
-        !      do n=1,3
-        !        v(n)=ejk(n)+ejl(n)
-        !      enddo
-        !      call sprod(3,eji,v,b)
-        !      if ((oopba1 .lt. 0.0d0) .and. (b .gt. 0.0d0)) then
-        !        oopba1=2.0d0*asin(-1.0d0)-oopba1
-        !      endif
-        !      if ((oopba1 .ge. 0.0d0) .and. (b .gt. 0.0d0)) then
-        !        oopba1=2.0d0*asin(1.0d0)-oopba1
-        !      endif
     end function oopba1
 
     !> @brief Evaluate xprod1 for the PHOH_APRP potential.

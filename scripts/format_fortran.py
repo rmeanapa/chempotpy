@@ -1846,6 +1846,225 @@ def remove_uninformative_comment_lines(source_text: str) -> str:
     return "\n".join(output) + "\n"
 
 
+COMMENTED_FORTRAN_STATEMENT = re.compile(
+    r"^(?:"
+    r"call\s+[a-z][a-z0-9_]*(?:\s*\(|\s*$)|"
+    r"(?:write|read|open|close|inquire|rewind|backspace|endfile)\s*\(|"
+    r"print\s*(?:\*|\(|['\"])|"
+    r"(?:allocate|deallocate)\s*\(|"
+    r"(?:go\s*to|goto)\s+\d+\b|"
+    r"(?:stop|error\s+stop|return|continue|cycle|exit)"
+    r"(?:\s+\d+|\s+['\"][^'\"]*['\"])?\s*$|"
+    r"(?:else\s*if|elseif)\s*\(|"
+    r"if\s*\(|"
+    r"if\s*\(.*\)\s*(?:call\b|write\s*\(|read\s*\(|return\b|"
+    r"(?:go\s*to|goto)\b|stop\b|[a-z][a-z0-9_]*(?:\([^)]*\))?\s*=)|"
+    r"(?:else|endif|end\s*if|enddo|end\s*do|endselect|end\s*select|"
+    r"endwhere|end\s*where)\s*$|"
+    r"do\s+(?:\d+\s+)?[a-z][a-z0-9_]*\s*=|"
+    r"(?:select\s+case|case)\s*\(|"
+    r"(?:common\s*/|data\s+[a-z][a-z0-9_]*\s*/|"
+    r"dimension\s+[a-z][a-z0-9_]*\s*\(|save\s+[a-z][a-z0-9_]*|"
+    r"implicit\s+(?:none|real|integer|double|complex|logical|character)\b)|"
+    r"use\s+[a-z][a-z0-9_]*(?:\s*,\s*only\s*:|\s*$)|"
+    r"(?:integer|real(?:\s*\([^)]*\))?|double\s+precision|"
+    r"double\s+complex|logical|complex|character(?:\s*\([^)]*\))?|"
+    r"type\s*\([^)]*\))\b[^!]*::|"
+    r"(?:integer|real|double\s+precision|double\s+complex|logical|complex|"
+    r"character(?:\s*\*\s*\d+)?)\s+[a-z][a-z0-9_]*"
+    r"(?:\s*\([^)]*\))?(?:\s*,\s*[a-z][a-z0-9_]*"
+    r"(?:\s*\([^)]*\))?)*\s*$|"
+    r"(?:subroutine|function)\s+[a-z][a-z0-9_]*\s*\(|"
+    r"end\s+(?:subroutine|function|module|program)\b|"
+    r"entry\s+[a-z][a-z0-9_]*\s*\(|"
+    r"include\s*['\"]|"
+    r"\d+\s+format\s*\()",
+    flags=re.IGNORECASE,
+)
+COMMENTED_ASSIGNMENT = re.compile(
+    r"^[a-z][a-z0-9_]*(?:\s*\([^!]*\))?\s*=",
+    flags=re.IGNORECASE,
+)
+COMMENTED_ARCHITECTURE = re.compile(
+    r"^(?:common\s*/|data\s+[a-z][a-z0-9_]*\s*/|"
+    r"dimension\s+[a-z][a-z0-9_]*\s*\(|save\s+[a-z][a-z0-9_]*|"
+    r"parameter\s*\()",
+    flags=re.IGNORECASE,
+)
+GLOBAL_COMMENTED_CALL = re.compile(
+    r"^call\s+[a-z][a-z0-9_]*(?:\s*\([^)]*\))?\s*$",
+    flags=re.IGNORECASE,
+)
+LEGACY_DEBUG_COMMENT = re.compile(r"^\s*![dD]\s{2,}\S")
+LEGACY_FIXED_COMMENT = re.compile(r"^\s*![cC](?:\s+|\s*$)(?P<body>.*)")
+OBSOLETE_COMMENT_PROSE = re.compile(
+    r"^(?:original parameters|some debugging print statements:?|"
+    r"the lines below are not needed because the derivatives are calculated|"
+    r"in venuspotlib_3\.f\. anyway nder=1|"
+    r"call to .* must be made:?|"
+    r"qm commented line\b.*)$",
+    flags=re.IGNORECASE,
+)
+PROCEDURE_END = re.compile(
+    r"^end\s*(?:subroutine|function)\b",
+    flags=re.IGNORECASE,
+)
+SPECIFICATION_STATEMENT = re.compile(
+    r"^(?:use\b|implicit\b|import\b|intrinsic\b|external\b|"
+    r"parameter\s*\(|dimension\b|allocatable\b|save\b|common\b|data\b|"
+    r"equivalence\b|namelist\b|public\b|private\b|procedure\b|"
+    r"integer\b|real\b|double\s+precision\b|double\s+complex\b|"
+    r"logical\b|complex\b|character\b|type\s*\(|class\s*\(|"
+    r"interface\b|end\s*interface\b)",
+    flags=re.IGNORECASE,
+)
+
+
+def _comment_parts(line: str):
+    """Return indentation after ``!`` and body for an ordinary comment."""
+
+    stripped = line.lstrip()
+    if (
+        not stripped.startswith("!")
+        or stripped.startswith("!>")
+        or stripped.startswith("!$")
+    ):
+        return None
+    remainder = stripped[1:]
+    padding = len(remainder)-len(remainder.lstrip())
+    return padding, remainder.strip()
+
+
+def _code_like_commented_assignment(padding: int, body: str) -> bool:
+    """Return whether a comment is an obsolete executable assignment."""
+
+    if padding < 5 or body.count("=") != 1 or "!" in body or "=>" in body:
+        return False
+    match = COMMENTED_ASSIGNMENT.match(body)
+    if match is None:
+        return False
+    right_hand_side = body[match.end():].strip()
+    if not right_hand_side:
+        return False
+    return re.search(
+        r"\b[a-z][a-z0-9_]*\s+[a-z][a-z0-9_]*\b",
+        right_hand_side,
+        flags=re.IGNORECASE,
+    ) is None
+
+
+def dead_commented_line_numbers(source_text: str) -> frozenset[int]:
+    """Return obsolete commented Fortran statements in a source file."""
+
+    lines = source_text.splitlines()
+    seen_source_unit = False
+    procedure_execution = []
+    specification_continuing = False
+    contexts = []
+    for line in lines:
+        parts = _comment_parts(line)
+        contexts.append((
+            seen_source_unit,
+            procedure_execution[-1] if procedure_execution else False,
+            parts,
+        ))
+        if parts is not None or not line.strip():
+            continue
+        code = code_without_comment(line).strip()
+        if not code:
+            continue
+        if UNIT_START.match(code):
+            seen_source_unit = True
+        if PROCEDURE_END.match(code):
+            if procedure_execution:
+                procedure_execution.pop()
+            specification_continuing = False
+            continue
+        if PROCEDURE_DECLARATION.match(code):
+            procedure_execution.append(False)
+            specification_continuing = code.endswith("&")
+            continue
+        if not procedure_execution:
+            continue
+        if specification_continuing:
+            specification_continuing = code.endswith("&")
+            continue
+        if code.lower() == "contains" or SPECIFICATION_STATEMENT.match(code):
+            specification_continuing = code.endswith("&")
+            continue
+        procedure_execution[-1] = True
+
+    dead = set()
+    index = 0
+    while index < len(lines):
+        if contexts[index][2] is None:
+            index += 1
+            continue
+        end = index
+        while end < len(lines) and contexts[end][2] is not None:
+            end += 1
+        direct = []
+        assignments = []
+        continuations = []
+        for line_index in range(index, end):
+            seen_unit, executing, parts = contexts[line_index]
+            padding, body = parts
+            fixed_comment = LEGACY_FIXED_COMMENT.match(lines[line_index])
+            fixed_body = (
+                fixed_comment.group("body").strip()
+                if fixed_comment is not None
+                else ""
+            )
+            if LEGACY_DEBUG_COMMENT.match(lines[line_index]):
+                direct.append(line_index)
+            elif body.lower() == "c":
+                direct.append(line_index)
+            elif COMMENTED_ARCHITECTURE.match(body):
+                direct.append(line_index)
+            elif GLOBAL_COMMENTED_CALL.match(body):
+                direct.append(line_index)
+            elif OBSOLETE_COMMENT_PROSE.match(body):
+                direct.append(line_index)
+            elif fixed_comment is not None and (
+                not fixed_body
+                or fixed_body.lower().startswith(("include ", "include file "))
+                or fixed_body.lower().startswith("call ")
+                or COMMENTED_FORTRAN_STATEMENT.match(fixed_body)
+                or _code_like_commented_assignment(5, fixed_body)
+            ):
+                direct.append(line_index)
+            elif seen_unit and COMMENTED_FORTRAN_STATEMENT.match(body):
+                direct.append(line_index)
+            elif executing and _code_like_commented_assignment(padding, body):
+                assignments.append(line_index)
+            elif body.startswith(("+", "&", "*")):
+                continuations.append(line_index)
+        dead.update(direct)
+        dead.update(assignments)
+        if direct or assignments:
+            dead.update(continuations)
+        index = end
+    return frozenset(line_number+1 for line_number in dead)
+
+
+def remove_dead_commented_code(source_text: str) -> str:
+    """Remove obsolete commented Fortran while retaining scientific notes."""
+
+    dead = dead_commented_line_numbers(source_text)
+    output = [
+        line
+        for line_number, line in enumerate(source_text.splitlines(), start=1)
+        if line_number not in dead
+    ]
+    output = collapse_blank_lines(output)
+    output = compact_unit_headers(output)
+    output = compact_specification_sections(output)
+    output = combine_initialization_assignments(output)
+    formatted = "\n".join(output) + "\n"
+    formatted = normalize_contains_blank_lines(formatted)
+    return normalize_procedure_separator_blank_lines(formatted)
+
+
 GENERIC_PES_BRIEFS = {
     "own the public evaluator for this potential energy surface.": "module",
     "own the complete implementation of this potential energy surface.": "module",
@@ -1911,6 +2130,7 @@ def format_source_text(source_text: str) -> str:
     source_text = fold_standalone_dimensions(source_text)
     source_text = align_pes_metadata(source_text)
     source_text = remove_uninformative_comment_lines(source_text)
+    source_text = remove_dead_commented_code(source_text)
     source_text = normalize_comma_spacing(source_text)
     source_text = compact_array_commas(source_text)
     source_text = convert_labeled_do_loops(source_text)
@@ -2003,6 +2223,7 @@ def format_source(
     contains_only: bool = False,
     procedure_separators_only: bool = False,
     metadata_only: bool = False,
+    dead_comments_only: bool = False,
 ) -> bool:
     """Format one source and optionally write it."""
 
@@ -2015,6 +2236,8 @@ def format_source(
         formatted = normalize_procedure_separator_blank_lines(original)
     elif metadata_only:
         formatted = hoist_pes_metadata(original)
+    elif dead_comments_only:
+        formatted = remove_dead_commented_code(original)
     else:
         formatted = specialize_pes_documentation(format_source_text(original), path)
     changed = formatted != original
@@ -2050,6 +2273,11 @@ def main() -> int:
         action="store_true",
         help="move the PES metadata block without other formatting",
     )
+    focused_mode.add_argument(
+        "--dead-comments-only",
+        action="store_true",
+        help="remove obsolete commented Fortran without other formatting",
+    )
     arguments = parser.parse_args()
     changed = sum(
         format_source(
@@ -2059,6 +2287,7 @@ def main() -> int:
             arguments.contains_only,
             arguments.procedure_separators_only,
             arguments.metadata_only,
+            arguments.dead_comments_only,
         )
         for path in arguments.sources
     )

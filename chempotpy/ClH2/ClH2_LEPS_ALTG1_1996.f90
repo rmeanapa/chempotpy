@@ -172,7 +172,6 @@ module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
         integer :: i
         ! Constants used by the code.  de is the dissociation energy (kcal/mol),
         ! re is the equilibrium bond length (angstroms), b is the Morse beta
-        ! parameter (angstroms**-1), and s is the sato parameter (unitless) for
         ! the appropriate diatom (1 = H-Cl, 2 = H=H', 3 = H'-Cl).  The other
         ! constants may be found in the literature reference.  ckcau is the
         ! conversion factor between kcal/mol and hartrees and cangau is the

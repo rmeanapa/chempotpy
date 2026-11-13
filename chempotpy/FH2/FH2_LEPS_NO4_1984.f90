@@ -20,7 +20,6 @@
 !   Coordinates, potential energy, and derivatives are passed
 !   The potential energy in the three asymptotic valleys are
 !   stored in the common block ASYCM:
-!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 !   The potential energy in the AB valley, EASYAB, is equal to the poten
 !   energy of the H "infinitely" far from the FH diatomic, with the
 !   FH diatomic at its equilibrium configuration.  Similarly, the terms
@@ -266,7 +265,6 @@ module chempotpy_fh2_leps_no4_1984_pes
             real(wp), parameter :: ckcau  = 627.5095e0_wp
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: tdeg   = 57.29577951e0_wp
-            !      LOGICAL LCOL, LDERIV, LZERO
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
@@ -297,7 +295,6 @@ module chempotpy_fh2_leps_no4_1984_pes
             indexes(2) = 1
             indexes(3) = 1
             irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

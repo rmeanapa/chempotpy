@@ -85,7 +85,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         energy = energy + easybc
     end subroutine pot
 
-    !     subroutine h3tot(r,Vtot,dVtot,id)
     !> @brief Evaluate h3tot for the H3_GEN_BKMP_1991 potential.
     subroutine h3tot( r, vtot, dvtot, id, ipr )
         !     calculate total h3 potential from all of its parts
@@ -98,8 +97,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         !           H2 molecule (say r=0.8).  After that paper was submitted,
         !           this problem was fixed and the corrected Cbend coefficients
         !           are used in this version of the surface (version 706).
-        !           The old coefficients are still in subr.vbcb but have been
-        !           commented out.
+        !           Git history retains the superseded coefficients.
         ! any questions/problems could be addressed to:
         !     wkeogh@alchemy.chem.utoronto.ca
         ! all distances are in bohrs and all energies are in hartrees
@@ -111,7 +109,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
             & dcbnda(3), dcbndb(3), dt(3), dvas(3), dvbnda(3), dvbndb(3), dvlon(3), dvtot(3), expass(4), r(3), t(3), vas, &
             & vb(2, 25), vbnda, vbndb, vbp(2, 25), vlon, vtot
         integer :: i, icompc, id, ipr
-        !     dimension vb(2,25),cb(2,25),vbp(2,25),cbp(2,25)    {debugging}
         !     ipr = 0
         !  zero everything to avoid any 'funny' values:
         vlon  = 0.e0_wp
@@ -122,7 +119,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         cas   = 0.e0_wp
         cbnda = 0.e0_wp
         cbndb = 0.e0_wp
-        !     do i=1,3
         do i=1, 3
             dvlon(i)  = 0.e0_wp
             dvas(i)   = 0.e0_wp
@@ -132,16 +128,13 @@ module chempotpy_h3_gen_bkmp_1991_pes
             dcas(i)   = 0.e0_wp
             dcbnda(i) = 0.e0_wp
             dcbndb(i) = 0.e0_wp
-            !     end do
         enddo
         !  zero the vb and cb arrays (used only for numerical derivatives)
-        !     do i=1,25
         do i=1, 25
             vb(1, i) = 0.e0_wp
             vb(2, i) = 0.e0_wp
             cb(1,i)  = 0.e0_wp
             cb(2,i)  = 0.e0_wp
-            !     end do
         enddo
         call h3lond(r, vlon, dvlon)
         call vascal(r, vas, dvas)
@@ -189,7 +182,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         endif
     end subroutine h3tot
 
-    !     subroutine triplet(r,E3,id)
     !> @brief Evaluate triplt for the H3_GEN_BKMP_1991 potential.
     subroutine triplt( r, e3, id )
         !  version of oct4/90  surface626 values
@@ -220,7 +212,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         real(wp), parameter :: c2 = -0.0746027774843370e0_wp
         real(wp), parameter :: c3 = 0.4297899952237434e0_wp
         ! surface parameters from fit601.out
-        !     parameter(a1=-0.66129429,a2=-1.99434198,a3=-2.37604328,
         !    .          a4= 2.08107802,a5=-0.0313032510,a6=3.76546699,
         !    .          C1=-0.4222590135447196,C2=-0.0731117796738824,
         !    .          C3= 0.4295918082189010 )
@@ -367,12 +358,10 @@ module chempotpy_h3_gen_bkmp_1991_pes
         real(wp), parameter :: two  = 2.e0_wp
         real(wp), parameter :: eps2 = 1.e-12_wp
         ipr = 0
-        !     do i=1,3
         do i=1, 3
             call vh2opt(r(i), esing, 2)
             e1(i)  = esing(1)
             de1(i) = esing(2)
-            !        call triplet(r(i),etrip,2)
             call triplt(r(i), etrip, 2)
             if( ipr .gt. 0 ) write(7, '(''from subr.london: '',/, ''  using r'',i1,'':   Esinglet='',3(1x,f12.8),/, ''        ' // &
                 ' '',1x,''    Etriplet='',3(1x,f12.8))') i, esing, etrip
@@ -380,7 +369,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
             de3(i) = etrip(2)
             q(i)   = half*(e1(i) + e3(i))
             j(i)   = half*(e1(i) - e3(i))
-            !     end do
         enddo
         sumq   = q(1) + q(2) + q(3)
         sumj   = abs( j(2)-j(1) )**2 + abs( j(3)-j(2) )**2 + abs( j(3)-j(1) )**2
@@ -486,11 +474,9 @@ module chempotpy_h3_gen_bkmp_1991_pes
         real(wp), parameter :: rr = 1.15e0_wp
         real(wp), parameter :: rp = 1.25e0_wp
         !  first see if this is a compact geometry:
-        !     do i=1,3
         do i=1, 3
             t(i)  = 0.e0_wp
             dt(i) = 0.e0_wp
-            !     end do
         enddo
         icompc = 0
         if( r(1) .lt. rr ) icompc = icompc + 1
@@ -498,7 +484,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         if( r(3) .lt. rr ) icompc = icompc + 1
         if( icompc .eq. 0 ) return
         ! calculate the T(i) values:
-        !     do i=1,3
         do i=1, 3
             if( r(i) .lt. rr )then
                 top   = rr-r(i)
@@ -509,7 +494,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
                 t(i)  = top3/bot
                 dt(i) = -3.e0_wp*top2/bot + top3/bot2
             endif
-            !     end do
         enddo
     end subroutine compac
 
@@ -522,7 +506,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         real(wp) :: a, a2, cas, da(3), dcas(3), determ(3), dpr(3), dseris(3), dsumt(3), dt(3), dterm1(3), eterm, pr, &
             & pr2, pr3, r(3), series, sr, sr2, sr3, sumt, t(3), term1
         integer :: i, id, ipr
-        !     dimension dPr(3),dT(3),dsumT(3),dterm1(3),determ(3),dseries(3),
         !---- Casym values from fit633a
         real(wp), parameter :: u1  = 0.1537481166e+00_wp
         real(wp), parameter :: u2  = 0.2745950036e+00_wp
@@ -543,8 +526,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcas(2) = 0.e0_wp
         dcas(3) = 0.e0_wp
         call acalc(r(1), r(2), r(3), a, da)
-        a2 = a*a
-        !     if(A.eq.0.d0) return
+        a2   = a*a
         sumt = t(1) + t(2) + t(3)
         sr   = r(1) + r(2) + r(3)
         pr   = r(1) * r(2) * r(3)
@@ -567,12 +549,10 @@ module chempotpy_h3_gen_bkmp_1991_pes
                 'Cas  = '',g12.6)') series, term1, eterm, cas
             write(7, *) ' Cas = ', cas
         endif
-        !     if(id.gt.0)then {calculate the derivative as well}
         if( id .gt. 0 )then
             dpr(1) = r(2)*r(3)
             dpr(2) = r(3)*r(1)
             dpr(3) = r(1)*r(2)
-            !        do i=1,3
             do i=1, 3
                 dsumt(i)  = dt(i)
                 dterm1(i) = -1.e0_wp*u1*u2*pr**(-u2-1.e0_wp)*dpr(i)
@@ -587,10 +567,8 @@ module chempotpy_h3_gen_bkmp_1991_pes
                     !    .      + dseries(i)    * sumt  * a2    * term1  * eterm
                     &+ dseris(i)     * sumt  * a2    * term1  * eterm&
                     &+ determ(i)     * sumt  * a2    * term1  * series
-                !        end do
             enddo
             if( ipr .gt. 0 )then
-                !           write(7,7500) dPr,dt,dterm1,determ,dseries,dCas
                 write(7, '(''    derivatives: dPr = '',3(1x,g12.6),/, ''                 dT  = '',3(1x,g12.6),/, ''       ' // &
                     '       dterm1 = '',3(1x,g12.6),/, ''              determ = '',3(1x,g12.6),/,  ''    ' // &
                     '          dseris = '',3(1x,g12.6),/, ''              dCas   = '',3(1x,g12.6))') dpr, dt, dterm1, determ, dseris, dcas
@@ -623,7 +601,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         sr3   = sr*sr2
         exp3  = exp( -v3*sr3 )
         dexp3 = -3.e0_wp*v3*sr2*exp3
-        !     do i=1,3
         do i=1, 3
             ri      = r(i)
             rrri    = rr-ri
@@ -638,7 +615,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
                 g(i)  = (rrri3/rpri) *sumv(i)
                 dg(i) = (rrri3/rpri2)*sumv(i) -3.e0_wp*(rrri2/rpri)*sumv(i) + (rrri3/rpri)*v1*v2
             endif
-            !     end do
         enddo
         sumg    = g(1) + g(2) + g(3)
         cal     = sumg*exp3
@@ -679,10 +655,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         integer :: icompc, ipr
         !    arrays required for B1,B2,B3 calculations:
         !    arrays required for Vbend calculations:
-        !     dimension vb(2,25)   {passed out for debugging only}
         !    arrays required for Cbend calculations:
-        !     dimension cb(2,25)   {passed out for debugging only}
-        !     parameter( z58=0.625d0, z38=0.375d0 )  {3/8 and 5/8}
         real(wp), parameter :: z58 = 0.625e0_wp
         real(wp), parameter :: z38 = 0.375e0_wp
         !   parameters required for Vbend calculations:
@@ -876,19 +849,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         db1b(1) = -z58*( d1*dc1dr1 + d2*dc2dr1 + d3*dc3dr1 ) -z38*(    dc1dr1 +    dc2dr1 +    dc3dr1 )
         db1b(2) = -z58*( d1*dc1dr2 + d2*dc2dr2 + d3*dc3dr2 ) -z38*(    dc1dr2 +    dc2dr2 +    dc3dr2 )
         db1b(3) = -z58*( d1*dc1dr3 + d2*dc2dr3 + d3*dc3dr3 ) -z38*(    dc1dr3 +    dc2dr3 +    dc3dr3 )
-        !d     if(ipr.gt.1)then
-        !d         write(7,*)
-        !d         write(7,*) ' from subr.vbcb -----------------------------'
-        !d         write(7,6000) rpass
-        !d         write(7,6010) b1a,b1b
-        !d         write(7,6020) db1a,db1b
-        !d         if(ipr.gt.2)then
-        !d            write(7,7000) dc1dr1,dc1dr2,dc1dr3,
-        !d    .                     dc2dr1,dc2dr2,dc2dr3,
-        !d    .                     dc3dr1,dc3dr2,dc3dr3
-        !d            write(7,7010) t1,t2,t3,c1,c2,c3,d1,d2,d3
-        !d         end if
-        !d     end if
         !  calculate the quantities used by both Vbend and Cbend:
         r      = r1 + r2 + r3
         rsq    = r*r
@@ -1170,41 +1130,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcbndb(3) = dt(3) * cbnds(2)    + sumt * dcbnds(2, 3)
         cbnda     = sumt*cbnds(1)
         cbndb     = sumt*cbnds(2)
-        !  some debugging print statements:
-        !d     if(ipr.gt.1)then
-        !d        write(7,7650) B2,B3
-        !d        write(7,7700) db2,db3
-        !d        write(7,*)
-        !d        write(7,*) 'Vbend values :'
-        !d        k=1
-        !d        write(7,7150) k,dvb1,dvb2,dvb3,dvb4,dvb5,dVbnda
-        !d        write(7,7155) (vb(1,i),i=1,5)
-        !d        k=2
-        !d        write(7,7150) k,dvb1,dvb2,dvb3,dvb4,dvb5,dVbndb
-        !d        write(7,7155) (vb(2,i),i=1,5)
-        !d        write(7,7100) Vbnda,Vbndb
-        !d        write(7,*)
-        !d        write(7,*) 'Cbend values:'
-        !d        write(7,*) 'c81,c81,c82=',c81,c81,c82
-        !d        write(7,*) 'c91,c83,c84=',c91,c83,c84
-        !d        write(7,*) 'd81,d81,d82=',d81,d81,d82
-        !d        write(7,*) 'd91,d83,d84=',d91,d83,d84
-        !d        k=1
-        !d           write(7,2020) k,(cb(1,j),j=1,9)
-        !d           write(7,2033) sumT,Cbnds(1)
-        !d        k=2
-        !d           write(7,2020) k,(cb(k,j),j=1,9)
-        !d           write(7,2033) sumT,Cbnds(2)
-        !d        k=1
-        !d        write(7,7152) k,dcb1,dcb2,dcb3,dcb4,dcb5,dcb6,
-        !d    .               dcb7,dcb8,dcb9,(dCbnds(1,i),i=1,3)
-        !d        k=2
-        !d        write(7,7152) k,dcb1,dcb2,dcb3,dcb4,dcb5,dcb6,
-        !d    .                 dcb7,dcb8,dcb9,(dCbnds(k,i),i=1,3)
-        !d        write(7,7200) dT,dCbnda,dCbndb
-        !d        write(7,*) 'VbCb  exit -------------------------'
-        !d        write(7,*)
-        !d     end if
     end subroutine vbcb
 end module chempotpy_h3_gen_bkmp_1991_pes
 

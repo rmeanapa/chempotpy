@@ -72,7 +72,6 @@ module chempotpy_aln_recoxjm_pes
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp
         !  calculate and tabulate the distances between all atoms
-        ! original parameters
         !      a2=7.d0
         !      a3=8.d0
         !      dd=0.9073d0/autoev

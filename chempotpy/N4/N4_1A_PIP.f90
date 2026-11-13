@@ -302,8 +302,6 @@ subroutine evv( v )
     do i=1, 276
         v = v + c(i)*b(i)
     enddo
-    !      Write(*,9999) V
-    ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
 end subroutine evv
 
 !> @brief Evaluate EvdVdX.

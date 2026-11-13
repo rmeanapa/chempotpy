@@ -273,13 +273,11 @@ module chempotpy_ch4o_lep_2014_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             call cartou
             call carttor
             ! Changing units from angstrom to bohr and initialize
             do i = 1, 18
-                q(i) = r(i)
-                !         q(I) = R(I)*0.52918d0
+                q(i)    = r(i)
                 pdot(i) = 0.e0_wp
             enddo
             !  calculate relative coordinates and bond lengths
@@ -352,8 +350,7 @@ module chempotpy_ch4o_lep_2014_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            tau = acos(-1.0e0_wp/3.0e0_wp)
-            !       pi=4.0d0*atan(1.0d0)
+            tau    = acos(-1.0e0_wp/3.0e0_wp)
             halfpi = 0.5e0_wp*pi
             twopi  = 2.0e0_wp*pi
             !  set diagonal elements to zero
@@ -674,8 +671,7 @@ module chempotpy_ch4o_lep_2014_pes
             p2vdw = vdwc2*exp(-12.e0_wp*(rcb/vdwr))
             evdw1 = vdwe/0.03812e0_wp/627.51 * (p1vdw+p2vdw)
             devdw = vdwe/0.03812e0_wp/627.51 * ( -6*p1vdw/rcb - 12*p2vdw/vdwr)
-            !      tvdw = 1.d0+vdt1*tanh(vdt2*(rav-vdtr))
-            arga = (vdt2*(rav-vdtr))
+            arga  = (vdt2*(rav-vdtr))
             if( arga .lt. 19.0e0_wp )then
                 tvdw  = 1.e0_wp+vdt1*tanh(arga)
                 dtvdw = vdt1*vdt2*(1/cosh(arga))**2.e0_wp
@@ -746,9 +742,8 @@ module chempotpy_ch4o_lep_2014_pes
                 argd(in(ii))  = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
                 argd(in(ii))  = argd(in(ii))/norma
                 delta(in(ii)) = acos(argd(in(ii)))-theta0(i,in(ii))
-                !        write(*,*) 'theta,delta ',theta0(i,in(ii)),delta(in(ii))
-                sum2 = sum2+delta(in(ii))**2
-                sum4 = sum4+delta(in(ii))**4
+                sum2          = sum2+delta(in(ii))**2
+                sum4          = sum4+delta(in(ii))**4
             enddo
             !  derivatives of axb wrt hj:
             daxb(j, 1, 1) = 0.0e0_wp
@@ -1124,7 +1119,6 @@ module chempotpy_ch4o_lep_2014_pes
             indexes(5) = 1
             indexes(6) = 8
             irctnt     = 6
-            !CALL POTINFO
             call ancvrt
             !  calculate indexes for coordinates
             do ind=1, 3

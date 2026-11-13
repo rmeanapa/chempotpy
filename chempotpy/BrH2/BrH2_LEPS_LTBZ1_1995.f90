@@ -269,7 +269,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             indexes(2) = 1
             indexes(3) = 1
             irctnt     = 2
-            !CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -340,9 +339,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
                 !   Compute DERAD = dRAD/dJ * [dJ/dX * dX/dR + dJ/dZ * dZ/dR]
                 call dexch
                 !   Put all the partial derivatives together:
-                !      DEGSDR  = DEQ + DERAD
-                !      DEQ   = dE/dQ * DQ/DR
-                !      DERAD = dE/dRAD * DRAD/DR
                 do i = 1, 3
                     degsdr(i) = deq(i) - derad(i)/r2
                 enddo

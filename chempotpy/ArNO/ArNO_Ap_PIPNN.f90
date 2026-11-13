@@ -101,7 +101,6 @@ module chempotpy_arno_ap_pipnn_pes
                 & dty(l), dy1, dyn, h1(l), h2(n), h3(m), r1, r1a, r2, s1(l), s2(l), s3(l), ss(m), sss(m), th, v, xt(m), y(m), y2(l), &
                 & y3, yw2
             integer :: i, iop, istate, j, k, nh, nr1, nthth
-            !        do iop=istate,istate
             dy1 = 1.0e30_wp; dyn = 1.0e30_wp
             iop = istate
             !$OMP PARALLEL DEFAULT(SHARED)
@@ -135,12 +134,10 @@ module chempotpy_arno_ap_pipnn_pes
             !$OMP END DO NOWAIT
             !$OMP END PARALLEL
             nr1 = nroh1
-            !       write(*,*)' vrhh=',(sss(i),i=1,noh)
             !$OMP PARALLEL DEFAULT(SHARED)
             !$OMP&  PRIVATE (i)
             !$OMP DO
             do i=1, nroh1
-                !       nr1=nr1+1
                 xt(i) = pesa_roh1(i)
                 y(i)  = sss(i)
             enddo
@@ -150,7 +147,6 @@ module chempotpy_arno_ap_pipnn_pes
             call splint(xt, y, y2, nr1, r2, yw2)
             if( yw2 .gt. bvcut_vcut ) yw2=bvcut_vcut
             v = yw2
-            !       enddo
         end
         !> @brief Evaluate splint.
         subroutine splint( xa, ya, y2a, n, x, y )

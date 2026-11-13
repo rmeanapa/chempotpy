@@ -593,7 +593,6 @@ module chempotpy_lifh_leps_jhtp1_2002_pot22_legacy_state_a571f7fd
         !     LiF pol (au) and ie (eV)
         !     H pol (au) and ie (eV)
         !     misc long-range
-        !      data rlif0did/7.5d0/,rlif0disp/7.5d0/,r2LRcut_a/2.0d0/,
         behf        = 0.e0_wp
         belif       = 0.e0_wp
         belifc1     = 0.e0_wp

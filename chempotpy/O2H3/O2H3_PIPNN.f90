@@ -58,9 +58,6 @@ module chempotpy_o2h3_pipnn_pes
             txinput(j) = basis(j+1)
         enddo
         call getpota(txinput, vpes)
-        !      vnn=min(vpes,5d0)
-        !       vnn=vpes
-        !       vpes=vnn
     end subroutine h3o2pipnn
 
     !> @brief Evaluate the immutable O2H3_PIPNN neural network.

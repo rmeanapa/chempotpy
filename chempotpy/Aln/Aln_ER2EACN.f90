@@ -132,7 +132,6 @@ module chempotpy_aln_er2eacn_pes
                 if( abscz2 .le. 10e-12_wp ) cz2=abscz2! eliminates negative valu
                 ec1       = 1e0_wp/(1e0_wp+cz2**gu2)                 ! compute beta part of f f
                 fu2(i, j) = 1e0_wp+du2*(es1*ec1-1e0_wp)         ! put alpha and beta parts
-                !       print *,es1,ec1,fu2(i,j)
             enddo
         enddo
         ! potential, includes cutoff

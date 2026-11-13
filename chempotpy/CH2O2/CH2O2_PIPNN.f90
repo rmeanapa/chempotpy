@@ -120,9 +120,6 @@ module chempotpy_ch2o2_pipnn_pes
         do j=1, 101
             txinput(j) = p(j)
         enddo
-        !     write(66,'(1000E16.8)') txinput(1:101)
-        !      write(66,*) p(0:193)
-        !      stop
         call pot3a1(txinput, v)
     end subroutine evvdvdx
 

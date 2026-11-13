@@ -19,7 +19,6 @@
 !   Coordinates, potential energy, and derivatives are passed
 !   The potential energy in the three asymptotic valleys are
 !   stored in the common block ASYCM:
-!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 !   The potential energy in the AB valley, EASYAB, is equal to the poten
 !   energy of the H "infinitely" far from the FH diatomic, with the
 !   FH diatomic at its equilibrium configuration.  Similarly, the terms
@@ -287,7 +286,6 @@ module chempotpy_fh2_leps_no2a_1984_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -329,7 +327,6 @@ module chempotpy_fh2_leps_no2a_1984_pes
             endif
             !   Compute the angle dependent Sato parameters
             call phical (phi)
-            !      IF (LCHI.NE.0) WRITE (IPRT,700) R(1),R(2),R(3),PHI
             z3cm_z(1) = fphi(phi)
             z3cm_z(3) = z3cm_z(1)
             do i=1, 3, 2
@@ -425,13 +422,11 @@ module chempotpy_fh2_leps_no2a_1984_pes
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             phicm_deg = 57.29577951e0_wp*phi
-            !      IF (LCHI.NE.0) WRITE (IPRT,100) DEG
             if( phicm_deg .gt. 180.0e0_wp ) phicm_deg=phicm_deg-180.0e0_wp
             if( phicm_deg .lt. 0.0e0_wp ) phicm_deg=-phicm_deg
             if( phicm_deg .gt. 90.0e0_wp ) phicm_deg=180.0e0_wp-phicm_deg
             if( phicm_deg .lt. 0.0e0_wp ) stop 89
             if( phicm_deg <= phicm_deg1 )then
-                !      IF (LCHI.NE.0) WRITE (IPRT,100) DEG
                 fphi       = phicm_z0
                 phicm_fder = 0.0e0_wp
             elseif( phicm_deg <= 20.0e0_wp )then
@@ -468,18 +463,16 @@ module chempotpy_fh2_leps_no2a_1984_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            hr2   = 0.5e0_wp*pt1cm_r(2)
-            r12   = pt1cm_r(1)*pt1cm_r(1)
-            r22   = pt1cm_r(2)*pt1cm_r(2)
-            r32   = pt1cm_r(3)*pt1cm_r(3)
-            hr22  = 0.25e0_wp*r22
-            cos23 = (r12-r22-r32)/(-2.0e0_wp*pt1cm_r(2)*pt1cm_r(3))
-            fhh2  = 0.5e0_wp*(r12 + r32 - 0.5e0_wp*r22)
-            !      FHH2=HR22+R32-2.0D0*HR2*R(3)*COS23
-            fhh = sqrt(fhh2)
-            u   = r32 - hr22 - fhh2
-            v   = -2.0e0_wp * hr2 * fhh
-            !      COSPHI=(R32-HR22-FHH2)/(-2.0D0*HR2*FHH)
+            hr2          = 0.5e0_wp*pt1cm_r(2)
+            r12          = pt1cm_r(1)*pt1cm_r(1)
+            r22          = pt1cm_r(2)*pt1cm_r(2)
+            r32          = pt1cm_r(3)*pt1cm_r(3)
+            hr22         = 0.25e0_wp*r22
+            cos23        = (r12-r22-r32)/(-2.0e0_wp*pt1cm_r(2)*pt1cm_r(3))
+            fhh2         = 0.5e0_wp*(r12 + r32 - 0.5e0_wp*r22)
+            fhh          = sqrt(fhh2)
+            u            = r32 - hr22 - fhh2
+            v            = -2.0e0_wp * hr2 * fhh
             coscm_cosphi = u / v
             if( coscm_cosphi .gt. 1.0e0_wp ) coscm_cosphi=1.0e0_wp
             if( coscm_cosphi .lt. -1.0e0_wp ) coscm_cosphi=-1.0e0_wp

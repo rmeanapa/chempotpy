@@ -16,7 +16,6 @@
 !   with respect to the coordinates are passed through the common block
 !   The potential energy in the three asymptotic valleys are
 !   stored in the common block ASYCM:
-!                  COMMON /PT5COM/ asycm_easyab, asycm_easybc, asycm_easyac
 !   The potential energy in the AB valley, asycm_easyab, is equal to the poten
 !   energy of the H "infinitely" far from the FH diatomic, with the
 !   FH diatomic at its equilibrium configuration.  Similarly, the terms
@@ -433,7 +432,6 @@ module chempotpy_fh2_gen_6sec_1993_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

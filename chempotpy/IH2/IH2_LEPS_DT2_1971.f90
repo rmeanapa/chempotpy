@@ -14,7 +14,6 @@
 !   Coordinates, potential energy, and derivatives are passed
 !   The potential energy in the three asymptotic valleys are
 !   stored in the common block ASYCM:
-!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 !   The potential energy in the AB valley, EASYAB, is equal to the poten
 !   energy of the H "infinitely" far from the IH diatomic, with the
 !   IH diatomic at its equilibrium configuration.  Similarly, the terms
@@ -246,7 +245,6 @@ module chempotpy_ih2_leps_dt2_1971_pes
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !   Echo the parameters for the bend potential to the
             !   file linked to UNIT NFLAG(18)
-            ! WRITE (NFLAG(18), 650) REQ,DE,BETA,A,GAMMA,RBB
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !       CONVERT TO ATOMIC UNITS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -268,7 +266,6 @@ module chempotpy_ih2_leps_dt2_1971_pes
             indexes(2) = 1
             indexes(3) = 1
             irctnt     = 2
-            !CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

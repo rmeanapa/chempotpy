@@ -336,8 +336,6 @@ subroutine evv( v )
     do i=1, 254
         v = v + c(i)*b(i)
     enddo
-    !      Write(*,9999) V
-    ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
 end subroutine evv
 
 !> @brief Evaluate EvdVdX.
@@ -3125,17 +3123,6 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     real(wp) :: dist(1), disp, dispdr(1)
     ! O2 pairwise
     if( imol .eq. 4 )then
-        ! Original parameters
-        !      alpha = 0.785d0
-        !      beta = 1.307d0
-        !      as(0) = -2388.5641690d0
-        !      as(1) = 18086.977116d0
-        !      as(2) = -71760.197585d0
-        !      as(3) = 154738.09175d0
-        !      as(4) = -215074.85646d0
-        !      as(5) = 214799.54567d0
-        !      as(6) = -148395.42850d0
-        !      as(7) = 73310.781453d0
         ! Modified parameters for D3(BJ)
         alpha = 9.439784362354936e-1_wp
         beta  = 1.262242998506810e0_wp
@@ -3154,11 +3141,9 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
         ! From milihartree to kcal/mol
         v = v*627.509523475149e-3_wp
         ! Add D3 dispersion correction
-        !        write(*,*) "voo= ",v
         dist(1) = r
         call d3disp(dist, disp, dispdr, 0, imol)
         v = v+disp
-        !        write(*,*) "dispoo= ",disp
         ! Compute the gradient if needed
         if( igrad .eq. 1 )then
             grad = 0.e0_wp
@@ -3200,11 +3185,9 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
         v= (-de)*(c(1)*u**1.0e0_wp + c(2)*u**2.0e0_wp + c(3)*u**3.0e0_wp + c(4)*u**4.0e0_wp + c(5)*u**5.0e0_wp + c(6)* &
             & u**6.0e0_wp + c(7)* u**7.0e0_wp + c(8)*u**8.0e0_wp + c(9)*u**9.0e0_wp + c(10)*u**10.0e0_wp )
         ! Add D3 dispersion correction
-        !        write(*,*) "vno= ",v
         dist(1) = r
         call d3disp(dist, disp, dispdr, 0, imol)
         v = v+disp
-        !        write(*,*) "dispno= ",disp
         ! 1st derivate by r
         if( igrad .eq. 1 )then
             ! multiplier part of the MEG derivate

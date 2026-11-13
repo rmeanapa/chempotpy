@@ -277,13 +277,11 @@ module chempotpy_clnh3_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             call cartou
             call carttor
             ! Changing units from angstrom to bohr and initialize
             do i = 1, 15
-                q(i) = r(i)
-                !         q(I) = R(I)*0.52918d0
+                q(i)    = r(i)
                 pdot(i) = 0.e0_wp
             enddo
             !  calculate relative coordinates and bond lengths
@@ -297,12 +295,10 @@ module chempotpy_clnh3_vbmm_pes
             !  calculate stretching potential
             call stretch(vstr)
             !  calculate out of plane bending potential
-            !      call opbend(vop)
             !  calculate in plane bending potential
             call ipbend(vip)
             !  total potential energy is vstr+vop+vip
             en = vstr+vip
-            !      en=vstr+vop+vip
             ! 0.03812 conversion factor from 10(5) j/mol to hartrees
             en     = en*0.03812e0_wp
             engygs = en
@@ -1070,7 +1066,6 @@ module chempotpy_clnh3_vbmm_pes
             indexes(4) = 1
             indexes(5) = 1
             irctnt     = 5
-            !CALL POTINFO
             call ancvrt
             !  calculate indexes for coordinates
             do ind=1, 3

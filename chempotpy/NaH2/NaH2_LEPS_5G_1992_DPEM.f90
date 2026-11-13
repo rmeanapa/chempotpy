@@ -297,7 +297,6 @@ module chempotpy_nah2_leps_5g_1992_dpem_pot12_legacy_state_dd307a13
         real(wp) :: amp, ampe, ampn, ampp, ampr, ang, cevau, e(:), eps, erl, erle, erln, erlp, erlr, ers, erse, ersn, &
             & ersp, ersr, f1, f3, ff, fg, fh, hr, r(:,:), rmx, rmxe, rmxn, rmxp, rmxr, rnah16, rnah36
         integer :: i, nt
-        !     cevau=1.d0/27.2113961d0
         amp    = 0.e0_wp
         ampe   = 0.e0_wp
         ampn   = 0.e0_wp

@@ -250,7 +250,6 @@ module chempotpy_mxhsl_leps_modelsurface_dpem_g_pot11_entry__abaef9a6
         endif
         cevau = 1.e0_wp / 27.2113961e0_wp
         do i = 1, nt
-            !          cosa = 0.5d0 * (r(i, 2) ** 2 + r(i, 3) ** 2 - r(i, 1) ** 2) /
             !     *(r(i, 2) * r(i, 3))
             !==============================================================k
             !This section contains the diatomic curves

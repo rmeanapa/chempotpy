@@ -344,16 +344,13 @@ module chempotpy_oh2_gen_pol1980_pes
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !      WRITE (NFLAG(18), 600)
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !      ASSIGN COLLINEAR POTENTIAL PARAMETERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !      WRITE(NFLAG(18), 610)
             call prepare_local_context_2
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !      ASSIGN BENDING POTENTIAL PARAMETERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-            !      WRITE(NFLAG(18), 620)
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !       CONVERT TO ATOMIC UNITS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -366,12 +363,6 @@ module chempotpy_oh2_gen_pol1980_pes
             ambpcm_rhh  = 1.4007977e0_wp
             ambpcm_rbb  = ambpcm_rbb /bohr
             !    Echo the potential parameters to the file linked to UNIT NFLAG(18)
-            !      WRITE(NFLAG(18),630) (REQ(IT), IT = 1,3)
-            !      WRITE(NFLAG(18),631) DE
-            !      WRITE(NFLAG(18),632) BETA
-            !      WRITE(NFLAG(18),635) RBB
-            !      WRITE(NFLAG(18),633) A
-            !      WRITE(NFLAG(18),634) GAMMA
             !CCCCCCCCCCC
             pt3cm_ezero(1) = 0.0e0_wp
             do i=1, 5
@@ -382,7 +373,6 @@ module chempotpy_oh2_gen_pol1980_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -413,14 +403,6 @@ module chempotpy_oh2_gen_pol1980_pes
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
-            !      IF (NASURF(1,1) .EQ. 0) THEN
-            !         WRITE(NFLAG(18), 900) NASURF(1,1)
-            !         STOP
-            !      ENDIF
-            !         IF (NDER .GT. 1) THEN
-            !             WRITE (NFLAG(18), 910) NDER
-            !             STOP 'POT 2'
-            !         ENDIF
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        FIRST CALCULATE SOME USEFUL NUMBERS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -526,33 +508,16 @@ module chempotpy_oh2_gen_pol1980_pes
             title = '   O+H2 AB 9-12-79 '
             !  ASSIGN COLLINEAR PARAMETERS (UNITS OF KCAL, ANGSTROM, DEGREES)
             !  IN BLOCK DATA SUBROUTINE
-            !      A1INF=0.0D0
-            !      A2INF=0.0D0
-            !      IAYES= 0
             !  ASSIGN PARAMETERS FOR THE ASYMPTOTIC REACTANT AND PRODUCT REGIONS
             !  IN BLOCK DATA SUBROUTINE
             if( pre2cm_a2inf .eq. 0.0e0_wp ) pre2cm_a2inf= pre2cm_d1inf-pre2cm_d2inf
             !  ASSIGN THE PIVOT POINT, POTENTIAL AT THE PIVOT,
             !  FLAG, AND ASYMPTOTIC EXPONENTIAL PARAMETERS
             !  IN BLOCK DATA SUBROUTINE.  ECHO.
-            !      WRITE(NFLAG(18),845)TITLE
-            !      WRITE(NFLAG(18),121)D1INF,R1EINF,B1INF,D2INF,R2INF,B2INF,A1INF,A2
             !     NF
-            !      WRITE(NFLAG(18),123)R1S,R2S,VSP,ALPH1,ALPH2
-            !      IF(IAYES.NE.0) WRITE(NFLAG(18),133)
-            !      IF(IAYES.EQ.0) WRITE(NFLAG(18),131)
-            !      WRITE(NFLAG(18),125)STEP
             nphip2 = pre2cm_nphi + 2
             !  ECHO POTENTIAL PARAMTERS ASSIGNED BY BLOCK DATA SUBROUTINE
-            !      WRITE(NFLAG(18),111)NPHI,NV
-            !      WRITE (NFLAG(18), 700)
-            !      DO 20 I = 1,NPHI
-            !          WRITE(NFLAG(18),103)I,PHI(I),(BSP(I,J),CSP(I,J),J=1,NV)
             !  20  CONTINUE
-            !      WRITE (NFLAG(18), 701)
-            !      DO 22 I=1,2
-            !         K = I + NPHI
-            !         WRITE(NFLAG(18),105)K,(CSP(K,J),J=1,NV)
             !  22  CONTINUE
             pre2cm_d1  = pre2cm_bsp(1,1)
             pre2cm_d2  = pre2cm_bsp(pre2cm_nphi,1)

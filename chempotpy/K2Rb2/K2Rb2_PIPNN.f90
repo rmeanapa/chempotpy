@@ -215,9 +215,6 @@ module chempotpy_k2rb2_pipnn_pes
     !------->This is the subroutine for PIPs up to the order
     !------->of 3 of A2B2 type molecule.
     !------->
-    !        double precision :: x(1:6)
-    !        double precision :: p(0:32)
-    !        call bemsav(x,p)
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         use chempotpy_kinds, only: wp

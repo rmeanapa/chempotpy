@@ -436,8 +436,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
                 dy(i+3,j+3) = s(i,j)
             enddo
         enddo
-        !      y(1:3) = matmul(S,x(1:3))
-        !      y(4:6) = matmul(S,x(4:6))
         y(7)    = x(7)
         dy(7,7) = 1.e0_wp
     end subroutine getsymm
@@ -454,7 +452,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: alpnh1, alpnh2, alphh
         !     Center of Gaussian Function
         real(wp) :: r0nh, r0hh
-        !      parameter (R00 = 0.0d0)
         real(wp) :: r0
         real(wp) :: erepi, erepnh, erephh
         ! second additional repulsive terms added to NH repulsion
@@ -481,7 +478,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: ecor1
         real(wp) :: decor1(6)
         !     gamma
-        !      parameter (gam  = 1.81d0 )
         real(wp), parameter :: gam   = 3.00e0_wp
         real(wp), parameter :: recor = 2.0e0_wp*1.024e0_wp
         integer             :: i, j
@@ -532,7 +528,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
                 derepnh2   = -erepi*( 2.e0_wp*alpnh2*dr + rr1 )
                 derepxh(i) = bnh1*derepnh1 + bnh2*derepnh2
                 ! Correction to right limit
-                !        erepi   = 0.5d0*(1.d0+dtanh(gam*sum[rr(i)-Recor]) )
                 tmp = tanh(gam*(rr(i)-recor))
                 !       d(tanh) = (sech)**2 = 1-(tanh)**2
                 dtmp      = gam*(1.e0_wp-tmp*tmp)
@@ -924,11 +919,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
             y(6) = 1.e0_wp+tmp*x6*g1g2
         endif
         !  geoInt(7) beta; HBa PI/2
-        !      y(7) = 1 + (1-x7)*g1*g2*g3
-        !      tmp = dble(p) * (beta-HBa)
-        !      x7  = dcos( tmp )
         !   dx7/dbeta, not in degree
-        !      dx7 = -dble(p)*dsin( tmp ) * deg2au
         tmp = beta-hba
         x7  = cos( real(p, wp) * tmp ) + 0.5e0_wp*dk*tmp*tmp/(0.05e0_wp+tmp*tmp)
         dx7 = -real(p, wp)*sin( real(p, wp) * tmp ) * deg2au + dk*tmp*deg2au/(0.05e0_wp+tmp*tmp) - dk*tmp**3*deg2au/ &
@@ -985,7 +976,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp)            :: alp
         real(wp), parameter :: deg2au = pi/180.e0_wp
         real(wp), parameter :: fru12b = 1.00e0_wp
-        !      parameter ( FRU12c = 2.0150d0        )
         real(wp), parameter :: gtu12a = 2.0e0_wp*pi/3.0e0_wp
         real(wp), parameter :: hbu12a = 0.5e0_wp*pi
         ! Misc
@@ -1041,21 +1031,20 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         ! f(r) = 1 - tanh[-B(r-C)]
         !  d tanh(x) = sech(x)^2 = 1 - tanh(x)^2
         ! df(r)/dr =  - {1 - tanh[-B(r-C)] }^2 * B
-        tmp    = tanh( fru12b*(geoint(1)-fru12c) )
-        fru121 = 1.e0_wp - tmp
-        dfr1   = -(1.e0_wp - tmp*tmp)*fru12b
-        tmp    = tanh( fru12b*(geoint(2)-fru12c) )
-        fru122 = 1.e0_wp - tmp
-        dfr2   = -(1.e0_wp - tmp*tmp)*fru12b
-        tmp    = tanh( fru12b*(geoint(3)-fru12c) )
-        fru123 = 1.e0_wp - tmp
-        dfr3   = -(1.e0_wp - tmp*tmp)*fru12b
-        z123   = z1(1)*z1(2)*z1(3)
-        z456   = z1(4)*z1(5)*z1(6)
-        tz     = z123*z456
-        tf     = fru121 * fru122 * fru123
-        ans    = tz * tf * hbu12
-        !       ans =  z1* HBU12 * FRU121 * FRU122 * FRU123
+        tmp      = tanh( fru12b*(geoint(1)-fru12c) )
+        fru121   = 1.e0_wp - tmp
+        dfr1     = -(1.e0_wp - tmp*tmp)*fru12b
+        tmp      = tanh( fru12b*(geoint(2)-fru12c) )
+        fru122   = 1.e0_wp - tmp
+        dfr2     = -(1.e0_wp - tmp*tmp)*fru12b
+        tmp      = tanh( fru12b*(geoint(3)-fru12c) )
+        fru123   = 1.e0_wp - tmp
+        dfr3     = -(1.e0_wp - tmp*tmp)*fru12b
+        z123     = z1(1)*z1(2)*z1(3)
+        z456     = z1(4)*z1(5)*z1(6)
+        tz       = z123*z456
+        tf       = fru121 * fru122 * fru123
+        ans      = tz * tf * hbu12
         g_ans(1) = dz1(1)*z1(2)*z1(3)*z456*tf*hbu12 + tz * hbu12 * dfr1 * fru122 * fru123
         g_ans(2) = z1(1)*dz1(2)*z1(3)*z456*tf*hbu12 + tz * hbu12 * fru121 * dfr2 * fru123
         g_ans(3) = z1(1)*z1(2)*dz1(3)*z456*tf*hbu12 + tz * hbu12 * fru121 * fru122 * dfr3
@@ -1179,7 +1168,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
                 enddo
             enddo
         enddo
-        !      NC=iNC
     end subroutine calcindu2
 
     !> @brief Evaluate calcindU12 for the NH3_GEN_FFW1_2006_DPEM potential.
@@ -1295,7 +1283,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
             &_pmax_, natom, 3), g_dist(g_pmax_), g_theta(g_pmax_, 3)
         real(wp) :: g_bow(g_pmax_,7)
         integer  :: g_ehfid
-        !        call ehsfid(g_ehfid, 'toBowman','g_toBowman.f')
         g_ehfid = 0
         do i=1, 12
             do j=1, 12
@@ -1336,9 +1323,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
             if( d1_w .gt. 0.0e0_wp )then
                 d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
             else
-                !             call ehufDO (9,d1_w, d2_v, d1_p,
-                !     +g_ehfid,
-                !     +164)
             endif
             do g_i_ = 1, g_pmax_
                 g_r(g_i_, i - 1) = d1_p * g_d1_w(g_i_)
@@ -1446,9 +1430,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         if( d1_w .gt. 0.0e0_wp )then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
-            !           call ehufDO (9,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +302)
         endif
         do g_i_ = 1, g_pmax_
             g_w(g_i_) = d1_p * g_d1_w(g_i_)
@@ -1473,17 +1454,12 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         if( abs(w) .lt. 1.0e0_wp )then
             d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-w)*(1.0e0_wp+w))
         else
-            !           call ehufDO (14,w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +335)
         endif
         d4_b = 1.0e0_wp / pi * 180.0e0_wp * d1_p
         do g_i_ = 1, g_pmax_
             g_beta(g_i_, 1) = d4_b * g_w(g_i_)
         enddo
         beta(1) = d2_v * 180.0e0_wp / pi
-        !     beta(2) = dacos( dot_product(uT,uB) ) * 180.0d0/PI
-        !     beta(3) = dacos( dot_product(uT,uC) ) * 180.0d0/PI
         ! Now we define the eq. of the plane
         !     a1x + a2y + a3z + d = 0
         ! such that the normal to the plane is uT and
@@ -1579,9 +1555,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
                 if( d1_w .gt. 0.0e0_wp )then
                     d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
                 else
-                    !               call ehufDO (9,d1_w, d2_v, d1_p,
-                    !     +g_ehfid,
-                    !     +473)
                 endif
                 do g_i_ = 1, g_pmax_
                     g_xt(g_i_) = d1_p * g_d1_w(g_i_)
@@ -1601,9 +1574,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
                 if( d1_w .gt. 0.0e0_wp )then
                     d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
                 else
-                    !               call ehufDO (9,d1_w, d2_v, d1_p,
-                    !     +g_ehfid,
-                    !     +498)
                 endif
                 do g_i_ = 1, g_pmax_
                     g_yt(g_i_) = d1_p * g_d1_w(g_i_)
@@ -1641,9 +1611,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
                 if( abs(w) .lt. 1.0e0_wp )then
                     d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-w)*(1.0e0_wp+w))
                 else
-                    !               call ehufDO (14,w, d2_v, d1_p,
-                    !     +g_ehfid,
-                    !     +547)
                 endif
                 do g_i_ = 1, g_pmax_
                     g_d1_w(g_i_) = d1_p * g_w(g_i_)
@@ -1655,9 +1622,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
                 elseif( d1_w .lt. 0.0e0_wp )then
                     d1_p = -1.0e0_wp
                 else
-                    !               call ehufDO (3,d1_w, d2_v, d1_p,
-                    !     +g_ehfid,
-                    !     +562)
                 endif
                 d4_b = 1.0e0_wp / pi * 180.0e0_wp * d1_p
                 do g_i_ = 1, g_pmax_
@@ -1683,10 +1647,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         enddo
         theta(3) = xt
         ! all theta should be +ve and <= 180
-        !    do k=1,3
-        !        if(theta(k) < 0.0d0) theta(k) = -theta(k)
         !        !if(theta(k) > 180.0d0) theta(k) = theta(k) - 180.0d0
-        !    end do
         do g_i_ = 1, g_pmax_
             g_bow(g_i_,1) = g_r(g_i_, 1)
         enddo
@@ -1743,7 +1704,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: g_a3(g_pmax_), g_dist(g_pmax_), g_x(g_pmax_), g&
             &_y(g_pmax_), g_z(g_pmax_), g_d(g_pmax_)
         integer :: g_ehfid
-        !        call ehsfid(g_ehfid, 'distplane','g_toBowman.f')
         g_ehfid = 0
         d2_v    = a1 * a1
         d3_p    = 2.0e0_wp * a1
@@ -1759,9 +1719,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         if( d1_w .gt. 0.0e0_wp )then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d15_v)
         else
-            !           call ehufDO (9,d1_w, d15_v, d1_p,
-            !     +g_ehfid,
-            !     +695)
         endif
         d16_v = (a1 * x + a2 * y + a3 * z + d) / d15_v
         d2_b  = 1.0e0_wp / d15_v
@@ -1792,7 +1749,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp)           :: d9_b, d8_b, d7_b, d6_b, d8_v, g_x(g_pmax_), g_a &
             & (g_pmax_, 3, 3), g_y(g_pmax_), g_z(g_pmax_), g_ans(g_pmax_)
         integer :: g_ehfid
-        !        call ehsfid(g_ehfid, 'det3','g_toBowman.f')
         g_ehfid = 0
         d8_v    = a(2,2) * a(3,3) - a(2,3) * a(3,2)
         d6_b    = (-a(1,1)) * a(3,2)
@@ -1911,8 +1867,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         !    dtheta1/dt1  theta = acos(t)
         do i=1, 3
             if( abs(t(i)) .ge. 1.e0_wp )then
-                !         write(*,*) "Abnormal structure: N-H2-H3 is linear"
-                !         stop
                 dt(i) = 0.e0_wp
             else
                 dt(i) = -(1.e0_wp/sqrt( 1.e0_wp-t(i)*t(i) ))*180.e0_wp/pi
@@ -2070,7 +2024,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         phi2 = theta3
         ! the following line (Shikha) is correct only when the sum of
         ! the three theta is 360.0
-        !      phi3 = theta1+theta3
         if( abs(360.e0_wp-(theta1+theta2+theta3)) .lt. small )then
             phi3 = theta1+theta3
         elseif( abs(theta1-theta2-theta3) .lt. small )then

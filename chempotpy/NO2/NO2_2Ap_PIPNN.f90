@@ -96,7 +96,6 @@ module chempotpy_no2_2ap_pipnn_pes
             call patchfunc(r, vpf, dvpfdr, 1)
             do i=1, 3
                 dvpfdr(i) = dvpfdr(i)/23.061e0_wp
-                !       write(*,*) "dVpfdR ", dVpfdR(i),i
             enddo
             call evdvdx(dvdg, dpdr, drdx, dvdxa, dvdx, dvpfdr)
         endif
@@ -185,46 +184,22 @@ module chempotpy_no2_2ap_pipnn_pes
         logsig = 1.e0_wp/(1.e0_wp+exp(-x))
     end function logsig
 
-    !      subroutine evvdvdx(xcart,v,vpes,dvdxa,dvdx,ndriv)
-    !      use nnparam
-    !      implicit none
-    !      integer i,j,k,ndriv
     !      real*8 v,vpes(npes),c(0:ninput),dvdx(1:natom*3,npes)
     !      real*8 xcart(1:3,1:natom),m(0:4),xmorse(1:nbond),r(1:nbond)
     !      real*8 dvdr(1:nbond),x(1:natom*3),drdx(1:nbond,1:natom*3)
     !      real*8 txinput(1:ninput),dvdg(1:ninput,npes),p(0:ninput)
     !      real*8 dpdr(1:nbond,0:ninput),dvdxa(1:natom*3)
-    !      do i=1,3
     !       x((3*(i-1)+1):(3*(i-1)+3))=xcart(:,i)
-    !      enddo
     !      k=0
-    !      do i=1,2
-    !       do j=i+1,3
     !        k=k+1
     !       r(k)=dot_product(xcart(:,i)-xcart(:,j),
     !     $                  xcart(:,i)-xcart(:,j))
     !        r(k)=dsqrt(r(k))
     !        xmorse(k)=dexp(-r(k)/alpha)
-    !       enddo
-    !      enddo
-    !      if(k.ne.3)stop "error"
-    !      call bemsav(xmorse,m,p)
-    !      do j=1,12
     !      txinput(j)=p(j)
-    !      enddo
-    !      call pot3a(txinput,vpes,dvdg,ndriv)
     !      v=0d0
-    !      do i=1,npes
     !       v=v+vpes(i)
-    !      enddo
     !      v=v/npes
-    !      if(ndriv.eq.1)then
-    !       call evdvdr(r,c,m,p,dpdr)
-    !       call evdrdx(xcart,r,x,drdx)
-    !       call evdvdx(dvdg,dpdr,drdx,dvdxa,dvdx)
-    !      endif
-    !      return
-    !      end subroutine evvdvdx
     !> @brief Evaluate bemsav.
     subroutine bemsav( xmorse, m, p )
         use chempotpy_kinds, only: wp

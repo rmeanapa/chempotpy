@@ -442,7 +442,6 @@ module chempotpy_fh2_gen_5secw_1991_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
             call cartou
             call carttor
@@ -484,7 +483,6 @@ module chempotpy_fh2_gen_5secw_1991_pes
             !  PART IIa.  CALCULATE THE DYNAMICAL CORRELATION ENERGY AND ITS DERIVAT
             !     FIRST: CALL THE SUBROUTINE DAMP WHICH CALCULATES THE DAMPING FUNCT
             !            FOR THE NTH DISPERSION COEFFICIENT AND ITS DERIVATIVES
-            !            N = 6, 8, 10.
             call damp(pt1cm_r, dist_rm)
             !     SECOND: CALL THE SUBROUTINE CORR2 WHICH CALCULATES THE TWO BODY
             !             CORRELATION ENERGY AND ITS DERIVATIVES
@@ -875,8 +873,6 @@ module chempotpy_fh2_gen_5secw_1991_pes
             if( usricm_nder .eq. 1 ) lderiv = .true.
             omp3c = 1.e0_wp - local_p3c
             omq3c = 1.e0_wp - local_q3c
-            !      HA2 = 0.5D0 * A2
-            !      G2 = G * G
             r12   = pt1cm_r(1) * pt1cm_r(1)
             r22   = pt1cm_r(2) * pt1cm_r(2)
             r32   = pt1cm_r(3) * pt1cm_r(3)
@@ -896,7 +892,6 @@ module chempotpy_fh2_gen_5secw_1991_pes
             costh = 0.5e0_wp * (r12 + r32 - r22) * t4
             t5    = omq3c * costh
             !   SET MODIFICATION ...
-            !      T=1.0D0
             t = local_q3c + t5 * costh
             !   engygs_e3c CONTAINS THE THREE CENTER CORRECTION TO V
             engygs_e3c = (ex2 + ex3) * t * ex1

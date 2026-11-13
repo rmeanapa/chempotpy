@@ -141,7 +141,6 @@ end subroutine diagonalize
 
 !> @brief Evaluate pot for the YRH_LEPS_ModelSurface_DPEM potential.
 subroutine pot( ro, e, de, nt, nsurf )
-    !      subroutine pot(ro,nt,nsurf)
     use chempotpy_kinds, only: wp
     implicit none
     integer, parameter :: g_p_  = 3
@@ -579,8 +578,7 @@ module chempotpy_yrh_leps_modelsurface_dpem_g_pot12_entry_st_d6ebbc37
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
         real(wp) :: a1, a2, cevau, csth, e(:), r(:,:), r1, r2, r3, re1_12, re2_12, s1, s2, scale, sith, thrad, thshift, &
             & tmp1, tmp2
-        integer :: i, nt
-        !      dimension r(:,:),De(3,nt),e(:)
+        integer            :: i, nt
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
         real(wp)           :: d1_p, d1_w, d4_b, d3_b, d2_v, g_r1(g_pmax_), g_r(:,:,:), g_r2(g_pmax_), g_s1(g_pmax_), g_s2(g_pmax_)

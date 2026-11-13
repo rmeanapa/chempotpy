@@ -397,36 +397,9 @@ module chempotpy_clh2o_pipnn_pes
             lxc = -1
             return
         endif
-        !     if(r23.lt.r13.and.r13.gt.1.9d0.and.r24.gt.1.8d0) then
-        !       if(r14.ge.1.8d0.or.r23.ge.1.9d0)then
-        !         lxc=-1
-        !         return
-        !       endif
-        !     endif
-        !     if(r13.lt.r23.and.r23.gt.1.9d0.and.r14.gt.1.8d0) then
-        !       if(r13.ge.1.8d0.or.r24.ge.1.9d0)then
-        !         lxc=-1
-        !         return
-        !       endif
-        !     endif
         !check if HO and HCl were produced
-        !     if(r12.ge.3.5d0)then
-        !       xcom1(:)=xct2(:,1)+(mass(3)/(mass(1)+mass(3)))*
         !    $ (xct2(:,3)-xct2(:,1))
-        !       xcom2(:)=xct2(:,2)+(mass(4)/(mass(2)+mass(4)))*
         !    $ (xct2(:,4)-xct2(:,2))
-        !       rcom=dsqrt(dot_product(xcom1-xcom2,xcom1-xcom2))
-        !       if(rcom.ge.5.0d0.and.rcom.le.16.0d0)then
-        !         lxc=1
-        !         return
-        !       else if(rcom.gt.16.0d0)then
-        !         lxc=2
-        !         return
-        !       else
-        !         lxc=0
-        !         return
-        !       endif
-        !     endif
         lxc = 0
     end subroutine before_vpes
 

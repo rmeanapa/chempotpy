@@ -488,7 +488,6 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             infocm_indexes(3) = 1
             infocm_indexes(4) = 9
             infocm_irctnt     = 3
-            !      CALL POTINFO
             call ancvrt
             ! prefactors for polynomials
             potcm_fac(0) = 1.
@@ -721,7 +720,6 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
                     enddo
                 enddo
             enddo
-            !     e=e+a(1)
             if( rcm .lt. 7.2e0_wp )then
                 e = e+vp(0, 0, 0)*exp(-((7.2e0_wp-rcm)/rcm)**2)*potcm_a(2)/rcm**6
             else

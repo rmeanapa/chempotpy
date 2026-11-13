@@ -585,14 +585,11 @@ module chempotpy_nafh_leps_ttypp2_1998_pot11_legacy_state_1329b7c2
                 danormd2 = danormd2 + dcogd2
                 danormd3 = danormd3 + dcogd3
             enddo
-            !     if (csb.gt.3.99d0) write(6,77)l1,l2,csb,r(i,3),
-            !    &                         r(i,2),e(i),anorm
             hlp     = 1.e0_wp/anorm
             e(i)    = e(i)*hlp
             de(1,i) = (de(1,i) - e(i)*danormd1)*hlp
             de(2,i) = (de(2,i) - e(i)*danormd2)*hlp
             de(3,i) = (de(3,i) - e(i)*danormd3)*hlp
-            !  77 format(2(2x,i3),5(2x,e16.8))
             e(i)    = e(i)*cevau
             de(1,i) = de(1,i)*cevau
             de(2,i) = de(2,i)*cevau
@@ -1263,7 +1260,6 @@ module chempotpy_nafh_leps_ttypp2_1998_pot22_legacy_state_1329b7c2
                 hlp   = 0.5e0_wp*(1.e0_wp+tanh(hlp))
                 hlp2  = r(i,3)+r(i,1)-rsi
                 if( hlp2 .gt. 0.e0_wp )then
-                    !     write(6,*)'R1+R3=',(r(i,1)+r(i,3))
                     ctanh  = exp(-psi/hlp2)
                     dctanh = psi*ctanh/(r(i,3)+r(i,1)-rsi)**2
                 else

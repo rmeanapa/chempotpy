@@ -160,11 +160,7 @@ module chempotpy_o3_2_1ap_pes
             integer  :: i, igrad, j, nob, k
             real(wp) :: v
             real(wp) :: dvdx(12), x(12)
-            !      common /coord/    R(3)
-            !      common /epot/     rMs(3),rM(0:7),P(0:66),C(56),B(56)
-            !      common /gradt/    dMsdR(3,3),dMdR(3,0:7),dPdR(3,0:66),dVdR(3),
             !     $                  dRdX(3,9),dBdR(3,56)
-            !      common /msprmt/   a,ab,ra,rb
             ! Convert the Cartesian coordinate array to pair distances
             call coord_convt(x)
             if( igrad .le. 1 )then
@@ -239,8 +235,6 @@ module chempotpy_o3_2_1ap_pes
             do i=1, 56
                 v = v + epot_c(i)*epot_b(i)
             enddo
-            !      Write(*,9999) V
-            ! 9999 Format('The potential energy is ',F20.14,' kcal/mol')
         end subroutine evv
 
         !> @brief Evaluate EvdVdX for the O3_2_1Ap potential.
@@ -429,7 +423,6 @@ module chempotpy_o3_2_1ap_pes
             ! Anstromgs^-2, beta=dimensionless, a_k in milihartree.
             real(wp) :: alpha, beta, a(0:7)
             integer  :: k, igrad
-            ! Original parameters
             !      alpha = 0.785d0
             !      beta = 1.307d0
             !      a(0) = -2388.5641690d0

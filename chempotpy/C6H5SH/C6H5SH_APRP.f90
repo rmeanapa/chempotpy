@@ -243,7 +243,6 @@ module chempotpy_c6h5sh_aprp_pes
         endif
         !--- cc: eigenvectors
         call diagonalize(nstate, uu, vv, cc)
-        !call diagonalize(vv, cc, uu, nstate)
         !--- get the nonadiabatic coupling elements
         dvec = 0e0_wp
         do i = 1, 3

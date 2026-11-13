@@ -219,7 +219,6 @@ module chempotpy_c2h2o_pipnn_pes
         do i=1, 10
             if( rb(i) .le. 0.7e0_wp )then
                 lxc = -1
-                !              print*,"lxc.eq.-1, rbond too small"
                 return
             endif
         enddo
@@ -237,43 +236,35 @@ module chempotpy_c2h2o_pipnn_pes
         tt = 1.43e0_wp
         if( min_rch .gt. xx )then
             lxc = -1
-            !           print*,"lxc.eq.-1, min_rCH too large"
             return
         else
             if( rc2c3 .gt. yy )then
                 if((rc2h4.le.xx .and. rc2h5.le.xx .and. rc3o1.le.zz).or. &
                     &          (rc3h4.le.xx .and. rc3h5.le.xx .and. rc2o1.le.zz))then
                 lxc = 0
-                !                print*,"lxc.eq.0, CH2+CO channel"
                 return
             else
                 lxc = -1
-                !                print*,"lxc.eq.-1, CC bond break but not CH2+CO channel"
                 return
             endif
         else
             if( (rc2h4 .le. xx .and.rc3h5 .le. xx) .or. (rc2h5 .le. xx .and.rc3h4 .le. xx) )then
                 lxc = 0
-                !                print*,"lxc.eq.0, HCCH+O channel"
                 return
             elseif(((rc2h4.le.xx.or.rc2h5.le.xx).and.rc3o1.le.yy ).or.&
                     &          ((rc3h4.le.xx.or.rc3h5.le.xx) .and. rc2o1.le.yy ))then
                 lxc = 0
-                !                print*,"lxc.eq.0, HCCO+H channel"
                 return
             elseif(((rc2h4.le.xx.or.rc3h4.le.xx).and.rh5o1.le.tt ).or. &
                     &          ((rc2h5.le.xx.or.rc3h5.le.xx) .and. rh4o1.le.tt ))then
                 lxc = 0
-                !                print*,"lxc.eq.0, HCC+OH channel"
                 return
             elseif((rc2h4.le.xx.and.rc2h5.le.xx.and.rc3o1.le.yy ).or. &
                     &          (rc3h4.le.xx.and.rc3h5.le.xx.and.rc2o1.le.yy ))then
                 lxc = 0
-                !                print*,"lxc.eq.0, H2CCO channel"
                 return
             else
                 lxc = -1
-                !                print*,"lxc.eq.-1, CC bond not break, but not HCCH+O/
                 !     $                  HCCO+H/HCC+OH/H2CCO channel"
                 return
             endif
@@ -285,9 +276,6 @@ module chempotpy_c2h2o_pipnn_pes
     !------->This is the subroutine for PIPs up to 3rd order
     !------->of A2B2C type molecule.
     !------->
-    !        double precision :: x(1:10)
-    !        double precision :: p(0:101)
-    !        call bemsav(x,p)
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
         use chempotpy_kinds, only: wp

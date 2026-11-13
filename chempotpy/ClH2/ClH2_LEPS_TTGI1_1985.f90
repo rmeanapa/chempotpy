@@ -181,8 +181,6 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         !   Initialize the array INDX which specifies the order of the
         !   input bond distances.  INDX=1,2,3 for Cl + H2 and INDX=132 for H + C
         !   Echo the name of the potential to the file linked to FORTRAN unit IP
-        !WRITE (IPTPRT, 600) C
-        !WRITE (IPTPRT, 610) TITLE
         !     SET UP SPLINE FITS TO H2 CURVES
         arg    = 0.e0_wp
         c      = 0.e0_wp
@@ -412,7 +410,6 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         !     NROOT-TH STATE ENERGY STORED IN XTER (OR TERM FOR DIATOMIC)
         !     THREE PARTIALS STORED IN DD(3)
         !   Check the value of NDER
-        !     IAPP=1
         !     SET FLAG FOR EIGENVECTOR OUTPUT
         iflag = sign(1, nroot)
         nroot = abs(nroot)
@@ -481,7 +478,6 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             & write(iptprt, '(1X,''NROOT,EN(1),EN(NROOT),C(2),XTER='',I5,1P4E13.5)') nroot, en(1), en(nroot), c(2), xter
         if( iflag .lt. zero ) write(iptprt, '(1X,''VECTOR='',6D20.8)') (vec(i,nroot), i=1, ndim)
         !************************* END OF FPOT3N *******************************
-        !     IF(IAPP.EQ.0) RETURN
         if( nder .ne. 1 ) return
         !     SET  VECTOR FOR STATE OF INTEREST
         do i=1, ndim

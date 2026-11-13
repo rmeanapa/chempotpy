@@ -5,7 +5,6 @@
 !   The cartesian coordinates, potential energy, and derivatives of the
 !   with respect to the cartesian coordinates are passed by the calling
 !   via COMMON BlOCKS
-!        CALL POT
 !   where X and DX are arrays dimensioned N3TM, and N3TM must be greater
 !   than or equal to 18 (3*number of atoms).
 !   All the information passed to and from the potential energy surface
@@ -272,8 +271,7 @@ module chempotpy_ch4o_lep_1995_pes
             call carttor
             ! Changing to angstroms and initialize
             do i = 1, 18
-                q(i) = r(i)
-                !         q(I) = R(I)*0.52918d0
+                q(i)    = r(i)
                 pdot(i) = 0.e0_wp
             enddo
             !  calculate relative coordinates and bond lengths
@@ -345,7 +343,6 @@ module chempotpy_ch4o_lep_1995_pes
             do i=1, 4
                 rch(i) = sqrt(tch(i,1)*tch(i,1)+tch(i,2)*tch(i,2)+ tch(i,3)*tch(i,3))
                 rbh(i) = sqrt(tbh(i,1)*tbh(i,1)+tbh(i,2)*tbh(i,2)+ tbh(i,3)*tbh(i,3))
-                !      write (*,*) 'rch(i) y rbh(i) = ',rch(i),rbh(i)
             enddo
         end subroutine coorden
 
@@ -361,8 +358,7 @@ module chempotpy_ch4o_lep_1995_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            tau = acos(-1.0e0_wp/3.0e0_wp)
-            !       pi=4.0d0*atan(1.0d0)
+            tau    = acos(-1.0e0_wp/3.0e0_wp)
             halfpi = 0.5e0_wp*pi
             twopi  = 2.0e0_wp*pi
             !  set diagonal elements to zero
@@ -682,9 +678,8 @@ module chempotpy_ch4o_lep_1995_pes
                 argd(in(ii))  = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
                 argd(in(ii))  = argd(in(ii))/norma
                 delta(in(ii)) = acos(argd(in(ii)))-theta0(i,in(ii))
-                !        write(*,*) 'theta,delta',theta0(i,in(ii)),delta(in(ii))
-                sum2 = sum2+delta(in(ii))**2
-                sum4 = sum4+delta(in(ii))**4
+                sum2          = sum2+delta(in(ii))**2
+                sum4          = sum4+delta(in(ii))**4
             enddo
             !  derivatives of axb wrt hj:
             daxb(j, 1, 1) = 0.0e0_wp
@@ -880,12 +875,9 @@ module chempotpy_ch4o_lep_1995_pes
             dfk0(3,4,2) = (f0-f2)*s2(1)*ds2(2)
             dfk0(3,4,3) = f0*ds1(3)*s1(4)
             dfk0(3,4,4) = f0*s1(3)*ds1(4)
-            !       argfk0=bk*((rch(1)-r0ch)**2+(rch(2)-r0ch)**2
             !     *              +(rch(3)-r0ch)**2+(rch(4)-r0ch)**2)
-            !       fk0=fkinf+ak*exp(-argfk0)
             do i=1, 4
                 !  calc derivatives of fk0 wrt each of the rch(i) bonds
-                !         dfk0(i)=-2.0d0*ak*bk*(rch(i)-r0ch)*exp(-argfk0)
                 !  calculate the terms f1(i)
                 arga1 = aa1*rbh(i)*rbh(i)
                 arga2 = aa4*(rbh(i)-r0hh)*(rbh(i)-r0hh)
@@ -1067,7 +1059,6 @@ module chempotpy_ch4o_lep_1995_pes
             indexes(5) = 1
             indexes(6) = 8
             irctnt     = 6
-            !CALL POTINFO
             call ancvrt
             !  calculate indexes for coordinates
             do ind=1, 3

@@ -552,10 +552,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
         subroutine pot
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: en, evdw, vip, vop, vstr, vtor
-            integer  :: i, n
-            !     DIMENSION COORD(24),DX(24)
-            !     DIMENSION dxvstr(21),dxvtor(21),dxvop(21),dxvip(21)
+            real(wp)            :: en, evdw, vip, vop, vstr, vtor
+            integer             :: i, n
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -563,7 +561,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+OH PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -577,7 +574,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! coordinates are in common qpdot.
             ! Besides, BOHR_A in utility.f does not match the value below.
             ! As a consequence, q(i) changes and energy is not conserved
-            !c call de venus
             call cartou
             call carttor
             !     PUT COORDINATES IN PROPER ARRAYS
@@ -587,10 +583,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 qpdot_pdot(i) = 0.e0_wp
             enddo
             ! Changing units from angstrom to bohr
-            !      DO  I = 1, 27
-            !c         q(I) = COORD(I)*0.52918d0
-            !        q(I) = R(I)*0.52918d0
-            !      enddo
             ! End of corrections by EMN
             !  calculate relative coordinates and bond lengths
             en = 0.0e0_wp
@@ -611,14 +603,12 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  total potential energy is vstr+vop+vip
             en = vstr+vop+vip+vtor+evdw
             !  convert from 10(5) j/mol to au
-            en = en*0.03812e0_wp
-            !      V = en
+            en           = en*0.03812e0_wp
             pt1cm_engygs = en
             call eunitzero
             if( usricm_nder .ne. 0 )then
                 !  Initialize derivatives
                 do n=1, 24
-                    !          DX(n)=0.0d0
                     pt1cm_degsdr(i) = qpdot_pdot(i)*0.0201723e0_wp
                 enddo
                 call rtocart
@@ -631,10 +621,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  calculates relative coordinates and bond lengths
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: argmax, argp5, p5, rav4, t5tmp
-            integer  :: i, ind
-            !      include 'ch3oh_h.inc'
-            !C INCLUDE DEL VENUS
+            real(wp)            :: argmax, argp5, p5, rav4, t5tmp
+            integer             :: i, ind
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -642,7 +630,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -710,7 +697,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             coord6_r0cc  = p5*potcm_r0ccr+(1-p5)*potcm_r0ccp
             coord6_r0c1h = p5*potcm_r0c1hr+(1-p5)*potcm_r0c1hp
             coord6_r0c2h = p5*potcm_r0c2hr+(1-p5)*potcm_r0c2hp
-            !c
         end subroutine coorden
 
         !> @brief Evaluate vander for the CH5O2_VBMM_2023 potential.
@@ -723,7 +709,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -741,9 +726,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
         subroutine torsion( vtor )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: a, arg1, arg2, dihed, t1(3), vtor
-            integer  :: i
-            !C INCLUDE DEL VENUS
+            real(wp)            :: a, arg1, arg2, dihed, t1(3), vtor
+            integer             :: i
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -751,14 +735,12 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
             ! Subroutine vop
             ! Subroutine ipforce
             ! Subroutine Switch
-            !      double precision pi
             !      pi=4.0d0*atan(1.0d0)
             ! Add Newh2o
             ! jeg vdw
@@ -772,17 +754,11 @@ module chempotpy_ch5o2_vbmm_2023_pes
             torsion1_thetahcch(3) = dihed*pi/180.0e0_wp
             ! CRD 2011 calculamos los terminos switching t1 y t2
             do i=1, 3
-                !       t1(i)=0.5d0*(1-tanh(w1*(rc1h(i)-w2)))
-                !       t1(i)=(1-tanh(w1*(rc1h(i)-w2)))
                 t1(i) = (1-tanh(potcm_w1*(coord5_rc1h(i)-coord6_r0c1h)))
             enddo
-            !       t2(1)=0.5d0*(1-tanh(w7*(rc2h(1)-w8)))
-            !       t2(1)=(1-tanh(w7*(rc2h(1)-w8)))
             torsion1_t2 = (1-tanh(potcm_w7*(coord5_rc2h(1)-coord6_r0c2h)))
-            !     write(*,*) t1(1)*t2(1),t1(2)*t2(1),t1(3)*t2(1)
-            vtor = 0.0e0_wp
+            vtor        = 0.0e0_wp
             ! CRD 2021 incluimos terminos para pasar de 3 a 2 minimos
-            !     arg1=(t1(1)*t1(2)*t1(3)*t2)**3.0d0
             arg1 = (coord5_rb1h(1)-potcm_r0h1h)*(coord5_rb1h(2)-potcm_r0h1h)*(coord5_rb1h(3)-potcm_r0h1h)* &
                 & (coord5_rb2h(1)-potcm_r0h2h)
             arg2 = tanh(arg1)
@@ -791,12 +767,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             else
                 a = 2.0e0_wp+1.e0_wp*arg2
             endif
-            !     write(45,*) arg1, arg2, A
             ! CRD linea para eliminar la correccion
-            a = 3.0e0_wp
-            !      vtor=vtor+(V3/3.0d0)*(1+cos(3*thetahcch(1)))*t1(1)*t2
-            !      vtor=vtor+(V3/3.0d0)*(1+cos(3*thetahcch(2)))*t1(2)*t2
-            !      vtor=vtor+(V3/3.0d0)*(1+cos(3*thetahcch(3)))*t1(3)*t2
+            a    = 3.0e0_wp
             vtor = vtor+(potcm_v3/3.0e0_wp)*(1+cos(a*torsion1_thetahcch(1)))*t1(1)*torsion1_t2
             vtor = vtor+(potcm_v3/3.0e0_wp)*(1+cos(a*torsion1_thetahcch(2)))*t1(2)*torsion1_t2
             vtor = vtor+(potcm_v3/3.0e0_wp)*(1+cos(a*torsion1_thetahcch(3)))*t1(3)*torsion1_t2
@@ -806,9 +778,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
         subroutine dihedro( i, j, k, l, dihed )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: dihed
-            !        include 'ch3oh_h.inc'
-            !C INCLUDE DEL VENUS
+            real(wp)            :: dihed
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -816,7 +786,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -825,14 +794,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Subroutine Switch
             ! Add Newh2o
             ! jeg vdw
-            integer :: i, j, k, l
-            integer :: m
-            !        double precision x(300)
-            !        double precision dista
-            !        double precision d12,d13,d14,d23,d24,d34
-            !        double precision p,q
-            !        double precision p
-            !        double precision pi
+            integer  :: i, j, k, l
+            integer  :: m
             real(wp) :: rij(3), rjk(3), rkj(3), rkl(3)
             real(wp) :: zijjk(3), zijkj(3), zkjkl(3), zjkkl(3)
             real(wp) :: tmpsign(3), tmp, arg1, arg2
@@ -907,9 +870,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  subroutine calculates reference angles for the "in-plane" potential
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: halfpi, tau, tauco, tauoc, twopi
-            integer  :: i, j
-            !C INCLUDE DEL VENUS
+            real(wp)            :: halfpi, tau, tauco, tauoc, twopi
+            integer             :: i, j
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -917,7 +879,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+OH PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -926,20 +887,14 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Subroutine Switch
             ! Add Newh2o
             ! jeg vdw
-            !      dimension sumd2(4),sumd4(4),ddr(4,4)
             tau = acos(-1.0e0_wp/3.0e0_wp)
             ! CRD 2012 taucc para el angulo H-C-C
-            tauco = acos(-0.3616e0_wp)
-            tauoc = acos(-0.4558e0_wp)
-            !      pi=4.0d0*atan(1.0d0)
-            !      halfpi=0.5d0*pi
+            tauco  = acos(-0.3616e0_wp)
+            tauoc  = acos(-0.4558e0_wp)
             halfpi = 0.6555e0_wp*pi
             twopi  = 2.0e0_wp*pi
             ! jcc-2010
             ! valor para ajustar el angulo
-            !      anghch=0.649d0*pi
-            !      tausih = pi - asin ( sin(anghch/2.d0) / sin(pi/3.d0) )
-            !      tausih=acos(-0.4648d0)
             ! jcc-2010
             !  set diagonal elements to zero
             do i=1, 6
@@ -968,12 +923,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 enddo
             enddo
             refangles1_theta0(6,5) = refangles1_theta0(5,6)
-            !      do i=1,3
-            !         do j=i+1,4
-            !          write(44,*) 'theta',i,j,'=', theta0(i,j)*180/pi
-            !         enddo
-            !      enddo
-            !          write(44,*) 'theta(5,6)=', theta0(5,6)*180/pi
         end subroutine refangles
 
         !> @brief Evaluate stretch for the CH5O2_VBMM_2023 potential.
@@ -984,9 +933,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             implicit none
             real(wp) :: ach1, ach2, arga1, arga2, dt, e1, e3, expterm, rav1, rav2, vcc, vj(4), vjb1h(3), vjb2h(1), vjc1b, &
                 & vjc1h(3), vjc2b, vjc2h(1), vno, vq(4), vqb1h(3), vqb2h(1), vqc1b, vqc1h(3), vqc2b, vqc2h(1), vstr
-            integer :: i
-            !      include 'ch3oh_h.inc'
-            !C INCLUDE DEL VENUS
+            integer             :: i
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -994,7 +941,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -1006,7 +952,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  calculate avergage bond length for the methane moiety
             rav1 = (coord5_rc1h(1)+coord5_rc1h(2)+coord5_rc1h(3))/3.0e0_wp
             rav2 = coord5_rc2h(1)
-            !      write(44,*) rav1, rav2
             !  initialise:
             vstr = 0.0e0_wp
             !  ach:
@@ -1024,40 +969,31 @@ module chempotpy_ch5o2_vbmm_2023_pes
             else
                 ach2 = potcm_a1c2h+potcm_b1c2h
             endif
-            !      write(44,*) 'r0c1h',r0c1h,'rav1',rav1
-            !      write(44,*) 'r0c2h',r0c2h, 'rav2',rav2
-            !      write(44,*) 'ach1',ach1,'ach2', ach2
             !  calculate singlet: e1, triplet: e3 energies and vq and vj
             !  terms for each bond
-            !      write(44,*) d1c1b,d3c2b,ac1b,rc1b,r0c1b
-            !      write(44,*) d1c2b,d3c2b,ac2b,rc2b,r0c2b
             e1    = potcm_d1c1b*(exp(-2.0e0_wp*potcm_ac1b*(coord5_rc1b-potcm_r0c1b)) -2.0e0_wp*exp(-potcm_ac1b* &
                 & (coord5_rc1b- potcm_r0c1b)))
             e3    = potcm_d3c1b*(exp(-2.0e0_wp*potcm_ac1b*(coord5_rc1b-potcm_r0c1b)) +2.0e0_wp*exp(-potcm_ac1b* &
                 & (coord5_rc1b- potcm_r0c1b)))
             vqc1b = (e1+e3)*0.5e0_wp
             vjc1b = (e1-e3)*0.5e0_wp
-            !      write(44,*) vqc1b, vjc1b
             e1    = potcm_d1c2b*(exp(-2.0e0_wp*potcm_ac2b*(coord5_rc2b-potcm_r0c2b)) -2.0e0_wp*exp(-potcm_ac2b* &
                 & (coord5_rc2b- potcm_r0c2b)))
             e3    = potcm_d3c2b*(exp(-2.0e0_wp*potcm_ac2b*(coord5_rc2b-potcm_r0c2b)) +2.0e0_wp*exp(-potcm_ac2b* &
                 & (coord5_rc2b- potcm_r0c2b)))
             vqc2b = (e1+e3)*0.5e0_wp
             vjc2b = (e1-e3)*0.5e0_wp
-            !     write(44,*) vqc2b, vjc2b
             ! O-H  new term (simple morse term)
             dt      = (newh2o_rno-newh2o_r0hh)
             expterm = exp(-newh2o_ahh*dt)
             vno     = newh2o_d1hh*(1.e0_wp-expterm)**2.e0_wp
             do i=1, 3
-                !      write(44,*) 'ach1',ach1,'rc1h',rc1h(i),r0c1h
                 e1       = potcm_d1c1h*(exp(-2.0e0_wp*ach1*(coord5_rc1h(i)-coord6_r0c1h)) -2.0e0_wp*exp(-ach1* &
                     & (coord5_rc1h(i)-coord6_r0c1h)))
                 e3       = potcm_d3c1h*(exp(-2.0e0_wp*ach1*(coord5_rc1h(i)-coord6_r0c1h)) +2.0e0_wp*exp(-ach1* &
                     & (coord5_rc1h(i)-coord6_r0c1h)))
                 vqc1h(i) = (e1+e3)*0.5e0_wp
                 vjc1h(i) = (e1-e3)*0.5e0_wp
-                !      write(44,*) 'vqc1h',i, vqc1h(i), 'vjc1h',i, vjc1h(i)
             enddo
             e1       = potcm_d1c2h*(exp(-2.0e0_wp*ach2*(coord5_rc2h(1)-coord6_r0c2h)) -2.0e0_wp*exp(-ach2* &
                 & (coord5_rc2h(1)- coord6_r0c2h)))
@@ -1065,7 +1001,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 & (coord5_rc2h(1)- coord6_r0c2h)))
             vqc2h(1) = (e1+e3)*0.5e0_wp
             vjc2h(1) = (e1-e3)*0.5e0_wp
-            !      write(44,*) 'vqc2h', vqc2h(1), 'vjc2h',vjc2h(1)
             do i=1, 3
                 e1       = potcm_d1h1h*(exp(-2.0e0_wp*potcm_ah1h*(coord5_rb1h(i)-potcm_r0h1h)) -2.0e0_wp*exp(- &
                     & potcm_ah1h* (coord5_rb1h(i)-potcm_r0h1h)))
@@ -1073,7 +1008,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                     & potcm_ah1h* (coord5_rb1h(i)-potcm_r0h1h)))
                 vqb1h(i) = (e1+e3)*0.5e0_wp
                 vjb1h(i) = (e1-e3)*0.5e0_wp
-                !      write(44,*) 'vqb1h',i, vqb1h(i), 'vjb1h',i, vjb1h(i)
             enddo
             e1       = potcm_d1h2h*(exp(-2.0e0_wp*potcm_ah2h*(coord5_rb2h(1)-potcm_r0h2h)) -2.0e0_wp*exp(-potcm_ah2h* &
                 & (coord5_rb2h(1)-potcm_r0h2h)))
@@ -1081,10 +1015,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 & (coord5_rb2h(1)-potcm_r0h2h)))
             vqb2h(1) = (e1+e3)*0.5e0_wp
             vjb2h(1) = (e1-e3)*0.5e0_wp
-            !      write(44,*) 'vqb2h', vqb2h(1), 'vji2h',vjb2h(1)
             !  calculate 3 body potential
             do i=1, 3
-                !       write(44,*) i,'vqc1h',vqc1h(i),'vqc1b',vqc1b, 'vqb1h',vqb1h(i)
                 vq(i) = vqc1h(i)+vqc1b+vqb1h(i)
                 vj(i) = -sqrt(((vjc1h(i)-vjc1b)**2+(vjc1b-vjb1h(i))**2 +(vjb1h(i)-vjc1h(i))**2)*0.5e0_wp)
                 vstr  = vstr+vq(i)+vj(i)
@@ -1097,7 +1029,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             expterm = exp(-potcm_acc*dt)
             vcc     = potcm_d1cc*(1.0e0_wp-expterm)**2.0e0_wp
             vstr    = vstr + vcc + vno
-            !      write(44,*) 'rcc',rcc,'r0cc',r0cc,'acc',acc
         end subroutine stretch
 
         !> @brief Evaluate opbend for the CH5O2_VBMM_2023 potential.
@@ -1105,9 +1036,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  subroutine calculates symmetrized vop potential and derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: a(3), argd(4), axb(3), b(3), c(4,3), sum2, sum4, sumd2(4), sumd4(4), vop
-            integer  :: i, in(3), j, k, l
-            !C INCLUDE DEL VENUS
+            real(wp)            :: a(3), argd(4), axb(3), b(3), c(4,3), sum2, sum4, sumd2(4), sumd4(4), vop
+            integer             :: i, in(3), j, k, l
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -1115,7 +1045,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -1125,8 +1054,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Add Newh2o
             ! jeg vdw
             real(wp) :: norma
-            !      dimension sumd2(8),sumd4(8)
-            !      dimension in(3),a(3),b(3),axb(3),c(8,3),argd(8)
             vop = 0.0e0_wp
             !  calculate force constants
             call opforce
@@ -1143,7 +1070,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 sumd2(i) = sum2
                 sumd4(i) = sum4
                 vop      = vop+vop6_fdelta(i)*sumd2(i)+vop6_hdelta(i)*sumd4(i)
-                !      write(44,*) i,j,k,l,sumd2(i)*fdelta(i),sumd4(i)*hdelta(i),vop
             enddo
         end subroutine opbend
 
@@ -1154,11 +1080,9 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !   also calculates the derivatives wrt delta
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
-            integer  :: i, ii, in(3), ind, j, k, l
-            real(wp) :: norma
-            !      include 'ch3oh_h.inc'
-            !C INCLUDE DEL VENUS
+            real(wp)            :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
+            integer             :: i, ii, in(3), ind, j, k, l
+            real(wp)            :: norma
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -1166,7 +1090,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -1218,9 +1141,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 axb(2) = a(3)*b(1)-a(1)*b(3)
                 axb(3) = a(1)*b(2)-a(2)*b(1)
                 ! modificacion para que hiciese vxu
-                !      axb(1)=b(2)*a(3)-b(3)*a(2)
-                !      axb(2)=a(1)*b(3)-b(1)*a(3)
-                !      axb(3)=b(1)*a(2)-a(1)*b(2)
                 norma = axb(1)*axb(1)+axb(2)*axb(2)+axb(3)*axb(3)
                 norma = sqrt(norma)
             else
@@ -1266,10 +1186,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  and their derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: switch(4)
-            integer  :: i
-            !      include 'ch3oh_h.inc'
-            !C INCLUDE DEL VENUS
+            real(wp)            :: switch(4)
+            integer             :: i
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -1277,7 +1195,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -1286,22 +1203,12 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Subroutine Switch
             ! Add Newh2o
             ! jeg vdw
-            !      dimension switch(8)
             !  calculate switching functions:
             switch(1) = (1.0e0_wp-switch1_s3(1))*switch1_s3(2)*switch1_s3(3)*switch1_s3(4)
             switch(2) = (1.0e0_wp-switch1_s3(2))*switch1_s3(3)*switch1_s3(4)*switch1_s3(1)
             switch(3) = (1.0e0_wp-switch1_s3(3))*switch1_s3(4)*switch1_s3(1)*switch1_s3(2)
             switch(4) = (1.0e0_wp-switch1_s3(4))*switch1_s3(1)*switch1_s3(2)*switch1_s3(3)
-            !      switch(5)=(1.0d0-s3(5))*s3(6)*s3(7)*s3(8)
-            !      switch(6)=(1.0d0-s3(6))*s3(7)*s3(8)*s3(5)
-            !      switch(7)=(1.0d0-s3(7))*s3(8)*s3(5)*s3(6)
-            !      switch(8)=(1.0d0-s3(8))*s3(5)*s3(6)*s3(7)
-            !      do i=1,4
-            !       write(44,*) 'switch',i,'=',switch(i)
-            !      enddo
-            !       write(*,*) 'pasa'
             !  calculate the force constants
-            !      do i=1,8
             do i=1, 4
                 vop6_fdelta(i) = switch(i)*potcm_fch3
                 vop6_hdelta(i) = switch(i)*potcm_hch3
@@ -1313,9 +1220,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  subroutine calculates symmetrised in plane bend term
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: arga, cosine, costh(6,6), dang, dot, dth(6,6), theta(6,6), vip
-            integer  :: i, j
-            !C INCLUDE DEL VENUS
+            real(wp)            :: arga, cosine, costh(6,6), dang, dot, dth(6,6), theta(6,6), vip
+            integer             :: i, j
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -1323,7 +1229,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -1347,8 +1252,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
                         costh(i,j) = costh(i,j)/coord5_rc1h(i)/coord5_rc1h(j)
                         theta(i,j) = acos(costh(i,j))
                         dth(i,j)   = theta(i,j)-refangles1_theta0(i,j)
-                        !      write(44,*) 'f1 i',i,f1(i),'f1 j',j,f1(j)
-                        vip = vip+0.5e0_wp*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
+                        vip        = vip+0.5e0_wp*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
                     else
                         costh(i,j) = coord4_tc1h(i,1)*coord3_tcc(1)+coord4_tc1h(i,2)*coord3_tcc(2) +coord4_tc1h(i,3)* &
                             & coord3_tcc(3)
@@ -1356,11 +1260,9 @@ module chempotpy_ch5o2_vbmm_2023_pes
                         theta(i,j) = acos(costh(i,j))
                         dth(i,j)   = theta(i,j)-refangles1_theta0(i,j)
                         vip        = vip+0.5e0_wp*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
-                        !     write(44,*)'fk0i,j',fk0(i,j),'f1i',f1(i),'f1j',f1(j),'dt',dth(i,j)
                     endif
                 enddo
             enddo
-            !     write(44,*) 'vip do 1', vip
             ! c2
             costh(5,6) = coord4_tc2h(1,1)*(-coord3_tcc(1))+coord4_tc2h(1,2)*(-coord3_tcc(2)) +coord4_tc2h(1,3)*(- &
                 & coord3_tcc(3))
@@ -1368,9 +1270,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             theta(5,6) = acos(costh(5,6))
             dth(5,6)   = theta(5,6)-refangles1_theta0(5,6)
             vip        = vip+0.5e0_wp*ipforce1_fk0(5,6)*ipforce1_f1(5)*ipforce1_f1(6)*dth(5,6)**2
-            !     write(44,*) 'theta 5,6', theta(5,6), theta0(5,6)
-            !     write(44,*)'fk05,6',fk0(5,6),'f15',f1(5),'f16',f1(6),'dt',dth(5,6)
-            !     write(44,*) 'vip do 2', vip
             !  Now, calculate h2o bending energies.
             !  First, calculate the angles:
             ! CRD 2022 INICIO
@@ -1424,10 +1323,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  all partial derivatives involving them
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: a1, a2, arga1, arga2, f0, f2
-            integer  :: i
-            !      include 'ch3oh_h.inc'
-            !C INCLUDE DEL VENUS
+            real(wp)            :: a1, a2, arga1, arga2, f0, f2
+            integer             :: i
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -1435,7 +1332,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -1459,20 +1355,16 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 & 1.0e0_wp)
             ipforce1_fk0(3,4) = f0+f0*(switch1_s1(3)*switch1_s1(4)-1.0e0_wp)+(f0-f2)*(switch1_s2(1)*switch1_s2(2)- &
                 & 1.0e0_wp)
-            !      fk0(5,6)=fkinf2*(s1(5)*s1(6))
-            !      fk0(5,6)=fkinf2*s1(5)
             ipforce1_fk0(5,6) = f0+f0*(switch1_s1(5)*switch1_s1(6)-1.0e0_wp)+(f0-f2)*(switch1_s2(5)*switch1_s2(6)- &
                 & 1.0e0_wp)
             ! f1 para los h del c1
             do i=1, 3
                 !  calc derivatives of fk0 wrt each of the rch(i) bonds
                 !  calculate the terms f1(i)
-                !       write(44,*) 'rb1h',i, rb1h(i)
-                arga1 = potcm_aa11*coord5_rb1h(i)*coord5_rb1h(i)
-                arga2 = potcm_aa41*(coord5_rb1h(i)-newh2o_r0hh)*(coord5_rb1h(i)-newh2o_r0hh)
-                a1    = 1.0e0_wp-exp(-arga1)
-                a2    = potcm_aa21+potcm_aa31*exp(-arga2)
-                !       write(44,*) 'a1',i, a1,'a2',i,a2,'aa11',aa11
+                arga1          = potcm_aa11*coord5_rb1h(i)*coord5_rb1h(i)
+                arga2          = potcm_aa41*(coord5_rb1h(i)-newh2o_r0hh)*(coord5_rb1h(i)-newh2o_r0hh)
+                a1             = 1.0e0_wp-exp(-arga1)
+                a2             = potcm_aa21+potcm_aa31*exp(-arga2)
                 ipforce1_f1(i) = a1*exp(-a2*(coord5_rc1h(i)-coord6_r0c1h)**2)
             enddo
             ! f1 para el c2
@@ -1495,10 +1387,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  calculates switching functions: s3,sphi,stheta
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: argmax, args1, args2, args3, argsc1, argsc2, argsc3, argsphi, argsphic, argstheta, argsthetac
-            integer  :: i
-            !      include 'ch3oh_h.inc'
-            !C INCLUDE DEL VENUS
+            real(wp)            :: argmax, args1, args2, args3, argsc1, argsc2, argsc3, argsphi, argsphic, argstheta, argsthetac
+            integer             :: i
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -1506,7 +1396,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -1624,11 +1513,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 refangles1_sphi(4) = 0.0e0_wp
                 refangles1_sphi(6) = refangles1_sphi(4)
             endif
-            !          sphi(4)=1.0d0
-            !          sphi(6)=1.0d0
-            !      do i=1,6
-            !          write(44,*) 'sphi',i,sphi(i)
-            !      enddo
             !  calculate stheta and dstheta
             do i=1, 3
                 if( coord5_rc1h(i) .lt. 3.8e0_wp )then
@@ -1639,14 +1523,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                     refangles1_stheta(i) = 0.0e0_wp
                 endif
             enddo
-            !      do i=1,3
-            !        if(rc2h(i).lt.3.8d0)then
-            !      argstheta=atheta*(rc2h(i)-r0c2h)*exp(btheta*(rc2h(i)-ctheta)**3)
-            !          stheta(i+4)=1.0d0-tanh(argstheta)
-            !        else
-            !          stheta(i+4)=0.0d0
-            !        endif
-            !      enddo
             ! CRD 2012 todos los S de los carbonos son 1
             if( coord5_rcc .lt. 3.8e0_wp )then
                 argsthetac           = potcm_athetacc*(coord5_rcc-coord6_r0cc)*exp(potcm_bthetacc*(coord5_rcc- &
@@ -1657,8 +1533,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 refangles1_stheta(4) = 0.0e0_wp
                 refangles1_stheta(6) = refangles1_stheta(4)
             endif
-            !          stheta(4)=1.0d0
-            !          stheta(6)=1.0d0
         end subroutine switchf
 
         !> @brief Evaluate prepare_local_context for the CH5O2_VBMM_2023 potential.
@@ -1672,9 +1546,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !   N3TM must be greater than or equal to N3TMMN.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: fact1, fact2, fact3
-            integer  :: i, icount, ind
-            !C INCLUDE DEL VENUS
+            real(wp)            :: fact1, fact2, fact3
+            integer             :: i, icount, ind
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
@@ -1683,7 +1556,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: n3tmmn = 27
             !  include file for CH3OH+H PES
             !  CONST
-            !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
             ! Subroutine refangles
@@ -1692,7 +1564,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Subroutine Switch
             ! Add Newh2o
             ! jeg vdw
-            !c call de venus
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
@@ -1702,7 +1573,6 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 infocm_ref(i) = ' '
             enddo
             !      REF(1)='J. Espinosa-Garcia and J. C. Corchado'
-            !      REF(2)='J. Chem. Phys., Vol. 112, p. 5731, 2000'
             infocm_indexes(1) = 6
             infocm_indexes(2) = 8
             infocm_indexes(3) = 1
@@ -1711,9 +1581,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             infocm_indexes(6) = 1
             infocm_indexes(7) = 8
             infocm_indexes(8) = 1
-            !     IRCTNT=9
-            infocm_irctnt = 7
-            !      CALL POTINFO
+            infocm_irctnt     = 7
             call ancvrt
             !  calculate indexes for coordinates
             do ind=1, 3

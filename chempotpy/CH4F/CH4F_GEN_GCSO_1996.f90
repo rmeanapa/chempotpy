@@ -329,7 +329,6 @@ module chempotpy_ch4f_gen_gcso_1996_pes
                     & coords_tch(i,3))
                 bonds_rbh(i) = sqrt(coords_tbh(i,1)*coords_tbh(i,1)+coords_tbh(i,2)*coords_tbh(i,2)+ coords_tbh(i,3)* &
                     & coords_tbh(i,3))
-                !      write (*,*) 'rch(i) y rbh(i) = ',rch(i),rbh(i)
             enddo
         end subroutine coorden
 
@@ -667,9 +666,8 @@ module chempotpy_ch4f_gen_gcso_1996_pes
                 argd(in(ii))  = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
                 argd(in(ii))  = argd(in(ii))/norma
                 delta(in(ii)) = acos(argd(in(ii)))-angles_theta0(i,in(ii))
-                !        write(*,*) 'theta,delta',theta0(i,in(ii)),delta(in(ii))
-                sum2 = sum2+delta(in(ii))**2
-                sum4 = sum4+delta(in(ii))**4
+                sum2          = sum2+delta(in(ii))**2
+                sum4          = sum4+delta(in(ii))**4
             enddo
             !  derivatives of axb wrt hj:
             daxb(j, 1, 1) = 0.0e0_wp
@@ -854,12 +852,9 @@ module chempotpy_ch4f_gen_gcso_1996_pes
             dfk0(3,4,2) = (f0-f2)*ip1_s2(1)*ip1_ds2(2)
             dfk0(3,4,3) = f0*ip1_ds1(3)*ip1_s1(4)
             dfk0(3,4,4) = f0*ip1_s1(3)*ip1_ds1(4)
-            !       argfk0=bk*((rch(1)-r0ch)**2+(rch(2)-r0ch)**2
             !     *              +(rch(3)-r0ch)**2+(rch(4)-r0ch)**2)
-            !       fk0=fkinf+ak*exp(-argfk0)
             do i=1, 4
                 !  calc derivatives of fk0 wrt each of the rch(i) bonds
-                !         dfk0(i)=-2.0d0*ak*bk*(rch(i)-r0ch)*exp(-argfk0)
                 !  calculate the terms f1(i)
                 arga1        = force2_aa1*bonds_rbh(i)*bonds_rbh(i)
                 arga2        = force2_aa4*(bonds_rbh(i)-bonds_r0hh)*(bonds_rbh(i)-bonds_r0hh)

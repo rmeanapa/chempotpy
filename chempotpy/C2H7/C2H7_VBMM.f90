@@ -513,7 +513,6 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: t0hch, t0cch
             real(wp) :: t0hcrh, t0ccrh
             real(wp) :: r0crh, r0ccr
-            !     parameter(r0ch=1.1120d0,r0cc=1.52470d0)
             !##   parameter(r0ch=1.09120d0,r0cc=1.51950d0)
             real(wp), parameter :: ksch = 4.740e0_wp
             real(wp), parameter :: kscc = 4.490e0_wp
@@ -559,7 +558,6 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: ar0ccr
             real(wp) :: at0ccrh
             !%%%  parameter(r0ch=1.1120d0,r0cc=1.52470d0)
-            !     parameter(r0ch=1.092510d0,r0cc=1.52720d0)
             !%%% for ethane
             ipt = 4
             if( ipt .eq. 1 )then
@@ -612,12 +610,6 @@ module chempotpy_c2h7_vbmm_pes
                 t4     = 1.0e0_wp-t3
                 t0cch  = (t0cch*t3)+(111.34990e0_wp*t4)
                 t0ccrh = (t0ccrh*t3)+(111.34990e0_wp*t4)
-                !       t1=6.0d0
-                !       t2=20.0d0
-                !       t3=0.50d0*(1.0d0+dtanh(t1*(rxncrd-t2)))
-                !       t4=1.0d0-t3
-                !       t0cch=(t0cch*t4)+(120.0d0*t3)
-                !       t0ccRh=(t0ccRh*t4)+(120.0d0*t3)
                 ! freq and energy
                 cs     = 10.0e0_wp
                 ravg0  = 1.17320e0_wp
@@ -626,12 +618,6 @@ module chempotpy_c2h7_vbmm_pes
                 ascc   = 0.70e0_wp
                 aktcch = 0.90e0_wp
                 akthch = 0.90e0_wp
-                !       z1=10.0d0
-                !       z2=2.144106410736830d0
-                !       z3=dexp(-z1*((rxncrd-z2)**2))
-                !       Ascc=1.0d0-(0.30d0*z3)
-                !       Aktcch=1.0d0-(0.10d0*z3)
-                !       Akthch=1.0d0-(0.10d0*z3)
                 t1     = 6.0e0_wp
                 t2     = 0.950e0_wp
                 t3     = 0.50e0_wp*(1.0e0_wp+tanh(t1*(rxncrd-t2)))
@@ -648,19 +634,6 @@ module chempotpy_c2h7_vbmm_pes
                 aktcch = z5
                 akthch = z6
             endif
-            !     Ar0ch=0.980d0
-            !     Ar0cc=0.9950d0
-            !     Av3hcch=1.00d0
-            !     Aksthcch=1.0d0
-            !     Aesph=1.0d0
-            !     Arvh=1.0d0
-            !     At0hch=1.00d0
-            !     Akthch=1.00d0
-            !     Aktcch=1.00d0
-            !     Ar0cRh=1.0d0
-            !     Ar0ccR=0.980d0
-            !     At0ccRh=1.100d0
-            !     Asch=1.10d0
             !%%%
             p(1)  = r0ch
             p(2)  = r0cc
@@ -712,7 +685,6 @@ module chempotpy_c2h7_vbmm_pes
             real(wp), parameter :: alpcb = 1.8530285e0_wp
             real(wp), parameter :: d1cb  = 26.4090e0_wp*fact1
             real(wp), parameter :: d3cb  = 20.0630e0_wp*fact1
-            !     parameter (r0cb=1.093970d0)
             !%%%  parameter (r0cb=1.092510d0)
             !%%%  parameter (r0ch=1.092510d0)
             !##   parameter (r0cb=1.09030d0)
@@ -721,13 +693,10 @@ module chempotpy_c2h7_vbmm_pes
             real(wp), parameter :: d1hh  = 109.4580e0_wp*fact1
             real(wp), parameter :: d3hh  = 39.6640e0_wp*fact1
             !%%%  parameter (r0hh=0.741910d0)
-            !     parameter (alphch=CALC_AT_RUNTIME)
             real(wp), parameter :: d1ch = 112.230e0_wp*fact1
             real(wp), parameter :: d3ch = 38.8340e0_wp*fact1
-            !     parameter (r0ch=1.093970d0)
             !##   parameter (r0ch=1.092510d0)
             ! out-of-plane bending parameters
-            !     parameter (tau=CALC_AT_RUNTIME)
             real(wp), parameter :: aphi   = 0.52879030e0_wp
             real(wp), parameter :: bphi   = 0.40066380e0_wp
             real(wp), parameter :: cphi   = 1.92099370e0_wp
@@ -786,7 +755,6 @@ module chempotpy_c2h7_vbmm_pes
                 cr    = 1.0e0_wp-cp
                 r0ch  = (1.0850e0_wp*cr)+(1.0750e0_wp*cp)
                 r0cb  = 1.400e0_wp
-                !       r0hh=0.73590d0
                 ! for rxn energy and freq
                 cs    = 10.0e0_wp
                 ravg0 = 1.7320e0_wp
@@ -920,12 +888,10 @@ module chempotpy_c2h7_vbmm_pes
             real(wp), parameter :: d1hh  = 109.4580e0_wp*fact1
             real(wp), parameter :: d3hh  = 39.6640e0_wp*fact1
             real(wp), parameter :: r0hh  = 0.741910e0_wp
-            !     parameter (alphch=CALC_AT_RUNTIME)
-            real(wp), parameter :: d1ch = 112.230e0_wp*fact1
-            real(wp), parameter :: d3ch = 38.8340e0_wp*fact1
-            real(wp), parameter :: r0ch = 1.093970e0_wp
+            real(wp), parameter :: d1ch  = 112.230e0_wp*fact1
+            real(wp), parameter :: d3ch  = 38.8340e0_wp*fact1
+            real(wp), parameter :: r0ch  = 1.093970e0_wp
             ! out-of-plane bending parameters
-            !     parameter (tau=CALC_AT_RUNTIME)
             real(wp), parameter :: aphi   = 0.52879030e0_wp
             real(wp), parameter :: bphi   = 0.40066380e0_wp
             real(wp), parameter :: cphi   = 1.92099370e0_wp
@@ -1138,9 +1104,6 @@ module chempotpy_c2h7_vbmm_pes
             scalech = para(23)
             r0crh   = para(24)
             r0ccr   = para(25)
-            !     write(IOUT,*)
-            !     write(IOUT,*)'LREACT   :',LREACT
-            !     write(IOUT,*)'LRADICAL :',LRADICAL
             ! Evaluate bond xdist
             rch(1) = xdist(c1, h2)
             rch(2) = xdist(c1, h3)
@@ -1163,7 +1126,6 @@ module chempotpy_c2h7_vbmm_pes
             z2    = 2.144106410736830e0_wp
             z3    = exp(-z1*((rxncrd-z2)**2))
             scale = 1.0e0_wp-(0.050e0_wp*z3)
-            !     scale=0.950d0
             ksch  = ksch*scale
             kthch = kthch*scale
             ktcch = ktcch*scale
@@ -1502,7 +1464,6 @@ module chempotpy_c2h7_vbmm_pes
                     xvdw    = xvdw+tvdwhh(i)
                 enddo
                 xsumrx = xstr+xbend+xstrbnd+xbndbnd+xtor+xstrtor+xvdw
-                !       call xdisp(xstr,xbend,xstrbnd,xbndbnd,
                 !    1             xtor,xstrtor,xvdw,xsumRX)
                 etotalmm = xsumrx
             endif
@@ -1594,7 +1555,6 @@ module chempotpy_c2h7_vbmm_pes
                     xvdw    = xvdw+tvdwhh(i)
                 enddo
                 xsumrx = xstr+xbend+xstrbnd+xbndbnd+xtor+xstrtor+xvdw
-                !       call xdisp(xstr,xbend,xstrbnd,xbndbnd,
                 !    1             xtor,xstrtor,xvdw,xsumRX)
                 etotalmm = xsumrx
             endif
@@ -1923,11 +1883,6 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: eng
             real(wp) :: dt
             ! Alligers (JACS, vol 111, pg 8551) parameters
-            !     parameter(c1=0.0219140d0)
-            !     parameter(c2=0.0140d0)
-            !     parameter(c3=5.60d-5)
-            !     parameter(c4=7.0d-7)
-            !     parameter(c5=9.0d-10)
             ! Tinker 4.1 MM3 parameter
             real(wp), parameter :: c1 = 0.021914180e0_wp
             real(wp), parameter :: c2 = 0.0140e0_wp
@@ -1995,7 +1950,6 @@ module chempotpy_c2h7_vbmm_pes
             real(wp)            :: eng
             real(wp), parameter :: c1 = -0.021914180e0_wp
             eng = c1*kbb*(ta-ta0)*(tb-tb0)
-            !     write(*,1000) c1,kbb,(ta-ta0)*(tb-tb0),eng
         end subroutine ebb
 
         !> @brief Evaluate Evdw for the C2H7_VBMM potential.
@@ -2308,7 +2262,6 @@ module chempotpy_c2h7_vbmm_pes
             t3 = c1ch*10.0e0_wp
             t4 = 1.12750e0_wp
             t5 = 0.50e0_wp*(1.0e0_wp+tanh(t3*(rchav-t4)))
-            !     r0ch=(t5*t2)+((1.0d0-t5)*t1)
             ! calculate the Morse parameter alphaCH (alpch)
             ! used in the Vstr using Equation 2 of
             ! Ref. [2]
@@ -2324,21 +2277,11 @@ module chempotpy_c2h7_vbmm_pes
             call v3qj77(alphh, d1hh, d3hh, r0hh, rbh4, bh4q, bh4f)
             call v3qj77(alphh, d1hh, d3hh, r0hh, rbh5, bh5q, bh5j)
             !%%%--------------------------------------------------
-            !     t1 = 0.9950d0
-            !     bh2q=bh2q*t1
-            !     bh3q=bh3q*t1
-            !     bh4q=bh4q*t1
-            !     bh5q=bh5q*t1
-            !     bh2j=bh2j*t1
-            !     bh3j=bh3j*t1
-            !     bh4f=bh4f*t1
-            !     bh5j=bh5j*t1
             !%%%--------------------------------------------------
             ! C1 and (H2...H5) terms
             t1 = 0.50e0_wp*(1.0e0_wp+tanh(10.0e0_wp*(rbh2-1.50e0_wp)))
             t2 = 1.0e0_wp-t1
             t3 = (1.0e0_wp+(t2*0.080e0_wp))*r0ch
-            !     call V3qj77(alpch,d1ch,d3ch,t3,rch2,ch2q,ch2j)
             call v3qj77(alpch, d1ch, d3ch, r0ch, rch2, ch2q, ch2j)
             call v3qj77(alpch, d1ch, d3ch, r0ch, rch3, ch3q, ch3j)
             call v3qj77(alpch, d1ch, d3ch, r0ch, rch4, ch4q, ch4j)
@@ -2363,18 +2306,11 @@ module chempotpy_c2h7_vbmm_pes
             v3h5 = vqh5+vjh5
             vstr = v3h2+v3h3+v3h4+v3h5
             !%%%--------------------------------------------------
-            !     t1=10.0d0
-            !     t2=2.144106410736830d0
-            !     t3=0.013850d0
-            !     t4=1.0d0+(t3*dexp(-t1*((rxncrd-t2)**2)))
             t1 = 6.0e0_wp
             t2 = 0.950e0_wp
             t3 = 0.50e0_wp*(1.0e0_wp+tanh(t1*(rxncrd-t2)))
             t4 = 1.013850e0_wp
             call xgaussfit(rxncrd, t4)
-            !     t4=t4*0.999930d0
-            !     t4=t4*1.00205d0
-            !     t4=t4*1.0159995120d0/1.016043066097427340d0
             t4   = t4*1.016043066097427340e0_wp/1.0159995120e0_wp
             t5   = (1.0e0_wp*(1.0e0_wp-t3))+(t3*t4)
             z1   = 6.0e0_wp
@@ -2382,7 +2318,6 @@ module chempotpy_c2h7_vbmm_pes
             z3   = 0.50e0_wp*(1.0e0_wp+tanh(z1*(rxncrd-z2)))
             z4   = (t5*(1.0e0_wp-z3))+(1.0e0_wp*z3)
             vstr = vstr * z4
-            !     vstr = vstr * 1.013850d0
             !%%%--------------------------------------------------
             if( ldebug )then
                 write(*, *)
@@ -2433,19 +2368,6 @@ module chempotpy_c2h7_vbmm_pes
             call gjtheta0(pi, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch5, rch4, rch3, rch2, theta054)
-            !     scat0=1.0d0
-            !     theta023=theta023*scat0
-            !     theta024=theta024*scat0
-            !     theta025=theta025*scat0
-            !     theta032=theta032*scat0
-            !     theta034=theta034*scat0
-            !     theta035=theta035*scat0
-            !     theta042=theta042*scat0
-            !     theta043=theta043*scat0
-            !     theta045=theta045*scat0
-            !     theta052=theta052*scat0
-            !     theta053=theta053*scat0
-            !     theta054=theta054*scat0
             ! calculate delta
             call steckdel(bvch3, bvch4, bvch5, bvch3, d23)
             call steckdel(bvch3, bvch4, bvch5, bvch4, d24)
@@ -2529,21 +2451,15 @@ module chempotpy_c2h7_vbmm_pes
                 & rch2, rch4, rch5, rch3, xk024)
             call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
                 & rch2, rch5, rch3, rch4, xk025)
-            !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,
             !    1               rch3,rch2,rch5,rch4,xk032)
             call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
                 & rch3, rch4, rch2, rch5, xk034)
             call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
                 & rch3, rch5, rch4, rch2, xk035)
-            !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,
             !    1               rch4,rch2,rch3,rch5,xk042)
-            !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,
             !    1               rch4,rch3,rch5,rch2,xk043)
             call calcvipk0(a1s, b1s, a2s, b2s, ak, kch3, r0ch, &
                 & rch4, rch5, rch2, rch3, xk045)
-            !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,rch5,rch2,rch4,rch3,xk
-            !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,rch5,rch3,rch2,rch4,xk
-            !     call calcvipk0(a1s,b1s,a2s,b2s,ak,kch3,r0ch,rch5,rch4,rch3,rch2,xk
             ! get ki terms
             call calcvipk(aa1, aa2, aa3, aa4, r0ch, r0hh, rch2, rbh2, xk2)
             call calcvipk(aa1, aa2, aa3, aa4, r0ch, r0hh, rch3, rbh3, xk3)
@@ -2605,7 +2521,6 @@ module chempotpy_c2h7_vbmm_pes
                 r(17) = hb(2)/0.52918e0_wp
                 r(18) = hb(3)/0.52918e0_wp
                 call csurf(vsurf, r, dv, 18)
-                !       vsurf=(vsurf-v3h5)*100.0d0*KJ_IN_KCAL
                 write(*, *) 'VSURF:', vsurf*627.510e0_wp
                 write(*, *) 'MYVSURF:', (vstr+vop+vip)*0.03812e0_wp*627.510e0_wp
             endif
@@ -2923,11 +2838,6 @@ module chempotpy_c2h7_vbmm_pes
             en = vstr+vop+vip
             ! 0.03812 conversion factor from 10(5) j/mol to hartrees
             !##--------------------------------------------------
-            !       write(*,*)
-            !       write(*,*) 'vstr 10(5)j/mol and au : ',vstr,vstr*0.03812D0
-            !       write(*,*) 'vop  10(5)j/mol and au : ',vop,vop*0.03812D0
-            !       write(*,*) 'vip  10(5)j/mol and au : ',vip,vip*0.03812D0
-            !       write(*,*) 'pot  10(5)j/mol and au : ',en,en*0.03812D0
             !##--------------------------------------------------
             en     = en*0.03812e0_wp
             engygs = en
@@ -2978,8 +2888,7 @@ module chempotpy_c2h7_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            tau = acos(-1.0e0_wp/3.0e0_wp)
-            !       pi=4.0d0*atan(1.0d0)
+            tau    = acos(-1.0e0_wp/3.0e0_wp)
             halfpi = 0.5e0_wp*pi
             twopi  = 2.0e0_wp*pi
             !  set diagonal elements to zero
@@ -3246,7 +3155,6 @@ module chempotpy_c2h7_vbmm_pes
                     dth(i,j)   = theta(i,j)-xangles_theta0(i,j)
                     vip        = vip+0.5e0_wp*force1_fk0(i,j)*force1_f1(i)*force1_f1(j)*dth(i,j)**2
                     !##
-                    !                 write(*,*) i,j,f1(j)
                     !  calculate partial derivatives wrt cartesian coordinates
                     !  calculate pdots wrt theta:
                     termth = -1.0e0_wp/sqrt(1.0e0_wp-costh(i,j)*costh(i,j))
@@ -3311,14 +3219,6 @@ module chempotpy_c2h7_vbmm_pes
                 b(ind) = qpdot_pl_q(ndx_nh(l,ind))-qpdot_pl_q(ndx_nh(j,ind))
             enddo
             !##
-            !        write(*,*)
-            !        write(*,*) ' i,j,k,l : ',i,j,k,l
-            !        write(*,1000) ' i vec :',q(nh(i,1:3))
-            !        write(*,1000) ' j vec :',q(nh(j,1:3))
-            !        write(*,1000) ' k vec :',q(nh(k,1:3))
-            !        write(*,1000) ' l vec :',q(nh(l,1:3))
-            !        write(*,*)
-            !1000    format(A,3F8.2)
             !  axb is vector a cross b
             axb(1) = a(2)*b(3)-a(3)*b(2)
             axb(2) = a(3)*b(1)-a(1)*b(3)
@@ -3326,9 +3226,6 @@ module chempotpy_c2h7_vbmm_pes
             norma  = axb(1)*axb(1)+axb(2)*axb(2)+axb(3)*axb(3)
             norma  = sqrt(norma)
             !##
-            !        write(*,*) 'axb1 : ',i,axb(1)
-            !        write(*,*) 'axb2 : ',i,axb(2)
-            !        write(*,*) 'axb3 : ',i,axb(3)
             !  c is position vector of h(ii): calculate c(j),c(k),c(l)
             !##
             do ii=1, 3
@@ -3517,14 +3414,6 @@ module chempotpy_c2h7_vbmm_pes
             force1_fk0(2,4) = f0+f0*(ip1_s1(2)*ip1_s1(4)-1.0e0_wp)+(f0-f2)*(ip1_s2(1)*ip1_s2(3)-1.0e0_wp)
             force1_fk0(3,4) = f0+f0*(ip1_s1(3)*ip1_s1(4)-1.0e0_wp)+(f0-f2)*(ip1_s2(1)*ip1_s2(2)-1.0e0_wp)
             !##
-            !           write(*,*)
-            !           write(*,*) 'f0    : ',f0
-            !           write(*,*) 'f2    : ',f2
-            !           write(*,*) 's1(1) : ',s1(1)
-            !           write(*,*) 's1(2) : ',s1(2)
-            !           write(*,*) 's2(3) : ',s2(3)
-            !           write(*,*) 's2(4) : ',s2(4)
-            !           write(*,*)
             !  derivative of fk0
             dfk0(1,2,1) = f0*ip1_ds1(1)*ip1_s1(2)
             dfk0(1,2,2) = f0*ip1_s1(1)*ip1_ds1(2)
@@ -3558,8 +3447,6 @@ module chempotpy_c2h7_vbmm_pes
                 a1           = 1.0e0_wp-exp(-arga1)
                 a2           = potcm_aa2+potcm_aa3*exp(-arga2)
                 force1_f1(i) = a1*exp(-a2*(bonds_rch(i)-potcm_r0ch)**2)
-                !           write(*,*) 'A1 :',a1
-                !           write(*,*) 'A2 :',a2
                 !  and calculate the derivatives wrt rch(i) and rbh(i)
                 duma1    = 2.0e0_wp*potcm_aa1*bonds_rbh(i)*exp(-arga1)
                 duma2    = -2.0e0_wp*potcm_aa3*potcm_aa4*(bonds_rbh(i)-potcm_r0hh)*exp(-arga2)

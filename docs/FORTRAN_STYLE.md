@@ -27,6 +27,11 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 - Remove empty comment records and punctuation-only separator bars such as
   `!`, `!-----`, and `!====`. Preserve comments that communicate scientific,
   algorithmic, provenance, unit, or diagram information.
+- Do not keep disabled Fortran statements in comments. Delete obsolete calls,
+  assignments, declarations, branches, I/O, debugging code, and fixed-form
+  continuations; Git history is the record of superseded implementations.
+  Preserve scientific rationale, equations, references, coordinate meanings,
+  interface semantics, and provenance that help maintain the active model.
 - Do not retain migration markers such as `@modern` or generic ownership
   comments. A PES module brief names the exact surface and chemical system;
   a DPEM module brief identifies the implementation as a diabatic potential
@@ -213,6 +218,9 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   `prepot` procedures, implicit typing, standalone `FORMAT`, Hollerith edit
   descriptors, ADIFOR boilerplate, and fixed-form Fortran sources.
 - Run `make check-style` after formatting.
+- For a focused catalog cleanup, run
+  `python3 scripts/format_fortran.py --write --dead-comments-only <sources>`.
+  The normal formatter and style gate enforce the same dead-comment rule.
 - Run the strict compiler gate for every affected surface.
 - Compare affected numerical outputs with the stored reference fixture.
 - Run `make test-surfaces` for catalog-wide changes.

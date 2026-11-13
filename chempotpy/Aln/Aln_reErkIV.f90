@@ -75,12 +75,6 @@ module chempotpy_aln_reerkiv_pes
         real(wp), parameter :: autoang = 0.5291277249e0_wp
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         alpha = log(2.e0_wp)
-        ! Original parameters
-        !      en = 2.072844d0
-        !      r0 = 2.47d0/autoang
-        !      aa = 6.20d0/autoev
-        !      c2 = 0.2635582d0
-        !      c3 = -0.1766508d0
         ! new parameters
         en    = 2.396042
         r0    = 2.409526/autoang

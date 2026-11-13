@@ -58,7 +58,6 @@ module chempotpy_ch2o_pipnn_pes
             txinput(j) = basis(j+1)
         enddo
         call getpota(txinput, vpes)
-        !      vnn=min(vpes,5d0)
         vnn  = vpes
         vpes = vnn
     end subroutine ch2opipnn

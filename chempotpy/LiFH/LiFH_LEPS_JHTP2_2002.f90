@@ -464,13 +464,7 @@ module chempotpy_lifh_leps_jhtp2_2002_pot11_legacy_state_fb8669b7
             enddo
             d1_w = d2_v + d4_v - d7_v * costheta
             d2_v = sqrt(d1_w)
-            !          if ( d1_w .gt. 0.0d0 ) then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
-            !          else
-            !             call ehufDO (9,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +185)
-            !          endif
             do g_i_ = 1, g_p_
                 g_bigr(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
@@ -499,35 +493,15 @@ module chempotpy_lifh_leps_jhtp2_2002_pot11_legacy_state_fb8669b7
             enddo
             d1_w = -1.e0_wp
             d3_v = max (coschi, d1_w)
-            !          if (coschi .gt.  d1_w) then
             d1_p = 1.0e0_wp
             d2_p = 0.0e0_wp
-            !          else if (coschi .lt.  d1_w) then
-            !             d1_p = 0.0d0
-            !             d2_p = 1.0d0
-            !          else
-            !             call ehbfDO (7,coschi, d1_w, d3_v, d1_p, d2_p,
-            !     +g_ehfid,
-            !     +228)
-            !             d2_p = 1.0d0 -  d1_p
-            !          endif
             do g_i_ = 1, g_p_
                 g_coschi(g_i_) = d2_p * g_d1_w(g_i_) + d1_p * g_coschi(g_i_)
             enddo
             coschi = d3_v
             d2_v   = min (coschi, 1.e0_wp)
-            !          if (coschi .lt.  1.d0) then
-            d1_p = 1.0e0_wp
-            d2_p = 0.0e0_wp
-            !          else if (coschi .gt.  1.d0) then
-            !             d1_p = 0.0d0
-            !             d2_p = 1.0d0
-            !          else
-            !             call ehbfDO (8,coschi, 1.d0, d2_v, d1_p, d2_p,
-            !     +g_ehfid,
-            !     +247)
-            !             d2_p = 1.0d0 -  d1_p
-            !          endif
+            d1_p   = 1.0e0_wp
+            d2_p   = 0.0e0_wp
             do g_i_ = 1, g_p_
                 g_coschi(g_i_) = d1_p * g_coschi(g_i_)
             enddo
@@ -696,27 +670,11 @@ module chempotpy_lifh_leps_jhtp2_2002_pot11_legacy_state_fb8669b7
             hfdip = 0.e0_wp
             do j = 1, 11
                 d3_v = real(j - 1, wp)
-                !            if ( hfdip_y .ne. 0.0d0 ) then
                 d4_v = hfdip_y ** ( d3_v - 2.0e0_wp)
                 d4_v = d4_v * hfdip_y
                 d1_p = d3_v *  d4_v
                 d4_v = d4_v * hfdip_y
-                !            else
                 !              (hfdip_y = 0)
-                !               d4_v = hfdip_y **  d3_v
-                !               if (  d3_v .lt. 1.0d0 ) then
-                !                  call ehbfDO (10,hfdip_y, d3_v, d4_v, d1_p, 0.0d0,
-                !     +g_ehfid,
-                !     +463)
-                !               else if (  d3_v .lt. 2.0d0 ) then
-                !                  d1_p = 0.0d0
-                !                  call ehbfDO (10,hfdip_y, d3_v, d4_v, d1_p, 0.0d0,
-                !     +g_ehfid,
-                !     +468)
-                !               else
-                !                  d1_p = 0.0d0
-                !               endif
-                !            endif
                 d6_b = 0.0e0_wp
                 d5_b = hfdip_m(j) * d1_p
                 do g_i_ = 1, g_p_
@@ -1244,8 +1202,6 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
         !     LiF pol (au) and ie (eV)
         !     H pol (au) and ie (eV)
         !     misc long-range
-        !      data rlif0did/7.5d0/,rlif0disp/7.5d0/,r2LRcut_a/2.0d0/,
-        !        data g_ehfid /0/
         behf          = 0.e0_wp
         belif         = 0.e0_wp
         belifc1       = 0.e0_wp
@@ -1660,13 +1616,7 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             enddo
             d1_w = d2_v + d4_v - d7_v * costhetahf
             d2_v = sqrt(d1_w)
-            !          if ( d1_w .gt. 0.0d0 ) then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
-            !          else
-            !             call ehufDO (9,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +278)
-            !          endif
             do g_i_ = 1, g_p_
                 g_bigrhf(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
@@ -1695,35 +1645,15 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             enddo
             d1_w = -1.e0_wp
             d3_v = max (d1_w, coschihf)
-            !          if (d1_w .gt.  coschihf) then
-            !             d1_p = 1.0d0
-            !             d2_p = 0.0d0
-            !          else if (d1_w .lt.  coschihf) then
             d1_p = 0.0e0_wp
             d2_p = 1.0e0_wp
-            !          else
-            !             call ehbfDO (7,d1_w, coschihf, d3_v, d1_p, d2_p,
-            !     +g_ehfid,
-            !     +321)
-            !             d2_p = 1.0d0 -  d1_p
-            !          endif
             do g_i_ = 1, g_p_
                 g_coschihf(g_i_) = d2_p * g_coschihf(g_i_) + d1_p * g_d1_w(g_i_)
             enddo
             coschihf = d3_v
             d2_v     = min (1.e0_wp, coschihf)
-            !          if (1.d0 .lt.  coschihf) then
-            !             d1_p = 1.0d0
-            !             d2_p = 0.0d0
-            !          else if (1.d0 .gt.  coschihf) then
-            d1_p = 0.0e0_wp
-            d2_p = 1.0e0_wp
-            !          else
-            !             call ehbfDO (8,1.d0, coschihf, d2_v, d1_p, d2_p,
-            !     +g_ehfid,
-            !     +341)
-            !             d2_p = 1.0d0 -  d1_p
-            !          endif
+            d1_p     = 0.0e0_wp
+            d2_p     = 1.0e0_wp
             do g_i_ = 1, g_p_
                 g_coschihf(g_i_) = d2_p * g_coschihf(g_i_)
             enddo
@@ -1766,13 +1696,7 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             enddo
             d1_w = d2_v + d4_v - d7_v * costhetalif
             d2_v = sqrt(d1_w)
-            !          if ( d1_w .gt. 0.0d0 ) then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
-            !          else
-            !             call ehufDO (9,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +398)
-            !          endif
             do g_i_ = 1, g_p_
                 g_bigrlif(g_i_) = d1_p * g_d1_w(g_i_)
             enddo
@@ -1797,18 +1721,8 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             enddo
             coschilif = d12_v
             d2_v      = min (1.e0_wp, coschilif)
-            !             if (1.d0 .lt.  coschilif) then
-            !                d1_p = 1.0d0
-            !                d2_p = 0.0d0
-            !             else if (1.d0 .gt.  coschilif) then
-            d1_p = 0.0e0_wp
-            d2_p = 1.0e0_wp
-            !             else
-            !                call ehbfDO (8,1.d0, coschilif, d2_v, d1_p, d2_p,
-            !     +g_ehfid,
-            !     +437)
-            !                   d2_p = 1.0d0 -  d1_p
-            !                endif
+            d1_p      = 0.0e0_wp
+            d2_p      = 1.0e0_wp
             do g_i_ = 1, g_p_
                 g_coschilif(g_i_) = d2_p * g_coschilif(g_i_)
             enddo
@@ -1818,18 +1732,8 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             enddo
             d1_w = -1.e0_wp
             d3_v = max (d1_w, coschilif)
-            !             if (d1_w .gt.  coschilif) then
-            !                d1_p = 1.0d0
-            !                d2_p = 0.0d0
-            !             else if (d1_w .lt.  coschilif) then
             d1_p = 0.0e0_wp
             d2_p = 1.0e0_wp
-            !             else
-            !                call ehbfDO (7,d1_w, coschilif, d3_v, d1_p, d2_p,
-            !     +g_ehfid,
-            !     +460)
-            !                   d2_p = 1.0d0 -  d1_p
-            !                endif
             do g_i_ = 1, g_p_
                 g_coschilif(g_i_) = d2_p * g_coschilif(g_i_) + d1_p * g_d1_w (g_i_)
             enddo
@@ -1870,18 +1774,8 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             enddo
             cs   = d6_v
             d2_v = min (cs, 1.0e0_wp)
-            !          if (cs .lt.  1.0d0) then
             d1_p = 1.0e0_wp
             d2_p = 0.0e0_wp
-            !          else if (cs .gt.  1.0d0) then
-            !             d1_p = 0.0d0
-            !             d2_p = 1.0d0
-            !          else
-            !             call ehbfDO (8,cs, 1.0d0, d2_v, d1_p, d2_p,
-            !     +g_ehfid,
-            !     +521)
-            !             d2_p = 1.0d0 -  d1_p
-            !          endif
             do g_i_ = 1, g_p_
                 g_cs(g_i_) = d1_p * g_cs(g_i_)
             enddo
@@ -1891,18 +1785,8 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             enddo
             d1_w = -1.0e0_wp
             d3_v = max (cs, d1_w)
-            !          if (cs .gt.  d1_w) then
             d1_p = 1.0e0_wp
             d2_p = 0.0e0_wp
-            !          else if (cs .lt.  d1_w) then
-            !             d1_p = 0.0d0
-            !             d2_p = 1.0d0
-            !          else
-            !             call ehbfDO (7,cs, d1_w, d3_v, d1_p, d2_p,
-            !     +g_ehfid,
-            !     +544)
-            !             d2_p = 1.0d0 -  d1_p
-            !          endif
             do g_i_ = 1, g_p_
                 g_cs(g_i_) = d2_p * g_d1_w(g_i_) + d1_p * g_cs(g_i_)
             enddo
@@ -2415,13 +2299,7 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             enddo
             d1_w = w + cplg2 * cplg2
             d7_v = sqrt(d1_w)
-            !          if ( d1_w .gt. 0.0d0 ) then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d7_v)
-            !          else
-            !             call ehufDO (9,d1_w, d7_v, d1_p,
-            !     +g_ehfid,
-            !     +1165)
-            !          endif
             d6_b = (-(1.0e0_wp / sqrt(2.0e0_wp))) * d1_p
             do g_i_ = 1, g_p_
                 g_e(g_i_,i) = d6_b * g_d1_w(g_i_) + g_coul3(g_i_) + g_coul2 (g_i_) + g_coul1(g_i_)
@@ -2446,27 +2324,11 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             hfdip = 0.e0_wp
             do j = 1, 11
                 d3_v = real(j - 1, wp)
-                !            if ( hfdip_y .ne. 0.0d0 ) then
                 d4_v = hfdip_y ** ( d3_v - 2.0e0_wp)
                 d4_v = d4_v * hfdip_y
                 d1_p = d3_v *  d4_v
                 d4_v = d4_v * hfdip_y
-                !            else
                 !              (hfdip_y = 0)
-                !               d4_v = hfdip_y **  d3_v
-                !               if (  d3_v .lt. 1.0d0 ) then
-                !                  call ehbfDO (10,hfdip_y, d3_v, d4_v, d1_p, 0.0d0,
-                !     +g_ehfid,
-                !     +1209)
-                !               else if (  d3_v .lt. 2.0d0 ) then
-                !                  d1_p = 0.0d0
-                !                  call ehbfDO (10,hfdip_y, d3_v, d4_v, d1_p, 0.0d0,
-                !     +g_ehfid,
-                !     +1214)
-                !               else
-                !                  d1_p = 0.0d0
-                !               endif
-                !            endif
                 d6_b = 0.0e0_wp
                 d5_b = hfdip_m(j) * d1_p
                 do g_i_ = 1, g_p_
@@ -2517,27 +2379,11 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
             hfqua = 0.e0_wp
             do j = 1, 10
                 d3_v = real(j - 1, wp)
-                !            if ( hfqua_y .ne. 0.0d0 ) then
                 d4_v = hfqua_y ** ( d3_v - 2.0e0_wp)
                 d4_v = d4_v * hfqua_y
                 d1_p = d3_v *  d4_v
                 d4_v = d4_v * hfqua_y
-                !            else
                 !              (hfqua_y = 0)
-                !               d4_v = hfqua_y **  d3_v
-                !               if (  d3_v .lt. 1.0d0 ) then
-                !                  call ehbfDO (10,hfqua_y, d3_v, d4_v, d1_p, 0.0d0,
-                !     +g_ehfid,
-                !     +1289)
-                !               else if (  d3_v .lt. 2.0d0 ) then
-                !                  d1_p = 0.0d0
-                !                  call ehbfDO (10,hfqua_y, d3_v, d4_v, d1_p, 0.0d0,
-                !     +g_ehfid,
-                !     +1294)
-                !               else
-                !                  d1_p = 0.0d0
-                !               endif
-                !            endif
                 d6_b = 0.0e0_wp
                 d5_b = hfqua_m(j) * d1_p
                 do g_i_ = 1, g_p_

@@ -316,13 +316,11 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             call cartou
             call carttor
             ! Changing units from angstrom to bohr and initialize
             do i = 1, 18
-                q(i) = r(i)
-                !         q(I) = R(I)*0.52918d0
+                q(i)    = r(i)
                 pdot(i) = 0.e0_wp
             enddo
             !  calculate relative coordinates and bond lengths
@@ -336,12 +334,10 @@ module chempotpy_nh3cn_vbmm_pes
             !  calculate stretching potential
             call stretch(vstr)
             !  calculate out of plane bending potential
-            !      call opbend(vop)
             !  calculate in plane bending potential
             call ipbend(vip)
             !  total potential energy is vstr+vop+vip
             en = vstr+vip
-            !      en=vstr+vop+vip
             ! 0.03812 conversion factor from 10(5) j/mol to hartrees
             en     = en*0.03812e0_wp
             engygs = en
@@ -384,7 +380,6 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             !  calculate relative coordinates
             do ind=1, 3
                 tcb(ind) = q(nc(ind))-q(nhb(ind))
@@ -441,7 +436,6 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             !      tau=acos(-1.0d0/3.0d0)
             !      pi=4.0d0*atan(1.0d0)
             halfpi = 0.5e0_wp*pi
@@ -495,7 +489,6 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             !       pi=4.0d0*atan(1.0d0)
             halfpi = 0.5e0_wp*pi
             twopi  = 2.0e0_wp*pi
@@ -566,14 +559,12 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             !  calculate avergage bond length for the nh3 moiety
             rav = (rch(1)+rch(2)+rch(3))/3.0e0_wp
             !  initialise:
             vstr = 0.0e0_wp
             texp = exp(-(4.e0_wp*(rav-rcbsp)/b3cb)**4.e0_wp)
             d3cb = (d3cbi-a3cb) + a3cb * texp
-            !      dd3cb = -4.d0*a3cb*texp*(rav-rcbsp)**3.d0*(4.d0/b3cb)**4.d0
             !  ach:
             !  in double precision tanh(19.0d0)=1.0d0 and we put the if statement
             !  in to avoid overflow/underflow errors
@@ -592,9 +583,6 @@ module chempotpy_nh3cn_vbmm_pes
             vqcb = (e1+e3)*0.5e0_wp
             vjcb = (e1-e3)*0.5e0_wp
             ! C-N  new term (simple morse term)
-            !      dt=(rno-r0hh)
-            !      expterm=exp(-ahh*dt)
-            !      vno=d1hh*(1.d0-expterm)**2.d0
             dt      = (rno-1.172e0_wp)
             expterm = exp(-0.80e0_wp*dt)
             vno     = 80.0e0_wp*(1.e0_wp-expterm)**2.e0_wp
@@ -681,8 +669,7 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
-            real(wp) :: norma
+            real(wp)            :: norma
             vop = 0.0e0_wp
             !  calculate force constants and their derivatives
             call opforce
@@ -759,7 +746,6 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             !  initialise
             vip = 0.0e0_wp
             !  calculate force constants: fk0(i,j), f1(i)
@@ -801,7 +787,6 @@ module chempotpy_nh3cn_vbmm_pes
             enddo
             !  Now, calculate h2o bending energies.
             !  First, calculate the angles:
-            !c       do i = 1,4
             do i = 1, 3
                 dot = 0.e0_wp
                 do j = 1, 3
@@ -814,7 +799,6 @@ module chempotpy_nh3cn_vbmm_pes
             !  Now, calculate each force constant fkh2o(i) as a function of the
             ! O-H(I)
             !  distance, rbh(i)
-            !C
             !C CRD 2009
             do i=1, 3
                 arga = alph2o * (rbh(i) - r0hh)
@@ -826,7 +810,6 @@ module chempotpy_nh3cn_vbmm_pes
             enddo
             !  Now calculate the contribution to the energy for each H(I)-O-H(O)
             !  harmonic bending term
-            !C
             !C CRD 2009
             do i=1, 3
                 dang = (angh2o(i) - angh2oeq)
@@ -850,7 +833,6 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             !  set i,j,k indices
             in(1) = i
             in(2) = j
@@ -988,7 +970,6 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             !  calculate switching functions:
             switch(1) = s3(1)*s3(2)*s3(3)
             switch(2) = s3(2)*s3(3)*s3(1)
@@ -1030,7 +1011,6 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             !  set force constant at asymptotes
             f0       = fkinf+ak
             f2       = fkinf
@@ -1090,7 +1070,6 @@ module chempotpy_nh3cn_vbmm_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
             a1s = 1.5313681e-9_wp
             b1s = -1.6696246e0_wp
             a2s = 1.0147402e-9_wp
@@ -1190,7 +1169,6 @@ module chempotpy_nh3cn_vbmm_pes
             indexes(5) = 8
             indexes(6) = 1
             irctnt     = 5
-            !CALL POTINFO
             call ancvrt
             !  calculate indexes for coordinates
             do ind=1, 3

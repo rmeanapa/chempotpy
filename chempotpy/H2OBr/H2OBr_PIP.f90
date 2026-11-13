@@ -281,7 +281,6 @@ real(wp) function emsav( x, c ) result(v)
     implicit none
     real(wp), dimension(1:6)::x
     real(wp), dimension(0:501)::c
-    !  real(wp)::v
     real(wp), dimension(0:501)::p
     call bemsav(x, p)
     v = dot_product(p, c)

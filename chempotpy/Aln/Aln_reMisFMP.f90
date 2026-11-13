@@ -91,25 +91,6 @@ module chempotpy_aln_remisfmp_pes
         q2    = -23.1485100146555922/autoev
         q3    = -20.1148021494870548/autoev
         ! original
-        !      rc = 6.78040d0   /autoang
-        !      h  = 1.41584d0   /autoang
-        !      e1 = 2.65219d2   /autoev
-        !      e2 = 7.67238d-3  /autoev
-        !      r1 = 1.0688d0    /autoang
-        !      r2 = 6.45771d0   /autoang
-        !      alp1 = 2.09043d0 *autoang
-        !      alp2 = 1.03062d0 *autoang
-        !      delta = 0.10432d0/autoev
-        !      a  = 5.47491d-2
-        !      r3 = 2.74668d0    /autoang
-        !      r4 = -6.92647d0   /autoang
-        !      b1 = 1.92116d0    *autoang**2
-        !      b2 = 0.42589d0    *autoang
-        !      f0 = -2.81468d0   /autoev
-        !      f2 = 5.57686d0    /autoev
-        !      q1 = -6.24655d0   /autoev
-        !      q2 = -21.52522d0   /autoev
-        !      q3 = -15.30493d0   /autoev
         v = 0.e0_wp
         do i=1, natom
             v2     = 0.e0_wp

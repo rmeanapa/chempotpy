@@ -269,7 +269,6 @@ module chempotpy_mxhsb_leps_modelsurface_g_pot11_legacy_state_b5a1de49
         endif
         cevau = 1.e0_wp / 27.2113961e0_wp
         do i = 1, nt
-            !          cosa = 0.5d0 * (r(i, 2) ** 2 + r(i, 3) ** 2 - r(i, 1) ** 2) /
             !     *(r(i, 2) * r(i, 3))
             !==============================================================k
             !This section contains the diatomic curves
@@ -398,7 +397,6 @@ module chempotpy_mxhsb_leps_modelsurface_g_pot12_legacy_state_b5a1de49
         real(wp) :: d1_p, d1_w, d3_v, g_r1s(g_pmax_), g_r(:,:,:), g_r2s(g_pmax_), g_r3s(g_pmax_), g_d1_w(g_pmax_), g_rnag(g_pmax_), g_gc(g_pmax_)
         real(wp) :: g_gc2(g_pmax_), g_d2_w(g_pmax_), g_e(:,:)
         integer  :: g_ehfid
-        !        data ap /0.3017d0/, alp /3.0d0/, rd0 /3.0d0/, bet /0.5d0/, r20
         alp     = 0.e0_wp
         ap      = 0.e0_wp
         bet     = 0.e0_wp

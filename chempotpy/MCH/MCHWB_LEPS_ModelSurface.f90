@@ -79,10 +79,6 @@ module chempotpy_mchwb_leps_modelsurface_pes
         dudr(1,2,:) = de_u12(:,1)*hartree_to_electronvolt
         dudr(2,1,:) = de_u12(:,1)*hartree_to_electronvolt
         dudr(2,2,:) = de_u22(:,1)*hartree_to_electronvolt
-        !      dudr(1,1,:)=de_u11(:,1)*hartree_per_bohr_to_ev_per_angstrom
-        !      dudr(1,2,:)=de_u12(:,1)*hartree_per_bohr_to_ev_per_angstrom
-        !      dudr(2,1,:)=de_u12(:,1)*hartree_per_bohr_to_ev_per_angstrom
-        !      dudr(2,2,:)=de_u22(:,1)*hartree_per_bohr_to_ev_per_angstrom
         call diagonalize(nstates, u, p, t)
         do i=1, 3
             tmpmat(:,:) = dudr(:,:,i)
@@ -240,7 +236,6 @@ module chempotpy_mchwb_leps_modelsurface_g_pot11_legacy_state_526d871f
         endif
         cevau = 1.e0_wp / 27.2113961e0_wp
         do i = 1, nt
-            !          cosa = 0.5d0 * (r(i, 2) ** 2 + r(i, 3) ** 2 - r(i, 1) ** 2) /
             !     *(r(i, 2) * r(i, 3))
             !==============================================================k
             !This section contains the diatomic curves

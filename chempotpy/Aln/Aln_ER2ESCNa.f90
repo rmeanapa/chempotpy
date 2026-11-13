@@ -128,7 +128,6 @@ module chempotpy_aln_er2escna_pes
                     term = xk1*exp(-xk2*((ril+rjl)/rij)**xk3+ac)        ! cutoff ti
                     s    = s+term                         ! sum
                 enddo
-                !        fs(i,j)=1.d0-dtanh(s)
                 fs(i, j) = tanh(s)
                 fs(j, i) = fs(i, j)
             enddo

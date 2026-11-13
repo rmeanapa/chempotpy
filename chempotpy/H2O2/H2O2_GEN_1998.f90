@@ -1015,9 +1015,6 @@ module chempotpy_h2o2_gen_1998_pes
         if( d1_w .gt. 0.0e0_wp )then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
-            !           call ehufDO (9,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +201)
         endif
         do g_i_ = 1, g_p_
             g_rab(g_i_) = d1_p * g_d1_w(g_i_)
@@ -1037,9 +1034,6 @@ module chempotpy_h2o2_gen_1998_pes
         if( d1_w .gt. 0.0e0_wp )then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
-            !           call ehufDO (9,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +226)
         endif
         do g_i_ = 1, g_p_
             g_rbc(g_i_) = d1_p * g_d1_w(g_i_)
@@ -1059,9 +1053,6 @@ module chempotpy_h2o2_gen_1998_pes
         if( d1_w .gt. 0.0e0_wp )then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
-            !           call ehufDO (9,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +251)
         endif
         do g_i_ = 1, g_p_
             g_rcd(g_i_) = d1_p * g_d1_w(g_i_)
@@ -1085,13 +1076,9 @@ module chempotpy_h2o2_gen_1998_pes
         ! The potential can give weird values for unusual geometries
         ! replace with some high value in these unphysical regions and
         ! then exit
-        !      if((min(rab,rcd,rac,rbd).gt.rohhigh) .or.
         !     !(min(rab,rcd,rac,rbd).lt.rohlow)  .or.
         !     !(rbc.gt.roohigh) .or. (rbc.lt.roolow) .or.
         !     !(rad.lt.rhhlow)) then
-        !      vdc=1000.d0
-        !      return
-        !      endif
         do g_i_ = 1, g_p_
             g_n1(g_i_) = (-c6) * g_c3(g_i_) + (-c3) * g_c6(g_i_) + (-c5) * g_c2(g_i_) + (-c2) * g_c5(g_i_) + (-c4) * &
                 & g_c1(g_i_) + (-c1) * g_c4(g_i_)
@@ -1112,9 +1099,6 @@ module chempotpy_h2o2_gen_1998_pes
         if( abs(d1_w) .lt. 1.0e0_wp )then
             d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-d1_w)*(1.0e0_wp+d1_w))
         else
-            !           call ehufDO (14,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +316)
         endif
         do g_i_ = 1, g_p_
             g_ah1oo(g_i_) = d1_p * g_d1_w(g_i_)
@@ -1140,9 +1124,6 @@ module chempotpy_h2o2_gen_1998_pes
         if( abs(d1_w) .lt. 1.0e0_wp )then
             d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-d1_w)*(1.0e0_wp+d1_w))
         else
-            !           call ehufDO (14,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +350)
         endif
         do g_i_ = 1, g_p_
             g_aooh2(g_i_) = d1_p * g_d1_w(g_i_)
@@ -1251,17 +1232,11 @@ module chempotpy_h2o2_gen_1998_pes
         if( d1_w .gt. 0.0e0_wp )then
             d2_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
-            !           call ehufDO (9,d1_w, d2_v, d2_p,
-            !     +g_ehfid,
-            !     +497)
         endif
         d4_v = sqrt(d2_w)
         if( d2_w .gt. 0.0e0_wp )then
             d1_p = 1.0e0_wp / (2.0e0_wp *  d4_v)
         else
-            !           call ehufDO (9,d2_w, d4_v, d1_p,
-            !     +g_ehfid,
-            !     +506)
         endif
         d4_b = d2_v * d1_p
         d5_b = d4_v * d2_p
@@ -1276,15 +1251,6 @@ module chempotpy_h2o2_gen_1998_pes
         !  outside this range.  Also if certain triatoms are collinear then the
         ! is not defined
         !  and we set these cases to 0 degrees
-        !      if(d.eq.0.d0)then
-        !       thooh=0.d0
-        !      else
-        !       argnd=n/d
-        !      if(argnd.ge.1.d0)then
-        !       thooh=0.d0
-        !      elseif(argnd.le.-1.d0)then
-        !       thooh=pi
-        !      else
         d3_v = n / d
         d2_b = 1.0e0_wp / d
         d3_b = (-d3_v) / d
@@ -1296,16 +1262,11 @@ module chempotpy_h2o2_gen_1998_pes
         if( abs(d1_w) .lt. 1.0e0_wp )then
             d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-d1_w)*(1.0e0_wp+d1_w))
         else
-            !           call ehufDO (14,d1_w, d2_v, d1_p,
-            !     +g_ehfid,
-            !     +547)
         endif
         do g_i_ = 1, g_p_
             g_thooh(g_i_) = d1_p * g_d1_w(g_i_)
         enddo
         thooh = d2_v
-        !      endif
-        !      endif
         do g_i_ = 1, g_p_
             g_pass(g_i_,1) = g_rh1o1(g_i_)
         enddo
@@ -1357,7 +1318,6 @@ module chempotpy_h2o2_gen_1998_pes
         integer            :: g_ehfid
         !      data rm_oo, rm_oh, ANGLE_OOH/1.456199d0, 0.962755d0, 100.9059d0/
         !   convert offset parameters to bohr and radians
-        !        call ehsfid(g_ehfid, 'vibpot','g_surf.f')
         zoe = 3.995139982058e-3_wp
         ind1 = [ 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1, 2, &
             & 1, 0, 2, 0, 1, 0, 2, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 4, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 1, 0, 0, &
@@ -1426,8 +1386,6 @@ module chempotpy_h2o2_gen_1998_pes
         rm_oh     = 0.962755e0_wp
         angle_ooh = 100.9059e0_wp
         pi        = 4.e0_wp * atan(1.e0_wp)
-        !        rm_oo = rm_oo / 0.529177d0
-        !        rm_oh = rm_oh / 0.529177d0
         angle_ooh = angle_ooh * pi / 180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
@@ -1581,9 +1539,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
     end subroutine g_vibpot
 
-    !      CALL G_ANALYTIC(GPP, GP, V, GV, GVV, LDGVV, LDGV, X,
     !    * GX, GXX, LDGXX, LDGX)
-    !      CALL G_ANALYTIC(12, 12, V, GV, GVV, 1, 1, X, GX, GXX, 12, 12)
     !> @brief Evaluate G_ANALYTIC for the H2O2_GEN_1998 potential.
     subroutine g_analytic( g2p, g_p_, v, g_v, g_g_v, ldg_g_v, ldg_v, x, &
             & g_x, g_g_x, ldg_g_x, ldg_x )
@@ -1859,13 +1815,9 @@ module chempotpy_h2o2_gen_1998_pes
         ! The potential can give weird values for unusual geometries
         ! replace with some high value in these unphysical regions and
         ! then exit
-        !      if((min(rab,rcd,rac,rbd).gt.rohhigh) .or.
         !     !(min(rab,rcd,rac,rbd).lt.rohlow)  .or.
         !     !(rbc.gt.roohigh) .or. (rbc.lt.roolow) .or.
         !     !(rad.lt.rhhlow)) then
-        !      vdc=1000.d0
-        !      return
-        !      endif
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_n1(g2i,g_i_) = (-c1) * g_g_c4(g2i,g_i_) + (-c4) * g_g_c1(g2i,g_i_) + (-c2) * g_g_c5(g2i,g_i_) + (- &
@@ -2128,15 +2080,6 @@ module chempotpy_h2o2_gen_1998_pes
         !  outside this range.  Also if certain triatoms are collinear then the
         ! is not defined
         !  and we set these cases to 0 degrees
-        !      if(d.eq.0.d0)then
-        !       thooh=0.d0
-        !      else
-        !       argnd=n/d
-        !      if(argnd.ge.1.d0)then
-        !       thooh=0.d0
-        !      elseif(argnd.le.-1.d0)then
-        !       thooh=pi
-        !      else
         d3_v = n / d
         d2_b = 1.0e0_wp / d
         d3_b = (-d3_v) / d
@@ -2156,8 +2099,6 @@ module chempotpy_h2o2_gen_1998_pes
             g_thooh(g_i_) = d1_p * g_d1_w(g_i_)
         enddo
         thooh = d2_v
-        !      endif
-        !      endif
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_pass(g2i,g_i_,1) = g_g_rh1o1(g2i,g_i_)
@@ -2304,8 +2245,6 @@ module chempotpy_h2o2_gen_1998_pes
         rm_oh     = 0.962755e0_wp
         angle_ooh = 100.9059e0_wp
         pi        = 4.e0_wp * atan(1.e0_wp)
-        !        rm_oo = rm_oo / 0.529177d0
-        !        rm_oh = rm_oh / 0.529177d0
         angle_ooh = angle_ooh * pi / 180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
@@ -2553,7 +2492,6 @@ module chempotpy_h2o2_gen_1998_pes
         !   N3TM must be greater than or equal to N3TMMN.
         integer, parameter :: n3tmmn = 12
         !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
-        !WRITE (6, 1300)
         if( n3tm .lt. n3tmmn )then
             write (6, '(/,2X,T5,''Warning: N3TM is set equal to '',I3, '' but this potential routine'', /,2X,T14,''requir' // &
                 'es N3TM be greater than or '', ''equal to '',I3,/)') n3tm, n3tmmn

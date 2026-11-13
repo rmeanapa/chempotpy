@@ -869,7 +869,6 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     NOW COMPUTE THE PARTIALS FOR THE THREE R VECTORS
             do i = 1, 3
                 do j = 1, 3
-                    !            DO 70 K = 1, 3
                     ! BUGFIX:  DRV was not fully initialized to zero causing trouble on some
                     !          platforms.
                     do k = 1, 18
@@ -1343,7 +1342,6 @@ module chempotpy_ch5_gen_j1_1987_pes
             infocm_indexes(5) = 6
             infocm_indexes(6) = 1
             infocm_irctnt     = 6
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

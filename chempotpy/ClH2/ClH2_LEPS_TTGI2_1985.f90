@@ -176,8 +176,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         character(len=80) :: title(2)
         equivalence (th(1, 1), dh(1, 1))
         !   Echo the name of the potential to the file linked to FORTRAN unit IP
-        !WRITE (IPTPRT, 600)
-        !WRITE (IPTPRT, 610) TITLE
         arg    = 0.e0_wp
         c      = 0.e0_wp
         cs     = 0.e0_wp
@@ -715,7 +713,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
                 'es, NDER = 1, are '', ''coded in this potential'')') nder
             stop 'POT 1'
         endif
-        !     IAPP=1
         !     SET FLAG FOR EIGENVECTOR OUTPUT
         iflag = sign(1, nroot)
         nroot = abs(nroot)
@@ -795,7 +792,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         if( iflag .lt. zero ) write(iptprt, '(/,2X,T5,''Vector:'',(T15,3E20.8))') (vec(i,nroot), i=1, ndim)
         !************************* END OF FPOT3N *******************************
         if( nder .ne. 1 ) return
-        !     IF(IAPP.EQ.0) RETURN
         !     SET  VECTOR FOR STATE OF INTEREST
         do i=1, ndim
             gvec(i) = vec(i,nroot)

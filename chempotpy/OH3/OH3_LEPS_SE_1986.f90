@@ -211,7 +211,6 @@ module chempotpy_oh3_leps_se_1986_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_indexes(4) = 1
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

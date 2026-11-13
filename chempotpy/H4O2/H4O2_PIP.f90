@@ -67,10 +67,9 @@ module chempotpy_h4o2_pip_pes
         real(wp), intent(in)  :: x(natoms,3)
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
-        !     logical :: first_time_data=.true.
-        real    :: tx(18)
-        real    :: v
-        integer :: iatom, idir, j, istate
+        real                  :: tx(18)
+        real                  :: v
+        integer               :: iatom, idir, j, istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms

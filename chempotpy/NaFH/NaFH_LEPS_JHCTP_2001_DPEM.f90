@@ -146,7 +146,6 @@ end subroutine diagonalize
 
 !> @brief Evaluate pot for the NaFH_LEPS_JHCTP_2001_DPEM potential.
 subroutine pot( r, e, de, nt, nsurf )
-    !      subroutine pot(r,e,nt,nsurf)
     !         R     is an array with dimensions R(NT,3)
     !               this array contains the geometry(ies) to be computed  (i
     !               Geometries are specified in terms of interatomic distanc
@@ -455,41 +454,8 @@ module chempotpy_nafh_leps_jhctp_2001_dpem_pot11_legacy_state_0db22763
         af1        = amh/(amf+amh)
         af2        = amf/(amf+amh)
         if( g_myrank .eq. 0 )then
-            !        write(6,100)af1,af2
             !     Excited NaF surface:
-            !        write(6,102)(cNF1(i),i=1,5)
             !     Ground HF suface:
-            !        write(6,103)DeHF,reHF,(cHF(i),i=1,6)
-            !        write(6,104)ads1,ars1,abs1
-            !        write(6,105)una2p,asmall
-            !        write(6,106)(y(1,1,j),j=1,4)
-            !        write(6,107)(y(2,1,j),j=1,4)
-            !        write(6,108)(y(3,1,j),j=1,4)
-            !        write(6,109)(y(4,1,j),j=1,4)
-            !        write(6,110)(y(1,2,j),j=1,4)
-            !        write(6,111)(y(2,2,j),j=1,4)
-            !        write(6,112)(y(3,2,j),j=1,4)
-            !        write(6,113)(y(4,2,j),j=1,4)
-            !        write(6,114)(y(1,3,j),j=1,4)
-            !        write(6,115)(y(2,3,j),j=1,4)
-            !        write(6,116)(y(3,3,j),j=1,4)
-            !        write(6,117)(y(4,3,j),j=1,4)
-            !        write(6,118)(c2a(j),j=1,4)
-            !        write(6,119)(c2b(j),j=1,4)
-            !        write(6,120)(c2c(j),j=1,4)
-            !        write(6,121)(dip1(j),j=1,4)
-            !        write(6,122)(adip1(j),j=1,4)
-            !        write(6,123)(rdip1(j),j=1,4)
-            !        write(6,124)(acut1(j),j=1,4)
-            !        write(6,125)(rcut1(j),j=1,4)
-            !        write(6,126)(dipn(j),j=1,4)
-            !        write(6,127)(al2(j),j=1,4)
-            !        write(6,128)(aln0(j),j=1,4)
-            !        write(6,129)(dipnn(j),j=1,4)
-            !        write(6,130)(al2n(j),j=1,4)
-            !        write(6,131)(aln0n1(j),j=1,4)
-            !        write(6,132)(aln0n2(j),j=1,4)
-            !        write(6,133)(rn0n(j),j=1,4)
         endif
         do i=1, nt
             r1s      = r(i,1)*r(i,1)
@@ -640,14 +606,11 @@ module chempotpy_nafh_leps_jhctp_2001_dpem_pot11_legacy_state_0db22763
                 danormd2 = danormd2 + dcogd2
                 danormd3 = danormd3 + dcogd3
             enddo
-            !     if (csb.gt.3.99d0) write(6,77)l1,l2,csb,r(i,3),
-            !    &                         r(i,2),e(i),anorm
             hlp     = 1.e0_wp/anorm
             e(i)    = e(i)*hlp
             de(1,i) = (de(1,i) - e(i)*danormd1)*hlp
             de(2,i) = (de(2,i) - e(i)*danormd2)*hlp
             de(3,i) = (de(3,i) - e(i)*danormd3)*hlp
-            !  77 format(2(2x,i3),5(2x,e16.8))
             do j=1, 3
                 rdum(j) = r(i,j)
             enddo
@@ -832,19 +795,8 @@ module chempotpy_nafh_leps_jhctp_2001_dpem_pot12_legacy_state_0db22763
         af1      = amh/(amf+amh)
         af2      = amf/(amf+amh)
         if( g_myrank .eq. 0 )then
-            !         write(6,100)af1,af2
             !     NaF coupling:
-            !         write(6,101)(ccNF(i),i=1,4)
-            !         write(6,102)(ccNHa(i),i=1,4)
-            !         write(6,103)(ccNHi(i),i=1,4)
-            !         write(6,104)(ccNHi1(i),i=1,4)
-            !         write(6,105)xpNH,xpNH1
-            !         write(6,106)(ahf(i),i=1,3)
-            !         write(6,107)(anaf(i),i=1,3)
-            !         write(6,108)(anah(i),i=1,3)
             !j         write(6,109)(r21(i),i=1,3)
-            !         write(6,110)(r23(i),i=1,3)
-            !         write(6,111)(r13(i),i=1,3)
         endif
         do i=1, nt
             hlp1       = exp(-xpnh*r(i,2)**2)
@@ -1312,49 +1264,8 @@ module chempotpy_nafh_leps_jhctp_2001_dpem_pot22_legacy_state_0db22763
         af1        = amh/(amf+amh)
         af2        = amf/(amf+amh)
         if( g_myrank .eq. 0 )then
-            !         write(6,100)af1,af2
             !     Ground NaF surface
-            !         write(6,101)DeNF,reNF,(cNF(i),i=1,6)
             !     Ground HF suface:
-            !         write(6,103)DeHF,reHF,(cHF(i),i=1,6)
-            !         write(6,105)una2p,asmall
-            !         write(6,106)(y(1,1,j),j=1,4)
-            !         write(6,107)(y(2,1,j),j=1,4)
-            !         write(6,108)(y(3,1,j),j=1,4)
-            !         write(6,109)(y(4,1,j),j=1,4)
-            !         write(6,110)(y(1,2,j),j=1,4)
-            !         write(6,111)(y(2,2,j),j=1,4)
-            !         write(6,112)(y(3,2,j),j=1,4)
-            !         write(6,113)(y(4,2,j),j=1,4)
-            !         write(6,114)(y(1,3,j),j=1,4)
-            !         write(6,115)(y(2,3,j),j=1,4)
-            !         write(6,116)(y(3,3,j),j=1,4)
-            !         write(6,117)(y(4,3,j),j=1,4)
-            !         write(6,118)(c2a(j),j=1,4)
-            !         write(6,119)(c2b(j),j=1,4)
-            !         write(6,120)(c2c(j),j=1,4)
-            !         write(6,121)(r20i(j),j=1,4)
-            !         write(6,122)r20a
-            !         write(6,123)(al20i(j),j=1,4)
-            !         write(6,124)(al20i1(j),j=1,4)
-            !         write(6,125)al20a
-            !         write(6,126)(al2a(j),j=1,4)
-            !         write(6,127)(rr0a(j),j=1,4)
-            !         write(6,128)psi
-            !         write(6,129)rsi
-            !         write(6,130)(dip2(j),j=1,4)
-            !         write(6,131)(adip2(j),j=1,4)
-            !         write(6,132)(rdip2(j),j=1,4)
-            !         write(6,133)(acut2(j),j=1,4)
-            !         write(6,134)(rcut2(j),j=1,4)
-            !         write(6,135)(ry(j),j=1,4)
-            !         write(6,136)(aly(j),j=1,4)
-            !         write(6,137)(dy(j),j=1,4)
-            !         write(6,138)(dip2n(j),j=1,4)
-            !         write(6,139)(adip2n(j),j=1,4)
-            !         write(6,140)(rdip2n(j),j=1,4)
-            !         write(6,141)(acut2n(j),j=1,4)
-            !         write(6,142)(rcut2n(j),j=1,4)
         endif
         do i=1, nt
             r1s      = r(i,1)*r(i,1)
@@ -1409,7 +1320,6 @@ module chempotpy_nafh_leps_jhctp_2001_dpem_pot22_legacy_state_0db22763
                 hlp   = 0.5e0_wp*(1.e0_wp+tanh(hlp))
                 hlp2  = r(i,3)+r(i,1)-rsi
                 if( hlp2 .gt. 0.e0_wp )then
-                    !     write(6,*)'R1+R3=',(r(i,1)+r(i,3))
                     ctanh  = exp(-psi/hlp2)
                     dctanh = psi*ctanh/(r(i,3)+r(i,1)-rsi)**2
                 else
@@ -1897,13 +1807,7 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cfu11 )
     enddo
     w    = j1_ac * j1_ac + j2_ac * j2_ac + j3_ac * j3_ac - j1_ac * j2_ac - j2_ac * j3_ac - j3_ac * j1_ac
     d7_v = sqrt(w)
-    !        if ( w .gt. 0.0d0 ) then
     d1_p = 1.0e0_wp / (2.0e0_wp *  d7_v)
-    !        else
-    !           call ehufDO (9,w, d7_v, d1_p,
-    !     +g_ehfid,
-    !     +482)
-    !        endif
     do g_i_ = 1, g_p_
         g_leps_ac(g_i_) = (-d1_p) * g_w(g_i_) + g_q3_ac(g_i_) + g_q2_ac(g_i_) + g_q1_ac(g_i_)
     enddo
@@ -1928,13 +1832,7 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cfu11 )
     enddo
     w    = j1_ap * j1_ap + j2_ap * j2_ap + j3_ap * j3_ap - j1_ap * j2_ap - j2_ap * j3_ap - j3_ap * j1_ap
     d7_v = sqrt(w)
-    !        if ( w .gt. 0.0d0 ) then
     d1_p = 1.0e0_wp / (2.0e0_wp *  d7_v)
-    !        else
-    !           call ehufDO (9,w, d7_v, d1_p,
-    !     +g_ehfid,
-    !     +524)
-    !        endif
     do g_i_ = 1, g_p_
         g_leps_ap(g_i_) = (-d1_p) * g_w(g_i_) + g_q3_ap(g_i_) + g_q2_ap(g_i_) + g_q1_ap(g_i_)
     enddo
@@ -2453,13 +2351,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cfu22 )
     enddo
     w    = j1_ac * j1_ac + j2_ac * j2_ac + j3_ac * j3_ac - j1_ac * j2_ac - j2_ac * j3_ac - j3_ac * j1_ac
     d7_v = sqrt(w)
-    !        if ( w .gt. 0.0d0 ) then
     d1_p = 1.0e0_wp / (2.0e0_wp *  d7_v)
-    !        else
-    !           call ehufDO (9,w, d7_v, d1_p,
-    !     +g_ehfid,
-    !     +704)
-    !        endif
     do g_i_ = 1, g_p_
         g_leps_ac(g_i_) = (-d1_p) * g_w(g_i_) + g_q3_ac(g_i_) + g_q2_ac(g_i_) + g_q1_ac(g_i_)
     enddo
@@ -2484,13 +2376,7 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cfu22 )
     enddo
     w    = j1_ap * j1_ap + j2_ap * j2_ap + j3_ap * j3_ap - j1_ap * j2_ap - j2_ap * j3_ap - j3_ap * j1_ap
     d7_v = sqrt(w)
-    !        if ( w .gt. 0.0d0 ) then
     d1_p = 1.0e0_wp / (2.0e0_wp *  d7_v)
-    !        else
-    !           call ehufDO (9,w, d7_v, d1_p,
-    !     +g_ehfid,
-    !     +746)
-    !        endif
     do g_i_ = 1, g_p_
         g_leps_ap(g_i_) = (-d1_p) * g_w(g_i_) + g_q3_ap(g_i_) + g_q2_ap(g_i_) + g_q1_ap(g_i_)
     enddo

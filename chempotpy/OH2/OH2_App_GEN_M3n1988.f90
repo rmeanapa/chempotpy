@@ -11,12 +11,10 @@
 !   Number of bodies:              3
 !   Number of derivatives:         1
 !   Number of electronic surfaces: 1
-!   prepare_local_context must be called once before any calls to POT.
-!   The potential parameters are included in the block data subprogram P
+!   The owning module prepares the local parameter context before evaluation.
 !   Coordinates, potential energy, and derivatives are passed
 !   The potential energy in the three asymptotic valleys are
 !   stored in the common block ASYCM:
-!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 !   The potential energy in the AB valley, EASYAB, is equal to the poten
 !   energy of the H "infinitely" far from the OH diatomic, with the
 !   OH diatomic at its equilibrium configuration.  Similarly, the terms
@@ -325,11 +323,8 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
             endif
-            !      WRITE (NFLAG(18), 600)
             hpi         = 2.0e0_wp*atan(one)
             precm_iopsw = max(0, precm_iopsw)
-            !      WRITE (NFLAG(18), 601) IOPSW
-            !      CALL PREM2
             call prepare_local_context_2
             !   Close the file containing the potential parameters
             pt3cm_ezero(1) = ambpcm_d(2)
@@ -342,7 +337,6 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -378,14 +372,6 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             call carttor
             hpi = 2.0e0_wp*atan(one)
             !   Check the values of NASURF and NDER for validity.
-            !      IF (NASURF(1,1) .EQ. 0) THEN
-            !         WRITE(NFLAG(18), 900) NASURF(1,1)
-            !         STOP
-            !      ENDIF
-            !         IF (NDER .GT. 1) THEN
-            !             WRITE (NFLAG(18), 910) NDER
-            !             STOP 'POT 2'
-            !         ENDIF
             !  CHECK FOR SMALL VALUES OF R
             if (pt1cm_r(1) .lt. 0.001e0_wp .or. pt1cm_r(2).lt. 0.001e0_wp .or.&
                 &pt1cm_r(3) .lt. 0.001e0_wp) then
@@ -450,7 +436,6 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             omf = 1.0e0_wp - f
             if( f .gt. 1.e-10_wp )then
                 !    EVALUATE POTENTIAL FOR O + H2 DIRECTION
-                !         CALL POTM2
                 call pot2
                 v1 = pt1cm_engygs
                 if( usricm_nder .eq. 1 )then
@@ -478,7 +463,6 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                 t          = pt1cm_r(1)
                 pt1cm_r(1) = pt1cm_r(3)
                 pt1cm_r(3) = t
-                !         CALL POTM2
                 call pot2
                 v2 = pt1cm_engygs
                 if( usricm_nder .eq. 1 )then
@@ -521,11 +505,8 @@ module chempotpy_oh2_app_gen_m3n1988_pes
         subroutine prepare_local_context_2
             !   The subprogram prepare_local_context_2 add the bending correction to the collinear
             !   O + H2 potential subroutine.
-            !   The potential parameters for the collinear potential are
-            !   initialized in the block data subprogram PTPACM.  The
-            !   potential parameters for the bending potential are assigned
-            !   in the subprogram prepare_local_context_22.  The subprograms prepare_local_context_2 and
-            !   prepare_local_context_2 do not needed to be called by the main program.
+            !   This internal routine prepares both the collinear and bending
+            !   parameters; callers do not invoke it directly.
             use chempotpy_kinds, only: wp
             implicit none
             integer             :: it
@@ -542,11 +523,8 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             !  Vaule of tolerance
             real(wp), parameter :: tol = 1.e-5_wp
             !   Assign parameters for the bending potential
-            !      CALL PREM22
             call prepare_local_context_22
             !   Echo the potential parameters for the bending correction.
-            !      WRITE (NFLAG(18),600) REQ, D
-            !      WRITE (NFLAG(18),601) BETA,A,RBB,GAMP
             !       CONVERT TO ATOMIC UNITS
             do it = 1, 3
                 ambpcm_req(it) = ambpcm_req(it)/bohr
@@ -652,7 +630,6 @@ module chempotpy_oh2_app_gen_m3n1988_pes
                 !       THE COLLINEAR GEOMETRY AND CALL POTM22
                 ractmp     = pt1cm_r(3)
                 pt1cm_r(3) = pt1cm_r(2) + pt1cm_r(1)
-                !         CALL POTM22
                 call pot22
                 pt1cm_r(3)   = ractmp
                 pt1cm_engygs = pt1cm_engygs + bcoor
@@ -694,7 +671,6 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             character(len=20)   :: title
             !  TITLE
             title = '   O+H2 MAB 9-12-79 '
-            !      WRITE (NFLAG(18), 599)
             !  ASSIGN COLLINEAR PARAMETERS (UNITS OF KCAL, ANGSTROM, DEGREES)
             !  IN BLOCK DATA SUBROUTINE
             pre22cm_a1inf = 0.0e0_wp
@@ -706,23 +682,10 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             !  ASSIGN THE PIVOT POINT, POTENTIAL AT THE PIVOT,
             !  FLAG, AND ASYMPTOTIC EXPONENTIAL PARAMETERS
             !  IN BLOCK DATA SUBROUTINE.  ECHO.
-            !      WRITE (NFLAG(18), 600) TITLE
-            !      WRITE (NFLAG(18), 601) D1INF,R1INF,B1INF,D2INF,R2INF,B2INF,A1INF,
             !     2INF
-            !      WRITE (NFLAG(18), 602) R1S,R2S,VSP,ALPH1,ALPH2
-            !      IF(IAYES.NE.0) WRITE (NFLAG(18), 603)
-            !      IF(IAYES.EQ.0) WRITE (NFLAG(18), 604)
             nphip2 = pre22cm_nphi + 2
             !  ECHO POTENTIAL PARAMTERS ASSIGNED BY BLOCK DATA SUBROUTINE
-            !      WRITE (NFLAG(18), 605) NPHI
-            !      WRITE (NFLAG(18), 610)
-            !      DO 30 I = 1,NPHI
-            !         WRITE (NFLAG(18), 606) I,PHI(I),(BSP(I,J),CSP(I,J),J=1,3)
             !   30 CONTINUE
-            !      WRITE (NFLAG(18), 611)
-            !      DO 40 I=1,2
-            !         K = I + NPHI
-            !         WRITE (NFLAG(18), 607) K,(CSP(K,J),J=1,3)
             !   40 CONTINUE
             !  CONVERT TO ATOMIC UNITS
             pre22cm_d1inf = pre22cm_d1inf/ckcal
@@ -940,7 +903,6 @@ module chempotpy_oh2_app_gen_m3n1988_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !     PARAMETER (IPRT = 6)
             !  THIS IS A SUBROUTINE FOR FITTING DATA WITH A CUBIC SPLINE
             !  POLYNOMIAL AND EVALUATING THAT POLYNOMIAL AT A GIVEN POINT
             !  OR ITS DERIVATIVE AT A GIVEN POINT

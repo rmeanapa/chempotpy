@@ -16,7 +16,6 @@
 !            R(3) = RAC
 !   The potential energy in the three asymptotic valleys are
 !   stored in the common block ASYCM:
-!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 !   The potential energy in the AB valley, EASYAB, is equal to the poten
 !   energy of the H "infinitely" far from the H2 diatomic, with the
 !   H2 diatomic at its equilibrium configuration.  For this potential en
@@ -241,8 +240,6 @@ module chempotpy_h3_gen_tk_1984_pes
             !           gamma is dimensionless and ranges from 0.5 to 0.65
             !   RBB   = parameter used in the scaling calculation for the
             !           bending correction
-            !      WRITE (NFLAG(18),600) DE, DE, DE, (REQ(I),I=1,3),BETA, BETA, BETA
-            !      WRITE (NFLAG(18), 610) A, GAMMA, RBB
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !       CONVERT TO ATOMIC UNITS
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -270,7 +267,6 @@ module chempotpy_h3_gen_tk_1984_pes
             indexes(2) = 1
             indexes(3) = 1
             irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

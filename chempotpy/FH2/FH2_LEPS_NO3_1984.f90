@@ -19,7 +19,6 @@
 !   Coordinates, potential energy, and derivatives are passed
 !   The potential energy in the three asymptotic valleys is
 !   stored in the common block ASYCM:
-!                  COMMON /ASYCM/ EASYAB, EASYBC, EASYAC
 !   The potential energy in the AB valley, EASYAB, is equal to the poten
 !   energy of the H "infinitely" far from the FH diatomic, with the
 !   FH diatomic at its equilibrium configuration.  Similarly, the terms
@@ -281,7 +280,6 @@ module chempotpy_fh2_leps_no3_1984_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 
@@ -320,7 +318,6 @@ module chempotpy_fh2_leps_no3_1984_pes
             endif
             !   Check the value of NDER
             call phical (phi)
-            !      IF (LCHI.NE.0) WRITE (NFLAG(18),620) R(1),R(2),R(3),PHI
             z3cm_z(1) = fphi(phi)
             z3cm_z(3) = z3cm_z(1)
             do i=1, 3, 2
@@ -390,13 +387,11 @@ module chempotpy_fh2_leps_no3_1984_pes
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             phicm_deg = 57.29577951e0_wp*phi
-            !      IF (LCHI.NE.0) WRITE (NFLAG(18),100) DEG
             if( phicm_deg .gt. 180.0e0_wp ) phicm_deg=phicm_deg-180.0e0_wp
             if( phicm_deg .lt. 0.0e0_wp ) phicm_deg=-phicm_deg
             if( phicm_deg .gt. 90.0e0_wp ) phicm_deg=180.0e0_wp-phicm_deg
             if( phicm_deg .lt. 0.0e0_wp ) stop 89
             if( phicm_deg <= phicm_deg1 )then
-                !      IF (LCHI.NE.0) WRITE (NFLAG(18),100) DEG
                 fphi       = phicm_z0
                 phicm_fder = 0.0e0_wp
             elseif( phicm_deg <= 20.0e0_wp )then

@@ -432,7 +432,6 @@ module chempotpy_fh2_gen_5seccog1_1993_pes
             infocm_indexes(2) = 1
             infocm_indexes(3) = 1
             infocm_irctnt     = 2
-            !      CALL POTINFO
             call ancvrt
         end subroutine prepare_local_context
 

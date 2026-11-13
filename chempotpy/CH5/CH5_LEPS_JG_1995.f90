@@ -247,8 +247,7 @@ module chempotpy_ch5_leps_jg_1995_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            !      DIMENSION COORD(N3TM),DX(N3TM)
-            logical :: lswap
+            logical             :: lswap
             ! added 9/8/2011
             ! check ordering of h atoms
             call horder(cart, lswap, natom)
@@ -285,7 +284,6 @@ module chempotpy_ch5_leps_jg_1995_pes
                     !           numerical derivatives. The following fix improves this situa
                     !           better solution would be to significantly increase the preci
                     !           the unit conversions in this code. (Jasper 7/17/11)
-                    !           DEGSDR(i)=pdot(i)*0.0201723d0
                     degsdr(i) = pdot(i)*0.03812e0_wp * 0.52918e0_wp
                 enddo
                 call rtocart
@@ -335,8 +333,7 @@ module chempotpy_ch5_leps_jg_1995_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
-            tau = acos(-1.0e0_wp/3.0e0_wp)
-            !       pi=4.0d0*atan(1.0d0)
+            tau    = acos(-1.0e0_wp/3.0e0_wp)
             halfpi = 0.5e0_wp*pi
             twopi  = 2.0e0_wp*pi
             !  set diagonal elements to zero
@@ -656,9 +653,8 @@ module chempotpy_ch5_leps_jg_1995_pes
                 argd(in(ii))  = axb(1)*c(in(ii),1)+axb(2)*c(in(ii),2) +axb(3)*c(in(ii),3)
                 argd(in(ii))  = argd(in(ii))/norma
                 delta(in(ii)) = acos(argd(in(ii)))-theta0(i,in(ii))
-                !        write(*,*) 'theta,delta ',theta0(i,in(ii)),delta(in(ii))
-                sum2 = sum2+delta(in(ii))**2
-                sum4 = sum4+delta(in(ii))**4
+                sum2          = sum2+delta(in(ii))**2
+                sum4          = sum4+delta(in(ii))**4
             enddo
             !  derivatives of axb wrt hj:
             daxb(j, 1, 1) = 0.0e0_wp
@@ -1034,7 +1030,6 @@ module chempotpy_ch5_leps_jg_1995_pes
             indexes(5) = 1
             indexes(6) = 1
             irctnt     = 6
-            !      CALL POTINFO
             call ancvrt
             !  calculate indexes for coordinates
             do ind=1, 3

@@ -72,10 +72,6 @@ module chempotpy_aln_regea_pes
         cc = 0.260371275036638983
         v0 = 90.0439667806546140
         ! Original
-        !      a=1.589647708
-        !      b=0.866262749
-        !      cc=0.4865568924
-        !      v0=44.8337922
         v1 = 0e0_wp
         do i=1, natom
             ud = 0e0_wp

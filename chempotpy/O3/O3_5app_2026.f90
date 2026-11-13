@@ -324,7 +324,6 @@ module chempotpy_o3_5app_2026_pes
         real(wp), intent(inout) :: b(n)
         integer                 :: i, n
         do i=1, n
-            !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
             b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
         enddo
     end subroutine activation_derivative_gelu
@@ -368,7 +367,6 @@ module chempotpy_o3_5app_2026_pes
     end subroutine activation_functional_heviside
 
     !add activation functional derivative terms
-    !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate activation_functional_derivative_terms.
     subroutine activation_functional_derivative_terms( g, z, n, r, nbonds, dfdr )
         use chempotpy_kinds, only: wp
@@ -458,7 +456,6 @@ module chempotpy_o3_5app_2026_pes
     end subroutine decay_function_heviside
 
     !add activation functional derivative terms
-    !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate decay_function_heviside_derivative.
     subroutine decay_function_heviside_derivative( r, nbonds, af_f, af_a, af_b, order, dfdr )
         use chempotpy_kinds, only: wp
@@ -521,18 +518,15 @@ module chempotpy_o3_5app_2026_pes
     end subroutine sumover
 
     ! matrix diagonalization
-    ! subroutine diagonalize(n,A_ss,B_ss,U_ss)
     !> @brief Evaluate diagonalize.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
         use chempotpy_kinds, only: wp
         implicit none
         ! parameters
-        integer, intent(in)  :: n
-        real(wp), intent(in) :: a_ss(n,n)
-        !   real*8, intent(out) :: B_ss(n,n)
+        integer, intent(in)   :: n
+        real(wp), intent(in)  :: a_ss(n,n)
         real(wp), intent(out) :: u_ss(n,n)
         ! internal variables
-        !   real*8 :: EV_s(n)
         real(wp), intent(out) :: ev_s(n)
         integer               :: io, i
         real(wp), allocatable :: lapack_work_d(:)
@@ -548,9 +542,6 @@ module chempotpy_o3_5app_2026_pes
         ! U_ss already holds the transformation matrix
         ! now  building the diagonal matrix A_ss
         !   B_ss=0.d0
-        !   do i=1,n
-        !     B_ss(i,i)=EV_s(i)
-        !   enddo
     end subroutine diagonalize
 
     ! convert de/dr to de/dxyz

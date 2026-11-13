@@ -93,7 +93,6 @@ module chempotpy_n2o_13_1ap_2026_pes
             &bias_l0, bias_l1, bias_l2, bias_l3, bias_l4, v2b, v2b_1, g2b)
         ! convert from gradient_r to gradient_xyz
         call grad_r_to_xyz(g, drdx, gr, r, x, n, ns)
-        !call nac_r_to_xyz(h,drdx,hr,r,x,n,ns)
         ! output is eV, eV/angstrom, and 1/angstrom
     end subroutine energy_gradient
 
@@ -125,9 +124,8 @@ module chempotpy_n2o_13_1ap_2026_pes
         real(wp)                :: ddecaydr_3b(ns,n*(n-1)/2), ddecaydr_2b(ns,n*(n-1)/2)
         integer                 :: sum1
         integer                 :: i, j, k, l
-        !real*8 :: v2b(ns),g2b(ns,n*(n-1)/2)
-        real(wp) :: sum_v2b(ns), sum_g2b(ns,n*(n-1)/2)
-        real(wp) :: reordered_v2b(ns), reordered_g2b(ns,n*(n-1)/2)
+        real(wp)                :: sum_v2b(ns), sum_g2b(ns,n*(n-1)/2)
+        real(wp)                :: reordered_v2b(ns), reordered_g2b(ns,n*(n-1)/2)
         a0 = 0.0e0_wp
         a1 = 0.0e0_wp
         a2 = 0.0e0_wp
@@ -247,7 +245,6 @@ module chempotpy_n2o_13_1ap_2026_pes
         real(wp), intent(inout) :: b(n)
         integer                 :: i, n
         do i=1, n
-            !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
             b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
         enddo
     end subroutine activation_derivative_gelu
@@ -291,7 +288,6 @@ module chempotpy_n2o_13_1ap_2026_pes
     end subroutine activation_functional_heviside
 
     !add activation functional derivative terms
-    !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate activation_functional_derivative_terms.
     subroutine activation_functional_derivative_terms( g, z, n, r, nbonds, dfdr )
         use chempotpy_kinds, only: wp
@@ -381,7 +377,6 @@ module chempotpy_n2o_13_1ap_2026_pes
     end subroutine decay_function_heviside
 
     !add activation functional derivative terms
-    !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate decay_function_heviside_derivative.
     subroutine decay_function_heviside_derivative( r, nbonds, af_f, af_a, af_b, order, dfdr )
         use chempotpy_kinds, only: wp
@@ -444,18 +439,15 @@ module chempotpy_n2o_13_1ap_2026_pes
     end subroutine sumover
 
     ! matrix diagonalization
-    ! subroutine diagonalize(n,A_ss,B_ss,U_ss)
     !> @brief Evaluate diagonalize.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
         use chempotpy_kinds, only: wp
         implicit none
         ! parameters
-        integer, intent(in)  :: n
-        real(wp), intent(in) :: a_ss(n,n)
-        !   real*8, intent(out) :: B_ss(n,n)
+        integer, intent(in)   :: n
+        real(wp), intent(in)  :: a_ss(n,n)
         real(wp), intent(out) :: u_ss(n,n)
         ! internal variables
-        !   real*8 :: EV_s(n)
         real(wp), intent(out) :: ev_s(n)
         integer               :: io, i
         real(wp), allocatable :: lapack_work_d(:)
@@ -471,9 +463,6 @@ module chempotpy_n2o_13_1ap_2026_pes
         ! U_ss already holds the transformation matrix
         ! now  building the diagonal matrix A_ss
         !   B_ss=0.d0
-        !   do i=1,n
-        !     B_ss(i,i)=EV_s(i)
-        !   enddo
     end subroutine diagonalize
 
     ! convert de/dr to de/dxyz
@@ -32700,7 +32689,6 @@ module chempotpy_n2o_13_1ap_2026_pes
                 endif
             elseif( imol .eq. 3 )then
                 if( (i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
-                    !          if ((i.eq.3).or.(i.eq.4).or.(i.eq.10).or.(i.eq.11).or.(i.eq.12).or.(i.eq.13)) then
                     v(i) = v(i) + gam*exp(-del*(r-1.7e0_wp)**2)
                 elseif( (i .eq. 5).or.(i .eq. 6).or.(i .eq. 7).or.(i .eq. 8).or.(i .eq. 9) )then
                     call noground(r, v(i), grad(i), imol, igrad)
@@ -32722,12 +32710,10 @@ module chempotpy_n2o_13_1ap_2026_pes
                     grad(i) = grad(i)-2.0e0_wp*del*gam*(r-1.7e0_wp)*exp(-del*(r-1.7e0_wp)**2)
                 endif
             elseif( imol .eq. 3 )then
-                !               if ((i.eq.3).or.(i.eq.4).or.(i.eq.10).or.(i.eq.11).or.(i.eq.12).or.(i.eq.13)) then
                 if( (i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
                     grad(i) = grad(i)-2.0e0_wp*del*gam*(r-1.7e0_wp)*exp(-del*(r-1.7e0_wp)**2)
                 endif
             endif
-            !          grad(i)= grad(i) + dispdr(1)
             endif
         enddo
     end subroutine ev2gm2
@@ -32897,7 +32883,6 @@ module chempotpy_n2o_13_1ap_2026_pes
         !                0 - gradient is not calculated
         ! Output: V      potential in kcal/mol
         !         grad   gradient (kcal/mol)/Angstrom
-        ! QM commented line 628-631 650-652 708-712 728-730
         use chempotpy_kinds, only: wp
         implicit none
         integer, intent(in) :: imol, igrad
@@ -32935,9 +32920,6 @@ module chempotpy_n2o_13_1ap_2026_pes
         ! Compute the gradient if needed
         if( igrad .eq. 1 )then
             grad = 0.e0_wp
-            !      dfdy = as(1) + 2.0d0*as(2)*y + 3.0d0*as(3)*y*y &
-            !           + 4.0d0*as(4)*y*y*y + 5.0d0*as(5)*y*y*y*y &
-            !           + 6.0d0*as(6)*y*y*y*y*y
             dfdy = as(6)*6.0e0_wp
             do a=5, 1, -1
                 dfdy = dfdy*y
@@ -32998,11 +32980,9 @@ module chempotpy_n2o_13_1ap_2026_pes
         v= (-de)*(c(1)*u**1.0e0_wp + c(2)*u**2.0e0_wp + c(3)*u**3.0e0_wp + c(4)*u**4.0e0_wp + c(5)*u**5.0e0_wp + c(6)* &
             & u**6.0e0_wp + c(7)*u** 7.0e0_wp + c(8)*u**8.0e0_wp + c(9)*u**9.0e0_wp + c(10)*u**10.0e0_wp )
         ! Add D3 dispersion correction
-        !        write(*,*) "vno= ",v
         dist(1) = r
         call d3disp(dist, disp, dispdr, 0, imol)
         v = v+disp
-        !        write(*,*) "dispno= ",disp
         ! 1st derivate by r
         if( igrad .eq. 1 )then
             ! multiplier part of the MEG derivate

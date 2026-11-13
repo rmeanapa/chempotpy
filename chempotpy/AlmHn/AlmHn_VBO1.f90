@@ -98,8 +98,6 @@ module chempotpy_almhn_vbo1_pes
         esn_h  = 0.1536
         c3_h   = 0.00001
         c4_h   = 0.00001
-        !           c3_h=     23378.9026/autoev**(1/esn_h)
-        !           c4_h=     22212.1589/autoev**(1/esn_h)
         !   The same definitions apply for Aluminum
         gam1_al = 0.3599
         gam2_al = 4.2538
@@ -110,8 +108,6 @@ module chempotpy_almhn_vbo1_pes
         esn_al  = 0.7931
         c3_al   = 0.0133
         c4_al   = 0.0068
-        !           c3_al=        0.8576/autoev**(1/esn_al)
-        !           c4_al=        0.4396/autoev**(1/esn_al)
         !   gam1_hal to gam4_hal and gam3_alh, gam4_alh are gammaij in Eq. (1)
         !   c1_hal and c2_hal are ci,1 and ci,2 in Eqs. (9) and (10)
         !   esn_h is the exponent of Vi in Eq. (9)

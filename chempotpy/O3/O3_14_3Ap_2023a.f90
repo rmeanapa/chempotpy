@@ -290,7 +290,6 @@ module chempotpy_o3_14_3ap_2023a_pes
         real(wp), intent(inout) :: b(n)
         integer                 :: i, n
         do i=1, n
-            !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
             b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
         enddo
     end subroutine activation_derivative_gelu
@@ -325,7 +324,6 @@ module chempotpy_o3_14_3ap_2023a_pes
     end subroutine activation_functional_heviside
 
     !add activation functional derivative terms
-    !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate activation_functional_derivative_terms.
     subroutine activation_functional_derivative_terms( g, z, n, r, nbonds )
         use chempotpy_kinds, only: wp
@@ -415,18 +413,15 @@ module chempotpy_o3_14_3ap_2023a_pes
     end subroutine sumover
 
     ! matrix diagonalization
-    ! subroutine diagonalize(n,A_ss,B_ss,U_ss)
     !> @brief Evaluate diagonalize.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
         use chempotpy_kinds, only: wp
         implicit none
         ! parameters
-        integer, intent(in)  :: n
-        real(wp), intent(in) :: a_ss(n,n)
-        !   real*8, intent(out) :: B_ss(n,n)
+        integer, intent(in)   :: n
+        real(wp), intent(in)  :: a_ss(n,n)
         real(wp), intent(out) :: u_ss(n,n)
         ! internal variables
-        !   real*8 :: EV_s(n)
         real(wp), intent(out) :: ev_s(n)
         integer               :: io, i
         real(wp), allocatable :: lapack_work_d(:)
@@ -442,9 +437,6 @@ module chempotpy_o3_14_3ap_2023a_pes
         ! U_ss already holds the transformation matrix
         ! now  building the diagonal matrix A_ss
         !   B_ss=0.d0
-        !   do i=1,n
-        !     B_ss(i,i)=EV_s(i)
-        !   enddo
     end subroutine diagonalize
 
     ! convert de/dr to de/dxyz
@@ -34243,17 +34235,6 @@ module chempotpy_o3_14_3ap_2023a_pes
         call d3disp(dist, disp, dispdr, 1, imol)
         do i=1, 14
             if( (i .eq. 1).or.(i .eq. 2) )then
-                ! Original parameters
-                !      alpha = 0.785d0
-                !      beta = 1.307d0
-                !      as(0) = -2388.5641690d0
-                !      as(1) = 18086.977116d0
-                !      as(2) = -71760.197585d0
-                !      as(3) = 154738.09175d0
-                !      as(4) = -215074.85646d0
-                !      as(5) = 214799.54567d0
-                !      as(6) = -148395.42850d0
-                !      as(7) = 73310.781453d0
                 ! O2 X 3Sig_g^-
                 ! Modified parameters for D3(BJ)
                 alpha = 9.91088352e-1_wp
@@ -34347,10 +34328,8 @@ module chempotpy_o3_14_3ap_2023a_pes
             if( (i .eq. 7).or.(i .eq. 8) )then
                 v(i) = v(i) + gam*exp(-del*(r-1.7e0_wp)**2)
             endif
-            !if ((i.eq.1).or.(i.eq.2)) then
             ! From milihartree to kcal/mol
             !v(i)=v(i)*627.509523475149d-3
-            !endif
             ! Add D3 dispersion correction
             v(i) = v(i)+disp
             ! Compute the gradient if needed
@@ -34361,10 +34340,8 @@ module chempotpy_o3_14_3ap_2023a_pes
                 if( (i .eq. 7).or.(i .eq. 8) )then
                     grad(i) = grad(i)-2.0e0_wp*del*gam*(r-1.7e0_wp)*exp(-del*(r-1.7e0_wp)**2)
                 endif
-                !if ((i.eq.1).or.(i.eq.2)) then
                 ! Convert from milihartree/A to (kcal/mol)/A
                 !grad(i)=grad(i)*627.509523475149d-3
-                !endif
                 grad(i) = grad(i) + dispdr(1)
             endif
         enddo

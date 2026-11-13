@@ -76,7 +76,6 @@ module chempotpy_n4_1a_pipnn_pes
         d = 0.e0_wp
     end subroutine evaluate
 
-    !      subroutine n4pipNN(ct,vpes,vpesa,vpesb,vpesc,vn2) !ct in N4 order and angstrom
     !> @brief Evaluate n4pipNN.
     subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
         use chempotpy_geometry,            only: all_pair_distances, transform_internal_gradient_to_cartesian
@@ -106,7 +105,6 @@ module chempotpy_n4_1a_pipnn_pes
             cx(1,i) = x(i)*cconv
             cx(2,i) = y(i)*cconv
             cx(3,i) = z(i)*cconv
-            !      write(1000,*) "cart ",cx(1,i),cx(2,i),cx(3,i)
         enddo
         dedx(:) = 0.0e0_wp
         dedy(:) = 0.0e0_wp
@@ -114,13 +112,7 @@ module chempotpy_n4_1a_pipnn_pes
         call all_pair_distances(transpose(cx), rb)
         vn2 = 0e0_wp
         do i=1, ndim
-            !       if(rb(i).le.0.6d0)then
-            !         vpes=1000.0d0/23.0605d0
-            !         return
-            !       endif
-            !       write(1000,*) "rb(i) ",rb(i),i
             call ev2gm2(rb(i), vn2tmp, grad, 1, 0)
-            !       write(1000,*) "vn2tmp ",vn2tmp,i
             vn2 = vn2+vn2tmp
         enddo
         vpes     = 0.0e0_wp
@@ -131,10 +123,8 @@ module chempotpy_n4_1a_pipnn_pes
         call evaluate_network(bnew, 2, vpesb)
         call evaluate_network(bnew, 3, vpesc)
         vpes = (vpesa+vpesb+vpesc)/3.0e0_wp  !in eV
-        !      write(1000,*) "vmb ",vpes
         ! vpes in kcal/mol
         vpes = vpes*23.0605e0_wp+vn2+457.4e0_wp
-        !      write(1000,*) "vpes ",vpes
         ! vpes in au
         vpes = vpes*econv
         ! numerical gradient w.r.t. dr, in kcal/Ang
@@ -149,7 +139,6 @@ module chempotpy_n4_1a_pipnn_pes
                     call ev2gm2(rb(j), vn2tmp, grad, 1, 0)
                     vn2 = vn2+vn2tmp
                 enddo
-                !      write(*,*) "vn2p ",vn2,i
                 xbond    = 0.0e0_wp
                 xbond(:) = exp(-rb(:)/alpha)
                 call bemsav49(xbond, basis)
@@ -160,14 +149,12 @@ module chempotpy_n4_1a_pipnn_pes
                 vp(i) = (vpesa+vpesb+vpesc)/3.0e0_wp
                 ! vp in kcal/mol
                 vp(i) = vp(i)*23.0605e0_wp+vn2+457.4e0_wp
-                !       write(*,*) "vp(i) ",vp(i),i
                 vn2   = 0.0e0_wp
                 rb(i) = rb(i)-2*dr
                 do j=1, 6
                     call ev2gm2(rb(j), vn2tmp, grad, 1, 0)
                     vn2 = vn2+vn2tmp
                 enddo
-                !      write(*,*) "vn2m ",vn2,i
                 xbond    = 0.0e0_wp
                 xbond(:) = exp(-rb(:)/alpha)
                 call bemsav49(xbond, basis)
@@ -178,11 +165,9 @@ module chempotpy_n4_1a_pipnn_pes
                 vm(i) = (vpesa+vpesb+vpesc)/3.0e0_wp
                 ! vm in kcal/mol
                 vm(i) = vm(i)*23.0605e0_wp+vn2+457.4e0_wp
-                !       write(*,*) "vm(i) ",vm(i),i
                 ! dedr in kcal/(mol Ang)
                 dedr(i) = (vp(i) - vm(i))/(2*dr)
-                !       write(*,*) "dedr(i) ",dedr(i),i
-                rb(i) = rb(i)+dr
+                rb(i)   = rb(i)+dr
             enddo
             call transform_internal_gradient_to_cartesian(dedr, drdx, dvdx)
             ! dEdX, dEdY, and dEdZ in au/bohr
@@ -190,7 +175,6 @@ module chempotpy_n4_1a_pipnn_pes
                 dedx(i) = dvdx(3*i-2)*gconv
                 dedy(i) = dvdx(3*i-1)*gconv
                 dedz(i) = dvdx(3*i)*gconv
-                !      write(*,*) "grad ",dEdX(i),dEdY(i),dEdZ(i)
             enddo
         endif
         if( igrad .eq. 2 )then
@@ -265,16 +249,7 @@ module chempotpy_n4_1a_pipnn_pes
         potential = y(nodes(nlayer),nlayer)*scale_deltas(nscale, network_index)+ scale_averages(nscale, network_index)
     end subroutine evaluate_network
 
-    !     function emsav49(x,c) result(v)
-    !     implicit none
-    !     real*8,dimension(1:6)::x
-    !     real*8,dimension(0:305)::c
-    !     real*8::v
-    !     real*8,dimension(0:305)::p
-    !     call bemsav49(x,p)
     !     v = dot_product(p,c)
-    !     return
-    !     end function emsav49
     !> @brief Evaluate bemsav49.
     subroutine bemsav49( x, p )
         use chempotpy_kinds, only: wp
@@ -744,7 +719,6 @@ module chempotpy_n4_1a_pipnn_pes
         integer             :: k
         ! Dispersion variables
         real(wp) :: dist(1), disp, dispdr(1)
-        ! Original parameters
         !       re=1.098d0
         !       de=228.7d0
         !       as(0) =  2.70963254293d0
@@ -989,7 +963,6 @@ module chempotpy_n4_1a_pipnn_pes
         bm2(274) = bm1(301)
         bm2(275) = bm1(303)
         bm2(276) = bm1(305)
-        !     nob=276
     end
 end module chempotpy_n4_1a_pipnn_pes
 

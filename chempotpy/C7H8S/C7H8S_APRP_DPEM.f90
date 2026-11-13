@@ -388,7 +388,6 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 case(4)
                     qr(iterm) = evalob(x, ii, jj, kk, ll)
                 end select
-                !write(*,*) "iq", iterm, qr(iterm)
             enddo
         end subroutine calcqr
 
