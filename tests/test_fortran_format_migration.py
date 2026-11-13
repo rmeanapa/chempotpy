@@ -51,6 +51,47 @@ end subroutine evaluate
             focused.index("double precision :: values(value_count)"),
         )
 
+    def test_dimension_attributes_are_folded_into_entities(self) -> None:
+        source = """\
+subroutine evaluate( x, work )
+    implicit none
+    integer, parameter, dimension(0:2) :: bounds = [0, 2, 4]
+    real(wp), dimension(natoms, 3), intent(in) :: x
+    real(wp), dimension(:, :), allocatable :: work, scratch
+    real(wp), dimension(size(x,2)*(size(x,2)-1)/2) :: distances
+end subroutine evaluate
+"""
+        converted = fold_standalone_dimensions(source)
+        self.assertIn(
+            "integer, parameter :: bounds(0:2) = [0, 2, 4]", converted
+        )
+        self.assertIn("real(wp), intent(in) :: x(natoms,3)", converted)
+        self.assertIn(
+            "real(wp), allocatable :: work(:,:), scratch(:,:)", converted
+        )
+        self.assertIn(
+            "real(wp) :: distances(size(x,2)*(size(x,2)-1)/2)", converted
+        )
+        self.assertNotRegex(converted, r"(?i)\bdimension\s*\(")
+
+    def test_dimension_initializer_keeps_physical_continuations(self) -> None:
+        source = """\
+subroutine evaluate
+    implicit none
+    real(wp), dimension(0:3) :: coefficients = (/ &
+        & 1.0, &
+        & 2.0, &
+        & 3.0, &
+        & 4.0 /)
+end subroutine evaluate
+"""
+        converted = format_source_text(source)
+        self.assertIn("real(wp) :: coefficients(0:3) = (/ &", converted)
+        self.assertIn("\n        & 1.0, &\n", converted)
+        self.assertIn("\n        & 2.0, &\n", converted)
+        self.assertIn("\n        & 3.0, &\n", converted)
+        self.assertIn("\n        & 4.0 /)\n", converted)
+
     def test_redundant_terminal_return_is_removed(self) -> None:
         source = """\
 subroutine report( value )
@@ -153,6 +194,7 @@ contains
         !d     write(7,*) value
         !c     call old_fixed_form_path(value)
         !C old_value = 2.0
+        !$     w() = w()+old_disabled_term
         ! C
         ! Original parameters
     end subroutine evaluate
@@ -166,9 +208,25 @@ end module example
         self.assertNotIn("old_no_argument_path", converted)
         self.assertNotIn("old_threshold", converted)
         self.assertNotIn("old_value = 2.0", converted)
+        self.assertNotIn("old_disabled_term", converted)
         self.assertNotIn("! C", converted)
         self.assertNotIn("write(*,*)", converted)
         self.assertNotIn("Original parameters", converted)
+
+    def test_openmp_sentinel_is_preserved(self) -> None:
+        source = """\
+subroutine evaluate
+    implicit none
+    !$omp parallel do
+    do index=1, 4
+        values(index) = index
+    enddo
+    !$omp end parallel do
+end subroutine evaluate
+"""
+        converted = remove_dead_commented_code(source)
+        self.assertIn("!$omp parallel do", converted)
+        self.assertIn("!$omp end parallel do", converted)
 
     def test_commented_common_block_is_removed_from_header(self) -> None:
         source = """\

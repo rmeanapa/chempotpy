@@ -366,10 +366,10 @@ module chempotpy_fh2o_soc_pipnn_pes
     function emsav( x, c ) result(v)
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:6)::x
-        real(wp), dimension(0:17)::c
+        real(wp) :: x(1:6)
+        real(wp) :: c(0:17)
         real(wp) :: v
-        real(wp), dimension(0:17)::p
+        real(wp) :: p(0:17)
         call bemsav(x, p)
         v = dot_product(p, c)
     end function emsav
@@ -378,9 +378,9 @@ module chempotpy_fh2o_soc_pipnn_pes
     subroutine bemsav( x, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:6), intent(in)::x
-        real(wp), dimension(0:17), intent(out)::p
-        real(wp), dimension(0:10)::m
+        real(wp), intent(in)  :: x(1:6)
+        real(wp), intent(out) :: p(0:17)
+        real(wp)              :: m(0:10)
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
@@ -389,8 +389,8 @@ module chempotpy_fh2o_soc_pipnn_pes
     subroutine evmono( x, m )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:6), intent(in)::x
-        real(wp), dimension(0:10), intent(out)::m
+        real(wp), intent(in)  :: x(1:6)
+        real(wp), intent(out) :: m(0:10)
         m(0)  = 1.e0_wp
         m(1)  = x(6)
         m(2)  = x(5)
@@ -408,8 +408,8 @@ module chempotpy_fh2o_soc_pipnn_pes
     subroutine evpoly( m, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(0:10), intent(in)::m
-        real(wp), dimension(0:17), intent(out)::p
+        real(wp), intent(in)  :: m(0:10)
+        real(wp), intent(out) :: p(0:17)
         p(0)  = m(0)
         p(1)  = m(1)
         p(2)  = m(2)+m(3)

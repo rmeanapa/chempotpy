@@ -46,7 +46,7 @@ DECLARATION = re.compile(
     r"real(?:\s*\([^)]*\)|\*\d+)?|integer(?:\s*\([^)]*\)|\*\d+)?|"
     r"logical(?:\s*\([^)]*\)|\*\d+)?|complex(?:\s*\([^)]*\)|\*\d+)?|"
     r"character(?:\s*\([^)]*\)|\*\d+)?)"
-    r"(?P<attributes>\s*,[^:]*)?\s*::\s*(?P<entities>.*)$",
+    r"(?P<attributes>\s*,(?:(?!::).)*)?\s*::\s*(?P<entities>.*)$",
     flags=re.IGNORECASE,
 )
 USE_ONLY = re.compile(
@@ -392,9 +392,128 @@ def hoist_shape_parameter_declarations(source_text: str) -> str:
     return "\n".join(lines)+"\n"
 
 
-def fold_standalone_dimensions(source_text: str) -> str:
-    """Move standalone DIMENSION shapes into typed declarations."""
+def fold_dimension_attributes(source_text: str) -> str:
+    """Move DIMENSION attribute shapes onto each declared entity."""
 
+    lines = source_text.splitlines()
+    replacements = {}
+    for start, end, statement in logical_statement_spans(lines):
+        declaration = DECLARATION.match(statement)
+        if declaration is None:
+            continue
+        attributes = split_top_level_entities(
+            (declaration.group("attributes") or "").lstrip(" ,")
+        )
+        dimension_attributes = [
+            attribute
+            for attribute in attributes
+            if re.match(r"^dimension\s*\(", attribute.strip(), re.I)
+        ]
+        if not dimension_attributes:
+            continue
+        if len(dimension_attributes) != 1:
+            raise ValueError("multiple DIMENSION attributes in one declaration")
+        dimension = re.match(
+            r"^dimension\s*(\(.*\))$",
+            dimension_attributes[0].strip(),
+            re.I,
+        )
+        if dimension is None:
+            raise ValueError(
+                "invalid DIMENSION attribute: {}".format(dimension_attributes[0])
+            )
+        shape = compact_dimension_shape(dimension.group(1))
+        physical = "\n".join(lines[start:end])
+        attribute_match = re.search(
+            r"\bdimension[ \t]*\(", physical, flags=re.IGNORECASE
+        )
+        if attribute_match is None:
+            raise ValueError("could not remove DIMENSION attribute")
+        opening = physical.find("(", attribute_match.start())
+        depth = 0
+        closing = None
+        for position in range(opening, len(physical)):
+            if physical[position] == "(":
+                depth += 1
+            elif physical[position] == ")":
+                depth -= 1
+                if depth == 0:
+                    closing = position+1
+                    break
+        if closing is None:
+            raise ValueError("unclosed DIMENSION attribute")
+        attribute_start = attribute_match.start()
+        while attribute_start > 0 and physical[attribute_start-1] in " \t":
+            attribute_start -= 1
+        if attribute_start == 0 or physical[attribute_start-1] != ",":
+            raise ValueError("DIMENSION attribute has no leading comma")
+        physical = physical[:attribute_start-1]+physical[closing:]
+        separator = physical.find("::")
+        if separator < 0:
+            raise ValueError("typed declaration has no :: separator")
+        insertions = []
+        depth = 0
+        quote = ""
+        expect_entity = True
+        index = separator+2
+        while index < len(physical):
+            character = physical[index]
+            if quote:
+                if character == quote:
+                    if index+1 < len(physical) and physical[index+1] == quote:
+                        index += 2
+                        continue
+                    quote = ""
+            elif character in "'\"":
+                quote = character
+            elif character in "([":
+                depth += 1
+            elif character in ")]":
+                depth -= 1
+            elif character == "," and depth == 0:
+                expect_entity = True
+            elif expect_entity and (character.isspace() or character == "&"):
+                index += 1
+                continue
+            elif expect_entity:
+                entity = re.match(r"[a-z][a-z0-9_]*", physical[index:], re.I)
+                if entity is None:
+                    raise ValueError("invalid declaration entity near {}".format(
+                        physical[index:index+20]
+                    ))
+                entity_end = index+entity.end()
+                if physical[entity_end:].lstrip().startswith("("):
+                    raise ValueError(
+                        "DIMENSION attribute and entity shape both specify {}".format(
+                            entity.group(0)
+                        )
+                    )
+                insertions.append(entity_end)
+                expect_entity = False
+                index = entity_end
+                continue
+            index += 1
+        for insertion in reversed(insertions):
+            physical = physical[:insertion]+shape+physical[insertion:]
+        replacements[(start, end)] = physical.splitlines()
+
+    output = []
+    index = 0
+    while index < len(lines):
+        matching = next((span for span in replacements if span[0] == index), None)
+        if matching is None:
+            output.append(lines[index])
+            index += 1
+            continue
+        output.extend(replacements[matching])
+        index = matching[1]
+    return "\n".join(output)+"\n"
+
+
+def fold_standalone_dimensions(source_text: str) -> str:
+    """Move standalone and attribute DIMENSION shapes onto entities."""
+
+    source_text = fold_dimension_attributes(source_text)
     lines = source_text.splitlines()
     statements = logical_statement_spans(lines)
     declarations = {}
@@ -1229,6 +1348,8 @@ def executable_statement(line: str) -> bool:
     code = normalized_code(line)[1].strip()
     if not code or code.startswith("!"):
         return False
+    if DECLARATION.match(line) is not None:
+        return False
     if ASSIGNMENT.match(line) is not None:
         return True
     return bool(re.match(
@@ -1600,7 +1721,8 @@ def combine_short_assignment_continuations(
     while index < len(lines):
         first = lines[index]
         if (
-            ASSIGNMENT.match(first) is None
+            DECLARATION.match(first) is not None
+            or ASSIGNMENT.match(first) is None
             or not code_without_comment(first).rstrip().endswith("&")
             or code_without_comment(first) != first
         ):
@@ -1670,7 +1792,7 @@ def repair_split_assignment_tokens(
 
     repaired = []
     for line in lines:
-        if ASSIGNMENT.match(line) is None:
+        if DECLARATION.match(line) is not None or ASSIGNMENT.match(line) is None:
             repaired.append(line)
             continue
         statement = repair_assignment_text(line)
@@ -1897,6 +2019,10 @@ GLOBAL_COMMENTED_CALL = re.compile(
 )
 LEGACY_DEBUG_COMMENT = re.compile(r"^\s*![dD]\s{2,}\S")
 LEGACY_FIXED_COMMENT = re.compile(r"^\s*![cC](?:\s+|\s*$)(?P<body>.*)")
+INVALID_SENTINEL_ASSIGNMENT = re.compile(
+    r"^\s*!\$\s+[a-z][a-z0-9_]*(?:\([^)]*\))?\s*=",
+    flags=re.IGNORECASE,
+)
 OBSOLETE_COMMENT_PROSE = re.compile(
     r"^(?:original parameters|some debugging print statements:?|"
     r"the lines below are not needed because the derivatives are calculated|"
@@ -1994,7 +2120,11 @@ def dead_commented_line_numbers(source_text: str) -> frozenset[int]:
             continue
         procedure_execution[-1] = True
 
-    dead = set()
+    dead = {
+        line_index
+        for line_index, line in enumerate(lines)
+        if INVALID_SENTINEL_ASSIGNMENT.match(line)
+    }
     index = 0
     while index < len(lines):
         if contexts[index][2] is None:
@@ -2256,7 +2386,7 @@ def main() -> int:
     focused_mode.add_argument(
         "--dimensions-only",
         action="store_true",
-        help="fold standalone DIMENSION statements without other formatting",
+        help="fold DIMENSION statements and attributes without other formatting",
     )
     focused_mode.add_argument(
         "--contains-only",

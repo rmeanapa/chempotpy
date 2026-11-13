@@ -164,9 +164,9 @@ module chempotpy_h3s_pipnn_pes
     subroutine bemsav( xmorse, m, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:6), intent(in)::xmorse
-        real(wp), dimension(0:22), intent(out)::p
-        real(wp), dimension(0:29)::m
+        real(wp), intent(in)  :: xmorse(1:6)
+        real(wp), intent(out) :: p(0:22)
+        real(wp)              :: m(0:29)
         call evmono(xmorse, m)
         call evpoly(m, p)
     end subroutine bemsav
@@ -175,8 +175,8 @@ module chempotpy_h3s_pipnn_pes
     subroutine evmono( x, m )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:6), intent(in)::x
-        real(wp), dimension(0:29), intent(out)::m
+        real(wp), intent(in)  :: x(1:6)
+        real(wp), intent(out) :: m(0:29)
         m(0)  = 1.e0_wp
         m(1)  = x(6)
         m(2)  = x(5)
@@ -213,8 +213,8 @@ module chempotpy_h3s_pipnn_pes
     subroutine evpoly( m, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(0:29), intent(in)::m
-        real(wp), dimension(0:22), intent(out)::p
+        real(wp), intent(in)  :: m(0:29)
+        real(wp), intent(out) :: p(0:22)
         p(0)  = m(0)
         p(1)  = m(1)+m(2)+m(3)
         p(2)  = m(4)+m(5)+m(6)

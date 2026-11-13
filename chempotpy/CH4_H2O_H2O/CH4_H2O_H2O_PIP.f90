@@ -1475,8 +1475,8 @@ module bemsa
     subroutine evmono( x, m )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:55), intent(in)::x
-        real(wp), dimension(1:16422), intent(out)::m
+        real(wp), intent(in)  :: x(1:55)
+        real(wp), intent(out) :: m(1:16422)
         m( 1)    = x(55)
         m( 2)    = x(54)
         m( 3)    = x(53)
@@ -17905,9 +17905,9 @@ module bemsa
     subroutine evpoly( m, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:16422), intent(in)::m
-        real(wp), dimension(1:5809), intent(out)::p
-        real(wp), dimension(1:231)::d
+        real(wp), intent(in)  :: m(1:16422)
+        real(wp), intent(out) :: p(1:5809)
+        real(wp)              :: d(1:231)
         d(    1) = m(    1)
         d(    2) = m(    2)
         d(    3) = m(    3)
@@ -25473,9 +25473,9 @@ module bemsa
     subroutine bemsav( x, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:55), intent(in)::x
-        real(wp), dimension(1:5809), intent(out)::p
-        real(wp), dimension(1:16422)::m
+        real(wp), intent(in)  :: x(1:55)
+        real(wp), intent(out) :: p(1:5809)
+        real(wp)              :: m(1:16422)
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav

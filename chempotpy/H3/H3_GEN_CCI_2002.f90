@@ -73,16 +73,16 @@ module ccidata
     private
     public :: ald, beta, betad, epscem, epslon, eshift, maxi2a, maxi2b, rnought
     public :: xlin1, xlin2, xlin3, xlin4
-    real(wp), parameter     :: ald     = 0.02e0_wp
-    real(wp), parameter     :: betad   = 0.72e0_wp
-    real(wp), parameter     :: epscem  = 1.e-12_wp
-    real(wp), parameter     :: epslon  = 1.e-12_wp
-    integer, parameter      :: maxi2a  = primary_term_count
-    integer, parameter      :: maxi2b  = secondary_term_count
-    real(wp), parameter     :: eshift  = 0.1744759989649372e0_wp
-    real(wp), parameter     :: beta    = 0.9246250191375499e0_wp
-    real(wp), parameter     :: rnought = 2.e0_wp
-    real(wp), dimension(89) :: xlin1=(/-0.1682626669809615e0_wp, &
+    real(wp), parameter :: ald     = 0.02e0_wp
+    real(wp), parameter :: betad   = 0.72e0_wp
+    real(wp), parameter :: epscem  = 1.e-12_wp
+    real(wp), parameter :: epslon  = 1.e-12_wp
+    integer, parameter  :: maxi2a  = primary_term_count
+    integer, parameter  :: maxi2b  = secondary_term_count
+    real(wp), parameter :: eshift  = 0.1744759989649372e0_wp
+    real(wp), parameter :: beta    = 0.9246250191375499e0_wp
+    real(wp), parameter :: rnought = 2.e0_wp
+    real(wp)            :: xlin1(89)=(/-0.1682626669809615e0_wp, &
         & 1.697952225005269e0_wp, 3.959367441888326e0_wp, &
         & -7.159854944676235e0_wp, -2.462488887191634e0_wp, &
         & 7.998434264390882e0_wp, -3.665712084901418e0_wp, &
@@ -127,7 +127,7 @@ module ccidata
         & 182.9671187483376e0_wp, 20.29606065582956e0_wp, &
         & 1.192500349837268e0_wp, -22.69079850990068e0_wp, &
         & -0.5967747962499963e0_wp, 1.091111370927579e0_wp/)
-    real(wp), dimension(89) :: xlin2=(/3.2289532152874986e-2_wp, &
+    real(wp) :: xlin2(89)=(/3.2289532152874986e-2_wp, &
         & -8.6686506736620789e-2_wp, -0.3266024449171150e0_wp, &
         & -0.7972798579742405e0_wp, 2.812854025206053e0_wp, &
         & -2.374871328104482e0_wp, 0.6089164699935086e0_wp, &
@@ -172,7 +172,7 @@ module ccidata
         & -32.04152511166628e0_wp, -2.104943871500433e0_wp, &
         & -0.7251129002870176e0_wp, 4.709122797258667e0_wp, &
         & 1.119971732384046e0_wp, -4.066519840824071e0_wp/)
-    real(wp), dimension(71) :: xlin3=(/6.3998636332917941e-2_wp, &
+    real(wp) :: xlin3(71)=(/6.3998636332917941e-2_wp, &
         & -0.5826083150212633e0_wp, -3.294968443823759e0_wp, &
         & 5.751817019955082e0_wp, -1.486176533347650e0_wp, &
         & -0.6845411439568367e0_wp, -0.9083627566591157e0_wp, &
@@ -208,7 +208,7 @@ module ccidata
         & -35.14731691232372e0_wp, 2.140914121987492e0_wp, &
         & 2250.367423678786e0_wp, 138.5994085512685e0_wp, &
         & 70.30416282155014e0_wp, -62.74844809925895e0_wp/)
-    real(wp), dimension(71) :: xlin4=(/-1.2612782515309912e-2_wp, &
+    real(wp) :: xlin4(71)=(/-1.2612782515309912e-2_wp, &
         & 1.5724446750473936e-2_wp, 0.2653887372495336e0_wp, &
         & 0.1216019078797281e0_wp, -0.6102844930670878e0_wp, &
         & 4.6420446436398755e-3_wp, 0.5563651571664677e0_wp, &
@@ -336,15 +336,15 @@ subroutine trip( r, v )
     !     H2 triplet curve for FCI/CBS
     use chempotpy_kinds, only: wp
     implicit none
-    integer                 :: j
-    real(wp)                :: r, v, damp, xd, prefac
-    real(wp)                :: c6=-6.499027e0_wp
-    real(wp)                :: c8=-124.3991e0_wp
-    real(wp)                :: c10=-3285.828e0_wp
-    real(wp)                :: beta=0.2e0_wp
-    real(wp)                :: re=1.401e0_wp
-    real(wp)                :: alpha=4.342902497495857e0_wp
-    real(wp), dimension(17) :: xlp=(/2.190254292077946e-1_wp, &
+    integer  :: j
+    real(wp) :: r, v, damp, xd, prefac
+    real(wp) :: c6=-6.499027e0_wp
+    real(wp) :: c8=-124.3991e0_wp
+    real(wp) :: c10=-3285.828e0_wp
+    real(wp) :: beta=0.2e0_wp
+    real(wp) :: re=1.401e0_wp
+    real(wp) :: alpha=4.342902497495857e0_wp
+    real(wp) :: xlp(17)=(/2.190254292077946e-1_wp, &
         & 6.903970886899540e-1_wp, 1.163805164813647e+0_wp, &
         & 1.337274224278977e+0_wp, 1.176131501286896e+0_wp, &
         & 9.093025316067311e-1_wp, 5.908490740317524e-1_wp, &
@@ -371,15 +371,15 @@ subroutine singlet( r, v )
     !     H2 singlet potential for FCI/CBS
     use chempotpy_kinds, only: wp
     implicit none
-    integer                 :: j
-    real(wp)                :: r, v, damp, xd, prefac
-    real(wp)                :: c6=-6.499027e0_wp
-    real(wp)                :: c8=-124.3991e0_wp
-    real(wp)                :: c10=-3285.828e0_wp
-    real(wp)                :: beta=0.2e0_wp
-    real(wp)                :: re=1.401e0_wp
-    real(wp)                :: alpha=3.980917850296971e0_wp
-    real(wp), dimension(17) :: xlp= (/ -1.709663318869429e-1_wp, &
+    integer  :: j
+    real(wp) :: r, v, damp, xd, prefac
+    real(wp) :: c6=-6.499027e0_wp
+    real(wp) :: c8=-124.3991e0_wp
+    real(wp) :: c10=-3285.828e0_wp
+    real(wp) :: beta=0.2e0_wp
+    real(wp) :: re=1.401e0_wp
+    real(wp) :: alpha=3.980917850296971e0_wp
+    real(wp) :: xlp(17)= (/ -1.709663318869429e-1_wp, &
         & -6.675286769482015e-1_wp, -1.101876055072129e+0_wp, &
         & -1.106460095658282e+0_wp, -7.414724284525231e-1_wp, &
         & -3.487882731923523e-1_wp, -1.276736255756598e-1_wp, &

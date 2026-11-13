@@ -73,21 +73,21 @@ module chempotpy_ch5p_pip_pes
     subroutine getpot( x, r, epot )
         use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter             :: natoms = 6
-        integer                        :: i, j, k, l, m
-        real(wp)                       :: a, b, theta
-        real(wp)                       :: vfit, epot
-        real(wp), dimension(natoms, 3) :: x
-        real(wp), dimension(3, natoms) :: xn
-        real(wp), dimension(4, 3)      :: xch3
-        real(wp), dimension(2, 3)      :: xh2
-        real(wp), parameter            :: de = -40.57833477e0_wp
-        real(wp)                       :: epotch3, epoth2, elr
-        real(wp)                       :: r, rh2, rp
-        real(wp), parameter            :: rmin = 11.e0_wp, rmax = 15.e0_wp
+        integer, parameter  :: natoms = 6
+        integer             :: i, j, k, l, m
+        real(wp)            :: a, b, theta
+        real(wp)            :: vfit, epot
+        real(wp)            :: x(natoms,3)
+        real(wp)            :: xn(3,natoms)
+        real(wp)            :: xch3(4,3)
+        real(wp)            :: xh2(2,3)
+        real(wp), parameter :: de = -40.57833477e0_wp
+        real(wp)            :: epotch3, epoth2, elr
+        real(wp)            :: r, rh2, rp
+        real(wp), parameter :: rmin = 11.e0_wp, rmax = 15.e0_wp
         do i = 1, natoms
             do j = 1, 3
-                xn(j, i) = x(i,j)
+                xn(j,i) = x(i,j)
             enddo
         enddo
         call calcr(xn, xch3, xh2, r, rh2, theta)
@@ -136,35 +136,35 @@ module chempotpy_ch5p_pip_pes
         !...  Based on pes6n4
         use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter :: natoms  = 6
-        integer, parameter :: natoms1 = 2
-        integer            :: i, j
-        real(wp), dimension(5:6, 3) :: xyz1
-        real(wp), dimension(natoms, 3)      :: xyz
-        real(wp), dimension(3, natoms)      :: xyzt, f
-        real(wp)                            :: v, ch3pot, ch3potab, h20
-        real(wp), parameter                 :: ang = 219474.6e0_wp
-        character(len=1), dimension(natoms) :: xname
+        integer, parameter  :: natoms  = 6
+        integer, parameter  :: natoms1 = 2
+        integer             :: i, j
+        real(wp)            :: xyz1(5:6,3)
+        real(wp)            :: xyz(natoms,3)
+        real(wp)            :: xyzt(3,natoms), f(3,natoms)
+        real(wp)            :: v, ch3pot, ch3potab, h20
+        real(wp), parameter :: ang = 219474.6e0_wp
+        character(len=1)    :: xname(natoms)
         do i = 5, 6
             do j = 1, 3
-                xyz(i, j) = xyz1(i, j)
+                xyz(i,j) = xyz1(i,j)
             enddo
         enddo
-        xyz(1, 1) = 0.e0_wp
-        xyz(1, 2) = 0.e0_wp
-        xyz(1, 3) = 0.e0_wp
-        xyz(2, 1) = 0.e0_wp
-        xyz(2, 2) = 2.0657297e0_wp
-        xyz(2, 3) = 0.e0_wp
-        xyz(3, 1) = 1.7889744e0_wp
-        xyz(3, 2) = -1.0328649e0_wp
-        xyz(3, 3) = 0.e0_wp
-        xyz(4, 1) = -1.7889744e0_wp
-        xyz(4, 2) = -1.0328649e0_wp
-        xyz(4, 3) = 0.e0_wp
+        xyz(1,1) = 0.e0_wp
+        xyz(1,2) = 0.e0_wp
+        xyz(1,3) = 0.e0_wp
+        xyz(2,1) = 0.e0_wp
+        xyz(2,2) = 2.0657297e0_wp
+        xyz(2,3) = 0.e0_wp
+        xyz(3,1) = 1.7889744e0_wp
+        xyz(3,2) = -1.0328649e0_wp
+        xyz(3,3) = 0.e0_wp
+        xyz(4,1) = -1.7889744e0_wp
+        xyz(4,2) = -1.0328649e0_wp
+        xyz(4,3) = 0.e0_wp
         do i = 1, natoms
             do j = 1, 3
-                xyzt(j, i) = xyz(i, j)
+                xyzt(j,i) = xyz(i,j)
             enddo
         enddo
         call getfit(xyzt, v)
@@ -180,14 +180,14 @@ module chempotpy_ch5p_pip_pes
     subroutine getfit( xn, f0 )
         use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter :: m  = 2239
-        integer, parameter :: mr = 32
-        real(wp), dimension(0:2, 0:5) :: xn
-        real(wp), dimension(0:2, 0:5) :: xn1
-        real(wp), dimension(0:2, 0:5) :: gf0
-        real(wp), dimension(0:5, 0:5) :: d0, r0
-        real(wp), dimension(0:2) :: rvec
-        real(wp), dimension(0:m+2*mr-1) :: vec, vec0, vec1
+        integer, parameter  :: m  = 2239
+        integer, parameter  :: mr = 32
+        real(wp)            :: xn(0:2,0:5)
+        real(wp)            :: xn1(0:2,0:5)
+        real(wp)            :: gf0(0:2,0:5)
+        real(wp)            :: d0(0:5,0:5), r0(0:5,0:5)
+        real(wp)            :: rvec(0:2)
+        real(wp)            :: vec(0:m+2*mr-1), vec0(0:m+2*mr-1), vec1(0:m+2*mr-1)
         real(wp)            :: f0
         real(wp)            :: t0, t1
         real(wp), parameter :: dd = 1.0e-6_wp
@@ -197,7 +197,7 @@ module chempotpy_ch5p_pip_pes
         real(wp)            :: dw0 = 0.09846745640
         real(wp)            :: dw1 = 0.12149234254
         !   coef = the coefficients of the fit
-        real(wp), dimension(0:m+2*mr-1) :: coef = (/ &
+        real(wp) :: coef(0:m+2*mr-1) = (/ &
             & 22.9504077130000, 100.8520699000000, &
             & -24.9984738080000, 184.1348056100000, &
             & 3.8424396959000, 64.8891061630000, &
@@ -1380,31 +1380,31 @@ module chempotpy_ch5p_pip_pes
     subroutine getd0 ( xn, dc0, dc1, dw0, dw1, d0, r0 )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(0:2, 0:5) :: xn
-        real(wp) :: dc0, dc1, dw0, dw1
-        real(wp), dimension(0:5, 0:5) :: d0, r0
+        real(wp)            :: xn(0:2,0:5)
+        real(wp)            :: dc0, dc1, dw0, dw1
+        real(wp)            :: d0(0:5,0:5), r0(0:5,0:5)
         real(wp), parameter :: p = 2.0e0_wp
         integer             :: i, j
         real(wp)            :: t0
         ! Note: CH5+.  Nuclei 0..5; i=0 for the C, i in 1..5 for the H.
-        d0(0, 0) = 0.e0_wp
-        r0(0, 0) = 0.e0_wp
+        d0(0,0) = 0.e0_wp
+        r0(0,0) = 0.e0_wp
         do j = 1, 5
-            t0       = sqrt((xn(0, j)-xn(0, 0))**2+(xn(1, j)-xn(1, 0))**2+ (xn(2, j)-xn(2, 0))**2)
-            d0(0, j) = (exp(-t0/p)-dc0)/dw0
-            d0(j, 0) = d0(0, j)
-            r0(0, j) = t0
-            r0(j, 0) = t0
+            t0      = sqrt((xn(0,j)-xn(0,0))**2+(xn(1,j)-xn(1,0))**2+ (xn(2,j)-xn(2,0))**2)
+            d0(0,j) = (exp(-t0/p)-dc0)/dw0
+            d0(j,0) = d0(0,j)
+            r0(0,j) = t0
+            r0(j,0) = t0
         enddo
         do i = 1, 5
-            d0(i, i) = 0.e0_wp
-            r0(i, i) = 0.e0_wp
+            d0(i,i) = 0.e0_wp
+            r0(i,i) = 0.e0_wp
             do j = i+1, 5
-                t0       = sqrt((xn(0, j)-xn(0, i))**2+(xn(1, j)-xn(1, i))**2+ (xn(2, j)-xn(2, i))**2)
-                d0(i, j) = (exp(-t0/p)-dc1)/dw1
-                d0(j, i) = d0(i, j)
-                r0(i, j) = t0
-                r0(j, i) = t0
+                t0      = sqrt((xn(0,j)-xn(0,i))**2+(xn(1,j)-xn(1,i))**2+ (xn(2,j)-xn(2,i))**2)
+                d0(i,j) = (exp(-t0/p)-dc1)/dw1
+                d0(j,i) = d0(i,j)
+                r0(i,j) = t0
+                r0(j,i) = t0
             enddo
         enddo
     end subroutine getd0
@@ -1413,17 +1413,17 @@ module chempotpy_ch5p_pip_pes
     subroutine getvec ( m, d, vec )
         use chempotpy_kinds, only: wp
         implicit none
-        integer :: m
-        real(wp), dimension(0:5, 0:5) :: d
-        real(wp), dimension(0:m-1) :: vec
-        integer :: j0, j1, j2, j3, j4, j5, j, k, k0
-        real(wp), dimension(0:1) :: x
-        real(wp), dimension(0:3) :: y
-        real(wp), dimension(0:9) :: z
-        real(wp), dimension(0:21) :: u
-        real(wp), dimension(0:41) :: v
-        real(wp), dimension(0:59) :: w
-        real(wp), dimension(0:5, 0:5) :: d2, d3, d4, d5
+        integer  :: m
+        real(wp) :: d(0:5,0:5)
+        real(wp) :: vec(0:m-1)
+        integer  :: j0, j1, j2, j3, j4, j5, j, k, k0
+        real(wp) :: x(0:1)
+        real(wp) :: y(0:3)
+        real(wp) :: z(0:9)
+        real(wp) :: u(0:21)
+        real(wp) :: v(0:41)
+        real(wp) :: w(0:59)
+        real(wp) :: d2(0:5,0:5), d3(0:5,0:5), d4(0:5,0:5), d5(0:5,0:5)
         real(wp) :: t0
         real(wp) :: her2, her3, her4, her5, her6, her7
         her2(t0) = (4*t0**2-2)/sqrt(real(8*2, wp))
@@ -1441,155 +1441,130 @@ module chempotpy_ch5p_pip_pes
         x = 0 ; y = 0 ; z = 0 ; u = 0 ; v = 0 ; w = 0
         do j0 = 0, 5
             do j1 = j0+1, 5
-                d2(j0, j1) = her2(d(j0,j1))
-                d2(j1, j0) = d2(j0, j1)
-                d3(j0, j1) = her3(d(j0,j1))
-                d3(j1, j0) = d3(j0, j1)
-                d4(j0, j1) = her4(d(j0,j1))
-                d4(j1, j0) = d4(j0, j1)
-                d5(j0, j1) = her5(d(j0,j1))
-                d5(j1, j0) = d5(j0, j1)
+                d2(j0,j1) = her2(d(j0,j1))
+                d2(j1,j0) = d2(j0,j1)
+                d3(j0,j1) = her3(d(j0,j1))
+                d3(j1,j0) = d3(j0,j1)
+                d4(j0,j1) = her4(d(j0,j1))
+                d4(j1,j0) = d4(j0,j1)
+                d5(j0,j1) = her5(d(j0,j1))
+                d5(j1,j0) = d5(j0,j1)
             enddo
         enddo
         do j1 = 1, 5
             x(0) = x(0)+d(0,j1)/5
-            y(0) = y(0)+d2(0, j1)/5
-            z(0) = z(0)+d3(0, j1)/5
-            u(0) = u(0)+d4(0, j1)/5
-            v(0) = v(0)+d5(0, j1)/5
-            !$       w() = w()+her6(d(0,j1))/5
+            y(0) = y(0)+d2(0,j1)/5
+            z(0) = z(0)+d3(0,j1)/5
+            u(0) = u(0)+d4(0,j1)/5
+            v(0) = v(0)+d5(0,j1)/5
             do j2 = 1, 5
                 if( j2 .ne. j1 )then
                     y(1) = y(1)+d(0,j1)*d(j1,j2)/20
-                    z(1) = z(1)+d2(0, j1)*d(j1,j2)/20
-                    z(2) = z(2)+d(0,j1)*d2(j1, j2)/20
+                    z(1) = z(1)+d2(0,j1)*d(j1,j2)/20
+                    z(2) = z(2)+d(0,j1)*d2(j1,j2)/20
                     z(3) = z(3)+d(0,j1)*d(0,j2)*d(j1,j2)/20
-                    u(1) = u(1)+d3(0, j1)*d(j1,j2)/20
-                    u(2) = u(2)+d2(0, j1)*d2(j1, j2)/20
-                    u(3) = u(3)+d(0,j1)*d3(j1, j2)/20
-                    u(4) = u(4)+d2(0, j1)*d(0,j2)*d(j1,j2)/20
-                    u(5) = u(5)+d(0,j1)*d(0,j2)*d2(j1, j2)/20
-                    v(1) = v(1)+d4(0, j1)*d(j1,j2)/20
-                    v(2) = v(2)+d3(0, j1)*d2(j1, j2)/20
-                    v(3) = v(3)+d2(0, j1)*d3(j1, j2)/20
-                    v(4) = v(4)+d(0,j1)*d4(j1, j2)/20
-                    v(5) = v(5)+d3(0, j1)*d(0,j2)*d(j1,j2)/20
-                    v(6) = v(6)+d2(0, j1)*d(0,j2)*d2(j1, j2)/20
-                    v(7) = v(7)+d(0,j1)*d(0,j2)*d3(j1, j2)/20
-                    w(0) = w(0)+d4(0, j1)*d2(j1, j2)/20
-                    w(1) = w(1)+d3(0, j1)*d3(j1, j2)/20
-                    w(2) = w(2)+d2(0, j1)*d4(j1, j2)/20
-                    w(3) = w(3)+d(0,j1)*d5(j1, j2)/20
-                    w(4) = w(4)+d3(0, j1)*d2(0, j2)*d(j1,j2)/20
-                    w(5) = w(5)+d3(0, j1)*d(0,j2)*d2(j1, j2)/20
-                    w(6) = w(6)+d2(0, j1)*d(0,j2)*d3(j1, j2)/20
-                    w(7) = w(7)+d(0,j1)*d(0,j2)*d4(j1, j2)/20
-                    !$        w() = w()+d5(0,j1)*d(j1,j2)/20
-                    !$        w() = w()+d4(0,j1)*d(0,j2)*d(j1,j2)/20
-                    !$        w() = w()+d2(0,j1)*d2(0,j2)*d2(j1,j2)/20
+                    u(1) = u(1)+d3(0,j1)*d(j1,j2)/20
+                    u(2) = u(2)+d2(0,j1)*d2(j1,j2)/20
+                    u(3) = u(3)+d(0,j1)*d3(j1,j2)/20
+                    u(4) = u(4)+d2(0,j1)*d(0,j2)*d(j1,j2)/20
+                    u(5) = u(5)+d(0,j1)*d(0,j2)*d2(j1,j2)/20
+                    v(1) = v(1)+d4(0,j1)*d(j1,j2)/20
+                    v(2) = v(2)+d3(0,j1)*d2(j1,j2)/20
+                    v(3) = v(3)+d2(0,j1)*d3(j1,j2)/20
+                    v(4) = v(4)+d(0,j1)*d4(j1,j2)/20
+                    v(5) = v(5)+d3(0,j1)*d(0,j2)*d(j1,j2)/20
+                    v(6) = v(6)+d2(0,j1)*d(0,j2)*d2(j1,j2)/20
+                    v(7) = v(7)+d(0,j1)*d(0,j2)*d3(j1,j2)/20
+                    w(0) = w(0)+d4(0,j1)*d2(j1,j2)/20
+                    w(1) = w(1)+d3(0,j1)*d3(j1,j2)/20
+                    w(2) = w(2)+d2(0,j1)*d4(j1,j2)/20
+                    w(3) = w(3)+d(0,j1)*d5(j1,j2)/20
+                    w(4) = w(4)+d3(0,j1)*d2(0,j2)*d(j1,j2)/20
+                    w(5) = w(5)+d3(0,j1)*d(0,j2)*d2(j1,j2)/20
+                    w(6) = w(6)+d2(0,j1)*d(0,j2)*d3(j1,j2)/20
+                    w(7) = w(7)+d(0,j1)*d(0,j2)*d4(j1,j2)/20
                     do j3 = 1, 5
                         if( j3 .ne. j2.and.j3 .ne. j1 )then
                             z(4)  = z(4)+d(0,j1)*d(j1,j2)*d(j2,j3)/60
                             z(5)  = z(5)+d(0,j1)*d(j1,j2)*d(j1,j3)/60
-                            u(6)  = u(6)+d(0,j1)*d2(j1, j2)*d(j2,j3)/60
-                            u(7)  = u(7)+d(0,j1)*d(j1,j2)*d2(j2, j3)/60
-                            u(8)  = u(8)+d(0,j1)*d2(j1, j2)*d(j1,j3)/60
+                            u(6)  = u(6)+d(0,j1)*d2(j1,j2)*d(j2,j3)/60
+                            u(7)  = u(7)+d(0,j1)*d(j1,j2)*d2(j2,j3)/60
+                            u(8)  = u(8)+d(0,j1)*d2(j1,j2)*d(j1,j3)/60
                             u(9)  = u(9)+d(0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)/60
-                            u(10) = u(10)+d2(0, j1)*d(j1,j2)*d(j2,j3)/60
-                            u(11) = u(11)+d2(0, j1)*d(j1,j2)*d(j1,j3)/60
+                            u(10) = u(10)+d2(0,j1)*d(j1,j2)*d(j2,j3)/60
+                            u(11) = u(11)+d2(0,j1)*d(j1,j2)*d(j1,j3)/60
                             u(12) = u(12)+d(0,j1)*d(0,j2)*d(j1,j3)*d(j2,j3)/60
-                            v(8)  = v(8)+d3(0, j1)*d(j1,j2)*d(j2,j3)/60
-                            v(9)  = v(9)+d2(0, j1)*d2(j1, j2)*d(j2,j3)/60
-                            v(10) = v(10)+d2(0, j1)*d(j1,j2)*d2(j2, j3)/60
-                            v(11) = v(11)+d(0,j1)*d3(j1, j2)*d(j2,j3)/60
-                            v(12) = v(12)+d(0,j1)*d2(j1, j2)*d2(j2, j3)/60
-                            v(13) = v(13)+d(0,j1)*d(j1,j2)*d3(j2, j3)/60
-                            v(14) = v(14)+d3(0, j1)*d(j1,j2)*d(j1,j3)/60
-                            v(15) = v(15)+d2(0, j1)*d2(j1, j2)*d(j1,j3)/60
-                            v(16) = v(16)+d(0,j1)*d3(j1, j2)*d(j1,j3)/60
-                            v(17) = v(17)+d(0,j1)*d2(j1, j2)*d2(j1, j3)/60
-                            v(18) = v(18)+d2(0, j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)/60
-                            v(19) = v(19)+d(0,j1)*d2(j1, j2)*d(j1,j3)*d(j2,j3)/60
-                            v(20) = v(20)+d(0,j1)*d(j1,j2)*d(j1,j3)*d2(j2, j3)/60
-                            v(21) = v(21)+d2(0, j1)*d(0,j2)*d(j1,j3)*d(j2,j3)/60
-                            v(22) = v(22)+d(0,j1)*d(0,j2)*d2(j1, j3)*d(j2,j3)/60
+                            v(8)  = v(8)+d3(0,j1)*d(j1,j2)*d(j2,j3)/60
+                            v(9)  = v(9)+d2(0,j1)*d2(j1,j2)*d(j2,j3)/60
+                            v(10) = v(10)+d2(0,j1)*d(j1,j2)*d2(j2,j3)/60
+                            v(11) = v(11)+d(0,j1)*d3(j1,j2)*d(j2,j3)/60
+                            v(12) = v(12)+d(0,j1)*d2(j1,j2)*d2(j2,j3)/60
+                            v(13) = v(13)+d(0,j1)*d(j1,j2)*d3(j2,j3)/60
+                            v(14) = v(14)+d3(0,j1)*d(j1,j2)*d(j1,j3)/60
+                            v(15) = v(15)+d2(0,j1)*d2(j1,j2)*d(j1,j3)/60
+                            v(16) = v(16)+d(0,j1)*d3(j1,j2)*d(j1,j3)/60
+                            v(17) = v(17)+d(0,j1)*d2(j1,j2)*d2(j1,j3)/60
+                            v(18) = v(18)+d2(0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)/60
+                            v(19) = v(19)+d(0,j1)*d2(j1,j2)*d(j1,j3)*d(j2,j3)/60
+                            v(20) = v(20)+d(0,j1)*d(j1,j2)*d(j1,j3)*d2(j2,j3)/60
+                            v(21) = v(21)+d2(0,j1)*d(0,j2)*d(j1,j3)*d(j2,j3)/60
+                            v(22) = v(22)+d(0,j1)*d(0,j2)*d2(j1,j3)*d(j2,j3)/60
                             v(23) = v(23)+d(0,j1)*d(0,j2)*d(j1,j3)*d(j2,j3)*d(j1,j2)/60
-                            v(24) = v(24)+d(0,j1)*d(0,j2)*d(j1,j2)*d2(j1, j3)/60
-                            !$         w() = w()+d4(0,j1)*d(j1,j2)*d(j2,j3)/60
-                            w(8)  = w(8)+d(0,j1)*d(j1,j2)*d4(j2, j3)/60
-                            w(9)  = w(9)+d(0,j1)*d4(j1, j2)*d(j2,j3)/60
-                            w(10) = w(10)+d3(0, j1)*d2(j1, j2)*d(j2,j3)/60
-                            w(11) = w(11)+d(0,j1)*d2(j1, j2)*d3(j2, j3)/60
-                            w(12) = w(12)+d2(0, j1)*d3(j1, j2)*d(j2,j3)/60
-                            w(13) = w(13)+d(0,j1)*d3(j1, j2)*d2(j2, j3)/60
-                            w(14) = w(14)+d3(0, j1)*d(j1,j2)*d2(j2, j3)/60
-                            w(15) = w(15)+d2(0, j1)*d(j1,j2)*d3(j2, j3)/60
-                            w(16) = w(16)+d2(0, j1)*d2(j1, j2)*d2(j2, j3)/60
-                            !$         w() = w()+d4(0,j1)*d(j1,j2)*d(j1,j3)/60
-                            w(17) = w(17)+d(0,j1)*d4(j1, j2)*d(j1,j3)/60
-                            w(18) = w(18)+d3(0, j1)*d2(j1, j2)*d(j1,j3)/60
-                            w(19) = w(19)+d2(0, j1)*d3(j1, j2)*d(j1,j3)/60
-                            w(20) = w(20)+d(0,j1)*d3(j1, j2)*d2(j1, j3)/60
-                            w(21) = w(21)+d2(0, j1)*d2(j1, j2)*d2(j1, j3)/60
-                            w(22) = w(22)+d3(0, j1)*d(0,j2)*d(j1,j3)*d(j2,j3)/60
-                            w(23) = w(23)+d(0,j1)*d(0,j2)*d3(j1, j3)*d(j2,j3)/60
-                            w(44) = w(44)+d2(0, j1)*d2(0, j2)*d(j1,j3)*d(j2,j3)/60
-                            w(24) = w(24)+d2(0, j1)*d(0,j2)*d2(j1, j3)*d(j2,j3)/60
-                            w(25) = w(25)+d(0,j1)*d(0,j2)*d2(j1, j3)*d2(j2, j3)/60
-                            w(26) = w(26)+d2(0, j1)*d(0,j2)*d(j1,j3)*d2(j2, j3)/60
-                            w(45) = w(45)+d3(0, j1)*d(0,j2)*d(j1,j2)*d(j2,j3)/60
-                            w(27) = w(27)+d(0,j1)*d(j1,j2)*d(j1,j3)*d3(j2, j3)/60
-                            w(28) = w(28)+d(0,j1)*d(0,j2)*d3(j1, j2)*d(j2,j3)/60
-                            w(46) = w(46)+d3(0, j1)*d(0,j2)*d(j1,j2)*d(j1,j3)/60
-                            !$         w() = w()+d3(0,j1)*d(0,j2)*d(0,j3)*d(j1,j2)/60
-                            w(29) = w(29)+d(0,j1)*d3(j1, j2)*d(j1,j3)*d(j2,j3)/60
-                            !$         w() = w()+d(0,j1)*d(0,j2)*d(j1,j2)*d3(j2,j3)/60
-                            w(30) = w(30)+d3(0, j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)/60
-                            w(31) = w(31)+d2(0, j1)*d(0,j2)*d2(j1, j2)*d(j2,j3)/60
-                            !$         w() = w()+d2(0,j1)*d2(0,j2)*d(j1,j2)*d(j2,j3)/60
-                            !$         w() = w()+d2(0,j1)*d(0,j2)*d(0,j3)*d2(j1,j2)/60
-                            w(32) = w(32)+d(0,j1)*d2(j1, j2)*d(j1,j3)*d2(j2, j3)/60
-                            !$         w() = w()+d2(0,j1)*d(0,j2)*d(j1,j2)*d2(j2,j3)/60
-                            w(33) = w(33)+d2(0, j1)*d(j1,j2)*d(j1,j3)*d2(j2, j3)/60
-                            !$         w() = w()+d2(0,j1)*d(0,j2)*d2(j1,j2)*d(j1,j3)/60
-                            !$         w() = w()+d2(0,j1)*d2(0,j2)*d(0,j3)*d(j1,j2)/60
-                            w(34) = w(34)+d(0,j1)*d2(j1, j2)*d2(j1, j3)*d(j2,j3)/60
-                            !$         w() = w()+d(0,j1)*d(0,j2)*d2(j1,j2)*d2(j2,j3)/60
-                            !$         w() = w()+d(0,j1)*d2(0,j2)*d(j1,j2)*d2(j2,j3)/60
-                            w(35) = w(35)+d2(0, j1)*d(j1,j2)*d2(j1, j3)*d(j2,j3)/60
-                            w(36) = w(36)+d2(0, j1)*d(0,j2)*d(0,j3)*d(j1,j2)*d(j2,j3)/60
-                            !$         w() = w()+d2(0,j1)*d(0,j2)*d(j1,j2)*d(j1,j3)*d(j2,j3)/60
-                            !$         w() = w()+d(0,j1)*d(0,j2)*d(0,j3)*d2(j1,j2)*d(j2,j3)/60
-                            w(37) = w(37)+d(0,j1)*d(0,j2)*d(j1,j2)*d2(j1, j3)*d(j2,j3)/60
-                            w(38) = w(38)+d2(0, j1)*d(0,j2)*d(0,j3)*d(j1,j2)*d(j1,j3)/60 !go
+                            v(24) = v(24)+d(0,j1)*d(0,j2)*d(j1,j2)*d2(j1,j3)/60
+                            w(8)  = w(8)+d(0,j1)*d(j1,j2)*d4(j2,j3)/60
+                            w(9)  = w(9)+d(0,j1)*d4(j1,j2)*d(j2,j3)/60
+                            w(10) = w(10)+d3(0,j1)*d2(j1,j2)*d(j2,j3)/60
+                            w(11) = w(11)+d(0,j1)*d2(j1,j2)*d3(j2,j3)/60
+                            w(12) = w(12)+d2(0,j1)*d3(j1,j2)*d(j2,j3)/60
+                            w(13) = w(13)+d(0,j1)*d3(j1,j2)*d2(j2,j3)/60
+                            w(14) = w(14)+d3(0,j1)*d(j1,j2)*d2(j2,j3)/60
+                            w(15) = w(15)+d2(0,j1)*d(j1,j2)*d3(j2,j3)/60
+                            w(16) = w(16)+d2(0,j1)*d2(j1,j2)*d2(j2,j3)/60
+                            w(17) = w(17)+d(0,j1)*d4(j1,j2)*d(j1,j3)/60
+                            w(18) = w(18)+d3(0,j1)*d2(j1,j2)*d(j1,j3)/60
+                            w(19) = w(19)+d2(0,j1)*d3(j1,j2)*d(j1,j3)/60
+                            w(20) = w(20)+d(0,j1)*d3(j1,j2)*d2(j1,j3)/60
+                            w(21) = w(21)+d2(0,j1)*d2(j1,j2)*d2(j1,j3)/60
+                            w(22) = w(22)+d3(0,j1)*d(0,j2)*d(j1,j3)*d(j2,j3)/60
+                            w(23) = w(23)+d(0,j1)*d(0,j2)*d3(j1,j3)*d(j2,j3)/60
+                            w(44) = w(44)+d2(0,j1)*d2(0,j2)*d(j1,j3)*d(j2,j3)/60
+                            w(24) = w(24)+d2(0,j1)*d(0,j2)*d2(j1,j3)*d(j2,j3)/60
+                            w(25) = w(25)+d(0,j1)*d(0,j2)*d2(j1,j3)*d2(j2,j3)/60
+                            w(26) = w(26)+d2(0,j1)*d(0,j2)*d(j1,j3)*d2(j2,j3)/60
+                            w(45) = w(45)+d3(0,j1)*d(0,j2)*d(j1,j2)*d(j2,j3)/60
+                            w(27) = w(27)+d(0,j1)*d(j1,j2)*d(j1,j3)*d3(j2,j3)/60
+                            w(28) = w(28)+d(0,j1)*d(0,j2)*d3(j1,j2)*d(j2,j3)/60
+                            w(46) = w(46)+d3(0,j1)*d(0,j2)*d(j1,j2)*d(j1,j3)/60
+                            w(29) = w(29)+d(0,j1)*d3(j1,j2)*d(j1,j3)*d(j2,j3)/60
+                            w(30) = w(30)+d3(0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)/60
+                            w(31) = w(31)+d2(0,j1)*d(0,j2)*d2(j1,j2)*d(j2,j3)/60
+                            w(32) = w(32)+d(0,j1)*d2(j1,j2)*d(j1,j3)*d2(j2,j3)/60
+                            w(33) = w(33)+d2(0,j1)*d(j1,j2)*d(j1,j3)*d2(j2,j3)/60
+                            w(34) = w(34)+d(0,j1)*d2(j1,j2)*d2(j1,j3)*d(j2,j3)/60
+                            w(35) = w(35)+d2(0,j1)*d(j1,j2)*d2(j1,j3)*d(j2,j3)/60
+                            w(36) = w(36)+d2(0,j1)*d(0,j2)*d(0,j3)*d(j1,j2)*d(j2,j3)/60
+                            w(37) = w(37)+d(0,j1)*d(0,j2)*d(j1,j2)*d2(j1,j3)*d(j2,j3)/60
+                            w(38) = w(38)+d2(0,j1)*d(0,j2)*d(0,j3)*d(j1,j2)*d(j1,j3)/60 !go
                             !        w(38) = w(38)+d2(0,j1)*d(0,j2)*d(0,j3)*d(j1,2)*d(j1,j3)/60 !bug
-                            w(39) = w(39)+d(0,j1)*d(0,j2)*d2(j1, j2)*d(j1,j3)*d(j2,j3)/60
-                            !$         w() = w()+d(0,j1)*d(0,j2)*d(0,j3)*d(j1,j2)*d(j1,j3)*d(j2,j3)/
+                            w(39) = w(39)+d(0,j1)*d(0,j2)*d2(j1,j2)*d(j1,j3)*d(j2,j3)/60
                             do j4 = 1, 5
                                 if( j4 .ne. j3.and.j4 .ne. j2.and.j4 .ne. j1 )then
                                     u(13) = u(13)+d(0,j1)*d(j1,j2)*d(j1,j3)*d(j3,j4)/120
                                     u(14) = u(14)+d(0,j1)*d(j1,j2)*d(j1,j3)*d(j1,j4)/120
-                                    v(25) = v(25)+d(0,j1)*d2(j1, j2)*d(j2,j3)*d(j3,j4)/120
-                                    v(26) = v(26)+d2(0, j1)*d(j1,j2)*d(j1,j3)*d(j3,j4)/120
-                                    v(27) = v(27)+d(0,j1)*d2(j1, j2)*d(j1,j3)*d(j3,j4)/120
-                                    v(28) = v(28)+d(0,j1)*d(j1,j2)*d2(j1, j3)*d(j3,j4)/120
-                                    v(29) = v(29)+d(0,j1)*d(j1,j2)*d(j1,j3)*d2(j3, j4)/120
-                                    v(30) = v(30)+d2(0, j1)*d(j1,j2)*d(j1,j3)*d(j1,j4)/120
-                                    v(31) = v(31)+d(0,j1)*d2(j1, j2)*d(j1,j3)*d(j1,j4)/120
-                                    w(40) = w(40)+d(0,j1)*d3(j1, j2)*d(j1,j3)*d(j1,j4)/120
-                                    w(41) = w(41)+d2(0, j1)*d(j1,j2)*d2(j2, j3)*d(j3,j4)/120
-                                    w(42) = w(42)+d(0,j1)*d(j1,j2)*d2(j2, j3)*d2(j3, j4)/120
-                                    w(43) = w(43)+d(0,j1)*d2(j1, j2)*d2(j1, j3)*d(j1,j4)/120
-                                    w(44) = w(44)+d(0,j1)*d(j1,j2)*d(j2,j3)*d3(j3, j4)/120
-                                    w(45) = w(45)+d(0,j1)*d2(j1, j2)*d(j2,j3)*d2(j3, j4)/120
-                                    w(46) = w(46)+d(0,j1)*d(j1,j2)*d(j1,j3)*d2(j2, j3)*d(j1,j4)/120
-                                    !$          w() = w()+d3(0,j1)*d(j1,j2)*d(j2,j3)*d(j3,j4)/120
-                                    !$          w() = w()+d2(0,j1)*d2(j1,j2)*d(j2,j3)*d(j3,j4)/120
-                                    !$          w() = w()+d3(0,j1)*d(j1,j2)*d(j1,j3)*d(j1,j4)/120
-                                    !$          w() = w()+d2(0,j1)*d2(j1,j2)*d(j1,j3)*d(j1,j4)/120
-                                    !$          w() = w()+d(0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)*d2(j1,j4)/120
-                                    !$          w() = w()+d2(0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)*d(j1,j4)/120
-                                    !$          w() = w()+d(0,j1)*d2(j1,j2)*d(j1,j3)*d(j2,j3)*d(j1,j4)/120
+                                    v(25) = v(25)+d(0,j1)*d2(j1,j2)*d(j2,j3)*d(j3,j4)/120
+                                    v(26) = v(26)+d2(0,j1)*d(j1,j2)*d(j1,j3)*d(j3,j4)/120
+                                    v(27) = v(27)+d(0,j1)*d2(j1,j2)*d(j1,j3)*d(j3,j4)/120
+                                    v(28) = v(28)+d(0,j1)*d(j1,j2)*d2(j1,j3)*d(j3,j4)/120
+                                    v(29) = v(29)+d(0,j1)*d(j1,j2)*d(j1,j3)*d2(j3,j4)/120
+                                    v(30) = v(30)+d2(0,j1)*d(j1,j2)*d(j1,j3)*d(j1,j4)/120
+                                    v(31) = v(31)+d(0,j1)*d2(j1,j2)*d(j1,j3)*d(j1,j4)/120
+                                    w(40) = w(40)+d(0,j1)*d3(j1,j2)*d(j1,j3)*d(j1,j4)/120
+                                    w(41) = w(41)+d2(0,j1)*d(j1,j2)*d2(j2,j3)*d(j3,j4)/120
+                                    w(42) = w(42)+d(0,j1)*d(j1,j2)*d2(j2,j3)*d2(j3,j4)/120
+                                    w(43) = w(43)+d(0,j1)*d2(j1,j2)*d2(j1,j3)*d(j1,j4)/120
+                                    w(44) = w(44)+d(0,j1)*d(j1,j2)*d(j2,j3)*d3(j3,j4)/120
+                                    w(45) = w(45)+d(0,j1)*d2(j1,j2)*d(j2,j3)*d2(j3,j4)/120
+                                    w(46) = w(46)+d(0,j1)*d(j1,j2)*d(j1,j3)*d2(j2,j3)*d(j1,j4)/120
                                 endif
                             enddo
                         endif
@@ -1601,49 +1576,46 @@ module chempotpy_ch5p_pip_pes
             do j1 = 1, 5
                 if( j1 .ne. j0 )then
                     x(1)  = x(1)+d(j0,j1)/4
-                    y(2)  = y(2)+d2(j0, j1)/4
-                    z(6)  = z(6)+d3(j0, j1)/4
-                    u(15) = u(15)+d4(j0, j1)/4
-                    v(32) = v(32)+d5(j0, j1)/4
-                    !$        w() = w()+her6(d(j0,j1))/4
+                    y(2)  = y(2)+d2(j0,j1)/4
+                    z(6)  = z(6)+d3(j0,j1)/4
+                    u(15) = u(15)+d4(j0,j1)/4
+                    v(32) = v(32)+d5(j0,j1)/4
                     do j2 = 1, 5
                         if( j2 .ne. j1.and.j2 .ne. j0 )then
                             y(3)  = y(3)+d(j0,j1)*d(j1,j2)/12
-                            z(7)  = z(7)+d2(j0, j1)*d(j1,j2)/12
+                            z(7)  = z(7)+d2(j0,j1)*d(j1,j2)/12
                             z(8)  = z(8)+d(j0,j1)*d(j0,j2)*d(j1,j2)/12
-                            u(16) = u(16)+d3(j0, j1)*d(j1,j2)/12
-                            u(17) = u(17)+d2(j0, j1)*d2(j1, j2)/12
-                            u(18) = u(18)+d2(j0, j1)*d(j0,j2)*d(j1,j2)/12
-                            v(33) = v(33)+d4(j0, j1)*d(j1,j2)/12
-                            v(34) = v(34)+d3(j0, j1)*d2(j1, j2)/12
-                            v(35) = v(35)+d3(j0, j1)*d(j0,j2)*d(j1,j2)/12
-                            v(36) = v(36)+d2(j0, j1)*d2(j0, j2)*d(j1,j2)/12
-                            w(47) = w(47)+d4(j0, j1)*d2(j1, j2)/12
-                            w(48) = w(48)+d3(j0, j1)*d3(j1, j2)/12
-                            w(49) = w(49)+d2(j0, j1)*d2(j0, j2)*d2(j1, j2)/12
-                            w(50) = w(50)+d4(j0, j1)*d(j0,j2)*d(j1,j2)/12
-                            !$         w() = w()+d3(j0,j1)*d2(j0,j2)*d(j1,j2)/12
-                            !$         w() = w()+d5(j0,j1)*d(j1,j2)/12
+                            u(16) = u(16)+d3(j0,j1)*d(j1,j2)/12
+                            u(17) = u(17)+d2(j0,j1)*d2(j1,j2)/12
+                            u(18) = u(18)+d2(j0,j1)*d(j0,j2)*d(j1,j2)/12
+                            v(33) = v(33)+d4(j0,j1)*d(j1,j2)/12
+                            v(34) = v(34)+d3(j0,j1)*d2(j1,j2)/12
+                            v(35) = v(35)+d3(j0,j1)*d(j0,j2)*d(j1,j2)/12
+                            v(36) = v(36)+d2(j0,j1)*d2(j0,j2)*d(j1,j2)/12
+                            w(47) = w(47)+d4(j0,j1)*d2(j1,j2)/12
+                            w(48) = w(48)+d3(j0,j1)*d3(j1,j2)/12
+                            w(49) = w(49)+d2(j0,j1)*d2(j0,j2)*d2(j1,j2)/12
+                            w(50) = w(50)+d4(j0,j1)*d(j0,j2)*d(j1,j2)/12
                             do j3 = 1, 5
                                 if( j3 .ne. j2.and.j3 .ne. j1.and.j3 .ne. j0 )then
                                     z(9)  = z(9)+d(j0,j1)*d(j0,j2)*d(j0,j3)/24
-                                    u(19) = u(19)+d2(j0, j1)*d(j0,j2)*d(j0,j3)/24
+                                    u(19) = u(19)+d2(j0,j1)*d(j0,j2)*d(j0,j3)/24
                                     u(20) = u(20)+d(j0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)/24
                                     u(21) = u(21)+d(j0,j1)*d(j0,j2)*d(j1,j3)*d(j2,j3)/24
-                                    v(37) = v(37)+d3(j0, j1)*d(j0,j2)*d(j0,j3)/24
-                                    v(38) = v(38)+d2(j0, j1)*d2(j0, j2)*d(j0,j3)/24
-                                    v(39) = v(39)+d2(j0, j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)/24
-                                    v(40) = v(40)+d(j0,j1)*d2(j1, j2)*d(j1,j3)*d(j2,j3)/24
-                                    v(41) = v(41)+d(j0,j1)*d(j1,j2)*d(j1,j3)*d2(j2, j3)/24
-                                    w(51) = w(51)+d4(j0, j1)*d(j1,j2)*d(j2,j3)/24
-                                    w(52) = w(52)+d(j0,j1)*d4(j1, j2)*d(j2,j3)/24
-                                    w(53) = w(53)+d3(j0, j1)*d2(j1, j2)*d(j2,j3)/24
-                                    w(54) = w(54)+d3(j0, j1)*d(j1,j2)*d2(j2, j3)/24
-                                    w(55) = w(55)+d2(j0, j1)*d3(j1, j2)*d(j2,j3)/24
-                                    w(56) = w(56)+d2(j0, j1)*d2(j1, j2)*d2(j2, j3)/24
-                                    w(57) = w(57)+d4(j0, j1)*d(j0,j2)*d(j0,j3)/24
-                                    w(58) = w(58)+d2(j0, j1)*d2(j0, j2)*d2(j0, j3)/24
-                                    w(59) = w(59)+d3(j0, j1)*d2(j0, j2)*d(j0,j3)/24
+                                    v(37) = v(37)+d3(j0,j1)*d(j0,j2)*d(j0,j3)/24
+                                    v(38) = v(38)+d2(j0,j1)*d2(j0,j2)*d(j0,j3)/24
+                                    v(39) = v(39)+d2(j0,j1)*d(j1,j2)*d(j1,j3)*d(j2,j3)/24
+                                    v(40) = v(40)+d(j0,j1)*d2(j1,j2)*d(j1,j3)*d(j2,j3)/24
+                                    v(41) = v(41)+d(j0,j1)*d(j1,j2)*d(j1,j3)*d2(j2,j3)/24
+                                    w(51) = w(51)+d4(j0,j1)*d(j1,j2)*d(j2,j3)/24
+                                    w(52) = w(52)+d(j0,j1)*d4(j1,j2)*d(j2,j3)/24
+                                    w(53) = w(53)+d3(j0,j1)*d2(j1,j2)*d(j2,j3)/24
+                                    w(54) = w(54)+d3(j0,j1)*d(j1,j2)*d2(j2,j3)/24
+                                    w(55) = w(55)+d2(j0,j1)*d3(j1,j2)*d(j2,j3)/24
+                                    w(56) = w(56)+d2(j0,j1)*d2(j1,j2)*d2(j2,j3)/24
+                                    w(57) = w(57)+d4(j0,j1)*d(j0,j2)*d(j0,j3)/24
+                                    w(58) = w(58)+d2(j0,j1)*d2(j0,j2)*d2(j0,j3)/24
+                                    w(59) = w(59)+d3(j0,j1)*d2(j0,j2)*d(j0,j3)/24
                                 endif
                             enddo
                         endif
@@ -1856,12 +1828,12 @@ module chempotpy_ch5p_pip_pes
     subroutine getrvec ( m, r, vec )
         use chempotpy_kinds, only: wp
         implicit none
-        integer :: m
-        real(wp), dimension(0:5, 0:5) :: r, r1
-        real(wp), dimension(0:m-1) :: vec
-        integer :: j0, j1, j2, i, j, k
-        real(wp), dimension(0:1) :: x
-        real(wp), dimension(0:3) :: y
+        integer  :: m
+        real(wp) :: r(0:5,0:5), r1(0:5,0:5)
+        real(wp) :: vec(0:m-1)
+        integer  :: j0, j1, j2, i, j, k
+        real(wp) :: x(0:1)
+        real(wp) :: y(0:3)
         !     Test for compatibility
         if( .not.(m .eq. 1.or.m .eq. 3.or.m .eq. 10) )then
             stop 'getrvec - wrong dimension'
@@ -1871,29 +1843,29 @@ module chempotpy_ch5p_pip_pes
         do i = 0, 5
             do j = 0, 5
                 if( i .eq. j )then
-                    r1(i, j) = 0
+                    r1(i,j) = 0
                 else
-                    r1(i, j) = exp(-r(i, j))/r(i, j)
+                    r1(i,j) = exp(-r(i,j))/r(i,j)
                 endif
             enddo
         enddo
         do j1 = 1, 5
-            x(0) = x(0)+r1(0, j1)/5
-            y(0) = y(0)+r1(0, j1)**2/5
+            x(0) = x(0)+r1(0,j1)/5
+            y(0) = y(0)+r1(0,j1)**2/5
             do j2 = 1, 5
                 if( j2 .ne. j1 )then
-                    y(1) = y(1)+r1(0, j1)*r1(j1, j2)/20
+                    y(1) = y(1)+r1(0,j1)*r1(j1,j2)/20
                 endif
             enddo
         enddo
         do j0 = 1, 5
             do j1 = 1, 5
                 if( j1 .ne. j0 )then
-                    x(1) = x(1)+r1(j0, j1)/4
-                    y(2) = y(2)+r1(j0, j1)**2/4
+                    x(1) = x(1)+r1(j0,j1)/4
+                    y(2) = y(2)+r1(j0,j1)**2/4
                     do j2 = 1, 5
                         if( j2 .ne. j1.and.j2 .ne. j0 )then
-                            y(3) = y(3)+r1(j0, j1)*r1(j1, j2)/12
+                            y(3) = y(3)+r1(j0,j1)*r1(j1,j2)/12
                         endif
                     enddo
                 endif
@@ -1920,29 +1892,29 @@ module chempotpy_ch5p_pip_pes
         !...  Based on pes6n4
         use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter                  :: natoms  = 6
-        integer, parameter                  :: natoms1 = 4
-        integer                             :: i, j
-        real(wp), dimension(natoms1, 3)     :: xyz1
-        real(wp), dimension(natoms, 3)      :: xyz
-        real(wp), dimension(3, natoms)      :: xyzt, f
-        real(wp)                            :: v, h2pot, h2potab, ch30
-        real(wp), parameter                 :: ang = 219474.6e0_wp
-        character(len=1), dimension(natoms) :: xname
+        integer, parameter  :: natoms  = 6
+        integer, parameter  :: natoms1 = 4
+        integer             :: i, j
+        real(wp)            :: xyz1(natoms1,3)
+        real(wp)            :: xyz(natoms,3)
+        real(wp)            :: xyzt(3,natoms), f(3,natoms)
+        real(wp)            :: v, h2pot, h2potab, ch30
+        real(wp), parameter :: ang = 219474.6e0_wp
+        character(len=1)    :: xname(natoms)
         do i = 1, natoms1
             do j = 1, 3
-                xyz(i, j) = xyz1(i, j)
+                xyz(i,j) = xyz1(i,j)
             enddo
         enddo
-        xyz(5, 1) = 0.7035e0_wp
-        xyz(5, 2) = 0.e0_wp
-        xyz(5, 3) = 14.0750143e0_wp
-        xyz(6, 1) = -0.7035e0_wp
-        xyz(6, 2) = 0.e0_wp
-        xyz(6, 3) = 14.0750143e0_wp
+        xyz(5,1) = 0.7035e0_wp
+        xyz(5,2) = 0.e0_wp
+        xyz(5,3) = 14.0750143e0_wp
+        xyz(6,1) = -0.7035e0_wp
+        xyz(6,2) = 0.e0_wp
+        xyz(6,3) = 14.0750143e0_wp
         do i = 1, natoms
             do j = 1, 3
-                xyzt(j, i) = xyz(i, j)
+                xyzt(j,i) = xyz(i,j)
             enddo
         enddo
         call getfit(xyzt, v)
@@ -1968,17 +1940,17 @@ module chempotpy_ch5p_pip_pes
     subroutine calcr( x, xch3, xh2a, dist, h2dist, theta )
         use chempotpy_kinds, only: wp
         implicit none
-        integer                        :: i, j, npp1, npp2, jr
-        integer, parameter             :: natoms = 6
-        real(wp), dimension(3, natoms) :: x
-        real(wp), dimension(natoms-1)  :: rch
-        real(wp), dimension(3)         :: xh2m, xh1, xh2
-        real(wp), dimension(2)         :: rchmax
-        real(wp)                       :: dist, h2dist, h2dist5, theta
-        real(wp), dimension(3, 4)      :: xch3t
-        real(wp), dimension(3, 2)      :: xh2at
-        real(wp), dimension(4, 3)      :: xch3
-        real(wp), dimension(2, 3)      :: xh2a
+        integer            :: i, j, npp1, npp2, jr
+        integer, parameter :: natoms = 6
+        real(wp)           :: x(3,natoms)
+        real(wp)           :: rch(natoms-1)
+        real(wp)           :: xh2m(3), xh1(3), xh2(3)
+        real(wp)           :: rchmax(2)
+        real(wp)           :: dist, h2dist, h2dist5, theta
+        real(wp)           :: xch3t(3,4)
+        real(wp)           :: xh2at(3,2)
+        real(wp)           :: xch3(4,3)
+        real(wp)           :: xh2a(2,3)
         do j = 1, natoms - 1
             rch(j) = sqrt((x(1,j+1)-x(1,1))**2+(x(2,j+1)-x(2,1))**2 +(x(3,j+1)-x(3,1))**2)
         enddo
@@ -2013,8 +1985,8 @@ module chempotpy_ch5p_pip_pes
             xh2(i) = x(i,npp2+1)
         enddo
         do i = 1, 3
-            xh2at(i, 1) = x(i,npp1+1)
-            xh2at(i, 2) = x(i,npp2+1)
+            xh2at(i,1) = x(i,npp1+1)
+            xh2at(i,2) = x(i,npp2+1)
         enddo
         jr = 0
         do j = 1, natoms
@@ -2022,18 +1994,18 @@ module chempotpy_ch5p_pip_pes
             else
                 jr = jr + 1
                 do i = 1, 3
-                    xch3t(i, jr) = x(i,j)
+                    xch3t(i,jr) = x(i,j)
                 enddo
             endif
         enddo
         do i = 1, 3
             do j = 1, 4
-                xch3(j, i) = xch3t(i, j)
+                xch3(j,i) = xch3t(i,j)
             enddo
         enddo
         do i = 1, 3
             do j = 1, 2
-                xh2a(j, i) = xh2at(i, j)
+                xh2a(j,i) = xh2at(i,j)
             enddo
         enddo
         !.... Calculate the bond distance of H2
@@ -2048,8 +2020,8 @@ module chempotpy_ch5p_pip_pes
         !.... x1, x2 are Cartisian coordinate
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(3) :: x1, x2
-        real(wp)               :: dist
+        real(wp) :: x1(3), x2(3)
+        real(wp) :: dist
         dist = sqrt((x1(1) - x2(1))**2 + (x1(2) - x2(2))**2 + (x1(3) - x2(3))**2)
     end subroutine calcdist
 

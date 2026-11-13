@@ -68,8 +68,8 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   mechanical legacy conversion; verify actual reads and writes first.
 - Use the `::` declaration separator and align it within a declaration group.
 - Put every array shape on its typed declaration, for example
-  `double precision :: switch(4), dswitch(4,4)`. Standalone `dimension`
-  statements are forbidden.
+  `real(wp) :: switch(4), dswitch(4,4)`. Standalone `dimension` statements
+  and `dimension(...)` declaration attributes are forbidden.
 - Use standard intrinsic syntax such as `real(real64)` and
   `character(len=80)`. Star-sized and entity-sized declarations are forbidden.
 - Declare constants with a type and `parameter`, for example

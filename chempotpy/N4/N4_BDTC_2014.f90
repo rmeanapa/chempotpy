@@ -73,7 +73,7 @@ module falcons_vars_eval
     implicit none
     private
     public :: aji, qi
-    real(wp), dimension(:, :), allocatable :: qi, aji
+    real(wp), allocatable :: qi(:,:), aji(:,:)
 end module falcons_vars_eval
 
 module falcons_vars_main
@@ -87,13 +87,13 @@ module falcons_vars_main
     integer :: i, j, k, l, nn, ind, n, m, eta, np, moltype, pesform, &
         & nma, nplmax, nall, nmincrc, mcrc, qps, pwonly, cgmeth, &
         & ntarmin, ntarmax, ntar, crcmult, nitcrc
-    integer, dimension(6)     :: sd
-    integer, dimension(4, 3)  :: cmap
-    integer, dimension(24, 6) :: qp
-    real(wp)                  :: pnu, epsnu, ps, pu, epsu, e, epw, systo, r, rwfa, rwfb
-    real(wp), dimension(6)    :: t, qr, qs, q, xr, x, aa, qeq
-    real(wp), dimension(4, 3) :: y, dedy
-    real(wp), dimension(:), allocatable :: crc
+    integer               :: sd(6)
+    integer               :: cmap(4,3)
+    integer               :: qp(24,6)
+    real(wp)              :: pnu, epsnu, ps, pu, epsu, e, epw, systo, r, rwfa, rwfb
+    real(wp)              :: t(6), qr(6), qs(6), q(6), xr(6), x(6), aa(6), qeq(6)
+    real(wp)              :: y(4,3), dedy(4,3)
+    real(wp), allocatable :: crc(:)
 end module falcons_vars_main
 
 !> @brief Assemble derived N4 BDTC arrays from immutable model parameters.
@@ -118,57 +118,57 @@ subroutine assemble_model_parameters( )
     if( allocated(qi) ) deallocate(qi)
     if( allocated(aji) ) deallocate(aji)
     if( allocated(crc) ) deallocate(crc)
-    cmap(1, :) = (/1, 2, 3/)
-    cmap(2, :) = (/1, 4, 5/)
-    cmap(3, :) = (/2, 4, 6/)
-    cmap(4, :) = (/3, 5, 6/)
-    qps        = 24
-    qp(1, :)   = (/1, 2, 3, 4, 5, 6/)
-    qp(2, :)   = (/1, 3, 2, 5, 4, 6/)
-    qp(3, :)   = (/2, 1, 3, 4, 6, 5/)
-    qp(4, :)   = (/2, 3, 1, 6, 4, 5/)
-    qp(5, :)   = (/3, 1, 2, 5, 6, 4/)
-    qp(6, :)   = (/3, 2, 1, 6, 5, 4/)
-    qp(7, :)   = (/1, 4, 5, 2, 3, 6/)
-    qp(8, :)   = (/1, 5, 4, 3, 2, 6/)
-    qp(9, :)   = (/4, 1, 5, 2, 6, 3/)
-    qp(10, :)  = (/4, 5, 1, 6, 2, 3/)
-    qp(11, :)  = (/5, 1, 4, 3, 6, 2/)
-    qp(12, :)  = (/5, 4, 1, 6, 3, 2/)
-    qp(13, :)  = (/2, 4, 6, 1, 3, 5/)
-    qp(14, :)  = (/2, 6, 4, 3, 1, 5/)
-    qp(15, :)  = (/4, 2, 6, 1, 5, 3/)
-    qp(16, :)  = (/4, 6, 2, 5, 1, 3/)
-    qp(17, :)  = (/6, 2, 4, 3, 5, 1/)
-    qp(18, :)  = (/6, 4, 2, 5, 3, 1/)
-    qp(19, :)  = (/3, 5, 6, 1, 2, 4/)
-    qp(20, :)  = (/3, 6, 5, 2, 1, 4/)
-    qp(21, :)  = (/5, 3, 6, 1, 4, 2/)
-    qp(22, :)  = (/5, 6, 3, 4, 1, 2/)
-    qp(23, :)  = (/6, 3, 5, 2, 4, 1/)
-    qp(24, :)  = (/6, 5, 3, 4, 2, 1/)
-    ps         = 4e0_wp
-    moltype    = parameter_moltype; pesform = parameter_pesform
-    n          = parameter_n; m = parameter_m; eta = parameter_eta
-    pnu        = parameter_pnu; epsnu = parameter_epsnu
-    aa         = parameter_morse_widths; qeq = parameter_equilibrium_distances
-    nma        = parameter_nma; nplmax = parameter_nplmax
-    nmincrc    = parameter_nmincrc; mcrc = parameter_mcrc
+    cmap(1,:) = (/1, 2, 3/)
+    cmap(2,:) = (/1, 4, 5/)
+    cmap(3,:) = (/2, 4, 6/)
+    cmap(4,:) = (/3, 5, 6/)
+    qps       = 24
+    qp(1,:)   = (/1, 2, 3, 4, 5, 6/)
+    qp(2,:)   = (/1, 3, 2, 5, 4, 6/)
+    qp(3,:)   = (/2, 1, 3, 4, 6, 5/)
+    qp(4,:)   = (/2, 3, 1, 6, 4, 5/)
+    qp(5,:)   = (/3, 1, 2, 5, 6, 4/)
+    qp(6,:)   = (/3, 2, 1, 6, 5, 4/)
+    qp(7,:)   = (/1, 4, 5, 2, 3, 6/)
+    qp(8,:)   = (/1, 5, 4, 3, 2, 6/)
+    qp(9,:)   = (/4, 1, 5, 2, 6, 3/)
+    qp(10,:)  = (/4, 5, 1, 6, 2, 3/)
+    qp(11,:)  = (/5, 1, 4, 3, 6, 2/)
+    qp(12,:)  = (/5, 4, 1, 6, 3, 2/)
+    qp(13,:)  = (/2, 4, 6, 1, 3, 5/)
+    qp(14,:)  = (/2, 6, 4, 3, 1, 5/)
+    qp(15,:)  = (/4, 2, 6, 1, 5, 3/)
+    qp(16,:)  = (/4, 6, 2, 5, 1, 3/)
+    qp(17,:)  = (/6, 2, 4, 3, 5, 1/)
+    qp(18,:)  = (/6, 4, 2, 5, 3, 1/)
+    qp(19,:)  = (/3, 5, 6, 1, 2, 4/)
+    qp(20,:)  = (/3, 6, 5, 2, 1, 4/)
+    qp(21,:)  = (/5, 3, 6, 1, 4, 2/)
+    qp(22,:)  = (/5, 6, 3, 4, 1, 2/)
+    qp(23,:)  = (/6, 3, 5, 2, 4, 1/)
+    qp(24,:)  = (/6, 5, 3, 4, 2, 1/)
+    ps        = 4e0_wp
+    moltype   = parameter_moltype; pesform = parameter_pesform
+    n         = parameter_n; m = parameter_m; eta = parameter_eta
+    pnu       = parameter_pnu; epsnu = parameter_epsnu
+    aa        = parameter_morse_widths; qeq = parameter_equilibrium_distances
+    nma       = parameter_nma; nplmax = parameter_nplmax
+    nmincrc   = parameter_nmincrc; mcrc = parameter_mcrc
     allocate(crc(mcrc)); crc = parameter_crc
     ntarmin = parameter_ntarmin; ntarmax = parameter_ntarmax; ntar = parameter_ntar
     crcmult = parameter_crcmult; nitcrc = parameter_nitcrc
     rwfa    = parameter_rwfa; rwfb = parameter_rwfb
     nall    = n+nma
-    allocate(qi(n, 6), aji(n, m))
+    allocate(qi(n,6), aji(n,m))
     do i=1, n
         do l=1, 6
             t(l) = geometry_value(i, l)
         enddo
         call default2cartesian(t(1), t(2), t(3), t(4), t(5), t(6), y)
         call cartesian2rawdist(y, qr)
-        call rawdist2rawmorse(qr, qi(i, :), qeq, aa)
+        call rawdist2rawmorse(qr, qi(i,:), qeq, aa)
         do j=1, m
-            aji(i, j) = coefficient_value(i, j)
+            aji(i,j) = coefficient_value(i, j)
         enddo
     enddo
 end subroutine assemble_model_parameters
@@ -182,11 +182,11 @@ subroutine pot( x_, y_, z_, e_, dedx_, dedy_, dedz_ )
         & systo, t, x, xr, y
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(4), intent(in)  :: x_, y_, z_
-    real(wp), intent(out)               :: e_
-    real(wp), dimension(4), intent(out) :: dedx_, dedy_, dedz_
-    real(wp)                            :: cconv, econv, gconv, eref
-    real(wp), dimension(4)              :: x__, y__, z__
+    real(wp), intent(in)  :: x_(4), y_(4), z_(4)
+    real(wp), intent(out) :: e_
+    real(wp), intent(out) :: dedx_(4), dedy_(4), dedz_(4)
+    real(wp)              :: cconv, econv, gconv, eref
+    real(wp)              :: x__(4), y__(4), z__(4)
     pu     = 3e0_wp
     epsu   = 1e-1_wp
     pwonly = 0
@@ -199,17 +199,17 @@ subroutine pot( x_, y_, z_, e_, dedx_, dedy_, dedz_ )
     y__    = y_*cconv
     z__    = z_*cconv
     do l=1, 4
-        y(l, 1) = x__(l)
-        y(l, 2) = y__(l)
-        y(l, 3) = z__(l)
+        y(l,1) = x__(l)
+        y(l,2) = y__(l)
+        y(l,3) = z__(l)
     enddo
     call calccoordinates(y, qr, xr, q, x, sd, aa, qeq, moltype, qp, qps)
     call evaluatesurface(cgmeth, y, qr, xr, q, x, moltype, pwonly, &
         & cmap, qp, qps, mcrc, crc, n, m, eta, ps, pu, epsu, aa, r, np, e, dedy)
     e_    = e
-    dedx_ = dedy(:, 1)
-    dedy_ = dedy(:, 2)
-    dedz_ = dedy(:, 3)
+    dedx_ = dedy(:,1)
+    dedy_ = dedy(:,2)
+    dedz_ = dedy(:,3)
     e_    = e_*econv+ eref
     dedx_ = dedx_*gconv
     dedy_ = dedy_*gconv
@@ -222,24 +222,24 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
     use falcons_vars_eval, only: aji, qi
     use chempotpy_kinds,   only: wp
     implicit none
-    integer, intent(in)                    :: cg, moltype, pwonly, qps, mcrc, n, m, eta
-    integer, dimension(4, 3), intent(in)   :: cmap
-    integer, dimension(qps, 6), intent(in) :: qp
-    real(wp), intent(in)                   :: ps, pu, epsu
-    real(wp), dimension(6), intent(in)     :: qr, xr, q, x, aa
-    real(wp), dimension(mcrc), intent(in)  :: crc
-    real(wp), dimension(4, 3), intent(in)  :: y
-    integer, intent(out)                   :: np
-    real(wp), intent(out)                  :: r, e
-    real(wp), dimension(4, 3), intent(out) :: dedy
-    integer                                :: i, j, k, l, a, b, c
-    real(wp)                               :: rs, drdqch, dis, wsum, wi, pi, dwidz, tmp, epw
-    real(wp), dimension(6)                 :: qii, dwidxr, dwdxrsum, dpidx, dpidxr, &
-        & dedxrpart, dedxr, dedqr, ddisdq, depwdqr
-    real(wp), dimension(m)       :: aj, bj
-    real(wp), dimension(6, 6)    :: dxdxr
-    real(wp), dimension(m, 6)    :: dbjdx
-    real(wp), dimension(6, 4, 3) :: dqrdy
+    integer, intent(in)   :: cg, moltype, pwonly, qps, mcrc, n, m, eta
+    integer, intent(in)   :: cmap(4,3)
+    integer, intent(in)   :: qp(qps,6)
+    real(wp), intent(in)  :: ps, pu, epsu
+    real(wp), intent(in)  :: qr(6), xr(6), q(6), x(6), aa(6)
+    real(wp), intent(in)  :: crc(mcrc)
+    real(wp), intent(in)  :: y(4,3)
+    integer, intent(out)  :: np
+    real(wp), intent(out) :: r, e
+    real(wp), intent(out) :: dedy(4,3)
+    integer               :: i, j, k, l, a, b, c
+    real(wp)              :: rs, drdqch, dis, wsum, wi, pi, dwidz, tmp, epw
+    real(wp)              :: qii(6), dwidxr(6), dwdxrsum(6), dpidx(6), dpidxr(6), &
+        & dedxrpart(6), dedxr(6), dedqr(6), ddisdq(6), depwdqr(6)
+    real(wp) :: aj(m), bj(m)
+    real(wp) :: dxdxr(6,6)
+    real(wp) :: dbjdx(m,6)
+    real(wp) :: dqrdy(6,4,3)
     np   = 0
     e    = 0e0_wp
     wsum = 0e0_wp !sum of the weight functions
@@ -258,7 +258,7 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
     if( pwonly == 0 )then
         do i=1, n
             do a=1, 6
-                qii(a) = qi(i, a)
+                qii(a) = qi(i,a)
             enddo
             call distance6ds_perm(q, qii, qp, qps, 0, dis, ddisdq)
             if( dis <= rs )then
@@ -267,7 +267,7 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
                     call distance6ds_perm(q, qii, qp, qps, cg, dis, ddisdq)
                 endif
                 do j=1, m
-                    aj(j) = aji(i, j)
+                    aj(j) = aji(i,j)
                 enddo
                 call weightw(wi, dwidz, dis, rs, ps, pu, epsu)
                 pi = 0e0_wp
@@ -282,13 +282,13 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
                     enddo
                     do j=1, m
                         do a=1, 6
-                            dpidx(a) = dpidx(a)+ aj(j)*dbjdx(j, a)
+                            dpidx(a) = dpidx(a)+ aj(j)*dbjdx(j,a)
                         enddo
                     enddo
                     do a=1, 6
                         tmp = 0e0_wp
                         do k=1, 6
-                            tmp = tmp+ dpidx(k)*dxdxr(k, a)
+                            tmp = tmp+ dpidx(k)*dxdxr(k,a)
                         enddo
                         dpidxr(a) = tmp
                     enddo
@@ -319,16 +319,16 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
             do c=1, 3
                 tmp = 0e0_wp
                 do k=1, 3
-                    a   = cmap(b, k)
-                    tmp = tmp+ dedqr(a)*dqrdy(a, b, c)
+                    a   = cmap(b,k)
+                    tmp = tmp+ dedqr(a)*dqrdy(a,b,c)
                 enddo
-                dedy(b, c) = tmp
+                dedy(b,c) = tmp
             enddo
         enddo
     else
         do b=1, 4
             do c=1, 3
-                dedy(b, c) = 0e0_wp
+                dedy(b,c) = 0e0_wp
             enddo
         enddo
     endif
@@ -347,10 +347,10 @@ end subroutine evaluatesurface
 subroutine calcqch( q, qch )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(6), intent(in) :: q
-    real(wp), intent(out)              :: qch
-    integer                            :: i
-    real(wp)                           :: val
+    real(wp), intent(in)  :: q(6)
+    real(wp), intent(out) :: qch
+    integer               :: i
+    real(wp)              :: val
     val = 0e0_wp
     do i=1, 6
         val = val+ q(i)**2e0_wp
@@ -362,12 +362,12 @@ end subroutine calcqch
 subroutine calccr( qch, mcrc, crc, cr, crs, dcrdqch )
     use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in)                   :: mcrc
-    real(wp), intent(in)                  :: qch
-    real(wp), intent(out)                 :: cr, crs, dcrdqch
-    real(wp), dimension(mcrc), intent(in) :: crc
-    integer                               :: icrc
-    real(wp)                              :: pqch
+    integer, intent(in)   :: mcrc
+    real(wp), intent(in)  :: qch
+    real(wp), intent(out) :: cr, crs, dcrdqch
+    real(wp), intent(in)  :: crc(mcrc)
+    integer               :: icrc
+    real(wp)              :: pqch
     pqch    = 1e0_wp
     cr      = crc(1)
     dcrdqch = 0e0_wp
@@ -383,16 +383,16 @@ end subroutine calccr
 subroutine calcbj( b, dbdx, x, eta, m, dflag )
     use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in)                    :: eta, m, dflag
-    real(wp), dimension(6), intent(in)     :: x
-    real(wp), dimension(m), intent(out)    :: b
-    real(wp), dimension(m, 6), intent(out) :: dbdx
-    integer                                :: ind, i, j, k, l, ll, a
-    real(wp)                               :: tmp, tmp2, tmp3
-    real(wp), dimension(6)                 :: xx, x2, xxx
-    real(wp), dimension(m)                 :: dbdxa
-    real(wp), dimension(6, 6)              :: xy, xy2
-    real(wp), dimension(6, 6, 6)           :: xyz
+    integer, intent(in)   :: eta, m, dflag
+    real(wp), intent(in)  :: x(6)
+    real(wp), intent(out) :: b(m)
+    real(wp), intent(out) :: dbdx(m,6)
+    integer               :: ind, i, j, k, l, ll, a
+    real(wp)              :: tmp, tmp2, tmp3
+    real(wp)              :: xx(6), x2(6), xxx(6)
+    real(wp)              :: dbdxa(m)
+    real(wp)              :: xy(6,6), xy2(6,6)
+    real(wp)              :: xyz(6,6,6)
     b    = 0e0_wp
     dbdx = 0e0_wp
     xx   = 0e0_wp !xx(j)     = x(j)*x(j)
@@ -416,10 +416,10 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
             xx(j)  = tmp
             b(ind) = tmp !quadratic terms such as x1^2
             do k= j+1, 6
-                ind      = ind+1
-                tmp      = x(j)*x(k)
-                xy(j, k) = tmp
-                b(ind)   = tmp
+                ind     = ind+1
+                tmp     = x(j)*x(k)
+                xy(j,k) = tmp
+                b(ind)  = tmp
             enddo
         enddo
     endif
@@ -439,12 +439,12 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
         enddo
         do j= 1, 6
             do k= j+1, 6
-                tmp = xy(j, k)
+                tmp = xy(j,k)
                 do l= k+1, 6
-                    ind          = ind+1
-                    tmp2         = tmp*x(l)
-                    b(ind)       = tmp2
-                    xyz(j, k, l) = tmp2
+                    ind        = ind+1
+                    tmp2       = tmp*x(l)
+                    b(ind)     = tmp2
+                    xyz(j,k,l) = tmp2
                 enddo
             enddo
         enddo
@@ -467,12 +467,12 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                 tmp2   = xx(k)
                 ind    = ind+1
                 b(ind) = tmp*tmp2
-                tmp3   = xy(j, k)
+                tmp3   = xy(j,k)
                 do l= k+1, 6
                     ind    = ind+1
-                    b(ind) = tmp*xy(k, l)
+                    b(ind) = tmp*xy(k,l)
                     ind    = ind+1
-                    b(ind) = tmp2*xy(j, l)
+                    b(ind) = tmp2*xy(j,l)
                     ind    = ind+1
                     b(ind) = xx(l)*tmp3
                 enddo
@@ -480,11 +480,11 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
         enddo
         do j=1, 6
             do k= j+1, 6
-                tmp = xy(j, k)
+                tmp = xy(j,k)
                 do l= k+1, 6
                     do ll= l+1, 6
                         ind    = ind+1
-                        b(ind) = tmp*xy(l, ll)
+                        b(ind) = tmp*xy(l,ll)
                     enddo
                 enddo
             enddo
@@ -494,7 +494,7 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
         do j=1, 6
             x2(j) = 2e0_wp*x(j)
             do k=j+1, 6
-                xy2(j, k) = 2e0_wp*xy(j, k)
+                xy2(j,k) = 2e0_wp*xy(j,k)
             enddo
         enddo
         do a=1, 6
@@ -526,7 +526,7 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                         dbdxa(ind) = 3e0_wp*xx(a)
                         do k= j+1, 6
                             ind        = ind+1
-                            dbdxa(ind) = xy2(j, k)
+                            dbdxa(ind) = xy2(j,k)
                             ind        = ind+1
                             dbdxa(ind) = xx(k)
                         enddo
@@ -536,7 +536,7 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                                 ind        = ind+1
                                 dbdxa(ind) = xx(j)
                                 ind        = ind+1
-                                dbdxa(ind) = xy2(j, k)
+                                dbdxa(ind) = xy2(j,k)
                             else
                                 ind = ind+2
                             endif
@@ -548,11 +548,11 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                         do l= k+1, 6
                             ind = ind+1
                             if( j == a )then
-                                dbdxa(ind) = xy(k, l)
+                                dbdxa(ind) = xy(k,l)
                             elseif( k == a )then
-                                dbdxa(ind) = xy(j, l)
+                                dbdxa(ind) = xy(j,l)
                             elseif( l == a )then
-                                dbdxa(ind) = xy(j, k)
+                                dbdxa(ind) = xy(j,k)
                             endif
                         enddo
                     enddo
@@ -595,7 +595,7 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                         do l= k+1, 6
                             ind = ind+1
                             if( j == a )then
-                                dbdxa(ind) = x2(j)*xy(k, l)
+                                dbdxa(ind) = x2(j)*xy(k,l)
                             elseif( k == a )then
                                 dbdxa(ind) = tmp*x(l)
                             elseif( l == a )then
@@ -605,7 +605,7 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                             if( j == a )then
                                 dbdxa(ind) = tmp2*x(l)
                             elseif( k == a )then
-                                dbdxa(ind) = x2(k)*xy(j, l)
+                                dbdxa(ind) = x2(k)*xy(j,l)
                             elseif( l == a )then
                                 dbdxa(ind) = tmp2*x(j)
                             endif
@@ -615,7 +615,7 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                             elseif( k == a )then
                                 dbdxa(ind) = xx(l)*x(j)
                             elseif( l == a )then
-                                dbdxa(ind) = x2(l)*xy(j, k)
+                                dbdxa(ind) = x2(l)*xy(j,k)
                             endif
                         enddo
                     enddo
@@ -626,13 +626,13 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                             do ll= l+1, 6
                                 ind = ind+1
                                 if( j == a )then
-                                    dbdxa(ind) = xyz(k, l, ll)
+                                    dbdxa(ind) = xyz(k,l,ll)
                                 elseif( k == a )then
-                                    dbdxa(ind) = xyz(j, l, ll)
+                                    dbdxa(ind) = xyz(j,l,ll)
                                 elseif( l == a )then
-                                    dbdxa(ind) = xyz(j, k, ll)
+                                    dbdxa(ind) = xyz(j,k,ll)
                                 elseif( ll == a )then
-                                    dbdxa(ind) = xyz(j, k, l)
+                                    dbdxa(ind) = xyz(j,k,l)
                                 endif
                             enddo
                         enddo
@@ -640,7 +640,7 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
                 enddo
             endif
             do j=1, m
-                dbdx(j, a) = dbdxa(j)
+                dbdx(j,a) = dbdxa(j)
             enddo
         enddo !end 'do a=1,6'
     endif !end 'if (dflag /= 0) then'
@@ -650,15 +650,15 @@ end subroutine calcbj
 subroutine distance6ds_perm( q, qi, qp, qps, cg, ds, ddsdq )
     use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in)                    :: cg, qps
-    integer, dimension(qps, 6), intent(in) :: qp
-    real(wp), intent(out)                  :: ds
-    real(wp), dimension(6), intent(in)     :: q, qi
-    real(wp), dimension(6), intent(out)    :: ddsdq
-    integer                                :: i, a, iszero
-    integer, dimension(6)                  :: sd
-    real(wp)                               :: dsval, dssum, mult, dsvali, dsvalis, dssumi
-    real(wp), dimension(6)                 :: qdif
+    integer, intent(in)   :: cg, qps
+    integer, intent(in)   :: qp(qps,6)
+    real(wp), intent(out) :: ds
+    real(wp), intent(in)  :: q(6), qi(6)
+    real(wp), intent(out) :: ddsdq(6)
+    integer               :: i, a, iszero
+    integer               :: sd(6)
+    real(wp)              :: dsval, dssum, mult, dsvali, dsvalis, dssumi
+    real(wp)              :: qdif(6)
     iszero = 0
     dssum  = 0e0_wp
     do a=1, 6
@@ -666,7 +666,7 @@ subroutine distance6ds_perm( q, qi, qp, qps, cg, ds, ddsdq )
     enddo
     do i=1, qps
         do a=1, 6
-            sd(a) = qp(i, a)
+            sd(a) = qp(i,a)
         enddo
         do a=1, 6
             qdif(a) = q(a)- qi(sd(a))
@@ -727,12 +727,12 @@ subroutine calccoordinates( &
         & y, qr, xr, q, x, sd, aa, qeq, moltype, qp, qps )
     use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in)                 :: moltype, qps
-    integer, dimension(6), intent(out)  :: sd
-    real(wp), dimension(6), intent(in)  :: aa, qeq
-    real(wp), dimension(6), intent(out) :: qr, xr, q, x
-    integer, dimension(qps, 6)          :: qp
-    real(wp), dimension(4, 3)           :: y
+    integer, intent(in)   :: moltype, qps
+    integer, intent(out)  :: sd(6)
+    real(wp), intent(in)  :: aa(6), qeq(6)
+    real(wp), intent(out) :: qr(6), xr(6), q(6), x(6)
+    integer               :: qp(qps,6)
+    real(wp)              :: y(4,3)
     call cartesian2rawdist(y, qr)
     call rawdist2rawmorse(qr, xr, qeq, aa)
     q = xr
@@ -744,51 +744,51 @@ subroutine default2cartesian( ra, rb, d, thetaa_d, thetab_d, &
         &  phi_d, y )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), intent(in)                   :: ra, rb, d, thetaa_d, thetab_d, phi_d
-    real(wp), dimension(4, 3), intent(out) :: y
-    real(wp)                               :: thetaa, thetab, phi, pi, y11, y31, y32
-    pi      = 3.1415926536e0_wp
-    thetaa  = thetaa_d*pi/180e0_wp
-    thetab  = thetab_d*pi/180e0_wp
-    phi     = phi_d*pi/180e0_wp
-    y11     = ra*sin(thetaa)/2e0_wp
-    y(1, 1) = y11
-    y(1, 2) = 0e0_wp
-    y(1, 3) = (d- ra*cos(thetaa))/2e0_wp
-    y(2, 1) = -y11
-    y(2, 2) = 0e0_wp
-    y(2, 3) = (d+ ra*cos(thetaa))/2e0_wp
-    y31     = rb*sin(thetab)*cos(phi)/2e0_wp
-    y(3, 1) = y31
-    y32     = rb*sin(thetab)*sin(phi)/2e0_wp
-    y(3, 2) = y32
-    y(3, 3) = (-d+ rb*cos(thetab))/2e0_wp
-    y(4, 1) = -y31
-    y(4, 2) = -y32
-    y(4, 3) = -(d+ rb*cos(thetab))/2e0_wp
+    real(wp), intent(in)  :: ra, rb, d, thetaa_d, thetab_d, phi_d
+    real(wp), intent(out) :: y(4,3)
+    real(wp)              :: thetaa, thetab, phi, pi, y11, y31, y32
+    pi     = 3.1415926536e0_wp
+    thetaa = thetaa_d*pi/180e0_wp
+    thetab = thetab_d*pi/180e0_wp
+    phi    = phi_d*pi/180e0_wp
+    y11    = ra*sin(thetaa)/2e0_wp
+    y(1,1) = y11
+    y(1,2) = 0e0_wp
+    y(1,3) = (d- ra*cos(thetaa))/2e0_wp
+    y(2,1) = -y11
+    y(2,2) = 0e0_wp
+    y(2,3) = (d+ ra*cos(thetaa))/2e0_wp
+    y31    = rb*sin(thetab)*cos(phi)/2e0_wp
+    y(3,1) = y31
+    y32    = rb*sin(thetab)*sin(phi)/2e0_wp
+    y(3,2) = y32
+    y(3,3) = (-d+ rb*cos(thetab))/2e0_wp
+    y(4,1) = -y31
+    y(4,2) = -y32
+    y(4,3) = -(d+ rb*cos(thetab))/2e0_wp
 end subroutine default2cartesian
 
 !> @brief Evaluate cartesian2rawdist.
 subroutine cartesian2rawdist( y, qr )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(6), intent(out)   :: qr
-    real(wp), dimension(4, 3), intent(in) :: y
-    integer                               :: i
-    call distance3d(y(1, :), y(2, :), qr(1))
-    call distance3d(y(1, :), y(3, :), qr(2))
-    call distance3d(y(1, :), y(4, :), qr(3))
-    call distance3d(y(2, :), y(3, :), qr(4))
-    call distance3d(y(2, :), y(4, :), qr(5))
-    call distance3d(y(3, :), y(4, :), qr(6))
+    real(wp), intent(out) :: qr(6)
+    real(wp), intent(in)  :: y(4,3)
+    integer               :: i
+    call distance3d(y(1,:), y(2,:), qr(1))
+    call distance3d(y(1,:), y(3,:), qr(2))
+    call distance3d(y(1,:), y(4,:), qr(3))
+    call distance3d(y(2,:), y(3,:), qr(4))
+    call distance3d(y(2,:), y(4,:), qr(5))
+    call distance3d(y(3,:), y(4,:), qr(6))
 end subroutine cartesian2rawdist
 
 !> @brief Evaluate distance3d.
 subroutine distance3d( p1, p2, d )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), intent(out)              :: d
-    real(wp), dimension(3), intent(in) :: p1, p2
+    real(wp), intent(out) :: d
+    real(wp), intent(in)  :: p1(3), p2(3)
     d = sqrt((p1(1)-p2(1))**2e0_wp+(p1(2)-p2(2))**2e0_wp+(p1(3)-p2(3))**2e0_wp)
 end subroutine distance3d
 
@@ -796,9 +796,9 @@ end subroutine distance3d
 subroutine rawdist2rawmorse( qr, xr, qeq, aa )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(6), intent(in)  :: qr, qeq, aa
-    real(wp), dimension(6), intent(out) :: xr
-    integer                             :: i
+    real(wp), intent(in)  :: qr(6), qeq(6), aa(6)
+    real(wp), intent(out) :: xr(6)
+    integer               :: i
     do i=1, 6
         xr(i) = exp(-(qr(i)-qeq(i))/aa(i))
     enddo
@@ -808,12 +808,12 @@ end subroutine rawdist2rawmorse
 subroutine calcinvariants( vr, v, moltype )
     use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in)                 :: moltype
-    real(wp), dimension(6), intent(in)  :: vr
-    real(wp), dimension(6), intent(out) :: v
-    integer                             :: i
-    real(wp)                            :: e0, e1, f0, f1, vrtmp
-    real(wp), dimension(4)              :: vv
+    integer, intent(in)   :: moltype
+    real(wp), intent(in)  :: vr(6)
+    real(wp), intent(out) :: v(6)
+    integer               :: i
+    real(wp)              :: e0, e1, f0, f1, vrtmp
+    real(wp)              :: vv(4)
     v = 0e0_wp
     select case (moltype)
     case (1)
@@ -849,12 +849,12 @@ end subroutine calcinvariants
 subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
     use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in)                    :: moltype
-    real(wp), dimension(6), intent(in)     :: vr, v
-    real(wp), dimension(6, 6), intent(out) :: dvdvr
-    integer                                :: i
-    real(wp)                               :: mult
-    real(wp), dimension(6)                 :: tmp, tmp2
+    integer, intent(in)   :: moltype
+    real(wp), intent(in)  :: vr(6), v(6)
+    real(wp), intent(out) :: dvdvr(6,6)
+    integer               :: i
+    real(wp)              :: mult
+    real(wp)              :: tmp(6), tmp2(6)
     select case (moltype)
     case (1)
         mult   = 1e0_wp/4e0_wp     !LEGACY: *3d0*(v(4)**2d0))
@@ -865,11 +865,11 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(5) = vr(1)*vr(4)+ vr(3)*vr(6)
         tmp(6) = vr(2)*vr(4)+ vr(3)*vr(5)
         do i=1, 6
-            dvdvr(4, i) = tmp(i)*mult
+            dvdvr(4,i) = tmp(i)*mult
         enddo
         mult = 1e0_wp/4e0_wp     !LEGACY: *3d0*(v(2)**2d0))
         do i=1, 6
-            dvdvr(2, i) = tmp(7-i)*mult
+            dvdvr(2,i) = tmp(7-i)*mult
         enddo
         mult   = 1e0_wp/12e0_wp    !LEGACY: *2d0*v(1))
         tmp(1) = vr(2)+vr(3)+vr(4)+vr(5)
@@ -879,7 +879,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(5) = tmp(2)
         tmp(6) = tmp(1)
         do i=1, 6
-            dvdvr(1, i) = tmp(i)*mult
+            dvdvr(1,i) = tmp(i)*mult
         enddo
         mult    = 1e0_wp/12e0_wp    !LEGACY: *3d0*(v(5)**2d0))
         tmp2(1) = vr(3)*vr(4)+ vr(2)*vr(5)
@@ -889,11 +889,11 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp2(5) = tmp2(2)
         tmp2(6) = tmp2(1)
         do i=1, 6
-            dvdvr(5, i) = (tmp(i)*vr(7-i)+ tmp2(i))*mult
+            dvdvr(5,i) = (tmp(i)*vr(7-i)+ tmp2(i))*mult
         enddo
         mult = 1e0_wp/3e0_wp     !LEGACY: *4d0*(v(6)**3d0))
         do i=1, 6
-            dvdvr(6, i) = vr(7-i)*tmp2(i)*mult
+            dvdvr(6,i) = vr(7-i)*tmp2(i)*mult
         enddo
         mult    = 1e0_wp/24e0_wp    !LEGACY: *3d0*(v(3)**2d0))
         tmp2(1) = vr(2)**2e0_wp+vr(3)**2e0_wp+vr(4)**2e0_wp+vr(5)**2e0_wp
@@ -903,7 +903,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp2(5) = tmp2(2)
         tmp2(6) = tmp2(1)
         do i=1, 6
-            dvdvr(3, i) = (tmp2(i)+ 2e0_wp*vr(i)*tmp(i))*mult
+            dvdvr(3,i) = (tmp2(i)+ 2e0_wp*vr(i)*tmp(i))*mult
         enddo
     case (2)
         mult   = 1e0_wp/2e0_wp
@@ -914,7 +914,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(5) = vr(3)
         tmp(6) = 0e0_wp
         do i=1, 6
-            dvdvr(1, i) = tmp(i)*mult
+            dvdvr(1,i) = tmp(i)*mult
         enddo
         tmp(1) = 0e0_wp
         tmp(2) = vr(3)
@@ -923,7 +923,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(5) = vr(4)
         tmp(6) = 0e0_wp
         do i=1, 6
-            dvdvr(2, i) = tmp(i)*mult
+            dvdvr(2,i) = tmp(i)*mult
         enddo
         tmp(1) = 2e0_wp*v(2)
         tmp(2) = vr(1)*vr(3)
@@ -932,7 +932,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(5) = vr(1)*vr(4)
         tmp(6) = 0e0_wp
         do i=1, 6
-            dvdvr(5, i) = tmp(i)*mult
+            dvdvr(5,i) = tmp(i)*mult
         enddo
         tmp(1) = 0e0_wp
         tmp(2) = vr(6)*vr(4)
@@ -941,7 +941,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(5) = vr(6)*vr(3)
         tmp(6) = 2e0_wp*v(1)
         do i=1, 6
-            dvdvr(6, i) = tmp(i)*mult
+            dvdvr(6,i) = tmp(i)*mult
         enddo
         mult   = 1e0_wp/4e0_wp
         tmp(1) = vr(2)+vr(3)+vr(4)+vr(5)
@@ -951,7 +951,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(5) = vr(1)
         tmp(6) = 0e0_wp
         do i=1, 6
-            dvdvr(3, i) = tmp(i)*mult
+            dvdvr(3,i) = tmp(i)*mult
         enddo
         tmp(1) = 0e0_wp
         tmp(2) = vr(6)
@@ -960,7 +960,7 @@ subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
         tmp(5) = vr(6)
         tmp(6) = vr(2)+vr(3)+vr(4)+vr(5)
         do i=1, 6
-            dvdvr(4, i) = tmp(i)*mult
+            dvdvr(4,i) = tmp(i)*mult
         enddo
     end select
 end subroutine calcinvariantsjacobian
@@ -969,34 +969,34 @@ end subroutine calcinvariantsjacobian
 subroutine calcdqrdyjacobian( qr, y, dqrdy )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(6), intent(in)        :: qr
-    real(wp), dimension(4, 3), intent(in)     :: y
-    real(wp), dimension(6, 4, 3), intent(out) :: dqrdy
-    integer                                   :: i
-    real(wp)                                  :: val
+    real(wp), intent(in)  :: qr(6)
+    real(wp), intent(in)  :: y(4,3)
+    real(wp), intent(out) :: dqrdy(6,4,3)
+    integer               :: i
+    real(wp)              :: val
     dqrdy = 0e0_wp
     do i=1, 3
-        val            = y(1, i)-y(2, i)
-        dqrdy(1, 1, i) = val
-        dqrdy(1, 2, i) = -val
-        val            = y(1, i)-y(3, i)
-        dqrdy(2, 1, i) = val
-        dqrdy(2, 3, i) = -val
-        val            = y(1, i)-y(4, i)
-        dqrdy(3, 1, i) = val
-        dqrdy(3, 4, i) = -val
-        val            = y(2, i)-y(3, i)
-        dqrdy(4, 2, i) = val
-        dqrdy(4, 3, i) = -val
-        val            = y(2, i)-y(4, i)
-        dqrdy(5, 2, i) = val
-        dqrdy(5, 4, i) = -val
-        val            = y(3, i)-y(4, i)
-        dqrdy(6, 3, i) = val
-        dqrdy(6, 4, i) = -val
+        val          = y(1,i)-y(2,i)
+        dqrdy(1,1,i) = val
+        dqrdy(1,2,i) = -val
+        val          = y(1,i)-y(3,i)
+        dqrdy(2,1,i) = val
+        dqrdy(2,3,i) = -val
+        val          = y(1,i)-y(4,i)
+        dqrdy(3,1,i) = val
+        dqrdy(3,4,i) = -val
+        val          = y(2,i)-y(3,i)
+        dqrdy(4,2,i) = val
+        dqrdy(4,3,i) = -val
+        val          = y(2,i)-y(4,i)
+        dqrdy(5,2,i) = val
+        dqrdy(5,4,i) = -val
+        val          = y(3,i)-y(4,i)
+        dqrdy(6,3,i) = val
+        dqrdy(6,4,i) = -val
     enddo
     do i=1, 6
-        dqrdy(i, :, :) = dqrdy(i, :, :)/qr(i)
+        dqrdy(i,:,:) = dqrdy(i,:,:)/qr(i)
     enddo
 end subroutine calcdqrdyjacobian
 
@@ -1004,10 +1004,10 @@ end subroutine calcdqrdyjacobian
 subroutine calcpairwise( r, v2, dv2dr, imol, igrad )
     use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in) :: igrad, imol
-    real(wp), dimension(0:10) :: c
+    integer, intent(in)   :: igrad, imol
     real(wp), intent(in)  :: r
     real(wp), intent(out) :: v2, dv2dr
+    real(wp)              :: c(0:10)
     real(wp)              :: re, de, fy, dfdy, dfdr, u, y, dydr, r2, r4, re2, re4, y2, y4, v
     select case (imol)
     case (1)
@@ -1074,11 +1074,11 @@ end subroutine calcpairwise
 subroutine calcsumpairwise( rvec, v2, dv2dr, systype, igrad )
     use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in)                 :: systype, igrad
-    real(wp), dimension(6), intent(in)  :: rvec
-    real(wp), dimension(6), intent(out) :: dv2dr
-    integer                             :: a
-    real(wp)                            :: v2, tmp, de
+    integer, intent(in)   :: systype, igrad
+    real(wp), intent(in)  :: rvec(6)
+    real(wp), intent(out) :: dv2dr(6)
+    integer               :: a
+    real(wp)              :: v2, tmp, de
     v2 = 0e0_wp
     do a=1, 6
         dv2dr(a) = 0e0_wp

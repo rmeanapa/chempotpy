@@ -73,16 +73,16 @@ module a4data
     private
     public :: ald, beta, betad, epscem, epslon, eshift, maxi2a, maxi2b, rnought
     public :: xlin1, xlin2, xlin3, xlin4
-    real(wp), parameter     :: ald     = 0.02e0_wp
-    real(wp), parameter     :: betad   = 0.72e0_wp
-    real(wp), parameter     :: epscem  = 1.e-12_wp
-    real(wp), parameter     :: epslon  = 1.e-12_wp
-    integer, parameter      :: maxi2a  = primary_term_count
-    integer, parameter      :: maxi2b  = secondary_term_count
-    real(wp), parameter     :: eshift  = 0.1739709107962980e0_wp
-    real(wp), parameter     :: beta    = 0.9201192312615871e0_wp
-    real(wp), parameter     :: rnought = 2.e0_wp
-    real(wp), dimension(89) :: xlin1=(/-0.1747684349138167e0_wp, &
+    real(wp), parameter :: ald     = 0.02e0_wp
+    real(wp), parameter :: betad   = 0.72e0_wp
+    real(wp), parameter :: epscem  = 1.e-12_wp
+    real(wp), parameter :: epslon  = 1.e-12_wp
+    integer, parameter  :: maxi2a  = primary_term_count
+    integer, parameter  :: maxi2b  = secondary_term_count
+    real(wp), parameter :: eshift  = 0.1739709107962980e0_wp
+    real(wp), parameter :: beta    = 0.9201192312615871e0_wp
+    real(wp), parameter :: rnought = 2.e0_wp
+    real(wp)            :: xlin1(89)=(/-0.1747684349138167e0_wp, &
         & 1.277318541919902e0_wp, 4.865120178227985e0_wp, &
         & -8.469658615576670e0_wp, -0.5743180823752541e0_wp, &
         & 6.240393306718566e0_wp, -2.708137131341480e0_wp, &
@@ -127,7 +127,7 @@ module a4data
         & 161.8383070634118e0_wp, 19.96531657285394e0_wp, &
         & 1.327410294913859e0_wp, -21.45733100652736e0_wp, &
         & -0.1662058917002993e0_wp, -0.2962531422178993e0_wp/)
-    real(wp), dimension(89) :: xlin2=(/3.6653811266866398e-2_wp, &
+    real(wp) :: xlin2(89)=(/3.6653811266866398e-2_wp, &
         & -6.0901908406171948e-2_wp, -0.4296166129329135e0_wp, &
         & -0.5999553551949833e0_wp, 2.516208126297607e0_wp, &
         & -2.048432510828575e0_wp, 0.3663315280773198e0_wp, &
@@ -172,7 +172,7 @@ module a4data
         & -34.61819182491933e0_wp, -2.686757365342857e0_wp, &
         & -0.7220696373666605e0_wp, 6.015885938467894e0_wp, &
         & 1.207183412067369e0_wp, -4.708046093073749e0_wp/)
-    real(wp), dimension(71) :: xlin3=(/6.2633244088892953e-2_wp, &
+    real(wp) :: xlin3(71)=(/6.2633244088892953e-2_wp, &
         & -0.3594764662369648e0_wp, -3.600210064900942e0_wp, &
         & 6.077024302044581e0_wp, -2.103247648143528e0_wp, &
         & -7.5336710734737355e-2_wp, -1.214802246636612e0_wp, &
@@ -208,7 +208,7 @@ module a4data
         & -90.73046075338512e0_wp, 3.835596218545594e0_wp, &
         & 2040.882666165481e0_wp, 168.7823751649685e0_wp, &
         & 84.39701838464045e0_wp, -72.00299079742861e0_wp/)
-    real(wp), dimension(71) :: xlin4=(/-1.3789322831534202e-2_wp, &
+    real(wp) :: xlin4(71)=(/-1.3789322831534202e-2_wp, &
         & -5.3276062951444891e-3_wp, 0.3280620147342902e0_wp, &
         & 2.7087208142318464e-3_wp, -0.4121991913062390e0_wp, &
         & -0.2194705118222190e0_wp, 0.7128681500449559e0_wp, &
@@ -336,15 +336,15 @@ subroutine trip( r, v )
     !     H2 triplet curve for FCI/aug-cc-pVQZ
     use chempotpy_kinds, only: wp
     implicit none
-    integer                 :: j
-    real(wp)                :: r, v, damp, xd, prefac
-    real(wp)                :: c6=-6.499027e0_wp
-    real(wp)                :: c8=-124.3991e0_wp
-    real(wp)                :: c10=-3285.828e0_wp
-    real(wp)                :: beta=0.2e0_wp
-    real(wp)                :: re=1.401e0_wp
-    real(wp)                :: alpha= 3.8542531266774340e0_wp
-    real(wp), dimension(17) :: xlp=(/2.1913359720738420e-1_wp, &
+    integer  :: j
+    real(wp) :: r, v, damp, xd, prefac
+    real(wp) :: c6=-6.499027e0_wp
+    real(wp) :: c8=-124.3991e0_wp
+    real(wp) :: c10=-3285.828e0_wp
+    real(wp) :: beta=0.2e0_wp
+    real(wp) :: re=1.401e0_wp
+    real(wp) :: alpha= 3.8542531266774340e0_wp
+    real(wp) :: xlp(17)=(/2.1913359720738420e-1_wp, &
         & 5.8422835449484010e-1_wp, 8.5061017374705010e-1_wp, &
         & 8.4614320758188910e-1_wp, 6.7185038364340950e-1_wp, &
         & 4.4194539374617390e-1_wp, 2.2339961981172340e-1_wp, &
@@ -371,15 +371,15 @@ subroutine singlet( r, v )
     !     H2 singlet potential for FCI/aug-cc-pVQZ
     use chempotpy_kinds, only: wp
     implicit none
-    integer                 :: j
-    real(wp)                :: r, v, damp, xd, prefac
-    real(wp)                :: c6=-6.499027e0_wp
-    real(wp)                :: c8=-124.3991e0_wp
-    real(wp)                :: c10=-3285.828e0_wp
-    real(wp)                :: beta=0.2e0_wp
-    real(wp)                :: re=1.401e0_wp
-    real(wp)                :: alpha= 4.0590126171616700e0_wp
-    real(wp), dimension(17) :: xlp= (/-1.7046099537113510e-1_wp, &
+    integer  :: j
+    real(wp) :: r, v, damp, xd, prefac
+    real(wp) :: c6=-6.499027e0_wp
+    real(wp) :: c8=-124.3991e0_wp
+    real(wp) :: c10=-3285.828e0_wp
+    real(wp) :: beta=0.2e0_wp
+    real(wp) :: re=1.401e0_wp
+    real(wp) :: alpha= 4.0590126171616700e0_wp
+    real(wp) :: xlp(17)= (/-1.7046099537113510e-1_wp, &
         & -6.7922917067867770e-1_wp, -1.1517142440791580e0_wp, &
         & -1.1910821267977240e0_wp, -8.2784442225164410e-1_wp, &
         & -4.0807832245803330e-1_wp, -1.5672842672450390e-1_wp, &

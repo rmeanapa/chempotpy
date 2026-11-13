@@ -679,8 +679,8 @@ module pes_shell
 
     !> @brief Evaluate calcpot.
     subroutine calcpot( v, xyz )
-        real(wp), dimension(3, 6) :: xyz
-        real(wp), dimension(0:2, 0:5) :: gf0
+        real(wp) :: xyz(3,6)
+        real(wp) :: gf0(0:2,0:5)
         real(wp) :: v
         call potshell(xyz, v)
     end subroutine calcpot

@@ -364,11 +364,11 @@ module bemsa
     function emsav( x, c ) result(v)
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:10)::x
-        real(wp), dimension(1:1376)::c
+        real(wp) :: x(1:10)
+        real(wp) :: c(1:1376)
         real(wp) :: v
-        real(wp), dimension(1:1376)::p
-        integer :: i
+        real(wp) :: p(1:1376)
+        integer  :: i
         call bemsav(x, p)
         v = 0.e0_wp
         do i=1, 1376
@@ -380,10 +380,10 @@ module bemsa
     subroutine bemsav( x, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:10), intent(in)::x
-        real(wp), dimension(1:1376), intent(out)::p
-        real(wp), dimension(1:21)::m
-        integer :: i
+        real(wp), intent(in)  :: x(1:10)
+        real(wp), intent(out) :: p(1:1376)
+        real(wp)              :: m(1:21)
+        integer               :: i
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
@@ -392,8 +392,8 @@ module bemsa
     subroutine evmono( x, m )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:10), intent(in)::x
-        real(wp), dimension(1:21), intent(out)::m
+        real(wp), intent(in)  :: x(1:10)
+        real(wp), intent(out) :: m(1:21)
         !    m(0) = 1.0D0
         m(1)  = x(10)
         m(2)  = x(9)
@@ -422,9 +422,9 @@ module bemsa
     subroutine evpoly( m, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:21), intent(in)::m
-        real(wp), dimension(1:1376), intent(out)::p
-        real(wp), dimension(1:1631)::d
+        real(wp), intent(in)  :: m(1:21)
+        real(wp), intent(out) :: p(1:1376)
+        real(wp)              :: d(1:1631)
         !    p(0) = m(0)
         d( 3)   = m( 3)
         d( 5)   = m( 6) + m( 7)

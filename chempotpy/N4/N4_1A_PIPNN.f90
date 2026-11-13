@@ -254,9 +254,9 @@ module chempotpy_n4_1a_pipnn_pes
     subroutine bemsav49( x, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:6), intent(in)::x
-        real(wp), dimension(0:305), intent(out)::p
-        real(wp), dimension(0:111)::m
+        real(wp), intent(in)  :: x(1:6)
+        real(wp), intent(out) :: p(0:305)
+        real(wp)              :: m(0:111)
         call evmono49(x, m)
         call evpoly49(m, p)
     end subroutine bemsav49
@@ -265,8 +265,8 @@ module chempotpy_n4_1a_pipnn_pes
     subroutine evmono49( x, m )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(1:6), intent(in)::x
-        real(wp), dimension(0:111), intent(out)::m
+        real(wp), intent(in)  :: x(1:6)
+        real(wp), intent(out) :: m(0:111)
         m(0)   = 1.e0_wp
         m(1)   = x(6)
         m(2)   = x(5)
@@ -385,8 +385,8 @@ module chempotpy_n4_1a_pipnn_pes
     subroutine evpoly49( m, p )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), dimension(0:111), intent(in)::m
-        real(wp), dimension(0:305), intent(out)::p
+        real(wp), intent(in)  :: m(0:111)
+        real(wp), intent(out) :: p(0:305)
         p(0)  = m(0)
         p(1)  = m(1)+m(2)+m(3)+m(4)+m(5)+m(6)
         p(2)  = m(7)+m(8)+m(9)

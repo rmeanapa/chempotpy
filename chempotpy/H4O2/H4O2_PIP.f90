@@ -114,10 +114,10 @@ subroutine h4o2pot( x, v )
     ! f: potential in hartree
     use chempotpy_kinds, only: wp
     implicit none
-    real, intent(in)      :: x(18)
-    real, intent(inout)   :: v
-    real, dimension(3, 6) :: xn
-    real                  :: pot
+    real, intent(in)    :: x(18)
+    real, intent(inout) :: v
+    real                :: xn(3,6)
+    real                :: pot
     xn = reshape(x, (/3, 6/))
     call evaluate_h4o2_coefficients(pot, xn)
     v = pot
@@ -802,8 +802,8 @@ subroutine mg42_secs ( mxd, x, v )
 
     !> @brief Evaluate mg42_setd.
     subroutine mg42_setd ( )
-        integer :: i, j, k, l0, l1
-        integer, parameter, dimension(0:2) :: lb=(/ 0, m, m+n /)
+        integer            :: i, j, k, l0, l1
+        integer, parameter :: lb(0:2) = (/ 0, m, m+n /)
         k = 0
         do l1 = 0, 1
             do l0 = 0, l1

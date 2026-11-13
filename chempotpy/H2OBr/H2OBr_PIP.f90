@@ -279,9 +279,9 @@ end subroutine
 real(wp) function emsav( x, c ) result(v)
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(1:6)::x
-    real(wp), dimension(0:501)::c
-    real(wp), dimension(0:501)::p
+    real(wp) :: x(1:6)
+    real(wp) :: c(0:501)
+    real(wp) :: p(0:501)
     call bemsav(x, p)
     v = dot_product(p, c)
 end function emsav
@@ -290,9 +290,9 @@ end function emsav
 subroutine bemsav( x, p )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(1:6), intent(in)::x
-    real(wp), dimension(0:501), intent(out)::p
-    real(wp), dimension(0:10)::m
+    real(wp), intent(in)  :: x(1:6)
+    real(wp), intent(out) :: p(0:501)
+    real(wp)              :: m(0:10)
     call evmono(x, m)
     call evpoly(m, p)
 end subroutine bemsav
@@ -301,8 +301,8 @@ end subroutine bemsav
 subroutine evmono( x, m )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(1:6), intent(in)::x
-    real(wp), dimension(0:10), intent(out)::m
+    real(wp), intent(in)  :: x(1:6)
+    real(wp), intent(out) :: m(0:10)
     m(0)  = 1.0e0_wp
     m(1)  = x(6)
     m(2)  = x(5)
@@ -320,8 +320,8 @@ end subroutine evmono
 subroutine evpoly( m, p )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(0:10), intent(in)::m
-    real(wp), dimension(0:501), intent(out)::p
+    real(wp), intent(in)  :: m(0:10)
+    real(wp), intent(out) :: p(0:501)
     p(0)   = m(0)
     p(1)   = m(1)
     p(2)   = m(2) + m(3)

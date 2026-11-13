@@ -2269,12 +2269,12 @@ end function grad_oh
 real(wp) function ohstar( r )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), intent(in)   :: r
-    integer                :: i
-    real(wp)               :: alr, blr, vsr, vlr, fs
-    real(wp), dimension(3) :: plr, clr
-    real(wp)               :: asr, bsr
-    real(wp), dimension(6) :: psr, csr
+    real(wp), intent(in) :: r
+    integer              :: i
+    real(wp)             :: alr, blr, vsr, vlr, fs
+    real(wp)             :: plr(3), clr(3)
+    real(wp)             :: asr, bsr
+    real(wp)             :: psr(6), csr(6)
     alr    = 2.0991414262152035
     blr    = 0.55368872045847861
     clr(1) = 4.8925016098582264
@@ -2304,12 +2304,12 @@ end function ohstar
 real(wp) function grad_ohstar( r )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), intent(in)   :: r
-    integer                :: i
-    real(wp)               :: alr, blr, vsr, vlr, fs, gsr, glr, gfs
-    real(wp), dimension(3) :: plr, clr, pglr
-    real(wp)               :: asr, bsr
-    real(wp), dimension(6) :: psr, csr, pgsr
+    real(wp), intent(in) :: r
+    integer              :: i
+    real(wp)             :: alr, blr, vsr, vlr, fs, gsr, glr, gfs
+    real(wp)             :: plr(3), clr(3), pglr(3)
+    real(wp)             :: asr, bsr
+    real(wp)             :: psr(6), csr(6), pgsr(6)
     alr    = 2.0991414262152035
     blr    = 0.55368872045847861
     clr(1) = 4.8925016098582264
@@ -2346,9 +2346,9 @@ end function grad_ohstar
 subroutine ev_pol_con_8( x, p )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(1:6), intent(in)::x
-    real(wp), dimension(1:546), intent(out)::p
-    real(wp) :: x1, x2, x3, x4, x5, x6
+    real(wp), intent(in)  :: x(1:6)
+    real(wp), intent(out) :: p(1:546)
+    real(wp)              :: x1, x2, x3, x4, x5, x6
     x1    = x(1)
     x2    = x(2)
     x3    = x(3)
@@ -3101,9 +3101,9 @@ end subroutine ev_pol_con_8
 subroutine grad_ev_pol_con_8( x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6 )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), dimension(1:6), intent(in)::x
-    real(wp), dimension(1:546), intent(out)::dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6
-    real(wp) :: x1, x2, x3, x4, x5, x6
+    real(wp), intent(in)  :: x(1:6)
+    real(wp), intent(out) :: dpdx1(1:546), dpdx2(1:546), dpdx3(1:546), dpdx4(1:546), dpdx5(1:546), dpdx6(1:546)
+    real(wp)              :: x1, x2, x3, x4, x5, x6
     x1         = x(1)
     x2         = x(2)
     x3         = x(3)
@@ -12505,12 +12505,12 @@ end subroutine u23_dc_10
 subroutine ev_pol_con_12( x, q )
     use chempotpy_kinds, only: wp
     implicit none
-    integer :: j
-    real(wp), dimension(1:6), intent(in)::x
-    real(wp), dimension(1:3075), intent(out)::q
-    real(wp), dimension(0:32) :: rm
-    real(wp), dimension(0:3392) :: p
-    real(wp) :: bm1(3394), bm2(3076)
+    real(wp), intent(in)  :: x(1:6)
+    real(wp), intent(out) :: q(1:3075)
+    integer               :: j
+    real(wp)              :: rm(0:32)
+    real(wp)              :: p(0:3392)
+    real(wp)              :: bm1(3394), bm2(3076)
     rm(0)   = 1.0e0_wp
     rm(1)   = x(4)
     rm(2)   = x(2)
@@ -19026,12 +19026,12 @@ end subroutine ev_pol_con_12
 subroutine ev_pol_con_10( x, q )
     use chempotpy_kinds, only: wp
     implicit none
-    integer :: i, j
-    real(wp), dimension(1:6), intent(in)::x
-    real(wp), dimension(1:1300), intent(out)::q
-    real(wp), dimension(0:32) :: rm
-    real(wp), dimension(0:1506) :: p
-    real(wp) :: bm1(1506), bm2(1300)
+    real(wp), intent(in)  :: x(1:6)
+    real(wp), intent(out) :: q(1:1300)
+    integer               :: i, j
+    real(wp)              :: rm(0:32)
+    real(wp)              :: p(0:1506)
+    real(wp)              :: bm1(1506), bm2(1300)
     rm(0)   = 1.0e0_wp
     rm(1)   = x(4)
     rm(2)   = x(2)
@@ -22164,12 +22164,12 @@ subroutine evu12o10dvdr( coord, r, dvdr )
     real(wp)           :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
     integer, parameter :: ncoeff = 1300
     real(wp)           :: coeff(ncoeff)
-    real(wp), dimension(0:32) :: rm
-    real(wp), dimension(0:32) :: dm
-    real(wp), dimension(0:1506) :: p
-    real(wp), dimension(0:1506) :: dp
-    real(wp) :: x(6), dmsdr(6,6)
-    real(wp) :: dbm1(1506), dbm2(1300)
+    real(wp)           :: rm(0:32)
+    real(wp)           :: dm(0:32)
+    real(wp)           :: p(0:1506)
+    real(wp)           :: dp(0:1506)
+    real(wp)           :: x(6), dmsdr(6,6)
+    real(wp)           :: dbm1(1506), dbm2(1300)
     ! Assign coefficients first
     a1          = 0.610
     a2          = 0.800
@@ -28027,12 +28027,12 @@ subroutine evu13o10dvdr( coord, r, dvdr )
     real(ddp)          :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
     integer, parameter :: ncoeff = 3075
     real(ddp)          :: coeff(ncoeff)
-    real(ddp), dimension(0:32) :: rm
-    real(ddp), dimension(0:32) :: dm
-    real(ddp), dimension(0:3392) :: p
-    real(ddp), dimension(0:3392) :: dp
-    real(ddp) :: x(6), dmsdr(6,6)
-    real(ddp) :: dbm1(3393), dbm2(3075)
+    real(ddp)          :: rm(0:32)
+    real(ddp)          :: dm(0:32)
+    real(ddp)          :: p(0:3392)
+    real(ddp)          :: dp(0:3392)
+    real(ddp)          :: x(6), dmsdr(6,6)
+    real(ddp)          :: dbm1(3393), dbm2(3075)
     ! Assign coefficients first
     a1          = 1.2561573
     a2          = 1.1028022
@@ -41151,12 +41151,12 @@ subroutine evu23o10dvdr( coord, r, dvdr )
     real(ddp)          :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
     integer, parameter :: ncoeff = 1300
     real(ddp)          :: coeff(ncoeff)
-    real(ddp), dimension(0:32) :: rm
-    real(ddp), dimension(0:32) :: dm
-    real(ddp), dimension(0:1506) :: p
-    real(ddp), dimension(0:1506) :: dp
-    real(ddp) :: x(6), dmsdr(6,6)
-    real(ddp) :: dbm1(1506), dbm2(1300)
+    real(ddp)          :: rm(0:32)
+    real(ddp)          :: dm(0:32)
+    real(ddp)          :: p(0:1506)
+    real(ddp)          :: dp(0:1506)
+    real(ddp)          :: x(6), dmsdr(6,6)
+    real(ddp)          :: dbm1(1506), dbm2(1300)
     ! Assign coefficients first
     a1          = 1.323343
     a2          = 1.09
