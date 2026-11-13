@@ -352,29 +352,34 @@ Run the independent direct-Fortran numerical and architecture regression with:
     make test-surfaces
 
 Every pull request and push also runs the `All PES numerical regression`
-GitHub Actions workflow. The workflow extracts
-`tests/data/all_surface_references.json` from the pull request's base commit
-(or the commit preceding a push), compiles all current PES sources, evaluates
-both deterministic geometries, and compares every result with that immutable
-baseline. Consequently, changing the fixture in the same pull request cannot
-hide a numerical regression. Existing surfaces must remain within a relative
-and absolute tolerance of `1e-13`; removed surfaces, interface changes,
-non-finite results, compilation failures, and execution failures also fail the
-workflow. Aln and NH3 use deterministic system-specific geometries so their
-regression points remain inside the mathematical domain of the released fits.
-A newly added surface is checked against its new fixture record.
+GitHub Actions workflow. The workflow checks out the pull request's base commit
+(or the commit preceding a push), compiles that revision and the current
+revision on the same runner, evaluates both deterministic geometries, and
+compares every result. Capturing both revisions with the same compiler and math
+runtime prevents platform-specific roundoff from being mistaken for a source
+change. Existing surfaces must remain within a relative and absolute tolerance
+of `1e-13`; removed surfaces, interface changes, non-finite results, compilation
+failures, and execution failures also fail the workflow. Aln and NH3 use
+deterministic system-specific geometries so their regression points remain
+inside the mathematical domain of the released fits. A newly added surface
+must compile, execute, match its declared interface, and return only finite
+values; that revision becomes its protected baseline on the next comparison.
 
-The modernization establishes `baseline_version: 1`. The workflow permits a
-one-time bootstrap only when the base revision predates that marker. Once a
-versioned fixture exists in the base revision, changing or replacing the
-working-tree fixture cannot alter the expected values for existing surfaces.
+The modernization establishes `baseline_version: 1`. The committed fixture
+supports local and package-level regression tests, while the workflow's
+base-revision capture protects existing surfaces independently of edits to that
+fixture in the proposed change.
 
-To reproduce the same comparison locally against a selected Git revision:
+To reproduce the workflow comparison locally against a selected Git revision:
 
-    git show REVISION:tests/data/all_surface_references.json \
-        > /tmp/chempotpy-baseline.json
-    make check-numerical-regression \
-        NUMERICAL_BASELINE=/tmp/chempotpy-baseline.json
+    base_root="$(mktemp -d)"
+    git worktree add --detach "$base_root/checkout" REVISION
+    (cd "$base_root/checkout" && \
+        python scripts/capture_library_references.py --all --jobs 4 \
+            --output "$base_root/baseline.json")
+    python scripts/check_numerical_regression.py \
+        --baseline "$base_root/baseline.json" --jobs 4
+    git worktree remove --force "$base_root/checkout"
 
 To run only the all-surface numerical comparison from that suite:
 

@@ -170,6 +170,21 @@ def compare_records(
     return diagnostics, len(expected_values)
 
 
+def comparison_record(
+    key: str,
+    actual: dict,
+    baseline: Dict[str, dict],
+    current_fixture: Dict[str, dict],
+) -> dict:
+    """Return the protected record, bootstrapping values for a new PES."""
+
+    if key in baseline:
+        return baseline[key]
+    expected = dict(current_fixture[key])
+    expected["values"] = actual.get("values")
+    return expected
+
+
 def main() -> int:
     """Compile every current PES and compare it with an immutable baseline."""
 
@@ -251,10 +266,10 @@ def main() -> int:
         if result.error:
             diagnostics.append(result.error)
             continue
-        if result.key in baseline:
-            expected = baseline[result.key]
-        else:
-            expected = current_fixture[result.key]
+        expected = comparison_record(
+            result.key, result.record, baseline, current_fixture
+        )
+        if result.key not in baseline:
             new_surfaces += 1
         record_diagnostics, compared = compare_records(
             result.key, result.record, expected

@@ -34,7 +34,7 @@ jobs:
                   sudo apt-get install --yes gfortran
                   python -m pip install --upgrade pip numpy
 
-            - name: Extract the immutable base-revision fixture
+            - name: Capture the base revision on this runner
               id: baseline
               env:
                   EVENT_NAME: ${{ github.event_name }}
@@ -56,9 +56,16 @@ jobs:
                       base_sha="$(git rev-parse HEAD^)"
                   fi
                   fixture="${RUNNER_TEMP}/all_surface_references.base.json"
-                  git show \
-                      "${base_sha}:tests/data/all_surface_references.json" \
-                      > "$fixture"
+                  base_checkout="${RUNNER_TEMP}/chempotpy-base"
+                  git worktree add --detach "$base_checkout" "$base_sha"
+                  trap 'git worktree remove --force "$base_checkout" >/dev/null 2>&1 || true' EXIT
+                  (
+                      cd "$base_checkout"
+                      python scripts/capture_library_references.py \
+                          --all \
+                          --jobs 4 \
+                          --output "$fixture"
+                  )
                   echo "sha=$base_sha" >> "$GITHUB_OUTPUT"
                   echo "fixture=$fixture" >> "$GITHUB_OUTPUT"
 

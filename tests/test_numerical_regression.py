@@ -5,6 +5,7 @@ import unittest
 from scripts.capture_library_references import coordinates
 from scripts.check_numerical_regression import (
     compare_records,
+    comparison_record,
     escape_workflow_command,
     select_baseline,
 )
@@ -73,6 +74,26 @@ class NumericalRegressionTests(unittest.TestCase):
             escape_workflow_command("100%\r\nfailed"),
             "100%25%0D%0Afailed",
         )
+
+    def test_new_surface_bootstraps_values_but_keeps_fixture_metadata(self) -> None:
+        actual = record(["2.0"])
+        fixture = record(["1.0"])
+        fixture["natoms"] = 4
+        selected = comparison_record(
+            "H4/new", actual, {}, {"H4/new": fixture}
+        )
+        self.assertEqual(selected["values"], ["2.0"])
+        self.assertEqual(selected["natoms"], 4)
+
+    def test_existing_surface_uses_base_revision_values(self) -> None:
+        baseline = {"H3/example": record(["1.0"])}
+        selected = comparison_record(
+            "H3/example",
+            record(["2.0"]),
+            baseline,
+            {"H3/example": record(["3.0"])},
+        )
+        self.assertIs(selected, baseline["H3/example"])
 
     def test_legacy_fixture_bootstraps_version_one_once(self) -> None:
         current = {"H3/example": record(["1.0"])}
