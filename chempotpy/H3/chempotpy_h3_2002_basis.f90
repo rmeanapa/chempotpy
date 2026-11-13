@@ -1,4 +1,5 @@
-module chempotpy_h3_basis
+!> @brief Provide the shared symmetric-polynomial basis for the H3 2002 fit family.
+module chempotpy_h3_2002_basis
     implicit none
     private
     integer, parameter, public :: primary_term_count   = 418
@@ -111,4 +112,4 @@ module chempotpy_h3_basis
             first_power = 0; second_power = 0; third_power = 0; coefficient_index = 0
         endif
     end subroutine select_term
-end module chempotpy_h3_basis
+end module chempotpy_h3_2002_basis

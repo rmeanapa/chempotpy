@@ -15,9 +15,9 @@ from .contract import (
     validate_coordinates,
 )
 from .units import (
-    CHEMPOTPY_LEGACY_BOHR_TO_ANGSTROM,
-    CHEMPOTPY_LEGACY_HARTREE_PER_BOHR_TO_EV_PER_ANGSTROM,
-    CHEMPOTPY_LEGACY_HARTREE_TO_EV,
+    BOHR_TO_ANGSTROM,
+    HARTREE_PER_BOHR_TO_EV_PER_ANGSTROM,
+    HARTREE_TO_EV,
 )
 
 
@@ -30,9 +30,8 @@ class LegacyAdiabaticF2PyAdapter:
     """Expose a historical adiabatic f2py ``pes`` wrapper in atomic units.
 
     Historical CHEMPOTPY wrappers accept angstrom and return eV, eV/angstrom,
-    and 1/angstrom. This first adapter intentionally uses their rounded
-    conversion factors so it reproduces released behavior exactly. New direct
-    kernel adapters should use the canonical constants in ``core.units``.
+    and 1/angstrom. The adapter applies the package-wide CODATA conversion
+    contract at that public boundary.
     """
 
     def __init__(
@@ -65,7 +64,7 @@ class LegacyAdiabaticF2PyAdapter:
             raise PESContractError("surface does not support gradients")
 
         coordinates_angstrom = (
-            coordinates * CHEMPOTPY_LEGACY_BOHR_TO_ANGSTROM
+            coordinates * BOHR_TO_ANGSTROM
         )
         derivative_order = 1 if request.gradient else 0
         energy_ev, gradient_ev_per_angstrom, _ = self._kernel(
@@ -75,13 +74,13 @@ class LegacyAdiabaticF2PyAdapter:
         result = PESResult(
             energy=(
                 np.asarray(energy_ev, dtype=np.float64)
-                / CHEMPOTPY_LEGACY_HARTREE_TO_EV
+                / HARTREE_TO_EV
             )
         )
         if request.gradient:
             result.gradient = (
                 np.asarray(gradient_ev_per_angstrom, dtype=np.float64)
-                / CHEMPOTPY_LEGACY_HARTREE_PER_BOHR_TO_EV_PER_ANGSTROM
+                / HARTREE_PER_BOHR_TO_EV_PER_ANGSTROM
             )
         result.validate(self.metadata, request)
         return result

@@ -59,6 +59,7 @@
 
 !> @brief Implement C7H8S_APRP, a diabatic potential matrix for C7H8S.
 module chempotpy_c7h8s_aprp_dpem_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -67,46 +68,51 @@ module chempotpy_c7h8s_aprp_dpem_pes
 
     !> @brief Evaluate the C7H8S_APRP diabatic potential matrix for C7H8S.
     subroutine evaluate( x, igrad, u, ug )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+        ! The published fit is numerically sensitive to its released coordinate scale.
+        use chempotpy_legacy_units, only: published_bohr_to_angstrom => legacy_bohr_to_angstrom
+        use chempotpy_units,        only: hartree_to_electronvolt
+        use chempotpy_kinds,        only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 3
-        integer, parameter            :: natoms  = 16
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: u(nstates,nstates)
-        double precision, intent(out) :: ug(nstates,nstates,natoms,3)
-        double precision              :: xx(3,natoms), uu(nstates,nstates)
-        double precision              :: guu(3,natoms,nstates,nstates)
-        double precision              :: vv(nstates), gvv(3,natoms,nstates)
-        double precision              :: dvec(3,natoms,nstates,nstates)
-        double precision              :: cc(nstates,nstates)
-        integer                       :: iatom, idir, j, istate, jstate
+        integer, parameter    :: nstates = 3
+        integer, parameter    :: natoms  = 16
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: u(nstates,nstates)
+        real(wp), intent(out) :: ug(nstates,nstates,natoms,3)
+        real(wp)              :: xx(3,natoms), uu(nstates,nstates)
+        real(wp)              :: guu(3,natoms,nstates,nstates)
+        real(wp)              :: vv(nstates), gvv(3,natoms,nstates)
+        real(wp)              :: dvec(3,natoms,nstates,nstates)
+        real(wp)              :: cc(nstates,nstates)
+        integer               :: iatom, idir, j, istate, jstate
         !initialize
-        u = 0.d0; ug = 0.d0
+        u = 0.e0_wp; ug = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                xx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
+                xx(idir,iatom) = x(iatom,idir)/published_bohr_to_angstrom
             enddo
         enddo
         call pot(igrad, xx, uu, guu, vv, gvv, dvec, cc, 0)
         if( igrad == 0 )then
             do istate=1, nstates
                 do jstate=1, nstates
-                    u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
+                    u(istate,jstate) = uu(istate,jstate)*hartree_to_electronvolt
                 enddo
             enddo
         elseif( igrad == 1 )then
             do istate=1, nstates
                 do jstate=1, nstates
-                    u(istate,jstate) = uu(istate,jstate)*legacy_hartree_to_electronvolt
+                    u(istate,jstate) = uu(istate,jstate)*hartree_to_electronvolt
                 enddo
             enddo
             do istate=1, nstates
                 do jstate=1, nstates
                     do iatom=1, natoms
                         do idir=1, 3
-                            ug(istate,jstate,iatom,idir) = guu(idir,iatom,istate,jstate)*51.422067
+                            ug(istate,jstate,iatom,idir) = guu(idir,iatom,istate,jstate)* &
+                                & hartree_per_bohr_to_ev_per_angstrom
                         enddo
                     enddo
                 enddo
@@ -116,26 +122,27 @@ module chempotpy_c7h8s_aprp_dpem_pes
 
     !> @brief Evaluate pot.
     subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
+        use chempotpy_kinds, only: wp
         implicit none
         !--- {'global' constants
         integer, parameter :: natom = 16, nstate=3, ntermmax=200 &
             , ntermtype=4, napmax=10, nqtpset=2, nlcmax=6
-        double precision, parameter :: pi = 3.14159265358979d0
+        real(wp), parameter :: pi = 3.14159265358979e0_wp
         !--- convertion factor: 0.53 Angstrom = 1 bohr
-        double precision, parameter :: ang_bohr = 0.529177249d0
+        real(wp), parameter :: ang_bohr = 0.529177249e0_wp
         !--- }'global' constants
         !--- {arguments
-        integer          :: igrad, repflag
-        double precision :: xx(3,natom), uu(nstate,nstate), vv(nstate) &
+        integer  :: igrad, repflag
+        real(wp) :: xx(3,natom), uu(nstate,nstate), vv(nstate) &
             , guu(3,natom,nstate,nstate), gvv(3,natom,nstate) &
             , dvec(3,natom,nstate,nstate), cc(nstate,nstate)
         !--- }arguments
-        integer          :: i, j, k, l, ist, jst
-        double precision :: x(3,natom), vt(nstate,nstate) &
+        integer  :: i, j, k, l, ist, jst
+        real(wp) :: x(3,natom), vt(nstate,nstate) &
             , gvt(3, natom, nstate, nstate), tmpmat33(nstate, nstate)
         !--- internals for prim.&sec. pot, tert. pot., tert. coupl.
         !--- qtp has two sets, for bonded & dissoc. S-Me
-        double precision :: qps(3), qtp(ntermmax,nqtpset) &
+        real(wp) :: qps(3), qtp(ntermmax,nqtpset) &
             , qtc(ntermmax) &
             !--- attributes
             , bmatqtc(ntermmax, natom*3)
@@ -144,10 +151,10 @@ module chempotpy_c7h8s_aprp_dpem_pes
             , iqtplist(4, ntermmax, nqtpset) &
             , nqtc, qtcsym(ntermmax), qtctyp(ntermmax)
         !--- for diagonalization of prim+sec U
-        double precision :: dtamat(nstate,nstate), vtmp(nstate)
-        logical          :: debug, debug2
+        real(wp) :: dtamat(nstate,nstate), vtmp(nstate)
+        logical  :: debug, debug2
         !--- zero of energy
-        double precision :: ezero
+        real(wp) :: ezero
         !--- debug: input cartesians in Angstroms; otherwise in bohr
         debug = .false.
         !--- debug2: use only 1 anchor point
@@ -164,7 +171,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
         call calcqtp(qtp, nqtp, itermqtptype, iqtplist, x)
         !--- calculate nonred. tert. internals for diab. coupl.
         call calcqtc(qtc, nqtc, qtcsym, qtctyp, bmatqtc, x)
-        uu = 0d0; guu = 0d0
+        uu = 0e0_wp; guu = 0e0_wp
         !--- calculate prim.&sec. U elements and their grad. w.r.t. x
         call  calcu1_ps(uu, guu, x, qps)
         call  calcu2_ps(uu, guu, x, qps)
@@ -190,7 +197,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
             uu(i,i) = uu(i,i)-ezero
         enddo
         !--- calculate adiab. V, DTA matrix cc, dV, NACME F
-        dvec = 0d0
+        dvec = 0e0_wp
         call diagonalize(vv, cc, uu, nstate)
         do i = 1, 3
             do j = 1, natom
@@ -227,8 +234,9 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    qps: values of primary & secondary internal coordinates
         !> @brief Evaluate calcqps.
         subroutine calcqps( qps, x )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: qps(3), x(3,natom)
+            real(wp) :: qps(3), x(3,natom)
             qps(1) = evalbl(x, 12, 13)
             !--- the CSCC torsion is not a good prim. coordinate;
             !---   instead, use the "special" coordinate phi
@@ -249,9 +257,10 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    iqtplist: atom index list array
         !> @brief Evaluate calcqtp.
         subroutine calcqtp( qtp, nterm, itypeqtp, iqtplist, x )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: qtp(:,:), x(3,natom)
-            integer          :: nterm(nqtpset), itypeqtp(ntermmax,nqtpset) &
+            real(wp) :: qtp(:,:), x(3,natom)
+            integer  :: nterm(nqtpset), itypeqtp(ntermmax,nqtpset) &
                 , iqtplist(4, ntermmax, nqtpset)
             integer :: iterm, iset, ii, jj, kk, ll
             !--- assign attributes of tert. int. for potentials
@@ -292,11 +301,12 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    bmatqtc: B matrix, B(i, j) = dqtc(i)/dx(j)
         !> @brief Evaluate calcqtc.
         subroutine calcqtc( qtc, nqtc, qtcsym, qtctyp, bmatqtc, x )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: qtcsym(ntermmax), nqtc
-            double precision :: qtc(ntermmax), x(3,natom) &
+            integer  :: qtcsym(ntermmax), nqtc
+            real(wp) :: qtc(ntermmax), x(3,natom) &
                 , bmatqtc(ntermmax, natom*3)
-            double precision :: qr(ntermmax), lccoef(nlcmax,ntermmax) &
+            real(wp) :: qr(ntermmax), lccoef(nlcmax,ntermmax) &
                 , lcqr(nlcmax), bmatrow(natom*3), bmatr(ntermmax, natom*3)
             integer :: nqr, itypeqr(ntermmax), iqrlist(10,ntermmax) &
                 , nqnr, lcindex(nlcmax,ntermmax), nlc(ntermmax) &
@@ -327,7 +337,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 bmatr(iqr, :) = bmatrow(:)
             enddo
             !--- B matrix for qtc from lin.comb. of bmatr
-            bmatqtc = 0d0
+            bmatqtc = 0e0_wp
             !--- loop over qtc
             do iqtc = 1, nqtc
                 !--- corresponding qnr index
@@ -351,13 +361,14 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    qr: values of qr
         !> @brief Evaluate calcqr.
         subroutine calcqr( qr, x, nqr, itypeqr, iqrlist )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: qr(ntermmax), x(3,natom)
-            integer          :: nqr, itypeqr(ntermmax), iqrlist(10,ntermmax)
-            integer          :: iterm, ii, jj, kk, ll
+            real(wp) :: qr(ntermmax), x(3,natom)
+            integer  :: nqr, itypeqr(ntermmax), iqrlist(10,ntermmax)
+            integer  :: iterm, ii, jj, kk, ll
             !--- attributes of redundant q (qr)
             call assignqr(nqr, itypeqr, iqrlist)
-            qr = 0.d0
+            qr = 0.e0_wp
             do iterm = 1, nqr
                 ii = iqrlist(1,iterm)
                 jj = iqrlist(2,iterm)
@@ -393,49 +404,50 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    guu: grad. array w/ calculated dU1/dx added to guu(:,:,1,1)
         !> @brief Evaluate calcu1_ps.
         subroutine calcu1_ps( uu, guu, x, qps )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: uu(nstate,nstate) &
+            real(wp) :: uu(nstate,nstate) &
                 , guu(3,natom,nstate,nstate), x(3,natom), qps(:)
-            double precision :: r, phi, theta, gradu1(3)
-            double precision :: de, b, re, a, bb, alpha1, rw &
+            real(wp) :: r, phi, theta, gradu1(3)
+            real(wp) :: de, b, re, a, bb, alpha1, rw &
                 , b0(2:4), alpha(2:4), r0(2:4) &
                 , b01, alpha01, r01, b02, alpha02, r02
-            double precision :: w1, k(2:4), theta0, dtheta0dr, dkdr, u1
-            integer          :: i
-            double precision :: bmatrow(3*natom), bmat(3,3*natom)
-            integer          :: iatomlist(10)
+            real(wp) :: w1, k(2:4), theta0, dtheta0dr, dkdr, u1
+            integer  :: i
+            real(wp) :: bmatrow(3*natom), bmat(3,3*natom)
+            integer  :: iatomlist(10)
             !--- param. set 6
             de     = 0.137295383087261
             b      = 2.29327756747856
             re     = 1.82748498740852
             a      = -668.338016424618
-            bb     = 9.635683829111455d-002
+            bb     = 9.635683829111455e-002_wp
             alpha1 = 0.711348372403729
             rw     = 1.45278649582810
             !--- The following are unused after treating theta as tertiary;
             !---   keep them just to avoid messing up other parts
-            b0(2)    = 0.220483011622790d0
-            alpha(2) = 0.187499658992014d0
-            r0(2)    = 1.82443674739262d0
-            b0(3)    = 0.475903698493558d0
-            alpha(3) = 0.242387888035320d0
-            r0(3)    = 2.33364647705814d0
-            b0(4)    = 0.514926437655652d0
-            alpha(4) = 0.219406435333100d0
-            r0(4)    = 1.72584530006004d0
-            b01      = 0.413985475374836d0
-            alpha01  = 0.271134056977830d0
-            r01      = -0.280509801889082d0
-            b02      = 1.68618904454606d0
-            alpha02  = 0.050592957575334d0
-            r02      = 2.46799725550623d0
+            b0(2)    = 0.220483011622790e0_wp
+            alpha(2) = 0.187499658992014e0_wp
+            r0(2)    = 1.82443674739262e0_wp
+            b0(3)    = 0.475903698493558e0_wp
+            alpha(3) = 0.242387888035320e0_wp
+            r0(3)    = 2.33364647705814e0_wp
+            b0(4)    = 0.514926437655652e0_wp
+            alpha(4) = 0.219406435333100e0_wp
+            r0(4)    = 1.72584530006004e0_wp
+            b01      = 0.413985475374836e0_wp
+            alpha01  = 0.271134056977830e0_wp
+            r01      = -0.280509801889082e0_wp
+            b02      = 1.68618904454606e0_wp
+            alpha02  = 0.050592957575334e0_wp
+            r02      = 2.46799725550623e0_wp
             r        = qps(1); phi = qps(2); theta = qps(3)
             w1       = bb*exp(-alpha1*(r-rw)**2)
             do i = 2, 4
                 k(i) = b0(i)*exp(-alpha(i)*(r-r0(i))**2)
             enddo
             theta0 = b01*exp(-alpha01*(r-r01)**2) +   b02*exp(-alpha02*(r-r02)**2)
-            u1     = 0d0
+            u1     = 0e0_wp
             !--- primary U1
             u1 = u1 + a-de*(1+b*(r-re))*exp(-b*(r-re)) &
                 !--- primary U1(R, phi)
@@ -449,7 +461,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
             !--- (d U1)/(d phi)
             gradu1(2) = 2*w1*sin(2*phi)
             !--- (d U1)/(d theta)
-            gradu1(3) = 0d0
+            gradu1(3) = 0e0_wp
             !--- use B matrix to convert dU1/dq to dU1/dx
             iatomlist(1:4) = (/12, 13, 0, 0/)
             call calcbmat(bmatrow, x, iatomlist, 1)
@@ -473,54 +485,55 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    guu: grad. array w/ calculated dU2/dx added to guu(:,:,2,2)
         !> @brief Evaluate calcu2_ps.
         subroutine calcu2_ps( uu, guu, x, qps )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: uu(nstate,nstate) &
+            real(wp) :: uu(nstate,nstate) &
                 , guu(3,natom,nstate,nstate), x(3,natom), qps(:)
-            double precision :: r, phi, theta, gradu2(3)
-            double precision :: de, b, re, a, bb, alpha1, rw &
+            real(wp) :: r, phi, theta, gradu2(3)
+            real(wp) :: de, b, re, a, bb, alpha1, rw &
                 , b0(2:4), alpha(2:4), r0(2:4) &
                 , b01, alpha01, r01, b02, alpha02, r02
-            double precision :: w1, k(2:4), theta0, dtheta0dr, dkdr, u2
-            integer          :: i
-            double precision :: bmatrow(3*natom), bmat(3,3*natom)
-            integer          :: iatomlist(10)
+            real(wp) :: w1, k(2:4), theta0, dtheta0dr, dkdr, u2
+            integer  :: i
+            real(wp) :: bmatrow(3*natom), bmat(3,3*natom)
+            integer  :: iatomlist(10)
             !--- param. set 3
-            de     = 9.093579980902658d-002
+            de     = 9.093579980902658e-002_wp
             b      = 1.95603566794475
             re     = 1.80932281976175
             a      = -668.305130416298
-            bb     = 8.161902457843210d-003
+            bb     = 8.161902457843210e-003_wp
             alpha1 = 1.41618582563090
             rw     = 1.08429805788656
             !--- The following are unused after treating theta as tertiary;
             !---   keep them just to avoid messing up other parts
-            b0(2)    = 0.295303558215292d0
-            alpha(2) = 6.983752180574522d-2
-            r0(2)    = 0.677613151501115d0
-            b0(3)    = 0.242598194722343d0
-            alpha(3) = 5.810399423252850d-2
-            r0(3)    = 3.04835360232912d0
-            b01      = 1.87588273113145d0
-            alpha01  = 6.815218991924723d-3
+            b0(2)    = 0.295303558215292e0_wp
+            alpha(2) = 6.983752180574522e-2_wp
+            r0(2)    = 0.677613151501115e0_wp
+            b0(3)    = 0.242598194722343e0_wp
+            alpha(3) = 5.810399423252850e-2_wp
+            r0(3)    = 3.04835360232912e0_wp
+            b01      = 1.87588273113145e0_wp
+            alpha01  = 6.815218991924723e-3_wp
             r        = qps(1); phi = qps(2); theta = qps(3)
             w1       = bb*exp(-alpha1*(r-rw)**2)
             do i = 2, 3
                 k(i) = b0(i)*exp(-alpha(i)*(r-r0(i))**2)
             enddo
             theta0 = b01*exp(-alpha01*r**2)
-            u2     = 0d0
+            u2     = 0e0_wp
             !--- primary U2
-            u2 = u2 + a+de*(1d0-exp(-b*(r-re)))**2 &
+            u2 = u2 + a+de*(1e0_wp-exp(-b*(r-re)))**2 &
                 !--- primary U2(R, phi)
                 + w1*(1-cos(2*phi))
             !--- secondary U2(R, theta)
             uu(2,2) = uu(2,2)+u2
             !--- (d U2)/(d R)
-            gradu2(1) = 2*de*(1d0-exp(-b*(r-re)))*b*exp(-b*(r-re)) - 2*alpha1*(r-rw)*w1*(1d0-cos(2*phi))
+            gradu2(1) = 2*de*(1e0_wp-exp(-b*(r-re)))*b*exp(-b*(r-re)) - 2*alpha1*(r-rw)*w1*(1e0_wp-cos(2*phi))
             !--- (d U2)/(d phi)
             gradu2(2) = 2*w1*sin(2*phi)
             !--- (d U2)/(d theta)
-            gradu2(3) = 0d0
+            gradu2(3) = 0e0_wp
             !--- use B matrix to convert dU2/dq to dU2/dx
             iatomlist(1:4) = (/12, 13, 0, 0/)
             call calcbmat(bmatrow, x, iatomlist, 1)
@@ -544,26 +557,27 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    guu: grad. array w/ calculated dU3/dx added to guu(:,:,3,3)
         !> @brief Evaluate calcu3_ps.
         subroutine calcu3_ps( uu, guu, x, qps )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: uu(nstate,nstate) &
+            real(wp) :: uu(nstate,nstate) &
                 , guu(3,natom,nstate,nstate), x(3,natom), qps(:)
-            double precision :: r, phi, theta, gradu3(3)
-            double precision :: de, b, re, a, bb, alpha1, rw &
+            real(wp) :: r, phi, theta, gradu3(3)
+            real(wp) :: de, b, re, a, bb, alpha1, rw &
                 , b0(2:4), alpha(2:4), r0(2:4) &
                 , b01, alpha01, r01, b02, alpha02, r02 &
                 , cc, e1a, e4a
-            double precision :: w1, k(2:4), theta0, dtheta0dr, dkdr, u3
-            integer          :: i
-            double precision :: bmatrow(3*natom), bmat(3,3*natom)
-            integer          :: iatomlist(10)
+            real(wp) :: w1, k(2:4), theta0, dtheta0dr, dkdr, u3
+            integer  :: i
+            real(wp) :: bmatrow(3*natom), bmat(3,3*natom)
+            integer  :: iatomlist(10)
             !--- param. set 5
             de     = 1.65138486208663
             b      = 1.77311772459465
             a      = -668.352732063236
-            bb     = -5.913514866085083d-002
+            bb     = -5.913514866085083e-002_wp
             alpha1 = 0.721710258187793
             rw     = 1.63756083461647
-            cc     = -3.832768992221822d-002
+            cc     = -3.832768992221822e-002_wp
             !--- The following are unused after treating theta as tertiary;
             !---   keep them just to avoid messing up other parts
             b0(2)    = 0.474611475756769
@@ -573,7 +587,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
             alpha(3) = 0.649583151192963
             r0(3)    = 1.37421784973235
             b01      = 2.26427273199978
-            alpha01  = 2.524238127368299d-3
+            alpha01  = 2.524238127368299e-3_wp
             r01      = 12.1853085944417
             r        = qps(1); phi = qps(2); theta = qps(3)
             e1a      = exp(-alpha1*(r-rw)**2)
@@ -583,7 +597,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 k(i) = b0(i)*exp(-alpha(i)*(r-r0(i))**2)
             enddo
             theta0 = b01*exp(-alpha01*(r-r01)**2)
-            u3     = 0d0
+            u3     = 0e0_wp
             !--- primary U3
             u3 = u3 + a+de*exp(-b*r) &
                 !--- secondary U3(R, phi)
@@ -591,11 +605,11 @@ module chempotpy_c7h8s_aprp_dpem_pes
             !--- secondary U3(R, theta)
             uu(3,3) = uu(3,3)+u3
             !--- (d U3)/(d R)
-            gradu3(1) = -b*de*exp(-b*r) - (2*bb*e1a+8*cc*e4a)*alpha1*(r-rw)*(1d0-cos(2*phi))
+            gradu3(1) = -b*de*exp(-b*r) - (2*bb*e1a+8*cc*e4a)*alpha1*(r-rw)*(1e0_wp-cos(2*phi))
             !--- (d U3)/(d phi)
             gradu3(2) = 2*w1*sin(2*phi)
             !--- (d U3)/(d theta)
-            gradu3(3) = 0d0
+            gradu3(3) = 0e0_wp
             !--- use B matrix to convert dU3/dq to dU3/dx
             iatomlist(1:4) = (/12, 13, 0, 0/)
             call calcbmat(bmatrow, x, iatomlist, 1)
@@ -619,21 +633,22 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    guu: grad. array w/ calculated dU12/dx added to guu(:,:,1,2)
         !> @brief Evaluate calcu12_ps.
         subroutine calcu12_ps( uu, guu, x, qps )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: uu(nstate,nstate) &
+            real(wp) :: uu(nstate,nstate) &
                 , guu(3,natom,nstate,nstate), x(3,natom), qps(:)
-            double precision :: r, phi, theta, gradu12(3) &
+            real(wp) :: r, phi, theta, gradu12(3) &
                 , b(0:4), alpha(2:4), k(2:4), r0(2:4), u12, dkdr
-            integer          :: i, iatomlist(10)
-            double precision :: bmatrow(3*natom), bmat(3,3*natom)
+            integer  :: i, iatomlist(10)
+            real(wp) :: bmatrow(3*natom), bmat(3,3*natom)
             !--- B(0) is average of intercept over all R
-            b(0)     = -3d-4
-            b(2)     = 0.01911d0
-            alpha(2) = 2.185135878d0
-            r0(2)    = 1.96523d0
-            b(4)     = -0.0185d0
-            alpha(4) = 2.332225304d0
-            r0(4)    = 2.0054d0
+            b(0)     = -3e-4_wp
+            b(2)     = 0.01911e0_wp
+            alpha(2) = 2.185135878e0_wp
+            r0(2)    = 1.96523e0_wp
+            b(4)     = -0.0185e0_wp
+            alpha(4) = 2.332225304e0_wp
+            r0(4)    = 2.0054e0_wp
             r        = qps(1); phi = qps(2); theta = qps(3)
             !--- U12
             u12 = b(0)
@@ -643,7 +658,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
             enddo
             uu(1,2) = uu(1,2)+u12; uu(2,1) = uu(1,2)
             !--- dU12
-            gradu12(:) = 0d0
+            gradu12(:) = 0e0_wp
             do i = 2, 4, 2
                 !--- (d U12)/(d R)
                 dkdr       = -2*alpha(i)*(r-r0(i))*k(i)
@@ -679,22 +694,23 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    guu: grad. array w/ calculated dU13/dx added to guu(:,:,1,3)
         !> @brief Evaluate calcu13_ps.
         subroutine calcu13_ps( uu, guu, x, qps )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: uu(nstate,nstate) &
+            real(wp) :: uu(nstate,nstate) &
                 , guu(3,natom,nstate,nstate), x(3,natom), qps(:)
-            double precision :: r, phi, theta, gradu13(3), u13 &
+            real(wp) :: r, phi, theta, gradu13(3), u13 &
                 , b2, alpha2, r2, c0, c1, alpha4, k(2:4), dkdr(2:4)
-            integer          :: i, iatomlist(10)
-            double precision :: bmatrow(3*natom), bmat(3,3*natom)
-            b2     = -0.09737d0
-            alpha2 = 0.848925978d0
-            r2     = 1.507d0
-            c0     = -6.89806d0
-            c1     = 3.90215d0
-            alpha4 = 2.86681d0
+            integer  :: i, iatomlist(10)
+            real(wp) :: bmatrow(3*natom), bmat(3,3*natom)
+            b2     = -0.09737e0_wp
+            alpha2 = 0.848925978e0_wp
+            r2     = 1.507e0_wp
+            c0     = -6.89806e0_wp
+            c1     = 3.90215e0_wp
+            alpha4 = 2.86681e0_wp
             r      = qps(1); phi = qps(2); theta = qps(3)
             !--- U13
-            u13  = 0d0
+            u13  = 0e0_wp
             k(2) = b2*exp(-alpha2*(r-r2)**2)
             k(4) = (c0+c1*r)*exp(-alpha4*r)
             do i = 2, 4, 2
@@ -702,7 +718,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
             enddo
             uu(1,3) = uu(1,3)+u13; uu(3,1) = uu(1,3)
             !--- dU13
-            gradu13(:) = 0d0
+            gradu13(:) = 0e0_wp
             dkdr(2)    = -2*alpha2*(r-r2)*k(2)
             dkdr(4)    = (-alpha4*(c0+c1*r)+c1)*exp(-alpha4*r)
             do i = 2, 4, 2
@@ -739,29 +755,30 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    guu: grad. array w/ calculated dU23/dx added to guu(:,:,2,3)
         !> @brief Evaluate calcu23_ps.
         subroutine calcu23_ps( uu, guu, x, qps )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: uu(nstate,nstate) &
+            real(wp) :: uu(nstate,nstate) &
                 , guu(3,natom,nstate,nstate), x(3,natom), qps(:)
-            double precision :: r, phi, theta, gradu23(3), u23 &
+            real(wp) :: r, phi, theta, gradu23(3), u23 &
                 , b(4:6), alpha(4:6), r0(4:6), k(4:6), dkdr
-            integer          :: i, iatomlist(10)
-            double precision :: bmatrow(3*natom), bmat(3,3*natom)
-            b(4)     = -0.00485d0
-            alpha(4) = 9.143137602d0
-            r0(4)    = 1.98608d0
-            b(6)     = 0.00114d0
-            alpha(6) = 8.827060236d0
-            r0(6)    = 2.12743d0
+            integer  :: i, iatomlist(10)
+            real(wp) :: bmatrow(3*natom), bmat(3,3*natom)
+            b(4)     = -0.00485e0_wp
+            alpha(4) = 9.143137602e0_wp
+            r0(4)    = 1.98608e0_wp
+            b(6)     = 0.00114e0_wp
+            alpha(6) = 8.827060236e0_wp
+            r0(6)    = 2.12743e0_wp
             r        = qps(1); phi = qps(2); theta = qps(3)
             !--- U23
-            u23 = 0d0
+            u23 = 0e0_wp
             do i = 4, 6, 2
                 k(i) = b(i)*exp(-alpha(i)*(r-r0(i))**2)
                 u23  = u23+k(i)*sin(i*phi)
             enddo
             uu(2,3) = uu(2,3)+u23; uu(3,2) = uu(2,3)
             !--- dU23
-            gradu23(:) = 0d0
+            gradu23(:) = 0e0_wp
             do i = 4, 6, 2
                 !--- (d U23)/(d R)
                 dkdr       = -2*alpha(i)*(r-r0(i))*k(i)
@@ -800,14 +817,15 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !> @brief Evaluate calcuii_t.
         subroutine calcuii_t( vt, gvt, x, qps, qtp, nterm, itypeqtp, &
                 iqtplist )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: vt(nstate,nstate) &
+            real(wp) :: vt(nstate,nstate) &
                 , gvt(3, natom, nstate, nstate), x(3,natom), qps(:), qtp(:,:)
             integer :: nterm(nqtpset), itypeqtp(ntermmax,nqtpset) &
                 , iqtplist(4, ntermmax, nqtpset)
-            integer          :: i, j, imin
-            double precision :: vmin, vtmp, gvtmp(3,natom)
-            vt = 0d0; gvt = 0d0
+            integer  :: i, j, imin
+            real(wp) :: vmin, vtmp, gvtmp(3,natom)
+            vt = 0e0_wp; gvt = 0e0_wp
             !--- calculate vt and gvt in diabatic order
             !--- uii_t is the actual routine
             do i = 1, nstate
@@ -821,25 +839,26 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !> @brief Evaluate uii_t.
         subroutine uii_t( vt, gvt, x, qps, qtp, nterm, itypeqtp, &
                 iqtplist, istate )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: vt(nstate,nstate) &
+            real(wp) :: vt(nstate,nstate) &
                 , gvt(3, natom, nstate, nstate), x(3,natom), qps(:), qtp(:,:)
             integer :: nterm(nqtpset), itypeqtp(ntermmax,nqtpset) &
                 , iqtplist(4, ntermmax, nqtpset)
-            integer          :: istate
-            double precision :: k(ntermmax,napmax) &
+            integer  :: istate
+            real(wp) :: k(ntermmax,napmax) &
                 , q0(ntermmax,napmax) &
                 , r0(napmax), phi0(napmax), theta0(napmax) &
                 , eterm, gterm, energy(0:napmax)
             integer :: iap, iterm, nap, n(ntermmax,napmax), ntermap &
                 , iset, iatomlist(10), iqtpset(napmax)
-            double precision              :: bmatrow(3*natom), gradc(3,natom,0:napmax)
-            double precision, allocatable :: bmat(:,:), gg(:)
-            double precision              :: tent(napmax), dtent(0:napmax), r
+            real(wp)              :: bmatrow(3*natom), gradc(3,natom,0:napmax)
+            real(wp), allocatable :: bmat(:,:), gg(:)
+            real(wp)              :: tent(napmax), dtent(0:napmax), r
             call assignparamuii_t(k, q0, n, istate)
             !--- set up state-dependent variables
             !--- Here 'istate' is diabatic state at phi = 0
-            energy = 0d0
+            energy = 0e0_wp
             select case(istate)
             case(1)
                 !--- # of anchor points
@@ -850,11 +869,11 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 iqtpset(4)   = 2
                 !--- prim&sec coord. of each anchor point
                 if( debug2 )then
-                    r0(1:4) = (/1.8d0, 100d0, 200d0, 300d0/)
+                    r0(1:4) = (/1.8e0_wp, 100e0_wp, 200e0_wp, 300e0_wp/)
                 else
-                    r0(1:4) = (/1.8d0, 2.2d0, 3.2d0, 6.0d0/)
+                    r0(1:4) = (/1.8e0_wp, 2.2e0_wp, 3.2e0_wp, 6.0e0_wp/)
                 endif
-                phi0(1:4) = 0d0
+                phi0(1:4) = 0e0_wp
                 !--- const. part of tert. potential
                 !---  which is relaxed minus unrelaxed energy at APs
                 energy(1:4) = (/ -0.000583020570508334, -0.002661649641063303, -0.011739718798774815, - &
@@ -866,11 +885,11 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 iqtpset(1:2) = 1
                 !--- prim&sec coord. of each anchor point
                 if( debug2 )then
-                    r0(1:2) = (/1.8d0, 100d0/)
+                    r0(1:2) = (/1.8e0_wp, 100e0_wp/)
                 else
-                    r0(1:2) = (/1.8d0, 2.2d0/)
+                    r0(1:2) = (/1.8e0_wp, 2.2e0_wp/)
                 endif
-                phi0(1:2) = 0d0
+                phi0(1:2) = 0e0_wp
                 !--- const. part of tert. potential
                 !---  which is relaxed minus unrelaxed energy at APs
                 energy(1:2) = (/ -0.0093642039986545408, -0.01134068516458372 /)
@@ -883,11 +902,11 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 iqtpset(4)   = 2
                 !--- prim&sec coord. of each anchor point
                 if( debug2 )then
-                    r0(1:4) = (/1.9d0, 100d0, 200d0, 300d0/)
+                    r0(1:4) = (/1.9e0_wp, 100e0_wp, 200e0_wp, 300e0_wp/)
                 else
-                    r0(1:4) = (/1.9d0, 2.2d0, 3.2d0, 6.0d0/)
+                    r0(1:4) = (/1.9e0_wp, 2.2e0_wp, 3.2e0_wp, 6.0e0_wp/)
                 endif
-                phi0(1:4) = 0d0
+                phi0(1:4) = 0e0_wp
                 !--- const. part of tert. potential
                 !---  which is relaxed minus unrelaxed energy at APs
                 energy(1:4) = (/ -0.0070903858216569311, -0.0061801905494431415, -0.022128914781961655, - &
@@ -922,7 +941,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 call calctent1(tent(iap), dtent(iap), r, r0, &
                     iap-1, iap, iap+1, nap)
             enddo
-            energy(0) = 0d0; gradc(:,:,0) = 0d0; dtent(0) = 0d0
+            energy(0) = 0e0_wp; gradc(:,:,0) = 0e0_wp; dtent(0) = 0e0_wp
             do iap = 1, nap
                 !--- interpolate anchor point values using tent func.
                 energy(0)    = energy(0)+energy(iap)*tent(iap)
@@ -961,12 +980,13 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !> @brief Evaluate calcuij_t.
         subroutine calcuij_t( uu, guu, x, qps, qtc, nqtc, &
                 qtcsym, qtctyp, bmatqtc )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: uu(nstate,nstate), qps(:), qtc(:) &
+            real(wp) :: uu(nstate,nstate), qps(:), qtc(:) &
                 , guu(3,natom,nstate,nstate), x(3,natom) &
                 , bmatqtc(ntermmax, natom*3)
-            integer          :: nqtc, qtcsym(ntermmax), qtctyp(ntermmax)
-            double precision :: uij, duij(3,natom)
+            integer  :: nqtc, qtcsym(ntermmax), qtctyp(ntermmax)
+            real(wp) :: uij, duij(3,natom)
             call uij_t(uij, duij, x, qps, qtc, &
                 nqtc, qtcsym, qtctyp, bmatqtc, 12)
             uu(1,2)      = uu(1,2)+uij; uu(2,1) = uu(1,2)
@@ -989,14 +1009,15 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !> @brief Evaluate uij_t.
         subroutine uij_t( uij, duij, x, qps, qtc, nqtc, &
                 qtcsym, qtctyp, bmatqtc, istate )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: uij, duij(3,natom), x(3,natom), qps(:) &
+            real(wp) :: uij, duij(3,natom), x(3,natom), qps(:) &
                 , qtc(:), bmatqtc(ntermmax, natom*3)
-            integer                       :: nqtc, qtcsym(ntermmax), qtctyp(ntermmax), istate
-            integer, parameter            :: nr0 = 2, nphi0=5, nk=2
-            integer                       :: ir0, iphi0, iqtc, iatomlist(10)
-            double precision, allocatable :: gg(:), bmat(:,:)
-            double precision              :: ee(nr0,nphi0), e, g &
+            integer               :: nqtc, qtcsym(ntermmax), qtctyp(ntermmax), istate
+            integer, parameter    :: nr0 = 2, nphi0=5, nk=2
+            integer               :: ir0, iphi0, iqtc, iatomlist(10)
+            real(wp), allocatable :: gg(:), bmat(:,:)
+            real(wp)              :: ee(nr0,nphi0), e, g &
                 , k(nk,nr0,nphi0,nqtc) &
                 , gradc(3,natom,nr0,nphi0), r, phi, qtc0(nqtc) &
                 , tentr(0:nr0), dtentr(0:nr0), r0(nr0), phi0(nphi0) &
@@ -1009,15 +1030,15 @@ module chempotpy_c7h8s_aprp_dpem_pes
             phi          = qps(2)
             qtcv(1:nqtc) = qtc(1:nqtc)
             !--- R and phi values at anchor points
-            r0(:)   = (/1.97d0, 3.5d0/)
-            phi0(:) = (/0d0, 10d0, 45d0, 80d0, 90d0/)
-            phi0(:) = phi0(:)/180d0*pi
+            r0(:)   = (/1.97e0_wp, 3.5e0_wp/)
+            phi0(:) = (/0e0_wp, 10e0_wp, 45e0_wp, 80e0_wp, 90e0_wp/)
+            phi0(:) = phi0(:)/180e0_wp*pi
             do iphi0 = 1, nphi0
                 cos2phi0(iphi0) = -cos(2*phi0(iphi0))
             enddo
             !--- state-dependent params
             call assignparamuij_t(k, qtc0, nqtc, nk, nr0, nphi0, istate)
-            ee = 0d0
+            ee = 0e0_wp
             allocate(gg(nqtc), bmat(nqtc,3*natom))
             bmat(1:nqtc,:) = bmatqtc(1:nqtc, :)
             !--- loop over anchor points (each with 2 subscripts iR0,iphi0)
@@ -1029,15 +1050,15 @@ module chempotpy_c7h8s_aprp_dpem_pes
                         !---   this is an exception due to the parameterization
                         call calctdcterm(e, g, &
                             k(:,ir0,iphi0,iqtc), nk, qtc0(iqtc), &
-                            qtcv(iqtc)/pi*180d0, qtctyp(iqtc))
+                            qtcv(iqtc)/pi*180e0_wp, qtctyp(iqtc))
                         if( iqtc .eq. 2 .or. iqtc .eq. 8 .or. iqtc .eq. 11 )then
-                            e = 0d0; g = 0d0
+                            e = 0e0_wp; g = 0e0_wp
                         endif
                         if( iphi0 .eq. 1 .or. iphi0 .eq. nphi0 )then
-                            e = 0d0; g = 0d0
+                            e = 0e0_wp; g = 0e0_wp
                         endif
                         !--- convert gg from deg^-1 to rad^-1
-                        g             = g*180d0/pi
+                        g             = g*180e0_wp/pi
                         ee(ir0,iphi0) = ee(ir0,iphi0)+e
                         gg(iqtc)      = g
                     enddo
@@ -1060,15 +1081,15 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 !--- dtentphi/dphi = dtentphi/d-cos2phi * d-cos2phi/dphi
                 dtentphi(iphi0) = dtentphi(iphi0)*(2*sin(2*phi))
                 if( istate .eq. 12 )then
-                    sij(iphi0)  = 1d0
-                    dsij(iphi0) = 0d0
+                    sij(iphi0)  = 1e0_wp
+                    dsij(iphi0) = 0e0_wp
                 else
-                    sij(iphi0)  = sign(1d0, sin(2*phi))
-                    dsij(iphi0) = 0d0
+                    sij(iphi0)  = sign(1e0_wp, sin(2*phi))
+                    dsij(iphi0) = 0e0_wp
                 endif
             enddo
-            uij       = 0d0; duij(:,:) = 0d0
-            dtentr(0) = 0d0; dtentphi(0) = 0d0
+            uij       = 0e0_wp; duij(:,:) = 0e0_wp
+            dtentr(0) = 0e0_wp; dtentphi(0) = 0e0_wp
             do ir0 = 1, nr0
                 do iphi0 = 1, nphi0
                     !--- interpolate anchor point values using tent func.
@@ -1107,10 +1128,11 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    guu: grad. array w/ calculated grad. of B-M pot. added
         !> @brief Evaluate calcbornmayer.
         subroutine calcbornmayer( uu, guu, x )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: uu(nstate,nstate) &
+            real(wp) :: uu(nstate,nstate) &
                 , guu(3,natom,nstate,nstate), x(3,natom)
-            double precision :: dist(3), bb, alpha, bmatrow(natom*3), vbm &
+            real(wp) :: dist(3), bb, alpha, bmatrow(natom*3), vbm &
                 , dvdr
             integer :: ic, is, iatomlist(10,3)
             dist(1) = evalbl(x, 1, 4); iatomlist(1:4,1) = (/1, 4, 0, 0/)
@@ -1142,25 +1164,26 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    gg: gradient w.r.t. the internal coordinate
         !> @brief Evaluate calcFFterm.
         subroutine calcffterm( ee, gg, k, q0, n, q, itype )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: ee, gg, k, q0, q
-            integer          :: n, itype
+            real(wp) :: ee, gg, k, q0, q
+            integer  :: n, itype
             select case (itype)
                 !--- bond length
             case(1)
-                ee = 0.5d0*k*(1d0-q0/q)**2
-                gg = k*(1d0-q0/q)*q0/q**2
+                ee = 0.5e0_wp*k*(1e0_wp-q0/q)**2
+                gg = k*(1e0_wp-q0/q)*q0/q**2
                 !--- bond angle
             case(2)
-                ee = 0.5d0*k*(cos(q)-cos(q0))**2
+                ee = 0.5e0_wp*k*(cos(q)-cos(q0))**2
                 gg = -k*(cos(q)-cos(q0))*sin(q)
                 !--- torsion
             case(3)
-                ee = 0.5d0*k*(1d0-cos(n*(q-q0)))
-                gg = 0.5d0*n*k*sin(n*(q-q0))
+                ee = 0.5e0_wp*k*(1e0_wp-cos(n*(q-q0)))
+                gg = 0.5e0_wp*n*k*sin(n*(q-q0))
                 !--- oop distance
             case(5)
-                ee = 0.5d0*k*(q-q0)**2
+                ee = 0.5e0_wp*k*(q-q0)**2
                 gg = k*(q-q0)
             end select
         end subroutine calcffterm
@@ -1181,22 +1204,23 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    gg: gradient w.r.t. the internal coordinate
         !> @brief Evaluate calcTDCterm.
         subroutine calctdcterm( ee, gg, k, nk, q0, q, ityp )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: nk, ityp
-            double precision :: ee, gg, k(nk), q0, q
-            integer          :: i
-            double precision :: dq, cc, expo, qq, qq0
+            integer  :: nk, ityp
+            real(wp) :: ee, gg, k(nk), q0, q
+            integer  :: i
+            real(wp) :: dq, cc, expo, qq, qq0
             select case(ityp)
                 !--- ityp 1: use the coordinate as variable
             case(1)
                 dq = q-q0
-                ee = 0d0; gg = 0d0
+                ee = 0e0_wp; gg = 0e0_wp
                 do i = 1, nk
                     ee = ee+k(i)*dq**i
                     gg = gg+i*k(i)*dq**(i-1)
                 enddo
                 !--- damp the couplings at large dq
-                cc   = 100d0
+                cc   = 100e0_wp
                 expo = exp(-dq**2/cc**2)
                 gg   = gg*expo+ee*(-2*dq/cc**2)*expo
                 ee   = ee*expo
@@ -1205,14 +1229,14 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 !--- Note that q needs deg->rad first,
                 !---   and gg needs rad-1 -> deg-1 last
             case(2)
-                qq = q/180d0*pi; qq0 = q0/180d0*pi
+                qq = q/180e0_wp*pi; qq0 = q0/180e0_wp*pi
                 dq = cos(qq)-cos(qq0)
-                ee = 0d0; gg = 0d0
+                ee = 0e0_wp; gg = 0e0_wp
                 do i = 1, nk
                     ee = ee+k(i)*dq**i
                     gg = gg+i*k(i)*dq**(i-1)
                 enddo
-                gg = -gg*sin(qq) /180d0*pi
+                gg = -gg*sin(qq) /180e0_wp*pi
             end select
         end subroutine calctdcterm
 
@@ -1229,30 +1253,31 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    dtdq: dt/dq
         !> @brief Evaluate calctent1.
         subroutine calctent1( t, dtdq, q, q0, i, j, k, nq0 )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: t, dtdq, q, q0(:)
-            integer          :: i, j, k, nq0
+            real(wp) :: t, dtdq, q, q0(:)
+            integer  :: i, j, k, nq0
             !--- if j is the 1st anchor point
             if( i .eq. 0 )then
                 if( q < q0(j) )then
-                    t = 1d0; dtdq = 0d0
+                    t = 1e0_wp; dtdq = 0e0_wp
                 elseif( q > q0(k) )then
-                    t = 0d0; dtdq = 0d0
+                    t = 0e0_wp; dtdq = 0e0_wp
                 else
                     call tent1(t, dtdq, q, q0(k), q0(j))
                 endif
                 !--- if j is the last anchor point
             elseif( k > nq0 )then
                 if( q > q0(j) )then
-                    t = 1d0; dtdq = 0d0
+                    t = 1e0_wp; dtdq = 0e0_wp
                 elseif( q < q0(i) )then
-                    t = 0d0; dtdq = 0d0
+                    t = 0e0_wp; dtdq = 0e0_wp
                 else
                     call tent1(t, dtdq, q, q0(i), q0(j))
                 endif
             else
                 if( q < q0(i).or.q > q0(k) )then
-                    t = 0d0; dtdq = 0d0
+                    t = 0e0_wp; dtdq = 0e0_wp
                 elseif( q < q0(j) )then
                     call tent1(t, dtdq, q, q0(i), q0(j))
                 else
@@ -1265,9 +1290,10 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !--- tent(q1) = 0, tent(q2) = 1
         !> @brief Evaluate tent1.
         subroutine tent1( t, dtdq, q, q1, q2 )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: t, dtdq, q, q1, q2
-            double precision :: dq1, dq2
+            real(wp) :: t, dtdq, q, q1, q2
+            real(wp) :: dq1, dq2
             dq1  = q-q1
             dq2  = q-q2
             t    = dq1**4/(dq1**4+dq2**4)
@@ -1282,11 +1308,12 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  Return:
         !    bond length in Angstroms
         !> @brief Evaluate evalBL.
-        double precision function evalbl( x, i, j )
+        real(wp) function evalbl( x, i, j )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: i, j
-            double precision :: x(3,natom)
-            double precision :: r(3)
+            integer  :: i, j
+            real(wp) :: x(3,natom)
+            real(wp) :: r(3)
             r(:)   = x(:,i)-x(:,j)
             evalbl = sqrt(dot_product(r, r))
         end function evalbl
@@ -1299,17 +1326,18 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  Return:
         !    bond angle in radians
         !> @brief Evaluate evalBA.
-        double precision function evalba( x, i, j, k )
+        real(wp) function evalba( x, i, j, k )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: i, j, k
-            double precision :: x(3,natom)
-            double precision :: eji(3), ejk(3), cosba
+            integer  :: i, j, k
+            real(wp) :: x(3,natom)
+            real(wp) :: eji(3), ejk(3), cosba
             eji(:) = (x(:,i)-x(:,j))/evalbl(x, i, j)
             ejk(:) = (x(:,k)-x(:,j))/evalbl(x, j, k)
             cosba  = dot_product(eji, ejk)
             !--- avoid numerical problem
             if( cosba > 1 )then
-                evalba = 0d0
+                evalba = 0e0_wp
             elseif( cosba < -1 )then
                 evalba = pi
             else
@@ -1325,12 +1353,13 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  Return:
         !    torsion in radians
         !> @brief Evaluate evalTO.
-        double precision function evalto( x, i, j, k, l )
+        real(wp) function evalto( x, i, j, k, l )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: i, j, k, l
-            double precision :: x(3,natom)
-            integer          :: sign
-            double precision :: eij(3), ejk(3), ekl(3) &
+            integer  :: i, j, k, l
+            real(wp) :: x(3,natom)
+            integer  :: sign
+            real(wp) :: eij(3), ejk(3), ekl(3) &
                 , sinijk, sinjkl, costo &
                 , cross1(3), cross2(3), cross3(3)
             eij(:) = (x(:,j)-x(:,i))/evalbl(x, i, j)
@@ -1352,7 +1381,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
             endif
             !--- avoid numerical problem
             if( costo > 1 )then
-                evalto = 0d0
+                evalto = 0e0_wp
             elseif( costo < -1 )then
                 evalto = pi
             else
@@ -1368,11 +1397,12 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  Return:
         !    oop bend in radians
         !> @brief Evaluate evalOB.
-        double precision function evalob( x, i, j, k, l )
+        real(wp) function evalob( x, i, j, k, l )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: i, j, k, l
-            double precision :: x(3,natom)
-            double precision :: eli(3), elj(3), elk(3), sinjlk, sinob &
+            integer  :: i, j, k, l
+            real(wp) :: x(3,natom)
+            real(wp) :: eli(3), elj(3), elk(3), sinjlk, sinob &
                 , cross1(3)
             eli(:) = (x(:,i)-x(:,l))/evalbl(x, l, i)
             elj(:) = (x(:,j)-x(:,l))/evalbl(x, l, j)
@@ -1398,11 +1428,12 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  Return:
         !    oop distance in Angstroms
         !> @brief Evaluate evalOD.
-        double precision function evalod( x, i, j, k, l )
+        real(wp) function evalod( x, i, j, k, l )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: i, j, k, l
-            double precision :: x(3,natom)
-            double precision :: eij(3), eik(3), eijxeik(3), ril(3), sinjik
+            integer  :: i, j, k, l
+            real(wp) :: x(3,natom)
+            real(wp) :: eij(3), eik(3), eijxeik(3), ril(3), sinjik
             ril(:) = x(:,l)-x(:,i)
             eij(:) = (x(:,j)-x(:,i))/evalbl(x, i, j)
             eik(:) = (x(:,k)-x(:,i))/evalbl(x, i, k)
@@ -1419,11 +1450,12 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  Return:
         !    The coordinate
         !> @brief Evaluate evalSP1.
-        double precision function evalsp1( x, i, j, k, l, m )
+        real(wp) function evalsp1( x, i, j, k, l, m )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: i, j, k, l, m
-            double precision :: x(3,natom)
-            double precision :: e12(3), e23(3), e13(3), ez(3), ex(3), ep(3) &
+            integer  :: i, j, k, l, m
+            real(wp) :: x(3,natom)
+            real(wp) :: e12(3), e23(3), e13(3), ez(3), ex(3), ep(3) &
                 , e45(3), e24(3), etmp(3), etmp2(3), etmp3(3) &
                 , sin123, sin13z, cos13z, e12xe23(3), cossp1, sgn
             e12(:) = (x(:,j)-x(:,i))/evalbl(x, i, j)
@@ -1447,7 +1479,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
             endif
             !--- avoid numerical problem
             if( cossp1 > 1 )then
-                evalsp1 = 0d0
+                evalsp1 = 0e0_wp
             elseif( cossp1 < -1 )then
                 evalsp1 = pi
             else
@@ -1463,8 +1495,9 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    axb(3): = a x b
         !> @brief Evaluate xprod.
         subroutine xprod( axb, a, b )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: axb(3), a(3), b(3)
+            real(wp) :: axb(3), a(3), b(3)
             axb(1) = a(2)*b(3)-a(3)*b(2)
             axb(2) = a(3)*b(1)-a(1)*b(3)
             axb(3) = a(1)*b(2)-a(2)*b(1)
@@ -1480,12 +1513,13 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    eigvec: ndim*ndim matrix containing eigenvectors
         !> @brief Evaluate diagonalize.
         subroutine diagonalize( eigval, eigvec, mat, ndim )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: eigval(ndim), eigvec(ndim,ndim) &
+            real(wp) :: eigval(ndim), eigvec(ndim,ndim) &
                 , mat(ndim, ndim)
-            integer                       :: ndim
-            double precision, allocatable :: work(:)
-            integer                       :: lwork, info
+            integer               :: ndim
+            real(wp), allocatable :: work(:)
+            integer               :: lwork, info
             eigvec = mat
             lwork  = -1
             allocate(work(1))
@@ -1511,19 +1545,20 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    bmatrow: row of B matrix
         !> @brief Evaluate calcbmat.
         subroutine calcbmat( bmatrow, x, iatomlist, inttype )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: bmatrow(natom*3), x(3,natom)
-            integer          :: inttype, iatomlist(10)
-            double precision :: rij, rij1, rij2, rij3, rjk1, rjk2, rjk3, rjk, pijk
-            double precision :: cijk, sijk, pxmg, pymg, pzmg, sjkl, sijkl
-            double precision :: rkl, rkl1, rkl2, rkl3, cjkl, cijkl, pjkl
-            integer          :: i, j, ijk, im, k, l, m, ijkl, ilisttmp(4), ii, iii, jj
-            double precision :: a243, s243, c243, e41(3), e42(3), e43(3) &
+            real(wp) :: bmatrow(natom*3), x(3,natom)
+            integer  :: inttype, iatomlist(10)
+            real(wp) :: rij, rij1, rij2, rij3, rjk1, rjk2, rjk3, rjk, pijk
+            real(wp) :: cijk, sijk, pxmg, pymg, pzmg, sjkl, sijkl
+            real(wp) :: rkl, rkl1, rkl2, rkl3, cjkl, cijkl, pjkl
+            integer  :: i, j, ijk, im, k, l, m, ijkl, ilisttmp(4), ii, iii, jj
+            real(wp) :: a243, s243, c243, e41(3), e42(3), e43(3) &
                 , r41, r42, r43, oopb, coopb, toopb, tmpv(3), bmv1(3), bmv2(3), bmv3(3) &
                 , bmv4(3), e12(3), e13(3), v14(3), r12, r13, theta, rtmp &
                 , tmpv2(3), tmpv3(3), rowtmp(3*natom), xtmp(3, natom) &
                 , coord1, coord2, step
-            bmatrow(:) = 0d0
+            bmatrow(:) = 0e0_wp
             select case(inttype)
                 !--- bond length; adapted from polyrate
             case(1)
@@ -1727,7 +1762,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
                 !--- special coordinate replacing torsionCCSC
                 !--- numerical gradient
             case(6)
-                step = 1d-5
+                step = 1e-5_wp
                 i    = iatomlist(1)
                 j    = iatomlist(2)
                 k    = iatomlist(3)
@@ -1760,6 +1795,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  ~200 lines of params
         !> @brief Evaluate assignqtp.
         subroutine assignqtp( nterm, itypeqtp, iqtplist )
+            use chempotpy_kinds, only: wp
             implicit none
             integer :: nterm(nqtpset), itypeqtp(ntermmax,nqtpset) &
                 , iqtplist(4, ntermmax, nqtpset)
@@ -1938,6 +1974,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  ~50 lines of params
         !> @brief Evaluate assignqr.
         subroutine assignqr( nqr, itypeqr, iqrlist )
+            use chempotpy_kinds, only: wp
             implicit none
             integer :: nqr, itypeqr(ntermmax) &
                 , iqrlist(10,ntermmax)
@@ -2023,9 +2060,10 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  ~200 lines of params
         !> @brief Evaluate assignqnr.
         subroutine assignqnr( nqnr, lcindex, lccoef, nlc )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: nqnr, lcindex(nlcmax,ntermmax), nlc(ntermmax)
-            double precision :: lccoef(nlcmax,ntermmax)
+            integer  :: nqnr, lcindex(nlcmax,ntermmax), nlc(ntermmax)
+            real(wp) :: lccoef(nlcmax,ntermmax)
             nqnr = 42
             !--- BEGIN generated by python gen_qnr_forUij-t.py intnrdef.txt
             nlc    (           1) = 1
@@ -2210,6 +2248,7 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !    qtctyp: type of qtc; used for choosing form of Uij[3] term
         !> @brief Evaluate assignqtc.
         subroutine assignqtc( nqtc, qtcsym, qnrindex, qtctyp )
+            use chempotpy_kinds, only: wp
             implicit none
             integer :: nqtc, qtcsym(ntermmax), qnrindex(ntermmax) &
                 , qtctyp(ntermmax)
@@ -2234,9 +2273,10 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  ~2200 lines of params
         !> @brief Evaluate assignparamuii_t.
         subroutine assignparamuii_t( k, q0, n, istate )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: k(ntermmax,napmax), q0(ntermmax,napmax)
-            integer          :: n(ntermmax,napmax), istate
+            real(wp) :: k(ntermmax,napmax), q0(ntermmax,napmax)
+            integer  :: n(ntermmax,napmax), istate
             !--- unit of parameters have been coverted to
             !---   hartree, Angstrom, rad
             select case(istate)
@@ -4444,9 +4484,10 @@ module chempotpy_c7h8s_aprp_dpem_pes
         !  ~400 lines of params
         !> @brief Evaluate assignparamuij_t.
         subroutine assignparamuij_t( k, qtc0, nqtc, nk, nr0, nphi0, istate )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: nqtc, nk, nr0, nphi0, istate
-            double precision :: k(nk,nr0,nphi0,nqtc), qtc0(nqtc)
+            integer  :: nqtc, nk, nr0, nphi0, istate
+            real(wp) :: k(nk,nr0,nphi0,nqtc), qtc0(nqtc)
             !--- rest values
             !--- BEGIN generated by "python gen_uijparam.py u12-t_param.txt 2"
             qtc0( 1) = 0.000000e+00
@@ -4817,12 +4858,13 @@ end module chempotpy_c7h8s_aprp_dpem_pes
 !> @brief Expose C7H8S_APRP through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_c7h8s_aprp_dpem_pes, only: evaluate
+    use chempotpy_kinds,               only: wp
     implicit none
-    integer, parameter            :: natoms  = 16
-    integer, parameter            :: nstates = 3
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: u(nstates,nstates)
-    double precision, intent(out) :: ug(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 16
+    integer, parameter    :: nstates = 3
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: u(nstates,nstates)
+    real(wp), intent(out) :: ug(nstates,nstates,natoms,3)
     call evaluate(x, igrad, u, ug)
 end subroutine dpem

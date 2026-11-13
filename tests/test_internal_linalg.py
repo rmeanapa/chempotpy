@@ -19,6 +19,12 @@ class InternalLinearAlgebraTests( unittest.TestCase ):
             / "core"
             / "chempotpy_dsyev.f90"
         )
+        kinds = (
+            repository
+            / "chempotpy"
+            / "core"
+            / "chempotpy_kinds.f90"
+        )
         driver_source = """
 program test_dsyev
     implicit none
@@ -73,7 +79,14 @@ end program test_dsyev
             executable = directory / "test_dsyev"
             driver.write_text(driver_source)
             subprocess.run(
-                [compiler, str(implementation), str(driver), "-o", str(executable)],
+                [
+                    compiler,
+                    str(kinds),
+                    str(implementation),
+                    str(driver),
+                    "-o",
+                    str(executable),
+                ],
                 check=True,
                 capture_output=True,
                 text=True,

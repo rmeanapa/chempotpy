@@ -40,105 +40,100 @@
 
 !> @brief Implement NH3_GEN_FFW1_2006, a potential energy surface for NH3.
 module chempotpy_nh3_gen_ffw1_2006_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
-    integer, parameter          :: coefficient_variable_count = 7
-    double precision, parameter :: nhcoeu1(62)                = [-.1698267005d+01, -.3116975297d+01, .4989324584d+02, .6140536234d+02, &
-        & -.9137903351d+02, -.4170308921d+02, -.2822911145d+03, -.1324724944d+03, &
-        & .4554289660d+02, .6482512608d+02, .1622981341d+03, -.1418440334d+03, &
-        & .3128761841d+03, .2291158383d+03, .4212981689d+03, .5904053030d+03, &
-        & -.2011576383d+03, -.2847074833d+03, -.4207881721d+03, -.3401129381d+03, &
-        & -.1017600665d+03, -.3135766858d+02, .7766878674d+02, -.1863622757d+03, &
-        & -.2454112660d+03, -.2311744548d+03, -.7810834823d+02, .1476582353d+03, &
-        & .2809941380d+03, .3033038990d+03, .6163060145d+02, .1175366540d+01, &
-        & .3888738002d+01, -.3651170315d+02, -.3522094635d+02, .8722843200d+02, &
-        & .7398300089d+02, .1872947617d+03, .1217028644d+03, -.3865307026d+02, &
-        & -.9112045320d+02, -.8906173604d+02, .5130386478d+02, -.2935045013d+03, &
-        & -.3045399445d+03, -.2456762591d+03, -.4827738566d+03, .1665284893d+03, &
-        & .3478380563d+03, .1826085704d+03, .3027131358d+03, .1219769642d+03, &
-        & .4171232808d+02, -.9647425161d+01, .2035053367d+03, .2297924112d+03, &
-        & .2731855209d+03, .3746015525d+02, -.1574954942d+03, -.2708242232d+03, &
-        & -.3486651786d+03, -.1927783168d+02]
-    double precision, parameter :: nhcoeu2(71) = [-.5839297267d+01, .1948308393d+03, .1476399426d+03, -.1952770539d+03, &
-        & -.4956220164d+03, .1455034861d+04, -.6852363440d+03, -.7980707978d+03, &
-        & -.7150307241d+02, -.1898884973d+04, .6944385319d+03, .1278073813d+04, &
-        & .2496161582d+03, -.6605419506d+03, -.2259061202d+03, .3208341955d+03, &
-        & .1438880740d+04, -.2462117089d+04, .1264999815d+03, .1618808427d+04, &
-        & -.4277636246d+03, .2889205530d+04, -.4525182746d+03, -.2216782595d+04, &
-        & -.5474397436d+03, .9523771905d+03, .8001804807d+03, -.2413673183d+03, &
-        & -.4689796908d+03, -.1226082702d+03, .2013096370d+03, .2497300043d+03, &
-        & .2354985426d+03, -.1609355796d+03, -.5933048064d+03, -.2301959837d+03, &
-        & -.1750594296d+03, -.1343884916d+03, .1997871612d+03, .4919735429d+03, &
-        & -.1486208797d+04, .6482490789d+03, .7895412677d+03, .3391285547d+02, &
-        & .1900289391d+04, -.6724668674d+03, -.1274908946d+04, -.2563702497d+03, &
-        & .6673491569d+03, .2226064703d+03, -.3178753276d+03, -.1352904130d+04, &
-        & .2450815486d+04, -.1269876680d+03, -.1626526640d+04, .4191476857d+03, &
-        & -.2837798016d+04, .4598348283d+03, .2208871680d+04, .5496794539d+03, &
-        & -.9765928983d+03, -.7638623676d+03, .2378197831d+03, .4359353643d+03, &
-        & .9157000100d+02, -.2028118062d+03, -.2304177594d+03, -.2325038433d+03, &
-        & .1797589106d+03, .5547260471d+03, .2316886253d+03]
-    double precision, parameter :: nhcoeu12(45) = [-.1370792834d+01, .6836772012d+00, .6331956838d+00, .1048352694d+01, &
-        & .1450863054d+01, -.6761575220d+00, -.1763525455d+01, -.2757812968d+00, &
-        & -.1771035818d+00, .1521156999d+00, .3338335016d+00, -.7011767589d+00, &
-        & .1057293370d+00, -.1499798375d+00, .8059440388d+00, .1100511326d+01, &
-        & -.9054527734d+00, -.1502093390d+00, -.5755857753d+00, -.1859473317d+01, &
-        & .1376357981d+01, .8781480771d+00, -.3398810498d+00, .1058482524d+01, &
-        & -.8694281520d+00, .1168933914d+00, .9741155480d+00, -.5185373065d+00, &
-        & .4463417737d+00, -.8328439796d+00, -.4614413328d+00, .3513046496d+00, &
-        & -.6307182534d-01, .6508886978d+00, .3787965679d+00, -.6678165549d+00, &
-        & .1524235094d+00, .1114227008d+00, -.3191010676d+00, .5041174980d+00, &
-        & -.2955290687d+00, -.7789245841d+00, .5060705599d+00, -.2054781302d+00, &
-        & .1836178250d+00]
+    integer, parameter  :: coefficient_variable_count = 7
+    real(wp), parameter :: nhcoeu1(62)                = [-.1698267005e+01_wp, -.3116975297e+01_wp, .4989324584e+02_wp, &
+        & .6140536234e+02_wp, -.9137903351e+02_wp, -.4170308921e+02_wp, -.2822911145e+03_wp, -.1324724944e+03_wp, &
+        & .4554289660e+02_wp, .6482512608e+02_wp, .1622981341e+03_wp, -.1418440334e+03_wp, .3128761841e+03_wp, &
+        & .2291158383e+03_wp, .4212981689e+03_wp, .5904053030e+03_wp, -.2011576383e+03_wp, -.2847074833e+03_wp, - &
+        & .4207881721e+03_wp, -.3401129381e+03_wp, -.1017600665e+03_wp, -.3135766858e+02_wp, .7766878674e+02_wp, - &
+        & .1863622757e+03_wp, -.2454112660e+03_wp, -.2311744548e+03_wp, -.7810834823e+02_wp, .1476582353e+03_wp, &
+        & .2809941380e+03_wp, .3033038990e+03_wp, .6163060145e+02_wp, .1175366540e+01_wp, .3888738002e+01_wp, - &
+        & .3651170315e+02_wp, -.3522094635e+02_wp, .8722843200e+02_wp, .7398300089e+02_wp, .1872947617e+03_wp, &
+        & .1217028644e+03_wp, -.3865307026e+02_wp, -.9112045320e+02_wp, -.8906173604e+02_wp, .5130386478e+02_wp, - &
+        & .2935045013e+03_wp, -.3045399445e+03_wp, -.2456762591e+03_wp, -.4827738566e+03_wp, .1665284893e+03_wp, &
+        & .3478380563e+03_wp, .1826085704e+03_wp, .3027131358e+03_wp, .1219769642e+03_wp, .4171232808e+02_wp, - &
+        & .9647425161e+01_wp, .2035053367e+03_wp, .2297924112e+03_wp, .2731855209e+03_wp, .3746015525e+02_wp, - &
+        & .1574954942e+03_wp, -.2708242232e+03_wp, -.3486651786e+03_wp, -.1927783168e+02_wp]
+    real(wp), parameter :: nhcoeu2(71) = [-.5839297267e+01_wp, .1948308393e+03_wp, .1476399426e+03_wp, - &
+        & .1952770539e+03_wp, -.4956220164e+03_wp, .1455034861e+04_wp, -.6852363440e+03_wp, -.7980707978e+03_wp, - &
+        & .7150307241e+02_wp, -.1898884973e+04_wp, .6944385319e+03_wp, .1278073813e+04_wp, .2496161582e+03_wp, - &
+        & .6605419506e+03_wp, -.2259061202e+03_wp, .3208341955e+03_wp, .1438880740e+04_wp, -.2462117089e+04_wp, &
+        & .1264999815e+03_wp, .1618808427e+04_wp, -.4277636246e+03_wp, .2889205530e+04_wp, -.4525182746e+03_wp, - &
+        & .2216782595e+04_wp, -.5474397436e+03_wp, .9523771905e+03_wp, .8001804807e+03_wp, -.2413673183e+03_wp, - &
+        & .4689796908e+03_wp, -.1226082702e+03_wp, .2013096370e+03_wp, .2497300043e+03_wp, .2354985426e+03_wp, - &
+        & .1609355796e+03_wp, -.5933048064e+03_wp, -.2301959837e+03_wp, -.1750594296e+03_wp, -.1343884916e+03_wp, &
+        & .1997871612e+03_wp, .4919735429e+03_wp, -.1486208797e+04_wp, .6482490789e+03_wp, .7895412677e+03_wp, &
+        & .3391285547e+02_wp, .1900289391e+04_wp, -.6724668674e+03_wp, -.1274908946e+04_wp, -.2563702497e+03_wp, &
+        & .6673491569e+03_wp, .2226064703e+03_wp, -.3178753276e+03_wp, -.1352904130e+04_wp, .2450815486e+04_wp, - &
+        & .1269876680e+03_wp, -.1626526640e+04_wp, .4191476857e+03_wp, -.2837798016e+04_wp, .4598348283e+03_wp, &
+        & .2208871680e+04_wp, .5496794539e+03_wp, -.9765928983e+03_wp, -.7638623676e+03_wp, .2378197831e+03_wp, &
+        & .4359353643e+03_wp, .9157000100e+02_wp, -.2028118062e+03_wp, -.2304177594e+03_wp, -.2325038433e+03_wp, &
+        & .1797589106e+03_wp, .5547260471e+03_wp, .2316886253e+03_wp]
+    real(wp), parameter :: nhcoeu12(45) = [-.1370792834e+01_wp, .6836772012e+00_wp, .6331956838e+00_wp, &
+        & .1048352694e+01_wp, .1450863054e+01_wp, -.6761575220e+00_wp, -.1763525455e+01_wp, -.2757812968e+00_wp, - &
+        & .1771035818e+00_wp, .1521156999e+00_wp, .3338335016e+00_wp, -.7011767589e+00_wp, .1057293370e+00_wp, - &
+        & .1499798375e+00_wp, .8059440388e+00_wp, .1100511326e+01_wp, -.9054527734e+00_wp, -.1502093390e+00_wp, - &
+        & .5755857753e+00_wp, -.1859473317e+01_wp, .1376357981e+01_wp, .8781480771e+00_wp, -.3398810498e+00_wp, &
+        & .1058482524e+01_wp, -.8694281520e+00_wp, .1168933914e+00_wp, .9741155480e+00_wp, -.5185373065e+00_wp, &
+        & .4463417737e+00_wp, -.8328439796e+00_wp, -.4614413328e+00_wp, .3513046496e+00_wp, -.6307182534e-01_wp, &
+        & .6508886978e+00_wp, .3787965679e+00_wp, -.6678165549e+00_wp, .1524235094e+00_wp, .1114227008e+00_wp, - &
+        & .3191010676e+00_wp, .5041174980e+00_wp, -.2955290687e+00_wp, -.7789245841e+00_wp, .5060705599e+00_wp, - &
+        & .2054781302e+00_wp, .1836178250e+00_wp]
 
     contains
 
     !> @brief Evaluate the NH3_GEN_FFW1_2006 potential energy surface for NH3.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 2
-        integer, parameter            :: natoms  = 4
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: v1, v2, u11, u12, u22
-        double precision              :: tx(12), gu11(12), gu12(12), gu22(12)
-        double precision              :: gv1(12), gv2(12)
-        double precision              :: u(nstates,nstates), dudx(nstates,nstates,12)
-        double precision              :: t(nstates,nstates)
-        double precision              :: tmpmat(nstates,nstates)
-        double precision              :: hx(nstates,nstates,12), gx(nstates,12)
-        integer                       :: iatom, idir, i, j, k, l
+        integer, parameter    :: nstates = 2
+        integer, parameter    :: natoms  = 4
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: v1, v2, u11, u12, u22
+        real(wp)              :: tx(12), gu11(12), gu12(12), gu22(12)
+        real(wp)              :: gv1(12), gv2(12)
+        real(wp)              :: u(nstates,nstates), dudx(nstates,nstates,12)
+        real(wp)              :: t(nstates,nstates)
+        real(wp)              :: tmpmat(nstates,nstates)
+        real(wp)              :: hx(nstates,nstates,12), gx(nstates,12)
+        integer               :: iatom, idir, i, j, k, l
         !initialize
-        u = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
+        u = 0.e0_wp; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
                 j     = (iatom-1)*3+idir
-                tx(j) = x(iatom,idir)/legacy_bohr_to_angstrom
+                tx(j) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
         call pot(tx, u11, u22, u12, v1, v2, gu11, gu22, gu12, gv1, gv2)
-        u(1,1) = u11*legacy_hartree_to_electronvolt
-        u(1,2) = u12*legacy_hartree_to_electronvolt
-        u(2,1) = u12*legacy_hartree_to_electronvolt
-        u(2,2) = u22*legacy_hartree_to_electronvolt
+        u(1,1) = u11*hartree_to_electronvolt
+        u(1,2) = u12*hartree_to_electronvolt
+        u(2,1) = u12*hartree_to_electronvolt
+        u(2,2) = u22*hartree_to_electronvolt
         call diagonalize(nstates, u, p, t)
-        dudx(1,1,:) = gu11(:)*51.422067
-        dudx(2,2,:) = gu22(:)*51.422067
-        dudx(1,2,:) = gu12(:)*51.422067
-        dudx(2,1,:) = gu12(:)*51.422067
+        dudx(1,1,:) = gu11(:)*hartree_per_bohr_to_ev_per_angstrom
+        dudx(2,2,:) = gu22(:)*hartree_per_bohr_to_ev_per_angstrom
+        dudx(1,2,:) = gu12(:)*hartree_per_bohr_to_ev_per_angstrom
+        dudx(2,1,:) = gu12(:)*hartree_per_bohr_to_ev_per_angstrom
         do i=1, 12
             tmpmat(:,:) = dudx(:,:,i)
             tmpmat      = matmul(transpose(t), matmul(tmpmat, t))
             do j=1, nstates
                 do k=j+1, nstates
-                    if( (p(k)-p(j)) > 1.d-8 )then
+                    if( (p(k)-p(j)) > 1.e-8_wp )then
                         hx(j,k,i) = tmpmat(j,k)/(p(k)-p(j))
                     else
-                        hx(j,k,i) = tmpmat(j,k)/1.d-8
+                        hx(j,k,i) = tmpmat(j,k)/1.e-8_wp
                     endif
                     hx(k,j,i) = -hx(j,k,i)
                 enddo
@@ -158,14 +153,15 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate diagonalize for the NH3_GEN_FFW1_2006 potential.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: n
-        double precision, intent(in)  :: a_ss(n,n)
-        double precision, intent(out) :: u_ss(n,n)
-        double precision, intent(out) :: ev_s(n)
-        integer                       :: io, i
-        double precision, allocatable :: work_d(:)
-        integer                       :: lwork_d
+        integer, intent(in)   :: n
+        real(wp), intent(in)  :: a_ss(n,n)
+        real(wp), intent(out) :: u_ss(n,n)
+        real(wp), intent(out) :: ev_s(n)
+        integer               :: io, i
+        real(wp), allocatable :: work_d(:)
+        integer               :: lwork_d
         u_ss    = a_ss
         lwork_d = -1
         allocate( work_d(1) )
@@ -178,30 +174,31 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate pot for the NH3_GEN_FFW1_2006 potential.
     subroutine pot( xcart, u11, u22, u12, v1, v2, gu11, gu22, gu12, gv1, gv2 )
+        use chempotpy_kinds, only: wp
         implicit none
         ! I/O variables
         integer, parameter :: natom = 4
-        double precision   :: xcart(12)
-        double precision   :: u11
-        double precision   :: u22
-        double precision   :: u12
-        double precision   :: v1
-        double precision   :: v2
-        double precision   :: gu11(12)
-        double precision   :: gu22(12)
-        double precision   :: gu12(12)
-        double precision   :: gv1(12)
-        double precision   :: gv2(12)
+        real(wp)           :: xcart(12)
+        real(wp)           :: u11
+        real(wp)           :: u22
+        real(wp)           :: u12
+        real(wp)           :: v1
+        real(wp)           :: v2
+        real(wp)           :: gu11(12)
+        real(wp)           :: gu22(12)
+        real(wp)           :: gu12(12)
+        real(wp)           :: gv1(12)
+        real(wp)           :: gv2(12)
         ! Local variables
         ! cart(12) local Xcart in ANG, x1,y1,z1,...,x4,y4,z4
-        double precision :: cart(12)
-        integer          :: i, j
+        real(wp) :: cart(12)
+        integer  :: i, j
         ! Unit conversion parameters
-        double precision, parameter :: autoang       = 0.5291772108d0
-        double precision, parameter :: autoev        = 27.2113845d0
-        double precision, parameter :: ev_to_hartree = 1.d0/autoev
-        double precision, parameter :: ang_to_bohr   = 1.0d0/autoang
-        double precision, parameter :: gconv         = ev_to_hartree/ang_to_bohr
+        real(wp), parameter :: autoang       = 0.5291772108e0_wp
+        real(wp), parameter :: autoev        = 27.2113845e0_wp
+        real(wp), parameter :: ev_to_hartree = 1.e0_wp/autoev
+        real(wp), parameter :: ang_to_bohr   = 1.0e0_wp/autoang
+        real(wp), parameter :: gconv         = ev_to_hartree/ang_to_bohr
         ! convert geometry from bohr to ang
         do i=1, 12
             cart(i) = xcart(i)*autoang
@@ -226,16 +223,17 @@ module chempotpy_nh3_gen_ffw1_2006_pes
     !> @brief Evaluate packpot for the NH3_GEN_FFW1_2006 potential.
     subroutine packpot( coord, u11, u22, u12, v1, v2, &
             & gcu11, gcu22, gcu12, gcv1, gcv2 )
+        use chempotpy_kinds, only: wp
         implicit none
         ! I/O variables
         ! coord: x1,y1,z1...x4,y4,z4
-        double precision :: coord(12)
-        double precision :: u11, u22, u12, v1, v2
-        double precision :: gcu11(12)
-        double precision :: gcu22(12)
-        double precision :: gcu12(12)
-        double precision :: gcv1(12)
-        double precision :: gcv2(12)
+        real(wp) :: coord(12)
+        real(wp) :: u11, u22, u12, v1, v2
+        real(wp) :: gcu11(12)
+        real(wp) :: gcu22(12)
+        real(wp) :: gcu12(12)
+        real(wp) :: gcv1(12)
+        real(wp) :: gcv2(12)
         ! Common blocks for coefficients and indices
         integer, parameter :: nv    = 7
         integer, parameter :: ncu1  = 62
@@ -245,32 +243,32 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         integer            :: nhindu2(ncu2,nv)
         integer            :: nhindu12(ncu12,nv)
         ! Distances 1-3: NH, 4-6: HH
-        double precision :: rr(6)
+        real(wp) :: rr(6)
         ! gradients of distances to cartesian coordinates
-        double precision :: grr(12,6)
-        double precision :: derep(6)
+        real(wp) :: grr(12,6)
+        real(wp) :: derep(6)
         ! gradients of integernal coordinates
-        double precision :: gu11(12)
-        double precision :: gu22(12)
-        double precision :: gu12(12)
-        double precision :: gv1(12)
-        double precision :: gv2(12)
+        real(wp) :: gu11(12)
+        real(wp) :: gu22(12)
+        real(wp) :: gu12(12)
+        real(wp) :: gv1(12)
+        real(wp) :: gv2(12)
         ! Parameter List
-        double precision, parameter :: pi = 3.1415926535897930d0
+        real(wp), parameter :: pi = 3.1415926535897930e0_wp
         ! Internal coordinates used
         ! internal coodinates: three bond distances, three bond angles, one
         ! trisector angle
-        double precision :: angint(7)
+        real(wp) :: angint(7)
         ! gradients of angle internal coordinates to cartesian coordinates
-        double precision :: gangint(12,7)
+        real(wp) :: gangint(12,7)
         ! Bowman internal coodinates: three bond distances, three bond angles
         ! (the three angles in the projected plane), one trisector angle
-        double precision :: bowint(7)
+        real(wp) :: bowint(7)
         ! gradients of bowman internal coordinates to cartesian coordinates
-        double precision :: gbowint(12,7)
+        real(wp) :: gbowint(12,7)
         ! Misc
-        integer          :: i, ii, j, k, n
-        double precision :: erep
+        integer  :: i, ii, j, k, n
+        real(wp) :: erep
         ! This code computes the fitted pot using the polynomial funcs as
         ! described by Bowman for NH3
         ! INPUT FILES : TWO INPUT FILES ARE NEEDED
@@ -281,17 +279,17 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         call calcindu2(nhindu2, 3, 3, 3, 2, 2, 2, 2, ncu2)
         call calcindu12(nhindu12, 2, 2, 2, 2, 2, 2, 5, ncu12)
         do i=1, 12
-            gcu11(i) = 0.d0
-            gcu22(i) = 0.d0
-            gcu12(i) = 0.d0
-            gcv1(i)  = 0.d0
-            gcv2(i)  = 0.d0
+            gcu11(i) = 0.e0_wp
+            gcu22(i) = 0.e0_wp
+            gcu12(i) = 0.e0_wp
+            gcv1(i)  = 0.e0_wp
+            gcv2(i)  = 0.e0_wp
         enddo
         ! Initialize gangint,and dbow
         do i=1, 7
             do j=1, 12
-                gangint(j,i) = 0.d0
-                gbowint(j,i) = 0.d0
+                gangint(j,i) = 0.e0_wp
+                gbowint(j,i) = 0.e0_wp
             enddo
         enddo
         ! Calculate internal coodinates
@@ -343,34 +341,35 @@ module chempotpy_nh3_gen_ffw1_2006_pes
     subroutine sumpoly( nc, ind0, x, coeff, v, gv, cpot )
         !    This part are all the same for U,U1,U12 except the poly normial
         !    called
+        use chempotpy_kinds, only: wp
         implicit none
         integer          :: nc
         integer          :: ind0(nc,7)
-        double precision :: x(7)
-        double precision :: coeff(nc)
-        double precision :: v
-        double precision :: gv(7)
+        real(wp)         :: x(7)
+        real(wp)         :: coeff(nc)
+        real(wp)         :: v
+        real(wp)         :: gv(7)
         character(len=3) :: cpot
         integer          :: i, j, k
         integer          :: i1, i2, i3
-        double precision :: fval
-        double precision :: fsum
-        double precision :: y(7)
+        real(wp)         :: fval
+        real(wp)         :: fsum
+        real(wp)         :: y(7)
         !     intemediate storage of derivatives
         ! dy(i,j) = dy(i)/dx(j)
-        double precision :: dy(7,7)
-        double precision :: dfval(7), dfsum(7)
-        integer          :: indp(7)
+        real(wp) :: dy(7,7)
+        real(wp) :: dfval(7), dfsum(7)
+        integer  :: indp(7)
         !     Initialize V,gV
-        v = 0.0d0
+        v = 0.0e0_wp
         do i=1, 7
-            gv(i) = 0.d0
+            gv(i) = 0.e0_wp
         enddo
         do k=1, nc
-            fsum = 0.0d0
+            fsum = 0.0e0_wp
             do i=1, 7
                 indp(i)  = ind0(k,i)
-                dfsum(i) = 0.d0
+                dfsum(i) = 0.e0_wp
             enddo
             do i1=1, 3
                 do i2=1, 3
@@ -409,37 +408,39 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate symOpt for the NH3_GEN_FFW1_2006 potential.
     subroutine symopt( n, ip, s )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: n, ip(n)
-        double precision :: s(n,n)
-        integer          :: i, j
+        integer  :: n, ip(n)
+        real(wp) :: s(n,n)
+        integer  :: i, j
         do i=1, n
             do j=1, n
-                s(i,j) = 0.d0
+                s(i,j) = 0.e0_wp
             enddo
         enddo
         do i=1, n
-            s(i,ip(i)) = 1.d0
+            s(i,ip(i)) = 1.e0_wp
         enddo
     end subroutine symopt
 
     !> @brief Evaluate getsymm for the NH3_GEN_FFW1_2006 potential.
     subroutine getsymm( i1, i2, i3, n, x, y, dy )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: i1
-        integer          :: i2
-        integer          :: i3
-        integer          :: n
-        double precision :: x(n)
-        double precision :: y(n)
+        integer  :: i1
+        integer  :: i2
+        integer  :: i3
+        integer  :: n
+        real(wp) :: x(n)
+        real(wp) :: y(n)
         ! dy(i,j) = dy(i)/dx(j)
-        double precision :: dy(n,n)
-        integer          :: ip(3), i, j, k
-        double precision :: s(3,3)
+        real(wp) :: dy(n,n)
+        integer  :: ip(3), i, j, k
+        real(wp) :: s(3,3)
         do i=1, n
-            y(i) = 0.d0
+            y(i) = 0.e0_wp
             do j=1, n
-                dy(i,j) = 0.d0
+                dy(i,j) = 0.e0_wp
             enddo
         enddo
         ip(1) = i1
@@ -457,72 +458,73 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         !      y(1:3) = matmul(S,x(1:3))
         !      y(4:6) = matmul(S,x(4:6))
         y(7)    = x(7)
-        dy(7,7) = 1.d0
+        dy(7,7) = 1.e0_wp
     end subroutine getsymm
 
     !> @brief Evaluate repulsive for the NH3_GEN_FFW1_2006 potential.
     subroutine repulsive( rr, erep, derep, cpot )
         ! Additional repuslive terms
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: rr(6), erep, derep(6)
+        real(wp)         :: rr(6), erep, derep(6)
         character(len=3) :: cpot
-        double precision :: bnh1, bnh2, bhh
+        real(wp)         :: bnh1, bnh2, bhh
         !     exponental coefficient
-        double precision :: alpnh1, alpnh2, alphh
+        real(wp) :: alpnh1, alpnh2, alphh
         !     Center of Gaussian Function
-        double precision :: r0nh, r0hh
+        real(wp) :: r0nh, r0hh
         !      parameter (R00 = 0.0d0)
-        double precision :: r0
-        double precision :: erepi, erepnh, erephh
+        real(wp) :: r0
+        real(wp) :: erepi, erepnh, erephh
         ! second additional repulsive terms added to NH repulsion
-        double precision :: erepnh1, erepnh2
+        real(wp) :: erepnh1, erepnh2
         ! Used for asymtotic correction
-        double precision :: ecorrlimit
+        real(wp) :: ecorrlimit
         ! Derivatives: derepXH: 1-3 NH repul. derivs, 4-6, HH repul. derivs
-        double precision :: derepxh(6), derepnh1, derepnh2, derepi
-        double precision :: decorrlimit
+        real(wp) :: derepxh(6), derepnh1, derepnh2, derepi
+        real(wp) :: decorrlimit
         ! U11
         !     DE between the dissociation limit and exp
-        double precision :: deu11
-        double precision :: shiftu11
+        real(wp) :: deu11
+        real(wp) :: shiftu11
         ! U22
         !     DE between the dissociation limit and exp
-        double precision :: deu22
+        real(wp) :: deu22
         !     energy shift to make the U22 (==V2) planar minimum in agreement
         !     with exp. All the energy are relative to V1
-        double precision :: shiftu22
-        double precision :: deltae
-        double precision :: eshift
+        real(wp) :: shiftu22
+        real(wp) :: deltae
+        real(wp) :: eshift
         !     Re for the correction function
         !     1.024d0: experimental NH distance for NH2 (2B1, ground state)
-        double precision :: ecor1
-        double precision :: decor1(6)
+        real(wp) :: ecor1
+        real(wp) :: decor1(6)
         !     gamma
         !      parameter (gam  = 1.81d0 )
-        double precision, parameter :: gam   = 3.00d0
-        double precision, parameter :: recor = 2.0d0*1.024d0
-        integer                     :: i, j
+        real(wp), parameter :: gam   = 3.00e0_wp
+        real(wp), parameter :: recor = 2.0e0_wp*1.024e0_wp
+        integer             :: i, j
         !  misc
-        double precision :: tmp
-        double precision :: dtmp
-        double precision :: dr, dr1, dr2
-        double precision :: rr1
+        real(wp) :: tmp
+        real(wp) :: dtmp
+        real(wp) :: dr, dr1, dr2
+        real(wp) :: rr1
         !      Re0 = 1.004d0
-        r0nh = -0.2d0
-        r0hh = -0.2d0
+        r0nh = -0.2e0_wp
+        r0hh = -0.2e0_wp
         !              Exp        Theor
-        shiftu11 = 0.00189d0
-        deu11    = 0.21967d0
-        shiftu22 = 0.04726d0
-        deu22    = 0.19700d0
+        shiftu11 = 0.00189e0_wp
+        deu11    = 0.21967e0_wp
+        shiftu22 = 0.04726e0_wp
+        deu22    = 0.19700e0_wp
         if( cpot .eq. 'U11' )then
-            alpnh2 = 11.00d0
-            bnh2   = 209.83d0
+            alpnh2 = 11.00e0_wp
+            bnh2   = 209.83e0_wp
             eshift = shiftu11
             deltae = deu11
         elseif( cpot .eq. 'U22' )then
-            alpnh2 = 11.00d0
-            bnh2   = 419.66d0
+            alpnh2 = 11.00e0_wp
+            bnh2   = 419.66e0_wp
             eshift = shiftu22
             deltae = deu22
         endif
@@ -540,31 +542,31 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         if( cpot .ne. 'U12' )then
             do i=1, 3
                 dr         = rr(i)-r0nh
-                rr1        = 1.d0/rr(i)
-                erepi      = dexp(-alpnh1*dr*dr) * rr1
+                rr1        = 1.e0_wp/rr(i)
+                erepi      = exp(-alpnh1*dr*dr) * rr1
                 erepnh1    = erepnh1+ erepi
-                derepnh1   = -erepi*( 2.d0*alpnh1*dr + rr1 )
-                erepi      = dexp(-alpnh2*dr*dr) * rr1
+                derepnh1   = -erepi*( 2.e0_wp*alpnh1*dr + rr1 )
+                erepi      = exp(-alpnh2*dr*dr) * rr1
                 erepnh2    = erepnh2 + erepi
-                derepnh2   = -erepi*( 2.d0*alpnh2*dr + rr1 )
+                derepnh2   = -erepi*( 2.e0_wp*alpnh2*dr + rr1 )
                 derepxh(i) = bnh1*derepnh1 + bnh2*derepnh2
                 ! Correction to right limit
                 !        erepi   = 0.5d0*(1.d0+dtanh(gam*sum[rr(i)-Recor]) )
-                tmp = dtanh(gam*(rr(i)-recor))
+                tmp = tanh(gam*(rr(i)-recor))
                 !       d(tanh) = (sech)**2 = 1-(tanh)**2
-                dtmp      = gam*(1.d0-tmp*tmp)
-                erepi     = 0.5d0*( 1.d0 + tmp )
+                dtmp      = gam*(1.e0_wp-tmp*tmp)
+                erepi     = 0.5e0_wp*( 1.e0_wp + tmp )
                 ecor1     = ecor1 + erepi
-                decor1(i) = 0.5d0*dtmp
+                decor1(i) = 0.5e0_wp*dtmp
             enddo
             erepnh = bnh1*erepnh1 + bnh2*erepnh2
             do i=4, 6
                 dr         = rr(i)-r0hh
-                rr1        = 1.d0/rr(i)
-                erepi      = dexp(-alphh*dr*dr) * rr1
+                rr1        = 1.e0_wp/rr(i)
+                erepi      = exp(-alphh*dr*dr) * rr1
                 erephh     = erephh + erepi
-                derepxh(i) = -bhh*erepi*( 2.d0*alphh*dr + rr1 )
-                decor1(i)  = 0.d0
+                derepxh(i) = -bhh*erepi*( 2.e0_wp*alphh*dr + rr1 )
+                decor1(i)  = 0.e0_wp
             enddo
             erephh = bhh * erephh
             do i=1, 6
@@ -578,53 +580,54 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate U11poly for the NH3_GEN_FFW1_2006 potential.
     subroutine u11poly( ind0, geoint, ans, g_ans )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: ind0(7)
-        double precision :: geoint(7)
-        double precision :: ans
-        double precision :: g_ans(7)
+        integer  :: ind0(7)
+        real(wp) :: geoint(7)
+        real(wp) :: ans
+        real(wp) :: g_ans(7)
         ! Parameter List
-        double precision            :: frb, frc, alp
-        double precision, parameter :: pi     = 3.1415926535897930d0
-        double precision, parameter :: deg2au = pi/180.d0
+        real(wp)            :: frb, frc, alp
+        real(wp), parameter :: pi     = 3.1415926535897930e0_wp
+        real(wp), parameter :: deg2au = pi/180.e0_wp
         ! Experimental value: Landolt-Börnstein, Numerical Data and Function
         ! Relationships in Science and Technology II(7,2) (Springer, New York,
         ! 1976). Cited in J. Pesonen, A. Miani, and L. Halonen, J. Chem. Phys.
         ! 115, 1243 (2001)
-        double precision, parameter :: gta = 106.68*pi/180.0d0
+        real(wp), parameter :: gta = 106.68*pi/180.0e0_wp
         ! CoS(GTa) = CoS(106.28)
-        double precision, parameter :: cosgta = -0.2870261592d0
-        double precision, parameter :: hba    = 0.5d0*pi
+        real(wp), parameter :: cosgta = -0.2870261592e0_wp
+        real(wp), parameter :: hba    = 0.5e0_wp*pi
         ! Local Variables
-        double precision :: g1
-        double precision :: g2
-        double precision :: g3
-        double precision :: x1
-        double precision :: x2
-        double precision :: x3
-        double precision :: x4
-        double precision :: x5
-        double precision :: x6
-        double precision :: x7
-        double precision :: y(7)
-        double precision :: beta, r1, r2, r3, the1, the2, the3
-        integer          :: i, j, k, l, m, n, p
-        integer          :: ind
+        real(wp) :: g1
+        real(wp) :: g2
+        real(wp) :: g3
+        real(wp) :: x1
+        real(wp) :: x2
+        real(wp) :: x3
+        real(wp) :: x4
+        real(wp) :: x5
+        real(wp) :: x6
+        real(wp) :: x7
+        real(wp) :: y(7)
+        real(wp) :: beta, r1, r2, r3, the1, the2, the3
+        integer  :: i, j, k, l, m, n, p
+        integer  :: ind
         ! Derivatives
-        double precision :: y123, y4567
-        double precision :: dg1, dg2, dg3
-        double precision :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
-        double precision :: dy71, dy72, dy73, dy77
-        double precision :: dy(3)
-        double precision :: dy42, dy43, dy44
-        double precision :: dy51, dy53, dy55
-        double precision :: dy61, dy62, dy66
-        double precision :: tmp
+        real(wp) :: y123, y4567
+        real(wp) :: dg1, dg2, dg3
+        real(wp) :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
+        real(wp) :: dy71, dy72, dy73, dy77
+        real(wp) :: dy(3)
+        real(wp) :: dy42, dy43, dy44
+        real(wp) :: dy51, dy53, dy55
+        real(wp) :: dy61, dy62, dy66
+        real(wp) :: tmp
         !  parameters to be optimized:
         !                 GTa(theta0),FRb(gamma),FRc(r0),ALP(delta)
-        frb = .1872506360d+01
-        frc = .4278236310d+00
-        alp = .1009053173d+00
+        frb = .1872506360e+01_wp
+        frc = .4278236310e+00_wp
+        alp = .1009053173e+00_wp
         ! geoInt contains the internals in the following format
         ! geoInt(1) : r1
         ! geoInt(2) : r2
@@ -644,13 +647,13 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         the2 = geoint(5)*deg2au
         the3 = geoint(6)*deg2au
         beta = geoint(7)*deg2au
-        g1   = dexp( -alp * r1*r1 )
-        g2   = dexp( -alp * r2*r2 )
-        g3   = dexp( -alp * r3*r3 )
+        g1   = exp( -alp * r1*r1 )
+        g2   = exp( -alp * r2*r2 )
+        g3   = exp( -alp * r3*r3 )
         ! dgi = dgi/dri (i=1,2,3)
-        dg1 = -2.d0*alp*r1*g1
-        dg2 = -2.d0*alp*r2*g2
-        dg3 = -2.d0*alp*r3*g3
+        dg1 = -2.e0_wp*alp*r1*g1
+        dg2 = -2.e0_wp*alp*r2*g2
+        dg3 = -2.e0_wp*alp*r3*g3
         ! Energy and Derivatives
         ! f(r)  = 1 - exp[-B(r-C)]
         ! dxi = dxi/dri (i=1,2,3) A,B,C are constants
@@ -658,14 +661,14 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         do i=1, 3
             ind = ind0(i)
             if( ind .eq. 0 )then
-                dy(i) = 0.d0
-                y(i)  = 1.d0
+                dy(i) = 0.e0_wp
+                y(i)  = 1.e0_wp
             else
-                x1    = dexp(-frb*(geoint(i) - frc))
+                x1    = exp(-frb*(geoint(i) - frc))
                 dx1   = frb*x1
-                x1    = 1.d0 - x1
+                x1    = 1.e0_wp - x1
                 tmp   = x1**(ind-1)
-                dy(i) = dble(ind)* tmp * dx1
+                dy(i) = real(ind, wp)* tmp * dx1
                 y(i)  = tmp*x1
             endif
         enddo
@@ -673,61 +676,61 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         !     x* = dcos(GTa) - dcos(  theta )
         ! dy4i = dy(4)/dri (i=1,2,3), dy44 = dy(4)/dtheta1
         if( l .eq. 0 )then
-            dy42 = 0.d0
-            dy43 = 0.d0
-            dy44 = 0.d0
-            y(4) = 1.d0
+            dy42 = 0.e0_wp
+            dy43 = 0.e0_wp
+            dy44 = 0.e0_wp
+            y(4) = 1.e0_wp
         else
-            x4   = cosgta - dcos(  the1 )
-            dx4  = dsin(  the1 ) * deg2au
+            x4   = cosgta - cos(  the1 )
+            dx4  = sin(  the1 ) * deg2au
             tmp  = (x4*g2*g3)**(l-1)
-            dy42 = dble(l)* tmp *  x4 * dg2 *  g3
-            dy43 = dble(l)* tmp *  x4 *  g2 * dg3
-            dy44 = dble(l)* tmp * dx4 *  g2 *  g3
+            dy42 = real(l, wp)* tmp *  x4 * dg2 *  g3
+            dy43 = real(l, wp)* tmp *  x4 *  g2 * dg3
+            dy44 = real(l, wp)* tmp * dx4 *  g2 *  g3
             y(4) = tmp*x4*g2*g3
         endif
         ! dy5i = dy(5)/dri (i=1,2,3), dy55 = dy(5)/dtheta2
         if( m .eq. 0 )then
-            dy51 = 0.d0
-            dy53 = 0.d0
-            dy55 = 0.d0
-            y(5) = 1.d0
+            dy51 = 0.e0_wp
+            dy53 = 0.e0_wp
+            dy55 = 0.e0_wp
+            y(5) = 1.e0_wp
         else
-            x5   = cosgta - dcos(  the2 )
-            dx5  = dsin(  the2 ) * deg2au
+            x5   = cosgta - cos(  the2 )
+            dx5  = sin(  the2 ) * deg2au
             tmp  = (x5*g1*g3)**(m-1)
-            dy51 = dble(m)* tmp *  x5 * dg1 *  g3
-            dy53 = dble(m)* tmp *  x5 *  g1 * dg3
-            dy55 = dble(m)* tmp * dx5 *  g1 *  g3
+            dy51 = real(m, wp)* tmp *  x5 * dg1 *  g3
+            dy53 = real(m, wp)* tmp *  x5 *  g1 * dg3
+            dy55 = real(m, wp)* tmp * dx5 *  g1 *  g3
             y(5) = tmp*x5*g1*g3
         endif
         ! dy6i = dy(6)/dri (i=1,2,3), dy66 = dy(6)/dtheta3
         if( n .eq. 0 )then
-            dy61 = 0.d0
-            dy62 = 0.d0
-            dy66 = 0.d0
-            y(6) = 1.d0
+            dy61 = 0.e0_wp
+            dy62 = 0.e0_wp
+            dy66 = 0.e0_wp
+            y(6) = 1.e0_wp
         else
-            x6   = cosgta - dcos(  the3 )
-            dx6  = dsin(  the3 ) * deg2au
+            x6   = cosgta - cos(  the3 )
+            dx6  = sin(  the3 ) * deg2au
             tmp  = (x6*g1*g2)**(n-1)
-            dy61 = dble(n)* tmp *  x6 * dg1 *  g2
-            dy62 = dble(n)* tmp *  x6 *  g1 * dg2
-            dy66 = dble(n)* tmp * dx6 *  g1 *  g2
+            dy61 = real(n, wp)* tmp *  x6 * dg1 *  g2
+            dy62 = real(n, wp)* tmp *  x6 *  g1 * dg2
+            dy66 = real(n, wp)* tmp * dx6 *  g1 *  g2
             y(6) = tmp*x6*g1*g2
         endif
         !  geoInt(7) beta; HBa PI/2
-        tmp = dble(p) * (beta-hba)
-        x7  = dcos( tmp )
+        tmp = real(p, wp) * (beta-hba)
+        x7  = cos( tmp )
         !   dx7/dbeta, not in degree
-        dx7 = -dble(p)*dsin( tmp ) * deg2au
+        dx7 = -real(p, wp)*sin( tmp ) * deg2au
         ! dy7i = dy(7)/dri (i=1,2,3), dy77 = dy(7)/dbeta
-        tmp   = 1.d0-x7
+        tmp   = 1.e0_wp-x7
         dy71  = tmp* dg1 *  g2 *  g3
         dy72  = tmp*  g1 * dg2 *  g3
         dy73  = tmp*  g1 *  g2 * dg3
         dy77  = -dx7*  g1 *  g2 *  g3
-        y(7)  = 1.0d0 + tmp*g1*g2*g3
+        y(7)  = 1.0e0_wp + tmp*g1*g2*g3
         y123  = y(1)*y(2)*y(3)
         y4567 = y(4)*y(5)*y(6)*y(7)
         ans   = y123 * y4567
@@ -753,58 +756,59 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate U22poly for the NH3_GEN_FFW1_2006 potential.
     subroutine u22poly( ind0, geoint, ans, g_ans )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: ind0(7)
-        double precision :: geoint(7)
-        double precision :: ans
-        double precision :: g_ans(7)
+        integer  :: ind0(7)
+        real(wp) :: geoint(7)
+        real(wp) :: ans
+        real(wp) :: g_ans(7)
         ! Parameter List
-        double precision            :: frb, frc, alp, re, frd
-        double precision, parameter :: pi     = 3.1415926535897930d0
-        double precision, parameter :: deg2au = pi/180.d0
-        double precision, parameter :: gta    = 2.0d0*pi/3.0d0
+        real(wp)            :: frb, frc, alp, re, frd
+        real(wp), parameter :: pi     = 3.1415926535897930e0_wp
+        real(wp), parameter :: deg2au = pi/180.e0_wp
+        real(wp), parameter :: gta    = 2.0e0_wp*pi/3.0e0_wp
         ! CoS(GTa) = CoS(120.0) = -1/2
-        double precision, parameter :: cosgta = -0.5d0
-        double precision, parameter :: hba    = 0.5d0*pi
+        real(wp), parameter :: cosgta = -0.5e0_wp
+        real(wp), parameter :: hba    = 0.5e0_wp*pi
         ! Correction to umbralla bending vibration mode
-        double precision :: dk
+        real(wp) :: dk
         ! FRd, and Re: used for Gaussian function
         ! Local varibales
-        double precision :: g1
-        double precision :: g2
-        double precision :: g3
-        double precision :: x1, x11
-        double precision :: x2, x21
-        double precision :: x3, x31
-        double precision :: x4
-        double precision :: x5
-        double precision :: x6
-        double precision :: x7
-        double precision :: y(7)
-        double precision :: beta, r1, r2, r3, the1, the2, the3
-        integer          :: i, j, k, l, m, n, p
-        integer          :: ind
+        real(wp) :: g1
+        real(wp) :: g2
+        real(wp) :: g3
+        real(wp) :: x1, x11
+        real(wp) :: x2, x21
+        real(wp) :: x3, x31
+        real(wp) :: x4
+        real(wp) :: x5
+        real(wp) :: x6
+        real(wp) :: x7
+        real(wp) :: y(7)
+        real(wp) :: beta, r1, r2, r3, the1, the2, the3
+        integer  :: i, j, k, l, m, n, p
+        integer  :: ind
         ! Derivatives
-        double precision :: y123, y4567
-        double precision :: dg1, dg2, dg3, g1g2, g2g3, g1g3
-        double precision :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
-        double precision :: dy71, dy72, dy73, dy77
-        double precision :: dy(3)
-        double precision :: dy11, dy12, dy13
-        double precision :: dy21, dy22, dy23
-        double precision :: dy31, dy32, dy33
-        double precision :: dy42, dy43, dy44
-        double precision :: dy51, dy53, dy55
-        double precision :: dy61, dy62, dy66
-        double precision :: tmp, dtmp(3)
-        double precision :: dr
+        real(wp) :: y123, y4567
+        real(wp) :: dg1, dg2, dg3, g1g2, g2g3, g1g3
+        real(wp) :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
+        real(wp) :: dy71, dy72, dy73, dy77
+        real(wp) :: dy(3)
+        real(wp) :: dy11, dy12, dy13
+        real(wp) :: dy21, dy22, dy23
+        real(wp) :: dy31, dy32, dy33
+        real(wp) :: dy42, dy43, dy44
+        real(wp) :: dy51, dy53, dy55
+        real(wp) :: dy61, dy62, dy66
+        real(wp) :: tmp, dtmp(3)
+        real(wp) :: dr
         ! Wed Oct 18 14:57:07 CDT 2006, with additional NH2 (linear)
-        frb = .1633658498d+01
-        frc = .1987056751d+00
-        alp = .3037603850d+00
-        re  = .7147714247d+00
-        frd = .4546981630d+01
-        dk  = -.2617146615d+00
+        frb = .1633658498e+01_wp
+        frc = .1987056751e+00_wp
+        alp = .3037603850e+00_wp
+        re  = .7147714247e+00_wp
+        frd = .4546981630e+01_wp
+        dk  = -.2617146615e+00_wp
         ! geoInt contains the internals in the following format
         ! geoInt(1) : r1
         ! geoInt(2) : r2
@@ -824,16 +828,16 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         the2 = geoint(5)*deg2au
         the3 = geoint(6)*deg2au
         beta = geoint(7)*deg2au
-        g1   = dexp( -alp * r1*r1 )
-        g2   = dexp( -alp * r2*r2 )
-        g3   = dexp( -alp * r3*r3 )
+        g1   = exp( -alp * r1*r1 )
+        g2   = exp( -alp * r2*r2 )
+        g3   = exp( -alp * r3*r3 )
         g1g2 = g1*g2
         g1g3 = g1*g3
         g2g3 = g2*g3
         ! dgi = dgi/dri (i=1,2,3)
-        dg1 = -2.d0*alp*r1*g1
-        dg2 = -2.d0*alp*r2*g2
-        dg3 = -2.d0*alp*r3*g3
+        dg1 = -2.e0_wp*alp*r1*g1
+        dg2 = -2.e0_wp*alp*r2*g2
+        dg3 = -2.e0_wp*alp*r3*g3
         ! Energy and Derivatives
         ! f(r)  = 1 - exp[-B(r-C)]
         ! dxi = dxi/dri (i=1,2,3) A,B,C are constants
@@ -841,55 +845,55 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         do i=1, 3
             ind = ind0(i)
             if( ind .eq. 0 )then
-                dy(i) = 0.d0
-                y(i)  = 1.d0
+                dy(i) = 0.e0_wp
+                y(i)  = 1.e0_wp
             elseif( ind .le. 2 )then
-                x1    = dexp(-frb*(geoint(i) - frc))
+                x1    = exp(-frb*(geoint(i) - frc))
                 dx1   = frb*x1
-                x1    = 1.d0 - x1
+                x1    = 1.e0_wp - x1
                 tmp   = x1**(ind-1)
-                dy(i) = dble(ind)* tmp * dx1
+                dy(i) = real(ind, wp)* tmp * dx1
                 y(i)  = tmp*x1
             endif
         enddo
         ! Li on Suggested by Don. (R-Re)^2 exp(-a (R-Re)^2)
         if( ind0(1) .eq. 3 )then
             dr   = geoint(1) - re
-            x1   = dexp(-frd*dr*dr)
-            dx1  = -2.d0*frd*dr*x1
+            x1   = exp(-frd*dr*dr)
+            dx1  = -2.e0_wp*frd*dr*x1
             y(1) = x1 * g2g3
             dy11 = dx1* g2g3
             dy12 = x1 * dg2*g3
             dy13 = x1 * g2*dg3
         else
             dy11 = dy(1)
-            dy12 = 0.d0
-            dy13 = 0.d0
+            dy12 = 0.e0_wp
+            dy13 = 0.e0_wp
         endif
         if( ind0(2) .eq. 3 )then
             dr   = geoint(2) - re
-            x1   = dexp(-frd*dr*dr)
-            dx1  = -2.d0*frd*dr*x1
+            x1   = exp(-frd*dr*dr)
+            dx1  = -2.e0_wp*frd*dr*x1
             y(2) = x1 * g1g3
             dy21 = x1 * dg1*g3
             dy22 = dx1* g1g3
             dy23 = x1 * g1*dg3
         else
-            dy21 = 0.d0
+            dy21 = 0.e0_wp
             dy22 = dy(2)
-            dy23 = 0.d0
+            dy23 = 0.e0_wp
         endif
         if( ind0(3) .eq. 3 )then
             dr   = geoint(3) - re
-            x1   = dexp(-frd*dr*dr)
-            dx1  = -2.d0*frd*dr*x1
+            x1   = exp(-frd*dr*dr)
+            dx1  = -2.e0_wp*frd*dr*x1
             y(3) = x1 * g1g2
             dy31 = x1 * dg1*g2
             dy32 = x1 * g1*dg2
             dy33 = dx1* g1g2
         else
-            dy31 = 0.d0
-            dy32 = 0.d0
+            dy31 = 0.e0_wp
+            dy32 = 0.e0_wp
             dy33 = dy(3)
         endif
         !     x* = dcos(GTa) - dcos(  theta )
@@ -898,45 +902,45 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         if( l .eq. 0 )then
             dy42 = dg2*g3
             dy43 = g2*dg3
-            dy44 = 0.d0
-            y(4) = 1.d0 + g2g3
+            dy44 = 0.e0_wp
+            y(4) = 1.e0_wp + g2g3
         else
-            x4   = cosgta - dcos(  the1 )
-            dx4  = dsin(  the1 ) * deg2au
+            x4   = cosgta - cos(  the1 )
+            dx4  = sin(  the1 ) * deg2au
             tmp  = x4**(l-1)
             dy42 = tmp *  x4 * dg2 *  g3
             dy43 = tmp *  x4 *  g2 * dg3
-            dy44 = dble(l)* tmp * dx4 *  g2g3
-            y(4) = 1.d0+tmp*x4*g2g3
+            dy44 = real(l, wp)* tmp * dx4 *  g2g3
+            y(4) = 1.e0_wp+tmp*x4*g2g3
         endif
         if( m .eq. 0 )then
             dy51 = dg1*g3
             dy53 = g1*dg3
-            dy55 = 0.d0
-            y(5) = 1.d0 + g1g3
+            dy55 = 0.e0_wp
+            y(5) = 1.e0_wp + g1g3
         else
-            x5   = cosgta - dcos(  the2 )
-            dx5  = dsin(  the2 ) * deg2au
+            x5   = cosgta - cos(  the2 )
+            dx5  = sin(  the2 ) * deg2au
             tmp  = x5**(m-1)
             dy51 = tmp *  x5 * dg1 *  g3
             dy53 = tmp *  x5 *  g1 * dg3
-            dy55 = dble(m)* tmp * dx5 *  g1g3
-            y(5) = 1.d0+tmp*x5*g1g3
+            dy55 = real(m, wp)* tmp * dx5 *  g1g3
+            y(5) = 1.e0_wp+tmp*x5*g1g3
         endif
         ! dy6i = dy(6)/dri (i=1,2,3), dy66 = dy(6)/dtheta3
         if( n .eq. 0 )then
             dy61 = dg1*g2
             dy62 = g1*dg2
-            dy66 = 0.d0
-            y(6) = 1.d0 + g1g2
+            dy66 = 0.e0_wp
+            y(6) = 1.e0_wp + g1g2
         else
-            x6   = cosgta - dcos(  the3 )
-            dx6  = dsin(  the3 ) * deg2au
+            x6   = cosgta - cos(  the3 )
+            dx6  = sin(  the3 ) * deg2au
             tmp  = x6**(n-1)
             dy61 = tmp *  x6 * dg1 *  g2
             dy62 = tmp *  x6 *  g1 * dg2
-            dy66 = dble(n)* tmp * dx6 *  g1g2
-            y(6) = 1.d0+tmp*x6*g1g2
+            dy66 = real(n, wp)* tmp * dx6 *  g1g2
+            y(6) = 1.e0_wp+tmp*x6*g1g2
         endif
         !  geoInt(7) beta; HBa PI/2
         !      y(7) = 1 + (1-x7)*g1*g2*g3
@@ -945,16 +949,16 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         !   dx7/dbeta, not in degree
         !      dx7 = -dble(p)*dsin( tmp ) * deg2au
         tmp = beta-hba
-        x7  = dcos( dble(p) * tmp ) + 0.5d0*dk*tmp*tmp/(0.05d0+tmp*tmp)
-        dx7 = -dble(p)*dsin( dble(p) * tmp ) * deg2au + dk*tmp*deg2au/(0.05d0+tmp*tmp) - dk*tmp**3*deg2au/(0.05d0+tmp* &
-            & tmp)** 2
+        x7  = cos( real(p, wp) * tmp ) + 0.5e0_wp*dk*tmp*tmp/(0.05e0_wp+tmp*tmp)
+        dx7 = -real(p, wp)*sin( real(p, wp) * tmp ) * deg2au + dk*tmp*deg2au/(0.05e0_wp+tmp*tmp) - dk*tmp**3*deg2au/ &
+            & (0.05e0_wp+tmp* tmp)** 2
         ! dy7i = dy(7)/dri (i=1,2,3), dy77 = dy(7)/dbeta
-        tmp   = 1.d0-x7
+        tmp   = 1.e0_wp-x7
         dy71  = tmp* dg1 *  g2g3
         dy72  = tmp*  g1g3 * dg2
         dy73  = tmp*  g1g2 * dg3
         dy77  = -dx7*  g1 *  g2g3
-        y(7)  = 1.0d0 + tmp*g1*g2g3
+        y(7)  = 1.0e0_wp + tmp*g1*g2g3
         y123  = y(1)*y(2)*y(3)
         y4567 = y(4)*y(5)*y(6)*y(7)
         ans   = y123 * y4567
@@ -983,38 +987,39 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate U12poly for the NH3_GEN_FFW1_2006 potential.
     subroutine u12poly( ind0, geoint, ans, g_ans )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: ind0(7)
-        double precision :: geoint(7)
-        double precision :: ans
+        integer  :: ind0(7)
+        real(wp) :: geoint(7)
+        real(wp) :: ans
         ! Derivatives of 7 internal coordinates
-        double precision :: g_ans(7)
+        real(wp) :: g_ans(7)
         ! Parameter List
-        double precision, parameter :: pi = 3.1415926535897930d0
+        real(wp), parameter :: pi = 3.1415926535897930e0_wp
         !! Parameter List (U12)
         ! FRU12a    parameters used to define angular for U22
         ! FRU12b    parameters used to define angular for U22
         ! FRU12c    parameters used to define angular for U22
-        double precision            :: fru12a, fru12c
-        double precision            :: alp
-        double precision, parameter :: deg2au = pi/180.d0
-        double precision, parameter :: fru12b = 1.00d0
+        real(wp)            :: fru12a, fru12c
+        real(wp)            :: alp
+        real(wp), parameter :: deg2au = pi/180.e0_wp
+        real(wp), parameter :: fru12b = 1.00e0_wp
         !      parameter ( FRU12c = 2.0150d0        )
-        double precision, parameter :: gtu12a = 2.0d0*pi/3.0d0
-        double precision, parameter :: hbu12a = 0.5d0*pi
+        real(wp), parameter :: gtu12a = 2.0e0_wp*pi/3.0e0_wp
+        real(wp), parameter :: hbu12a = 0.5e0_wp*pi
         ! Misc
-        integer          :: i, j, ind
-        double precision :: z1(6), tz, tf, z123, z456
-        double precision :: hbu12, fru121, fru122, fru123
-        double precision :: theta, beta
-        double precision :: y(7)
-        double precision :: tmp
+        integer  :: i, j, ind
+        real(wp) :: z1(6), tz, tf, z123, z456
+        real(wp) :: hbu12, fru121, fru122, fru123
+        real(wp) :: theta, beta
+        real(wp) :: y(7)
+        real(wp) :: tmp
         ! Derivatives
-        double precision :: dz1(6)
-        double precision :: d7, dfr1, dfr2, dfr3
+        real(wp) :: dz1(6)
+        real(wp) :: d7, dfr1, dfr2, dfr3
         !  parameters to be optimized:
         !                 FRU12c(r04)
-        fru12c = .1501070926d+01
+        fru12c = .1501070926e+01_wp
         ! geoInt contains the internals in the following format
         ! geoInt(1) : r1
         ! geoInt(2) : r2
@@ -1026,44 +1031,44 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         do i=1, 3
             ind = ind0(i)
             if( ind .eq. 0 )then
-                dz1(i) = 0.d0
-                z1(i)  = 1.d0
+                dz1(i) = 0.e0_wp
+                z1(i)  = 1.e0_wp
             else
                 z1(i)  = geoint(i)**(ind-1)
-                dz1(i) = dble(ind)*z1(i)
+                dz1(i) = real(ind, wp)*z1(i)
                 z1(i)  = z1(i)*geoint(i)
             endif
         enddo
         do i=4, 6
             ind = ind0(i)
             if( ind .eq. 0 )then
-                dz1(i) = 0.d0
-                z1(i)  = 1.d0
+                dz1(i) = 0.e0_wp
+                z1(i)  = 1.e0_wp
             else
                 !  Unit degree/A
                 theta  = geoint(i) * deg2au
                 z1(i)  = theta**(ind-1)
-                dz1(i) = dble(ind)*z1(i) * deg2au
+                dz1(i) = real(ind, wp)*z1(i) * deg2au
                 z1(i)  = z1(i)*theta
             endif
         enddo
         beta  = geoint(7)*deg2au
-        tmp   = dble(ind0(7))*(beta-hbu12a)
-        hbu12 = -dsin( tmp )
+        tmp   = real(ind0(7), wp)*(beta-hbu12a)
+        hbu12 = -sin( tmp )
         !  d_HBU12 / d geoInt(7)
-        d7 = -dcos( tmp ) * ind0(7) * deg2au
+        d7 = -cos( tmp ) * ind0(7) * deg2au
         ! f(r) = 1 - tanh[-B(r-C)]
         !  d tanh(x) = sech(x)^2 = 1 - tanh(x)^2
         ! df(r)/dr =  - {1 - tanh[-B(r-C)] }^2 * B
-        tmp    = dtanh( fru12b*(geoint(1)-fru12c) )
-        fru121 = 1.d0 - tmp
-        dfr1   = -(1.d0 - tmp*tmp)*fru12b
-        tmp    = dtanh( fru12b*(geoint(2)-fru12c) )
-        fru122 = 1.d0 - tmp
-        dfr2   = -(1.d0 - tmp*tmp)*fru12b
-        tmp    = dtanh( fru12b*(geoint(3)-fru12c) )
-        fru123 = 1.d0 - tmp
-        dfr3   = -(1.d0 - tmp*tmp)*fru12b
+        tmp    = tanh( fru12b*(geoint(1)-fru12c) )
+        fru121 = 1.e0_wp - tmp
+        dfr1   = -(1.e0_wp - tmp*tmp)*fru12b
+        tmp    = tanh( fru12b*(geoint(2)-fru12c) )
+        fru122 = 1.e0_wp - tmp
+        dfr2   = -(1.e0_wp - tmp*tmp)*fru12b
+        tmp    = tanh( fru12b*(geoint(3)-fru12c) )
+        fru123 = 1.e0_wp - tmp
+        dfr3   = -(1.e0_wp - tmp*tmp)*fru12b
         z123   = z1(1)*z1(2)*z1(3)
         z456   = z1(4)*z1(5)*z1(6)
         tz     = z123*z456
@@ -1082,31 +1087,33 @@ module chempotpy_nh3_gen_ffw1_2006_pes
     !> @brief Evaluate getAdiabat for the NH3_GEN_FFW1_2006 potential.
     subroutine getadiabat( nv, u11, u22, u12, v1, v2, &
             & gu11, gu22, gu12, gv1, gv2 )
+        use chempotpy_kinds, only: wp
         implicit none
         ! input
-        integer          :: nv
-        double precision :: u11, u22, u12
-        double precision :: gu11(nv), gu22(nv), gu12(nv)
+        integer  :: nv
+        real(wp) :: u11, u22, u12
+        real(wp) :: gu11(nv), gu22(nv), gu12(nv)
         ! Output
-        double precision :: v1, v2
-        double precision :: gv1(nv), gv2(nv)
-        integer          :: i, j
-        double precision :: x, y, dx, dy
+        real(wp) :: v1, v2
+        real(wp) :: gv1(nv), gv2(nv)
+        integer  :: i, j
+        real(wp) :: x, y, dx, dy
         x  = u11+u22
-        y  = dsqrt( ((u22-u11)**2) + (4.0d0*u12*u12) )
-        v1 = 0.5d0*(x - y)
-        v2 = 0.5d0*(x + y)
+        y  = sqrt( ((u22-u11)**2) + (4.0e0_wp*u12*u12) )
+        v1 = 0.5e0_wp*(x - y)
+        v2 = 0.5e0_wp*(x + y)
         ! Derivatives
         do i=1, nv
             dx     = gu11(i) + gu22(i)
-            dy     = ( (u22-u11)*( gu22(i)-gu11(i) ) + 4.d0*u12*gu12(i) ) / y
-            gv1(i) = 0.5d0 * (dx - dy)
-            gv2(i) = 0.5d0 * (dx + dy)
+            dy     = ( (u22-u11)*( gu22(i)-gu11(i) ) + 4.e0_wp*u12*gu12(i) ) / y
+            gv1(i) = 0.5e0_wp * (dx - dy)
+            gv2(i) = 0.5e0_wp * (dx + dy)
         enddo
     end subroutine getadiabat
 
     !> @brief Evaluate calcindU1 for the NH3_GEN_FFW1_2006 potential.
     subroutine calcindu1( ind, m1, m2, m3, m4, m5, m6, m7, nc )
+        use chempotpy_kinds, only: wp
         implicit none
         integer :: nc
         integer :: m1
@@ -1148,6 +1155,7 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate calcindU2 for the NH3_GEN_FFW1_2006 potential.
     subroutine calcindu2( ind, m1, m2, m3, m4, m5, m6, m7, nc )
+        use chempotpy_kinds, only: wp
         implicit none
         integer :: nc
         integer :: mnc
@@ -1195,6 +1203,7 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate calcindU12 for the NH3_GEN_FFW1_2006 potential.
     subroutine calcindu12( ind, m1, m2, m3, m4, m5, m6, m7, nc )
+        use chempotpy_kinds, only: wp
         implicit none
         integer :: nc
         integer :: m1
@@ -1236,12 +1245,13 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate toBowman for the NH3_GEN_FFW1_2006 potential.
     subroutine tobowman( x, bow, g_bow )
+        use chempotpy_kinds, only: wp
         implicit none
         integer, parameter :: natom = 4
         !     X in one array with x1,y1,z1,...x4,y4,z4
-        double precision            :: x(3 * natom)
-        double precision            :: bow(7)
-        double precision, parameter :: pi = 3.1415926535897930d0
+        real(wp)            :: x(3 * natom)
+        real(wp)            :: bow(7)
+        real(wp), parameter :: pi = 3.1415926535897930e0_wp
         ! This function returns the Bowman
         ! coordinates from cartesian coordinates
         ! All angles are in DEGREES
@@ -1258,31 +1268,31 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! coord(2,:) : H1
         ! coord(3,:) : H2
         ! coord(4,:) : H3
-        double precision :: r(3)
-        double precision :: beta(3)
-        double precision :: theta(3)
+        real(wp) :: r(3)
+        real(wp) :: beta(3)
+        real(wp) :: theta(3)
         ! Parameter list
-        integer, parameter          :: iout1 = 0
-        integer, parameter          :: inp1  = 5
-        double precision, parameter :: tol   = 1.0d-4
+        integer, parameter  :: iout1 = 0
+        integer, parameter  :: inp1  = 5
+        real(wp), parameter :: tol   = 1.0e-4_wp
         ! Geometry
-        double precision :: cartn(natom,3)
-        double precision :: cartp(natom,3)
+        real(wp) :: cartn(natom,3)
+        real(wp) :: cartp(natom,3)
         ! Unit Vectors
-        double precision :: ua(3), ub(3), uc(3)
-        double precision :: ut(3)
-        double precision :: uba(3), uca(3), ucb(3)
+        real(wp) :: ua(3), ub(3), uc(3)
+        real(wp) :: ut(3)
+        real(wp) :: uba(3), uca(3), ucb(3)
         ! Eq. of Plane
-        double precision :: a1
-        double precision :: a2
-        double precision :: a3
-        double precision :: d
-        double precision :: dist
+        real(wp) :: a1
+        real(wp) :: a2
+        real(wp) :: a3
+        real(wp) :: d
+        real(wp) :: dist
         ! Misc
-        integer          :: i, j, k, n, m
-        double precision :: xt, yt, zt, w
-        double precision :: b(3,3)
-        double precision :: a(3,3)
+        integer  :: i, j, k, n, m
+        real(wp) :: xt, yt, zt, w
+        real(wp) :: b(3,3)
+        real(wp) :: a(3,3)
         ! Get data from user
         ! Now we will evaluate the direction of the trisector vector
         ! the unit vectors along Ha, Hb and Hc bonds are labelled as
@@ -1290,20 +1300,20 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! cartN has the origin on the N atom
         integer, parameter :: g_pmax_ = 12
         integer            :: g_i_
-        double precision   :: d5_b, d3_p, d7_b, d2_v, d3_v, d8_b, d2_b, d3_b, d1_w, d4_v
-        double precision   :: d5_v, d1_p, d7_v, d2_p, d4_b, g_cartn(g_pmax_,natom,3), g_x(g_pmax_,3 * natom), g_d1_w(g_pmax_), g_r(g_pmax_,3), g_ua(g_pmax_,3)
-        double precision   :: g_ub(g_pmax_,3), g_uc(g_pmax_,3), g_uba(g_pmax_,3), g_uca(g_pmax_,3), g_ucb(g_pmax_,3), g_a(g_pmax_,3,3), g_b(g_pmax_,3,3), g_ut(g_pmax_,3), g_w(g_pmax_), g_beta(g_pmax_,3)
-        double precision   :: g_a1(g_pmax_), g_a2(g_pmax_), g_a3(g_pmax_), g_d(g_pmax_), g_xt(g_pmax_), g_yt(g_pmax_), g_zt(g_pmax_), g_cartp(g_pmax_,natom,3), g_dist(g_pmax_), g_theta(g_pmax_,3)
-        double precision   :: g_bow(g_pmax_,7)
+        real(wp)           :: d5_b, d3_p, d7_b, d2_v, d3_v, d8_b, d2_b, d3_b, d1_w, d4_v
+        real(wp)           :: d5_v, d1_p, d7_v, d2_p, d4_b, g_cartn(g_pmax_,natom,3), g_x(g_pmax_,3 * natom), g_d1_w(g_pmax_), g_r(g_pmax_,3), g_ua(g_pmax_,3)
+        real(wp)           :: g_ub(g_pmax_,3), g_uc(g_pmax_,3), g_uba(g_pmax_,3), g_uca(g_pmax_,3), g_ucb(g_pmax_,3), g_a(g_pmax_,3,3), g_b(g_pmax_,3,3), g_ut(g_pmax_,3), g_w(g_pmax_), g_beta(g_pmax_,3)
+        real(wp)           :: g_a1(g_pmax_), g_a2(g_pmax_), g_a3(g_pmax_), g_d(g_pmax_), g_xt(g_pmax_), g_yt(g_pmax_), g_zt(g_pmax_), g_cartp(g_pmax_,natom,3), g_dist(g_pmax_), g_theta(g_pmax_,3)
+        real(wp)           :: g_bow(g_pmax_,7)
         integer            :: g_ehfid
         !        call ehsfid(g_ehfid, 'toBowman','g_toBowman.f')
         g_ehfid = 0
         do i=1, 12
             do j=1, 12
                 if( i .eq. j )then
-                    g_x(i,j) = 1.d0
+                    g_x(i,j) = 1.e0_wp
                 else
-                    g_x(i,j) = 0.d0
+                    g_x(i,j) = 0.e0_wp
                 endif
             enddo
         enddo
@@ -1324,18 +1334,18 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! Get the bond distances
         do i = 2, natom
             d2_v = cartn(i,1) * cartn(i,1)
-            d3_p = 2.0d0 * cartn(i,1)
+            d3_p = 2.0e0_wp * cartn(i,1)
             d4_v = cartn(i,2) * cartn(i,2)
-            d2_p = 2.0d0 * cartn(i,2)
+            d2_p = 2.0e0_wp * cartn(i,2)
             d7_v = cartn(i,3) * cartn(i,3)
-            d1_p = 2.0d0 * cartn(i,3)
+            d1_p = 2.0e0_wp * cartn(i,3)
             do g_i_ = 1, g_pmax_
                 g_d1_w(g_i_) = d1_p * g_cartn(g_i_,i,3) + d2_p * g_cartn(g_i_,i,2) + d3_p * g_cartn(g_i_,i,1)
             enddo
             d1_w = d2_v + d4_v + d7_v
             d2_v = sqrt(d1_w)
-            if( d1_w .gt. 0.0d0 )then
-                d1_p = 1.0d0 / (2.0d0 *  d2_v)
+            if( d1_w .gt. 0.0e0_wp )then
+                d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
             else
                 !             call ehufDO (9,d1_w, d2_v, d1_p,
                 !     +g_ehfid,
@@ -1349,21 +1359,21 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! get the units vectors along Ha, Hb, and Hc
         do i = 1, 3
             d3_v = cartn(2,i) / r(1)
-            d2_b = 1.0d0 / r(1)
+            d2_b = 1.0e0_wp / r(1)
             d3_b = (-d3_v) / r(1)
             do g_i_ = 1, g_pmax_
                 g_ua(g_i_,i) = d3_b * g_r(g_i_,1) + d2_b * g_cartn(g_i_,2,i)
             enddo
             ua(i) = d3_v
             d3_v  = cartn(3,i) / r(2)
-            d2_b  = 1.0d0 / r(2)
+            d2_b  = 1.0e0_wp / r(2)
             d3_b  = (-d3_v) / r(2)
             do g_i_ = 1, g_pmax_
                 g_ub(g_i_,i) = d3_b * g_r(g_i_,2) + d2_b * g_cartn(g_i_,3,i)
             enddo
             ub(i) = d3_v
             d3_v  = cartn(4,i) / r(3)
-            d2_b  = 1.0d0 / r(3)
+            d2_b  = 1.0e0_wp / r(3)
             d3_b  = (-d3_v) / r(3)
             do g_i_ = 1, g_pmax_
                 g_uc(g_i_,i) = d3_b * g_r(g_i_,3) + d2_b * g_cartn(g_i_,4,i)
@@ -1430,9 +1440,9 @@ module chempotpy_nh3_gen_ffw1_2006_pes
             enddo
             do j = 1, 3
                 do g_i_ = 1, g_pmax_
-                    g_b(g_i_,j,i) = 0.0d0
+                    g_b(g_i_,j,i) = 0.0e0_wp
                 enddo
-                b(j,i) = 1.0d0
+                b(j,i) = 1.0e0_wp
             enddo
             call g_det3(b, g_b, ut(i), g_ut(1,i))
         enddo
@@ -1444,8 +1454,8 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         enddo
         d1_w = ut(1) * ut(1) + ut(2) * ut(2) + ut(3) * ut(3)
         d2_v = sqrt(d1_w)
-        if( d1_w .gt. 0.0d0 )then
-            d1_p = 1.0d0 / (2.0d0 *  d2_v)
+        if( d1_w .gt. 0.0e0_wp )then
+            d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
             !           call ehufDO (9,d1_w, d2_v, d1_p,
             !     +g_ehfid,
@@ -1457,7 +1467,7 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         w = d2_v
         do i = 1, 3
             d3_v = ut(i) / w
-            d2_b = 1.0d0 / w
+            d2_b = 1.0e0_wp / w
             d3_b = (-d3_v) / w
             do g_i_ = 1, g_pmax_
                 g_ut(g_i_,i) = d3_b * g_w(g_i_) + d2_b * g_ut(g_i_,i)
@@ -1471,18 +1481,18 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         enddo
         w    = ut(1) * ua(1) + ut(2) * ua(2) + ut(3) * ua(3)
         d2_v = acos(w)
-        if( abs(w) .lt. 1.0d0 )then
-            d1_p = -1.0d0 / sqrt ((1.0d0-w)*(1.0d0+w))
+        if( abs(w) .lt. 1.0e0_wp )then
+            d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-w)*(1.0e0_wp+w))
         else
             !           call ehufDO (14,w, d2_v, d1_p,
             !     +g_ehfid,
             !     +335)
         endif
-        d4_b = 1.0d0 / pi * 180.0d0 * d1_p
+        d4_b = 1.0e0_wp / pi * 180.0e0_wp * d1_p
         do g_i_ = 1, g_pmax_
             g_beta(g_i_,1) = d4_b * g_w(g_i_)
         enddo
-        beta(1) = d2_v * 180.0d0 / pi
+        beta(1) = d2_v * 180.0e0_wp / pi
         !     beta(2) = dacos( dot_product(uT,uB) ) * 180.0d0/PI
         !     beta(3) = dacos( dot_product(uT,uC) ) * 180.0d0/PI
         ! Now we define the eq. of the plane
@@ -1551,9 +1561,9 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         enddo
         do i = 1, 3
             do g_i_ = 1, g_pmax_
-                g_cartp(g_i_,1,i) = 0.0d0
+                g_cartp(g_i_,1,i) = 0.0e0_wp
             enddo
-            cartp(1,i) = 0.0d0
+            cartp(1,i) = 0.0e0_wp
         enddo
         ! The theta are labelled as:
         ! H1-N-H2 : theta(1)
@@ -1567,18 +1577,18 @@ module chempotpy_nh3_gen_ffw1_2006_pes
             do i = j + 1, natom
                 k    = k + 1
                 d2_v = cartp(i,1) * cartp(i,1)
-                d3_p = 2.0d0 * cartp(i,1)
+                d3_p = 2.0e0_wp * cartp(i,1)
                 d4_v = cartp(i,2) * cartp(i,2)
-                d2_p = 2.0d0 * cartp(i,2)
+                d2_p = 2.0e0_wp * cartp(i,2)
                 d7_v = cartp(i,3) * cartp(i,3)
-                d1_p = 2.0d0 * cartp(i,3)
+                d1_p = 2.0e0_wp * cartp(i,3)
                 do g_i_ = 1, g_pmax_
                     g_d1_w(g_i_) = d1_p * g_cartp(g_i_,i,3) + d2_p * g_cartp (g_i_,i,2) + d3_p * g_cartp(g_i_,i,1)
                 enddo
                 d1_w = d2_v + d4_v + d7_v
                 d2_v = sqrt(d1_w)
-                if( d1_w .gt. 0.0d0 )then
-                    d1_p = 1.0d0 / (2.0d0 *  d2_v)
+                if( d1_w .gt. 0.0e0_wp )then
+                    d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
                 else
                     !               call ehufDO (9,d1_w, d2_v, d1_p,
                     !     +g_ehfid,
@@ -1589,18 +1599,18 @@ module chempotpy_nh3_gen_ffw1_2006_pes
                 enddo
                 xt   = d2_v
                 d2_v = cartp(j,1) * cartp(j,1)
-                d3_p = 2.0d0 * cartp(j,1)
+                d3_p = 2.0e0_wp * cartp(j,1)
                 d4_v = cartp(j,2) * cartp(j,2)
-                d2_p = 2.0d0 * cartp(j,2)
+                d2_p = 2.0e0_wp * cartp(j,2)
                 d7_v = cartp(j,3) * cartp(j,3)
-                d1_p = 2.0d0 * cartp(j,3)
+                d1_p = 2.0e0_wp * cartp(j,3)
                 do g_i_ = 1, g_pmax_
                     g_d1_w(g_i_) = d1_p * g_cartp(g_i_,j,3) + d2_p * g_cartp (g_i_,j,2) + d3_p * g_cartp(g_i_,j,1)
                 enddo
                 d1_w = d2_v + d4_v + d7_v
                 d2_v = sqrt(d1_w)
-                if( d1_w .gt. 0.0d0 )then
-                    d1_p = 1.0d0 / (2.0d0 *  d2_v)
+                if( d1_w .gt. 0.0e0_wp )then
+                    d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
                 else
                     !               call ehufDO (9,d1_w, d2_v, d1_p,
                     !     +g_ehfid,
@@ -1618,7 +1628,7 @@ module chempotpy_nh3_gen_ffw1_2006_pes
                 zt   = cartp(i,1) * cartp(j,1) + cartp(i,2) * cartp(j,2) + cartp(i,3) * cartp(j,3)
                 d4_v = xt * yt
                 d5_v = zt / d4_v
-                d2_b = 1.0d0 / d4_v
+                d2_b = 1.0e0_wp / d4_v
                 d3_b = (-d5_v) / d4_v
                 d4_b = d3_b * yt
                 d5_b = d3_b * xt
@@ -1626,21 +1636,21 @@ module chempotpy_nh3_gen_ffw1_2006_pes
                     g_w(g_i_) = d5_b * g_yt(g_i_) + d4_b * g_xt(g_i_) + d2_b * g_zt(g_i_)
                 enddo
                 w = d5_v
-                if( w .gt. 1.0d0 )then
+                if( w .gt. 1.0e0_wp )then
                     do g_i_ = 1, g_pmax_
-                        g_w(g_i_) = 0.0d0
+                        g_w(g_i_) = 0.0e0_wp
                     enddo
-                    w = 1.0d0
+                    w = 1.0e0_wp
                 endif
-                if( w .lt. (-1.0d0) )then
+                if( w .lt. (-1.0e0_wp) )then
                     do g_i_ = 1, g_pmax_
-                        g_w(g_i_) = 0.0d0
+                        g_w(g_i_) = 0.0e0_wp
                     enddo
-                    w = -1.0d0
+                    w = -1.0e0_wp
                 endif
                 d2_v = acos(w)
-                if( abs(w) .lt. 1.0d0 )then
-                    d1_p = -1.0d0 / sqrt ((1.0d0-w)*(1.0d0+w))
+                if( abs(w) .lt. 1.0e0_wp )then
+                    d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-w)*(1.0e0_wp+w))
                 else
                     !               call ehufDO (14,w, d2_v, d1_p,
                     !     +g_ehfid,
@@ -1651,20 +1661,20 @@ module chempotpy_nh3_gen_ffw1_2006_pes
                 enddo
                 d1_w = d2_v
                 d2_v = abs(d1_w)
-                if( d1_w .gt. 0.0d0 )then
-                    d1_p = 1.0d0
-                elseif( d1_w .lt. 0.0d0 )then
-                    d1_p = -1.0d0
+                if( d1_w .gt. 0.0e0_wp )then
+                    d1_p = 1.0e0_wp
+                elseif( d1_w .lt. 0.0e0_wp )then
+                    d1_p = -1.0e0_wp
                 else
                     !               call ehufDO (3,d1_w, d2_v, d1_p,
                     !     +g_ehfid,
                     !     +562)
                 endif
-                d4_b = 1.0d0 / pi * 180.0d0 * d1_p
+                d4_b = 1.0e0_wp / pi * 180.0e0_wp * d1_p
                 do g_i_ = 1, g_pmax_
                     g_theta(g_i_,k) = d4_b * g_d1_w(g_i_)
                 enddo
-                theta(k) = d2_v * 180.0d0 / pi
+                theta(k) = d2_v * 180.0e0_wp / pi
             enddo
         enddo
         ! Now we we will relabel theta such that
@@ -1721,47 +1731,48 @@ module chempotpy_nh3_gen_ffw1_2006_pes
     !> @brief Evaluate g_distplane for the NH3_GEN_FFW1_2006 potential.
     subroutine g_distplane( a1, g_a1, a2, g_a2, a3, g_a3, d, g_d, x, g_&
             &x, y, g_y, z, g_z, dist, g_dist )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: a1
-        double precision :: a2
-        double precision :: a3
-        double precision :: d
-        double precision :: x
-        double precision :: y
-        double precision :: z
-        double precision :: dist
+        real(wp) :: a1
+        real(wp) :: a2
+        real(wp) :: a3
+        real(wp) :: d
+        real(wp) :: x
+        real(wp) :: y
+        real(wp) :: z
+        real(wp) :: dist
         ! This subroutine calculates the dist between the
         ! point (x,y,z) and the plane (a1x+a2y+a3z+d=0)
         ! dist = a1x + a2y + a3z + d
         !      sqrt(a**2+b**2+c**2)
         integer, parameter :: g_pmax_ = 12
         integer            :: g_i_
-        double precision   :: d16_b, d15_b, d14_b, d13_b, d1_w, d3_p, d2_v, d1_p, d4_v, d10_b
-        double precision   :: d9_b, d7_v, d16_v, d15_v, d2_b, d2_p, d4_b, g_d1_w(g_pmax_), g_a1(g_pmax_), g_a2(g_pmax_)
-        double precision   :: g_a3(g_pmax_), g_dist(g_pmax_), g_x(g_pmax_), g_y(g_pmax_), g_z(g_pmax_), g_d(g_pmax_)
+        real(wp)           :: d16_b, d15_b, d14_b, d13_b, d1_w, d3_p, d2_v, d1_p, d4_v, d10_b
+        real(wp)           :: d9_b, d7_v, d16_v, d15_v, d2_b, d2_p, d4_b, g_d1_w(g_pmax_), g_a1(g_pmax_), g_a2(g_pmax_)
+        real(wp)           :: g_a3(g_pmax_), g_dist(g_pmax_), g_x(g_pmax_), g_y(g_pmax_), g_z(g_pmax_), g_d(g_pmax_)
         integer            :: g_ehfid
         !        call ehsfid(g_ehfid, 'distplane','g_toBowman.f')
         g_ehfid = 0
         d2_v    = a1 * a1
-        d3_p    = 2.0d0 * a1
+        d3_p    = 2.0e0_wp * a1
         d4_v    = a2 * a2
-        d2_p    = 2.0d0 * a2
+        d2_p    = 2.0e0_wp * a2
         d7_v    = a3 * a3
-        d1_p    = 2.0d0 * a3
+        d1_p    = 2.0e0_wp * a3
         do g_i_ = 1, g_pmax_
             g_d1_w(g_i_) = d1_p * g_a3(g_i_) + d2_p * g_a2(g_i_) + d3_p * g_a1(g_i_)
         enddo
         d1_w  = d2_v + d4_v + d7_v
         d15_v = sqrt(d1_w)
-        if( d1_w .gt. 0.0d0 )then
-            d1_p = 1.0d0 / (2.0d0 *  d15_v)
+        if( d1_w .gt. 0.0e0_wp )then
+            d1_p = 1.0e0_wp / (2.0e0_wp *  d15_v)
         else
             !           call ehufDO (9,d1_w, d15_v, d1_p,
             !     +g_ehfid,
             !     +695)
         endif
         d16_v = (a1 * x + a2 * y + a3 * z + d) / d15_v
-        d2_b  = 1.0d0 / d15_v
+        d2_b  = 1.0e0_wp / d15_v
         d4_b  = (-d16_v) / d15_v * d1_p
         d9_b  = d2_b * z
         d10_b = d2_b * a3
@@ -1778,14 +1789,15 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate g_det3 for the NH3_GEN_FFW1_2006 potential.
     subroutine g_det3( a, g_a, ans, g_ans )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: a(3,3)
-        double precision :: ans
+        real(wp) :: a(3,3)
+        real(wp) :: ans
         ! Compute determinant of a 3x3 matrix
-        double precision   :: x, y, z
+        real(wp)           :: x, y, z
         integer, parameter :: g_pmax_ = 12
         integer            :: g_i_
-        double precision   :: d9_b, d8_b, d7_b, d6_b, d8_v, g_x(g_pmax_), g_a (g_pmax_,3,3), g_y(g_pmax_), g_z(g_pmax_), g_ans(g_pmax_)
+        real(wp)           :: d9_b, d8_b, d7_b, d6_b, d8_v, g_x(g_pmax_), g_a (g_pmax_,3,3), g_y(g_pmax_), g_z(g_pmax_), g_ans(g_pmax_)
         integer            :: g_ehfid
         !        call ehsfid(g_ehfid, 'det3','g_toBowman.f')
         g_ehfid = 0
@@ -1840,23 +1852,24 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! H1-N-H3 : theta2
         ! H2-N-H3 : theta1
         ![r1,r2,r3,theta1,theta2,theta3]
+        use chempotpy_kinds, only: wp
         implicit none
         ! I/O variables
-        integer, parameter          :: natom = 4
-        double precision, parameter :: pi    = 3.1415926535897930d0
-        double precision            :: cart(3*natom)
-        double precision            :: gangint(12,7)
+        integer, parameter  :: natom = 4
+        real(wp), parameter :: pi    = 3.1415926535897930e0_wp
+        real(wp)            :: cart(3*natom)
+        real(wp)            :: gangint(12,7)
         ! Local variables
-        integer          :: i, j, k
-        double precision :: r(3), t(3)
-        double precision :: dt(3)
-        double precision :: theta(3)
-        double precision :: carth(3,3)
-        double precision :: ans(7)
+        integer  :: i, j, k
+        real(wp) :: r(3), t(3)
+        real(wp) :: dt(3)
+        real(wp) :: theta(3)
+        real(wp) :: carth(3,3)
+        real(wp) :: ans(7)
         ! initialize gangint
         do i=1, 7
             do j=1, 12
-                gangint(j,i) = 0.d0
+                gangint(j,i) = 0.e0_wp
             enddo
         enddo
         ! Put N at the origin and
@@ -1870,7 +1883,7 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         enddo
         ! calculate bond distances
         do i=1, 3
-            r(i) = dsqrt(carth(i,1)*carth(i,1) + carth(i,2)*carth(i,2) + carth(i,3)*carth(i,3) )
+            r(i) = sqrt(carth(i,1)*carth(i,1) + carth(i,2)*carth(i,2) + carth(i,3)*carth(i,3) )
             ! dr/dx,cartH(i) is a function of the cartesian coord. of the i+1 atom
             do j=1, 3
                 k = 3*i + j
@@ -1887,14 +1900,14 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         do i=1, 3
             !    Due to numerical errors, t maybe larger than 1.0 by a tiny value
             !        by definition 0 <= dacos(t) <= PI
-            if( t(i) .gt. 1.d0 )then
-                t(i) = 1.d0
-            elseif( t(i) .lt. -1.d0 )then
-                t(i) = -1.d0
+            if( t(i) .gt. 1.e0_wp )then
+                t(i) = 1.e0_wp
+            elseif( t(i) .lt. -1.e0_wp )then
+                t(i) = -1.e0_wp
             endif
-            theta(i) = dacos( t(i) )
+            theta(i) = acos( t(i) )
             !       convert to degrees
-            theta(i) = theta(i)*180.0d0/pi
+            theta(i) = theta(i)*180.0e0_wp/pi
         enddo
         ! return answer
         do i=1, 3
@@ -1904,12 +1917,12 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         !   Derivatives of the three angles
         !    dtheta1/dt1  theta = acos(t)
         do i=1, 3
-            if( dabs(t(i)) .ge. 1.d0 )then
+            if( abs(t(i)) .ge. 1.e0_wp )then
                 !         write(*,*) "Abnormal structure: N-H2-H3 is linear"
                 !         stop
-                dt(i) = 0.d0
+                dt(i) = 0.e0_wp
             else
-                dt(i) = -(1.d0/dsqrt( 1.d0-t(i)*t(i) ))*180.d0/pi
+                dt(i) = -(1.e0_wp/sqrt( 1.e0_wp-t(i)*t(i) ))*180.e0_wp/pi
             endif
         enddo
         !    dtheta1/dx3,dtheta1/dx4,dtheta1/dx1. dtheta1/dx2=0
@@ -1957,58 +1970,61 @@ module chempotpy_nh3_gen_ffw1_2006_pes
 
     !> @brief Evaluate cart_to_polar for the NH3_GEN_FFW1_2006 potential.
     subroutine cart_to_polar( x, ans )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision            :: x(3)
-        double precision            :: ans(3)
-        double precision, parameter :: pi = 3.1415926535897930d0
+        real(wp)            :: x(3)
+        real(wp)            :: ans(3)
+        real(wp), parameter :: pi = 3.1415926535897930e0_wp
         ! ans(1) : r
         ! ans(2) : phi (0-2PI)  !in degrees
         ! ans(3) : theta (0-PI) !in degrees
-        double precision :: t
-        ans(1) = dsqrt( x(1)*x(1) + x(2)*x(2) + x(3)*x(3) )
-        if( ans(1) .ne. 0.d0 )then
-            t      = dacos(x(3)/ans(1))      !angle is between [-PI,PI]
-            ans(3) = dasin(dsin(t))          !angle is between [0,2PI]
-            if( x(1) .ne. 0.0d0 )then
-                ans(2) = datan(x(2)/x(1))
+        real(wp) :: t
+        ans(1) = sqrt( x(1)*x(1) + x(2)*x(2) + x(3)*x(3) )
+        if( ans(1) .ne. 0.e0_wp )then
+            t      = acos(x(3)/ans(1))      !angle is between [-PI,PI]
+            ans(3) = asin(sin(t))          !angle is between [0,2PI]
+            if( x(1) .ne. 0.0e0_wp )then
+                ans(2) = atan(x(2)/x(1))
             else
-                ans(2)                       = 0.50d0 * pi
-                if( x(2) .eq. 0.0d0 ) ans(2) = 0.0d0
+                ans(2)                          = 0.50e0_wp * pi
+                if( x(2) .eq. 0.0e0_wp ) ans(2) = 0.0e0_wp
             endif
             ! Convert to degrees
-            ans(2) = ans(2) * 180.0d0/pi
-            ans(3) = ans(3) * 180.0d0/pi
+            ans(2) = ans(2) * 180.0e0_wp/pi
+            ans(3) = ans(3) * 180.0e0_wp/pi
         else
-            ans(2) = 0.d0
-            ans(3) = 0.d0
+            ans(2) = 0.e0_wp
+            ans(3) = 0.e0_wp
         endif
     end subroutine cart_to_polar
 
     !> @brief Evaluate polar_to_cart for the NH3_GEN_FFW1_2006 potential.
     subroutine polar_to_cart( p, ans )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision            :: p(3)
-        double precision            :: ans(3)
-        double precision, parameter :: pi = 3.1415926535897930d0
+        real(wp)            :: p(3)
+        real(wp)            :: ans(3)
+        real(wp), parameter :: pi = 3.1415926535897930e0_wp
         ! p(1) : r
         ! p(2) : phi (0-2PI)  !in degrees
         ! p(3) : theta (0-PI) !in degrees
-        double precision :: phi, theta
-        double precision :: sinth
-        phi    = p(2) * pi/180.0d0
-        theta  = p(3) * pi/180.0d0
-        sinth  = dsin(theta)
-        ans(1) = p(1) * dcos(phi) * sinth
-        ans(2) = p(1) * dsin(phi) * sinth
-        ans(3) = p(1) * dcos(theta)
+        real(wp) :: phi, theta
+        real(wp) :: sinth
+        phi    = p(2) * pi/180.0e0_wp
+        theta  = p(3) * pi/180.0e0_wp
+        sinth  = sin(theta)
+        ans(1) = p(1) * cos(phi) * sinth
+        ans(2) = p(1) * sin(phi) * sinth
+        ans(3) = p(1) * cos(theta)
     end subroutine polar_to_cart
 
     !> @brief Evaluate fromBowman for the NH3_GEN_FFW1_2006 potential.
     subroutine frombowman( bow, coord )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision            :: bow(7)
-        double precision            :: coord(12)
-        double precision, parameter :: pi = 3.1415926535897930d0
+        real(wp)            :: bow(7)
+        real(wp)            :: coord(12)
+        real(wp), parameter :: pi = 3.1415926535897930e0_wp
         ! This function returns the cartesian
         ! coordinates from bowman coordinates for 4 atom systems ONLY
         ! All angles are in DEGREES
@@ -2025,17 +2041,17 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! coord(4:6)   : H1  x,y,z
         ! coord(7:9)   : H2  x,y,z
         ! coord(10:12) : H3  x,y,z
-        double precision :: r1, r2, r3
-        double precision :: theta1, theta2, theta3
-        double precision :: phi1, phi2, phi3
-        double precision :: beta
-        double precision :: ph1(3)
-        double precision :: ph2(3)
-        double precision :: ph3(3)
-        double precision :: ans(3)
-        integer          :: i, j
-        double precision :: small
-        small = 1.d-3
+        real(wp) :: r1, r2, r3
+        real(wp) :: theta1, theta2, theta3
+        real(wp) :: phi1, phi2, phi3
+        real(wp) :: beta
+        real(wp) :: ph1(3)
+        real(wp) :: ph2(3)
+        real(wp) :: ph3(3)
+        real(wp) :: ans(3)
+        integer  :: i, j
+        real(wp) :: small
+        small = 1.e-3_wp
         ! define stuff
         r1     = bow(1)
         r2     = bow(2)
@@ -2057,18 +2073,18 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! G1-N-G3 : theta2
         ! G2-N-G3 : theta1
         ! define phi
-        phi1 = 0.0d0
+        phi1 = 0.0e0_wp
         phi2 = theta3
         ! the following line (Shikha) is correct only when the sum of
         ! the three theta is 360.0
         !      phi3 = theta1+theta3
-        if( dabs(360.d0-(theta1+theta2+theta3)) .lt. small )then
+        if( abs(360.e0_wp-(theta1+theta2+theta3)) .lt. small )then
             phi3 = theta1+theta3
-        elseif( dabs(theta1-theta2-theta3) .lt. small )then
-            phi3 = 360.d0-theta2
-        elseif( dabs(theta2-theta1-theta3) .lt. small )then
+        elseif( abs(theta1-theta2-theta3) .lt. small )then
+            phi3 = 360.e0_wp-theta2
+        elseif( abs(theta2-theta1-theta3) .lt. small )then
             phi3 = theta2
-        elseif( dabs(theta3-theta1-theta2) .lt. small )then
+        elseif( abs(theta3-theta1-theta2) .lt. small )then
             phi3 = theta2
         else
             write(6, *) "Is this geometry possible?"
@@ -2089,9 +2105,9 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ph3(3) = beta
         ! convert to cartesian vectors
         ! N is at the origin
-        coord(1) = 0.0d0
-        coord(2) = 0.0d0
-        coord(3) = 0.0d0
+        coord(1) = 0.0e0_wp
+        coord(2) = 0.0e0_wp
+        coord(3) = 0.0e0_wp
         ! H1
         call polar_to_cart(ph1, ans)
         do i=1, 3
@@ -2124,24 +2140,25 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! H1-N-H3 : theta2
         ! H2-N-H3 : theta1
         ![r1,r2,r3,theta1,theta2,theta3]
+        use chempotpy_kinds, only: wp
         implicit none
         ! I/O variables
-        double precision :: angint(7)
-        double precision :: coord(12)
+        real(wp) :: angint(7)
+        real(wp) :: coord(12)
         ! Local variables
-        double precision :: r1
-        double precision :: r2
-        double precision :: r3
-        double precision :: theta1
-        double precision :: theta2
-        double precision :: theta3
-        double precision :: uh3(3)
+        real(wp) :: r1
+        real(wp) :: r2
+        real(wp) :: r3
+        real(wp) :: theta1
+        real(wp) :: theta2
+        real(wp) :: theta3
+        real(wp) :: uh3(3)
         ! Misc
-        double precision, parameter :: degtopi = 3.1415926535897930d0/180.d0
-        double precision            :: x
-        double precision            :: costh1, costh2, costh3, sinth3
-        double precision, parameter :: small = 1.d-10
-        integer                     :: i
+        real(wp), parameter :: degtopi = 3.1415926535897930e0_wp/180.e0_wp
+        real(wp)            :: x
+        real(wp)            :: costh1, costh2, costh3, sinth3
+        real(wp), parameter :: small = 1.e-10_wp
+        integer             :: i
         ! initialize
         r1     = angint(1)
         r2     = angint(2)
@@ -2150,11 +2167,11 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         theta2 = angint(5)*degtopi
         theta3 = angint(6)*degtopi
         do i = 1, 12
-            coord(i) = 0.0d0
+            coord(i) = 0.0e0_wp
         enddo
-        costh2 = dcos(theta2)
-        costh3 = dcos(theta3)
-        sinth3 = dsin(theta3)
+        costh2 = cos(theta2)
+        costh3 = cos(theta3)
+        sinth3 = sin(theta3)
         ! N is at origin
         ! H1 is along x
         coord(4) = r1
@@ -2167,19 +2184,19 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! theta3 = PI  theta1=PI-theta2
         ! unit vector along the N-H3 bond (uH3)
         uh3(1) = costh2
-        if( dabs(sinth3) .lt. small )then
-            uh3(2) = 0.d0
-            uh3(3) = dsin(theta2)
+        if( abs(sinth3) .lt. small )then
+            uh3(2) = 0.e0_wp
+            uh3(3) = sin(theta2)
         else
-            costh1 = dcos(theta1)
+            costh1 = cos(theta1)
             uh3(2) = ( costh1 - costh2*costh3 )/sinth3
             x      = uh3(1)**2 + uh3(2)**2
-            if( x .le. 1.d0 )then
-                uh3(3) = dsqrt(1.0d0-x)
+            if( x .le. 1.e0_wp )then
+                uh3(3) = sqrt(1.0e0_wp-x)
                 !  Due to numerical errors, x may be just marginally larger than 1.d0
                 !  (planar structure)
-            elseif( (x-1.d0) .le. small )then
-                uh3(3) = 0.d0
+            elseif( (x-1.e0_wp) .le. small )then
+                uh3(3) = 0.e0_wp
             else
                 write(*, *)'ERROR: Set of three bond angles is unphysical'
                 write(*, *) r1, r2, r3, theta1/degtopi, &
@@ -2197,18 +2214,19 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! calculate the rij array N(N-1)/2 elements
         ! x:  x1,y1,z1,...,xn,yn,zn
         ! dr(i,j): derivatives of jth r to i th cart coord
+        use chempotpy_kinds, only: wp
         implicit none
         integer :: natoms
         ! dimension of x and r, must be larger than 3*natoms and
         ! natoms*(natoms-1)/2 respectively
-        integer          :: mx, mr
-        double precision :: x(mx), r(mr), dr(mx,mr)
-        integer          :: i, j, k, ii, ij, nr
-        double precision :: dx, dy, dz
+        integer  :: mx, mr
+        real(wp) :: x(mx), r(mr), dr(mx,mr)
+        integer  :: i, j, k, ii, ij, nr
+        real(wp) :: dx, dy, dz
         nr = natoms*(natoms-1)/2
         do i=1, nr
             do j = 1, 3*natoms
-                dr(j,i) = 0.d0
+                dr(j,i) = 0.e0_wp
             enddo
         enddo
         k = 0
@@ -2220,7 +2238,7 @@ module chempotpy_nh3_gen_ffw1_2006_pes
                 dx         = x(ij+1) - x(ii+1)
                 dy         = x(ij+2) - x(ii+2)
                 dz         = x(ij+3) - x(ii+3)
-                r(k)       = dsqrt( dx*dx + dy*dy + dz*dz )
+                r(k)       = sqrt( dx*dx + dy*dy + dz*dz )
                 dr(ij+1,k) = dx/r(k)
                 dr(ij+2,k) = dy/r(k)
                 dr(ij+3,k) = dz/r(k)
@@ -2235,13 +2253,14 @@ end module chempotpy_nh3_gen_ffw1_2006_pes
 !> @brief Expose NH3_GEN_FFW1_2006 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_nh3_gen_ffw1_2006_pes, only: evaluate
+    use chempotpy_kinds,                 only: wp
     implicit none
-    integer, parameter            :: natoms  = 4
-    integer, parameter            :: nstates = 2
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 4
+    integer, parameter    :: nstates = 2
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

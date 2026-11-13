@@ -21,6 +21,7 @@
 
 !> @brief Implement N2O_13_1Ap_2026, a potential energy surface for N2O.
 module chempotpy_n2o_13_1ap_2026_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -29,18 +30,19 @@ module chempotpy_n2o_13_1ap_2026_pes
 
     !> @brief Evaluate the N2O_13_1Ap_2026 potential energy surface for N2O.
     subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 13
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: t(nstates,nstates)
-        integer                       :: iatom, idir, j, istate, jstate
+        integer, parameter    :: nstates = 13
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: t(nstates,nstates)
+        integer               :: iatom, idir, j, istate, jstate
         !initialize
-        p = 0.d0; g = 0.d0; d = 0.d0
+        p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! no conversion needed, input is Angstrom, output is eV, eV/Angstrom, and 1/angstrom
         call energy_gradient(x, p, g, d, t, natoms, nstates)
     end
@@ -60,24 +62,25 @@ module chempotpy_n2o_13_1ap_2026_pes
         ! g2b  - derivatives of two-body energy contributions w.r.t.
         ! internuclear distances
         ! drdx - dr/dx matrix for converting derivatives
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)             :: n, ns
-        double precision, intent(in)    :: x(n,3)
-        double precision, intent(inout) :: e(ns)
-        double precision, intent(inout) :: g(ns,n,3)
-        double precision, intent(inout) :: t(ns,ns)
-        double precision, intent(inout) :: h(ns,ns,n,3)
+        integer, intent(in)     :: n, ns
+        real(wp), intent(in)    :: x(n,3)
+        real(wp), intent(inout) :: e(ns)
+        real(wp), intent(inout) :: g(ns,n,3)
+        real(wp), intent(inout) :: t(ns,ns)
+        real(wp), intent(inout) :: h(ns,ns,n,3)
         ! layers and their sizes
-        double precision :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,91)
-        double precision :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
-        double precision :: r(n*(n-1)/2)
-        double precision :: gr(ns,n*(n-1)/2)
-        double precision :: hr(ns,ns,n*(n-1)/2)
-        double precision :: v2b(ns), v2b_1(n*(n-1)/2,ns)
-        double precision :: g2b(ns,n*(n-1)/2)
-        double precision :: drdx(n*(n-1)/2,3*n)
-        integer          :: i, j, k, l, m
-        integer          :: imollist(3)
+        real(wp) :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,91)
+        real(wp) :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
+        real(wp) :: r(n*(n-1)/2)
+        real(wp) :: gr(ns,n*(n-1)/2)
+        real(wp) :: hr(ns,ns,n*(n-1)/2)
+        real(wp) :: v2b(ns), v2b_1(n*(n-1)/2,ns)
+        real(wp) :: g2b(ns,n*(n-1)/2)
+        real(wp) :: drdx(n*(n-1)/2,3*n)
+        integer  :: i, j, k, l, m
+        integer  :: imollist(3)
         call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4)
         call convert_xyz_to_r(x, r, n)
         ! calculate the two-body terms
@@ -97,49 +100,50 @@ module chempotpy_n2o_13_1ap_2026_pes
     ! back propagation
     !> @brief Evaluate backprop.
     subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4, v2b, v2b_1, g2b )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)             :: n, ns
-        double precision, intent(inout) :: e(ns), g(ns,n*(n-1)/2), h(ns,ns,n*(n-1)/2)
-        double precision, intent(inout) :: t(ns,ns)
-        double precision, intent(in)    :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,91)
-        double precision, intent(in)    :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
-        double precision, intent(in)    :: v2b(ns), v2b_1(n*(n-1)/2,ns)
-        double precision, intent(in)    :: g2b(ns,n*(n-1)/2)
-        double precision                :: r(n*(n-1)/2)
-        double precision                :: a0(30), a1(65), a2(95), a3(125), a4(91)
-        double precision                :: z0(30), z1(65), z2(95), z3(125), z4(91)
-        double precision                :: g0(3,30), g1(3,65), g2(3,95), g3(3,125), g4(3,91), g4p(91,3)
-        double precision                :: dpem(ns,ns), dvdu(ns,91)
-        double precision                :: dudr(ns,ns,3), tmpmat(ns,ns)
-        integer                         :: map(3,13)
-        double precision                :: e_0(13), sum_dis, s_j
-        double precision                :: af_f=1.2, af_a=-2.0, af_b=3.8, order=4.0
-        double precision                :: f, dfdr(n*(n-1)/2)
-        double precision                :: dfdr_3b(ns,n*(n-1)/2), dfdr_2b(ns,n*(n-1)/2)
-        double precision                :: ag_f=1.2, ag_a=-2.0, ag_b=6.0
-        double precision                :: decay, ddecaydr(n*(n-1)/2)
-        double precision                :: ddecaydr_3b(ns,n*(n-1)/2), ddecaydr_2b(ns,n*(n-1)/2)
-        integer                         :: sum1
-        integer                         :: i, j, k, l
+        integer, intent(in)     :: n, ns
+        real(wp), intent(inout) :: e(ns), g(ns,n*(n-1)/2), h(ns,ns,n*(n-1)/2)
+        real(wp), intent(inout) :: t(ns,ns)
+        real(wp), intent(in)    :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,91)
+        real(wp), intent(in)    :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
+        real(wp), intent(in)    :: v2b(ns), v2b_1(n*(n-1)/2,ns)
+        real(wp), intent(in)    :: g2b(ns,n*(n-1)/2)
+        real(wp)                :: r(n*(n-1)/2)
+        real(wp)                :: a0(30), a1(65), a2(95), a3(125), a4(91)
+        real(wp)                :: z0(30), z1(65), z2(95), z3(125), z4(91)
+        real(wp)                :: g0(3,30), g1(3,65), g2(3,95), g3(3,125), g4(3,91), g4p(91,3)
+        real(wp)                :: dpem(ns,ns), dvdu(ns,91)
+        real(wp)                :: dudr(ns,ns,3), tmpmat(ns,ns)
+        integer                 :: map(3,13)
+        real(wp)                :: e_0(13), sum_dis, s_j
+        real(wp)                :: af_f=1.2, af_a=-2.0, af_b=3.8, order=4.0
+        real(wp)                :: f, dfdr(n*(n-1)/2)
+        real(wp)                :: dfdr_3b(ns,n*(n-1)/2), dfdr_2b(ns,n*(n-1)/2)
+        real(wp)                :: ag_f=1.2, ag_a=-2.0, ag_b=6.0
+        real(wp)                :: decay, ddecaydr(n*(n-1)/2)
+        real(wp)                :: ddecaydr_3b(ns,n*(n-1)/2), ddecaydr_2b(ns,n*(n-1)/2)
+        integer                 :: sum1
+        integer                 :: i, j, k, l
         !real*8 :: v2b(ns),g2b(ns,n*(n-1)/2)
-        double precision :: sum_v2b(ns), sum_g2b(ns,n*(n-1)/2)
-        double precision :: reordered_v2b(ns), reordered_g2b(ns,n*(n-1)/2)
-        a0 = 0.0d0
-        a1 = 0.0d0
-        a2 = 0.0d0
-        a3 = 0.0d0
-        a4 = 0.0d0
-        z0 = 0.0d0
-        z1 = 0.0d0
-        z2 = 0.0d0
-        z3 = 0.0d0
-        z4 = 0.0d0
-        e  = 0.0d0
-        g0 = 0.0d0
-        g1 = 0.0d0
-        g2 = 0.0d0
-        g3 = 0.0d0
-        g4 = 0.0d0
+        real(wp) :: sum_v2b(ns), sum_g2b(ns,n*(n-1)/2)
+        real(wp) :: reordered_v2b(ns), reordered_g2b(ns,n*(n-1)/2)
+        a0 = 0.0e0_wp
+        a1 = 0.0e0_wp
+        a2 = 0.0e0_wp
+        a3 = 0.0e0_wp
+        a4 = 0.0e0_wp
+        z0 = 0.0e0_wp
+        z1 = 0.0e0_wp
+        z2 = 0.0e0_wp
+        z3 = 0.0e0_wp
+        z4 = 0.0e0_wp
+        e  = 0.0e0_wp
+        g0 = 0.0e0_wp
+        g1 = 0.0e0_wp
+        g2 = 0.0e0_wp
+        g3 = 0.0e0_wp
+        g4 = 0.0e0_wp
         call mproduct(r, coeff_l0, z0, 1, 3, 30)
         z0 = z0 +bias_l0
         call activation_gelu(z0, a0, 30)
@@ -219,27 +223,29 @@ module chempotpy_n2o_13_1ap_2026_pes
             enddo
         enddo
         call mproduct(dvdu, g4p, g, ns, 91, 3)
-        h(:,:,:) = 0.d0
+        h(:,:,:) = 0.e0_wp
     end subroutine backprop
 
     !activation function, geluG
     !> @brief Evaluate activation_gelu.
     subroutine activation_gelu( z, a, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)    :: z(n)
-        double precision, intent(inout) :: a(n)
-        integer                         :: i, n
+        real(wp), intent(in)    :: z(n)
+        real(wp), intent(inout) :: a(n)
+        integer                 :: i, n
         do i=1, n
-            a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.d0)))
+            a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.e0_wp)))
         enddo
     end subroutine activation_gelu
 
     !> @brief Evaluate activation_derivative_gelu.
     subroutine activation_derivative_gelu( z, a, b, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)    :: z(n), a(n)
-        double precision, intent(inout) :: b(n)
-        integer                         :: i, n
+        real(wp), intent(in)    :: z(n), a(n)
+        real(wp), intent(inout) :: b(n)
+        integer                 :: i, n
         do i=1, n
             !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
             b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
@@ -253,25 +259,26 @@ module chempotpy_n2o_13_1ap_2026_pes
     ! B(r)=0.5+0.5*tanh(2*(-x+4.0))
     !> @brief Evaluate activation_functional_heviside.
     subroutine activation_functional_heviside( z, a, n, r, nbonds, f )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, parameter     :: af_f = 1.2, af_a=-2.0, af_b=3.8, order=4.0
-        integer, intent(in)             :: n, nbonds
-        double precision, intent(in)    :: z(n)
-        double precision, intent(in)    :: r(nbonds)
-        double precision, intent(inout) :: a(n)
-        double precision, intent(out)   :: f
-        double precision                :: r_in, ar, br
-        integer                         :: max_index
-        integer                         :: npairs, ibond, jbond, ipair
-        double precision                :: pair_sum, bond_sum
-        pair_sum = 0.d0
+        real(wp), parameter     :: af_f = 1.2, af_a=-2.0, af_b=3.8, order=4.0
+        integer, intent(in)     :: n, nbonds
+        real(wp), intent(in)    :: z(n)
+        real(wp), intent(in)    :: r(nbonds)
+        real(wp), intent(inout) :: a(n)
+        real(wp), intent(out)   :: f
+        real(wp)                :: r_in, ar, br
+        integer                 :: max_index
+        integer                 :: npairs, ibond, jbond, ipair
+        real(wp)                :: pair_sum, bond_sum
+        pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
                 pair_sum = pair_sum+(r(ibond)+r(jbond))**order
             enddo
         enddo
         pair_sum = pair_sum**(1/order)
-        bond_sum = 0.d0
+        bond_sum = 0.e0_wp
         do ibond=1, nbonds
             bond_sum = bond_sum+r(ibond)**order
         enddo
@@ -287,28 +294,29 @@ module chempotpy_n2o_13_1ap_2026_pes
     !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate activation_functional_derivative_terms.
     subroutine activation_functional_derivative_terms( g, z, n, r, nbonds, dfdr )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, parameter     :: af_f = 1.2, af_a=-2.0, af_b=3.8, order=4.0
-        integer, intent(in)             :: n, nbonds
-        double precision, intent(in)    :: z(n)
-        double precision, intent(in)    :: r(nbonds)
-        double precision, intent(inout) :: g(nbonds,n)
-        double precision, intent(out)   :: dfdr(nbonds)
-        integer                         :: i
-        double precision                :: r_in, ar, br
-        double precision                :: dfdr_in, dr_indr(nbonds)
-        integer                         :: npairs, ibond, jbond, ipair
-        double precision                :: r_in_num
-        double precision                :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
-        double precision                :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
-        double precision                :: diff
-        pair_sum = 0.d0
+        real(wp), parameter     :: af_f = 1.2, af_a=-2.0, af_b=3.8, order=4.0
+        integer, intent(in)     :: n, nbonds
+        real(wp), intent(in)    :: z(n)
+        real(wp), intent(in)    :: r(nbonds)
+        real(wp), intent(inout) :: g(nbonds,n)
+        real(wp), intent(out)   :: dfdr(nbonds)
+        integer                 :: i
+        real(wp)                :: r_in, ar, br
+        real(wp)                :: dfdr_in, dr_indr(nbonds)
+        integer                 :: npairs, ibond, jbond, ipair
+        real(wp)                :: r_in_num
+        real(wp)                :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
+        real(wp)                :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
+        real(wp)                :: diff
+        pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
                 pair_sum = pair_sum+(r(ibond)+r(jbond))**order
             enddo
         enddo
-        bond_sum = 0.d0
+        bond_sum = 0.e0_wp
         do ibond=1, nbonds
             bond_sum = bond_sum+r(ibond)**order
         enddo
@@ -317,7 +325,7 @@ module chempotpy_n2o_13_1ap_2026_pes
         br   = 0.5+0.5*tanh(af_f*(-r_in+af_b))
         dfdr_in = af_f*(-0.25*tanh(af_f*(r_in-af_a))-0.25)/((cosh(af_f*(-r_in+af_b)))**2) + af_f*(0.25+0.25*tanh(af_f* &
             & (- r_in+af_b)))/((cosh(af_f*(r_in-af_a)))**2)
-        dr_indr = 0.d0
+        dr_indr = 0.e0_wp
         do ibond=1, nbonds
             do jbond=1, nbonds
                 if( ibond .ne. jbond )then
@@ -344,23 +352,24 @@ module chempotpy_n2o_13_1ap_2026_pes
     ! B(r)=0.5+0.5*tanh(2*(-x+4.0))
     !> @brief Evaluate decay_function_heviside.
     subroutine decay_function_heviside( r, nbonds, af_f, af_a, af_b, order, f )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: nbonds
-        double precision, intent(in)  :: af_f, af_a, af_b, order
-        double precision, intent(in)  :: r(nbonds)
-        double precision, intent(out) :: f
-        double precision              :: r_in, ar, br
-        integer                       :: max_index
-        integer                       :: npairs, ibond, jbond, ipair
-        double precision              :: pair_sum, bond_sum
-        pair_sum = 0.d0
+        integer, intent(in)   :: nbonds
+        real(wp), intent(in)  :: af_f, af_a, af_b, order
+        real(wp), intent(in)  :: r(nbonds)
+        real(wp), intent(out) :: f
+        real(wp)              :: r_in, ar, br
+        integer               :: max_index
+        integer               :: npairs, ibond, jbond, ipair
+        real(wp)              :: pair_sum, bond_sum
+        pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
                 pair_sum = pair_sum+(r(ibond)+r(jbond))**order
             enddo
         enddo
         pair_sum = pair_sum**(1/order)
-        bond_sum = 0.d0
+        bond_sum = 0.e0_wp
         do ibond=1, nbonds
             bond_sum = bond_sum+r(ibond)**order
         enddo
@@ -375,25 +384,26 @@ module chempotpy_n2o_13_1ap_2026_pes
     !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate decay_function_heviside_derivative.
     subroutine decay_function_heviside_derivative( r, nbonds, af_f, af_a, af_b, order, dfdr )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: nbonds
-        double precision, intent(in)  :: r(nbonds)
-        double precision, intent(in)  :: af_f, af_a, af_b, order
-        double precision, intent(out) :: dfdr(nbonds)
-        double precision              :: r_in, ar, br
-        double precision              :: dfdr_in, dr_indr(nbonds)
-        integer                       :: npairs, ibond, jbond, ipair
-        double precision              :: r_in_num
-        double precision              :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
-        double precision              :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
-        double precision              :: diff
-        pair_sum = 0.d0
+        integer, intent(in)   :: nbonds
+        real(wp), intent(in)  :: r(nbonds)
+        real(wp), intent(in)  :: af_f, af_a, af_b, order
+        real(wp), intent(out) :: dfdr(nbonds)
+        real(wp)              :: r_in, ar, br
+        real(wp)              :: dfdr_in, dr_indr(nbonds)
+        integer               :: npairs, ibond, jbond, ipair
+        real(wp)              :: r_in_num
+        real(wp)              :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
+        real(wp)              :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
+        real(wp)              :: diff
+        pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
                 pair_sum = pair_sum+(r(ibond)+r(jbond))**order
             enddo
         enddo
-        bond_sum = 0.d0
+        bond_sum = 0.e0_wp
         do ibond=1, nbonds
             bond_sum = bond_sum+r(ibond)**order
         enddo
@@ -402,7 +412,7 @@ module chempotpy_n2o_13_1ap_2026_pes
         br   = 0.5+0.5*tanh(af_f*(-r_in+af_b))
         dfdr_in = af_f*(-0.25*tanh(af_f*(r_in-af_a))-0.25)/((cosh(af_f*(-r_in+af_b)))**2) + af_f*(0.25+0.25*tanh(af_f* &
             & (- r_in+af_b)))/((cosh(af_f*(r_in-af_a)))**2)
-        dr_indr = 0.d0
+        dr_indr = 0.e0_wp
         do ibond=1, nbonds
             do jbond=1, nbonds
                 if( ibond .ne. jbond )then
@@ -422,6 +432,7 @@ module chempotpy_n2o_13_1ap_2026_pes
     ! used to compute index in DPEM
     !> @brief Evaluate sumover.
     subroutine sumover( a, b, sum1 )
+        use chempotpy_kinds, only: wp
         implicit none
         integer, intent(in)  :: a, b
         integer, intent(out) :: sum1
@@ -436,18 +447,19 @@ module chempotpy_n2o_13_1ap_2026_pes
     ! subroutine diagonalize(n,A_ss,B_ss,U_ss)
     !> @brief Evaluate diagonalize.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
+        use chempotpy_kinds, only: wp
         implicit none
         ! parameters
-        integer, intent(in)          :: n
-        double precision, intent(in) :: a_ss(n,n)
+        integer, intent(in)  :: n
+        real(wp), intent(in) :: a_ss(n,n)
         !   real*8, intent(out) :: B_ss(n,n)
-        double precision, intent(out) :: u_ss(n,n)
+        real(wp), intent(out) :: u_ss(n,n)
         ! internal variables
         !   real*8 :: EV_s(n)
-        double precision, intent(out) :: ev_s(n)
-        integer                       :: io, i
-        double precision, allocatable :: lapack_work_d(:)
-        integer                       :: lapack_lwork_d
+        real(wp), intent(out) :: ev_s(n)
+        integer               :: io, i
+        real(wp), allocatable :: lapack_work_d(:)
+        integer               :: lapack_lwork_d
         u_ss           = a_ss
         lapack_lwork_d = -1
         allocate( lapack_work_d(2) )
@@ -468,15 +480,16 @@ module chempotpy_n2o_13_1ap_2026_pes
     !> @brief Evaluate grad_r_to_xyz.
     subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
         use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
+        use chempotpy_kinds,    only: wp
         implicit none
-        integer, intent(in)             :: n, ns
-        double precision, intent(in)    :: x(n,3)
-        double precision, intent(in)    :: r(n*(n-1)/2)
-        double precision, intent(in)    :: gr(ns,n*(n-1)/2)
-        double precision, intent(inout) :: g(ns,n,3)
-        double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
-        double precision                :: gx(ns,3*n)
-        integer                         :: i, j
+        integer, intent(in)     :: n, ns
+        real(wp), intent(in)    :: x(n,3)
+        real(wp), intent(in)    :: r(n*(n-1)/2)
+        real(wp), intent(in)    :: gr(ns,n*(n-1)/2)
+        real(wp), intent(inout) :: g(ns,n,3)
+        real(wp), intent(inout) :: drdx(n*(n-1)/2,3*n)
+        real(wp)                :: gx(ns,3*n)
+        integer                 :: i, j
         call all_pair_distance_jacobian(x, r, drdx)
         call transform_internal_gradient_to_cartesian(gr, drdx, gx)
         do i=1, n
@@ -490,15 +503,16 @@ module chempotpy_n2o_13_1ap_2026_pes
     !> @brief Evaluate nac_r_to_xyz.
     subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
         use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
+        use chempotpy_kinds,    only: wp
         implicit none
-        integer, intent(in)             :: n, ns
-        double precision, intent(in)    :: x(n,3)
-        double precision, intent(in)    :: r(n*(n-1)/2)
-        double precision, intent(in)    :: hr(ns,ns,n*(n-1)/2)
-        double precision, intent(inout) :: h(ns,ns,n,3)
-        double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
-        double precision                :: hx(ns,ns,3*n)
-        integer                         :: i, j, k, l
+        integer, intent(in)     :: n, ns
+        real(wp), intent(in)    :: x(n,3)
+        real(wp), intent(in)    :: r(n*(n-1)/2)
+        real(wp), intent(in)    :: hr(ns,ns,n*(n-1)/2)
+        real(wp), intent(inout) :: h(ns,ns,n,3)
+        real(wp), intent(inout) :: drdx(n*(n-1)/2,3*n)
+        real(wp)                :: hx(ns,ns,3*n)
+        integer                 :: i, j, k, l
         call all_pair_distance_jacobian(x, r, drdx)
         call transform_internal_gradient_to_cartesian(hr, drdx, hx)
         do i=1, n
@@ -512,24 +526,26 @@ module chempotpy_n2o_13_1ap_2026_pes
     !> @brief Evaluate convert_xyz_to_r.
     subroutine convert_xyz_to_r( x, r, n )
         use chempotpy_geometry, only: all_pair_distances
+        use chempotpy_kinds,    only: wp
         implicit none
-        integer, intent(in)           :: n
-        double precision, intent(in)  :: x(n,3)
-        double precision, intent(out) :: r(n*(n-1)/2)
+        integer, intent(in)   :: n
+        real(wp), intent(in)  :: x(n,3)
+        real(wp), intent(out) :: r(n*(n-1)/2)
         call all_pair_distances(x, r)
     end subroutine convert_xyz_to_r
 
     ! matrix vector product
     !> @brief Evaluate mproduct.
     subroutine mproduct( a, b, c, l, m, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)             :: l, m, n
-        double precision, intent(in)    :: a(l,m), b(m,n)
-        double precision, intent(inout) :: c(l,n)
-        integer                         :: i, j, k
+        integer, intent(in)     :: l, m, n
+        real(wp), intent(in)    :: a(l,m), b(m,n)
+        real(wp), intent(inout) :: c(l,n)
+        integer                 :: i, j, k
         do i=1, l
             do j=1, n
-                c(i,j) = 0.d0
+                c(i,j) = 0.e0_wp
                 do k=1, m
                     c(i,j) = c(i,j)+a(i,k)*b(k,j)
                 enddo
@@ -540,9 +556,10 @@ module chempotpy_n2o_13_1ap_2026_pes
     ! assign coefficients
     !> @brief Evaluate assign_coeff_bias.
     subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4 )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(inout) :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,91)
-        double precision, intent(inout) :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
+        real(wp), intent(inout) :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,91)
+        real(wp), intent(inout) :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
         !coeff layer 0
         coeff_l0(1,1)  = 8.1062996387e-01
         coeff_l0(1,2)  = 1.9599635899e-01
@@ -32429,21 +32446,22 @@ module chempotpy_n2o_13_1ap_2026_pes
     !> @brief Evaluate ev2gm2m.
     subroutine ev2gm2m( dist, v2b, v2b_1, g2b, imollist, igrad, n )
         !Bohr
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: imollist(3), igrad !igrad=0 /1
-        integer, intent(in)           :: n
-        double precision, intent(in)  :: dist(n*(n-1)/2)
-        double precision, intent(out) :: v2b(13), v2b_1(3,13), g2b(13,3)
-        double precision              :: v(13), grad(13), disp
-        double precision              :: r
-        integer                       :: i, j, imol
+        integer, intent(in)   :: imollist(3), igrad !igrad=0 /1
+        integer, intent(in)   :: n
+        real(wp), intent(in)  :: dist(n*(n-1)/2)
+        real(wp), intent(out) :: v2b(13), v2b_1(3,13), g2b(13,3)
+        real(wp)              :: v(13), grad(13), disp
+        real(wp)              :: r
+        integer               :: i, j, imol
         ! dist should be in Ang
         ! v2b is in kcal/mol
         ! grad2b is in kcal/molAng
         ! 1:    N(4S) + N(4S) + O(3P)
         ! 2-4:  N(4S) + N(4S) + O(1D)
         ! 5-13: N(4S) + N(2D) + O(3P)
-        v2b(1)  = 0.0d0
+        v2b(1)  = 0.0e0_wp
         v2b(2)  = 1.97
         v2b(3)  = 1.97
         v2b(4)  = 1.97
@@ -32456,17 +32474,17 @@ module chempotpy_n2o_13_1ap_2026_pes
         v2b(11) = 2.38
         v2b(12) = 2.38
         v2b(13) = 2.38
-        g2b     = 0.0d0
-        v2b_1   = 0.d0
+        g2b     = 0.0e0_wp
+        v2b_1   = 0.e0_wp
         do i=1, n*(n-1)/2
             r    = dist(i) !!!*0.529177d0    for Bohr
             imol = imollist(i)
             call ev2gm2(r, v, grad, imol, igrad, disp)
-            v2b_1(i,:) = v/23.061d0
-            v2b        = v2b + v/23.061d0
+            v2b_1(i,:) = v/23.061e0_wp
+            v2b        = v2b + v/23.061e0_wp
             if( igrad .eq. 1 )then
                 do j=1, 13
-                    g2b(j,i) = grad(j)/23.061d0 !! (23.061d0/0.529177d0) for Bohr
+                    g2b(j,i) = grad(j)/23.061e0_wp !! (23.061d0/0.529177d0) for Bohr
                 enddo
             endif
         enddo
@@ -32479,17 +32497,18 @@ module chempotpy_n2o_13_1ap_2026_pes
         ! Input:  r      interatomic distance in Angstrom
         ! Output: V      potential in kcal/mol
         !         grad   gradient (kcal/mol)/Angstrom
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: imol, igrad
-        double precision, intent(in)  :: r
-        double precision, intent(out) :: v(13), grad(13)
-        double precision              :: alpha, beta, as(0:7)
-        double precision              :: gam, del
-        integer                       :: i, j, k
+        integer, intent(in)   :: imol, igrad
+        real(wp), intent(in)  :: r
+        real(wp), intent(out) :: v(13), grad(13)
+        real(wp)              :: alpha, beta, as(0:7)
+        real(wp)              :: gam, del
+        integer               :: i, j, k
         ! Dispersion variables
-        double precision :: dist(1), disp, dispdr(1)
-        v    = 0.0d0
-        grad = 0.0d0
+        real(wp) :: dist(1), disp, dispdr(1)
+        v    = 0.0e0_wp
+        grad = 0.0e0_wp
         ! Calculate dispersion correction for all states
         dist(1) = r
         call d3disp(dist, disp, dispdr, 1, imol)
@@ -32671,18 +32690,18 @@ module chempotpy_n2o_13_1ap_2026_pes
                 endif
             endif
             do k=0, 7
-                v(i) = v(i) + as(k)*dexp(-alpha*beta**k*r**2)
+                v(i) = v(i) + as(k)*exp(-alpha*beta**k*r**2)
             enddo
             if( imol .eq. 2 )then
                 if( i .eq. 14 )then
-                    v(i) = v(i) + gam*dexp(-del*(r-1.7d0)**2)
+                    v(i) = v(i) + gam*exp(-del*(r-1.7e0_wp)**2)
                 elseif( (i .eq. 2).or.(i .eq. 3).or.(i .eq. 4) )then
                     call n2ground(r, v(i), grad(i), imol, igrad)
                 endif
             elseif( imol .eq. 3 )then
                 if( (i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
                     !          if ((i.eq.3).or.(i.eq.4).or.(i.eq.10).or.(i.eq.11).or.(i.eq.12).or.(i.eq.13)) then
-                    v(i) = v(i) + gam*dexp(-del*(r-1.7d0)**2)
+                    v(i) = v(i) + gam*exp(-del*(r-1.7e0_wp)**2)
                 elseif( (i .eq. 5).or.(i .eq. 6).or.(i .eq. 7).or.(i .eq. 8).or.(i .eq. 9) )then
                     call noground(r, v(i), grad(i), imol, igrad)
                 endif
@@ -32695,17 +32714,17 @@ module chempotpy_n2o_13_1ap_2026_pes
                 (imol.eq.3 .and. i.eq.7) .or. (imol.eq.3 .and. i.eq.8) .or. &
                 (imol.eq.3 .and. i.eq.9))) then
             do k=0, 7
-                grad(i) = grad(i)-2.d0*as(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
+                grad(i) = grad(i)-2.e0_wp*as(k)*alpha*beta**k*r*exp(-alpha*beta**k*r**2)
             enddo
             !gam del were not used, add this part if necessary
             if( imol .eq. 2 )then
                 if( i .eq. 14 )then
-                    grad(i) = grad(i)-2.0d0*del*gam*(r-1.7d0)*dexp(-del*(r-1.7d0)**2)
+                    grad(i) = grad(i)-2.0e0_wp*del*gam*(r-1.7e0_wp)*exp(-del*(r-1.7e0_wp)**2)
                 endif
             elseif( imol .eq. 3 )then
                 !               if ((i.eq.3).or.(i.eq.4).or.(i.eq.10).or.(i.eq.11).or.(i.eq.12).or.(i.eq.13)) then
                 if( (i .eq. 11).or.(i .eq. 12).or.(i .eq. 13) )then
-                    grad(i) = grad(i)-2.0d0*del*gam*(r-1.7d0)*dexp(-del*(r-1.7d0)**2)
+                    grad(i) = grad(i)-2.0e0_wp*del*gam*(r-1.7e0_wp)*exp(-del*(r-1.7e0_wp)**2)
                 endif
             endif
             !          grad(i)= grad(i) + dispdr(1)
@@ -32726,23 +32745,24 @@ module chempotpy_n2o_13_1ap_2026_pes
         ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
         ! 1456-1465
         ! The C6 values are fixed.
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: cn(2), s6, s8, rs6, rs8
-        double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
-        double precision :: e6dr(1), e8dr(1)
-        integer          :: iz(2), mxc(94), i, j, igrad
-        double precision :: c6ab(94,94,5,5,3)
-        double precision :: r2r4(94)
-        double precision :: autoang, autokcal
-        integer          :: imol
-        autoang  = 0.52917726d0
-        autokcal = 627.509541d0
+        real(wp) :: cn(2), s6, s8, rs6, rs8
+        real(wp) :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
+        real(wp) :: e6dr(1), e8dr(1)
+        integer  :: iz(2), mxc(94), i, j, igrad
+        real(wp) :: c6ab(94,94,5,5,3)
+        real(wp) :: r2r4(94)
+        real(wp) :: autoang, autokcal
+        integer  :: imol
+        autoang  = 0.52917726e0_wp
+        autokcal = 627.509541e0_wp
         ! Generalized parameters for BJ damping from P. Verma, B. Wang,
         ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017)
-        s6  = 1.0d0
-        s8  = 2.0d0
-        rs6 = 0.5299d0 !!it's not unit conversion
-        rs8 = 2.20d0
+        s6  = 1.0e0_wp
+        s8  = 2.0e0_wp
+        rs6 = 0.5299e0_wp !!it's not unit conversion
+        rs8 = 2.20e0_wp
         do i=1, 1
             dist(i) = dist(i)/autoang
         enddo
@@ -32751,15 +32771,15 @@ module chempotpy_n2o_13_1ap_2026_pes
             iz(1) = 7
             iz(2) = 7
             ! C6 for N2 system
-            c6(1) = 19.7d0
-            c6(2) = 19.7d0
+            c6(1) = 19.7e0_wp
+            c6(2) = 19.7e0_wp
         elseif( imol .eq. 3 )then! NO
             ! iz for NO system
             iz(1) = 7
             iz(2) = 8
             ! C6 for NO system
-            c6(1) = 16.7d0
-            c6(2) = 16.7d0
+            c6(1) = 16.7e0_wp
+            c6(2) = 16.7e0_wp
         else
             ! currently imol = 2 & 3 are used
             stop
@@ -32767,14 +32787,14 @@ module chempotpy_n2o_13_1ap_2026_pes
         ! Calculate dispersion correction
         call edisp(94, 5, 2, dist, iz, mxc, &
             rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
-        disp = 0.0d0
+        disp = 0.0e0_wp
         do i=1, 1
             disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
         enddo
         if( igrad .eq. 1 )then
             call edisp(94, 5, 2, dist, iz, mxc, &
                 rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
-            dispdr(:) = 0.0d0
+            dispdr(:) = 0.0e0_wp
             do i=1, 1
                 dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
             enddo
@@ -32788,58 +32808,63 @@ module chempotpy_n2o_13_1ap_2026_pes
     !> @brief Evaluate edisp.
     subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
             rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: n, iz(2), max_elem, maxc, mxc(max_elem)
-        double precision :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
-        double precision :: rs6, rs8, rcov(max_elem)
-        double precision :: c6ab(max_elem,max_elem,maxc,maxc,3)
-        double precision :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
-        integer          :: iat, jat, igrad
-        double precision :: r, tmp, c6, c8, a1, a2
-        double precision :: damp6, damp8
-        double precision :: cn(n)
-        double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
-        integer          :: step
-        e6(:)   = 0.0d0
-        e8(:)   = 0.0d0
-        e6dr(:) = 0.0d0
-        e8dr(:) = 0.0d0
+        integer  :: n, iz(2), max_elem, maxc, mxc(max_elem)
+        real(wp) :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+        real(wp) :: rs6, rs8, rcov(max_elem)
+        real(wp) :: c6ab(max_elem,max_elem,maxc,maxc,3)
+        real(wp) :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
+        integer  :: iat, jat, igrad
+        real(wp) :: r, tmp, c6, c8, a1, a2
+        real(wp) :: damp6, damp8
+        real(wp) :: cn(n)
+        real(wp) :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
+        integer  :: step
+        e6(:)   = 0.0e0_wp
+        e8(:)   = 0.0e0_wp
+        e6dr(:) = 0.0e0_wp
+        e8dr(:) = 0.0e0_wp
         a1      = rs6
         a2      = rs8
         !  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
         !  the large number of digits is just to keep the results consistent
         !  with older versions. They should not imply any higher accuracy than
         !  the old values
-        r2r4(1:94)=(/ 2.00734898d0, 1.56637132d0, 5.01986934d0, 3.85379032d0, 3.64446594d0, 3.10492822d0, &
-            & 2.71175247d0, 2.59361680d0, 2.38825250d0, 2.21522516d0, 6.58585536d0, 5.46295967d0, 5.65216669d0, &
-            & 4.88284902d0, 4.29727576d0, 4.04108902d0, 3.72932356d0, 3.44677275d0, 7.97762753d0, 7.07623947d0, &
-            & 6.60844053d0, 6.28791364d0, 6.07728703d0, 5.54643096d0, 5.80491167d0, 5.58415602d0, 5.41374528d0, &
-            & 5.28497229d0, 5.22592821d0, 5.09817141d0, 6.12149689d0, 5.54083734d0, 5.06696878d0, 4.87005108d0, &
-            & 4.59089647d0, 4.31176304d0, 9.55461698d0, 8.67396077d0, 7.97210197d0, 7.43439917d0, 6.58711862d0, &
-            & 6.19536215d0, 6.01517290d0, 5.81623410d0, 5.65710424d0, 5.52640661d0, 5.44263305d0, 5.58285373d0, &
-            & 7.02081898d0, 6.46815523d0, 5.98089120d0, 5.81686657d0, 5.53321815d0, 5.25477007d0, 11.02204549d0, &
-            & 0.15679528d0, 9.35167836d0, 9.06926079d0, 8.97241155d0, 8.90092807d0, 8.85984840d0, 8.81736827d0, &
-            & 8.79317710d0, 7.89969626d0, 8.80588454d0, 8.42439218d0, 8.54289262d0, 8.47583370d0, 8.45090888d0, &
-            & 8.47339339d0, 7.83525634d0, 8.20702843d0, 7.70559063d0, 7.32755997d0, 7.03887381d0, 6.68978720d0, &
-            & 6.05450052d0, 5.88752022d0, 5.70661499d0, 5.78450695d0, 7.79780729d0, 7.26443867d0, 6.78151984d0, &
-            & 6.67883169d0, 6.39024318d0, 6.09527958d0, 11.79156076d0, 11.10997644d0, 9.51377795d0, 8.67197068d0, &
-            & 8.77140725d0, 8.65402716d0, 8.53923501d0, 8.85024712d0 /)
+        r2r4(1:94)=(/ 2.00734898e0_wp, 1.56637132e0_wp, 5.01986934e0_wp, 3.85379032e0_wp, 3.64446594e0_wp, &
+            & 3.10492822e0_wp, 2.71175247e0_wp, 2.59361680e0_wp, 2.38825250e0_wp, 2.21522516e0_wp, 6.58585536e0_wp, &
+            & 5.46295967e0_wp, 5.65216669e0_wp, 4.88284902e0_wp, 4.29727576e0_wp, 4.04108902e0_wp, 3.72932356e0_wp, &
+            & 3.44677275e0_wp, 7.97762753e0_wp, 7.07623947e0_wp, 6.60844053e0_wp, 6.28791364e0_wp, 6.07728703e0_wp, &
+            & 5.54643096e0_wp, 5.80491167e0_wp, 5.58415602e0_wp, 5.41374528e0_wp, 5.28497229e0_wp, 5.22592821e0_wp, &
+            & 5.09817141e0_wp, 6.12149689e0_wp, 5.54083734e0_wp, 5.06696878e0_wp, 4.87005108e0_wp, 4.59089647e0_wp, &
+            & 4.31176304e0_wp, 9.55461698e0_wp, 8.67396077e0_wp, 7.97210197e0_wp, 7.43439917e0_wp, 6.58711862e0_wp, &
+            & 6.19536215e0_wp, 6.01517290e0_wp, 5.81623410e0_wp, 5.65710424e0_wp, 5.52640661e0_wp, 5.44263305e0_wp, &
+            & 5.58285373e0_wp, 7.02081898e0_wp, 6.46815523e0_wp, 5.98089120e0_wp, 5.81686657e0_wp, 5.53321815e0_wp, &
+            & 5.25477007e0_wp, 11.02204549e0_wp, 0.15679528e0_wp, 9.35167836e0_wp, 9.06926079e0_wp, 8.97241155e0_wp, &
+            & 8.90092807e0_wp, 8.85984840e0_wp, 8.81736827e0_wp, 8.79317710e0_wp, 7.89969626e0_wp, 8.80588454e0_wp, &
+            & 8.42439218e0_wp, 8.54289262e0_wp, 8.47583370e0_wp, 8.45090888e0_wp, 8.47339339e0_wp, 7.83525634e0_wp, &
+            & 8.20702843e0_wp, 7.70559063e0_wp, 7.32755997e0_wp, 7.03887381e0_wp, 6.68978720e0_wp, 6.05450052e0_wp, &
+            & 5.88752022e0_wp, 5.70661499e0_wp, 5.78450695e0_wp, 7.79780729e0_wp, 7.26443867e0_wp, 6.78151984e0_wp, &
+            & 6.67883169e0_wp, 6.39024318e0_wp, 6.09527958e0_wp, 11.79156076e0_wp, 11.10997644e0_wp, 9.51377795e0_wp, &
+            & 8.67197068e0_wp, 8.77140725e0_wp, 8.65402716e0_wp, 8.53923501e0_wp, 8.85024712e0_wp /)
         ! these new data are scaled with k2=4./3.  and converted a_0 via
         ! autoang=0.52917726d0
-        rcov(1:94)=(/ 0.80628308d0, 1.15903197d0, 3.02356173d0, 2.36845659d0, 1.94011865d0, 1.88972601d0, &
-            & 1.78894056d0, 1.58736983d0, 1.61256616d0, 1.68815527d0, 3.52748848d0, 3.14954334d0, 2.84718717d0, &
-            & 2.62041997d0, 2.77159820d0, 2.57002732d0, 2.49443835d0, 2.41884923d0, 4.43455700d0, 3.88023730d0, &
-            & 3.35111422d0, 3.07395437d0, 3.04875805d0, 2.77159820d0, 2.69600923d0, 2.62041997d0, 2.51963467d0, &
-            & 2.49443835d0, 2.54483100d0, 2.74640188d0, 2.82199085d0, 2.74640188d0, 2.89757982d0, 2.77159820d0, &
-            & 2.87238349d0, 2.94797246d0, 4.76210950d0, 4.20778980d0, 3.70386304d0, 3.50229216d0, 3.32591790d0, &
-            & 3.12434702d0, 2.89757982d0, 2.84718717d0, 2.84718717d0, 2.72120556d0, 2.89757982d0, 3.09915070d0, &
-            & 3.22513231d0, 3.17473967d0, 3.17473967d0, 3.09915070d0, 3.32591790d0, 3.30072128d0, 5.26603625d0, &
-            & 4.43455700d0, 4.08180818d0, 3.70386304d0, 3.98102289d0, 3.95582657d0, 3.93062995d0, 3.90543362d0, &
-            & 3.80464833d0, 3.82984466d0, 3.80464833d0, 3.77945201d0, 3.75425569d0, 3.75425569d0, 3.72905937d0, &
-            & 3.85504098d0, 3.67866672d0, 3.45189952d0, 3.30072128d0, 3.09915070d0, 2.97316878d0, 2.92277614d0, &
-            & 2.79679452d0, 2.82199085d0, 2.84718717d0, 3.32591790d0, 3.27552496d0, 3.27552496d0, 3.42670319d0, &
-            & 3.30072128d0, 3.47709584d0, 3.57788113d0, 5.06446567d0, 4.56053862d0, 4.20778980d0, 3.98102289d0, &
-            & 3.82984466d0, 3.85504098d0, 3.88023730d0, 3.90543362d0 /)
+        rcov(1:94)=(/ 0.80628308e0_wp, 1.15903197e0_wp, 3.02356173e0_wp, 2.36845659e0_wp, 1.94011865e0_wp, &
+            & 1.88972601e0_wp, 1.78894056e0_wp, 1.58736983e0_wp, 1.61256616e0_wp, 1.68815527e0_wp, 3.52748848e0_wp, &
+            & 3.14954334e0_wp, 2.84718717e0_wp, 2.62041997e0_wp, 2.77159820e0_wp, 2.57002732e0_wp, 2.49443835e0_wp, &
+            & 2.41884923e0_wp, 4.43455700e0_wp, 3.88023730e0_wp, 3.35111422e0_wp, 3.07395437e0_wp, 3.04875805e0_wp, &
+            & 2.77159820e0_wp, 2.69600923e0_wp, 2.62041997e0_wp, 2.51963467e0_wp, 2.49443835e0_wp, 2.54483100e0_wp, &
+            & 2.74640188e0_wp, 2.82199085e0_wp, 2.74640188e0_wp, 2.89757982e0_wp, 2.77159820e0_wp, 2.87238349e0_wp, &
+            & 2.94797246e0_wp, 4.76210950e0_wp, 4.20778980e0_wp, 3.70386304e0_wp, 3.50229216e0_wp, 3.32591790e0_wp, &
+            & 3.12434702e0_wp, 2.89757982e0_wp, 2.84718717e0_wp, 2.84718717e0_wp, 2.72120556e0_wp, 2.89757982e0_wp, &
+            & 3.09915070e0_wp, 3.22513231e0_wp, 3.17473967e0_wp, 3.17473967e0_wp, 3.09915070e0_wp, 3.32591790e0_wp, &
+            & 3.30072128e0_wp, 5.26603625e0_wp, 4.43455700e0_wp, 4.08180818e0_wp, 3.70386304e0_wp, 3.98102289e0_wp, &
+            & 3.95582657e0_wp, 3.93062995e0_wp, 3.90543362e0_wp, 3.80464833e0_wp, 3.82984466e0_wp, 3.80464833e0_wp, &
+            & 3.77945201e0_wp, 3.75425569e0_wp, 3.75425569e0_wp, 3.72905937e0_wp, 3.85504098e0_wp, 3.67866672e0_wp, &
+            & 3.45189952e0_wp, 3.30072128e0_wp, 3.09915070e0_wp, 2.97316878e0_wp, 2.92277614e0_wp, 2.79679452e0_wp, &
+            & 2.82199085e0_wp, 2.84718717e0_wp, 3.32591790e0_wp, 3.27552496e0_wp, 3.27552496e0_wp, 3.42670319e0_wp, &
+            & 3.30072128e0_wp, 3.47709584e0_wp, 3.57788113e0_wp, 5.06446567e0_wp, 4.56053862e0_wp, 4.20778980e0_wp, &
+            & 3.98102289e0_wp, 3.82984466e0_wp, 3.85504098e0_wp, 3.88023730e0_wp, 3.90543362e0_wp /)
         ! DFT-D3
         step = 0
         do iat=1, n-1
@@ -32848,7 +32873,7 @@ module chempotpy_n2o_13_1ap_2026_pes
                 r    = dist(step)
                 c6   = c6a(step)
                 ! r2r4 stored in main as sqrt
-                c8 = 3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
+                c8 = 3.0e0_wp*c6*r2r4(iz(iat))*r2r4(iz(jat))
                 ! energy for BJ damping
                 tmp      = sqrt(c8/c6)
                 e6(step) = c6/(r**6+(a1*tmp+a2)**6)
@@ -32873,27 +32898,28 @@ module chempotpy_n2o_13_1ap_2026_pes
         ! Output: V      potential in kcal/mol
         !         grad   gradient (kcal/mol)/Angstrom
         ! QM commented line 628-631 650-652 708-712 728-730
+        use chempotpy_kinds, only: wp
         implicit none
         integer, intent(in) :: imol, igrad
-        double precision    :: r
-        double precision    :: v, grad
-        double precision    :: re, de, as(0:6)
-        double precision    :: y, fy, u
-        double precision    :: dfdy, rr, dydr, dfdr
+        real(wp)            :: r
+        real(wp)            :: v, grad
+        real(wp)            :: re, de, as(0:6)
+        real(wp)            :: y, fy, u
+        real(wp)            :: dfdy, rr, dydr, dfdr
         integer             :: k, a
         ! Dispersion variables
-        double precision :: dist(1), disp, dispdr(1)
+        real(wp) :: dist(1), disp, dispdr(1)
         ! Modified parameters for D3(BJ)
-        re    = 1.098d0
-        de    = 224.9157d0 ! 228.4d0
-        as(0) = 2.7599278840949d0  ! 2.71405774451d0
-        as(1) = 0.2318898277373d0  ! 1.32757649829d-1
-        as(2) = 0.1908422945648d0  ! 2.66756890408d-1
-        as(3) = -0.2727504034613d0  ! 1.95350725241d-1
-        as(4) = -0.5345112219335d0  !-4.08663480982d-1
-        as(5) = 1.0857331617073d0  ! 3.92451705557d-1
-        as(6) = 1.6339897930305d0  ! 1.13006674877d0
-        v     = 0.0d0
+        re    = 1.098e0_wp
+        de    = 224.9157e0_wp ! 228.4d0
+        as(0) = 2.7599278840949e0_wp  ! 2.71405774451d0
+        as(1) = 0.2318898277373e0_wp  ! 1.32757649829d-1
+        as(2) = 0.1908422945648e0_wp  ! 2.66756890408d-1
+        as(3) = -0.2727504034613e0_wp  ! 1.95350725241d-1
+        as(4) = -0.5345112219335e0_wp  !-4.08663480982d-1
+        as(5) = 1.0857331617073e0_wp  ! 3.92451705557d-1
+        as(6) = 1.6339897930305e0_wp  ! 1.13006674877d0
+        v     = 0.0e0_wp
         y     = (r**4 - re**4)/(r**4 + re**4)
         fy    = as(6)
         do a=5, 0, -1
@@ -32901,26 +32927,26 @@ module chempotpy_n2o_13_1ap_2026_pes
             fy = fy + as(a)
         enddo
         u = exp(-fy*(r-re))
-        v = de*(1.0d0-u)*(1.0d0-u)-de
+        v = de*(1.0e0_wp-u)*(1.0e0_wp-u)-de
         ! Add D3 dispersion correction
         dist(1) = r
         call d3disp(dist, disp, dispdr, 0, imol)
         v = v+disp
         ! Compute the gradient if needed
         if( igrad .eq. 1 )then
-            grad = 0.d0
+            grad = 0.e0_wp
             !      dfdy = as(1) + 2.0d0*as(2)*y + 3.0d0*as(3)*y*y &
             !           + 4.0d0*as(4)*y*y*y + 5.0d0*as(5)*y*y*y*y &
             !           + 6.0d0*as(6)*y*y*y*y*y
-            dfdy = as(6)*6.0d0
+            dfdy = as(6)*6.0e0_wp
             do a=5, 1, -1
                 dfdy = dfdy*y
                 dfdy = dfdy + as(a)*a
             enddo
             rr   = r**4 + re**4
-            dydr = 8.0d0*r**3*re**4/(rr*rr)
+            dydr = 8.0e0_wp*r**3*re**4/(rr*rr)
             dfdr = dfdy*dydr
-            grad = 2.0d0*de*(1-u)*u*(dfdr*(r-re)+fy)
+            grad = 2.0e0_wp*de*(1-u)*u*(dfdr*(r-re)+fy)
             ! Add analytical gradient of D3 dispersion correction
             call d3disp(dist, disp, dispdr, 1, imol)
             grad = grad + dispdr(1)
@@ -32941,35 +32967,36 @@ module chempotpy_n2o_13_1ap_2026_pes
         ! The difference between the points of the 8th order MEG NO diatomic
         ! potential and the dispersion corrections was refitted by a 10th
         ! order MEG polynomial
+        use chempotpy_kinds, only: wp
         implicit none
         integer, intent(in) :: imol, igrad
-        double precision    :: r
-        double precision    :: v, grad
-        double precision    :: re, de, c(1:12), u
-        double precision    :: dydr, dfdr
+        real(wp)            :: r
+        real(wp)            :: v, grad
+        real(wp)            :: re, de, c(1:12), u
+        real(wp)            :: dydr, dfdr
         ! Dispersion variables
-        double precision :: dist(1), disp, dispdr(1)
-        re    = 1.1508d0
-        de    = 149.47844d0   !152.6d0
-        c(1)  = -1.385343053807088d-01
-        c(2)  = 1.889990874379912d+00
-        c(3)  = -4.297653558650669d+00
-        c(4)  = 2.143053955670876d+01
-        c(5)  = -4.434782706902637d+01
-        c(6)  = 4.107240828842039d+01
-        c(7)  = -1.090996257595447d+01
-        c(8)  = -1.068726081590712d+01
-        c(9)  = 9.189735457956482d+00
-        c(10) = -2.201965266358976d+00
-        c(11) = 8.966018393955543d-01 ! delta b
-        c(12) = 2.069542710330378d+00 ! delta c
+        real(wp) :: dist(1), disp, dispdr(1)
+        re    = 1.1508e0_wp
+        de    = 149.47844e0_wp   !152.6d0
+        c(1)  = -1.385343053807088e-01_wp
+        c(2)  = 1.889990874379912e+00_wp
+        c(3)  = -4.297653558650669e+00_wp
+        c(4)  = 2.143053955670876e+01_wp
+        c(5)  = -4.434782706902637e+01_wp
+        c(6)  = 4.107240828842039e+01_wp
+        c(7)  = -1.090996257595447e+01_wp
+        c(8)  = -1.068726081590712e+01_wp
+        c(9)  = 9.189735457956482e+00_wp
+        c(10) = -2.201965266358976e+00_wp
+        c(11) = 8.966018393955543e-01_wp ! delta b
+        c(12) = 2.069542710330378e+00_wp ! delta c
         !  for NO
         ! MEG variable
-        u = exp(-(r-re)/c(11)-(r-re)**2.0d0/c(12))
+        u = exp(-(r-re)/c(11)-(r-re)**2.0e0_wp/c(12))
         ! Pair-wise potential
-        v = 0.d0
-        v= (-de)*(c(1)*u**1.0d0 + c(2)*u**2.0d0 + c(3)*u**3.0d0 + c(4)*u**4.0d0 + c(5)*u**5.0d0 + c(6)*u**6.0d0 + &
-            & c(7)*u** 7.0d0 + c(8)*u**8.0d0 + c(9)*u**9.0d0 + c(10)*u**10.0d0 )
+        v = 0.e0_wp
+        v= (-de)*(c(1)*u**1.0e0_wp + c(2)*u**2.0e0_wp + c(3)*u**3.0e0_wp + c(4)*u**4.0e0_wp + c(5)*u**5.0e0_wp + c(6)* &
+            & u**6.0e0_wp + c(7)*u** 7.0e0_wp + c(8)*u**8.0e0_wp + c(9)*u**9.0e0_wp + c(10)*u**10.0e0_wp )
         ! Add D3 dispersion correction
         !        write(*,*) "vno= ",v
         dist(1) = r
@@ -32979,10 +33006,11 @@ module chempotpy_n2o_13_1ap_2026_pes
         ! 1st derivate by r
         if( igrad .eq. 1 )then
             ! multiplier part of the MEG derivate
-            dfdr = (-2.0d0*(r-re)/c(12)-1.0d0/c(11))
-            grad =  - de*(c(1)*1.0d0*dfdr*u**1.0d0 + c(2)*2.0d0*dfdr*u**2.0d0 + c(3)*3.0d0*dfdr*u**3.0d0 + c(4)*4.0d0* &
-                & dfdr* u**4.0d0 + c(5)*5.0d0*dfdr*u**5.0d0 + c(6)*6.0d0*dfdr*u**6.0d0 + c(7)*7.0d0*dfdr*u**7.0d0 + &
-                & c(8)* 8.0d0* dfdr*u**8.0d0 + c(9)*9.0d0*dfdr*u**9.0d0 + c(10)*10.0d0*dfdr*u**10.0d0 )
+            dfdr = (-2.0e0_wp*(r-re)/c(12)-1.0e0_wp/c(11))
+            grad =  - de*(c(1)*1.0e0_wp*dfdr*u**1.0e0_wp + c(2)*2.0e0_wp*dfdr*u**2.0e0_wp + c(3)*3.0e0_wp*dfdr*u** &
+                & 3.0e0_wp + c(4)*4.0e0_wp* dfdr* u**4.0e0_wp + c(5)*5.0e0_wp*dfdr*u**5.0e0_wp + c(6)*6.0e0_wp*dfdr* &
+                & u**6.0e0_wp + c(7)*7.0e0_wp*dfdr*u**7.0e0_wp + c(8)* 8.0e0_wp* dfdr*u**8.0e0_wp + c(9)*9.0e0_wp* &
+                & dfdr*u**9.0e0_wp + c(10)*10.0e0_wp*dfdr*u**10.0e0_wp )
             ! Add analytical gradient of D3 dispersion correction
             call d3disp(dist, disp, dispdr, 1, imol)
             grad = grad + dispdr(1)
@@ -32993,12 +33021,13 @@ end module chempotpy_n2o_13_1ap_2026_pes
 !> @brief Expose N2O_13_1Ap_2026 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_n2o_13_1ap_2026_pes, only: evaluate
+    use chempotpy_kinds,               only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 13
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 13
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

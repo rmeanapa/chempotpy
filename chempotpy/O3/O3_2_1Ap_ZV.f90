@@ -50,13 +50,14 @@ module o3_2_1ap_zv_par
     !        1 kcal/mol = 0.159360144 * 10^-2 hartree
     ! Gconv: kcal/(mol*Angstrom) to hartree/bohr
     !        1 kcal mol^-1 angstrom^-1 = 0.843297564 * 10^-3 hartree/bohr
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, gconv, p, r, ra, &
         & rb, rm, rms, totdiss
-    double precision, parameter :: cconv = 0.52917721092d0
-    double precision, parameter :: econv = 0.159360144d-2
-    double precision, parameter :: gconv = 0.843297564d-3
+    real(wp), parameter :: cconv = 0.52917721092e0_wp
+    real(wp), parameter :: econv = 0.159360144e-2_wp
+    real(wp), parameter :: gconv = 0.843297564e-3_wp
     ! Common variables
     ! R(3):         Interatomic bond distance
     ! rMs(6)        Array to store base terms
@@ -69,50 +70,45 @@ module o3_2_1ap_zv_par
     ! dVdR(3):      The derivative of V w.r.t. R
     ! dRdX(3,9):    The derivative of R w.r.t. X
     ! dBdR(3,56)    The derivative of B w.r.t. R
-    double precision :: r(3)
-    double precision :: rms(3), rm(0:7), p(0:66), b(56)
-    double precision :: dmsdr(3,3), dmdr(3,0:7), dpdr(3,0:66)
-    double precision :: dvdr(3), drdx(3,9), dbdr(3,56)
+    real(wp) :: r(3)
+    real(wp) :: rms(3), rm(0:7), p(0:66), b(56)
+    real(wp) :: dmsdr(3,3), dmdr(3,0:7), dpdr(3,0:66)
+    real(wp) :: dvdr(3), drdx(3,9), dbdr(3,56)
     ! Nonlinear parameters:
     ! a(in Ang)
     ! ab (in Ang^2)
     ! ra (in Ang)
     ! and rb (in Ang)
-    double precision, parameter :: a  = 1.28d0
-    double precision, parameter :: ab = 0.92d0
-    double precision, parameter :: ra = 1.28d0
-    double precision, parameter :: rb = 1.05d0
+    real(wp), parameter :: a  = 1.28e0_wp
+    real(wp), parameter :: ab = 0.92e0_wp
+    real(wp), parameter :: ra = 1.28e0_wp
+    real(wp), parameter :: rb = 1.05e0_wp
     ! Reference energy of infinitely separated O2 + O in hartree (taken
     ! from DSEC corrected calculations)
-    double precision, parameter :: eref = -0.19172848d0
+    real(wp), parameter :: eref = -0.19172848e0_wp
     ! For O2 + O2 framework total diss. energy is 2*120.243 kcal/mol
-    double precision, parameter :: totdiss = 240.486d0
+    real(wp), parameter :: totdiss = 240.486e0_wp
     ! Linear parameters optimized by the weighted-least square fitting
-    double precision, parameter :: c(56) = (/ &
-        0.434187508648d+03, 0.601877868424d+04, -0.464660936314d+03 &
-        , -0.243509245050d+05, 0.950014957019d+04, -0.592848250717d+04 &
-        , 0.697932064786d+05, 0.196833691662d+05, 0.620333799425d+04 &
-        , 0.161329177106d+05, -0.193674344521d+06, -0.538497729426d+05 &
-        , 0.307977146576d+05, 0.403726480782d+05, -0.108892707651d+06 &
-        , -0.779096037457d+03, 0.216579154261d+06, -0.300325527808d+05 &
-        , -0.129080356773d+05, -0.738241261273d+05, 0.143489436247d+05 &
-        , 0.190791768214d+06, -0.370029900769d+05, -0.652612717831d+05 &
-        , -0.221944693403d+06, 0.769784255864d+05, 0.408455132075d+05 &
-        , 0.641594621798d+05, 0.235567946536d+05, -0.893289391646d+05 &
-        , -0.132904223603d+06, 0.456228477004d+05, -0.635361323742d+05 &
-        , 0.698584128346d+05, -0.285994785632d+05, 0.333522136629d+05 &
-        , -0.662684575365d+05, 0.340064804790d+04, -0.326330023790d+05 &
-        , 0.946186834969d+03, 0.662931691589d+05, 0.346863578454d+05 &
-        , -0.211679798701d+05, 0.110843144810d+04, 0.572141564079d+05 &
-        , -0.626260899288d+05, 0.528829171664d+04, 0.465447414881d+05 &
-        , 0.187198514117d+05, -0.130023471408d+05, 0.831266742257d+04 &
-        , -0.550716231464d+04, 0.136134108119d+04, -0.167845982042d+05 &
-        , -0.556894418697d+03, 0.332719035097d+04                      &
-        /)
+    real(wp), parameter :: c(56) = (/ 0.434187508648e+03_wp, 0.601877868424e+04_wp, -0.464660936314e+03_wp, - &
+        & 0.243509245050e+05_wp, 0.950014957019e+04_wp, -0.592848250717e+04_wp, 0.697932064786e+05_wp, &
+        & 0.196833691662e+05_wp, 0.620333799425e+04_wp, 0.161329177106e+05_wp, -0.193674344521e+06_wp, - &
+        & 0.538497729426e+05_wp, 0.307977146576e+05_wp, 0.403726480782e+05_wp, -0.108892707651e+06_wp, - &
+        & 0.779096037457e+03_wp, 0.216579154261e+06_wp, -0.300325527808e+05_wp, -0.129080356773e+05_wp, - &
+        & 0.738241261273e+05_wp, 0.143489436247e+05_wp, 0.190791768214e+06_wp, -0.370029900769e+05_wp, - &
+        & 0.652612717831e+05_wp, -0.221944693403e+06_wp, 0.769784255864e+05_wp, 0.408455132075e+05_wp, &
+        & 0.641594621798e+05_wp, 0.235567946536e+05_wp, -0.893289391646e+05_wp, -0.132904223603e+06_wp, &
+        & 0.456228477004e+05_wp, -0.635361323742e+05_wp, 0.698584128346e+05_wp, -0.285994785632e+05_wp, &
+        & 0.333522136629e+05_wp, -0.662684575365e+05_wp, 0.340064804790e+04_wp, -0.326330023790e+05_wp, &
+        & 0.946186834969e+03_wp, 0.662931691589e+05_wp, 0.346863578454e+05_wp, -0.211679798701e+05_wp, &
+        & 0.110843144810e+04_wp, 0.572141564079e+05_wp, -0.626260899288e+05_wp, 0.528829171664e+04_wp, &
+        & 0.465447414881e+05_wp, 0.187198514117e+05_wp, -0.130023471408e+05_wp, 0.831266742257e+04_wp, - &
+        & 0.550716231464e+04_wp, 0.136134108119e+04_wp, -0.167845982042e+05_wp, -0.556894418697e+03_wp, &
+        & 0.332719035097e+04_wp /)
 end module o3_2_1ap_zv_par
 
 !> @brief Implement O3_2_1Ap_ZV, a potential energy surface for O3.
 module chempotpy_o3_2_1ap_zv_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -121,34 +117,36 @@ module chempotpy_o3_2_1ap_zv_pes
 
     !> @brief Evaluate the O3_2_1Ap_ZV potential energy surface for O3.
     subroutine evaluate( x, igrad, potential, gradient, dvec )
+        use chempotpy_units, only: electronvolt_to_kilocalorie_per_mole
         use o3_2_1ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
             & gconv, p, r, ra, rb, rm, rms, totdiss
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: potential(nstates)
-        double precision, intent(out) :: gradient(nstates,natoms,3)
-        double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-        double precision              :: v, tx(9), tg(9)
-        integer                       :: iatom, idir, j, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: potential(nstates)
+        real(wp), intent(out) :: gradient(nstates,natoms,3)
+        real(wp), intent(out) :: dvec(nstates,nstates,natoms,3)
+        real(wp)              :: v, tx(9), tg(9)
+        integer               :: iatom, idir, j, istate
         !initialize
-        potential = 0.d0; gradient = 0.d0; dvec = 0.d0
+        potential = 0.e0_wp; gradient = 0.e0_wp; dvec = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
                 j     = 3*(iatom-1)+idir
                 tx(j) = x(iatom,idir)
             enddo
         enddo
-        tg = 0.d0
-        ! o3pes reads in angstrom for coordinates
+        tg = 0.e0_wp
+        ! o3pes accepts coordinates in angstrom
         ! o3pes outputs in kcal/mol for energy
         call o3pes(tx, v, tg, igrad)
         ! add a reference energy, which is in hartree
-        v  = v/23.0609 !+Eref*27.211386d0
-        tg = tg/23.0609
+        v  = v/electronvolt_to_kilocalorie_per_mole
+        tg = tg/electronvolt_to_kilocalorie_per_mole
         do istate=1, nstates
             potential(istate) = v
         enddo
@@ -160,21 +158,22 @@ module chempotpy_o3_2_1ap_zv_pes
                 enddo
             enddo
         enddo
-        dvec = 0.d0
+        dvec = 0.e0_wp
     end subroutine evaluate
 end module chempotpy_o3_2_1ap_zv_pes
 
 !> @brief Expose O3_2_1Ap_ZV through the Python-facing PES entry point.
 subroutine pes( x, igrad, potential, gradient, dvec )
     use chempotpy_o3_2_1ap_zv_pes, only: evaluate
+    use chempotpy_kinds,           only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: potential(nstates)
-    double precision, intent(out) :: gradient(nstates,natoms,3)
-    double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: potential(nstates)
+    real(wp), intent(out) :: gradient(nstates,natoms,3)
+    real(wp), intent(out) :: dvec(nstates,nstates,natoms,3)
     call evaluate(x, igrad, potential, gradient, dvec)
 end subroutine pes
 
@@ -202,11 +201,12 @@ subroutine o3pes( x, v, dvdx, igrad )
     ! dMdR:         The derivative of monomials w.r.t. R
     !               dim(3*8)
     ! dRdX:         The derivative of R w.r.t. X, dim(3*9)
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i, igrad, j, nob, k
-    double precision :: v
-    double precision :: dvdx(9), x(9)
-    ! Read Cartesian coordinate from input file
+    integer  :: i, igrad, j, nob, k
+    real(wp) :: v
+    real(wp) :: dvdx(9), x(9)
+    ! Convert the Cartesian coordinate array to pair distances
     call coord_convt(x)
     if( igrad .le. 1 )then
         ! Call subroutine Evv to evaluate potential energy V
@@ -226,9 +226,10 @@ subroutine coord_convt( x )
     use o3_2_1ap_zv_par,    only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
     !  Program to calculate the six interatomic distance
-    !  by reading XYZ coordinate
+    !  from the Cartesian coordinate array
+    use chempotpy_kinds, only: wp
     implicit none
-    double precision, intent(in) :: x(9)
+    real(wp), intent(in) :: x(9)
     call all_pair_distances(x, r)
 end subroutine coord_convt
 
@@ -250,9 +251,10 @@ subroutine evv( v )
     ! rM(0:7):      Array to store monomials
     ! P(0:66):      Array to store polynomials
     ! B(1:56):      Array to store basis functions
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i, j, k
-    double precision :: dist, dv2dr, v, v2
+    integer  :: i, j, k
+    real(wp) :: dist, dv2dr, v, v2
     ! Calculate the six MEG terms for each point
     call evmorse
     ! Calculate the monomials for each point by using six MEG terms
@@ -295,9 +297,10 @@ subroutine evdvdx( x, dvdx )
     ! dVdR:         dVdR(3), derivatives of V w.r.t. 3 bond lengths
     ! dRdX:         dRdX(3,9), derivatives of R(3) w.r.t. 9
     !               Cartesian coordinates
+    use chempotpy_kinds, only: wp
     implicit none
-    double precision, intent(in)  :: x(9)
-    double precision, intent(out) :: dvdx(9)
+    real(wp), intent(in)  :: x(9)
+    real(wp), intent(out) :: dvdx(9)
     call evdvdr
     call evdrdx(x)
     call transform_internal_gradient_to_cartesian(dvdr, drdx, dvdx)
@@ -312,10 +315,11 @@ subroutine evmorse
     ! rb:   reference bond length
     ! a:    nonlinear parameter, unit Anstrom
     ! ab:   nonlinear parameter, unit Anstrom^2
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: i
     do i=1, 3
-        rms(i) = exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
+        rms(i) = exp(-(r(i)-ra)/a-((r(i)-rb)**2.0e0_wp)/ab)
     enddo
 end subroutine evmorse
 
@@ -323,11 +327,12 @@ end subroutine evmorse
 subroutine evmono
     use o3_2_1ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !  The subroutine reads six MEG variables(X) and calculates the
+    !  The subroutine accepts six MEG variables (X) and calculates the
     !  monomials(M) that do not have usable decomposition.
     !  For A4 with max. degree 10, the number of monomials is nom.
+    use chempotpy_kinds, only: wp
     implicit none
-    rm(0) = 1.0d0
+    rm(0) = 1.0e0_wp
     rm(1) = rms(3)
     rm(2) = rms(2)
     rm(3) = rms(1)
@@ -341,9 +346,10 @@ end subroutine evmono
 subroutine evpoly
     use o3_2_1ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !  The subroutine reads monomials(m) and calculates the
+    !  The subroutine accepts monomials (m) and calculates the
     !  permutation invariant polynomials(p)
     !  For A4 with max. degree 10, the number of polynomials is nob.
+    use chempotpy_kinds, only: wp
     implicit none
     p( 0) = rm(0)
     p( 1) = rm(1) + rm(2) + rm(3)
@@ -419,9 +425,10 @@ subroutine evbas
     use o3_2_1ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
     !  The subroutine eliminate the 2-body terms in Bowman's approach
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i
-    double precision :: b1(67)
+    integer  :: i
+    real(wp) :: b1(67)
     ! Pass P(0:66) to BM1(1:67)
     do i=1, 67
         b1(i) = p(i-1)
@@ -461,17 +468,18 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     ! Input:  r      interatomic distance in Angstrom
     ! Output: V      potential in kcal/mol
     !         grad   gradient (kcal/mol)/Angstrom
+    use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in)           :: imol, igrad
-    double precision, intent(in)  :: r
-    double precision, intent(out) :: v, grad
+    integer, intent(in)   :: imol, igrad
+    real(wp), intent(in)  :: r
+    real(wp), intent(out) :: v, grad
     ! Parameters of analytical even-tempered Gaussian expansions for the
     ! ground state potential energy curve of O2 CBS+SR+SO+CV.
     ! Units: alpha in Angstrom^-2, beta=dimensionless, as_k in milihartree.
-    double precision :: alpha, beta, as(0:7)
-    integer          :: k
+    real(wp) :: alpha, beta, as(0:7)
+    integer  :: k
     ! Dispersion variables
-    double precision :: dist(1), disp, dispdr(1)
+    real(wp) :: dist(1), disp, dispdr(1)
     ! Original parameters
     !      alpha = 0.785d0
     !      beta = 1.307d0
@@ -484,34 +492,34 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     !      as(6) = -148395.42850d0
     !      as(7) = 73310.781453d0
     ! Modified parameters for D3(BJ)
-    alpha = 9.439784362354936d-1
-    beta  = 1.262242998506810d0
-    as(0) = -1.488979427684798d3
-    as(1) = 1.881435846488955d4
-    as(2) = -1.053475425838226d5
-    as(3) = 2.755135591229064d5
-    as(4) = -4.277588997761775d5
-    as(5) = 4.404104009614092d5
-    as(6) = -2.946204062950765d5
-    as(7) = 1.176861219078620d5
-    v     = 0.d0
+    alpha = 9.439784362354936e-1_wp
+    beta  = 1.262242998506810e0_wp
+    as(0) = -1.488979427684798e3_wp
+    as(1) = 1.881435846488955e4_wp
+    as(2) = -1.053475425838226e5_wp
+    as(3) = 2.755135591229064e5_wp
+    as(4) = -4.277588997761775e5_wp
+    as(5) = 4.404104009614092e5_wp
+    as(6) = -2.946204062950765e5_wp
+    as(7) = 1.176861219078620e5_wp
+    v     = 0.e0_wp
     do k=0, 7
-        v = v + as(k)*dexp(-alpha*beta**k*r**2)
+        v = v + as(k)*exp(-alpha*beta**k*r**2)
     enddo
     ! From milihartree to kcal/mol
-    v = v*627.509523475149d-3
+    v = v*627.509523475149e-3_wp
     ! Add D3 dispersion correction
     dist(1) = r
     call d3disp(dist, disp, dispdr, 0, imol)
     v = v+disp
     ! Compute the gradient if needed
     if( igrad .eq. 1 )then
-        grad = 0.d0
+        grad = 0.e0_wp
         do k=0, 7
-            grad = grad-2.d0*as(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
+            grad = grad-2.e0_wp*as(k)*alpha*beta**k*r*exp(-alpha*beta**k*r**2)
         enddo
         ! Convert from milihartree/A to (kcal/mol)/A
-        grad = grad*627.509523475149d-3
+        grad = grad*627.509523475149e-3_wp
         ! Add analytical gradient of D3 dispersion correction
         call d3disp(dist, disp, dispdr, 1, imol)
         grad = grad + dispdr(1)
@@ -536,12 +544,13 @@ subroutine evdvdr
     ! nob:          number of basis functions(polynomials)
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i, j
-    double precision :: dist, v2, dv2dr
+    integer  :: i, j
+    real(wp) :: dist, v2, dv2dr
     ! Initialize dVdR(3)
     do i=1, 3
-        dvdr(i) = 0.0d0
+        dvdr(i) = 0.0e0_wp
     enddo
     ! Add dV2dR(i) to dVdR
     do i=1, 3
@@ -584,10 +593,11 @@ subroutine evdrdx( x )
     !               w.r.t. 3 bond lengths
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
+    use chempotpy_kinds, only: wp
     implicit none
-    integer, parameter           :: first_atoms(3)  = [1, 1, 2]
-    integer, parameter           :: second_atoms(3) = [2, 3, 3]
-    double precision, intent(in) :: x(9)
+    integer, parameter   :: first_atoms(3)  = [1, 1, 2]
+    integer, parameter   :: second_atoms(3) = [2, 3, 3]
+    real(wp), intent(in) :: x(9)
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
@@ -602,18 +612,19 @@ subroutine evdmsdr
     ! ab:           Nonlinear pamameter(Angstrom^2)
     ! ra:           reference bond length(Angstrom)
     ! rb:           reference bond length(Angstrom)
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: i, j
     ! Initialize dmsdr
     do i=1, 3
         do j=1, 3
-            dmsdr(i,j) = 0.0d0
+            dmsdr(i,j) = 0.0e0_wp
         enddo
     enddo
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
     do i=1, 3
-        dmsdr(i,i) = (-2.0d0*(r(i)-rb)/ab-1/a) * exp(-(r(i)-ra)/a-((r(i)-rb)**2.0d0)/ab)
+        dmsdr(i,i) = (-2.0e0_wp*(r(i)-rb)/ab-1/a) * exp(-(r(i)-ra)/a-((r(i)-rb)**2.0e0_wp)/ab)
     enddo
 end subroutine evdmsdr
 
@@ -621,13 +632,14 @@ end subroutine evdmsdr
 subroutine evdmdr
     use o3_2_1ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !  The subroutine reads M(nom) and dMSdR(3,3) and calculates the
+    !  The subroutine accepts M(nom) and dMSdR(3,3) and calculates the
     !  dMdR(3,nom) that do not have usable decomposition.
     !  For A4 with max. degree 10, the number of monomials is nom.
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: i
     do i=1, 3
-        dmdr(i,0) = 0.0d0
+        dmdr(i,0) = 0.0e0_wp
         dmdr(i,1) = dmsdr(i,3)
         dmdr(i,2) = dmsdr(i,2)
         dmdr(i,3) = dmsdr(i,1)
@@ -642,9 +654,10 @@ end subroutine evdmdr
 subroutine evdpdr
     use o3_2_1ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
-    !  The subroutine reads monomials(m) and calculates the
+    !  The subroutine accepts monomials (m) and calculates the
     !  permutation invariant polynomials(p)
     !  For A4 with max. degree 10, the number of polynomials is nob.
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: i
     do i=1, 3
@@ -723,9 +736,10 @@ subroutine evdbdr
     use o3_2_1ap_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
         & gconv, p, r, ra, rb, rm, rms, totdiss
     !  The subroutine eliminate the 2-body terms in Bowman's approach
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i, j
-    double precision :: db1dr(3,67)
+    integer  :: i, j
+    real(wp) :: db1dr(3,67)
     ! Pass P(3,0:66) to BM1(3,1:67)
     do j=1, 3
         do i=1, 67
@@ -775,23 +789,24 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
     ! 1456-1465
     ! The C6 values are fixed.
+    use chempotpy_kinds, only: wp
     implicit none
-    double precision :: cn(2), s6, s8, rs6, rs8
-    double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
-    double precision :: e6dr(1), e8dr(1)
-    integer          :: iz(2), mxc(94), i, j, igrad
-    double precision :: c6ab(94,94,5,5,3)
-    double precision :: r2r4(94)
-    double precision :: autoang, autokcal
-    integer          :: imol
-    autoang  = 0.52917726d0
-    autokcal = 627.509541d0
+    real(wp) :: cn(2), s6, s8, rs6, rs8
+    real(wp) :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
+    real(wp) :: e6dr(1), e8dr(1)
+    integer  :: iz(2), mxc(94), i, j, igrad
+    real(wp) :: c6ab(94,94,5,5,3)
+    real(wp) :: r2r4(94)
+    real(wp) :: autoang, autokcal
+    integer  :: imol
+    autoang  = 0.52917726e0_wp
+    autokcal = 627.509541e0_wp
     ! Generalized parameters for BJ damping from P. Verma, B. Wang,
     ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017)
-    s6  = 1.0d0
-    s8  = 2.0d0
-    rs6 = 0.5299d0
-    rs8 = 2.20d0
+    s6  = 1.0e0_wp
+    s8  = 2.0e0_wp
+    rs6 = 0.5299e0_wp
+    rs8 = 2.20e0_wp
     do i=1, 1
         dist(i) = dist(i)/autoang
     enddo
@@ -800,8 +815,8 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
         iz(1) = 8
         iz(2) = 8
         ! C6 for O2 system
-        c6(1) = 12.8d0
-        c6(2) = 12.8d0
+        c6(1) = 12.8e0_wp
+        c6(2) = 12.8e0_wp
     else
         ! currently imol = 4 is used
         stop
@@ -809,14 +824,14 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     ! Calculate dispersion correction
     call edisp(94, 5, 2, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
-    disp = 0.0d0
+    disp = 0.0e0_wp
     do i=1, 1
         disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
     enddo
     if( igrad .eq. 1 )then
         call edisp(94, 5, 2, dist, iz, mxc, &
             rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
-        dispdr(:) = 0.0d0
+        dispdr(:) = 0.0e0_wp
         do i=1, 1
             dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
         enddo
@@ -830,58 +845,63 @@ end subroutine d3disp
 !> @brief Evaluate edisp.
 subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
         rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: n, iz(2), max_elem, maxc, mxc(max_elem)
-    double precision :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
-    double precision :: rs6, rs8, rcov(max_elem)
-    double precision :: c6ab(max_elem,max_elem,maxc,maxc,3)
-    double precision :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
-    integer          :: iat, jat, igrad
-    double precision :: r, tmp, c6, c8, a1, a2
-    double precision :: damp6, damp8
-    double precision :: cn(n)
-    double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
-    integer          :: step
-    e6(:)   = 0.0d0
-    e8(:)   = 0.0d0
-    e6dr(:) = 0.0d0
-    e8dr(:) = 0.0d0
+    integer  :: n, iz(2), max_elem, maxc, mxc(max_elem)
+    real(wp) :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+    real(wp) :: rs6, rs8, rcov(max_elem)
+    real(wp) :: c6ab(max_elem,max_elem,maxc,maxc,3)
+    real(wp) :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
+    integer  :: iat, jat, igrad
+    real(wp) :: r, tmp, c6, c8, a1, a2
+    real(wp) :: damp6, damp8
+    real(wp) :: cn(n)
+    real(wp) :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
+    integer  :: step
+    e6(:)   = 0.0e0_wp
+    e8(:)   = 0.0e0_wp
+    e6dr(:) = 0.0e0_wp
+    e8dr(:) = 0.0e0_wp
     a1      = rs6
     a2      = rs8
     !  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
     !  the large number of digits is just to keep the results consistent
     !  with older versions. They should not imply any higher accuracy than
     !  the old values
-    r2r4(1:94)=(/ 2.00734898d0, 1.56637132d0, 5.01986934d0, 3.85379032d0, 3.64446594d0, 3.10492822d0, 2.71175247d0, &
-        & 2.59361680d0, 2.38825250d0, 2.21522516d0, 6.58585536d0, 5.46295967d0, 5.65216669d0, 4.88284902d0, &
-        & 4.29727576d0, 4.04108902d0, 3.72932356d0, 3.44677275d0, 7.97762753d0, 7.07623947d0, 6.60844053d0, &
-        & 6.28791364d0, 6.07728703d0, 5.54643096d0, 5.80491167d0, 5.58415602d0, 5.41374528d0, 5.28497229d0, &
-        & 5.22592821d0, 5.09817141d0, 6.12149689d0, 5.54083734d0, 5.06696878d0, 4.87005108d0, 4.59089647d0, &
-        & 4.31176304d0, 9.55461698d0, 8.67396077d0, 7.97210197d0, 7.43439917d0, 6.58711862d0, 6.19536215d0, &
-        & 6.01517290d0, 5.81623410d0, 5.65710424d0, 5.52640661d0, 5.44263305d0, 5.58285373d0, 7.02081898d0, &
-        & 6.46815523d0, 5.98089120d0, 5.81686657d0, 5.53321815d0, 5.25477007d0, 11.02204549d0, 0.15679528d0, &
-        & 9.35167836d0, 9.06926079d0, 8.97241155d0, 8.90092807d0, 8.85984840d0, 8.81736827d0, 8.79317710d0, &
-        & 7.89969626d0, 8.80588454d0, 8.42439218d0, 8.54289262d0, 8.47583370d0, 8.45090888d0, 8.47339339d0, &
-        & 7.83525634d0, 8.20702843d0, 7.70559063d0, 7.32755997d0, 7.03887381d0, 6.68978720d0, 6.05450052d0, &
-        & 5.88752022d0, 5.70661499d0, 5.78450695d0, 7.79780729d0, 7.26443867d0, 6.78151984d0, 6.67883169d0, &
-        & 6.39024318d0, 6.09527958d0, 11.79156076d0, 11.10997644d0, 9.51377795d0, 8.67197068d0, 8.77140725d0, &
-        & 8.65402716d0, 8.53923501d0, 8.85024712d0 /)
+    r2r4(1:94)=(/ 2.00734898e0_wp, 1.56637132e0_wp, 5.01986934e0_wp, 3.85379032e0_wp, 3.64446594e0_wp, &
+        & 3.10492822e0_wp, 2.71175247e0_wp, 2.59361680e0_wp, 2.38825250e0_wp, 2.21522516e0_wp, 6.58585536e0_wp, &
+        & 5.46295967e0_wp, 5.65216669e0_wp, 4.88284902e0_wp, 4.29727576e0_wp, 4.04108902e0_wp, 3.72932356e0_wp, &
+        & 3.44677275e0_wp, 7.97762753e0_wp, 7.07623947e0_wp, 6.60844053e0_wp, 6.28791364e0_wp, 6.07728703e0_wp, &
+        & 5.54643096e0_wp, 5.80491167e0_wp, 5.58415602e0_wp, 5.41374528e0_wp, 5.28497229e0_wp, 5.22592821e0_wp, &
+        & 5.09817141e0_wp, 6.12149689e0_wp, 5.54083734e0_wp, 5.06696878e0_wp, 4.87005108e0_wp, 4.59089647e0_wp, &
+        & 4.31176304e0_wp, 9.55461698e0_wp, 8.67396077e0_wp, 7.97210197e0_wp, 7.43439917e0_wp, 6.58711862e0_wp, &
+        & 6.19536215e0_wp, 6.01517290e0_wp, 5.81623410e0_wp, 5.65710424e0_wp, 5.52640661e0_wp, 5.44263305e0_wp, &
+        & 5.58285373e0_wp, 7.02081898e0_wp, 6.46815523e0_wp, 5.98089120e0_wp, 5.81686657e0_wp, 5.53321815e0_wp, &
+        & 5.25477007e0_wp, 11.02204549e0_wp, 0.15679528e0_wp, 9.35167836e0_wp, 9.06926079e0_wp, 8.97241155e0_wp, &
+        & 8.90092807e0_wp, 8.85984840e0_wp, 8.81736827e0_wp, 8.79317710e0_wp, 7.89969626e0_wp, 8.80588454e0_wp, &
+        & 8.42439218e0_wp, 8.54289262e0_wp, 8.47583370e0_wp, 8.45090888e0_wp, 8.47339339e0_wp, 7.83525634e0_wp, &
+        & 8.20702843e0_wp, 7.70559063e0_wp, 7.32755997e0_wp, 7.03887381e0_wp, 6.68978720e0_wp, 6.05450052e0_wp, &
+        & 5.88752022e0_wp, 5.70661499e0_wp, 5.78450695e0_wp, 7.79780729e0_wp, 7.26443867e0_wp, 6.78151984e0_wp, &
+        & 6.67883169e0_wp, 6.39024318e0_wp, 6.09527958e0_wp, 11.79156076e0_wp, 11.10997644e0_wp, 9.51377795e0_wp, &
+        & 8.67197068e0_wp, 8.77140725e0_wp, 8.65402716e0_wp, 8.53923501e0_wp, 8.85024712e0_wp /)
     ! these new data are scaled with k2=4./3. and converted to a_0 via
     ! autoang=0.52917726d0
-    rcov(1:94)=(/ 0.80628308d0, 1.15903197d0, 3.02356173d0, 2.36845659d0, 1.94011865d0, 1.88972601d0, 1.78894056d0, &
-        & 1.58736983d0, 1.61256616d0, 1.68815527d0, 3.52748848d0, 3.14954334d0, 2.84718717d0, 2.62041997d0, &
-        & 2.77159820d0, 2.57002732d0, 2.49443835d0, 2.41884923d0, 4.43455700d0, 3.88023730d0, 3.35111422d0, &
-        & 3.07395437d0, 3.04875805d0, 2.77159820d0, 2.69600923d0, 2.62041997d0, 2.51963467d0, 2.49443835d0, &
-        & 2.54483100d0, 2.74640188d0, 2.82199085d0, 2.74640188d0, 2.89757982d0, 2.77159820d0, 2.87238349d0, &
-        & 2.94797246d0, 4.76210950d0, 4.20778980d0, 3.70386304d0, 3.50229216d0, 3.32591790d0, 3.12434702d0, &
-        & 2.89757982d0, 2.84718717d0, 2.84718717d0, 2.72120556d0, 2.89757982d0, 3.09915070d0, 3.22513231d0, &
-        & 3.17473967d0, 3.17473967d0, 3.09915070d0, 3.32591790d0, 3.30072128d0, 5.26603625d0, 4.43455700d0, &
-        & 4.08180818d0, 3.70386304d0, 3.98102289d0, 3.95582657d0, 3.93062995d0, 3.90543362d0, 3.80464833d0, &
-        & 3.82984466d0, 3.80464833d0, 3.77945201d0, 3.75425569d0, 3.75425569d0, 3.72905937d0, 3.85504098d0, &
-        & 3.67866672d0, 3.45189952d0, 3.30072128d0, 3.09915070d0, 2.97316878d0, 2.92277614d0, 2.79679452d0, &
-        & 2.82199085d0, 2.84718717d0, 3.32591790d0, 3.27552496d0, 3.27552496d0, 3.42670319d0, 3.30072128d0, &
-        & 3.47709584d0, 3.57788113d0, 5.06446567d0, 4.56053862d0, 4.20778980d0, 3.98102289d0, 3.82984466d0, &
-        & 3.85504098d0, 3.88023730d0, 3.90543362d0 /)
+    rcov(1:94)=(/ 0.80628308e0_wp, 1.15903197e0_wp, 3.02356173e0_wp, 2.36845659e0_wp, 1.94011865e0_wp, &
+        & 1.88972601e0_wp, 1.78894056e0_wp, 1.58736983e0_wp, 1.61256616e0_wp, 1.68815527e0_wp, 3.52748848e0_wp, &
+        & 3.14954334e0_wp, 2.84718717e0_wp, 2.62041997e0_wp, 2.77159820e0_wp, 2.57002732e0_wp, 2.49443835e0_wp, &
+        & 2.41884923e0_wp, 4.43455700e0_wp, 3.88023730e0_wp, 3.35111422e0_wp, 3.07395437e0_wp, 3.04875805e0_wp, &
+        & 2.77159820e0_wp, 2.69600923e0_wp, 2.62041997e0_wp, 2.51963467e0_wp, 2.49443835e0_wp, 2.54483100e0_wp, &
+        & 2.74640188e0_wp, 2.82199085e0_wp, 2.74640188e0_wp, 2.89757982e0_wp, 2.77159820e0_wp, 2.87238349e0_wp, &
+        & 2.94797246e0_wp, 4.76210950e0_wp, 4.20778980e0_wp, 3.70386304e0_wp, 3.50229216e0_wp, 3.32591790e0_wp, &
+        & 3.12434702e0_wp, 2.89757982e0_wp, 2.84718717e0_wp, 2.84718717e0_wp, 2.72120556e0_wp, 2.89757982e0_wp, &
+        & 3.09915070e0_wp, 3.22513231e0_wp, 3.17473967e0_wp, 3.17473967e0_wp, 3.09915070e0_wp, 3.32591790e0_wp, &
+        & 3.30072128e0_wp, 5.26603625e0_wp, 4.43455700e0_wp, 4.08180818e0_wp, 3.70386304e0_wp, 3.98102289e0_wp, &
+        & 3.95582657e0_wp, 3.93062995e0_wp, 3.90543362e0_wp, 3.80464833e0_wp, 3.82984466e0_wp, 3.80464833e0_wp, &
+        & 3.77945201e0_wp, 3.75425569e0_wp, 3.75425569e0_wp, 3.72905937e0_wp, 3.85504098e0_wp, 3.67866672e0_wp, &
+        & 3.45189952e0_wp, 3.30072128e0_wp, 3.09915070e0_wp, 2.97316878e0_wp, 2.92277614e0_wp, 2.79679452e0_wp, &
+        & 2.82199085e0_wp, 2.84718717e0_wp, 3.32591790e0_wp, 3.27552496e0_wp, 3.27552496e0_wp, 3.42670319e0_wp, &
+        & 3.30072128e0_wp, 3.47709584e0_wp, 3.57788113e0_wp, 5.06446567e0_wp, 4.56053862e0_wp, 4.20778980e0_wp, &
+        & 3.98102289e0_wp, 3.82984466e0_wp, 3.85504098e0_wp, 3.88023730e0_wp, 3.90543362e0_wp /)
     ! DFT-D3
     step = 0
     do iat=1, n-1
@@ -890,7 +910,7 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
             r    = dist(step)
             c6   = c6a(step)
             ! r2r4 stored in main as sqrt
-            c8 = 3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
+            c8 = 3.0e0_wp*c6*r2r4(iz(iat))*r2r4(iz(jat))
             ! energy for BJ damping
             tmp      = sqrt(c8/c6)
             e6(step) = c6/(r**6+(a1*tmp+a2)**6)

@@ -54,6 +54,7 @@
 
 !> @brief Implement BrH2_LEPS_C_1982, a potential energy surface for BrH2.
 module chempotpy_brh2_leps_c_1982_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -62,146 +63,148 @@ module chempotpy_brh2_leps_c_1982_pes
 
     !> @brief Evaluate the BrH2_LEPS_C_1982 potential energy surface for BrH2.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, parameter            :: natom   = 25
-        integer, parameter            :: isurf   = 5
-        integer, parameter            :: jsurf   = int(isurf*(isurf+1)/2)
-        integer, parameter            :: n3atom  = 75
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: ahh
-        double precision              :: ahx
-        double precision              :: alfw
-        double precision              :: anuzero
-        double precision              :: bhh
-        double precision              :: bhx
-        double precision              :: c3
-        double precision              :: cart(natom,3)
-        double precision              :: cartnu(natom,3)
-        double precision              :: cnvrtd
-        double precision              :: cnvrtde
-        double precision              :: cnvrte
-        double precision              :: deesdr(n3atom,isurf)
-        double precision              :: degsdr(n3atom)
-        double precision              :: deijdr(n3atom,jsurf)
-        double precision              :: denom
-        double precision              :: descart(natom,3,isurf)
-        double precision              :: descartnu(natom,3,isurf)
-        double precision              :: dgscart(natom,3)
-        double precision              :: dgscartnu(natom,3)
-        double precision              :: dh1(10)
-        double precision              :: dh2(10)
-        double precision              :: dh3(10)
-        double precision              :: dhh
-        double precision              :: dhx
-        double precision              :: dijcart(natom,3,jsurf)
-        double precision              :: dijcartnu(natom,3,jsurf)
-        double precision              :: e(4)
-        double precision              :: easyab
-        double precision              :: easyac
-        double precision              :: easybc
-        double precision              :: engyes(isurf)
-        double precision              :: engygs
-        double precision              :: engyij(jsurf)
-        double precision              :: eps
-        double precision              :: eta1p
-        double precision              :: eta3p
-        double precision              :: eta3s
-        double precision              :: etahh
-        double precision              :: ezero(isurf+1)
-        double precision              :: h(10)
-        integer                       :: icartr
-        integer                       :: indexes(natom)
-        integer                       :: irctnt
-        integer                       :: ireorder
-        integer                       :: kediag
-        integer                       :: keoffd
-        integer                       :: ksdiag
-        integer                       :: ksoffd
-        double precision              :: legacy_g
-        integer                       :: legacy_natoms
-        double precision              :: legacy_u(4,4)
-        integer                       :: mder
-        integer                       :: msurf
-        integer                       :: nasurf(isurf+1,isurf+1)
-        integer                       :: nder
-        integer                       :: nflag(20)
-        integer                       :: nulbl(natom)
-        double precision              :: one
-        double precision              :: pengyes(isurf)
-        double precision              :: pengygs
-        double precision              :: pengyij(jsurf)
-        double precision              :: r(n3atom)
-        character                     :: ref(5)
-        double precision              :: rhh
-        double precision              :: rhx
-        double precision              :: rt34
-        double precision              :: rt38
-        double precision              :: scr1(4)
-        double precision              :: scr2(4)
-        double precision              :: xib
-        double precision              :: xih
-        double precision              :: xix
-        double precision              :: v
-        integer                       :: iatom, idir, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, parameter    :: natom   = 25
+        integer, parameter    :: isurf   = 5
+        integer, parameter    :: jsurf   = int(isurf*(isurf+1)/2)
+        integer, parameter    :: n3atom  = 75
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: ahh
+        real(wp)              :: ahx
+        real(wp)              :: alfw
+        real(wp)              :: anuzero
+        real(wp)              :: bhh
+        real(wp)              :: bhx
+        real(wp)              :: c3
+        real(wp)              :: cart(natom,3)
+        real(wp)              :: cartnu(natom,3)
+        real(wp)              :: cnvrtd
+        real(wp)              :: cnvrtde
+        real(wp)              :: cnvrte
+        real(wp)              :: deesdr(n3atom,isurf)
+        real(wp)              :: degsdr(n3atom)
+        real(wp)              :: deijdr(n3atom,jsurf)
+        real(wp)              :: denom
+        real(wp)              :: descart(natom,3,isurf)
+        real(wp)              :: descartnu(natom,3,isurf)
+        real(wp)              :: dgscart(natom,3)
+        real(wp)              :: dgscartnu(natom,3)
+        real(wp)              :: dh1(10)
+        real(wp)              :: dh2(10)
+        real(wp)              :: dh3(10)
+        real(wp)              :: dhh
+        real(wp)              :: dhx
+        real(wp)              :: dijcart(natom,3,jsurf)
+        real(wp)              :: dijcartnu(natom,3,jsurf)
+        real(wp)              :: e(4)
+        real(wp)              :: easyab
+        real(wp)              :: easyac
+        real(wp)              :: easybc
+        real(wp)              :: engyes(isurf)
+        real(wp)              :: engygs
+        real(wp)              :: engyij(jsurf)
+        real(wp)              :: eps
+        real(wp)              :: eta1p
+        real(wp)              :: eta3p
+        real(wp)              :: eta3s
+        real(wp)              :: etahh
+        real(wp)              :: ezero(isurf+1)
+        real(wp)              :: h(10)
+        integer               :: icartr
+        integer               :: indexes(natom)
+        integer               :: irctnt
+        integer               :: ireorder
+        integer               :: kediag
+        integer               :: keoffd
+        integer               :: ksdiag
+        integer               :: ksoffd
+        real(wp)              :: legacy_g
+        integer               :: legacy_natoms
+        real(wp)              :: legacy_u(4,4)
+        integer               :: mder
+        integer               :: msurf
+        integer               :: nasurf(isurf+1,isurf+1)
+        integer               :: nder
+        integer               :: nflag(20)
+        integer               :: nulbl(natom)
+        real(wp)              :: one
+        real(wp)              :: pengyes(isurf)
+        real(wp)              :: pengygs
+        real(wp)              :: pengyij(jsurf)
+        real(wp)              :: r(n3atom)
+        character             :: ref(5)
+        real(wp)              :: rhh
+        real(wp)              :: rhx
+        real(wp)              :: rt34
+        real(wp)              :: rt38
+        real(wp)              :: scr1(4)
+        real(wp)              :: scr2(4)
+        real(wp)              :: xib
+        real(wp)              :: xih
+        real(wp)              :: xix
+        real(wp)              :: v
+        integer               :: iatom, idir, istate
         !initialize
-        ahh    = 0.d0; ahx = 0.d0; alfw = 0.d0; anuzero = 0.d0; bhh = 0.d0; bhx = 0.d0; c3 = 0.d0; cart = 0.d0
-        cartnu = 0.d0; cnvrtd = 0.d0; cnvrtde = 0.d0; cnvrte = 0.d0; deesdr = 0.d0; degsdr = 0.d0; deijdr = 0.d0
-        denom  = 0.d0; descart = 0.d0; descartnu = 0.d0; dgscart = 0.d0; dgscartnu = 0.d0; dh1 = 0.d0; dh2 = 0.d0
-        dh3    = 0.d0; dhh = 0.d0; dhx = 0.d0; dijcart = 0.d0; dijcartnu = 0.d0; e = 0.d0; easyab = 0.d0; easyac = 0.d0
-        easybc = 0.d0; engyes = 0.d0; engygs = 0.d0; engyij = 0.d0; eps = 0.d0; eta1p = 0.d0; eta3p = 0.d0; eta3s = 0.d0
-        etahh  = 0.d0; ezero = 0.d0; h = 0.d0; icartr = 0; indexes = 0; irctnt = 0; ireorder = 0; kediag = 0; keoffd = 0
-        ksdiag = 0; ksoffd = 0; legacy_g = 0.d0; legacy_natoms = 0; legacy_u = 0.d0; mder = 0; msurf = 0; nasurf = 0
-        nder   = 0; nflag = 0; nulbl = 0; one = 0.d0; pengyes = 0.d0; pengygs = 0.d0; pengyij = 0.d0; r = 0.d0
+        ahh    = 0.e0_wp; ahx = 0.e0_wp; alfw = 0.e0_wp; anuzero = 0.e0_wp; bhh = 0.e0_wp; bhx = 0.e0_wp; c3 = 0.e0_wp; cart = 0.e0_wp
+        cartnu = 0.e0_wp; cnvrtd = 0.e0_wp; cnvrtde = 0.e0_wp; cnvrte = 0.e0_wp; deesdr = 0.e0_wp; degsdr = 0.e0_wp; deijdr = 0.e0_wp
+        denom  = 0.e0_wp; descart = 0.e0_wp; descartnu = 0.e0_wp; dgscart = 0.e0_wp; dgscartnu = 0.e0_wp; dh1 = 0.e0_wp; dh2 = 0.e0_wp
+        dh3    = 0.e0_wp; dhh = 0.e0_wp; dhx = 0.e0_wp; dijcart = 0.e0_wp; dijcartnu = 0.e0_wp; e = 0.e0_wp; easyab = 0.e0_wp; easyac = 0.e0_wp
+        easybc = 0.e0_wp; engyes = 0.e0_wp; engygs = 0.e0_wp; engyij = 0.e0_wp; eps = 0.e0_wp; eta1p = 0.e0_wp; eta3p = 0.e0_wp; eta3s = 0.e0_wp
+        etahh  = 0.e0_wp; ezero = 0.e0_wp; h = 0.e0_wp; icartr = 0; indexes = 0; irctnt = 0; ireorder = 0; kediag = 0; keoffd = 0
+        ksdiag = 0; ksoffd = 0; legacy_g = 0.e0_wp; legacy_natoms = 0; legacy_u = 0.e0_wp; mder = 0; msurf = 0; nasurf = 0
+        nder   = 0; nflag = 0; nulbl = 0; one = 0.e0_wp; pengyes = 0.e0_wp; pengygs = 0.e0_wp; pengyij = 0.e0_wp; r = 0.e0_wp
         ref    = ' '
-        rhh    = 0.d0
-        rhx    = 0.d0
-        rt34   = 0.d0
-        rt38   = 0.d0
-        scr1   = 0.d0
-        scr2   = 0.d0
-        xib    = 0.d0
-        xih    = 0.d0
-        xix    = 0.d0
+        rhh    = 0.e0_wp
+        rhx    = 0.e0_wp
+        rt34   = 0.e0_wp
+        rt38   = 0.e0_wp
+        scr1   = 0.e0_wp
+        scr2   = 0.e0_wp
+        xib    = 0.e0_wp
+        xih    = 0.e0_wp
+        xix    = 0.e0_wp
         nasurf = reshape([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
             & 0, 0, 0, 0, 0], shape(nasurf))
         nder          = 0
         nflag         = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        anuzero       = 0.0d0
+        anuzero       = 0.0e0_wp
         icartr        = 3
         msurf         = 0
         mder          = 1
         nulbl         = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         legacy_natoms = 3
-        eps           = 1.d-6
-        one           = 1.0d0
-        rhh           = 1.4016d0
-        ahh           = 1.0291d0
-        dhh           = 0.17447d0
-        bhh           = 0.018d0
-        xih           = 1.d0
-        xix           = 1.6d0
-        legacy_g      = 0.22d0
-        alfw          = 1.0d0
-        rhx           = 2.673d0
-        ahx           = 0.957d0
-        dhx           = 0.1439d0
-        bhx           = 0.012d0
-        etahh         = 0.393764d0
-        eta3s         = 0.322d0
-        eta1p         = 0.20286d0
-        eta3p         = 0.1771d0
-        v             = 0.d0; g = 0.d0; d = 0.d0
-        cart          = 0.d0
+        eps           = 1.e-6_wp
+        one           = 1.0e0_wp
+        rhh           = 1.4016e0_wp
+        ahh           = 1.0291e0_wp
+        dhh           = 0.17447e0_wp
+        bhh           = 0.018e0_wp
+        xih           = 1.e0_wp
+        xix           = 1.6e0_wp
+        legacy_g      = 0.22e0_wp
+        alfw          = 1.0e0_wp
+        rhx           = 2.673e0_wp
+        ahx           = 0.957e0_wp
+        dhx           = 0.1439e0_wp
+        bhx           = 0.012e0_wp
+        etahh         = 0.393764e0_wp
+        eta3s         = 0.322e0_wp
+        eta1p         = 0.20286e0_wp
+        eta3p         = 0.1771e0_wp
+        v             = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
+        cart          = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                cart(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+                cart(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
         nder = igrad
@@ -209,15 +212,15 @@ module chempotpy_brh2_leps_c_1982_pes
         call pot
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = pengygs*legacy_hartree_to_electronvolt
+                p(istate) = pengygs*hartree_to_electronvolt
             enddo
         elseif( igrad == 1 )then
             do istate=1, nstates
-                p(istate) = pengygs*legacy_hartree_to_electronvolt
+                p(istate) = pengygs*hartree_to_electronvolt
             enddo
             do iatom=1, natoms
                 do idir=1, 3
-                    g(1,iatom,idir) = dgscart(iatom,idir)*51.422067
+                    g(1,iatom,idir) = dgscart(iatom,idir)*hartree_per_bohr_to_ev_per_angstrom
                 enddo
             enddo
         elseif( igrad == 2 )then
@@ -228,14 +231,15 @@ module chempotpy_brh2_leps_c_1982_pes
 
         !> @brief Evaluate prepare_local_context for the BrH2_LEPS_C_1982 potential.
         subroutine prepare_local_context
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: t
-            integer                     :: i
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: t
+            integer             :: i
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !      LOGICAL LCOL
             !      DIMENSION H(10),DH1(10),DH2(10),DH3(10),legacy_u(4,4),E(4),SCR1(4),
             !     1          SCR2(4)
@@ -249,13 +253,13 @@ module chempotpy_brh2_leps_c_1982_pes
             easyab   = dhx
             easybc   = dhh
             easyac   = dhx
-            xib      = 0.5d0*(xih + xix)
+            xib      = 0.5e0_wp*(xih + xix)
             t        = xib*rhx
-            c3       = 1.d0/3.d0
-            denom    = 2.d0*rhx*(1.d0+t*(1.d0+c3*t))*exp(-t)
+            c3       = 1.e0_wp/3.e0_wp
+            denom    = 2.e0_wp*rhx*(1.e0_wp+t*(1.e0_wp+c3*t))*exp(-t)
             legacy_g = legacy_g/rhx
-            rt34     = 0.25d0*sqrt(3.d0)
-            rt38     = 0.5d0*rt34
+            rt34     = 0.25e0_wp*sqrt(3.e0_wp)
+            rt38     = 0.5e0_wp*rt34
             ezero(1) = dhh
             do i=1, 5
                 ref(i) = ' '
@@ -288,15 +292,16 @@ module chempotpy_brh2_leps_c_1982_pes
             !        the BrH diatomic and R(BrH) equal to Re(BrH).  Similarly, the t
             !        EASYBC and EASYAC represent the energies in the H2 and the HBr
             !        valleys, respectively.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: csa, csa2, csb, csb2, csg2, d1, d2, d3, dcsa21, dcsa22, dcsa23, dcsb21, dcsb22, dcsb23, dcsg21, dcsg22, dcsg23, dp11, dp12, dp21, dp22, dp31, dp32, ds11, ds12, ds21, ds22, ds31, ds32, dshh, dshx1, dshx2, dsn2a1, dsn2a2, dsn2a3, dsn2b1, dsn2b2, dsn2b3, dv1hh, dv1p1, dv1p2, dv1s1, dv1s2, dv3hh, dv3p1, dv3p2, dv3s1, dv3s2, ex1, ex2, p11, p12, p21, p22, p31, p32, r1, r12, r13, r1s, r2, r23, r2s, r3, r3s, rdif, rdif2, s11, s12, s21, s22, s31, s32, shh, shx1, shx2, sn2a, sn2b, sna, sna2, snb, snb2, t, t1, t11, t12, t2, t21, t22, t3, t31, t32, v1hh, v1p1, v1p2, v1s1, v1s2, v3hh, v3p1, v3p2, v3s1, v3s2
-            integer                     :: ierr, index, k, kk, l, ll
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            logical                     :: lcol
+            real(wp)            :: csa, csa2, csb, csb2, csg2, d1, d2, d3, dcsa21, dcsa22, dcsa23, dcsb21, dcsb22, dcsb23, dcsg21, dcsg22, dcsg23, dp11, dp12, dp21, dp22, dp31, dp32, ds11, ds12, ds21, ds22, ds31, ds32, dshh, dshx1, dshx2, dsn2a1, dsn2a2, dsn2a3, dsn2b1, dsn2b2, dsn2b3, dv1hh, dv1p1, dv1p2, dv1s1, dv1s2, dv3hh, dv3p1, dv3p2, dv3s1, dv3s2, ex1, ex2, p11, p12, p21, p22, p31, p32, r1, r12, r13, r1s, r2, r23, r2s, r3, r3s, rdif, rdif2, s11, s12, s21, s22, s31, s32, shh, shx1, shx2, sn2a, sn2b, sna, sna2, snb, snb2, t, t1, t11, t12, t2, t21, t22, t3, t31, t32, v1hh, v1p1, v1p2, v1s1, v1s2, v3hh, v3p1, v3p2, v3s1, v3s2
+            integer             :: ierr, index, k, kk, l, ll
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            logical             :: lcol
             call cartou
             call carttor
             !   The potential routines define R1=R(Br-H), R2=R(H-Br), and R3=R(H-H);
@@ -313,18 +318,18 @@ module chempotpy_brh2_leps_c_1982_pes
             r12 = r1*r2
             r13 = r1*r3
             r23 = r2*r3
-            t3  = (r1s+r2s-r3s)*0.5d0
-            t2  = (r1s+r3s-r2s)*0.5d0
-            t1  = (r2s+r3s-r1s)*0.5d0
+            t3  = (r1s+r2s-r3s)*0.5e0_wp
+            t2  = (r1s+r3s-r2s)*0.5e0_wp
+            t1  = (r2s+r3s-r1s)*0.5e0_wp
             csa = t2/r13
             if( abs(csa) .gt. one ) csa = sign(one, csa)
             csa2 = csa*csa
-            sna2 = 1.d0-csa2
+            sna2 = 1.e0_wp-csa2
             lcol = sna2 .lt. eps
             sna  = sqrt(sna2)
-            t22  = 2.d0*csa
-            t11  = 0.d0
-            if( .not.lcol ) t11 = 2.d0*(sna2-csa2)/sna
+            t22  = 2.e0_wp*csa
+            t11  = 0.e0_wp
+            if( .not.lcol ) t11 = 2.e0_wp*(sna2-csa2)/sna
             sn2a   = t22*sna
             t      = t3/(r1*r13)
             dcsa21 = t22*t
@@ -338,11 +343,11 @@ module chempotpy_brh2_leps_c_1982_pes
             csb    = t1/r23
             if( abs(csb) .gt. one ) csb = sign(one, csb)
             csb2 = csb*csb
-            snb2 = 1.d0-csb2
+            snb2 = 1.e0_wp-csb2
             snb  = sqrt(snb2)
-            t11  = 0.d0
-            if( .not.lcol ) t11 = 2.d0*(snb2-csb2)/snb
-            t22    = 2.d0*csb
+            t11  = 0.e0_wp
+            if( .not.lcol ) t11 = 2.e0_wp*(snb2-csb2)/snb
+            t22    = 2.e0_wp*csb
             sn2b   = t22*snb
             t      = -r1/r23
             dcsb21 = t22*t
@@ -355,7 +360,7 @@ module chempotpy_brh2_leps_c_1982_pes
             dsn2b3 = t11*t
             t      = t3/r12
             csg2   = t*t
-            t      = 2.d0*t
+            t      = 2.e0_wp*t
             dcsg21 = t*t2/(r1*r12)
             dcsg22 = t*t1/(r12*r2)
             dcsg23 = -t*r3/r12
@@ -366,83 +371,83 @@ module chempotpy_brh2_leps_c_1982_pes
             rdif2 = rdif*rdif
             ex2   = exp(-bhh*rdif*rdif2)
             t1    = dhh*ex1*ex2
-            v1hh  = t1*(ex1-2.d0)
-            v3hh  = etahh*t1*(ex1+2.d0)
-            t1    = 2.d0*ahh*t1
-            t2    = 3.d0*bhh*rdif2
-            dv1hh = t1*(1.d0-ex1) - t2*v1hh
-            dv3hh = -t1*etahh*(1.d0+ex1) - t2*v3hh
+            v1hh  = t1*(ex1-2.e0_wp)
+            v3hh  = etahh*t1*(ex1+2.e0_wp)
+            t1    = 2.e0_wp*ahh*t1
+            t2    = 3.e0_wp*bhh*rdif2
+            dv1hh = t1*(1.e0_wp-ex1) - t2*v1hh
+            dv3hh = -t1*etahh*(1.e0_wp+ex1) - t2*v3hh
             !    HX
             call vhx(r1, v1s1, v3s1, v1p1, v3p1, dv1s1, dv3s1, dv1p1, dv3p1)
             call vhx(r2, v1s2, v3s2, v1p2, v3p2, dv1s2, dv3s2, dv1p2, dv3p2)
-            s11  = v1s1 + 3.d0*v3s1
-            s12  = v1s2 + 3.d0*v3s2
-            s21  = 3.d0*v1s1 + v3s1
-            s22  = 3.d0*v1s2 + v3s2
+            s11  = v1s1 + 3.e0_wp*v3s1
+            s12  = v1s2 + 3.e0_wp*v3s2
+            s21  = 3.e0_wp*v1s1 + v3s1
+            s22  = 3.e0_wp*v1s2 + v3s2
             s31  = v1s1 - v3s1
             s32  = v1s2 - v3s2
-            p11  = v1p1 + 3.d0*v3p1
-            p12  = v1p2 + 3.d0*v3p2
-            p21  = 3.d0*v1p1 + v3p1
-            p22  = 3.d0*v1p2 + v3p2
+            p11  = v1p1 + 3.e0_wp*v3p1
+            p12  = v1p2 + 3.e0_wp*v3p2
+            p21  = 3.e0_wp*v1p1 + v3p1
+            p22  = 3.e0_wp*v1p2 + v3p2
             p31  = v1p1 - v3p1
             p32  = v1p2 - v3p2
-            ds11 = dv1s1 + 3.d0*dv3s1
-            ds12 = dv1s2 + 3.d0*dv3s2
-            ds21 = 3.d0*dv1s1 + dv3s1
-            ds22 = 3.d0*dv1s2 + dv3s2
+            ds11 = dv1s1 + 3.e0_wp*dv3s1
+            ds12 = dv1s2 + 3.e0_wp*dv3s2
+            ds21 = 3.e0_wp*dv1s1 + dv3s1
+            ds22 = 3.e0_wp*dv1s2 + dv3s2
             ds31 = dv1s1 - dv3s1
             ds32 = dv1s2 - dv3s2
-            dp11 = dv1p1 + 3.d0*dv3p1
-            dp12 = dv1p2 + 3.d0*dv3p2
-            dp21 = 3.d0*dv1p1 + dv3p1
-            dp22 = 3.d0*dv1p2 + dv3p2
+            dp11 = dv1p1 + 3.e0_wp*dv3p1
+            dp12 = dv1p2 + 3.e0_wp*dv3p2
+            dp21 = 3.e0_wp*dv1p1 + dv3p1
+            dp22 = 3.e0_wp*dv1p2 + dv3p2
             dp31 = dv1p1 - dv3p1
             dp32 = dv1p2 - dv3p2
             !    CONSTRUCT 4X4 HAMILTONIAN PUT IN PACKED ARRAY
-            h(1)                 = v1hh + 0.25d0*(s11*csa2 + p11*sna2 + s12*csb2 + p12*snb2)
-            h(3)                 = v1hh + 0.25d0*(s11*sna2 + p11*csa2 + s12*snb2 + p12*csb2)
-            h(6)                 = v3hh + 0.25d0*(s21*csa2 + p21*sna2 + s22*csb2 + p22*snb2)
-            h(10)                = v3hh + 0.25d0*(s21*sna2 + p21*csa2 + s22*snb2 + p22*csb2)
+            h(1)                 = v1hh + 0.25e0_wp*(s11*csa2 + p11*sna2 + s12*csb2 + p12*snb2)
+            h(3)                 = v1hh + 0.25e0_wp*(s11*sna2 + p11*csa2 + s12*snb2 + p12*csb2)
+            h(6)                 = v3hh + 0.25e0_wp*(s21*csa2 + p21*sna2 + s22*csb2 + p22*snb2)
+            h(10)                = v3hh + 0.25e0_wp*(s21*sna2 + p21*csa2 + s22*snb2 + p22*csb2)
             t11                  = s11 - p11
             t12                  = s12 - p12
-            h(2)                 = 0.d0
-            if( .not.lcol ) h(2) = 0.125d0*(t11*sn2a - t12*sn2b)
+            h(2)                 = 0.e0_wp
+            if( .not.lcol ) h(2) = 0.125e0_wp*(t11*sn2a - t12*sn2b)
             h(4)                 = rt34*(s31*csa2 + p31*sna2 - s32*csb2 - p32*snb2)
             t31                  = s31 - p31
             t32                  = s32 - p32
-            h(5)                 = 0.d0
+            h(5)                 = 0.e0_wp
             if( .not.lcol ) h(5) = rt38*(t31*sn2a + t32*sn2b)
             h(7)                 = h(5)
             h(8)                 = rt34*(s31*sna2 + p31*csa2 - s32*snb2 - p32*csb2)
             t21                  = s21 - p21
             t22                  = s22 - p22
-            h(9)                 = 0.d0
-            if( .not.lcol ) h(9) = 0.125d0*(t21*sn2a - t22*sn2b)
+            h(9)                 = 0.e0_wp
+            if( .not.lcol ) h(9) = 0.125e0_wp*(t21*sn2a - t22*sn2b)
             !   CONSTRUCT DERIVATIVE OF HAMILTONIAN MATRIX
             t       = t11*dcsa21 + t12*dcsb21
-            dh1(1)  = 0.25d0*(ds11*csa2 + dp11*sna2 + t)
-            dh1(2)  = 0.125d0*((ds11-dp11)*sn2a + t11*dsn2a1 - t12*dsn2b1)
-            dh1(3)  = 0.25d0*(ds11*sna2 + dp11*csa2 - t)
+            dh1(1)  = 0.25e0_wp*(ds11*csa2 + dp11*sna2 + t)
+            dh1(2)  = 0.125e0_wp*((ds11-dp11)*sn2a + t11*dsn2a1 - t12*dsn2b1)
+            dh1(3)  = 0.25e0_wp*(ds11*sna2 + dp11*csa2 - t)
             t       = t11*dcsa22 + t12*dcsb22
-            dh2(1)  = 0.25d0*(ds12*csb2 + dp12*snb2 + t)
-            dh2(2)  = 0.125d0*(-(ds12-dp12)*sn2b + t11*dsn2a2 - t12*dsn2b2)
-            dh2(3)  = 0.25d0*(ds12*snb2 + dp12*csb2 - t)
-            t       = 0.25d0*(t11*dcsa23 + t12*dcsb23)
+            dh2(1)  = 0.25e0_wp*(ds12*csb2 + dp12*snb2 + t)
+            dh2(2)  = 0.125e0_wp*(-(ds12-dp12)*sn2b + t11*dsn2a2 - t12*dsn2b2)
+            dh2(3)  = 0.25e0_wp*(ds12*snb2 + dp12*csb2 - t)
+            t       = 0.25e0_wp*(t11*dcsa23 + t12*dcsb23)
             dh3(1)  = dv1hh + t
-            dh3(2)  = 0.125d0*(t11*dsn2a3 - t12*dsn2b3)
+            dh3(2)  = 0.125e0_wp*(t11*dsn2a3 - t12*dsn2b3)
             dh3(3)  = dv1hh - t
             t       = t21*dcsa21 + t22*dcsb21
-            dh1(6)  = 0.25d0*(ds21*csa2 + dp21*sna2 + t)
-            dh1(9)  = 0.125d0*((ds21-dp21)*sn2a + t21*dsn2a1 - t22*dsn2b1)
-            dh1(10) = 0.25d0*(ds21*sna2 + dp21*csa2 - t)
+            dh1(6)  = 0.25e0_wp*(ds21*csa2 + dp21*sna2 + t)
+            dh1(9)  = 0.125e0_wp*((ds21-dp21)*sn2a + t21*dsn2a1 - t22*dsn2b1)
+            dh1(10) = 0.25e0_wp*(ds21*sna2 + dp21*csa2 - t)
             t       = t21*dcsa22 + t22*dcsb22
-            dh2(6)  = 0.25d0*(ds22*csb2 + dp22*snb2 + t)
-            dh2(9)  = 0.125d0*((dp22-ds22)*sn2b + t21*dsn2a2 - t22*dsn2b2)
-            dh2(10) = 0.25d0*(ds22*snb2 + dp22*csb2 - t)
-            t       = 0.25d0*(t21*dcsa23 + t22*dcsb23)
+            dh2(6)  = 0.25e0_wp*(ds22*csb2 + dp22*snb2 + t)
+            dh2(9)  = 0.125e0_wp*((dp22-ds22)*sn2b + t21*dsn2a2 - t22*dsn2b2)
+            dh2(10) = 0.25e0_wp*(ds22*snb2 + dp22*csb2 - t)
+            t       = 0.25e0_wp*(t21*dcsa23 + t22*dcsb23)
             dh3(6)  = dv3hh + t
-            dh3(9)  = 0.125d0*(t21*dsn2a3 - t22*dsn2b3)
+            dh3(9)  = 0.125e0_wp*(t21*dsn2a3 - t22*dsn2b3)
             dh3(10) = dv3hh - t
             t       = t31*dcsa21 - t32*dcsb21
             dh1(4)  = rt34*(ds31*csa2 + dp31*sna2 + t)
@@ -470,9 +475,9 @@ module chempotpy_brh2_leps_c_1982_pes
                 stop 'POT 3'
             endif
             !    EVALUATE DERIVATIVES OF LOWEST ROOT
-            d1 = 0.d0
-            d2 = 0.d0
-            d3 = 0.d0
+            d1 = 0.e0_wp
+            d2 = 0.e0_wp
+            d3 = 0.e0_wp
             do l = 1, 4
                 t1 = legacy_u(l,1)
                 ll = (l*(l-1))/2
@@ -489,23 +494,23 @@ module chempotpy_brh2_leps_c_1982_pes
             !   SUPPLEMENTARY TERM
             t      = xih*r3
             ex1    = exp(-t)
-            shh    = (1.d0+t*(1.d0+c3*t))*ex1
-            dshh   = -xih*t*(1.d0+t)*c3*ex1
+            shh    = (1.e0_wp+t*(1.e0_wp+c3*t))*ex1
+            dshh   = -xih*t*(1.e0_wp+t)*c3*ex1
             t      = xib*r1
             ex1    = exp(-t)
-            shx1   = r1*(1.d0+t*(1.d0+c3*t))*ex1/denom
-            dshx1  = (1.d0+t*(1.d0-c3*t*t))*ex1/denom
+            shx1   = r1*(1.e0_wp+t*(1.e0_wp+c3*t))*ex1/denom
+            dshx1  = (1.e0_wp+t*(1.e0_wp-c3*t*t))*ex1/denom
             t      = xib*r2
             ex1    = exp(-t)
-            shx2   = r2*(1.d0+t*(1.d0+c3*t))*ex1/denom
-            dshx2  = (1.d0+t*(1.d0-c3*t*t))*ex1/denom
+            shx2   = r2*(1.e0_wp+t*(1.e0_wp+c3*t))*ex1/denom
+            dshx2  = (1.e0_wp+t*(1.e0_wp-c3*t*t))*ex1/denom
             rdif   = r1 - r2
             t1     = legacy_g*exp(-alfw*rdif*rdif)
             t2     = shh*(shx1+shx2) + shx1*shx2
             engygs = e(1) + t2*t1*csg2 + ezero(1)
             call eunitzero
             if( nder .ne. 0 )then
-                t3        = 2.d0*alfw*rdif*csg2
+                t3        = 2.e0_wp*alfw*rdif*csg2
                 degsdr(1) = d1 + (dshx1*(shh+shx2)*csg2 + t2*(dcsg21-t3))*t1
                 degsdr(3) = d2 + (dshx2*(shh+shx1)*csg2 + t2*(dcsg22+t3))*t1
                 degsdr(2) = d3 + (dshh*(shx1+shx2)*csg2 + t2*dcsg23)*t1
@@ -516,27 +521,28 @@ module chempotpy_brh2_leps_c_1982_pes
 
         !> @brief Evaluate VHX for the BrH2_LEPS_C_1982 potential.
         subroutine vhx( rr, v1s, v3s, v1p, v3p, dv1s, dv3s, dv1p, dv3p )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: dv1, dv1p, dv1s, dv3p, dv3s, ex1, ex2, rdif, rdif2, rr, t1, t2, v1, v1p, v1s, v3p, v3s
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: dv1, dv1p, dv1s, dv3p, dv3s, ex1, ex2, rdif, rdif2, rr, t1, t2, v1, v1p, v1s, v3p, v3s
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             rdif  = rr - rhx
             rdif2 = rdif*rdif
             ex1   = exp(-ahx*rdif)
             ex2   = exp(-bhx*rdif2*rdif)
             t1    = dhx*ex1*ex2
-            v1s   = t1*(ex1-2.d0)
-            v1    = t1*(ex1+2.d0)
+            v1s   = t1*(ex1-2.e0_wp)
+            v1    = t1*(ex1+2.e0_wp)
             v3s   = eta3s*v1
             v1p   = eta1p*v1
             v3p   = eta3p*v1
-            t1    = 2.d0*ahx*t1
-            t2    = 3.d0*bhx*rdif2
-            dv1s  = t1*(1.d0-ex1) - t2*v1s
-            dv1   = -t1*(1.d0+ex1) - t2*v1
+            t1    = 2.e0_wp*ahx*t1
+            t2    = 3.e0_wp*bhx*rdif2
+            dv1s  = t1*(1.e0_wp-ex1) - t2*v1s
+            dv1   = -t1*(1.e0_wp+ex1) - t2*v1
             dv3s  = eta3s*dv1
             dv1p  = eta1p*dv1
             dv3p  = eta3p*dv1
@@ -545,18 +551,19 @@ module chempotpy_brh2_leps_c_1982_pes
         !> @brief Evaluate RSP for the BrH2_LEPS_C_1982 potential.
         !> @brief Diagonalize a real symmetric packed matrix with the shared core eigensolver.
         subroutine rsp( nm, n, nv, a, w, matz, z, fv1, fv2, ierr )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, intent(in)           :: nm, n, nv, matz
-            double precision, intent(in)  :: a(nv)
-            double precision, intent(out) :: w(n), z(nm,n), fv1(n), fv2(n)
-            integer, intent(out)          :: ierr
-            integer                       :: i, j, packed_index, lwork
-            double precision, allocatable :: matrix(:,:), work(:)
+            integer, intent(in)   :: nm, n, nv, matz
+            real(wp), intent(in)  :: a(nv)
+            real(wp), intent(out) :: w(n), z(nm,n), fv1(n), fv2(n)
+            integer, intent(out)  :: ierr
+            integer               :: i, j, packed_index, lwork
+            real(wp), allocatable :: matrix(:,:), work(:)
             external                      :: dsyev
             ierr = 0
-            z    = 0.0d0
-            fv1  = 0.0d0
-            fv2  = 0.0d0
+            z    = 0.0e0_wp
+            fv1  = 0.0e0_wp
+            fv2  = 0.0e0_wp
             if( n > nm )then
                 ierr = 10*n
                 return
@@ -567,7 +574,7 @@ module chempotpy_brh2_leps_c_1982_pes
             endif
             lwork = max(1, 3*n-1)
             allocate(matrix(n,n), work(lwork))
-            matrix       = 0.0d0
+            matrix       = 0.0e0_wp
             packed_index = 0
             do i = 1, n
                 do j = 1, i
@@ -587,13 +594,14 @@ module chempotpy_brh2_leps_c_1982_pes
 
         !> @brief Evaluate POTINFO for the BrH2_LEPS_C_1982 potential.
         subroutine potinfo
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i, j, k, kmax
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
+            integer             :: i, j, k, kmax
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             write(nflag(18), '(/)')
             do i =1, 5
                 write(nflag(18), '(2x,a75)') ref(i)
@@ -681,34 +689,35 @@ module chempotpy_brh2_leps_c_1982_pes
 
         !> @brief Evaluate ANCVRT for the BrH2_LEPS_C_1982 potential.
         subroutine ancvrt
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi         = 3.141592653589793d0
-            double precision, parameter :: clight     = 2.99792458d08
-            double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
-            double precision, parameter :: cepsilon_0 = 1.0d0/(cmu_0*clight**2)
-            double precision, parameter :: ce         = 1.602176462d-19
-            double precision, parameter :: cplanck    = 6.62606876d-34
-            double precision, parameter :: cm_e       = 9.10938188d-31
-            double precision, parameter :: cang       = 1.0d-10
-            double precision, parameter :: cavogadro  = 6.02214199d23
-            double precision, parameter :: ckcal      = 4.184d10
-            double precision, parameter :: htomillh   = 1000.d0
-            double precision, parameter :: htoev      = 27.2113834d0
-            double precision, parameter :: htokcal    = 627.509470d0
-            double precision, parameter :: htowave    = 219474.631d0
-            double precision, parameter :: htokj      = 2625.49962d0
-            double precision, parameter :: bohr_a     = .5291772083d0
-            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
-            character(len=3)   :: periodic_1(7,32)
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
+            integer, parameter  :: n3atom     = 75
+            integer, parameter  :: natom      = 25
+            integer, parameter  :: isurf      = 5
+            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
+            real(wp), parameter :: pi         = 3.141592653589793e0_wp
+            real(wp), parameter :: clight     = 2.99792458e08_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
+            real(wp), parameter :: ce         = 1.602176462e-19_wp
+            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
+            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
+            real(wp), parameter :: cang       = 1.0e-10_wp
+            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
+            real(wp), parameter :: ckcal      = 4.184e10_wp
+            real(wp), parameter :: htomillh   = 1000.e0_wp
+            real(wp), parameter :: htoev      = 27.2113834e0_wp
+            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htowave    = 219474.631e0_wp
+            real(wp), parameter :: htokj      = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)    :: periodic_1(7,32)
+            character(len=2)    :: name1(natom)
+            character(len=2)    :: name2(natom)
+            character(len=1)    :: iblank
+            character(len=20)   :: distance
+            character(len=20)   :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -933,9 +942,9 @@ module chempotpy_brh2_leps_c_1982_pes
             elseif( nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
-            cnvrtd  = 1.d0
-            cnvrte  = 1.d0
-            cnvrtde = 1.d0
+            cnvrtd  = 1.e0_wp
+            cnvrte  = 1.e0_wp
+            cnvrtde = 1.e0_wp
             if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
             if( nflag(2) .eq. 2 )then
                 cnvrte = cnvrte*htomillh
@@ -960,6 +969,7 @@ module chempotpy_brh2_leps_c_1982_pes
         !> @brief Evaluate CARTOU for the BrH2_LEPS_C_1982 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: i, j
             integer, parameter :: n3atom = 75
@@ -972,9 +982,10 @@ module chempotpy_brh2_leps_c_1982_pes
         !> @brief Evaluate CARTTOR for the BrH2_LEPS_C_1982 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: coordinate_status
-            double precision   :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
+            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
             integer            :: i, ind, k, l
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
@@ -988,6 +999,7 @@ module chempotpy_brh2_leps_c_1982_pes
 
         !> @brief Evaluate EUNITZERO for the BrH2_LEPS_C_1982 potential.
         subroutine eunitzero
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j
             character(len=75)  :: ref(5)
@@ -1010,15 +1022,16 @@ module chempotpy_brh2_leps_c_1982_pes
 
         !> @brief Evaluate RTOCART for the BrH2_LEPS_C_1982 potential.
         subroutine rtocart
+            use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
-                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
-                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
+            real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom, isurf), &
+                & ygs(n3atom), yij(n3atom, jsurf), za, zb, zc, zd
+            integer :: i, ind, j, j1, j2, k, m1
             if( icartr .eq. 1 )then
                 do i = 1, legacy_natoms
                     ind            = 3*i-2
@@ -1042,21 +1055,21 @@ module chempotpy_brh2_leps_c_1982_pes
                 enddo
             elseif( icartr .eq. 2 )then
                 do i = 1, legacy_natoms
-                    dgscartnu(i,1) = 0.d0
-                    dgscartnu(i,2) = 0.d0
-                    dgscartnu(i,3) = 0.d0
+                    dgscartnu(i,1) = 0.e0_wp
+                    dgscartnu(i,2) = 0.e0_wp
+                    dgscartnu(i,3) = 0.e0_wp
                     if( ksdiag .ne. 0 )then
                         do j1=ksdiag, kediag
-                            descartnu(i,1,j1) = 0.d0
-                            descartnu(i,2,j1) = 0.d0
-                            descartnu(i,3,j1) = 0.d0
+                            descartnu(i,1,j1) = 0.e0_wp
+                            descartnu(i,2,j1) = 0.e0_wp
+                            descartnu(i,3,j1) = 0.e0_wp
                         enddo
                     endif
                     if( ksoffd .ne. 0 )then
                         do j2=ksoffd, keoffd
-                            dijcartnu(i,1,j2) = 0.d0
-                            dijcartnu(i,2,j2) = 0.d0
-                            dijcartnu(i,3,j2) = 0.d0
+                            dijcartnu(i,1,j2) = 0.e0_wp
+                            dijcartnu(i,2,j2) = 0.e0_wp
+                            dijcartnu(i,3,j2) = 0.e0_wp
                         enddo
                     endif
                     do j = 1, legacy_natoms
@@ -1096,12 +1109,12 @@ module chempotpy_brh2_leps_c_1982_pes
                     ygs(i) = degsdr(i)/r(i)
                     if( ksdiag .ne. 0 )then
                         do j=ksdiag, kediag
-                            yes(i,j) = deesdr(i,j)/r(i)
+                            yes(i, j) = deesdr(i,j)/r(i)
                         enddo
                     endif
                     if( ksoffd .ne. 0 )then
                         do k=ksoffd, keoffd
-                            yij(i,k) = deijdr(i,k)/r(i)
+                            yij(i, k) = deijdr(i,k)/r(i)
                         enddo
                     endif
                 enddo
@@ -1114,22 +1127,22 @@ module chempotpy_brh2_leps_c_1982_pes
                     dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
                     if( ksdiag .ne. 0 )then
                         do j1=ksdiag, kediag
-                            descartnu(1,k,j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                            descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                            descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                            descartnu(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
+                            descartnu(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
+                            descartnu(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
                         enddo
                     endif
                     if( ksoffd .ne. 0 )then
                         do j2=ksoffd, keoffd
-                            dijcartnu(1,k,j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                            dijcartnu(2,k,j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                            dijcartnu(3,k,j2) = -term13*yij(3,j2) - term23*yij(2,j2)
+                            dijcartnu(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
+                            dijcartnu(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
+                            dijcartnu(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
                         enddo
                     endif
                 enddo
             elseif( icartr .eq. 4 )then
-                wh   = 1.007825d0
-                wf   = 18.99840d0
+                wh   = 1.007825e0_wp
+                wf   = 18.99840e0_wp
                 sum  = wh+wf
                 eps  = wf/sum
                 epsp = wh/sum
@@ -1139,8 +1152,8 @@ module chempotpy_brh2_leps_c_1982_pes
                 ss1  = sin(theta1)
                 ss2  = sin(theta2)
                 ss3  = sin(phi)
-                ya   = 0.0d0
-                yb   = 0.0d0
+                ya   = 0.0e0_wp
+                yb   = 0.0e0_wp
                 t0   = r1*u1
                 za   = -epsp*t0
                 zb   = eps*t0
@@ -1166,6 +1179,7 @@ module chempotpy_brh2_leps_c_1982_pes
 
         !> @brief Evaluate DEDCOU for the BrH2_LEPS_C_1982 potential.
         subroutine dedcou
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k
             integer, parameter :: n3atom = 75
@@ -1220,13 +1234,14 @@ end module chempotpy_brh2_leps_c_1982_pes
 !> @brief Expose BrH2_LEPS_C_1982 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_brh2_leps_c_1982_pes, only: evaluate
+    use chempotpy_kinds,                only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

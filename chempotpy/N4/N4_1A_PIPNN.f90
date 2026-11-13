@@ -29,6 +29,7 @@
 
 !> @brief Implement N4_1A_PIPNN, a potential energy surface for N4.
 module chempotpy_n4_1a_pipnn_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -37,40 +38,42 @@ module chempotpy_n4_1a_pipnn_pes
 
     !> @brief Evaluate the N4_1A_PIPNN potential energy surface for N4.
     subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_units,               only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_n4_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, natom, nbasis, ndim, nnew, pi, &
             & radian
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 4
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: v
-        double precision              :: tx(natoms), ty(natoms), tz(natoms)
-        double precision              :: txg(natoms), tyg(natoms), tzg(natoms)
-        integer                       :: iatom, idir, j, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 4
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: v
+        real(wp)              :: tx(natoms), ty(natoms), tz(natoms)
+        real(wp)              :: txg(natoms), tyg(natoms), tzg(natoms)
+        integer               :: iatom, idir, j, istate
         !initialize
-        p = 0.d0; g = 0.d0; d = 0.d0
+        p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! input coordinates of tx, ty, tz are in bohr
-        tx(:) = x(:,1)/legacy_bohr_to_angstrom
-        ty(:) = x(:,2)/legacy_bohr_to_angstrom
-        tz(:) = x(:,3)/legacy_bohr_to_angstrom
+        tx(:) = x(:,1)/bohr_to_angstrom
+        ty(:) = x(:,2)/bohr_to_angstrom
+        tz(:) = x(:,3)/bohr_to_angstrom
         call n4pipnn(tx, ty, tz, v, txg, tyg, tzg, igrad)
         do istate=1, nstates
-            p(istate) = v*legacy_hartree_to_electronvolt
+            p(istate) = v*hartree_to_electronvolt
         enddo
         do istate=1, nstates
-            g(istate,:,1) = txg(:)*51.422067
-            g(istate,:,2) = tyg(:)*51.422067
-            g(istate,:,3) = tzg(:)*51.422067
+            g(istate,:,1) = txg(:)*hartree_per_bohr_to_ev_per_angstrom
+            g(istate,:,2) = tyg(:)*hartree_per_bohr_to_ev_per_angstrom
+            g(istate,:,3) = tzg(:)*hartree_per_bohr_to_ev_per_angstrom
         enddo
-        d = 0.d0
+        d = 0.e0_wp
     end subroutine evaluate
 
     !      subroutine n4pipNN(ct,vpes,vpesa,vpesb,vpesc,vn2) !ct in N4 order and angstrom
@@ -82,21 +85,22 @@ module chempotpy_n4_1a_pipnn_pes
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, natom, nbasis, ndim, nnew, pi, &
             & radian
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: i, j
-        double precision :: rb(ndim), xbond(ndim), basis(1:nbasis), tmp1, &
+        integer  :: i, j
+        real(wp) :: rb(ndim), xbond(ndim), basis(1:nbasis), tmp1, &
             &  txinput(nbasis-1), bnew(1:nnew)
-        double precision :: cx(3,natom)
-        double precision :: vpes, vpesa, vpesb, vpesc
-        double precision :: vn2, vn2tmp, grad
-        integer          :: imol, igrad
+        real(wp) :: cx(3,natom)
+        real(wp) :: vpes, vpesa, vpesb, vpesc
+        real(wp) :: vn2, vn2tmp, grad
+        integer  :: imol, igrad
         ! ZV
-        double precision            :: x(4), y(4), z(4), dedx(4), dedy(4), dedz(4)
-        double precision            :: dr, vp(6), vm(6), dedr(6), dvdx(12), drdx(6,12)
-        double precision, parameter :: cconv = 0.52917721092d0
-        double precision, parameter :: econv = 0.159360144d-2
-        double precision, parameter :: gconv = 0.843297564d-3
-        basis = 0.d0
+        real(wp)            :: x(4), y(4), z(4), dedx(4), dedy(4), dedz(4)
+        real(wp)            :: dr, vp(6), vm(6), dedr(6), dvdx(12), drdx(6,12)
+        real(wp), parameter :: cconv = 0.52917721092e0_wp
+        real(wp), parameter :: econv = 0.159360144e-2_wp
+        real(wp), parameter :: gconv = 0.843297564e-3_wp
+        basis = 0.e0_wp
         ! Cartesians in Ang
         do i=1, 4
             cx(1,i) = x(i)*cconv
@@ -104,11 +108,11 @@ module chempotpy_n4_1a_pipnn_pes
             cx(3,i) = z(i)*cconv
             !      write(1000,*) "cart ",cx(1,i),cx(2,i),cx(3,i)
         enddo
-        dedx(:) = 0.0d0
-        dedy(:) = 0.0d0
-        dedz(:) = 0.0d0
+        dedx(:) = 0.0e0_wp
+        dedy(:) = 0.0e0_wp
+        dedz(:) = 0.0e0_wp
         call all_pair_distances(transpose(cx), rb)
-        vn2 = 0d0
+        vn2 = 0e0_wp
         do i=1, ndim
             !       if(rb(i).le.0.6d0)then
             !         vpes=1000.0d0/23.0605d0
@@ -119,61 +123,61 @@ module chempotpy_n4_1a_pipnn_pes
             !       write(1000,*) "vn2tmp ",vn2tmp,i
             vn2 = vn2+vn2tmp
         enddo
-        vpes     = 0.0d0
-        xbond(:) = dexp(-rb(:)/alpha)
+        vpes     = 0.0e0_wp
+        xbond(:) = exp(-rb(:)/alpha)
         call bemsav49(xbond, basis)
         call bmx2b109(basis, bnew, nbasis, nnew)
         call evaluate_network(bnew, 1, vpesa)
         call evaluate_network(bnew, 2, vpesb)
         call evaluate_network(bnew, 3, vpesc)
-        vpes = (vpesa+vpesb+vpesc)/3.0d0  !in eV
+        vpes = (vpesa+vpesb+vpesc)/3.0e0_wp  !in eV
         !      write(1000,*) "vmb ",vpes
         ! vpes in kcal/mol
-        vpes = vpes*23.0605d0+vn2+457.4d0
+        vpes = vpes*23.0605e0_wp+vn2+457.4e0_wp
         !      write(1000,*) "vpes ",vpes
         ! vpes in au
         vpes = vpes*econv
         ! numerical gradient w.r.t. dr, in kcal/Ang
-        dr = 1.0d-5 ! in Ang
+        dr = 1.0e-5_wp ! in Ang
         if( igrad .eq. 1 )then
             ! calculate evdrdx
             call evdrdx(cx, rb, drdx)
             do i=1, 6
-                vn2   = 0.0d0
+                vn2   = 0.0e0_wp
                 rb(i) = rb(i)+dr
                 do j=1, 6
                     call ev2gm2(rb(j), vn2tmp, grad, 1, 0)
                     vn2 = vn2+vn2tmp
                 enddo
                 !      write(*,*) "vn2p ",vn2,i
-                xbond    = 0.0d0
-                xbond(:) = dexp(-rb(:)/alpha)
+                xbond    = 0.0e0_wp
+                xbond(:) = exp(-rb(:)/alpha)
                 call bemsav49(xbond, basis)
                 call bmx2b109(basis, bnew, nbasis, nnew)
                 call evaluate_network(bnew, 1, vpesa)
                 call evaluate_network(bnew, 2, vpesb)
                 call evaluate_network(bnew, 3, vpesc)
-                vp(i) = (vpesa+vpesb+vpesc)/3.0d0
+                vp(i) = (vpesa+vpesb+vpesc)/3.0e0_wp
                 ! vp in kcal/mol
-                vp(i) = vp(i)*23.0605d0+vn2+457.4d0
+                vp(i) = vp(i)*23.0605e0_wp+vn2+457.4e0_wp
                 !       write(*,*) "vp(i) ",vp(i),i
-                vn2   = 0.0d0
+                vn2   = 0.0e0_wp
                 rb(i) = rb(i)-2*dr
                 do j=1, 6
                     call ev2gm2(rb(j), vn2tmp, grad, 1, 0)
                     vn2 = vn2+vn2tmp
                 enddo
                 !      write(*,*) "vn2m ",vn2,i
-                xbond    = 0.0d0
-                xbond(:) = dexp(-rb(:)/alpha)
+                xbond    = 0.0e0_wp
+                xbond(:) = exp(-rb(:)/alpha)
                 call bemsav49(xbond, basis)
                 call bmx2b109(basis, bnew, nbasis, nnew)
                 call evaluate_network(bnew, 1, vpesa)
                 call evaluate_network(bnew, 2, vpesb)
                 call evaluate_network(bnew, 3, vpesc)
-                vm(i) = (vpesa+vpesb+vpesc)/3.0d0
+                vm(i) = (vpesa+vpesb+vpesc)/3.0e0_wp
                 ! vm in kcal/mol
-                vm(i) = vm(i)*23.0605d0+vn2+457.4d0
+                vm(i) = vm(i)*23.0605e0_wp+vn2+457.4e0_wp
                 !       write(*,*) "vm(i) ",vm(i),i
                 ! dedr in kcal/(mol Ang)
                 dedr(i) = (vp(i) - vm(i))/(2*dr)
@@ -197,9 +201,10 @@ module chempotpy_n4_1a_pipnn_pes
     !> @brief Evaluate EvdRdX.
     subroutine evdrdx( cx, r, drdx )
         use chempotpy_geometry, only: all_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
         implicit none
-        double precision, intent(in)  :: cx(3,4), r(6)
-        double precision, intent(out) :: drdx(6,12)
+        real(wp), intent(in)  :: cx(3,4), r(6)
+        real(wp), intent(out) :: drdx(6,12)
         call all_pair_distance_jacobian(transpose(cx), r, drdx)
     end subroutine evdrdx
 
@@ -210,13 +215,14 @@ module chempotpy_n4_1a_pipnn_pes
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, natom, nbasis, ndim, nnew, pi, &
             & radian
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)  :: x(ninput)
-        integer, intent(in)           :: network_index
-        double precision, intent(out) :: potential
-        double precision              :: y(nodemax,nlayer)
-        integer                       :: input_index, node_index, previous_index
-        y = 0.0d0
+        real(wp), intent(in)  :: x(ninput)
+        integer, intent(in)   :: network_index
+        real(wp), intent(out) :: potential
+        real(wp)              :: y(nodemax,nlayer)
+        integer               :: input_index, node_index, previous_index
+        y = 0.0e0_wp
         do input_index=1, ninput
             y(input_index,1) = (x(input_index)-scale_averages(input_index, network_index))/ scale_deltas(input_index, &
                 & network_index)
@@ -231,7 +237,7 @@ module chempotpy_n4_1a_pipnn_pes
             case( 1 )
                 y(node_index,2) = tanh(y(node_index,2))
             case( 2 )
-                y(node_index,2) = 1.0d0/(1.0d0+exp(-y(node_index,2)))
+                y(node_index,2) = 1.0e0_wp/(1.0e0_wp+exp(-y(node_index,2)))
             case( 3 )
             end select
         enddo
@@ -245,7 +251,7 @@ module chempotpy_n4_1a_pipnn_pes
             case( 1 )
                 y(node_index,3) = tanh(y(node_index,3))
             case( 2 )
-                y(node_index,3) = 1.0d0/(1.0d0+exp(-y(node_index,3)))
+                y(node_index,3) = 1.0e0_wp/(1.0e0_wp+exp(-y(node_index,3)))
             case( 3 )
             end select
         enddo
@@ -271,20 +277,22 @@ module chempotpy_n4_1a_pipnn_pes
     !     end function emsav49
     !> @brief Evaluate bemsav49.
     subroutine bemsav49( x, p )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(1:6), intent(in)::x
-        double precision, dimension(0:305), intent(out)::p
-        double precision, dimension(0:111)::m
+        real(wp), dimension(1:6), intent(in)::x
+        real(wp), dimension(0:305), intent(out)::p
+        real(wp), dimension(0:111)::m
         call evmono49(x, m)
         call evpoly49(m, p)
     end subroutine bemsav49
 
     !> @brief Evaluate evmono49.
     subroutine evmono49( x, m )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(1:6), intent(in)::x
-        double precision, dimension(0:111), intent(out)::m
-        m(0)   = 1.d0
+        real(wp), dimension(1:6), intent(in)::x
+        real(wp), dimension(0:111), intent(out)::m
+        m(0)   = 1.e0_wp
         m(1)   = x(6)
         m(2)   = x(5)
         m(3)   = x(4)
@@ -400,9 +408,10 @@ module chempotpy_n4_1a_pipnn_pes
 
     !> @brief Evaluate evpoly49.
     subroutine evpoly49( m, p )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(0:111), intent(in)::m
-        double precision, dimension(0:305), intent(out)::p
+        real(wp), dimension(0:111), intent(in)::m
+        real(wp), dimension(0:305), intent(out)::p
         p(0)  = m(0)
         p(1)  = m(1)+m(2)+m(3)+m(4)+m(5)+m(6)
         p(2)  = m(7)+m(8)+m(9)
@@ -724,16 +733,17 @@ module chempotpy_n4_1a_pipnn_pes
         !                0 - gradient is not calculated
         ! Output: V      potential in kcal/mol
         !         grad   gradient (kcal/mol)/Angstrom
+        use chempotpy_kinds, only: wp
         implicit none
         integer, intent(in) :: imol, igrad
-        double precision    :: r
-        double precision    :: v, grad
-        double precision    :: re, de, as(0:6)
-        double precision    :: y, fy, u
-        double precision    :: dfdy, rr, dydr, dfdr
+        real(wp)            :: r
+        real(wp)            :: v, grad
+        real(wp)            :: re, de, as(0:6)
+        real(wp)            :: y, fy, u
+        real(wp)            :: dfdy, rr, dydr, dfdr
         integer             :: k
         ! Dispersion variables
-        double precision :: dist(1), disp, dispdr(1)
+        real(wp) :: dist(1), disp, dispdr(1)
         ! Original parameters
         !       re=1.098d0
         !       de=228.7d0
@@ -745,33 +755,33 @@ module chempotpy_n4_1a_pipnn_pes
         !       as(5) =  3.80734244606d-1
         !       as(6) =  1.21001628750d0
         ! Modified parameters for D3(BJ)
-        re    = 1.098d0
-        de    = 225.213d0
-        as(0) = 2.7475450369759d0
-        as(1) = 0.218868498415108d0
-        as(2) = 0.248885765371433d0
-        as(3) = -0.229295466336412d0
-        as(4) = -0.653389048592838d0
-        as(5) = 1.03611964035396d0
-        as(6) = 1.71287482791961d0
-        v     = 0.d0
+        re    = 1.098e0_wp
+        de    = 225.213e0_wp
+        as(0) = 2.7475450369759e0_wp
+        as(1) = 0.218868498415108e0_wp
+        as(2) = 0.248885765371433e0_wp
+        as(3) = -0.229295466336412e0_wp
+        as(4) = -0.653389048592838e0_wp
+        as(5) = 1.03611964035396e0_wp
+        as(6) = 1.71287482791961e0_wp
+        v     = 0.e0_wp
         y     = (r*r*r*r - re*re*re*re)/(r*r*r*r + re*re*re*re)
         fy    = as(0) + as(1)*y + as(2)*y*y + as(3)*y*y*y + as(4)*y*y*y*y + as(5)*y*y*y*y*y + as(6)*y*y*y*y*y*y
         u     = exp(-fy*(r-re))
-        v     = de*(1.0d0-u)*(1.0d0-u)-de
+        v     = de*(1.0e0_wp-u)*(1.0e0_wp-u)-de
         ! Add D3 dispersion correction
         dist(1) = r
         call d3disp(dist, disp, dispdr, 0, imol)
         v = v+disp
         ! Compute the gradient if needed
         if( igrad .eq. 1 )then
-            grad = 0.d0
-            dfdy = as(1) + 2.0d0*as(2)*y + 3.0d0*as(3)*y*y + 4.0d0*as(4)*y*y*y + 5.0d0*as(5)*y*y*y*y + 6.0d0*as(6)*y* &
-                & y*y*y*y
+            grad = 0.e0_wp
+            dfdy = as(1) + 2.0e0_wp*as(2)*y + 3.0e0_wp*as(3)*y*y + 4.0e0_wp*as(4)*y*y*y + 5.0e0_wp*as(5)*y*y*y*y + &
+                & 6.0e0_wp*as(6)*y* y*y*y*y
             rr   = r*r*r*r + re*re*re*re
-            dydr = 8.0d0*r*r*r*re*re*re*re/(rr*rr)
+            dydr = 8.0e0_wp*r*r*r*re*re*re*re/(rr*rr)
             dfdr = dfdy*dydr
-            grad = 2.0d0*de*(1-u)*u*(dfdr*(r-re)+fy)
+            grad = 2.0e0_wp*de*(1-u)*u*(dfdr*(r-re)+fy)
             ! Add analytical gradient of D3 dispersion correction
             call d3disp(dist, disp, dispdr, 1, imol)
             grad = grad + dispdr(1)
@@ -791,23 +801,24 @@ module chempotpy_n4_1a_pipnn_pes
         ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
         ! 1456-1465
         ! The C6 values are fixed.
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: cn(2), s6, s8, rs6, rs8
-        double precision :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
-        double precision :: e6dr(1), e8dr(1)
-        integer          :: iz(2), mxc(94), i, j, igrad
-        double precision :: c6ab(94,94,5,5,3)
-        double precision :: r2r4(94)
-        double precision :: autoang, autokcal
-        integer          :: imol
-        autoang  = 0.52917726d0
-        autokcal = 627.509541d0
+        real(wp) :: cn(2), s6, s8, rs6, rs8
+        real(wp) :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
+        real(wp) :: e6dr(1), e8dr(1)
+        integer  :: iz(2), mxc(94), i, j, igrad
+        real(wp) :: c6ab(94,94,5,5,3)
+        real(wp) :: r2r4(94)
+        real(wp) :: autoang, autokcal
+        integer  :: imol
+        autoang  = 0.52917726e0_wp
+        autokcal = 627.509541e0_wp
         ! Generalized parameters for BJ damping from P. Verma, B. Wang,
         ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017)
-        s6  = 1.0d0
-        s8  = 2.0d0
-        rs6 = 0.5299d0
-        rs8 = 2.20d0
+        s6  = 1.0e0_wp
+        s8  = 2.0e0_wp
+        rs6 = 0.5299e0_wp
+        rs8 = 2.20e0_wp
         do i=1, 1
             dist(i) = dist(i)/autoang
         enddo
@@ -816,8 +827,8 @@ module chempotpy_n4_1a_pipnn_pes
             iz(1) = 7
             iz(2) = 7
             ! C6 for N2 system
-            c6(1) = 19.7d0
-            c6(2) = 19.7d0
+            c6(1) = 19.7e0_wp
+            c6(2) = 19.7e0_wp
         else
             ! currently imol = 1 is used
             stop
@@ -825,14 +836,14 @@ module chempotpy_n4_1a_pipnn_pes
         ! Calculate dispersion correction
         call edisp(94, 5, 2, dist, iz, mxc, &
             &     rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
-        disp = 0.0d0
+        disp = 0.0e0_wp
         do i=1, 1
             disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
         enddo
         if( igrad .eq. 1 )then
             call edisp(94, 5, 2, dist, iz, mxc, &
                 &     rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
-            dispdr(:) = 0.0d0
+            dispdr(:) = 0.0e0_wp
             do i=1, 1
                 dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
             enddo
@@ -846,58 +857,63 @@ module chempotpy_n4_1a_pipnn_pes
     !> @brief Evaluate edisp.
     subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
             &           rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: n, iz(2), max_elem, maxc, mxc(max_elem)
-        double precision :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
-        double precision :: rs6, rs8, rcov(max_elem)
-        double precision :: c6ab(max_elem,max_elem,maxc,maxc,3)
-        double precision :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
-        integer          :: iat, jat, igrad
-        double precision :: r, tmp, c6, c8, a1, a2
-        double precision :: damp6, damp8
-        double precision :: cn(n)
-        double precision :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
-        integer          :: step
-        e6(:)   = 0.0d0
-        e8(:)   = 0.0d0
-        e6dr(:) = 0.0d0
-        e8dr(:) = 0.0d0
+        integer  :: n, iz(2), max_elem, maxc, mxc(max_elem)
+        real(wp) :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+        real(wp) :: rs6, rs8, rcov(max_elem)
+        real(wp) :: c6ab(max_elem,max_elem,maxc,maxc,3)
+        real(wp) :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
+        integer  :: iat, jat, igrad
+        real(wp) :: r, tmp, c6, c8, a1, a2
+        real(wp) :: damp6, damp8
+        real(wp) :: cn(n)
+        real(wp) :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
+        integer  :: step
+        e6(:)   = 0.0e0_wp
+        e8(:)   = 0.0e0_wp
+        e6dr(:) = 0.0e0_wp
+        e8dr(:) = 0.0e0_wp
         a1      = rs6
         a2      = rs8
         !  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
         !  the large number of digits is just to keep the results consistent
         !  with older versions. They should not imply any higher accuracy than
         !  the old values
-        r2r4(1:94)=(/ 2.00734898d0, 1.56637132d0, 5.01986934d0, 3.85379032d0, 3.64446594d0, 3.10492822d0, &
-            & 2.71175247d0, 2.59361680d0, 2.38825250d0, 2.21522516d0, 6.58585536d0, 5.46295967d0, 5.65216669d0, &
-            & 4.88284902d0, 4.29727576d0, 4.04108902d0, 3.72932356d0, 3.44677275d0, 7.97762753d0, 7.07623947d0, &
-            & 6.60844053d0, 6.28791364d0, 6.07728703d0, 5.54643096d0, 5.80491167d0, 5.58415602d0, 5.41374528d0, &
-            & 5.28497229d0, 5.22592821d0, 5.09817141d0, 6.12149689d0, 5.54083734d0, 5.06696878d0, 4.87005108d0, &
-            & 4.59089647d0, 4.31176304d0, 9.55461698d0, 8.67396077d0, 7.97210197d0, 7.43439917d0, 6.58711862d0, &
-            & 6.19536215d0, 6.01517290d0, 5.81623410d0, 5.65710424d0, 5.52640661d0, 5.44263305d0, 5.58285373d0, &
-            & 7.02081898d0, 6.46815523d0, 5.98089120d0, 5.81686657d0, 5.53321815d0, 5.25477007d0, 11.02204549d0, &
-            & 0.15679528d0, 9.35167836d0, 9.06926079d0, 8.97241155d0, 8.90092807d0, 8.85984840d0, 8.81736827d0, &
-            & 8.79317710d0, 7.89969626d0, 8.80588454d0, 8.42439218d0, 8.54289262d0, 8.47583370d0, 8.45090888d0, &
-            & 8.47339339d0, 7.83525634d0, 8.20702843d0, 7.70559063d0, 7.32755997d0, 7.03887381d0, 6.68978720d0, &
-            & 6.05450052d0, 5.88752022d0, 5.70661499d0, 5.78450695d0, 7.79780729d0, 7.26443867d0, 6.78151984d0, &
-            & 6.67883169d0, 6.39024318d0, 6.09527958d0, 11.79156076d0, 11.10997644d0, 9.51377795d0, 8.67197068d0, &
-            & 8.77140725d0, 8.65402716d0, 8.53923501d0, 8.85024712d0 /)
+        r2r4(1:94)=(/ 2.00734898e0_wp, 1.56637132e0_wp, 5.01986934e0_wp, 3.85379032e0_wp, 3.64446594e0_wp, &
+            & 3.10492822e0_wp, 2.71175247e0_wp, 2.59361680e0_wp, 2.38825250e0_wp, 2.21522516e0_wp, 6.58585536e0_wp, &
+            & 5.46295967e0_wp, 5.65216669e0_wp, 4.88284902e0_wp, 4.29727576e0_wp, 4.04108902e0_wp, 3.72932356e0_wp, &
+            & 3.44677275e0_wp, 7.97762753e0_wp, 7.07623947e0_wp, 6.60844053e0_wp, 6.28791364e0_wp, 6.07728703e0_wp, &
+            & 5.54643096e0_wp, 5.80491167e0_wp, 5.58415602e0_wp, 5.41374528e0_wp, 5.28497229e0_wp, 5.22592821e0_wp, &
+            & 5.09817141e0_wp, 6.12149689e0_wp, 5.54083734e0_wp, 5.06696878e0_wp, 4.87005108e0_wp, 4.59089647e0_wp, &
+            & 4.31176304e0_wp, 9.55461698e0_wp, 8.67396077e0_wp, 7.97210197e0_wp, 7.43439917e0_wp, 6.58711862e0_wp, &
+            & 6.19536215e0_wp, 6.01517290e0_wp, 5.81623410e0_wp, 5.65710424e0_wp, 5.52640661e0_wp, 5.44263305e0_wp, &
+            & 5.58285373e0_wp, 7.02081898e0_wp, 6.46815523e0_wp, 5.98089120e0_wp, 5.81686657e0_wp, 5.53321815e0_wp, &
+            & 5.25477007e0_wp, 11.02204549e0_wp, 0.15679528e0_wp, 9.35167836e0_wp, 9.06926079e0_wp, 8.97241155e0_wp, &
+            & 8.90092807e0_wp, 8.85984840e0_wp, 8.81736827e0_wp, 8.79317710e0_wp, 7.89969626e0_wp, 8.80588454e0_wp, &
+            & 8.42439218e0_wp, 8.54289262e0_wp, 8.47583370e0_wp, 8.45090888e0_wp, 8.47339339e0_wp, 7.83525634e0_wp, &
+            & 8.20702843e0_wp, 7.70559063e0_wp, 7.32755997e0_wp, 7.03887381e0_wp, 6.68978720e0_wp, 6.05450052e0_wp, &
+            & 5.88752022e0_wp, 5.70661499e0_wp, 5.78450695e0_wp, 7.79780729e0_wp, 7.26443867e0_wp, 6.78151984e0_wp, &
+            & 6.67883169e0_wp, 6.39024318e0_wp, 6.09527958e0_wp, 11.79156076e0_wp, 11.10997644e0_wp, 9.51377795e0_wp, &
+            & 8.67197068e0_wp, 8.77140725e0_wp, 8.65402716e0_wp, 8.53923501e0_wp, 8.85024712e0_wp /)
         ! these new data are scaled with k2=4./3. and converted to a_0 via
         ! autoang=0.52917726d0
-        rcov(1:94)=(/ 0.80628308d0, 1.15903197d0, 3.02356173d0, 2.36845659d0, 1.94011865d0, 1.88972601d0, &
-            & 1.78894056d0, 1.58736983d0, 1.61256616d0, 1.68815527d0, 3.52748848d0, 3.14954334d0, 2.84718717d0, &
-            & 2.62041997d0, 2.77159820d0, 2.57002732d0, 2.49443835d0, 2.41884923d0, 4.43455700d0, 3.88023730d0, &
-            & 3.35111422d0, 3.07395437d0, 3.04875805d0, 2.77159820d0, 2.69600923d0, 2.62041997d0, 2.51963467d0, &
-            & 2.49443835d0, 2.54483100d0, 2.74640188d0, 2.82199085d0, 2.74640188d0, 2.89757982d0, 2.77159820d0, &
-            & 2.87238349d0, 2.94797246d0, 4.76210950d0, 4.20778980d0, 3.70386304d0, 3.50229216d0, 3.32591790d0, &
-            & 3.12434702d0, 2.89757982d0, 2.84718717d0, 2.84718717d0, 2.72120556d0, 2.89757982d0, 3.09915070d0, &
-            & 3.22513231d0, 3.17473967d0, 3.17473967d0, 3.09915070d0, 3.32591790d0, 3.30072128d0, 5.26603625d0, &
-            & 4.43455700d0, 4.08180818d0, 3.70386304d0, 3.98102289d0, 3.95582657d0, 3.93062995d0, 3.90543362d0, &
-            & 3.80464833d0, 3.82984466d0, 3.80464833d0, 3.77945201d0, 3.75425569d0, 3.75425569d0, 3.72905937d0, &
-            & 3.85504098d0, 3.67866672d0, 3.45189952d0, 3.30072128d0, 3.09915070d0, 2.97316878d0, 2.92277614d0, &
-            & 2.79679452d0, 2.82199085d0, 2.84718717d0, 3.32591790d0, 3.27552496d0, 3.27552496d0, 3.42670319d0, &
-            & 3.30072128d0, 3.47709584d0, 3.57788113d0, 5.06446567d0, 4.56053862d0, 4.20778980d0, 3.98102289d0, &
-            & 3.82984466d0, 3.85504098d0, 3.88023730d0, 3.90543362d0 /)
+        rcov(1:94)=(/ 0.80628308e0_wp, 1.15903197e0_wp, 3.02356173e0_wp, 2.36845659e0_wp, 1.94011865e0_wp, &
+            & 1.88972601e0_wp, 1.78894056e0_wp, 1.58736983e0_wp, 1.61256616e0_wp, 1.68815527e0_wp, 3.52748848e0_wp, &
+            & 3.14954334e0_wp, 2.84718717e0_wp, 2.62041997e0_wp, 2.77159820e0_wp, 2.57002732e0_wp, 2.49443835e0_wp, &
+            & 2.41884923e0_wp, 4.43455700e0_wp, 3.88023730e0_wp, 3.35111422e0_wp, 3.07395437e0_wp, 3.04875805e0_wp, &
+            & 2.77159820e0_wp, 2.69600923e0_wp, 2.62041997e0_wp, 2.51963467e0_wp, 2.49443835e0_wp, 2.54483100e0_wp, &
+            & 2.74640188e0_wp, 2.82199085e0_wp, 2.74640188e0_wp, 2.89757982e0_wp, 2.77159820e0_wp, 2.87238349e0_wp, &
+            & 2.94797246e0_wp, 4.76210950e0_wp, 4.20778980e0_wp, 3.70386304e0_wp, 3.50229216e0_wp, 3.32591790e0_wp, &
+            & 3.12434702e0_wp, 2.89757982e0_wp, 2.84718717e0_wp, 2.84718717e0_wp, 2.72120556e0_wp, 2.89757982e0_wp, &
+            & 3.09915070e0_wp, 3.22513231e0_wp, 3.17473967e0_wp, 3.17473967e0_wp, 3.09915070e0_wp, 3.32591790e0_wp, &
+            & 3.30072128e0_wp, 5.26603625e0_wp, 4.43455700e0_wp, 4.08180818e0_wp, 3.70386304e0_wp, 3.98102289e0_wp, &
+            & 3.95582657e0_wp, 3.93062995e0_wp, 3.90543362e0_wp, 3.80464833e0_wp, 3.82984466e0_wp, 3.80464833e0_wp, &
+            & 3.77945201e0_wp, 3.75425569e0_wp, 3.75425569e0_wp, 3.72905937e0_wp, 3.85504098e0_wp, 3.67866672e0_wp, &
+            & 3.45189952e0_wp, 3.30072128e0_wp, 3.09915070e0_wp, 2.97316878e0_wp, 2.92277614e0_wp, 2.79679452e0_wp, &
+            & 2.82199085e0_wp, 2.84718717e0_wp, 3.32591790e0_wp, 3.27552496e0_wp, 3.27552496e0_wp, 3.42670319e0_wp, &
+            & 3.30072128e0_wp, 3.47709584e0_wp, 3.57788113e0_wp, 5.06446567e0_wp, 4.56053862e0_wp, 4.20778980e0_wp, &
+            & 3.98102289e0_wp, 3.82984466e0_wp, 3.85504098e0_wp, 3.88023730e0_wp, 3.90543362e0_wp /)
         ! DFT-D3
         step = 0
         do iat=1, n-1
@@ -906,7 +922,7 @@ module chempotpy_n4_1a_pipnn_pes
                 r    = dist(step)
                 c6   = c6a(step)
                 ! r2r4 stored in main as sqrt
-                c8 = 3.0d0*c6*r2r4(iz(iat))*r2r4(iz(jat))
+                c8 = 3.0e0_wp*c6*r2r4(iz(iat))*r2r4(iz(jat))
                 ! energy for BJ damping
                 tmp      = sqrt(c8/c6)
                 e6(step) = c6/(r**6+(a1*tmp+a2)**6)
@@ -927,10 +943,11 @@ module chempotpy_n4_1a_pipnn_pes
         !  as well as the the nonconnected terms in Bowman's approach
         !  nobm : maximum number of basis
         !  nob  : number of basis
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: nob, nobm
-        integer          :: i
-        double precision :: bm1(nobm), bm2(nob)
+        integer  :: nob, nobm
+        integer  :: i
+        real(wp) :: bm1(nobm), bm2(nob)
         bm2(1) = bm1(4)
         do i=2, 4
             bm2(i) = bm1(i+4)
@@ -979,14 +996,15 @@ end module chempotpy_n4_1a_pipnn_pes
 !> @brief Expose N4_1A_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_n4_1a_pipnn_pes, only: evaluate
+    use chempotpy_kinds,           only: wp
     implicit none
     integer, parameter              :: natoms  = 4
     integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
-    double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates)
-    double precision, intent(out)   :: g(nstates,natoms,3)
-    double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+    real(wp), intent(in)            :: x(natoms,3)
+    real(wp), intent(out)           :: p(nstates)
+    real(wp), intent(out)           :: g(nstates,natoms,3)
+    real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

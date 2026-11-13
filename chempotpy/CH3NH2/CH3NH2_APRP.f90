@@ -72,6 +72,7 @@
 
 !> @brief Implement CH3NH2_APRP, a potential energy surface for CH3NH2.
 module chempotpy_ch3nh2_aprp_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -80,27 +81,29 @@ module chempotpy_ch3nh2_aprp_pes
 
     !> @brief Evaluate the CH3NH2_APRP potential energy surface for CH3NH2.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 2
-        integer, parameter            :: natoms  = 7
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: xx(3,natoms), uu(nstates,nstates)
-        double precision              :: guu(3,natoms,nstates,nstates)
-        double precision              :: vv(nstates), gvv(3,natoms,nstates)
-        double precision              :: dvec(3,natoms,nstates,nstates)
-        double precision              :: cc(nstates,nstates)
-        integer                       :: iatom, idir, j, istate, jstate
-        integer                       :: jgrad
+        integer, parameter    :: nstates = 2
+        integer, parameter    :: natoms  = 7
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: xx(3,natoms), uu(nstates,nstates)
+        real(wp)              :: guu(3,natoms,nstates,nstates)
+        real(wp)              :: vv(nstates), gvv(3,natoms,nstates)
+        real(wp)              :: dvec(3,natoms,nstates,nstates)
+        real(wp)              :: cc(nstates,nstates)
+        integer               :: iatom, idir, j, istate, jstate
+        integer               :: jgrad
         !initialize
-        p = 0.d0; g = 0.d0; d = 0.d0
+        p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                xx(idir,iatom) = x(iatom,idir)  !/legacy_bohr_to_angstrom
+                xx(idir,iatom) = x(iatom,idir)  !/bohr_to_angstrom
             enddo
         enddo
         if( igrad == 0 )then
@@ -111,27 +114,27 @@ module chempotpy_ch3nh2_aprp_pes
         call pot(jgrad, xx, uu, guu, vv, gvv, dvec, cc, 0)
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = vv(istate)*legacy_hartree_to_electronvolt
+                p(istate) = vv(istate)*hartree_to_electronvolt
             enddo
         elseif( igrad == 1 )then
             do istate=1, nstates
-                p(istate) = vv(istate)*legacy_hartree_to_electronvolt
+                p(istate) = vv(istate)*hartree_to_electronvolt
             enddo
             do istate=1, nstates
                 do iatom=1, natoms
                     do idir=1, 3
-                        g(istate,iatom,idir) = gvv(idir,iatom,istate)*51.422067
+                        g(istate,iatom,idir) = gvv(idir,iatom,istate)*hartree_per_bohr_to_ev_per_angstrom
                     enddo
                 enddo
             enddo
         elseif( igrad == 2 )then
             do istate=1, nstates
-                p(istate) = vv(istate)*legacy_hartree_to_electronvolt
+                p(istate) = vv(istate)*hartree_to_electronvolt
             enddo
             do istate=1, nstates
                 do iatom=1, natoms
                     do idir=1, 3
-                        g(istate,iatom,idir) = gvv(idir,iatom,istate)*51.422067
+                        g(istate,iatom,idir) = gvv(idir,iatom,istate)*hartree_per_bohr_to_ev_per_angstrom
                     enddo
                 enddo
             enddo
@@ -149,35 +152,36 @@ module chempotpy_ch3nh2_aprp_pes
 
     !> @brief Evaluate pot for the CH3NH2_APRP potential.
     subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision              :: xx(3,7)
-        double precision              :: x(7), y(7), z(7)
-        double precision              :: scp(3)
-        integer                       :: i, j
-        double precision              :: e1
-        integer                       :: nrap, ntap
-        double precision              :: dx1(7), dy1(7), dz1(7)
-        double precision              :: dx(7), dy(7), dz(7)
-        integer                       :: igrad
-        double precision              :: dux(7,3), duy(7,3), duz(7,3)
-        double precision              :: uu(2,2), vv(2)
-        double precision              :: tt(1)
-        double precision              :: guu(3,7,2,2), gtt(3,7,1,1)
-        double precision              :: gvv(3,7,2)
-        double precision              :: dvec(3,7,2,2)
-        double precision              :: eigvec(2,2)
-        integer                       :: lwork, info
-        integer                       :: repflag
-        double precision, allocatable :: work(:)
-        double precision              :: tmpmat22(2,2)
-        integer                       :: ist, jst
-        double precision, parameter   :: evtohartree = 27.21139d0
-        double precision, parameter   :: bohrtoang   = 0.52917721067d0
-        double precision              :: v2, v4
-        scp = 0d0
-        dux = 0d0
-        duy = 0d0
-        duz = 0d0
+        real(wp)              :: xx(3,7)
+        real(wp)              :: x(7), y(7), z(7)
+        real(wp)              :: scp(3)
+        integer               :: i, j
+        real(wp)              :: e1
+        integer               :: nrap, ntap
+        real(wp)              :: dx1(7), dy1(7), dz1(7)
+        real(wp)              :: dx(7), dy(7), dz(7)
+        integer               :: igrad
+        real(wp)              :: dux(7,3), duy(7,3), duz(7,3)
+        real(wp)              :: uu(2,2), vv(2)
+        real(wp)              :: tt(1)
+        real(wp)              :: guu(3,7,2,2), gtt(3,7,1,1)
+        real(wp)              :: gvv(3,7,2)
+        real(wp)              :: dvec(3,7,2,2)
+        real(wp)              :: eigvec(2,2)
+        integer               :: lwork, info
+        integer               :: repflag
+        real(wp), allocatable :: work(:)
+        real(wp)              :: tmpmat22(2,2)
+        integer               :: ist, jst
+        real(wp), parameter   :: evtohartree = 27.21139e0_wp
+        real(wp), parameter   :: bohrtoang   = 0.52917721067e0_wp
+        real(wp)              :: v2, v4
+        scp = 0e0_wp
+        dux = 0e0_wp
+        duy = 0e0_wp
+        duz = 0e0_wp
         do i=1, 7
             x(i) = xx(1,i)
             y(i) = xx(2,i)
@@ -252,20 +256,21 @@ module chempotpy_ch3nh2_aprp_pes
     end subroutine pot
 
     !> @brief Evaluate dihedr1 for the CH3NH2_APRP potential.
-    double precision function dihedr1( i, j, k, l, x, y, z )
+    real(wp) function dihedr1( i, j, k, l, x, y, z )
         ! Evaluate the dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
         ! I created a modified version of this code to avoid issues when the
         ! amine is flat in a plane
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision            :: a
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: a
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -304,15 +309,15 @@ module chempotpy_ch3nh2_aprp_pes
         call xprod1(ejk, ekl, v)
         call xprod1(u, v, w)
         call sprod(3, u, v, a)
-        a       = a/(dsin(aijk)*dsin(ajkl))
-        a       = max(a, -1.0d0)
-        a       = min(a, 1.0d0)
-        dihedr1 = dacos(a)
+        a       = a/(sin(aijk)*sin(ajkl))
+        a       = max(a, -1.0e0_wp)
+        a       = min(a, 1.0e0_wp)
+        dihedr1 = acos(a)
         ! Determine the sign of dihedr based on u,v,ejk
         ! dihedr >= 0, u,v,ejk right-hand (w*ejk >=0)
         ! dihedr < 0,  u,v,ejk left-hand (w*ejk < 0)
         wejk = w(1)*ejk(1)+w(2)*ejk(2)+w(3)*ejk(3)
-        if( wejk .lt. 0.0d0 )then
+        if( wejk .lt. 0.0e0_wp )then
             dihedr1 = -dihedr1
         endif
         ! Setting the range of dihedral angle between -90.0 degree to 270 degree
@@ -323,13 +328,14 @@ module chempotpy_ch3nh2_aprp_pes
     end function dihedr1
 
     !> @brief Evaluate bndlen for the CH3NH2_APRP potential.
-    double precision function bndlen( i, j, x, y, z )
+    real(wp) function bndlen( i, j, x, y, z )
         !* Function to evaluate the bond length between atom i and j
         !* Input: i,j (indices of 2 atoms)
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j
-        double precision, parameter :: tiny = 1.0d-13
-        double precision            :: x(*), y(*), z(*)
+        integer             :: i, j
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp)            :: x(*), y(*), z(*)
         bndlen = sqrt( (x(i)-x(j))*(x(i)-x(j)) +      (y(i)-y(j))*(y(i)-y(j)) +      (z(i)-z(j))*(z(i)-z(j)))
         if( bndlen .le. tiny )then
             write(*, '('' Atom'',I3,'' and'',I3,'' are too close to each other!'')') i, j
@@ -341,14 +347,15 @@ module chempotpy_ch3nh2_aprp_pes
     end function bndlen
 
     !> @brief Evaluate bndang for the CH3NH2_APRP potential.
-    double precision function bndang( i, j, k, x, y, z )
+    real(wp) function bndang( i, j, k, x, y, z )
         !* Evaluate the bond angle between atoms i, j, and k
         !* Input: i,j,k (indices of 3 atoms, i-j and j-k bonds)
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: a
-        integer          :: i, j, k
-        double precision :: x(*), y(*), z(*)
-        double precision :: eji(3), ejk(3), rji, rjk
+        real(wp) :: a
+        integer  :: i, j, k
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: eji(3), ejk(3), rji, rjk
         rji    = bndlen(i, j, x, y, z)
         rjk    = bndlen(j, k, x, y, z)
         eji(1) = (x(i)-x(j))/rji
@@ -366,8 +373,9 @@ module chempotpy_ch3nh2_aprp_pes
         !* Calculate cross product of x1 and x2 and return x3
         !* Input: X1,X2
         !* Output: X3
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: x1(3), x2(3), x3(3)
+        real(wp) :: x1(3), x2(3), x3(3)
         x3(1) = x1(2)*x2(3)-x1(3)*x2(2)
         x3(2) = x1(3)*x2(1)-x1(1)*x2(3)
         x3(3) = x1(1)*x2(2)-x1(2)*x2(1)
@@ -378,11 +386,12 @@ module chempotpy_ch3nh2_aprp_pes
         !* Calculate scalar product of a and b and return c
         !* Input: a(n),b(n)
         !* Output: c
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: i
-        integer          :: n
-        double precision :: a(*), b(*), c
-        c = 0.0d0
+        integer  :: i
+        integer  :: n
+        real(wp) :: a(*), b(*), c
+        c = 0.0e0_wp
         do i=1, n
             c = c+a(i)*b(i)
         enddo
@@ -392,21 +401,22 @@ module chempotpy_ch3nh2_aprp_pes
     subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
         ! this subroutine deals with the tertiary derivatives and converts these
         ! from the various internal coords to XYZ
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: kk, nat
-        integer          :: i, j, k
-        double precision :: xyz(4,3)
-        double precision :: beta
-        double precision :: x(7), y(7), z(7)
-        double precision :: dk(22)
-        double precision :: r1, t2
-        double precision :: qc(20)
-        double precision :: dx1(7), dy1(7), dz1(7)
-        double precision :: dngx(7), dngy(7), dngz(7)
-        double precision :: torh1, torh2, rh1hx, rh2hx
-        double precision :: ang1, ang2, ang3
-        double precision :: len1, len2, len3
-        integer          :: bonds(2,8), bends(3,8)
+        integer  :: kk, nat
+        integer  :: i, j, k
+        real(wp) :: xyz(4,3)
+        real(wp) :: beta
+        real(wp) :: x(7), y(7), z(7)
+        real(wp) :: dk(22)
+        real(wp) :: r1, t2
+        real(wp) :: qc(20)
+        real(wp) :: dx1(7), dy1(7), dz1(7)
+        real(wp) :: dngx(7), dngy(7), dngz(7)
+        real(wp) :: torh1, torh2, rh1hx, rh2hx
+        real(wp) :: ang1, ang2, ang3
+        real(wp) :: len1, len2, len3
+        integer  :: bonds(2,8), bends(3,8)
         bonds = reshape([ 2, 3, 3, 4, 4, 5, 4, 6, 4, 7, 5, 6, 6, 7, 7, 5 ], shape(bonds))
         bends = reshape([ 1, 3, 4, 2, 3, 4, 3, 4, 5, 3, 4, 6, 3, 4, 7, 5, 4, 6, 6, 4, 7, 7, 4, 5 ], shape(bends))
         r1    = bndlen(1, 3, x, y, z)
@@ -422,9 +432,9 @@ module chempotpy_ch3nh2_aprp_pes
         len1  = qc(18)
         len2  = qc(19)
         len3  = qc(20)
-        dx1   = 0d0
-        dy1   = 0d0
-        dz1   = 0d0
+        dx1   = 0e0_wp
+        dy1   = 0e0_wp
+        dz1   = 0e0_wp
         do kk=1, 5
             i = bonds(1,kk)
             j = bonds(2,kk)
@@ -540,48 +550,50 @@ module chempotpy_ch3nh2_aprp_pes
     !> @brief Evaluate angder for the CH3NH2_APRP potential.
     subroutine angder( x, y, z, i, j, k, dngx, dngy, dngz )
         ! This subroutine converts a bond angle derivative to XYZ
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: i, j, k
-        double precision :: x(7), y(7), z(7)
-        double precision :: ra, rb
-        double precision :: to, be, go, cgo
-        double precision :: dngx(7), dngy(7), dngz(7)
-        dngx = 0d0
-        dngy = 0d0
-        dngz = 0d0
+        integer  :: i, j, k
+        real(wp) :: x(7), y(7), z(7)
+        real(wp) :: ra, rb
+        real(wp) :: to, be, go, cgo
+        real(wp) :: dngx(7), dngy(7), dngz(7)
+        dngx = 0e0_wp
+        dngy = 0e0_wp
+        dngz = 0e0_wp
         ra   = bndlen(j, i, x, y, z)
         rb   = bndlen(j, k, x, y, z)
         to   = (x(j)-x(i))*(x(j)-x(k)) +(y(j)-y(i))*(y(j)-y(k)) +(z(j)-z(i))*(z(j)-z(k))
-        be=((((x(j)-x(i))**2)+((y(j)-y(i))**2)+((z(j)-z(i))**2))**0.5d0) *((((x(j)-x(k))**2)+((y(j)-y(k))**2)+((z(j)- &
-            & z(k))** 2))**0.5d0)
+        be=((((x(j)-x(i))**2)+((y(j)-y(i))**2)+((z(j)-z(i))**2))**0.5e0_wp) *((((x(j)-x(k))**2)+((y(j)-y(k))**2)+ &
+            & ((z(j)- z(k))** 2))**0.5e0_wp)
         go  = to/be
-        cgo = (-1d0/((1d0-go**2d0)**(1d0/2d0)))
+        cgo = (-1e0_wp/((1e0_wp-go**2e0_wp)**(1e0_wp/2e0_wp)))
         !--------- j -----------!
-        dngx(j) = cgo*((2d0*x(j)-x(i)-x(k))*be -( (((x(j)-x(i))/ra)*rb) + (((x(j)-x(k))/rb)*ra) )*to)/(be**2d0)
-        dngy(j) = cgo*((2d0*y(j)-y(i)-y(k))*be -( (((y(j)-y(i))/ra)*rb) + (((y(j)-y(k))/rb)*ra) )*to)/(be**2d0)
-        dngz(j) = cgo*((2d0*z(j)-z(i)-z(k))*be -( (((z(j)-z(i))/ra)*rb) + (((z(j)-z(k))/rb)*ra) )*to)/(be**2d0)
+        dngx(j) = cgo*((2e0_wp*x(j)-x(i)-x(k))*be -( (((x(j)-x(i))/ra)*rb) + (((x(j)-x(k))/rb)*ra) )*to)/(be**2e0_wp)
+        dngy(j) = cgo*((2e0_wp*y(j)-y(i)-y(k))*be -( (((y(j)-y(i))/ra)*rb) + (((y(j)-y(k))/rb)*ra) )*to)/(be**2e0_wp)
+        dngz(j) = cgo*((2e0_wp*z(j)-z(i)-z(k))*be -( (((z(j)-z(i))/ra)*rb) + (((z(j)-z(k))/rb)*ra) )*to)/(be**2e0_wp)
         !--------- k -----------!
-        dngx(k) = cgo*( -1d0*(x(j)-x(i))*be -(((x(k)-x(j))/rb)*ra*to))/(be**2d0)
-        dngy(k) = cgo*( -1d0*(y(j)-y(i))*be -(((y(k)-y(j))/rb)*ra*to))/(be**2d0)
-        dngz(k) = cgo*( -1d0*(z(j)-z(i))*be -(((z(k)-z(j))/rb)*ra*to))/(be**2d0)
+        dngx(k) = cgo*( -1e0_wp*(x(j)-x(i))*be -(((x(k)-x(j))/rb)*ra*to))/(be**2e0_wp)
+        dngy(k) = cgo*( -1e0_wp*(y(j)-y(i))*be -(((y(k)-y(j))/rb)*ra*to))/(be**2e0_wp)
+        dngz(k) = cgo*( -1e0_wp*(z(j)-z(i))*be -(((z(k)-z(j))/rb)*ra*to))/(be**2e0_wp)
         !--------- i -----------!
-        dngx(i) = cgo*( -(x(j)-x(k))*be -(((x(i)-x(j))/ra)*rb*to))/(be**2d0)
-        dngy(i) = cgo*( -(y(j)-y(k))*be -(((y(i)-y(j))/ra)*rb*to))/(be**2d0)
-        dngz(i) = cgo*( -(z(j)-z(k))*be -(((z(i)-z(j))/ra)*rb*to))/(be**2d0)
+        dngx(i) = cgo*( -(x(j)-x(k))*be -(((x(i)-x(j))/ra)*rb*to))/(be**2e0_wp)
+        dngy(i) = cgo*( -(y(j)-y(k))*be -(((y(i)-y(j))/ra)*rb*to))/(be**2e0_wp)
+        dngz(i) = cgo*( -(z(j)-z(k))*be -(((z(i)-z(j))/ra)*rb*to))/(be**2e0_wp)
     end subroutine angder
 
     !> @brief Evaluate disder for the CH3NH2_APRP potential.
     subroutine disder( x, y, z, i, j, dngx, dngy, dngz )
         ! This subroutine converts a distance derivative to XYZ
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: i, j, k
-        double precision :: x(7), y(7), z(7)
-        double precision :: ra, rb
-        double precision :: to, be, go, cgo
-        double precision :: dngx(7), dngy(7), dngz(7)
-        dngx    = 0d0
-        dngy    = 0d0
-        dngz    = 0d0
+        integer  :: i, j, k
+        real(wp) :: x(7), y(7), z(7)
+        real(wp) :: ra, rb
+        real(wp) :: to, be, go, cgo
+        real(wp) :: dngx(7), dngy(7), dngz(7)
+        dngx    = 0e0_wp
+        dngy    = 0e0_wp
+        dngz    = 0e0_wp
         dngx(i) = (x(i)-x(j))/bndlen(i, j, x, y, z)
         dngy(i) = (y(i)-y(j))/bndlen(i, j, x, y, z)
         dngz(i) = (z(i)-z(j))/bndlen(i, j, x, y, z)
@@ -598,56 +610,57 @@ module chempotpy_ch3nh2_aprp_pes
         !       = 1, U11
         !       = 2, U22
         !       = 3, U12
+        use chempotpy_kinds, only: wp
         implicit none
         integer            :: nrap, ntap, ra1, ra2
         integer, parameter :: nqs = 5
         integer, parameter :: nqb = 5
         integer            :: igrad, ii
         integer            :: ntot, nqtc
-        double precision   :: r, ut, dutdr, ra
+        real(wp)           :: r, ut, dutdr, ra
         ! Local variables
-        integer          :: i, j, k
-        double precision :: u0
-        double precision :: vs, vb, vbs
-        double precision :: qs(nqs)
-        double precision :: qb(nqb)
-        double precision :: sqb(nqb), cqb(nqb)
-        double precision :: qc(20), dut(20)
-        double precision :: v0(nrap,ntap)
-        double precision :: pi
-        double precision :: dnc1, dnc2
-        double precision :: dch1, dch2
-        double precision :: knhb1(nrap,ntap), knhb2(nrap,ntap)
-        double precision :: knc1(nrap,ntap), knc2(nrap,ntap)
-        double precision :: kch1(nrap,ntap), kch2(nrap,ntap)
-        double precision :: kch3(nrap,ntap)
-        double precision :: kcnha1(nrap,ntap), kcnha2(nrap,ntap)
-        double precision :: kcnhb1(nrap,ntap), kcnhb2(nrap,ntap)
-        double precision :: knch1(nrap,ntap), knch2(nrap,ntap)
-        double precision :: jnhb1(nrap,ntap), jnhb2(nrap,ntap)
-        double precision :: jnhb3(nrap,ntap)
-        double precision :: jnc1(nrap,ntap), jnc2(nrap,ntap)
-        double precision :: jnc3(nrap,ntap)
-        double precision :: jcnha1(nrap,ntap), jcnha2(nrap,ntap)
-        double precision :: jcnha3(nrap,ntap)
-        double precision :: jcnhb1(nrap,ntap), jcnhb2(nrap,ntap)
-        double precision :: jcnhb3(nrap,ntap)
-        double precision :: gnhb1(nrap,ntap), gnhb2(nrap,ntap)
-        double precision :: gnhb3(nrap,ntap)
-        double precision :: gnc1(nrap,ntap), gnc2(nrap,ntap)
-        double precision :: gnc3(nrap,ntap)
-        double precision :: v3, v4
-        double precision :: torh1, torh2, rh1hx, rh2hx
-        double precision :: ang1, ang2, ang3
-        double precision :: len1, len2, len3
-        double precision :: dd1, dd2, rr, ft2, fa2
-        double precision :: ft1(nrap,ntap)
-        double precision :: fa1(nrap,ntap)
-        pi  = 4.d0*datan(1.d0)
-        ut  = 0d0
-        vs  = 0d0
-        vb  = 0d0
-        dut = 0d0
+        integer  :: i, j, k
+        real(wp) :: u0
+        real(wp) :: vs, vb, vbs
+        real(wp) :: qs(nqs)
+        real(wp) :: qb(nqb)
+        real(wp) :: sqb(nqb), cqb(nqb)
+        real(wp) :: qc(20), dut(20)
+        real(wp) :: v0(nrap,ntap)
+        real(wp) :: pi
+        real(wp) :: dnc1, dnc2
+        real(wp) :: dch1, dch2
+        real(wp) :: knhb1(nrap,ntap), knhb2(nrap,ntap)
+        real(wp) :: knc1(nrap,ntap), knc2(nrap,ntap)
+        real(wp) :: kch1(nrap,ntap), kch2(nrap,ntap)
+        real(wp) :: kch3(nrap,ntap)
+        real(wp) :: kcnha1(nrap,ntap), kcnha2(nrap,ntap)
+        real(wp) :: kcnhb1(nrap,ntap), kcnhb2(nrap,ntap)
+        real(wp) :: knch1(nrap,ntap), knch2(nrap,ntap)
+        real(wp) :: jnhb1(nrap,ntap), jnhb2(nrap,ntap)
+        real(wp) :: jnhb3(nrap,ntap)
+        real(wp) :: jnc1(nrap,ntap), jnc2(nrap,ntap)
+        real(wp) :: jnc3(nrap,ntap)
+        real(wp) :: jcnha1(nrap,ntap), jcnha2(nrap,ntap)
+        real(wp) :: jcnha3(nrap,ntap)
+        real(wp) :: jcnhb1(nrap,ntap), jcnhb2(nrap,ntap)
+        real(wp) :: jcnhb3(nrap,ntap)
+        real(wp) :: gnhb1(nrap,ntap), gnhb2(nrap,ntap)
+        real(wp) :: gnhb3(nrap,ntap)
+        real(wp) :: gnc1(nrap,ntap), gnc2(nrap,ntap)
+        real(wp) :: gnc3(nrap,ntap)
+        real(wp) :: v3, v4
+        real(wp) :: torh1, torh2, rh1hx, rh2hx
+        real(wp) :: ang1, ang2, ang3
+        real(wp) :: len1, len2, len3
+        real(wp) :: dd1, dd2, rr, ft2, fa2
+        real(wp) :: ft1(nrap,ntap)
+        real(wp) :: fa1(nrap,ntap)
+        pi  = 4.e0_wp*atan(1.e0_wp)
+        ut  = 0e0_wp
+        vs  = 0e0_wp
+        vb  = 0e0_wp
+        dut = 0e0_wp
         do i=1, nqs
             qs(i) = qc(i)
         enddo
@@ -689,44 +702,44 @@ module chempotpy_ch3nh2_aprp_pes
             ! STRETCHES
             ! STRETCH 1 (NHB)
             !       if (ii .eq. 1) then
-            vs = gnhb1(ra1,ra2) *(1d0-exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2))))**2d0
-            vs = vs+knhb1(ra1,ra2)*(qc(1)-knhb2(ra1,ra2))**4d0
+            vs = gnhb1(ra1,ra2) *(1e0_wp-exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2))))**2e0_wp
+            vs = vs+knhb1(ra1,ra2)*(qc(1)-knhb2(ra1,ra2))**4e0_wp
             ! STRETCH 2 (NC)
-            vs = vs+gnc1(ra1,ra2) *(1d0-exp(gnc2(ra1,ra2)*(qc(2)-gnc3(ra1,ra2))))**2d0
-            vs = vs+knc1(ra1,ra2)*(qc(2)-knc2(ra1,ra2))**4d0
+            vs = vs+gnc1(ra1,ra2) *(1e0_wp-exp(gnc2(ra1,ra2)*(qc(2)-gnc3(ra1,ra2))))**2e0_wp
+            vs = vs+knc1(ra1,ra2)*(qc(2)-knc2(ra1,ra2))**4e0_wp
             ! STRETCHES 3-5 (CH)
             do i=3, nqs
-                vs = vs+kch1(ra1,ra2) *(1d0-exp(kch2(ra1,ra2)*(qc(i)-kch3(ra1,ra2))))**2d0
+                vs = vs+kch1(ra1,ra2) *(1e0_wp-exp(kch2(ra1,ra2)*(qc(i)-kch3(ra1,ra2))))**2e0_wp
             enddo
             ! BENDS
             ! BEND 1 (CNHA)
-            vb = kcnha1(ra1,ra2)*(cqb(1)-kcnha2(ra1,ra2))**2d0
+            vb = kcnha1(ra1,ra2)*(cqb(1)-kcnha2(ra1,ra2))**2e0_wp
             ! BEND 2 (CNHB)
-            vb = vb+kcnhb1(ra1,ra2)*(cqb(2)-kcnhb2(ra1,ra2))**2d0
+            vb = vb+kcnhb1(ra1,ra2)*(cqb(2)-kcnhb2(ra1,ra2))**2e0_wp
             ! BEND 3-5 (NCH)
             do i=3, nqb
-                vb = vb+knch1(ra1,ra2)*(qb(i)-knch2(ra1,ra2))**2d0
+                vb = vb+knch1(ra1,ra2)*(qb(i)-knch2(ra1,ra2))**2e0_wp
             enddo
-            ft2 = -3.0d0
-            dd1 = 2.2d0
-            v3  = ft1(ra1,ra2)*(1d0-(4d0*(torh2**3d0)-3d0*torh2)) * exp(((rh2hx-dd1)**2d0)/ft2)
-            dd2 = 1.881d0
-            rr  = 1.761d0
-            fa2 = -2.0d0
-            v4=(fa1(ra1,ra2)*(ang1-dd2)**2d0) *exp(((len1-rr)**2d0)/fa2) +(fa1(ra1,ra2)*(ang2-dd2)**2d0) *exp(((len2- &
-                & rr)** 2d0)/fa2) +(fa1(ra1,ra2)*(ang3-dd2)**2d0) *exp(((len3-rr)**2d0)/fa2)
+            ft2 = -3.0e0_wp
+            dd1 = 2.2e0_wp
+            v3  = ft1(ra1,ra2)*(1e0_wp-(4e0_wp*(torh2**3e0_wp)-3e0_wp*torh2)) * exp(((rh2hx-dd1)**2e0_wp)/ft2)
+            dd2 = 1.881e0_wp
+            rr  = 1.761e0_wp
+            fa2 = -2.0e0_wp
+            v4=(fa1(ra1,ra2)*(ang1-dd2)**2e0_wp) *exp(((len1-rr)**2e0_wp)/fa2) +(fa1(ra1,ra2)*(ang2-dd2)**2e0_wp) * &
+                & exp(((len2- rr)** 2e0_wp)/fa2) +(fa1(ra1,ra2)*(ang3-dd2)**2e0_wp) *exp(((len3-rr)**2e0_wp)/fa2)
         elseif( ii .eq. 3 )then
             ! STRETCHES
             ! STRETCH 1 (NHB)
-            vs = jnhb1(ra1,ra2)*exp(jnhb2(ra1,ra2) *(qc(1)-jnhb3(ra1,ra2))**2d0)
+            vs = jnhb1(ra1,ra2)*exp(jnhb2(ra1,ra2) *(qc(1)-jnhb3(ra1,ra2))**2e0_wp)
             ! STRETCH 2 (NC)
-            vs = vs+jnc1(ra1,ra2)*exp(jnc2(ra1,ra2) *(qc(2)-jnc3(ra1,ra2))**2d0)
+            vs = vs+jnc1(ra1,ra2)*exp(jnc2(ra1,ra2) *(qc(2)-jnc3(ra1,ra2))**2e0_wp)
             ! STRETCHES 3-5 (CH)
             ! BENDS
             ! BEND 1 (CNHA)
-            vb = jcnha1(ra1,ra2)*exp(jcnha2(ra1,ra2) *(cqb(1)-jcnha3(ra1,ra2))**2d0)
+            vb = jcnha1(ra1,ra2)*exp(jcnha2(ra1,ra2) *(cqb(1)-jcnha3(ra1,ra2))**2e0_wp)
             ! BEND 2 (CNHB)
-            vb = vb+jcnhb1(ra1,ra2)*exp(jcnhb2(ra1,ra2) *(cqb(2)-jcnhb3(ra1,ra2))**2d0)
+            vb = vb+jcnhb1(ra1,ra2)*exp(jcnhb2(ra1,ra2) *(cqb(2)-jcnhb3(ra1,ra2))**2e0_wp)
             ! BEND 3-5 (NCH)
         endif
         ! COMBINE
@@ -737,55 +750,55 @@ module chempotpy_ch3nh2_aprp_pes
                 ! STRETCHES
                 ! STRETCH 1 (NHB)
                 !       if (ii .eq. 1) then
-                dut(1)=-2d0*gnhb2(ra1,ra2)*gnhb1(ra1,ra2)* exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2)))* (1d0- &
+                dut(1)=-2e0_wp*gnhb2(ra1,ra2)*gnhb1(ra1,ra2)* exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2)))* (1e0_wp- &
                     & exp(gnhb2(ra1,ra2)*(qc(1)-gnhb3(ra1,ra2))))
-                dut(1) = dut(1)+4d0*knhb1(ra1,ra2)*(qc(1)-knhb2(ra1,ra2))**3d0
+                dut(1) = dut(1)+4e0_wp*knhb1(ra1,ra2)*(qc(1)-knhb2(ra1,ra2))**3e0_wp
                 ! STRETCH 2 (NC)
-                dut(2)=-2d0*gnc2(ra1,ra2)*gnc1(ra1,ra2)* exp(gnc2(ra1,ra2)*(qc(2)-gnc3(ra1,ra2)))* (1d0-exp(gnc2(ra1, &
-                    & ra2)* (qc(2)-gnc3(ra1,ra2))))
-                dut(2) = dut(2)+4d0*knc1(ra1,ra2)*(qc(2)-knc2(ra1,ra2))**3d0
+                dut(2)=-2e0_wp*gnc2(ra1,ra2)*gnc1(ra1,ra2)* exp(gnc2(ra1,ra2)*(qc(2)-gnc3(ra1,ra2)))* (1e0_wp- &
+                    & exp(gnc2(ra1,ra2)* (qc(2)-gnc3(ra1,ra2))))
+                dut(2) = dut(2)+4e0_wp*knc1(ra1,ra2)*(qc(2)-knc2(ra1,ra2))**3e0_wp
                 ! STRETCHES 3-5 (CH)
                 do i=3, nqs
-                    dut(i)=-2d0*kch2(ra1,ra2)*kch1(ra1,ra2)* exp(kch2(ra1,ra2)*(qs(i)-kch3(ra1,ra2)))* (1d0- &
+                    dut(i)=-2e0_wp*kch2(ra1,ra2)*kch1(ra1,ra2)* exp(kch2(ra1,ra2)*(qs(i)-kch3(ra1,ra2)))* (1e0_wp- &
                         & exp(kch2(ra1,ra2)*(qs(i)-kch3(ra1,ra2))))
                 enddo
                 ! BENDS
                 ! BEND 1 (CNHA)
-                dut(6) = kcnha1(ra1,ra2)*(cqb(1)-kcnha2(ra1,ra2)) *2d0*(-sqb(1))
+                dut(6) = kcnha1(ra1,ra2)*(cqb(1)-kcnha2(ra1,ra2)) *2e0_wp*(-sqb(1))
                 ! BEND 2 (CNHB)
-                dut(7) = kcnhb1(ra1,ra2)*(cqb(2)-kcnhb2(ra1,ra2)) *2d0*(-sqb(2))
+                dut(7) = kcnhb1(ra1,ra2)*(cqb(2)-kcnhb2(ra1,ra2)) *2e0_wp*(-sqb(2))
                 ! BEND 3-5 (NCH)
                 do i=3, nqb
-                    dut(nqs+i) = knch1(ra1,ra2)*(qb(i)-knch2(ra1,ra2))*2d0
+                    dut(nqs+i) = knch1(ra1,ra2)*(qb(i)-knch2(ra1,ra2))*2e0_wp
                 enddo
-                dut(11) = 2d0*((rh1hx-dd1)/ft2)*exp(((rh1hx-dd1)**2d0)/ft2) *ft1(ra1,ra2)*(1d0-(4d0*(torh1**3d0)-3d0* &
-                    & torh1))
-                dut(12) = 2d0*((rh2hx-dd1)/ft2)*exp(((rh2hx-dd1)**2d0)/ft2) *ft1(ra1,ra2)*(1d0-(4d0*(torh2**3d0)-3d0* &
-                    & torh2))
-                dut(13) = ft1(ra1,ra2)*(-12d0*(torh1**2d0)+3d0) * exp(((rh1hx-dd1)**2d0)/ft2)
-                dut(14) = ft1(ra1,ra2)*(-12d0*(torh2**2d0)+3d0) * exp(((rh2hx-dd1)**2d0)/ft2)
-                dut(15) = 2d0*fa1(ra1,ra2)*(ang1-dd2) *exp(((len1-rr)**2d0)/fa2)
-                dut(16) = 2d0*fa1(ra1,ra2)*(ang2-dd2) *exp(((len2-rr)**2d0)/fa2)
-                dut(17) = 2d0*fa1(ra1,ra2)*(ang3-dd2) *exp(((len3-rr)**2d0)/fa2)
-                dut(18) = (fa1(ra1,ra2)*(ang1-dd2)**2d0) *2d0*((len1-rr)/fa2)*exp(((len1-rr)**2d0)/fa2)
-                dut(19) = (fa1(ra1,ra2)*(ang2-dd2)**2d0) *2d0*((len2-rr)/fa2)*exp(((len2-rr)**2d0)/fa2)
-                dut(20) = (fa1(ra1,ra2)*(ang3-dd2)**2d0) *2d0*((len3-rr)/fa2)*exp(((len3-rr)**2d0)/fa2)
-                dut(11) = 0d0
-                dut(13) = 0d0
+                dut(11) = 2e0_wp*((rh1hx-dd1)/ft2)*exp(((rh1hx-dd1)**2e0_wp)/ft2) *ft1(ra1,ra2)*(1e0_wp-(4e0_wp* &
+                    & (torh1**3e0_wp)-3e0_wp* torh1))
+                dut(12) = 2e0_wp*((rh2hx-dd1)/ft2)*exp(((rh2hx-dd1)**2e0_wp)/ft2) *ft1(ra1,ra2)*(1e0_wp-(4e0_wp* &
+                    & (torh2**3e0_wp)-3e0_wp* torh2))
+                dut(13) = ft1(ra1,ra2)*(-12e0_wp*(torh1**2e0_wp)+3e0_wp) * exp(((rh1hx-dd1)**2e0_wp)/ft2)
+                dut(14) = ft1(ra1,ra2)*(-12e0_wp*(torh2**2e0_wp)+3e0_wp) * exp(((rh2hx-dd1)**2e0_wp)/ft2)
+                dut(15) = 2e0_wp*fa1(ra1,ra2)*(ang1-dd2) *exp(((len1-rr)**2e0_wp)/fa2)
+                dut(16) = 2e0_wp*fa1(ra1,ra2)*(ang2-dd2) *exp(((len2-rr)**2e0_wp)/fa2)
+                dut(17) = 2e0_wp*fa1(ra1,ra2)*(ang3-dd2) *exp(((len3-rr)**2e0_wp)/fa2)
+                dut(18) = (fa1(ra1,ra2)*(ang1-dd2)**2e0_wp) *2e0_wp*((len1-rr)/fa2)*exp(((len1-rr)**2e0_wp)/fa2)
+                dut(19) = (fa1(ra1,ra2)*(ang2-dd2)**2e0_wp) *2e0_wp*((len2-rr)/fa2)*exp(((len2-rr)**2e0_wp)/fa2)
+                dut(20) = (fa1(ra1,ra2)*(ang3-dd2)**2e0_wp) *2e0_wp*((len3-rr)/fa2)*exp(((len3-rr)**2e0_wp)/fa2)
+                dut(11) = 0e0_wp
+                dut(13) = 0e0_wp
             elseif( ii .eq. 3 )then
                 ! STRETCH 1 (NHB)
-                dut(1)=jnhb2(ra1,ra2)*(qc(1)-jnhb3(ra1,ra2))*2d0* jnhb1(ra1,ra2)*exp(jnhb2(ra1,ra2) *(qc(1)-jnhb3(ra1, &
-                    & ra2))**2d0)
+                dut(1)=jnhb2(ra1,ra2)*(qc(1)-jnhb3(ra1,ra2))*2e0_wp* jnhb1(ra1,ra2)*exp(jnhb2(ra1,ra2) *(qc(1)- &
+                    & jnhb3(ra1,ra2))**2e0_wp)
                 ! STRETCH 2 (NC)
-                dut(2) = jnc2(ra1,ra2)*(qc(2)-jnc3(ra1,ra2))*2d0* jnc1(ra1,ra2)*exp(jnc2(ra1,ra2) *(qc(2)-jnc3(ra1, &
-                    & ra2))** 2d0)
+                dut(2) = jnc2(ra1,ra2)*(qc(2)-jnc3(ra1,ra2))*2e0_wp* jnc1(ra1,ra2)*exp(jnc2(ra1,ra2) *(qc(2)-jnc3(ra1, &
+                    & ra2))** 2e0_wp)
                 ! BENDS
                 ! BEND 1 (CNHA)
-                dut(6)=jcnha2(ra1,ra2)*(cqb(1)-jcnha3(ra1,ra2))*2d0* jcnha1(ra1,ra2)*exp(jcnha2(ra1,ra2) *(cqb(1)- &
-                    & jcnha3(ra1,ra2))**2d0) *(-sqb(1))
+                dut(6)=jcnha2(ra1,ra2)*(cqb(1)-jcnha3(ra1,ra2))*2e0_wp* jcnha1(ra1,ra2)*exp(jcnha2(ra1,ra2) *(cqb(1)- &
+                    & jcnha3(ra1,ra2))**2e0_wp) *(-sqb(1))
                 ! BEND 2 (CNHB)
-                dut(7)=jcnhb2(ra1,ra2)*(cqb(2)-jcnhb3(ra1,ra2))*2d0 *jcnhb1(ra1,ra2)*exp(jcnhb2(ra1,ra2) *(cqb(2)- &
-                    & jcnhb3(ra1,ra2))**2d0) *(-sqb(2))
+                dut(7)=jcnhb2(ra1,ra2)*(cqb(2)-jcnhb3(ra1,ra2))*2e0_wp *jcnhb1(ra1,ra2)*exp(jcnhb2(ra1,ra2) *(cqb(2)- &
+                    & jcnhb3(ra1,ra2))**2e0_wp) *(-sqb(2))
             endif
         endif
     end subroutine solver
@@ -793,50 +806,51 @@ module chempotpy_ch3nh2_aprp_pes
     !> @brief Evaluate getV0 for the CH3NH2_APRP potential.
     subroutine getv0( ii, nrap, ntap, v0 )
         ! subrountine gives constants in tertiary eqns
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: ii
-        integer          :: nrap, ntap
-        double precision :: v0(nrap,ntap)
-        v0 = 0d0
+        integer  :: ii
+        integer  :: nrap, ntap
+        real(wp) :: v0(nrap,ntap)
+        v0 = 0e0_wp
         if( ii .eq. 1 )then
-            v0(1,1) = -0.2734d0
-            v0(1,2) = -0.0359d0
-            v0(1,3) = -0.2495d0
-            v0(2,1) = -0.2243d0
-            v0(2,2) = -0.0108d0
-            v0(2,3) = -0.3548d0
-            v0(3,1) = -0.1393d0
-            v0(3,2) = -0.1971d0
-            v0(3,3) = -0.4208d0
-            v0(4,1) = -0.5648d0
-            v0(4,2) = -0.5648d0
-            v0(4,3) = -0.5648d0
+            v0(1,1) = -0.2734e0_wp
+            v0(1,2) = -0.0359e0_wp
+            v0(1,3) = -0.2495e0_wp
+            v0(2,1) = -0.2243e0_wp
+            v0(2,2) = -0.0108e0_wp
+            v0(2,3) = -0.3548e0_wp
+            v0(3,1) = -0.1393e0_wp
+            v0(3,2) = -0.1971e0_wp
+            v0(3,3) = -0.4208e0_wp
+            v0(4,1) = -0.5648e0_wp
+            v0(4,2) = -0.5648e0_wp
+            v0(4,3) = -0.5648e0_wp
         elseif( ii .eq. 2 )then
-            v0(1,1) = -0.1853d0
-            v0(1,2) = -0.1269d0
-            v0(1,3) = -0.3474d0
-            v0(2,1) = -0.1265d0
-            v0(2,2) = -0.1550d0
-            v0(2,3) = -0.2869d0
-            v0(3,1) = -0.1910d0
-            v0(3,2) = -0.0865d0
-            v0(3,3) = -0.0470d0
-            v0(4,1) = -0.0481d0
-            v0(4,2) = -0.0481d0
-            v0(4,3) = -0.0481d0
+            v0(1,1) = -0.1853e0_wp
+            v0(1,2) = -0.1269e0_wp
+            v0(1,3) = -0.3474e0_wp
+            v0(2,1) = -0.1265e0_wp
+            v0(2,2) = -0.1550e0_wp
+            v0(2,3) = -0.2869e0_wp
+            v0(3,1) = -0.1910e0_wp
+            v0(3,2) = -0.0865e0_wp
+            v0(3,3) = -0.0470e0_wp
+            v0(4,1) = -0.0481e0_wp
+            v0(4,2) = -0.0481e0_wp
+            v0(4,3) = -0.0481e0_wp
         elseif( ii .eq. 3 )then
-            v0(1,1) = -0.4000d0
-            v0(1,2) = -0.2125d0
-            v0(1,3) = -0.0093d0
-            v0(2,1) = -0.1812d0
-            v0(2,2) = -0.0606d0
-            v0(2,3) = -0.0090d0
-            v0(3,1) = -5.0661d0
-            v0(3,2) = -3.5468d0
-            v0(3,3) = -0.0369d0
-            v0(4,1) = -0.0000d0
-            v0(4,2) = -0.0000d0
-            v0(4,3) = -0.0000d0
+            v0(1,1) = -0.4000e0_wp
+            v0(1,2) = -0.2125e0_wp
+            v0(1,3) = -0.0093e0_wp
+            v0(2,1) = -0.1812e0_wp
+            v0(2,2) = -0.0606e0_wp
+            v0(2,3) = -0.0090e0_wp
+            v0(3,1) = -5.0661e0_wp
+            v0(3,2) = -3.5468e0_wp
+            v0(3,3) = -0.0369e0_wp
+            v0(4,1) = -0.0000e0_wp
+            v0(4,2) = -0.0000e0_wp
+            v0(4,3) = -0.0000e0_wp
         endif
     end subroutine getv0
 
@@ -857,722 +871,723 @@ module chempotpy_ch3nh2_aprp_pes
             & gnc1, gnc2, gnc3, &
             & ft1, fa1 )
         ! subroutine gives parameters for the tertiary contribution
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: ii
-        integer          :: nrap, i, j, ntap
-        double precision :: knhb1(nrap,ntap), knhb2(nrap,ntap)
-        double precision :: knc1(nrap,ntap), knc2(nrap,ntap)
-        double precision :: kch1(nrap,ntap), kch2(nrap,ntap)
-        double precision :: kch3(nrap,ntap)
-        double precision :: kcnha1(nrap,ntap), kcnha2(nrap,ntap)
-        double precision :: kcnhb1(nrap,ntap), kcnhb2(nrap,ntap)
-        double precision :: knch1(nrap,ntap), knch2(nrap,ntap)
-        double precision :: jnhb1(nrap,ntap), jnhb2(nrap,ntap)
-        double precision :: jnhb3(nrap,ntap)
-        double precision :: jnc1(nrap,ntap), jnc2(nrap,ntap)
-        double precision :: jnc3(nrap,ntap)
-        double precision :: jcnha1(nrap,ntap), jcnha2(nrap,ntap)
-        double precision :: jcnha3(nrap,ntap)
-        double precision :: jcnhb1(nrap,ntap), jcnhb2(nrap,ntap)
-        double precision :: jcnhb3(nrap,ntap)
-        double precision :: gnhb1(nrap,ntap), gnhb2(nrap,ntap)
-        double precision :: gnhb3(nrap,ntap)
-        double precision :: gnc1(nrap,ntap), gnc2(nrap,ntap)
-        double precision :: gnc3(nrap,ntap)
-        double precision :: ft1(nrap,ntap), fa1(nrap,ntap)
-        knhb1  = 0d0
-        knhb2  = 0d0
-        knc1   = 0d0
-        knc2   = 0d0
-        kch1   = 0d0
-        kch2   = 0d0
-        kch3   = 0d0
-        kcnha1 = 0d0
-        kcnha2 = 0d0
-        kcnhb1 = 0d0
-        kcnhb2 = 0d0
-        knch1  = 0d0
-        knch2  = 0d0
-        jnhb1  = 0d0
-        jnhb2  = 0d0
-        jnhb3  = 0d0
-        jnc1   = 0d0
-        jnc2   = 0d0
-        jnc3   = 0d0
-        jcnha1 = 0d0
-        jcnha2 = 0d0
-        jcnha3 = 0d0
-        jcnhb1 = 0d0
-        jcnhb2 = 0d0
-        jcnhb3 = 0d0
+        integer  :: ii
+        integer  :: nrap, i, j, ntap
+        real(wp) :: knhb1(nrap,ntap), knhb2(nrap,ntap)
+        real(wp) :: knc1(nrap,ntap), knc2(nrap,ntap)
+        real(wp) :: kch1(nrap,ntap), kch2(nrap,ntap)
+        real(wp) :: kch3(nrap,ntap)
+        real(wp) :: kcnha1(nrap,ntap), kcnha2(nrap,ntap)
+        real(wp) :: kcnhb1(nrap,ntap), kcnhb2(nrap,ntap)
+        real(wp) :: knch1(nrap,ntap), knch2(nrap,ntap)
+        real(wp) :: jnhb1(nrap,ntap), jnhb2(nrap,ntap)
+        real(wp) :: jnhb3(nrap,ntap)
+        real(wp) :: jnc1(nrap,ntap), jnc2(nrap,ntap)
+        real(wp) :: jnc3(nrap,ntap)
+        real(wp) :: jcnha1(nrap,ntap), jcnha2(nrap,ntap)
+        real(wp) :: jcnha3(nrap,ntap)
+        real(wp) :: jcnhb1(nrap,ntap), jcnhb2(nrap,ntap)
+        real(wp) :: jcnhb3(nrap,ntap)
+        real(wp) :: gnhb1(nrap,ntap), gnhb2(nrap,ntap)
+        real(wp) :: gnhb3(nrap,ntap)
+        real(wp) :: gnc1(nrap,ntap), gnc2(nrap,ntap)
+        real(wp) :: gnc3(nrap,ntap)
+        real(wp) :: ft1(nrap,ntap), fa1(nrap,ntap)
+        knhb1  = 0e0_wp
+        knhb2  = 0e0_wp
+        knc1   = 0e0_wp
+        knc2   = 0e0_wp
+        kch1   = 0e0_wp
+        kch2   = 0e0_wp
+        kch3   = 0e0_wp
+        kcnha1 = 0e0_wp
+        kcnha2 = 0e0_wp
+        kcnhb1 = 0e0_wp
+        kcnhb2 = 0e0_wp
+        knch1  = 0e0_wp
+        knch2  = 0e0_wp
+        jnhb1  = 0e0_wp
+        jnhb2  = 0e0_wp
+        jnhb3  = 0e0_wp
+        jnc1   = 0e0_wp
+        jnc2   = 0e0_wp
+        jnc3   = 0e0_wp
+        jcnha1 = 0e0_wp
+        jcnha2 = 0e0_wp
+        jcnha3 = 0e0_wp
+        jcnhb1 = 0e0_wp
+        jcnhb2 = 0e0_wp
+        jcnhb3 = 0e0_wp
         if( ii .eq. 1 )then
             ! STRETCH 1 (NHB)
-            gnhb1(1,2) = 6.420621d0
-            gnhb1(2,2) = 6.420621d0
-            gnhb1(3,2) = 6.420621d0
-            gnhb1(4,2) = 6.420621d0
-            gnhb1(1,3) = 6.420621d0
-            gnhb1(2,3) = 6.420621d0
-            gnhb1(3,3) = 6.420621d0
+            gnhb1(1,2) = 6.420621e0_wp
+            gnhb1(2,2) = 6.420621e0_wp
+            gnhb1(3,2) = 6.420621e0_wp
+            gnhb1(4,2) = 6.420621e0_wp
+            gnhb1(1,3) = 6.420621e0_wp
+            gnhb1(2,3) = 6.420621e0_wp
+            gnhb1(3,3) = 6.420621e0_wp
             gnhb1(4,3) = gnhb1(4,2)
-            gnhb1(1,1) = 4.3d0
-            gnhb1(2,1) = 4.4d0
-            gnhb1(3,1) = 8d0
+            gnhb1(1,1) = 4.3e0_wp
+            gnhb1(2,1) = 4.4e0_wp
+            gnhb1(3,1) = 8e0_wp
             gnhb1(4,1) = gnhb1(4,2)
-            gnhb2(1,2) = -1.85d0
-            gnhb2(2,2) = -1.85d0
-            gnhb2(3,2) = -1.85d0
-            gnhb2(4,2) = -1.96d0
-            gnhb2(1,3) = -1.85d0
-            gnhb2(2,3) = -1.85d0
-            gnhb2(3,3) = -1.85d0
+            gnhb2(1,2) = -1.85e0_wp
+            gnhb2(2,2) = -1.85e0_wp
+            gnhb2(3,2) = -1.85e0_wp
+            gnhb2(4,2) = -1.96e0_wp
+            gnhb2(1,3) = -1.85e0_wp
+            gnhb2(2,3) = -1.85e0_wp
+            gnhb2(3,3) = -1.85e0_wp
             gnhb2(4,3) = gnhb2(4,2)
-            gnhb2(1,1) = -1.85d0
-            gnhb2(2,1) = -1.85d0
-            gnhb2(3,1) = -2.0d0
+            gnhb2(1,1) = -1.85e0_wp
+            gnhb2(2,1) = -1.85e0_wp
+            gnhb2(3,1) = -2.0e0_wp
             gnhb2(4,1) = gnhb2(4,2)
-            gnhb3(1,2) = 1.01574847d0
-            gnhb3(2,2) = 1.01574847d0
-            gnhb3(3,2) = 1.02d0
-            gnhb3(4,2) = 1.00368d0
-            gnhb3(1,3) = 1.01574847d0
-            gnhb3(2,3) = 1.01574847d0
-            gnhb3(3,3) = 1.02d0
+            gnhb3(1,2) = 1.01574847e0_wp
+            gnhb3(2,2) = 1.01574847e0_wp
+            gnhb3(3,2) = 1.02e0_wp
+            gnhb3(4,2) = 1.00368e0_wp
+            gnhb3(1,3) = 1.01574847e0_wp
+            gnhb3(2,3) = 1.01574847e0_wp
+            gnhb3(3,3) = 1.02e0_wp
             gnhb3(4,3) = gnhb3(4,2)
-            gnhb3(1,1) = 1.08d0
-            gnhb3(2,1) = 1.07d0
-            gnhb3(3,1) = 1.0d0
+            gnhb3(1,1) = 1.08e0_wp
+            gnhb3(2,1) = 1.07e0_wp
+            gnhb3(3,1) = 1.0e0_wp
             gnhb3(4,1) = gnhb3(4,2)
-            knhb1(1,2) = 1.0d0
-            knhb1(2,2) = 1.0d0
-            knhb1(3,2) = 0.5d0
-            knhb1(4,2) = 0.5d0
-            knhb1(1,3) = 6.0d0
-            knhb1(2,3) = 3.0d0
-            knhb1(3,3) = 1.0d0
+            knhb1(1,2) = 1.0e0_wp
+            knhb1(2,2) = 1.0e0_wp
+            knhb1(3,2) = 0.5e0_wp
+            knhb1(4,2) = 0.5e0_wp
+            knhb1(1,3) = 6.0e0_wp
+            knhb1(2,3) = 3.0e0_wp
+            knhb1(3,3) = 1.0e0_wp
             knhb1(4,3) = knhb1(4,2)
-            knhb1(1,1) = 1.0d0
-            knhb1(2,1) = 1.0d0
-            knhb1(3,1) = 0.5d0
+            knhb1(1,1) = 1.0e0_wp
+            knhb1(2,1) = 1.0e0_wp
+            knhb1(3,1) = 0.5e0_wp
             knhb1(4,1) = knhb1(4,2)
-            knhb2(1,2) = 1.01574847d0
-            knhb2(2,2) = 1.01574847d0
-            knhb2(3,2) = 1.02d0
-            knhb2(4,2) = 1.00368d0
-            knhb2(1,3) = 1.01574847d0
-            knhb2(2,3) = 1.01574847d0
-            knhb2(3,3) = 1.02d0
+            knhb2(1,2) = 1.01574847e0_wp
+            knhb2(2,2) = 1.01574847e0_wp
+            knhb2(3,2) = 1.02e0_wp
+            knhb2(4,2) = 1.00368e0_wp
+            knhb2(1,3) = 1.01574847e0_wp
+            knhb2(2,3) = 1.01574847e0_wp
+            knhb2(3,3) = 1.02e0_wp
             knhb2(4,3) = knhb2(4,2)
-            knhb2(1,1) = 1.08d0
-            knhb2(2,1) = 1.07d0
-            knhb2(3,1) = 1.0d0
+            knhb2(1,1) = 1.08e0_wp
+            knhb2(2,1) = 1.07e0_wp
+            knhb2(3,1) = 1.0e0_wp
             knhb2(4,1) = knhb2(4,2)
             ! STRETCH 2 (NC)
-            gnc1(1,2) = 4.584032444d0
-            gnc1(2,2) = 4.543215344d0
-            gnc1(3,2) = 4.0d0
-            gnc1(4,2) = 2.7d0
-            gnc1(1,3) = 4.43273706d0
-            gnc1(2,3) = 4.412600624d0
-            gnc1(3,3) = 3.1d0
+            gnc1(1,2) = 4.584032444e0_wp
+            gnc1(2,2) = 4.543215344e0_wp
+            gnc1(3,2) = 4.0e0_wp
+            gnc1(4,2) = 2.7e0_wp
+            gnc1(1,3) = 4.43273706e0_wp
+            gnc1(2,3) = 4.412600624e0_wp
+            gnc1(3,3) = 3.1e0_wp
             gnc1(4,3) = gnc1(4,2)
-            gnc1(1,1) = 4.90621542d0
-            gnc1(2,1) = 4.870024258d0
-            gnc1(3,1) = 4.0d0
+            gnc1(1,1) = 4.90621542e0_wp
+            gnc1(2,1) = 4.870024258e0_wp
+            gnc1(3,1) = 4.0e0_wp
             gnc1(4,1) = gnc1(4,2)
-            gnc2(1,2) = -2.0d0
-            gnc2(2,2) = -2.0d0
-            gnc2(3,2) = -1.9d0
-            gnc2(4,2) = -2.6d0
-            gnc2(1,3) = -2.0d0
-            gnc2(2,3) = -2.0d0
-            gnc2(3,3) = -2.3d0
+            gnc2(1,2) = -2.0e0_wp
+            gnc2(2,2) = -2.0e0_wp
+            gnc2(3,2) = -1.9e0_wp
+            gnc2(4,2) = -2.6e0_wp
+            gnc2(1,3) = -2.0e0_wp
+            gnc2(2,3) = -2.0e0_wp
+            gnc2(3,3) = -2.3e0_wp
             gnc2(4,3) = gnc2(4,2)
-            gnc2(1,1) = -1.9d0
-            gnc2(2,1) = -1.9d0
-            gnc2(3,1) = -2.3d0
+            gnc2(1,1) = -1.9e0_wp
+            gnc2(2,1) = -1.9e0_wp
+            gnc2(3,1) = -2.3e0_wp
             gnc2(4,1) = gnc2(4,2)
-            gnc3(1,2) = 1.4597436d0
-            gnc3(2,2) = 1.4597436d0
-            gnc3(3,2) = 1.4597436d0
-            gnc3(4,2) = 1.40443d0
-            gnc3(1,3) = 1.4597436d0
-            gnc3(2,3) = 1.4597436d0
-            gnc3(3,3) = 1.44d0
+            gnc3(1,2) = 1.4597436e0_wp
+            gnc3(2,2) = 1.4597436e0_wp
+            gnc3(3,2) = 1.4597436e0_wp
+            gnc3(4,2) = 1.40443e0_wp
+            gnc3(1,3) = 1.4597436e0_wp
+            gnc3(2,3) = 1.4597436e0_wp
+            gnc3(3,3) = 1.44e0_wp
             gnc3(4,3) = gnc3(4,2)
-            gnc3(1,1) = 1.4597436d0
-            gnc3(2,1) = 1.4597436d0
-            gnc3(3,1) = 1.45d0
+            gnc3(1,1) = 1.4597436e0_wp
+            gnc3(2,1) = 1.4597436e0_wp
+            gnc3(3,1) = 1.45e0_wp
             gnc3(4,1) = gnc3(4,2)
-            knc1(1,2) = 3.0d0
-            knc1(2,2) = 5.0d0
-            knc1(3,2) = 8.0d0
-            knc1(4,2) = 1.7d0
-            knc1(1,3) = 2.0d0
-            knc1(2,3) = 3.0d0
-            knc1(3,3) = 4.5d0
+            knc1(1,2) = 3.0e0_wp
+            knc1(2,2) = 5.0e0_wp
+            knc1(3,2) = 8.0e0_wp
+            knc1(4,2) = 1.7e0_wp
+            knc1(1,3) = 2.0e0_wp
+            knc1(2,3) = 3.0e0_wp
+            knc1(3,3) = 4.5e0_wp
             knc1(4,3) = knc1(4,2)
-            knc1(1,1) = 4.0d0
-            knc1(2,1) = 5.0d0
-            knc1(3,1) = 4.0d0
+            knc1(1,1) = 4.0e0_wp
+            knc1(2,1) = 5.0e0_wp
+            knc1(3,1) = 4.0e0_wp
             knc1(4,1) = knc1(4,2)
-            knc2(1,2) = 1.4597436d0
-            knc2(2,2) = 1.4597436d0
-            knc2(3,2) = 1.4597436d0
-            knc2(4,2) = 1.40443d0
-            knc2(1,3) = 1.4597436d0
-            knc2(2,3) = 1.4597436d0
-            knc2(3,3) = 1.44d0
+            knc2(1,2) = 1.4597436e0_wp
+            knc2(2,2) = 1.4597436e0_wp
+            knc2(3,2) = 1.4597436e0_wp
+            knc2(4,2) = 1.40443e0_wp
+            knc2(1,3) = 1.4597436e0_wp
+            knc2(2,3) = 1.4597436e0_wp
+            knc2(3,3) = 1.44e0_wp
             knc2(4,3) = knc2(4,2)
-            knc2(1,1) = 1.4597436d0
-            knc2(2,1) = 1.4597436d0
-            knc2(3,1) = 1.45d0
+            knc2(1,1) = 1.4597436e0_wp
+            knc2(2,1) = 1.4597436e0_wp
+            knc2(3,1) = 1.45e0_wp
             knc2(4,1) = knc2(4,2)
             ! STRETCHES 3-5 (CH)
-            kch1(1,2) = 4.680905028d0
-            kch1(2,2) = 4.660046401d0
-            kch1(3,2) = 3.103188056d0
-            kch1(4,2) = 2.783998334d0
-            kch1(1,3) = 4.778593954d0
-            kch1(2,3) = 4.763899798d0
-            kch1(3,3) = 3.552720384d0
+            kch1(1,2) = 4.680905028e0_wp
+            kch1(2,2) = 4.660046401e0_wp
+            kch1(3,2) = 3.103188056e0_wp
+            kch1(4,2) = 2.783998334e0_wp
+            kch1(1,3) = 4.778593954e0_wp
+            kch1(2,3) = 4.763899798e0_wp
+            kch1(3,3) = 3.552720384e0_wp
             kch1(4,3) = kch1(4,2)
-            kch1(1,1) = 4.655054198d0
-            kch1(2,1) = 4.633285078d0
-            kch1(3,1) = 2.861006596d0
+            kch1(1,1) = 4.655054198e0_wp
+            kch1(2,1) = 4.633285078e0_wp
+            kch1(3,1) = 2.861006596e0_wp
             kch1(4,1) = kch1(4,2)
-            kch2(1,2) = -2.0d0
-            kch2(2,2) = -1.9d0
-            kch2(3,2) = -2.3d0
-            kch2(4,2) = -2.3d0
-            kch2(1,3) = -2.0d0
-            kch2(2,3) = -2.0d0
-            kch2(3,3) = -2.2d0
+            kch2(1,2) = -2.0e0_wp
+            kch2(2,2) = -1.9e0_wp
+            kch2(3,2) = -2.3e0_wp
+            kch2(4,2) = -2.3e0_wp
+            kch2(1,3) = -2.0e0_wp
+            kch2(2,3) = -2.0e0_wp
+            kch2(3,3) = -2.2e0_wp
             kch2(4,3) = kch2(4,2)
-            kch2(1,1) = -2.0d0
-            kch2(2,1) = -2.0d0
-            kch2(3,1) = -2.4d0
+            kch2(1,1) = -2.0e0_wp
+            kch2(2,1) = -2.0e0_wp
+            kch2(3,1) = -2.4e0_wp
             kch2(4,1) = kch2(4,2)
-            kch3(1,2) = 1.0894707d0
-            kch3(2,2) = 1.0894707d0
-            kch3(3,2) = 1.0894707d0
-            kch3(4,2) = 1.094d0
-            kch3(1,3) = 1.0894707d0
-            kch3(2,3) = 1.0894707d0
-            kch3(3,3) = 1.0894707d0
+            kch3(1,2) = 1.0894707e0_wp
+            kch3(2,2) = 1.0894707e0_wp
+            kch3(3,2) = 1.0894707e0_wp
+            kch3(4,2) = 1.094e0_wp
+            kch3(1,3) = 1.0894707e0_wp
+            kch3(2,3) = 1.0894707e0_wp
+            kch3(3,3) = 1.0894707e0_wp
             kch3(4,3) = kch3(4,2)
-            kch3(1,1) = 1.0894707d0
-            kch3(2,1) = 1.0894707d0
-            kch3(3,1) = 1.0894707d0
+            kch3(1,1) = 1.0894707e0_wp
+            kch3(2,1) = 1.0894707e0_wp
+            kch3(3,1) = 1.0894707e0_wp
             kch3(4,1) = kch3(4,2)
             ! BEND 1 (CNHA)
-            kcnha1(1,2) = 3.7d0
-            kcnha1(2,2) = 3.4d0
-            kcnha1(3,2) = 1.0d0
-            kcnha1(4,2) = 0.0d0
-            kcnha1(1,3) = 3.7d0
-            kcnha1(2,3) = 3.8d0
-            kcnha1(3,3) = 1.5d0
+            kcnha1(1,2) = 3.7e0_wp
+            kcnha1(2,2) = 3.4e0_wp
+            kcnha1(3,2) = 1.0e0_wp
+            kcnha1(4,2) = 0.0e0_wp
+            kcnha1(1,3) = 3.7e0_wp
+            kcnha1(2,3) = 3.8e0_wp
+            kcnha1(3,3) = 1.5e0_wp
             kcnha1(4,3) = kcnha1(4,2)
-            kcnha1(1,1) = 3.0d0
-            kcnha1(2,1) = 3.3d0
-            kcnha1(3,1) = 2.0d0
+            kcnha1(1,1) = 3.0e0_wp
+            kcnha1(2,1) = 3.3e0_wp
+            kcnha1(3,1) = 2.0e0_wp
             kcnha1(4,1) = kcnha1(4,2)
-            kcnha2(1,2) = -0.354096319d0
-            kcnha2(2,2) = -0.354096319d0
-            kcnha2(3,2) = -0.354096319d0
-            kcnha2(4,2) = 0.0d0
-            kcnha2(1,3) = -0.544639035d0
-            kcnha2(2,3) = -0.559192903d0
-            kcnha2(3,3) = -0.544639035d0
+            kcnha2(1,2) = -0.354096319e0_wp
+            kcnha2(2,2) = -0.354096319e0_wp
+            kcnha2(3,2) = -0.354096319e0_wp
+            kcnha2(4,2) = 0.0e0_wp
+            kcnha2(1,3) = -0.544639035e0_wp
+            kcnha2(2,3) = -0.559192903e0_wp
+            kcnha2(3,3) = -0.544639035e0_wp
             kcnha2(4,3) = kcnha2(4,2)
-            kcnha2(1,1) = -0.207911691d0
-            kcnha2(2,1) = -0.207911691d0
-            kcnha2(3,1) = -0.258819045d0
+            kcnha2(1,1) = -0.207911691e0_wp
+            kcnha2(2,1) = -0.207911691e0_wp
+            kcnha2(3,1) = -0.258819045e0_wp
             kcnha2(4,1) = kcnha2(4,2)
             ! BEND 2 (CNHB)
-            kcnhb1(1,2) = 3.9d0
-            kcnhb1(2,2) = 3.4d0
-            kcnhb1(3,2) = 3.3d0
-            kcnhb1(4,2) = 2.6d0
-            kcnhb1(1,3) = 3.7d0
-            kcnhb1(2,3) = 3.3d0
-            kcnhb1(3,3) = 4.0d0
+            kcnhb1(1,2) = 3.9e0_wp
+            kcnhb1(2,2) = 3.4e0_wp
+            kcnhb1(3,2) = 3.3e0_wp
+            kcnhb1(4,2) = 2.6e0_wp
+            kcnhb1(1,3) = 3.7e0_wp
+            kcnhb1(2,3) = 3.3e0_wp
+            kcnhb1(3,3) = 4.0e0_wp
             kcnhb1(4,3) = kcnhb1(4,2)
-            kcnhb1(1,1) = 3.4d0
-            kcnhb1(2,1) = 3.5d0
-            kcnhb1(3,1) = 4.0d0
+            kcnhb1(1,1) = 3.4e0_wp
+            kcnhb1(2,1) = 3.5e0_wp
+            kcnhb1(3,1) = 4.0e0_wp
             kcnhb1(4,1) = kcnhb1(4,2)
-            kcnhb2(1,2) = -0.325568154d0
-            kcnhb2(2,2) = -0.355262388d0
-            kcnhb2(3,2) = -0.573576436d0
-            kcnhb2(4,2) = -0.788976538d0
-            kcnhb2(1,3) = -0.5d0
-            kcnhb2(2,3) = -0.573576436d0
-            kcnhb2(3,3) = -0.64278761d0
+            kcnhb2(1,2) = -0.325568154e0_wp
+            kcnhb2(2,2) = -0.355262388e0_wp
+            kcnhb2(3,2) = -0.573576436e0_wp
+            kcnhb2(4,2) = -0.788976538e0_wp
+            kcnhb2(1,3) = -0.5e0_wp
+            kcnhb2(2,3) = -0.573576436e0_wp
+            kcnhb2(3,3) = -0.64278761e0_wp
             kcnhb2(4,3) = kcnhb2(4,2)
-            kcnhb2(1,1) = -0.173648178d0
-            kcnhb2(2,1) = -0.207911691d0
-            kcnhb2(3,1) = -0.5d0
+            kcnhb2(1,1) = -0.173648178e0_wp
+            kcnhb2(2,1) = -0.207911691e0_wp
+            kcnhb2(3,1) = -0.5e0_wp
             kcnhb2(4,1) = kcnhb2(4,2)
             ! BEND 3-5 (NCH)
-            knch1(1,2) = 3.7d0
-            knch1(2,2) = 3.4d0
-            knch1(3,2) = 3.7d0
-            knch1(4,2) = 3.0d0
-            knch1(1,3) = 3.5d0
-            knch1(2,3) = 3.5d0
-            knch1(3,3) = 3.6d0
+            knch1(1,2) = 3.7e0_wp
+            knch1(2,2) = 3.4e0_wp
+            knch1(3,2) = 3.7e0_wp
+            knch1(4,2) = 3.0e0_wp
+            knch1(1,3) = 3.5e0_wp
+            knch1(2,3) = 3.5e0_wp
+            knch1(3,3) = 3.6e0_wp
             knch1(4,3) = knch1(4,2)
-            knch1(1,1) = 3.5d0
-            knch1(2,1) = 3.6d0
-            knch1(3,1) = 3.5d0
+            knch1(1,1) = 3.5e0_wp
+            knch1(2,1) = 3.6e0_wp
+            knch1(3,1) = 3.5e0_wp
             knch1(4,1) = knch1(4,2)
-            knch2(1,2) = 1.92d0
-            knch2(2,2) = 1.92d0
-            knch2(3,2) = 1.97d0
-            knch2(4,2) = 1.93d0
-            knch2(1,3) = 1.97d0
-            knch2(2,3) = 1.97d0
-            knch2(3,3) = 1.95d0
+            knch2(1,2) = 1.92e0_wp
+            knch2(2,2) = 1.92e0_wp
+            knch2(3,2) = 1.97e0_wp
+            knch2(4,2) = 1.93e0_wp
+            knch2(1,3) = 1.97e0_wp
+            knch2(2,3) = 1.97e0_wp
+            knch2(3,3) = 1.95e0_wp
             knch2(4,3) = knch2(4,2)
-            knch2(1,1) = 1.95d0
-            knch2(2,1) = 1.93d0
-            knch2(3,1) = 1.93d0
+            knch2(1,1) = 1.95e0_wp
+            knch2(2,1) = 1.93e0_wp
+            knch2(3,1) = 1.93e0_wp
             knch2(4,1) = knch2(4,2)
             ! Methylrot and Methylang
-            ft1(1,2) = 0.0305d0
-            ft1(2,2) = 0.0305d0
-            ft1(3,2) = 0.0035d0
-            ft1(4,2) = 0.0035d0
-            ft1(1,3) = 0.0305d0
-            ft1(2,3) = 0.0305d0
+            ft1(1,2) = 0.0305e0_wp
+            ft1(2,2) = 0.0305e0_wp
+            ft1(3,2) = 0.0035e0_wp
+            ft1(4,2) = 0.0035e0_wp
+            ft1(1,3) = 0.0305e0_wp
+            ft1(2,3) = 0.0305e0_wp
             ft1(3,3) = ft1(3,2)
             ft1(4,3) = ft1(4,2)
-            ft1(1,1) = 0.0305d0
-            ft1(2,1) = 0.0305d0
+            ft1(1,1) = 0.0305e0_wp
+            ft1(2,1) = 0.0305e0_wp
             ft1(3,1) = ft1(3,2)
             ft1(4,1) = ft1(4,2)
-            fa1(1,2) = 0.5d0
-            fa1(2,2) = 0.5d0
-            fa1(3,2) = 1.5d0
-            fa1(4,2) = 1.5d0
-            fa1(1,3) = 0.5d0
-            fa1(2,3) = 0.5d0
+            fa1(1,2) = 0.5e0_wp
+            fa1(2,2) = 0.5e0_wp
+            fa1(3,2) = 1.5e0_wp
+            fa1(4,2) = 1.5e0_wp
+            fa1(1,3) = 0.5e0_wp
+            fa1(2,3) = 0.5e0_wp
             fa1(3,3) = fa1(3,2)
             fa1(4,3) = fa1(4,2)
-            fa1(1,1) = 0.5d0
-            fa1(2,1) = 0.5d0
+            fa1(1,1) = 0.5e0_wp
+            fa1(2,1) = 0.5e0_wp
             fa1(3,1) = fa1(3,2)
             fa1(4,1) = fa1(4,2)
         elseif( ii .eq. 2 )then
             ! STRETCH 1 (NHB)
-            gnhb1(1,2) = 1.0d0
-            gnhb1(2,2) = 1.0d0
-            gnhb1(3,2) = 1.5d0
-            gnhb1(4,2) = 3.2d0
-            gnhb1(1,3) = 1.0d0
-            gnhb1(2,3) = 1.0d0
-            gnhb1(3,3) = 1.8d0
+            gnhb1(1,2) = 1.0e0_wp
+            gnhb1(2,2) = 1.0e0_wp
+            gnhb1(3,2) = 1.5e0_wp
+            gnhb1(4,2) = 3.2e0_wp
+            gnhb1(1,3) = 1.0e0_wp
+            gnhb1(2,3) = 1.0e0_wp
+            gnhb1(3,3) = 1.8e0_wp
             gnhb1(4,3) = gnhb1(4,2)
-            gnhb1(1,1) = 1.0d0
-            gnhb1(2,1) = 1.0d0
-            gnhb1(3,1) = 0.8d0
+            gnhb1(1,1) = 1.0e0_wp
+            gnhb1(2,1) = 1.0e0_wp
+            gnhb1(3,1) = 0.8e0_wp
             gnhb1(4,1) = gnhb1(4,2)
-            gnhb2(1,2) = -3.8d0
-            gnhb2(2,2) = -3.8d0
-            gnhb2(3,2) = -3.8d0
-            gnhb2(4,2) = -2.5d0
-            gnhb2(1,3) = -3.5d0
-            gnhb2(2,3) = -4.2d0
-            gnhb2(3,3) = -3.6d0
+            gnhb2(1,2) = -3.8e0_wp
+            gnhb2(2,2) = -3.8e0_wp
+            gnhb2(3,2) = -3.8e0_wp
+            gnhb2(4,2) = -2.5e0_wp
+            gnhb2(1,3) = -3.5e0_wp
+            gnhb2(2,3) = -4.2e0_wp
+            gnhb2(3,3) = -3.6e0_wp
             gnhb2(4,3) = gnhb2(4,2)
-            gnhb2(1,1) = -3.1d0
-            gnhb2(2,1) = -3.3d0
-            gnhb2(3,1) = -3.3d0
+            gnhb2(1,1) = -3.1e0_wp
+            gnhb2(2,1) = -3.3e0_wp
+            gnhb2(3,1) = -3.3e0_wp
             gnhb2(4,1) = gnhb2(4,2)
-            gnhb3(1,2) = 1.040695848d0
-            gnhb3(2,2) = 1.040695848d0
-            gnhb3(3,2) = 1.0d0
-            gnhb3(4,2) = 1.030034236d0
-            gnhb3(1,3) = 1.040695848d0
-            gnhb3(2,3) = 1.055d0
-            gnhb3(3,3) = 1.01d0
+            gnhb3(1,2) = 1.040695848e0_wp
+            gnhb3(2,2) = 1.040695848e0_wp
+            gnhb3(3,2) = 1.0e0_wp
+            gnhb3(4,2) = 1.030034236e0_wp
+            gnhb3(1,3) = 1.040695848e0_wp
+            gnhb3(2,3) = 1.055e0_wp
+            gnhb3(3,3) = 1.01e0_wp
             gnhb3(4,3) = gnhb3(4,2)
-            gnhb3(1,1) = 1.11d0
-            gnhb3(2,1) = 1.08d0
-            gnhb3(3,1) = 1.08d0
+            gnhb3(1,1) = 1.11e0_wp
+            gnhb3(2,1) = 1.08e0_wp
+            gnhb3(3,1) = 1.08e0_wp
             gnhb3(4,1) = gnhb3(4,2)
-            knhb1(1,2) = 2.0d0
-            knhb1(2,2) = 2.0d0
-            knhb1(3,2) = 3.0d0
-            knhb1(4,2) = 11.0d0
-            knhb1(1,3) = 2.0d0
-            knhb1(2,3) = 2.0d0
-            knhb1(3,3) = 6.0d0
+            knhb1(1,2) = 2.0e0_wp
+            knhb1(2,2) = 2.0e0_wp
+            knhb1(3,2) = 3.0e0_wp
+            knhb1(4,2) = 11.0e0_wp
+            knhb1(1,3) = 2.0e0_wp
+            knhb1(2,3) = 2.0e0_wp
+            knhb1(3,3) = 6.0e0_wp
             knhb1(4,3) = knhb1(4,2)
-            knhb1(1,1) = 2.0d0
-            knhb1(2,1) = 2.0d0
-            knhb1(3,1) = 3.0d0
+            knhb1(1,1) = 2.0e0_wp
+            knhb1(2,1) = 2.0e0_wp
+            knhb1(3,1) = 3.0e0_wp
             knhb1(4,1) = knhb1(4,2)
-            knhb2(1,2) = 1.040695848d0
-            knhb2(2,2) = 1.040695848d0
-            knhb2(3,2) = 1.0d0
-            knhb2(4,2) = 1.030034236d0
-            knhb2(1,3) = 1.040695848d0
-            knhb2(2,3) = 1.055d0
-            knhb2(3,3) = 1.01d0
+            knhb2(1,2) = 1.040695848e0_wp
+            knhb2(2,2) = 1.040695848e0_wp
+            knhb2(3,2) = 1.0e0_wp
+            knhb2(4,2) = 1.030034236e0_wp
+            knhb2(1,3) = 1.040695848e0_wp
+            knhb2(2,3) = 1.055e0_wp
+            knhb2(3,3) = 1.01e0_wp
             knhb2(4,3) = knhb2(4,2)
-            knhb2(1,1) = 1.11d0
-            knhb2(2,1) = 1.08d0
-            knhb2(3,1) = 1.08d0
+            knhb2(1,1) = 1.11e0_wp
+            knhb2(2,1) = 1.08e0_wp
+            knhb2(3,1) = 1.08e0_wp
             knhb2(4,1) = knhb2(4,2)
             ! STRETCH 2 (NC)
-            gnc1(1,2) = 3.0d0
-            gnc1(2,2) = 3.0d0
-            gnc1(3,2) = 3.0d0
-            gnc1(4,2) = 3.34292049d0
-            gnc1(1,3) = 3.0d0
-            gnc1(2,3) = 3.0d0
-            gnc1(3,3) = 3.8d0
+            gnc1(1,2) = 3.0e0_wp
+            gnc1(2,2) = 3.0e0_wp
+            gnc1(3,2) = 3.0e0_wp
+            gnc1(4,2) = 3.34292049e0_wp
+            gnc1(1,3) = 3.0e0_wp
+            gnc1(2,3) = 3.0e0_wp
+            gnc1(3,3) = 3.8e0_wp
             gnc1(4,3) = gnc1(4,2)
-            gnc1(1,1) = 3.0d0
-            gnc1(2,1) = 3.0d0
-            gnc1(3,1) = 4.0d0
+            gnc1(1,1) = 3.0e0_wp
+            gnc1(2,1) = 3.0e0_wp
+            gnc1(3,1) = 4.0e0_wp
             gnc1(4,1) = gnc1(4,2)
-            gnc2(1,2) = -2.3d0
-            gnc2(2,2) = -2.3d0
-            gnc2(3,2) = -2.3d0
-            gnc2(4,2) = -2.1d0
-            gnc2(1,3) = -2.3d0
-            gnc2(2,3) = -2.4d0
-            gnc2(3,3) = -2.0d0
+            gnc2(1,2) = -2.3e0_wp
+            gnc2(2,2) = -2.3e0_wp
+            gnc2(3,2) = -2.3e0_wp
+            gnc2(4,2) = -2.1e0_wp
+            gnc2(1,3) = -2.3e0_wp
+            gnc2(2,3) = -2.4e0_wp
+            gnc2(3,3) = -2.0e0_wp
             gnc2(4,3) = gnc2(4,2)
-            gnc2(1,1) = -2.3d0
-            gnc2(2,1) = -2.3d0
-            gnc2(3,1) = -1.9d0
+            gnc2(1,1) = -2.3e0_wp
+            gnc2(2,1) = -2.3e0_wp
+            gnc2(3,1) = -1.9e0_wp
             gnc2(4,1) = gnc2(4,2)
-            gnc3(1,2) = 1.43081d0
-            gnc3(2,2) = 1.43081d0
-            gnc3(3,2) = 1.43081d0
-            gnc3(4,2) = 1.44623d0
-            gnc3(1,3) = 1.43081d0
-            gnc3(2,3) = 1.43081d0
-            gnc3(3,3) = 1.445d0
+            gnc3(1,2) = 1.43081e0_wp
+            gnc3(2,2) = 1.43081e0_wp
+            gnc3(3,2) = 1.43081e0_wp
+            gnc3(4,2) = 1.44623e0_wp
+            gnc3(1,3) = 1.43081e0_wp
+            gnc3(2,3) = 1.43081e0_wp
+            gnc3(3,3) = 1.445e0_wp
             gnc3(4,3) = gnc3(4,2)
-            gnc3(1,1) = 1.43081d0
-            gnc3(2,1) = 1.43081d0
-            gnc3(3,1) = 1.43081d0
+            gnc3(1,1) = 1.43081e0_wp
+            gnc3(2,1) = 1.43081e0_wp
+            gnc3(3,1) = 1.43081e0_wp
             gnc3(4,1) = gnc3(4,2)
-            knc1(1,2) = 2.0d0
-            knc1(2,2) = 2.0d0
-            knc1(3,2) = 2.0d0
-            knc1(4,2) = 2.0d0
-            knc1(1,3) = 2.0d0
-            knc1(2,3) = 2.0d0
-            knc1(3,3) = 2.5d0
+            knc1(1,2) = 2.0e0_wp
+            knc1(2,2) = 2.0e0_wp
+            knc1(3,2) = 2.0e0_wp
+            knc1(4,2) = 2.0e0_wp
+            knc1(1,3) = 2.0e0_wp
+            knc1(2,3) = 2.0e0_wp
+            knc1(3,3) = 2.5e0_wp
             knc1(4,3) = knc1(4,2)
-            knc1(1,1) = 2.0d0
-            knc1(2,1) = 2.0d0
-            knc1(3,1) = 1.0d0
+            knc1(1,1) = 2.0e0_wp
+            knc1(2,1) = 2.0e0_wp
+            knc1(3,1) = 1.0e0_wp
             knc1(4,1) = knc1(4,2)
-            knc2(1,2) = 1.43081d0
-            knc2(2,2) = 1.43081d0
-            knc2(3,2) = 1.43081d0
-            knc2(4,2) = 1.44623d0
-            knc2(1,3) = 1.43081d0
-            knc2(2,3) = 1.43081d0
-            knc2(3,3) = 1.445d0
+            knc2(1,2) = 1.43081e0_wp
+            knc2(2,2) = 1.43081e0_wp
+            knc2(3,2) = 1.43081e0_wp
+            knc2(4,2) = 1.44623e0_wp
+            knc2(1,3) = 1.43081e0_wp
+            knc2(2,3) = 1.43081e0_wp
+            knc2(3,3) = 1.445e0_wp
             knc2(4,3) = knc2(4,2)
-            knc2(1,1) = 1.43081d0
-            knc2(2,1) = 1.43081d0
-            knc2(3,1) = 1.43081d0
+            knc2(1,1) = 1.43081e0_wp
+            knc2(2,1) = 1.43081e0_wp
+            knc2(3,1) = 1.43081e0_wp
             knc2(4,1) = knc2(4,2)
             ! STRETCHES 3-5 (CH)
-            kch1(1,2) = 2.811209734d0
-            kch1(2,2) = 3.037064354d0
-            kch1(3,2) = 4.641992726d0
-            kch1(4,2) = 4.605257336d0
-            kch1(1,3) = 2.164122642d0
-            kch1(2,3) = 2.476781628d0
-            kch1(3,3) = 4.53750095d0
+            kch1(1,2) = 2.811209734e0_wp
+            kch1(2,2) = 3.037064354e0_wp
+            kch1(3,2) = 4.641992726e0_wp
+            kch1(4,2) = 4.605257336e0_wp
+            kch1(1,3) = 2.164122642e0_wp
+            kch1(2,3) = 2.476781628e0_wp
+            kch1(3,3) = 4.53750095e0_wp
             kch1(4,3) = kch1(4,2)
-            kch1(1,1) = 3.084140076d0
-            kch1(2,1) = 3.237068144d0
-            kch1(3,1) = 4.646074436d0
+            kch1(1,1) = 3.084140076e0_wp
+            kch1(2,1) = 3.237068144e0_wp
+            kch1(3,1) = 4.646074436e0_wp
             kch1(4,1) = kch1(4,2)
-            kch2(1,2) = -2.4d0
-            kch2(2,2) = -2.4d0
-            kch2(3,2) = -2.0d0
-            kch2(4,2) = -1.9d0
-            kch2(1,3) = -2.6d0
-            kch2(2,3) = -2.5d0
-            kch2(3,3) = -2.0d0
+            kch2(1,2) = -2.4e0_wp
+            kch2(2,2) = -2.4e0_wp
+            kch2(3,2) = -2.0e0_wp
+            kch2(4,2) = -1.9e0_wp
+            kch2(1,3) = -2.6e0_wp
+            kch2(2,3) = -2.5e0_wp
+            kch2(3,3) = -2.0e0_wp
             kch2(4,3) = kch2(4,2)
-            kch2(1,1) = -2.3d0
-            kch2(2,1) = -2.3d0
-            kch2(3,1) = -2.0d0
+            kch2(1,1) = -2.3e0_wp
+            kch2(2,1) = -2.3e0_wp
+            kch2(3,1) = -2.0e0_wp
             kch2(4,1) = kch2(4,2)
-            kch3(1,2) = 1.0894707d0
-            kch3(2,2) = 1.0894707d0
-            kch3(3,2) = 1.0894707d0
-            kch3(4,2) = 1.0894707d0
-            kch3(1,3) = 1.0894707d0
-            kch3(2,3) = 1.0894707d0
-            kch3(3,3) = 1.0894707d0
+            kch3(1,2) = 1.0894707e0_wp
+            kch3(2,2) = 1.0894707e0_wp
+            kch3(3,2) = 1.0894707e0_wp
+            kch3(4,2) = 1.0894707e0_wp
+            kch3(1,3) = 1.0894707e0_wp
+            kch3(2,3) = 1.0894707e0_wp
+            kch3(3,3) = 1.0894707e0_wp
             kch3(4,3) = kch3(4,2)
-            kch3(1,1) = 1.0894707d0
-            kch3(2,1) = 1.0894707d0
-            kch3(3,1) = 1.0894707d0
+            kch3(1,1) = 1.0894707e0_wp
+            kch3(2,1) = 1.0894707e0_wp
+            kch3(3,1) = 1.0894707e0_wp
             kch3(4,1) = kch3(4,2)
             ! BEND 1 (CNHA)
-            kcnha1(1,2) = 3.2d0
-            kcnha1(2,2) = 3.0d0
-            kcnha1(3,2) = 1.0d0
-            kcnha1(4,2) = 0.0d0
-            kcnha1(1,3) = 3.6d0
-            kcnha1(2,3) = 4.0d0
-            kcnha1(3,3) = 0.5d0
+            kcnha1(1,2) = 3.2e0_wp
+            kcnha1(2,2) = 3.0e0_wp
+            kcnha1(3,2) = 1.0e0_wp
+            kcnha1(4,2) = 0.0e0_wp
+            kcnha1(1,3) = 3.6e0_wp
+            kcnha1(2,3) = 4.0e0_wp
+            kcnha1(3,3) = 0.5e0_wp
             kcnha1(4,3) = kcnha1(4,2)
-            kcnha1(1,1) = 1.9d0
-            kcnha1(2,1) = 2.1d0
-            kcnha1(3,1) = 1.0d0
+            kcnha1(1,1) = 1.9e0_wp
+            kcnha1(2,1) = 2.1e0_wp
+            kcnha1(3,1) = 1.0e0_wp
             kcnha1(4,1) = kcnha1(4,2)
-            kcnha2(1,2) = -0.4539905d0
-            kcnha2(2,2) = -0.48480962d0
-            kcnha2(3,2) = -0.48480962d0
-            kcnha2(4,2) = 0d0
-            kcnha2(1,3) = -0.559192903d0
-            kcnha2(2,3) = -0.505340076d0
-            kcnha2(3,3) = -0.5d0
+            kcnha2(1,2) = -0.4539905e0_wp
+            kcnha2(2,2) = -0.48480962e0_wp
+            kcnha2(3,2) = -0.48480962e0_wp
+            kcnha2(4,2) = 0e0_wp
+            kcnha2(1,3) = -0.559192903e0_wp
+            kcnha2(2,3) = -0.505340076e0_wp
+            kcnha2(3,3) = -0.5e0_wp
             kcnha2(4,3) = kcnha2(4,2)
-            kcnha2(1,1) = -0.438371147d0
-            kcnha2(2,1) = -0.4539905d0
-            kcnha2(3,1) = -0.64278761d0
+            kcnha2(1,1) = -0.438371147e0_wp
+            kcnha2(2,1) = -0.4539905e0_wp
+            kcnha2(3,1) = -0.64278761e0_wp
             kcnha2(4,1) = kcnha2(4,2)
             ! BEND 2 (CNHB)
-            kcnhb1(1,2) = 3.7d0
-            kcnhb1(2,2) = 3.3d0
-            kcnhb1(3,2) = 2.8d0
-            kcnhb1(4,2) = 3.3d0
-            kcnhb1(1,3) = 3.6d0
-            kcnhb1(2,3) = 3.3d0
-            kcnhb1(3,3) = 2.5d0
+            kcnhb1(1,2) = 3.7e0_wp
+            kcnhb1(2,2) = 3.3e0_wp
+            kcnhb1(3,2) = 2.8e0_wp
+            kcnhb1(4,2) = 3.3e0_wp
+            kcnhb1(1,3) = 3.6e0_wp
+            kcnhb1(2,3) = 3.3e0_wp
+            kcnhb1(3,3) = 2.5e0_wp
             kcnhb1(4,3) = kcnhb1(4,2)
-            kcnhb1(1,1) = 2.3d0
-            kcnhb1(2,1) = 2.1d0
-            kcnhb1(3,1) = 3.0d0
+            kcnhb1(1,1) = 2.3e0_wp
+            kcnhb1(2,1) = 2.1e0_wp
+            kcnhb1(3,1) = 3.0e0_wp
             kcnhb1(4,1) = kcnhb1(4,2)
-            kcnhb2(1,2) = -0.406736643d0
-            kcnhb2(2,2) = -0.422618262d0
-            kcnhb2(3,2) = -0.406736643d0
-            kcnhb2(4,2) = -0.286195791d0
-            kcnhb2(1,3) = -0.529919264d0
-            kcnhb2(2,3) = -0.528778795d0
-            kcnhb2(3,3) = -0.342020143d0
+            kcnhb2(1,2) = -0.406736643e0_wp
+            kcnhb2(2,2) = -0.422618262e0_wp
+            kcnhb2(3,2) = -0.406736643e0_wp
+            kcnhb2(4,2) = -0.286195791e0_wp
+            kcnhb2(1,3) = -0.529919264e0_wp
+            kcnhb2(2,3) = -0.528778795e0_wp
+            kcnhb2(3,3) = -0.342020143e0_wp
             kcnhb2(4,3) = kcnhb2(4,2)
-            kcnhb2(1,1) = -0.342020143d0
-            kcnhb2(2,1) = -0.374606593d0
-            kcnhb2(3,1) = -0.422618262d0
+            kcnhb2(1,1) = -0.342020143e0_wp
+            kcnhb2(2,1) = -0.374606593e0_wp
+            kcnhb2(3,1) = -0.422618262e0_wp
             kcnhb2(4,1) = kcnhb2(4,2)
             ! BEND 3-5 (NCH)
-            knch1(1,2) = 3.5d0
-            knch1(2,2) = 3.7d0
-            knch1(3,2) = 3.0d0
-            knch1(4,2) = 2.9d0
-            knch1(1,3) = 3.0d0
-            knch1(2,3) = 2.8d0
-            knch1(3,3) = 2.6d0
+            knch1(1,2) = 3.5e0_wp
+            knch1(2,2) = 3.7e0_wp
+            knch1(3,2) = 3.0e0_wp
+            knch1(4,2) = 2.9e0_wp
+            knch1(1,3) = 3.0e0_wp
+            knch1(2,3) = 2.8e0_wp
+            knch1(3,3) = 2.6e0_wp
             knch1(4,3) = knch1(4,2)
-            knch1(1,1) = 3.6d0
-            knch1(2,1) = 3.6d0
-            knch1(3,1) = 3.1d0
+            knch1(1,1) = 3.6e0_wp
+            knch1(2,1) = 3.6e0_wp
+            knch1(3,1) = 3.1e0_wp
             knch1(4,1) = knch1(4,2)
-            knch2(1,2) = 1.88d0
-            knch2(2,2) = 1.88d0
-            knch2(3,2) = 1.89d0
-            knch2(4,2) = 1.92d0
-            knch2(1,3) = 1.87d0
-            knch2(2,3) = 1.88d0
-            knch2(3,3) = 1.9d0
+            knch2(1,2) = 1.88e0_wp
+            knch2(2,2) = 1.88e0_wp
+            knch2(3,2) = 1.89e0_wp
+            knch2(4,2) = 1.92e0_wp
+            knch2(1,3) = 1.87e0_wp
+            knch2(2,3) = 1.88e0_wp
+            knch2(3,3) = 1.9e0_wp
             knch2(4,3) = knch2(4,2)
-            knch2(1,1) = 1.90d0
-            knch2(2,1) = 1.91d0
-            knch2(3,1) = 1.9d0
+            knch2(1,1) = 1.90e0_wp
+            knch2(2,1) = 1.91e0_wp
+            knch2(3,1) = 1.9e0_wp
             knch2(4,1) = knch2(4,2)
             ! Methylrot and Methylang
-            ft1(1,2) = 0.012d0
-            ft1(2,2) = 0.012d0
-            ft1(3,2) = 0.012d0
-            ft1(4,2) = 0.012d0
-            ft1(1,3) = 0.012d0
-            ft1(2,3) = 0.012d0
+            ft1(1,2) = 0.012e0_wp
+            ft1(2,2) = 0.012e0_wp
+            ft1(3,2) = 0.012e0_wp
+            ft1(4,2) = 0.012e0_wp
+            ft1(1,3) = 0.012e0_wp
+            ft1(2,3) = 0.012e0_wp
             ft1(3,3) = ft1(3,2)
             ft1(4,3) = ft1(4,2)
-            ft1(1,1) = 0.012d0
-            ft1(2,1) = 0.012d0
+            ft1(1,1) = 0.012e0_wp
+            ft1(2,1) = 0.012e0_wp
             ft1(3,1) = ft1(3,2)
             ft1(4,1) = ft1(4,2)
-            fa1(1,2) = 0.5d0
-            fa1(2,2) = 0.5d0
-            fa1(3,2) = 0.8d0
-            fa1(4,2) = 0.8d0
-            fa1(1,3) = 0.5d0
-            fa1(2,3) = 0.5d0
+            fa1(1,2) = 0.5e0_wp
+            fa1(2,2) = 0.5e0_wp
+            fa1(3,2) = 0.8e0_wp
+            fa1(4,2) = 0.8e0_wp
+            fa1(1,3) = 0.5e0_wp
+            fa1(2,3) = 0.5e0_wp
             fa1(3,3) = fa1(3,2)
             fa1(4,3) = fa1(4,2)
-            fa1(1,1) = 0.5d0
-            fa1(2,1) = 0.5d0
+            fa1(1,1) = 0.5e0_wp
+            fa1(2,1) = 0.5e0_wp
             fa1(3,1) = fa1(3,2)
             fa1(4,1) = fa1(4,2)
         elseif( ii .eq. 3 )then
             ! STRETCH 1 (NHB)
-            jnhb1(1,2) = 1.4d0
-            jnhb1(2,2) = 1.4d0
-            jnhb1(3,2) = 0.9d0
-            jnhb1(4,2) = 0d0
-            jnhb1(1,3) = 0.28d0
-            jnhb1(2,3) = 0.28d0
-            jnhb1(3,3) = 1.15d0
+            jnhb1(1,2) = 1.4e0_wp
+            jnhb1(2,2) = 1.4e0_wp
+            jnhb1(3,2) = 0.9e0_wp
+            jnhb1(4,2) = 0e0_wp
+            jnhb1(1,3) = 0.28e0_wp
+            jnhb1(2,3) = 0.28e0_wp
+            jnhb1(3,3) = 1.15e0_wp
             jnhb1(4,3) = jnhb1(4,2)
-            jnhb1(1,1) = 1.4d0
-            jnhb1(2,1) = 1.44d0
-            jnhb1(3,1) = 1.28d0
+            jnhb1(1,1) = 1.4e0_wp
+            jnhb1(2,1) = 1.44e0_wp
+            jnhb1(3,1) = 1.28e0_wp
             jnhb1(4,1) = jnhb1(4,2)
-            jnhb2(1,2) = -8.5d0
-            jnhb2(2,2) = -10.0d0
-            jnhb2(3,2) = -0.4d0
-            jnhb2(4,2) = -1d0
-            jnhb2(1,3) = -22d0
-            jnhb2(2,3) = -22d0
-            jnhb2(3,3) = -35d0
+            jnhb2(1,2) = -8.5e0_wp
+            jnhb2(2,2) = -10.0e0_wp
+            jnhb2(3,2) = -0.4e0_wp
+            jnhb2(4,2) = -1e0_wp
+            jnhb2(1,3) = -22e0_wp
+            jnhb2(2,3) = -22e0_wp
+            jnhb2(3,3) = -35e0_wp
             jnhb2(4,3) = jnhb2(4,2)
-            jnhb2(1,1) = -6.5d0
-            jnhb2(2,1) = -6.5d0
-            jnhb2(3,1) = -0.5d0
+            jnhb2(1,1) = -6.5e0_wp
+            jnhb2(2,1) = -6.5e0_wp
+            jnhb2(3,1) = -0.5e0_wp
             jnhb2(4,1) = jnhb2(4,2)
-            jnhb3(1,2) = 1.8145815d0
-            jnhb3(2,2) = 1.8145815d0
-            jnhb3(3,2) = 1.2d0
-            jnhb3(4,2) = 1d0
-            jnhb3(1,3) = 1.7145815d0
-            jnhb3(2,3) = 1.7145815d0
-            jnhb3(3,3) = 2d0
+            jnhb3(1,2) = 1.8145815e0_wp
+            jnhb3(2,2) = 1.8145815e0_wp
+            jnhb3(3,2) = 1.2e0_wp
+            jnhb3(4,2) = 1e0_wp
+            jnhb3(1,3) = 1.7145815e0_wp
+            jnhb3(2,3) = 1.7145815e0_wp
+            jnhb3(3,3) = 2e0_wp
             jnhb3(4,3) = jnhb3(4,2)
-            jnhb3(1,1) = 2.0145815d0
-            jnhb3(2,1) = 2.0145815d0
-            jnhb3(3,1) = 1.1d0
+            jnhb3(1,1) = 2.0145815e0_wp
+            jnhb3(2,1) = 2.0145815e0_wp
+            jnhb3(3,1) = 1.1e0_wp
             jnhb3(4,1) = jnhb3(4,2)
             ! STRETCH 2 (NC)
-            jnc1(1,2) = 1.65d0
-            jnc1(2,2) = 1.6d0
+            jnc1(1,2) = 1.65e0_wp
+            jnc1(2,2) = 1.6e0_wp
             jnc1(3,2) = 0.95
-            jnc1(4,2) = 0d0
-            jnc1(1,3) = 0.32d0
-            jnc1(2,3) = 0.4d0
-            jnc1(3,3) = 0.34d0
+            jnc1(4,2) = 0e0_wp
+            jnc1(1,3) = 0.32e0_wp
+            jnc1(2,3) = 0.4e0_wp
+            jnc1(3,3) = 0.34e0_wp
             jnc1(4,3) = jnc1(4,2)
-            jnc1(1,1) = 2.4d0
-            jnc1(2,1) = 2.5d0
-            jnc1(3,1) = 1.3d0
+            jnc1(1,1) = 2.4e0_wp
+            jnc1(2,1) = 2.5e0_wp
+            jnc1(3,1) = 1.3e0_wp
             jnc1(4,1) = jnc1(4,2)
-            jnc2(1,2) = -25.0d0
-            jnc2(2,2) = -25.0d0
-            jnc2(3,2) = -0.7d0
+            jnc2(1,2) = -25.0e0_wp
+            jnc2(2,2) = -25.0e0_wp
+            jnc2(3,2) = -0.7e0_wp
             jnc2(4,2) = -1
-            jnc2(1,3) = -30.0d0
-            jnc2(2,3) = -30.0d0
-            jnc2(3,3) = -30.0d0
+            jnc2(1,3) = -30.0e0_wp
+            jnc2(2,3) = -30.0e0_wp
+            jnc2(3,3) = -30.0e0_wp
             jnc2(4,3) = jnc2(4,2)
-            jnc2(1,1) = -30.0d0
-            jnc2(2,1) = -30.0d0
-            jnc2(3,1) = -1.2d0
+            jnc2(1,1) = -30.0e0_wp
+            jnc2(2,1) = -30.0e0_wp
+            jnc2(3,1) = -1.2e0_wp
             jnc2(4,1) = jnc2(4,2)
-            jnc3(1,2) = 1.9597436d0
-            jnc3(2,2) = 2.0597436d0
-            jnc3(3,2) = 1.7d0
-            jnc3(4,2) = 1d0
-            jnc3(1,3) = 2.3597436d0
-            jnc3(2,3) = 2.3597436d0
-            jnc3(3,3) = 2.6d0
+            jnc3(1,2) = 1.9597436e0_wp
+            jnc3(2,2) = 2.0597436e0_wp
+            jnc3(3,2) = 1.7e0_wp
+            jnc3(4,2) = 1e0_wp
+            jnc3(1,3) = 2.3597436e0_wp
+            jnc3(2,3) = 2.3597436e0_wp
+            jnc3(3,3) = 2.6e0_wp
             jnc3(4,3) = jnc3(4,2)
-            jnc3(1,1) = 1.9597436d0
-            jnc3(2,1) = 1.9597436d0
-            jnc3(3,1) = 1.55d0
+            jnc3(1,1) = 1.9597436e0_wp
+            jnc3(2,1) = 1.9597436e0_wp
+            jnc3(3,1) = 1.55e0_wp
             jnc3(4,1) = jnc3(4,2)
             ! BEND 1 (CNHA)
-            jcnha1(1,2) = 0.1d0
-            jcnha1(2,2) = 0.06d0
-            jcnha1(3,2) = 0.93d0
-            jcnha1(4,2) = 0d0
-            jcnha1(1,3) = 0.007d0
-            jcnha1(2,3) = 0.005d0
-            jcnha1(3,3) = 0.048d0
+            jcnha1(1,2) = 0.1e0_wp
+            jcnha1(2,2) = 0.06e0_wp
+            jcnha1(3,2) = 0.93e0_wp
+            jcnha1(4,2) = 0e0_wp
+            jcnha1(1,3) = 0.007e0_wp
+            jcnha1(2,3) = 0.005e0_wp
+            jcnha1(3,3) = 0.048e0_wp
             jcnha1(4,3) = jcnha1(4,2)
-            jcnha1(1,1) = 0.2d0
-            jcnha1(2,1) = 0.18d0
-            jcnha1(3,1) = 1.3d0
+            jcnha1(1,1) = 0.2e0_wp
+            jcnha1(2,1) = 0.18e0_wp
+            jcnha1(3,1) = 1.3e0_wp
             jcnha1(4,1) = jcnha1(4,2)
-            jcnha2(1,2) = -2.5d0
-            jcnha2(2,2) = -3.0d0
-            jcnha2(3,2) = -1.5d0
-            jcnha2(4,2) = -1d0
-            jcnha2(1,3) = -1.2d0
-            jcnha2(2,3) = -0.5d0
-            jcnha2(3,3) = -3.0d0
+            jcnha2(1,2) = -2.5e0_wp
+            jcnha2(2,2) = -3.0e0_wp
+            jcnha2(3,2) = -1.5e0_wp
+            jcnha2(4,2) = -1e0_wp
+            jcnha2(1,3) = -1.2e0_wp
+            jcnha2(2,3) = -0.5e0_wp
+            jcnha2(3,3) = -3.0e0_wp
             jcnha2(4,3) = jcnha2(4,2)
-            jcnha2(1,1) = -0.7d0
-            jcnha2(2,1) = -2.3d0
-            jcnha2(3,1) = -2.0d0
+            jcnha2(1,1) = -0.7e0_wp
+            jcnha2(2,1) = -2.3e0_wp
+            jcnha2(3,1) = -2.0e0_wp
             jcnha2(4,1) = jcnha2(4,2)
-            jcnha3(1,2) = -0.354096319d0
-            jcnha3(2,2) = 0.160948072d0
+            jcnha3(1,2) = -0.354096319e0_wp
+            jcnha3(2,2) = 0.160948072e0_wp
             jcnha3(3,2) = -0.173648178
             jcnha3(4,2) = 1
-            jcnha3(1,3) = 0.160948072d0
-            jcnha3(2,3) = -0.354096319d0
+            jcnha3(1,3) = 0.160948072e0_wp
+            jcnha3(2,3) = -0.354096319e0_wp
             jcnha3(3,3) = 0.329887214
             jcnha3(4,3) = jcnha3(4,2)
-            jcnha3(1,1) = -0.186319468d0
-            jcnha3(2,1) = 0.160948072d0
+            jcnha3(1,1) = -0.186319468e0_wp
+            jcnha3(2,1) = 0.160948072e0_wp
             jcnha3(3,1) = -0.258819045
             jcnha3(4,1) = jcnha3(4,2)
             ! BEND 2 (CNHB)
-            jcnhb1(1,2) = 0.15d0
-            jcnhb1(2,2) = 0.06d0
-            jcnhb1(3,2) = 1.4d0
+            jcnhb1(1,2) = 0.15e0_wp
+            jcnhb1(2,2) = 0.06e0_wp
+            jcnhb1(3,2) = 1.4e0_wp
             jcnhb1(4,2) = 0
-            jcnhb1(1,3) = 0.006d0
-            jcnhb1(2,3) = 0.005d0
-            jcnhb1(3,3) = 0.04d0
+            jcnhb1(1,3) = 0.006e0_wp
+            jcnhb1(2,3) = 0.005e0_wp
+            jcnhb1(3,3) = 0.04e0_wp
             jcnhb1(4,3) = jcnhb1(4,2)
-            jcnhb1(1,1) = 0.32d0
-            jcnhb1(2,1) = 0.14d0
-            jcnhb1(3,1) = 1.9d0
+            jcnhb1(1,1) = 0.32e0_wp
+            jcnhb1(2,1) = 0.14e0_wp
+            jcnhb1(3,1) = 1.9e0_wp
             jcnhb1(4,1) = jcnhb1(4,2)
-            jcnhb2(1,2) = -0.8d0
-            jcnhb2(2,2) = -2.5d0
-            jcnhb2(3,2) = -1d0
+            jcnhb2(1,2) = -0.8e0_wp
+            jcnhb2(2,2) = -2.5e0_wp
+            jcnhb2(3,2) = -1e0_wp
             jcnhb2(4,2) = -1
-            jcnhb2(1,3) = -3.0d0
-            jcnhb2(2,3) = -0.5d0
-            jcnhb2(3,3) = -1.0d0
+            jcnhb2(1,3) = -3.0e0_wp
+            jcnhb2(2,3) = -0.5e0_wp
+            jcnhb2(3,3) = -1.0e0_wp
             jcnhb2(4,3) = jcnhb2(4,2)
-            jcnhb2(1,1) = -1.0d0
-            jcnhb2(2,1) = -1.2d0
-            jcnhb2(3,1) = -0.9d0
+            jcnhb2(1,1) = -1.0e0_wp
+            jcnhb2(2,1) = -1.2e0_wp
+            jcnhb2(3,1) = -0.9e0_wp
             jcnhb2(4,1) = jcnhb2(4,2)
-            jcnhb3(1,2) = 0.328709624d0
-            jcnhb3(2,2) = 0.159717057d0
-            jcnhb3(3,2) = 0.342020143d0
-            jcnhb3(4,2) = 1d0
-            jcnhb3(1,3) = -0.014128431d0
-            jcnhb3(2,3) = 0.328709624d0
-            jcnhb3(3,3) = 0.328709624d0
+            jcnhb3(1,2) = 0.328709624e0_wp
+            jcnhb3(2,2) = 0.159717057e0_wp
+            jcnhb3(3,2) = 0.342020143e0_wp
+            jcnhb3(4,2) = 1e0_wp
+            jcnhb3(1,3) = -0.014128431e0_wp
+            jcnhb3(2,3) = 0.328709624e0_wp
+            jcnhb3(3,3) = 0.328709624e0_wp
             jcnhb3(4,3) = jcnhb3(4,2)
-            jcnhb3(1,1) = 0.328709624d0
-            jcnhb3(2,1) = 0.328709624d0
-            jcnhb3(3,1) = 0.342020143d0
+            jcnhb3(1,1) = 0.328709624e0_wp
+            jcnhb3(2,1) = 0.328709624e0_wp
+            jcnhb3(3,1) = 0.342020143e0_wp
             jcnhb3(4,1) = jcnhb3(4,2)
         endif
     end subroutine getpara
@@ -1580,43 +1595,44 @@ module chempotpy_ch3nh2_aprp_pes
     !> @brief Evaluate tert for the CH3NH2_APRP potential.
     subroutine tert( igrad, ii, x, y, z, nrap, ntap, en, dx1, dy1, dz1 )
         ! Subroutine to calculate the tertiary contribution
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: tk
-        integer          :: nrap, ntap
-        integer          :: igrad
-        double precision :: r1, t2
-        double precision :: x(7), y(7), z(7)
-        double precision :: xyz(4,3)
-        double precision :: dx(22)
-        double precision :: rap(nrap,3), tap(ntap,3)
-        integer          :: i, ii, j
-        integer          :: fg(2)
-        double precision :: u, v, f(4)
-        double precision :: h(4), en
-        double precision :: dh(4,20), dhe(20)
-        double precision :: df(4,2)
-        double precision :: dtr(2)
-        double precision :: dx1(7), dy1(7), dz1(7)
-        double precision :: beta
-        double precision :: dbeta(12)
+        integer  :: tk
+        integer  :: nrap, ntap
+        integer  :: igrad
+        real(wp) :: r1, t2
+        real(wp) :: x(7), y(7), z(7)
+        real(wp) :: xyz(4,3)
+        real(wp) :: dx(22)
+        real(wp) :: rap(nrap,3), tap(ntap,3)
+        integer  :: i, ii, j
+        integer  :: fg(2)
+        real(wp) :: u, v, f(4)
+        real(wp) :: h(4), en
+        real(wp) :: dh(4,20), dhe(20)
+        real(wp) :: df(4,2)
+        real(wp) :: dtr(2)
+        real(wp) :: dx1(7), dy1(7), dz1(7)
+        real(wp) :: beta
+        real(wp) :: dbeta(12)
         ! The anchor points:
         do i=1, 3
-            rap(1,i) = 0.7157485d0
-            rap(2,i) = 1.0157485d0
-            rap(3,i) = 2.2157485d0
-            rap(4,i) = 3.5157485d0
+            rap(1,i) = 0.7157485e0_wp
+            rap(2,i) = 1.0157485e0_wp
+            rap(3,i) = 2.2157485e0_wp
+            rap(4,i) = 3.5157485e0_wp
         enddo
         do i=1, 3
-            tap(1,i) = -0.193287305d0
-            tap(2,i) = 0.482599384d0
-            tap(3,i) = 1.0d0
+            tap(1,i) = -0.193287305e0_wp
+            tap(2,i) = 0.482599384e0_wp
+            tap(3,i) = 1.0e0_wp
         enddo
         r1 = bndlen(1, 3, x, y, z)
         t2 = dihedr2(1, 3, 4, 2, x, y, z)
         ! calls the 2D tent
         call bigtent(r1, t2, f, rap, nrap, tap, ntap, fg, ii, tk, df)
         ! calcs the contribution at the anchor points
-        h = 0d0
+        h = 0e0_wp
         if( tk .eq. 1 )then
             call calchess1(igrad, nrap, ntap, fg, x, y, z, ii, h, dh)
         elseif( tk .eq. 2 )then
@@ -1625,22 +1641,22 @@ module chempotpy_ch3nh2_aprp_pes
             call calchess3(igrad, nrap, ntap, fg, x, y, z, ii, h, dh)
         endif
         ! Combines the tent functions and contribution from the anchor points
-        en = 0d0
+        en = 0e0_wp
         do i=1, 4
             en = en+h(i)*f(i)
         enddo
-        dx1 = 0d0
-        dy1 = 0d0
-        dz1 = 0d0
+        dx1 = 0e0_wp
+        dy1 = 0e0_wp
+        dz1 = 0e0_wp
         !!!!!!!!!!! GET GRADIENT !!!!!!!!!
         if( igrad .eq. 1 )then
-            dhe = 0d0
+            dhe = 0e0_wp
             do j=1, 20
                 do i=1, 4
                     dhe(j) = dhe(j)+dh(i,j)*f(i)
                 enddo
             enddo
-            dtr = 0d0
+            dtr = 0e0_wp
             do j=1, 2
                 do i=1, 4
                     dtr(j) = dtr(j)+df(i,j)*h(i)
@@ -1659,25 +1675,26 @@ module chempotpy_ch3nh2_aprp_pes
     subroutine calchess1( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
         ! calcs the tertiary contribution for case 1: corners of the 2D tent
         ! i.e. only need 1 anchor point
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: igrad
-        integer          :: ra1, ra2
-        integer          :: nrap, ntap
-        double precision :: r1, t2
-        double precision :: x(7), y(7), z(7)
-        double precision :: qc(20)
-        double precision :: e
-        double precision :: dx
-        integer          :: i, ii
-        integer          :: fg(2)
-        double precision :: u, v, f(4)
-        double precision :: h(4), hs
-        double precision :: dhs(20), dh(4,20)
-        double precision :: pi
-        pi  = 4.d0*datan(1.d0)
-        hs  = 0d0
-        dhs = 0d0
-        dh  = 0d0
+        integer  :: igrad
+        integer  :: ra1, ra2
+        integer  :: nrap, ntap
+        real(wp) :: r1, t2
+        real(wp) :: x(7), y(7), z(7)
+        real(wp) :: qc(20)
+        real(wp) :: e
+        real(wp) :: dx
+        integer  :: i, ii
+        integer  :: fg(2)
+        real(wp) :: u, v, f(4)
+        real(wp) :: h(4), hs
+        real(wp) :: dhs(20), dh(4,20)
+        real(wp) :: pi
+        pi  = 4.e0_wp*atan(1.e0_wp)
+        hs  = 0e0_wp
+        dhs = 0e0_wp
+        dh  = 0e0_wp
         call calcgeom(x, y, z, qc)
         !****** CORNERS
         if( (fg(1)-1 .eq. 0) .and. (fg(2)-1 .eq. 0) )then
@@ -1719,25 +1736,26 @@ module chempotpy_ch3nh2_aprp_pes
     subroutine calchess2( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
         ! calcs the tertiary contribution for case 2: sides of the 2D tent
         ! i.e. between 2 anchor points
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: igrad
-        integer          :: ra1, ra2
-        integer          :: nrap, ntap
-        double precision :: r1, t2
-        double precision :: x(7), y(7), z(7)
-        double precision :: qc(20)
-        double precision :: e
-        double precision :: dx
-        integer          :: i, ii
-        integer          :: fg(2)
-        double precision :: u, v, f(4)
-        double precision :: h(4), hs
-        double precision :: dhs(20), dh(4,20)
-        double precision :: pi
-        pi  = 4.d0*datan(1.d0)
-        hs  = 0d0
-        dhs = 0d0
-        dh  = 0d0
+        integer  :: igrad
+        integer  :: ra1, ra2
+        integer  :: nrap, ntap
+        real(wp) :: r1, t2
+        real(wp) :: x(7), y(7), z(7)
+        real(wp) :: qc(20)
+        real(wp) :: e
+        real(wp) :: dx
+        integer  :: i, ii
+        integer  :: fg(2)
+        real(wp) :: u, v, f(4)
+        real(wp) :: h(4), hs
+        real(wp) :: dhs(20), dh(4,20)
+        real(wp) :: pi
+        pi  = 4.e0_wp*atan(1.e0_wp)
+        hs  = 0e0_wp
+        dhs = 0e0_wp
+        dh  = 0e0_wp
         call calcgeom(x, y, z, qc)
         !****** SIDES
         if( (fg(1)-1 .eq. 0) )then
@@ -1798,25 +1816,26 @@ module chempotpy_ch3nh2_aprp_pes
     !> @brief Evaluate calcHess3 for the CH3NH2_APRP potential.
     subroutine calchess3( igrad, nrap, ntap, fg, x, y, z, ii, h, dh )
         ! calcs the tertiary contribution for case 3: between 4 anchor points
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: igrad
-        integer          :: ra1, ra2
-        integer          :: nrap, ntap
-        double precision :: r1, t2
-        double precision :: x(7), y(7), z(7)
-        double precision :: qc(20)
-        double precision :: e
-        double precision :: dx
-        integer          :: i, ii
-        integer          :: fg(2)
-        double precision :: u, v, f(4)
-        double precision :: h(4), hs
-        double precision :: dhs(20), dh(4,20)
-        double precision :: pi
-        pi  = 4.d0*datan(1.d0)
-        hs  = 0d0
-        dhs = 0d0
-        dh  = 0d0
+        integer  :: igrad
+        integer  :: ra1, ra2
+        integer  :: nrap, ntap
+        real(wp) :: r1, t2
+        real(wp) :: x(7), y(7), z(7)
+        real(wp) :: qc(20)
+        real(wp) :: e
+        real(wp) :: dx
+        integer  :: i, ii
+        integer  :: fg(2)
+        real(wp) :: u, v, f(4)
+        real(wp) :: h(4), hs
+        real(wp) :: dhs(20), dh(4,20)
+        real(wp) :: pi
+        pi  = 4.e0_wp*atan(1.e0_wp)
+        hs  = 0e0_wp
+        dhs = 0e0_wp
+        dh  = 0e0_wp
         ra1 = fg(1)
         ra2 = fg(2)
         call calcgeom(x, y, z, qc)
@@ -1845,10 +1864,11 @@ module chempotpy_ch3nh2_aprp_pes
     !> @brief Evaluate calcgeom for the CH3NH2_APRP potential.
     subroutine calcgeom( x, y, z, qc )
         ! get the internal coords for tertiary calcs
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: i
-        double precision :: x(7), y(7), z(7)
-        double precision :: qc(20)
+        integer  :: i
+        real(wp) :: x(7), y(7), z(7)
+        real(wp) :: qc(20)
         qc(1)  = bndlen(2, 3, x, y, z)
         qc(2)  = bndlen(3, 4, x, y, z)
         qc(3)  = bndlen(4, 5, x, y, z)
@@ -1874,19 +1894,20 @@ module chempotpy_ch3nh2_aprp_pes
     !> @brief Evaluate bigtent for the CH3NH2_APRP potential.
     subroutine bigtent( r1, t2, f, rap, nrap, tap, ntap, fg, si, tk, df )
         ! Subroutine to evaluate 2D tent functions
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: i, si, s, tk
-        integer          :: nrap !number of anchor points
-        integer          :: ntap !number of anchor points
-        double precision :: r1, t2
-        double precision :: rap(nrap,3)
-        double precision :: tap(ntap,3)
-        double precision :: f(4)
-        double precision :: un, up, vn, vp, dnom
-        double precision :: df(4,2)
-        double precision :: dun, dup, dvn, dvp, ddnom(2)
-        integer          :: fg(2)
-        f  = 0d0
+        integer  :: i, si, s, tk
+        integer  :: nrap !number of anchor points
+        integer  :: ntap !number of anchor points
+        real(wp) :: r1, t2
+        real(wp) :: rap(nrap,3)
+        real(wp) :: tap(ntap,3)
+        real(wp) :: f(4)
+        real(wp) :: un, up, vn, vp, dnom
+        real(wp) :: df(4,2)
+        real(wp) :: dun, dup, dvn, dvp, ddnom(2)
+        integer  :: fg(2)
+        f  = 0e0_wp
         fg = 0
         ! Check whether the point are end points
         if( r1 .lt. rap(1,si) )then
@@ -1910,62 +1931,62 @@ module chempotpy_ch3nh2_aprp_pes
                 fg(2) = i
             endif
         enddo
-        un = 0d0
-        up = 0d0
-        vn = 0d0
-        vp = 0d0
+        un = 0e0_wp
+        up = 0e0_wp
+        vn = 0e0_wp
+        vp = 0e0_wp
         !****** CORNERS
         if( (fg(1)-1 .eq. 0) .and. (fg(2)-1 .eq. 0) )then
-            vp = 1d0
-            up = 1d0
+            vp = 1e0_wp
+            up = 1e0_wp
             tk = 1
         elseif( (fg(1) .eq. nrap+1) .and. (fg(2) .eq. ntap+1) )then
-            un = 1d0
-            vn = 1d0
+            un = 1e0_wp
+            vn = 1e0_wp
             tk = 1
         elseif( (fg(1)-1 .eq. 0) .and. (fg(2) .eq. ntap+1) )then
-            up = 1d0
-            vn = 1d0
+            up = 1e0_wp
+            vn = 1e0_wp
             tk = 1
         elseif( (fg(1) .eq. nrap+1) .and. (fg(2)-1 .eq. 0) )then
-            un = 1d0
-            vp = 1d0
+            un = 1e0_wp
+            vp = 1e0_wp
             tk = 1
             !****** SIDES
         elseif( (fg(1)-1 .eq. 0) )then
-            up = (r1-rap(fg(1),si))**4d0
-            vn = (t2-tap(fg(2)-1,si))**4d0
-            vp = (t2-tap(fg(2),si))**4d0
+            up = (r1-rap(fg(1),si))**4e0_wp
+            vn = (t2-tap(fg(2)-1,si))**4e0_wp
+            vp = (t2-tap(fg(2),si))**4e0_wp
             tk = 2
         elseif( (fg(1) .eq. nrap+1) )then
-            un = (r1-rap((fg(1)-1),si))**4d0
-            vn = (t2-tap(fg(2)-1,si))**4d0
-            vp = (t2-tap(fg(2),si))**4d0
+            un = (r1-rap((fg(1)-1),si))**4e0_wp
+            vn = (t2-tap(fg(2)-1,si))**4e0_wp
+            vp = (t2-tap(fg(2),si))**4e0_wp
             ! Connection for r1=rap
             if( r1 .eq. rap((fg(1)-1),si) )then
-                un = 1d0
+                un = 1e0_wp
             endif
             tk = 2
         elseif( (fg(2)-1 .eq. 0) )then
-            un = (r1-rap((fg(1)-1),si))**4d0
-            up = (r1-rap(fg(1),si))**4d0
-            vp = (t2-tap(fg(2),si))**4d0
+            un = (r1-rap((fg(1)-1),si))**4e0_wp
+            up = (r1-rap(fg(1),si))**4e0_wp
+            vp = (t2-tap(fg(2),si))**4e0_wp
             tk = 2
         elseif( (fg(2) .eq. ntap+1) )then
-            un = (r1-rap((fg(1)-1),si))**4d0
-            up = (r1-rap(fg(1),si))**4d0
-            vn = (t2-tap(fg(2)-1,si))**4d0
+            un = (r1-rap((fg(1)-1),si))**4e0_wp
+            up = (r1-rap(fg(1),si))**4e0_wp
+            vn = (t2-tap(fg(2)-1,si))**4e0_wp
             ! Connection for t2=rap
             if( t2 .eq. tap(fg(2)-1,si) )then
-                vn = 1d0
+                vn = 1e0_wp
             endif
             tk = 2
             !****** MIDDLE
         else
-            un = (r1-rap((fg(1)-1),si))**4d0
-            up = (r1-rap(fg(1),si))**4d0
-            vn = (t2-tap(fg(2)-1,si))**4d0
-            vp = (t2-tap(fg(2),si))**4d0
+            un = (r1-rap((fg(1)-1),si))**4e0_wp
+            up = (r1-rap(fg(1),si))**4e0_wp
+            vn = (t2-tap(fg(2)-1,si))**4e0_wp
+            vp = (t2-tap(fg(2),si))**4e0_wp
             tk = 3
         endif
         dnom = un*vn + un*vp + up*vn + up*vp
@@ -1973,7 +1994,7 @@ module chempotpy_ch3nh2_aprp_pes
         f(2) = un*vp/dnom
         f(3) = up*vn/dnom
         f(4) = up*vp/dnom
-        df   = 0d0
+        df   = 0e0_wp
         if( (fg(1)-1 .eq. 0) .and. (fg(2)-1 .eq. 0) )then
         elseif( (fg(1) .eq. nrap+1) .and. (fg(2) .eq. ntap+1) )then
         elseif( (fg(1)-1 .eq. 0) .and. (fg(2) .eq. ntap+1) )then
@@ -1984,245 +2005,247 @@ module chempotpy_ch3nh2_aprp_pes
             !****** SIDES
             !      if( (fg(1)-1.eq.0) ) then
         elseif( (fg(1)-1 .eq. 0) )then
-            dup = 4d0*(r1-rap(fg(1),si))**3d0
-            dvn = 4d0*(t2-tap(fg(2)-1,si))**3d0
-            dvp = 4d0*(t2-tap(fg(2),si))**3d0
+            dup = 4e0_wp*(r1-rap(fg(1),si))**3e0_wp
+            dvn = 4e0_wp*(t2-tap(fg(2)-1,si))**3e0_wp
+            dvp = 4e0_wp*(t2-tap(fg(2),si))**3e0_wp
         elseif( (fg(1) .eq. nrap+1) )then
-            dun = 4d0*(r1-rap((fg(1)-1),si))**3d0
-            dvn = 4d0*(t2-tap(fg(2)-1,si))**3d0
-            dvp = 4d0*(t2-tap(fg(2),si))**3d0
+            dun = 4e0_wp*(r1-rap((fg(1)-1),si))**3e0_wp
+            dvn = 4e0_wp*(t2-tap(fg(2)-1,si))**3e0_wp
+            dvp = 4e0_wp*(t2-tap(fg(2),si))**3e0_wp
         elseif( (fg(2)-1 .eq. 0) )then
-            dun = 4d0*(r1-rap((fg(1)-1),si))**3d0
-            dup = 4d0*(r1-rap(fg(1),si))**3d0
-            dvp = 4d0*(t2-tap(fg(2),si))**3d0
+            dun = 4e0_wp*(r1-rap((fg(1)-1),si))**3e0_wp
+            dup = 4e0_wp*(r1-rap(fg(1),si))**3e0_wp
+            dvp = 4e0_wp*(t2-tap(fg(2),si))**3e0_wp
         elseif( (fg(2) .eq. nrap+1) )then
-            dun = 4d0*(r1-rap((fg(1)-1),si))**3d0
-            dup = 4d0*(r1-rap(fg(1),si))**3d0
-            dvn = 4d0*(t2-tap(fg(2)-1,si))**3d0
+            dun = 4e0_wp*(r1-rap((fg(1)-1),si))**3e0_wp
+            dup = 4e0_wp*(r1-rap(fg(1),si))**3e0_wp
+            dvn = 4e0_wp*(t2-tap(fg(2)-1,si))**3e0_wp
             !****** MIDDLE
         else
-            dun = 4d0*(r1-rap((fg(1)-1),si))**3d0
-            dup = 4d0*(r1-rap(fg(1),si))**3d0
-            dvn = 4d0*(t2-tap(fg(2)-1,si))**3d0
-            dvp = 4d0*(t2-tap(fg(2),si))**3d0
+            dun = 4e0_wp*(r1-rap((fg(1)-1),si))**3e0_wp
+            dup = 4e0_wp*(r1-rap(fg(1),si))**3e0_wp
+            dvn = 4e0_wp*(t2-tap(fg(2)-1,si))**3e0_wp
+            dvp = 4e0_wp*(t2-tap(fg(2),si))**3e0_wp
         endif
         ddnom(1) = dun*vn + dun*vp + dup*vn + dup*vp
         ddnom(2) = un*dvn + un*dvp + up*dvn + up*dvp
-        df(1,1)  = ((dun*vn)*dnom-ddnom(1)*un*vn)/(dnom**2d0)
-        df(2,1)  = ((dun*vp)*dnom-ddnom(1)*un*vp)/(dnom**2d0)
-        df(3,1)  = ((dup*vn)*dnom-ddnom(1)*up*vn)/(dnom**2d0)
-        df(4,1)  = ((dup*vp)*dnom-ddnom(1)*up*vp)/(dnom**2d0)
-        df(1,2)  = ((un*dvn)*dnom-ddnom(2)*un*vn)/(dnom**2d0)
-        df(2,2)  = ((un*dvp)*dnom-ddnom(2)*un*vp)/(dnom**2d0)
-        df(3,2)  = ((up*dvn)*dnom-ddnom(2)*up*vn)/(dnom**2d0)
-        df(4,2)  = ((up*dvp)*dnom-ddnom(2)*up*vp)/(dnom**2d0)
+        df(1,1)  = ((dun*vn)*dnom-ddnom(1)*un*vn)/(dnom**2e0_wp)
+        df(2,1)  = ((dun*vp)*dnom-ddnom(1)*un*vp)/(dnom**2e0_wp)
+        df(3,1)  = ((dup*vn)*dnom-ddnom(1)*up*vn)/(dnom**2e0_wp)
+        df(4,1)  = ((dup*vp)*dnom-ddnom(1)*up*vp)/(dnom**2e0_wp)
+        df(1,2)  = ((un*dvn)*dnom-ddnom(2)*un*vn)/(dnom**2e0_wp)
+        df(2,2)  = ((un*dvp)*dnom-ddnom(2)*un*vp)/(dnom**2e0_wp)
+        df(3,2)  = ((up*dvn)*dnom-ddnom(2)*up*vn)/(dnom**2e0_wp)
+        df(4,2)  = ((up*dvp)*dnom-ddnom(2)*up*vp)/(dnom**2e0_wp)
     end subroutine bigtent
 
     !> @brief Evaluate KPev2gm2 for the CH3NH2_APRP potential.
     subroutine kpev2gm2( igrad, x, y, z, v3, imol, dx, dy, dz )
         ! gives the primary coordinate contribution
+        use chempotpy_kinds, only: wp
         implicit none
-        integer          :: imol
-        double precision :: a12(4)
-        double precision :: const(4)
-        double precision :: ga1(4), ga2(4), ga3(4)
-        double precision :: gb1(4), gb2(4), gb3(4)
-        double precision :: ka1(4), ka2(4)
-        double precision :: c(0:10)
-        double precision :: re, de, rmin, pi, rx
-        double precision :: fy, dfdr, u, dydr, lj, dljdr
-        double precision :: rr, tt, dv2dr, dv2dt, v3
-        integer          :: ri, i, igrad
-        double precision :: x(7), y(7), z(7)
-        double precision :: dx(7), dy(7), dz(7)
-        double precision :: ae, e1, e2, e3, f1, f2, f3
-        double precision :: g1, g2, g3, g4, i2, i3, i4
-        double precision :: h2, h3, h4, j2, j3, j4
-        double precision :: n1, n2, n3, n4
-        double precision :: ak, tt0, gr1, gr2, gr3
-        double precision :: fr1(5), fr2(5), fr3(5)
-        double precision :: ft2(5), ft3(5)
-        dv2dr = 0d0
-        dv2dt = 0d0
-        v3    = 0d0
-        dx    = 0d0
-        dy    = 0d0
-        dz    = 0d0
+        integer  :: imol
+        real(wp) :: a12(4)
+        real(wp) :: const(4)
+        real(wp) :: ga1(4), ga2(4), ga3(4)
+        real(wp) :: gb1(4), gb2(4), gb3(4)
+        real(wp) :: ka1(4), ka2(4)
+        real(wp) :: c(0:10)
+        real(wp) :: re, de, rmin, pi, rx
+        real(wp) :: fy, dfdr, u, dydr, lj, dljdr
+        real(wp) :: rr, tt, dv2dr, dv2dt, v3
+        integer  :: ri, i, igrad
+        real(wp) :: x(7), y(7), z(7)
+        real(wp) :: dx(7), dy(7), dz(7)
+        real(wp) :: ae, e1, e2, e3, f1, f2, f3
+        real(wp) :: g1, g2, g3, g4, i2, i3, i4
+        real(wp) :: h2, h3, h4, j2, j3, j4
+        real(wp) :: n1, n2, n3, n4
+        real(wp) :: ak, tt0, gr1, gr2, gr3
+        real(wp) :: fr1(5), fr2(5), fr3(5)
+        real(wp) :: ft2(5), ft3(5)
+        dv2dr = 0e0_wp
+        dv2dt = 0e0_wp
+        v3    = 0e0_wp
+        dx    = 0e0_wp
+        dy    = 0e0_wp
+        dz    = 0e0_wp
         rr    = bndlen(1, 3, x, y, z)
         tt    = dihedr2(1, 3, 4, 2, x, y, z)
         if( imol .eq. 1 )then! GROUND STATE
-            e1 = 6.420621d0
-            e2 = -1.85d0
-            e3 = 1.01574847d0
-            f1 = 0.6d0
-            f2 = -4.0d0
-            f3 = 2.23d0
-            v3 = e1*(1.0d0-exp(e2*((rr-e3))))**2d0 +f1*exp(f2*((rr-f3)**2d0))
+            e1 = 6.420621e0_wp
+            e2 = -1.85e0_wp
+            e3 = 1.01574847e0_wp
+            f1 = 0.6e0_wp
+            f2 = -4.0e0_wp
+            f3 = 2.23e0_wp
+            v3 = e1*(1.0e0_wp-exp(e2*((rr-e3))))**2e0_wp +f1*exp(f2*((rr-f3)**2e0_wp))
             if( igrad .eq. 1 )then
-                dv2dr = -2.0d0*e1*e2*exp(e2*(rr-e3)) *(1-exp(e2*(rr-e3))) + 2d0*f1*f2*(rr-f3)*exp(f2*(rr-f3)**2d0)
+                dv2dr = -2.0e0_wp*e1*e2*exp(e2*(rr-e3)) *(1-exp(e2*(rr-e3))) + 2e0_wp*f1*f2*(rr-f3)*exp(f2*(rr-f3)** &
+                    & 2e0_wp)
             endif
-            ak  = 0.945760042d0
-            tt0 = 0.482599385d0
-            gr1 = 1.472234651d0
-            gr2 = -5.656037749d0
-            gr3 = 0.647196191d0
-            v3  = v3+ ak*(tt-tt0)**2d0* gr1*exp(gr2*(rr-gr3)**2d0)
+            ak  = 0.945760042e0_wp
+            tt0 = 0.482599385e0_wp
+            gr1 = 1.472234651e0_wp
+            gr2 = -5.656037749e0_wp
+            gr3 = 0.647196191e0_wp
+            v3  = v3+ ak*(tt-tt0)**2e0_wp* gr1*exp(gr2*(rr-gr3)**2e0_wp)
             if( igrad .eq. 1 )then
-                dv2dr = dv2dr+ ak*(tt-tt0)**2d0* 2d0*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2d0)
-                dv2dt = ak*(tt-tt0)*2d0* gr1*exp(gr2*(rr-gr3)**2d0)
+                dv2dr = dv2dr+ ak*(tt-tt0)**2e0_wp* 2e0_wp*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2e0_wp)
+                dv2dt = ak*(tt-tt0)*2e0_wp* gr1*exp(gr2*(rr-gr3)**2e0_wp)
             endif
-            fr1(1) = 3.067752289d0
-            fr1(2) = 1076.860912d0
-            fr1(3) = 0.792499074d0
-            fr1(4) = -1.373902904d0
-            fr2(1) = -0.845025076d0
-            fr2(2) = -5.474618306d0
-            fr2(3) = -5.214819223d0
-            fr2(4) = -7.271506597d0
-            fr3(1) = 0.98801149d0
-            fr3(2) = 0.89839555d0
-            fr3(3) = 1.484837694d0
-            fr3(4) = 1.89501344d0
-            ft2(1) = -3.340905161d0
-            ft2(2) = -14.55654461d0
-            ft2(3) = -12.70986496d0
-            ft2(4) = -11.06393037d0
-            ft3(1) = -0.917131468d0
-            ft3(2) = -1.489784616d0
-            ft3(3) = 1.002868947d0
-            ft3(4) = -0.334959847d0
+            fr1(1) = 3.067752289e0_wp
+            fr1(2) = 1076.860912e0_wp
+            fr1(3) = 0.792499074e0_wp
+            fr1(4) = -1.373902904e0_wp
+            fr2(1) = -0.845025076e0_wp
+            fr2(2) = -5.474618306e0_wp
+            fr2(3) = -5.214819223e0_wp
+            fr2(4) = -7.271506597e0_wp
+            fr3(1) = 0.98801149e0_wp
+            fr3(2) = 0.89839555e0_wp
+            fr3(3) = 1.484837694e0_wp
+            fr3(4) = 1.89501344e0_wp
+            ft2(1) = -3.340905161e0_wp
+            ft2(2) = -14.55654461e0_wp
+            ft2(3) = -12.70986496e0_wp
+            ft2(4) = -11.06393037e0_wp
+            ft3(1) = -0.917131468e0_wp
+            ft3(2) = -1.489784616e0_wp
+            ft3(3) = 1.002868947e0_wp
+            ft3(4) = -0.334959847e0_wp
             do i=1, 4
-                v3 = v3+ fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))**2d0))
+                v3 = v3+ fr1(i)*exp(fr2(i)*((rr-fr3(i))**2e0_wp))* exp(ft2(i)*((tt-ft3(i))**2e0_wp))
             enddo
             if( igrad .eq. 1 )then
                 do i=1, 4
-                    dv2dr=dv2dr+ 2d0*fr2(i)*(rr-fr3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt- &
-                        & ft3(i))** 2d0))
+                    dv2dr=dv2dr+ 2e0_wp*fr2(i)*(rr-fr3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2e0_wp))* exp(ft2(i)*((tt- &
+                        & ft3(i))** 2e0_wp))
                 enddo
                 do i=1, 4
-                    dv2dt=dv2dt+ 2d0*ft2(i)*(tt-ft3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt- &
-                        & ft3(i))** 2d0))
+                    dv2dt=dv2dt+ 2e0_wp*ft2(i)*(tt-ft3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2e0_wp))* exp(ft2(i)*((tt- &
+                        & ft3(i))** 2e0_wp))
                 enddo
             endif
         elseif( imol .eq. 2 )then! EXCITED STATE
-            e1 = 4.509566d0
-            n4 = 1.650445177d0
-            e2 = -1.460739955d0
-            e3 = 0.582944229d0
-            f1 = 0.234487181d0
-            f2 = -2.282322532d0
-            f3 = 0.30831821d0
-            n1 = 0.0d0
-            n2 = 300d0
-            n3 = 1.025d0
-            v3 = e1+n4*exp(e2*(rr-e3)) +(n1+n2*(rr-n3)**2d0) *f1*exp(f2*((rr-f3)**2d0))
+            e1 = 4.509566e0_wp
+            n4 = 1.650445177e0_wp
+            e2 = -1.460739955e0_wp
+            e3 = 0.582944229e0_wp
+            f1 = 0.234487181e0_wp
+            f2 = -2.282322532e0_wp
+            f3 = 0.30831821e0_wp
+            n1 = 0.0e0_wp
+            n2 = 300e0_wp
+            n3 = 1.025e0_wp
+            v3 = e1+n4*exp(e2*(rr-e3)) +(n1+n2*(rr-n3)**2e0_wp) *f1*exp(f2*((rr-f3)**2e0_wp))
             if( igrad .eq. 1 )then
-                dv2dr=e2*n4*exp(e2*(rr-e3)) + (n2*(rr-n3)*2d0) *f1*exp(f2*((rr-f3)**2d0)) +(n1+n2*(rr-n3)**2d0) *2d0* &
-                    & f1* f2* (rr-f3)*exp(f2*(rr-f3)**2d0)
+                dv2dr=e2*n4*exp(e2*(rr-e3)) + (n2*(rr-n3)*2e0_wp) *f1*exp(f2*((rr-f3)**2e0_wp)) +(n1+n2*(rr-n3)** &
+                    & 2e0_wp) *2e0_wp* f1* f2* (rr-f3)*exp(f2*(rr-f3)**2e0_wp)
             endif
-            ak  = 1.233643227d0
-            tt0 = 1.0d0
-            gr1 = 0.978308804d0
-            gr2 = -0.981638325d0
-            gr3 = 0.901675465d0
-            v3  = v3+ ak*(tt-tt0)**2d0* gr1*exp(gr2*(rr-gr3)**2d0)
+            ak  = 1.233643227e0_wp
+            tt0 = 1.0e0_wp
+            gr1 = 0.978308804e0_wp
+            gr2 = -0.981638325e0_wp
+            gr3 = 0.901675465e0_wp
+            v3  = v3+ ak*(tt-tt0)**2e0_wp* gr1*exp(gr2*(rr-gr3)**2e0_wp)
             if( igrad .eq. 1 )then
-                dv2dr = dv2dr+ ak*(tt-tt0)**2d0* 2d0*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2d0)
-                dv2dt = ak*(tt-tt0)*2d0* gr1*exp(gr2*(rr-gr3)**2d0)
+                dv2dr = dv2dr+ ak*(tt-tt0)**2e0_wp* 2e0_wp*gr1*gr2*(rr-gr3)*exp(gr2*(rr-gr3)**2e0_wp)
+                dv2dt = ak*(tt-tt0)*2e0_wp* gr1*exp(gr2*(rr-gr3)**2e0_wp)
             endif
-            fr1(1) = 5.402431748d0
-            fr1(2) = -5.542582536d0
-            fr1(3) = -3.460058164d0
-            fr1(4) = -0.508881823d0
-            fr1(5) = 3.692631232d0
-            fr2(1) = -5.951923443d0
-            fr2(2) = -6.031843482d0
-            fr2(3) = -9.434511421d0
-            fr2(4) = -2.878092095d0
-            fr2(5) = -9.180177476d0
-            fr3(1) = 1.867955914d0
-            fr3(2) = 1.870582014d0
-            fr3(3) = 1.787229743d0
-            fr3(4) = 2.302428489d0
-            fr3(5) = 1.746230571d0
-            ft2(1) = -9.559209372d0
-            ft2(2) = -9.696891789d0
-            ft2(3) = -5.670799519d0
-            ft2(4) = -8.901043282d0
-            ft2(5) = -5.346117363d0
-            ft3(1) = -0.590397385d0
-            ft3(2) = -0.675159631d0
-            ft3(3) = 0.465695686d0
-            ft3(4) = -0.5580416d0
-            ft3(5) = 0.427418036d0
+            fr1(1) = 5.402431748e0_wp
+            fr1(2) = -5.542582536e0_wp
+            fr1(3) = -3.460058164e0_wp
+            fr1(4) = -0.508881823e0_wp
+            fr1(5) = 3.692631232e0_wp
+            fr2(1) = -5.951923443e0_wp
+            fr2(2) = -6.031843482e0_wp
+            fr2(3) = -9.434511421e0_wp
+            fr2(4) = -2.878092095e0_wp
+            fr2(5) = -9.180177476e0_wp
+            fr3(1) = 1.867955914e0_wp
+            fr3(2) = 1.870582014e0_wp
+            fr3(3) = 1.787229743e0_wp
+            fr3(4) = 2.302428489e0_wp
+            fr3(5) = 1.746230571e0_wp
+            ft2(1) = -9.559209372e0_wp
+            ft2(2) = -9.696891789e0_wp
+            ft2(3) = -5.670799519e0_wp
+            ft2(4) = -8.901043282e0_wp
+            ft2(5) = -5.346117363e0_wp
+            ft3(1) = -0.590397385e0_wp
+            ft3(2) = -0.675159631e0_wp
+            ft3(3) = 0.465695686e0_wp
+            ft3(4) = -0.5580416e0_wp
+            ft3(5) = 0.427418036e0_wp
             do i=1, 5
-                v3 = v3+ fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt-ft3(i))**2d0))
+                v3 = v3+ fr1(i)*exp(fr2(i)*((rr-fr3(i))**2e0_wp))* exp(ft2(i)*((tt-ft3(i))**2e0_wp))
             enddo
             if( igrad .eq. 1 )then
                 do i=1, 5
-                    dv2dr=dv2dr+ 2d0*fr2(i)*(rr-fr3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt- &
-                        & ft3(i))** 2d0))
+                    dv2dr=dv2dr+ 2e0_wp*fr2(i)*(rr-fr3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2e0_wp))* exp(ft2(i)*((tt- &
+                        & ft3(i))** 2e0_wp))
                 enddo
                 do i=1, 5
-                    dv2dt=dv2dt+ 2d0*ft2(i)*(tt-ft3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2d0))* exp(ft2(i)*((tt- &
-                        & ft3(i))** 2d0))
+                    dv2dt=dv2dt+ 2e0_wp*ft2(i)*(tt-ft3(i))* fr1(i)*exp(fr2(i)*((rr-fr3(i))**2e0_wp))* exp(ft2(i)*((tt- &
+                        & ft3(i))** 2e0_wp))
                 enddo
             endif
         elseif( imol .eq. 3 )then! COUPLING
-            a12(1)   = -0.16290134d0
-            ga1(1)   = -0.231270633d0
-            ga2(1)   = -42.62845833d0
-            ga3(1)   = -0.788781464d0
-            gb1(1)   = -0.157578396d0
-            gb2(1)   = -4.728738508d0
-            gb3(1)   = -0.492785959d0
-            const(1) = 0.050222306d0
-            a12(2)   = 1.514877043d0
-            ga1(2)   = 0.38885665d0
-            ga2(2)   = -52.43604225d0
-            ga3(2)   = -0.596932233d0
-            gb1(2)   = 2.340167593d0
-            gb2(2)   = -0.158293136d0
-            gb3(2)   = 0.03631615d0
-            const(2) = -2.497398102d0
-            a12(3)   = 0.96486818d0
-            ga1(3)   = -0.567995439d0
-            ga2(3)   = -14.16424012d0
-            ga3(3)   = -0.534406038d0
-            gb1(3)   = 1.682033257d0
-            gb2(3)   = -0.103900297d0
-            gb3(3)   = 0.059650329d0
-            const(3) = -1.859104948d0
-            a12(4)   = 0.730431712d0
-            ga1(4)   = -1.39153824d0
-            ga2(4)   = -0.081123542d0
-            ga3(4)   = -1.342253144d0
-            gb1(4)   = 4.257325153d0
-            gb2(4)   = -1.963596235d0
-            gb3(4)   = -2.057979708d0
-            const(4) = 0.669000566d0
-            ka1(1)   = -2.904320563d0
-            ka1(2)   = -5.709140977d0
-            ka1(3)   = -5.612288257d0
-            ka1(4)   = -2.876200866d0
-            ka2(1)   = 0.382538122d0
-            ka2(2)   = 1.81713229d0
-            ka2(3)   = 2.40922499d0
-            ka2(4)   = 3.270326934d0
+            a12(1)   = -0.16290134e0_wp
+            ga1(1)   = -0.231270633e0_wp
+            ga2(1)   = -42.62845833e0_wp
+            ga3(1)   = -0.788781464e0_wp
+            gb1(1)   = -0.157578396e0_wp
+            gb2(1)   = -4.728738508e0_wp
+            gb3(1)   = -0.492785959e0_wp
+            const(1) = 0.050222306e0_wp
+            a12(2)   = 1.514877043e0_wp
+            ga1(2)   = 0.38885665e0_wp
+            ga2(2)   = -52.43604225e0_wp
+            ga3(2)   = -0.596932233e0_wp
+            gb1(2)   = 2.340167593e0_wp
+            gb2(2)   = -0.158293136e0_wp
+            gb3(2)   = 0.03631615e0_wp
+            const(2) = -2.497398102e0_wp
+            a12(3)   = 0.96486818e0_wp
+            ga1(3)   = -0.567995439e0_wp
+            ga2(3)   = -14.16424012e0_wp
+            ga3(3)   = -0.534406038e0_wp
+            gb1(3)   = 1.682033257e0_wp
+            gb2(3)   = -0.103900297e0_wp
+            gb3(3)   = 0.059650329e0_wp
+            const(3) = -1.859104948e0_wp
+            a12(4)   = 0.730431712e0_wp
+            ga1(4)   = -1.39153824e0_wp
+            ga2(4)   = -0.081123542e0_wp
+            ga3(4)   = -1.342253144e0_wp
+            gb1(4)   = 4.257325153e0_wp
+            gb2(4)   = -1.963596235e0_wp
+            gb3(4)   = -2.057979708e0_wp
+            const(4) = 0.669000566e0_wp
+            ka1(1)   = -2.904320563e0_wp
+            ka1(2)   = -5.709140977e0_wp
+            ka1(3)   = -5.612288257e0_wp
+            ka1(4)   = -2.876200866e0_wp
+            ka2(1)   = 0.382538122e0_wp
+            ka2(2)   = 1.81713229e0_wp
+            ka2(3)   = 2.40922499e0_wp
+            ka2(4)   = 3.270326934e0_wp
             do i=1, 4
-                v3=v3 + (a12(i)*sqrt(1.1d0-(tt**2d0)) +const(i) + ga1(i)*exp(ga2(i)*((tt-ga3(i))**2d0)) + gb1(i)* &
-                    & exp(gb2(i)* ((tt-gb3(i))**2d0))) *(exp(ka1(i)*(rr-ka2(i))**2d0))
+                v3=v3 + (a12(i)*sqrt(1.1e0_wp-(tt**2e0_wp)) +const(i) + ga1(i)*exp(ga2(i)*((tt-ga3(i))**2e0_wp)) + &
+                    & gb1(i)* exp(gb2(i)* ((tt-gb3(i))**2e0_wp))) *(exp(ka1(i)*(rr-ka2(i))**2e0_wp))
             enddo
             if( igrad .eq. 1 )then
                 do i=1, 4
-                    dv2dt=dv2dt + (-1.0d0*a12(i)*tt *(1.0d0/sqrt(1.1d0-(tt**2d0))) + ga1(i)*exp(ga2(i)*((tt-ga3(i))** &
-                        & 2d0)) * ga2(i)*((tt-ga3(i))*2d0) + gb1(i)*exp(gb2(i)*((tt-gb3(i))**2d0)) *gb2(i)*((tt- &
-                        & gb3(i))* 2d0)) * (exp(ka1(i)*(rr-ka2(i))**2d0))
+                    dv2dt=dv2dt + (-1.0e0_wp*a12(i)*tt *(1.0e0_wp/sqrt(1.1e0_wp-(tt**2e0_wp))) + ga1(i)*exp(ga2(i)* &
+                        & ((tt-ga3(i))** 2e0_wp)) * ga2(i)*((tt-ga3(i))*2e0_wp) + gb1(i)*exp(gb2(i)*((tt-gb3(i))** &
+                        & 2e0_wp)) *gb2(i)*((tt- gb3(i))* 2e0_wp)) * (exp(ka1(i)*(rr-ka2(i))**2e0_wp))
                 enddo
                 do i=1, 4
-                    dv2dr=dv2dr + (a12(i)*sqrt(1.1d0-(tt**2d0)) +const(i) + ga1(i)*exp(ga2(i)*((tt-ga3(i))**2d0)) + &
-                        & gb1(i)* exp(gb2(i)*((tt-gb3(i))**2d0))) *(exp(ka1(i)*(rr-ka2(i))**2d0)) *(ka1(i)*(rr- &
-                        & ka2(i))*2d0)
+                    dv2dr=dv2dr + (a12(i)*sqrt(1.1e0_wp-(tt**2e0_wp)) +const(i) + ga1(i)*exp(ga2(i)*((tt-ga3(i))** &
+                        & 2e0_wp)) + gb1(i)* exp(gb2(i)*((tt-gb3(i))**2e0_wp))) *(exp(ka1(i)*(rr-ka2(i))**2e0_wp)) * &
+                        & (ka1(i)*(rr- ka2(i))*2e0_wp)
                 enddo
             endif
         endif
@@ -2247,24 +2270,25 @@ module chempotpy_ch3nh2_aprp_pes
     end subroutine kpev2gm2
 
     !> @brief Evaluate dihedr2 for the CH3NH2_APRP potential.
-    double precision function dihedr2( i, j, k, l, x, y, z )
+    real(wp) function dihedr2( i, j, k, l, x, y, z )
         ! Evaluate the dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
         ! modified version of dihedr1 to work through flat amine geoms
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: kkx, kky, kkz, yyx, yyy, yyz
-        double precision            :: llx, lly, llz, eex, eey, eez
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: kkx, kky, kkz, yyx, yyy, yyz
+        real(wp)            :: llx, lly, llz, eex, eey, eez
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2290,16 +2314,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lly*eez-llz*eey
         oo2(2) = llz*eex-llx*eez
         oo2(3) = llx*eey-lly*eex
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2312,25 +2336,26 @@ module chempotpy_ch3nh2_aprp_pes
     end function dihedr2
 
     !> @brief Evaluate dihedrIX for the CH3NH2_APRP potential.
-    double precision function dihedrix( i, j, k, l, x, y, z )
+    real(wp) function dihedrix( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2356,16 +2381,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2376,38 +2401,39 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=ra
         !------------------Xi---------------------------
         !top (sab deriv for Xi)
-        td = -1d0*kjz*lkz*jkx +kjz*lkx*jkz +kjy*lkx*jky -kjy*lky*jkx
+        td = -1e0_wp*kjz*lkz*jkx +kjz*lkx*jkz +kjy*lkx*jky -kjy*lky*jkx
         !bottom (p1p2 deriv for Xi)
         ! deriv of sso1 and bd for Xi
-        ld = 2d0*(x(i)-x(j))*(kjz**2d0+kjy**2d0) -2*(kjz*ijz*kjx +kjy*ijy*kjx)
-        bd = (sso2*ld)/(2d0*p1p2)
+        ld = 2e0_wp*(x(i)-x(j))*(kjz**2e0_wp+kjy**2e0_wp) -2*(kjz*ijz*kjx +kjy*ijy*kjx)
+        bd = (sso2*ld)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrIX=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrix = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Xi---------------------------
     end function dihedrix
 
     !> @brief Evaluate dihedrIY for the CH3NH2_APRP potential.
-    double precision function dihedriy( i, j, k, l, x, y, z )
+    real(wp) function dihedriy( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !         \
         !          \ ajkl
         !           k----l
@@ -2430,16 +2456,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2449,37 +2475,38 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Yi---------------------------
         !top (sab deriv for Yi)
-        td = -1d0*kjz*lkz*jky +kjz*lky*jkz +kjx*lky*jkx -kjx*lkx*jky
+        td = -1e0_wp*kjz*lkz*jky +kjz*lky*jkz +kjx*lky*jkx -kjx*lkx*jky
         ! deriv of sso1 and bd for Yi
-        ld = 2d0*(y(i)-y(j))*(kjz**2+kjx**2) -2*(kjz*ijz*kjy +kjx*ijx*kjy)
-        bd = (sso2*ld)/(2d0*p1p2)
+        ld = 2e0_wp*(y(i)-y(j))*(kjz**2+kjx**2) -2*(kjz*ijz*kjy +kjx*ijx*kjy)
+        bd = (sso2*ld)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrIY=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedriy = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Yi---------------------------
     end function dihedriy
 
     !> @brief Evaluate dihedrIZ for the CH3NH2_APRP potential.
-    double precision function dihedriz( i, j, k, l, x, y, z )
+    real(wp) function dihedriz( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2505,16 +2532,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2524,37 +2551,38 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Zi---------------------------
         !top (sab deriv for Zi)
-        td = -1d0*kjy*lky*jkz +kjy*lkz*jky +kjx*lkz*jkx -kjx*lkx*jkz
+        td = -1e0_wp*kjy*lky*jkz +kjy*lkz*jky +kjx*lkz*jkx -kjx*lkx*jkz
         ! deriv of sso1 and bd for Zi
-        ld = 2d0*(z(i)-z(j))*(kjx**2+kjy**2) -2*(kjx*ijx*kjz +kjy*ijy*kjz)
-        bd = (sso2*ld)/(2d0*p1p2)
+        ld = 2e0_wp*(z(i)-z(j))*(kjx**2+kjy**2) -2*(kjx*ijx*kjz +kjy*ijy*kjz)
+        bd = (sso2*ld)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrIZ=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedriz = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Zi---------------------------
     end function dihedriz
 
     !> @brief Evaluate dihedrLX for the CH3NH2_APRP potential.
-    double precision function dihedrlx( i, j, k, l, x, y, z )
+    real(wp) function dihedrlx( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2580,16 +2608,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2599,37 +2627,38 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Xl---------------------------
         !top (sab deriv for Xl)
-        td = -1d0*ijz*kjx*jkz +ijx*kjz*jkz +ijx*kjy*jky -ijy*kjx*jky
+        td = -1e0_wp*ijz*kjx*jkz +ijx*kjz*jkz +ijx*kjy*jky -ijy*kjx*jky
         ! deriv of sso2 for Xl
-        rd = 2d0*(x(l)-x(k))*(jky**2+jkz**2) -2*(jky*lky*jkx +jkz*lkz*jkx)
-        bd = (sso1*rd)/(2d0*p1p2)
+        rd = 2e0_wp*(x(l)-x(k))*(jky**2+jkz**2) -2*(jky*lky*jkx +jkz*lkz*jkx)
+        bd = (sso1*rd)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrLX=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrlx = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Xl---------------------------
     end function dihedrlx
 
     !> @brief Evaluate dihedrLY for the CH3NH2_APRP potential.
-    double precision function dihedrly( i, j, k, l, x, y, z )
+    real(wp) function dihedrly( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2655,16 +2684,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2674,37 +2703,38 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Yl---------------------------
         !top (sab deriv for Yl)
-        td = -1d0*ijz*kjy*jkz +ijy*kjz*jkz +ijy*kjx*jkx -ijx*kjy*jkx
+        td = -1e0_wp*ijz*kjy*jkz +ijy*kjz*jkz +ijy*kjx*jkx -ijx*kjy*jkx
         ! deriv of sso2 for Yl
-        rd = 2d0*(y(l)-y(k))*(jkx**2+jkz**2) -2*(jkx*lkx*jky +jkz*lkz*jky)
-        bd = (sso1*rd)/(2d0*p1p2)
+        rd = 2e0_wp*(y(l)-y(k))*(jkx**2+jkz**2) -2*(jkx*lkx*jky +jkz*lkz*jky)
+        bd = (sso1*rd)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrLY=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrly = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Yl---------------------------
     end function dihedrly
 
     !> @brief Evaluate dihedrLZ for the CH3NH2_APRP potential.
-    double precision function dihedrlz( i, j, k, l, x, y, z )
+    real(wp) function dihedrlz( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2730,16 +2760,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2749,37 +2779,38 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Zl---------------------------
         !top (sab deriv for Zl)
-        td = -1d0*ijy*kjz*jky +ijz*kjy*jky +ijz*kjx*jkx -ijx*kjz*jkx
+        td = -1e0_wp*ijy*kjz*jky +ijz*kjy*jky +ijz*kjx*jkx -ijx*kjz*jkx
         ! deriv of sso2 and bd for Zl
-        rd = 2d0*(z(l)-z(k))*(jky**2+jkx**2) -2*(jky*lky*jkz +jkx*lkx*jkz)
-        bd = (sso1*rd)/(2d0*p1p2)
+        rd = 2e0_wp*(z(l)-z(k))*(jky**2+jkx**2) -2*(jky*lky*jkz +jkx*lkx*jkz)
+        bd = (sso1*rd)/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrLZ=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrlz = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Zl---------------------------
     end function dihedrlz
 
     !> @brief Evaluate dihedrJX for the CH3NH2_APRP potential.
-    double precision function dihedrjx( i, j, k, l, x, y, z )
+    real(wp) function dihedrjx( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2805,16 +2836,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2824,40 +2855,42 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Xj---------------------------
         !top (sab deriv for Xj)
-        td=(-2d0*x(j)+2d0*x(k))*ijz*lkz +ijz*lkx*jkz -(-2d0*x(j)+x(k)+x(i))*kjz*lkz -kjz*lkx*jkz -kjy*lkx*jky -(-2d0* &
-            & x(j)+ x(k)+x(i))*kjy*lky +ijy*lkx*jky +(-2d0*x(j)+2d0*x(k))*ijy*lky
+        td=(-2e0_wp*x(j)+2e0_wp*x(k))*ijz*lkz +ijz*lkx*jkz -(-2e0_wp*x(j)+x(k)+x(i))*kjz*lkz -kjz*lkx*jkz -kjy*lkx* &
+            & jky -(-2e0_wp* x(j)+ x(k)+x(i))*kjy*lky +ijy*lkx*jky +(-2e0_wp*x(j)+2e0_wp*x(k))*ijy*lky
         ! deriv of sso1 for Xj
-        ld = 2d0*(x(j)-x(k))*(ijz**2+ijy**2) +2d0*(x(j)-x(i))*(kjz**2+kjy**2) -2*(2d0*x(j)-x(k)-x(i))*(ijz*kjz +ijy*kjy)
+        ld = 2e0_wp*(x(j)-x(k))*(ijz**2+ijy**2) +2e0_wp*(x(j)-x(i))*(kjz**2+kjy**2) -2*(2e0_wp*x(j)-x(k)-x(i))*(ijz* &
+            & kjz +ijy*kjy)
         ! deriv of sso2 for Xj
-        rd = 2d0*(x(j)-x(k))*(lkz**2+lky**2) -2*(lkz*lkx*jkz +lky*lkx*jky)
-        bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
+        rd = 2e0_wp*(x(j)-x(k))*(lkz**2+lky**2) -2*(lkz*lkx*jkz +lky*lkx*jky)
+        bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrJX=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrjx = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Xj---------------------------
     end function dihedrjx
 
     !> @brief Evaluate dihedrJY for the CH3NH2_APRP potential.
-    double precision function dihedrjy( i, j, k, l, x, y, z )
+    real(wp) function dihedrjy( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2883,16 +2916,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2902,40 +2935,42 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Yj---------------------------
         !top (sab deriv for Yj)
-        td=-kjz*lky*jkz -(-2d0*y(j)+y(k)+y(i))*kjz*lkz +ijz*lky*jkz +(-2d0*y(j)+2d0*y(k))*ijz*lkz +(-2d0*y(j)+2d0* &
-            & y(k))* ijx* lkx +ijx*lky*jkx -(-2d0*y(j)+y(k)+y(i))*kjx*lkx -kjx*lky*jkx
+        td=-kjz*lky*jkz -(-2e0_wp*y(j)+y(k)+y(i))*kjz*lkz +ijz*lky*jkz +(-2e0_wp*y(j)+2e0_wp*y(k))*ijz*lkz +(-2e0_wp* &
+            & y(j)+2e0_wp* y(k))* ijx* lkx +ijx*lky*jkx -(-2e0_wp*y(j)+y(k)+y(i))*kjx*lkx -kjx*lky*jkx
         ! deriv of sso1 for Yj
-        ld = 2d0*(y(j)-y(k))*(ijz**2+ijx**2) +2d0*(y(j)-y(i))*(kjz**2+kjx**2) -2*(2d0*y(j)-y(k)-y(i))*(ijz*kjz +ijx*kjx)
+        ld = 2e0_wp*(y(j)-y(k))*(ijz**2+ijx**2) +2e0_wp*(y(j)-y(i))*(kjz**2+kjx**2) -2*(2e0_wp*y(j)-y(k)-y(i))*(ijz* &
+            & kjz +ijx*kjx)
         ! deriv of sso2 for Yj
-        rd = 2d0*(y(j)-y(k))*(lkz**2+lkx**2) -2*(lkz*lky*jkz +lkx*lky*jkx)
-        bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
+        rd = 2e0_wp*(y(j)-y(k))*(lkz**2+lkx**2) -2*(lkz*lky*jkz +lkx*lky*jkx)
+        bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrJY=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrjy = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Yj---------------------------
     end function dihedrjy
 
     !> @brief Evaluate dihedrJZ for the CH3NH2_APRP potential.
-    double precision function dihedrjz( i, j, k, l, x, y, z )
+    real(wp) function dihedrjz( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2961,16 +2996,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -2980,40 +3015,42 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Zj---------------------------
         !top (sab deriv for Zj)
-        td=(-2d0*z(j)+2d0*z(k))*ijy*lky +ijy*lkz*jky -(-2d0*z(j)+z(k)+z(i))*kjy*lky -kjy*lkz*jky -kjx*lkz*jkx -(-2d0* &
-            & z(j)+ z(k)+z(i))*kjx*lkx +ijx*lkz*jkx +(-2d0*z(j)+2d0*z(k))*ijx*lkx
+        td=(-2e0_wp*z(j)+2e0_wp*z(k))*ijy*lky +ijy*lkz*jky -(-2e0_wp*z(j)+z(k)+z(i))*kjy*lky -kjy*lkz*jky -kjx*lkz* &
+            & jkx -(-2e0_wp* z(j)+ z(k)+z(i))*kjx*lkx +ijx*lkz*jkx +(-2e0_wp*z(j)+2e0_wp*z(k))*ijx*lkx
         ! deriv of sso1 for Zj
-        ld = 2d0*(z(j)-z(k))*(ijy**2+ijx**2) +2d0*(z(j)-z(i))*(kjy**2+kjx**2) -2*(2d0*z(j)-z(k)-z(i))*(ijy*kjy +ijx*kjx)
+        ld = 2e0_wp*(z(j)-z(k))*(ijy**2+ijx**2) +2e0_wp*(z(j)-z(i))*(kjy**2+kjx**2) -2*(2e0_wp*z(j)-z(k)-z(i))*(ijy* &
+            & kjy +ijx*kjx)
         ! deriv of sso2 for Zj
-        rd = 2d0*(z(j)-z(k))*(lky**2+lkx**2) -2*(lky*lkz*jky +lkx*lkz*jkx)
-        bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
+        rd = 2e0_wp*(z(j)-z(k))*(lky**2+lkx**2) -2*(lky*lkz*jky +lkx*lkz*jkx)
+        bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrJZ=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrjz = id!/(1d0-ra**2d0)**(0.5d0)
         !------------------Zj---------------------------
     end function dihedrjz
 
     !> @brief Evaluate dihedrKX for the CH3NH2_APRP potential.
-    double precision function dihedrkx( i, j, k, l, x, y, z )
+    real(wp) function dihedrkx( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -3039,16 +3076,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -3058,40 +3095,42 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Xk---------------------------
         !top (sab deriv for Xk)
-        td=(-2d0*x(k)+2d0*x(j))*ijz*lkz -(-2d0*x(k)+x(j)+x(l))*ijz*jkz +ijx*kjz*lkz -ijx*kjz*jkz -ijx*kjy*jky +ijx* &
-            & kjy* lky - (-2d0*x(k)+x(j)+x(l))*ijy*jky +(-2d0*x(k)+2d0*x(j))*ijy*lky
+        td=(-2e0_wp*x(k)+2e0_wp*x(j))*ijz*lkz -(-2e0_wp*x(k)+x(j)+x(l))*ijz*jkz +ijx*kjz*lkz -ijx*kjz*jkz -ijx*kjy* &
+            & jky +ijx* kjy* lky - (-2e0_wp*x(k)+x(j)+x(l))*ijy*jky +(-2e0_wp*x(k)+2e0_wp*x(j))*ijy*lky
         ! deriv of sso1 for Xk
-        ld = 2d0*(x(k)-x(j))*(ijz**2+ijy**2) -2*(ijx*ijz*kjz +ijx*ijy*kjy)
+        ld = 2e0_wp*(x(k)-x(j))*(ijz**2+ijy**2) -2*(ijx*ijz*kjz +ijx*ijy*kjy)
         ! deriv of sso2 for Xk
-        rd = 2d0*(x(k)-x(j))*(lkz**2+lky**2) +2d0*(x(k)-x(l))*(jkz**2+jky**2) -2*(2d0*x(k)-x(j)-x(l))*(lkz*jkz +lky*jky)
-        bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
+        rd = 2e0_wp*(x(k)-x(j))*(lkz**2+lky**2) +2e0_wp*(x(k)-x(l))*(jkz**2+jky**2) -2*(2e0_wp*x(k)-x(j)-x(l))*(lkz* &
+            & jkz +lky*jky)
+        bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrKX=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrkx = id!(-id)/(1d0-ra**2d0)**(0.5d0)
         !------------------Xk---------------------------
     end function dihedrkx
 
     !> @brief Evaluate dihedrKY for the CH3NH2_APRP potential.
-    double precision function dihedrky( i, j, k, l, x, y, z )
+    real(wp) function dihedrky( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !        i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -3117,16 +3156,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -3136,40 +3175,42 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Yk---------------------------
         !top (sab deriv for Yk)
-        td=(-2d0*y(k)+2d0*y(j))*ijz*lkz -(-2d0*y(k)+y(j)+y(l))*ijz*jkz +ijy*kjz*lkz -ijy*kjz*jkz -ijy*kjx*jkx +ijy* &
-            & kjx* lkx - (-2d0*y(k)+y(j)+y(l))*ijx*jkx +(-2d0*y(k)+2d0*y(j))*ijx*lkx
+        td=(-2e0_wp*y(k)+2e0_wp*y(j))*ijz*lkz -(-2e0_wp*y(k)+y(j)+y(l))*ijz*jkz +ijy*kjz*lkz -ijy*kjz*jkz -ijy*kjx* &
+            & jkx +ijy* kjx* lkx - (-2e0_wp*y(k)+y(j)+y(l))*ijx*jkx +(-2e0_wp*y(k)+2e0_wp*y(j))*ijx*lkx
         ! deriv of sso1 for Yk
-        ld = 2d0*(y(k)-y(j))*(ijz**2+ijx**2) -2*(ijy*ijz*kjz +ijy*ijx*kjx)
+        ld = 2e0_wp*(y(k)-y(j))*(ijz**2+ijx**2) -2*(ijy*ijz*kjz +ijy*ijx*kjx)
         ! deriv of sso2 for Yk
-        rd = 2d0*(y(k)-y(j))*(lkz**2+lkx**2) +2d0*(y(k)-y(l))*(jkz**2+jkx**2) -2*(2d0*y(k)-y(j)-y(l))*(lkz*jkz +lkx*jkx)
-        bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
+        rd = 2e0_wp*(y(k)-y(j))*(lkz**2+lkx**2) +2e0_wp*(y(k)-y(l))*(jkz**2+jkx**2) -2*(2e0_wp*y(k)-y(j)-y(l))*(lkz* &
+            & jkz +lkx*jkx)
+        bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrKY=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrky = id!(-id)/(1d0-ra**2d0)**(0.5d0)
         !------------------Yk---------------------------
     end function dihedrky
 
     !> @brief Evaluate dihedrKZ for the CH3NH2_APRP potential.
-    double precision function dihedrkz( i, j, k, l, x, y, z )
+    real(wp) function dihedrkz( i, j, k, l, x, y, z )
         ! Converts derivative from internal to XYZ for
         ! dihedral angle between atoms i, j, k, and l
         ! Input: i,j,k,l (indices of 4 atoms)
         !         i--j--k--l
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                     :: i, j, k, l
-        double precision, parameter :: tiny = 1.0d-13
-        double precision, parameter :: pi   = 3.1415926535898d0
-        double precision            :: x(*), y(*), z(*)
-        double precision            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        double precision            :: rij, rjk, rkl, aijk, ajkl, wejk
-        double precision            :: ijx, ijy, ijz, kjx, kjy, kjz
-        double precision            :: lkx, lky, lkz, jkx, jky, jkz
-        double precision            :: oo1(3), oo2(3), so1(3), so2(3)
-        double precision            :: sso1, sso2, rso1, rso2
-        double precision            :: ab(3)
-        double precision            :: sab, p1p2, ra
-        double precision            :: ld, rd, td, bd, id, fd
+        integer             :: i, j, k, l
+        real(wp), parameter :: tiny = 1.0e-13_wp
+        real(wp), parameter :: pi   = 3.1415926535898e0_wp
+        real(wp)            :: x(*), y(*), z(*)
+        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
+        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
+        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp)            :: sso1, sso2, rso1, rso2
+        real(wp)            :: ab(3)
+        real(wp)            :: sab, p1p2, ra
+        real(wp)            :: ld, rd, td, bd, id, fd
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -3195,16 +3236,16 @@ module chempotpy_ch3nh2_aprp_pes
         oo2(1) = lky*jkz-lkz*jky
         oo2(2) = lkz*jkx-lkx*jkz
         oo2(3) = lkx*jky-lky*jkx
-        so1(1) = oo1(1)**2d0
-        so1(2) = oo1(2)**2d0
-        so1(3) = oo1(3)**2d0
+        so1(1) = oo1(1)**2e0_wp
+        so1(2) = oo1(2)**2e0_wp
+        so1(3) = oo1(3)**2e0_wp
         sso1   = so1(1)+so1(2)+so1(3)
-        rso1   = (sso1)**(0.5d0)
-        so2(1) = oo2(1)**2d0
-        so2(2) = oo2(2)**2d0
-        so2(3) = oo2(3)**2d0
+        rso1   = (sso1)**(0.5e0_wp)
+        so2(1) = oo2(1)**2e0_wp
+        so2(2) = oo2(2)**2e0_wp
+        so2(3) = oo2(3)**2e0_wp
         sso2   = so2(1)+so2(2)+so2(3)
-        rso2   = (sso2)**(0.5d0)
+        rso2   = (sso2)**(0.5e0_wp)
         ab(1)  = oo1(1)*oo2(1)
         ab(2)  = oo1(2)*oo2(2)
         ab(3)  = oo1(3)*oo2(3)
@@ -3214,15 +3255,16 @@ module chempotpy_ch3nh2_aprp_pes
         !       dihedr2=acos(ra)
         !------------------Zk---------------------------
         !top (sab deriv for Zk)
-        td=(-2d0*z(k)+2d0*z(j))*ijy*lky -(-2d0*z(k)+z(j)+z(l))*ijy*jky +ijz*kjy*lky -ijz*kjy*jky -ijz*kjx*jkx +ijz* &
-            & kjx* lkx - (-2d0*z(k)+z(j)+z(l))*ijx*jkx +(-2d0*z(k)+2d0*z(j))*ijx*lkx
+        td=(-2e0_wp*z(k)+2e0_wp*z(j))*ijy*lky -(-2e0_wp*z(k)+z(j)+z(l))*ijy*jky +ijz*kjy*lky -ijz*kjy*jky -ijz*kjx* &
+            & jkx +ijz* kjx* lkx - (-2e0_wp*z(k)+z(j)+z(l))*ijx*jkx +(-2e0_wp*z(k)+2e0_wp*z(j))*ijx*lkx
         ! deriv of sso1 for Zk
-        ld = 2d0*(z(k)-z(j))*(ijy**2+ijx**2) -2*(ijz*ijy*kjy +ijz*ijx*kjx)
+        ld = 2e0_wp*(z(k)-z(j))*(ijy**2+ijx**2) -2*(ijz*ijy*kjy +ijz*ijx*kjx)
         ! deriv of sso2 for Zk
-        rd = 2d0*(z(k)-z(j))*(lky**2+lkx**2) +2d0*(z(k)-z(l))*(jky**2+jkx**2) -2*(2d0*z(k)-z(j)-z(l))*(lky*jky +lkx*jkx)
-        bd = ((ld*sso2)+(sso1*rd))/(2d0*p1p2)
+        rd = 2e0_wp*(z(k)-z(j))*(lky**2+lkx**2) +2e0_wp*(z(k)-z(l))*(jky**2+jkx**2) -2*(2e0_wp*z(k)-z(j)-z(l))*(lky* &
+            & jky +lkx*jkx)
+        bd = ((ld*sso2)+(sso1*rd))/(2e0_wp*p1p2)
         !ra=sab/p1p2
-        id = ((td*p1p2)-(bd*sab))/(p1p2**2d0)
+        id = ((td*p1p2)-(bd*sab))/(p1p2**2e0_wp)
         !       dihedrKZ=(-id)/(1d0-ra**2d0)**(0.5d0)
         dihedrkz = id!(-id)/(1d0-ra**2d0)**(0.5d0)
         !------------------Zk---------------------------
@@ -3232,13 +3274,14 @@ end module chempotpy_ch3nh2_aprp_pes
 !> @brief Expose CH3NH2_APRP through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_ch3nh2_aprp_pes, only: evaluate
+    use chempotpy_kinds,           only: wp
     implicit none
-    integer, parameter            :: natoms  = 7
-    integer, parameter            :: nstates = 2
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 7
+    integer, parameter    :: nstates = 2
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

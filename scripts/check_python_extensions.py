@@ -80,7 +80,12 @@ def call_surface(
     elif entry_point == "pes" and len(arguments) in (8, 9):
         atom_count = 3
     coordinate_array = np.asarray(
-        coordinates(atom_count, geometry_index, geometry_variant),
+        coordinates(
+            atom_count,
+            geometry_index,
+            geometry_variant,
+            system_name,
+        ),
         dtype=np.float64,
     )
     if entry_point == "pes" and len(arguments) == 5:

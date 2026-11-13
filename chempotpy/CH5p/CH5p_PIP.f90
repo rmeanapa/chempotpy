@@ -15,6 +15,7 @@
 
 !> @brief Implement CH5p_PIP, a potential energy surface for CH5p.
 module chempotpy_ch5p_pip_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -23,29 +24,30 @@ module chempotpy_ch5p_pip_pes
 
     !> @brief Evaluate the CH5p_PIP potential energy surface for CH5p.
     subroutine evaluate( x, igrad, p, gradient_out, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 6
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates)
-        double precision, intent(out) :: gradient_out(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        real                          :: tx(natoms,3)
-        double precision              :: v
-        integer                       :: iatom, idir, j, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 6
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates)
+        real(wp), intent(out) :: gradient_out(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real                  :: tx(natoms,3)
+        real(wp)              :: v
+        integer               :: iatom, idir, j, istate
         !initialize
-        v = 0.d0; gradient_out = 0.d0; d = 0.d0
+        v = 0.e0_wp; gradient_out = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                tx(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+                tx(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
         if( igrad == 0 )then
             call mycalcpot(x, v)
-            v = v*legacy_hartree_to_electronvolt
+            v = v*hartree_to_electronvolt
             do istate=1, nstates
                 p(istate) = v
             enddo
@@ -56,31 +58,33 @@ module chempotpy_ch5p_pip_pes
 
     !> @brief Evaluate mycalcpot for the CH5p_PIP potential.
     subroutine mycalcpot( x, v )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter            :: natom = 6
-        double precision, intent(in)  :: x(natom,3)
-        double precision, intent(out) :: v
-        double precision              :: emin, r
-        emin = -40.65276470207075d0 + 2.9123825129317993d-007 !global surf
+        integer, parameter    :: natom = 6
+        real(wp), intent(in)  :: x(natom,3)
+        real(wp), intent(out) :: v
+        real(wp)              :: emin, r
+        emin = -40.65276470207075e0_wp + 2.9123825129317993e-007_wp !global surf
         call getpot(x, r, v)
         v = v-emin !vmin is in H
     end subroutine mycalcpot
 
     !> @brief Evaluate getpot for the CH5p_PIP potential.
     subroutine getpot( x, r, epot )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter                     :: natoms = 6
-        integer                                :: i, j, k, l, m
-        double precision                       :: a, b, theta
-        double precision                       :: vfit, epot
-        double precision, dimension(natoms, 3) :: x
-        double precision, dimension(3, natoms) :: xn
-        double precision, dimension(4, 3)      :: xch3
-        double precision, dimension(2, 3)      :: xh2
-        double precision, parameter            :: de = -40.57833477d0
-        double precision                       :: epotch3, epoth2, elr
-        double precision                       :: r, rh2, rp
-        double precision, parameter            :: rmin = 11.d0, rmax = 15.d0
+        integer, parameter             :: natoms = 6
+        integer                        :: i, j, k, l, m
+        real(wp)                       :: a, b, theta
+        real(wp)                       :: vfit, epot
+        real(wp), dimension(natoms, 3) :: x
+        real(wp), dimension(3, natoms) :: xn
+        real(wp), dimension(4, 3)      :: xch3
+        real(wp), dimension(2, 3)      :: xh2
+        real(wp), parameter            :: de = -40.57833477e0_wp
+        real(wp)                       :: epotch3, epoth2, elr
+        real(wp)                       :: r, rh2, rp
+        real(wp), parameter            :: rmin = 11.e0_wp, rmax = 15.e0_wp
         do i = 1, natoms
             do j = 1, 3
                 xn(j, i) = x(i,j)
@@ -88,8 +92,8 @@ module chempotpy_ch5p_pip_pes
         enddo
         call calcr(xn, xch3, xh2, r, rh2, theta)
         !     write(*,'a2,2x,f9.2') 'r=', r
-        a = 0.d0
-        b = 0.d0
+        a = 0.e0_wp
+        b = 0.e0_wp
         if( r <= rmax )then
             call getfit(xn, vfit)
         endif
@@ -107,108 +111,99 @@ module chempotpy_ch5p_pip_pes
             if( r > rmax )then
                 epot = elr + epoth2 + epotch3 + de
             else
-                epot = (1.d0-sw(a, b, rp))*vfit + sw(a, b, rp)* (elr + epoth2 + epotch3 + de)
+                epot = (1.e0_wp-sw(a, b, rp))*vfit + sw(a, b, rp)* (elr + epoth2 + epotch3 + de)
             endif
         endif
     end subroutine getpot
 
     !> @brief Evaluate sw for the CH5p_PIP potential.
-    double precision function sw( a, b, x )
+    real(wp) function sw( a, b, x )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: a, b, x
-        sw = 0.5d0*a*x**2 + (10.d0 + b/2.d0 - 3.d0*a/2.d0)*x**3 + (3.d0*a/2.d0 - b - 15.d0)*x**4 + (6.d0 + b/2.d0 - a/ &
-            & 2.d0)* x**5
+        real(wp) :: a, b, x
+        sw = 0.5e0_wp*a*x**2 + (10.e0_wp + b/2.e0_wp - 3.e0_wp*a/2.e0_wp)*x**3 + (3.e0_wp*a/2.e0_wp - b - 15.e0_wp)* &
+            & x**4 + (6.e0_wp + b/2.e0_wp - a/ 2.e0_wp)* x**5
     end function sw
 
-    !.... Subroutine to obtain the long-range interaction
-    !.... 02/14/05   Zhong      SUBROUTINE created
-    !.... 02/22/05   Zhong      Modified for the long range effect
-    !> @brief Evaluate getlr for the CH5p_PIP potential.
+    !> @brief Report that the unreleased CH5p long-range tables are unavailable.
     subroutine getlr( r, rh2, theta, elr )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: r, rh2, theta
-        double precision :: alpha, alpha0, alpha90
-        double precision :: u3, u4, p2, q
-        double precision :: epot, elr
-        double precision :: pi
-        pi = 4.d0 * datan(1.d0)
-        call cspline(rh2, alpha0, alpha90, q)
-        !     write(*,'a4,1x,f9.5')'rh2=',rh2
-        theta = theta / 180.d0 * pi
-        alpha = 1.d0/3.d0*(alpha0 + 2*alpha90)
-        p2    = 0.5d0*(3*(cos(theta))**2 - 1.d0)
-        u3    = q*p2/r**3
-        u4    = -(0.5d0*alpha + 1.d0/3.d0*(alpha0 - alpha90)*p2)/r**4
-        elr   = u3 + u4
+        real(wp), intent(in)  :: r, rh2, theta
+        real(wp), intent(out) :: elr
+        elr = 0.e0_wp*r*rh2*theta
+        error stop 'CH5p_PIP: the released POTLIB archive omits the long-range alpha_1967.dat and q.dat tables'
     end subroutine getlr
 
     !> @brief Evaluate geth2pot for the CH5p_PIP potential.
     subroutine geth2pot( xyz1, v )
         !...  program is to calculate the potential energy of H2
         !...  Based on pes6n4
+        use chempotpy_kinds, only: wp
         implicit none
         integer, parameter :: natoms  = 6
         integer, parameter :: natoms1 = 2
         integer            :: i, j
-        double precision, dimension(5:6, 3) :: xyz1
-        double precision, dimension(natoms, 3) :: xyz
-        double precision, dimension(3, natoms) :: xyzt, f
-        double precision                       :: v, ch3pot, ch3potab, h20
-        double precision, parameter            :: ang = 219474.6d0
-        character(len=1), dimension(natoms)    :: xname
+        real(wp), dimension(5:6, 3) :: xyz1
+        real(wp), dimension(natoms, 3)      :: xyz
+        real(wp), dimension(3, natoms)      :: xyzt, f
+        real(wp)                            :: v, ch3pot, ch3potab, h20
+        real(wp), parameter                 :: ang = 219474.6e0_wp
+        character(len=1), dimension(natoms) :: xname
         do i = 5, 6
             do j = 1, 3
                 xyz(i, j) = xyz1(i, j)
             enddo
         enddo
-        xyz(1, 1) = 0.d0
-        xyz(1, 2) = 0.d0
-        xyz(1, 3) = 0.d0
-        xyz(2, 1) = 0.d0
-        xyz(2, 2) = 2.0657297d0
-        xyz(2, 3) = 0.d0
-        xyz(3, 1) = 1.7889744d0
-        xyz(3, 2) = -1.0328649d0
-        xyz(3, 3) = 0.d0
-        xyz(4, 1) = -1.7889744d0
-        xyz(4, 2) = -1.0328649d0
-        xyz(4, 3) = 0.d0
+        xyz(1, 1) = 0.e0_wp
+        xyz(1, 2) = 0.e0_wp
+        xyz(1, 3) = 0.e0_wp
+        xyz(2, 1) = 0.e0_wp
+        xyz(2, 2) = 2.0657297e0_wp
+        xyz(2, 3) = 0.e0_wp
+        xyz(3, 1) = 1.7889744e0_wp
+        xyz(3, 2) = -1.0328649e0_wp
+        xyz(3, 3) = 0.e0_wp
+        xyz(4, 1) = -1.7889744e0_wp
+        xyz(4, 2) = -1.0328649e0_wp
+        xyz(4, 3) = 0.e0_wp
         do i = 1, natoms
             do j = 1, 3
                 xyzt(j, i) = xyz(i, j)
             enddo
         enddo
         call getfit(xyzt, v)
-        ch3pot = -39.4046592d0 + 0.0006415d0/2.d0
+        ch3pot = -39.4046592e0_wp + 0.0006415e0_wp/2.e0_wp
         !      ch3potab = -39.40570072d0
-        h20 = -1.1745554d0 + 0.0006728d0/2.d0
+        h20 = -1.1745554e0_wp + 0.0006728e0_wp/2.e0_wp
         v   = v - ch3pot - h20
-        if( (v*ang .le. 5.d0).and.(v*ang .ge. -5.d0) )then
-            v = 0.d0
+        if( (v*ang .le. 5.e0_wp).and.(v*ang .ge. -5.e0_wp) )then
+            v = 0.e0_wp
         endif
     end subroutine geth2pot
 
     !> @brief Evaluate getfit for the CH5p_PIP potential.
     subroutine getfit( xn, f0 )
+        use chempotpy_kinds, only: wp
         implicit none
         integer, parameter :: m  = 2239
         integer, parameter :: mr = 32
-        double precision, dimension(0:2, 0:5) :: xn
-        double precision, dimension(0:2, 0:5) :: xn1
-        double precision, dimension(0:2, 0:5) :: gf0
-        double precision, dimension(0:5, 0:5) :: d0, r0
-        double precision, dimension(0:2) :: rvec
-        double precision, dimension(0:m+2*mr-1) :: vec, vec0, vec1
-        double precision            :: f0
-        double precision            :: t0, t1
-        double precision, parameter :: dd = 1.0d-6
-        integer                     :: i, j, l, k
-        double precision            :: dc0 = 0.30547300513
-        double precision            :: dc1 = 0.19476072488
-        double precision            :: dw0 = 0.09846745640
-        double precision            :: dw1 = 0.12149234254
+        real(wp), dimension(0:2, 0:5) :: xn
+        real(wp), dimension(0:2, 0:5) :: xn1
+        real(wp), dimension(0:2, 0:5) :: gf0
+        real(wp), dimension(0:5, 0:5) :: d0, r0
+        real(wp), dimension(0:2) :: rvec
+        real(wp), dimension(0:m+2*mr-1) :: vec, vec0, vec1
+        real(wp)            :: f0
+        real(wp)            :: t0, t1
+        real(wp), parameter :: dd = 1.0e-6_wp
+        integer             :: i, j, l, k
+        real(wp)            :: dc0 = 0.30547300513
+        real(wp)            :: dc1 = 0.19476072488
+        real(wp)            :: dw0 = 0.09846745640
+        real(wp)            :: dw1 = 0.12149234254
         !   coef = the coefficients of the fit
-        double precision, dimension(0:m+2*mr-1) :: coef = (/ &
+        real(wp), dimension(0:m+2*mr-1) :: coef = (/ &
             & 22.9504077130000, 100.8520699000000, &
             & -24.9984738080000, 184.1348056100000, &
             & 3.8424396959000, 64.8891061630000, &
@@ -1412,33 +1407,34 @@ module chempotpy_ch5p_pip_pes
 
     !> @brief Evaluate getd0 for the CH5p_PIP potential.
     subroutine getd0 ( xn, dc0, dc1, dw0, dw1, d0, r0 )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(0:2, 0:5) :: xn
-        double precision :: dc0, dc1, dw0, dw1
-        double precision, dimension(0:5, 0:5) :: d0, r0
-        double precision, parameter :: p = 2.0d0
-        integer                     :: i, j
-        double precision            :: t0
+        real(wp), dimension(0:2, 0:5) :: xn
+        real(wp) :: dc0, dc1, dw0, dw1
+        real(wp), dimension(0:5, 0:5) :: d0, r0
+        real(wp), parameter :: p = 2.0e0_wp
+        integer             :: i, j
+        real(wp)            :: t0
         ! Note: CH5+.  Nuclei 0..5; i=0 for the C, i in 1..5 for the H.
-        d0(0, 0) = 0.d0
-        r0(0, 0) = 0.d0
+        d0(0, 0) = 0.e0_wp
+        r0(0, 0) = 0.e0_wp
         do j = 1, 5
             t0 = sqrt((xn(0, j)-xn(0, 0))**2+(xn(1, j)-xn(1, 0))**2+ (xn(2, j)-xn(2, 0))**2)
             !         d0(0,j) = (log(t0)-dc0)/dw0
             !         d0(0,j) = (dexp(-t0/3.d0)-dc0)/dw0
-            d0(0, j) = (dexp(-t0/p)-dc0)/dw0
+            d0(0, j) = (exp(-t0/p)-dc0)/dw0
             d0(j, 0) = d0(0, j)
             r0(0, j) = t0
             r0(j, 0) = t0
         enddo
         do i = 1, 5
-            d0(i, i) = 0.d0
-            r0(i, i) = 0.d0
+            d0(i, i) = 0.e0_wp
+            r0(i, i) = 0.e0_wp
             do j = i+1, 5
                 t0 = sqrt((xn(0, j)-xn(0, i))**2+(xn(1, j)-xn(1, i))**2+ (xn(2, j)-xn(2, i))**2)
                 !           d0(i,j) = (log(t0)-dc1)/dw1
                 !           d0(i,j) = (dexp(-t0/p)-dc1)/dw1
-                d0(i, j) = (dexp(-t0/p)-dc1)/dw1
+                d0(i, j) = (exp(-t0/p)-dc1)/dw1
                 d0(j, i) = d0(i, j)
                 r0(i, j) = t0
                 r0(j, i) = t0
@@ -1448,26 +1444,27 @@ module chempotpy_ch5p_pip_pes
 
     !> @brief Evaluate getvec for the CH5p_PIP potential.
     subroutine getvec ( m, d, vec )
+        use chempotpy_kinds, only: wp
         implicit none
         integer :: m
-        double precision, dimension(0:5, 0:5) :: d
-        double precision, dimension(0:m-1) :: vec
+        real(wp), dimension(0:5, 0:5) :: d
+        real(wp), dimension(0:m-1) :: vec
         integer :: j0, j1, j2, j3, j4, j5, j, k, k0
-        double precision, dimension(0:1) :: x
-        double precision, dimension(0:3) :: y
-        double precision, dimension(0:9) :: z
-        double precision, dimension(0:21) :: u
-        double precision, dimension(0:41) :: v
-        double precision, dimension(0:59) :: w
-        double precision, dimension(0:5, 0:5) :: d2, d3, d4, d5
-        double precision :: t0
-        double precision :: her2, her3, her4, her5, her6, her7
-        her2(t0) = (4*t0**2-2)/sqrt(dble(8*2))
-        her3(t0) = (8*t0**2-12)*t0/sqrt(dble(16*6))
-        her4(t0) = ((16*t0**2-48)*t0**2+12)/sqrt(dble(32*24))
-        her5(t0) = ((32*t0**2-160)*t0**2+120)*t0/sqrt(dble(64*120))
-        her6(t0) = (((64*t0**2-480)*t0**2+720)*t0**2-120)/sqrt(dble( 128*720))
-        her7(t0) = (((128*t0**2-1344)*t0**2+3360)*t0**2-1680)*t0/ sqrt(dble(256*5040))
+        real(wp), dimension(0:1) :: x
+        real(wp), dimension(0:3) :: y
+        real(wp), dimension(0:9) :: z
+        real(wp), dimension(0:21) :: u
+        real(wp), dimension(0:41) :: v
+        real(wp), dimension(0:59) :: w
+        real(wp), dimension(0:5, 0:5) :: d2, d3, d4, d5
+        real(wp) :: t0
+        real(wp) :: her2, her3, her4, her5, her6, her7
+        her2(t0) = (4*t0**2-2)/sqrt(real(8*2, wp))
+        her3(t0) = (8*t0**2-12)*t0/sqrt(real(16*6, wp))
+        her4(t0) = ((16*t0**2-48)*t0**2+12)/sqrt(real(32*24, wp))
+        her5(t0) = ((32*t0**2-160)*t0**2+120)*t0/sqrt(real(64*120, wp))
+        her6(t0) = (((64*t0**2-480)*t0**2+720)*t0**2-120)/sqrt(real( 128*720, wp))
+        her7(t0) = (((128*t0**2-1344)*t0**2+3360)*t0**2-1680)*t0/ sqrt(real(256*5040, wp))
         !     Test for compatibility
         if (.not.(m.eq.1.or.m.eq.3.or.m.eq.10.or.m.eq.32.or.&
             &m.eq.101.or.m.eq.299.or.m.eq.849.or.m.eq.2239)) then
@@ -1890,13 +1887,14 @@ module chempotpy_ch5p_pip_pes
 
     !> @brief Evaluate getrvec for the CH5p_PIP potential.
     subroutine getrvec ( m, r, vec )
+        use chempotpy_kinds, only: wp
         implicit none
         integer :: m
-        double precision, dimension(0:5, 0:5) :: r, r1
-        double precision, dimension(0:m-1) :: vec
+        real(wp), dimension(0:5, 0:5) :: r, r1
+        real(wp), dimension(0:m-1) :: vec
         integer :: j0, j1, j2, i, j, k
-        double precision, dimension(0:1) :: x
-        double precision, dimension(0:3) :: y
+        real(wp), dimension(0:1) :: x
+        real(wp), dimension(0:3) :: y
         !     Test for compatibility
         if( .not.(m .eq. 1.or.m .eq. 3.or.m .eq. 10) )then
             stop 'getrvec - wrong dimension'
@@ -1953,151 +1951,43 @@ module chempotpy_ch5p_pip_pes
     subroutine getch3pot( xyz1, v )
         !...  program is to calculate the potential energy of CH3+
         !...  Based on pes6n4
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter                      :: natoms  = 6
-        integer, parameter                      :: natoms1 = 4
-        integer                                 :: i, j
-        double precision, dimension(natoms1, 3) :: xyz1
-        double precision, dimension(natoms, 3)  :: xyz
-        double precision, dimension(3, natoms)  :: xyzt, f
-        double precision                        :: v, h2pot, h2potab, ch30
-        double precision, parameter             :: ang = 219474.6d0
-        character(len=1), dimension(natoms)     :: xname
+        integer, parameter                  :: natoms  = 6
+        integer, parameter                  :: natoms1 = 4
+        integer                             :: i, j
+        real(wp), dimension(natoms1, 3)     :: xyz1
+        real(wp), dimension(natoms, 3)      :: xyz
+        real(wp), dimension(3, natoms)      :: xyzt, f
+        real(wp)                            :: v, h2pot, h2potab, ch30
+        real(wp), parameter                 :: ang = 219474.6e0_wp
+        character(len=1), dimension(natoms) :: xname
         do i = 1, natoms1
             do j = 1, 3
                 xyz(i, j) = xyz1(i, j)
             enddo
         enddo
-        xyz(5, 1) = 0.7035d0
-        xyz(5, 2) = 0.d0
-        xyz(5, 3) = 14.0750143d0
-        xyz(6, 1) = -0.7035d0
-        xyz(6, 2) = 0.d0
-        xyz(6, 3) = 14.0750143d0
+        xyz(5, 1) = 0.7035e0_wp
+        xyz(5, 2) = 0.e0_wp
+        xyz(5, 3) = 14.0750143e0_wp
+        xyz(6, 1) = -0.7035e0_wp
+        xyz(6, 2) = 0.e0_wp
+        xyz(6, 3) = 14.0750143e0_wp
         do i = 1, natoms
             do j = 1, 3
                 xyzt(j, i) = xyz(i, j)
             enddo
         enddo
         call getfit(xyzt, v)
-        h2pot = -1.1745554d0 + 0.0006728d0/2.d0
+        h2pot = -1.1745554e0_wp + 0.0006728e0_wp/2.e0_wp
         !      h2potab = -1.17263405d0
-        ch30 = -39.4046592d0 + 0.0006415d0/2.d0
+        ch30 = -39.4046592e0_wp + 0.0006415e0_wp/2.e0_wp
         !      ch30 = -39.40570072d0
         v = v - h2pot - ch30
-        if( (v*ang .le. 5.d0).and.(v*ang .ge. -5.d0) )then
-            v = 0.d0
+        if( (v*ang .le. 5.e0_wp).and.(v*ang .ge. -5.e0_wp) )then
+            v = 0.e0_wp
         endif
     end subroutine getch3pot
-
-    !...  subroutine for cubic spline
-    !...  driver for routine splint, which calls spline
-    !...  x ....       H-H bond distance
-    !     y0 ...       alpha parallel
-    !     y90 ...      alpha perpendicular
-    !     yq ...       quadrupole
-    !> @brief Evaluate cspline for the CH5p_PIP potential.
-    subroutine cspline( x, y0, y90, yq )
-        implicit none
-        integer                          :: file_unit_70
-        integer                          :: file_unit_71
-        integer, parameter               :: np = 21, np2 = 257
-        integer                          :: i, nfunc
-        double precision                 :: x, y0, yp01, yp0n, y90, yp901, yp90n
-        double precision                 :: ypq1, ypqn, yq
-        double precision, dimension(np)  :: xa, ya0, ya90, y2s0, y2s90
-        double precision, dimension(np2) :: xa1, ya1, yq2
-        open(newunit=file_unit_70, file='alpha_1967.dat', status='old')
-        open(newunit=file_unit_71, file='q.dat', status='old')
-        read(file_unit_70, *)
-        do i = 1, np
-            read(file_unit_70, *) xa(i), ya0(i), ya90(i)
-        enddo
-        yp01  = 0.d0
-        yp0n  = 0.d0
-        yp901 = 0.d0
-        yp90n = 0.d0
-        !     call SPLINE to get second derivatives
-        call spline(xa, ya0, np, yp01, yp0n, y2s0)
-        call spline(xa, ya90, np, yp901, yp90n, y2s90)
-        !     call SPLINT for interpolations
-        call splint(xa, ya0, y2s0, np, x, y0)
-        call splint(xa, ya90, y2s90, np, x, y90)
-        do i = 1, np2
-            read(file_unit_71, *) xa1(i), ya1(i)
-        enddo
-        ypq1 = 0.d0
-        ypqn = 0.d0
-        call spline(xa1, ya1, np2, ypq1, ypqn, yq2)
-        call splint(xa1, ya1, yq2, np2, x, yq)
-        close(file_unit_70)
-        close(file_unit_71)
-    end subroutine cspline
-
-    !...  Cubic spline code
-    !...  Original cubic spline code from Numerial Recipe has been modified
-    !...  to adapt double precision
-    !...  02/23/05    Zhong
-    !> @brief Evaluate spline for the CH5p_PIP potential.
-    subroutine spline( x, y, n, yp1, ypn, y2 )
-        implicit none
-        integer                           :: n
-        integer, parameter                :: nmax = 500
-        integer                           :: i, k
-        double precision                  :: yp1, ypn
-        double precision                  :: p, qn, sig, un
-        double precision, dimension(n)    :: x, y, y2
-        double precision, dimension(nmax) :: u
-        if( yp1 .gt. .99e30 )then
-            y2(1) = 0.5d0
-            u(1)  = 0.5d0
-        else
-            y2(1) = -.5d0
-            u(1)  = (3./(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
-        endif
-        do i = 2, n-1
-            sig   = (x(i)-x(i-1))/(x(i+1)-x(i-1))
-            p     = sig*y2(i-1)+2.d0
-            y2(i) = (sig-1.)/p
-            u(i)  = (6.*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1))/ (x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
-        enddo
-        if( ypn .gt. .99e30 )then
-            qn = 0.d0
-            un = 0.d0
-        else
-            qn = .5d0
-            un = (3.d0/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
-        endif
-        y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.d0)
-        do k = n-1, 1, -1
-            y2(k) = y2(k)*y2(k+1)+u(k)
-        enddo
-    end subroutine spline
-
-    !> @brief Evaluate splint for the CH5p_PIP potential.
-    subroutine splint( xa, ya, y2a, n, x, y )
-        implicit none
-        integer                        :: n
-        double precision               :: x, y
-        double precision, dimension(n) :: xa, y2a, ya
-        integer                        :: k, khi, klo
-        double precision               :: a, b, h
-        klo = 1
-        khi = n
-        do while( khi-klo .gt. 1 )
-            k = (khi+klo)/2
-            if( xa(k) .gt. x )then
-                khi = k
-            else
-                klo = k
-            endif
-        enddo
-        h = xa(khi)-xa(klo)
-        if( h .eq. 0. ) pause 'bad xa input in splint'
-        a = (xa(khi)-x)/h
-        b = (x-xa(klo))/h
-        y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h** 2)/6.d0
-    end subroutine splint
 
     !.... Subroutine to calculate R, which is the distance between C and the
     !.... center of H2 in CH5+
@@ -2111,23 +2001,24 @@ module chempotpy_ch5p_pip_pes
     !.... theta ...  the angle between H2 and axis of C-center of H2
     !> @brief Evaluate calcr for the CH5p_PIP potential.
     subroutine calcr( x, xch3, xh2a, dist, h2dist, theta )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer                                :: i, j, npp1, npp2, jr
-        integer, parameter                     :: natoms = 6
-        double precision, dimension(3, natoms) :: x
-        double precision, dimension(natoms-1)  :: rch
-        double precision, dimension(3)         :: xh2m, xh1, xh2
-        double precision, dimension(2)         :: rchmax
-        double precision                       :: dist, h2dist, h2dist5, theta
-        double precision, dimension(3, 4)      :: xch3t
-        double precision, dimension(3, 2)      :: xh2at
-        double precision, dimension(4, 3)      :: xch3
-        double precision, dimension(2, 3)      :: xh2a
+        integer                        :: i, j, npp1, npp2, jr
+        integer, parameter             :: natoms = 6
+        real(wp), dimension(3, natoms) :: x
+        real(wp), dimension(natoms-1)  :: rch
+        real(wp), dimension(3)         :: xh2m, xh1, xh2
+        real(wp), dimension(2)         :: rchmax
+        real(wp)                       :: dist, h2dist, h2dist5, theta
+        real(wp), dimension(3, 4)      :: xch3t
+        real(wp), dimension(3, 2)      :: xh2at
+        real(wp), dimension(4, 3)      :: xch3
+        real(wp), dimension(2, 3)      :: xh2a
         do j = 1, natoms - 1
             rch(j) = sqrt((x(1,j+1)-x(1,1))**2+(x(2,j+1)-x(2,1))**2 +(x(3,j+1)-x(3,1))**2)
         enddo
-        rchmax(1) = 0.d0
-        rchmax(2) = 0.d0
+        rchmax(1) = 0.e0_wp
+        rchmax(2) = 0.e0_wp
         npp1      = 0
         npp2      = 0
         do j = 1, natoms - 1
@@ -2147,7 +2038,7 @@ module chempotpy_ch5p_pip_pes
         enddo
         !.... Find the Cartisian coordinate of the center of H2
         do i = 1, 3
-            xh2m(i) = 0.5d0*(x(i,npp1+1)+x(i,npp2+1))
+            xh2m(i) = 0.5e0_wp*(x(i,npp1+1)+x(i,npp2+1))
         enddo
         !.... Obtain the R -- dist
         call calcdist(x, xh2m, dist)
@@ -2182,7 +2073,7 @@ module chempotpy_ch5p_pip_pes
         enddo
         !.... Calculate the bond distance of H2
         call calcdist(xh1, xh2, h2dist)
-        h2dist5 = h2dist/2.d0
+        h2dist5 = h2dist/2.e0_wp
         call calcangle(rch(npp2), dist, h2dist5, theta)
     end subroutine calcr
 
@@ -2190,24 +2081,26 @@ module chempotpy_ch5p_pip_pes
     subroutine calcdist( x1, x2, dist )
         !.... a subroutine to calculate the bond length
         !.... x1, x2 are Cartisian coordinate
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(3) :: x1, x2
-        double precision               :: dist
-        dist = dsqrt((x1(1) - x2(1))**2 + (x1(2) - x2(2))**2 + (x1(3) - x2(3))**2)
+        real(wp), dimension(3) :: x1, x2
+        real(wp)               :: dist
+        dist = sqrt((x1(1) - x2(1))**2 + (x1(2) - x2(2))**2 + (x1(3) - x2(3))**2)
     end subroutine calcdist
 
     !> @brief Evaluate calcangle for the CH5p_PIP potential.
     subroutine calcangle( a, b, c, theta )
         !.... program to calculate theta
         !.... a, b, c are the length of sides of triangle
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: a, b, c, theta, pi, d
-        pi = 4.d0*datan(1.d0)
+        real(wp) :: a, b, c, theta, pi, d
+        pi = 4.e0_wp*atan(1.e0_wp)
         if( abs(b-c-a) .le. 1e-5 )then
-            theta = 0.d0
+            theta = 0.e0_wp
         else
             d     = b**2 + c**2 - a**2
-            theta = 180.d0*dacos(d/(2.d0*b*c))/pi
+            theta = 180.e0_wp*acos(d/(2.e0_wp*b*c))/pi
         endif
     end subroutine calcangle
 end module chempotpy_ch5p_pip_pes
@@ -2215,13 +2108,14 @@ end module chempotpy_ch5p_pip_pes
 !> @brief Expose CH5p_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, gradient_out, d )
     use chempotpy_ch5p_pip_pes, only: evaluate
+    use chempotpy_kinds,        only: wp
     implicit none
-    integer, parameter            :: natoms  = 6
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: gradient_out(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 6
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: gradient_out(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, gradient_out, d)
 end subroutine pes

@@ -51,6 +51,7 @@
 
 !> @brief Implement OH2_GEN_DIM1981, a potential energy surface for OH2.
 module chempotpy_oh2_gen_dim1981_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -59,135 +60,137 @@ module chempotpy_oh2_gen_dim1981_pes
 
     !> @brief Evaluate the OH2_GEN_DIM1981 potential energy surface for OH2.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, parameter            :: natom   = 25
-        integer, parameter            :: isurf   = 5
-        integer, parameter            :: jsurf   = int(isurf*(isurf+1)/2)
-        integer, parameter            :: n3atom  = 75
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: asycm_easyab
-        double precision              :: asycm_easyac
-        double precision              :: asycm_easybc
-        double precision              :: infocm_cartnu(natom,3)
-        integer                       :: infocm_icartr
-        integer                       :: infocm_indexes(natom)
-        integer                       :: infocm_irctnt
-        integer                       :: infocm_mder
-        integer                       :: infocm_msurf
-        integer                       :: infocm_natoms
-        character                     :: infocm_ref(5)
-        double precision              :: nstep_step
-        double precision              :: potcm_a
-        double precision              :: potcm_aab(3)
-        double precision              :: potcm_abc(3)
-        double precision              :: potcm_beta
-        double precision              :: potcm_bsp(40,3)
-        double precision              :: potcm_cab(3)
-        double precision              :: potcm_cbc(3)
-        double precision              :: potcm_dbcoor(2)
-        double precision              :: potcm_de
-        double precision              :: potcm_gamma
-        integer                       :: potcm_nphi
-        double precision              :: potcm_phi(40)
-        double precision              :: potcm_r1s
-        double precision              :: potcm_r2s
-        double precision              :: potcm_rbb
-        double precision              :: potcm_req(3)
-        double precision              :: potcm_rhh
-        double precision              :: potcm_vsp
-        double precision              :: potcm_xab(3)
-        double precision              :: potcm_xbc(3)
-        double precision              :: pt1cm_degsdr(n3atom)
-        double precision              :: pt1cm_engygs
-        double precision              :: pt1cm_r(n3atom)
-        double precision              :: pt3cm_ezero(isurf+1)
-        double precision              :: pt4cm_deesdr(n3atom,isurf)
-        double precision              :: pt4cm_engyes(isurf)
-        double precision              :: pt5cm_deijdr(n3atom,jsurf)
-        double precision              :: pt5cm_engyij(jsurf)
-        double precision              :: usricm_anuzero
-        double precision              :: usricm_cart(natom,3)
-        integer                       :: usricm_nasurf(isurf+1,isurf+1)
-        integer                       :: usricm_nder
-        integer                       :: usricm_nflag(20)
-        integer                       :: usricm_nulbl(natom)
-        double precision              :: usrocm_descart(natom,3,isurf)
-        double precision              :: usrocm_dgscart(natom,3)
-        double precision              :: usrocm_dijcart(natom,3,jsurf)
-        double precision              :: usrocm_pengyes(isurf)
-        double precision              :: usrocm_pengygs
-        double precision              :: usrocm_pengyij(jsurf)
-        double precision              :: utilcm_cnvrtd
-        double precision              :: utilcm_cnvrtde
-        double precision              :: utilcm_cnvrte
-        double precision              :: utilcm_descartnu(natom,3,isurf)
-        double precision              :: utilcm_dgscartnu(natom,3)
-        double precision              :: utilcm_dijcartnu(natom,3,jsurf)
-        integer                       :: utilcm_ireorder
-        integer                       :: utilcm_kediag
-        integer                       :: utilcm_keoffd
-        integer                       :: utilcm_ksdiag
-        integer                       :: utilcm_ksoffd
-        double precision              :: v
-        integer                       :: iatom, idir, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, parameter    :: natom   = 25
+        integer, parameter    :: isurf   = 5
+        integer, parameter    :: jsurf   = int(isurf*(isurf+1)/2)
+        integer, parameter    :: n3atom  = 75
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: asycm_easyab
+        real(wp)              :: asycm_easyac
+        real(wp)              :: asycm_easybc
+        real(wp)              :: infocm_cartnu(natom,3)
+        integer               :: infocm_icartr
+        integer               :: infocm_indexes(natom)
+        integer               :: infocm_irctnt
+        integer               :: infocm_mder
+        integer               :: infocm_msurf
+        integer               :: infocm_natoms
+        character             :: infocm_ref(5)
+        real(wp)              :: nstep_step
+        real(wp)              :: potcm_a
+        real(wp)              :: potcm_aab(3)
+        real(wp)              :: potcm_abc(3)
+        real(wp)              :: potcm_beta
+        real(wp)              :: potcm_bsp(40,3)
+        real(wp)              :: potcm_cab(3)
+        real(wp)              :: potcm_cbc(3)
+        real(wp)              :: potcm_dbcoor(2)
+        real(wp)              :: potcm_de
+        real(wp)              :: potcm_gamma
+        integer               :: potcm_nphi
+        real(wp)              :: potcm_phi(40)
+        real(wp)              :: potcm_r1s
+        real(wp)              :: potcm_r2s
+        real(wp)              :: potcm_rbb
+        real(wp)              :: potcm_req(3)
+        real(wp)              :: potcm_rhh
+        real(wp)              :: potcm_vsp
+        real(wp)              :: potcm_xab(3)
+        real(wp)              :: potcm_xbc(3)
+        real(wp)              :: pt1cm_degsdr(n3atom)
+        real(wp)              :: pt1cm_engygs
+        real(wp)              :: pt1cm_r(n3atom)
+        real(wp)              :: pt3cm_ezero(isurf+1)
+        real(wp)              :: pt4cm_deesdr(n3atom,isurf)
+        real(wp)              :: pt4cm_engyes(isurf)
+        real(wp)              :: pt5cm_deijdr(n3atom,jsurf)
+        real(wp)              :: pt5cm_engyij(jsurf)
+        real(wp)              :: usricm_anuzero
+        real(wp)              :: usricm_cart(natom,3)
+        integer               :: usricm_nasurf(isurf+1,isurf+1)
+        integer               :: usricm_nder
+        integer               :: usricm_nflag(20)
+        integer               :: usricm_nulbl(natom)
+        real(wp)              :: usrocm_descart(natom,3,isurf)
+        real(wp)              :: usrocm_dgscart(natom,3)
+        real(wp)              :: usrocm_dijcart(natom,3,jsurf)
+        real(wp)              :: usrocm_pengyes(isurf)
+        real(wp)              :: usrocm_pengygs
+        real(wp)              :: usrocm_pengyij(jsurf)
+        real(wp)              :: utilcm_cnvrtd
+        real(wp)              :: utilcm_cnvrtde
+        real(wp)              :: utilcm_cnvrte
+        real(wp)              :: utilcm_descartnu(natom,3,isurf)
+        real(wp)              :: utilcm_dgscartnu(natom,3)
+        real(wp)              :: utilcm_dijcartnu(natom,3,jsurf)
+        integer               :: utilcm_ireorder
+        integer               :: utilcm_kediag
+        integer               :: utilcm_keoffd
+        integer               :: utilcm_ksdiag
+        integer               :: utilcm_ksoffd
+        real(wp)              :: v
+        integer               :: iatom, idir, istate
         !initialize
-        asycm_easyab     = 0.d0; asycm_easyac = 0.d0; asycm_easybc = 0.d0; infocm_cartnu = 0.d0; infocm_icartr = 0
+        asycm_easyab     = 0.e0_wp; asycm_easyac = 0.e0_wp; asycm_easybc = 0.e0_wp; infocm_cartnu = 0.e0_wp; infocm_icartr = 0
         infocm_indexes   = 0; infocm_irctnt = 0; infocm_mder = 0; infocm_msurf = 0; infocm_natoms = 0
         infocm_ref       = ' '
-        nstep_step       = 0.d0
-        potcm_a          = 0.d0
-        potcm_aab        = 0.d0
-        potcm_abc        = 0.d0
-        potcm_beta       = 0.d0
-        potcm_bsp        = 0.d0
-        potcm_cab        = 0.d0
-        potcm_cbc        = 0.d0
-        potcm_dbcoor     = 0.d0
-        potcm_de         = 0.d0
-        potcm_gamma      = 0.d0
+        nstep_step       = 0.e0_wp
+        potcm_a          = 0.e0_wp
+        potcm_aab        = 0.e0_wp
+        potcm_abc        = 0.e0_wp
+        potcm_beta       = 0.e0_wp
+        potcm_bsp        = 0.e0_wp
+        potcm_cab        = 0.e0_wp
+        potcm_cbc        = 0.e0_wp
+        potcm_dbcoor     = 0.e0_wp
+        potcm_de         = 0.e0_wp
+        potcm_gamma      = 0.e0_wp
         potcm_nphi       = 0
-        potcm_phi        = 0.d0
-        potcm_r1s        = 0.d0
-        potcm_r2s        = 0.d0
-        potcm_rbb        = 0.d0
-        potcm_req        = 0.d0
-        potcm_rhh        = 0.d0
-        potcm_vsp        = 0.d0
-        potcm_xab        = 0.d0
-        potcm_xbc        = 0.d0
-        pt1cm_degsdr     = 0.d0
-        pt1cm_engygs     = 0.d0
-        pt1cm_r          = 0.d0
-        pt3cm_ezero      = 0.d0
-        pt4cm_deesdr     = 0.d0
-        pt4cm_engyes     = 0.d0
-        pt5cm_deijdr     = 0.d0
-        pt5cm_engyij     = 0.d0
-        usricm_anuzero   = 0.d0
-        usricm_cart      = 0.d0
+        potcm_phi        = 0.e0_wp
+        potcm_r1s        = 0.e0_wp
+        potcm_r2s        = 0.e0_wp
+        potcm_rbb        = 0.e0_wp
+        potcm_req        = 0.e0_wp
+        potcm_rhh        = 0.e0_wp
+        potcm_vsp        = 0.e0_wp
+        potcm_xab        = 0.e0_wp
+        potcm_xbc        = 0.e0_wp
+        pt1cm_degsdr     = 0.e0_wp
+        pt1cm_engygs     = 0.e0_wp
+        pt1cm_r          = 0.e0_wp
+        pt3cm_ezero      = 0.e0_wp
+        pt4cm_deesdr     = 0.e0_wp
+        pt4cm_engyes     = 0.e0_wp
+        pt5cm_deijdr     = 0.e0_wp
+        pt5cm_engyij     = 0.e0_wp
+        usricm_anuzero   = 0.e0_wp
+        usricm_cart      = 0.e0_wp
         usricm_nasurf    = 0
         usricm_nder      = 0
         usricm_nflag     = 0
         usricm_nulbl     = 0
-        usrocm_descart   = 0.d0
-        usrocm_dgscart   = 0.d0
-        usrocm_dijcart   = 0.d0
-        usrocm_pengyes   = 0.d0
-        usrocm_pengygs   = 0.d0
-        usrocm_pengyij   = 0.d0
-        utilcm_cnvrtd    = 0.d0
-        utilcm_cnvrtde   = 0.d0
-        utilcm_cnvrte    = 0.d0
-        utilcm_descartnu = 0.d0
-        utilcm_dgscartnu = 0.d0
-        utilcm_dijcartnu = 0.d0
+        usrocm_descart   = 0.e0_wp
+        usrocm_dgscart   = 0.e0_wp
+        usrocm_dijcart   = 0.e0_wp
+        usrocm_pengyes   = 0.e0_wp
+        usrocm_pengygs   = 0.e0_wp
+        usrocm_pengyij   = 0.e0_wp
+        utilcm_cnvrtd    = 0.e0_wp
+        utilcm_cnvrtde   = 0.e0_wp
+        utilcm_cnvrte    = 0.e0_wp
+        utilcm_descartnu = 0.e0_wp
+        utilcm_dgscartnu = 0.e0_wp
+        utilcm_dijcartnu = 0.e0_wp
         utilcm_ireorder  = 0
         utilcm_kediag    = 0
         utilcm_keoffd    = 0
@@ -197,63 +200,67 @@ module chempotpy_oh2_gen_dim1981_pes
             & 0, 0, 0, 0, 0, 0, 0, 0], shape(usricm_nasurf))
         usricm_nder    = 0
         usricm_nflag   = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        usricm_anuzero = 0.0d0
+        usricm_anuzero = 0.0e0_wp
         infocm_icartr  = 3
         infocm_msurf   = 0
         infocm_mder    = 1
         usricm_nulbl   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         infocm_natoms  = 3
-        nstep_step     = 0.000000008d0
+        nstep_step     = 0.000000008e0_wp
         potcm_nphi     = 17
-        potcm_r1s      = 0.2212079d+01
-        potcm_r2s      = 0.2215309d+01
-        potcm_vsp      = 0.1094890d+03
-        potcm_xbc      = [0.1094890d+03, 0.1473409d+01, 0.1941998d+01]
-        potcm_xab      = [0.1056400d+03, 0.1241479d+01, 0.2304798d+01]
-        potcm_cbc      = [-0.4815674d-01, 0.3814697d-05, 0.4415512d-03]
-        potcm_abc      = [0.7873216d+01, 0.7873216d+01, 0.7873216d+01]
-        potcm_cab      = [-0.1482804d+01, -0.2084732d-02, -0.3727913d-02]
-        potcm_aab      = [0.1932070d+01, 0.1932070d+01, 0.1932070d+01]
-        potcm_phi(1:17) = [0.0000000d+00, 0.2000000d+01, 0.4000000d+01, 0.6000000d+01, 0.1800000d+02, 0.2400000d+02, &
-            & 0.3000000d+02, 0.3400000d+02, 0.3800000d+02, 0.4400000d+02, 0.4800000d+02, 0.5400000d+02, 0.6000000d+02, &
-            & 0.7600000d+02, 0.8600000d+02, 0.8800000d+02, 0.9000000d+02]
-        potcm_bsp(1:17,1) = [0.1094409d+03, 0.1094212d+03, 0.1094004d+03, 0.1093775d+03, 0.1088412d+03, 0.1077417d+03, &
-            & 0.1055117d+03, 0.1030257d+03, 0.9966266d+02, 0.9630693d+02, 0.9637480d+02, 0.9811765d+02, 0.1000138d+03, &
-            & 0.1029822d+03, 0.1038929d+03, 0.1040309d+03, 0.1041572d+03]
-        potcm_bsp(1:17,2) = [0.1473413d+01, 0.1474257d+01, 0.1476847d+01, 0.1481213d+01, 0.1545280d+01, 0.1599182d+01, &
-            & 0.1655956d+01, 0.1681611d+01, 0.1680401d+01, 0.1626349d+01, 0.1572269d+01, 0.1486160d+01, 0.1408802d+01, &
-            & 0.1273705d+01, 0.1241724d+01, 0.1239825d+01, 0.1239394d+01]
-        potcm_bsp(1:17,3) = [0.1942440d+01, 0.1940545d+01, 0.1936212d+01, 0.1929558d+01, 0.1825750d+01, 0.1719964d+01, &
-            & 0.1603891d+01, 0.1538857d+01, 0.1490752d+01, 0.1525683d+01, 0.1620584d+01, 0.1788983d+01, 0.1942842d+01, &
-            & 0.2222638d+01, 0.2294156d+01, 0.2299114d+01, 0.2301070d+01]
-        potcm_de      = 106.56d0
-        potcm_beta    = 2.07942d0
-        potcm_req     = [0.96966d0, 0.74144d0, 0.96966d0]
-        potcm_a       = 0.26d0
-        potcm_gamma   = 0.4131d0
-        potcm_rbb     = 0.74144d0
-        v             = 0.d0; g = 0.d0; d = 0.d0
+        potcm_r1s      = 0.2212079e+01_wp
+        potcm_r2s      = 0.2215309e+01_wp
+        potcm_vsp      = 0.1094890e+03_wp
+        potcm_xbc      = [0.1094890e+03_wp, 0.1473409e+01_wp, 0.1941998e+01_wp]
+        potcm_xab      = [0.1056400e+03_wp, 0.1241479e+01_wp, 0.2304798e+01_wp]
+        potcm_cbc      = [-0.4815674e-01_wp, 0.3814697e-05_wp, 0.4415512e-03_wp]
+        potcm_abc      = [0.7873216e+01_wp, 0.7873216e+01_wp, 0.7873216e+01_wp]
+        potcm_cab      = [-0.1482804e+01_wp, -0.2084732e-02_wp, -0.3727913e-02_wp]
+        potcm_aab      = [0.1932070e+01_wp, 0.1932070e+01_wp, 0.1932070e+01_wp]
+        potcm_phi(1:17) = [0.0000000e+00_wp, 0.2000000e+01_wp, 0.4000000e+01_wp, 0.6000000e+01_wp, 0.1800000e+02_wp, &
+            & 0.2400000e+02_wp, 0.3000000e+02_wp, 0.3400000e+02_wp, 0.3800000e+02_wp, 0.4400000e+02_wp, &
+            & 0.4800000e+02_wp, 0.5400000e+02_wp, 0.6000000e+02_wp, 0.7600000e+02_wp, 0.8600000e+02_wp, &
+            & 0.8800000e+02_wp, 0.9000000e+02_wp]
+        potcm_bsp(1:17,1) = [0.1094409e+03_wp, 0.1094212e+03_wp, 0.1094004e+03_wp, 0.1093775e+03_wp, 0.1088412e+03_wp, &
+            & 0.1077417e+03_wp, 0.1055117e+03_wp, 0.1030257e+03_wp, 0.9966266e+02_wp, 0.9630693e+02_wp, &
+            & 0.9637480e+02_wp, 0.9811765e+02_wp, 0.1000138e+03_wp, 0.1029822e+03_wp, 0.1038929e+03_wp, &
+            & 0.1040309e+03_wp, 0.1041572e+03_wp]
+        potcm_bsp(1:17,2) = [0.1473413e+01_wp, 0.1474257e+01_wp, 0.1476847e+01_wp, 0.1481213e+01_wp, 0.1545280e+01_wp, &
+            & 0.1599182e+01_wp, 0.1655956e+01_wp, 0.1681611e+01_wp, 0.1680401e+01_wp, 0.1626349e+01_wp, &
+            & 0.1572269e+01_wp, 0.1486160e+01_wp, 0.1408802e+01_wp, 0.1273705e+01_wp, 0.1241724e+01_wp, &
+            & 0.1239825e+01_wp, 0.1239394e+01_wp]
+        potcm_bsp(1:17,3) = [0.1942440e+01_wp, 0.1940545e+01_wp, 0.1936212e+01_wp, 0.1929558e+01_wp, 0.1825750e+01_wp, &
+            & 0.1719964e+01_wp, 0.1603891e+01_wp, 0.1538857e+01_wp, 0.1490752e+01_wp, 0.1525683e+01_wp, &
+            & 0.1620584e+01_wp, 0.1788983e+01_wp, 0.1942842e+01_wp, 0.2222638e+01_wp, 0.2294156e+01_wp, &
+            & 0.2299114e+01_wp, 0.2301070e+01_wp]
+        potcm_de      = 106.56e0_wp
+        potcm_beta    = 2.07942e0_wp
+        potcm_req     = [0.96966e0_wp, 0.74144e0_wp, 0.96966e0_wp]
+        potcm_a       = 0.26e0_wp
+        potcm_gamma   = 0.4131e0_wp
+        potcm_rbb     = 0.74144e0_wp
+        v             = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         usricm_nder   = igrad
         usricm_nasurf = 1
-        usricm_cart   = 0.d0
+        usricm_cart   = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                usricm_cart(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+                usricm_cart(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
         call prepare_local_context
         call pot
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
+                p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
         elseif( igrad == 1 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
+                p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
             do iatom=1, natoms
                 do idir=1, 3
-                    g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*51.422067
+                    g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*hartree_per_bohr_to_ev_per_angstrom
                 enddo
             enddo
         elseif( igrad == 2 )then
@@ -264,18 +271,19 @@ module chempotpy_oh2_gen_dim1981_pes
 
         !> @brief Evaluate prepare_local_context for the OH2_GEN_DIM1981 potential.
         subroutine prepare_local_context
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: i, it
-            double precision :: nab, nab1, nbc, nbc1, junk(4)
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer             :: i, it
+            real(wp)            :: nab, nab1, nbc, nbc1, junk(4)
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
-            double precision, parameter :: bohr = .52917706d0
+            real(wp), parameter :: bohr = .52917706e0_wp
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
-            double precision, parameter :: hrtree = 627.5095d0
+            real(wp), parameter :: hrtree = 627.5095e0_wp
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
@@ -302,7 +310,7 @@ module chempotpy_oh2_gen_dim1981_pes
             potcm_beta = potcm_beta * bohr
             potcm_de   = potcm_de/hrtree
             potcm_a    = potcm_a/bohr
-            potcm_rhh  = 1.4007977d0
+            potcm_rhh  = 1.4007977e0_wp
             potcm_rbb  = potcm_rbb /bohr
             !CCCCCCCCCCC
             pt3cm_ezero(1) = potcm_vsp
@@ -332,19 +340,20 @@ module chempotpy_oh2_gen_dim1981_pes
             !   The zero of energy is defined at O "infinitely" far from the H2 diat
             !CCCCCCCCCCCCCCC
             !CCCCCCCCCCCCCCC
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: bcoor, c, dac, ractmp, rob, stuff, vabbc, vac
-            integer          :: it
-            double precision :: nab, nab1, nbc, nbc1, junk(4)
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: bcoor, c, dac, ractmp, rob, stuff, vabbc, vac
+            integer             :: it
+            real(wp)            :: nab, nab1, nbc, nbc1, junk(4)
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
-            double precision, parameter :: bohr = .52917706d0
+            real(wp), parameter :: bohr = .52917706e0_wp
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
-            double precision, parameter :: hrtree = 627.5095d0
+            real(wp), parameter :: hrtree = 627.5095e0_wp
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
@@ -362,45 +371,45 @@ module chempotpy_oh2_gen_dim1981_pes
             !        NAB AND NBC ARE THE BOND ORDERS OF THE DIATOMICS
             !        AB AND BC RESPECTIVELY. (EQUATION 2.2)
             nab = exp((potcm_req(1) - pt1cm_r(1))/potcm_a)
-            if( nab .lt. 1.d-15 ) nab = 1.d-15
+            if( nab .lt. 1.e-15_wp ) nab = 1.e-15_wp
             nbc = exp((potcm_req(2) - pt1cm_r(2))/potcm_a)
-            if( nbc .lt. 1.d-15 ) nbc = 1.d-15
+            if( nbc .lt. 1.e-15_wp ) nbc = 1.e-15_wp
             !       CALCULATE BOND ORDERS ALONG THE REACTION COORDINATE
             !       SEE EQUATION 2.7A, 2.7B
-            c = 1.0d0-nab/nbc
-            if( abs(c) <= 1.0d-14 )then
-                nab1 = 0.5d0
-                nbc1 = 0.5d0
+            c = 1.0e0_wp-nab/nbc
+            if( abs(c) <= 1.0e-14_wp )then
+                nab1 = 0.5e0_wp
+                nbc1 = 0.5e0_wp
             else
                 c    = c/nab
-                nab1 = (2.0d0+c-sqrt(4.0d0+c*c))/(2.0d0*c)
-                nbc1 = 1.0d0-nab1
+                nab1 = (2.0e0_wp+c-sqrt(4.0e0_wp+c*c))/(2.0e0_wp*c)
+                nbc1 = 1.0e0_wp-nab1
             endif
             !          ROB IS USED IN THE BENDING POTENTIAL CALCULATIONS
             !          FIRST TRAP OUT ANY ZERO ARGUEMENTS
-            if( nab1*nbc1 > 0.0d0 )then
+            if( nab1*nbc1 > 0.0e0_wp )then
                 stuff = potcm_a * log(nab1*nbc1)
                 rob   = (potcm_rbb - stuff)/(potcm_rhh - stuff)
             else
-                rob = 1.0d0
+                rob = 1.0e0_wp
             endif
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        CALCULATE BENDING CORRECTION
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
             !        CALCULATE V(R(3))
             junk(3) = exp(-potcm_beta*(pt1cm_r(3)-potcm_req(3))/rob)
-            vac     = potcm_gamma *1.0d-14 * potcm_de * junk(3)* (1.d0 + 0.5d0*junk(3))
+            vac     = potcm_gamma *1.0e-14_wp * potcm_de * junk(3)* (1.e0_wp + 0.5e0_wp*junk(3))
             !        CALCULATE V(R(1)+R(2))
             junk(4) = exp(potcm_beta*(potcm_req(3)-pt1cm_r(2)-pt1cm_r(1))/rob)
-            vabbc   = potcm_gamma *1.0d-14 * potcm_de * junk(4) * (1.d0 + 0.5d0*junk(4))
+            vabbc   = potcm_gamma *1.0e-14_wp * potcm_de * junk(4) * (1.e0_wp + 0.5e0_wp*junk(4))
             !        HERE IS THE BENDING CORRECTION
-            bcoor = (vac - vabbc)*1.0d14
+            bcoor = (vac - vabbc)*1.0e14_wp
             !          WHILE IT'S CONVENIENT, CALCULATE THE DERIVATIVE
             !          OF BCOOR WITH RESPECT TO R(1), R(2), AND R(3).
             !        CALCULATE DAC (THE DERIVATIVE WITH RESPECT TO R(3))
             if( usricm_nder .eq. 1 )then
-                dac             = -potcm_gamma*potcm_de*potcm_beta*junk(3)*(1.d0+junk(3))/rob
-                potcm_dbcoor(1) = potcm_gamma * potcm_de * potcm_beta * junk(4) * (1.d0 + junk(4))/rob
+                dac             = -potcm_gamma*potcm_de*potcm_beta*junk(3)*(1.e0_wp+junk(3))/rob
+                potcm_dbcoor(1) = potcm_gamma * potcm_de * potcm_beta * junk(4) * (1.e0_wp + junk(4))/rob
                 potcm_dbcoor(2) = potcm_dbcoor(1)
             endif
             !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -436,20 +445,21 @@ module chempotpy_oh2_gen_dim1981_pes
             !   RMO-SPLINE TYPE FIT WITH BEBO TYPE CONTINUATION INTO THE ASYMBTOTIC
             !   POTENTIAL ROUTINE INTERACTS WITH REST OF PROGRAM WITH UNITS OF EV/BO
             !   POTENTIAL ROUTINE ASSUMES SPLINE INFO IS IN UNITS OF KCAL/ANGSTROM
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: csp(48,3), scrap(48), v(4)
-            double precision :: nab, nab1, nbc, nbc1, junk(4)
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: csp(48,3), scrap(48), v(4)
+            real(wp)            :: nab, nab1, nbc, nbc1, junk(4)
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
-            double precision, parameter :: bohr = .52917706d0
+            real(wp), parameter :: bohr = .52917706e0_wp
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
-            double precision, parameter :: hrtree = 627.5095d0
-            double precision, parameter :: detrad = .0174532d0
-            character(len=80) :: title
+            real(wp), parameter :: hrtree = 627.5095e0_wp
+            real(wp), parameter :: detrad = .0174532e0_wp
+            character(len=80)   :: title
             title = ' RMOFIT to DIM surface with BEBO continuations '
             !      WRITE(NFLAG(18),845)TITLE
             !      WRITE(NFLAG(18),125)STEP
@@ -469,18 +479,19 @@ module chempotpy_oh2_gen_dim1981_pes
         !> @brief Evaluate POT2 for the OH2_GEN_DIM1981 potential.
         subroutine pot2
             ! COCK SPLINES
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: angle, bet, betpr, betrg, csp(48,3), dbc, depr, derg, dis, dr1, dr2, ppp, r1, r2, r3, repr, req2, &
+            real(wp) :: angle, bet, betpr, betrg, csp(48,3), dbc, depr, derg, dis, dr1, dr2, ppp, r1, r2, r3, repr, req2, &
                 & rerg, rr, scrap(48), sep, v(4), x
-            integer          :: i, ic, j, k
-            double precision :: nab, nab1, nbc, nbc1, junk(4), bohr
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            double precision, parameter :: hrtree = 627.5095d0
-            double precision, parameter :: detrad = .0174532d0
+            integer             :: i, ic, j, k
+            real(wp)            :: nab, nab1, nbc, nbc1, junk(4), bohr
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            real(wp), parameter :: hrtree = 627.5095e0_wp
+            real(wp), parameter :: detrad = .0174532e0_wp
             do ic = 1, 4
                 select case( ic )
                 case( 1 )
@@ -500,9 +511,9 @@ module chempotpy_oh2_gen_dim1981_pes
                     r2 = pt1cm_r(2)
                     r3 = pt1cm_r(3)+nstep_step
                 end select
-                r1    = r1*0.529177d0
-                r2    = r2*0.529177d0
-                r3    = r3*0.529177d0
+                r1    = r1*0.529177e0_wp
+                r2    = r2*0.529177e0_wp
+                r3    = r3*0.529177e0_wp
                 dr1   = potcm_r1s-r1
                 dr2   = potcm_r2s-r2
                 angle = atan(dr1/dr2)/detrad
@@ -510,32 +521,32 @@ module chempotpy_oh2_gen_dim1981_pes
                     ppp = spline(1, potcm_nphi, potcm_phi, potcm_bsp(1,k), csp(1,k), scrap, angle)
                 enddo
                 dbc   = potcm_xbc(1)
-                derg  = potcm_xbc(1)/23.061d0
-                rerg  = (potcm_r2s-potcm_xbc(2))/.529177d0
-                betrg = potcm_xbc(3)*.529177d0
-                depr  = potcm_xab(1)/23.061d0
-                repr  = (potcm_r1s-potcm_xab(2))/.529177d0
-                betpr = potcm_xab(3)*.529177d0
+                derg  = potcm_xbc(1)/23.061e0_wp
+                rerg  = (potcm_r2s-potcm_xbc(2))/.529177e0_wp
+                betrg = potcm_xbc(3)*.529177e0_wp
+                depr  = potcm_xab(1)/23.061e0_wp
+                repr  = (potcm_r1s-potcm_xab(2))/.529177e0_wp
+                betpr = potcm_xab(3)*.529177e0_wp
                 if( r1 > potcm_r1s .and. r2 > potcm_r2s )then
-                    pt1cm_engygs = potcm_xbc(1)/627.5095d0
+                    pt1cm_engygs = potcm_xbc(1)/627.5095e0_wp
                     if( usricm_nder == 1 )then
-                        pt1cm_degsdr(1) = 1.0d-9
-                        pt1cm_degsdr(2) = 1.0d-9
-                        pt1cm_degsdr(3) = 0.0d0
+                        pt1cm_degsdr(1) = 1.0e-9_wp
+                        pt1cm_degsdr(2) = 1.0e-9_wp
+                        pt1cm_degsdr(3) = 0.0e0_wp
                     endif
                     return
                 elseif( r1 > potcm_r1s )then
                     rr   = potcm_r2s-r2
                     sep  = r1-potcm_r1s
-                    dis  = potcm_xbc(1)+potcm_cbc(1)*exp(-min(potcm_abc(1)*sep, 25.0d0))
-                    req2 = potcm_xbc(2)+potcm_cbc(2)*exp(-min(potcm_abc(2)*sep, 25.0d0))
-                    bet  = potcm_xbc(3)+potcm_cbc(3)*exp(-min(potcm_abc(3)*sep, 25.0d0))
+                    dis  = potcm_xbc(1)+potcm_cbc(1)*exp(-min(potcm_abc(1)*sep, 25.0e0_wp))
+                    req2 = potcm_xbc(2)+potcm_cbc(2)*exp(-min(potcm_abc(2)*sep, 25.0e0_wp))
+                    bet  = potcm_xbc(3)+potcm_cbc(3)*exp(-min(potcm_abc(3)*sep, 25.0e0_wp))
                 elseif( r2 > potcm_r2s )then
                     rr   = potcm_r1s-r1
                     sep  = r2-potcm_r2s
-                    dis  = potcm_xab(1)+potcm_cab(1)*exp(-min(potcm_aab(1)*sep, 25.0d0))
-                    req2 = potcm_xab(2)+potcm_cab(2)*exp(-min(potcm_aab(2)*sep, 25.0d0))
-                    bet  = potcm_xab(3)+potcm_cab(3)*exp(-min(potcm_aab(3)*sep, 25.0d0))
+                    dis  = potcm_xab(1)+potcm_cab(1)*exp(-min(potcm_aab(1)*sep, 25.0e0_wp))
+                    req2 = potcm_xab(2)+potcm_cab(2)*exp(-min(potcm_aab(2)*sep, 25.0e0_wp))
+                    bet  = potcm_xab(3)+potcm_cab(3)*exp(-min(potcm_aab(3)*sep, 25.0e0_wp))
                 else
                     dr1   = potcm_r1s-r1
                     dr2   = potcm_r2s-r2
@@ -545,27 +556,28 @@ module chempotpy_oh2_gen_dim1981_pes
                     req2  = spline(2, potcm_nphi, potcm_phi, potcm_bsp(1,2), csp(1,2), scrap, angle)
                     bet   = spline(2, potcm_nphi, potcm_phi, potcm_bsp(1,3), csp(1,3), scrap, angle)
                 endif
-                x     = dis*((1.0d0-exp(bet*(rr-req2)))**2-1.0d0)+pt3cm_ezero(1)-usricm_anuzero*627.5095d0
+                x     = dis*((1.0e0_wp-exp(bet*(rr-req2)))**2-1.0e0_wp)+pt3cm_ezero(1)-usricm_anuzero*627.5095e0_wp
                 v(ic) = x
             enddo
-            v(1:3)       = v(1:3)/627.5095d0
+            v(1:3)       = v(1:3)/627.5095e0_wp
             pt1cm_engygs = v(1)
             if( usricm_nder == 1 )then
                 pt1cm_degsdr(1) = (v(2)-v(1))/nstep_step
                 pt1cm_degsdr(2) = (v(3)-v(1))/nstep_step
-                pt1cm_degsdr(3) = 0.0d0
+                pt1cm_degsdr(3) = 0.0e0_wp
             endif
         end subroutine pot2
 
         !> @brief Fit or evaluate the legacy cubic-spline representation.
-        double precision function spline( isw, nn, x, y, c, d, xpt )
+        real(wp) function spline( isw, nn, x, y, c, d, xpt )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, intent(in)             :: isw, nn
-            double precision, intent(in)    :: x(nn), y(nn), xpt
-            double precision, intent(inout) :: c(nn+2), d(nn+2)
-            integer                         :: i, j, n, np1, np2
-            double precision                :: cfact, dfact, pivot, supd, v, v2, z
-            double precision                :: deriv = 0.0d0
+            integer, intent(in)     :: isw, nn
+            real(wp), intent(in)    :: x(nn), y(nn), xpt
+            real(wp), intent(inout) :: c(nn+2), d(nn+2)
+            integer                 :: i, j, n, np1, np2
+            real(wp)                :: cfact, dfact, pivot, supd, v, v2, z
+            real(wp)                :: deriv = 0.0e0_wp
             n   = nn
             np1 = n+1
             np2 = n+2
@@ -573,24 +585,24 @@ module chempotpy_oh2_gen_dim1981_pes
             select case( isw )
             case( 1 )
                 c(1)   = y(1)
-                d(1)   = 1.0d0
-                c(np1) = 0.0d0
-                d(np1) = 0.0d0
-                c(np2) = 0.0d0
-                d(np2) = 0.0d0
+                d(1)   = 1.0e0_wp
+                c(np1) = 0.0e0_wp
+                d(np1) = 0.0e0_wp
+                c(np2) = 0.0e0_wp
+                d(np2) = 0.0e0_wp
                 do i = 2, n
                     c(i) = y(i)-y(1)
                     d(i) = x(i)-x(1)
                 enddo
                 do i = 3, np2
-                    if( d(i-1) == 0.0d0 ) error stop 'SPLINE: singular knot system'
-                    pivot = 1.0d0/d(i-1)
+                    if( d(i-1) == 0.0e0_wp ) error stop 'SPLINE: singular knot system'
+                    pivot = 1.0e0_wp/d(i-1)
                     if( i < np2 )then
                         supd = x(i-1)-x(i-2)
-                        if( supd < 0.0d0 ) error stop 'SPLINE: knots must be ordered'
+                        if( supd < 0.0e0_wp ) error stop 'SPLINE: knots must be ordered'
                         supd = supd**3
                     else
-                        supd = 1.0d0
+                        supd = 1.0e0_wp
                     endif
                     dfact = supd*pivot
                     cfact = c(i-1)*pivot
@@ -603,7 +615,7 @@ module chempotpy_oh2_gen_dim1981_pes
                     endif
                     if( i < np2 )then
                         c(np1) = c(np1)-d(np1)*cfact
-                        d(np1) = 1.0d0-d(np1)*dfact
+                        d(np1) = 1.0e0_wp-d(np1)*dfact
                     endif
                     c(np2) = c(np2)-d(np2)*cfact
                     d(np2) = x(i-2)-d(np2)*dfact
@@ -611,36 +623,36 @@ module chempotpy_oh2_gen_dim1981_pes
                 do i = 1, n
                     j = np2-i
                     if( j == np1 )then
-                        v = 1.0d0
+                        v = 1.0e0_wp
                     else
                         v = (x(j)-x(j-1))**3
                     endif
-                    if( d(j+1) == 0.0d0 ) error stop 'SPLINE: singular back substitution'
+                    if( d(j+1) == 0.0e0_wp ) error stop 'SPLINE: singular back substitution'
                     c(j+1) = c(j+1)/d(j+1)
                     c(j)   = c(j)-c(j+1)*v
                 enddo
-                if( d(2) == 0.0d0 ) error stop 'SPLINE: singular leading coefficient'
+                if( d(2) == 0.0e0_wp ) error stop 'SPLINE: singular leading coefficient'
                 c(2)   = c(2)/d(2)
-                spline = 0.0d0
+                spline = 0.0e0_wp
             case( 2 )
                 spline = c(1)+c(2)*(z-x(1))
                 do i = 1, n
                     v = z-x(i)
-                    if( v <= 0.0d0 ) exit
+                    if( v <= 0.0e0_wp ) exit
                     spline = spline+c(i+2)*v**3
                 enddo
             case( 3 )
                 spline = c(1)+c(2)*(z-x(1))
-                deriv  = c(2)/3.0d0
+                deriv  = c(2)/3.0e0_wp
                 do i = 1, n
                     v = z-x(i)
-                    if( v <= 0.0d0 ) exit
+                    if( v <= 0.0e0_wp ) exit
                     v2     = v*v
                     spline = spline+c(i+2)*v2*v
                     deriv  = deriv+c(i+2)*v2
                 enddo
             case( 4 )
-                spline = 3.0d0*deriv
+                spline = 3.0e0_wp*deriv
             case default
                 error stop 'SPLINE: invalid operation selector'
             end select
@@ -648,13 +660,14 @@ module chempotpy_oh2_gen_dim1981_pes
 
         !> @brief Evaluate POTINFO for the OH2_GEN_DIM1981 potential.
         subroutine potinfo
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i, j, k, kmax
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
+            integer             :: i, j, k, kmax
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -742,34 +755,35 @@ module chempotpy_oh2_gen_dim1981_pes
 
         !> @brief Evaluate ANCVRT for the OH2_GEN_DIM1981 potential.
         subroutine ancvrt
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi         = 3.141592653589793d0
-            double precision, parameter :: clight     = 2.99792458d08
-            double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
-            double precision, parameter :: cepsilon_0 = 1.0d0/(cmu_0*clight**2)
-            double precision, parameter :: ce         = 1.602176462d-19
-            double precision, parameter :: cplanck    = 6.62606876d-34
-            double precision, parameter :: cm_e       = 9.10938188d-31
-            double precision, parameter :: cang       = 1.0d-10
-            double precision, parameter :: cavogadro  = 6.02214199d23
-            double precision, parameter :: ckcal      = 4.184d10
-            double precision, parameter :: htomillh   = 1000.d0
-            double precision, parameter :: htoev      = 27.2113834d0
-            double precision, parameter :: htokcal    = 627.509470d0
-            double precision, parameter :: htowave    = 219474.631d0
-            double precision, parameter :: htokj      = 2625.49962d0
-            double precision, parameter :: bohr_a     = .5291772083d0
-            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
-            character(len=3)   :: periodic_1(7,32)
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
+            integer, parameter  :: n3atom     = 75
+            integer, parameter  :: natom      = 25
+            integer, parameter  :: isurf      = 5
+            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
+            real(wp), parameter :: pi         = 3.141592653589793e0_wp
+            real(wp), parameter :: clight     = 2.99792458e08_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
+            real(wp), parameter :: ce         = 1.602176462e-19_wp
+            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
+            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
+            real(wp), parameter :: cang       = 1.0e-10_wp
+            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
+            real(wp), parameter :: ckcal      = 4.184e10_wp
+            real(wp), parameter :: htomillh   = 1000.e0_wp
+            real(wp), parameter :: htoev      = 27.2113834e0_wp
+            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htowave    = 219474.631e0_wp
+            real(wp), parameter :: htokj      = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)    :: periodic_1(7,32)
+            character(len=2)    :: name1(natom)
+            character(len=2)    :: name2(natom)
+            character(len=1)    :: iblank
+            character(len=20)   :: distance
+            character(len=20)   :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -994,9 +1008,9 @@ module chempotpy_oh2_gen_dim1981_pes
             elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
-            utilcm_cnvrtd  = 1.d0
-            utilcm_cnvrte  = 1.d0
-            utilcm_cnvrtde = 1.d0
+            utilcm_cnvrtd  = 1.e0_wp
+            utilcm_cnvrte  = 1.e0_wp
+            utilcm_cnvrtde = 1.e0_wp
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
@@ -1021,6 +1035,7 @@ module chempotpy_oh2_gen_dim1981_pes
         !> @brief Evaluate CARTOU for the OH2_GEN_DIM1981 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: i, j
             integer, parameter :: n3atom = 75
@@ -1033,9 +1048,10 @@ module chempotpy_oh2_gen_dim1981_pes
         !> @brief Evaluate CARTTOR for the OH2_GEN_DIM1981 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: coordinate_status
-            double precision   :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
+            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
             integer            :: i, ind, k, l
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
@@ -1049,6 +1065,7 @@ module chempotpy_oh2_gen_dim1981_pes
 
         !> @brief Evaluate EUNITZERO for the OH2_GEN_DIM1981 potential.
         subroutine eunitzero
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j
             character(len=75)  :: ref(5)
@@ -1071,15 +1088,16 @@ module chempotpy_oh2_gen_dim1981_pes
 
         !> @brief Evaluate RTOCART for the OH2_GEN_DIM1981 potential.
         subroutine rtocart
+            use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
-                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
-                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
+            real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom, isurf), &
+                & ygs(n3atom), yij(n3atom, jsurf), za, zb, zc, zd
+            integer :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -1103,21 +1121,21 @@ module chempotpy_oh2_gen_dim1981_pes
                 enddo
             elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
-                    utilcm_dgscartnu(i,1) = 0.d0
-                    utilcm_dgscartnu(i,2) = 0.d0
-                    utilcm_dgscartnu(i,3) = 0.d0
+                    utilcm_dgscartnu(i,1) = 0.e0_wp
+                    utilcm_dgscartnu(i,2) = 0.e0_wp
+                    utilcm_dgscartnu(i,3) = 0.e0_wp
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(i,1,j1) = 0.d0
-                            utilcm_descartnu(i,2,j1) = 0.d0
-                            utilcm_descartnu(i,3,j1) = 0.d0
+                            utilcm_descartnu(i,1,j1) = 0.e0_wp
+                            utilcm_descartnu(i,2,j1) = 0.e0_wp
+                            utilcm_descartnu(i,3,j1) = 0.e0_wp
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(i,1,j2) = 0.d0
-                            utilcm_dijcartnu(i,2,j2) = 0.d0
-                            utilcm_dijcartnu(i,3,j2) = 0.d0
+                            utilcm_dijcartnu(i,1,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,2,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,3,j2) = 0.e0_wp
                         enddo
                     endif
                     do j = 1, infocm_natoms
@@ -1157,12 +1175,12 @@ module chempotpy_oh2_gen_dim1981_pes
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j=utilcm_ksdiag, utilcm_kediag
-                            yes(i,j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
+                            yes(i, j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do k=utilcm_ksoffd, utilcm_keoffd
-                            yij(i,k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
+                            yij(i, k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
                         enddo
                     endif
                 enddo
@@ -1175,22 +1193,22 @@ module chempotpy_oh2_gen_dim1981_pes
                     utilcm_dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(1,k,j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                            utilcm_descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                            utilcm_descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                            utilcm_descartnu(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
+                            utilcm_descartnu(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
+                            utilcm_descartnu(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(1,k,j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3,j2) - term23*yij(2,j2)
+                            utilcm_dijcartnu(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
+                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
+                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
                         enddo
                     endif
                 enddo
             elseif( infocm_icartr .eq. 4 )then
-                wh   = 1.007825d0
-                wf   = 18.99840d0
+                wh   = 1.007825e0_wp
+                wf   = 18.99840e0_wp
                 sum  = wh+wf
                 eps  = wf/sum
                 epsp = wh/sum
@@ -1200,8 +1218,8 @@ module chempotpy_oh2_gen_dim1981_pes
                 ss1  = sin(theta1)
                 ss2  = sin(theta2)
                 ss3  = sin(phi)
-                ya   = 0.0d0
-                yb   = 0.0d0
+                ya   = 0.0e0_wp
+                yb   = 0.0e0_wp
                 t0   = r1*u1
                 za   = -epsp*t0
                 zb   = eps*t0
@@ -1227,6 +1245,7 @@ module chempotpy_oh2_gen_dim1981_pes
 
         !> @brief Evaluate DEDCOU for the OH2_GEN_DIM1981 potential.
         subroutine dedcou
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k
             integer, parameter :: n3atom = 75
@@ -1281,13 +1300,14 @@ end module chempotpy_oh2_gen_dim1981_pes
 !> @brief Expose OH2_GEN_DIM1981 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_oh2_gen_dim1981_pes, only: evaluate
+    use chempotpy_kinds,               only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

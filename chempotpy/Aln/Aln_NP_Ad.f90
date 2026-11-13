@@ -28,6 +28,7 @@
 
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_np_ad_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -37,28 +38,28 @@ module chempotpy_aln_np_ad_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
-        use chempotpy_legacy_units, only: legacy_coordinates_to_bohr, &
-            legacy_energy_to_electronvolt
-        use chempotpy_kinds, only: real64
+        use chempotpy_units, only: coordinates_to_bohr, &
+            energy_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter        :: state_count = 1
-        real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-        integer, intent(in)       :: atom_count, derivative_order
-        real(real64), intent(out) :: energy_ev(state_count)
-        real(real64), intent(out) :: gradient_ev_per_angstrom( &
+        integer, parameter    :: state_count = 1
+        real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+        integer, intent(in)   :: atom_count, derivative_order
+        real(wp), intent(out) :: energy_ev(state_count)
+        real(wp), intent(out) :: gradient_ev_per_angstrom( &
             state_count,atom_count,3 )
-        real(real64), intent(out) :: coupling_per_angstrom( &
+        real(wp), intent(out) :: coupling_per_angstrom( &
             state_count,state_count,atom_count,3 )
-        real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-        energy_ev                = 0.0d0
-        gradient_ev_per_angstrom = 0.0d0
-        coupling_per_angstrom    = 0.0d0
-        call legacy_coordinates_to_bohr( &
+        real(wp) :: coordinates_bohr(atom_count,3), energy_hartree
+        energy_ev                = 0.0e0_wp
+        gradient_ev_per_angstrom = 0.0e0_wp
+        coupling_per_angstrom    = 0.0e0_wp
+        call coordinates_to_bohr( &
             coordinates_angstrom(1:atom_count,:), coordinates_bohr)
         call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
             coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
         if( derivative_order == 0 )then
-            energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
+            energy_ev(1) = energy_to_electronvolt(energy_hartree)
         else
             write(*, *) 'Only energy is available'
         endif
@@ -66,19 +67,20 @@ module chempotpy_aln_np_ad_pes
 
     !> @brief Evaluate pot for the Aln_NP_Ad potential.
     subroutine pot( x, y, z, v, natom, maxatom )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, bu2b, co, cob, cz1, cz2, d1_p, d1_w, d2_p, &
+        real(wp) :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, bu2b, co, cob, cz1, cz2, d1_p, d1_w, d2_p, &
             & d2_v, d3_v, d4_b, d4_ba, d4_bb, d4_v, d5_b, d5_v, d6_b, d6_b1, d7_b, d7_v, d8_b1, d8_b2, dcobdrr, de, deb, &
             & deebdrr, dpolybdrr, dtmpbdrr, du2, dum, dx, dy, dz, ec1, ee, eeb, es1, fcn, fs, g1, g1e, g2, g_co, g_ee, g_poly, &
             & g_rho, g_rr, g_tmp, gdum, gu2, gzero, poly, polyb, re, reb, rho, rhob, rij, ril, rjl, rr, rrr, s, term, tmp, tmpb, &
             & tt1, tt2, v, x(maxatom), xk1, xk2, xk3, y(maxatom), z(maxatom)
-        integer                     :: i, j, k, l, maxatom, natom
-        double precision, parameter :: autoev  = 27.2113961d0
-        double precision, parameter :: autoang = 0.529177249d0
-        double precision :: gxs(maxatom), gys(maxatom), gzs(maxatom), &
-            & gxgcorr(maxatom,maxatom), gygcorr(maxatom,maxatom), &
-            & gzgcorr(maxatom,maxatom), gcorr(maxatom)
-        double precision :: dvdy(maxatom), dvdz(maxatom), dvdx(maxatom)
+        integer             :: i, j, k, l, maxatom, natom
+        real(wp), parameter :: autoev  = 27.2113961e0_wp
+        real(wp), parameter :: autoang = 0.529177249e0_wp
+        real(wp)            :: gxs(maxatom), gys(maxatom), gzs(maxatom), &
+            & gxgcorr(maxatom, maxatom), gygcorr(maxatom, maxatom), &
+            & gzgcorr(maxatom, maxatom), gcorr(maxatom)
+        real(wp) :: dvdy(maxatom), dvdz(maxatom), dvdx(maxatom)
         ! Nanoparticle parameters (Ref. 2)
         !       two-body interaction
         de  = 1.71013678553981441 / autoev
@@ -109,10 +111,10 @@ module chempotpy_aln_np_ad_pes
         bu2b = 6.50000000000000000/autoang
         ! Initialize arrays
         do i = 1, natom
-            dvdx(i) = 0.0d0
-            dvdy(i) = 0.0d0
-            dvdz(i) = 0.0d0
-            v       = 0.d0
+            dvdx(i) = 0.0e0_wp
+            dvdy(i) = 0.0e0_wp
+            dvdz(i) = 0.0e0_wp
+            v       = 0.e0_wp
         enddo
         ! do S term, needs xk1,xk2,xk3
         do i = 1, natom
@@ -125,11 +127,11 @@ module chempotpy_aln_np_ad_pes
                 rij  = d2_v
                 if( rij .ge. bu2 ) cycle
                 do k = 1, natom
-                    gxs(k) = 0.0d0
-                    gys(k) = 0.0d0
-                    gzs(k) = 0.0d0
+                    gxs(k) = 0.0e0_wp
+                    gys(k) = 0.0e0_wp
+                    gzs(k) = 0.0e0_wp
                 enddo
-                s = 0.d0
+                s = 0.e0_wp
                 do l = 1, natom
                     if( l .eq. j .or. l .eq. i ) cycle
                     dx   = x(i) - x(l)
@@ -147,20 +149,20 @@ module chempotpy_aln_np_ad_pes
                     if( rjl .ge. bu2 ) cycle
                     if( ril .ge. bu2 ) cycle
                     rrr    = (ril + rjl) / rij
-                    d3_v   = 1d0 - rjl / bu2
+                    d3_v   = 1e0_wp - rjl / bu2
                     d6_b1  = -au23 / (d3_v**2 * bu2)
-                    ac     = au23 * (1d0 - 1.d0/d3_v)
-                    d4_v   = 1d0 - rij / bu2
-                    d5_v   = 1d0 / d4_v
-                    d8_b1  = (-((-au23) * ((-d5_v) / d4_v))) * (1.0d0 / bu2)
-                    ac     = ac + au23 * (1d0 - d5_v)
-                    d4_v   = 1d0 - ril / bu2
-                    d5_v   = 1d0 / d4_v
-                    d8_b2  = (-((-au23) * ((-d5_v) / d4_v))) * (1.0d0 / bu2)
-                    ac     = ac + au23 * (1d0 - d5_v)
-                    term   = xk1 * dexp(-xk2 * rrr ** xk3 + ac)
-                    d5_b   = -xk2 * xk3 * rrr ** ( xk3 - 1.0d0)
-                    d6_b   = d5_b * (1.0d0 / rij) * term
+                    ac     = au23 * (1e0_wp - 1.e0_wp/d3_v)
+                    d4_v   = 1e0_wp - rij / bu2
+                    d5_v   = 1e0_wp / d4_v
+                    d8_b1  = (-((-au23) * ((-d5_v) / d4_v))) * (1.0e0_wp / bu2)
+                    ac     = ac + au23 * (1e0_wp - d5_v)
+                    d4_v   = 1e0_wp - ril / bu2
+                    d5_v   = 1e0_wp / d4_v
+                    d8_b2  = (-((-au23) * ((-d5_v) / d4_v))) * (1.0e0_wp / bu2)
+                    ac     = ac + au23 * (1e0_wp - d5_v)
+                    term   = xk1 * exp(-xk2 * rrr ** xk3 + ac)
+                    d5_b   = -xk2 * xk3 * rrr ** ( xk3 - 1.0e0_wp)
+                    d6_b   = d5_b * (1.0e0_wp / rij) * term
                     d7_b   = -d5_b * (rrr / rij) * term
                     gxs(i) = gxs(i) + (term*d8_b1+d7_b)*(x(i)-x(j))/rij
                     gxs(i) = gxs(i) + (term*d8_b2+d6_b)*(x(i)-x(l))/ril
@@ -183,19 +185,19 @@ module chempotpy_aln_np_ad_pes
                     s      = s + term
                 enddo
                 d2_v = tanh (s)
-                d1_p = 1.0d0 - ( d2_v *  d2_v)
+                d1_p = 1.0e0_wp - ( d2_v *  d2_v)
                 fs   = d2_v
                 ! effective two-body
                 rr    = rij
                 rhob  = rr-reb
-                polyb = 1.d0+a1b*rhob+a2b*rhob**2+a3b*rhob**3
-                eeb   = dexp(-a1b*rhob)
-                cob   = 0.d0
-                if( rr .le. bu2b ) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
+                polyb = 1.e0_wp+a1b*rhob+a2b*rhob**2+a3b*rhob**3
+                eeb   = exp(-a1b*rhob)
+                cob   = 0.e0_wp
+                if( rr .le. bu2b ) cob=exp(au2b*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2b)))
                 tmpb    = deb*eeb*polyb*cob
-                dcobdrr = 0.d0
-                if( rr .le. bu2b ) dcobdrr=(-cob/bu2b)*au2b/(1.d0-rr/bu2b)**2
-                dpolybdrr = a1b+2.d0*a2b*rhob+3.d0*a3b*rhob**2
+                dcobdrr = 0.e0_wp
+                if( rr .le. bu2b ) dcobdrr=(-cob/bu2b)*au2b/(1.e0_wp-rr/bu2b)**2
+                dpolybdrr = a1b+2.e0_wp*a2b*rhob+3.e0_wp*a3b*rhob**2
                 deebdrr   = -a1b*eeb
                 dtmpbdrr  = deb*(eeb*polyb*dcobdrr+eeb*dpolybdrr*cob +deebdrr*polyb*cob)
                 dvdx(i)   = dvdx(i) + dtmpbdrr*(x(i)-x(j))/rr*fs
@@ -213,14 +215,14 @@ module chempotpy_aln_np_ad_pes
             enddo
         enddo
         ! CALCULATE CN FUNCTION
-        g1e = dexp(g1)
+        g1e = exp(g1)
         do i = 1, natom
             do j = 1, natom
-                gxgcorr(j, i) = 0.0d0
-                gygcorr(j, i) = 0.0d0
-                gzgcorr(j, i) = 0.0d0
+                gxgcorr(j, i) = 0.0e0_wp
+                gygcorr(j, i) = 0.0e0_wp
+                gzgcorr(j, i) = 0.0e0_wp
             enddo
-            gcorr(i) = 0.d0
+            gcorr(i) = 0.e0_wp
             do j = 1, natom
                 if( i .eq. j ) cycle
                 dx   = x(i) - x(j)
@@ -230,11 +232,11 @@ module chempotpy_aln_np_ad_pes
                 d2_v = sqrt(d1_w)
                 rij  = d2_v
                 if( rij .ge. g2 ) cycle
-                d3_v          = 1d0 - rij / g2
+                d3_v          = 1e0_wp - rij / g2
                 d4_v          = (-g1) / d3_v
-                d4_b          = (-((-d4_v) / d3_v)) * (1.0d0 / g2)
+                d4_b          = (-((-d4_v) / d3_v)) * (1.0e0_wp / g2)
                 d1_w          = d4_v
-                d2_v          = dexp(d1_w)
+                d2_v          = exp(d1_w)
                 d1_p          = d2_v
                 dum           = g1e*d1_p*d4_b/rij
                 term          = d2_v
@@ -259,46 +261,46 @@ module chempotpy_aln_np_ad_pes
                 d2_v = sqrt(d1_w)
                 rij  = d2_v
                 if( rij .ge. bu2b ) cycle
-                term = 0.d0
-                gdum = 0.d0
+                term = 0.e0_wp
+                gdum = 0.e0_wp
                 goto_block_32_278: block
                     if( rij .ge. g2 ) exit goto_block_32_278
-                    d3_v = 1.d0-rij/g2
-                    d4_v = 1.d0/d3_v
+                    d3_v = 1.e0_wp-rij/g2
+                    d4_v = 1.e0_wp/d3_v
                     d6_b = -g1*d4_v/(d3_v*g2)
-                    d1_w = g1 * (1.d0 - d4_v)
-                    d2_v = dexp(d1_w)
+                    d1_w = g1 * (1.e0_wp - d4_v)
+                    d2_v = exp(d1_w)
                     d1_p = d2_v
                     gdum = d1_p * d6_b /rij
                     term = d2_v
                 end block goto_block_32_278
                 cz1 = (gcorr(i) - term) / gzero
-                if( cz1 .gt. 1.d-20 )then
-                    d2_v = cz1 ** ( gu2 - 2.0d0)
+                if( cz1 .gt. 1.e-20_wp )then
+                    d2_v = cz1 ** ( gu2 - 2.0e0_wp)
                     d2_v = d2_v * cz1
                     d1_p = gu2 *  d2_v
                     d2_v = d2_v * cz1
                 else
-                    cz1  = 0.d0
-                    d2_v = 0.d0
-                    d1_p = 0.d0
+                    cz1  = 0.e0_wp
+                    d2_v = 0.e0_wp
+                    d1_p = 0.e0_wp
                 endif
-                d3_v  = 1d0 + d2_v
+                d3_v  = 1e0_wp + d2_v
                 d4_ba = -d1_p / d3_v**2
-                es1   = 1d0 / d3_v
+                es1   = 1e0_wp / d3_v
                 cz2   = (gcorr(j) - term) / gzero
-                if( cz2 .gt. 1.d-20 )then
-                    d2_v = cz2 ** ( gu2 - 2.0d0)
+                if( cz2 .gt. 1.e-20_wp )then
+                    d2_v = cz2 ** ( gu2 - 2.0e0_wp)
                     d2_v = d2_v * cz2
                     d1_p = gu2 *  d2_v
                     d2_v = d2_v * cz2
                 else
-                    cz2  = 0.d0
-                    d2_v = 0.d0
-                    d1_p = 0.d0
+                    cz2  = 0.e0_wp
+                    d2_v = 0.e0_wp
+                    d1_p = 0.e0_wp
                 endif
-                d3_v  = 1d0 + d2_v
-                d4_v  = 1d0 / d3_v
+                d3_v  = 1e0_wp + d2_v
+                d4_v  = 1e0_wp / d3_v
                 d4_bb = (-d4_v) / d3_v * d1_p
                 ec1   = d4_v
                 tt1   = du2 * ec1 * d4_ba
@@ -306,16 +308,16 @@ module chempotpy_aln_np_ad_pes
                 ! modified two-body
                 rr    = rij
                 rhob  = rr-reb
-                polyb = 1.d0+a1b*rhob+a2b*rhob**2+a3b*rhob**3
-                eeb   = dexp(-a1b*rhob)
-                cob   = 0.d0
-                if( rr .le. bu2b ) cob=dexp(au2b*(1.d0-1.d0/(1.d0-rr/bu2b)))
-                tmpb    = 0.5d0*deb*eeb*polyb*cob
-                dcobdrr = 0.d0
-                if( rr .le. bu2b ) dcobdrr=(-cob/bu2b)*au2b/(1.d0-rr/bu2b)**2
-                dpolybdrr = a1b+2.d0*a2b*rhob+3.d0*a3b*rhob**2
+                polyb = 1.e0_wp+a1b*rhob+a2b*rhob**2+a3b*rhob**3
+                eeb   = exp(-a1b*rhob)
+                cob   = 0.e0_wp
+                if( rr .le. bu2b ) cob=exp(au2b*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2b)))
+                tmpb    = 0.5e0_wp*deb*eeb*polyb*cob
+                dcobdrr = 0.e0_wp
+                if( rr .le. bu2b ) dcobdrr=(-cob/bu2b)*au2b/(1.e0_wp-rr/bu2b)**2
+                dpolybdrr = a1b+2.e0_wp*a2b*rhob+3.e0_wp*a3b*rhob**2
                 deebdrr   = -a1b*eeb
-                dtmpbdrr  = 0.5d0*deb*(eeb*polyb*dcobdrr+eeb*dpolybdrr*cob +deebdrr*polyb*cob)
+                dtmpbdrr  = 0.5e0_wp*deb*(eeb*polyb*dcobdrr+eeb*dpolybdrr*cob +deebdrr*polyb*cob)
                 do k = 1, natom
                     dvdx(k) = dvdx(k) - tmpb*(tt2*gxgcorr(k, j)+tt1*gxgcorr(k, i))/gzero
                     dvdy(k) = dvdy(k) - tmpb*(tt2*gygcorr(k, j)+tt1*gygcorr(k, i))/gzero
@@ -327,7 +329,7 @@ module chempotpy_aln_np_ad_pes
                 dvdy(j) = dvdy(j)-tmpb*(tt2+tt1)*gdum/gzero*(y(i)-y(j))
                 dvdz(i) = dvdz(i)+tmpb*(tt2+tt1)*gdum/gzero*(z(i)-z(j))
                 dvdz(j) = dvdz(j)-tmpb*(tt2+tt1)*gdum/gzero*(z(i)-z(j))
-                fcn     = du2 * (es1 * ec1 - 1d0)
+                fcn     = du2 * (es1 * ec1 - 1e0_wp)
                 dvdx(i) = dvdx(i) - dtmpbdrr*(x(i)-x(j))/rr*fcn
                 dvdx(j) = dvdx(j) - dtmpbdrr*(x(j)-x(i))/rr*fcn
                 dvdy(i) = dvdy(i) - dtmpbdrr*(y(i)-y(j))/rr*fcn
@@ -345,34 +347,34 @@ module chempotpy_aln_np_ad_pes
                 dz   = z(i) - z(j)
                 d1_w = dx * dx + dy * dy + dz * dz
                 d2_v = sqrt(d1_w)
-                d1_p = 1.0d0 / (2.0d0 *  d2_v)
-                g_rr = d1_p * 2.d0
+                d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
+                g_rr = d1_p * 2.e0_wp
                 rr   = d2_v
                 if( rr .gt. bu2 ) cycle
                 g_rho  = g_rr
                 rho    = rr - re
                 d4_v   = rho * rho
-                d2_p   = 2.0d0 * rho
+                d2_p   = 2.0e0_wp * rho
                 d7_v   = rho ** ( 3 - 2)
                 d7_v   = d7_v * rho
                 d1_p   = 3 *  d7_v
                 d7_v   = d7_v * rho
                 d5_b   = a3 * d1_p + a2 * d2_p + a1
                 g_poly = d5_b * g_rho
-                poly   = 1.d0 + a1 * rho + a2 * d4_v + a3 * d7_v
+                poly   = 1.e0_wp + a1 * rho + a2 * d4_v + a3 * d7_v
                 d1_w   = (-a1) * rho
-                d2_v   = dexp(d1_w)
+                d2_v   = exp(d1_w)
                 d1_p   = d2_v
                 g_ee   = d1_p * (-a1) * g_rho
                 ee     = d2_v
-                g_co   = 0.0d0
-                co     = 0.d0
+                g_co   = 0.0e0_wp
+                co     = 0.e0_wp
                 if( rr .le. bu2 )then
-                    d3_v = 1.d0 - rr / bu2
-                    d4_v = 1.d0 / d3_v
-                    d6_b = (-((-au2) * ((-d4_v) / d3_v))) * (1.0d0 / bu2)
-                    d1_w = au2 * (1.d0 - d4_v)
-                    d2_v = dexp(d1_w)
+                    d3_v = 1.e0_wp - rr / bu2
+                    d4_v = 1.e0_wp / d3_v
+                    d6_b = (-((-au2) * ((-d4_v) / d3_v))) * (1.0e0_wp / bu2)
+                    d1_w = au2 * (1.e0_wp - d4_v)
+                    d2_v = exp(d1_w)
                     d1_p = d2_v
                     g_co = d1_p * d6_b * g_rr
                     co   = d2_v
@@ -400,14 +402,14 @@ end module chempotpy_aln_np_ad_pes
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_np_ad_pes, only: evaluate
-    use chempotpy_kinds,         only: real64
+    use chempotpy_kinds,         only: wp
     implicit none
-    integer, parameter        :: state_count = 1
-    real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-    integer, intent(in)       :: atom_count, derivative_order
-    real(real64), intent(out) :: energy_ev(state_count)
-    real(real64), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
-    real(real64), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
+    integer, parameter    :: state_count = 1
+    real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+    integer, intent(in)   :: atom_count, derivative_order
+    real(wp), intent(out) :: energy_ev(state_count)
+    real(wp), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
+    real(wp), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
     call evaluate(coordinates_angstrom, atom_count, derivative_order, energy_ev, gradient_ev_per_angstrom, &
         & coupling_per_angstrom)
 end subroutine pes

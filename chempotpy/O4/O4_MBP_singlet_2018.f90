@@ -26,6 +26,7 @@
 
 !> @brief Implement O4_MBP_singlet_2018, a potential energy surface for O4.
 module chempotpy_o4_mbp_singlet_2018_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -34,19 +35,21 @@ module chempotpy_o4_mbp_singlet_2018_pes
 
     !> @brief Evaluate the O4_MBP_singlet_2018 potential energy surface for O4.
     subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_units,    only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_geometry, only: cartesian_distance
+        use chempotpy_kinds,    only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 4
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: v, tx(6), sum_d
-        integer                       :: ibond, iatom, idir, j, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 4
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: v, tx(6), sum_d
+        integer               :: ibond, iatom, idir, j, istate
         !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         if( igrad == 0 )then
             tx(1) = cartesian_distance(x(1,:), x(2,:))
             tx(2) = cartesian_distance(x(1,:), x(3,:))
@@ -55,7 +58,7 @@ module chempotpy_o4_mbp_singlet_2018_pes
             tx(5) = cartesian_distance(x(2,:), x(4,:))
             tx(6) = cartesian_distance(x(3,:), x(4,:))
             call o4(v, tx)
-            v = v/23.0609
+            v = v/electronvolt_to_kilocalorie_per_mole
             do istate=1, nstates
                 p(istate) = v
             enddo
@@ -66,23 +69,24 @@ module chempotpy_o4_mbp_singlet_2018_pes
 
     !> @brief Evaluate o4.
     subroutine o4( v, r )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)  :: r(6)
-        double precision, intent(out) :: v
-        double precision              :: xr(6)
-        integer                       :: mpoints
-        double precision              :: coeff(306)
-        double precision              :: indices(306,6)
-        integer                       :: permutation(24,6)
-        double precision              :: ae, re
-        integer                       :: i, j, k
-        integer                       :: ci, cj, ck, cl
-        double precision              :: mult
-        re      = 1.208d0
-        ae      = 0.7d0
+        real(wp), intent(in)  :: r(6)
+        real(wp), intent(out) :: v
+        real(wp)              :: xr(6)
+        integer               :: mpoints
+        real(wp)              :: coeff(306)
+        real(wp)              :: indices(306,6)
+        integer               :: permutation(24,6)
+        real(wp)              :: ae, re
+        integer               :: i, j, k
+        integer               :: ci, cj, ck, cl
+        real(wp)              :: mult
+        re      = 1.208e0_wp
+        ae      = 0.7e0_wp
         mpoints = 306
         do ci=1, 6
-            xr(ci) = exp((1.208d0-r(ci))/0.7d0)
+            xr(ci) = exp((1.208e0_wp-r(ci))/0.7e0_wp)
         enddo
         call assign(coeff, indices, permutation)
         v = 0.0
@@ -99,9 +103,10 @@ module chempotpy_o4_mbp_singlet_2018_pes
 
     !> @brief Evaluate assign.
     subroutine assign( coeff, indices, permutation )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(inout) :: coeff(306), indices(306,6)
-        integer, intent(inout)          :: permutation(24,6)
+        real(wp), intent(inout) :: coeff(306), indices(306,6)
+        integer, intent(inout)  :: permutation(24,6)
         permutation(1,1)  = 0
         permutation(1,2)  = 1
         permutation(1,3)  = 2
@@ -2394,12 +2399,13 @@ end module chempotpy_o4_mbp_singlet_2018_pes
 !> @brief Expose O4_MBP_singlet_2018 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_o4_mbp_singlet_2018_pes, only: evaluate
+    use chempotpy_kinds,                   only: wp
     implicit none
-    integer, parameter            :: natoms  = 4
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 4
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

@@ -39,15 +39,18 @@ the following changes:
 * Replaced initialization entry points with stateless, independently owned PES
   modules whose fixed coefficients live in source-controlled module data.
 * Added a bundled Fortran core for numerical kinds, status values, canonical
-  and compatibility unit conversions, Cartesian geometry, coordinate
+  NIST CODATA 2022 and compatibility unit conversions, Cartesian geometry, coordinate
   flattening, internal-to-Cartesian gradient transformations, reusable
-  internal-coordinate adapters, H3 basis operations, BLAS operations, and
+  internal-coordinate adapters, BLAS operations, and
   symmetric eigensolution. The core keeps CHEMPOTPY
   independent of external MKL, LAPACK, and BLAS libraries.
 * Added a Python core contract, adapters, surface registry, runtime dispatch,
   and unit utilities. Python implementations are organized under
   `chempotpy/core/python`; Fortran core modules live directly under
   `chempotpy/core`.
+* Kept system- or fit-family support beside its PES sources. For example,
+  `chempotpy/H3/chempotpy_h3_2002_basis.f90` owns the shared basis used by the
+  A2, A3, A4, and CCI H3 2002 surfaces and is bundled automatically.
 * Standardized the Fortran source format: four-space indentation, compact array
   subscripts, consistent declarations and assignments, `elseif`/`endif` and
   `enddo`, inline I/O formats, meaningful PES-specific documentation, and a
@@ -62,6 +65,72 @@ the following changes:
   toolchain.
 * Documented the shared PES contract, Fortran conventions, build workflow, and
   commands for validating the entire surface catalog.
+
+
+Physical constants and unit conversions
+---------------------------------------
+
+CHEMPOTPY uses the NIST CODATA 2022 adjustment as its versioned source for
+universal physical constants. The authoritative decimal values and provenance
+are stored in `chempotpy/core/codata_2022.json`; committed Fortran and Python
+modules are generated from that manifest so compiled PES modules do not read a
+data file at runtime. Run the following check after changing the manifest or
+the generator:
+
+    python scripts/generate_physical_constants.py --check
+
+All public PES boundary conversions use the resulting canonical factors:
+
+| Conversion | Value |
+| --- | ---: |
+| bohr to angstrom | `0.529177210544` |
+| hartree to electronvolt | `27.211386245981` |
+| hartree/bohr to eV/angstrom | `51.42206751119799` |
+| hartree to kJ/mol | `2625.499639479163` |
+| hartree to kcal/mol | `627.5094740628975` |
+| hartree to cm^-1 | `219474.63136314` |
+| electronvolt to kcal/mol | `23.06054783061903` |
+| electronvolt to cm^-1 | `8065.543937349212` |
+
+The source values are published in the
+[NIST CODATA 2022 extensive listing](https://physics.nist.gov/cuu/pdf/all.pdf).
+The module `chempotpy_legacy_units` remains available only for explicitly
+requested reproduction of the formerly released rounded conversions. A
+conversion-like value that is part of a published PES fit remains local to its
+surface and is not replaced merely because it resembles a physical constant;
+changing such a value would change the fitted model itself.
+
+The C6H5SH APRP pair and the three C7H8S APRP adiabatic/diabatic pairs are
+documented exceptions for input-coordinate scaling. Their released fits are
+numerically sensitive enough that replacing the historical scale changed
+representative energies by as much as about `0.18 eV`. They therefore retain
+that scale as an explicitly named published-fit constant while using CODATA
+2022 for energy, gradient, coupling, and all other public conversions.
+
+
+Fortran working precision
+-------------------------
+
+Modern numerical code imports `wp` from `chempotpy_kinds` and declares real
+values as `real(wp)` with explicit literals such as `1.0_wp`. The kinds module
+defines portable single, double, and quadruple requests with
+`selected_real_kind` and currently selects double precision:
+
+```fortran
+use chempotpy_kinds, only: wp
+real(wp) :: energy
+
+energy = 0.0_wp
+```
+
+The selector is the single `wp = dp` parameter in
+`chempotpy/core/chempotpy_kinds.f90`. The shared numerical core, internal
+BLAS/DSYEV implementation, generated constants and parameter modules, and the
+maintained PES catalog now use this selector consistently. Package builds must
+currently leave `wp = dp` because the Python/f2py boundary maps `wp` to a C
+double. Standalone Fortran kernels may select another supported kind; a
+catalog-wide non-binary64 Python build still requires an explicit conversion
+layer at that external boundary.
 
 
 How to install
@@ -135,10 +204,11 @@ returns remain valid.
 
 All PES kernels are now authoritative free-form `.f90` sources; no legacy `.f`
 implementation remains in the package. The regression suite recompiles every
-converted kernel and compares it with values captured from the released
-fixed-form source. The detailed contract, migration, and numerical-parity rules
-are in `docs/PES_CONTRACT.md`; the required source conventions are collected in
-`docs/FORTRAN_STYLE.md`.
+converted kernel and compares it with the current CODATA 2022 boundary
+references. Earlier release-reference fixtures remain as independent migration
+evidence where documented. The detailed contract, migration, and
+numerical-parity rules are in `docs/PES_CONTRACT.md`; the required source
+conventions are collected in `docs/FORTRAN_STYLE.md`.
 
 Run `make check-modernization` for the complete repeatable modernization gate.
 It audits the catalog, rejects forbidden legacy Fortran constructs, runs the
@@ -175,14 +245,19 @@ so gfortran should be given unlimited free-form line length:
         H3_GEN_A2_2002_standalone.f90 my_program.f90 -o my_program
 
 The generated source preserves the selected surface's public argument list and
-historical units, making it suitable for existing dynamics programs. The
-surface source documents the exact `pes(...)` or `dpem(...)` signature. A
-surface that still reads external scientific data requires its data directory
-at runtime; the exporter does not hide or rewrite that input. N4_1A_PIPNN,
-FH2O_PIPNN, FH2O_SOC_PIPNN, both CH4F 1996 surfaces, CH4Br_VBMM_2002, and
-F2H2_GEN_JBKKL_1990, HOBr_3App_PIP, COCO_PIPNN, and C3H7NO_PIP retain their historical path argument for ABI
-compatibility, but their immutable parameters are embedded in the exported
-source and those surfaces perform no runtime model-file I/O.
+documented units while using the versioned CODATA conversion contract, making
+it suitable for existing dynamics programs. The surface source documents the
+exact `pes(...)` or `dpem(...)` signature. Every released model parameter used
+by an installed evaluator is embedded in the owning source or a PES-specific
+generated module, so standalone exports perform no runtime model-file I/O.
+Historical `path` arguments remain on some entry points only for ABI
+compatibility and may be passed an empty string.
+
+The POTLIB CH5p release references two long-range spline tables that neither
+POTLIB 2023 nor the original ChemPotPy distribution includes. Its released
+short-range PIP is self contained; entering the unavailable long-range branch
+reports that provenance defect explicitly instead of searching the working
+directory for untracked files.
 
 Add `--with-driver` to also generate a complete example program:
 
@@ -210,13 +285,8 @@ only. The default displacement is `1.0e-3` angstrom and can be changed with
 diagnostics in the historical output units per angstrom and per angstrom
 squared; they do not claim analytic Hessian support from the underlying PES.
 
-For a surface with a data-directory argument, pass that directory to the
-example executable:
-
-    ./SURFACE_example /absolute/path/to/chempotpy
-
-The directory argument is the package data root that contains the individual
-system directories, not the system directory itself.
+If a historical entry point still accepts a data-directory argument, the
+generated example accepts the argument for compatibility but does not use it.
 
 Surface names that occur in more than one system must use the unambiguous
 `SYSTEM/SURFACE` selector shown above.
@@ -280,6 +350,31 @@ linkage, imports every extension in an isolated Python process, and performs
 Run the independent direct-Fortran numerical and architecture regression with:
 
     make test-surfaces
+
+Every pull request and push also runs the `All PES numerical regression`
+GitHub Actions workflow. The workflow extracts
+`tests/data/all_surface_references.json` from the pull request's base commit
+(or the commit preceding a push), compiles all current PES sources, evaluates
+both deterministic geometries, and compares every result with that immutable
+baseline. Consequently, changing the fixture in the same pull request cannot
+hide a numerical regression. Existing surfaces must remain within a relative
+and absolute tolerance of `1e-13`; removed surfaces, interface changes,
+non-finite results, compilation failures, and execution failures also fail the
+workflow. Aln and NH3 use deterministic system-specific geometries so their
+regression points remain inside the mathematical domain of the released fits.
+A newly added surface is checked against its new fixture record.
+
+The modernization establishes `baseline_version: 1`. The workflow permits a
+one-time bootstrap only when the base revision predates that marker. Once a
+versioned fixture exists in the base revision, changing or replacing the
+working-tree fixture cannot alter the expected values for existing surfaces.
+
+To reproduce the same comparison locally against a selected Git revision:
+
+    git show REVISION:tests/data/all_surface_references.json \
+        > /tmp/chempotpy-baseline.json
+    make check-numerical-regression \
+        NUMERICAL_BASELINE=/tmp/chempotpy-baseline.json
 
 To run only the all-surface numerical comparison from that suite:
 

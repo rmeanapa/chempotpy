@@ -1,6 +1,7 @@
 !     The ^2A doublet prime PES for C2N system at the MC-PDFT/AVTZ level.
 !> @brief Implement C2N_PIPNN_App, a potential energy surface for C2N.
 module chempotpy_c2n_pipnn_app_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -8,37 +9,37 @@ module chempotpy_c2n_pipnn_app_pes
     contains
 
     !> @brief Evaluate the C2N_PIPNN_App potential energy surface for C2N.
-    subroutine evaluate( x, igrad, path, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d )
         use chempotpy_geometry, only: cartesian_distance
+        use chempotpy_kinds,    only: wp
         implicit none
         ! number of electronic state
-        integer, parameter              :: nstates = 1
-        integer, parameter              :: natoms  = 3
-        integer, intent(in)             :: igrad
-        character(len=1024), intent(in) :: path
-        double precision, intent(in)    :: x(natoms,3)
-        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-        double precision                :: v
-        double precision                :: rb(3)
-        integer                         :: iatom, idir, j, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: v
+        real(wp)              :: rb(3)
+        integer               :: iatom, idir, j, istate
         !initialize
-        v = 0.d0; p = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! order of r_CC,r_NC,r_NC
-        rb    = 0.d0
+        rb    = 0.e0_wp
         rb(1) = cartesian_distance(x(1,:), x(2,:))
         rb(2) = cartesian_distance(x(1,:), x(3,:))
         rb(3) = cartesian_distance(x(2,:), x(3,:))
         if( igrad == 0 )then
-            call c2n_2a_dprime(rb, path, v)
+            call c2n_2a_dprime(rb, v)
         else
             write (*, *) 'Only energy is available'
         endif
         do istate=1, nstates
             p(istate) = v
         enddo
-        g = 0.d0
-        d = 0.d0
+        g = 0.e0_wp
+        d = 0.e0_wp
     end subroutine evaluate
 
     !     PIP-NN PES of total energy for the C2N(^2A") system.
@@ -47,32 +48,32 @@ module chempotpy_c2n_pipnn_app_pes
     !       theta: degree
     !       Vpes: total energy, eV
     !> @brief Evaluate c2n_2a_dprime.
-    subroutine c2n_2a_dprime( rb, path, vpes )
+    subroutine c2n_2a_dprime( rb, vpes )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter              :: npip    = 12
-        double precision, parameter     :: alpha   = 1.5d0 ! angstrom
-        double precision, parameter     :: vpescut = 5.d5 ! eV
-        double precision, parameter     :: pi      = dacos(-1.d0)
-        character(len=1024), intent(in) :: path
-        integer                         :: i
-        double precision                :: vpesa(1), vpesb(1), vpesc(1), vpes
-        double precision                :: rb(3), xbond(3), basis(0:npip), txinput(npip)
-        if( minval(rb) .lt. 0.79999999d0 )then
+        integer, parameter  :: npip    = 12
+        real(wp), parameter :: alpha   = 1.5e0_wp ! angstrom
+        real(wp), parameter :: vpescut = 5.e5_wp ! eV
+        real(wp), parameter :: pi      = acos(-1.e0_wp)
+        integer             :: i
+        real(wp)            :: vpesa(1), vpesb(1), vpesc(1), vpes
+        real(wp)            :: rb(3), xbond(3), basis(0:npip), txinput(npip)
+        if( minval(rb) .lt. 0.79999999e0_wp )then
             vpes  = vpescut
             vpesa = vpescut
             vpesb = vpescut
             vpesc = vpescut
         else
-            xbond(:) = dexp(-rb(:)/alpha)
-            basis    = 0.d0
+            xbond(:) = exp(-rb(:)/alpha)
+            basis    = 0.e0_wp
             call bemsav(xbond, basis)
             do i=1, npip
                 txinput(i) = basis(i)
             enddo
-            call nnfit_a(npip, 1, txinput, path, vpesa)
-            call nnfit_b(npip, 1, txinput, path, vpesb)
-            call nnfit_c(npip, 1, txinput, path, vpesc)
-            vpes = (vpesa(1)+vpesb(1)+vpesc(1))/3.0d0
+            call nnfit(npip, 1, txinput, 1, vpesa)
+            call nnfit(npip, 1, txinput, 2, vpesb)
+            call nnfit(npip, 1, txinput, 3, vpesc)
+            vpes = (vpesa(1)+vpesb(1)+vpesc(1))/3.0e0_wp
             if( vpes .gt. vpescut )then
                 vpes  = vpescut
                 vpesa = vpescut
@@ -82,131 +83,77 @@ module chempotpy_c2n_pipnn_app_pes
         endif
     end subroutine c2n_2a_dprime
 
-    !> @brief Evaluate nnfit_a.
-    subroutine nnfit_a( ndim, ntot, r0, path, vx )
+    !> @brief Evaluate one member of the immutable three-network ensemble.
+    subroutine nnfit( ndim, ntot, r0, network, vx )
+        use chempotpy_c2n_pipnn_app_parameters, only: hidden_1_biases, hidden_1_count, hidden_2_biases, &
+            & hidden_2_count, hidden_hidden_weights, hidden_output_weights, input_hidden_weights, &
+            & input_ranges, ninput, output_biases, output_ranges
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter              :: s0 = 12, s1=30, s2=30
-        integer, intent(in)             :: ndim, ntot
-        double precision, intent(in)    :: r0(ndim,ntot)
-        double precision, intent(out)   :: vx(ntot)
-        character(len=1024), intent(in) :: path
-        double precision                :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
-        double precision                :: rg(2,s0), vg(2)
-        character(len=1024)             :: file_path1
-        double precision                :: dv(ndim,ntot)
-        integer                         :: fid, i
-        if( ndim .ne. s0 ) stop "ndim .ne. s0"
-        file_path1 = trim(path)//"/C2N/c2n_2a_dprime_para_a.txt"
-        fid        = 123456
-        open(fid, file=file_path1, status='old', action='read')
-        read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
-        close(fid)
+        integer, intent(in)   :: ndim, ntot, network
+        real(wp), intent(in)  :: r0(ndim,ntot)
+        real(wp), intent(out) :: vx(ntot)
+        real(wp)              :: dv(ndim,ntot)
+        integer               :: i
         if( ntot .ge. 24 )then
-            call nsimx(ntot, r0, vx, 0, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
+            call nsimx(ntot, r0, vx, 0, dv, ninput, hidden_1_count, hidden_2_count, &
+                & input_ranges(:, :, network), input_hidden_weights(:, :, network), &
+                & hidden_1_biases(:, network), hidden_hidden_weights(:, :, network), &
+                & hidden_2_biases(:, network), hidden_output_weights(:, network), &
+                & output_biases(network), output_ranges(:, network))
         else
             do i=1, ntot
-                call nsim(r0(1,i), vx(i), 0, dv(:,i), s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
+                call nsim(r0(1,i), vx(i), 0, dv(:,i), ninput, hidden_1_count, hidden_2_count, &
+                    & input_ranges(:, :, network), input_hidden_weights(:, :, network), &
+                    & hidden_1_biases(:, network), hidden_hidden_weights(:, :, network), &
+                    & hidden_2_biases(:, network), hidden_output_weights(:, network), &
+                    & output_biases(network), output_ranges(:, network))
             enddo
         endif
-    end subroutine
-
-    !> @brief Evaluate nnfit_b.
-    subroutine nnfit_b( ndim, ntot, r0, path, vx )
-        implicit none
-        integer, parameter              :: s0 = 12, s1=30, s2=30
-        integer, intent(in)             :: ndim, ntot
-        double precision, intent(in)    :: r0(ndim,ntot)
-        double precision, intent(out)   :: vx(ntot)
-        character(len=1024), intent(in) :: path
-        double precision                :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
-        double precision                :: rg(2,s0), vg(2)
-        character(len=1024)             :: file_path1
-        double precision                :: dv(ndim,ntot)
-        integer                         :: fid, i
-        if( ndim .ne. s0 ) stop "ndim .ne. s0"
-        file_path1 = trim(path)//"/C2N/c2n_2a_dprime_para_b.txt"
-        fid        = 123456
-        open(fid, file=file_path1, status='old', action='read')
-        read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
-        close(fid)
-        if( ntot .ge. 24 )then
-            call nsimx(ntot, r0, vx, 0, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
-        else
-            do i=1, ntot
-                call nsim(r0(1,i), vx(i), 0, dv(:,i), s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
-            enddo
-        endif
-    end subroutine
-
-    !> @brief Evaluate nnfit_c.
-    subroutine nnfit_c( ndim, ntot, r0, path, vx )
-        implicit none
-        integer, parameter              :: s0 = 12, s1=30, s2=30
-        integer, intent(in)             :: ndim, ntot
-        double precision, intent(in)    :: r0(ndim,ntot)
-        double precision, intent(out)   :: vx(ntot)
-        character(len=1024), intent(in) :: path
-        double precision                :: w1(s0,s1), b1(s1), w2(s1,s2), b2(s2), w3(s2), b3
-        double precision                :: rg(2,s0), vg(2)
-        character(len=1024)             :: file_path1
-        double precision                :: dv(ndim,ntot)
-        integer                         :: fid, i
-        if( ndim .ne. s0 ) stop "ndim .ne. s0"
-        file_path1 = trim(path)//"/C2N/c2n_2a_dprime_para_c.txt"
-        fid        = 123456
-        open(fid, file=file_path1, status='old', action='read')
-        read(fid, *) w1, b1, w2, b2, w3, b3, rg, vg
-        close(fid)
-        if( ntot .ge. 24 )then
-            call nsimx(ntot, r0, vx, 0, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
-        else
-            do i=1, ntot
-                call nsim(r0(1,i), vx(i), 0, dv(:,i), s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
-            enddo
-        endif
-    end subroutine
+    end subroutine nnfit
 
     ! Simulate a neural network with two hidden layers: n0-n1-n2-1
     ! Blas routines used in this subroutine: dgemv, ddot
     !> @brief Evaluate nsim.
     subroutine nsim( r0, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: n0, n1, n2, idv
-        double precision, intent(in)  :: r0(n0), rg(2,n0), vg(2)
-        double precision, intent(in)  :: w1(n0,n1), b1(n1)
-        double precision, intent(in)  :: w2(n1,n2), b2(n2)
-        double precision, intent(in)  :: w3(n2), b3
-        double precision, intent(out) :: v, dv(n0)
-        integer                       :: i, j, k
-        double precision              :: r(n0), rgg(n0), vgg, ax(n1), bx(n2)
-        double precision              :: dvtm, rtmp, rt1(n1), rt2(n2)
-        double precision, external    :: ddot
-        v   = 0.d0
+        integer, intent(in)   :: n0, n1, n2, idv
+        real(wp), intent(in)  :: r0(n0), rg(2,n0), vg(2)
+        real(wp), intent(in)  :: w1(n0,n1), b1(n1)
+        real(wp), intent(in)  :: w2(n1,n2), b2(n2)
+        real(wp), intent(in)  :: w3(n2), b3
+        real(wp), intent(out) :: v, dv(n0)
+        integer               :: i, j, k
+        real(wp)              :: r(n0), rgg(n0), vgg, ax(n1), bx(n2)
+        real(wp)              :: dvtm, rtmp, rt1(n1), rt2(n2)
+        real(wp), external    :: ddot
+        v   = 0.e0_wp
         r   = r0
         vgg = vg(2)-vg(1)
         ! mapminmax [-1,1]
         do i=1, n0
             rgg(i) = rg(2,i)-rg(1,i)
-            r(i)   = 2.d0*(r(i)-rg(1,i))/rgg(i)-1.d0
+            r(i)   = 2.e0_wp*(r(i)-rg(1,i))/rgg(i)-1.e0_wp
         enddo
         ! 1st layer
         rt1 = b1
-        call dgemv('t', n0, n1, 1.d0, w1, n0, r, 1, 1.d0, rt1, 1)
-        ax = dtanh(rt1)
+        call dgemv('t', n0, n1, 1.e0_wp, w1, n0, r, 1, 1.e0_wp, rt1, 1)
+        ax = tanh(rt1)
         ! 2nd layer
         rt2 = b2
-        call dgemv('t', n1, n2, 1.d0, w2, n1, ax, 1, 1.d0, rt2, 1)
-        bx = dtanh(rt2)
+        call dgemv('t', n1, n2, 1.e0_wp, w2, n1, ax, 1, 1.e0_wp, rt2, 1)
+        bx = tanh(rt2)
         ! output layer
         v = b3+ddot(n2, w3, 1, bx, 1)
         !reverse map
-        v = vgg*(v+1.d0)/2+vg(1)
+        v = vgg*(v+1.e0_wp)/2+vg(1)
         if( idv .ne. 1 ) return
         ! calculate first derivatives, dv(i)=dv/dr(i)
-        dv = 0.d0
+        dv = 0.e0_wp
         do i=1, n0
             do k=1, n2
-                dvtm = 0.d0
+                dvtm = 0.e0_wp
                 do j=1, n1
                     dvtm = dvtm+w2(j,k)*w1(i,j)*(1-ax(j)**2)
                 enddo
@@ -240,48 +187,49 @@ module chempotpy_c2n_pipnn_app_pes
     !    vg  : output range of the training set, vg(2)
     !> @brief Evaluate nsimx.
     subroutine nsimx( nt, r, v, idv, dv, n0, n1, n2, rg, w1, b1, w2, b2, w3, b3, vg )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: nt, idv, n0, n1, n2
-        double precision, intent(in)  :: r(n0,nt)
-        double precision, intent(out) :: v(nt), dv(n0,nt)
-        double precision, intent(in)  :: w1(n0,n1), b1(n1), w2(n1,n2), b2(n2), w3(n2), b3
-        double precision, intent(in)  :: rg(2,n0), vg(2)
-        double precision              :: x0(n0,nt), x1(nt,n1), x2(nt,n2), tmp, rgg(n0), vgg
-        integer                       :: i, j, k, n
-        v = 0.d0
+        integer, intent(in)   :: nt, idv, n0, n1, n2
+        real(wp), intent(in)  :: r(n0,nt)
+        real(wp), intent(out) :: v(nt), dv(n0,nt)
+        real(wp), intent(in)  :: w1(n0,n1), b1(n1), w2(n1,n2), b2(n2), w3(n2), b3
+        real(wp), intent(in)  :: rg(2,n0), vg(2)
+        real(wp)              :: x0(n0,nt), x1(nt,n1), x2(nt,n2), tmp, rgg(n0), vgg
+        integer               :: i, j, k, n
+        v = 0.e0_wp
         do i=1, n0
             rgg(i) = rg(2,i)-rg(1,i)
         enddo
         vgg = vg(2)-vg(1)
         x0  = r
         do i=1, n0
-            x0(i,1:nt) = (x0(i,1:nt)-rg(1,i))/rgg(i)*2.d0-1.d0
+            x0(i,1:nt) = (x0(i,1:nt)-rg(1,i))/rgg(i)*2.e0_wp-1.e0_wp
         enddo
         do i=1, n1
             x1(1:nt,i) = b1(i)
         enddo
         ! ---- x1=trans(x0(n0,nt))*w1(n0,n1)+x1(nt,n1)
         !call gpu_dgemm('t','n',nt,n1,n0,1.d0,x0,n0,w1,n0,1.d0,x1,nt)
-        call dgemm('t', 'n', nt, n1, n0, 1.d0, x0, n0, w1, n0, 1.d0, x1, nt)
-        x1 = dtanh(x1)
+        call dgemm('t', 'n', nt, n1, n0, 1.e0_wp, x0, n0, w1, n0, 1.e0_wp, x1, nt)
+        x1 = tanh(x1)
         do i=1, n2
             x2(1:nt,i) = b2(i)
         enddo
         ! ---- x2=x1(nt,n1)*w2(n1,n2)+x2(nt,n2)
         !call gpu_dgemm('n','n',nt,n2,n1,1.d0,x1,nt,w2,n1,1.d0,x2,nt)
-        call dgemm('n', 'n', nt, n2, n1, 1.d0, x1, nt, w2, n1, 1.d0, x2, nt)
-        x2      = dtanh(x2)
+        call dgemm('n', 'n', nt, n2, n1, 1.e0_wp, x1, nt, w2, n1, 1.e0_wp, x2, nt)
+        x2      = tanh(x2)
         v(1:nt) = b3
         ! ---- v=x2(nt,n2)*w3(n2)+v(nt)
-        call dgemv('n', nt, n2, 1.d0, x2, nt, w3, 1, 1.d0, v, 1)
-        v = (v+1.d0)/2.d0*vgg+vg(1)
+        call dgemv('n', nt, n2, 1.e0_wp, x2, nt, w3, 1, 1.e0_wp, v, 1)
+        v = (v+1.e0_wp)/2.e0_wp*vgg+vg(1)
         if( idv .ne. 1 ) return
         ! ---- calculate first derivatives
-        dv = 0.d0
+        dv = 0.e0_wp
         do n=1, nt
             do i=1, n0
                 do k=1, n2
-                    tmp = 0.d0
+                    tmp = 0.e0_wp
                     do j=1, n1
                         tmp = tmp+w2(j,k)*w1(i,j)*(1-x1(n,j)**2)
                     enddo
@@ -299,20 +247,22 @@ module chempotpy_c2n_pipnn_app_pes
     !        call bemsav(x,p)
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)  :: x(1:3)
-        double precision, intent(out) :: p(0:12)
-        double precision              :: m(0:4)
+        real(wp), intent(in)  :: x(1:3)
+        real(wp), intent(out) :: p(0:12)
+        real(wp)              :: m(0:4)
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
 
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)  :: x(1:3)
-        double precision, intent(out) :: m(0:4)
-        m(0) = 1.0d0
+        real(wp), intent(in)  :: x(1:3)
+        real(wp), intent(out) :: m(0:4)
+        m(0) = 1.0e0_wp
         m(1) = x(3)
         m(2) = x(2)
         m(3) = x(1)
@@ -321,9 +271,10 @@ module chempotpy_c2n_pipnn_app_pes
 
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)  :: m(0:4)
-        double precision, intent(out) :: p(0:12)
+        real(wp), intent(in)  :: m(0:4)
+        real(wp), intent(out) :: p(0:12)
         p(0)  = m(0)
         p(1)  = m(1)+m(2)
         p(2)  = m(3)
@@ -343,14 +294,15 @@ end module chempotpy_c2n_pipnn_app_pes
 !> @brief Expose C2N_PIPNN_App through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_c2n_pipnn_app_pes, only: evaluate
+    use chempotpy_kinds,             only: wp
     implicit none
     integer, parameter              :: natoms  = 3
     integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
-    double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates)
-    double precision, intent(out)   :: g(nstates,natoms,3)
-    double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    call evaluate(x, igrad, path, p, g, d)
+    real(wp), intent(in)            :: x(natoms,3)
+    real(wp), intent(out)           :: p(nstates)
+    real(wp), intent(out)           :: g(nstates,natoms,3)
+    real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
+    call evaluate(x, igrad, p, g, d)
 end subroutine pes

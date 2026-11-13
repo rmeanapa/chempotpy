@@ -23,6 +23,7 @@
 
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_beth_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -32,28 +33,28 @@ module chempotpy_aln_beth_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
-        use chempotpy_legacy_units, only: legacy_coordinates_to_bohr, &
-            legacy_energy_to_electronvolt
-        use chempotpy_kinds, only: real64
+        use chempotpy_units, only: coordinates_to_bohr, &
+            energy_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter        :: state_count = 1
-        real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-        integer, intent(in)       :: atom_count, derivative_order
-        real(real64), intent(out) :: energy_ev(state_count)
-        real(real64), intent(out) :: gradient_ev_per_angstrom( &
+        integer, parameter    :: state_count = 1
+        real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+        integer, intent(in)   :: atom_count, derivative_order
+        real(wp), intent(out) :: energy_ev(state_count)
+        real(wp), intent(out) :: gradient_ev_per_angstrom( &
             state_count,atom_count,3 )
-        real(real64), intent(out) :: coupling_per_angstrom( &
+        real(wp), intent(out) :: coupling_per_angstrom( &
             state_count,state_count,atom_count,3 )
-        real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-        energy_ev                = 0.0d0
-        gradient_ev_per_angstrom = 0.0d0
-        coupling_per_angstrom    = 0.0d0
-        call legacy_coordinates_to_bohr( &
+        real(wp) :: coordinates_bohr(atom_count,3), energy_hartree
+        energy_ev                = 0.0e0_wp
+        gradient_ev_per_angstrom = 0.0e0_wp
+        coupling_per_angstrom    = 0.0e0_wp
+        call coordinates_to_bohr( &
             coordinates_angstrom(1:atom_count,:), coordinates_bohr)
         call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
             coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
         if( derivative_order == 0 )then
-            energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
+            energy_ev(1) = energy_to_electronvolt(energy_hartree)
         else
             write(*, *) 'Only energy is available'
         endif
@@ -61,11 +62,12 @@ module chempotpy_aln_beth_pes
 
     !> @brief Evaluate pot for the Aln_BetH potential.
     subroutine pot( x, y, z, v, natom, maxatom )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: a, aa, b, bb, dx, dy, dz, rr, u, ud, udd, uu, v, v1, x(maxatom), y(maxatom), z(maxatom)
-        integer :: i, j, maxatom, natom
-        double precision, parameter :: autoev  = 27.2113961d0
-        double precision, parameter :: autoang = 0.529177249d0
+        real(wp)            :: a, aa, b, bb, dx, dy, dz, rr, u, ud, udd, uu, v, v1, x(maxatom), y(maxatom), z(maxatom)
+        integer             :: i, j, maxatom, natom
+        real(wp), parameter :: autoev  = 27.2113961e0_wp
+        real(wp), parameter :: autoang = 0.529177249e0_wp
         !  calculate the potential energy
         aa = 44.8337922
         bb = 0.4865568924
@@ -75,30 +77,30 @@ module chempotpy_aln_beth_pes
         bb = 13.24/autoev
         a  = 3.004*autoang
         b  = 1.637*autoang
-        v1 = 0d0
+        v1 = 0e0_wp
         do i=1, natom
-            ud = 0d0
+            ud = 0e0_wp
             do j=1, natom
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
-                rr = dsqrt(dx*dx+dy*dy+dz*dz)
+                rr = sqrt(dx*dx+dy*dy+dz*dz)
                 if( j .eq. i ) cycle
-                udd = 0d0
-                udd = dexp(-b*rr)
+                udd = 0e0_wp
+                udd = exp(-b*rr)
                 ud  = ud+udd
             enddo
-            v1 = v1+dsqrt(ud)
+            v1 = v1+sqrt(ud)
         enddo
-        u = 0d0
+        u = 0e0_wp
         do i=1, natom-1
             do j=i+1, natom
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
-                rr = dsqrt(dx*dx+dy*dy+dz*dz)
-                uu = 0d0
-                uu = dexp(-a*rr)
+                rr = sqrt(dx*dx+dy*dy+dz*dz)
+                uu = 0e0_wp
+                uu = exp(-a*rr)
                 u  = u+uu
             enddo
         enddo
@@ -110,14 +112,14 @@ end module chempotpy_aln_beth_pes
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_beth_pes, only: evaluate
-    use chempotpy_kinds,        only: real64
+    use chempotpy_kinds,        only: wp
     implicit none
-    integer, parameter        :: state_count = 1
-    real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-    integer, intent(in)       :: atom_count, derivative_order
-    real(real64), intent(out) :: energy_ev(state_count)
-    real(real64), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
-    real(real64), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
+    integer, parameter    :: state_count = 1
+    real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+    integer, intent(in)   :: atom_count, derivative_order
+    real(wp), intent(out) :: energy_ev(state_count)
+    real(wp), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
+    real(wp), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
     call evaluate(coordinates_angstrom, atom_count, derivative_order, energy_ev, gradient_ev_per_angstrom, &
         & coupling_per_angstrom)
 end subroutine pes

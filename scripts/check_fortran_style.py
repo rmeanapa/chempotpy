@@ -174,7 +174,11 @@ def check_source(path: Path) -> Sequence[StyleViolation]:
     relative_path = str(path.relative_to(REPOSITORY_ROOT))
     violations: List[StyleViolation] = []
     source_text = path.read_text(errors="replace")
-    if format_source_text(source_text) != source_text:
+    generator_controlled = (
+        "Generated from the released" in source_text
+        or "Generated from released model data" in source_text
+    )
+    if not generator_controlled and format_source_text(source_text) != source_text:
         violations.append(StyleViolation(
             relative_path, 1, "structural-indent",
             "source does not match four-space structural indentation",

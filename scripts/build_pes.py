@@ -25,7 +25,53 @@ from chempotpy.core.registry import SurfaceSource, discover_surface_sources
 
 
 SUPPORT_SOURCES = {
-    ("CH4", "CH4_GEN_SP_2001"): ("ch4_t8.f90",),
+    ("C2H2N2O", "C2H2N2O_PIPNN"): (
+        "chempotpy_c2h2n2o_pipnn_parameters.f90",
+    ),
+    ("C2H2O", "C2H2O_PIPNN"): (
+        "chempotpy_c2h2o_pipnn_parameters.f90",
+    ),
+    ("ArNO", "ArNO_Ap_PIPNN"): (
+        "chempotpy_arno_spline_parameters.f90",
+    ),
+    ("ArNO", "ArNO_App_PIPNN"): (
+        "chempotpy_arno_spline_parameters.f90",
+    ),
+    ("H3", "H3_GEN_A2_2002"): ("chempotpy_h3_2002_basis.f90",),
+    ("H3", "H3_GEN_A3_2002"): ("chempotpy_h3_2002_basis.f90",),
+    ("H3", "H3_GEN_A4_2002"): ("chempotpy_h3_2002_basis.f90",),
+    ("H3", "H3_GEN_CCI_2002"): ("chempotpy_h3_2002_basis.f90",),
+    ("H2CO", "H2CO_PIP"): (
+        "chempotpy_h2co_pip_parameters.f90",
+    ),
+    ("CH4", "CH4_GEN_SP_2001"): (
+        "chempotpy_ch4_t8_parameters.f90",
+        "ch4_t8.f90",
+    ),
+    ("CH4", "ch4_t8"): (
+        "chempotpy_ch4_t8_parameters.f90",
+    ),
+    ("CH2O", "CH2O_PIPNN"): (
+        "chempotpy_ch2o_pipnn_parameters.f90",
+    ),
+    ("CH2O2", "CH2O2_PIPNN"): (
+        "chempotpy_ch2o2_pipnn_parameters.f90",
+    ),
+    ("CH4OCl", "CH4OCl_PIPNN"): (
+        "chempotpy_ch4ocl_pipnn_parameters.f90",
+    ),
+    ("CH4OF", "CH4OF_PIPNN"): (
+        "chempotpy_ch4of_pipnn_parameters.f90",
+    ),
+    ("C2N", "C2N_PIPNN_Ap"): (
+        "chempotpy_c2n_pipnn_ap_parameters.f90",
+    ),
+    ("C2N", "C2N_PIPNN_App"): (
+        "chempotpy_c2n_pipnn_app_parameters.f90",
+    ),
+    ("ClH2O", "ClH2O_PIPNN"): (
+        "chempotpy_clh2o_pipnn_parameters.f90",
+    ),
     ("C3H7NO", "C3H7NO_PIP"): ("chempotpy_c3h7no_pip_parameters.f90",),
     ("COCO", "COCO_PIPNN"): ("chempotpy_coco_pipnn_parameters.f90",),
     ("FH2O", "FH2O_PIPNN"): ("chempotpy_fh2o_pipnn_parameters.f90",),
@@ -36,12 +82,48 @@ SUPPORT_SOURCES = {
         "chempotpy_f2h2_jbkkl_parameters.f90",
     ),
     ("N4", "N4_1A_PIPNN"): ("chempotpy_n4_pipnn_parameters.f90",),
+    ("N4", "N4_BDTC_2014"): ("chempotpy_n4_bdtc_parameters.f90",),
     ("HOBr", "HOBr_3App_PIP"): ("chempotpy_hobr_3app_parameters.f90",),
+    ("H3ClO", "H3ClO_PIPNN"): (
+        "chempotpy_h3clo_pipnn_parameters.f90",
+    ),
+    ("H3Cl", "H3Cl_PIPNN"): (
+        "chempotpy_h3cl_pipnn_parameters.f90",
+    ),
+    ("H3S", "H3S_PIPNN"): (
+        "chempotpy_h3s_pipnn_parameters.f90",
+    ),
+    ("H4O2", "H4O2_PIP"): (
+        "chempotpy_h4o2_pip_parameters.f90",
+    ),
+    ("HClOH", "HClOH_PIPNN"): (
+        "chempotpy_hcloh_pipnn_parameters.f90",
+    ),
+    ("HO3", "HO3_PIPNN"): (
+        "chempotpy_ho3_pipnn_parameters.f90",
+    ),
+    ("K2Rb2", "K2Rb2_PIPNN"): (
+        "chempotpy_k2rb2_pipnn_parameters.f90",
+    ),
+    ("N2HOCp", "N2HOCp_PIPNN"): (
+        "chempotpy_n2hocp_pipnn_parameters.f90",
+    ),
+    ("NO2", "NO2_2Ap_PIPNN"): (
+        "chempotpy_no2_2ap_pipnn_parameters.f90",
+    ),
+    ("NO2", "NO2_4Ap_PIPNN"): (
+        "chempotpy_no2_4ap_pipnn_parameters.f90",
+    ),
+    ("NO2", "NO2_6Ap_PIPNN"): (
+        "chempotpy_no2_6ap_pipnn_parameters.f90",
+    ),
+    ("O2H3", "O2H3_PIPNN"): (
+        "chempotpy_o2h3_pipnn_parameters.f90",
+    ),
 }
 CORE_FORTRAN_ROOT = REPOSITORY_ROOT / "chempotpy" / "core"
 CORE_MODULE_SOURCES = {
     "chempotpy_geometry": CORE_FORTRAN_ROOT / "chempotpy_geometry.f90",
-    "chempotpy_h3_basis": CORE_FORTRAN_ROOT / "chempotpy_h3_basis.f90",
     "chempotpy_internal_coordinates": (
         CORE_FORTRAN_ROOT / "chempotpy_internal_coordinates.f90"
     ),
@@ -51,6 +133,9 @@ CORE_MODULE_SOURCES = {
     ),
     "chempotpy_legacy_units": (
         CORE_FORTRAN_ROOT / "chempotpy_legacy_units.f90"
+    ),
+    "chempotpy_physical_constants": (
+        CORE_FORTRAN_ROOT / "chempotpy_physical_constants.f90"
     ),
     "chempotpy_status": CORE_FORTRAN_ROOT / "chempotpy_status.f90",
     "chempotpy_units": CORE_FORTRAN_ROOT / "chempotpy_units.f90",
@@ -71,6 +156,7 @@ F2PY_KIND_MAP = {
     "real": {
         "real32": "float",
         "real64": "double",
+        "wp": "double",
     }
 }
 
@@ -184,8 +270,11 @@ def select_surfaces(
     )
 
 
-def core_fortran_dependencies(source_text: str) -> Sequence[Path]:
-    """Return referenced bundled modules in dependency-first build order."""
+def core_fortran_dependencies(
+    source_text: str,
+    additional_sources: Sequence[Path] = (),
+) -> Sequence[Path]:
+    """Return bundled modules required by primary and support sources."""
 
     ordered = []
     resolved = set()
@@ -210,7 +299,11 @@ def core_fortran_dependencies(source_text: str) -> Sequence[Path]:
         resolved.add(normalized_name)
         ordered.append(source_path)
 
-    for referenced_module in USE_PATTERN.findall(source_text):
+    combined_text = source_text+"".join(
+        "\n"+path.read_text(errors="replace")
+        for path in additional_sources
+    )
+    for referenced_module in USE_PATTERN.findall(combined_text):
         resolve(referenced_module)
     return tuple(ordered)
 
@@ -262,15 +355,20 @@ def normalized_sources(
         local_signature = build_directory / signature_source.name
         copy_ascii_source(signature_source, local_signature)
         local_sources.append(local_signature)
-    for core_source in core_fortran_dependencies(source_text):
+    support_sources = tuple(
+        source.path.parent / support_name
+        for support_name in SUPPORT_SOURCES.get(
+            (source.system_name, source.surface_name), ()
+        )
+    )
+    for core_source in core_fortran_dependencies(
+        source_text, support_sources
+    ):
         local_core = build_directory / core_source.name
         copy_ascii_source(core_source, local_core)
         local_sources.append(local_core)
-    for support_name in SUPPORT_SOURCES.get(
-        (source.system_name, source.surface_name), ()
-    ):
-        support_source = source.path.parent / support_name
-        local_support = build_directory / support_name
+    for support_source in support_sources:
+        local_support = build_directory / support_source.name
         copy_ascii_source(support_source, local_support)
         local_sources.append(local_support)
     local_sources.append(local_source)

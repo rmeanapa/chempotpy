@@ -1,5 +1,6 @@
 !> @brief Implement CH5_GEN_J1_1987, a potential energy surface for CH5.
 module chempotpy_ch5_gen_j1_1987_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -8,207 +9,209 @@ module chempotpy_ch5_gen_j1_1987_pes
 
     !> @brief Evaluate the CH5_GEN_J1_1987 potential energy surface for CH5.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 6
-        integer, parameter            :: natom   = 25
-        integer, parameter            :: isurf   = 5
-        integer, parameter            :: jsurf   = int(isurf*(isurf+1)/2)
-        integer, parameter            :: n3atom  = 75
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: alpdcm_dalp
-        double precision              :: dervcp_deccr1
-        double precision              :: dervcp_deccr5
-        double precision              :: dervcp_deccr6
-        double precision              :: icorcm_ar(15)
-        double precision              :: icorcm_der(15)
-        double precision              :: infocm_cartnu(natom,3)
-        integer                       :: infocm_icartr
-        integer                       :: infocm_indexes(natom)
-        integer                       :: infocm_irctnt
-        integer                       :: infocm_mder
-        integer                       :: infocm_msurf
-        integer                       :: infocm_natoms
-        character                     :: infocm_ref(5)
-        double precision              :: pdatcm_aa(3)
-        double precision              :: pdatcm_alph(3)
-        double precision              :: pdatcm_aparm(5)
-        double precision              :: pdatcm_b1
-        double precision              :: pdatcm_beta(3)
-        double precision              :: pdatcm_bp1
-        double precision              :: pdatcm_c1
-        double precision              :: pdatcm_cc(3)
-        double precision              :: pdatcm_cp
-        double precision              :: pdatcm_cp1
-        double precision              :: pdatcm_d1(3)
-        double precision              :: pdatcm_d3(3)
-        double precision              :: pdatcm_re(3)
-        double precision              :: pdatcm_refv
-        double precision              :: pdatcm_tau
-        double precision              :: pdt2cm_a
-        double precision              :: pdt2cm_a0
-        double precision              :: pdt2cm_a3
-        double precision              :: pdt2cm_aphi
-        double precision              :: pdt2cm_b
-        double precision              :: pdt2cm_b0
-        double precision              :: pdt2cm_b3
-        double precision              :: pdt2cm_bphi
-        double precision              :: pdt2cm_c0
-        double precision              :: pdt2cm_cphi
-        double precision              :: pdt2cm_d
-        double precision              :: pdt2cm_d0
-        double precision              :: pdt2cm_delt
-        double precision              :: pdt2cm_delta
-        double precision              :: pdt2cm_dij
-        double precision              :: pdt2cm_fch3
-        double precision              :: pdt2cm_hch3
-        double precision              :: pdt2cm_pch4
-        double precision              :: pdt2cm_rex
-        double precision              :: pdt2cm_rnot
-        double precision              :: pdt3cm_ca
-        double precision              :: pdt3cm_cb
-        double precision              :: pdt3cm_fa
-        double precision              :: pdt3cm_fk0
-        double precision              :: potrcm_acs(6)
-        double precision              :: potrcm_ag(6)
-        double precision              :: potrcm_ass(6)
-        double precision              :: potrcm_r2(15)
-        double precision              :: potxcm_dedx(18)
-        double precision              :: potxcm_drdx(15,18)
-        double precision              :: potxcm_energy
-        double precision              :: potxcm_x(6)
-        double precision              :: potxcm_xx(6)
-        double precision              :: potxcm_y(6)
-        double precision              :: potxcm_z(6)
-        double precision              :: pt1cm_degsdr(n3atom)
-        double precision              :: pt1cm_engygs
-        double precision              :: pt1cm_r(n3atom)
-        double precision              :: pt3cm_ezero(isurf+1)
-        double precision              :: pt4cm_deesdr(n3atom,isurf)
-        double precision              :: pt4cm_engyes(isurf)
-        double precision              :: pt5cm_deijdr(n3atom,jsurf)
-        double precision              :: pt5cm_engyij(jsurf)
-        double precision              :: temcom_dtemp(9)
-        double precision              :: temcom_etem
-        double precision              :: temcom_rtem(9)
-        double precision              :: testcm_dgamma(3,18)
-        double precision              :: testcm_gamma(3)
-        double precision              :: usricm_anuzero
-        double precision              :: usricm_cart(natom,3)
-        integer                       :: usricm_nasurf(isurf+1,isurf+1)
-        integer                       :: usricm_nder
-        integer                       :: usricm_nflag(20)
-        integer                       :: usricm_nulbl(natom)
-        double precision              :: usrocm_descart(natom,3,isurf)
-        double precision              :: usrocm_dgscart(natom,3)
-        double precision              :: usrocm_dijcart(natom,3,jsurf)
-        double precision              :: usrocm_pengyes(isurf)
-        double precision              :: usrocm_pengygs
-        double precision              :: usrocm_pengyij(jsurf)
-        double precision              :: utilcm_cnvrtd
-        double precision              :: utilcm_cnvrtde
-        double precision              :: utilcm_cnvrte
-        double precision              :: utilcm_descartnu(natom,3,isurf)
-        double precision              :: utilcm_dgscartnu(natom,3)
-        double precision              :: utilcm_dijcartnu(natom,3,jsurf)
-        integer                       :: utilcm_ireorder
-        integer                       :: utilcm_kediag
-        integer                       :: utilcm_keoffd
-        integer                       :: utilcm_ksdiag
-        integer                       :: utilcm_ksoffd
-        double precision              :: v
-        integer                       :: iatom, idir, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 6
+        integer, parameter    :: natom   = 25
+        integer, parameter    :: isurf   = 5
+        integer, parameter    :: jsurf   = int(isurf*(isurf+1)/2)
+        integer, parameter    :: n3atom  = 75
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: alpdcm_dalp
+        real(wp)              :: dervcp_deccr1
+        real(wp)              :: dervcp_deccr5
+        real(wp)              :: dervcp_deccr6
+        real(wp)              :: icorcm_ar(15)
+        real(wp)              :: icorcm_der(15)
+        real(wp)              :: infocm_cartnu(natom,3)
+        integer               :: infocm_icartr
+        integer               :: infocm_indexes(natom)
+        integer               :: infocm_irctnt
+        integer               :: infocm_mder
+        integer               :: infocm_msurf
+        integer               :: infocm_natoms
+        character             :: infocm_ref(5)
+        real(wp)              :: pdatcm_aa(3)
+        real(wp)              :: pdatcm_alph(3)
+        real(wp)              :: pdatcm_aparm(5)
+        real(wp)              :: pdatcm_b1
+        real(wp)              :: pdatcm_beta(3)
+        real(wp)              :: pdatcm_bp1
+        real(wp)              :: pdatcm_c1
+        real(wp)              :: pdatcm_cc(3)
+        real(wp)              :: pdatcm_cp
+        real(wp)              :: pdatcm_cp1
+        real(wp)              :: pdatcm_d1(3)
+        real(wp)              :: pdatcm_d3(3)
+        real(wp)              :: pdatcm_re(3)
+        real(wp)              :: pdatcm_refv
+        real(wp)              :: pdatcm_tau
+        real(wp)              :: pdt2cm_a
+        real(wp)              :: pdt2cm_a0
+        real(wp)              :: pdt2cm_a3
+        real(wp)              :: pdt2cm_aphi
+        real(wp)              :: pdt2cm_b
+        real(wp)              :: pdt2cm_b0
+        real(wp)              :: pdt2cm_b3
+        real(wp)              :: pdt2cm_bphi
+        real(wp)              :: pdt2cm_c0
+        real(wp)              :: pdt2cm_cphi
+        real(wp)              :: pdt2cm_d
+        real(wp)              :: pdt2cm_d0
+        real(wp)              :: pdt2cm_delt
+        real(wp)              :: pdt2cm_delta
+        real(wp)              :: pdt2cm_dij
+        real(wp)              :: pdt2cm_fch3
+        real(wp)              :: pdt2cm_hch3
+        real(wp)              :: pdt2cm_pch4
+        real(wp)              :: pdt2cm_rex
+        real(wp)              :: pdt2cm_rnot
+        real(wp)              :: pdt3cm_ca
+        real(wp)              :: pdt3cm_cb
+        real(wp)              :: pdt3cm_fa
+        real(wp)              :: pdt3cm_fk0
+        real(wp)              :: potrcm_acs(6)
+        real(wp)              :: potrcm_ag(6)
+        real(wp)              :: potrcm_ass(6)
+        real(wp)              :: potrcm_r2(15)
+        real(wp)              :: potxcm_dedx(18)
+        real(wp)              :: potxcm_drdx(15,18)
+        real(wp)              :: potxcm_energy
+        real(wp)              :: potxcm_x(6)
+        real(wp)              :: potxcm_xx(6)
+        real(wp)              :: potxcm_y(6)
+        real(wp)              :: potxcm_z(6)
+        real(wp)              :: pt1cm_degsdr(n3atom)
+        real(wp)              :: pt1cm_engygs
+        real(wp)              :: pt1cm_r(n3atom)
+        real(wp)              :: pt3cm_ezero(isurf+1)
+        real(wp)              :: pt4cm_deesdr(n3atom,isurf)
+        real(wp)              :: pt4cm_engyes(isurf)
+        real(wp)              :: pt5cm_deijdr(n3atom,jsurf)
+        real(wp)              :: pt5cm_engyij(jsurf)
+        real(wp)              :: temcom_dtemp(9)
+        real(wp)              :: temcom_etem
+        real(wp)              :: temcom_rtem(9)
+        real(wp)              :: testcm_dgamma(3,18)
+        real(wp)              :: testcm_gamma(3)
+        real(wp)              :: usricm_anuzero
+        real(wp)              :: usricm_cart(natom,3)
+        integer               :: usricm_nasurf(isurf+1,isurf+1)
+        integer               :: usricm_nder
+        integer               :: usricm_nflag(20)
+        integer               :: usricm_nulbl(natom)
+        real(wp)              :: usrocm_descart(natom,3,isurf)
+        real(wp)              :: usrocm_dgscart(natom,3)
+        real(wp)              :: usrocm_dijcart(natom,3,jsurf)
+        real(wp)              :: usrocm_pengyes(isurf)
+        real(wp)              :: usrocm_pengygs
+        real(wp)              :: usrocm_pengyij(jsurf)
+        real(wp)              :: utilcm_cnvrtd
+        real(wp)              :: utilcm_cnvrtde
+        real(wp)              :: utilcm_cnvrte
+        real(wp)              :: utilcm_descartnu(natom,3,isurf)
+        real(wp)              :: utilcm_dgscartnu(natom,3)
+        real(wp)              :: utilcm_dijcartnu(natom,3,jsurf)
+        integer               :: utilcm_ireorder
+        integer               :: utilcm_kediag
+        integer               :: utilcm_keoffd
+        integer               :: utilcm_ksdiag
+        integer               :: utilcm_ksoffd
+        real(wp)              :: v
+        integer               :: iatom, idir, istate
         !initialize
-        alpdcm_dalp      = 0.d0; dervcp_deccr1 = 0.d0; dervcp_deccr5 = 0.d0; dervcp_deccr6 = 0.d0; icorcm_ar = 0.d0
-        icorcm_der       = 0.d0; infocm_cartnu = 0.d0; infocm_icartr = 0; infocm_indexes = 0; infocm_irctnt = 0
+        alpdcm_dalp      = 0.e0_wp; dervcp_deccr1 = 0.e0_wp; dervcp_deccr5 = 0.e0_wp; dervcp_deccr6 = 0.e0_wp; icorcm_ar = 0.e0_wp
+        icorcm_der       = 0.e0_wp; infocm_cartnu = 0.e0_wp; infocm_icartr = 0; infocm_indexes = 0; infocm_irctnt = 0
         infocm_mder      = 0; infocm_msurf = 0; infocm_natoms = 0
         infocm_ref       = ' '
-        pdatcm_aa        = 0.d0
-        pdatcm_alph      = 0.d0
-        pdatcm_aparm     = 0.d0
-        pdatcm_b1        = 0.d0
-        pdatcm_beta      = 0.d0
-        pdatcm_bp1       = 0.d0
-        pdatcm_c1        = 0.d0
-        pdatcm_cc        = 0.d0
-        pdatcm_cp        = 0.d0
-        pdatcm_cp1       = 0.d0
-        pdatcm_d1        = 0.d0
-        pdatcm_d3        = 0.d0
-        pdatcm_re        = 0.d0
-        pdatcm_refv      = 0.d0
-        pdatcm_tau       = 0.d0
-        pdt2cm_a         = 0.d0
-        pdt2cm_a0        = 0.d0
-        pdt2cm_a3        = 0.d0
-        pdt2cm_aphi      = 0.d0
-        pdt2cm_b         = 0.d0
-        pdt2cm_b0        = 0.d0
-        pdt2cm_b3        = 0.d0
-        pdt2cm_bphi      = 0.d0
-        pdt2cm_c0        = 0.d0
-        pdt2cm_cphi      = 0.d0
-        pdt2cm_d         = 0.d0
-        pdt2cm_d0        = 0.d0
-        pdt2cm_delt      = 0.d0
-        pdt2cm_delta     = 0.d0
-        pdt2cm_dij       = 0.d0
-        pdt2cm_fch3      = 0.d0
-        pdt2cm_hch3      = 0.d0
-        pdt2cm_pch4      = 0.d0
-        pdt2cm_rex       = 0.d0
-        pdt2cm_rnot      = 0.d0
-        pdt3cm_ca        = 0.d0
-        pdt3cm_cb        = 0.d0
-        pdt3cm_fa        = 0.d0
-        pdt3cm_fk0       = 0.d0
-        potrcm_acs       = 0.d0
-        potrcm_ag        = 0.d0
-        potrcm_ass       = 0.d0
-        potrcm_r2        = 0.d0
-        potxcm_dedx      = 0.d0
-        potxcm_drdx      = 0.d0
-        potxcm_energy    = 0.d0
-        potxcm_x         = 0.d0
-        potxcm_xx        = 0.d0
-        potxcm_y         = 0.d0
-        potxcm_z         = 0.d0
-        pt1cm_degsdr     = 0.d0
-        pt1cm_engygs     = 0.d0
-        pt1cm_r          = 0.d0
-        pt3cm_ezero      = 0.d0
-        pt4cm_deesdr     = 0.d0
-        pt4cm_engyes     = 0.d0
-        pt5cm_deijdr     = 0.d0
-        pt5cm_engyij     = 0.d0
-        temcom_dtemp     = 0.d0
-        temcom_etem      = 0.d0
-        temcom_rtem      = 0.d0
-        testcm_dgamma    = 0.d0
-        testcm_gamma     = 0.d0
-        usricm_anuzero   = 0.d0
-        usricm_cart      = 0.d0
+        pdatcm_aa        = 0.e0_wp
+        pdatcm_alph      = 0.e0_wp
+        pdatcm_aparm     = 0.e0_wp
+        pdatcm_b1        = 0.e0_wp
+        pdatcm_beta      = 0.e0_wp
+        pdatcm_bp1       = 0.e0_wp
+        pdatcm_c1        = 0.e0_wp
+        pdatcm_cc        = 0.e0_wp
+        pdatcm_cp        = 0.e0_wp
+        pdatcm_cp1       = 0.e0_wp
+        pdatcm_d1        = 0.e0_wp
+        pdatcm_d3        = 0.e0_wp
+        pdatcm_re        = 0.e0_wp
+        pdatcm_refv      = 0.e0_wp
+        pdatcm_tau       = 0.e0_wp
+        pdt2cm_a         = 0.e0_wp
+        pdt2cm_a0        = 0.e0_wp
+        pdt2cm_a3        = 0.e0_wp
+        pdt2cm_aphi      = 0.e0_wp
+        pdt2cm_b         = 0.e0_wp
+        pdt2cm_b0        = 0.e0_wp
+        pdt2cm_b3        = 0.e0_wp
+        pdt2cm_bphi      = 0.e0_wp
+        pdt2cm_c0        = 0.e0_wp
+        pdt2cm_cphi      = 0.e0_wp
+        pdt2cm_d         = 0.e0_wp
+        pdt2cm_d0        = 0.e0_wp
+        pdt2cm_delt      = 0.e0_wp
+        pdt2cm_delta     = 0.e0_wp
+        pdt2cm_dij       = 0.e0_wp
+        pdt2cm_fch3      = 0.e0_wp
+        pdt2cm_hch3      = 0.e0_wp
+        pdt2cm_pch4      = 0.e0_wp
+        pdt2cm_rex       = 0.e0_wp
+        pdt2cm_rnot      = 0.e0_wp
+        pdt3cm_ca        = 0.e0_wp
+        pdt3cm_cb        = 0.e0_wp
+        pdt3cm_fa        = 0.e0_wp
+        pdt3cm_fk0       = 0.e0_wp
+        potrcm_acs       = 0.e0_wp
+        potrcm_ag        = 0.e0_wp
+        potrcm_ass       = 0.e0_wp
+        potrcm_r2        = 0.e0_wp
+        potxcm_dedx      = 0.e0_wp
+        potxcm_drdx      = 0.e0_wp
+        potxcm_energy    = 0.e0_wp
+        potxcm_x         = 0.e0_wp
+        potxcm_xx        = 0.e0_wp
+        potxcm_y         = 0.e0_wp
+        potxcm_z         = 0.e0_wp
+        pt1cm_degsdr     = 0.e0_wp
+        pt1cm_engygs     = 0.e0_wp
+        pt1cm_r          = 0.e0_wp
+        pt3cm_ezero      = 0.e0_wp
+        pt4cm_deesdr     = 0.e0_wp
+        pt4cm_engyes     = 0.e0_wp
+        pt5cm_deijdr     = 0.e0_wp
+        pt5cm_engyij     = 0.e0_wp
+        temcom_dtemp     = 0.e0_wp
+        temcom_etem      = 0.e0_wp
+        temcom_rtem      = 0.e0_wp
+        testcm_dgamma    = 0.e0_wp
+        testcm_gamma     = 0.e0_wp
+        usricm_anuzero   = 0.e0_wp
+        usricm_cart      = 0.e0_wp
         usricm_nasurf    = 0
         usricm_nder      = 0
         usricm_nflag     = 0
         usricm_nulbl     = 0
-        usrocm_descart   = 0.d0
-        usrocm_dgscart   = 0.d0
-        usrocm_dijcart   = 0.d0
-        usrocm_pengyes   = 0.d0
-        usrocm_pengygs   = 0.d0
-        usrocm_pengyij   = 0.d0
-        utilcm_cnvrtd    = 0.d0
-        utilcm_cnvrtde   = 0.d0
-        utilcm_cnvrte    = 0.d0
-        utilcm_descartnu = 0.d0
-        utilcm_dgscartnu = 0.d0
-        utilcm_dijcartnu = 0.d0
+        usrocm_descart   = 0.e0_wp
+        usrocm_dgscart   = 0.e0_wp
+        usrocm_dijcart   = 0.e0_wp
+        usrocm_pengyes   = 0.e0_wp
+        usrocm_pengygs   = 0.e0_wp
+        usrocm_pengyij   = 0.e0_wp
+        utilcm_cnvrtd    = 0.e0_wp
+        utilcm_cnvrtde   = 0.e0_wp
+        utilcm_cnvrte    = 0.e0_wp
+        utilcm_descartnu = 0.e0_wp
+        utilcm_dgscartnu = 0.e0_wp
+        utilcm_dijcartnu = 0.e0_wp
         utilcm_ireorder  = 0
         utilcm_kediag    = 0
         utilcm_keoffd    = 0
@@ -218,64 +221,64 @@ module chempotpy_ch5_gen_j1_1987_pes
             & 0, 0, 0, 0, 0, 0, 0, 0], shape(usricm_nasurf))
         usricm_nder    = 1
         usricm_nflag   = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        usricm_anuzero = 0.0d0
+        usricm_anuzero = 0.0e0_wp
         infocm_icartr  = 1
         infocm_msurf   = 0
         infocm_mder    = 1
         usricm_nulbl   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         infocm_natoms  = 6
-        pdatcm_d1      = [4.8668d0, 4.74660d0, 1.1452d0]
-        pdatcm_d3      = [1.6890d0, 1.75200d0, 0.8870d0]
-        pdatcm_b1      = 3.00d0
-        pdatcm_c1      = 11.00d0
-        pdatcm_alph    = [0.939d0, 1.029955d0, 0.939d0]
-        pdatcm_re      = [2.0673d0, 1.402d0, 2.0673d0]
-        pdatcm_beta    = [0.939d0, 1.029955d0, 0.939d0]
-        pdatcm_aa      = [0.0d0, 0.0d0, -2.3603d0]
-        pdatcm_refv    = 0.71098329d0
-        pdatcm_tau     = 1.9105588d0
-        pdatcm_cp      = 0.080768d0
-        pdatcm_aparm   = [4.0d0, 0.8999975d0, 0.448035d0, 0.606528d0, 3.239921d0]
-        pdt2cm_aphi    = 2.7982366d-1
-        pdt2cm_bphi    = 5.937217d-2
-        pdt2cm_cphi    = 3.6301534d0
-        pdt2cm_pch4    = 1.9106d0
-        pdt2cm_fch3    = 2.19d-2
-        pdt2cm_hch3    = 4.38d-02
-        pdt2cm_rnot    = 2.052d0
-        pdt2cm_a3      = 2.102956d-2
-        pdt2cm_b3      = 5.798533d-1
-        pdt2cm_delt    = 0.1d0
-        pdt2cm_dij     = 3.1190d0
-        pdt2cm_a       = -1.56944d+3
-        pdt2cm_b       = -1.12008d+3
-        pdt2cm_c0      = 1.5786151d+3
-        pdt2cm_d       = 2.67146d0
-        pdt3cm_ca      = 0.903d0
-        pdt3cm_cb      = 0.072d0
-        pdt2cm_rex     = 1.18584d0
-        pdt3cm_fk0     = 2.55d0
-        pdt3cm_fa      = 0.8d0
-        v              = 0.d0; g = 0.d0; d = 0.d0
-        usricm_cart    = 0.d0
+        pdatcm_d1      = [4.8668e0_wp, 4.74660e0_wp, 1.1452e0_wp]
+        pdatcm_d3      = [1.6890e0_wp, 1.75200e0_wp, 0.8870e0_wp]
+        pdatcm_b1      = 3.00e0_wp
+        pdatcm_c1      = 11.00e0_wp
+        pdatcm_alph    = [0.939e0_wp, 1.029955e0_wp, 0.939e0_wp]
+        pdatcm_re      = [2.0673e0_wp, 1.402e0_wp, 2.0673e0_wp]
+        pdatcm_beta    = [0.939e0_wp, 1.029955e0_wp, 0.939e0_wp]
+        pdatcm_aa      = [0.0e0_wp, 0.0e0_wp, -2.3603e0_wp]
+        pdatcm_refv    = 0.71098329e0_wp
+        pdatcm_tau     = 1.9105588e0_wp
+        pdatcm_cp      = 0.080768e0_wp
+        pdatcm_aparm   = [4.0e0_wp, 0.8999975e0_wp, 0.448035e0_wp, 0.606528e0_wp, 3.239921e0_wp]
+        pdt2cm_aphi    = 2.7982366e-1_wp
+        pdt2cm_bphi    = 5.937217e-2_wp
+        pdt2cm_cphi    = 3.6301534e0_wp
+        pdt2cm_pch4    = 1.9106e0_wp
+        pdt2cm_fch3    = 2.19e-2_wp
+        pdt2cm_hch3    = 4.38e-02_wp
+        pdt2cm_rnot    = 2.052e0_wp
+        pdt2cm_a3      = 2.102956e-2_wp
+        pdt2cm_b3      = 5.798533e-1_wp
+        pdt2cm_delt    = 0.1e0_wp
+        pdt2cm_dij     = 3.1190e0_wp
+        pdt2cm_a       = -1.56944e+3_wp
+        pdt2cm_b       = -1.12008e+3_wp
+        pdt2cm_c0      = 1.5786151e+3_wp
+        pdt2cm_d       = 2.67146e0_wp
+        pdt3cm_ca      = 0.903e0_wp
+        pdt3cm_cb      = 0.072e0_wp
+        pdt2cm_rex     = 1.18584e0_wp
+        pdt3cm_fk0     = 2.55e0_wp
+        pdt3cm_fa      = 0.8e0_wp
+        v              = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
+        usricm_cart    = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                usricm_cart(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+                usricm_cart(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
         call prepare_local_context
         call pot
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
+                p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
         elseif( igrad == 1 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
+                p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
             do iatom=1, natoms
                 do idir=1, 3
-                    g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*51.422067
+                    g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*hartree_per_bohr_to_ev_per_angstrom
                 enddo
             enddo
         elseif( igrad == 2 )then
@@ -300,18 +303,19 @@ module chempotpy_ch5_gen_j1_1987_pes
             !      I = 10, 11, 12   REFERS TO H1 - H(2,3,4)
             !      I = 13, 14       REFERS TO H2 - H(3,4)
             !      I = 15           REFERS TO H3 - H4
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: a11, a12, a13, a14, a21, a22, a23, a24, asb, asf, coord(18), daa, dadr1, dasb, dasf, &
+            real(wp) :: a11, a12, a13, a14, a21, a22, a23, a24, asb, asf, coord(18), daa, dadr1, dasb, dasf, &
                 & der2, der3, der4, df(4), dfr(4), dk(6), dr2, dtot, dvoop(18), dxx(18), e, ee, evcon, exa11, exa12, exa13, exa14, &
                 & exa21, exa22, exa23, exa24, exf1, exf2, exf3, exf4, f(4), o, rhmax, stp, sum, v, voop, w, xa, xa2, xb, xb2, xc, &
                 & xc2, xd, xd2, xxa, xxb, xxc, xxd, y1(6), y2(6)
-            integer                     :: i, ib1, ib2, ib3, if1, if2, if3, ipt, klm, kmax
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            evcon = 2.721161d+1
+            integer             :: i, ib1, ib2, ib3, if1, if2, if3, ipt, klm, kmax
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            evcon = 2.721161e+1_wp
             call cartou
             call carttor
             !     PUT COORDINATES IN PROPER ARRAYS
@@ -341,7 +345,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             ! COMPUTE THE HCH ANGLES AND STORE RESULTS IN ARRAY AG
             call angle
             do i = 1, 15
-                icorcm_der(i) = 0.0d0
+                icorcm_der(i) = 0.0e0_wp
             enddo
             !  COMPUTE THE MORSE RANGE PARAMETERS ALPH:
             call calpha
@@ -394,10 +398,10 @@ module chempotpy_ch5_gen_j1_1987_pes
             exa22 = exp(-pdatcm_aparm(5)*xxb*xxb)
             exa23 = exp(-pdatcm_aparm(5)*xxc*xxc)
             exa24 = exp(-pdatcm_aparm(5)*xxd*xxd)
-            a11   = 1.0d0-exa11
-            a12   = 1.0d0-exa12
-            a13   = 1.0d0-exa13
-            a14   = 1.0d0-exa14
+            a11   = 1.0e0_wp-exa11
+            a12   = 1.0e0_wp-exa12
+            a13   = 1.0e0_wp-exa13
+            a14   = 1.0e0_wp-exa14
             a21   = pdatcm_aparm(3)+pdatcm_aparm(4)*exa21
             a22   = pdatcm_aparm(3)+pdatcm_aparm(4)*exa22
             a23   = pdatcm_aparm(3)+pdatcm_aparm(4)*exa23
@@ -421,9 +425,9 @@ module chempotpy_ch5_gen_j1_1987_pes
             dk(6) = pdatcm_aparm(1)*f(3)*f(4)
             ! COMPUTE THE EQUILIBRIUM ANGLES--THETA AND D(THETA)/DR
             call theta (asf, dasf, asb, dasb)
-            daa = 0.0d0
+            daa = 0.0e0_wp
             ! COMPUTE CONTRIBUTION TO THE TOTAL ENERGY FROM THE ANGLE TERMS
-            sum = 0.0d0
+            sum = 0.0e0_wp
             if1 = 1
             if2 = 2
             if3 = 3
@@ -441,58 +445,58 @@ module chempotpy_ch5_gen_j1_1987_pes
                 y2(i) = y1(i)*y1(i)
                 sum   = sum+dk(i)*y2(i)
             enddo
-            ee = ee+0.5d0*sum
+            ee = ee+0.5e0_wp*sum
             ! COMPUTE DERIVATIVES OF THE ANGLE ATTENUATION TERMS WITH RESPECT TO R6,
             !                       AND R9
-            dfr(1) = 2.0d0*pdatcm_aparm(2)*icorcm_ar(6)*exa11*exf1+a11*exf1*xa2*2.0d0* pdatcm_aparm(4)* &
+            dfr(1) = 2.0e0_wp*pdatcm_aparm(2)*icorcm_ar(6)*exa11*exf1+a11*exf1*xa2*2.0e0_wp* pdatcm_aparm(4)* &
                 & pdatcm_aparm(5)*xxa*exa21
-            dfr(2) = 2.0d0*pdatcm_aparm(2)*icorcm_ar(7)*exa12*exf2+a12*exf2*xb2*2.0d0* pdatcm_aparm(4)* &
+            dfr(2) = 2.0e0_wp*pdatcm_aparm(2)*icorcm_ar(7)*exa12*exf2+a12*exf2*xb2*2.0e0_wp* pdatcm_aparm(4)* &
                 & pdatcm_aparm(5)*xxb*exa22
-            dfr(3) = 2.0d0*pdatcm_aparm(2)*icorcm_ar(8)*exa13*exf3+a13*exf3*xc2*2.0d0* pdatcm_aparm(4)* &
+            dfr(3) = 2.0e0_wp*pdatcm_aparm(2)*icorcm_ar(8)*exa13*exf3+a13*exf3*xc2*2.0e0_wp* pdatcm_aparm(4)* &
                 & pdatcm_aparm(5)*xxc*exa23
-            dfr(4) = 2.0d0*pdatcm_aparm(2)*icorcm_ar(9)*exa14*exf4+a14*exf4*xd2*2.0d0* pdatcm_aparm(4)* &
+            dfr(4) = 2.0e0_wp*pdatcm_aparm(2)*icorcm_ar(9)*exa14*exf4+a14*exf4*xd2*2.0e0_wp* pdatcm_aparm(4)* &
                 & pdatcm_aparm(5)*xxd*exa24
             ! COMPUTE DERIVATIVES OF ATTENUATION TERMS WITH RESPECT TO R1,R2,R3, AND
-            df(1) = -2.0d0*a21*xa*f(1)
-            df(2) = -2.0d0*a22*xb*f(2)
-            df(3) = -2.0d0*a23*xc*f(3)
-            df(4) = -2.0d0*a24*xd*f(4)
+            df(1) = -2.0e0_wp*a21*xa*f(1)
+            df(2) = -2.0e0_wp*a22*xb*f(2)
+            df(3) = -2.0e0_wp*a23*xc*f(3)
+            df(4) = -2.0e0_wp*a24*xd*f(4)
             ! ADD IN CONTRIBUTION TO DER FROM DK/DR ANGLE TERMS AND D(THETA)/DR TERM
             ! FIRST THREE ANGLE TERMS
             do i = 1, 3
-                stp = 0.5d0*dk(i)*y2(i)
+                stp = 0.5e0_wp*dk(i)*y2(i)
                 w   = dk(i)*y1(i)
-                if( abs(f(1)) .gt. 1.0d-10 ) icorcm_der(1)=icorcm_der(1)+stp*(df(1)/f(1)+dadr1/ pdatcm_aparm(1))+w*(- &
-                    & 1.0d0/(icorcm_ar(i+1)*potrcm_ass(i))+potrcm_acs(i)/ (icorcm_ar(1)*potrcm_ass(i)))
-                if( abs(f(i+1)) .gt. 1.0d-10 ) icorcm_der(i+1)=icorcm_der(i+1)+stp*df(i+1)/f(i+ 1)+w*(-1.0d0/ &
+                if( abs(f(1)) .gt. 1.0e-10_wp ) icorcm_der(1)=icorcm_der(1)+stp*(df(1)/f(1)+dadr1/ pdatcm_aparm(1))+w* &
+                    & (- 1.0e0_wp/(icorcm_ar(i+1)*potrcm_ass(i))+potrcm_acs(i)/ (icorcm_ar(1)*potrcm_ass(i)))
+                if( abs(f(i+1)) .gt. 1.0e-10_wp ) icorcm_der(i+1)=icorcm_der(i+1)+stp*df(i+1)/f(i+ 1)+w*(-1.0e0_wp/ &
                     & (icorcm_ar(1)*potrcm_ass(i))+potrcm_acs(i)/(potrcm_ass(i)* icorcm_ar(i+1)))
-                if( abs(f(1)) .gt. 1.0d-10 ) icorcm_der(6)     = icorcm_der(6)+stp*dfr(1)/f(1)
-                if( abs(f(i+1)) .gt. 1.0d-10 ) icorcm_der(i+6) = icorcm_der(i+6)+stp*dfr(i+1)/f(i +1)
+                if( abs(f(1)) .gt. 1.0e-10_wp ) icorcm_der(6)     = icorcm_der(6)+stp*dfr(1)/f(1)
+                if( abs(f(i+1)) .gt. 1.0e-10_wp ) icorcm_der(i+6) = icorcm_der(i+6)+stp*dfr(i+1)/f(i +1)
                 icorcm_der(i+9)                                = icorcm_der(i+9)+w*icorcm_ar(i+9)/(icorcm_ar(1)* &
                     & icorcm_ar(i+1)*potrcm_ass(i))
             enddo
             ! FOURTH AND FIFTH ANGLE TERMS
             do i = 4, 5
-                stp           = 0.5d0*dk(i)*y2(i)
+                stp           = 0.5e0_wp*dk(i)*y2(i)
                 w             = dk(i)*y1(i)
                 icorcm_der(1) = icorcm_der(1)+stp*dadr1/pdatcm_aparm(1)
-                icorcm_der(2) = icorcm_der(2)+stp*df(2)/f(2)+w*(-1.0d0/(potrcm_ass(i)*icorcm_ar(i-1))+ potrcm_acs(i)/ &
-                    & (potrcm_ass(i)*icorcm_ar(2)))
+                icorcm_der(2) = icorcm_der(2)+stp*df(2)/f(2)+w*(-1.0e0_wp/(potrcm_ass(i)*icorcm_ar(i-1))+ &
+                    & potrcm_acs(i)/ (potrcm_ass(i)*icorcm_ar(2)))
                 icorcm_der(7) = icorcm_der(7)+stp*dfr(2)/f(2)
-                if( abs(f(i-1)) .gt. 1.0d-10 ) icorcm_der(i-1)=icorcm_der(i-1)+stp*df(i-1)/f(i- 1)+w*(-1.0d0/ &
+                if( abs(f(i-1)) .gt. 1.0e-10_wp ) icorcm_der(i-1)=icorcm_der(i-1)+stp*df(i-1)/f(i- 1)+w*(-1.0e0_wp/ &
                     & (potrcm_ass(i)*icorcm_ar(2))+potrcm_acs(i)/(potrcm_ass(i)* icorcm_ar(i-1)))
-                if( abs(f(i-1)) .gt. 1.0d-10 ) icorcm_der(i+4) = icorcm_der(i+4)+stp*dfr(i-1)/f(i -1)
+                if( abs(f(i-1)) .gt. 1.0e-10_wp ) icorcm_der(i+4) = icorcm_der(i+4)+stp*dfr(i-1)/f(i -1)
                 icorcm_der(i+9)                                = icorcm_der(i+9)+w*icorcm_ar(i+9)/(icorcm_ar(2)* &
                     & icorcm_ar(i-1)*potrcm_ass(i))
             enddo
             ! CONTRIBUTION FROM SIXTH ANGLE TERM
-            stp           = 0.5d0*dk(6)*y2(6)
+            stp           = 0.5e0_wp*dk(6)*y2(6)
             w             = dk(6)*y1(6)
             icorcm_der(1) = icorcm_der(1)+stp*dadr1/pdatcm_aparm(1)
-            icorcm_der(3)  = icorcm_der(3)+stp*df(3)/f(3)+w*(-1.0d0/(potrcm_ass(6)*icorcm_ar(4))+potrcm_acs(6)/ &
+            icorcm_der(3)  = icorcm_der(3)+stp*df(3)/f(3)+w*(-1.0e0_wp/(potrcm_ass(6)*icorcm_ar(4))+potrcm_acs(6)/ &
                 & (potrcm_ass(6)*icorcm_ar(3)))
             icorcm_der(8) = icorcm_der(8)+stp*dfr(3)/f(3)
-            icorcm_der(4)  = icorcm_der(4)+stp*df(4)/f(4)+w*(-1.0d0/(potrcm_ass(6)*icorcm_ar(3))+potrcm_acs(6)/ &
+            icorcm_der(4)  = icorcm_der(4)+stp*df(4)/f(4)+w*(-1.0e0_wp/(potrcm_ass(6)*icorcm_ar(3))+potrcm_acs(6)/ &
                 & (potrcm_ass(6)*icorcm_ar(4)))
             icorcm_der(9)  = icorcm_der(9)+stp*dfr(4)/f(4)
             icorcm_der(15) = icorcm_der(15)+w*icorcm_ar(15)/(potrcm_ass(6)*icorcm_ar(3)*icorcm_ar(4))
@@ -502,7 +506,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                     & y1(ib1)+dk(ib2)*y1(ib2)+ dk(ib3)*y1(ib3) )*dasb
             enddo
             icorcm_der(5) = icorcm_der(5)-(dk(if1)*y1(if1)+dk(if2)*y1(if2)+dk(if3)*y1(if3))* daa-(dk(ib1)*y1(ib1)+ &
-                & dk(ib2)*y1(ib2)+dk(ib3)* y1(ib3))*3.0d0* sin(asf)*cos(asf)*daa/sin(asb)
+                & dk(ib2)*y1(ib2)+dk(ib3)* y1(ib3))*3.0e0_wp* sin(asf)*cos(asf)*daa/sin(asb)
             call switch (kmax, 2, v, coord, dxx)
             potxcm_energy = ee/evcon+pdatcm_refv
             do i = 1, 15
@@ -539,29 +543,30 @@ module chempotpy_ch5_gen_j1_1987_pes
         !> @brief Evaluate ANGLE for the CH5_GEN_J1_1987 potential.
         subroutine angle
             ! ROUTINE TO COMPUTE CH4 ANGLES FROM THE INTERPARTICLE DISTANCES
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: x
-            integer                     :: i
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: x
+            integer             :: i
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             do i = 1, 3
-                x             = (potrcm_r2(1)+potrcm_r2(i+1)-potrcm_r2(i+9))/(2.0d0*icorcm_ar(1)*icorcm_ar(i+1))
+                x             = (potrcm_r2(1)+potrcm_r2(i+1)-potrcm_r2(i+9))/(2.0e0_wp*icorcm_ar(1)*icorcm_ar(i+1))
                 potrcm_acs(i) = x
-                potrcm_ass(i) = sqrt(1.0d0-x*x)
+                potrcm_ass(i) = sqrt(1.0e0_wp-x*x)
                 potrcm_ag(i)  = acos(x)
             enddo
             do i = 1, 2
-                x               = (potrcm_r2(2)+potrcm_r2(i+2)-potrcm_r2(i+12))/(2.0d0*icorcm_ar(2)*icorcm_ar(i+2))
+                x               = (potrcm_r2(2)+potrcm_r2(i+2)-potrcm_r2(i+12))/(2.0e0_wp*icorcm_ar(2)*icorcm_ar(i+2))
                 potrcm_acs(i+3) = x
-                potrcm_ass(i+3) = sqrt(1.0d0-x*x)
+                potrcm_ass(i+3) = sqrt(1.0e0_wp-x*x)
                 potrcm_ag(i+3)  = acos(x)
             enddo
-            x             = (potrcm_r2(3)+potrcm_r2(4)-potrcm_r2(15))/(2.0d0*icorcm_ar(3)*icorcm_ar(4))
+            x             = (potrcm_r2(3)+potrcm_r2(4)-potrcm_r2(15))/(2.0e0_wp*icorcm_ar(3)*icorcm_ar(4))
             potrcm_acs(6) = x
-            potrcm_ass(6) = sqrt(1.0d0-x*x)
+            potrcm_ass(6) = sqrt(1.0e0_wp-x*x)
             potrcm_ag(6)  = acos(x)
         end subroutine angle
 
@@ -570,37 +575,39 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     COMPUTE THE C-H AND C-H' MORSE RANGE PARAMETERS FOR THE SINGLET
             !     AND TRIPLET ENERGY CURVES.  THESE WILL BE A FUNCTION OF THE
             !     AVERAGE C-H BOND LENGTH IN METHANE.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: htan, ravg
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: htan, ravg
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !     FIRST COMPUTE THE AVERAGE METHANE BOND LENGTH
-            ravg           = (icorcm_ar(1)+icorcm_ar(2)+icorcm_ar(3)+icorcm_ar(4))/4.0d0
+            ravg           = (icorcm_ar(1)+icorcm_ar(2)+icorcm_ar(3)+icorcm_ar(4))/4.0e0_wp
             htan           = tanh(pdatcm_c1*(ravg-pdatcm_re(1)))
-            pdatcm_alph(1) = pdt3cm_ca+pdt3cm_cb*((htan+1.0d0)/2.0d0)
+            pdatcm_alph(1) = pdt3cm_ca+pdt3cm_cb*((htan+1.0e0_wp)/2.0e0_wp)
             pdatcm_alph(3) = pdatcm_alph(1)
             pdatcm_beta(1) = pdatcm_alph(1)
             pdatcm_beta(3) = pdatcm_alph(1)
             !     NOW THE DERIVATIVES---DALPH WILL BE THE DERIVATIVE OF ALPHA WITH
             !     RESPECT TO R1,R2,R3 OR R4
-            alpdcm_dalp = (pdatcm_c1*pdt3cm_cb/8.0d0)*(1.0d0-htan**2)
+            alpdcm_dalp = (pdatcm_c1*pdt3cm_cb/8.0e0_wp)*(1.0e0_wp-htan**2)
         end subroutine calpha
 
         !> @brief Evaluate DISTA for the CH5_GEN_J1_1987 potential.
         subroutine dista
             ! ROUTINE TO COMPUTE THE INTERPARTICLE DISTANCES FROM THE CARTESIAN
             !     COORDINATES OF THE ATOMS
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: df(15,3)
-            integer                     :: i, j, k
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: df(15,3)
+            integer             :: i, j, k
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             do i = 1, 4
                 df(i,1)      = potxcm_x(i)-potxcm_x(5)
                 df(i,2)      = potxcm_y(i)-potxcm_y(5)
@@ -650,17 +657,18 @@ module chempotpy_ch5_gen_j1_1987_pes
         subroutine drdxc
             ! THIS SUBROUTINE CALCULATES DRDX
             !     ADDED BY FBB AT THE U. OF MINN.  1/24/84
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i, j
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer             :: i, j
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             ! ZERO OUT DRDX
             do i = 1, 18
                 do j = 1, 15
-                    potxcm_drdx(j,i) = 0.0d0
+                    potxcm_drdx(j,i) = 0.0e0_wp
                 enddo
             enddo
             ! CALCULATE DRDX FOR C - H(1,2,3,4) BONDS
@@ -720,28 +728,30 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     THIS SUBROUTINE COMPUTES THE BENDING FORCE CONSTANT AS A FUNCTION
             !     OF AR(1). (APARM(1))   IT ALSO COMPUTES THE DERIVATIVE OF THIS
             !     TERM WITH RESPECT TO AR(1).
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: dadr1, fex
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: dadr1, fex
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             fex             = exp(-pdatcm_b1*(icorcm_ar(1)-pdatcm_re(1))**2)
             pdatcm_aparm(1) = pdt3cm_fk0+pdt3cm_fa*fex
-            dadr1           = -2.0d0*pdt3cm_fa*pdatcm_b1*(icorcm_ar(1)-pdatcm_re(1))*fex
+            dadr1           = -2.0e0_wp*pdt3cm_fa*pdatcm_b1*(icorcm_ar(1)-pdatcm_re(1))*fex
         end subroutine force
 
         !> @brief Evaluate MULT for the CH5_GEN_J1_1987 potential.
         subroutine mult ( a, na, ma, b, nb, mb, c )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a(na,ma), b(nb,mb), c(na,mb), sum
-            integer          :: i, j, k, ma, mb, na, nb
+            real(wp) :: a(na,ma), b(nb,mb), c(na,mb), sum
+            integer  :: i, j, k, ma, mb, na, nb
             ! THIS SUBROUTINE PERFORMS THE MATRIX MULTIPLICATION :
             !         C = A X B
             do i = 1, na
                 do j = 1, mb
-                    sum = 0.0d0
+                    sum = 0.0e0_wp
                     do k = 1, ma
                         sum = sum+a(i,k)*b(k,j)
                     enddo
@@ -757,17 +767,18 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     GIVEN BY DUCHOVIC ET. AL. (JPC 89, 1339, (1984)).
             !     THE DERIVATIVES WITH RESPECT TO THE CARTESIAN COORDINATES (X)
             !     ARE ALSO COMPUTED AND STORED IN DVOOP.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: crossx, crossy, crossz, cst, dcross(3,18), ddelta(3,18), delta(3), dfds, dfdx(18), &
-                & dgcros(18), dhds, dhdx(18), dphi(18), drdx(18), drv(3,3,18), dsdr, dtop(3,18), dvoop(18), dx(18), dxmagr(3,18), &
-                & erest, f, gcross, h, phinot, rest, rstar, rv(3,3), s3, sphi, term1, term2, term3, term4, texp, top(3), v, voop, &
+            real(wp) :: crossx, crossy, crossz, cst, dcross(3,18), ddelta(3,18), delta(3), dfds, dfdx(18), &
+                & dgcros(18), dhds, dhdx(18), dphi(18), drdx(18), drv(3, 3, 18), dsdr, dtop(3, 18), dvoop(18), dx(18), dxmagr(3, 18), &
+                & erest, f, gcross, h, phinot, rest, rstar, rv(3, 3), s3, sphi, term1, term2, term3, term4, texp, top(3), v, voop, &
                 & x(18), xdif(2), xmagr(3), ydif(2), zdif(2)
-            integer                     :: i, j, k
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer             :: i, j, k
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !     START BY COMPUTING THE NECESSARY DIFFERENCES IN THE R1,R2 AND
             !     R3 VECTORS.
             xdif(1) = x(7)-x(4)
@@ -779,10 +790,10 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     NOW COMPUTE THE INDIVIDUAL COMPONENTS OF THE R1,R2 AND R3 VECTORS
             j = 1
             do i = 1, 3
-                rv(i,1) = x(j+3)-x(13)
-                rv(i,2) = x(j+4)-x(14)
-                rv(i,3) = x(j+5)-x(15)
-                j       = j+3
+                rv(i, 1) = x(j+3)-x(13)
+                rv(i, 2) = x(j+4)-x(14)
+                rv(i, 3) = x(j+5)-x(15)
+                j        = j+3
             enddo
             !     RSTAR IS THE C-H4 BOND LENGTH
             rstar = sqrt((x(1)-x(13))**2+(x(2)-x(14))**2+(x(3)-x(15))**2)
@@ -794,19 +805,19 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     COMPUTE THE THREE TRIPLE PRODUCTS--WITH R1,R2 AND R3 (TOP)
             !     AND THEN COMPUTE THE ANGLE GAMMA USED IN DELTA.
             do i = 1, 3
-                xmagr(i)        = sqrt(rv(i,1)**2+rv(i,2)**2+rv(i,3)**2)
-                top(i)          = crossx*rv(i,1)+crossy*rv(i,2)+crossz*rv(i,3)
+                xmagr(i)        = sqrt(rv(i, 1)**2+rv(i, 2)**2+rv(i, 3)**2)
+                top(i)          = crossx*rv(i, 1)+crossy*rv(i, 2)+crossz*rv(i, 3)
                 testcm_gamma(i) = +top(i)/(gcross*xmagr(i))
             enddo
             !     NOW THE SECOND TERM IN DELTA--PHINOT
             !     FIRST THE SWITCHING FUNCTION SPHI THEN PHINOT
-            sphi = 0.0d0
+            sphi = 0.0e0_wp
             rest = pdt2cm_bphi*(rstar-pdt2cm_cphi)**3
-            if( rest .lt. 70.0d0 )then
+            if( rest .lt. 70.0e0_wp )then
                 erest = exp(rest)
-                sphi  = 1.0d0-tanh(pdt2cm_aphi*(rstar-pdt2cm_rnot)*erest)
+                sphi  = 1.0e0_wp-tanh(pdt2cm_aphi*(rstar-pdt2cm_rnot)*erest)
             endif
-            phinot = pdt2cm_pch4+(pdt2cm_pch4-pi/2.0d0)*(sphi-1.0d0)
+            phinot = pdt2cm_pch4+(pdt2cm_pch4-pi/2.0e0_wp)*(sphi-1.0e0_wp)
             !     NOW PUT THESE TWO TERMS TOGETHER TO GET EACH DELTA
             do i = 1, 3
                 delta(i) = acos(testcm_gamma(i))-phinot
@@ -818,41 +829,41 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     START WITH THE PARTIAL OF CROSS WITH RESPECT TO EACH X(I)
             do i = 1, 3
                 do j = 1, 3
-                    dcross(i,j) = 0.0d0
+                    dcross(i,j) = 0.0e0_wp
                 enddo
                 do j = 13, 18
-                    dcross(i,j) = 0.0d0
+                    dcross(i,j) = 0.0e0_wp
                 enddo
                 if( i .eq. 1 )then
-                    dcross(i,4)  = 0.0d0
+                    dcross(i,4)  = 0.0e0_wp
                     dcross(i,5)  = zdif(1)-zdif(2)
                     dcross(i,6)  = ydif(2)-ydif(1)
-                    dcross(i,7)  = 0.0d0
+                    dcross(i,7)  = 0.0e0_wp
                     dcross(i,8)  = zdif(2)
                     dcross(i,9)  = -ydif(2)
-                    dcross(i,10) = 0.0d0
+                    dcross(i,10) = 0.0e0_wp
                     dcross(i,11) = -zdif(1)
                     dcross(i,12) = ydif(1)
                 elseif( i .eq. 2 )then
                     dcross(i,4)  = zdif(2)-zdif(1)
-                    dcross(i,5)  = 0.0d0
+                    dcross(i,5)  = 0.0e0_wp
                     dcross(i,6)  = xdif(1)-xdif(2)
                     dcross(i,7)  = -zdif(2)
-                    dcross(i,8)  = 0.0d0
+                    dcross(i,8)  = 0.0e0_wp
                     dcross(i,9)  = xdif(2)
                     dcross(i,10) = zdif(1)
-                    dcross(i,11) = 0.0d0
+                    dcross(i,11) = 0.0e0_wp
                     dcross(i,12) = -xdif(1)
                 elseif( i .eq. 3 )then
                     dcross(i,4)  = ydif(1)-ydif(2)
                     dcross(i,5)  = xdif(2)-xdif(1)
-                    dcross(i,6)  = 0.0d0
+                    dcross(i,6)  = 0.0e0_wp
                     dcross(i,7)  = ydif(2)
                     dcross(i,8)  = -xdif(2)
-                    dcross(i,9)  = 0.0d0
+                    dcross(i,9)  = 0.0e0_wp
                     dcross(i,10) = -ydif(1)
                     dcross(i,11) = xdif(1)
-                    dcross(i,12) = 0.0d0
+                    dcross(i,12) = 0.0e0_wp
                 endif
             enddo
             !     NOW COMPUTE THE PARTIALS FOR THE THREE R VECTORS
@@ -862,72 +873,72 @@ module chempotpy_ch5_gen_j1_1987_pes
                     ! BUGFIX:  DRV was not fully initialized to zero causing trouble on some
                     !          platforms.
                     do k = 1, 18
-                        drv(i,j,k) = 0.0d0
+                        drv(i, j, k) = 0.0e0_wp
                     enddo
                 enddo
             enddo
             do k = 4, 6
-                drv(1,k-3,k) = 1.0d0
+                drv(1, k-3, k) = 1.0e0_wp
             enddo
             do k = 7, 9
-                drv(2,k-6,k) = 1.0d0
+                drv(2, k-6, k) = 1.0e0_wp
             enddo
             do k = 10, 12
-                drv(3,k-9,k) = 1.0d0
+                drv(3, k-9, k) = 1.0e0_wp
             enddo
             do i = 1, 3
                 do j = 1, 3
-                    drv(i,j,j+12) = -1.0d0
+                    drv(i, j, j+12) = -1.0e0_wp
                 enddo
             enddo
             !     NOW COMPUTE THE PARTIALS FOR THE TRIPLE PRODUCT  (TOP)
             do i = 1, 18
                 do j = 1, 3
-                    dtop(j,i) = dcross(1,i)*rv(j,1)+crossx*drv(j,1,i)+dcross(2,i )*rv(j,2)+crossy*drv(j,2,i)+ &
-                        & dcross(3,i)* rv(j,3)+crossz* drv(j,3,i)
+                    dtop(j, i) = dcross(1,i)*rv(j, 1)+crossx*drv(j, 1, i)+dcross(2,i )*rv(j, 2)+crossy*drv(j, 2, i)+ &
+                        & dcross(3,i)* rv(j, 3)+crossz* drv(j, 3, i)
                 enddo
             enddo
             !     PARTIALS FOR THE MAGNITUDE OF THE CROSS PRODUCT  (GCROSS)
             do i = 1, 18
-                dgcros(i) = (1.0d0/gcross)*(dcross(1,i)*crossx+dcross(2,i)* crossy+dcross(3,i)*crossz)
+                dgcros(i) = (1.0e0_wp/gcross)*(dcross(1,i)*crossx+dcross(2,i)* crossy+dcross(3,i)*crossz)
             enddo
             !     PARTIALS FOR THE MAGNITUDE OF R1, R2 AND R3
             do i = 1, 3
                 do j = 1, 18
-                    dxmagr(i,j) = 0.0d0
+                    dxmagr(i, j) = 0.0e0_wp
                     do k = 1, 3
-                        dxmagr(i,j) = dxmagr(i,j)+(1.0d0/xmagr(i))*(rv(i,k)*drv(i,k,j))
+                        dxmagr(i, j) = dxmagr(i, j)+(1.0e0_wp/xmagr(i))*(rv(i, k)*drv(i, k, j))
                     enddo
                 enddo
             enddo
             !     NOW WE'RE READY FOR THE PARTIALS OF GAMMA
             do i = 1, 3
                 do j = 1, 18
-                    testcm_dgamma(i,j) = +gcross*xmagr(i)*dtop(i,j)-top(i)*(xmagr(i)* dgcros(j)+gcross*dxmagr(i,j))
+                    testcm_dgamma(i,j) = +gcross*xmagr(i)*dtop(i, j)-top(i)*(xmagr(i)* dgcros(j)+gcross*dxmagr(i, j))
                     testcm_dgamma(i,j) = testcm_dgamma(i,j)/(gcross*xmagr(i))**2
-                    testcm_dgamma(i,j) = testcm_dgamma(i,j)*(-1.0d0)/(sqrt(1.0d0-testcm_gamma(i)**2) )
+                    testcm_dgamma(i,j) = testcm_dgamma(i,j)*(-1.0e0_wp)/(sqrt(1.0e0_wp-testcm_gamma(i)**2) )
                 enddo
             enddo
             !     NOW THE PARTIAL FOR THE SECOND TERM IN DELTA -- PHINOT
             !       FIRST COMPUTE THE PARTIAL OF S(SWITCHING FUNCTION) WITH
             !       RESPECT TO RSTAR, THE THE PARTIAL OF RSTAR W/R X(I) AND
             !       FINALLY THE PARTIAL OF PHINOT W/R TO S.
-            dsdr = 0.0d0
+            dsdr = 0.0e0_wp
             rest = pdt2cm_bphi*(rstar-pdt2cm_cphi)**3
-            if( rest .lt. 70.0d0 )then
+            if( rest .lt. 70.0e0_wp )then
                 texp = exp(rest)
                 dsdr = -((sech(pdt2cm_aphi*(rstar-pdt2cm_rnot)*texp))**2)
-                dsdr = dsdr*pdt2cm_aphi*texp*(1.0d0+(rstar-pdt2cm_rnot)*pdt2cm_bphi*3.0d0*(rstar- pdt2cm_cphi)**2)
+                dsdr = dsdr*pdt2cm_aphi*texp*(1.0e0_wp+(rstar-pdt2cm_rnot)*pdt2cm_bphi*3.0e0_wp*(rstar- pdt2cm_cphi)**2)
             endif
             do i = 1, 18
-                drdx(i) = 0.0d0
-                dphi(i) = 0.0d0
+                drdx(i) = 0.0e0_wp
+                dphi(i) = 0.0e0_wp
             enddo
-            cst = 1.0d0/(2.0d0*rstar)
+            cst = 1.0e0_wp/(2.0e0_wp*rstar)
             do i = 1, 3
-                drdx(i)    = cst*2.0d0*(x(i)-x(i+12))
+                drdx(i)    = cst*2.0e0_wp*(x(i)-x(i+12))
                 drdx(i+12) = -drdx(i)
-                dphi(i)    = drdx(i)*dsdr*(pdt2cm_pch4-pi/2.0d0)
+                dphi(i)    = drdx(i)*dsdr*(pdt2cm_pch4-pi/2.0e0_wp)
                 dphi(i+12) = -dphi(i)
             enddo
             !     NOW PUT BOTH TERMS TOGETHER TO GET THE PARTIALS OF DELTA
@@ -940,10 +951,10 @@ module chempotpy_ch5_gen_j1_1987_pes
             !       FORCE CONSTANTS (F AND H) AND THEIR DERIVATIVES.  THE
             !       OUT-OF-PLANE BEND ENERGY WILL ALSO BE COMPUTED HERE (VOOP)
             !     FIRST THE SWITCHING FUNCTION
-            s3   = 1.0d0-tanh(pdt2cm_a3*(rstar-pdt2cm_rnot)*(rstar-pdt2cm_b3)**2)
-            f    = (1.0d0-s3)*pdt2cm_fch3
-            h    = (1.0d0-s3)*pdt2cm_hch3
-            voop = 0.0d0
+            s3   = 1.0e0_wp-tanh(pdt2cm_a3*(rstar-pdt2cm_rnot)*(rstar-pdt2cm_b3)**2)
+            f    = (1.0e0_wp-s3)*pdt2cm_fch3
+            h    = (1.0e0_wp-s3)*pdt2cm_hch3
+            voop = 0.0e0_wp
             do i = 1, 3
                 voop = voop+f*(delta(i)**2)+h*(delta(i)**4)
             enddo
@@ -954,8 +965,8 @@ module chempotpy_ch5_gen_j1_1987_pes
             dhds = -pdt2cm_hch3
             !     PARTIAL OF EACH FORCE CONSTANT
             do i = 1, 18
-                dfdx(i) = 0.0d0
-                dhdx(i) = 0.0d0
+                dfdx(i) = 0.0e0_wp
+                dhdx(i) = 0.0e0_wp
             enddo
             do i = 1, 3
                 dfdx(i)    = dfds*dsdr*drdx(i)
@@ -965,17 +976,18 @@ module chempotpy_ch5_gen_j1_1987_pes
             enddo
             !    NOW WE ARE READY FOR THE FULL PARTIAL DERIVATIVES OF VOOP
             do i = 1, 18
-                term1 = 0.0d0
+                term1 = 0.0e0_wp
                 do j = 1, 3
                     term1 = term1+dfdx(i)*delta(j)**2
                 enddo
-                term2 = 2.0d0*delta(1)*ddelta(1,i)+2.0d0*delta(2)*ddelta(2,i) +2.0d0*delta(3)*ddelta(3,i)
+                term2 = 2.0e0_wp*delta(1)*ddelta(1,i)+2.0e0_wp*delta(2)*ddelta(2,i) +2.0e0_wp*delta(3)*ddelta(3,i)
                 term2 = term2*f
-                term3 = 0.0d0
+                term3 = 0.0e0_wp
                 do j = 1, 3
                     term3 = term3+dhdx(i)*delta(j)**4
                 enddo
-                term4    = 4.0d0*delta(1)**3*ddelta(1,i)+4.0d0*delta(2)**3* ddelta(2,i)+4.0d0*delta(3)**3*ddelta(3,i)
+                term4    = 4.0e0_wp*delta(1)**3*ddelta(1,i)+4.0e0_wp*delta(2)**3* ddelta(2,i)+4.0e0_wp*delta(3)**3* &
+                    & ddelta(3,i)
                 term4    = term4*h
                 dvoop(i) = term1+term2+term3+term4
             enddo
@@ -983,12 +995,13 @@ module chempotpy_ch5_gen_j1_1987_pes
 
         !> @brief Evaluate SECH for the CH5_GEN_J1_1987 potential.
         function sech ( x )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: sech, x
-            if( x .gt. 70.0d0 )then
-                sech = 0.0d0
+            real(wp) :: sech, x
+            if( x .gt. 70.0e0_wp )then
+                sech = 0.0e0_wp
             else
-                sech = 1.0d0/cosh(x)
+                sech = 1.0e0_wp/cosh(x)
             endif
         end function sech
 
@@ -1000,14 +1013,15 @@ module chempotpy_ch5_gen_j1_1987_pes
             ! KMAX IS THE LABEL OF THE H ATOM WITH MAXIMUM C-H DISTANCE.
             ! IF LMG=1, R AND R2 MATRICES ARE SWITCHED APPROPRIATELY.
             ! IF LMG=2, R AND R2 MATRICES ARE SWITCHED BACK AND MATRIX DER IS SWITCH
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: coord(18), dxx(18), store, v
-            integer                     :: k, kk, kmax, l, ll, lmg, m, mm, n, nn
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: coord(18), dxx(18), store, v
+            integer             :: k, kk, kmax, l, ll, lmg, m, mm, n, nn
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             select case( kmax )
             case( 1 )
                 k  = 1
@@ -1095,27 +1109,28 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     THE DERIVATIVE OF THETA WITH RESPECT TO AR(I) IS ALSO COMPUTED.
             !     NOTE HERE THAT BECAUSE OF SYMMETRY EACH OF THESE PARTIALS IS
             !     THE SAME.       ADDED 11/22/85
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: a, asb, asf, b, c, ctau, ctau2, dasb, dasf, delta2, f, fk1, fk2, ravg, rdif, rdif2, rdif3, rdif4, rdif5, xyz
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            ravg = (icorcm_ar(1)+icorcm_ar(2)+icorcm_ar(3)+icorcm_ar(4))/4.0d0
+            real(wp)            :: a, asb, asf, b, c, ctau, ctau2, dasb, dasf, delta2, f, fk1, fk2, ravg, rdif, rdif2, rdif3, rdif4, rdif5, xyz
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            ravg = (icorcm_ar(1)+icorcm_ar(2)+icorcm_ar(3)+icorcm_ar(4))/4.0e0_wp
             !     COMPUTE THETA
             if( ravg .gt. pdt2cm_dij )then
-                asf  = pi/2.0d0
-                dasf = 0.0d0
+                asf  = pi/2.0e0_wp
+                dasf = 0.0e0_wp
             elseif( ravg .le. pdatcm_re(1) )then
                 asf  = pdatcm_tau
-                dasf = 0.0d0
+                dasf = 0.0e0_wp
             elseif( ravg .gt. pdatcm_re(1).and.ravg .le. pdatcm_re(1)+pdt2cm_delta )then
                 delta2 = pdt2cm_delta*pdt2cm_delta
-                fk1    = -4.0d0*pdatcm_cp/(delta2)
-                a      = 3.0d0*fk1/(delta2)
-                b      = -(5.0d0*a*delta2+fk1)/(2.0d0*pdt2cm_delta)
-                c      = -(20.0d0*a*delta2+12.0d0*b*pdt2cm_delta)/6.0d0
+                fk1    = -4.0e0_wp*pdatcm_cp/(delta2)
+                a      = 3.0e0_wp*fk1/(delta2)
+                b      = -(5.0e0_wp*a*delta2+fk1)/(2.0e0_wp*pdt2cm_delta)
+                c      = -(20.0e0_wp*a*delta2+12.0e0_wp*b*pdt2cm_delta)/6.0e0_wp
                 f      = pdatcm_tau
                 rdif   = ravg-pdatcm_re(1)
                 rdif2  = rdif*rdif
@@ -1123,34 +1138,34 @@ module chempotpy_ch5_gen_j1_1987_pes
                 rdif4  = rdif3*rdif
                 rdif5  = rdif4*rdif
                 asf    = a*rdif5+b*rdif4+c*rdif3+f
-                dasf   = 5.0d0*a*rdif4+4.0d0*b*rdif3+3.0d0*c*rdif2
+                dasf   = 5.0e0_wp*a*rdif4+4.0e0_wp*b*rdif3+3.0e0_wp*c*rdif2
             elseif( ravg .le. pdt2cm_dij-pdt2cm_delta )then
-                asf  = pdatcm_tau-4.0d0*pdatcm_cp*(ravg-pdatcm_re(1))
-                dasf = -4.0d0*pdatcm_cp
+                asf  = pdatcm_tau-4.0e0_wp*pdatcm_cp*(ravg-pdatcm_re(1))
+                dasf = -4.0e0_wp*pdatcm_cp
             elseif( ravg .le. pdt2cm_dij.and.ravg .gt. pdt2cm_dij-pdt2cm_delta )then
-                fk1   = (pdatcm_tau-4.0d0*pdatcm_cp*(pdt2cm_dij-pdt2cm_delta-pdatcm_re(1))-f)/(pdt2cm_delta**3)
-                fk2   = (-4.0d0*pdatcm_cp)/(pdt2cm_delta**2)
-                a     = -3.0d0*(2.0d0*fk1+fk2)/(pdt2cm_delta**2)
-                b     = (fk2+5.0d0*a*pdt2cm_delta**2)/(2.0d0*pdt2cm_delta)
-                c     = (12.0d0*b*pdt2cm_delta-20.0d0*a*pdt2cm_delta**2)/6.0d0
-                f     = pi/2.0d0
+                fk1   = (pdatcm_tau-4.0e0_wp*pdatcm_cp*(pdt2cm_dij-pdt2cm_delta-pdatcm_re(1))-f)/(pdt2cm_delta**3)
+                fk2   = (-4.0e0_wp*pdatcm_cp)/(pdt2cm_delta**2)
+                a     = -3.0e0_wp*(2.0e0_wp*fk1+fk2)/(pdt2cm_delta**2)
+                b     = (fk2+5.0e0_wp*a*pdt2cm_delta**2)/(2.0e0_wp*pdt2cm_delta)
+                c     = (12.0e0_wp*b*pdt2cm_delta-20.0e0_wp*a*pdt2cm_delta**2)/6.0e0_wp
+                f     = pi/2.0e0_wp
                 rdif  = ravg-pdt2cm_dij
                 rdif3 = rdif*rdif*rdif
                 rdif4 = rdif3*rdif
                 rdif5 = rdif4*rdif
                 asf   = a*rdif5+b*rdif4+c*rdif3+f
-                dasf  = 5.0d0*a*rdif4+4.0d0*b*rdif3+3.0d0*c*rdif*rdif
+                dasf  = 5.0e0_wp*a*rdif4+4.0e0_wp*b*rdif3+3.0e0_wp*c*rdif*rdif
             endif
             ! COMPUTE BACKSIDE EQUILIBRIUM ANGLE
             xyz   = cos(asf)
             ctau  = cos(pdatcm_tau)
             ctau2 = ctau*ctau
-            a     = (ctau+0.5d0)/ctau2
-            asb   = acos(a*xyz*xyz-0.5d0)
-            dasb  = 2.0d0*a*xyz*sin(asf)*dasf/sin(asb)
+            a     = (ctau+0.5e0_wp)/ctau2
+            asb   = acos(a*xyz*xyz-0.5e0_wp)
+            dasb  = 2.0e0_wp*a*xyz*sin(asf)*dasf/sin(asb)
             ! NOW COMPUTE THE DER W/R TO RI INSTEAD OF RAVG
-            dasf = dasf/4.0d0
-            dasb = dasb/4.0d0
+            dasf = dasf/4.0e0_wp
+            dasb = dasb/4.0e0_wp
         end subroutine theta
 
         !> @brief Evaluate TRI for the CH5_GEN_J1_1987 potential.
@@ -1160,14 +1175,15 @@ module chempotpy_ch5_gen_j1_1987_pes
             ! DR1,DR2,DR3 ARE THE THREE DERIVATIVES WITH RESPECT TO RR1,RR2, AND RR3
             ! I,J, AND K GIVE THE ARRAY NUMBER FOR THE APPROPRIATE POTENTIAL PARAMET
             ! E IS THE FINAL THREE-BODY ENERGY
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: a, a1, a2, aa1, aa2, alab, alac, albc, b, b1, b2, bb, bb1, bb2, c, c1, c2, cc1, cc2, dab1, dab3, dac1, dac3, de1ab, de1ac, de1bc, de3ab, de3ac, de3bc, dqr, dr1, dr2, dr3, dtot, dur, dux, duy, duz, dxr, dyr, dzr, e, e1ab, e1ac, e1bc, e3ab, e3ac, e3bc, qab, qac, qbc, rr1, rr2, rr3, u, xx, yy, zz
-            integer                     :: i, j, k
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: a, a1, a2, aa1, aa2, alab, alac, albc, b, b1, b2, bb, bb1, bb2, c, c1, c2, cc1, cc2, dab1, dab3, dac1, dac3, de1ab, de1ac, de1bc, de3ab, de3ac, de3bc, dqr, dr1, dr2, dr3, dtot, dur, dux, duy, duz, dxr, dyr, dzr, e, e1ab, e1ac, e1bc, e3ab, e3ac, e3bc, qab, qac, qbc, rr1, rr2, rr3, u, xx, yy, zz
+            integer             :: i, j, k
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             a     = rr1-pdatcm_re(i)
             b     = rr2-pdatcm_re(j)
             c     = rr3-pdatcm_re(k)
@@ -1177,114 +1193,115 @@ module chempotpy_ch5_gen_j1_1987_pes
             a2    = a1*a1
             b2    = b1*b1
             c2    = c1*c1
-            e1ab  = pdatcm_d1(i)*(a2-2.0d0*a1)
-            e1ac  = pdatcm_d1(j)*(b2-2.0d0*b1)
-            e1bc  = pdatcm_d1(k)*(c2-2.0d0*c1)
-            de1ab = 2.0d0*pdatcm_d1(i)*(a1-a2)*pdatcm_alph(i)
-            dab1  = 2.0d0*pdatcm_d1(i)*(a1-a2)*(a*alpdcm_dalp)
-            de1ac = 2.0d0*pdatcm_d1(j)*(b1-b2)*pdatcm_alph(j)
-            dac1  = 2.0d0*pdatcm_d1(j)*(b1-b2)*(b*alpdcm_dalp)
-            de1bc = 2.0d0*pdatcm_alph(k)*pdatcm_d1(k)*(c1-c2)
+            e1ab  = pdatcm_d1(i)*(a2-2.0e0_wp*a1)
+            e1ac  = pdatcm_d1(j)*(b2-2.0e0_wp*b1)
+            e1bc  = pdatcm_d1(k)*(c2-2.0e0_wp*c1)
+            de1ab = 2.0e0_wp*pdatcm_d1(i)*(a1-a2)*pdatcm_alph(i)
+            dab1  = 2.0e0_wp*pdatcm_d1(i)*(a1-a2)*(a*alpdcm_dalp)
+            de1ac = 2.0e0_wp*pdatcm_d1(j)*(b1-b2)*pdatcm_alph(j)
+            dac1  = 2.0e0_wp*pdatcm_d1(j)*(b1-b2)*(b*alpdcm_dalp)
+            de1bc = 2.0e0_wp*pdatcm_alph(k)*pdatcm_d1(k)*(c1-c2)
             aa1   = exp(-pdatcm_beta(i)*a)
             aa2   = aa1*aa1
-            e3ab  = pdatcm_d3(i)*(aa2+2.0d0*aa1)
-            de3ab = -2.0d0*pdatcm_d3(i)*(aa1+aa2)*pdatcm_beta(i)
-            dab3  = -2.0d0*pdatcm_d3(i)*(aa1+aa2)*a*alpdcm_dalp
+            e3ab  = pdatcm_d3(i)*(aa2+2.0e0_wp*aa1)
+            de3ab = -2.0e0_wp*pdatcm_d3(i)*(aa1+aa2)*pdatcm_beta(i)
+            dab3  = -2.0e0_wp*pdatcm_d3(i)*(aa1+aa2)*a*alpdcm_dalp
             bb1   = exp(-pdatcm_beta(j)*b)
             bb2   = bb1*bb1
-            e3ac  = pdatcm_d3(j)*(bb2+2.0d0*bb1)
-            de3ac = -2.0d0*pdatcm_d3(j)*(bb1+bb2)*pdatcm_beta(j)
-            dac3  = -2.0d0*pdatcm_d3(j)*(bb1+bb2)*b*alpdcm_dalp
+            e3ac  = pdatcm_d3(j)*(bb2+2.0e0_wp*bb1)
+            de3ac = -2.0e0_wp*pdatcm_d3(j)*(bb1+bb2)*pdatcm_beta(j)
+            dac3  = -2.0e0_wp*pdatcm_d3(j)*(bb1+bb2)*b*alpdcm_dalp
             cc1   = exp(-pdatcm_beta(k)*c)
             cc2   = cc1*cc1
-            e3bc  = pdatcm_d3(k)*(cc2+2.0d0*cc1)
-            de3bc = -2.0d0*pdatcm_beta(k)*pdatcm_d3(k)*(cc1+cc2)
-            qab   = (e1ab+e3ab)/2.0d0
-            qac   = (e1ac+e3ac)/2.0d0
-            qbc   = (e1bc+e3bc)/2.0d0
-            alab  = (e1ab-e3ab)/2.0d0
-            alac  = (e1ac-e3ac)/2.0d0
-            albc  = (e1bc-e3bc)/2.0d0
+            e3bc  = pdatcm_d3(k)*(cc2+2.0e0_wp*cc1)
+            de3bc = -2.0e0_wp*pdatcm_beta(k)*pdatcm_d3(k)*(cc1+cc2)
+            qab   = (e1ab+e3ab)/2.0e0_wp
+            qac   = (e1ac+e3ac)/2.0e0_wp
+            qbc   = (e1bc+e3bc)/2.0e0_wp
+            alab  = (e1ab-e3ab)/2.0e0_wp
+            alac  = (e1ac-e3ac)/2.0e0_wp
+            albc  = (e1bc-e3bc)/2.0e0_wp
             xx    = alab-albc
             yy    = albc-alac
             zz    = alac-alab
-            u     = (xx*xx+yy*yy+zz*zz)/2.0d0
+            u     = (xx*xx+yy*yy+zz*zz)/2.0e0_wp
             u     = sqrt(u)
             e     = qab+qbc+qac-u
-            bb    = 4.0d0*u
-            dxr   = (dab1-dab3)/2.0d0
-            dyr   = (dac3-dac1)/2.0d0
+            bb    = 4.0e0_wp*u
+            dxr   = (dab1-dab3)/2.0e0_wp
+            dyr   = (dac3-dac1)/2.0e0_wp
             dzr   = -(dxr+dyr)
-            dux   = xx/(2.0d0*u)
-            duy   = yy/(2.0d0*u)
-            duz   = zz/(2.0d0*u)
+            dux   = xx/(2.0e0_wp*u)
+            duy   = yy/(2.0e0_wp*u)
+            duz   = zz/(2.0e0_wp*u)
             dur   = dux*dxr+duy*dyr+duz*dzr
-            dqr   = (dab1+dac1+dab3+dac3)/2.0d0
+            dqr   = (dab1+dac1+dab3+dac3)/2.0e0_wp
             dtot  = dqr-dur
-            dr1   = (de1ab+de3ab)/2.0d0-(2.0d0*alab-albc-alac)*(de1ab-de3ab)/bb
-            dr2   = (de1ac+de3ac)/2.0d0-(2.0d0*alac-alab-albc)*(de1ac-de3ac)/bb
-            dr3   = (de1bc+de3bc)/2.0d0-(2.0d0*albc-alac-alab)*(de1bc-de3bc)/bb
+            dr1   = (de1ab+de3ab)/2.0e0_wp-(2.0e0_wp*alab-albc-alac)*(de1ab-de3ab)/bb
+            dr2   = (de1ac+de3ac)/2.0e0_wp-(2.0e0_wp*alac-alab-albc)*(de1ac-de3ac)/bb
+            dr3   = (de1bc+de3bc)/2.0e0_wp-(2.0e0_wp*albc-alac-alab)*(de1bc-de3bc)/bb
         end subroutine tri
 
         !> @brief Evaluate TRIPLE for the CH5_GEN_J1_1987 potential.
         subroutine triple
             !     THIS SUBROUTINE COMPUTES THE C-H' SATO PARAMETER WHICH IS A
             !     FUNCTION OF AR(H'-H) AND THE C-H-H' BEND ANGLE.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: alpha, c1, check, dalr1, dalr5, dalr6, dc1r6, dcyx, deg20, dyxr, r6, tem, tem2, tem22, tembot, u, ui, yx
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: alpha, c1, check, dalr1, dalr5, dalr6, dc1r6, dcyx, deg20, dyxr, r6, tem, tem2, tem22, tembot, u, ui, yx
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !     COMPUTE C1--IT IS A FUNCTION OF R6--THE H-H' BOND DISTANCE
-            if( icorcm_ar(6) .gt. 15.0d0 )then
-                r6 = icorcm_ar(6)/3.0d0
-                yx = (exp(2.0d0*pi*(r6-pdt2cm_rex)/pdt2cm_d))**3
+            if( icorcm_ar(6) .gt. 15.0e0_wp )then
+                r6 = icorcm_ar(6)/3.0e0_wp
+                yx = (exp(2.0e0_wp*pi*(r6-pdt2cm_rex)/pdt2cm_d))**3
             else
-                yx = exp(2.0d0*pi*(icorcm_ar(6)-pdt2cm_rex)/pdt2cm_d)
+                yx = exp(2.0e0_wp*pi*(icorcm_ar(6)-pdt2cm_rex)/pdt2cm_d)
             endif
-            c1    = -(pdt2cm_a*yx/(yx+1.0d0)+pdt2cm_b/yx)-pdt2cm_c0
-            dyxr  = (2.0d0*pi/pdt2cm_d)*yx
+            c1    = -(pdt2cm_a*yx/(yx+1.0e0_wp)+pdt2cm_b/yx)-pdt2cm_c0
+            dyxr  = (2.0e0_wp*pi/pdt2cm_d)*yx
             dcyx  = pdt2cm_b/yx-(pdt2cm_a*yx/(1+yx))/(1+yx)
             dc1r6 = dcyx*dyxr/yx
             !     COMPUTE THE C-H4-H5 ANGLE
             tem    = icorcm_ar(5)**2-icorcm_ar(1)**2-icorcm_ar(6)**2
-            tembot = -2.0d0*icorcm_ar(1)*icorcm_ar(6)
+            tembot = -2.0e0_wp*icorcm_ar(1)*icorcm_ar(6)
             check  = tem/tembot
-            if( check .le. -1.0d0 )then
-                alpha         = 0.0d0
+            if( check .le. -1.0e0_wp )then
+                alpha         = 0.0e0_wp
                 pdatcm_cc(3)  = pdt2cm_c0
-                dervcp_deccr1 = 0.0d0
-                dervcp_deccr5 = 0.0d0
-                dervcp_deccr6 = 0.0d0
+                dervcp_deccr1 = 0.0e0_wp
+                dervcp_deccr5 = 0.0e0_wp
+                dervcp_deccr6 = 0.0e0_wp
                 return
             else
-                alpha = acos(tem/(-2.0d0*icorcm_ar(1)*icorcm_ar(6)))
+                alpha = acos(tem/(-2.0e0_wp*icorcm_ar(1)*icorcm_ar(6)))
                 alpha = pi-alpha
             endif
             !     NOW COMPUTE THE ANGLE DERIVATIVES (DERIV. ALPHA W.R. R1,R5,R6)
-            u     = tem/(-2.0d0*icorcm_ar(1)*icorcm_ar(6))
-            ui    = -1.0d0/(sqrt(1.0d0-u**2))
+            u     = tem/(-2.0e0_wp*icorcm_ar(1)*icorcm_ar(6))
+            ui    = -1.0e0_wp/(sqrt(1.0e0_wp-u**2))
             dalr5 = -ui*icorcm_ar(5)/(icorcm_ar(1)*icorcm_ar(6))
-            tem2  = 1.0d0/(-2.0d0*icorcm_ar(1)*icorcm_ar(6))
+            tem2  = 1.0e0_wp/(-2.0e0_wp*icorcm_ar(1)*icorcm_ar(6))
             tem22 = tem2*tem2
-            dalr1 = -2.0d0*ui*(icorcm_ar(1)*tem2-icorcm_ar(6)*tem*tem22)
-            dalr6 = -2.0d0*ui*(icorcm_ar(6)*tem2-icorcm_ar(1)*tem*tem22)
+            dalr1 = -2.0e0_wp*ui*(icorcm_ar(1)*tem2-icorcm_ar(6)*tem*tem22)
+            dalr6 = -2.0e0_wp*ui*(icorcm_ar(6)*tem2-icorcm_ar(1)*tem*tem22)
             !     COMBINE THE RADIAL AND ANGLE COMPONENT TO COMPUTE THE TRIPLET
             !     PARAMETER CC(3) AND THE DERIVATIVES.  HERE TEM IS JUST THE PARTIAL
             !     OF CC W.R.T. ALPHA.
-            deg20 = pi/9.0d0
+            deg20 = pi/9.0e0_wp
             if( alpha .le. deg20 )then
-                pdatcm_cc(3)  = pdt2cm_c0+c1*(sin(9.0d0*alpha/2.0d0))**4
-                tem           = 18.0d0*(sin(9.0d0*alpha/2.0d0))**3*cos(9.0d0*alpha/ 2.0d0)
+                pdatcm_cc(3)  = pdt2cm_c0+c1*(sin(9.0e0_wp*alpha/2.0e0_wp))**4
+                tem           = 18.0e0_wp*(sin(9.0e0_wp*alpha/2.0e0_wp))**3*cos(9.0e0_wp*alpha/ 2.0e0_wp)
                 dervcp_deccr1 = c1*tem*dalr1
                 dervcp_deccr5 = c1*tem*dalr5
-                dervcp_deccr6 = dc1r6*(sin(9.0d0*alpha/2.0d0))**4+c1*tem*dalr6
+                dervcp_deccr6 = dc1r6*(sin(9.0e0_wp*alpha/2.0e0_wp))**4+c1*tem*dalr6
             else
                 pdatcm_cc(3)  = pdt2cm_c0+c1
-                dervcp_deccr1 = 0.0d0
-                dervcp_deccr5 = 0.0d0
+                dervcp_deccr1 = 0.0e0_wp
+                dervcp_deccr5 = 0.0e0_wp
                 dervcp_deccr6 = dc1r6
             endif
         end subroutine triple
@@ -1298,17 +1315,18 @@ module chempotpy_ch5_gen_j1_1987_pes
             !   coordinates needed to represent the full system represented by this
             !   potential energy surface routine.
             !   N3TM must be greater than or equal to N3TMMN.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: coord(18), df(4), dfr(4), dk(6), dvoop(18), dxx(18), evcon, f(4), y1(6), y2(6)
-            integer                     :: i
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: n3tmmn = 18
+            real(wp)            :: coord(18), df(4), dfr(4), dk(6), dvoop(18), dxx(18), evcon, f(4), y1(6), y2(6)
+            integer             :: i
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: n3tmmn = 18
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
-            evcon = 2.721161d+1
+            evcon = 2.721161e+1_wp
             if( infocm_natoms .gt. 25 )then
                 write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
@@ -1331,13 +1349,14 @@ module chempotpy_ch5_gen_j1_1987_pes
 
         !> @brief Evaluate POTINFO for the CH5_GEN_J1_1987 potential.
         subroutine potinfo
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i, j, k, kmax
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
+            integer             :: i, j, k, kmax
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -1425,34 +1444,35 @@ module chempotpy_ch5_gen_j1_1987_pes
 
         !> @brief Evaluate ANCVRT for the CH5_GEN_J1_1987 potential.
         subroutine ancvrt
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi         = 3.141592653589793d0
-            double precision, parameter :: clight     = 2.99792458d08
-            double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
-            double precision, parameter :: cepsilon_0 = 1.0d0/(cmu_0*clight**2)
-            double precision, parameter :: ce         = 1.602176462d-19
-            double precision, parameter :: cplanck    = 6.62606876d-34
-            double precision, parameter :: cm_e       = 9.10938188d-31
-            double precision, parameter :: cang       = 1.0d-10
-            double precision, parameter :: cavogadro  = 6.02214199d23
-            double precision, parameter :: ckcal      = 4.184d10
-            double precision, parameter :: htomillh   = 1000.d0
-            double precision, parameter :: htoev      = 27.2113834d0
-            double precision, parameter :: htokcal    = 627.509470d0
-            double precision, parameter :: htowave    = 219474.631d0
-            double precision, parameter :: htokj      = 2625.49962d0
-            double precision, parameter :: bohr_a     = .5291772083d0
-            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
-            character(len=3)   :: periodic_1(7,32)
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
+            integer, parameter  :: n3atom     = 75
+            integer, parameter  :: natom      = 25
+            integer, parameter  :: isurf      = 5
+            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
+            real(wp), parameter :: pi         = 3.141592653589793e0_wp
+            real(wp), parameter :: clight     = 2.99792458e08_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
+            real(wp), parameter :: ce         = 1.602176462e-19_wp
+            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
+            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
+            real(wp), parameter :: cang       = 1.0e-10_wp
+            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
+            real(wp), parameter :: ckcal      = 4.184e10_wp
+            real(wp), parameter :: htomillh   = 1000.e0_wp
+            real(wp), parameter :: htoev      = 27.2113834e0_wp
+            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htowave    = 219474.631e0_wp
+            real(wp), parameter :: htokj      = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)    :: periodic_1(7,32)
+            character(len=2)    :: name1(natom)
+            character(len=2)    :: name2(natom)
+            character(len=1)    :: iblank
+            character(len=20)   :: distance
+            character(len=20)   :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -1677,9 +1697,9 @@ module chempotpy_ch5_gen_j1_1987_pes
             elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
-            utilcm_cnvrtd  = 1.d0
-            utilcm_cnvrte  = 1.d0
-            utilcm_cnvrtde = 1.d0
+            utilcm_cnvrtd  = 1.e0_wp
+            utilcm_cnvrte  = 1.e0_wp
+            utilcm_cnvrtde = 1.e0_wp
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
@@ -1704,6 +1724,7 @@ module chempotpy_ch5_gen_j1_1987_pes
         !> @brief Evaluate CARTOU for the CH5_GEN_J1_1987 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: i, j
             integer, parameter :: n3atom = 75
@@ -1716,9 +1737,10 @@ module chempotpy_ch5_gen_j1_1987_pes
         !> @brief Evaluate CARTTOR for the CH5_GEN_J1_1987 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: coordinate_status
-            double precision   :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
+            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
             integer            :: i, ind, k, l
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
@@ -1732,6 +1754,7 @@ module chempotpy_ch5_gen_j1_1987_pes
 
         !> @brief Evaluate EUNITZERO for the CH5_GEN_J1_1987 potential.
         subroutine eunitzero
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j
             character(len=75)  :: ref(5)
@@ -1754,15 +1777,16 @@ module chempotpy_ch5_gen_j1_1987_pes
 
         !> @brief Evaluate RTOCART for the CH5_GEN_J1_1987 potential.
         subroutine rtocart
+            use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
-                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
-                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
+            real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom, isurf), &
+                & ygs(n3atom), yij(n3atom, jsurf), za, zb, zc, zd
+            integer :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -1786,21 +1810,21 @@ module chempotpy_ch5_gen_j1_1987_pes
                 enddo
             elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
-                    utilcm_dgscartnu(i,1) = 0.d0
-                    utilcm_dgscartnu(i,2) = 0.d0
-                    utilcm_dgscartnu(i,3) = 0.d0
+                    utilcm_dgscartnu(i,1) = 0.e0_wp
+                    utilcm_dgscartnu(i,2) = 0.e0_wp
+                    utilcm_dgscartnu(i,3) = 0.e0_wp
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(i,1,j1) = 0.d0
-                            utilcm_descartnu(i,2,j1) = 0.d0
-                            utilcm_descartnu(i,3,j1) = 0.d0
+                            utilcm_descartnu(i,1,j1) = 0.e0_wp
+                            utilcm_descartnu(i,2,j1) = 0.e0_wp
+                            utilcm_descartnu(i,3,j1) = 0.e0_wp
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(i,1,j2) = 0.d0
-                            utilcm_dijcartnu(i,2,j2) = 0.d0
-                            utilcm_dijcartnu(i,3,j2) = 0.d0
+                            utilcm_dijcartnu(i,1,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,2,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,3,j2) = 0.e0_wp
                         enddo
                     endif
                     do j = 1, infocm_natoms
@@ -1840,12 +1864,12 @@ module chempotpy_ch5_gen_j1_1987_pes
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j=utilcm_ksdiag, utilcm_kediag
-                            yes(i,j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
+                            yes(i, j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do k=utilcm_ksoffd, utilcm_keoffd
-                            yij(i,k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
+                            yij(i, k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
                         enddo
                     endif
                 enddo
@@ -1858,22 +1882,22 @@ module chempotpy_ch5_gen_j1_1987_pes
                     utilcm_dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(1,k,j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                            utilcm_descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                            utilcm_descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                            utilcm_descartnu(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
+                            utilcm_descartnu(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
+                            utilcm_descartnu(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(1,k,j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3,j2) - term23*yij(2,j2)
+                            utilcm_dijcartnu(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
+                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
+                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
                         enddo
                     endif
                 enddo
             elseif( infocm_icartr .eq. 4 )then
-                wh   = 1.007825d0
-                wf   = 18.99840d0
+                wh   = 1.007825e0_wp
+                wf   = 18.99840e0_wp
                 sum  = wh+wf
                 eps  = wf/sum
                 epsp = wh/sum
@@ -1883,8 +1907,8 @@ module chempotpy_ch5_gen_j1_1987_pes
                 ss1  = sin(theta1)
                 ss2  = sin(theta2)
                 ss3  = sin(phi)
-                ya   = 0.0d0
-                yb   = 0.0d0
+                ya   = 0.0e0_wp
+                yb   = 0.0e0_wp
                 t0   = r1*u1
                 za   = -epsp*t0
                 zb   = eps*t0
@@ -1910,6 +1934,7 @@ module chempotpy_ch5_gen_j1_1987_pes
 
         !> @brief Evaluate DEDCOU for the CH5_GEN_J1_1987 potential.
         subroutine dedcou
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k
             integer, parameter :: n3atom = 75
@@ -1964,13 +1989,14 @@ end module chempotpy_ch5_gen_j1_1987_pes
 !> @brief Expose CH5_GEN_J1_1987 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_ch5_gen_j1_1987_pes, only: evaluate
+    use chempotpy_kinds,               only: wp
     implicit none
-    integer, parameter            :: natoms  = 6
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 6
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

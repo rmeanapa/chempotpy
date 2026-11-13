@@ -56,6 +56,7 @@
 
 !> @brief Implement H3_GEN_DMBE_1987, a potential energy surface for H3.
 module chempotpy_h3_gen_dmbe_1987_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -64,254 +65,256 @@ module chempotpy_h3_gen_dmbe_1987_pes
 
     !> @brief Evaluate the H3_GEN_DMBE_1987 potential energy surface for H3.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_geometry,     only: cartesian_distance, flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units,    only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_geometry, only: cartesian_distance, flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
+        use chempotpy_units,    only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,    only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 2
-        integer, parameter            :: natoms  = 3
-        integer, parameter            :: n3atom  = 75
-        integer, parameter            :: natom   = 25
-        integer, parameter            :: isurf   = 5
-        integer, parameter            :: jsurf   = int(isurf*(isurf+1)/2)
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: cor2cm_corrs
-        double precision              :: cor2cm_corrt
-        double precision              :: cor2cm_dcor2(4)
-        double precision              :: coupcm_dphi(3)
-        double precision              :: coupcm_dsphi3(3)
-        double precision              :: coupcm_phi
-        double precision              :: coupcm_sphi3
-        double precision              :: dmpcm_b
-        double precision              :: dmpcm_dampb
-        double precision              :: dmpcm_dpol
-        double precision              :: dmpcm_parb
-        double precision              :: dmpcm_texp
-        double precision              :: dmpcm_tt
-        double precision              :: dmpcm_tt1
-        double precision              :: dmpcm_y
-        double precision              :: h3cocm_cphi3
-        double precision              :: h3cocm_dcphi1
-        double precision              :: h3cocm_dcphi2
-        double precision              :: h3cocm_dcphi3
-        double precision              :: h3cocm_dq1
-        double precision              :: h3cocm_dq2
-        double precision              :: h3cocm_dq3
-        double precision              :: h3cocm_drho1
-        double precision              :: h3cocm_drho2
-        double precision              :: h3cocm_drho3
-        double precision              :: h3cocm_ds1
-        double precision              :: h3cocm_ds2
-        double precision              :: h3cocm_ds3
-        double precision              :: h3cocm_per
-        double precision              :: h3cocm_per2
-        double precision              :: h3cocm_qcoord
-        double precision              :: h3cocm_r12
-        double precision              :: h3cocm_r22
-        double precision              :: h3cocm_r32
-        double precision              :: h3cocm_rho
-        double precision              :: h3cocm_s
-        double precision              :: h3cocm_s2
-        double precision              :: h3crcm_corrs(3)
-        double precision              :: h3crcm_corrt(3)
-        double precision              :: h3crcm_damp(3,3)
-        double precision              :: h3crcm_dcorrs(3)
-        double precision              :: h3crcm_dcorrt(3)
-        double precision              :: h3crcm_ddamp(3,3)
-        double precision              :: h3dmcm_al0
-        double precision              :: h3dmcm_al1
-        double precision              :: h3dmcm_al2
-        double precision              :: h3dmcm_al3
-        double precision              :: h3dmcm_alph0
-        double precision              :: h3dmcm_alph1
-        double precision              :: h3dmcm_alph2
-        double precision              :: h3dmcm_alpha5
-        double precision              :: h3dmcm_az2
-        double precision              :: h3dmcm_bet0
-        double precision              :: h3dmcm_bet1
-        double precision              :: h3dmcm_beta1
-        double precision              :: h3dmcm_beta2
-        double precision              :: h3dmcm_beta3
-        double precision              :: h3dmcm_cd0
-        double precision              :: h3dmcm_cd1
-        double precision              :: h3dmcm_chh(3)
-        double precision              :: h3dmcm_ck0(3)
-        double precision              :: h3dmcm_ck1(3)
-        double precision              :: h3dmcm_dampa(3)
-        double precision              :: h3dmcm_dampb(3)
-        double precision              :: h3dmcm_h2r0
-        double precision              :: h3dmcm_h2rm
-        double precision              :: h3dmcm_h2rmt
-        double precision              :: h3dmcm_h2ta
-        double precision              :: h3dmcm_h2tb1
-        double precision              :: h3dmcm_h2tb2
-        double precision              :: h3dmcm_h2tb3
-        double precision              :: h3dmcm_h2tb4
-        double precision              :: h3dmcm_hfa1
-        double precision              :: h3dmcm_hfa2
-        double precision              :: h3dmcm_hfa3
-        double precision              :: h3dmcm_hfd
-        double precision              :: h3dmcm_hfgam
-        double precision              :: h3dmcm_rhol
-        double precision              :: h3dmcm_sqrt3
-        double precision              :: h3dmcm_xpar(15)
-        double precision              :: ijconvert_cnvrtchi
-        double precision              :: ijconvert_cnvrtq
-        double precision              :: ijconvert_cnvrts
-        integer                       :: ijconvert_icouple
-        double precision              :: infocm_cartnu(natom,3)
-        integer                       :: infocm_icartr
-        integer                       :: infocm_indexes(natom)
-        integer                       :: infocm_irctnt
-        integer                       :: infocm_mder
-        integer                       :: infocm_msurf
-        integer                       :: infocm_natoms
-        character                     :: infocm_ref(5)
-        double precision              :: pt1cm_degsdr(n3atom)
-        double precision              :: pt1cm_engygs
-        double precision              :: pt1cm_r(n3atom)
-        double precision              :: pt3cm_ezero(isurf+1)
-        double precision              :: pt4cm_deesdr(n3atom,isurf)
-        double precision              :: pt4cm_engyes(isurf)
-        double precision              :: pt5cm_deijdr(n3atom,jsurf)
-        double precision              :: pt5cm_engyij(jsurf)
-        double precision              :: usricm_anuzero
-        double precision              :: usricm_cart(natom,3)
-        integer                       :: usricm_nasurf(isurf+1,isurf+1)
-        integer                       :: usricm_nder
-        integer                       :: usricm_nflag(20)
-        integer                       :: usricm_nulbl(natom)
-        double precision              :: usrocm_descart(natom,3,isurf)
-        double precision              :: usrocm_dgscart(natom,3)
-        double precision              :: usrocm_dijcart(natom,3,jsurf)
-        double precision              :: usrocm_pengyes(isurf)
-        double precision              :: usrocm_pengygs
-        double precision              :: usrocm_pengyij(jsurf)
-        double precision              :: utilcm_cnvrtd
-        double precision              :: utilcm_cnvrtde
-        double precision              :: utilcm_cnvrte
-        double precision              :: utilcm_descartnu(natom,3,isurf)
-        double precision              :: utilcm_dgscartnu(natom,3)
-        double precision              :: utilcm_dijcartnu(natom,3,jsurf)
-        integer                       :: utilcm_ireorder
-        integer                       :: utilcm_kediag
-        integer                       :: utilcm_keoffd
-        integer                       :: utilcm_ksdiag
-        integer                       :: utilcm_ksoffd
-        double precision              :: v
-        integer                       :: iatom
-        double precision              :: tx(9), r1(3), drdx(3,9)
-        double precision              :: hr(nstates,nstates,3), gr(nstates,3)
-        double precision              :: hx(nstates,nstates,9), gx(nstates,9)
-        integer                       :: istate, idir, i, j, k, l
+        integer, parameter    :: nstates = 2
+        integer, parameter    :: natoms  = 3
+        integer, parameter    :: n3atom  = 75
+        integer, parameter    :: natom   = 25
+        integer, parameter    :: isurf   = 5
+        integer, parameter    :: jsurf   = int(isurf*(isurf+1)/2)
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: cor2cm_corrs
+        real(wp)              :: cor2cm_corrt
+        real(wp)              :: cor2cm_dcor2(4)
+        real(wp)              :: coupcm_dphi(3)
+        real(wp)              :: coupcm_dsphi3(3)
+        real(wp)              :: coupcm_phi
+        real(wp)              :: coupcm_sphi3
+        real(wp)              :: dmpcm_b
+        real(wp)              :: dmpcm_dampb
+        real(wp)              :: dmpcm_dpol
+        real(wp)              :: dmpcm_parb
+        real(wp)              :: dmpcm_texp
+        real(wp)              :: dmpcm_tt
+        real(wp)              :: dmpcm_tt1
+        real(wp)              :: dmpcm_y
+        real(wp)              :: h3cocm_cphi3
+        real(wp)              :: h3cocm_dcphi1
+        real(wp)              :: h3cocm_dcphi2
+        real(wp)              :: h3cocm_dcphi3
+        real(wp)              :: h3cocm_dq1
+        real(wp)              :: h3cocm_dq2
+        real(wp)              :: h3cocm_dq3
+        real(wp)              :: h3cocm_drho1
+        real(wp)              :: h3cocm_drho2
+        real(wp)              :: h3cocm_drho3
+        real(wp)              :: h3cocm_ds1
+        real(wp)              :: h3cocm_ds2
+        real(wp)              :: h3cocm_ds3
+        real(wp)              :: h3cocm_per
+        real(wp)              :: h3cocm_per2
+        real(wp)              :: h3cocm_qcoord
+        real(wp)              :: h3cocm_r12
+        real(wp)              :: h3cocm_r22
+        real(wp)              :: h3cocm_r32
+        real(wp)              :: h3cocm_rho
+        real(wp)              :: h3cocm_s
+        real(wp)              :: h3cocm_s2
+        real(wp)              :: h3crcm_corrs(3)
+        real(wp)              :: h3crcm_corrt(3)
+        real(wp)              :: h3crcm_damp(3,3)
+        real(wp)              :: h3crcm_dcorrs(3)
+        real(wp)              :: h3crcm_dcorrt(3)
+        real(wp)              :: h3crcm_ddamp(3,3)
+        real(wp)              :: h3dmcm_al0
+        real(wp)              :: h3dmcm_al1
+        real(wp)              :: h3dmcm_al2
+        real(wp)              :: h3dmcm_al3
+        real(wp)              :: h3dmcm_alph0
+        real(wp)              :: h3dmcm_alph1
+        real(wp)              :: h3dmcm_alph2
+        real(wp)              :: h3dmcm_alpha5
+        real(wp)              :: h3dmcm_az2
+        real(wp)              :: h3dmcm_bet0
+        real(wp)              :: h3dmcm_bet1
+        real(wp)              :: h3dmcm_beta1
+        real(wp)              :: h3dmcm_beta2
+        real(wp)              :: h3dmcm_beta3
+        real(wp)              :: h3dmcm_cd0
+        real(wp)              :: h3dmcm_cd1
+        real(wp)              :: h3dmcm_chh(3)
+        real(wp)              :: h3dmcm_ck0(3)
+        real(wp)              :: h3dmcm_ck1(3)
+        real(wp)              :: h3dmcm_dampa(3)
+        real(wp)              :: h3dmcm_dampb(3)
+        real(wp)              :: h3dmcm_h2r0
+        real(wp)              :: h3dmcm_h2rm
+        real(wp)              :: h3dmcm_h2rmt
+        real(wp)              :: h3dmcm_h2ta
+        real(wp)              :: h3dmcm_h2tb1
+        real(wp)              :: h3dmcm_h2tb2
+        real(wp)              :: h3dmcm_h2tb3
+        real(wp)              :: h3dmcm_h2tb4
+        real(wp)              :: h3dmcm_hfa1
+        real(wp)              :: h3dmcm_hfa2
+        real(wp)              :: h3dmcm_hfa3
+        real(wp)              :: h3dmcm_hfd
+        real(wp)              :: h3dmcm_hfgam
+        real(wp)              :: h3dmcm_rhol
+        real(wp)              :: h3dmcm_sqrt3
+        real(wp)              :: h3dmcm_xpar(15)
+        real(wp)              :: ijconvert_cnvrtchi
+        real(wp)              :: ijconvert_cnvrtq
+        real(wp)              :: ijconvert_cnvrts
+        integer               :: ijconvert_icouple
+        real(wp)              :: infocm_cartnu(natom,3)
+        integer               :: infocm_icartr
+        integer               :: infocm_indexes(natom)
+        integer               :: infocm_irctnt
+        integer               :: infocm_mder
+        integer               :: infocm_msurf
+        integer               :: infocm_natoms
+        character             :: infocm_ref(5)
+        real(wp)              :: pt1cm_degsdr(n3atom)
+        real(wp)              :: pt1cm_engygs
+        real(wp)              :: pt1cm_r(n3atom)
+        real(wp)              :: pt3cm_ezero(isurf+1)
+        real(wp)              :: pt4cm_deesdr(n3atom,isurf)
+        real(wp)              :: pt4cm_engyes(isurf)
+        real(wp)              :: pt5cm_deijdr(n3atom,jsurf)
+        real(wp)              :: pt5cm_engyij(jsurf)
+        real(wp)              :: usricm_anuzero
+        real(wp)              :: usricm_cart(natom,3)
+        integer               :: usricm_nasurf(isurf+1,isurf+1)
+        integer               :: usricm_nder
+        integer               :: usricm_nflag(20)
+        integer               :: usricm_nulbl(natom)
+        real(wp)              :: usrocm_descart(natom,3,isurf)
+        real(wp)              :: usrocm_dgscart(natom,3)
+        real(wp)              :: usrocm_dijcart(natom,3,jsurf)
+        real(wp)              :: usrocm_pengyes(isurf)
+        real(wp)              :: usrocm_pengygs
+        real(wp)              :: usrocm_pengyij(jsurf)
+        real(wp)              :: utilcm_cnvrtd
+        real(wp)              :: utilcm_cnvrtde
+        real(wp)              :: utilcm_cnvrte
+        real(wp)              :: utilcm_descartnu(natom,3,isurf)
+        real(wp)              :: utilcm_dgscartnu(natom,3)
+        real(wp)              :: utilcm_dijcartnu(natom,3,jsurf)
+        integer               :: utilcm_ireorder
+        integer               :: utilcm_kediag
+        integer               :: utilcm_keoffd
+        integer               :: utilcm_ksdiag
+        integer               :: utilcm_ksoffd
+        real(wp)              :: v
+        integer               :: iatom
+        real(wp)              :: tx(9), r1(3), drdx(3,9)
+        real(wp)              :: hr(nstates,nstates,3), gr(nstates,3)
+        real(wp)              :: hx(nstates,nstates,9), gx(nstates,9)
+        integer               :: istate, idir, i, j, k, l
         !initialize
-        cor2cm_corrs     = 0.d0; cor2cm_corrt = 0.d0; cor2cm_dcor2 = 0.d0; coupcm_dphi = 0.d0; coupcm_dsphi3 = 0.d0
-        coupcm_phi       = 0.d0; coupcm_sphi3 = 0.d0; dmpcm_b = 0.d0; dmpcm_dampb = 0.d0; dmpcm_dpol = 0.d0; dmpcm_parb = 0.d0
-        dmpcm_texp       = 0.d0; dmpcm_tt = 0.d0; dmpcm_tt1 = 0.d0; dmpcm_y = 0.d0; h3cocm_cphi3 = 0.d0; h3cocm_dcphi1 = 0.d0
-        h3cocm_dcphi2    = 0.d0; h3cocm_dcphi3 = 0.d0; h3cocm_dq1 = 0.d0; h3cocm_dq2 = 0.d0; h3cocm_dq3 = 0.d0
-        h3cocm_drho1     = 0.d0; h3cocm_drho2 = 0.d0; h3cocm_drho3 = 0.d0; h3cocm_ds1 = 0.d0; h3cocm_ds2 = 0.d0
-        h3cocm_ds3       = 0.d0; h3cocm_per = 0.d0; h3cocm_per2 = 0.d0; h3cocm_qcoord = 0.d0; h3cocm_r12 = 0.d0
-        h3cocm_r22       = 0.d0; h3cocm_r32 = 0.d0; h3cocm_rho = 0.d0; h3cocm_s = 0.d0; h3cocm_s2 = 0.d0; h3crcm_corrs = 0.d0
-        h3crcm_corrt     = 0.d0; h3crcm_damp = 0.d0; h3crcm_dcorrs = 0.d0; h3crcm_dcorrt = 0.d0; h3crcm_ddamp = 0.d0
-        h3dmcm_al0       = 0.d0; h3dmcm_al1 = 0.d0; h3dmcm_al2 = 0.d0; h3dmcm_al3 = 0.d0; h3dmcm_alph0 = 0.d0
-        h3dmcm_alph1     = 0.d0; h3dmcm_alph2 = 0.d0; h3dmcm_alpha5 = 0.d0; h3dmcm_az2 = 0.d0; h3dmcm_bet0 = 0.d0
-        h3dmcm_bet1      = 0.d0; h3dmcm_beta1 = 0.d0; h3dmcm_beta2 = 0.d0; h3dmcm_beta3 = 0.d0; h3dmcm_cd0 = 0.d0
-        h3dmcm_cd1       = 0.d0; h3dmcm_chh = 0.d0; h3dmcm_ck0 = 0.d0; h3dmcm_ck1 = 0.d0; h3dmcm_dampa = 0.d0
-        h3dmcm_dampb     = 0.d0; h3dmcm_h2r0 = 0.d0; h3dmcm_h2rm = 0.d0; h3dmcm_h2rmt = 0.d0; h3dmcm_h2ta = 0.d0
-        h3dmcm_h2tb1     = 0.d0; h3dmcm_h2tb2 = 0.d0; h3dmcm_h2tb3 = 0.d0; h3dmcm_h2tb4 = 0.d0; h3dmcm_hfa1 = 0.d0
-        h3dmcm_hfa2      = 0.d0; h3dmcm_hfa3 = 0.d0; h3dmcm_hfd = 0.d0; h3dmcm_hfgam = 0.d0; h3dmcm_rhol = 0.d0
-        h3dmcm_sqrt3     = 0.d0; h3dmcm_xpar = 0.d0; ijconvert_cnvrtchi = 0.d0; ijconvert_cnvrtq = 0.d0
-        ijconvert_cnvrts = 0.d0; ijconvert_icouple = 0; infocm_cartnu = 0.d0; infocm_icartr = 0; infocm_indexes = 0
+        cor2cm_corrs     = 0.e0_wp; cor2cm_corrt = 0.e0_wp; cor2cm_dcor2 = 0.e0_wp; coupcm_dphi = 0.e0_wp; coupcm_dsphi3 = 0.e0_wp
+        coupcm_phi       = 0.e0_wp; coupcm_sphi3 = 0.e0_wp; dmpcm_b = 0.e0_wp; dmpcm_dampb = 0.e0_wp; dmpcm_dpol = 0.e0_wp; dmpcm_parb = 0.e0_wp
+        dmpcm_texp       = 0.e0_wp; dmpcm_tt = 0.e0_wp; dmpcm_tt1 = 0.e0_wp; dmpcm_y = 0.e0_wp; h3cocm_cphi3 = 0.e0_wp; h3cocm_dcphi1 = 0.e0_wp
+        h3cocm_dcphi2    = 0.e0_wp; h3cocm_dcphi3 = 0.e0_wp; h3cocm_dq1 = 0.e0_wp; h3cocm_dq2 = 0.e0_wp; h3cocm_dq3 = 0.e0_wp
+        h3cocm_drho1     = 0.e0_wp; h3cocm_drho2 = 0.e0_wp; h3cocm_drho3 = 0.e0_wp; h3cocm_ds1 = 0.e0_wp; h3cocm_ds2 = 0.e0_wp
+        h3cocm_ds3       = 0.e0_wp; h3cocm_per = 0.e0_wp; h3cocm_per2 = 0.e0_wp; h3cocm_qcoord = 0.e0_wp; h3cocm_r12 = 0.e0_wp
+        h3cocm_r22       = 0.e0_wp; h3cocm_r32 = 0.e0_wp; h3cocm_rho = 0.e0_wp; h3cocm_s = 0.e0_wp; h3cocm_s2 = 0.e0_wp; h3crcm_corrs = 0.e0_wp
+        h3crcm_corrt     = 0.e0_wp; h3crcm_damp = 0.e0_wp; h3crcm_dcorrs = 0.e0_wp; h3crcm_dcorrt = 0.e0_wp; h3crcm_ddamp = 0.e0_wp
+        h3dmcm_al0       = 0.e0_wp; h3dmcm_al1 = 0.e0_wp; h3dmcm_al2 = 0.e0_wp; h3dmcm_al3 = 0.e0_wp; h3dmcm_alph0 = 0.e0_wp
+        h3dmcm_alph1     = 0.e0_wp; h3dmcm_alph2 = 0.e0_wp; h3dmcm_alpha5 = 0.e0_wp; h3dmcm_az2 = 0.e0_wp; h3dmcm_bet0 = 0.e0_wp
+        h3dmcm_bet1      = 0.e0_wp; h3dmcm_beta1 = 0.e0_wp; h3dmcm_beta2 = 0.e0_wp; h3dmcm_beta3 = 0.e0_wp; h3dmcm_cd0 = 0.e0_wp
+        h3dmcm_cd1       = 0.e0_wp; h3dmcm_chh = 0.e0_wp; h3dmcm_ck0 = 0.e0_wp; h3dmcm_ck1 = 0.e0_wp; h3dmcm_dampa = 0.e0_wp
+        h3dmcm_dampb     = 0.e0_wp; h3dmcm_h2r0 = 0.e0_wp; h3dmcm_h2rm = 0.e0_wp; h3dmcm_h2rmt = 0.e0_wp; h3dmcm_h2ta = 0.e0_wp
+        h3dmcm_h2tb1     = 0.e0_wp; h3dmcm_h2tb2 = 0.e0_wp; h3dmcm_h2tb3 = 0.e0_wp; h3dmcm_h2tb4 = 0.e0_wp; h3dmcm_hfa1 = 0.e0_wp
+        h3dmcm_hfa2      = 0.e0_wp; h3dmcm_hfa3 = 0.e0_wp; h3dmcm_hfd = 0.e0_wp; h3dmcm_hfgam = 0.e0_wp; h3dmcm_rhol = 0.e0_wp
+        h3dmcm_sqrt3     = 0.e0_wp; h3dmcm_xpar = 0.e0_wp; ijconvert_cnvrtchi = 0.e0_wp; ijconvert_cnvrtq = 0.e0_wp
+        ijconvert_cnvrts = 0.e0_wp; ijconvert_icouple = 0; infocm_cartnu = 0.e0_wp; infocm_icartr = 0; infocm_indexes = 0
         infocm_irctnt    = 0; infocm_mder = 0; infocm_msurf = 0; infocm_natoms = 0
         infocm_ref       = ' '
-        pt1cm_degsdr     = 0.d0
-        pt1cm_engygs     = 0.d0
-        pt1cm_r          = 0.d0
-        pt3cm_ezero      = 0.d0
-        pt4cm_deesdr     = 0.d0
-        pt4cm_engyes     = 0.d0
-        pt5cm_deijdr     = 0.d0
-        pt5cm_engyij     = 0.d0
-        usricm_anuzero   = 0.d0
-        usricm_cart      = 0.d0
+        pt1cm_degsdr     = 0.e0_wp
+        pt1cm_engygs     = 0.e0_wp
+        pt1cm_r          = 0.e0_wp
+        pt3cm_ezero      = 0.e0_wp
+        pt4cm_deesdr     = 0.e0_wp
+        pt4cm_engyes     = 0.e0_wp
+        pt5cm_deijdr     = 0.e0_wp
+        pt5cm_engyij     = 0.e0_wp
+        usricm_anuzero   = 0.e0_wp
+        usricm_cart      = 0.e0_wp
         usricm_nasurf    = 0
         usricm_nder      = 0
         usricm_nflag     = 0
         usricm_nulbl     = 0
-        usrocm_descart   = 0.d0
-        usrocm_dgscart   = 0.d0
-        usrocm_dijcart   = 0.d0
-        usrocm_pengyes   = 0.d0
-        usrocm_pengygs   = 0.d0
-        usrocm_pengyij   = 0.d0
-        utilcm_cnvrtd    = 0.d0
-        utilcm_cnvrtde   = 0.d0
-        utilcm_cnvrte    = 0.d0
-        utilcm_descartnu = 0.d0
-        utilcm_dgscartnu = 0.d0
-        utilcm_dijcartnu = 0.d0
+        usrocm_descart   = 0.e0_wp
+        usrocm_dgscart   = 0.e0_wp
+        usrocm_dijcart   = 0.e0_wp
+        usrocm_pengyes   = 0.e0_wp
+        usrocm_pengygs   = 0.e0_wp
+        usrocm_pengyij   = 0.e0_wp
+        utilcm_cnvrtd    = 0.e0_wp
+        utilcm_cnvrtde   = 0.e0_wp
+        utilcm_cnvrte    = 0.e0_wp
+        utilcm_descartnu = 0.e0_wp
+        utilcm_dgscartnu = 0.e0_wp
+        utilcm_dijcartnu = 0.e0_wp
         utilcm_ireorder  = 0
         utilcm_kediag    = 0
         utilcm_keoffd    = 0
         utilcm_ksdiag    = 0
         utilcm_ksoffd    = 0
-        pt3cm_ezero(1)   = 0.174474112d0
-        pt3cm_ezero(2)   = 0.174474112d0
+        pt3cm_ezero(1)   = 0.174474112e0_wp
+        pt3cm_ezero(2)   = 0.174474112e0_wp
         usricm_nasurf = reshape([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
             & 0, 0, 0, 0, 0, 0, 0, 0], shape(usricm_nasurf))
         usricm_nder    = 0
         usricm_nflag   = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        usricm_anuzero = 0.0d0
+        usricm_anuzero = 0.0e0_wp
         infocm_icartr  = 3
         infocm_msurf   = 1
         infocm_mder    = 1
         usricm_nulbl   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         infocm_natoms  = 3
-        h3dmcm_rhol    = 2.4848d0
-        h3dmcm_alph0   = 25.9528d0
-        h3dmcm_alph1   = 1.1868d0
-        h3dmcm_bet0    = 15.7381d0
-        h3dmcm_bet1    = 0.09729d0
-        h3dmcm_alpha5  = 8.2433033d-03
-        h3dmcm_beta1   = 0.53302897d0
-        h3dmcm_beta2   = 0.39156612d-01
-        h3dmcm_beta3   = 0.69996945d0
-        h3dmcm_alph2   = 4.735364d-1
-        h3dmcm_al0     = 0.45024472d+01
-        h3dmcm_al1     = -0.62467617d+01
-        h3dmcm_al2     = 0.40966542d+01
-        h3dmcm_al3     = 0.21813012d+01
-        h3dmcm_az2     = 4.453649d-4
-        h3dmcm_cd0     = 6.333404d-03
-        h3dmcm_cd1     = -1.726839d-03
-        h3dmcm_chh     = [6.499027d0, 1.243991d+02, 3285.8d0]
-        h3dmcm_ck0     = [-1.372843d-01, -1.638459d-01, -1.973814d-01]
-        h3dmcm_ck1     = [1.011204d0, 9.988099d-01, 9.399411d-01]
-        h3dmcm_hfd     = 0.15796326d0
-        h3dmcm_hfa1    = 2.1977034d0
-        h3dmcm_hfa2    = 1.2932502d0
-        h3dmcm_hfa3    = 0.64375666d0
-        h3dmcm_hfgam   = 2.1835071d0
-        h3dmcm_h2rm    = 1.401d0
-        h3dmcm_h2r0    = 6.928203d0
-        h3dmcm_h2rmt   = 7.82d0
-        h3dmcm_h2ta    = 0.448467d0
-        h3dmcm_h2tb1   = -0.056687d0
-        h3dmcm_h2tb2   = 0.246831d0
-        h3dmcm_h2tb3   = -0.018419d0
-        h3dmcm_h2tb4   = 0.000598d0
-        h3dmcm_sqrt3   = 1.73205080756887d0
-        h3dmcm_xpar = [-0.9286579d-02, 0.2811592d-03, -0.4665659d-05, 0.2069800d-07, 0.2903613d+02, -0.2934824d+01, &
-            & 0.7181886d0, -0.3753218d0, -0.1114538d+01, 0.2134221d+01, -0.4164343d0, 0.2022584d0, -0.4662687d-01, - &
-            & 0.4818623d+02, 0.2988468d0]
-        v           = 0.d0; g = 0.d0; d = 0.d0
-        usricm_cart = 0.d0
+        h3dmcm_rhol    = 2.4848e0_wp
+        h3dmcm_alph0   = 25.9528e0_wp
+        h3dmcm_alph1   = 1.1868e0_wp
+        h3dmcm_bet0    = 15.7381e0_wp
+        h3dmcm_bet1    = 0.09729e0_wp
+        h3dmcm_alpha5  = 8.2433033e-03_wp
+        h3dmcm_beta1   = 0.53302897e0_wp
+        h3dmcm_beta2   = 0.39156612e-01_wp
+        h3dmcm_beta3   = 0.69996945e0_wp
+        h3dmcm_alph2   = 4.735364e-1_wp
+        h3dmcm_al0     = 0.45024472e+01_wp
+        h3dmcm_al1     = -0.62467617e+01_wp
+        h3dmcm_al2     = 0.40966542e+01_wp
+        h3dmcm_al3     = 0.21813012e+01_wp
+        h3dmcm_az2     = 4.453649e-4_wp
+        h3dmcm_cd0     = 6.333404e-03_wp
+        h3dmcm_cd1     = -1.726839e-03_wp
+        h3dmcm_chh     = [6.499027e0_wp, 1.243991e+02_wp, 3285.8e0_wp]
+        h3dmcm_ck0     = [-1.372843e-01_wp, -1.638459e-01_wp, -1.973814e-01_wp]
+        h3dmcm_ck1     = [1.011204e0_wp, 9.988099e-01_wp, 9.399411e-01_wp]
+        h3dmcm_hfd     = 0.15796326e0_wp
+        h3dmcm_hfa1    = 2.1977034e0_wp
+        h3dmcm_hfa2    = 1.2932502e0_wp
+        h3dmcm_hfa3    = 0.64375666e0_wp
+        h3dmcm_hfgam   = 2.1835071e0_wp
+        h3dmcm_h2rm    = 1.401e0_wp
+        h3dmcm_h2r0    = 6.928203e0_wp
+        h3dmcm_h2rmt   = 7.82e0_wp
+        h3dmcm_h2ta    = 0.448467e0_wp
+        h3dmcm_h2tb1   = -0.056687e0_wp
+        h3dmcm_h2tb2   = 0.246831e0_wp
+        h3dmcm_h2tb3   = -0.018419e0_wp
+        h3dmcm_h2tb4   = 0.000598e0_wp
+        h3dmcm_sqrt3   = 1.73205080756887e0_wp
+        h3dmcm_xpar = [-0.9286579e-02_wp, 0.2811592e-03_wp, -0.4665659e-05_wp, 0.2069800e-07_wp, 0.2903613e+02_wp, - &
+            & 0.2934824e+01_wp, 0.7181886e0_wp, -0.3753218e0_wp, -0.1114538e+01_wp, 0.2134221e+01_wp, -0.4164343e0_wp, &
+            & 0.2022584e0_wp, -0.4662687e-01_wp, - 0.4818623e+02_wp, 0.2988468e0_wp]
+        v           = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
+        usricm_cart = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                usricm_cart(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+                usricm_cart(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
         if( igrad .eq. 0 )then
@@ -322,10 +325,10 @@ module chempotpy_h3_gen_dmbe_1987_pes
         usricm_nasurf = 1
         call prepare_local_context
         call pot
-        p(1) = pt1cm_engygs*legacy_hartree_to_electronvolt
+        p(1) = pt1cm_engygs*hartree_to_electronvolt
         do istate=2, nstates
             i         = istate-1
-            p(istate) = pt4cm_engyes(i)*legacy_hartree_to_electronvolt
+            p(istate) = pt4cm_engyes(i)*hartree_to_electronvolt
         enddo
         ! now compute gradients
         call flatten_cartesian_coordinates(x, tx)
@@ -334,15 +337,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
         r1(2) = cartesian_distance(x(2,:), x(3,:))
         r1(3) = cartesian_distance(x(1,:), x(3,:))
         call evdrdx(tx, r1, drdx)
-        hr = 0.d0
-        gr = 0.d0
+        hr = 0.e0_wp
+        gr = 0.e0_wp
         do i=1, 3
-            hr(1,2,i) = usrocm_pengyij(i)/legacy_bohr_to_angstrom
-            hr(2,1,i) = -usrocm_pengyij(i)/legacy_bohr_to_angstrom
+            hr(1,2,i) = usrocm_pengyij(i)/bohr_to_angstrom
+            hr(2,1,i) = -usrocm_pengyij(i)/bohr_to_angstrom
         enddo
         do i=1, 3
-            gr(1,i) = pt1cm_degsdr(i)*51.422067
-            gr(2,i) = pt4cm_deesdr(i,1)*51.422067
+            gr(1,i) = pt1cm_degsdr(i)*hartree_per_bohr_to_ev_per_angstrom
+            gr(2,i) = pt4cm_deesdr(i,1)*hartree_per_bohr_to_ev_per_angstrom
         enddo
         call transform_internal_gradient_to_cartesian(hr, drdx, hx)
         call transform_internal_gradient_to_cartesian(gr, drdx, gx)
@@ -359,24 +362,26 @@ module chempotpy_h3_gen_dmbe_1987_pes
         !> @brief Evaluate EvdRdX for the H3_GEN_DMBE_1987 potential.
         subroutine evdrdx( x, r, drdx )
             use chempotpy_geometry, only: ordered_pair_distance_jacobian
+            use chempotpy_kinds,    only: wp
             implicit none
-            integer, parameter            :: first_atoms(3)  = [1, 2, 1]
-            integer, parameter            :: second_atoms(3) = [2, 3, 3]
-            double precision, intent(in)  :: x(9), r(3)
-            double precision, intent(out) :: drdx(3,9)
+            integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+            integer, parameter    :: second_atoms(3) = [2, 3, 3]
+            real(wp), intent(in)  :: x(9), r(3)
+            real(wp), intent(out) :: drdx(3,9)
             call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
         end subroutine evdrdx
 
         !> @brief Evaluate prepare_local_context for the H3_GEN_DMBE_1987 potential.
         subroutine prepare_local_context
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: cnvrtd, cnvrte
-            integer                     :: i, id, nexp
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: cnvrtd, cnvrte
+            integer             :: i, id, nexp
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -399,22 +404,22 @@ module chempotpy_h3_gen_dmbe_1987_pes
             ijconvert_icouple  = 1
             usricm_nasurf(1,2) = 0
             usricm_nasurf(2,1) = 0
-            cnvrtd             = 1.d0
-            if( usricm_nflag(1) .eq. 2 ) cnvrtd = .529177249d0
-            cnvrte = 1.d0
-            if( usricm_nflag(2) .eq. 2 ) cnvrte = 1000.d0
-            if( usricm_nflag(2) .eq. 3 ) cnvrte = 27.211395d0
-            if( usricm_nflag(2) .eq. 4 ) cnvrte = 627.5095d0
-            if( usricm_nflag(2) .eq. 5 ) cnvrte = 219474.6d0
-            if( usricm_nflag(2) .eq. 6 ) cnvrte = 2625.500d0
+            cnvrtd             = 1.e0_wp
+            if( usricm_nflag(1) .eq. 2 ) cnvrtd = .529177249e0_wp
+            cnvrte = 1.e0_wp
+            if( usricm_nflag(2) .eq. 2 ) cnvrte = 1000.e0_wp
+            if( usricm_nflag(2) .eq. 3 ) cnvrte = 27.211395e0_wp
+            if( usricm_nflag(2) .eq. 4 ) cnvrte = 627.5095e0_wp
+            if( usricm_nflag(2) .eq. 5 ) cnvrte = 219474.6e0_wp
+            if( usricm_nflag(2) .eq. 6 ) cnvrte = 2625.500e0_wp
             ijconvert_cnvrtq   = cnvrte/cnvrtd
             ijconvert_cnvrts   = cnvrte/cnvrtd
             ijconvert_cnvrtchi = cnvrte
             nexp               = 4
             do id = 1, 3
                 nexp             = nexp + 2
-                h3dmcm_dampa(id) = h3dmcm_alph0/dble(nexp)**h3dmcm_alph1
-                h3dmcm_dampb(id) = h3dmcm_bet0*exp(-h3dmcm_bet1*dble(nexp))
+                h3dmcm_dampa(id) = h3dmcm_alph0/real(nexp, wp)**h3dmcm_alph1
+                h3dmcm_dampb(id) = h3dmcm_bet0*exp(-h3dmcm_bet1*real(nexp, wp))
             enddo
             do i=1, 5
                 infocm_ref(i) = ' '
@@ -442,15 +447,16 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !      Internal, Definition: pt1cm_r(1) = pt1cm_r( first H -- second H)
             !                            pt1cm_r(2) = pt1cm_r(second H -- third H )
             !                            pt1cm_r(3) = pt1cm_r( third H -- first H )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: ce2, ce3, dc3(3), dlep(3), dlep2(3), dv2(3), dv3(3), dva(3), t, va, vc, vii, viii, vleps, &
+            real(wp) :: ce2, ce3, dc3(3), dlep(3), dlep2(3), dv2(3), dv3(3), dva(3), t, va, vc, vii, viii, vleps, &
                 & vleps2
-            integer                     :: i, indes
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
+            integer             :: i, indes
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -527,13 +533,14 @@ module chempotpy_h3_gen_dmbe_1987_pes
         !> @brief Evaluate H3COOR for the H3_GEN_DMBE_1987 potential.
         subroutine h3coor ( r1, r2, r3 )
             !   Calculates D3H symmetry coordinates and derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: arg, bet2, beta, dbt1, dbt2, dbt3, dgm1, dgm2, dgm3, gam2, gamma, phi3, r1, r2, r3, rtan, t, t1, t12, t2, t3, theta
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: arg, bet2, beta, dbt1, dbt2, dbt3, dgm1, dgm2, dgm3, gam2, gamma, phi3, r1, r2, r3, rtan, t, t1, t12, t2, t3, theta
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -549,47 +556,47 @@ module chempotpy_h3_gen_dmbe_1987_pes
             h3cocm_r22    = r2*r2
             h3cocm_r32    = r3*r3
             h3cocm_qcoord = h3cocm_r12+h3cocm_r22+h3cocm_r32
-            h3cocm_dq1    = 2.0d0*r1
-            h3cocm_dq2    = 2.0d0*r2
-            h3cocm_dq3    = 2.0d0*r3
+            h3cocm_dq1    = 2.0e0_wp*r1
+            h3cocm_dq2    = 2.0e0_wp*r2
+            h3cocm_dq3    = 2.0e0_wp*r3
             !   h3cocm_rho and its derivatives
-            h3cocm_rho   = sqrt(h3cocm_qcoord/3.0d0)
-            t            = 1.0d0/(6.0d0*h3cocm_rho)
+            h3cocm_rho   = sqrt(h3cocm_qcoord/3.0e0_wp)
+            t            = 1.0e0_wp/(6.0e0_wp*h3cocm_rho)
             h3cocm_drho1 = t*h3cocm_dq1
             h3cocm_drho2 = t*h3cocm_dq2
             h3cocm_drho3 = t*h3cocm_dq3
             !   h3cocm_s, h3cocm_cphi3 (cos(phi3)), and their derivatives
-            gamma     = 2.0d0*h3cocm_r12-h3cocm_r22-h3cocm_r32
+            gamma     = 2.0e0_wp*h3cocm_r12-h3cocm_r22-h3cocm_r32
             gam2      = gamma*gamma
-            dgm1      = 2.0d0*h3cocm_dq1
+            dgm1      = 2.0e0_wp*h3cocm_dq1
             dgm2      = -h3cocm_dq2
             dgm3      = -h3cocm_dq3
             beta      = h3dmcm_sqrt3*(h3cocm_r22-h3cocm_r32)
             bet2      = beta*beta
-            dbt1      = 0.0d0
+            dbt1      = 0.0e0_wp
             dbt2      = h3dmcm_sqrt3*h3cocm_dq2
             dbt3      = -h3dmcm_sqrt3*h3cocm_dq3
             t12       = bet2 + gam2
             t1        = sqrt(t12)
             h3cocm_s  = t1/h3cocm_qcoord
             h3cocm_s2 = h3cocm_s*h3cocm_s
-            if( h3cocm_s .eq. 0.0d0 )then
-                h3cocm_ds1 = 0.0d0
-                h3cocm_ds2 = 0.0d0
-                h3cocm_ds3 = 0.0d0
+            if( h3cocm_s .eq. 0.0e0_wp )then
+                h3cocm_ds1 = 0.0e0_wp
+                h3cocm_ds2 = 0.0e0_wp
+                h3cocm_ds3 = 0.0e0_wp
                 !   For h3cocm_s=0, h3cocm_cphi3 and its derivative should not be
                 !   used anywhere but set to zero anyway.
-                h3cocm_cphi3  = 0.0d0
-                h3cocm_dcphi1 = 0.0d0
-                h3cocm_dcphi2 = 0.0d0
-                h3cocm_dcphi3 = 0.0d0
+                h3cocm_cphi3  = 0.0e0_wp
+                h3cocm_dcphi1 = 0.0e0_wp
+                h3cocm_dcphi2 = 0.0e0_wp
+                h3cocm_dcphi3 = 0.0e0_wp
             else
                 h3cocm_ds1    = h3cocm_s*((beta*dbt1+gamma*dgm1)/t12 - h3cocm_dq1/h3cocm_qcoord)
                 h3cocm_ds2    = h3cocm_s*((beta*dbt2+gamma*dgm2)/t12 - h3cocm_dq2/h3cocm_qcoord)
                 h3cocm_ds3    = h3cocm_s*((beta*dbt3+gamma*dgm3)/t12 - h3cocm_dq3/h3cocm_qcoord)
-                t2            = 1.0d0/(t1*t12)
-                h3cocm_cphi3  = gamma*(3.0d0*bet2 - gam2)*t2
-                t3            = 3.0d0*beta*(3.0d0*gam2 - bet2)*t2/t12
+                t2            = 1.0e0_wp/(t1*t12)
+                h3cocm_cphi3  = gamma*(3.0e0_wp*bet2 - gam2)*t2
+                t3            = 3.0e0_wp*beta*(3.0e0_wp*gam2 - bet2)*t2/t12
                 h3cocm_dcphi1 = t3*(gamma*dbt1 - beta*dgm1)
                 h3cocm_dcphi2 = t3*(gamma*dbt2 - beta*dgm2)
                 h3cocm_dcphi3 = t3*(gamma*dbt3 - beta*dgm3)
@@ -597,19 +604,19 @@ module chempotpy_h3_gen_dmbe_1987_pes
             goto_block_10_741: block
                 if( usricm_nasurf(2,2) .eq. 0.and.usricm_nflag(4) .eq. 0 ) exit goto_block_10_741
                 arg = gamma/t1
-                if( arg .le. -1.d0 ) arg=-1.d0
-                if( arg .ge. 1.d0 ) arg=1.d0
+                if( arg .le. -1.e0_wp ) arg=-1.e0_wp
+                if( arg .ge. 1.e0_wp ) arg=1.e0_wp
                 theta            = acos(arg)
                 coupcm_phi       = pi-theta
-                phi3             = 3.0d0*coupcm_phi
+                phi3             = 3.0e0_wp*coupcm_phi
                 coupcm_sphi3     = sin(phi3)
                 rtan             = h3cocm_cphi3/coupcm_sphi3
                 coupcm_dsphi3(1) = -rtan*h3cocm_dcphi1
                 coupcm_dsphi3(2) = -rtan*h3cocm_dcphi2
                 coupcm_dsphi3(3) = -rtan*h3cocm_dcphi3
-                coupcm_dphi(1)   = -h3cocm_dcphi1/(coupcm_sphi3*3.d0)
-                coupcm_dphi(2)   = -h3cocm_dcphi2/(coupcm_sphi3*3.d0)
-                coupcm_dphi(3)   = -h3cocm_dcphi3/(coupcm_sphi3*3.d0)
+                coupcm_dphi(1)   = -h3cocm_dcphi1/(coupcm_sphi3*3.e0_wp)
+                coupcm_dphi(2)   = -h3cocm_dcphi2/(coupcm_sphi3*3.e0_wp)
+                coupcm_dphi(3)   = -h3cocm_dcphi3/(coupcm_sphi3*3.e0_wp)
             end block goto_block_10_741
         end subroutine h3coor
 
@@ -618,14 +625,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     Calculates 2-body correlation energies for singlet and triplet
             !     states of H2, the damping factors for the dispersion terms, and
             !     their 1st derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: d, dd, denom, dpol, fnexp, pol, rsave, t, t1, t2, tt, tt1, tt2, x
-            integer                     :: id, j, nexp
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: d, dd, denom, dpol, fnexp, pol, rsave, t, t1, t2, tt, tt1, tt2, x
+            integer             :: id, j, nexp
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !      DIMENSION RR(3)
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
@@ -638,11 +646,11 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !   Loop over three coordinates
             do j = 1, 3
                 rsave            = pt1cm_r(j)
-                h3crcm_corrs(j)  = 0.0d0
-                h3crcm_dcorrs(j) = 0.0d0
-                h3crcm_corrt(j)  = 0.0d0
-                h3crcm_dcorrt(j) = 0.0d0
-                t1               = 1.0d0/rsave
+                h3crcm_corrs(j)  = 0.0e0_wp
+                h3crcm_dcorrs(j) = 0.0e0_wp
+                h3crcm_corrt(j)  = 0.0e0_wp
+                h3crcm_dcorrt(j) = 0.0e0_wp
+                t1               = 1.0e0_wp/rsave
                 t                = t1*t1
                 t2               = t*t
                 t1               = t2*t1
@@ -650,23 +658,23 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 !      Loop over terms in dispersion expansion
                 do id = 1, 3
                     nexp  = nexp + 2
-                    fnexp = dble(nexp)
+                    fnexp = real(nexp, wp)
                     t2    = t2*t
                     t1    = t1*t
                     !     singlet
                     !        Calculate damping function for the nth dispersion coefficient
                     !        and its 1st derivative
-                    denom = h3dmcm_h2rm + 2.5d0*h3dmcm_h2r0
-                    x     = 2.0d0*rsave/denom
+                    denom = h3dmcm_h2rm + 2.5e0_wp*h3dmcm_h2r0
+                    x     = 2.0e0_wp*rsave/denom
                     tt    = h3dmcm_dampb(id)*x
                     tt1   = h3dmcm_dampa(id) + tt
                     pol   = x*tt1
                     dpol  = tt1 + tt
                     tt    = exp(-pol)
-                    tt1   = 1.0d0 - tt
+                    tt1   = 1.0e0_wp - tt
                     tt2   = tt1**(nexp-1)
                     d     = tt1*tt2
-                    dd    = 2.0d0*fnexp*dpol*tt*tt2/denom
+                    dd    = 2.0e0_wp*fnexp*dpol*tt*tt2/denom
                     !     store damping factors (including h3dmcm_chh coeff and 1/pt1cm_r**NEXP)
                     !     FOR later use in computing the 3-body correlation energy.
                     h3crcm_damp(id,j)  = h3dmcm_chh(id)*d*t2
@@ -676,17 +684,17 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     !     triplet
                     !        Calculate damping function for the nth dispersion
                     !        coefficient and its 1st derivative
-                    denom            = h3dmcm_h2rmt + 2.5d0*h3dmcm_h2r0
-                    x                = 2.0d0*rsave/denom
+                    denom            = h3dmcm_h2rmt + 2.5e0_wp*h3dmcm_h2r0
+                    x                = 2.0e0_wp*rsave/denom
                     tt               = h3dmcm_dampb(id)*x
                     tt1              = h3dmcm_dampa(id) + tt
                     pol              = x*tt1
                     dpol             = tt1 + tt
                     tt               = exp(-pol)
-                    tt1              = 1.0d0 - tt
+                    tt1              = 1.0e0_wp - tt
                     tt2              = tt1**(nexp-1)
                     d                = tt1*tt2
-                    dd               = 2.0d0*fnexp*dpol*tt*tt2/denom
+                    dd               = 2.0e0_wp*fnexp*dpol*tt*tt2/denom
                     h3crcm_corrt(j)  = h3crcm_corrt(j) - h3dmcm_chh(id)*d*t2
                     h3crcm_dcorrt(j) = h3crcm_dcorrt(j) - h3dmcm_chh(id)*(dd*t2 - fnexp*d*t1)
                 enddo
@@ -696,14 +704,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
         !> @brief Evaluate H3COR3 for the H3_GEN_DMBE_1987 potential.
         subroutine h3cor3 ( ce3, dc3 )
             !     Calculates 3-body correlation energy and its 1st derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: ce3, dc3(3), g(3), gd(3), h(3), hd(3), hysec, hytan, rr, sgnt, t, t1, t2
-            integer                     :: i, i2, i3, id
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: ce3, dc3(3), g(3), gd(3), h(3), hd(3), hysec, hytan, rr, sgnt, t, t1, t2
+            integer             :: i, i2, i3, id
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -712,10 +721,10 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  Common block for 2-body correlation energies   *
             !  and damping factors (computed in H3COR2)       *
             !                                                 *
-            ce3    = 0.0d0
-            dc3(1) = 0.0d0
-            dc3(2) = 0.0d0
-            dc3(3) = 0.0d0
+            ce3    = 0.0e0_wp
+            dc3(1) = 0.0e0_wp
+            dc3(2) = 0.0e0_wp
+            dc3(3) = 0.0e0_wp
             !   Loop over terms in dispersion expansion; dispersion damping
             !   FACTORS are computed in H3COR2 and passed through COMMON /H3CRCM/.
             do id = 1, 3
@@ -724,32 +733,32 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     rr = pt1cm_r(i)
                     !     Calculate G function and its 1st derivative
                     t     = h3dmcm_ck0(id)*exp(-h3dmcm_ck1(id)*(rr-h3dmcm_h2rm))
-                    g(i)  = 1.0d0 + t
+                    g(i)  = 1.0e0_wp + t
                     gd(i) = -h3dmcm_ck1(id)*t
                     !     Calculate H function and its 1st derivative.
                     t    = h3dmcm_ck1(id)*rr
-                    sgnt = 1.0d0
-                    if( t .lt. 0.0d0 )then
+                    sgnt = 1.0e0_wp
+                    if( t .lt. 0.0e0_wp )then
                         t    = -t
-                        sgnt = -1.0d0
+                        sgnt = -1.0e0_wp
                     endif
                     t     = exp(-t)
                     t2    = t*t
-                    t1    = 1.0d0/(1.0d0+t2)
-                    hysec = 2.0d0*t*t1
-                    hytan = sgnt*(1.0d0-t2)*t1
+                    t1    = 1.0e0_wp/(1.0e0_wp+t2)
+                    hysec = 2.0e0_wp*t*t1
+                    hytan = sgnt*(1.0e0_wp-t2)*t1
                     t1    = hytan**5
                     h(i)  = hytan*t1
-                    hd(i) = 6.0d0*h3dmcm_ck1(id)*t1*hysec*hysec
+                    hd(i) = 6.0e0_wp*h3dmcm_ck1(id)*t1*hysec*hysec
                 enddo
                 do i = 1, 3
                     i2      = mod(i, 3) + 1
                     i3      = mod(i+1, 3) + 1
-                    t       = 1.0d0 - 0.5d0*(g(i2)*h(i3) + g(i3)*h(i2))
+                    t       = 1.0e0_wp - 0.5e0_wp*(g(i2)*h(i3) + g(i3)*h(i2))
                     ce3     = ce3 + t*h3crcm_damp(id,i)
                     dc3(i)  = dc3(i) + t*h3crcm_ddamp(id,i)
-                    dc3(i2) = dc3(i2) - 0.5d0*(gd(i2)*h(i3)+g(i3)*hd(i2))*h3crcm_damp(id,i)
-                    dc3(i3) = dc3(i3) - 0.5d0*(g(i2)*hd(i3)+gd(i3)*h(i2))*h3crcm_damp(id,i)
+                    dc3(i2) = dc3(i2) - 0.5e0_wp*(gd(i2)*h(i3)+g(i3)*hd(i2))*h3crcm_damp(id,i)
+                    dc3(i3) = dc3(i3) - 0.5e0_wp*(g(i2)*hd(i3)+gd(i3)*h(i2))*h3crcm_damp(id,i)
                 enddo
             enddo
         end subroutine h3cor3
@@ -762,16 +771,17 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !   VLEPS2 IS LEPS UPPER SURFACE.
             !   DLEP(3) ARE LEPS LOWER SURFACE DERIVATIVES
             !   DLEP2(3) "   "   UPPER    "       "
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: at, dat, desdr, df(3), dlep(3), dlep2(3), dq(3), dr, dwe, dxj(3,3), es, et, exch, f, f1, &
+            real(wp) :: at, dat, desdr, df(3), dlep(3), dlep2(3), dq(3), dr, dwe, dxj(3,3), es, et, exch, f, f1, &
                 & f2, f3, fterm, omf, qsum, rr, rri, t, t1, t2, tdc, tdq, tds, texch, vleps, vleps2, we, xj(3), xterm, xterm1, &
                 & xterm2, xterm3
-            integer                     :: i, j
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer             :: i, j
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -785,48 +795,49 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !  (J. Chem. Phys., 82,5597,1985; and references therein) is used
             !  throughout.
             t1 = -h3dmcm_az2*h3cocm_qcoord
-            if( h3cocm_s .eq. 0.0d0 )then
+            if( h3cocm_s .eq. 0.0e0_wp )then
                 f     = exp(t1*h3cocm_qcoord)
-                t1    = 2.0d0*t1*f
+                t1    = 2.0e0_wp*t1*f
                 df(1) = t1*h3cocm_dq1
                 df(2) = t1*h3cocm_dq2
                 df(3) = t1*h3cocm_dq3
             else
-                t2    = 1.0d0 + h3cocm_s*h3cocm_s2*h3cocm_cphi3
+                t2    = 1.0e0_wp + h3cocm_s*h3cocm_s2*h3cocm_cphi3
                 f     = exp(t1*h3cocm_qcoord*t2)
                 t1    = t1*f
-                tdq   = 2.0d0*t2
+                tdq   = 2.0e0_wp*t2
                 t2    = h3cocm_s2*h3cocm_qcoord
-                tds   = 3.0d0*h3cocm_cphi3*t2
+                tds   = 3.0e0_wp*h3cocm_cphi3*t2
                 tdc   = h3cocm_s*t2
                 df(1) = t1*(tdq*h3cocm_dq1 + tds*h3cocm_ds1 + tdc*h3cocm_dcphi1)
                 df(2) = t1*(tdq*h3cocm_dq2 + tds*h3cocm_ds2 + tdc*h3cocm_dcphi2)
                 df(3) = t1*(tdq*h3cocm_dq3 + tds*h3cocm_ds3 + tdc*h3cocm_dcphi3)
             endif
-            omf  = 1.0d0 - f
-            qsum = 0.0d0
+            omf  = 1.0e0_wp - f
+            qsum = 0.0e0_wp
             do i = 1, 3
-                dq(i) = 0.0d0
+                dq(i) = 0.0e0_wp
             enddo
             !  Loop over 3 coordinates
             do i = 1, 3
                 rr  = pt1cm_r(i)
-                rri = 1.0d0/rr
+                rri = 1.0e0_wp/rr
                 !     Calculate extended-Hartree-Fock curve for ground singlet state of
                 !     H2 [A.J.C. Varandas & J.D. Silva, J. Chem. Soc. Faraday II
                 !     (submitted)] and 1st derivative of 2-body extended-Hartree-Fock
                 !     curve for the ground-singlet state of H2.
-                dr    = rr - h3dmcm_h2rm
-                t     = exp(-h3dmcm_hfgam*dr)
-                es    = -h3dmcm_hfd*(1.0d0 + dr*(h3dmcm_hfa1 + dr*(h3dmcm_hfa2 + dr*h3dmcm_hfa3)))*t
-                desdr = -h3dmcm_hfgam*es - h3dmcm_hfd*(h3dmcm_hfa1 + dr*(2.0d0*h3dmcm_hfa2 + 3.0d0*dr*h3dmcm_hfa3))*t
+                dr = rr - h3dmcm_h2rm
+                t  = exp(-h3dmcm_hfgam*dr)
+                es = -h3dmcm_hfd*(1.0e0_wp + dr*(h3dmcm_hfa1 + dr*(h3dmcm_hfa2 + dr*h3dmcm_hfa3)))*t
+                desdr = -h3dmcm_hfgam*es - h3dmcm_hfd*(h3dmcm_hfa1 + dr*(2.0e0_wp*h3dmcm_hfa2 + 3.0e0_wp*dr* &
+                    & h3dmcm_hfa3))*t
                 !     Compute the HFACE (Hartree-Fock-approximate correlation energy)
                 !     potential for the lowest triplet state of H2 [A.J.C. Varandas &
                 !     J. Brandao Mol. Phys.,45,1982,857] without the 2-body correlation
                 !     energy.
                 t   = rr*(h3dmcm_h2tb1 + rr*(h3dmcm_h2tb2 + rr*(h3dmcm_h2tb3 + rr*h3dmcm_h2tb4)))
                 at  = h3dmcm_h2ta*exp(-t)*rri
-                t   = h3dmcm_h2tb1 + rr*(2.0d0*h3dmcm_h2tb2 + rr*(3.0d0*h3dmcm_h2tb3 + rr*4.0d0*h3dmcm_h2tb4))
+                t   = h3dmcm_h2tb1 + rr*(2.0e0_wp*h3dmcm_h2tb2 + rr*(3.0e0_wp*h3dmcm_h2tb3 + rr*4.0e0_wp*h3dmcm_h2tb4))
                 dat = -at*(t + rri)
                 !     Add in triplet and subtract singlet 2-body correlation terms
                 at  = at + h3crcm_corrt(i) - h3crcm_corrs(i)
@@ -834,37 +845,37 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 !     Calculate effective diatomic triplet state curve.
                 t   = exp(-h3dmcm_al3*rr)
                 we  = (h3dmcm_al0 + rr*(h3dmcm_al1 + rr*h3dmcm_al2))*t
-                dwe = (h3dmcm_al1 + 2.0d0*h3dmcm_al2*rr)*t - h3dmcm_al3*we
+                dwe = (h3dmcm_al1 + 2.0e0_wp*h3dmcm_al2*rr)*t - h3dmcm_al3*we
                 !     Triplet energy
                 et = f*we + omf*at
                 !     Contribution to coulomb term
-                qsum = qsum + 0.5d0*(es + et)
+                qsum = qsum + 0.5e0_wp*(es + et)
                 !     Contribution to exchange term
-                xj(i) = 0.5d0*(es - et)
+                xj(i) = 0.5e0_wp*(es - et)
                 !     Derivatives of coulomb and exchange parts
                 fterm = we - at
                 do j = 1, 3
-                    t        = 0.5d0*fterm*df(j)
+                    t        = 0.5e0_wp*fterm*df(j)
                     dq(j)    = dq(j) + t
                     dxj(i,j) = -t
                 enddo
                 t        = f*dwe + omf*dat
-                dq(i)    = dq(i) + 0.5d0*(desdr + t)
-                dxj(i,i) = dxj(i,i) + 0.5d0*(desdr - t)
+                dq(i)    = dq(i) + 0.5e0_wp*(desdr + t)
+                dxj(i,i) = dxj(i,i) + 0.5e0_wp*(desdr - t)
             enddo
             f1     = (xj(1) - xj(2))**2
             f2     = (xj(2) - xj(3))**2
             f3     = (xj(3) - xj(1))**2
-            exch   = sqrt(0.5d0*(f1 + f2 + f3))
+            exch   = sqrt(0.5e0_wp*(f1 + f2 + f3))
             vleps  = qsum - exch
             vleps2 = qsum + exch
-            xterm1 = 2.0d0*xj(1) - xj(2) - xj(3)
-            xterm2 = 2.0d0*xj(2) - xj(1) - xj(3)
-            xterm3 = 2.0d0*xj(3) - xj(1) - xj(2)
+            xterm1 = 2.0e0_wp*xj(1) - xj(2) - xj(3)
+            xterm2 = 2.0e0_wp*xj(2) - xj(1) - xj(3)
+            xterm3 = 2.0e0_wp*xj(3) - xj(1) - xj(2)
             do i = 1, 3
                 texch = exch
-                if( texch .le. 0.0d0 ) texch = 1.0d0
-                xterm    = 0.5d0/texch*(xterm1*dxj(1,i)  + xterm2*dxj(2,i) + xterm3*dxj(3,i))
+                if( texch .le. 0.0e0_wp ) texch = 1.0e0_wp
+                xterm    = 0.5e0_wp/texch*(xterm1*dxj(1,i)  + xterm2*dxj(2,i) + xterm3*dxj(3,i))
                 dlep(i)  = dq(i) - xterm
                 dlep2(i) = dq(i) + xterm
             enddo
@@ -873,14 +884,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
         !> @brief Evaluate H3VA for the H3_GEN_DMBE_1987 potential.
         subroutine h3va ( r1, r2, r3, va, dva )
             !     Calculates Va correction energy and its 1st derivative.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: dv, dva(3), expva, r1, r2, r3, t, t1, t2, t3, t4, va
-            integer                     :: j
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: dv, dva(3), expva, r1, r2, r3, t, t1, t2, t3, t4, va
+            integer             :: j
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -894,47 +906,48 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     +                DAMP(3,3),DDAMP(3,3)
             t     = h3dmcm_alpha5*h3cocm_per2
             expva = exp(-t*h3cocm_per)
-            if( expva .eq. 0.0d0 )then
-                va     = 0.0d0
-                dva(1) = 0.0d0
-                dva(2) = 0.0d0
-                dva(3) = 0.0d0
+            if( expva .eq. 0.0e0_wp )then
+                va     = 0.0e0_wp
+                dva(1) = 0.0e0_wp
+                dva(2) = 0.0e0_wp
+                dva(3) = 0.0e0_wp
             else
-                va = 0.0d0
-                dv = 0.0d0
+                va = 0.0e0_wp
+                dv = 0.0e0_wp
                 t3 = (r1-r2)*(r2-r3)*(r3-r1)
                 t1 = t3*t3
-                t2 = 1.0d0
-                t4 = 2.0d0
+                t2 = 1.0e0_wp
+                t4 = 2.0e0_wp
                 do j=1, 4
                     t2 = t2*t1
                     va = va + h3dmcm_xpar(j)*t2
                     dv = dv + t4*h3dmcm_xpar(j)*t3
                     t3 = t3*t1
-                    t4 = t4 + 2.0d0
+                    t4 = t4 + 2.0e0_wp
                 enddo
                 va     = va*expva
                 t1     = dv*expva
-                t2     = 3.0d0*t*va
-                dva(1) = t1*(r2-r3)*(r3+r2-2.0d0*r1) - t2
-                dva(2) = t1*(r3-r1)*(r1+r3-2.0d0*r2) - t2
-                dva(3) = t1*(r1-r2)*(r1+r2-2.0d0*r3) - t2
+                t2     = 3.0e0_wp*t*va
+                dva(1) = t1*(r2-r3)*(r3+r2-2.0e0_wp*r1) - t2
+                dva(2) = t1*(r3-r1)*(r1+r3-2.0e0_wp*r2) - t2
+                dva(3) = t1*(r1-r2)*(r1+r2-2.0e0_wp*r3) - t2
             endif
         end subroutine h3va
 
         !> @brief Evaluate H3VII for the H3_GEN_DMBE_1987 potential.
         subroutine h3vii ( r1, r2, r3, e, dv2 )
             !     Calculates VII correction energy and its 1st derivative.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: cos1, cos2, cos3, dr12, dr23, dr31, dv2(3), e, eb1, eb1p1, eb1p2, eb1p3, eb1pr, eb1pwb, &
+            real(wp) :: cos1, cos2, cos3, dr12, dr23, dr31, dv2(3), e, eb1, eb1p1, eb1p2, eb1p3, eb1pr, eb1pwb, &
                 & eb1t, eb2, eb2p1, eb2p2, eb2p3, eb2pr, eb2pwb, eb3t, eb4, eb4a, eb4ap1, eb4ap2, eb4ap3, eb4apr, eb4apw, eb4b, &
                 & eb4bp1, eb4bp2, eb4bp3, eb4bpr, eb4bpw, eb4p1, eb4p2, eb4p3, eq, eqp1, eqp2, eqp3, exp1, exp2, exp3, r1, r1i, r2, &
                 & r2i, r3, r3i, ri, t1, t2, t3, wb, wb1p, wb2, wb2p, wb3p
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -947,18 +960,18 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     +                CORRT(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
             !   Compute B1 function.
-            r1i  = 1.0d0/r1
-            r2i  = 1.0d0/r2
-            r3i  = 1.0d0/r3
-            cos1 = 0.5d0*r2i*r3i*(h3cocm_r12-h3cocm_r22-h3cocm_r32)
-            cos2 = 0.5d0*r1i*r3i*(h3cocm_r22-h3cocm_r12-h3cocm_r32)
-            cos3 = 0.5d0*r1i*r2i*(h3cocm_r32-h3cocm_r12-h3cocm_r22)
-            wb   = 1.0d0+cos1+cos2+cos3
+            r1i  = 1.0e0_wp/r1
+            r2i  = 1.0e0_wp/r2
+            r3i  = 1.0e0_wp/r3
+            cos1 = 0.5e0_wp*r2i*r3i*(h3cocm_r12-h3cocm_r22-h3cocm_r32)
+            cos2 = 0.5e0_wp*r1i*r3i*(h3cocm_r22-h3cocm_r12-h3cocm_r32)
+            cos3 = 0.5e0_wp*r1i*r2i*(h3cocm_r32-h3cocm_r12-h3cocm_r22)
+            wb   = 1.0e0_wp+cos1+cos2+cos3
             wb2  = wb*wb
             !   WB derivatives
-            wb1p = (r1*r3i - 1.0d0)*r2i - r3i - (cos2+cos3)*r1i
-            wb2p = (r2*r3i - 1.0d0)*r1i - r3i - (cos1+cos3)*r2i
-            wb3p = (r3*r2i - 1.0d0)*r1i - r2i - (cos1+cos2)*r3i
+            wb1p = (r1*r3i - 1.0e0_wp)*r2i - r3i - (cos2+cos3)*r1i
+            wb2p = (r2*r3i - 1.0e0_wp)*r1i - r3i - (cos1+cos3)*r2i
+            wb3p = (r3*r2i - 1.0e0_wp)*r1i - r2i - (cos1+cos2)*r3i
             !   EB1 term
             exp1 = exp(-h3dmcm_beta1*h3cocm_per)
             exp3 = exp(-h3dmcm_beta3*h3cocm_per)
@@ -966,7 +979,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             eb3t = (h3dmcm_xpar(14) + h3dmcm_xpar(15)*h3cocm_per2)*exp3
             eb1  = wb*(eb1t + eb3t)
             !   EB1 derivatives
-            eb1pr  = wb*(-h3dmcm_beta1*eb1t - h3dmcm_beta3*eb3t + h3dmcm_xpar(6)*exp1 + 2.0d0*h3cocm_per* &
+            eb1pr  = wb*(-h3dmcm_beta1*eb1t - h3dmcm_beta3*eb3t + h3dmcm_xpar(6)*exp1 + 2.0e0_wp*h3cocm_per* &
                 & h3dmcm_xpar(15)*exp3)
             eb1pwb = eb1t + eb3t
             eb1p1  = eb1pwb*wb1p + eb1pr
@@ -977,8 +990,8 @@ module chempotpy_h3_gen_dmbe_1987_pes
             exp2 = exp(-t1*h3cocm_per)
             eb2  = wb2*(h3dmcm_xpar(7) + wb*(h3dmcm_xpar(8) + wb*h3dmcm_xpar(9)))*exp2
             !   EB2 derivatives
-            eb2pwb = wb*(2.0d0*h3dmcm_xpar(7) + wb*(3.0d0*h3dmcm_xpar(8) + wb*4.0d0*h3dmcm_xpar(9)) )*exp2
-            eb2pr  = -2.0d0*t1*eb2
+            eb2pwb = wb*(2.0e0_wp*h3dmcm_xpar(7) + wb*(3.0e0_wp*h3dmcm_xpar(8) + wb*4.0e0_wp*h3dmcm_xpar(9)) )*exp2
+            eb2pr  = -2.0e0_wp*t1*eb2
             eb2p1  = eb2pwb*wb1p + eb2pr
             eb2p2  = eb2pwb*wb2p + eb2pr
             eb2p3  = eb2pwb*wb3p + eb2pr
@@ -988,8 +1001,8 @@ module chempotpy_h3_gen_dmbe_1987_pes
             t3   = wb*h3dmcm_xpar(11)*exp2
             eb4a = wb*(t2 + t3)
             !      EB4A derivatives
-            eb4apw = t2 + 2.0d0*t3
-            eb4apr = -wb*(h3dmcm_beta1*t2 + 2.0d0*t1*t3)
+            eb4apw = t2 + 2.0e0_wp*t3
+            eb4apr = -wb*(h3dmcm_beta1*t2 + 2.0e0_wp*t1*t3)
             eb4ap1 = eb4apw*wb1p + eb4apr
             eb4ap2 = eb4apw*wb2p + eb4apr
             eb4ap3 = eb4apw*wb3p + eb4apr
@@ -999,7 +1012,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             eb4b = wb*(t2 + t3)
             !      EB4B derivatives
             eb4bpw = t2 + t3
-            eb4bpr = -wb*(h3dmcm_beta1*t2 + 2.0d0*t1*t3)
+            eb4bpr = -wb*(h3dmcm_beta1*t2 + 2.0e0_wp*t1*t3)
             eb4bp1 = eb4bpw*wb1p + eb4bpr
             eb4bp2 = eb4bpw*wb2p + eb4bpr
             eb4bp3 = eb4bpw*wb3p + eb4bpr
@@ -1007,9 +1020,9 @@ module chempotpy_h3_gen_dmbe_1987_pes
             dr23   = r2 - r3
             dr31   = r3 - r1
             eq     = dr12*dr12 + dr23*dr23 + dr31*dr31
-            eqp1   = 2.0d0*(dr12 - dr31)
-            eqp2   = 2.0d0*(-dr12 + dr23)
-            eqp3   = 2.0d0*(-dr23 + dr31)
+            eqp1   = 2.0e0_wp*(dr12 - dr31)
+            eqp2   = 2.0e0_wp*(-dr12 + dr23)
+            eqp3   = 2.0e0_wp*(-dr23 + dr31)
             ri     = r1i + r2i + r3i
             eb4    = eb4a*ri + eb4b*eq
             !   EB4 derivatives
@@ -1025,13 +1038,14 @@ module chempotpy_h3_gen_dmbe_1987_pes
         !> @brief Evaluate H3VIII for the H3_GEN_DMBE_1987 potential.
         subroutine h3viii ( viii, dv3 )
             !     Calculates VIII correction energy and it 1st derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: dv3(3), expv3, t1, t2, t3, t4, t5, tdcph, tdrho, tds, viii
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: dv3(3), expv3, t1, t2, t3, t4, t5, tdcph, tdrho, tds, viii
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -1043,29 +1057,29 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !      COMMON /H3CRCM/ CORRS(3),DCORRS(3),
             !     +                CORRT(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
-            if( h3cocm_s .eq. 0.0d0 )then
-                viii   = 0.0d0
-                dv3(1) = 0.0d0
-                dv3(2) = 0.0d0
-                dv3(3) = 0.0d0
+            if( h3cocm_s .eq. 0.0e0_wp )then
+                viii   = 0.0e0_wp
+                dv3(1) = 0.0e0_wp
+                dv3(2) = 0.0e0_wp
+                dv3(3) = 0.0e0_wp
             else
                 t1    = h3cocm_rho - h3dmcm_rhol
                 t5    = h3dmcm_alph2*t1
                 expv3 = exp(-t5*t1)
-                if( expv3 .eq. 0.0d0 )then
-                    viii   = 0.0d0
-                    dv3(1) = 0.0d0
-                    dv3(2) = 0.0d0
-                    dv3(3) = 0.0d0
+                if( expv3 .eq. 0.0e0_wp )then
+                    viii   = 0.0e0_wp
+                    dv3(1) = 0.0e0_wp
+                    dv3(2) = 0.0e0_wp
+                    dv3(3) = 0.0e0_wp
                 else
                     t1     = h3cocm_s2*h3cocm_cphi3
-                    t2     = 1.0d0 + h3cocm_s*t1
+                    t2     = 1.0e0_wp + h3cocm_s*t1
                     t3     = h3cocm_s2*t2
                     t4     = h3dmcm_cd0 + h3dmcm_cd1*h3cocm_rho
                     viii   = t3*t4*expv3
-                    tds    = (2.0d0*h3cocm_s*t2 + 3.0d0*h3cocm_s2*t1)*t4
+                    tds    = (2.0e0_wp*h3cocm_s*t2 + 3.0e0_wp*h3cocm_s2*t1)*t4
                     tdcph  = h3cocm_s2*h3cocm_s*h3cocm_s2*t4
-                    tdrho  = t3*(h3dmcm_cd1 - 2.0d0*t5*t4)
+                    tdrho  = t3*(h3dmcm_cd1 - 2.0e0_wp*t5*t4)
                     dv3(1) = (tds*h3cocm_ds1 + tdcph*h3cocm_dcphi1 + tdrho*h3cocm_drho1)*expv3
                     dv3(2) = (tds*h3cocm_ds2 + tdcph*h3cocm_dcphi2 + tdrho*h3cocm_drho2)*expv3
                     dv3(3) = (tds*h3cocm_ds3 + tdcph*h3cocm_dcphi3 + tdrho*h3cocm_drho3)*expv3
@@ -1075,15 +1089,16 @@ module chempotpy_h3_gen_dmbe_1987_pes
 
         !> @brief Evaluate CAPF for the H3_GEN_DMBE_1987 potential.
         subroutine capf( r1, r2, r3 )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            double precision            :: arg, brak, capk, darg, dcapk(4), dcphi(3), denom, dfu(3), dfz(3), dgz(3), ds(3), dx(3), &
-                & f(3,jsurf), fu, fz, gz, r1, r2, r3, rcapf(3), x, x2, xi, xi3
-            integer                     :: i
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            real(wp)            :: arg, brak, capk, darg, dcapk(4), dcphi(3), denom, dfu(3), dfz(3), dgz(3), ds(3), dx(3), &
+                & f(3, jsurf), fu, fz, gz, r1, r2, r3, rcapf(3), x, x2, xi, xi3
+            integer :: i
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -1105,26 +1120,27 @@ module chempotpy_h3_gen_dmbe_1987_pes
             dcphi(1) = h3cocm_dcphi1
             dcphi(2) = h3cocm_dcphi2
             dcphi(3) = h3cocm_dcphi3
-            x        = sqrt(h3cocm_qcoord/3.0d0)
-            xi       = 1.0d0/x
-            xi3      = x/3.0d0
+            x        = sqrt(h3cocm_qcoord/3.0e0_wp)
+            xi       = 1.0e0_wp/x
+            xi3      = x/3.0e0_wp
             x2       = x*x
             call kappa(x, capk, dcapk)
-            fz    = 0.375d0*x*dcapk(1)
-            fu    = 0.03515625d0*(x*dcapk(1)-x2*dcapk(2)+x2*xi3*dcapk(3))
-            gz    = 0.046875d0*(-x*dcapk(1)+x2*dcapk(2))
+            fz    = 0.375e0_wp*x*dcapk(1)
+            fu    = 0.03515625e0_wp*(x*dcapk(1)-x2*dcapk(2)+x2*xi3*dcapk(3))
+            gz    = 0.046875e0_wp*(-x*dcapk(1)+x2*dcapk(2))
             denom = fz+gz*h3cocm_cphi3*h3cocm_s+fu*h3cocm_s2
             arg   = gz*coupcm_sphi3*h3cocm_s/denom
             !     FCT=coupcm_phi-ATAN(ARG)
             do i=1, 3
-                dx(i)           = rcapf(i)*xi
-                dfz(i)          = 0.125d0*dx(i)*(dcapk(1)+x*dcapk(2))
-                dfu(i)          = 0.01171875d0*dx(i)*(dcapk(1)-x*dcapk(2)+x2*xi3*dcapk(4))
-                dgz(i)          = 0.015625d0*dx(i)*(-dcapk(1)+x*dcapk(2)+x2*dcapk(3))
-                brak            = h3cocm_s*dgz(i)+gz*ds(i)
-                darg            = -arg*(dfz(i)+h3cocm_cphi3*brak+h3cocm_s*(gz*dcphi(i)+h3cocm_s*dfu(i)+ 2.0d0*fu*ds(i)))
+                dx(i)  = rcapf(i)*xi
+                dfz(i) = 0.125e0_wp*dx(i)*(dcapk(1)+x*dcapk(2))
+                dfu(i) = 0.01171875e0_wp*dx(i)*(dcapk(1)-x*dcapk(2)+x2*xi3*dcapk(4))
+                dgz(i) = 0.015625e0_wp*dx(i)*(-dcapk(1)+x*dcapk(2)+x2*dcapk(3))
+                brak   = h3cocm_s*dgz(i)+gz*ds(i)
+                darg            = -arg*(dfz(i)+h3cocm_cphi3*brak+h3cocm_s*(gz*dcphi(i)+h3cocm_s*dfu(i)+ 2.0e0_wp*fu* &
+                    & ds(i)))
                 darg            = (darg+gz*h3cocm_s*coupcm_dsphi3(i)+coupcm_sphi3*brak)/denom
-                pt5cm_engyij(i) = coupcm_dphi(i)-1.0d0/(1.0d0+arg**2)*darg
+                pt5cm_engyij(i) = coupcm_dphi(i)-1.0e0_wp/(1.0e0_wp+arg**2)*darg
             enddo
         end subroutine capf
 
@@ -1132,14 +1148,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
         subroutine h2cor2 ( rr )
             !     CALCULATES 1-4 DERIVATIVES OF 2-BODY CORRELATION TERMS FOR
             !     BOTH SINGLET AND TRIPLET STATES AND RETURNS THEIR DIFFERENCE
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: d, d2, d3, d4, dcorrs, dcorrt, dd, denom, fnexp, pol, rr, rsave, t, t1, t2, tem2, tem3, tem4, tt2, x
-            integer                     :: id, j, nexp
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: d, d2, d3, d4, dcorrs, dcorrt, dd, denom, fnexp, pol, rr, rsave, t, t1, t2, tem2, tem3, tem4, tt2, x
+            integer             :: id, j, nexp
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -1152,14 +1169,14 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     +                cor2cm_corrt(3),DCORRT(3),
             !     +                DAMP(3,3),DDAMP(3,3)
             rsave        = rr
-            cor2cm_corrs = 0.0d0
-            dcorrs       = 0.0d0
-            cor2cm_corrt = 0.0d0
-            dcorrt       = 0.0d0
+            cor2cm_corrs = 0.0e0_wp
+            dcorrs       = 0.0e0_wp
+            cor2cm_corrt = 0.0e0_wp
+            dcorrt       = 0.0e0_wp
             do j=1, 4
-                cor2cm_dcor2(j) = 0.0d0
+                cor2cm_dcor2(j) = 0.0e0_wp
             enddo
-            t1   = 1.0d0/rsave
+            t1   = 1.0e0_wp/rsave
             t    = t1*t1
             t2   = t*t
             t1   = t2*t1
@@ -1167,12 +1184,12 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !      Loop over terms in dispersion expansion
             do id = 1, 3
                 nexp  = nexp + 2
-                fnexp = dble(nexp)
+                fnexp = real(nexp, wp)
                 t2    = t2*t
                 t1    = t1*t
                 !******SINGLET
-                denom        = h3dmcm_h2rm + 2.5d0*h3dmcm_h2r0
-                dmpcm_y      = 2.0d0/denom
+                denom        = h3dmcm_h2rm + 2.5e0_wp*h3dmcm_h2r0
+                dmpcm_y      = 2.0e0_wp/denom
                 x            = rsave*dmpcm_y
                 dmpcm_parb   = h3dmcm_dampb(id)
                 dmpcm_tt     = h3dmcm_dampb(id)*x
@@ -1180,10 +1197,10 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 pol          = x*dmpcm_tt1
                 dmpcm_dpol   = dmpcm_tt1 + dmpcm_tt
                 dmpcm_tt     = exp(-pol)
-                dmpcm_tt1    = 1.0d0 - dmpcm_tt
+                dmpcm_tt1    = 1.0e0_wp - dmpcm_tt
                 tt2          = dmpcm_tt1**(nexp-1)
                 d            = dmpcm_tt1*tt2
-                dd           = 2.0d0*fnexp*dmpcm_dpol*dmpcm_tt*tt2/denom
+                dd           = 2.0e0_wp*fnexp*dmpcm_dpol*dmpcm_tt*tt2/denom
                 cor2cm_corrs = cor2cm_corrs - h3dmcm_chh(id)*d*t2
                 dcorrs       = dcorrs - h3dmcm_chh(id)*(dd*t2-fnexp*d*t1)
                 call damp(rsave, nexp, d2, d3, d4)
@@ -1191,18 +1208,18 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 tem3 = d3
                 tem4 = d4
                 !*****TRIPLET
-                denom        = h3dmcm_h2rmt + 2.5d0*h3dmcm_h2r0
-                dmpcm_y      = 2.0d0/denom
+                denom        = h3dmcm_h2rmt + 2.5e0_wp*h3dmcm_h2r0
+                dmpcm_y      = 2.0e0_wp/denom
                 x            = rsave*dmpcm_y
                 dmpcm_tt     = h3dmcm_dampb(id)*x
                 dmpcm_tt1    = h3dmcm_dampa(id) + dmpcm_tt
                 pol          = x*dmpcm_tt1
                 dmpcm_dpol   = dmpcm_tt1 + dmpcm_tt
                 dmpcm_tt     = exp(-pol)
-                dmpcm_tt1    = 1.0d0 - dmpcm_tt
+                dmpcm_tt1    = 1.0e0_wp - dmpcm_tt
                 tt2          = dmpcm_tt1**(nexp-1)
                 d            = dmpcm_tt1*tt2
-                dd           = 2.0d0*fnexp*dmpcm_dpol*dmpcm_tt*tt2/denom
+                dd           = 2.0e0_wp*fnexp*dmpcm_dpol*dmpcm_tt*tt2/denom
                 cor2cm_corrt = cor2cm_corrt - h3dmcm_chh(id)*d*t2
                 dcorrt       = dcorrt - h3dmcm_chh(id)*(dd*t2 - fnexp*d*t1)
                 call damp(rsave, nexp, d2, d3, d4)
@@ -1218,14 +1235,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !      CALCULATES 2ND,3RD AND 4TH DERIVATIVES OF 2-BODY CORRELATION
             !      ENERGIES FOR SINGLET AND TRIPLET STATES FOR USE IN NON-ADIABATIC
             !      COUPLINGS OF H3 SURFACES 1 AND 2. SENT TO SUBROUTINE H3COR2
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: bm2, bm3, bm4, d1b, d2, d2b, d3, d3b, d4, d4b, dpol2, fr, rmp, rr, rrn, t, th, tm, tm2, tm3, tp, tp2, tp3, tw
-            integer                     :: n
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: bm2, bm3, bm4, d1b, d2, d2b, d3, d3b, d4, d4b, dpol2, fr, rmp, rr, rrn, t, th, tm, tm2, tm3, tp, tp2, tp3, tw
+            integer             :: n
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !      COMMON /H3DMCM/ ALPH2,ALPHA5,ALPH0,ALPH1,
             !     +                AL0,AL1,AL2,AL3,AZ2,
@@ -1252,20 +1270,20 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     +                DAMP(3,3),DDAMP(3,3)
             dpol2 = dmpcm_dpol**2
             d1b   = dmpcm_y*dmpcm_dpol*dmpcm_texp
-            d2b   = dmpcm_y**2*(2.0d0*dmpcm_dampb-dpol2)*dmpcm_texp
-            d3b   = dmpcm_y**3*dmpcm_dpol*(dpol2-6.0d0*dmpcm_dampb)*dmpcm_texp
-            d4b   = dmpcm_y**4*(-12.d0*dmpcm_dampb*dmpcm_dampb+dpol2*(12.d0*dmpcm_dampb-dpol2))*dmpcm_texp
-            t     = dble(n)
-            tm    = dble(n-1)
-            tm2   = dble(n-2)
-            tm3   = dble(n-3)
-            tp    = dble(n+1)
-            tp2   = dble(n+2)
-            tp3   = dble(n+3)
-            th    = 3.0d0
-            tw    = 2.0d0
-            fr    = 4.0d0
-            rr    = 1.0d0/rmp
+            d2b   = dmpcm_y**2*(2.0e0_wp*dmpcm_dampb-dpol2)*dmpcm_texp
+            d3b   = dmpcm_y**3*dmpcm_dpol*(dpol2-6.0e0_wp*dmpcm_dampb)*dmpcm_texp
+            d4b   = dmpcm_y**4*(-12.e0_wp*dmpcm_dampb*dmpcm_dampb+dpol2*(12.e0_wp*dmpcm_dampb-dpol2))*dmpcm_texp
+            t     = real(n, wp)
+            tm    = real(n-1, wp)
+            tm2   = real(n-2, wp)
+            tm3   = real(n-3, wp)
+            tp    = real(n+1, wp)
+            tp2   = real(n+2, wp)
+            tp3   = real(n+3, wp)
+            th    = 3.0e0_wp
+            tw    = 2.0e0_wp
+            fr    = 4.0e0_wp
+            rr    = 1.0e0_wp/rmp
             rrn   = rr**n
             bm4   = dmpcm_b**(n-4)
             bm3   = dmpcm_b*bm4
@@ -1282,14 +1300,15 @@ module chempotpy_h3_gen_dmbe_1987_pes
         !> @brief Evaluate KAPPA for the H3_GEN_DMBE_1987 potential.
         subroutine kappa( qlc, capk, dcapk )
             !     CALCULATES FUNCTION CAPK AND ITS FIRST ROUR DERIVATIVES
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: at, capk, d1uehf, d1vhf, d1w, d2uehf, d2vhf, d2w, d3uehf, d3vhf, d3w, d4uehf, d4vhf, d4w, &
+            real(wp) :: at, capk, d1uehf, d1vhf, d1w, d2uehf, d2vhf, d2w, d3uehf, d3vhf, d3w, d4uehf, d4vhf, d4w, &
                 & dat, dcapk(4), desdr, dr, dwe, es, fzero, o1, o2, omfz, p1, p2, p3, q1, q2, q3, qlc, rr, rri, t, t1, we
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -1305,40 +1324,41 @@ module chempotpy_h3_gen_dmbe_1987_pes
             t1    = -h3dmcm_az2*h3cocm_qcoord
             fzero = exp(t1*h3cocm_qcoord)
             rr    = qlc
-            rri   = 1.0d0/rr
+            rri   = 1.0e0_wp/rr
             !*****CALCULATE 1-4 DERIVATIVES OF VEHF
             dr    = rr - h3dmcm_h2rm
             t     = exp(-h3dmcm_hfgam*dr)
-            es    = -h3dmcm_hfd*(1.0d0 + dr*(h3dmcm_hfa1 + dr*(h3dmcm_hfa2 + dr*h3dmcm_hfa3)))*t
-            desdr = -h3dmcm_hfgam*es - h3dmcm_hfd*(h3dmcm_hfa1 + dr*(2.0d0*h3dmcm_hfa2 + 3.0d0*dr*h3dmcm_hfa3))*t
-            p1    = h3dmcm_hfa1+2.0d0*h3dmcm_hfa2*dr+3.0d0*h3dmcm_hfa3*dr*dr
-            p3    = 6.0d0*h3dmcm_hfa3
-            p2    = 2.0d0*h3dmcm_hfa2 +p3*dr
+            es    = -h3dmcm_hfd*(1.0e0_wp + dr*(h3dmcm_hfa1 + dr*(h3dmcm_hfa2 + dr*h3dmcm_hfa3)))*t
+            desdr = -h3dmcm_hfgam*es - h3dmcm_hfd*(h3dmcm_hfa1 + dr*(2.0e0_wp*h3dmcm_hfa2 + 3.0e0_wp*dr*h3dmcm_hfa3))*t
+            p1    = h3dmcm_hfa1+2.0e0_wp*h3dmcm_hfa2*dr+3.0e0_wp*h3dmcm_hfa3*dr*dr
+            p3    = 6.0e0_wp*h3dmcm_hfa3
+            p2    = 2.0e0_wp*h3dmcm_hfa2 +p3*dr
             d1vhf = desdr
             d2vhf = -h3dmcm_hfgam*d1vhf-h3dmcm_hfd*t*(p2-h3dmcm_hfgam*p1)
-            d3vhf = -h3dmcm_hfgam*d2vhf-h3dmcm_hfd*t*(p3-2.d0*h3dmcm_hfgam*p2+h3dmcm_hfgam*h3dmcm_hfgam*p1)
-            d4vhf    = -h3dmcm_hfgam*d3vhf+h3dmcm_hfd*t*(3.d0*h3dmcm_hfgam*p3-3.d0*h3dmcm_hfgam*h3dmcm_hfgam*p2+ &
+            d3vhf = -h3dmcm_hfgam*d2vhf-h3dmcm_hfd*t*(p3-2.e0_wp*h3dmcm_hfgam*p2+h3dmcm_hfgam*h3dmcm_hfgam*p1)
+            d4vhf    = -h3dmcm_hfgam*d3vhf+h3dmcm_hfd*t*(3.e0_wp*h3dmcm_hfgam*p3-3.e0_wp*h3dmcm_hfgam*h3dmcm_hfgam*p2+ &
                 & h3dmcm_hfgam*h3dmcm_hfgam*h3dmcm_hfgam*p1)
             dcapk(1) = d1vhf
             dcapk(2) = d2vhf
             dcapk(3) = d3vhf
             dcapk(4) = d4vhf
             !*****CALCULATE 1-4 DERIVATIVES OF UEHF
-            t      = rr*(h3dmcm_h2tb1 + rr*(h3dmcm_h2tb2 + rr*(h3dmcm_h2tb3 + rr*h3dmcm_h2tb4)))
-            at     = h3dmcm_h2ta*exp(-t)*rri
-            t      = h3dmcm_h2tb1 + rr*(2.0d0*h3dmcm_h2tb2 + rr*(3.0d0*h3dmcm_h2tb3 + rr*4.0d0*h3dmcm_h2tb4))+rri
+            t  = rr*(h3dmcm_h2tb1 + rr*(h3dmcm_h2tb2 + rr*(h3dmcm_h2tb3 + rr*h3dmcm_h2tb4)))
+            at = h3dmcm_h2ta*exp(-t)*rri
+            t      = h3dmcm_h2tb1 + rr*(2.0e0_wp*h3dmcm_h2tb2 + rr*(3.0e0_wp*h3dmcm_h2tb3 + rr*4.0e0_wp* &
+                & h3dmcm_h2tb4))+rri
             dat    = -at*t
-            q1     = -rri**2+2.d0*h3dmcm_h2tb2+6.d0*h3dmcm_h2tb3*rr+12.d0*h3dmcm_h2tb4*rr**2
-            q2     = 2.d0*rri**3+6.d0*h3dmcm_h2tb3+24.d0*h3dmcm_h2tb4*rr
-            q3     = -6.d0*rri**4+24.d0*h3dmcm_h2tb4
+            q1     = -rri**2+2.e0_wp*h3dmcm_h2tb2+6.e0_wp*h3dmcm_h2tb3*rr+12.e0_wp*h3dmcm_h2tb4*rr**2
+            q2     = 2.e0_wp*rri**3+6.e0_wp*h3dmcm_h2tb3+24.e0_wp*h3dmcm_h2tb4*rr
+            q3     = -6.e0_wp*rri**4+24.e0_wp*h3dmcm_h2tb4
             d1uehf = dat
             d2uehf = -t*d1uehf-at*q1
-            d3uehf = -t*d2uehf-2.d0*q1*d1uehf-at*q2
-            d4uehf = -t*d3uehf-3.d0*q1*d2uehf-3.d0*q2*d1uehf-at*q3
+            d3uehf = -t*d2uehf-2.e0_wp*q1*d1uehf-at*q2
+            d4uehf = -t*d3uehf-3.e0_wp*q1*d2uehf-3.e0_wp*q2*d1uehf-at*q3
             !     Add in triplet and subtract singlet 2-body correlation terms
             at = at + cor2cm_corrt - cor2cm_corrs
             !*****INCLUDE CORRELATION PART OF CAPK,(USUBC-VSUBC)*(1-FZERO)
-            omfz     = 1.0d0-fzero
+            omfz     = 1.0e0_wp-fzero
             dcapk(1) = dcapk(1)-(d1uehf+cor2cm_dcor2(1))*omfz
             dcapk(2) = dcapk(2)-(d2uehf+cor2cm_dcor2(2))*omfz
             dcapk(3) = dcapk(3)-(d3uehf+cor2cm_dcor2(3))*omfz
@@ -1346,13 +1366,13 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !*****CALCULATE 1-4 DERIVATIVES OF W-EFFECTIVE
             t        = exp(-h3dmcm_al3*rr)
             we       = (h3dmcm_al0 + rr*(h3dmcm_al1 + rr*h3dmcm_al2))*t
-            dwe      = (h3dmcm_al1 + 2.0d0*h3dmcm_al2*rr)*t - h3dmcm_al3*we
-            o2       = 2.0d0*h3dmcm_al2
+            dwe      = (h3dmcm_al1 + 2.0e0_wp*h3dmcm_al2*rr)*t - h3dmcm_al3*we
+            o2       = 2.0e0_wp*h3dmcm_al2
             o1       = h3dmcm_al1+o2*rr
             d1w      = dwe
             d2w      = -h3dmcm_al3*d1w+t*(o2-h3dmcm_al3*o1)
-            d3w      = -h3dmcm_al3*d2w+t*(h3dmcm_al3*o1-2.0d0*o2)*h3dmcm_al3
-            d4w      = -h3dmcm_al3*d3w+t*(3.0d0*o2-h3dmcm_al3*o1)*h3dmcm_al3**2
+            d3w      = -h3dmcm_al3*d2w+t*(h3dmcm_al3*o1-2.0e0_wp*o2)*h3dmcm_al3
+            d4w      = -h3dmcm_al3*d3w+t*(3.0e0_wp*o2-h3dmcm_al3*o1)*h3dmcm_al3**2
             dcapk(1) = dcapk(1)-fzero*d1w
             dcapk(2) = dcapk(2)-fzero*d2w
             dcapk(3) = dcapk(3)-fzero*d3w
@@ -1362,13 +1382,14 @@ module chempotpy_h3_gen_dmbe_1987_pes
 
         !> @brief Evaluate POTINFO for the H3_GEN_DMBE_1987 potential.
         subroutine potinfo
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i, j, k, kmax
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
+            integer             :: i, j, k, kmax
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -1456,34 +1477,35 @@ module chempotpy_h3_gen_dmbe_1987_pes
 
         !> @brief Evaluate ANCVRT for the H3_GEN_DMBE_1987 potential.
         subroutine ancvrt
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi         = 3.141592653589793d0
-            double precision, parameter :: clight     = 2.99792458d08
-            double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
-            double precision, parameter :: cepsilon_0 = 1.0d0/(cmu_0*clight**2)
-            double precision, parameter :: ce         = 1.602176462d-19
-            double precision, parameter :: cplanck    = 6.62606876d-34
-            double precision, parameter :: cm_e       = 9.10938188d-31
-            double precision, parameter :: cang       = 1.0d-10
-            double precision, parameter :: cavogadro  = 6.02214199d23
-            double precision, parameter :: ckcal      = 4.184d10
-            double precision, parameter :: htomillh   = 1000.d0
-            double precision, parameter :: htoev      = 27.2113834d0
-            double precision, parameter :: htokcal    = 627.509470d0
-            double precision, parameter :: htowave    = 219474.631d0
-            double precision, parameter :: htokj      = 2625.49962d0
-            double precision, parameter :: bohr_a     = .5291772083d0
-            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
-            character(len=3)   :: periodic_1(7,32)
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
+            integer, parameter  :: n3atom     = 75
+            integer, parameter  :: natom      = 25
+            integer, parameter  :: isurf      = 5
+            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
+            real(wp), parameter :: pi         = 3.141592653589793e0_wp
+            real(wp), parameter :: clight     = 2.99792458e08_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
+            real(wp), parameter :: ce         = 1.602176462e-19_wp
+            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
+            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
+            real(wp), parameter :: cang       = 1.0e-10_wp
+            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
+            real(wp), parameter :: ckcal      = 4.184e10_wp
+            real(wp), parameter :: htomillh   = 1000.e0_wp
+            real(wp), parameter :: htoev      = 27.2113834e0_wp
+            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htowave    = 219474.631e0_wp
+            real(wp), parameter :: htokj      = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)    :: periodic_1(7,32)
+            character(len=2)    :: name1(natom)
+            character(len=2)    :: name2(natom)
+            character(len=1)    :: iblank
+            character(len=20)   :: distance
+            character(len=20)   :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -1708,9 +1730,9 @@ module chempotpy_h3_gen_dmbe_1987_pes
             elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
-            utilcm_cnvrtd  = 1.d0
-            utilcm_cnvrte  = 1.d0
-            utilcm_cnvrtde = 1.d0
+            utilcm_cnvrtd  = 1.e0_wp
+            utilcm_cnvrte  = 1.e0_wp
+            utilcm_cnvrtde = 1.e0_wp
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
@@ -1735,6 +1757,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
         !> @brief Evaluate CARTOU for the H3_GEN_DMBE_1987 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: i, j
             integer, parameter :: n3atom = 75
@@ -1747,9 +1770,10 @@ module chempotpy_h3_gen_dmbe_1987_pes
         !> @brief Evaluate CARTTOR for the H3_GEN_DMBE_1987 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: coordinate_status
-            double precision   :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
+            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
             integer            :: i, ind, k, l
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
@@ -1763,6 +1787,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
 
         !> @brief Evaluate EUNITZERO for the H3_GEN_DMBE_1987 potential.
         subroutine eunitzero
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j
             character(len=75)  :: ref(5)
@@ -1785,15 +1810,16 @@ module chempotpy_h3_gen_dmbe_1987_pes
 
         !> @brief Evaluate RTOCART for the H3_GEN_DMBE_1987 potential.
         subroutine rtocart
+            use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
-                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
-                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
+            real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom, isurf), &
+                & ygs(n3atom), yij(n3atom, jsurf), za, zb, zc, zd
+            integer :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -1817,21 +1843,21 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 enddo
             elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
-                    utilcm_dgscartnu(i,1) = 0.d0
-                    utilcm_dgscartnu(i,2) = 0.d0
-                    utilcm_dgscartnu(i,3) = 0.d0
+                    utilcm_dgscartnu(i,1) = 0.e0_wp
+                    utilcm_dgscartnu(i,2) = 0.e0_wp
+                    utilcm_dgscartnu(i,3) = 0.e0_wp
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(i,1,j1) = 0.d0
-                            utilcm_descartnu(i,2,j1) = 0.d0
-                            utilcm_descartnu(i,3,j1) = 0.d0
+                            utilcm_descartnu(i,1,j1) = 0.e0_wp
+                            utilcm_descartnu(i,2,j1) = 0.e0_wp
+                            utilcm_descartnu(i,3,j1) = 0.e0_wp
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(i,1,j2) = 0.d0
-                            utilcm_dijcartnu(i,2,j2) = 0.d0
-                            utilcm_dijcartnu(i,3,j2) = 0.d0
+                            utilcm_dijcartnu(i,1,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,2,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,3,j2) = 0.e0_wp
                         enddo
                     endif
                     do j = 1, infocm_natoms
@@ -1871,12 +1897,12 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j=utilcm_ksdiag, utilcm_kediag
-                            yes(i,j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
+                            yes(i, j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do k=utilcm_ksoffd, utilcm_keoffd
-                            yij(i,k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
+                            yij(i, k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
                         enddo
                     endif
                 enddo
@@ -1889,22 +1915,22 @@ module chempotpy_h3_gen_dmbe_1987_pes
                     utilcm_dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(1,k,j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                            utilcm_descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                            utilcm_descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                            utilcm_descartnu(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
+                            utilcm_descartnu(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
+                            utilcm_descartnu(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(1,k,j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3,j2) - term23*yij(2,j2)
+                            utilcm_dijcartnu(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
+                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
+                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
                         enddo
                     endif
                 enddo
             elseif( infocm_icartr .eq. 4 )then
-                wh   = 1.007825d0
-                wf   = 18.99840d0
+                wh   = 1.007825e0_wp
+                wf   = 18.99840e0_wp
                 sum  = wh+wf
                 eps  = wf/sum
                 epsp = wh/sum
@@ -1914,8 +1940,8 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 ss1  = sin(theta1)
                 ss2  = sin(theta2)
                 ss3  = sin(phi)
-                ya   = 0.0d0
-                yb   = 0.0d0
+                ya   = 0.0e0_wp
+                yb   = 0.0e0_wp
                 t0   = r1*u1
                 za   = -epsp*t0
                 zb   = eps*t0
@@ -1941,6 +1967,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
 
         !> @brief Evaluate DEDCOU for the H3_GEN_DMBE_1987 potential.
         subroutine dedcou
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k
             integer, parameter :: n3atom = 75
@@ -1995,13 +2022,14 @@ end module chempotpy_h3_gen_dmbe_1987_pes
 !> @brief Expose H3_GEN_DMBE_1987 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_h3_gen_dmbe_1987_pes, only: evaluate
+    use chempotpy_kinds,                only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 2
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 2
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

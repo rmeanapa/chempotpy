@@ -166,17 +166,15 @@
     gradient: eV/angstrom
     nonadiabatic coupling: 1/angstrom
 
-    If the original subroutine output units are different from those above, 
-    we use the following conversion factors:
+    If the original subroutine output units are different from those above,
+    CHEMPOTPY uses the versioned NIST CODATA 2022 conversion contract:
 
-    1 bohr = 0.529177211 angstrom 
-    1 hartree = 27.211386 eV
-    1 eV = 23.0609 kcal/mol
-    1 kcal/mol = 349.757 cm^-1
-    therefore, 
-    1 hartree = 627.5190514 kcal/mol = 219479.1808631 cm^-1
-    1 eV = 8065.7112013 cm^-1
-    1 hartree/bohr = 27.211386 eV/0.529177211 angstrom = 51.422067 eV/angstrom
+    1 bohr = 0.529177210544 angstrom
+    1 hartree = 27.211386245981 eV
+    1 eV = 23.06054783061903 kcal/mol
+    1 hartree = 627.5094740628975 kcal/mol = 219474.63136314 cm^-1
+    1 eV = 8065.543937349212 cm^-1
+    1 hartree/bohr = 51.42206751119799 eV/angstrom
 
 
     ====A Complete Example==== 

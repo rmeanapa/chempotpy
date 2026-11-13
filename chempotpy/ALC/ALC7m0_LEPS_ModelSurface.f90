@@ -7,12 +7,9 @@
 !                    J. Phys. Chem. 90, 3766-3774 (1986)
 !   Note:            In A-L-C, A = acceptor group, L = H (D),
 !                    and C = methyl donor
-!   Calling Sequence:
-!      PREPOT - initializes the potential's variables and
-!               must be called once before any calls to POT
-!      POT    - driver for the evaluation of the energy and the derivati
-!               of the energy with respect to the coordinates for a give
-!               geometric configuration
+!   Interface:
+!      PES      - public Cartesian-coordinate evaluator
+!      EVALUATE - private internal-coordinate evaluator
 !   Units:
 !      energies    - hartrees
 !      coordinates - bohr
@@ -24,7 +21,7 @@
 !      infinitely far from the LC diatomic and R(LC) set equal to the
 !      LC equilibrium diatomic value.
 !   Parameters:
-!      Set in the BLOCK DATA subprogram PTPARM
+!      Embedded as immutable module parameters
 !   Coordinates:
 !      Internal, Definition: R(1) = R(Al-L)
 !                            R(2) = R(L-C)
@@ -58,6 +55,7 @@
 
 !> @brief Implement ALC7m0_LEPS_ModelSurface, a potential energy surface for ALC.
 module chempotpy_alc7m0_leps_modelsurface_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -66,30 +64,32 @@ module chempotpy_alc7m0_leps_modelsurface_pes
 
     !> @brief Evaluate the ALC7m0_LEPS_ModelSurface potential energy surface for ALC.
     subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
-        use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
-        use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+        use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
+        use chempotpy_kinds,              only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: dedrr(3), e, rr(3), v
-        integer                       :: i, iatom, idir, istate, j
-        double precision              :: tx(9), r2(3), dedx(9), drdx(3,9)
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: dedrr(3), e, rr(3), v
+        integer               :: i, iatom, idir, istate, j
+        real(wp)              :: tx(9), r2(3), dedx(9), drdx(3,9)
         !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         call flatten_cartesian_coordinates(x, tx)
         ! input cartesian is ClHH
-        call legacy_triatomic_distances_to_bohr(x, rr)
-        dedrr = 0.d0
+        call triatomic_distances_to_bohr(x, rr)
+        dedrr = 0.e0_wp
         call pot(rr, igrad, e, dedrr)
-        e     = e*legacy_hartree_to_electronvolt
-        dedrr = dedrr*51.422067
-        r2    = rr*legacy_bohr_to_angstrom
+        e     = e*hartree_to_electronvolt
+        dedrr = dedrr*hartree_per_bohr_to_ev_per_angstrom
+        r2    = rr*bohr_to_angstrom
         call evdrdx(tx, r2, drdx)
         call transform_internal_gradient_to_cartesian(dedrr, drdx, dedx)
         if( igrad == 0 )then
@@ -115,52 +115,56 @@ end module chempotpy_alc7m0_leps_modelsurface_pes
 !> @brief Expose ALC7m0_LEPS_ModelSurface through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_alc7m0_leps_modelsurface_pes, only: evaluate
+    use chempotpy_kinds,                        only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the ALC7m0_LEPS_ModelSurface potential.
 subroutine evdrdx( x, r, drdx )
     use chempotpy_geometry, only: ordered_pair_distance_jacobian
+    use chempotpy_kinds,    only: wp
     implicit none
-    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter            :: second_atoms(3) = [2, 3, 3]
-    double precision, intent(in)  :: x(9), r(3)
-    double precision, intent(out) :: drdx(3,9)
+    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter    :: second_atoms(3) = [2, 3, 3]
+    real(wp), intent(in)  :: x(9), r(3)
+    real(wp), intent(out) :: drdx(3,9)
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
-!> @brief Evaluate PREPOT for the ALC7m0_LEPS_ModelSurface potential.
+!> @brief Own the immutable fit state for the ALC7m0_LEPS_ModelSurface potential.
 module chempotpy_alc7m0_leps_modelsurface_pot_legacy_state_e48204dc
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
-    double precision, parameter :: fit_d(3)    = [73.00000d0, 73.00000d0, 80.00000d0]
-    double precision, parameter :: fit_re(3)   = [1.10000d0, 1.10000d0, 1.54000d0]
-    double precision, parameter :: fit_beta(3) = [2.17500d0, 2.17500d0, 2.07800d0]
-    double precision, parameter :: fit_z(3)    = [0.00000d0, 0.00000d0, -0.18900d0]
-    double precision, parameter :: fit_an1     = 0.026d0
-    double precision, parameter :: fit_fns     = 0.004d0
+    real(wp), parameter :: fit_d(3)    = [73.00000e0_wp, 73.00000e0_wp, 80.00000e0_wp]
+    real(wp), parameter :: fit_re(3)   = [1.10000e0_wp, 1.10000e0_wp, 1.54000e0_wp]
+    real(wp), parameter :: fit_beta(3) = [2.17500e0_wp, 2.17500e0_wp, 2.07800e0_wp]
+    real(wp), parameter :: fit_z(3)    = [0.00000e0_wp, 0.00000e0_wp, -0.18900e0_wp]
+    real(wp), parameter :: fit_an1     = 0.026e0_wp
+    real(wp), parameter :: fit_fns     = 0.004e0_wp
 
     contains
 
     !> @brief Evaluate dispatch.
     subroutine evaluate( rr, nder, e, dedrr )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, parameter   :: root2 = 1.41421356d0
-        double precision, parameter   :: ckcal = 627.5095d0
-        double precision, parameter   :: cangs = 0.529177106d0
-        double precision, intent(in)  :: rr(3)
-        integer, intent(in)           :: nder
-        double precision, intent(out) :: e, dedrr(3)
-        double precision              :: an1, b(3), beta(3), coul(3), d(3), delta, do4z(3), ens, ensp1, ensp2, ensp3, &
+        real(wp), parameter   :: root2 = 1.41421356e0_wp
+        real(wp), parameter   :: ckcal = 627.5095e0_wp
+        real(wp), parameter   :: cangs = 0.529177106e0_wp
+        real(wp), intent(in)  :: rr(3)
+        integer, intent(in)   :: nder
+        real(wp), intent(out) :: e, dedrr(3)
+        real(wp)              :: an1, b(3), beta(3), coul(3), d(3), delta, do4z(3), ens, ensp1, ensp2, ensp3, &
             & enspr, enspwn, exch(3), exns, fns, op3z(3), r, r2, r3, rad, re(3), s, t, top3z(3), tzp3(3), wn, wn2, &
             & wnp1, wnp2, wnp3, wnt, x(3), x21, x22, x23, z(3), zp3(3), zpo(3)
         integer :: i
@@ -177,13 +181,13 @@ module chempotpy_alc7m0_leps_modelsurface_pot_legacy_state_e48204dc
             re(i)   = re(i)/cangs
             beta(i) = beta(i)*cangs
             !   COMPUTE USEFUL CONSTANTS
-            zpo(i)   = 1.0d0 + z(i)
-            op3z(i)  = 1.0d0 + 3.0d0*z(i)
-            top3z(i) = 2.0d0*op3z(i)
-            zp3(i)   = z(i) + 3.0d0
-            tzp3(i)  = 2.0d0*zp3(i)
-            do4z(i)  = d(i)/4.0d0/zpo(i)
-            b(i)     = beta(i)*do4z(i)*2.0d0!
+            zpo(i)   = 1.0e0_wp + z(i)
+            op3z(i)  = 1.0e0_wp + 3.0e0_wp*z(i)
+            top3z(i) = 2.0e0_wp*op3z(i)
+            zp3(i)   = z(i) + 3.0e0_wp
+            tzp3(i)  = 2.0e0_wp*zp3(i)
+            do4z(i)  = d(i)/4.0e0_wp/zpo(i)
+            b(i)     = beta(i)*do4z(i)*2.0e0_wp!
         enddo
         !   Check the value NDER for validity.
         !    Compute the eLEPS part of the potential energy
@@ -199,15 +203,15 @@ module chempotpy_alc7m0_leps_modelsurface_pot_legacy_state_e48204dc
             if( nder .ne. 1 ) exit goto_block_700_249
             s = exch(1) + exch(2) + exch(3)
             do i = 1, 3
-                dedrr(i) = 0.d0
-                if( x(i) .lt. 1.d-30 ) cycle
-                t = (3.0d0*exch(i)-s)/root2*(op3z(i)*x(i)-zp3(i))
+                dedrr(i) = 0.e0_wp
+                if( x(i) .lt. 1.e-30_wp ) cycle
+                t = (3.0e0_wp*exch(i)-s)/root2*(op3z(i)*x(i)-zp3(i))
                 !   If RAD is very small compared to T print a warning to the file linke
                 !   to FORTRAN IPTPRT and set T/RAD equal to T.
-                if( abs(rad) .lt. 1.d-32.and.abs(t) .gt. 1.d-12 )then
+                if( abs(rad) .lt. 1.e-32_wp.and.abs(t) .gt. 1.e-12_wp )then
                     write(*, '(/,2X,''In the potential routine: T, RAD = '',1P,2E15.7, /,2X,''T/RAD has been set equal to' // &
                         ' T'')') t, rad
-                elseif( abs(rad) .gt. 1.d-32 )then
+                elseif( abs(rad) .gt. 1.e-32_wp )then
                     t = t/rad
                 endif
                 dedrr(i) = b(i)*x(i)*(t -zp3(i)*x(i)+op3z(i))
@@ -219,7 +223,7 @@ module chempotpy_alc7m0_leps_modelsurface_pot_legacy_state_e48204dc
         r2   = r*r
         r3   = r2*r
         exns = exp(-fns*r3)
-        ens  = 0.d0
+        ens  = 0.e0_wp
         wnt  = (rr(1)-rr(2))*(rr(2)-rr(3))*(rr(3)-rr(1))
         wn   = abs(wnt)
         wn2  = wn*wn
@@ -229,20 +233,20 @@ module chempotpy_alc7m0_leps_modelsurface_pot_legacy_state_e48204dc
         !    Compute the derivative of the Va term with respect to the
         !    coordinates, if NDER = 1
         if( nder .eq. 1 )then
-            delta = -1.d0
-            if( wn .eq. wnt ) delta =1.d0
-            ensp1  = 0.d0
-            ensp2  = 0.d0
-            ensp3  = 0.d0
-            enspwn = (an1*wn*2.d0)*exns
-            enspr  = (-3.d0)*fns*r2*ens
+            delta = -1.e0_wp
+            if( wn .eq. wnt ) delta =1.e0_wp
+            ensp1  = 0.e0_wp
+            ensp2  = 0.e0_wp
+            ensp3  = 0.e0_wp
+            enspwn = (an1*wn*2.e0_wp)*exns
+            enspr  = (-3.e0_wp)*fns*r2*ens
             ! DENS/DXI=(DENS/DWN)(DWN/DXI)+(DENS/DR)(DR/DXI)
             x21      = rr(1)*rr(1)
             x22      = rr(2)*rr(2)
             x23      = rr(3)*rr(3)
-            wnp1     = (2.d0*rr(1)*(rr(3)-rr(2))+x22-x23)*delta
-            wnp2     = (2.d0*rr(2)*(rr(1)-rr(3))+x23-x21)*delta
-            wnp3     = (2.d0*rr(3)*(rr(2)-rr(1))+x21-x22)*delta
+            wnp1     = (2.e0_wp*rr(1)*(rr(3)-rr(2))+x22-x23)*delta
+            wnp2     = (2.e0_wp*rr(2)*(rr(1)-rr(3))+x23-x21)*delta
+            wnp3     = (2.e0_wp*rr(3)*(rr(2)-rr(1))+x21-x22)*delta
             ensp1    = enspwn*wnp1+enspr
             ensp2    = enspwn*wnp2+enspr
             ensp3    = enspwn*wnp3+enspr
@@ -256,10 +260,11 @@ end module chempotpy_alc7m0_leps_modelsurface_pot_legacy_state_e48204dc
 !> @brief Evaluate the ALC potential for one set of bond distances.
 subroutine pot( rr, nder, e, dedrr )
     use chempotpy_alc7m0_leps_modelsurface_pot_legacy_state_e48204dc, only: evaluate
+    use chempotpy_kinds,                                              only: wp
     implicit none
-    double precision, intent(in)  :: rr(3)
-    integer, intent(in)           :: nder
-    double precision, intent(out) :: e, dedrr(3)
+    real(wp), intent(in)  :: rr(3)
+    integer, intent(in)   :: nder
+    real(wp), intent(out) :: e, dedrr(3)
     call evaluate(rr, nder, e, dedrr)
 end subroutine pot
 

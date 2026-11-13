@@ -2,7 +2,7 @@
 
 import sys
 
-from .python import adapters, contract, registry, runtime, units
+from .python import adapters, constants, contract, registry, runtime, units
 from .python.adapters import LegacyAdiabaticF2PyAdapter
 from .python.contract import (
     PESCapabilities,
@@ -19,6 +19,7 @@ from .python.runtime import LegacyRuntime, SurfaceRuntimeError
 # Preserve the established chempotpy.core.<module> import paths while keeping
 # their implementations together under chempotpy/core/python.
 sys.modules[__name__ + ".adapters"] = adapters
+sys.modules[__name__ + ".constants"] = constants
 sys.modules[__name__ + ".contract"] = contract
 sys.modules[__name__ + ".registry"] = registry
 sys.modules[__name__ + ".runtime"] = runtime

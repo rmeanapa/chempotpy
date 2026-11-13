@@ -330,14 +330,13 @@ def manual():
     If the original subroutine output units are different from those above, 
     we use the following conversion factors:
 
-    1 bohr = 0.529177211 angstrom 
-    1 hartree = 27.211386 eV
-    1 eV = 23.0609 kcal/mol
-    1 kcal/mol = 349.757 cm^-1
-    therefore, 
-    1 hartree = 627.5190514 kcal/mol = 219479.1808631 cm^-1
-    1 eV = 8065.7112013 cm^-1
-    1 hartree/bohr = 27.211386 eV/0.529177211 angstrom = 51.422067 eV/angstrom
+    CHEMPOTPY uses the versioned NIST CODATA 2022 conversion contract:
+    1 bohr = 0.529177210544 angstrom
+    1 hartree = 27.211386245981 eV
+    1 eV = 23.06054783061903 kcal/mol
+    1 hartree = 627.5094740628975 kcal/mol = 219474.63136314 cm^-1
+    1 eV = 8065.543937349212 cm^-1
+    1 hartree/bohr = 51.42206751119799 eV/angstrom
 
 
     ====A Complete Example==== 
@@ -1039,7 +1038,9 @@ def detail(system):
 def get_script_dir():
     return os.path.dirname(os.path.abspath(inspect.stack()[1].filename))
 
-requires_read_file_list=[
+# These surfaces retain a historical path argument in their compiled ABI.
+# Their model parameters are embedded; the argument is not used for file I/O.
+legacy_path_argument_list=[
 'NO2_2Ap_PIPNN', 'NO2_4Ap_PIPNN', 'NO2_6Ap_PIPNN',
 'HO3_PIPNN', 'O2H3_PIPNN', 'FH2O_PIPNN', 'FH2O_SOC_PIPNN',
 'N4_1A_PIPNN', 'CH4OCl_PIPNN', 'C2H2O_PIPNN', 'CH2O2_PIPNN',
@@ -1093,7 +1094,7 @@ def p(system, surface, geom):
     xyz, rank_ordered = module0.check(system, surface, geom)
     module_name = f"chempotpy.{system}.{surface}"
     module = importlib.import_module(module_name)
-    if surface in requires_read_file_list:
+    if surface in legacy_path_argument_list:
         v, g, d = module.pes(xyz, 0, parent_path)
     elif surface in Al_list:
         natoms=int(len(geom))
@@ -1129,7 +1130,7 @@ def pg(system, surface, geom):
     xyz, rank_ordered = module0.check(system, surface, geom)
     module_name = f"chempotpy.{system}.{surface}"
     module = importlib.import_module(module_name)
-    if surface in requires_read_file_list:
+    if surface in legacy_path_argument_list:
         v, g, d = module.pes(xyz, 1, parent_path)
     elif surface in Al_list:
         natoms=int(len(geom))
@@ -1165,7 +1166,7 @@ def pgd(system, surface, geom):
     xyz, rank_ordered = module0.check(system, surface, geom)
     module_name = f"chempotpy.{system}.{surface}"
     module = importlib.import_module(module_name)
-    if surface in requires_read_file_list:
+    if surface in legacy_path_argument_list:
         v, g, d = module.pes(xyz, 2, parent_path)
     elif surface in Al_list:
         natoms=int(len(geom))
@@ -1202,7 +1203,7 @@ def pn(system, surface, geom):
     xyz, rank_ordered = module0.check(system, surface, geom)
     module_name = f"chempotpy.{system}.{surface}"
     module = importlib.import_module(module_name)
-    if surface in requires_read_file_list:
+    if surface in legacy_path_argument_list:
         v, g, d = module.pes(xyz, 0, parent_path)
     elif surface in Al_list:
         natoms=int(len(geom))
@@ -1237,7 +1238,7 @@ def pn(system, surface, geom):
         for idir in range(3):
             xyz_displaced=np.copy(xyz)
             xyz_displaced[iatom][idir]=xyz_displaced[iatom][idir]+0.001
-            if surface in requires_read_file_list:
+            if surface in legacy_path_argument_list:
                 v_plus, g, d = module.pes(xyz_displaced, 0, parent_path)
             elif surface in Al_list:
                 natoms=int(len(geom))
@@ -1266,7 +1267,7 @@ def pn(system, surface, geom):
                 v_plus, g, d = module.pes(xyz_displaced, 0)
             xyz_displaced=np.copy(xyz)
             xyz_displaced[iatom][idir]=xyz_displaced[iatom][idir]-0.001
-            if surface in requires_read_file_list:
+            if surface in legacy_path_argument_list:
                 v_minus, g, d = module.pes(xyz_displaced, 0, parent_path)
             elif surface in Al_list:
                 natoms=int(len(geom))
@@ -1306,7 +1307,7 @@ def u(system, surface, geom):
     module_name = f"chempotpy.{system}.{surface}"
     module = importlib.import_module(module_name)
     if surface in multi_state_list:
-        if surface in requires_read_file_list:
+        if surface in legacy_path_argument_list:
             u, ug = module.dpem(xyz, 0, parent_path)
         else:
             u, ug = module.dpem(xyz, 0)
@@ -1322,7 +1323,7 @@ def ug(system, surface, geom):
     module_name = f"chempotpy.{system}.{surface}"
     module = importlib.import_module(module_name)
     if surface in multi_state_list:
-        if surface in requires_read_file_list:
+        if surface in legacy_path_argument_list:
             u, ug = module.dpem(xyz, 1, parent_path)
         else:
             u, ug = module.dpem(xyz, 1)
@@ -1339,7 +1340,7 @@ def un(system, surface, geom):
     module_name = f"chempotpy.{system}.{surface}"
     module = importlib.import_module(module_name)
     if surface in multi_state_list:
-        if surface in requires_read_file_list:
+        if surface in legacy_path_argument_list:
             u, ug = module.dpem(xyz, 0, parent_path)
         else:
             u, ug = module.dpem(xyz, 0)
@@ -1354,13 +1355,13 @@ def un(system, surface, geom):
         for idir in range(3):
             xyz_displaced=np.copy(xyz)
             xyz_displaced[iatom][idir]=xyz_displaced[iatom][idir]+0.001
-            if surface in requires_read_file_list:
+            if surface in legacy_path_argument_list:
                 u_plus, ug = module.dpem(xyz_displaced, 0, parent_path)
             else:
                 u_plus, ug = module.dpem(xyz_displaced, 0)
             xyz_displaced=np.copy(xyz)
             xyz_displaced[iatom][idir]=xyz_displaced[iatom][idir]-0.001
-            if surface in requires_read_file_list:
+            if surface in legacy_path_argument_list:
                 u_minus, ug = module.dpem(xyz_displaced, 0, parent_path)
             else:
                 u_minus, ug = module.dpem(xyz_displaced, 0)
@@ -1377,7 +1378,7 @@ def un(system, surface, geom):
 from .core.runtime import LegacyRuntime as _LegacyRuntime
 
 _runtime = _LegacyRuntime(
-    requires_data_path=requires_read_file_list,
+    requires_data_path=legacy_path_argument_list,
     variable_atom_surfaces=Al_list,
     aluminium_hydride_surfaces=AlmHn_list,
     silicon_oxygen_hydride_surfaces=SiOH_list,

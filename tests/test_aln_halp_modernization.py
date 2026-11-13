@@ -10,7 +10,9 @@ from scripts.build_pes import core_fortran_dependencies
 
 
 class AlnHalPModernizationTests( unittest.TestCase ):
-    def test_released_energy_references( self ) -> None:
+    def test_codata_energies_remain_close_to_released_references(
+        self,
+    ) -> None:
         compiler = shutil.which("gfortran")
         if compiler is None:
             self.skipTest("gfortran is not available")
@@ -25,14 +27,16 @@ program test_aln_halp
     coordinates = 0.0d0
     coordinates(2,1) = 2.8d0
     call pes( coordinates, 2, 0, energy, gradient, coupling )
-    if( abs(energy(1)-(-0.34621314477322201d0)) > 1.0d-14 ) &
-        error stop 'two-atom energy changed'
+    if( abs(energy(1)-(-0.34621314477322201d0)) > &
+        max(1.0d-8, 1.0d-6*abs(-0.34621314477322201d0)) ) &
+        error stop 'two-atom CODATA migration envelope exceeded'
 
     coordinates(3,2) = 2.8d0
     coordinates(4,3) = 2.8d0
     call pes( coordinates, 4, 0, energy, gradient, coupling )
-    if( abs(energy(1)-(-1.4003824541328054d0)) > 1.0d-14 ) &
-        error stop 'four-atom energy changed'
+    if( abs(energy(1)-(-1.4003824541328054d0)) > &
+        max(1.0d-8, 1.0d-6*abs(-1.4003824541328054d0)) ) &
+        error stop 'four-atom CODATA migration envelope exceeded'
 end program test_aln_halp
 """
         with tempfile.TemporaryDirectory(prefix="chempotpy-aln-halp-") as tmp:

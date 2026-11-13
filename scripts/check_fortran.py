@@ -62,15 +62,18 @@ def compiler_command(
         if source.path.exists()
         else ""
     )
-    command.extend(
-        str(path) for path in core_fortran_dependencies(source_text)
-    )
-    command.extend(
-        str(source.path.parent / support_name)
+    support_sources = tuple(
+        source.path.parent / support_name
         for support_name in SUPPORT_SOURCES.get(
             (source.system_name, source.surface_name), ()
         )
     )
+    command.extend(
+        str(path) for path in core_fortran_dependencies(
+            source_text, support_sources
+        )
+    )
+    command.extend(str(path) for path in support_sources)
     command.append(str(source.path))
     return command
 

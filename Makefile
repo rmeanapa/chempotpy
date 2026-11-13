@@ -1,8 +1,9 @@
-.PHONY: all audit build check check-binaries check-conda check-embedded-parameters check-fortran check-modernization check-modernization-source check-python-extensions check-style clean test test-surfaces
+.PHONY: all audit build check check-binaries check-conda check-embedded-parameters check-fortran check-generated check-modernization check-modernization-source check-numerical-regression check-python-extensions check-style clean test test-surfaces
 
 PYTHON ?= python3
 BUILD_FLAGS ?=
 BUILD_OUTPUT ?= chempotpy
+NUMERICAL_BASELINE ?= tests/data/all_surface_references.json
 
 audit:
 	$(PYTHON) scripts/audit_pes.py
@@ -28,12 +29,15 @@ check-embedded-parameters:
 	$(PYTHON) scripts/generate_embedded_network_parameters.py --check
 	$(PYTHON) scripts/generate_embedded_pes_parameters.py --check
 
+check-generated: check-embedded-parameters
+	$(PYTHON) scripts/generate_physical_constants.py --check
+
 build:
 	$(PYTHON) scripts/build_pes.py $(BUILD_FLAGS)
 
 all: build
 
-check: audit check-modernization-source check-embedded-parameters test check-fortran check-style
+check: audit check-modernization-source check-generated test check-fortran check-style
 
 check-modernization: check
 
@@ -42,6 +46,10 @@ test:
 
 test-surfaces:
 	$(PYTHON) -m unittest tests.test_all_surfaces -v
+
+check-numerical-regression:
+	$(PYTHON) scripts/check_numerical_regression.py \
+		--baseline $(NUMERICAL_BASELINE) --jobs 4
 
 clean:
 	$(PYTHON) scripts/clean_generated.py

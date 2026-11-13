@@ -24,6 +24,7 @@
 
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_rejac_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -33,28 +34,28 @@ module chempotpy_aln_rejac_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
-        use chempotpy_legacy_units, only: legacy_coordinates_to_bohr, &
-            legacy_energy_to_electronvolt
-        use chempotpy_kinds, only: real64
+        use chempotpy_units, only: coordinates_to_bohr, &
+            energy_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter        :: state_count = 1
-        real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-        integer, intent(in)       :: atom_count, derivative_order
-        real(real64), intent(out) :: energy_ev(state_count)
-        real(real64), intent(out) :: gradient_ev_per_angstrom( &
+        integer, parameter    :: state_count = 1
+        real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+        integer, intent(in)   :: atom_count, derivative_order
+        real(wp), intent(out) :: energy_ev(state_count)
+        real(wp), intent(out) :: gradient_ev_per_angstrom( &
             state_count,atom_count,3 )
-        real(real64), intent(out) :: coupling_per_angstrom( &
+        real(wp), intent(out) :: coupling_per_angstrom( &
             state_count,state_count,atom_count,3 )
-        real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-        energy_ev                = 0.0d0
-        gradient_ev_per_angstrom = 0.0d0
-        coupling_per_angstrom    = 0.0d0
-        call legacy_coordinates_to_bohr( &
+        real(wp) :: coordinates_bohr(atom_count,3), energy_hartree
+        energy_ev                = 0.0e0_wp
+        gradient_ev_per_angstrom = 0.0e0_wp
+        coupling_per_angstrom    = 0.0e0_wp
+        call coordinates_to_bohr( &
             coordinates_angstrom(1:atom_count,:), coordinates_bohr)
         call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
             coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
         if( derivative_order == 0 )then
-            energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
+            energy_ev(1) = energy_to_electronvolt(energy_hartree)
         else
             write(*, *) 'Only energy is available'
         endif
@@ -62,12 +63,13 @@ module chempotpy_aln_rejac_pes
 
     !> @brief Evaluate pot for the Aln_reJac potential.
     subroutine pot( x, y, z, v, natom, maxatom )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: alpha, beta, bs, dx, dy, dz, e0, e2, e3, en, ep, eta, eta1, eta2, fra, pi, rr, s, u, ud, udno, uno, &
+        real(wp) :: alpha, beta, bs, dx, dy, dz, e0, e2, e3, en, ep, eta, eta1, eta2, fra, pi, rr, s, u, ud, udno, uno, &
             & v, vv, x(maxatom), y(maxatom), z(maxatom)
-        integer :: i, j, m, maxatom, natom
-        double precision, parameter :: autoev  = 27.2113961d0
-        double precision, parameter :: autoang = 0.529177249d0
+        integer             :: i, j, m, maxatom, natom
+        real(wp), parameter :: autoev  = 27.2113961e0_wp
+        real(wp), parameter :: autoang = 0.529177249e0_wp
         !  calculate the potential energy
         en    = 0.03536  *autoang**3
         s     = 1.8788   /autoang
@@ -78,34 +80,34 @@ module chempotpy_aln_rejac_pes
         alpha = 262.2   /(autoev*autoang**3)
         eta1  = 0.7111   *autoang
         beta  = 1.5664
-        pi    = dacos(-1.d0)
+        pi    = acos(-1.e0_wp)
         eta2  = (eta+eta1)/beta
         ep    = eta/(eta+eta1)
         bs    = beta*s
-        fra   = 1.d0/12.d0
-        v     = 0d0
+        fra   = 1.e0_wp/12.e0_wp
+        v     = 0e0_wp
         do i=1, natom
-            u = 0d0
+            u = 0e0_wp
             do j=1, natom
                 if( j .eq. i ) cycle
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
-                rr = dsqrt(dx*dx+dy*dy+dz*dz)
-                u  = u+dexp(-eta2*(rr-bs))   ! EAS(1) w/o exponent
+                rr = sqrt(dx*dx+dy*dy+dz*dz)
+                u  = u+exp(-eta2*(rr-bs))   ! EAS(1) w/o exponent
             enddo
-            ud = 0d0
+            ud = 0e0_wp
             do m=1, natom
                 if( m .eq. i ) cycle
                 dx = x(i)-x(m)
                 dy = y(i)-y(m)
                 dz = z(i)-z(m)
-                rr = dsqrt(dx*dx+dy*dy+dz*dz)
-                ud = ud+dexp(-eta*(rr/beta-s))  ! EAS(2)
+                rr = sqrt(dx*dx+dy*dy+dz*dz)
+                ud = ud+exp(-eta*(rr/beta-s))  ! EAS(2)
             enddo
             uno  = (fra*u)**ep   ! EAS(1)
             udno = fra*ud       ! EAS(2)
-            vv   = e0+e2*(uno-1d0)**2+e3*(uno-1d0)**3 +alpha*en*(uno-udno)
+            vv   = e0+e2*(uno-1e0_wp)**2+e3*(uno-1e0_wp)**3 +alpha*en*(uno-udno)
             v    = v+vv
         enddo
     end subroutine pot
@@ -115,14 +117,14 @@ end module chempotpy_aln_rejac_pes
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_rejac_pes, only: evaluate
-    use chempotpy_kinds,         only: real64
+    use chempotpy_kinds,         only: wp
     implicit none
-    integer, parameter        :: state_count = 1
-    real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-    integer, intent(in)       :: atom_count, derivative_order
-    real(real64), intent(out) :: energy_ev(state_count)
-    real(real64), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
-    real(real64), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
+    integer, parameter    :: state_count = 1
+    real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+    integer, intent(in)   :: atom_count, derivative_order
+    real(wp), intent(out) :: energy_ev(state_count)
+    real(wp), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
+    real(wp), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
     call evaluate(coordinates_angstrom, atom_count, derivative_order, energy_ev, gradient_ev_per_angstrom, &
         & coupling_per_angstrom)
 end subroutine pes

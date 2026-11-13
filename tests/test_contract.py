@@ -14,6 +14,13 @@ from chempotpy.core.contract import (
     validate_coordinates,
 )
 from chempotpy.core.units import (
+    BOHR_TO_ANGSTROM,
+    ELECTRONVOLT_TO_INVERSE_CENTIMETER,
+    ELECTRONVOLT_TO_KILOCALORIE_PER_MOLE,
+    HARTREE_PER_BOHR_TO_EV_PER_ANGSTROM,
+    HARTREE_TO_EV,
+    HARTREE_TO_INVERSE_CENTIMETER,
+    HARTREE_TO_KILOCALORIE_PER_MOLE,
     angstrom_to_bohr,
     bohr_to_angstrom,
     ev_to_hartree,
@@ -67,6 +74,35 @@ class ContractTests( unittest.TestCase ):
         )
         np.testing.assert_allclose(
             ev_to_hartree(hartree_to_ev(energy)), energy
+        )
+
+    def test_codata_2022_conversion_values( self ) -> None:
+        self.assertEqual(BOHR_TO_ANGSTROM, 0.529177210544)
+        self.assertEqual(HARTREE_TO_EV, 27.211386245981)
+        self.assertAlmostEqual(
+            HARTREE_PER_BOHR_TO_EV_PER_ANGSTROM,
+            51.42206751119799,
+            places=14,
+        )
+        self.assertAlmostEqual(
+            HARTREE_TO_KILOCALORIE_PER_MOLE,
+            627.5094740628975,
+            places=12,
+        )
+        self.assertAlmostEqual(
+            ELECTRONVOLT_TO_KILOCALORIE_PER_MOLE,
+            23.06054783061903,
+            places=14,
+        )
+        self.assertAlmostEqual(
+            HARTREE_TO_INVERSE_CENTIMETER,
+            219474.63136314,
+            places=8,
+        )
+        self.assertAlmostEqual(
+            ELECTRONVOLT_TO_INVERSE_CENTIMETER,
+            8065.543937349212,
+            places=11,
         )
 
 

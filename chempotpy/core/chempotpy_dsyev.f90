@@ -1,22 +1,23 @@
-!> @brief Self-contained symmetric eigensolver implementing the LAPACK DSYEV ABI.
+!> @brief Solve a symmetric eigenproblem at the selected working precision.
 subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
+    use chempotpy_kinds, only: wp
     implicit none
     character(len=1), intent(in) :: jobz, uplo
     integer, intent(in)          :: n, lda, lwork
-    real(8), intent(inout)       :: a(lda,*)
-    real(8), intent(out)         :: w(*)
-    real(8), intent(inout)       :: work(*)
+    real(wp), intent(inout)      :: a(lda,*)
+    real(wp), intent(out)        :: w(*)
+    real(wp), intent(inout)      :: work(*)
     integer, intent(out)         :: info
     integer                      :: i, j, p, q, iteration, max_iterations
     integer                      :: minimum_work, eigen_index
-    real(8)                      :: app, aqq, apq, tau, tangent, cosine, sine
-    real(8)                      :: updated_ip, updated_iq, off_diagonal_max
-    real(8)                      :: scale, tolerance, temporary_value
-    real(8), allocatable         :: matrix(:,:), eigenvectors(:,:)
+    real(wp)                     :: app, aqq, apq, tau, tangent, cosine, sine
+    real(wp)                     :: updated_ip, updated_iq, off_diagonal_max
+    real(wp)                     :: scale, tolerance, temporary_value
+    real(wp), allocatable        :: matrix(:,:), eigenvectors(:,:)
     info         = 0
     minimum_work = max(1, 3*n-1)
     if( lwork == -1 )then
-        work(1) = real(minimum_work, kind=8)
+        work(1) = real(minimum_work, wp)
         return
     endif
     if( jobz /= 'N' .and. jobz /= 'n' .and. &
@@ -41,13 +42,13 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
         info = -8
         return
     endif
-    work(1) = real(minimum_work, kind=8)
+    work(1) = real(minimum_work, wp)
     if( n == 0 ) return
     allocate(matrix(n,n), eigenvectors(n,n))
-    matrix       = 0.0d0
-    eigenvectors = 0.0d0
+    matrix       = 0.0e0_wp
+    eigenvectors = 0.0e0_wp
     do i = 1, n
-        eigenvectors(i,i) = 1.0d0
+        eigenvectors(i,i) = 1.0e0_wp
         matrix(i,i)       = a(i,i)
     enddo
     if( uplo == 'U' .or. uplo == 'u' )then
@@ -65,11 +66,11 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
             enddo
         enddo
     endif
-    scale          = max(1.0d0, maxval(abs(matrix)))
-    tolerance      = epsilon(1.0d0)*scale*real(max(1, n), kind=8)
+    scale          = max(1.0e0_wp, maxval(abs(matrix)))
+    tolerance      = epsilon(1.0e0_wp)*scale*real(max(1, n), wp)
     max_iterations = max(32, 100*n*n)
     do iteration = 1, max_iterations
-        off_diagonal_max = 0.0d0
+        off_diagonal_max = 0.0e0_wp
         p                = 1
         q                = min(2, n)
         do j = 2, n
@@ -85,13 +86,13 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
         app = matrix(p,p)
         aqq = matrix(q,q)
         apq = matrix(p,q)
-        tau = (aqq-app)/(2.0d0*apq)
-        if( tau >= 0.0d0 )then
-            tangent = 1.0d0/(tau+hypot(1.0d0, tau))
+        tau = (aqq-app)/(2.0e0_wp*apq)
+        if( tau >= 0.0e0_wp )then
+            tangent = 1.0e0_wp/(tau+hypot(1.0e0_wp, tau))
         else
-            tangent = -1.0d0/(-tau+hypot(1.0d0, tau))
+            tangent = -1.0e0_wp/(-tau+hypot(1.0e0_wp, tau))
         endif
-        cosine = 1.0d0/sqrt(1.0d0+tangent*tangent)
+        cosine = 1.0e0_wp/sqrt(1.0e0_wp+tangent*tangent)
         sine   = tangent*cosine
         do i = 1, n
             if( i /= p .and. i /= q )then
@@ -103,10 +104,10 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
                 matrix(q,i) = updated_iq
             endif
         enddo
-        matrix(p,p) = cosine*cosine*app-2.0d0*sine*cosine*apq +sine*sine*aqq
-        matrix(q,q) = sine*sine*app+2.0d0*sine*cosine*apq +cosine*cosine*aqq
-        matrix(p,q) = 0.0d0
-        matrix(q,p) = 0.0d0
+        matrix(p,p) = cosine*cosine*app-2.0e0_wp*sine*cosine*apq +sine*sine*aqq
+        matrix(q,q) = sine*sine*app+2.0e0_wp*sine*cosine*apq +cosine*cosine*aqq
+        matrix(p,q) = 0.0e0_wp
+        matrix(q,p) = 0.0e0_wp
         do i = 1, n
             updated_ip        = cosine*eigenvectors(i,p) -sine*eigenvectors(i,q)
             updated_iq        = sine*eigenvectors(i,p) +cosine*eigenvectors(i,q)
@@ -137,7 +138,7 @@ subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
     if( jobz == 'V' .or. jobz == 'v' )then
         a(1:n,1:n) = eigenvectors
     else
-        a(1:n,1:n) = 0.0d0
+        a(1:n,1:n) = 0.0e0_wp
         do i = 1, n
             a(i,i) = w(i)
         enddo

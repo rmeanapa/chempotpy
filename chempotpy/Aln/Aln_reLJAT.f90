@@ -22,6 +22,7 @@
 
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_reljat_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -31,28 +32,28 @@ module chempotpy_aln_reljat_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
-        use chempotpy_legacy_units, only: legacy_coordinates_to_bohr, &
-            legacy_energy_to_electronvolt
-        use chempotpy_kinds, only: real64
+        use chempotpy_units, only: coordinates_to_bohr, &
+            energy_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter        :: state_count = 1
-        real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-        integer, intent(in)       :: atom_count, derivative_order
-        real(real64), intent(out) :: energy_ev(state_count)
-        real(real64), intent(out) :: gradient_ev_per_angstrom( &
+        integer, parameter    :: state_count = 1
+        real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+        integer, intent(in)   :: atom_count, derivative_order
+        real(wp), intent(out) :: energy_ev(state_count)
+        real(wp), intent(out) :: gradient_ev_per_angstrom( &
             state_count,atom_count,3 )
-        real(real64), intent(out) :: coupling_per_angstrom( &
+        real(wp), intent(out) :: coupling_per_angstrom( &
             state_count,state_count,atom_count,3 )
-        real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-        energy_ev                = 0.0d0
-        gradient_ev_per_angstrom = 0.0d0
-        coupling_per_angstrom    = 0.0d0
-        call legacy_coordinates_to_bohr( &
+        real(wp) :: coordinates_bohr(atom_count,3), energy_hartree
+        energy_ev                = 0.0e0_wp
+        gradient_ev_per_angstrom = 0.0e0_wp
+        coupling_per_angstrom    = 0.0e0_wp
+        call coordinates_to_bohr( &
             coordinates_angstrom(1:atom_count,:), coordinates_bohr)
         call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
             coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
         if( derivative_order == 0 )then
-            energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
+            energy_ev(1) = energy_to_electronvolt(energy_hartree)
         else
             write(*, *) 'Only energy is available'
         endif
@@ -60,29 +61,30 @@ module chempotpy_aln_reljat_pes
 
     !> @brief Evaluate pot for the Aln_reLJAT potential.
     subroutine pot( x, y, z, v, natom, maxatom )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: aa, cote1, cote2, cote3, dx, dy, dz, em, en, r0, r1, r2, r3, rel, rr, sig, u, um, un, utr, v, &
+        real(wp) :: aa, cote1, cote2, cote3, dx, dy, dz, em, en, r0, r1, r2, r3, rel, rr, sig, u, um, un, utr, v, &
             & x(maxatom), y(maxatom), z(maxatom), zet
-        integer :: i, j, m, maxatom, natom
-        double precision, parameter :: autoev  = 27.2113961d0
-        double precision, parameter :: autoang = 0.529177249d0
+        integer             :: i, j, m, maxatom, natom
+        real(wp), parameter :: autoev  = 27.2113961e0_wp
+        real(wp), parameter :: autoang = 0.529177249e0_wp
         !  calculate the potential energy
         aa  = 9.24963361016121155/autoev
         r0  = 2.06741573033707882/autoang
         en  = 4.23009281875915999
         em  = 8.76160234489496759
         zet = 2897.99706888129003/(autoev*autoang**9)
-        sig = (en/em)**(1.d0/(em-en))*r0
-        v   = 0d0
+        sig = (en/em)**(1.e0_wp/(em-en))*r0
+        v   = 0e0_wp
         !  1. calculate energy of two-body interactions
-        um = 0.d0
-        un = 0.d0
+        um = 0.e0_wp
+        un = 0.e0_wp
         do i=1, natom-1
             do j=i+1, natom
                 dx  = x(i)-x(j)
                 dy  = y(i)-y(j)
                 dz  = z(i)-z(j)
-                rr  = dsqrt(dx*dx+dy*dy+dz*dz)
+                rr  = sqrt(dx*dx+dy*dy+dz*dz)
                 rel = sig/rr
                 um  = um+rel**em
                 un  = un+rel**en
@@ -98,17 +100,17 @@ module chempotpy_aln_reljat_pes
                         dx = x(i)-x(j)
                         dy = y(i)-y(j)
                         dz = z(i)-z(j)
-                        r1 = dsqrt(dx*dx+dy*dy+dz*dz)
+                        r1 = sqrt(dx*dx+dy*dy+dz*dz)
                         dx = x(m)-x(j)
                         dy = y(m)-y(j)
                         dz = z(m)-z(j)
-                        r2 = dsqrt(dx*dx+dy*dy+dz*dz)
+                        r2 = sqrt(dx*dx+dy*dy+dz*dz)
                         dx = x(m)-x(i)
                         dy = y(m)-y(i)
                         dz = z(m)-z(i)
-                        r3 = dsqrt(dx*dx+dy*dy+dz*dz)
+                        r3 = sqrt(dx*dx+dy*dy+dz*dz)
                         call scos(i, j, m, x, y, z, r1, r2, r3, natom, maxatom, cote1, cote2, cote3)
-                        utr = utr+zet*(1.d0+3.d0*cote1*cote2*cote3)/((r1*r2*r3)**3)
+                        utr = utr+zet*(1.e0_wp+3.e0_wp*cote1*cote2*cote3)/((r1*r2*r3)**3)
                     enddo
                 enddo
             enddo
@@ -134,9 +136,10 @@ module chempotpy_aln_reljat_pes
         !  cote1   --- cosine of the angle between bonds ij and im
         !  cote2   --- cosine of the angle between bonds ji and jm
         !  cote3   --- cosine of the angle between bonds mi and mj
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: cote1, cote2, cote3, r1, r2, r3, scalar1, scalar2, scalar3, x(maxatom), y(maxatom), z(maxatom)
-        integer          :: i, j, m, maxatom, natom
+        real(wp) :: cote1, cote2, cote3, r1, r2, r3, scalar1, scalar2, scalar3, x(maxatom), y(maxatom), z(maxatom)
+        integer  :: i, j, m, maxatom, natom
         !  calculate scalar products of the position vectors of two atoms
         !  originating from the third atom
         scalar1 = (x(j)-x(i))*(x(m)-x(i)) +(y(j)-y(i))*(y(m)-y(i)) +(z(j)-z(i))*(z(m)-z(i))
@@ -155,14 +158,14 @@ end module chempotpy_aln_reljat_pes
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_reljat_pes, only: evaluate
-    use chempotpy_kinds,          only: real64
+    use chempotpy_kinds,          only: wp
     implicit none
-    integer, parameter        :: state_count = 1
-    real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-    integer, intent(in)       :: atom_count, derivative_order
-    real(real64), intent(out) :: energy_ev(state_count)
-    real(real64), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
-    real(real64), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
+    integer, parameter    :: state_count = 1
+    real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+    integer, intent(in)   :: atom_count, derivative_order
+    real(wp), intent(out) :: energy_ev(state_count)
+    real(wp), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
+    real(wp), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
     call evaluate(coordinates_angstrom, atom_count, derivative_order, energy_ev, gradient_ev_per_angstrom, &
         & coupling_per_angstrom)
 end subroutine pes

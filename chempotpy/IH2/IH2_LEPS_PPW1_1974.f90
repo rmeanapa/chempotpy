@@ -2,34 +2,34 @@
 module chempotpy_ih2_leps_ppw1_1974_pes
     use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
         & prepare_legacy_triatomic_coordinates
-    use chempotpy_kinds, only: real64
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
-    real(real64), parameter :: energy_per_hartree         = 627.5095_real64
-    real(real64), parameter :: bohr_per_angstrom          = 0.529177106_real64
-    real(real64), parameter :: root_two                   = 1.41421356_real64
-    real(real64), parameter :: dissociation_energy(3)     = [73.78d0, 109.43d0, 73.78d0]/energy_per_hartree
-    real(real64), parameter :: equilibrium_distance(3)    = [1.604d0, 0.742d0, 1.604d0]/bohr_per_angstrom
-    real(real64), parameter :: morse_exponent(3)          = [1.75d0, 1.942d0, 1.75d0]*bohr_per_angstrom
-    real(real64), parameter :: sato_parameter(3)          = [0.09d0, 0.23d0, 0.09d0]
-    real(real64), parameter :: one_plus_sato(3)           = 1.0_real64+sato_parameter
-    real(real64), parameter :: one_plus_three_sato(3)     = 1.0_real64+3.0_real64*sato_parameter
-    real(real64), parameter :: two_one_plus_three_sato(3) = 2.0_real64*one_plus_three_sato
-    real(real64), parameter :: sato_plus_three(3)         = sato_parameter+3.0_real64
-    real(real64), parameter :: two_sato_plus_three(3)     = 2.0_real64*sato_plus_three
-    real(real64), parameter :: quarter_energy(3)          = dissociation_energy/(4.0_real64*one_plus_sato)
-    real(real64), parameter :: derivative_weight(3)       = 2.0_real64*morse_exponent*quarter_energy
+    real(wp), parameter :: energy_per_hartree         = 627.5095_wp
+    real(wp), parameter :: bohr_per_angstrom          = 0.529177106_wp
+    real(wp), parameter :: root_two                   = 1.41421356_wp
+    real(wp), parameter :: dissociation_energy(3)     = [73.78e0_wp, 109.43e0_wp, 73.78e0_wp]/energy_per_hartree
+    real(wp), parameter :: equilibrium_distance(3)    = [1.604e0_wp, 0.742e0_wp, 1.604e0_wp]/bohr_per_angstrom
+    real(wp), parameter :: morse_exponent(3)          = [1.75e0_wp, 1.942e0_wp, 1.75e0_wp]*bohr_per_angstrom
+    real(wp), parameter :: sato_parameter(3)          = [0.09e0_wp, 0.23e0_wp, 0.09e0_wp]
+    real(wp), parameter :: one_plus_sato(3)           = 1.0_wp+sato_parameter
+    real(wp), parameter :: one_plus_three_sato(3)     = 1.0_wp+3.0_wp*sato_parameter
+    real(wp), parameter :: two_one_plus_three_sato(3) = 2.0_wp*one_plus_three_sato
+    real(wp), parameter :: sato_plus_three(3)         = sato_parameter+3.0_wp
+    real(wp), parameter :: two_sato_plus_three(3)     = 2.0_wp*sato_plus_three
+    real(wp), parameter :: quarter_energy(3)          = dissociation_energy/(4.0_wp*one_plus_sato)
+    real(wp), parameter :: derivative_weight(3)       = 2.0_wp*morse_exponent*quarter_energy
 
     contains
 
     !> @brief Evaluate the IH2_LEPS_PPW1_1974 potential energy surface for IH2.
     subroutine evaluate( x, igrad, p, g, d )
-        integer, intent(in)       :: igrad
-        real(real64), intent(in)  :: x(3,3)
-        real(real64), intent(out) :: p(1), g(1,3,3), d(1,1,3,3)
-        real(real64)              :: distance_jacobian(3,9), distances_bohr(3)
-        real(real64)              :: energy_hartree, internal_gradient(3)
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(3,3)
+        real(wp), intent(out) :: p(1), g(1,3,3), d(1,1,3,3)
+        real(wp)              :: distance_jacobian(3,9), distances_bohr(3)
+        real(wp)              :: energy_hartree, internal_gradient(3)
         call prepare_legacy_triatomic_coordinates(x, distances_bohr, distance_jacobian)
         call evaluate_internal(distances_bohr, igrad, energy_hartree, internal_gradient)
         call finalize_legacy_triatomic_surface(igrad, energy_hartree, internal_gradient, distance_jacobian, p, g, d)
@@ -37,14 +37,14 @@ module chempotpy_ih2_leps_ppw1_1974_pes
 
     !> @brief Evaluate the extended LEPS energy and optional internal-coordinate gradient.
     pure subroutine evaluate_internal( distances, derivative_order, energy, gradient )
-        real(real64), intent(in)  :: distances(3)
-        integer, intent(in)       :: derivative_order
-        real(real64), intent(out) :: energy, gradient(3)
-        real(real64)              :: coulomb(3), exchange(3), exponential(3)
-        real(real64)              :: exchange_norm, exchange_sum
-        integer                   :: bond
-        energy   = 0.0_real64
-        gradient = 0.0_real64
+        real(wp), intent(in)  :: distances(3)
+        integer, intent(in)   :: derivative_order
+        real(wp), intent(out) :: energy, gradient(3)
+        real(wp)              :: coulomb(3), exchange(3), exponential(3)
+        real(wp)              :: exchange_norm, exchange_sum
+        integer               :: bond
+        energy   = 0.0_wp
+        gradient = 0.0_wp
         do bond = 1, 3
             exponential(bond) = exp(-morse_exponent(bond)*(distances(bond)-equilibrium_distance(bond)))
             coulomb(bond) = quarter_energy(bond)*(sato_plus_three(bond)*exponential(bond)- &
@@ -58,7 +58,7 @@ module chempotpy_ih2_leps_ppw1_1974_pes
         if( derivative_order == 1 )then
             exchange_sum = sum(exchange)
             do bond = 1, 3
-                gradient(bond) = derivative_weight(bond)*exponential(bond)*( (3.0_real64*exchange(bond)-exchange_sum)/ &
+                gradient(bond) = derivative_weight(bond)*exponential(bond)*( (3.0_wp*exchange(bond)-exchange_sum)/ &
                     & root_two * (one_plus_three_sato(bond)*exponential(bond)-sato_plus_three(bond))/exchange_norm - &
                     & sato_plus_three(bond)*exponential(bond)+one_plus_three_sato(bond) )
             enddo
@@ -69,12 +69,13 @@ end module chempotpy_ih2_leps_ppw1_1974_pes
 !> @brief Expose IH2_LEPS_PPW1_1974 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_ih2_leps_ppw1_1974_pes, only: evaluate
+    use chempotpy_kinds,                  only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

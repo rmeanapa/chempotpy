@@ -45,6 +45,7 @@
 
 !> @brief Implement H3p_KBNN_2002, a potential energy surface for H3p.
 module chempotpy_h3p_kbnn_2002_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -53,71 +54,73 @@ module chempotpy_h3p_kbnn_2002_pes
 
     !> @brief Evaluate the H3p_KBNN_2002 potential energy surface for H3p.
     subroutine evaluate( x, igrad, pin, grad, dvec )
+        use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
-        use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
-        use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+        use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
+        use chempotpy_kinds,              only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 3
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: pin(nstates)
-        double precision, intent(out) :: grad(nstates,natoms,3)
-        double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-        double precision              :: u
-        integer                       :: nt
-        double precision              :: r(1,3), r2(3)
-        double precision              :: u11(1), u12(1), u13(1), u22(1), u23(1), u33(1)
-        double precision              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
-        double precision              :: de_u13(3,1), de_u23(3,1), de_u33(3,1)
-        double precision              :: dpem(nstates,nstates), dudr(nstates,nstates,3)
-        double precision              :: trans(nstates,nstates)
-        double precision              :: tmpmat(nstates,nstates)
-        double precision              :: hr(nstates,nstates,3), gr(nstates,3)
-        double precision              :: tx(9), drdx(3,9)
-        double precision              :: hx(nstates,nstates,9), gx(nstates,9)
-        integer                       :: iatom, idir, i, j, k, l
+        integer, parameter    :: nstates = 3
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: pin(nstates)
+        real(wp), intent(out) :: grad(nstates,natoms,3)
+        real(wp), intent(out) :: dvec(nstates,nstates,natoms,3)
+        real(wp)              :: u
+        integer               :: nt
+        real(wp)              :: r(1,3), r2(3)
+        real(wp)              :: u11(1), u12(1), u13(1), u22(1), u23(1), u33(1)
+        real(wp)              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
+        real(wp)              :: de_u13(3,1), de_u23(3,1), de_u33(3,1)
+        real(wp)              :: dpem(nstates,nstates), dudr(nstates,nstates,3)
+        real(wp)              :: trans(nstates,nstates)
+        real(wp)              :: tmpmat(nstates,nstates)
+        real(wp)              :: hr(nstates,nstates,3), gr(nstates,3)
+        real(wp)              :: tx(9), drdx(3,9)
+        real(wp)              :: hx(nstates,nstates,9), gx(nstates,9)
+        integer               :: iatom, idir, i, j, k, l
         !initialize
-        u  = 0.d0; pin = 0.d0; grad = 0.d0; dvec = 0.d0
+        u  = 0.e0_wp; pin = 0.e0_wp; grad = 0.e0_wp; dvec = 0.e0_wp
         nt = 1
         call flatten_cartesian_coordinates(x, tx)
         ! input cartesian is HHH
-        call legacy_triatomic_distances_to_bohr(x, r(1,:))
+        call triatomic_distances_to_bohr(x, r(1,:))
         call pot(r, u11, de_u11, 1, 1)
         call pot(r, u12, de_u12, 1, 2)
         call pot(r, u22, de_u22, 1, 3)
         call pot(r, u13, de_u13, 1, 4)
         call pot(r, u23, de_u23, 1, 5)
         call pot(r, u33, de_u33, 1, 6)
-        dpem(1,1)   = u11(1)*legacy_hartree_to_electronvolt
-        dpem(1,2)   = u12(1)*legacy_hartree_to_electronvolt
-        dpem(2,1)   = u12(1)*legacy_hartree_to_electronvolt
-        dpem(2,2)   = u22(1)*legacy_hartree_to_electronvolt
-        dpem(1,3)   = u13(1)*legacy_hartree_to_electronvolt
-        dpem(3,1)   = u13(1)*legacy_hartree_to_electronvolt
-        dpem(2,3)   = u23(1)*legacy_hartree_to_electronvolt
-        dpem(3,2)   = u23(1)*legacy_hartree_to_electronvolt
-        dpem(3,3)   = u33(1)*legacy_hartree_to_electronvolt
-        dudr(1,1,:) = de_u11(:,1)*51.422067
-        dudr(1,2,:) = de_u12(:,1)*51.422067
-        dudr(2,1,:) = de_u12(:,1)*51.422067
-        dudr(2,2,:) = de_u22(:,1)*51.422067
-        dudr(1,3,:) = de_u13(:,1)*51.422067
-        dudr(3,1,:) = de_u13(:,1)*51.422067
-        dudr(2,3,:) = de_u23(:,1)*51.422067
-        dudr(3,2,:) = de_u23(:,1)*51.422067
-        dudr(3,3,:) = de_u33(:,1)*51.422067
+        dpem(1,1)   = u11(1)*hartree_to_electronvolt
+        dpem(1,2)   = u12(1)*hartree_to_electronvolt
+        dpem(2,1)   = u12(1)*hartree_to_electronvolt
+        dpem(2,2)   = u22(1)*hartree_to_electronvolt
+        dpem(1,3)   = u13(1)*hartree_to_electronvolt
+        dpem(3,1)   = u13(1)*hartree_to_electronvolt
+        dpem(2,3)   = u23(1)*hartree_to_electronvolt
+        dpem(3,2)   = u23(1)*hartree_to_electronvolt
+        dpem(3,3)   = u33(1)*hartree_to_electronvolt
+        dudr(1,1,:) = de_u11(:,1)*hartree_per_bohr_to_ev_per_angstrom
+        dudr(1,2,:) = de_u12(:,1)*hartree_per_bohr_to_ev_per_angstrom
+        dudr(2,1,:) = de_u12(:,1)*hartree_per_bohr_to_ev_per_angstrom
+        dudr(2,2,:) = de_u22(:,1)*hartree_per_bohr_to_ev_per_angstrom
+        dudr(1,3,:) = de_u13(:,1)*hartree_per_bohr_to_ev_per_angstrom
+        dudr(3,1,:) = de_u13(:,1)*hartree_per_bohr_to_ev_per_angstrom
+        dudr(2,3,:) = de_u23(:,1)*hartree_per_bohr_to_ev_per_angstrom
+        dudr(3,2,:) = de_u23(:,1)*hartree_per_bohr_to_ev_per_angstrom
+        dudr(3,3,:) = de_u33(:,1)*hartree_per_bohr_to_ev_per_angstrom
         call diagonalize(nstates, dpem, pin, trans)
         do i=1, 3
             tmpmat(:,:) = dudr(:,:,i)
             tmpmat      = matmul(transpose(trans), matmul(tmpmat, trans))
             do j=1, nstates
                 do k=j+1, nstates
-                    if( (pin(k)-pin(j)) > 1.d-8 )then
+                    if( (pin(k)-pin(j)) > 1.e-8_wp )then
                         hr(j,k,i) = tmpmat(j,k)/(pin(k)-pin(j))
                     else
-                        hr(j,k,i) = tmpmat(j,k)/1.d-8
+                        hr(j,k,i) = tmpmat(j,k)/1.e-8_wp
                     endif
                     hr(k,j,i) = -hr(j,k,i)
                 enddo
@@ -126,7 +129,7 @@ module chempotpy_h3p_kbnn_2002_pes
                 gr(j,i) = tmpmat(j,j)
             enddo
         enddo
-        r2 = r(1,:)*legacy_bohr_to_angstrom
+        r2 = r(1,:)*bohr_to_angstrom
         call evdrdx(tx, r2, drdx)
         call transform_internal_gradient_to_cartesian(hr, drdx, hx)
         call transform_internal_gradient_to_cartesian(gr, drdx, gx)
@@ -142,24 +145,26 @@ module chempotpy_h3p_kbnn_2002_pes
     !> @brief Evaluate EvdRdX for the H3p_KBNN_2002 potential.
     subroutine evdrdx( x, r, drdx )
         use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
         implicit none
-        integer, parameter            :: first_atoms(3)  = [1, 2, 1]
-        integer, parameter            :: second_atoms(3) = [2, 3, 3]
-        double precision, intent(in)  :: x(9), r(3)
-        double precision, intent(out) :: drdx(3,9)
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
         call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
     end subroutine evdrdx
 
     !> @brief Evaluate diagonalize for the H3p_KBNN_2002 potential.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: n
-        double precision, intent(in)  :: a_ss(n,n)
-        double precision, intent(out) :: u_ss(n,n)
-        double precision, intent(out) :: ev_s(n)
-        integer                       :: io, i
-        double precision, allocatable :: work_d(:)
-        integer                       :: lwork_d
+        integer, intent(in)   :: n
+        real(wp), intent(in)  :: a_ss(n,n)
+        real(wp), intent(out) :: u_ss(n,n)
+        real(wp), intent(out) :: ev_s(n)
+        integer               :: io, i
+        real(wp), allocatable :: work_d(:)
+        integer               :: lwork_d
         u_ss    = a_ss
         lwork_d = -1
         allocate( work_d(2) )
@@ -172,73 +177,74 @@ module chempotpy_h3p_kbnn_2002_pes
 
     !> @brief Evaluate pot for the H3p_KBNN_2002 potential.
     subroutine pot( r, e, de, nt, nsurf )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: a, b, b_g, b_h, b_u, d_g, d_h, d_u, de(3,nt), e(nt), r(nt,3), r1, r2, r3, r_g, r_h, r_u
-        integer          :: i, ii, j, k, l
-        integer :: nt, nsurf
+        real(wp) :: a, b, b_g, b_h, b_u, d_g, d_h, d_u, de(3,nt), e(nt), r(nt,3), r1, r2, r3, r_g, r_h, r_u
+        integer  :: i, ii, j, k, l
+        integer  :: nt, nsurf
         !     Table 2: fitting parameters of eqns 10 and 11
-        double precision :: c1(3), c2(3), c3(3), c4(3), c5(3), c6(3), c7(3)
-        double precision :: c8(3), c9(3), c10(3), c11(3), c12(3), c13(3)
-        double precision :: c14(3)
-        double precision :: p(3,3)
-        double precision :: c(3,3)
-        double precision :: osg(3), tsg(3), tsu(3)
-        double precision :: h(3), g(3), u(3)
-        double precision :: potential(3,3)
+        real(wp) :: c1(3), c2(3), c3(3), c4(3), c5(3), c6(3), c7(3)
+        real(wp) :: c8(3), c9(3), c10(3), c11(3), c12(3), c13(3)
+        real(wp) :: c14(3)
+        real(wp) :: p(3,3)
+        real(wp) :: c(3,3)
+        real(wp) :: osg(3), tsg(3), tsu(3)
+        real(wp) :: h(3), g(3), u(3)
+        real(wp) :: potential(3,3)
         !     Table 2: fitting params for eqns 10 and 11
         integer            :: g_i_, g_p_
         integer, parameter :: g_pmax_ = 3
         integer, parameter :: ldg_r   = 3
         integer, parameter :: ldg_e   = 3
-        double precision   :: d3_w, d2_w, d1_w, d4_p, d3_p, d2_p, d1_p, d2_v, &
+        real(wp)           :: d3_w, d2_w, d1_w, d4_p, d3_p, d2_p, d1_p, d2_v, &
             & d3_v, d4_v
-        double precision :: d38_v, d30_b, d7_b, d8_v, d9_v, d10_v, d41_v, &
+        real(wp) :: d38_v, d30_b, d7_b, d8_v, d9_v, d10_v, d41_v, &
             & d44_b, d13_v, d42_v
-        double precision :: d15_v, d16_v, d17_v, d43_v, d8_b, d20_v, d16_b, &
+        real(wp) :: d15_v, d16_v, d17_v, d43_v, d8_b, d20_v, d16_b, &
             & d10_b, d11_b, d24_v
-        double precision :: d12_b, d21_b, d27_v, d28_v, d29_v, d2_b, d3_b, &
+        real(wp) :: d12_b, d21_b, d27_v, d28_v, d29_v, d2_b, d3_b, &
             & d32_v, d4_b, d34_v
-        double precision :: d5_b, d6_b, d37_v, g_r1(g_pmax_), g_r(ldg_r,nt &
-            &,3), g_r2(g_pmax_), g_r3(g_pmax_), g_p(g_pmax_,3,3), g_d1_w(g_p&
-            &max_), g_c(g_pmax_,3,3)
-        double precision :: g_osg(g_pmax_,3), g_d2_w(g_pmax_), g_d3_w(g_pm&
-            &ax_), g_tsg(g_pmax_,3), g_tsu(g_pmax_,3), g_h(g_pmax_,3), g_g(g&
-            &_pmax_, 3), g_u(g_pmax_,3), g_potential(g_pmax_,3,3), g_e(ldg_e &
+        real(wp) :: d5_b, d6_b, d37_v, g_r1(g_pmax_), g_r(ldg_r,nt &
+            &,3), g_r2(g_pmax_), g_r3(g_pmax_), g_p(g_pmax_, 3, 3), g_d1_w(g_p&
+            &max_), g_c(g_pmax_, 3, 3)
+        real(wp) :: g_osg(g_pmax_,3), g_d2_w(g_pmax_), g_d3_w(g_pm&
+            &ax_), g_tsg(g_pmax_, 3), g_tsu(g_pmax_, 3), g_h(g_pmax_, 3), g_g(g&
+            &_pmax_, 3), g_u(g_pmax_, 3), g_potential(g_pmax_, 3, 3), g_e(ldg_e &
             &, nt)
         integer :: g_ehfid
-        c1  = [ -2.03221d0, -0.51486d0, -3.14355d0]
-        c2  = [ 1.46569d0, 0.08741d0, 1.39001d0]
-        c3  = [ 1.66412d0, -0.12057d0, -0.11632d0]
-        c4  = [ 0.27272d0, -0.02033d0, -0.28688d0]
-        c5  = [ 0.06060d0, 0.08057d0, -0.42105d0]
-        c6  = [ -2.25049d0, -0.37742d0, 0.44070d0]
-        c7  = [ 0.01945d0, 0.05521d0, 0.46790d0]
-        c8  = [ -0.05753d0, 0.01096d0, 0.05605d0]
-        c9  = [ -0.01288d0, -0.00318d0, -0.05596d0]
-        c10 = [ 0.57271d0, 0.00257d0, 0.10729d0]
-        c11 = [ -0.07831d0, 0.00774d0, 0.16146d0]
-        c12 = [ 0.50812d0, 0.00916d0, -0.09256d0]
-        c13 = [ -0.07156d0, -0.02141d0, -0.15563d0]
-        c14 = [ 0.98170d0, 0.74157d0, 0.79817d0]
+        c1  = [ -2.03221e0_wp, -0.51486e0_wp, -3.14355e0_wp]
+        c2  = [ 1.46569e0_wp, 0.08741e0_wp, 1.39001e0_wp]
+        c3  = [ 1.66412e0_wp, -0.12057e0_wp, -0.11632e0_wp]
+        c4  = [ 0.27272e0_wp, -0.02033e0_wp, -0.28688e0_wp]
+        c5  = [ 0.06060e0_wp, 0.08057e0_wp, -0.42105e0_wp]
+        c6  = [ -2.25049e0_wp, -0.37742e0_wp, 0.44070e0_wp]
+        c7  = [ 0.01945e0_wp, 0.05521e0_wp, 0.46790e0_wp]
+        c8  = [ -0.05753e0_wp, 0.01096e0_wp, 0.05605e0_wp]
+        c9  = [ -0.01288e0_wp, -0.00318e0_wp, -0.05596e0_wp]
+        c10 = [ 0.57271e0_wp, 0.00257e0_wp, 0.10729e0_wp]
+        c11 = [ -0.07831e0_wp, 0.00774e0_wp, 0.16146e0_wp]
+        c12 = [ 0.50812e0_wp, 0.00916e0_wp, -0.09256e0_wp]
+        c13 = [ -0.07156e0_wp, -0.02141e0_wp, -0.15563e0_wp]
+        c14 = [ 0.98170e0_wp, 0.74157e0_wp, 0.79817e0_wp]
         !     Table 1: diatomic parameters for eqns 7-9
-        d_h     = -0.17445d0
-        d_g     = 0.10272d0
-        d_u     = 0.62871d0
-        b_h     = 2.09607d0
-        b_g     = 0.71935d0
-        b_u     = 0.87080d0
-        r_h     = 1.40104d0
-        r_g     = 2.00313d0
-        r_u     = 0.34405d0
-        a       = 1.13804d0
-        b       = 0.52961d0
+        d_h     = -0.17445e0_wp
+        d_g     = 0.10272e0_wp
+        d_u     = 0.62871e0_wp
+        b_h     = 2.09607e0_wp
+        b_g     = 0.71935e0_wp
+        b_u     = 0.87080e0_wp
+        r_h     = 1.40104e0_wp
+        r_g     = 2.00313e0_wp
+        r_u     = 0.34405e0_wp
+        a       = 1.13804e0_wp
+        b       = 0.52961e0_wp
         g_ehfid = 0
         g_p_    = 3
         do i=1, nt
             do j=1, 3
                 do k=1, 3
-                    if( j .eq. k ) g_r(j,i,k) = 1.0d0
-                    if( j .ne. k ) g_r(j,i,k) = 0.0d0
+                    if( j .eq. k ) g_r(j,i,k) = 1.0e0_wp
+                    if( j .ne. k ) g_r(j,i,k) = 0.0e0_wp
                 enddo
             enddo
         enddo
@@ -259,7 +265,7 @@ module chempotpy_h3p_kbnn_2002_pes
             do l = 1, 3
                 d4_v  = c4(l) * r1
                 d10_v = (r2 + r3) * (r2 + r3)
-                d4_p  = 2.0d0 * (r2 + r3)
+                d4_p  = 2.0e0_wp * (r2 + r3)
                 d13_v = c6(l) * r2
                 d16_v = c7(l) * r1
                 d17_v = r2 + r3
@@ -276,7 +282,7 @@ module chempotpy_h3p_kbnn_2002_pes
                 d29_v = r2 + r3
                 d32_v = c11(l) * r1
                 d34_v = (r2 + r3) * (r2 + r3)
-                d1_p  = 2.0d0 * (r2 + r3)
+                d1_p  = 2.0e0_wp * (r2 + r3)
                 d37_v = c12(l) * r1
                 d38_v = d37_v * r2
                 d41_v = c13(l) * r1
@@ -297,7 +303,7 @@ module chempotpy_h3p_kbnn_2002_pes
                     & c9(l) * d24_v + d28_v * d29_v + d32_v * d34_v + d38_v * r3 + d42_v * d43_v + c3(l) * (r2 + r3)
                 d4_v  = c4(l) * r2
                 d10_v = (r3 + r1) * (r3 + r1)
-                d4_p  = 2.0d0 * (r3 + r1)
+                d4_p  = 2.0e0_wp * (r3 + r1)
                 d13_v = c6(l) * r3
                 d16_v = c7(l) * r2
                 d17_v = r3 + r1
@@ -314,7 +320,7 @@ module chempotpy_h3p_kbnn_2002_pes
                 d29_v = r3 + r1
                 d32_v = c11(l) * r2
                 d34_v = (r3 + r1) * (r3 + r1)
-                d1_p  = 2.0d0 * (r3 + r1)
+                d1_p  = 2.0e0_wp * (r3 + r1)
                 d37_v = c12(l) * r2
                 d38_v = d37_v * r3
                 d41_v = c13(l) * r2
@@ -335,7 +341,7 @@ module chempotpy_h3p_kbnn_2002_pes
                     & c9(l) * d24_v + d28_v * d29_v + d32_v * d34_v + d38_v * r1 + d42_v * d43_v + c3(l) * (r3 + r1)
                 d4_v  = c4(l) * r3
                 d10_v = (r1 + r2) * (r1 + r2)
-                d4_p  = 2.0d0 * (r1 + r2)
+                d4_p  = 2.0e0_wp * (r1 + r2)
                 d13_v = c6(l) * r1
                 d16_v = c7(l) * r3
                 d17_v = r1 + r2
@@ -352,7 +358,7 @@ module chempotpy_h3p_kbnn_2002_pes
                 d29_v = r1 + r2
                 d32_v = c11(l) * r3
                 d34_v = (r1 + r2) * (r1 + r2)
-                d1_p  = 2.0d0 * (r1 + r2)
+                d1_p  = 2.0e0_wp * (r1 + r2)
                 d37_v = c12(l) * r3
                 d38_v = d37_v * r1
                 d41_v = c13(l) * r3
@@ -421,51 +427,51 @@ module chempotpy_h3p_kbnn_2002_pes
                 d3_p  = d2_v
                 d3_v  = d2_v * d_h
                 d9_v  = (r(ii,k) - r_h) * (r(ii,k) - r_h)
-                d2_p  = 2.0d0 * (r(ii,k) - r_h)
+                d2_p  = 2.0e0_wp * (r(ii,k) - r_h)
                 d13_v = (r(ii,k) - r_h) ** ( 3 - 2)
                 d13_v = d13_v * (r(ii,k) - r_h)
                 d1_p  = 3 *  d13_v
                 d13_v = d13_v * (r(ii,k) - r_h)
-                d15_v = 1.0d0 + b_h * (r(ii,k) - r_h) + a * d9_v + b * d13_v
+                d15_v = 1.0e0_wp + b_h * (r(ii,k) - r_h) + a * d9_v + b * d13_v
                 d8_b  = d3_v * b * d1_p + d3_v * a * d2_p + d3_v * b_h
                 d16_b = d15_v * d_h * d3_p
                 do g_i_ = 1, g_p_
                     g_osg(g_i_,k) = d8_b * g_r(g_i_,ii,k) + d16_b * g_d1_w( g_i_)
                 enddo
                 osg(k) = d3_v * d15_v
-                d3_b   = (-2.0d0) * b_g
+                d3_b   = (-2.0e0_wp) * b_g
                 do g_i_ = 1, g_p_
                     g_d1_w(g_i_) = d3_b * g_r(g_i_,ii,k)
                 enddo
-                d1_w = (-2.0d0) * b_g * (r(ii,k) - r_g)
-                d3_b = dble(-1.0) * b_g
+                d1_w = (-2.0e0_wp) * b_g * (r(ii,k) - r_g)
+                d3_b = real(-1.0, wp) * b_g
                 do g_i_ = 1, g_p_
                     g_d2_w(g_i_) = d3_b * g_r(g_i_,ii,k)
                 enddo
-                d2_w = dble(-1.0) * b_g * (r(ii,k) - r_g)
-                d3_b = (-8.0d0) * b_g
+                d2_w = real(-1.0, wp) * b_g * (r(ii,k) - r_g)
+                d3_b = (-8.0e0_wp) * b_g
                 do g_i_ = 1, g_p_
                     g_d3_w(g_i_) = d3_b * g_r(g_i_,ii,k)
                 enddo
-                d3_w  = (-8.0d0) * b_g * (r(ii,k) - r_g)
+                d3_w  = (-8.0e0_wp) * b_g * (r(ii,k) - r_g)
                 d2_v  = exp(d1_w)
                 d3_p  = d2_v
                 d4_v  = exp(d2_w)
                 d2_p  = d4_v
                 d8_v  = exp(d3_w)
                 d1_p  = d8_v
-                d6_b  = d_g * 0.0015d0 * d1_p
-                d10_b = (-d_g) * 2.0d0 * d2_p
+                d6_b  = d_g * 0.0015e0_wp * d1_p
+                d10_b = (-d_g) * 2.0e0_wp * d2_p
                 d11_b = d_g * d3_p
                 do g_i_ = 1, g_p_
                     g_tsg(g_i_, k) = d6_b * g_d3_w(g_i_) + d10_b * g_d2_w(g_i_ ) + d11_b * g_d1_w(g_i_)
                 enddo
-                tsg(k) = d_g * (d2_v - 2.0d0 * d4_v + 0.0015d0 * d8_v)
-                d3_b   = (-2.0d0) * b_u
+                tsg(k) = d_g * (d2_v - 2.0e0_wp * d4_v + 0.0015e0_wp * d8_v)
+                d3_b   = (-2.0e0_wp) * b_u
                 do g_i_ = 1, g_p_
                     g_d1_w(g_i_) = d3_b * g_r(g_i_,ii,k)
                 enddo
-                d1_w = (-2.0d0) * b_u * (r(ii,k) - r_u)
+                d1_w = (-2.0e0_wp) * b_u * (r(ii,k) - r_u)
                 do g_i_ = 1, g_p_
                     g_d2_w(g_i_) = (-b_u) * g_r(g_i_,ii,k)
                 enddo
@@ -474,12 +480,12 @@ module chempotpy_h3p_kbnn_2002_pes
                 d2_p = d2_v
                 d4_v = exp(d2_w)
                 d1_p = d4_v
-                d6_b = d_u * 2.0d0 * d1_p
+                d6_b = d_u * 2.0e0_wp * d1_p
                 d7_b = d_u * d2_p
                 do g_i_ = 1, g_p_
                     g_tsu(g_i_, k) = d6_b * g_d2_w(g_i_) + d7_b * g_d1_w(g_i_)
                 enddo
-                tsu(k) = d_u * (d2_v + 2.0d0 * d4_v)
+                tsu(k) = d_u * (d2_v + 2.0e0_wp * d4_v)
             enddo
             !     eqns 4,5,6
             do i = 1, 3
@@ -498,44 +504,44 @@ module chempotpy_h3p_kbnn_2002_pes
             enddo
             !     this 'potential' 3X3 is the potential matrix
             do g_i_ = 1, g_p_
-                g_potential(g_i_, 1, 1) = 0.5d0 * g_u(g_i_, 3) + 0.5d0 * g_g (g_i_, 3) + 0.5d0 * g_u(g_i_, 2) + &
-                    & 0.5d0 * g_g(g_i_, 2) + g_h(g_i_, 1)
+                g_potential(g_i_, 1, 1) = 0.5e0_wp * g_u(g_i_, 3) + 0.5e0_wp * g_g (g_i_, 3) + 0.5e0_wp * g_u(g_i_, &
+                    & 2) + 0.5e0_wp * g_g(g_i_, 2) + g_h(g_i_, 1)
             enddo
-            potential(1,1) = h(1) + 0.5d0 * (g(2) + u(2) + g(3) + u(3))
+            potential(1,1) = h(1) + 0.5e0_wp * (g(2) + u(2) + g(3) + u(3))
             do g_i_ = 1, g_p_
-                g_potential(g_i_, 2, 2) = 0.5d0 * g_u(g_i_, 3) + 0.5d0 * g_g (g_i_, 3) + 0.5d0 * g_u(g_i_, 1) + &
-                    & 0.5d0 * g_g(g_i_, 1) + g_h(g_i_, 2)
+                g_potential(g_i_, 2, 2) = 0.5e0_wp * g_u(g_i_, 3) + 0.5e0_wp * g_g (g_i_, 3) + 0.5e0_wp * g_u(g_i_, &
+                    & 1) + 0.5e0_wp * g_g(g_i_, 1) + g_h(g_i_, 2)
             enddo
-            potential(2,2) = h(2) + 0.5d0 * (g(1) + u(1) + g(3) + u(3))
+            potential(2,2) = h(2) + 0.5e0_wp * (g(1) + u(1) + g(3) + u(3))
             do g_i_ = 1, g_p_
-                g_potential(g_i_, 3, 3) = 0.5d0 * g_u(g_i_, 2) + 0.5d0 * g_g (g_i_, 2) + 0.5d0 * g_u(g_i_, 1) + &
-                    & 0.5d0 * g_g(g_i_, 1) + g_h(g_i_, 3)
+                g_potential(g_i_, 3, 3) = 0.5e0_wp * g_u(g_i_, 2) + 0.5e0_wp * g_g (g_i_, 2) + 0.5e0_wp * g_u(g_i_, &
+                    & 1) + 0.5e0_wp * g_g(g_i_, 1) + g_h(g_i_, 3)
             enddo
-            potential(3,3) = h(3) + 0.5d0 * (g(1) + u(1) + g(2) + u(2))
+            potential(3,3) = h(3) + 0.5e0_wp * (g(1) + u(1) + g(2) + u(2))
             do g_i_ = 1, g_p_
-                g_potential(g_i_, 1, 2) = (-0.5d0) * g_u(g_i_, 3) + 0.5d0 * g_g(g_i_, 3)
+                g_potential(g_i_, 1, 2) = (-0.5e0_wp) * g_u(g_i_, 3) + 0.5e0_wp * g_g(g_i_, 3)
             enddo
-            potential(1,2) = 0.5d0 * (g(3) - u(3))
+            potential(1,2) = 0.5e0_wp * (g(3) - u(3))
             do g_i_ = 1, g_p_
-                g_potential(g_i_, 1, 3) = (-0.5d0) * g_u(g_i_, 2) + 0.5d0 * g_g(g_i_, 2)
+                g_potential(g_i_, 1, 3) = (-0.5e0_wp) * g_u(g_i_, 2) + 0.5e0_wp * g_g(g_i_, 2)
             enddo
-            potential(1,3) = 0.5d0 * (g(2) - u(2))
+            potential(1,3) = 0.5e0_wp * (g(2) - u(2))
             do g_i_ = 1, g_p_
-                g_potential(g_i_, 2, 1) = (-0.5d0) * g_u(g_i_, 3) + 0.5d0 * g_g(g_i_, 3)
+                g_potential(g_i_, 2, 1) = (-0.5e0_wp) * g_u(g_i_, 3) + 0.5e0_wp * g_g(g_i_, 3)
             enddo
-            potential(2,1) = 0.5d0 * (g(3) - u(3))
+            potential(2,1) = 0.5e0_wp * (g(3) - u(3))
             do g_i_ = 1, g_p_
-                g_potential(g_i_, 2, 3) = (-0.5d0) * g_u(g_i_, 1) + 0.5d0 * g_g(g_i_, 1)
+                g_potential(g_i_, 2, 3) = (-0.5e0_wp) * g_u(g_i_, 1) + 0.5e0_wp * g_g(g_i_, 1)
             enddo
-            potential(2,3) = 0.5d0 * (g(1) - u(1))
+            potential(2,3) = 0.5e0_wp * (g(1) - u(1))
             do g_i_ = 1, g_p_
-                g_potential(g_i_, 3, 1) = (-0.5d0) * g_u(g_i_, 2) + 0.5d0 * g_g(g_i_, 2)
+                g_potential(g_i_, 3, 1) = (-0.5e0_wp) * g_u(g_i_, 2) + 0.5e0_wp * g_g(g_i_, 2)
             enddo
-            potential(3,1) = 0.5d0 * (g(2) - u(2))
+            potential(3,1) = 0.5e0_wp * (g(2) - u(2))
             do g_i_ = 1, g_p_
-                g_potential(g_i_, 3, 2) = (-0.5d0) * g_u(g_i_, 1) + 0.5d0 * g_g(g_i_, 1)
+                g_potential(g_i_, 3, 2) = (-0.5e0_wp) * g_u(g_i_, 1) + 0.5e0_wp * g_g(g_i_, 1)
             enddo
-            potential(3,2) = 0.5d0 * (g(1) - u(1))
+            potential(3,2) = 0.5e0_wp * (g(1) - u(1))
             if( nsurf .eq. 1 )then
                 do g_i_ = 1, g_p_
                     g_e(g_i_, ii) = g_potential(g_i_, 1, 1)
@@ -574,9 +580,9 @@ module chempotpy_h3p_kbnn_2002_pes
             endif
             if( nsurf .gt. 6 .or. nsurf .lt. 1 )then
                 do g_i_ = 1, g_p_
-                    g_e(g_i_, ii) = 0.0d0
+                    g_e(g_i_, ii) = 0.0e0_wp
                 enddo
-                e(ii) = 0.d0
+                e(ii) = 0.e0_wp
                 write (6, *) 'WARN:  NSURF = ', nsurf
             endif
             ! derivatives
@@ -591,13 +597,14 @@ end module chempotpy_h3p_kbnn_2002_pes
 !> @brief Expose H3p_KBNN_2002 through the Python-facing PES entry point.
 subroutine pes( x, igrad, pin, grad, dvec )
     use chempotpy_h3p_kbnn_2002_pes, only: evaluate
+    use chempotpy_kinds,             only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 3
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: pin(nstates)
-    double precision, intent(out) :: grad(nstates,natoms,3)
-    double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 3
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: pin(nstates)
+    real(wp), intent(out) :: grad(nstates,natoms,3)
+    real(wp), intent(out) :: dvec(nstates,nstates,natoms,3)
     call evaluate(x, igrad, pin, grad, dvec)
 end subroutine pes

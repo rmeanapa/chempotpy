@@ -24,6 +24,7 @@
 
 !> @brief Implement AlmHn_VBO1, a potential energy surface for AlmHn.
 module chempotpy_almhn_vbo1_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -32,25 +33,26 @@ module chempotpy_almhn_vbo1_pes
 
     !> @brief Evaluate the AlmHn_VBO1 potential energy surface for AlmHn.
     subroutine evaluate( xyz, nal, nh, natoms, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, intent(in)           :: nal, nh, natoms
-        double precision, intent(in)  :: xyz(10000,3)
-        integer, intent(in)           :: igrad
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: cx(natoms), cy(natoms), cz(natoms)
-        double precision              :: v
-        character(len=2)              :: symbol(natoms)
-        integer                       :: istate, iatom
+        integer, parameter    :: nstates = 1
+        integer, intent(in)   :: nal, nh, natoms
+        real(wp), intent(in)  :: xyz(10000,3)
+        integer, intent(in)   :: igrad
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: cx(natoms), cy(natoms), cz(natoms)
+        real(wp)              :: v
+        character(len=2)      :: symbol(natoms)
+        integer               :: istate, iatom
         !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
-            cx(iatom) = xyz(iatom,1)/legacy_bohr_to_angstrom
-            cy(iatom) = xyz(iatom,2)/legacy_bohr_to_angstrom
-            cz(iatom) = xyz(iatom,3)/legacy_bohr_to_angstrom
+            cx(iatom) = xyz(iatom,1)/bohr_to_angstrom
+            cy(iatom) = xyz(iatom,2)/bohr_to_angstrom
+            cz(iatom) = xyz(iatom,3)/bohr_to_angstrom
         enddo
         do iatom=1, nal
             symbol(iatom) = 'Al'
@@ -61,7 +63,7 @@ module chempotpy_almhn_vbo1_pes
         call alhpot(cx, cy, cz, v, natoms, 10000, symbol)
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = v*legacy_hartree_to_electronvolt
+                p(istate) = v*hartree_to_electronvolt
             enddo
         else
             write (*, *) 'Only energy is available'
@@ -71,18 +73,19 @@ module chempotpy_almhn_vbo1_pes
     !> @brief Evaluate alhpot for the AlmHn_VBO1 potential.
     subroutine alhpot( x, y, z, v, natom, maxatom, symbol )
         use chempotpy_geometry, only: fill_distance_matrix
+        use chempotpy_kinds,    only: wp
         implicit none
-        double precision            :: add, c1, c1_al, c1_h, c1_hal, c2, c2_al, c2_h, c2_hal, c3, c3_al, c3_h, c4, c4_al, c4_h, &
+        real(wp) :: add, c1, c1_al, c1_h, c1_hal, c2, c2_al, c2_h, c2_hal, c3, c3_al, c3_h, c4, c4_al, c4_h, &
             & del1, den1, den2, den3, den4, dx, dy, dz, en, en1, en2, esn, esn_al, esn_h, fa, gam1_al, gam1_h, gam1_hal, &
             & gam2_al, gam2_h, gam2_hal, gam3_al, gam3_alh, gam3_h, gam3_hal, gam4_al, gam4_alh, gam4_h, gam4_hal, &
-            & r(maxatom,maxatom), r1, rij, sig3_alh, sig3_hal, sig4_alh, sig4_hal, v, v1, vi3, vi4, x(maxatom), y(maxatom), &
+            & r(maxatom, maxatom), r1, rij, sig3_alh, sig3_hal, sig4_alh, sig4_hal, v, v1, vi3, vi4, x(maxatom), y(maxatom), &
             & z(maxatom)
-        integer                     :: i, id(maxatom), j, k, maxatom, natom
-        double precision, parameter :: autoev  = 27.2113961d0
-        double precision, parameter :: autoang = 0.529177249d0
-        character(len=2)            :: symbol(maxatom)
-        double precision :: b(4,maxatom,maxatom), sigma(4,maxatom,maxatom)
-        double precision :: cn(4,maxatom,maxatom), gam(4,maxatom,maxatom)
+        integer             :: i, id(maxatom), j, k, maxatom, natom
+        real(wp), parameter :: autoev  = 27.2113961e0_wp
+        real(wp), parameter :: autoang = 0.529177249e0_wp
+        character(len=2)    :: symbol(maxatom)
+        real(wp)            :: b(4,maxatom,maxatom), sigma(4,maxatom,maxatom)
+        real(wp)            :: cn(4,maxatom,maxatom), gam(4,maxatom,maxatom)
         !   gam1_h to gam4_h are gammaij in Eq. (1) of Ref. 1
         !   c1_h to c4_h are ci,1 to ci,4 in Eqs. (6) and (7)
         !   esn_h is the exponent of Vi in Eq. (6)
@@ -139,12 +142,12 @@ module chempotpy_almhn_vbo1_pes
             endif
         enddo
         !    Calculate all internuclear distances
-        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
+        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom, 1:natom))
         !    Calculate en1 which corresponds to the first term in parenthesis in
-        en1 = 0d0
-        en2 = 0d0
+        en1 = 0e0_wp
+        en2 = 0e0_wp
         do i=1, natom
-            v1 = 0d0
+            v1 = 0e0_wp
             do j=1, natom
                 if( i .eq. j ) cycle
                 if( (id(i) .eq. 1).and.(id(j) .eq. 1) )then
@@ -158,14 +161,14 @@ module chempotpy_almhn_vbo1_pes
                     c2         = c2_h
                     r1         = 0.7414/autoang
                     !    Calculate Nij according to Eq. (2)
-                    den1         = 1d0-(r1/del1)**en
-                    cn(1,i,j)    = dexp(gam(1,i,j)/den1)
-                    den2         = 1d0-(r1/del1)**en
-                    cn(2,i,j)    = dexp(gam(2,i,j)/den2)
-                    den3         = 1d0-(r1/del1)**en
-                    cn(3,i,j)    = dexp(gam(3,i,j)/den3)
-                    den4         = 1d0-(r1/del1)**en
-                    cn(4,i,j)    = dexp(gam(4,i,j)/den4)
+                    den1         = 1e0_wp-(r1/del1)**en
+                    cn(1,i,j)    = exp(gam(1,i,j)/den1)
+                    den2         = 1e0_wp-(r1/del1)**en
+                    cn(2,i,j)    = exp(gam(2,i,j)/den2)
+                    den3         = 1e0_wp-(r1/del1)**en
+                    cn(3,i,j)    = exp(gam(3,i,j)/den3)
+                    den4         = 1e0_wp-(r1/del1)**en
+                    cn(4,i,j)    = exp(gam(4,i,j)/den4)
                     sigma(3,i,j) = 1.0
                     sigma(4,i,j) = 1.0
                 elseif( (id(i) .eq. 2).and.(id(j) .eq. 2) )then
@@ -178,14 +181,14 @@ module chempotpy_almhn_vbo1_pes
                     c1           = c1_al
                     c2           = c2_al
                     r1           = 2.7306/autoang
-                    den1         = 1d0-(r1/del1)**en
-                    cn(1,i,j)    = dexp(gam(1,i,j)/den1)
-                    den2         = 1d0-(r1/del1)**en
-                    cn(2,i,j)    = dexp(gam(2,i,j)/den2)
-                    den3         = 1d0-(r1/del1)**en
-                    cn(3,i,j)    = dexp(gam(3,i,j)/den3)
-                    den4         = 1d0-(r1/del1)**en
-                    cn(4,i,j)    = dexp(gam(4,i,j)/den4)
+                    den1         = 1e0_wp-(r1/del1)**en
+                    cn(1,i,j)    = exp(gam(1,i,j)/den1)
+                    den2         = 1e0_wp-(r1/del1)**en
+                    cn(2,i,j)    = exp(gam(2,i,j)/den2)
+                    den3         = 1e0_wp-(r1/del1)**en
+                    cn(3,i,j)    = exp(gam(3,i,j)/den3)
+                    den4         = 1e0_wp-(r1/del1)**en
+                    cn(4,i,j)    = exp(gam(4,i,j)/den4)
                     sigma(3,i,j) = 1.0
                     sigma(4,i,j) = 1.0
                 else
@@ -207,27 +210,27 @@ module chempotpy_almhn_vbo1_pes
                     c1        = c1_hal
                     c2        = c2_hal
                     r1        = 1.6637/autoang
-                    den1      = 1d0-(r1/del1)**en
-                    cn(1,i,j) = dexp(gam(1,i,j)/den1)
-                    den2      = 1d0-(r1/del1)**en
-                    cn(2,i,j) = dexp(gam(2,i,j)/den2)
-                    den3      = 1d0-(r1/del1)**en
-                    cn(3,i,j) = dexp(gam(3,i,j)/den3)
-                    den4      = 1d0-(r1/del1)**en
-                    cn(4,i,j) = dexp(gam(4,i,j)/den4)
+                    den1      = 1e0_wp-(r1/del1)**en
+                    cn(1,i,j) = exp(gam(1,i,j)/den1)
+                    den2      = 1e0_wp-(r1/del1)**en
+                    cn(2,i,j) = exp(gam(2,i,j)/den2)
+                    den3      = 1e0_wp-(r1/del1)**en
+                    cn(3,i,j) = exp(gam(3,i,j)/den3)
+                    den4      = 1e0_wp-(r1/del1)**en
+                    cn(4,i,j) = exp(gam(4,i,j)/den4)
                 endif
                 !   Calculate bij according to Eq. (1)
-                rij = r(i,j)
+                rij = r(i, j)
                 if( rij .lt. del1 )then
-                    b(1,i,j) = dexp(-gam(1,i,j)/(1d0-(rij/del1)**en))*cn(1,i,j)
-                    b(2,i,j) = dexp(-gam(2,i,j)/(1d0-(rij/del1)**en))*cn(2,i,j)
-                    b(3,i,j) = dexp(-gam(3,i,j)/(1d0-(rij/del1)**en))*cn(3,i,j)
-                    b(4,i,j) = dexp(-gam(4,i,j)/(1d0-(rij/del1)**en))*cn(4,i,j)
+                    b(1,i,j) = exp(-gam(1,i,j)/(1e0_wp-(rij/del1)**en))*cn(1,i,j)
+                    b(2,i,j) = exp(-gam(2,i,j)/(1e0_wp-(rij/del1)**en))*cn(2,i,j)
+                    b(3,i,j) = exp(-gam(3,i,j)/(1e0_wp-(rij/del1)**en))*cn(3,i,j)
+                    b(4,i,j) = exp(-gam(4,i,j)/(1e0_wp-(rij/del1)**en))*cn(4,i,j)
                     fa       = c1*b(1,i,j)+c2*b(2,i,j)
                     v1       = v1+fa
                 else
                     do k=1, 4
-                        b(k,i,j) = 0.0d0
+                        b(k,i,j) = 0.0e0_wp
                     enddo
                 endif
             enddo
@@ -244,8 +247,8 @@ module chempotpy_almhn_vbo1_pes
                 c4  = c4_al
                 esn = esn_al
             endif
-            vi3 = 0.0d0
-            vi4 = 0.0d0
+            vi3 = 0.0e0_wp
+            vi4 = 0.0e0_wp
             do j=1, natom
                 if( i .eq. j ) cycle
                 vi3 = vi3+c3*sigma(3,i,j)*b(3,i,j)
@@ -261,12 +264,13 @@ end module chempotpy_almhn_vbo1_pes
 !> @brief Expose AlmHn_VBO1 through the Python-facing PES entry point.
 subroutine pes( xyz, nal, nh, natoms, igrad, p, g, d )
     use chempotpy_almhn_vbo1_pes, only: evaluate
+    use chempotpy_kinds,          only: wp
     implicit none
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: nal, nh, natoms, igrad
-    double precision, intent(in)  :: xyz(10000,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: nal, nh, natoms, igrad
+    real(wp), intent(in)  :: xyz(10000,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(xyz, nal, nh, natoms, igrad, p, g, d)
 end subroutine pes

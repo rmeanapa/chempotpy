@@ -22,6 +22,7 @@
 
 !> @brief Implement O3_16_3App_AE_2026, a potential energy surface for O3.
 module chempotpy_o3_16_3app_ae_2026_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -30,18 +31,19 @@ module chempotpy_o3_16_3app_ae_2026_pes
 
     !> @brief Evaluate the O3_16_3App_AE_2026 potential energy surface for O3.
     subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 16
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: t(nstates,nstates)
-        integer                       :: iatom, idir, j, istate, jstate
+        integer, parameter    :: nstates = 16
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: t(nstates,nstates)
+        integer               :: iatom, idir, j, istate, jstate
         !initialize
-        p = 0.d0; g = 0.d0; d = 0.d0
+        p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! no conversion needed, input is Angstrom, output is eV, eV/Angstrom, and 1/angstrom
         call energy_gradient(x, p, g, d, t, natoms, nstates)
     end
@@ -61,24 +63,25 @@ module chempotpy_o3_16_3app_ae_2026_pes
         ! g2b  - derivatives of two-body energy contributions w.r.t.
         ! internuclear distances
         ! drdx - dr/dx matrix for converting derivatives
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)             :: n, ns
-        double precision, intent(in)    :: x(n,3)
-        double precision, intent(inout) :: e(ns)
-        double precision, intent(inout) :: g(ns,n,3)
-        double precision, intent(inout) :: t(ns,ns)
-        double precision, intent(inout) :: h(ns,ns,n,3)
+        integer, intent(in)     :: n, ns
+        real(wp), intent(in)    :: x(n,3)
+        real(wp), intent(inout) :: e(ns)
+        real(wp), intent(inout) :: g(ns,n,3)
+        real(wp), intent(inout) :: t(ns,ns)
+        real(wp), intent(inout) :: h(ns,ns,n,3)
         ! layers and their sizes
-        double precision :: coeff_l0(3,32), coeff_l1(32,64), coeff_l2(64,128), coeff_l3(128,256), coeff_l4(256,136)
-        double precision :: bias_l0(32), bias_l1(64), bias_l2(128), bias_l3(256), bias_l4(136)
-        double precision :: r(n*(n-1)/2)
-        double precision :: gr(ns,n*(n-1)/2)
-        double precision :: hr(ns,ns,n*(n-1)/2)
-        double precision :: v2b(ns), g2b(ns,n*(n-1)/2)  !!!!
-        double precision :: v2b_1(n*(n-1)/2,ns)
-        double precision :: drdx(n*(n-1)/2,3*n)
-        integer          :: i, j, k, l, m
-        integer          :: imol
+        real(wp) :: coeff_l0(3,32), coeff_l1(32,64), coeff_l2(64,128), coeff_l3(128,256), coeff_l4(256,136)
+        real(wp) :: bias_l0(32), bias_l1(64), bias_l2(128), bias_l3(256), bias_l4(136)
+        real(wp) :: r(n*(n-1)/2)
+        real(wp) :: gr(ns,n*(n-1)/2)
+        real(wp) :: hr(ns,ns,n*(n-1)/2)
+        real(wp) :: v2b(ns), g2b(ns,n*(n-1)/2)  !!!!
+        real(wp) :: v2b_1(n*(n-1)/2,ns)
+        real(wp) :: drdx(n*(n-1)/2,3*n)
+        integer  :: i, j, k, l, m
+        integer  :: imol
         call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4)
         call convert_xyz_to_r(x, r, n)
         ! compute 2body terms, ip_states involves inoinic curve
@@ -94,66 +97,67 @@ module chempotpy_o3_16_3app_ae_2026_pes
 
     !> @brief Evaluate backprop.
     subroutine backprop( r, n, ns, e, g, h, t, coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4, v2b, v2b_1, g2b )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)             :: n, ns
-        double precision, intent(inout) :: e(ns), g(ns,n*(n-1)/2), h(ns,ns,n*(n-1)/2)
-        double precision, intent(inout) :: t(ns,ns)
-        double precision, intent(in)    :: coeff_l0(3,32), coeff_l1(32,64), coeff_l2(64,128), coeff_l3(128,256), coeff_l4(256,136)
-        double precision, intent(in)    :: bias_l0(32), bias_l1(64), bias_l2(128), bias_l3(256), bias_l4(136)
-        double precision, intent(in)    :: v2b(ns), v2b_1(n*(n-1)/2,ns)
-        double precision, intent(in)    :: g2b(ns,n*(n-1)/2)
-        double precision                :: r(n*(n-1)/2)
-        double precision                :: a0(32), a1(64), a2(128), a3(256), a4(136)
-        double precision                :: z0(32), z1(64), z2(128), z3(256), z4(136)
-        double precision                :: g0(3,32), g1(3,64), g2(3,128), g3(3,256), g4(3,136), g4p(136,3)
-        double precision                :: dpem(ns,ns), dvdu(ns,136)
-        double precision                :: dudr(ns,ns,3), tmpmat(ns,ns)
-        integer                         :: map(3,16)
-        double precision                :: e_0(16), sum_dis, s_j
-        double precision                :: af_f=1.5, af_a=-2.0, af_b=3.4, order=4.0
-        double precision                :: f, dfdr(n*(n-1)/2)
-        double precision                :: dfdr_3b(ns,n*(n-1)/2), dfdr_2b(ns,n*(n-1)/2)
-        double precision                :: ag_f=1.5, ag_a=-2.0, ag_b=4.0
-        double precision                :: decay, ddecaydr(n*(n-1)/2)
-        double precision                :: ddecaydr_3b(ns,n*(n-1)/2), ddecaydr_2b(ns,n*(n-1)/2)
-        integer                         :: sum1
-        integer                         :: i, j, k, l
-        double precision                :: sum_v2b(ns), sum_g2b(ns,n*(n-1)/2)
-        double precision                :: reordered_v2b(ns), reordered_g2b(ns,n*(n-1)/2)
-        double precision                :: cpem0(ns,ns)
-        double precision                :: g4p_0(136,3)
+        integer, intent(in)     :: n, ns
+        real(wp), intent(inout) :: e(ns), g(ns,n*(n-1)/2), h(ns,ns,n*(n-1)/2)
+        real(wp), intent(inout) :: t(ns,ns)
+        real(wp), intent(in)    :: coeff_l0(3,32), coeff_l1(32,64), coeff_l2(64,128), coeff_l3(128,256), coeff_l4(256,136)
+        real(wp), intent(in)    :: bias_l0(32), bias_l1(64), bias_l2(128), bias_l3(256), bias_l4(136)
+        real(wp), intent(in)    :: v2b(ns), v2b_1(n*(n-1)/2,ns)
+        real(wp), intent(in)    :: g2b(ns,n*(n-1)/2)
+        real(wp)                :: r(n*(n-1)/2)
+        real(wp)                :: a0(32), a1(64), a2(128), a3(256), a4(136)
+        real(wp)                :: z0(32), z1(64), z2(128), z3(256), z4(136)
+        real(wp)                :: g0(3,32), g1(3,64), g2(3,128), g3(3,256), g4(3,136), g4p(136,3)
+        real(wp)                :: dpem(ns,ns), dvdu(ns,136)
+        real(wp)                :: dudr(ns,ns,3), tmpmat(ns,ns)
+        integer                 :: map(3,16)
+        real(wp)                :: e_0(16), sum_dis, s_j
+        real(wp)                :: af_f=1.5, af_a=-2.0, af_b=3.4, order=4.0
+        real(wp)                :: f, dfdr(n*(n-1)/2)
+        real(wp)                :: dfdr_3b(ns,n*(n-1)/2), dfdr_2b(ns,n*(n-1)/2)
+        real(wp)                :: ag_f=1.5, ag_a=-2.0, ag_b=4.0
+        real(wp)                :: decay, ddecaydr(n*(n-1)/2)
+        real(wp)                :: ddecaydr_3b(ns,n*(n-1)/2), ddecaydr_2b(ns,n*(n-1)/2)
+        integer                 :: sum1
+        integer                 :: i, j, k, l
+        real(wp)                :: sum_v2b(ns), sum_g2b(ns,n*(n-1)/2)
+        real(wp)                :: reordered_v2b(ns), reordered_g2b(ns,n*(n-1)/2)
+        real(wp)                :: cpem0(ns,ns)
+        real(wp)                :: g4p_0(136,3)
         ! the following parameters are used to construct multi-state many-body SEC
-        double precision :: sec_scaling(ns)
-        double precision :: averaged_sec_scaling
+        real(wp) :: sec_scaling(ns)
+        real(wp) :: averaged_sec_scaling
         ! decay function used to construct multi-state many-body SEC
-        double precision :: cpem1(ns,ns)
-        double precision :: cpem2(ns,ns)
-        double precision :: ah_f=2.5, ah_a=-2.0, ah_b=5.0
-        double precision :: decay_h, ddecay_hdr(n*(n-1)/2)
-        double precision :: ddecay_hdr_3b(ns,n*(n-1)/2), ddecay_hdr_2b(ns,n*(n-1)/2)
+        real(wp) :: cpem1(ns,ns)
+        real(wp) :: cpem2(ns,ns)
+        real(wp) :: ah_f=2.5, ah_a=-2.0, ah_b=5.0
+        real(wp) :: decay_h, ddecay_hdr(n*(n-1)/2)
+        real(wp) :: ddecay_hdr_3b(ns,n*(n-1)/2), ddecay_hdr_2b(ns,n*(n-1)/2)
         ! convert CPEM(1) and CPEM(2) into ns*(ns+1)/2 vector
-        double precision :: cpem1_vec(136)
-        double precision :: cpem2_vec(136)
+        real(wp) :: cpem1_vec(136)
+        real(wp) :: cpem2_vec(136)
         ! gradient of CPEMs
-        double precision :: g4p_1(136,3), g4p_2(136,3)
+        real(wp) :: g4p_1(136,3), g4p_2(136,3)
         ! final gradient
-        double precision :: g4p_f(136,3)
-        a0 = 0.0d0
-        a1 = 0.0d0
-        a2 = 0.0d0
-        a3 = 0.0d0
-        a4 = 0.0d0
-        z0 = 0.0d0
-        z1 = 0.0d0
-        z2 = 0.0d0
-        z3 = 0.0d0
-        z4 = 0.0d0
-        e  = 0.0d0
-        g0 = 0.0d0
-        g1 = 0.0d0
-        g2 = 0.0d0
-        g3 = 0.0d0
-        g4 = 0.0d0
+        real(wp) :: g4p_f(136,3)
+        a0 = 0.0e0_wp
+        a1 = 0.0e0_wp
+        a2 = 0.0e0_wp
+        a3 = 0.0e0_wp
+        a4 = 0.0e0_wp
+        z0 = 0.0e0_wp
+        z1 = 0.0e0_wp
+        z2 = 0.0e0_wp
+        z3 = 0.0e0_wp
+        z4 = 0.0e0_wp
+        e  = 0.0e0_wp
+        g0 = 0.0e0_wp
+        g1 = 0.0e0_wp
+        g2 = 0.0e0_wp
+        g3 = 0.0e0_wp
+        g4 = 0.0e0_wp
         ! Step 1. Computing CPEM(0) using DDNN
         !== Step 1.1 Computing CPEM(0)
         call mproduct(r, coeff_l0, z0, 1, 3, 32)
@@ -254,7 +258,7 @@ module chempotpy_o3_16_3app_ae_2026_pes
         !   sec_scaling(14)=1.0d0     ! 1.10
         !   sec_scaling(15)=1.0d0     ! 1.10
         !   sec_scaling(16)=1.0d0     ! 1.10
-        averaged_sec_scaling = 0.d0
+        averaged_sec_scaling = 0.e0_wp
         do i=1, ns
             averaged_sec_scaling = averaged_sec_scaling+sec_scaling(i)
         enddo
@@ -327,7 +331,7 @@ module chempotpy_o3_16_3app_ae_2026_pes
         enddo
         call mproduct(dvdu, g4p_f, g, ns, 136, 3)
         ! compute NACs
-        dudr(:,:,:) = 0.d0
+        dudr(:,:,:) = 0.e0_wp
         do i=1, ns
             dudr(i,i,:) = g4p_f(i,:)
         enddo
@@ -339,7 +343,7 @@ module chempotpy_o3_16_3app_ae_2026_pes
                 dudr(j,i,:) = dudr(i,j,:)
             enddo
         enddo
-        h(:,:,:) = 0.d0
+        h(:,:,:) = 0.e0_wp
         do i=1, 3
             tmpmat(:,:) = dudr(:,:,i)
             ! C^T*dU*C
@@ -347,10 +351,10 @@ module chempotpy_o3_16_3app_ae_2026_pes
             ! F_ij = (C^T*dU*C)_ij / (V_j-V_i)
             do j=1, ns
                 do k=j+1, ns
-                    if( (e(k)-e(j)) > 1.d-8 )then
+                    if( (e(k)-e(j)) > 1.e-8_wp )then
                         h(j,k,i) = tmpmat(j,k)/(e(k)-e(j))
                     else
-                        h(j,k,i) = tmpmat(j,k)/1.d-8
+                        h(j,k,i) = tmpmat(j,k)/1.e-8_wp
                     endif
                     h(k,j,i) = -h(j,k,i)
                 enddo
@@ -371,21 +375,23 @@ module chempotpy_o3_16_3app_ae_2026_pes
     !activation function, geluG
     !> @brief Evaluate activation_gelu.
     subroutine activation_gelu( z, a, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)    :: z(n)
-        double precision, intent(inout) :: a(n)
-        integer                         :: i, n
+        real(wp), intent(in)    :: z(n)
+        real(wp), intent(inout) :: a(n)
+        integer                 :: i, n
         do i=1, n
-            a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.d0)))
+            a(i) = 0.5*z(i)*(1+erf(z(i)/sqrt(2.e0_wp)))
         enddo
     end subroutine activation_gelu
 
     !> @brief Evaluate activation_derivative_gelu.
     subroutine activation_derivative_gelu( z, a, b, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)    :: z(n), a(n)
-        double precision, intent(inout) :: b(n)
-        integer                         :: i, n
+        real(wp), intent(in)    :: z(n), a(n)
+        real(wp), intent(inout) :: b(n)
+        integer                 :: i, n
         do i=1, n
             !     b(i)=b(i)*(0.5*erf(z(i)/sqrt(2.d0))+0.398942*exp(-z(i)**2/2)*z(i)+0.5)
             b(i) = b(i)*(a(i)/z(i) + 0.398942*z(i)*exp(-z(i)**2/2) )
@@ -399,25 +405,26 @@ module chempotpy_o3_16_3app_ae_2026_pes
     ! B(r)=0.5+0.5*tanh(2*(-x+4.0))
     !> @brief Evaluate activation_functional_heviside.
     subroutine activation_functional_heviside( z, a, n, r, nbonds, f )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, parameter     :: af_f = 1.5, af_a=-2.0, af_b=3.4, order=4.0
-        integer, intent(in)             :: n, nbonds
-        double precision, intent(in)    :: z(n)
-        double precision, intent(in)    :: r(nbonds)
-        double precision, intent(inout) :: a(n)
-        double precision, intent(out)   :: f
-        double precision                :: r_in, ar, br
-        integer                         :: max_index
-        integer                         :: npairs, ibond, jbond, ipair
-        double precision                :: pair_sum, bond_sum
-        pair_sum = 0.d0
+        real(wp), parameter     :: af_f = 1.5, af_a=-2.0, af_b=3.4, order=4.0
+        integer, intent(in)     :: n, nbonds
+        real(wp), intent(in)    :: z(n)
+        real(wp), intent(in)    :: r(nbonds)
+        real(wp), intent(inout) :: a(n)
+        real(wp), intent(out)   :: f
+        real(wp)                :: r_in, ar, br
+        integer                 :: max_index
+        integer                 :: npairs, ibond, jbond, ipair
+        real(wp)                :: pair_sum, bond_sum
+        pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
                 pair_sum = pair_sum+(r(ibond)+r(jbond))**order
             enddo
         enddo
         pair_sum = pair_sum**(1/order)
-        bond_sum = 0.d0
+        bond_sum = 0.e0_wp
         do ibond=1, nbonds
             bond_sum = bond_sum+r(ibond)**order
         enddo
@@ -433,28 +440,29 @@ module chempotpy_o3_16_3app_ae_2026_pes
     !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate activation_functional_derivative_terms.
     subroutine activation_functional_derivative_terms( g, z, n, r, nbonds, dfdr )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, parameter     :: af_f = 1.5, af_a=-2.0, af_b=3.4, order=4.0
-        integer, intent(in)             :: n, nbonds
-        double precision, intent(in)    :: z(n)
-        double precision, intent(in)    :: r(nbonds)
-        double precision, intent(inout) :: g(nbonds,n)
-        double precision, intent(out)   :: dfdr(nbonds)
-        integer                         :: i
-        double precision                :: r_in, ar, br
-        double precision                :: dfdr_in, dr_indr(nbonds)
-        integer                         :: npairs, ibond, jbond, ipair
-        double precision                :: r_in_num
-        double precision                :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
-        double precision                :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
-        double precision                :: diff
-        pair_sum = 0.d0
+        real(wp), parameter     :: af_f = 1.5, af_a=-2.0, af_b=3.4, order=4.0
+        integer, intent(in)     :: n, nbonds
+        real(wp), intent(in)    :: z(n)
+        real(wp), intent(in)    :: r(nbonds)
+        real(wp), intent(inout) :: g(nbonds,n)
+        real(wp), intent(out)   :: dfdr(nbonds)
+        integer                 :: i
+        real(wp)                :: r_in, ar, br
+        real(wp)                :: dfdr_in, dr_indr(nbonds)
+        integer                 :: npairs, ibond, jbond, ipair
+        real(wp)                :: r_in_num
+        real(wp)                :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
+        real(wp)                :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
+        real(wp)                :: diff
+        pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
                 pair_sum = pair_sum+(r(ibond)+r(jbond))**order
             enddo
         enddo
-        bond_sum = 0.d0
+        bond_sum = 0.e0_wp
         do ibond=1, nbonds
             bond_sum = bond_sum+r(ibond)**order
         enddo
@@ -463,7 +471,7 @@ module chempotpy_o3_16_3app_ae_2026_pes
         br   = 0.5+0.5*tanh(af_f*(-r_in+af_b))
         dfdr_in = af_f*(-0.25*tanh(af_f*(r_in-af_a))-0.25)/((cosh(af_f*(-r_in+af_b)))**2) + af_f*(0.25+0.25*tanh(af_f* &
             & (- r_in+af_b)))/((cosh(af_f*(r_in-af_a)))**2)
-        dr_indr = 0.d0
+        dr_indr = 0.e0_wp
         do ibond=1, nbonds
             do jbond=1, nbonds
                 if( ibond .ne. jbond )then
@@ -490,23 +498,24 @@ module chempotpy_o3_16_3app_ae_2026_pes
     ! B(r)=0.5+0.5*tanh(2*(-x+4.0))
     !> @brief Evaluate decay_function_heviside.
     subroutine decay_function_heviside( r, nbonds, af_f, af_a, af_b, order, f )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: nbonds
-        double precision, intent(in)  :: af_f, af_a, af_b, order
-        double precision, intent(in)  :: r(nbonds)
-        double precision, intent(out) :: f
-        double precision              :: r_in, ar, br
-        integer                       :: max_index
-        integer                       :: npairs, ibond, jbond, ipair
-        double precision              :: pair_sum, bond_sum
-        pair_sum = 0.d0
+        integer, intent(in)   :: nbonds
+        real(wp), intent(in)  :: af_f, af_a, af_b, order
+        real(wp), intent(in)  :: r(nbonds)
+        real(wp), intent(out) :: f
+        real(wp)              :: r_in, ar, br
+        integer               :: max_index
+        integer               :: npairs, ibond, jbond, ipair
+        real(wp)              :: pair_sum, bond_sum
+        pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
                 pair_sum = pair_sum+(r(ibond)+r(jbond))**order
             enddo
         enddo
         pair_sum = pair_sum**(1/order)
-        bond_sum = 0.d0
+        bond_sum = 0.e0_wp
         do ibond=1, nbonds
             bond_sum = bond_sum+r(ibond)**order
         enddo
@@ -521,25 +530,26 @@ module chempotpy_o3_16_3app_ae_2026_pes
     !call activation_functional_derivative_terms(g4,21,n*(n-1)/2,z4)
     !> @brief Evaluate decay_function_heviside_derivative.
     subroutine decay_function_heviside_derivative( r, nbonds, af_f, af_a, af_b, order, dfdr )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: nbonds
-        double precision, intent(in)  :: r(nbonds)
-        double precision, intent(in)  :: af_f, af_a, af_b, order
-        double precision, intent(out) :: dfdr(nbonds)
-        double precision              :: r_in, ar, br
-        double precision              :: dfdr_in, dr_indr(nbonds)
-        integer                       :: npairs, ibond, jbond, ipair
-        double precision              :: r_in_num
-        double precision              :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
-        double precision              :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
-        double precision              :: diff
-        pair_sum = 0.d0
+        integer, intent(in)   :: nbonds
+        real(wp), intent(in)  :: r(nbonds)
+        real(wp), intent(in)  :: af_f, af_a, af_b, order
+        real(wp), intent(out) :: dfdr(nbonds)
+        real(wp)              :: r_in, ar, br
+        real(wp)              :: dfdr_in, dr_indr(nbonds)
+        integer               :: npairs, ibond, jbond, ipair
+        real(wp)              :: r_in_num
+        real(wp)              :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
+        real(wp)              :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
+        real(wp)              :: diff
+        pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
                 pair_sum = pair_sum+(r(ibond)+r(jbond))**order
             enddo
         enddo
-        bond_sum = 0.d0
+        bond_sum = 0.e0_wp
         do ibond=1, nbonds
             bond_sum = bond_sum+r(ibond)**order
         enddo
@@ -548,7 +558,7 @@ module chempotpy_o3_16_3app_ae_2026_pes
         br   = 0.5+0.5*tanh(af_f*(-r_in+af_b))
         dfdr_in = af_f*(-0.25*tanh(af_f*(r_in-af_a))-0.25)/((cosh(af_f*(-r_in+af_b)))**2) + af_f*(0.25+0.25*tanh(af_f* &
             & (- r_in+af_b)))/((cosh(af_f*(r_in-af_a)))**2)
-        dr_indr = 0.d0
+        dr_indr = 0.e0_wp
         do ibond=1, nbonds
             do jbond=1, nbonds
                 if( ibond .ne. jbond )then
@@ -568,6 +578,7 @@ module chempotpy_o3_16_3app_ae_2026_pes
     ! used to compute index in DPEM
     !> @brief Evaluate sumover.
     subroutine sumover( a, b, sum1 )
+        use chempotpy_kinds, only: wp
         implicit none
         integer, intent(in)  :: a, b
         integer, intent(out) :: sum1
@@ -582,18 +593,19 @@ module chempotpy_o3_16_3app_ae_2026_pes
     ! subroutine diagonalize(n,A_ss,B_ss,U_ss)
     !> @brief Evaluate diagonalize.
     subroutine diagonalize( n, a_ss, ev_s, u_ss )
+        use chempotpy_kinds, only: wp
         implicit none
         ! parameters
-        integer, intent(in)          :: n
-        double precision, intent(in) :: a_ss(n,n)
+        integer, intent(in)  :: n
+        real(wp), intent(in) :: a_ss(n,n)
         !   real*8, intent(out) :: B_ss(n,n)
-        double precision, intent(out) :: u_ss(n,n)
+        real(wp), intent(out) :: u_ss(n,n)
         ! internal variables
         !   real*8 :: EV_s(n)
-        double precision, intent(out) :: ev_s(n)
-        integer                       :: io, i
-        double precision, allocatable :: lapack_work_d(:)
-        integer                       :: lapack_lwork_d
+        real(wp), intent(out) :: ev_s(n)
+        integer               :: io, i
+        real(wp), allocatable :: lapack_work_d(:)
+        integer               :: lapack_lwork_d
         u_ss           = a_ss
         lapack_lwork_d = -1
         allocate( lapack_work_d(2) )
@@ -614,15 +626,16 @@ module chempotpy_o3_16_3app_ae_2026_pes
     !> @brief Evaluate grad_r_to_xyz.
     subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
         use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
+        use chempotpy_kinds,    only: wp
         implicit none
-        integer, intent(in)             :: n, ns
-        double precision, intent(in)    :: x(n,3)
-        double precision, intent(in)    :: r(n*(n-1)/2)
-        double precision, intent(in)    :: gr(ns,n*(n-1)/2)
-        double precision, intent(inout) :: g(ns,n,3)
-        double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
-        double precision                :: gx(ns,3*n)
-        integer                         :: i, j
+        integer, intent(in)     :: n, ns
+        real(wp), intent(in)    :: x(n,3)
+        real(wp), intent(in)    :: r(n*(n-1)/2)
+        real(wp), intent(in)    :: gr(ns,n*(n-1)/2)
+        real(wp), intent(inout) :: g(ns,n,3)
+        real(wp), intent(inout) :: drdx(n*(n-1)/2,3*n)
+        real(wp)                :: gx(ns,3*n)
+        integer                 :: i, j
         call all_pair_distance_jacobian(x, r, drdx)
         call transform_internal_gradient_to_cartesian(gr, drdx, gx)
         do i=1, n
@@ -636,15 +649,16 @@ module chempotpy_o3_16_3app_ae_2026_pes
     !> @brief Evaluate nac_r_to_xyz.
     subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
         use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
+        use chempotpy_kinds,    only: wp
         implicit none
-        integer, intent(in)             :: n, ns
-        double precision, intent(in)    :: x(n,3)
-        double precision, intent(in)    :: r(n*(n-1)/2)
-        double precision, intent(in)    :: hr(ns,ns,n*(n-1)/2)
-        double precision, intent(inout) :: h(ns,ns,n,3)
-        double precision, intent(inout) :: drdx(n*(n-1)/2,3*n)
-        double precision                :: hx(ns,ns,3*n)
-        integer                         :: i, j, k, l
+        integer, intent(in)     :: n, ns
+        real(wp), intent(in)    :: x(n,3)
+        real(wp), intent(in)    :: r(n*(n-1)/2)
+        real(wp), intent(in)    :: hr(ns,ns,n*(n-1)/2)
+        real(wp), intent(inout) :: h(ns,ns,n,3)
+        real(wp), intent(inout) :: drdx(n*(n-1)/2,3*n)
+        real(wp)                :: hx(ns,ns,3*n)
+        integer                 :: i, j, k, l
         call all_pair_distance_jacobian(x, r, drdx)
         call transform_internal_gradient_to_cartesian(hr, drdx, hx)
         do i=1, n
@@ -658,24 +672,26 @@ module chempotpy_o3_16_3app_ae_2026_pes
     !> @brief Evaluate convert_xyz_to_r.
     subroutine convert_xyz_to_r( x, r, n )
         use chempotpy_geometry, only: all_pair_distances
+        use chempotpy_kinds,    only: wp
         implicit none
-        integer, intent(in)           :: n
-        double precision, intent(in)  :: x(n,3)
-        double precision, intent(out) :: r(n*(n-1)/2)
+        integer, intent(in)   :: n
+        real(wp), intent(in)  :: x(n,3)
+        real(wp), intent(out) :: r(n*(n-1)/2)
         call all_pair_distances(x, r)
     end subroutine convert_xyz_to_r
 
     ! matrix vector product
     !> @brief Evaluate mproduct.
     subroutine mproduct( a, b, c, l, m, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)             :: l, m, n
-        double precision, intent(in)    :: a(l,m), b(m,n)
-        double precision, intent(inout) :: c(l,n)
-        integer                         :: i, j, k
+        integer, intent(in)     :: l, m, n
+        real(wp), intent(in)    :: a(l,m), b(m,n)
+        real(wp), intent(inout) :: c(l,n)
+        integer                 :: i, j, k
         do i=1, l
             do j=1, n
-                c(i,j) = 0.d0
+                c(i,j) = 0.e0_wp
                 do k=1, m
                     c(i,j) = c(i,j)+a(i,k)*b(k,j)
                 enddo
@@ -686,9 +702,10 @@ module chempotpy_o3_16_3app_ae_2026_pes
     ! assign coefficients
     !> @brief Evaluate assign_coeff_bias.
     subroutine assign_coeff_bias( coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4 )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(inout) :: coeff_l0(3,32), coeff_l1(32,64), coeff_l2(64,128), coeff_l3(128,256), coeff_l4(256,136)
-        double precision, intent(inout) :: bias_l0(32), bias_l1(64), bias_l2(128), bias_l3(256), bias_l4(136)
+        real(wp), intent(inout) :: coeff_l0(3,32), coeff_l1(32,64), coeff_l2(64,128), coeff_l3(128,256), coeff_l4(256,136)
+        real(wp), intent(inout) :: bias_l0(32), bias_l1(64), bias_l2(128), bias_l3(256), bias_l4(136)
         !coeff layer 0
         coeff_l0(1,1)  = -9.1999822855e-01
         coeff_l0(1,2)  = 1.7712518573e-01
@@ -79239,69 +79256,70 @@ module chempotpy_o3_16_3app_ae_2026_pes
 
     !> @brief Evaluate ip_states.
     subroutine ip_states( dist, v, grad, n, ns )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)             :: n, ns
-        double precision, intent(in)    :: dist(n*(n-1)/2)
-        double precision, intent(inout) :: v(ns)
-        double precision, intent(inout) :: grad(ns,n*(n-1)/2)
-        double precision                :: rmin, r2, r3
-        double precision                :: gap
-        double precision                :: rcom
-        double precision                :: ip, ionic(3)
-        double precision                :: all_e(19)
-        double precision                :: low16(ns)
-        integer                         :: idx(1), istate
-        integer                         :: pos, j
-        double precision                :: pair_sum, bond_sum, bond_sum_inv
-        integer                         :: nbonds, ibond, jbond
-        double precision                :: order
+        integer, intent(in)     :: n, ns
+        real(wp), intent(in)    :: dist(n*(n-1)/2)
+        real(wp), intent(inout) :: v(ns)
+        real(wp), intent(inout) :: grad(ns,n*(n-1)/2)
+        real(wp)                :: rmin, r2, r3
+        real(wp)                :: gap
+        real(wp)                :: rcom
+        real(wp)                :: ip, ionic(3)
+        real(wp)                :: all_e(19)
+        real(wp)                :: low16(ns)
+        integer                 :: idx(1), istate
+        integer                 :: pos, j
+        real(wp)                :: pair_sum, bond_sum, bond_sum_inv
+        integer                 :: nbonds, ibond, jbond
+        real(wp)                :: order
         ! for computing ground state diatomic energy
-        double precision :: v_diatomic(ns), v2b_diatomic(ns), grad_diatomic(ns)
+        real(wp) :: v_diatomic(ns), v2b_diatomic(ns), grad_diatomic(ns)
         ! for gradient
-        double precision :: g_ip(n*(n-1)/2)
-        double precision :: all_g(19,n*(n-1)/2)
-        double precision :: low16g(ns,n*(n-1)/2)
-        double precision :: drcom_dr(n*(n-1)/2)
-        double precision :: drmin_dr(n*(n-1)/2)
-        double precision :: dpair_drk, dbond_drk, s
-        double precision :: s1, s2, ds1_drmin, ds2_drmin, dip_drmin
-        double precision :: eh, a1, a2, b1, b2, r1ip, r2ip, ang2bohr
-        double precision :: tmp
-        eh       = 27.211608d0
-        ang2bohr = 1.0d0/0.529177249d0
-        a1       = 9.105969581048d0
-        a2       = 9.02188625911906d0
-        b1       = 17.288085933831d0
-        b2       = 44.8646954407384d0
-        r1ip     = 0.795647491227032d0
-        r2ip     = 1.06219636583541d0
-        order    = 4.d0
+        real(wp) :: g_ip(n*(n-1)/2)
+        real(wp) :: all_g(19,n*(n-1)/2)
+        real(wp) :: low16g(ns,n*(n-1)/2)
+        real(wp) :: drcom_dr(n*(n-1)/2)
+        real(wp) :: drmin_dr(n*(n-1)/2)
+        real(wp) :: dpair_drk, dbond_drk, s
+        real(wp) :: s1, s2, ds1_drmin, ds2_drmin, dip_drmin
+        real(wp) :: eh, a1, a2, b1, b2, r1ip, r2ip, ang2bohr
+        real(wp) :: tmp
+        eh       = 27.211608e0_wp
+        ang2bohr = 1.0e0_wp/0.529177249e0_wp
+        a1       = 9.105969581048e0_wp
+        a2       = 9.02188625911906e0_wp
+        b1       = 17.288085933831e0_wp
+        b2       = 44.8646954407384e0_wp
+        r1ip     = 0.795647491227032e0_wp
+        r2ip     = 1.06219636583541e0_wp
+        order    = 4.e0_wp
         nbonds   = int(n*(n-1)/2)
         ! rcom
-        pair_sum = 0.d0
+        pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
                 pair_sum = pair_sum+(dist(ibond)+dist(jbond))**order
             enddo
         enddo
-        bond_sum = 0.d0
+        bond_sum = 0.e0_wp
         do ibond=1, nbonds
             bond_sum = bond_sum+dist(ibond)**order
         enddo
-        rcom = pair_sum**(1.d0/order)-bond_sum**(1.d0/order)
+        rcom = pair_sum**(1.e0_wp/order)-bond_sum**(1.e0_wp/order)
         ! computing r_min
-        bond_sum_inv = 0.d0
+        bond_sum_inv = 0.e0_wp
         do ibond=1, nbonds
-            bond_sum_inv = bond_sum_inv+dist(ibond)**(-1.d0*order)
+            bond_sum_inv = bond_sum_inv+dist(ibond)**(-1.e0_wp*order)
         enddo
         rmin = bond_sum_inv**(-1.0/order)
         ! for computing ground state diatomic energy
-        v2b_diatomic  = 0.d0
-        grad_diatomic = 0.d0
+        v2b_diatomic  = 0.e0_wp
+        grad_diatomic = 0.e0_wp
         call ev2gm2(rmin, v_diatomic, grad_diatomic, 4, 1)
-        v2b_diatomic = v2b_diatomic+v_diatomic/23.061d0
+        v2b_diatomic = v2b_diatomic+v_diatomic/23.061e0_wp
         ! IP(rmin)
-        ip = a1/(1.d0+exp(-b1*(rmin-r1ip)))+a2/(1.d0+exp(-b2*(rmin-r2ip)))
+        ip = a1/(1.e0_wp+exp(-b1*(rmin-r1ip)))+a2/(1.e0_wp+exp(-b2*(rmin-r2ip)))
         ip = ip+v2b_diatomic(1)
         ! W_IP
         ionic(1) = 27.211608*((2.0/rcom)**8)-27.211608/(rcom/0.529177)+ip-1.46
@@ -79310,7 +79328,7 @@ module chempotpy_o3_16_3app_ae_2026_pes
         ionic(3) = ionic(2)
         ! gradients: drcom/dr_k and drmin/dr_k
         do ibond=1, nbonds
-            dpair_drk = 0.d0
+            dpair_drk = 0.e0_wp
             do jbond=1, nbonds
                 if( jbond .ne. ibond )then
                     dpair_drk = dpair_drk+order*(dist(ibond)+dist(jbond))**(order-1.0)
@@ -79318,22 +79336,22 @@ module chempotpy_o3_16_3app_ae_2026_pes
             enddo
             dbond_drk = order*dist(ibond)**(order-1.0)
             ! drcom/dr_k = (1/4) pair_sum^{-3/4} * dpair_drk - (1/4) bond_sum^{-3/4} * dbond_drk
-            drcom_dr(ibond)=(1.d0/order)*pair_sum**(-(order-1.0)/order)*dpair_drk -(1.d0/order)*bond_sum**(-(order- &
-                & 1.0)/ order)*dbond_drk
+            drcom_dr(ibond)=(1.e0_wp/order)*pair_sum**(-(order-1.0)/order)*dpair_drk -(1.e0_wp/order)*bond_sum**(- &
+                & (order- 1.0)/ order)*dbond_drk
             ! For rmin = S^{-1/4}, with S = sum r_i^{-4},
             ! dS/dr_k = -4 r_k^{-5}  => drmin/dr_k = -1/4 * S^{-5/4} * (-4 r_k^{-5}) = S^{-5/4} * r_k^{-5} = rmin^5 * r_k^{-5}
             drmin_dr(ibond) = rmin**(order+1.0)*dist(ibond)**(-(order+1.0))
         enddo
         ! d(ip)/drmin
-        s1        = 1.d0/(1.d0+exp(-b1*(rmin-r1ip)))
-        s2        = 1.d0/(1.d0+exp(-b2*(rmin-r2ip)))
-        ds1_drmin = b1*s1*(1.d0-s1)
-        ds2_drmin = b2*s2*(1.d0-s2)
-        dip_drmin = a1*ds1_drmin+a2*ds2_drmin+grad_diatomic(1)/23.061d0
+        s1        = 1.e0_wp/(1.e0_wp+exp(-b1*(rmin-r1ip)))
+        s2        = 1.e0_wp/(1.e0_wp+exp(-b2*(rmin-r2ip)))
+        ds1_drmin = b1*s1*(1.e0_wp-s1)
+        ds2_drmin = b2*s2*(1.e0_wp-s2)
+        dip_drmin = a1*ds1_drmin+a2*ds2_drmin+grad_diatomic(1)/23.061e0_wp
         ! g_ip
         do ibond=1, nbonds
-            g_ip(ibond) = (-eh*2048.d0*rcom**(-9.d0)+eh*0.529177d0*rcom**(-2.d0))*drcom_dr(ibond)+dip_drmin* &
-                & drmin_dr(ibond)
+            g_ip(ibond) = (-eh*2048.e0_wp*rcom**(-9.e0_wp)+eh*0.529177e0_wp*rcom**(-2.e0_wp))*drcom_dr(ibond)+ &
+                & dip_drmin* drmin_dr(ibond)
         enddo
         ! pack energies and gradients: 16 neutral + 3 ionic
         do istate=1, 16
@@ -79354,7 +79372,7 @@ module chempotpy_o3_16_3app_ae_2026_pes
             enddo
             low16(istate)    = all_e(pos)
             low16g(istate,:) = all_g(pos,:)
-            all_e(pos)       = huge(1.0d0)
+            all_e(pos)       = huge(1.0e0_wp)
         enddo
         v    = low16
         grad = low16g
@@ -79362,26 +79380,27 @@ module chempotpy_o3_16_3app_ae_2026_pes
 
     !> @brief Evaluate ev2gm2m.
     subroutine ev2gm2m( dist, v2b, g2b, imol, igrad, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: imol, igrad
-        integer, intent(in)           :: n
-        double precision, intent(in)  :: dist(int(n*(n-1)/2))
-        double precision, intent(out) :: v2b(16), g2b(16,3)
-        double precision              :: v(16), grad(16)
-        double precision              :: r
-        integer                       :: i, j
+        integer, intent(in)   :: imol, igrad
+        integer, intent(in)   :: n
+        real(wp), intent(in)  :: dist(int(n*(n-1)/2))
+        real(wp), intent(out) :: v2b(16), g2b(16,3)
+        real(wp)              :: v(16), grad(16)
+        real(wp)              :: r
+        integer               :: i, j
         ! dist should be in Ang
         ! v2b is in kcal/mol
         ! grad2b is in kcal/molAng
-        v2b = 0.d0
-        g2b = 0.0d0
+        v2b = 0.e0_wp
+        g2b = 0.0e0_wp
         do i=1, n*(n-1)/2
             r = dist(i)
             call ev2gm2(r, v, grad, imol, igrad)
-            v2b = v2b + v/23.061d0
+            v2b = v2b + v/23.061e0_wp
             if( igrad .eq. 1 )then
                 do j=1, 16
-                    g2b(j,i) = grad(j)/23.061d0
+                    g2b(j,i) = grad(j)/23.061e0_wp
                 enddo
             endif
         enddo
@@ -79389,15 +79408,16 @@ module chempotpy_o3_16_3app_ae_2026_pes
 
     !> @brief Evaluate ev2gm2.
     subroutine ev2gm2( r, v, grad, imol, igrad )
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, intent(in)           :: imol, igrad
-        double precision, intent(in)  :: r
-        double precision, intent(out) :: v(16), grad(16)
-        double precision              :: alpha, beta, as(0:7)
-        double precision              :: gam, del
-        integer                       :: i, j, k
-        v    = 0.0d0
-        grad = 0.0d0
+        integer, intent(in)   :: imol, igrad
+        real(wp), intent(in)  :: r
+        real(wp), intent(out) :: v(16), grad(16)
+        real(wp)              :: alpha, beta, as(0:7)
+        real(wp)              :: gam, del
+        integer               :: i, j, k
+        v    = 0.0e0_wp
+        grad = 0.0e0_wp
         do i=1, 16
             if( i .eq. 1 )then
                 as(0) = 71492.0825
@@ -79500,18 +79520,18 @@ module chempotpy_o3_16_3app_ae_2026_pes
                 as(7) = -10838.5723
             endif
             do k=0, 7
-                v(i) = v(i) + as(k)*dexp(-alpha*beta**k*r**2)
+                v(i) = v(i) + as(k)*exp(-alpha*beta**k*r**2)
             enddo
             if( (i .eq. 13).or.(i .eq. 14).or.(i .eq. 15).or.(i .eq. 16) )then
-                v(i) = v(i) + gam*dexp(-del*(r-1.7d0)**2)
+                v(i) = v(i) + gam*exp(-del*(r-1.7e0_wp)**2)
             endif
             ! Compute the gradient if needed
             if( igrad .eq. 1 )then
                 do k=0, 7
-                    grad(i) = grad(i)-2.d0*as(k)*alpha*beta**k*r*dexp(-alpha*beta**k*r**2)
+                    grad(i) = grad(i)-2.e0_wp*as(k)*alpha*beta**k*r*exp(-alpha*beta**k*r**2)
                 enddo
                 if( (i .eq. 13).or.(i .eq. 14).or.(i .eq. 15).or.(i .eq. 16) )then
-                    grad(i) = grad(i)-2.0d0*del*gam*(r-1.7d0)*dexp(-del*(r-1.7d0)**2)
+                    grad(i) = grad(i)-2.0e0_wp*del*gam*(r-1.7e0_wp)*exp(-del*(r-1.7e0_wp)**2)
                 endif
             endif
         enddo
@@ -79521,12 +79541,13 @@ end module chempotpy_o3_16_3app_ae_2026_pes
 !> @brief Expose O3_16_3App_AE_2026 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_o3_16_3app_ae_2026_pes, only: evaluate
+    use chempotpy_kinds,                  only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 16
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 16
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

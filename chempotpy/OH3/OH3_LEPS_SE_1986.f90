@@ -10,6 +10,7 @@
 
 !> @brief Implement OH3_LEPS_SE_1986, a potential energy surface for OH3.
 module chempotpy_oh3_leps_se_1986_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -18,118 +19,120 @@ module chempotpy_oh3_leps_se_1986_pes
 
     !> @brief Evaluate the OH3_LEPS_SE_1986 potential energy surface for OH3.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 4
-        integer, parameter            :: natom   = 25
-        integer, parameter            :: isurf   = 5
-        integer, parameter            :: jsurf   = int(isurf*(isurf+1)/2)
-        integer, parameter            :: n3atom  = 75
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: concom_acon(2)
-        double precision              :: concom_alp(4)
-        double precision              :: concom_beta(3)
-        double precision              :: concom_clam(4)
-        double precision              :: concom_con(7)
-        double precision              :: concom_de(3)
-        double precision              :: concom_dum(22)
-        double precision              :: concom_dum1(10)
-        double precision              :: concom_dum2(10)
-        double precision              :: concom_gam(3)
-        double precision              :: concom_re(3)
-        double precision              :: concom_rehh
-        double precision              :: concom_reoh
-        double precision              :: concom_sato
-        double precision              :: infocm_cartnu(natom,3)
-        integer                       :: infocm_icartr
-        integer                       :: infocm_indexes(natom)
-        integer                       :: infocm_irctnt
-        integer                       :: infocm_mder
-        integer                       :: infocm_msurf
-        integer                       :: infocm_natoms
-        character                     :: infocm_ref(5)
-        double precision              :: pot2cm_dedr(4)
-        double precision              :: pot2cm_energy
-        double precision              :: pot2cm_r(4)
-        double precision              :: potcm_dvdr(6)
-        double precision              :: potcm_r(6)
-        double precision              :: potcm_vtot
-        double precision              :: pt1cm_degsdr(n3atom)
-        double precision              :: pt1cm_engygs
-        double precision              :: pt1cm_r(n3atom)
-        double precision              :: pt3cm_ezero(isurf+1)
-        double precision              :: pt4cm_deesdr(n3atom,isurf)
-        double precision              :: pt4cm_engyes(isurf)
-        double precision              :: pt5cm_deijdr(n3atom,jsurf)
-        double precision              :: pt5cm_engyij(jsurf)
-        double precision              :: usricm_anuzero
-        double precision              :: usricm_cart(natom,3)
-        integer                       :: usricm_nasurf(isurf+1,isurf+1)
-        integer                       :: usricm_nder
-        integer                       :: usricm_nflag(20)
-        integer                       :: usricm_nulbl(natom)
-        double precision              :: usrocm_descart(natom,3,isurf)
-        double precision              :: usrocm_dgscart(natom,3)
-        double precision              :: usrocm_dijcart(natom,3,jsurf)
-        double precision              :: usrocm_pengyes(isurf)
-        double precision              :: usrocm_pengygs
-        double precision              :: usrocm_pengyij(jsurf)
-        double precision              :: utilcm_cnvrtd
-        double precision              :: utilcm_cnvrtde
-        double precision              :: utilcm_cnvrte
-        double precision              :: utilcm_descartnu(natom,3,isurf)
-        double precision              :: utilcm_dgscartnu(natom,3)
-        double precision              :: utilcm_dijcartnu(natom,3,jsurf)
-        integer                       :: utilcm_ireorder
-        integer                       :: utilcm_kediag
-        integer                       :: utilcm_keoffd
-        integer                       :: utilcm_ksdiag
-        integer                       :: utilcm_ksoffd
-        double precision              :: v
-        integer                       :: iatom, idir, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 4
+        integer, parameter    :: natom   = 25
+        integer, parameter    :: isurf   = 5
+        integer, parameter    :: jsurf   = int(isurf*(isurf+1)/2)
+        integer, parameter    :: n3atom  = 75
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: concom_acon(2)
+        real(wp)              :: concom_alp(4)
+        real(wp)              :: concom_beta(3)
+        real(wp)              :: concom_clam(4)
+        real(wp)              :: concom_con(7)
+        real(wp)              :: concom_de(3)
+        real(wp)              :: concom_dum(22)
+        real(wp)              :: concom_dum1(10)
+        real(wp)              :: concom_dum2(10)
+        real(wp)              :: concom_gam(3)
+        real(wp)              :: concom_re(3)
+        real(wp)              :: concom_rehh
+        real(wp)              :: concom_reoh
+        real(wp)              :: concom_sato
+        real(wp)              :: infocm_cartnu(natom,3)
+        integer               :: infocm_icartr
+        integer               :: infocm_indexes(natom)
+        integer               :: infocm_irctnt
+        integer               :: infocm_mder
+        integer               :: infocm_msurf
+        integer               :: infocm_natoms
+        character             :: infocm_ref(5)
+        real(wp)              :: pot2cm_dedr(4)
+        real(wp)              :: pot2cm_energy
+        real(wp)              :: pot2cm_r(4)
+        real(wp)              :: potcm_dvdr(6)
+        real(wp)              :: potcm_r(6)
+        real(wp)              :: potcm_vtot
+        real(wp)              :: pt1cm_degsdr(n3atom)
+        real(wp)              :: pt1cm_engygs
+        real(wp)              :: pt1cm_r(n3atom)
+        real(wp)              :: pt3cm_ezero(isurf+1)
+        real(wp)              :: pt4cm_deesdr(n3atom,isurf)
+        real(wp)              :: pt4cm_engyes(isurf)
+        real(wp)              :: pt5cm_deijdr(n3atom,jsurf)
+        real(wp)              :: pt5cm_engyij(jsurf)
+        real(wp)              :: usricm_anuzero
+        real(wp)              :: usricm_cart(natom,3)
+        integer               :: usricm_nasurf(isurf+1,isurf+1)
+        integer               :: usricm_nder
+        integer               :: usricm_nflag(20)
+        integer               :: usricm_nulbl(natom)
+        real(wp)              :: usrocm_descart(natom,3,isurf)
+        real(wp)              :: usrocm_dgscart(natom,3)
+        real(wp)              :: usrocm_dijcart(natom,3,jsurf)
+        real(wp)              :: usrocm_pengyes(isurf)
+        real(wp)              :: usrocm_pengygs
+        real(wp)              :: usrocm_pengyij(jsurf)
+        real(wp)              :: utilcm_cnvrtd
+        real(wp)              :: utilcm_cnvrtde
+        real(wp)              :: utilcm_cnvrte
+        real(wp)              :: utilcm_descartnu(natom,3,isurf)
+        real(wp)              :: utilcm_dgscartnu(natom,3)
+        real(wp)              :: utilcm_dijcartnu(natom,3,jsurf)
+        integer               :: utilcm_ireorder
+        integer               :: utilcm_kediag
+        integer               :: utilcm_keoffd
+        integer               :: utilcm_ksdiag
+        integer               :: utilcm_ksoffd
+        real(wp)              :: v
+        integer               :: iatom, idir, istate
         !initialize
-        concom_acon      = 0.d0; concom_alp = 0.d0; concom_beta = 0.d0; concom_clam = 0.d0; concom_con = 0.d0
-        concom_de        = 0.d0; concom_dum = 0.d0; concom_dum1 = 0.d0; concom_dum2 = 0.d0; concom_gam = 0.d0; concom_re = 0.d0
-        concom_rehh      = 0.d0; concom_reoh = 0.d0; concom_sato = 0.d0; infocm_cartnu = 0.d0; infocm_icartr = 0
+        concom_acon      = 0.e0_wp; concom_alp = 0.e0_wp; concom_beta = 0.e0_wp; concom_clam = 0.e0_wp; concom_con = 0.e0_wp
+        concom_de        = 0.e0_wp; concom_dum = 0.e0_wp; concom_dum1 = 0.e0_wp; concom_dum2 = 0.e0_wp; concom_gam = 0.e0_wp; concom_re = 0.e0_wp
+        concom_rehh      = 0.e0_wp; concom_reoh = 0.e0_wp; concom_sato = 0.e0_wp; infocm_cartnu = 0.e0_wp; infocm_icartr = 0
         infocm_indexes   = 0; infocm_irctnt = 0; infocm_mder = 0; infocm_msurf = 0; infocm_natoms = 0
         infocm_ref       = ' '
-        pot2cm_dedr      = 0.d0
-        pot2cm_energy    = 0.d0
-        pot2cm_r         = 0.d0
-        potcm_dvdr       = 0.d0
-        potcm_r          = 0.d0
-        potcm_vtot       = 0.d0
-        pt1cm_degsdr     = 0.d0
-        pt1cm_engygs     = 0.d0
-        pt1cm_r          = 0.d0
-        pt3cm_ezero      = 0.d0
-        pt4cm_deesdr     = 0.d0
-        pt4cm_engyes     = 0.d0
-        pt5cm_deijdr     = 0.d0
-        pt5cm_engyij     = 0.d0
-        usricm_anuzero   = 0.d0
-        usricm_cart      = 0.d0
+        pot2cm_dedr      = 0.e0_wp
+        pot2cm_energy    = 0.e0_wp
+        pot2cm_r         = 0.e0_wp
+        potcm_dvdr       = 0.e0_wp
+        potcm_r          = 0.e0_wp
+        potcm_vtot       = 0.e0_wp
+        pt1cm_degsdr     = 0.e0_wp
+        pt1cm_engygs     = 0.e0_wp
+        pt1cm_r          = 0.e0_wp
+        pt3cm_ezero      = 0.e0_wp
+        pt4cm_deesdr     = 0.e0_wp
+        pt4cm_engyes     = 0.e0_wp
+        pt5cm_deijdr     = 0.e0_wp
+        pt5cm_engyij     = 0.e0_wp
+        usricm_anuzero   = 0.e0_wp
+        usricm_cart      = 0.e0_wp
         usricm_nasurf    = 0
         usricm_nder      = 0
         usricm_nflag     = 0
         usricm_nulbl     = 0
-        usrocm_descart   = 0.d0
-        usrocm_dgscart   = 0.d0
-        usrocm_dijcart   = 0.d0
-        usrocm_pengyes   = 0.d0
-        usrocm_pengygs   = 0.d0
-        usrocm_pengyij   = 0.d0
-        utilcm_cnvrtd    = 0.d0
-        utilcm_cnvrtde   = 0.d0
-        utilcm_cnvrte    = 0.d0
-        utilcm_descartnu = 0.d0
-        utilcm_dgscartnu = 0.d0
-        utilcm_dijcartnu = 0.d0
+        usrocm_descart   = 0.e0_wp
+        usrocm_dgscart   = 0.e0_wp
+        usrocm_dijcart   = 0.e0_wp
+        usrocm_pengyes   = 0.e0_wp
+        usrocm_pengygs   = 0.e0_wp
+        usrocm_pengyij   = 0.e0_wp
+        utilcm_cnvrtd    = 0.e0_wp
+        utilcm_cnvrtde   = 0.e0_wp
+        utilcm_cnvrte    = 0.e0_wp
+        utilcm_descartnu = 0.e0_wp
+        utilcm_dgscartnu = 0.e0_wp
+        utilcm_dijcartnu = 0.e0_wp
         utilcm_ireorder  = 0
         utilcm_kediag    = 0
         utilcm_keoffd    = 0
@@ -139,45 +142,46 @@ module chempotpy_oh3_leps_se_1986_pes
             & 0, 0, 0, 0, 0, 0, 0, 0], shape(usricm_nasurf))
         usricm_nder    = 1
         usricm_nflag   = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        usricm_anuzero = 0.0d0
+        usricm_anuzero = 0.0e0_wp
         infocm_icartr  = 2
         infocm_msurf   = 0
         infocm_mder    = 1
         usricm_nulbl   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         infocm_natoms  = 4
-        concom_de      = [0.148201d0, 0.0275690d0, 0.151548d0]
-        concom_beta    = [1.260580d0, 0.924180d0, 1.068620d0]
-        concom_re      = [1.863300d0, 2.907700d0, 1.428600d0]
-        concom_sato    = 0.10d0
-        concom_gam     = [2.399700d0, 1.058350d0, 2.399700d0]
-        concom_reoh    = 1.808090d0
-        concom_rehh    = 2.861590d0
-        concom_con     = [-.0015920d0, 0.026963d0, 0.0014689d0, 0.080011d0, 0.085816d0, -0.063179d0, 0.101380d0]
-        concom_alp     = [4.773d0, 7.14d0, 2.938d0, 5.28d0]
-        concom_clam    = [0.10d0, 0.10d0, 0.20d0, 0.03d0]
-        concom_acon    = [0.10d0, 0.009d0]
-        v              = 0.d0; g = 0.d0; d = 0.d0
-        usricm_nder    = igrad
-        usricm_nasurf  = 1
-        usricm_cart    = 0.d0
+        concom_de      = [0.148201e0_wp, 0.0275690e0_wp, 0.151548e0_wp]
+        concom_beta    = [1.260580e0_wp, 0.924180e0_wp, 1.068620e0_wp]
+        concom_re      = [1.863300e0_wp, 2.907700e0_wp, 1.428600e0_wp]
+        concom_sato    = 0.10e0_wp
+        concom_gam     = [2.399700e0_wp, 1.058350e0_wp, 2.399700e0_wp]
+        concom_reoh    = 1.808090e0_wp
+        concom_rehh    = 2.861590e0_wp
+        concom_con     = [-.0015920e0_wp, 0.026963e0_wp, 0.0014689e0_wp, 0.080011e0_wp, 0.085816e0_wp, -0.063179e0_wp, &
+            & 0.101380e0_wp]
+        concom_alp    = [4.773e0_wp, 7.14e0_wp, 2.938e0_wp, 5.28e0_wp]
+        concom_clam   = [0.10e0_wp, 0.10e0_wp, 0.20e0_wp, 0.03e0_wp]
+        concom_acon   = [0.10e0_wp, 0.009e0_wp]
+        v             = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
+        usricm_nder   = igrad
+        usricm_nasurf = 1
+        usricm_cart   = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                usricm_cart(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+                usricm_cart(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
         call prepare_local_context
         call pot
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
+                p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
         elseif( igrad == 1 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
+                p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
             do iatom=1, natoms
                 do idir=1, 3
-                    g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*51.422067
+                    g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*hartree_per_bohr_to_ev_per_angstrom
                 enddo
             enddo
         elseif( igrad == 2 )then
@@ -188,13 +192,14 @@ module chempotpy_oh3_leps_se_1986_pes
 
         !> @brief Evaluate prepare_local_context for the OH3_LEPS_SE_1986 potential.
         subroutine prepare_local_context
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer             :: i
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
@@ -217,18 +222,19 @@ module chempotpy_oh3_leps_se_1986_pes
             !   The subprogram PREPEF must be called once before any calls to this
             !   subprogram.
             !   All calculations in this subprogram are in hartree atomic units.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: b, d, dvmor, rr, t, vmor
-            integer                     :: i
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 1
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: b, d, dvmor, rr, t, vmor
+            integer             :: i
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 1
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !   Define the statement functions VMOR and DVMOR which evaluate the Mor
             !   diatomic potential energy  and the derivatives of the Morse potentia
-            vmor(d, b, t, rr)  = d*(1.0d0-exp(-b*(rr-t)))**2
-            dvmor(d, b, t, rr) = 2.0d0*b*d*(1.0d0-exp(-b*(rr-t)))*exp(-b*(rr-t))
+            vmor(d, b, t, rr)  = d*(1.0e0_wp-exp(-b*(rr-t)))**2
+            dvmor(d, b, t, rr) = 2.0e0_wp*b*d*(1.0e0_wp-exp(-b*(rr-t)))*exp(-b*(rr-t))
             call cartou
             call carttor
             do i = 1, 6
@@ -238,7 +244,7 @@ module chempotpy_oh3_leps_se_1986_pes
             !   with respect to the internal coordinates.
             if( usricm_nder .eq. 1 )then
                 do i = 1, 6
-                    potcm_dvdr(i) = 0.0d0
+                    potcm_dvdr(i) = 0.0e0_wp
                 enddo
             endif
             !   Calculate the Morse part of the potential energy.
@@ -308,7 +314,7 @@ module chempotpy_oh3_leps_se_1986_pes
             endif
             !   Adjust the potential to the correct zero, which corresponds to
             !   OH(R=RE) and H2(R=RE) at infinity.
-            potcm_vtot   = potcm_vtot-2.0d0*concom_de(2)+concom_de(3)
+            potcm_vtot   = potcm_vtot-2.0e0_wp*concom_de(2)+concom_de(3)
             pt1cm_engygs = potcm_vtot
             do i = 1, 6
                 pt1cm_degsdr(i) = potcm_dvdr(i)
@@ -322,15 +328,16 @@ module chempotpy_oh3_leps_se_1986_pes
 
         !> @brief Evaluate V3POT for the OH3_LEPS_SE_1986 potential.
         subroutine v3pot
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: b(3), beta(3), coul(3), de(3), do4z(3), exch(3), op3z(3), rad, re(3), s, top3z(3), &
+            real(wp) :: b(3), beta(3), coul(3), de(3), do4z(3), exch(3), op3z(3), rad, re(3), s, top3z(3), &
                 & tzp3(3), x(3), z(3), zp3(3), zpo(3)
-            integer                     :: i
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer             :: i
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !   Set up the values of DE, BETA, and RE for the three-body LEPS potent
             de(1)   = concom_de(1)
             beta(1) = concom_beta(1)
@@ -344,16 +351,16 @@ module chempotpy_oh3_leps_se_1986_pes
             !   Compute useful constants.
             do i = 1, 3
                 z(i)     = concom_sato
-                zpo(i)   = 1.0d0+z(i)
-                op3z(i)  = 1.0d0+3.0d0*z(i)
-                top3z(i) = 2.0d0*op3z(i)
-                zp3(i)   = z(i)+3.0d0
-                tzp3(i)  = 2.0d0*zp3(i)
-                do4z(i)  = de(i)/4.0d0/zpo(i)
-                b(i)     = beta(i)*do4z(i)*2.0d0
+                zpo(i)   = 1.0e0_wp+z(i)
+                op3z(i)  = 1.0e0_wp+3.0e0_wp*z(i)
+                top3z(i) = 2.0e0_wp*op3z(i)
+                zp3(i)   = z(i)+3.0e0_wp
+                tzp3(i)  = 2.0e0_wp*zp3(i)
+                do4z(i)  = de(i)/4.0e0_wp/zpo(i)
+                b(i)     = beta(i)*do4z(i)*2.0e0_wp
             enddo
             !   Initialize the variable used for storing the energy.
-            pot2cm_energy = 0.d0
+            pot2cm_energy = 0.e0_wp
             do i = 1, 3
                 x(i)          = exp(-beta(i)*(pot2cm_r(i)-re(i)))
                 coul(i)       = do4z(i)*(zp3(i)*x(i)-top3z(i))*x(i)
@@ -361,27 +368,28 @@ module chempotpy_oh3_leps_se_1986_pes
                 pot2cm_energy = pot2cm_energy + coul(i)
             enddo
             rad           = sqrt((exch(1)-exch(2))**2+(exch(2)-exch(3))**2+(exch(3)-exch (1))**2)
-            pot2cm_energy = pot2cm_energy - rad/sqrt(2.d0)
+            pot2cm_energy = pot2cm_energy - rad/sqrt(2.e0_wp)
             !   Compute the derivatives of the energy with respect to the internal
             !   coordinates.
             if( usricm_nder .eq. 1 )then
                 s = exch(1) + exch(2) + exch(3)
                 do i = 1, 3
-                    pot2cm_dedr(i) = b(i)*x(i)*((3.0d0*exch(i)-s)/sqrt(2.d0)* (op3z(i)*x(i)-zp3(i))/rad- zp3(i)*x(i)+ &
-                        & op3z(i))
+                    pot2cm_dedr(i) = b(i)*x(i)*((3.0e0_wp*exch(i)-s)/sqrt(2.e0_wp)* (op3z(i)*x(i)-zp3(i))/rad- zp3(i)* &
+                        & x(i)+ op3z(i))
                 enddo
             endif
         end subroutine v3pot
 
         !> @brief Evaluate V4POT for the OH3_LEPS_SE_1986 potential.
         subroutine v4pot
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: t1, t2
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: t1, t2
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             t1 = exp(-concom_clam(1)*(pot2cm_r(1)-concom_alp(1))**2-concom_clam(1)*(pot2cm_r(2)-concom_alp(1))**2- &
                 & concom_clam(3)*(pot2cm_r(3)-concom_alp(3)) **2-concom_clam(3)*(pot2cm_r(4)-concom_alp(3))**2)* &
                 & concom_acon(1)
@@ -390,58 +398,59 @@ module chempotpy_oh3_leps_se_1986_pes
                 & concom_acon(2)
             pot2cm_energy = t1+t2
             if( usricm_nder .eq. 1 )then
-                pot2cm_dedr(1) = -2.0d0*(t1*concom_clam(1)*(pot2cm_r(1)-concom_alp(1))+t2*concom_clam(2)*(pot2cm_r(1)- &
-                    & concom_alp(2)))
-                pot2cm_dedr(2) = -2.0d0*(t1*concom_clam(1)*(pot2cm_r(2)-concom_alp(1))+t2*concom_clam(2)*(pot2cm_r(2)- &
-                    & concom_alp(2)))
-                pot2cm_dedr(3) = -2.0d0*(t1*concom_clam(3)*(pot2cm_r(3)-concom_alp(3))+t2*concom_clam(4)*(pot2cm_r(3)- &
-                    & concom_alp(4)))
-                pot2cm_dedr(4) = -2.0d0*(t1*concom_clam(3)*(pot2cm_r(4)-concom_alp(3))+t2*concom_clam(4)*(pot2cm_r(4)- &
-                    & concom_alp(4)))
+                pot2cm_dedr(1) = -2.0e0_wp*(t1*concom_clam(1)*(pot2cm_r(1)-concom_alp(1))+t2*concom_clam(2)* &
+                    & (pot2cm_r(1)- concom_alp(2)))
+                pot2cm_dedr(2) = -2.0e0_wp*(t1*concom_clam(1)*(pot2cm_r(2)-concom_alp(1))+t2*concom_clam(2)* &
+                    & (pot2cm_r(2)- concom_alp(2)))
+                pot2cm_dedr(3) = -2.0e0_wp*(t1*concom_clam(3)*(pot2cm_r(3)-concom_alp(3))+t2*concom_clam(4)* &
+                    & (pot2cm_r(3)- concom_alp(4)))
+                pot2cm_dedr(4) = -2.0e0_wp*(t1*concom_clam(3)*(pot2cm_r(4)-concom_alp(3))+t2*concom_clam(4)* &
+                    & (pot2cm_r(4)- concom_alp(4)))
             endif
         end subroutine v4pot
 
         !> @brief Evaluate VH2O for the OH3_LEPS_SE_1986 potential.
         subroutine vh2o
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: dp(3), dq(3), p, q(3), s(3), tanlg, temp, trm1, x(3), xmax1, xmax2, xx
-            integer          :: i
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: dp(3), dq(3), p, q(3), s(3), tanlg, temp, trm1, x(3), xmax1, xmax2, xx
+            integer             :: i
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !     XMAX1 FOR WHEN TANH SET=1.0 ON VAX
             !     XMAX2 FOR PREVENTING OVERFLOWS ON VAX
             !     STATEMENT FUNCTION
-            tanlg(xx) = 2.0d0/(1.0d0+exp(2.0d0*xx))
+            tanlg(xx) = 2.0e0_wp/(1.0e0_wp+exp(2.0e0_wp*xx))
             s(1)      = pot2cm_r(1)-concom_reoh
             s(3)      = pot2cm_r(2)-concom_reoh
             s(2)      = pot2cm_r(3)-concom_rehh
-            xmax1     = 15.0d0; xmax2 = 43.0d0
+            xmax1     = 15.0e0_wp; xmax2 = 43.0e0_wp
             do i = 1, 3
-                x(i) = 0.5d0*concom_gam(i)*s(i)
-                q(i) = 1.0d0-tanh(x(i))
+                x(i) = 0.5e0_wp*concom_gam(i)*s(i)
+                q(i) = 1.0e0_wp-tanh(x(i))
                 if( x(i) < xmax1 )then
-                    dq(i) = -0.5d0*concom_gam(i)/cosh(x(i))**2
+                    dq(i) = -0.5e0_wp*concom_gam(i)/cosh(x(i))**2
                 elseif( x(i) < xmax2 )then
                     q(i)  = tanlg(x(i))
-                    dq(i) = -0.5d0*concom_gam(i)/cosh(x(i))**2
+                    dq(i) = -0.5e0_wp*concom_gam(i)/cosh(x(i))**2
                 else
-                    q(i)  = 0.0d0
-                    dq(i) = 0.0d0
+                    q(i)  = 0.0e0_wp
+                    dq(i) = 0.0e0_wp
                 endif
             enddo
-            p = concom_con(1)+concom_con(2)*(s(1)+s(3))+concom_con(3)*s(2)+0.5d0*concom_con(4)*(s(1)*s(1)+s(3)*s( 3))+ &
-                & 0.5d0*concom_con(5)*s(2)*s(2)+concom_con(6)*s(2)*(s(1)+s(3))+ concom_con(7)*s(1)*s(3)
+            p = concom_con(1)+concom_con(2)*(s(1)+s(3))+concom_con(3)*s(2)+0.5e0_wp*concom_con(4)*(s(1)*s(1)+s(3)* &
+                & s( 3))+ 0.5e0_wp*concom_con(5)*s(2)*s(2)+concom_con(6)*s(2)*(s(1)+s(3))+ concom_con(7)*s(1)*s(3)
             pot2cm_energy = q(1)*q(2)*q(3)*p
             if( usricm_nder .eq. 1 )then
                 dp(1) = concom_con(2)+concom_con(4)*s(1)+concom_con(6)*s(2)+concom_con(7)*s(3)
                 dp(2) = concom_con(3)+concom_con(5)*s(2)+concom_con(6)*(s(1)+s(3))
                 dp(3) = concom_con(2)+concom_con(4)*s(3)+concom_con(6)*s(2)+concom_con(7)*s(1)
                 do i = 1, 3
-                    trm1 = 0.0d0
-                    if( q(i) /= 0.0d0 ) trm1 = dq(i)/q(i)
+                    trm1 = 0.0e0_wp
+                    if( q(i) /= 0.0e0_wp ) trm1 = dq(i)/q(i)
                     pot2cm_dedr(i) = pot2cm_energy*(trm1+dp(i)/p)
                 enddo
                 temp           = pot2cm_dedr(2)
@@ -452,13 +461,14 @@ module chempotpy_oh3_leps_se_1986_pes
 
         !> @brief Evaluate POTINFO for the OH3_LEPS_SE_1986 potential.
         subroutine potinfo
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i, j, k, kmax
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
+            integer             :: i, j, k, kmax
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -546,34 +556,35 @@ module chempotpy_oh3_leps_se_1986_pes
 
         !> @brief Evaluate ANCVRT for the OH3_LEPS_SE_1986 potential.
         subroutine ancvrt
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi         = 3.141592653589793d0
-            double precision, parameter :: clight     = 2.99792458d08
-            double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
-            double precision, parameter :: cepsilon_0 = 1.0d0/(cmu_0*clight**2)
-            double precision, parameter :: ce         = 1.602176462d-19
-            double precision, parameter :: cplanck    = 6.62606876d-34
-            double precision, parameter :: cm_e       = 9.10938188d-31
-            double precision, parameter :: cang       = 1.0d-10
-            double precision, parameter :: cavogadro  = 6.02214199d23
-            double precision, parameter :: ckcal      = 4.184d10
-            double precision, parameter :: htomillh   = 1000.d0
-            double precision, parameter :: htoev      = 27.2113834d0
-            double precision, parameter :: htokcal    = 627.509470d0
-            double precision, parameter :: htowave    = 219474.631d0
-            double precision, parameter :: htokj      = 2625.49962d0
-            double precision, parameter :: bohr_a     = .5291772083d0
-            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
-            character(len=3)   :: periodic_1(7,32)
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
+            integer, parameter  :: n3atom     = 75
+            integer, parameter  :: natom      = 25
+            integer, parameter  :: isurf      = 5
+            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
+            real(wp), parameter :: pi         = 3.141592653589793e0_wp
+            real(wp), parameter :: clight     = 2.99792458e08_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
+            real(wp), parameter :: ce         = 1.602176462e-19_wp
+            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
+            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
+            real(wp), parameter :: cang       = 1.0e-10_wp
+            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
+            real(wp), parameter :: ckcal      = 4.184e10_wp
+            real(wp), parameter :: htomillh   = 1000.e0_wp
+            real(wp), parameter :: htoev      = 27.2113834e0_wp
+            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htowave    = 219474.631e0_wp
+            real(wp), parameter :: htokj      = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)    :: periodic_1(7,32)
+            character(len=2)    :: name1(natom)
+            character(len=2)    :: name2(natom)
+            character(len=1)    :: iblank
+            character(len=20)   :: distance
+            character(len=20)   :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -798,9 +809,9 @@ module chempotpy_oh3_leps_se_1986_pes
             elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
-            utilcm_cnvrtd  = 1.d0
-            utilcm_cnvrte  = 1.d0
-            utilcm_cnvrtde = 1.d0
+            utilcm_cnvrtd  = 1.e0_wp
+            utilcm_cnvrte  = 1.e0_wp
+            utilcm_cnvrtde = 1.e0_wp
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
@@ -825,6 +836,7 @@ module chempotpy_oh3_leps_se_1986_pes
         !> @brief Evaluate CARTOU for the OH3_LEPS_SE_1986 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: i, j
             integer, parameter :: n3atom = 75
@@ -837,9 +849,10 @@ module chempotpy_oh3_leps_se_1986_pes
         !> @brief Evaluate CARTTOR for the OH3_LEPS_SE_1986 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: coordinate_status
-            double precision   :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
+            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
             integer            :: i, ind, k, l
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
@@ -853,6 +866,7 @@ module chempotpy_oh3_leps_se_1986_pes
 
         !> @brief Evaluate EUNITZERO for the OH3_LEPS_SE_1986 potential.
         subroutine eunitzero
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j
             character(len=75)  :: ref(5)
@@ -875,15 +889,16 @@ module chempotpy_oh3_leps_se_1986_pes
 
         !> @brief Evaluate RTOCART for the OH3_LEPS_SE_1986 potential.
         subroutine rtocart
+            use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
-                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
-                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
+            real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom, isurf), &
+                & ygs(n3atom), yij(n3atom, jsurf), za, zb, zc, zd
+            integer :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -907,21 +922,21 @@ module chempotpy_oh3_leps_se_1986_pes
                 enddo
             elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
-                    utilcm_dgscartnu(i,1) = 0.d0
-                    utilcm_dgscartnu(i,2) = 0.d0
-                    utilcm_dgscartnu(i,3) = 0.d0
+                    utilcm_dgscartnu(i,1) = 0.e0_wp
+                    utilcm_dgscartnu(i,2) = 0.e0_wp
+                    utilcm_dgscartnu(i,3) = 0.e0_wp
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(i,1,j1) = 0.d0
-                            utilcm_descartnu(i,2,j1) = 0.d0
-                            utilcm_descartnu(i,3,j1) = 0.d0
+                            utilcm_descartnu(i,1,j1) = 0.e0_wp
+                            utilcm_descartnu(i,2,j1) = 0.e0_wp
+                            utilcm_descartnu(i,3,j1) = 0.e0_wp
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(i,1,j2) = 0.d0
-                            utilcm_dijcartnu(i,2,j2) = 0.d0
-                            utilcm_dijcartnu(i,3,j2) = 0.d0
+                            utilcm_dijcartnu(i,1,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,2,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,3,j2) = 0.e0_wp
                         enddo
                     endif
                     do j = 1, infocm_natoms
@@ -961,12 +976,12 @@ module chempotpy_oh3_leps_se_1986_pes
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j=utilcm_ksdiag, utilcm_kediag
-                            yes(i,j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
+                            yes(i, j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do k=utilcm_ksoffd, utilcm_keoffd
-                            yij(i,k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
+                            yij(i, k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
                         enddo
                     endif
                 enddo
@@ -979,22 +994,22 @@ module chempotpy_oh3_leps_se_1986_pes
                     utilcm_dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(1,k,j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                            utilcm_descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                            utilcm_descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                            utilcm_descartnu(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
+                            utilcm_descartnu(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
+                            utilcm_descartnu(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(1,k,j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3,j2) - term23*yij(2,j2)
+                            utilcm_dijcartnu(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
+                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
+                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
                         enddo
                     endif
                 enddo
             elseif( infocm_icartr .eq. 4 )then
-                wh   = 1.007825d0
-                wf   = 18.99840d0
+                wh   = 1.007825e0_wp
+                wf   = 18.99840e0_wp
                 sum  = wh+wf
                 eps  = wf/sum
                 epsp = wh/sum
@@ -1004,8 +1019,8 @@ module chempotpy_oh3_leps_se_1986_pes
                 ss1  = sin(theta1)
                 ss2  = sin(theta2)
                 ss3  = sin(phi)
-                ya   = 0.0d0
-                yb   = 0.0d0
+                ya   = 0.0e0_wp
+                yb   = 0.0e0_wp
                 t0   = r1*u1
                 za   = -epsp*t0
                 zb   = eps*t0
@@ -1031,6 +1046,7 @@ module chempotpy_oh3_leps_se_1986_pes
 
         !> @brief Evaluate DEDCOU for the OH3_LEPS_SE_1986 potential.
         subroutine dedcou
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k
             integer, parameter :: n3atom = 75
@@ -1085,13 +1101,14 @@ end module chempotpy_oh3_leps_se_1986_pes
 !> @brief Expose OH3_LEPS_SE_1986 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_oh3_leps_se_1986_pes, only: evaluate
+    use chempotpy_kinds,                only: wp
     implicit none
-    integer, parameter            :: natoms  = 4
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 4
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

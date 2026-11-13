@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import Iterable
 
 try:
-    from scripts.build_pes import core_fortran_dependencies
+    from scripts.build_pes import SUPPORT_SOURCES, core_fortran_dependencies
 except ModuleNotFoundError:  # Direct execution adds scripts/, not the repository.
-    from build_pes import core_fortran_dependencies
+    from build_pes import SUPPORT_SOURCES, core_fortran_dependencies
 
 
 ATOM_COUNTS = (2, 3, 5, 8)
@@ -85,7 +85,16 @@ def source_dependencies(source: Path) -> Iterable[Path]:
 
     if source.suffix.lower() == ".f":
         return ()
-    return core_fortran_dependencies(source.read_text())
+    support_sources = tuple(
+        source.parent / support_name
+        for support_name in SUPPORT_SOURCES.get(
+            (source.parent.name, source.stem), ()
+        )
+    )
+    return (
+        *core_fortran_dependencies(source.read_text(), support_sources),
+        *support_sources,
+    )
 
 
 def capture_source(compiler: str, source: Path, directory: Path) -> dict:

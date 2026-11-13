@@ -13,9 +13,6 @@ from typing import List, Optional, Sequence
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from scripts.format_fortran import format_source_text
-
-
 SOURCE_ROOT = REPOSITORY_ROOT / "tests" / "data" / "neural_network_parameters"
 
 
@@ -112,7 +109,7 @@ def parse_weight_file(path: Path, input_count: int) -> tuple[Network, ...]:
             scale_average,
             tuple(layer_weights),
         ))
-    if index != len(lines):
+    if any(line.strip(" *\t") for line in lines[index:]):
         raise ValueError("unparsed records remain in the weights file")
     return tuple(
         Network(*items, layer_biases=()) for items in partial
@@ -150,6 +147,122 @@ def attach_biases(
     return tuple(output)
 
 
+def parse_unlabeled_network(path: Path, input_count: int) -> Network:
+    """Parse one released network whose file omits an ensemble label."""
+
+    lines = path.read_text().splitlines()
+    index = 0
+    while index < len(lines):
+        try:
+            header = tuple(int(value) for value in lines[index].split())
+        except ValueError:
+            index += 1
+            continue
+        if len(header) == 2:
+            break
+        index += 1
+    if index == len(lines):
+        raise ValueError("network header was not found")
+    hidden_layer_count, output_count = (
+        value for value in header
+    )
+    index += 1
+    hidden_nodes = tuple(int(value) for value in lines[index].split())
+    index += 1
+    if len(hidden_nodes) != hidden_layer_count:
+        raise ValueError("hidden-layer count does not match its node list")
+    nodes = (input_count, *hidden_nodes, output_count)
+    activation_function, parameter_count = (
+        int(value) for value in lines[index].split()
+    )
+    index += 1
+    scale_count = input_count+output_count
+    scale_delta, index = consume_values(lines, index, scale_count)
+    scale_average, index = consume_values(lines, index, scale_count)
+    layer_weights = []
+    for previous_count, current_count in zip(nodes[:-1], nodes[1:]):
+        weights, index = consume_values(
+            lines, index, previous_count*current_count
+        )
+        layer_weights.append(weights)
+    if sum(len(values) for values in layer_weights)+sum(nodes[1:]) != parameter_count:
+        raise ValueError("released network parameter count is inconsistent")
+    if any(line.strip(" *\t") for line in lines[index:]):
+        raise ValueError("unparsed records remain in the weights file")
+    return Network(
+        path.stem,
+        nodes,
+        activation_function,
+        scale_delta,
+        scale_average,
+        tuple(layer_weights),
+        (),
+    )
+
+
+def attach_unlabeled_biases(path: Path, network: Network) -> Network:
+    """Attach a numeric-only bias file to one released network."""
+
+    lines = path.read_text().splitlines()
+    index = 0
+    while index < len(lines):
+        try:
+            numeric_tokens(lines[index])
+        except ValueError:
+            index += 1
+            continue
+        break
+    layers = []
+    for node_count in network.nodes[1:]:
+        values, index = consume_values(lines, index, node_count)
+        layers.append(values)
+    if any(line.strip(" *\t") for line in lines[index:]):
+        raise ValueError("unparsed records remain in the biases file")
+    return Network(
+        network.name,
+        network.nodes,
+        network.activation_function,
+        network.scale_delta,
+        network.scale_average,
+        network.layer_weights,
+        tuple(layers),
+    )
+
+
+def attach_unlabeled_bias_ensemble(
+    path: Path, networks: Sequence[Network]
+) -> tuple[Network, ...]:
+    """Attach sequential bias records to an unlabeled network ensemble."""
+
+    lines = path.read_text().splitlines()
+    index = 0
+    output = []
+    for network in networks:
+        while index < len(lines):
+            try:
+                numeric_tokens(lines[index])
+            except ValueError:
+                index += 1
+                continue
+            break
+        layers = []
+        for node_count in network.nodes[1:]:
+            values, index = consume_values(lines, index, node_count)
+            layers.append(values)
+        output.append(Network(
+            network.name,
+            network.nodes,
+            network.activation_function,
+            network.scale_delta,
+            network.scale_average,
+            network.layer_weights,
+            tuple(layers),
+        ))
+    if any(line.strip(" *\t") for line in lines[index:]):
+        raise ValueError("unparsed records remain in the biases file")
+    return tuple(output)
+
+
 def released_vector(path: Path, label: str, count: int) -> tuple[str, ...]:
     """Read a named vector from a released biases/provenance file."""
 
@@ -162,10 +275,77 @@ def released_vector(path: Path, label: str, count: int) -> tuple[str, ...]:
     return values
 
 
-def real_literal(value: str) -> str:
-    """Return one released decimal as an explicit real64 literal."""
+def leading_numeric_values(path: Path, count: int) -> tuple[str, ...]:
+    """Return the leading numeric records from a legacy list-directed file."""
 
-    return value.lower().replace("e", "e")+"_real64"
+    values = []
+    for token in path.read_text().split():
+        normalized = token.replace("D", "e").replace("d", "e")
+        try:
+            float(normalized)
+        except ValueError:
+            break
+        values.append(normalized)
+        if len(values) == count:
+            return tuple(values)
+    raise ValueError(
+        "{} contains {} leading values; expected {}".format(
+            path, len(values), count
+        )
+    )
+
+
+def all_numeric_values(path: Path, count: int) -> tuple[str, ...]:
+    """Return every numeric token from a fixed-size provenance file."""
+
+    values = tuple(
+        token.replace("D", "e").replace("d", "e")
+        for token in path.read_text().split()
+    )
+    for value in values:
+        float(value)
+    if len(values) != count:
+        raise ValueError(
+            "{} contains {} values; expected {}".format(
+                path, len(values), count
+            )
+        )
+    return values
+
+
+def natural_spline_second_derivatives(
+    coordinates: Sequence[str], values: Sequence[str]
+) -> tuple[str, ...]:
+    """Reproduce the released Numerical Recipes natural-spline setup."""
+
+    x = tuple(float(value) for value in coordinates)
+    y = tuple(float(value) for value in values)
+    count = len(x)
+    if len(y) != count or count < 2:
+        raise ValueError("spline coordinate and value dimensions are inconsistent")
+    second = [0.0]*count
+    work = [0.0]*count
+    for index in range(1, count-1):
+        sigma = (x[index]-x[index-1])/(x[index+1]-x[index-1])
+        factor = sigma*second[index-1]+2.0
+        second[index] = (sigma-1.0)/factor
+        slope_change = (
+            (y[index+1]-y[index])/(x[index+1]-x[index])
+            -(y[index]-y[index-1])/(x[index]-x[index-1])
+        )
+        work[index] = (
+            6.0*slope_change/(x[index+1]-x[index-1])
+            -sigma*work[index-1]
+        )/factor
+    for index in range(count-2, -1, -1):
+        second[index] = second[index]*second[index+1]+work[index]
+    return tuple("{:.17e}".format(value) for value in second)
+
+
+def real_literal(value: str) -> str:
+    """Return one released decimal as an explicit wp literal."""
+
+    return value.lower().replace("e", "e")+"_wp"
 
 
 def array_declaration(
@@ -174,10 +354,10 @@ def array_declaration(
     values: Sequence[str],
     shape: Optional[str] = None,
 ) -> str:
-    """Render one compact real64 parameter array."""
+    """Render one compact wp parameter array."""
 
     lines = [
-        "    real(real64), parameter :: {}({}) = {}[ &".format(
+        "    real(wp), parameter :: {}({}) = {}[ &".format(
             name, dimensions, "reshape(" if shape else ""
         )
     ]
@@ -194,10 +374,11 @@ def array_declaration(
 def render_module(
     module_name: str,
     networks: Sequence[Network],
-    weights_path: Path,
-    biases_path: Path,
+    weights_path: Path | Sequence[Path],
+    biases_path: Path | Sequence[Path],
     system_declarations: Sequence[str],
     extra_arrays: Sequence[tuple[str, str, Sequence[str]]],
+    additional_provenance: Sequence[tuple[str, Path]] = (),
 ) -> str:
     """Render one private-by-default immutable parameter module."""
 
@@ -225,19 +406,33 @@ def render_module(
         model_label = model_label[len("chempotpy_"):]
     if model_label.endswith("_parameters"):
         model_label = model_label[:-len("_parameters")]
+    weights_paths = (weights_path,) if isinstance(weights_path, Path) else tuple(weights_path)
+    biases_paths = (biases_path,) if isinstance(biases_path, Path) else tuple(biases_path)
     output = [
         "!> @brief Store immutable neural-network parameters for the {} model.".format(
             model_label
         ),
         "!",
         "! Generated from released model data; do not edit numeric values by hand.",
-        "! Weights SHA-256: {}".format(sha256(weights_path)),
-        "! Biases SHA-256: {}".format(sha256(biases_path)),
+    ]
+    output.extend(
+        "! Weights {} SHA-256: {}".format(index, sha256(path))
+        for index, path in enumerate(weights_paths, 1)
+    )
+    output.extend(
+        "! Biases {} SHA-256: {}".format(index, sha256(path))
+        for index, path in enumerate(biases_paths, 1)
+    )
+    output.extend(
+        "! {} SHA-256: {}".format(label, sha256(path))
+        for label, path in additional_provenance
+    )
+    output.extend([
         "module {}".format(module_name),
-        "    use iso_fortran_env, only: real64",
+        "    use chempotpy_kinds, only: wp",
         "    implicit none",
         "    private",
-    ]
+    ])
     for index in range(0, len(public_names), 5):
         prefix = "    public :: " if index == 0 else "        & "
         suffix = ", &" if index+5 < len(public_names) else ""
@@ -298,15 +493,95 @@ def render_module(
             name, dimensions, values, dimensions
         ))
     for name, dimensions, values in extra_arrays:
-        output.append(array_declaration(name, dimensions, values))
+        shape = dimensions if "," in dimensions else None
+        output.append(array_declaration(name, dimensions, values, shape))
     output.append("end module {}".format(module_name))
-    source = "\n".join(output)+"\n"
-    for _ in range(4):
-        formatted = format_source_text(source)
-        if formatted == source:
-            return formatted
-        source = formatted
-    raise RuntimeError("generated Fortran formatting did not converge")
+    return "\n".join(output)+"\n"
+
+
+def render_c2n_module(
+    module_name: str, parameter_paths: Sequence[Path]
+) -> str:
+    """Render one immutable three-network C2N parameter module."""
+
+    model_label = module_name
+    if model_label.startswith("chempotpy_"):
+        model_label = model_label[len("chempotpy_"):]
+    if model_label.endswith("_parameters"):
+        model_label = model_label[:-len("_parameters")]
+    input_count = 12
+    hidden_1_count = 30
+    hidden_2_count = 30
+    network_count = len(parameter_paths)
+    parameter_count = (
+        input_count*hidden_1_count+hidden_1_count
+        + hidden_1_count*hidden_2_count+hidden_2_count
+        + hidden_2_count+1+2*input_count+2
+    )
+    networks = [
+        leading_numeric_values(path, parameter_count)
+        for path in parameter_paths
+    ]
+    offsets = [
+        0,
+        input_count*hidden_1_count,
+        input_count*hidden_1_count+hidden_1_count,
+        input_count*hidden_1_count+hidden_1_count
+        + hidden_1_count*hidden_2_count,
+        input_count*hidden_1_count+hidden_1_count
+        + hidden_1_count*hidden_2_count+hidden_2_count,
+        input_count*hidden_1_count+hidden_1_count
+        + hidden_1_count*hidden_2_count+hidden_2_count+hidden_2_count,
+        input_count*hidden_1_count+hidden_1_count
+        + hidden_1_count*hidden_2_count+hidden_2_count+hidden_2_count+1,
+        input_count*hidden_1_count+hidden_1_count
+        + hidden_1_count*hidden_2_count+hidden_2_count+hidden_2_count+1
+        + 2*input_count,
+        parameter_count,
+    ]
+    names_and_dimensions = (
+        ("input_hidden_weights", "ninput,hidden_1_count,network_count"),
+        ("hidden_1_biases", "hidden_1_count,network_count"),
+        ("hidden_hidden_weights", "hidden_1_count,hidden_2_count,network_count"),
+        ("hidden_2_biases", "hidden_2_count,network_count"),
+        ("hidden_output_weights", "hidden_2_count,network_count"),
+        ("output_biases", "network_count"),
+        ("input_ranges", "2,ninput,network_count"),
+        ("output_ranges", "2,network_count"),
+    )
+    output = [
+        "!> @brief Store immutable neural-network parameters for the {} model.".format(
+            model_label
+        ),
+        "!",
+        "! Generated from released model data; do not edit numeric values by hand.",
+    ]
+    output.extend(
+        "! Network {} SHA-256: {}".format(index, sha256(path))
+        for index, path in enumerate(parameter_paths, 1)
+    )
+    output.extend([
+        "module {}".format(module_name),
+        "    use chempotpy_kinds, only: wp",
+        "    implicit none",
+        "    private",
+        "    public :: hidden_1_biases, hidden_1_count, hidden_2_biases, hidden_2_count, &",
+        "        & hidden_hidden_weights, hidden_output_weights, input_hidden_weights, input_ranges, &",
+        "        & network_count, ninput, output_biases, output_ranges",
+        "    integer, parameter :: network_count  = {}".format(network_count),
+        "    integer, parameter :: ninput         = {}".format(input_count),
+        "    integer, parameter :: hidden_1_count = {}".format(hidden_1_count),
+        "    integer, parameter :: hidden_2_count = {}".format(hidden_2_count),
+    ])
+    for array_index, (name, dimensions) in enumerate(names_and_dimensions):
+        values = tuple(
+            value
+            for network in networks
+            for value in network[offsets[array_index]:offsets[array_index+1]]
+        )
+        output.append(array_declaration(name, dimensions, values, dimensions))
+    output.append("end module {}".format(module_name))
+    return "\n".join(output)+"\n"
 
 
 def generated_documents() -> dict[Path, str]:
@@ -324,9 +599,9 @@ def generated_documents() -> dict[Path, str]:
         n4_weights,
         n4_biases,
         (
-            "real(real64), parameter :: alpha = 1.0_real64",
-            "real(real64), parameter :: pi = 3.1415926_real64",
-            "real(real64), parameter :: radian = pi/180.0_real64",
+            "real(wp), parameter :: alpha = 1.0_wp",
+            "real(wp), parameter :: pi = 3.1415926_wp",
+            "real(wp), parameter :: radian = pi/180.0_wp",
             "integer, parameter :: natom = 4",
             "integer, parameter :: nbasis = 306",
             "integer, parameter :: ndim = 6",
@@ -346,11 +621,11 @@ def generated_documents() -> dict[Path, str]:
         fh2o_weights,
         fh2o_biases,
         (
-            "real(real64), parameter :: alpha = 1.0_real64",
-            "real(real64), parameter :: vpesmin = -176.0260035639990_real64",
-            "real(real64), parameter :: pi = 3.141592653589793238_real64",
-            "real(real64), parameter :: radian = pi/180.0_real64",
-            "real(real64), parameter :: bohr = 0.5291772_real64",
+            "real(wp), parameter :: alpha = 1.0_wp",
+            "real(wp), parameter :: vpesmin = -176.0260035639990_wp",
+            "real(wp), parameter :: pi = 3.141592653589793238_wp",
+            "real(wp), parameter :: radian = pi/180.0_wp",
+            "real(wp), parameter :: bohr = 0.5291772_wp",
             "integer, parameter :: nbasis = 18",
             "integer, parameter :: nrbasissoc = 147",
             "integer, parameter :: npbasissoc = 288",
@@ -364,12 +639,367 @@ def generated_documents() -> dict[Path, str]:
             )),
         ),
     )
-    return {
+    h3clo_root = SOURCE_ROOT / "H3ClO"
+    h3clo_weights = h3clo_root / "weights.txt"
+    h3clo_biases = h3clo_root / "biases.txt"
+    h3clo_networks = attach_biases(
+        h3clo_biases, parse_weight_file(h3clo_weights, input_count=230)
+    )
+    h3clo = render_module(
+        "chempotpy_h3clo_pipnn_parameters",
+        h3clo_networks,
+        h3clo_weights,
+        h3clo_biases,
+        (
+            "integer, parameter :: natom = 5",
+            "integer, parameter :: nbond = natom*(natom-1)/2",
+            "integer, parameter :: nmorse = 110",
+        ),
+        (),
+    )
+    c2n_root = SOURCE_ROOT / "C2N"
+    c2n_prime_paths = tuple(
+        c2n_root / "c2n_2a_prime_para_{}.txt".format(label)
+        for label in "abc"
+    )
+    c2n_dprime_paths = tuple(
+        c2n_root / "c2n_2a_dprime_para_{}.txt".format(label)
+        for label in "abc"
+    )
+    c2n_prime = render_c2n_module(
+        "chempotpy_c2n_pipnn_ap_parameters", c2n_prime_paths
+    )
+    c2n_dprime = render_c2n_module(
+        "chempotpy_c2n_pipnn_app_parameters", c2n_dprime_paths
+    )
+    ch4of_root = SOURCE_ROOT / "CH4OF"
+    ch4of_weights = ch4of_root / "weights.txt"
+    ch4of_biases = ch4of_root / "biases.txt"
+    ch4of_network = attach_unlabeled_biases(
+        ch4of_biases,
+        parse_unlabeled_network(ch4of_weights, input_count=1104),
+    )
+    ch4of = render_module(
+        "chempotpy_ch4of_pipnn_parameters",
+        (ch4of_network,),
+        ch4of_weights,
+        ch4of_biases,
+        (
+            "real(wp), parameter :: alpha = 1.0_wp",
+            "real(wp), parameter :: vpesmin = -215.234262652419_wp",
+            "integer, parameter :: natom = 7",
+            "integer, parameter :: nbasis = 1105",
+            "integer, parameter :: ndim = 21",
+        ),
+        (),
+    )
+    single_network_configurations = (
+        (
+            "CH2O", "chempotpy_ch2o_pipnn_parameters", 17,
+            (
+                "real(wp), parameter :: alpha = 1.0_wp",
+                "real(wp), parameter :: vpesmin = -114.158373618668_wp",
+                "integer, parameter :: natom = 4",
+                "integer, parameter :: nbasis = 18",
+                "integer, parameter :: ndim = 6",
+            ),
+        ),
+        (
+            "CH2O2", "chempotpy_ch2o2_pipnn_parameters", 101,
+            (
+                "real(wp), parameter :: alpha = 1.8_wp",
+                "real(wp), parameter :: para2 = 27.2114_wp",
+                "real(wp), parameter :: vpesmin = -560.0228149965_wp",
+                "integer, parameter :: natom = 5",
+                "integer, parameter :: nbasis = 102",
+                "integer, parameter :: nbond = 10",
+            ),
+        ),
+        (
+            "CH4OCl", "chempotpy_ch4ocl_pipnn_parameters", 1104,
+            (
+                "real(wp), parameter :: alpha = 1.0_wp",
+                "real(wp), parameter :: vpesmin = -575.2960146494_wp",
+                "integer, parameter :: natom = 7",
+                "integer, parameter :: nbasis = 1105",
+                "integer, parameter :: ndim = 21",
+            ),
+        ),
+        (
+            "H3S", "chempotpy_h3s_pipnn_parameters", 22,
+            (
+                "real(wp), parameter :: alpha = 1.0_wp",
+                "real(wp), parameter :: para2 = 27.2116_wp",
+                "real(wp), parameter :: vpesmin = -399.45863953_wp",
+                "integer, parameter :: natom = 4",
+                "integer, parameter :: nbasis = 23",
+                "integer, parameter :: ndata = 33435",
+                "integer, parameter :: ndim = 6",
+            ),
+        ),
+        (
+            "O2H3", "chempotpy_o2h3_pipnn_parameters", 138,
+            (
+                "real(wp), parameter :: alpha = 1.0_wp",
+                "real(wp), parameter :: vpesmin = -152.040123400851_wp",
+                "integer, parameter :: natom = 5",
+                "integer, parameter :: nbasis = 139",
+                "integer, parameter :: ndim = 10",
+            ),
+        ),
+        (
+            "C2H2N2O", "chempotpy_c2h2n2o_pipnn_parameters", 456,
+            (
+                "real(wp), parameter :: alpha = 1.8_wp",
+                "real(wp), parameter :: para2 = 27.2114_wp",
+                "integer, parameter :: natom = 7",
+                "integer, parameter :: nbasis = 2390",
+                "integer, parameter :: nbond = 21",
+            ),
+        ),
+    )
+    additional_single_networks = {}
+    for system, module_name, input_count, declarations in single_network_configurations:
+        root = SOURCE_ROOT / system
+        weights = root / "weights.txt"
+        biases_name = "biase.txt" if system == "H3S" else "biases.txt"
+        biases = root / biases_name
+        if system == "H3S":
+            networks = attach_unlabeled_bias_ensemble(
+                biases, parse_weight_file(weights, input_count)
+            )
+        else:
+            networks = (
+                attach_unlabeled_biases(
+                    biases, parse_unlabeled_network(weights, input_count)
+                ),
+            )
+        additional_single_networks[
+            REPOSITORY_ROOT / "chempotpy" / system /
+            (module_name+".f90")
+        ] = render_module(
+            module_name, networks, weights, biases, declarations, ()
+        )
+    ensemble_configurations = (
+        (
+            "C2H2O", "chempotpy_c2h2o_pipnn_parameters", 101,
+            ("real(wp), parameter :: vpescut = 5.0_wp",), "letters",
+        ),
+        (
+            "HClOH", "chempotpy_hcloh_pipnn_parameters", 17,
+            ("real(wp), parameter :: vpescut = 5.0_wp",), "letters",
+        ),
+        (
+            "HO3", "chempotpy_ho3_pipnn_parameters", 22,
+            ("real(wp), parameter :: vpescut = 6.0_wp",), "letters",
+        ),
+        (
+            "K2Rb2", "chempotpy_k2rb2_pipnn_parameters", 32,
+            ("real(wp), parameter :: vpescut = 5000.0_wp",), "letters",
+        ),
+        (
+            "N2HOCp", "chempotpy_n2hocp_pipnn_parameters", 167,
+            (
+                "real(wp), parameter :: alpha = 1.5_wp",
+                "integer, parameter :: natom = 5",
+                "integer, parameter :: nbasis = 167",
+                "integer, parameter :: ndim = 10",
+            ),
+            "numbers",
+        ),
+    )
+    additional_ensembles = {}
+    for system, module_name, input_count, declarations, naming in ensemble_configurations:
+        root = SOURCE_ROOT / system
+        if naming == "letters":
+            weights = tuple(root / "weights{}.txt".format(label) for label in "abc")
+            biases = tuple(root / "biases{}.txt".format(label) for label in "abc")
+        else:
+            weights = tuple(root / "weights.txt-{}".format(index) for index in range(1, 4))
+            biases = tuple(root / "biases.txt-{}".format(index) for index in range(1, 4))
+        networks = tuple(
+            attach_unlabeled_biases(
+                bias_path, parse_unlabeled_network(weight_path, input_count)
+            )
+            for weight_path, bias_path in zip(weights, biases)
+        )
+        additional_ensembles[
+            REPOSITORY_ROOT / "chempotpy" / system / (module_name+".f90")
+        ] = render_module(
+            module_name, networks, weights, biases, declarations, ()
+        )
+    clh2o_root = SOURCE_ROOT / "ClH2O"
+    clh2o_weights = tuple(
+        clh2o_root / "weights{}.txt".format(label) for label in "abc"
+    )
+    clh2o_biases = tuple(
+        clh2o_root / "biases{}.txt".format(label) for label in "abc"
+    )
+    clh2o_networks = tuple(
+        attach_unlabeled_biases(
+            bias_path, parse_unlabeled_network(weight_path, 17)
+        )
+        for weight_path, bias_path in zip(clh2o_weights, clh2o_biases)
+    )
+    clh2o_table_path = (
+        REPOSITORY_ROOT / "tests" / "data" / "external_parameters" /
+        "ClH2O" / "spline_tables.txt"
+    )
+    clh2o_values = all_numeric_values(clh2o_table_path, 436)
+    rxhcl = clh2o_values[0:18]
+    rxho = clh2o_values[18:36]
+    exhohcl = clh2o_values[36:360]
+    r0hcl = clh2o_values[360:378]
+    dp0hcl = clh2o_values[378:396]
+    r0ho = clh2o_values[396:416]
+    dp0ho = clh2o_values[416:436]
+    exhohcl2_rows = tuple(
+        natural_spline_second_derivatives(
+            rxho, tuple(exhohcl[column*18+row] for column in range(18))
+        )
+        for row in range(18)
+    )
+    exhohcl2 = tuple(
+        exhohcl2_rows[row][column]
+        for column in range(18)
+        for row in range(18)
+    )
+    additional_ensembles[
+        REPOSITORY_ROOT / "chempotpy" / "ClH2O" /
+        "chempotpy_clh2o_pipnn_parameters.f90"
+    ] = render_module(
+        "chempotpy_clh2o_pipnn_parameters",
+        clh2o_networks,
+        clh2o_weights,
+        clh2o_biases,
+        (
+            "real(wp), parameter :: alpha = 1.0_wp",
+            "real(wp), parameter :: vpesmin = -536.01052952_wp",
+            "real(wp), parameter :: vpescut = 5.0_wp",
+            "real(wp), parameter :: pi = 3.141592653589793238_wp",
+            "real(wp), parameter :: radian = pi/180.0_wp",
+            "real(wp), parameter :: bohr = 0.5291772_wp",
+            "integer, parameter :: nbasis = 18",
+            "integer, parameter :: n0hcl = 18",
+            "integer, parameter :: n0ho = 20",
+            "integer, parameter :: nxhcl = 18",
+            "integer, parameter :: nxho = 18",
+        ),
+        (
+            ("rxhcl", "nxhcl", rxhcl),
+            ("rxho", "nxho", rxho),
+            ("exhohcl", "nxhcl,nxho", exhohcl),
+            ("exhohcl2", "nxhcl,nxho", exhohcl2),
+            ("r0hcl", "n0hcl", r0hcl),
+            ("dp0hcl", "n0hcl", dp0hcl),
+            (
+                "dp0hcl2", "n0hcl",
+                natural_spline_second_derivatives(r0hcl, dp0hcl),
+            ),
+            ("r0ho", "n0ho", r0ho),
+            ("dp0ho", "n0ho", dp0ho),
+            (
+                "dp0ho2", "n0ho",
+                natural_spline_second_derivatives(r0ho, dp0ho),
+            ),
+        ),
+        (("Spline tables", clh2o_table_path),),
+    )
+    h3cl_root = SOURCE_ROOT / "H3Cl"
+    h3cl_weights = tuple(
+        h3cl_root / "weights.txt-{}".format(index) for index in range(1, 4)
+    )
+    h3cl_biases = tuple(
+        h3cl_root / "biases.txt-{}".format(index) for index in range(1, 4)
+    )
+    h3cl_networks = tuple(
+        attach_unlabeled_biases(
+            bias_path, parse_unlabeled_network(weight_path, 50)
+        )
+        for weight_path, bias_path in zip(h3cl_weights, h3cl_biases)
+    )
+    h2_values = tuple(
+        token
+        for line in (h3cl_root / "H2.dat").read_text().splitlines()
+        for token in numeric_tokens(line)
+    )
+    hcl_values = tuple(
+        token
+        for line in (h3cl_root / "HCl.dat").read_text().splitlines()
+        for token in numeric_tokens(line)
+    )
+    long_range_coefficients = tuple(
+        token
+        for line in (h3cl_root / "c.dat").read_text().splitlines()
+        for token in numeric_tokens(line)
+    )
+    if len(h2_values) != 2*1425 or len(hcl_values) != 2*3200:
+        raise ValueError("H3Cl diatomic tables have unexpected dimensions")
+    if len(long_range_coefficients) != 644:
+        raise ValueError("H3Cl long-range table has an unexpected dimension")
+    additional_ensembles[
+        REPOSITORY_ROOT / "chempotpy" / "H3Cl" /
+        "chempotpy_h3cl_pipnn_parameters.f90"
+    ] = render_module(
+        "chempotpy_h3cl_pipnn_parameters",
+        h3cl_networks,
+        h3cl_weights,
+        h3cl_biases,
+        (
+            "real(wp), parameter :: alpha = 1.5_wp",
+            "integer, parameter :: natom = 4",
+            "integer, parameter :: nbasis = 50",
+            "integer, parameter :: ndim = 6",
+        ),
+        (
+            ("h2_distance_grid", "1425", h2_values[0::2]),
+            ("h2_potential_grid", "1425", h2_values[1::2]),
+            ("hcl_distance_grid", "3200", hcl_values[0::2]),
+            ("hcl_potential_grid", "3200", hcl_values[1::2]),
+            ("long_range_coefficients", "644", long_range_coefficients),
+        ),
+    )
+    no2_root = SOURCE_ROOT / "NO2"
+    for state in ("2Ap", "4Ap", "6Ap"):
+        weights = no2_root / "weights_NO2_{}_PIPNN.txt".format(state)
+        biases = no2_root / "biases_NO2_{}_PIPNN.txt".format(state)
+        networks = attach_unlabeled_bias_ensemble(
+            biases, parse_weight_file(weights, 12)
+        )
+        module_name = "chempotpy_no2_{}_pipnn_parameters".format(state.lower())
+        additional_ensembles[
+            REPOSITORY_ROOT / "chempotpy" / "NO2" / (module_name+".f90")
+        ] = render_module(
+            module_name,
+            networks,
+            weights,
+            biases,
+            (
+                "real(wp), parameter :: alpha = 1.0_wp",
+                "real(wp), parameter :: bohr = 0.5291772_wp",
+                "integer, parameter :: natom = 3",
+                "integer, parameter :: nbond = 3",
+                "integer, parameter :: npes = 3",
+            ),
+            (),
+        )
+    documents = {
         REPOSITORY_ROOT / "chempotpy" / "N4" /
         "chempotpy_n4_pipnn_parameters.f90": n4,
         REPOSITORY_ROOT / "chempotpy" / "FH2O" /
         "chempotpy_fh2o_pipnn_parameters.f90": fh2o,
+        REPOSITORY_ROOT / "chempotpy" / "H3ClO" /
+        "chempotpy_h3clo_pipnn_parameters.f90": h3clo,
+        REPOSITORY_ROOT / "chempotpy" / "C2N" /
+        "chempotpy_c2n_pipnn_ap_parameters.f90": c2n_prime,
+        REPOSITORY_ROOT / "chempotpy" / "C2N" /
+        "chempotpy_c2n_pipnn_app_parameters.f90": c2n_dprime,
+        REPOSITORY_ROOT / "chempotpy" / "CH4OF" /
+        "chempotpy_ch4of_pipnn_parameters.f90": ch4of,
     }
+    documents.update(additional_single_networks)
+    documents.update(additional_ensembles)
+    return documents
 
 
 def main() -> int:

@@ -52,6 +52,13 @@ CORRECTED_RELEASE_DEFECTS = {
     ],
 }
 
+# Preserve the released fixed-form values as independent provenance while
+# allowing only the measured change introduced by the CODATA 2022 boundary
+# conversions.  The current CODATA outputs have their own strict fixture in
+# all_surface_references.json.
+CODATA_MIGRATION_RELATIVE_TOLERANCE = 1.25e-4
+CODATA_MIGRATION_ABSOLUTE_TOLERANCE = 5.0e-7
+
 
 class LibraryLegacyMigrationTests( unittest.TestCase ):
     @classmethod
@@ -61,7 +68,9 @@ class LibraryLegacyMigrationTests( unittest.TestCase ):
             "library_legacy_references.json"
         cls.references = json.loads(fixture.read_text())["surfaces"]
 
-    def test_modern_sources_match_legacy_references( self ) -> None:
+    def test_modern_sources_stay_within_codata_migration_envelope(
+        self,
+    ) -> None:
         compiler = shutil.which("gfortran")
         if compiler is None:
             self.skipTest("gfortran is not available")
@@ -97,8 +106,11 @@ class LibraryLegacyMigrationTests( unittest.TestCase ):
                     self.assertTrue(math.isclose(
                         actual_number,
                         expected_number,
-                        rel_tol=1.0e-13,
-                        abs_tol=1.0e-13,
+                        rel_tol=CODATA_MIGRATION_RELATIVE_TOLERANCE,
+                        abs_tol=CODATA_MIGRATION_ABSOLUTE_TOLERANCE,
+                    ), (
+                        f"CODATA migration envelope exceeded: "
+                        f"expected {expected_number}, got {actual_number}"
                     ))
 
     def test_reference_fixture_has_legacy_provenance( self ) -> None:

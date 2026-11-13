@@ -31,6 +31,38 @@ ENTRY_PATTERN = re.compile(
     flags=re.IGNORECASE | re.MULTILINE | re.DOTALL,
 )
 INTEGER_PATTERN = r"\b{}\s*=\s*(\d+)"
+SYSTEM_GEOMETRIES = {
+    "Aln": (
+        (
+            (0.00, 0.00, 0.00),
+            (2.80, 0.20, 0.10),
+            (0.40, 3.10, 0.30),
+            (0.20, 0.60, 3.30),
+            (3.00, 3.20, 0.40),
+        ),
+        (
+            (0.15, -0.20, 0.35),
+            (2.45, 0.65, -0.10),
+            (-0.55, 2.70, 0.80),
+            (0.90, -0.75, 3.05),
+            (2.85, 2.25, 0.55),
+        ),
+    ),
+    "NH3": (
+        (
+            (0.00, 0.00, 0.00),
+            (0.94, 0.00, 0.35),
+            (-0.47, 0.814, 0.35),
+            (-0.47, -0.814, 0.35),
+        ),
+        (
+            (0.02, -0.01, 0.03),
+            (0.98, 0.05, 0.30),
+            (-0.42, 0.86, 0.42),
+            (-0.51, -0.76, 0.36),
+        ),
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -76,9 +108,20 @@ def coordinates(
     natoms: int,
     geometry_index: int,
     geometry_variant: str = "",
+    system_name: str = "",
 ) -> tuple[tuple[float, ...], ...]:
     """Return a deterministic, non-symmetric test geometry in angstroms."""
 
+    system_geometries = SYSTEM_GEOMETRIES.get(system_name)
+    if system_geometries is not None:
+        points = system_geometries[geometry_index - 1]
+        if len(points) != natoms:
+            raise ValueError(
+                "{} regression geometry has {} rather than {} atoms".format(
+                    system_name, len(points), natoms
+                )
+            )
+        return points
     points = []
     for index in range(natoms):
         if geometry_index == 1:
@@ -104,6 +147,7 @@ def assignments(
     geometry_index: int,
     array_name: str,
     geometry_variant: str = "",
+    system_name: str = "",
 ) -> str:
     """Return coordinate assignments for a Fortran driver."""
 
@@ -118,9 +162,12 @@ def assignments(
             literal(point[1]),
             literal(point[2]),
         ).replace("e+", "e+").replace("e-", "e-").replace("ed", "d")
-        for index, point in enumerate(
-            coordinates(natoms, geometry_index, geometry_variant), 1
-        )
+        for index, point in enumerate(coordinates(
+            natoms,
+            geometry_index,
+            geometry_variant,
+            system_name,
+        ), 1)
     )
 
 
@@ -262,6 +309,7 @@ def standard_driver(
                     geometry_index,
                     coordinate_name,
                     geometry_variant,
+                    system_name,
                 ),
                 call=call,
                 writes=writes,
@@ -288,15 +336,20 @@ end program capture_library_reference
 def compile_dependencies(source: Path, source_text: str) -> tuple[Path, ...]:
     """Return extra Fortran sources needed to link one historical surface."""
 
-    dependencies = list(core_fortran_dependencies(source_text))
+    support_sources = tuple(
+        source.parent / support_name
+        for support_name in SUPPORT_SOURCES.get(
+            (source.parent.name, source.stem), ()
+        )
+    )
+    dependencies = list(core_fortran_dependencies(
+        source_text, support_sources
+    ))
     if re.search(r"\bcall\s+dsyev\b", source_text, re.IGNORECASE):
         dependencies.append(INTERNAL_DSYEV)
     if re.search(r"\b(?:ddot|dgemv|dgemm)\b", source_text, re.IGNORECASE):
         dependencies.append(INTERNAL_BLAS)
-    for support_name in SUPPORT_SOURCES.get(
-        (source.parent.name, source.stem), ()
-    ):
-        dependencies.append(source.parent / support_name)
+    dependencies.extend(support_sources)
     return tuple(dependencies)
 
 
@@ -479,6 +532,7 @@ def main() -> int:
     for failure in failures:
         print("FAIL {}: {}".format(failure.key, failure.error))
     document = {
+        "baseline_version": 1,
         "surfaces": {
             result.key: result.record
             for result in sorted(results, key=lambda item: item.key)

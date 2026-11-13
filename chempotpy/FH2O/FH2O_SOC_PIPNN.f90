@@ -3,6 +3,7 @@
 !-->  global variables are declared in this module
 !> @brief Implement FH2O_SOC_PIPNN, a potential energy surface for FH2O.
 module chempotpy_fh2o_soc_pipnn_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -11,24 +12,26 @@ module chempotpy_fh2o_soc_pipnn_pes
 
     !> @brief Evaluate the FH2O_SOC_PIPNN potential energy surface for FH2O.
     subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_units,                 only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
             & pi, r1soccoef, radian, vpesmin
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 4
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: v, va, vb, vc, socg, vgsoc
-        double precision              :: tx(3,natoms)
-        integer                       :: iatom, idir, j, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 4
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: v, va, vb, vc, socg, vgsoc
+        real(wp)              :: tx(3,natoms)
+        integer               :: iatom, idir, j, istate
         !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
                 tx(idir,iatom) = x(iatom,idir)
@@ -39,12 +42,12 @@ module chempotpy_fh2o_soc_pipnn_pes
         else
             write (*, *) 'Only energy and gradient are available'
         endif
-        vgsoc = vgsoc/23.0609
+        vgsoc = vgsoc/electronvolt_to_kilocalorie_per_mole
         do istate=1, nstates
             p(istate) = vgsoc
         enddo
-        g = 0.d0
-        d = 0.d0
+        g = 0.e0_wp
+        d = 0.e0_wp
     end subroutine evaluate
 
     !> @brief Evaluate fh2o_soc_nn.
@@ -55,21 +58,22 @@ module chempotpy_fh2o_soc_pipnn_pes
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
             & pi, r1soccoef, radian, vpesmin
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: xt(3,4), xt2(3,4), xn(3,4), rint(6), rt(6)
-        double precision :: tr1basis(nrbasissoc), tr2basis(nrbasissoc)
-        double precision :: rcom, the1, the2, phi
-        double precision :: tp2basis(npbasissoc)
-        integer          :: n, k, l, m, j, nrcom
-        double precision :: vg, vgsoc, socg, socs, vpesa, vpesb, vpesc
-        double precision :: socrg, socrs, socpg, socps
-        double precision :: r1switch, r2switch, p2switch, switch
+        real(wp) :: xt(3,4), xt2(3,4), xn(3,4), rint(6), rt(6)
+        real(wp) :: tr1basis(nrbasissoc), tr2basis(nrbasissoc)
+        real(wp) :: rcom, the1, the2, phi
+        real(wp) :: tp2basis(npbasissoc)
+        integer  :: n, k, l, m, j, nrcom
+        real(wp) :: vg, vgsoc, socg, socs, vpesa, vpesb, vpesc
+        real(wp) :: socrg, socrs, socpg, socps
+        real(wp) :: r1switch, r2switch, p2switch, switch
         call fh2onn(xt, vg, vpesa, vpesb, vpesc) !xt in HHFO and angstrom
-        vg = vg*23.0605d0
-        vg = min(vg, 100.0d0)
-        if( vg .ge. 100.0d0 )then
-            socg  = 0.0d0
-            vgsoc = vg+socg/349.75d0
+        vg = vg*23.0605e0_wp
+        vg = min(vg, 100.0e0_wp)
+        if( vg .ge. 100.0e0_wp )then
+            socg  = 0.0e0_wp
+            vgsoc = vg+socg/349.75e0_wp
             return
         endif
         xt2 = xt
@@ -94,21 +98,22 @@ module chempotpy_fh2o_soc_pipnn_pes
         the2 = rint(5)
         phi  = rint(6)
         call soc_product_ground(rcom, the1, the2, phi, socpg)
-        switch = (1.d0-dtanh(20.0d0*(rt(3)-1.6d0)))/2.0d0
-        socg   = socrg*switch+socpg*(1.0d0-switch)
-        vgsoc  = vg+socg/349.75d0
-        vgsoc  = min(100.0d0, vgsoc)
+        switch = (1.e0_wp-tanh(20.0e0_wp*(rt(3)-1.6e0_wp)))/2.0e0_wp
+        socg   = socrg*switch+socpg*(1.0e0_wp-switch)
+        vgsoc  = vg+socg/349.75e0_wp
+        vgsoc  = min(100.0e0_wp, vgsoc)
     end subroutine fh2o_soc_nn
 
     !> @brief Evaluate orderxnt.
     subroutine orderxnt( x1, x2 )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: x1(3,4), x2(3,4), xvec(3,2), r1, r2, xt(3,4)
+        real(wp) :: x1(3,4), x2(3,4), xvec(3,2), r1, r2, xt(3,4)
         xt        = x1
         xvec(:,1) = xt(:,1)-xt(:,3)
         xvec(:,2) = xt(:,2)-xt(:,3)
-        r1        = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-        r2        = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
+        r1        = sqrt(dot_product(xvec(:,1), xvec(:,1)))
+        r2        = sqrt(dot_product(xvec(:,2), xvec(:,2)))
         if( r1 .gt. r2 )then
             x2(:,1) = xt(:,2)  !-->1st H closer to F
             x2(:,2) = xt(:,1)
@@ -120,46 +125,49 @@ module chempotpy_fh2o_soc_pipnn_pes
     end subroutine orderxnt
 
     !> @brief Evaluate r1function.
-    double precision function r1function( r, n )
+    real(wp) function r1function( r, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, parameter :: r0 = 1.8d0, c=0.45d0
-        double precision            :: r
-        integer                     :: n
+        real(wp), parameter :: r0 = 1.8e0_wp, c=0.45e0_wp
+        real(wp)            :: r
+        integer             :: n
         if( n .eq. 0 )then
-            r1function = 1.0d0
+            r1function = 1.0e0_wp
             return
         else
-            r1function = dtanh(dble(n)*c*(r-r0))
+            r1function = tanh(real(n, wp)*c*(r-r0))
             return
         endif
     end function r1function
 
     !> @brief Evaluate r2function.
-    double precision function r2function( r, n )
+    real(wp) function r2function( r, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, parameter :: r0 = 2.0d0, c=0.42d0
-        double precision            :: r
-        integer                     :: n
+        real(wp), parameter :: r0 = 2.0e0_wp, c=0.42e0_wp
+        real(wp)            :: r
+        integer             :: n
         if( n .eq. 0 )then
-            r2function = 1.0d0
+            r2function = 1.0e0_wp
             return
         else
-            r2function = dtanh(dble(n)*c*(r-r0))
+            r2function = tanh(real(n, wp)*c*(r-r0))
             return
         endif
     end function r2function
 
     !> @brief Evaluate p2function.
-    double precision function p2function( r, n )
+    real(wp) function p2function( r, n )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, parameter :: r0 = 2.3d0, c=0.40d0
-        double precision            :: r
-        integer                     :: n
+        real(wp), parameter :: r0 = 2.3e0_wp, c=0.40e0_wp
+        real(wp)            :: r
+        integer             :: n
         if( n .eq. 0 )then
-            p2function = 1.0d0
+            p2function = 1.0e0_wp
             return
         else
-            p2function = dtanh(dble(n)*c*(r-r0))
+            p2function = tanh(real(n, wp)*c*(r-r0))
             return
         endif
     end function p2function
@@ -171,11 +179,12 @@ module chempotpy_fh2o_soc_pipnn_pes
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
             & pi, r1soccoef, radian, vpesmin
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: rcom, t2, phi, socrg
-        double precision :: tr1basis(nrbasissoc)
-        integer          :: j, n, k, l, nrcom
-        tr1basis = 0.0d0
+        real(wp) :: rcom, t2, phi, socrg
+        real(wp) :: tr1basis(nrbasissoc)
+        integer  :: j, n, k, l, nrcom
+        tr1basis = 0.0e0_wp
         j        = 0
         do n=0, 6
             do k=0, 2
@@ -183,9 +192,9 @@ module chempotpy_fh2o_soc_pipnn_pes
                     j     = j+1
                     nrcom = n
                     if( l .le. 3 )then
-                        tr1basis(j) = r1function(rcom, nrcom)*dcos(dble(k)*phi)* dcos(dble(l)*t2)
+                        tr1basis(j) = r1function(rcom, nrcom)*cos(real(k, wp)*phi)* cos(real(l, wp)*t2)
                     else
-                        tr1basis(j) = r1function(rcom, nrcom)*dcos(dble(k)*phi)* dsin(dble(l-3)*t2)
+                        tr1basis(j) = r1function(rcom, nrcom)*cos(real(k, wp)*phi)* sin(real(l-3, wp)*t2)
                     endif
                 enddo
             enddo
@@ -204,19 +213,21 @@ module chempotpy_fh2o_soc_pipnn_pes
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
             & pi, r1soccoef, radian, vpesmin
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: rcom, t1, t2, phi, socpg, socps
-        double precision :: tp2basis(npbasissoc)
-        integer          :: j, n, k, l, m, nrcom
-        tp2basis = 0.0d0
+        real(wp) :: rcom, t1, t2, phi, socpg, socps
+        real(wp) :: tp2basis(npbasissoc)
+        integer  :: j, n, k, l, m, nrcom
+        tp2basis = 0.0e0_wp
         j        = 0
         do n=0, 5
             do k=0, 2
                 do l=0, 3
                     do m=0, 3
-                        j           = j+1
-                        nrcom       = n
-                        tp2basis(j) = p2function(rcom, nrcom)*dcos(dble(k)*phi)* dcos(dble(l)*t1)*dcos(dble(m)*t2)
+                        j     = j+1
+                        nrcom = n
+                        tp2basis(j) = p2function(rcom, nrcom)*cos(real(k, wp)*phi)* cos(real(l, wp)*t1)*cos(real(m, &
+                            & wp)*t2)
                     enddo
                 enddo
             enddo
@@ -226,7 +237,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             stop
         endif
         socps = dot_product(tp2basis(:), p2soccoef(:))
-        socpg = -1.0d0*socps
+        socpg = -1.0e0_wp*socps
     end subroutine soc_product_ground
 
     !> @brief Evaluate fh2oNN.
@@ -237,49 +248,50 @@ module chempotpy_fh2o_soc_pipnn_pes
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
             & pi, r1soccoef, radian, vpesmin
+        use chempotpy_kinds, only: wp
         implicit none
         integer, parameter :: ndim = 6
         integer            :: j
-        double precision   :: rb(ndim), xbond(ndim), basis(0:nbasis-1), tmp1
-        double precision   :: txinput(1:nbasis-1)
-        double precision   :: ct(3,4), vpes
-        double precision   :: vpesa, vpesb, vpesc, r12, r13, r14, r23, r24, r34
-        basis = 0.d0
+        real(wp)           :: rb(ndim), xbond(ndim), basis(0:nbasis-1), tmp1
+        real(wp)           :: txinput(1:nbasis-1)
+        real(wp)           :: ct(3,4), vpes
+        real(wp)           :: vpesa, vpesb, vpesc, r12, r13, r14, r23, r24, r34
+        basis = 0.e0_wp
         call all_pair_distances(transpose(ct), rb)
         r12 = rb(1);r13=rb(2);r14=rb(3);r23=rb(4);r24=rb(5);r34=rb(6)
-        if( minval(rb(:)) .le. 0.67d0.or.minval(rb(:)) .gt. 1.45d0 )then
-            vpes = 5.0d0
+        if( minval(rb(:)) .le. 0.67e0_wp.or.minval(rb(:)) .gt. 1.45e0_wp )then
+            vpes = 5.0e0_wp
             return
         endif
-        if( r34 .le. 1.5d0.or.r12 .le. 0.8d0.or.minval(rb) .eq. r12 )then
-            vpes = 5.0d0
+        if( r34 .le. 1.5e0_wp.or.r12 .le. 0.8e0_wp.or.minval(rb) .eq. r12 )then
+            vpes = 5.0e0_wp
             return
         endif
-        if( r14 .lt. r24.and.r24 .gt. 1.9d0 )then
-            if( r14 .ge. 1.8d0.or.r23 .ge. 1.8d0 )then
-                vpes = 5.0d0
+        if( r14 .lt. r24.and.r24 .gt. 1.9e0_wp )then
+            if( r14 .ge. 1.8e0_wp.or.r23 .ge. 1.8e0_wp )then
+                vpes = 5.0e0_wp
                 return
             endif
         endif
-        if( r24 .lt. r14.and.r14 .gt. 1.9d0 )then
-            if( r24 .ge. 1.8d0.or.r13 .ge. 1.8d0 )then
-                vpes = 5.0d0
+        if( r24 .lt. r14.and.r14 .gt. 1.9e0_wp )then
+            if( r24 .ge. 1.8e0_wp.or.r13 .ge. 1.8e0_wp )then
+                vpes = 5.0e0_wp
                 return
             endif
         endif
-        if( r23 .lt. r13.and.r13 .gt. 1.9d0.and.r24 .gt. 1.7d0 )then
-            if( r14 .ge. 1.8d0.or.r23 .ge. 1.8d0 )then
-                vpes = 5.0d0
+        if( r23 .lt. r13.and.r13 .gt. 1.9e0_wp.and.r24 .gt. 1.7e0_wp )then
+            if( r14 .ge. 1.8e0_wp.or.r23 .ge. 1.8e0_wp )then
+                vpes = 5.0e0_wp
                 return
             endif
         endif
-        if( r13 .lt. r23.and.r23 .gt. 1.9d0.and.r14 .gt. 1.7d0 )then
-            if( r13 .ge. 1.8d0.or.r24 .ge. 1.8d0 )then
-                vpes = 5.0d0
+        if( r13 .lt. r23.and.r23 .gt. 1.9e0_wp.and.r14 .gt. 1.7e0_wp )then
+            if( r13 .ge. 1.8e0_wp.or.r24 .ge. 1.8e0_wp )then
+                vpes = 5.0e0_wp
                 return
             endif
         endif
-        xbond(:) = dexp(-rb(:)/alpha)
+        xbond(:) = exp(-rb(:)/alpha)
         !      do j=1,nbasis
         !       tmp1=0.0d0
         !       do k=1,nterm(j)
@@ -297,9 +309,9 @@ module chempotpy_fh2o_soc_pipnn_pes
         call evaluate_network(txinput, 1, vpesa)
         call evaluate_network(txinput, 2, vpesb)
         call evaluate_network(txinput, 3, vpesc)
-        vpes = (vpesa+vpesb+vpesc)/3.0d0
-        if( vpes .lt. -1.5d0 ) vpes=5.0d0
-        vpes = min(vpes, 5.0d0)
+        vpes = (vpesa+vpesb+vpesc)/3.0e0_wp
+        if( vpes .lt. -1.5e0_wp ) vpes=5.0e0_wp
+        vpes = min(vpes, 5.0e0_wp)
     end subroutine fh2onn
 
     !> @brief Evaluate one member of the immutable neural-network ensemble.
@@ -309,13 +321,14 @@ module chempotpy_fh2o_soc_pipnn_pes
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
             & pi, r1soccoef, radian, vpesmin
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)  :: x(ninput)
-        integer, intent(in)           :: network_index
-        double precision, intent(out) :: potential
-        double precision              :: y(nodemax,nlayer)
-        integer                       :: input_index, node_index, previous_index
-        y = 0.0d0
+        real(wp), intent(in)  :: x(ninput)
+        integer, intent(in)   :: network_index
+        real(wp), intent(out) :: potential
+        real(wp)              :: y(nodemax,nlayer)
+        integer               :: input_index, node_index, previous_index
+        y = 0.0e0_wp
         do input_index=1, ninput
             y(input_index,1) = (x(input_index)-scale_averages(input_index, network_index))/ scale_deltas(input_index, &
                 & network_index)
@@ -330,7 +343,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             case( 1 )
                 y(node_index,2) = tanh(y(node_index,2))
             case( 2 )
-                y(node_index,2) = 1.0d0/(1.0d0+exp(-y(node_index,2)))
+                y(node_index,2) = 1.0e0_wp/(1.0e0_wp+exp(-y(node_index,2)))
             case( 3 )
             end select
         enddo
@@ -344,7 +357,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             case( 1 )
                 y(node_index,3) = tanh(y(node_index,3))
             case( 2 )
-                y(node_index,3) = 1.0d0/(1.0d0+exp(-y(node_index,3)))
+                y(node_index,3) = 1.0e0_wp/(1.0e0_wp+exp(-y(node_index,3)))
             case( 3 )
             end select
         enddo
@@ -360,31 +373,34 @@ module chempotpy_fh2o_soc_pipnn_pes
 
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(1:6)::x
-        double precision, dimension(0:17)::c
-        double precision :: v
-        double precision, dimension(0:17)::p
+        real(wp), dimension(1:6)::x
+        real(wp), dimension(0:17)::c
+        real(wp) :: v
+        real(wp), dimension(0:17)::p
         call bemsav(x, p)
         v = dot_product(p, c)
     end function emsav
 
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(1:6), intent(in)::x
-        double precision, dimension(0:17), intent(out)::p
-        double precision, dimension(0:10)::m
+        real(wp), dimension(1:6), intent(in)::x
+        real(wp), dimension(0:17), intent(out)::p
+        real(wp), dimension(0:10)::m
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
 
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(1:6), intent(in)::x
-        double precision, dimension(0:10), intent(out)::m
-        m(0)  = 1.d0
+        real(wp), dimension(1:6), intent(in)::x
+        real(wp), dimension(0:10), intent(out)::m
+        m(0)  = 1.e0_wp
         m(1)  = x(6)
         m(2)  = x(5)
         m(3)  = x(3)
@@ -399,9 +415,10 @@ module chempotpy_fh2o_soc_pipnn_pes
 
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(0:10), intent(in)::m
-        double precision, dimension(0:17), intent(out)::p
+        real(wp), dimension(0:10), intent(in)::m
+        real(wp), dimension(0:17), intent(out)::p
         p(0)  = m(0)
         p(1)  = m(1)
         p(2)  = m(2)+m(3)
@@ -424,6 +441,7 @@ module chempotpy_fh2o_soc_pipnn_pes
 
     !> @brief Evaluate xyzTOjcb3.
     subroutine xyztojcb3( ct, rt )
+        use chempotpy_kinds, only: wp
         implicit none
         !   D  F
         !           /|\         /
@@ -435,38 +453,39 @@ module chempotpy_fh2o_soc_pipnn_pes
         !              \
         !               \
         !             O  B
-        double precision :: ct(3,4), xab(3), xabc(3), rt(6) !ct in HOH + F= HO + HF order
-        double precision :: xvec(3,6), crop1(3), crop2(3)
-        double precision :: mass(4)
-        mass(1)   = 1.00783d0
-        mass(2)   = 15.99491d0
-        mass(3)   = 1.00783d0
-        mass(4)   = 18.99840d0
+        real(wp) :: ct(3,4), xab(3), xabc(3), rt(6) !ct in HOH + F= HO + HF order
+        real(wp) :: xvec(3,6), crop1(3), crop2(3)
+        real(wp) :: mass(4)
+        mass(1)   = 1.00783e0_wp
+        mass(2)   = 15.99491e0_wp
+        mass(3)   = 1.00783e0_wp
+        mass(4)   = 18.99840e0_wp
         xab(:)    = (mass(1)*ct(:,1)+mass(2)*ct(:,2))/(mass(1)+mass(2))
         xabc(:)   = (mass(1)*ct(:,1)+mass(2)*ct(:,2)+mass(3)*ct(:,3))/ (mass(1)+mass(2)+mass(3))
         xvec(:,1) = ct(:,1)-ct(:,2)
         xvec(:,2) = ct(:,3)-xab(:)
         xvec(:,3) = ct(:,4)-xabc(:)
-        rt(1)     = dsqrt(dot_product(xvec(:,1), xvec(:,1)))
-        rt(2)     = dsqrt(dot_product(xvec(:,2), xvec(:,2)))
-        rt(3)     = dsqrt(dot_product(xvec(:,3), xvec(:,3)))
+        rt(1)     = sqrt(dot_product(xvec(:,1), xvec(:,1)))
+        rt(2)     = sqrt(dot_product(xvec(:,2), xvec(:,2)))
+        rt(3)     = sqrt(dot_product(xvec(:,3), xvec(:,3)))
         rt(4)     = dot_product(xvec(:,1), xvec(:,2))/rt(1)/rt(2)
         rt(5)     = dot_product(xvec(:,2), xvec(:,3))/rt(2)/rt(3)
-        rt(4)     = dacos(max(-1.0d0, min(1.0d0, rt(4))))
-        rt(5)     = dacos(max(-1.0d0, min(1.0d0, rt(5))))
+        rt(4)     = acos(max(-1.0e0_wp, min(1.0e0_wp, rt(4))))
+        rt(5)     = acos(max(-1.0e0_wp, min(1.0e0_wp, rt(5))))
         call crossp(xvec(:,1), xvec(:,2), crop1)
         call crossp(xvec(:,2), xvec(:,3), crop2)
-        rt(6) = dot_product(crop1, crop2)/dsqrt(dot_product(crop1, crop1))/ dsqrt(dot_product(crop2, crop2))
-        rt(6) = dacos(max(-1.0d0, min(1.0d0, rt(6))))
-        rt(6) = dacos(-1.d0)-rt(6)
+        rt(6) = dot_product(crop1, crop2)/sqrt(dot_product(crop1, crop1))/ sqrt(dot_product(crop2, crop2))
+        rt(6) = acos(max(-1.0e0_wp, min(1.0e0_wp, rt(6))))
+        rt(6) = acos(-1.e0_wp)-rt(6)
     end subroutine xyztojcb3
 
     !> @brief Evaluate jcb3tocart.
     subroutine jcb3tocart( rint, cart )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: rint(6), cart(3,4)
-        double precision :: r1, r2, r3, th1, th2, phia, sth1, sth2, sth3, cth1, cth2, cth3
-        double precision :: wa, wb, wc, wd, abm, cdm, ama, amb, amc, amd
+        real(wp) :: rint(6), cart(3,4)
+        real(wp) :: r1, r2, r3, th1, th2, phia, sth1, sth2, sth3, cth1, cth2, cth3
+        real(wp) :: wa, wb, wc, wd, abm, cdm, ama, amb, amc, amd
         !-->-->rint(1-6)=r1,r2,r3,th1,th2,phi
         !-->-->r1 is vector A->B, r2 is a vector pointing from the COM of AB to
         !C
@@ -475,11 +494,11 @@ module chempotpy_fh2o_soc_pipnn_pes
         !-->-->th2 is the angle for r2 and r3
         !-->-->phia is the diheral angle for r1*r2 plane and r2*r3 plane.
         !-->-->cart(3,1-4)=cartesian coordinates of four atoms A,B,C,D.
-        double precision :: temp1, temp2, temp3
-        ama  = 1.00783d0
-        amb  = 15.99491d0
-        amc  = 1.00783d0
-        amd  = 18.99840d0
+        real(wp) :: temp1, temp2, temp3
+        ama  = 1.00783e0_wp
+        amb  = 15.99491e0_wp
+        amc  = 1.00783e0_wp
+        amd  = 18.99840e0_wp
         r1   = rint(1)
         r2   = rint(2)
         r3   = rint(3)
@@ -495,20 +514,20 @@ module chempotpy_fh2o_soc_pipnn_pes
         abm       = r1/(ama+amb)
         wa        = amb*abm
         wb        = ama*abm
-        sth1      = dsin(th1)
-        cth1      = dcos(th1)
-        sth2      = dsin(th2)
-        cth2      = dcos(th2)
-        cth3      = dcos(phia)
-        sth3      = dsin(phia)
+        sth1      = sin(th1)
+        cth1      = cos(th1)
+        sth2      = sin(th2)
+        cth2      = cos(th2)
+        cth3      = cos(phia)
+        sth3      = sin(phia)
         cart(1,1) = wa*sth1
-        cart(2,1) = 0d0
+        cart(2,1) = 0e0_wp
         cart(3,1) = wa*cth1
         cart(1,2) = -wb*sth1
-        cart(2,2) = 0d0
+        cart(2,2) = 0e0_wp
         cart(3,2) = -wb*cth1
-        cart(1,3) = 0d0
-        cart(2,3) = 0d0
+        cart(1,3) = 0e0_wp
+        cart(2,3) = 0e0_wp
         cart(3,3) = r2
         cart(1,4) = r3*sth2*cth3
         cart(2,4) = r3*sth2*sth3
@@ -518,25 +537,26 @@ module chempotpy_fh2o_soc_pipnn_pes
     !> @brief Evaluate cart_diJacobi.
     subroutine cart_dijacobi( c1, r )
         ! convert the diatom-diatom Jacobi coordinates to XYZ coordinates
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: r(1:6), c(1:3,1:4), mass(1:4), c1(1:3,1:4)
-        double precision :: crop1(1:3), crop2(1:3)
-        double precision :: vec(1:3,1:9), dotpp(1:9), bohr
-        double precision :: dotp, costh1, costh2, amass, bmass, cmass, dmass, costh3
+        real(wp) :: r(1:6), c(1:3,1:4), mass(1:4), c1(1:3,1:4)
+        real(wp) :: crop1(1:3), crop2(1:3)
+        real(wp) :: vec(1:3,1:9), dotpp(1:9), bohr
+        real(wp) :: dotp, costh1, costh2, amass, bmass, cmass, dmass, costh3
         c        = c1  ! c in HOHF order angstrom
-        bohr     = 1.0d0
-        amass    = 2.0141d0
-        bmass    = 15.99491d0
+        bohr     = 1.0e0_wp
+        amass    = 2.0141e0_wp
+        bmass    = 15.99491e0_wp
         cmass    = amass
-        dmass    = 18.9984d0
+        dmass    = 18.9984e0_wp
         vec(:,1) = c(:,1)-c(:,2) !  vector B->A OH
-        r(1)     = dsqrt( sum(vec(:,1)**2) )/bohr
+        r(1)     = sqrt( sum(vec(:,1)**2) )/bohr
         vec(:,2) = c(:,2)+vec(:,1)*amass/(amass+bmass) !vector BX (X COM of BA)
         vec(:,3) = c(:,3)-c(:,4) ! vector D->C OC
-        r(2)     = dsqrt( sum(vec(:,3)**2) )/bohr
+        r(2)     = sqrt( sum(vec(:,3)**2) )/bohr
         vec(:,4) = c(:,4)+vec(:,3)*cmass/(cmass+dmass) !vector Y(Y COM of
         vec(:,5) = vec(:,4)-vec(:,2) !vecor R X->Y
-        r(3)     = dsqrt( sum(vec(:,5)**2) )/bohr
+        r(3)     = sqrt( sum(vec(:,5)**2) )/bohr
         !-
         vec(:,6) = c(:,3)-c(:,2) ! vector  O->C
         vec(:,7) = c(:,2)-c(:,3) ! vector  C->O
@@ -544,36 +564,36 @@ module chempotpy_fh2o_soc_pipnn_pes
         !     dompp(5)=dsqrt(dot_product(vec(:,5),vec(:,5)))
         !     dotpp(6)=dsqrt(dot_product(vec(:,6),vec(:,6)))
         !     dotpp(7)=dsqrt(dot_product(vec(:,7),vec(:,7)))
-        dotpp(1) = dsqrt(dot_product(vec(:,1), vec(:,1)))
-        dotpp(3) = dsqrt(dot_product(vec(:,3), vec(:,3)))
-        dotpp(5) = dsqrt(dot_product(vec(:,5), vec(:,5)))
-        if( dotpp(1)*dotpp(5) .lt. 1.0d-16 )then
-            costh1 = 0.0d0
+        dotpp(1) = sqrt(dot_product(vec(:,1), vec(:,1)))
+        dotpp(3) = sqrt(dot_product(vec(:,3), vec(:,3)))
+        dotpp(5) = sqrt(dot_product(vec(:,5), vec(:,5)))
+        if( dotpp(1)*dotpp(5) .lt. 1.0e-16_wp )then
+            costh1 = 0.0e0_wp
         else
             costh1 = dot_product(vec(:,1), vec(:,5))/(dotpp(1)*dotpp(5))
         endif
-        if( dotpp(3)*dotpp(5) .lt. 1.0d-16 )then
-            costh2 = 0.0d0
+        if( dotpp(3)*dotpp(5) .lt. 1.0e-16_wp )then
+            costh2 = 0.0e0_wp
         else
             costh2 = dot_product(vec(:,3), vec(:,5))/(dotpp(3)*dotpp(5))
         endif
         !  note the round off errors
-        r(4) = dacos( max(-1.0d0, min(1.0d0, costh1))) ! in radians
-        r(5) = dacos( max(-1.0d0, min(1.0d0, costh2))) ! in radians
-        if( dabs(dcos(r(4))*dcos(r(5))) .lt. 1.0d-16 )then
+        r(4) = acos( max(-1.0e0_wp, min(1.0e0_wp, costh1))) ! in radians
+        r(5) = acos( max(-1.0e0_wp, min(1.0e0_wp, costh2))) ! in radians
+        if( abs(cos(r(4))*cos(r(5))) .lt. 1.0e-16_wp )then
             !       stop
             !       return
         else
             ! compute the Jacobi dihedral angle, based on the norm of the plane
             call crossp(vec(:,1), vec(:,5), crop1) ! crossproduct for the norm
             call crossp(vec(:,3), vec(:,5), crop2) !
-            if( dsqrt( sum(crop1(:)**2))*dsqrt(sum(crop2(:)**2)) .lt. 1.0d-10 ) &
+            if( sqrt( sum(crop1(:)**2))*sqrt(sum(crop2(:)**2)) .lt. 1.0e-10_wp ) &
                 &  then
-            r(6) = 0.0d0
+            r(6) = 0.0e0_wp
         else
-            costh3 = dot_product(crop1(:), crop2(:))/(dsqrt(sum(crop1(:)**2)) *dsqrt(sum(crop2(:)**2)))
+            costh3 = dot_product(crop1(:), crop2(:))/(sqrt(sum(crop1(:)**2)) *sqrt(sum(crop2(:)**2)))
             !    write(99999,'(f20.10)') costh3
-            r(6) = dacos( max(-1.0d0, min(1.0d0, costh3)))
+            r(6) = acos( max(-1.0e0_wp, min(1.0e0_wp, costh3)))
         endif
         endif
     end subroutine cart_dijacobi
@@ -582,17 +602,18 @@ module chempotpy_fh2o_soc_pipnn_pes
     subroutine dijacobi_cart( r, c )
         ! convert the diatom-diatom Jacobi coordinates to XYZ coordinates
         ! r in angstrom and radians,  c in bohr and ABCD
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: r(1:6), c(1:3,1:4), mass(1:4)
-        double precision :: cm(3,2), vec(1:3,1:6), pi
-        double precision :: xa, xb, yc, yd, cxsin, dxsin, dotp
-        double precision :: rx1, rx2, rx3, rx4, rx5, rx6
-        double precision :: amass, bmass, cmass, dmass
-        pi      = dacos(-1.0d0)
-        amass   = 1.00783d0
-        bmass   = 15.99491d0
+        real(wp) :: r(1:6), c(1:3,1:4), mass(1:4)
+        real(wp) :: cm(3,2), vec(1:3,1:6), pi
+        real(wp) :: xa, xb, yc, yd, cxsin, dxsin, dotp
+        real(wp) :: rx1, rx2, rx3, rx4, rx5, rx6
+        real(wp) :: amass, bmass, cmass, dmass
+        pi      = acos(-1.0e0_wp)
+        amass   = 1.00783e0_wp
+        bmass   = 15.99491e0_wp
         cmass   = amass
-        dmass   = 18.99834d0
+        dmass   = 18.99834e0_wp
         mass(1) = amass
         mass(2) = bmass
         mass(3) = cmass
@@ -623,17 +644,17 @@ module chempotpy_fh2o_soc_pipnn_pes
         !              \
         !               \
         !                B
-        c  = 0.0d0
+        c  = 0.0e0_wp
         xa = bmass/(amass+bmass)*r(1)
         xb = amass/(amass+bmass)*r(1)
         !    A
-        c(1,1) = xa*dcos(r(4))
-        c(2,1) = xa*dsin(r(4))
-        c(3,1) = 0.0d0
+        c(1,1) = xa*cos(r(4))
+        c(2,1) = xa*sin(r(4))
+        c(3,1) = 0.0e0_wp
         !    B
-        c(1,2) = xb*dcos(pi-r(4))
-        c(2,2) = -xb*dsin(pi-r(4))
-        c(3,2) = 0.d0
+        c(1,2) = xb*cos(pi-r(4))
+        c(2,2) = -xb*sin(pi-r(4))
+        c(3,2) = 0.e0_wp
         !     put ABY on xy plane, X origin point
         !               ^y
         !          A    |
@@ -648,22 +669,23 @@ module chempotpy_fh2o_soc_pipnn_pes
         !      C in +z and -z phase is identical, so put it in +z
         yc    = dmass/(cmass+dmass)*r(2)
         yd    = cmass/(cmass+dmass)*r(2)
-        cxsin = yc*dsin(r(5))
-        dxsin = -yd*dsin(r(5))
+        cxsin = yc*sin(r(5))
+        dxsin = -yd*sin(r(5))
         !     C
-        c(1,3) = r(3)+yc*dcos(r(5))
-        c(2,3) = cxsin*dcos(r(6))
-        c(3,3) = cxsin*dsin(r(6))
+        c(1,3) = r(3)+yc*cos(r(5))
+        c(2,3) = cxsin*cos(r(6))
+        c(3,3) = cxsin*sin(r(6))
         !     D
-        c(1,4) = r(3)-yd*dcos(r(5))
-        c(2,4) = dxsin*dcos(r(6))
-        c(3,4) = dxsin*dsin(r(6))
+        c(1,4) = r(3)-yd*cos(r(5))
+        c(2,4) = dxsin*cos(r(6))
+        c(3,4) = dxsin*sin(r(6))
     end subroutine dijacobi_cart
 
     !> @brief Evaluate crossp.
     subroutine crossp( v1, v2, v3 )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: v1(1:3), v2(1:3), v3(1:3)
+        real(wp) :: v1(1:3), v2(1:3), v3(1:3)
         ! cross product of two 3-dimensional vectors
         v3(1) = v1(2)*v2(3)-v1(3)*v2(2)
         v3(2) = v1(3)*v2(1)-v1(1)*v2(3)
@@ -674,14 +696,15 @@ end module chempotpy_fh2o_soc_pipnn_pes
 !> @brief Expose FH2O_SOC_PIPNN through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_fh2o_soc_pipnn_pes, only: evaluate
+    use chempotpy_kinds,              only: wp
     implicit none
     integer, parameter              :: natoms  = 4
     integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
-    double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates)
-    double precision, intent(out)   :: g(nstates,natoms,3)
-    double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+    real(wp), intent(in)            :: x(natoms,3)
+    real(wp), intent(out)           :: p(nstates)
+    real(wp), intent(out)           :: g(nstates,natoms,3)
+    real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

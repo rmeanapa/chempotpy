@@ -110,7 +110,9 @@ RELEASED_ENERGIES = {
 
 
 class AlnSmallModernizationTests( unittest.TestCase ):
-    def test_released_energy_references( self ) -> None:
+    def test_codata_energies_remain_close_to_released_references(
+        self,
+    ) -> None:
         compiler = shutil.which("gfortran")
         if compiler is None:
             self.skipTest("gfortran is not available")
@@ -151,8 +153,9 @@ class AlnSmallModernizationTests( unittest.TestCase ):
     def _driver_source( expected: tuple[float, ...] ) -> str:
         checks = "\n".join(
             """    call pes( coordinates, {count}, 0, energy, gradient, coupling )
-    if( abs(energy(1)-({energy:.17g}d0)) > 1.0d-13 ) &
-        error stop 'released energy changed for {count} atoms'""".format(
+    if( abs(energy(1)-({energy:.17g}d0)) > &
+        max(1.0d-8, 1.0d-6*abs({energy:.17g}d0)) ) &
+        error stop 'CODATA migration envelope exceeded for {count} atoms'""".format(
                 count=count,
                 energy=energy,
             )

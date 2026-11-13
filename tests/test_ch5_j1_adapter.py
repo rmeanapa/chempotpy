@@ -8,7 +8,7 @@ import numpy as np
 from chempotpy.CH5.adapters import create_ch5_j1_surface
 from chempotpy.core import PESRequest
 from chempotpy.core.units import (
-    CHEMPOTPY_LEGACY_BOHR_TO_ANGSTROM,
+    BOHR_TO_ANGSTROM,
 )
 
 
@@ -72,7 +72,7 @@ class CH5J1AdapterTests( unittest.TestCase ):
         def released_kernel( coordinates_angstrom, derivative_order ):
             np.testing.assert_allclose(
                 coordinates_angstrom,
-                coordinates_bohr * CHEMPOTPY_LEGACY_BOHR_TO_ANGSTROM,
+                coordinates_bohr * BOHR_TO_ANGSTROM,
                 rtol=0.0,
                 atol=0.0,
             )

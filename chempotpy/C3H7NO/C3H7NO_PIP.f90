@@ -1,5 +1,6 @@
 module pes_shell
     use chempotpy_c3h7no_pip_parameters, only: coeff => pip_coefficients
+    use chempotpy_kinds,                 only: wp
     implicit none
     private
     public :: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, g
@@ -9,31 +10,34 @@ module pes_shell
 
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(1:66)::x
-        double precision, dimension(0:8039)::c
-        double precision :: v
-        double precision, dimension(0:8039)::p
+        real(wp), dimension(1:66)::x
+        real(wp), dimension(0:8039)::c
+        real(wp) :: v
+        real(wp), dimension(0:8039)::p
         call bemsav(x, p)
         v = dot_product(p, c)
     end function emsav
 
     !> @brief Evaluate bemsav.
     subroutine bemsav( x, p )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(1:66), intent(in)::x
-        double precision, dimension(0:8039), intent(out)::p
-        double precision, dimension(0:5402)::m
+        real(wp), dimension(1:66), intent(in)::x
+        real(wp), dimension(0:8039), intent(out)::p
+        real(wp), dimension(0:5402)::m
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
 
     !> @brief Evaluate evmono.
     subroutine evmono( x, m )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(1:66), intent(in)::x
-        double precision, dimension(0:5402), intent(out)::m
-        m(0)    = 1.0d0
+        real(wp), dimension(1:66), intent(in)::x
+        real(wp), dimension(0:5402), intent(out)::m
+        m(0)    = 1.0e0_wp
         m(1)    = x(66)
         m(2)    = x(65)
         m(3)    = x(64)
@@ -5440,9 +5444,10 @@ module pes_shell
 
     !> @brief Evaluate evpoly.
     subroutine evpoly( m, p )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(0:5402), intent(in)::m
-        double precision, dimension(0:8039), intent(out)::p
+        real(wp), dimension(0:5402), intent(in)::m
+        real(wp), dimension(0:8039), intent(out)::p
         p(0)   = m(0)
         p(1)   = m(1) + m(2) + m(3)
         p(2)   = m(4) + m(5) + m(6)
@@ -13731,41 +13736,44 @@ module pes_shell
 
     !> @brief Evaluate demsav.
     function demsav( drdx, c, m, p, flag ) result(grad)
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(36, 66) :: drdx
-        double precision, dimension(0:8039)::c
-        double precision, dimension(0:5402)::m
-        double precision, dimension(0:8039)::p
-        double precision :: grad
-        integer          :: flag
-        double precision, dimension(0:8039)::dp
+        real(wp), dimension(36, 66) :: drdx
+        real(wp), dimension(0:8039)::c
+        real(wp), dimension(0:5402)::m
+        real(wp), dimension(0:8039)::p
+        real(wp) :: grad
+        integer  :: flag
+        real(wp), dimension(0:8039)::dp
         call dbemsav(drdx, dp, m, p, flag)
         grad = dot_product(dp, c)
     end function demsav
 
     !> @brief Evaluate dbemsav.
     subroutine dbemsav( drdx, dp, m, p, flag )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(36, 66), intent(in) :: drdx
-        double precision, dimension(0:8039), intent(out)::dp
-        double precision, dimension(0:5402), intent(in)::m
-        double precision, dimension(0:8039), intent(in)::p
+        real(wp), dimension(36, 66), intent(in) :: drdx
+        real(wp), dimension(0:8039), intent(out)::dp
+        real(wp), dimension(0:5402), intent(in)::m
+        real(wp), dimension(0:8039), intent(in)::p
         integer :: flag
-        double precision, dimension(0:5402)::dm
+        real(wp), dimension(0:5402)::dm
         call devmono(drdx, dm, m, flag)
         call devpoly(dm, p, dp)
     end subroutine dbemsav
 
     !> @brief Evaluate devmono.
     subroutine devmono( drdx, dm, m, flag )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(36, 66), intent(in) :: drdx
-        double precision, dimension(0:5402), intent(out)::dm
-        double precision, dimension(0:5402), intent(in)::m
-        integer          :: flag
-        double precision :: a
-        a        = 2.d0
-        dm(0)    = 0.0d0
+        real(wp), dimension(36, 66), intent(in) :: drdx
+        real(wp), dimension(0:5402), intent(out)::dm
+        real(wp), dimension(0:5402), intent(in)::m
+        integer  :: flag
+        real(wp) :: a
+        a        = 2.e0_wp
+        dm(0)    = 0.0e0_wp
         dm(1)    = -m(1)/a*drdx(flag, 66)
         dm(2)    = -m(2)/a*drdx(flag, 65)
         dm(3)    = -m(3)/a*drdx(flag, 64)
@@ -19172,10 +19180,11 @@ module pes_shell
 
     !> @brief Evaluate devpoly.
     subroutine devpoly( dm, p, dp )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, dimension(0:5402), intent(in)::dm
-        double precision, dimension(0:8039), intent(in)::p
-        double precision, dimension(0:8039), intent(out)::dp
+        real(wp), dimension(0:5402), intent(in)::dm
+        real(wp), dimension(0:8039), intent(in)::p
+        real(wp), dimension(0:8039), intent(out)::dp
         dp(0)   = dm(0)
         dp(1)   = dm(1) + dm(2) + dm(3)
         dp(2)   = dm(4) + dm(5) + dm(6)
@@ -27478,13 +27487,13 @@ module pes_shell
     ! Function to evaluate the potential !
     !> @brief Evaluate f.
     function f( xyz )
-        double precision, dimension(:, :), intent(in)::xyz
-        double precision                                             :: f
-        double precision, dimension(size(xyz, 2)*(size(xyz, 2)-1)/2) :: x
-        double precision, dimension(3)                               :: dr
-        double precision                                             :: a0  ! the same as the fitting code
-        integer                                                      :: i, j, k
-        a0 = 2.d0
+        real(wp), dimension(:, :), intent(in)::xyz
+        real(wp)                                             :: f
+        real(wp), dimension(size(xyz, 2)*(size(xyz, 2)-1)/2) :: x
+        real(wp), dimension(3)                               :: dr
+        real(wp)                                             :: a0  ! the same as the fitting code
+        integer                                              :: i, j, k
+        a0 = 2.e0_wp
         k  = 1
         do i=1, size(xyz, 2)-1
             do j=i+1, size(xyz, 2)
@@ -27503,20 +27512,20 @@ module pes_shell
     ! analytical gradient       !
     !> @brief Evaluate g.
     function g( xyz )
-        double precision, dimension(:, :), intent(in)::xyz
-        double precision, dimension(size(xyz, 2)*3)                                  :: g
-        double precision, dimension(size(xyz, 2)*(size(xyz, 2)-1)/2)                 :: r, x
-        double precision, dimension(3, size(xyz, 2)*(size(xyz, 2)-1)/2)              :: dr
-        double precision, dimension(size(xyz, 2)*3, size(xyz, 2)*(size(xyz, 2)-1)/2) :: drdx
-        double precision, dimension(1:8040)::p   ! change to number of popynomials
+        real(wp), dimension(:, :), intent(in)::xyz
+        real(wp), dimension(size(xyz, 2)*3)                                  :: g
+        real(wp), dimension(size(xyz, 2)*(size(xyz, 2)-1)/2)                 :: r, x
+        real(wp), dimension(3, size(xyz, 2)*(size(xyz, 2)-1)/2)              :: dr
+        real(wp), dimension(size(xyz, 2)*3, size(xyz, 2)*(size(xyz, 2)-1)/2) :: drdx
+        real(wp), dimension(1:8040)::p   ! change to number of popynomials
         ! (size of p in bemsa.f90)
-        double precision, dimension(1:5403)::m  ! change to number of monomials
+        real(wp), dimension(1:5403)::m  ! change to number of monomials
         ! (size of m in bemsa.f90
-        double precision :: a0
-        integer          :: i, j, k
-        a0   = 2.d0
+        real(wp) :: a0
+        integer  :: i, j, k
+        a0   = 2.e0_wp
         k    = 1
-        drdx = 0.d0
+        drdx = 0.e0_wp
         do i=1, size(xyz, 2)-1
             do j=i+1, size(xyz, 2)
                 dr(:, k)           = xyz(:, i) - xyz(:, j)
@@ -27539,6 +27548,7 @@ end module pes_shell
 
 !> @brief Implement C3H7NO_PIP, a potential energy surface for C3H7NO.
 module chempotpy_c3h7no_pip_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -27547,27 +27557,29 @@ module chempotpy_c3h7no_pip_pes
 
     !> @brief Evaluate the C3H7NO_PIP potential energy surface for C3H7NO.
     subroutine evaluate( x, igrad, potential, gradient_out, dvec )
-        use pes_shell, only: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, &
+        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+        use pes_shell,       only: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, &
             & g
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 12
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: potential(nstates)
-        double precision, intent(out) :: gradient_out(nstates,natoms,3)
-        double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-        double precision              :: tx(3,natoms)
-        double precision              :: energy
-        double precision              :: grad(3*natoms)
-        integer                       :: iatom, idir, j, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 12
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: potential(nstates)
+        real(wp), intent(out) :: gradient_out(nstates,natoms,3)
+        real(wp), intent(out) :: dvec(nstates,nstates,natoms,3)
+        real(wp)              :: tx(3,natoms)
+        real(wp)              :: energy
+        real(wp)              :: grad(3*natoms)
+        integer               :: iatom, idir, j, istate
         !initialize
-        energy = 0.d0; gradient_out = 0.d0; dvec = 0.d0
+        energy = 0.e0_wp; gradient_out = 0.e0_wp; dvec = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                tx(idir,iatom) = x(iatom,idir)/legacy_bohr_to_angstrom
+                tx(idir,iatom) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
         ! zero of energy: 247.471007349006 a.u.
@@ -27575,19 +27587,19 @@ module chempotpy_c3h7no_pip_pes
         if( igrad == 0 )then
             energy = f(tx)
             do istate=1, nstates
-                potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
+                potential(istate) = (energy+247.471007349006)*hartree_to_electronvolt
             enddo
         elseif( igrad == 1 )then
             energy = f(tx)
             do istate=1, nstates
-                potential(istate) = (energy+247.471007349006)*legacy_hartree_to_electronvolt
+                potential(istate) = (energy+247.471007349006)*hartree_to_electronvolt
             enddo
             grad = g(tx)
             do istate=1, nstates
                 do iatom=1, natoms
                     do idir=1, 3
                         j                               = (iatom-1)*3+idir
-                        gradient_out(istate,iatom,idir) = grad(j)*51.422067
+                        gradient_out(istate,iatom,idir) = grad(j)*hartree_per_bohr_to_ev_per_angstrom
                     enddo
                 enddo
             enddo
@@ -27600,14 +27612,15 @@ end module chempotpy_c3h7no_pip_pes
 !> @brief Expose C3H7NO_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, potential, gradient_out, dvec )
     use chempotpy_c3h7no_pip_pes, only: evaluate
+    use chempotpy_kinds,          only: wp
     implicit none
     integer, parameter              :: natoms  = 12
     integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
-    double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: potential(nstates)
-    double precision, intent(out)   :: gradient_out(nstates,natoms,3)
-    double precision, intent(out)   :: dvec(nstates,nstates,natoms,3)
+    real(wp), intent(in)            :: x(natoms,3)
+    real(wp), intent(out)           :: potential(nstates)
+    real(wp), intent(out)           :: gradient_out(nstates,natoms,3)
+    real(wp), intent(out)           :: dvec(nstates,nstates,natoms,3)
     call evaluate(x, igrad, potential, gradient_out, dvec)
 end subroutine pes

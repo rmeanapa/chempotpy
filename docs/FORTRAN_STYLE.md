@@ -135,18 +135,26 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 - Use `chempotpy_internal_coordinates` for a supported Cartesian-to-internal
   evaluation workflow. A single-state triatomic distance kernel implements the
   private `evaluate_internal` contract and delegates Cartesian construction,
-  legacy unit conversion, chain-rule transformation, and output packing to
+  canonical unit conversion, chain-rule transformation, and output packing to
   `prepare_legacy_triatomic_coordinates` and
   `finalize_legacy_triatomic_surface`.
 - Do not use the generic legacy name `pot` for a newly migrated internal-coordinate
   kernel. Name the private surface equation `evaluate_internal`, or
   `evaluate_diabatic_internal` when it returns a diabatic matrix.
-- Use `chempotpy_units` for new canonical atomic-unit interfaces.
-- Use `chempotpy_legacy_units` when a compatibility wrapper must preserve the
-  released rounded conversion literals exactly.
-- Use `legacy_triatomic_distances_to_bohr` for the historical 1-2, 2-3, 1-3
-  triatomic ordering; do not spell out those three distance assignments in a
-  wrapper.
+- Use `chempotpy_units` for every public-boundary conversion. Its factors are
+  derived from the versioned NIST CODATA manifest.
+- Import `wp` from `chempotpy_kinds` for modern numerical code. Declare real
+  variables as `real(wp)` and suffix explicit real literals with `_wp`.
+- Treat `real64`, `double precision`, and `real(8)` as binary64 compatibility
+  declarations. Use them only at a documented external ABI boundary; do not
+  introduce them into a new numerical kernel.
+- Use `chempotpy_legacy_units` only when a documented parity study proves that
+  a released coordinate scale is part of a numerically sensitive published
+  fit. Import it with a descriptive local rename such as
+  `published_bohr_to_angstrom => legacy_bohr_to_angstrom`.
+- Use `triatomic_distances_to_bohr` for the historical 1-2, 2-3, 1-3
+  triatomic ordering with canonical units. The separately named legacy routine
+  exists only for explicit release reproduction.
 - Keep equations together when they fit the 120-column target. Wrap only at a
   safe operator and use free-form `&` continuation.
 - Align consecutive simple assignments when this makes related equations easier

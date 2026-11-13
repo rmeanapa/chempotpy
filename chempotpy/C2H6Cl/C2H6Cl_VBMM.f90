@@ -12,6 +12,7 @@
 
 !> @brief Implement C2H6Cl_VBMM, a potential energy surface for C2H6Cl.
 module chempotpy_c2h6cl_vbmm_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -20,222 +21,224 @@ module chempotpy_c2h6cl_vbmm_pes
 
     !> @brief Evaluate the C2H6Cl_VBMM potential energy surface for C2H6Cl.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
+        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units, only: hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 9
-        integer, parameter            :: natom   = 25
-        integer, parameter            :: isurf   = 5
-        integer, parameter            :: jsurf   = int(isurf*(isurf+1)/2)
-        integer, parameter            :: n3atom  = 75
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: a1c
-        double precision              :: a1c1h
-        double precision              :: a1c2h
-        double precision              :: a1cc
-        double precision              :: a1s
-        double precision              :: a1scc
-        double precision              :: a2c
-        double precision              :: a2s
-        double precision              :: a2scc
-        double precision              :: a3s
-        double precision              :: a3scc
-        double precision              :: aa1
-        double precision              :: aa2
-        double precision              :: aa3
-        double precision              :: aa4
-        double precision              :: acb
-        double precision              :: acc
-        double precision              :: ahh
-        double precision              :: ak
-        double precision              :: anuzero
-        double precision              :: aphi
-        double precision              :: atheta
-        double precision              :: b1c1h
-        double precision              :: b1c2h
-        double precision              :: b1cc
-        double precision              :: b1s
-        double precision              :: b1scc
-        double precision              :: b2s
-        double precision              :: b2scc
-        double precision              :: b3s
-        double precision              :: b3scc
-        double precision              :: bk
-        double precision              :: bphi
-        double precision              :: btheta
-        double precision              :: c1c1h
-        double precision              :: c1c2h
-        double precision              :: c1cc
-        double precision              :: cart(natom,3)
-        double precision              :: cartnu(natom,3)
-        double precision              :: cnvrtd
-        double precision              :: cnvrtde
-        double precision              :: cnvrte
-        double precision              :: cphi
-        double precision              :: ctheta
-        double precision              :: d1c1h
-        double precision              :: d1c2h
-        double precision              :: d1cb
-        double precision              :: d1cc
-        double precision              :: d1ch
-        double precision              :: d1hh
-        double precision              :: d3c1h
-        double precision              :: d3c2h
-        double precision              :: d3cb
-        double precision              :: d3ch
-        double precision              :: d3hh
-        double precision              :: deesdr(n3atom,isurf)
-        double precision              :: degsdr(n3atom)
-        double precision              :: deijdr(n3atom,jsurf)
-        double precision              :: descart(natom,3,isurf)
-        double precision              :: descartnu(natom,3,isurf)
-        double precision              :: dfdc(8,8,8)
-        double precision              :: dfdelta(8,8)
-        double precision              :: dfdh(8,8,8)
-        double precision              :: dgscart(natom,3)
-        double precision              :: dgscartnu(natom,3)
-        double precision              :: dhdelta(8,8)
-        double precision              :: dijcart(natom,3,jsurf)
-        double precision              :: dijcartnu(natom,3,jsurf)
-        double precision              :: ds1(8)
-        double precision              :: ds2(8)
-        double precision              :: ds3(8)
-        double precision              :: dsphi(8)
-        double precision              :: dstheta(8)
-        double precision              :: dtheta0(8,8,8)
-        double precision              :: engyes(isurf)
-        double precision              :: engygs
-        double precision              :: engyij(jsurf)
-        double precision              :: ezero(isurf+1)
-        double precision              :: f1(8)
-        double precision              :: fch3
-        double precision              :: fdelta(8)
-        double precision              :: fk0(8,8)
-        double precision              :: fkinf
-        double precision              :: hch3
-        double precision              :: hdelta(8)
-        integer                       :: icartr
-        integer                       :: indexes(natom)
-        integer                       :: irctnt
-        integer                       :: ireorder
-        integer                       :: kediag
-        integer                       :: keoffd
-        integer                       :: ksdiag
-        integer                       :: ksoffd
-        integer                       :: legacy_natoms
-        integer                       :: mder
-        integer                       :: msurf
-        integer                       :: nasurf(isurf+1,isurf+1)
-        integer                       :: nc(3)
-        integer                       :: nc1(3)
-        integer                       :: nc2(3)
-        integer                       :: nder
-        integer                       :: nflag(20)
-        integer                       :: nh(8,3)
-        integer                       :: nhb(3)
-        integer                       :: nnb
-        integer                       :: nnc1
-        integer                       :: nnc2
-        integer                       :: nnh(6)
-        integer                       :: nulbl(natom)
-        double precision              :: pdot(27)
-        double precision              :: pengyes(isurf)
-        double precision              :: pengygs
-        double precision              :: pengyij(jsurf)
-        double precision              :: q(27)
-        double precision              :: r(n3atom)
-        double precision              :: r0c1h
-        double precision              :: r0c1hp
-        double precision              :: r0c1hr
-        double precision              :: r0c2h
-        double precision              :: r0c2hp
-        double precision              :: r0c2hr
-        double precision              :: r0cb
-        double precision              :: r0cc
-        double precision              :: r0hh
-        double precision              :: rbh(6)
-        double precision              :: rc1b
-        double precision              :: rc1h(3)
-        double precision              :: rc2b
-        double precision              :: rc2h(3)
-        double precision              :: rcc
-        character                     :: ref(5)
-        double precision              :: rhh(3,6)
-        double precision              :: s1(8)
-        double precision              :: s2(8)
-        double precision              :: s3(8)
-        double precision              :: sphi(8)
-        double precision              :: stheta(8)
-        double precision              :: tbh(6,3)
-        double precision              :: tc1b(3)
-        double precision              :: tc1h(3,3)
-        double precision              :: tc2b(3)
-        double precision              :: tc2h(3,3)
-        double precision              :: tcb(3)
-        double precision              :: tcc(3)
-        double precision              :: theta0(8,8)
-        double precision              :: thetahcch(9)
-        double precision              :: thh(3,6,3)
-        double precision              :: v3
-        double precision              :: w1
-        double precision              :: w2
-        double precision              :: w3
-        double precision              :: w4
-        double precision              :: w5
-        double precision              :: w6
-        double precision              :: v
-        integer                       :: iatom, idir, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 9
+        integer, parameter    :: natom   = 25
+        integer, parameter    :: isurf   = 5
+        integer, parameter    :: jsurf   = int(isurf*(isurf+1)/2)
+        integer, parameter    :: n3atom  = 75
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: a1c
+        real(wp)              :: a1c1h
+        real(wp)              :: a1c2h
+        real(wp)              :: a1cc
+        real(wp)              :: a1s
+        real(wp)              :: a1scc
+        real(wp)              :: a2c
+        real(wp)              :: a2s
+        real(wp)              :: a2scc
+        real(wp)              :: a3s
+        real(wp)              :: a3scc
+        real(wp)              :: aa1
+        real(wp)              :: aa2
+        real(wp)              :: aa3
+        real(wp)              :: aa4
+        real(wp)              :: acb
+        real(wp)              :: acc
+        real(wp)              :: ahh
+        real(wp)              :: ak
+        real(wp)              :: anuzero
+        real(wp)              :: aphi
+        real(wp)              :: atheta
+        real(wp)              :: b1c1h
+        real(wp)              :: b1c2h
+        real(wp)              :: b1cc
+        real(wp)              :: b1s
+        real(wp)              :: b1scc
+        real(wp)              :: b2s
+        real(wp)              :: b2scc
+        real(wp)              :: b3s
+        real(wp)              :: b3scc
+        real(wp)              :: bk
+        real(wp)              :: bphi
+        real(wp)              :: btheta
+        real(wp)              :: c1c1h
+        real(wp)              :: c1c2h
+        real(wp)              :: c1cc
+        real(wp)              :: cart(natom,3)
+        real(wp)              :: cartnu(natom,3)
+        real(wp)              :: cnvrtd
+        real(wp)              :: cnvrtde
+        real(wp)              :: cnvrte
+        real(wp)              :: cphi
+        real(wp)              :: ctheta
+        real(wp)              :: d1c1h
+        real(wp)              :: d1c2h
+        real(wp)              :: d1cb
+        real(wp)              :: d1cc
+        real(wp)              :: d1ch
+        real(wp)              :: d1hh
+        real(wp)              :: d3c1h
+        real(wp)              :: d3c2h
+        real(wp)              :: d3cb
+        real(wp)              :: d3ch
+        real(wp)              :: d3hh
+        real(wp)              :: deesdr(n3atom,isurf)
+        real(wp)              :: degsdr(n3atom)
+        real(wp)              :: deijdr(n3atom,jsurf)
+        real(wp)              :: descart(natom,3,isurf)
+        real(wp)              :: descartnu(natom,3,isurf)
+        real(wp)              :: dfdc(8,8,8)
+        real(wp)              :: dfdelta(8,8)
+        real(wp)              :: dfdh(8,8,8)
+        real(wp)              :: dgscart(natom,3)
+        real(wp)              :: dgscartnu(natom,3)
+        real(wp)              :: dhdelta(8,8)
+        real(wp)              :: dijcart(natom,3,jsurf)
+        real(wp)              :: dijcartnu(natom,3,jsurf)
+        real(wp)              :: ds1(8)
+        real(wp)              :: ds2(8)
+        real(wp)              :: ds3(8)
+        real(wp)              :: dsphi(8)
+        real(wp)              :: dstheta(8)
+        real(wp)              :: dtheta0(8,8,8)
+        real(wp)              :: engyes(isurf)
+        real(wp)              :: engygs
+        real(wp)              :: engyij(jsurf)
+        real(wp)              :: ezero(isurf+1)
+        real(wp)              :: f1(8)
+        real(wp)              :: fch3
+        real(wp)              :: fdelta(8)
+        real(wp)              :: fk0(8,8)
+        real(wp)              :: fkinf
+        real(wp)              :: hch3
+        real(wp)              :: hdelta(8)
+        integer               :: icartr
+        integer               :: indexes(natom)
+        integer               :: irctnt
+        integer               :: ireorder
+        integer               :: kediag
+        integer               :: keoffd
+        integer               :: ksdiag
+        integer               :: ksoffd
+        integer               :: legacy_natoms
+        integer               :: mder
+        integer               :: msurf
+        integer               :: nasurf(isurf+1,isurf+1)
+        integer               :: nc(3)
+        integer               :: nc1(3)
+        integer               :: nc2(3)
+        integer               :: nder
+        integer               :: nflag(20)
+        integer               :: nh(8,3)
+        integer               :: nhb(3)
+        integer               :: nnb
+        integer               :: nnc1
+        integer               :: nnc2
+        integer               :: nnh(6)
+        integer               :: nulbl(natom)
+        real(wp)              :: pdot(27)
+        real(wp)              :: pengyes(isurf)
+        real(wp)              :: pengygs
+        real(wp)              :: pengyij(jsurf)
+        real(wp)              :: q(27)
+        real(wp)              :: r(n3atom)
+        real(wp)              :: r0c1h
+        real(wp)              :: r0c1hp
+        real(wp)              :: r0c1hr
+        real(wp)              :: r0c2h
+        real(wp)              :: r0c2hp
+        real(wp)              :: r0c2hr
+        real(wp)              :: r0cb
+        real(wp)              :: r0cc
+        real(wp)              :: r0hh
+        real(wp)              :: rbh(6)
+        real(wp)              :: rc1b
+        real(wp)              :: rc1h(3)
+        real(wp)              :: rc2b
+        real(wp)              :: rc2h(3)
+        real(wp)              :: rcc
+        character             :: ref(5)
+        real(wp)              :: rhh(3,6)
+        real(wp)              :: s1(8)
+        real(wp)              :: s2(8)
+        real(wp)              :: s3(8)
+        real(wp)              :: sphi(8)
+        real(wp)              :: stheta(8)
+        real(wp)              :: tbh(6,3)
+        real(wp)              :: tc1b(3)
+        real(wp)              :: tc1h(3,3)
+        real(wp)              :: tc2b(3)
+        real(wp)              :: tc2h(3,3)
+        real(wp)              :: tcb(3)
+        real(wp)              :: tcc(3)
+        real(wp)              :: theta0(8,8)
+        real(wp)              :: thetahcch(9)
+        real(wp)              :: thh(3,6,3)
+        real(wp)              :: v3
+        real(wp)              :: w1
+        real(wp)              :: w2
+        real(wp)              :: w3
+        real(wp)              :: w4
+        real(wp)              :: w5
+        real(wp)              :: w6
+        real(wp)              :: v
+        integer               :: iatom, idir, istate
         !initialize
-        a1c           = 0.d0; a1c1h = 0.d0; a1c2h = 0.d0; a1cc = 0.d0; a1s = 0.d0; a1scc = 0.d0; a2c = 0.d0; a2s = 0.d0
-        a2scc         = 0.d0; a3s = 0.d0; a3scc = 0.d0; aa1 = 0.d0; aa2 = 0.d0; aa3 = 0.d0; aa4 = 0.d0; acb = 0.d0; acc = 0.d0
-        ahh           = 0.d0; ak = 0.d0; anuzero = 0.d0; aphi = 0.d0; atheta = 0.d0; b1c1h = 0.d0; b1c2h = 0.d0; b1cc = 0.d0
-        b1s           = 0.d0; b1scc = 0.d0; b2s = 0.d0; b2scc = 0.d0; b3s = 0.d0; b3scc = 0.d0; bk = 0.d0; bphi = 0.d0
-        btheta        = 0.d0; c1c1h = 0.d0; c1c2h = 0.d0; c1cc = 0.d0; cart = 0.d0; cartnu = 0.d0; cnvrtd = 0.d0
-        cnvrtde       = 0.d0; cnvrte = 0.d0; cphi = 0.d0; ctheta = 0.d0; d1c1h = 0.d0; d1c2h = 0.d0; d1cb = 0.d0; d1cc = 0.d0
-        d1ch          = 0.d0; d1hh = 0.d0; d3c1h = 0.d0; d3c2h = 0.d0; d3cb = 0.d0; d3ch = 0.d0; d3hh = 0.d0; deesdr = 0.d0
-        degsdr        = 0.d0; deijdr = 0.d0; descart = 0.d0; descartnu = 0.d0; dfdc = 0.d0; dfdelta = 0.d0; dfdh = 0.d0
-        dgscart       = 0.d0; dgscartnu = 0.d0; dhdelta = 0.d0; dijcart = 0.d0; dijcartnu = 0.d0; ds1 = 0.d0; ds2 = 0.d0
-        ds3           = 0.d0; dsphi = 0.d0; dstheta = 0.d0; dtheta0 = 0.d0; engyes = 0.d0; engygs = 0.d0; engyij = 0.d0
-        ezero         = 0.d0; f1 = 0.d0; fch3 = 0.d0; fdelta = 0.d0; fk0 = 0.d0; fkinf = 0.d0; hch3 = 0.d0; hdelta = 0.d0
+        a1c           = 0.e0_wp; a1c1h = 0.e0_wp; a1c2h = 0.e0_wp; a1cc = 0.e0_wp; a1s = 0.e0_wp; a1scc = 0.e0_wp; a2c = 0.e0_wp; a2s = 0.e0_wp
+        a2scc         = 0.e0_wp; a3s = 0.e0_wp; a3scc = 0.e0_wp; aa1 = 0.e0_wp; aa2 = 0.e0_wp; aa3 = 0.e0_wp; aa4 = 0.e0_wp; acb = 0.e0_wp; acc = 0.e0_wp
+        ahh           = 0.e0_wp; ak = 0.e0_wp; anuzero = 0.e0_wp; aphi = 0.e0_wp; atheta = 0.e0_wp; b1c1h = 0.e0_wp; b1c2h = 0.e0_wp; b1cc = 0.e0_wp
+        b1s           = 0.e0_wp; b1scc = 0.e0_wp; b2s = 0.e0_wp; b2scc = 0.e0_wp; b3s = 0.e0_wp; b3scc = 0.e0_wp; bk = 0.e0_wp; bphi = 0.e0_wp
+        btheta        = 0.e0_wp; c1c1h = 0.e0_wp; c1c2h = 0.e0_wp; c1cc = 0.e0_wp; cart = 0.e0_wp; cartnu = 0.e0_wp; cnvrtd = 0.e0_wp
+        cnvrtde       = 0.e0_wp; cnvrte = 0.e0_wp; cphi = 0.e0_wp; ctheta = 0.e0_wp; d1c1h = 0.e0_wp; d1c2h = 0.e0_wp; d1cb = 0.e0_wp; d1cc = 0.e0_wp
+        d1ch          = 0.e0_wp; d1hh = 0.e0_wp; d3c1h = 0.e0_wp; d3c2h = 0.e0_wp; d3cb = 0.e0_wp; d3ch = 0.e0_wp; d3hh = 0.e0_wp; deesdr = 0.e0_wp
+        degsdr        = 0.e0_wp; deijdr = 0.e0_wp; descart = 0.e0_wp; descartnu = 0.e0_wp; dfdc = 0.e0_wp; dfdelta = 0.e0_wp; dfdh = 0.e0_wp
+        dgscart       = 0.e0_wp; dgscartnu = 0.e0_wp; dhdelta = 0.e0_wp; dijcart = 0.e0_wp; dijcartnu = 0.e0_wp; ds1 = 0.e0_wp; ds2 = 0.e0_wp
+        ds3           = 0.e0_wp; dsphi = 0.e0_wp; dstheta = 0.e0_wp; dtheta0 = 0.e0_wp; engyes = 0.e0_wp; engygs = 0.e0_wp; engyij = 0.e0_wp
+        ezero         = 0.e0_wp; f1 = 0.e0_wp; fch3 = 0.e0_wp; fdelta = 0.e0_wp; fk0 = 0.e0_wp; fkinf = 0.e0_wp; hch3 = 0.e0_wp; hdelta = 0.e0_wp
         icartr        = 0; indexes = 0; irctnt = 0; ireorder = 0; kediag = 0; keoffd = 0; ksdiag = 0; ksoffd = 0
         legacy_natoms = 0; mder = 0; msurf = 0; nasurf = 0; nc = 0; nc1 = 0; nc2 = 0; nder = 0; nflag = 0; nh = 0
-        nhb           = 0; nnb = 0; nnc1 = 0; nnc2 = 0; nnh = 0; nulbl = 0; pdot = 0.d0; pengyes = 0.d0; pengygs = 0.d0
-        pengyij       = 0.d0; q = 0.d0; r = 0.d0; r0c1h = 0.d0; r0c1hp = 0.d0; r0c1hr = 0.d0; r0c2h = 0.d0; r0c2hp = 0.d0
-        r0c2hr        = 0.d0; r0cb = 0.d0; r0cc = 0.d0; r0hh = 0.d0; rbh = 0.d0; rc1b = 0.d0; rc1h = 0.d0; rc2b = 0.d0
-        rc2h          = 0.d0; rcc = 0.d0
+        nhb           = 0; nnb = 0; nnc1 = 0; nnc2 = 0; nnh = 0; nulbl = 0; pdot = 0.e0_wp; pengyes = 0.e0_wp; pengygs = 0.e0_wp
+        pengyij       = 0.e0_wp; q = 0.e0_wp; r = 0.e0_wp; r0c1h = 0.e0_wp; r0c1hp = 0.e0_wp; r0c1hr = 0.e0_wp; r0c2h = 0.e0_wp; r0c2hp = 0.e0_wp
+        r0c2hr        = 0.e0_wp; r0cb = 0.e0_wp; r0cc = 0.e0_wp; r0hh = 0.e0_wp; rbh = 0.e0_wp; rc1b = 0.e0_wp; rc1h = 0.e0_wp; rc2b = 0.e0_wp
+        rc2h          = 0.e0_wp; rcc = 0.e0_wp
         ref           = ' '
-        rhh           = 0.d0
-        s1            = 0.d0
-        s2            = 0.d0
-        s3            = 0.d0
-        sphi          = 0.d0
-        stheta        = 0.d0
-        tbh           = 0.d0
-        tc1b          = 0.d0
-        tc1h          = 0.d0
-        tc2b          = 0.d0
-        tc2h          = 0.d0
-        tcb           = 0.d0
-        tcc           = 0.d0
-        theta0        = 0.d0
-        thetahcch     = 0.d0
-        thh           = 0.d0
-        v3            = 0.d0
-        w1            = 0.d0
-        w2            = 0.d0
-        w3            = 0.d0
-        w4            = 0.d0
-        w5            = 0.d0
-        w6            = 0.d0
+        rhh           = 0.e0_wp
+        s1            = 0.e0_wp
+        s2            = 0.e0_wp
+        s3            = 0.e0_wp
+        sphi          = 0.e0_wp
+        stheta        = 0.e0_wp
+        tbh           = 0.e0_wp
+        tc1b          = 0.e0_wp
+        tc1h          = 0.e0_wp
+        tc2b          = 0.e0_wp
+        tc2h          = 0.e0_wp
+        tcb           = 0.e0_wp
+        tcc           = 0.e0_wp
+        theta0        = 0.e0_wp
+        thetahcch     = 0.e0_wp
+        thh           = 0.e0_wp
+        v3            = 0.e0_wp
+        w1            = 0.e0_wp
+        w2            = 0.e0_wp
+        w3            = 0.e0_wp
+        w4            = 0.e0_wp
+        w5            = 0.e0_wp
+        w6            = 0.e0_wp
         nasurf = reshape([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
             & 0, 0, 0, 0, 0], shape(nasurf))
         nder          = 1
         nflag         = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        anuzero       = 0.0d0
+        anuzero       = 0.0e0_wp
         icartr        = 1
         msurf         = 0
         mder          = 1
@@ -245,69 +248,69 @@ module chempotpy_c2h6cl_vbmm_pes
         nnc2          = 2
         nnb           = 9
         nnh           = [3, 4, 5, 6, 7, 8]
-        r0c1hr        = 1.08897d0
-        r0c1hp        = 1.07577d0
-        w3            = 1.00000d0
-        w4            = 1.08897d0
-        d1c1h         = 109.23000d0
-        d3c1h         = 26.00400d0
-        a1c1h         = 1.65300d0
-        b1c1h         = 0.12500d0
-        c1c1h         = 3.51404d0
-        r0c2hr        = 1.08897d0
-        r0c2hp        = 1.07577d0
-        w5            = 1.00000d0
-        w6            = 1.08897d0
-        d1c2h         = 109.23000d0
-        d3c2h         = 26.00400d0
-        a1c2h         = 1.65300d0
-        b1c2h         = 0.12500d0
-        c1c2h         = 3.51404d0
-        r0cc          = 1.50007d0
-        d1cc          = 117.94900d0
-        acc           = 1.93400d0
-        a1c           = 0.90007d0
-        a2c           = 0.94900d0
-        r0hh          = 1.27191d0
-        d1hh          = 107.85800d0
-        d3hh          = 28.56400d0
-        ahh           = 1.85570d0
-        r0cb          = 1.95397d0
-        d1cb          = 46.60900d0
-        d3cb          = 14.90000d0
-        acb           = 1.2290285d0
-        a3s           = 1.8419147d0
-        b3s           = 1.0889300d0
-        aphi          = 1.0087903d0
-        bphi          = 1.2006638d0
-        cphi          = 1.0889937d0
-        atheta        = 1.2078714d0
-        btheta        = 0.3548859d0
-        ctheta        = 1.8915497d0
-        fch3          = 0.1357500d0
-        hch3          = 0.2615000d0
-        fkinf         = 0.2977000d0
-        ak            = 0.3060000d0
-        bk            = 0.2032000d0
-        aa1           = 0.300952d0
-        aa2           = 0.499963d0
-        aa3           = 6.465953d0
-        aa4           = 1.569977d0
-        v3            = 13.730000d0
-        w1            = 9.3548859d0
-        w2            = 0.913970d0
-        a1s           = 2.5313681d0
-        b1s           = 1.088625d0
-        a2s           = 2.0147402d0
-        b2s           = 1.088980d0
-        a1scc         = 2.5313681d0
-        b1scc         = 1.550070d0
-        a2scc         = 2.0147402d0
-        b2scc         = 1.550070d0
-        a3scc         = 0.531368d0
-        b3scc         = 1.550070d0
-        v             = 0.d0; g = 0.d0; d = 0.d0
-        cart          = 0.d0
+        r0c1hr        = 1.08897e0_wp
+        r0c1hp        = 1.07577e0_wp
+        w3            = 1.00000e0_wp
+        w4            = 1.08897e0_wp
+        d1c1h         = 109.23000e0_wp
+        d3c1h         = 26.00400e0_wp
+        a1c1h         = 1.65300e0_wp
+        b1c1h         = 0.12500e0_wp
+        c1c1h         = 3.51404e0_wp
+        r0c2hr        = 1.08897e0_wp
+        r0c2hp        = 1.07577e0_wp
+        w5            = 1.00000e0_wp
+        w6            = 1.08897e0_wp
+        d1c2h         = 109.23000e0_wp
+        d3c2h         = 26.00400e0_wp
+        a1c2h         = 1.65300e0_wp
+        b1c2h         = 0.12500e0_wp
+        c1c2h         = 3.51404e0_wp
+        r0cc          = 1.50007e0_wp
+        d1cc          = 117.94900e0_wp
+        acc           = 1.93400e0_wp
+        a1c           = 0.90007e0_wp
+        a2c           = 0.94900e0_wp
+        r0hh          = 1.27191e0_wp
+        d1hh          = 107.85800e0_wp
+        d3hh          = 28.56400e0_wp
+        ahh           = 1.85570e0_wp
+        r0cb          = 1.95397e0_wp
+        d1cb          = 46.60900e0_wp
+        d3cb          = 14.90000e0_wp
+        acb           = 1.2290285e0_wp
+        a3s           = 1.8419147e0_wp
+        b3s           = 1.0889300e0_wp
+        aphi          = 1.0087903e0_wp
+        bphi          = 1.2006638e0_wp
+        cphi          = 1.0889937e0_wp
+        atheta        = 1.2078714e0_wp
+        btheta        = 0.3548859e0_wp
+        ctheta        = 1.8915497e0_wp
+        fch3          = 0.1357500e0_wp
+        hch3          = 0.2615000e0_wp
+        fkinf         = 0.2977000e0_wp
+        ak            = 0.3060000e0_wp
+        bk            = 0.2032000e0_wp
+        aa1           = 0.300952e0_wp
+        aa2           = 0.499963e0_wp
+        aa3           = 6.465953e0_wp
+        aa4           = 1.569977e0_wp
+        v3            = 13.730000e0_wp
+        w1            = 9.3548859e0_wp
+        w2            = 0.913970e0_wp
+        a1s           = 2.5313681e0_wp
+        b1s           = 1.088625e0_wp
+        a2s           = 2.0147402e0_wp
+        b2s           = 1.088980e0_wp
+        a1scc         = 2.5313681e0_wp
+        b1scc         = 1.550070e0_wp
+        a2scc         = 2.0147402e0_wp
+        b2scc         = 1.550070e0_wp
+        a3scc         = 0.531368e0_wp
+        b3scc         = 1.550070e0_wp
+        v             = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
+        cart          = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
                 cart(iatom,idir) = x(iatom,idir)
@@ -317,16 +320,16 @@ module chempotpy_c2h6cl_vbmm_pes
         call pot
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = pengygs*legacy_hartree_to_electronvolt
+                p(istate) = pengygs*hartree_to_electronvolt
             enddo
         elseif( igrad == 1 )then
             write (*, *) 'Only energy is available'
             !       do istate=1,nstates
-            !         p(istate)=PENGYGS*legacy_hartree_to_electronvolt
+            !         p(istate)=PENGYGS*hartree_to_electronvolt
             !       enddo
             !       do iatom=1,natoms
             !       do idir=1,3
-            !         g(1,iatom,idir)=DGSCART(iatom,idir)*51.422067
+            !         g(1,iatom,idir)=DGSCART(iatom,idir)*hartree_per_bohr_to_ev_per_angstrom
             !       enddo
             !       enddo
         elseif( igrad == 2 )then
@@ -352,23 +355,24 @@ module chempotpy_c2h6cl_vbmm_pes
             !                       X(19) - X(21) : X, Y, Z for H5
             !                       X(22) - X(24) : X, Y, Z for H6
             !                       X(25) - X(27) : X, Y, Z for Hb
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: coord(27), dx(27), en, vip, vop, vstr, vtor
-            integer          :: i, n
+            real(wp) :: coord(27), dx(27), en, vip, vop, vstr, vtor
+            integer  :: i, n
             !      DIMENSION COORD(27),DX(27)
             !      DIMENSION dxvstr(27),dxvtor(27),dxvop(27),dxvip(27)
             !C      include 'c2h6cl.inc'
             !     write(97,*) 'pasa'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
-            pengygs = 0.0d0
+            pengygs = 0.0e0_wp
             ! Start of changes by EMN.
             ! The lines below do not seem to be needed because the Cartesian
             ! coordinates are in common qpdot.
@@ -382,7 +386,7 @@ module chempotpy_c2h6cl_vbmm_pes
             do i=1, 27
                 q(i) = r(i)
                 !          q(I) = R(I)*0.52918d0
-                pdot(i) = 0.d0
+                pdot(i) = 0.e0_wp
             enddo
             ! Changing units from angstrom to bohr
             !      DO  I = 1, 27
@@ -390,7 +394,7 @@ module chempotpy_c2h6cl_vbmm_pes
             !        q(I) = R(I)*0.52918d0
             !      enddo
             ! End of corrections by EMN
-            en = 0.0d0
+            en = 0.0e0_wp
             call coorden
             !  calculate switching functions
             call switchf
@@ -410,7 +414,7 @@ module chempotpy_c2h6cl_vbmm_pes
             !     write(*,*) 'vip', vip*0.03812D0
             en = vstr+vop+vip+vtor
             !  convert from 10(5) j/mol to au
-            en = en*0.03812d0
+            en = en*0.03812e0_wp
             !      V = en
             engygs = en
             call eunitzero
@@ -418,7 +422,7 @@ module chempotpy_c2h6cl_vbmm_pes
                 !  Initialize derivatives
                 do n=1, 27
                     !          DX(n)=0.0d0
-                    degsdr(i) = pdot(i)*0.0201723d0
+                    degsdr(i) = pdot(i)*0.0201723e0_wp
                 enddo
                 ! Start of changes by EMN.
                 ! The lines below are not needed because the derivatives are calculated
@@ -463,16 +467,17 @@ module chempotpy_c2h6cl_vbmm_pes
         !> @brief Evaluate coorden for the C2H6Cl_VBMM potential.
         subroutine coorden
             !  calculates relative coordinates and bond lengths
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: argmax, argp3, argp4, p3, p4, t3tmp, t4tmp
-            integer          :: i, ind
+            real(wp) :: argmax, argp3, argp4, p3, p4, t3tmp, t4tmp
+            integer  :: i, ind
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
@@ -526,26 +531,26 @@ module chempotpy_c2h6cl_vbmm_pes
             !         enddo
             !      enddo
             ! crd 2013 modificaciones de las distancias
-            argmax = 19.d0
-            p3     = 1.d0
+            argmax = 19.e0_wp
+            p3     = 1.e0_wp
             do i=1, 3
                 argp3 = (w3*(rc1h(i)-w4))
                 if( argp3 .lt. argmax )then
                     t3tmp = 1-tanh(argp3)
                 else
-                    t3tmp = 0.d0
+                    t3tmp = 0.e0_wp
                 endif
                 p3 = p3*t3tmp
             enddo
             r0c1h = p3*r0c1hr+(1-p3)*r0c1hp
             !      r0c1h=r0c1hr
-            p4 = 1.d0
+            p4 = 1.e0_wp
             do i=1, 3
                 argp4 = (w5*(rc2h(i)-w6))
                 if( argp4 .lt. argmax )then
                     t4tmp = 1-tanh(argp4)
                 else
-                    t4tmp = 0.d0
+                    t4tmp = 0.e0_wp
                 endif
                 p4 = p4*t4tmp
             enddo
@@ -556,16 +561,17 @@ module chempotpy_c2h6cl_vbmm_pes
 
         !> @brief Evaluate torsion for the C2H6Cl_VBMM potential.
         subroutine torsion( vtor )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: dihed, t1(3), t2(3), vtor
-            integer          :: i
+            real(wp) :: dihed, t1(3), t2(3), vtor
+            integer  :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
@@ -575,55 +581,56 @@ module chempotpy_c2h6cl_vbmm_pes
             ! CRD 2011 incluimos un apartado para calcular los angulos dihedro
             ! para poder calcular despues vtorsion
             call dihedro(3, 1, 2, 6, dihed)
-            thetahcch(1) = dihed*pi/180.0d0
+            thetahcch(1) = dihed*pi/180.0e0_wp
             call dihedro(3, 1, 2, 7, dihed)
-            thetahcch(2) = dihed*pi/180.0d0
+            thetahcch(2) = dihed*pi/180.0e0_wp
             call dihedro(3, 1, 2, 8, dihed)
-            thetahcch(3) = dihed*pi/180.0d0
+            thetahcch(3) = dihed*pi/180.0e0_wp
             call dihedro(4, 1, 2, 6, dihed)
-            thetahcch(4) = dihed*pi/180.0d0
+            thetahcch(4) = dihed*pi/180.0e0_wp
             call dihedro(4, 1, 2, 7, dihed)
-            thetahcch(5) = dihed*pi/180.0d0
+            thetahcch(5) = dihed*pi/180.0e0_wp
             call dihedro(4, 1, 2, 8, dihed)
-            thetahcch(6) = dihed*pi/180.0d0
+            thetahcch(6) = dihed*pi/180.0e0_wp
             call dihedro(5, 1, 2, 6, dihed)
-            thetahcch(7) = dihed*pi/180.0d0
+            thetahcch(7) = dihed*pi/180.0e0_wp
             call dihedro(5, 1, 2, 7, dihed)
-            thetahcch(8) = dihed*pi/180.0d0
+            thetahcch(8) = dihed*pi/180.0e0_wp
             call dihedro(5, 1, 2, 8, dihed)
-            thetahcch(9) = dihed*pi/180.0d0
+            thetahcch(9) = dihed*pi/180.0e0_wp
             ! CRD 2011 calculamos los terminos switching t1 y t2
             do i=1, 3
-                t1(i) = 0.5d0*(1-tanh(w1*(rc1h(i)-w2)))
-                t2(i) = 0.5d0*(1-tanh(w1*(rc2h(i)-w2)))
+                t1(i) = 0.5e0_wp*(1-tanh(w1*(rc1h(i)-w2)))
+                t2(i) = 0.5e0_wp*(1-tanh(w1*(rc2h(i)-w2)))
                 !       write(*,*) 't1',i,t1(i),'t2',i,t2(i)
                 !       t1(i)=1-tanh(w1*(rc1h(i)-w2))
                 !       t2(i)=1-tanh(w1*(rc2h(i)-w2))
             enddo
             ! CRD 2011 inicializamos vtor
-            vtor = 0.0d0
-            vtor = vtor+(v3/3.0d0)*(1+cos(3*thetahcch(1)))*t1(1)*t2(1)
-            vtor = vtor+(v3/3.0d0)*(1+cos(3*thetahcch(2)))*t1(1)*t2(2)
-            vtor = vtor+(v3/3.0d0)*(1+cos(3*thetahcch(3)))*t1(1)*t2(3)
-            vtor = vtor+(v3/3.0d0)*(1+cos(3*thetahcch(4)))*t1(2)*t2(1)
-            vtor = vtor+(v3/3.0d0)*(1+cos(3*thetahcch(5)))*t1(2)*t2(2)
-            vtor = vtor+(v3/3.0d0)*(1+cos(3*thetahcch(6)))*t1(2)*t2(3)
-            vtor = vtor+(v3/3.0d0)*(1+cos(3*thetahcch(7)))*t1(3)*t2(1)
-            vtor = vtor+(v3/3.0d0)*(1+cos(3*thetahcch(8)))*t1(3)*t2(2)
-            vtor = vtor+(v3/3.0d0)*(1+cos(3*thetahcch(9)))*t1(3)*t2(3)
+            vtor = 0.0e0_wp
+            vtor = vtor+(v3/3.0e0_wp)*(1+cos(3*thetahcch(1)))*t1(1)*t2(1)
+            vtor = vtor+(v3/3.0e0_wp)*(1+cos(3*thetahcch(2)))*t1(1)*t2(2)
+            vtor = vtor+(v3/3.0e0_wp)*(1+cos(3*thetahcch(3)))*t1(1)*t2(3)
+            vtor = vtor+(v3/3.0e0_wp)*(1+cos(3*thetahcch(4)))*t1(2)*t2(1)
+            vtor = vtor+(v3/3.0e0_wp)*(1+cos(3*thetahcch(5)))*t1(2)*t2(2)
+            vtor = vtor+(v3/3.0e0_wp)*(1+cos(3*thetahcch(6)))*t1(2)*t2(3)
+            vtor = vtor+(v3/3.0e0_wp)*(1+cos(3*thetahcch(7)))*t1(3)*t2(1)
+            vtor = vtor+(v3/3.0e0_wp)*(1+cos(3*thetahcch(8)))*t1(3)*t2(2)
+            vtor = vtor+(v3/3.0e0_wp)*(1+cos(3*thetahcch(9)))*t1(3)*t2(3)
         end subroutine torsion
 
         !> @brief Evaluate dihedro for the C2H6Cl_VBMM potential.
         subroutine dihedro( i, j, k, l, dihed )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: dihed
+            real(wp) :: dihed
             !        include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
@@ -636,9 +643,9 @@ module chempotpy_c2h6cl_vbmm_pes
             !        double precision p,q
             !        double precision p
             !        double precision pi
-            double precision :: rij(3), rjk(3), rkj(3), rkl(3)
-            double precision :: zijjk(3), zijkj(3), zkjkl(3), zjkkl(3)
-            double precision :: tmpsign(3), tmp, arg1, arg2
+            real(wp) :: rij(3), rjk(3), rkj(3), rkl(3)
+            real(wp) :: zijjk(3), zijkj(3), zkjkl(3), zjkkl(3)
+            real(wp) :: tmpsign(3), tmp, arg1, arg2
             !        pi=4.0d0*atan(1.0d0)
             do m = 1, 3
                 rij(m) = q((i-1)*3+m)-q((j-1)*3+m)
@@ -649,40 +656,42 @@ module chempotpy_c2h6cl_vbmm_pes
             call crosprod(rij, rjk, zijjk)
             arg2 = anorm(rjk)*dotprod(rij, zjkkl)
             arg1 = dotprod(zijjk, zjkkl)
-            if( abs(arg1) .lt. 1.d-6 )then
-                if( arg2 .gt. 0.d0 ) dihed = 90.d0
-                if( arg2 .lt. 0.d0 ) dihed = -90.d0
+            if( abs(arg1) .lt. 1.e-6_wp )then
+                if( arg2 .gt. 0.e0_wp ) dihed = 90.e0_wp
+                if( arg2 .lt. 0.e0_wp ) dihed = -90.e0_wp
                 return
             endif
-            if( arg1 .gt. 0.d0 )then
-                dihed = atan(arg2/arg1) *180.d0/pi
+            if( arg1 .gt. 0.e0_wp )then
+                dihed = atan(arg2/arg1) *180.e0_wp/pi
                 return
             endif
-            if( arg2 .ge. 0.d0 )then
-                dihed = 180.d0 + atan(arg2/arg1) *180.d0/pi
+            if( arg2 .ge. 0.e0_wp )then
+                dihed = 180.e0_wp + atan(arg2/arg1) *180.e0_wp/pi
                 return
             endif
-            if( arg2 .lt. 0.d0 )then
-                dihed = -180.d0 + atan(arg2/arg1) *180.d0/pi
+            if( arg2 .lt. 0.e0_wp )then
+                dihed = -180.e0_wp + atan(arg2/arg1) *180.e0_wp/pi
                 return
             endif
         end subroutine dihedro
 
         !> @brief Evaluate crosprod for the C2H6Cl_VBMM potential.
         subroutine crosprod( x, y, z )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: x(3), y(3), z(3)
+            real(wp) :: x(3), y(3), z(3)
             z(1) = x(2)*y(3)-x(3)*y(2)
             z(2) = x(3)*y(1)-x(1)*y(3)
             z(3) = x(1)*y(2)-x(2)*y(1)
         end subroutine crosprod
 
         !> @brief Evaluate dotprod for the C2H6Cl_VBMM potential.
-        double precision function dotprod( x, y )
+        real(wp) function dotprod( x, y )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: k
-            double precision :: x(3), y(3), tmp
-            tmp = 0.d0
+            integer  :: k
+            real(wp) :: x(3), y(3), tmp
+            tmp = 0.e0_wp
             do k = 1, 3
                 tmp = tmp + x(k)*y(k)
             enddo
@@ -690,42 +699,44 @@ module chempotpy_c2h6cl_vbmm_pes
         end function dotprod
 
         !> @brief Evaluate anorm for the C2H6Cl_VBMM potential.
-        double precision function anorm( x )
+        real(wp) function anorm( x )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: k
-            double precision :: x(3), tmp
-            tmp = 0.d0
+            integer  :: k
+            real(wp) :: x(3), tmp
+            tmp = 0.e0_wp
             do k = 1, 3
                 tmp = tmp + x(k)*x(k)
             enddo
-            anorm = dsqrt(tmp)
+            anorm = sqrt(tmp)
         end function anorm
 
         !> @brief Evaluate refangles for the C2H6Cl_VBMM potential.
         subroutine refangles
             !  subroutine calculates reference angles for the "in-plane" potential
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: ddr(4,4), halfpi, sumd2(4), sumd4(4), tau, taucc, twopi
-            integer          :: i, j
+            real(wp) :: ddr(4,4), halfpi, sumd2(4), sumd4(4), tau, taucc, twopi
+            integer  :: i, j
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            tau = acos(-1.0d0/3.0d0)
+            tau = acos(-1.0e0_wp/3.0e0_wp)
             ! CRD 2012 taucc para el angulo H-C-C
-            taucc = acos(-0.3616d0)
+            taucc = acos(-0.3616e0_wp)
             !      write(*,*) 'tau', tau, 'acostau', tau*57.2957795
             !      write(*,*) 'taucc', taucc, 'acostaucc', taucc*57.2957795
             !      pi=4.0d0*atan(1.0d0)
-            halfpi = 0.5d0*pi
-            twopi  = 2.0d0*pi
+            halfpi = 0.5e0_wp*pi
+            twopi  = 2.0e0_wp*pi
             !      write(38,*) tau, pi, halfpi, twopi
             ! jcc-2010
             ! valor para ajustar el angulo
@@ -735,7 +746,7 @@ module chempotpy_c2h6cl_vbmm_pes
             ! jcc-2010
             !  set diagonal elements to zero
             do i=1, 8
-                theta0(i,i) = 0.0d0
+                theta0(i,i) = 0.0e0_wp
             enddo
             !  calculate reference angles
             !      theta0(1,2)=tau+(tau-tausih)*(sphi(1)*sphi(2)-1.0d0)
@@ -763,19 +774,31 @@ module chempotpy_c2h6cl_vbmm_pes
             !      theta0(7,8)=taucc+(tau-tausih)*(sphi(7)*sphi(8)-1.0d0)
             !    *             +(tau-anghch/3.0d0)*(stheta(5)*stheta(6)-1.0d0)
             ! el atomo 4 es el c2
-            theta0(1,2) = tau+(tau-halfpi)*(sphi(1)*sphi(2)-1.0d0) +(tau-twopi/3.0d0)*(stheta(3)*stheta(4)-1.0d0)
-            theta0(1,3) = tau+(tau-halfpi)*(sphi(1)*sphi(3)-1.0d0) +(tau-twopi/3.0d0)*(stheta(2)*stheta(4)-1.0d0)
-            theta0(1,4) = taucc+(tau-halfpi)*(sphi(1)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(2)*stheta(3)-1.0d0)
-            theta0(2,3) = tau+(tau-halfpi)*(sphi(2)*sphi(3)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(4)-1.0d0)
-            theta0(2,4) = taucc+(tau-halfpi)*(sphi(2)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(3)-1.0d0)
-            theta0(3,4) = taucc+(tau-halfpi)*(sphi(3)*sphi(4)-1.0d0) +(tau-twopi/3.0d0)*(stheta(1)*stheta(2)-1.0d0)
+            theta0(1,2) = tau+(tau-halfpi)*(sphi(1)*sphi(2)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(3)*stheta(4)- &
+                & 1.0e0_wp)
+            theta0(1,3) = tau+(tau-halfpi)*(sphi(1)*sphi(3)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(2)*stheta(4)- &
+                & 1.0e0_wp)
+            theta0(1,4) = taucc+(tau-halfpi)*(sphi(1)*sphi(4)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(2)*stheta(3)- &
+                & 1.0e0_wp)
+            theta0(2,3) = tau+(tau-halfpi)*(sphi(2)*sphi(3)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(1)*stheta(4)- &
+                & 1.0e0_wp)
+            theta0(2,4) = taucc+(tau-halfpi)*(sphi(2)*sphi(4)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(1)*stheta(3)- &
+                & 1.0e0_wp)
+            theta0(3,4) = taucc+(tau-halfpi)*(sphi(3)*sphi(4)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(1)*stheta(2)- &
+                & 1.0e0_wp)
             !  el atomo 8 es el c1
-            theta0(5,6) = tau+(tau-halfpi)*(sphi(5)*sphi(6)-1.0d0) +(tau-twopi/3.0d0)*(stheta(7)*stheta(8)-1.0d0)
-            theta0(5,7) = tau+(tau-halfpi)*(sphi(5)*sphi(7)-1.0d0) +(tau-twopi/3.0d0)*(stheta(6)*stheta(8)-1.0d0)
-            theta0(5,8) = taucc+(tau-halfpi)*(sphi(5)*sphi(8)-1.0d0) +(tau-twopi/3.0d0)*(stheta(6)*stheta(7)-1.0d0)
-            theta0(6,7) = tau+(tau-halfpi)*(sphi(6)*sphi(7)-1.0d0) +(tau-twopi/3.0d0)*(stheta(5)*stheta(8)-1.0d0)
-            theta0(6,8) = taucc+(tau-halfpi)*(sphi(6)*sphi(8)-1.0d0) +(tau-twopi/3.0d0)*(stheta(5)*stheta(7)-1.0d0)
-            theta0(7,8) = taucc+(tau-halfpi)*(sphi(7)*sphi(8)-1.0d0) +(tau-twopi/3.0d0)*(stheta(5)*stheta(6)-1.0d0)
+            theta0(5,6) = tau+(tau-halfpi)*(sphi(5)*sphi(6)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(7)*stheta(8)- &
+                & 1.0e0_wp)
+            theta0(5,7) = tau+(tau-halfpi)*(sphi(5)*sphi(7)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(6)*stheta(8)- &
+                & 1.0e0_wp)
+            theta0(5,8) = taucc+(tau-halfpi)*(sphi(5)*sphi(8)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(6)*stheta(7)- &
+                & 1.0e0_wp)
+            theta0(6,7) = tau+(tau-halfpi)*(sphi(6)*sphi(7)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(5)*stheta(8)- &
+                & 1.0e0_wp)
+            theta0(6,8) = taucc+(tau-halfpi)*(sphi(6)*sphi(8)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(5)*stheta(7)- &
+                & 1.0e0_wp)
+            theta0(7,8) = taucc+(tau-halfpi)*(sphi(7)*sphi(8)-1.0e0_wp) +(tau-twopi/3.0e0_wp)*(stheta(5)*stheta(6)- &
+                & 1.0e0_wp)
             !  fill in the other half of the matrix
             do i=1, 3
                 do j=i+1, 4
@@ -803,18 +826,19 @@ module chempotpy_c2h6cl_vbmm_pes
         subroutine stretch( vstr )
             !  subroutine to calculate leps-type stretching potential and its
             !  derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: ach1, ach2, achdc(3), achdh(4,3), achdx(3), arga1, arga2, dt, e1, e3, expterm, factj(4), rav1, &
+            real(wp) :: ach1, ach2, achdc(3), achdh(4,3), achdx(3), arga1, arga2, dt, e1, e3, expterm, factj(4), rav1, &
                 & rav2, vcc, vj(3), vjbh(6), vjc1b, vjc1h(3), vjc2b, vjc2h(3), vq(3), vqbh(6), vqc1b, vqc1h(3), vqc2b, vqc2h(3), &
                 & vstr
-            integer          :: i
+            integer :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
@@ -837,11 +861,11 @@ module chempotpy_c2h6cl_vbmm_pes
             !      write(*,*) a1scc,b1scc,a2scc,b2scc,a3scc,b3scc
             !  calculate avergage bond length for the methane moiety
             !C       rav=(rc1h(1)+rc1h(2)+rc1h(3)+rc2h(1)+rc2h(2)+rc2h(3))/6.0d0
-            rav1 = (rc1h(1)+rc1h(2)+rc1h(3))/3.0d0
-            rav2 = (rc2h(1)+rc2h(2)+rc2h(3))/3.0d0
+            rav1 = (rc1h(1)+rc1h(2)+rc1h(3))/3.0e0_wp
+            rav2 = (rc2h(1)+rc2h(2)+rc2h(3))/3.0e0_wp
             !      write(*,*) 'rav1',rav1,'rav2', rav2
             !  initialise:
-            vstr = 0.0d0
+            vstr = 0.0e0_wp
             !  ach:
             !  nb: in double precision tanh(19.0d0)=1.0d0 and we put the if statemen
             !  in to avoid overflow/underflow errors
@@ -849,13 +873,13 @@ module chempotpy_c2h6cl_vbmm_pes
             arga1 = c1c1h*(rav1-r0c1h)
             arga2 = c1c2h*(rav2-r0c2h)
             !      write(*,*) 'arga1', arga1,'arga2',arga2
-            if( arga1 .lt. 19.0d0 )then
-                ach1 = a1c1h+b1c1h*(tanh(arga1)+1.0d0)*0.5d0
+            if( arga1 .lt. 19.0e0_wp )then
+                ach1 = a1c1h+b1c1h*(tanh(arga1)+1.0e0_wp)*0.5e0_wp
             else
                 ach1 = a1c1h+b1c1h
             endif
-            if( arga2 .lt. 19.0d0 )then
-                ach2 = a1c2h+b1c2h*(tanh(arga2)+1.0d0)*0.5d0
+            if( arga2 .lt. 19.0e0_wp )then
+                ach2 = a1c2h+b1c2h*(tanh(arga2)+1.0e0_wp)*0.5e0_wp
             else
                 ach2 = a1c2h+b1c2h
             endif
@@ -868,72 +892,73 @@ module chempotpy_c2h6cl_vbmm_pes
             !      endif
             !  calculate singlet: e1, triplet: e3 energies and vq and vj
             !  terms for each bond
-            e1    = d1cb*(exp(-2.0d0*acb*(rc1b-r0cb))-2.0d0*exp(-acb*(rc1b-r0cb)))
-            e3    = d3cb*(exp(-2.0d0*acb*(rc1b-r0cb))+2.0d0*exp(-acb*(rc1b-r0cb)))
-            vqc1b = (e1+e3)*0.5d0
-            vjc1b = (e1-e3)*0.5d0
-            e1    = d1cb*(exp(-2.0d0*acb*(rc2b-r0cb))-2.0d0*exp(-acb*(rc2b-r0cb)))
-            e3    = d3cb*(exp(-2.0d0*acb*(rc2b-r0cb))+2.0d0*exp(-acb*(rc2b-r0cb)))
-            vqc2b = (e1+e3)*0.5d0
-            vjc2b = (e1-e3)*0.5d0
+            e1    = d1cb*(exp(-2.0e0_wp*acb*(rc1b-r0cb))-2.0e0_wp*exp(-acb*(rc1b-r0cb)))
+            e3    = d3cb*(exp(-2.0e0_wp*acb*(rc1b-r0cb))+2.0e0_wp*exp(-acb*(rc1b-r0cb)))
+            vqc1b = (e1+e3)*0.5e0_wp
+            vjc1b = (e1-e3)*0.5e0_wp
+            e1    = d1cb*(exp(-2.0e0_wp*acb*(rc2b-r0cb))-2.0e0_wp*exp(-acb*(rc2b-r0cb)))
+            e3    = d3cb*(exp(-2.0e0_wp*acb*(rc2b-r0cb))+2.0e0_wp*exp(-acb*(rc2b-r0cb)))
+            vqc2b = (e1+e3)*0.5e0_wp
+            vjc2b = (e1-e3)*0.5e0_wp
             !     write(*,*) 'vqc1b',vqc1b,'vqc2b',vqc2b,'vjc1b',vjc1b,'vjc2b',vjc2b
             !      e1=d1cc*(exp(-2.0d0*acc*(rcc-r0cc))-2.0d0*exp(-acc*(rcc-r0cc)))
             !      e3=d3cc*(exp(-2.0d0*acc*(rcc-r0cc))+2.0d0*exp(-acc*(rcc-r0cc)))
             !      vqcc=(e1+e3)*0.5d0
             !      vjcc=(e1-e3)*0.5d0
             do i=1, 3
-                e1       = d1c1h*(exp(-2.0d0*ach1*(rc1h(i)-r0c1h)) -2.0d0*exp(-ach1*(rc1h(i)-r0c1h)))
-                e3       = d3c1h*(exp(-2.0d0*ach1*(rc1h(i)-r0c1h)) +2.0d0*exp(-ach1*(rc1h(i)-r0c1h)))
-                vqc1h(i) = (e1+e3)*0.5d0
-                vjc1h(i) = (e1-e3)*0.5d0
-                e1       = d1c2h*(exp(-2.0d0*ach2*(rc2h(i)-r0c2h)) -2.0d0*exp(-ach2*(rc2h(i)-r0c2h)))
-                e3       = d3c2h*(exp(-2.0d0*ach2*(rc2h(i)-r0c2h)) +2.0d0*exp(-ach2*(rc2h(i)-r0c2h)))
-                vqc2h(i) = (e1+e3)*0.5d0
-                vjc2h(i) = (e1-e3)*0.5d0
+                e1       = d1c1h*(exp(-2.0e0_wp*ach1*(rc1h(i)-r0c1h)) -2.0e0_wp*exp(-ach1*(rc1h(i)-r0c1h)))
+                e3       = d3c1h*(exp(-2.0e0_wp*ach1*(rc1h(i)-r0c1h)) +2.0e0_wp*exp(-ach1*(rc1h(i)-r0c1h)))
+                vqc1h(i) = (e1+e3)*0.5e0_wp
+                vjc1h(i) = (e1-e3)*0.5e0_wp
+                e1       = d1c2h*(exp(-2.0e0_wp*ach2*(rc2h(i)-r0c2h)) -2.0e0_wp*exp(-ach2*(rc2h(i)-r0c2h)))
+                e3       = d3c2h*(exp(-2.0e0_wp*ach2*(rc2h(i)-r0c2h)) +2.0e0_wp*exp(-ach2*(rc2h(i)-r0c2h)))
+                vqc2h(i) = (e1+e3)*0.5e0_wp
+                vjc2h(i) = (e1-e3)*0.5e0_wp
             enddo
             do i=1, 6
-                e1      = d1hh*(exp(-2.0d0*ahh*(rbh(i)-r0hh)) -2.0d0*exp(-ahh*(rbh(i)-r0hh)))
-                e3      = d3hh*(exp(-2.0d0*ahh*(rbh(i)-r0hh)) +2.0d0*exp(-ahh*(rbh(i)-r0hh)))
-                vqbh(i) = (e1+e3)*0.5d0
-                vjbh(i) = (e1-e3)*0.5d0
+                e1      = d1hh*(exp(-2.0e0_wp*ahh*(rbh(i)-r0hh)) -2.0e0_wp*exp(-ahh*(rbh(i)-r0hh)))
+                e3      = d3hh*(exp(-2.0e0_wp*ahh*(rbh(i)-r0hh)) +2.0e0_wp*exp(-ahh*(rbh(i)-r0hh)))
+                vqbh(i) = (e1+e3)*0.5e0_wp
+                vjbh(i) = (e1-e3)*0.5e0_wp
             enddo
             !  calculate 3 body potential
             do i=1, 3
                 vq(i) = vqc1h(i)+vqc1b+vqbh(i)
-                vj(i) = -sqrt(((vjc1h(i)-vjc1b)**2+(vjc1b-vjbh(i))**2 +(vjbh(i)-vjc1h(i))**2)*0.5d0)
+                vj(i) = -sqrt(((vjc1h(i)-vjc1b)**2+(vjc1b-vjbh(i))**2 +(vjbh(i)-vjc1h(i))**2)*0.5e0_wp)
                 vstr  = vstr+vq(i)+vj(i)
             enddo
             do i=1, 3
                 vq(i) = vqc2h(i)+vqc2b+vqbh(i+3)
-                vj(i) = -sqrt(((vjc2h(i)-vjc2b)**2+(vjc2b-vjbh(i+3))**2 +(vjbh(i+3)-vjc2h(i))**2)*0.5d0)
+                vj(i) = -sqrt(((vjc2h(i)-vjc2b)**2+(vjc2b-vjbh(i+3))**2 +(vjbh(i+3)-vjc2h(i))**2)*0.5e0_wp)
                 vstr  = vstr+vq(i)+vj(i)
             enddo
             ! CRD 2012 potencial morse para el enlace C-C
             dt      = (rcc-r0cc)
             expterm = exp(-acc*dt)
-            vcc     = d1cc*(1.0d0-expterm)**2.0d0
+            vcc     = d1cc*(1.0e0_wp-expterm)**2.0e0_wp
             vstr    = vstr + vcc
         end subroutine stretch
 
         !> @brief Evaluate opbend for the C2H6Cl_VBMM potential.
         subroutine opbend( vop )
             !  subroutine calculates symmetrized vop potential and derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a(3), argd(8), axb(3), b(3), c(8,3), sum2, sum4, sumd2(8), sumd4(8), vop
-            integer          :: i, in(3), j, k, l
+            real(wp) :: a(3), argd(8), axb(3), b(3), c(8,3), sum2, sum4, sumd2(8), sumd4(8), vop
+            integer  :: i, in(3), j, k, l
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
-            double precision :: norma
-            vop = 0.0d0
+            real(wp) :: norma
+            vop = 0.0e0_wp
             !  calculate force constants and their derivatives
             call opforce
             !  calculate out-of-plane angle and derivatives
@@ -979,22 +1004,23 @@ module chempotpy_c2h6cl_vbmm_pes
         subroutine ipbend( vip )
             !  subroutine calculates symmetrised in plane bend term
             !  and its derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: costh(8,8), dth(8,8), theta(8,8), vip
-            integer          :: i, j
+            real(wp) :: costh(8,8), dth(8,8), theta(8,8), vip
+            integer  :: i, j
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
             !  initialise
-            vip = 0.0d0
+            vip = 0.0e0_wp
             !  calculate force constants: fk0(i,j), f1(i)
             !  and derivatives wrt rch(k) and rbh(k): dfdc(i,j,k), dfdh(i,j,k)
             call ipforce
@@ -1011,14 +1037,14 @@ module chempotpy_c2h6cl_vbmm_pes
                         costh(i,j) = costh(i,j)/rc1h(i)/rc1h(j)
                         theta(i,j) = acos(costh(i,j))
                         dth(i,j)   = theta(i,j)-theta0(i,j)
-                        vip        = vip+0.5d0*fk0(i,j)*f1(i)*f1(j)*dth(i,j)**2
+                        vip        = vip+0.5e0_wp*fk0(i,j)*f1(i)*f1(j)*dth(i,j)**2
                     else
                         costh(i,j) = tc1h(i,1)*tcc(1)+tc1h(i,2)*tcc(2) +tc1h(i,3)*tcc(3)
                         !      write(92,*) 'rc1h',i,'=', rc1h(i), 'rcc=', rcc
                         costh(i,j) = costh(i,j)/rc1h(i)/rcc
                         theta(i,j) = acos(costh(i,j))
                         dth(i,j)   = theta(i,j)-theta0(i,j)
-                        vip        = vip+0.5d0*fk0(i,j)*f1(i)*f1(j)*dth(i,j)**2
+                        vip        = vip+0.5e0_wp*fk0(i,j)*f1(i)*f1(j)*dth(i,j)**2
                     endif
                     !      write(*,*) 'fk0',i,j,'=',fk0(i,j)
                     !      write(*,*) 'f1',i,'=',f1(i)
@@ -1039,7 +1065,7 @@ module chempotpy_c2h6cl_vbmm_pes
                         costh(i+4,j+4) = costh(i+4,j+4)/rc2h(i)/rc2h(j)
                         theta(i+4,j+4) = acos(costh(i+4,j+4))
                         dth(i+4,j+4)   = theta(i+4,j+4)-theta0(i+4,j+4)
-                        vip            = vip+0.5d0*fk0(i+4,j+4)*f1(i+4)*f1(j+4)*dth(i+4,j+4)**2
+                        vip            = vip+0.5e0_wp*fk0(i+4,j+4)*f1(i+4)*f1(j+4)*dth(i+4,j+4)**2
                     else
                         ! modificacion para corregir los angulos del c2
                         !          costh(i,j)=tc2h(i,1)*tcc(1)+tc2h(i,2)*tcc(2)
@@ -1048,7 +1074,7 @@ module chempotpy_c2h6cl_vbmm_pes
                         costh(i+4,j+4) = costh(i+4,j+4)/rc2h(i)/rcc
                         theta(i+4,j+4) = acos(costh(i+4,j+4))
                         dth(i+4,j+4)   = theta(i+4,j+4)-theta0(i+4,j+4)
-                        vip            = vip+0.5d0*fk0(i+4,j+4)*f1(i+4)*f1(j+4)*dth(i+4,j+4)**2
+                        vip            = vip+0.5e0_wp*fk0(i+4,j+4)*f1(i+4)*f1(j+4)*dth(i+4,j+4)**2
                     endif
                 enddo
             enddo
@@ -1059,23 +1085,24 @@ module chempotpy_c2h6cl_vbmm_pes
             !  subroutine calculates out of plane angle delta, loops
             !  through delta(i,j), delta(i,k), delta(i,l)
             !   also calculates the derivatives wrt delta
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
-            integer          :: i, ii, in(3), ind, j, k, l
-            double precision :: norma
+            real(wp) :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
+            integer  :: i, ii, in(3), ind, j, k, l
+            real(wp) :: norma
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
             !  initialise
-            sum2 = 0.0d0; sum4 = 0.0d0
+            sum2 = 0.0e0_wp; sum4 = 0.0e0_wp
             !  set j,k,l indices
             in(1) = j
             in(2) = k
@@ -1158,8 +1185,8 @@ module chempotpy_c2h6cl_vbmm_pes
                 ! Start of corrections by EMN
                 ! The two lines below are added to avoid problems when acos is
                 ! calculated
-                if( argd(in(ii)) > 1.d0 ) argd(in(ii))  = 1
-                if( argd(in(ii)) < -1.d0 ) argd(in(ii)) = -1
+                if( argd(in(ii)) > 1.e0_wp ) argd(in(ii))  = 1
+                if( argd(in(ii)) < -1.e0_wp ) argd(in(ii)) = -1
                 ! End of corrections by EMN
                 delta(in(ii)) = acos(argd(in(ii)))-theta0(i,in(ii))
                 sum2          = sum2+delta(in(ii))**2
@@ -1174,23 +1201,24 @@ module chempotpy_c2h6cl_vbmm_pes
             !  subroutine calculates out of plane angle delta, loops
             !  through delta(i,j), delta(i,k), delta(i,l)
             !   also calculates the derivatives wrt delta
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
-            integer          :: i, ii, in(3), ind, j, k, l
-            double precision :: norma
+            real(wp) :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
+            integer  :: i, ii, in(3), ind, j, k, l
+            real(wp) :: norma
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
             !  initialise
-            sum2 = 0.0d0; sum4 = 0.0d0
+            sum2 = 0.0e0_wp; sum4 = 0.0e0_wp
             !  set j,k,l indices
             !      in(1)=j
             !      in(2)=k
@@ -1271,8 +1299,8 @@ module chempotpy_c2h6cl_vbmm_pes
                 ! Start of corrections by EMN
                 ! The two lines below are added to avoid problems when acos is
                 ! calculated
-                if( argd(in(ii)) > 1.d0 ) argd(in(ii))  = 1
-                if( argd(in(ii)) < -1.d0 ) argd(in(ii)) = -1
+                if( argd(in(ii)) > 1.e0_wp ) argd(in(ii))  = 1
+                if( argd(in(ii)) < -1.e0_wp ) argd(in(ii)) = -1
                 ! End of corrections by EMN
                 delta(in(ii)) = acos(argd(in(ii)))-theta0(i,in(ii))
                 sum2          = sum2+delta(in(ii))**2
@@ -1284,29 +1312,30 @@ module chempotpy_c2h6cl_vbmm_pes
         subroutine opforce
             !  calculates the out-of-plane bending force constants
             !  and their derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: switch(8)
-            integer          :: i
+            real(wp) :: switch(8)
+            integer  :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
             !c call de venus
             !  calculate switching functions:
-            switch(1) = (1.0d0-s3(1))*s3(2)*s3(3)*s3(4)
-            switch(2) = (1.0d0-s3(2))*s3(3)*s3(4)*s3(1)
-            switch(3) = (1.0d0-s3(3))*s3(4)*s3(1)*s3(2)
-            switch(4) = (1.0d0-s3(4))*s3(1)*s3(2)*s3(3)
-            switch(5) = (1.0d0-s3(5))*s3(6)*s3(7)*s3(8)
-            switch(6) = (1.0d0-s3(6))*s3(7)*s3(8)*s3(5)
-            switch(7) = (1.0d0-s3(7))*s3(8)*s3(5)*s3(6)
-            switch(8) = (1.0d0-s3(8))*s3(5)*s3(6)*s3(7)
+            switch(1) = (1.0e0_wp-s3(1))*s3(2)*s3(3)*s3(4)
+            switch(2) = (1.0e0_wp-s3(2))*s3(3)*s3(4)*s3(1)
+            switch(3) = (1.0e0_wp-s3(3))*s3(4)*s3(1)*s3(2)
+            switch(4) = (1.0e0_wp-s3(4))*s3(1)*s3(2)*s3(3)
+            switch(5) = (1.0e0_wp-s3(5))*s3(6)*s3(7)*s3(8)
+            switch(6) = (1.0e0_wp-s3(6))*s3(7)*s3(8)*s3(5)
+            switch(7) = (1.0e0_wp-s3(7))*s3(8)*s3(5)*s3(6)
+            switch(8) = (1.0e0_wp-s3(8))*s3(5)*s3(6)*s3(7)
             !      do i=1,8
             !       write(*,*) 'switch',i,'=',switch(i)
             !      enddo
@@ -1322,16 +1351,17 @@ module chempotpy_c2h6cl_vbmm_pes
         subroutine ipforce
             !  calculates the symmetrised in plane bend force constants and
             !  all partial derivatives involving them
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a1, a2, arga1, arga2, f0, f2
-            integer          :: i
+            real(wp) :: a1, a2, arga1, arga2, f0, f2
+            integer  :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
@@ -1339,25 +1369,25 @@ module chempotpy_c2h6cl_vbmm_pes
             !  set force constant at asymptotes
             f0       = fkinf+ak
             f2       = fkinf
-            fk0(1,2) = f0+f0*(s1(1)*s1(2)-1.0d0)+(f0-f2)*(s2(3)*s2(4)-1.0d0)
-            fk0(1,3) = f0+f0*(s1(1)*s1(3)-1.0d0)+(f0-f2)*(s2(2)*s2(4)-1.0d0)
-            fk0(1,4) = f0+f0*(s1(1)*s1(4)-1.0d0)+(f0-f2)*(s2(2)*s2(3)-1.0d0)
-            fk0(2,3) = f0+f0*(s1(2)*s1(3)-1.0d0)+(f0-f2)*(s2(1)*s2(4)-1.0d0)
-            fk0(2,4) = f0+f0*(s1(2)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(3)-1.0d0)
-            fk0(3,4) = f0+f0*(s1(3)*s1(4)-1.0d0)+(f0-f2)*(s2(1)*s2(2)-1.0d0)
-            fk0(5,6) = f0+f0*(s1(5)*s1(6)-1.0d0)+(f0-f2)*(s2(7)*s2(8)-1.0d0)
-            fk0(5,7) = f0+f0*(s1(5)*s1(7)-1.0d0)+(f0-f2)*(s2(6)*s2(8)-1.0d0)
-            fk0(5,8) = f0+f0*(s1(5)*s1(8)-1.0d0)+(f0-f2)*(s2(6)*s2(7)-1.0d0)
-            fk0(6,7) = f0+f0*(s1(6)*s1(7)-1.0d0)+(f0-f2)*(s2(5)*s2(8)-1.0d0)
-            fk0(6,8) = f0+f0*(s1(6)*s1(8)-1.0d0)+(f0-f2)*(s2(5)*s2(7)-1.0d0)
-            fk0(7,8) = f0+f0*(s1(7)*s1(8)-1.0d0)+(f0-f2)*(s2(5)*s2(6)-1.0d0)
+            fk0(1,2) = f0+f0*(s1(1)*s1(2)-1.0e0_wp)+(f0-f2)*(s2(3)*s2(4)-1.0e0_wp)
+            fk0(1,3) = f0+f0*(s1(1)*s1(3)-1.0e0_wp)+(f0-f2)*(s2(2)*s2(4)-1.0e0_wp)
+            fk0(1,4) = f0+f0*(s1(1)*s1(4)-1.0e0_wp)+(f0-f2)*(s2(2)*s2(3)-1.0e0_wp)
+            fk0(2,3) = f0+f0*(s1(2)*s1(3)-1.0e0_wp)+(f0-f2)*(s2(1)*s2(4)-1.0e0_wp)
+            fk0(2,4) = f0+f0*(s1(2)*s1(4)-1.0e0_wp)+(f0-f2)*(s2(1)*s2(3)-1.0e0_wp)
+            fk0(3,4) = f0+f0*(s1(3)*s1(4)-1.0e0_wp)+(f0-f2)*(s2(1)*s2(2)-1.0e0_wp)
+            fk0(5,6) = f0+f0*(s1(5)*s1(6)-1.0e0_wp)+(f0-f2)*(s2(7)*s2(8)-1.0e0_wp)
+            fk0(5,7) = f0+f0*(s1(5)*s1(7)-1.0e0_wp)+(f0-f2)*(s2(6)*s2(8)-1.0e0_wp)
+            fk0(5,8) = f0+f0*(s1(5)*s1(8)-1.0e0_wp)+(f0-f2)*(s2(6)*s2(7)-1.0e0_wp)
+            fk0(6,7) = f0+f0*(s1(6)*s1(7)-1.0e0_wp)+(f0-f2)*(s2(5)*s2(8)-1.0e0_wp)
+            fk0(6,8) = f0+f0*(s1(6)*s1(8)-1.0e0_wp)+(f0-f2)*(s2(5)*s2(7)-1.0e0_wp)
+            fk0(7,8) = f0+f0*(s1(7)*s1(8)-1.0e0_wp)+(f0-f2)*(s2(5)*s2(6)-1.0e0_wp)
             ! f1 para los h del c1
             do i=1, 3
                 !  calc derivatives of fk0 wrt each of the rch(i) bonds
                 !  calculate the terms f1(i)
                 arga1 = aa1*rbh(i)*rbh(i)
                 arga2 = aa4*(rbh(i)-r0hh)*(rbh(i)-r0hh)
-                a1    = 1.0d0-exp(-arga1)
+                a1    = 1.0e0_wp-exp(-arga1)
                 a2    = aa2+aa3*exp(-arga2)
                 f1(i) = a1*exp(-a2*(rc1h(i)-r0c1h)**2)
             enddo
@@ -1376,7 +1406,7 @@ module chempotpy_c2h6cl_vbmm_pes
                 !  calculate the terms f1(i)
                 arga1 = aa1*rbh(i-1)*rbh(i-1)
                 arga2 = aa4*(rbh(i-1)-r0hh)*(rbh(i-1)-r0hh)
-                a1    = 1.0d0-exp(-arga1)
+                a1    = 1.0e0_wp-exp(-arga1)
                 a2    = aa2+aa3*exp(-arga2)
                 f1(i) = a1*exp(-a2*(rc2h(i-4)-r0c2h)**2)
             enddo
@@ -1394,16 +1424,17 @@ module chempotpy_c2h6cl_vbmm_pes
         subroutine switchf
             !  calculates switching functions: s3,sphi,stheta
             !  and their derivatives ds3,dsphi,dstheta
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: argmax, args1, args2, args3, argsc1, argsc2, argsc3, argsphi, argsphic, argstheta, argsthetac
-            integer          :: i
+            real(wp) :: argmax, args1, args2, args3, argsc1, argsc2, argsc3, argsphi, argsphic, argstheta, argsthetac
+            integer  :: i
             !      include 'c2h6cl.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
@@ -1419,22 +1450,22 @@ module chempotpy_c2h6cl_vbmm_pes
             !      b2s=-12.363798d0
             !  use double precision criterion:
             !  tanh(19.0d0)=1.0d0
-            argmax = 19.0d0
+            argmax = 19.0e0_wp
             !  calculate s1 and ds1
             do i=1, 3
                 args1 = a1s*(rc1h(i)-r0c1h)*(rc1h(i)-b1s)**8
                 if( args1 .lt. argmax )then
-                    s1(i) = 1.0d0-tanh(args1)
+                    s1(i) = 1.0e0_wp-tanh(args1)
                 else
-                    s1(i) = 0.0d0
+                    s1(i) = 0.0e0_wp
                 endif
             enddo
             do i=1, 3
                 args1 = a1s*(rc2h(i)-r0c2h)*(rc2h(i)-b1s)**8
                 if( args1 .lt. argmax )then
-                    s1(i+4) = 1.0d0-tanh(args1)
+                    s1(i+4) = 1.0e0_wp-tanh(args1)
                 else
-                    s1(i+4) = 0.0d0
+                    s1(i+4) = 0.0e0_wp
                 endif
             enddo
             ! CRD 2012 todos los S de los carbonos son 1
@@ -1442,27 +1473,27 @@ module chempotpy_c2h6cl_vbmm_pes
             !      s1(8)=1.0d0
             argsc1 = a1scc*(rcc-r0cc)*(rcc-b1scc)**8
             if( argsc1 .lt. argmax )then
-                s1(4) = 1.0d0-tanh(argsc1)
+                s1(4) = 1.0e0_wp-tanh(argsc1)
                 s1(8) = s1(4)
             else
-                s1(4) = 0.0d0
+                s1(4) = 0.0e0_wp
                 s1(8) = s1(4)
             endif
             !  calculate s2 and ds2
             do i=1, 3
                 args2 = a2s*(rc1h(i)-r0c1h)*(rc1h(i)-b2s)**6
                 if( args2 .lt. argmax )then
-                    s2(i) = 1.0d0-tanh(args2)
+                    s2(i) = 1.0e0_wp-tanh(args2)
                 else
-                    s2(i) = 0.0d0
+                    s2(i) = 0.0e0_wp
                 endif
             enddo
             do i=1, 3
                 args2 = a2s*(rc2h(i)-r0c2h)*(rc2h(i)-b2s)**6
                 if( args2 .lt. argmax )then
-                    s2(i+4) = 1.0d0-tanh(args2)
+                    s2(i+4) = 1.0e0_wp-tanh(args2)
                 else
-                    s2(i+4) = 0.0d0
+                    s2(i+4) = 0.0e0_wp
                 endif
             enddo
             ! CRD 2005 s2(4)for the new atom
@@ -1471,27 +1502,27 @@ module chempotpy_c2h6cl_vbmm_pes
             !      s2(8)=1.0d0
             argsc2 = a2scc*(rcc-r0cc)*(rcc-b2scc)**6
             if( argsc2 .lt. argmax )then
-                s2(4) = 1.0d0-tanh(argsc2)
+                s2(4) = 1.0e0_wp-tanh(argsc2)
                 s2(8) = s2(4)
             else
-                s2(4) = 0.0d0
+                s2(4) = 0.0e0_wp
                 s2(8) = s2(4)
             endif
             !  calculate s3 and ds3
             do i=1, 3
                 args3 = a3s*(rc1h(i)-r0c1h)*(rc1h(i)-b3s)**2
                 if( args3 .lt. argmax )then
-                    s3(i) = 1.0d0-tanh(args3)
+                    s3(i) = 1.0e0_wp-tanh(args3)
                 else
-                    s3(i) = 0.0d0
+                    s3(i) = 0.0e0_wp
                 endif
             enddo
             do i=1, 3
                 args3 = a3s*(rc2h(i)-r0c2h)*(rc2h(i)-b3s)**2
                 if( args3 .lt. argmax )then
-                    s3(i+4) = 1.0d0-tanh(args3)
+                    s3(i+4) = 1.0e0_wp-tanh(args3)
                 else
-                    s3(i+4) = 0.0d0
+                    s3(i+4) = 0.0e0_wp
                 endif
             enddo
             ! CRD 2005 s3(4) for the new atom
@@ -1500,72 +1531,72 @@ module chempotpy_c2h6cl_vbmm_pes
             !      s3(8)=1.0d0
             argsc3 = a3scc*(rcc-r0cc)*(rcc-b3scc)**2
             if( argsc3 .lt. argmax )then
-                s3(4) = 1.0d0-tanh(argsc3)
+                s3(4) = 1.0e0_wp-tanh(argsc3)
                 s3(8) = s3(4)
             else
-                s3(4) = 0.0d0
+                s3(4) = 0.0e0_wp
                 s3(8) = s3(4)
             endif
             ! JEG 2019
-            s3(4) = 1.0d0
-            s3(8) = 1.0d0
+            s3(4) = 1.0e0_wp
+            s3(8) = 1.0e0_wp
             ! JEG 2019 No hay cambios en las k(T) !!
             !  calculate sphi and dsphi
             !  condition here is on the bondlength rch(i)
             !  st argsphi is lt approx 19.0d0
             do i=1, 3
-                if( rc1h(i) .lt. 3.8d0 )then
+                if( rc1h(i) .lt. 3.8e0_wp )then
                     argsphi = aphi*(rc1h(i)-r0c1h)*exp(bphi*(rc1h(i)-cphi)**3)
-                    sphi(i) = 1.0d0-tanh(argsphi)
+                    sphi(i) = 1.0e0_wp-tanh(argsphi)
                 else
-                    sphi(i) = 0.0d0
+                    sphi(i) = 0.0e0_wp
                 endif
             enddo
             do i=1, 3
-                if( rc2h(i) .lt. 3.8d0 )then
+                if( rc2h(i) .lt. 3.8e0_wp )then
                     argsphi   = aphi*(rc2h(i)-r0c2h)*exp(bphi*(rc2h(i)-cphi)**3)
-                    sphi(i+4) = 1.0d0-tanh(argsphi)
+                    sphi(i+4) = 1.0e0_wp-tanh(argsphi)
                 else
-                    sphi(i+4) = 0.0d0
+                    sphi(i+4) = 0.0e0_wp
                 endif
             enddo
             ! CRD 2012 todos los S de los carbonos son 1
             !      sphi(4)=1.0d0
             !      sphi(8)=1.0d0
-            if( rcc .lt. 3.8d0 )then
+            if( rcc .lt. 3.8e0_wp )then
                 argsphic = aphi*(rcc-r0cc)*exp(bphi*(rcc-cphi)**3)
-                sphi(4)  = 1.0d0-tanh(argsphic)
+                sphi(4)  = 1.0e0_wp-tanh(argsphic)
                 sphi(8)  = sphi(4)
             else
-                sphi(4) = 0.0d0
+                sphi(4) = 0.0e0_wp
                 sphi(8) = sphi(4)
             endif
             !  calculate stheta and dstheta
             do i=1, 3
-                if( rc1h(i) .lt. 3.8d0 )then
+                if( rc1h(i) .lt. 3.8e0_wp )then
                     argstheta = atheta*(rc1h(i)-r0c1h)*exp(btheta*(rc1h(i)-ctheta)**3)
-                    stheta(i) = 1.0d0-tanh(argstheta)
+                    stheta(i) = 1.0e0_wp-tanh(argstheta)
                 else
-                    stheta(i) = 0.0d0
+                    stheta(i) = 0.0e0_wp
                 endif
             enddo
             do i=1, 3
-                if( rc2h(i) .lt. 3.8d0 )then
+                if( rc2h(i) .lt. 3.8e0_wp )then
                     argstheta   = atheta*(rc2h(i)-r0c2h)*exp(btheta*(rc2h(i)-ctheta)**3)
-                    stheta(i+4) = 1.0d0-tanh(argstheta)
+                    stheta(i+4) = 1.0e0_wp-tanh(argstheta)
                 else
-                    stheta(i+4) = 0.0d0
+                    stheta(i+4) = 0.0e0_wp
                 endif
             enddo
             ! CRD 2012 todos los S de los carbonos son 1
             !      stheta(4)=1.0d0
             !      stheta(8)=1.0d0
-            if( rcc .lt. 3.8d0 )then
+            if( rcc .lt. 3.8e0_wp )then
                 argsthetac = atheta*(rcc-r0cc)*exp(btheta*(rcc-ctheta)**3)
-                stheta(4)  = 1.0d0-tanh(argsthetac)
+                stheta(4)  = 1.0e0_wp-tanh(argsthetac)
                 stheta(8)  = stheta(4)
             else
-                stheta(4) = 0.0d0
+                stheta(4) = 0.0e0_wp
                 stheta(8) = stheta(4)
             endif
         end subroutine switchf
@@ -1579,16 +1610,17 @@ module chempotpy_c2h6cl_vbmm_pes
             !   coordinates needed to represent the full system represented by this
             !   potential energy surface routine.
             !   N3TM must be greater than or equal to N3TMMN.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: d1bc, d3bc, fact1, fact2, vdwc2
-            integer          :: i, icount, ind
+            real(wp) :: d1bc, d3bc, fact1, fact2, vdwc2
+            integer  :: i, icount, ind
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: n3tmmn = 27
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: n3tmmn = 27
             !c include CONST
             !c  include file for C2H6+H PES
             !      common /bonds/ r0ch
@@ -1635,8 +1667,8 @@ module chempotpy_c2h6cl_vbmm_pes
             !  distance in 1.0d-10 m
             !  angles   in radians
             !  mass     in amu
-            fact1 = 0.041840d0
-            fact2 = 6.022045d0
+            fact1 = 0.041840e0_wp
+            fact2 = 6.022045e0_wp
             d1ch  = d1ch*fact1
             d3ch  = d3ch*fact1
             d1c1h = d1c1h*fact1
@@ -1655,22 +1687,23 @@ module chempotpy_c2h6cl_vbmm_pes
             hch3  = hch3*fact2
             fkinf = fkinf*fact2
             ak    = ak*fact2
-            a1s   = a1s*1.d-8
-            a2s   = a2s*1.d-8
-            a1scc = a1scc*1.d-8
-            a2scc = a2scc*1.d-8
-            vdwc2 = vdwc2*1.d+4
+            a1s   = a1s*1.e-8_wp
+            a2s   = a2s*1.e-8_wp
+            a1scc = a1scc*1.e-8_wp
+            a2scc = a2scc*1.e-8_wp
+            vdwc2 = vdwc2*1.e+4_wp
         end subroutine prepare_local_context
 
         !> @brief Evaluate POTINFO for the C2H6Cl_VBMM potential.
         subroutine potinfo
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i, j, k, kmax
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
+            integer             :: i, j, k, kmax
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             write(nflag(18), '(/)')
             do i =1, 5
                 write(nflag(18), '(2x,a75)') ref(i)
@@ -1758,34 +1791,35 @@ module chempotpy_c2h6cl_vbmm_pes
 
         !> @brief Evaluate ANCVRT for the C2H6Cl_VBMM potential.
         subroutine ancvrt
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi         = 3.141592653589793d0
-            double precision, parameter :: clight     = 2.99792458d08
-            double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
-            double precision, parameter :: cepsilon_0 = 1.0d0/(cmu_0*clight**2)
-            double precision, parameter :: ce         = 1.602176462d-19
-            double precision, parameter :: cplanck    = 6.62606876d-34
-            double precision, parameter :: cm_e       = 9.10938188d-31
-            double precision, parameter :: cang       = 1.0d-10
-            double precision, parameter :: cavogadro  = 6.02214199d23
-            double precision, parameter :: ckcal      = 4.184d10
-            double precision, parameter :: htomillh   = 1000.d0
-            double precision, parameter :: htoev      = 27.2113834d0
-            double precision, parameter :: htokcal    = 627.509470d0
-            double precision, parameter :: htowave    = 219474.631d0
-            double precision, parameter :: htokj      = 2625.49962d0
-            double precision, parameter :: bohr_a     = .5291772083d0
-            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
-            character(len=3)   :: periodic_1(7,32)
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
+            integer, parameter  :: n3atom     = 75
+            integer, parameter  :: natom      = 25
+            integer, parameter  :: isurf      = 5
+            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
+            real(wp), parameter :: pi         = 3.141592653589793e0_wp
+            real(wp), parameter :: clight     = 2.99792458e08_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
+            real(wp), parameter :: ce         = 1.602176462e-19_wp
+            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
+            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
+            real(wp), parameter :: cang       = 1.0e-10_wp
+            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
+            real(wp), parameter :: ckcal      = 4.184e10_wp
+            real(wp), parameter :: htomillh   = 1000.e0_wp
+            real(wp), parameter :: htoev      = 27.2113834e0_wp
+            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htowave    = 219474.631e0_wp
+            real(wp), parameter :: htokj      = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)    :: periodic_1(7,32)
+            character(len=2)    :: name1(natom)
+            character(len=2)    :: name2(natom)
+            character(len=1)    :: iblank
+            character(len=20)   :: distance
+            character(len=20)   :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -2010,9 +2044,9 @@ module chempotpy_c2h6cl_vbmm_pes
             elseif( nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
-            cnvrtd  = 1.d0
-            cnvrte  = 1.d0
-            cnvrtde = 1.d0
+            cnvrtd  = 1.e0_wp
+            cnvrte  = 1.e0_wp
+            cnvrtde = 1.e0_wp
             if( nflag(1) .eq. 2 ) cnvrtd = bohr_a
             if( nflag(2) .eq. 2 )then
                 cnvrte = cnvrte*htomillh
@@ -2037,6 +2071,7 @@ module chempotpy_c2h6cl_vbmm_pes
         !> @brief Evaluate CARTOU for the C2H6Cl_VBMM potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: i, j
             integer, parameter :: n3atom = 75
@@ -2049,9 +2084,10 @@ module chempotpy_c2h6cl_vbmm_pes
         !> @brief Evaluate CARTTOR for the C2H6Cl_VBMM potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: coordinate_status
-            double precision   :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
+            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
             integer            :: i, ind, k, l
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
@@ -2065,6 +2101,7 @@ module chempotpy_c2h6cl_vbmm_pes
 
         !> @brief Evaluate EUNITZERO for the C2H6Cl_VBMM potential.
         subroutine eunitzero
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j
             character(len=75)  :: ref(5)
@@ -2087,15 +2124,16 @@ module chempotpy_c2h6cl_vbmm_pes
 
         !> @brief Evaluate RTOCART for the C2H6Cl_VBMM potential.
         subroutine rtocart
+            use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
-                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
-                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
+            real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom, isurf), &
+                & ygs(n3atom), yij(n3atom, jsurf), za, zb, zc, zd
+            integer :: i, ind, j, j1, j2, k, m1
             if( icartr .eq. 1 )then
                 do i = 1, legacy_natoms
                     ind            = 3*i-2
@@ -2119,21 +2157,21 @@ module chempotpy_c2h6cl_vbmm_pes
                 enddo
             elseif( icartr .eq. 2 )then
                 do i = 1, legacy_natoms
-                    dgscartnu(i,1) = 0.d0
-                    dgscartnu(i,2) = 0.d0
-                    dgscartnu(i,3) = 0.d0
+                    dgscartnu(i,1) = 0.e0_wp
+                    dgscartnu(i,2) = 0.e0_wp
+                    dgscartnu(i,3) = 0.e0_wp
                     if( ksdiag .ne. 0 )then
                         do j1=ksdiag, kediag
-                            descartnu(i,1,j1) = 0.d0
-                            descartnu(i,2,j1) = 0.d0
-                            descartnu(i,3,j1) = 0.d0
+                            descartnu(i,1,j1) = 0.e0_wp
+                            descartnu(i,2,j1) = 0.e0_wp
+                            descartnu(i,3,j1) = 0.e0_wp
                         enddo
                     endif
                     if( ksoffd .ne. 0 )then
                         do j2=ksoffd, keoffd
-                            dijcartnu(i,1,j2) = 0.d0
-                            dijcartnu(i,2,j2) = 0.d0
-                            dijcartnu(i,3,j2) = 0.d0
+                            dijcartnu(i,1,j2) = 0.e0_wp
+                            dijcartnu(i,2,j2) = 0.e0_wp
+                            dijcartnu(i,3,j2) = 0.e0_wp
                         enddo
                     endif
                     do j = 1, legacy_natoms
@@ -2173,12 +2211,12 @@ module chempotpy_c2h6cl_vbmm_pes
                     ygs(i) = degsdr(i)/r(i)
                     if( ksdiag .ne. 0 )then
                         do j=ksdiag, kediag
-                            yes(i,j) = deesdr(i,j)/r(i)
+                            yes(i, j) = deesdr(i,j)/r(i)
                         enddo
                     endif
                     if( ksoffd .ne. 0 )then
                         do k=ksoffd, keoffd
-                            yij(i,k) = deijdr(i,k)/r(i)
+                            yij(i, k) = deijdr(i,k)/r(i)
                         enddo
                     endif
                 enddo
@@ -2191,22 +2229,22 @@ module chempotpy_c2h6cl_vbmm_pes
                     dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
                     if( ksdiag .ne. 0 )then
                         do j1=ksdiag, kediag
-                            descartnu(1,k,j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                            descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                            descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                            descartnu(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
+                            descartnu(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
+                            descartnu(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
                         enddo
                     endif
                     if( ksoffd .ne. 0 )then
                         do j2=ksoffd, keoffd
-                            dijcartnu(1,k,j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                            dijcartnu(2,k,j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                            dijcartnu(3,k,j2) = -term13*yij(3,j2) - term23*yij(2,j2)
+                            dijcartnu(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
+                            dijcartnu(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
+                            dijcartnu(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
                         enddo
                     endif
                 enddo
             elseif( icartr .eq. 4 )then
-                wh   = 1.007825d0
-                wf   = 18.99840d0
+                wh   = 1.007825e0_wp
+                wf   = 18.99840e0_wp
                 sum  = wh+wf
                 eps  = wf/sum
                 epsp = wh/sum
@@ -2216,8 +2254,8 @@ module chempotpy_c2h6cl_vbmm_pes
                 ss1  = sin(theta1)
                 ss2  = sin(theta2)
                 ss3  = sin(phi)
-                ya   = 0.0d0
-                yb   = 0.0d0
+                ya   = 0.0e0_wp
+                yb   = 0.0e0_wp
                 t0   = r1*u1
                 za   = -epsp*t0
                 zb   = eps*t0
@@ -2243,6 +2281,7 @@ module chempotpy_c2h6cl_vbmm_pes
 
         !> @brief Evaluate DEDCOU for the C2H6Cl_VBMM potential.
         subroutine dedcou
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k
             integer, parameter :: n3atom = 75
@@ -2297,13 +2336,14 @@ end module chempotpy_c2h6cl_vbmm_pes
 !> @brief Expose C2H6Cl_VBMM through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_c2h6cl_vbmm_pes, only: evaluate
+    use chempotpy_kinds,           only: wp
     implicit none
-    integer, parameter            :: natoms  = 9
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 9
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

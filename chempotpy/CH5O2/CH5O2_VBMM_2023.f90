@@ -18,6 +18,7 @@
 
 !> @brief Implement CH5O2_VBMM_2023, a potential energy surface for CH5O2.
 module chempotpy_ch5o2_vbmm_2023_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -26,397 +27,398 @@ module chempotpy_ch5o2_vbmm_2023_pes
 
     !> @brief Evaluate the CH5O2_VBMM_2023 potential energy surface for CH5O2.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
+        use chempotpy_units, only: hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 8
-        integer, parameter            :: natom   = 25
-        integer, parameter            :: isurf   = 5
-        integer, parameter            :: jsurf   = int(isurf*(isurf+1)/2)
-        integer, parameter            :: n3atom  = 75
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        integer                       :: coord2_n1h(3,3)
-        integer                       :: coord2_n2h(1,3)
-        integer                       :: coord2_nc(3)
-        integer                       :: coord2_nc1(3)
-        integer                       :: coord2_nc2(3)
-        integer                       :: coord2_nhb(3)
-        double precision              :: coord3_tc1b(3)
-        double precision              :: coord3_tc2b(3)
-        double precision              :: coord3_tcc(3)
-        double precision              :: coord4_tb1h(3,3)
-        double precision              :: coord4_tb2h(1,3)
-        double precision              :: coord4_tc1h(3,3)
-        double precision              :: coord4_tc2h(1,3)
-        double precision              :: coord5_rb1h(3)
-        double precision              :: coord5_rb2h(1)
-        double precision              :: coord5_rc1b
-        double precision              :: coord5_rc1h(3)
-        double precision              :: coord5_rc2b
-        double precision              :: coord5_rc2h(1)
-        double precision              :: coord5_rcc
-        double precision              :: coord6_r0c1h
-        double precision              :: coord6_r0c2h
-        double precision              :: coord6_r0cc
-        double precision              :: infocm_cartnu(natom,3)
-        integer                       :: infocm_icartr
-        integer                       :: infocm_indexes(natom)
-        integer                       :: infocm_irctnt
-        integer                       :: infocm_mder
-        integer                       :: infocm_msurf
-        integer                       :: infocm_natoms
-        character                     :: infocm_ref(5)
-        double precision              :: ipforce1_f1(6)
-        double precision              :: ipforce1_fk0(6,6)
-        double precision              :: newh2o_ahh
-        double precision              :: newh2o_alph2o
-        double precision              :: newh2o_angh2o(4)
-        double precision              :: newh2o_angh2oeq
-        double precision              :: newh2o_d1hh
-        double precision              :: newh2o_d3hh
-        double precision              :: newh2o_ded(3)
-        double precision              :: newh2o_dedhi(3)
-        double precision              :: newh2o_dedho(3)
-        double precision              :: newh2o_dedo(3)
-        double precision              :: newh2o_dkdr(4)
-        double precision              :: newh2o_dkdx(4,3)
-        double precision              :: newh2o_fkh2o(4)
-        double precision              :: newh2o_fkh2oeq
-        integer                       :: newh2o_nno
-        integer                       :: newh2o_no(3)
-        double precision              :: newh2o_r0hh
-        double precision              :: newh2o_rno
-        double precision              :: newh2o_tno(3)
-        double precision              :: newvdw_roh
-        double precision              :: newvdw_toh(3)
-        integer                       :: potcm2_nc1h(3)
-        integer                       :: potcm2_nc2h(1)
-        double precision              :: potcm_a1c
-        double precision              :: potcm_a1c1h
-        double precision              :: potcm_a1c2h
-        double precision              :: potcm_a1s1
-        double precision              :: potcm_a1s2
-        double precision              :: potcm_a1scc
-        double precision              :: potcm_a2c
-        double precision              :: potcm_a2s1
-        double precision              :: potcm_a2s2
-        double precision              :: potcm_a2scc
-        double precision              :: potcm_a3s
-        double precision              :: potcm_a3scc
-        double precision              :: potcm_aa11
-        double precision              :: potcm_aa12
-        double precision              :: potcm_aa21
-        double precision              :: potcm_aa22
-        double precision              :: potcm_aa31
-        double precision              :: potcm_aa32
-        double precision              :: potcm_aa41
-        double precision              :: potcm_aa42
-        double precision              :: potcm_ac1b
-        double precision              :: potcm_ac2b
-        double precision              :: potcm_acc
-        double precision              :: potcm_ah1h
-        double precision              :: potcm_ah2h
-        double precision              :: potcm_ak1
-        double precision              :: potcm_aphi
-        double precision              :: potcm_aphi1
-        double precision              :: potcm_aphi2
-        double precision              :: potcm_atheta
-        double precision              :: potcm_athetacc
-        double precision              :: potcm_b1c1h
-        double precision              :: potcm_b1c2h
-        double precision              :: potcm_b1s1
-        double precision              :: potcm_b1s2
-        double precision              :: potcm_b1scc
-        double precision              :: potcm_b2s1
-        double precision              :: potcm_b2s2
-        double precision              :: potcm_b2scc
-        double precision              :: potcm_b3s
-        double precision              :: potcm_b3scc
-        double precision              :: potcm_bphi
-        double precision              :: potcm_bphi1
-        double precision              :: potcm_bphi2
-        double precision              :: potcm_btheta
-        double precision              :: potcm_bthetacc
-        double precision              :: potcm_c1c1h
-        double precision              :: potcm_c1c2h
-        double precision              :: potcm_cphi
-        double precision              :: potcm_cphi1
-        double precision              :: potcm_cphi2
-        double precision              :: potcm_ctheta
-        double precision              :: potcm_cthetacc
-        double precision              :: potcm_d1c1b
-        double precision              :: potcm_d1c1h
-        double precision              :: potcm_d1c2b
-        double precision              :: potcm_d1c2h
-        double precision              :: potcm_d1cc
-        double precision              :: potcm_d1h1h
-        double precision              :: potcm_d1h2h
-        double precision              :: potcm_d3c1b
-        double precision              :: potcm_d3c1h
-        double precision              :: potcm_d3c2b
-        double precision              :: potcm_d3c2h
-        double precision              :: potcm_d3h1h
-        double precision              :: potcm_d3h2h
-        double precision              :: potcm_fch3
-        double precision              :: potcm_fkinf1
-        double precision              :: potcm_fkinf2
-        double precision              :: potcm_hch3
-        integer                       :: potcm_nnb
-        integer                       :: potcm_nnc1
-        integer                       :: potcm_nnc2
-        double precision              :: potcm_r0c1b
-        double precision              :: potcm_r0c1hp
-        double precision              :: potcm_r0c1hr
-        double precision              :: potcm_r0c2b
-        double precision              :: potcm_r0c2hp
-        double precision              :: potcm_r0c2hr
-        double precision              :: potcm_r0ccp
-        double precision              :: potcm_r0ccr
-        double precision              :: potcm_r0h1h
-        double precision              :: potcm_r0h2h
-        double precision              :: potcm_v3
-        double precision              :: potcm_vdwc1
-        double precision              :: potcm_vdwc2
-        double precision              :: potcm_vdwe
-        double precision              :: potcm_vdwr
-        double precision              :: potcm_w1
-        double precision              :: potcm_w10
-        double precision              :: potcm_w2
-        double precision              :: potcm_w3
-        double precision              :: potcm_w4
-        double precision              :: potcm_w5
-        double precision              :: potcm_w6
-        double precision              :: potcm_w7
-        double precision              :: potcm_w8
-        double precision              :: potcm_w9
-        double precision              :: pt1cm_degsdr(n3atom)
-        double precision              :: pt1cm_engygs
-        double precision              :: pt1cm_r(n3atom)
-        double precision              :: pt3cm_ezero(isurf+1)
-        double precision              :: pt4cm_deesdr(n3atom,isurf)
-        double precision              :: pt4cm_engyes(isurf)
-        double precision              :: pt5cm_deijdr(n3atom,jsurf)
-        double precision              :: pt5cm_engyij(jsurf)
-        double precision              :: qpdot_pdot(27)
-        double precision              :: qpdot_q(27)
-        double precision              :: refangles1_sphi(6)
-        double precision              :: refangles1_stheta(6)
-        double precision              :: refangles1_theta0(6,6)
-        double precision              :: switch1_s1(6)
-        double precision              :: switch1_s2(6)
-        double precision              :: switch1_s3(4)
-        double precision              :: torsion1_t2
-        double precision              :: torsion1_thetahcch(3)
-        double precision              :: usricm_anuzero
-        double precision              :: usricm_cart(natom,3)
-        integer                       :: usricm_nasurf(isurf+1,isurf+1)
-        integer                       :: usricm_nder
-        integer                       :: usricm_nflag(20)
-        integer                       :: usricm_nulbl(natom)
-        double precision              :: usrocm_descart(natom,3,isurf)
-        double precision              :: usrocm_dgscart(natom,3)
-        double precision              :: usrocm_dijcart(natom,3,jsurf)
-        double precision              :: usrocm_pengyes(isurf)
-        double precision              :: usrocm_pengygs
-        double precision              :: usrocm_pengyij(jsurf)
-        double precision              :: utilcm_cnvrtd
-        double precision              :: utilcm_cnvrtde
-        double precision              :: utilcm_cnvrte
-        double precision              :: utilcm_descartnu(natom,3,isurf)
-        double precision              :: utilcm_dgscartnu(natom,3)
-        double precision              :: utilcm_dijcartnu(natom,3,jsurf)
-        integer                       :: utilcm_ireorder
-        integer                       :: utilcm_kediag
-        integer                       :: utilcm_keoffd
-        integer                       :: utilcm_ksdiag
-        integer                       :: utilcm_ksoffd
-        double precision              :: vop6_fdelta(4)
-        double precision              :: vop6_hdelta(4)
-        double precision              :: v
-        integer                       :: iatom, idir, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 8
+        integer, parameter    :: natom   = 25
+        integer, parameter    :: isurf   = 5
+        integer, parameter    :: jsurf   = int(isurf*(isurf+1)/2)
+        integer, parameter    :: n3atom  = 75
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        integer               :: coord2_n1h(3,3)
+        integer               :: coord2_n2h(1,3)
+        integer               :: coord2_nc(3)
+        integer               :: coord2_nc1(3)
+        integer               :: coord2_nc2(3)
+        integer               :: coord2_nhb(3)
+        real(wp)              :: coord3_tc1b(3)
+        real(wp)              :: coord3_tc2b(3)
+        real(wp)              :: coord3_tcc(3)
+        real(wp)              :: coord4_tb1h(3,3)
+        real(wp)              :: coord4_tb2h(1,3)
+        real(wp)              :: coord4_tc1h(3,3)
+        real(wp)              :: coord4_tc2h(1,3)
+        real(wp)              :: coord5_rb1h(3)
+        real(wp)              :: coord5_rb2h(1)
+        real(wp)              :: coord5_rc1b
+        real(wp)              :: coord5_rc1h(3)
+        real(wp)              :: coord5_rc2b
+        real(wp)              :: coord5_rc2h(1)
+        real(wp)              :: coord5_rcc
+        real(wp)              :: coord6_r0c1h
+        real(wp)              :: coord6_r0c2h
+        real(wp)              :: coord6_r0cc
+        real(wp)              :: infocm_cartnu(natom,3)
+        integer               :: infocm_icartr
+        integer               :: infocm_indexes(natom)
+        integer               :: infocm_irctnt
+        integer               :: infocm_mder
+        integer               :: infocm_msurf
+        integer               :: infocm_natoms
+        character             :: infocm_ref(5)
+        real(wp)              :: ipforce1_f1(6)
+        real(wp)              :: ipforce1_fk0(6,6)
+        real(wp)              :: newh2o_ahh
+        real(wp)              :: newh2o_alph2o
+        real(wp)              :: newh2o_angh2o(4)
+        real(wp)              :: newh2o_angh2oeq
+        real(wp)              :: newh2o_d1hh
+        real(wp)              :: newh2o_d3hh
+        real(wp)              :: newh2o_ded(3)
+        real(wp)              :: newh2o_dedhi(3)
+        real(wp)              :: newh2o_dedho(3)
+        real(wp)              :: newh2o_dedo(3)
+        real(wp)              :: newh2o_dkdr(4)
+        real(wp)              :: newh2o_dkdx(4,3)
+        real(wp)              :: newh2o_fkh2o(4)
+        real(wp)              :: newh2o_fkh2oeq
+        integer               :: newh2o_nno
+        integer               :: newh2o_no(3)
+        real(wp)              :: newh2o_r0hh
+        real(wp)              :: newh2o_rno
+        real(wp)              :: newh2o_tno(3)
+        real(wp)              :: newvdw_roh
+        real(wp)              :: newvdw_toh(3)
+        integer               :: potcm2_nc1h(3)
+        integer               :: potcm2_nc2h(1)
+        real(wp)              :: potcm_a1c
+        real(wp)              :: potcm_a1c1h
+        real(wp)              :: potcm_a1c2h
+        real(wp)              :: potcm_a1s1
+        real(wp)              :: potcm_a1s2
+        real(wp)              :: potcm_a1scc
+        real(wp)              :: potcm_a2c
+        real(wp)              :: potcm_a2s1
+        real(wp)              :: potcm_a2s2
+        real(wp)              :: potcm_a2scc
+        real(wp)              :: potcm_a3s
+        real(wp)              :: potcm_a3scc
+        real(wp)              :: potcm_aa11
+        real(wp)              :: potcm_aa12
+        real(wp)              :: potcm_aa21
+        real(wp)              :: potcm_aa22
+        real(wp)              :: potcm_aa31
+        real(wp)              :: potcm_aa32
+        real(wp)              :: potcm_aa41
+        real(wp)              :: potcm_aa42
+        real(wp)              :: potcm_ac1b
+        real(wp)              :: potcm_ac2b
+        real(wp)              :: potcm_acc
+        real(wp)              :: potcm_ah1h
+        real(wp)              :: potcm_ah2h
+        real(wp)              :: potcm_ak1
+        real(wp)              :: potcm_aphi
+        real(wp)              :: potcm_aphi1
+        real(wp)              :: potcm_aphi2
+        real(wp)              :: potcm_atheta
+        real(wp)              :: potcm_athetacc
+        real(wp)              :: potcm_b1c1h
+        real(wp)              :: potcm_b1c2h
+        real(wp)              :: potcm_b1s1
+        real(wp)              :: potcm_b1s2
+        real(wp)              :: potcm_b1scc
+        real(wp)              :: potcm_b2s1
+        real(wp)              :: potcm_b2s2
+        real(wp)              :: potcm_b2scc
+        real(wp)              :: potcm_b3s
+        real(wp)              :: potcm_b3scc
+        real(wp)              :: potcm_bphi
+        real(wp)              :: potcm_bphi1
+        real(wp)              :: potcm_bphi2
+        real(wp)              :: potcm_btheta
+        real(wp)              :: potcm_bthetacc
+        real(wp)              :: potcm_c1c1h
+        real(wp)              :: potcm_c1c2h
+        real(wp)              :: potcm_cphi
+        real(wp)              :: potcm_cphi1
+        real(wp)              :: potcm_cphi2
+        real(wp)              :: potcm_ctheta
+        real(wp)              :: potcm_cthetacc
+        real(wp)              :: potcm_d1c1b
+        real(wp)              :: potcm_d1c1h
+        real(wp)              :: potcm_d1c2b
+        real(wp)              :: potcm_d1c2h
+        real(wp)              :: potcm_d1cc
+        real(wp)              :: potcm_d1h1h
+        real(wp)              :: potcm_d1h2h
+        real(wp)              :: potcm_d3c1b
+        real(wp)              :: potcm_d3c1h
+        real(wp)              :: potcm_d3c2b
+        real(wp)              :: potcm_d3c2h
+        real(wp)              :: potcm_d3h1h
+        real(wp)              :: potcm_d3h2h
+        real(wp)              :: potcm_fch3
+        real(wp)              :: potcm_fkinf1
+        real(wp)              :: potcm_fkinf2
+        real(wp)              :: potcm_hch3
+        integer               :: potcm_nnb
+        integer               :: potcm_nnc1
+        integer               :: potcm_nnc2
+        real(wp)              :: potcm_r0c1b
+        real(wp)              :: potcm_r0c1hp
+        real(wp)              :: potcm_r0c1hr
+        real(wp)              :: potcm_r0c2b
+        real(wp)              :: potcm_r0c2hp
+        real(wp)              :: potcm_r0c2hr
+        real(wp)              :: potcm_r0ccp
+        real(wp)              :: potcm_r0ccr
+        real(wp)              :: potcm_r0h1h
+        real(wp)              :: potcm_r0h2h
+        real(wp)              :: potcm_v3
+        real(wp)              :: potcm_vdwc1
+        real(wp)              :: potcm_vdwc2
+        real(wp)              :: potcm_vdwe
+        real(wp)              :: potcm_vdwr
+        real(wp)              :: potcm_w1
+        real(wp)              :: potcm_w10
+        real(wp)              :: potcm_w2
+        real(wp)              :: potcm_w3
+        real(wp)              :: potcm_w4
+        real(wp)              :: potcm_w5
+        real(wp)              :: potcm_w6
+        real(wp)              :: potcm_w7
+        real(wp)              :: potcm_w8
+        real(wp)              :: potcm_w9
+        real(wp)              :: pt1cm_degsdr(n3atom)
+        real(wp)              :: pt1cm_engygs
+        real(wp)              :: pt1cm_r(n3atom)
+        real(wp)              :: pt3cm_ezero(isurf+1)
+        real(wp)              :: pt4cm_deesdr(n3atom,isurf)
+        real(wp)              :: pt4cm_engyes(isurf)
+        real(wp)              :: pt5cm_deijdr(n3atom,jsurf)
+        real(wp)              :: pt5cm_engyij(jsurf)
+        real(wp)              :: qpdot_pdot(27)
+        real(wp)              :: qpdot_q(27)
+        real(wp)              :: refangles1_sphi(6)
+        real(wp)              :: refangles1_stheta(6)
+        real(wp)              :: refangles1_theta0(6,6)
+        real(wp)              :: switch1_s1(6)
+        real(wp)              :: switch1_s2(6)
+        real(wp)              :: switch1_s3(4)
+        real(wp)              :: torsion1_t2
+        real(wp)              :: torsion1_thetahcch(3)
+        real(wp)              :: usricm_anuzero
+        real(wp)              :: usricm_cart(natom,3)
+        integer               :: usricm_nasurf(isurf+1,isurf+1)
+        integer               :: usricm_nder
+        integer               :: usricm_nflag(20)
+        integer               :: usricm_nulbl(natom)
+        real(wp)              :: usrocm_descart(natom,3,isurf)
+        real(wp)              :: usrocm_dgscart(natom,3)
+        real(wp)              :: usrocm_dijcart(natom,3,jsurf)
+        real(wp)              :: usrocm_pengyes(isurf)
+        real(wp)              :: usrocm_pengygs
+        real(wp)              :: usrocm_pengyij(jsurf)
+        real(wp)              :: utilcm_cnvrtd
+        real(wp)              :: utilcm_cnvrtde
+        real(wp)              :: utilcm_cnvrte
+        real(wp)              :: utilcm_descartnu(natom,3,isurf)
+        real(wp)              :: utilcm_dgscartnu(natom,3)
+        real(wp)              :: utilcm_dijcartnu(natom,3,jsurf)
+        integer               :: utilcm_ireorder
+        integer               :: utilcm_kediag
+        integer               :: utilcm_keoffd
+        integer               :: utilcm_ksdiag
+        integer               :: utilcm_ksoffd
+        real(wp)              :: vop6_fdelta(4)
+        real(wp)              :: vop6_hdelta(4)
+        real(wp)              :: v
+        integer               :: iatom, idir, istate
         !initialize
         coord2_n1h         = 0; coord2_n2h = 0; coord2_nc = 0; coord2_nc1 = 0; coord2_nc2 = 0; coord2_nhb = 0
-        coord3_tc1b        = 0.d0; coord3_tc2b = 0.d0; coord3_tcc = 0.d0; coord4_tb1h = 0.d0; coord4_tb2h = 0.d0
-        coord4_tc1h        = 0.d0; coord4_tc2h = 0.d0; coord5_rb1h = 0.d0; coord5_rb2h = 0.d0; coord5_rc1b = 0.d0
-        coord5_rc1h        = 0.d0; coord5_rc2b = 0.d0; coord5_rc2h = 0.d0; coord5_rcc = 0.d0; coord6_r0c1h = 0.d0
-        coord6_r0c2h       = 0.d0; coord6_r0cc = 0.d0; infocm_cartnu = 0.d0; infocm_icartr = 0; infocm_indexes = 0
+        coord3_tc1b        = 0.e0_wp; coord3_tc2b = 0.e0_wp; coord3_tcc = 0.e0_wp; coord4_tb1h = 0.e0_wp; coord4_tb2h = 0.e0_wp
+        coord4_tc1h        = 0.e0_wp; coord4_tc2h = 0.e0_wp; coord5_rb1h = 0.e0_wp; coord5_rb2h = 0.e0_wp; coord5_rc1b = 0.e0_wp
+        coord5_rc1h        = 0.e0_wp; coord5_rc2b = 0.e0_wp; coord5_rc2h = 0.e0_wp; coord5_rcc = 0.e0_wp; coord6_r0c1h = 0.e0_wp
+        coord6_r0c2h       = 0.e0_wp; coord6_r0cc = 0.e0_wp; infocm_cartnu = 0.e0_wp; infocm_icartr = 0; infocm_indexes = 0
         infocm_irctnt      = 0; infocm_mder = 0; infocm_msurf = 0; infocm_natoms = 0
         infocm_ref         = ' '
-        ipforce1_f1        = 0.d0
-        ipforce1_fk0       = 0.d0
-        newh2o_ahh         = 0.d0
-        newh2o_alph2o      = 0.d0
-        newh2o_angh2o      = 0.d0
-        newh2o_angh2oeq    = 0.d0
-        newh2o_d1hh        = 0.d0
-        newh2o_d3hh        = 0.d0
-        newh2o_ded         = 0.d0
-        newh2o_dedhi       = 0.d0
-        newh2o_dedho       = 0.d0
-        newh2o_dedo        = 0.d0
-        newh2o_dkdr        = 0.d0
-        newh2o_dkdx        = 0.d0
-        newh2o_fkh2o       = 0.d0
-        newh2o_fkh2oeq     = 0.d0
+        ipforce1_f1        = 0.e0_wp
+        ipforce1_fk0       = 0.e0_wp
+        newh2o_ahh         = 0.e0_wp
+        newh2o_alph2o      = 0.e0_wp
+        newh2o_angh2o      = 0.e0_wp
+        newh2o_angh2oeq    = 0.e0_wp
+        newh2o_d1hh        = 0.e0_wp
+        newh2o_d3hh        = 0.e0_wp
+        newh2o_ded         = 0.e0_wp
+        newh2o_dedhi       = 0.e0_wp
+        newh2o_dedho       = 0.e0_wp
+        newh2o_dedo        = 0.e0_wp
+        newh2o_dkdr        = 0.e0_wp
+        newh2o_dkdx        = 0.e0_wp
+        newh2o_fkh2o       = 0.e0_wp
+        newh2o_fkh2oeq     = 0.e0_wp
         newh2o_nno         = 0
         newh2o_no          = 0
-        newh2o_r0hh        = 0.d0
-        newh2o_rno         = 0.d0
-        newh2o_tno         = 0.d0
-        newvdw_roh         = 0.d0
-        newvdw_toh         = 0.d0
+        newh2o_r0hh        = 0.e0_wp
+        newh2o_rno         = 0.e0_wp
+        newh2o_tno         = 0.e0_wp
+        newvdw_roh         = 0.e0_wp
+        newvdw_toh         = 0.e0_wp
         potcm2_nc1h        = 0
         potcm2_nc2h        = 0
-        potcm_a1c          = 0.d0
-        potcm_a1c1h        = 0.d0
-        potcm_a1c2h        = 0.d0
-        potcm_a1s1         = 0.d0
-        potcm_a1s2         = 0.d0
-        potcm_a1scc        = 0.d0
-        potcm_a2c          = 0.d0
-        potcm_a2s1         = 0.d0
-        potcm_a2s2         = 0.d0
-        potcm_a2scc        = 0.d0
-        potcm_a3s          = 0.d0
-        potcm_a3scc        = 0.d0
-        potcm_aa11         = 0.d0
-        potcm_aa12         = 0.d0
-        potcm_aa21         = 0.d0
-        potcm_aa22         = 0.d0
-        potcm_aa31         = 0.d0
-        potcm_aa32         = 0.d0
-        potcm_aa41         = 0.d0
-        potcm_aa42         = 0.d0
-        potcm_ac1b         = 0.d0
-        potcm_ac2b         = 0.d0
-        potcm_acc          = 0.d0
-        potcm_ah1h         = 0.d0
-        potcm_ah2h         = 0.d0
-        potcm_ak1          = 0.d0
-        potcm_aphi         = 0.d0
-        potcm_aphi1        = 0.d0
-        potcm_aphi2        = 0.d0
-        potcm_atheta       = 0.d0
-        potcm_athetacc     = 0.d0
-        potcm_b1c1h        = 0.d0
-        potcm_b1c2h        = 0.d0
-        potcm_b1s1         = 0.d0
-        potcm_b1s2         = 0.d0
-        potcm_b1scc        = 0.d0
-        potcm_b2s1         = 0.d0
-        potcm_b2s2         = 0.d0
-        potcm_b2scc        = 0.d0
-        potcm_b3s          = 0.d0
-        potcm_b3scc        = 0.d0
-        potcm_bphi         = 0.d0
-        potcm_bphi1        = 0.d0
-        potcm_bphi2        = 0.d0
-        potcm_btheta       = 0.d0
-        potcm_bthetacc     = 0.d0
-        potcm_c1c1h        = 0.d0
-        potcm_c1c2h        = 0.d0
-        potcm_cphi         = 0.d0
-        potcm_cphi1        = 0.d0
-        potcm_cphi2        = 0.d0
-        potcm_ctheta       = 0.d0
-        potcm_cthetacc     = 0.d0
-        potcm_d1c1b        = 0.d0
-        potcm_d1c1h        = 0.d0
-        potcm_d1c2b        = 0.d0
-        potcm_d1c2h        = 0.d0
-        potcm_d1cc         = 0.d0
-        potcm_d1h1h        = 0.d0
-        potcm_d1h2h        = 0.d0
-        potcm_d3c1b        = 0.d0
-        potcm_d3c1h        = 0.d0
-        potcm_d3c2b        = 0.d0
-        potcm_d3c2h        = 0.d0
-        potcm_d3h1h        = 0.d0
-        potcm_d3h2h        = 0.d0
-        potcm_fch3         = 0.d0
-        potcm_fkinf1       = 0.d0
-        potcm_fkinf2       = 0.d0
-        potcm_hch3         = 0.d0
+        potcm_a1c          = 0.e0_wp
+        potcm_a1c1h        = 0.e0_wp
+        potcm_a1c2h        = 0.e0_wp
+        potcm_a1s1         = 0.e0_wp
+        potcm_a1s2         = 0.e0_wp
+        potcm_a1scc        = 0.e0_wp
+        potcm_a2c          = 0.e0_wp
+        potcm_a2s1         = 0.e0_wp
+        potcm_a2s2         = 0.e0_wp
+        potcm_a2scc        = 0.e0_wp
+        potcm_a3s          = 0.e0_wp
+        potcm_a3scc        = 0.e0_wp
+        potcm_aa11         = 0.e0_wp
+        potcm_aa12         = 0.e0_wp
+        potcm_aa21         = 0.e0_wp
+        potcm_aa22         = 0.e0_wp
+        potcm_aa31         = 0.e0_wp
+        potcm_aa32         = 0.e0_wp
+        potcm_aa41         = 0.e0_wp
+        potcm_aa42         = 0.e0_wp
+        potcm_ac1b         = 0.e0_wp
+        potcm_ac2b         = 0.e0_wp
+        potcm_acc          = 0.e0_wp
+        potcm_ah1h         = 0.e0_wp
+        potcm_ah2h         = 0.e0_wp
+        potcm_ak1          = 0.e0_wp
+        potcm_aphi         = 0.e0_wp
+        potcm_aphi1        = 0.e0_wp
+        potcm_aphi2        = 0.e0_wp
+        potcm_atheta       = 0.e0_wp
+        potcm_athetacc     = 0.e0_wp
+        potcm_b1c1h        = 0.e0_wp
+        potcm_b1c2h        = 0.e0_wp
+        potcm_b1s1         = 0.e0_wp
+        potcm_b1s2         = 0.e0_wp
+        potcm_b1scc        = 0.e0_wp
+        potcm_b2s1         = 0.e0_wp
+        potcm_b2s2         = 0.e0_wp
+        potcm_b2scc        = 0.e0_wp
+        potcm_b3s          = 0.e0_wp
+        potcm_b3scc        = 0.e0_wp
+        potcm_bphi         = 0.e0_wp
+        potcm_bphi1        = 0.e0_wp
+        potcm_bphi2        = 0.e0_wp
+        potcm_btheta       = 0.e0_wp
+        potcm_bthetacc     = 0.e0_wp
+        potcm_c1c1h        = 0.e0_wp
+        potcm_c1c2h        = 0.e0_wp
+        potcm_cphi         = 0.e0_wp
+        potcm_cphi1        = 0.e0_wp
+        potcm_cphi2        = 0.e0_wp
+        potcm_ctheta       = 0.e0_wp
+        potcm_cthetacc     = 0.e0_wp
+        potcm_d1c1b        = 0.e0_wp
+        potcm_d1c1h        = 0.e0_wp
+        potcm_d1c2b        = 0.e0_wp
+        potcm_d1c2h        = 0.e0_wp
+        potcm_d1cc         = 0.e0_wp
+        potcm_d1h1h        = 0.e0_wp
+        potcm_d1h2h        = 0.e0_wp
+        potcm_d3c1b        = 0.e0_wp
+        potcm_d3c1h        = 0.e0_wp
+        potcm_d3c2b        = 0.e0_wp
+        potcm_d3c2h        = 0.e0_wp
+        potcm_d3h1h        = 0.e0_wp
+        potcm_d3h2h        = 0.e0_wp
+        potcm_fch3         = 0.e0_wp
+        potcm_fkinf1       = 0.e0_wp
+        potcm_fkinf2       = 0.e0_wp
+        potcm_hch3         = 0.e0_wp
         potcm_nnb          = 0
         potcm_nnc1         = 0
         potcm_nnc2         = 0
-        potcm_r0c1b        = 0.d0
-        potcm_r0c1hp       = 0.d0
-        potcm_r0c1hr       = 0.d0
-        potcm_r0c2b        = 0.d0
-        potcm_r0c2hp       = 0.d0
-        potcm_r0c2hr       = 0.d0
-        potcm_r0ccp        = 0.d0
-        potcm_r0ccr        = 0.d0
-        potcm_r0h1h        = 0.d0
-        potcm_r0h2h        = 0.d0
-        potcm_v3           = 0.d0
-        potcm_vdwc1        = 0.d0
-        potcm_vdwc2        = 0.d0
-        potcm_vdwe         = 0.d0
-        potcm_vdwr         = 0.d0
-        potcm_w1           = 0.d0
-        potcm_w10          = 0.d0
-        potcm_w2           = 0.d0
-        potcm_w3           = 0.d0
-        potcm_w4           = 0.d0
-        potcm_w5           = 0.d0
-        potcm_w6           = 0.d0
-        potcm_w7           = 0.d0
-        potcm_w8           = 0.d0
-        potcm_w9           = 0.d0
-        pt1cm_degsdr       = 0.d0
-        pt1cm_engygs       = 0.d0
-        pt1cm_r            = 0.d0
-        pt3cm_ezero        = 0.d0
-        pt4cm_deesdr       = 0.d0
-        pt4cm_engyes       = 0.d0
-        pt5cm_deijdr       = 0.d0
-        pt5cm_engyij       = 0.d0
-        qpdot_pdot         = 0.d0
-        qpdot_q            = 0.d0
-        refangles1_sphi    = 0.d0
-        refangles1_stheta  = 0.d0
-        refangles1_theta0  = 0.d0
-        switch1_s1         = 0.d0
-        switch1_s2         = 0.d0
-        switch1_s3         = 0.d0
-        torsion1_t2        = 0.d0
-        torsion1_thetahcch = 0.d0
-        usricm_anuzero     = 0.d0
-        usricm_cart        = 0.d0
+        potcm_r0c1b        = 0.e0_wp
+        potcm_r0c1hp       = 0.e0_wp
+        potcm_r0c1hr       = 0.e0_wp
+        potcm_r0c2b        = 0.e0_wp
+        potcm_r0c2hp       = 0.e0_wp
+        potcm_r0c2hr       = 0.e0_wp
+        potcm_r0ccp        = 0.e0_wp
+        potcm_r0ccr        = 0.e0_wp
+        potcm_r0h1h        = 0.e0_wp
+        potcm_r0h2h        = 0.e0_wp
+        potcm_v3           = 0.e0_wp
+        potcm_vdwc1        = 0.e0_wp
+        potcm_vdwc2        = 0.e0_wp
+        potcm_vdwe         = 0.e0_wp
+        potcm_vdwr         = 0.e0_wp
+        potcm_w1           = 0.e0_wp
+        potcm_w10          = 0.e0_wp
+        potcm_w2           = 0.e0_wp
+        potcm_w3           = 0.e0_wp
+        potcm_w4           = 0.e0_wp
+        potcm_w5           = 0.e0_wp
+        potcm_w6           = 0.e0_wp
+        potcm_w7           = 0.e0_wp
+        potcm_w8           = 0.e0_wp
+        potcm_w9           = 0.e0_wp
+        pt1cm_degsdr       = 0.e0_wp
+        pt1cm_engygs       = 0.e0_wp
+        pt1cm_r            = 0.e0_wp
+        pt3cm_ezero        = 0.e0_wp
+        pt4cm_deesdr       = 0.e0_wp
+        pt4cm_engyes       = 0.e0_wp
+        pt5cm_deijdr       = 0.e0_wp
+        pt5cm_engyij       = 0.e0_wp
+        qpdot_pdot         = 0.e0_wp
+        qpdot_q            = 0.e0_wp
+        refangles1_sphi    = 0.e0_wp
+        refangles1_stheta  = 0.e0_wp
+        refangles1_theta0  = 0.e0_wp
+        switch1_s1         = 0.e0_wp
+        switch1_s2         = 0.e0_wp
+        switch1_s3         = 0.e0_wp
+        torsion1_t2        = 0.e0_wp
+        torsion1_thetahcch = 0.e0_wp
+        usricm_anuzero     = 0.e0_wp
+        usricm_cart        = 0.e0_wp
         usricm_nasurf      = 0
         usricm_nder        = 0
         usricm_nflag       = 0
         usricm_nulbl       = 0
-        usrocm_descart     = 0.d0
-        usrocm_dgscart     = 0.d0
-        usrocm_dijcart     = 0.d0
-        usrocm_pengyes     = 0.d0
-        usrocm_pengygs     = 0.d0
-        usrocm_pengyij     = 0.d0
-        utilcm_cnvrtd      = 0.d0
-        utilcm_cnvrtde     = 0.d0
-        utilcm_cnvrte      = 0.d0
-        utilcm_descartnu   = 0.d0
-        utilcm_dgscartnu   = 0.d0
-        utilcm_dijcartnu   = 0.d0
+        usrocm_descart     = 0.e0_wp
+        usrocm_dgscart     = 0.e0_wp
+        usrocm_dijcart     = 0.e0_wp
+        usrocm_pengyes     = 0.e0_wp
+        usrocm_pengygs     = 0.e0_wp
+        usrocm_pengyij     = 0.e0_wp
+        utilcm_cnvrtd      = 0.e0_wp
+        utilcm_cnvrtde     = 0.e0_wp
+        utilcm_cnvrte      = 0.e0_wp
+        utilcm_descartnu   = 0.e0_wp
+        utilcm_dgscartnu   = 0.e0_wp
+        utilcm_dijcartnu   = 0.e0_wp
         utilcm_ireorder    = 0
         utilcm_kediag      = 0
         utilcm_keoffd      = 0
         utilcm_ksdiag      = 0
         utilcm_ksoffd      = 0
-        vop6_fdelta        = 0.d0
-        vop6_hdelta        = 0.d0
+        vop6_fdelta        = 0.e0_wp
+        vop6_hdelta        = 0.e0_wp
         usricm_nasurf = reshape([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
             & 0, 0, 0, 0, 0, 0, 0, 0], shape(usricm_nasurf))
         usricm_nder     = 1
         usricm_nflag    = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        usricm_anuzero  = 0.0d0
+        usricm_anuzero  = 0.0e0_wp
         infocm_icartr   = 1
         infocm_msurf    = 0
         infocm_mder     = 1
@@ -428,106 +430,106 @@ module chempotpy_ch5o2_vbmm_2023_pes
         potcm2_nc1h     = [3, 4, 5]
         potcm2_nc2h     = 6
         newh2o_nno      = 8
-        potcm_r0c1hr    = 1.09047d0
-        potcm_r0c1hp    = 1.08177d0
-        potcm_d1c1h     = 106.23000d0
-        potcm_d3c1h     = 37.00400d0
-        potcm_a1c1h     = 1.60300d0
-        potcm_b1c1h     = 0.52500d0
-        potcm_c1c1h     = 0.55404d0
-        potcm_r0c2hr    = 0.95897d0
-        potcm_r0c2hp    = 0.96077d0
-        potcm_d1c2h     = 117.23000d0
-        potcm_d3c2h     = 42.00400d0
-        potcm_a1c2h     = 2.05300d0
-        potcm_b1c2h     = 0.42500d0
-        potcm_c1c2h     = 0.51404d0
-        newh2o_r0hh     = 0.9719d0
-        newh2o_d1hh     = 130.458d0
-        newh2o_d3hh     = 13.264d0
-        newh2o_ahh      = 2.0557d0
-        potcm_r0ccr     = 1.42007d0
-        potcm_r0ccp     = 1.37500d0
-        potcm_w9        = 1.5000d0
-        potcm_w10       = 1.08507d0
-        potcm_d1cc      = 109.94900d0
-        potcm_acc       = 1.934d0
-        potcm_a1c       = 1.20997d0
-        potcm_a2c       = 1.949d0
-        potcm_r0h1h     = 0.97191d0
-        potcm_d1h1h     = 130.458d0
-        potcm_d3h1h     = 33.264d0
-        potcm_ah1h      = 2.0557d0
-        potcm_r0h2h     = 0.97191d0
-        potcm_d1h2h     = 130.458d0
-        potcm_d3h2h     = 33.264d0
-        potcm_ah2h      = 2.0557d0
-        potcm_r0c1b     = 1.69597d0
-        potcm_d1c1b     = 45.009d0
-        potcm_d3c1b     = 22.200d0
-        potcm_ac1b      = 1.6390285d0
-        potcm_r0c2b     = 1.85897d0
-        potcm_d1c2b     = 32.609d0
-        potcm_d3c2b     = 22.400d0
-        potcm_ac2b      = 2.1170285d0
-        potcm_aphi      = 0.528790d0
-        potcm_bphi      = 1.200664d0
-        potcm_cphi      = 1.420074d0
-        potcm_aphi1     = 0.19700d0
-        potcm_bphi1     = 1.20600d0
-        potcm_cphi1     = 1.08200d0
-        potcm_aphi2     = 0.19700d0
-        potcm_bphi2     = 1.20600d0
-        potcm_cphi2     = 0.96800d0
-        potcm_a3s       = 0.12770d0
-        potcm_b3s       = 1.08200d0
-        potcm_a3scc     = 0.297000d0
-        potcm_b3scc     = 1.420664d0
-        potcm_atheta    = 1.65781d0
-        potcm_btheta    = 0.950600d0
-        potcm_ctheta    = 1.08201d0
-        potcm_athetacc  = 1.45781d0
-        potcm_bthetacc  = 0.950600d0
-        potcm_cthetacc  = 1.42001d0
-        potcm_fch3      = 0.19770d0
-        potcm_hch3      = 0.09600d0
-        potcm_fkinf1    = 0.44770d0
-        potcm_ak1       = 0.12600d0
-        potcm_aa11      = 1.49001d0
-        potcm_aa21      = 1.59995d0
-        potcm_aa31      = 2.16996d0
-        potcm_aa41      = 11.56595d0
-        potcm_fkinf2    = 0.45770d0
-        potcm_aa12      = 0.15001d0
-        potcm_aa22      = 1.30095d0
-        potcm_aa32      = 1.49996d0
-        potcm_aa42      = 11.46595d0
-        newh2o_fkh2oeq  = 0.6700d0
-        newh2o_alph2o   = 3.70800d0
-        newh2o_angh2oeq = 104.7132d0
-        potcm_v3        = 0.03000d0
-        potcm_w1        = 0.11000d0
-        potcm_w2        = 1.08697d0
-        potcm_w7        = 0.11000d0
-        potcm_w8        = 1.08367d0
-        potcm_a1s1      = 1.53137d0
-        potcm_b1s1      = 1.09463d0
-        potcm_a2s1      = 1.01474d0
-        potcm_b2s1      = 0.96898d0
-        potcm_a1s2      = 1.53137d0
-        potcm_b1s2      = 1.09463d0
-        potcm_a2s2      = 1.51474d0
-        potcm_b2s2      = 0.96898d0
-        potcm_a1scc     = 1.53137d0
-        potcm_b1scc     = 1.42003d0
-        potcm_a2scc     = 1.51474d0
-        potcm_b2scc     = 1.42008d0
-        potcm_vdwe      = 0.500d0
-        potcm_vdwr      = 3.7100d0
-        potcm_vdwc1     = -6.7000d0
-        potcm_vdwc2     = 225000.0d0
-        v               = 0.d0; g = 0.d0; d = 0.d0
-        usricm_cart     = 0.d0
+        potcm_r0c1hr    = 1.09047e0_wp
+        potcm_r0c1hp    = 1.08177e0_wp
+        potcm_d1c1h     = 106.23000e0_wp
+        potcm_d3c1h     = 37.00400e0_wp
+        potcm_a1c1h     = 1.60300e0_wp
+        potcm_b1c1h     = 0.52500e0_wp
+        potcm_c1c1h     = 0.55404e0_wp
+        potcm_r0c2hr    = 0.95897e0_wp
+        potcm_r0c2hp    = 0.96077e0_wp
+        potcm_d1c2h     = 117.23000e0_wp
+        potcm_d3c2h     = 42.00400e0_wp
+        potcm_a1c2h     = 2.05300e0_wp
+        potcm_b1c2h     = 0.42500e0_wp
+        potcm_c1c2h     = 0.51404e0_wp
+        newh2o_r0hh     = 0.9719e0_wp
+        newh2o_d1hh     = 130.458e0_wp
+        newh2o_d3hh     = 13.264e0_wp
+        newh2o_ahh      = 2.0557e0_wp
+        potcm_r0ccr     = 1.42007e0_wp
+        potcm_r0ccp     = 1.37500e0_wp
+        potcm_w9        = 1.5000e0_wp
+        potcm_w10       = 1.08507e0_wp
+        potcm_d1cc      = 109.94900e0_wp
+        potcm_acc       = 1.934e0_wp
+        potcm_a1c       = 1.20997e0_wp
+        potcm_a2c       = 1.949e0_wp
+        potcm_r0h1h     = 0.97191e0_wp
+        potcm_d1h1h     = 130.458e0_wp
+        potcm_d3h1h     = 33.264e0_wp
+        potcm_ah1h      = 2.0557e0_wp
+        potcm_r0h2h     = 0.97191e0_wp
+        potcm_d1h2h     = 130.458e0_wp
+        potcm_d3h2h     = 33.264e0_wp
+        potcm_ah2h      = 2.0557e0_wp
+        potcm_r0c1b     = 1.69597e0_wp
+        potcm_d1c1b     = 45.009e0_wp
+        potcm_d3c1b     = 22.200e0_wp
+        potcm_ac1b      = 1.6390285e0_wp
+        potcm_r0c2b     = 1.85897e0_wp
+        potcm_d1c2b     = 32.609e0_wp
+        potcm_d3c2b     = 22.400e0_wp
+        potcm_ac2b      = 2.1170285e0_wp
+        potcm_aphi      = 0.528790e0_wp
+        potcm_bphi      = 1.200664e0_wp
+        potcm_cphi      = 1.420074e0_wp
+        potcm_aphi1     = 0.19700e0_wp
+        potcm_bphi1     = 1.20600e0_wp
+        potcm_cphi1     = 1.08200e0_wp
+        potcm_aphi2     = 0.19700e0_wp
+        potcm_bphi2     = 1.20600e0_wp
+        potcm_cphi2     = 0.96800e0_wp
+        potcm_a3s       = 0.12770e0_wp
+        potcm_b3s       = 1.08200e0_wp
+        potcm_a3scc     = 0.297000e0_wp
+        potcm_b3scc     = 1.420664e0_wp
+        potcm_atheta    = 1.65781e0_wp
+        potcm_btheta    = 0.950600e0_wp
+        potcm_ctheta    = 1.08201e0_wp
+        potcm_athetacc  = 1.45781e0_wp
+        potcm_bthetacc  = 0.950600e0_wp
+        potcm_cthetacc  = 1.42001e0_wp
+        potcm_fch3      = 0.19770e0_wp
+        potcm_hch3      = 0.09600e0_wp
+        potcm_fkinf1    = 0.44770e0_wp
+        potcm_ak1       = 0.12600e0_wp
+        potcm_aa11      = 1.49001e0_wp
+        potcm_aa21      = 1.59995e0_wp
+        potcm_aa31      = 2.16996e0_wp
+        potcm_aa41      = 11.56595e0_wp
+        potcm_fkinf2    = 0.45770e0_wp
+        potcm_aa12      = 0.15001e0_wp
+        potcm_aa22      = 1.30095e0_wp
+        potcm_aa32      = 1.49996e0_wp
+        potcm_aa42      = 11.46595e0_wp
+        newh2o_fkh2oeq  = 0.6700e0_wp
+        newh2o_alph2o   = 3.70800e0_wp
+        newh2o_angh2oeq = 104.7132e0_wp
+        potcm_v3        = 0.03000e0_wp
+        potcm_w1        = 0.11000e0_wp
+        potcm_w2        = 1.08697e0_wp
+        potcm_w7        = 0.11000e0_wp
+        potcm_w8        = 1.08367e0_wp
+        potcm_a1s1      = 1.53137e0_wp
+        potcm_b1s1      = 1.09463e0_wp
+        potcm_a2s1      = 1.01474e0_wp
+        potcm_b2s1      = 0.96898e0_wp
+        potcm_a1s2      = 1.53137e0_wp
+        potcm_b1s2      = 1.09463e0_wp
+        potcm_a2s2      = 1.51474e0_wp
+        potcm_b2s2      = 0.96898e0_wp
+        potcm_a1scc     = 1.53137e0_wp
+        potcm_b1scc     = 1.42003e0_wp
+        potcm_a2scc     = 1.51474e0_wp
+        potcm_b2scc     = 1.42008e0_wp
+        potcm_vdwe      = 0.500e0_wp
+        potcm_vdwr      = 3.7100e0_wp
+        potcm_vdwc1     = -6.7000e0_wp
+        potcm_vdwc2     = 225000.0e0_wp
+        v               = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
+        usricm_cart     = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
                 usricm_cart(iatom,idir) = x(iatom,idir)
@@ -538,7 +540,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
         call pot
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
+                p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
         else
             write (*, *) 'Only energy is available'
@@ -548,16 +550,17 @@ module chempotpy_ch5o2_vbmm_2023_pes
 
         !> @brief Evaluate POT for the CH5O2_VBMM_2023 potential.
         subroutine pot
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: en, evdw, vip, vop, vstr, vtor
-            integer          :: i, n
+            real(wp) :: en, evdw, vip, vop, vstr, vtor
+            integer  :: i, n
             !     DIMENSION COORD(24),DX(24)
             !     DIMENSION dxvstr(21),dxvtor(21),dxvop(21),dxvip(21)
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+OH PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -581,7 +584,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Inicialization de variables
             do i=1, 27
                 qpdot_q(i)    = pt1cm_r(i)
-                qpdot_pdot(i) = 0.d0
+                qpdot_pdot(i) = 0.e0_wp
             enddo
             ! Changing units from angstrom to bohr
             !      DO  I = 1, 27
@@ -590,7 +593,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !      enddo
             ! End of corrections by EMN
             !  calculate relative coordinates and bond lengths
-            en = 0.0d0
+            en = 0.0e0_wp
             call coorden
             call torsion(vtor)
             !  calculate switching functions
@@ -608,7 +611,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  total potential energy is vstr+vop+vip
             en = vstr+vop+vip+vtor+evdw
             !  convert from 10(5) j/mol to au
-            en = en*0.03812d0
+            en = en*0.03812e0_wp
             !      V = en
             pt1cm_engygs = en
             call eunitzero
@@ -616,7 +619,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 !  Initialize derivatives
                 do n=1, 24
                     !          DX(n)=0.0d0
-                    pt1cm_degsdr(i) = qpdot_pdot(i)*0.0201723d0
+                    pt1cm_degsdr(i) = qpdot_pdot(i)*0.0201723e0_wp
                 enddo
                 call rtocart
                 call dedcou
@@ -626,16 +629,17 @@ module chempotpy_ch5o2_vbmm_2023_pes
         !> @brief Evaluate coorden for the CH5O2_VBMM_2023 potential.
         subroutine coorden
             !  calculates relative coordinates and bond lengths
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: argmax, argp5, p5, rav4, t5tmp
-            integer          :: i, ind
+            real(wp) :: argmax, argp5, p5, rav4, t5tmp
+            integer  :: i, ind
             !      include 'ch3oh_h.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -693,14 +697,14 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! crd 2013 modificaciones de las distancias
             ! CRD 2021 modificacion para hacer solo un parametro que
             ! modifique todos los r0c en funcion de rav
-            argmax = 19.d0
-            rav4   = (coord5_rc1h(1)+coord5_rc1h(2)+coord5_rc1h(3)+coord5_rc2h(1))/4.0d0
-            p5     = 1.d0
+            argmax = 19.e0_wp
+            rav4   = (coord5_rc1h(1)+coord5_rc1h(2)+coord5_rc1h(3)+coord5_rc2h(1))/4.0e0_wp
+            p5     = 1.e0_wp
             argp5  = (potcm_w9*(rav4-potcm_w10))
             if( argp5 .lt. argmax )then
                 t5tmp = 1-tanh(argp5)
             else
-                t5tmp = 0.d0
+                t5tmp = 0.e0_wp
             endif
             p5           = p5*t5tmp
             coord6_r0cc  = p5*potcm_r0ccr+(1-p5)*potcm_r0ccp
@@ -711,13 +715,14 @@ module chempotpy_ch5o2_vbmm_2023_pes
 
         !> @brief Evaluate vander for the CH5O2_VBMM_2023 potential.
         subroutine vander( evdw )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision            :: evdw, p1vdw, p2vdw, t1(3)
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            real(wp)            :: evdw, p1vdw, p2vdw, t1(3)
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
             ! Subroutine Coorden
             ! Subroutine torsion
@@ -727,22 +732,23 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Subroutine Switch
             ! Add Newh2o
             ! jeg vdw
-            p1vdw = potcm_vdwc1*(potcm_vdwr/newvdw_roh)**6.d0
-            p2vdw = potcm_vdwc2*exp(-12.d0*(newvdw_roh/potcm_vdwr))
-            evdw  = potcm_vdwe/0.03812d0/627.52d0*(p1vdw+p2vdw)
+            p1vdw = potcm_vdwc1*(potcm_vdwr/newvdw_roh)**6.e0_wp
+            p2vdw = potcm_vdwc2*exp(-12.e0_wp*(newvdw_roh/potcm_vdwr))
+            evdw  = potcm_vdwe/0.03812e0_wp/627.52e0_wp*(p1vdw+p2vdw)
         end subroutine vander
 
         !> @brief Evaluate torsion for the CH5O2_VBMM_2023 potential.
         subroutine torsion( vtor )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a, arg1, arg2, dihed, t1(3), vtor
-            integer          :: i
+            real(wp) :: a, arg1, arg2, dihed, t1(3), vtor
+            integer  :: i
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -759,11 +765,11 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! CRD 2011 incluimos un apartado para calcular los angulos dihedro
             ! para poder calcular despues vtorsion
             call dihedro(3, 1, 2, 6, dihed)
-            torsion1_thetahcch(1) = dihed*pi/180.0d0
+            torsion1_thetahcch(1) = dihed*pi/180.0e0_wp
             call dihedro(4, 1, 2, 6, dihed)
-            torsion1_thetahcch(2) = dihed*pi/180.0d0
+            torsion1_thetahcch(2) = dihed*pi/180.0e0_wp
             call dihedro(5, 1, 2, 6, dihed)
-            torsion1_thetahcch(3) = dihed*pi/180.0d0
+            torsion1_thetahcch(3) = dihed*pi/180.0e0_wp
             ! CRD 2011 calculamos los terminos switching t1 y t2
             do i=1, 3
                 !       t1(i)=0.5d0*(1-tanh(w1*(rc1h(i)-w2)))
@@ -774,39 +780,40 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !       t2(1)=(1-tanh(w7*(rc2h(1)-w8)))
             torsion1_t2 = (1-tanh(potcm_w7*(coord5_rc2h(1)-coord6_r0c2h)))
             !     write(*,*) t1(1)*t2(1),t1(2)*t2(1),t1(3)*t2(1)
-            vtor = 0.0d0
+            vtor = 0.0e0_wp
             ! CRD 2021 incluimos terminos para pasar de 3 a 2 minimos
             !     arg1=(t1(1)*t1(2)*t1(3)*t2)**3.0d0
             arg1 = (coord5_rb1h(1)-potcm_r0h1h)*(coord5_rb1h(2)-potcm_r0h1h)*(coord5_rb1h(3)-potcm_r0h1h)* &
                 & (coord5_rb2h(1)-potcm_r0h2h)
             arg2 = tanh(arg1)
             if( arg2 .lt. 0.0 )then
-                a = 2.0d0
+                a = 2.0e0_wp
             else
-                a = 2.0d0+1.d0*arg2
+                a = 2.0e0_wp+1.e0_wp*arg2
             endif
             !     write(45,*) arg1, arg2, A
             ! CRD linea para eliminar la correccion
-            a = 3.0d0
+            a = 3.0e0_wp
             !      vtor=vtor+(V3/3.0d0)*(1+cos(3*thetahcch(1)))*t1(1)*t2
             !      vtor=vtor+(V3/3.0d0)*(1+cos(3*thetahcch(2)))*t1(2)*t2
             !      vtor=vtor+(V3/3.0d0)*(1+cos(3*thetahcch(3)))*t1(3)*t2
-            vtor = vtor+(potcm_v3/3.0d0)*(1+cos(a*torsion1_thetahcch(1)))*t1(1)*torsion1_t2
-            vtor = vtor+(potcm_v3/3.0d0)*(1+cos(a*torsion1_thetahcch(2)))*t1(2)*torsion1_t2
-            vtor = vtor+(potcm_v3/3.0d0)*(1+cos(a*torsion1_thetahcch(3)))*t1(3)*torsion1_t2
+            vtor = vtor+(potcm_v3/3.0e0_wp)*(1+cos(a*torsion1_thetahcch(1)))*t1(1)*torsion1_t2
+            vtor = vtor+(potcm_v3/3.0e0_wp)*(1+cos(a*torsion1_thetahcch(2)))*t1(2)*torsion1_t2
+            vtor = vtor+(potcm_v3/3.0e0_wp)*(1+cos(a*torsion1_thetahcch(3)))*t1(3)*torsion1_t2
         end subroutine torsion
 
         !> @brief Evaluate dihedro for the CH5O2_VBMM_2023 potential.
         subroutine dihedro( i, j, k, l, dihed )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: dihed
+            real(wp) :: dihed
             !        include 'ch3oh_h.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -826,9 +833,9 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !        double precision p,q
             !        double precision p
             !        double precision pi
-            double precision :: rij(3), rjk(3), rkj(3), rkl(3)
-            double precision :: zijjk(3), zijkj(3), zkjkl(3), zjkkl(3)
-            double precision :: tmpsign(3), tmp, arg1, arg2
+            real(wp) :: rij(3), rjk(3), rkj(3), rkl(3)
+            real(wp) :: zijjk(3), zijkj(3), zkjkl(3), zjkkl(3)
+            real(wp) :: tmpsign(3), tmp, arg1, arg2
             !        pi=4.0d0*atan(1.0d0)
             do m = 1, 3
                 rij(m) = qpdot_q((i-1)*3+m)-qpdot_q((j-1)*3+m)
@@ -839,41 +846,43 @@ module chempotpy_ch5o2_vbmm_2023_pes
             call crosprod(rij, rjk, zijjk)
             arg2 = anorm(rjk)*dotprod(rij, zjkkl)
             arg1 = dotprod(zijjk, zjkkl)
-            if( abs(arg1) .lt. 1.d-6 )then
-                if( arg2 .gt. 0.d0 ) dihed = 90.d0
-                if( arg2 .lt. 0.d0 ) dihed = -90.d0
+            if( abs(arg1) .lt. 1.e-6_wp )then
+                if( arg2 .gt. 0.e0_wp ) dihed = 90.e0_wp
+                if( arg2 .lt. 0.e0_wp ) dihed = -90.e0_wp
                 return
             endif
-            if( arg1 .gt. 0.d0 )then
-                dihed = atan(arg2/arg1) *180.d0/pi
+            if( arg1 .gt. 0.e0_wp )then
+                dihed = atan(arg2/arg1) *180.e0_wp/pi
                 return
             endif
-            if( arg2 .ge. 0.d0 )then
-                dihed = 180.d0 + atan(arg2/arg1) *180.d0/pi
+            if( arg2 .ge. 0.e0_wp )then
+                dihed = 180.e0_wp + atan(arg2/arg1) *180.e0_wp/pi
                 return
             endif
-            if( arg2 .lt. 0.d0 )then
-                dihed = -180.d0 + atan(arg2/arg1) *180.d0/pi
+            if( arg2 .lt. 0.e0_wp )then
+                dihed = -180.e0_wp + atan(arg2/arg1) *180.e0_wp/pi
                 return
             endif
-            dihed = dihed*pi/180.d0
+            dihed = dihed*pi/180.e0_wp
         end subroutine dihedro
 
         !> @brief Evaluate crosprod for the CH5O2_VBMM_2023 potential.
         subroutine crosprod( x, y, z )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: x(3), y(3), z(3)
+            real(wp) :: x(3), y(3), z(3)
             z(1) = x(2)*y(3)-x(3)*y(2)
             z(2) = x(3)*y(1)-x(1)*y(3)
             z(3) = x(1)*y(2)-x(2)*y(1)
         end subroutine crosprod
 
         !> @brief Evaluate dotprod for the CH5O2_VBMM_2023 potential.
-        double precision function dotprod( x, y )
+        real(wp) function dotprod( x, y )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: k
-            double precision :: x(3), y(3), tmp
-            tmp = 0.d0
+            integer  :: k
+            real(wp) :: x(3), y(3), tmp
+            tmp = 0.e0_wp
             do k = 1, 3
                 tmp = tmp + x(k)*y(k)
             enddo
@@ -881,29 +890,31 @@ module chempotpy_ch5o2_vbmm_2023_pes
         end function dotprod
 
         !> @brief Evaluate anorm for the CH5O2_VBMM_2023 potential.
-        double precision function anorm( x )
+        real(wp) function anorm( x )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer          :: k
-            double precision :: x(3), tmp
-            tmp = 0.d0
+            integer  :: k
+            real(wp) :: x(3), tmp
+            tmp = 0.e0_wp
             do k = 1, 3
                 tmp = tmp + x(k)*x(k)
             enddo
-            anorm = dsqrt(tmp)
+            anorm = sqrt(tmp)
         end function anorm
 
         !> @brief Evaluate refangles for the CH5O2_VBMM_2023 potential.
         subroutine refangles
             !  subroutine calculates reference angles for the "in-plane" potential
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: halfpi, tau, tauco, tauoc, twopi
-            integer          :: i, j
+            real(wp) :: halfpi, tau, tauco, tauoc, twopi
+            integer  :: i, j
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+OH PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -916,14 +927,14 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Add Newh2o
             ! jeg vdw
             !      dimension sumd2(4),sumd4(4),ddr(4,4)
-            tau = acos(-1.0d0/3.0d0)
+            tau = acos(-1.0e0_wp/3.0e0_wp)
             ! CRD 2012 taucc para el angulo H-C-C
-            tauco = acos(-0.3616d0)
-            tauoc = acos(-0.4558d0)
+            tauco = acos(-0.3616e0_wp)
+            tauoc = acos(-0.4558e0_wp)
             !      pi=4.0d0*atan(1.0d0)
             !      halfpi=0.5d0*pi
-            halfpi = 0.6555d0*pi
-            twopi  = 2.0d0*pi
+            halfpi = 0.6555e0_wp*pi
+            twopi  = 2.0e0_wp*pi
             ! jcc-2010
             ! valor para ajustar el angulo
             !      anghch=0.649d0*pi
@@ -932,24 +943,24 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! jcc-2010
             !  set diagonal elements to zero
             do i=1, 6
-                refangles1_theta0(i,i) = 0.0d0
+                refangles1_theta0(i,i) = 0.0e0_wp
             enddo
             !  calculate reference angles
             ! el atomo 4 es el c2
-            refangles1_theta0(1,2) = tau+(tau-halfpi)*(refangles1_sphi(1)*refangles1_sphi(2)-1.0d0) +(tau-twopi/ &
-                & 3.0d0)*(refangles1_stheta(3)*refangles1_stheta(4)-1.0d0)
-            refangles1_theta0(1,3) = tau+(tau-halfpi)*(refangles1_sphi(1)*refangles1_sphi(3)-1.0d0) +(tau-twopi/ &
-                & 3.0d0)*(refangles1_stheta(2)*refangles1_stheta(4)-1.0d0)
-            refangles1_theta0(1,4) = tauco+(tau-halfpi)*(refangles1_sphi(1)*refangles1_sphi(4)-1.0d0) +(tau-twopi/ &
-                & 3.0d0)*(refangles1_stheta(2)*refangles1_stheta(3)-1.0d0)
-            refangles1_theta0(2,3) = tau+(tau-halfpi)*(refangles1_sphi(2)*refangles1_sphi(3)-1.0d0) +(tau-twopi/ &
-                & 3.0d0)*(refangles1_stheta(1)*refangles1_stheta(4)-1.0d0)
-            refangles1_theta0(2,4) = tauco+(tau-halfpi)*(refangles1_sphi(2)*refangles1_sphi(4)-1.0d0) +(tau-twopi/ &
-                & 3.0d0)*(refangles1_stheta(1)*refangles1_stheta(3)-1.0d0)
-            refangles1_theta0(3,4) = tauco+(tau-halfpi)*(refangles1_sphi(3)*refangles1_sphi(4)-1.0d0) +(tau-twopi/ &
-                & 3.0d0)*(refangles1_stheta(1)*refangles1_stheta(2)-1.0d0)
+            refangles1_theta0(1,2) = tau+(tau-halfpi)*(refangles1_sphi(1)*refangles1_sphi(2)-1.0e0_wp) +(tau-twopi/ &
+                & 3.0e0_wp)*(refangles1_stheta(3)*refangles1_stheta(4)-1.0e0_wp)
+            refangles1_theta0(1,3) = tau+(tau-halfpi)*(refangles1_sphi(1)*refangles1_sphi(3)-1.0e0_wp) +(tau-twopi/ &
+                & 3.0e0_wp)*(refangles1_stheta(2)*refangles1_stheta(4)-1.0e0_wp)
+            refangles1_theta0(1,4) = tauco+(tau-halfpi)*(refangles1_sphi(1)*refangles1_sphi(4)-1.0e0_wp) +(tau-twopi/ &
+                & 3.0e0_wp)*(refangles1_stheta(2)*refangles1_stheta(3)-1.0e0_wp)
+            refangles1_theta0(2,3) = tau+(tau-halfpi)*(refangles1_sphi(2)*refangles1_sphi(3)-1.0e0_wp) +(tau-twopi/ &
+                & 3.0e0_wp)*(refangles1_stheta(1)*refangles1_stheta(4)-1.0e0_wp)
+            refangles1_theta0(2,4) = tauco+(tau-halfpi)*(refangles1_sphi(2)*refangles1_sphi(4)-1.0e0_wp) +(tau-twopi/ &
+                & 3.0e0_wp)*(refangles1_stheta(1)*refangles1_stheta(3)-1.0e0_wp)
+            refangles1_theta0(3,4) = tauco+(tau-halfpi)*(refangles1_sphi(3)*refangles1_sphi(4)-1.0e0_wp) +(tau-twopi/ &
+                & 3.0e0_wp)*(refangles1_stheta(1)*refangles1_stheta(2)-1.0e0_wp)
             !  el atomo 6 es el c1
-            refangles1_theta0(5,6) = tauoc+(tauoc-halfpi)*(refangles1_sphi(5)*refangles1_sphi(6)-1.0d0)
+            refangles1_theta0(5,6) = tauoc+(tauoc-halfpi)*(refangles1_sphi(5)*refangles1_sphi(6)-1.0e0_wp)
             !  fill in the other half of the matrix
             do i=1, 3
                 do j=i+1, 4
@@ -969,17 +980,18 @@ module chempotpy_ch5o2_vbmm_2023_pes
         subroutine stretch( vstr )
             !  subroutine to calculate leps-type stretching potential and its
             !  derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: ach1, ach2, arga1, arga2, dt, e1, e3, expterm, rav1, rav2, vcc, vj(4), vjb1h(3), vjb2h(1), vjc1b, &
+            real(wp) :: ach1, ach2, arga1, arga2, dt, e1, e3, expterm, rav1, rav2, vcc, vj(4), vjb1h(3), vjb2h(1), vjc1b, &
                 & vjc1h(3), vjc2b, vjc2h(1), vno, vq(4), vqb1h(3), vqb2h(1), vqc1b, vqc1h(3), vqc2b, vqc2h(1), vstr
-            integer          :: i
+            integer :: i
             !      include 'ch3oh_h.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -992,23 +1004,23 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Add Newh2o
             ! jeg vdw
             !  calculate avergage bond length for the methane moiety
-            rav1 = (coord5_rc1h(1)+coord5_rc1h(2)+coord5_rc1h(3))/3.0d0
+            rav1 = (coord5_rc1h(1)+coord5_rc1h(2)+coord5_rc1h(3))/3.0e0_wp
             rav2 = coord5_rc2h(1)
             !      write(44,*) rav1, rav2
             !  initialise:
-            vstr = 0.0d0
+            vstr = 0.0e0_wp
             !  ach:
             !  nb: in double precision tanh(19.0d0)=1.0d0 and we put the if statemen
             !  in to avoid overflow/underflow errors
             arga1 = potcm_c1c1h*(rav1-coord6_r0c1h)
             arga2 = potcm_c1c2h*(rav2-coord6_r0c2h)
-            if( arga1 .lt. 19.0d0 )then
-                ach1 = potcm_a1c1h+potcm_b1c1h*(tanh(arga1)+1.0d0)*0.5d0
+            if( arga1 .lt. 19.0e0_wp )then
+                ach1 = potcm_a1c1h+potcm_b1c1h*(tanh(arga1)+1.0e0_wp)*0.5e0_wp
             else
                 ach1 = potcm_a1c1h+potcm_b1c1h
             endif
-            if( arga2 .lt. 19.0d0 )then
-                ach2 = potcm_a1c2h+potcm_b1c2h*(tanh(arga2)+1.0d0)*0.5d0
+            if( arga2 .lt. 19.0e0_wp )then
+                ach2 = potcm_a1c2h+potcm_b1c2h*(tanh(arga2)+1.0e0_wp)*0.5e0_wp
             else
                 ach2 = potcm_a1c2h+potcm_b1c2h
             endif
@@ -1019,71 +1031,71 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  terms for each bond
             !      write(44,*) d1c1b,d3c2b,ac1b,rc1b,r0c1b
             !      write(44,*) d1c2b,d3c2b,ac2b,rc2b,r0c2b
-            e1    = potcm_d1c1b*(exp(-2.0d0*potcm_ac1b*(coord5_rc1b-potcm_r0c1b)) -2.0d0*exp(-potcm_ac1b*(coord5_rc1b- &
-                & potcm_r0c1b)))
-            e3    = potcm_d3c1b*(exp(-2.0d0*potcm_ac1b*(coord5_rc1b-potcm_r0c1b)) +2.0d0*exp(-potcm_ac1b*(coord5_rc1b- &
-                & potcm_r0c1b)))
-            vqc1b = (e1+e3)*0.5d0
-            vjc1b = (e1-e3)*0.5d0
+            e1    = potcm_d1c1b*(exp(-2.0e0_wp*potcm_ac1b*(coord5_rc1b-potcm_r0c1b)) -2.0e0_wp*exp(-potcm_ac1b* &
+                & (coord5_rc1b- potcm_r0c1b)))
+            e3    = potcm_d3c1b*(exp(-2.0e0_wp*potcm_ac1b*(coord5_rc1b-potcm_r0c1b)) +2.0e0_wp*exp(-potcm_ac1b* &
+                & (coord5_rc1b- potcm_r0c1b)))
+            vqc1b = (e1+e3)*0.5e0_wp
+            vjc1b = (e1-e3)*0.5e0_wp
             !      write(44,*) vqc1b, vjc1b
-            e1    = potcm_d1c2b*(exp(-2.0d0*potcm_ac2b*(coord5_rc2b-potcm_r0c2b)) -2.0d0*exp(-potcm_ac2b*(coord5_rc2b- &
-                & potcm_r0c2b)))
-            e3    = potcm_d3c2b*(exp(-2.0d0*potcm_ac2b*(coord5_rc2b-potcm_r0c2b)) +2.0d0*exp(-potcm_ac2b*(coord5_rc2b- &
-                & potcm_r0c2b)))
-            vqc2b = (e1+e3)*0.5d0
-            vjc2b = (e1-e3)*0.5d0
+            e1    = potcm_d1c2b*(exp(-2.0e0_wp*potcm_ac2b*(coord5_rc2b-potcm_r0c2b)) -2.0e0_wp*exp(-potcm_ac2b* &
+                & (coord5_rc2b- potcm_r0c2b)))
+            e3    = potcm_d3c2b*(exp(-2.0e0_wp*potcm_ac2b*(coord5_rc2b-potcm_r0c2b)) +2.0e0_wp*exp(-potcm_ac2b* &
+                & (coord5_rc2b- potcm_r0c2b)))
+            vqc2b = (e1+e3)*0.5e0_wp
+            vjc2b = (e1-e3)*0.5e0_wp
             !     write(44,*) vqc2b, vjc2b
             ! O-H  new term (simple morse term)
             dt      = (newh2o_rno-newh2o_r0hh)
             expterm = exp(-newh2o_ahh*dt)
-            vno     = newh2o_d1hh*(1.d0-expterm)**2.d0
+            vno     = newh2o_d1hh*(1.e0_wp-expterm)**2.e0_wp
             do i=1, 3
                 !      write(44,*) 'ach1',ach1,'rc1h',rc1h(i),r0c1h
-                e1       = potcm_d1c1h*(exp(-2.0d0*ach1*(coord5_rc1h(i)-coord6_r0c1h)) -2.0d0*exp(-ach1* &
+                e1       = potcm_d1c1h*(exp(-2.0e0_wp*ach1*(coord5_rc1h(i)-coord6_r0c1h)) -2.0e0_wp*exp(-ach1* &
                     & (coord5_rc1h(i)-coord6_r0c1h)))
-                e3       = potcm_d3c1h*(exp(-2.0d0*ach1*(coord5_rc1h(i)-coord6_r0c1h)) +2.0d0*exp(-ach1* &
+                e3       = potcm_d3c1h*(exp(-2.0e0_wp*ach1*(coord5_rc1h(i)-coord6_r0c1h)) +2.0e0_wp*exp(-ach1* &
                     & (coord5_rc1h(i)-coord6_r0c1h)))
-                vqc1h(i) = (e1+e3)*0.5d0
-                vjc1h(i) = (e1-e3)*0.5d0
+                vqc1h(i) = (e1+e3)*0.5e0_wp
+                vjc1h(i) = (e1-e3)*0.5e0_wp
                 !      write(44,*) 'vqc1h',i, vqc1h(i), 'vjc1h',i, vjc1h(i)
             enddo
-            e1       = potcm_d1c2h*(exp(-2.0d0*ach2*(coord5_rc2h(1)-coord6_r0c2h)) -2.0d0*exp(-ach2*(coord5_rc2h(1)- &
-                & coord6_r0c2h)))
-            e3       = potcm_d3c2h*(exp(-2.0d0*ach2*(coord5_rc2h(1)-coord6_r0c2h)) +2.0d0*exp(-ach2*(coord5_rc2h(1)- &
-                & coord6_r0c2h)))
-            vqc2h(1) = (e1+e3)*0.5d0
-            vjc2h(1) = (e1-e3)*0.5d0
+            e1       = potcm_d1c2h*(exp(-2.0e0_wp*ach2*(coord5_rc2h(1)-coord6_r0c2h)) -2.0e0_wp*exp(-ach2* &
+                & (coord5_rc2h(1)- coord6_r0c2h)))
+            e3       = potcm_d3c2h*(exp(-2.0e0_wp*ach2*(coord5_rc2h(1)-coord6_r0c2h)) +2.0e0_wp*exp(-ach2* &
+                & (coord5_rc2h(1)- coord6_r0c2h)))
+            vqc2h(1) = (e1+e3)*0.5e0_wp
+            vjc2h(1) = (e1-e3)*0.5e0_wp
             !      write(44,*) 'vqc2h', vqc2h(1), 'vjc2h',vjc2h(1)
             do i=1, 3
-                e1       = potcm_d1h1h*(exp(-2.0d0*potcm_ah1h*(coord5_rb1h(i)-potcm_r0h1h)) -2.0d0*exp(-potcm_ah1h* &
-                    & (coord5_rb1h(i)-potcm_r0h1h)))
-                e3       = potcm_d3h1h*(exp(-2.0d0*potcm_ah1h*(coord5_rb1h(i)-potcm_r0h1h)) +2.0d0*exp(-potcm_ah1h* &
-                    & (coord5_rb1h(i)-potcm_r0h1h)))
-                vqb1h(i) = (e1+e3)*0.5d0
-                vjb1h(i) = (e1-e3)*0.5d0
+                e1       = potcm_d1h1h*(exp(-2.0e0_wp*potcm_ah1h*(coord5_rb1h(i)-potcm_r0h1h)) -2.0e0_wp*exp(- &
+                    & potcm_ah1h* (coord5_rb1h(i)-potcm_r0h1h)))
+                e3       = potcm_d3h1h*(exp(-2.0e0_wp*potcm_ah1h*(coord5_rb1h(i)-potcm_r0h1h)) +2.0e0_wp*exp(- &
+                    & potcm_ah1h* (coord5_rb1h(i)-potcm_r0h1h)))
+                vqb1h(i) = (e1+e3)*0.5e0_wp
+                vjb1h(i) = (e1-e3)*0.5e0_wp
                 !      write(44,*) 'vqb1h',i, vqb1h(i), 'vjb1h',i, vjb1h(i)
             enddo
-            e1       = potcm_d1h2h*(exp(-2.0d0*potcm_ah2h*(coord5_rb2h(1)-potcm_r0h2h)) -2.0d0*exp(-potcm_ah2h* &
+            e1       = potcm_d1h2h*(exp(-2.0e0_wp*potcm_ah2h*(coord5_rb2h(1)-potcm_r0h2h)) -2.0e0_wp*exp(-potcm_ah2h* &
                 & (coord5_rb2h(1)-potcm_r0h2h)))
-            e3       = potcm_d3h2h*(exp(-2.0d0*potcm_ah2h*(coord5_rb2h(1)-potcm_r0h2h)) +2.0d0*exp(-potcm_ah2h* &
+            e3       = potcm_d3h2h*(exp(-2.0e0_wp*potcm_ah2h*(coord5_rb2h(1)-potcm_r0h2h)) +2.0e0_wp*exp(-potcm_ah2h* &
                 & (coord5_rb2h(1)-potcm_r0h2h)))
-            vqb2h(1) = (e1+e3)*0.5d0
-            vjb2h(1) = (e1-e3)*0.5d0
+            vqb2h(1) = (e1+e3)*0.5e0_wp
+            vjb2h(1) = (e1-e3)*0.5e0_wp
             !      write(44,*) 'vqb2h', vqb2h(1), 'vji2h',vjb2h(1)
             !  calculate 3 body potential
             do i=1, 3
                 !       write(44,*) i,'vqc1h',vqc1h(i),'vqc1b',vqc1b, 'vqb1h',vqb1h(i)
                 vq(i) = vqc1h(i)+vqc1b+vqb1h(i)
-                vj(i) = -sqrt(((vjc1h(i)-vjc1b)**2+(vjc1b-vjb1h(i))**2 +(vjb1h(i)-vjc1h(i))**2)*0.5d0)
+                vj(i) = -sqrt(((vjc1h(i)-vjc1b)**2+(vjc1b-vjb1h(i))**2 +(vjb1h(i)-vjc1h(i))**2)*0.5e0_wp)
                 vstr  = vstr+vq(i)+vj(i)
             enddo
             vq(4) = vqc2h(1)+vqc2b+vqb2h(1)
-            vj(4) = -sqrt(((vjc2h(1)-vjc2b)**2+(vjc2b-vjb2h(1))**2 +(vjb2h(1)-vjc2h(1))**2)*0.5d0)
+            vj(4) = -sqrt(((vjc2h(1)-vjc2b)**2+(vjc2b-vjb2h(1))**2 +(vjb2h(1)-vjc2h(1))**2)*0.5e0_wp)
             vstr  = vstr+vq(4)+vj(4)
             ! CRD 2012 potencial morse para el enlace C-C
             dt      = (coord5_rcc-coord6_r0cc)
             expterm = exp(-potcm_acc*dt)
-            vcc     = potcm_d1cc*(1.0d0-expterm)**2.0d0
+            vcc     = potcm_d1cc*(1.0e0_wp-expterm)**2.0e0_wp
             vstr    = vstr + vcc + vno
             !      write(44,*) 'rcc',rcc,'r0cc',r0cc,'acc',acc
         end subroutine stretch
@@ -1091,15 +1103,16 @@ module chempotpy_ch5o2_vbmm_2023_pes
         !> @brief Evaluate opbend for the CH5O2_VBMM_2023 potential.
         subroutine opbend( vop )
             !  subroutine calculates symmetrized vop potential and derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a(3), argd(4), axb(3), b(3), c(4,3), sum2, sum4, sumd2(4), sumd4(4), vop
-            integer          :: i, in(3), j, k, l
+            real(wp) :: a(3), argd(4), axb(3), b(3), c(4,3), sum2, sum4, sumd2(4), sumd4(4), vop
+            integer  :: i, in(3), j, k, l
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -1111,10 +1124,10 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Subroutine Switch
             ! Add Newh2o
             ! jeg vdw
-            double precision :: norma
+            real(wp) :: norma
             !      dimension sumd2(8),sumd4(8)
             !      dimension in(3),a(3),b(3),axb(3),c(8,3),argd(8)
-            vop = 0.0d0
+            vop = 0.0e0_wp
             !  calculate force constants
             call opforce
             !  calculate out-of-plane angle
@@ -1139,17 +1152,18 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  subroutine calculates out of plane angle delta, loops
             !  through delta(i,j), delta(i,k), delta(i,l)
             !   also calculates the derivatives wrt delta
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
-            integer          :: i, ii, in(3), ind, j, k, l
-            double precision :: norma
+            real(wp) :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
+            integer  :: i, ii, in(3), ind, j, k, l
+            real(wp) :: norma
             !      include 'ch3oh_h.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -1162,7 +1176,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Add Newh2o
             ! jeg vdw
             !  initialise
-            sum2 = 0.0d0; sum4 = 0.0d0
+            sum2 = 0.0e0_wp; sum4 = 0.0e0_wp
             !  set j,k,l indices
             in(1) = j
             in(2) = k
@@ -1250,16 +1264,17 @@ module chempotpy_ch5o2_vbmm_2023_pes
         subroutine opforce
             !  calculates the out-of-plane bending force constants
             !  and their derivatives
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: switch(4)
-            integer          :: i
+            real(wp) :: switch(4)
+            integer  :: i
             !      include 'ch3oh_h.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -1273,10 +1288,10 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! jeg vdw
             !      dimension switch(8)
             !  calculate switching functions:
-            switch(1) = (1.0d0-switch1_s3(1))*switch1_s3(2)*switch1_s3(3)*switch1_s3(4)
-            switch(2) = (1.0d0-switch1_s3(2))*switch1_s3(3)*switch1_s3(4)*switch1_s3(1)
-            switch(3) = (1.0d0-switch1_s3(3))*switch1_s3(4)*switch1_s3(1)*switch1_s3(2)
-            switch(4) = (1.0d0-switch1_s3(4))*switch1_s3(1)*switch1_s3(2)*switch1_s3(3)
+            switch(1) = (1.0e0_wp-switch1_s3(1))*switch1_s3(2)*switch1_s3(3)*switch1_s3(4)
+            switch(2) = (1.0e0_wp-switch1_s3(2))*switch1_s3(3)*switch1_s3(4)*switch1_s3(1)
+            switch(3) = (1.0e0_wp-switch1_s3(3))*switch1_s3(4)*switch1_s3(1)*switch1_s3(2)
+            switch(4) = (1.0e0_wp-switch1_s3(4))*switch1_s3(1)*switch1_s3(2)*switch1_s3(3)
             !      switch(5)=(1.0d0-s3(5))*s3(6)*s3(7)*s3(8)
             !      switch(6)=(1.0d0-s3(6))*s3(7)*s3(8)*s3(5)
             !      switch(7)=(1.0d0-s3(7))*s3(8)*s3(5)*s3(6)
@@ -1296,15 +1311,16 @@ module chempotpy_ch5o2_vbmm_2023_pes
         !> @brief Evaluate ipbend for the CH5O2_VBMM_2023 potential.
         subroutine ipbend( vip )
             !  subroutine calculates symmetrised in plane bend term
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: arga, cosine, costh(6,6), dang, dot, dth(6,6), theta(6,6), vip
-            integer          :: i, j
+            real(wp) :: arga, cosine, costh(6,6), dang, dot, dth(6,6), theta(6,6), vip
+            integer  :: i, j
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -1317,7 +1333,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Add Newh2o
             ! jeg vdw
             !  initialise
-            vip = 0.0d0
+            vip = 0.0e0_wp
             !  calculate force constants: fk0(i,j), f1(i)
             !  and derivatives wrt rch(k) and rbh(k): dfdc(i,j,k), dfdh(i,j,k)
             call ipforce
@@ -1332,14 +1348,14 @@ module chempotpy_ch5o2_vbmm_2023_pes
                         theta(i,j) = acos(costh(i,j))
                         dth(i,j)   = theta(i,j)-refangles1_theta0(i,j)
                         !      write(44,*) 'f1 i',i,f1(i),'f1 j',j,f1(j)
-                        vip = vip+0.5d0*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
+                        vip = vip+0.5e0_wp*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
                     else
                         costh(i,j) = coord4_tc1h(i,1)*coord3_tcc(1)+coord4_tc1h(i,2)*coord3_tcc(2) +coord4_tc1h(i,3)* &
                             & coord3_tcc(3)
                         costh(i,j) = costh(i,j)/coord5_rc1h(i)/coord5_rcc
                         theta(i,j) = acos(costh(i,j))
                         dth(i,j)   = theta(i,j)-refangles1_theta0(i,j)
-                        vip        = vip+0.5d0*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
+                        vip        = vip+0.5e0_wp*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
                         !     write(44,*)'fk0i,j',fk0(i,j),'f1i',f1(i),'f1j',f1(j),'dt',dth(i,j)
                     endif
                 enddo
@@ -1351,7 +1367,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             costh(5,6) = costh(5,6)/coord5_rc2h(1)/coord5_rcc
             theta(5,6) = acos(costh(5,6))
             dth(5,6)   = theta(5,6)-refangles1_theta0(5,6)
-            vip        = vip+0.5d0*ipforce1_fk0(5,6)*ipforce1_f1(5)*ipforce1_f1(6)*dth(5,6)**2
+            vip        = vip+0.5e0_wp*ipforce1_fk0(5,6)*ipforce1_f1(5)*ipforce1_f1(6)*dth(5,6)**2
             !     write(44,*) 'theta 5,6', theta(5,6), theta0(5,6)
             !     write(44,*)'fk05,6',fk0(5,6),'f15',f1(5),'f16',f1(6),'dt',dth(5,6)
             !     write(44,*) 'vip do 2', vip
@@ -1359,20 +1375,20 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  First, calculate the angles:
             ! CRD 2022 INICIO
             do i = 1, 3
-                dot = 0.d0
+                dot = 0.e0_wp
                 do j = 1, 3
                     dot = dot - newh2o_tno(j)*coord4_tb1h(i,j)
                 enddo
                 cosine           = dot / (newh2o_rno*coord5_rb1h(i))
-                cosine           = min(1.d0, max(-1.d0, cosine))
+                cosine           = min(1.e0_wp, max(-1.e0_wp, cosine))
                 newh2o_angh2o(i) = acos(cosine)
             enddo
-            dot = 0.d0
+            dot = 0.e0_wp
             do j = 1, 3
                 dot = dot - newh2o_tno(j)*coord4_tb2h(1,j)
             enddo
             cosine           = dot / (newh2o_rno*coord5_rb2h(1))
-            cosine           = min(1.d0, max(-1.d0, cosine))
+            cosine           = min(1.e0_wp, max(-1.e0_wp, cosine))
             newh2o_angh2o(4) = acos(cosine)
             ! CRD 2022 FIN
             !  Now, calculate each force constant fkh2o(i) as a function of the
@@ -1381,24 +1397,24 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! CRD 2022 INICIO
             do i=1, 3
                 arga = newh2o_alph2o * (coord5_rb1h(i) - newh2o_r0hh)
-                if( arga .lt. 19.0d0 )then
+                if( arga .lt. 19.0e0_wp )then
                     newh2o_fkh2o(i) = newh2o_fkh2oeq * (1 - tanh(arga))
                 else
-                    newh2o_fkh2o(i) = 0.0d0
+                    newh2o_fkh2o(i) = 0.0e0_wp
                 endif
             enddo
             arga = newh2o_alph2o * (coord5_rb2h(1) - newh2o_r0hh)
-            if( arga .lt. 19.0d0 )then
+            if( arga .lt. 19.0e0_wp )then
                 newh2o_fkh2o(4) = newh2o_fkh2oeq * (1 - tanh(arga))
             else
-                newh2o_fkh2o(4) = 0.0d0
+                newh2o_fkh2o(4) = 0.0e0_wp
             endif
             ! CRD 2022 FIN
             !  Now calculate the contribution to the energy for each H(I)-O-H(O)
             !  harmonic bending term
             do i=1, 4
                 dang = (newh2o_angh2o(i) - newh2o_angh2oeq)
-                vip  = vip+0.5d0* newh2o_fkh2o(i) * dang * dang
+                vip  = vip+0.5e0_wp* newh2o_fkh2o(i) * dang * dang
             enddo
         end subroutine ipbend
 
@@ -1406,16 +1422,17 @@ module chempotpy_ch5o2_vbmm_2023_pes
         subroutine ipforce
             !  calculates the symmetrised in plane bend force constants and
             !  all partial derivatives involving them
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a1, a2, arga1, arga2, f0, f2
-            integer          :: i
+            real(wp) :: a1, a2, arga1, arga2, f0, f2
+            integer  :: i
             !      include 'ch3oh_h.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -1428,17 +1445,24 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! Add Newh2o
             ! jeg vdw
             !  set force constant at asymptotes
-            f0                = potcm_fkinf1+potcm_ak1
-            f2                = potcm_fkinf1
-            ipforce1_fk0(1,2) = f0+f0*(switch1_s1(1)*switch1_s1(2)-1.0d0)+(f0-f2)*(switch1_s2(3)*switch1_s2(4)-1.0d0)
-            ipforce1_fk0(1,3) = f0+f0*(switch1_s1(1)*switch1_s1(3)-1.0d0)+(f0-f2)*(switch1_s2(2)*switch1_s2(4)-1.0d0)
-            ipforce1_fk0(1,4) = f0+f0*(switch1_s1(1)*switch1_s1(4)-1.0d0)+(f0-f2)*(switch1_s2(2)*switch1_s2(3)-1.0d0)
-            ipforce1_fk0(2,3) = f0+f0*(switch1_s1(2)*switch1_s1(3)-1.0d0)+(f0-f2)*(switch1_s2(1)*switch1_s2(4)-1.0d0)
-            ipforce1_fk0(2,4) = f0+f0*(switch1_s1(2)*switch1_s1(4)-1.0d0)+(f0-f2)*(switch1_s2(1)*switch1_s2(3)-1.0d0)
-            ipforce1_fk0(3,4) = f0+f0*(switch1_s1(3)*switch1_s1(4)-1.0d0)+(f0-f2)*(switch1_s2(1)*switch1_s2(2)-1.0d0)
+            f0 = potcm_fkinf1+potcm_ak1
+            f2 = potcm_fkinf1
+            ipforce1_fk0(1,2) = f0+f0*(switch1_s1(1)*switch1_s1(2)-1.0e0_wp)+(f0-f2)*(switch1_s2(3)*switch1_s2(4)- &
+                & 1.0e0_wp)
+            ipforce1_fk0(1,3) = f0+f0*(switch1_s1(1)*switch1_s1(3)-1.0e0_wp)+(f0-f2)*(switch1_s2(2)*switch1_s2(4)- &
+                & 1.0e0_wp)
+            ipforce1_fk0(1,4) = f0+f0*(switch1_s1(1)*switch1_s1(4)-1.0e0_wp)+(f0-f2)*(switch1_s2(2)*switch1_s2(3)- &
+                & 1.0e0_wp)
+            ipforce1_fk0(2,3) = f0+f0*(switch1_s1(2)*switch1_s1(3)-1.0e0_wp)+(f0-f2)*(switch1_s2(1)*switch1_s2(4)- &
+                & 1.0e0_wp)
+            ipforce1_fk0(2,4) = f0+f0*(switch1_s1(2)*switch1_s1(4)-1.0e0_wp)+(f0-f2)*(switch1_s2(1)*switch1_s2(3)- &
+                & 1.0e0_wp)
+            ipforce1_fk0(3,4) = f0+f0*(switch1_s1(3)*switch1_s1(4)-1.0e0_wp)+(f0-f2)*(switch1_s2(1)*switch1_s2(2)- &
+                & 1.0e0_wp)
             !      fk0(5,6)=fkinf2*(s1(5)*s1(6))
             !      fk0(5,6)=fkinf2*s1(5)
-            ipforce1_fk0(5,6) = f0+f0*(switch1_s1(5)*switch1_s1(6)-1.0d0)+(f0-f2)*(switch1_s2(5)*switch1_s2(6)-1.0d0)
+            ipforce1_fk0(5,6) = f0+f0*(switch1_s1(5)*switch1_s1(6)-1.0e0_wp)+(f0-f2)*(switch1_s2(5)*switch1_s2(6)- &
+                & 1.0e0_wp)
             ! f1 para los h del c1
             do i=1, 3
                 !  calc derivatives of fk0 wrt each of the rch(i) bonds
@@ -1446,7 +1470,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 !       write(44,*) 'rb1h',i, rb1h(i)
                 arga1 = potcm_aa11*coord5_rb1h(i)*coord5_rb1h(i)
                 arga2 = potcm_aa41*(coord5_rb1h(i)-newh2o_r0hh)*(coord5_rb1h(i)-newh2o_r0hh)
-                a1    = 1.0d0-exp(-arga1)
+                a1    = 1.0e0_wp-exp(-arga1)
                 a2    = potcm_aa21+potcm_aa31*exp(-arga2)
                 !       write(44,*) 'a1',i, a1,'a2',i,a2,'aa11',aa11
                 ipforce1_f1(i) = a1*exp(-a2*(coord5_rc1h(i)-coord6_r0c1h)**2)
@@ -1461,7 +1485,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  calculate the terms f1(i)
             arga1          = potcm_aa12*coord5_rb2h(1)*coord5_rb2h(1)
             arga2          = potcm_aa42*(coord5_rb2h(1)-newh2o_r0hh)*(coord5_rb2h(1)-newh2o_r0hh)
-            a1             = 1.0d0-exp(-arga1)
+            a1             = 1.0e0_wp-exp(-arga1)
             a2             = potcm_aa22+potcm_aa32*exp(-arga2)
             ipforce1_f1(5) = a1*exp(-a2*(coord5_rc2h(1)-coord6_r0c2h)**2)
         end subroutine ipforce
@@ -1469,16 +1493,17 @@ module chempotpy_ch5o2_vbmm_2023_pes
         !> @brief Evaluate switchf for the CH5O2_VBMM_2023 potential.
         subroutine switchf
             !  calculates switching functions: s3,sphi,stheta
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: argmax, args1, args2, args3, argsc1, argsc2, argsc3, argsphi, argsphic, argstheta, argsthetac
-            integer          :: i
+            real(wp) :: argmax, args1, args2, args3, argsc1, argsc2, argsc3, argsphi, argsphic, argstheta, argsthetac
+            integer  :: i
             !      include 'ch3oh_h.inc'
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -1501,102 +1526,102 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !      b2s=-12.363798d0
             !  use double precision criterion:
             !  tanh(19.0d0)=1.0d0
-            argmax = 19.0d0
+            argmax = 19.0e0_wp
             !  calculate s1
             do i=1, 3
                 args1 = potcm_a1s1*(coord5_rc1h(i)-coord6_r0c1h)*(coord5_rc1h(i)-potcm_b1s1)**8
                 if( args1 .lt. argmax )then
-                    switch1_s1(i) = 1.0d0-tanh(args1)
+                    switch1_s1(i) = 1.0e0_wp-tanh(args1)
                 else
-                    switch1_s1(i) = 0.0d0
+                    switch1_s1(i) = 0.0e0_wp
                 endif
             enddo
             args1 = potcm_a2s1*(coord5_rc2h(1)-coord6_r0c2h)*(coord5_rc2h(1)-potcm_b2s1)**8
             if( args1 .lt. argmax )then
-                switch1_s1(5) = 1.0d0-tanh(args1)
+                switch1_s1(5) = 1.0e0_wp-tanh(args1)
             else
-                switch1_s1(5) = 0.0d0
+                switch1_s1(5) = 0.0e0_wp
             endif
             ! CRD 2012 todos los S de los carbonos son 1
             argsc1 = potcm_a1scc*(coord5_rcc-coord6_r0cc)*(coord5_rcc-potcm_b1scc)**8
             if( argsc1 .lt. argmax )then
-                switch1_s1(4) = 1.0d0-tanh(argsc1)
+                switch1_s1(4) = 1.0e0_wp-tanh(argsc1)
                 switch1_s1(6) = switch1_s1(4)
             else
-                switch1_s1(4) = 0.0d0
+                switch1_s1(4) = 0.0e0_wp
                 switch1_s1(6) = switch1_s1(4)
             endif
             ! CRD correccion para dejar C-C fijo
-            switch1_s1(4) = 1.0d0
-            switch1_s1(6) = 1.0d0
+            switch1_s1(4) = 1.0e0_wp
+            switch1_s1(6) = 1.0e0_wp
             !  calculate s2 and ds2
             do i=1, 3
                 args2 = potcm_a1s2*(coord5_rc1h(i)-coord6_r0c1h)*(coord5_rc1h(i)-potcm_b1s2)**6
                 if( args2 .lt. argmax )then
-                    switch1_s2(i) = 1.0d0-tanh(args2)
+                    switch1_s2(i) = 1.0e0_wp-tanh(args2)
                 else
-                    switch1_s2(i) = 0.0d0
+                    switch1_s2(i) = 0.0e0_wp
                 endif
             enddo
             args2 = potcm_a2s2*(coord5_rc2h(1)-coord6_r0c2h)*(coord5_rc2h(1)-potcm_b2s2)**6
             if( args2 .lt. argmax )then
-                switch1_s2(5) = 1.0d0-tanh(args2)
+                switch1_s2(5) = 1.0e0_wp-tanh(args2)
             else
-                switch1_s2(5) = 0.0d0
+                switch1_s2(5) = 0.0e0_wp
             endif
             argsc2 = potcm_a2scc*(coord5_rcc-coord6_r0cc)*(coord5_rcc-potcm_b2scc)**6
             if( argsc2 .lt. argmax )then
-                switch1_s2(4) = 1.0d0-tanh(argsc2)
+                switch1_s2(4) = 1.0e0_wp-tanh(argsc2)
                 switch1_s2(6) = switch1_s2(4)
             else
-                switch1_s2(4) = 0.0d0
+                switch1_s2(4) = 0.0e0_wp
                 switch1_s2(6) = switch1_s2(4)
             endif
             ! CRD correccion para dejar C-C fijo
-            switch1_s2(4) = 1.0d0
-            switch1_s2(6) = 1.0d0
+            switch1_s2(4) = 1.0e0_wp
+            switch1_s2(6) = 1.0e0_wp
             !  calculate s3 and ds3
             do i=1, 3
                 args3 = potcm_a3s*(coord5_rc1h(i)-coord6_r0c1h)*(coord5_rc1h(i)-potcm_b3s)**2
                 if( args3 .lt. argmax )then
-                    switch1_s3(i) = 1.0d0-tanh(args3)
+                    switch1_s3(i) = 1.0e0_wp-tanh(args3)
                 else
-                    switch1_s3(i) = 0.0d0
+                    switch1_s3(i) = 0.0e0_wp
                 endif
             enddo
             argsc3 = potcm_a3scc*(coord5_rcc-coord6_r0cc)*(coord5_rcc-potcm_b3scc)**2
             if( argsc3 .lt. argmax )then
-                switch1_s3(4) = 1.0d0-tanh(argsc3)
+                switch1_s3(4) = 1.0e0_wp-tanh(argsc3)
             else
-                switch1_s3(4) = 0.0d0
+                switch1_s3(4) = 0.0e0_wp
             endif
             ! CRD correccion para dejar C-C fijo
-            switch1_s3(4) = 1.0d0
+            switch1_s3(4) = 1.0e0_wp
             !  calculate sphi
             !  condition here is on the bondlength rch(i)
             !  st argsphi is lt approx 19.0d0
             do i=1, 3
-                if( coord5_rc1h(i) .lt. 3.8d0 )then
+                if( coord5_rc1h(i) .lt. 3.8e0_wp )then
                     argsphi            = potcm_aphi1*(coord5_rc1h(i)-coord6_r0c1h)*exp(potcm_bphi1*(coord5_rc1h(i)- &
                         & potcm_cphi1)**3)
-                    refangles1_sphi(i) = 1.0d0-tanh(argsphi)
+                    refangles1_sphi(i) = 1.0e0_wp-tanh(argsphi)
                 else
-                    refangles1_sphi(i) = 0.0d0
+                    refangles1_sphi(i) = 0.0e0_wp
                 endif
             enddo
-            if( coord5_rc2h(1) .lt. 3.8d0 )then
+            if( coord5_rc2h(1) .lt. 3.8e0_wp )then
                 argsphi            = potcm_aphi2*(coord5_rc2h(1)-coord6_r0c2h)*exp(potcm_bphi2*(coord5_rc2h(1)- &
                     & potcm_cphi2)**3)
-                refangles1_sphi(5) = 1.0d0-tanh(argsphi)
+                refangles1_sphi(5) = 1.0e0_wp-tanh(argsphi)
             else
-                refangles1_sphi(5) = 0.0d0
+                refangles1_sphi(5) = 0.0e0_wp
             endif
-            if( coord5_rcc .lt. 3.8d0 )then
+            if( coord5_rcc .lt. 3.8e0_wp )then
                 argsphic           = potcm_aphi*(coord5_rcc-coord6_r0cc)*exp(potcm_bphi*(coord5_rcc-potcm_cphi)**3)
-                refangles1_sphi(4) = 1.0d0-tanh(argsphic)
+                refangles1_sphi(4) = 1.0e0_wp-tanh(argsphic)
                 refangles1_sphi(6) = refangles1_sphi(4)
             else
-                refangles1_sphi(4) = 0.0d0
+                refangles1_sphi(4) = 0.0e0_wp
                 refangles1_sphi(6) = refangles1_sphi(4)
             endif
             !          sphi(4)=1.0d0
@@ -1606,12 +1631,12 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !      enddo
             !  calculate stheta and dstheta
             do i=1, 3
-                if( coord5_rc1h(i) .lt. 3.8d0 )then
+                if( coord5_rc1h(i) .lt. 3.8e0_wp )then
                     argstheta = potcm_atheta*(coord5_rc1h(i)-coord6_r0c1h)*exp(potcm_btheta*(coord5_rc1h(i)- &
                         & potcm_ctheta)**3)
-                    refangles1_stheta(i) = 1.0d0-tanh(argstheta)
+                    refangles1_stheta(i) = 1.0e0_wp-tanh(argstheta)
                 else
-                    refangles1_stheta(i) = 0.0d0
+                    refangles1_stheta(i) = 0.0e0_wp
                 endif
             enddo
             !      do i=1,3
@@ -1623,13 +1648,13 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !        endif
             !      enddo
             ! CRD 2012 todos los S de los carbonos son 1
-            if( coord5_rcc .lt. 3.8d0 )then
+            if( coord5_rcc .lt. 3.8e0_wp )then
                 argsthetac           = potcm_athetacc*(coord5_rcc-coord6_r0cc)*exp(potcm_bthetacc*(coord5_rcc- &
                     & potcm_cthetacc)**3)
-                refangles1_stheta(4) = 1.0d0-tanh(argsthetac)
+                refangles1_stheta(4) = 1.0e0_wp-tanh(argsthetac)
                 refangles1_stheta(6) = refangles1_stheta(4)
             else
-                refangles1_stheta(4) = 0.0d0
+                refangles1_stheta(4) = 0.0e0_wp
                 refangles1_stheta(6) = refangles1_stheta(4)
             endif
             !          stheta(4)=1.0d0
@@ -1645,16 +1670,17 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !   coordinates needed to represent the full system represented by this
             !   potential energy surface routine.
             !   N3TM must be greater than or equal to N3TMMN.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: fact1, fact2, fact3
-            integer          :: i, icount, ind
+            real(wp) :: fact1, fact2, fact3
+            integer  :: i, icount, ind
             !C INCLUDE DEL VENUS
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: n3tmmn = 27
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: n3tmmn = 27
             !  include file for CH3OH+H PES
             !  CONST
             !     COMMON /POTCM/ nnc1,nnc2,nnb,nc1h(3),nc2h(1),
@@ -1711,9 +1737,9 @@ module chempotpy_ch5o2_vbmm_2023_pes
             !  distance in 1.0d-10 m
             !  angles   in radians
             !  mass     in amu
-            fact1           = 0.041840d0
-            fact2           = 6.022045d0
-            fact3           = 2.d0*3.1415926d0/360.d0
+            fact1           = 0.041840e0_wp
+            fact2           = 6.022045e0_wp
+            fact3           = 2.e0_wp*3.1415926e0_wp/360.e0_wp
             potcm_d1c1h     = potcm_d1c1h*fact1
             potcm_d3c1h     = potcm_d3c1h*fact1
             potcm_d1c2h     = potcm_d1c2h*fact1
@@ -1734,23 +1760,24 @@ module chempotpy_ch5o2_vbmm_2023_pes
             potcm_fkinf2    = potcm_fkinf2*fact2
             newh2o_fkh2oeq  = newh2o_fkh2oeq*fact2
             newh2o_angh2oeq = newh2o_angh2oeq*fact3
-            potcm_a1s1      = potcm_a1s1*1.d-8
-            potcm_a2s1      = potcm_a2s1*1.d-8
-            potcm_a1s2      = potcm_a1s2*1.d-8
-            potcm_a2s2      = potcm_a2s2*1.d-8
-            potcm_a1scc     = potcm_a1scc*1.d-8
-            potcm_a2scc     = potcm_a2scc*1.d-8
+            potcm_a1s1      = potcm_a1s1*1.e-8_wp
+            potcm_a2s1      = potcm_a2s1*1.e-8_wp
+            potcm_a1s2      = potcm_a1s2*1.e-8_wp
+            potcm_a2s2      = potcm_a2s2*1.e-8_wp
+            potcm_a1scc     = potcm_a1scc*1.e-8_wp
+            potcm_a2scc     = potcm_a2scc*1.e-8_wp
         end subroutine prepare_local_context
 
         !> @brief Evaluate POTINFO for the CH5O2_VBMM_2023 potential.
         subroutine potinfo
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i, j, k, kmax
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
+            integer             :: i, j, k, kmax
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -1838,34 +1865,35 @@ module chempotpy_ch5o2_vbmm_2023_pes
 
         !> @brief Evaluate ANCVRT for the CH5O2_VBMM_2023 potential.
         subroutine ancvrt
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi         = 3.141592653589793d0
-            double precision, parameter :: clight     = 2.99792458d08
-            double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
-            double precision, parameter :: cepsilon_0 = 1.0d0/(cmu_0*clight**2)
-            double precision, parameter :: ce         = 1.602176462d-19
-            double precision, parameter :: cplanck    = 6.62606876d-34
-            double precision, parameter :: cm_e       = 9.10938188d-31
-            double precision, parameter :: cang       = 1.0d-10
-            double precision, parameter :: cavogadro  = 6.02214199d23
-            double precision, parameter :: ckcal      = 4.184d10
-            double precision, parameter :: htomillh   = 1000.d0
-            double precision, parameter :: htoev      = 27.2113834d0
-            double precision, parameter :: htokcal    = 627.509470d0
-            double precision, parameter :: htowave    = 219474.631d0
-            double precision, parameter :: htokj      = 2625.49962d0
-            double precision, parameter :: bohr_a     = .5291772083d0
-            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
-            character(len=3)   :: periodic_1(7,32)
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
+            integer, parameter  :: n3atom     = 75
+            integer, parameter  :: natom      = 25
+            integer, parameter  :: isurf      = 5
+            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
+            real(wp), parameter :: pi         = 3.141592653589793e0_wp
+            real(wp), parameter :: clight     = 2.99792458e08_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
+            real(wp), parameter :: ce         = 1.602176462e-19_wp
+            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
+            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
+            real(wp), parameter :: cang       = 1.0e-10_wp
+            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
+            real(wp), parameter :: ckcal      = 4.184e10_wp
+            real(wp), parameter :: htomillh   = 1000.e0_wp
+            real(wp), parameter :: htoev      = 27.2113834e0_wp
+            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htowave    = 219474.631e0_wp
+            real(wp), parameter :: htokj      = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)    :: periodic_1(7,32)
+            character(len=2)    :: name1(natom)
+            character(len=2)    :: name2(natom)
+            character(len=1)    :: iblank
+            character(len=20)   :: distance
+            character(len=20)   :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -2090,9 +2118,9 @@ module chempotpy_ch5o2_vbmm_2023_pes
             elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
-            utilcm_cnvrtd  = 1.d0
-            utilcm_cnvrte  = 1.d0
-            utilcm_cnvrtde = 1.d0
+            utilcm_cnvrtd  = 1.e0_wp
+            utilcm_cnvrte  = 1.e0_wp
+            utilcm_cnvrtde = 1.e0_wp
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
@@ -2117,6 +2145,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
         !> @brief Evaluate CARTOU for the CH5O2_VBMM_2023 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: i, j
             integer, parameter :: n3atom = 75
@@ -2129,9 +2158,10 @@ module chempotpy_ch5o2_vbmm_2023_pes
         !> @brief Evaluate CARTTOR for the CH5O2_VBMM_2023 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: coordinate_status
-            double precision   :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
+            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
             integer            :: i, ind, k, l
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
@@ -2145,6 +2175,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
 
         !> @brief Evaluate EUNITZERO for the CH5O2_VBMM_2023 potential.
         subroutine eunitzero
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j
             character(len=75)  :: ref(5)
@@ -2167,15 +2198,16 @@ module chempotpy_ch5o2_vbmm_2023_pes
 
         !> @brief Evaluate RTOCART for the CH5O2_VBMM_2023 potential.
         subroutine rtocart
+            use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
-                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
-                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
+            real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom, isurf), &
+                & ygs(n3atom), yij(n3atom, jsurf), za, zb, zc, zd
+            integer :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -2199,21 +2231,21 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 enddo
             elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
-                    utilcm_dgscartnu(i,1) = 0.d0
-                    utilcm_dgscartnu(i,2) = 0.d0
-                    utilcm_dgscartnu(i,3) = 0.d0
+                    utilcm_dgscartnu(i,1) = 0.e0_wp
+                    utilcm_dgscartnu(i,2) = 0.e0_wp
+                    utilcm_dgscartnu(i,3) = 0.e0_wp
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(i,1,j1) = 0.d0
-                            utilcm_descartnu(i,2,j1) = 0.d0
-                            utilcm_descartnu(i,3,j1) = 0.d0
+                            utilcm_descartnu(i,1,j1) = 0.e0_wp
+                            utilcm_descartnu(i,2,j1) = 0.e0_wp
+                            utilcm_descartnu(i,3,j1) = 0.e0_wp
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(i,1,j2) = 0.d0
-                            utilcm_dijcartnu(i,2,j2) = 0.d0
-                            utilcm_dijcartnu(i,3,j2) = 0.d0
+                            utilcm_dijcartnu(i,1,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,2,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,3,j2) = 0.e0_wp
                         enddo
                     endif
                     do j = 1, infocm_natoms
@@ -2253,12 +2285,12 @@ module chempotpy_ch5o2_vbmm_2023_pes
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j=utilcm_ksdiag, utilcm_kediag
-                            yes(i,j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
+                            yes(i, j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do k=utilcm_ksoffd, utilcm_keoffd
-                            yij(i,k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
+                            yij(i, k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
                         enddo
                     endif
                 enddo
@@ -2271,22 +2303,22 @@ module chempotpy_ch5o2_vbmm_2023_pes
                     utilcm_dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(1,k,j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                            utilcm_descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                            utilcm_descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                            utilcm_descartnu(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
+                            utilcm_descartnu(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
+                            utilcm_descartnu(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(1,k,j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3,j2) - term23*yij(2,j2)
+                            utilcm_dijcartnu(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
+                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
+                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
                         enddo
                     endif
                 enddo
             elseif( infocm_icartr .eq. 4 )then
-                wh   = 1.007825d0
-                wf   = 18.99840d0
+                wh   = 1.007825e0_wp
+                wf   = 18.99840e0_wp
                 sum  = wh+wf
                 eps  = wf/sum
                 epsp = wh/sum
@@ -2296,8 +2328,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 ss1  = sin(theta1)
                 ss2  = sin(theta2)
                 ss3  = sin(phi)
-                ya   = 0.0d0
-                yb   = 0.0d0
+                ya   = 0.0e0_wp
+                yb   = 0.0e0_wp
                 t0   = r1*u1
                 za   = -epsp*t0
                 zb   = eps*t0
@@ -2323,6 +2355,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
 
         !> @brief Evaluate DEDCOU for the CH5O2_VBMM_2023 potential.
         subroutine dedcou
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k
             integer, parameter :: n3atom = 75
@@ -2377,13 +2410,14 @@ end module chempotpy_ch5o2_vbmm_2023_pes
 !> @brief Expose CH5O2_VBMM_2023 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_ch5o2_vbmm_2023_pes, only: evaluate
+    use chempotpy_kinds,               only: wp
     implicit none
-    integer, parameter            :: natoms  = 8
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 8
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

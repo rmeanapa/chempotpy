@@ -34,9 +34,14 @@ class ExportStandaloneTests(unittest.TestCase):
         source = select_surface("H3/H3_GEN_A2_2002")
         combined = combined_source(source)
         self.assertIn("module chempotpy_legacy_coordinates", combined)
+        self.assertIn("module chempotpy_h3_2002_basis", combined)
         self.assertIn("module chempotpy_h3_gen_a2_2002_pes", combined)
         self.assertLess(
             combined.index("module chempotpy_legacy_coordinates"),
+            combined.index("module chempotpy_h3_2002_basis"),
+        )
+        self.assertLess(
+            combined.index("module chempotpy_h3_2002_basis"),
             combined.index("module chempotpy_h3_gen_a2_2002_pes"),
         )
 

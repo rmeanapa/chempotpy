@@ -44,6 +44,7 @@
 
 !> @brief Implement O2H_GEN, a potential energy surface for O2H.
 module chempotpy_o2h_gen_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -52,30 +53,32 @@ module chempotpy_o2h_gen_pes
 
     !> @brief Evaluate the O2H_GEN potential energy surface for O2H.
     subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
-        use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
-        use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+        use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
+        use chempotpy_kinds,              only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: der(3), energy, r(3), v
-        integer                       :: iatom, idir, istate, j
-        double precision              :: tx(9), r2(3), dedx(9), drdx(3,9)
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: der(3), energy, r(3), v
+        integer               :: iatom, idir, istate, j
+        real(wp)              :: tx(9), r2(3), dedx(9), drdx(3,9)
         !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         call flatten_cartesian_coordinates(x, tx)
         ! input cartesian is ClHH
-        call legacy_triatomic_distances_to_bohr(x, r)
-        der = 0.d0
+        call triatomic_distances_to_bohr(x, r)
+        der = 0.e0_wp
         call pot(r, igrad, energy, der)
-        energy = energy*legacy_hartree_to_electronvolt
-        der    = der*51.422067
-        r2     = r*legacy_bohr_to_angstrom
+        energy = energy*hartree_to_electronvolt
+        der    = der*hartree_per_bohr_to_ev_per_angstrom
+        r2     = r*bohr_to_angstrom
         call evdrdx(tx, r2, drdx)
         call transform_internal_gradient_to_cartesian(der, drdx, dedx)
         if( igrad == 0 )then
@@ -101,29 +104,32 @@ end module chempotpy_o2h_gen_pes
 !> @brief Expose O2H_GEN through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_o2h_gen_pes, only: evaluate
+    use chempotpy_kinds,       only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the O2H_GEN potential.
 subroutine evdrdx( x, r, drdx )
     use chempotpy_geometry, only: ordered_pair_distance_jacobian
+    use chempotpy_kinds,    only: wp
     implicit none
-    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter            :: second_atoms(3) = [2, 3, 3]
-    double precision, intent(in)  :: x(9), r(3)
-    double precision, intent(out) :: drdx(3,9)
+    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter    :: second_atoms(3) = [2, 3, 3]
+    real(wp), intent(in)  :: x(9), r(3)
+    real(wp), intent(out) :: drdx(3,9)
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 module chempotpy_o2h_gen_pot_legacy_state_fffab58a
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate_internal
@@ -132,14 +138,15 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
 
     !> @brief Evaluate dispatch.
     subroutine evaluate_internal( r, nder, energy, der )
+        use chempotpy_kinds, only: wp
         implicit none
         intent(in)  :: r, nder
         intent(out) :: energy, der
-        double precision :: a(5), alpha, b(5,3), beta, c(5,3,3), csth, da(5,3), db(5,3,3), dcsth(3), de(3), der(3), dmew(3), &
+        real(wp) :: a(5), alpha, b(5,3), beta, c(5,3,3), csth, da(5,3), db(5,3,3), dcsth(3), de(3), der(3), dmew(3), &
             & dprod1(3), dprod2(3), dprod3(3), dsec(3), dthird(3), dv(3), easyab, easyac, easybc, energy, prod1, prod2, prod3, &
             & r(3), rab, rac, rbc, req(3), second, third, vab, vac, vbc, zeroad, zev, zkcal
-        integer          :: i, idum, iprt, it, it1, j, nder, ndum, nsurf
-        double precision :: num, denom, gamma(3), junk(4), expo(3), dexpo(3), mew
+        integer  :: i, idum, iprt, it, it1, j, nder, ndum, nsurf
+        real(wp) :: num, denom, gamma(3), junk(4), expo(3), dexpo(3), mew
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          Initialize the constants
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -149,68 +156,69 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !   The variable ZEROAD contains the constant added to the energy in har
         !   atomic units.
         !          SET ALPHA, UNITS: RECIPROCAL BOHR
-        a      = 0.d0
-        alpha  = 0.d0
-        b      = 0.d0
-        beta   = 0.d0
-        c      = 0.d0
-        csth   = 0.d0
-        da     = 0.d0
-        db     = 0.d0
-        dcsth  = 0.d0
-        de     = 0.d0
-        denom  = 0.d0
-        dexpo  = 0.d0
-        dmew   = 0.d0
-        dprod1 = 0.d0
-        dprod2 = 0.d0
-        dprod3 = 0.d0
-        dsec   = 0.d0
-        dthird = 0.d0
-        dv     = 0.d0
-        easyab = 0.d0
-        easyac = 0.d0
-        easybc = 0.d0
-        expo   = 0.d0
-        gamma  = 0.d0
-        junk   = 0.d0
-        mew    = 0.d0
-        num    = 0.d0
-        prod1  = 0.d0
-        prod2  = 0.d0
-        prod3  = 0.d0
-        rab    = 0.d0
-        rac    = 0.d0
-        rbc    = 0.d0
-        req    = 0.d0
-        second = 0.d0
-        third  = 0.d0
-        vab    = 0.d0
-        vac    = 0.d0
-        vbc    = 0.d0
-        zeroad = 0.d0
-        zev    = 0.d0
-        zkcal  = 0.d0
-        c = reshape([ 77.45d0, -0.4071d0, -0.508d0, 0.1489d0, 1.013d0, -10.495d0, 9.1484d0, 10.273d0, 0.0d0, 0.0d0, - &
-            & 3.050d0, -33.78d0, -22.951d0, 0.0d0, 0.0d0, -1.3699d0, 0.4101d0, 0.3411d0, 16.906d0, 0.0005637d0, - &
-            & 0.6359d0, -0.06253d0, -0.1225d0, 0.0d0, 0.0d0, -0.00906d0, 0.4435d0, 0.7439d0, 0.0d0, 0.0d0, -0.3498d0, &
-            & 0.6617d0, 0.8677d0, 1.3858d0, 233.36d0, -4.756d0, -1.626d0, 0.6337d0, 0.0d0, 0.0d0, -476.32d0, - &
-            & 1.2104d0, -1.2762d0, 0.0d0, 0.0d0], shape(c))
-        de     = [ 0.1559d0, 0.1779d0, 0.1559d0]
-        gamma  = [ 1.2670d0, 1.4694d0, 1.2670d0]
-        req    = [ 1.8460d0, 2.3158d0, 1.8460d0]
-        zeroad = -0.022000295721d0
-        alpha  = 0.9172d0
+        a      = 0.e0_wp
+        alpha  = 0.e0_wp
+        b      = 0.e0_wp
+        beta   = 0.e0_wp
+        c      = 0.e0_wp
+        csth   = 0.e0_wp
+        da     = 0.e0_wp
+        db     = 0.e0_wp
+        dcsth  = 0.e0_wp
+        de     = 0.e0_wp
+        denom  = 0.e0_wp
+        dexpo  = 0.e0_wp
+        dmew   = 0.e0_wp
+        dprod1 = 0.e0_wp
+        dprod2 = 0.e0_wp
+        dprod3 = 0.e0_wp
+        dsec   = 0.e0_wp
+        dthird = 0.e0_wp
+        dv     = 0.e0_wp
+        easyab = 0.e0_wp
+        easyac = 0.e0_wp
+        easybc = 0.e0_wp
+        expo   = 0.e0_wp
+        gamma  = 0.e0_wp
+        junk   = 0.e0_wp
+        mew    = 0.e0_wp
+        num    = 0.e0_wp
+        prod1  = 0.e0_wp
+        prod2  = 0.e0_wp
+        prod3  = 0.e0_wp
+        rab    = 0.e0_wp
+        rac    = 0.e0_wp
+        rbc    = 0.e0_wp
+        req    = 0.e0_wp
+        second = 0.e0_wp
+        third  = 0.e0_wp
+        vab    = 0.e0_wp
+        vac    = 0.e0_wp
+        vbc    = 0.e0_wp
+        zeroad = 0.e0_wp
+        zev    = 0.e0_wp
+        zkcal  = 0.e0_wp
+        c = reshape([ 77.45e0_wp, -0.4071e0_wp, -0.508e0_wp, 0.1489e0_wp, 1.013e0_wp, -10.495e0_wp, 9.1484e0_wp, &
+            & 10.273e0_wp, 0.0e0_wp, 0.0e0_wp, - 3.050e0_wp, -33.78e0_wp, -22.951e0_wp, 0.0e0_wp, 0.0e0_wp, - &
+            & 1.3699e0_wp, 0.4101e0_wp, 0.3411e0_wp, 16.906e0_wp, 0.0005637e0_wp, - 0.6359e0_wp, -0.06253e0_wp, - &
+            & 0.1225e0_wp, 0.0e0_wp, 0.0e0_wp, -0.00906e0_wp, 0.4435e0_wp, 0.7439e0_wp, 0.0e0_wp, 0.0e0_wp, - &
+            & 0.3498e0_wp, 0.6617e0_wp, 0.8677e0_wp, 1.3858e0_wp, 233.36e0_wp, -4.756e0_wp, -1.626e0_wp, 0.6337e0_wp, &
+            & 0.0e0_wp, 0.0e0_wp, -476.32e0_wp, - 1.2104e0_wp, -1.2762e0_wp, 0.0e0_wp, 0.0e0_wp], shape(c))
+        de     = [ 0.1559e0_wp, 0.1779e0_wp, 0.1559e0_wp]
+        gamma  = [ 1.2670e0_wp, 1.4694e0_wp, 1.2670e0_wp]
+        req    = [ 1.8460e0_wp, 2.3158e0_wp, 1.8460e0_wp]
+        zeroad = -0.022000295721e0_wp
+        alpha  = 0.9172e0_wp
         !          SET BETA, UNITS: RECIPROCAL BOHR
-        beta = 1.4694d0
+        beta = 1.4694e0_wp
         !   Initialize the potential values in the three asymptotic valleys.
         easyab = de(1)
         easybc = de(2)
         easyac = de(3)
         !   Echo potential paramters to unit IPRT.
         !   Convert ZEROAD to eV and kcal/mol and echo to unit IPRT.
-        zev   = zeroad*27.21106d0
-        zkcal = zeroad*627.5095d0
+        zev   = zeroad*27.21106e0_wp
+        zkcal = zeroad*627.5095e0_wp
         !CCCCCCCCCCC
         !CCCCCCCCCCC
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -249,23 +257,23 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !          CORRESPOND TO THE VOH POTENTIAL DESCRIBED IN EQUATION 3.
         !          DV(1) IS THE DERIVATIVE OF THIS TERM WITH RESPECT TO RAB.
         junk(1) = exp(gamma(1)*(req(1)-rab))
-        vab     = de(1)*(junk(1)*junk(1)-2.0d0*junk(1))
+        vab     = de(1)*(junk(1)*junk(1)-2.0e0_wp*junk(1))
         if( nder .eq. 1 ) &
-            & dv(1) = 2.0d0*de(1)*(1.0d0-junk(1))*gamma(1)*junk(1)
+            & dv(1) = 2.0e0_wp*de(1)*(1.0e0_wp-junk(1))*gamma(1)*junk(1)
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          CALCULATE VAC AND DV(3)
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         junk(1) = exp(gamma(3)*(req(3)-rac))
-        vac     = de(3)*(junk(1)*junk(1)-2.0d0*junk(1))
+        vac     = de(3)*(junk(1)*junk(1)-2.0e0_wp*junk(1))
         if( nder .eq. 1 ) &
-            & dv(3) = 2.0d0*de(3)*(1.0d0-junk(1))*gamma(3)*junk(1)
+            & dv(3) = 2.0e0_wp*de(3)*(1.0e0_wp-junk(1))*gamma(3)*junk(1)
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          CALCULATE VBC AND DV(2)
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         junk(1) = exp(gamma(2)*(req(2)-rbc))
-        vbc     = de(2)*(junk(1)*junk(1)-2.0d0*junk(1))
+        vbc     = de(2)*(junk(1)*junk(1)-2.0e0_wp*junk(1))
         if( nder .eq. 1 ) &
-            & dv(2) = -2.0d0*de(2)*(junk(1)-1.0d0)*gamma(2)*junk(1)
+            & dv(2) = -2.0e0_wp*de(2)*(junk(1)-1.0e0_wp)*gamma(2)*junk(1)
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          CALCULATE CSTH AND DERIVATIVES
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -274,23 +282,23 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !          HOWEVER COSINE(TH) IS.  COSINE(TH) IS CALCULATED
         !          FROM THE LAW OF COSINES)
         num   = rbc*rbc+rab*rab-rac*rac
-        denom = 2.0d0*rab*rbc
+        denom = 2.0e0_wp*rab*rbc
         csth  = num/denom
         if( nder .eq. 1 )then
-            dcsth(1) = (2.0d0*rab/denom)-(2.0d0*rbc)*csth/denom
-            dcsth(2) = (2.0d0*rbc/denom)-(2.0d0*rab)*csth/denom
-            dcsth(3) = -(2.0d0*rac/denom)
+            dcsth(1) = (2.0e0_wp*rab/denom)-(2.0e0_wp*rbc)*csth/denom
+            dcsth(2) = (2.0e0_wp*rbc/denom)-(2.0e0_wp*rab)*csth/denom
+            dcsth(3) = -(2.0e0_wp*rac/denom)
         endif
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          CALCULATE THE B IJ 'S--SEE EQUATION 5
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         do i = 1, 5
             do j = 1, 3
-                b(i, j) = c(i,j,1)*(1.0d0+c(i,j,2)*csth*(1.0d0+c(i,j,3)* csth))
+                b(i,j) = c(i,j,1)*(1.0e0_wp+c(i,j,2)*csth*(1.0e0_wp+c(i,j,3)* csth))
                 !               CALCULATE THE DERIVATIVES TOO.
                 if( nder .eq. 1 )then
                     do it = 1, 3
-                        db(i, j, it) = c(i,j,1)*c(i,j,2)*(csth*c(i,j,3)* dcsth(it)+dcsth(it)* (1.0d0+c(i,j,3)*csth))
+                        db(i,j,it) = c(i,j,1)*c(i,j,2)*(csth*c(i,j,3)* dcsth(it)+dcsth(it)* (1.0e0_wp+c(i,j,3)*csth))
                     enddo
                 endif
             enddo
@@ -298,24 +306,24 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          NEXT CALCULATE MEW--SEE EQUATION FOUR
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-        mew = expo(2)-0.02538745816335d0
+        mew = expo(2)-0.02538745816335e0_wp
         if( nder .eq. 1 )then
             dmew(2) = -beta*expo(2)
-            dmew(1) = 0.0d0
-            dmew(3) = 0.0d0
+            dmew(1) = 0.0e0_wp
+            dmew(3) = 0.0e0_wp
         endif
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          NOW CALCULATE A I 'S AND DERIVATIVES--SEE EQUATION 4
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         do it = 1, 5
-            junk(1) = 1.0d0+b(it, 3)*mew
-            junk(2) = mew*b(it, 2)
-            junk(3) = 1.0d0+junk(2)*junk(1)
-            a(it)   = b(it, 1)*junk(3)
+            junk(1) = 1.0e0_wp+b(it,3)*mew
+            junk(2) = mew*b(it,2)
+            junk(3) = 1.0e0_wp+junk(2)*junk(1)
+            a(it)   = b(it,1)*junk(3)
             if( nder .eq. 1 )then
                 do it1 = 1, 3
-                    da(it,it1) = db(it, 1, it1)*junk(3)+b(it, 1)* ((db(it, 2, it1)*mew+b(it, 2)*dmew(it1))* junk(1)+ &
-                        & junk(2)* (db(it, 3, it1)*mew+ b(it, 3)*dmew(it1)))
+                    da(it,it1) = db(it,1,it1)*junk(3)+b(it,1)* ((db(it,2,it1)*mew+b(it,2)*dmew(it1))* junk(1)+ &
+                        & junk(2)* (db(it,3,it1)*mew+ b(it,3)*dmew(it1)))
                 enddo
             endif
         enddo
@@ -323,7 +331,7 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !          CALCULATE THE SECOND TERM IN EQUATION THREE
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         prod1 = expo(1)*expo(3)*a(1)
-        prod2 = 1.0d0+(a(3)*rab*rac)/(rab+rac)
+        prod2 = 1.0e0_wp+(a(3)*rab*rac)/(rab+rac)
         if( nder .eq. 1 )then
             dprod1(1) = dexpo(1)*expo(3)*a(1)+expo(1)*expo(3)*da(1,1)
             dprod1(2) = expo(1)*expo(3)*da(1,2)
@@ -333,7 +341,7 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
             dprod2(3) = ((da(3,3)*rab*rac+a(3)*rab)*(rab+rac)- (a(3)*rab*rac))/((rab+rac)*(rab+rac))
         endif
         !          CALCULATE PROD3
-        prod3 = 1.0d0+a(2)*(rab+rac)*prod2
+        prod3 = 1.0e0_wp+a(2)*(rab+rac)*prod2
         if( nder .eq. 1 )then
             do it = 1, 3
                 dprod3(it) = da(2,it)*(rab+rac)*prod2+a(2)* (rab+rac)*dprod2(it)
@@ -351,7 +359,7 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !          CALCULATE THE THIRD TERM
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         junk(1) = expo(1)+expo(3)
-        junk(2) = (1.0d0+a(5)*(rab+rac))
+        junk(2) = (1.0e0_wp+a(5)*(rab+rac))
         third   = junk(1)*expo(2)*a(4)*junk(2)
         if( nder .eq. 1 )then
             do it1 = 1, 2
@@ -386,9 +394,10 @@ end module chempotpy_o2h_gen_pot_legacy_state_fffab58a
 !> @brief Evaluate O2H for one set of internal distances.
 subroutine pot( r, nder, energy, der )
     use chempotpy_o2h_gen_pot_legacy_state_fffab58a, only: evaluate_internal
+    use chempotpy_kinds,                             only: wp
     implicit none
-    double precision, intent(in)  :: r(3)
-    integer, intent(in)           :: nder
-    double precision, intent(out) :: energy, der(3)
+    real(wp), intent(in)  :: r(3)
+    integer, intent(in)   :: nder
+    real(wp), intent(out) :: energy, der(3)
     call evaluate_internal(r, nder, energy, der)
 end subroutine pot

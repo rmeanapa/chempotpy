@@ -22,6 +22,7 @@ class BuildPESTests( unittest.TestCase ):
     def test_core_fortran_sources_live_directly_under_core( self ) -> None:
         self.assertEqual(CORE_FORTRAN_ROOT.name, "core")
         self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_kinds.f90").is_file())
+        self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_physical_constants.f90").is_file())
         self.assertFalse((CORE_FORTRAN_ROOT / "fortran").exists())
 
     def test_entry_point_extraction_omits_internal_modules( self ) -> None:
@@ -78,12 +79,13 @@ end subroutine pes
         self.assertIn("--debug", command)
         self.assertTrue(any("-fcheck=all" in argument for argument in command))
 
-    def test_f2py_kind_map_keeps_real64_at_double_precision( self ) -> None:
+    def test_f2py_kind_map_keeps_working_precision_at_binary64( self ) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             mapping = write_f2py_kind_map(Path(temporary_directory))
             content = mapping.read_text()
         self.assertIn("'real32': 'float'", content)
         self.assertIn("'real64': 'double'", content)
+        self.assertIn("'wp': 'double'", content)
 
     def test_source_normalization_preserves_fixed_form_columns( self ) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -104,6 +106,33 @@ end subroutine pes
         self.assertEqual(
             [path.name for path in dependencies],
             ["chempotpy_kinds.f90", "chempotpy_geometry.f90"],
+        )
+
+    def test_unit_dependencies_include_codata_constants( self ) -> None:
+        dependencies = core_fortran_dependencies(
+            "use chempotpy_units, only: bohr_to_angstrom\n"
+        )
+        self.assertEqual(
+            [path.name for path in dependencies],
+            [
+                "chempotpy_kinds.f90",
+                "chempotpy_physical_constants.f90",
+                "chempotpy_units.f90",
+            ],
+        )
+
+    def test_support_sources_contribute_core_dependencies( self ) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            support = Path(temporary_directory) / "parameters.f90"
+            support.write_text(
+                "module parameters\n"
+                "    use chempotpy_kinds, only: wp\n"
+                "end module parameters\n"
+            )
+            dependencies = core_fortran_dependencies("", (support,))
+        self.assertEqual(
+            [path.name for path in dependencies],
+            ["chempotpy_kinds.f90"],
         )
 
     def test_normalization_bundles_only_referenced_core_modules( self ) -> None:
@@ -162,6 +191,36 @@ end subroutine pes
             "chempotpy_n4_pipnn_parameters.f90"
         )))
         self.assertLess(support_index, command.index(str(source_path)))
+
+    def test_h3_family_basis_precedes_its_consumer( self ) -> None:
+        source_path = (
+            Path(__file__).resolve().parents[1]
+            / "chempotpy" / "H3" / "H3_GEN_A2_2002.f90"
+        )
+        source = SurfaceSource(
+            system_name="H3",
+            surface_name="H3_GEN_A2_2002",
+            path=source_path,
+            source_form="free",
+            entry_point="pes",
+        )
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            normalized = normalized_sources(
+                source, Path(temporary_directory)
+            )
+        source_names = [path.name for path in normalized]
+        self.assertLess(
+            source_names.index("chempotpy_h3_2002_basis.f90"),
+            source_names.index("H3_GEN_A2_2002.f90"),
+        )
+        self.assertNotIn("chempotpy_h3_2002_basis.f90", [
+            path.name for path in core_fortran_dependencies(
+                source_path.read_text()
+            )
+        ])
+        command = compiler_command(source, Path("modules"), "gfortran")
+        support = str(source_path.parent / "chempotpy_h3_2002_basis.f90")
+        self.assertLess(command.index(support), command.index(str(source_path)))
 
     def test_resume_recognizes_one_existing_extension( self ) -> None:
         source = SurfaceSource(

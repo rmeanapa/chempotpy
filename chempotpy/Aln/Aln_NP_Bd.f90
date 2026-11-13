@@ -34,6 +34,7 @@
 
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_np_bd_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -43,28 +44,28 @@ module chempotpy_aln_np_bd_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
-        use chempotpy_legacy_units, only: legacy_coordinates_to_bohr, &
-            legacy_energy_to_electronvolt
-        use chempotpy_kinds, only: real64
+        use chempotpy_units, only: coordinates_to_bohr, &
+            energy_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter        :: state_count = 1
-        real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-        integer, intent(in)       :: atom_count, derivative_order
-        real(real64), intent(out) :: energy_ev(state_count)
-        real(real64), intent(out) :: gradient_ev_per_angstrom( &
+        integer, parameter    :: state_count = 1
+        real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+        integer, intent(in)   :: atom_count, derivative_order
+        real(wp), intent(out) :: energy_ev(state_count)
+        real(wp), intent(out) :: gradient_ev_per_angstrom( &
             state_count,atom_count,3 )
-        real(real64), intent(out) :: coupling_per_angstrom( &
+        real(wp), intent(out) :: coupling_per_angstrom( &
             state_count,state_count,atom_count,3 )
-        real(real64) :: coordinates_bohr(atom_count,3), energy_hartree
-        energy_ev                = 0.0d0
-        gradient_ev_per_angstrom = 0.0d0
-        coupling_per_angstrom    = 0.0d0
-        call legacy_coordinates_to_bohr( &
+        real(wp) :: coordinates_bohr(atom_count,3), energy_hartree
+        energy_ev                = 0.0e0_wp
+        gradient_ev_per_angstrom = 0.0e0_wp
+        coupling_per_angstrom    = 0.0e0_wp
+        call coordinates_to_bohr( &
             coordinates_angstrom(1:atom_count,:), coordinates_bohr)
         call pot(coordinates_bohr(:,1), coordinates_bohr(:,2), &
             coordinates_bohr(:,3), energy_hartree, atom_count, atom_count)
         if( derivative_order == 0 )then
-            energy_ev(1) = legacy_energy_to_electronvolt(energy_hartree)
+            energy_ev(1) = energy_to_electronvolt(energy_hartree)
         else
             write(*, *) 'Only energy is available'
         endif
@@ -72,13 +73,14 @@ module chempotpy_aln_np_bd_pes
 
     !> @brief Evaluate pot for the Aln_NP_Bd potential.
     subroutine pot( x, y, z, v, natom, maxatom )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: ab, alpha, beta, bigef, cc(6), d_rho(3,maxatom), d_v2(3,maxatom), dbigefdrho, delta, dphidr, &
+        real(wp) :: ab, alpha, beta, bigef, cc(6), d_rho(3,maxatom), d_v2(3,maxatom), dbigefdrho, delta, dphidr, &
             & dphiqdr, dqdr, dr, drdr, drhodr, dstermdrho, dvdx(maxatom), dvdy(maxatom), dvdz(maxatom), dx, dxxdr, dy, dz, ec, &
             & ef, gamma, phi, phi0, q, r0, rc, rho, rn, rr, s(3), sterm, v, v2, x(maxatom), xm, xx, y(maxatom), z(maxatom)
-        integer                     :: i, j, k, l, m, maxatom, natom
-        double precision, parameter :: autoev  = 27.2113961d0
-        double precision, parameter :: autoang = 0.529177249d0
+        integer             :: i, j, k, l, m, maxatom, natom
+        real(wp), parameter :: autoev  = 27.2113961e0_wp
+        real(wp), parameter :: autoang = 0.529177249e0_wp
         ! Original Literature Parameters (Ref. 1)
         !        ec    =   3.39d0/autoev
         !        phi0  =   0.1318d0/autoev
@@ -118,39 +120,39 @@ module chempotpy_aln_np_bd_pes
         !        rn    =   1.75d0*r0
         !        rc    =   1.95d0*r0
         ! Nanoparticle-parameterized Parameters (Ref. 2)
-        ec    = 2.833661628d0/autoev
-        phi0  = 0.209474568d0/autoev
-        r0    = 2.759835989d0/autoang
-        alpha = 4.953631991d0
-        beta  = 5.202672172d0
-        gamma = 5.824302949d0
-        delta = 8.968682037d0
-        cc(1) = 0.433294196d0
-        cc(2) = -7.305279256d0
-        cc(3) = 29.818956621d0
-        cc(4) = -54.437991632d0
-        cc(5) = 48.412067298d0
-        cc(6) = -15.525225110d0
-        s(1)  = 6.927645227d0
-        s(2)  = 3.861172975d0
-        s(3)  = 15.498062621d0
-        rn    = 1.75d0*r0
-        rc    = 1.95d0*r0
+        ec    = 2.833661628e0_wp/autoev
+        phi0  = 0.209474568e0_wp/autoev
+        r0    = 2.759835989e0_wp/autoang
+        alpha = 4.953631991e0_wp
+        beta  = 5.202672172e0_wp
+        gamma = 5.824302949e0_wp
+        delta = 8.968682037e0_wp
+        cc(1) = 0.433294196e0_wp
+        cc(2) = -7.305279256e0_wp
+        cc(3) = 29.818956621e0_wp
+        cc(4) = -54.437991632e0_wp
+        cc(5) = 48.412067298e0_wp
+        cc(6) = -15.525225110e0_wp
+        s(1)  = 6.927645227e0_wp
+        s(2)  = 3.861172975e0_wp
+        s(3)  = 15.498062621e0_wp
+        rn    = 1.75e0_wp*r0
+        rc    = 1.95e0_wp*r0
         ! Initialize
-        v = 0.d0
+        v = 0.e0_wp
         do i=1, natom
-            dvdx(i) = 0.d0
-            dvdy(i) = 0.d0
-            dvdz(i) = 0.d0
+            dvdx(i) = 0.e0_wp
+            dvdy(i) = 0.e0_wp
+            dvdz(i) = 0.e0_wp
         enddo
         ! Double loop (main loop)
         do i=1, natom
-            rho = 0.d0
-            v2  = 0.d0
+            rho = 0.e0_wp
+            v2  = 0.e0_wp
             do k=1, 3
                 do j=1, natom
-                    d_rho(k,j) = 0.d0
-                    d_v2(k,j)  = 0.d0
+                    d_rho(k,j) = 0.e0_wp
+                    d_v2(k,j)  = 0.e0_wp
                 enddo
             enddo
             do j=1, natom
@@ -158,37 +160,37 @@ module chempotpy_aln_np_bd_pes
                 dx = x(i)-x(j)
                 dy = y(i)-y(j)
                 dz = z(i)-z(j)
-                rr = dsqrt(dx*dx+dy*dy+dz*dz)
+                rr = sqrt(dx*dx+dy*dy+dz*dz)
                 ! Cutoff function
                 if( rr .le. rn )then
-                    q    = 1.d0
-                    dqdr = 0.d0  ! Derivs
+                    q    = 1.e0_wp
+                    dqdr = 0.e0_wp  ! Derivs
                 elseif( rr .ge. rc )then
                     cycle
-                    q    = 0.d0
-                    dqdr = 0.d0  ! Derivs
+                    q    = 0.e0_wp
+                    dqdr = 0.e0_wp  ! Derivs
                 else
                     xx    = (rr-rn)/(rc-rn)
-                    q     = ((1.d0-xx)**3)*(1.d0+3.d0*xx+6.d0*xx**2)
-                    dxxdr = 1.d0/(rc-rn)  ! Derivs
-                    dqdr  = ((1.d0-xx)**3)*(3.d0+12.d0*xx)*dxxdr &  ! Derivs
-                        & -(3.d0*(1.d0-xx)**2)*(1.d0+3.d0*xx+6.d0*xx**2)*dxxdr
+                    q     = ((1.e0_wp-xx)**3)*(1.e0_wp+3.e0_wp*xx+6.e0_wp*xx**2)
+                    dxxdr = 1.e0_wp/(rc-rn)  ! Derivs
+                    dqdr  = ((1.e0_wp-xx)**3)*(3.e0_wp+12.e0_wp*xx)*dxxdr &  ! Derivs
+                        & -(3.e0_wp*(1.e0_wp-xx)**2)*(1.e0_wp+3.e0_wp*xx+6.e0_wp*xx**2)*dxxdr
                 endif
                 ! Pair potential phi
-                dr   = rr/r0-1.d0
-                phi  = -0.5d0*phi0*(1.d0+delta*dr)*dexp(-gamma*dr)
+                dr   = rr/r0-1.e0_wp
+                phi  = -0.5e0_wp*phi0*(1.e0_wp+delta*dr)*exp(-gamma*dr)
                 v2   = v2 + phi*q
-                drdr = 1.d0/r0  ! Derivs
-                dphidr  = -0.5d0*phi0*(1.d0+delta*dr)*(-gamma*drdr)*dexp(-gamma*dr) -0.5d0*phi0*delta*drdr*dexp(- &
-                    & gamma*dr)
+                drdr = 1.e0_wp/r0  ! Derivs
+                dphidr  = -0.5e0_wp*phi0*(1.e0_wp+delta*dr)*(-gamma*drdr)*exp(-gamma*dr) -0.5e0_wp*phi0*delta*drdr* &
+                    & exp(- gamma*dr)
                 dphiqdr = dqdr*phi+dphidr*q  ! Derivs
                 ! Embedding potential rho
-                drhodr = 0.d0  ! Derivs
+                drhodr = 0.e0_wp  ! Derivs
                 do l=0, 5
-                    ef  = (cc(l+1)/12.d0)*(r0/rr)**l
+                    ef  = (cc(l+1)/12.e0_wp)*(r0/rr)**l
                     rho = rho + ef*q
                     if( l .ne. 0 ) drhodr = drhodr &! Derivs
-                        & - (q/rr)*dble(l)*(cc(l+1)/12.d0)*(r0/rr)**l+ef*dqdr
+                        & - (q/rr)*real(l, wp)*(cc(l+1)/12.e0_wp)*(r0/rr)**l+ef*dqdr
                     if( l .eq. 0 ) drhodr = drhodr + ef*dqdr! Derivs
                 enddo
                 ! v2 (pairwise repulsion) derivs
@@ -206,27 +208,27 @@ module chempotpy_aln_np_bd_pes
                 d_rho(3,i) = d_rho(3,i) + drhodr*dz/rr
                 d_rho(3,j) = d_rho(3,j) - drhodr*dz/rr
             enddo
-            sterm      = 0.d0
-            dstermdrho = 0.d0  ! Derivs
-            if( rho .gt. 0.d0 )then
+            sterm      = 0.e0_wp
+            dstermdrho = 0.e0_wp  ! Derivs
+            if( rho .gt. 0.e0_wp )then
                 do m=1, 3
-                    xm = dsqrt(dble(m))
-                    sterm=sterm+s(m)*dexp(-gamma*(xm-1.d0)) *(1.d0+delta*(xm-1.d0)-xm*(delta/beta)*dlog(rho)) *(rho)** &
-                        & (xm* gamma/beta)
-                    dstermdrho = dstermdrho + s(m)*dexp(-gamma*(xm-1.d0))*( &  ! Der
-                        & (1.d0+delta*(xm-1.d0)-xm*(delta/beta)*dlog(rho)) &
-                        & *(xm*gamma/beta)*(rho)**(xm*gamma/beta-1.d0) &
-                        & +(-xm*(delta/beta)*(1.d0/rho))*(rho)**(xm*gamma/beta) )
+                    xm = sqrt(real(m, wp))
+                    sterm=sterm+s(m)*exp(-gamma*(xm-1.e0_wp)) *(1.e0_wp+delta*(xm-1.e0_wp)-xm*(delta/beta)*log(rho)) * &
+                        & (rho)** (xm* gamma/beta)
+                    dstermdrho = dstermdrho + s(m)*exp(-gamma*(xm-1.e0_wp))*( &  ! Der
+                        & (1.e0_wp+delta*(xm-1.e0_wp)-xm*(delta/beta)*log(rho)) &
+                        & *(xm*gamma/beta)*(rho)**(xm*gamma/beta-1.e0_wp) &
+                        & +(-xm*(delta/beta)*(1.e0_wp/rho))*(rho)**(xm*gamma/beta) )
                 enddo
             endif
             ab         = alpha/beta
-            bigef      = 0.d0
-            dbigefdrho = 0.d0
-            if( rho .gt. 0.d0 )then
-                bigef      = -ec*(1.d0-ab*dlog(rho))*rho**ab + 0.5d0*phi0*sterm
-                dbigefdrho = -ec*(1.d0-ab*dlog(rho))*(ab)*rho**(ab-1.d0) &  ! Deri
-                    & -ec*(-ab*(1.d0/rho))*rho**ab &
-                    & +0.5d0*phi0*dstermdrho
+            bigef      = 0.e0_wp
+            dbigefdrho = 0.e0_wp
+            if( rho .gt. 0.e0_wp )then
+                bigef      = -ec*(1.e0_wp-ab*log(rho))*rho**ab + 0.5e0_wp*phi0*sterm
+                dbigefdrho = -ec*(1.e0_wp-ab*log(rho))*(ab)*rho**(ab-1.e0_wp) &  ! Deri
+                    & -ec*(-ab*(1.e0_wp/rho))*rho**ab &
+                    & +0.5e0_wp*phi0*dstermdrho
             endif
             ! Combine derivs
             do j=1, natom
@@ -243,14 +245,14 @@ end module chempotpy_aln_np_bd_pes
 subroutine pes( coordinates_angstrom, atom_count, derivative_order, &
         energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
     use chempotpy_aln_np_bd_pes, only: evaluate
-    use chempotpy_kinds,         only: real64
+    use chempotpy_kinds,         only: wp
     implicit none
-    integer, parameter        :: state_count = 1
-    real(real64), intent(in)  :: coordinates_angstrom(10000,3)
-    integer, intent(in)       :: atom_count, derivative_order
-    real(real64), intent(out) :: energy_ev(state_count)
-    real(real64), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
-    real(real64), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
+    integer, parameter    :: state_count = 1
+    real(wp), intent(in)  :: coordinates_angstrom(10000,3)
+    integer, intent(in)   :: atom_count, derivative_order
+    real(wp), intent(out) :: energy_ev(state_count)
+    real(wp), intent(out) :: gradient_ev_per_angstrom(state_count,atom_count,3)
+    real(wp), intent(out) :: coupling_per_angstrom(state_count,state_count,atom_count,3)
     call evaluate(coordinates_angstrom, atom_count, derivative_order, energy_ev, gradient_ev_per_angstrom, &
         & coupling_per_angstrom)
 end subroutine pes

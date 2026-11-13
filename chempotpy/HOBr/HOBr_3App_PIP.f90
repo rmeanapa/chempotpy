@@ -19,6 +19,7 @@
 
 !> @brief Implement HOBr_3App_PIP, a potential energy surface for HOBr.
 module chempotpy_hobr_3app_pip_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -27,36 +28,38 @@ module chempotpy_hobr_3app_pip_pes
 
     !> @brief Evaluate the HOBr_3App_PIP potential energy surface for HOBr.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_geometry,     only: cartesian_distance, flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units,    only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_geometry, only: cartesian_distance, flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
+        use chempotpy_units,    only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,    only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: v
-        double precision              :: r_oh, r_hbr, r_obr
-        double precision              :: dr_oh, dr_hbr, dr_obr
-        double precision              :: r(3), tx(9)
-        double precision              :: dr(3), drdx(3,9), dx(9)
-        integer                       :: iatom, idir, i, j, istate
-        v     = 0.d0; g = 0.d0; d = 0.d0
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: v
+        real(wp)              :: r_oh, r_hbr, r_obr
+        real(wp)              :: dr_oh, dr_hbr, dr_obr
+        real(wp)              :: r(3), tx(9)
+        real(wp)              :: dr(3), drdx(3,9), dx(9)
+        integer               :: iatom, idir, i, j, istate
+        v     = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         r_obr = cartesian_distance(x(2,:), x(3,:))
         r_oh  = cartesian_distance(x(1,:), x(2,:))
         r_hbr = cartesian_distance(x(1,:), x(3,:))
         call flatten_cartesian_coordinates(x, tx)
         r = [r_oh, r_hbr, r_obr]
         call mypot(r_oh, r_hbr, r_obr, v, dr_oh, dr_hbr, dr_obr)
-        v     = v*legacy_hartree_to_electronvolt
-        dr(1) = dr_oh*legacy_hartree_to_electronvolt
-        dr(2) = dr_hbr*legacy_hartree_to_electronvolt
-        dr(3) = dr_obr*legacy_hartree_to_electronvolt
-        !      dr(1)=dr_OH*51.422067
-        !      dr(2)=dr_HBr*51.422067
-        !      dr(3)=dr_OBr*51.422067
+        v     = v*hartree_to_electronvolt
+        dr(1) = dr_oh*hartree_to_electronvolt
+        dr(2) = dr_hbr*hartree_to_electronvolt
+        dr(3) = dr_obr*hartree_to_electronvolt
+        !      dr(1)=dr_OH*hartree_per_bohr_to_ev_per_angstrom
+        !      dr(2)=dr_HBr*hartree_per_bohr_to_ev_per_angstrom
+        !      dr(3)=dr_OBr*hartree_per_bohr_to_ev_per_angstrom
         call evdrdx(tx, r, drdx)
         call transform_internal_gradient_to_cartesian(dr, drdx, dx)
         if( igrad == 0 )then
@@ -82,31 +85,34 @@ end module chempotpy_hobr_3app_pip_pes
 !> @brief Expose HOBr_3App_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_hobr_3app_pip_pes, only: evaluate
+    use chempotpy_kinds,             only: wp
     implicit none
     integer, parameter              :: natoms  = 3
     integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
-    double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates)
-    double precision, intent(out)   :: g(nstates,natoms,3)
-    double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+    real(wp), intent(in)            :: x(natoms,3)
+    real(wp), intent(out)           :: p(nstates)
+    real(wp), intent(out)           :: g(nstates,natoms,3)
+    real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
 
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( x, r, drdx )
     use chempotpy_geometry, only: ordered_pair_distance_jacobian
+    use chempotpy_kinds,    only: wp
     implicit none
-    integer, parameter            :: first_atoms(3)  = [1, 1, 2]
-    integer, parameter            :: second_atoms(3) = [2, 3, 3]
-    double precision, intent(in)  :: x(9), r(3)
-    double precision, intent(out) :: drdx(3,9)
+    integer, parameter    :: first_atoms(3)  = [1, 1, 2]
+    integer, parameter    :: second_atoms(3) = [2, 3, 3]
+    real(wp), intent(in)  :: x(9), r(3)
+    real(wp), intent(out) :: drdx(3,9)
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 !> @brief Evaluate myprepot.
 module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: dispatch
@@ -150,7 +156,7 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
         !      call myprepot
         !    Later, the potential energy is computed by calling mypot:
         !      call mypot(r1,r2,r3,value,dr1,dr2,dr3)
-        !   The parameters are read from the o_hbr_a_pp.par file
+        !   The released o_hbr_a_pp.par parameters are embedded in the parameter module
         !                              Saddle point
         !        r1                          r2                        r3
         !   2.6289099999999999        2.8486750000000001        5.1064215904894388
@@ -172,21 +178,21 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
         !  -3.3549004949264938E-002
         !        dr1                         dr2                       dr3
         !   6.5041529057150577E-007  -4.8876198921465885E-010   6.6615884752874166E-009
+        use chempotpy_kinds, only: wp
         implicit none
         logical, intent(in) :: initialize_only
         optional :: r1, r2, r3, value, dr1, dr2, dr3
-        integer, parameter :: dp = kind(0.d0)                   ! double precision
-        real(dp)           :: r1, r2, r3, value, dr1, dr2, dr3
-        real(dp)           :: r_oh, r_hbr, r_bro
-        real(dp)           :: sum1, sum2, dzdr, dfdr
-        real(dp)           :: dbetadz, dedr_oh, dedr_hbr
-        real(dp)           :: v_oh, v_hbr, v_bro, v3
-        real(dp)           :: th_y, theta
-        real(dp)           :: z, re, de, phi_inf, alpha_s, r_s, z_i, phi_z, f_s
-        real(dp)           :: x_1_max, x_2_max, y_1_max
-        real(dp)           :: x_1_min, x_2_min, y_1_min
-        real(dp)           :: q_1, q_2, q_3, dq_1, dq_2, dq_3
-        integer            :: i
+        real(wp) :: r1, r2, r3, value, dr1, dr2, dr3
+        real(wp) :: r_oh, r_hbr, r_bro
+        real(wp) :: sum1, sum2, dzdr, dfdr
+        real(wp) :: dbetadz, dedr_oh, dedr_hbr
+        real(wp) :: v_oh, v_hbr, v_bro, v3
+        real(wp) :: th_y, theta
+        real(wp) :: z, re, de, phi_inf, alpha_s, r_s, z_i, phi_z, f_s
+        real(wp) :: x_1_max, x_2_max, y_1_max
+        real(wp) :: x_1_min, x_2_min, y_1_min
+        real(wp) :: q_1, q_2, q_3, dq_1, dq_2, dq_3
+        integer  :: i
         if( .not. initialize_only )then
             r_oh    = r1
             r_hbr   = r2
@@ -198,21 +204,21 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
             r_s     = phi_oh(5)
             z       = (r_oh-re)/(r_oh+re)
             phi_z   = -phi_inf
-            z_i     = 1.0_dp
-            sum2    = 0.0_dp
+            z_i     = 1.0_wp
+            sum2    = 0.0_wp
             do i=6, 14, 1
                 phi_z = phi_z+phi_oh(i)*z_i
                 sum2  = sum2+(i-6)*phi_oh(i)*z_i/z
                 z_i   = z_i*z
             enddo
             sum1    = phi_z
-            f_s     = 1.0_dp/(exp(alpha_s*(r_oh-r_s))+1.0_dp)
+            f_s     = 1.0_wp/(exp(alpha_s*(r_oh-r_s))+1.0_wp)
             phi_z   = f_s*phi_z+phi_inf
-            v_oh    = de*((1.0_dp-(re/r_oh)**6*exp(-phi_z*z))**2-1.0_dp)
-            dzdr    = 2.0_dp*re/((r_oh+re)**2)
+            v_oh    = de*((1.0_wp-(re/r_oh)**6*exp(-phi_z*z))**2-1.0_wp)
+            dzdr    = 2.0_wp*re/((r_oh+re)**2)
             dfdr    = -alpha_s*exp(alpha_s*(r_oh-r_s))*f_s*f_s
             dbetadz = phi_z+((1/dzdr)*dfdr*sum1+f_s*sum2)*z
-            dedr_oh = 2.0_dp*de*(1.0_dp-(re/r_oh)**6*exp(-phi_z*z))*((re/r_oh)**6)*exp(-phi_z*z)*(dzdr*dbetadz+6.0_dp/ &
+            dedr_oh = 2.0_wp*de*(1.0_wp-(re/r_oh)**6*exp(-phi_z*z))*((re/r_oh)**6)*exp(-phi_z*z)*(dzdr*dbetadz+6.0_wp/ &
                 & r_oh)
             re      = phi_hbr(1)
             de      = phi_hbr(2)
@@ -221,62 +227,62 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
             r_s     = phi_hbr(5)
             z       = (r_hbr-re)/(r_hbr+re)
             phi_z   = -phi_inf
-            z_i     = 1.0_dp
-            sum2    = 0.0_dp
+            z_i     = 1.0_wp
+            sum2    = 0.0_wp
             do i=6, 14, 1
                 phi_z = phi_z+phi_hbr(i)*z_i
                 sum2  = sum2+(i-6)*phi_hbr(i)*z_i/z
                 z_i   = z_i*z
             enddo
             sum1    = phi_z
-            f_s     = 1.0_dp/(exp(alpha_s*(r_hbr-r_s))+1.0_dp)
+            f_s     = 1.0_wp/(exp(alpha_s*(r_hbr-r_s))+1.0_wp)
             phi_z   = f_s*phi_z+phi_inf
-            v_hbr   = de*((1.0_dp-(re/r_hbr)**6*exp(-phi_z*z))**2-1.0_dp)
-            dzdr    = 2.0_dp*re/((r_hbr+re)**2)
+            v_hbr   = de*((1.0_wp-(re/r_hbr)**6*exp(-phi_z*z))**2-1.0_wp)
+            dzdr    = 2.0_wp*re/((r_hbr+re)**2)
             dfdr    = -alpha_s*exp(alpha_s*(r_hbr-r_s))*f_s*f_s
             dbetadz = phi_z+((1/dzdr)*dfdr*sum1+f_s*sum2)*z
-            dedr_hbr = 2.0_dp*de*(1.0_dp-(re/r_hbr)**6*exp(-phi_z*z))*((re/r_hbr)**6)*exp(-phi_z*z)*(dzdr*dbetadz+ &
-                & 6.0_dp/r_hbr)
-            v_bro = 0.0868406_dp*exp(-1.91_dp*(r_bro-3.2509_dp))
-            th_y  = (1.0_dp-((r_oh*r_oh+r_hbr*r_hbr-r_bro*r_bro)/(2.0_dp*r_oh*r_hbr)))/2.0_dp
-            v3    = 0.0_dp
-            dr1   = 0.0_dp
-            dr2   = 0.0_dp
-            dr3   = 0.0_dp
+            dedr_hbr = 2.0_wp*de*(1.0_wp-(re/r_hbr)**6*exp(-phi_z*z))*((re/r_hbr)**6)*exp(-phi_z*z)*(dzdr*dbetadz+ &
+                & 6.0_wp/r_hbr)
+            v_bro = 0.0868406_wp*exp(-1.91_wp*(r_bro-3.2509_wp))
+            th_y  = (1.0_wp-((r_oh*r_oh+r_hbr*r_hbr-r_bro*r_bro)/(2.0_wp*r_oh*r_hbr)))/2.0_wp
+            v3    = 0.0_wp
+            dr1   = 0.0_wp
+            dr2   = 0.0_wp
+            dr3   = 0.0_wp
             do i=1, 1110, 1
                 if( r_oh .ge. x_1(i) )then
-                    q_1  = (1.0_dp/14.0_dp)*(r_oh**(-7))*(1.0_dp-(7.0_dp/9.0_dp)*(x_1(i)/r_oh))
-                    dq_1 = 0.5_dp*(r_oh**(-8))*((8.0_dp/9.0_dp)*(x_1(i)/r_oh)-1.0_dp)
+                    q_1  = (1.0_wp/14.0_wp)*(r_oh**(-7))*(1.0_wp-(7.0_wp/9.0_wp)*(x_1(i)/r_oh))
+                    dq_1 = 0.5_wp*(r_oh**(-8))*((8.0_wp/9.0_wp)*(x_1(i)/r_oh)-1.0_wp)
                 else
-                    q_1  = (1.0_dp/14.0_dp)*(x_1(i)**(-7))*(1.0_dp-(7.0_dp/9.0_dp)*(r_oh/x_1(i)))
-                    dq_1 = -x_1(i)**(-8)/18.0_dp
+                    q_1  = (1.0_wp/14.0_wp)*(x_1(i)**(-7))*(1.0_wp-(7.0_wp/9.0_wp)*(r_oh/x_1(i)))
+                    dq_1 = -x_1(i)**(-8)/18.0_wp
                 endif
                 if( r_hbr .ge. x_2(i) )then
-                    q_2  = (1.0_dp/14.0_dp)*(r_hbr**(-7))*(1.0_dp-(7.0_dp/9.0_dp)*(x_2(i)/r_hbr))
-                    dq_2 = 0.5_dp*(r_hbr**(-8))*((8.0_dp/9.0_dp)*(x_2(i)/r_hbr)-1.0_dp)
+                    q_2  = (1.0_wp/14.0_wp)*(r_hbr**(-7))*(1.0_wp-(7.0_wp/9.0_wp)*(x_2(i)/r_hbr))
+                    dq_2 = 0.5_wp*(r_hbr**(-8))*((8.0_wp/9.0_wp)*(x_2(i)/r_hbr)-1.0_wp)
                 else
-                    q_2  = (1.0_dp/14.0_dp)*(x_2(i)**(-7))*(1.0_dp-(7.0_dp/9.0_dp)*(r_hbr/x_2(i)))
-                    dq_2 = -x_2(i)**(-8)/18.0_dp
+                    q_2  = (1.0_wp/14.0_wp)*(x_2(i)**(-7))*(1.0_wp-(7.0_wp/9.0_wp)*(r_hbr/x_2(i)))
+                    dq_2 = -x_2(i)**(-8)/18.0_wp
                 endif
                 if( th_y .ge. y_1(i) )then
-                    q_3  = 1.0_dp+th_y*y_1(i)+2.0_dp*y_1(i)**2*th_y*(1.0_dp-(1.0_dp/3.0_dp)*(y_1(i)/th_y))
-                    dq_3 = y_1(i)+2.0_dp*y_1(i)**2
+                    q_3  = 1.0_wp+th_y*y_1(i)+2.0_wp*y_1(i)**2*th_y*(1.0_wp-(1.0_wp/3.0_wp)*(y_1(i)/th_y))
+                    dq_3 = y_1(i)+2.0_wp*y_1(i)**2
                 else
-                    q_3  = 1.0_dp+th_y*y_1(i)+2.0_dp*th_y**2*y_1(i)*(1.0_dp-(1.0_dp/3.0_dp)*(th_y/y_1(i)))
-                    dq_3 = y_1(i)+4.0_dp*y_1(i)*th_y-2.0_dp*th_y**2
+                    q_3  = 1.0_wp+th_y*y_1(i)+2.0_wp*th_y**2*y_1(i)*(1.0_wp-(1.0_wp/3.0_wp)*(th_y/y_1(i)))
+                    dq_3 = y_1(i)+4.0_wp*y_1(i)*th_y-2.0_wp*th_y**2
                 endif
                 v3  = v3+amn(i)*q_1*q_2*q_3
                 dr1 = dr1+amn(i)*dq_1*q_2*q_3
                 dr2 = dr2+amn(i)*q_1*dq_2*q_3
                 dr3 = dr3+amn(i)*q_1*q_2*dq_3
             enddo
-            value = 0.97714_dp*v3+v_oh+v_hbr+v_bro+0.14242006_dp
-            dr3   = 0.97714_dp*dr3*r3/(2.0_dp*r1*r2)
-            dr1   = 0.97714_dp*dr1-dr3*((r1-r2*((r_oh**2+r_hbr**2-r_bro**2)/(2*r_oh*r_hbr)))/r3)
-            dr2   = 0.97714_dp*dr2-dr3*((r2-r1*((r_oh**2+r_hbr**2-r_bro**2)/(2*r_oh*r_hbr)))/r3)
+            value = 0.97714_wp*v3+v_oh+v_hbr+v_bro+0.14242006_wp
+            dr3   = 0.97714_wp*dr3*r3/(2.0_wp*r1*r2)
+            dr1   = 0.97714_wp*dr1-dr3*((r1-r2*((r_oh**2+r_hbr**2-r_bro**2)/(2*r_oh*r_hbr)))/r3)
+            dr2   = 0.97714_wp*dr2-dr3*((r2-r1*((r_oh**2+r_hbr**2-r_bro**2)/(2*r_oh*r_hbr)))/r3)
             dr1   = dedr_oh+dr1
             dr2   = dedr_hbr+dr2
-            dr3   = dr3-1.91_dp*0.0868406_dp*exp(-1.91_dp*(r_bro-3.2509_dp))
+            dr3   = dr3-1.91_wp*0.0868406_wp*exp(-1.91_wp*(r_bro-3.2509_wp))
         endif
     end subroutine dispatch
 end module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
@@ -286,14 +292,14 @@ end module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
 !> @brief Compatibility interface for mypot.
 subroutine mypot( r1, r2, r3, value, dr1, dr2, dr3 )
     use chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804, only: dispatch
+    use chempotpy_kinds,                                     only: wp
     implicit none
-    integer, parameter :: dp = kind(0.d0)
-    real(dp)           :: r1
-    real(dp)           :: r2
-    real(dp)           :: r3
-    real(dp)           :: value
-    real(dp)           :: dr1
-    real(dp)           :: dr2
-    real(dp)           :: dr3
+    real(wp) :: r1
+    real(wp) :: r2
+    real(wp) :: r3
+    real(wp) :: value
+    real(wp) :: dr1
+    real(wp) :: dr2
+    real(wp) :: dr3
     call dispatch(r1=r1, r2=r2, r3=r3, value=value, dr1=dr1, dr2=dr2, dr3=dr3, initialize_only=.false.)
 end subroutine mypot

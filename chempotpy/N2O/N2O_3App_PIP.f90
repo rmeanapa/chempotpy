@@ -31,13 +31,14 @@ module n2o_3app_pip_par
     !        1 kcal/mol = 0.159360144 * 10^-2 hartree
     ! Gconv: kcal/(mol*Angstrom) to hartree/bohr
     !        1 kcal mol^-1 angstrom^-1 = 0.843297564 * 10^-3 hartree/bohr
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, gconv, &
         & p, r, re, rm, rms, totdiss
-    double precision, parameter :: cconv = 0.52917721092d0
-    double precision, parameter :: econv = 0.159360144d-2
-    double precision, parameter :: gconv = 0.843297564d-3
+    real(wp), parameter :: cconv = 0.52917721092e0_wp
+    real(wp), parameter :: econv = 0.159360144e-2_wp
+    real(wp), parameter :: gconv = 0.843297564e-3_wp
     ! Common variables
     ! R(6):         Interatomic bond distance
     ! rMs(6)                Array to store base terms
@@ -52,118 +53,93 @@ module n2o_3app_pip_par
     ! dRdX(6,12):   The derivative of R w.r.t. X
     ! dB2dR(6,2153) The derivative of B w.r.t. R (four-body)
     ! dBdR(6,254)   The derivative of B w.r.t. R (three-body)
-    double precision :: r(6)
-    double precision :: rms(6), rm(0:17), p(0:2253), b(254), b2(2153)
-    double precision :: dmsdr(6,6), dmdr(6,0:17), dpdr(6,0:2253)
-    double precision :: dvdr(6), drdx(6,12)
-    double precision :: db2dr(6,2153), dbdr(6,254)
+    real(wp) :: r(6)
+    real(wp) :: rms(6), rm(0:17), p(0:2253), b(254), b2(2153)
+    real(wp) :: dmsdr(6,6), dmdr(6,0:17), dpdr(6,0:2253)
+    real(wp) :: dvdr(6), drdx(6,12)
+    real(wp) :: db2dr(6,2153), dbdr(6,254)
     ! Nonlinear parameters:
     ! a(in Ang)
     ! ab (in Ang^2)
     ! re (in Ang)
     ! order of data: OO,NO,NO,NO,NO,NN
-    double precision, parameter :: a(6) = (/ 1.30d0, 1.15d0, 1.15d0, &
-        1.15d0, 1.15d0, 0.95d0 /)
-    double precision, parameter :: ab(6) = (/ 1.60d0, 2.25d0, 2.25d0, &
-        2.25d0, 2.25d0, 1.95d0 /)
-    double precision, parameter :: re(6) = (/ 1.208d0, 1.1508d0, &
-        1.1508d0, 1.1508d0, 1.1508d0, 1.098d0 /)
+    real(wp), parameter :: a(6)  = (/ 1.30e0_wp, 1.15e0_wp, 1.15e0_wp, 1.15e0_wp, 1.15e0_wp, 0.95e0_wp /)
+    real(wp), parameter :: ab(6) = (/ 1.60e0_wp, 2.25e0_wp, 2.25e0_wp, 2.25e0_wp, 2.25e0_wp, 1.95e0_wp /)
+    real(wp), parameter :: re(6) = (/ 1.208e0_wp, 1.1508e0_wp, 1.1508e0_wp, 1.1508e0_wp, 1.1508e0_wp, 1.098e0_wp /)
     ! Reference energy of N2 + O in hartree for N2O system
-    double precision, parameter :: eref = -0.191619504727d0
+    real(wp), parameter :: eref = -0.191619504727e0_wp
     ! De(N2) + De(O2) = 228.4 + 120.143 kcal/mol
-    double precision, parameter :: totdiss = 348.643d0
+    real(wp), parameter :: totdiss = 348.643e0_wp
     ! Linear parameters optimized by the weighted-least square fitting
-    double precision, parameter :: c(254) = (/ &
-        -0.179879775675d+03, -0.278373649213d+04, 0.617058818679d+03 &
-        , 0.409016739299d+03, -0.399091551083d+03, 0.603251864585d+03 &
-        , -0.561219097033d+04, 0.140071202918d+03, -0.162067624528d+03 &
-        , -0.537101260279d+03, 0.307746716099d+03, -0.641305591020d+02 &
-        , 0.114005408032d+04, 0.454391853157d+04, 0.154381212239d+03 &
-        , -0.438600348259d+04, 0.854140784522d+02, 0.376691264003d+03 &
-        , 0.140158139683d+03, 0.556000110706d+03, -0.144667691225d+03 &
-        , 0.145870498341d+03, -0.116522400342d+02, 0.400666599159d+02 &
-        , -0.176567946530d+03, -0.160260865697d+02, 0.415847205488d+04 &
-        , -0.190286087643d+03, 0.130737654534d+03, -0.347232020107d+03 &
-        , 0.229669936370d+05, 0.909995547850d+02, 0.903203605651d+02 &
-        , -0.745058766597d-02, 0.138776561791d-02, 0.343493026662d-02 &
-        , -0.303195874227d-02, 0.198495689637d-02, 0.567347457405d-03 &
-        , 0.193581665087d-03, -0.103662277914d-02, -0.658098220441d-03 &
-        , -0.578290374569d+04, -0.550983622622d+04, -0.100678642502d-02 &
-        , 0.264808511377d+05, -0.245003347326d+05, -0.117294221081d-02 &
-        , 0.179044336198d+05, -0.355250244525d-03, -0.776764441071d-03 &
-        , -0.157424502959d-02, 0.491818986120d-03, -0.673502805626d-03 &
-        , 0.173622965655d-02, -0.144539060557d-02, -0.561440101137d-03 &
-        , 0.211228919738d-03, 0.685627078383d-03, 0.629681506780d-03 &
-        , -0.551838637080d-04, 0.911703314159d-04, 0.550996428956d-03 &
-        , -0.373031879917d-03, 0.785882738001d-03, 0.519109562447d-05 &
-        , -0.835270020616d-05, 0.171175997821d-06, -0.177071979124d-05 &
-        , -0.102010744740d-05, 0.278826337308d-05, -0.984560210782d-05 &
-        , -0.324456777889d-06, 0.180702500074d-05, -0.442893906438d-05 &
-        , -0.936086196082d+04, -0.252087011177d-05, 0.190237187780d-05 &
-        , 0.135749542096d-05, -0.157212514296d-05, -0.207627178157d+05 &
-        , -0.346590604750d-05, -0.127545354189d-05, 0.127172222397d+05 &
-        , 0.157240060616d-05, 0.165298479260d-05, 0.223319148063d-05 &
-        , -0.193053347175d-05, -0.888028617738d+05, -0.165791607287d-05 &
-        , 0.197597728402d-05, -0.373439252144d-05, -0.952186383074d-07 &
-        , -0.283733697870d-06, 0.293173070531d-05, -0.420974174631d-06 &
-        , -0.308020753437d-05, -0.747240846977d-08, 0.147847458720d-07 &
-        , 0.804413957667d-08, 0.691397872288d-08, 0.212967279367d-07 &
-        , -0.581630956731d-07, 0.104232640297d-07, 0.209547579288d-08 &
-        , -0.268482835963d-08, -0.575164449401d-08, -0.120089680422d-07 &
-        , -0.112668203656d-07, 0.239444052952d+05, -0.110123044865d+04 &
-        , 0.227344283249d+05, 0.232830643654d-09, -0.728335114566d+05 &
-        , 0.706624298827d+05, -0.193540472537d-08, -0.374036753499d+05 &
-        , -0.864383764565d-08, -0.237196218222d-08, -0.360887497663d-08 &
-        , -0.416184775531d-08, -0.395812094212d-08, 0.424915924668d-08 &
-        , 0.989530235529d-09, -0.372529029846d-08, -0.155705492944d-08 &
-        , 0.349245965481d-08, -0.168802216649d-08, 0.116415321827d-08 &
-        , -0.200088834390d-09, -0.291038304567d-10, -0.291038304567d-10 &
-        , -0.582076609135d-10, 0.116415321827d-09, -0.378349795938d-09 &
-        , 0.291038304567d-10, -0.291038304567d-10, 0.116294303633d+06 &
-        , -0.932698067873d+05, 0.182067725788d+06, 0.603723541667d+05 &
-        , -0.504744476135d+05, 0.186240934401d+06, -0.648836503734d+05 &
-        , 0.760711138767d+04, 0.232470013309d+05, 0.981373268182d+05 &
-        , -0.602451124364d+05, 0.147512505331d+06, -0.115867163372d+06 &
-        , 0.290478503132d+05, -0.237848044916d+06, 0.131806124689d+06 &
-        , -0.212229457323d+06, 0.107758396476d+06, -0.925265058394d+05 &
-        , -0.444471409873d+05, -0.148468407559d+06, 0.134506363712d+06 &
-        , -0.238252450364d+06, 0.100262972788d+06, -0.144052311678d+05 &
-        , -0.286126649299d+05, -0.373713016249d+05, -0.861432703691d+05 &
-        , 0.108830438399d+06, -0.211664176879d+06, 0.104999582837d+06 &
-        , 0.185711450004d+05, 0.200219342855d+06, -0.305887447973d+05 &
-        , -0.594773037540d+05, -0.954790334899d+05, 0.125782033440d+06 &
-        , -0.135234073322d+06, -0.643802523493d+04, 0.165819780937d+06 &
-        , 0.850577962364d+05, 0.679578687136d+05, -0.256646212936d+06 &
-        , 0.240117149985d+06, -0.863328378583d+05, 0.194675355363d+05 &
-        , -0.145537051930d+04, 0.244284732909d+05, 0.527300216185d+05 &
-        , 0.436825344687d+05, 0.461297050313d+05, -0.118524561799d+06 &
-        , 0.184217141807d+06, -0.493908119291d+05, -0.494833518727d+05 &
-        , -0.865015242197d+05, -0.675345748498d+04, 0.112556807290d+06 &
-        , -0.555602340340d+04, -0.464694388794d+05, -0.417436891453d+06 &
-        , 0.424456061090d+05, 0.255320262911d+06, 0.213142408968d+06 &
-        , 0.687181499372d+04, -0.983706549923d+05, -0.386826069386d+06 &
-        , -0.125935380968d+06, 0.108955533685d+06, 0.281878301622d+06 &
-        , -0.178388224399d+06, 0.393954663806d+05, -0.157045081376d+05 &
-        , 0.236834090980d+05, -0.348750833857d+05, 0.313505460100d+05 &
-        , -0.359924304306d+04, -0.527943182516d+05, -0.338019678445d+05 &
-        , 0.701488826213d+05, -0.800841653944d+05, 0.105494112653d+05 &
-        , 0.324152587776d+05, 0.191737897489d+05, -0.776798145308d+04 &
-        , -0.309726784148d+05, 0.406452113485d+05, 0.145546365619d+05 &
-        , -0.184196208121d+06, -0.730884041710d+05, 0.119249613548d+06 &
-        , 0.121966037073d+06, 0.199453173176d+06, 0.294533084229d+05 &
-        , -0.170530695115d+06, -0.268376928010d+06, -0.523018772274d+04 &
-        , 0.277413928645d+05, 0.264481796648d+06, 0.648106185750d+05 &
-        , -0.786764241456d+05, -0.117410099837d+06, 0.594594063505d+05 &
-        , -0.754569024940d+04, 0.450114370238d+04, -0.694005940695d+04 &
-        , 0.280454893056d+03, 0.173486813889d+05, 0.140290617263d+05 &
-        , -0.250755757471d+05, -0.139195618100d+05, 0.262265052719d+05 &
-        , 0.165931396286d+05, -0.175003792591d+05, 0.124445440740d+05 &
-        , -0.806583737305d+03, -0.732604327190d+04                      &
-        /)
+    real(wp), parameter :: c(254) = (/ -0.179879775675e+03_wp, -0.278373649213e+04_wp, 0.617058818679e+03_wp, &
+        & 0.409016739299e+03_wp, -0.399091551083e+03_wp, 0.603251864585e+03_wp, -0.561219097033e+04_wp, &
+        & 0.140071202918e+03_wp, -0.162067624528e+03_wp, -0.537101260279e+03_wp, 0.307746716099e+03_wp, - &
+        & 0.641305591020e+02_wp, 0.114005408032e+04_wp, 0.454391853157e+04_wp, 0.154381212239e+03_wp, - &
+        & 0.438600348259e+04_wp, 0.854140784522e+02_wp, 0.376691264003e+03_wp, 0.140158139683e+03_wp, &
+        & 0.556000110706e+03_wp, -0.144667691225e+03_wp, 0.145870498341e+03_wp, -0.116522400342e+02_wp, &
+        & 0.400666599159e+02_wp, -0.176567946530e+03_wp, -0.160260865697e+02_wp, 0.415847205488e+04_wp, - &
+        & 0.190286087643e+03_wp, 0.130737654534e+03_wp, -0.347232020107e+03_wp, 0.229669936370e+05_wp, &
+        & 0.909995547850e+02_wp, 0.903203605651e+02_wp, -0.745058766597e-02_wp, 0.138776561791e-02_wp, &
+        & 0.343493026662e-02_wp, -0.303195874227e-02_wp, 0.198495689637e-02_wp, 0.567347457405e-03_wp, &
+        & 0.193581665087e-03_wp, -0.103662277914e-02_wp, -0.658098220441e-03_wp, -0.578290374569e+04_wp, - &
+        & 0.550983622622e+04_wp, -0.100678642502e-02_wp, 0.264808511377e+05_wp, -0.245003347326e+05_wp, - &
+        & 0.117294221081e-02_wp, 0.179044336198e+05_wp, -0.355250244525e-03_wp, -0.776764441071e-03_wp, - &
+        & 0.157424502959e-02_wp, 0.491818986120e-03_wp, -0.673502805626e-03_wp, 0.173622965655e-02_wp, - &
+        & 0.144539060557e-02_wp, -0.561440101137e-03_wp, 0.211228919738e-03_wp, 0.685627078383e-03_wp, &
+        & 0.629681506780e-03_wp, -0.551838637080e-04_wp, 0.911703314159e-04_wp, 0.550996428956e-03_wp, - &
+        & 0.373031879917e-03_wp, 0.785882738001e-03_wp, 0.519109562447e-05_wp, -0.835270020616e-05_wp, &
+        & 0.171175997821e-06_wp, -0.177071979124e-05_wp, -0.102010744740e-05_wp, 0.278826337308e-05_wp, - &
+        & 0.984560210782e-05_wp, -0.324456777889e-06_wp, 0.180702500074e-05_wp, -0.442893906438e-05_wp, - &
+        & 0.936086196082e+04_wp, -0.252087011177e-05_wp, 0.190237187780e-05_wp, 0.135749542096e-05_wp, - &
+        & 0.157212514296e-05_wp, -0.207627178157e+05_wp, -0.346590604750e-05_wp, -0.127545354189e-05_wp, &
+        & 0.127172222397e+05_wp, 0.157240060616e-05_wp, 0.165298479260e-05_wp, 0.223319148063e-05_wp, - &
+        & 0.193053347175e-05_wp, -0.888028617738e+05_wp, -0.165791607287e-05_wp, 0.197597728402e-05_wp, - &
+        & 0.373439252144e-05_wp, -0.952186383074e-07_wp, -0.283733697870e-06_wp, 0.293173070531e-05_wp, - &
+        & 0.420974174631e-06_wp, -0.308020753437e-05_wp, -0.747240846977e-08_wp, 0.147847458720e-07_wp, &
+        & 0.804413957667e-08_wp, 0.691397872288e-08_wp, 0.212967279367e-07_wp, -0.581630956731e-07_wp, &
+        & 0.104232640297e-07_wp, 0.209547579288e-08_wp, -0.268482835963e-08_wp, -0.575164449401e-08_wp, - &
+        & 0.120089680422e-07_wp, -0.112668203656e-07_wp, 0.239444052952e+05_wp, -0.110123044865e+04_wp, &
+        & 0.227344283249e+05_wp, 0.232830643654e-09_wp, -0.728335114566e+05_wp, 0.706624298827e+05_wp, - &
+        & 0.193540472537e-08_wp, -0.374036753499e+05_wp, -0.864383764565e-08_wp, -0.237196218222e-08_wp, - &
+        & 0.360887497663e-08_wp, -0.416184775531e-08_wp, -0.395812094212e-08_wp, 0.424915924668e-08_wp, &
+        & 0.989530235529e-09_wp, -0.372529029846e-08_wp, -0.155705492944e-08_wp, 0.349245965481e-08_wp, - &
+        & 0.168802216649e-08_wp, 0.116415321827e-08_wp, -0.200088834390e-09_wp, -0.291038304567e-10_wp, - &
+        & 0.291038304567e-10_wp, -0.582076609135e-10_wp, 0.116415321827e-09_wp, -0.378349795938e-09_wp, &
+        & 0.291038304567e-10_wp, -0.291038304567e-10_wp, 0.116294303633e+06_wp, -0.932698067873e+05_wp, &
+        & 0.182067725788e+06_wp, 0.603723541667e+05_wp, -0.504744476135e+05_wp, 0.186240934401e+06_wp, - &
+        & 0.648836503734e+05_wp, 0.760711138767e+04_wp, 0.232470013309e+05_wp, 0.981373268182e+05_wp, - &
+        & 0.602451124364e+05_wp, 0.147512505331e+06_wp, -0.115867163372e+06_wp, 0.290478503132e+05_wp, - &
+        & 0.237848044916e+06_wp, 0.131806124689e+06_wp, -0.212229457323e+06_wp, 0.107758396476e+06_wp, - &
+        & 0.925265058394e+05_wp, -0.444471409873e+05_wp, -0.148468407559e+06_wp, 0.134506363712e+06_wp, - &
+        & 0.238252450364e+06_wp, 0.100262972788e+06_wp, -0.144052311678e+05_wp, -0.286126649299e+05_wp, - &
+        & 0.373713016249e+05_wp, -0.861432703691e+05_wp, 0.108830438399e+06_wp, -0.211664176879e+06_wp, &
+        & 0.104999582837e+06_wp, 0.185711450004e+05_wp, 0.200219342855e+06_wp, -0.305887447973e+05_wp, - &
+        & 0.594773037540e+05_wp, -0.954790334899e+05_wp, 0.125782033440e+06_wp, -0.135234073322e+06_wp, - &
+        & 0.643802523493e+04_wp, 0.165819780937e+06_wp, 0.850577962364e+05_wp, 0.679578687136e+05_wp, - &
+        & 0.256646212936e+06_wp, 0.240117149985e+06_wp, -0.863328378583e+05_wp, 0.194675355363e+05_wp, - &
+        & 0.145537051930e+04_wp, 0.244284732909e+05_wp, 0.527300216185e+05_wp, 0.436825344687e+05_wp, &
+        & 0.461297050313e+05_wp, -0.118524561799e+06_wp, 0.184217141807e+06_wp, -0.493908119291e+05_wp, - &
+        & 0.494833518727e+05_wp, -0.865015242197e+05_wp, -0.675345748498e+04_wp, 0.112556807290e+06_wp, - &
+        & 0.555602340340e+04_wp, -0.464694388794e+05_wp, -0.417436891453e+06_wp, 0.424456061090e+05_wp, &
+        & 0.255320262911e+06_wp, 0.213142408968e+06_wp, 0.687181499372e+04_wp, -0.983706549923e+05_wp, - &
+        & 0.386826069386e+06_wp, -0.125935380968e+06_wp, 0.108955533685e+06_wp, 0.281878301622e+06_wp, - &
+        & 0.178388224399e+06_wp, 0.393954663806e+05_wp, -0.157045081376e+05_wp, 0.236834090980e+05_wp, - &
+        & 0.348750833857e+05_wp, 0.313505460100e+05_wp, -0.359924304306e+04_wp, -0.527943182516e+05_wp, - &
+        & 0.338019678445e+05_wp, 0.701488826213e+05_wp, -0.800841653944e+05_wp, 0.105494112653e+05_wp, &
+        & 0.324152587776e+05_wp, 0.191737897489e+05_wp, -0.776798145308e+04_wp, -0.309726784148e+05_wp, &
+        & 0.406452113485e+05_wp, 0.145546365619e+05_wp, -0.184196208121e+06_wp, -0.730884041710e+05_wp, &
+        & 0.119249613548e+06_wp, 0.121966037073e+06_wp, 0.199453173176e+06_wp, 0.294533084229e+05_wp, - &
+        & 0.170530695115e+06_wp, -0.268376928010e+06_wp, -0.523018772274e+04_wp, 0.277413928645e+05_wp, &
+        & 0.264481796648e+06_wp, 0.648106185750e+05_wp, -0.786764241456e+05_wp, -0.117410099837e+06_wp, &
+        & 0.594594063505e+05_wp, -0.754569024940e+04_wp, 0.450114370238e+04_wp, -0.694005940695e+04_wp, &
+        & 0.280454893056e+03_wp, 0.173486813889e+05_wp, 0.140290617263e+05_wp, -0.250755757471e+05_wp, - &
+        & 0.139195618100e+05_wp, 0.262265052719e+05_wp, 0.165931396286e+05_wp, -0.175003792591e+05_wp, &
+        & 0.124445440740e+05_wp, -0.806583737305e+03_wp, -0.732604327190e+04_wp /)
 end module n2o_3app_pip_par
 
 !> @brief Implement N2O_3App_PIP, a potential energy surface for N2O.
 module chempotpy_n2o_3app_pip_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -172,25 +148,27 @@ module chempotpy_n2o_3app_pip_pes
 
     !> @brief Evaluate the N2O_3App_PIP potential energy surface for N2O.
     subroutine evaluate( x, igrad, potential, gradient, dvec )
+        use chempotpy_units,  only: electronvolt_to_kilocalorie_per_mole
         use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
             & econv, eref, gconv, p, r, re, rm, rms, totdiss
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: potential(nstates)
-        double precision, intent(out) :: gradient(nstates,natoms,3)
-        double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
-        double precision              :: v, tx(12), tg(12)
-        integer                       :: iatom, idir, j, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: potential(nstates)
+        real(wp), intent(out) :: gradient(nstates,natoms,3)
+        real(wp), intent(out) :: dvec(nstates,nstates,natoms,3)
+        real(wp)              :: v, tx(12), tg(12)
+        integer               :: iatom, idir, j, istate
         !initialize
-        potential = 0.d0; gradient = 0.d0; dvec = 0.d0
+        potential = 0.e0_wp; gradient = 0.e0_wp; dvec = 0.e0_wp
         ! Notice that this N2O surface is weird, it is using N2O2 surface
         ! and simply make the first three coordinates as zero.
         do idir=1, 3
-            tx(idir) = 1.0d10
+            tx(idir) = 1.0e10_wp
         enddo
         do iatom=1, 3
             do idir=1, 3
@@ -198,13 +176,13 @@ module chempotpy_n2o_3app_pip_pes
                 tx(j) = x(iatom,idir)
             enddo
         enddo
-        tg = 0.d0
+        tg = 0.e0_wp
         call n2o2pes(tx, v, tg, igrad)
         ! output v is in kcal/mol, but there is a reference energy that is
         ! in hartree, so convert everything in eV.
-        v = v/23.0609 + eref/23.0609
+        v = v/electronvolt_to_kilocalorie_per_mole + eref/electronvolt_to_kilocalorie_per_mole
         ! output g is in kcal/mol/ang
-        tg = tg/23.0609
+        tg = tg/electronvolt_to_kilocalorie_per_mole
         do istate=1, nstates
             potential(istate) = v
         enddo
@@ -216,21 +194,22 @@ module chempotpy_n2o_3app_pip_pes
                 enddo
             enddo
         enddo
-        dvec = 0.d0
+        dvec = 0.e0_wp
     end subroutine evaluate
 end module chempotpy_n2o_3app_pip_pes
 
 !> @brief Expose N2O_3App_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, potential, gradient, dvec )
     use chempotpy_n2o_3app_pip_pes, only: evaluate
+    use chempotpy_kinds,            only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: potential(nstates)
-    double precision, intent(out) :: gradient(nstates,natoms,3)
-    double precision, intent(out) :: dvec(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: potential(nstates)
+    real(wp), intent(out) :: gradient(nstates,natoms,3)
+    real(wp), intent(out) :: dvec(nstates,nstates,natoms,3)
     call evaluate(x, igrad, potential, gradient, dvec)
 end subroutine pes
 
@@ -277,10 +256,11 @@ subroutine n2o2pes( x, v, dvdx, igrad )
     ! dMdR:         The derivative of monomials w.r.t. R
     !               dim(6*18)
     ! dRdX:         The derivative of R w.r.t. X, dim(6*12)
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i, igrad, j, nob, k
-    double precision :: v
-    double precision :: dvdx(12), x(12)
+    integer  :: i, igrad, j, nob, k
+    real(wp) :: v
+    real(wp) :: dvdx(12), x(12)
     ! Obtain Cartesian coordinates from input file
     call coord_convt(x)
     if( igrad .le. 1 )then
@@ -305,8 +285,9 @@ subroutine coord_convt( x )
     !  r1 = r(O1N2)    r2 = r(O1N3)
     !  r3 = r(O1N4)    r4 = r(O2N3)
     !  r5 = r(O2N4)    r6 = r(N3N4)
+    use chempotpy_kinds, only: wp
     implicit none
-    double precision, intent(in) :: x(12)
+    real(wp), intent(in) :: x(12)
     call all_pair_distances(x, r)
 end subroutine coord_convt
 
@@ -328,9 +309,10 @@ subroutine evv( v )
     ! rM(0:17):     Array to store monomials
     ! P(0:2253):    Array to store polynomials
     ! B(1:2153):    Array to store basis functions
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i, j, k
-    double precision :: dist, dv2dr, v, v21, v22, v23, v24, v25, v26
+    integer  :: i, j, k
+    real(wp) :: dist, dv2dr, v, v21, v22, v23, v24, v25, v26
     ! Calculate the six MEG terms for each point
     call evmeg
     ! Calculate the monomials for each point by using six MEG terms
@@ -379,9 +361,10 @@ subroutine evdvdx( x, dvdx )
     ! dVdR:         dVdR(6), derivatives of V w.r.t.6 bond length
     ! dRdX:         dRdX(6,12), derivatives of R(6) w.r.t. 12
     !               Cartesian coordinates
+    use chempotpy_kinds, only: wp
     implicit none
-    double precision, intent(in)  :: x(12)
-    double precision, intent(out) :: dvdx(12)
+    real(wp), intent(in)  :: x(12)
+    real(wp), intent(out) :: dvdx(12)
     call evdvdr
     call evdrdx(x)
     call transform_internal_gradient_to_cartesian(dvdr, drdx, dvdx)
@@ -396,10 +379,11 @@ subroutine evmeg
     !  re:   equilibrium bond length (Angstrom)
     !  a:    nonlinear parameter (Angstrom)
     !  ab:   nonlinear parameter (Angstrom^2)
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: i
     do i=1, 6
-        rms(i) = exp(-(r(i)-re(i))/a(i)-(r(i)-re(i))**2.0d0/ab(i))
+        rms(i) = exp(-(r(i)-re(i))/a(i)-(r(i)-re(i))**2.0e0_wp/ab(i))
     enddo
 end subroutine evmeg
 
@@ -410,8 +394,9 @@ subroutine evmono
     !  This subroutine takes six MEG variables(X) and calculates the
     !  monomials(RM) and that do not have usable decomposition.
     !  For degree 10, the number of monomials is nom.
+    use chempotpy_kinds, only: wp
     implicit none
-    rm(0)  = 1.0d0
+    rm(0)  = 1.0e0_wp
     rm(1)  = rms(6)
     rm(2)  = rms(5)
     rm(3)  = rms(4)
@@ -438,6 +423,7 @@ subroutine evpoly
     !  This subroutine takes monomials(RM) and calculates the
     !  permutationally invariant polynomials(p)
     !  For degree 10, the number of polynomials is nob.
+    use chempotpy_kinds, only: wp
     implicit none
     p(0)    = rm(0)
     p(1)    = rm(1)
@@ -2701,9 +2687,10 @@ subroutine evbas
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
     !  This subroutine eliminates the 2-body terms in the permutationally
     !  invariant formulation
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i
-    double precision :: b1(2254)
+    integer  :: i
+    real(wp) :: b1(2254)
     ! Pass P(0:2253) to BM1(1:2254)
     do i=1, 2254
         b1(i) = p(i-1)
@@ -2861,6 +2848,7 @@ subroutine evbas2
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
     !  This subroutine eliminates unused four-body terms
+    use chempotpy_kinds, only: wp
     implicit none
     b(  1) = b2(   1)
     b(  2) = b2(   2)
@@ -3141,96 +3129,97 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
     !               (for N2O2 data)
     ! imol .eq. 4   Paramemters for O2 dissociation with SEC
     !               (for N2O2 data and future O4 data)
+    use chempotpy_kinds, only: wp
     implicit none
-    integer, intent(in)           :: igrad, imol, pairw
-    double precision, intent(in)  :: r
-    double precision, intent(out) :: v2, dv2dr
-    double precision              :: cs(0:10)
-    double precision              :: red, de, rmin, pi, rx, vx
-    double precision              :: fy, dfdr, u, y, dydr, dfdy
+    integer, intent(in)   :: igrad, imol, pairw
+    real(wp), intent(in)  :: r
+    real(wp), intent(out) :: v2, dv2dr
+    real(wp)              :: cs(0:10)
+    real(wp)              :: red, de, rmin, pi, rx, vx
+    real(wp)              :: fy, dfdr, u, y, dydr, dfdy
     if( pairw .eq. 1 )then
         ! Call MEG function to calculate the pairwise potentials
         if( imol .eq. 1 )then
             ! Parameter for N2 dissociation without SEC (for N4 data)
             ! This is for generalized Morse equation
-            red   = 1.098d0
-            de    = 228.7d0
-            cs(0) = 2.70963254293d0
-            cs(1) = 1.32620177271d-1
-            cs(2) = 2.96757048793d-1
-            cs(3) = 1.97112432229d-1
-            cs(4) = -5.02002309588d-1
-            cs(5) = 3.80734244606d-1
-            cs(6) = 1.21001628750d0
+            red   = 1.098e0_wp
+            de    = 228.7e0_wp
+            cs(0) = 2.70963254293e0_wp
+            cs(1) = 1.32620177271e-1_wp
+            cs(2) = 2.96757048793e-1_wp
+            cs(3) = 1.97112432229e-1_wp
+            cs(4) = -5.02002309588e-1_wp
+            cs(5) = 3.80734244606e-1_wp
+            cs(6) = 1.21001628750e0_wp
         elseif( imol .eq. 2 )then
             ! Parameter for N2 dissociation with SEC (for N2O2)
             ! This is for generalized Morse equation
-            red   = 1.098d0
-            de    = 228.4d0
-            cs(0) = 2.71405774451d0
-            cs(1) = 1.32757649829d-1
-            cs(2) = 2.66756890408d-1
-            cs(3) = 1.95350725241d-1
-            cs(4) = -4.08663480982d-1
-            cs(5) = 3.92451705557d-1
-            cs(6) = 1.13006674877d0
+            red   = 1.098e0_wp
+            de    = 228.4e0_wp
+            cs(0) = 2.71405774451e0_wp
+            cs(1) = 1.32757649829e-1_wp
+            cs(2) = 2.66756890408e-1_wp
+            cs(3) = 1.95350725241e-1_wp
+            cs(4) = -4.08663480982e-1_wp
+            cs(5) = 3.92451705557e-1_wp
+            cs(6) = 1.13006674877e0_wp
         elseif( imol .eq. 3 )then
             ! Parameter for NO dissociation with SEC (for N2O2)
-            red    = 1.1508d0
-            de     = 152.6d0
-            cs(1)  = 0.322338d0
-            cs(2)  = 5.878590d0
-            cs(3)  = -12.790761d0
-            cs(4)  = 13.320811d0
-            cs(5)  = -7.516309d0
-            cs(6)  = 1.875839d0
-            cs(7)  = -0.052723d0
-            cs(8)  = -0.037783d0
-            cs(9)  = 0.48294d0   ! delta b
-            cs(10) = 1.98697d0   ! delta c
+            red    = 1.1508e0_wp
+            de     = 152.6e0_wp
+            cs(1)  = 0.322338e0_wp
+            cs(2)  = 5.878590e0_wp
+            cs(3)  = -12.790761e0_wp
+            cs(4)  = 13.320811e0_wp
+            cs(5)  = -7.516309e0_wp
+            cs(6)  = 1.875839e0_wp
+            cs(7)  = -0.052723e0_wp
+            cs(8)  = -0.037783e0_wp
+            cs(9)  = 0.48294e0_wp   ! delta b
+            cs(10) = 1.98697e0_wp   ! delta c
         elseif( imol .eq. 4 )then
             ! Parameter for O2 dissociation with SEC (for N2O2 and O4)
-            red    = 1.2080d0
-            de     = 120.243d0
-            cs(1)  = 0.163630d0
-            cs(2)  = -4.695433d0
-            cs(3)  = 56.774041d0
-            cs(4)  = -171.354957d0
-            cs(5)  = 249.320090d0
-            cs(6)  = -195.481732d0
-            cs(7)  = 79.575388d0
-            cs(8)  = -13.301027d0
-            cs(9)  = 0.63802d0  ! delta b
-            cs(10) = 0.99684d0  ! delta c
+            red    = 1.2080e0_wp
+            de     = 120.243e0_wp
+            cs(1)  = 0.163630e0_wp
+            cs(2)  = -4.695433e0_wp
+            cs(3)  = 56.774041e0_wp
+            cs(4)  = -171.354957e0_wp
+            cs(5)  = 249.320090e0_wp
+            cs(6)  = -195.481732e0_wp
+            cs(7)  = 79.575388e0_wp
+            cs(8)  = -13.301027e0_wp
+            cs(9)  = 0.63802e0_wp  ! delta b
+            cs(10) = 0.99684e0_wp  ! delta c
         endif
         if( imol .eq. 2 )then
             ! Keep this pairwise for N2
             y  = (r*r*r*r - red*red*red*red)/(r*r*r*r + red*red*red*red)
             fy = cs(0) + cs(1)*y + cs(2)*y*y + cs(3)*y*y*y + cs(4)*y*y*y*y + cs(5)*y*y*y*y*y + cs(6)*y*y*y*y*y*y
             u  = exp(-fy*(r-red))
-            v2 = de*(1.0d0-u)*(1.0d0-u)-de
+            v2 = de*(1.0e0_wp-u)*(1.0e0_wp-u)-de
             if( igrad .eq. 1 )then
-                dfdy = cs(1) + 2.0d0*cs(2)*y + 3.0d0*cs(3)*y*y + 4.0d0*cs(4)*y*y*y + 5.0d0*cs(5)*y*y*y*y + 6.0d0* &
-                    & cs(6)* y*y*y*y*y
+                dfdy = cs(1) + 2.0e0_wp*cs(2)*y + 3.0e0_wp*cs(3)*y*y + 4.0e0_wp*cs(4)*y*y*y + 5.0e0_wp*cs(5)*y*y*y*y + &
+                    & 6.0e0_wp* cs(6)* y*y*y*y*y
                 vx    = r*r*r*r + red*red*red*red
-                dydr  = 8.0d0*r*r*r*red*red*red*red/(vx*vx)
+                dydr  = 8.0e0_wp*r*r*r*red*red*red*red/(vx*vx)
                 dfdr  = dfdy*dydr
-                dv2dr = 2.0d0*de*(1-u)*u*(dfdr*(r-red)+fy)
+                dv2dr = 2.0e0_wp*de*(1-u)*u*(dfdr*(r-red)+fy)
             endif
         else
             !  For NO and O2
             ! MEG variable
-            u = exp(-(r-red)/cs(9)-(r-red)**2.0d0/(cs(10)))
+            u = exp(-(r-red)/cs(9)-(r-red)**2.0e0_wp/(cs(10)))
             ! Pairwise potential
-            v2=   - de*(cs(1)*u**1.0d0 + cs(2)*u**2.0d0 + cs(3)*u**3.0d0 + cs(4)*u**4.0d0 + cs(5)*u**5.0d0 + cs(6)*u** &
-                & 6.0d0 + cs(7)*u**7.0d0 + cs(8)*u**8.0d0)
+            v2=   - de*(cs(1)*u**1.0e0_wp + cs(2)*u**2.0e0_wp + cs(3)*u**3.0e0_wp + cs(4)*u**4.0e0_wp + cs(5)*u** &
+                & 5.0e0_wp + cs(6)*u** 6.0e0_wp + cs(7)*u**7.0e0_wp + cs(8)*u**8.0e0_wp)
             ! 1st derivative by r
             if( igrad .eq. 1 )then
                 ! multiplier part of the MEG derivative
-                dfdr = (-2.0d0*(r-red)/cs(10)-1.0d0/cs(9))
-                dv2dr=      - de*(cs(1)*1.0d0*dfdr*u**1.0d0 + cs(2)*2.0d0*dfdr*u**2.0d0 + cs(3)*3.0d0*dfdr*u**3.0d0 + &
-                    & cs(4)*4.0d0*dfdr*u**4.0d0 + cs(5)*5.0d0*dfdr*u**5.0d0 + cs(6)*6.0d0*dfdr*u**6.0d0 + cs(7)*7.0d0* &
-                    & dfdr*u**7.0d0 + cs(8)*8.0d0*dfdr*u**8.0d0)
+                dfdr = (-2.0e0_wp*(r-red)/cs(10)-1.0e0_wp/cs(9))
+                dv2dr=      - de*(cs(1)*1.0e0_wp*dfdr*u**1.0e0_wp + cs(2)*2.0e0_wp*dfdr*u**2.0e0_wp + cs(3)*3.0e0_wp* &
+                    & dfdr*u**3.0e0_wp + cs(4)*4.0e0_wp*dfdr*u**4.0e0_wp + cs(5)*5.0e0_wp*dfdr*u**5.0e0_wp + cs(6)* &
+                    & 6.0e0_wp*dfdr*u**6.0e0_wp + cs(7)*7.0e0_wp* dfdr*u**7.0e0_wp + cs(8)*8.0e0_wp*dfdr*u**8.0e0_wp)
             endif
         endif
     endif
@@ -3254,13 +3243,14 @@ subroutine evdvdr
     ! nob:          number of basis functions (polynomials)
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i, j
-    double precision :: dist, v, v21, v22, v23, v24, v25, v26
-    double precision :: dv2dr1, dv2dr2, dv2dr3, dv2dr4, dv2dr5, dv2dr6
+    integer  :: i, j
+    real(wp) :: dist, v, v21, v22, v23, v24, v25, v26
+    real(wp) :: dv2dr1, dv2dr2, dv2dr3, dv2dr4, dv2dr5, dv2dr6
     ! Initialize dVdR(6)
     do i=1, 6
-        dvdr(i) = 0.0d0
+        dvdr(i) = 0.0e0_wp
     enddo
     ! Add dV2dR(i) to dVdR
     dist = r(1)
@@ -3312,10 +3302,11 @@ subroutine evdrdx( x )
     !               w.r.t. 6 bond lengths
     ! M(nom):       Array to store monomials
     ! P(nob):       Array to store polynomials
+    use chempotpy_kinds, only: wp
     implicit none
-    integer, parameter           :: first_atoms(6)  = [1, 1, 1, 2, 2, 3]
-    integer, parameter           :: second_atoms(6) = [2, 3, 4, 3, 4, 4]
-    double precision, intent(in) :: x(12)
+    integer, parameter   :: first_atoms(6)  = [1, 1, 1, 2, 2, 3]
+    integer, parameter   :: second_atoms(6) = [2, 3, 4, 3, 4, 4]
+    real(wp), intent(in) :: x(12)
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
@@ -3329,19 +3320,21 @@ subroutine evdmsdr
     ! a:            Nonlinear parameter(Angstrom)
     ! ab:           Nonlinear parameter(Angstrom^2)
     ! re:           equilibrium bond length(Angstrom)
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: i, j
     ! Initialize dmsdr
     do i=1, 6
         do j=1, 6
-            dmsdr(i,j) = 0.0d0
+            dmsdr(i,j) = 0.0e0_wp
         enddo
     enddo
     ! MEG term dmsdr = exp(-(r-re)/a-(r-re)^2/ab)
     ! dmsdr(i,j)=0  i!=j
     ! dmsdr(i,i)= (-1/a-2*(r-re)/ab)*Exp(-(r-re)/a-(r-re)^2/ab)
     do i=1, 6
-        dmsdr(i,i) = (-2.0d0*(r(i)-re(i))/ab(i)-1.0d0/a(i)) * exp(-(r(i)-re(i))/a(i)-((r(i)-re(i))**2.0d0)/ab(i))
+        dmsdr(i,i) = (-2.0e0_wp*(r(i)-re(i))/ab(i)-1.0e0_wp/a(i)) * exp(-(r(i)-re(i))/a(i)-((r(i)-re(i))**2.0e0_wp)/ &
+            & ab(i))
     enddo
 end subroutine evdmsdr
 
@@ -3352,10 +3345,11 @@ subroutine evdmdr
     !  This subroutine takes M(nom) and dMSdR(6,6) and calculates the
     !  dMdR(6,nom) that do not have usable decomposition.
     !  For degree 10, the number of monomials is nom.
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: i
     do i=1, 6
-        dmdr(i,0)  = 0.0d0
+        dmdr(i,0)  = 0.0e0_wp
         dmdr(i,1)  = dmsdr(i,6)
         dmdr(i,2)  = dmsdr(i,5)
         dmdr(i,3)  = dmsdr(i,4)
@@ -3383,6 +3377,7 @@ subroutine evdpdr
     !  This subroutine takes monomials(m) and calculates the
     !  permutationally invariant polynomials(p)
     !  For degree 10, the number of polynomials is nob.
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: i
     do i=1, 6
@@ -5650,9 +5645,10 @@ subroutine evdbdr
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
     !  This subroutine eliminates the 2-body terms in the permutationally
     !  invariant formulation.
+    use chempotpy_kinds, only: wp
     implicit none
-    integer          :: i, j
-    double precision :: db1dr(6,2254)
+    integer  :: i, j
+    real(wp) :: db1dr(6,2254)
     ! Pass P(0:2253) to BM1(1:2254)
     do j=1, 6
         do i=1, 2254
@@ -5814,6 +5810,7 @@ subroutine evdbdr2
     use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
         & econv, eref, gconv, p, r, re, rm, rms, totdiss
     !  This subroutine eliminates the unused four-body terms
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: j
     do j=1, 6

@@ -24,6 +24,7 @@
 
 !> @brief Implement N3_MBP_2017, a potential energy surface for N3.
 module chempotpy_n3_mbp_2017_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -32,25 +33,27 @@ module chempotpy_n3_mbp_2017_pes
 
     !> @brief Evaluate the N3_MBP_2017 potential energy surface for N3.
     subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_units,    only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_geometry, only: cartesian_distance
+        use chempotpy_kinds,    only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: v, tx(3), sum_d
-        integer                       :: ibond, iatom, idir, j, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: v, tx(3), sum_d
+        integer               :: ibond, iatom, idir, j, istate
         !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         if( igrad == 0 )then
             tx(1) = cartesian_distance(x(1,:), x(2,:))
             tx(2) = cartesian_distance(x(1,:), x(3,:))
             tx(3) = cartesian_distance(x(2,:), x(3,:))
             call n3(v, tx(1), tx(2), tx(3))
-            v = v/23.0609
+            v = v/electronvolt_to_kilocalorie_per_mole
             do istate=1, nstates
                 p(istate) = v
             enddo
@@ -61,24 +64,25 @@ module chempotpy_n3_mbp_2017_pes
 
     !> @brief Evaluate n3.
     subroutine n3( v, rx, ry, rz )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)  :: rx, ry, rz
-        double precision, intent(out) :: v
-        integer                       :: mpoints
-        double precision              :: coeff(52)
-        double precision              :: indices(52,3)
-        double precision              :: ae, re
-        double precision              :: xrx, xry, xrz
-        integer                       :: i, j, k
-        double precision              :: a
-        integer                       :: ii
-        re  = 1.098d0
-        ae  = 0.9d0
+        real(wp), intent(in)  :: rx, ry, rz
+        real(wp), intent(out) :: v
+        integer               :: mpoints
+        real(wp)              :: coeff(52)
+        real(wp)              :: indices(52,3)
+        real(wp)              :: ae, re
+        real(wp)              :: xrx, xry, xrz
+        integer               :: i, j, k
+        real(wp)              :: a
+        integer               :: ii
+        re  = 1.098e0_wp
+        ae  = 0.9e0_wp
         xrx = exp(-(rx-re)/ae)
         xry = exp(-(ry-re)/ae)
         xrz = exp(-(rz-re)/ae)
         call assign(coeff, indices)
-        v       = 0.d0
+        v       = 0.e0_wp
         mpoints = 52
         do ii=1, mpoints
             v = v + coeff(ii)*(xrx**(indices(ii,1))*xry**(indices(ii,2))*xrz**(indices(ii,3)) + xrx**(indices(ii,1))* &
@@ -91,8 +95,9 @@ module chempotpy_n3_mbp_2017_pes
 
     !> @brief Evaluate assign.
     subroutine assign( coeff, indices )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(inout) :: coeff(52), indices(52,3)
+        real(wp), intent(inout) :: coeff(52), indices(52,3)
         indices(1,1)  = 0.0
         indices(1,2)  = 0.0
         indices(1,3)  = 0.0
@@ -307,12 +312,13 @@ end module chempotpy_n3_mbp_2017_pes
 !> @brief Expose N3_MBP_2017 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_n3_mbp_2017_pes, only: evaluate
+    use chempotpy_kinds,           only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

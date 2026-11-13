@@ -1,4 +1,5 @@
 module constants
+    use chempotpy_kinds, only: wp
     implicit none
     private
     ! Define the mass of different atoms
@@ -16,29 +17,15 @@ end module constants
 
 !> @brief Own the fitted H4O2 coefficients without legacy COMMON storage.
 module h4o2_pes_state
+    use chempotpy_h4o2_pip_parameters, only: coefficients => pip_coefficients
+    use chempotpy_kinds,               only: wp
     implicit none
     private
     public :: evaluate_h4o2_coefficients
-    public :: load_h4o2_coefficients
-    integer          :: coefficient_count
-    integer          :: correction_count
-    double precision :: coefficients(0:5226)
+    integer, parameter :: coefficient_count = 5056
+    integer, parameter :: correction_count  = 57
 
     contains
-
-    !> @brief Load the fitted H4O2 coefficients from the package data file.
-    subroutine load_h4o2_coefficients( file_name )
-        integer                      :: file_unit_20
-        character(len=*), intent(in) :: file_name
-        integer                      :: coefficient
-        coefficient_count = 5056; correction_count = 57
-        open(newunit=file_unit_20, file=file_name, status='old')
-        read(file_unit_20, *)
-        read(file_unit_20, *)
-        read(file_unit_20, *) (coefficients(coefficient), &
-            coefficient = 0, coefficient_count+3*correction_count-1)
-        close(file_unit_20)
-    end subroutine load_h4o2_coefficients
 
     !> @brief Evaluate the fitted H4O2 expansion for Cartesian coordinates.
     subroutine evaluate_h4o2_coefficients( potential, cartesian_coordinates )
@@ -48,7 +35,7 @@ module h4o2_pes_state
             +3*correction_count-1)
         real :: zero_padding(0:coefficient_count &
             +3*correction_count-1)
-        double precision :: basis(0:coefficient_count &
+        real(wp) :: basis(0:coefficient_count &
             +3*correction_count-1)
         zero_padding = 0.0
         call getvec(coefficient_count, correction_count, &
@@ -61,6 +48,7 @@ end module h4o2_pes_state
 
 !> @brief Implement H4O2_PIP, a potential energy surface for H4O2.
 module chempotpy_h4o2_pip_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -68,39 +56,35 @@ module chempotpy_h4o2_pip_pes
     contains
 
     !> @brief Evaluate the H4O2_PIP potential energy surface for H4O2.
-    subroutine evaluate( x, igrad, path, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+    subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter              :: nstates = 1
-        integer, parameter              :: natoms  = 6
-        integer, intent(in)             :: igrad
-        character(len=1024), intent(in) :: path
-        double precision, intent(in)    :: x(natoms,3)
-        double precision, intent(out)   :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out)   :: d(nstates,nstates,natoms,3)
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 6
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         !     logical :: first_time_data=.true.
         real    :: tx(18)
         real    :: v
         integer :: iatom, idir, j, istate
         !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
                 j     = (iatom-1)*3+idir
-                tx(j) = x(iatom,idir)/legacy_bohr_to_angstrom
+                tx(j) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
-        !     if(first_time_data) then
-        call pes_init(path)
-        !       first_time_data=.false.
-        !     endif
         if( igrad == 0 )then
             call h4o2pot(tx, v)
         else
             write (*, *) 'Only energy is available'
         endif
-        v = v*legacy_hartree_to_electronvolt
+        v = v*hartree_to_electronvolt
         do istate=1, nstates
             p(istate) = v
         enddo
@@ -110,29 +94,18 @@ end module chempotpy_h4o2_pip_pes
 !> @brief Expose H4O2_PIP through the Python-facing PES entry point.
 subroutine pes( x, igrad, path, p, g, d )
     use chempotpy_h4o2_pip_pes, only: evaluate
+    use chempotpy_kinds,        only: wp
     implicit none
     integer, parameter              :: natoms  = 6
     integer, parameter              :: nstates = 1
     integer, intent(in)             :: igrad
     character(len=1024), intent(in) :: path
-    double precision, intent(in)    :: x(natoms,3)
-    double precision, intent(out)   :: p(nstates)
-    double precision, intent(out)   :: g(nstates,natoms,3)
-    double precision, intent(out)   :: d(nstates,nstates,natoms,3)
-    call evaluate(x, igrad, path, p, g, d)
+    real(wp), intent(in)            :: x(natoms,3)
+    real(wp), intent(out)           :: p(nstates)
+    real(wp), intent(out)           :: g(nstates,natoms,3)
+    real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
+    call evaluate(x, igrad, p, g, d)
 end subroutine pes
-
-! Initializing HBB water potential                !
-!> @brief Evaluate pes_init.
-subroutine pes_init( path )
-    use h4o2_pes_state, only: load_h4o2_coefficients
-    implicit none
-    character(len=1024), intent(in) :: path
-    character(len=1024)             :: file_path1, file_path2
-    file_path1 = trim(path)//"/H4O2/h4o2.pes4.coeff.dat"
-    ! 2-body init
-    call load_h4o2_coefficients(file_path1)
-end subroutine pes_init
 
 ! water potential                                  !
 !> @brief Evaluate h4o2pot.
@@ -140,6 +113,7 @@ subroutine h4o2pot( x, v )
     use h4o2_pes_state, only: evaluate_h4o2_coefficients
     ! x(1:18) Cartesian coordinates in bohr, must in order H H H H O O
     ! f: potential in hartree
+    use chempotpy_kinds, only: wp
     implicit none
     real, intent(in)      :: x(18)
     real, intent(inout)   :: v
@@ -152,6 +126,7 @@ end subroutine h4o2pot
 
 module inv_mg42_t
     !..use and access
+    use chempotpy_kinds, only: wp
     implicit none
     private
     integer, parameter, public :: &
@@ -164,6 +139,7 @@ end module inv_mg42_t
 
 !> @brief Evaluate getr0.
 subroutine getr0 ( nk, xn, r0 )
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: nk
     real    :: xn(0:2,0:nk-1), r0(0:nk-1,0:nk-1)
@@ -181,6 +157,7 @@ end subroutine getr0
 subroutine getrvec ( m, r, vec )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
+    use chempotpy_kinds, only: wp
     implicit none
     ! version for X4Y2
     integer            :: m
@@ -226,6 +203,7 @@ end subroutine getrvec
 subroutine getvec ( ms, mr, xn, vec )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
+    use chempotpy_kinds, only: wp
     implicit none
     ! version for X4Y2
     integer            :: ms, mr
@@ -256,6 +234,7 @@ end subroutine getvec
 
 !> @brief Evaluate getx0.
 subroutine getx0 ( nk, r0, x0 )
+    use chempotpy_kinds, only: wp
     implicit none
     integer :: nk
     real    :: r0(0:nk-1,0:nk-1), x0(0:nk*(nk-1)/2-1)
@@ -263,7 +242,7 @@ subroutine getx0 ( nk, r0, x0 )
     k = 0
     do j = 0, nk-1
         do i = 0, j-1
-            x0(k) = 1.d0*exp(-r0(i,j)/3)
+            x0(k) = 1.e0_wp*exp(-r0(i,j)/3)
             k     = k+1
         enddo
     enddo
@@ -273,6 +252,7 @@ end subroutine getx0
 subroutine inv_base ( mxd, u, v, w )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
+    use chempotpy_kinds, only: wp
     implicit none
     integer, intent (in) :: mxd
     real, intent (in)    :: u(0:mg42_ivp(mxd)-1), v(0:mg42_ivs(mxd)-1)
@@ -300,6 +280,7 @@ end subroutine inv_base
 subroutine mg42_base ( mxd, x, w )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
+    use chempotpy_kinds, only: wp
     implicit none
     integer, intent (in) :: mxd
     real, intent (in)    :: x(0:mg42_nr-1)
@@ -314,6 +295,7 @@ end subroutine mg42_base
 subroutine mg42_gens ( ind, x, y )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
+    use chempotpy_kinds, only: wp
     implicit none
     integer, intent (in) :: ind
     real, intent (in)    :: x(0:mg42_nr-1)
@@ -346,6 +328,7 @@ end subroutine mg42_gens
 subroutine mg42_prims ( x, u )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
+    use chempotpy_kinds, only: wp
     implicit none
     integer, parameter :: m = 4, n=2, m2=m*(m-1)/2, n2=n*(n-1)/2
     real, intent (in)  :: x(0:mg42_nr-1)
@@ -387,6 +370,7 @@ end subroutine mg42_prims
 subroutine mg42_secs ( mxd, x, v )
     use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
         & mg42_ngrp, mg42_nr
+    use chempotpy_kinds, only: wp
     implicit none
     !! Note: We stop at degree 7 for now.
     integer, parameter :: m = 4, n=2, nk=6, npv=107, &

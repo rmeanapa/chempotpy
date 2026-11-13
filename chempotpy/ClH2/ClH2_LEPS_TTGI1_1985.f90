@@ -59,6 +59,7 @@
 
 !> @brief Implement ClH2_LEPS_TTGI1_1985, a potential energy surface for ClH2.
 module chempotpy_clh2_leps_ttgi1_1985_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -67,29 +68,31 @@ module chempotpy_clh2_leps_ttgi1_1985_pes
 
     !> @brief Evaluate the ClH2_LEPS_TTGI1_1985 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, p, g, d )
+        use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
-        use chempotpy_legacy_units,       only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
-        use chempotpy_legacy_coordinates, only: legacy_triatomic_distances_to_bohr
+        use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
+        use chempotpy_kinds,              only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: dq(3), q(3), r2(3), tx(9), dedx(9), drdx(3,9), v, xter
-        integer                       :: iatom, idir, istate, j
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: dq(3), q(3), r2(3), tx(9), dedx(9), drdx(3,9), v, xter
+        integer               :: iatom, idir, istate, j
         !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         call flatten_cartesian_coordinates(x, tx)
         ! input cartesian is ClHH
-        call legacy_triatomic_distances_to_bohr(x, q)
-        dq = 0.d0
+        call triatomic_distances_to_bohr(x, q)
+        dq = 0.e0_wp
         call pot(q, igrad, xter, dq)
-        xter = xter*legacy_hartree_to_electronvolt
-        dq   = dq*51.422067
-        r2   = q*legacy_bohr_to_angstrom
+        xter = xter*hartree_to_electronvolt
+        dq   = dq*hartree_per_bohr_to_ev_per_angstrom
+        r2   = q*bohr_to_angstrom
         call evdrdx(tx, r2, drdx)
         call transform_internal_gradient_to_cartesian(dq, drdx, dedx)
         if( igrad == 0 )then
@@ -115,29 +118,32 @@ end module chempotpy_clh2_leps_ttgi1_1985_pes
 !> @brief Expose ClH2_LEPS_TTGI1_1985 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_clh2_leps_ttgi1_1985_pes, only: evaluate
+    use chempotpy_kinds,                    only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
 
 !> @brief Evaluate EvdRdX for the ClH2_LEPS_TTGI1_1985 potential.
 subroutine evdrdx( x, r, drdx )
     use chempotpy_geometry, only: ordered_pair_distance_jacobian
+    use chempotpy_kinds,    only: wp
     implicit none
-    integer, parameter            :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter            :: second_atoms(3) = [2, 3, 3]
-    double precision, intent(in)  :: x(9), r(3)
-    double precision, intent(out) :: drdx(3,9)
+    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+    integer, parameter    :: second_atoms(3) = [2, 3, 3]
+    real(wp), intent(in)  :: x(9), r(3)
+    real(wp), intent(out) :: drdx(3,9)
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
 module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate_internal
@@ -146,237 +152,253 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
 
     !> @brief Evaluate dispatch.
     subroutine evaluate_internal( q, nder, xter, dq )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision, intent(in)  :: q(3)
-        integer, intent(in)           :: nder
-        double precision, intent(out) :: xter, dq(3)
-        double precision              :: v1h2(79), v2h2(87), v3h2(126), v4h2(126)
-        double precision              :: r1h2(79), r2h2(87), r3h2(126)
-        double precision              :: s2ss(79), s3ss(79), delss(79)
-        double precision              :: s2ts(87), s3ts(87), delts(87)
-        double precision              :: s2dg(126), s3dg(126), deldg(126)
-        double precision              :: s2du(126), s3du(126), deldu(126)
-        double precision              :: quar, rt3
-        double precision :: arg, c(3), cs, ct, ct2, dd(3), ddgab, ddsxa, ddsxb, dduab, dgab, dh(6,6), dh1(2,2), dh11(3), &
-            & dh12(3), dh13(3), dh14(3), dh15(3), dh16(3), dh2(2,2), dh22(3), dh24(3), dh25(3), dh26(3), dh33(3), dh34(3), &
+        real(wp), intent(in)  :: q(3)
+        integer, intent(in)   :: nder
+        real(wp), intent(out) :: xter, dq(3)
+        real(wp)              :: v1h2(79), v2h2(87), v3h2(126), v4h2(126)
+        real(wp)              :: r1h2(79), r2h2(87), r3h2(126)
+        real(wp)              :: s2ss(79), s3ss(79), delss(79)
+        real(wp)              :: s2ts(87), s3ts(87), delts(87)
+        real(wp)              :: s2dg(126), s3dg(126), deldg(126)
+        real(wp)              :: s2du(126), s3du(126), deldu(126)
+        real(wp)              :: quar, rt3
+        real(wp)              :: arg, c(3), cs, ct, ct2, dd(3), ddgab, ddsxa, ddsxb, dduab, dgab, dh(6,6), dh1(2,2), dh11(3), &
+            & dh12(3), dh13(3), dh14(3), dh15(3), dh16(3), dh2(2, 2), dh22(3), dh24(3), dh25(3), dh26(3), dh33(3), dh34(3), &
             & dh44(3), dh45(3), dh46(3), dh55(3), dh56(3), dh66(3), dnumb, dpux, dsgh, dspxa, dspxb, dss11a, dss11b, dss12a, &
             & dss12b, dss22a, dss22b, dssab, dsxa, dsxb, dtdr1, dtdr2, dtdr3, dtpxa, dtpxb, dtsab, dtsxa, dtsxb, duab, easyab, &
-            & easyac, easybc, eht, en(6), factr, for, forth, gvec(6), h1(2,2), h2(2,2), half, one, r(3), rt2i, six, spxa, spxb, &
-            & sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, test, th(6,6), tpxa, tpxb, tre, tsab, &
+            & easyac, easybc, eht, en(6), factr, for, forth, gvec(6), h1(2, 2), h2(2,2), half, one, r(3), rt2i, six, spxa, spxb, &
+            & sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, test, th(6, 6), tpxa, tpxb, tre, tsab, &
             & tsxa, tsxb, two, vec(6,6), w(6), xtra, zero
-        integer :: i, idebug, idum, iflag, indx(3), iptprt, ix, j, k, ndim, ndum, nroot
+        integer           :: i, idebug, idum, iflag, indx(3), iptprt, ix, j, k, ndim, ndum, nroot
         character(len=80) :: title(2)
-        equivalence (h1(1,1), ss11a), (h1(1,2), ss12a), (h1(2,2), ss22a)
+        equivalence (h1(1, 1), ss11a), (h1(1, 2), ss12a), (h1(2, 2), ss22a)
         equivalence (h2(1,1), ss11b), (h2(1,2), ss12b), (h2(2,2), ss22b)
         equivalence (dh1(1,1), dss11a), (dh1(1,2), dss12a), (dh1(2,2), dss22a)
-        equivalence (dh2(1,1), dss11b), (dh2(1,2), dss12b), (dh2(2,2), dss22b)
-        equivalence (th(1,1), dh(1,1))
+        equivalence (dh2(1, 1), dss11b), (dh2(1, 2), dss12b), (dh2(2, 2), dss22b)
+        equivalence (th(1, 1), dh(1,1))
         !   Initialize the array INDX which specifies the order of the
         !   input bond distances.  INDX=1,2,3 for Cl + H2 and INDX=132 for H + C
         !   Echo the name of the potential to the file linked to FORTRAN unit IP
         !WRITE (IPTPRT, 600) C
         !WRITE (IPTPRT, 610) TITLE
         !     SET UP SPLINE FITS TO H2 CURVES
-        arg    = 0.d0
-        c      = 0.d0
-        cs     = 0.d0
-        ct     = 0.d0
-        ct2    = 0.d0
-        dd     = 0.d0
-        ddgab  = 0.d0
-        ddsxa  = 0.d0
-        ddsxb  = 0.d0
-        dduab  = 0.d0
-        deldg  = 0.d0
-        deldu  = 0.d0
-        delss  = 0.d0
-        delts  = 0.d0
-        dgab   = 0.d0
-        dh     = 0.d0
-        dh1    = 0.d0
-        dh11   = 0.d0
-        dh12   = 0.d0
-        dh13   = 0.d0
-        dh14   = 0.d0
-        dh15   = 0.d0
-        dh16   = 0.d0
-        dh2    = 0.d0
-        dh22   = 0.d0
-        dh24   = 0.d0
-        dh25   = 0.d0
-        dh26   = 0.d0
-        dh33   = 0.d0
-        dh34   = 0.d0
-        dh44   = 0.d0
-        dh45   = 0.d0
-        dh46   = 0.d0
-        dh55   = 0.d0
-        dh56   = 0.d0
-        dh66   = 0.d0
-        dnumb  = 0.d0
-        dpux   = 0.d0
-        dsgh   = 0.d0
-        dspxa  = 0.d0
-        dspxb  = 0.d0
-        dss11a = 0.d0
-        dss11b = 0.d0
-        dss12a = 0.d0
-        dss12b = 0.d0
-        dss22a = 0.d0
-        dss22b = 0.d0
-        dssab  = 0.d0
-        dsxa   = 0.d0
-        dsxb   = 0.d0
-        dtdr1  = 0.d0
-        dtdr2  = 0.d0
-        dtdr3  = 0.d0
-        dtpxa  = 0.d0
-        dtpxb  = 0.d0
-        dtsab  = 0.d0
-        dtsxa  = 0.d0
-        dtsxb  = 0.d0
-        duab   = 0.d0
-        easyab = 0.d0
-        easyac = 0.d0
-        easybc = 0.d0
-        eht    = 0.d0
-        en     = 0.d0
-        factr  = 0.d0
-        for    = 0.d0
-        forth  = 0.d0
-        gvec   = 0.d0
-        h1     = 0.d0
-        h2     = 0.d0
-        half   = 0.d0
-        one    = 0.d0
-        quar   = 0.d0
-        r      = 0.d0
-        r1h2   = 0.d0
-        r2h2   = 0.d0
-        r3h2   = 0.d0
-        rt2i   = 0.d0
-        rt3    = 0.d0
-        s2dg   = 0.d0
-        s2du   = 0.d0
-        s2ss   = 0.d0
-        s2ts   = 0.d0
-        s3dg   = 0.d0
-        s3du   = 0.d0
-        s3ss   = 0.d0
-        s3ts   = 0.d0
-        six    = 0.d0
-        spxa   = 0.d0
-        spxb   = 0.d0
-        sqrt3  = 0.d0
-        ss11a  = 0.d0
-        ss11b  = 0.d0
-        ss12a  = 0.d0
-        ss12b  = 0.d0
-        ss22a  = 0.d0
-        ss22b  = 0.d0
-        ssab   = 0.d0
-        ssgh   = 0.d0
-        ssgx   = 0.d0
-        st     = 0.d0
-        st2    = 0.d0
-        test   = 0.d0
-        th     = 0.d0
-        tpxa   = 0.d0
-        tpxb   = 0.d0
-        tre    = 0.d0
-        tsab   = 0.d0
-        tsxa   = 0.d0
-        tsxb   = 0.d0
-        two    = 0.d0
-        v1h2   = 0.d0
-        v2h2   = 0.d0
-        v3h2   = 0.d0
-        v4h2   = 0.d0
-        vec    = 0.d0
-        w      = 0.d0
-        xtra   = 0.d0
-        zero   = 0.d0
+        arg    = 0.e0_wp
+        c      = 0.e0_wp
+        cs     = 0.e0_wp
+        ct     = 0.e0_wp
+        ct2    = 0.e0_wp
+        dd     = 0.e0_wp
+        ddgab  = 0.e0_wp
+        ddsxa  = 0.e0_wp
+        ddsxb  = 0.e0_wp
+        dduab  = 0.e0_wp
+        deldg  = 0.e0_wp
+        deldu  = 0.e0_wp
+        delss  = 0.e0_wp
+        delts  = 0.e0_wp
+        dgab   = 0.e0_wp
+        dh     = 0.e0_wp
+        dh1    = 0.e0_wp
+        dh11   = 0.e0_wp
+        dh12   = 0.e0_wp
+        dh13   = 0.e0_wp
+        dh14   = 0.e0_wp
+        dh15   = 0.e0_wp
+        dh16   = 0.e0_wp
+        dh2    = 0.e0_wp
+        dh22   = 0.e0_wp
+        dh24   = 0.e0_wp
+        dh25   = 0.e0_wp
+        dh26   = 0.e0_wp
+        dh33   = 0.e0_wp
+        dh34   = 0.e0_wp
+        dh44   = 0.e0_wp
+        dh45   = 0.e0_wp
+        dh46   = 0.e0_wp
+        dh55   = 0.e0_wp
+        dh56   = 0.e0_wp
+        dh66   = 0.e0_wp
+        dnumb  = 0.e0_wp
+        dpux   = 0.e0_wp
+        dsgh   = 0.e0_wp
+        dspxa  = 0.e0_wp
+        dspxb  = 0.e0_wp
+        dss11a = 0.e0_wp
+        dss11b = 0.e0_wp
+        dss12a = 0.e0_wp
+        dss12b = 0.e0_wp
+        dss22a = 0.e0_wp
+        dss22b = 0.e0_wp
+        dssab  = 0.e0_wp
+        dsxa   = 0.e0_wp
+        dsxb   = 0.e0_wp
+        dtdr1  = 0.e0_wp
+        dtdr2  = 0.e0_wp
+        dtdr3  = 0.e0_wp
+        dtpxa  = 0.e0_wp
+        dtpxb  = 0.e0_wp
+        dtsab  = 0.e0_wp
+        dtsxa  = 0.e0_wp
+        dtsxb  = 0.e0_wp
+        duab   = 0.e0_wp
+        easyab = 0.e0_wp
+        easyac = 0.e0_wp
+        easybc = 0.e0_wp
+        eht    = 0.e0_wp
+        en     = 0.e0_wp
+        factr  = 0.e0_wp
+        for    = 0.e0_wp
+        forth  = 0.e0_wp
+        gvec   = 0.e0_wp
+        h1     = 0.e0_wp
+        h2     = 0.e0_wp
+        half   = 0.e0_wp
+        one    = 0.e0_wp
+        quar   = 0.e0_wp
+        r      = 0.e0_wp
+        r1h2   = 0.e0_wp
+        r2h2   = 0.e0_wp
+        r3h2   = 0.e0_wp
+        rt2i   = 0.e0_wp
+        rt3    = 0.e0_wp
+        s2dg   = 0.e0_wp
+        s2du   = 0.e0_wp
+        s2ss   = 0.e0_wp
+        s2ts   = 0.e0_wp
+        s3dg   = 0.e0_wp
+        s3du   = 0.e0_wp
+        s3ss   = 0.e0_wp
+        s3ts   = 0.e0_wp
+        six    = 0.e0_wp
+        spxa   = 0.e0_wp
+        spxb   = 0.e0_wp
+        sqrt3  = 0.e0_wp
+        ss11a  = 0.e0_wp
+        ss11b  = 0.e0_wp
+        ss12a  = 0.e0_wp
+        ss12b  = 0.e0_wp
+        ss22a  = 0.e0_wp
+        ss22b  = 0.e0_wp
+        ssab   = 0.e0_wp
+        ssgh   = 0.e0_wp
+        ssgx   = 0.e0_wp
+        st     = 0.e0_wp
+        st2    = 0.e0_wp
+        test   = 0.e0_wp
+        th     = 0.e0_wp
+        tpxa   = 0.e0_wp
+        tpxb   = 0.e0_wp
+        tre    = 0.e0_wp
+        tsab   = 0.e0_wp
+        tsxa   = 0.e0_wp
+        tsxb   = 0.e0_wp
+        two    = 0.e0_wp
+        v1h2   = 0.e0_wp
+        v2h2   = 0.e0_wp
+        v3h2   = 0.e0_wp
+        v4h2   = 0.e0_wp
+        vec    = 0.e0_wp
+        w      = 0.e0_wp
+        xtra   = 0.e0_wp
+        zero   = 0.e0_wp
         iptprt = 6
         idebug = 0
-        zero   = 0.d0
-        one    = 1.d0
-        two    = 2.d0
-        tre    = 3.d0
-        for    = 4.d0
-        six    = 6.d0
-        eht    = 8.d0
-        half   = 0.5d0
-        quar   = 0.25d0
-        rt2i   = 7.07106781186548d-1
-        rt3    = 1.73205080756888d0
-        dpux   = 0.d0
-        ssgx   = -0.132774d0
-        dsgh   = 0.d0
-        ssgh   = 0.5d0
-        c      = [ 0.169552d0, 0.1744734d0, 0.169552d0]
-        v1h2 = [ -.1202028d0, -.5266270d0, -.7696341d0, -.9220261d0, -1.0200556d0, -1.0836422d0, -1.1245385d0, - &
-            & 1.1500562d0, -1.1649342d0, -1.1723459d0, -1.1744744d0, -1.1728537d0, -1.1685799d0, -1.1624570d0, - &
-            & 1.1550670d0, -1.1468496d0, -1.1381312d0, -1.1291562d0, -1.1201233d0, -1.1111725d0, -1.1024127d0, - &
-            & 1.0939273d0, -1.0857810d0, -1.0780164d0, -1.0706700d0, -1.0637641d0, -1.0573118d0, -1.0513185d0, - &
-            & 1.0457832d0, -1.0407003d0, -1.0360578d0, -1.0318402d0, -1.0280272d0, -1.0245978d0, -1.0215297d0, - &
-            & 1.0187967d0, -1.0163689d0, -1.0142247d0, -1.0123371d0, -1.0106810d0, -1.0092303d0, -1.0079682d0, - &
-            & 1.0068703d0, -1.0059178d0, -1.0050923d0, -1.0043782d0, -1.0037626d0, -1.0032309d0, -1.0027740d0, - &
-            & 1.0023800d0, -1.0020423d0, -1.0017521d0, -1.0015030d0, -1.0012899d0, -1.0011069d0, -1.0009498d0, - &
-            & 1.0008150d0, -1.0007002d0, -1.0006030d0, -1.0005162d0, -1.0004466d0, -1.0003864d0, -1.0003328d0, - &
-            & 1.0002906d0, -1.0002466d0, -1.0002154d0, -1.0001889d0, -1.0001434d0, -1.0001086d0, -1.0000868d0, - &
-            & 1.0000682d0, -1.0000528d0, -1.0000404d0, -1.0000314d0, -1.0000185d0, -1.0000121d0, -1.0000091d0, - &
-            & 1.0000045d0, -1.0000025d0]
-        v2h2 = [ -.6215227d0, -.6757268d0, -.7189640d0, -.7544033d0, -.7841501d0, -.8096095d0, -.8317238d0, - &
-            & .8511347d0, -.8682913d0, -.8835186d0, -.8970636d0, -.9091230d0, -.9198593d0, -.9294123d0, -.9379051d0, - &
-            & .9454463d0, -.9521346d0, -.9580585d0, -.9632985d0, -.9679271d0, -.9720104d0, -.9756071d0, -.9787717d0, - &
-            & .9815517d0, -.9839910d0, -.9861279d0, -.9879977d0, -.9896312d0, -.9910564d0, -.9922979d0, -.9933781d0, - &
-            & .9943164d0, -.9951304d0, -.9958355d0, -.9964456d0, -.9969715d0, -.9974252d0, -.9978159d0, -.9981500d0, - &
-            & .9984382d0, -.9986849d0, -.9988960d0, -.9990763d0, -.9992292d0, -.9993597d0, -.9994703d0, -.9995635d0, - &
-            & .9996432d0, -.9997094d0, -.9997655d0, -.9998125d0, -.9998515d0, -.9998842d0, -.9999112d0, -.9999337d0, - &
-            & .9999521d0, -.9999670d0, -.9999795d0, -.9999887d0, -.9999966d0, -1.0000030d0, -1.0000076d0, - &
-            & 1.0000117d0, -1.0000143d0, -1.0000167d0, -1.0000180d0, -1.0000191d0, -1.0000195d0, -1.0000197d0, - &
-            & 1.0000194d0, -1.0000196d0, -1.0000192d0, -1.0000191d0, -1.0000180d0, -1.0000173d0, -1.0000164d0, - &
-            & 1.0000158d0, -1.0000152d0, -1.0000143d0, -1.0000143d0, -1.0000127d0, -1.0000109d0, -1.0000095d0, - &
-            & 1.0000076d0, -1.0000067d0, -1.0000043d0, -1.0000025d0]
-        v3h2(1:64) = [ 8.0217579d0, 3.0713797d0, 1.4666292d0, .6992459d0, .2650120d0, -.0048180d0, -.1826248d0, - &
-            & .3044801d0, -.3902705d0, -.4517863d0, -.4964119d0, -.5289745d0, -.5527406d0, -.5699835d0, -.5823232d0, - &
-            & .5909372d0, -.5966963d0, -.6002536d0, -.6021058d0, -.6026342d0, -.6021349d0, -.6008396d0, -.5989309d0, - &
-            & .5965536d0, -.5938235d0, -.5908332d0, -.5876573d0, -.5843560d0, -.5809780d0, -.5775629d0, -.5741424d0, - &
-            & .5707426d0, -.5673842d0, -.5640840d0, -.5608555d0, -.5577093d0, -.5546536d0, -.5516947d0, -.5488374d0, - &
-            & .5460849d0, -.5434394d0, -.5409022d0, -.5384736d0, -.5361531d0, -.5339400d0, -.5318328d0, -.5298296d0, - &
-            & .5279281d0, -.5261259d0, -.5244203d0, -.5228082d0, -.5212866d0, -.5198521d0, -.5185016d0, -.5172315d0, - &
-            & .5160385d0, -.5149192d0, -.5138701d0, -.5128878d0, -.5119690d0, -.5111105d0, -.5103089d0, -.5095612d0, - &
-            & .5088644d0]
-        v3h2(65:126) = [ -.5082155d0, -.5076116d0, -.5070501d0, -.5065283d0, -.5060437d0, -.5055940d0, -.5051769d0, - &
-            & .5047902d0, -.5044319d0, -.5041001d0, -.5037930d0, -.5035087d0, -.5032458d0, -.5030027d0, -.5027780d0, - &
-            & .5025704d0, -.5023785d0, -.5022014d0, -.5020377d0, -.5018866d0, -.5017472d0, -.5016184d0, -.5014996d0, - &
-            & .5013900d0, -.5012888d0, -.5011954d0, -.5011093d0, -.5010298d0, -.5009564d0, -.5008887d0, -.5008262d0, - &
-            & .5007685d0, -.5007153d0, -.5006661d0, -.5006207d0, -.5005787d0, -.5004122d0, -.5002992d0, -.5002219d0, - &
-            & .5001683d0, -.5001306d0, -.5001035d0, -.5000837d0, -.5000690d0, -.5000577d0, -.5000489d0, -.5000420d0, - &
-            & .5000364d0, -.5000318d0, -.5000279d0, -.5000247d0, -.5000220d0, -.5000196d0, -.5000176d0, -.5000158d0, - &
-            & .5000142d0, -.5000129d0, -.5000117d0, -.5000106d0, -.5000097d0, -.5000089d0, -.5000081d0]
-        v4h2(1:64) = [ 9.4993326d0, 4.4973226d0, 2.8272874d0, 1.9892158d0, 1.4831145d0, 1.1423563d0, .8955959d0, &
-            & .7072541d0, .5576760d0, .4351864d0, .3324666d0, .2447306d0, .1687347d0, .1022057d0, .0434985d0, - &
-            & .0086173d0, -.0550906d0, -.0966755d0, -.1339863d0, -.1675344d0, -.1977530d0, -.2250137d0, -.2496386d0, - &
-            & .2719091d0, -.2920720d0, -.3103453d0, -.3269215d0, -.3419716d0, -.3556477d0, -.3680850d0, -.3794043d0, - &
-            & .3897134d0, -.3991089d0, -.4076771d0, -.4154957d0, -.4226343d0, -.4291554d0, -.4351155d0, -.4405653d0, - &
-            & .4455506d0, -.4501129d0, -.4542896d0, -.4581145d0, -.4616184d0, -.4648290d0, -.4677716d0, -.4704692d0, - &
-            & .4729427d0, -.4752111d0, -.4772916d0, -.4792001d0, -.4809509d0, -.4825572d0, -.4840309d0, -.4853831d0, - &
-            & .4866238d0, -.4877622d0, -.4888066d0, -.4897648d0, -.4906439d0, -.4914502d0, -.4921898d0, -.4928681d0, - &
-            & .4934901d0]
-        v4h2(65:126) = [ -.4940603d0, -.4945830d0, -.4950621d0, -.4955011d0, -.4959033d0, -.4962717d0, -.4966090d0, - &
-            & .4969178d0, -.4972005d0, -.4974591d0, -.4976956d0, -.4979119d0, -.4981096d0, -.4982903d0, -.4984553d0, - &
-            & .4986060d0, -.4987435d0, -.4988690d0, -.4989834d0, -.4990877d0, -.4991827d0, -.4992692d0, -.4993480d0, - &
-            & .4994196d0, -.4994847d0, -.4995438d0, -.4995975d0, -.4996462d0, -.4996904d0, -.4997303d0, -.4997665d0, - &
-            & .4997992d0, -.4998288d0, -.4998554d0, -.4998794d0, -.4999011d0, -.4999800d0, -.5000244d0, -.5000475d0, - &
-            & .5000579d0, -.5000608d0, -.5000595d0, -.5000560d0, -.5000515d0, -.5000467d0, -.5000421d0, -.5000377d0, - &
-            & .5000337d0, -.5000301d0, -.5000269d0, -.5000240d0, -.5000216d0, -.5000194d0, -.5000174d0, -.5000157d0, - &
-            & .5000142d0, -.5000129d0, -.5000117d0, -.5000106d0, -.5000097d0, -.5000089d0, -.5000081d0]
+        zero   = 0.e0_wp
+        one    = 1.e0_wp
+        two    = 2.e0_wp
+        tre    = 3.e0_wp
+        for    = 4.e0_wp
+        six    = 6.e0_wp
+        eht    = 8.e0_wp
+        half   = 0.5e0_wp
+        quar   = 0.25e0_wp
+        rt2i   = 7.07106781186548e-1_wp
+        rt3    = 1.73205080756888e0_wp
+        dpux   = 0.e0_wp
+        ssgx   = -0.132774e0_wp
+        dsgh   = 0.e0_wp
+        ssgh   = 0.5e0_wp
+        c      = [ 0.169552e0_wp, 0.1744734e0_wp, 0.169552e0_wp]
+        v1h2 = [ -.1202028e0_wp, -.5266270e0_wp, -.7696341e0_wp, -.9220261e0_wp, -1.0200556e0_wp, -1.0836422e0_wp, - &
+            & 1.1245385e0_wp, - 1.1500562e0_wp, -1.1649342e0_wp, -1.1723459e0_wp, -1.1744744e0_wp, -1.1728537e0_wp, - &
+            & 1.1685799e0_wp, -1.1624570e0_wp, - 1.1550670e0_wp, -1.1468496e0_wp, -1.1381312e0_wp, -1.1291562e0_wp, - &
+            & 1.1201233e0_wp, -1.1111725e0_wp, -1.1024127e0_wp, - 1.0939273e0_wp, -1.0857810e0_wp, -1.0780164e0_wp, - &
+            & 1.0706700e0_wp, -1.0637641e0_wp, -1.0573118e0_wp, -1.0513185e0_wp, - 1.0457832e0_wp, -1.0407003e0_wp, - &
+            & 1.0360578e0_wp, -1.0318402e0_wp, -1.0280272e0_wp, -1.0245978e0_wp, -1.0215297e0_wp, - 1.0187967e0_wp, - &
+            & 1.0163689e0_wp, -1.0142247e0_wp, -1.0123371e0_wp, -1.0106810e0_wp, -1.0092303e0_wp, -1.0079682e0_wp, - &
+            & 1.0068703e0_wp, -1.0059178e0_wp, -1.0050923e0_wp, -1.0043782e0_wp, -1.0037626e0_wp, -1.0032309e0_wp, - &
+            & 1.0027740e0_wp, - 1.0023800e0_wp, -1.0020423e0_wp, -1.0017521e0_wp, -1.0015030e0_wp, -1.0012899e0_wp, - &
+            & 1.0011069e0_wp, -1.0009498e0_wp, - 1.0008150e0_wp, -1.0007002e0_wp, -1.0006030e0_wp, -1.0005162e0_wp, - &
+            & 1.0004466e0_wp, -1.0003864e0_wp, -1.0003328e0_wp, - 1.0002906e0_wp, -1.0002466e0_wp, -1.0002154e0_wp, - &
+            & 1.0001889e0_wp, -1.0001434e0_wp, -1.0001086e0_wp, -1.0000868e0_wp, - 1.0000682e0_wp, -1.0000528e0_wp, - &
+            & 1.0000404e0_wp, -1.0000314e0_wp, -1.0000185e0_wp, -1.0000121e0_wp, -1.0000091e0_wp, - 1.0000045e0_wp, - &
+            & 1.0000025e0_wp]
+        v2h2 = [ -.6215227e0_wp, -.6757268e0_wp, -.7189640e0_wp, -.7544033e0_wp, -.7841501e0_wp, -.8096095e0_wp, - &
+            & .8317238e0_wp, - .8511347e0_wp, -.8682913e0_wp, -.8835186e0_wp, -.8970636e0_wp, -.9091230e0_wp, - &
+            & .9198593e0_wp, -.9294123e0_wp, -.9379051e0_wp, - .9454463e0_wp, -.9521346e0_wp, -.9580585e0_wp, - &
+            & .9632985e0_wp, -.9679271e0_wp, -.9720104e0_wp, -.9756071e0_wp, -.9787717e0_wp, - .9815517e0_wp, - &
+            & .9839910e0_wp, -.9861279e0_wp, -.9879977e0_wp, -.9896312e0_wp, -.9910564e0_wp, -.9922979e0_wp, - &
+            & .9933781e0_wp, - .9943164e0_wp, -.9951304e0_wp, -.9958355e0_wp, -.9964456e0_wp, -.9969715e0_wp, - &
+            & .9974252e0_wp, -.9978159e0_wp, -.9981500e0_wp, - .9984382e0_wp, -.9986849e0_wp, -.9988960e0_wp, - &
+            & .9990763e0_wp, -.9992292e0_wp, -.9993597e0_wp, -.9994703e0_wp, -.9995635e0_wp, - .9996432e0_wp, - &
+            & .9997094e0_wp, -.9997655e0_wp, -.9998125e0_wp, -.9998515e0_wp, -.9998842e0_wp, -.9999112e0_wp, - &
+            & .9999337e0_wp, - .9999521e0_wp, -.9999670e0_wp, -.9999795e0_wp, -.9999887e0_wp, -.9999966e0_wp, - &
+            & 1.0000030e0_wp, -1.0000076e0_wp, - 1.0000117e0_wp, -1.0000143e0_wp, -1.0000167e0_wp, -1.0000180e0_wp, - &
+            & 1.0000191e0_wp, -1.0000195e0_wp, -1.0000197e0_wp, - 1.0000194e0_wp, -1.0000196e0_wp, -1.0000192e0_wp, - &
+            & 1.0000191e0_wp, -1.0000180e0_wp, -1.0000173e0_wp, -1.0000164e0_wp, - 1.0000158e0_wp, -1.0000152e0_wp, - &
+            & 1.0000143e0_wp, -1.0000143e0_wp, -1.0000127e0_wp, -1.0000109e0_wp, -1.0000095e0_wp, - 1.0000076e0_wp, - &
+            & 1.0000067e0_wp, -1.0000043e0_wp, -1.0000025e0_wp]
+        v3h2(1:64) = [ 8.0217579e0_wp, 3.0713797e0_wp, 1.4666292e0_wp, .6992459e0_wp, .2650120e0_wp, -.0048180e0_wp, - &
+            & .1826248e0_wp, - .3044801e0_wp, -.3902705e0_wp, -.4517863e0_wp, -.4964119e0_wp, -.5289745e0_wp, - &
+            & .5527406e0_wp, -.5699835e0_wp, -.5823232e0_wp, - .5909372e0_wp, -.5966963e0_wp, -.6002536e0_wp, - &
+            & .6021058e0_wp, -.6026342e0_wp, -.6021349e0_wp, -.6008396e0_wp, -.5989309e0_wp, - .5965536e0_wp, - &
+            & .5938235e0_wp, -.5908332e0_wp, -.5876573e0_wp, -.5843560e0_wp, -.5809780e0_wp, -.5775629e0_wp, - &
+            & .5741424e0_wp, - .5707426e0_wp, -.5673842e0_wp, -.5640840e0_wp, -.5608555e0_wp, -.5577093e0_wp, - &
+            & .5546536e0_wp, -.5516947e0_wp, -.5488374e0_wp, - .5460849e0_wp, -.5434394e0_wp, -.5409022e0_wp, - &
+            & .5384736e0_wp, -.5361531e0_wp, -.5339400e0_wp, -.5318328e0_wp, -.5298296e0_wp, - .5279281e0_wp, - &
+            & .5261259e0_wp, -.5244203e0_wp, -.5228082e0_wp, -.5212866e0_wp, -.5198521e0_wp, -.5185016e0_wp, - &
+            & .5172315e0_wp, - .5160385e0_wp, -.5149192e0_wp, -.5138701e0_wp, -.5128878e0_wp, -.5119690e0_wp, - &
+            & .5111105e0_wp, -.5103089e0_wp, -.5095612e0_wp, - .5088644e0_wp]
+        v3h2(65:126) = [ -.5082155e0_wp, -.5076116e0_wp, -.5070501e0_wp, -.5065283e0_wp, -.5060437e0_wp, - &
+            & .5055940e0_wp, -.5051769e0_wp, - .5047902e0_wp, -.5044319e0_wp, -.5041001e0_wp, -.5037930e0_wp, - &
+            & .5035087e0_wp, -.5032458e0_wp, -.5030027e0_wp, -.5027780e0_wp, - .5025704e0_wp, -.5023785e0_wp, - &
+            & .5022014e0_wp, -.5020377e0_wp, -.5018866e0_wp, -.5017472e0_wp, -.5016184e0_wp, -.5014996e0_wp, - &
+            & .5013900e0_wp, -.5012888e0_wp, -.5011954e0_wp, -.5011093e0_wp, -.5010298e0_wp, -.5009564e0_wp, - &
+            & .5008887e0_wp, -.5008262e0_wp, - .5007685e0_wp, -.5007153e0_wp, -.5006661e0_wp, -.5006207e0_wp, - &
+            & .5005787e0_wp, -.5004122e0_wp, -.5002992e0_wp, -.5002219e0_wp, - .5001683e0_wp, -.5001306e0_wp, - &
+            & .5001035e0_wp, -.5000837e0_wp, -.5000690e0_wp, -.5000577e0_wp, -.5000489e0_wp, -.5000420e0_wp, - &
+            & .5000364e0_wp, -.5000318e0_wp, -.5000279e0_wp, -.5000247e0_wp, -.5000220e0_wp, -.5000196e0_wp, - &
+            & .5000176e0_wp, -.5000158e0_wp, - .5000142e0_wp, -.5000129e0_wp, -.5000117e0_wp, -.5000106e0_wp, - &
+            & .5000097e0_wp, -.5000089e0_wp, -.5000081e0_wp]
+        v4h2(1:64) = [ 9.4993326e0_wp, 4.4973226e0_wp, 2.8272874e0_wp, 1.9892158e0_wp, 1.4831145e0_wp, 1.1423563e0_wp, &
+            & .8955959e0_wp, .7072541e0_wp, .5576760e0_wp, .4351864e0_wp, .3324666e0_wp, .2447306e0_wp, .1687347e0_wp, &
+            & .1022057e0_wp, .0434985e0_wp, - .0086173e0_wp, -.0550906e0_wp, -.0966755e0_wp, -.1339863e0_wp, - &
+            & .1675344e0_wp, -.1977530e0_wp, -.2250137e0_wp, -.2496386e0_wp, - .2719091e0_wp, -.2920720e0_wp, - &
+            & .3103453e0_wp, -.3269215e0_wp, -.3419716e0_wp, -.3556477e0_wp, -.3680850e0_wp, -.3794043e0_wp, - &
+            & .3897134e0_wp, -.3991089e0_wp, -.4076771e0_wp, -.4154957e0_wp, -.4226343e0_wp, -.4291554e0_wp, - &
+            & .4351155e0_wp, -.4405653e0_wp, - .4455506e0_wp, -.4501129e0_wp, -.4542896e0_wp, -.4581145e0_wp, - &
+            & .4616184e0_wp, -.4648290e0_wp, -.4677716e0_wp, -.4704692e0_wp, - .4729427e0_wp, -.4752111e0_wp, - &
+            & .4772916e0_wp, -.4792001e0_wp, -.4809509e0_wp, -.4825572e0_wp, -.4840309e0_wp, -.4853831e0_wp, - &
+            & .4866238e0_wp, -.4877622e0_wp, -.4888066e0_wp, -.4897648e0_wp, -.4906439e0_wp, -.4914502e0_wp, - &
+            & .4921898e0_wp, -.4928681e0_wp, - .4934901e0_wp]
+        v4h2(65:126) = [ -.4940603e0_wp, -.4945830e0_wp, -.4950621e0_wp, -.4955011e0_wp, -.4959033e0_wp, - &
+            & .4962717e0_wp, -.4966090e0_wp, - .4969178e0_wp, -.4972005e0_wp, -.4974591e0_wp, -.4976956e0_wp, - &
+            & .4979119e0_wp, -.4981096e0_wp, -.4982903e0_wp, -.4984553e0_wp, - .4986060e0_wp, -.4987435e0_wp, - &
+            & .4988690e0_wp, -.4989834e0_wp, -.4990877e0_wp, -.4991827e0_wp, -.4992692e0_wp, -.4993480e0_wp, - &
+            & .4994196e0_wp, -.4994847e0_wp, -.4995438e0_wp, -.4995975e0_wp, -.4996462e0_wp, -.4996904e0_wp, - &
+            & .4997303e0_wp, -.4997665e0_wp, - .4997992e0_wp, -.4998288e0_wp, -.4998554e0_wp, -.4998794e0_wp, - &
+            & .4999011e0_wp, -.4999800e0_wp, -.5000244e0_wp, -.5000475e0_wp, - .5000579e0_wp, -.5000608e0_wp, - &
+            & .5000595e0_wp, -.5000560e0_wp, -.5000515e0_wp, -.5000467e0_wp, -.5000421e0_wp, -.5000377e0_wp, - &
+            & .5000337e0_wp, -.5000301e0_wp, -.5000269e0_wp, -.5000240e0_wp, -.5000216e0_wp, -.5000194e0_wp, - &
+            & .5000174e0_wp, -.5000157e0_wp, - .5000142e0_wp, -.5000129e0_wp, -.5000117e0_wp, -.5000106e0_wp, - &
+            & .5000097e0_wp, -.5000089e0_wp, -.5000081e0_wp]
         forth    = quar
         sqrt3    = rt3
         ndim     = 6
         nroot    = 1
-        test     = 0.999999999d0
+        test     = 0.999999999e0_wp
         indx     = [ 1, 2, 3]
         title(1) = 'Final BNL DIM surface for CL+H2 -- 5 and7 kcal/mole barriers'
         title(2) = 'Spline fits replaced with analytic forms where possible'
@@ -400,15 +422,15 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         enddo
         if( idebug .eq. 1 ) write(iptprt, '(1X,''DIMIMA, Q='',1P3E13.5,/,9X,'' R='',3E13.5)') q, r
         !  CHECK FOR NEGATIVE R'S
-        xter  = 1.d30
+        xter  = 1.e30_wp
         dq(1) = -xter
         dq(2) = -xter
         dq(3) = -xter
-        if( r(1) .lt. 0.d0 .or. r(2) .lt. 0.d0 .or. r(3) .lt. 0.d0 ) return
+        if( r(1) .lt. 0.e0_wp .or. r(2) .lt. 0.e0_wp .or. r(3) .lt. 0.e0_wp ) return
         !     ZERO OUT UNUSED HAMILTONIAN ELEMENTS
-        th(2,3) = zero
-        th(3,5) = zero
-        th(3,6) = zero
+        th(2, 3) = zero
+        th(3, 5) = zero
+        th(3, 6) = zero
         !     COMPUTE SINE AND COSINE OF ANGLE AXB, AND POWERS
         ct = (r(1)*r(1)+r(3)*r(3)-r(2)*r(2))/(two*r(1)*r(3))
         goto_block_10_466: block
@@ -428,28 +450,28 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         call h2curv(r(2), ssab, tsab, dgab, duab, dssab, dtsab, ddgab, dduab)
         if( idebug .eq. 1 ) write(iptprt, '(1X,''SS11A,SS11B,DSXA,DSXB,SSAB='',1P5E13.5)') ss11a, ss11b, dsxa, dsxb, ssab
         !     CONSTRUCT DIM HAMILTONIAN IN ORTHOGONAL BASIS
-        th(1,1) = ss11a+forth*((ssab+tre*tsab)+ct2*(ss11b+tre*tsxb) +st2*(spxb+tre*tpxb))-dpux-two*dsgh
-        th(1,2) = forth*sqrt3*(ssab-tsab-ct2*(ss11b-tsxb)-st2*(spxb-tpxb))
-        th(1,3) = ss12a
-        th(1,4) = -half*ct*ss12b
-        th(1,5) = forth*cs*(ss11b+tre*tsxb-spxb-tre*tpxb)
-        th(1,6) = -forth*sqrt3*cs*(ss11b-tsxb-spxb+tpxb)
-        th(2,2) = tsxa+forth*((tre*ssab+tsab)+ct2*(tre*ss11b+tsxb) +st2*(tre*spxb+tpxb))-dpux-two*dsgh
-        th(2,4) = half*sqrt3*ct*ss12b
-        th(2,5) = th(1,6)
-        th(2,6) = forth*cs*(tre*ss11b+tsxb-tre*spxb-tpxb)
-        th(3,3) = ss22a+half*(dgab+duab)+dsxb-ssgx-ssgh-dsgh
-        th(3,4) = half*(dgab-duab)
-        th(4,4) = dsxa+half*(dgab+duab)+ss22b-ssgx-ssgh-dsgh
-        th(4,5) = -half*st*ss12b
-        th(4,6) = half*sqrt3*st*ss12b
-        th(5,5) = spxa+forth*((ssab+tre*tsab)+st2*(ss11b+tre*tsxb) +ct2*(spxb+tre*tpxb))-dpux-two*dsgh
-        th(5,6) = forth*sqrt3*(ssab-tsab-st2*(ss11b-tsxb)-ct2*(spxb-tpxb))
-        th(6,6) = tpxa+forth*((tre*ssab+tsab)+st2*(tre*ss11b+tsxb) +ct2*(tre*spxb+tpxb))-dpux-two*dsgh
+        th(1, 1) = ss11a+forth*((ssab+tre*tsab)+ct2*(ss11b+tre*tsxb) +st2*(spxb+tre*tpxb))-dpux-two*dsgh
+        th(1, 2) = forth*sqrt3*(ssab-tsab-ct2*(ss11b-tsxb)-st2*(spxb-tpxb))
+        th(1, 3) = ss12a
+        th(1, 4) = -half*ct*ss12b
+        th(1, 5) = forth*cs*(ss11b+tre*tsxb-spxb-tre*tpxb)
+        th(1, 6) = -forth*sqrt3*cs*(ss11b-tsxb-spxb+tpxb)
+        th(2, 2) = tsxa+forth*((tre*ssab+tsab)+ct2*(tre*ss11b+tsxb) +st2*(tre*spxb+tpxb))-dpux-two*dsgh
+        th(2, 4) = half*sqrt3*ct*ss12b
+        th(2, 5) = th(1, 6)
+        th(2, 6) = forth*cs*(tre*ss11b+tsxb-tre*spxb-tpxb)
+        th(3, 3) = ss22a+half*(dgab+duab)+dsxb-ssgx-ssgh-dsgh
+        th(3, 4) = half*(dgab-duab)
+        th(4, 4) = dsxa+half*(dgab+duab)+ss22b-ssgx-ssgh-dsgh
+        th(4, 5) = -half*st*ss12b
+        th(4, 6) = half*sqrt3*st*ss12b
+        th(5, 5) = spxa+forth*((ssab+tre*tsab)+st2*(ss11b+tre*tsxb) +ct2*(spxb+tre*tpxb))-dpux-two*dsgh
+        th(5, 6) = forth*sqrt3*(ssab-tsab-st2*(ss11b-tsxb)-ct2*(spxb-tpxb))
+        th(6, 6) = tpxa+forth*((tre*ssab+tsab)+st2*(tre*ss11b+tsxb) +ct2*(tre*spxb+tpxb))-dpux-two*dsgh
         !     FILL OUT MATRIX AND DIAGONALIZE
         do i=1, ndim
             do j=1, i
-                th(i,j) = th(j,i)
+                th(i, j) = th(j, i)
             enddo
         enddo
         call eign(ndim, th, vec, en, w, ndim)
@@ -470,7 +492,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         dtdr2 = -r(2)/(r(1)*r(3))
         dtdr3 = (r(2)*r(2)+r(3)*r(3)-r(1)*r(1))/(two*r(3)*r(3)*r(1))
         factr = -one/st
-        if( abs(st) .lt. 1.d-6 ) write(iptprt, &
+        if( abs(st) .lt. 1.e-6_wp ) write(iptprt, &
             & '(/,2X,T5,''Warning: Sine(THETA) = '',1PE20.10, '' in the derivative calculatio' // &
             & 'n'', /,2X,T14,''a serious error may result'')') st
         !     COMPUTE PARTIALS OF HAMILTONIAN ELEMENTS
@@ -592,82 +614,84 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         !> @brief Evaluate SETSPL for the ClH2_LEPS_TTGI1_1985 potential.
         subroutine setspl
             !     SETS UP SPLINE FITS FOR H2 CURVES
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: epsln, ss, ss1, ss2, t
-            integer          :: i
+            real(wp) :: epsln, ss, ss1, ss2, t
+            integer  :: i
             !     NOW COMPUTE SPLINE FIT DATA
             !     H2 SINGLET STATE
             do i=1, 67
-                r1h2(i) = dble(i+3)*0.1d0
+                r1h2(i) = real(i+3, wp)*0.1e0_wp
             enddo
-            r1h2(68) = 7.2d-00
-            r1h2(69) = 7.4d-00
-            r1h2(70) = 7.6d-00
-            r1h2(71) = 7.8d-00
-            r1h2(72) = 8.0d-00
-            r1h2(73) = 8.25d-00
-            r1h2(74) = 8.5d-00
-            r1h2(75) = 9.0d-00
-            r1h2(76) = 9.5d-00
-            r1h2(77) = 10.d-00
-            r1h2(78) = 11.d-00
-            r1h2(79) = 12.d-00
+            r1h2(68) = 7.2e-00_wp
+            r1h2(69) = 7.4e-00_wp
+            r1h2(70) = 7.6e-00_wp
+            r1h2(71) = 7.8e-00_wp
+            r1h2(72) = 8.0e-00_wp
+            r1h2(73) = 8.25e-00_wp
+            r1h2(74) = 8.5e-00_wp
+            r1h2(75) = 9.0e-00_wp
+            r1h2(76) = 9.5e-00_wp
+            r1h2(77) = 10.e-00_wp
+            r1h2(78) = 11.e-00_wp
+            r1h2(79) = 12.e-00_wp
             do i=1, 79
                 v1h2(i) = v1h2(i)+one
             enddo
-            s2ss(1)  = 3.2006875d+1
-            s2ss(79) = -7.93478d-7
+            s2ss(1)  = 3.2006875e+1_wp
+            s2ss(79) = -7.93478e-7_wp
             call splnin(79, r1h2, v1h2, t, ss, ss1, ss2, epsln, s2ss, s3ss, delss)
             !     H2 TRIPLET STATE
             do i=1, 81
-                r2h2(i) = dble(i+9)*0.1d-00
+                r2h2(i) = real(i+9, wp)*0.1e-00_wp
             enddo
-            r2h2(82) = 9.25d-00
-            r2h2(83) = 9.5d-00
-            r2h2(84) = 9.75d-00
-            r2h2(85) = 10.d-00
-            r2h2(86) = 11.d-00
-            r2h2(87) = 12.d-00
+            r2h2(82) = 9.25e-00_wp
+            r2h2(83) = 9.5e-00_wp
+            r2h2(84) = 9.75e-00_wp
+            r2h2(85) = 10.e-00_wp
+            r2h2(86) = 11.e-00_wp
+            r2h2(87) = 12.e-00_wp
             do i=1, 87
                 v2h2(i) = v2h2(i)+one
             enddo
-            s2ts(1)  = 1.3039390d0
-            s2ts(87) = -7.93478d-7
+            s2ts(1)  = 1.3039390e0_wp
+            s2ts(87) = -7.93478e-7_wp
             call splnin(87, r2h2, v2h2, t, ss, ss1, ss2, epsln, s2ts, s3ts, delts)
             !     H2+ G STATE
             do i=1, 100
-                r3h2(i) = dble(i)*0.1d-00
+                r3h2(i) = real(i, wp)*0.1e-00_wp
             enddo
             do i=1, 26
-                r3h2(i+100) = dble(i)*half+10.d-00
+                r3h2(i+100) = real(i, wp)*half+10.e-00_wp
             enddo
             do i=1, 126
                 v3h2(i) = v3h2(i)+one
             enddo
-            s2dg(1)   = 1.0742890d+3
-            s2dg(126) = -3.03938d-7
+            s2dg(1)   = 1.0742890e+3_wp
+            s2dg(126) = -3.03938e-7_wp
             call splnin(126, r3h2, v3h2, t, ss, ss1, ss2, epsln, s2dg, s3dg, deldg)
             !     H2+ U STATE
             do i=1, 126
                 v4h2(i) = v4h2(i)+one
             enddo
-            s2du(1)   = 9.0876397d+2
-            s2du(126) = -3.0398d-7
+            s2du(1)   = 9.0876397e+2_wp
+            s2du(126) = -3.0398e-7_wp
             call splnin(126, r3h2, v4h2, t, ss, ss1, ss2, epsln, s2du, s3du, deldu)
         end subroutine setspl
 
         !> @brief Evaluate HCLM for the ClH2_LEPS_TTGI1_1985 potential.
         subroutine hclm( r, xhm2s, dxhm2s )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a, a1, arg, b, b1, c, c1, dx, dxhm2s, dy, r, rsmall, x, xhm2s, y
+            real(wp) :: a, a1, arg, b, b1, c, c1, dx, dxhm2s, dy, r, rsmall, x, xhm2s, y
             !     DOUBLET SIGMA STATE OF HCL-IN A.U.
-            a      = 2.52966d+1
-            b      = -2.23d+0
-            c      = -1.32774d-1
-            a1     = 2.4913064d+4
-            b1     = 7.1248778d+0
+            a      = 2.52966e+1_wp
+            b      = -2.23e+0_wp
+            c      = -1.32774e-1_wp
+            a1     = 2.4913064e+4_wp
+            b1     = 7.1248778e+0_wp
             c1     = 2.8830121
-            rsmall = 0.94486d+0
+            rsmall = 0.94486e+0_wp
             if( r < rsmall )then
                 arg    = a1*exp(-b1*r)
                 xhm2s  = arg+c1
@@ -684,8 +708,9 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
 
         !> @brief Evaluate HCL for the ClH2_LEPS_TTGI1_1985 potential.
         subroutine hcl( r, h, xh3s, xh1p, xh3p, dh, dxh3s, dxh1p, dxh3p )
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a2, aa, ab, alp, ang, angcon, arg, b0, b2, ba, bb, bet, bt, bv, bx, c, c0, c2, c4, c6, c8, cc, cs, &
+            real(wp) :: a2, aa, ab, alp, ang, angcon, arg, b0, b2, ba, bb, bet, bt, bv, bx, c, c0, c2, c4, c6, c8, cc, cs, &
                 & cv, d0, da, da2, dab, dalp, dang, db2, dbet, dc, dc2, dcs, de1, de12, de2, dfac1, dfac2, dg, dg11, dg12, dg22, &
                 & dh(2,2), dh11, dh12, dh22, dovlp, ds, ds12, ds2, dt, dt1, dt2, dv, dx, dxh1p, dxh3p, dxh3s, e1, e12, e2, ex, ex1, &
                 & ex2, fac1, fac2, g, g11, g12, g22, gb, gmax, h(2,2), h11, h12, h22, omex, opex, ovlp, r, r0, r2, ra, ri, ri2, ri4, &
@@ -698,41 +723,41 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             !        AND = 0 FOR SYMMETRIC ORTHOGONALIZATION
             !     SINGLET SIGMA BLOCK
             !     GROUND STATE ADIABAT
-            dx     = 1.69552d-1
-            rx     = 2.4082d+0
-            bx     = 9.89104d-1
-            dv     = 1.84605d-1
-            rv     = 4.746d+0
-            bv     = 2.77985d-1
-            cv     = 1.82621d-1
-            c8     = -2.018460d+4
-            c6     = 2.399677d+3
-            c4     = -5.351085d+1
-            c0     = 3.67226d-1
-            aa     = 25.20626238d-0
-            bb     = 1.910495693d-0
-            cc     = 1.828090476d-1
-            rt     = 2.53d-0
-            bt     = 1.047d-0
-            dt     = 6.685927358d-2
-            ra     = 2.274408d+0
-            ba     = 1.069975d+0
-            da     = 5.3556d-2
-            rmax   = 2.5d+0
-            gmax   = 2.0212d-2
-            gb     = 4.654d-1
-            rv1    = 3.5d-0
-            angcon = 1.0d-0
-            zeta   = 2.0387d0
-            z1     = 7.222580119d+2
-            z2     = -2.749954467d+2
-            z3     = 8.648352007d+2
-            z4     = 2.437196153d+2
-            z5     = 3.144371653d+1
-            z6     = 1.128252224d-1
-            r0     = 2.53d-0
-            b0     = 0.9897d-0
-            d0     = 0.150789d-0
+            dx     = 1.69552e-1_wp
+            rx     = 2.4082e+0_wp
+            bx     = 9.89104e-1_wp
+            dv     = 1.84605e-1_wp
+            rv     = 4.746e+0_wp
+            bv     = 2.77985e-1_wp
+            cv     = 1.82621e-1_wp
+            c8     = -2.018460e+4_wp
+            c6     = 2.399677e+3_wp
+            c4     = -5.351085e+1_wp
+            c0     = 3.67226e-1_wp
+            aa     = 25.20626238e-0_wp
+            bb     = 1.910495693e-0_wp
+            cc     = 1.828090476e-1_wp
+            rt     = 2.53e-0_wp
+            bt     = 1.047e-0_wp
+            dt     = 6.685927358e-2_wp
+            ra     = 2.274408e+0_wp
+            ba     = 1.069975e+0_wp
+            da     = 5.3556e-2_wp
+            rmax   = 2.5e+0_wp
+            gmax   = 2.0212e-2_wp
+            gb     = 4.654e-1_wp
+            rv1    = 3.5e-0_wp
+            angcon = 1.0e-0_wp
+            zeta   = 2.0387e0_wp
+            z1     = 7.222580119e+2_wp
+            z2     = -2.749954467e+2_wp
+            z3     = 8.648352007e+2_wp
+            z4     = 2.437196153e+2_wp
+            z5     = 3.144371653e+1_wp
+            z6     = 1.128252224e-1_wp
+            r0     = 2.53e-0_wp
+            b0     = 0.9897e-0_wp
+            d0     = 0.150789e-0_wp
             ex     = exp(-bx*(r-rx))
             omex   = one-ex
             e1     = dx*omex*omex-dx
@@ -775,7 +800,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             dovlp = z6*(dfac1-two*fac1/r)/r2
             rops2 = one/sqrt(one+ovlp*ovlp)
             s12   = ovlp*rops2/rt2i
-            if( abs(s12) .gt. 1.0d0 ) write(iptprt, '(1X,''In the DIM potential in the subprogram HCL: '', ''R,S12='',F10.5,1PE1' // &
+            if( abs(s12) .gt. 1.0e0_wp ) write(iptprt, '(1X,''In the DIM potential in the subprogram HCL: '', ''R,S12='',F10.5,1PE1' // &
                 '5.7)') r, s12
             ds12 = dovlp*rops2**3/rt2i
             !     H12 AND H22 DIABATS IN NON-ORTHOGONAL REPRESENTATION
@@ -785,15 +810,15 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             fac2  = one-s12*s12
             dfac2 = -two*s12*ds12
             ttt   = fac1*fac2
-            root  = 0.d0
-            if( ttt .gt. 0.d0 ) root=sqrt(ttt)
+            root  = 0.e0_wp
+            if( ttt .gt. 0.e0_wp ) root=sqrt(ttt)
             h(1,2)  = s12*h(1,1)+root
             dh(1,2) = ds12*h(1,1)+s12*dh(1,1)
             ttt                          = half*(dfac2*fac1+fac2*(de12*h(1,1) +e12*dh(1,1)-e1*de2-de1*e2-two* h(1,1)* &
                 & dh(1,1)))
-            if( root .ne. 0.d0 ) dh(1,2) = dh(1,2) + ttt/root
-            h(2,2)                       = e12*fac2+two*s12*h(1,2)-h(1,1)
-            dh(2,2)                      = de12*fac2+e12*dfac2+two*(ds12*h(1,2)+s12*dh(1,2)) -dh(1,1)
+            if( root .ne. 0.e0_wp ) dh(1,2) = dh(1,2) + ttt/root
+            h(2,2)                          = e12*fac2+two*s12*h(1,2)-h(1,1)
+            dh(2,2)                         = de12*fac2+e12*dfac2+two*(ds12*h(1,2)+s12*dh(1,2)) -dh(1,1)
             !     TRANSFORM TO SYMMETRIC ORTHOGONAL REPRESENTATION
             t1      = one/sqrt(one+s12)
             t2      = one/sqrt(one-s12)
@@ -824,10 +849,10 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             dh(2,2) = dg22
             !     PERFORM UNITARY TRANSFORMATION ON H
             y = half*(one/t1+one/t2)
-            if( abs(y) .gt. 1.0d0 ) y = sign(1.0d0, y)
+            if( abs(y) .gt. 1.0e0_wp ) y = sign(1.0e0_wp, y)
             ang  = angcon*acos(y)
             dang = zero
-            if( abs(ang) >= 1.0d-14 ) &
+            if( abs(ang) >= 1.0e-14_wp ) &
                 dang = half*angcon*(dt1/(t1*t1)+dt2/(t2*t2))/sqrt(one-y*y)
             c       = cos(ang)
             s       = sin(ang)
@@ -878,30 +903,31 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         subroutine h2curv( r, ab1s, ab3s, ab2g, ab2u, dab1s, dab3s, dab2g, dab2u )
             !     CALCULATES ENERGY AND DERIVATIVES FOR H2 SINGLET AND TRIPLET
             !     SIGMA AND H2+ DOUBLET SIGMA G AND U STATES IN A.U.
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: a1, ab1s, ab2g, ab2u, ab3s, arg, arg2, arg3, b1, be, bfac, c10, c4, c6, c8, dab1s, dab2g, &
+            real(wp) :: a1, ab1s, ab2g, ab2u, ab3s, arg, arg2, arg3, b1, be, bfac, c10, c4, c6, c8, dab1s, dab2g, &
                 & dab2u, dab3s, de, df1, epsln, ex, f1, f2, opex, r, r10, r2, r4, r6, r8, re, ss2
             !     H2 EXPONENTIALS W.R.T. FINAL LIMITS, H2+ W.R.T. 0.0 LIMIT
             !**   DATA A2,B2,C2/2.41893D00,2.1329115D00,0.0918539D00/
             !     H2 CURVES
             !     SINGLET SIGMA
-            b1  = 6.0315697d-00
-            a1  = 9.8214033d-00
-            c6  = 6.49903d-00
-            c8  = 124.399d-00
-            c10 = 1135.21d-00
-            de  = 3.21533d-2
-            be  = 8.3d-1
-            re  = 1.60d-0
-            c4  = 2.25d0
-            if( r > 12.0d0 )then
+            b1  = 6.0315697e-00_wp
+            a1  = 9.8214033e-00_wp
+            c6  = 6.49903e-00_wp
+            c8  = 124.399e-00_wp
+            c10 = 1135.21e-00_wp
+            de  = 3.21533e-2_wp
+            be  = 8.3e-1_wp
+            re  = 1.60e-0_wp
+            c4  = 2.25e0_wp
+            if( r > 12.0e0_wp )then
                 r2    = one/(r*r)
                 r6    = r2**3
                 r8    = r6*r2
                 r10   = r8*r2
                 ab1s  = -(c6*r6+c8*r8+c10*r10)
-                dab1s = (six*c6*r6+eht*c8*r8+10.0d0*c10*r10)/r
-            elseif( r >= 0.4d0 )then
+                dab1s = (six*c6*r6+eht*c8*r8+10.0e0_wp*c10*r10)/r
+            elseif( r >= 0.4e0_wp )then
                 call spline(79, r1h2, v1h2, r, ab1s, dab1s, ss2, epsln, s2ss, s3ss, delss)
             else
                 ab1s  = a1*exp(-b1*r)
@@ -922,8 +948,8 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             !**   AB3S=AB1S
             !**   DAB3S=DAB1S
             !     REPLACE TRIPLET CURVE WITH MODIFIED ANTI-MORSE
-            bfac = 2.6d-2
-            if( r .lt. re ) bfac=2.026d0
+            bfac = 2.6e-2_wp
+            if( r .lt. re ) bfac=2.026e0_wp
             arg   = r-re
             ex    = exp(-be*arg)
             opex  = one+ex
@@ -936,10 +962,10 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             dab3s = (df1-f1*tre*bfac*arg2)*f2
             !     H2+ CURVES
             !     DOUBLET G
-            if( r > 23.0d0 )then
+            if( r > 23.0e0_wp )then
                 r4    = one/r**4
                 ab2g  = -c4*r4+half
-                dab2g = 9.0d0*r4/r
+                dab2g = 9.0e0_wp*r4/r
                 ab2u  = ab2g
                 dab2u = dab2g
             else
@@ -955,14 +981,15 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             !     SS2=2ND DERIV; S2,S3, AND DELY ARE COEFFICIENT ARRAYS
             !     SECOND DERIV'S AT ENDS STORED IN S2(1) AND S2(N) ON INPUT
             !     EPSLN IS OVERALL FIT CRITERION
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: b(126), c(126), delsqy, dely(n), epsln, eta, ex, h(126), h2(126), half, omega, s2(n), s3(n), ss, &
+            real(wp) :: b(126), c(126), delsqy, dely(n), epsln, eta, ex, h(126), h2(126), half, omega, s2(n), s3(n), ss, &
                 & ss1, ss2, t, w, x(n), y(n)
-            integer          :: i, knt, n, n1
-            ex    = 1.1d0
-            omega = 1.0717968d0
-            half  = 0.5d0
-            epsln = 1.d-12
+            integer :: i, knt, n, n1
+            ex    = 1.1e0_wp
+            omega = 1.0717968e0_wp
+            half  = 0.5e0_wp
+            epsln = 1.e-12_wp
             n1    = n-1
             knt   = 0
             do i=1, n1
@@ -977,7 +1004,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
                 c(i)   = delsqy+s2(i)
             enddo
             do
-                eta = 0.0d0
+                eta = 0.0e0_wp
                 do i=2, n1
                     w     = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
                     eta   = max(eta, abs(w))
@@ -995,12 +1022,13 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
 
         !> @brief Interpolate a tabulated curve and its first two derivatives.
         subroutine spline( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, intent(in)           :: n
-            double precision, intent(in)  :: x(n), y(n), t, epsln, s2(n), s3(n), dely(n)
-            double precision, intent(out) :: ss, ss1, ss2
-            integer                       :: i
-            double precision              :: delsqs, ht1, ht2, prod
+            integer, intent(in)   :: n
+            real(wp), intent(in)  :: x(n), y(n), t, epsln, s2(n), s3(n), dely(n)
+            real(wp), intent(out) :: ss, ss1, ss2
+            integer               :: i
+            real(wp)              :: delsqs, ht1, ht2, prod
             if( t <= x(1) )then
                 ss  = y(1)
                 ss1 = dely(1)
@@ -1021,24 +1049,25 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             ht2    = t-x(i+1)
             prod   = ht1*ht2
             ss2    = s2(i)+ht1*s3(i)
-            delsqs = (s2(i)+s2(i+1)+ss2)/6.0d0
+            delsqs = (s2(i)+s2(i+1)+ss2)/6.0e0_wp
             ss     = y(i)+ht1*dely(i)+prod*delsqs
-            ss1    = dely(i)+(ht1+ht2)*delsqs+prod*s3(i)/6.0d0
+            ss1    = dely(i)+(ht1+ht2)*delsqs+prod*s3(i)/6.0e0_wp
         end subroutine spline
 
         !> @brief Evaluate EIGN for the ClH2_LEPS_TTGI1_1985 potential.
         !> @brief Diagonalize a real symmetric matrix with the shared core eigensolver.
         subroutine eign( nn, a, vec, eig, w, nd )
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, intent(in)             :: nn, nd
-            double precision, intent(inout) :: a(nd,nd)
-            double precision, intent(out)   :: vec(nd,nd), eig(nd), w(nd)
-            integer                         :: ierr, lwork
-            double precision, allocatable   :: work(:)
+            integer, intent(in)     :: nn, nd
+            real(wp), intent(inout) :: a(nd,nd)
+            real(wp), intent(out)   :: vec(nd,nd), eig(nd), w(nd)
+            integer                 :: ierr, lwork
+            real(wp), allocatable   :: work(:)
             external                         :: dsyev
-            vec = 0.0d0
-            eig = 0.0d0
-            w   = 0.0d0
+            vec = 0.0e0_wp
+            eig = 0.0e0_wp
+            w   = 0.0e0_wp
             if( nn == 0 ) return
             lwork = max(1, 3*nn-1)
             allocate(work(lwork))
@@ -1053,10 +1082,11 @@ end module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
 !> @brief Evaluate TTGI1 for one set of internal distances.
 subroutine pot( q, nder, xter, dq )
     use chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade, only: evaluate_internal
+    use chempotpy_kinds,                                          only: wp
     implicit none
-    double precision, intent(in)  :: q(3)
-    integer, intent(in)           :: nder
-    double precision, intent(out) :: xter, dq(3)
+    real(wp), intent(in)  :: q(3)
+    integer, intent(in)   :: nder
+    real(wp), intent(out) :: xter, dq(3)
     call evaluate_internal(q, nder, xter, dq)
 end subroutine pot
 

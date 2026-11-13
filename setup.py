@@ -16,7 +16,7 @@ setup(
     python_requires=">=3.8",
     packages=find_packages(),
     package_data={
-        'chempotpy': ['*/*', 'core/*.f90']
+        "chempotpy": ["*/*.f90", "core/*.json"],
     },
     install_requires=[
         'numpy',

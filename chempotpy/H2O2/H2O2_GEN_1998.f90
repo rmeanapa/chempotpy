@@ -11,6 +11,7 @@
 
 !> @brief Implement H2O2_GEN_1998, a potential energy surface for H2O2.
 module chempotpy_h2o2_gen_1998_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -19,26 +20,28 @@ module chempotpy_h2o2_gen_1998_pes
 
     !> @brief Evaluate the H2O2_GEN_1998 potential energy surface for H2O2.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_geometry,     only: flatten_cartesian_coordinates
-        use chempotpy_legacy_units, only: legacy_hartree_to_electronvolt
+        use chempotpy_units,    only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_geometry, only: flatten_cartesian_coordinates
+        use chempotpy_units,    only: hartree_to_electronvolt
+        use chempotpy_kinds,    only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 4
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        integer                       :: istate
-        double precision              :: tx(12), dx(12), v
-        integer                       :: iatom, idir, i, j
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 4
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        integer               :: istate
+        real(wp)              :: tx(12), dx(12), v
+        integer               :: iatom, idir, i, j
         !initialize
-        v = 0.d0; g = 0.d0; d = 0.d0
+        v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         call flatten_cartesian_coordinates(x, tx)
         call surf(v, tx, dx, 12)
-        v  = v*legacy_hartree_to_electronvolt
-        dx = dx*legacy_hartree_to_electronvolt
-        !dx=dx*51.422067
+        v  = v*hartree_to_electronvolt
+        dx = dx*hartree_to_electronvolt
+        !dx=dx*hartree_per_bohr_to_ev_per_angstrom
         if( igrad == 0 )then
             do istate=1, nstates
                 p(istate) = v
@@ -60,22 +63,23 @@ module chempotpy_h2o2_gen_1998_pes
 
     !> @brief Evaluate SURF for the H2O2_GEN_1998 potential.
     subroutine surf( v, coord, dx, n3tm )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: v, coord(n3tm), dx(n3tm)
-        double precision :: dxx(n3tm), x(n3tm)
-        integer          :: i, n3tm
+        real(wp) :: v, coord(n3tm), dx(n3tm)
+        real(wp) :: dxx(n3tm), x(n3tm)
+        integer  :: i, n3tm
         ! Changing units from bohr to angstroms
         do i = 1, 12
-            x(i) = coord(i)*0.52918d0
+            x(i) = coord(i)*0.52918e0_wp
         enddo
         do i = 1, 12
-            dx(i) = 0.0d0
+            dx(i) = 0.0e0_wp
         enddo
         call potential(v, x, dx, dxx, 12)
         do i = 1, 12
-            x(i)   = x(i)/0.52918d0
-            dx(i)  = dx(i)*0.52918d0
-            dxx(i) = dxx(i) * 0.52918d0 * 0.52918d0
+            x(i)   = x(i)/0.52918e0_wp
+            dx(i)  = dx(i)*0.52918e0_wp
+            dxx(i) = dxx(i) * 0.52918e0_wp * 0.52918e0_wp
         enddo
     end subroutine surf
 
@@ -92,169 +96,170 @@ module chempotpy_h2o2_gen_1998_pes
         !                       X(4)  - X(6)  : X, Y, Z for O1
         !                       X(7)  - X(9)  : X, Y, Z for O2
         !                       X(10) - X(12) : X, Y, Z for H2
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision            :: coord(n3tm), dx(n3tm), dxx(n3tm), x(n3tm)
-        double precision            :: v, pass(6)
-        double precision            :: gx(12,12), gv(12,12)
-        double precision            :: gxx(12,12,12), gvv(12,12,12)
-        double precision            :: temp, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46, temp47, temp48, temp49, temp50, temp51, temp52, temp53, temp54, temp55, temp56, temp57, temp58, temp59, temp60, temp61, temp62, temp63, temp64, temp65, temp66
-        double precision            :: tempx, temp1x, temp2x, temp3x, temp4x, temp5x, temp6x, temp7x, temp8x, temp9x, temp10x, temp11x, temp12x, temp13x, temp14x, temp15x, temp16x, temp17x, temp18x, temp19x, temp20x, temp21x, temp22x, temp23x, temp24x, temp25x, temp26x, temp27x, temp28x, temp29x, temp30x, temp31x, temp32x, temp33x, temp34x, temp35x, temp36x, temp37x, temp38x, temp39x, temp40x, temp41x, temp42x, temp43x, temp44x, temp45x, temp46x, temp47x, temp48x, temp49x, temp50x, temp51x, temp52x, temp53x, temp54x, temp55x, temp56x, temp57x, temp58x, temp59x, temp60x, temp61x, temp62x, temp63x, temp64x, temp65x, temp66x
-        integer                     :: n3tm, i, j, ii
-        double precision, parameter :: rohlow  = 1.0d0
-        double precision, parameter :: rohhigh = 4.0d0
-        double precision, parameter :: roolow  = 1.8d0
-        double precision, parameter :: roohigh = 4.0d0
-        double precision, parameter :: rhhlow  = 0.7d0
+        real(wp)            :: coord(n3tm), dx(n3tm), dxx(n3tm), x(n3tm)
+        real(wp)            :: v, pass(6)
+        real(wp)            :: gx(12,12), gv(12,12)
+        real(wp)            :: gxx(12,12,12), gvv(12,12,12)
+        real(wp)            :: temp, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46, temp47, temp48, temp49, temp50, temp51, temp52, temp53, temp54, temp55, temp56, temp57, temp58, temp59, temp60, temp61, temp62, temp63, temp64, temp65, temp66
+        real(wp)            :: tempx, temp1x, temp2x, temp3x, temp4x, temp5x, temp6x, temp7x, temp8x, temp9x, temp10x, temp11x, temp12x, temp13x, temp14x, temp15x, temp16x, temp17x, temp18x, temp19x, temp20x, temp21x, temp22x, temp23x, temp24x, temp25x, temp26x, temp27x, temp28x, temp29x, temp30x, temp31x, temp32x, temp33x, temp34x, temp35x, temp36x, temp37x, temp38x, temp39x, temp40x, temp41x, temp42x, temp43x, temp44x, temp45x, temp46x, temp47x, temp48x, temp49x, temp50x, temp51x, temp52x, temp53x, temp54x, temp55x, temp56x, temp57x, temp58x, temp59x, temp60x, temp61x, temp62x, temp63x, temp64x, temp65x, temp66x
+        integer             :: n3tm, i, j, ii
+        real(wp), parameter :: rohlow  = 1.0e0_wp
+        real(wp), parameter :: rohhigh = 4.0e0_wp
+        real(wp), parameter :: roolow  = 1.8e0_wp
+        real(wp), parameter :: roohigh = 4.0e0_wp
+        real(wp), parameter :: rhhlow  = 0.7e0_wp
         ! Call Koput, Carter, and Handy PES
         call pot(v, x)
         !  Initialize derivatives
         do j=1, n3tm
-            dx(j) = 0.0d0
+            dx(j) = 0.0e0_wp
         enddo
-        gx(1,1)   = 1.0d0
-        gx(2,2)   = 1.0d0
-        gx(3,3)   = 1.0d0
-        gx(4,4)   = 1.0d0
-        gx(5,5)   = 1.0d0
-        gx(6,6)   = 1.0d0
-        gx(7,7)   = 1.0d0
-        gx(8,8)   = 1.0d0
-        gx(9,9)   = 1.0d0
-        gx(10,10) = 1.0d0
-        gx(11,11) = 1.0d0
-        gx(12,12) = 1.0d0
-        gx(1,2)   = 0.0d0
-        gx(1,3)   = 0.0d0
-        gx(1,4)   = 0.0d0
-        gx(1,5)   = 0.0d0
-        gx(1,6)   = 0.0d0
-        gx(1,7)   = 0.0d0
-        gx(1,8)   = 0.0d0
-        gx(1,9)   = 0.0d0
-        gx(1,10)  = 0.0d0
-        gx(1,11)  = 0.0d0
-        gx(1,12)  = 0.0d0
-        gx(2,1)   = 0.0d0
-        gx(2,3)   = 0.0d0
-        gx(2,4)   = 0.0d0
-        gx(2,5)   = 0.0d0
-        gx(2,6)   = 0.0d0
-        gx(2,7)   = 0.0d0
-        gx(2,8)   = 0.0d0
-        gx(2,9)   = 0.0d0
-        gx(2,10)  = 0.0d0
-        gx(2,11)  = 0.0d0
-        gx(2,12)  = 0.0d0
-        gx(3,1)   = 0.0d0
-        gx(3,2)   = 0.0d0
-        gx(3,4)   = 0.0d0
-        gx(3,5)   = 0.0d0
-        gx(3,6)   = 0.0d0
-        gx(3,7)   = 0.0d0
-        gx(3,8)   = 0.0d0
-        gx(3,9)   = 0.0d0
-        gx(3,10)  = 0.0d0
-        gx(3,11)  = 0.0d0
-        gx(3,12)  = 0.0d0
-        gx(4,1)   = 0.0d0
-        gx(4,2)   = 0.0d0
-        gx(4,3)   = 0.0d0
-        gx(4,5)   = 0.0d0
-        gx(4,6)   = 0.0d0
-        gx(4,7)   = 0.0d0
-        gx(4,8)   = 0.0d0
-        gx(4,9)   = 0.0d0
-        gx(4,10)  = 0.0d0
-        gx(4,11)  = 0.0d0
-        gx(4,12)  = 0.0d0
-        gx(5,1)   = 0.0d0
-        gx(5,2)   = 0.0d0
-        gx(5,3)   = 0.0d0
-        gx(5,4)   = 0.0d0
-        gx(5,6)   = 0.0d0
-        gx(5,7)   = 0.0d0
-        gx(5,8)   = 0.0d0
-        gx(5,9)   = 0.0d0
-        gx(5,10)  = 0.0d0
-        gx(5,11)  = 0.0d0
-        gx(5,12)  = 0.0d0
-        gx(6,1)   = 0.0d0
-        gx(6,2)   = 0.0d0
-        gx(6,3)   = 0.0d0
-        gx(6,4)   = 0.0d0
-        gx(6,5)   = 0.0d0
-        gx(6,7)   = 0.0d0
-        gx(6,8)   = 0.0d0
-        gx(6,9)   = 0.0d0
-        gx(6,10)  = 0.0d0
-        gx(6,11)  = 0.0d0
-        gx(6,12)  = 0.0d0
-        gx(7,1)   = 0.0d0
-        gx(7,2)   = 0.0d0
-        gx(7,3)   = 0.0d0
-        gx(7,4)   = 0.0d0
-        gx(7,5)   = 0.0d0
-        gx(7,6)   = 0.0d0
-        gx(7,8)   = 0.0d0
-        gx(7,9)   = 0.0d0
-        gx(7,10)  = 0.0d0
-        gx(7,11)  = 0.0d0
-        gx(7,12)  = 0.0d0
-        gx(8,1)   = 0.0d0
-        gx(8,2)   = 0.0d0
-        gx(8,3)   = 0.0d0
-        gx(8,4)   = 0.0d0
-        gx(8,5)   = 0.0d0
-        gx(8,6)   = 0.0d0
-        gx(8,7)   = 0.0d0
-        gx(8,9)   = 0.0d0
-        gx(8,10)  = 0.0d0
-        gx(8,11)  = 0.0d0
-        gx(8,12)  = 0.0d0
-        gx(9,1)   = 0.0d0
-        gx(9,2)   = 0.0d0
-        gx(9,3)   = 0.0d0
-        gx(9,4)   = 0.0d0
-        gx(9,5)   = 0.0d0
-        gx(9,6)   = 0.0d0
-        gx(9,7)   = 0.0d0
-        gx(9,8)   = 0.0d0
-        gx(9,10)  = 0.0d0
-        gx(9,11)  = 0.0d0
-        gx(9,12)  = 0.0d0
-        gx(10,1)  = 0.0d0
-        gx(10,2)  = 0.0d0
-        gx(10,3)  = 0.0d0
-        gx(10,4)  = 0.0d0
-        gx(10,5)  = 0.0d0
-        gx(10,6)  = 0.0d0
-        gx(10,7)  = 0.0d0
-        gx(10,8)  = 0.0d0
-        gx(10,9)  = 0.0d0
-        gx(10,11) = 0.0d0
-        gx(10,12) = 0.0d0
-        gx(11,1)  = 0.0d0
-        gx(11,2)  = 0.0d0
-        gx(11,3)  = 0.0d0
-        gx(11,4)  = 0.0d0
-        gx(11,5)  = 0.0d0
-        gx(11,6)  = 0.0d0
-        gx(11,7)  = 0.0d0
-        gx(11,8)  = 0.0d0
-        gx(11,9)  = 0.0d0
-        gx(11,10) = 0.0d0
-        gx(11,12) = 0.0d0
-        gx(12,1)  = 0.0d0
-        gx(12,2)  = 0.0d0
-        gx(12,3)  = 0.0d0
-        gx(12,4)  = 0.0d0
-        gx(12,5)  = 0.0d0
-        gx(12,6)  = 0.0d0
-        gx(12,7)  = 0.0d0
-        gx(12,8)  = 0.0d0
-        gx(12,9)  = 0.0d0
-        gx(12,10) = 0.0d0
-        gx(12,11) = 0.0d0
+        gx(1,1)   = 1.0e0_wp
+        gx(2,2)   = 1.0e0_wp
+        gx(3,3)   = 1.0e0_wp
+        gx(4,4)   = 1.0e0_wp
+        gx(5,5)   = 1.0e0_wp
+        gx(6,6)   = 1.0e0_wp
+        gx(7,7)   = 1.0e0_wp
+        gx(8,8)   = 1.0e0_wp
+        gx(9,9)   = 1.0e0_wp
+        gx(10,10) = 1.0e0_wp
+        gx(11,11) = 1.0e0_wp
+        gx(12,12) = 1.0e0_wp
+        gx(1,2)   = 0.0e0_wp
+        gx(1,3)   = 0.0e0_wp
+        gx(1,4)   = 0.0e0_wp
+        gx(1,5)   = 0.0e0_wp
+        gx(1,6)   = 0.0e0_wp
+        gx(1,7)   = 0.0e0_wp
+        gx(1,8)   = 0.0e0_wp
+        gx(1,9)   = 0.0e0_wp
+        gx(1,10)  = 0.0e0_wp
+        gx(1,11)  = 0.0e0_wp
+        gx(1,12)  = 0.0e0_wp
+        gx(2,1)   = 0.0e0_wp
+        gx(2,3)   = 0.0e0_wp
+        gx(2,4)   = 0.0e0_wp
+        gx(2,5)   = 0.0e0_wp
+        gx(2,6)   = 0.0e0_wp
+        gx(2,7)   = 0.0e0_wp
+        gx(2,8)   = 0.0e0_wp
+        gx(2,9)   = 0.0e0_wp
+        gx(2,10)  = 0.0e0_wp
+        gx(2,11)  = 0.0e0_wp
+        gx(2,12)  = 0.0e0_wp
+        gx(3,1)   = 0.0e0_wp
+        gx(3,2)   = 0.0e0_wp
+        gx(3,4)   = 0.0e0_wp
+        gx(3,5)   = 0.0e0_wp
+        gx(3,6)   = 0.0e0_wp
+        gx(3,7)   = 0.0e0_wp
+        gx(3,8)   = 0.0e0_wp
+        gx(3,9)   = 0.0e0_wp
+        gx(3,10)  = 0.0e0_wp
+        gx(3,11)  = 0.0e0_wp
+        gx(3,12)  = 0.0e0_wp
+        gx(4,1)   = 0.0e0_wp
+        gx(4,2)   = 0.0e0_wp
+        gx(4,3)   = 0.0e0_wp
+        gx(4,5)   = 0.0e0_wp
+        gx(4,6)   = 0.0e0_wp
+        gx(4,7)   = 0.0e0_wp
+        gx(4,8)   = 0.0e0_wp
+        gx(4,9)   = 0.0e0_wp
+        gx(4,10)  = 0.0e0_wp
+        gx(4,11)  = 0.0e0_wp
+        gx(4,12)  = 0.0e0_wp
+        gx(5,1)   = 0.0e0_wp
+        gx(5,2)   = 0.0e0_wp
+        gx(5,3)   = 0.0e0_wp
+        gx(5,4)   = 0.0e0_wp
+        gx(5,6)   = 0.0e0_wp
+        gx(5,7)   = 0.0e0_wp
+        gx(5,8)   = 0.0e0_wp
+        gx(5,9)   = 0.0e0_wp
+        gx(5,10)  = 0.0e0_wp
+        gx(5,11)  = 0.0e0_wp
+        gx(5,12)  = 0.0e0_wp
+        gx(6,1)   = 0.0e0_wp
+        gx(6,2)   = 0.0e0_wp
+        gx(6,3)   = 0.0e0_wp
+        gx(6,4)   = 0.0e0_wp
+        gx(6,5)   = 0.0e0_wp
+        gx(6,7)   = 0.0e0_wp
+        gx(6,8)   = 0.0e0_wp
+        gx(6,9)   = 0.0e0_wp
+        gx(6,10)  = 0.0e0_wp
+        gx(6,11)  = 0.0e0_wp
+        gx(6,12)  = 0.0e0_wp
+        gx(7,1)   = 0.0e0_wp
+        gx(7,2)   = 0.0e0_wp
+        gx(7,3)   = 0.0e0_wp
+        gx(7,4)   = 0.0e0_wp
+        gx(7,5)   = 0.0e0_wp
+        gx(7,6)   = 0.0e0_wp
+        gx(7,8)   = 0.0e0_wp
+        gx(7,9)   = 0.0e0_wp
+        gx(7,10)  = 0.0e0_wp
+        gx(7,11)  = 0.0e0_wp
+        gx(7,12)  = 0.0e0_wp
+        gx(8,1)   = 0.0e0_wp
+        gx(8,2)   = 0.0e0_wp
+        gx(8,3)   = 0.0e0_wp
+        gx(8,4)   = 0.0e0_wp
+        gx(8,5)   = 0.0e0_wp
+        gx(8,6)   = 0.0e0_wp
+        gx(8,7)   = 0.0e0_wp
+        gx(8,9)   = 0.0e0_wp
+        gx(8,10)  = 0.0e0_wp
+        gx(8,11)  = 0.0e0_wp
+        gx(8,12)  = 0.0e0_wp
+        gx(9,1)   = 0.0e0_wp
+        gx(9,2)   = 0.0e0_wp
+        gx(9,3)   = 0.0e0_wp
+        gx(9,4)   = 0.0e0_wp
+        gx(9,5)   = 0.0e0_wp
+        gx(9,6)   = 0.0e0_wp
+        gx(9,7)   = 0.0e0_wp
+        gx(9,8)   = 0.0e0_wp
+        gx(9,10)  = 0.0e0_wp
+        gx(9,11)  = 0.0e0_wp
+        gx(9,12)  = 0.0e0_wp
+        gx(10,1)  = 0.0e0_wp
+        gx(10,2)  = 0.0e0_wp
+        gx(10,3)  = 0.0e0_wp
+        gx(10,4)  = 0.0e0_wp
+        gx(10,5)  = 0.0e0_wp
+        gx(10,6)  = 0.0e0_wp
+        gx(10,7)  = 0.0e0_wp
+        gx(10,8)  = 0.0e0_wp
+        gx(10,9)  = 0.0e0_wp
+        gx(10,11) = 0.0e0_wp
+        gx(10,12) = 0.0e0_wp
+        gx(11,1)  = 0.0e0_wp
+        gx(11,2)  = 0.0e0_wp
+        gx(11,3)  = 0.0e0_wp
+        gx(11,4)  = 0.0e0_wp
+        gx(11,5)  = 0.0e0_wp
+        gx(11,6)  = 0.0e0_wp
+        gx(11,7)  = 0.0e0_wp
+        gx(11,8)  = 0.0e0_wp
+        gx(11,9)  = 0.0e0_wp
+        gx(11,10) = 0.0e0_wp
+        gx(11,12) = 0.0e0_wp
+        gx(12,1)  = 0.0e0_wp
+        gx(12,2)  = 0.0e0_wp
+        gx(12,3)  = 0.0e0_wp
+        gx(12,4)  = 0.0e0_wp
+        gx(12,5)  = 0.0e0_wp
+        gx(12,6)  = 0.0e0_wp
+        gx(12,7)  = 0.0e0_wp
+        gx(12,8)  = 0.0e0_wp
+        gx(12,9)  = 0.0e0_wp
+        gx(12,10) = 0.0e0_wp
+        gx(12,11) = 0.0e0_wp
         !  Calculate first derivatives using a analytic gradients
         call g_surf(12, v, gv, 12, x, gx, 12)
         !  TRANSPOSE GV
@@ -461,161 +466,161 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         !  Initialize second derivatives
         do j=1, n3tm
-            dxx(j) = 0.0d0
+            dxx(j) = 0.0e0_wp
         enddo
         do i = 1, 12
-            gxx(1,2,i)   = 0.0d0
-            gxx(1,3,i)   = 0.0d0
-            gxx(1,4,i)   = 0.0d0
-            gxx(1,5,i)   = 0.0d0
-            gxx(1,6,i)   = 0.0d0
-            gxx(1,7,i)   = 0.0d0
-            gxx(1,8,i)   = 0.0d0
-            gxx(1,9,i)   = 0.0d0
-            gxx(1,10,i)  = 0.0d0
-            gxx(1,11,i)  = 0.0d0
-            gxx(1,12,i)  = 0.0d0
-            gxx(2,1,i)   = 0.0d0
-            gxx(2,3,i)   = 0.0d0
-            gxx(2,4,i)   = 0.0d0
-            gxx(2,5,i)   = 0.0d0
-            gxx(2,6,i)   = 0.0d0
-            gxx(2,7,i)   = 0.0d0
-            gxx(2,8,i)   = 0.0d0
-            gxx(2,9,i)   = 0.0d0
-            gxx(2,10,i)  = 0.0d0
-            gxx(2,11,i)  = 0.0d0
-            gxx(2,12,i)  = 0.0d0
-            gxx(3,1,i)   = 0.0d0
-            gxx(3,2,i)   = 0.0d0
-            gxx(3,4,i)   = 0.0d0
-            gxx(3,5,i)   = 0.0d0
-            gxx(3,6,i)   = 0.0d0
-            gxx(3,7,i)   = 0.0d0
-            gxx(3,8,i)   = 0.0d0
-            gxx(3,9,i)   = 0.0d0
-            gxx(3,10,i)  = 0.0d0
-            gxx(3,11,i)  = 0.0d0
-            gxx(3,12,i)  = 0.0d0
-            gxx(4,1,i)   = 0.0d0
-            gxx(4,2,i)   = 0.0d0
-            gxx(4,3,i)   = 0.0d0
-            gxx(4,5,i)   = 0.0d0
-            gxx(4,6,i)   = 0.0d0
-            gxx(4,7,i)   = 0.0d0
-            gxx(4,8,i)   = 0.0d0
-            gxx(4,9,i)   = 0.0d0
-            gxx(4,10,i)  = 0.0d0
-            gxx(4,11,i)  = 0.0d0
-            gxx(4,12,i)  = 0.0d0
-            gxx(5,1,i)   = 0.0d0
-            gxx(5,2,i)   = 0.0d0
-            gxx(5,3,i)   = 0.0d0
-            gxx(5,4,i)   = 0.0d0
-            gxx(5,6,i)   = 0.0d0
-            gxx(5,7,i)   = 0.0d0
-            gxx(5,8,i)   = 0.0d0
-            gxx(5,9,i)   = 0.0d0
-            gxx(5,10,i)  = 0.0d0
-            gxx(5,11,i)  = 0.0d0
-            gxx(5,12,i)  = 0.0d0
-            gxx(6,1,i)   = 0.0d0
-            gxx(6,2,i)   = 0.0d0
-            gxx(6,3,i)   = 0.0d0
-            gxx(6,4,i)   = 0.0d0
-            gxx(6,5,i)   = 0.0d0
-            gxx(6,7,i)   = 0.0d0
-            gxx(6,8,i)   = 0.0d0
-            gxx(6,9,i)   = 0.0d0
-            gxx(6,10,i)  = 0.0d0
-            gxx(6,11,i)  = 0.0d0
-            gxx(6,12,i)  = 0.0d0
-            gxx(7,1,i)   = 0.0d0
-            gxx(7,2,i)   = 0.0d0
-            gxx(7,3,i)   = 0.0d0
-            gxx(7,4,i)   = 0.0d0
-            gxx(7,5,i)   = 0.0d0
-            gxx(7,6,i)   = 0.0d0
-            gxx(7,8,i)   = 0.0d0
-            gxx(7,9,i)   = 0.0d0
-            gxx(7,10,i)  = 0.0d0
-            gxx(7,11,i)  = 0.0d0
-            gxx(7,12,i)  = 0.0d0
-            gxx(8,1,i)   = 0.0d0
-            gxx(8,2,i)   = 0.0d0
-            gxx(8,3,i)   = 0.0d0
-            gxx(8,4,i)   = 0.0d0
-            gxx(8,5,i)   = 0.0d0
-            gxx(8,6,i)   = 0.0d0
-            gxx(8,7,i)   = 0.0d0
-            gxx(8,9,i)   = 0.0d0
-            gxx(8,10,i)  = 0.0d0
-            gxx(8,11,i)  = 0.0d0
-            gxx(8,12,i)  = 0.0d0
-            gxx(9,1,i)   = 0.0d0
-            gxx(9,2,i)   = 0.0d0
-            gxx(9,3,i)   = 0.0d0
-            gxx(9,4,i)   = 0.0d0
-            gxx(9,5,i)   = 0.0d0
-            gxx(9,6,i)   = 0.0d0
-            gxx(9,7,i)   = 0.0d0
-            gxx(9,8,i)   = 0.0d0
-            gxx(9,10,i)  = 0.0d0
-            gxx(9,11,i)  = 0.0d0
-            gxx(9,12,i)  = 0.0d0
-            gxx(10,1,i)  = 0.0d0
-            gxx(10,2,i)  = 0.0d0
-            gxx(10,3,i)  = 0.0d0
-            gxx(10,4,i)  = 0.0d0
-            gxx(10,5,i)  = 0.0d0
-            gxx(10,6,i)  = 0.0d0
-            gxx(10,7,i)  = 0.0d0
-            gxx(10,8,i)  = 0.0d0
-            gxx(10,9,i)  = 0.0d0
-            gxx(10,11,i) = 0.0d0
-            gxx(10,12,i) = 0.0d0
-            gxx(11,1,i)  = 0.0d0
-            gxx(11,2,i)  = 0.0d0
-            gxx(11,3,i)  = 0.0d0
-            gxx(11,4,i)  = 0.0d0
-            gxx(11,5,i)  = 0.0d0
-            gxx(11,6,i)  = 0.0d0
-            gxx(11,7,i)  = 0.0d0
-            gxx(11,8,i)  = 0.0d0
-            gxx(11,9,i)  = 0.0d0
-            gxx(11,10,i) = 0.0d0
-            gxx(11,12,i) = 0.0d0
-            gxx(12,1,i)  = 0.0d0
-            gxx(12,2,i)  = 0.0d0
-            gxx(12,3,i)  = 0.0d0
-            gxx(12,4,i)  = 0.0d0
-            gxx(12,5,i)  = 0.0d0
-            gxx(12,6,i)  = 0.0d0
-            gxx(12,7,i)  = 0.0d0
-            gxx(12,8,i)  = 0.0d0
-            gxx(12,9,i)  = 0.0d0
-            gxx(12,10,i) = 0.0d0
-            gxx(12,11,i) = 0.0d0
+            gxx(1,2,i)   = 0.0e0_wp
+            gxx(1,3,i)   = 0.0e0_wp
+            gxx(1,4,i)   = 0.0e0_wp
+            gxx(1,5,i)   = 0.0e0_wp
+            gxx(1,6,i)   = 0.0e0_wp
+            gxx(1,7,i)   = 0.0e0_wp
+            gxx(1,8,i)   = 0.0e0_wp
+            gxx(1,9,i)   = 0.0e0_wp
+            gxx(1,10,i)  = 0.0e0_wp
+            gxx(1,11,i)  = 0.0e0_wp
+            gxx(1,12,i)  = 0.0e0_wp
+            gxx(2,1,i)   = 0.0e0_wp
+            gxx(2,3,i)   = 0.0e0_wp
+            gxx(2,4,i)   = 0.0e0_wp
+            gxx(2,5,i)   = 0.0e0_wp
+            gxx(2,6,i)   = 0.0e0_wp
+            gxx(2,7,i)   = 0.0e0_wp
+            gxx(2,8,i)   = 0.0e0_wp
+            gxx(2,9,i)   = 0.0e0_wp
+            gxx(2,10,i)  = 0.0e0_wp
+            gxx(2,11,i)  = 0.0e0_wp
+            gxx(2,12,i)  = 0.0e0_wp
+            gxx(3,1,i)   = 0.0e0_wp
+            gxx(3,2,i)   = 0.0e0_wp
+            gxx(3,4,i)   = 0.0e0_wp
+            gxx(3,5,i)   = 0.0e0_wp
+            gxx(3,6,i)   = 0.0e0_wp
+            gxx(3,7,i)   = 0.0e0_wp
+            gxx(3,8,i)   = 0.0e0_wp
+            gxx(3,9,i)   = 0.0e0_wp
+            gxx(3,10,i)  = 0.0e0_wp
+            gxx(3,11,i)  = 0.0e0_wp
+            gxx(3,12,i)  = 0.0e0_wp
+            gxx(4,1,i)   = 0.0e0_wp
+            gxx(4,2,i)   = 0.0e0_wp
+            gxx(4,3,i)   = 0.0e0_wp
+            gxx(4,5,i)   = 0.0e0_wp
+            gxx(4,6,i)   = 0.0e0_wp
+            gxx(4,7,i)   = 0.0e0_wp
+            gxx(4,8,i)   = 0.0e0_wp
+            gxx(4,9,i)   = 0.0e0_wp
+            gxx(4,10,i)  = 0.0e0_wp
+            gxx(4,11,i)  = 0.0e0_wp
+            gxx(4,12,i)  = 0.0e0_wp
+            gxx(5,1,i)   = 0.0e0_wp
+            gxx(5,2,i)   = 0.0e0_wp
+            gxx(5,3,i)   = 0.0e0_wp
+            gxx(5,4,i)   = 0.0e0_wp
+            gxx(5,6,i)   = 0.0e0_wp
+            gxx(5,7,i)   = 0.0e0_wp
+            gxx(5,8,i)   = 0.0e0_wp
+            gxx(5,9,i)   = 0.0e0_wp
+            gxx(5,10,i)  = 0.0e0_wp
+            gxx(5,11,i)  = 0.0e0_wp
+            gxx(5,12,i)  = 0.0e0_wp
+            gxx(6,1,i)   = 0.0e0_wp
+            gxx(6,2,i)   = 0.0e0_wp
+            gxx(6,3,i)   = 0.0e0_wp
+            gxx(6,4,i)   = 0.0e0_wp
+            gxx(6,5,i)   = 0.0e0_wp
+            gxx(6,7,i)   = 0.0e0_wp
+            gxx(6,8,i)   = 0.0e0_wp
+            gxx(6,9,i)   = 0.0e0_wp
+            gxx(6,10,i)  = 0.0e0_wp
+            gxx(6,11,i)  = 0.0e0_wp
+            gxx(6,12,i)  = 0.0e0_wp
+            gxx(7,1,i)   = 0.0e0_wp
+            gxx(7,2,i)   = 0.0e0_wp
+            gxx(7,3,i)   = 0.0e0_wp
+            gxx(7,4,i)   = 0.0e0_wp
+            gxx(7,5,i)   = 0.0e0_wp
+            gxx(7,6,i)   = 0.0e0_wp
+            gxx(7,8,i)   = 0.0e0_wp
+            gxx(7,9,i)   = 0.0e0_wp
+            gxx(7,10,i)  = 0.0e0_wp
+            gxx(7,11,i)  = 0.0e0_wp
+            gxx(7,12,i)  = 0.0e0_wp
+            gxx(8,1,i)   = 0.0e0_wp
+            gxx(8,2,i)   = 0.0e0_wp
+            gxx(8,3,i)   = 0.0e0_wp
+            gxx(8,4,i)   = 0.0e0_wp
+            gxx(8,5,i)   = 0.0e0_wp
+            gxx(8,6,i)   = 0.0e0_wp
+            gxx(8,7,i)   = 0.0e0_wp
+            gxx(8,9,i)   = 0.0e0_wp
+            gxx(8,10,i)  = 0.0e0_wp
+            gxx(8,11,i)  = 0.0e0_wp
+            gxx(8,12,i)  = 0.0e0_wp
+            gxx(9,1,i)   = 0.0e0_wp
+            gxx(9,2,i)   = 0.0e0_wp
+            gxx(9,3,i)   = 0.0e0_wp
+            gxx(9,4,i)   = 0.0e0_wp
+            gxx(9,5,i)   = 0.0e0_wp
+            gxx(9,6,i)   = 0.0e0_wp
+            gxx(9,7,i)   = 0.0e0_wp
+            gxx(9,8,i)   = 0.0e0_wp
+            gxx(9,10,i)  = 0.0e0_wp
+            gxx(9,11,i)  = 0.0e0_wp
+            gxx(9,12,i)  = 0.0e0_wp
+            gxx(10,1,i)  = 0.0e0_wp
+            gxx(10,2,i)  = 0.0e0_wp
+            gxx(10,3,i)  = 0.0e0_wp
+            gxx(10,4,i)  = 0.0e0_wp
+            gxx(10,5,i)  = 0.0e0_wp
+            gxx(10,6,i)  = 0.0e0_wp
+            gxx(10,7,i)  = 0.0e0_wp
+            gxx(10,8,i)  = 0.0e0_wp
+            gxx(10,9,i)  = 0.0e0_wp
+            gxx(10,11,i) = 0.0e0_wp
+            gxx(10,12,i) = 0.0e0_wp
+            gxx(11,1,i)  = 0.0e0_wp
+            gxx(11,2,i)  = 0.0e0_wp
+            gxx(11,3,i)  = 0.0e0_wp
+            gxx(11,4,i)  = 0.0e0_wp
+            gxx(11,5,i)  = 0.0e0_wp
+            gxx(11,6,i)  = 0.0e0_wp
+            gxx(11,7,i)  = 0.0e0_wp
+            gxx(11,8,i)  = 0.0e0_wp
+            gxx(11,9,i)  = 0.0e0_wp
+            gxx(11,10,i) = 0.0e0_wp
+            gxx(11,12,i) = 0.0e0_wp
+            gxx(12,1,i)  = 0.0e0_wp
+            gxx(12,2,i)  = 0.0e0_wp
+            gxx(12,3,i)  = 0.0e0_wp
+            gxx(12,4,i)  = 0.0e0_wp
+            gxx(12,5,i)  = 0.0e0_wp
+            gxx(12,6,i)  = 0.0e0_wp
+            gxx(12,7,i)  = 0.0e0_wp
+            gxx(12,8,i)  = 0.0e0_wp
+            gxx(12,9,i)  = 0.0e0_wp
+            gxx(12,10,i) = 0.0e0_wp
+            gxx(12,11,i) = 0.0e0_wp
         enddo
         do i = 1, 12
             do j = 1, 12
                 do ii = 1, 12
-                    gxx(i,j,ii) = 0.0d0
+                    gxx(i,j,ii) = 0.0e0_wp
                 enddo
             enddo
         enddo
-        gxx(1,1,1)    = 1.0d0
-        gxx(2,2,2)    = 1.0d0
-        gxx(3,3,3)    = 1.0d0
-        gxx(4,4,4)    = 1.0d0
-        gxx(5,5,5)    = 1.0d0
-        gxx(6,6,6)    = 1.0d0
-        gxx(7,7,7)    = 1.0d0
-        gxx(8,8,8)    = 1.0d0
-        gxx(9,9,9)    = 1.0d0
-        gxx(10,10,10) = 1.0d0
-        gxx(11,11,11) = 1.0d0
-        gxx(12,12,12) = 1.0d0
+        gxx(1,1,1)    = 1.0e0_wp
+        gxx(2,2,2)    = 1.0e0_wp
+        gxx(3,3,3)    = 1.0e0_wp
+        gxx(4,4,4)    = 1.0e0_wp
+        gxx(5,5,5)    = 1.0e0_wp
+        gxx(6,6,6)    = 1.0e0_wp
+        gxx(7,7,7)    = 1.0e0_wp
+        gxx(8,8,8)    = 1.0e0_wp
+        gxx(9,9,9)    = 1.0e0_wp
+        gxx(10,10,10) = 1.0e0_wp
+        gxx(11,11,11) = 1.0e0_wp
+        gxx(12,12,12) = 1.0e0_wp
         do i = 1, 12
             do j = 1, 12
                 do ii = 1, 12
@@ -624,15 +629,15 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         do i = 1, 12
             do j = 1, 12
-                gv(i,j) = 0.0d0
-                gx(i,j) = 0.0d0
+                gv(i,j) = 0.0e0_wp
+                gx(i,j) = 0.0e0_wp
             enddo
         enddo
         !  Calculate first derivatives using a analytic gradients
         call g_analytic(12, 12, v, gv, gvv, 12, 12, x, gx, gxx, 12, 12)
         !  TRANSPOSE GVV
         do i = 1, 12
-            dxx(i) = gvv(1,i,i)/0.529177d0
+            dxx(i) = gvv(1,i,i)/0.529177e0_wp
         enddo
     end subroutine potential
 
@@ -649,30 +654,31 @@ module chempotpy_h2o2_gen_1998_pes
         !                       X(4)  - X(6)  : X, Y, Z for O1
         !                       X(7)  - X(9)  : X, Y, Z for O2
         !                       X(10) - X(12) : X, Y, Z for H2
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision            :: n, n1, n2
-        double precision            :: v, pi
-        double precision            :: coord(12), dx(12), x(12), pass(6)
-        double precision            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
-        double precision            :: c11, c12, c13, c14, c15, c16, c17, c18
-        double precision            :: rab, rbc, rcd, rac, rbd, rad
-        double precision            :: rh1o1, ro1o2, ro2h2
-        double precision            :: d1, d2, d, ah1oo, aooh2, thooh
-        double precision            :: xcomp1, ycomp1, zcomp1
-        double precision            :: xcomp2, ycomp2, zcomp2
-        double precision            :: xcomp3, ycomp3, zcomp3
-        double precision            :: xcomp4, ycomp4, zcomp4
-        double precision            :: x_normal1, y_normal1, z_normal1
-        double precision            :: x_normal2, y_normal2, z_normal2
-        double precision, parameter :: rohlow  = 1.0d0
-        double precision, parameter :: rohhigh = 4.0d0
-        double precision, parameter :: roolow  = 1.8d0
-        double precision, parameter :: roohigh = 4.0d0
-        double precision, parameter :: rhhlow  = 0.7d0
+        real(wp)            :: n, n1, n2
+        real(wp)            :: v, pi
+        real(wp)            :: coord(12), dx(12), x(12), pass(6)
+        real(wp)            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
+        real(wp)            :: c11, c12, c13, c14, c15, c16, c17, c18
+        real(wp)            :: rab, rbc, rcd, rac, rbd, rad
+        real(wp)            :: rh1o1, ro1o2, ro2h2
+        real(wp)            :: d1, d2, d, ah1oo, aooh2, thooh
+        real(wp)            :: xcomp1, ycomp1, zcomp1
+        real(wp)            :: xcomp2, ycomp2, zcomp2
+        real(wp)            :: xcomp3, ycomp3, zcomp3
+        real(wp)            :: xcomp4, ycomp4, zcomp4
+        real(wp)            :: x_normal1, y_normal1, z_normal1
+        real(wp)            :: x_normal2, y_normal2, z_normal2
+        real(wp), parameter :: rohlow  = 1.0e0_wp
+        real(wp), parameter :: rohhigh = 4.0e0_wp
+        real(wp), parameter :: roolow  = 1.8e0_wp
+        real(wp), parameter :: roohigh = 4.0e0_wp
+        real(wp), parameter :: rhhlow  = 0.7e0_wp
         !  Calculate energy at the configuration space point
         !  NOTE :: This is not necessarily a quadrature point
         ! Expecting input in cartesians
-        pi  = 4.d0*atan(1.d0)
+        pi  = 4.e0_wp*atan(1.e0_wp)
         c1  = x(1) - x(4)
         c2  = x(2) - x(5)
         c3  = x(3) - x(6)
@@ -749,18 +755,19 @@ module chempotpy_h2o2_gen_1998_pes
 
     !> @brief Evaluate VIBPOT for the H2O2_GEN_1998 potential.
     subroutine vibpot( coord, v )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision :: v, pi
-        double precision :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
-        double precision :: q5p(0:4), q6p(0:4)
-        double precision :: ind1(152), ind2(152), ind3(152), ind4(152)
-        double precision :: ind5(152), ind6(152), coeff(152)
-        double precision :: rm_oo, rm_oh, angle_ooh, r1, r2, r3
-        double precision :: a1, a2, q1, q2, q3, q4, q5, q6
-        integer          :: i
-        double precision :: zoe
+        real(wp) :: v, pi
+        real(wp) :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
+        real(wp) :: q5p(0:4), q6p(0:4)
+        real(wp) :: ind1(152), ind2(152), ind3(152), ind4(152)
+        real(wp) :: ind5(152), ind6(152), coeff(152)
+        real(wp) :: rm_oo, rm_oh, angle_ooh, r1, r2, r3
+        real(wp) :: a1, a2, q1, q2, q3, q4, q5, q6
+        integer  :: i
+        real(wp) :: zoe
         !   convert offset parameters to bohr and radians
-        zoe = 3.995139982058d-3
+        zoe = 3.995139982058e-3_wp
         ind1 = [ 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1, 2, &
             & 1, 0, 2, 0, 1, 0, 2, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 4, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 1, 0, 0, &
             & 0, 3, 0, 0, 0, 1, 3, 1, 0, 3, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0, 0, 0, 1, 1, 2, 0, 1, 0, 1, 0, &
@@ -791,33 +798,39 @@ module chempotpy_h2o2_gen_1998_pes
             & 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
             & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &
             & 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
-        coeff = [ 0.00482409d0, 0.00325127d0, 0.00026630d0, 0.00004135d0, 1.08154998d0, 0.86097723d0, 0.86097723d0, &
-            & 0.11016112d0, 0.11016112d0, -0.03637740d0, -0.03637740d0, 0.17491854d0, 0.17491854d0, 0.00057054d0, - &
-            & 0.00137967d0, -0.00137967d0, 0.00062152d0, 0.00062152d0, 0.01375726d0, -1.15691421d0, -0.25495918d0, - &
-            & 0.25495918d0, -0.02272830d0, -0.02272830d0, -0.18381415d0, -0.18381415d0, -0.34627237d0, -0.34627237d0, &
-            & 0.13974588d0, 0.13974588d0, -0.27290455d0, -0.27290455d0, -0.00674721d0, -0.00674721d0, -0.02179545d0, - &
-            & 0.02179545d0, -0.02125643d0, -0.02125643d0, -0.00491968d0, -0.00491968d0, 0.00233773d0, 0.00233773d0, - &
-            & 0.00050066d0, -0.00050066d0, 0.01817536d0, -0.04666009d0, -0.04666009d0, -0.02424748d0, -0.02424748d0, - &
-            & 0.01727148d0, -0.00420506d0, -0.00420506d0, -0.00647944d0, -0.00647944d0, -1.06749007d0, -0.35741007d0, &
-            & -0.35741007d0, -0.00796836d0, -0.00796836d0, -0.42556742d0, -0.42556742d0, 0.06278896d0, 0.06278896d0, - &
-            & 0.04010419d0, -0.04010419d0, -0.00993912d0, 0.47562894d0, 0.47562894d0, -0.40830627d0, -0.40830627d0, &
-            & 0.22073222d0, 0.22073222d0, 0.07828212d0, 0.07828212d0, -0.02954687d0, -0.02954687d0, 0.03057888d0, &
-            & 0.03057888d0, -0.06363999d0, -0.06363999d0, -0.00373964d0, -0.00373964d0, -0.04114668d0, 0.11249614d0, &
-            & 0.11249614d0, 0.02616679d0, 0.02616679d0, -0.07824425d0, 0.04266205d0, 0.04266205d0, -0.07420432d0, - &
-            & 0.07420432d0, -0.08251268d0, -0.08251268d0, 0.00270940d0, 0.00270940d0, 0.00199953d0, 0.00199953d0, - &
-            & 0.01292325d0, -0.01292325d0, -0.02074323d0, -0.02074323d0, -0.00789732d0, -0.00789732d0, -0.01435326d0, &
-            & -0.00180710d0, -0.00180710d0, -0.01135671d0, -0.01135671d0, 0.00020655d0, -0.00492533d0, -0.00492533d0, &
-            & 0.00270990d0, 0.00270990d0, 0.00376086d0, 0.00376086d0, 0.00044732d0, 0.00044732d0, 0.00569979d0, - &
-            & 0.00244774d0, -0.00244774d0, -0.02065564d0, 0.05249331d0, -0.02490299d0, -0.02490299d0, 0.00391460d0, &
-            & 0.00391460d0, 0.08893744d0, 0.08893744d0, -0.01051618d0, 0.00120479d0, 0.00120479d0, -0.00111888d0, - &
-            & 0.00111888d0, 0.00884757d0, 0.00416289d0, 0.00416289d0, 0.00126763d0, 0.00126763d0, -0.00706563d0, - &
-            & 0.00706563d0, -0.00840146d0, -0.00840146d0, -0.00139219d0, 0.00801673d0, 0.00801673d0, 0.00463860d0, - &
-            & 0.00096051d0, 0.00019906d0, 0.00019906d0, -0.00057576d0, -0.00057576d0]
-        rm_oo     = 1.456199d0
-        rm_oh     = 0.962755d0
-        angle_ooh = 100.9059d0
-        pi        = 4.d0*atan(1.d0)
-        angle_ooh = angle_ooh*pi/180.d0
+        coeff = [ 0.00482409e0_wp, 0.00325127e0_wp, 0.00026630e0_wp, 0.00004135e0_wp, 1.08154998e0_wp, &
+            & 0.86097723e0_wp, 0.86097723e0_wp, 0.11016112e0_wp, 0.11016112e0_wp, -0.03637740e0_wp, -0.03637740e0_wp, &
+            & 0.17491854e0_wp, 0.17491854e0_wp, 0.00057054e0_wp, - 0.00137967e0_wp, -0.00137967e0_wp, 0.00062152e0_wp, &
+            & 0.00062152e0_wp, 0.01375726e0_wp, -1.15691421e0_wp, -0.25495918e0_wp, - 0.25495918e0_wp, - &
+            & 0.02272830e0_wp, -0.02272830e0_wp, -0.18381415e0_wp, -0.18381415e0_wp, -0.34627237e0_wp, - &
+            & 0.34627237e0_wp, 0.13974588e0_wp, 0.13974588e0_wp, -0.27290455e0_wp, -0.27290455e0_wp, -0.00674721e0_wp, &
+            & -0.00674721e0_wp, -0.02179545e0_wp, - 0.02179545e0_wp, -0.02125643e0_wp, -0.02125643e0_wp, - &
+            & 0.00491968e0_wp, -0.00491968e0_wp, 0.00233773e0_wp, 0.00233773e0_wp, - 0.00050066e0_wp, - &
+            & 0.00050066e0_wp, 0.01817536e0_wp, -0.04666009e0_wp, -0.04666009e0_wp, -0.02424748e0_wp, - &
+            & 0.02424748e0_wp, - 0.01727148e0_wp, -0.00420506e0_wp, -0.00420506e0_wp, -0.00647944e0_wp, - &
+            & 0.00647944e0_wp, -1.06749007e0_wp, -0.35741007e0_wp, -0.35741007e0_wp, -0.00796836e0_wp, - &
+            & 0.00796836e0_wp, -0.42556742e0_wp, -0.42556742e0_wp, 0.06278896e0_wp, 0.06278896e0_wp, - &
+            & 0.04010419e0_wp, -0.04010419e0_wp, -0.00993912e0_wp, 0.47562894e0_wp, 0.47562894e0_wp, -0.40830627e0_wp, &
+            & -0.40830627e0_wp, 0.22073222e0_wp, 0.22073222e0_wp, 0.07828212e0_wp, 0.07828212e0_wp, -0.02954687e0_wp, &
+            & -0.02954687e0_wp, 0.03057888e0_wp, 0.03057888e0_wp, -0.06363999e0_wp, -0.06363999e0_wp, - &
+            & 0.00373964e0_wp, -0.00373964e0_wp, -0.04114668e0_wp, 0.11249614e0_wp, 0.11249614e0_wp, 0.02616679e0_wp, &
+            & 0.02616679e0_wp, -0.07824425e0_wp, 0.04266205e0_wp, 0.04266205e0_wp, -0.07420432e0_wp, - &
+            & 0.07420432e0_wp, -0.08251268e0_wp, -0.08251268e0_wp, 0.00270940e0_wp, 0.00270940e0_wp, 0.00199953e0_wp, &
+            & 0.00199953e0_wp, - 0.01292325e0_wp, -0.01292325e0_wp, -0.02074323e0_wp, -0.02074323e0_wp, - &
+            & 0.00789732e0_wp, -0.00789732e0_wp, -0.01435326e0_wp, -0.00180710e0_wp, -0.00180710e0_wp, - &
+            & 0.01135671e0_wp, -0.01135671e0_wp, 0.00020655e0_wp, -0.00492533e0_wp, -0.00492533e0_wp, 0.00270990e0_wp, &
+            & 0.00270990e0_wp, 0.00376086e0_wp, 0.00376086e0_wp, 0.00044732e0_wp, 0.00044732e0_wp, 0.00569979e0_wp, - &
+            & 0.00244774e0_wp, -0.00244774e0_wp, -0.02065564e0_wp, 0.05249331e0_wp, -0.02490299e0_wp, - &
+            & 0.02490299e0_wp, 0.00391460e0_wp, 0.00391460e0_wp, 0.08893744e0_wp, 0.08893744e0_wp, -0.01051618e0_wp, &
+            & 0.00120479e0_wp, 0.00120479e0_wp, -0.00111888e0_wp, - 0.00111888e0_wp, 0.00884757e0_wp, 0.00416289e0_wp, &
+            & 0.00416289e0_wp, 0.00126763e0_wp, 0.00126763e0_wp, -0.00706563e0_wp, - 0.00706563e0_wp, - &
+            & 0.00840146e0_wp, -0.00840146e0_wp, -0.00139219e0_wp, 0.00801673e0_wp, 0.00801673e0_wp, 0.00463860e0_wp, &
+            & - 0.00096051e0_wp, 0.00019906e0_wp, 0.00019906e0_wp, -0.00057576e0_wp, -0.00057576e0_wp]
+        rm_oo     = 1.456199e0_wp
+        rm_oh     = 0.962755e0_wp
+        angle_ooh = 100.9059e0_wp
+        pi        = 4.e0_wp*atan(1.e0_wp)
+        angle_ooh = angle_ooh*pi/180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
         ! 1998, volume 102, pages 6325-6330
@@ -846,12 +859,12 @@ module chempotpy_h2o2_gen_1998_pes
         q4 = a1 - angle_ooh
         q5 = a2 - angle_ooh
         do i=0, 4
-            q1p(i) = 1.d0
-            q2p(i) = 1.d0
-            q3p(i) = 1.d0
-            q4p(i) = 1.d0
-            q5p(i) = 1.d0
-            q6p(i) = 1.d0
+            q1p(i) = 1.e0_wp
+            q2p(i) = 1.e0_wp
+            q3p(i) = 1.e0_wp
+            q4p(i) = 1.e0_wp
+            q5p(i) = 1.e0_wp
+            q6p(i) = 1.e0_wp
         enddo
         do i=1, 4
             q1p(i) = q1p(i-1)*q1
@@ -880,36 +893,37 @@ module chempotpy_h2o2_gen_1998_pes
         !                       X(4)  - X(6)  : X, Y, Z for O1
         !                       X(7)  - X(9)  : X, Y, Z for O2
         !                       X(10) - X(12) : X, Y, Z for H2
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision            :: n, n1, n2
-        double precision            :: v, pi
-        double precision            :: coord(12), dx(12), x(12), pass(6)
-        double precision            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
-        double precision            :: c11, c12, c13, c14, c15, c16, c17, c18
-        double precision            :: rab, rbc, rcd, rac, rbd, rad
-        double precision            :: rh1o1, ro1o2, ro2h2
-        double precision            :: d1, d2, d, ah1oo, aooh2, thooh
-        double precision            :: xcomp1, ycomp1, zcomp1
-        double precision            :: xcomp2, ycomp2, zcomp2
-        double precision            :: xcomp3, ycomp3, zcomp3
-        double precision            :: xcomp4, ycomp4, zcomp4
-        double precision            :: x_normal1, y_normal1, z_normal1
-        double precision            :: x_normal2, y_normal2, z_normal2
-        double precision, parameter :: rohlow  = 1.0d0
-        double precision, parameter :: rohhigh = 4.0d0
-        double precision, parameter :: roolow  = 1.8d0
-        double precision, parameter :: roohigh = 4.0d0
-        double precision, parameter :: rhhlow  = 0.7d0
-        integer, parameter          :: g_pmax_ = 12
-        integer                     :: g_i_, g_p_, ldg_x, ldg_v
-        double precision            :: d2_w, d1_p, d7_v, d2_p, d4_b, d5_b, d3_p, d2_v, d3_v, d7_b
-        double precision            :: d2_b, d3_b, d1_w, d4_v, d8_b, g_c1(g_pmax_), g_x(ldg_x,12), g_c2(g_pmax_), g_c3(g_pmax_), g_c4(g_pmax_)
-        double precision            :: g_c5(g_pmax_), g_c6(g_pmax_), g_c7(g_pmax_), g_c8(g_pmax_), g_c9(g_pmax_), g_c10(g_pmax_), g_c11(g_pmax_), g_c12( g_pmax_), g_c13(g_pmax_), g_c14(g_pmax_)
-        double precision            :: g_c15(g_pmax_), g_d1_w(g_pmax_), g_rab(g_pmax_), g_rbc(g_pmax_), g_rcd(g_pmax_), g_rh1o1(g_pmax_), g_ro1o2(g_pmax_), g_ro2h2(g_pmax_), g_n1(g_pmax_), g_d1(g_pmax_)
-        double precision            :: g_ah1oo(g_pmax_), g_n2(g_pmax_), g_d2(g_pmax_), g_aooh2(g_pmax_), g_xcomp1(g_pmax_), g_ycomp1(g_pmax_), g_zcomp1( g_pmax_), g_xcomp2(g_pmax_), g_ycomp2(g_pmax_), g_zcomp2(g_pmax_)
-        double precision            :: g_x_normal1(g_pmax_), g_y_normal1(g_pmax_), g_z_normal1(g_pmax_), g_xcomp3(g_pmax_), g_ycomp3(g_pmax_), g_zcomp3( g_pmax_), g_xcomp4(g_pmax_), g_ycomp4(g_pmax_), g_zcomp4(g_pmax_), g_x_normal2(g_pmax_)
-        double precision            :: g_y_normal2(g_pmax_), g_z_normal2(g_pmax_), g_n (g_pmax_), g_d2_w(g_pmax_), g_d(g_pmax_), g_thooh(g_pmax_), g_pass (g_pmax_,6), g_v(ldg_v)
-        integer                     :: g_ehfid
+        real(wp)            :: n, n1, n2
+        real(wp)            :: v, pi
+        real(wp)            :: coord(12), dx(12), x(12), pass(6)
+        real(wp)            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
+        real(wp)            :: c11, c12, c13, c14, c15, c16, c17, c18
+        real(wp)            :: rab, rbc, rcd, rac, rbd, rad
+        real(wp)            :: rh1o1, ro1o2, ro2h2
+        real(wp)            :: d1, d2, d, ah1oo, aooh2, thooh
+        real(wp)            :: xcomp1, ycomp1, zcomp1
+        real(wp)            :: xcomp2, ycomp2, zcomp2
+        real(wp)            :: xcomp3, ycomp3, zcomp3
+        real(wp)            :: xcomp4, ycomp4, zcomp4
+        real(wp)            :: x_normal1, y_normal1, z_normal1
+        real(wp)            :: x_normal2, y_normal2, z_normal2
+        real(wp), parameter :: rohlow  = 1.0e0_wp
+        real(wp), parameter :: rohhigh = 4.0e0_wp
+        real(wp), parameter :: roolow  = 1.8e0_wp
+        real(wp), parameter :: roohigh = 4.0e0_wp
+        real(wp), parameter :: rhhlow  = 0.7e0_wp
+        integer, parameter  :: g_pmax_ = 12
+        integer             :: g_i_, g_p_, ldg_x, ldg_v
+        real(wp)            :: d2_w, d1_p, d7_v, d2_p, d4_b, d5_b, d3_p, d2_v, d3_v, d7_b
+        real(wp)            :: d2_b, d3_b, d1_w, d4_v, d8_b, g_c1(g_pmax_), g_x(ldg_x,12), g_c2(g_pmax_), g_c3(g_pmax_), g_c4(g_pmax_)
+        real(wp)            :: g_c5(g_pmax_), g_c6(g_pmax_), g_c7(g_pmax_), g_c8(g_pmax_), g_c9(g_pmax_), g_c10(g_pmax_), g_c11(g_pmax_), g_c12( g_pmax_), g_c13(g_pmax_), g_c14(g_pmax_)
+        real(wp)            :: g_c15(g_pmax_), g_d1_w(g_pmax_), g_rab(g_pmax_), g_rbc(g_pmax_), g_rcd(g_pmax_), g_rh1o1(g_pmax_), g_ro1o2(g_pmax_), g_ro2h2(g_pmax_), g_n1(g_pmax_), g_d1(g_pmax_)
+        real(wp)            :: g_ah1oo(g_pmax_), g_n2(g_pmax_), g_d2(g_pmax_), g_aooh2(g_pmax_), g_xcomp1(g_pmax_), g_ycomp1(g_pmax_), g_zcomp1( g_pmax_), g_xcomp2(g_pmax_), g_ycomp2(g_pmax_), g_zcomp2(g_pmax_)
+        real(wp)            :: g_x_normal1(g_pmax_), g_y_normal1(g_pmax_), g_z_normal1(g_pmax_), g_xcomp3(g_pmax_), g_ycomp3(g_pmax_), g_zcomp3( g_pmax_), g_xcomp4(g_pmax_), g_ycomp4(g_pmax_), g_zcomp4(g_pmax_), g_x_normal2(g_pmax_)
+        real(wp)            :: g_y_normal2(g_pmax_), g_z_normal2(g_pmax_), g_n (g_pmax_), g_d2_w(g_pmax_), g_d(g_pmax_), g_thooh(g_pmax_), g_pass (g_pmax_,6), g_v(ldg_v)
+        integer             :: g_ehfid
         !  Calculate energy at the configuration space point
         !  NOTE :: This is not necessarily a quadrature point
         ! Expecting input in cartesians
@@ -918,7 +932,7 @@ module chempotpy_h2o2_gen_1998_pes
             print *, 'Parameter g_p_ is greater than g_pmax_'
             stop
         endif
-        pi = 4.d0 * atan(1.d0)
+        pi = 4.e0_wp * atan(1.e0_wp)
         do g_i_ = 1, g_p_
             g_c1(g_i_) = -g_x(g_i_,4) + g_x(g_i_,1)
         enddo
@@ -988,18 +1002,18 @@ module chempotpy_h2o2_gen_1998_pes
         !  angle O1O2H2 = AOOH2
         !  TORSION HOOH = THOOH
         d2_v = c1 * c1
-        d3_p = 2.0d0 * c1
+        d3_p = 2.0e0_wp * c1
         d4_v = c2 * c2
-        d2_p = 2.0d0 * c2
+        d2_p = 2.0e0_wp * c2
         d7_v = c3 * c3
-        d1_p = 2.0d0 * c3
+        d1_p = 2.0e0_wp * c3
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d1_p * g_c3(g_i_) + d2_p * g_c2(g_i_) + d3_p * g_c1(g_i_)
         enddo
         d1_w = d2_v + d4_v + d7_v
         d2_v = sqrt(d1_w)
-        if( d1_w .gt. 0.0d0 )then
-            d1_p = 1.0d0 / (2.0d0 *  d2_v)
+        if( d1_w .gt. 0.0e0_wp )then
+            d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
             !           call ehufDO (9,d1_w, d2_v, d1_p,
             !     +g_ehfid,
@@ -1010,18 +1024,18 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         rab  = d2_v
         d2_v = c4 * c4
-        d3_p = 2.0d0 * c4
+        d3_p = 2.0e0_wp * c4
         d4_v = c5 * c5
-        d2_p = 2.0d0 * c5
+        d2_p = 2.0e0_wp * c5
         d7_v = c6 * c6
-        d1_p = 2.0d0 * c6
+        d1_p = 2.0e0_wp * c6
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d1_p * g_c6(g_i_) + d2_p * g_c5(g_i_) + d3_p * g_c4(g_i_)
         enddo
         d1_w = d2_v + d4_v + d7_v
         d2_v = sqrt(d1_w)
-        if( d1_w .gt. 0.0d0 )then
-            d1_p = 1.0d0 / (2.0d0 *  d2_v)
+        if( d1_w .gt. 0.0e0_wp )then
+            d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
             !           call ehufDO (9,d1_w, d2_v, d1_p,
             !     +g_ehfid,
@@ -1032,18 +1046,18 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         rbc  = d2_v
         d2_v = c7 * c7
-        d3_p = 2.0d0 * c7
+        d3_p = 2.0e0_wp * c7
         d4_v = c8 * c8
-        d2_p = 2.0d0 * c8
+        d2_p = 2.0e0_wp * c8
         d7_v = c9 * c9
-        d1_p = 2.0d0 * c9
+        d1_p = 2.0e0_wp * c9
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d1_p * g_c9(g_i_) + d2_p * g_c8(g_i_) + d3_p * g_c7(g_i_)
         enddo
         d1_w = d2_v + d4_v + d7_v
         d2_v = sqrt(d1_w)
-        if( d1_w .gt. 0.0d0 )then
-            d1_p = 1.0d0 / (2.0d0 *  d2_v)
+        if( d1_w .gt. 0.0e0_wp )then
+            d1_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
             !           call ehufDO (9,d1_w, d2_v, d1_p,
             !     +g_ehfid,
@@ -1088,15 +1102,15 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d1   = ro1o2 * rh1o1
         d3_v = n1 / d1
-        d2_b = 1.0d0 / d1
+        d2_b = 1.0e0_wp / d1
         d3_b = (-d3_v) / d1
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_d1(g_i_) + d2_b * g_n1(g_i_)
         enddo
         d1_w = d3_v
         d2_v = acos(d1_w)
-        if( abs(d1_w) .lt. 1.0d0 )then
-            d1_p = -1.0d0 / sqrt ((1.0d0-d1_w)*(1.0d0+d1_w))
+        if( abs(d1_w) .lt. 1.0e0_wp )then
+            d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-d1_w)*(1.0e0_wp+d1_w))
         else
             !           call ehufDO (14,d1_w, d2_v, d1_p,
             !     +g_ehfid,
@@ -1116,15 +1130,15 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d2   = ro2h2 * ro1o2
         d3_v = n2 / d2
-        d2_b = 1.0d0 / d2
+        d2_b = 1.0e0_wp / d2
         d3_b = (-d3_v) / d2
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_d2(g_i_) + d2_b * g_n2(g_i_)
         enddo
         d1_w = d3_v
         d2_v = acos(d1_w)
-        if( abs(d1_w) .lt. 1.0d0 )then
-            d1_p = -1.0d0 / sqrt ((1.0d0-d1_w)*(1.0d0+d1_w))
+        if( abs(d1_w) .lt. 1.0e0_wp )then
+            d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-d1_w)*(1.0e0_wp+d1_w))
         else
             !           call ehufDO (14,d1_w, d2_v, d1_p,
             !     +g_ehfid,
@@ -1234,16 +1248,16 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d2_w = x_normal2 * x_normal2 + y_normal2 * y_normal2 + z_normal2 * z_normal2
         d2_v = sqrt(d1_w)
-        if( d1_w .gt. 0.0d0 )then
-            d2_p = 1.0d0 / (2.0d0 *  d2_v)
+        if( d1_w .gt. 0.0e0_wp )then
+            d2_p = 1.0e0_wp / (2.0e0_wp *  d2_v)
         else
             !           call ehufDO (9,d1_w, d2_v, d2_p,
             !     +g_ehfid,
             !     +497)
         endif
         d4_v = sqrt(d2_w)
-        if( d2_w .gt. 0.0d0 )then
-            d1_p = 1.0d0 / (2.0d0 *  d4_v)
+        if( d2_w .gt. 0.0e0_wp )then
+            d1_p = 1.0e0_wp / (2.0e0_wp *  d4_v)
         else
             !           call ehufDO (9,d2_w, d4_v, d1_p,
             !     +g_ehfid,
@@ -1272,15 +1286,15 @@ module chempotpy_h2o2_gen_1998_pes
         !       thooh=pi
         !      else
         d3_v = n / d
-        d2_b = 1.0d0 / d
+        d2_b = 1.0e0_wp / d
         d3_b = (-d3_v) / d
         do g_i_ = 1, g_p_
             g_d1_w(g_i_) = d3_b * g_d(g_i_) + d2_b * g_n(g_i_)
         enddo
         d1_w = d3_v
         d2_v = acos(d1_w)
-        if( abs(d1_w) .lt. 1.0d0 )then
-            d1_p = -1.0d0 / sqrt ((1.0d0-d1_w)*(1.0d0+d1_w))
+        if( abs(d1_w) .lt. 1.0e0_wp )then
+            d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-d1_w)*(1.0e0_wp+d1_w))
         else
             !           call ehufDO (14,d1_w, d2_v, d1_p,
             !     +g_ehfid,
@@ -1323,27 +1337,28 @@ module chempotpy_h2o2_gen_1998_pes
     !> @brief Evaluate g_vibpot for the H2O2_GEN_1998 potential.
     subroutine g_vibpot( g_p_, coord, g_coord, ldg_coord, v, g_v, ldg_v &
             & )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision   :: v, pi
-        double precision   :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
-        double precision   :: q5p(0:4), q6p(0:4)
-        double precision   :: ind1(152), ind2(152), ind3(152), ind4(152)
-        double precision   :: ind5(152), ind6(152), coeff(152)
-        double precision   :: rm_oo, rm_oh, angle_ooh, r1, r2, r3
-        double precision   :: a1, a2, q1, q2, q3, q4, q5, q6
+        real(wp)           :: v, pi
+        real(wp)           :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
+        real(wp)           :: q5p(0:4), q6p(0:4)
+        real(wp)           :: ind1(152), ind2(152), ind3(152), ind4(152)
+        real(wp)           :: ind5(152), ind6(152), coeff(152)
+        real(wp)           :: rm_oo, rm_oh, angle_ooh, r1, r2, r3
+        real(wp)           :: a1, a2, q1, q2, q3, q4, q5, q6
         integer            :: i
-        double precision   :: zoe
+        real(wp)           :: zoe
         integer, parameter :: g_pmax_ = 12
         integer            :: g_i_, g_p_, ldg_coord, ldg_v
-        double precision   :: d14_b, d13_b, d7_v, d11_b, d10_b, d9_b, d8_b, d7_b, d2_v, d3_v
-        double precision   :: d6_b, d2_b, d3_b, d1_w, d1_p, d11_v, d5_v, d9_v, g_r1(g_pmax_), g_coord(ldg_coord,6)
-        double precision   :: g_r2(g_pmax_), g_r3(g_pmax_), g_a1(g_pmax_), g_a2(g_pmax_), g_q6(g_pmax_), g_q3(g_pmax_), g_q1(g_pmax_), g_q2(g_pmax_), g_q4(g_pmax_), g_q5(g_pmax_)
-        double precision   :: g_q1p(g_pmax_,0:4), g_q2p(g_pmax_,0:4), g_q3p (g_pmax_,0:4), g_q4p(g_pmax_,0:4), g_q5p(g_pmax_,0:4), g_q6p(g_pmax_,0:4), g_d1_w(g_pmax_), g_v(ldg_v)
+        real(wp)           :: d14_b, d13_b, d7_v, d11_b, d10_b, d9_b, d8_b, d7_b, d2_v, d3_v
+        real(wp)           :: d6_b, d2_b, d3_b, d1_w, d1_p, d11_v, d5_v, d9_v, g_r1(g_pmax_), g_coord(ldg_coord,6)
+        real(wp)           :: g_r2(g_pmax_), g_r3(g_pmax_), g_a1(g_pmax_), g_a2(g_pmax_), g_q6(g_pmax_), g_q3(g_pmax_), g_q1(g_pmax_), g_q2(g_pmax_), g_q4(g_pmax_), g_q5(g_pmax_)
+        real(wp)           :: g_q1p(g_pmax_,0:4), g_q2p(g_pmax_,0:4), g_q3p (g_pmax_,0:4), g_q4p(g_pmax_,0:4), g_q5p(g_pmax_,0:4), g_q6p(g_pmax_,0:4), g_d1_w(g_pmax_), g_v(ldg_v)
         integer            :: g_ehfid
         !      data rm_oo, rm_oh, ANGLE_OOH/1.456199d0, 0.962755d0, 100.9059d0/
         !   convert offset parameters to bohr and radians
         !        call ehsfid(g_ehfid, 'vibpot','g_surf.f')
-        zoe = 3.995139982058d-3
+        zoe = 3.995139982058e-3_wp
         ind1 = [ 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1, 2, &
             & 1, 0, 2, 0, 1, 0, 2, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 4, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 1, 0, 0, &
             & 0, 3, 0, 0, 0, 1, 3, 1, 0, 3, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0, 0, 0, 1, 1, 2, 0, 1, 0, 1, 0, &
@@ -1374,40 +1389,46 @@ module chempotpy_h2o2_gen_1998_pes
             & 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
             & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &
             & 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
-        coeff = [ 0.00482409d0, 0.00325127d0, 0.00026630d0, 0.00004135d0, 1.08154998d0, 0.86097723d0, 0.86097723d0, &
-            & 0.11016112d0, 0.11016112d0, -0.03637740d0, -0.03637740d0, 0.17491854d0, 0.17491854d0, 0.00057054d0, - &
-            & 0.00137967d0, -0.00137967d0, 0.00062152d0, 0.00062152d0, 0.01375726d0, -1.15691421d0, -0.25495918d0, - &
-            & 0.25495918d0, -0.02272830d0, -0.02272830d0, -0.18381415d0, -0.18381415d0, -0.34627237d0, -0.34627237d0, &
-            & 0.13974588d0, 0.13974588d0, -0.27290455d0, -0.27290455d0, -0.00674721d0, -0.00674721d0, -0.02179545d0, - &
-            & 0.02179545d0, -0.02125643d0, -0.02125643d0, -0.00491968d0, -0.00491968d0, 0.00233773d0, 0.00233773d0, - &
-            & 0.00050066d0, -0.00050066d0, 0.01817536d0, -0.04666009d0, -0.04666009d0, -0.02424748d0, -0.02424748d0, - &
-            & 0.01727148d0, -0.00420506d0, -0.00420506d0, -0.00647944d0, -0.00647944d0, -1.06749007d0, -0.35741007d0, &
-            & -0.35741007d0, -0.00796836d0, -0.00796836d0, -0.42556742d0, -0.42556742d0, 0.06278896d0, 0.06278896d0, - &
-            & 0.04010419d0, -0.04010419d0, -0.00993912d0, 0.47562894d0, 0.47562894d0, -0.40830627d0, -0.40830627d0, &
-            & 0.22073222d0, 0.22073222d0, 0.07828212d0, 0.07828212d0, -0.02954687d0, -0.02954687d0, 0.03057888d0, &
-            & 0.03057888d0, -0.06363999d0, -0.06363999d0, -0.00373964d0, -0.00373964d0, -0.04114668d0, 0.11249614d0, &
-            & 0.11249614d0, 0.02616679d0, 0.02616679d0, -0.07824425d0, 0.04266205d0, 0.04266205d0, -0.07420432d0, - &
-            & 0.07420432d0, -0.08251268d0, -0.08251268d0, 0.00270940d0, 0.00270940d0, 0.00199953d0, 0.00199953d0, - &
-            & 0.01292325d0, -0.01292325d0, -0.02074323d0, -0.02074323d0, -0.00789732d0, -0.00789732d0, -0.01435326d0, &
-            & -0.00180710d0, -0.00180710d0, -0.01135671d0, -0.01135671d0, 0.00020655d0, -0.00492533d0, -0.00492533d0, &
-            & 0.00270990d0, 0.00270990d0, 0.00376086d0, 0.00376086d0, 0.00044732d0, 0.00044732d0, 0.00569979d0, - &
-            & 0.00244774d0, -0.00244774d0, -0.02065564d0, 0.05249331d0, -0.02490299d0, -0.02490299d0, 0.00391460d0, &
-            & 0.00391460d0, 0.08893744d0, 0.08893744d0, -0.01051618d0, 0.00120479d0, 0.00120479d0, -0.00111888d0, - &
-            & 0.00111888d0, 0.00884757d0, 0.00416289d0, 0.00416289d0, 0.00126763d0, 0.00126763d0, -0.00706563d0, - &
-            & 0.00706563d0, -0.00840146d0, -0.00840146d0, -0.00139219d0, 0.00801673d0, 0.00801673d0, 0.00463860d0, - &
-            & 0.00096051d0, 0.00019906d0, 0.00019906d0, -0.00057576d0, -0.00057576d0]
+        coeff = [ 0.00482409e0_wp, 0.00325127e0_wp, 0.00026630e0_wp, 0.00004135e0_wp, 1.08154998e0_wp, &
+            & 0.86097723e0_wp, 0.86097723e0_wp, 0.11016112e0_wp, 0.11016112e0_wp, -0.03637740e0_wp, -0.03637740e0_wp, &
+            & 0.17491854e0_wp, 0.17491854e0_wp, 0.00057054e0_wp, - 0.00137967e0_wp, -0.00137967e0_wp, 0.00062152e0_wp, &
+            & 0.00062152e0_wp, 0.01375726e0_wp, -1.15691421e0_wp, -0.25495918e0_wp, - 0.25495918e0_wp, - &
+            & 0.02272830e0_wp, -0.02272830e0_wp, -0.18381415e0_wp, -0.18381415e0_wp, -0.34627237e0_wp, - &
+            & 0.34627237e0_wp, 0.13974588e0_wp, 0.13974588e0_wp, -0.27290455e0_wp, -0.27290455e0_wp, -0.00674721e0_wp, &
+            & -0.00674721e0_wp, -0.02179545e0_wp, - 0.02179545e0_wp, -0.02125643e0_wp, -0.02125643e0_wp, - &
+            & 0.00491968e0_wp, -0.00491968e0_wp, 0.00233773e0_wp, 0.00233773e0_wp, - 0.00050066e0_wp, - &
+            & 0.00050066e0_wp, 0.01817536e0_wp, -0.04666009e0_wp, -0.04666009e0_wp, -0.02424748e0_wp, - &
+            & 0.02424748e0_wp, - 0.01727148e0_wp, -0.00420506e0_wp, -0.00420506e0_wp, -0.00647944e0_wp, - &
+            & 0.00647944e0_wp, -1.06749007e0_wp, -0.35741007e0_wp, -0.35741007e0_wp, -0.00796836e0_wp, - &
+            & 0.00796836e0_wp, -0.42556742e0_wp, -0.42556742e0_wp, 0.06278896e0_wp, 0.06278896e0_wp, - &
+            & 0.04010419e0_wp, -0.04010419e0_wp, -0.00993912e0_wp, 0.47562894e0_wp, 0.47562894e0_wp, -0.40830627e0_wp, &
+            & -0.40830627e0_wp, 0.22073222e0_wp, 0.22073222e0_wp, 0.07828212e0_wp, 0.07828212e0_wp, -0.02954687e0_wp, &
+            & -0.02954687e0_wp, 0.03057888e0_wp, 0.03057888e0_wp, -0.06363999e0_wp, -0.06363999e0_wp, - &
+            & 0.00373964e0_wp, -0.00373964e0_wp, -0.04114668e0_wp, 0.11249614e0_wp, 0.11249614e0_wp, 0.02616679e0_wp, &
+            & 0.02616679e0_wp, -0.07824425e0_wp, 0.04266205e0_wp, 0.04266205e0_wp, -0.07420432e0_wp, - &
+            & 0.07420432e0_wp, -0.08251268e0_wp, -0.08251268e0_wp, 0.00270940e0_wp, 0.00270940e0_wp, 0.00199953e0_wp, &
+            & 0.00199953e0_wp, - 0.01292325e0_wp, -0.01292325e0_wp, -0.02074323e0_wp, -0.02074323e0_wp, - &
+            & 0.00789732e0_wp, -0.00789732e0_wp, -0.01435326e0_wp, -0.00180710e0_wp, -0.00180710e0_wp, - &
+            & 0.01135671e0_wp, -0.01135671e0_wp, 0.00020655e0_wp, -0.00492533e0_wp, -0.00492533e0_wp, 0.00270990e0_wp, &
+            & 0.00270990e0_wp, 0.00376086e0_wp, 0.00376086e0_wp, 0.00044732e0_wp, 0.00044732e0_wp, 0.00569979e0_wp, - &
+            & 0.00244774e0_wp, -0.00244774e0_wp, -0.02065564e0_wp, 0.05249331e0_wp, -0.02490299e0_wp, - &
+            & 0.02490299e0_wp, 0.00391460e0_wp, 0.00391460e0_wp, 0.08893744e0_wp, 0.08893744e0_wp, -0.01051618e0_wp, &
+            & 0.00120479e0_wp, 0.00120479e0_wp, -0.00111888e0_wp, - 0.00111888e0_wp, 0.00884757e0_wp, 0.00416289e0_wp, &
+            & 0.00416289e0_wp, 0.00126763e0_wp, 0.00126763e0_wp, -0.00706563e0_wp, - 0.00706563e0_wp, - &
+            & 0.00840146e0_wp, -0.00840146e0_wp, -0.00139219e0_wp, 0.00801673e0_wp, 0.00801673e0_wp, 0.00463860e0_wp, &
+            & - 0.00096051e0_wp, 0.00019906e0_wp, 0.00019906e0_wp, -0.00057576e0_wp, -0.00057576e0_wp]
         g_ehfid = 0
         if( g_p_ .gt. g_pmax_ )then
             print *, 'Parameter g_p_ is greater than g_pmax_'
             stop
         endif
-        rm_oo     = 1.456199d0
-        rm_oh     = 0.962755d0
-        angle_ooh = 100.9059d0
-        pi        = 4.d0 * atan(1.d0)
+        rm_oo     = 1.456199e0_wp
+        rm_oh     = 0.962755e0_wp
+        angle_ooh = 100.9059e0_wp
+        pi        = 4.e0_wp * atan(1.e0_wp)
         !        rm_oo = rm_oo / 0.529177d0
         !        rm_oh = rm_oh / 0.529177d0
-        angle_ooh = angle_ooh * pi / 180.d0
+        angle_ooh = angle_ooh * pi / 180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
         ! 1998, volume 102, pages 6325-6330
@@ -1449,19 +1470,19 @@ module chempotpy_h2o2_gen_1998_pes
         ! Q6 is the torsional mode
         ! Q1, Q2, Q3 are dimensionless, Q4, Q5, and Q6 are in radians
         d3_v = (r2 - rm_oo) / r2
-        d3_b = (-d3_v) / r2 + 1.0d0 / r2
+        d3_b = (-d3_v) / r2 + 1.0e0_wp / r2
         do g_i_ = 1, g_p_
             g_q3(g_i_) = d3_b * g_r2(g_i_)
         enddo
         q3   = d3_v
         d3_v = (r1 - rm_oh) / r1
-        d3_b = (-d3_v) / r1 + 1.0d0 / r1
+        d3_b = (-d3_v) / r1 + 1.0e0_wp / r1
         do g_i_ = 1, g_p_
             g_q1(g_i_) = d3_b * g_r1(g_i_)
         enddo
         q1   = d3_v
         d3_v = (r3 - rm_oh) / r3
-        d3_b = (-d3_v) / r3 + 1.0d0 / r3
+        d3_b = (-d3_v) / r3 + 1.0e0_wp / r3
         do g_i_ = 1, g_p_
             g_q2(g_i_) = d3_b * g_r3(g_i_)
         enddo
@@ -1476,29 +1497,29 @@ module chempotpy_h2o2_gen_1998_pes
         q5 = a2 - angle_ooh
         do i = 0, 4
             do g_i_ = 1, g_p_
-                g_q1p(g_i_,i) = 0.0d0
+                g_q1p(g_i_,i) = 0.0e0_wp
             enddo
-            q1p(i) = 1.d0
+            q1p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
-                g_q2p(g_i_,i) = 0.0d0
+                g_q2p(g_i_,i) = 0.0e0_wp
             enddo
-            q2p(i) = 1.d0
+            q2p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
-                g_q3p(g_i_,i) = 0.0d0
+                g_q3p(g_i_,i) = 0.0e0_wp
             enddo
-            q3p(i) = 1.d0
+            q3p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
-                g_q4p(g_i_,i) = 0.0d0
+                g_q4p(g_i_,i) = 0.0e0_wp
             enddo
-            q4p(i) = 1.d0
+            q4p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
-                g_q5p(g_i_,i) = 0.0d0
+                g_q5p(g_i_,i) = 0.0e0_wp
             enddo
-            q5p(i) = 1.d0
+            q5p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
-                g_q6p(g_i_,i) = 0.0d0
+                g_q6p(g_i_,i) = 0.0e0_wp
             enddo
-            q6p(i) = 1.d0
+            q6p(i) = 1.e0_wp
         enddo
         do i = 1, 4
             do g_i_ = 1, g_p_
@@ -1521,11 +1542,11 @@ module chempotpy_h2o2_gen_1998_pes
                 g_q5p(g_i_,i) = q5p(i - 1) * g_q5(g_i_) + q5 * g_q5p(g_i_,i - 1)
             enddo
             q5p(i) = q5p(i - 1) * q5
-            d2_b   = dble(i)
+            d2_b   = real(i, wp)
             do g_i_ = 1, g_p_
                 g_d1_w(g_i_) = d2_b * g_q6(g_i_)
             enddo
-            d1_w = dble(i) * q6
+            d1_w = real(i, wp) * q6
             d2_v = cos(d1_w)
             d1_p = -sin(d1_w)
             do g_i_ = 1, g_p_
@@ -1534,7 +1555,7 @@ module chempotpy_h2o2_gen_1998_pes
             q6p(i) = d2_v
         enddo
         do g_i_ = 1, g_p_
-            g_v(g_i_) = 0.0d0
+            g_v(g_i_) = 0.0e0_wp
         enddo
         v = zoe
         do i = 1, 152
@@ -1577,45 +1598,46 @@ module chempotpy_h2o2_gen_1998_pes
         !                       X(4)  - X(6)  : X, Y, Z for O1
         !                       X(7)  - X(9)  : X, Y, Z for O2
         !                       X(10) - X(12) : X, Y, Z for H2
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision            :: n, n1, n2
-        double precision            :: v, pi
-        double precision            :: coord(12), dx(12), x(12), pass(6)
-        double precision            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
-        double precision            :: c11, c12, c13, c14, c15, c16, c17, c18
-        double precision            :: rab, rbc, rcd, rac, rbd, rad
-        double precision            :: rh1o1, ro1o2, ro2h2
-        double precision            :: d1, d2, d, ah1oo, aooh2, thooh
-        double precision            :: xcomp1, ycomp1, zcomp1
-        double precision            :: xcomp2, ycomp2, zcomp2
-        double precision            :: xcomp3, ycomp3, zcomp3
-        double precision            :: xcomp4, ycomp4, zcomp4
-        double precision            :: x_normal1, y_normal1, z_normal1
-        double precision            :: x_normal2, y_normal2, z_normal2
-        double precision, parameter :: rohlow  = 1.0d0
-        double precision, parameter :: rohhigh = 4.0d0
-        double precision, parameter :: roolow  = 1.8d0
-        double precision, parameter :: roohigh = 4.0d0
-        double precision, parameter :: rhhlow  = 0.7d0
-        integer, parameter          :: g_pmax_ = 12
-        integer, parameter          :: g2pmax  = 12
-        integer                     :: g_i_, g_p_, ldg_x, ldg_v
-        double precision            :: d2_w, d1_p, d7_v, d2_p, d4_b, d5_b, d3_p, d2_v, d3_v, d7_b
-        double precision            :: d2_b, d3_b, d1_w, d4_v, d8_b, g_c1(g_pmax_), g_x(ldg_x,12), g_c2(g_pmax_), g_c3(g_pmax_), g_c4(g_pmax_)
-        double precision            :: g_c5(g_pmax_), g_c6(g_pmax_), g_c7(g_pmax_), g_c8(g_pmax_), g_c9(g_pmax_), g_c10(g_pmax_), g_c11(g_pmax_), g_c12( g_pmax_), g_c13(g_pmax_), g_c14(g_pmax_)
-        double precision            :: g_c15(g_pmax_), g_d1_w(g_pmax_), g_rab(g_pmax_), g_rbc(g_pmax_), g_rcd(g_pmax_), g_rh1o1(g_pmax_), g_ro1o2(g_pmax_), g_ro2h2(g_pmax_), g_n1(g_pmax_), g_d1(g_pmax_)
-        double precision            :: g_ah1oo(g_pmax_), g_n2(g_pmax_), g_d2(g_pmax_), g_aooh2(g_pmax_), g_xcomp1(g_pmax_), g_ycomp1(g_pmax_), g_zcomp1( g_pmax_), g_xcomp2(g_pmax_), g_ycomp2(g_pmax_), g_zcomp2(g_pmax_)
-        double precision            :: g_x_normal1(g_pmax_), g_y_normal1(g_pmax_), g_z_normal1(g_pmax_), g_xcomp3(g_pmax_), g_ycomp3(g_pmax_), g_zcomp3( g_pmax_), g_xcomp4(g_pmax_), g_ycomp4(g_pmax_), g_zcomp4(g_pmax_), g_x_normal2(g_pmax_)
-        double precision            :: g_y_normal2(g_pmax_), g_z_normal2(g_pmax_), g_n (g_pmax_), g_d2_w(g_pmax_), g_d(g_pmax_), g_thooh(g_pmax_), g_pass (g_pmax_,6), g_v(ldg_v)
-        integer                     :: g_ehfid
-        integer, parameter          :: g__pmax_ = 12
-        integer                     :: g2i, g2p, ldg_g_x, ldg_g_v
-        double precision            :: g_g_c1(g__pmax_,g_pmax_), g_g_x(ldg_g_x,ldg_x,12), g_g_c2(g__pmax_,g_pmax_), g_g_c3(g__pmax_,g_pmax_), g_g_c4(g__pmax_,g_pmax_), g_g_c5(g__pmax_,g_pmax_), g_g_c6(g__pmax_,g_pmax_), g_g_c7(g__pmax_,g_pmax_), g_g_c8(g__pmax_,g_pmax_), g_g_c9(g__pmax_,g_pmax_)
-        double precision            :: g_g_c10(g__pmax_,g_pmax_), g_g_c11(g__pmax_,g_pmax_), g_g_c12(g__pmax_,g_pmax_), g_g_c13(g__pmax_,g_pmax_), g_g_c14(g__pmax_,g_pmax_), g_g_c15(g__pmax_,g_pmax_), g_g_d1_w(g__pmax_,g_pmax_), g_g_rab(g__pmax_,g_pmax_), g_g_rbc(g__pmax_,g_pmax_), g_g_rcd(g__pmax_,g_pmax_)
-        double precision            :: g_g_rh1o1(g__pmax_,g_pmax_), g_g_ro1o2(g__pmax_,g_pmax_), g_g_ro2h2(g__pmax_,g_pmax_), g_g_n1(g__pmax_,g_pmax_), g_g_d1(g__pmax_,g_pmax_), g_g_ah1oo(g__pmax_,g_pmax_), g_g_n2(g__pmax_,g_pmax_), g_g_d2(g__pmax_,g_pmax_), g_g_aooh2(g__pmax_,g_pmax_), g_g_xcomp1(g__pmax_,g_pmax_)
-        double precision            :: g_g_ycomp1(g__pmax_,g_pmax_), g_g_zcomp1(g__pmax_,g_pmax_), g_g_xcomp2(g__pmax_,g_pmax_), g_g_ycomp2(g__pmax_,g_pmax_), g_g_zcomp2(g__pmax_,g_pmax_), g_g_x_normal1(g__pmax_,g_pmax_), g_g_y_normal1(g__pmax_,g_pmax_), g_g_z_normal1(g__pmax_,g_pmax_), g_g_xcomp3(g__pmax_,g_pmax_), g_g_ycomp3(g__pmax_,g_pmax_)
-        double precision            :: g_g_zcomp3(g__pmax_,g_pmax_), g_g_xcomp4(g__pmax_,g_pmax_), g_g_ycomp4(g__pmax_,g_pmax_), g_g_zcomp4(g__pmax_,g_pmax_), g_g_x_normal2(g__pmax_,g_pmax_), g_g_y_normal2(g__pmax_,g_pmax_), g_g_z_normal2(g__pmax_,g_pmax_), g_g_n(g__pmax_,g_pmax_), g_g_d2_w(g__pmax_,g_pmax_), g_g_d(g__pmax_,g_pmax_)
-        double precision            :: g_g_thooh(g__pmax_,g_pmax_), g_g_pass(g__pmax_,g_pmax_,6), g_g_v(ldg_g_v,ldg_v)
+        real(wp)            :: n, n1, n2
+        real(wp)            :: v, pi
+        real(wp)            :: coord(12), dx(12), x(12), pass(6)
+        real(wp)            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
+        real(wp)            :: c11, c12, c13, c14, c15, c16, c17, c18
+        real(wp)            :: rab, rbc, rcd, rac, rbd, rad
+        real(wp)            :: rh1o1, ro1o2, ro2h2
+        real(wp)            :: d1, d2, d, ah1oo, aooh2, thooh
+        real(wp)            :: xcomp1, ycomp1, zcomp1
+        real(wp)            :: xcomp2, ycomp2, zcomp2
+        real(wp)            :: xcomp3, ycomp3, zcomp3
+        real(wp)            :: xcomp4, ycomp4, zcomp4
+        real(wp)            :: x_normal1, y_normal1, z_normal1
+        real(wp)            :: x_normal2, y_normal2, z_normal2
+        real(wp), parameter :: rohlow  = 1.0e0_wp
+        real(wp), parameter :: rohhigh = 4.0e0_wp
+        real(wp), parameter :: roolow  = 1.8e0_wp
+        real(wp), parameter :: roohigh = 4.0e0_wp
+        real(wp), parameter :: rhhlow  = 0.7e0_wp
+        integer, parameter  :: g_pmax_ = 12
+        integer, parameter  :: g2pmax  = 12
+        integer             :: g_i_, g_p_, ldg_x, ldg_v
+        real(wp)            :: d2_w, d1_p, d7_v, d2_p, d4_b, d5_b, d3_p, d2_v, d3_v, d7_b
+        real(wp)            :: d2_b, d3_b, d1_w, d4_v, d8_b, g_c1(g_pmax_), g_x(ldg_x,12), g_c2(g_pmax_), g_c3(g_pmax_), g_c4(g_pmax_)
+        real(wp)            :: g_c5(g_pmax_), g_c6(g_pmax_), g_c7(g_pmax_), g_c8(g_pmax_), g_c9(g_pmax_), g_c10(g_pmax_), g_c11(g_pmax_), g_c12( g_pmax_), g_c13(g_pmax_), g_c14(g_pmax_)
+        real(wp)            :: g_c15(g_pmax_), g_d1_w(g_pmax_), g_rab(g_pmax_), g_rbc(g_pmax_), g_rcd(g_pmax_), g_rh1o1(g_pmax_), g_ro1o2(g_pmax_), g_ro2h2(g_pmax_), g_n1(g_pmax_), g_d1(g_pmax_)
+        real(wp)            :: g_ah1oo(g_pmax_), g_n2(g_pmax_), g_d2(g_pmax_), g_aooh2(g_pmax_), g_xcomp1(g_pmax_), g_ycomp1(g_pmax_), g_zcomp1( g_pmax_), g_xcomp2(g_pmax_), g_ycomp2(g_pmax_), g_zcomp2(g_pmax_)
+        real(wp)            :: g_x_normal1(g_pmax_), g_y_normal1(g_pmax_), g_z_normal1(g_pmax_), g_xcomp3(g_pmax_), g_ycomp3(g_pmax_), g_zcomp3( g_pmax_), g_xcomp4(g_pmax_), g_ycomp4(g_pmax_), g_zcomp4(g_pmax_), g_x_normal2(g_pmax_)
+        real(wp)            :: g_y_normal2(g_pmax_), g_z_normal2(g_pmax_), g_n (g_pmax_), g_d2_w(g_pmax_), g_d(g_pmax_), g_thooh(g_pmax_), g_pass (g_pmax_,6), g_v(ldg_v)
+        integer             :: g_ehfid
+        integer, parameter  :: g__pmax_ = 12
+        integer             :: g2i, g2p, ldg_g_x, ldg_g_v
+        real(wp)            :: g_g_c1(g__pmax_,g_pmax_), g_g_x(ldg_g_x,ldg_x,12), g_g_c2(g__pmax_,g_pmax_), g_g_c3(g__pmax_,g_pmax_), g_g_c4(g__pmax_,g_pmax_), g_g_c5(g__pmax_,g_pmax_), g_g_c6(g__pmax_,g_pmax_), g_g_c7(g__pmax_,g_pmax_), g_g_c8(g__pmax_,g_pmax_), g_g_c9(g__pmax_,g_pmax_)
+        real(wp)            :: g_g_c10(g__pmax_,g_pmax_), g_g_c11(g__pmax_,g_pmax_), g_g_c12(g__pmax_,g_pmax_), g_g_c13(g__pmax_,g_pmax_), g_g_c14(g__pmax_,g_pmax_), g_g_c15(g__pmax_,g_pmax_), g_g_d1_w(g__pmax_,g_pmax_), g_g_rab(g__pmax_,g_pmax_), g_g_rbc(g__pmax_,g_pmax_), g_g_rcd(g__pmax_,g_pmax_)
+        real(wp)            :: g_g_rh1o1(g__pmax_,g_pmax_), g_g_ro1o2(g__pmax_,g_pmax_), g_g_ro2h2(g__pmax_,g_pmax_), g_g_n1(g__pmax_,g_pmax_), g_g_d1(g__pmax_,g_pmax_), g_g_ah1oo(g__pmax_,g_pmax_), g_g_n2(g__pmax_,g_pmax_), g_g_d2(g__pmax_,g_pmax_), g_g_aooh2(g__pmax_,g_pmax_), g_g_xcomp1(g__pmax_,g_pmax_)
+        real(wp)            :: g_g_ycomp1(g__pmax_,g_pmax_), g_g_zcomp1(g__pmax_,g_pmax_), g_g_xcomp2(g__pmax_,g_pmax_), g_g_ycomp2(g__pmax_,g_pmax_), g_g_zcomp2(g__pmax_,g_pmax_), g_g_x_normal1(g__pmax_,g_pmax_), g_g_y_normal1(g__pmax_,g_pmax_), g_g_z_normal1(g__pmax_,g_pmax_), g_g_xcomp3(g__pmax_,g_pmax_), g_g_ycomp3(g__pmax_,g_pmax_)
+        real(wp)            :: g_g_zcomp3(g__pmax_,g_pmax_), g_g_xcomp4(g__pmax_,g_pmax_), g_g_ycomp4(g__pmax_,g_pmax_), g_g_zcomp4(g__pmax_,g_pmax_), g_g_x_normal2(g__pmax_,g_pmax_), g_g_y_normal2(g__pmax_,g_pmax_), g_g_z_normal2(g__pmax_,g_pmax_), g_g_n(g__pmax_,g_pmax_), g_g_d2_w(g__pmax_,g_pmax_), g_g_d(g__pmax_,g_pmax_)
+        real(wp)            :: g_g_thooh(g__pmax_,g_pmax_), g_g_pass(g__pmax_,g_pmax_,6), g_g_v(ldg_g_v,ldg_v)
         !        data rohlow, rohhigh /1.d0, 4.d0/
         !        data roolow, roohigh, rhhlow /1.8d0, 4.d0, 0.7d0/
         !  Calculate energy at the configuration space point
@@ -1630,7 +1652,7 @@ module chempotpy_h2o2_gen_1998_pes
             print *, 'Parameter g_p_ is greater than g_pmax_'
             stop
         endif
-        pi = 4.d0 * atan(1.d0)
+        pi = 4.e0_wp * atan(1.e0_wp)
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_c1(g2i,g_i_) = g_g_x(g2i,g_i_,1) + (-g_g_x(g2i,g_i_,4))
@@ -1745,11 +1767,11 @@ module chempotpy_h2o2_gen_1998_pes
         !  angle O1O2H2 = AOOH2
         !  TORSION HOOH = THOOH
         d2_v = c1 * c1
-        d3_p = 2.0d0 * c1
+        d3_p = 2.0e0_wp * c1
         d4_v = c2 * c2
-        d2_p = 2.0d0 * c2
+        d2_p = 2.0e0_wp * c2
         d7_v = c3 * c3
-        d1_p = 2.0d0 * c3
+        d1_p = 2.0e0_wp * c3
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_d1_w(g2i,g_i_) = d3_p * g_g_c1(g2i,g_i_) + d2_p * g_g_c2(g2i,g_i_) + d1_p * g_g_c3(g2i,g_i_)
@@ -1758,7 +1780,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d1_w = d2_v + d4_v + d7_v
         d2_v = sqrt(d1_w)
-        d1_p = 1.0d0 / (2.0d0 * d2_v)
+        d1_p = 1.0e0_wp / (2.0e0_wp * d2_v)
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_rab(g2i,g_i_) = d1_p * g_g_d1_w(g2i,g_i_)
@@ -1767,11 +1789,11 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         rab  = d2_v
         d2_v = c4 * c4
-        d3_p = 2.0d0 * c4
+        d3_p = 2.0e0_wp * c4
         d4_v = c5 * c5
-        d2_p = 2.0d0 * c5
+        d2_p = 2.0e0_wp * c5
         d7_v = c6 * c6
-        d1_p = 2.0d0 * c6
+        d1_p = 2.0e0_wp * c6
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_d1_w(g2i,g_i_) = d3_p * g_g_c4(g2i,g_i_) + d2_p * g_g_c5(g2i,g_i_) + d1_p * g_g_c6(g2i,g_i_)
@@ -1780,7 +1802,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d1_w = d2_v + d4_v + d7_v
         d2_v = sqrt(d1_w)
-        d1_p = 1.0d0 / (2.0d0 * d2_v)
+        d1_p = 1.0e0_wp / (2.0e0_wp * d2_v)
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_rbc(g2i,g_i_) = d1_p * g_g_d1_w(g2i,g_i_)
@@ -1789,11 +1811,11 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         rbc  = d2_v
         d2_v = c7 * c7
-        d3_p = 2.0d0 * c7
+        d3_p = 2.0e0_wp * c7
         d4_v = c8 * c8
-        d2_p = 2.0d0 * c8
+        d2_p = 2.0e0_wp * c8
         d7_v = c9 * c9
-        d1_p = 2.0d0 * c9
+        d1_p = 2.0e0_wp * c9
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_d1_w(g2i,g_i_) = d3_p * g_g_c7(g2i,g_i_) + d2_p * g_g_c8(g2i,g_i_) + d1_p * g_g_c9(g2i,g_i_)
@@ -1802,7 +1824,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d1_w = d2_v + d4_v + d7_v
         d2_v = sqrt(d1_w)
-        d1_p = 1.0d0 / (2.0d0 * d2_v)
+        d1_p = 1.0e0_wp / (2.0e0_wp * d2_v)
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_rcd(g2i,g_i_) = d1_p * g_g_d1_w(g2i,g_i_)
@@ -1861,7 +1883,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d1   = ro1o2 * rh1o1
         d3_v = n1 / d1
-        d2_b = 1.0d0 / d1
+        d2_b = 1.0e0_wp / d1
         d3_b = (-d3_v) / d1
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
@@ -1871,7 +1893,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d1_w = d3_v
         d2_v = acos(d1_w)
-        d1_p = (-1.0d0) / sqrt((1.0d0 - d1_w) * (1.0d0 + d1_w))
+        d1_p = (-1.0e0_wp) / sqrt((1.0e0_wp - d1_w) * (1.0e0_wp + d1_w))
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_ah1oo(g2i,g_i_) = d1_p * g_g_d1_w(g2i,g_i_)
@@ -1896,7 +1918,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d2   = ro2h2 * ro1o2
         d3_v = n2 / d2
-        d2_b = 1.0d0 / d2
+        d2_b = 1.0e0_wp / d2
         d3_b = (-d3_v) / d2
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
@@ -1906,7 +1928,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d1_w = d3_v
         d2_v = acos(d1_w)
-        d1_p = (-1.0d0) / sqrt((1.0d0 - d1_w) * (1.0d0 + d1_w))
+        d1_p = (-1.0e0_wp) / sqrt((1.0e0_wp - d1_w) * (1.0e0_wp + d1_w))
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_aooh2(g2i,g_i_) = d1_p * g_g_d1_w(g2i,g_i_)
@@ -2087,9 +2109,9 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d2_w = x_normal2 * x_normal2 + y_normal2 * y_normal2 + z_normal2 * z_normal2
         d2_v = sqrt(d1_w)
-        d2_p = 1.0d0 / (2.0d0 * d2_v)
+        d2_p = 1.0e0_wp / (2.0e0_wp * d2_v)
         d4_v = sqrt(d2_w)
-        d1_p = 1.0d0 / (2.0d0 * d4_v)
+        d1_p = 1.0e0_wp / (2.0e0_wp * d4_v)
         d4_b = d2_v * d1_p
         d5_b = d4_v * d2_p
         do g_i_ = 1, g_p_
@@ -2116,7 +2138,7 @@ module chempotpy_h2o2_gen_1998_pes
         !       thooh=pi
         !      else
         d3_v = n / d
-        d2_b = 1.0d0 / d
+        d2_b = 1.0e0_wp / d
         d3_b = (-d3_v) / d
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
@@ -2126,7 +2148,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         d1_w = d3_v
         d2_v = acos(d1_w)
-        d1_p = (-1.0d0) / sqrt((1.0d0 - d1_w) * (1.0d0 + d1_w))
+        d1_p = (-1.0e0_wp) / sqrt((1.0e0_wp - d1_w) * (1.0e0_wp + d1_w))
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_thooh(g2i,g_i_) = d1_p * g_g_d1_w(g2i,g_i_)
@@ -2186,30 +2208,31 @@ module chempotpy_h2o2_gen_1998_pes
     !> @brief Evaluate g_g_vibpot for the H2O2_GEN_1998 potential.
     subroutine g_g_vibpot( g2p, g_p_, coord, g_coord, g_g_coord, ldg_&
             &g_coord, ldg_coord, v, g_v, g_g_v, ldg_g_v, ldg_v )
+        use chempotpy_kinds, only: wp
         implicit none
-        double precision   :: v, pi
-        double precision   :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
-        double precision   :: q5p(0:4), q6p(0:4)
-        double precision   :: ind1(152), ind2(152), ind3(152), ind4(152)
-        double precision   :: ind5(152), ind6(152), coeff(152)
-        double precision   :: rm_oo, rm_oh, angle_ooh, r1, r2, r3
-        double precision   :: a1, a2, q1, q2, q3, q4, q5, q6
+        real(wp)           :: v, pi
+        real(wp)           :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
+        real(wp)           :: q5p(0:4), q6p(0:4)
+        real(wp)           :: ind1(152), ind2(152), ind3(152), ind4(152)
+        real(wp)           :: ind5(152), ind6(152), coeff(152)
+        real(wp)           :: rm_oo, rm_oh, angle_ooh, r1, r2, r3
+        real(wp)           :: a1, a2, q1, q2, q3, q4, q5, q6
         integer            :: i
-        double precision   :: zoe
+        real(wp)           :: zoe
         integer, parameter :: g_pmax_ = 12
         integer            :: g_i_, g_p_, ldg_coord, ldg_v
-        double precision   :: d14_b, d13_b, d7_v, d11_b, d10_b, d9_b, d8_b, d7_b, d2_v, d3_v
-        double precision   :: d6_b, d2_b, d3_b, d1_w, d1_p, d11_v, d5_v, d9_v, g_r1(g_pmax_), g_coord(ldg_coord,6)
-        double precision   :: g_r2(g_pmax_), g_r3(g_pmax_), g_a1(g_pmax_), g_a2(g_pmax_), g_q6(g_pmax_), g_q3(g_pmax_), g_q1(g_pmax_), g_q2(g_pmax_), g_q4(g_pmax_), g_q5(g_pmax_)
-        double precision   :: g_q1p(g_pmax_,0:4), g_q2p(g_pmax_,0:4), g_q3p (g_pmax_,0:4), g_q4p(g_pmax_,0:4), g_q5p(g_pmax_,0:4), g_q6p(g_pmax_,0:4), g_d1_w(g_pmax_), g_v(ldg_v)
+        real(wp)           :: d14_b, d13_b, d7_v, d11_b, d10_b, d9_b, d8_b, d7_b, d2_v, d3_v
+        real(wp)           :: d6_b, d2_b, d3_b, d1_w, d1_p, d11_v, d5_v, d9_v, g_r1(g_pmax_), g_coord(ldg_coord,6)
+        real(wp)           :: g_r2(g_pmax_), g_r3(g_pmax_), g_a1(g_pmax_), g_a2(g_pmax_), g_q6(g_pmax_), g_q3(g_pmax_), g_q1(g_pmax_), g_q2(g_pmax_), g_q4(g_pmax_), g_q5(g_pmax_)
+        real(wp)           :: g_q1p(g_pmax_,0:4), g_q2p(g_pmax_,0:4), g_q3p (g_pmax_,0:4), g_q4p(g_pmax_,0:4), g_q5p(g_pmax_,0:4), g_q6p(g_pmax_,0:4), g_d1_w(g_pmax_), g_v(ldg_v)
         integer            :: g_ehfid
         integer, parameter :: g__pmax_ = 12
         integer            :: g2i, g2p, ldg_g_coord, ldg_g_v
-        double precision   :: g_g_r1(g__pmax_,g_pmax_), g_g_coord(ldg_g_coord,ldg_coord,6), g_g_r2(g__pmax_,g_pmax_), g_g_r3(g__pmax_,g_pmax_), g_g_a1(g__pmax_,g_pmax_), g_g_a2(g__pmax_,g_pmax_), g_g_q6 (g__pmax_,g_pmax_), g_g_q3(g__pmax_,g_pmax_), g_g_q1(g__pmax_,g_pmax_), g_g_q2(g__pmax_,g_pmax_)
-        double precision   :: g_g_q4(g__pmax_,g_pmax_), g_g_q5(g__pmax_,g_pmax_), g_g_q1p(g__pmax_,g_pmax_,0:4), g_g_q2p(g__pmax_,g_pmax_,0:4), g_g_q3p(g__pmax_,g_pmax_,0:4), g_g_q4p(g__pmax_,g_pmax_,0:4), g_g_q5p(g__pmax_,g_pmax_,0:4), g_g_q6p(g__pmax_,g_pmax_,0:4), g_g_d1_w(g__pmax_,g_pmax_), g_g_v(ldg_g_v,ldg_v)
+        real(wp)           :: g_g_r1(g__pmax_,g_pmax_), g_g_coord(ldg_g_coord,ldg_coord,6), g_g_r2(g__pmax_,g_pmax_), g_g_r3(g__pmax_,g_pmax_), g_g_a1(g__pmax_,g_pmax_), g_g_a2(g__pmax_,g_pmax_), g_g_q6 (g__pmax_,g_pmax_), g_g_q3(g__pmax_,g_pmax_), g_g_q1(g__pmax_,g_pmax_), g_g_q2(g__pmax_,g_pmax_)
+        real(wp)           :: g_g_q4(g__pmax_,g_pmax_), g_g_q5(g__pmax_,g_pmax_), g_g_q1p(g__pmax_,g_pmax_,0:4), g_g_q2p(g__pmax_,g_pmax_,0:4), g_g_q3p(g__pmax_,g_pmax_,0:4), g_g_q4p(g__pmax_,g_pmax_,0:4), g_g_q5p(g__pmax_,g_pmax_,0:4), g_g_q6p(g__pmax_,g_pmax_,0:4), g_g_d1_w(g__pmax_,g_pmax_), g_g_v(ldg_g_v,ldg_v)
         !      data rm_oo, rm_oh, ANGLE_OOH/1.456199d0, 0.962755d0, 100.9059d0/
         !   convert offset parameters to bohr and radians
-        zoe = 3.995139982058d-3
+        zoe = 3.995139982058e-3_wp
         ind1 = [ 0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1, 2, &
             & 1, 0, 2, 0, 1, 0, 2, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 4, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 1, 0, 0, &
             & 0, 3, 0, 0, 0, 1, 3, 1, 0, 3, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 2, 0, 2, 0, 0, 0, 1, 1, 2, 0, 1, 0, 1, 0, &
@@ -2240,28 +2263,34 @@ module chempotpy_h2o2_gen_1998_pes
             & 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
             & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &
             & 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
-        coeff = [ 0.00482409d0, 0.00325127d0, 0.00026630d0, 0.00004135d0, 1.08154998d0, 0.86097723d0, 0.86097723d0, &
-            & 0.11016112d0, 0.11016112d0, -0.03637740d0, -0.03637740d0, 0.17491854d0, 0.17491854d0, 0.00057054d0, - &
-            & 0.00137967d0, -0.00137967d0, 0.00062152d0, 0.00062152d0, 0.01375726d0, -1.15691421d0, -0.25495918d0, - &
-            & 0.25495918d0, -0.02272830d0, -0.02272830d0, -0.18381415d0, -0.18381415d0, -0.34627237d0, -0.34627237d0, &
-            & 0.13974588d0, 0.13974588d0, -0.27290455d0, -0.27290455d0, -0.00674721d0, -0.00674721d0, -0.02179545d0, - &
-            & 0.02179545d0, -0.02125643d0, -0.02125643d0, -0.00491968d0, -0.00491968d0, 0.00233773d0, 0.00233773d0, - &
-            & 0.00050066d0, -0.00050066d0, 0.01817536d0, -0.04666009d0, -0.04666009d0, -0.02424748d0, -0.02424748d0, - &
-            & 0.01727148d0, -0.00420506d0, -0.00420506d0, -0.00647944d0, -0.00647944d0, -1.06749007d0, -0.35741007d0, &
-            & -0.35741007d0, -0.00796836d0, -0.00796836d0, -0.42556742d0, -0.42556742d0, 0.06278896d0, 0.06278896d0, - &
-            & 0.04010419d0, -0.04010419d0, -0.00993912d0, 0.47562894d0, 0.47562894d0, -0.40830627d0, -0.40830627d0, &
-            & 0.22073222d0, 0.22073222d0, 0.07828212d0, 0.07828212d0, -0.02954687d0, -0.02954687d0, 0.03057888d0, &
-            & 0.03057888d0, -0.06363999d0, -0.06363999d0, -0.00373964d0, -0.00373964d0, -0.04114668d0, 0.11249614d0, &
-            & 0.11249614d0, 0.02616679d0, 0.02616679d0, -0.07824425d0, 0.04266205d0, 0.04266205d0, -0.07420432d0, - &
-            & 0.07420432d0, -0.08251268d0, -0.08251268d0, 0.00270940d0, 0.00270940d0, 0.00199953d0, 0.00199953d0, - &
-            & 0.01292325d0, -0.01292325d0, -0.02074323d0, -0.02074323d0, -0.00789732d0, -0.00789732d0, -0.01435326d0, &
-            & -0.00180710d0, -0.00180710d0, -0.01135671d0, -0.01135671d0, 0.00020655d0, -0.00492533d0, -0.00492533d0, &
-            & 0.00270990d0, 0.00270990d0, 0.00376086d0, 0.00376086d0, 0.00044732d0, 0.00044732d0, 0.00569979d0, - &
-            & 0.00244774d0, -0.00244774d0, -0.02065564d0, 0.05249331d0, -0.02490299d0, -0.02490299d0, 0.00391460d0, &
-            & 0.00391460d0, 0.08893744d0, 0.08893744d0, -0.01051618d0, 0.00120479d0, 0.00120479d0, -0.00111888d0, - &
-            & 0.00111888d0, 0.00884757d0, 0.00416289d0, 0.00416289d0, 0.00126763d0, 0.00126763d0, -0.00706563d0, - &
-            & 0.00706563d0, -0.00840146d0, -0.00840146d0, -0.00139219d0, 0.00801673d0, 0.00801673d0, 0.00463860d0, - &
-            & 0.00096051d0, 0.00019906d0, 0.00019906d0, -0.00057576d0, -0.00057576d0]
+        coeff = [ 0.00482409e0_wp, 0.00325127e0_wp, 0.00026630e0_wp, 0.00004135e0_wp, 1.08154998e0_wp, &
+            & 0.86097723e0_wp, 0.86097723e0_wp, 0.11016112e0_wp, 0.11016112e0_wp, -0.03637740e0_wp, -0.03637740e0_wp, &
+            & 0.17491854e0_wp, 0.17491854e0_wp, 0.00057054e0_wp, - 0.00137967e0_wp, -0.00137967e0_wp, 0.00062152e0_wp, &
+            & 0.00062152e0_wp, 0.01375726e0_wp, -1.15691421e0_wp, -0.25495918e0_wp, - 0.25495918e0_wp, - &
+            & 0.02272830e0_wp, -0.02272830e0_wp, -0.18381415e0_wp, -0.18381415e0_wp, -0.34627237e0_wp, - &
+            & 0.34627237e0_wp, 0.13974588e0_wp, 0.13974588e0_wp, -0.27290455e0_wp, -0.27290455e0_wp, -0.00674721e0_wp, &
+            & -0.00674721e0_wp, -0.02179545e0_wp, - 0.02179545e0_wp, -0.02125643e0_wp, -0.02125643e0_wp, - &
+            & 0.00491968e0_wp, -0.00491968e0_wp, 0.00233773e0_wp, 0.00233773e0_wp, - 0.00050066e0_wp, - &
+            & 0.00050066e0_wp, 0.01817536e0_wp, -0.04666009e0_wp, -0.04666009e0_wp, -0.02424748e0_wp, - &
+            & 0.02424748e0_wp, - 0.01727148e0_wp, -0.00420506e0_wp, -0.00420506e0_wp, -0.00647944e0_wp, - &
+            & 0.00647944e0_wp, -1.06749007e0_wp, -0.35741007e0_wp, -0.35741007e0_wp, -0.00796836e0_wp, - &
+            & 0.00796836e0_wp, -0.42556742e0_wp, -0.42556742e0_wp, 0.06278896e0_wp, 0.06278896e0_wp, - &
+            & 0.04010419e0_wp, -0.04010419e0_wp, -0.00993912e0_wp, 0.47562894e0_wp, 0.47562894e0_wp, -0.40830627e0_wp, &
+            & -0.40830627e0_wp, 0.22073222e0_wp, 0.22073222e0_wp, 0.07828212e0_wp, 0.07828212e0_wp, -0.02954687e0_wp, &
+            & -0.02954687e0_wp, 0.03057888e0_wp, 0.03057888e0_wp, -0.06363999e0_wp, -0.06363999e0_wp, - &
+            & 0.00373964e0_wp, -0.00373964e0_wp, -0.04114668e0_wp, 0.11249614e0_wp, 0.11249614e0_wp, 0.02616679e0_wp, &
+            & 0.02616679e0_wp, -0.07824425e0_wp, 0.04266205e0_wp, 0.04266205e0_wp, -0.07420432e0_wp, - &
+            & 0.07420432e0_wp, -0.08251268e0_wp, -0.08251268e0_wp, 0.00270940e0_wp, 0.00270940e0_wp, 0.00199953e0_wp, &
+            & 0.00199953e0_wp, - 0.01292325e0_wp, -0.01292325e0_wp, -0.02074323e0_wp, -0.02074323e0_wp, - &
+            & 0.00789732e0_wp, -0.00789732e0_wp, -0.01435326e0_wp, -0.00180710e0_wp, -0.00180710e0_wp, - &
+            & 0.01135671e0_wp, -0.01135671e0_wp, 0.00020655e0_wp, -0.00492533e0_wp, -0.00492533e0_wp, 0.00270990e0_wp, &
+            & 0.00270990e0_wp, 0.00376086e0_wp, 0.00376086e0_wp, 0.00044732e0_wp, 0.00044732e0_wp, 0.00569979e0_wp, - &
+            & 0.00244774e0_wp, -0.00244774e0_wp, -0.02065564e0_wp, 0.05249331e0_wp, -0.02490299e0_wp, - &
+            & 0.02490299e0_wp, 0.00391460e0_wp, 0.00391460e0_wp, 0.08893744e0_wp, 0.08893744e0_wp, -0.01051618e0_wp, &
+            & 0.00120479e0_wp, 0.00120479e0_wp, -0.00111888e0_wp, - 0.00111888e0_wp, 0.00884757e0_wp, 0.00416289e0_wp, &
+            & 0.00416289e0_wp, 0.00126763e0_wp, 0.00126763e0_wp, -0.00706563e0_wp, - 0.00706563e0_wp, - &
+            & 0.00840146e0_wp, -0.00840146e0_wp, -0.00139219e0_wp, 0.00801673e0_wp, 0.00801673e0_wp, 0.00463860e0_wp, &
+            & - 0.00096051e0_wp, 0.00019906e0_wp, 0.00019906e0_wp, -0.00057576e0_wp, -0.00057576e0_wp]
         g_ehfid = 0
         if( g2p .gt. g__pmax_ )then
             print *, 'Parameter g2p is greater than g__pmax_'
@@ -2271,13 +2300,13 @@ module chempotpy_h2o2_gen_1998_pes
             print *, 'Parameter g_p_ is greater than g_pmax_'
             stop
         endif
-        rm_oo     = 1.456199d0
-        rm_oh     = 0.962755d0
-        angle_ooh = 100.9059d0
-        pi        = 4.d0 * atan(1.d0)
+        rm_oo     = 1.456199e0_wp
+        rm_oh     = 0.962755e0_wp
+        angle_ooh = 100.9059e0_wp
+        pi        = 4.e0_wp * atan(1.e0_wp)
         !        rm_oo = rm_oo / 0.529177d0
         !        rm_oh = rm_oh / 0.529177d0
-        angle_ooh = angle_ooh * pi / 180.d0
+        angle_ooh = angle_ooh * pi / 180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
         ! 1998, volume 102, pages 6325-6330
@@ -2337,7 +2366,7 @@ module chempotpy_h2o2_gen_1998_pes
         ! Q6 is the torsional mode
         ! Q1, Q2, Q3 are dimensionless, Q4, Q5, and Q6 are in radians
         d3_v = (r2 - rm_oo) / r2
-        d3_b = (-d3_v) / r2 + 1.0d0 / r2
+        d3_b = (-d3_v) / r2 + 1.0e0_wp / r2
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_q3(g2i,g_i_) = d3_b * g_g_r2(g2i,g_i_)
@@ -2346,7 +2375,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         q3   = d3_v
         d3_v = (r1 - rm_oh) / r1
-        d3_b = (-d3_v) / r1 + 1.0d0 / r1
+        d3_b = (-d3_v) / r1 + 1.0e0_wp / r1
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_q1(g2i,g_i_) = d3_b * g_g_r1(g2i,g_i_)
@@ -2355,7 +2384,7 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         q1   = d3_v
         d3_v = (r3 - rm_oh) / r3
-        d3_b = (-d3_v) / r3 + 1.0d0 / r3
+        d3_b = (-d3_v) / r3 + 1.0e0_wp / r3
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_q2(g2i,g_i_) = d3_b * g_g_r3(g2i,g_i_)
@@ -2380,46 +2409,46 @@ module chempotpy_h2o2_gen_1998_pes
         do i = 0, 4
             do g_i_ = 1, g_p_
                 do g2i = 1, g2p
-                    g_g_q1p(g2i,g_i_,i) = 0.0d0
+                    g_g_q1p(g2i,g_i_,i) = 0.0e0_wp
                 enddo
-                g_q1p(g_i_,i) = 0.0d0
+                g_q1p(g_i_,i) = 0.0e0_wp
             enddo
-            q1p(i) = 1.d0
+            q1p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
                 do g2i = 1, g2p
-                    g_g_q2p(g2i,g_i_,i) = 0.0d0
+                    g_g_q2p(g2i,g_i_,i) = 0.0e0_wp
                 enddo
-                g_q2p(g_i_,i) = 0.0d0
+                g_q2p(g_i_,i) = 0.0e0_wp
             enddo
-            q2p(i) = 1.d0
+            q2p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
                 do g2i = 1, g2p
-                    g_g_q3p(g2i,g_i_,i) = 0.0d0
+                    g_g_q3p(g2i,g_i_,i) = 0.0e0_wp
                 enddo
-                g_q3p(g_i_,i) = 0.0d0
+                g_q3p(g_i_,i) = 0.0e0_wp
             enddo
-            q3p(i) = 1.d0
+            q3p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
                 do g2i = 1, g2p
-                    g_g_q4p(g2i,g_i_,i) = 0.0d0
+                    g_g_q4p(g2i,g_i_,i) = 0.0e0_wp
                 enddo
-                g_q4p(g_i_,i) = 0.0d0
+                g_q4p(g_i_,i) = 0.0e0_wp
             enddo
-            q4p(i) = 1.d0
+            q4p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
                 do g2i = 1, g2p
-                    g_g_q5p(g2i,g_i_,i) = 0.0d0
+                    g_g_q5p(g2i,g_i_,i) = 0.0e0_wp
                 enddo
-                g_q5p(g_i_,i) = 0.0d0
+                g_q5p(g_i_,i) = 0.0e0_wp
             enddo
-            q5p(i) = 1.d0
+            q5p(i) = 1.e0_wp
             do g_i_ = 1, g_p_
                 do g2i = 1, g2p
-                    g_g_q6p(g2i,g_i_,i) = 0.0d0
+                    g_g_q6p(g2i,g_i_,i) = 0.0e0_wp
                 enddo
-                g_q6p(g_i_,i) = 0.0d0
+                g_q6p(g_i_,i) = 0.0e0_wp
             enddo
-            q6p(i) = 1.d0
+            q6p(i) = 1.e0_wp
         enddo
         do i = 1, 4
             do g_i_ = 1, g_p_
@@ -2457,14 +2486,14 @@ module chempotpy_h2o2_gen_1998_pes
                 g_q5p(g_i_,i) = q5p(i - 1) * g_q5(g_i_) + q5 * g_q5p(g_i_,i - 1)
             enddo
             q5p(i) = q5p(i - 1) * q5
-            d2_b   = dble(i)
+            d2_b   = real(i, wp)
             do g_i_ = 1, g_p_
                 do g2i = 1, g2p
                     g_g_d1_w(g2i,g_i_) = d2_b * g_g_q6(g2i,g_i_)
                 enddo
                 g_d1_w(g_i_) = d2_b * g_q6(g_i_)
             enddo
-            d1_w = dble(i) * q6
+            d1_w = real(i, wp) * q6
             d2_v = cos(d1_w)
             d1_p = -sin(d1_w)
             do g_i_ = 1, g_p_
@@ -2477,9 +2506,9 @@ module chempotpy_h2o2_gen_1998_pes
         enddo
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
-                g_g_v(g2i,g_i_) = 0.0d0
+                g_g_v(g2i,g_i_) = 0.0e0_wp
             enddo
-            g_v(g_i_) = 0.0d0
+            g_v(g_i_) = 0.0e0_wp
         enddo
         v = zoe
         do i = 1, 152
@@ -2512,6 +2541,7 @@ module chempotpy_h2o2_gen_1998_pes
 
     !> @brief Evaluate SETUP for the H2O2_GEN_1998 potential.
     subroutine setup( n3tm )
+        use chempotpy_kinds, only: wp
         implicit none
         integer :: n3tm
         !   N3TMMN = 3 * NATOMS
@@ -2535,13 +2565,14 @@ end module chempotpy_h2o2_gen_1998_pes
 !> @brief Expose H2O2_GEN_1998 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_h2o2_gen_1998_pes, only: evaluate
+    use chempotpy_kinds,             only: wp
     implicit none
-    integer, parameter            :: natoms  = 4
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 4
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

@@ -49,6 +49,7 @@
 
 !> @brief Implement OH2_GEN_SL1979, a potential energy surface for OH2.
 module chempotpy_oh2_gen_sl1979_pes
+    use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
@@ -57,123 +58,124 @@ module chempotpy_oh2_gen_sl1979_pes
 
     !> @brief Evaluate the OH2_GEN_SL1979 potential energy surface for OH2.
     subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, legacy_hartree_to_electronvolt
+        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
-        integer, parameter            :: nstates = 1
-        integer, parameter            :: natoms  = 3
-        integer, parameter            :: natom   = 25
-        integer, parameter            :: isurf   = 5
-        integer, parameter            :: jsurf   = int(isurf*(isurf+1)/2)
-        integer, parameter            :: n3atom  = 75
-        integer, intent(in)           :: igrad
-        double precision, intent(in)  :: x(natoms,3)
-        double precision, intent(out) :: p(nstates), g(nstates,natoms,3)
-        double precision, intent(out) :: d(nstates,nstates,natoms,3)
-        double precision              :: asycm_easyab
-        double precision              :: asycm_easyac
-        double precision              :: asycm_easybc
-        double precision              :: infocm_cartnu(natom,3)
-        integer                       :: infocm_icartr
-        integer                       :: infocm_indexes(natom)
-        integer                       :: infocm_irctnt
-        integer                       :: infocm_mder
-        integer                       :: infocm_msurf
-        integer                       :: infocm_natoms
-        character                     :: infocm_ref(5)
-        double precision              :: ndercm_step
-        double precision              :: precm_a
-        double precision              :: precm_al(3)
-        double precision              :: precm_alf
-        double precision              :: precm_b
-        double precision              :: precm_c(50)
-        double precision              :: precm_chi(3)
-        double precision              :: precm_gam
-        double precision              :: precm_s(3)
-        double precision              :: precm_v(4)
-        double precision              :: precm_vm(3)
-        double precision              :: precm_x(3)
-        double precision              :: pt1cm_degsdr(n3atom)
-        double precision              :: pt1cm_engygs
-        double precision              :: pt1cm_r(n3atom)
-        double precision              :: pt3cm_ezero(isurf+1)
-        double precision              :: pt4cm_deesdr(n3atom,isurf)
-        double precision              :: pt4cm_engyes(isurf)
-        double precision              :: pt5cm_deijdr(n3atom,jsurf)
-        double precision              :: pt5cm_engyij(jsurf)
-        double precision              :: satocm_bet(3)
-        double precision              :: satocm_de(3)
-        double precision              :: satocm_xre(3)
-        double precision              :: usricm_anuzero
-        double precision              :: usricm_cart(natom,3)
-        integer                       :: usricm_nasurf(isurf+1,isurf+1)
-        integer                       :: usricm_nder
-        integer                       :: usricm_nflag(20)
-        integer                       :: usricm_nulbl(natom)
-        double precision              :: usrocm_descart(natom,3,isurf)
-        double precision              :: usrocm_dgscart(natom,3)
-        double precision              :: usrocm_dijcart(natom,3,jsurf)
-        double precision              :: usrocm_pengyes(isurf)
-        double precision              :: usrocm_pengygs
-        double precision              :: usrocm_pengyij(jsurf)
-        double precision              :: utilcm_cnvrtd
-        double precision              :: utilcm_cnvrtde
-        double precision              :: utilcm_cnvrte
-        double precision              :: utilcm_descartnu(natom,3,isurf)
-        double precision              :: utilcm_dgscartnu(natom,3)
-        double precision              :: utilcm_dijcartnu(natom,3,jsurf)
-        integer                       :: utilcm_ireorder
-        integer                       :: utilcm_kediag
-        integer                       :: utilcm_keoffd
-        integer                       :: utilcm_ksdiag
-        integer                       :: utilcm_ksoffd
-        double precision              :: v
-        integer                       :: iatom, idir, istate
+        integer, parameter    :: nstates = 1
+        integer, parameter    :: natoms  = 3
+        integer, parameter    :: natom   = 25
+        integer, parameter    :: isurf   = 5
+        integer, parameter    :: jsurf   = int(isurf*(isurf+1)/2)
+        integer, parameter    :: n3atom  = 75
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
+        real(wp), intent(out) :: d(nstates,nstates,natoms,3)
+        real(wp)              :: asycm_easyab
+        real(wp)              :: asycm_easyac
+        real(wp)              :: asycm_easybc
+        real(wp)              :: infocm_cartnu(natom,3)
+        integer               :: infocm_icartr
+        integer               :: infocm_indexes(natom)
+        integer               :: infocm_irctnt
+        integer               :: infocm_mder
+        integer               :: infocm_msurf
+        integer               :: infocm_natoms
+        character             :: infocm_ref(5)
+        real(wp)              :: ndercm_step
+        real(wp)              :: precm_a
+        real(wp)              :: precm_al(3)
+        real(wp)              :: precm_alf
+        real(wp)              :: precm_b
+        real(wp)              :: precm_c(50)
+        real(wp)              :: precm_chi(3)
+        real(wp)              :: precm_gam
+        real(wp)              :: precm_s(3)
+        real(wp)              :: precm_v(4)
+        real(wp)              :: precm_vm(3)
+        real(wp)              :: precm_x(3)
+        real(wp)              :: pt1cm_degsdr(n3atom)
+        real(wp)              :: pt1cm_engygs
+        real(wp)              :: pt1cm_r(n3atom)
+        real(wp)              :: pt3cm_ezero(isurf+1)
+        real(wp)              :: pt4cm_deesdr(n3atom,isurf)
+        real(wp)              :: pt4cm_engyes(isurf)
+        real(wp)              :: pt5cm_deijdr(n3atom,jsurf)
+        real(wp)              :: pt5cm_engyij(jsurf)
+        real(wp)              :: satocm_bet(3)
+        real(wp)              :: satocm_de(3)
+        real(wp)              :: satocm_xre(3)
+        real(wp)              :: usricm_anuzero
+        real(wp)              :: usricm_cart(natom,3)
+        integer               :: usricm_nasurf(isurf+1,isurf+1)
+        integer               :: usricm_nder
+        integer               :: usricm_nflag(20)
+        integer               :: usricm_nulbl(natom)
+        real(wp)              :: usrocm_descart(natom,3,isurf)
+        real(wp)              :: usrocm_dgscart(natom,3)
+        real(wp)              :: usrocm_dijcart(natom,3,jsurf)
+        real(wp)              :: usrocm_pengyes(isurf)
+        real(wp)              :: usrocm_pengygs
+        real(wp)              :: usrocm_pengyij(jsurf)
+        real(wp)              :: utilcm_cnvrtd
+        real(wp)              :: utilcm_cnvrtde
+        real(wp)              :: utilcm_cnvrte
+        real(wp)              :: utilcm_descartnu(natom,3,isurf)
+        real(wp)              :: utilcm_dgscartnu(natom,3)
+        real(wp)              :: utilcm_dijcartnu(natom,3,jsurf)
+        integer               :: utilcm_ireorder
+        integer               :: utilcm_kediag
+        integer               :: utilcm_keoffd
+        integer               :: utilcm_ksdiag
+        integer               :: utilcm_ksoffd
+        real(wp)              :: v
+        integer               :: iatom, idir, istate
         !initialize
-        asycm_easyab     = 0.d0; asycm_easyac = 0.d0; asycm_easybc = 0.d0; infocm_cartnu = 0.d0; infocm_icartr = 0
+        asycm_easyab     = 0.e0_wp; asycm_easyac = 0.e0_wp; asycm_easybc = 0.e0_wp; infocm_cartnu = 0.e0_wp; infocm_icartr = 0
         infocm_indexes   = 0; infocm_irctnt = 0; infocm_mder = 0; infocm_msurf = 0; infocm_natoms = 0
         infocm_ref       = ' '
-        ndercm_step      = 0.d0
-        precm_a          = 0.d0
-        precm_al         = 0.d0
-        precm_alf        = 0.d0
-        precm_b          = 0.d0
-        precm_c          = 0.d0
-        precm_chi        = 0.d0
-        precm_gam        = 0.d0
-        precm_s          = 0.d0
-        precm_v          = 0.d0
-        precm_vm         = 0.d0
-        precm_x          = 0.d0
-        pt1cm_degsdr     = 0.d0
-        pt1cm_engygs     = 0.d0
-        pt1cm_r          = 0.d0
-        pt3cm_ezero      = 0.d0
-        pt4cm_deesdr     = 0.d0
-        pt4cm_engyes     = 0.d0
-        pt5cm_deijdr     = 0.d0
-        pt5cm_engyij     = 0.d0
-        satocm_bet       = 0.d0
-        satocm_de        = 0.d0
-        satocm_xre       = 0.d0
-        usricm_anuzero   = 0.d0
-        usricm_cart      = 0.d0
+        ndercm_step      = 0.e0_wp
+        precm_a          = 0.e0_wp
+        precm_al         = 0.e0_wp
+        precm_alf        = 0.e0_wp
+        precm_b          = 0.e0_wp
+        precm_c          = 0.e0_wp
+        precm_chi        = 0.e0_wp
+        precm_gam        = 0.e0_wp
+        precm_s          = 0.e0_wp
+        precm_v          = 0.e0_wp
+        precm_vm         = 0.e0_wp
+        precm_x          = 0.e0_wp
+        pt1cm_degsdr     = 0.e0_wp
+        pt1cm_engygs     = 0.e0_wp
+        pt1cm_r          = 0.e0_wp
+        pt3cm_ezero      = 0.e0_wp
+        pt4cm_deesdr     = 0.e0_wp
+        pt4cm_engyes     = 0.e0_wp
+        pt5cm_deijdr     = 0.e0_wp
+        pt5cm_engyij     = 0.e0_wp
+        satocm_bet       = 0.e0_wp
+        satocm_de        = 0.e0_wp
+        satocm_xre       = 0.e0_wp
+        usricm_anuzero   = 0.e0_wp
+        usricm_cart      = 0.e0_wp
         usricm_nasurf    = 0
         usricm_nder      = 0
         usricm_nflag     = 0
         usricm_nulbl     = 0
-        usrocm_descart   = 0.d0
-        usrocm_dgscart   = 0.d0
-        usrocm_dijcart   = 0.d0
-        usrocm_pengyes   = 0.d0
-        usrocm_pengygs   = 0.d0
-        usrocm_pengyij   = 0.d0
-        utilcm_cnvrtd    = 0.d0
-        utilcm_cnvrtde   = 0.d0
-        utilcm_cnvrte    = 0.d0
-        utilcm_descartnu = 0.d0
-        utilcm_dgscartnu = 0.d0
-        utilcm_dijcartnu = 0.d0
+        usrocm_descart   = 0.e0_wp
+        usrocm_dgscart   = 0.e0_wp
+        usrocm_dijcart   = 0.e0_wp
+        usrocm_pengyes   = 0.e0_wp
+        usrocm_pengygs   = 0.e0_wp
+        usrocm_pengyij   = 0.e0_wp
+        utilcm_cnvrtd    = 0.e0_wp
+        utilcm_cnvrtde   = 0.e0_wp
+        utilcm_cnvrte    = 0.e0_wp
+        utilcm_descartnu = 0.e0_wp
+        utilcm_dgscartnu = 0.e0_wp
+        utilcm_dijcartnu = 0.e0_wp
         utilcm_ireorder  = 0
         utilcm_kediag    = 0
         utilcm_keoffd    = 0
@@ -183,51 +185,52 @@ module chempotpy_oh2_gen_sl1979_pes
             & 0, 0, 0, 0, 0, 0, 0, 0], shape(usricm_nasurf))
         usricm_nder    = 0
         usricm_nflag   = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        usricm_anuzero = 0.0d0
+        usricm_anuzero = 0.0e0_wp
         infocm_icartr  = 3
         infocm_msurf   = 0
         infocm_mder    = 1
         usricm_nulbl   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         infocm_natoms  = 3
-        satocm_de      = [4.035d0, 4.1662d0, 4.035d0]
-        satocm_xre     = [0.9923d0, 0.7590d0, 0.9923d0]
-        satocm_bet     = [2.4113d0, 2.0682d0, 2.4113d0]
-        ndercm_step    = 5.0d-7
-        precm_a        = 0.157002d-03
-        precm_b        = -0.162301d-01
-        precm_alf      = 0.9d0
-        precm_gam      = 0.045d0
-        precm_al       = [1.0d0, 0.8d0, 1.0d0]
-        precm_c = [0.354195d+01, 0.302780d+01, 0.577312d+00, 0.539877d+01, 0.233027d+01, 0.157276d+02, 0.701851d+01, - &
-            & 0.478535d+02, -0.106915d+01, 0.268137d+02, -0.104806d+02, -0.182660d+02, 0.833941d+01, 0.872497d+02, &
-            & 0.917870d+01, -0.697766d+02, 0.434862d+02, -0.156633d+02, 0.380162d+02, -0.796542d+01, 0.602854d+02, &
-            & 0.500800d+02, -0.545761d+02, 0.410210d+02, -0.890739d+01, 0.191135d+02, -0.512653d+02, 0.365096d+02, - &
-            & 0.235972d+02, -0.102322d+03, 0.837770d+00, 0.258200d+02, -0.198105d+01, -0.484189d+01, 0.105377d+02, &
-            & 0.372352d+01, -0.207237d+02, 0.223342d+02, 0.244787d+01, 0.979572d+01, -0.135612d+01, -0.724496d+01, &
-            & 0.234984d+02, 0.136364d+03, 0.253799d+01, -0.203821d+02, 0.699846d+01, 0.198529d+02, -0.475902d+01, &
-            & 0.236328d+01]
-        v             = 0.d0; g = 0.d0; d = 0.d0
+        satocm_de      = [4.035e0_wp, 4.1662e0_wp, 4.035e0_wp]
+        satocm_xre     = [0.9923e0_wp, 0.7590e0_wp, 0.9923e0_wp]
+        satocm_bet     = [2.4113e0_wp, 2.0682e0_wp, 2.4113e0_wp]
+        ndercm_step    = 5.0e-7_wp
+        precm_a        = 0.157002e-03_wp
+        precm_b        = -0.162301e-01_wp
+        precm_alf      = 0.9e0_wp
+        precm_gam      = 0.045e0_wp
+        precm_al       = [1.0e0_wp, 0.8e0_wp, 1.0e0_wp]
+        precm_c = [0.354195e+01_wp, 0.302780e+01_wp, 0.577312e+00_wp, 0.539877e+01_wp, 0.233027e+01_wp, &
+            & 0.157276e+02_wp, 0.701851e+01_wp, - 0.478535e+02_wp, -0.106915e+01_wp, 0.268137e+02_wp, - &
+            & 0.104806e+02_wp, -0.182660e+02_wp, 0.833941e+01_wp, 0.872497e+02_wp, 0.917870e+01_wp, -0.697766e+02_wp, &
+            & 0.434862e+02_wp, -0.156633e+02_wp, 0.380162e+02_wp, -0.796542e+01_wp, 0.602854e+02_wp, 0.500800e+02_wp, &
+            & -0.545761e+02_wp, 0.410210e+02_wp, -0.890739e+01_wp, 0.191135e+02_wp, -0.512653e+02_wp, 0.365096e+02_wp, &
+            & - 0.235972e+02_wp, -0.102322e+03_wp, 0.837770e+00_wp, 0.258200e+02_wp, -0.198105e+01_wp, - &
+            & 0.484189e+01_wp, 0.105377e+02_wp, 0.372352e+01_wp, -0.207237e+02_wp, 0.223342e+02_wp, 0.244787e+01_wp, &
+            & 0.979572e+01_wp, -0.135612e+01_wp, -0.724496e+01_wp, 0.234984e+02_wp, 0.136364e+03_wp, 0.253799e+01_wp, &
+            & -0.203821e+02_wp, 0.699846e+01_wp, 0.198529e+02_wp, -0.475902e+01_wp, 0.236328e+01_wp]
+        v             = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         usricm_nder   = igrad
         usricm_nasurf = 1
-        usricm_cart   = 0.d0
+        usricm_cart   = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                usricm_cart(iatom,idir) = x(iatom,idir)/legacy_bohr_to_angstrom
+                usricm_cart(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
         call prepare_local_context
         call pot
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
+                p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
         elseif( igrad == 1 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*legacy_hartree_to_electronvolt
+                p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
             do iatom=1, natoms
                 do idir=1, 3
-                    g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*legacy_hartree_to_electronvolt
+                    g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*hartree_to_electronvolt
                 enddo
             enddo
         elseif( igrad == 2 )then
@@ -238,16 +241,17 @@ module chempotpy_oh2_gen_sl1979_pes
 
         !> @brief Evaluate prepare_local_context for the OH2_GEN_SL1979 potential.
         subroutine prepare_local_context
+            use chempotpy_kinds, only: wp
             implicit none
             integer :: i, j
             !        IMPLICIT REAL*16(L)
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            double precision, parameter :: bohr   = 0.529177d0
-            double precision, parameter :: hart   = 27.21161d0
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            real(wp), parameter :: bohr   = 0.529177e0_wp
+            real(wp), parameter :: hart   = 27.21161e0_wp
             !      DIMENSION C(50),AL(3),X(3),S(3),VM(3),R(3),CHI(3)
             !   Echo potential data to the file linked to UNIT NFLAG(18)
             if( infocm_natoms .gt. 25 )then
@@ -288,17 +292,18 @@ module chempotpy_oh2_gen_sl1979_pes
             !                  R(2) = R(H-H)
             !                  R(3) = R(H-O)
             !   The zero of energy is defined at O "infinitely" far from the H2 diat
+            use chempotpy_kinds, only: wp
             implicit none
-            double precision :: ap, bp, check, d1d, d2d, d3d, da, da2, da3, dap1, dap2, dap3, db, db1, db2, db3, dc, dc2, dc3, dchi1, dchi2, dchi3, dcsr1, dcsr2, dcsr3, dd, dd2, dd3, df, df2, df3, dg, dq1, dq2, dq3, dvr1, dvr2, dvr3, gg, p, psi13, q, soh, sr2, t, temp, tt, u, w, ww, xter, y, z, zz
-            integer          :: i, ic, j
+            real(wp) :: ap, bp, check, d1d, d2d, d3d, da, da2, da3, dap1, dap2, dap3, db, db1, db2, db3, dc, dc2, dc3, dchi1, dchi2, dchi3, dcsr1, dcsr2, dcsr3, dd, dd2, dd3, df, df2, df3, dg, dq1, dq2, dq3, dvr1, dvr2, dvr3, gg, p, psi13, q, soh, sr2, t, temp, tt, u, w, ww, xter, y, z, zz
+            integer  :: i, ic, j
             !        IMPLICIT REAL*16(L)
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
-            integer, parameter          :: natom  = 25
-            double precision, parameter :: bohr   = 0.529177d0
-            double precision, parameter :: hart   = 27.21161d0
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer, parameter  :: natom  = 25
+            real(wp), parameter :: bohr   = 0.529177e0_wp
+            real(wp), parameter :: hart   = 27.21161e0_wp
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
@@ -311,7 +316,7 @@ module chempotpy_oh2_gen_sl1979_pes
             !             STOP 'POT 2'
             !         ENDIF
             ic = 4
-            if( pt1cm_r(1) > 30.0d0 .or. pt1cm_r(2) > 30.0d0 ) ic = 1
+            if( pt1cm_r(1) > 30.0e0_wp .or. pt1cm_r(2) > 30.0e0_wp ) ic = 1
             evaluation_loop: do
                 select case( ic )
                 case( 1 )
@@ -335,22 +340,23 @@ module chempotpy_oh2_gen_sl1979_pes
                 pt1cm_r(3) = pt1cm_r(3)*bohr
                 pt1cm_r(1) = soh
                 pt1cm_r(2) = sr2
-                q          = 1.0d0
+                q          = 1.0e0_wp
                 do i=1, 3
                     precm_x(i)   = pt1cm_r(i)
-                    precm_chi(i) = (1.0d0 - exp(-precm_alf*precm_x(i)**2))
-                    precm_s(i)   = precm_x(i)-1.d0
-                    precm_vm(i)  = satocm_de(i)*(1.0d0-exp(-satocm_bet(i)*(precm_x(i)-satocm_xre(i))))**2-satocm_de(i)
-                    q            = q*(1.0d0-tanh(precm_al(i)*precm_s(i)))
+                    precm_chi(i) = (1.0e0_wp - exp(-precm_alf*precm_x(i)**2))
+                    precm_s(i)   = precm_x(i)-1.e0_wp
+                    precm_vm(i)  = satocm_de(i)*(1.0e0_wp-exp(-satocm_bet(i)*(precm_x(i)-satocm_xre(i))))**2- &
+                        & satocm_de(i)
+                    q = q*(1.0e0_wp-tanh(precm_al(i)*precm_s(i)))
                 enddo
                 u = precm_vm(1)*precm_chi(2)*precm_chi(3)+precm_vm(2)*precm_chi(1)*precm_chi(3) + precm_vm(3)* &
                     & precm_chi(1)*precm_chi(2)
-                bp    = precm_b*(1.0d0/precm_x(1)**4+1.0d0/precm_x(3)**4)
-                check = (precm_x(1)*precm_x(3)*(precm_x(2)-0.2d0))
-                if( check > 1000.0d0 )then
-                    ap = 0.0d0
+                bp    = precm_b*(1.0e0_wp/precm_x(1)**4+1.0e0_wp/precm_x(3)**4)
+                check = (precm_x(1)*precm_x(3)*(precm_x(2)-0.2e0_wp))
+                if( check > 1000.0e0_wp )then
+                    ap = 0.0e0_wp
                 else
-                    ap = precm_a/(precm_x(1)*precm_x(3)*(precm_x(2)-0.2d0))**12
+                    ap = precm_a/(precm_x(1)*precm_x(3)*(precm_x(2)-0.2e0_wp))**12
                 endif
                 u = u+ap+bp
                 t = precm_c(1) + precm_c(2)*(precm_s(1)+precm_s(3)) + precm_c(3)*precm_s(2) + precm_c(4)*(precm_s(1)** &
@@ -394,7 +400,7 @@ module chempotpy_oh2_gen_sl1979_pes
                     ic = ic+1
                     cycle evaluation_loop
                 endif
-                if( pt1cm_r(1) > 30.0d0 .or. pt1cm_r(2) >= 30.0d0 )then
+                if( pt1cm_r(1) > 30.0e0_wp .or. pt1cm_r(2) >= 30.0e0_wp )then
                     if( usricm_nder == 1 )then
                         pt1cm_degsdr(1) = (precm_v(3)-precm_v(4))/ndercm_step
                         pt1cm_degsdr(2) = (precm_v(2)-precm_v(4))/ndercm_step
@@ -403,97 +409,101 @@ module chempotpy_oh2_gen_sl1979_pes
                 else
                     ! Analytic derivatives in the interaction region.
                     if( usricm_nder .eq. 1 )then
-                        da = precm_c(2) + 2.0d0*precm_s(1)*precm_c(4) + precm_s(2)*precm_c(6) + precm_s(3)* &
-                            & precm_c(7) + 3.0d0* precm_s(1)**2*precm_c(8) + (precm_s(3)**2 + 2.0d0*precm_s(1)* &
-                            & precm_s(3))*precm_c(10) + precm_s(2)**2*precm_c(11) + 2.0d0*precm_s(1)*precm_s(2)* &
-                            & precm_c(12) + precm_s(2)*precm_s(3)* precm_c(13) + 4.0d0*precm_s(1)**3*precm_c(14)
-                        db = (3.0d0*precm_s(1)**2*precm_s(3) + precm_s(3)**3)*precm_c(16) + 2.0d0*precm_s(1)* &
-                            & precm_s(3)**2* precm_c(17) + 3.0d0*precm_s(1)**2*precm_s(2)*precm_c(18) + 2.0d0* &
+                        da = precm_c(2) + 2.0e0_wp*precm_s(1)*precm_c(4) + precm_s(2)*precm_c(6) + precm_s(3)* &
+                            & precm_c(7) + 3.0e0_wp* precm_s(1)**2*precm_c(8) + (precm_s(3)**2 + 2.0e0_wp*precm_s(1)* &
+                            & precm_s(3))*precm_c(10) + precm_s(2)**2*precm_c(11) + 2.0e0_wp*precm_s(1)*precm_s(2)* &
+                            & precm_c(12) + precm_s(2)*precm_s(3)* precm_c(13) + 4.0e0_wp*precm_s(1)**3*precm_c(14)
+                        db = (3.0e0_wp*precm_s(1)**2*precm_s(3) + precm_s(3)**3)*precm_c(16) + 2.0e0_wp*precm_s(1)* &
+                            & precm_s(3)**2* precm_c(17) + 3.0e0_wp*precm_s(1)**2*precm_s(2)*precm_c(18) + 2.0e0_wp* &
                             & precm_s(1)* precm_s(2)**2* precm_c(19) + precm_s(2)**3*precm_c(20) + precm_s(2)**2* &
-                            & precm_s(3)*precm_c(21) + (2.0d0* precm_s(1)*precm_s(2)*precm_s(3) + precm_s(2)* &
+                            & precm_s(3)*precm_c(21) + (2.0e0_wp* precm_s(1)*precm_s(2)*precm_s(3) + precm_s(2)* &
                             & precm_s(3)**2)*precm_c(22)
-                        dc = 5.0d0*precm_s(1)**4*precm_c(23) + (4.0d0*precm_s(1)**3*precm_s(3) + precm_s(3)**4)* &
-                            & precm_c(24) + (3.0d0*precm_s(1)**2*precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(3)** 3)* &
-                            & precm_c(25) + 4.0d0* precm_s(1)**3*precm_s(2)*precm_c(26) + (3.0d0*precm_s(2)* &
+                        dc = 5.0e0_wp*precm_s(1)**4*precm_c(23) + (4.0e0_wp*precm_s(1)**3*precm_s(3) + precm_s(3)**4)* &
+                            & precm_c(24) + (3.0e0_wp*precm_s(1)**2*precm_s(3)**2 + 2.0e0_wp*precm_s(1)*precm_s(3)** &
+                            & 3)* precm_c(25) + 4.0e0_wp* precm_s(1)**3*precm_s(2)*precm_c(26) + (3.0e0_wp*precm_s(2)* &
                             & precm_s(1)**2*precm_s(3) + precm_s(2)* precm_s(3)**3)*precm_c(27)
-                        dd = 2.0d0*precm_s(1)*precm_s(2)*precm_s(3)**2*precm_c(28) + 3.0d0*precm_s(1)**2*precm_s(2)** &
-                            & 2* precm_c(29) + (2.0d0*precm_s(1)*precm_s(2)**2*precm_s(3) + precm_s(2)**2*precm_s(3)** &
-                            & 2)* precm_c(30) + 2.0d0*precm_s(1)*precm_s(2)**3*precm_c(31) + precm_s(2)**3*precm_s(3)* &
-                            & precm_c(32) + precm_s(2)**4*precm_c(33) + 6.0d0*precm_s(1)**5*precm_c(35) + (5.0d0* &
-                            & precm_s(1)** 4*precm_s(3) + precm_s(3)**5)*precm_c(36)
-                        df = (4.0d0*precm_s(1)**3*precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(3)**4)*precm_c(37) + 3.0d0* &
-                            & precm_s(1)**2*precm_s(3)**3*precm_c(38) + 5.0d0*precm_s(1)**4*precm_s(2)* precm_c(39) + &
-                            & (4.0d0* precm_s(2)*precm_s(1)**3*precm_s(3) + precm_s(2)*precm_s(3)**4)*precm_c(40) + &
-                            & (3.0d0* precm_s(1)**2*precm_s(2)*precm_s(3)**2 + 2.0d0*precm_s(1)*precm_s(2)* &
-                            & precm_s(3)**3)* precm_c(41) + 4.0d0*precm_s(1)**3*precm_s(2)**2*precm_c(42)
-                        dg = (3.0d0*precm_s(1)**2*precm_s(2)**2*precm_s(3) + precm_s(2)**2*precm_s(3)**3)* &
-                            & precm_c(43) + 2.0d0* precm_s(1)*precm_s(2)**2*precm_s(3)**2*precm_c(44) + 3.0d0* &
-                            & precm_s(1)**2* precm_s(2)**3* precm_c(45) + (2.0d0*precm_s(1)*precm_s(2)**3*precm_s(3) + &
-                            & precm_s(2)**3*precm_s(3)**2)* precm_c(46) + 2.0d0*precm_s(1)*precm_s(2)**4*precm_c(47) + &
-                            & precm_s(2)**4* precm_s(3)* precm_c(48) + precm_s(2)**5*precm_c(49)
+                        dd = 2.0e0_wp*precm_s(1)*precm_s(2)*precm_s(3)**2*precm_c(28) + 3.0e0_wp*precm_s(1)**2* &
+                            & precm_s(2)** 2* precm_c(29) + (2.0e0_wp*precm_s(1)*precm_s(2)**2*precm_s(3) + &
+                            & precm_s(2)**2*precm_s(3)** 2)* precm_c(30) + 2.0e0_wp*precm_s(1)*precm_s(2)**3* &
+                            & precm_c(31) + precm_s(2)**3*precm_s(3)* precm_c(32) + precm_s(2)**4*precm_c(33) + &
+                            & 6.0e0_wp*precm_s(1)**5*precm_c(35) + (5.0e0_wp* precm_s(1)** 4*precm_s(3) + precm_s(3)** &
+                            & 5)*precm_c(36)
+                        df = (4.0e0_wp*precm_s(1)**3*precm_s(3)**2 + 2.0e0_wp*precm_s(1)*precm_s(3)**4)*precm_c(37) + &
+                            & 3.0e0_wp* precm_s(1)**2*precm_s(3)**3*precm_c(38) + 5.0e0_wp*precm_s(1)**4*precm_s(2)* &
+                            & precm_c(39) + (4.0e0_wp* precm_s(2)*precm_s(1)**3*precm_s(3) + precm_s(2)*precm_s(3)** &
+                            & 4)*precm_c(40) + (3.0e0_wp* precm_s(1)**2*precm_s(2)*precm_s(3)**2 + 2.0e0_wp* &
+                            & precm_s(1)*precm_s(2)* precm_s(3)**3)* precm_c(41) + 4.0e0_wp*precm_s(1)**3*precm_s(2)** &
+                            & 2*precm_c(42)
+                        dg = (3.0e0_wp*precm_s(1)**2*precm_s(2)**2*precm_s(3) + precm_s(2)**2*precm_s(3)**3)* &
+                            & precm_c(43) + 2.0e0_wp* precm_s(1)*precm_s(2)**2*precm_s(3)**2*precm_c(44) + 3.0e0_wp* &
+                            & precm_s(1)**2* precm_s(2)**3* precm_c(45) + (2.0e0_wp*precm_s(1)*precm_s(2)**3* &
+                            & precm_s(3) + precm_s(2)**3*precm_s(3)**2)* precm_c(46) + 2.0e0_wp*precm_s(1)* &
+                            & precm_s(2)**4*precm_c(47) + precm_s(2)**4* precm_s(3)* precm_c(48) + precm_s(2)**5* &
+                            & precm_c(49)
                         d1d = da + db + dc + dd + df + dg
-                        da2 = precm_c(3) + 2.0d0*precm_s(2)*precm_c(5) + (precm_s(1) + precm_s(3))*precm_c(6) + 3.0d0* &
-                            & precm_s(2)**2*precm_c(9) + 2.0d0*precm_s(2)*(precm_s(1) + precm_s(3))*precm_c(11) + &
-                            & (precm_s(1)**2 + precm_s(3)**2)*precm_c(12) + precm_s(1)*precm_s(3)*precm_c(13) + 4.0d0* &
-                            & precm_s(2)**3*precm_c(15) + (precm_s(1)**3 + precm_s(3)**3)*precm_c(18) + 2.0d0* &
-                            & precm_s(2)* (precm_s(1)**2 + precm_s(3)**2)*precm_c(19)
-                        db2 = 3.0d0*precm_s(2)**2*(precm_s(1) + precm_s(3))*precm_c(20) + 2.0d0*precm_s(1)*precm_s(2)* &
-                            & precm_s(3)*precm_c(21) + (precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)* &
-                            & precm_c(22) + (precm_s(1)**4 + precm_s(3)**4)*precm_c(26) + (precm_s(1)**3*precm_s(3) + &
-                            & precm_s(1)* precm_s(3)**3)*precm_c(27) + precm_s(1)**2*precm_s(3)**2*precm_c(28) + &
-                            & 2.0d0*precm_s(2)* (precm_s(1)**3 + precm_s(3)**3)*precm_c(29)
-                        dc2 = 2.0d0*precm_s(2)*(precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)*precm_c(30) + &
-                            & 3.0d0* precm_s(2)**2*(precm_s(1)**2 + precm_s(3)**2)*precm_c(31) + 3.0d0*precm_s(2)** 2* &
-                            & precm_s(1)* precm_s(3)*precm_c(32) + 4.0d0*precm_s(2)**3*(precm_s(1) + precm_s(3))* &
-                            & precm_c(33) + 5.0d0* precm_s(2)**4*precm_c(34)
+                        da2 = precm_c(3) + 2.0e0_wp*precm_s(2)*precm_c(5) + (precm_s(1) + precm_s(3))*precm_c(6) + &
+                            & 3.0e0_wp* precm_s(2)**2*precm_c(9) + 2.0e0_wp*precm_s(2)*(precm_s(1) + precm_s(3))* &
+                            & precm_c(11) + (precm_s(1)**2 + precm_s(3)**2)*precm_c(12) + precm_s(1)*precm_s(3)* &
+                            & precm_c(13) + 4.0e0_wp* precm_s(2)**3*precm_c(15) + (precm_s(1)**3 + precm_s(3)**3)* &
+                            & precm_c(18) + 2.0e0_wp* precm_s(2)* (precm_s(1)**2 + precm_s(3)**2)*precm_c(19)
+                        db2 = 3.0e0_wp*precm_s(2)**2*(precm_s(1) + precm_s(3))*precm_c(20) + 2.0e0_wp*precm_s(1)* &
+                            & precm_s(2)* precm_s(3)*precm_c(21) + (precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)** &
+                            & 2)* precm_c(22) + (precm_s(1)**4 + precm_s(3)**4)*precm_c(26) + (precm_s(1)**3* &
+                            & precm_s(3) + precm_s(1)* precm_s(3)**3)*precm_c(27) + precm_s(1)**2*precm_s(3)**2* &
+                            & precm_c(28) + 2.0e0_wp*precm_s(2)* (precm_s(1)**3 + precm_s(3)**3)*precm_c(29)
+                        dc2 = 2.0e0_wp*precm_s(2)*(precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)*precm_c(30) + &
+                            & 3.0e0_wp* precm_s(2)**2*(precm_s(1)**2 + precm_s(3)**2)*precm_c(31) + 3.0e0_wp* &
+                            & precm_s(2)** 2* precm_s(1)* precm_s(3)*precm_c(32) + 4.0e0_wp*precm_s(2)**3* &
+                            & (precm_s(1) + precm_s(3))* precm_c(33) + 5.0e0_wp* precm_s(2)**4*precm_c(34)
                         dd2 = (precm_s(1)**5 + precm_s(3)**5)*precm_c(39) + (precm_s(1)**4*precm_s(3) + precm_s(1)* &
                             & precm_s(3)**4)*precm_c(40) + (precm_s(1)**3*precm_s(3)**2 + precm_s(1)**2*precm_s(3)** &
-                            & 3)* precm_c(41) + 2.0d0*precm_s(2)*(precm_s(1)**4 + precm_s(3)**4)*precm_c(42) + 2.0d0* &
-                            & precm_s(2)* (precm_s(1)**3*precm_s(3) + precm_s(1)*precm_s(3)**3)*precm_c(43) + 2.0d0* &
-                            & precm_s(1)**2* precm_s(2)*precm_s(3)**2*precm_c(44)
-                        df2 = 3.0d0*precm_s(2)**2*(precm_s(1)**3 + precm_s(3)**3)*precm_c(45) + 3.0d0*precm_s(2)**2* &
-                            & (precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)*precm_c(46) + 4.0d0* precm_s(2)** &
-                            & 3* (precm_s(1)**2 + precm_s(3)**2)*precm_c(47) + 4.0d0*precm_s(2)**3*precm_s(1)* &
-                            & precm_s(3)* precm_c(48) + 5.0d0*precm_s(2)**4*(precm_s(1) + precm_s(3))*precm_c(49) + &
-                            & 6.0d0* precm_s(2)**5* precm_c(50)
+                            & 3)* precm_c(41) + 2.0e0_wp*precm_s(2)*(precm_s(1)**4 + precm_s(3)**4)*precm_c(42) + &
+                            & 2.0e0_wp* precm_s(2)* (precm_s(1)**3*precm_s(3) + precm_s(1)*precm_s(3)**3)* &
+                            & precm_c(43) + 2.0e0_wp* precm_s(1)**2* precm_s(2)*precm_s(3)**2*precm_c(44)
+                        df2 = 3.0e0_wp*precm_s(2)**2*(precm_s(1)**3 + precm_s(3)**3)*precm_c(45) + 3.0e0_wp* &
+                            & precm_s(2)**2* (precm_s(1)**2*precm_s(3) + precm_s(1)*precm_s(3)**2)*precm_c(46) + &
+                            & 4.0e0_wp* precm_s(2)** 3* (precm_s(1)**2 + precm_s(3)**2)*precm_c(47) + 4.0e0_wp* &
+                            & precm_s(2)**3*precm_s(1)* precm_s(3)* precm_c(48) + 5.0e0_wp*precm_s(2)**4*(precm_s(1) + &
+                            & precm_s(3))*precm_c(49) + 6.0e0_wp* precm_s(2)**5* precm_c(50)
                         d2d = da2 + db2 + dc2 + dd2 + df2
-                        da3 = precm_c(2) + 2.0d0*precm_s(3)*precm_c(4) + precm_s(2)*precm_c(6) + precm_s(1)* &
-                            & precm_c(7) + 3.0d0*precm_s(3)**2*precm_c(8) + (2.0d0*precm_s(1)*precm_s(3) + &
-                            & precm_s(1)**2)* precm_c(10) + precm_s(2)**2*precm_c(11) + 2.0d0*precm_s(2)*precm_s(3)* &
-                            & precm_c(12) + precm_s(1)*precm_s(2)* precm_c(13) + 4.0d0*precm_s(3)**3*precm_c(14)
-                        db3 = (precm_s(1)**3 + 3.0d0*precm_s(1)*precm_s(3)**2)*precm_c(16) + 2.0d0*precm_s(1)**2* &
-                            & precm_s(3)* precm_c(17) + 3.0d0*precm_s(2)*precm_s(3)**2*precm_c(18) + 2.0d0* &
+                        da3 = precm_c(2) + 2.0e0_wp*precm_s(3)*precm_c(4) + precm_s(2)*precm_c(6) + precm_s(1)* &
+                            & precm_c(7) + 3.0e0_wp*precm_s(3)**2*precm_c(8) + (2.0e0_wp*precm_s(1)*precm_s(3) + &
+                            & precm_s(1)**2)* precm_c(10) + precm_s(2)**2*precm_c(11) + 2.0e0_wp*precm_s(2)* &
+                            & precm_s(3)* precm_c(12) + precm_s(1)*precm_s(2)* precm_c(13) + 4.0e0_wp*precm_s(3)**3* &
+                            & precm_c(14)
+                        db3 = (precm_s(1)**3 + 3.0e0_wp*precm_s(1)*precm_s(3)**2)*precm_c(16) + 2.0e0_wp*precm_s(1)** &
+                            & 2* precm_s(3)* precm_c(17) + 3.0e0_wp*precm_s(2)*precm_s(3)**2*precm_c(18) + 2.0e0_wp* &
                             & precm_s(2)** 2*precm_s(3)* precm_c(19) + precm_s(2)**3*precm_c(20) + precm_s(2)**2* &
-                            & precm_s(1)*precm_c(21) + precm_s(2)* (precm_s(1)**2 + 2.0d0*precm_s(1)*precm_s(3))* &
-                            & precm_c(22) + 5.0d0*precm_s(3)** 4*precm_c(23) + (precm_s(1)**4 + 4.0d0*precm_s(1)* &
-                            & precm_s(3)**3)*precm_c(24)
-                        dc3 = (2.0d0*precm_s(1)**3*precm_s(3) + 3.0d0*precm_s(1)**2*precm_s(3)**2)*precm_c(25) + &
-                            & 4.0d0* precm_s(2)*precm_s(3)**3*precm_c(26) + precm_s(2)*(precm_s(1)**3 + 3.0d0* &
-                            & precm_s(1)* precm_s(3)**2)*precm_c(27) + 2.0d0*precm_s(2)*precm_s(1)**2*precm_s(3)* &
-                            & precm_c(28) + 3.0d0* precm_s(2)**2*precm_s(3)**2*precm_c(29)
-                        dd3 = precm_s(2)**2*(precm_s(1)**2 + 2.0d0*precm_s(1)*precm_s(3))*precm_c(30) + 2.0d0* &
+                            & precm_s(1)*precm_c(21) + precm_s(2)* (precm_s(1)**2 + 2.0e0_wp*precm_s(1)*precm_s(3))* &
+                            & precm_c(22) + 5.0e0_wp*precm_s(3)** 4*precm_c(23) + (precm_s(1)**4 + 4.0e0_wp* &
+                            & precm_s(1)* precm_s(3)**3)*precm_c(24)
+                        dc3 = (2.0e0_wp*precm_s(1)**3*precm_s(3) + 3.0e0_wp*precm_s(1)**2*precm_s(3)**2)*precm_c(25) + &
+                            & 4.0e0_wp* precm_s(2)*precm_s(3)**3*precm_c(26) + precm_s(2)*(precm_s(1)**3 + 3.0e0_wp* &
+                            & precm_s(1)* precm_s(3)**2)*precm_c(27) + 2.0e0_wp*precm_s(2)*precm_s(1)**2*precm_s(3)* &
+                            & precm_c(28) + 3.0e0_wp* precm_s(2)**2*precm_s(3)**2*precm_c(29)
+                        dd3 = precm_s(2)**2*(precm_s(1)**2 + 2.0e0_wp*precm_s(1)*precm_s(3))*precm_c(30) + 2.0e0_wp* &
                             & precm_s(2)**3* precm_s(3)*precm_c(31) + precm_s(2)**3*precm_s(1)*precm_c(32) + &
-                            & precm_s(2)**4* precm_c(33) + 6.0d0*precm_s(3)**5*precm_c(35) + (precm_s(1)**5 + 5.0d0* &
-                            & precm_s(1)*precm_s(3)**4)*precm_c(36) + (2.0d0*precm_s(1)**4*precm_s(3) + 4.0d0* &
-                            & precm_s(1)** 2* precm_s(3)**3)*precm_c(37) + 3.0d0* precm_s(1)**3*precm_s(3)**2* &
-                            & precm_c(38)
-                        df3 = 5.0d0*precm_s(2)*precm_s(3)**4*precm_c(39) + precm_s(2)*(precm_s(1)**4 + 4.0d0* &
-                            & precm_s(1)* precm_s(3)**3)*precm_c(40) + precm_s(2)*(2.0d0*precm_s(1)**3*precm_s(3) + &
-                            & 3.0d0* precm_s(1)**2* precm_s(3)**2)*precm_c(41) + 4.0d0*precm_s(2)**2*precm_s(3)**3* &
-                            & precm_c(42) + precm_s(2)**2* (precm_s(1)**3 + 3.0d0*precm_s(1)*precm_s(3)**2)* &
-                            & precm_c(43) + 2.0d0*precm_s(1)**2*precm_s(2)** 2*precm_s(3)*precm_c(44) + 3.0d0* &
-                            & precm_s(2)**3*precm_s(3)**2*precm_c(45) + precm_s(2)**3* (precm_s(1)**2 + 2.0d0* &
-                            & precm_s(1)*precm_s(3))* precm_c(46) + 2.0d0*precm_s(2)**4*precm_s(3)* precm_c(47) + &
-                            & precm_s(2)**4*precm_s(1)*precm_c(48) + precm_s(2)**5*precm_c(49)
+                            & precm_s(2)**4* precm_c(33) + 6.0e0_wp*precm_s(3)**5*precm_c(35) + (precm_s(1)**5 + &
+                            & 5.0e0_wp* precm_s(1)*precm_s(3)**4)*precm_c(36) + (2.0e0_wp*precm_s(1)**4*precm_s(3) + &
+                            & 4.0e0_wp* precm_s(1)** 2* precm_s(3)**3)*precm_c(37) + 3.0e0_wp* precm_s(1)**3* &
+                            & precm_s(3)**2* precm_c(38)
+                        df3 = 5.0e0_wp*precm_s(2)*precm_s(3)**4*precm_c(39) + precm_s(2)*(precm_s(1)**4 + 4.0e0_wp* &
+                            & precm_s(1)* precm_s(3)**3)*precm_c(40) + precm_s(2)*(2.0e0_wp*precm_s(1)**3*precm_s(3) + &
+                            & 3.0e0_wp* precm_s(1)**2* precm_s(3)**2)*precm_c(41) + 4.0e0_wp*precm_s(2)**2* &
+                            & precm_s(3)**3* precm_c(42) + precm_s(2)**2* (precm_s(1)**3 + 3.0e0_wp*precm_s(1)* &
+                            & precm_s(3)**2)* precm_c(43) + 2.0e0_wp*precm_s(1)**2*precm_s(2)** 2*precm_s(3)* &
+                            & precm_c(44) + 3.0e0_wp* precm_s(2)**3*precm_s(3)**2*precm_c(45) + precm_s(2)**3* &
+                            & (precm_s(1)**2 + 2.0e0_wp* precm_s(1)*precm_s(3))* precm_c(46) + 2.0e0_wp*precm_s(2)**4* &
+                            & precm_s(3)* precm_c(47) + precm_s(2)**4*precm_s(1)*precm_c(48) + precm_s(2)**5*precm_c(49)
                         d3d  = da3 + db3 + dc3 + dd3 + df3
-                        dq1  = (1.0d0 - tanh(precm_al(2)*precm_s(2)))*(1.0d0-tanh(precm_al(3)*precm_s(3)))
-                        dq2  = (1.0d0 - tanh(precm_al(1)*precm_s(1)))*(1.0d0-tanh(precm_al(3)*precm_s(3)))
-                        dq3  = (1.0d0 - tanh(precm_al(1)*precm_s(1)))*(1.0d0-tanh(precm_al(2)*precm_s(2)))
-                        dap1 = -12.0d0*ap/pt1cm_r(1)
-                        dap2 = -12.0d0*ap/(pt1cm_r(2) - 0.2d0)
-                        dap3 = -12.0d0*ap/pt1cm_r(3)
-                        db1  = -4.0d0*precm_b/pt1cm_r(1)**5
-                        db3  = -4.0d0*precm_b/pt1cm_r(3)**5
+                        dq1  = (1.0e0_wp - tanh(precm_al(2)*precm_s(2)))*(1.0e0_wp-tanh(precm_al(3)*precm_s(3)))
+                        dq2  = (1.0e0_wp - tanh(precm_al(1)*precm_s(1)))*(1.0e0_wp-tanh(precm_al(3)*precm_s(3)))
+                        dq3  = (1.0e0_wp - tanh(precm_al(1)*precm_s(1)))*(1.0e0_wp-tanh(precm_al(2)*precm_s(2)))
+                        dap1 = -12.0e0_wp*ap/pt1cm_r(1)
+                        dap2 = -12.0e0_wp*ap/(pt1cm_r(2) - 0.2e0_wp)
+                        dap3 = -12.0e0_wp*ap/pt1cm_r(3)
+                        db1  = -4.0e0_wp*precm_b/pt1cm_r(1)**5
+                        db3  = -4.0e0_wp*precm_b/pt1cm_r(3)**5
                         !      IF(DCOSH(AL(1)*S(1)).LT.1.0D-15)DCRS1=1.0D30
                         !      IF(DCOSH(AL(1)*S(1)).LT.1.0D-15)GO TO 144
                         dcsr1 = -precm_al(1)/(cosh(precm_al(1)*precm_s(1))**2)
@@ -503,21 +513,21 @@ module chempotpy_oh2_gen_sl1979_pes
                         !145   IF(COSH(AL(3)*S(3)).LT.1.0D-15)DCRS3=1.0D30
                         !      IF(COSH(AL(3)*S(3)).LT.1.0D-15)GO TO 146
                         dcsr3 = -precm_al(3)/(cosh(precm_al(3)*precm_s(3))**2)
-                        psi13 = 2.0d0*(-precm_gam)*temp*(pt1cm_r(1) + pt1cm_r(3))
-                        dchi1 = 2.0d0*precm_alf*pt1cm_r(1)*exp(-precm_alf*(pt1cm_r(1)**2))
-                        dchi2 = 2.0d0*precm_alf*pt1cm_r(2)*exp(-precm_alf*(pt1cm_r(2)**2))
-                        dchi3 = 2.0d0*precm_alf*pt1cm_r(3)*exp(-precm_alf*(pt1cm_r(3)**2))
+                        psi13 = 2.0e0_wp*(-precm_gam)*temp*(pt1cm_r(1) + pt1cm_r(3))
+                        dchi1 = 2.0e0_wp*precm_alf*pt1cm_r(1)*exp(-precm_alf*(pt1cm_r(1)**2))
+                        dchi2 = 2.0e0_wp*precm_alf*pt1cm_r(2)*exp(-precm_alf*(pt1cm_r(2)**2))
+                        dchi3 = 2.0e0_wp*precm_alf*pt1cm_r(3)*exp(-precm_alf*(pt1cm_r(3)**2))
                         !      IF(VM(1).GT.1.0D20)DVR1=1.0D30
                         !      IF(VM(1).GT.1.0D20)GO TO 153
-                        dvr1 = 2.0d0*satocm_de(1)*(1.0d0 - exp(-satocm_bet(1)*(pt1cm_r(1)-satocm_xre(1))))* &
+                        dvr1 = 2.0e0_wp*satocm_de(1)*(1.0e0_wp - exp(-satocm_bet(1)*(pt1cm_r(1)-satocm_xre(1))))* &
                             & satocm_bet(1)* exp(-satocm_bet(1)*(pt1cm_r(1)-satocm_xre(1)))
                         ! 153  IF(VM(2).GT.1.0D20)DVR2=1.0D30
                         !      IF(VM(2).GT.1.0D20)GO TO 154
-                        dvr2 = 2.0d0*satocm_de(2)*(1.0d0 - exp(-satocm_bet(2)*(pt1cm_r(2)-satocm_xre(2))))* &
+                        dvr2 = 2.0e0_wp*satocm_de(2)*(1.0e0_wp - exp(-satocm_bet(2)*(pt1cm_r(2)-satocm_xre(2))))* &
                             & satocm_bet(2)* exp(-satocm_bet(2)*(pt1cm_r(2)-satocm_xre(2)))
                         ! 154  IF(VM(3).GT.1.0D20)DVR3=1.0D30
                         !      IF(VM(3).GT.1.0D20)GO TO 155
-                        dvr3 = 2.0d0*satocm_de(3)*(1.0d0 - exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3))))* &
+                        dvr3 = 2.0e0_wp*satocm_de(3)*(1.0e0_wp - exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3))))* &
                             & satocm_bet(3)* exp(-satocm_bet(3)*(pt1cm_r(3)-satocm_xre(3)))
                         pt1cm_degsdr(1) = precm_vm(2)*precm_chi(3)*dchi1 + precm_chi(2)*precm_chi(3)*dvr1 + &
                             & precm_vm(3)*precm_chi(2)*dchi1 + d1d*q*temp + p*dq1*temp*dcsr1 + dap1 + db1 + p*q*psi13
@@ -531,8 +541,8 @@ module chempotpy_oh2_gen_sl1979_pes
                         ! END OF NDER SWITCH AROUND DERIVATIVES
                     endif
                 endif
-                if( pt1cm_r(2) >= 20.0d0 )then
-                    precm_v(4) = int(precm_v(4)*1.0d8)*1.0d-8
+                if( pt1cm_r(2) >= 20.0e0_wp )then
+                    precm_v(4) = int(precm_v(4)*1.0e8_wp)*1.0e-8_wp
                 endif
                 exit evaluation_loop
             enddo evaluation_loop
@@ -548,13 +558,14 @@ module chempotpy_oh2_gen_sl1979_pes
 
         !> @brief Evaluate POTINFO for the OH2_GEN_SL1979 potential.
         subroutine potinfo
+            use chempotpy_kinds, only: wp
             implicit none
-            integer                     :: i, j, k, kmax
-            integer, parameter          :: n3atom = 75
-            integer, parameter          :: natom  = 25
-            integer, parameter          :: isurf  = 5
-            integer, parameter          :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi     = 3.141592653589793d0
+            integer             :: i, j, k, kmax
+            integer, parameter  :: n3atom = 75
+            integer, parameter  :: natom  = 25
+            integer, parameter  :: isurf  = 5
+            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
+            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -642,34 +653,35 @@ module chempotpy_oh2_gen_sl1979_pes
 
         !> @brief Evaluate ANCVRT for the OH2_GEN_SL1979 potential.
         subroutine ancvrt
+            use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision, parameter :: pi         = 3.141592653589793d0
-            double precision, parameter :: clight     = 2.99792458d08
-            double precision, parameter :: cmu_0      = 4.0d0*pi*1.0d-07
-            double precision, parameter :: cepsilon_0 = 1.0d0/(cmu_0*clight**2)
-            double precision, parameter :: ce         = 1.602176462d-19
-            double precision, parameter :: cplanck    = 6.62606876d-34
-            double precision, parameter :: cm_e       = 9.10938188d-31
-            double precision, parameter :: cang       = 1.0d-10
-            double precision, parameter :: cavogadro  = 6.02214199d23
-            double precision, parameter :: ckcal      = 4.184d10
-            double precision, parameter :: htomillh   = 1000.d0
-            double precision, parameter :: htoev      = 27.2113834d0
-            double precision, parameter :: htokcal    = 627.509470d0
-            double precision, parameter :: htowave    = 219474.631d0
-            double precision, parameter :: htokj      = 2625.49962d0
-            double precision, parameter :: bohr_a     = .5291772083d0
-            integer            :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
-            character(len=3)   :: periodic_1(7,32)
-            character(len=2)   :: name1(natom)
-            character(len=2)   :: name2(natom)
-            character(len=1)   :: iblank
-            character(len=20)  :: distance
-            character(len=20)  :: units
+            integer, parameter  :: n3atom     = 75
+            integer, parameter  :: natom      = 25
+            integer, parameter  :: isurf      = 5
+            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
+            real(wp), parameter :: pi         = 3.141592653589793e0_wp
+            real(wp), parameter :: clight     = 2.99792458e08_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
+            real(wp), parameter :: ce         = 1.602176462e-19_wp
+            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
+            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
+            real(wp), parameter :: cang       = 1.0e-10_wp
+            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
+            real(wp), parameter :: ckcal      = 4.184e10_wp
+            real(wp), parameter :: htomillh   = 1000.e0_wp
+            real(wp), parameter :: htoev      = 27.2113834e0_wp
+            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htowave    = 219474.631e0_wp
+            real(wp), parameter :: htokj      = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
+            character(len=3)    :: periodic_1(7,32)
+            character(len=2)    :: name1(natom)
+            character(len=2)    :: name2(natom)
+            character(len=1)    :: iblank
+            character(len=20)   :: distance
+            character(len=20)   :: units
             do i=1, 7
                 do j=1, 32
                     ianum(i,j)      = 0
@@ -894,9 +906,9 @@ module chempotpy_oh2_gen_sl1979_pes
             elseif( usricm_nflag(2) .eq. 6 )then
                 units = 'KILOJOULES PER MOLE '
             endif
-            utilcm_cnvrtd  = 1.d0
-            utilcm_cnvrte  = 1.d0
-            utilcm_cnvrtde = 1.d0
+            utilcm_cnvrtd  = 1.e0_wp
+            utilcm_cnvrte  = 1.e0_wp
+            utilcm_cnvrtde = 1.e0_wp
             if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
             if( usricm_nflag(2) .eq. 2 )then
                 utilcm_cnvrte = utilcm_cnvrte*htomillh
@@ -921,6 +933,7 @@ module chempotpy_oh2_gen_sl1979_pes
         !> @brief Evaluate CARTOU for the OH2_GEN_SL1979 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: i, j
             integer, parameter :: n3atom = 75
@@ -933,9 +946,10 @@ module chempotpy_oh2_gen_sl1979_pes
         !> @brief Evaluate CARTTOR for the OH2_GEN_SL1979 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
+            use chempotpy_kinds,              only: wp
             implicit none
             integer            :: coordinate_status
-            double precision   :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
+            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
             integer            :: i, ind, k, l
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
@@ -949,6 +963,7 @@ module chempotpy_oh2_gen_sl1979_pes
 
         !> @brief Evaluate EUNITZERO for the OH2_GEN_SL1979 potential.
         subroutine eunitzero
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j
             character(len=75)  :: ref(5)
@@ -971,15 +986,16 @@ module chempotpy_oh2_gen_sl1979_pes
 
         !> @brief Evaluate RTOCART for the OH2_GEN_SL1979 potential.
         subroutine rtocart
+            use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            double precision   :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
-                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom,isurf), &
-                & ygs(n3atom), yij(n3atom,jsurf), za, zb, zc, zd
-            integer            :: i, ind, j, j1, j2, k, m1
+            real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
+                & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom, isurf), &
+                & ygs(n3atom), yij(n3atom, jsurf), za, zb, zc, zd
+            integer :: i, ind, j, j1, j2, k, m1
             if( infocm_icartr .eq. 1 )then
                 do i = 1, infocm_natoms
                     ind                   = 3*i-2
@@ -1003,21 +1019,21 @@ module chempotpy_oh2_gen_sl1979_pes
                 enddo
             elseif( infocm_icartr .eq. 2 )then
                 do i = 1, infocm_natoms
-                    utilcm_dgscartnu(i,1) = 0.d0
-                    utilcm_dgscartnu(i,2) = 0.d0
-                    utilcm_dgscartnu(i,3) = 0.d0
+                    utilcm_dgscartnu(i,1) = 0.e0_wp
+                    utilcm_dgscartnu(i,2) = 0.e0_wp
+                    utilcm_dgscartnu(i,3) = 0.e0_wp
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(i,1,j1) = 0.d0
-                            utilcm_descartnu(i,2,j1) = 0.d0
-                            utilcm_descartnu(i,3,j1) = 0.d0
+                            utilcm_descartnu(i,1,j1) = 0.e0_wp
+                            utilcm_descartnu(i,2,j1) = 0.e0_wp
+                            utilcm_descartnu(i,3,j1) = 0.e0_wp
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(i,1,j2) = 0.d0
-                            utilcm_dijcartnu(i,2,j2) = 0.d0
-                            utilcm_dijcartnu(i,3,j2) = 0.d0
+                            utilcm_dijcartnu(i,1,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,2,j2) = 0.e0_wp
+                            utilcm_dijcartnu(i,3,j2) = 0.e0_wp
                         enddo
                     endif
                     do j = 1, infocm_natoms
@@ -1057,12 +1073,12 @@ module chempotpy_oh2_gen_sl1979_pes
                     ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j=utilcm_ksdiag, utilcm_kediag
-                            yes(i,j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
+                            yes(i, j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do k=utilcm_ksoffd, utilcm_keoffd
-                            yij(i,k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
+                            yij(i, k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
                         enddo
                     endif
                 enddo
@@ -1075,22 +1091,22 @@ module chempotpy_oh2_gen_sl1979_pes
                     utilcm_dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
                     if( utilcm_ksdiag .ne. 0 )then
                         do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(1,k,j1) = term12*yes(1,j1) + term13*yes(3,j1)
-                            utilcm_descartnu(2,k,j1) = -term12*yes(1,j1) + term23*yes(2,j1)
-                            utilcm_descartnu(3,k,j1) = -term13*yes(3,j1) - term23*yes(2,j1)
+                            utilcm_descartnu(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
+                            utilcm_descartnu(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
+                            utilcm_descartnu(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
                         enddo
                     endif
                     if( utilcm_ksoffd .ne. 0 )then
                         do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(1,k,j2) = term12*yij(1,j2) + term13*yij(3,j2)
-                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1,j2) + term23*yij(2,j2)
-                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3,j2) - term23*yij(2,j2)
+                            utilcm_dijcartnu(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
+                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
+                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
                         enddo
                     endif
                 enddo
             elseif( infocm_icartr .eq. 4 )then
-                wh   = 1.007825d0
-                wf   = 18.99840d0
+                wh   = 1.007825e0_wp
+                wf   = 18.99840e0_wp
                 sum  = wh+wf
                 eps  = wf/sum
                 epsp = wh/sum
@@ -1100,8 +1116,8 @@ module chempotpy_oh2_gen_sl1979_pes
                 ss1  = sin(theta1)
                 ss2  = sin(theta2)
                 ss3  = sin(phi)
-                ya   = 0.0d0
-                yb   = 0.0d0
+                ya   = 0.0e0_wp
+                yb   = 0.0e0_wp
                 t0   = r1*u1
                 za   = -epsp*t0
                 zb   = eps*t0
@@ -1127,6 +1143,7 @@ module chempotpy_oh2_gen_sl1979_pes
 
         !> @brief Evaluate DEDCOU for the OH2_GEN_SL1979 potential.
         subroutine dedcou
+            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k
             integer, parameter :: n3atom = 75
@@ -1181,13 +1198,14 @@ end module chempotpy_oh2_gen_sl1979_pes
 !> @brief Expose OH2_GEN_SL1979 through the Python-facing PES entry point.
 subroutine pes( x, igrad, p, g, d )
     use chempotpy_oh2_gen_sl1979_pes, only: evaluate
+    use chempotpy_kinds,              only: wp
     implicit none
-    integer, parameter            :: natoms  = 3
-    integer, parameter            :: nstates = 1
-    integer, intent(in)           :: igrad
-    double precision, intent(in)  :: x(natoms,3)
-    double precision, intent(out) :: p(nstates)
-    double precision, intent(out) :: g(nstates,natoms,3)
-    double precision, intent(out) :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 3
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

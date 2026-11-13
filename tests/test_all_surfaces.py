@@ -67,9 +67,46 @@ class AllSurfaceRegressionTests(unittest.TestCase):
         self.assertEqual(block_data_units, 0)
         self.assertEqual(entry_points, 0)
 
+    def test_public_evaluators_use_codata_conversions(self) -> None:
+        rounded_boundary_factor = re.compile(
+            r"(?i)(?:51\.422067(?:d0)?|23\.0609(?:d0)?|"
+            r"8065\.7112013(?:d0)?|0?\.529177211d0|27\.211386d0)"
+        )
+        sensitive_fit_exceptions = {
+            "C6H5SH/C6H5SH_APRP",
+            "C6H5SH/C6H5SH_APRP_DPEM",
+            "C7H8S/C7H8S_APRP",
+            "C7H8S/C7H8S_APRP_DPEM",
+            "C7H8S/C7H8S_III_APRP",
+            "C7H8S/C7H8S_III_APRP_DPEM",
+            "C7H8S/C7H8S_S22_APRP",
+            "C7H8S/C7H8S_S22_APRP_DPEM",
+        }
+        actual_exceptions = set()
+        for key, source in self.sources.items():
+            text = source.read_text(errors="replace")
+            match = re.search(
+                r"(?ims)^\s*subroutine\s+evaluate\b.*?"
+                r"^\s*end(?:\s+subroutine(?:\s+evaluate)?)?\s*$",
+                text,
+            )
+            self.assertIsNotNone(match, key)
+            evaluator = "\n".join(
+                line.split("!", 1)[0] for line in match.group().splitlines()
+            )
+            with self.subTest(surface=key):
+                self.assertNotRegex(evaluator, rounded_boundary_factor)
+            if "use chempotpy_legacy_units" in evaluator.lower():
+                actual_exceptions.add(key)
+                self.assertIn(
+                    "published_bohr_to_angstrom => legacy_bohr_to_angstrom",
+                    evaluator.lower(),
+                )
+        self.assertEqual(actual_exceptions, sensitive_fit_exceptions)
+
     def test_migrated_fits_have_no_initialization_lifecycle(self) -> None:
         targets = (
-            self.repository / "chempotpy" / "core" / "chempotpy_h3_basis.f90",
+            self.repository / "chempotpy" / "H3" / "chempotpy_h3_2002_basis.f90",
             self.sources["ClH2/ClH2_LEPS_ALTG2_1996"],
             self.sources["ClH2/ClH2_LEPS_STSBLTG1_1989"],
             self.sources["ClH2/ClH2_LEPS_STSBLTG2_1989"],

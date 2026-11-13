@@ -94,8 +94,13 @@ PES source to duplicate constants and geometry utilities.
 
 The maintained bundled core currently contains:
 
-- `chempotpy_kinds`: named `real32` and `real64` kinds.
-- `chempotpy_units`: canonical conversions for new atomic-unit contracts.
+- `chempotpy_kinds`: portable `sp`, `dp`, and `qp` requests plus the single
+  compile-time working-precision selector `wp`. The default `wp = dp` preserves
+  the released binary64 behavior.
+- `chempotpy_physical_constants`: generated NIST CODATA 2022 source values and
+  provenance.
+- `chempotpy_units`: canonical conversions for all public atomic-unit
+  boundaries, derived from the versioned physical constants.
 - `chempotpy_legacy_units`: the released Python wrapper conversions, including
   their original default-real rounding behavior.
 - `chempotpy_geometry`: Cartesian distance, three-component dot product, angle
@@ -111,15 +116,29 @@ The maintained bundled core currently contains:
 - `chempotpy_internal_coordinates`: family-level adapters that connect private
   internal-coordinate kernels to the Cartesian compatibility contract. The
   triatomic adapter builds the 1-2, 2-3, 1-3 distances and Jacobian, applies the
-  released unit factors, and packs energy, gradient, and coupling outputs.
-- `chempotpy_h3_basis`: private symmetric-polynomial index storage and a
-  procedural initialization/lookup API for the H3 2002 fit family.
+  canonical unit factors, and packs energy, gradient, and coupling outputs.
 - `chempotpy_legacy_coordinates`: explicit-argument implementations of the
   historical POTLIB Cartesian input and internal-coordinate setup algorithms,
-  including the shared legacy triatomic 1-2, 2-3, 1-3 distance adapter.
+  including canonical and explicit-release triatomic distance adapters.
 - `chempotpy_status`: status values for future non-printing modern interfaces.
 - `chempotpy_blas`: the small BLAS subset required by bundled legacy kernels.
 - `chempotpy_dsyev`: the standalone historical `DSYEV` ABI implementation.
+
+System- and fit-family support belongs beside the surfaces that own it rather
+than in the generic core. `chempotpy/H3/chempotpy_h3_2002_basis.f90` provides
+the stateless symmetric-polynomial lookup shared only by H3_GEN_A2_2002,
+H3_GEN_A3_2002, H3_GEN_A4_2002, and H3_GEN_CCI_2002. The build and standalone
+export registries include that support source automatically for those four
+surfaces.
+
+Shared numerical modules and maintained PES kernels declare reals as
+`real(wp)` and suffix explicit literals with `_wp`. The bundled BLAS and DSYEV
+implementations use the same working kind. Hard-wired `double precision`,
+`real(8)`, `real64`, locally defined real-kind aliases, and double-specific
+intrinsics are prohibited in maintained numerical source. The package-wide
+selector remains `wp = dp` because f2py currently maps `wp` to a C double; a
+different package precision requires an explicit conversion layer at that
+external boundary.
 
 `scripts/build_pes.py` resolves bundled module dependencies recursively from
 Fortran `use` statements and compiles the dependency-first source set into each
@@ -128,11 +147,10 @@ remains independently loadable while the maintained source has one definition
 of each core tool.
 
 Immutable fitted neural-network parameters belong to the owning PES rather
-than the general-purpose core. N4_1A_PIPNN, FH2O_PIPNN, and FH2O_SOC_PIPNN
-therefore compile generated, private-by-default parameter modules into their
-standalone artifacts. Their released text files remain under `tests/data` as
-provenance inputs, while runtime evaluation performs no file I/O or mutable
-initialization.
+than the general-purpose core. Every affected neural-network surface therefore
+compiles a generated, private-by-default parameter module into its standalone
+artifact. Released text files remain under `tests/data` as provenance inputs,
+while runtime evaluation performs no file I/O or mutable initialization.
 
 The same ownership rule applies to every immutable fitted coefficient or
 constant table distributed with a PES. The migration policy, provenance
@@ -147,6 +165,13 @@ same build path used by the complete catalog.
 Published PES fit coefficients, cutoffs, and fit-specific internal conversions
 remain in their owning surface. Moving those values into the core would obscure
 model ownership and could silently change a published fit.
+
+The public conversion contract is pinned to NIST CODATA 2022. Updating it is a
+deliberate, tested source change rather than an automatic dependency update.
+The C6H5SH APRP pair and all six C7H8S APRP interfaces retain their released
+input-coordinate scale because a catalog parity study found amplified changes
+up to about `0.18 eV`; the scale is imported under the descriptive local name
+`published_bohr_to_angstrom`. Their output conversions remain canonical.
 
 Internal-coordinate kernels remain private procedures in their owning surface
 modules. Compatible families use a descriptive common signature such as
@@ -297,10 +322,10 @@ structural formatter used during migration.
   arguments rather than shared storage. The source gate fixes the inventory at
   zero active `COMMON` declarations, `BLOCK DATA` units, `ENTRY` statements,
   `prepot*` definitions, and `prepot*` calls.
-- N4 BDTC deliberately reloads its packaged multi-megabyte `pes.dat` table for
-  each evaluation instead of hiding mutable first-call state. The data file
-  remains part of the self-contained Python package; embedding that table would
-  materially inflate the Fortran source without improving portability.
+- N4 BDTC compiles its released multi-megabyte `pes.dat` table into a generated
+  private parameter module. The large source is intentional: it makes Python,
+  standalone Fortran, and embedded-library evaluation deterministic and
+  independent of installation paths.
 - The POTLIB local-context migration made intentional legacy array overreach
   explicit for the C2H6F, CH4OCl, and CH5O2 VBMM kernels. Corrected local bounds
   preserve the released indexing and eliminate dependence on compiler-specific
@@ -332,8 +357,8 @@ and compilation gates enforce the resulting source contract directly.
   compares their outputs with those frozen release references.
 - A second catalog fixture covers all 363 callable PES interfaces at two
   deterministic, nonsymmetric geometries. It records the authoritative source
-  digest, interface signature, state dimensions, and formatted outputs; run
-  `make test-surfaces` to compile and evaluate the complete catalog.
+  digest, interface signature, state dimensions, and CODATA 2022 boundary
+  outputs; run `make test-surfaces` to compile and evaluate the complete catalog.
 - The earlier Aln fixture independently records 42 source digests and 336
   energies across non-symmetric two-, three-, five-, and eight-atom geometries.
   All modern Aln sources reproduce those values exactly.
@@ -343,16 +368,16 @@ and compilation gates enforce the resulting source contract directly.
   captures return stable ground-state energies and the catalog fixture records
   the corrected outputs.
 - The CH5 J1 atomic-unit adapter remains checked against the independently
-  compiled released behavior. Its small POLYRATE residual reflects the rounded
-  conversion literals in the historical CHEMPOTPY wrapper, not the source-form
-  migration.
+  compiled POLYRATE reference while using the shared canonical boundary
+  factors.
 
 ## Validation gates
 
 - Python syntax and contract tests.
 - Deterministic source and duplicate inventory.
 - Strict compilation of the selected authoritative source for each surface.
-- Stored release energy/output references generated before modernization.
+- Stored release migration references plus current CODATA 2022 catalog
+  references.
 - Analytic versus central-finite-difference gradient checks when supported.
 - Translation/rotation and atom-order checks where physically applicable.
 - Adiabatic/diabatic symmetry and NAC antisymmetry checks for multistate models.
