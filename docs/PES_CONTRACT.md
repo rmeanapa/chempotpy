@@ -97,8 +97,8 @@ The maintained bundled core currently contains:
 - `chempotpy_kinds`: portable `sp`, `dp`, and `qp` requests plus the single
   compile-time working-precision selector `wp`. The default `wp = dp` preserves
   the released binary64 behavior.
-- `chempotpy_physical_constants`: generated NIST CODATA 2022 source values and
-  provenance.
+- `chempotpy_constants`: the canonical mathematical constants plus generated
+  NIST CODATA 2022 source values and provenance.
 - `chempotpy_units`: canonical conversions for all public atomic-unit
   boundaries, derived from the versioned physical constants.
 - `chempotpy_legacy_units`: the released Python wrapper conversions, including

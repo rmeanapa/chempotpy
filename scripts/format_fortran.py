@@ -335,6 +335,167 @@ def compact_dimension_shape(shape: str) -> str:
     return re.sub(r"\s*\)", ")", shape)
 
 
+PI_PARAMETER_DECLARATION = re.compile(
+    r"^\s*real(?:\s*\([^)]*\))?\s*,\s*parameter\s*::\s*"
+    r"pi\s*=.*$",
+    flags=re.IGNORECASE,
+)
+PI_ASSIGNMENT = re.compile(
+    r"^\s*pi\s*=\s*(?P<expression>.*?)\s*$",
+    flags=re.IGNORECASE,
+)
+MODULE_DECLARATION = re.compile(
+    r"^(?P<indent>\s*)module\s+(?!procedure\b)"
+    r"(?P<name>[a-z][a-z0-9_]*)\s*$",
+    flags=re.IGNORECASE,
+)
+
+
+def canonical_pi_expression(expression: str) -> bool:
+    """Return whether an expression constructs the mathematical constant PI."""
+
+    compact = re.sub(r"\s+", "", expression).lower()
+    return bool(
+        re.fullmatch(r"acos\(-1(?:\.0*)?(?:e0)?(?:_wp)?\)", compact)
+        or re.fullmatch(
+            r"4(?:\.0*)?(?:e0)?(?:_wp)?\*"
+            r"atan\(1(?:\.0*)?(?:e0)?(?:_wp)?\)",
+            compact,
+        )
+        or re.fullmatch(
+            r"3\.14159\d*(?:e0)?(?:_wp)?",
+            compact,
+        )
+    )
+
+
+def centralize_pi_constants(source_text: str) -> str:
+    """Replace local PI parameters with the shared core constant."""
+
+    lines = source_text.splitlines()
+    module_names = {
+        match.group("name").lower()
+        for line in lines
+        for match in [MODULE_DECLARATION.match(code_without_comment(line))]
+        if match is not None
+    }
+    if "chempotpy_constants" in module_names:
+        return source_text
+
+    current_module = None
+    procedure_stack = []
+    line_procedures = {}
+    modules_requiring_pi = set()
+    procedures_requiring_pi = set()
+    runtime_pi_procedures = set()
+    imported_modules = set()
+    imported_procedures = set()
+    procedure_header_ends = {}
+    removed = set()
+    for index, line in enumerate(lines):
+        code = code_without_comment(line)
+        module = MODULE_DECLARATION.match(code)
+        if module is not None:
+            current_module = index
+            continue
+        procedure = PROCEDURE_DECLARATION.match(code.strip())
+        if procedure is not None:
+            procedure_stack.append(index)
+            header_end = index
+            while (
+                header_end+1 < len(lines)
+                and code_without_comment(lines[header_end]).rstrip().endswith("&")
+            ):
+                header_end += 1
+            procedure_header_ends[index] = header_end
+        current_procedure = procedure_stack[-1] if procedure_stack else None
+        line_procedures[index] = current_procedure
+        if re.match(
+            r"^\s*use\s+chempotpy_constants\s*,\s*only\s*:\s*pi\s*$",
+            code,
+            re.IGNORECASE,
+        ):
+            if current_procedure is not None:
+                imported_procedures.add(current_procedure)
+            elif current_module is not None:
+                imported_modules.add(current_module)
+        if re.match(r"^\s*end\s+module\b", code, re.IGNORECASE):
+            current_module = None
+            continue
+        parameter_pi = PI_PARAMETER_DECLARATION.match(code) is not None
+        assignment = PI_ASSIGNMENT.match(code)
+        runtime_pi = (
+            assignment is not None
+            and canonical_pi_expression(assignment.group("expression"))
+        )
+        if parameter_pi or runtime_pi:
+            if current_module is not None:
+                modules_requiring_pi.add(current_module)
+            elif current_procedure is not None:
+                procedures_requiring_pi.add(current_procedure)
+            else:
+                raise ValueError("PI definition is not owned by a source unit")
+            removed.add(index)
+        if runtime_pi:
+            if current_procedure is None:
+                raise ValueError("runtime PI assignment is outside a procedure")
+            runtime_pi_procedures.add(current_procedure)
+        if re.match(
+            r"^\s*end\s*(?:subroutine|function)(?:\s|$)|^\s*end\s*$",
+            code,
+            re.IGNORECASE,
+        ) and procedure_stack:
+            procedure_stack.pop()
+
+    for index, line in enumerate(lines):
+        if line_procedures.get(index) not in runtime_pi_procedures:
+            continue
+        code = code_without_comment(line)
+        declaration = DECLARATION.match(code)
+        if declaration is None:
+            continue
+        entities = split_top_level_entities(declaration.group("entities"))
+        retained = [
+            entity
+            for entity in entities
+            if not re.fullmatch(
+                r"\s*pi(?:\s*=.*)?\s*", entity, flags=re.IGNORECASE
+            )
+        ]
+        if len(retained) == len(entities):
+            continue
+        if not retained:
+            removed.add(index)
+            continue
+        suffix = line[len(code):]
+        lines[index] = (
+            code[:declaration.start("entities")]
+            + ", ".join(entity.strip() for entity in retained)
+            + suffix
+        )
+
+    if not removed:
+        return source_text
+    insertions = {}
+    for module_index in modules_requiring_pi-imported_modules:
+        insertions.setdefault(module_index, []).append(
+            "    use chempotpy_constants, only: pi"
+        )
+    for procedure_index in procedures_requiring_pi-imported_procedures:
+        header_end = procedure_header_ends[procedure_index]
+        indentation = re.match(r"^\s*", lines[procedure_index]).group(0)
+        insertions.setdefault(header_end, []).append(
+            indentation+"    use chempotpy_constants, only: pi"
+        )
+    output = []
+    for index, line in enumerate(lines):
+        if index in removed:
+            continue
+        output.append(line)
+        output.extend(insertions.get(index, []))
+    return "\n".join(output)+"\n"
+
+
 def hoist_shape_parameter_declarations(source_text: str) -> str:
     """Move named constants ahead of declarations whose shapes use them."""
 
@@ -2257,6 +2418,7 @@ def format_source_text(source_text: str) -> str:
     """Return structurally indented free-form Fortran source."""
 
     source_text = lowercase_fortran_code(source_text)
+    source_text = centralize_pi_constants(source_text)
     source_text = fold_standalone_dimensions(source_text)
     source_text = align_pes_metadata(source_text)
     source_text = remove_uninformative_comment_lines(source_text)
@@ -2354,6 +2516,7 @@ def format_source(
     procedure_separators_only: bool = False,
     metadata_only: bool = False,
     dead_comments_only: bool = False,
+    pi_constant_only: bool = False,
 ) -> bool:
     """Format one source and optionally write it."""
 
@@ -2368,6 +2531,8 @@ def format_source(
         formatted = hoist_pes_metadata(original)
     elif dead_comments_only:
         formatted = remove_dead_commented_code(original)
+    elif pi_constant_only:
+        formatted = centralize_pi_constants(original)
     else:
         formatted = specialize_pes_documentation(format_source_text(original), path)
     changed = formatted != original
@@ -2408,6 +2573,11 @@ def main() -> int:
         action="store_true",
         help="remove obsolete commented Fortran without other formatting",
     )
+    focused_mode.add_argument(
+        "--pi-constant-only",
+        action="store_true",
+        help="replace local PI parameters with the shared core constant",
+    )
     arguments = parser.parse_args()
     changed = sum(
         format_source(
@@ -2418,6 +2588,7 @@ def main() -> int:
             arguments.procedure_separators_only,
             arguments.metadata_only,
             arguments.dead_comments_only,
+            arguments.pi_constant_only,
         )
         for path in arguments.sources
     )

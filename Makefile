@@ -30,7 +30,7 @@ check-embedded-parameters:
 	$(PYTHON) scripts/generate_embedded_pes_parameters.py --check
 
 check-generated: check-embedded-parameters
-	$(PYTHON) scripts/generate_physical_constants.py --check
+	$(PYTHON) scripts/generate_constants.py --check
 
 build:
 	$(PYTHON) scripts/build_pes.py $(BUILD_FLAGS)

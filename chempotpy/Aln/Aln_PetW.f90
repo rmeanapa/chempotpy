@@ -1,6 +1,7 @@
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_petw_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -53,10 +54,9 @@ module chempotpy_aln_petw_pes
         real(wp), intent(in)  :: coordinates_bohr(atom_count,3)
         integer, intent(in)   :: atom_count
         real(wp), intent(out) :: energy_hartree
-        real(wp)              :: distance_bohr, pair_energy, pi, twice_fermi_wavevector
+        real(wp)              :: distance_bohr, pair_energy, twice_fermi_wavevector
         real(wp)              :: phases(3), wavevectors(3), decay_rates(3)
         integer               :: first_atom, second_atom
-        pi                     = acos(-1.0e0_wp)
         phases                 = phase_factors*pi
         twice_fermi_wavevector = 3.504e0_wp*bohr_to_angstrom
         wavevectors            = wave_factors*twice_fermi_wavevector

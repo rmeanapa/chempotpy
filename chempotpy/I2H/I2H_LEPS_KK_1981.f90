@@ -50,7 +50,8 @@
 
 !> @brief Implement I2H_LEPS_KK_1981, a potential energy surface for I2H.
 module chempotpy_i2h_leps_kk_1981_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -188,7 +189,6 @@ module chempotpy_i2h_leps_kk_1981_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cevau  = 27.2113961e0_wp
             ! Write header potential parameters to UNIT NFLAG(18).
@@ -238,7 +238,6 @@ module chempotpy_i2h_leps_kk_1981_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cevau  = 27.2113961e0_wp
             call cartou
@@ -297,7 +296,6 @@ module chempotpy_i2h_leps_kk_1981_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

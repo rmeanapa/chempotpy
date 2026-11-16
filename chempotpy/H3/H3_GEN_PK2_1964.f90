@@ -1,6 +1,7 @@
 !> @brief Implement H3_GEN_PK2_1964, a potential energy surface for H3.
 module chempotpy_h3_gen_pk2_1964_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -98,12 +99,11 @@ module chempotpy_h3_gen_pk2_1964_pes
                 & dife(3), dj(3), dj112, dj113, dj12, dj123, dj13, dj21, dj212, dj213, dj223, dj23, dj31, dj312, dj313, dj32, dj323, &
                 & dq(3), ds(3), e1(3), e3(3), engygs0, ex(3), exa, exb, expg, expr, f, fj(3), fj12, fj13, fj23, gamr, q(3), qt, &
                 & rbac, rel, rho, rr(3), s(3), s12, s123, s13, s23, ss(3), sume(3), t, zeta
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !   Conversion constants
             !   CEV (eV) converts from Hartree to kcal/mol
             real(wp), parameter :: cev    = 27.21161e0_wp
@@ -208,7 +208,6 @@ module chempotpy_h3_gen_pk2_1964_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

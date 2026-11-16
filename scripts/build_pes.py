@@ -134,8 +134,8 @@ CORE_MODULE_SOURCES = {
     "chempotpy_legacy_units": (
         CORE_FORTRAN_ROOT / "chempotpy_legacy_units.f90"
     ),
-    "chempotpy_physical_constants": (
-        CORE_FORTRAN_ROOT / "chempotpy_physical_constants.f90"
+    "chempotpy_constants": (
+        CORE_FORTRAN_ROOT / "chempotpy_constants.f90"
     ),
     "chempotpy_status": CORE_FORTRAN_ROOT / "chempotpy_status.f90",
     "chempotpy_units": CORE_FORTRAN_ROOT / "chempotpy_units.f90",

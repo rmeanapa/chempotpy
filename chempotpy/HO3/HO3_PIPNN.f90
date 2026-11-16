@@ -1,5 +1,6 @@
 !> @brief Implement HO3_PIPNN, a potential energy surface for HO3.
 module chempotpy_ho3_pipnn_pes
+    use chempotpy_constants,            only: pi
     use chempotpy_ho3_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_1_count, hidden_2_biases, &
         & hidden_2_count, hidden_hidden_weights, hidden_output_weights, input_hidden_weights, &
         & network_count, ninput, nscale, output_biases, scale_averages, scale_deltas, &
@@ -84,7 +85,6 @@ module chempotpy_ho3_pipnn_pes
         real(wp)            :: vpesa, vpesb, vpesc, vpes
         real(wp), parameter :: alpha = 2.5e0_wp ! bohr
         real(wp), parameter :: btoa  = 0.529177249e0_wp
-        real(wp), parameter :: pi    = acos(-1.e0_wp)
         basis = 0.e0_wp
         call all_pair_distances(transpose(ct), pair_distances)
         rb       = pair_distances([6,5,3,4,2,1])

@@ -90,11 +90,11 @@ end subroutine
 
 !> @brief Evaluate hcopot.
 subroutine hcopot( f, rhc, rco, roh )
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     real(wp), parameter :: au2ev = 27.2116e0_wp
     real(wp), parameter :: a0    = 0.52918e0_wp
-    real(wp), parameter :: pi    = 3.1415926536e0_wp
     integer             :: j, loop, iv
     real(wp)            :: rmin(3), rmax(3), z1, z2, z3, m(3), h(3)
     real(wp)            :: pot, potmin, ma, mb, mc
@@ -114,6 +114,7 @@ end subroutine hcopot
 
 !> @brief Evaluate POTHCO.
 function pothco( rhc, rco, rcos, istate )
+    use chempotpy_constants,           only: pi
     use chempotpy_h2co_pip_parameters, only: parameter_aa => aa, parameter_easym => easym, &
         & parameter_gnhc => gnhc, parameter_gnco => gnco, parameter_gnwin => gnwin, &
         & parameter_gwhc => gwhc, parameter_gwco => gwco, parameter_gwwin => gwwin, &
@@ -157,7 +158,7 @@ function pothco( rhc, rco, rcos, istate )
     logical     :: qinit(2) = [.false., .false.] ! zeigt an ob Parameter initialisiert.
     real(wp)    :: pq, a, b, c, nenn, rhcsin, rhccos, konus
     real(wp)    :: phc, pco, pcos, poh, rhci, rcoi, rcosi, rohi
-    real(wp)    :: thy, aco, ahc, vplus, pi
+    real(wp)    :: thy, aco, ahc, vplus
     complex(wp) :: qq1, qq2, qq3, qq4, wurz
     gzhc        = parameter_gzhc; gzco = parameter_gzco; gzwin = parameter_gzwin
     gnhc        = parameter_gnhc; gnco = parameter_gnco; gnwin = parameter_gnwin
@@ -173,7 +174,6 @@ function pothco( rhc, rco, rcos, istate )
     mlin(2)     = (gzhc+1)*(gzco+1)*(gzwin+1)+(gz2co+1)
     mtan(1)     = 2*(gnhc+1)*(gnco+1)*(gnwin+1)-2+2*gn2co+4
     mtan(2)     = 2*(gnhc+1)*(gnco+1)*(gnwin+1)-2+2*gn2co
-    pi          = acos(-1.e0_wp)
     do j3=1, nwin
         nucos(j3) = cos(pi/180.e0_wp*nuwin(j3))
     enddo

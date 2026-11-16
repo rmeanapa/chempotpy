@@ -54,7 +54,8 @@
 
 !> @brief Implement BrH2_LEPS_C_1982, a potential energy surface for BrH2.
 module chempotpy_brh2_leps_c_1982_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -233,13 +234,12 @@ module chempotpy_brh2_leps_c_1982_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: t
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: t
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !     1          SCR2(4)
             !   Echo potential parameters to UNIT NFLAG(18)
             if( legacy_natoms .gt. 25 )then
@@ -289,14 +289,13 @@ module chempotpy_brh2_leps_c_1982_pes
             !        valleys, respectively.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: csa, csa2, csb, csb2, csg2, d1, d2, d3, dcsa21, dcsa22, dcsa23, dcsb21, dcsb22, dcsb23, dcsg21, dcsg22, dcsg23, dp11, dp12, dp21, dp22, dp31, dp32, ds11, ds12, ds21, ds22, ds31, ds32, dshh, dshx1, dshx2, dsn2a1, dsn2a2, dsn2a3, dsn2b1, dsn2b2, dsn2b3, dv1hh, dv1p1, dv1p2, dv1s1, dv1s2, dv3hh, dv3p1, dv3p2, dv3s1, dv3s2, ex1, ex2, p11, p12, p21, p22, p31, p32, r1, r12, r13, r1s, r2, r23, r2s, r3, r3s, rdif, rdif2, s11, s12, s21, s22, s31, s32, shh, shx1, shx2, sn2a, sn2b, sna, sna2, snb, snb2, t, t1, t11, t12, t2, t21, t22, t3, t31, t32, v1hh, v1p1, v1p2, v1s1, v1s2, v3hh, v3p1, v3p2, v3s1, v3s2
-            integer             :: ierr, index, k, kk, l, ll
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
-            logical             :: lcol
+            real(wp)           :: csa, csa2, csb, csb2, csg2, d1, d2, d3, dcsa21, dcsa22, dcsa23, dcsb21, dcsb22, dcsb23, dcsg21, dcsg22, dcsg23, dp11, dp12, dp21, dp22, dp31, dp32, ds11, ds12, ds21, ds22, ds31, ds32, dshh, dshx1, dshx2, dsn2a1, dsn2a2, dsn2a3, dsn2b1, dsn2b2, dsn2b3, dv1hh, dv1p1, dv1p2, dv1s1, dv1s2, dv3hh, dv3p1, dv3p2, dv3s1, dv3s2, ex1, ex2, p11, p12, p21, p22, p31, p32, r1, r12, r13, r1s, r2, r23, r2s, r3, r3s, rdif, rdif2, s11, s12, s21, s22, s31, s32, shh, shx1, shx2, sn2a, sn2b, sna, sna2, snb, snb2, t, t1, t11, t12, t2, t21, t22, t3, t31, t32, v1hh, v1p1, v1p2, v1s1, v1s2, v3hh, v3p1, v3p2, v3s1, v3s2
+            integer            :: ierr, index, k, kk, l, ll
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
+            logical            :: lcol
             call cartou
             call carttor
             !   The potential routines define R1=R(Br-H), R2=R(H-Br), and R3=R(H-H);
@@ -518,12 +517,11 @@ module chempotpy_brh2_leps_c_1982_pes
         subroutine vhx( rr, v1s, v3s, v1p, v3p, dv1s, dv3s, dv1p, dv3p )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: dv1, dv1p, dv1s, dv3p, dv3s, ex1, ex2, rdif, rdif2, rr, t1, t2, v1, v1p, v1s, v3p, v3s
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: dv1, dv1p, dv1s, dv3p, dv3s, ex1, ex2, rdif, rdif2, rr, t1, t2, v1, v1p, v1s, v3p, v3s
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             rdif  = rr - rhx
             rdif2 = rdif*rdif
             ex1   = exp(-ahx*rdif)
@@ -591,12 +589,11 @@ module chempotpy_brh2_leps_c_1982_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(nflag(18), '(/)')
             do i =1, 5
                 write(nflag(18), '(2x,a75)') ref(i)
@@ -690,7 +687,6 @@ module chempotpy_brh2_leps_c_1982_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

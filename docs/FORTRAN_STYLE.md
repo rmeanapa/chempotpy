@@ -112,6 +112,8 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 - Published fit coefficients and model-specific constants belong beside their
   owning PES. General geometry, unit conversion, numerical kinds, linear
   algebra, status handling, and reusable I/O belong in the bundled core.
+- Import `pi` from `chempotpy_constants`; local approximations and repeated
+  mathematical-constant declarations are forbidden.
 - Each compiled PES must remain independently loadable. Core source dependencies
   are compiled into the extension rather than supplied by an external library.
 

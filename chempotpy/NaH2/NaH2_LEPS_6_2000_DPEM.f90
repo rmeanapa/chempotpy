@@ -2301,7 +2301,8 @@ end subroutine g_pot11
 ! U12 coupling surface . . .
 !> @brief Own the stateless g_pot12 evaluator.
 module chempotpy_nah2_leps_6_2000_dpem_g_pot12_legacy_state_7d743da0
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: dispatch
@@ -2427,7 +2428,6 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot12_legacy_state_7d743da0
             stop
         endif
         cevau = 1.e0_wp / 27.2113961e0_wp
-        pi    = acos(-1.0e0_wp)
         ! set leven true for an even U12 surface, and false for an odd
         ! surface
         leven = .true.

@@ -1,6 +1,7 @@
 !> @brief Implement CH5_GEN_J1_1987, a potential energy surface for CH5.
 module chempotpy_ch5_gen_j1_1987_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -309,12 +310,11 @@ module chempotpy_ch5_gen_j1_1987_pes
                 & der2, der3, der4, df(4), dfr(4), dk(6), dr2, dtot, dvoop(18), dxx(18), e, ee, evcon, exa11, exa12, exa13, exa14, &
                 & exa21, exa22, exa23, exa24, exf1, exf2, exf3, exf4, f(4), o, rhmax, stp, sum, v, voop, w, xa, xa2, xb, xb2, xc, &
                 & xc2, xd, xd2, xxa, xxb, xxc, xxd, y1(6), y2(6)
-            integer             :: i, ib1, ib2, ib3, if1, if2, if3, ipt, klm, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i, ib1, ib2, ib3, if1, if2, if3, ipt, klm, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             evcon = 2.721161e+1_wp
             call cartou
             call carttor
@@ -545,13 +545,12 @@ module chempotpy_ch5_gen_j1_1987_pes
             ! ROUTINE TO COMPUTE CH4 ANGLES FROM THE INTERPARTICLE DISTANCES
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: x
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: x
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             do i = 1, 3
                 x             = (potrcm_r2(1)+potrcm_r2(i+1)-potrcm_r2(i+9))/(2.0e0_wp*icorcm_ar(1)*icorcm_ar(i+1))
                 potrcm_acs(i) = x
@@ -577,12 +576,11 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     AVERAGE C-H BOND LENGTH IN METHANE.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: htan, ravg
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: htan, ravg
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !     FIRST COMPUTE THE AVERAGE METHANE BOND LENGTH
             ravg           = (icorcm_ar(1)+icorcm_ar(2)+icorcm_ar(3)+icorcm_ar(4))/4.0e0_wp
             htan           = tanh(pdatcm_c1*(ravg-pdatcm_re(1)))
@@ -601,13 +599,12 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     COORDINATES OF THE ATOMS
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: df(15,3)
-            integer             :: i, j, k
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: df(15,3)
+            integer            :: i, j, k
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             do i = 1, 4
                 df(i,1)      = potxcm_x(i)-potxcm_x(5)
                 df(i,2)      = potxcm_y(i)-potxcm_y(5)
@@ -659,12 +656,11 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     ADDED BY FBB AT THE U. OF MINN.  1/24/84
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i, j
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             ! ZERO OUT DRDX
             do i = 1, 18
                 do j = 1, 15
@@ -730,12 +726,11 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     TERM WITH RESPECT TO AR(1).
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: dadr1, fex
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: dadr1, fex
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             fex             = exp(-pdatcm_b1*(icorcm_ar(1)-pdatcm_re(1))**2)
             pdatcm_aparm(1) = pdt3cm_fk0+pdt3cm_fa*fex
             dadr1           = -2.0e0_wp*pdt3cm_fa*pdatcm_b1*(icorcm_ar(1)-pdatcm_re(1))*fex
@@ -773,12 +768,11 @@ module chempotpy_ch5_gen_j1_1987_pes
                 & dgcros(18), dhds, dhdx(18), dphi(18), drdx(18), drv(3, 3, 18), dsdr, dtop(3, 18), dvoop(18), dx(18), dxmagr(3, 18), &
                 & erest, f, gcross, h, phinot, rest, rstar, rv(3, 3), s3, sphi, term1, term2, term3, term4, texp, top(3), v, voop, &
                 & x(18), xdif(2), xmagr(3), ydif(2), zdif(2)
-            integer             :: i, j, k
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i, j, k
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !     START BY COMPUTING THE NECESSARY DIFFERENCES IN THE R1,R2 AND
             !     R3 VECTORS.
             xdif(1) = x(7)-x(4)
@@ -1014,13 +1008,12 @@ module chempotpy_ch5_gen_j1_1987_pes
             ! IF LMG=2, R AND R2 MATRICES ARE SWITCHED BACK AND MATRIX DER IS SWITCH
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: coord(18), dxx(18), store, v
-            integer             :: k, kk, kmax, l, ll, lmg, m, mm, n, nn
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: coord(18), dxx(18), store, v
+            integer            :: k, kk, kmax, l, ll, lmg, m, mm, n, nn
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             select case( kmax )
             case( 1 )
                 k  = 1
@@ -1110,12 +1103,11 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     THE SAME.       ADDED 11/22/85
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: a, asb, asf, b, c, ctau, ctau2, dasb, dasf, delta2, f, fk1, fk2, ravg, rdif, rdif2, rdif3, rdif4, rdif5, xyz
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: a, asb, asf, b, c, ctau, ctau2, dasb, dasf, delta2, f, fk1, fk2, ravg, rdif, rdif2, rdif3, rdif4, rdif5, xyz
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             ravg = (icorcm_ar(1)+icorcm_ar(2)+icorcm_ar(3)+icorcm_ar(4))/4.0e0_wp
             !     COMPUTE THETA
             if( ravg .gt. pdt2cm_dij )then
@@ -1176,13 +1168,12 @@ module chempotpy_ch5_gen_j1_1987_pes
             ! E IS THE FINAL THREE-BODY ENERGY
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: a, a1, a2, aa1, aa2, alab, alac, albc, b, b1, b2, bb, bb1, bb2, c, c1, c2, cc1, cc2, dab1, dab3, dac1, dac3, de1ab, de1ac, de1bc, de3ab, de3ac, de3bc, dqr, dr1, dr2, dr3, dtot, dur, dux, duy, duz, dxr, dyr, dzr, e, e1ab, e1ac, e1bc, e3ab, e3ac, e3bc, qab, qac, qbc, rr1, rr2, rr3, u, xx, yy, zz
-            integer             :: i, j, k
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: a, a1, a2, aa1, aa2, alab, alac, albc, b, b1, b2, bb, bb1, bb2, c, c1, c2, cc1, cc2, dab1, dab3, dac1, dac3, de1ab, de1ac, de1bc, de3ab, de3ac, de3bc, dqr, dr1, dr2, dr3, dtot, dur, dux, duy, duz, dxr, dyr, dzr, e, e1ab, e1ac, e1bc, e3ab, e3ac, e3bc, qab, qac, qbc, rr1, rr2, rr3, u, xx, yy, zz
+            integer            :: i, j, k
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             a     = rr1-pdatcm_re(i)
             b     = rr2-pdatcm_re(j)
             c     = rr3-pdatcm_re(k)
@@ -1247,12 +1238,11 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     FUNCTION OF AR(H'-H) AND THE C-H-H' BEND ANGLE.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: alpha, c1, check, dalr1, dalr5, dalr6, dc1r6, dcyx, deg20, dyxr, r6, tem, tem2, tem22, tembot, u, ui, yx
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: alpha, c1, check, dalr1, dalr5, dalr6, dc1r6, dcyx, deg20, dyxr, r6, tem, tem2, tem22, tembot, u, ui, yx
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !     COMPUTE C1--IT IS A FUNCTION OF R6--THE H-H' BOND DISTANCE
             if( icorcm_ar(6) .gt. 15.0e0_wp )then
                 r6 = icorcm_ar(6)/3.0e0_wp
@@ -1316,14 +1306,13 @@ module chempotpy_ch5_gen_j1_1987_pes
             !   N3TM must be greater than or equal to N3TMMN.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: coord(18), df(4), dfr(4), dk(6), dvoop(18), dxx(18), evcon, f(4), y1(6), y2(6)
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: n3tmmn = 18
+            real(wp)           :: coord(18), df(4), dfr(4), dk(6), dvoop(18), dxx(18), evcon, f(4), y1(6), y2(6)
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
+            integer, parameter :: n3tmmn = 18
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
             evcon = 2.721161e+1_wp
             if( infocm_natoms .gt. 25 )then
@@ -1349,12 +1338,11 @@ module chempotpy_ch5_gen_j1_1987_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -1448,7 +1436,6 @@ module chempotpy_ch5_gen_j1_1987_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

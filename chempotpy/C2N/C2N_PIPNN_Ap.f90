@@ -1,7 +1,8 @@
 !     The ^2A prime PES for C2N system at the MC-PDFT/AVTZ level.
 !> @brief Implement C2N_PIPNN_Ap, a potential energy surface for C2N.
 module chempotpy_c2n_pipnn_ap_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -54,7 +55,6 @@ module chempotpy_c2n_pipnn_ap_pes
         integer, parameter  :: npip    = 12
         real(wp), parameter :: alpha   = 1.5e0_wp ! angstrom
         real(wp), parameter :: vpescut = 5.e5_wp ! eV
-        real(wp), parameter :: pi      = acos(-1.e0_wp)
         integer             :: i
         real(wp)            :: vpesa(1), vpesb(1), vpesc(1), vpes
         real(wp)            :: rb(3), xbond(3), basis(0:npip), txinput(npip)

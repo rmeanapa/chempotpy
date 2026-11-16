@@ -24,7 +24,8 @@
 
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_rejac_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -65,7 +66,7 @@ module chempotpy_aln_rejac_pes
     subroutine pot( x, y, z, v, natom, maxatom )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: alpha, beta, bs, dx, dy, dz, e0, e2, e3, en, ep, eta, eta1, eta2, fra, pi, rr, s, u, ud, udno, uno, &
+        real(wp) :: alpha, beta, bs, dx, dy, dz, e0, e2, e3, en, ep, eta, eta1, eta2, fra, rr, s, u, ud, udno, uno, &
             & v, vv, x(maxatom), y(maxatom), z(maxatom)
         integer             :: i, j, m, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
@@ -80,7 +81,6 @@ module chempotpy_aln_rejac_pes
         alpha = 262.2   /(autoev*autoang**3)
         eta1  = 0.7111   *autoang
         beta  = 1.5664
-        pi    = acos(-1.e0_wp)
         eta2  = (eta+eta1)/beta
         ep    = eta/(eta+eta1)
         bs    = beta*s

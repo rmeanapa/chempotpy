@@ -69,17 +69,17 @@ the following changes:
   commands for validating the entire surface catalog.
 
 
-Physical constants and unit conversions
----------------------------------------
+Mathematical constants and unit conversions
+-------------------------------------------
 
-CHEMPOTPY uses the NIST CODATA 2022 adjustment as its versioned source for
-universal physical constants. The authoritative decimal values and provenance
-are stored in `chempotpy/core/codata_2022.json`; committed Fortran and Python
-modules are generated from that manifest so compiled PES modules do not read a
-data file at runtime. Run the following check after changing the manifest or
-the generator:
+The generated `chempotpy_constants` module provides one working-precision
+definition of `pi` together with the NIST CODATA 2022 universal physical
+constants. The authoritative CODATA decimal values and provenance are stored
+in `chempotpy/core/codata_2022.json`; compiled PES modules therefore do not
+read a data file at runtime. Run the following check after changing the
+manifest or generator:
 
-    python scripts/generate_physical_constants.py --check
+    python scripts/generate_constants.py --check
 
 All public PES boundary conversions use the resulting canonical factors:
 

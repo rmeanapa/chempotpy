@@ -65,7 +65,8 @@
 
 !> @brief Implement FH2_GEN_5SECW_1991, a potential energy surface for FH2.
 module chempotpy_fh2_gen_5secw_1991_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -409,7 +410,6 @@ module chempotpy_fh2_gen_5secw_1991_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: deh2   = 0.174472692e0_wp
             real(wp), parameter :: dehf   = 0.224989333e0_wp
@@ -472,7 +472,6 @@ module chempotpy_fh2_gen_5secw_1991_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: deh2   = 0.174472692e0_wp
             real(wp), parameter :: dehf   = 0.224989333e0_wp
@@ -531,12 +530,11 @@ module chempotpy_fh2_gen_5secw_1991_pes
             !     CALCULATES TWO-BODY CORRELATION ENERGY.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: r1p10, r1p6, r1p8, r2p10, r2p6, r2p8, r3p10, r3p6, r3p8
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: r1p10, r1p6, r1p8, r2p10, r2p6, r2p8, r3p10, r3p6, r3p8
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             r1p6             = pt1cm_r(1)**6
             r1p8             = pt1cm_r(1)**8
             r1p10            = pt1cm_r(1)**10
@@ -567,12 +565,11 @@ module chempotpy_fh2_gen_5secw_1991_pes
             !     CALCULATES DAMPING FUNCTION FOR THE NTH DISPERSION COEFFICIENT
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: dpol1(3), dpol2(3), dpol3(3), dx(3), pol1(3), pol2(3), pol3(3), rt1(3), rt2(3), x(3)
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: dpol1(3), dpol2(3), dpol3(3), dx(3), pol1(3), pol2(3), pol3(3), rt1(3), rt2(3), x(3)
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             x(1) = 2.0e0_wp*rt1(1)/(rt2(1)+2.5e0_wp*dist_r0(1))
             x(2) = 2.0e0_wp*rt1(2)/(rt2(2)+2.5e0_wp*dist_r0(2))
             x(3) = 2.0e0_wp*rt1(3)/(rt2(3)+2.5e0_wp*dist_r0(3))
@@ -629,12 +626,11 @@ module chempotpy_fh2_gen_5secw_1991_pes
             implicit none
             real(wp) :: co3(3), dc3dr1(3), dc3dr2(3), dc3dr3(3), dg1, dg2, dg3, dh1, dh2, dh3, dt1dr1, dt1dr2, &
                 & dt1dr3, dt2dr1, dt2dr2, dt2dr3, dt3dr1, dt3dr2, dt3dr3, fi, g1, g2, g3, h1, h2, h3, r1pi, r2pi, r3pi, t1, t2, t3
-            integer             :: i, jj
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i, jj
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             jj = 0
             do i=6, 10, 2
                 jj   = jj+1
@@ -696,12 +692,11 @@ module chempotpy_fh2_gen_5secw_1991_pes
                 & detrip(3, 3), dex(3, 3), dfcsi1(3), dfcsi2(3), dq(3, 3), dr, dri(3), drp2, dscale, dsumq(3), dti(3, 3), dx(3), ehf(3), &
                 & ehft(3), etrip(3), ex(3), exch, fcsi1t, fcsi2t, ff1, ff2, ff3, q(3), r1p2, r2p2, r2p3, r2p4, r3p2, scale, sumq, &
                 & texch, ti(3), tmp1, tmp2, x(3), xip2, xterm, xterm1, xterm2, xterm3
-            integer             :: i, j
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i, j
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !     CSI IS SIMILAR TO A COSINE FUNCTION
             csi   = (pt1cm_r(1)-pt1cm_r(3))/pt1cm_r(2)
             csip2 = csi**2
@@ -862,13 +857,12 @@ module chempotpy_fh2_gen_5secw_1991_pes
             !  82(1985)188 WITH MODIFICATIONS
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: costh, dcos1, dcos2, dcos3, de3c1, de3c2, de3c3, ex1, ex2, ex3, f3, omp3c, omq3c, r12, r1i, r22, r32, r3i, rdif, rdif2, rsum, t, t1, t2, t3, t4, t5
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
-            logical             :: lderiv
+            real(wp)           :: costh, dcos1, dcos2, dcos3, de3c1, de3c2, de3c3, ex1, ex2, ex3, f3, omp3c, omq3c, r12, r1i, r22, r32, r3i, rdif, rdif2, rsum, t, t1, t2, t3, t4, t5
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
+            logical            :: lderiv
             lderiv = .false.
             if( usricm_nder .eq. 1 ) lderiv = .true.
             omp3c = 1.e0_wp - local_p3c
@@ -920,13 +914,12 @@ module chempotpy_fh2_gen_5secw_1991_pes
         subroutine xtanh( i, a )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: a(*), ex, rval, sgn, t, th
-            integer             :: i, j
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: a(*), ex, rval, sgn, t, th
+            integer            :: i, j
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             do j=6, 10, 2
                 rval = pt1cm_r(i) * a(j)
                 if( rval .gt. 0.0e0_wp )then
@@ -947,13 +940,12 @@ module chempotpy_fh2_gen_5secw_1991_pes
         subroutine switch
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: dth, ex, rmrb, rval, sgn, t, th
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: dth, ex, rmrb, rval, sgn, t, th
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             do i=1, 3
                 rmrb = pt1cm_r(i)-swpar_rb(i)
                 rval = rmrb*swpar_dec(i)
@@ -977,12 +969,11 @@ module chempotpy_fh2_gen_5secw_1991_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -1076,7 +1067,6 @@ module chempotpy_fh2_gen_5secw_1991_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

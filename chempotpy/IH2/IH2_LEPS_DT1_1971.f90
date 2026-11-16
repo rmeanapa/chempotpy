@@ -43,7 +43,8 @@
 
 !> @brief Implement IH2_LEPS_DT1_1971, a potential energy surface for IH2.
 module chempotpy_ih2_leps_dt1_1971_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -204,12 +205,11 @@ module chempotpy_ih2_leps_dt1_1971_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, m, n
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i, m, n
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !   Conversion constants: kcal/mol/Hartree and Angstroms/Bohr
             real(wp), parameter :: ckcal = 627.5095e0_wp
             real(wp), parameter :: cangs = 0.52917706e0_wp
@@ -279,13 +279,12 @@ module chempotpy_ih2_leps_dt1_1971_pes
             !   infinitely far from the equilibrium H2 diatomic.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: alf, cs2pp, daldr, dgadr, ds4dr, dsldr, dxidr, fac, gam, phip, quan, quan2, rr12, sn2pp, sn2pp3, sn2pp4, sn2ppl, tn2pp, xi
-            integer             :: i, j, lm3
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: alf, cs2pp, daldr, dgadr, ds4dr, dsldr, dxidr, fac, gam, phip, quan, quan2, rr12, sn2pp, sn2pp3, sn2pp4, sn2ppl, tn2pp, xi
+            integer            :: i, j, lm3
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !   Conversion constants: kcal/mol/Hartree and Angstroms/Bohr
             real(wp), parameter :: ckcal = 627.5095e0_wp
             real(wp), parameter :: cangs = 0.52917706e0_wp
@@ -373,7 +372,6 @@ module chempotpy_ih2_leps_dt1_1971_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

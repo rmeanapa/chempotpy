@@ -1,5 +1,6 @@
 module constants
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     ! Define the mass of different atoms
@@ -7,7 +8,6 @@ module constants
     real, parameter :: d_mass = 2.0135532127
     real, parameter :: h_mass = 1.0078250  !1837.15
     real, parameter :: o_mass = 15.9949146  !29156.95
-    real, parameter :: pi     = acos(-1.0)
     ! Define constants
     real, parameter :: auang  = 0.5291772083
     real, parameter :: aucm   = 219474.6313710

@@ -10,7 +10,8 @@
 
 !> @brief Implement BrH2_LEPS_LTBZSO_1995, a diabatic potential matrix for BrH2.
 module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -220,12 +221,11 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
                 stop
@@ -250,11 +250,10 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
         subroutine pot
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             call cartou
             call carttor
             if( nasurf(1,1) .ne. 0 ) call pot11
@@ -311,7 +310,6 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: charkc = 627.5095e0_wp
@@ -343,7 +341,6 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: n3atom  = 75
             integer, parameter  :: isurf   = 5
             integer, parameter  :: jsurf   = isurf*(isurf+1)/2
-            real(wp), parameter :: pi      = 3.141592653589793e0_wp
             integer, parameter  :: natom   = 25
             real(wp), parameter :: cangau  = 0.52917706e0_wp
             real(wp), parameter :: charkc  = 627.5095e0_wp
@@ -423,7 +420,6 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: charkc = 627.5095e0_wp
@@ -436,7 +432,6 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: n3atom  = 75
             integer, parameter  :: isurf   = 5
             integer, parameter  :: jsurf   = isurf*(isurf+1)/2
-            real(wp), parameter :: pi      = 3.141592653589793e0_wp
             integer, parameter  :: natom   = 25
             real(wp), parameter :: cangau  = 0.52917706e0_wp
             real(wp), parameter :: charkc  = 627.5095e0_wp
@@ -452,7 +447,6 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: charkc = 627.5095e0_wp
@@ -476,7 +470,6 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: n3atom  = 75
             integer, parameter  :: isurf   = 5
             integer, parameter  :: jsurf   = isurf*(isurf+1)/2
-            real(wp), parameter :: pi      = 3.141592653589793e0_wp
             integer, parameter  :: natom   = 25
             real(wp), parameter :: cangau  = 0.52917706e0_wp
             real(wp), parameter :: charkc  = 627.5095e0_wp
@@ -502,7 +495,6 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

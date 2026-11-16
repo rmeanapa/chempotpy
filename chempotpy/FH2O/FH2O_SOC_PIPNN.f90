@@ -3,7 +3,8 @@
 !-->  global variables are declared in this module
 !> @brief Implement FH2O_SOC_PIPNN, a potential energy surface for FH2O.
 module chempotpy_fh2o_soc_pipnn_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -589,11 +590,10 @@ module chempotpy_fh2o_soc_pipnn_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp) :: r(1:6), c(1:3,1:4), mass(1:4)
-        real(wp) :: cm(3,2), vec(1:3,1:6), pi
+        real(wp) :: cm(3,2), vec(1:3,1:6)
         real(wp) :: xa, xb, yc, yd, cxsin, dxsin, dotp
         real(wp) :: rx1, rx2, rx3, rx4, rx5, rx6
         real(wp) :: amass, bmass, cmass, dmass
-        pi      = acos(-1.0e0_wp)
         amass   = 1.00783e0_wp
         bmass   = 15.99491e0_wp
         cmass   = amass

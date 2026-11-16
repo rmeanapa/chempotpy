@@ -11,7 +11,8 @@
 
 !> @brief Implement H2O2_GEN_1998, a potential energy surface for H2O2.
 module chempotpy_h2o2_gen_1998_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -657,7 +658,7 @@ module chempotpy_h2o2_gen_1998_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp)            :: n, n1, n2
-        real(wp)            :: v, pi
+        real(wp)            :: v
         real(wp)            :: coord(12), dx(12), x(12), pass(6)
         real(wp)            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
         real(wp)            :: c11, c12, c13, c14, c15, c16, c17, c18
@@ -678,7 +679,6 @@ module chempotpy_h2o2_gen_1998_pes
         !  Calculate energy at the configuration space point
         !  NOTE :: This is not necessarily a quadrature point
         ! Expecting input in cartesians
-        pi  = 4.e0_wp*atan(1.e0_wp)
         c1  = x(1) - x(4)
         c2  = x(2) - x(5)
         c3  = x(3) - x(6)
@@ -757,7 +757,7 @@ module chempotpy_h2o2_gen_1998_pes
     subroutine vibpot( coord, v )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: v, pi
+        real(wp) :: v
         real(wp) :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
         real(wp) :: q5p(0:4), q6p(0:4)
         real(wp) :: ind1(152), ind2(152), ind3(152), ind4(152)
@@ -829,7 +829,6 @@ module chempotpy_h2o2_gen_1998_pes
         rm_oo     = 1.456199e0_wp
         rm_oh     = 0.962755e0_wp
         angle_ooh = 100.9059e0_wp
-        pi        = 4.e0_wp*atan(1.e0_wp)
         angle_ooh = angle_ooh*pi/180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
@@ -896,7 +895,7 @@ module chempotpy_h2o2_gen_1998_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp)            :: n, n1, n2
-        real(wp)            :: v, pi
+        real(wp)            :: v
         real(wp)            :: coord(12), dx(12), x(12), pass(6)
         real(wp)            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
         real(wp)            :: c11, c12, c13, c14, c15, c16, c17, c18
@@ -932,7 +931,6 @@ module chempotpy_h2o2_gen_1998_pes
             print *, 'Parameter g_p_ is greater than g_pmax_'
             stop
         endif
-        pi = 4.e0_wp * atan(1.e0_wp)
         do g_i_ = 1, g_p_
             g_c1(g_i_) = -g_x(g_i_,4) + g_x(g_i_,1)
         enddo
@@ -1300,7 +1298,7 @@ module chempotpy_h2o2_gen_1998_pes
             & )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)           :: v, pi
+        real(wp)           :: v
         real(wp)           :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
         real(wp)           :: q5p(0:4), q6p(0:4)
         real(wp)           :: ind1(152), ind2(152), ind3(152), ind4(152)
@@ -1385,7 +1383,6 @@ module chempotpy_h2o2_gen_1998_pes
         rm_oo     = 1.456199e0_wp
         rm_oh     = 0.962755e0_wp
         angle_ooh = 100.9059e0_wp
-        pi        = 4.e0_wp * atan(1.e0_wp)
         angle_ooh = angle_ooh * pi / 180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
@@ -1557,7 +1554,7 @@ module chempotpy_h2o2_gen_1998_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp)            :: n, n1, n2
-        real(wp)            :: v, pi
+        real(wp)            :: v
         real(wp)            :: coord(12), dx(12), x(12), pass(6)
         real(wp)            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
         real(wp)            :: c11, c12, c13, c14, c15, c16, c17, c18
@@ -1608,7 +1605,6 @@ module chempotpy_h2o2_gen_1998_pes
             print *, 'Parameter g_p_ is greater than g_pmax_'
             stop
         endif
-        pi = 4.e0_wp * atan(1.e0_wp)
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
                 g_g_c1(g2i,g_i_) = g_g_x(g2i,g_i_,1) + (-g_g_x(g2i,g_i_,4))
@@ -2151,7 +2147,7 @@ module chempotpy_h2o2_gen_1998_pes
             &g_coord, ldg_coord, v, g_v, g_g_v, ldg_g_v, ldg_v )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)           :: v, pi
+        real(wp)           :: v
         real(wp)           :: coord(6), q1p(0:4), q2p(0:4), q3p(0:4), q4p(0:4)
         real(wp)           :: q5p(0:4), q6p(0:4)
         real(wp)           :: ind1(152), ind2(152), ind3(152), ind4(152)
@@ -2244,7 +2240,6 @@ module chempotpy_h2o2_gen_1998_pes
         rm_oo     = 1.456199e0_wp
         rm_oh     = 0.962755e0_wp
         angle_ooh = 100.9059e0_wp
-        pi        = 4.e0_wp * atan(1.e0_wp)
         angle_ooh = angle_ooh * pi / 180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A

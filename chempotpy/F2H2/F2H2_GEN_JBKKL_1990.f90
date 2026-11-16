@@ -1,6 +1,7 @@
 !> @brief Implement F2H2_GEN_JBKKL_1990, a potential energy surface for F2H2.
 module chempotpy_f2h2_gen_jbkkl_1990_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -57,7 +58,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
         subroutine carttor( cartnu, r )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
+            real(wp) :: cmm, cphi, flm, hhd, hym, phi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
             real(wp) :: cartnu(4,3), r(6)
             flm    = 18.99840e0_wp
             hym    = 1.007825e0_wp
@@ -88,7 +89,6 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             if( theta2 .gt. 1.0e0_wp ) theta2=1.0e0_wp
             if( theta2 .lt. -1.0e0_wp ) theta2=-1.0e0_wp
             theta2 = acos(theta2)
-            pi     = acos(-1.0e0_wp)
             theta2 = pi-theta2
             q1     = sqrt(xrm1**2+yrm1**2+zrm1**2)
             q2     = sqrt(xrm2**2+yrm2**2+zrm2**2)

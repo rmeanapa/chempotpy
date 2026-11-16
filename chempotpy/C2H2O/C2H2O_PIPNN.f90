@@ -1,5 +1,6 @@
 !> @brief Implement C2H2O_PIPNN, a potential energy surface for C2H2O.
 module chempotpy_c2h2o_pipnn_pes
+    use chempotpy_constants,              only: pi
     use chempotpy_c2h2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_1_count, hidden_2_biases, &
         & hidden_2_count, hidden_hidden_weights, hidden_output_weights, input_hidden_weights, &
         & network_count, ninput, nscale, output_biases, scale_averages, scale_deltas, &
@@ -88,7 +89,6 @@ module chempotpy_c2h2o_pipnn_pes
         real(wp), parameter :: alpha = 2.e0_wp ! bohr
         ! bohr to angstrom
         real(wp), parameter :: btoa = 0.529177249e0_wp
-        real(wp), parameter :: pi   = acos(-1.e0_wp)
         basis = 0.e0_wp
         call all_pair_distances(transpose(ct), pair_distances)
         rb       = pair_distances([5,6,7,1,8,9,2,10,3,4])

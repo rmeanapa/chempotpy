@@ -47,7 +47,8 @@
 
 !> @brief Implement OH2_GEN_SL1979, a potential energy surface for OH2.
 module chempotpy_oh2_gen_sl1979_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -245,7 +246,6 @@ module chempotpy_oh2_gen_sl1979_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: bohr   = 0.529177e0_wp
             real(wp), parameter :: hart   = 27.21161e0_wp
@@ -291,7 +291,6 @@ module chempotpy_oh2_gen_sl1979_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: bohr   = 0.529177e0_wp
             real(wp), parameter :: hart   = 27.21161e0_wp
@@ -535,12 +534,11 @@ module chempotpy_oh2_gen_sl1979_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -634,7 +632,6 @@ module chempotpy_oh2_gen_sl1979_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

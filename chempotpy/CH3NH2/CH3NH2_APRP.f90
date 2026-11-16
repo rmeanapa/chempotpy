@@ -72,7 +72,8 @@
 
 !> @brief Implement CH3NH2_APRP, a potential energy surface for CH3NH2.
 module chempotpy_ch3nh2_aprp_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -267,7 +268,6 @@ module chempotpy_ch3nh2_aprp_pes
         real(wp)            :: a
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -621,7 +621,6 @@ module chempotpy_ch3nh2_aprp_pes
         real(wp) :: sqb(nqb), cqb(nqb)
         real(wp) :: qc(20), dut(20)
         real(wp) :: v0(nrap,ntap)
-        real(wp) :: pi
         real(wp) :: dnc1, dnc2
         real(wp) :: dch1, dch2
         real(wp) :: knhb1(nrap,ntap), knhb2(nrap,ntap)
@@ -650,7 +649,6 @@ module chempotpy_ch3nh2_aprp_pes
         real(wp) :: dd1, dd2, rr, ft2, fa2
         real(wp) :: ft1(nrap,ntap)
         real(wp) :: fa1(nrap,ntap)
-        pi  = 4.e0_wp*atan(1.e0_wp)
         ut  = 0e0_wp
         vs  = 0e0_wp
         vb  = 0e0_wp
@@ -1682,8 +1680,6 @@ module chempotpy_ch3nh2_aprp_pes
         real(wp) :: u, v, f(4)
         real(wp) :: h(4), hs
         real(wp) :: dhs(20), dh(4,20)
-        real(wp) :: pi
-        pi  = 4.e0_wp*atan(1.e0_wp)
         hs  = 0e0_wp
         dhs = 0e0_wp
         dh  = 0e0_wp
@@ -1743,8 +1739,6 @@ module chempotpy_ch3nh2_aprp_pes
         real(wp) :: u, v, f(4)
         real(wp) :: h(4), hs
         real(wp) :: dhs(20), dh(4,20)
-        real(wp) :: pi
-        pi  = 4.e0_wp*atan(1.e0_wp)
         hs  = 0e0_wp
         dhs = 0e0_wp
         dh  = 0e0_wp
@@ -1823,8 +1817,6 @@ module chempotpy_ch3nh2_aprp_pes
         real(wp) :: u, v, f(4)
         real(wp) :: h(4), hs
         real(wp) :: dhs(20), dh(4,20)
-        real(wp) :: pi
-        pi  = 4.e0_wp*atan(1.e0_wp)
         hs  = 0e0_wp
         dhs = 0e0_wp
         dh  = 0e0_wp
@@ -2270,7 +2262,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -2334,7 +2325,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -2409,7 +2399,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -2480,7 +2469,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -2554,7 +2542,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -2628,7 +2615,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -2702,7 +2688,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -2776,7 +2761,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -2854,7 +2838,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -2932,7 +2915,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -3010,7 +2992,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -3088,7 +3069,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
@@ -3166,7 +3146,6 @@ module chempotpy_ch3nh2_aprp_pes
         implicit none
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk

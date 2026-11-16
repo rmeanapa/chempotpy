@@ -50,7 +50,8 @@
 
 !> @brief Implement OH2_GEN_DIM1981, a potential energy surface for OH2.
 module chempotpy_oh2_gen_dim1981_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -272,13 +273,12 @@ module chempotpy_oh2_gen_dim1981_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, it
-            real(wp)            :: nab, nab1, nbc, nbc1, junk(4)
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i, it
+            real(wp)           :: nab, nab1, nbc, nbc1, junk(4)
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
@@ -332,14 +332,13 @@ module chempotpy_oh2_gen_dim1981_pes
             !CCCCCCCCCCCCCCC
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: bcoor, c, dac, ractmp, rob, stuff, vabbc, vac
-            integer             :: it
-            real(wp)            :: nab, nab1, nbc, nbc1, junk(4)
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: bcoor, c, dac, ractmp, rob, stuff, vabbc, vac
+            integer            :: it
+            real(wp)           :: nab, nab1, nbc, nbc1, junk(4)
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
@@ -429,13 +428,12 @@ module chempotpy_oh2_gen_dim1981_pes
             !   POTENTIAL ROUTINE ASSUMES SPLINE INFO IS IN UNITS OF KCAL/ANGSTROM
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: csp(48,3), scrap(48), v(4)
-            real(wp)            :: nab, nab1, nbc, nbc1, junk(4)
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: csp(48,3), scrap(48), v(4)
+            real(wp)           :: nab, nab1, nbc, nbc1, junk(4)
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
@@ -463,7 +461,6 @@ module chempotpy_oh2_gen_dim1981_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: hrtree = 627.5095e0_wp
             real(wp), parameter :: detrad = .0174532e0_wp
@@ -637,12 +634,11 @@ module chempotpy_oh2_gen_dim1981_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -736,7 +732,6 @@ module chempotpy_oh2_gen_dim1981_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

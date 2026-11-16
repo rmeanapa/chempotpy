@@ -71,7 +71,8 @@
 
 !> @brief Implement PHOH_APRP, a diabatic potential matrix for C6H6O.
 module chempotpy_phoh_aprp_dpem_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -10075,7 +10076,6 @@ module chempotpy_phoh_aprp_dpem_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp), parameter :: zero = 0.0e0_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         ! Global variables
         integer  :: ii
         integer  :: nap
@@ -10932,15 +10932,14 @@ module chempotpy_phoh_aprp_dpem_pes
         ! bmst: B-matrix of NRICs
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: d13dph, d23dph, du12dr, phi, r, u12t, u13s, u13t, u23s, u23t
-        integer             :: i, j, nap
-        integer, parameter  :: maxdim = 100
-        integer, parameter  :: ldbmt  = maxdim
-        integer, parameter  :: ldbms  = maxdim
-        integer, parameter  :: ldbnrt = maxdim
-        integer, parameter  :: ldct   = maxdim
-        integer, parameter  :: nstc   = 9
-        real(wp), parameter :: pi     = 3.1415926535898e0_wp
+        real(wp)           :: d13dph, d23dph, du12dr, phi, r, u12t, u13s, u13t, u23s, u23t
+        integer            :: i, j, nap
+        integer, parameter :: maxdim = 100
+        integer, parameter :: ldbmt  = maxdim
+        integer, parameter :: ldbms  = maxdim
+        integer, parameter :: ldbnrt = maxdim
+        integer, parameter :: ldct   = maxdim
+        integer, parameter :: nstc   = 9
         ! Global variables
         integer  :: igrad, ir
         integer  :: natm
@@ -11351,7 +11350,6 @@ module chempotpy_phoh_aprp_dpem_pes
         implicit none
         integer, parameter  :: maxint = 1000
         real(wp), parameter :: btoa   = 0.5291772192e0_wp
-        real(wp), parameter :: pi     = 3.1415926535898e0_wp
         integer             :: i
         integer             :: nbl, nba, noop, nto, nint
         integer             :: ibl(2,*), iba(3,*), ito(4,*), ioop(4,*)
@@ -11659,7 +11657,6 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp)            :: a
         integer             :: i, j, k, l
         real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp), parameter :: pi   = 3.1415926535898e0_wp
         real(wp)            :: x(*), y(*), z(*)
         real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
         real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk

@@ -1,4 +1,5 @@
 module chempotpy_h3cl_pipnn_pes
+    use chempotpy_constants,             only: pi
     use chempotpy_h3cl_pipnn_parameters, only: activation_function, alpha, h2_distance_grid, &
         & h2_potential_grid, hcl_distance_grid, hcl_potential_grid, hidden_1_biases, hidden_1_count, &
         & hidden_2_biases, hidden_2_count, hidden_hidden_weights, hidden_output_weights, &
@@ -475,13 +476,12 @@ module chempotpy_h3cl_pipnn_pes
     subroutine xyz_to_jaco( x, r1, r2, r3, theta1, theta2, phi, r )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: ra1, ra4, rb1, rb4, str11, str12
-        real(wp)            :: x(3,4), a(3), b(3), r(6)
-        real(wp)            :: mass(4)
-        real(wp)            :: r1, r2, r3, theta1, theta2, phi
-        real(wp), parameter :: pi = 3.14159265e0_wp
-        integer             :: k, m, i, j, n, ndata
-        character           :: long
+        real(wp)  :: ra1, ra4, rb1, rb4, str11, str12
+        real(wp)  :: x(3,4), a(3), b(3), r(6)
+        real(wp)  :: mass(4)
+        real(wp)  :: r1, r2, r3, theta1, theta2, phi
+        integer   :: k, m, i, j, n, ndata
+        character :: long
         mass(1) = 1.00782503e0_wp
         mass(2) = mass(1)
         mass(3) = mass(1)

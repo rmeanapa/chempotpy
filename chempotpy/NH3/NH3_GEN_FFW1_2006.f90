@@ -40,7 +40,8 @@
 
 !> @brief Implement NH3_GEN_FFW1_2006, a potential energy surface for NH3.
 module chempotpy_nh3_gen_ffw1_2006_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -254,7 +255,6 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         real(wp) :: gv1(12)
         real(wp) :: gv2(12)
         ! Parameter List
-        real(wp), parameter :: pi = 3.1415926535897930e0_wp
         ! Internal coordinates used
         ! internal coodinates: three bond distances, three bond angles, one
         ! trisector angle
@@ -583,7 +583,6 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         real(wp) :: g_ans(7)
         ! Parameter List
         real(wp)            :: frb, frc, alp
-        real(wp), parameter :: pi     = 3.1415926535897930e0_wp
         real(wp), parameter :: deg2au = pi/180.e0_wp
         ! Experimental value: Landolt-Börnstein, Numerical Data and Function
         ! Relationships in Science and Technology II(7,2) (Springer, New York,
@@ -759,7 +758,6 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         real(wp) :: g_ans(7)
         ! Parameter List
         real(wp)            :: frb, frc, alp, re, frd
-        real(wp), parameter :: pi     = 3.1415926535897930e0_wp
         real(wp), parameter :: deg2au = pi/180.e0_wp
         real(wp), parameter :: gta    = 2.0e0_wp*pi/3.0e0_wp
         ! CoS(GTa) = CoS(120.0) = -1/2
@@ -986,7 +984,6 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         ! Derivatives of 7 internal coordinates
         real(wp) :: g_ans(7)
         ! Parameter List
-        real(wp), parameter :: pi = 3.1415926535897930e0_wp
         !! Parameter List (U12)
         ! FRU12a    parameters used to define angular for U22
         ! FRU12b    parameters used to define angular for U22
@@ -1237,9 +1234,8 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         implicit none
         integer, parameter :: natom = 4
         !     X in one array with x1,y1,z1,...x4,y4,z4
-        real(wp)            :: x(3 * natom)
-        real(wp)            :: bow(7)
-        real(wp), parameter :: pi = 3.1415926535897930e0_wp
+        real(wp) :: x(3 * natom)
+        real(wp) :: bow(7)
         ! This function returns the Bowman
         ! coordinates from cartesian coordinates
         ! All angles are in DEGREES
@@ -1811,10 +1807,9 @@ module chempotpy_nh3_gen_ffw1_2006_pes
         use chempotpy_kinds, only: wp
         implicit none
         ! I/O variables
-        integer, parameter  :: natom = 4
-        real(wp), parameter :: pi    = 3.1415926535897930e0_wp
-        real(wp)            :: cart(3*natom)
-        real(wp)            :: gangint(12,7)
+        integer, parameter :: natom = 4
+        real(wp)           :: cart(3*natom)
+        real(wp)           :: gangint(12,7)
         ! Local variables
         integer  :: i, j, k
         real(wp) :: r(3), t(3)
@@ -1926,9 +1921,8 @@ module chempotpy_nh3_gen_ffw1_2006_pes
     subroutine cart_to_polar( x, ans )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: x(3)
-        real(wp)            :: ans(3)
-        real(wp), parameter :: pi = 3.1415926535897930e0_wp
+        real(wp) :: x(3)
+        real(wp) :: ans(3)
         ! ans(1) : r
         ! ans(2) : phi (0-2PI)  !in degrees
         ! ans(3) : theta (0-PI) !in degrees
@@ -1956,9 +1950,8 @@ module chempotpy_nh3_gen_ffw1_2006_pes
     subroutine polar_to_cart( p, ans )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: p(3)
-        real(wp)            :: ans(3)
-        real(wp), parameter :: pi = 3.1415926535897930e0_wp
+        real(wp) :: p(3)
+        real(wp) :: ans(3)
         ! p(1) : r
         ! p(2) : phi (0-2PI)  !in degrees
         ! p(3) : theta (0-PI) !in degrees
@@ -1976,9 +1969,8 @@ module chempotpy_nh3_gen_ffw1_2006_pes
     subroutine frombowman( bow, coord )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: bow(7)
-        real(wp)            :: coord(12)
-        real(wp), parameter :: pi = 3.1415926535897930e0_wp
+        real(wp) :: bow(7)
+        real(wp) :: coord(12)
         ! This function returns the cartesian
         ! coordinates from bowman coordinates for 4 atom systems ONLY
         ! All angles are in DEGREES

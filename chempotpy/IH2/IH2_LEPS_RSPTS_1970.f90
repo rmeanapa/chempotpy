@@ -39,7 +39,8 @@
 
 !> @brief Implement IH2_LEPS_RSPTS_1970, a potential energy surface for IH2.
 module chempotpy_ih2_leps_rspts_1970_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -178,12 +179,11 @@ module chempotpy_ih2_leps_rspts_1970_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !   Echo the potential name and the potential parameters to the
             if( legacy_natoms .gt. 25 )then
                 write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
@@ -228,12 +228,11 @@ module chempotpy_ih2_leps_rspts_1970_pes
             implicit none
             real(wp) :: de1(3), de3(3), dj(3), dq(3), e1(3), e3(3), ex1, ex2, ex3, exa, exb, exch, exs, fj(3), &
                 & q(3), qt, rel, sumj
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
@@ -299,7 +298,6 @@ module chempotpy_ih2_leps_rspts_1970_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

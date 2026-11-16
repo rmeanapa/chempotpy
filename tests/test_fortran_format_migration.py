@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from scripts.format_fortran import (
+    centralize_pi_constants,
     fold_standalone_dimensions,
     format_source_text,
     hoist_pes_metadata,
@@ -15,6 +16,77 @@ from scripts.format_fortran import (
 
 
 class FortranFormatMigrationTests(unittest.TestCase):
+    def test_pi_parameters_are_replaced_by_core_import(self) -> None:
+        source = """\
+module first_surface
+    use chempotpy_kinds, only: wp
+    implicit none
+contains
+    subroutine evaluate
+        real(wp), parameter :: pi = 3.1415926_wp
+        print *, pi
+    end subroutine evaluate
+end module first_surface
+
+module unrelated_surface
+    implicit none
+end module unrelated_surface
+"""
+        converted = centralize_pi_constants(source)
+        self.assertIn(
+            "module first_surface\n"
+            "    use chempotpy_constants, only: pi\n",
+            converted,
+        )
+        self.assertNotIn("parameter :: pi", converted)
+        self.assertNotIn(
+            "module unrelated_surface\n"
+            "    use chempotpy_constants",
+            converted,
+        )
+
+    def test_canonical_constants_module_keeps_pi_definition(self) -> None:
+        source = """\
+module chempotpy_constants
+    use chempotpy_kinds, only: wp
+    real(wp), parameter, public :: pi = 3.141592653589793_wp
+end module chempotpy_constants
+"""
+        self.assertEqual(centralize_pi_constants(source), source)
+
+    def test_runtime_pi_construction_is_replaced_in_external_procedure(self) -> None:
+        source = """\
+subroutine evaluate( angle )
+    use chempotpy_kinds, only: wp
+    implicit none
+    real(wp), intent(out) :: angle
+    real(wp)              :: pi, scale
+    pi = 4.0e0_wp*atan(1.0e0_wp)
+    angle = scale*pi
+end subroutine evaluate
+"""
+        converted = centralize_pi_constants(source)
+        self.assertIn(
+            "subroutine evaluate( angle )\n"
+            "    use chempotpy_constants, only: pi\n",
+            converted,
+        )
+        self.assertIn("real(wp)              :: scale", converted)
+        self.assertNotIn("atan(1.0e0_wp)", converted)
+
+    def test_nonmathematical_pi_accumulator_is_not_rewritten(self) -> None:
+        source = """\
+module polynomial
+contains
+    subroutine evaluate
+        real(wp) :: pi
+        pi = 0.0_wp
+        pi = pi+coefficient*basis
+    end subroutine evaluate
+end module polynomial
+"""
+        self.assertEqual(centralize_pi_constants(source), source)
+
     def test_standalone_dimensions_are_folded_into_declarations(self) -> None:
         source = """\
 subroutine switching( switch, dswitch )

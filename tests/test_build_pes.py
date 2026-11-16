@@ -22,7 +22,7 @@ class BuildPESTests( unittest.TestCase ):
     def test_core_fortran_sources_live_directly_under_core( self ) -> None:
         self.assertEqual(CORE_FORTRAN_ROOT.name, "core")
         self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_kinds.f90").is_file())
-        self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_physical_constants.f90").is_file())
+        self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_constants.f90").is_file())
         self.assertFalse((CORE_FORTRAN_ROOT / "fortran").exists())
 
     def test_entry_point_extraction_omits_internal_modules( self ) -> None:
@@ -116,7 +116,7 @@ end subroutine pes
             [path.name for path in dependencies],
             [
                 "chempotpy_kinds.f90",
-                "chempotpy_physical_constants.f90",
+                "chempotpy_constants.f90",
                 "chempotpy_units.f90",
             ],
         )

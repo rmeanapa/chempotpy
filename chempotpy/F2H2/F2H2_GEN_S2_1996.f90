@@ -46,7 +46,8 @@
 
 !> @brief Implement F2H2_GEN_S2_1996, a potential energy surface for F2H2.
 module chempotpy_f2h2_gen_s2_1996_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -466,14 +467,13 @@ module chempotpy_f2h2_gen_s2_1996_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: cg3j, e, esum, f, sum, x
-            integer             :: i, i1, i2, ia, ib, ic, id, ie, if, j, j1, j2, j3, l, m, m1, m2, m3, nmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: ma     = 135
+            real(wp)           :: cg3j, e, esum, f, sum, x
+            integer            :: i, i1, i2, ia, ib, ic, id, ie, if, j, j1, j2, j3, l, m, m1, m2, m3, nmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
+            integer, parameter :: ma     = 135
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
@@ -566,15 +566,14 @@ module chempotpy_f2h2_gen_s2_1996_pes
         subroutine gsrsqs
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: dab1, dab2, dab3
-            integer             :: j1, j2, j3
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter  :: ndmax  = 1100
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: ma     = 135
+            real(wp)           :: dab1, dab2, dab3
+            integer            :: j1, j2, j3
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: ndmax  = 1100
+            integer, parameter :: natom  = 25
+            integer, parameter :: ma     = 135
             !      dab1=rcm1-3.0d0
             !      dab2=rcm1-4.0d0
             !      dab3=rcm1-4.9d0
@@ -598,13 +597,12 @@ module chempotpy_f2h2_gen_s2_1996_pes
             implicit none
             real(wp) :: amf, amh, c, c2, c3, c4, c5, cs(4), e, fac2, p1(0:4,0:4), p2(0:4,0:4), phicon, pif, r1, &
                 & r12, r14, r2, r23, r34, rcm, s, s2, s3, s4, s5, tau, th1, th2, vp(0:4, 0:4, 0:2*4), x(4), y(4), z(4)
-            integer             :: icu, j, j1, j2, j3, m
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: ma     = 135
+            integer            :: icu, j, j1, j2, j3, m
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
+            integer, parameter :: ma     = 135
             !     PUT COORDINATES IN PROPER ARRAYS
             amh = 1837.152756e0_wp
             amf = 34631.9678e0_wp
@@ -802,7 +800,6 @@ module chempotpy_f2h2_gen_s2_1996_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             integer, parameter  :: ma     = 135
             real(wp), parameter :: am     = 1.1953e0_wp
@@ -816,12 +813,11 @@ module chempotpy_f2h2_gen_s2_1996_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -915,7 +911,6 @@ module chempotpy_f2h2_gen_s2_1996_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

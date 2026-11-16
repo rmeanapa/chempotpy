@@ -82,7 +82,8 @@
 
 !> @brief Implement C6H5SH_APRP, a potential energy surface for C6H5SH.
 module chempotpy_c6h5sh_aprp_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -167,7 +168,6 @@ module chempotpy_c6h5sh_aprp_pes
         !--- {'global' constants
         integer, parameter :: natom = 13, nstate=3, ntermmax=200 &
             , ntermtype=4, napmax=10, nqtpset=2, nlcmax=6
-        real(wp), parameter :: pi         = 3.14159265358979e0_wp
         real(wp), parameter :: ev_hartree = 3.674931e-2_wp
         real(wp), parameter :: ang_bohr   = 0.529177249e0_wp
         integer, parameter  :: n_ps       = 2 !number of primary & secondary coordinates

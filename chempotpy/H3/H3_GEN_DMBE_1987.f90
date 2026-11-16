@@ -56,7 +56,8 @@
 
 !> @brief Implement H3_GEN_DMBE_1987, a potential energy surface for H3.
 module chempotpy_h3_gen_dmbe_1987_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -375,13 +376,12 @@ module chempotpy_h3_gen_dmbe_1987_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: cnvrtd, cnvrte
-            integer             :: i, id, nexp
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: cnvrtd, cnvrte
+            integer            :: i, id, nexp
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -448,12 +448,11 @@ module chempotpy_h3_gen_dmbe_1987_pes
             implicit none
             real(wp) :: ce2, ce3, dc3(3), dlep(3), dlep2(3), dv2(3), dv3(3), dva(3), t, va, vc, vii, viii, vleps, &
                 & vleps2
-            integer             :: i, indes
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, indes
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -531,12 +530,11 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !   Calculates D3H symmetry coordinates and derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: arg, bet2, beta, dbt1, dbt2, dbt3, dgm1, dgm2, dgm3, gam2, gamma, phi3, r1, r2, r3, rtan, t, t1, t12, t2, t3, theta
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: arg, bet2, beta, dbt1, dbt2, dbt3, dgm1, dgm2, dgm3, gam2, gamma, phi3, r1, r2, r3, rtan, t, t1, t12, t2, t3, theta
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -623,13 +621,12 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     their 1st derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: d, dd, denom, dpol, fnexp, pol, rsave, t, t1, t2, tt, tt1, tt2, x
-            integer             :: id, j, nexp
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: d, dd, denom, dpol, fnexp, pol, rsave, t, t1, t2, tt, tt1, tt2, x
+            integer            :: id, j, nexp
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COR2)  *
@@ -701,13 +698,12 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     Calculates 3-body correlation energy and its 1st derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: ce3, dc3(3), g(3), gd(3), h(3), hd(3), hysec, hytan, rr, sgnt, t, t1, t2
-            integer             :: i, i2, i3, id
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: ce3, dc3(3), g(3), gd(3), h(3), hd(3), hysec, hytan, rr, sgnt, t, t1, t2
+            integer            :: i, i2, i3, id
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -771,12 +767,11 @@ module chempotpy_h3_gen_dmbe_1987_pes
             real(wp) :: at, dat, desdr, df(3), dlep(3), dlep2(3), dq(3), dr, dwe, dxj(3,3), es, et, exch, f, f1, &
                 & f2, f3, fterm, omf, qsum, rr, rri, t, t1, t2, tdc, tdq, tds, texch, vleps, vleps2, we, xj(3), xterm, xterm1, &
                 & xterm2, xterm3
-            integer             :: i, j
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i, j
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -881,13 +876,12 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     Calculates Va correction energy and its 1st derivative.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: dv, dva(3), expva, r1, r2, r3, t, t1, t2, t3, t4, va
-            integer             :: j
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: dv, dva(3), expva, r1, r2, r3, t, t1, t2, t3, t4, va
+            integer            :: j
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -935,11 +929,10 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 & eb1t, eb2, eb2p1, eb2p2, eb2p3, eb2pr, eb2pwb, eb3t, eb4, eb4a, eb4ap1, eb4ap2, eb4ap3, eb4apr, eb4apw, eb4b, &
                 & eb4bp1, eb4bp2, eb4bp3, eb4bpr, eb4bpw, eb4p1, eb4p2, eb4p3, eq, eqp1, eqp2, eqp3, exp1, exp2, exp3, r1, r1i, r2, &
                 & r2i, r3, r3i, ri, t1, t2, t3, wb, wb1p, wb2, wb2p, wb3p
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -1029,12 +1022,11 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     Calculates VIII correction energy and it 1st derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: dv3(3), expv3, t1, t2, t3, t4, t5, tdcph, tdrho, tds, viii
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: dv3(3), expv3, t1, t2, t3, t4, t5, tdcph, tdrho, tds, viii
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -1077,12 +1069,11 @@ module chempotpy_h3_gen_dmbe_1987_pes
         subroutine capf( r1, r2, r3 )
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
-            real(wp)            :: arg, brak, capk, darg, dcapk(4), dcphi(3), denom, dfu(3), dfz(3), dgz(3), ds(3), dx(3), &
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
+            real(wp)           :: arg, brak, capk, darg, dcapk(4), dcphi(3), denom, dfu(3), dfz(3), dgz(3), ds(3), dx(3), &
                 & f(3, jsurf), fu, fz, gz, r1, r2, r3, rcapf(3), x, x2, xi, xi3
             integer :: i
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
@@ -1132,13 +1123,12 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !     BOTH SINGLET AND TRIPLET STATES AND RETURNS THEIR DIFFERENCE
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: d, d2, d3, d4, dcorrs, dcorrt, dd, denom, fnexp, pol, rr, rsave, t, t1, t2, tem2, tem3, tem4, tt2, x
-            integer             :: id, j, nexp
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: d, d2, d3, d4, dcorrs, dcorrt, dd, denom, fnexp, pol, rr, rsave, t, t1, t2, tem2, tem3, tem4, tt2, x
+            integer            :: id, j, nexp
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -1216,13 +1206,12 @@ module chempotpy_h3_gen_dmbe_1987_pes
             !      COUPLINGS OF H3 SURFACES 1 AND 2. SENT TO SUBROUTINE H3COR2
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: bm2, bm3, bm4, d1b, d2, d2b, d3, d3b, d4, d4b, dpol2, fr, rmp, rr, rrn, t, th, tm, tm2, tm3, tp, tp2, tp3, tw
-            integer             :: n
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: bm2, bm3, bm4, d1b, d2, d2b, d3, d3b, d4, d4b, dpol2, fr, rmp, rr, rrn, t, th, tm, tm2, tm3, tp, tp2, tp3, tw
+            integer            :: n
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -1267,11 +1256,10 @@ module chempotpy_h3_gen_dmbe_1987_pes
             implicit none
             real(wp) :: at, capk, d1uehf, d1vhf, d1w, d2uehf, d2vhf, d2w, d3uehf, d3vhf, d3w, d4uehf, d4vhf, d4w, &
                 & dat, dcapk(4), desdr, dr, dwe, es, fzero, o1, o2, omfz, p1, p2, p3, q1, q2, q3, qlc, rr, rri, t, t1, we
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  Common block for H3 potential parameters, set in BLOCK DATA PTPACM
             !                                                     *
             !  Common block for coordinates (computed in H3COOR)  *
@@ -1344,12 +1332,11 @@ module chempotpy_h3_gen_dmbe_1987_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -1443,7 +1430,6 @@ module chempotpy_h3_gen_dmbe_1987_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

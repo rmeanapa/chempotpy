@@ -15,7 +15,8 @@
 
 !> @brief Implement CH5p_PIP, a potential energy surface for CH5p.
 module chempotpy_ch5p_pip_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -2031,8 +2032,7 @@ module chempotpy_ch5p_pip_pes
         !.... a, b, c are the length of sides of triangle
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: a, b, c, theta, pi, d
-        pi = 4.e0_wp*atan(1.e0_wp)
+        real(wp) :: a, b, c, theta, d
         if( abs(b-c-a) .le. 1e-5 )then
             theta = 0.e0_wp
         else

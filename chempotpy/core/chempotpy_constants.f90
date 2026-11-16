@@ -1,8 +1,10 @@
-!> @brief Provide the NIST CODATA 2022 constants used by CHEMPOTPY.
-module chempotpy_physical_constants
+!> @brief Provide mathematical and NIST CODATA constants used by CHEMPOTPY.
+module chempotpy_constants
     use chempotpy_kinds, only: wp
     implicit none
     private
+    real(wp), parameter, public :: pi = &
+        3.141592653589793238462643383279502884_wp
     integer, parameter, public          :: codata_adjustment_year = 2022
     character(len=*), parameter, public :: codata_source_name     = &
         "NIST CODATA 2022"
@@ -17,4 +19,4 @@ module chempotpy_physical_constants
     real(wp), parameter, public :: planck_constant_joule_second    = 6.62607015e-34_wp
     real(wp), parameter, public :: rydberg_constant_per_meter      = 10973731.568157_wp
     real(wp), parameter, public :: speed_of_light_meter_per_second = 299792458.0_wp
-end module chempotpy_physical_constants
+end module chempotpy_constants

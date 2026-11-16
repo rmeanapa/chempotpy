@@ -1,5 +1,6 @@
 !> @brief Implement K2Rb2_PIPNN, a potential energy surface for K2Rb2.
 module chempotpy_k2rb2_pipnn_pes
+    use chempotpy_constants,              only: pi
     use chempotpy_k2rb2_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_1_count, hidden_2_biases, &
         & hidden_2_count, hidden_hidden_weights, hidden_output_weights, input_hidden_weights, &
         & network_count, ninput, nscale, output_biases, scale_averages, scale_deltas, &
@@ -89,7 +90,6 @@ module chempotpy_k2rb2_pipnn_pes
         real(wp), parameter :: alpha = 10.e0_wp ! bohr
         ! bohr to angstrom
         real(wp), parameter :: btoa = 0.529177249e0_wp
-        real(wp), parameter :: pi   = acos(-1.e0_wp)
         basis = 0.e0_wp
         call all_pair_distances(transpose(ct), rb)
         xbond(:) = exp(-rb(:)/(alpha*btoa))

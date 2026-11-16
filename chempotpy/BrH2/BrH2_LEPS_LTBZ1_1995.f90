@@ -57,7 +57,8 @@
 
 !> @brief Implement BrH2_LEPS_LTBZ1_1995, a potential energy surface for BrH2.
 module chempotpy_brh2_leps_ltbz1_1995_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -240,7 +241,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: charkc = 627.5095e0_wp
@@ -294,7 +294,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: charkc = 627.5095e0_wp
@@ -360,13 +359,12 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !   bond lengths.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: capr, capr2, capri, coschi, dcapr1, dcapr2, dcapr3, dchi1, dchi2, dchi3, dzchic, dzchir, r1p2, r2i, r2p2, r3p2, schip2, tmp, tmp1, tmp2, zchi
-            integer             :: i, j
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: capr, capr2, capri, coschi, dcapr1, dcapr2, dcapr3, dchi1, dchi2, dchi3, dzchic, dzchir, r1p2, r2i, r2p2, r3p2, schip2, tmp, tmp1, tmp2, zchi
+            integer            :: i, j
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             do i = 1, 3
                 do j = 1, 3
                     dz(i,j) = 0.0e0_wp
@@ -435,12 +433,11 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !   three-center term for the H-Br-H barrier as a function of the geomet
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: a1, a2, a3, a4, a5, a6, costh, dfcn1, dfcn2, dfcn3, dfcn4, dist, dthdr1, dthdr2, dthdr3, fcn1, fcn2, fcn3, fcn4, r132p2, r1m3, r1m3p2, r1p3, r1p3m2, sintp2, sintp6, sintp8, v3cdth
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: a1, a2, a3, a4, a5, a6, costh, dfcn1, dfcn2, dfcn3, dfcn4, dist, dthdr1, dthdr2, dthdr3, fcn1, fcn2, fcn3, fcn4, r132p2, r1m3, r1m3p2, r1p3, r1p3m2, sintp2, sintp6, sintp8, v3cdth
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             a1     = v3cp1
             a2     = v3cp2
             a3     = v3cp3
@@ -498,13 +495,12 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !                   R(3) = R(Br-B)
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: dqdx(3), dqdz(3)
-            integer             :: i, j
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: dqdx(3), dqdz(3)
+            integer            :: i, j
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             do i = 1, 3
                 deq(i)  = 0.e0_wp
                 dqdx(i) = 0.e0_wp
@@ -545,13 +541,12 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !                   R(3) = R(Br-B)
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: djdr(3,3), djdx(3), djdz(3), draddj(3), sumj
-            integer             :: i, j
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: djdr(3,3), djdx(3), djdz(3), draddj(3), sumj
+            integer            :: i, j
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             do i = 1, 3
                 derad(i) = 0.e0_wp
                 djdx(i)  = 0.e0_wp
@@ -591,7 +586,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

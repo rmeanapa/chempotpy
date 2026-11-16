@@ -10,7 +10,8 @@
 
 !> @brief Implement OH3_LEPS_SE_1986, a potential energy surface for OH3.
 module chempotpy_oh3_leps_se_1986_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -194,12 +195,11 @@ module chempotpy_oh3_leps_se_1986_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
@@ -223,13 +223,12 @@ module chempotpy_oh3_leps_se_1986_pes
             !   All calculations in this subprogram are in hartree atomic units.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: b, d, dvmor, rr, t, vmor
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 1
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: b, d, dvmor, rr, t, vmor
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 1
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !   Define the statement functions VMOR and DVMOR which evaluate the Mor
             !   diatomic potential energy  and the derivatives of the Morse potentia
             vmor(d, b, t, rr)  = d*(1.0e0_wp-exp(-b*(rr-t)))**2
@@ -331,12 +330,11 @@ module chempotpy_oh3_leps_se_1986_pes
             implicit none
             real(wp) :: b(3), beta(3), coul(3), de(3), do4z(3), exch(3), op3z(3), rad, re(3), s, top3z(3), &
                 & tzp3(3), x(3), z(3), zp3(3), zpo(3)
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !   Set up the values of DE, BETA, and RE for the three-body LEPS potent
             de(1)   = concom_de(1)
             beta(1) = concom_beta(1)
@@ -383,12 +381,11 @@ module chempotpy_oh3_leps_se_1986_pes
         subroutine v4pot
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: t1, t2
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: t1, t2
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             t1 = exp(-concom_clam(1)*(pot2cm_r(1)-concom_alp(1))**2-concom_clam(1)*(pot2cm_r(2)-concom_alp(1))**2- &
                 & concom_clam(3)*(pot2cm_r(3)-concom_alp(3)) **2-concom_clam(3)*(pot2cm_r(4)-concom_alp(3))**2)* &
                 & concom_acon(1)
@@ -412,13 +409,12 @@ module chempotpy_oh3_leps_se_1986_pes
         subroutine vh2o
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: dp(3), dq(3), p, q(3), s(3), tanlg, temp, trm1, x(3), xmax1, xmax2, xx
-            integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: dp(3), dq(3), p, q(3), s(3), tanlg, temp, trm1, x(3), xmax1, xmax2, xx
+            integer            :: i
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !     XMAX1 FOR WHEN TANH SET=1.0 ON VAX
             !     XMAX2 FOR PREVENTING OVERFLOWS ON VAX
             !     STATEMENT FUNCTION
@@ -462,12 +458,11 @@ module chempotpy_oh3_leps_se_1986_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -561,7 +556,6 @@ module chempotpy_oh3_leps_se_1986_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

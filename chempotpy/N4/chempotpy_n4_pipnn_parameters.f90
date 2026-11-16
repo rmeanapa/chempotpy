@@ -1,10 +1,10 @@
 !> @brief Store immutable neural-network parameters for the n4_pipnn model.
-!
 ! Generated from released model data; do not edit numeric values by hand.
 ! Weights 1 SHA-256: 8715bd64357aa1deea15fe3efb783cf9e965bf726c22cf7aaff1768f9a673f17
 ! Biases 1 SHA-256: fd14cde2523cee83b12d9ada7898eeb80a4bfb2a6a4464f9ba359a4591df3a60
 module chempotpy_n4_pipnn_parameters
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, &
@@ -12,23 +12,22 @@ module chempotpy_n4_pipnn_parameters
         & nlayer, nodemax, nodes, noutput, nscale, &
         & output_biases, scale_averages, scale_deltas, alpha, pi, &
         & radian, natom, nbasis, ndim, nnew
-    integer, parameter :: network_count       = 3
-    integer, parameter :: ninput              = 276
-    integer, parameter :: hidden_1_count      = 5
-    integer, parameter :: hidden_2_count      = 90
-    integer, parameter :: noutput             = 1
-    integer, parameter :: nlayer              = 4
-    integer, parameter :: nscale              = ninput+noutput
-    integer, parameter :: nodemax             = 276
-    integer, parameter :: activation_function = 1
-    integer, parameter :: nodes(nlayer) = [276, 5, 90, 1]
-    real(wp), parameter :: alpha = 1.0_wp
-    real(wp), parameter :: pi = 3.1415926_wp
-    real(wp), parameter :: radian = pi/180.0_wp
-    integer, parameter :: natom = 4
-    integer, parameter :: nbasis = 306
-    integer, parameter :: ndim = 6
-    integer, parameter :: nnew = 276
+    integer, parameter  :: network_count                      = 3
+    integer, parameter  :: ninput                             = 276
+    integer, parameter  :: hidden_1_count                     = 5
+    integer, parameter  :: hidden_2_count                     = 90
+    integer, parameter  :: noutput                            = 1
+    integer, parameter  :: nlayer                             = 4
+    integer, parameter  :: nscale                             = ninput+noutput
+    integer, parameter  :: nodemax                            = 276
+    integer, parameter  :: activation_function                = 1
+    integer, parameter  :: nodes(nlayer)                      = [276, 5, 90, 1]
+    real(wp), parameter :: alpha                              = 1.0_wp
+    real(wp), parameter :: radian                             = pi/180.0_wp
+    integer, parameter  :: natom                              = 4
+    integer, parameter  :: nbasis                             = 306
+    integer, parameter  :: ndim                               = 6
+    integer, parameter  :: nnew                               = 276
     real(wp), parameter :: scale_deltas(nscale,network_count) = reshape([ &
         0.7881094069793475_wp, 0.2826971848893160_wp, &
         0.0936437036224096_wp, 0.0935713100983054_wp, &
@@ -446,7 +445,7 @@ module chempotpy_n4_pipnn_parameters
         0.0028943096216662_wp, 0.0029762895980992_wp, &
         0.0031774893910215_wp, 0.0038252357531822_wp, &
         43.0099895058650077_wp &
-        ], [nscale,network_count])
+        ], [nscale, network_count])
     real(wp), parameter :: scale_averages(nscale,network_count) = reshape([ &
         0.7881094069793475_wp, 0.2826971848893160_wp, &
         0.0936437036224096_wp, 0.0935713100983054_wp, &
@@ -864,7 +863,7 @@ module chempotpy_n4_pipnn_parameters
         0.0028943096216662_wp, 0.0029762895980992_wp, &
         0.0031774893910215_wp, 0.0038252357531822_wp, &
         37.7234382168643378_wp &
-        ], [nscale,network_count])
+        ], [nscale, network_count])
     real(wp), parameter :: input_hidden_weights(ninput,hidden_1_count,network_count) = reshape([ &
         -0.04148309565509899349_wp, 0.59957457929833402055_wp, &
         -2.92296369978377867938_wp, 0.23452818844493936168_wp, &
@@ -2936,7 +2935,7 @@ module chempotpy_n4_pipnn_parameters
         -1.33823683791632563889_wp, 1.24119966262665570866_wp, &
         -1.17257258333071723300_wp, 1.88477790247054022288_wp, &
         -0.37218973929345794405_wp, -1.10308598651169909033_wp &
-        ], [ninput,hidden_1_count,network_count])
+        ], [ninput, hidden_1_count, network_count])
     real(wp), parameter :: hidden_hidden_weights(hidden_1_count,hidden_2_count,network_count) = reshape([ &
         -1.08526040338229234905_wp, 2.92398146510482614957_wp, &
         1.38532930264191023184_wp, -0.27817314361198491879_wp, &
@@ -3613,7 +3612,7 @@ module chempotpy_n4_pipnn_parameters
         -2.27204348105091824550_wp, -0.05657688804220509238_wp, &
         -2.08758959834351331963_wp, 0.28436219212568220049_wp, &
         2.26982064886264423009_wp, 1.50111609309858340389_wp &
-        ], [hidden_1_count,hidden_2_count,network_count])
+        ], [hidden_1_count, hidden_2_count, network_count])
     real(wp), parameter :: hidden_output_weights(hidden_2_count,noutput,network_count) = reshape([ &
         -0.93984202632102531449_wp, -1.60385536893799729441_wp, &
         0.33316990411428915042_wp, 0.64006031477870350965_wp, &
@@ -3750,7 +3749,7 @@ module chempotpy_n4_pipnn_parameters
         -1.78521520222309493242_wp, 0.27879882755929252802_wp, &
         -0.25111493381954752557_wp, -0.69053829201793359704_wp, &
         -0.45036623275284226597_wp, -1.01122421048090571638_wp &
-        ], [hidden_2_count,noutput,network_count])
+        ], [hidden_2_count, noutput, network_count])
     real(wp), parameter :: hidden_1_biases(hidden_1_count,network_count) = reshape([ &
         -0.77434980103269368534_wp, -0.37794836583739543912_wp, &
         -0.00955810451310796887_wp, -0.04032329754399609223_wp, &
@@ -3760,7 +3759,7 @@ module chempotpy_n4_pipnn_parameters
         -0.04231930842059158232_wp, -0.40363810063955263274_wp, &
         -0.49530129595546307231_wp, -0.02991426870696366550_wp, &
         -0.89744085803043571747_wp &
-        ], [hidden_1_count,network_count])
+        ], [hidden_1_count, network_count])
     real(wp), parameter :: hidden_2_biases(hidden_2_count,network_count) = reshape([ &
         3.46902099868938007532_wp, -2.04585915621273217724_wp, &
         3.26618498886251273916_wp, -3.21436229951024543539_wp, &
@@ -3897,9 +3896,9 @@ module chempotpy_n4_pipnn_parameters
         -2.36331363306962449755_wp, 3.06441671603570409133_wp, &
         -3.44099360703633516678_wp, -3.06275430610637577900_wp, &
         -1.13626882085128877442_wp, -3.45083515347651337279_wp &
-        ], [hidden_2_count,network_count])
+        ], [hidden_2_count, network_count])
     real(wp), parameter :: output_biases(noutput,network_count) = reshape([ &
         0.05728759420581293338_wp, -0.32260884752113105911_wp, &
         -0.22461820016242614595_wp &
-        ], [noutput,network_count])
+        ], [noutput, network_count])
 end module chempotpy_n4_pipnn_parameters

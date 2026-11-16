@@ -24,7 +24,8 @@
 
 !> @brief Implement SiOH_GEN_1988, a potential energy surface for SiOH.
 module chempotpy_sioh_gen_1988_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -99,7 +100,6 @@ module chempotpy_sioh_gen_1988_pes
             & p, q(maxatom), r0(22, 36), rho(14, 14), rij(maxatom, maxatom), theta(14, 14, 14), tmp, v, v1, v2, v3
         integer             :: i, ien, indmm(maxatom), j, k, maxatom, natom
         real(wp), parameter :: rn    = 10.393496649e0_wp
-        real(wp), parameter :: pi    = 3.1415926536e0_wp
         real(wp), parameter :: pener = 4.3597482e-11_wp
         real(wp), parameter :: pdis  = 0.52917706e0_wp
         real(wp), parameter :: pang  = 57.2957795e0_wp

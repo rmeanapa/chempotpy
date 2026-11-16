@@ -46,7 +46,8 @@
 
 !> @brief Implement FH2_LEPS_NO2_1984, a potential energy surface for FH2.
 module chempotpy_fh2_leps_no2_1984_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -238,7 +239,6 @@ module chempotpy_fh2_leps_no2_1984_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: ckcau  = 627.5095e0_wp
             real(wp), parameter :: cangau = 0.52917706e0_wp
@@ -300,7 +300,6 @@ module chempotpy_fh2_leps_no2_1984_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: ckcau  = 627.5095e0_wp
             real(wp), parameter :: cangau = 0.52917706e0_wp
@@ -378,12 +377,11 @@ module chempotpy_fh2_leps_no2_1984_pes
             !   Z0 IS SET EQUAL TO Z(1)=Z(3) IN prepare_local_context.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: cosdeg, dd2, dd3, degdif, fphi, phi, s2, sindeg
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: cosdeg, dd2, dd3, degdif, fphi, phi, s2, sindeg
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             phicm_deg = 57.29577951e0_wp*phi
             if( phicm_deg .gt. 180.0e0_wp ) phicm_deg=phicm_deg-180.0e0_wp
             if( phicm_deg .lt. 0.0e0_wp ) phicm_deg=-phicm_deg
@@ -418,12 +416,11 @@ module chempotpy_fh2_leps_no2_1984_pes
             !   FH2 NEW SURFACE NO. 2   DON TRUHLAR
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: cos23, fhh, fhh2, hr2, hr22, phi, r12, r22, r32
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: cos23, fhh, fhh2, hr2, hr22, phi, r12, r22, r32
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             hr2          = 0.5e0_wp*pt1cm_r(2)
             r12          = pt1cm_r(1)*pt1cm_r(1)
             r22          = pt1cm_r(2)*pt1cm_r(2)
@@ -442,12 +439,11 @@ module chempotpy_fh2_leps_no2_1984_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -541,7 +537,6 @@ module chempotpy_fh2_leps_no2_1984_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)

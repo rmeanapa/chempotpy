@@ -12,7 +12,7 @@ WORKING_PRECISION_CORE_SOURCES = (
     "chempotpy_internal_coordinates.f90",
     "chempotpy_legacy_coordinates.f90",
     "chempotpy_legacy_units.f90",
-    "chempotpy_physical_constants.f90",
+    "chempotpy_constants.f90",
     "chempotpy_units.f90",
 )
 

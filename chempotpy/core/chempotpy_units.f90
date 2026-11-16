@@ -1,7 +1,7 @@
 !> @brief Derive CHEMPOTPY unit conversions from NIST CODATA 2022 constants.
 module chempotpy_units
-    use chempotpy_kinds,              only: wp
-    use chempotpy_physical_constants, only: avogadro_constant_per_mole, bohr_radius_angstrom, &
+    use chempotpy_kinds,     only: wp
+    use chempotpy_constants, only: avogadro_constant_per_mole, bohr_radius_angstrom, &
         elementary_charge_coulomb, hartree_energy_electronvolt, hartree_energy_joule, &
         planck_constant_joule_second, rydberg_constant_per_meter, speed_of_light_meter_per_second
     implicit none

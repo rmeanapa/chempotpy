@@ -10,7 +10,8 @@
 
 !> @brief Implement COCO_PIPNN, a potential energy surface for COCO.
 module chempotpy_coco_pipnn_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -54,7 +55,6 @@ module chempotpy_coco_pipnn_pes
     subroutine pes_ococ( r, v, idv, dvdr )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp), parameter   :: pi = acos(-1.e0_wp)
         integer, parameter    :: np = 7
         real(wp), intent(in)  :: r(6)
         integer, intent(in)   :: idv

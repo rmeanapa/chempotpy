@@ -78,7 +78,8 @@
 
 !> @brief Implement C7H8S_III_APRP, a potential energy surface for C7H8S.
 module chempotpy_c7h8s_iii_aprp_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -159,7 +160,6 @@ module chempotpy_c7h8s_iii_aprp_pes
         !--- {'global' constants
         integer, parameter :: natom = 16, nstate=3, ntermmax=200 &
             , ntermtype=4, napmax=10, nqtpset=2, nlcmax=6
-        real(wp), parameter :: pi = 3.14159265358979e0_wp
         !--- convertion factor: 0.53 Angstrom = 1 bohr
         real(wp), parameter :: ang_bohr = 0.529177249e0_wp
         !--- }'global' constants

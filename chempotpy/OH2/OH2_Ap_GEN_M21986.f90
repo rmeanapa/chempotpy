@@ -44,7 +44,8 @@
 
 !> @brief Implement OH2_Ap_GEN_M21986, a potential energy surface for OH2.
 module chempotpy_oh2_ap_gen_m21986_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_constants, only: pi
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -299,13 +300,12 @@ module chempotpy_oh2_ap_gen_m21986_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, it
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
-            real(wp)            :: nab, nab1, nbc, nbc1
+            integer            :: i, it
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
+            real(wp)           :: nab, nab1, nbc, nbc1
             !   Conversion for Angstroms to Bohr (Angstroms/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             !   Conversion for kcal to Hartree (kcal/Hartree)
@@ -362,14 +362,13 @@ module chempotpy_oh2_ap_gen_m21986_pes
             !   infinitely far from the equilibrium H2 diatomic.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: bcoor, c, dac, dex1, dex2, dgam, ex, ex1, ex2, gamma, raccol, ractmp, rob, stuff, t
-            integer             :: it
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
-            real(wp)            :: nab, nab1, nbc, nbc1
+            real(wp)           :: bcoor, c, dac, dex1, dex2, dgam, ex, ex1, ex2, gamma, raccol, ractmp, rob, stuff, t
+            integer            :: it
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
+            real(wp)           :: nab, nab1, nbc, nbc1
             !   Conversion for Angstroms to Bohr (Angstroms/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             !   Conversion for kcal to Hartree (kcal/Hartree)
@@ -500,7 +499,6 @@ module chempotpy_oh2_ap_gen_m21986_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: detrad = 0.0174532e0_wp
             real(wp), parameter :: ckcal  = 627.5095e0_wp
@@ -597,7 +595,6 @@ module chempotpy_oh2_ap_gen_m21986_pes
             integer, parameter  :: n3atom = 75
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
             integer, parameter  :: natom  = 25
             real(wp), parameter :: detrad = 0.0174532e0_wp
             real(wp), parameter :: ckcal  = 627.5095e0_wp
@@ -731,13 +728,12 @@ module chempotpy_oh2_ap_gen_m21986_pes
         function spline( isw, nn, x, y, c, d, xpt )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: c(nn+2), cfact, d(nn+2), deriv, dfact, pivot, spline, supd, v, v2, x(nn), xpt, y(nn), z
-            integer             :: i, isw, j, n, nn, np1, np2
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
-            integer, parameter  :: natom  = 25
+            real(wp)           :: c(nn+2), cfact, d(nn+2), deriv, dfact, pivot, spline, supd, v, v2, x(nn), xpt, y(nn), z
+            integer            :: i, isw, j, n, nn, np1, np2
+            integer, parameter :: n3atom = 75
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: natom  = 25
             !  THIS IS A SUBROUTINE FOR FITTING DATA WITH A CUBIC SPLINE
             !  POLYNOMIAL AND EVALUATING THAT POLYNOMIAL AT A GIVEN POINT
             !  OR ITS DERIVATIVE AT A GIVEN POINT
@@ -868,12 +864,11 @@ module chempotpy_oh2_ap_gen_m21986_pes
         subroutine potinfo
             use chempotpy_kinds, only: wp
             implicit none
-            integer             :: i, j, k, kmax
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: natom  = 25
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            real(wp), parameter :: pi     = 3.141592653589793e0_wp
+            integer            :: i, j, k, kmax
+            integer, parameter :: n3atom = 75
+            integer, parameter :: natom  = 25
+            integer, parameter :: isurf  = 5
+            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             write(usricm_nflag(18), '(/)')
             do i =1, 5
                 write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
@@ -967,7 +962,6 @@ module chempotpy_oh2_ap_gen_m21986_pes
             integer, parameter  :: natom      = 25
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: pi         = 3.141592653589793e0_wp
             real(wp), parameter :: clight     = 2.99792458e08_wp
             real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
