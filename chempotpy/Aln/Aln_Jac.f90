@@ -23,7 +23,7 @@
 
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_jac_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -83,7 +83,7 @@ module chempotpy_aln_jac_pes
         e3    = -0.35     /autoev
         alpha = 189.7   /(autoev*autoang**3)
         eta1  = 0.5669   *autoang
-        beta  = (2.e0_wp**(-0.5))*((16.e0_wp*pi/3.e0_wp)**(1.e0_wp/3.e0_wp))
+        beta  = (2.e0_wp**(-0.5))*((16.e0_wp*PI/3.e0_wp)**(1.e0_wp/3.e0_wp))
         eta2  = (eta+eta1)/beta
         ep    = eta/(eta+eta1)
         bs    = beta*s

@@ -1,6 +1,6 @@
 !> @brief Implement C2H7_VBMM, a potential energy surface for C2H7.
 module chempotpy_c2h7_vbmm_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -1140,18 +1140,18 @@ module chempotpy_c2h7_vbmm_pes
             astr(7) = escc
             ! calculate bend energy
             ! there are 12 bending terms
-            thch(1) = xangle(h2, c1, h3)*180.0e0_wp/pi
-            thch(2) = xangle(h2, c1, h4)*180.0e0_wp/pi
-            thch(3) = xangle(h3, c1, h4)*180.0e0_wp/pi
-            thch(4) = xangle(h6, c5, h7)*180.0e0_wp/pi
-            thch(5) = xangle(h6, c5, h8)*180.0e0_wp/pi
-            thch(6) = xangle(h7, c5, h8)*180.0e0_wp/pi
-            tcch(1) = xangle(h2, c1, c5)*180.0e0_wp/pi
-            tcch(2) = xangle(h3, c1, c5)*180.0e0_wp/pi
-            tcch(3) = xangle(h4, c1, c5)*180.0e0_wp/pi
-            tcch(4) = xangle(h6, c5, c1)*180.0e0_wp/pi
-            tcch(5) = xangle(h7, c5, c1)*180.0e0_wp/pi
-            tcch(6) = xangle(h8, c5, c1)*180.0e0_wp/pi
+            thch(1) = xangle(h2, c1, h3)*180.0e0_wp/PI
+            thch(2) = xangle(h2, c1, h4)*180.0e0_wp/PI
+            thch(3) = xangle(h3, c1, h4)*180.0e0_wp/PI
+            thch(4) = xangle(h6, c5, h7)*180.0e0_wp/PI
+            thch(5) = xangle(h6, c5, h8)*180.0e0_wp/PI
+            thch(6) = xangle(h7, c5, h8)*180.0e0_wp/PI
+            tcch(1) = xangle(h2, c1, c5)*180.0e0_wp/PI
+            tcch(2) = xangle(h3, c1, c5)*180.0e0_wp/PI
+            tcch(3) = xangle(h4, c1, c5)*180.0e0_wp/PI
+            tcch(4) = xangle(h6, c5, c1)*180.0e0_wp/PI
+            tcch(5) = xangle(h7, c5, c1)*180.0e0_wp/PI
+            tcch(6) = xangle(h8, c5, c1)*180.0e0_wp/PI
             ebend   = 0.0e0_wp
             do i=1, 6
                 call eb(t0hch, kthch, thch(i), ebhch)
@@ -2330,40 +2330,40 @@ module chempotpy_c2h7_vbmm_pes
             ! evaluate tau and PI
             tau = acos(-1.0e0_wp/3.0e0_wp)
             ! calculate theta0
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch2, rch3, rch4, rch5, theta023)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch2, rch4, rch5, rch3, theta024)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch2, rch5, rch3, rch4, theta025)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch3, rch2, rch5, rch4, theta032)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch3, rch4, rch2, rch5, theta034)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch3, rch5, rch4, rch2, theta035)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch4, rch2, rch3, rch5, theta042)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch4, rch3, rch5, rch2, theta043)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch4, rch5, rch2, rch3, theta045)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch5, rch2, rch4, rch3, theta052)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch5, rch3, rch2, rch4, theta053)
-            call gjtheta0(pi, tau, aphi, bphi, cphi, &
+            call gjtheta0(PI, tau, aphi, bphi, cphi, &
                 & atheta, btheta, ctheta, r0ch, &
                 & rch5, rch4, rch3, rch2, theta054)
             ! calculate delta
@@ -2884,8 +2884,8 @@ module chempotpy_c2h7_vbmm_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             integer, parameter :: natom  = 25
             tau    = acos(-1.0e0_wp/3.0e0_wp)
-            halfpi = 0.5e0_wp*pi
-            twopi  = 2.0e0_wp*pi
+            halfpi = 0.5e0_wp*PI
+            twopi  = 2.0e0_wp*PI
             !  set diagonal elements to zero
             do i=1, 4
                 xangles_theta0(i,i) = 0.0e0_wp

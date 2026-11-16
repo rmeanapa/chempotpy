@@ -61,7 +61,7 @@
 
 !> @brief Implement FH2_GEN_5SECG3_1993, a potential energy surface for FH2.
 module chempotpy_fh2_gen_5secg3_1993_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -1075,7 +1075,7 @@ module chempotpy_fh2_gen_5secg3_1993_pes
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
             real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
             real(wp), parameter :: ce         = 1.602176462e-19_wp
             real(wp), parameter :: cplanck    = 6.62606876e-34_wp

@@ -15,7 +15,7 @@
 
 !> @brief Implement CH4F_GEN_GC_1996, a potential energy surface for CH4F.
 module chempotpy_ch4f_gen_gc_1996_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -341,8 +341,8 @@ module chempotpy_ch4f_gen_gc_1996_pes
             real(wp) :: ddr(4,4), halfpi, sumd2(4), sumd4(4), tau, twopi
             integer  :: i, j, k
             tau    = acos(-1.0e0_wp/3.0e0_wp)
-            halfpi = 0.5e0_wp*pi
-            twopi  = 2.0e0_wp*pi
+            halfpi = 0.5e0_wp*PI
+            twopi  = 2.0e0_wp*PI
             !  set diagonal elements to zero
             do i=1, 4
                 angles_theta0(i,i) = 0.0e0_wp

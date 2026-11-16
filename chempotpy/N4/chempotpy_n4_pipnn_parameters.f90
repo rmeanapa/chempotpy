@@ -3,14 +3,14 @@
 ! Weights 1 SHA-256: 8715bd64357aa1deea15fe3efb783cf9e965bf726c22cf7aaff1768f9a673f17
 ! Biases 1 SHA-256: fd14cde2523cee83b12d9ada7898eeb80a4bfb2a6a4464f9ba359a4591df3a60
 module chempotpy_n4_pipnn_parameters
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, &
         & hidden_hidden_weights, hidden_output_weights, input_hidden_weights, network_count, ninput, &
         & nlayer, nodemax, nodes, noutput, nscale, &
-        & output_biases, scale_averages, scale_deltas, alpha, pi, &
+        & output_biases, scale_averages, scale_deltas, alpha, PI, &
         & radian, natom, nbasis, ndim, nnew
     integer, parameter  :: network_count                      = 3
     integer, parameter  :: ninput                             = 276
@@ -23,7 +23,7 @@ module chempotpy_n4_pipnn_parameters
     integer, parameter  :: activation_function                = 1
     integer, parameter  :: nodes(nlayer)                      = [276, 5, 90, 1]
     real(wp), parameter :: alpha                              = 1.0_wp
-    real(wp), parameter :: radian                             = pi/180.0_wp
+    real(wp), parameter :: radian                             = PI/180.0_wp
     integer, parameter  :: natom                              = 4
     integer, parameter  :: nbasis                             = 306
     integer, parameter  :: ndim                               = 6

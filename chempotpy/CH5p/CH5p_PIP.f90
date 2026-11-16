@@ -15,7 +15,7 @@
 
 !> @brief Implement CH5p_PIP, a potential energy surface for CH5p.
 module chempotpy_ch5p_pip_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -2037,7 +2037,7 @@ module chempotpy_ch5p_pip_pes
             theta = 0.e0_wp
         else
             d     = b**2 + c**2 - a**2
-            theta = 180.e0_wp*acos(d/(2.e0_wp*b*c))/pi
+            theta = 180.e0_wp*acos(d/(2.e0_wp*b*c))/PI
         endif
     end subroutine calcangle
 end module chempotpy_ch5p_pip_pes

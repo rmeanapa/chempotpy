@@ -10,7 +10,7 @@
 
 !> @brief Implement COCO_PIPNN, a potential energy surface for COCO.
 module chempotpy_coco_pipnn_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private

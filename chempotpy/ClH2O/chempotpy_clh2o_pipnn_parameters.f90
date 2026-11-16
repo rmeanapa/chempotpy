@@ -8,7 +8,7 @@
 ! Biases 3 SHA-256: d7365f55e9455ba1be9b1bd7c5def94de753448f591598801615a4a03c82bee7
 ! Spline tables SHA-256: c58b95e9997b4dc9858bb876beaa594eb4e05b791041eace2512b1d699facf86
 module chempotpy_clh2o_pipnn_parameters
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -16,7 +16,7 @@ module chempotpy_clh2o_pipnn_parameters
         & hidden_hidden_weights, hidden_output_weights, input_hidden_weights, network_count, ninput, &
         & nlayer, nodemax, nodes, noutput, nscale, &
         & output_biases, scale_averages, scale_deltas, alpha, vpesmin, &
-        & vpescut, pi, radian, bohr, nbasis, &
+        & vpescut, PI, radian, bohr, nbasis, &
         & n0hcl, n0ho, nxhcl, nxho, rxhcl, &
         & rxho, exhohcl, exhohcl2, r0hcl, dp0hcl, &
         & dp0hcl2, r0ho, dp0ho, dp0ho2
@@ -33,7 +33,7 @@ module chempotpy_clh2o_pipnn_parameters
     real(wp), parameter :: alpha                              = 1.0_wp
     real(wp), parameter :: vpesmin                            = -536.01052952_wp
     real(wp), parameter :: vpescut                            = 5.0_wp
-    real(wp), parameter :: radian                             = pi/180.0_wp
+    real(wp), parameter :: radian                             = PI/180.0_wp
     real(wp), parameter :: bohr                               = 0.5291772_wp
     integer, parameter  :: nbasis                             = 18
     integer, parameter  :: n0hcl                              = 18

@@ -1,5 +1,5 @@
 module chempotpy_h3cl_pipnn_pes
-    use chempotpy_constants,             only: pi
+    use chempotpy_constants,             only: PI
     use chempotpy_h3cl_pipnn_parameters, only: activation_function, alpha, h2_distance_grid, &
         & h2_potential_grid, hcl_distance_grid, hcl_potential_grid, hidden_1_biases, hidden_1_count, &
         & hidden_2_biases, hidden_2_count, hidden_hidden_weights, hidden_output_weights, &
@@ -502,7 +502,7 @@ module chempotpy_h3cl_pipnn_pes
         str12   = min(1e0_wp, str12);str12=max(-1e0_wp, str12)
         theta1  = acos(str12)
         call dihedral(x(:,2), a, b, x(:,4), phi)
-        phi = phi*pi/180e0_wp
+        phi = phi*PI/180e0_wp
         if( isnan(phi) )then
             phi = 0e0_wp
         endif

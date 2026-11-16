@@ -1,7 +1,7 @@
 !     The ^2A doublet prime PES for C2N system at the MC-PDFT/AVTZ level.
 !> @brief Implement C2N_PIPNN_App, a potential energy surface for C2N.
 module chempotpy_c2n_pipnn_app_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private

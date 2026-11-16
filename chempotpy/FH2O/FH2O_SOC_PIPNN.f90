@@ -3,7 +3,7 @@
 !-->  global variables are declared in this module
 !> @brief Implement FH2O_SOC_PIPNN, a potential energy surface for FH2O.
 module chempotpy_fh2o_soc_pipnn_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -18,7 +18,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & pi, r1soccoef, radian, vpesmin
+            & PI, r1soccoef, radian, vpesmin
         use chempotpy_kinds, only: wp
         implicit none
         ! number of electronic state
@@ -58,7 +58,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & pi, r1soccoef, radian, vpesmin
+            & PI, r1soccoef, radian, vpesmin
         use chempotpy_kinds, only: wp
         implicit none
         real(wp) :: xt(3,4), xt2(3,4), xn(3,4), rint(6), rt(6)
@@ -179,7 +179,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & pi, r1soccoef, radian, vpesmin
+            & PI, r1soccoef, radian, vpesmin
         use chempotpy_kinds, only: wp
         implicit none
         real(wp) :: rcom, t2, phi, socrg
@@ -213,7 +213,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & pi, r1soccoef, radian, vpesmin
+            & PI, r1soccoef, radian, vpesmin
         use chempotpy_kinds, only: wp
         implicit none
         real(wp) :: rcom, t1, t2, phi, socpg, socps
@@ -248,7 +248,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & pi, r1soccoef, radian, vpesmin
+            & PI, r1soccoef, radian, vpesmin
         use chempotpy_kinds, only: wp
         implicit none
         integer, parameter :: ndim = 6
@@ -312,7 +312,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
             & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
             & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & pi, r1soccoef, radian, vpesmin
+            & PI, r1soccoef, radian, vpesmin
         use chempotpy_kinds, only: wp
         implicit none
         real(wp), intent(in)  :: x(ninput)
@@ -636,8 +636,8 @@ module chempotpy_fh2o_soc_pipnn_pes
         c(2,1) = xa*sin(r(4))
         c(3,1) = 0.0e0_wp
         !    B
-        c(1,2) = xb*cos(pi-r(4))
-        c(2,2) = -xb*sin(pi-r(4))
+        c(1,2) = xb*cos(PI-r(4))
+        c(2,2) = -xb*sin(PI-r(4))
         c(3,2) = 0.e0_wp
         !     put ABY on xy plane, X origin point
         !               ^y

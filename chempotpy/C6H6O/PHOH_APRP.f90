@@ -71,7 +71,7 @@
 
 !> @brief Implement PHOH_APRP, a potential energy surface for C6H6O.
 module chempotpy_phoh_aprp_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -10135,28 +10135,28 @@ module chempotpy_phoh_aprp_pes
         ! Local variables
         integer :: i, j
         qte(1,1)  = zero
-        qte(2,1)  = pi
-        qte(3,1)  = pi
+        qte(2,1)  = PI
+        qte(3,1)  = PI
         qte(4,1)  = zero
         qte(5,1)  = zero
-        qte(6,1)  = pi
-        qte(7,1)  = pi
+        qte(6,1)  = PI
+        qte(7,1)  = PI
         qte(8,1)  = zero
         qte(9,1)  = zero
-        qte(10,1) = pi
-        qte(11,1) = pi
+        qte(10,1) = PI
+        qte(11,1) = PI
         qte(12,1) = zero
         qte(13,1) = zero
-        qte(14,1) = pi
-        qte(15,1) = pi
+        qte(14,1) = PI
+        qte(15,1) = PI
         qte(16,1) = zero
         qte(17,1) = zero
-        qte(18,1) = pi
-        qte(19,1) = pi
+        qte(18,1) = PI
+        qte(19,1) = PI
         qte(20,1) = zero
         qte(21,1) = zero
-        qte(22,1) = pi
-        qte(23,1) = pi
+        qte(22,1) = PI
+        qte(23,1) = PI
         qte(24,1) = zero
         do i=2, nap
             do j=1, nqt
@@ -11720,10 +11720,10 @@ module chempotpy_phoh_aprp_pes
         aijk = bndang(i, j, k, x, y, z)
         ajkl = bndang(j, k, l, x, y, z)
         ! Check whether i-j-k or j-k-l are collinear
-        if( (abs(aijk) .le. tiny) .or. (abs(aijk-pi) .lt. tiny) )then
+        if( (abs(aijk) .le. tiny) .or. (abs(aijk-PI) .lt. tiny) )then
             write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') i, j, k
         endif
-        if( (abs(ajkl) .le. tiny) .or. (abs(ajkl-pi) .lt. tiny) )then
+        if( (abs(ajkl) .le. tiny) .or. (abs(ajkl-PI) .lt. tiny) )then
             write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') j, k, l
         endif
         ! Calculate eij

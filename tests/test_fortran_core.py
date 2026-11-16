@@ -117,7 +117,7 @@ program test_fortran_core
     use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
         prepare_legacy_triatomic_coordinates
     use chempotpy_kinds, only: dp, real32, real64, sp, wp
-    use chempotpy_constants, only: codata_adjustment_year, pi
+    use chempotpy_constants, only: codata_adjustment_year, PI
     use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates, &
         legacy_triatomic_distances_to_bohr, triatomic_distances_to_bohr
     use chempotpy_legacy_units, only: legacy_bohr_to_angstrom, &
@@ -154,8 +154,8 @@ program test_fortran_core
     if( precision(0.0_wp) < 15 .or. range(0.0_wp) < 307 ) &
         error stop 'working precision contract is too small'
     if( codata_adjustment_year /= 2022 ) error stop 'CODATA version changed'
-    if( abs(cos(pi)+1.0_wp) > epsilon(1.0_wp) ) &
-        error stop 'canonical pi is inconsistent'
+    if( abs(cos(PI)+1.0_wp) > epsilon(1.0_wp) ) &
+        error stop 'canonical PI is inconsistent'
     if( bohr_to_angstrom /= 0.529177210544_wp ) &
         error stop 'canonical length conversion changed'
     if( hartree_to_electronvolt /= 27.211386245981_wp ) &

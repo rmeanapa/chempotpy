@@ -73,7 +73,7 @@ Mathematical constants and unit conversions
 -------------------------------------------
 
 The generated `chempotpy_constants` module provides one working-precision
-definition of `pi` together with the NIST CODATA 2022 universal physical
+definition of `PI` together with the NIST CODATA 2022 universal physical
 constants. The authoritative CODATA decimal values and provenance are stored
 in `chempotpy/core/codata_2022.json`; compiled PES modules therefore do not
 read a data file at runtime. Run the following check after changing the

@@ -1,6 +1,6 @@
 !> @brief Implement CH4OH_VBMM_2015, a potential energy surface for CH4OH.
 module chempotpy_ch4oh_vbmm_2015_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -353,8 +353,8 @@ module chempotpy_ch4oh_vbmm_2015_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             integer, parameter :: natom  = 25
             tau    = acos(-1.0e0_wp/3.0e0_wp)
-            halfpi = 0.5e0_wp*pi
-            twopi  = 2.0e0_wp*pi
+            halfpi = 0.5e0_wp*PI
+            twopi  = 2.0e0_wp*PI
             !  set diagonal elements to zero
             do i=1, 4
                 theta0(i,i) = 0.0e0_wp
@@ -1205,7 +1205,7 @@ module chempotpy_ch4oh_vbmm_2015_pes
             !  mass     in amu
             fact1   = 0.041840e0_wp
             fact2   = 6.022045e0_wp
-            fact3   = 2.e0_wp*pi/360.e0_wp
+            fact3   = 2.e0_wp*PI/360.e0_wp
             d1ch    = d1ch*fact1
             d3ch    = d3ch*fact1
             d1cb    = d1cb*fact1
@@ -1230,7 +1230,7 @@ module chempotpy_ch4oh_vbmm_2015_pes
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
             real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
             real(wp), parameter :: ce         = 1.602176462e-19_wp
             real(wp), parameter :: cplanck    = 6.62606876e-34_wp

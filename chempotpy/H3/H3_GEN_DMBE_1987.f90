@@ -56,7 +56,7 @@
 
 !> @brief Implement H3_GEN_DMBE_1987, a potential energy surface for H3.
 module chempotpy_h3_gen_dmbe_1987_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -601,7 +601,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
                 if( arg .le. -1.e0_wp ) arg=-1.e0_wp
                 if( arg .ge. 1.e0_wp ) arg=1.e0_wp
                 theta            = acos(arg)
-                coupcm_phi       = pi-theta
+                coupcm_phi       = PI-theta
                 phi3             = 3.0e0_wp*coupcm_phi
                 coupcm_sphi3     = sin(phi3)
                 rtan             = h3cocm_cphi3/coupcm_sphi3
@@ -1431,7 +1431,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
             real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
             real(wp), parameter :: ce         = 1.602176462e-19_wp
             real(wp), parameter :: cplanck    = 6.62606876e-34_wp

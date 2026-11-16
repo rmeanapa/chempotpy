@@ -12,7 +12,7 @@
 
 !> @brief Implement CH4Br_VBMM_2002, a potential energy surface for CH4Br.
 module chempotpy_ch4br_vbmm_2002_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -331,8 +331,8 @@ module chempotpy_ch4br_vbmm_2002_pes
             integer  :: i, j, k
             !  subroutine calculates reference angles for the "in-plane" potential
             tau    = acos(-1.0e0_wp/3.0e0_wp)
-            halfpi = 0.5e0_wp*pi
-            twopi  = 2.0e0_wp*pi
+            halfpi = 0.5e0_wp*PI
+            twopi  = 2.0e0_wp*PI
             !  set diagonal elements to zero
             do i=1, 4
                 angles_theta0(i,i) = 0.0e0_wp

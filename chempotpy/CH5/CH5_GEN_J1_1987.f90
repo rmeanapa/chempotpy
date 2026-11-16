@@ -1,6 +1,6 @@
 !> @brief Implement CH5_GEN_J1_1987, a potential energy surface for CH5.
 module chempotpy_ch5_gen_j1_1987_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -811,7 +811,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 erest = exp(rest)
                 sphi  = 1.0e0_wp-tanh(pdt2cm_aphi*(rstar-pdt2cm_rnot)*erest)
             endif
-            phinot = pdt2cm_pch4+(pdt2cm_pch4-pi/2.0e0_wp)*(sphi-1.0e0_wp)
+            phinot = pdt2cm_pch4+(pdt2cm_pch4-PI/2.0e0_wp)*(sphi-1.0e0_wp)
             !     NOW PUT THESE TWO TERMS TOGETHER TO GET EACH DELTA
             do i = 1, 3
                 delta(i) = acos(testcm_gamma(i))-phinot
@@ -931,7 +931,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             do i = 1, 3
                 drdx(i)    = cst*2.0e0_wp*(x(i)-x(i+12))
                 drdx(i+12) = -drdx(i)
-                dphi(i)    = drdx(i)*dsdr*(pdt2cm_pch4-pi/2.0e0_wp)
+                dphi(i)    = drdx(i)*dsdr*(pdt2cm_pch4-PI/2.0e0_wp)
                 dphi(i+12) = -dphi(i)
             enddo
             !     NOW PUT BOTH TERMS TOGETHER TO GET THE PARTIALS OF DELTA
@@ -1111,7 +1111,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             ravg = (icorcm_ar(1)+icorcm_ar(2)+icorcm_ar(3)+icorcm_ar(4))/4.0e0_wp
             !     COMPUTE THETA
             if( ravg .gt. pdt2cm_dij )then
-                asf  = pi/2.0e0_wp
+                asf  = PI/2.0e0_wp
                 dasf = 0.0e0_wp
             elseif( ravg .le. pdatcm_re(1) )then
                 asf  = pdatcm_tau
@@ -1139,7 +1139,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 a     = -3.0e0_wp*(2.0e0_wp*fk1+fk2)/(pdt2cm_delta**2)
                 b     = (fk2+5.0e0_wp*a*pdt2cm_delta**2)/(2.0e0_wp*pdt2cm_delta)
                 c     = (12.0e0_wp*b*pdt2cm_delta-20.0e0_wp*a*pdt2cm_delta**2)/6.0e0_wp
-                f     = pi/2.0e0_wp
+                f     = PI/2.0e0_wp
                 rdif  = ravg-pdt2cm_dij
                 rdif3 = rdif*rdif*rdif
                 rdif4 = rdif3*rdif
@@ -1246,12 +1246,12 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     COMPUTE C1--IT IS A FUNCTION OF R6--THE H-H' BOND DISTANCE
             if( icorcm_ar(6) .gt. 15.0e0_wp )then
                 r6 = icorcm_ar(6)/3.0e0_wp
-                yx = (exp(2.0e0_wp*pi*(r6-pdt2cm_rex)/pdt2cm_d))**3
+                yx = (exp(2.0e0_wp*PI*(r6-pdt2cm_rex)/pdt2cm_d))**3
             else
-                yx = exp(2.0e0_wp*pi*(icorcm_ar(6)-pdt2cm_rex)/pdt2cm_d)
+                yx = exp(2.0e0_wp*PI*(icorcm_ar(6)-pdt2cm_rex)/pdt2cm_d)
             endif
             c1    = -(pdt2cm_a*yx/(yx+1.0e0_wp)+pdt2cm_b/yx)-pdt2cm_c0
-            dyxr  = (2.0e0_wp*pi/pdt2cm_d)*yx
+            dyxr  = (2.0e0_wp*PI/pdt2cm_d)*yx
             dcyx  = pdt2cm_b/yx-(pdt2cm_a*yx/(1+yx))/(1+yx)
             dc1r6 = dcyx*dyxr/yx
             !     COMPUTE THE C-H4-H5 ANGLE
@@ -1267,7 +1267,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 return
             else
                 alpha = acos(tem/(-2.0e0_wp*icorcm_ar(1)*icorcm_ar(6)))
-                alpha = pi-alpha
+                alpha = PI-alpha
             endif
             !     NOW COMPUTE THE ANGLE DERIVATIVES (DERIV. ALPHA W.R. R1,R5,R6)
             u     = tem/(-2.0e0_wp*icorcm_ar(1)*icorcm_ar(6))
@@ -1280,7 +1280,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             !     COMBINE THE RADIAL AND ANGLE COMPONENT TO COMPUTE THE TRIPLET
             !     PARAMETER CC(3) AND THE DERIVATIVES.  HERE TEM IS JUST THE PARTIAL
             !     OF CC W.R.T. ALPHA.
-            deg20 = pi/9.0e0_wp
+            deg20 = PI/9.0e0_wp
             if( alpha .le. deg20 )then
                 pdatcm_cc(3)  = pdt2cm_c0+c1*(sin(9.0e0_wp*alpha/2.0e0_wp))**4
                 tem           = 18.0e0_wp*(sin(9.0e0_wp*alpha/2.0e0_wp))**3*cos(9.0e0_wp*alpha/ 2.0e0_wp)
@@ -1437,7 +1437,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
             real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
             real(wp), parameter :: ce         = 1.602176462e-19_wp
             real(wp), parameter :: cplanck    = 6.62606876e-34_wp

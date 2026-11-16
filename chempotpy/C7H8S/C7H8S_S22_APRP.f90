@@ -84,7 +84,7 @@
 
 !> @brief Implement C7H8S_S22_APRP, a potential energy surface for C7H8S.
 module chempotpy_c7h8s_s22_aprp_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -1069,7 +1069,7 @@ module chempotpy_c7h8s_s22_aprp_pes
             !--- R and phi values at anchor points
             r0(:)   = (/1.97e0_wp, 3.5e0_wp/)
             phi0(:) = (/0e0_wp, 10e0_wp, 45e0_wp, 80e0_wp, 90e0_wp/)
-            phi0(:) = phi0(:)/180e0_wp*pi
+            phi0(:) = phi0(:)/180e0_wp*PI
             do iphi0 = 1, nphi0
                 cos2phi0(iphi0) = -cos(2*phi0(iphi0))
             enddo
@@ -1087,7 +1087,7 @@ module chempotpy_c7h8s_s22_aprp_pes
                         !---   this is an exception due to the parameterization
                         call calctdcterm(e, g, &
                             k(:,ir0,iphi0,iqtc), nk, qtc0(iqtc), &
-                            qtcv(iqtc)/pi*180e0_wp, qtctyp(iqtc))
+                            qtcv(iqtc)/PI*180e0_wp, qtctyp(iqtc))
                         if( iqtc .eq. 2 .or. iqtc .eq. 8 .or. iqtc .eq. 11 )then
                             e = 0e0_wp; g = 0e0_wp
                         endif
@@ -1095,7 +1095,7 @@ module chempotpy_c7h8s_s22_aprp_pes
                             e = 0e0_wp; g = 0e0_wp
                         endif
                         !--- convert gg from deg^-1 to rad^-1
-                        g             = g*180e0_wp/pi
+                        g             = g*180e0_wp/PI
                         ee(ir0,iphi0) = ee(ir0,iphi0)+e
                         gg(iqtc)      = g
                     enddo
@@ -1302,14 +1302,14 @@ module chempotpy_c7h8s_s22_aprp_pes
                 !--- Note that q needs deg->rad first,
                 !---   and gg needs rad-1 -> deg-1 last
             case(2)
-                qq = q/180e0_wp*pi; qq0 = q0/180e0_wp*pi
+                qq = q/180e0_wp*PI; qq0 = q0/180e0_wp*PI
                 dq = cos(qq)-cos(qq0)
                 ee = 0e0_wp; gg = 0e0_wp
                 do i = 1, nk
                     ee = ee+k(i)*dq**i
                     gg = gg+i*k(i)*dq**(i-1)
                 enddo
-                gg = -gg*sin(qq) /180e0_wp*pi
+                gg = -gg*sin(qq) /180e0_wp*PI
             end select
         end subroutine calctdcterm
 
@@ -1412,7 +1412,7 @@ module chempotpy_c7h8s_s22_aprp_pes
             if( cosba > 1 )then
                 evalba = 0e0_wp
             elseif( cosba < -1 )then
-                evalba = pi
+                evalba = PI
             else
                 evalba = acos(cosba)
             endif
@@ -1456,7 +1456,7 @@ module chempotpy_c7h8s_s22_aprp_pes
             if( costo > 1 )then
                 evalto = 0e0_wp
             elseif( costo < -1 )then
-                evalto = pi
+                evalto = PI
             else
                 evalto = sign*acos(costo)
             endif
@@ -1485,9 +1485,9 @@ module chempotpy_c7h8s_s22_aprp_pes
             sinob = dot_product(cross1, eli)/sinjlk
             !--- avoid numerical problem
             if( sinob > 1 )then
-                evalob = pi/2
+                evalob = PI/2
             elseif( sinob < -1 )then
-                evalob = -pi/2
+                evalob = -PI/2
             else
                 evalob = asin(sinob)
             endif
@@ -1554,7 +1554,7 @@ module chempotpy_c7h8s_s22_aprp_pes
             if( cossp1 > 1 )then
                 evalsp1 = 0e0_wp
             elseif( cossp1 < -1 )then
-                evalsp1 = pi
+                evalsp1 = PI
             else
                 evalsp1 = sgn*acos(cossp1)
             endif

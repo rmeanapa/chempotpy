@@ -1,6 +1,6 @@
 !> @brief Implement F2H2_GEN_JBKKL_1990, a potential energy surface for F2H2.
 module chempotpy_f2h2_gen_jbkkl_1990_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -89,7 +89,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             if( theta2 .gt. 1.0e0_wp ) theta2=1.0e0_wp
             if( theta2 .lt. -1.0e0_wp ) theta2=-1.0e0_wp
             theta2 = acos(theta2)
-            theta2 = pi-theta2
+            theta2 = PI-theta2
             q1     = sqrt(xrm1**2+yrm1**2+zrm1**2)
             q2     = sqrt(xrm2**2+yrm2**2+zrm2**2)
             cmm    = (xcm3**2+ycm3**2+zcm3**2)

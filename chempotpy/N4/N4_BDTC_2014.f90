@@ -742,15 +742,15 @@ end subroutine calccoordinates
 !> @brief Evaluate default2cartesian.
 subroutine default2cartesian( ra, rb, d, thetaa_d, thetab_d, &
         &  phi_d, y )
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     real(wp), intent(in)  :: ra, rb, d, thetaa_d, thetab_d, phi_d
     real(wp), intent(out) :: y(4,3)
     real(wp)              :: thetaa, thetab, phi, y11, y31, y32
-    thetaa = thetaa_d*pi/180e0_wp
-    thetab = thetab_d*pi/180e0_wp
-    phi    = phi_d*pi/180e0_wp
+    thetaa = thetaa_d*PI/180e0_wp
+    thetab = thetab_d*PI/180e0_wp
+    phi    = phi_d*PI/180e0_wp
     y11    = ra*sin(thetaa)/2e0_wp
     y(1,1) = y11
     y(1,2) = 0e0_wp

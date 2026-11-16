@@ -1,6 +1,6 @@
 !> @brief Implement NH4_VBMM_2010, a potential energy surface for NH4.
 module chempotpy_nh4_vbmm_2010_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -332,8 +332,8 @@ module chempotpy_nh4_vbmm_2010_pes
             integer, parameter :: natom  = 25
             !      tau=acos(-1.0d0/3.0d0)
             !      pi=4.0d0*atan(1.0d0)
-            halfpi = 0.5e0_wp*pi
-            twopi  = 2.0e0_wp*pi
+            halfpi = 0.5e0_wp*PI
+            twopi  = 2.0e0_wp*PI
             ppito  = (twopi-taunh2)/2.0e0_wp
             !  set diagonal elements to zero
             do i=1, 3
@@ -383,8 +383,8 @@ module chempotpy_nh4_vbmm_2010_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             integer, parameter :: natom  = 25
             !       pi=4.0d0*atan(1.0d0)
-            halfpi = 0.5e0_wp*pi
-            twopi  = 2.0e0_wp*pi
+            halfpi = 0.5e0_wp*PI
+            twopi  = 2.0e0_wp*PI
             ppito  = (twopi-taunh2)/2.0e0_wp
             !  set diagonal elements to zero
             do i=1, 2
@@ -1059,7 +1059,7 @@ module chempotpy_nh4_vbmm_2010_pes
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
             real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
             real(wp), parameter :: ce         = 1.602176462e-19_wp
             real(wp), parameter :: cplanck    = 6.62606876e-34_wp

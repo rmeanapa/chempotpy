@@ -13,7 +13,7 @@
 
 !> @brief Implement C2H6F_VBMM, a potential energy surface for C2H6F.
 module chempotpy_c2h6f_vbmm_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -589,23 +589,23 @@ module chempotpy_c2h6f_vbmm_pes
             ! CRD 2011 incluimos un apartado para calcular los angulos dihedro
             ! para poder calcular despues vtorsion
             call dihedro(3, 1, 2, 6, dihed)
-            thetahcch_thetahcch(1) = dihed*pi/180.0e0_wp
+            thetahcch_thetahcch(1) = dihed*PI/180.0e0_wp
             call dihedro(3, 1, 2, 7, dihed)
-            thetahcch_thetahcch(2) = dihed*pi/180.0e0_wp
+            thetahcch_thetahcch(2) = dihed*PI/180.0e0_wp
             call dihedro(3, 1, 2, 8, dihed)
-            thetahcch_thetahcch(3) = dihed*pi/180.0e0_wp
+            thetahcch_thetahcch(3) = dihed*PI/180.0e0_wp
             call dihedro(4, 1, 2, 6, dihed)
-            thetahcch_thetahcch(4) = dihed*pi/180.0e0_wp
+            thetahcch_thetahcch(4) = dihed*PI/180.0e0_wp
             call dihedro(4, 1, 2, 7, dihed)
-            thetahcch_thetahcch(5) = dihed*pi/180.0e0_wp
+            thetahcch_thetahcch(5) = dihed*PI/180.0e0_wp
             call dihedro(4, 1, 2, 8, dihed)
-            thetahcch_thetahcch(6) = dihed*pi/180.0e0_wp
+            thetahcch_thetahcch(6) = dihed*PI/180.0e0_wp
             call dihedro(5, 1, 2, 6, dihed)
-            thetahcch_thetahcch(7) = dihed*pi/180.0e0_wp
+            thetahcch_thetahcch(7) = dihed*PI/180.0e0_wp
             call dihedro(5, 1, 2, 7, dihed)
-            thetahcch_thetahcch(8) = dihed*pi/180.0e0_wp
+            thetahcch_thetahcch(8) = dihed*PI/180.0e0_wp
             call dihedro(5, 1, 2, 8, dihed)
-            thetahcch_thetahcch(9) = dihed*pi/180.0e0_wp
+            thetahcch_thetahcch(9) = dihed*PI/180.0e0_wp
             ! CRD 2011 calculamos los terminos switching t1 y t2
             do i=1, 3
                 t1(i) = 0.5e0_wp*(1-tanh(potcm_w1*(bonds2_rc1h(i)-potcm_w2)))
@@ -654,15 +654,15 @@ module chempotpy_c2h6f_vbmm_pes
                 return
             endif
             if( arg1 .gt. 0.e0_wp )then
-                dihed = atan(arg2/arg1) *180.e0_wp/pi
+                dihed = atan(arg2/arg1) *180.e0_wp/PI
                 return
             endif
             if( arg2 .ge. 0.e0_wp )then
-                dihed = 180.e0_wp + atan(arg2/arg1) *180.e0_wp/pi
+                dihed = 180.e0_wp + atan(arg2/arg1) *180.e0_wp/PI
                 return
             endif
             if( arg2 .lt. 0.e0_wp )then
-                dihed = -180.e0_wp + atan(arg2/arg1) *180.e0_wp/pi
+                dihed = -180.e0_wp + atan(arg2/arg1) *180.e0_wp/PI
                 return
             endif
         end subroutine dihedro
@@ -717,8 +717,8 @@ module chempotpy_c2h6f_vbmm_pes
             tau = acos(-1.0e0_wp/3.0e0_wp)
             ! CRD 2012 taucc para el angulo H-C-C
             taucc  = acos(-0.3616e0_wp)
-            halfpi = 0.5e0_wp*pi
-            twopi  = 2.0e0_wp*pi
+            halfpi = 0.5e0_wp*PI
+            twopi  = 2.0e0_wp*PI
             ! jcc-2010
             ! valor para ajustar el angulo
             ! jcc-2010
@@ -1542,7 +1542,7 @@ module chempotpy_c2h6f_vbmm_pes
                     & 3)*coords1_tbh(i,3)
                 coschb(i)   = coschb(i)/bonds2_rc1h(i)/bonds2_rbh(i)
                 thetachb(i) = acos(coschb(i))
-                dthchb(i)   = pi-thetachb(i)
+                dthchb(i)   = PI-thetachb(i)
                 xb          = qpdot_q(ndx_nhb(1))
                 yb          = qpdot_q(ndx_nhb(2))
                 zb          = qpdot_q(ndx_nhb(3))
@@ -1557,7 +1557,7 @@ module chempotpy_c2h6f_vbmm_pes
                     & 3)*coords1_tbh(i,3)
                 coschb(i)   = coschb(i)/bonds2_rc2h(i)/bonds2_rbh(i)
                 thetachb(i) = acos(coschb(i))
-                dthchb(i)   = pi-thetachb(i)
+                dthchb(i)   = PI-thetachb(i)
                 xb          = qpdot_q(ndx_nhb(1))
                 yb          = qpdot_q(ndx_nhb(2))
                 zb          = qpdot_q(ndx_nhb(3))
@@ -1568,7 +1568,7 @@ module chempotpy_c2h6f_vbmm_pes
                 yc          = qpdot_q(ndx2_nc2(2))
                 zc          = qpdot_q(ndx2_nc2(3))
             endif
-            vchf = potcm_fk0chf*(0.75e0_wp*pi - acos(((xb - xh)*(xc - xh) + (yb - yh)*(yc - yh) + (zb - zh)*(zc - &
+            vchf = potcm_fk0chf*(0.75e0_wp*PI - acos(((xb - xh)*(xc - xh) + (yb - yh)*(yc - yh) + (zb - zh)*(zc - &
                 & zh))/ (sqrt((xb - xh)** 2 + (yb - yh)**2 + (zb - zh)**2)* sqrt((xc - xh)**2 + (yc - yh)**2 + (zc - &
                 & zh)** 2))))**4* (1 - tanh(potcm_chfsw*(- potcm_rchfsp + sqrt((-xb + xc)**2 + (-yb + yc)**2 + (-zb + &
                 & zc)** 2)))**2)
@@ -1678,7 +1678,7 @@ module chempotpy_c2h6f_vbmm_pes
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
             real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
             real(wp), parameter :: ce         = 1.602176462e-19_wp
             real(wp), parameter :: cplanck    = 6.62606876e-34_wp

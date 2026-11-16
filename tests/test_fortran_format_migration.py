@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 from scripts.format_fortran import (
+    canonicalize_shared_pi_case,
     centralize_pi_constants,
     fold_standalone_dimensions,
     format_source_text,
@@ -35,7 +36,7 @@ end module unrelated_surface
         converted = centralize_pi_constants(source)
         self.assertIn(
             "module first_surface\n"
-            "    use chempotpy_constants, only: pi\n",
+            "    use chempotpy_constants, only: PI\n",
             converted,
         )
         self.assertNotIn("parameter :: pi", converted)
@@ -49,7 +50,7 @@ end module unrelated_surface
         source = """\
 module chempotpy_constants
     use chempotpy_kinds, only: wp
-    real(wp), parameter, public :: pi = 3.141592653589793_wp
+    real(wp), parameter, public :: PI = 3.141592653589793_wp
 end module chempotpy_constants
 """
         self.assertEqual(centralize_pi_constants(source), source)
@@ -68,7 +69,7 @@ end subroutine evaluate
         converted = centralize_pi_constants(source)
         self.assertIn(
             "subroutine evaluate( angle )\n"
-            "    use chempotpy_constants, only: pi\n",
+            "    use chempotpy_constants, only: PI\n",
             converted,
         )
         self.assertIn("real(wp)              :: scale", converted)
@@ -86,6 +87,30 @@ contains
 end module polynomial
 """
         self.assertEqual(centralize_pi_constants(source), source)
+
+    def test_shared_pi_is_uppercase_without_renaming_local_accumulator(self) -> None:
+        source = """\
+module surface
+    use chempotpy_constants, only: pi
+contains
+    subroutine constant_user( angle )
+        real(wp), intent(out) :: angle
+        angle = 2.0_wp*pi
+    end subroutine constant_user
+
+    subroutine polynomial( value )
+        real(wp), intent(out) :: value
+        real(wp)              :: pi
+        pi = 0.0_wp
+        value = pi
+    end subroutine polynomial
+end module surface
+"""
+        converted = canonicalize_shared_pi_case(source)
+        self.assertIn("only: PI", converted)
+        self.assertIn("angle = 2.0_wp*PI", converted)
+        self.assertIn("real(wp)              :: pi", converted)
+        self.assertIn("value = pi", converted)
 
     def test_standalone_dimensions_are_folded_into_declarations(self) -> None:
         source = """\

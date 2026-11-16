@@ -24,7 +24,7 @@
 
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_rejac_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private

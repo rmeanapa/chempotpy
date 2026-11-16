@@ -37,7 +37,7 @@
 
 !> @brief Implement NH3_GEN_FFW2_2007, a potential energy surface for NH3.
 module chempotpy_nh3_gen_ffw2_2007_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -371,8 +371,8 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         real(wp) :: cos1, cos2, cos3
         real(wp) :: dbeta
         ! Parameters
-        real(wp), parameter :: deg2au = pi/180.e0_wp
-        real(wp), parameter :: hba    = 0.5e0_wp*pi
+        real(wp), parameter :: deg2au = PI/180.e0_wp
+        real(wp), parameter :: hba    = 0.5e0_wp*PI
         ! U11
         real(wp) :: frb, frc, alp, cosgta
         ! U22
@@ -717,15 +717,15 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         real(wp) :: g_ans(7)
         ! Parameter List
         real(wp)            :: frb, frc, alp
-        real(wp), parameter :: deg2au = pi/180.e0_wp
+        real(wp), parameter :: deg2au = PI/180.e0_wp
         ! Experimental value: Landolt-Bötein, Numerical Data and Function
         ! Relationships in Science and Technology II(7,2) (Springer, New York,
         ! 1976). Cited in J. Pesonen, A. Miani, and L. Halonen, J. Chem. Phys.
         ! 115, 1243 (2001)
-        real(wp), parameter :: gta = 106.68*pi/180.0e0_wp
+        real(wp), parameter :: gta = 106.68*PI/180.0e0_wp
         ! CoS(GTa) = CoS(106.28)
         real(wp), parameter :: cosgta = -0.2870261592e0_wp
-        real(wp), parameter :: hba    = 0.5e0_wp*pi
+        real(wp), parameter :: hba    = 0.5e0_wp*PI
         ! Local Variables
         real(wp) :: g1
         real(wp) :: g2
@@ -1101,10 +1101,10 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ! FRU12c    parameters used to define angular for U22
         real(wp)            :: fru12a, fru12c
         real(wp)            :: alp
-        real(wp), parameter :: deg2au = pi/180.e0_wp
+        real(wp), parameter :: deg2au = PI/180.e0_wp
         real(wp), parameter :: fru12b = 1.00e0_wp
-        real(wp), parameter :: gtu12a = 2.0e0_wp*pi/3.0e0_wp
-        real(wp), parameter :: hbu12a = 0.5e0_wp*pi
+        real(wp), parameter :: gtu12a = 2.0e0_wp*PI/3.0e0_wp
+        real(wp), parameter :: hbu12a = 0.5e0_wp*PI
         ! Misc
         integer  :: i, j, ind
         real(wp) :: z1(6), tz, tf, z123, z456
@@ -1571,11 +1571,11 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             d1_p = -1.0e0_wp / sqrt ((1.0e0_wp-w)*(1.0e0_wp+w))
         else
         endif
-        d4_b = 1.0e0_wp / pi * 180.0e0_wp * d1_p
+        d4_b = 1.0e0_wp / PI * 180.0e0_wp * d1_p
         do g_i_ = 1, g_pmax_
             g_beta(g_i_,1) = d4_b * g_w(g_i_)
         enddo
-        beta(1) = d2_v * 180.0e0_wp / pi
+        beta(1) = d2_v * 180.0e0_wp / PI
         ! Now we define the eq. of the plane
         !     a1x + a2y + a3z + d = 0
         ! such that the normal to the plane is uT and
@@ -1739,11 +1739,11 @@ module chempotpy_nh3_gen_ffw2_2007_pes
                     d1_p = -1.0e0_wp
                 else
                 endif
-                d4_b = 1.0e0_wp / pi * 180.0e0_wp * d1_p
+                d4_b = 1.0e0_wp / PI * 180.0e0_wp * d1_p
                 do g_i_ = 1, g_pmax_
                     g_theta(g_i_,k) = d4_b * g_d1_w(g_i_)
                 enddo
-                theta(k) = d2_v * 180.0e0_wp / pi
+                theta(k) = d2_v * 180.0e0_wp / PI
             enddo
         enddo
         ! Now we we will relabel theta such that
@@ -1971,7 +1971,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             endif
             theta(i) = acos( t(i) )
             !       convert to degrees
-            theta(i) = theta(i)*180.0e0_wp/pi
+            theta(i) = theta(i)*180.0e0_wp/PI
         enddo
         ! return answer
         do i=1, 3
@@ -1984,7 +1984,7 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             if( abs(t(i)) .ge. 1.e0_wp )then
                 dt(i) = 0.e0_wp
             else
-                dt(i) = -(1.e0_wp/sqrt( 1.e0_wp-t(i)*t(i) ))*180.e0_wp/pi
+                dt(i) = -(1.e0_wp/sqrt( 1.e0_wp-t(i)*t(i) ))*180.e0_wp/PI
             endif
         enddo
         !    dtheta1/dx3,dtheta1/dx4,dtheta1/dx1. dtheta1/dx2=0
@@ -2047,12 +2047,12 @@ module chempotpy_nh3_gen_ffw2_2007_pes
             if( x(1) .ne. 0.0e0_wp )then
                 ans(2) = atan(x(2)/x(1))
             else
-                ans(2)                          = 0.50e0_wp * pi
+                ans(2)                          = 0.50e0_wp * PI
                 if( x(2) .eq. 0.0e0_wp ) ans(2) = 0.0e0_wp
             endif
             ! Convert to degrees
-            ans(2) = ans(2) * 180.0e0_wp/pi
-            ans(3) = ans(3) * 180.0e0_wp/pi
+            ans(2) = ans(2) * 180.0e0_wp/PI
+            ans(3) = ans(3) * 180.0e0_wp/PI
         else
             ans(2) = 0.e0_wp
             ans(3) = 0.e0_wp
@@ -2070,8 +2070,8 @@ module chempotpy_nh3_gen_ffw2_2007_pes
         ! p(3) : theta (0-PI) !in degrees
         real(wp) :: phi, theta
         real(wp) :: sinth
-        phi    = p(2) * pi/180.0e0_wp
-        theta  = p(3) * pi/180.0e0_wp
+        phi    = p(2) * PI/180.0e0_wp
+        theta  = p(3) * PI/180.0e0_wp
         sinth  = sin(theta)
         ans(1) = p(1) * cos(phi) * sinth
         ans(2) = p(1) * sin(phi) * sinth

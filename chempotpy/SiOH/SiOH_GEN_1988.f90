@@ -24,7 +24,7 @@
 
 !> @brief Implement SiOH_GEN_1988, a potential energy surface for SiOH.
 module chempotpy_sioh_gen_1988_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -231,7 +231,7 @@ module chempotpy_sioh_gen_1988_pes
                             & erfc(rij(i, j)/ beta(indmm(i),indmm(j)))
                         e=-alpha(indmm(i),indmm(j))*exp(-rij(i, j)/rho(indmm(i), indmm(j)))/rho(indmm(i), indmm(j)) - &
                             & q(i)* q(j)* erfc(rij(i, j)/beta(indmm(i),indmm(j)))/ rij(i, j)**2 -2*q(i)*q(j)*exp(- &
-                            & (rij(i, j)/ beta(indmm(i),indmm(j)))**2)/(sqrt(pi)*rij(i, j)*beta(indmm(i),indmm(j)))
+                            & (rij(i, j)/ beta(indmm(i),indmm(j)))**2)/(sqrt(PI)*rij(i, j)*beta(indmm(i),indmm(j)))
                         tmp     = e/rij(i, j)
                         dvdx(i) = dvdx(i)+tmp*dx(i, j)
                         dvdy(i) = dvdy(i)+tmp*dy(i, j)

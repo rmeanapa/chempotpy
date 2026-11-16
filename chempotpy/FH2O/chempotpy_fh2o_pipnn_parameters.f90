@@ -3,7 +3,7 @@
 ! Weights 1 SHA-256: 00e25469733c76be74ca05cf07068bf1e2356cae0aa0de24d829254e7c186291
 ! Biases 1 SHA-256: 82316c6e457a52419463950adea22330ff975f9c4fe06b0b36dd17769db4f3f2
 module chempotpy_fh2o_pipnn_parameters
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -11,7 +11,7 @@ module chempotpy_fh2o_pipnn_parameters
         & hidden_hidden_weights, hidden_output_weights, input_hidden_weights, network_count, ninput, &
         & nlayer, nodemax, nodes, noutput, nscale, &
         & output_biases, scale_averages, scale_deltas, alpha, vpesmin, &
-        & pi, radian, bohr, nbasis, nrbasissoc, &
+        & PI, radian, bohr, nbasis, nrbasissoc, &
         & npbasissoc, r1soccoef, p2soccoef
     integer, parameter  :: network_count                      = 3
     integer, parameter  :: ninput                             = 17
@@ -25,7 +25,7 @@ module chempotpy_fh2o_pipnn_parameters
     integer, parameter  :: nodes(nlayer)                      = [17, 30, 70, 1]
     real(wp), parameter :: alpha                              = 1.0_wp
     real(wp), parameter :: vpesmin                            = -176.0260035639990_wp
-    real(wp), parameter :: radian                             = pi/180.0_wp
+    real(wp), parameter :: radian                             = PI/180.0_wp
     real(wp), parameter :: bohr                               = 0.5291772_wp
     integer, parameter  :: nbasis                             = 18
     integer, parameter  :: nrbasissoc                         = 147

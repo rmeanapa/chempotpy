@@ -18,7 +18,7 @@
 
 !> @brief Implement CH5O2_VBMM_2023, a potential energy surface for CH5O2.
 module chempotpy_ch5o2_vbmm_2023_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -744,11 +744,11 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! CRD 2011 incluimos un apartado para calcular los angulos dihedro
             ! para poder calcular despues vtorsion
             call dihedro(3, 1, 2, 6, dihed)
-            torsion1_thetahcch(1) = dihed*pi/180.0e0_wp
+            torsion1_thetahcch(1) = dihed*PI/180.0e0_wp
             call dihedro(4, 1, 2, 6, dihed)
-            torsion1_thetahcch(2) = dihed*pi/180.0e0_wp
+            torsion1_thetahcch(2) = dihed*PI/180.0e0_wp
             call dihedro(5, 1, 2, 6, dihed)
-            torsion1_thetahcch(3) = dihed*pi/180.0e0_wp
+            torsion1_thetahcch(3) = dihed*PI/180.0e0_wp
             ! CRD 2011 calculamos los terminos switching t1 y t2
             do i=1, 3
                 t1(i) = (1-tanh(potcm_w1*(coord5_rc1h(i)-coord6_r0c1h)))
@@ -811,18 +811,18 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 return
             endif
             if( arg1 .gt. 0.e0_wp )then
-                dihed = atan(arg2/arg1) *180.e0_wp/pi
+                dihed = atan(arg2/arg1) *180.e0_wp/PI
                 return
             endif
             if( arg2 .ge. 0.e0_wp )then
-                dihed = 180.e0_wp + atan(arg2/arg1) *180.e0_wp/pi
+                dihed = 180.e0_wp + atan(arg2/arg1) *180.e0_wp/PI
                 return
             endif
             if( arg2 .lt. 0.e0_wp )then
-                dihed = -180.e0_wp + atan(arg2/arg1) *180.e0_wp/pi
+                dihed = -180.e0_wp + atan(arg2/arg1) *180.e0_wp/PI
                 return
             endif
-            dihed = dihed*pi/180.e0_wp
+            dihed = dihed*PI/180.e0_wp
         end subroutine dihedro
 
         !> @brief Evaluate crosprod for the CH5O2_VBMM_2023 potential.
@@ -886,8 +886,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! CRD 2012 taucc para el angulo H-C-C
             tauco  = acos(-0.3616e0_wp)
             tauoc  = acos(-0.4558e0_wp)
-            halfpi = 0.6555e0_wp*pi
-            twopi  = 2.0e0_wp*pi
+            halfpi = 0.6555e0_wp*PI
+            twopi  = 2.0e0_wp*PI
             ! jcc-2010
             ! valor para ajustar el angulo
             ! jcc-2010
@@ -1726,7 +1726,7 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
             real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
             real(wp), parameter :: ce         = 1.602176462e-19_wp
             real(wp), parameter :: cplanck    = 6.62606876e-34_wp

@@ -2301,7 +2301,7 @@ end subroutine g_pot11
 ! U12 coupling surface . . .
 !> @brief Own the stateless g_pot12 evaluator.
 module chempotpy_nah2_leps_6_2000_dpem_g_pot12_legacy_state_7d743da0
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private

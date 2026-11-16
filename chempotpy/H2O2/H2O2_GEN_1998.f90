@@ -11,7 +11,7 @@
 
 !> @brief Implement H2O2_GEN_1998, a potential energy surface for H2O2.
 module chempotpy_h2o2_gen_1998_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -829,7 +829,7 @@ module chempotpy_h2o2_gen_1998_pes
         rm_oo     = 1.456199e0_wp
         rm_oh     = 0.962755e0_wp
         angle_ooh = 100.9059e0_wp
-        angle_ooh = angle_ooh*pi/180.e0_wp
+        angle_ooh = angle_ooh*PI/180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
         ! 1998, volume 102, pages 6325-6330
@@ -1383,7 +1383,7 @@ module chempotpy_h2o2_gen_1998_pes
         rm_oo     = 1.456199e0_wp
         rm_oh     = 0.962755e0_wp
         angle_ooh = 100.9059e0_wp
-        angle_ooh = angle_ooh * pi / 180.e0_wp
+        angle_ooh = angle_ooh * PI / 180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
         ! 1998, volume 102, pages 6325-6330
@@ -2240,7 +2240,7 @@ module chempotpy_h2o2_gen_1998_pes
         rm_oo     = 1.456199e0_wp
         rm_oh     = 0.962755e0_wp
         angle_ooh = 100.9059e0_wp
-        angle_ooh = angle_ooh * pi / 180.e0_wp
+        angle_ooh = angle_ooh * PI / 180.e0_wp
         ! Potential energy surface for H2O2
         ! Jacek Koput, Stuart Carter, and Nicholas Handy, J. Phys. Chem. A
         ! 1998, volume 102, pages 6325-6330

@@ -46,7 +46,7 @@
 
 !> @brief Implement F2H2_GEN_SQSBDE_1995, a potential energy surface for F2H2.
 module chempotpy_f2h2_gen_sqsbde_1995_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -496,7 +496,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             enddo
             do l=0, 4
                 do m=0, l
-                    ang_pf(l,m) = (-1)**m*sqrt((2*l+1)*potcm_fac(l-m)/(4*pi*potcm_fac(l+m)))
+                    ang_pf(l,m) = (-1)**m*sqrt((2*l+1)*potcm_fac(l-m)/(4*PI*potcm_fac(l+m)))
                 enddo
             enddo
             ! 3j-symbols for potential energy surface
@@ -616,7 +616,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             th2    = pt1cm_r(5)
             tau    = pt1cm_r(6)
             phicon = 0.01745329252e0_wp
-            pif    = 1.0e0_wp/(2.0e0_wp*sqrt(pi))
+            pif    = 1.0e0_wp/(2.0e0_wp*sqrt(PI))
             fac2   = amh/(amh+amf)
             x(3)   = 0.0e0_wp-r1*cos(th1)*fac2
             y(3)   = 0.0e0_wp-r1*sin(th1)*fac2
@@ -908,7 +908,7 @@ module chempotpy_f2h2_gen_sqsbde_1995_pes
             integer, parameter  :: isurf      = 5
             integer, parameter  :: jsurf      = isurf*(isurf+1)/2
             real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*pi*1.0e-07_wp
+            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
             real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
             real(wp), parameter :: ce         = 1.602176462e-19_wp
             real(wp), parameter :: cplanck    = 6.62606876e-34_wp

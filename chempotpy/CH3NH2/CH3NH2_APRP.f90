@@ -72,7 +72,7 @@
 
 !> @brief Implement CH3NH2_APRP, a potential energy surface for CH3NH2.
 module chempotpy_ch3nh2_aprp_pes
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     private
@@ -284,10 +284,10 @@ module chempotpy_ch3nh2_aprp_pes
         aijk = bndang(i, j, k, x, y, z)
         ajkl = bndang(j, k, l, x, y, z)
         ! Check whether i-j-k or j-k-l are collinear
-        if( (abs(aijk) .le. tiny) .or. (abs(aijk-pi) .lt. tiny) )then
+        if( (abs(aijk) .le. tiny) .or. (abs(aijk-PI) .lt. tiny) )then
             write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') i, j, k
         endif
-        if( (abs(ajkl) .le. tiny) .or. (abs(ajkl-pi) .lt. tiny) )then
+        if( (abs(ajkl) .le. tiny) .or. (abs(ajkl-PI) .lt. tiny) )then
             write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') j, k, l
         endif
         ! Calculate eij

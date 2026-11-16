@@ -90,7 +90,7 @@ end subroutine
 
 !> @brief Evaluate hcopot.
 subroutine hcopot( f, rhc, rco, roh )
-    use chempotpy_constants, only: pi
+    use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
     real(wp), parameter :: au2ev = 27.2116e0_wp
@@ -114,7 +114,7 @@ end subroutine hcopot
 
 !> @brief Evaluate POTHCO.
 function pothco( rhc, rco, rcos, istate )
-    use chempotpy_constants,           only: pi
+    use chempotpy_constants,           only: PI
     use chempotpy_h2co_pip_parameters, only: parameter_aa => aa, parameter_easym => easym, &
         & parameter_gnhc => gnhc, parameter_gnco => gnco, parameter_gnwin => gnwin, &
         & parameter_gwhc => gwhc, parameter_gwco => gwco, parameter_gwwin => gwwin, &
@@ -175,7 +175,7 @@ function pothco( rhc, rco, rcos, istate )
     mtan(1)     = 2*(gnhc+1)*(gnco+1)*(gnwin+1)-2+2*gn2co+4
     mtan(2)     = 2*(gnhc+1)*(gnco+1)*(gnwin+1)-2+2*gn2co
     do j3=1, nwin
-        nucos(j3) = cos(pi/180.e0_wp*nuwin(j3))
+        nucos(j3) = cos(PI/180.e0_wp*nuwin(j3))
     enddo
     if( istate .le. 0 )then
         pothco = 0.e0_wp

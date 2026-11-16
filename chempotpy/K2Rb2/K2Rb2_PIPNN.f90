@@ -1,6 +1,6 @@
 !> @brief Implement K2Rb2_PIPNN, a potential energy surface for K2Rb2.
 module chempotpy_k2rb2_pipnn_pes
-    use chempotpy_constants,              only: pi
+    use chempotpy_constants,              only: PI
     use chempotpy_k2rb2_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_1_count, hidden_2_biases, &
         & hidden_2_count, hidden_hidden_weights, hidden_output_weights, input_hidden_weights, &
         & network_count, ninput, nscale, output_biases, scale_averages, scale_deltas, &

@@ -369,6 +369,120 @@ def canonical_pi_expression(expression: str) -> bool:
     )
 
 
+def replace_code_identifier(line: str, identifier: str, replacement: str) -> str:
+    """Replace one Fortran identifier while preserving literals and comments."""
+
+    code = code_without_comment(line)
+    output = []
+    quote = ""
+    cursor = 0
+    index = 0
+    while index < len(code):
+        character = code[index]
+        if quote:
+            if character == quote:
+                if index+1 < len(code) and code[index+1] == quote:
+                    index += 2
+                    continue
+                quote = ""
+            index += 1
+            continue
+        if character in "'\"":
+            quote = character
+            index += 1
+            continue
+        match = re.match(r"[a-z][a-z0-9_]*", code[index:], re.IGNORECASE)
+        if match is None:
+            index += 1
+            continue
+        end = index+len(match.group(0))
+        if match.group(0).lower() == identifier.lower():
+            output.append(code[cursor:index])
+            output.append(replacement)
+            cursor = end
+        index = end
+    output.append(line[cursor:])
+    return "".join(output)
+
+
+def canonicalize_shared_pi_case(source_text: str) -> str:
+    """Spell the shared mathematical constant as uppercase ``PI``."""
+
+    lines = source_text.splitlines()
+    procedure_stack = []
+    current_module = None
+    line_modules = {}
+    line_procedures = {}
+    procedure_locals = set()
+    imported_modules = set()
+    imported_procedures = set()
+    constants_modules = set()
+    for start, end, statement in logical_statement_spans(lines):
+        normalized = statement.strip()
+        module = MODULE_DECLARATION.match(normalized)
+        if module is not None:
+            current_module = start
+            if module.group("name").lower() == "chempotpy_constants":
+                constants_modules.add(start)
+        procedure = PROCEDURE_DECLARATION.match(normalized)
+        if procedure is not None:
+            procedure_stack.append(start)
+            if re.search(r"\([^)]*\bpi\b[^)]*\)", normalized, re.IGNORECASE):
+                procedure_locals.add(start)
+        current_procedure = procedure_stack[-1] if procedure_stack else None
+        for index in range(start, end):
+            line_modules[index] = current_module
+            line_procedures[index] = tuple(procedure_stack)
+        declaration = DECLARATION.match(normalized)
+        if declaration is not None and current_procedure is not None:
+            entities = split_top_level_entities(declaration.group("entities"))
+            if any(
+                re.match(r"\s*pi(?:\s|\(|=|$)", entity, re.IGNORECASE)
+                for entity in entities
+            ):
+                procedure_locals.add(current_procedure)
+        if re.match(
+            r"^use\s+chempotpy_constants\s*,\s*only\s*:\s*pi\s*$",
+            normalized,
+            re.IGNORECASE,
+        ):
+            if current_procedure is not None:
+                imported_procedures.add(current_procedure)
+            elif current_module is not None:
+                imported_modules.add(current_module)
+        if re.match(r"^end\s+module\b", normalized, re.IGNORECASE):
+            current_module = None
+        if re.match(
+            r"^end\s*(?:subroutine|function)(?:\s|$)|^end\s*$",
+            normalized,
+            re.IGNORECASE,
+        ) and procedure_stack:
+            procedure_stack.pop()
+
+    for index, line in enumerate(lines):
+        module = line_modules.get(index)
+        procedures = line_procedures.get(index, ())
+        if module in constants_modules:
+            code = code_without_comment(line)
+            if re.match(
+                r"^\s*real(?:\s*\([^)]*\))?(?:\s*,[^:]*)?\s*::"
+                r"\s*pi\s*=",
+                code,
+                re.IGNORECASE,
+            ):
+                lines[index] = replace_code_identifier(line, "pi", "PI")
+            continue
+        shared_pi_available = module in imported_modules or any(
+            procedure in imported_procedures for procedure in procedures
+        )
+        locally_bound = any(
+            procedure in procedure_locals for procedure in procedures
+        )
+        if shared_pi_available and not locally_bound:
+            lines[index] = replace_code_identifier(line, "pi", "PI")
+    return "\n".join(lines)+"\n"
+
+
 def centralize_pi_constants(source_text: str) -> str:
     """Replace local PI parameters with the shared core constant."""
 
@@ -479,13 +593,13 @@ def centralize_pi_constants(source_text: str) -> str:
     insertions = {}
     for module_index in modules_requiring_pi-imported_modules:
         insertions.setdefault(module_index, []).append(
-            "    use chempotpy_constants, only: pi"
+            "    use chempotpy_constants, only: PI"
         )
     for procedure_index in procedures_requiring_pi-imported_procedures:
         header_end = procedure_header_ends[procedure_index]
         indentation = re.match(r"^\s*", lines[procedure_index]).group(0)
         insertions.setdefault(header_end, []).append(
-            indentation+"    use chempotpy_constants, only: pi"
+            indentation+"    use chempotpy_constants, only: PI"
         )
     output = []
     for index, line in enumerate(lines):
@@ -2419,6 +2533,7 @@ def format_source_text(source_text: str) -> str:
 
     source_text = lowercase_fortran_code(source_text)
     source_text = centralize_pi_constants(source_text)
+    source_text = canonicalize_shared_pi_case(source_text)
     source_text = fold_standalone_dimensions(source_text)
     source_text = align_pes_metadata(source_text)
     source_text = remove_uninformative_comment_lines(source_text)
@@ -2532,7 +2647,9 @@ def format_source(
     elif dead_comments_only:
         formatted = remove_dead_commented_code(original)
     elif pi_constant_only:
-        formatted = centralize_pi_constants(original)
+        formatted = canonicalize_shared_pi_case(
+            centralize_pi_constants(original)
+        )
     else:
         formatted = specialize_pes_documentation(format_source_text(original), path)
     changed = formatted != original

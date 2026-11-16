@@ -2,7 +2,7 @@
 
 !> @brief Implement ArNO_Ap_PIPNN, a potential energy surface for ArNO.
 module chempotpy_arno_ap_pipnn_pes
-    use chempotpy_constants,              only: pi
+    use chempotpy_constants,              only: PI
     use chempotpy_arno_spline_parameters, only: bvcut_vcut, pesa_ind, pesa_roh1, pesa_roh2, pesa_thth, pesa_ve
     use chempotpy_kinds,                  only: wp
     implicit none
@@ -76,7 +76,7 @@ module chempotpy_arno_ap_pipnn_pes
             cth = cthi
             if( cth .gt. 1e0_wp ) cth=1e0_wp
             if( cth .lt. -1e0_wp ) cth=-1e0_wp
-            th = acos(cth)*180.0e0_wp/pi
+            th = acos(cth)*180.0e0_wp/PI
             if( r1 .lt. 1.60e0_wp ) r1=1.60e0_wp
             if( r1 .gt. 4.0e0_wp ) r1=4.0e0_wp
             if( r2 .lt. 3.50e0_wp ) r2=3.50e0_wp
