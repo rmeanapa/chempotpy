@@ -59,6 +59,8 @@ jobs:
                   base_checkout="${RUNNER_TEMP}/chempotpy-base"
                   git worktree add --detach "$base_checkout" "$base_sha"
                   trap 'git worktree remove --force "$base_checkout" >/dev/null 2>&1 || true' EXIT
+                  cp scripts/capture_library_references.py \
+                      "$base_checkout/scripts/capture_library_references.py"
                   (
                       cd "$base_checkout"
                       python scripts/capture_library_references.py \

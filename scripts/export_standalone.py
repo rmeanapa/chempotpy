@@ -12,6 +12,7 @@ sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from chempotpy.core.registry import SurfaceSource, discover_surface_sources
 from scripts.capture_library_references import (
+    REGRESSION_GEOMETRY_COUNT,
     assignments,
     compile_dependencies,
     first_integer_parameter,
@@ -159,7 +160,9 @@ def example_driver(
     path_argument = "path" in signature.split(",")
     geometry_blocks = []
     for geometry_index in range(1, geometry_count + 1):
-        reference_index = 1 if geometry_index % 2 else 2
+        reference_index = (
+            (geometry_index-1) % REGRESSION_GEOMETRY_COUNT
+        )+1
         geometry_blocks.append(
             "    coordinates = 0.0d0\n{}\n"
             "    call report_geometry({}, coordinates)".format(

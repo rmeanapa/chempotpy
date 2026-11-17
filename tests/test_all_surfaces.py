@@ -11,7 +11,10 @@ import unittest
 from pathlib import Path
 
 from chempotpy.core.registry import discover_surface_sources
-from scripts.capture_library_references import capture_source
+from scripts.capture_library_references import (
+    REGRESSION_GEOMETRY_COUNT,
+    capture_source,
+)
 
 
 class AllSurfaceRegressionTests(unittest.TestCase):
@@ -30,6 +33,17 @@ class AllSurfaceRegressionTests(unittest.TestCase):
     def test_fixture_covers_the_callable_catalog(self) -> None:
         self.assertEqual(len(self.references), 363)
         self.assertEqual(set(self.references), set(self.sources))
+        for key, reference in self.references.items():
+            with self.subTest(surface=key):
+                values_per_geometry = (
+                    reference["nstates"]**2
+                    if reference["entry_point"] == "dpem"
+                    else reference["nstates"]
+                )
+                self.assertEqual(
+                    len(reference["values"]),
+                    REGRESSION_GEOMETRY_COUNT*values_per_geometry,
+                )
 
     def test_fixture_tracks_the_authoritative_sources(self) -> None:
         for key, source in self.sources.items():

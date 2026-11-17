@@ -61,7 +61,7 @@ the following changes:
   receives only the bundled core modules it actually imports.
 * Added strict compilation, modernization, formatting, packaging, binary
   linkage, extension-import, and numerical-regression gates for all 363
-  callable surfaces, including two stored reference geometries per surface.
+  callable surfaces, including nine stored reference geometries per surface.
 * Added a reproducible current conda-forge environment and validation against
   the newest mutually compatible Python, NumPy, Meson, Ninja, and gfortran
   toolchain.
@@ -215,7 +215,7 @@ conventions are collected in `docs/FORTRAN_STYLE.md`.
 Run `make check-modernization` for the complete repeatable modernization gate.
 It audits the catalog, rejects forbidden legacy Fortran constructs, runs the
 Python and core tests, strictly compiles all 363 callable PES interfaces, checks
-formatting, and evaluates every surface at two deterministic geometries in the
+formatting, and evaluates every surface at nine deterministic geometries in the
 same process. `make test-surfaces` runs only the slower catalog-wide numerical
 and architecture regression portion.
 
@@ -326,8 +326,14 @@ Validating every potential energy surface
 CHEMPOTPY provides two complementary numerical regression paths. The Python
 extension gate exercises the same compiled modules used by package users,
 while the direct-Fortran test independently compiles the authoritative source
-of every PES. Both paths evaluate two deterministic geometries per surface and
-compare the results with `tests/data/all_surface_references.json`.
+of every PES. Both paths evaluate nine deterministic geometries per surface and
+compare the results with `tests/data/all_surface_references.json`. The suite
+uses three end-to-end pairs and the midpoint of each pair. It retains the two
+original non-symmetric endpoints, adds a symmetric non-rigid distortion pair
+around the 75/25 interior point, and adds a radial contraction/expansion pair
+around the 25/75 interior point. The extra points exercise independent internal
+coordinate directions while remaining inside or close to the established test
+envelope.
 
 Create the current conda-forge validation environment once, then activate it:
 
@@ -340,13 +346,13 @@ From the repository root, run the complete Python extension gate with:
 
 This command builds all 363 f2py extensions, checks their native-library
 linkage, imports every extension in an isolated Python process, and performs
-726 numerical evaluations. A successful run ends with counters equivalent to:
+3,267 numerical evaluations. A successful run ends with counters equivalent to:
 
     pes_extensions_checked: 363
     missing_or_ambiguous_extensions: 0
     external_mkl_lapack_blas_links: 0
     python_extensions_checked: 363
-    python_extension_evaluations: 726
+    python_extension_evaluations: 3267
     python_extension_failures: 0
 
 Run the independent direct-Fortran numerical and architecture regression with:
@@ -356,9 +362,10 @@ Run the independent direct-Fortran numerical and architecture regression with:
 Every pull request and push also runs the `All PES numerical regression`
 GitHub Actions workflow. The workflow checks out the pull request's base commit
 (or the commit preceding a push), compiles that revision and the current
-revision on the same runner, evaluates both deterministic geometries, and
+revision on the same runner, evaluates all nine deterministic geometries, and
 compares every result. Capturing both revisions with the same compiler and math
-runtime prevents platform-specific roundoff from being mistaken for a source
+runtime—and using the tested revision's geometry harness for both—prevents
+platform or geometry-suite differences from being mistaken for a source
 change. Existing surfaces must remain within a relative and absolute tolerance
 of `1e-13`; removed surfaces, interface changes, non-finite results, compilation
 failures, and execution failures also fail the workflow. Aln and NH3 use
@@ -376,6 +383,8 @@ To reproduce the workflow comparison locally against a selected Git revision:
 
     base_root="$(mktemp -d)"
     git worktree add --detach "$base_root/checkout" REVISION
+    cp scripts/capture_library_references.py \
+        "$base_root/checkout/scripts/capture_library_references.py"
     (cd "$base_root/checkout" && \
         python scripts/capture_library_references.py --all --jobs 4 \
             --output "$base_root/baseline.json")

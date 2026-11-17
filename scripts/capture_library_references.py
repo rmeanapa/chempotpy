@@ -63,6 +63,18 @@ SYSTEM_GEOMETRIES = {
         ),
     ),
 }
+REGRESSION_GEOMETRY_NAMES = (
+    "primary_start",
+    "primary_end",
+    "primary_midpoint",
+    "near_start_distortion_minus",
+    "near_start_distortion_plus",
+    "near_start_midpoint",
+    "near_end_contracted",
+    "near_end_expanded",
+    "near_end_midpoint",
+)
+REGRESSION_GEOMETRY_COUNT = len(REGRESSION_GEOMETRY_NAMES)
 
 
 @dataclass(frozen=True)
@@ -110,36 +122,121 @@ def coordinates(
     geometry_variant: str = "",
     system_name: str = "",
 ) -> tuple[tuple[float, ...], ...]:
-    """Return a deterministic, non-symmetric test geometry in angstroms."""
+    """Return one deterministic geometry inside the two-point test envelope."""
 
     system_geometries = SYSTEM_GEOMETRIES.get(system_name)
     if system_geometries is not None:
-        points = system_geometries[geometry_index - 1]
-        if len(points) != natoms:
+        first_points, second_points = system_geometries
+        if len(first_points) != natoms or len(second_points) != natoms:
             raise ValueError(
-                "{} regression geometry has {} rather than {} atoms".format(
-                    system_name, len(points), natoms
+                "{} regression geometries do not contain {} atoms".format(
+                    system_name, natoms
                 )
             )
-        return points
-    points = []
-    for index in range(natoms):
-        if geometry_index == 1:
-            point = (
+    else:
+        first_points = []
+        second_points = []
+        for index in range(natoms):
+            first_points.append((
                 0.93*(index % 4) + 0.07*(index//4),
                 1.07*((index//4) % 4) + 0.11*(index % 3),
                 0.89*(index//16) + 0.13*((2*index + 1) % 5),
-            )
-        else:
-            point = (
+            ))
+            second_point = (
                 1.01*(index % 3) + 0.17*((index//3) % 2),
                 0.97*((index//3) % 3) + 0.09*((3*index + 2) % 4),
                 1.13*(index//9) + 0.15*((index + 3) % 6),
             )
             if geometry_variant == "torsion":
-                point = (point[0], point[1], point[2] + 0.017*index*index)
-        points.append(point)
-    return tuple(points)
+                second_point = (
+                    second_point[0],
+                    second_point[1],
+                    second_point[2] + 0.017*index*index,
+                )
+            second_points.append(second_point)
+    if not 1 <= geometry_index <= REGRESSION_GEOMETRY_COUNT:
+        raise ValueError(
+            "geometry index must be between 1 and {}".format(
+                REGRESSION_GEOMETRY_COUNT
+            )
+        )
+
+    def interpolate(first_weight: float) -> tuple[tuple[float, ...], ...]:
+        second_weight = 1.0-first_weight
+        return tuple(
+            tuple(
+                first_weight*first_coordinate
+                + second_weight*second_coordinate
+                for first_coordinate, second_coordinate in zip(first, second)
+            )
+            for first, second in zip(first_points, second_points)
+        )
+
+    primary_start = interpolate(1.00)
+    primary_end = interpolate(0.00)
+    primary_midpoint = interpolate(0.50)
+    near_start_midpoint = interpolate(0.75)
+    near_end_midpoint = interpolate(0.25)
+    raw_offsets = tuple(
+        (
+            float(index % 3-1),
+            float((2*index+1) % 3-1),
+            float((3*index+2) % 5-2),
+        )
+        for index in range(natoms)
+    )
+    offset_means = tuple(
+        sum(offset[axis] for offset in raw_offsets)/natoms
+        for axis in range(3)
+    )
+    amplitudes = (0.020, 0.015, 0.012)
+    offsets = tuple(
+        tuple(
+            amplitudes[axis]*(offset[axis]-offset_means[axis])
+            for axis in range(3)
+        )
+        for offset in raw_offsets
+    )
+    near_start_minus = tuple(
+        tuple(
+            coordinate-offset
+            for coordinate, offset in zip(point, displacement)
+        )
+        for point, displacement in zip(near_start_midpoint, offsets)
+    )
+    near_start_plus = tuple(
+        tuple(
+            coordinate+offset
+            for coordinate, offset in zip(point, displacement)
+        )
+        for point, displacement in zip(near_start_midpoint, offsets)
+    )
+    centroid = tuple(
+        sum(point[axis] for point in near_end_midpoint)/natoms
+        for axis in range(3)
+    )
+
+    def radial_scale(factor: float) -> tuple[tuple[float, ...], ...]:
+        return tuple(
+            tuple(
+                centroid[axis]+factor*(point[axis]-centroid[axis])
+                for axis in range(3)
+            )
+            for point in near_end_midpoint
+        )
+
+    geometries = (
+        primary_start,
+        primary_end,
+        primary_midpoint,
+        near_start_minus,
+        near_start_plus,
+        near_start_midpoint,
+        radial_scale(0.97),
+        radial_scale(1.03),
+        near_end_midpoint,
+    )
+    return geometries[geometry_index-1]
 
 
 def assignments(
@@ -295,10 +392,10 @@ def standard_driver(
         ))
 
     blocks = []
-    for geometry_index in (1, 2):
+    for geometry_index in range(1, REGRESSION_GEOMETRY_COUNT+1):
         geometry_variant = (
             "torsion"
-            if system_name == "C6H6O" and geometry_index == 2
+            if system_name == "C6H6O"
             else ""
         )
         blocks.append(
@@ -467,7 +564,9 @@ def capture_source(compiler: str, source: Path, work_root: Path) -> CaptureResul
             for line in completed.stdout.splitlines()
             if line.startswith("CHEMPOTPY_REF ")
         ]
-        expected_count = 2*(nstates*nstates if entry_point == "dpem" else nstates)
+        expected_count = REGRESSION_GEOMETRY_COUNT*(
+            nstates*nstates if entry_point == "dpem" else nstates
+        )
         if len(values) != expected_count:
             raise RuntimeError(
                 "captured {} of {} values; output:\n{}".format(

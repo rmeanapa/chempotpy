@@ -2,7 +2,10 @@
 
 import unittest
 
-from scripts.capture_library_references import coordinates
+from scripts.capture_library_references import (
+    REGRESSION_GEOMETRY_COUNT,
+    coordinates,
+)
 from scripts.check_numerical_regression import (
     compare_records,
     comparison_record,
@@ -114,7 +117,8 @@ class NumericalRegressionTests(unittest.TestCase):
 
     def test_problem_systems_use_physical_regression_geometries(self) -> None:
         for system_name, atom_count in (("Aln", 5), ("NH3", 4)):
-            for geometry_index in (1, 2):
+            geometries = []
+            for geometry_index in range(1, REGRESSION_GEOMETRY_COUNT+1):
                 points = coordinates(
                     atom_count,
                     geometry_index,
@@ -122,6 +126,50 @@ class NumericalRegressionTests(unittest.TestCase):
                 )
                 self.assertEqual(len(points), atom_count)
                 self.assertEqual(len(set(points)), atom_count)
+                geometries.append(points)
+            self.assertEqual(len(set(geometries)), REGRESSION_GEOMETRY_COUNT)
+
+    def test_each_endpoint_pair_has_its_interpolated_midpoint(self) -> None:
+        geometries = [
+            coordinates(3, geometry_index)
+            for geometry_index in range(1, REGRESSION_GEOMETRY_COUNT+1)
+        ]
+        self.assertEqual(len(set(geometries)), REGRESSION_GEOMETRY_COUNT)
+        for first_index, second_index, midpoint_index in (
+            (0, 1, 2),
+            (3, 4, 5),
+            (6, 7, 8),
+        ):
+            first = geometries[first_index]
+            second = geometries[second_index]
+            midpoint = geometries[midpoint_index]
+            for atom in range(3):
+                for axis in range(3):
+                    self.assertAlmostEqual(
+                        midpoint[atom][axis],
+                        0.5*first[atom][axis]+0.5*second[atom][axis],
+                    )
+
+    def test_additional_pairs_change_internal_distances(self) -> None:
+        geometries = [
+            coordinates(4, geometry_index)
+            for geometry_index in range(1, REGRESSION_GEOMETRY_COUNT+1)
+        ]
+        pair_distances = []
+        for geometry in geometries:
+            distances = []
+            for first_atom in range(3):
+                for second_atom in range(first_atom+1, 4):
+                    distances.append(sum(
+                        (geometry[first_atom][axis]
+                         - geometry[second_atom][axis])**2
+                        for axis in range(3)
+                    )**0.5)
+            pair_distances.append(tuple(distances))
+        self.assertEqual(
+            len(set(pair_distances)),
+            REGRESSION_GEOMETRY_COUNT,
+        )
 
 
 if __name__ == "__main__":

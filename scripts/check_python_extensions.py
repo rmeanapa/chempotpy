@@ -21,7 +21,10 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from chempotpy.core.registry import discover_surface_sources  # noqa: E402
-from scripts.capture_library_references import coordinates  # noqa: E402
+from scripts.capture_library_references import (  # noqa: E402
+    REGRESSION_GEOMETRY_COUNT,
+    coordinates,
+)
 
 
 RESULT_PREFIX = "CHEMPOTPY_PYTHON_EXTENSION_RESULT "
@@ -70,11 +73,7 @@ def call_surface(
     arguments = record["signature"].split(",")
     atom_count = int(record["natoms"])
     state_count = int(record["nstates"])
-    geometry_variant = (
-        "torsion"
-        if system_name == "C6H6O" and geometry_index == 2
-        else ""
-    )
+    geometry_variant = "torsion" if system_name == "C6H6O" else ""
     if entry_point == "pes" and len(arguments) == 6 and arguments[2] != "path":
         atom_count = 5
     elif entry_point == "pes" and len(arguments) in (8, 9):
@@ -178,7 +177,7 @@ def validate_one(output_root: Path, key: str, record: dict) -> dict:
             )
         )
     actual = []
-    for geometry_index in (1, 2):
+    for geometry_index in range(1, REGRESSION_GEOMETRY_COUNT+1):
         actual.extend(call_surface(
             module,
             record,
@@ -325,7 +324,9 @@ def main() -> int:
                         )
                     )
     print("python_extensions_checked: {}".format(len(keys)))
-    print("python_extension_evaluations: {}".format(2*len(keys)))
+    print("python_extension_evaluations: {}".format(
+        REGRESSION_GEOMETRY_COUNT*len(keys)
+    ))
     print("python_extension_failures: {}".format(len(failures)))
     for failure in failures:
         print("FAIL {}".format(failure))
