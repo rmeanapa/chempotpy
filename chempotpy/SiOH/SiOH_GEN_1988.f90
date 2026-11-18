@@ -33,11 +33,13 @@ module chempotpy_sioh_gen_1988_pes
     contains
 
     !> @brief Evaluate the SiOH_GEN_1988 potential energy surface for SiOH.
-    subroutine evaluate( xyz, nsi, no, nh, natoms, igrad, p, g, d )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( xyz, nsi, no, nh, natoms, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, intent(in)   :: nsi, no, nh
@@ -86,7 +88,8 @@ module chempotpy_sioh_gen_1988_pes
                 enddo
             enddo
         else
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
 

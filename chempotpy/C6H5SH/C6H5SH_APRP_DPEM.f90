@@ -91,13 +91,15 @@ module chempotpy_c6h5sh_aprp_dpem_pes
     contains
 
     !> @brief Evaluate the C6H5SH_APRP diabatic potential matrix for C6H5SH.
-    subroutine evaluate( x, igrad, u, ug )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+    subroutine evaluate( x, igrad, u, ug, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
         ! The published fit is numerically sensitive to its released coordinate scale.
         use chempotpy_legacy_units, only: published_bohr_to_angstrom => legacy_bohr_to_angstrom
         use chempotpy_units,        only: hartree_to_electronvolt
         use chempotpy_kinds,        only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 3
         integer, parameter    :: natoms  = 13

@@ -85,10 +85,12 @@ module chempotpy_oh3_pip_ffw1_2019_pes
     contains
 
     !> @brief Evaluate the OH3_PIP_FFW1_2019 potential energy surface for OH3.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 3
         integer, parameter    :: natoms  = 4

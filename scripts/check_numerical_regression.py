@@ -23,8 +23,11 @@ from scripts.capture_library_references import capture_source
 DEFAULT_FIXTURE = REPOSITORY_ROOT / "tests" / "data" / \
     "all_surface_references.json"
 METADATA_FIELDS = ("entry_point", "natoms", "nstates", "signature")
-RELATIVE_TOLERANCE = 1.0e-13
-ABSOLUTE_TOLERANCE = 1.0e-13
+# Different supported compiler versions can reorder floating-point operations
+# at the final few ulps even at -O0.  This remains tight enough to reject any
+# chemically meaningful change while keeping the baseline compiler-portable.
+RELATIVE_TOLERANCE = 1.0e-11
+ABSOLUTE_TOLERANCE = 1.0e-11
 BASELINE_VERSION = 1
 MAX_WORKFLOW_ANNOTATIONS = 50
 

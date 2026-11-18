@@ -68,13 +68,15 @@ module chempotpy_clh2_leps_ttgi2_1985_pes
     contains
 
     !> @brief Evaluate the ClH2_LEPS_TTGI2_1985 potential energy surface for ClH2.
-    subroutine evaluate( x, igrad, path, p, g, d )
+    subroutine evaluate( x, igrad, path, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter              :: nstates = 1
         integer, parameter              :: natoms  = 3
@@ -112,7 +114,8 @@ module chempotpy_clh2_leps_ttgi2_1985_pes
                 enddo
             enddo
         elseif( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_clh2_leps_ttgi2_1985_pes
@@ -709,9 +712,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         !     THREE PARTIALS STORED IN DD(3)
         !   Check the value of NDER
         if( nder .gt. 1 )then
-            write (iptprt, '(/,1X,T5,''Error: POT has been called with NDER = '', I5, /,1X,T12,''only the first derivativ' // &
-                'es, NDER = 1, are '', ''coded in this potential'')') nder
-            stop 'POT 1'
+            return
         endif
         !     SET FLAG FOR EIGENVECTOR OUTPUT
         iflag = sign(1, nroot)
@@ -789,7 +790,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         call eign(ndim, th, vec, en, w, ndim)
         !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
         xter = en(nroot)+c(2)
-        if( iflag .lt. zero ) write(iptprt, '(/,2X,T5,''Vector:'',(T15,3E20.8))') (vec(i,nroot), i=1, ndim)
         !************************* END OF FPOT3N *******************************
         if( nder .ne. 1 ) return
         !     SET  VECTOR FOR STATE OF INTEREST
@@ -801,8 +801,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         dtdr2 = -r(2)/(r(1)*r(3))
         dtdr3 = (r(2)*r(2)+r(3)*r(3)-r(1)*r(1))/(two*r(3)*r(3)*r(1))
         factr = -one/st
-        if( abs(st) .lt. 1.e-6_wp ) write(iptprt, &
-            & '(/,2X,T5,''Warning: A serious error may result because '', ''sine(THETA) = '',' // '1PE20.10)') st
         !     COMPUTE PARTIALS OF HAMILTONIAN ELEMENTS
         xtra    = +half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
         dh11(1) = dss11a+xtra*dtdr1
@@ -1055,7 +1053,6 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             do i=1, n1
                 s3(i) = (s2(i+1)-s2(i))/h(i)
             enddo
-            if( idebug .eq. 1 ) write(iptprt, '(2X,T5,''Final EPS = '', 1PE15.6)') epsln
         end subroutine splnin
 
         !> @brief Evaluate EIGN for the ClH2_LEPS_TTGI2_1985 potential.
@@ -1076,7 +1073,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             lwork = max(1, 3*nn-1)
             allocate(work(lwork))
             call dsyev('V', 'L', nn, a, nd, eig, work, lwork, ierr)
-            if( ierr /= 0 ) error stop 'EIGN: symmetric eigensolver failed to converge'
+            if( ierr /= 0 ) return
             vec(1:nn,1:nn) = a(1:nn,1:nn)
             deallocate(work)
         end subroutine eign

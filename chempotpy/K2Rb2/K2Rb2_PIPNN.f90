@@ -13,10 +13,12 @@ module chempotpy_k2rb2_pipnn_pes
     contains
 
     !> @brief Evaluate the K2Rb2_PIPNN potential energy surface for K2Rb2.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: electronvolt_to_inverse_centimeter
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: electronvolt_to_inverse_centimeter
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -36,7 +38,8 @@ module chempotpy_k2rb2_pipnn_pes
         if( igrad == 0 )then
             call k2rb2_pes_interface(tx, v)
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
         v = v/electronvolt_to_inverse_centimeter
         do istate=1, nstates

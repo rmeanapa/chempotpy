@@ -9,11 +9,13 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
     contains
 
     !> @brief Evaluate the F2H2_GEN_JBKKL_1990 potential energy surface for F2H2.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,                only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_f2h2_jbkkl_parameters, only: params_c => jbkkl_coefficients
         use chempotpy_units,                 only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,                 only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -49,7 +51,8 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
                 p(istate) = v*hartree_to_electronvolt
             enddo
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
 
         contains
@@ -407,7 +410,11 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             fakt = 1.e0_wp
             if( ax .eq. 0.e0_wp ) return
             fakt = .1e0_wp
-            if( ax .lt. 0.e0_wp ) stop 101
+            if( ax .lt. 0.e0_wp )then
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
+            endif
             ic   = idnint(ax)
             ax   = ax/10.e0_wp
             fakt = ax

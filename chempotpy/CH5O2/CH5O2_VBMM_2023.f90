@@ -27,10 +27,12 @@ module chempotpy_ch5o2_vbmm_2023_pes
     contains
 
     !> @brief Evaluate the CH5O2_VBMM_2023 potential energy surface for CH5O2.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 8
@@ -544,7 +546,8 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 p(istate) = usrocm_pengygs*hartree_to_electronvolt
             enddo
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
 
         contains
@@ -1553,8 +1556,9 @@ module chempotpy_ch5o2_vbmm_2023_pes
             ! jeg vdw
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
             if( infocm_natoms .gt. 25 )then
-                write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
             do i=1, 5
                 infocm_ref(i) = ' '
@@ -1632,21 +1636,18 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            write(usricm_nflag(18), '(/)')
             do i =1, 5
-                write(usricm_nflag(18), '(2x,a75)') infocm_ref(i)
             enddo
-            write(usricm_nflag(18), '(/)')
             kmax = 0
             do i = 1, isurf+1
                 do j = 1, isurf+1
                     if( usricm_nasurf(i,j) .ne. 0.and.kmax .lt. max(i, j) ) kmax = max(i, j)
                 enddo
             enddo
-            write(usricm_nflag(18), '(2x,'' MAX. AND ACTUAL NO. OF EXCITED SURFACES: '',I3,5x,I3)') infocm_msurf, kmax-1
             if( kmax-1 .gt. infocm_msurf )then
-                write(6, *) ' WRONG INPUT ON NUMBER OF EXCITED SURFACES'
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
             utilcm_ksdiag = 0
             utilcm_kediag = 0
@@ -1668,52 +1669,12 @@ module chempotpy_ch5o2_vbmm_2023_pes
                     endif
                 enddo
             enddo
-            write(usricm_nflag(18), '(2x,'' MAX. AND ACTUAL ORDER OF DERIVATIVES:    '',I3,5x,I3)') infocm_mder, usricm_nder
             if( usricm_nder .gt. infocm_mder )then
-                write(6, *) ' WRONG INPUT ON ORDER OF DERIVATIVES'
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
             if( usricm_nflag(19) .eq. 1 )then
-                write(usricm_nflag(18), '(/)')
-                write(usricm_nflag(18), '(2x,''Cartesian coordinates are supplied by'',/, 2x,''the user in the array CART.'',//)')
-                write(usricm_nflag(18), '(2x,''Provide cartesian coordinates in the'',/, 2x,''following order using the array CART'',' // &
-                    '//, 2x,'' CART(1,1)...CART(1,3)   => ATOM 1'',/, 2x,'' CART(2,1)...CART(2,3)   => AT' // &
-                    'OM 2'',/, 2x,'' CART(3,1)...CART(3,3)   => ATOM 3'',/, 2x,'' CART(N,1)...CART(N,3)  ' // &
-                    ' => ATOM N'',/, 2x,''CART(25,1)...CART(25,3)  => ATOM 25'',/)')
-                write(usricm_nflag(18), '(2x,''If the user wishes to relabel the atoms,'',/, 2x,''set the variable IREORDER equal to ' // &
-                    '1'',/, 2x,''in the PARAMETER statement.  The user'',/, 2x,''must also specify the ne' // &
-                    'w labeling'',/, 2x,''scheme.  This is done using the array'',/, 2x,''NULBL in the fo' // &
-                    'llowing manner:'',//, 2x,''NULBL(i) = j'',/, 2x,''where:  i => old index'',/, 2x,'' ' // &
-                    '       j => new index'',//)')
-                write(usricm_nflag(18), '(2x,''Cartesian coordinates can be provided to'',/, 2x,''the potential routine in a variety ' // &
-                    'of units.'',/, 2x,''The input units will be converted to Bohr'',/, 2x,''based on the' // &
-                    ' following values of the NFLAG'',/, 2x,''variable:'',//, 2x,''NFLAG(1)  =  1  =>  CA' // &
-                    'RTESIANS IN BOHR (no'',/, 2x,''                    conversion required)'',/, 2x,''NF' // &
-                    'LAG(1)  =  2  =>  CARTESIANS IN ANGSTROMS'',//)')
-                write(usricm_nflag(18), '(2x,''The value of the energy and derivatives'',/, 2x,''(if computed) can be reported in a v' // &
-                    'ariety'',/, 2x,''units.  A units conversion will take place'',/, 2x,''as specified b' // &
-                    'y the following values of the'',/, 2x,''NFLAG variable:'',//, 2x,''NFLAG(2) = 1 =>  ' // &
-                    'ENERGIES REPORTED IN HARTEEE'',/, 2x,''NFLAG(2) = 2 =>  ENERGIES REPORTED IN mHARTRE' // &
-                    'E'',/, 2x,''NFLAG(2) = 3 =>  ENERGIES REPORTED IN eV'',/, 2x,''NFLAG(2) = 4 =>  ENER' // &
-                    'GIES REPORTED IN kcal/mol'',/, 2x,''NFLAG(2) = 5 =>  ENERGIES REPORTED IN cm**-1'',/' // &
-                    '/)')
-                write(usricm_nflag(18), '(2x,''A units conversion will take place'',/, 2x,''as specified by the following values of t' // &
-                    'he'',/, 2x,''NFLAG variable:'',//, 2x,''NFLAG(1)=1 & NFLAG(2)=1 => DERIVATIVES REPOR' // &
-                    'TED IN'',/, 2x,''                           HARTEEE/BOHR'',/, 2x,''NFLAG(1)=1 & NFLA' // &
-                    'G(2)=2 => DERIVATIVES REPORTED IN'',/, 2x,''                           mHARTREE/BOHR' // &
-                    ''',/, 2x,''NFLAG(1)=1 & NFLAG(2)=3 => DERIVATIVES REPORTED IN'',/, 2x,''            ' // &
-                    '               eV/BOHR'',/, 2x,''NFLAG(1)=1 & NFLAG(2)=4 => DERIVATIVES REPORTED IN' // &
-                    ''',/, 2x,''                           kcal/mol/BOHR'',/, 2x,''NFLAG(1)=1 & NFLAG(2)=' // &
-                    '5 => DERIVATIVES REPORTED IN'',/, 2x,''                           cm**-1/BOHR'',//)')
-                write(usricm_nflag(18), '(2x,''A units conversion will take place'',/, 2x,''as specified by the following values of t' // &
-                    'he'',/, 2x,''NFLAG variable:'',//, 2x,''NFLAG(1)=2 & NFLAG(2)=1 => DERIVATIVES REPOR' // &
-                    'TED IN'',/, 2x,''                           HARTEEE/ANGSTROM'',/, 2x,''NFLAG(1)=2 & ' // &
-                    'NFLAG(2)=2 => DERIVATIVES REPORTED IN'',/, 2x,''                           mHARTREE/' // &
-                    'ANGSTROM'',/, 2x,''NFLAG(1)=2 & NFLAG(2)=3 => DERIVATIVES REPORTED IN'',/, 2x,''    ' // &
-                    '                       eV/ANGSTROM'',/, 2x,''NFLAG(1)=2 & NFLAG(2)=4 => DERIVATIVES ' // &
-                    'REPORTED IN'',/, 2x,''                           kcal/mol/ANGSTROM'',/, 2x,''NFLAG(1' // &
-                    ')=2 & NFLAG(2)=5 => DERIVATIVES REPORTED IN'',/, 2x,''                           cm*' // &
-                    '*-1/ANGSTROM'',//)')
             endif
         end subroutine potinfo
 
@@ -2021,8 +1982,9 @@ module chempotpy_ch5o2_vbmm_2023_pes
             integer, parameter :: isurf  = 5
             call cartesian_to_potlib_coordinates(infocm_cartnu, infocm_natoms, infocm_icartr, pt1cm_r, coordinate_status)
             if( coordinate_status /= 0 )then
-                write(usricm_nflag(18), '(2x,''WRONG ICARTR FOR CARTNU; ICARTR ='',i5//)') infocm_icartr
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
         end subroutine carttor
 
@@ -2201,8 +2163,9 @@ module chempotpy_ch5o2_vbmm_2023_pes
                 zd   = eps*t0+rcm
                 rff  = sqrt((xa-xc)**2+yc**2+(za-zc)**2)
             else
-                write(usricm_nflag(18), '(2X,'' WRONG ICARTR FOR DERIVATIVE; ICARTR ='',I5//)') infocm_icartr
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
         end subroutine rtocart
 

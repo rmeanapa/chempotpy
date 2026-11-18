@@ -57,12 +57,14 @@ module chempotpy_ch4br_vbmm_2002_pes
     contains
 
     !> @brief Evaluate the CH4Br_VBMM_2002 potential energy surface for CH4Br.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,    only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry, only: flatten_cartesian_coordinates
         use chempotpy_units,    only: hartree_to_electronvolt
         use chempotpy_kinds,    only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 6
@@ -210,7 +212,8 @@ module chempotpy_ch4br_vbmm_2002_pes
                 enddo
             enddo
         elseif( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
 
         contains
@@ -1038,9 +1041,9 @@ module chempotpy_ch4br_vbmm_2002_pes
             integer, parameter :: n3tmmn = 18
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
             if( n3tm .lt. n3tmmn )then
-                write (6, '(/,2X,T5,''Warning: N3TM is set equal to '',I3, '' but this potential routine'', /,2X,T14,''requir' // &
-                    'es N3TM be greater than or '', ''equal to '',I3,/)') n3tm, n3tmmn
-                stop 'SETUP 1'
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'SETUP 1')
+                return
             endif
         end subroutine setup
     end subroutine evaluate

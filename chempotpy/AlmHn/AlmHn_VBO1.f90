@@ -32,10 +32,12 @@ module chempotpy_almhn_vbo1_pes
     contains
 
     !> @brief Evaluate the AlmHn_VBO1 potential energy surface for AlmHn.
-    subroutine evaluate( xyz, nal, nh, natoms, igrad, p, g, d )
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( xyz, nal, nh, natoms, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, intent(in)   :: nal, nh, natoms
@@ -66,7 +68,8 @@ module chempotpy_almhn_vbo1_pes
                 p(istate) = v*hartree_to_electronvolt
             enddo
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine evaluate
 
@@ -133,8 +136,7 @@ module chempotpy_almhn_vbo1_pes
                 & (symbol(i).eq.'al').or.(symbol(i).eq.'aL'))then
             id(i) = 2
         else
-            write(13, *)'Atomic symbol ', symbol(i), ' undefined. Stopping.'
-            stop "Undefined atomic symbol."
+            return
             endif
         enddo
         !    Calculate all internuclear distances

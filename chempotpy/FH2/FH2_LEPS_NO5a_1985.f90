@@ -53,11 +53,13 @@ module chempotpy_fh2_leps_no5a_1985_pes
     contains
 
     !> @brief Evaluate the FH2_LEPS_NO5a_1985 potential energy surface for FH2.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -244,7 +246,8 @@ module chempotpy_fh2_leps_no5a_1985_pes
                 enddo
             enddo
         elseif( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
 
         contains
@@ -262,8 +265,9 @@ module chempotpy_fh2_leps_no5a_1985_pes
             real(wp), parameter :: cangau = 0.52917706e0_wp
             !   EXLARG IS LN(LARGEST FLOATING POINT NUMBER ALLOWED)
             if( legacy_natoms .gt. 25 )then
-                write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
             do i = 1, 3
                 dm(i)   = dm(i) / ckcau
@@ -391,9 +395,9 @@ module chempotpy_fh2_leps_no5a_1985_pes
                 deg = tdeg * phi
                 goto_block_60_465: block
                     if( .not.(deg .lt. 0.e0_wp .or. deg .gt. 90.e0_wp) ) exit goto_block_60_465
-                    write(nflag(18), '(/,2X,T5,''In the FH2 surface no. 5A, PHI = '', F10.5, ''degrees'', /,2X,T5,''but PHI must be gr' // &
-                        'eater than zero.'')') deg
-                    stop 'POT 3'
+                    if( present(status) ) call status%set(status_invalid_input, &
+                        'POT 3')
+                    return
                 end block goto_block_60_465
                 if( deg <= deg1 )then
                     zphi  = 0.0e0_wp
@@ -411,9 +415,9 @@ module chempotpy_fh2_leps_no5a_1985_pes
                     zphi = c5+c6*sinphi*sinphi
                     if( lderiv ) dzphi = 2.0e0_wp*c6*sinphi*cosphi
                 else
-                    write (nflag(18), '(/,2X,T5,''In the FH2 surface no. 5A, PHI = '', F10.5, ''degrees'', /,2X,T5,''but PHI must be l' // &
-                        'ess than 90 degrees.'')') deg
-                    stop 'POT 4'
+                    if( present(status) ) call status%set(status_invalid_input, &
+                        'POT 4')
+                    return
                 endif
                 !   COMPUTE SCALE FACTOR TO DAMP OUT CORRECTION AT LARGE DISTANCE
                 scale1 = capr2 / (g2 + capr2)
@@ -883,8 +887,9 @@ module chempotpy_fh2_leps_no5a_1985_pes
             integer, parameter :: isurf  = 5
             call cartesian_to_potlib_coordinates(cartnu, legacy_natoms, icartr, r, coordinate_status)
             if( coordinate_status /= 0 )then
-                write(nflag(18), '(2x,''WRONG ICARTR FOR CARTNU; ICARTR ='',i5//)') icartr
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
         end subroutine carttor
 
@@ -1062,8 +1067,9 @@ module chempotpy_fh2_leps_no5a_1985_pes
                 zd   = eps*t0+rcm
                 rff  = sqrt((xa-xc)**2+yc**2+(za-zc)**2)
             else
-                write(nflag(18), '(2X,'' WRONG ICARTR FOR DERIVATIVE; ICARTR ='',I5//)') icartr
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
         end subroutine rtocart
 

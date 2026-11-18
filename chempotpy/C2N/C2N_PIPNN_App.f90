@@ -10,10 +10,12 @@ module chempotpy_c2n_pipnn_app_pes
     contains
 
     !> @brief Evaluate the C2N_PIPNN_App potential energy surface for C2N.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_geometry, only: cartesian_distance
         use chempotpy_kinds,    only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -34,7 +36,8 @@ module chempotpy_c2n_pipnn_app_pes
         if( igrad == 0 )then
             call c2n_2a_dprime(rb, v)
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
         do istate=1, nstates
             p(istate) = v

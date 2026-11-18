@@ -68,13 +68,15 @@ module chempotpy_c7h8s_aprp_pes
     contains
 
     !> @brief Evaluate the C7H8S_APRP potential energy surface for C7H8S.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
         ! The published fit is numerically sensitive to its released coordinate scale.
         use chempotpy_legacy_units, only: published_bohr_to_angstrom => legacy_bohr_to_angstrom
         use chempotpy_units,        only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,        only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 3
         integer, parameter    :: natoms  = 16
@@ -1542,8 +1544,7 @@ module chempotpy_c7h8s_aprp_pes
             call dsyev('V', 'U', ndim, eigvec, ndim, eigval, work, lwork, info)
             deallocate(work)
             if( info .ne. 0 )then
-                write(*, *) "dsyev exits abnormally in diagonalization."
-                stop
+                return
             endif
         end subroutine diagonalize
 

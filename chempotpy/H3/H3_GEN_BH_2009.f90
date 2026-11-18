@@ -1829,11 +1829,7 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
     fb = fcn(bx)
     fc = fcn(cx)
     if( (fb .ge. fa).or.(fb .ge. fc) )then
-        write(6, *)'bracketing error in golden'
-        write(6, *)ax, fa
-        write(6, *)bx, fb
-        write(6, *)cx, fc
-        stop
+        return
     endif
     x0 = ax
     x3 = cx
@@ -1853,8 +1849,7 @@ subroutine golden( ax, bx, cx, tol, xmin, fval )
         if( abs(x3-x0) .le. tol*(abs(x1)+abs(x2)) ) exit
         icount = icount+1
         if( icount .ge. maxcount )then
-            write(6, *)'too many evaluations in golden'
-            stop
+            return
         endif
         if( f2 .lt. f1 )then
             x0 = x1
@@ -1903,13 +1898,15 @@ module chempotpy_h3_gen_bh_2009_pes
     contains
 
     !> @brief Evaluate the H3_GEN_BH_2009 potential energy surface for H3.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -1939,7 +1936,8 @@ module chempotpy_h3_gen_bh_2009_pes
             enddo
         enddo
         if( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_h3_gen_bh_2009_pes

@@ -232,7 +232,7 @@ function pothco( rhc, rco, rcos, istate )
             wurz = sqrt( a**2 + (aa(jj,ks)*rhcsin)**2 + wuradd ) ! WURADD ist
             jj   = jj + 4
         endif
-        if( jj .ne. mtan(ks)+1 ) stop 'POTHCO: MTAN FALSCH !'
+        if( jj .ne. mtan(ks)+1 ) return!'
         ll  = 1
         pq  = easym
         pq  = pq + v2ch(rhci)
@@ -277,7 +277,7 @@ function pothco( rhc, rco, rcos, istate )
             enddo
             phc = phc * ( rhci - nuhc(j+1) )
         enddo
-        if( ll .ne. mlin(ks)+1 ) stop ' POTHCO: MLIN FALSCH '
+        if( ll .ne. mlin(ks)+1 ) return
         pq = pq + 0.055e0_wp/au2ev + vplus         ! OFFSET(Dez.1994)
         if (rohi.lt.1.1e0_wp.or.rhci.lt.1.3e0_wp.or.&
             &rcoi.lt.1.5e0_wp.or.rcoi+rohi.lt.2.9e0_wp) then
@@ -331,11 +331,13 @@ module chempotpy_h2co_pip_pes
     contains
 
     !> @brief Evaluate the H2CO_PIP potential energy surface for H2CO.
-    subroutine evaluate( x, igrad, p, gradient_out, d )
-        use shell,           only: cof, coff, power, total
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, gradient_out, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use shell,            only: cof, coff, power, total
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -359,7 +361,8 @@ module chempotpy_h2co_pip_pes
                 p(istate) = v
             enddo
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_h2co_pip_pes

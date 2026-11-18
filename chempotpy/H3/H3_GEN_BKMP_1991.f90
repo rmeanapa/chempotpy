@@ -8,13 +8,15 @@ module chempotpy_h3_gen_bkmp_1991_pes
     contains
 
     !> @brief Evaluate pes for the H3_GEN_BKMP_1991 potential.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -43,7 +45,8 @@ module chempotpy_h3_gen_bkmp_1991_pes
             enddo
         enddo
         if( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
 
@@ -69,15 +72,10 @@ module chempotpy_h3_gen_bkmp_1991_pes
         real(wp), intent(out) :: energy, dedr(3)
         !   Check the values of NSURF and NDER for validity.
         if( nsurf .ne. 0 )then
-            write (iprt, '(/,2X,T5,''NSURF has been set equal to '',I5, /,2X,T5,''This value of NSURF is not allowed for ' // &
-                'this '', ''potential, '', /,2X,T5,''only the ground electronic surface, NSURF = 0, ' // &
-                ''', ''is available'')') nsurf
-            stop 'POT 1'
+            return
         endif
         if( nder .gt. 1 )then
-            write (iprt, '(/, 2X,''POT has been called with NDER = '',I5, /, 2X, ''This value of NDER is not allowed in t' // &
-                'his '', ''version of the potential.'')') nder
-            stop 'POT 2'
+            return
         endif
         call h3tot (rval, energy, dedr, nder, idbug)
         !    Put the zero of energy at the BC asymptotic valley, i.e., at
@@ -155,30 +153,8 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dvtot(2) = dvlon(2) + dvas(2) + dvbnda(2) + dvbndb(2) +  dcal(2) + dcas(2) + dcbnda(2) + dcbndb(2)
         dvtot(3) = dvlon(3) + dvas(3) + dvbnda(3) + dvbndb(3) +  dcal(3) + dcas(3) + dcbnda(3) + dcbndb(3)
         if( ipr .gt. 0 )then
-            write(7, *)
-            write(7, *) 'h3tot enter --------------------------------'
-            write(7, '(5x,''    r ='',3(1x,f16.10),'' icompac = '',i1,/, 5x,''Vtot  = '',f18.12,/, 5x,''Vlon  = '',f18.12,' // &
-                '''       Vas   = '',g18.12,/, 5x,''Cal   = '',g18.12,''       Cas   = '',g18.12,/, 5' // &
-                'x,''Vbnda = '',g18.12,''       Vbndb = '',g18.12,/, 5x,''Cbnda = '',g18.12,''       ' // &
-                'Cbndb = '',g18.12)') r, icompc, vtot, &
-                & vlon, vas, cal, cas, vbnda, vbndb, cbnda, cbndb
             if( ipr .gt. 1 )then
-                write(7, '('' dVtot   = '',3(1x,g18.12),/, '' dVlon   = '',3(1x,g18.12),/, '' dVas    = '',3(1x,g18.12),/,' // &
-                    ' '' dVbnda  = '',3(1x,g18.12),/, '' dVbndb  = '',3(1x,g18.12),/, '' dCal    = '',3(1' // &
-                    'x,g18.12),/, '' dCas    = '',3(1x,g18.12),/, '' dCbnda  = '',3(1x,g18.12),/, '' dCbn' // &
-                    'db  = '',3(1x,g18.12))') dvtot, dvlon, dvas, dvbnda, dvbndb, &
-                    & dcal, dcas, dcbnda, dcbndb
             endif
-            write(7, '(''Vba values: '',5(1x,g12.6),/,''Vbb values: '',5(1x,g12.6))') (vb(1, i), i=1, 5), (vb(2, i), i=1, 5)
-            write(7, '(''Cba values: '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''C' // &
-                'bb values: '',3(1x,f16.8),/, ''            '',3(1x,f16.8),/, ''            '',3(1x,f' // &
-                '16.8))') (cb(1,i), i=1, 9), (cb(2,i), i=1, 9)
-            write(7, '(''   Vbnda        Vbndb        Cbnda        Cbndb '',/, 4(e12.6,2x),/, ''dVbnda: '',3(e16.10,1x),/,' // &
-                ' ''dVbndb: '',3(e16.10,1x),/, ''dCbnda: '',3(e16.10,1x),/, ''dCbndb: '',3(e16.10,1x)' // &
-                ')') vbnda, vbndb, cbnda, cbndb, &
-                & dvbnda, dvbndb, dcbnda, dcbndb
-            write(7, *) 'exiting subr.h3tot'
-            write(7, *) 'h3tot exit ---------------------------------'
         endif
     end subroutine h3tot
 
@@ -240,7 +216,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
                 e3(2) = e1(2) + 3.e0_wp*c1*dr*dr + c2
             endif
         endif
-        if( ipr .gt. 0 ) write(7, '(''  triplet:  E3 = '',3(1x,f12.8))') e3
     end subroutine triplt
 
     !> @brief Evaluate vH2opt for the H3_GEN_BKMP_1991 potential.
@@ -363,8 +338,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
             e1(i)  = esing(1)
             de1(i) = esing(2)
             call triplt(r(i), etrip, 2)
-            if( ipr .gt. 0 ) write(7, '(''from subr.london: '',/, ''  using r'',i1,'':   Esinglet='',3(1x,f12.8),/, ''        ' // &
-                ' '',1x,''    Etriplet='',3(1x,f12.8))') i, esing, etrip
             e3(i)  = etrip(1)
             de3(i) = etrip(2)
             q(i)   = half*(e1(i) + e3(i))
@@ -376,18 +349,12 @@ module chempotpy_h3_gen_bkmp_1991_pes
         rootjt = sqrt(jt)
         vlon   = sumq - rootjt
         if( ipr .gt. 0 )then
-            write(7, '(''         sumQ = '',g12.6,''        sumJ = '',g12.6)') sumq, sumj
-            write(7, '(''         Vlon = '',f12.8,''      rootJt = '',g12.6)') vlon, rootjt
         endif
         !  calculate the derivatives with respect to r(i):
         dvlon(1) = half*(de1(1)+de3(1)) - 0.25e0_wp*(two*j(1)-j(2)-j(3))*(de1(1)-de3(1))/rootjt
         dvlon(2) = half*(de1(2)+de3(2)) - 0.25e0_wp*(two*j(2)-j(3)-j(1))*(de1(2)-de3(2))/rootjt
         dvlon(3) = half*(de1(3)+de3(3)) - 0.25e0_wp*(two*j(3)-j(1)-j(2))*(de1(3)-de3(3))/rootjt
         if( ipr .gt. 0 )then
-            write(7, '(''             r = '',3(1x,f12.6),/, ''            E1 = '',3(1x,f12.8),/, ''            E3 = '',3(1' // &
-                'x,f12.8),/, ''          vlon = '',1x,f12.8)') r, e1, e3, vlon
-            write(7, '(13x,''q = '',3(1x,e12.6),/,13x,''j = '',3(1x,e12.6))') q, j
-            write(7, '(''         dVlon = '',3(1x,g12.6))') dvlon
         endif
     end subroutine h3lond
 
@@ -432,8 +399,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dvas(2) = -3.e0_wp*aa1*rsq*s*exp1 + ds(2)*exp1 -aa7*a2*exp6/rsq  + 2.e0_wp*aa7*a*da(2)*exp6/r -aa6*aa7*a2*exp6/r
         ds(3)   = ( 2.e0_wp*aa2*a  +3.e0_wp*aa3*a2 +4.e0_wp*aa4*a3 +5.e0_wp*aa5*a4) * da(3)
         dvas(3) = -3.e0_wp*aa1*rsq*s*exp1 + ds(3)*exp1 -aa7*a2*exp6/rsq  + 2.e0_wp*aa7*a*da(3)*exp6/r -aa6*aa7*a2*exp6/r
-        if( ipr .gt. 0 ) write(7, '(''    from subr.vascal:   Vas  = '',  1x,g12.6, /, ''                        dS   = '',3(1' // &
-            'x,g12.6),/, ''                        dVas = '',3(1x,g12.6))') vas, ds, dvas
     end subroutine vascal
 
     !> @brief Evaluate acalc for the H3_GEN_BKMP_1991 potential.
@@ -457,8 +422,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
             da(2) = -da(2)
             da(3) = -da(3)
         endif
-        if( ipr .gt. 0 ) write(7, '(''Acalc enter ---------------------------------------'',/, ''     A = '',f15.10,''   dA = ' // &
-            ''',3(1x,g12.6),/, ''Acalc exit ----------------------------------------'')') a, da
     end subroutine acalc
 
     !> @brief Evaluate compac for the H3_GEN_BKMP_1991 potential.
@@ -540,14 +503,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         eterm  = exp(-u3*sr3)
         cas    = sumt * a2 * term1 * series * eterm
         if( ipr .gt. 0 )then
-            write(7, *)
-            write(7, *) 'Casym: ------------------'
-            write(7, *) ' T(i) = ', t
-            write(7, *) 'dT(i) = ', dt
-            write(7, *) ' id = ', id
-            write(7, '(''subr.Cas:   series = '',g12.6,''     term1 = '',g12.6,/, ''             eterm = '',g12.6,''      ' // &
-                'Cas  = '',g12.6)') series, term1, eterm, cas
-            write(7, *) ' Cas = ', cas
         endif
         if( id .gt. 0 )then
             dpr(1) = r(2)*r(3)
@@ -569,10 +524,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
                     &+ determ(i)     * sumt  * a2    * term1  * series
             enddo
             if( ipr .gt. 0 )then
-                write(7, '(''    derivatives: dPr = '',3(1x,g12.6),/, ''                 dT  = '',3(1x,g12.6),/, ''       ' // &
-                    '       dterm1 = '',3(1x,g12.6),/, ''              determ = '',3(1x,g12.6),/,  ''    ' // &
-                    '          dseris = '',3(1x,g12.6),/, ''              dCas   = '',3(1x,g12.6))') dpr, dt, dterm1, determ, dseris, dcas
-                write(7, *) ' dCas = ', dcas
             endif
         endif
     end subroutine casym
@@ -622,11 +573,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcal(2) = dg(2)*exp3 + sumg*dexp3
         dcal(3) = dg(3)*exp3 + sumg*dexp3
         if( ipr .gt. 0 )then
-            write(7, *)
-            write(7, '(''Csym enter ----------------------------------------'',/, ''    Cal = '',1x,g20.14)') cal
-            write(7, '(''      G = '',3(1x,g12.6),/, ''     dG = '',3(1x,g12.6),/, ''   sumv = '',3(1x,g12.6),/, ''   dCal' // &
-                ' = '',3(1x,g16.10),/, ''Csym exit -----------------------------------------'')') g, dg, sumv, dcal
-            write(7, *) 'exiting subr.csym'
         endif
     end subroutine csym
 

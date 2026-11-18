@@ -8,11 +8,13 @@ module chempotpy_nafh_leps_ttypp1_1998_pes
     contains
 
     !> @brief Evaluate the NaFH_LEPS_TTYPP1_1998 potential energy surface for NaFH.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 2
         integer, parameter    :: natoms  = 3
@@ -40,7 +42,8 @@ module chempotpy_nafh_leps_ttypp1_1998_pes
             u(2,2) = u22(1)*hartree_to_electronvolt
             call diagonalize(nstates, u, p, t)
         else
-            write(*, *) "Only energy is available"
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_nafh_leps_ttypp1_1998_pes

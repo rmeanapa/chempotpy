@@ -120,7 +120,8 @@ The maintained bundled core currently contains:
 - `chempotpy_legacy_coordinates`: explicit-argument implementations of the
   historical POTLIB Cartesian input and internal-coordinate setup algorithms,
   including canonical and explicit-release triatomic distance adapters.
-- `chempotpy_status`: status values for future non-printing modern interfaces.
+- `chempotpy_status`: the `chempotpy_status_t` result and shared status codes
+  used by non-printing, non-terminating modern interfaces.
 - `chempotpy_blas`: the small BLAS subset required by bundled legacy kernels.
 - `chempotpy_dsyev`: the standalone historical `DSYEV` ABI implementation.
 
@@ -247,11 +248,10 @@ Modernized PES sources follow the same compact conventions used by SIMPLE:
   assignments are aligned when doing so improves readability.
 - Blank lines are used as single visual separators; consecutive empty lines are
   removed by the formatter.
-- Files are opened with `newunit=` and a local unit variable. Existing numbered
-  diagnostic writes remain compatibility behavior until a non-printing status
-  and logging interface replaces them deliberately.
-- Format specifications live directly in their `read` or `write` statement;
-  detached labeled `FORMAT` statements are not used.
+- Numerical library code never writes to an external logical unit. The owning
+  application may format a returned status message for its selected logger.
+- `stop` and `error stop` are forbidden; evaluators return normally and expose
+  observable failures through their optional structured status result.
 - Early `return` statements remain available for control flow, but a `return`
   immediately before `end subroutine` or `end function` is omitted.
 - Names describe physical quantities and units rather than historical temporary
@@ -269,7 +269,8 @@ structural formatter used during migration.
   sources. The registry identifies 363 independently callable PES sources with
   no competing duplicate stems.
 - All 363 callable surfaces have a uniquely named private owning module that
-  publishes `evaluate` and a thin historical external `pes` or `dpem` adapter.
+  publishes `evaluate` with an optional `chempotpy_status_t` result and a thin
+  historical external `pes` or `dpem` adapter.
   The catalog regression suite enforces exactly one owner module per surface.
   Structural ownership does not by itself complete coefficient-lifecycle
   migration: legacy setup routines are tracked separately and must still be
@@ -288,6 +289,9 @@ structural formatter used during migration.
 - All 2,920 detached labeled formats were either moved into their I/O statement
   or removed when unused. Redundant terminal returns were removed without
   changing early-return control flow.
+- Active external diagnostic writes and process-terminating `stop` statements
+  have been removed from all library sources; the modernization gate prevents
+  either construct from returning.
 - All 10,601 legacy `PARAMETER(...)` statements are now typed declarations.
   Legacy star-sized intrinsic types and entity-level character lengths have
   also been removed, and active `OPEN` statements no longer hard-code units.

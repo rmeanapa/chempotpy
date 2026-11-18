@@ -55,13 +55,15 @@ module chempotpy_clh2_leps_altg1_1996_pes
     contains
 
     !> @brief Evaluate the ClH2_LEPS_ALTG1_1996 potential energy surface for ClH2.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -99,7 +101,8 @@ module chempotpy_clh2_leps_altg1_1996_pes
                 enddo
             enddo
         elseif( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_clh2_leps_altg1_1996_pes
@@ -156,10 +159,12 @@ module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
     contains
 
     !> @brief Evaluate the ClH2 ALTG1 potential for one set of bond distances.
-    subroutine evaluate( r, nder, energy, dedr )
+    subroutine evaluate( r, nder, energy, dedr, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         ! Last modified on 3 August 1995 by TCA.
         use chempotpy_kinds, only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         real(wp), intent(in)  :: r(3)
         integer, intent(in)   :: nder
         real(wp), intent(out) :: energy, dedr(3)

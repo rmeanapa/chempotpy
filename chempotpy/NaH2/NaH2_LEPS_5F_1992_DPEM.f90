@@ -8,11 +8,13 @@ module chempotpy_nah2_leps_5f_1992_dpem_pes
     contains
 
     !> @brief Evaluate the NaH2_LEPS_5F_1992 diabatic potential matrix for NaH2.
-    subroutine evaluate( x, igrad, u, ug )
+    subroutine evaluate( x, igrad, u, ug, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 2
         integer, parameter    :: natoms  = 3
@@ -37,7 +39,8 @@ module chempotpy_nah2_leps_5f_1992_dpem_pes
             u(2,1) = u12(1)*hartree_to_electronvolt
             u(2,2) = u22(1)*hartree_to_electronvolt
         else
-            write(*, *) "Only DPEM is available"
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested adiabatic representation is unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_nah2_leps_5f_1992_dpem_pes
@@ -216,7 +219,7 @@ module chempotpy_nah2_leps_5f_1992_dpem_pot11_legacy_state_49cb98d5
             r2s  = r(i,2)*r(i,2)
             r3s  = r(i,3)*r(i,3)
             rnag = sqrt(0.5e0_wp*abs(r1s+r3s-0.5e0_wp*r2s))
-            if( rnag .lt. 1.e-10_wp ) stop 'RNAG < 1.D-10'
+            if( rnag .lt. 1.e-10_wp ) return
             if( r(i,2) .ne. 0.e0_wp )then
                 cstsq = (0.5e0_wp*(r1s-r3s)/(r(i,2)*rnag))**2
             else
@@ -520,7 +523,7 @@ module chempotpy_nah2_leps_5f_1992_dpem_pot22_legacy_state_49cb98d5
             r2s  = r(i,2)*r(i,2)
             r3s  = r(i,3)*r(i,3)
             rnag = sqrt(0.5e0_wp*abs(r1s+r3s-0.5e0_wp*r2s))
-            if( rnag .lt. 1.e-10_wp ) stop 'RNAG < 1.D-10'
+            if( rnag .lt. 1.e-10_wp ) return
             cstsq = (0.5e0_wp*(r1s-r3s)/(r(i,2)*rnag))**2
             swa   = y90swa+(y0swa-y90swa)*cstsq
             swr0  = y90swr0+(y0swr0-y90swr0)*cstsq

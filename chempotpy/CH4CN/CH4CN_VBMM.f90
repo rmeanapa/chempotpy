@@ -9,11 +9,13 @@ module chempotpy_ch4cn_vbmm_pes
     contains
 
     !> @brief Evaluate the CH4CN_VBMM potential energy surface for CH4CN.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
-        use chempotpy_units, only: hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units,  only: hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 7
@@ -254,7 +256,8 @@ module chempotpy_ch4cn_vbmm_pes
                 enddo
             enddo
         elseif( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
 
         contains
@@ -1170,8 +1173,9 @@ module chempotpy_ch4cn_vbmm_pes
             integer, parameter :: n3tmmn = 21
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
             if( legacy_natoms .gt. 25 )then
-                write(nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
             do i=1, 5
                 ref(i) = ' '
@@ -1525,8 +1529,9 @@ module chempotpy_ch4cn_vbmm_pes
             integer, parameter :: isurf  = 5
             call cartesian_to_potlib_coordinates(cartnu, legacy_natoms, icartr, r, coordinate_status)
             if( coordinate_status /= 0 )then
-                write(nflag(18), '(2x,''WRONG ICARTR FOR CARTNU; ICARTR ='',i5//)') icartr
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
         end subroutine carttor
 
@@ -1704,8 +1709,9 @@ module chempotpy_ch4cn_vbmm_pes
                 zd   = eps*t0+rcm
                 rff  = sqrt((xa-xc)**2+yc**2+(za-zc)**2)
             else
-                write(nflag(18), '(2X,'' WRONG ICARTR FOR DERIVATIVE; ICARTR ='',I5//)') icartr
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
         end subroutine rtocart
 

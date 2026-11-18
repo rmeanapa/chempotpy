@@ -215,12 +215,14 @@ module chempotpy_o4_triplet_zv_pes
     contains
 
     !> @brief Evaluate the O4_triplet_ZV potential energy surface for O4.
-    subroutine evaluate( x, igrad, potential, gradient, dvec )
+    subroutine evaluate( x, igrad, potential, gradient, dvec, status )
+        use chempotpy_status,  only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,   only: electronvolt_to_kilocalorie_per_mole
         use o4_triplet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
             & eref, gconv, p, r, ra, rb, rm, rms, totdiss
         use chempotpy_kinds, only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -313,7 +315,6 @@ subroutine o4pes( x, v, dvdx, igrad )
             call evdvdx(x, dvdx)
         endif
     else
-        write (*, *) 'Only energy and gradient are available'
     endif
 end subroutine o4pes
 
@@ -2005,7 +2006,7 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
         c6(2) = 12.8e0_wp
     else
         ! currently imol = 4 is used
-        stop
+        return
     endif
     ! Calculate dispersion correction
     call edisp(94, 5, 2, dist, iz, mxc, &

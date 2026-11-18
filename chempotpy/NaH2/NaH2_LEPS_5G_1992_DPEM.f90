@@ -8,11 +8,13 @@ module chempotpy_nah2_leps_5g_1992_dpem_pes
     contains
 
     !> @brief Evaluate the NaH2_LEPS_5G_1992 diabatic potential matrix for NaH2.
-    subroutine evaluate( x, igrad, u, ug )
+    subroutine evaluate( x, igrad, u, ug, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 2
         integer, parameter    :: natoms  = 3
@@ -37,7 +39,8 @@ module chempotpy_nah2_leps_5g_1992_dpem_pes
             u(2,1) = u12(1)*hartree_to_electronvolt
             u(2,2) = u22(1)*hartree_to_electronvolt
         else
-            write(*, *) "Only DPEM is available"
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested adiabatic representation is unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_nah2_leps_5g_1992_dpem_pes
@@ -213,21 +216,12 @@ module chempotpy_nah2_leps_5g_1992_dpem_pot11_legacy_state_dd307a13
         cfm    = 1.8427829108061610e-4_wp
         rac2   = 1.e0_wp/sqrt(2.e0_wp)
         cevau  = 1.e0_wp/27.2113961e0_wp
-        write(6, '(/24(''=''),'' NaH2 - U11 potential '',24(''=''), /''   dt2 ='',1pe14.6,2x,''  ret2 ='',e14.6,2x,''betat' // &
-            '2 ='',e14.6, /'' y90c1 ='',e14.6,2x,'' y90c2 ='',e14.6,2x,'' y90c3 ='',e14.6, /'' y9' // &
-            '0c4 ='',e14.6,2x,''  y0c1 ='',e14.6,2x,''  y0c2 ='',e14.6, /''  y0c3 ='',e14.6,2x,''' // &
-            '  y0c4 ='',e14.6,2x,''  ads1 ='',e14.6, /''  ars1 ='',e14.6,2x,''  abs1 ='',e14.6,2x' // &
-            ',''  cds1 ='',e14.6, /''  crs1 ='',e14.6,2x,''  cbs1 ='',e14.6,2x,''   swa ='',e14.6' // &
-            ', /''  swr0 ='',e14.6,2x,''  swa2 ='',e14.6,2x,'' swr20 ='',e14.6, /''   c2a ='',e14' // &
-            '.6,2x,''   c2b ='',e14.6,2x,''   c2c ='',e14.6, /70(''=''))') dt2, ret2, betat2, y90c1, y90c2, y90c3, y90c4, y0c1, y0c2, &
-            & y0c3, y0c4, ads1, ars1, abs1, cds1, crs1, cbs1, swa, swr0, swa2, swr20, &
-            & c2a, c2b, c2c
         do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
             r3s  = r(i,3)*r(i,3)
             rnag = sqrt(0.5e0_wp*abs(r1s+r3s-0.5e0_wp*r2s))
-            if( rnag .lt. 1.e-10_wp ) stop 'RNAG < 1.D-10'
+            if( rnag .lt. 1.e-10_wp ) return
             if( r(i,2) .ne. 0.e0_wp )then
                 cstsq = (0.5e0_wp*(r1s-r3s)/(r(i,2)*rnag))**2
             else
@@ -346,11 +340,6 @@ module chempotpy_nah2_leps_5g_1992_dpem_pot12_legacy_state_dd307a13
         rmxe   = 2.04523701e+1_wp
         rmxr   = 1.98941949e+0_wp
         cevau  = 1.e0_wp/27.211611e0_wp
-        write(6, '(/28(''=''),'' NaH2 - U12 coupling '',29(''=''), /''ampn='',1pe13.5,''  ampp='',e13.5,''  ampe='',e13.5,' // &
-            '''  ampr='',e13.5 /''erln='',e13.5,''  erlp='',e13.5,''  erle='',e13.5,''  erlr='',e' // &
-            '13.5, /''ersn='',e13.5,''  ersp='',e13.5,''  erse='',e13.5,''  ersr='',e13.5, /''rmx' // &
-            'n='',e13.5,''  rmxp='',e13.5,''  rmxe='',e13.5,''  rmxr='',e13.5, /78(''=''))') ampn, ampp, ampe, ampr, erln, erlp, erle, erlr, &
-            & ersn, ersp, erse, ersr, rmxn, rmxp, rmxe, rmxr
         do i=1, nt
             amp    = ampn+(ampp-ampn)*0.5e0_wp*(tanh(ampe*(r(i,2)-ampr))+1.e0_wp)
             erl    = erln+(erlp-erln)*0.5e0_wp*(tanh(erle*(r(i,2)-erlr))+1.e0_wp)
@@ -559,27 +548,12 @@ module chempotpy_nah2_leps_5g_1992_dpem_pot22_legacy_state_dd307a13
         twothd  = 2.e0_wp/3.e0_wp
         rac2    = 1.e0_wp/sqrt(2.e0_wp)
         cevau   = 1.e0_wp/27.2113961e0_wp
-        write(6, '(/24(''=''),'' NaH2 - U22 potential '',25(''=''), /''  y90d1 ='',1pe14.6,''    y90r1 ='',e14.6,''  y90b1' // &
-            ' ='',e14.6, /''  y90d2 ='',e14.6,  ''    y90r2 ='',e14.6,''  y90b2 ='',e14.6, /'' y9' // &
-            '0swa ='',e14.6,  ''  y90swr0 ='',e14.6, /''   y0d1 ='',1pe14.6,''     y0r1 ='',e14.6' // &
-            ',''   y0b1 ='',e14.6, /''   y0d2 ='',e14.6,  ''     y0r2 ='',e14.6,''   y0b2 ='',e14' // &
-            '.6, /''  y0swa ='',e14.6,  ''   y0swr0 ='',e14.6, /''   c1s1 ='',1pe14.6,''     c2s1' // &
-            ' ='',e14.6,''   c3s1 ='',e14.6, /''   c4s1 ='',1pe14.6,''     c5s1 ='',e14.6,''   c6' // &
-            's1 ='',e14.6, /''    c2a ='',1pe14.6,''      c2b ='',e14.6,''    c2c ='',e14.6, /'' ' // &
-            '  a0g1 ='',1pe14.6,''     b0g1 ='',e14.6,''   r0g1 ='',e14.6, /''   a0g2 ='',1pe14.6' // &
-            ',''     b0g2 ='',e14.6,''   r0g2 ='',e14.6, /''   a0g3 ='',1pe14.6,''     b0g3 ='',e' // &
-            '14.6,''   r0g3 ='',e14.6, /''  a90g1 ='',1pe14.6,''    b90g1 ='',e14.6,''  r90g1 =''' // &
-            ',e14.6, /''  a90g2 ='',1pe14.6,''    b90g2 ='',e14.6,''  r90g2 ='',e14.6, /''  a90g3' // &
-            ' ='',1pe14.6,''    b90g3 ='',e14.6,''  r90g3 ='',e14.6, /71(''=''))') y90d1, y90r1, y90b1, y90d2, y90r2, y90b2, y90swa, y90swr0, &
-            & y0d1, y0r1, y0b1, y0d2, y0r2, y0b2, y0swa, y0swr0, c1s1, c2s1, c3s1, c4s1, &
-            & c5s1, c6s1, c2a, c2b, c2c, a0g1, b0g1, r0g1, a0g2, b0g2, r0g2, a0g3, b0g3, &
-            & r0g3, a90g1, b90g1, r90g1, a90g2, b90g2, r90g2, a90g3, b90g3, r90g3
         do i=1, nt
             r1s  = r(i,1)*r(i,1)
             r2s  = r(i,2)*r(i,2)
             r3s  = r(i,3)*r(i,3)
             rnag = sqrt(0.5e0_wp*abs(r1s+r3s-0.5e0_wp*r2s))
-            if( rnag .lt. 1.e-10_wp ) stop 'RNAG < 1.D-10'
+            if( rnag .lt. 1.e-10_wp ) return
             cstsq = (0.5e0_wp*(r1s-r3s)/(r(i,2)*rnag))**2
             swa   = y90swa+(y0swa-y90swa)*cstsq
             swr0  = y90swr0+(y0swr0-y90swr0)*cstsq

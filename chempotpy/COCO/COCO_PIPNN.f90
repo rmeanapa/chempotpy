@@ -19,12 +19,14 @@ module chempotpy_coco_pipnn_pes
     contains
 
     !> @brief Evaluate the COCO_PIPNN potential energy surface for COCO.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,    only: electronvolt_to_inverse_centimeter
         use chempotpy_geometry, only: all_pair_distances_and_jacobian, transform_internal_gradient_to_cartesian
         use chempotpy_units,    only: bohr_to_angstrom
         use chempotpy_kinds,    only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -60,7 +62,7 @@ module chempotpy_coco_pipnn_pes
         integer, intent(in)   :: idv
         real(wp), intent(out) :: v, dvdr(6)
         real(wp)              :: p(np,1), vp(1), dvdp(np,1), dpdr(np,6)
-        if( idv .ne. 0 .and. idv .ne. 1 ) stop "Only energy and gradient are available"
+        if( idv .ne. 0 .and. idv .ne. 1 ) return
         call pip_ococ(r, p(:,1), idv, dpdr)
         call nnfit_ococ(np, 1, p, vp, idv, dvdp)
         if( idv .eq. 1 ) call dgemv('t', 7, 6, 1.e0_wp, dpdr, 7, dvdp, 1, 0.e0_wp, dvdr, 1)
@@ -126,7 +128,7 @@ module chempotpy_coco_pipnn_pes
             integer, intent(in)   :: idv
             real(wp), intent(out) :: dv(ndim,ntot)
             integer               :: i
-            if( ndim .ne. s0 ) stop "ndim .ne. s0"
+            if( ndim .ne. s0 ) return
             if( ntot .ge. 24 )then
                 call nsimx(ntot, r0, vx, idv, dv, s0, s1, s2, rg, w1, b1, w2, b2, w3, b3, vg)
             else

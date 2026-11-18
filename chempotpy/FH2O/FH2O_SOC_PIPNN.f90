@@ -12,7 +12,8 @@ module chempotpy_fh2o_soc_pipnn_pes
     contains
 
     !> @brief Evaluate the FH2O_SOC_PIPNN potential energy surface for FH2O.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,                only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,                 only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
@@ -21,6 +22,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             & PI, r1soccoef, radian, vpesmin
         use chempotpy_kinds, only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -41,7 +43,8 @@ module chempotpy_fh2o_soc_pipnn_pes
         if( igrad == 0 )then
             call fh2o_soc_nn(tx, v, socg, vgsoc)
         else
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
         vgsoc = vgsoc/electronvolt_to_kilocalorie_per_mole
         do istate=1, nstates
@@ -201,8 +204,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             enddo
         enddo
         if( j .ne. nrbasissoc )then
-            write(*, *)'error for nrbasissoc'
-            stop
+            return
         endif
         socrg = dot_product(tr1basis(:), r1soccoef(:))
     end subroutine soc_react_ground
@@ -234,8 +236,7 @@ module chempotpy_fh2o_soc_pipnn_pes
             enddo
         enddo
         if( j .ne. npbasissoc )then
-            write(*, *)'error for nrbasissoc'
-            stop
+            return
         endif
         socps = dot_product(tp2basis(:), p2soccoef(:))
         socpg = -1.0e0_wp*socps

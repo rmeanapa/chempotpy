@@ -32,11 +32,13 @@ module chempotpy_n3_mbp_2017_pes
     contains
 
     !> @brief Evaluate the N3_MBP_2017 potential energy surface for N3.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,    only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_geometry, only: cartesian_distance
         use chempotpy_kinds,    only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -58,7 +60,8 @@ module chempotpy_n3_mbp_2017_pes
                 p(istate) = v
             enddo
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine
 

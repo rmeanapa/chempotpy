@@ -28,11 +28,13 @@ module chempotpy_clh2_leps_altg2_1996_pes
     contains
 
     !> @brief Evaluate the ClH2_LEPS_ALTG2_1996 potential energy surface for ClH2.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -54,7 +56,8 @@ module chempotpy_clh2_leps_altg2_1996_pes
                 p(istate) = e(1)
             enddo
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_clh2_leps_altg2_1996_pes

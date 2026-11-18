@@ -27556,13 +27556,15 @@ module chempotpy_c3h7no_pip_pes
     contains
 
     !> @brief Evaluate the C3H7NO_PIP potential energy surface for C3H7NO.
-    subroutine evaluate( x, igrad, potential, gradient_out, dvec )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
-        use pes_shell,       only: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, &
+    subroutine evaluate( x, igrad, potential, gradient_out, dvec, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
+        use pes_shell,        only: bemsav, coeff, dbemsav, demsav, devmono, devpoly, emsav, evmono, evpoly, f, &
             & g
         use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds, only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 12
@@ -27604,7 +27606,8 @@ module chempotpy_c3h7no_pip_pes
                 enddo
             enddo
         else
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_c3h7no_pip_pes

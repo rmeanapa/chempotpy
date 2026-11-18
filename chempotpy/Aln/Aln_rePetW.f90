@@ -9,11 +9,13 @@ module chempotpy_aln_repetw_pes
 
     !> @brief Evaluate the reparameterized Pettifor-Ward potential through Python.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
-            energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom )
-        use chempotpy_kinds, only: wp
-        use chempotpy_units, only: coordinates_to_bohr, &
+            energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_kinds,  only: wp
+        use chempotpy_units,  only: coordinates_to_bohr, &
             energy_to_electronvolt
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         integer, parameter    :: state_count = 1
         real(wp), intent(in)  :: coordinates_angstrom(10000,3)
         integer, intent(in)   :: atom_count, derivative_order
@@ -33,7 +35,8 @@ module chempotpy_aln_repetw_pes
         if( derivative_order == 0 )then
             energy_ev(1) = energy_to_electronvolt(energy_hartree)
         else
-            write(*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine evaluate
 

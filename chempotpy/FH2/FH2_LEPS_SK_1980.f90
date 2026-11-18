@@ -24,7 +24,9 @@ module chempotpy_fh2_leps_sk_1980_pes
     contains
 
     !> @brief Evaluate the FH2_LEPS_SK_1980 potential energy surface for FH2.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        type(chempotpy_status_t), intent(out), optional :: status
         integer, intent(in)   :: igrad
         real(wp), intent(in)  :: x(3,3)
         real(wp), intent(out) :: p(1), g(1,3,3), d(1,1,3,3)

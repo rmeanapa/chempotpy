@@ -85,11 +85,13 @@ module chempotpy_nh3_gen_ffw2_2007_dpem_pes
     contains
 
     !> @brief Evaluate the NH3_GEN_FFW2_2007 diabatic potential matrix for NH3.
-    subroutine evaluate( x, igrad, u, ug )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, u, ug, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 2
         integer, parameter    :: natoms  = 4
@@ -2138,9 +2140,7 @@ module chempotpy_nh3_gen_ffw2_2007_dpem_pes
         elseif( abs(theta3-theta1-theta2) .lt. small )then
             phi3 = theta2
         else
-            write(6, *) "Is this geometry possible?"
-            write(6, *) bow
-            stop
+            return
         endif
         ! vector for H1 in polar
         ph1(1) = r1
@@ -2249,10 +2249,7 @@ module chempotpy_nh3_gen_ffw2_2007_dpem_pes
             elseif( (x-1.e0_wp) .le. small )then
                 uh3(3) = 0.e0_wp
             else
-                write(*, *)'ERROR: Set of three bond angles is unphysical'
-                write(*, *) r1, r2, r3, theta1/degtopi, &
-                    & theta2/degtopi, theta3/degtopi
-                stop
+                return
             endif
         endif
         coord(10) = r3 * uh3(1)

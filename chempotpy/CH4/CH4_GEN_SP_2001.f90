@@ -8,10 +8,12 @@ module chempotpy_ch4_gen_sp_2001_pes
     contains
 
     !> @brief Evaluate the Schwenke-Partridge methane potential.
-    subroutine evaluate( x, igrad, path, p, g, d )
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, path, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         integer, parameter              :: nstates = 1
         integer, parameter              :: natoms  = 5
         real(wp), intent(in)            :: x(natoms,3)
@@ -30,7 +32,8 @@ module chempotpy_ch4_gen_sp_2001_pes
         if( igrad == 0 )then
             p(1) = energy_hartree*hartree_to_electronvolt
         else
-            write(*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine evaluate
 

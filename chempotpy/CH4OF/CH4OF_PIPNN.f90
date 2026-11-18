@@ -12,9 +12,11 @@ module chempotpy_ch4of_pipnn_pes
     contains
 
     !> @brief Evaluate the CH4OF_PIPNN potential energy surface for CH4OF.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 7
@@ -35,7 +37,8 @@ module chempotpy_ch4of_pipnn_pes
         if( igrad == 0 )then
             call fch3ohpipnn(tx, v)
         else
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
         do istate=1, nstates
             p(istate) = v

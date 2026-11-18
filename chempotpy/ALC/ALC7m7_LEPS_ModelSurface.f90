@@ -63,13 +63,15 @@ module chempotpy_alc7m7_leps_modelsurface_pes
     contains
 
     !> @brief Evaluate the ALC7m7_LEPS_ModelSurface potential energy surface for ALC.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -107,7 +109,8 @@ module chempotpy_alc7m7_leps_modelsurface_pes
                 enddo
             enddo
         elseif( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_alc7m7_leps_modelsurface_pes
@@ -155,9 +158,11 @@ module chempotpy_alc7m7_leps_modelsurface_pot_legacy_state_81c382c8
     contains
 
     !> @brief Evaluate dispatch.
-    subroutine evaluate( rr, nder, e, dedrr )
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( rr, nder, e, dedrr, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         real(wp), parameter   :: root2 = 1.41421356e0_wp
         real(wp), parameter   :: ckcal = 627.5095e0_wp
         real(wp), parameter   :: cangs = 0.529177106e0_wp
@@ -209,8 +214,6 @@ module chempotpy_alc7m7_leps_modelsurface_pot_legacy_state_81c382c8
                 !   If RAD is very small compared to T print a warning to the file linke
                 !   to FORTRAN IPTPRT and set T/RAD equal to T.
                 if( abs(rad) .lt. 1.e-32_wp.and.abs(t) .gt. 1.e-12_wp )then
-                    write(*, '(/,2X,''In the potential routine: T, RAD = '',1P,2E15.7, /,2X,''T/RAD has been set equal to' // &
-                        ' T'')') t, rad
                 elseif( abs(rad) .gt. 1.e-32_wp )then
                     t = t/rad
                 endif

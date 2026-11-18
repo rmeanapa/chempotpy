@@ -80,11 +80,13 @@ module chempotpy_phoh_aprp_pes
     contains
 
     !> @brief Evaluate the PHOH_APRP potential energy surface for C6H6O.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 3
         integer, parameter    :: natoms  = 13
@@ -305,8 +307,7 @@ module chempotpy_phoh_aprp_pes
         call dsyev('V', 'L', 3, cc, 3, vv, work, lwork, info)
         deallocate (work)
         if( info .ne. 0 )then
-            write(6, *) 'Error in diagolization of U matrix'
-            stop
+            return
         endif
         ! Test
         if( igrad .eq. 1 )then
@@ -11200,18 +11201,14 @@ module chempotpy_phoh_aprp_pes
             a(2,8) = -0.00209e0_wp
             a(2,9) = -0.01501e0_wp
         else
-            write(*, *) "Only parameters for U12, U13 and U23 are allowed!"
-            stop
+            return
         endif
         ! Check for consistence
         if( ntc .ne. 9 )then
-            write(*, *) "Inconsistence in the number of out-of-plane tertiary&
-                & coordinates"
-            stop
+            return
         endif
         if( nap .ne. 4 )then
-            write(*, *) "Inconsistence in the number of anchor structures"
-            stop
+            return
         endif
         ! Now calculate coupling contributions from tertiary coordinates
         if( ir .eq. 1 )then
@@ -11664,11 +11661,8 @@ module chempotpy_phoh_aprp_pes
         real(wp)            :: x(*), y(*), z(*)
         bndlen = sqrt( (x(i)-x(j))*(x(i)-x(j)) + (y(i)-y(j))*(y(i)-y(j)) + (z(i)-z(j))*(z(i)-z(j)))
         if( bndlen .le. tiny )then
-            write(*, '('' Atom'',I3,'' and'',I3,'' are too close to each other!'')') i, j
             !DB  KRY 20140718
-            write(*, '(I3,3F18.12)') i, x(i), y(i), z(i)
-            write(*, '(I3,3F18.12)') j, x(j), y(j), z(j)
-            stop
+            return
         endif
     end function bndlen
 
@@ -11721,10 +11715,8 @@ module chempotpy_phoh_aprp_pes
         ajkl = bndang(j, k, l, x, y, z)
         ! Check whether i-j-k or j-k-l are collinear
         if( (abs(aijk) .le. tiny) .or. (abs(aijk-PI) .lt. tiny) )then
-            write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') i, j, k
         endif
         if( (abs(ajkl) .le. tiny) .or. (abs(ajkl-PI) .lt. tiny) )then
-            write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') j, k, l
         endif
         ! Calculate eij
         eij(1) = (x(j)-x(i))/rij
@@ -11803,9 +11795,7 @@ module chempotpy_phoh_aprp_pes
         call xprod1(ejk, ejl, u)
         ! Check if whether ai = 180
         if( u(1)**2+u(2)**2+u(3)**2 .le. tiny )then
-            write(*, *) "Looks like k-j-l collinear."
-            write(*, *) "Out-of-plane bending angle is not defined."
-            stop
+            return
         endif
         call sprod(3, u, eji, a)
         a      = a/si

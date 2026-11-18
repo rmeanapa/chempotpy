@@ -37,7 +37,8 @@ module chempotpy_n4_1a_pipnn_pes
     contains
 
     !> @brief Evaluate the N4_1A_PIPNN potential energy surface for N4.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,              only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,               only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_n4_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
             & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
@@ -47,6 +48,7 @@ module chempotpy_n4_1a_pipnn_pes
         use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds, only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -178,7 +180,6 @@ module chempotpy_n4_1a_pipnn_pes
             enddo
         endif
         if( igrad .eq. 2 )then
-            write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine n4pipnn
 
@@ -805,7 +806,7 @@ module chempotpy_n4_1a_pipnn_pes
             c6(2) = 19.7e0_wp
         else
             ! currently imol = 1 is used
-            stop
+            return
         endif
         ! Calculate dispersion correction
         call edisp(94, 5, 2, dist, iz, mxc, &

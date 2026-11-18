@@ -24,7 +24,9 @@ module chempotpy_ih2_leps_ppw1_1974_pes
     contains
 
     !> @brief Evaluate the IH2_LEPS_PPW1_1974 potential energy surface for IH2.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        type(chempotpy_status_t), intent(out), optional :: status
         integer, intent(in)   :: igrad
         real(wp), intent(in)  :: x(3,3)
         real(wp), intent(out) :: p(1), g(1,3,3), d(1,1,3,3)

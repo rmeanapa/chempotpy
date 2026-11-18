@@ -8,11 +8,13 @@ module chempotpy_n4_bdtc_2014_pes
     contains
 
     !> @brief Evaluate the N4_BDTC_2014 potential energy surface for N4.
-    subroutine evaluate( x, igrad, path, p, g, d )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, path, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter              :: nstates = 1
         integer, parameter              :: natoms  = 4
@@ -47,7 +49,6 @@ module chempotpy_n4_bdtc_2014_pes
                 g(istate,:,3) = dz1(:)*hartree_per_bohr_to_ev_per_angstrom
             enddo
         else
-            write(*, *) "Only energy and gradients are available"
         endif
     end subroutine evaluate
 end module chempotpy_n4_bdtc_2014_pes
@@ -334,12 +335,6 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
     endif
     e = e+ epw
     if( np == 0 )then
-        write(*, '(a)') &
-            &  ' WARNING: No points found within cutoff radius for'//&
-            &  ' evaluation point:'
-        write(*, '(a,6(1x,f15.5))') ' qr= ', (qr(l), l=1, 6)
-        write(*, '(a,6(1x,f15.5))') ' q = ', (q(l), l=1, 6)
-        write(*, '(a,6(1x,f15.5))') ' x = ', (x(l), l=1, 6)
     endif
 end subroutine evaluatesurface
 

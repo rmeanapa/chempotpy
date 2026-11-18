@@ -734,7 +734,7 @@ module pes_shell
         real(wp)           :: x(0:3), r1(0:nk-1,0:nk-1), t0, t1
         ! Test for compatibility
         if( .not.(ms .eq. 1.or.ms .eq. 5) )then
-            stop 'getrvec - wrong dimension'
+            return
         endif
         ! Computation
         x = 0
@@ -844,7 +844,7 @@ module pes_shell
         case (l7)
             mdeg = 7
         case default
-            stop 'getv - wrong dimension'
+            return
         end select
         ! auxiliary distances
         do i = 0, nk-1
@@ -1295,11 +1295,13 @@ module chempotpy_ch3oh_pip_pes
     contains
 
     !> @brief Evaluate the CH3OH_PIP potential energy surface for CH3OH.
-    subroutine evaluate( x, igrad, path, p, g, d )
-        use pes_shell,       only: calcpot
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, path, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use pes_shell,        only: calcpot
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter              :: nstates = 1
         integer, parameter              :: natoms  = 6
@@ -1320,7 +1322,8 @@ module chempotpy_ch3oh_pip_pes
         if( igrad == 0 )then
             call calcpot(v, tx)
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
         !employ the minimum to be -115.57493896563480 hartree.
         v = (v+115.57493896563480)*hartree_to_electronvolt

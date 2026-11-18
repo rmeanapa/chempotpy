@@ -2070,10 +2070,12 @@ module chempotpy_hoco_ar_pip_pes
     contains
 
     !> @brief Evaluate the HOCO_Ar_PIP potential energy surface for HOCO_Ar.
-    subroutine evaluate( x, igrad, path, p, gradient_out, d )
-        use chempotpy_units, only: hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, path, p, gradient_out, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter              :: nstates = 1
         integer, parameter              :: natoms  = 5
@@ -2094,7 +2096,8 @@ module chempotpy_hoco_ar_pip_pes
                 p(istate) = v
             enddo
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_hoco_ar_pip_pes

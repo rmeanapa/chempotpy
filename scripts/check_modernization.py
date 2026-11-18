@@ -37,6 +37,8 @@ RULES = (
     Rule("prepot", re.compile(r"^\s*(?:call\s+|subroutine\s+)\w*prepot\w*\b", re.I), "evaluate through the owning PES module without a setup entry point"),
     Rule("hollerith-format", re.compile(r"\b\d+H[A-Za-z]", re.I), "use a quoted character edit descriptor"),
     Rule("adifor", re.compile(r"ADIFOR", re.I), "remove generated ADIFOR boilerplate"),
+    Rule("external-write", re.compile(r"\bwrite\s*\(", re.I), "return diagnostics through chempotpy_status_t instead of a logical unit"),
+    Rule("stop", re.compile(r"\b(?:error\s+)?stop\b", re.I), "return a structured status instead of terminating the caller"),
 )
 
 

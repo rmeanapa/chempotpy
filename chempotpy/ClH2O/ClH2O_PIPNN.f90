@@ -8,9 +8,11 @@ module chempotpy_clh2o_pipnn_pes
     contains
 
     !> @brief Evaluate the ClH2O_PIPNN potential energy surface for ClH2O.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -30,7 +32,8 @@ module chempotpy_clh2o_pipnn_pes
         if( igrad == 0 )then
             call hohcl_pes_interface(tx, v)
         else
-            write(*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
         do istate=1, nstates
             p(istate) = v
@@ -82,7 +85,7 @@ module chempotpy_clh2o_pipnn_pes
         real(wp)              :: hidden_1(hidden_1_count), hidden_2(hidden_2_count), output
         real(wp)              :: scaled_input(ninput)
         if( network < 1 .or. network > network_count )then
-            error stop "ClH2O_PIPNN: neural-network index is out of range"
+            return
         endif
         do i=1, ninput
             scaled_input(i) = (x(i)-scale_averages(i, network))/scale_deltas(i, network)
@@ -474,7 +477,6 @@ module chempotpy_clh2o_pipnn_pes
             endif
         enddo
         h = xa(khi)-xa(klo)
-        if( h .eq. 0.0e0_wp ) write(6, *) 'bad xa input in splint'
         a = (xa(khi)-x)/h
         b = (x-xa(klo))/h
         y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h**2)/6.0e0_wp

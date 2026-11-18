@@ -450,7 +450,12 @@ def compile_dependencies(source: Path, source_text: str) -> tuple[Path, ...]:
     return tuple(dependencies)
 
 
-def capture_source(compiler: str, source: Path, work_root: Path) -> CaptureResult:
+def capture_source(
+    compiler: str,
+    source: Path,
+    work_root: Path,
+    geometry_system_name: Optional[str] = None,
+) -> CaptureResult:
     """Compile and run one source, returning a serializable reference record."""
 
     relative = source.relative_to(REPOSITORY_ROOT)
@@ -486,7 +491,11 @@ def capture_source(compiler: str, source: Path, work_root: Path) -> CaptureResul
             natoms,
             nstates,
             REPOSITORY_ROOT / "chempotpy",
-            source.parent.name,
+            (
+                source.parent.name
+                if geometry_system_name is None
+                else geometry_system_name
+            ),
         ))
         form_flags = (
             ["-ffixed-form", "-ffixed-line-length-72"]

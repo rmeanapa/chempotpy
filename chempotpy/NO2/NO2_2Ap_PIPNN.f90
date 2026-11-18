@@ -11,9 +11,11 @@ module chempotpy_no2_2ap_pipnn_pes
     contains
 
     !> @brief Evaluate the NO2_2Ap_PIPNN potential energy surface for NO2.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -100,7 +102,6 @@ module chempotpy_no2_2ap_pipnn_pes
             call evdvdx(dvdg, dpdr, drdx, dvdxa, dvdx, dvpfdr)
         endif
         if( ndriv .eq. 2 )then
-            write (*, *) 'Only energy and gradient are available'
         endif
     end subroutine evvdvdx
 

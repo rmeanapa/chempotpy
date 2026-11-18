@@ -20,12 +20,14 @@ module chempotpy_h2o2_gen_1998_pes
     contains
 
     !> @brief Evaluate the H2O2_GEN_1998 potential energy surface for H2O2.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,    only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry, only: flatten_cartesian_coordinates
         use chempotpy_units,    only: hartree_to_electronvolt
         use chempotpy_kinds,    only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -58,7 +60,8 @@ module chempotpy_h2o2_gen_1998_pes
                 enddo
             enddo
         elseif( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
 
@@ -929,7 +932,7 @@ module chempotpy_h2o2_gen_1998_pes
         g_ehfid = 0
         if( g_p_ .gt. g_pmax_ )then
             print *, 'Parameter g_p_ is greater than g_pmax_'
-            stop
+            return
         endif
         do g_i_ = 1, g_p_
             g_c1(g_i_) = -g_x(g_i_,4) + g_x(g_i_,1)
@@ -1378,7 +1381,7 @@ module chempotpy_h2o2_gen_1998_pes
         g_ehfid = 0
         if( g_p_ .gt. g_pmax_ )then
             print *, 'Parameter g_p_ is greater than g_pmax_'
-            stop
+            return
         endif
         rm_oo     = 1.456199e0_wp
         rm_oh     = 0.962755e0_wp
@@ -1599,11 +1602,11 @@ module chempotpy_h2o2_gen_1998_pes
         g_ehfid = 0
         if( g2p .gt. g2pmax )then
             print *, 'Parameter g2p is greater than g2pmax'
-            stop
+            return
         endif
         if( g_p_ .gt. g_pmax_ )then
             print *, 'Parameter g_p_ is greater than g_pmax_'
-            stop
+            return
         endif
         do g_i_ = 1, g_p_
             do g2i = 1, g2p
@@ -2231,11 +2234,11 @@ module chempotpy_h2o2_gen_1998_pes
         g_ehfid = 0
         if( g2p .gt. g__pmax_ )then
             print *, 'Parameter g2p is greater than g__pmax_'
-            stop
+            return
         endif
         if( g_p_ .gt. g_pmax_ )then
             print *, 'Parameter g_p_ is greater than g_pmax_'
-            stop
+            return
         endif
         rm_oo     = 1.456199e0_wp
         rm_oh     = 0.962755e0_wp
@@ -2488,9 +2491,7 @@ module chempotpy_h2o2_gen_1998_pes
         integer, parameter :: n3tmmn = 12
         !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
         if( n3tm .lt. n3tmmn )then
-            write (6, '(/,2X,T5,''Warning: N3TM is set equal to '',I3, '' but this potential routine'', /,2X,T14,''requir' // &
-                'es N3TM be greater than or '', ''equal to '',I3,/)') n3tm, n3tmmn
-            stop 'SETUP 1'
+            return
         endif
     end subroutine setup
 end module chempotpy_h2o2_gen_1998_pes

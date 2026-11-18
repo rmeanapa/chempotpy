@@ -13,6 +13,8 @@ from typing import List, Optional, Sequence
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
+from scripts.format_fortran import format_source_text
+
 SOURCE_ROOT = REPOSITORY_ROOT / "tests" / "data" / "neural_network_parameters"
 
 
@@ -496,7 +498,11 @@ def render_module(
         shape = dimensions if "," in dimensions else None
         output.append(array_declaration(name, dimensions, values, shape))
     output.append("end module {}".format(module_name))
-    return "\n".join(output)+"\n"
+    source = "\n".join(output)+"\n"
+    if any("parameter :: pi " in declaration.lower()
+           for declaration in system_declarations):
+        source = format_source_text(source)
+    return source
 
 
 def render_c2n_module(

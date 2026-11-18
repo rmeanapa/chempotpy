@@ -29,9 +29,11 @@ module chempotpy_o3_16_3app_2026_pes
     contains
 
     !> @brief Evaluate the O3_16_3App_2026 potential energy surface for O3.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 16
         integer, parameter    :: natoms  = 3

@@ -80,6 +80,7 @@ end program test_quad_precision
                     str(core / "chempotpy_constants.f90"),
                     str(core / "chempotpy_units.f90"),
                     str(core / "chempotpy_geometry.f90"),
+                    str(core / "chempotpy_status.f90"),
                     str(repository / "chempotpy" / "Aln" / "Aln_ER.f90"),
                     str(driver),
                     "-o",
@@ -124,8 +125,10 @@ program test_fortran_core
         legacy_coordinates_to_bohr, legacy_energy_to_electronvolt, &
         legacy_gradient_to_electronvolt_per_angstrom, &
         legacy_hartree_to_electronvolt
-    use chempotpy_status, only: status_derivative_unavailable, &
-        status_invalid_input, status_success
+    use chempotpy_status, only: chempotpy_status_t, &
+        status_derivative_unavailable, status_internal_error, &
+        status_invalid_input, status_model_unavailable, &
+        status_numerical_error, status_success
     use chempotpy_units, only: angstrom_to_bohr, bohr_to_angstrom, &
         electronvolt_to_hartree, electronvolt_to_inverse_centimeter, &
         hartree_per_bohr_to_ev_per_angstrom, hartree_to_electronvolt, &
@@ -322,7 +325,19 @@ program test_fortran_core
         error stop 'internal-coordinate driver coupling initialization failed'
 
     if( status_success /= 0 .or. status_derivative_unavailable /= 1 &
-        .or. status_invalid_input /= 2 ) error stop 'status contract changed'
+        .or. status_invalid_input /= 2 .or. status_internal_error /= 3 &
+        .or. status_model_unavailable /= 4 &
+        .or. status_numerical_error /= 5 ) error stop 'status contract changed'
+    block
+        type(chempotpy_status_t) :: evaluation_status
+        if( evaluation_status%failed() ) error stop 'default status is not successful'
+        call evaluation_status%set(status_invalid_input, 'invalid geometry')
+        if( .not. evaluation_status%failed() ) error stop 'failure status was not recorded'
+        if( evaluation_status%code /= status_invalid_input ) error stop 'wrong failure code'
+        if( trim(evaluation_status%message) /= 'invalid geometry' ) error stop 'wrong failure message'
+        call evaluation_status%set(status_internal_error, 'must preserve first failure')
+        if( evaluation_status%code /= status_invalid_input ) error stop 'first failure was overwritten'
+    end block
     contains
     subroutine test_triatomic_kernel( distances_bohr, derivative_order, energy_hartree, gradient_hartree_per_bohr )
         real(wp), intent(in)  :: distances_bohr(3)

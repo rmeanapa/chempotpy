@@ -20,11 +20,13 @@ module chempotpy_h3_gen_cci_2002_pes
     contains
 
     !> @brief Evaluate the H3_GEN_CCI_2002 potential energy surface for H3.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: energy_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -46,7 +48,8 @@ module chempotpy_h3_gen_cci_2002_pes
                 p(istate) = v
             enddo
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_h3_gen_cci_2002_pes

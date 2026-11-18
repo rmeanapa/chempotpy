@@ -152,12 +152,14 @@ module chempotpy_n4_1a_pip_pes
     contains
 
     !> @brief Evaluate the N4_1A_PIP potential energy surface for N4.
-    subroutine evaluate( x, igrad, potential, gradient, dvec )
-        use chempotpy_units, only: electronvolt_to_kilocalorie_per_mole
-        use n4_1a_pip_par,   only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
+    subroutine evaluate( x, igrad, potential, gradient, dvec, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: electronvolt_to_kilocalorie_per_mole
+        use n4_1a_pip_par,    only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, eref, &
             & gconv, p, r, re, rm, rms, totdiss
         use chempotpy_kinds, only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -243,7 +245,6 @@ subroutine n4pes( x, v, dvdx, igrad )
             call evdvdx(x, dvdx)
         endif
     else
-        write (*, *) 'Only igrad = 0, 1 is allowed!'
     endif
 end subroutine n4pes
 

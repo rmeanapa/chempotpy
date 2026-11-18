@@ -67,13 +67,15 @@ module chempotpy_clh2_leps_ttgi1_1985_pes
     contains
 
     !> @brief Evaluate the ClH2_LEPS_TTGI1_1985 potential energy surface for ClH2.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 3
@@ -110,7 +112,8 @@ module chempotpy_clh2_leps_ttgi1_1985_pes
                 enddo
             enddo
         elseif( igrad == 2 )then
-            write (*, *) 'Only energy and gradient are available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
 end module chempotpy_clh2_leps_ttgi1_1985_pes
@@ -417,7 +420,6 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         do ix=1, 3
             r(ix) = q(indx(ix))
         enddo
-        if( idebug .eq. 1 ) write(iptprt, '(1X,''DIMIMA, Q='',1P3E13.5,/,9X,'' R='',3E13.5)') q, r
         !  CHECK FOR NEGATIVE R'S
         xter  = 1.e30_wp
         dq(1) = -xter
@@ -445,7 +447,6 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         call hclm(r(1), dsxa, ddsxa)
         call hclm(r(3), dsxb, ddsxb)
         call h2curv(r(2), ssab, tsab, dgab, duab, dssab, dtsab, ddgab, dduab)
-        if( idebug .eq. 1 ) write(iptprt, '(1X,''SS11A,SS11B,DSXA,DSXB,SSAB='',1P5E13.5)') ss11a, ss11b, dsxa, dsxb, ssab
         !     CONSTRUCT DIM HAMILTONIAN IN ORTHOGONAL BASIS
         th(1, 1) = ss11a+forth*((ssab+tre*tsab)+ct2*(ss11b+tre*tsxb) +st2*(spxb+tre*tpxb))-dpux-two*dsgh
         th(1, 2) = forth*sqrt3*(ssab-tsab-ct2*(ss11b-tsxb)-st2*(spxb-tpxb))
@@ -474,9 +475,6 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         call eign(ndim, th, vec, en, w, ndim)
         !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
         xter = en(nroot)+c(2)
-        if( idebug .eq. 1 ) &
-            & write(iptprt, '(1X,''NROOT,EN(1),EN(NROOT),C(2),XTER='',I5,1P4E13.5)') nroot, en(1), en(nroot), c(2), xter
-        if( iflag .lt. zero ) write(iptprt, '(1X,''VECTOR='',6D20.8)') (vec(i,nroot), i=1, ndim)
         !************************* END OF FPOT3N *******************************
         if( nder .ne. 1 ) return
         !     SET  VECTOR FOR STATE OF INTEREST
@@ -488,9 +486,6 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
         dtdr2 = -r(2)/(r(1)*r(3))
         dtdr3 = (r(2)*r(2)+r(3)*r(3)-r(1)*r(1))/(two*r(3)*r(3)*r(1))
         factr = -one/st
-        if( abs(st) .lt. 1.e-6_wp ) write(iptprt, &
-            & '(/,2X,T5,''Warning: Sine(THETA) = '',1PE20.10, '' in the derivative calculatio' // &
-            & 'n'', /,2X,T14,''a serious error may result'')') st
         !     COMPUTE PARTIALS OF HAMILTONIAN ELEMENTS
         xtra    = +half*ct*(ss11b+tre*tsxb-spxb-tre*tpxb)
         dh11(1) = dss11a+xtra*dtdr1
@@ -796,9 +791,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             dovlp = z6*(dfac1-two*fac1/r)/r2
             rops2 = one/sqrt(one+ovlp*ovlp)
             s12   = ovlp*rops2/rt2i
-            if( abs(s12) .gt. 1.0e0_wp ) write(iptprt, '(1X,''In the DIM potential in the subprogram HCL: '', ''R,S12='',F10.5,1PE1' // &
-                '5.7)') r, s12
-            ds12 = dovlp*rops2**3/rt2i
+            ds12  = dovlp*rops2**3/rt2i
             !     H12 AND H22 DIABATS IN NON-ORTHOGONAL REPRESENTATION
             e12   = e1+e2
             de12  = de1+de2
@@ -1013,7 +1006,6 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             do i=1, n1
                 s3(i) = (s2(i+1)-s2(i))/h(i)
             enddo
-            if( idebug .eq. 1 ) write(iptprt, '(5X,"Final EPS =",D15.6)') epsln
         end subroutine splnin
 
         !> @brief Interpolate a tabulated curve and its first two derivatives.
@@ -1068,7 +1060,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             lwork = max(1, 3*nn-1)
             allocate(work(lwork))
             call dsyev('V', 'L', nn, a, nd, eig, work, lwork, ierr)
-            if( ierr /= 0 ) error stop 'EIGN: symmetric eigensolver failed to converge'
+            if( ierr /= 0 ) return
             vec(1:nn,1:nn) = a(1:nn,1:nn)
             deallocate(work)
         end subroutine eign

@@ -9,10 +9,12 @@ module chempotpy_c2h7_vbmm_pes
     contains
 
     !> @brief Evaluate the C2H7_VBMM potential energy surface for C2H7.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: electronvolt_to_kilocalorie_per_mole
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: electronvolt_to_kilocalorie_per_mole
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 9
@@ -255,7 +257,8 @@ module chempotpy_c2h7_vbmm_pes
                 p(istate) = v
             enddo
         else
-            write(*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
 
         contains
@@ -1237,7 +1240,6 @@ module chempotpy_c2h7_vbmm_pes
                 etor      = etor + ethcch
                 athcch(i) = ethcch
                 if( ldebugmm )then
-                    write(*, *) 'Torsion Angle:', phcch(i)
                 endif
             enddo
             ! stretch-xtorsion terms
@@ -1691,10 +1693,6 @@ module chempotpy_c2h7_vbmm_pes
                 enddo
                 xsumjg = xstr+xbend+xstrbnd+xbndbnd+xtor+xstrtor+xvdw
                 if( ldebugmm )then
-                    write(*, '(A,F14.8)')
-                    write(*, '(A,F14.8)') '----------------------------'
-                    write(*, '(A,F14.8)') 'Energy from MM3'
-                    write(*, '(A,F14.8)') '----------------------------'
                     call xdisp(xstr, xbend, xstrbnd, xbndbnd, &
                         & xtor, xstrtor, xvdw, xsumjg)
                 endif
@@ -1716,17 +1714,6 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: xstrtor
             real(wp) :: xvdw
             real(wp) :: xsum
-            write(*, '(A,F14.4)')
-            write(*, '(A,F14.4)') 'Energy in kcal/mol'
-            write(*, '(A,F14.4)')'Stretch   :', xstr
-            write(*, '(A,F14.4)')'Bend      :', xbend
-            write(*, '(A,F14.4)')'Str-Bnd   :', xstrbnd
-            write(*, '(A,F14.4)')'Bnd-Bnd   :', xbndbnd
-            write(*, '(A,F14.4)')'Torsional :', xtor
-            write(*, '(A,F14.4)')'Str-Tor   :', xstrtor
-            write(*, '(A,F14.4)')'vdW       :', xvdw
-            write(*, '(A,F14.4)')
-            write(*, '(A,F14.4)')'Total MM eng.  :', xsum
         end subroutine xdisp
 
         !> @brief Evaluate xdist for the C2H7_VBMM potential.
@@ -2319,12 +2306,6 @@ module chempotpy_c2h7_vbmm_pes
             vstr = vstr * z4
             !%%%--------------------------------------------------
             if( ldebug )then
-                write(*, *)
-                write(*, *)'H2 Vstr :', v3h2*1.0e2_wp*kj_in_kcal
-                write(*, *)'H3 Vstr :', v3h3*1.0e2_wp*kj_in_kcal
-                write(*, *)'H4 Vstr :', v3h4*1.0e2_wp*kj_in_kcal
-                write(*, *)'H5 Vstr :', v3h5*1.0e2_wp*kj_in_kcal
-                write(*, *) 'VSTR FROM XPOT:', vstr*1.0e2_wp*kj_in_kcal
             endif
             ! calculate the out-of-plane bend terms
             ! evaluate tau and PI
@@ -2392,14 +2373,6 @@ module chempotpy_c2h7_vbmm_pes
             delta53 = d53-theta053
             delta54 = d54-theta054
             if( ldebug )then
-                write(iout, *)
-                write(iout, *) 'theta0 and delta terms:'
-                write(iout, *) 'H2-H3:', theta023, delta23
-                write(iout, *) 'H2-H4:', theta024, delta24
-                write(iout, *) 'H2-H5:', theta025, delta25
-                write(iout, *) 'H3-H4:', theta034, delta34
-                write(iout, *) 'H3-H5:', theta035, delta35
-                write(iout, *) 'H4-H5:', theta045, delta45
             endif
             ! calculate fd and hd terms
             call calcfh(a3s, b3s, fd0, hd0, r0ch, rch2, rch3, rch4, rch5, fd2, hd2)
@@ -2407,12 +2380,6 @@ module chempotpy_c2h7_vbmm_pes
             call calcfh(a3s, b3s, fd0, hd0, r0ch, rch4, rch5, rch2, rch3, fd4, hd4)
             call calcfh(a3s, b3s, fd0, hd0, r0ch, rch5, rch2, rch4, rch3, fd5, hd5)
             if( ldebug )then
-                write(iout, *)
-                write(iout, *)'FD and HD terms:'
-                write(iout, *)'H2', fd2, hd2
-                write(iout, *)'H3', fd3, hd3
-                write(iout, *)'H4', fd4, hd4
-                write(iout, *)'H5', fd5, hd5
             endif
             ! calculate vop contributions for each H
             t1    = delta23*delta23
@@ -2434,12 +2401,6 @@ module chempotpy_c2h7_vbmm_pes
             ! total vop contribution
             vop = voph2+voph3+voph4+voph5
             if( ldebug )then
-                write(*, *)
-                write(*, *)'H2 Vop : ', voph2*1.0e2_wp*kj_in_kcal
-                write(*, *)'H3 Vop : ', voph3*1.0e2_wp*kj_in_kcal
-                write(*, *)'H4 Vop : ', voph4*1.0e2_wp*kj_in_kcal
-                write(*, *)'H5 Vop : ', voph5*1.0e2_wp*kj_in_kcal
-                write(iout, *) 'VOP FROM XPOT :', vop*1.0e2_wp*kj_in_kcal
             endif
             ! Calculate in-plane terms
             ! get the k0ij terms
@@ -2482,22 +2443,6 @@ module chempotpy_c2h7_vbmm_pes
             xpot      = vstr+vop+vip-v3h5-voph5-((vip25+vip35+vip45)*0.50e0_wp)
             xpot_kcal = xpot*100.0e0_wp*kj_in_kcal
             if( ldebug )then
-                write(*, *)
-                write(*, *)'H2-H3 Vip :', 0.50e0_wp*vip23*1.0e2_wp*kj_in_kcal
-                write(*, *)'H2-H4 Vip :', 0.50e0_wp*vip24*1.0e2_wp*kj_in_kcal
-                write(*, *)'H2-H5 Vip :', 0.50e0_wp*vip25*1.0e2_wp*kj_in_kcal
-                write(*, *)'H3-H4 Vip :', 0.50e0_wp*vip34*1.0e2_wp*kj_in_kcal
-                write(*, *)'H3-H5 Vip :', 0.50e0_wp*vip35*1.0e2_wp*kj_in_kcal
-                write(*, *)'H4-H5 Vip :', 0.50e0_wp*vip45*1.0e2_wp*kj_in_kcal
-                write(*, *) 'VIP FROM XPOT:', vip*1.0e2_wp*kj_in_kcal
-                write(*, *) 'VSTR+VIP+VOP :', (vstr+vip+vop)*1.0e2_wp*kj_in_kcal
-                write(*, *)
-                write(*, *)'Energy after removing H5 term'
-                write(*, *)'Vstr:', (vstr-v3h5)*1.0e2_wp*kj_in_kcal
-                write(*, *)'Vop :', (vop-voph5)*1.0e2_wp*kj_in_kcal
-                write(*, *)'Vip :', vip-((vip25+vip35+vip45)*0.50e0_wp)* &
-                    & 1.0e2_wp*kj_in_kcal
-                write(*, *)'Total xpot:', xpot_kcal
             endif
             if( .false. )then
                 r(1)  = h2(1)/0.52918e0_wp
@@ -2519,8 +2464,6 @@ module chempotpy_c2h7_vbmm_pes
                 r(17) = hb(2)/0.52918e0_wp
                 r(18) = hb(3)/0.52918e0_wp
                 call csurf(vsurf, r, dv, 18)
-                write(*, *) 'VSURF:', vsurf*627.510e0_wp
-                write(*, *) 'MYVSURF:', (vstr+vop+vip)*0.03812e0_wp*627.510e0_wp
             endif
         end subroutine xch5pot
 
@@ -3601,8 +3544,9 @@ module chempotpy_c2h7_vbmm_pes
             integer, parameter :: n3tmmn = 18
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
             if( infocm_natoms .gt. 25 )then
-                write(usricm_nflag(18), '(2X,''STOP. NUMBER OF ATOMS EXCEEDS ARRAY DIMENSIONS'')')
-                stop
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'legacy kernel rejected the evaluation request')
+                return
             endif
             do i=1, 5
                 infocm_ref(i) = ' '

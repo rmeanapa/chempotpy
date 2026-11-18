@@ -47,13 +47,15 @@ module chempotpy_nah2_leps_7ld_2000_pes
     contains
 
     !> @brief Evaluate the NaH2_LEPS_7LD_2000 potential energy surface for NaH2.
-    subroutine evaluate( x, igrad, p, g, d )
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 2
         integer, parameter    :: natoms  = 3
@@ -579,7 +581,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot11_legacy_state_526eecd9
         g_ehfid     = 0
         if( g_p_ .gt. g_pmax_ )then
             print *, 'Parameter g_p_ is greater than g_pmax_'
-            stop
+            return
         endif
         rac2   = 1.e0_wp / sqrt(2.e0_wp)
         cevau  = 1.e0_wp / 27.2113961e0_wp
@@ -1573,7 +1575,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot12_legacy_state_526eecd9
         g_ehfid  = 0
         if( g_p_ .gt. g_pmax_ )then
             print *, 'Parameter g_p_ is greater than g_pmax_'
-            stop
+            return
         endif
         theta = 15.6e0_wp * acos(-1.0e0_wp) / 180.0e0_wp
         cevau = 1.e0_wp / 27.2113961e0_wp
@@ -2250,7 +2252,7 @@ module chempotpy_nah2_leps_7ld_2000_g_pot22_legacy_state_526eecd9
         g_ehfid     = 0
         if( g_p_ .gt. g_pmax_ )then
             print *, 'Parameter g_p_ is greater than g_pmax_'
-            stop
+            return
         endif
         cevau  = 1.e0_wp / 27.2113961e0_wp
         onethd = 1.0e0_wp / 3.0e0_wp

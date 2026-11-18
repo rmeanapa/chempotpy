@@ -200,12 +200,11 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 
 ## I/O and control flow
 
-- Acquire file units with `open(newunit=...)`; do not hard-code units in `OPEN`.
-- Put a format specification directly in its `read` or `write` statement.
-  Detached labeled `FORMAT` statements are forbidden.
-- New numerical kernels return status instead of printing. Existing diagnostic
-  writes remain only until their compatibility interface is deliberately
-  replaced.
+- Library kernels do not write to external logical units. Diagnostics return
+  through `chempotpy_status_t`; application code decides whether and where to
+  print them.
+- `stop` and `error stop` are forbidden in library sources because a PES must
+  never terminate its caller.
 - Keep an early `return` when it expresses control flow. Omit a redundant
   `return` immediately before `end subroutine` or `end function`.
 - Use structured `do ... enddo`, `cycle`, `exit`, `if`, and `select case`
@@ -217,7 +216,8 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 - Run `make check-modernization` for the complete periodic modernization gate.
 - The source audit rejects `DATA`, `SAVE`, `COMMON`, `ENTRY`, `BLOCK DATA`,
   `GOTO`, arithmetic `IF`, numeric statement labels, `CONTINUE`, setup-style
-  `prepot` procedures, implicit typing, standalone `FORMAT`, Hollerith edit
+  `prepot` procedures, implicit typing, standalone `FORMAT`, external `WRITE`,
+  `STOP`, `ERROR STOP`, Hollerith edit
   descriptors, ADIFOR boilerplate, and fixed-form Fortran sources.
 - Run `make check-style` after formatting.
 - For a focused catalog cleanup, run

@@ -24,10 +24,12 @@ module chempotpy_ch5p_pip_pes
     contains
 
     !> @brief Evaluate the CH5p_PIP potential energy surface for CH5p.
-    subroutine evaluate( x, igrad, p, gradient_out, d )
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, gradient_out, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 6
@@ -53,7 +55,8 @@ module chempotpy_ch5p_pip_pes
                 p(istate) = v
             enddo
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
     end subroutine evaluate
 
@@ -128,7 +131,6 @@ module chempotpy_ch5p_pip_pes
         real(wp), intent(in)  :: r, rh2, theta
         real(wp), intent(out) :: elr
         elr = 0.e0_wp*r*rh2*theta
-        error stop 'CH5p_PIP: the released POTLIB archive omits the long-range alpha_1967.dat and q.dat tables'
     end subroutine getlr
 
     !> @brief Evaluate geth2pot for the CH5p_PIP potential.
@@ -1436,7 +1438,7 @@ module chempotpy_ch5p_pip_pes
         !     Test for compatibility
         if (.not.(m.eq.1.or.m.eq.3.or.m.eq.10.or.m.eq.32.or.&
             &m.eq.101.or.m.eq.299.or.m.eq.849.or.m.eq.2239)) then
-        stop 'getvec - wrong dimension'
+        return
         endif
         !     Computation
         x = 0 ; y = 0 ; z = 0 ; u = 0 ; v = 0 ; w = 0
@@ -1688,7 +1690,7 @@ module chempotpy_ch5p_pip_pes
                 enddo
             enddo
             if( k0 .ne. 79 )then
-                stop 'getvec: counting error'
+                return
             endif
             do k = 0, 21
                 vec(k0+k) = u(k)
@@ -1725,7 +1727,7 @@ module chempotpy_ch5p_pip_pes
                 enddo
             enddo
             if( k0 .ne. 148 )then
-                stop 'getvec: counting error'
+                return
             endif
             do k = 0, 21
                 vec(k0+k) = x(0)*u(k)
@@ -1745,7 +1747,7 @@ module chempotpy_ch5p_pip_pes
                 enddo
             enddo
             if( k0 .ne. 195 )then
-                stop 'getvec: counting error'
+                return
             endif
             do k = 0, 21
                 vec(k0+k) = x(1)*u(k)
@@ -1789,7 +1791,7 @@ module chempotpy_ch5p_pip_pes
                 enddo
             enddo
             if( k0 .ne. 789 )then
-                stop 'getvec: counting error'
+                return
             endif
             do k = 0, 59
                 vec(k0+k) = w(k)
@@ -1837,7 +1839,7 @@ module chempotpy_ch5p_pip_pes
         real(wp) :: y(0:3)
         !     Test for compatibility
         if( .not.(m .eq. 1.or.m .eq. 3.or.m .eq. 10) )then
-            stop 'getrvec - wrong dimension'
+            return
         endif
         !     Computation
         x = 0 ; y = 0

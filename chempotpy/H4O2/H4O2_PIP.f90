@@ -56,10 +56,12 @@ module chempotpy_h4o2_pip_pes
     contains
 
     !> @brief Evaluate the H4O2_PIP potential energy surface for H4O2.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 6
@@ -81,7 +83,8 @@ module chempotpy_h4o2_pip_pes
         if( igrad == 0 )then
             call h4o2pot(tx, v)
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
         v = v*hartree_to_electronvolt
         do istate=1, nstates
@@ -166,7 +169,7 @@ subroutine getrvec ( m, r, vec )
     real               :: x(0:2), r1(0:nk-1,0:nk-1), t0, t1
     ! Test for compatibility
     if( .not.(m .eq. 1.or.m .eq. 4) )then
-        stop 'getrvec - wrong dimension'
+        return
     endif
     ! Computation
     x = 0
@@ -217,7 +220,7 @@ subroutine getvec ( ms, mr, xn, vec )
         endif
     enddo
     if( deg .eq. -1 )then
-        stop 'getvec: bad ms'
+        return
     endif
     vec = 0
     call getr0 (nk, xn, r0)
@@ -314,7 +317,7 @@ subroutine mg42_gens ( ind, x, y )
         ! permutation (4,5)
         iord = (/ 0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 6, 7, 8, 9, 14 /)
     case default
-        stop 'mg42_gens: invalid index'
+        return
     end select
     if( 0 .le. ind )then
         y(iord(:)) = x(:)
@@ -795,7 +798,7 @@ subroutine mg42_secs ( mxd, x, v )
         v(374:378) = pv(102:106)
     endif
     if( 8 .le. mxd )then
-        stop 'mg42: degree 8 not implemented'
+        return
     endif
 
     contains
@@ -829,7 +832,7 @@ subroutine mg42_secs ( mxd, x, v )
             enddo
         enddo
         if( k .ne. mg42_nr )then
-            stop 'mg42_setd: bad count'
+            return
         endif
         do i = 0, nk-1
             d(i,i)   = 0

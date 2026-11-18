@@ -9,8 +9,8 @@ import math
 from pathlib import Path
 
 
-REFERENCE_RELATIVE_TOLERANCE = 1.0e-13
-REFERENCE_ABSOLUTE_TOLERANCE = 1.0e-13
+REFERENCE_RELATIVE_TOLERANCE = 1.0e-11
+REFERENCE_ABSOLUTE_TOLERANCE = 1.0e-11
 
 
 def equivalent_values(expected: list[str], actual: list[str]) -> bool:

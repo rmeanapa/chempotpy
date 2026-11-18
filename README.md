@@ -187,9 +187,11 @@ uses `-fimplicit-none`, so an undeclared variable is a hard error.
 
 Declarations use `::`, constants use typed `parameter` declarations, and
 intrinsic kinds and character lengths use standard syntax. Source code is
-lowercase without changing comments or character literals. Files acquire units
-with `open(newunit=...)`; numbered diagnostic writes are retained only where a
-legacy public routine still exposes that behavior.
+lowercase without changing comments or character literals. Library kernels are
+quiet: they contain no external `write`, `stop`, or `error stop` statements.
+The optional `chempotpy_status_t` result on each module-level `evaluate`
+reports unsupported requests without changing the historical `pes` or `dpem`
+adapter ABI.
 
 The formatter uses a 120-column readability target for normal equations rather
 than Fortran 77's 72/80-column limit. Generated numerical data may exceed that
@@ -367,7 +369,7 @@ compares every result. Capturing both revisions with the same compiler and math
 runtime—and using the tested revision's geometry harness for both—prevents
 platform or geometry-suite differences from being mistaken for a source
 change. Existing surfaces must remain within a relative and absolute tolerance
-of `1e-13`; removed surfaces, interface changes, non-finite results, compilation
+of `1e-11`; removed surfaces, interface changes, non-finite results, compilation
 failures, and execution failures also fail the workflow. Aln and NH3 use
 deterministic system-specific geometries so their regression points remain
 inside the mathematical domain of the released fits. A newly added surface

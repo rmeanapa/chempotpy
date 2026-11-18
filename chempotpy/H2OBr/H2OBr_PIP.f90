@@ -8,10 +8,12 @@ module chempotpy_h2obr_pip_pes
     contains
 
     !> @brief Evaluate the H2OBr_PIP potential energy surface for H2OBr.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -26,7 +28,8 @@ module chempotpy_h2obr_pip_pes
         if( igrad == 0 )then
             call pot(x, v)
         else
-            write (*, *) 'Only energy is available'
+            if( present(status) ) call status%set(status_derivative_unavailable, &
+                'requested derivatives are unavailable')
         endif
         v = v*hartree_to_electronvolt
         do istate=1, nstates

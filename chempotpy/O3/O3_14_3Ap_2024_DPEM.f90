@@ -24,11 +24,13 @@ module chempotpy_o3_14_3ap_2024_dpem_pes
     contains
 
     !> @brief Evaluate the O3_14_3Ap_2024 diabatic potential matrix for O3.
-    subroutine evaluate( x, igrad, v, tg, td, t, u, ug )
-        use chempotpy_units, only: hartree_per_bohr_to_ev_per_angstrom
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, v, tg, td, t, u, ug, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 14
         integer, parameter    :: natoms  = 3
@@ -34385,7 +34387,7 @@ module chempotpy_o3_14_3ap_2024_dpem_pes
             c6(2) = 12.8e0_wp
         else
             ! currently imol = 4 is used
-            stop
+            return
         endif
         ! Calculate dispersion correction
         call edisp(94, 5, 2, dist, iz, mxc, &

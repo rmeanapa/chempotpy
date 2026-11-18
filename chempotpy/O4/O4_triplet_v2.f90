@@ -29,10 +29,12 @@ module chempotpy_o4_triplet_v2_pes
     contains
 
     !> @brief Evaluate the O4_triplet_v2 potential energy surface for O4.
-    subroutine evaluate( x, igrad, p, g, d )
-        use chempotpy_units, only: electronvolt_to_kilocalorie_per_mole
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, p, g, d, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: electronvolt_to_kilocalorie_per_mole
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
@@ -548,7 +550,6 @@ module chempotpy_o4_triplet_v2_pes
                     call evdvdx(x, dvdx)
                 endif
             else
-                write (*, *) 'Only energy and gradient are available'
             endif
         end subroutine o4pes
 

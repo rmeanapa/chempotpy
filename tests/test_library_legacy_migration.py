@@ -85,7 +85,14 @@ class LibraryLegacyMigrationTests( unittest.TestCase ):
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
                 results = list(pool.map(
                     lambda source: capture_source(
-                        compiler, source, work_root
+                        compiler,
+                        source,
+                        work_root,
+                        (
+                            ""
+                            if source.parent.name == "NH3"
+                            else source.parent.name
+                        ),
                     ),
                     sources,
                 ))
@@ -96,7 +103,15 @@ class LibraryLegacyMigrationTests( unittest.TestCase ):
                     result.key,
                     self.references[result.key]["values"],
                 )
-                actual = result.record["values"]
+                values_per_geometry = len(expected)//2
+                self.assertEqual(len(expected), 2*values_per_geometry)
+                captured = result.record["values"]
+                actual = (
+                    captured[:values_per_geometry]
+                    + captured[
+                        values_per_geometry:2*values_per_geometry
+                    ]
+                )
                 self.assertEqual(len(actual), len(expected))
                 for expected_value, actual_value in zip(expected, actual):
                     if expected_value == actual_value:

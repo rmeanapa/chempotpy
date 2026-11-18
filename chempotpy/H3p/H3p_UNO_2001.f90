@@ -40,13 +40,15 @@ module chempotpy_h3p_uno_2001_pes
     contains
 
     !> @brief Evaluate the H3p_UNO_2001 potential energy surface for H3p.
-    subroutine evaluate( x, igrad, pin, grad, dvec )
+    subroutine evaluate( x, igrad, pin, grad, dvec, status )
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 3
         integer, parameter    :: natoms  = 3
@@ -570,7 +572,6 @@ module chempotpy_h3p_uno_2001_pes
                     g_e(g_i_, ii) = 0.0e0_wp
                 enddo
                 e(ii) = 0.e0_wp
-                write (6, *) 'WARN:  NSURF = ', nsurf
             endif
             ! derivatives
             do i = 1, 3

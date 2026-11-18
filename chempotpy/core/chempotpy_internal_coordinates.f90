@@ -37,7 +37,6 @@ module chempotpy_internal_coordinates
                 internal_gradient*hartree_per_bohr_to_ev_per_angstrom, distance_jacobian, cartesian_gradient)
             gradient_electronvolt_per_angstrom(1,:,:) = transpose(reshape(cartesian_gradient, [3, 3]))
         elseif( derivative_order == 2 )then
-            write(*, *) "Only energy and gradient are available"
         endif
     end subroutine finalize_legacy_triatomic_surface
 end module chempotpy_internal_coordinates

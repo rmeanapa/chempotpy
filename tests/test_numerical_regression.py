@@ -39,9 +39,15 @@ class NumericalRegressionTests(unittest.TestCase):
 
     def test_roundoff_within_cross_platform_tolerance_passes(self) -> None:
         diagnostics, _ = compare_records(
-            "H3/example", record(["1.00000000000001"]), record(["1.0"])
+            "H3/example", record(["1.000000000005"]), record(["1.0"])
         )
         self.assertEqual(diagnostics, [])
+
+    def test_change_outside_cross_platform_tolerance_fails(self) -> None:
+        diagnostics, _ = compare_records(
+            "H3/example", record(["1.00000005"]), record(["1.0"])
+        )
+        self.assertEqual(len(diagnostics), 1)
 
     def test_numerical_change_fails_with_surface_and_index(self) -> None:
         diagnostics, _ = compare_records(

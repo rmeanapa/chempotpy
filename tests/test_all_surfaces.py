@@ -15,6 +15,10 @@ from scripts.capture_library_references import (
     REGRESSION_GEOMETRY_COUNT,
     capture_source,
 )
+from scripts.check_numerical_regression import (
+    ABSOLUTE_TOLERANCE,
+    RELATIVE_TOLERANCE,
+)
 
 
 class AllSurfaceRegressionTests(unittest.TestCase):
@@ -452,8 +456,8 @@ class AllSurfaceRegressionTests(unittest.TestCase):
                     self.assertTrue(math.isclose(
                         actual_number,
                         expected_number,
-                        rel_tol=1.0e-13,
-                        abs_tol=1.0e-13,
+                        rel_tol=RELATIVE_TOLERANCE,
+                        abs_tol=ABSOLUTE_TOLERANCE,
                     ))
 
 

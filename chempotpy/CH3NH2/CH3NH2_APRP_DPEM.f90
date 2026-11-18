@@ -81,10 +81,12 @@ module chempotpy_ch3nh2_aprp_dpem_pes
     contains
 
     !> @brief Evaluate the CH3NH2_APRP diabatic potential matrix for CH3NH2.
-    subroutine evaluate( x, igrad, u, ug )
-        use chempotpy_units, only: hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+    subroutine evaluate( x, igrad, u, ug, status )
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_units,  only: hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 2
         integer, parameter    :: natoms  = 7
@@ -207,8 +209,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         call dsyev('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
         deallocate (work)
         if( info .ne. 0 )then
-            write(6, *) 'Error in diagolization of U matrix'
-            stop
+            return
         endif
         do i=1, 7
             guu(1,i,1,1) = (dux(i,1)/evtohartree)*bohrtoang
@@ -270,10 +271,8 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ajkl = bndang(j, k, l, x, y, z)
         ! Check whether i-j-k or j-k-l are collinear
         if( (abs(aijk) .le. tiny) .or. (abs(aijk-PI) .lt. tiny) )then
-            write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') i, j, k
         endif
         if( (abs(ajkl) .le. tiny) .or. (abs(ajkl-PI) .lt. tiny) )then
-            write(*, '(''Torsion angle not defined since atoms'',3I3,'' collinear'')') j, k, l
         endif
         ! Calculate eij
         eij(1) = (x(j)-x(i))/rij
@@ -320,11 +319,8 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         real(wp)            :: x(*), y(*), z(*)
         bndlen = sqrt( (x(i)-x(j))*(x(i)-x(j)) +      (y(i)-y(j))*(y(i)-y(j)) +      (z(i)-z(j))*(z(i)-z(j)))
         if( bndlen .le. tiny )then
-            write(*, '('' Atom'',I3,'' and'',I3,'' are too close to each other!'')') i, j
             !CDB  KRY 20140718
-            write(*, '(I3,3F18.12)') i, x(i), y(i), z(i)
-            write(*, '(I3,3F18.12)') j, x(j), y(j), z(j)
-            stop
+            return
         endif
     end function bndlen
 
