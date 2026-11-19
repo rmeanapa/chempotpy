@@ -117,7 +117,9 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   symmetric matrices. PES modules must not define `diagonalize` or `eign`
   wrappers or call the low-level `DSYEV` ABI directly. The core-owned
   `symmetric_eigensolver` generic exposes that ABI only for a published kernel
-  whose numerical parity depends on retaining the original call boundary.
+  whose numerical parity depends on retaining the original call boundary. The
+  CH3NH2 APRP pair is the sole direct-ABI exception: cross-target regression
+  proves that adding an explicit interface changes its published eigenvalues.
 - Use `chempotpy_interpolation` for one-dimensional cubic splines. The core
   provides both endpoint-derivative cubic splines and the historical tabulated
   relaxation spline used by the ClH2 TTGI fits; do not copy local `spline`,

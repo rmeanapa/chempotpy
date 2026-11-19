@@ -72,9 +72,8 @@
 
 !> @brief Implement CH3NH2_APRP, a potential energy surface for CH3NH2.
 module chempotpy_ch3nh2_aprp_pes
-    use chempotpy_linear_algebra, only: symmetric_eigensolver
-    use chempotpy_constants,      only: PI
-    use chempotpy_kinds,          only: wp
+    use chempotpy_constants, only: PI
+    use chempotpy_kinds,     only: wp
     implicit none
     private
     public :: evaluate
@@ -218,11 +217,11 @@ module chempotpy_ch3nh2_aprp_pes
         eigvec  = uu
         lwork   = -1
         allocate(work(1))
-        call symmetric_eigensolver('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
+        call dsyev('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
         lwork = int(work(1))
         deallocate(work)
         allocate(work(lwork))
-        call symmetric_eigensolver('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
+        call dsyev('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
         deallocate(work)
         if( info .ne. 0 )then
             return
