@@ -15,9 +15,15 @@ concurrency:
 
 jobs:
     numerical-regression:
-        name: Compare all PES values with the base revision
-        runs-on: ubuntu-24.04
+        name: Compare all PES values (${{ matrix.os }})
+        runs-on: ${{ matrix.os }}
         timeout-minutes: 30
+        strategy:
+            fail-fast: false
+            matrix:
+                os:
+                    - ubuntu-24.04
+                    - macos-15
         steps:
             - name: Check out the tested revision
               uses: actions/checkout@v7
@@ -29,10 +35,23 @@ jobs:
               with:
                   python-version: "3.14"
 
-            - name: Install the compiler and Python runtime dependency
+            - name: Install GNU Fortran on Linux
+              if: runner.os == 'Linux'
               run: |
                   sudo apt-get update
                   sudo apt-get install --yes gfortran
+
+            - name: Select GNU Fortran on macOS
+              if: runner.os == 'macOS'
+              run: |
+                  compiler="$(command -v gfortran-15 || command -v gfortran-14 || command -v gfortran-13)"
+                  test -n "$compiler"
+                  mkdir -p "$RUNNER_TEMP/bin"
+                  ln -s "$compiler" "$RUNNER_TEMP/bin/gfortran"
+                  echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+            - name: Install the Python runtime dependency
+              run: |
                   python -m pip install --upgrade pip numpy
 
             - name: Capture the base revision on this runner
