@@ -122,8 +122,8 @@ program test_fortran_core
         representation_adiabatic
     use chempotpy_finite_difference, only: central_finite_difference
     use chempotpy_geometry, only: all_pair_distance_jacobian, all_pair_distances, &
-        all_pair_distances_and_jacobian, cartesian_distance, compute_cross_product_3d, cosine_between_vectors, &
-        cross_product_3d, dot_product_3d, fill_distance_matrix, &
+        all_pair_distances_and_jacobian, cartesian_distance, compute_cross_product_3d, compute_dot_product_3d, &
+        cosine_between_vectors, cross_product_3d, dot_product_3d, fill_distance_matrix, &
         flatten_cartesian_coordinates, ordered_pair_distance_jacobian, reshape_cartesian_coordinates, &
         transform_internal_gradient_to_cartesian, triatomic_distance_jacobian
     use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
@@ -156,7 +156,7 @@ program test_fortran_core
     real(wp) :: internal_gradient_matrix(2,2), cartesian_gradient_matrix(2,3)
     real(wp) :: internal_gradient_tensor(2,2,2), cartesian_gradient_tensor(2,2,3)
     real(wp) :: atom_gradient_matrix(2,1,3), atom_gradient_tensor(2,2,1,3)
-    real(wp) :: cartesian_gradient(3), stored_cross_product(3)
+    real(wp) :: cartesian_gradient(3), stored_cross_product(3), stored_dot_product
     real(wp) :: potlib_coordinates(9)
     real(wp) :: pair_distances(3)
     real(wp) :: triatomic_jacobian(3,9)
@@ -261,6 +261,9 @@ program test_fortran_core
         [0.0_wp,1.0_wp,0.0_wp])
     if( any(stored_cross_product /= [0.0_wp,0.0_wp,1.0_wp]) ) &
         error stop 'stored cross product failed'
+    call compute_dot_product_3d(stored_dot_product, [1.0_wp,2.0_wp,3.0_wp], &
+        [4.0_wp,5.0_wp,6.0_wp])
+    if( stored_dot_product /= 32.0_wp ) error stop 'stored dot product failed'
     if( abs(cosine_between_vectors([1.0_wp,0.0_wp,0.0_wp], &
         [0.0_wp,1.0_wp,0.0_wp])) > epsilon(1.0_wp) ) &
         error stop 'angle cosine failed'

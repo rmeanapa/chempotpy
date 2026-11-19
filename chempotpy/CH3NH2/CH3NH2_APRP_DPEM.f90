@@ -73,7 +73,7 @@
 !> @brief Implement CH3NH2_APRP, a diabatic potential matrix for CH3NH2.
 module chempotpy_ch3nh2_aprp_dpem_pes
     use chempotpy_linear_algebra, only: symmetric_eigendecomposition
-    use chempotpy_geometry,       only: cross_product_3d
+    use chempotpy_geometry,       only: compute_cross_product_3d, compute_dot_product_3d
     use chempotpy_constants,      only: PI
     use chempotpy_kinds,          only: wp
     implicit none
@@ -282,10 +282,10 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ! u = eij*ejk normal vector in plane i-j-k
         ! v = ejk*ekl Normal vector in plane j-k-l
         ! w = u*v used to determine the sign of dihedral angle
-        u       = cross_product_3d(eij, ejk)
-        v       = cross_product_3d(ejk, ekl)
-        w       = cross_product_3d(u, v)
-        a       = dot_product(u, v)
+        call compute_cross_product_3d(u, eij, ejk)
+        call compute_cross_product_3d(v, ejk, ekl)
+        call compute_cross_product_3d(w, u, v)
+        call compute_dot_product_3d(a, u, v)
         a       = a/(sin(aijk)*sin(ajkl))
         a       = max(a, -1.0e0_wp)
         a       = min(a, 1.0e0_wp)
@@ -335,7 +335,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ejk(1) = (x(k)-x(j))/rjk
         ejk(2) = (y(k)-y(j))/rjk
         ejk(3) = (z(k)-z(j))/rjk
-        a      = dot_product(eji, ejk)
+        call compute_dot_product_3d(a, eji, ejk)
         bndang = acos(a)
     end function bndang
 
