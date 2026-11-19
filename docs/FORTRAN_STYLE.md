@@ -136,7 +136,10 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   requires the historical subroutine evaluation boundary for numerical parity.
   The analogous `compute_dot_product_3d` preserves sequential accumulation for
   numerically sensitive published kernels. Use the Fortran `dot_product` and
-  `norm2` intrinsics for general vector dot products and Euclidean norms. Do not carry local
+  `norm2` intrinsics for general vector dot products and Euclidean norms. The
+  CH3NH2 APRP fit is the sole local exception: cross-target regression shows
+  that moving its two private three-component kernels across a compilation-unit
+  boundary changes its published energies materially. Do not carry other local
   `crosprod`, `dotprod`, `anorm`, `xprod`, or `sprod` helpers. Use
   `flatten_cartesian_coordinates` to transform `x(natoms,3)` into
   `[x1, y1, z1, x2, y2, z2, ...]`; do not repeat indexing loops for this

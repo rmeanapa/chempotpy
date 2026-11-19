@@ -73,7 +73,6 @@
 !> @brief Implement CH3NH2_APRP, a potential energy surface for CH3NH2.
 module chempotpy_ch3nh2_aprp_pes
     use chempotpy_linear_algebra, only: symmetric_eigensolver
-    use chempotpy_geometry,       only: compute_cross_product_3d, compute_dot_product_3d
     use chempotpy_constants,      only: PI
     use chempotpy_kinds,          only: wp
     implicit none
@@ -306,10 +305,10 @@ module chempotpy_ch3nh2_aprp_pes
         ! u = eij*ejk normal vector in plane i-j-k
         ! v = ejk*ekl Normal vector in plane j-k-l
         ! w = u*v used to determine the sign of dihedral angle
-        call compute_cross_product_3d(u, eij, ejk)
-        call compute_cross_product_3d(v, ejk, ekl)
-        call compute_cross_product_3d(w, u, v)
-        call compute_dot_product_3d(a, u, v)
+        call published_cross_product_3d(eij, ejk, u)
+        call published_cross_product_3d(ejk, ekl, v)
+        call published_cross_product_3d(u, v, w)
+        call published_dot_product_3d(u, v, a)
         a       = a/(sin(aijk)*sin(ajkl))
         a       = max(a, -1.0e0_wp)
         a       = min(a, 1.0e0_wp)
@@ -359,9 +358,29 @@ module chempotpy_ch3nh2_aprp_pes
         ejk(1) = (x(k)-x(j))/rjk
         ejk(2) = (y(k)-y(j))/rjk
         ejk(3) = (z(k)-z(j))/rjk
-        call compute_dot_product_3d(a, eji, ejk)
+        call published_dot_product_3d(eji, ejk, a)
         bndang = acos(a)
     end function bndang
+
+    !> @brief Evaluate a cross product in the published CH3NH2 arithmetic context.
+    pure subroutine published_cross_product_3d( first_vector, second_vector, product )
+        real(wp), intent(in)  :: first_vector(3), second_vector(3)
+        real(wp), intent(out) :: product(3)
+        product(1) = first_vector(2)*second_vector(3)-first_vector(3)*second_vector(2)
+        product(2) = first_vector(3)*second_vector(1)-first_vector(1)*second_vector(3)
+        product(3) = first_vector(1)*second_vector(2)-first_vector(2)*second_vector(1)
+    end subroutine published_cross_product_3d
+
+    !> @brief Accumulate a dot product in the published CH3NH2 arithmetic context.
+    pure subroutine published_dot_product_3d( first_vector, second_vector, product )
+        real(wp), intent(in)  :: first_vector(3), second_vector(3)
+        real(wp), intent(out) :: product
+        integer               :: component
+        product = 0.0_wp
+        do component=1, 3
+            product = product+first_vector(component)*second_vector(component)
+        enddo
+    end subroutine published_dot_product_3d
 
     !> @brief Evaluate convertit for the CH3NH2_APRP potential.
     subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )
