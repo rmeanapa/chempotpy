@@ -23,11 +23,13 @@ from scripts.capture_library_references import capture_source
 DEFAULT_FIXTURE = REPOSITORY_ROOT / "tests" / "data" / \
     "all_surface_references.json"
 METADATA_FIELDS = ("entry_point", "natoms", "nstates", "signature")
-# Different supported compiler versions can reorder floating-point operations
-# at the final few ulps even at -O0.  This remains tight enough to reject any
-# chemically meaningful change while keeping the baseline compiler-portable.
+# Different supported compiler targets can round an identical operation at a
+# procedure boundary differently even at -O0. The absolute limit covers the
+# observed sub-nanoelectronvolt variation while remaining far below any
+# chemically meaningful change; the relative limit remains stricter for
+# larger values.
 RELATIVE_TOLERANCE = 1.0e-11
-ABSOLUTE_TOLERANCE = 1.0e-11
+ABSOLUTE_TOLERANCE = 5.0e-10
 BASELINE_VERSION = 2
 MAX_WORKFLOW_ANNOTATIONS = 50
 

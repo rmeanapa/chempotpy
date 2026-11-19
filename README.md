@@ -367,14 +367,16 @@ Run the independent direct-Fortran numerical and architecture regression with:
 
 Every pull request and push also runs the `All PES numerical regression`
 GitHub Actions workflow. The workflow checks out the pull request's base commit
-(or the commit preceding a push), compiles that revision and the current
+or the most recent successful push, compiles that revision and the current
 revision on the same runner, evaluates all nine deterministic geometries, and
-compares every result. Capturing both revisions with the same compiler and math
-runtime prevents platform differences from being mistaken for a source
-change. Each revision uses its own versioned geometry harness so an explicitly
-reviewed baseline transition remains visible. Existing surfaces must remain within a relative and absolute tolerance
-of `1e-11`; removed surfaces, interface changes, non-finite results, compilation
-failures, and execution failures also fail the workflow. Aln and NH3 use
+compares every result. A failed run therefore cannot become the protected
+baseline. Capturing both revisions with the same compiler and math runtime
+prevents platform differences from being mistaken for a source change. Each
+revision uses its own versioned geometry harness so an explicitly reviewed
+baseline transition remains visible. Existing surfaces must remain within a
+relative tolerance of `1e-11` and an absolute tolerance of `5e-10`; removed
+surfaces, interface changes, non-finite results, compilation failures, and
+execution failures also fail the workflow. Aln and NH3 use
 deterministic system-specific geometries so their regression points remain
 inside the mathematical domain of the released fits. A newly added surface
 must compile, execute, match its declared interface, and return only finite
