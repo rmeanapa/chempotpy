@@ -115,7 +115,9 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   finite-difference validation belong in the bundled core.
 - Use `symmetric_eigendecomposition` from `chempotpy_linear_algebra` for real
   symmetric matrices. PES modules must not define `diagonalize` or `eign`
-  wrappers or call the low-level `DSYEV` ABI directly.
+  wrappers or call the low-level `DSYEV` ABI directly. The core-owned
+  `symmetric_eigensolver` generic exposes that ABI only for a published kernel
+  whose numerical parity depends on retaining the original call boundary.
 - Use `chempotpy_interpolation` for one-dimensional cubic splines. The core
   provides both endpoint-derivative cubic splines and the historical tabulated
   relaxation spline used by the ClH2 TTGI fits; do not copy local `spline`,

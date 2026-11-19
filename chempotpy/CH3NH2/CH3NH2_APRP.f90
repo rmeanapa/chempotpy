@@ -72,7 +72,7 @@
 
 !> @brief Implement CH3NH2_APRP, a potential energy surface for CH3NH2.
 module chempotpy_ch3nh2_aprp_pes
-    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_linear_algebra, only: symmetric_eigensolver
     use chempotpy_geometry,       only: compute_cross_product_3d, compute_dot_product_3d
     use chempotpy_constants,      only: PI
     use chempotpy_kinds,          only: wp
@@ -159,29 +159,30 @@ module chempotpy_ch3nh2_aprp_pes
     subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: xx(3,7)
-        real(wp)            :: x(7), y(7), z(7)
-        real(wp)            :: scp(3)
-        integer             :: i, j
-        real(wp)            :: e1
-        integer             :: nrap, ntap
-        real(wp)            :: dx1(7), dy1(7), dz1(7)
-        real(wp)            :: dx(7), dy(7), dz(7)
-        integer             :: igrad
-        real(wp)            :: dux(7,3), duy(7,3), duz(7,3)
-        real(wp)            :: uu(2,2), vv(2)
-        real(wp)            :: tt(1)
-        real(wp)            :: guu(3,7,2,2), gtt(3,7,1,1)
-        real(wp)            :: gvv(3,7,2)
-        real(wp)            :: dvec(3,7,2,2)
-        real(wp)            :: eigvec(2,2)
-        integer             :: info
-        integer             :: repflag
-        real(wp)            :: tmpmat22(2,2)
-        integer             :: ist, jst
-        real(wp), parameter :: evtohartree = 27.21139e0_wp
-        real(wp), parameter :: bohrtoang   = 0.52917721067e0_wp
-        real(wp)            :: v2, v4
+        real(wp)              :: xx(3,7)
+        real(wp)              :: x(7), y(7), z(7)
+        real(wp)              :: scp(3)
+        integer               :: i, j
+        real(wp)              :: e1
+        integer               :: nrap, ntap
+        real(wp)              :: dx1(7), dy1(7), dz1(7)
+        real(wp)              :: dx(7), dy(7), dz(7)
+        integer               :: igrad
+        real(wp)              :: dux(7,3), duy(7,3), duz(7,3)
+        real(wp)              :: uu(2,2), vv(2)
+        real(wp)              :: tt(1)
+        real(wp)              :: guu(3,7,2,2), gtt(3,7,1,1)
+        real(wp)              :: gvv(3,7,2)
+        real(wp)              :: dvec(3,7,2,2)
+        real(wp)              :: eigvec(2,2)
+        real(wp), allocatable :: work(:)
+        integer               :: info, lwork
+        integer               :: repflag
+        real(wp)              :: tmpmat22(2,2)
+        integer               :: ist, jst
+        real(wp), parameter   :: evtohartree = 27.21139e0_wp
+        real(wp), parameter   :: bohrtoang   = 0.52917721067e0_wp
+        real(wp)              :: v2, v4
         scp = 0e0_wp
         dux = 0e0_wp
         duy = 0e0_wp
@@ -215,7 +216,15 @@ module chempotpy_ch3nh2_aprp_pes
         uu(2,2) = scp(2)/evtohartree
         uu(1,2) = scp(3)/evtohartree
         uu(2,1) = scp(3)/evtohartree
-        call symmetric_eigendecomposition(uu, vv, eigvec, info)
+        eigvec  = uu
+        lwork   = -1
+        allocate(work(1))
+        call symmetric_eigensolver('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
+        lwork = int(work(1))
+        deallocate(work)
+        allocate(work(lwork))
+        call symmetric_eigensolver('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
+        deallocate(work)
         if( info .ne. 0 )then
             return
         endif

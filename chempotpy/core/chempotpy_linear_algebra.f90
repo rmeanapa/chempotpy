@@ -4,7 +4,8 @@ module chempotpy_linear_algebra
     implicit none
     private
     public :: symmetric_eigendecomposition
-    interface
+    public :: symmetric_eigensolver
+    interface symmetric_eigensolver
         !> @brief Solve a symmetric eigenproblem with the bundled DSYEV-compatible kernel.
         subroutine dsyev( jobz, uplo, n, a, lda, w, work, lwork, info )
             import wp
@@ -16,7 +17,7 @@ module chempotpy_linear_algebra
             real(wp), intent(inout)      :: work(*)
             integer, intent(out)         :: info
         end subroutine dsyev
-    end interface
+    end interface symmetric_eigensolver
 
     contains
 
@@ -46,13 +47,13 @@ module chempotpy_linear_algebra
         result_matrix = matrix
         job           = merge('V', 'N', present(eigenvectors))
         allocate(work(1))
-        call dsyev(job, 'L', size(matrix, 1), result_matrix, size(matrix, 1), &
+        call symmetric_eigensolver(job, 'L', size(matrix, 1), result_matrix, size(matrix, 1), &
             & eigenvalues, work, -1, solver_info)
         if( solver_info == 0 )then
             work_size = max(1, int(work(1)))
             deallocate(work)
             allocate(work(work_size))
-            call dsyev(job, 'L', size(matrix, 1), result_matrix, size(matrix, 1), &
+            call symmetric_eigensolver(job, 'L', size(matrix, 1), result_matrix, size(matrix, 1), &
                 & eigenvalues, work, work_size, solver_info)
         endif
         if( present(eigenvectors) ) eigenvectors = result_matrix
