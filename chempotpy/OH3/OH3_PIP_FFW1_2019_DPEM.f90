@@ -6578,6 +6578,7 @@ end subroutine grad_ev_pol_con_8
 ! subtoutine of computing u12
 !> @brief Evaluate u12_order10.
 module chempotpy_oh3_pip_ffw1_2019_dpem_u12_dc_10_entry_stat_6005b2a7
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -7938,8 +7939,8 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_u12_dc_10_entry_stat_6005b2a7
             enddo
             volume = tanh(15.4*volume)
             call ev_pol_con_10(x, q)
-            v = dot_product(coeff, q)*volume/627.509474
-            s = dot_product(coeff, q)/627.509474
+            v = dot_product(coeff, q)*volume/hartree_to_kilocalorie_per_mole
+            s = dot_product(coeff, q)/hartree_to_kilocalorie_per_mole
         endif
     end subroutine dispatch
 end module chempotpy_oh3_pip_ffw1_2019_dpem_u12_dc_10_entry_stat_6005b2a7
@@ -7967,6 +7968,7 @@ end subroutine u12_dc_10
 ! subtoutine of computing u13
 !> @brief Evaluate u13_order12.
 module chempotpy_oh3_pip_ffw1_2019_dpem_u13_dc_12_entry_stat_6005b2a7
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -11083,7 +11085,7 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_u13_dc_12_entry_stat_6005b2a7
             x(5) = exp(-((r24-ra2))/a2 -((r24-rb2)**2)/b2)
             x(6) = exp(-((r34-ra2))/a2 -((r34-rb2)**2)/b2)
             call ev_pol_con_12(x, q)
-            v = dot_product(coeff, q)/627.509474
+            v = dot_product(coeff, q)/hartree_to_kilocalorie_per_mole
         endif
     end subroutine dispatch
 end module chempotpy_oh3_pip_ffw1_2019_dpem_u13_dc_12_entry_stat_6005b2a7
@@ -11110,6 +11112,7 @@ end subroutine u13_dc_12
 ! subtoutine of computing u23
 !> @brief Evaluate u23_order10.
 module chempotpy_oh3_pip_ffw1_2019_dpem_u23_dc_10_entry_stat_6005b2a7
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -12476,8 +12479,8 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_u23_dc_10_entry_stat_6005b2a7
             enddo
             volume = tanh(15.4*volume)
             call ev_pol_con_10(x, q)
-            v = dot_product(coeff, q)*volume/627.509474
-            s = dot_product(coeff, q)/627.509474
+            v = dot_product(coeff, q)*volume/hartree_to_kilocalorie_per_mole
+            s = dot_product(coeff, q)/hartree_to_kilocalorie_per_mole
         endif
     end subroutine dispatch
 end module chempotpy_oh3_pip_ffw1_2019_dpem_u23_dc_10_entry_stat_6005b2a7
@@ -22097,6 +22100,7 @@ end subroutine
 !  du12dx is the gradient of u12
 !> @brief Evaluate u12_dvdx.
 subroutine u12_dvdx( xyz, u12, s12, du12dx )
+    use chempotpy_units,    only: hartree_to_kilocalorie_per_mole
     use chempotpy_geometry, only: all_pair_distances_and_jacobian, flatten_cartesian_coordinates, &
         & transform_internal_gradient_to_cartesian
     use chempotpy_kinds, only: wp
@@ -22130,7 +22134,7 @@ subroutine u12_dvdx( xyz, u12, s12, du12dx )
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to 6
     call transform_internal_gradient_to_cartesian(dvdr, drdx, dvdx)
     do i=1, 12
-        dvdx(i) = dvdx(i)/627.509474
+        dvdx(i) = dvdx(i)/hartree_to_kilocalorie_per_mole
     enddo
     call p_volume(xyz, volume)
     ! Now compute numerical dtdx
@@ -27971,6 +27975,7 @@ end subroutine p_volume
 !  du13dx is the gradient of u13
 !> @brief Evaluate u13_dvdx.
 subroutine u13_dvdx( xyz, u13, du13dx )
+    use chempotpy_units,    only: hartree_to_kilocalorie_per_mole
     use chempotpy_geometry, only: all_pair_distances_and_jacobian, flatten_cartesian_coordinates, &
         & transform_internal_gradient_to_cartesian
     use chempotpy_kinds, only: wp
@@ -28003,7 +28008,7 @@ subroutine u13_dvdx( xyz, u13, du13dx )
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to 6
     call transform_internal_gradient_to_cartesian(dvdr, drdx, dvdx)
     do i=1, 12
-        dudx(i) = dvdx(i)/627.509474
+        dudx(i) = dvdx(i)/hartree_to_kilocalorie_per_mole
     enddo
     ! Assign dvdx back to du13dvdx
     do i=1, 4
@@ -41083,6 +41088,7 @@ end subroutine evu13o10dvdr
 !  du23dx is the gradient of u23
 !> @brief Evaluate u23_dvdx.
 subroutine u23_dvdx( xyz, u23, s23, du23dx )
+    use chempotpy_units,    only: hartree_to_kilocalorie_per_mole
     use chempotpy_geometry, only: all_pair_distances_and_jacobian, flatten_cartesian_coordinates, &
         & transform_internal_gradient_to_cartesian
     use chempotpy_kinds, only: wp
@@ -41116,7 +41122,7 @@ subroutine u23_dvdx( xyz, u23, s23, du23dx )
     ! Calculate dVdX by using chain rule: dV/dXi=(dV/dRj)*(dRj/dXi), j=1 to 6
     call transform_internal_gradient_to_cartesian(dvdr, drdx, dvdx)
     do i=1, 12
-        dvdx(i) = dvdx(i)/627.509474
+        dvdx(i) = dvdx(i)/hartree_to_kilocalorie_per_mole
     enddo
     call p_volume(xyz, volume)
     ! Now compute numerical dtdx

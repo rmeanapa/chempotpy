@@ -19,6 +19,10 @@
 
 !> @brief Implement O3_14_3Ap_2022, a potential energy surface for O3.
 module chempotpy_o3_14_3ap_2022_pes
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_geometry,       only: all_pair_distance_jacobian, all_pair_distances, &
+        & transform_internal_gradient_to_cartesian
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -126,8 +130,9 @@ module chempotpy_o3_14_3ap_2022_pes
         call backprop(expr, n, ns, e, gr, hr, t, coeff_l0, coeff_l1, coeff_l2, &
             coeff_l3, bias_l0, bias_l1, bias_l2, bias_l3, v2b, g2b, a)
         ! convert from gradient_r to gradient_xyz
-        call grad_r_to_xyz(g, drdx, gr, r, x, n, ns)
-        call nac_r_to_xyz(h, drdx, hr, r, x, n, ns)
+        call all_pair_distance_jacobian(x, r, drdx)
+        call transform_internal_gradient_to_cartesian(gr, drdx, g)
+        call transform_internal_gradient_to_cartesian(hr, drdx, h)
         ! convert energy from eV to hartree (1/27.2107=0.0367502)
         e(:) = e(:)*0.0367502e0_wp
         ! convert grad and nac from eV/bohr to hartree/bohr (1/27.2107=0.0367502)
@@ -174,17 +179,17 @@ module chempotpy_o3_14_3ap_2022_pes
         g1 = 0.0e0_wp
         g2 = 0.0e0_wp
         g3 = 0.0e0_wp
-        call mproduct(expr, coeff_l0, z0, 1, 3, 15)
+        z0 = matmul(expr, coeff_l0)
         z0 = z0 !+bias_l0
         call activation_gelu(z0, a0, 15)
-        call mproduct(a0, coeff_l1, z1, 1, 15, 35)
+        z1 = matmul(a0, coeff_l1)
         z1 = z1 !+bias_l1
         call activation_gelu(z1, a1, 35)
-        call mproduct(a1, coeff_l2, z2, 1, 35, 55)
+        z2 = matmul(a1, coeff_l2)
         z2 = z2 !+bias_l2
         call activation_gelu(z2, a2, 55)
         !diabatic layer, no activation function.
-        call mproduct(a2, coeff_l3, z3, 1, 55, 105)
+        z3 = matmul(a2, coeff_l3)
         z3 = z3 !+bias_l3
         a3 = z3
         !construction many-body diabatic potential energy matrix (mb-dpem)
@@ -204,7 +209,7 @@ module chempotpy_o3_14_3ap_2022_pes
             dpem(i,i) = dpem(i,i) + v2b(i)
         enddo
         ! diagonalize dpem
-        call diagonalize(ns, dpem, e, t)
+        call symmetric_eigendecomposition(dpem, e, t)
         ! cmpute dvdu
         do i=1, ns
             do j=1, ns
@@ -225,15 +230,15 @@ module chempotpy_o3_14_3ap_2022_pes
         do i=1, 3
             call activation_derivative_gelu(z0, a0, g0(i,:), 15)
         enddo
-        call mproduct(g0, coeff_l1, g1, 3, 15, 35)
+        g1 = matmul(g0, coeff_l1)
         do i=1, 3
             call activation_derivative_gelu(z1, a1, g1(i,:), 35)
         enddo
-        call mproduct(g1, coeff_l2, g2, 3, 35, 55)
+        g2 = matmul(g1, coeff_l2)
         do i=1, 3
             call activation_derivative_gelu(z2, a2, g2(i,:), 55)
         enddo
-        call mproduct(g2, coeff_l3, g3, 3, 55, 105)
+        g3 = matmul(g2, coeff_l3)
         do i=1, 3
             do j=1, 105
                 g3p(j,i) = g3(i,j)
@@ -247,7 +252,7 @@ module chempotpy_o3_14_3ap_2022_pes
         do i=1, 3
             dexpdr(i,i) = -a*expr(i)
         enddo
-        call mproduct(g3p, dexpdr, g3r, 105, 3, 3)
+        g3r = matmul(g3p, dexpdr)
         ! add dU_2B/dr to dU_MB/dr
         ! the unit of dU_2B/dr is also eV/bohr
         do i=1, ns
@@ -255,7 +260,7 @@ module chempotpy_o3_14_3ap_2022_pes
                 g3r(i,j) = g3r(i,j) + g2b(i,j)
             enddo
         enddo
-        call mproduct(dvdu, g3r, g, ns, 105, 3)
+        g = matmul(dvdu, g3r)
         do i=1, ns
             do j=1, ns
                 t_trans(i,j) = t(j,i)
@@ -274,8 +279,8 @@ module chempotpy_o3_14_3ap_2022_pes
             enddo
         enddo
         do i=1, n*(n-1)/2
-            call mproduct(t_trans, dudr(:,:,i), tmp1(:,:,i), ns, ns, ns)
-            call mproduct(tmp1(:,:,i), t, dgdr(:,:,i), ns, ns, ns)
+            tmp1(:,:,i) = matmul(t_trans, dudr(:,:,i))
+            dgdr(:,:,i) = matmul(tmp1(:,:,i), t)
         enddo
         h = 0.e0_wp
         do i=1, ns
@@ -325,79 +330,6 @@ module chempotpy_o3_14_3ap_2022_pes
         enddo
     end subroutine sumover
 
-    ! matrix diagonalization
-    !> @brief Evaluate diagonalize.
-    subroutine diagonalize( n, a_ss, ev_s, u_ss )
-        use chempotpy_kinds, only: wp
-        implicit none
-        ! parameters
-        integer, intent(in)   :: n
-        real(wp), intent(in)  :: a_ss(n,n)
-        real(wp), intent(out) :: u_ss(n,n)
-        ! internal variables
-        real(wp), intent(out) :: ev_s(n)
-        integer               :: io, i
-        real(wp), allocatable :: lapack_work_d(:)
-        integer               :: lapack_lwork_d
-        u_ss           = a_ss
-        lapack_lwork_d = -1
-        allocate( lapack_work_d(2) )
-        call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
-        lapack_lwork_d = int(lapack_work_d(1))
-        deallocate ( lapack_work_d )
-        allocate( lapack_work_d(lapack_lwork_d) )
-        call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
-        ! U_ss already holds the transformation matrix
-        ! now  building the diagonal matrix A_ss
-        !   B_ss=0.d0
-    end subroutine diagonalize
-
-    ! convert de/dr to de/dxyz
-    !> @brief Evaluate grad_r_to_xyz.
-    subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
-        use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
-        use chempotpy_kinds,    only: wp
-        implicit none
-        integer, intent(in)     :: n, ns
-        real(wp), intent(in)    :: x(n,3)
-        real(wp), intent(in)    :: r(n*(n-1)/2)
-        real(wp), intent(in)    :: gr(ns,n*(n-1)/2)
-        real(wp), intent(inout) :: g(ns,n,3)
-        real(wp), intent(inout) :: drdx(n*(n-1)/2,3*n)
-        real(wp)                :: gx(ns,3*n)
-        integer                 :: i, j
-        call all_pair_distance_jacobian(x, r, drdx)
-        call transform_internal_gradient_to_cartesian(gr, drdx, gx)
-        do i=1, n
-            g(:,i,1) = gx(:,3*(i-1)+1)
-            g(:,i,2) = gx(:,3*(i-1)+2)
-            g(:,i,3) = gx(:,3*(i-1)+3)
-        enddo
-    end subroutine grad_r_to_xyz
-
-    ! convert de/dr to de/dxyz
-    !> @brief Evaluate nac_r_to_xyz.
-    subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
-        use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
-        use chempotpy_kinds,    only: wp
-        implicit none
-        integer, intent(in)     :: n, ns
-        real(wp), intent(in)    :: x(n,3)
-        real(wp), intent(in)    :: r(n*(n-1)/2)
-        real(wp), intent(in)    :: hr(ns,ns,n*(n-1)/2)
-        real(wp), intent(inout) :: h(ns,ns,n,3)
-        real(wp), intent(inout) :: drdx(n*(n-1)/2,3*n)
-        real(wp)                :: hx(ns,ns,3*n)
-        integer                 :: i, j
-        call all_pair_distance_jacobian(x, r, drdx)
-        call transform_internal_gradient_to_cartesian(hr, drdx, hx)
-        do i=1, n
-            h(:,:,i,1) = hx(:,:,3*(i-1)+1)
-            h(:,:,i,2) = hx(:,:,3*(i-1)+2)
-            h(:,:,i,3) = hx(:,:,3*(i-1)+3)
-        enddo
-    end subroutine nac_r_to_xyz
-
     ! convert xyz to expr
     !> @brief Evaluate convert_xyz_to_expr.
     subroutine convert_xyz_to_expr( x, expr, r, n, a )
@@ -421,25 +353,6 @@ module chempotpy_o3_14_3ap_2022_pes
             expr(i) = exp(-a*r(i))
         enddo
     end subroutine convert_xyz_to_expr
-
-    ! matrix vector product
-    !> @brief Evaluate mproduct.
-    subroutine mproduct( a, b, c, l, m, n )
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer, intent(in)     :: l, m, n
-        real(wp), intent(in)    :: a(l,m), b(m,n)
-        real(wp), intent(inout) :: c(l,n)
-        integer                 :: i, j, k
-        do i=1, l
-            do j=1, n
-                c(i,j) = 0.e0_wp
-                do k=1, m
-                    c(i,j) = c(i,j)+a(i,k)*b(k,j)
-                enddo
-            enddo
-        enddo
-    end subroutine mproduct
 
     ! assign coefficients
     !> @brief Evaluate assign_coeff_bias.
@@ -8899,7 +8812,7 @@ module chempotpy_o3_14_3ap_2022_pes
             endif
             if( (i .eq. 1).or.(i .eq. 2) )then
                 ! From milihartree to kcal/mol
-                v(i) = v(i)*627.509523475149e-3_wp
+                v(i) = v(i)*hartree_to_kilocalorie_per_mole*1.0e-3_wp
             endif
             ! Add D3 dispersion correction
             v(i) = v(i)+disp
@@ -8913,7 +8826,7 @@ module chempotpy_o3_14_3ap_2022_pes
                 endif
                 if( (i .eq. 1).or.(i .eq. 2) )then
                     ! Convert from milihartree/A to (kcal/mol)/A
-                    grad(i) = grad(i)*627.509523475149e-3_wp
+                    grad(i) = grad(i)*hartree_to_kilocalorie_per_mole*1.0e-3_wp
                 endif
                 grad(i) = grad(i) + dispdr(1)
             endif
@@ -8944,7 +8857,7 @@ module chempotpy_o3_14_3ap_2022_pes
         real(wp) :: autoang, autokcal
         integer  :: imol
         autoang  = 0.52917726e0_wp
-        autokcal = 627.509541e0_wp
+        autokcal = hartree_to_kilocalorie_per_mole
         ! Generalized parameters for BJ damping from P. Verma, B. Wang,
         ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017)
         s6  = 1.0e0_wp

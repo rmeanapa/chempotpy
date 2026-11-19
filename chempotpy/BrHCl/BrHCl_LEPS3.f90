@@ -1,12 +1,13 @@
 !> @brief Evaluate the BrHCl_LEPS3 potential energy surface.
 module chempotpy_brhcl_leps3_pes
+    use chempotpy_units,                only: hartree_to_kilocalorie_per_mole
     use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
         & prepare_legacy_triatomic_coordinates
     use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
-    real(wp), parameter :: energy_per_hartree         = 627.5095_wp
+    real(wp), parameter :: energy_per_hartree         = hartree_to_kilocalorie_per_mole
     real(wp), parameter :: bohr_per_angstrom          = 0.529177106_wp
     real(wp), parameter :: root_two                   = 1.41421356_wp
     real(wp), parameter :: dissociation_energy(3)     = [90.24e0_wp, 106.4e0_wp, 52.09e0_wp]/energy_per_hartree

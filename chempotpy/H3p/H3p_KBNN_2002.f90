@@ -45,7 +45,8 @@
 
 !> @brief Implement H3p_KBNN_2002, a potential energy surface for H3p.
 module chempotpy_h3p_kbnn_2002_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate
@@ -113,7 +114,7 @@ module chempotpy_h3p_kbnn_2002_pes
         dudr(2,3,:) = de_u23(:,1)*hartree_per_bohr_to_ev_per_angstrom
         dudr(3,2,:) = de_u23(:,1)*hartree_per_bohr_to_ev_per_angstrom
         dudr(3,3,:) = de_u33(:,1)*hartree_per_bohr_to_ev_per_angstrom
-        call diagonalize(nstates, dpem, pin, trans)
+        call symmetric_eigendecomposition(dpem, pin, trans)
         do i=1, 3
             tmpmat(:,:) = dudr(:,:,i)
             tmpmat      = matmul(transpose(trans), matmul(tmpmat, trans))
@@ -155,27 +156,6 @@ module chempotpy_h3p_kbnn_2002_pes
         real(wp), intent(out) :: drdx(3,9)
         call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
     end subroutine evdrdx
-
-    !> @brief Evaluate diagonalize for the H3p_KBNN_2002 potential.
-    subroutine diagonalize( n, a_ss, ev_s, u_ss )
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer, intent(in)   :: n
-        real(wp), intent(in)  :: a_ss(n,n)
-        real(wp), intent(out) :: u_ss(n,n)
-        real(wp), intent(out) :: ev_s(n)
-        integer               :: io, i
-        real(wp), allocatable :: work_d(:)
-        integer               :: lwork_d
-        u_ss    = a_ss
-        lwork_d = -1
-        allocate( work_d(2) )
-        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-        lwork_d = int(work_d(1))
-        deallocate ( work_d )
-        allocate( work_d(lwork_d) )
-        call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-    end subroutine diagonalize
 
     !> @brief Evaluate pot for the H3p_KBNN_2002 potential.
     subroutine pot( r, e, de, nt, nsurf )

@@ -1,12 +1,13 @@
 !> @brief Evaluate the Cl2H_LEPS_PK3_1987 potential energy surface.
 module chempotpy_cl2h_leps_pk3_1987_pes
+    use chempotpy_units,                only: hartree_to_kilocalorie_per_mole
     use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
         & prepare_legacy_triatomic_coordinates
     use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
-    real(wp), parameter :: energy_per_hartree         = 627.5095_wp
+    real(wp), parameter :: energy_per_hartree         = hartree_to_kilocalorie_per_mole
     real(wp), parameter :: bohr_per_angstrom          = 0.52917706_wp
     real(wp), parameter :: root_two                   = 1.41421356_wp
     logical, parameter  :: has_jws_correction         = .false.

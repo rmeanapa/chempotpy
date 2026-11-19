@@ -50,6 +50,7 @@
 
 !> @brief Implement OH2_GEN_POL1980, a potential energy surface for OH2.
 module chempotpy_oh2_gen_pol1980_pes
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -341,7 +342,7 @@ module chempotpy_oh2_gen_pol1980_pes
             !   Conversion for Angstroms to Bohr (Angstrom/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             !   Conversion for kcal to Hartree (kcal/Hartree)
-            real(wp), parameter :: hrtree = 627.5095e0_wp
+            real(wp), parameter :: hrtree = hartree_to_kilocalorie_per_mole
             !   Echo the name of the potential routine to UNIT NFLAG(18)
             if( infocm_natoms .gt. 25 )then
                 if( present(status) ) call status%set(status_invalid_input, &
@@ -402,7 +403,7 @@ module chempotpy_oh2_gen_pol1980_pes
             !   Conversion for Angstroms to Bohr (Angstrom/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             !   Conversion for kcal to Hartree (kcal/Hartree)
-            real(wp), parameter :: hrtree = 627.5095e0_wp
+            real(wp), parameter :: hrtree = hartree_to_kilocalorie_per_mole
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
@@ -503,7 +504,7 @@ module chempotpy_oh2_gen_pol1980_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
             real(wp), parameter :: detrad = 0.0174532e0_wp
-            real(wp), parameter :: ckcal  = 627.5095e0_wp
+            real(wp), parameter :: ckcal  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: bohr   = 0.529177e0_wp
             character(len=20)   :: title
             !  TITLE
@@ -552,7 +553,7 @@ module chempotpy_oh2_gen_pol1980_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
             real(wp), parameter :: detrad = 0.0174532e0_wp
-            real(wp), parameter :: ckcal  = 627.5095e0_wp
+            real(wp), parameter :: ckcal  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: bohr   = 0.529177e0_wp
             character(len=20)   :: title
             do ic = 1, 3
@@ -808,7 +809,7 @@ module chempotpy_oh2_gen_pol1980_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

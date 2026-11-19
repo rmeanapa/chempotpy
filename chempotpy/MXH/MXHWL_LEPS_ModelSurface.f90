@@ -26,7 +26,8 @@
 
 !> @brief Implement MXHWL_LEPS_ModelSurface, a potential energy surface for MXH.
 module chempotpy_mxhwl_leps_modelsurface_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate
@@ -79,7 +80,7 @@ module chempotpy_mxhwl_leps_modelsurface_pes
         dudr(1,2,:) = de_u12(:,1)*hartree_per_bohr_to_ev_per_angstrom
         dudr(2,1,:) = de_u12(:,1)*hartree_per_bohr_to_ev_per_angstrom
         dudr(2,2,:) = de_u22(:,1)*hartree_per_bohr_to_ev_per_angstrom
-        call diagonalize(nstates, u, p, t)
+        call symmetric_eigendecomposition(u, p, t)
         do i=1, 3
             tmpmat(:,:) = dudr(:,:,i)
             tmpmat      = matmul(transpose(t), matmul(tmpmat, t))
@@ -137,27 +138,6 @@ subroutine evdrdx( x, r, drdx )
     real(wp), intent(out) :: drdx(3,9)
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
-
-!> @brief Evaluate diagonalize for the MXHWL_LEPS_ModelSurface potential.
-subroutine diagonalize( n, a_ss, ev_s, u_ss )
-    use chempotpy_kinds, only: wp
-    implicit none
-    integer, intent(in)   :: n
-    real(wp), intent(in)  :: a_ss(n,n)
-    real(wp), intent(out) :: u_ss(n,n)
-    real(wp), intent(out) :: ev_s(n)
-    integer               :: io, i
-    real(wp), allocatable :: work_d(:)
-    integer               :: lwork_d
-    u_ss    = a_ss
-    lwork_d = -1
-    allocate( work_d(1) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-    lwork_d = int(work_d(1))
-    deallocate( work_d )
-    allocate( work_d(lwork_d) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-end subroutine diagonalize
 
 !> @brief Evaluate pot for the MXHWL_LEPS_ModelSurface potential.
 subroutine pot( r, e, de, nt, nsurf )

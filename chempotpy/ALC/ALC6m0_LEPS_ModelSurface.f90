@@ -145,6 +145,7 @@ end subroutine evdrdx
 
 !> @brief Own the immutable fit state for the ALC6m0_LEPS_ModelSurface potential.
 module chempotpy_alc6m0_leps_modelsurface_pot_legacy_state_8cd45204
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -165,7 +166,7 @@ module chempotpy_alc6m0_leps_modelsurface_pot_legacy_state_8cd45204
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
         real(wp), parameter   :: root2 = 1.41421356e0_wp
-        real(wp), parameter   :: ckcal = 627.5095e0_wp
+        real(wp), parameter   :: ckcal = hartree_to_kilocalorie_per_mole
         real(wp), parameter   :: cangs = 0.529177106e0_wp
         real(wp), intent(in)  :: rr(3)
         integer, intent(in)   :: nder

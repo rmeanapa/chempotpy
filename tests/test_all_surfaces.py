@@ -122,6 +122,62 @@ class AllSurfaceRegressionTests(unittest.TestCase):
                 )
         self.assertEqual(actual_exceptions, sensitive_fit_exceptions)
 
+    def test_matrix_products_use_intrinsic_matmul(self) -> None:
+        legacy_helpers = re.compile(
+            r"(?im)^\s*(?:subroutine|call)\s+"
+            r"(?:mult|matmult|matvect|mproduct)\b"
+        )
+        for source in sorted(
+            (self.repository / "chempotpy").rglob("*.f90")
+        ):
+            with self.subTest(source=source.name):
+                self.assertIsNone(
+                    legacy_helpers.search(source.read_text(errors="replace"))
+                )
+
+    def test_vector_operations_use_core_and_intrinsics(self) -> None:
+        legacy_helpers = re.compile(
+            r"(?im)^\s*(?:(?:real\([^)]*\)\s+)?function|subroutine|call)\s+"
+            r"(?:anorm|crosprod|dotprod|sprod|xprod|xprod1)\b"
+        )
+        for source in sorted(
+            (self.repository / "chempotpy").rglob("*.f90")
+        ):
+            with self.subTest(source=source.name):
+                self.assertIsNone(
+                    legacy_helpers.search(source.read_text(errors="replace"))
+                )
+
+    def test_symmetric_diagonalization_uses_core(self) -> None:
+        legacy_helpers = re.compile(
+            r"(?im)^\s*(?:subroutine|call)\s+(?:diagonalize|eign)\b|"
+            r"^\s*call\s+dsyev\b"
+        )
+        for source in sorted(
+            (self.repository / "chempotpy").rglob("*.f90")
+        ):
+            if source.parent.name == "core":
+                continue
+            with self.subTest(source=source.name):
+                self.assertIsNone(
+                    legacy_helpers.search(source.read_text(errors="replace"))
+                )
+
+    def test_spline_interpolation_uses_core(self) -> None:
+        legacy_helpers = re.compile(
+            r"(?im)^\s*(?:subroutine|call)\s+"
+            r"(?:spline|splint|splnin)\b"
+        )
+        for source in sorted(
+            (self.repository / "chempotpy").rglob("*.f90")
+        ):
+            if source.parent.name == "core":
+                continue
+            with self.subTest(source=source.name):
+                self.assertIsNone(
+                    legacy_helpers.search(source.read_text(errors="replace"))
+                )
+
     def test_migrated_fits_have_no_initialization_lifecycle(self) -> None:
         targets = (
             self.repository / "chempotpy" / "H3" / "chempotpy_h3_2002_basis.f90",
@@ -324,6 +380,10 @@ class AllSurfaceRegressionTests(unittest.TestCase):
         )
 
     def test_distance_derivative_adapters_are_centralized(self) -> None:
+        legacy_adapters = re.compile(
+            r"(?im)^\s*subroutine\s+"
+            r"(?:convert_xyz_to_r|grad_r_to_xyz|nac_r_to_xyz)\b"
+        )
         manual_jacobian = re.compile(
             r"(?im)^\s*(?!\!)\w*drdx\s*\([^\n]*\)\s*=\s*"
             r"\([^\n]*-[^\n]*\)\s*/"
@@ -342,6 +402,8 @@ class AllSurfaceRegressionTests(unittest.TestCase):
         }
         for source in self.sources.values():
             text = source.read_text(errors="replace")
+            with self.subTest(source=source.name, operation="adapters"):
+                self.assertNotRegex(text, legacy_adapters)
             with self.subTest(source=source.name, operation="chain_rule"):
                 self.assertNotRegex(text, manual_chain_rule)
             with self.subTest(source=source.name, operation="flatten"):

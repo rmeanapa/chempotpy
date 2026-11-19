@@ -12,6 +12,8 @@
 
 !> @brief Implement C2H6Cl_VBMM, a potential energy surface for C2H6Cl.
 module chempotpy_c2h6cl_vbmm_pes
+    use chempotpy_geometry,  only: cross_product_3d
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -545,10 +547,10 @@ module chempotpy_c2h6cl_vbmm_pes
                 rjk(m) = q((j-1)*3+m)-q((k-1)*3+m)
                 rkl(m) = q((k-1)*3+m)-q((l-1)*3+m)
             enddo
-            call crosprod(rjk, rkl, zjkkl)
-            call crosprod(rij, rjk, zijjk)
-            arg2 = anorm(rjk)*dotprod(rij, zjkkl)
-            arg1 = dotprod(zijjk, zjkkl)
+            zjkkl = cross_product_3d(rjk, rkl)
+            zijjk = cross_product_3d(rij, rjk)
+            arg2  = norm2(rjk)*dot_product(rij, zjkkl)
+            arg1  = dot_product(zijjk, zjkkl)
             if( abs(arg1) .lt. 1.e-6_wp )then
                 if( arg2 .gt. 0.e0_wp ) dihed = 90.e0_wp
                 if( arg2 .lt. 0.e0_wp ) dihed = -90.e0_wp
@@ -567,42 +569,6 @@ module chempotpy_c2h6cl_vbmm_pes
                 return
             endif
         end subroutine dihedro
-
-        !> @brief Evaluate crosprod for the C2H6Cl_VBMM potential.
-        subroutine crosprod( x, y, z )
-            use chempotpy_kinds, only: wp
-            implicit none
-            real(wp) :: x(3), y(3), z(3)
-            z(1) = x(2)*y(3)-x(3)*y(2)
-            z(2) = x(3)*y(1)-x(1)*y(3)
-            z(3) = x(1)*y(2)-x(2)*y(1)
-        end subroutine crosprod
-
-        !> @brief Evaluate dotprod for the C2H6Cl_VBMM potential.
-        real(wp) function dotprod( x, y )
-            use chempotpy_kinds, only: wp
-            implicit none
-            integer  :: k
-            real(wp) :: x(3), y(3), tmp
-            tmp = 0.e0_wp
-            do k = 1, 3
-                tmp = tmp + x(k)*y(k)
-            enddo
-            dotprod = tmp
-        end function dotprod
-
-        !> @brief Evaluate anorm for the C2H6Cl_VBMM potential.
-        real(wp) function anorm( x )
-            use chempotpy_kinds, only: wp
-            implicit none
-            integer  :: k
-            real(wp) :: x(3), tmp
-            tmp = 0.e0_wp
-            do k = 1, 3
-                tmp = tmp + x(k)*x(k)
-            enddo
-            anorm = sqrt(tmp)
-        end function anorm
 
         !> @brief Evaluate refangles for the C2H6Cl_VBMM potential.
         subroutine refangles
@@ -1464,7 +1430,7 @@ module chempotpy_c2h6cl_vbmm_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

@@ -23,6 +23,7 @@
 
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_desph_ljat_pes
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -72,7 +73,7 @@ module chempotpy_aln_desph_ljat_pes
         integer             :: i, j, m, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp
-        real(wp), parameter :: autokpm = 627.5095e0_wp
+        real(wp), parameter :: autokpm = hartree_to_kilocalorie_per_mole
         !  calculate the potential energy
         ! in kJ/mol
         !      a = 2975343.77d0 / ((autoang**12) * autokpm)

@@ -1,5 +1,6 @@
 !> @brief Implement CH5_GEN_J2_1987, a potential energy surface for CH5.
 module chempotpy_ch5_gen_j2_1987_pes
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -518,8 +519,8 @@ module chempotpy_ch5_gen_j2_1987_pes
             !      CALCULATE DRDX ARRAY
             call drdxc
             !      CALCULATE DEDX = DEDR(DER) * DRDX
-            call mult (icorcm_der, 1, 15, potxcm_drdx, 15, 18, potxcm_dedx)
-            ipt = 1
+            potxcm_dedx = matmul(icorcm_der, potxcm_drdx)
+            ipt         = 1
             do i = 1, 6
                 dxx(ipt)   = potxcm_dedx(i)
                 dxx(ipt+1) = potxcm_dedx(i+6)
@@ -738,25 +739,6 @@ module chempotpy_ch5_gen_j2_1987_pes
             pdatcm_aparm(1) = pdt3cm_fk0+pdt3cm_fa*fex
             dadr1           = -2.0e0_wp*pdt3cm_fa*pdatcm_b1*(icorcm_ar(1)-pdatcm_re(1))*fex
         end subroutine force
-
-        !> @brief Evaluate MULT for the CH5_GEN_J2_1987 potential.
-        subroutine mult ( a, na, ma, b, nb, mb, c )
-            use chempotpy_kinds, only: wp
-            implicit none
-            real(wp) :: a(na,ma), b(nb,mb), c(na,mb), sum
-            integer  :: i, j, k, ma, mb, na, nb
-            ! THIS SUBROUTINE PERFORMS THE MATRIX MULTIPLICATION :
-            !         C = A X B
-            do i = 1, na
-                do j = 1, mb
-                    sum = 0.0e0_wp
-                    do k = 1, ma
-                        sum = sum+a(i,k)*b(k,j)
-                    enddo
-                    c(i,j) = sum
-                enddo
-            enddo
-        end subroutine mult
 
         !> @brief Evaluate OOPB for the CH5_GEN_J2_1987 potential.
         subroutine oopb ( voop, dvoop, v, x, dx )
@@ -1410,7 +1392,7 @@ module chempotpy_ch5_gen_j2_1987_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

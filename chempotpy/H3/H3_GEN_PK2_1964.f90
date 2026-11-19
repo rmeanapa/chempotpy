@@ -1,5 +1,6 @@
 !> @brief Implement H3_GEN_PK2_1964, a potential energy surface for H3.
 module chempotpy_h3_gen_pk2_1964_pes
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -110,7 +111,7 @@ module chempotpy_h3_gen_pk2_1964_pes
             !   Conversion constants
             !   CEV (eV) converts from Hartree to kcal/mol
             real(wp), parameter :: cev    = 27.21161e0_wp
-            real(wp), parameter :: hartre = 627.5095e0_wp
+            real(wp), parameter :: hartre = hartree_to_kilocalorie_per_mole
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
@@ -222,7 +223,7 @@ module chempotpy_h3_gen_pk2_1964_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

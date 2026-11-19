@@ -79,11 +79,12 @@ end subroutine pes
 
 !> @brief Own the stateless ClH2 ALTG2 numerical kernel.
 module chempotpy_clh2_leps_altg2_1996_pot
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
     public :: dispatch
-    real(wp), parameter :: energy_per_hartree      = 627.5095e0_wp
+    real(wp), parameter :: energy_per_hartree      = hartree_to_kilocalorie_per_mole
     real(wp), parameter :: bohr_per_angstrom       = 0.529177249e0_wp
     real(wp), parameter :: dissociation_energy(3)  = [106.447e0_wp, 109.458e0_wp, 106.447e0_wp]/energy_per_hartree
     real(wp), parameter :: equilibrium_distance(3) = [1.2732e0_wp, 0.74127e0_wp, 1.2732e0_wp]/bohr_per_angstrom

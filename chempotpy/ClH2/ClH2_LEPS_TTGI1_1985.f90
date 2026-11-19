@@ -146,7 +146,10 @@ subroutine evdrdx( x, r, drdx )
 end subroutine evdrdx
 
 module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
-    use chempotpy_kinds, only: wp
+    use chempotpy_interpolation, only: evaluate_tabulated_cubic_spline, &
+        & prepare_tabulated_cubic_spline
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate_internal
@@ -171,13 +174,13 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             & dh12(3), dh13(3), dh14(3), dh15(3), dh16(3), dh2(2, 2), dh22(3), dh24(3), dh25(3), dh26(3), dh33(3), dh34(3), &
             & dh44(3), dh45(3), dh46(3), dh55(3), dh56(3), dh66(3), dnumb, dpux, dsgh, dspxa, dspxb, dss11a, dss11b, dss12a, &
             & dss12b, dss22a, dss22b, dssab, dsxa, dsxb, dtdr1, dtdr2, dtdr3, dtpxa, dtpxb, dtsab, dtsxa, dtsxb, duab, easyab, &
-            & easyac, easybc, eht, en(6), factr, for, forth, gvec(6), h1(2, 2), h2(2,2), half, one, r(3), rt2i, six, spxa, spxb, &
+            & easyac, easybc, eht, en(6), factr, for, forth, gvec(6), h1(2, 2), h2(2, 2), half, one, r(3), rt2i, six, spxa, spxb, &
             & sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, test, th(6, 6), tpxa, tpxb, tre, tsab, &
-            & tsxa, tsxb, two, vec(6,6), w(6), xtra, zero
+            & tsxa, tsxb, two, vec(6, 6), w(6), xtra, zero
         integer           :: i, idebug, idum, iflag, indx(3), iptprt, ix, j, k, ndim, ndum, nroot
         character(len=80) :: title(2)
         equivalence (h1(1, 1), ss11a), (h1(1, 2), ss12a), (h1(2, 2), ss22a)
-        equivalence (h2(1,1), ss11b), (h2(1,2), ss12b), (h2(2,2), ss22b)
+        equivalence (h2(1, 1), ss11b), (h2(1, 2), ss12b), (h2(2, 2), ss22b)
         equivalence (dh1(1,1), dss11a), (dh1(1,2), dss12a), (dh1(2,2), dss22a)
         equivalence (dh2(1, 1), dss11b), (dh2(1, 2), dss12b), (dh2(2, 2), dss22b)
         equivalence (th(1, 1), dh(1,1))
@@ -472,14 +475,15 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
                 th(i, j) = th(j, i)
             enddo
         enddo
-        call eign(ndim, th, vec, en, w, ndim)
+        call symmetric_eigendecomposition(th, en, vec)
+        th = vec; w = 0.0_wp
         !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
         xter = en(nroot)+c(2)
         !************************* END OF FPOT3N *******************************
         if( nder .ne. 1 ) return
         !     SET  VECTOR FOR STATE OF INTEREST
         do i=1, ndim
-            gvec(i) = vec(i,nroot)
+            gvec(i) = vec(i, nroot)
         enddo
         !     COMPUTE PARTIALS OF U=COS(THETA)
         dtdr1 = (r(1)*r(1)+r(2)*r(2)-r(3)*r(3))/(two*r(1)*r(1)*r(3))
@@ -631,7 +635,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             enddo
             s2ss(1)  = 3.2006875e+1_wp
             s2ss(79) = -7.93478e-7_wp
-            call splnin(79, r1h2, v1h2, t, ss, ss1, ss2, epsln, s2ss, s3ss, delss)
+            call prepare_tabulated_cubic_spline(r1h2, v1h2, 1.0e-12_wp, s2ss, s3ss, delss)
             !     H2 TRIPLET STATE
             do i=1, 81
                 r2h2(i) = real(i+9, wp)*0.1e-00_wp
@@ -647,7 +651,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             enddo
             s2ts(1)  = 1.3039390e0_wp
             s2ts(87) = -7.93478e-7_wp
-            call splnin(87, r2h2, v2h2, t, ss, ss1, ss2, epsln, s2ts, s3ts, delts)
+            call prepare_tabulated_cubic_spline(r2h2, v2h2, 1.0e-12_wp, s2ts, s3ts, delts)
             !     H2+ G STATE
             do i=1, 100
                 r3h2(i) = real(i, wp)*0.1e-00_wp
@@ -660,14 +664,14 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             enddo
             s2dg(1)   = 1.0742890e+3_wp
             s2dg(126) = -3.03938e-7_wp
-            call splnin(126, r3h2, v3h2, t, ss, ss1, ss2, epsln, s2dg, s3dg, deldg)
+            call prepare_tabulated_cubic_spline(r3h2, v3h2, 1.0e-12_wp, s2dg, s3dg, deldg)
             !     H2+ U STATE
             do i=1, 126
                 v4h2(i) = v4h2(i)+one
             enddo
             s2du(1)   = 9.0876397e+2_wp
             s2du(126) = -3.0398e-7_wp
-            call splnin(126, r3h2, v4h2, t, ss, ss1, ss2, epsln, s2du, s3du, deldu)
+            call prepare_tabulated_cubic_spline(r3h2, v4h2, 1.0e-12_wp, s2du, s3du, deldu)
         end subroutine setspl
 
         !> @brief Evaluate HCLM for the ClH2_LEPS_TTGI1_1985 potential.
@@ -704,7 +708,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             real(wp) :: a2, aa, ab, alp, ang, angcon, arg, b0, b2, ba, bb, bet, bt, bv, bx, c, c0, c2, c4, c6, c8, cc, cs, &
                 & cv, d0, da, da2, dab, dalp, dang, db2, dbet, dc, dc2, dcs, de1, de12, de2, dfac1, dfac2, dg, dg11, dg12, dg22, &
                 & dh(2,2), dh11, dh12, dh22, dovlp, ds, ds12, ds2, dt, dt1, dt2, dv, dx, dxh1p, dxh3p, dxh3s, e1, e12, e2, ex, ex1, &
-                & ex2, fac1, fac2, g, g11, g12, g22, gb, gmax, h(2,2), h11, h12, h22, omex, opex, ovlp, r, r0, r2, ra, ri, ri2, ri4, &
+                & ex2, fac1, fac2, g, g11, g12, g22, gb, gmax, h(2, 2), h11, h12, h22, omex, opex, ovlp, r, r0, r2, ra, ri, ri2, ri4, &
                 & ri6, ri8, rmax, root, rops2, rt, rv, rv1, rx, s, s12, s2, t1, t2, ttt, xh1p, xh3p, xh3s, y, z1, z2, z3, z4, z5, &
                 & z6, zeta
             !     CALCULATES 2X2 SINGLET SIGMA BLOCK, AND TRIPLET SIGMA, SINGLET
@@ -775,7 +779,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             !     LOWER COVALENT DIABAT
             ex      = exp(-b0*(r-r0))
             omex    = one-ex
-            h(1,1)  = d0*omex*omex-d0
+            h(1, 1) = d0*omex*omex-d0
             dh(1,1) = two*d0*b0*ex*omex
             !     OVERLAP
             r2    = r*r
@@ -795,19 +799,19 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             !     H12 AND H22 DIABATS IN NON-ORTHOGONAL REPRESENTATION
             e12   = e1+e2
             de12  = de1+de2
-            fac1  = e12*h(1,1)-e1*e2-h(1,1)*h(1,1)
+            fac1  = e12*h(1, 1)-e1*e2-h(1, 1)*h(1, 1)
             fac2  = one-s12*s12
             dfac2 = -two*s12*ds12
             ttt   = fac1*fac2
             root  = 0.e0_wp
             if( ttt .gt. 0.e0_wp ) root=sqrt(ttt)
-            h(1,2)  = s12*h(1,1)+root
-            dh(1,2) = ds12*h(1,1)+s12*dh(1,1)
-            ttt                          = half*(dfac2*fac1+fac2*(de12*h(1,1) +e12*dh(1,1)-e1*de2-de1*e2-two* h(1,1)* &
-                & dh(1,1)))
+            h(1, 2) = s12*h(1, 1)+root
+            dh(1,2) = ds12*h(1, 1)+s12*dh(1,1)
+            ttt                          = half*(dfac2*fac1+fac2*(de12*h(1, 1) +e12*dh(1,1)-e1*de2-de1*e2-two* h(1, &
+                & 1)* dh(1,1)))
             if( root .ne. 0.e0_wp ) dh(1,2) = dh(1,2) + ttt/root
-            h(2,2)                          = e12*fac2+two*s12*h(1,2)-h(1,1)
-            dh(2,2)                         = de12*fac2+e12*dfac2+two*(ds12*h(1,2)+s12*dh(1,2)) -dh(1,1)
+            h(2, 2)                         = e12*fac2+two*s12*h(1, 2)-h(1, 1)
+            dh(2,2)                         = de12*fac2+e12*dfac2+two*(ds12*h(1, 2)+s12*dh(1,2)) -dh(1,1)
             !     TRANSFORM TO SYMMETRIC ORTHOGONAL REPRESENTATION
             t1      = one/sqrt(one+s12)
             t2      = one/sqrt(one-s12)
@@ -823,16 +827,16 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             da2     = two*alp*dalp
             db2     = two*bet*dbet
             dab     = alp*dbet+dalp*bet
-            g11     = a2*h(1,1)+two*ab*h(1,2)+b2*h(2,2)
-            g12     = (a2+b2)*h(1,2)+ab*(h(1,1)+h(2,2))
-            g22     = b2*h(1,1)+two*ab*h(1,2)+a2*h(2,2)
-            arg     = two*(ab*dh(1,2)+dab*h(1,2))
-            dg11    = a2*dh(1,1)+da2*h(1,1)+arg+b2*dh(2,2)+db2*h(2,2)
-            dg12    = (a2+b2)*dh(1,2)+(da2+db2)*h(1,2)+ab*(dh(1,1)+dh(2,2)) +dab*(h(1,1)+h(2,2))
-            dg22    = b2*dh(1,1)+db2*h(1,1)+arg+a2*dh(2,2)+da2*h(2,2)
-            h(1,1)  = g11
-            h(1,2)  = g12
-            h(2,2)  = g22
+            g11     = a2*h(1, 1)+two*ab*h(1, 2)+b2*h(2, 2)
+            g12     = (a2+b2)*h(1, 2)+ab*(h(1, 1)+h(2, 2))
+            g22     = b2*h(1, 1)+two*ab*h(1, 2)+a2*h(2, 2)
+            arg     = two*(ab*dh(1,2)+dab*h(1, 2))
+            dg11    = a2*dh(1,1)+da2*h(1, 1)+arg+b2*dh(2,2)+db2*h(2, 2)
+            dg12    = (a2+b2)*dh(1,2)+(da2+db2)*h(1, 2)+ab*(dh(1,1)+dh(2,2)) +dab*(h(1, 1)+h(2, 2))
+            dg22    = b2*dh(1,1)+db2*h(1, 1)+arg+a2*dh(2,2)+da2*h(2, 2)
+            h(1, 1) = g11
+            h(1, 2) = g12
+            h(2, 2) = g22
             dh(1,1) = dg11
             dh(1,2) = dg12
             dh(2,2) = dg22
@@ -853,16 +857,16 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             dc2     = two*c*dc
             ds2     = two*s*ds
             dcs     = c*ds+s*dc
-            h11     = c2*h(1,1)+two*cs*h(1,2)+s2*h(2,2)
-            dh11    = c2*dh(1,1)+two*cs*dh(1,2)+s2*dh(2,2) +dc2*h(1,1)+two*dcs*h(1,2)+ds2*h(2,2)
-            h12     = (c2-s2)*h(1,2)+cs*(h(2,2)-h(1,1))
-            dh12    = (c2-s2)*dh(1,2)+cs*(dh(2,2)-dh(1,1)) +(dc2-ds2)*h(1,2)+dcs*(h(2,2)-h(1,1))
-            h22     = s2*h(1,1)-two*cs*h(1,2)+c2*h(2,2)
-            dh22    = s2*dh(1,1)-two*cs*dh(1,2)+c2*dh(2,2) +ds2*h(1,1)-two*dcs*h(1,2)+dc2*h(2,2)
-            h(1,1)  = h11
-            h(2,2)  = h22
-            h(1,2)  = h12
-            h(2,1)  = h12
+            h11     = c2*h(1, 1)+two*cs*h(1, 2)+s2*h(2, 2)
+            dh11    = c2*dh(1,1)+two*cs*dh(1,2)+s2*dh(2,2) +dc2*h(1, 1)+two*dcs*h(1, 2)+ds2*h(2, 2)
+            h12     = (c2-s2)*h(1, 2)+cs*(h(2, 2)-h(1, 1))
+            dh12    = (c2-s2)*dh(1,2)+cs*(dh(2,2)-dh(1,1)) +(dc2-ds2)*h(1, 2)+dcs*(h(2, 2)-h(1, 1))
+            h22     = s2*h(1, 1)-two*cs*h(1, 2)+c2*h(2, 2)
+            dh22    = s2*dh(1,1)-two*cs*dh(1,2)+c2*dh(2,2) +ds2*h(1, 1)-two*dcs*h(1, 2)+dc2*h(2, 2)
+            h(1, 1) = h11
+            h(2, 2) = h22
+            h(1, 2) = h12
+            h(2, 1) = h12
             dh(1,1) = dh11
             dh(2,2) = dh22
             dh(1,2) = dh12
@@ -917,7 +921,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
                 ab1s  = -(c6*r6+c8*r8+c10*r10)
                 dab1s = (six*c6*r6+eht*c8*r8+10.0e0_wp*c10*r10)/r
             elseif( r >= 0.4e0_wp )then
-                call spline(79, r1h2, v1h2, r, ab1s, dab1s, ss2, epsln, s2ss, s3ss, delss)
+                call evaluate_tabulated_cubic_spline(r1h2, v1h2, r, s2ss, s3ss, delss, ab1s, dab1s, ss2)
             else
                 ab1s  = a1*exp(-b1*r)
                 dab1s = -b1*ab1s
@@ -958,112 +962,11 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
                 ab2u  = ab2g
                 dab2u = dab2g
             else
-                call spline(126, r3h2, v3h2, r, ab2g, dab2g, ss2, epsln, s2dg, s3dg, deldg)
-                call spline(126, r3h2, v4h2, r, ab2u, dab2u, ss2, epsln, s2du, s3du, deldu)
+                call evaluate_tabulated_cubic_spline(r3h2, v3h2, r, s2dg, s3dg, deldg, ab2g, dab2g, ss2)
+                call evaluate_tabulated_cubic_spline(r3h2, v4h2, r, s2du, s3du, deldu, ab2u, dab2u, ss2)
             endif
         end subroutine h2curv
-
-        !> @brief Evaluate SPLNIN for the ClH2_LEPS_TTGI1_1985 potential.
-        subroutine splnin( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
-            !     JIM STINE'S INITIALIZATION ROUTINE FOR SPLINE FITTING
-            !     N=NO. POINTS (X,Y); T=ARGUMENT; SS=VALUE; SS1=1ST DERIV;
-            !     SS2=2ND DERIV; S2,S3, AND DELY ARE COEFFICIENT ARRAYS
-            !     SECOND DERIV'S AT ENDS STORED IN S2(1) AND S2(N) ON INPUT
-            !     EPSLN IS OVERALL FIT CRITERION
-            use chempotpy_kinds, only: wp
-            implicit none
-            real(wp) :: b(126), c(126), delsqy, dely(n), epsln, eta, ex, h(126), h2(126), half, omega, s2(n), s3(n), ss, &
-                & ss1, ss2, t, w, x(n), y(n)
-            integer :: i, knt, n, n1
-            ex    = 1.1e0_wp
-            omega = 1.0717968e0_wp
-            half  = 0.5e0_wp
-            epsln = 1.e-12_wp
-            n1    = n-1
-            knt   = 0
-            do i=1, n1
-                h(i)    = x(i+1)-x(i)
-                dely(i) = (y(i+1)-y(i))/h(i)
-            enddo
-            do i=2, n1
-                h2(i)  = h(i-1)+h(i)
-                b(i)   = half*h(i-1)/h2(i)
-                delsqy = (dely(i)-dely(i-1))/h2(i)
-                s2(i)  = delsqy+delsqy
-                c(i)   = delsqy+s2(i)
-            enddo
-            do
-                eta = 0.0e0_wp
-                do i=2, n1
-                    w     = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
-                    eta   = max(eta, abs(w))
-                    s2(i) = s2(i)+w
-                enddo
-                knt = knt+1
-                if( knt .gt. 10 ) epsln=epsln*ex
-                if( eta < epsln ) exit
-            enddo
-            do i=1, n1
-                s3(i) = (s2(i+1)-s2(i))/h(i)
-            enddo
-        end subroutine splnin
-
         !> @brief Interpolate a tabulated curve and its first two derivatives.
-        subroutine spline( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
-            use chempotpy_kinds, only: wp
-            implicit none
-            integer, intent(in)   :: n
-            real(wp), intent(in)  :: x(n), y(n), t, epsln, s2(n), s3(n), dely(n)
-            real(wp), intent(out) :: ss, ss1, ss2
-            integer               :: i
-            real(wp)              :: delsqs, ht1, ht2, prod
-            if( t <= x(1) )then
-                ss  = y(1)
-                ss1 = dely(1)
-                ss2 = s2(1)
-                return
-            elseif( t >= x(n) )then
-                ss  = y(n)
-                ss1 = dely(n)
-                ss2 = s2(n)
-                return
-            endif
-            i = 1
-            do while( t > x(i) )
-                i = i+1
-            enddo
-            if( t < x(i) ) i = i-1
-            ht1    = t-x(i)
-            ht2    = t-x(i+1)
-            prod   = ht1*ht2
-            ss2    = s2(i)+ht1*s3(i)
-            delsqs = (s2(i)+s2(i+1)+ss2)/6.0e0_wp
-            ss     = y(i)+ht1*dely(i)+prod*delsqs
-            ss1    = dely(i)+(ht1+ht2)*delsqs+prod*s3(i)/6.0e0_wp
-        end subroutine spline
-
-        !> @brief Evaluate EIGN for the ClH2_LEPS_TTGI1_1985 potential.
-        !> @brief Diagonalize a real symmetric matrix with the shared core eigensolver.
-        subroutine eign( nn, a, vec, eig, w, nd )
-            use chempotpy_kinds, only: wp
-            implicit none
-            integer, intent(in)     :: nn, nd
-            real(wp), intent(inout) :: a(nd,nd)
-            real(wp), intent(out)   :: vec(nd,nd), eig(nd), w(nd)
-            integer                 :: ierr, lwork
-            real(wp), allocatable   :: work(:)
-            external                         :: dsyev
-            vec = 0.0e0_wp
-            eig = 0.0e0_wp
-            w   = 0.0e0_wp
-            if( nn == 0 ) return
-            lwork = max(1, 3*nn-1)
-            allocate(work(lwork))
-            call dsyev('V', 'L', nn, a, nd, eig, work, lwork, ierr)
-            if( ierr /= 0 ) return
-            vec(1:nn,1:nn) = a(1:nn,1:nn)
-            deallocate(work)
-        end subroutine eign
     end subroutine evaluate_internal
 end module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
 

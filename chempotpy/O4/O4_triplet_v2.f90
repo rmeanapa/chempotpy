@@ -21,6 +21,7 @@
 
 !> @brief Implement O4_triplet_v2, a potential energy surface for O4.
 module chempotpy_o4_triplet_v2_pes
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -1392,7 +1393,7 @@ module chempotpy_o4_triplet_v2_pes
                 v = v + a(k)*exp(-alpha*beta**k*r**2)
             enddo
             ! From milihartree to kcal/mol
-            v = v*627.509523475149e-3_wp
+            v = v*hartree_to_kilocalorie_per_mole*1.0e-3_wp
             ! Compute the gradient if needed
             if( igrad .eq. 1 )then
                 grad = 0.e0_wp
@@ -1400,7 +1401,7 @@ module chempotpy_o4_triplet_v2_pes
                     grad = grad-2.e0_wp*a(k)*alpha*beta**k*r*exp(-alpha*beta**k*r**2)
                 enddo
                 ! Convert from milihartree/A to i(kcal/mol)/A
-                grad = grad*627.509523475149e-3_wp
+                grad = grad*hartree_to_kilocalorie_per_mole*1.0e-3_wp
             endif
         end subroutine ev2gm2
 
@@ -2452,7 +2453,7 @@ module chempotpy_o4_triplet_v2_pes
             real(wp) :: r2r4(94)
             real(wp) :: autoang, autokcal
             autoang  = 0.52917726e0_wp
-            autokcal = 627.509541e0_wp
+            autokcal = hartree_to_kilocalorie_per_mole
             ! Generalized parameters for BJ damping
             s6  = 1.0e0_wp
             s8  = 2.0e0_wp

@@ -1,12 +1,13 @@
 !> @brief Evaluate the I2H_LEPS_PT1_1971 potential energy surface.
 module chempotpy_i2h_leps_pt1_1971_pes
+    use chempotpy_units,                only: hartree_to_kilocalorie_per_mole
     use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
         & prepare_legacy_triatomic_coordinates
     use chempotpy_kinds, only: wp
     implicit none
     private
     public :: evaluate
-    real(wp), parameter :: energy_per_hartree         = 627.5095_wp
+    real(wp), parameter :: energy_per_hartree         = hartree_to_kilocalorie_per_mole
     real(wp), parameter :: bohr_per_angstrom          = 0.529177106_wp
     real(wp), parameter :: root_two                   = 1.41421356_wp
     real(wp), parameter :: dissociation_energy(3)     = [76.8e0_wp, 76.8e0_wp, 35.9e0_wp]/energy_per_hartree

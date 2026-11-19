@@ -136,6 +136,7 @@ end subroutine evdrdx
 
 !> @brief Own the released fit state for the ClH2_LEPS_ALTG1_1996 potential.
 module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -153,7 +154,7 @@ module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
     real(wp), parameter :: q4     = 1.6963092005e0_wp
     real(wp), parameter :: c1     = 3.1053877618397071175758280546e+0_wp
     real(wp), parameter :: c2     = -1.8942608491155350536449828878e+0_wp
-    real(wp), parameter :: ckcau  = 627.5095e0_wp
+    real(wp), parameter :: ckcau  = hartree_to_kilocalorie_per_mole
     real(wp), parameter :: cangau = 0.52917706e0_wp
 
     contains

@@ -86,7 +86,11 @@ def main() -> int:
         if any(name in linkage for name in ("mkl", "lapack", "blas")):
             external_numerical_links.append(str(artifact))
         source_text = source.path.read_text(errors="replace")
-        if re.search(r"\bcall\s+dsyev\b", source_text, flags=re.IGNORECASE):
+        if re.search(
+            r"\b(?:call\s+dsyev|use\s+chempotpy_linear_algebra)\b",
+            source_text,
+            flags=re.IGNORECASE,
+        ):
             dsyev_dependent += 1
             symbols = defined_symbols(artifact)
             if re.search(r"\bT\s+_?dsyev_$", symbols, flags=re.MULTILINE) is None:

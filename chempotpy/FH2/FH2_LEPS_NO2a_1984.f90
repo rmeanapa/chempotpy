@@ -47,6 +47,7 @@
 
 !> @brief Implement FH2_LEPS_NO2a_1984, a potential energy surface for FH2.
 module chempotpy_fh2_leps_no2a_1984_pes
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -250,7 +251,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
-            real(wp), parameter :: ckcau  = 627.5095e0_wp
+            real(wp), parameter :: ckcau  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: r2     = 1.41421356e0_wp
             !   Echo potential parameters to UNIT NFLAG(18)
@@ -313,7 +314,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
-            real(wp), parameter :: ckcau  = 627.5095e0_wp
+            real(wp), parameter :: ckcau  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: r2     = 1.41421356e0_wp
             call cartou
@@ -568,7 +569,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

@@ -1,5 +1,6 @@
 !> @brief Own the complete implementation of this aluminum PES.
 module chempotpy_aln_desph_m_pes
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -47,7 +48,7 @@ module chempotpy_aln_desph_m_pes
         use chempotpy_kinds,    only: wp
         implicit none
         real(wp), parameter :: bohr_to_angstrom          = 0.529177249e0_wp
-        real(wp), parameter :: hartree_to_kcal_per_mol   = 627.5095e0_wp
+        real(wp), parameter :: hartree_to_kcal_per_mol   = hartree_to_kilocalorie_per_mole
         real(wp), parameter :: equilibrium_distance_bohr = &
             2.834e0_wp/bohr_to_angstrom
         real(wp), parameter :: well_depth_hartree = &

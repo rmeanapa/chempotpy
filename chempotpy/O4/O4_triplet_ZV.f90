@@ -1095,6 +1095,7 @@ end subroutine evbas
 
 !> @brief Evaluate ev2gm2.
 subroutine ev2gm2( r, v, grad, imol, igrad )
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     ! Compute the diatomic potential of ground-state triplet O2
     ! References: J. Chem. Phys. 132, 074307 (2010)
     ! Input:  r      interatomic distance in Angstrom
@@ -1138,7 +1139,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
         v = v + as(k)*exp(-alpha*beta**k*r**2)
     enddo
     ! From milihartree to kcal/mol
-    v = v*627.509523475149e-3_wp
+    v = v*hartree_to_kilocalorie_per_mole*1.0e-3_wp
     ! Add D3 dispersion correction
     dist(1) = r
     call d3disp(dist, disp, dispdr, 0, imol)
@@ -1150,7 +1151,7 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
             grad = grad-2.e0_wp*as(k)*alpha*beta**k*r*exp(-alpha*beta**k*r**2)
         enddo
         ! Convert from milihartree/A to (kcal/mol)/A
-        grad = grad*627.509523475149e-3_wp
+        grad = grad*hartree_to_kilocalorie_per_mole*1.0e-3_wp
         ! Add analytical gradient of D3 dispersion correction
         call d3disp(dist, disp, dispdr, 1, imol)
         grad = grad + dispdr(1)
@@ -1965,6 +1966,7 @@ end subroutine evdbdr
 
 !> @brief Evaluate d3disp.
 subroutine d3disp( dist, disp, dispdr, igrad, imol )
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     ! Dispersion correction based on Grimme's D3(BJ) calculation for
     ! diatomic pairs
     ! Several subroutines of DFTD3 V3.1 Rev 1 by Grimme were merged into
@@ -1987,7 +1989,7 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     real(wp) :: autoang, autokcal
     integer  :: imol
     autoang  = 0.52917726e0_wp
-    autokcal = 627.509541e0_wp
+    autokcal = hartree_to_kilocalorie_per_mole
     ! Generalized parameters for BJ damping from P. Verma, B. Wang,
     ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017)
     s6  = 1.0e0_wp

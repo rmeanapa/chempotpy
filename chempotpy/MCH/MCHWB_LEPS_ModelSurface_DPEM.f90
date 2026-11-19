@@ -117,27 +117,6 @@ subroutine evdrdx( x, r, drdx )
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
-!> @brief Evaluate diagonalize for the MCHWB_LEPS_ModelSurface_DPEM potential.
-subroutine diagonalize( n, a_ss, ev_s, u_ss )
-    use chempotpy_kinds, only: wp
-    implicit none
-    integer, intent(in)   :: n
-    real(wp), intent(in)  :: a_ss(n,n)
-    real(wp), intent(out) :: u_ss(n,n)
-    real(wp), intent(out) :: ev_s(n)
-    integer               :: io, i
-    real(wp), allocatable :: work_d(:)
-    integer               :: lwork_d
-    u_ss    = a_ss
-    lwork_d = -1
-    allocate( work_d(1) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-    lwork_d = int(work_d(1))
-    deallocate( work_d )
-    allocate( work_d(lwork_d) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-end subroutine diagonalize
-
 !> @brief Evaluate pot for the MCHWB_LEPS_ModelSurface_DPEM potential.
 subroutine pot( r, e, de, nt, nsurf )
     use chempotpy_kinds, only: wp

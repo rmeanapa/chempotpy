@@ -71,17 +71,21 @@ Fortran object interface.
 
 ## Ownership
 
-- A numerical kernel owns its published fit parameters and any fit-specific
+- A numerical kernel owns its published coefficients, switching-function
+  parameters, neural-network weights, fitted constants, and any fit-specific
   internal units.
 - `chempotpy.core` owns Python contract validation, registry discovery, and
-  public-boundary conversions. Its bundled Fortran modules own numerical kinds,
-  shared conversions, geometry primitives, linear-algebra support, and status
-  values.
+  public-boundary conversions. Its bundled Fortran modules own numerical
+  kinds, mathematical and physical constants, shared conversions, Cartesian
+  layouts/distances/Jacobians, internal-coordinate and gradient-chain-rule
+  transformations, finite-difference validation, typed metadata/request/result
+  contracts, status values, and small linear-algebra support.
 - POLYRATE owns its abstract Fortran type and program compatibility wrappers.
 - Neither repository copies the other repository's application framework.
-- CHEMPOTPY ships its own small symmetric eigensolver behind the historical
-  `DSYEV` interface. PES extensions therefore do not require MKL, LAPACK, or
-  BLAS; POLYRATE can reuse the same standalone Fortran source when needed.
+- CHEMPOTPY exposes symmetric diagonalization through
+  `chempotpy_linear_algebra`; its private companion implementation preserves
+  the historical `DSYEV` ABI without requiring MKL, LAPACK, or BLAS. POLYRATE
+  can reuse the same self-contained sources when needed.
 - A future C-interoperable procedural ABI may connect independently built
   CHEMPOTPY kernels to POLYRATE without exposing Python or Fortran derived
   types across the boundary.
@@ -105,7 +109,7 @@ The maintained bundled core currently contains:
   their original default-real rounding behavior.
 - `chempotpy_geometry`: Cartesian distance, three-component dot product, angle
   cosine, symmetric distance-matrix operations, and the atom-major
-  `(natoms,3)` to `(3*natoms)` Cartesian layout adapter. It provides
+  `(natoms,3)` to `(3*natoms)` Cartesian layout adapter and its inverse. It provides
   dimension-independent lexicographic all-pair distances and distance
   Jacobians for matrix or atom-major vector coordinates, explicitly ordered
   pair Jacobians for published model-specific coordinate orders, and symmetric
@@ -122,8 +126,21 @@ The maintained bundled core currently contains:
   including canonical and explicit-release triatomic distance adapters.
 - `chempotpy_status`: the `chempotpy_status_t` result and shared status codes
   used by non-printing, non-terminating modern interfaces.
+- `chempotpy_contract`: shared capability, metadata, request, and result types
+  for modern atomic-unit PES interfaces. Shape, capability, and finite-value
+  validation report through `chempotpy_status_t`.
+- `chempotpy_finite_difference`: centered Cartesian gradients and Hessians for
+  validation and standalone application drivers. It owns displacement and
+  mixed-derivative bookkeeping so PES modules do not duplicate it.
+- `chempotpy_linear_algebra`: the typed, shape-checked high-level interface for
+  real symmetric eigendecomposition. It owns workspace allocation and calls
+  the private bundled `DSYEV` companion.
+- `chempotpy_interpolation`: shared cubic-spline coefficient construction and
+  evaluation, including the tabulated relaxation form required by the ClH2
+  TTGI surfaces.
 - `chempotpy_blas`: the small BLAS subset required by bundled legacy kernels.
-- `chempotpy_dsyev`: the standalone historical `DSYEV` ABI implementation.
+- `chempotpy_dsyev`: the private standalone `DSYEV` ABI implementation used by
+  `chempotpy_linear_algebra`.
 
 System- and fit-family support belongs beside the surfaces that own it rather
 than in the generic core. `chempotpy/H3/chempotpy_h3_2002_basis.f90` provides
@@ -394,7 +411,7 @@ and no MKL, LAPACK, or BLAS link flags.
 
 The optimized macOS extension gate also builds all 363 callable surfaces. A
 binary audit finds all 363 exact module artifacts, no MKL/LAPACK/BLAS links,
-and an internally defined `DSYEV` symbol in each of the 87 extensions whose
-source calls that interface. The only non-system compiled dependency observed
-is the normal GNU Fortran runtime; distributable wheels must bundle that runtime
-according to their platform's wheel policy.
+and an internally defined `DSYEV` symbol in each extension that imports
+`chempotpy_linear_algebra` (currently 78). The only non-system compiled
+dependency observed is the normal GNU Fortran runtime; distributable wheels
+must bundle that runtime according to their platform's wheel policy.

@@ -132,6 +132,7 @@ subroutine evdrdx( x, r, drdx )
 end subroutine evdrdx
 
 module chempotpy_o2h_gen_pot_legacy_state_fffab58a
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -221,7 +222,7 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         !   Echo potential paramters to unit IPRT.
         !   Convert ZEROAD to eV and kcal/mol and echo to unit IPRT.
         zev   = zeroad*27.21106e0_wp
-        zkcal = zeroad*627.5095e0_wp
+        zkcal = zeroad*hartree_to_kilocalorie_per_mole
         !CCCCCCCCCCC
         !CCCCCCCCCCC
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC

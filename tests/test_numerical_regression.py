@@ -104,11 +104,18 @@ class NumericalRegressionTests(unittest.TestCase):
         )
         self.assertIs(selected, baseline["H3/example"])
 
-    def test_legacy_fixture_bootstraps_version_one_once(self) -> None:
+    def test_legacy_fixture_bootstraps_current_version_once(self) -> None:
         current = {"H3/example": record(["1.0"])}
         selected, bootstrapped = select_baseline(
-            None, {"H3/example": record(["0.0"])}, 1, current
+            None, {"H3/example": record(["0.0"])}, 2, current
         )
+        self.assertIs(selected, current)
+        self.assertTrue(bootstrapped)
+
+    def test_previous_version_uses_approved_current_baseline(self) -> None:
+        previous = {"H3/example": record(["1.0"])}
+        current = {"H3/example": record(["2.0"])}
+        selected, bootstrapped = select_baseline(1, previous, 2, current)
         self.assertIs(selected, current)
         self.assertTrue(bootstrapped)
 
@@ -116,7 +123,7 @@ class NumericalRegressionTests(unittest.TestCase):
         baseline = {"H3/example": record(["1.0"])}
         current = {"H3/example": record(["2.0"])}
         selected, bootstrapped = select_baseline(
-            1, baseline, 1, current
+            2, baseline, 2, current
         )
         self.assertIs(selected, baseline)
         self.assertFalse(bootstrapped)

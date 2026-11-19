@@ -23,11 +23,19 @@ module chempotpy_status
 
     contains
 
+    procedure :: clear  => clear_status
     procedure :: failed => status_failed
     procedure :: set    => set_status
     end type chempotpy_status_t
 
     contains
+
+    !> @brief Reset a status value so it can report a new operation.
+    pure subroutine clear_status( self )
+        class(chempotpy_status_t), intent(inout) :: self
+        self%code    = status_success
+        self%message = ''
+    end subroutine clear_status
 
     !> @brief Return true when an evaluation did not complete successfully.
     pure logical function status_failed( self )

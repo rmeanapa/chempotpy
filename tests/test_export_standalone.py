@@ -1,5 +1,7 @@
 """Tests for dependency-complete standalone PES exports."""
 
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -49,8 +51,10 @@ class ExportStandaloneTests(unittest.TestCase):
         source = select_surface("H3_GEN_A2_2002")
         driver = example_driver(source, geometry_count=1, difference_step=1.0e-3)
         self.assertIn("call pes( coordinates, 0, energy, gradient, coupling )", driver)
+        self.assertIn("call central_finite_difference", driver)
         self.assertIn("numerical_gradient", driver)
         self.assertIn("numerical_hessian", driver)
+        self.assertNotIn("mixed_pp", driver)
 
     def test_export_writes_source_and_optional_driver(self) -> None:
         source = select_surface("H3/H3_GEN_A2_2002")
@@ -64,6 +68,47 @@ class ExportStandaloneTests(unittest.TestCase):
             )
             self.assertEqual(len(outputs), 2)
             self.assertTrue(all(path.is_file() for path in outputs))
+            self.assertIn(
+                "module chempotpy_finite_difference",
+                outputs[0].read_text(),
+            )
+
+    def test_exported_example_compiles_and_runs( self ) -> None:
+        compiler = shutil.which("gfortran")
+        if compiler is None:
+            self.skipTest("gfortran is not available")
+        source = select_surface("H3/H3_GEN_A2_2002")
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            source_output, driver_output = export_surface(
+                source,
+                directory,
+                with_driver=True,
+                geometry_count=1,
+                difference_step=1.0e-3,
+            )
+            executable = directory / "example"
+            subprocess.run(
+                [
+                    compiler,
+                    "-ffree-line-length-none",
+                    str(source_output),
+                    str(driver_output),
+                    "-o",
+                    str(executable),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            completed = subprocess.run(
+                [str(executable)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        self.assertIn("numerical_gradient", completed.stdout)
+        self.assertIn("numerical_hessian", completed.stdout)
 
 
 if __name__ == "__main__":

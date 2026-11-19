@@ -143,6 +143,7 @@ subroutine evdrdx( x, r, drdx )
 end subroutine evdrdx
 
 module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -155,7 +156,7 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
         use chempotpy_kinds, only: wp
         implicit none
         real(wp), parameter   :: bohr   = .52917706e0_wp
-        real(wp), parameter   :: hrtree = 627.5095e0_wp
+        real(wp), parameter   :: hrtree = hartree_to_kilocalorie_per_mole
         real(wp), intent(in)  :: rab, rbc, rac
         integer, intent(in)   :: nder
         real(wp), intent(out) :: energy, der(3)

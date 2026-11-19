@@ -109,27 +109,6 @@ subroutine evdrdx( x, r, drdx )
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
 
-!> @brief Evaluate diagonalize for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
-subroutine diagonalize( n, a_ss, ev_s, u_ss )
-    use chempotpy_kinds, only: wp
-    implicit none
-    integer, intent(in)   :: n
-    real(wp), intent(in)  :: a_ss(n,n)
-    real(wp), intent(out) :: u_ss(n,n)
-    real(wp), intent(out) :: ev_s(n)
-    integer               :: io, i
-    real(wp), allocatable :: work_d(:)
-    integer               :: lwork_d
-    u_ss    = a_ss
-    lwork_d = -1
-    allocate( work_d(1) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-    lwork_d = int(work_d(1))
-    deallocate( work_d )
-    allocate( work_d(lwork_d) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-end subroutine diagonalize
-
 !> @brief Evaluate pot for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
 subroutine pot( r, e, de, nt, nsurf )
     use chempotpy_kinds, only: wp
@@ -149,6 +128,7 @@ end subroutine pot
 
 !> @brief Own the stateless g_pot11 evaluator.
 module chempotpy_brh2_leps_ltbz2_1995_dpem_g_pot11_entry_sta_432f3192
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -170,7 +150,7 @@ module chempotpy_brh2_leps_ltbz2_1995_dpem_g_pot11_entry_sta_432f3192
         integer             :: i, k, n
         real(wp)            :: r(3)
         real(wp), parameter :: cangau  = 0.52917706e0_wp
-        real(wp), parameter :: charkc  = 627.5095e0_wp
+        real(wp), parameter :: charkc  = hartree_to_kilocalorie_per_mole
         integer, parameter  :: g_pmax_ = 3
         integer             :: g_i_, g_p_, ldg_rr, ldg_e
         real(wp)            :: d3_p, d2_p, d2_v, d10_v, d2_b, d3_v, d4_v, &
@@ -704,6 +684,7 @@ end subroutine pot12
 
 !> @brief Own the stateless g_pot22 evaluator.
 module chempotpy_brh2_leps_ltbz2_1995_dpem_pot22_legacy_state_432f3192
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -722,7 +703,7 @@ module chempotpy_brh2_leps_ltbz2_1995_dpem_pot22_legacy_state_432f3192
         integer             :: i, k, n
         real(wp)            :: r(3)
         real(wp), parameter :: cangau = 0.52917706e0_wp
-        real(wp), parameter :: charkc = 627.5095e0_wp
+        real(wp), parameter :: charkc = hartree_to_kilocalorie_per_mole
         integer             :: g_myrank, g_nprocs
         b      = 0.e0_wp
         beta   = 0.e0_wp

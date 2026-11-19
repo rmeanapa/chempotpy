@@ -8,16 +8,20 @@ module chempotpy_geometry
     public :: all_pair_distances_and_jacobian
     public :: cartesian_distance
     public :: cosine_between_vectors
+    public :: cross_product_3d
     public :: dot_product_3d
     public :: fill_distance_matrix
     public :: flatten_cartesian_coordinates
     public :: ordered_pair_distance_jacobian
+    public :: reshape_cartesian_coordinates
     public :: triatomic_distance_jacobian
     public :: transform_internal_gradient_to_cartesian
     interface transform_internal_gradient_to_cartesian
         module procedure transform_gradient_vector
         module procedure transform_gradient_matrix
         module procedure transform_gradient_tensor
+        module procedure transform_gradient_matrix_to_atoms
+        module procedure transform_gradient_tensor_to_atoms
     end interface transform_internal_gradient_to_cartesian
     interface all_pair_distances_and_jacobian
         module procedure all_pair_distances_from_matrix
@@ -215,6 +219,17 @@ module chempotpy_geometry
         enddo
     end subroutine flatten_cartesian_coordinates
 
+    !> @brief Reshape atom-major flat coordinates into a Cartesian (natoms,3) matrix.
+    pure subroutine reshape_cartesian_coordinates( flat_coordinates, coordinates )
+        real(wp), intent(in)  :: flat_coordinates(:)
+        real(wp), intent(out) :: coordinates(size(flat_coordinates)/3,3)
+        integer               :: atom, first_coordinate
+        do atom = 1, size(coordinates, 1)
+            first_coordinate    = 3*atom-2
+            coordinates(atom,:) = flat_coordinates(first_coordinate:first_coordinate+2)
+        enddo
+    end subroutine reshape_cartesian_coordinates
+
     !> @brief Return the 1-2, 2-3, and 1-3 distances and their Cartesian Jacobian.
     pure subroutine triatomic_distance_jacobian( coordinates, distances, jacobian )
         real(wp), intent(in)  :: coordinates(3,3)
@@ -277,6 +292,41 @@ module chempotpy_geometry
         enddo
     end subroutine transform_gradient_tensor
 
+    !> @brief Apply dq/dx and return multiple Cartesian gradients as (state,atom,component).
+    pure subroutine transform_gradient_matrix_to_atoms( internal_gradient, coordinate_jacobian, cartesian_gradient )
+        real(wp), intent(in)  :: internal_gradient(:,:), coordinate_jacobian(:,:)
+        real(wp), intent(out) :: cartesian_gradient(size(internal_gradient, 1),size(coordinate_jacobian, 2)/3,3)
+        integer               :: atom, cartesian_index, component, internal_index
+        cartesian_gradient = 0.0_wp
+        do atom = 1, size(cartesian_gradient, 2)
+            do component = 1, 3
+                cartesian_index = 3*(atom-1)+component
+                do internal_index = 1, size(coordinate_jacobian, 1)
+                    cartesian_gradient(:,atom,component) = cartesian_gradient(:,atom,component) + internal_gradient(:, &
+                        & internal_index)*coordinate_jacobian(internal_index,cartesian_index)
+                enddo
+            enddo
+        enddo
+    end subroutine transform_gradient_matrix_to_atoms
+
+    !> @brief Apply dq/dx and return matrix-valued Cartesian gradients as (state,state,atom,component).
+    pure subroutine transform_gradient_tensor_to_atoms( internal_gradient, coordinate_jacobian, cartesian_gradient )
+        real(wp), intent(in)  :: internal_gradient(:,:,:), coordinate_jacobian(:,:)
+        real(wp), intent(out) :: cartesian_gradient(size(internal_gradient, 1),size(internal_gradient, 2),&
+            & size(coordinate_jacobian, 2)/3,3)
+        integer :: atom, cartesian_index, component, internal_index
+        cartesian_gradient = 0.0_wp
+        do atom = 1, size(cartesian_gradient, 3)
+            do component = 1, 3
+                cartesian_index = 3*(atom-1)+component
+                do internal_index = 1, size(coordinate_jacobian, 1)
+                    cartesian_gradient(:,:,atom,component) = cartesian_gradient(:,:,atom,component) + &
+                        & internal_gradient(:,:,internal_index)*coordinate_jacobian(internal_index,cartesian_index)
+                enddo
+            enddo
+        enddo
+    end subroutine transform_gradient_tensor_to_atoms
+
     !> @brief Return the Euclidean distance between two Cartesian points.
     pure function cartesian_distance( first_point, second_point ) &
             result(distance)
@@ -288,6 +338,15 @@ module chempotpy_geometry
         delta_z  = first_point(3)-second_point(3)
         distance = sqrt(delta_x*delta_x+delta_y*delta_y+delta_z*delta_z)
     end function cartesian_distance
+
+    !> @brief Return the Cartesian cross product of two three-component vectors.
+    pure function cross_product_3d( first_vector, second_vector ) result(product)
+        real(wp), intent(in) :: first_vector(3), second_vector(3)
+        real(wp)             :: product(3)
+        product(1) = first_vector(2)*second_vector(3)-first_vector(3)*second_vector(2)
+        product(2) = first_vector(3)*second_vector(1)-first_vector(1)*second_vector(3)
+        product(3) = first_vector(1)*second_vector(2)-first_vector(2)*second_vector(1)
+    end function cross_product_3d
 
     !> @brief Return the Cartesian dot product of two three-component vectors.
     pure function dot_product_3d( first_vector, second_vector ) &

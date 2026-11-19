@@ -28,7 +28,7 @@ METADATA_FIELDS = ("entry_point", "natoms", "nstates", "signature")
 # chemically meaningful change while keeping the baseline compiler-portable.
 RELATIVE_TOLERANCE = 1.0e-11
 ABSOLUTE_TOLERANCE = 1.0e-11
-BASELINE_VERSION = 1
+BASELINE_VERSION = 2
 MAX_WORKFLOW_ANNOTATIONS = 50
 
 
@@ -82,7 +82,7 @@ def select_baseline(
     current_version: Optional[int],
     current: Dict[str, dict],
 ) -> Tuple[Dict[str, dict], bool]:
-    """Select the immutable baseline, allowing only the initial bootstrap."""
+    """Select the immutable baseline or one explicit version transition."""
 
     if current_version != BASELINE_VERSION:
         raise ValueError(
@@ -91,6 +91,8 @@ def select_baseline(
             )
         )
     if baseline_version is None:
+        return current, True
+    if baseline_version == BASELINE_VERSION-1:
         return current, True
     if baseline_version != BASELINE_VERSION:
         raise ValueError(

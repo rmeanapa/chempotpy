@@ -71,8 +71,10 @@
 
 !> @brief Implement PHOH_APRP, a potential energy surface for C6H6O.
 module chempotpy_phoh_aprp_pes
-    use chempotpy_constants, only: PI
-    use chempotpy_kinds,     only: wp
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_geometry,       only: cross_product_3d
+    use chempotpy_constants,      only: PI
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate
@@ -236,9 +238,8 @@ module chempotpy_phoh_aprp_pes
         real(wp) :: u13, u23
         real(wp) :: du12dx(3*natm), du13dx(3*natm), du23dx(3*natm)
         ! add by J. Zheng
-        integer               :: lwork, info
-        real(wp)              :: cc(3,3)
-        real(wp), allocatable :: work(:)
+        integer  :: info
+        real(wp) :: cc(3,3)
         !C add by K. Yang
         real(wp) :: agvv(3*natm,3)
         real(wp) :: gvv(3,natm,3)
@@ -297,15 +298,7 @@ module chempotpy_phoh_aprp_pes
         !            n  = size of u                               !
         !output: cc(n,n) = orthonormal eigenvectors of u          !
         !        vv(n) = eigenvalues of u in ascending order      !
-        cc(:,:) = uu(:,:)
-        lwork   = -1
-        allocate (work (1) )
-        call dsyev('V', 'L', 3, cc, 3, vv, work, lwork, info)
-        lwork = int(work(1))
-        deallocate (work)
-        allocate( work(lwork) )
-        call dsyev('V', 'L', 3, cc, 3, vv, work, lwork, info)
-        deallocate (work)
+        call symmetric_eigendecomposition(uu, vv, cc, info)
         if( info .ne. 0 )then
             return
         endif
@@ -11069,16 +11062,16 @@ module chempotpy_phoh_aprp_pes
         ! Test
         ! End
         !Add by J. Zheng
-        call matvect(stc, nstc, ct, ldct, qtc, nqtc)
-        r   = bndlen(7, 13, x, y, z)
-        phi = dihedr(2, 1, 7, 13, x, y, z)
+        stc(1:nstc) = matmul(ct(1:nstc,1:nqtc), qtc(1:nqtc))
+        r           = bndlen(7, 13, x, y, z)
+        phi         = dihedr(2, 1, 7, 13, x, y, z)
         ! Evaluate Wilson's B-matrix if igrad = 1
         if( igrad .eq. 1 )then
             !Added by J. Zheng
             call bmat3(nblt, iblt, nbat, ibat, ntot, itot, noopt, ioopt, natm, &
                 & x, y, z, bmt, ldbmt)
             ! Evalate the Wilson's B-matrix in nonredundant internal coordinates
-            call matmult(bnrt, ldbnrt, ct, ldct, nstc, bmt, ldbmt, nqtc, 3*natm)
+            bnrt(1:nstc,1:3*natm) = matmul(ct(1:nstc,1:nqtc), bmt(1:nqtc,1:3*natm))
             !Added by J. Zheng
             call bmat3(nbls, ibls, nbas, ibas, ntos, itos, noops, ioops, natm, &
                 & x, y, z, bms, ldbms)
@@ -11447,26 +11440,6 @@ module chempotpy_phoh_aprp_pes
         enddo
     end subroutine evintcoord
 
-    !> @brief Evaluate matvect for the PHOH_APRP potential.
-    subroutine matvect( y, m, a, lda, x, n )
-        ! Subroutien to calculate matrix A multiply vector X
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer  :: i, j
-        integer  :: lda, m, n
-        real(wp) :: x(*), y(*)
-        real(wp) :: a(lda,*)
-        ! Initialize Y
-        do i=1, m
-            y(i) = 0.0e0_wp
-        enddo
-        do i=1, m
-            do j=1, n
-                y(i) = y(i)+a(i,j)*x(j)
-            enddo
-        enddo
-    end subroutine matvect
-
     !> @brief Evaluate bmat3 for the PHOH_APRP potential.
     subroutine bmat3( nbl, ibl, nba, iba, nto, ito, noop, ioop, natm, &
             & x, y, z, bm, ldbm )
@@ -11561,8 +11534,8 @@ module chempotpy_phoh_aprp_pes
             ekl(2) = (y(l)-y(k))/rkl
             ekl(3) = (z(l)-z(k))/rkl
             ! Caculate u=eij*ejk, v=ejk*ekl
-            call xprod1(eij, ejk, u)
-            call xprod1(ejk, ekl, v)
+            u              = cross_product_3d(eij, ejk)
+            v              = cross_product_3d(ejk, ekl)
             bm(irow,3*i-2) = -u(1)/(rij*sijk*sijk)
             bm(irow,3*i-1) = -u(2)/(rij*sijk*sijk)
             bm(irow,3*i)   = -u(3)/(rij*sijk*sijk)
@@ -11610,7 +11583,7 @@ module chempotpy_phoh_aprp_pes
             ejl(2) = (y(l)-y(j))/rjl
             ejl(3) = (z(l)-z(j))/rjl
             ! Caculate u=ejk*ejl
-            call xprod1(ejk, ejl, u)
+            u              = cross_product_3d(ejk, ejl)
             bm(irow,3*i-2) = (1.0e0_wp/rji)*(u(1)/(ctheta*si)-ttheta*eji(1))
             bm(irow,3*i-1) = (1.0e0_wp/rji)*(u(2)/(ctheta*si)-ttheta*eji(2))
             bm(irow,3*i)   = (1.0e0_wp/rji)*(u(3)/(ctheta*si)-ttheta*eji(3))
@@ -11625,30 +11598,6 @@ module chempotpy_phoh_aprp_pes
             bm(irow,3*j)   = -bm(irow,3*i)  -bm(irow,3*k)  -bm(irow,3*l)
         enddo
     end subroutine bmat3
-
-    !> @brief Evaluate matmult for the PHOH_APRP potential.
-    subroutine matmult( c, ldc, a, lda, m, b, ldb, n, l )
-        ! Global variables
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer  :: lda, ldb, ldc
-        integer  :: m, n, l
-        real(wp) :: a(lda,*), b(ldb,*), c(ldc,*)
-        ! Local variables
-        integer :: i, j, k
-        do i=1, m
-            do j=1, l
-                c(i,j) = 0.0e0_wp
-            enddo
-        enddo
-        do i=1, m
-            do j=1, l
-                do k=1, n
-                    c(i,j) = c(i,j)+a(i,k)*b(k,j)
-                enddo
-            enddo
-        enddo
-    end subroutine matmult
 
     !> @brief Evaluate bndlen for the PHOH_APRP potential.
     real(wp) function bndlen( i, j, x, y, z )
@@ -11684,7 +11633,7 @@ module chempotpy_phoh_aprp_pes
         ejk(1) = (x(k)-x(j))/rjk
         ejk(2) = (y(k)-y(j))/rjk
         ejk(3) = (z(k)-z(j))/rjk
-        call sprod(3, eji, ejk, a)
+        a      = dot_product(eji, ejk)
         bndang = acos(a)
     end function bndang
 
@@ -11733,10 +11682,10 @@ module chempotpy_phoh_aprp_pes
         ! u = eij*ejk normal vector in plane i-j-k
         ! v = ejk*ekl Normal vector in plane j-k-l
         ! w = u*v used to determine the sign of dihedral angle
-        call xprod1(eij, ejk, u)
-        call xprod1(ejk, ekl, v)
-        call xprod1(u, v, w)
-        call sprod(3, u, v, a)
+        u      = cross_product_3d(eij, ejk)
+        v      = cross_product_3d(ejk, ekl)
+        w      = cross_product_3d(u, v)
+        a      = dot_product(u, v)
         a      = a/(sin(aijk)*sin(ajkl))
         a      = max(a, -1.0e0_wp)
         a      = min(a, 1.0e0_wp)
@@ -11792,47 +11741,18 @@ module chempotpy_phoh_aprp_pes
         ejl(3) = (z(l)-z(j))/rjl
         ai     = bndang(k, j, l, x, y, z)
         si     = sin(ai)
-        call xprod1(ejk, ejl, u)
+        u      = cross_product_3d(ejk, ejl)
         ! Check if whether ai = 180
         if( u(1)**2+u(2)**2+u(3)**2 .le. tiny )then
             return
         endif
-        call sprod(3, u, eji, a)
+        a      = dot_product(u, eji)
         a      = a/si
         a      = max(a, -1.0e0_wp)
         a      = min(a, 1.0e0_wp)
         oopba1 = asin(a)
         ! Check whether needs to go beyond -pi/2 to pi/2
     end function oopba1
-
-    !> @brief Evaluate xprod1 for the PHOH_APRP potential.
-    subroutine xprod1( x1, x2, x3 )
-        ! Calculate cross-product x1 and x2 and return x3
-        ! Input: X1,X2
-        ! Output: X3
-        use chempotpy_kinds, only: wp
-        implicit none
-        real(wp) :: x1(3), x2(3), x3(3)
-        x3(1) = x1(2)*x2(3)-x1(3)*x2(2)
-        x3(2) = x1(3)*x2(1)-x1(1)*x2(3)
-        x3(3) = x1(1)*x2(2)-x1(2)*x2(1)
-    end subroutine xprod1
-
-    !> @brief Evaluate sprod for the PHOH_APRP potential.
-    subroutine sprod( n, a, b, c )
-        ! Calculate scalar-product a and b and return c
-        ! Input: a(n),b(n)
-        ! Output: c
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer  :: i
-        integer  :: n
-        real(wp) :: a(*), b(*), c
-        c = 0.0e0_wp
-        do i=1, n
-            c = c+a(i)*b(i)
-        enddo
-    end subroutine sprod
 end module chempotpy_phoh_aprp_pes
 
 !> @brief Expose PHOH_APRP through the Python-facing PES entry point.

@@ -1,4 +1,5 @@
 module chempotpy_h3cl_pipnn_pes
+    use chempotpy_interpolation,         only: cubic_spline_coefficients, evaluate_cubic_spline
     use chempotpy_constants,             only: PI
     use chempotpy_h3cl_pipnn_parameters, only: activation_function, alpha, h2_distance_grid, &
         & h2_potential_grid, hcl_distance_grid, hcl_potential_grid, hidden_1_biases, hidden_1_count, &
@@ -77,8 +78,8 @@ module chempotpy_h3cl_pipnn_pes
         real(wp), intent(out) :: vv0
         real(wp)              :: dy1, dyn, second_derivatives(m0)
         dy1 = 1.0e30_wp; dyn = 1.0e30_wp
-        call spline(h2_distance_grid, h2_potential_grid, m0, dy1, dyn, second_derivatives)
-        call splint(h2_distance_grid, h2_potential_grid, second_derivatives, m0, r0, vv0)
+        call cubic_spline_coefficients(h2_distance_grid, h2_potential_grid, dy1, dyn, second_derivatives)
+        call evaluate_cubic_spline(h2_distance_grid, h2_potential_grid, second_derivatives, r0, vv0)
     end subroutine pot0
 
     !> @brief Interpolate the immutable HCl diatomic correction table.
@@ -90,68 +91,9 @@ module chempotpy_h3cl_pipnn_pes
         real(wp), intent(out) :: vv1
         real(wp)              :: dy1, dyn, second_derivatives(m1)
         dy1 = 1.0e30_wp; dyn = 1.0e30_wp
-        call spline(hcl_distance_grid, hcl_potential_grid, m1, dy1, dyn, second_derivatives)
-        call splint(hcl_distance_grid, hcl_potential_grid, second_derivatives, m1, r1, vv1)
+        call cubic_spline_coefficients(hcl_distance_grid, hcl_potential_grid, dy1, dyn, second_derivatives)
+        call evaluate_cubic_spline(hcl_distance_grid, hcl_potential_grid, second_derivatives, r1, vv1)
     end subroutine pot1
-
-    !# SPLINE ROUTINES
-    !#            Numerical recipes in fortran
-    !#            Cambrige University Press
-    !#            York, 2nd edition, 1992.
-    !> @brief Evaluate splint for the H3Cl_PIPNN potential.
-    subroutine splint( xa, ya, y2a, n, x, y )
-        use chempotpy_kinds, only: wp
-        implicit none
-        real(wp) :: a, b, h, x, xa(n), y, y2a(n), ya(n)
-        integer  :: k, khi, klo, n
-        klo = 1
-        khi = n
-        do while( khi-klo .gt. 1 )
-            k = (khi+klo)/2
-            if( xa(k) .gt. x )then
-                khi = k
-            else
-                klo = k
-            endif
-        enddo
-        h = xa(khi)-xa(klo)
-        a = (xa(khi)-x)/h
-        b = (x-xa(klo))/h
-        y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h** 2)/6.0e0_wp
-    end subroutine splint
-
-    !> @brief Evaluate spline for the H3Cl_PIPNN potential.
-    subroutine spline( x, y, n, yp1, ypn, y2 )
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer, parameter :: nmax = 4200
-        real(wp)           :: p, qn, sig, u(nmax), un, x(n), y(n), y2(n), yp1, ypn
-        integer            :: i, k, n
-        if( yp1 .gt. .99e30_wp )then
-            y2(1) = 0.0e0_wp
-            u(1)  = 0.0e0_wp
-        else
-            y2(1) = -0.5e0_wp
-            u(1)  = (3.0e0_wp/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
-        endif
-        do i=2, n-1
-            sig   = (x(i)-x(i-1))/(x(i+1)-x(i-1))
-            p     = sig*y2(i-1)+2.0e0_wp
-            y2(i) = (sig-1.0e0_wp)/p
-            u(i)  = (6.0e0_wp*((y(i+1)-y(i))/(x(i+ 1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig* u(i-1))/p
-        enddo
-        if( ypn .gt. .99e30_wp )then
-            qn = 0.0e0_wp
-            un = 0.0e0_wp
-        else
-            qn = 0.5e0_wp
-            un = (3.0e0_wp/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
-        endif
-        y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0e0_wp)
-        do k=n-1, 1, -1
-            y2(k) = y2(k)*y2(k+1)+u(k)
-        enddo
-    end subroutine spline
 
     !> @brief Evaluate the immutable H3Cl long-range expansion.
     subroutine clh3vlr( r1, r2, r3, theta1, theta2, phi, vint, n )

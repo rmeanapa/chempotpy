@@ -20,6 +20,9 @@
 
 !> @brief Implement O3_5app_AE_2026, a potential energy surface for O3.
 module chempotpy_o3_5app_ae_2026_pes
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_geometry,       only: all_pair_distance_jacobian, all_pair_distances, &
+        & transform_internal_gradient_to_cartesian
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -83,15 +86,16 @@ module chempotpy_o3_5app_ae_2026_pes
         integer  :: i, j, k, l, m
         integer  :: imol
         call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4)
-        call convert_xyz_to_r(x, r, n)
+        call all_pair_distances(x, r)
         ! compute 2body terms,
         imol = 4
         call ev2gm2m(r, v2b, g2b, imol, 1, n)
         ! compute many body terms and form final CPEM
         call backprop(r, n, ns, e, gr, hr, t, coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4, v2b, v2b_1, g2b)
         ! convert from gradient_r to gradient_xyz
-        call grad_r_to_xyz(g, drdx, gr, r, x, n, ns)
-        call nac_r_to_xyz(h, drdx, hr, r, x, n, ns)
+        call all_pair_distance_jacobian(x, r, drdx)
+        call transform_internal_gradient_to_cartesian(gr, drdx, g)
+        call transform_internal_gradient_to_cartesian(hr, drdx, h)
     end subroutine energy_gradient
 
     !> @brief Evaluate backprop.
@@ -159,20 +163,20 @@ module chempotpy_o3_5app_ae_2026_pes
         g4 = 0.0e0_wp
         ! Step 1. Computing CPEM(0) using DDNN
         !== Step 1.1 Computing CPEM(0)
-        call mproduct(r, coeff_l0, z0, 1, 3, 35)
+        z0 = matmul(r, coeff_l0)
         z0 = z0 +bias_l0
         call activation_gelu(z0, a0, 35)
-        call mproduct(a0, coeff_l1, z1, 1, 35, 65)
+        z1 = matmul(a0, coeff_l1)
         z1 = z1 +bias_l1
         call activation_gelu(z1, a1, 65)
-        call mproduct(a1, coeff_l2, z2, 1, 65, 95)
+        z2 = matmul(a1, coeff_l2)
         z2 = z2 +bias_l2
         call activation_gelu(z2, a2, 95)
-        call mproduct(a2, coeff_l3, z3, 1, 95, 125)
+        z3 = matmul(a2, coeff_l3)
         z3 = z3 +bias_l3
         call activation_gelu(z3, a3, 125)
         !diabatic layer, use activation functional
-        call mproduct(a3, coeff_l4, z4, 1, 125, 21)
+        z4 = matmul(a3, coeff_l4)
         z4 = z4 +bias_l4
         call activation_functional_heviside(z4, a4, int(ns*(ns+1)/2), r, n*(n-1)/2, f)
         !construction many-body diabatic potential energy matrix (mb-dpem)
@@ -195,19 +199,19 @@ module chempotpy_o3_5app_ae_2026_pes
         do i=1, 3
             call activation_derivative_gelu(z0, a0, g0(i,:), 35)
         enddo
-        call mproduct(g0, coeff_l1, g1, 3, 35, 65)
+        g1 = matmul(g0, coeff_l1)
         do i=1, 3
             call activation_derivative_gelu(z1, a1, g1(i,:), 65)
         enddo
-        call mproduct(g1, coeff_l2, g2, 3, 65, 95)
+        g2 = matmul(g1, coeff_l2)
         do i=1, 3
             call activation_derivative_gelu(z2, a2, g2(i,:), 95)
         enddo
-        call mproduct(g2, coeff_l3, g3, 3, 95, 125)
+        g3 = matmul(g2, coeff_l3)
         do i=1, 3
             call activation_derivative_gelu(z3, a3, g3(i,:), 125)
         enddo
-        call mproduct(g3, coeff_l4, g4, 3, 125, 21)
+        g4 = matmul(g3, coeff_l4)
         ! here to add actional functional derivative
         call activation_functional_derivative_terms(g4, z4, int(ns*(ns+1)/2), r, n*(n-1)/2, dfdr)
         do i=1, 3
@@ -285,7 +289,7 @@ module chempotpy_o3_5app_ae_2026_pes
         !        dpem is final CPEM; g4p_f is final gradient
         ! Step 3. Diagonalize final CPEM
         ! diagonalize dpem
-        call diagonalize(ns, dpem, e, t)
+        call symmetric_eigendecomposition(dpem, e, t)
         ! cmpute dvdu
         do i=1, ns
             do j=1, ns
@@ -301,7 +305,7 @@ module chempotpy_o3_5app_ae_2026_pes
                 enddo
             enddo
         enddo
-        call mproduct(dvdu, g4p_f, g, ns, 21, 3)
+        g = matmul(dvdu, g4p_f)
         ! compute NACs
         dudr(:,:,:) = 0.e0_wp
         do i=1, ns
@@ -558,110 +562,6 @@ module chempotpy_o3_5app_ae_2026_pes
             sum1 = sum1+num
         enddo
     end subroutine sumover
-
-    ! matrix diagonalization
-    !> @brief Evaluate diagonalize.
-    subroutine diagonalize( n, a_ss, ev_s, u_ss )
-        use chempotpy_kinds, only: wp
-        implicit none
-        ! parameters
-        integer, intent(in)   :: n
-        real(wp), intent(in)  :: a_ss(n,n)
-        real(wp), intent(out) :: u_ss(n,n)
-        ! internal variables
-        real(wp), intent(out) :: ev_s(n)
-        integer               :: io, i
-        real(wp), allocatable :: lapack_work_d(:)
-        integer               :: lapack_lwork_d
-        u_ss           = a_ss
-        lapack_lwork_d = -1
-        allocate( lapack_work_d(2) )
-        call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
-        lapack_lwork_d = int(lapack_work_d(1))
-        deallocate ( lapack_work_d )
-        allocate( lapack_work_d(lapack_lwork_d) )
-        call dsyev('V', 'L', n, u_ss, n, ev_s, lapack_work_d, lapack_lwork_d, io)
-        ! U_ss already holds the transformation matrix
-        ! now  building the diagonal matrix A_ss
-        !   B_ss=0.d0
-    end subroutine diagonalize
-
-    ! convert de/dr to de/dxyz
-    !> @brief Evaluate grad_r_to_xyz.
-    subroutine grad_r_to_xyz( g, drdx, gr, r, x, n, ns )
-        use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
-        use chempotpy_kinds,    only: wp
-        implicit none
-        integer, intent(in)     :: n, ns
-        real(wp), intent(in)    :: x(n,3)
-        real(wp), intent(in)    :: r(n*(n-1)/2)
-        real(wp), intent(in)    :: gr(ns,n*(n-1)/2)
-        real(wp), intent(inout) :: g(ns,n,3)
-        real(wp), intent(inout) :: drdx(n*(n-1)/2,3*n)
-        real(wp)                :: gx(ns,3*n)
-        integer                 :: i, j
-        call all_pair_distance_jacobian(x, r, drdx)
-        call transform_internal_gradient_to_cartesian(gr, drdx, gx)
-        do i=1, n
-            g(:,i,1) = gx(:,3*(i-1)+1)
-            g(:,i,2) = gx(:,3*(i-1)+2)
-            g(:,i,3) = gx(:,3*(i-1)+3)
-        enddo
-    end subroutine grad_r_to_xyz
-
-    ! convert d/dr to d/dxyz for NAC
-    !> @brief Evaluate nac_r_to_xyz.
-    subroutine nac_r_to_xyz( h, drdx, hr, r, x, n, ns )
-        use chempotpy_geometry, only: all_pair_distance_jacobian, transform_internal_gradient_to_cartesian
-        use chempotpy_kinds,    only: wp
-        implicit none
-        integer, intent(in)     :: n, ns
-        real(wp), intent(in)    :: x(n,3)
-        real(wp), intent(in)    :: r(n*(n-1)/2)
-        real(wp), intent(in)    :: hr(ns,ns,n*(n-1)/2)
-        real(wp), intent(inout) :: h(ns,ns,n,3)
-        real(wp), intent(inout) :: drdx(n*(n-1)/2,3*n)
-        real(wp)                :: hx(ns,ns,3*n)
-        integer                 :: i, j, k, l
-        call all_pair_distance_jacobian(x, r, drdx)
-        call transform_internal_gradient_to_cartesian(hr, drdx, hx)
-        do i=1, n
-            h(:,:,i,1) = hx(:,:,3*(i-1)+1)
-            h(:,:,i,2) = hx(:,:,3*(i-1)+2)
-            h(:,:,i,3) = hx(:,:,3*(i-1)+3)
-        enddo
-    end subroutine nac_r_to_xyz
-
-    ! convert xyz to r
-    !> @brief Evaluate convert_xyz_to_r.
-    subroutine convert_xyz_to_r( x, r, n )
-        use chempotpy_geometry, only: all_pair_distances
-        use chempotpy_kinds,    only: wp
-        implicit none
-        integer, intent(in)   :: n
-        real(wp), intent(in)  :: x(n,3)
-        real(wp), intent(out) :: r(n*(n-1)/2)
-        call all_pair_distances(x, r)
-    end subroutine convert_xyz_to_r
-
-    ! matrix vector product
-    !> @brief Evaluate mproduct.
-    subroutine mproduct( a, b, c, l, m, n )
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer, intent(in)     :: l, m, n
-        real(wp), intent(in)    :: a(l,m), b(m,n)
-        real(wp), intent(inout) :: c(l,n)
-        integer                 :: i, j, k
-        do i=1, l
-            do j=1, n
-                c(i,j) = 0.e0_wp
-                do k=1, m
-                    c(i,j) = c(i,j)+a(i,k)*b(k,j)
-                enddo
-            enddo
-        enddo
-    end subroutine mproduct
 
     ! assign coefficients
     !> @brief Evaluate assign_coeff_bias.

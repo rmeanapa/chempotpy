@@ -56,6 +56,7 @@
 
 !> @brief Implement H3_GEN_DMBE_1987, a potential energy surface for H3.
 module chempotpy_h3_gen_dmbe_1987_pes
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -410,7 +411,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             cnvrte = 1.e0_wp
             if( usricm_nflag(2) .eq. 2 ) cnvrte = 1000.e0_wp
             if( usricm_nflag(2) .eq. 3 ) cnvrte = 27.211395e0_wp
-            if( usricm_nflag(2) .eq. 4 ) cnvrte = 627.5095e0_wp
+            if( usricm_nflag(2) .eq. 4 ) cnvrte = hartree_to_kilocalorie_per_mole
             if( usricm_nflag(2) .eq. 5 ) cnvrte = 219474.6e0_wp
             if( usricm_nflag(2) .eq. 6 ) cnvrte = 2625.500e0_wp
             ijconvert_cnvrtq   = cnvrte/cnvrtd
@@ -1401,7 +1402,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

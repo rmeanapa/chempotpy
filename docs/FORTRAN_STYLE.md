@@ -111,7 +111,15 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   initialization/evaluation lifecycle that consumes it.
 - Published fit coefficients and model-specific constants belong beside their
   owning PES. General geometry, unit conversion, numerical kinds, linear
-  algebra, status handling, and reusable I/O belong in the bundled core.
+  algebra, status handling, typed request/result/metadata contracts, and
+  finite-difference validation belong in the bundled core.
+- Use `symmetric_eigendecomposition` from `chempotpy_linear_algebra` for real
+  symmetric matrices. PES modules must not define `diagonalize` or `eign`
+  wrappers or call the low-level `DSYEV` ABI directly.
+- Use `chempotpy_interpolation` for one-dimensional cubic splines. The core
+  provides both endpoint-derivative cubic splines and the historical tabulated
+  relaxation spline used by the ClH2 TTGI fits; do not copy local `spline`,
+  `splint`, or `splnin` procedures into a PES.
 - Import `PI` from `chempotpy_constants`; local approximations and repeated
   mathematical-constant declarations are forbidden.
 - Each compiled PES must remain independently loadable. Core source dependencies
@@ -119,12 +127,17 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 
 ## Geometry, units, and numerical expressions
 
-- Use `chempotpy_geometry` for Cartesian distances, dot products, angle cosines,
-  distance matrices, and atom-major Cartesian flattening. Use
+- Use `chempotpy_geometry` for Cartesian distances, three-dimensional cross
+  products, dot products, angle cosines, distance matrices, and atom-major
+  Cartesian flattening and reshaping. Use `cross_product_3d` for a Cartesian
+  cross product; use the Fortran `dot_product` and `norm2` intrinsics for
+  general vector dot products and Euclidean norms. Do not carry local
+  `crosprod`, `dotprod`, `anorm`, `xprod`, or `sprod` helpers. Use
   `flatten_cartesian_coordinates` to transform `x(natoms,3)` into
   `[x1, y1, z1, x2, y2, z2, ...]`; do not repeat indexing loops for this
-  layout conversion or hand-written Cartesian distance formulas in public
-  wrappers.
+  layout conversion. Use `reshape_cartesian_coordinates` for the inverse
+  transformation; do not repeat indexing loops or hand-written Cartesian
+  distance formulas in public wrappers.
 - Use `all_pair_distances` for lexicographically ordered unique pairs
   `1-2, 1-3, ..., 2-3, ...`. Use `all_pair_distances_and_jacobian` when both
   distances and `dr/dx` are needed, or `all_pair_distance_jacobian` when a PES
@@ -137,14 +150,22 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   that store Cartesian coordinates as separate `x`, `y`, and `z` arrays.
 - Use `transform_internal_gradient_to_cartesian` to apply the chain rule
   `dE/dx = (dE/dq)(dq/dx)`. The generic core interface supports scalar-surface,
-  multi-state, and matrix-valued gradients. Do not repeat Jacobian-contraction
-  loops in public wrappers.
+  multi-state, and matrix-valued gradients and can return either flattened
+  Cartesian components or `(state,atom,component)` and
+  `(state,state,atom,component)` arrays. Do not add PES-local
+  `grad_r_to_xyz`, `nac_r_to_xyz`, or Jacobian-contraction wrappers.
 - Use `chempotpy_internal_coordinates` for a supported Cartesian-to-internal
   evaluation workflow. A single-state triatomic distance kernel implements the
   private `evaluate_internal` contract and delegates Cartesian construction,
   canonical unit conversion, chain-rule transformation, and output packing to
   `prepare_legacy_triatomic_coordinates` and
   `finalize_legacy_triatomic_surface`.
+- Use `chempotpy_finite_difference` for centered Cartesian gradient and Hessian
+  validation. Application and export drivers may print its results; PES
+  kernels must not carry private copies of the displacement algorithm.
+- Use `chempotpy_contract` for modern `pes_metadata_t`, `pes_request_t`,
+  `pes_result_t`, and `pes_capabilities_t` declarations. These types describe
+  atomic-unit arrays without changing the historical f2py adapter ABI.
 - Do not use the generic legacy name `pot` for a newly migrated internal-coordinate
   kernel. Name the private surface equation `evaluate_internal`, or
   `evaluate_diabatic_internal` when it returns a diabatic matrix.
@@ -203,6 +224,12 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 - Library kernels do not write to external logical units. Diagnostics return
   through `chempotpy_status_t`; application code decides whether and where to
   print them.
+- Unit conversions belong to `chempotpy_units`. Import
+  `hartree_to_kilocalorie_per_mole` instead of declaring a PES-local
+  Hartree-to-kcal/mol approximation such as `627.5095`.
+- Use the intrinsic `matmul` for matrix-matrix and matrix-vector products.
+  Do not add PES-local `mult`, `matmult`, `matvect`, or `mproduct` loop
+  kernels.
 - `stop` and `error stop` are forbidden in library sources because a PES must
   never terminate its caller.
 - Keep an early `return` when it expresses control flow. Omit a redundant

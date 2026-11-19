@@ -43,6 +43,7 @@
 
 !> @brief Implement IH2_LEPS_DT1_1971, a potential energy surface for IH2.
 module chempotpy_ih2_leps_dt1_1971_pes
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -214,7 +215,7 @@ module chempotpy_ih2_leps_dt1_1971_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             integer, parameter :: natom  = 25
             !   Conversion constants: kcal/mol/Hartree and Angstroms/Bohr
-            real(wp), parameter :: ckcal = 627.5095e0_wp
+            real(wp), parameter :: ckcal = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: cangs = 0.52917706e0_wp
             if( legacy_natoms .gt. 25 )then
                 if( present(status) ) call status%set(status_invalid_input, &
@@ -290,7 +291,7 @@ module chempotpy_ih2_leps_dt1_1971_pes
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             integer, parameter :: natom  = 25
             !   Conversion constants: kcal/mol/Hartree and Angstroms/Bohr
-            real(wp), parameter :: ckcal = 627.5095e0_wp
+            real(wp), parameter :: ckcal = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: cangs = 0.52917706e0_wp
             logical             :: lrr1, lrr2
             call cartou
@@ -386,7 +387,7 @@ module chempotpy_ih2_leps_dt1_1971_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

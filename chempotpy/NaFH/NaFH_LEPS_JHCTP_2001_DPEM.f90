@@ -32,7 +32,8 @@
 
 !> @brief Implement NaFH_LEPS_JHCTP_2001, a diabatic potential matrix for NaFH.
 module chempotpy_nafh_leps_jhctp_2001_dpem_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate
@@ -86,7 +87,7 @@ module chempotpy_nafh_leps_jhctp_2001_dpem_pes
         dudr(1,2,:) = de_u12(:,1)*hartree_per_bohr_to_ev_per_angstrom
         dudr(2,1,:) = de_u12(:,1)*hartree_per_bohr_to_ev_per_angstrom
         dudr(2,2,:) = de_u22(:,1)*hartree_per_bohr_to_ev_per_angstrom
-        call diagonalize(nstates, u, p, t)
+        call symmetric_eigendecomposition(u, p, t)
         r2 = r(1,:)*bohr_to_angstrom
         call evdrdx(tx, r2, drdx)
         call transform_internal_gradient_to_cartesian(dudr, drdx, dudx)
@@ -124,27 +125,6 @@ subroutine evdrdx( x, r, drdx )
     real(wp), intent(out) :: drdx(3,9)
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
-
-!> @brief Evaluate diagonalize for the NaFH_LEPS_JHCTP_2001_DPEM potential.
-subroutine diagonalize( n, a_ss, ev_s, u_ss )
-    use chempotpy_kinds, only: wp
-    implicit none
-    integer, intent(in)   :: n
-    real(wp), intent(in)  :: a_ss(n,n)
-    real(wp), intent(out) :: u_ss(n,n)
-    real(wp), intent(out) :: ev_s(n)
-    integer               :: io, i
-    real(wp), allocatable :: work_d(:)
-    integer               :: lwork_d
-    u_ss    = a_ss
-    lwork_d = -1
-    allocate( work_d(1) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-    lwork_d = int(work_d(1))
-    deallocate( work_d )
-    allocate( work_d(lwork_d) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-end subroutine diagonalize
 
 !> @brief Evaluate pot for the NaFH_LEPS_JHCTP_2001_DPEM potential.
 subroutine pot( r, e, de, nt, nsurf )

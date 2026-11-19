@@ -10,6 +10,7 @@
 
 !> @brief Implement BrH2_LEPS_LTBZSO_1995, a diabatic potential matrix for BrH2.
 module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -199,27 +200,6 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
 
         contains
 
-        !> @brief Evaluate diagonalize for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
-        subroutine diagonalize( n, a_ss, ev_s, u_ss )
-            use chempotpy_kinds, only: wp
-            implicit none
-            integer, intent(in)   :: n
-            real(wp), intent(in)  :: a_ss(n,n)
-            real(wp), intent(out) :: u_ss(n,n)
-            real(wp), intent(out) :: ev_s(n)
-            integer               :: io, i
-            real(wp), allocatable :: work_d(:)
-            integer               :: lwork_d
-            u_ss    = a_ss
-            lwork_d = -1
-            allocate( work_d(2) )
-            call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-            lwork_d = int(work_d(1))
-            deallocate ( work_d )
-            allocate( work_d(lwork_d) )
-            call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-        end subroutine diagonalize
-
         !> @brief Evaluate prepare_local_context for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
@@ -316,7 +296,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
-            real(wp), parameter :: charkc = 627.5095e0_wp
+            real(wp), parameter :: charkc = hartree_to_kilocalorie_per_mole
             !         A1  =  V3CP1
             !         A2  =  V3CP2
             !         A3  =  V3CP3
@@ -347,7 +327,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: jsurf   = isurf*(isurf+1)/2
             integer, parameter  :: natom   = 25
             real(wp), parameter :: cangau  = 0.52917706e0_wp
-            real(wp), parameter :: charkc  = 627.5095e0_wp
+            real(wp), parameter :: charkc  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: xlamb11 = 0.4568e0_wp/27.21161e0_wp
             rr(1) = r(1)
             rr(2) = r(2)
@@ -426,7 +406,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
-            real(wp), parameter :: charkc = 627.5095e0_wp
+            real(wp), parameter :: charkc = hartree_to_kilocalorie_per_mole
         end subroutine prepare_local_context_12
 
         !> @brief Evaluate POT12 for the BrH2_LEPS_LTBZSO_1995_DPEM potential.
@@ -438,7 +418,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: jsurf   = isurf*(isurf+1)/2
             integer, parameter  :: natom   = 25
             real(wp), parameter :: cangau  = 0.52917706e0_wp
-            real(wp), parameter :: charkc  = 627.5095e0_wp
+            real(wp), parameter :: charkc  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: xlamb12 = 0.4568e0_wp/27.21161e0_wp
             engyij(1) = -sqrt(2.e0_wp)*xlamb12/3.e0_wp
         end subroutine pot12
@@ -453,7 +433,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
-            real(wp), parameter :: charkc = 627.5095e0_wp
+            real(wp), parameter :: charkc = hartree_to_kilocalorie_per_mole
             !   Convert the constants to atomic units
             do i = 1, 3
                 de22(i)   = d22(i) / charkc
@@ -476,7 +456,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             integer, parameter  :: jsurf   = isurf*(isurf+1)/2
             integer, parameter  :: natom   = 25
             real(wp), parameter :: cangau  = 0.52917706e0_wp
-            real(wp), parameter :: charkc  = 627.5095e0_wp
+            real(wp), parameter :: charkc  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: xlamb22 = 0.4568e0_wp/27.21161e0_wp
             rr(1)     = r(1)
             rr(2)     = r(2)
@@ -510,7 +490,7 @@ module chempotpy_brh2_leps_ltbzso_1995_dpem_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

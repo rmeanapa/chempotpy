@@ -123,9 +123,16 @@ SUPPORT_SOURCES = {
 }
 CORE_FORTRAN_ROOT = REPOSITORY_ROOT / "chempotpy" / "core"
 CORE_MODULE_SOURCES = {
+    "chempotpy_contract": CORE_FORTRAN_ROOT / "chempotpy_contract.f90",
+    "chempotpy_finite_difference": (
+        CORE_FORTRAN_ROOT / "chempotpy_finite_difference.f90"
+    ),
     "chempotpy_geometry": CORE_FORTRAN_ROOT / "chempotpy_geometry.f90",
     "chempotpy_internal_coordinates": (
         CORE_FORTRAN_ROOT / "chempotpy_internal_coordinates.f90"
+    ),
+    "chempotpy_interpolation": (
+        CORE_FORTRAN_ROOT / "chempotpy_interpolation.f90"
     ),
     "chempotpy_kinds": CORE_FORTRAN_ROOT / "chempotpy_kinds.f90",
     "chempotpy_legacy_coordinates": (
@@ -138,11 +145,17 @@ CORE_MODULE_SOURCES = {
         CORE_FORTRAN_ROOT / "chempotpy_constants.f90"
     ),
     "chempotpy_status": CORE_FORTRAN_ROOT / "chempotpy_status.f90",
+    "chempotpy_linear_algebra": (
+        CORE_FORTRAN_ROOT / "chempotpy_linear_algebra.f90"
+    ),
     "chempotpy_units": CORE_FORTRAN_ROOT / "chempotpy_units.f90",
 }
 INTERNAL_DSYEV = (
     CORE_FORTRAN_ROOT / "chempotpy_dsyev.f90"
 )
+CORE_MODULE_COMPANIONS = {
+    "chempotpy_linear_algebra": (INTERNAL_DSYEV,),
+}
 INTERNAL_BLAS = CORE_FORTRAN_ROOT / "chempotpy_blas.f90"
 USE_PATTERN = re.compile(
     r"^\s*use(?:\s*,[^:]*)?\s*(?:::\s*)?([a-z][a-z0-9_]*)",
@@ -298,6 +311,9 @@ def core_fortran_dependencies(
         resolving.remove(normalized_name)
         resolved.add(normalized_name)
         ordered.append(source_path)
+        for companion in CORE_MODULE_COMPANIONS.get(normalized_name, ()):
+            if companion not in ordered:
+                ordered.append(companion)
 
     combined_text = source_text+"".join(
         "\n"+path.read_text(errors="replace")

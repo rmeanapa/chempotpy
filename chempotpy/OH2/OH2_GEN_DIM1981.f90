@@ -50,6 +50,7 @@
 
 !> @brief Implement OH2_GEN_DIM1981, a potential energy surface for OH2.
 module chempotpy_oh2_gen_dim1981_pes
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -285,7 +286,7 @@ module chempotpy_oh2_gen_dim1981_pes
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
-            real(wp), parameter :: hrtree = 627.5095e0_wp
+            real(wp), parameter :: hrtree = hartree_to_kilocalorie_per_mole
             if( infocm_natoms .gt. 25 )then
                 if( present(status) ) call status%set(status_invalid_input, &
                     'legacy kernel rejected the evaluation request')
@@ -346,7 +347,7 @@ module chempotpy_oh2_gen_dim1981_pes
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
-            real(wp), parameter :: hrtree = 627.5095e0_wp
+            real(wp), parameter :: hrtree = hartree_to_kilocalorie_per_mole
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
@@ -441,7 +442,7 @@ module chempotpy_oh2_gen_dim1981_pes
             ! Conversion constant from Angstroms to Bohr (Angstrom/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             ! Conversion constant from Hartree to kcal (kcal/Hartree)
-            real(wp), parameter :: hrtree = 627.5095e0_wp
+            real(wp), parameter :: hrtree = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: detrad = .0174532e0_wp
             character(len=80)   :: title
             title = ' RMOFIT to DIM surface with BEBO continuations '
@@ -466,7 +467,7 @@ module chempotpy_oh2_gen_dim1981_pes
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
-            real(wp), parameter :: hrtree = 627.5095e0_wp
+            real(wp), parameter :: hrtree = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: detrad = .0174532e0_wp
             do ic = 1, 4
                 select case( ic )
@@ -504,7 +505,7 @@ module chempotpy_oh2_gen_dim1981_pes
                 repr  = (potcm_r1s-potcm_xab(2))/.529177e0_wp
                 betpr = potcm_xab(3)*.529177e0_wp
                 if( r1 > potcm_r1s .and. r2 > potcm_r2s )then
-                    pt1cm_engygs = potcm_xbc(1)/627.5095e0_wp
+                    pt1cm_engygs = potcm_xbc(1)/hartree_to_kilocalorie_per_mole
                     if( usricm_nder == 1 )then
                         pt1cm_degsdr(1) = 1.0e-9_wp
                         pt1cm_degsdr(2) = 1.0e-9_wp
@@ -532,10 +533,11 @@ module chempotpy_oh2_gen_dim1981_pes
                     req2  = spline(2, potcm_nphi, potcm_phi, potcm_bsp(1,2), csp(1,2), scrap, angle)
                     bet   = spline(2, potcm_nphi, potcm_phi, potcm_bsp(1,3), csp(1,3), scrap, angle)
                 endif
-                x     = dis*((1.0e0_wp-exp(bet*(rr-req2)))**2-1.0e0_wp)+pt3cm_ezero(1)-usricm_anuzero*627.5095e0_wp
+                x     = dis*((1.0e0_wp-exp(bet*(rr-req2)))**2-1.0e0_wp)+pt3cm_ezero(1)-usricm_anuzero* &
+                    & hartree_to_kilocalorie_per_mole
                 v(ic) = x
             enddo
-            v(1:3)       = v(1:3)/627.5095e0_wp
+            v(1:3)       = v(1:3)/hartree_to_kilocalorie_per_mole
             pt1cm_engygs = v(1)
             if( usricm_nder == 1 )then
                 pt1cm_degsdr(1) = (v(2)-v(1))/nstep_step
@@ -722,7 +724,7 @@ module chempotpy_oh2_gen_dim1981_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

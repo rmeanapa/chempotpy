@@ -149,7 +149,10 @@ subroutine evdrdx( x, r, drdx )
 end subroutine evdrdx
 
 module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
-    use chempotpy_kinds, only: wp
+    use chempotpy_interpolation, only: evaluate_tabulated_cubic_spline, &
+        & prepare_tabulated_cubic_spline
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate_internal
@@ -174,7 +177,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             & s2tab(121), s2tpx(121), s2tsx(121), s2uab(121), s3, s3dsx(121), s3gab(121), s3s11(121), s3s12(121), s3s22(121), &
             & s3sab(121), s3spx(121), s3tab(121), s3tpx(121), s3tsx(121), s3uab(121), sabfit(121), spxa, spxb, spxfit(121), &
             & sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, tabfit(121), test, th(6, 6), tpxa, &
-            & tpxb, tpxfit(121), tre, tsab, tsxa, tsxb, tsxfit(121), two, uabfit(121), vec(6,6), w(6), x(121), xtra, zero
+            & tpxb, tpxfit(121), tre, tsab, tsxa, tsxb, tsxfit(121), two, uabfit(121), vec(6, 6), w(6), x(121), xtra, zero
         integer           :: i, idebug, idum, iflag, indx(3), iptprt, ix, j, k, ndim, ndum, nroot, ns
         character(len=80) :: title(2)
         equivalence (th(1, 1), dh(1, 1))
@@ -738,30 +741,24 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
         st2 = st*st
         cs  = ct*st
         !     COMPUTE DIATOMIC ENERGIES FOR R(3) ARRAY
-        call spline(ns, x, s11fit, r(1), ss11a, dss11a, s3, eps, s2s11, s3s11, &
-            & dels11)
-        call spline(ns, x, s11fit, r(3), ss11b, dss11b, s3, eps, s2s11, s3s11, &
-            & dels11)
-        call spline(ns, x, s12fit, r(1), ss12a, dss12a, s3, eps, s2s12, s3s12, &
-            & dels12)
-        call spline(ns, x, s12fit, r(3), ss12b, dss12b, s3, eps, s2s12, s3s12, &
-            & dels12)
-        call spline(ns, x, s22fit, r(1), ss22a, dss22a, s3, eps, s2s22, s3s22, &
-            & dels22)
-        call spline(ns, x, s22fit, r(3), ss22b, dss22b, s3, eps, s2s22, s3s22, &
-            & dels22)
-        call spline(ns, x, tsxfit, r(1), tsxa, dtsxa, s3, eps, s2tsx, s3tsx, deltsx)
-        call spline(ns, x, tsxfit, r(3), tsxb, dtsxb, s3, eps, s2tsx, s3tsx, deltsx)
-        call spline(ns, x, spxfit, r(1), spxa, dspxa, s3, eps, s2spx, s3spx, delspx)
-        call spline(ns, x, spxfit, r(3), spxb, dspxb, s3, eps, s2spx, s3spx, delspx)
-        call spline(ns, x, tpxfit, r(1), tpxa, dtpxa, s3, eps, s2tpx, s3tpx, deltpx)
-        call spline(ns, x, tpxfit, r(3), tpxb, dtpxb, s3, eps, s2tpx, s3tpx, deltpx)
-        call spline(ns, x, dsxfit, r(1), dsxa, ddsxa, s3, eps, s2dsx, s3dsx, deldsx)
-        call spline(ns, x, dsxfit, r(3), dsxb, ddsxb, s3, eps, s2dsx, s3dsx, deldsx)
-        call spline(ns, x, sabfit, r(2), ssab, dssab, s3, eps, s2sab, s3sab, delsab)
-        call spline(ns, x, tabfit, r(2), tsab, dtsab, s3, eps, s2tab, s3tab, deltab)
-        call spline(ns, x, gabfit, r(2), dgab, ddgab, s3, eps, s2gab, s3gab, delgab)
-        call spline(ns, x, uabfit, r(2), duab, dduab, s3, eps, s2uab, s3uab, deluab)
+        call evaluate_tabulated_cubic_spline(x, s11fit, r(1), s2s11, s3s11, dels11, ss11a, dss11a, s3)
+        call evaluate_tabulated_cubic_spline(x, s11fit, r(3), s2s11, s3s11, dels11, ss11b, dss11b, s3)
+        call evaluate_tabulated_cubic_spline(x, s12fit, r(1), s2s12, s3s12, dels12, ss12a, dss12a, s3)
+        call evaluate_tabulated_cubic_spline(x, s12fit, r(3), s2s12, s3s12, dels12, ss12b, dss12b, s3)
+        call evaluate_tabulated_cubic_spline(x, s22fit, r(1), s2s22, s3s22, dels22, ss22a, dss22a, s3)
+        call evaluate_tabulated_cubic_spline(x, s22fit, r(3), s2s22, s3s22, dels22, ss22b, dss22b, s3)
+        call evaluate_tabulated_cubic_spline(x, tsxfit, r(1), s2tsx, s3tsx, deltsx, tsxa, dtsxa, s3)
+        call evaluate_tabulated_cubic_spline(x, tsxfit, r(3), s2tsx, s3tsx, deltsx, tsxb, dtsxb, s3)
+        call evaluate_tabulated_cubic_spline(x, spxfit, r(1), s2spx, s3spx, delspx, spxa, dspxa, s3)
+        call evaluate_tabulated_cubic_spline(x, spxfit, r(3), s2spx, s3spx, delspx, spxb, dspxb, s3)
+        call evaluate_tabulated_cubic_spline(x, tpxfit, r(1), s2tpx, s3tpx, deltpx, tpxa, dtpxa, s3)
+        call evaluate_tabulated_cubic_spline(x, tpxfit, r(3), s2tpx, s3tpx, deltpx, tpxb, dtpxb, s3)
+        call evaluate_tabulated_cubic_spline(x, dsxfit, r(1), s2dsx, s3dsx, deldsx, dsxa, ddsxa, s3)
+        call evaluate_tabulated_cubic_spline(x, dsxfit, r(3), s2dsx, s3dsx, deldsx, dsxb, ddsxb, s3)
+        call evaluate_tabulated_cubic_spline(x, sabfit, r(2), s2sab, s3sab, delsab, ssab, dssab, s3)
+        call evaluate_tabulated_cubic_spline(x, tabfit, r(2), s2tab, s3tab, deltab, tsab, dtsab, s3)
+        call evaluate_tabulated_cubic_spline(x, gabfit, r(2), s2gab, s3gab, delgab, dgab, ddgab, s3)
+        call evaluate_tabulated_cubic_spline(x, uabfit, r(2), s2uab, s3uab, deluab, duab, dduab, s3)
         !     CONSTRUCT DIM HAMILTONIAN IN ORTHOGONAL BASIS
         th(1, 1) = ss11a+forth*((ssab+tre*tsab)+ct2*(ss11b+tre*tsxb) +st2*(spxb+tre*tpxb))-dpux-two*dsgh
         th(1, 2) = forth*sqrt3*(ssab-tsab-ct2*(ss11b-tsxb)-st2*(spxb-tpxb))
@@ -787,14 +784,15 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
                 th(i, j) = th(j, i)
             enddo
         enddo
-        call eign(ndim, th, vec, en, w, ndim)
+        call symmetric_eigendecomposition(th, en, vec)
+        th = vec; w = 0.0_wp
         !     FOLLOWING STATEMENT ASSUMES ENERGY ZERO AT A + BC(R=RE)
         xter = en(nroot)+c(2)
         !************************* END OF FPOT3N *******************************
         if( nder .ne. 1 ) return
         !     SET  VECTOR FOR STATE OF INTEREST
         do i=1, ndim
-            gvec(i) = vec(i,nroot)
+            gvec(i) = vec(i, nroot)
         enddo
         !     COMPUTE PARTIALS OF U=COS(THETA)
         dtdr1 = (r(1)*r(1)+r(2)*r(2)-r(3)*r(3))/(two*r(1)*r(1)*r(3))
@@ -963,120 +961,19 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             s2tpx(1) = s2tpx(1)*fac
             s2dsx(1) = s2dsx(1)*fac
             !     GENERATE SPLINE FITS
-            call splnin(ns, x, sabfit, r, r1, r2, r3, eps, s2sab, s3sab, delsab)
-            call splnin(ns, x, tabfit, r, r1, r2, r3, eps, s2tab, s3tab, deltab)
-            call splnin(ns, x, gabfit, r, r1, r2, r3, eps, s2gab, s3gab, delgab)
-            call splnin(ns, x, uabfit, r, r1, r2, r3, eps, s2uab, s3uab, deluab)
-            call splnin(ns, x, s11fit, r, r1, r2, r3, eps, s2s11, s3s11, dels11)
-            call splnin(ns, x, s12fit, r, r1, r2, r3, eps, s2s12, s3s12, dels12)
-            call splnin(ns, x, s22fit, r, r1, r2, r3, eps, s2s22, s3s22, dels22)
-            call splnin(ns, x, tsxfit, r, r1, r2, r3, eps, s2tsx, s3tsx, deltsx)
-            call splnin(ns, x, spxfit, r, r1, r2, r3, eps, s2spx, s3spx, delspx)
-            call splnin(ns, x, tpxfit, r, r1, r2, r3, eps, s2tpx, s3tpx, deltpx)
-            call splnin(ns, x, dsxfit, r, r1, r2, r3, eps, s2dsx, s3dsx, deldsx)
+            call prepare_tabulated_cubic_spline(x, sabfit, 6.4229e-13_wp, s2sab, s3sab, delsab)
+            call prepare_tabulated_cubic_spline(x, tabfit, 6.4229e-13_wp, s2tab, s3tab, deltab)
+            call prepare_tabulated_cubic_spline(x, gabfit, 6.4229e-13_wp, s2gab, s3gab, delgab)
+            call prepare_tabulated_cubic_spline(x, uabfit, 6.4229e-13_wp, s2uab, s3uab, deluab)
+            call prepare_tabulated_cubic_spline(x, s11fit, 6.4229e-13_wp, s2s11, s3s11, dels11)
+            call prepare_tabulated_cubic_spline(x, s12fit, 6.4229e-13_wp, s2s12, s3s12, dels12)
+            call prepare_tabulated_cubic_spline(x, s22fit, 6.4229e-13_wp, s2s22, s3s22, dels22)
+            call prepare_tabulated_cubic_spline(x, tsxfit, 6.4229e-13_wp, s2tsx, s3tsx, deltsx)
+            call prepare_tabulated_cubic_spline(x, spxfit, 6.4229e-13_wp, s2spx, s3spx, delspx)
+            call prepare_tabulated_cubic_spline(x, tpxfit, 6.4229e-13_wp, s2tpx, s3tpx, deltpx)
+            call prepare_tabulated_cubic_spline(x, dsxfit, 6.4229e-13_wp, s2dsx, s3dsx, deldsx)
         end subroutine setspl
-
         !> @brief Interpolate a tabulated curve and its first two derivatives.
-        subroutine spline( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
-            use chempotpy_kinds, only: wp
-            implicit none
-            integer, intent(in)   :: n
-            real(wp), intent(in)  :: x(n), y(n), t, epsln, s2(n), s3(n), dely(n)
-            real(wp), intent(out) :: ss, ss1, ss2
-            integer               :: i
-            real(wp)              :: delsqs, ht1, ht2, prod
-            if( t <= x(1) )then
-                ss  = y(1)
-                ss1 = dely(1)
-                ss2 = s2(1)
-                return
-            elseif( t >= x(n) )then
-                ss  = y(n)
-                ss1 = dely(n)
-                ss2 = s2(n)
-                return
-            endif
-            i = 1
-            do while( t > x(i) )
-                i = i+1
-            enddo
-            if( t < x(i) ) i = i-1
-            ht1    = t-x(i)
-            ht2    = t-x(i+1)
-            prod   = ht1*ht2
-            ss2    = s2(i)+ht1*s3(i)
-            delsqs = (s2(i)+s2(i+1)+ss2)/6.0e0_wp
-            ss     = y(i)+ht1*dely(i)+prod*delsqs
-            ss1    = dely(i)+(ht1+ht2)*delsqs+prod*s3(i)/6.0e0_wp
-        end subroutine spline
-
-        !> @brief Evaluate SPLNIN for the ClH2_LEPS_TTGI2_1985 potential.
-        subroutine splnin( n, x, y, t, ss, ss1, ss2, epsln, s2, s3, dely )
-            !     JIM STINE'S INITIALIZATION ROUTINE FOR SPLINE FITTING
-            !     N=NO. POINTS (X,Y); T=ARGUMENT; SS=VALUE; SS1=1ST DERIV;
-            !     SS2=2ND DERIV; S2,S3, AND DELY ARE COEFFICIENT ARRAYS
-            !     SECOND DERIV'S AT ENDS STORED IN S2(1) AND S2(N) ON INPUT
-            !     EPSLN IS OVERALL FIT CRITERION
-            use chempotpy_kinds, only: wp
-            implicit none
-            real(wp) :: b(121), c(121), delsqy, dely(n), epsln, eta, ex, h(121), h2(121), half, omega, s2(n), s3(n), ss, &
-                & ss1, ss2, t, w, x(n), y(n)
-            integer :: i, knt, n, n1
-            ex    = 1.1e0_wp
-            omega = 1.0717968e0_wp
-            half  = 0.5e0_wp
-            epsln = 6.4229e-13_wp
-            n1    = n-1
-            knt   = 0
-            do i=1, n1
-                h(i)    = x(i+1)-x(i)
-                dely(i) = (y(i+1)-y(i))/h(i)
-            enddo
-            do i=2, n1
-                h2(i)  = h(i-1)+h(i)
-                b(i)   = half*h(i-1)/h2(i)
-                delsqy = (dely(i)-dely(i-1))/h2(i)
-                s2(i)  = delsqy+delsqy
-                c(i)   = delsqy+s2(i)
-            enddo
-            do
-                eta = 0.0e0_wp
-                do i=2, n1
-                    w     = (c(i)-b(i)*s2(i-1)-(half-b(i))*s2(i+1)-s2(i))*omega
-                    eta   = max(eta, abs(w))
-                    s2(i) = s2(i)+w
-                enddo
-                knt = knt+1
-                if( knt .gt. 10 ) epsln=epsln*ex
-                if( eta < epsln ) exit
-            enddo
-            do i=1, n1
-                s3(i) = (s2(i+1)-s2(i))/h(i)
-            enddo
-        end subroutine splnin
-
-        !> @brief Evaluate EIGN for the ClH2_LEPS_TTGI2_1985 potential.
-        !> @brief Diagonalize a real symmetric matrix with the shared core eigensolver.
-        subroutine eign( nn, a, vec, eig, w, nd )
-            use chempotpy_kinds, only: wp
-            implicit none
-            integer, intent(in)     :: nn, nd
-            real(wp), intent(inout) :: a(nd,nd)
-            real(wp), intent(out)   :: vec(nd,nd), eig(nd), w(nd)
-            integer                 :: ierr, lwork
-            real(wp), allocatable   :: work(:)
-            external                         :: dsyev
-            vec = 0.0e0_wp
-            eig = 0.0e0_wp
-            w   = 0.0e0_wp
-            if( nn == 0 ) return
-            lwork = max(1, 3*nn-1)
-            allocate(work(lwork))
-            call dsyev('V', 'L', nn, a, nd, eig, work, lwork, ierr)
-            if( ierr /= 0 ) return
-            vec(1:nn,1:nn) = a(1:nn,1:nn)
-            deallocate(work)
-        end subroutine eign
     end subroutine evaluate_internal
 end module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
 

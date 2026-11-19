@@ -62,10 +62,18 @@ def surface_interface(source: SurfaceSource) -> tuple[str, str, int, int]:
     return entry_point, signature, atom_count, state_count
 
 
-def standalone_sources(source: SurfaceSource) -> tuple[Path, ...]:
+def standalone_sources(
+    source: SurfaceSource,
+    include_validation: bool = False,
+) -> tuple[Path, ...]:
     """Return dependency-first sources required by one PES."""
 
     source_text = source.path.read_text(errors="replace")
+    if include_validation:
+        source_text = (
+            "use chempotpy_finite_difference, "
+            "only: central_finite_difference\n"+source_text
+        )
     ordered = [*compile_dependencies(source.path, source_text), source.path]
     unique = []
     seen = set()
@@ -77,11 +85,14 @@ def standalone_sources(source: SurfaceSource) -> tuple[Path, ...]:
     return tuple(unique)
 
 
-def combined_source(source: SurfaceSource) -> str:
+def combined_source(
+    source: SurfaceSource,
+    include_validation: bool = False,
+) -> str:
     """Return one dependency-first free-form source file for a PES."""
 
     sections = []
-    for path in standalone_sources(source):
+    for path in standalone_sources(source, include_validation):
         relative = path.relative_to(REPOSITORY_ROOT)
         sections.append("! Standalone source: {}\n{}".format(
             relative, path.read_text(errors="strict").rstrip()
@@ -95,52 +106,52 @@ def evaluator_body(entry_point: str, signature: str) -> str:
     arguments = signature.split(",")
     if entry_point == "pes" and len(arguments) == 5:
         return """\
-        real(8) :: energy(nstates), gradient(nstates,natoms,3)
-        real(8) :: coupling(nstates,nstates,natoms,3)
+        real(wp) :: energy(nstates), gradient(nstates,natoms,3)
+        real(wp) :: coupling(nstates,nstates,natoms,3)
         call pes( coordinates, 0, energy, gradient, coupling )
         values = energy"""
     if entry_point == "pes" and len(arguments) == 6 and arguments[2] == "path":
         return """\
-        real(8) :: energy(nstates), gradient(nstates,natoms,3)
-        real(8) :: coupling(nstates,nstates,natoms,3)
+        real(wp) :: energy(nstates), gradient(nstates,natoms,3)
+        real(wp) :: coupling(nstates,nstates,natoms,3)
         call pes( coordinates, 0, data_path, energy, gradient, coupling )
         values = energy"""
     if entry_point == "pes" and len(arguments) == 6:
         return """\
-        real(8) :: workspace(10000,3), energy(nstates)
-        real(8) :: gradient(nstates,natoms,3)
-        real(8) :: coupling(nstates,nstates,natoms,3)
-        workspace = 0.0d0; workspace(1:natoms,:) = coordinates
+        real(wp) :: workspace(10000,3), energy(nstates)
+        real(wp) :: gradient(nstates,natoms,3)
+        real(wp) :: coupling(nstates,nstates,natoms,3)
+        workspace = 0.0_wp; workspace(1:natoms,:) = coordinates
         call pes( workspace, natoms, 0, energy, gradient, coupling )
         values = energy"""
     if entry_point == "pes" and len(arguments) == 8:
         return """\
-        real(8) :: workspace(10000,3), energy(nstates)
-        real(8) :: gradient(nstates,natoms,3)
-        real(8) :: coupling(nstates,nstates,natoms,3)
-        workspace = 0.0d0; workspace(1:natoms,:) = coordinates
+        real(wp) :: workspace(10000,3), energy(nstates)
+        real(wp) :: gradient(nstates,natoms,3)
+        real(wp) :: coupling(nstates,nstates,natoms,3)
+        workspace = 0.0_wp; workspace(1:natoms,:) = coordinates
         call pes( workspace, 1, 2, natoms, 0, energy, gradient, coupling )
         values = energy"""
     if entry_point == "pes" and len(arguments) == 9:
         return """\
-        real(8) :: workspace(10000,3), energy(nstates)
-        real(8) :: gradient(nstates,natoms,3)
-        real(8) :: coupling(nstates,nstates,natoms,3)
-        workspace = 0.0d0; workspace(1:natoms,:) = coordinates
+        real(wp) :: workspace(10000,3), energy(nstates)
+        real(wp) :: gradient(nstates,natoms,3)
+        real(wp) :: coupling(nstates,nstates,natoms,3)
+        workspace = 0.0_wp; workspace(1:natoms,:) = coordinates
         call pes( workspace, 1, 1, 1, natoms, 0, energy, gradient, coupling )
         values = energy"""
     if entry_point == "dpem" and len(arguments) == 4:
         return """\
-        real(8) :: matrix(nstates,nstates)
-        real(8) :: matrix_gradient(nstates,nstates,natoms,3)
+        real(wp) :: matrix(nstates,nstates)
+        real(wp) :: matrix_gradient(nstates,nstates,natoms,3)
         call dpem( coordinates, 0, matrix, matrix_gradient )
         values = reshape(matrix, [nvalues])"""
     if entry_point == "dpem" and len(arguments) == 8:
         return """\
-        real(8) :: energy(nstates), gradient(nstates,natoms,3)
-        real(8) :: coupling(nstates,nstates,natoms,3)
-        real(8) :: transform(nstates,nstates), matrix(nstates,nstates)
-        real(8) :: matrix_gradient(nstates,nstates,natoms,3)
+        real(wp) :: energy(nstates), gradient(nstates,natoms,3)
+        real(wp) :: coupling(nstates,nstates,natoms,3)
+        real(wp) :: transform(nstates,nstates), matrix(nstates,nstates)
+        real(wp) :: matrix_gradient(nstates,nstates,natoms,3)
         call dpem( coordinates, 0, energy, gradient, coupling, transform, matrix, matrix_gradient )
         values = reshape(matrix, [nvalues])"""
     raise ValueError("unsupported standalone interface: {}({})".format(
@@ -164,7 +175,7 @@ def example_driver(
             (geometry_index-1) % REGRESSION_GEOMETRY_COUNT
         )+1
         geometry_blocks.append(
-            "    coordinates = 0.0d0\n{}\n"
+            "    coordinates = 0.0_wp\n{}\n"
             "    call report_geometry({}, coordinates)".format(
                 assignments(atom_count, reference_index, "coordinates"),
                 geometry_index,
@@ -183,64 +194,40 @@ def example_driver(
     value_label = "energy" if entry_point == "pes" else "diabatic_matrix_element"
     return """\
 program chempotpy_standalone_example
+    use chempotpy_finite_difference, only: central_finite_difference
+    use chempotpy_kinds,             only: wp
+    use chempotpy_status,            only: chempotpy_status_t
     implicit none
     integer, parameter :: natoms  = {atom_count}
     integer, parameter :: nstates = {state_count}
     integer, parameter :: nvalues = {value_count}
-    real(8), parameter :: difference_step = {difference_step:.17e}
-    real(8)            :: coordinates(natoms,3)
+    real(wp), parameter :: difference_step = {difference_step:.17e}_wp
+    real(wp)            :: coordinates(natoms,3)
 {data_declaration}{data_setup}{geometry_blocks}
     contains
-    subroutine evaluate_values( coordinates, values )
+    subroutine evaluate_values( coordinates, values, status )
         implicit none
-        real(8), intent(in)  :: coordinates(natoms,3)
-        real(8), intent(out) :: values(nvalues)
+        real(wp), intent(in)                    :: coordinates(:,:)
+        real(wp), intent(out)                   :: values(:)
+        type(chempotpy_status_t), intent(inout) :: status
 {evaluator_body}
     end subroutine evaluate_values
 
     subroutine report_geometry( geometry_index, coordinates )
         implicit none
-        integer, intent(in) :: geometry_index
-        real(8), intent(in) :: coordinates(natoms,3)
-        real(8)             :: base(nvalues), forward(nvalues), backward(nvalues)
-        real(8)             :: mixed_pp(nvalues), mixed_pm(nvalues)
-        real(8)             :: mixed_mp(nvalues), mixed_mm(nvalues)
-        real(8)             :: numerical_gradient(nvalues,3*natoms)
-        real(8)             :: numerical_hessian(nvalues,3*natoms,3*natoms)
-        real(8)             :: displaced(natoms,3)
-        integer             :: atom_i, atom_j, coordinate_i, coordinate_j
-        integer             :: direction_i, direction_j, value_index
-        call evaluate_values(coordinates, base)
-        numerical_gradient = 0.0d0; numerical_hessian = 0.0d0
-        do coordinate_i=1, 3*natoms
-            atom_i      = (coordinate_i-1)/3+1
-            direction_i = mod(coordinate_i-1, 3)+1
-            displaced = coordinates
-            displaced(atom_i,direction_i) = displaced(atom_i,direction_i)+difference_step
-            call evaluate_values(displaced, forward)
-            displaced(atom_i,direction_i) = displaced(atom_i,direction_i)-2.0d0*difference_step
-            call evaluate_values(displaced, backward)
-            numerical_gradient(:,coordinate_i) = (forward-backward)/(2.0d0*difference_step)
-            numerical_hessian(:,coordinate_i,coordinate_i) = &
-                (forward-2.0d0*base+backward)/(difference_step*difference_step)
-            do coordinate_j=coordinate_i+1, 3*natoms
-                atom_j      = (coordinate_j-1)/3+1
-                direction_j = mod(coordinate_j-1, 3)+1
-                displaced = coordinates
-                displaced(atom_i,direction_i) = displaced(atom_i,direction_i)+difference_step
-                displaced(atom_j,direction_j) = displaced(atom_j,direction_j)+difference_step
-                call evaluate_values(displaced, mixed_pp)
-                displaced(atom_j,direction_j) = displaced(atom_j,direction_j)-2.0d0*difference_step
-                call evaluate_values(displaced, mixed_pm)
-                displaced(atom_i,direction_i) = displaced(atom_i,direction_i)-2.0d0*difference_step
-                call evaluate_values(displaced, mixed_mm)
-                displaced(atom_j,direction_j) = displaced(atom_j,direction_j)+2.0d0*difference_step
-                call evaluate_values(displaced, mixed_mp)
-                numerical_hessian(:,coordinate_i,coordinate_j) = &
-                    (mixed_pp-mixed_pm-mixed_mp+mixed_mm)/(4.0d0*difference_step*difference_step)
-                numerical_hessian(:,coordinate_j,coordinate_i) = numerical_hessian(:,coordinate_i,coordinate_j)
-            enddo
-        enddo
+        integer, intent(in)                    :: geometry_index
+        real(wp), intent(in)                   :: coordinates(natoms,3)
+        real(wp)                               :: base(nvalues)
+        real(wp)                               :: numerical_gradient(nvalues,3*natoms)
+        real(wp)                               :: numerical_hessian(nvalues,3*natoms,3*natoms)
+        type(chempotpy_status_t)               :: status
+        integer                                :: coordinate_i, coordinate_j, value_index
+        call central_finite_difference(evaluate_values, coordinates, difference_step, base, numerical_gradient, &
+            numerical_hessian, status)
+        if( status%failed() )then
+            write(*,'(A,1X,I0,2A)') 'geometry', geometry_index, ' failed: ', trim(status%message)
+            return
+        endif
         write(*,'(A,1X,I0)') 'geometry', geometry_index
         do value_index=1, nvalues
             write(*,'(A,1X,I0,1X,ES26.17E3)') '{value_label}', value_index, base(value_index)
@@ -279,7 +266,9 @@ def export_surface(
 
     output_directory.mkdir(parents=True, exist_ok=True)
     source_output = output_directory / (source.surface_name + "_standalone.f90")
-    source_output.write_text(combined_source(source))
+    source_output.write_text(combined_source(
+        source, include_validation=with_driver
+    ))
     outputs = [source_output]
     if with_driver:
         driver_output = output_directory / (source.surface_name + "_example.f90")

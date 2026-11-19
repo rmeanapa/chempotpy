@@ -965,6 +965,7 @@ end
 
 !> @brief Evaluate leps.
 subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     !   r1 is the distance between A and B
     !   r2 is the distance between B and C
     !   r3 is the distance between A and C
@@ -984,7 +985,7 @@ subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     real(wp) :: d2h12(3), d2hdif(3), drad(3), df12(3,3)
     real(wp) :: dcos1(3), dcos2(3), dcos3(3)
     real(wp) :: d(3), re(3), beta(3), sato(3), rt3
-    d    = 109.4583e0_wp/627.509552e0_wp
+    d    = 109.4583e0_wp/hartree_to_kilocalorie_per_mole
     re   = 0.7412871e0_wp/0.52917725e0_wp
     beta = 1.973536e0_wp*0.52917725e0_wp
     sato = 0.132e0_wp

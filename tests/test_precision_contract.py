@@ -7,9 +7,13 @@ from pathlib import Path
 
 WORKING_PRECISION_CORE_SOURCES = (
     "chempotpy_blas.f90",
+    "chempotpy_contract.f90",
     "chempotpy_dsyev.f90",
+    "chempotpy_finite_difference.f90",
     "chempotpy_geometry.f90",
     "chempotpy_internal_coordinates.f90",
+    "chempotpy_interpolation.f90",
+    "chempotpy_linear_algebra.f90",
     "chempotpy_legacy_coordinates.f90",
     "chempotpy_legacy_units.f90",
     "chempotpy_constants.f90",
@@ -109,6 +113,19 @@ class PrecisionContractTests( unittest.TestCase ):
                         source.read_text(errors="replace")
                     ))
                 )
+
+    def test_catalog_uses_shared_hartree_to_kilocalorie_conversion(
+        self,
+    ) -> None:
+        legacy_conversion = re.compile(r"(?<![A-Za-z0-9_])627\.509\d*")
+        for source in sorted(self.repository.glob("chempotpy/**/*.f90")):
+            if source.parent == self.core:
+                continue
+            with self.subTest(source=str(source.relative_to(self.repository))):
+                executable = self.executable_fortran(
+                    source.read_text(errors="replace")
+                )
+                self.assertIsNone(legacy_conversion.search(executable))
 
     def test_internal_linear_algebra_uses_working_precision( self ) -> None:
         blas = (self.core / "chempotpy_blas.f90").read_text().lower()

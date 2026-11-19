@@ -44,6 +44,7 @@
 
 !> @brief Implement H3_GEN_TK_1984, a potential energy surface for H3.
 module chempotpy_h3_gen_tk_1984_pes
+    use chempotpy_units,     only: hartree_to_kilocalorie_per_mole
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -224,7 +225,7 @@ module chempotpy_h3_gen_tk_1984_pes
             !   BOHR (Angstrom/bohr) converts Angstroms to Bohr
             !   HARTRE (kcal/Hartree) converts from Hartree to kcal/mol
             real(wp), parameter :: bohr   = 0.52917706e0_wp
-            real(wp), parameter :: hartre = 627.5095e0_wp
+            real(wp), parameter :: hartre = hartree_to_kilocalorie_per_mole
             if( legacy_natoms .gt. 25 )then
                 if( present(status) ) call status%set(status_invalid_input, &
                     'legacy kernel rejected the evaluation request')
@@ -303,7 +304,7 @@ module chempotpy_h3_gen_tk_1984_pes
             !   BOHR (Angstrom/bohr) converts Angstroms to Bohr
             !   HARTRE (kcal/Hartree) converts from Hartree to kcal/mol
             real(wp), parameter :: bohr   = 0.52917706e0_wp
-            real(wp), parameter :: hartre = 627.5095e0_wp
+            real(wp), parameter :: hartre = hartree_to_kilocalorie_per_mole
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
@@ -393,7 +394,7 @@ module chempotpy_h3_gen_tk_1984_pes
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
-            real(wp), parameter :: hartre = 627.5095e0_wp
+            real(wp), parameter :: hartre = hartree_to_kilocalorie_per_mole
             logical             :: rabl, rbcl
             !         COORDINATES,POTENTIAL ENERGY, AND DERIVATIVES ARE
             !  THIS SUBPROGRAM SHOULD BE CALLED
@@ -419,7 +420,7 @@ module chempotpy_h3_gen_tk_1984_pes
             integer, parameter  :: isurf  = 5
             integer, parameter  :: jsurf  = isurf*(isurf+1)/2
             integer, parameter  :: natom  = 25
-            real(wp), parameter :: hartre = 627.5095e0_wp
+            real(wp), parameter :: hartre = hartree_to_kilocalorie_per_mole
             logical             :: rabl, rbcl
             !         COORDINATES,POTENTIAL ENERGY, AND DERIVATIVES ARE
             !         PASSED THROUGH COMMON /PT1CM/ R(3), ENGYGS, DEGSDR(3)
@@ -502,7 +503,7 @@ module chempotpy_h3_gen_tk_1984_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

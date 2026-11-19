@@ -640,7 +640,7 @@ def main() -> int:
     for failure in failures:
         print("FAIL {}: {}".format(failure.key, failure.error))
     document = {
-        "baseline_version": 1,
+        "baseline_version": 2,
         "surfaces": {
             result.key: result.record
             for result in sorted(results, key=lambda item: item.key)

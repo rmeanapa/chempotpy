@@ -29,6 +29,7 @@
 
 !> @brief Implement N4_1A_PIPNN, a potential energy surface for N4.
 module chempotpy_n4_1a_pipnn_pes
+    use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
     implicit none
     private
@@ -787,7 +788,7 @@ module chempotpy_n4_1a_pipnn_pes
         real(wp) :: autoang, autokcal
         integer  :: imol
         autoang  = 0.52917726e0_wp
-        autokcal = 627.509541e0_wp
+        autokcal = hartree_to_kilocalorie_per_mole
         ! Generalized parameters for BJ damping from P. Verma, B. Wang,
         ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017)
         s6  = 1.0e0_wp

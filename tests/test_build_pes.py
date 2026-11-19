@@ -23,6 +23,8 @@ class BuildPESTests( unittest.TestCase ):
         self.assertEqual(CORE_FORTRAN_ROOT.name, "core")
         self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_kinds.f90").is_file())
         self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_constants.f90").is_file())
+        self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_contract.f90").is_file())
+        self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_finite_difference.f90").is_file())
         self.assertFalse((CORE_FORTRAN_ROOT / "fortran").exists())
 
     def test_entry_point_extraction_omits_internal_modules( self ) -> None:
@@ -108,6 +110,28 @@ end subroutine pes
             ["chempotpy_kinds.f90", "chempotpy_geometry.f90"],
         )
 
+    def test_linear_algebra_dependencies_include_the_bundled_solver( self ) -> None:
+        dependencies = core_fortran_dependencies(
+            "use chempotpy_linear_algebra, only: symmetric_eigendecomposition\n"
+        )
+        self.assertEqual(
+            [path.name for path in dependencies],
+            [
+                "chempotpy_kinds.f90",
+                "chempotpy_linear_algebra.f90",
+                "chempotpy_dsyev.f90",
+            ],
+        )
+
+    def test_interpolation_dependencies_include_working_precision( self ) -> None:
+        dependencies = core_fortran_dependencies(
+            "use chempotpy_interpolation, only: evaluate_cubic_spline\n"
+        )
+        self.assertEqual(
+            [path.name for path in dependencies],
+            ["chempotpy_kinds.f90", "chempotpy_interpolation.f90"],
+        )
+
     def test_unit_dependencies_include_codata_constants( self ) -> None:
         dependencies = core_fortran_dependencies(
             "use chempotpy_units, only: bohr_to_angstrom\n"
@@ -118,6 +142,32 @@ end subroutine pes
                 "chempotpy_kinds.f90",
                 "chempotpy_constants.f90",
                 "chempotpy_units.f90",
+            ],
+        )
+
+    def test_contract_dependencies_include_kinds_and_status( self ) -> None:
+        dependencies = core_fortran_dependencies(
+            "use chempotpy_contract, only: pes_request_t\n"
+        )
+        self.assertEqual(
+            [path.name for path in dependencies],
+            [
+                "chempotpy_kinds.f90",
+                "chempotpy_status.f90",
+                "chempotpy_contract.f90",
+            ],
+        )
+
+    def test_finite_difference_dependencies_include_kinds_and_status( self ) -> None:
+        dependencies = core_fortran_dependencies(
+            "use chempotpy_finite_difference, only: central_finite_difference\n"
+        )
+        self.assertEqual(
+            [path.name for path in dependencies],
+            [
+                "chempotpy_kinds.f90",
+                "chempotpy_status.f90",
+                "chempotpy_finite_difference.f90",
             ],
         )
 

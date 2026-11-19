@@ -81,6 +81,8 @@ end program test_quad_precision
                     str(core / "chempotpy_units.f90"),
                     str(core / "chempotpy_geometry.f90"),
                     str(core / "chempotpy_status.f90"),
+                    str(core / "chempotpy_contract.f90"),
+                    str(core / "chempotpy_finite_difference.f90"),
                     str(repository / "chempotpy" / "Aln" / "Aln_ER.f90"),
                     str(driver),
                     "-o",
@@ -105,19 +107,31 @@ end program test_quad_precision
             "chempotpy_units.f90",
             "chempotpy_legacy_units.f90",
             "chempotpy_geometry.f90",
+            "chempotpy_interpolation.f90",
+            "chempotpy_linear_algebra.f90",
+            "chempotpy_dsyev.f90",
             "chempotpy_internal_coordinates.f90",
             "chempotpy_legacy_coordinates.f90",
             "chempotpy_status.f90",
+            "chempotpy_contract.f90",
+            "chempotpy_finite_difference.f90",
         )
         driver_source = """
 program test_fortran_core
+    use chempotpy_contract, only: pes_metadata_t, pes_request_t, pes_result_t, &
+        representation_adiabatic
+    use chempotpy_finite_difference, only: central_finite_difference
     use chempotpy_geometry, only: all_pair_distance_jacobian, all_pair_distances, &
-        all_pair_distances_and_jacobian, cartesian_distance, cosine_between_vectors, dot_product_3d, fill_distance_matrix, &
-        flatten_cartesian_coordinates, ordered_pair_distance_jacobian, transform_internal_gradient_to_cartesian, &
-        triatomic_distance_jacobian
+        all_pair_distances_and_jacobian, cartesian_distance, cosine_between_vectors, cross_product_3d, dot_product_3d, &
+        fill_distance_matrix, &
+        flatten_cartesian_coordinates, ordered_pair_distance_jacobian, reshape_cartesian_coordinates, &
+        transform_internal_gradient_to_cartesian, triatomic_distance_jacobian
     use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
         prepare_legacy_triatomic_coordinates
+    use chempotpy_interpolation, only: cubic_spline_coefficients, evaluate_cubic_spline, &
+        evaluate_tabulated_cubic_spline, prepare_tabulated_cubic_spline
     use chempotpy_kinds, only: dp, real32, real64, sp, wp
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
     use chempotpy_constants, only: codata_adjustment_year, PI
     use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates, &
         legacy_triatomic_distances_to_bohr, triatomic_distances_to_bohr
@@ -137,9 +151,11 @@ program test_fortran_core
 
     real(wp) :: first_point(3), second_point(3), coordinates(3,3)
     real(wp) :: distances(3,3), converted(1,3), flat_coordinates(9)
+    real(wp) :: reshaped_coordinates(3,3)
     real(wp) :: coordinate_jacobian(2,3), internal_gradient(2)
     real(wp) :: internal_gradient_matrix(2,2), cartesian_gradient_matrix(2,3)
     real(wp) :: internal_gradient_tensor(2,2,2), cartesian_gradient_tensor(2,2,3)
+    real(wp) :: atom_gradient_matrix(2,1,3), atom_gradient_tensor(2,2,1,3)
     real(wp) :: cartesian_gradient(3)
     real(wp) :: potlib_coordinates(9)
     real(wp) :: pair_distances(3)
@@ -149,7 +165,12 @@ program test_fortran_core
     real(wp) :: surface_energy(1), surface_gradient(1,3,3)
     real(wp) :: surface_coupling(1,1,3,3)
     real(wp) :: surface_energy_hartree, surface_internal_gradient(3)
-    integer      :: conversion_status
+    real(wp) :: finite_values(2), finite_gradient(2,9), finite_hessian(2,9,9)
+    real(wp) :: symmetric_matrix(2,2), eigenvalues(2), eigenvectors(2,2)
+    real(wp) :: spline_coordinates(3), spline_values(3), spline_second(3), spline_third(3), spline_first(3)
+    real(wp) :: spline_value, spline_first_value, spline_second_value
+    type(chempotpy_status_t) :: evaluation_status
+    integer                  :: conversion_status, i, j, solver_status
 
     if( sp /= real32 ) error stop 'single-precision kind is not binary32'
     if( dp /= real64 ) error stop 'double-precision kind is not binary64'
@@ -184,6 +205,34 @@ program test_fortran_core
     if( abs(electronvolt_to_hartree*hartree_to_electronvolt-1.0_wp) &
         > epsilon(1.0_wp) ) error stop 'energy conversion is inconsistent'
 
+    symmetric_matrix(1,:) = [2.0_wp, 1.0_wp]
+    symmetric_matrix(2,:) = [1.0_wp, 2.0_wp]
+    call symmetric_eigendecomposition(symmetric_matrix, eigenvalues, eigenvectors, solver_status)
+    if( solver_status /= 0 .or. any(abs(eigenvalues-[1.0_wp, 3.0_wp]) > 16.0_wp*epsilon(1.0_wp)) ) &
+        error stop 'symmetric eigendecomposition failed'
+    if( any(abs(matmul(symmetric_matrix,eigenvectors(:,1))-eigenvalues(1)*eigenvectors(:,1)) &
+        > 32.0_wp*epsilon(1.0_wp)) ) error stop 'symmetric eigenvector residual failed'
+    call symmetric_eigendecomposition(symmetric_matrix, eigenvalues, info=solver_status)
+    if( solver_status /= 0 .or. any(abs(eigenvalues-[1.0_wp, 3.0_wp]) > 16.0_wp*epsilon(1.0_wp)) ) &
+        error stop 'symmetric eigenvalue-only operation failed'
+
+    spline_coordinates = [0.0_wp, 1.0_wp, 2.0_wp]
+    spline_values      = [0.0_wp, 1.0_wp, 4.0_wp]
+    call cubic_spline_coefficients(spline_coordinates, spline_values, 0.0_wp, 4.0_wp, spline_second)
+    call evaluate_cubic_spline(spline_coordinates, spline_values, spline_second, 1.5_wp, spline_value)
+    if( abs(spline_value-2.25_wp) > 32.0_wp*epsilon(1.0_wp) ) &
+        error stop 'clamped cubic spline failed'
+    spline_values  = spline_coordinates
+    spline_second  = 0.0_wp
+    call prepare_tabulated_cubic_spline(spline_coordinates, spline_values, 1.0e-12_wp, spline_second, &
+        spline_third, spline_first)
+    call evaluate_tabulated_cubic_spline(spline_coordinates, spline_values, 1.5_wp, spline_second, spline_third, &
+        spline_first, spline_value, spline_first_value, spline_second_value)
+    if( abs(spline_value-1.5_wp) > 32.0_wp*epsilon(1.0_wp) .or. &
+        abs(spline_first_value-1.0_wp) > 32.0_wp*epsilon(1.0_wp) .or. &
+        abs(spline_second_value) > 32.0_wp*epsilon(1.0_wp) ) &
+        error stop 'prepared tabulated cubic spline failed'
+
     if( legacy_bohr_to_angstrom /= 0.52917718887329101562_wp ) &
         error stop 'legacy length rounding changed'
     if( legacy_hartree_to_electronvolt /= &
@@ -205,6 +254,9 @@ program test_fortran_core
     if( dot_product_3d([1.0_wp,2.0_wp,3.0_wp], &
         [4.0_wp,5.0_wp,6.0_wp]) /= 32.0_wp ) &
         error stop 'dot product failed'
+    if( any(cross_product_3d([1.0_wp,0.0_wp,0.0_wp], &
+        [0.0_wp,1.0_wp,0.0_wp]) /= [0.0_wp,0.0_wp,1.0_wp]) ) &
+        error stop 'cross product failed'
     if( abs(cosine_between_vectors([1.0_wp,0.0_wp,0.0_wp], &
         [0.0_wp,1.0_wp,0.0_wp])) > epsilon(1.0_wp) ) &
         error stop 'angle cosine failed'
@@ -216,6 +268,9 @@ program test_fortran_core
     if( any(flat_coordinates /= [1.0_wp, 2.0_wp, 3.0_wp, &
         4.0_wp, 5.0_wp, 6.0_wp, 7.0_wp, 8.0_wp, &
         9.0_wp]) ) error stop 'Cartesian flattening order changed'
+    call reshape_cartesian_coordinates(flat_coordinates, reshaped_coordinates)
+    if( any(reshaped_coordinates /= coordinates) ) &
+        error stop 'Cartesian reshaping order changed'
     call cartesian_to_potlib_coordinates( &
         coordinates, 3, 1, potlib_coordinates, conversion_status )
     if( conversion_status /= 0 .or. any(potlib_coordinates /= flat_coordinates) ) &
@@ -234,12 +289,21 @@ program test_fortran_core
     if( any(cartesian_gradient_matrix(1,:) /= cartesian_gradient) .or. &
         any(cartesian_gradient_matrix(2,:) /= [15.0_wp, 18.0_wp, 21.0_wp]) ) &
         error stop 'matrix chain-rule transformation failed'
+    call transform_internal_gradient_to_cartesian( &
+        internal_gradient_matrix, coordinate_jacobian, atom_gradient_matrix )
+    if( any(atom_gradient_matrix(1,1,:) /= cartesian_gradient) .or. &
+        any(atom_gradient_matrix(2,1,:) /= [15.0_wp, 18.0_wp, 21.0_wp]) ) &
+        error stop 'atom-shaped matrix chain-rule transformation failed'
     internal_gradient_tensor = 0.0_wp
     internal_gradient_tensor(1,2,:) = internal_gradient
     call transform_internal_gradient_to_cartesian( &
         internal_gradient_tensor, coordinate_jacobian, cartesian_gradient_tensor )
     if( any(cartesian_gradient_tensor(1,2,:) /= cartesian_gradient) ) &
         error stop 'tensor chain-rule transformation failed'
+    call transform_internal_gradient_to_cartesian( &
+        internal_gradient_tensor, coordinate_jacobian, atom_gradient_tensor )
+    if( any(atom_gradient_tensor(1,2,1,:) /= cartesian_gradient) ) &
+        error stop 'atom-shaped tensor chain-rule transformation failed'
     coordinates = 0.0_wp
     coordinates(2,1) = 3.0_wp
     coordinates(3,2) = 4.0_wp
@@ -328,16 +392,62 @@ program test_fortran_core
         .or. status_invalid_input /= 2 .or. status_internal_error /= 3 &
         .or. status_model_unavailable /= 4 &
         .or. status_numerical_error /= 5 ) error stop 'status contract changed'
+    if( evaluation_status%failed() ) error stop 'default status is not successful'
+    call evaluation_status%set(status_invalid_input, 'invalid geometry')
+    if( .not. evaluation_status%failed() ) error stop 'failure status was not recorded'
+    if( evaluation_status%code /= status_invalid_input ) error stop 'wrong failure code'
+    if( trim(evaluation_status%message) /= 'invalid geometry' ) error stop 'wrong failure message'
+    call evaluation_status%set(status_internal_error, 'must preserve first failure')
+    if( evaluation_status%code /= status_invalid_input ) error stop 'first failure was overwritten'
+    call evaluation_status%clear()
+    if( evaluation_status%failed() .or. len_trim(evaluation_status%message) /= 0 ) &
+        error stop 'status reset failed'
     block
-        type(chempotpy_status_t) :: evaluation_status
-        if( evaluation_status%failed() ) error stop 'default status is not successful'
-        call evaluation_status%set(status_invalid_input, 'invalid geometry')
-        if( .not. evaluation_status%failed() ) error stop 'failure status was not recorded'
-        if( evaluation_status%code /= status_invalid_input ) error stop 'wrong failure code'
-        if( trim(evaluation_status%message) /= 'invalid geometry' ) error stop 'wrong failure message'
-        call evaluation_status%set(status_internal_error, 'must preserve first failure')
-        if( evaluation_status%code /= status_invalid_input ) error stop 'first failure was overwritten'
+        type(pes_metadata_t) :: metadata
+        type(pes_request_t)  :: request
+        type(pes_result_t)   :: result
+        metadata%system_name  = 'H3'
+        metadata%surface_name = 'quadratic_test'
+        allocate(metadata%atom_symbols(3))
+        metadata%atom_symbols = ['H  ', 'H  ', 'H  ']
+        metadata%state_count = 1
+        metadata%capabilities%gradient = .true.
+        request%representation = representation_adiabatic
+        request%gradient = .true.
+        allocate(result%energy(1), result%gradient(1,3,3))
+        result%energy = 0.0_wp; result%gradient = 0.0_wp
+        call result%validate(metadata, request, evaluation_status)
+        if( evaluation_status%failed() ) error stop 'valid PES contract was rejected'
+        call result%clear()
+        if( allocated(result%energy) .or. allocated(result%gradient) ) &
+            error stop 'PES result clear failed'
+        request%nonadiabatic_coupling = .true.
+        call request%validate(metadata, evaluation_status)
+        if( evaluation_status%code /= status_derivative_unavailable ) &
+            error stop 'unsupported request did not report derivative status'
     end block
+    call evaluation_status%clear()
+    coordinates(1,:) = [1.0_wp, 2.0_wp, 3.0_wp]
+    coordinates(2,:) = [4.0_wp, 5.0_wp, 6.0_wp]
+    coordinates(3,:) = [7.0_wp, 8.0_wp, 9.0_wp]
+    call central_finite_difference(test_quadratic_evaluator, coordinates, 1.0e-3_wp, finite_values, &
+        finite_gradient, finite_hessian, evaluation_status)
+    call flatten_cartesian_coordinates(coordinates, flat_coordinates)
+    if( evaluation_status%failed() ) error stop 'finite-difference evaluation failed'
+    if( any(abs(finite_gradient(1,:)-2.0_wp*flat_coordinates) > 1.0e-9_wp) ) &
+        error stop 'finite-difference gradient failed'
+    if( any(abs(finite_gradient(2,:)-1.0_wp) > 1.0e-10_wp) ) &
+        error stop 'finite-difference linear gradient failed'
+    do i = 1, 9
+        if( abs(finite_hessian(1,i,i)-2.0_wp) > 1.0e-7_wp ) &
+            error stop 'finite-difference Hessian diagonal failed'
+        do j = 1, 9
+            if( i /= j .and. abs(finite_hessian(1,i,j)) > 1.0e-7_wp ) &
+                error stop 'finite-difference Hessian off-diagonal failed'
+        enddo
+    enddo
+    if( maxval(abs(finite_hessian(2,:,:))) > 1.0e-7_wp ) &
+        error stop 'finite-difference linear Hessian failed'
     contains
     subroutine test_triatomic_kernel( distances_bohr, derivative_order, energy_hartree, gradient_hartree_per_bohr )
         real(wp), intent(in)  :: distances_bohr(3)
@@ -347,6 +457,14 @@ program test_fortran_core
         gradient_hartree_per_bohr = 0.0_wp
         if( derivative_order == 1 ) gradient_hartree_per_bohr = [1.0_wp, 2.0_wp, 3.0_wp]
     end subroutine test_triatomic_kernel
+
+    subroutine test_quadratic_evaluator( coordinates, values, status )
+        real(wp), intent(in)                    :: coordinates(:,:)
+        real(wp), intent(out)                   :: values(:)
+        type(chempotpy_status_t), intent(inout) :: status
+        values(1) = sum(coordinates*coordinates)
+        values(2) = sum(coordinates)
+    end subroutine test_quadratic_evaluator
 end program test_fortran_core
 """
         with tempfile.TemporaryDirectory(prefix="chempotpy-fortran-core-") as tmp:

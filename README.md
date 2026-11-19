@@ -40,10 +40,11 @@ the following changes:
   constructs from governed PES sources.
 * Replaced initialization entry points with stateless, independently owned PES
   modules whose fixed coefficients live in source-controlled module data.
-* Added a bundled Fortran core for numerical kinds, status values, canonical
-  NIST CODATA 2022 and compatibility unit conversions, Cartesian geometry, coordinate
-  flattening, internal-to-Cartesian gradient transformations, reusable
-  internal-coordinate adapters, BLAS operations, and
+* Added a bundled Fortran core for numerical kinds, status values, typed PES
+  requests/results/metadata, canonical NIST CODATA 2022 and compatibility unit
+  conversions, Cartesian geometry, coordinate flattening and reshaping,
+  internal-to-Cartesian gradient transformations, centered finite-difference
+  validation, reusable internal-coordinate adapters, BLAS operations, and
   symmetric eigensolution. The core keeps CHEMPOTPY
   independent of external MKL, LAPACK, and BLAS libraries.
 * Added a Python core contract, adapters, surface registry, runtime dispatch,
@@ -126,9 +127,10 @@ energy = 0.0_wp
 ```
 
 The selector is the single `wp = dp` parameter in
-`chempotpy/core/chempotpy_kinds.f90`. The shared numerical core, internal
-BLAS/DSYEV implementation, generated constants and parameter modules, and the
-maintained PES catalog now use this selector consistently. Package builds must
+`chempotpy/core/chempotpy_kinds.f90`. The shared numerical core, high-level
+linear-algebra and interpolation APIs, private BLAS/DSYEV implementation,
+generated constants and parameter modules, and the maintained PES catalog now
+use this selector consistently. Package builds must
 currently leave `wp = dp` because the Python/f2py boundary maps `wp` to a C
 double. Standalone Fortran kernels may select another supported kind; a
 catalog-wide non-binary64 Python build still requires an explicit conversion
@@ -172,9 +174,10 @@ How to install
 
   Modern PES sources may import the bundled Fortran core for numerical kinds,
   canonical or compatibility unit conversions, Cartesian geometry operations,
-  status values, and linear algebra. The isolated builder follows those module
-  dependencies and compiles the required sources into each extension, so every
-  resulting PES module remains independently loadable.
+  typed PES contracts, finite-difference validation, status values, and linear
+  algebra. The isolated builder follows those module dependencies and compiles
+  the required sources into each extension, so every resulting PES module
+  remains independently loadable.
 
 Modernizing Fortran sources
 ---------------------------
@@ -283,11 +286,12 @@ Compile and run the generated pair:
 The example constructs deterministic, non-symmetric Cartesian geometries and
 reports each adiabatic energy, or each diabatic-matrix element for a DPEM. It
 also reports Cartesian gradients and Hessians calculated by centered finite
-differences, so the example works even when the original PES publishes energy
-only. The default displacement is `1.0e-3` angstrom and can be changed with
-`--difference-step`. Consequently, these example derivatives are numerical
-diagnostics in the historical output units per angstrom and per angstrom
-squared; they do not claim analytic Hessian support from the underlying PES.
+differences through the bundled `chempotpy_finite_difference` module, so the
+example works even when the original PES publishes energy only. The default
+displacement is `1.0e-3` angstrom and can be changed with `--difference-step`.
+Consequently, these example derivatives are numerical diagnostics in the
+historical output units per angstrom and per angstrom squared; they do not
+claim analytic Hessian support from the underlying PES.
 
 If a historical entry point still accepts a data-directory argument, the
 generated example accepts the argument for compatibility but does not use it.
@@ -366,9 +370,9 @@ GitHub Actions workflow. The workflow checks out the pull request's base commit
 (or the commit preceding a push), compiles that revision and the current
 revision on the same runner, evaluates all nine deterministic geometries, and
 compares every result. Capturing both revisions with the same compiler and math
-runtime—and using the tested revision's geometry harness for both—prevents
-platform or geometry-suite differences from being mistaken for a source
-change. Existing surfaces must remain within a relative and absolute tolerance
+runtime prevents platform differences from being mistaken for a source
+change. Each revision uses its own versioned geometry harness so an explicitly
+reviewed baseline transition remains visible. Existing surfaces must remain within a relative and absolute tolerance
 of `1e-11`; removed surfaces, interface changes, non-finite results, compilation
 failures, and execution failures also fail the workflow. Aln and NH3 use
 deterministic system-specific geometries so their regression points remain
@@ -376,17 +380,17 @@ inside the mathematical domain of the released fits. A newly added surface
 must compile, execute, match its declared interface, and return only finite
 values; that revision becomes its protected baseline on the next comparison.
 
-The modernization establishes `baseline_version: 1`. The committed fixture
-supports local and package-level regression tests, while the workflow's
-base-revision capture protects existing surfaces independently of edits to that
-fixture in the proposed change.
+The CODATA 2022 Hartree-to-kcal/mol migration establishes
+`baseline_version: 2`. The one-step transition from version 1 approves that
+documented numerical correction; comparisons between two version-2 revisions
+remain strict. The committed fixture supports local and package-level
+regression tests, while the workflow's base-revision capture protects existing
+surfaces independently of ordinary fixture edits in a proposed change.
 
 To reproduce the workflow comparison locally against a selected Git revision:
 
     base_root="$(mktemp -d)"
     git worktree add --detach "$base_root/checkout" REVISION
-    cp scripts/capture_library_references.py \
-        "$base_root/checkout/scripts/capture_library_references.py"
     (cd "$base_root/checkout" && \
         python scripts/capture_library_references.py --all --jobs 4 \
             --output "$base_root/baseline.json")

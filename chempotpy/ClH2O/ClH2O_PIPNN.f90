@@ -1,6 +1,8 @@
 !> @brief Implement ClH2O_PIPNN, a potential energy surface for ClH2O.
 module chempotpy_clh2o_pipnn_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_interpolation, only: cubic_spline_coefficients, evaluate_cubic_spline
+    use chempotpy_units,         only: hartree_to_kilocalorie_per_mole
+    use chempotpy_kinds,         only: wp
     implicit none
     private
     public :: evaluate
@@ -316,7 +318,7 @@ module chempotpy_clh2o_pipnn_pes
         angab     = dot_product(vecacl, vecbo)/(racl*rbo)
         angab     = acos(max(-1.0e0_wp, min(1.0e0_wp, angab)))
         vcorr     = dpthcl*dptho/((rab/0.5291772e0_wp)**3)* (cos(angab)-3.0e0_wp*cos(angb)*cos(anga))
-        vdp       = ((vt1+vcorr)-vpesmin)*627.509e0_wp - 0.15e0_wp
+        vdp       = ((vt1+vcorr)-vpesmin)*hartree_to_kilocalorie_per_mole - 0.15e0_wp
         vdp       = vdp/23.0605e0_wp
     end subroutine ho_hcl_correction
 
@@ -415,7 +417,7 @@ module chempotpy_clh2o_pipnn_pes
         y2 = dp0ho2
         if( rt .lt. r0ho(1) ) rt=r0ho(1)
         if( rt .gt. r0ho(n0ho) ) rt=r0ho(n0ho)
-        call splint(r0ho, dp0ho, y2, n0ho, rt, dpt)
+        call evaluate_cubic_spline(r0ho, dp0ho, y2, rt, dpt)
     end subroutine ho_dipole
 
     !> @brief Evaluate hcl_dipole.
@@ -427,10 +429,10 @@ module chempotpy_clh2o_pipnn_pes
         y2 = dp0hcl2
         if( rt .lt. r0hcl(1) ) rt=r0hcl(1)
         if( rt .gt. r0hcl(n0hcl) ) rt=r0hcl(n0hcl)
-        call splint(r0hcl, dp0hcl, y2, n0hcl, rt, dpt)
+        call evaluate_cubic_spline(r0hcl, dp0hcl, y2, rt, dpt)
     end subroutine hcl_dipole
 
-    !> @brief Evaluate HO_HCl_pes_spline.
+    !> @brief Interpolate the tabulated two-dimensional HO-HCl potential contribution.
     subroutine ho_hcl_pes_spline( r1, r2, vpes )
         use chempotpy_clh2o_pipnn_parameters, only: exhohcl, exhohcl2, nxhcl, nxho, rxhcl, rxho
         use chempotpy_kinds,                  only: wp
@@ -453,67 +455,12 @@ module chempotpy_clh2o_pipnn_pes
                 ytmp(k)  = ya(j,k)
                 y2tmp(k) = y2a(j,k)
             enddo
-            call splint(x2a, ytmp, y2tmp, n, x2, yytmp(j))
+            call evaluate_cubic_spline(x2a, ytmp, y2tmp, x2, yytmp(j))
         enddo
-        call spline(x1a, yytmp, m, 1.0e30_wp, 1.0e30_wp, y2tmp)
-        call splint(x1a, yytmp, y2tmp, m, x1, y)
+        call cubic_spline_coefficients(x1a, yytmp, 1.0e30_wp, 1.0e30_wp, y2tmp)
+        call evaluate_cubic_spline(x1a, yytmp, y2tmp, x1, y)
         vpes = y
     end subroutine ho_hcl_pes_spline
-
-    !> @brief Evaluate splint.
-    subroutine splint( xa, ya, y2a, n, x, y )
-        use chempotpy_kinds, only: wp
-        implicit none
-        real(wp) :: a, b, h, x, xa(n), y, y2a(n), ya(n)
-        integer  :: k, khi, klo, n
-        klo = 1
-        khi = n
-        do while( khi-klo .gt. 1 )
-            k = (khi+klo)/2
-            if( xa(k) .gt. x )then
-                khi = k
-            else
-                klo = k
-            endif
-        enddo
-        h = xa(khi)-xa(klo)
-        a = (xa(khi)-x)/h
-        b = (x-xa(klo))/h
-        y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h**2)/6.0e0_wp
-    end subroutine splint
-
-    !> @brief Evaluate spline.
-    subroutine spline( x, y, n, yp1, ypn, y2 )
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer, parameter :: nmax = 100
-        real(wp)           :: p, qn, sig, u(nmax), un, x(n), y(n), y2(n), yp1, ypn
-        integer            :: i, k, n
-        if( yp1 .gt. .99e30_wp )then
-            y2(1) = 0.0e0_wp
-            u(1)  = 0.0e0_wp
-        else
-            y2(1) = -0.5e0_wp
-            u(1)  = (3.0e0_wp/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
-        endif
-        do i=2, n-1
-            sig   = (x(i)-x(i-1))/(x(i+1)-x(i-1))
-            p     = sig*y2(i-1)+2.0e0_wp
-            y2(i) = (sig-1.0e0_wp)/p
-            u(i)  = (6.0e0_wp*((y(i+1)-y(i))/(x(i+ 1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig* u(i-1))/p
-        enddo
-        if( ypn .gt. .99e30_wp )then
-            qn = 0.0e0_wp
-            un = 0.0e0_wp
-        else
-            qn = 0.5e0_wp
-            un = (3.0e0_wp/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
-        endif
-        y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0e0_wp)
-        do k=n-1, 1, -1
-            y2(k) = y2(k)*y2(k+1)+u(k)
-        enddo
-    end subroutine spline
 end module chempotpy_clh2o_pipnn_pes
 
 !> @brief Expose ClH2O_PIPNN through the Python-facing PES entry point.

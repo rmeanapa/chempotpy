@@ -34,7 +34,8 @@
 
 !> @brief Implement LiFH_LEPS_JHTP1_2002, a potential energy surface for LiFH.
 module chempotpy_lifh_leps_jhtp1_2002_pes
-    use chempotpy_kinds, only: wp
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate
@@ -74,7 +75,7 @@ module chempotpy_lifh_leps_jhtp1_2002_pes
             u(1,2) = u12(1)*hartree_to_electronvolt
             u(2,1) = u12(1)*hartree_to_electronvolt
             u(2,2) = u22(1)*hartree_to_electronvolt
-            call diagonalize(nstates, u, p, t)
+            call symmetric_eigendecomposition(u, p, t)
         else
             if( present(status) ) call status%set(status_derivative_unavailable, &
                 'requested derivatives are unavailable')
@@ -108,27 +109,6 @@ subroutine evdrdx( x, r, drdx )
     real(wp), intent(out) :: drdx(3,9)
     call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
 end subroutine evdrdx
-
-!> @brief Evaluate diagonalize for the LiFH_LEPS_JHTP1_2002 potential.
-subroutine diagonalize( n, a_ss, ev_s, u_ss )
-    use chempotpy_kinds, only: wp
-    implicit none
-    integer, intent(in)   :: n
-    real(wp), intent(in)  :: a_ss(n,n)
-    real(wp), intent(out) :: u_ss(n,n)
-    real(wp), intent(out) :: ev_s(n)
-    integer               :: io, i
-    real(wp), allocatable :: work_d(:)
-    integer               :: lwork_d
-    u_ss    = a_ss
-    lwork_d = -1
-    allocate( work_d(1) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-    lwork_d = int(work_d(1))
-    deallocate( work_d )
-    allocate( work_d(lwork_d) )
-    call dsyev('V', 'L', n, u_ss, n, ev_s, work_d, lwork_d, io)
-end subroutine diagonalize
 
 !> @brief Evaluate pot for the LiFH_LEPS_JHTP1_2002 potential.
 subroutine pot( r, e, nt, nsurf )

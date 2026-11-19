@@ -54,8 +54,10 @@
 
 !> @brief Implement BrH2_LEPS_C_1982, a potential energy surface for BrH2.
 module chempotpy_brh2_leps_c_1982_pes
-    use chempotpy_constants, only: PI
-    use chempotpy_kinds,     only: wp
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_units,          only: hartree_to_kilocalorie_per_mole
+    use chempotpy_constants,      only: PI
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate
@@ -552,9 +554,8 @@ module chempotpy_brh2_leps_c_1982_pes
             real(wp), intent(in)  :: a(nv)
             real(wp), intent(out) :: w(n), z(nm,n), fv1(n), fv2(n)
             integer, intent(out)  :: ierr
-            integer               :: i, j, packed_index, lwork
-            real(wp), allocatable :: matrix(:,:), work(:)
-            external                      :: dsyev
+            integer               :: i, j, packed_index
+            real(wp), allocatable :: eigenvectors(:,:), matrix(:,:)
             ierr = 0
             z    = 0.0e0_wp
             fv1  = 0.0e0_wp
@@ -567,8 +568,7 @@ module chempotpy_brh2_leps_c_1982_pes
                 ierr = 20*n
                 return
             endif
-            lwork = max(1, 3*n-1)
-            allocate(matrix(n,n), work(lwork))
+            allocate(eigenvectors(n,n), matrix(n,n))
             matrix       = 0.0e0_wp
             packed_index = 0
             do i = 1, n
@@ -579,12 +579,12 @@ module chempotpy_brh2_leps_c_1982_pes
                 enddo
             enddo
             if( matz == 0 )then
-                call dsyev('N', 'L', n, matrix, n, w, work, lwork, ierr)
+                call symmetric_eigendecomposition(matrix, w, info=ierr)
             else
-                call dsyev('V', 'L', n, matrix, n, w, work, lwork, ierr)
-                if( ierr == 0 ) z(1:n,1:n) = matrix
+                call symmetric_eigendecomposition(matrix, w, eigenvectors, ierr)
+                if( ierr == 0 ) z(1:n,1:n) = eigenvectors
             endif
-            deallocate(matrix, work)
+            deallocate(eigenvectors, matrix)
         end subroutine rsp
 
         !> @brief Evaluate POTINFO for the BrH2_LEPS_C_1982 potential.
@@ -657,7 +657,7 @@ module chempotpy_brh2_leps_c_1982_pes
             real(wp), parameter :: ckcal      = 4.184e10_wp
             real(wp), parameter :: htomillh   = 1000.e0_wp
             real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = 627.509470e0_wp
+            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave    = 219474.631e0_wp
             real(wp), parameter :: htokj      = 2625.49962e0_wp
             real(wp), parameter :: bohr_a     = .5291772083e0_wp

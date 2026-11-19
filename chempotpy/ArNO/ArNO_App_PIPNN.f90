@@ -2,6 +2,7 @@
 
 !> @brief Implement ArNO_App_PIPNN, a potential energy surface for ArNO.
 module chempotpy_arno_app_pipnn_pes
+    use chempotpy_interpolation,          only: cubic_spline_coefficients, evaluate_cubic_spline
     use chempotpy_constants,              only: PI
     use chempotpy_arno_spline_parameters, only: bvcut_vcut, pesa_ind, pesa_roh1, pesa_roh2, pesa_thth, pesa_ve
     use chempotpy_kinds,                  only: wp
@@ -118,8 +119,8 @@ module chempotpy_arno_app_pipnn_pes
                         y(nh)  = pesa_ve(iop, i, j, k)
                     enddo
                     r1a = r1
-                    call spline(xt, y, nh, dy1, dyn, y2)
-                    call splint(xt, y, y2, nh, r1a, y3)
+                    call cubic_spline_coefficients(xt(:nh), y(:nh), dy1, dyn, y2(:nh))
+                    call evaluate_cubic_spline(xt(:nh), y(:nh), y2(:nh), r1a, y3)
                     if( y3 .gt. bvcut_vcut ) y3=bvcut_vcut
                     ss(j) = y3
                 enddo
@@ -129,8 +130,8 @@ module chempotpy_arno_app_pipnn_pes
                     xt(nthth) = pesa_thth(j)
                     y(nthth)  = ss(j)
                 enddo
-                call spline(xt, y, nthth, 0.0e0_wp, 0.0e0_wp, y2)
-                call splint(xt, y, y2, nthth, th, yw2)
+                call cubic_spline_coefficients(xt(:nthth), y(:nthth), 0.0e0_wp, 0.0e0_wp, y2(:nthth))
+                call evaluate_cubic_spline(xt(:nthth), y(:nthth), y2(:nthth), th, yw2)
                 if( yw2 .gt. bvcut_vcut ) yw2=bvcut_vcut
                 sss(i) = yw2
             enddo
@@ -146,64 +147,10 @@ module chempotpy_arno_app_pipnn_pes
             enddo
             !$OMP END DO NOWAIT
             !$OMP END PARALLEL
-            call spline(xt, y, nr1, dy1, dyn, y2)
-            call splint(xt, y, y2, nr1, r2, yw2)
+            call cubic_spline_coefficients(xt(:nr1), y(:nr1), dy1, dyn, y2(:nr1))
+            call evaluate_cubic_spline(xt(:nr1), y(:nr1), y2(:nr1), r2, yw2)
             if( yw2 .gt. bvcut_vcut ) yw2=bvcut_vcut
             v = yw2
-        end
-        !> @brief Evaluate splint.
-        subroutine splint( xa, ya, y2a, n, x, y )
-            use chempotpy_kinds, only: wp
-            implicit none
-            real(wp) :: a, b, h, x, xa(n), y, y2a(n), ya(n)
-            integer  :: k, khi, klo, n
-            klo = 1
-            khi = n
-            do while( khi-klo .gt. 1 )
-                k = (khi+klo)/2
-                if( xa(k) .gt. x )then
-                    khi = k
-                else
-                    klo = k
-                endif
-            enddo
-            h = xa(khi)-xa(klo)
-            a = (xa(khi)-x)/h
-            b = (x-xa(klo))/h
-            y = a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))* (h**2)/6.0e0_wp
-        end
-        !> @brief Evaluate spline.
-        subroutine spline( x, y, n, yp1, ypn, y2 )
-            use chempotpy_kinds, only: wp
-            implicit none
-            integer, parameter :: nmax = 100
-            real(wp)           :: p, qn, sig, u(nmax), un, x(n), y(n), y2(n), yp1, ypn
-            integer            :: i, k, n
-            if( yp1 .gt. .99e30_wp )then
-                y2(1) = 0.0e0_wp
-                u(1)  = 0.0e0_wp
-            else
-                y2(1) = -0.5e0_wp
-                u(1)  = (3.0e0_wp/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
-            endif
-            do i=2, n-1
-                sig   = (x(i)-x(i-1))/(x(i+1)-x(i-1))
-                p     = sig*y2(i-1)+2.0e0_wp
-                y2(i) = (sig-1.0e0_wp)/p
-                u(i)  = (6.0e0_wp*((y(i+1)-y(i))/(x(i+ 1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))- sig* &
-                    & u(i- 1))/p
-            enddo
-            if( ypn .gt. .99e30_wp )then
-                qn = 0.0e0_wp
-                un = 0.0e0_wp
-            else
-                qn = 0.5e0_wp
-                un = (3.0e0_wp/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
-            endif
-            y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0e0_wp)
-            do k=n-1, 1, -1
-                y2(k) = y2(k)*y2(k+1)+u(k)
-            enddo
         end
         !> @brief Evaluate longpes.
         subroutine longpes( r_no, r_arn, cthx, v, istat )
@@ -427,8 +374,8 @@ module chempotpy_arno_app_pipnn_pes
                     y(i) = v+(de(i)-vmin1)*tocm
                 enddo
             endif
-            call spline(x, y, 17, dy1, dyn, y2)
-            call splint(x, y, y2, 17, r2, v)
+            call cubic_spline_coefficients(x, y, dy1, dyn, y2)
+            call evaluate_cubic_spline(x, y, y2, r2, v)
             !       set zero point at minimum of Ar + NO on A' state
             v = v-31.4930895583566e0_wp
         end
@@ -542,8 +489,8 @@ module chempotpy_arno_app_pipnn_pes
                     y(i) = (de(i)-vmin1)*tocm
                 enddo
             endif
-            call spline(x, y, 17, dy1, dyn, y2)
-            call splint(x, y, y2, 17, r2, v)
+            call cubic_spline_coefficients(x, y, dy1, dyn, y2)
+            call evaluate_cubic_spline(x, y, y2, r2, v)
             !       set zero point at minimum of Ar + NO on A' state
             v = v-31.4930895583566e0_wp
         end
