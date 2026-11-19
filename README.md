@@ -385,8 +385,10 @@ values; that revision becomes its protected baseline on the next comparison.
 
 The CODATA 2022 Hartree-to-kcal/mol migration establishes
 `baseline_version: 2`. The one-step transition from version 1 approves that
-documented numerical correction; comparisons between two version-2 revisions
-remain strict. The committed fixture supports local and package-level
+documented numerical correction. Records whose approved values did not change
+retain the base revision captured on that same runner, so an unchanged PES is
+never compared with another architecture's fixture. Comparisons between two
+version-2 revisions remain strict. The committed fixture supports local and package-level
 regression tests, while the workflow's base-revision capture protects existing
 surfaces independently of ordinary fixture edits in a proposed change.
 

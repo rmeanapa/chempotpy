@@ -84,7 +84,13 @@ def select_baseline(
     current_version: Optional[int],
     current: Dict[str, dict],
 ) -> Tuple[Dict[str, dict], bool]:
-    """Select the immutable baseline or one explicit version transition."""
+    """Select the immutable baseline or one approved version transition.
+
+    During a version transition, records deliberately changed in the current
+    fixture use those approved values. Unchanged records retain values captured
+    from the base revision on the same runner, which prevents a fixture created
+    on one architecture from becoming another architecture's baseline.
+    """
 
     if current_version != BASELINE_VERSION:
         raise ValueError(
@@ -95,7 +101,16 @@ def select_baseline(
     if baseline_version is None:
         return current, True
     if baseline_version == BASELINE_VERSION-1:
-        return current, True
+        selected = dict(baseline)
+        compared_fields = METADATA_FIELDS+("values",)
+        for key, current_record in current.items():
+            previous_record = baseline.get(key)
+            if previous_record is None or any(
+                previous_record.get(field) != current_record.get(field)
+                for field in compared_fields
+            ):
+                selected[key] = current_record
+        return selected, True
     if baseline_version != BASELINE_VERSION:
         raise ValueError(
             "base fixture uses unsupported baseline_version {}".format(

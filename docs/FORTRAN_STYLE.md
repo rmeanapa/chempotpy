@@ -115,11 +115,8 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   finite-difference validation belong in the bundled core.
 - Use `symmetric_eigendecomposition` from `chempotpy_linear_algebra` for real
   symmetric matrices. PES modules must not define `diagonalize` or `eign`
-  wrappers or call the low-level `DSYEV` ABI directly. The core-owned
-  `symmetric_eigensolver` generic exposes that ABI only for a published kernel
-  whose numerical parity depends on retaining the original call boundary. The
-  CH3NH2 APRP pair is the sole direct-ABI exception: cross-target regression
-  proves that adding an explicit interface changes its published eigenvalues.
+  wrappers or call the low-level `DSYEV` ABI directly. The bundled core owns
+  that implementation detail.
 - Use `chempotpy_interpolation` for one-dimensional cubic splines. The core
   provides both endpoint-derivative cubic splines and the historical tabulated
   relaxation spline used by the ClH2 TTGI fits; do not copy local `spline`,
@@ -138,11 +135,9 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   requires the historical subroutine evaluation boundary for numerical parity.
   The analogous `compute_dot_product_3d` preserves sequential accumulation for
   numerically sensitive published kernels. Use the Fortran `dot_product` and
-  `norm2` intrinsics for general vector dot products and Euclidean norms. The
-  CH3NH2 APRP fit is the sole local exception: cross-target regression shows
-  that changing its historical assumed-size `xprod1` and `sprod` procedure
-  contracts changes its published energies materially. Do not carry other
-  local `crosprod`, `dotprod`, `anorm`, `xprod`, or `sprod` helpers. Use
+  `norm2` intrinsics for general vector dot products and Euclidean norms. Do
+  not carry local `crosprod`, `dotprod`, `anorm`, `xprod`, or `sprod` helpers.
+  Use
   `flatten_cartesian_coordinates` to transform `x(natoms,3)` into
   `[x1, y1, z1, x2, y2, z2, ...]`; do not repeat indexing loops for this
   layout conversion. Use `reshape_cartesian_coordinates` for the inverse

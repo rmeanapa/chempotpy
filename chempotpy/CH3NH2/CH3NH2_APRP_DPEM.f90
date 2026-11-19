@@ -72,8 +72,10 @@
 
 !> @brief Implement CH3NH2_APRP, a diabatic potential matrix for CH3NH2.
 module chempotpy_ch3nh2_aprp_dpem_pes
-    use chempotpy_constants, only: PI
-    use chempotpy_kinds,     only: wp
+    use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_geometry,       only: compute_cross_product_3d, compute_dot_product_3d
+    use chempotpy_constants,      only: PI
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate
@@ -142,30 +144,29 @@ module chempotpy_ch3nh2_aprp_dpem_pes
     subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, eigvec, repflag )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)              :: xx(3,7)
-        real(wp)              :: x(7), y(7), z(7)
-        real(wp)              :: scp(3)
-        integer               :: i, j
-        real(wp)              :: e1
-        integer               :: nrap, ntap
-        real(wp)              :: dx1(7), dy1(7), dz1(7)
-        real(wp)              :: dx(7), dy(7), dz(7)
-        integer               :: igrad
-        real(wp)              :: dux(7,3), duy(7,3), duz(7,3)
-        real(wp)              :: uu(2,2), vv(2)
-        real(wp)              :: tt(1)
-        real(wp)              :: guu(3,7,2,2), gtt(3,7,1,1)
-        real(wp)              :: gvv(3,7,2)
-        real(wp)              :: dvec(3,7,2,2)
-        real(wp)              :: eigvec(2,2)
-        real(wp), allocatable :: work(:)
-        integer               :: info, lwork
-        integer               :: repflag
-        real(wp)              :: tmpmat22(2,2)
-        integer               :: ist, jst
-        real(wp), parameter   :: evtohartree = 27.21139e0_wp
-        real(wp), parameter   :: bohrtoang   = 0.52917721067e0_wp
-        real(wp)              :: v2, v4
+        real(wp)            :: xx(3,7)
+        real(wp)            :: x(7), y(7), z(7)
+        real(wp)            :: scp(3)
+        integer             :: i, j
+        real(wp)            :: e1
+        integer             :: nrap, ntap
+        real(wp)            :: dx1(7), dy1(7), dz1(7)
+        real(wp)            :: dx(7), dy(7), dz(7)
+        integer             :: igrad
+        real(wp)            :: dux(7,3), duy(7,3), duz(7,3)
+        real(wp)            :: uu(2,2), vv(2)
+        real(wp)            :: tt(1)
+        real(wp)            :: guu(3,7,2,2), gtt(3,7,1,1)
+        real(wp)            :: gvv(3,7,2)
+        real(wp)            :: dvec(3,7,2,2)
+        real(wp)            :: eigvec(2,2)
+        integer             :: info
+        integer             :: repflag
+        real(wp)            :: tmpmat22(2,2)
+        integer             :: ist, jst
+        real(wp), parameter :: evtohartree = 27.21139e0_wp
+        real(wp), parameter :: bohrtoang   = 0.52917721067e0_wp
+        real(wp)            :: v2, v4
         scp = 0e0_wp
         dux = 0e0_wp
         duy = 0e0_wp
@@ -199,15 +200,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         uu(2,2) = scp(2)/evtohartree
         uu(1,2) = scp(3)/evtohartree
         uu(2,1) = scp(3)/evtohartree
-        eigvec  = uu
-        lwork   = -1
-        allocate(work(1))
-        call dsyev('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
-        lwork = int(work(1))
-        deallocate(work)
-        allocate(work(lwork))
-        call dsyev('V', 'L', 2, eigvec, 2, vv, work, lwork, info)
-        deallocate(work)
+        call symmetric_eigendecomposition(uu, vv, eigvec, info)
         if( info .ne. 0 )then
             return
         endif
@@ -289,10 +282,10 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ! u = eij*ejk normal vector in plane i-j-k
         ! v = ejk*ekl Normal vector in plane j-k-l
         ! w = u*v used to determine the sign of dihedral angle
-        call xprod1(eij, ejk, u)
-        call xprod1(ejk, ekl, v)
-        call xprod1(u, v, w)
-        call sprod(3, u, v, a)
+        call compute_cross_product_3d(u, eij, ejk)
+        call compute_cross_product_3d(v, ejk, ekl)
+        call compute_cross_product_3d(w, u, v)
+        call compute_dot_product_3d(a, u, v)
         a       = a/(sin(aijk)*sin(ajkl))
         a       = max(a, -1.0e0_wp)
         a       = min(a, 1.0e0_wp)
@@ -342,27 +335,9 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ejk(1) = (x(k)-x(j))/rjk
         ejk(2) = (y(k)-y(j))/rjk
         ejk(3) = (z(k)-z(j))/rjk
-        call sprod(3, eji, ejk, a)
+        call compute_dot_product_3d(a, eji, ejk)
         bndang = acos(a)
     end function bndang
-
-    !> @brief Evaluate the historical cross product used by the published CH3NH2 fit.
-    subroutine xprod1( x1, x2, x3 )
-        real(wp) :: x1(3), x2(3), x3(3)
-        x3(1) = x1(2)*x2(3)-x1(3)*x2(2)
-        x3(2) = x1(3)*x2(1)-x1(1)*x2(3)
-        x3(3) = x1(1)*x2(2)-x1(2)*x2(1)
-    end subroutine xprod1
-
-    !> @brief Accumulate the historical dot product used by the published CH3NH2 fit.
-    subroutine sprod( n, a, b, c )
-        integer  :: i, n
-        real(wp) :: a(*), b(*), c
-        c = 0.0e0_wp
-        do i=1, n
-            c = c+a(i)*b(i)
-        enddo
-    end subroutine sprod
 
     !> @brief Evaluate convertit for the CH3NH2_APRP_DPEM potential.
     subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )

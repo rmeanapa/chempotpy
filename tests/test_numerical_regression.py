@@ -112,11 +112,18 @@ class NumericalRegressionTests(unittest.TestCase):
         self.assertIs(selected, current)
         self.assertTrue(bootstrapped)
 
-    def test_previous_version_uses_approved_current_baseline(self) -> None:
+    def test_previous_version_uses_approved_changed_record(self) -> None:
         previous = {"H3/example": record(["1.0"])}
         current = {"H3/example": record(["2.0"])}
         selected, bootstrapped = select_baseline(1, previous, 2, current)
-        self.assertIs(selected, current)
+        self.assertIs(selected["H3/example"], current["H3/example"])
+        self.assertTrue(bootstrapped)
+
+    def test_previous_version_keeps_same_platform_unchanged_record(self) -> None:
+        previous = {"H3/example": record(["1.0"])}
+        current = {"H3/example": record(["1.0"])}
+        selected, bootstrapped = select_baseline(1, previous, 2, current)
+        self.assertIs(selected["H3/example"], previous["H3/example"])
         self.assertTrue(bootstrapped)
 
     def test_versioned_base_cannot_be_replaced_by_current_fixture(self) -> None:
