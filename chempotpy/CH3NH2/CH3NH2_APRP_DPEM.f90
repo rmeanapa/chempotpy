@@ -594,9 +594,12 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         real(wp) :: dd1, dd2, rr, ft2, fa2
         real(wp) :: ft1(nrap,ntap)
         real(wp) :: fa1(nrap,ntap)
-        ut  = 0e0_wp
-        vs  = 0e0_wp
-        vb  = 0e0_wp
+        ut = 0e0_wp
+        vs = 0e0_wp
+        vb = 0e0_wp
+        ! The coupling branch has no diagonal-state v3 or v4 contribution.
+        v3  = 0e0_wp
+        v4  = 0e0_wp
         dut = 0e0_wp
         do i=1, nqs
             qs(i) = qc(i)
@@ -1860,10 +1863,14 @@ module chempotpy_ch3nh2_aprp_dpem_pes
                 fg(2) = i
             endif
         enddo
-        un = 0e0_wp
-        up = 0e0_wp
-        vn = 0e0_wp
-        vp = 0e0_wp
+        un  = 0e0_wp
+        up  = 0e0_wp
+        vn  = 0e0_wp
+        vp  = 0e0_wp
+        dun = 0e0_wp
+        dup = 0e0_wp
+        dvn = 0e0_wp
+        dvp = 0e0_wp
         !****** CORNERS
         if( (fg(1)-1 .eq. 0) .and. (fg(2)-1 .eq. 0) )then
             vp = 1e0_wp

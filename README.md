@@ -63,6 +63,10 @@ the following changes:
 * Added strict compilation, modernization, formatting, packaging, binary
   linkage, extension-import, and numerical-regression gates for all 363
   callable surfaces, including nine stored reference geometries per surface.
+* Corrected the CH3NH2 APRP coupling evaluation by initializing terms that are
+  absent from the coupling branch and conditionally assigned tent derivatives.
+  The legacy result depended on uninitialized stack memory and therefore
+  changed with compiler, architecture, and source layout.
 * Added a reproducible current conda-forge environment and validation against
   the newest mutually compatible Python, NumPy, Meson, Ninja, and gfortran
   toolchain.
