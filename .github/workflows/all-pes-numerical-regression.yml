@@ -6,6 +6,7 @@ on:
     workflow_dispatch:
 
 permissions:
+    actions: read
     contents: read
 
 concurrency:
@@ -37,20 +38,70 @@ jobs:
             - name: Capture the base revision on this runner
               id: baseline
               env:
+                  API_URL: ${{ github.api_url }}
                   EVENT_NAME: ${{ github.event_name }}
+                  HEAD_SHA: ${{ github.sha }}
                   PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
                   PUSH_BEFORE_SHA: ${{ github.event.before }}
                   PUSH_FORCED: ${{ github.event.forced }}
+                  REF_NAME: ${{ github.ref_name }}
+                  REPOSITORY: ${{ github.repository }}
+                  TOKEN: ${{ github.token }}
+                  WORKFLOW_FILE: all-pes-numerical-regression.yml
               run: |
                   set -euo pipefail
                   if [[ "$EVENT_NAME" == "pull_request" ]]; then
                       base_sha="$PR_BASE_SHA"
-                  elif [[ "$PUSH_FORCED" != "true" ]] && \
-                       [[ "$PUSH_BEFORE_SHA" =~ ^[0-9a-f]{40}$ ]] && \
-                       [[ ! "$PUSH_BEFORE_SHA" =~ ^0+$ ]]; then
-                      base_sha="$PUSH_BEFORE_SHA"
                   else
-                      base_sha="$(git rev-parse HEAD^)"
+                      successful_sha="$(python - <<'PY'
+                  import json
+                  import os
+                  import urllib.parse
+                  import urllib.request
+
+                  query = urllib.parse.urlencode({
+                      "branch": os.environ["REF_NAME"],
+                      "event": "push",
+                      "per_page": 20,
+                      "status": "success",
+                  })
+                  url = "{}/repos/{}/actions/workflows/{}/runs?{}".format(
+                      os.environ["API_URL"],
+                      os.environ["REPOSITORY"],
+                      os.environ["WORKFLOW_FILE"],
+                      query,
+                  )
+                  request = urllib.request.Request(
+                      url,
+                      headers={
+                          "Accept": "application/vnd.github+json",
+                          "Authorization": "Bearer {}".format(os.environ["TOKEN"]),
+                          "X-GitHub-Api-Version": "2022-11-28",
+                      },
+                  )
+                  try:
+                      with urllib.request.urlopen(request) as response:
+                          runs = json.load(response).get("workflow_runs", [])
+                  except Exception as error:
+                      print("Could not query the last green run: {}".format(error), file=__import__("sys").stderr)
+                      runs = []
+                  for run in runs:
+                      sha = run.get("head_sha", "")
+                      if sha != os.environ["HEAD_SHA"]:
+                          print(sha)
+                          break
+                  PY
+                      )"
+                      if [[ "$successful_sha" =~ ^[0-9a-f]{40}$ ]] && \
+                         git merge-base --is-ancestor "$successful_sha" HEAD; then
+                          base_sha="$successful_sha"
+                      elif [[ "$PUSH_FORCED" != "true" ]] && \
+                           [[ "$PUSH_BEFORE_SHA" =~ ^[0-9a-f]{40}$ ]] && \
+                           [[ ! "$PUSH_BEFORE_SHA" =~ ^0+$ ]]; then
+                          base_sha="$PUSH_BEFORE_SHA"
+                      else
+                          base_sha="$(git rev-parse HEAD^)"
+                      fi
                   fi
                   if ! git cat-file -e "${base_sha}^{commit}" 2>/dev/null; then
                       base_sha="$(git rev-parse HEAD^)"

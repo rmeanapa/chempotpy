@@ -82,7 +82,7 @@
 
 !> @brief Implement C6H5SH_APRP, a diabatic potential matrix for C6H5SH.
 module chempotpy_c6h5sh_aprp_dpem_pes
-    use chempotpy_geometry,  only: cross_product_3d
+    use chempotpy_geometry,  only: compute_cross_product_3d
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -5134,13 +5134,13 @@ module chempotpy_c6h5sh_aprp_dpem_pes
             ekl(:) = (x(:,l)-x(:,k))/evalbl(x, k, l)
             sinijk = sin(evalba(x, i, j, k))
             sinjkl = sin(evalba(x, j, k, l))
-            cross1 = cross_product_3d(eij, ejk)
-            cross2 = cross_product_3d(ejk, ekl)
-            costo  = dot_product(cross1, cross2)/sinijk/sinjkl
+            call compute_cross_product_3d(cross1, eij, ejk)
+            call compute_cross_product_3d(cross2, ejk, ekl)
+            costo = dot_product(cross1, cross2)/sinijk/sinjkl
             !--- determine sign of torsion
-            cross1 = cross_product_3d(eij, ejk)
-            cross2 = cross_product_3d(ejk, ekl)
-            cross3 = cross_product_3d(cross1, cross2)
+            call compute_cross_product_3d(cross1, eij, ejk)
+            call compute_cross_product_3d(cross2, ejk, ekl)
+            call compute_cross_product_3d(cross3, cross1, cross2)
             if( dot_product(cross3, ejk) > 0 )then
                 sign = 1
             else
@@ -5175,8 +5175,8 @@ module chempotpy_c6h5sh_aprp_dpem_pes
             elj(:) = (x(:,j)-x(:,l))/evalbl(x, l, j)
             elk(:) = (x(:,k)-x(:,l))/evalbl(x, l, k)
             sinjlk = sin(evalba(x, j, l, k))
-            cross1 = cross_product_3d(elj, elk)
-            sinob  = dot_product(cross1, eli)/sinjlk
+            call compute_cross_product_3d(cross1, elj, elk)
+            sinob = dot_product(cross1, eli)/sinjlk
             !--- avoid numerical problem
             if( sinob > 1 )then
                 evalob = PI/2
@@ -5201,12 +5201,12 @@ module chempotpy_c6h5sh_aprp_dpem_pes
             integer  :: i, j, k, l
             real(wp) :: x(3,natom)
             real(wp) :: eij(3), eik(3), eijxeik(3), ril(3), sinjik
-            ril(:)  = x(:,l)-x(:,i)
-            eij(:)  = (x(:,j)-x(:,i))/evalbl(x, i, j)
-            eik(:)  = (x(:,k)-x(:,i))/evalbl(x, i, k)
-            eijxeik = cross_product_3d(eij, eik)
-            sinjik  = sin(evalba(x, j, i, k))
-            evalod  = abs(dot_product(ril, eijxeik)/sinjik)
+            ril(:) = x(:,l)-x(:,i)
+            eij(:) = (x(:,j)-x(:,i))/evalbl(x, i, j)
+            eik(:) = (x(:,k)-x(:,i))/evalbl(x, i, k)
+            call compute_cross_product_3d(eijxeik, eij, eik)
+            sinjik = sin(evalba(x, j, i, k))
+            evalod = abs(dot_product(ril, eijxeik)/sinjik)
         end function evalod
 
         ! *def evalSP1
@@ -5225,20 +5225,20 @@ module chempotpy_c6h5sh_aprp_dpem_pes
             real(wp) :: e12(3), e23(3), e13(3), ez(3), ex(3), ep(3) &
                 , e45(3), e24(3), etmp(3), etmp2(3), etmp3(3) &
                 , sin123, sin13z, cos13z, e12xe23(3), cossp1, sgn
-            e12(:)  = (x(:,j)-x(:,i))/evalbl(x, i, j)
-            e23(:)  = (x(:,k)-x(:,j))/evalbl(x, j, k)
-            e13(:)  = (x(:,k)-x(:,i))/evalbl(x, i, k)
-            e45(:)  = (x(:,m)-x(:,l))/evalbl(x, l, m)
-            e24(:)  = (x(:,l)-x(:,j))/evalbl(x, j, l)
-            etmp    = cross_product_3d(e12, e23)
-            ez(:)   = etmp(:)/sqrt(dot_product(etmp, etmp))
-            etmp    = cross_product_3d(e13, ez)
+            e12(:) = (x(:,j)-x(:,i))/evalbl(x, i, j)
+            e23(:) = (x(:,k)-x(:,j))/evalbl(x, j, k)
+            e13(:) = (x(:,k)-x(:,i))/evalbl(x, i, k)
+            e45(:) = (x(:,m)-x(:,l))/evalbl(x, l, m)
+            e24(:) = (x(:,l)-x(:,j))/evalbl(x, j, l)
+            call compute_cross_product_3d(etmp, e12, e23)
+            ez(:) = etmp(:)/sqrt(dot_product(etmp, etmp))
+            call compute_cross_product_3d(etmp, e13, ez)
             ex(:)   = etmp(:)/sqrt(dot_product(etmp, etmp))
             etmp(:) = e45(:)-ex(:)*dot_product(e45, ex)
             ep(:)   = etmp(:)/sqrt(dot_product(etmp, etmp))
             cossp1  = dot_product(ep, e13)
             !--- determine sign
-            etmp = cross_product_3d(e13, ep)
+            call compute_cross_product_3d(etmp, e13, ep)
             if( dot_product(etmp, ex) > 0 )then
                 sgn = 1
             else
@@ -5444,43 +5444,43 @@ module chempotpy_c6h5sh_aprp_dpem_pes
                     & rjk* rkl)- sijkl*rkl3/(cijkl*sjkl**2*rkl**2)
                 !--- out-of-plane bend
             case(4)
-                i              = iatomlist(1)
-                j              = iatomlist(2)
-                k              = iatomlist(3)
-                l              = iatomlist(4)
-                e41(1)         = x(1,i)-x(1,l)
-                e41(2)         = x(2,i)-x(2,l)
-                e41(3)         = x(3,i)-x(3,l)
-                e42(1)         = x(1,j)-x(1,l)
-                e42(2)         = x(2,j)-x(2,l)
-                e42(3)         = x(3,j)-x(3,l)
-                e43(1)         = x(1,k)-x(1,l)
-                e43(2)         = x(2,k)-x(2,l)
-                e43(3)         = x(3,k)-x(3,l)
-                r41            = evalbl(x, i, l)
-                r42            = evalbl(x, j, l)
-                r43            = evalbl(x, k, l)
-                e41            = e41/r41
-                e42            = e42/r42
-                e43            = e43/r43
-                a243           = evalba(x, j, l, k)
-                c243           = cos(a243)
-                s243           = sin(a243)
-                tmpv           = cross_product_3d(e42, e43)
-                oopb           = asin(dot_product(tmpv, e41)/s243)
-                coopb          = cos(oopb)
-                toopb          = tan(oopb)
-                tmpv           = cross_product_3d(e42, e43)
+                i      = iatomlist(1)
+                j      = iatomlist(2)
+                k      = iatomlist(3)
+                l      = iatomlist(4)
+                e41(1) = x(1,i)-x(1,l)
+                e41(2) = x(2,i)-x(2,l)
+                e41(3) = x(3,i)-x(3,l)
+                e42(1) = x(1,j)-x(1,l)
+                e42(2) = x(2,j)-x(2,l)
+                e42(3) = x(3,j)-x(3,l)
+                e43(1) = x(1,k)-x(1,l)
+                e43(2) = x(2,k)-x(2,l)
+                e43(3) = x(3,k)-x(3,l)
+                r41    = evalbl(x, i, l)
+                r42    = evalbl(x, j, l)
+                r43    = evalbl(x, k, l)
+                e41    = e41/r41
+                e42    = e42/r42
+                e43    = e43/r43
+                a243   = evalba(x, j, l, k)
+                c243   = cos(a243)
+                s243   = sin(a243)
+                call compute_cross_product_3d(tmpv, e42, e43)
+                oopb  = asin(dot_product(tmpv, e41)/s243)
+                coopb = cos(oopb)
+                toopb = tan(oopb)
+                call compute_cross_product_3d(tmpv, e42, e43)
                 bmv1           = (tmpv/coopb/s243-toopb*e41)/r41
                 bmatrow(3*i-2) = bmv1(1)
                 bmatrow(3*i-1) = bmv1(2)
                 bmatrow(3*i)   = bmv1(3)
-                tmpv           = cross_product_3d(e43, e41)
+                call compute_cross_product_3d(tmpv, e43, e41)
                 bmv2           = (tmpv/coopb/s243-toopb/s243**2*(e42-e43*c243))/r42
                 bmatrow(3*j-2) = bmv2(1)
                 bmatrow(3*j-1) = bmv2(2)
                 bmatrow(3*j)   = bmv2(3)
-                tmpv           = cross_product_3d(e41, e42)
+                call compute_cross_product_3d(tmpv, e41, e42)
                 bmv3           = (tmpv/coopb/s243-toopb/s243**2*(e43-e42*c243))/r43
                 bmatrow(3*k-2) = bmv3(1)
                 bmatrow(3*k-1) = bmv3(2)
@@ -5491,35 +5491,35 @@ module chempotpy_c6h5sh_aprp_dpem_pes
                 bmatrow(3*l)   = bmv4(3)
                 !--- out-of-plane distance (aka pyramid height)
             case(5)
-                i        = iatomlist(1)
-                j        = iatomlist(2)
-                k        = iatomlist(3)
-                l        = iatomlist(4)
-                e12(1)   = x(1,j)-x(1,i)
-                e12(2)   = x(2,j)-x(2,i)
-                e12(3)   = x(3,j)-x(3,i)
-                e13(1)   = x(1,k)-x(1,i)
-                e13(2)   = x(2,k)-x(2,i)
-                e13(3)   = x(3,k)-x(3,i)
-                v14(1)   = x(1,l)-x(1,i)
-                v14(2)   = x(2,l)-x(2,i)
-                v14(3)   = x(3,l)-x(3,i)
-                r12      = evalbl(x, i, j)
-                r13      = evalbl(x, i, k)
-                e12(:)   = e12(:)/r12
-                e13(:)   = e13(:)/r13
-                theta    = evalba(x, j, i, k)
-                tmpv2    = cross_product_3d(e12, e13)
-                rtmp     = dot_product(v14, tmpv2)
-                tmpv     = cross_product_3d(e13, v14)
+                i      = iatomlist(1)
+                j      = iatomlist(2)
+                k      = iatomlist(3)
+                l      = iatomlist(4)
+                e12(1) = x(1,j)-x(1,i)
+                e12(2) = x(2,j)-x(2,i)
+                e12(3) = x(3,j)-x(3,i)
+                e13(1) = x(1,k)-x(1,i)
+                e13(2) = x(2,k)-x(2,i)
+                e13(3) = x(3,k)-x(3,i)
+                v14(1) = x(1,l)-x(1,i)
+                v14(2) = x(2,l)-x(2,i)
+                v14(3) = x(3,l)-x(3,i)
+                r12    = evalbl(x, i, j)
+                r13    = evalbl(x, i, k)
+                e12(:) = e12(:)/r12
+                e13(:) = e13(:)/r13
+                theta  = evalba(x, j, i, k)
+                call compute_cross_product_3d(tmpv2, e12, e13)
+                rtmp = dot_product(v14, tmpv2)
+                call compute_cross_product_3d(tmpv, e13, v14)
                 tmpv3(:) = (cos(theta)*e12(:)-e13(:))/r12/sin(theta)
                 bmv2     = (tmpv-rtmp*e12)/sin(theta)/r12 - cos(theta)*rtmp/sin(theta)**2*tmpv3
-                tmpv     = cross_product_3d(v14, e12)
+                call compute_cross_product_3d(tmpv, v14, e12)
                 tmpv3(:) = (cos(theta)*e13(:)-e12(:))/r13/sin(theta)
                 bmv3     = (tmpv-rtmp*e13)/sin(theta)/r13 - cos(theta)*rtmp/sin(theta)**2*tmpv3
-                tmpv     = cross_product_3d(e12, e13)
-                bmv4     = tmpv/sin(theta)
-                bmv1     = -bmv2-bmv3-bmv4
+                call compute_cross_product_3d(tmpv, e12, e13)
+                bmv4 = tmpv/sin(theta)
+                bmv1 = -bmv2-bmv3-bmv4
                 if( rtmp/sin(theta) < 0 )then
                     bmv1 = -bmv1
                     bmv2 = -bmv2

@@ -8,6 +8,7 @@ module chempotpy_geometry
     public :: all_pair_distances_and_jacobian
     public :: cartesian_distance
     public :: cosine_between_vectors
+    public :: compute_cross_product_3d
     public :: cross_product_3d
     public :: dot_product_3d
     public :: fill_distance_matrix
@@ -347,6 +348,15 @@ module chempotpy_geometry
         product(2) = first_vector(3)*second_vector(1)-first_vector(1)*second_vector(3)
         product(3) = first_vector(1)*second_vector(2)-first_vector(2)*second_vector(1)
     end function cross_product_3d
+
+    !> @brief Store a Cartesian cross product while preserving legacy subroutine evaluation semantics.
+    pure subroutine compute_cross_product_3d( product, first_vector, second_vector )
+        real(wp), intent(out) :: product(3)
+        real(wp), intent(in)  :: first_vector(3), second_vector(3)
+        product(1) = first_vector(2)*second_vector(3)-first_vector(3)*second_vector(2)
+        product(2) = first_vector(3)*second_vector(1)-first_vector(1)*second_vector(3)
+        product(3) = first_vector(1)*second_vector(2)-first_vector(2)*second_vector(1)
+    end subroutine compute_cross_product_3d
 
     !> @brief Return the Cartesian dot product of two three-component vectors.
     pure function dot_product_3d( first_vector, second_vector ) &

@@ -130,8 +130,10 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
 - Use `chempotpy_geometry` for Cartesian distances, three-dimensional cross
   products, dot products, angle cosines, distance matrices, and atom-major
   Cartesian flattening and reshaping. Use `cross_product_3d` for a Cartesian
-  cross product; use the Fortran `dot_product` and `norm2` intrinsics for
-  general vector dot products and Euclidean norms. Do not carry local
+  cross product. Use `compute_cross_product_3d` only when a published kernel
+  requires the historical subroutine evaluation boundary for numerical parity.
+  Use the Fortran `dot_product` and `norm2` intrinsics for general vector dot
+  products and Euclidean norms. Do not carry local
   `crosprod`, `dotprod`, `anorm`, `xprod`, or `sprod` helpers. Use
   `flatten_cartesian_coordinates` to transform `x(natoms,3)` into
   `[x1, y1, z1, x2, y2, z2, ...]`; do not repeat indexing loops for this
