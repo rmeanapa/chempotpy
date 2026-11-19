@@ -304,10 +304,10 @@ module chempotpy_ch3nh2_aprp_pes
         ! u = eij*ejk normal vector in plane i-j-k
         ! v = ejk*ekl Normal vector in plane j-k-l
         ! w = u*v used to determine the sign of dihedral angle
-        call published_cross_product_3d(eij, ejk, u)
-        call published_cross_product_3d(ejk, ekl, v)
-        call published_cross_product_3d(u, v, w)
-        call published_dot_product_3d(u, v, a)
+        call xprod1(eij, ejk, u)
+        call xprod1(ejk, ekl, v)
+        call xprod1(u, v, w)
+        call sprod(3, u, v, a)
         a       = a/(sin(aijk)*sin(ajkl))
         a       = max(a, -1.0e0_wp)
         a       = min(a, 1.0e0_wp)
@@ -357,29 +357,27 @@ module chempotpy_ch3nh2_aprp_pes
         ejk(1) = (x(k)-x(j))/rjk
         ejk(2) = (y(k)-y(j))/rjk
         ejk(3) = (z(k)-z(j))/rjk
-        call published_dot_product_3d(eji, ejk, a)
+        call sprod(3, eji, ejk, a)
         bndang = acos(a)
     end function bndang
 
-    !> @brief Evaluate a cross product in the published CH3NH2 arithmetic context.
-    pure subroutine published_cross_product_3d( first_vector, second_vector, product )
-        real(wp), intent(in)  :: first_vector(3), second_vector(3)
-        real(wp), intent(out) :: product(3)
-        product(1) = first_vector(2)*second_vector(3)-first_vector(3)*second_vector(2)
-        product(2) = first_vector(3)*second_vector(1)-first_vector(1)*second_vector(3)
-        product(3) = first_vector(1)*second_vector(2)-first_vector(2)*second_vector(1)
-    end subroutine published_cross_product_3d
+    !> @brief Evaluate the historical cross product used by the published CH3NH2 fit.
+    subroutine xprod1( x1, x2, x3 )
+        real(wp) :: x1(3), x2(3), x3(3)
+        x3(1) = x1(2)*x2(3)-x1(3)*x2(2)
+        x3(2) = x1(3)*x2(1)-x1(1)*x2(3)
+        x3(3) = x1(1)*x2(2)-x1(2)*x2(1)
+    end subroutine xprod1
 
-    !> @brief Accumulate a dot product in the published CH3NH2 arithmetic context.
-    pure subroutine published_dot_product_3d( first_vector, second_vector, product )
-        real(wp), intent(in)  :: first_vector(3), second_vector(3)
-        real(wp), intent(out) :: product
-        integer               :: component
-        product = 0.0_wp
-        do component=1, 3
-            product = product+first_vector(component)*second_vector(component)
+    !> @brief Accumulate the historical dot product used by the published CH3NH2 fit.
+    subroutine sprod( n, a, b, c )
+        integer  :: i, n
+        real(wp) :: a(*), b(*), c
+        c = 0.0e0_wp
+        do i=1, n
+            c = c+a(i)*b(i)
         enddo
-    end subroutine published_dot_product_3d
+    end subroutine sprod
 
     !> @brief Evaluate convertit for the CH3NH2_APRP potential.
     subroutine convertit( x, y, z, dk, dx1, dy1, dz1 )

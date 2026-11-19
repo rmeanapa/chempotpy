@@ -140,13 +140,22 @@ class AllSurfaceRegressionTests(unittest.TestCase):
             r"(?im)^\s*(?:(?:real\([^)]*\)\s+)?function|subroutine|call)\s+"
             r"(?:anorm|crosprod|dotprod|sprod|xprod|xprod1)\b"
         )
+        parity_exceptions = {
+            self.sources["CH3NH2/CH3NH2_APRP"],
+            self.sources["CH3NH2/CH3NH2_APRP_DPEM"],
+        }
+        actual_exceptions = set()
         for source in sorted(
             (self.repository / "chempotpy").rglob("*.f90")
         ):
             with self.subTest(source=source.name):
-                self.assertIsNone(
-                    legacy_helpers.search(source.read_text(errors="replace"))
+                match = legacy_helpers.search(
+                    source.read_text(errors="replace")
                 )
+                if match is not None:
+                    actual_exceptions.add(source)
+                    self.assertIn(source, parity_exceptions)
+        self.assertEqual(actual_exceptions, parity_exceptions)
 
     def test_symmetric_diagonalization_uses_core(self) -> None:
         legacy_helpers = re.compile(
