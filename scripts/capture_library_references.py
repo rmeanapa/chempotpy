@@ -380,7 +380,7 @@ def standard_driver(
         coordinate_name = "xyz"
     elif entry_point == "pes" and len(arguments) == 9:
         natoms = 3
-        declarations = """    real(8) :: xyz(10000,3), p({nstates})
+        declarations = """    real(8) :: xyz({natoms},3), p({nstates})
     real(8) :: g({nstates},{natoms},3)
     real(8) :: d({nstates},{nstates},{natoms},3)""".format(
             natoms=natoms, nstates=nstates

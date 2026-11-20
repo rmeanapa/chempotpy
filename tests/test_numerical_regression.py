@@ -6,6 +6,7 @@ from scripts.capture_library_references import (
     BASELINE_VERSION,
     REGRESSION_GEOMETRY_COUNT,
     coordinates,
+    standard_driver,
 )
 from scripts.check_numerical_regression import (
     compare_records,
@@ -195,6 +196,19 @@ class NumericalRegressionTests(unittest.TestCase):
             len(set(pair_distances)),
             REGRESSION_GEOMETRY_COUNT,
         )
+
+    def test_variable_atom_driver_uses_the_public_array_shape(self) -> None:
+        driver = standard_driver(
+            "pes",
+            "xyz,nsi,no,nh,natoms,igrad,p,g,d",
+            3,
+            1,
+            None,
+            "SiOH",
+        )
+
+        self.assertIn("real(8) :: xyz(3,3)", driver)
+        self.assertNotIn("real(8) :: xyz(10000,3)", driver)
 
 
 if __name__ == "__main__":

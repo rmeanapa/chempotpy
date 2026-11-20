@@ -25,6 +25,10 @@ from scripts.capture_library_references import (  # noqa: E402
     REGRESSION_GEOMETRY_COUNT,
     coordinates,
 )
+from scripts.check_numerical_regression import (  # noqa: E402
+    ABSOLUTE_TOLERANCE,
+    RELATIVE_TOLERANCE,
+)
 
 
 RESULT_PREFIX = "CHEMPOTPY_PYTHON_EXTENSION_RESULT "
@@ -134,9 +138,9 @@ def call_surface(
         result = module.pes(expanded, 1, 2, 3, 0)
         selected = result[0]
     elif entry_point == "pes" and len(arguments) == 9:
-        expanded = np.zeros((10000, 3), dtype=np.float64)
-        expanded[:atom_count, :] = coordinate_array
-        result = module.pes(expanded, 1, 1, 1, 3, 0)
+        # f2py derives NATOMS from XYZ and therefore moves it behind the
+        # required IGRAD argument in the generated Python signature.
+        result = module.pes(coordinate_array, 1, 1, 1, 0, atom_count)
         selected = result[0]
     else:
         raise RuntimeError(
@@ -201,8 +205,8 @@ def values_match(expected: str, actual: float) -> bool:
     return math.isclose(
         actual,
         expected_number,
-        rel_tol=1.0e-13,
-        abs_tol=1.0e-13,
+        rel_tol=RELATIVE_TOLERANCE,
+        abs_tol=ABSOLUTE_TOLERANCE,
     )
 
 

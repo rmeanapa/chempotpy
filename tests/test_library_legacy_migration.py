@@ -50,11 +50,23 @@ CORRECTED_RELEASE_DEFECTS = {
         "-2.15335810324679189E-001",
         "1.85671456516125453E+001",
     ],
-    # The released sparse coefficient tables read unset entries.  Explicitly
-    # zero-filling those entries removes the compiler-dependent values.
-    "SiOH/SiOH_GEN_1988": [
-        "8.53887245449429031E+001",
-        "6.52397032504587315E+001",
+    # The released coupling branch read unset interpolation and state terms.
+    # Their physically absent contributions are now initialized to zero.
+    "CH3NH2/CH3NH2_APRP": [
+        "4.39472118958554461E+001",
+        "5.68561310252204635E+001",
+        "3.48342885810071508E+001",
+        "4.44525044875495183E+001",
+    ],
+    "CH3NH2/CH3NH2_APRP_DPEM": [
+        "5.67061455176218061E+001",
+        "-1.38334924573596418E+000",
+        "-1.38334924573596418E+000",
+        "4.40971974034541105E+001",
+        "4.41510401359067401E+001",
+        "-1.67590825134155064E+000",
+        "-1.67590825134155064E+000",
+        "3.51357529326499431E+001",
     ],
 }
 

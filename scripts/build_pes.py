@@ -527,6 +527,27 @@ def existing_result(
     )
 
 
+def missing_build_tools(python: str, backend: str) -> Sequence[str]:
+    """Return missing executables or Python packages for an f2py build."""
+
+    missing = []
+    numpy_check = subprocess.run(
+        [python, "-c", "import numpy"],
+        capture_output=True,
+        text=True,
+    )
+    if numpy_check.returncode:
+        missing.append("numpy for {}".format(python))
+    compiler = os.environ.get("FC", "gfortran")
+    if shutil.which(compiler) is None:
+        missing.append(compiler)
+    if backend == "meson":
+        for executable in ("meson", "ninja"):
+            if shutil.which(executable) is None:
+                missing.append(executable)
+    return tuple(missing)
+
+
 def main() -> int:
     """Build selected surfaces and fail when any extension does not build."""
 
@@ -544,6 +565,15 @@ def main() -> int:
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
+    missing = missing_build_tools(args.python, args.backend)
+    if missing:
+        parser.error(
+            "build toolchain is incomplete; missing: {}. "
+            "Create or update the environment with "
+            "'conda env update --file environment.yml --prune'.".format(
+                ", ".join(missing)
+            )
+        )
 
     surfaces = select_surfaces(args.system, args.surface)
     if not surfaces:

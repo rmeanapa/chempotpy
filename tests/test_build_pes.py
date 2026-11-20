@@ -3,6 +3,7 @@
 import unittest
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 from chempotpy.core.registry import SurfaceSource
 from scripts.build_pes import (
@@ -12,6 +13,7 @@ from scripts.build_pes import (
     extract_entry_point_source,
     existing_result,
     f2py_command,
+    missing_build_tools,
     normalized_sources,
     write_f2py_kind_map,
 )
@@ -19,6 +21,20 @@ from scripts.check_fortran import compiler_command
 
 
 class BuildPESTests( unittest.TestCase ):
+    @patch("scripts.build_pes.shutil.which")
+    @patch("scripts.build_pes.subprocess.run")
+    def test_missing_build_tools_reports_backend_requirements(
+        self, run, which
+    ) -> None:
+        run.return_value.returncode = 0
+        which.side_effect = lambda name: (
+            None if name in {"meson", "ninja"} else "/usr/bin/"+name
+        )
+
+        missing = missing_build_tools("python", "meson")
+
+        self.assertEqual(missing, ("meson", "ninja"))
+
     def test_core_fortran_sources_live_directly_under_core( self ) -> None:
         self.assertEqual(CORE_FORTRAN_ROOT.name, "core")
         self.assertTrue((CORE_FORTRAN_ROOT / "chempotpy_kinds.f90").is_file())

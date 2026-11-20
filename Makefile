@@ -1,6 +1,22 @@
 .PHONY: all audit build check check-binaries check-conda check-embedded-parameters check-fortran check-fortran-warnings check-generated check-modernization check-modernization-source check-numerical-regression check-python-extensions check-style clean test test-surfaces
 
-PYTHON ?= python3
+CONDA_ENV ?= chempotpy
+PYTHON ?= $(shell \
+	if python3 -c "import numpy" >/dev/null 2>&1 && \
+		command -v meson >/dev/null 2>&1 && \
+		command -v ninja >/dev/null 2>&1 && \
+		command -v "$${FC:-gfortran}" >/dev/null 2>&1; then \
+		printf '%s' python3; \
+	elif command -v conda >/dev/null 2>&1 && \
+		conda run -n $(CONDA_ENV) sh -c \
+		'python -c "import numpy" >/dev/null 2>&1 && \
+		command -v meson >/dev/null 2>&1 && \
+		command -v ninja >/dev/null 2>&1 && \
+		command -v "$${FC:-gfortran}" >/dev/null 2>&1'; then \
+		printf '%s' 'conda run -n $(CONDA_ENV) python'; \
+	else \
+		printf '%s' python3; \
+	fi)
 BUILD_FLAGS ?=
 BUILD_OUTPUT ?= chempotpy
 NUMERICAL_BASELINE ?= tests/data/all_surface_references.json
