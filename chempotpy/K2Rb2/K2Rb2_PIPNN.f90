@@ -14,7 +14,7 @@ module chempotpy_k2rb2_pipnn_pes
 
     !> @brief Evaluate the K2Rb2_PIPNN potential energy surface for K2Rb2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: electronvolt_to_inverse_centimeter
         use chempotpy_kinds,  only: wp
         implicit none
@@ -27,7 +27,7 @@ module chempotpy_k2rb2_pipnn_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: v, tx(3,natoms)
-        integer               :: iatom, idir, j, istate
+        integer               :: iatom, idir, istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
@@ -187,7 +187,7 @@ module chempotpy_k2rb2_pipnn_pes
     subroutine before_vpes( xct, lxc )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, lxc
+        integer  :: lxc
         real(wp) :: xct(3,4), xc(3,4), xvec(3,6), rb(6)
         real(wp) :: rmin
         ! lxc=-1,  unphysical point

@@ -39,15 +39,10 @@ module chempotpy_n4_1a_pipnn_pes
 
     !> @brief Evaluate the N4_1A_PIPNN potential energy surface for N4.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,              only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
-        use chempotpy_units,               only: hartree_per_bohr_to_ev_per_angstrom
-        use chempotpy_n4_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
-            & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
-            & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
-            & alpha, natom, nbasis, ndim, nnew, pi, &
-            & radian
-        use chempotpy_units, only: bohr_to_angstrom, hartree_to_electronvolt
-        use chempotpy_kinds, only: wp
+        use chempotpy_status, only: chempotpy_status_t
+        use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
@@ -60,7 +55,7 @@ module chempotpy_n4_1a_pipnn_pes
         real(wp)              :: v
         real(wp)              :: tx(natoms), ty(natoms), tz(natoms)
         real(wp)              :: txg(natoms), tyg(natoms), tzg(natoms)
-        integer               :: iatom, idir, j, istate
+        integer               :: istate
         !initialize
         p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! input coordinates of tx, ty, tz are in bohr
@@ -82,20 +77,15 @@ module chempotpy_n4_1a_pipnn_pes
     !> @brief Evaluate n4pipNN.
     subroutine n4pipnn( x, y, z, vpes, dedx, dedy, dedz, igrad )
         use chempotpy_geometry,            only: all_pair_distances, transform_internal_gradient_to_cartesian
-        use chempotpy_n4_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
-            & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
-            & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
-            & alpha, natom, nbasis, ndim, nnew, pi, &
-            & radian
-        use chempotpy_kinds, only: wp
+        use chempotpy_n4_pipnn_parameters, only: alpha, natom, nbasis, ndim, nnew
+        use chempotpy_kinds,               only: wp
         implicit none
         integer  :: i, j
-        real(wp) :: rb(ndim), xbond(ndim), basis(1:nbasis), tmp1, &
-            &  txinput(nbasis-1), bnew(1:nnew)
+        real(wp) :: rb(ndim), xbond(ndim), basis(1:nbasis), bnew(1:nnew)
         real(wp) :: cx(3,natom)
         real(wp) :: vpes, vpesa, vpesb, vpesc
         real(wp) :: vn2, vn2tmp, grad
-        integer  :: imol, igrad
+        integer  :: igrad
         ! ZV
         real(wp)            :: x(4), y(4), z(4), dedx(4), dedy(4), dedz(4)
         real(wp)            :: dr, vp(6), vm(6), dedr(6), dvdx(12), drdx(6,12)
@@ -196,12 +186,8 @@ module chempotpy_n4_1a_pipnn_pes
 
     !> @brief Evaluate one member of the immutable neural-network ensemble.
     subroutine evaluate_network( x, network_index, potential )
-        use chempotpy_n4_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
-            & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
-            & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
-            & alpha, natom, nbasis, ndim, nnew, pi, &
-            & radian
-        use chempotpy_kinds, only: wp
+        use chempotpy_n4_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, hidden_output_weights, input_hidden_weights, ninput, nlayer, nodemax, nodes, noutput, nscale, output_biases, scale_averages, scale_deltas
+        use chempotpy_kinds,               only: wp
         implicit none
         real(wp), intent(in)  :: x(ninput)
         integer, intent(in)   :: network_index
@@ -718,7 +704,6 @@ module chempotpy_n4_1a_pipnn_pes
         real(wp)            :: re, de, as(0:6)
         real(wp)            :: y, fy, u
         real(wp)            :: dfdy, rr, dydr, dfdr
-        integer             :: k
         ! Dispersion variables
         real(wp) :: dist(1), disp, dispdr(1)
         !       re=1.098d0
@@ -779,12 +764,10 @@ module chempotpy_n4_1a_pipnn_pes
         ! The C6 values are fixed.
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: cn(2), s6, s8, rs6, rs8
+        real(wp) :: s6, s8, rs6, rs8
         real(wp) :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
         real(wp) :: e6dr(1), e8dr(1)
-        integer  :: iz(2), mxc(94), i, j, igrad
-        real(wp) :: c6ab(94,94,5,5,3)
-        real(wp) :: r2r4(94)
+        integer  :: iz(2), mxc(94), i, igrad
         real(wp) :: autoang, autokcal
         integer  :: imol
         autoang  = 0.52917726e0_wp
@@ -836,15 +819,11 @@ module chempotpy_n4_1a_pipnn_pes
         use chempotpy_kinds, only: wp
         implicit none
         integer  :: n, iz(2), max_elem, maxc, mxc(max_elem)
-        real(wp) :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+        real(wp) :: dist(1), r2r4(max_elem)
         real(wp) :: rs6, rs8, rcov(max_elem)
-        real(wp) :: c6ab(max_elem,max_elem,maxc,maxc,3)
         real(wp) :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
         integer  :: iat, jat, igrad
         real(wp) :: r, tmp, c6, c8, a1, a2
-        real(wp) :: damp6, damp8
-        real(wp) :: cn(n)
-        real(wp) :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
         integer  :: step
         e6(:)   = 0.0e0_wp
         e8(:)   = 0.0e0_wp

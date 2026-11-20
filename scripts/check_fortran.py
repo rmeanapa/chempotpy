@@ -20,6 +20,25 @@ sys.path.insert(0, str(REPOSITORY_ROOT))
 from chempotpy.core.registry import SurfaceSource, discover_surface_sources
 from scripts.build_pes import SUPPORT_SOURCES, core_fortran_dependencies
 
+WARNING_FLAGS = (
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    # Stable PES signatures intentionally retain several arguments that a
+    # particular implementation does not consume.  Exact REAL comparisons
+    # are likewise part of released lookup and branch logic.  Keep both
+    # contracts regression-tested without letting them mask new hygiene
+    # warnings in imports, parameters, or local variables.
+    "-Wno-unused-dummy-argument",
+    "-Wno-compare-reals",
+    "-Wcharacter-truncation",
+    "-Wdo-subscript",
+    "-Wimplicit-interface",
+    "-Wmaybe-uninitialized",
+    "-Wsurprising",
+    "-Wuninitialized",
+)
+
 
 @dataclass(frozen=True)
 class CheckResult:
@@ -35,7 +54,10 @@ class CheckResult:
 
 
 def compiler_command(
-    source: SurfaceSource, module_directory: Path, compiler: str
+    source: SurfaceSource,
+    module_directory: Path,
+    compiler: str,
+    warnings_as_errors: bool = False,
 ) -> List[str]:
     """Return the strict compatibility command for one source form."""
 
@@ -49,6 +71,8 @@ def compiler_command(
         "-I",
         str(source.path.parent),
     ]
+    if warnings_as_errors:
+        command.extend((*WARNING_FLAGS, "-Werror"))
     if source.source_form == "fixed":
         command.extend(("-ffixed-form", "-ffixed-line-length-72"))
     else:
@@ -79,13 +103,21 @@ def compiler_command(
 
 
 def check_source(
-    source: SurfaceSource, work_root: Path, compiler: str
+    source: SurfaceSource,
+    work_root: Path,
+    compiler: str,
+    warnings_as_errors: bool = False,
 ) -> CheckResult:
     """Run the compiler syntax gate for one source."""
 
     module_directory = work_root / source.system_name / source.surface_name
     module_directory.mkdir(parents=True, exist_ok=True)
-    command = compiler_command(source, module_directory, compiler)
+    command = compiler_command(
+        source,
+        module_directory,
+        compiler,
+        warnings_as_errors=warnings_as_errors,
+    )
     process = subprocess.run(
         command,
         cwd=module_directory,
@@ -132,6 +164,7 @@ def main() -> int:
     parser.add_argument("--system")
     parser.add_argument("--surface")
     parser.add_argument("--include-support", action="store_true")
+    parser.add_argument("--warnings-as-errors", action="store_true")
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()
     if args.jobs < 1:
@@ -149,7 +182,13 @@ def main() -> int:
             max_workers=args.jobs
         ) as executor:
             futures = [
-                executor.submit(check_source, source, work_root, args.compiler)
+                executor.submit(
+                    check_source,
+                    source,
+                    work_root,
+                    args.compiler,
+                    args.warnings_as_errors,
+                )
                 for source in sources
             ]
             results = [future.result() for future in futures]

@@ -13,7 +13,7 @@ module chempotpy_n2hocp_pipnn_pes
 
     !> @brief Evaluate the N2HOCp_PIPNN potential energy surface for N2HOCp.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -71,9 +71,9 @@ module chempotpy_n2hocp_pipnn_pes
     subroutine n2chopipnn( rb, vpes, vpesa, vpesb, vpesc )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j, k, lpes
-        real(wp) :: rb(ndim), xbond(ndim), basis(0:nbasis), tmp1, txinput(nbasis)
-        real(wp) :: vpes, vpesa, vpesb, vpesc, vpesh, vnn
+        integer  :: j
+        real(wp) :: rb(ndim), xbond(ndim), basis(0:nbasis), txinput(nbasis)
+        real(wp) :: vpes, vpesa, vpesb, vpesc
         basis    = 0.e0_wp
         xbond(:) = exp(-rb(:)/alpha)
         call bemsav21113(xbond, basis)

@@ -4,16 +4,36 @@ module chempotpy_n4_bdtc_2014_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( x_, y_, z_, e_, dedx_, dedy_, dedz_ )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: x_(4), y_(4), z_(4)
+            real(wp), intent(out) :: e_
+            real(wp), intent(out) :: dedx_(4), dedy_(4), dedz_(4)
+            real(wp)              :: cconv, econv, gconv, eref
+            real(wp)              :: x__(4), y__(4), z__(4)
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the N4_BDTC_2014 potential energy surface for N4.
     subroutine evaluate( x, igrad, path, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
+        interface
+            !> @brief Evaluate assemble_model_parameters.
+            subroutine assemble_model_parameters( )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer :: oridval, maskval
+            end subroutine assemble_model_parameters
+        end interface
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter              :: nstates = 1
@@ -26,8 +46,7 @@ module chempotpy_n4_bdtc_2014_pes
         real(wp)                        :: x1(4), y1(4), z1(4)
         real(wp)                        :: dx1(4), dy1(4), dz1(4)
         real(wp)                        :: v
-        integer                         :: i, j, k, l
-        integer                         :: istate, iatom, idir
+        integer                         :: istate
         !initialize
         v     = 0.e0_wp; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         x1(:) = x(:,1)/bohr_to_angstrom
@@ -109,13 +128,38 @@ subroutine assemble_model_parameters( )
         & parameter_pesform => pesform, parameter_pnu => pnu, parameter_rwfa => rwfa, &
         & parameter_rwfb => rwfb
     use falcons_vars_eval, only: aji, qi
-    use falcons_vars_main, only: aa, cgmeth, cmap, crc, crcmult, dedy, e, epsnu, epsu, epw, eta, i, &
-        & ind, j, k, l, m, mcrc, moltype, n, nall, nitcrc, nma, nmincrc, nn, np, nplmax, ntar, &
-        & ntarmax, ntarmin, pesform, pnu, ps, pu, pwonly, q, qeq, qp, qps, qr, qs, r, rwfa, rwfb, sd, &
-        & systo, t, x, xr, y
-    use chempotpy_kinds, only: wp
+    use falcons_vars_main, only: aa, cmap, crc, crcmult, epsnu, eta, i, j, l, m, mcrc, moltype, n, nall, nitcrc, nma, nmincrc, nplmax, ntar, ntarmax, ntarmin, pesform, pnu, ps, qeq, qp, qps, qr, rwfa, rwfb, t, y
+    use chempotpy_kinds,   only: wp
     implicit none
-    integer :: oridval, maskval
+    interface
+        !> @brief Evaluate cartesian2rawdist.
+        subroutine cartesian2rawdist( y, qr )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(out) :: qr(6)
+            real(wp), intent(in)  :: y(4,3)
+            integer               :: i
+        end subroutine cartesian2rawdist
+
+        !> @brief Evaluate default2cartesian.
+        subroutine default2cartesian( ra, rb, d, thetaa_d, thetab_d, &
+                &  phi_d, y )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: ra, rb, d, thetaa_d, thetab_d, phi_d
+            real(wp), intent(out) :: y(4,3)
+            real(wp)              :: thetaa, thetab, phi, y11, y31, y32
+        end subroutine default2cartesian
+
+        !> @brief Evaluate rawdist2rawmorse.
+        subroutine rawdist2rawmorse( qr, xr, qeq, aa )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: qr(6), qeq(6), aa(6)
+            real(wp), intent(out) :: xr(6)
+            integer               :: i
+        end subroutine rawdist2rawmorse
+    end interface
     if( allocated(qi) ) deallocate(qi)
     if( allocated(aji) ) deallocate(aji)
     if( allocated(crc) ) deallocate(crc)
@@ -176,13 +220,48 @@ end subroutine assemble_model_parameters
 
 !> @brief Evaluate pot.
 subroutine pot( x_, y_, z_, e_, dedx_, dedy_, dedz_ )
-    use falcons_vars_eval, only: aji, qi
-    use falcons_vars_main, only: aa, cgmeth, cmap, crc, crcmult, dedy, e, epsnu, epsu, epw, eta, i, &
-        & ind, j, k, l, m, mcrc, moltype, n, nall, nitcrc, nma, nmincrc, nn, np, nplmax, ntar, &
-        & ntarmax, ntarmin, pesform, pnu, ps, pu, pwonly, q, qeq, qp, qps, qr, qs, r, rwfa, rwfb, sd, &
-        & systo, t, x, xr, y
-    use chempotpy_kinds, only: wp
+    use falcons_vars_main, only: aa, cgmeth, cmap, crc, dedy, e, epsu, eta, l, m, mcrc, moltype, n, np, ps, pu, pwonly, q, qeq, qp, qps, qr, r, sd, x, xr, y
+    use chempotpy_kinds,   only: wp
     implicit none
+    interface
+        !> @brief Evaluate calccoordinates.
+        subroutine calccoordinates( &
+                & y, qr, xr, q, x, sd, aa, qeq, moltype, qp, qps )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: moltype, qps
+            integer, intent(out)  :: sd(6)
+            real(wp), intent(in)  :: aa(6), qeq(6)
+            real(wp), intent(out) :: qr(6), xr(6), q(6), x(6)
+            integer               :: qp(qps,6)
+            real(wp)              :: y(4,3)
+        end subroutine calccoordinates
+
+        !> @brief Evaluate evaluatesurface.
+        subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
+                & cmap, qp, qps, mcrc, crc, n, m, eta, ps, pu, epsu, aa, r, np, e, dedy )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: cg, moltype, pwonly, qps, mcrc, n, m, eta
+            integer, intent(in)   :: cmap(4,3)
+            integer, intent(in)   :: qp(qps,6)
+            real(wp), intent(in)  :: ps, pu, epsu
+            real(wp), intent(in)  :: qr(6), xr(6), q(6), x(6), aa(6)
+            real(wp), intent(in)  :: crc(mcrc)
+            real(wp), intent(in)  :: y(4,3)
+            integer, intent(out)  :: np
+            real(wp), intent(out) :: r, e
+            real(wp), intent(out) :: dedy(4,3)
+            integer               :: i, j, k, l, a, b, c
+            real(wp)              :: rs, drdqch, dis, wsum, wi, pi, dwidz, tmp, epw
+            real(wp)              :: qii(6), dwidxr(6), dwdxrsum(6), dpidx(6), dpidxr(6), &
+                & dedxrpart(6), dedxr(6), dedqr(6), ddisdq(6), depwdqr(6)
+            real(wp) :: aj(m), bj(m)
+            real(wp) :: dxdxr(6,6)
+            real(wp) :: dbjdx(m,6)
+            real(wp) :: dqrdy(6,4,3)
+        end subroutine evaluatesurface
+    end interface
     real(wp), intent(in)  :: x_(4), y_(4), z_(4)
     real(wp), intent(out) :: e_
     real(wp), intent(out) :: dedx_(4), dedy_(4), dedz_(4)
@@ -223,6 +302,103 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
     use falcons_vars_eval, only: aji, qi
     use chempotpy_kinds,   only: wp
     implicit none
+    interface
+        !> @brief Evaluate calcbj.
+        subroutine calcbj( b, dbdx, x, eta, m, dflag )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: eta, m, dflag
+            real(wp), intent(in)  :: x(6)
+            real(wp), intent(out) :: b(m)
+            real(wp), intent(out) :: dbdx(m,6)
+            integer               :: ind, i, j, k, l, ll, a
+            real(wp)              :: tmp, tmp2, tmp3
+            real(wp)              :: xx(6), x2(6), xxx(6)
+            real(wp)              :: dbdxa(m)
+            real(wp)              :: xy(6,6), xy2(6,6)
+            real(wp)              :: xyz(6,6,6)
+        end subroutine calcbj
+
+        !> @brief Evaluate calccr.
+        subroutine calccr( qch, mcrc, crc, cr, crs, dcrdqch )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: mcrc
+            real(wp), intent(in)  :: qch
+            real(wp), intent(out) :: cr, crs, dcrdqch
+            real(wp), intent(in)  :: crc(mcrc)
+            integer               :: icrc
+            real(wp)              :: pqch
+        end subroutine calccr
+
+        !> @brief Evaluate calcdqrdyjacobian.
+        subroutine calcdqrdyjacobian( qr, y, dqrdy )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: qr(6)
+            real(wp), intent(in)  :: y(4,3)
+            real(wp), intent(out) :: dqrdy(6,4,3)
+            integer               :: i
+            real(wp)              :: val
+        end subroutine calcdqrdyjacobian
+
+        !> @brief Evaluate calcinvariantsjacobian.
+        subroutine calcinvariantsjacobian( vr, v, dvdvr, moltype )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: moltype
+            real(wp), intent(in)  :: vr(6), v(6)
+            real(wp), intent(out) :: dvdvr(6,6)
+            integer               :: i
+            real(wp)              :: mult
+            real(wp)              :: tmp(6), tmp2(6)
+        end subroutine calcinvariantsjacobian
+
+        !> @brief Evaluate calcqch.
+        subroutine calcqch( q, qch )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: q(6)
+            real(wp), intent(out) :: qch
+            integer               :: i
+            real(wp)              :: val
+        end subroutine calcqch
+
+        !> @brief Evaluate calcsumpairwise.
+        subroutine calcsumpairwise( rvec, v2, dv2dr, systype, igrad )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: systype, igrad
+            real(wp), intent(in)  :: rvec(6)
+            real(wp), intent(out) :: dv2dr(6)
+            integer               :: a
+            real(wp)              :: v2, tmp, de
+        end subroutine calcsumpairwise
+
+        !> @brief Evaluate distance6ds_perm.
+        subroutine distance6ds_perm( q, qi, qp, qps, cg, ds, ddsdq )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: cg, qps
+            integer, intent(in)   :: qp(qps,6)
+            real(wp), intent(out) :: ds
+            real(wp), intent(in)  :: q(6), qi(6)
+            real(wp), intent(out) :: ddsdq(6)
+            integer               :: i, a, iszero
+            integer               :: sd(6)
+            real(wp)              :: dsval, dssum, mult, dsvali, dsvalis, dssumi
+            real(wp)              :: qdif(6)
+        end subroutine distance6ds_perm
+
+        !> @brief Evaluate weightw.
+        subroutine weightw( w, dwdz, ds, rs, ps, pu, epsu )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: ds, ps, pu, epsu, rs
+            real(wp), intent(out) :: w, dwdz
+            real(wp)              :: z, uval, sval
+        end subroutine weightw
+    end interface
     integer, intent(in)   :: cg, moltype, pwonly, qps, mcrc, n, m, eta
     integer, intent(in)   :: cmap(4,3)
     integer, intent(in)   :: qp(qps,6)
@@ -233,7 +409,7 @@ subroutine evaluatesurface( cg, y, qr, xr, q, x, moltype, pwonly, &
     integer, intent(out)  :: np
     real(wp), intent(out) :: r, e
     real(wp), intent(out) :: dedy(4,3)
-    integer               :: i, j, k, l, a, b, c
+    integer               :: i, j, k, a, b, c
     real(wp)              :: rs, drdqch, dis, wsum, wi, pi, dwidz, tmp, epw
     real(wp)              :: qii(6), dwidxr(6), dwdxrsum(6), dpidx(6), dpidxr(6), &
         & dedxrpart(6), dedxr(6), dedqr(6), ddisdq(6), depwdqr(6)
@@ -382,7 +558,7 @@ subroutine calcbj( b, dbdx, x, eta, m, dflag )
     real(wp), intent(in)  :: x(6)
     real(wp), intent(out) :: b(m)
     real(wp), intent(out) :: dbdx(m,6)
-    integer               :: ind, i, j, k, l, ll, a
+    integer               :: ind, j, k, l, ll, a
     real(wp)              :: tmp, tmp2, tmp3
     real(wp)              :: xx(6), x2(6), xxx(6)
     real(wp)              :: dbdxa(m)
@@ -722,6 +898,37 @@ subroutine calccoordinates( &
         & y, qr, xr, q, x, sd, aa, qeq, moltype, qp, qps )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate calcinvariants.
+        subroutine calcinvariants( vr, v, moltype )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: moltype
+            real(wp), intent(in)  :: vr(6)
+            real(wp), intent(out) :: v(6)
+            integer               :: i
+            real(wp)              :: e0, e1, f0, f1, vrtmp
+            real(wp)              :: vv(4)
+        end subroutine calcinvariants
+
+        !> @brief Evaluate cartesian2rawdist.
+        subroutine cartesian2rawdist( y, qr )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(out) :: qr(6)
+            real(wp), intent(in)  :: y(4,3)
+            integer               :: i
+        end subroutine cartesian2rawdist
+
+        !> @brief Evaluate rawdist2rawmorse.
+        subroutine rawdist2rawmorse( qr, xr, qeq, aa )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: qr(6), qeq(6), aa(6)
+            real(wp), intent(out) :: xr(6)
+            integer               :: i
+        end subroutine rawdist2rawmorse
+    end interface
     integer, intent(in)   :: moltype, qps
     integer, intent(out)  :: sd(6)
     real(wp), intent(in)  :: aa(6), qeq(6)
@@ -767,9 +974,17 @@ end subroutine default2cartesian
 subroutine cartesian2rawdist( y, qr )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate distance3d.
+        subroutine distance3d( p1, p2, d )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(out) :: d
+            real(wp), intent(in)  :: p1(3), p2(3)
+        end subroutine distance3d
+    end interface
     real(wp), intent(out) :: qr(6)
     real(wp), intent(in)  :: y(4,3)
-    integer               :: i
     call distance3d(y(1,:), y(2,:), qr(1))
     call distance3d(y(1,:), y(3,:), qr(2))
     call distance3d(y(1,:), y(4,:), qr(3))
@@ -806,9 +1021,6 @@ subroutine calcinvariants( vr, v, moltype )
     integer, intent(in)   :: moltype
     real(wp), intent(in)  :: vr(6)
     real(wp), intent(out) :: v(6)
-    integer               :: i
-    real(wp)              :: e0, e1, f0, f1, vrtmp
-    real(wp)              :: vv(4)
     v = 0e0_wp
     select case (moltype)
     case (1)
@@ -1069,6 +1281,18 @@ end subroutine calcpairwise
 subroutine calcsumpairwise( rvec, v2, dv2dr, systype, igrad )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate calcpairwise.
+        subroutine calcpairwise( r, v2, dv2dr, imol, igrad )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: igrad, imol
+            real(wp), intent(in)  :: r
+            real(wp), intent(out) :: v2, dv2dr
+            real(wp)              :: c(0:10)
+            real(wp)              :: re, de, fy, dfdy, dfdr, u, y, dydr, r2, r4, re2, re4, y2, y4, v
+        end subroutine calcpairwise
+    end interface
     integer, intent(in)   :: systype, igrad
     real(wp), intent(in)  :: rvec(6)
     real(wp), intent(out) :: dv2dr(6)

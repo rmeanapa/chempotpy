@@ -34,7 +34,7 @@ module chempotpy_sioh_gen_1988_pes
 
     !> @brief Evaluate the SiOH_GEN_1988 potential energy surface for SiOH.
     subroutine evaluate( xyz, nsi, no, nh, natoms, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
@@ -44,14 +44,14 @@ module chempotpy_sioh_gen_1988_pes
         integer, parameter    :: nstates = 1
         integer, intent(in)   :: nsi, no, nh
         integer, intent(in)   :: natoms
-        real(wp), intent(in)  :: xyz(10000,3)
+        real(wp), intent(in)  :: xyz(natoms,3)
         integer, intent(in)   :: igrad
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
-        real(wp)              :: cx(10000), cy(10000), cz(10000)
-        real(wp)              :: dcx(10000), dcy(10000), dcz(10000)
-        real(wp)              :: q(10000)
-        integer               :: indexlist(10000)
+        real(wp)              :: cx(natoms), cy(natoms), cz(natoms)
+        real(wp)              :: dcx(natoms), dcy(natoms), dcz(natoms)
+        real(wp)              :: q(natoms)
+        integer               :: indexlist(natoms)
         real(wp)              :: v
         integer               :: istate, iatom
         !initialize
@@ -71,7 +71,7 @@ module chempotpy_sioh_gen_1988_pes
         do iatom=1, nh
             indexlist(iatom+nsi+no) = 1
         enddo
-        call siohpot(cx, cy, cz, q, indexlist, v, dcx, dcy, dcz, natoms, 10000, 0)
+        call siohpot(cx, cy, cz, q, indexlist, v, dcx, dcy, dcz, natoms, natoms, 0)
         if( igrad == 0 )then
             do istate=1, nstates
                 p(istate) = v*hartree_to_electronvolt
@@ -108,6 +108,13 @@ module chempotpy_sioh_gen_1988_pes
         real(wp), parameter :: pang  = 57.2957795e0_wp
         real(wp)            :: dvdy(maxatom), dvdz(maxatom), dvdx(maxatom), &
             & x(maxatom), y(maxatom), z(maxatom)
+        aa      = 0.0e0_wp
+        bb      = 0.0e0_wp
+        cc      = 0.0e0_wp
+        alambda = 0.0e0_wp
+        gamma   = 0.0e0_wp
+        r0      = 0.0e0_wp
+        theta   = 0.0e0_wp
         ! Nanoparticle-parameterized Parameters in two-body term(Ref. 1)
         alpha(14,14) = 0.18770e-8_wp/pener
         alpha(14,8)  = 0.29620e-8_wp/pener
@@ -326,7 +333,7 @@ subroutine pes( xyz, nsi, no, nh, natoms, igrad, p, g, d )
     implicit none
     integer, parameter    :: nstates = 1
     integer, intent(in)   :: nsi, no, nh, natoms, igrad
-    real(wp), intent(in)  :: xyz(10000,3)
+    real(wp), intent(in)  :: xyz(natoms,3)
     real(wp), intent(out) :: p(nstates)
     real(wp), intent(out) :: g(nstates,natoms,3)
     real(wp), intent(out) :: d(nstates,nstates,natoms,3)

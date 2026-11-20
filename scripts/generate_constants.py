@@ -37,8 +37,7 @@ module chempotpy_constants
     use chempotpy_kinds, only: wp
     implicit none
     private
-    real(wp), parameter, public :: PI = &
-        3.141592653589793238462643383279502884_wp
+    real(wp), parameter, public         :: PI                     = acos(-1.0_wp)
     integer, parameter, public          :: codata_adjustment_year = {year}
     character(len=*), parameter, public :: codata_source_name     = &
         \"{source_name}\"

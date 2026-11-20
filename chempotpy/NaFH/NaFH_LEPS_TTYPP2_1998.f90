@@ -5,12 +5,21 @@ module chempotpy_nafh_leps_ttypp2_1998_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( r, e, de, nt, nsurf )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: de(3,nt), e(nt), r(nt,3)
+            integer  :: nsurf, nt
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the NaFH_LEPS_TTYPP2_1998 potential energy surface for NaFH.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -26,7 +35,7 @@ module chempotpy_nafh_leps_ttypp2_1998_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         integer               :: iatom, idir, nder
-        real(wp)              :: nt, r(1,3), r2(3), v(1)
+        real(wp)              :: nt, r(1,3), r2(3)
         real(wp)              :: u11(1), u12(1), u22(1)
         real(wp)              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
         real(wp)              :: u(nstates,nstates), dudr(nstates,nstates,3)
@@ -35,7 +44,7 @@ module chempotpy_nafh_leps_ttypp2_1998_pes
         real(wp)              :: hr(nstates,nstates,3), gr(nstates,3)
         real(wp)              :: tx(9), drdx(3,9)
         real(wp)              :: hx(nstates,nstates,9), gx(nstates,9)
-        integer               :: i, j, k, l
+        integer               :: i, j, k
         !initialize
         u  = 0.e0_wp; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         nt = 1
@@ -84,6 +93,18 @@ module chempotpy_nafh_leps_ttypp2_1998_pes
             enddo
         enddo
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the NaFH_LEPS_TTYPP2_1998 potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_nafh_leps_ttypp2_1998_pes
 
 !> @brief Expose NaFH_LEPS_TTYPP2_1998 through the Python-facing PES entry point.
@@ -100,18 +121,6 @@ subroutine pes( x, igrad, p, g, d )
     real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
-
-!> @brief Evaluate EvdRdX for the NaFH_LEPS_TTYPP2_1998 potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
 
 !> @brief Evaluate pot for the NaFH_LEPS_TTYPP2_1998 potential.
 subroutine pot( r, e, de, nt, nsurf )
@@ -141,6 +150,37 @@ subroutine pot( r, e, de, nt, nsurf )
     !                          in the reactant channel
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate pot11.
+        subroutine pot11( r, e, de, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3)
+            real(wp) :: e(nt)
+            real(wp) :: de(3,nt)
+            integer  :: nt
+        end subroutine pot11
+
+        !> @brief Evaluate pot12.
+        subroutine pot12( r, e, de, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3)
+            real(wp) :: e(nt)
+            real(wp) :: de(3,nt)
+            integer  :: nt
+        end subroutine pot12
+
+        !> @brief Evaluate pot22.
+        subroutine pot22( r, e, de, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3)
+            real(wp) :: e(nt)
+            real(wp) :: de(3,nt)
+            integer  :: nt
+        end subroutine pot22
+    end interface
     real(wp) :: de(3,nt), e(nt), r(nt,3)
     integer  :: nsurf, nt
     if( nsurf .eq. 1 )then

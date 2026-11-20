@@ -95,7 +95,7 @@ module chempotpy_oh2_gen_pol1980_pes
         integer               :: infocm_mder
         integer               :: infocm_msurf
         integer               :: infocm_natoms
-        character             :: infocm_ref(5)
+        character(len=75)     :: infocm_ref(5)
         real(wp)              :: pre2cm_a1
         real(wp)              :: pre2cm_a1dif
         real(wp)              :: pre2cm_a1inf
@@ -334,11 +334,7 @@ module chempotpy_oh2_gen_pol1980_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, it
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            integer :: i, it
             !   Conversion for Angstroms to Bohr (Angstrom/Bohr)
             real(wp), parameter :: bohr = .52917706e0_wp
             !   Conversion for kcal to Hartree (kcal/Hartree)
@@ -393,17 +389,11 @@ module chempotpy_oh2_gen_pol1980_pes
             !CCCCCCCCCCCCCCC
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: c, dac, ractmp, rob, stuff, vabbc, vac
-            integer            :: it
-            real(wp)           :: nab, nab1, nbc, nbc1
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: c, dac, ractmp, rob, stuff, vabbc, vac
+            integer  :: it
+            real(wp) :: nab, nab1, nbc, nbc1
             !   Conversion for Angstroms to Bohr (Angstrom/Bohr)
-            real(wp), parameter :: bohr = .52917706e0_wp
             !   Conversion for kcal to Hartree (kcal/Hartree)
-            real(wp), parameter :: hrtree = hartree_to_kilocalorie_per_mole
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
@@ -496,17 +486,9 @@ module chempotpy_oh2_gen_pol1980_pes
             !   POTENTIAL ROUTINE ASSUMES SPLINE INFO IN UNITS OF KCAL/ANGSTROM
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: betpr, betrg, depr, derg, repr, rerg
-            integer             :: nphip2
-            real(wp)            :: nab, nab1, nbc, nbc1
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter  :: natom  = 25
-            real(wp), parameter :: detrad = 0.0174532e0_wp
-            real(wp), parameter :: ckcal  = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: bohr   = 0.529177e0_wp
-            character(len=20)   :: title
+            real(wp)          :: betpr, betrg, depr, derg, repr, rerg
+            integer           :: nphip2
+            character(len=20) :: title
             !  TITLE
             title = '   O+H2 AB 9-12-79 '
             !  ASSIGN COLLINEAR PARAMETERS (UNITS OF KCAL, ANGSTROM, DEGREES)
@@ -546,16 +528,10 @@ module chempotpy_oh2_gen_pol1980_pes
             implicit none
             real(wp) :: angle, anu, ber, bet, da, dbe, delr, der, dis, dr, dr1, dr2, dre, factr, potsp, r1, r2, &
                 & r3, req2, rer, rr, scrap(20)
-            integer             :: i, ic
-            real(wp)            :: nab, nab1, nbc, nbc1
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter  :: natom  = 25
+            integer             :: ic
             real(wp), parameter :: detrad = 0.0174532e0_wp
             real(wp), parameter :: ckcal  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: bohr   = 0.529177e0_wp
-            character(len=20)   :: title
             do ic = 1, 3
                 select case( ic )
                 case( 1 )
@@ -741,13 +717,9 @@ module chempotpy_oh2_gen_pol1980_pes
 
         !> @brief Evaluate POTINFO for the OH2_GEN_POL1980 potential.
         subroutine potinfo
-            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k, kmax
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: isurf = 5
             do i =1, 5
             enddo
             kmax = 0
@@ -794,25 +766,13 @@ module chempotpy_oh2_gen_pol1980_pes
         subroutine ancvrt
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: n3atom     = 75
-            integer, parameter  :: natom      = 25
-            integer, parameter  :: isurf      = 5
-            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
-            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
-            real(wp), parameter :: ce         = 1.602176462e-19_wp
-            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
-            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
-            real(wp), parameter :: cang       = 1.0e-10_wp
-            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
-            real(wp), parameter :: ckcal      = 4.184e10_wp
-            real(wp), parameter :: htomillh   = 1000.e0_wp
-            real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: htowave    = 219474.631e0_wp
-            real(wp), parameter :: htokj      = 2625.49962e0_wp
-            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer, parameter  :: natom    = 25
+            real(wp), parameter :: htomillh = 1000.e0_wp
+            real(wp), parameter :: htoev    = 27.2113834e0_wp
+            real(wp), parameter :: htokcal  = hartree_to_kilocalorie_per_mole
+            real(wp), parameter :: htowave  = 219474.631e0_wp
+            real(wp), parameter :: htokj    = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a   = .5291772083e0_wp
             integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
             character(len=3)    :: periodic_1(7,32)
             character(len=2)    :: name1(natom)
@@ -1071,27 +1031,15 @@ module chempotpy_oh2_gen_pol1980_pes
         !> @brief Evaluate CARTOU for the OH2_GEN_POL1980 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(usricm_cart, usricm_nulbl, infocm_natoms, utilcm_cnvrtd, utilcm_ireorder == 1, infocm_cartnu)
         end subroutine cartou
 
         !> @brief Evaluate CARTTOR for the OH2_GEN_POL1980 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: coordinate_status
-            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
-            integer            :: i, ind, k, l
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
+            integer :: coordinate_status
             call cartesian_to_potlib_coordinates(infocm_cartnu, infocm_natoms, infocm_icartr, pt1cm_r, coordinate_status)
             if( coordinate_status /= 0 )then
                 if( present(status) ) call status%set(status_invalid_input, &
@@ -1102,14 +1050,8 @@ module chempotpy_oh2_gen_pol1980_pes
 
         !> @brief Evaluate EUNITZERO for the OH2_GEN_POL1980 potential.
         subroutine eunitzero
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j
-            character(len=75)  :: ref(5)
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j
             usrocm_pengygs = pt1cm_engygs * utilcm_cnvrte - usricm_anuzero
             if( utilcm_ksdiag .ne. 0 )then
                 do i=utilcm_ksdiag, utilcm_kediag
@@ -1128,7 +1070,6 @@ module chempotpy_oh2_gen_pol1980_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
@@ -1283,13 +1224,8 @@ module chempotpy_oh2_gen_pol1980_pes
 
         !> @brief Evaluate DEDCOU for the OH2_GEN_POL1980 potential.
         subroutine dedcou
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j, k
             if( utilcm_ireorder .eq. 1 )then
                 do i = 1, infocm_natoms
                     usrocm_dgscart(i,1) = utilcm_dgscartnu(usricm_nulbl(i),1) * utilcm_cnvrtde

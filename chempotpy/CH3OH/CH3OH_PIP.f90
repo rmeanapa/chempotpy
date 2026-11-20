@@ -3,7 +3,6 @@ module pes_shell
     implicit none
     private
     public :: calcpot
-    real, parameter     :: auang                = 0.5291772083e0_wp
     integer, parameter  :: coefficient_count    = 3250
     integer, parameter  :: correction_count     = 22
     real(wp), parameter :: coefficients(0:3337) = [ -71.0736939980e0_wp, 329.949807576e0_wp, -494.543865242e0_wp, - &
@@ -680,16 +679,14 @@ module pes_shell
     !> @brief Evaluate calcpot.
     subroutine calcpot( v, xyz )
         real(wp) :: xyz(3,6)
-        real(wp) :: gf0(0:2,0:5)
         real(wp) :: v
         call potshell(xyz, v)
     end subroutine calcpot
 
     !> @brief Evaluate potshell.
     subroutine potshell( xn, v )
-        real(wp) :: f0, gf0(0:2,0:5)
+        real(wp) :: f0
         real(wp) :: v, xn(0:2,0:5)
-        real(wp) :: d0(0:5,0:5), dw(0:5,0:5)
         real(wp) :: vec(0:coefficient_count+4*correction_count-1)
         call getvec(coefficient_count, correction_count, xn, vec)
         f0 = dot_product(coefficients, vec)
@@ -804,17 +801,15 @@ module pes_shell
         integer, parameter :: l0 = 1, l1=l0+4, l2=l1+17, l3=l2+65, l4=l3+230, &
             l5 = l4+736, l6=l5+2197, l7=l6+6093-221
         !! We haven't incorporated the secondaries at degree 7
-        integer, parameter :: np1 = 4, np2=4, np3=4, np4=3, np5=0, np6=0, &
-            np7 = 0
-        integer, parameter :: ns1 = 0, ns2=3, ns3=13, ns4=32, ns5=62, &
-            ns6 = 129, ns7=221
-        real(wp) :: x(0:np1-1), y(0:np2-1), z(0:np3-1), u(0:np4-1)
-        real(wp) :: x2(0:np1-1), x3(0:np1-1), x4(0:np1-1), x5(0:np1-1), &
+        integer, parameter :: np1 = 4, np2=4, np3=4, np4=3
+        integer, parameter :: ns2 = 3, ns3=13, ns4=32, ns5=62, ns6 = 129, ns7=221
+        real(wp)           :: x(0:np1-1), y(0:np2-1), z(0:np3-1), u(0:np4-1)
+        real(wp)           :: x2(0:np1-1), x3(0:np1-1), x4(0:np1-1), x5(0:np1-1), &
             x6(0:np1-1), x7(0:np1-1), y2(0:np2-1), y3(0:np2-1), &
             z2(0:np3-1)
         real(wp) :: ys(0:ns2-1), zs(0:ns3-1), us(0:ns4-1), &
             vs(0:ns5-1), ws(0:ns6-1), w7s(0:ns7-1)
-        integer  :: mdeg, i, j, k, l, i0, i1, i2, i3, j0, k0
+        integer  :: mdeg, i, j, k, i0, i1, i2, j0, k0
         real(wp) :: d2(0:nk-1,0:nk-1), d3(0:nk-1,0:nk-1), d4(0:nk-1,0:nk-1), &
             d5(0:nk-1, 0:nk-1), d6(0:nk-1, 0:nk-1), d7(0:nk-1, 0:nk-1)
         real(wp) :: t0
@@ -1296,7 +1291,7 @@ module chempotpy_ch3oh_pip_pes
 
     !> @brief Evaluate the CH3OH_PIP potential energy surface for CH3OH.
     subroutine evaluate( x, igrad, path, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use pes_shell,        only: calcpot
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
@@ -1311,7 +1306,7 @@ module chempotpy_ch3oh_pip_pes
         real(wp), intent(out)           :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
         real(wp)                        :: v, tx(3,natoms)
-        integer                         :: iatom, idir, j, istate
+        integer                         :: iatom, idir, istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms

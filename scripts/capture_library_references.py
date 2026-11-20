@@ -21,7 +21,6 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from scripts.build_pes import (
-    INTERNAL_BLAS,
     INTERNAL_DSYEV,
     SUPPORT_SOURCES,
     core_fortran_dependencies,
@@ -74,7 +73,14 @@ REGRESSION_GEOMETRY_NAMES = (
     "near_end_expanded",
     "near_end_midpoint",
 )
+RUNTIME_CHECK_FLAGS = (
+    "-fbacktrace",
+    "-fcheck=all",
+    "-finit-integer=-777777",
+    "-finit-real=snan",
+)
 REGRESSION_GEOMETRY_COUNT = len(REGRESSION_GEOMETRY_NAMES)
+BASELINE_VERSION = 3
 
 
 @dataclass(frozen=True)
@@ -444,8 +450,6 @@ def compile_dependencies(source: Path, source_text: str) -> tuple[Path, ...]:
     ))
     if re.search(r"\bcall\s+dsyev\b", source_text, re.IGNORECASE):
         dependencies.append(INTERNAL_DSYEV)
-    if re.search(r"\b(?:ddot|dgemv|dgemm)\b", source_text, re.IGNORECASE):
-        dependencies.append(INTERNAL_BLAS)
     dependencies.extend(support_sources)
     return tuple(dependencies)
 
@@ -455,6 +459,7 @@ def capture_source(
     source: Path,
     work_root: Path,
     geometry_system_name: Optional[str] = None,
+    runtime_checks: bool = False,
 ) -> CaptureResult:
     """Compile and run one source, returning a serializable reference record."""
 
@@ -512,6 +517,8 @@ def capture_source(
             "-I",
             str(source.parent),
         ]
+        if runtime_checks:
+            common_flags.extend(RUNTIME_CHECK_FLAGS)
         objects = []
         compile_inputs = [
             (
@@ -560,7 +567,7 @@ def capture_source(
             cwd=source.parent,
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=120 if runtime_checks else 30,
         )
         if completed.returncode:
             raise RuntimeError(
@@ -612,6 +619,7 @@ def main() -> int:
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--jobs", type=int, default=min(4, os.cpu_count() or 1))
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--runtime-checks", action="store_true")
     args = parser.parse_args()
     if args.all and args.sources:
         parser.error("sources and --all are mutually exclusive")
@@ -633,14 +641,19 @@ def main() -> int:
             max_workers=args.jobs
         ) as executor:
             results = list(executor.map(
-                lambda source: capture_source(compiler, source, work_root),
+                lambda source: capture_source(
+                    compiler,
+                    source,
+                    work_root,
+                    runtime_checks=args.runtime_checks,
+                ),
                 sources,
             ))
     failures = [result for result in results if result.error]
     for failure in failures:
         print("FAIL {}: {}".format(failure.key, failure.error))
     document = {
-        "baseline_version": 2,
+        "baseline_version": BASELINE_VERSION,
         "surfaces": {
             result.key: result.record
             for result in sorted(results, key=lambda item: item.key)

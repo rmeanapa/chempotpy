@@ -60,12 +60,22 @@ module chempotpy_clh2_leps_gtm4_1982_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( r, nder, energy, der )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: r(3)
+            integer, intent(in)   :: nder
+            real(wp), intent(out) :: energy, der(3)
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the ClH2_LEPS_GTM4_1982 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -113,6 +123,18 @@ module chempotpy_clh2_leps_gtm4_1982_pes
                 'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the ClH2_LEPS_GTM4_1982 potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_clh2_leps_gtm4_1982_pes
 
 !> @brief Expose ClH2_LEPS_GTM4_1982 through the Python-facing PES entry point.
@@ -130,18 +152,6 @@ subroutine pes( x, igrad, p, g, d )
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
 
-!> @brief Evaluate EvdRdX for the ClH2_LEPS_GTM4_1982 potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
-
 module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
     use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds, only: wp
@@ -155,6 +165,15 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
     subroutine evaluate_internal( rab, rbc, rac, nder, energy, der )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate bigm.
+            function bigm( dummy )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: dummy
+                real(wp)             :: bigm
+            end function bigm
+        end interface
         real(wp), parameter   :: bohr   = .52917706e0_wp
         real(wp), parameter   :: hrtree = hartree_to_kilocalorie_per_mole
         real(wp), intent(in)  :: rab, rbc, rac
@@ -163,8 +182,7 @@ module chempotpy_clh2_leps_gtm4_1982_pot_legacy_state_69fc7d3b
         real(wp)              :: a, bcoor, beta(3), c, coef(2), dbcoor(2), de(3), denom, dew, dvstar(2), &
             & easyab, easyac, easybc, gamma, junk(4), lamda, m, morse(2), nab, nab1, nbc, nbc1, num, omega(2), &
             & rbb, req(3), rhh, rob, sigma, stuff, v1, v2, v3, v4, vabbc, vac, vstar
-        real(wp), external :: bigm
-        integer            :: it
+        integer :: it
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !      Echo the potential parameters
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC

@@ -12,7 +12,7 @@ module chempotpy_no2_6ap_pipnn_pes
 
     !> @brief Evaluate the NO2_6Ap_PIPNN potential energy surface for NO2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -71,7 +71,7 @@ module chempotpy_no2_6ap_pipnn_pes
         integer  :: i, j, ndriv
         real(wp) :: v, vpes(npes), c(0:ninput), dvdx(1:natom*3,npes)
         real(wp) :: xcart(1:3,1:natom), m(0:4), xmorse(1:nbond), r(1:nbond)
-        real(wp) :: dvdr(1:nbond), x(1:natom*3), drdx(1:nbond,1:natom*3)
+        real(wp) :: x(1:natom*3), drdx(1:nbond,1:natom*3)
         real(wp) :: txinput(1:ninput), dvdg(1:ninput,npes), p(0:ninput)
         real(wp) :: dpdr(1:nbond,0:ninput), dvdxa(1:natom*3)
         call flatten_cartesian_coordinates(transpose(xcart), x)
@@ -240,11 +240,11 @@ module chempotpy_no2_6ap_pipnn_pes
         use chempotpy_kinds,    only: wp
         implicit none
         integer  :: i, j, k
-        real(wp) :: dvdx(1:natom*3,npes), xcart(1:3,1:natom)
-        real(wp) :: drdx(1:nbond,1:natom*3), x(1:ninput)
-        real(wp) :: dvdr(1:nbond), dpdr(1:nbond,0:ninput), dvdp(0:ninput)
-        real(wp) :: dgdx(1:natom*3,1:ninput), dgdr(1:nbond,1:ninput)
-        real(wp) :: dvdxa(1:natom*3), dvdg(1:ninput,npes), rtmp, basis_cartesian(ninput,natom*3)
+        real(wp) :: dvdx(1:natom*3,npes)
+        real(wp) :: drdx(1:nbond,1:natom*3)
+        real(wp) :: dpdr(1:nbond,0:ninput)
+        real(wp) :: dgdx(1:natom*3,1:ninput)
+        real(wp) :: dvdxa(1:natom*3), dvdg(1:ninput,npes), basis_cartesian(ninput,natom*3)
         call transform_internal_gradient_to_cartesian(transpose(dpdr(:,1:ninput)), drdx, basis_cartesian)
         dgdx = transpose(basis_cartesian)
         dvdx = 0e0_wp;dvdxa=0
@@ -267,7 +267,6 @@ module chempotpy_no2_6ap_pipnn_pes
     subroutine evdvdr( r, c, m, p, dpdr )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j
         real(wp) :: r(1:nbond), dmsdr(1:nbond,1:nbond), dmdr(1:nbond,0:4)
         real(wp) :: dvdr(1:nbond), dpdr(1:nbond,0:ninput), c(0:ninput)
         real(wp) :: m(0:4), p(0:ninput)
@@ -293,7 +292,7 @@ module chempotpy_no2_6ap_pipnn_pes
     subroutine evdmsdr( r, dmsdr )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j
+        integer  :: i
         real(wp) :: dmsdr(1:nbond,1:nbond), r(1:nbond)
         dmsdr(:,:) = 0e0_wp
         !Morse term ms = exp(-r/alpha)
@@ -308,7 +307,7 @@ module chempotpy_no2_6ap_pipnn_pes
     subroutine evdmdr( m, dmsdr, dmdr )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j
+        integer  :: i
         real(wp) :: dmsdr(1:nbond,1:nbond), dmdr(1:nbond,0:4), m(0:4)
         do i=1, nbond
             dmdr(i,0) = 0.e0_wp
@@ -323,7 +322,7 @@ module chempotpy_no2_6ap_pipnn_pes
     subroutine evdpdr( p, dmdr, dpdr )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j
+        integer  :: i
         real(wp) :: dmdr(1:nbond,0:4), dpdr(1:nbond,0:ninput)
         real(wp) :: p(0:ninput)
         do i=1, nbond

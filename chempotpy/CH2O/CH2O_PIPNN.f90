@@ -13,7 +13,7 @@ module chempotpy_ch2o_pipnn_pes
 
     !> @brief Evaluate the CH2O_PIPNN potential energy surface for CH2O.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -25,7 +25,7 @@ module chempotpy_ch2o_pipnn_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: v, tx(3,natoms)
-        integer               :: iatom, idir, j, istate
+        integer               :: iatom, idir, istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
@@ -49,10 +49,10 @@ module chempotpy_ch2o_pipnn_pes
         use chempotpy_geometry, only: all_pair_distances
         use chempotpy_kinds,    only: wp
         implicit none
-        integer  :: j, lpes
-        real(wp) :: rb(ndim), xbond(ndim), basis(nbasis), tmp1, txinput(nbasis-1)
-        real(wp) :: ct(3,natom), cy(3,natom)
-        real(wp) :: vpes, vpesa, vpesb, vpesc, vpesh, vnn, rfx(6)
+        integer  :: j
+        real(wp) :: rb(ndim), xbond(ndim), basis(nbasis), txinput(nbasis-1)
+        real(wp) :: ct(3,natom)
+        real(wp) :: vpes, vnn
         basis = 0.e0_wp
         call all_pair_distances(transpose(ct), rb)
         xbond(:) = exp(-rb(:)/alpha)

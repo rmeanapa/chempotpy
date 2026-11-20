@@ -18,7 +18,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from chempotpy.core.registry import discover_surface_sources
-from scripts.capture_library_references import capture_source
+from scripts.capture_library_references import BASELINE_VERSION, capture_source
 
 DEFAULT_FIXTURE = REPOSITORY_ROOT / "tests" / "data" / \
     "all_surface_references.json"
@@ -30,7 +30,6 @@ METADATA_FIELDS = ("entry_point", "natoms", "nstates", "signature")
 # larger values.
 RELATIVE_TOLERANCE = 1.0e-11
 ABSOLUTE_TOLERANCE = 5.0e-10
-BASELINE_VERSION = 2
 MAX_WORKFLOW_ANNOTATIONS = 50
 
 
@@ -228,6 +227,7 @@ def main() -> int:
         type=int,
         default=min(4, os.cpu_count() or 1),
     )
+    parser.add_argument("--runtime-checks", action="store_true")
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
@@ -278,7 +278,12 @@ def main() -> int:
             max_workers=args.jobs
         ) as executor:
             results = list(executor.map(
-                lambda source: capture_source(compiler, source, work_root),
+                lambda source: capture_source(
+                    compiler,
+                    source,
+                    work_root,
+                    runtime_checks=args.runtime_checks,
+                ),
                 ordered_sources,
             ))
 

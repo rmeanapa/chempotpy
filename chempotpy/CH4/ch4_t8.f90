@@ -29,7 +29,7 @@ subroutine vibpot( rij, v, n, path )
     character(len=1024), intent(in) :: path
     real(wp), intent(in)            :: rij(n,10)
     real(wp), intent(out)           :: v(n,1)
-    integer                         :: i, ig, j
+    integer                         :: i, ig
     real(wp)                        :: fmat(9,9)
     real(wp)                        :: a02, a03, a04, a06, a08
     real(wp)                        :: beta, beta0, bohr, bohri, damp
@@ -181,15 +181,6 @@ subroutine vibpot( rij, v, n, path )
                 & 1)*7+4)) *fmat(ixp(term_offsets(7)+(i-1)*7+5),ixw(term_offsets(7)+(i-1)*7+5)) * &
                 & fmat(ixp(term_offsets(7)+(i-1)*7+6),ixw(term_offsets(7)+(i-1)*7+6)) * fmat(ixp(term_offsets(7)+(i- &
                 & 1)*7+7),ixw(term_offsets(7)+(i-1)*7+7))
-        enddo
-        do i=1, nx(8)
-            vs=vs+ccc(i, 8)*fmat(ixp(term_offsets(8)+(i-1)*8+1),ixw(term_offsets(8)+(i-1)*8+1))*damp * &
-                & fmat(ixp(term_offsets(8)+(i-1)*8+2),ixw(term_offsets(8)+(i-1)*8+2)) *fmat(ixp(term_offsets(8)+(i-1)* &
-                & 8+3),ixw(term_offsets(8)+(i-1)*8+3)) * fmat(ixp(term_offsets(8)+(i-1)*8+4),ixw(term_offsets(8)+(i- &
-                & 1)*8+4)) *fmat(ixp(term_offsets(8)+(i-1)*8+5),ixw(term_offsets(8)+(i-1)*8+5)) * &
-                & fmat(ixp(term_offsets(8)+(i-1)*8+6),ixw(term_offsets(8)+(i-1)*8+6)) * fmat(ixp(term_offsets(8)+(i- &
-                & 1)*8+7),ixw(term_offsets(8)+(i-1)*8+7)) *fmat(ixp(term_offsets(8)+(i-1)*8+8),ixw(term_offsets(8)+(i- &
-                & 1)*8+8))
         enddo
         vs      = vs+const*damp
         v(ig,1) = vs

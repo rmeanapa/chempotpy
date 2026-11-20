@@ -128,14 +128,9 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             implicit none
             real(wp)            :: cdenom, const, const1, const2, const3, phas, r, r1, r2, v, xl, xl1, xl2, xm
             integer             :: imu, iq1, iq2, l, ll, lm, lu
-            integer, parameter  :: lmax    = 4
-            integer, parameter  :: lsummax = 9
-            integer, parameter  :: ipara   = 1
-            real(wp), parameter :: zero    = 0.0e0_wp
-            real(wp), parameter :: one     = 1.e0_wp
-            real(wp), parameter :: two     = 2.e0_wp
-            real(wp), parameter :: four    = 4.e0_wp
-            integer, parameter  :: izero   = 0
+            real(wp), parameter :: one  = 1.e0_wp
+            real(wp), parameter :: two  = 2.e0_wp
+            real(wp), parameter :: four = 4.e0_wp
             consts_bo = 0.529177249e0_wp
             consts_ha = 219474.63067e0_wp
             consts_pi = 3.1415926535898e0_wp
@@ -223,10 +218,9 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             !       G IS THE SCRIPT I USED BY GREEN IN HIS EQ.(A9)
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: cd, cdq, cq, d1, d2, d3, de1, de2, de3, de4, g(0:4,0:4,0:8), r1, r2, r6, rab, req(6), rin01, rin10, &
-                & rmiddle, rout10, t1, t1deg, t2, t2deg, tau, taudeg, y1, y1py2, y1y2, y1y22, y1y23, y1y24, y2, y3
-            integer :: i, il, iu, j, k
-            integer :: out
+            real(wp) :: cd, cdq, cq, d1, d2, d3, de1, de2, de3, de4, r1, r2, r6, rab, rin01, rin10, rmiddle, rout10, t1, t1deg, t2, t2deg, tau, taudeg, y1, y1py2, y1y2, y1y22, y1y23, y1y24, y2, y3
+            integer  :: i, il, iu, j, k
+            integer  :: out
             out = 6
             !     NEXT CALL SUBROUTINE HF2INT WHICH CALCULATES THE RELEVANT ATOM-ATO
             !     DISTANCES NEEDED TO COMPUTE THE TWO-BODY TERMS. THE ANGLES MUST

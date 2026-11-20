@@ -124,6 +124,7 @@ SUPPORT_SOURCES = {
 CORE_FORTRAN_ROOT = REPOSITORY_ROOT / "chempotpy" / "core"
 CORE_MODULE_SOURCES = {
     "chempotpy_contract": CORE_FORTRAN_ROOT / "chempotpy_contract.f90",
+    "chempotpy_blas": CORE_FORTRAN_ROOT / "chempotpy_blas.f90",
     "chempotpy_finite_difference": (
         CORE_FORTRAN_ROOT / "chempotpy_finite_difference.f90"
     ),
@@ -156,7 +157,6 @@ INTERNAL_DSYEV = (
 CORE_MODULE_COMPANIONS = {
     "chempotpy_linear_algebra": (INTERNAL_DSYEV,),
 }
-INTERNAL_BLAS = CORE_FORTRAN_ROOT / "chempotpy_blas.f90"
 USE_PATTERN = re.compile(
     r"^\s*use(?:\s*,[^:]*)?\s*(?:::\s*)?([a-z][a-z0-9_]*)",
     flags=re.IGNORECASE | re.MULTILINE,
@@ -392,12 +392,6 @@ def normalized_sources(
         local_dsyev = build_directory / INTERNAL_DSYEV.name
         copy_ascii_source(INTERNAL_DSYEV, local_dsyev)
         local_sources.append(local_dsyev)
-    if re.search(
-        r"\b(?:ddot|dgemv|dgemm)\b", source_text, flags=re.IGNORECASE
-    ):
-        local_blas = build_directory / INTERNAL_BLAS.name
-        copy_ascii_source(INTERNAL_BLAS, local_blas)
-        local_sources.append(local_blas)
     return tuple(local_sources)
 
 

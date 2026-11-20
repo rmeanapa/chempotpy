@@ -89,7 +89,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
 
     !> @brief Evaluate the NH3_GEN_FFW1_2006 diabatic potential matrix for NH3.
     subroutine evaluate( x, igrad, u, ug, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
@@ -106,10 +106,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp)              :: tx(12), gu11(12), gu12(12), gu22(12)
         real(wp)              :: gv1(12), gv2(12)
         real(wp)              :: dudx(nstates,nstates,12)
-        real(wp)              :: t(nstates,nstates)
-        real(wp)              :: tmpmat(nstates,nstates)
-        real(wp)              :: hx(nstates,nstates,12), gx(nstates,12)
-        integer               :: iatom, idir, i, j, k, l
+        integer               :: iatom, idir, j
         !initialize
         u = 0.e0_wp; ug = 0.e0_wp
         do iatom=1, natoms
@@ -140,22 +137,21 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         use chempotpy_kinds, only: wp
         implicit none
         ! I/O variables
-        integer, parameter :: natom = 4
-        real(wp)           :: xcart(12)
-        real(wp)           :: u11
-        real(wp)           :: u22
-        real(wp)           :: u12
-        real(wp)           :: v1
-        real(wp)           :: v2
-        real(wp)           :: gu11(12)
-        real(wp)           :: gu22(12)
-        real(wp)           :: gu12(12)
-        real(wp)           :: gv1(12)
-        real(wp)           :: gv2(12)
+        real(wp) :: xcart(12)
+        real(wp) :: u11
+        real(wp) :: u22
+        real(wp) :: u12
+        real(wp) :: v1
+        real(wp) :: v2
+        real(wp) :: gu11(12)
+        real(wp) :: gu22(12)
+        real(wp) :: gu12(12)
+        real(wp) :: gv1(12)
+        real(wp) :: gv2(12)
         ! Local variables
         ! cart(12) local Xcart in ANG, x1,y1,z1,...,x4,y4,z4
         real(wp) :: cart(12)
-        integer  :: i, j
+        integer  :: i
         ! Unit conversion parameters
         real(wp), parameter :: autoang       = 0.5291772108e0_wp
         real(wp), parameter :: autoev        = 27.2113845e0_wp
@@ -214,8 +210,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: gu11(12)
         real(wp) :: gu22(12)
         real(wp) :: gu12(12)
-        real(wp) :: gv1(12)
-        real(wp) :: gv2(12)
         ! Parameter List
         ! Internal coordinates used
         ! internal coodinates: three bond distances, three bond angles, one
@@ -229,7 +223,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         ! gradients of bowman internal coordinates to cartesian coordinates
         real(wp) :: gbowint(12,7)
         ! Misc
-        integer  :: i, ii, j, k, n
+        integer  :: i, j
         real(wp) :: erep
         ! This code computes the fitted pot using the polynomial funcs as
         ! described by Bowman for NH3
@@ -396,7 +390,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: y(n)
         ! dy(i,j) = dy(i)/dx(j)
         real(wp) :: dy(n,n)
-        integer  :: ip(3), i, j, k
+        integer  :: ip(3), i, j
         real(wp) :: s(3,3)
         do i=1, n
             y(i) = 0.e0_wp
@@ -432,14 +426,13 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: alpnh1, alpnh2, alphh
         !     Center of Gaussian Function
         real(wp) :: r0nh, r0hh
-        real(wp) :: r0
         real(wp) :: erepi, erepnh, erephh
         ! second additional repulsive terms added to NH repulsion
         real(wp) :: erepnh1, erepnh2
         ! Used for asymtotic correction
         real(wp) :: ecorrlimit
         ! Derivatives: derepXH: 1-3 NH repul. derivs, 4-6, HH repul. derivs
-        real(wp) :: derepxh(6), derepnh1, derepnh2, derepi
+        real(wp) :: derepxh(6), derepnh1, derepnh2
         real(wp) :: decorrlimit
         ! U11
         !     DE between the dissociation limit and exp
@@ -460,11 +453,11 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         !     gamma
         real(wp), parameter :: gam   = 3.00e0_wp
         real(wp), parameter :: recor = 2.0e0_wp*1.024e0_wp
-        integer             :: i, j
+        integer             :: i
         !  misc
         real(wp) :: tmp
         real(wp) :: dtmp
-        real(wp) :: dr, dr1, dr2
+        real(wp) :: dr
         real(wp) :: rr1
         !      Re0 = 1.004d0
         r0nh = -0.2e0_wp
@@ -549,7 +542,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         ! Relationships in Science and Technology II(7,2) (Springer, New York,
         ! 1976). Cited in J. Pesonen, A. Miani, and L. Halonen, J. Chem. Phys.
         ! 115, 1243 (2001)
-        real(wp), parameter :: gta = 106.68*PI/180.0e0_wp
         ! CoS(GTa) = CoS(106.28)
         real(wp), parameter :: cosgta = -0.2870261592e0_wp
         real(wp), parameter :: hba    = 0.5e0_wp*PI
@@ -558,20 +550,18 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: g2
         real(wp) :: g3
         real(wp) :: x1
-        real(wp) :: x2
-        real(wp) :: x3
         real(wp) :: x4
         real(wp) :: x5
         real(wp) :: x6
         real(wp) :: x7
         real(wp) :: y(7)
         real(wp) :: beta, r1, r2, r3, the1, the2, the3
-        integer  :: i, j, k, l, m, n, p
+        integer  :: i, l, m, n, p
         integer  :: ind
         ! Derivatives
         real(wp) :: y123, y4567
         real(wp) :: dg1, dg2, dg3
-        real(wp) :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
+        real(wp) :: dx1, dx4, dx5, dx6, dx7
         real(wp) :: dy71, dy72, dy73, dy77
         real(wp) :: dy(3)
         real(wp) :: dy42, dy43, dy44
@@ -720,7 +710,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         ! Parameter List
         real(wp)            :: frb, frc, alp, re, frd
         real(wp), parameter :: deg2au = PI/180.e0_wp
-        real(wp), parameter :: gta    = 2.0e0_wp*PI/3.0e0_wp
         ! CoS(GTa) = CoS(120.0) = -1/2
         real(wp), parameter :: cosgta = -0.5e0_wp
         real(wp), parameter :: hba    = 0.5e0_wp*PI
@@ -731,21 +720,19 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: g1
         real(wp) :: g2
         real(wp) :: g3
-        real(wp) :: x1, x11
-        real(wp) :: x2, x21
-        real(wp) :: x3, x31
+        real(wp) :: x1
         real(wp) :: x4
         real(wp) :: x5
         real(wp) :: x6
         real(wp) :: x7
         real(wp) :: y(7)
         real(wp) :: beta, r1, r2, r3, the1, the2, the3
-        integer  :: i, j, k, l, m, n, p
+        integer  :: i, l, m, n, p
         integer  :: ind
         ! Derivatives
         real(wp) :: y123, y4567
         real(wp) :: dg1, dg2, dg3, g1g2, g2g3, g1g3
-        real(wp) :: dx1, dx2, dx3, dx4, dx5, dx6, dx7
+        real(wp) :: dx1, dx4, dx5, dx6, dx7
         real(wp) :: dy71, dy72, dy73, dy77
         real(wp) :: dy(3)
         real(wp) :: dy11, dy12, dy13
@@ -754,7 +741,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: dy42, dy43, dy44
         real(wp) :: dy51, dy53, dy55
         real(wp) :: dy61, dy62, dy66
-        real(wp) :: tmp, dtmp(3)
+        real(wp) :: tmp
         real(wp) :: dr
         ! Wed Oct 18 14:57:07 CDT 2006, with additional NH2 (linear)
         frb = .1633658498e+01_wp
@@ -949,18 +936,15 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         ! FRU12a    parameters used to define angular for U22
         ! FRU12b    parameters used to define angular for U22
         ! FRU12c    parameters used to define angular for U22
-        real(wp)            :: fru12a, fru12c
-        real(wp)            :: alp
+        real(wp)            :: fru12c
         real(wp), parameter :: deg2au = PI/180.e0_wp
         real(wp), parameter :: fru12b = 1.00e0_wp
-        real(wp), parameter :: gtu12a = 2.0e0_wp*PI/3.0e0_wp
         real(wp), parameter :: hbu12a = 0.5e0_wp*PI
         ! Misc
-        integer  :: i, j, ind
+        integer  :: i, ind
         real(wp) :: z1(6), tz, tf, z123, z456
         real(wp) :: hbu12, fru121, fru122, fru123
         real(wp) :: theta, beta
-        real(wp) :: y(7)
         real(wp) :: tmp
         ! Derivatives
         real(wp) :: dz1(6)
@@ -1043,7 +1027,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         ! Output
         real(wp) :: v1, v2
         real(wp) :: gv1(nv), gv2(nv)
-        integer  :: i, j
+        integer  :: i
         real(wp) :: x, y, dx, dy
         x  = u11+u22
         y  = sqrt( ((u22-u11)**2) + (4.0e0_wp*u12*u12) )
@@ -1060,7 +1044,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
 
     !> @brief Evaluate calcindU1 for the NH3_GEN_FFW1_2006_DPEM potential.
     subroutine calcindu1( ind, m1, m2, m3, m4, m5, m6, m7, nc )
-        use chempotpy_kinds, only: wp
         implicit none
         integer :: nc
         integer :: m1
@@ -1102,10 +1085,8 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
 
     !> @brief Evaluate calcindU2 for the NH3_GEN_FFW1_2006_DPEM potential.
     subroutine calcindu2( ind, m1, m2, m3, m4, m5, m6, m7, nc )
-        use chempotpy_kinds, only: wp
         implicit none
         integer :: nc
-        integer :: mnc
         integer :: m1
         integer :: m2
         integer :: m3
@@ -1149,7 +1130,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
 
     !> @brief Evaluate calcindU12 for the NH3_GEN_FFW1_2006_DPEM potential.
     subroutine calcindu12( ind, m1, m2, m3, m4, m5, m6, m7, nc )
-        use chempotpy_kinds, only: wp
         implicit none
         integer :: nc
         integer :: m1
@@ -1217,9 +1197,6 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: beta(3)
         real(wp) :: theta(3)
         ! Parameter list
-        integer, parameter  :: iout1 = 0
-        integer, parameter  :: inp1  = 5
-        real(wp), parameter :: tol   = 1.0e-4_wp
         ! Geometry
         real(wp) :: cartn(natom,3)
         real(wp) :: cartp(natom,3)
@@ -1234,7 +1211,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: d
         real(wp) :: dist
         ! Misc
-        integer  :: i, j, k, n, m
+        integer  :: i, j, k
         real(wp) :: xt, yt, zt, w
         real(wp) :: b(3,3)
         real(wp) :: a(3,3)
@@ -1968,7 +1945,7 @@ module chempotpy_nh3_gen_ffw1_2006_dpem_pes
         real(wp) :: ph2(3)
         real(wp) :: ph3(3)
         real(wp) :: ans(3)
-        integer  :: i, j
+        integer  :: i
         real(wp) :: small
         small = 1.e-3_wp
         ! define stuff

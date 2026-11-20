@@ -63,12 +63,22 @@ module chempotpy_clh2_leps_ttgi1_1985_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( q, nder, xter, dq )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: q(3)
+            integer, intent(in)   :: nder
+            real(wp), intent(out) :: xter, dq(3)
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the ClH2_LEPS_TTGI1_1985 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -116,6 +126,18 @@ module chempotpy_clh2_leps_ttgi1_1985_pes
                 'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the ClH2_LEPS_TTGI1_1985 potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_clh2_leps_ttgi1_1985_pes
 
 !> @brief Expose ClH2_LEPS_TTGI1_1985 through the Python-facing PES entry point.
@@ -132,18 +154,6 @@ subroutine pes( x, igrad, p, g, d )
     real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
-
-!> @brief Evaluate EvdRdX for the ClH2_LEPS_TTGI1_1985 potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
 
 module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
     use chempotpy_interpolation, only: evaluate_tabulated_cubic_spline, &
@@ -177,7 +187,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             & easyac, easybc, eht, en(6), factr, for, forth, gvec(6), h1(2, 2), h2(2, 2), half, one, r(3), rt2i, six, spxa, spxb, &
             & sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, test, th(6, 6), tpxa, tpxb, tre, tsab, &
             & tsxa, tsxb, two, vec(6, 6), w(6), xtra, zero
-        integer           :: i, idebug, idum, iflag, indx(3), iptprt, ix, j, k, ndim, ndum, nroot
+        integer           :: i, idebug, iflag, indx(3), iptprt, ix, j, k, ndim, nroot
         character(len=80) :: title(2)
         equivalence (h1(1, 1), ss11a), (h1(1, 2), ss12a), (h1(2, 2), ss22a)
         equivalence (h2(1, 1), ss11b), (h2(1, 2), ss12b), (h2(2, 2), ss22b)
@@ -611,8 +621,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             !     SETS UP SPLINE FITS FOR H2 CURVES
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: epsln, ss, ss1, ss2, t
-            integer  :: i
+            integer :: i
             !     NOW COMPUTE SPLINE FIT DATA
             !     H2 SINGLET STATE
             do i=1, 67
@@ -898,8 +907,7 @@ module chempotpy_clh2_leps_ttgi1_1985_pot_legacy_state_bf7e4ade
             !     SIGMA AND H2+ DOUBLET SIGMA G AND U STATES IN A.U.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: a1, ab1s, ab2g, ab2u, ab3s, arg, arg2, arg3, b1, be, bfac, c10, c4, c6, c8, dab1s, dab2g, &
-                & dab2u, dab3s, de, df1, epsln, ex, f1, f2, opex, r, r10, r2, r4, r6, r8, re, ss2
+            real(wp) :: a1, ab1s, ab2g, ab2u, ab3s, arg, arg2, arg3, b1, be, bfac, c10, c4, c6, c8, dab1s, dab2g, dab2u, dab3s, de, df1, ex, f1, f2, opex, r, r10, r2, r4, r6, r8, re, ss2
             !     H2 EXPONENTIALS W.R.T. FINAL LIMITS, H2+ W.R.T. 0.0 LIMIT
             !**   DATA A2,B2,C2/2.41893D00,2.1329115D00,0.0918539D00/
             !     H2 CURVES

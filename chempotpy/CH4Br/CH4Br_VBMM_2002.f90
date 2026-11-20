@@ -143,7 +143,7 @@ module chempotpy_ch4br_vbmm_2002_pes
         real(wp)              :: switch1_stheta(4)
         integer               :: istate
         real(wp)              :: tx(18), dx(18), v
-        integer               :: iatom, idir, i, j
+        integer               :: iatom, idir, j
         !initialize
         angles_dtheta0 = 0.e0_wp; angles_theta0 = 0.e0_wp; bonds_r0cb = 0.e0_wp; bonds_r0ch = 0.e0_wp; bonds_r0hh = 0.e0_wp
         bonds_rbh      = 0.e0_wp; bonds_rcb = 0.e0_wp; bonds_rch = 0.e0_wp; coords_tbh = 0.e0_wp; coords_tcb = 0.e0_wp; coords_tch = 0.e0_wp
@@ -304,7 +304,6 @@ module chempotpy_ch4br_vbmm_2002_pes
 
         !> @brief Evaluate coorden for the CH4Br_VBMM_2002 potential.
         subroutine coorden
-            use chempotpy_kinds, only: wp
             implicit none
             integer :: i, ind
             !  calculates relative coordinates and bond lengths
@@ -330,7 +329,7 @@ module chempotpy_ch4br_vbmm_2002_pes
         subroutine refangles
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: ddr(4,4), halfpi, sumd2(4), sumd4(4), tau, twopi
+            real(wp) :: halfpi, tau, twopi
             integer  :: i, j, k
             !  subroutine calculates reference angles for the "in-plane" potential
             tau    = acos(-1.0e0_wp/3.0e0_wp)
@@ -1028,7 +1027,6 @@ module chempotpy_ch4br_vbmm_2002_pes
 
         !> @brief Evaluate SETUP for the CH4Br_VBMM_2002 potential.
         subroutine setup( n3tm )
-            use chempotpy_kinds, only: wp
             implicit none
             integer :: n3tm
             !   N3TMMN = 3 * NATOMS

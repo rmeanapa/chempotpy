@@ -215,12 +215,20 @@ module chempotpy_o4_singlet_zv_pes
 
     !> @brief Evaluate the O4_singlet_ZV potential energy surface for O4.
     subroutine evaluate( x, igrad, potential, gradient, dvec, status )
-        use chempotpy_status,  only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
-        use chempotpy_units,   only: electronvolt_to_kilocalorie_per_mole
-        use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-            & eref, gconv, p, r, ra, rb, rm, rms, totdiss
-        use chempotpy_kinds, only: wp
+        use chempotpy_status, only: chempotpy_status_t
+        use chempotpy_units,  only: electronvolt_to_kilocalorie_per_mole
+        use chempotpy_kinds,  only: wp
         implicit none
+        interface
+            !> @brief Evaluate o4pes.
+            subroutine o4pes( x, v, dvdx, igrad )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer  :: i, igrad, j, nob, k
+                real(wp) :: v
+                real(wp) :: dvdx(12), x(12)
+            end subroutine o4pes
+        end interface
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
@@ -286,8 +294,6 @@ end subroutine pes
 ! output gradient:              dVdX in kcal/(mol*Ang)
 !> @brief Evaluate o4pes.
 subroutine o4pes( x, v, dvdx, igrad )
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
     ! Subroutine to calculate the potential energy V and gradient dVdX
     ! for given Cartesian coordinates X(12)
     ! R:            Interatomic bond distance (6)
@@ -301,7 +307,31 @@ subroutine o4pes( x, v, dvdx, igrad )
     ! dRdX:         The derivative of R w.r.t. X, dim(6*12)
     use chempotpy_kinds, only: wp
     implicit none
-    integer  :: i, igrad, j, nob, k
+    interface
+        !> @brief Evaluate coord_convt.
+        subroutine coord_convt( x )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in) :: x(12)
+        end subroutine coord_convt
+
+        !> @brief Evaluate evdvdx.
+        subroutine evdvdx( x, dvdx )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: x(12)
+            real(wp), intent(out) :: dvdx(12)
+        end subroutine evdvdx
+
+        !> @brief Evaluate evv.
+        subroutine evv( v )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j, k
+            real(wp) :: dist, dv2dr, v, v2, disp, dispdr(6)
+        end subroutine evv
+    end interface
+    integer  :: igrad
     real(wp) :: v
     real(wp) :: dvdx(12), x(12)
     ! Convert the Cartesian coordinate array to pair distances
@@ -320,8 +350,7 @@ end subroutine o4pes
 !> @brief Evaluate coord_convt.
 subroutine coord_convt( x )
     use chempotpy_geometry, only: all_pair_distances
-    use o4_singlet_zv_par,  only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par,  only: r
     !  Program to calculate the six interatomic distance
     !  from the Cartesian coordinate array
     use chempotpy_kinds, only: wp
@@ -332,8 +361,7 @@ end subroutine coord_convt
 
 !> @brief Evaluate EvV.
 subroutine evv( v )
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: b, c, r, totdiss
     ! Subroutine to evaluate V for given R
     ! V(R) = C*P
     ! C:            Coefficients, stored in 'dim.inc'
@@ -350,8 +378,48 @@ subroutine evv( v )
     ! B(1:430):     Array to store basis functions
     use chempotpy_kinds, only: wp
     implicit none
-    integer  :: i, j, k
-    real(wp) :: dist, dv2dr, v, v2, disp, dispdr(6)
+    interface
+        !> @brief Evaluate ev2gm2.
+        subroutine ev2gm2( r, v, grad, imol, igrad )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: imol, igrad
+            real(wp), intent(in)  :: r
+            real(wp), intent(out) :: v, grad
+            real(wp)              :: alpha, beta, as(0:7)
+            integer               :: k
+            real(wp)              :: dist(1), disp, dispdr(1)
+        end subroutine ev2gm2
+
+        !> @brief Evaluate evbas.
+        subroutine evbas
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i
+            real(wp) :: b1(466)
+        end subroutine evbas
+
+        !> @brief Evaluate evmono.
+        subroutine evmono
+            use chempotpy_kinds, only: wp
+            implicit none
+        end subroutine evmono
+
+        !> @brief Evaluate evmorse.
+        subroutine evmorse
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: i
+        end subroutine evmorse
+
+        !> @brief Evaluate evpoly.
+        subroutine evpoly
+            use chempotpy_kinds, only: wp
+            implicit none
+        end subroutine evpoly
+    end interface
+    integer  :: i
+    real(wp) :: dist, dv2dr, v, v2
     ! Calculate the six MEG terms for each point
     call evmorse
     ! Calculate the monomials for each point by using six MEG terms
@@ -379,8 +447,7 @@ end subroutine evv
 !> @brief Evaluate EvdVdX.
 subroutine evdvdx( x, dvdx )
     use chempotpy_geometry, only: transform_internal_gradient_to_cartesian
-    use o4_singlet_zv_par,  only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par,  only: drdx, dvdr
     ! Subroutine to evaluate dRdX for given R and X
     ! R:            R(6), 6 bond lengths
     ! X:            X(12), 12 Cartesian coordinates
@@ -392,6 +459,22 @@ subroutine evdvdx( x, dvdx )
     !               Cartesian coordinates
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate evdrdx.
+        subroutine evdrdx( x )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in) :: x(12)
+        end subroutine evdrdx
+
+        !> @brief Evaluate evdvdr.
+        subroutine evdvdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j
+            real(wp) :: dist, v2, dv2dr, disp, dispdr(6)
+        end subroutine evdvdr
+    end interface
     real(wp), intent(in)  :: x(12)
     real(wp), intent(out) :: dvdx(12)
     call evdvdr
@@ -401,8 +484,7 @@ end subroutine evdvdx
 
 !> @brief Evaluate EvMorse.
 subroutine evmorse
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: a, ab, r, ra, rb, rms
     ! mixed exponential-Gaussian terms = exp(-(r-re)/a-(r-re)^2/ab)
     ! re:   equlibrium bond length(1.208A)
     ! a:    nonlinear parameter optimized for diatomic molecules, unit
@@ -419,8 +501,7 @@ end subroutine evmorse
 
 !> @brief Evaluate EvMono.
 subroutine evmono
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: rm, rms
     !  The subroutine accepts six MEG variables (X) and calculates the
     !  monomials(M) that do not have usable decomposition.
     !  For A4 with max. degree 10, the number of monomials is nom.
@@ -542,12 +623,10 @@ end subroutine evmono
 
 !> @brief Evaluate EvPoly.
 subroutine evpoly
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: p, rm
     !  The subroutine accepts monomials (m) and calculates the
     !  permutation invariant polynomials(p)
     !  For A4 with max. degree 10, the number of polynomials is nob.
-    use chempotpy_kinds, only: wp
     implicit none
     p(0)  = rm(0)
     p(1)  = rm(1) + rm(2) + rm(3) + rm(4) + rm(5) + rm(6)
@@ -1029,8 +1108,7 @@ end subroutine evpoly
 
 !> @brief Evaluate evbas.
 subroutine evbas
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: b, p
     !  The subroutine eliminate the 2-body terms in Bowman's approach
     use chempotpy_kinds, only: wp
     implicit none
@@ -1102,6 +1180,21 @@ subroutine ev2gm2( r, v, grad, imol, igrad )
     !         grad   gradient (kcal/mol)/Angstrom
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate d3disp.
+        subroutine d3disp( dist, disp, dispdr, igrad, imol )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: cn(2), s6, s8, rs6, rs8
+            real(wp) :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
+            real(wp) :: e6dr(1), e8dr(1)
+            integer  :: iz(2), mxc(94), i, j, igrad
+            real(wp) :: c6ab(94,94,5,5,3)
+            real(wp) :: r2r4(94)
+            real(wp) :: autoang, autokcal
+            integer  :: imol
+        end subroutine d3disp
+    end interface
     integer, intent(in)   :: imol, igrad
     real(wp), intent(in)  :: r
     real(wp), intent(out) :: v, grad
@@ -1159,8 +1252,7 @@ end subroutine ev2gm2
 
 !> @brief Evaluate EvdVdR.
 subroutine evdvdr
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: c, dbdr, dvdr, r
     ! Subroutine to evaluate dVdR for given R
     ! dVdR = dV2dR + C*dBdR
     ! C:            Coefficients, stored in 'dim.inc'
@@ -1177,8 +1269,50 @@ subroutine evdvdr
     ! P(nob):       Array to store polynomials
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate ev2gm2.
+        subroutine ev2gm2( r, v, grad, imol, igrad )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: imol, igrad
+            real(wp), intent(in)  :: r
+            real(wp), intent(out) :: v, grad
+            real(wp)              :: alpha, beta, as(0:7)
+            integer               :: k
+            real(wp)              :: dist(1), disp, dispdr(1)
+        end subroutine ev2gm2
+
+        !> @brief Evaluate evdbdr.
+        subroutine evdbdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j
+            real(wp) :: db1dr(6,466)
+        end subroutine evdbdr
+
+        !> @brief Evaluate evdmdr.
+        subroutine evdmdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: i
+        end subroutine evdmdr
+
+        !> @brief Evaluate evdmsdr.
+        subroutine evdmsdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: i, j
+        end subroutine evdmsdr
+
+        !> @brief Evaluate evdpdr.
+        subroutine evdpdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: i
+        end subroutine evdpdr
+    end interface
     integer  :: i, j
-    real(wp) :: dist, v2, dv2dr, disp, dispdr(6)
+    real(wp) :: dist, v2, dv2dr
     ! Initialize dVdR(6)
     do i=1, 6
         dvdr(i) = 0.0e0_wp
@@ -1219,8 +1353,7 @@ end subroutine evdrdx
 
 !> @brief Evaluate EvdMsdR.
 subroutine evdmsdr
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: a, ab, dmsdr, r, ra, rb
     ! Subroutine to evaluate the derivatives of MEG term X
     ! w.r.t. interatomic distance R(6)
     ! dmsdR:        Local variables, dirm(6,6)
@@ -1245,8 +1378,7 @@ end subroutine evdmsdr
 
 !> @brief Evaluate EvdMdR.
 subroutine evdmdr
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: dmdr, dmsdr, rm
     !  The subroutine accepts M(nom) and dMSdR(6,6) and calculates the
     !  dMdR(6,nom) that do not have usable decomposition.
     !  For A4 with max. degree 10, the number of monomials is nom.
@@ -1371,12 +1503,10 @@ end subroutine evdmdr
 
 !> @brief Evaluate EvdPdr.
 subroutine evdpdr
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: dmdr, dpdr, p
     !  The subroutine accepts monomials (m) and calculates the
     !  permutation invariant polynomials(p)
     !  For A4 with max. degree 10, the number of polynomials is nob.
-    use chempotpy_kinds, only: wp
     implicit none
     integer :: i
     do i=1, 6
@@ -1896,8 +2026,7 @@ end subroutine evdpdr
 
 !> @brief Evaluate evdbdr.
 subroutine evdbdr
-    use o4_singlet_zv_par, only: a, ab, b, c, cconv, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, econv, &
-        & eref, gconv, p, r, ra, rb, rm, rms, totdiss
+    use o4_singlet_zv_par, only: dbdr, dpdr
     !  The subroutine eliminate the 2-body terms in Bowman's approach
     use chempotpy_kinds, only: wp
     implicit none
@@ -1979,12 +2108,29 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     ! The C6 values are fixed.
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp) :: cn(2), s6, s8, rs6, rs8
+    interface
+        !> @brief Evaluate edisp.
+        subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
+                rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: n, iz(2), max_elem, maxc, mxc(max_elem)
+            real(wp) :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+            real(wp) :: rs6, rs8, rcov(max_elem)
+            real(wp) :: c6ab(max_elem,max_elem,maxc,maxc,3)
+            real(wp) :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
+            integer  :: iat, jat, igrad
+            real(wp) :: r, tmp, c6, c8, a1, a2
+            real(wp) :: damp6, damp8
+            real(wp) :: cn(n)
+            real(wp) :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
+            integer  :: step
+        end subroutine edisp
+    end interface
+    real(wp) :: s6, s8, rs6, rs8
     real(wp) :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
     real(wp) :: e6dr(1), e8dr(1)
-    integer  :: iz(2), mxc(94), i, j, igrad
-    real(wp) :: c6ab(94,94,5,5,3)
-    real(wp) :: r2r4(94)
+    integer  :: iz(2), mxc(94), i, igrad
     real(wp) :: autoang, autokcal
     integer  :: imol
     autoang  = 0.52917726e0_wp
@@ -2036,15 +2182,11 @@ subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
     use chempotpy_kinds, only: wp
     implicit none
     integer  :: n, iz(2), max_elem, maxc, mxc(max_elem)
-    real(wp) :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+    real(wp) :: dist(1), r2r4(max_elem)
     real(wp) :: rs6, rs8, rcov(max_elem)
-    real(wp) :: c6ab(max_elem,max_elem,maxc,maxc,3)
     real(wp) :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
     integer  :: iat, jat, igrad
     real(wp) :: r, tmp, c6, c8, a1, a2
-    real(wp) :: damp6, damp8
-    real(wp) :: cn(n)
-    real(wp) :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
     integer  :: step
     e6(:)   = 0.0e0_wp
     e8(:)   = 0.0e0_wp

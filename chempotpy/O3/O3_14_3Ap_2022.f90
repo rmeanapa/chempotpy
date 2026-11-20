@@ -32,7 +32,7 @@ module chempotpy_o3_14_3ap_2022_pes
 
     !> @brief Evaluate the O3_14_3Ap_2022 potential energy surface for O3.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
@@ -48,7 +48,7 @@ module chempotpy_o3_14_3ap_2022_pes
         real(wp)              :: v(nstates), tx(natoms,3), tg(nstates,3,3)
         real(wp)              :: td(nstates,nstates,3,3)
         real(wp)              :: t(nstates,nstates)
-        integer               :: iatom, idir, j, istate, jstate
+        integer               :: iatom, idir, istate, jstate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! transform from angstrom to bohr
@@ -116,7 +116,6 @@ module chempotpy_o3_14_3ap_2022_pes
         real(wp) :: hr(ns,ns,n*(n-1)/2)
         real(wp) :: v2b(ns), g2b(ns,n*(n-1)/2)
         real(wp) :: drdx(n*(n-1)/2,3*n)
-        integer  :: i, j, k, l, m
         call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, &
             bias_l0, bias_l1, bias_l2, bias_l3)
         ! input x is in bohr
@@ -319,7 +318,6 @@ module chempotpy_o3_14_3ap_2022_pes
     ! used to compute index in DPEM
     !> @brief Evaluate sumover.
     subroutine sumover( a, b, sum1 )
-        use chempotpy_kinds, only: wp
         implicit none
         integer, intent(in)  :: a, b
         integer, intent(out) :: sum1
@@ -8692,7 +8690,7 @@ module chempotpy_o3_14_3ap_2022_pes
         ! Units: alpha in Angstrom^-2, beta=dimensionless, as_k in milihartree.
         real(wp) :: alpha, beta, as(0:7)
         real(wp) :: gam, del
-        integer  :: i, j, k
+        integer  :: i, k
         ! Dispersion variables
         real(wp) :: dist(1), disp, dispdr(1)
         v    = 0.0e0_wp
@@ -8848,12 +8846,10 @@ module chempotpy_o3_14_3ap_2022_pes
         ! The C6 values are fixed.
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: cn(2), s6, s8, rs6, rs8
+        real(wp) :: s6, s8, rs6, rs8
         real(wp) :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
         real(wp) :: e6dr(1), e8dr(1)
-        integer  :: iz(2), mxc(94), i, j, igrad
-        real(wp) :: c6ab(94,94,5,5,3)
-        real(wp) :: r2r4(94)
+        integer  :: iz(2), mxc(94), i, igrad
         real(wp) :: autoang, autokcal
         integer  :: imol
         autoang  = 0.52917726e0_wp
@@ -8905,15 +8901,11 @@ module chempotpy_o3_14_3ap_2022_pes
         use chempotpy_kinds, only: wp
         implicit none
         integer  :: n, iz(2), max_elem, maxc, mxc(max_elem)
-        real(wp) :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+        real(wp) :: dist(1), r2r4(max_elem)
         real(wp) :: rs6, rs8, rcov(max_elem)
-        real(wp) :: c6ab(max_elem,max_elem,maxc,maxc,3)
         real(wp) :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
         integer  :: iat, jat, igrad
         real(wp) :: r, tmp, c6, c8, a1, a2
-        real(wp) :: damp6, damp8
-        real(wp) :: cn(n)
-        real(wp) :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
         integer  :: step
         e6(:)   = 0.0e0_wp
         e8(:)   = 0.0e0_wp

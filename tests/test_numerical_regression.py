@@ -3,6 +3,7 @@
 import unittest
 
 from scripts.capture_library_references import (
+    BASELINE_VERSION,
     REGRESSION_GEOMETRY_COUNT,
     coordinates,
 )
@@ -107,7 +108,7 @@ class NumericalRegressionTests(unittest.TestCase):
     def test_legacy_fixture_bootstraps_current_version_once(self) -> None:
         current = {"H3/example": record(["1.0"])}
         selected, bootstrapped = select_baseline(
-            None, {"H3/example": record(["0.0"])}, 2, current
+            None, {"H3/example": record(["0.0"])}, BASELINE_VERSION, current
         )
         self.assertIs(selected, current)
         self.assertTrue(bootstrapped)
@@ -115,14 +116,18 @@ class NumericalRegressionTests(unittest.TestCase):
     def test_previous_version_uses_approved_changed_record(self) -> None:
         previous = {"H3/example": record(["1.0"])}
         current = {"H3/example": record(["2.0"])}
-        selected, bootstrapped = select_baseline(1, previous, 2, current)
+        selected, bootstrapped = select_baseline(
+            BASELINE_VERSION-1, previous, BASELINE_VERSION, current
+        )
         self.assertIs(selected["H3/example"], current["H3/example"])
         self.assertTrue(bootstrapped)
 
     def test_previous_version_keeps_same_platform_unchanged_record(self) -> None:
         previous = {"H3/example": record(["1.0"])}
         current = {"H3/example": record(["1.0"])}
-        selected, bootstrapped = select_baseline(1, previous, 2, current)
+        selected, bootstrapped = select_baseline(
+            BASELINE_VERSION-1, previous, BASELINE_VERSION, current
+        )
         self.assertIs(selected["H3/example"], previous["H3/example"])
         self.assertTrue(bootstrapped)
 
@@ -130,7 +135,7 @@ class NumericalRegressionTests(unittest.TestCase):
         baseline = {"H3/example": record(["1.0"])}
         current = {"H3/example": record(["2.0"])}
         selected, bootstrapped = select_baseline(
-            2, baseline, 2, current
+            BASELINE_VERSION, baseline, BASELINE_VERSION, current
         )
         self.assertIs(selected, baseline)
         self.assertFalse(bootstrapped)

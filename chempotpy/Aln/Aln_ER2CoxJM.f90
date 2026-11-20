@@ -33,7 +33,7 @@ module chempotpy_aln_er2coxjm_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: coordinates_to_bohr, &
             energy_to_electronvolt
         use chempotpy_kinds, only: wp
@@ -68,9 +68,7 @@ module chempotpy_aln_er2coxjm_pes
         use chempotpy_geometry, only: fill_distance_matrix
         use chempotpy_kinds,    only: wp
         implicit none
-        real(wp) :: a1, a2, a3, au2, au23, bu2, c(15), c0, c1, c2, c3, c4, c5, c6, co, coij, cojk, coki, dd, de, dx, dy, &
-            & dz, ee, fsech, fu2(maxatom, maxatom), oneha, onesi, oneth, poly, q1, q2, q23, q3, q332, r(maxatom, maxatom), re, &
-            & ree, rho, rij, rjk, rki, rr, twoth, v, v3, x(maxatom), y(maxatom), z(maxatom)
+        real(wp)            :: a1, a2, a3, au2, au23, bu2, c0, c1, c2, c3, c4, c5, c6, co, coij, cojk, coki, dd, de, dx, dy, dz, ee, fsech, oneha, onesi, oneth, poly, q1, q2, q23, q3, q332, r(maxatom,maxatom), re, ree, rho, rij, rjk, rki, rr, twoth, v, v3, x(maxatom), y(maxatom), z(maxatom)
         integer             :: i, j, k, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp
@@ -114,25 +112,25 @@ module chempotpy_aln_er2coxjm_pes
         oneha = sqrt(1.e0_wp/2.e0_wp)
         twoth = sqrt(2.e0_wp/3.e0_wp)
         onesi = sqrt(1.e0_wp/6.e0_wp)
-        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom, 1:natom))
+        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
         !  calculate the potential energy
         v3 = 0.e0_wp
         do i=1, natom
             do j=i+1, natom
                 !  two body term
-                rr   = r(i, j)
+                rr   = r(i,j)
                 coij = 0.e0_wp
                 if( rr .ge. bu2 ) cycle
                 coij = exp(au23*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2)))
                 rij  = (rr-ree)/ree
                 do k=j+1, natom
                     ! three body term
-                    rr   = r(k, j)
+                    rr   = r(k,j)
                     cojk = 0.e0_wp
                     if( rr .ge. bu2 ) cycle
                     cojk = exp(au23*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2)))
                     rjk  = (rr-ree)/ree
-                    rr   = r(k, i)
+                    rr   = r(k,i)
                     coki = 0.e0_wp
                     if( rr .ge. bu2 ) cycle
                     coki  = exp(au23*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2)))

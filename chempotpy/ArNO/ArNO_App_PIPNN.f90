@@ -14,7 +14,7 @@ module chempotpy_arno_app_pipnn_pes
 
     !> @brief Evaluate the ArNO_App_PIPNN potential energy surface for ArNO.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,    only: electronvolt_to_inverse_centimeter
         use chempotpy_geometry, only: cartesian_distance
         use chempotpy_units,    only: bohr_to_angstrom
@@ -30,7 +30,7 @@ module chempotpy_arno_app_pipnn_pes
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: vtm, vim
         real(wp)              :: r_no, r_arn, r_aro, cthx
-        integer               :: iatom, idir, j, istate
+        integer               :: istate
         !initialize
         vtm = 0.0; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! x: Ar, N, O order
@@ -71,9 +71,8 @@ module chempotpy_arno_app_pipnn_pes
         subroutine arnopes_sh( r10, r20, cthi, va, istate )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: cth, cthi, r1, r10, r2, r20, th, va
-            integer             :: istate
-            real(wp), parameter :: rbohr = 0.5291771
+            real(wp) :: cth, cthi, r1, r10, r2, r20, th, va
+            integer  :: istate
             ! : r1=r(N-O), r2=r(Ar-N)
             r1  = r10
             r2  = r20
@@ -96,15 +95,10 @@ module chempotpy_arno_app_pipnn_pes
             implicit none
             integer, parameter :: nroh1 = 17
             integer, parameter :: nth   = 13
-            integer, parameter :: nroh2 = 70
-            integer, parameter :: ip    = 2
             integer, parameter :: m     = 100
-            integer, parameter :: n     = 100
             integer, parameter :: l     = 100
-            real(wp)           :: ddhy(m), ddny(n), dds1(l), dds2(l), dds3(l), ddty(l), dhy(m), dny(n), ds1(l), ds2(l), ds3(l), &
-                & dty(l), dy1, dyn, h1(l), h2(n), h3(m), r1, r1a, r2, s1(l), s2(l), s3(l), ss(m), sss(m), th, v, xt(m), y(m), y2(l), &
-                & y3, yw2
-            integer :: i, iop, istate, j, k, nh, nr1, nthth
+            real(wp)           :: dy1, dyn, r1, r1a, r2, ss(m), sss(m), th, v, xt(m), y(m), y2(l), y3, yw2
+            integer            :: i, iop, istate, j, k, nh, nr1, nthth
             dy1 = 1.0e30_wp; dyn = 1.0e30_wp
             iop = istate
             !$OMP PARALLEL DEFAULT(SHARED)
@@ -419,7 +413,7 @@ module chempotpy_arno_app_pipnn_pes
         subroutine pes1d( r_no, v, istat )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: a1(4,17), a2(4,17), de(17), dy1, dyn, r2, r_no, tocm, v, vmin1, x(17), y(17), y2(17)
+            real(wp) :: de(17), dy1, dyn, r2, r_no, tocm, v, vmin1, x(17), y(17), y2(17)
             integer  :: i, istat
             vmin1 = -656.852768990000e0_wp
             r2    = r_no

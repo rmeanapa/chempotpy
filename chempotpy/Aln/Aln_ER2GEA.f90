@@ -33,7 +33,7 @@ module chempotpy_aln_er2gea_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: coordinates_to_bohr, &
             energy_to_electronvolt
         use chempotpy_kinds, only: wp
@@ -67,8 +67,7 @@ module chempotpy_aln_er2gea_pes
     subroutine pot( x, y, z, v, natom, maxatom )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: a1, a2, a3, au2, au23, b, bb, bu2, c(4), co, co3, de, dx, dy, dz, ee, en, ff, fu2(maxatom,maxatom), &
-            & poly, r(maxatom, maxatom), re, rho, rr, u2, ud, ud2, v, x(maxatom), y(maxatom), z(maxatom)
+        real(wp)            :: a1, a2, a3, au2, au23, b, bb, bu2, co, co3, de, dx, dy, dz, ee, en, ff, poly, re, rho, rr, u2, ud, ud2, v, x(maxatom), y(maxatom), z(maxatom)
         integer             :: i, j, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp

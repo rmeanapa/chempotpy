@@ -26,7 +26,7 @@ module chempotpy_clh2_leps_spk_1973_pes
 
     !> @brief Evaluate the ClH2_LEPS_SPK_1973 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         type(chempotpy_status_t), intent(out), optional :: status
         integer, intent(in)   :: igrad
         real(wp), intent(in)  :: x(3,3)

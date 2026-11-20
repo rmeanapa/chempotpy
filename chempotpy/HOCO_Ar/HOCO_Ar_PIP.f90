@@ -348,6 +348,17 @@ module bemsa
         & 734.67128450972825e0_wp, 370.53444288248591e0_wp, 554.41064370056233e0_wp, 1232.2966354902248e0_wp, &
         & 244.67334710691102e0_wp, 54.524094580760391e0_wp, 50.247453349200924e0_wp, 8.2543160126563819e0_wp, - &
         & 296.07864822707103e0_wp, -195.55137548221165e0_wp]
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( xyz, v )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)    :: xyz(5,3)
+            real(wp), intent(inout) :: v
+            real(wp)                :: x(10)
+            real(wp)                :: a1, a2
+        end subroutine pot
+    end interface
 
     contains
 
@@ -383,7 +394,6 @@ module bemsa
         real(wp), intent(in)  :: x(1:10)
         real(wp), intent(out) :: p(1:1376)
         real(wp)              :: m(1:21)
-        integer               :: i
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
@@ -2071,10 +2081,21 @@ module chempotpy_hoco_ar_pip_pes
 
     !> @brief Evaluate the HOCO_Ar_PIP potential energy surface for HOCO_Ar.
     subroutine evaluate( x, igrad, path, p, gradient_out, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
+        interface
+            !> @brief Evaluate pot.
+            subroutine pot( xyz, v )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)    :: xyz(5,3)
+                real(wp), intent(inout) :: v
+                real(wp)                :: x(10)
+                real(wp)                :: a1, a2
+            end subroutine pot
+        end interface
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter              :: nstates = 1
@@ -2086,7 +2107,7 @@ module chempotpy_hoco_ar_pip_pes
         real(wp), intent(out)           :: gradient_out(nstates,natoms,3)
         real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
         real(wp)                        :: v
-        integer                         :: iatom, idir, j, istate
+        integer                         :: istate
         !initialize
         gradient_out = 0.e0_wp; d = 0.e0_wp
         if( igrad == 0 )then

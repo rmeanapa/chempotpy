@@ -83,7 +83,7 @@ module chempotpy_clh2_leps_stsbltg1_1989_pes
 
     !> @brief Evaluate the ClH2_LEPS_STSBLTG1_1989 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt

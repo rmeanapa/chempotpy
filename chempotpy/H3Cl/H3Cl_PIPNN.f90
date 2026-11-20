@@ -15,7 +15,7 @@ module chempotpy_h3cl_pipnn_pes
 
     !> @brief Evaluate the H3Cl_PIPNN potential energy surface for H3Cl.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -28,7 +28,7 @@ module chempotpy_h3cl_pipnn_pes
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: v
         real(wp)              :: tx(3,natoms)
-        integer               :: iatom, idir, j, istate
+        integer               :: iatom, idir, istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
@@ -62,11 +62,11 @@ module chempotpy_h3cl_pipnn_pes
         call pot0(r1, v0)
         call pot1(r2, v1)
         call clh3vlr(r1, r2, r3, th1, th2, phi, vint, n)
-        vpip = (vpes*0.03674931e0_wp+-461.54119162e0_wp)-v0-v1
+        vpip = (vpes*0.03674931e0_wp-461.54119162e0_wp)-v0-v1
         vpip = vpip*tocm
         s    = (1e0_wp-tanh(3e0_wp*(r3-5.5e0_wp)))/2e0_wp
         v    = s*vpip+(1e0_wp-s)*vint
-        vtot = (v/tocm+v0+v1--461.54020987e0_wp)*27.21138e0_wp
+        vtot = (v/tocm+v0+v1+461.54020987e0_wp)*27.21138e0_wp
     end subroutine pesh3cl
 
     !> @brief Interpolate the immutable H2 diatomic correction table.
@@ -112,11 +112,9 @@ module chempotpy_h3cl_pipnn_pes
         use chempotpy_kinds, only: wp
         implicit none
         integer, parameter :: m = 3, m1=2*m+1, m2=m1**2! m the order of r1 and r2
-        real(wp)           :: z1(m2), z2(m2), z3(m2), z4(m2), z5(m1), z6(m2), z7(m2), &
-            & afunc(ma), a(m2), z8(m2), z9(m2), z10(m2), z11(m2), z12(m2), z13(m2) &
-            &, z14(m2), a111(m2)
-        integer  :: ma, i, l, n, j, j1
-        real(wp) :: ra, rb, rc, theta1, theta2, phi, r1, r2, r3, th1, th2, a1, a2, a3 &
+        real(wp)           :: z1(m2), z2(m2), z3(m2), z4(m2), z6(m2), z7(m2), afunc(ma), a(m2), z8(m2), z9(m2), z10(m2), z11(m2), z12(m2), z13(m2), z14(m2), a111(m2)
+        integer            :: ma, i, l, n, j, j1
+        real(wp)           :: ra, rb, rc, theta1, theta2, phi, r1, r2, r3, th1, th2, a1, a2, a3 &
             &, a11, a22
         r2 = ra;r1=rb;r3=rc;th1=theta2;th2=theta1
         n  = 1
@@ -184,9 +182,9 @@ module chempotpy_h3cl_pipnn_pes
     subroutine clh3pipnn( rb, vpes, vpesa, vpesb, vpesc )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j, k, lpes
-        real(wp) :: rb(ndim), xbond(ndim), basis(0:nbasis), tmp1, txinput(nbasis)
-        real(wp) :: vpes, vpesa, vpesb, vpesc, vpesh, vnn
+        integer  :: j
+        real(wp) :: rb(ndim), xbond(ndim), basis(0:nbasis), txinput(nbasis)
+        real(wp) :: vpes, vpesa, vpesb, vpesc
         basis    = 0.e0_wp
         xbond(:) = exp(-rb(:)/alpha)
         call bemsav134(xbond, basis)
@@ -420,12 +418,10 @@ module chempotpy_h3cl_pipnn_pes
     subroutine xyz_to_jaco( x, r1, r2, r3, theta1, theta2, phi, r )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)  :: ra1, ra4, rb1, rb4, str11, str12
-        real(wp)  :: x(3,4), a(3), b(3), r(6)
-        real(wp)  :: mass(4)
-        real(wp)  :: r1, r2, r3, theta1, theta2, phi
-        integer   :: k, m, i, j, n, ndata
-        character :: long
+        real(wp) :: ra1, ra4, rb1, rb4, str11, str12
+        real(wp) :: x(3,4), a(3), b(3), r(6)
+        real(wp) :: mass(4)
+        real(wp) :: r1, r2, r3, theta1, theta2, phi
         mass(1) = 1.00782503e0_wp
         mass(2) = mass(1)
         mass(3) = mass(1)

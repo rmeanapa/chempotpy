@@ -86,10 +86,123 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_pes
 
     !> @brief Evaluate the OH3_PIP_FFW1_2019 diabatic potential matrix for OH3.
     subroutine evaluate( x, igrad, u, ug, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
+        interface
+            !> @brief Evaluate u11_pot_8.
+            subroutine u11_pot_8( xyz, v, dxyz )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: xyz(4,3)
+                real(wp) :: v
+                real(wp) :: dxyz(4,3)
+            end subroutine u11_pot_8
+
+            !> @brief Evaluate u12_dc_10.
+            subroutine u12_dc_10( xyz, v, s )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: xyz(4,3)
+                real(wp) :: v
+                real(wp) :: s
+            end subroutine u12_dc_10
+
+            !> @brief Evaluate u12_dvdx.
+            subroutine u12_dvdx( xyz, u12, s12, du12dx )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer  :: i, j, k
+                real(wp) :: du12dx(4,3), xyz(4,3)
+                real(wp) :: u12, s12
+                real(wp) :: coord(12), r(6)
+                real(wp) :: dudx(12)
+                real(wp) :: dvdx(12), dvdr(6), drdx(6,12)
+                real(wp) :: dtdx(12)
+                real(wp) :: volume
+            end subroutine u12_dvdx
+
+            !> @brief Evaluate u12_order10.
+            subroutine u12_order10
+                use chempotpy_kinds, only: wp
+                implicit none
+            end subroutine u12_order10
+
+            !> @brief Evaluate u13_dc_12.
+            subroutine u13_dc_12( xyz, v )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: xyz(4,3)
+                real(wp) :: v
+            end subroutine u13_dc_12
+
+            !> @brief Evaluate u13_dvdx.
+            subroutine u13_dvdx( xyz, u13, du13dx )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer  :: i, j, k
+                real(wp) :: du13dx(4,3), xyz(4,3)
+                real(wp) :: u13
+                real(wp) :: coord(12), r(6)
+                real(wp) :: dudx(12)
+                real(wp) :: dvdx(12), dvdr(6), drdx(6,12)
+                real(wp) :: volume
+            end subroutine u13_dvdx
+
+            !> @brief Evaluate u13_order12.
+            subroutine u13_order12
+                use chempotpy_kinds, only: wp
+                implicit none
+            end subroutine u13_order12
+
+            !> @brief Evaluate u22_pot_8.
+            subroutine u22_pot_8( xyz, v, dxyz )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: xyz(4,3)
+                real(wp) :: v
+                real(wp) :: dxyz(4,3)
+            end subroutine u22_pot_8
+
+            !> @brief Evaluate u23_dc_10.
+            subroutine u23_dc_10( xyz, v, s )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: xyz(4,3)
+                real(wp) :: v
+                real(wp) :: s
+            end subroutine u23_dc_10
+
+            !> @brief Evaluate u23_dvdx.
+            subroutine u23_dvdx( xyz, u23, s23, du23dx )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer  :: i, j, k
+                real(wp) :: du23dx(4,3), xyz(4,3)
+                real(wp) :: u23, s23
+                real(wp) :: coord(12), r(6)
+                real(wp) :: dudx(12)
+                real(wp) :: dvdx(12), dvdr(6), drdx(6,12)
+                real(wp) :: dtdx(12)
+                real(wp) :: volume
+            end subroutine u23_dvdx
+
+            !> @brief Evaluate u23_order10.
+            subroutine u23_order10
+                use chempotpy_kinds, only: wp
+                implicit none
+            end subroutine u23_order10
+
+            !> @brief Evaluate u33_pot_8.
+            subroutine u33_pot_8( xyz, v, dxyz )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: xyz(4,3)
+                real(wp) :: v
+                real(wp) :: dxyz(4,3)
+            end subroutine u33_pot_8
+        end interface
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 3
@@ -98,20 +211,13 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_pes
         real(wp), intent(in)  :: x(natoms,3)
         real(wp), intent(out) :: u(nstates,nstates)
         real(wp), intent(out) :: ug(nstates,nstates,natoms,3)
-        character (len=1)     :: symb
-        integer               :: iatom, idir, istate, jstate
-        integer               :: i, j, k, l
+        integer               :: i, j
         real(wp)              :: u11, u22, u33
         real(wp)              :: u12, u13, u23
         real(wp)              :: s12, s23
         real(wp)              :: xyz(4,3)
-        character(len=32)     :: fname, bname
         real(wp)              :: du11dx(4,3), du22dx(4,3), du33dx(4,3)
         real(wp)              :: du12dx(4,3), du13dx(4,3), du23dx(4,3)
-        real(wp)              :: gu(4,3,3,3)
-        real(wp)              :: rv(3,3), a(3)
-        real(wp)              :: ga(4,3,3), f(4,3,3,3)
-        real(wp)              :: tmpgu(3,3), tmpga(3,3)
         xyz = x
         !compute diabatic states
         call u11_pot_8(xyz, u11, du11dx)
@@ -186,15 +292,74 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_u11_pot_8_entry_stat_6005b2a7
     subroutine dispatch( xyz, v, dxyz, initialize_only )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate ev_pol_con_8.
+            subroutine ev_pol_con_8( x, p )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: x(1:6)
+                real(wp), intent(out) :: p(1:546)
+                real(wp)              :: x1, x2, x3, x4, x5, x6
+            end subroutine ev_pol_con_8
+
+            !> @brief Evaluate grad_ev_pol_con_8.
+            subroutine grad_ev_pol_con_8( x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6 )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: x(1:6)
+                real(wp), intent(out) :: dpdx1(1:546), dpdx2(1:546), dpdx3(1:546), dpdx4(1:546), dpdx5(1:546), dpdx6(1:546)
+                real(wp)              :: x1, x2, x3, x4, x5, x6
+            end subroutine grad_ev_pol_con_8
+
+            !> @brief Evaluate grad_hh.
+            real(wp) function grad_hh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: grad_d3bj_hh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function grad_hh
+
+            !> @brief Evaluate grad_oh.
+            real(wp) function grad_oh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: grad_d3bj_oh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function grad_oh
+
+            !> @brief Evaluate hh.
+            real(wp) function hh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: d3bj_hh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function hh
+
+            !> @brief Evaluate oh.
+            real(wp) function oh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: d3bj_oh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function oh
+        end interface
         logical, intent(in) :: initialize_only
         optional :: xyz, v, dxyz
         real(wp)           :: xyz(:,:)
         real(wp)           :: v, r12, r13, r14, r23, r24, r34
-        real(wp)           :: a1, a2, b1, b2, oh, hh, ra1, ra2, rb1, rb2, grad_hh, grad_oh
+        real(wp)           :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
         integer, parameter :: ncoeff = 546
         real(wp)           :: coeff(ncoeff), p(ncoeff)
         real(wp)           :: dpdx1(ncoeff), dpdx2(ncoeff), dpdx3(ncoeff), dpdx4(ncoeff), dpdx5(ncoeff), dpdx6(ncoeff)
-        real(wp)           :: x(6), re_hh, re_oh, ra_hh, ra_oh, rb_hh, rb_oh
+        real(wp)           :: x(6)
         real(wp)           :: dx1, dx2, dx3, dx4, dx5, dx6, dr1, dr2, dr3, dr4, dr5, dr6, dxyz(:,:)
         a1          = 8.0000000000000004e-01
         a2          = 1.2000000000000000e+00
@@ -822,11 +987,70 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_u22_pot_8_entry_stat_6005b2a7
     subroutine dispatch( xyz, v, dxyz, initialize_only )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate ev_pol_con_8.
+            subroutine ev_pol_con_8( x, p )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: x(1:6)
+                real(wp), intent(out) :: p(1:546)
+                real(wp)              :: x1, x2, x3, x4, x5, x6
+            end subroutine ev_pol_con_8
+
+            !> @brief Evaluate grad_ev_pol_con_8.
+            subroutine grad_ev_pol_con_8( x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6 )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: x(1:6)
+                real(wp), intent(out) :: dpdx1(1:546), dpdx2(1:546), dpdx3(1:546), dpdx4(1:546), dpdx5(1:546), dpdx6(1:546)
+                real(wp)              :: x1, x2, x3, x4, x5, x6
+            end subroutine grad_ev_pol_con_8
+
+            !> @brief Evaluate grad_hh.
+            real(wp) function grad_hh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: grad_d3bj_hh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function grad_hh
+
+            !> @brief Evaluate grad_oh.
+            real(wp) function grad_oh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: grad_d3bj_oh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function grad_oh
+
+            !> @brief Evaluate hh.
+            real(wp) function hh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: d3bj_hh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function hh
+
+            !> @brief Evaluate oh.
+            real(wp) function oh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: d3bj_oh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function oh
+        end interface
         logical, intent(in) :: initialize_only
         optional :: xyz, v, dxyz
         real(wp)           :: xyz(:,:)
         real(wp)           :: v, r12, r13, r14, r23, r24, r34
-        real(wp)           :: a1, a2, b1, b2, oh, hh, ra1, ra2, rb1, rb2, grad_hh, grad_oh
+        real(wp)           :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
         integer, parameter :: ncoeff = 546
         real(wp)           :: coeff(ncoeff), p(ncoeff)
         real(wp)           :: dpdx1(ncoeff), dpdx2(ncoeff), dpdx3(ncoeff), dpdx4(ncoeff), dpdx5(ncoeff), dpdx6(ncoeff)
@@ -1464,11 +1688,74 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_u33_pot_8_entry_stat_6005b2a7
     subroutine dispatch( xyz, v, dxyz, initialize_only )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate ev_pol_con_8.
+            subroutine ev_pol_con_8( x, p )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: x(1:6)
+                real(wp), intent(out) :: p(1:546)
+                real(wp)              :: x1, x2, x3, x4, x5, x6
+            end subroutine ev_pol_con_8
+
+            !> @brief Evaluate grad_ev_pol_con_8.
+            subroutine grad_ev_pol_con_8( x, dpdx1, dpdx2, dpdx3, dpdx4, dpdx5, dpdx6 )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: x(1:6)
+                real(wp), intent(out) :: dpdx1(1:546), dpdx2(1:546), dpdx3(1:546), dpdx4(1:546), dpdx5(1:546), dpdx6(1:546)
+                real(wp)              :: x1, x2, x3, x4, x5, x6
+            end subroutine grad_ev_pol_con_8
+
+            !> @brief Evaluate grad_hh.
+            real(wp) function grad_hh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: grad_d3bj_hh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function grad_hh
+
+            !> @brief Evaluate grad_ohstar.
+            real(wp) function grad_ohstar( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                integer              :: i
+                real(wp)             :: alr, blr, vsr, vlr, fs, gsr, glr, gfs
+                real(wp)             :: plr(3), clr(3), pglr(3)
+                real(wp)             :: asr, bsr
+                real(wp)             :: psr(6), csr(6), pgsr(6)
+            end function grad_ohstar
+
+            !> @brief Evaluate hh.
+            real(wp) function hh( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                real(wp)             :: d3bj_hh
+                real(wp)             :: vsr, alpha, beta, c(8), p(8)
+                integer              :: i
+            end function hh
+
+            !> @brief Evaluate ohstar.
+            real(wp) function ohstar( r )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in) :: r
+                integer              :: i
+                real(wp)             :: alr, blr, vsr, vlr, fs
+                real(wp)             :: plr(3), clr(3)
+                real(wp)             :: asr, bsr
+                real(wp)             :: psr(6), csr(6)
+            end function ohstar
+        end interface
         logical, intent(in) :: initialize_only
         optional :: xyz, v, dxyz
         real(wp)           :: xyz(:,:)
         real(wp)           :: v, r12, r13, r14, r23, r24, r34
-        real(wp)           :: a1, a2, b1, b2, ohstar, hh, ra1, ra2, rb1, rb2, grad_hh, grad_ohstar
+        real(wp)           :: a1, a2, b1, b2, ra1, ra2, rb1, rb2
         integer, parameter :: ncoeff = 546
         real(wp)           :: coeff(ncoeff), p(ncoeff)
         real(wp)           :: dpdx1(ncoeff), dpdx2(ncoeff), dpdx3(ncoeff), dpdx4(ncoeff), dpdx5(ncoeff), dpdx6(ncoeff)
@@ -2171,8 +2458,16 @@ end function grad_d3bj_oh
 real(wp) function hh( r )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate d3bj_hh.
+        real(wp) function d3bj_hh( r )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in) :: r
+            real(wp)             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
+        end function d3bj_hh
+    end interface
     real(wp), intent(in) :: r
-    real(wp)             :: d3bj_hh
     real(wp)             :: vsr, alpha, beta, c(8), p(8)
     integer              :: i
     alpha = 0.53931748805004220
@@ -2196,8 +2491,16 @@ end function hh
 real(wp) function grad_hh( r )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate grad_d3bj_hh.
+        real(wp) function grad_d3bj_hh( r )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in) :: r
+            real(wp)             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
+        end function grad_d3bj_hh
+    end interface
     real(wp), intent(in) :: r
-    real(wp)             :: grad_d3bj_hh
     real(wp)             :: vsr, alpha, beta, c(8), p(8)
     integer              :: i
     alpha = 0.53931748805004220
@@ -2221,8 +2524,16 @@ end function grad_hh
 real(wp) function oh( r )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate d3bj_oh.
+        real(wp) function d3bj_oh( r )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in) :: r
+            real(wp)             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
+        end function d3bj_oh
+    end interface
     real(wp), intent(in) :: r
-    real(wp)             :: d3bj_oh
     real(wp)             :: vsr, alpha, beta, c(8), p(8)
     integer              :: i
     alpha = 0.51045358916334960
@@ -2246,8 +2557,16 @@ end function oh
 real(wp) function grad_oh( r )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate grad_d3bj_oh.
+        real(wp) function grad_d3bj_oh( r )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in) :: r
+            real(wp)             :: s6, s8, c6au, c8au, c6, c8, a1, a2, r0, fr0
+        end function grad_d3bj_oh
+    end interface
     real(wp), intent(in) :: r
-    real(wp)             :: grad_d3bj_oh
     real(wp)             :: vsr, alpha, beta, c(8), p(8)
     integer              :: i
     alpha = 0.51045358916334960
@@ -6590,6 +6909,19 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_u12_dc_10_entry_stat_6005b2a7
     subroutine dispatch( xyz, v, s, initialize_only )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate ev_pol_con_10.
+            subroutine ev_pol_con_10( x, q )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: x(1:6)
+                real(wp), intent(out) :: q(1:1300)
+                integer               :: i, j
+                real(wp)              :: rm(0:32)
+                real(wp)              :: p(0:1506)
+                real(wp)              :: bm1(1506), bm2(1300)
+            end subroutine ev_pol_con_10
+        end interface
         logical, intent(in) :: initialize_only
         optional :: xyz, v, s
         real(wp)           :: xyz(:,:)
@@ -7948,7 +8280,6 @@ end module chempotpy_oh3_pip_ffw1_2019_dpem_u12_dc_10_entry_stat_6005b2a7
 !> @brief Compatibility interface for u12_order10.
 subroutine u12_order10
     use chempotpy_oh3_pip_ffw1_2019_dpem_u12_dc_10_entry_stat_6005b2a7, only: dispatch
-    use chempotpy_kinds,                                                only: wp
     implicit none
     call dispatch(initialize_only=.true.)
 end subroutine u12_order10
@@ -7980,6 +8311,19 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_u13_dc_12_entry_stat_6005b2a7
     subroutine dispatch( xyz, v, initialize_only )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate ev_pol_con_12.
+            subroutine ev_pol_con_12( x, q )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: x(1:6)
+                real(wp), intent(out) :: q(1:3075)
+                integer               :: j
+                real(wp)              :: rm(0:32)
+                real(wp)              :: p(0:3392)
+                real(wp)              :: bm1(3394), bm2(3076)
+            end subroutine ev_pol_con_12
+        end interface
         logical, intent(in) :: initialize_only
         optional :: xyz, v
         real(wp)           :: xyz(:,:)
@@ -11093,7 +11437,6 @@ end module chempotpy_oh3_pip_ffw1_2019_dpem_u13_dc_12_entry_stat_6005b2a7
 !> @brief Compatibility interface for u13_order12.
 subroutine u13_order12
     use chempotpy_oh3_pip_ffw1_2019_dpem_u13_dc_12_entry_stat_6005b2a7, only: dispatch
-    use chempotpy_kinds,                                                only: wp
     implicit none
     call dispatch(initialize_only=.true.)
 end subroutine u13_order12
@@ -11124,6 +11467,19 @@ module chempotpy_oh3_pip_ffw1_2019_dpem_u23_dc_10_entry_stat_6005b2a7
     subroutine dispatch( xyz, v, s, initialize_only )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate ev_pol_con_10.
+            subroutine ev_pol_con_10( x, q )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: x(1:6)
+                real(wp), intent(out) :: q(1:1300)
+                integer               :: i, j
+                real(wp)              :: rm(0:32)
+                real(wp)              :: p(0:1506)
+                real(wp)              :: bm1(1506), bm2(1300)
+            end subroutine ev_pol_con_10
+        end interface
         logical, intent(in) :: initialize_only
         optional :: xyz, v, s
         real(wp)           :: xyz(:,:)
@@ -12488,7 +12844,6 @@ end module chempotpy_oh3_pip_ffw1_2019_dpem_u23_dc_10_entry_stat_6005b2a7
 !> @brief Compatibility interface for u23_order10.
 subroutine u23_order10
     use chempotpy_oh3_pip_ffw1_2019_dpem_u23_dc_10_entry_stat_6005b2a7, only: dispatch
-    use chempotpy_kinds,                                                only: wp
     implicit none
     call dispatch(initialize_only=.true.)
 end subroutine u23_order10
@@ -19033,7 +19388,7 @@ subroutine ev_pol_con_10( x, q )
     implicit none
     real(wp), intent(in)  :: x(1:6)
     real(wp), intent(out) :: q(1:1300)
-    integer               :: i, j
+    integer               :: j
     real(wp)              :: rm(0:32)
     real(wp)              :: p(0:1506)
     real(wp)              :: bm1(1506), bm2(1300)
@@ -22105,6 +22460,28 @@ subroutine u12_dvdx( xyz, u12, s12, du12dx )
         & transform_internal_gradient_to_cartesian
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate num_dtdx.
+        subroutine num_dtdx( xyz, dtdx )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j, k, m, n
+            real(wp) :: xyz(4,3)
+            real(wp) :: dtdx(12)
+            real(wp) :: xyz1(4,3), xyz2(4,3)
+            real(wp) :: volume1, volume2
+        end subroutine num_dtdx
+
+        !> @brief Evaluate p_volume.
+        subroutine p_volume( xyz, volume )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j, k
+            real(wp) :: volume
+            real(wp) :: xyz(4,3)
+            real(wp) :: rrel(3,3), cross(3)
+        end subroutine p_volume
+    end interface
     integer  :: i, j, k
     real(wp) :: du12dx(4,3), xyz(4,3)
     real(wp) :: u12, s12
@@ -27915,6 +28292,17 @@ end subroutine evdrdx
 subroutine num_dtdx( xyz, dtdx )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate p_volume.
+        subroutine p_volume( xyz, volume )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j, k
+            real(wp) :: volume
+            real(wp) :: xyz(4,3)
+            real(wp) :: rrel(3,3), cross(3)
+        end subroutine p_volume
+    end interface
     integer  :: i, j, k, m, n
     real(wp) :: xyz(4,3)
     real(wp) :: dtdx(12)
@@ -27949,7 +28337,7 @@ end subroutine num_dtdx
 subroutine p_volume( xyz, volume )
     use chempotpy_kinds, only: wp
     implicit none
-    integer  :: i, j, k
+    integer  :: i, j
     real(wp) :: volume
     real(wp) :: xyz(4,3)
     real(wp) :: rrel(3,3), cross(3)
@@ -27986,7 +28374,6 @@ subroutine u13_dvdx( xyz, u13, du13dx )
     real(wp) :: coord(12), r(6)
     real(wp) :: dudx(12)
     real(wp) :: dvdx(12), dvdr(6), drdx(6,12)
-    real(wp) :: volume
     ! Initialize dVdX(12)
     do i=1, 12
         dvdx(i) = 0.0e0_wp
@@ -41093,6 +41480,28 @@ subroutine u23_dvdx( xyz, u23, s23, du23dx )
         & transform_internal_gradient_to_cartesian
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate num_dtdx.
+        subroutine num_dtdx( xyz, dtdx )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j, k, m, n
+            real(wp) :: xyz(4,3)
+            real(wp) :: dtdx(12)
+            real(wp) :: xyz1(4,3), xyz2(4,3)
+            real(wp) :: volume1, volume2
+        end subroutine num_dtdx
+
+        !> @brief Evaluate p_volume.
+        subroutine p_volume( xyz, volume )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j, k
+            real(wp) :: volume
+            real(wp) :: xyz(4,3)
+            real(wp) :: rrel(3,3), cross(3)
+        end subroutine p_volume
+    end interface
     integer  :: i, j, k
     real(wp) :: du23dx(4,3), xyz(4,3)
     real(wp) :: u23, s23

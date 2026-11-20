@@ -33,7 +33,7 @@ module chempotpy_aln_er2escnm_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: coordinates_to_bohr, &
             energy_to_electronvolt
         use chempotpy_kinds, only: wp
@@ -67,10 +67,7 @@ module chempotpy_aln_er2escnm_pes
     subroutine pot( x, y, z, v, natom, maxatom )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: a1, a1b, a2, a2b, a3, a3b, abscz1, abscz2, ac, au2, au23, au2b, bu2, bu2b, c(30), co, cob, cz1, cz2, &
-            & de, deb, du2, dx, dy, dz, ec1, ee, eeb, es1, fcn(maxatom, maxatom), fs(maxatom, maxatom), g1, g1e, g2, &
-            & gcorr(maxatom), gu2, gzero, poly, polyb, r(maxatom, maxatom), re, reb, rho, rhob, rij, ril, rjl, rr, s, term, tmp, &
-            & tmpb, v, x(maxatom), xk1, xk2, xk3, y(maxatom), z(maxatom)
+        real(wp)            :: a1, a1b, a2, a2b, a3, a3b, abscz1, abscz2, ac, au2, au23, au2b, bu2, bu2b, co, cob, cz1, cz2, de, deb, du2, dx, dy, dz, ec1, ee, eeb, es1, fcn(maxatom,maxatom), fs(maxatom,maxatom), g1, g1e, g2, gcorr(maxatom), gu2, gzero, poly, polyb, r(maxatom,maxatom), re, reb, rho, rhob, rij, ril, rjl, rr, s, term, tmp, tmpb, v, x(maxatom), xk1, xk2, xk3, y(maxatom), z(maxatom)
         integer             :: i, j, l, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp
@@ -98,19 +95,19 @@ module chempotpy_aln_er2escnm_pes
         au2b  = 0.216047874938935042
         bu2b  = 6.50000000000000000/autoang
         do i=1, natom
-            r(i, i)   = 0.e0_wp
-            fs(i, i)  = 1.e0_wp
-            fcn(i, i) = 1.e0_wp
+            r(i,i)   = 0.e0_wp
+            fs(i,i)  = 1.e0_wp
+            fcn(i,i) = 1.e0_wp
             do j=i+1, natom
-                dx        = x(i)-x(j)
-                dy        = y(i)-y(j)
-                dz        = z(i)-z(j)
-                r(i, j)   = sqrt(dx*dx+dy*dy+dz*dz)
-                r(j, i)   = r(i, j)
-                fs(j, i)  = 1.e0_wp
-                fs(i, j)  = 1.e0_wp
-                fcn(j, i) = 1.e0_wp
-                fcn(i, j) = 1.e0_wp
+                dx       = x(i)-x(j)
+                dy       = y(i)-y(j)
+                dz       = z(i)-z(j)
+                r(i,j)   = sqrt(dx*dx+dy*dy+dz*dz)
+                r(j,i)   = r(i,j)
+                fs(j,i)  = 1.e0_wp
+                fs(i,j)  = 1.e0_wp
+                fcn(j,i) = 1.e0_wp
+                fcn(i,j) = 1.e0_wp
             enddo
         enddo
         ! do S term, needs xk1,xk2,xk3
@@ -119,9 +116,9 @@ module chempotpy_aln_er2escnm_pes
                 s = 0.e0_wp
                 do l=1, natom! gamma loop
                     if( l .eq. j.or.l .eq. i ) cycle! gamma != alpha or beta
-                    rjl = r(l, j)
-                    rij = r(i, j)
-                    ril = r(l, i)
+                    rjl = r(l,j)
+                    rij = r(i,j)
+                    ril = r(l,i)
                     if( rjl .ge. bu2 ) cycle! cutoff for Rbeta,delta
                     if( rij .ge. bu2 ) cycle! cutoff for Rbeta,delta
                     if( ril .ge. bu2 ) cycle! cutoff for Rbeta,delta
@@ -131,10 +128,10 @@ module chempotpy_aln_er2escnm_pes
                     term = xk1*exp(-xk2*((ril+rjl)/rij)**xk3+ac)        ! cutoff ti
                     s    = s+term                         ! sum
                 enddo
-                fs(i, j) = tanh(s)
-                fs(j, i) = fs(i, j)
+                fs(i,j) = tanh(s)
+                fs(j,i) = fs(i,j)
             enddo
-            fs(i, i) = 1.e0_wp                           ! shouldn't get used anywhe
+            fs(i,i) = 1.e0_wp                           ! shouldn't get used anywhe
         enddo
         ! CALCULATE CN FUNCTION
         !     first calculate g_alpha
@@ -143,7 +140,7 @@ module chempotpy_aln_er2escnm_pes
             gcorr(i) = 0e0_wp
             do j=1, natom! beta loop
                 if( i .eq. j ) cycle! beta != alpha
-                rij = r(i, j)
+                rij = r(i,j)
                 if( rij .ge. g2 ) cycle! cutoff term counts nearb
                 term     = exp(-g1/(1e0_wp-(rij/g2)))         ! cutoff term counts nearb
                 gcorr(i) = gcorr(i)+term                ! sum over beta
@@ -154,7 +151,7 @@ module chempotpy_aln_er2escnm_pes
         do i=1, natom! alpha loop
             do j=1, natom! beta loop
                 if( i .eq. j ) cycle! beat != alpha
-                rij  = r(i, j)
+                rij  = r(i,j)
                 term = 0.e0_wp
                 goto_block_32_160: block
                     if( rij .ge. g2 ) exit goto_block_32_160! g_alphabeta
@@ -169,7 +166,7 @@ module chempotpy_aln_er2escnm_pes
                 if( abscz2 .le. 10e-12_wp ) cz2=abscz2! eliminates negative valu
                 ec1 = 1e0_wp/(1e0_wp+cz2**gu2)                 ! compute beta part of f f
                 !       fcn(i,j)=1d0+du2*(es1*ec1-1d0)         ! put alpha and beta parts together, mult by BA term for u2 part
-                fcn(i, j) = du2*(es1*ec1-1e0_wp)         ! put alpha and beta parts tog
+                fcn(i,j) = du2*(es1*ec1-1e0_wp)         ! put alpha and beta parts tog
             enddo
         enddo
         ! potential, includes cutoff
@@ -192,7 +189,7 @@ module chempotpy_aln_er2escnm_pes
                 if( rr .le. bu2b ) cob=exp(au2b*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2b)))
                 tmp  = de*ee*poly*co
                 tmpb = deb*eeb*polyb*cob
-                v    = v-tmp+tmpb*(fs(i, j)-fcn(i, j)+fs(i, j)*fcn(i, j))
+                v    = v-tmp+tmpb*(fs(i,j)-fcn(i,j)+fs(i,j)*fcn(i,j))
             enddo
         enddo
     end subroutine pot

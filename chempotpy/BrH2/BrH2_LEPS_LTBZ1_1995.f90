@@ -140,7 +140,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
         real(wp)              :: r(n3atom)
         real(wp)              :: rad
         real(wp)              :: re(3)
-        character             :: ref(5)
+        character(len=75)     :: ref(5)
         real(wp)              :: top3z(3)
         real(wp)              :: tzp3(3)
         real(wp)              :: v3c
@@ -242,13 +242,8 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter  :: natom  = 25
             real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: charkc = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: r2     = 1.41421356e0_wp
             if( legacy_natoms .gt. 25 )then
                 if( present(status) ) call status%set(status_invalid_input, &
                     'legacy kernel rejected the evaluation request')
@@ -296,13 +291,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter  :: natom  = 25
-            real(wp), parameter :: cangau = 0.52917706e0_wp
-            real(wp), parameter :: charkc = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: r2     = 1.41421356e0_wp
+            real(wp), parameter :: r2 = 1.41421356e0_wp
             call cartou
             call carttor
             !   Check the value of NDER
@@ -364,12 +353,8 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !   bond lengths.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: capr, capr2, capri, coschi, dcapr1, dcapr2, dcapr3, dchi1, dchi2, dchi3, dzchic, dzchir, r1p2, r2i, r2p2, r3p2, schip2, tmp, tmp1, tmp2, zchi
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: capr, capr2, capri, coschi, dcapr1, dcapr2, dcapr3, dchi1, dchi2, dchi3, dzchic, dzchir, r1p2, r2i, r2p2, r3p2, schip2, tmp, tmp1, tmp2, zchi
+            integer  :: i, j
             do i = 1, 3
                 do j = 1, 3
                     dz(i,j) = 0.0e0_wp
@@ -438,11 +423,7 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !   three-center term for the H-Br-H barrier as a function of the geomet
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: a1, a2, a3, a4, a5, a6, costh, dfcn1, dfcn2, dfcn3, dfcn4, dist, dthdr1, dthdr2, dthdr3, fcn1, fcn2, fcn3, fcn4, r132p2, r1m3, r1m3p2, r1p3, r1p3m2, sintp2, sintp6, sintp8, v3cdth
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: a1, a2, a3, a4, a5, a6, costh, dfcn1, dfcn2, dfcn3, dfcn4, dist, dthdr1, dthdr2, dthdr3, fcn1, fcn2, fcn3, fcn4, r132p2, r1m3, r1m3p2, r1p3, r1p3m2, sintp2, sintp6, sintp8, v3cdth
             a1     = v3cp1
             a2     = v3cp2
             a3     = v3cp3
@@ -500,12 +481,8 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !                   R(3) = R(Br-B)
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: dqdx(3), dqdz(3)
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: dqdx(3), dqdz(3)
+            integer  :: i, j
             do i = 1, 3
                 deq(i)  = 0.e0_wp
                 dqdx(i) = 0.e0_wp
@@ -546,12 +523,8 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             !                   R(3) = R(Br-B)
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: djdr(3,3), djdx(3), djdz(3), draddj(3), sumj
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: djdr(3,3), djdx(3), djdz(3), draddj(3), sumj
+            integer  :: i, j
             do i = 1, 3
                 derad(i) = 0.e0_wp
                 djdx(i)  = 0.e0_wp
@@ -587,25 +560,13 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
         subroutine ancvrt
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: n3atom     = 75
-            integer, parameter  :: natom      = 25
-            integer, parameter  :: isurf      = 5
-            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
-            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
-            real(wp), parameter :: ce         = 1.602176462e-19_wp
-            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
-            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
-            real(wp), parameter :: cang       = 1.0e-10_wp
-            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
-            real(wp), parameter :: ckcal      = 4.184e10_wp
-            real(wp), parameter :: htomillh   = 1000.e0_wp
-            real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: htowave    = 219474.631e0_wp
-            real(wp), parameter :: htokj      = 2625.49962e0_wp
-            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer, parameter  :: natom    = 25
+            real(wp), parameter :: htomillh = 1000.e0_wp
+            real(wp), parameter :: htoev    = 27.2113834e0_wp
+            real(wp), parameter :: htokcal  = hartree_to_kilocalorie_per_mole
+            real(wp), parameter :: htowave  = 219474.631e0_wp
+            real(wp), parameter :: htokj    = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a   = .5291772083e0_wp
             integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
             character(len=3)    :: periodic_1(7,32)
             character(len=2)    :: name1(natom)
@@ -864,27 +825,15 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
         !> @brief Evaluate CARTOU for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
 
         !> @brief Evaluate CARTTOR for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: coordinate_status
-            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
-            integer            :: i, ind, k, l
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
+            integer :: coordinate_status
             call cartesian_to_potlib_coordinates(cartnu, legacy_natoms, icartr, r, coordinate_status)
             if( coordinate_status /= 0 )then
                 if( present(status) ) call status%set(status_invalid_input, &
@@ -895,13 +844,8 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
 
         !> @brief Evaluate EUNITZERO for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine eunitzero
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j
             pengygs = engygs * cnvrte - anuzero
             if( ksdiag .ne. 0 )then
                 do i=ksdiag, kediag
@@ -920,7 +864,6 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
@@ -1075,13 +1018,8 @@ module chempotpy_brh2_leps_ltbz1_1995_pes
 
         !> @brief Evaluate DEDCOU for the BrH2_LEPS_LTBZ1_1995 potential.
         subroutine dedcou
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j, k
             if( ireorder .eq. 1 )then
                 do i = 1, legacy_natoms
                     dgscart(i,1) = dgscartnu(nulbl(i),1) * cnvrtde

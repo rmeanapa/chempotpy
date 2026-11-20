@@ -13,14 +13,8 @@ module chempotpy_fh2o_pipnn_pes
 
     !> @brief Evaluate the FH2O_PIPNN potential energy surface for FH2O.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,                only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
-        use chempotpy_units,                 only: electronvolt_to_kilocalorie_per_mole
-        use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
-            & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
-            & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
-            & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & PI, r1soccoef, radian, vpesmin
-        use chempotpy_kinds, only: wp
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
+        use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
@@ -30,9 +24,9 @@ module chempotpy_fh2o_pipnn_pes
         real(wp), intent(in)  :: x(natoms,3)
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
-        real(wp)              :: v, va, vb, vc, socg, vgsoc
+        real(wp)              :: v, va, vb, vc
         real(wp)              :: tx(3,natoms)
-        integer               :: iatom, idir, j, istate
+        integer               :: iatom, idir, istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
@@ -56,22 +50,14 @@ module chempotpy_fh2o_pipnn_pes
 
     !> @brief Evaluate fh2o_soc_nn.
     subroutine fh2o_soc_nn( xt, vg, socg, vgsoc )
-        use chempotpy_geometry,              only: all_pair_distances
-        use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
-            & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
-            & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
-            & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & PI, r1soccoef, radian, vpesmin
-        use chempotpy_kinds, only: wp
+        use chempotpy_geometry, only: all_pair_distances
+        use chempotpy_kinds,    only: wp
         implicit none
         real(wp) :: xt(3,4), xt2(3,4), xn(3,4), rint(6), rt(6)
-        real(wp) :: tr1basis(nrbasissoc), tr2basis(nrbasissoc)
         real(wp) :: rcom, the1, the2, phi
-        real(wp) :: tp2basis(npbasissoc)
-        integer  :: n, k, l, m, j, nrcom
-        real(wp) :: vg, vgsoc, socg, socs, vpesa, vpesb, vpesc
-        real(wp) :: socrg, socrs, socpg, socps
-        real(wp) :: r1switch, r2switch, p2switch, switch
+        real(wp) :: vg, vgsoc, socg, vpesa, vpesb, vpesc
+        real(wp) :: socrg, socpg
+        real(wp) :: switch
         call fh2onn(xt, vg, vpesa, vpesb, vpesc) !xt in HHFO and angstrom
         vg = vg*23.0605e0_wp
         vg = min(vg, 100.0e0_wp)
@@ -178,12 +164,8 @@ module chempotpy_fh2o_pipnn_pes
 
     !> @brief Evaluate soc_react_ground.
     subroutine soc_react_ground( rcom, t2, phi, socrg )
-        use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
-            & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
-            & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
-            & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & PI, r1soccoef, radian, vpesmin
-        use chempotpy_kinds, only: wp
+        use chempotpy_fh2o_pipnn_parameters, only: nrbasissoc, r1soccoef
+        use chempotpy_kinds,                 only: wp
         implicit none
         real(wp) :: rcom, t2, phi, socrg
         real(wp) :: tr1basis(nrbasissoc)
@@ -211,12 +193,8 @@ module chempotpy_fh2o_pipnn_pes
 
     !> @brief Evaluate soc_product_ground.
     subroutine soc_product_ground( rcom, t1, t2, phi, socpg )
-        use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
-            & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
-            & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
-            & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & PI, r1soccoef, radian, vpesmin
-        use chempotpy_kinds, only: wp
+        use chempotpy_fh2o_pipnn_parameters, only: npbasissoc, p2soccoef
+        use chempotpy_kinds,                 only: wp
         implicit none
         real(wp) :: rcom, t1, t2, phi, socpg, socps
         real(wp) :: tp2basis(npbasissoc)
@@ -245,16 +223,12 @@ module chempotpy_fh2o_pipnn_pes
     !> @brief Evaluate fh2oNN.
     subroutine fh2onn( ct, vpes, vpesa, vpesb, vpesc ) !ct in HHFO order and angstrom
         use chempotpy_geometry,              only: all_pair_distances
-        use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
-            & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
-            & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
-            & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & PI, r1soccoef, radian, vpesmin
-        use chempotpy_kinds, only: wp
+        use chempotpy_fh2o_pipnn_parameters, only: alpha, nbasis
+        use chempotpy_kinds,                 only: wp
         implicit none
         integer, parameter :: ndim = 6
         integer            :: j
-        real(wp)           :: rb(ndim), xbond(ndim), basis(0:nbasis-1), tmp1
+        real(wp)           :: rb(ndim), xbond(ndim), basis(0:nbasis-1)
         real(wp)           :: txinput(1:nbasis-1)
         real(wp)           :: ct(3,4), vpes
         real(wp)           :: vpesa, vpesb, vpesc, r12, r13, r14, r23, r24, r34
@@ -309,12 +283,8 @@ module chempotpy_fh2o_pipnn_pes
 
     !> @brief Evaluate one member of the immutable neural-network ensemble.
     subroutine evaluate_network( x, network_index, potential )
-        use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, &
-            & hidden_output_weights, input_hidden_weights, network_count, ninput, nlayer, nodemax, &
-            & nodes, noutput, nscale, output_biases, scale_averages, scale_deltas, &
-            & alpha, bohr, nbasis, npbasissoc, nrbasissoc, p2soccoef, &
-            & PI, r1soccoef, radian, vpesmin
-        use chempotpy_kinds, only: wp
+        use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, hidden_output_weights, input_hidden_weights, ninput, nlayer, nodemax, nodes, noutput, nscale, output_biases, scale_averages, scale_deltas
+        use chempotpy_kinds,                 only: wp
         implicit none
         real(wp), intent(in)  :: x(ninput)
         integer, intent(in)   :: network_index
@@ -478,7 +448,7 @@ module chempotpy_fh2o_pipnn_pes
         implicit none
         real(wp) :: rint(6), cart(3,4)
         real(wp) :: r1, r2, r3, th1, th2, phia, sth1, sth2, sth3, cth1, cth2, cth3
-        real(wp) :: wa, wb, wc, wd, abm, cdm, ama, amb, amc, amd
+        real(wp) :: wa, wb, abm, ama, amb, amc, amd
         !-->-->rint(1-6)=r1,r2,r3,th1,th2,phi
         !-->-->r1 is vector A->B, r2 is a vector pointing from the COM of AB to
         !-->-->r3 is a vector pointing from the COM of ABC to D
@@ -486,7 +456,6 @@ module chempotpy_fh2o_pipnn_pes
         !-->-->th2 is the angle for r2 and r3
         !-->-->phia is the diheral angle for r1*r2 plane and r2*r3 plane.
         !-->-->cart(3,1-4)=cartesian coordinates of four atoms A,B,C,D.
-        real(wp) :: temp1, temp2, temp3
         ama  = 1.00783e0_wp
         amb  = 15.99491e0_wp
         amc  = 1.00783e0_wp
@@ -532,10 +501,10 @@ module chempotpy_fh2o_pipnn_pes
         !  c in angstrom and ABCD, r in angstrom and radians
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: r(1:6), c(1:3,1:4), mass(1:4), c1(1:3,1:4)
+        real(wp) :: r(1:6), c(1:3,1:4), c1(1:3,1:4)
         real(wp) :: crop1(1:3), crop2(1:3)
         real(wp) :: vec(1:3,1:9), dotpp(1:9), bohr
-        real(wp) :: dotp, costh1, costh2, amass, bmass, cmass, dmass, costh3
+        real(wp) :: costh1, costh2, amass, bmass, cmass, dmass, costh3
         c        = c1  ! c in HOHF order angstrom
         bohr     = 1.0e0_wp
         amass    = 2.0141e0_wp
@@ -592,9 +561,7 @@ module chempotpy_fh2o_pipnn_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp) :: r(1:6), c(1:3,1:4), mass(1:4)
-        real(wp) :: cm(3,2), vec(1:3,1:6)
-        real(wp) :: xa, xb, yc, yd, cxsin, dxsin, dotp
-        real(wp) :: rx1, rx2, rx3, rx4, rx5, rx6
+        real(wp) :: xa, xb, yc, yd, cxsin, dxsin
         real(wp) :: amass, bmass, cmass, dmass
         amass   = 1.00783e0_wp
         bmass   = 15.99491e0_wp

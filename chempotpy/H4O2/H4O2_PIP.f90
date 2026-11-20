@@ -1,20 +1,3 @@
-module constants
-    use chempotpy_constants, only: PI
-    use chempotpy_kinds,     only: wp
-    implicit none
-    private
-    ! Define the mass of different atoms
-    real, parameter :: c_mass = 12.0000000  !21874.66
-    real, parameter :: d_mass = 2.0135532127
-    real, parameter :: h_mass = 1.0078250  !1837.15
-    real, parameter :: o_mass = 15.9949146  !29156.95
-    ! Define constants
-    real, parameter :: auang  = 0.5291772083
-    real, parameter :: aucm   = 219474.6313710
-    real, parameter :: aukcal = 627.51
-    real, parameter :: emass  = 1822.88848
-end module constants
-
 !> @brief Own the fitted H4O2 coefficients without legacy COMMON storage.
 module h4o2_pes_state
     use chempotpy_h4o2_pip_parameters, only: coefficients => pip_coefficients
@@ -24,6 +7,15 @@ module h4o2_pes_state
     public :: evaluate_h4o2_coefficients
     integer, parameter :: coefficient_count = 5056
     integer, parameter :: correction_count  = 57
+    interface
+        !> @brief Evaluate getvec.
+        subroutine getvec ( ms, mr, xn, vec )
+            implicit none
+            integer, intent(in) :: ms, mr
+            real, intent(in)    :: xn(0:2,0:5)
+            real, intent(out)   :: vec(0:ms+3*mr-1)
+        end subroutine getvec
+    end interface
 
     contains
 
@@ -42,7 +34,7 @@ module h4o2_pes_state
             cartesian_coordinates, legacy_basis)
         ! Preserve the released single-to-double storage layout explicitly.
         basis     = transfer([legacy_basis, zero_padding], basis)
-        potential = dot_product(coefficients, basis)
+        potential = real(dot_product(coefficients, basis), kind=kind(potential))
     end subroutine evaluate_h4o2_coefficients
 end module h4o2_pes_state
 
@@ -57,10 +49,21 @@ module chempotpy_h4o2_pip_pes
 
     !> @brief Evaluate the H4O2_PIP potential energy surface for H4O2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
+        interface
+            !> @brief Evaluate h4o2pot.
+            subroutine h4o2pot( x, v )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real, intent(in)    :: x(18)
+                real, intent(inout) :: v
+                real                :: xn(3,6)
+                real                :: pot
+            end subroutine h4o2pot
+        end interface
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
@@ -77,7 +80,7 @@ module chempotpy_h4o2_pip_pes
         do iatom=1, natoms
             do idir=1, 3
                 j     = (iatom-1)*3+idir
-                tx(j) = x(iatom,idir)/bohr_to_angstrom
+                tx(j) = real(x(iatom,idir)/bohr_to_angstrom, kind=kind(tx))
             enddo
         enddo
         if( igrad == 0 )then
@@ -86,9 +89,9 @@ module chempotpy_h4o2_pip_pes
             if( present(status) ) call status%set(status_derivative_unavailable, &
                 'requested derivatives are unavailable')
         endif
-        v = v*hartree_to_electronvolt
+        v = real(real(v, kind=wp)*hartree_to_electronvolt, kind=kind(v))
         do istate=1, nstates
-            p(istate) = v
+            p(istate) = real(v, kind=wp)
         enddo
     end subroutine evaluate
 end module chempotpy_h4o2_pip_pes
@@ -115,7 +118,6 @@ subroutine h4o2pot( x, v )
     use h4o2_pes_state, only: evaluate_h4o2_coefficients
     ! x(1:18) Cartesian coordinates in bohr, must in order H H H H O O
     ! f: potential in hartree
-    use chempotpy_kinds, only: wp
     implicit none
     real, intent(in)    :: x(18)
     real, intent(inout) :: v
@@ -141,7 +143,6 @@ end module inv_mg42_t
 
 !> @brief Evaluate getr0.
 subroutine getr0 ( nk, xn, r0 )
-    use chempotpy_kinds, only: wp
     implicit none
     integer :: nk
     real    :: xn(0:2,0:nk-1), r0(0:nk-1,0:nk-1)
@@ -157,16 +158,13 @@ end subroutine getr0
 
 !> @brief Evaluate getrvec.
 subroutine getrvec ( m, r, vec )
-    use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
-        & mg42_ngrp, mg42_nr
-    use chempotpy_kinds, only: wp
     implicit none
     ! version for X4Y2
     integer            :: m
     integer, parameter :: nk = 6
     real               :: r(0:nk-1,0:nk-1), vec(0:m-1)
     integer            :: i, j
-    real               :: x(0:2), r1(0:nk-1,0:nk-1), t0, t1
+    real               :: x(0:2), r1(0:nk-1,0:nk-1), t0
     ! Test for compatibility
     if( .not.(m .eq. 1.or.m .eq. 4) )then
         return
@@ -203,16 +201,56 @@ end subroutine getrvec
 
 !> @brief Evaluate getvec.
 subroutine getvec ( ms, mr, xn, vec )
-    use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
-        & mg42_ngrp, mg42_nr
-    use chempotpy_kinds, only: wp
+    use inv_mg42_t, only: mg42_ivb
     implicit none
+    interface
+        !> @brief Evaluate getr0.
+        subroutine getr0 ( nk, xn, r0 )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: nk
+            real    :: xn(0:2,0:nk-1), r0(0:nk-1,0:nk-1)
+            integer :: i, j
+        end subroutine getr0
+
+        !> @brief Evaluate getrvec.
+        subroutine getrvec ( m, r, vec )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer            :: m
+            integer, parameter :: nk = 6
+            real               :: r(0:nk-1,0:nk-1), vec(0:m-1)
+            integer            :: i, j
+            real               :: x(0:2), r1(0:nk-1,0:nk-1), t0, t1
+        end subroutine getrvec
+
+        !> @brief Evaluate getx0.
+        subroutine getx0 ( nk, r0, x0 )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: nk
+            real    :: r0(0:nk-1,0:nk-1), x0(0:nk*(nk-1)/2-1)
+            integer :: i, j, k
+        end subroutine getx0
+
+        !> @brief Evaluate mg42_base.
+        subroutine mg42_base ( mxd, x, w )
+            use inv_mg42_t,      only: mg42_ivb, mg42_ivs, mg42_nr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent (in) :: mxd
+            real, intent (in)    :: x(0:mg42_nr-1)
+            real, intent (out)   :: w(0:mg42_ivb(mxd)-1)
+            real                 :: u(0:mg42_nr-1), v(0:mg42_ivs(mxd)-1)
+        end subroutine mg42_base
+    end interface
     ! version for X4Y2
-    integer            :: ms, mr
-    integer, parameter :: nk = 6
-    real               :: xn(0:2,0:nk-1), vec(0:ms+3*mr-1)
-    integer            :: k, l, deg
-    real               :: rvec(0:3), x0(0:nk-1,0:nk-1), r0(0:nk-1,0:nk-1)
+    integer, intent(in) :: ms, mr
+    integer, parameter  :: nk = 6
+    real, intent(in)    :: xn(0:2,0:nk-1)
+    real, intent(out)   :: vec(0:ms+3*mr-1)
+    integer             :: k, l, deg
+    real                :: rvec(0:3), x0(0:nk-1,0:nk-1), r0(0:nk-1,0:nk-1)
     deg = -1
     do k = 9, 0, -1
         if( ms .eq. mg42_ivb(k) )then
@@ -236,7 +274,6 @@ end subroutine getvec
 
 !> @brief Evaluate getx0.
 subroutine getx0 ( nk, r0, x0 )
-    use chempotpy_kinds, only: wp
     implicit none
     integer :: nk
     real    :: r0(0:nk-1,0:nk-1), x0(0:nk*(nk-1)/2-1)
@@ -244,7 +281,7 @@ subroutine getx0 ( nk, r0, x0 )
     k = 0
     do j = 0, nk-1
         do i = 0, j-1
-            x0(k) = 1.e0_wp*exp(-r0(i,j)/3)
+            x0(k) = exp(-r0(i,j)/3.0)
             k     = k+1
         enddo
     enddo
@@ -252,9 +289,7 @@ end subroutine getx0
 
 !> @brief Evaluate inv_base.
 subroutine inv_base ( mxd, u, v, w )
-    use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
-        & mg42_ngrp, mg42_nr
-    use chempotpy_kinds, only: wp
+    use inv_mg42_t, only: mg42_ivb, mg42_ivp, mg42_ivs
     implicit none
     integer, intent (in) :: mxd
     real, intent (in)    :: u(0:mg42_ivp(mxd)-1), v(0:mg42_ivs(mxd)-1)
@@ -280,10 +315,50 @@ end subroutine inv_base
 
 !> @brief Evaluate mg42_base.
 subroutine mg42_base ( mxd, x, w )
-    use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
-        & mg42_ngrp, mg42_nr
-    use chempotpy_kinds, only: wp
+    use inv_mg42_t, only: mg42_ivb, mg42_ivs, mg42_nr
     implicit none
+    interface
+        !> @brief Evaluate inv_base.
+        subroutine inv_base ( mxd, u, v, w )
+            use inv_mg42_t,      only: mg42_ivb, mg42_ivp, mg42_ivs
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent (in) :: mxd
+            real, intent (in)    :: u(0:mg42_ivp(mxd)-1), v(0:mg42_ivs(mxd)-1)
+            real, intent (out)   :: w(0:mg42_ivb(mxd)-1)
+            integer              :: l(0:mxd,0:mg42_ivp(mxd)), ind, i, k, d, inc
+        end subroutine inv_base
+
+        !> @brief Evaluate mg42_prims.
+        subroutine mg42_prims ( x, u )
+            use inv_mg42_t,      only: mg42_nr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, parameter :: m = 4, n=2, m2=m*(m-1)/2, n2=n*(n-1)/2
+            real, intent (in)  :: x(0:mg42_nr-1)
+            real, intent (out) :: u(0:mg42_nr-1)
+            integer            :: i, j
+            real               :: x0(0:m2-1), x1(0:m*n-1), x2(0:n2-1), t0(0:m-1), &
+                e(0:m-1), f(0:n-1)
+        end subroutine mg42_prims
+
+        !> @brief Evaluate mg42_secs.
+        subroutine mg42_secs ( mxd, x, v )
+            use inv_mg42_t,      only: mg42_ivs, mg42_nr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, parameter :: m = 4, n=2, nk=6, npv=107, &
+                m2=m*(m-1), m3=m*(m-1)*(m-2), n2=n*(n-1), mn=m*n, m2n=m*(m-1)*n, mn2=m*n*(n-1), m2n2=m2n*(n-1), m3n=m* &
+                & (m-1)* (m- 2)*n, m3n2 = m*(m-1)*(m-2)*n*(n-1)
+            integer, intent (in) :: mxd
+            real, intent (in)    :: x(0:mg42_nr-1)
+            real, intent (out)   :: v(0:mg42_ivs(mxd)-1)
+            integer              :: i0, i1, i2, j0, j1
+            real                 :: pv(0:npv-1), d(0:nk-1,0:nk-1), d2(0:nk-1,0:nk-1), &
+                d3(0:nk-1, 0:nk-1), d4(0:nk-1, 0:nk-1), d5(0:nk-1, 0:nk-1), &
+                d6(0:nk-1, 0:nk-1), d7(0:nk-1, 0:nk-1)
+        end subroutine mg42_secs
+    end interface
     integer, intent (in) :: mxd
     real, intent (in)    :: x(0:mg42_nr-1)
     real, intent (out)   :: w(0:mg42_ivb(mxd)-1)
@@ -295,9 +370,7 @@ end subroutine mg42_base
 
 !> @brief Evaluate mg42_gens.
 subroutine mg42_gens ( ind, x, y )
-    use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
-        & mg42_ngrp, mg42_nr
-    use chempotpy_kinds, only: wp
+    use inv_mg42_t, only: mg42_nr
     implicit none
     integer, intent (in) :: ind
     real, intent (in)    :: x(0:mg42_nr-1)
@@ -328,9 +401,7 @@ end subroutine mg42_gens
 
 !> @brief Evaluate mg42_prims.
 subroutine mg42_prims ( x, u )
-    use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
-        & mg42_ngrp, mg42_nr
-    use chempotpy_kinds, only: wp
+    use inv_mg42_t, only: mg42_nr
     implicit none
     integer, parameter :: m = 4, n=2, m2=m*(m-1)/2, n2=n*(n-1)/2
     real, intent (in)  :: x(0:mg42_nr-1)
@@ -370,14 +441,10 @@ end subroutine mg42_prims
 
 !> @brief Evaluate mg42_secs.
 subroutine mg42_secs ( mxd, x, v )
-    use inv_mg42_t, only: mg42_dvb, mg42_dvp, mg42_dvs, mg42_ivb, mg42_ivp, mg42_ivs, mg42_ngen, &
-        & mg42_ngrp, mg42_nr
-    use chempotpy_kinds, only: wp
+    use inv_mg42_t, only: mg42_ivs, mg42_nr
     implicit none
     !! Note: We stop at degree 7 for now.
-    integer, parameter :: m = 4, n=2, nk=6, npv=107, &
-        m2=m*(m-1), m3=m*(m-1)*(m-2), n2=n*(n-1), mn=m*n, m2n=m*(m-1)*n, mn2=m*n*(n-1), m2n2=m2n*(n-1), m3n=m*(m-1)* &
-        & (m- 2)*n, m3n2 = m*(m-1)*(m-2)*n*(n-1)
+    integer, parameter   :: m = 4, n=2, nk=6, npv=107, m2=m*(m-1), m3=m*(m-1)*(m-2), mn=m*n, m2n=m*(m-1)*n, mn2=m*n*(n-1), m2n2=m2n*(n-1), m3n=m*(m-1)* (m- 2)*n, m3n2 = m*(m-1)*(m-2)*n*(n-1)
     integer, intent (in) :: mxd
     real, intent (in)    :: x(0:mg42_nr-1)
     real, intent (out)   :: v(0:mg42_ivs(mxd)-1)

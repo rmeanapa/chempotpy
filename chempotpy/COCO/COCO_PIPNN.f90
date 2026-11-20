@@ -10,6 +10,7 @@
 
 !> @brief Implement COCO_PIPNN, a potential energy surface for COCO.
 module chempotpy_coco_pipnn_pes
+    use chempotpy_blas,      only: ddot, dgemm, dgemv
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -20,7 +21,7 @@ module chempotpy_coco_pipnn_pes
 
     !> @brief Evaluate the COCO_PIPNN potential energy surface for COCO.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,   only: chempotpy_status_t
         use chempotpy_units,    only: electronvolt_to_inverse_centimeter
         use chempotpy_geometry, only: all_pair_distances_and_jacobian, transform_internal_gradient_to_cartesian
         use chempotpy_units,    only: bohr_to_angstrom
@@ -154,7 +155,6 @@ module chempotpy_coco_pipnn_pes
             integer               :: i, j, k
             real(wp)              :: r(n0), rgg(n0), vgg, ax(n1), bx(n2), maxx(n1), w2maxx(n1,n2), w3mbxx(n2)
             real(wp)              :: dvtm(n0,n2), rt1(n1), rt2(n2)
-            real(wp), external    :: ddot
             v   = 0.e0_wp
             r   = r0
             vgg = vg(2)-vg(1)

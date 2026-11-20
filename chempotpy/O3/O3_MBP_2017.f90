@@ -34,7 +34,7 @@ module chempotpy_o3_mbp_2017_pes
 
     !> @brief Evaluate the O3_MBP_2017 potential energy surface for O3.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,    only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_geometry, only: cartesian_distance
         use chempotpy_kinds,    only: wp
@@ -47,8 +47,8 @@ module chempotpy_o3_mbp_2017_pes
         real(wp), intent(in)  :: x(natoms,3)
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
-        real(wp)              :: v, tx(3), sum_d
-        integer               :: ibond, iatom, idir, j, istate
+        real(wp)              :: v, tx(3)
+        integer               :: istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         if( igrad == 0 )then
@@ -77,8 +77,6 @@ module chempotpy_o3_mbp_2017_pes
         real(wp)              :: indices(52,3)
         real(wp)              :: ae, re
         real(wp)              :: xrx, xry, xrz
-        integer               :: i, j, k
-        real(wp)              :: a
         integer               :: ii
         re  = 1.208e0_wp
         ae  = 0.8e0_wp

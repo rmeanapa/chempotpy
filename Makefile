@@ -1,4 +1,4 @@
-.PHONY: all audit build check check-binaries check-conda check-embedded-parameters check-fortran check-generated check-modernization check-modernization-source check-numerical-regression check-python-extensions check-style clean test test-surfaces
+.PHONY: all audit build check check-binaries check-conda check-embedded-parameters check-fortran check-fortran-warnings check-generated check-modernization check-modernization-source check-numerical-regression check-python-extensions check-style clean test test-surfaces
 
 PYTHON ?= python3
 BUILD_FLAGS ?=
@@ -10,6 +10,9 @@ audit:
 
 check-fortran:
 	$(PYTHON) scripts/check_fortran.py
+
+check-fortran-warnings:
+	$(PYTHON) scripts/check_fortran.py --include-support --warnings-as-errors
 
 check-binaries:
 	$(PYTHON) scripts/check_binaries.py --output-root $(BUILD_OUTPUT)

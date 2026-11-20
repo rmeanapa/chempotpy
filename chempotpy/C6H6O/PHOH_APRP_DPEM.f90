@@ -82,7 +82,7 @@ module chempotpy_phoh_aprp_dpem_pes
 
     !> @brief Evaluate the PHOH_APRP diabatic potential matrix for C6H6O.
     subroutine evaluate( x, igrad, u, ug, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
@@ -99,7 +99,7 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp)              :: vv(nstates), gvv(3,natoms,nstates)
         real(wp)              :: dvec(3,natoms,nstates,nstates)
         real(wp)              :: cc(nstates,nstates)
-        integer               :: iatom, idir, j, istate, jstate
+        integer               :: iatom, idir, istate, jstate
         !initialize
         u = 0.e0_wp; ug = 0.e0_wp
         do iatom=1, natoms
@@ -136,19 +136,16 @@ module chempotpy_phoh_aprp_dpem_pes
     subroutine pot( igrad, xx, uu, guu, vv, gvv, dvec, cc, repflag )
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l, m
-        integer             :: igrad, repflag
-        integer, parameter  :: natm   = 13
-        integer, parameter  :: nsurft = 3
-        real(wp)            :: uu(3,3), vv(3)
-        real(wp)            :: guu(3,natm,3,3), uup(3,3), vvp(3), vvm(3)
-        real(wp)            :: guup(3,natm,3,3), gvv(3,natm,nsurft)
-        real(wp)            :: guum(3,natm,3,3)
-        real(wp)            :: xx(3,natm), x(natm), y(natm), z(natm)
-        real(wp)            :: dvec(3,natm,nsurft,nsurft)
-        real(wp)            :: cc(3,3), ccp(3,3)
-        real(wp)            :: tmp
-        real(wp), parameter :: stp = 1.e-4_wp
+        integer            :: i
+        integer            :: igrad, repflag
+        integer, parameter :: natm   = 13
+        integer, parameter :: nsurft = 3
+        real(wp)           :: uu(3,3), vv(3)
+        real(wp)           :: guu(3,natm,3,3)
+        real(wp)           :: gvv(3,natm,nsurft)
+        real(wp)           :: xx(3,natm), x(natm), y(natm), z(natm)
+        real(wp)           :: dvec(3,natm,nsurft,nsurft)
+        real(wp)           :: cc(3,3)
         ! calculate adiabatic and diabatic energies in hartree
         do i = 1, natm
             x(i) = xx(1,i)
@@ -222,13 +219,9 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp) :: u13, u23
         real(wp) :: du12dx(3*natm), du13dx(3*natm), du23dx(3*natm)
         ! add by J. Zheng
-        integer               :: lwork, info
-        real(wp)              :: cc(3,3)
-        real(wp), allocatable :: work(:)
+        real(wp) :: cc(3,3)
         !C add by K. Yang
-        real(wp) :: agvv(3*natm,3)
         real(wp) :: gvv(3,natm,3)
-        real(wp) :: fad(3*natm,3,3)
         ! Determine rOH and determine ir, t, and dtdr
         rap = reshape([ 1.93206106e0_wp, 2.49443845e0_wp, 4.27078097e0_wp, 9.44863047e0_wp ], shape(rap))
         roh = bndlen(7, 13, x, y, z)
@@ -295,9 +288,6 @@ module chempotpy_phoh_aprp_dpem_pes
         integer, parameter  :: maxdim = 100
         integer, parameter  :: ldbmt  = maxdim
         integer, parameter  :: ldbms  = maxdim
-        integer, parameter  :: ldbnrt = maxdim
-        integer, parameter  :: ldct   = maxdim
-        integer, parameter  :: nstc   = 9
         real(wp), parameter :: u1min  = 0.00905097e0_wp
         ! Global variables
         integer  :: igrad
@@ -311,7 +301,7 @@ module chempotpy_phoh_aprp_dpem_pes
         integer  :: iblt(2,12), ibat(3,18), itot(4,24), ioopt(4,0)
         integer  :: nbls, nbas, ntos, noops
         integer  :: ibls(2,1), ibas(3,1), itos(4,1), ioops(4,0)
-        real(wp) :: qtc(maxdim), qsc(maxdim)
+        real(wp) :: qtc(maxdim)
         real(wp) :: dutdr, dubdr, dutodr, durdr
         real(wp) :: dtodph, dubdth
         real(wp) :: dut(maxdim)
@@ -414,22 +404,21 @@ module chempotpy_phoh_aprp_dpem_pes
         integer, parameter :: nqt = 24
         ! Global variables
         integer  :: igrad, ii
-        integer  :: ntot, nqtc
+        integer  :: nqtc
         real(wp) :: r, ut, dutdr
         real(wp) :: qtc(*), dut(*)
         ! Local variables
-        integer  :: i, j, k
+        integer  :: i, j
         integer  :: ir
         real(wp) :: u0, u01, u02, u1, u2
         real(wp) :: vs, vs1, vs2
         real(wp) :: vb, vb1, vb2
         real(wp) :: vt, vt1, vt2
         real(wp) :: vbs, vbs1, vbs2
-        real(wp) :: dvsdr, dvbdr, dvtdr, dvbsdr
         real(wp) :: t(nap), dtdr(nap)
         real(wp) :: rap(nap)
         real(wp) :: v0(nap)
-        real(wp) :: qs(nqs), qs1(nqs), qs2(nqs)
+        real(wp) :: qs(nqs)
         real(wp) :: qb(nqb), qb1(nqb), qb2(nqb)
         real(wp) :: sqb(nqb)
         real(wp) :: qt(nqt), qt1(nqt), qt2(nqt)
@@ -10586,7 +10575,7 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp)           :: alpha2(ngk2)
         real(wp)           :: r2(ngk2)
         real(wp)           :: cthta1, cthta2, a, r0
-        integer            :: i, j, k
+        integer            :: i
         real(wp)           :: r
         real(wp)           :: k2
         a2     = 0.10449356e0_wp
@@ -10637,7 +10626,7 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp), parameter :: r2     = 2.10516007e0_wp
         integer             :: igrad
         real(wp)            :: phi, r, v, dvdph, dvdr
-        real(wp)            :: x, y, dvdy, dydx, dxdr
+        real(wp)            :: y
         x1 = a1*exp(-alpha1*(r-r1)*(r-r1))
         x2 = a2*exp(-alpha2*(r-r2)*(r-r2))
         y  = 1.0e0_wp-cos(2.0e0_wp*phi)
@@ -10688,7 +10677,7 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp)           :: alpha2(ngk2)
         real(wp)           :: r2(ngk2)
         real(wp)           :: cthta1, cthta2, a, r0
-        integer            :: i, j, k
+        integer            :: i
         real(wp)           :: r
         real(wp)           :: k2
         a2     = 0.10090668e0_wp
@@ -10736,7 +10725,7 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp), parameter :: r1     = 2.22678700e0_wp
         integer             :: igrad
         real(wp)            :: phi, r, v, dvdph, dvdr
-        real(wp)            :: x, y, dvdy, dydx, dxdr
+        real(wp)            :: x, y, dxdr
         x = a1*exp(-alpha1*(r-r1)*(r-r1))
         y = 1.0e0_wp-cos(2.0e0_wp*phi)
         v = x*y
@@ -10766,7 +10755,6 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp), parameter :: r3     = -0.04117486e0_wp
         integer             :: igrad
         real(wp)            :: r, v, dvdr
-        real(wp)            :: x, y, dvdy, dydx, dxdr
         x1 = r-r1
         y1 = a1*exp(-alpha1*x1)
         x2 = r-r2
@@ -10800,7 +10788,7 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp)           :: alpha2(ngk2), alpha3(ngk3)
         real(wp)           :: r2(ngk2), r3(ngk3)
         real(wp)           :: cthta1, cthta2, a, r0
-        integer            :: i, j, k
+        integer            :: i
         real(wp)           :: r
         real(wp)           :: k2, k3
         a2     = 3.00968695e0_wp
@@ -10864,7 +10852,7 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp), parameter :: r2     = 2.58341105e0_wp
         integer             :: igrad
         real(wp)            :: phi, r, v, dvdph, dvdr
-        real(wp)            :: x, y, dvdy, dydx, dxdr
+        real(wp)            :: y
         x1 = a1*exp(-alpha1*(r-r1)*(r-r1))
         x2 = a2*exp(-alpha2*(r-r2)*(r-r2))
         y  = 1.0e0_wp-cos(2.0e0_wp*phi)
@@ -10886,7 +10874,7 @@ module chempotpy_phoh_aprp_dpem_pes
         implicit none
         real(wp), parameter :: b     = 6.693126e1_wp
         real(wp), parameter :: alpha = 1.894454e0_wp
-        integer             :: i, j
+        integer             :: i
         integer             :: igrad, natm
         real(wp)            :: ubm
         real(wp)            :: x(natm), y(natm), z(natm)
@@ -10961,16 +10949,17 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp), parameter :: half   = 0.5e0_wp
         real(wp), parameter :: oossix = 0.408248290463863e0_wp
         real(wp), parameter :: oostlv = 0.288675134594813e0_wp
-        real(wp)            :: qtc(maxdim), qsc(maxdim)
+        real(wp)            :: qtc(maxdim)
         real(wp)            :: stc(maxdim)
         ! KRY 20140718
-        real(wp) :: d12tdr, d12sdr
-        real(wp) :: d13tdr, d13sdr, du13dr, du13dph
-        real(wp) :: d23tdr, d23sdr, du23dr, du23dph
-        real(wp) :: du12t(maxdim), du13t(maxdim), du23t(maxdim)
-        real(wp) :: bmt(ldbmt,3*natm), bms(ldbms,3*natm)
-        real(wp) :: bnrt(ldbnrt,3*natm)
-        real(wp) :: ct(ldct,maxdim)
+        real(wp)              :: d12tdr
+        real(wp)              :: d13tdr, d13sdr, du13dr
+        real(wp)              :: d23tdr, d23sdr, du23dr
+        real(wp)              :: du12t(maxdim), du13t(maxdim), du23t(maxdim)
+        real(wp)              :: bmt(ldbmt,3*natm), bms(ldbms,3*natm)
+        real(wp)              :: bnrt(ldbnrt,3*natm)
+        real(wp), allocatable :: ct(:,:)
+        allocate(ct(ldct,maxdim))
         ! Initialize Ct matrix
         nblt  = 0; nbat = 0; ntot = 6; noopt = 6; nblt = 0; nbat = 0; ntot = 6; noopt = 6
         itot  = reshape([ 2, 1, 6, 5, 1, 6, 5, 4, 6, 5, 4, 3, 5, 4, 3, 2, 4, 3, 2, 1, 3, 2, 1, 6 ], shape(itot))
@@ -11096,7 +11085,6 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp) :: duij(*)
         ! Local variables
         integer  :: i, j
-        real(wp) :: u(nap)
         real(wp) :: a(nap,ntc)
         real(wp) :: uij0(nap)
         real(wp) :: uij1, uij2
@@ -11225,7 +11213,6 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp) :: sphi, cphi
         real(wp) :: sphi1, sphi2, sphi3, sphi4, sphi5
         real(wp) :: f1r, f3r, f5r
-        real(wp) :: df1dr, df3dr, df5dr
         real(wp) :: g1r, g3r, g5r
         a1     = reshape([ 0.068885e0_wp, 0.034221e0_wp, 0.001544e0_wp ], shape(a1))
         a3     = reshape([ -0.082676e0_wp, -0.021770e0_wp, 0.0e0_wp ], shape(a3))
@@ -11284,10 +11271,7 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp)            :: r, phi, u23to, d23dph, d23dr
         ! Local variables
         integer  :: i
-        real(wp) :: sphi, cphi
-        real(wp) :: sphi1, sphi2, sphi3, sphi4, sphi5
         real(wp) :: f2r, f4r, f6r
-        real(wp) :: df2dr, df4dr, df6dr
         real(wp) :: g2r, g4r, g6r
         a2     = 0.016924e0_wp
         a4     = 0.007145e0_wp
@@ -11347,13 +11331,12 @@ module chempotpy_phoh_aprp_dpem_pes
         ! X,Y,Z:        Cartesian coordinates
         use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter  :: maxint = 1000
-        real(wp), parameter :: btoa   = 0.5291772192e0_wp
-        integer             :: i
-        integer             :: nbl, nba, noop, nto, nint
-        integer             :: ibl(2,*), iba(3,*), ito(4,*), ioop(4,*)
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: rab(maxint), theta(maxint), tors(maxint), &
+        integer, parameter :: maxint = 1000
+        integer            :: i
+        integer            :: nbl, nba, noop, nto, nint
+        integer            :: ibl(2,*), iba(3,*), ito(4,*), ioop(4,*)
+        real(wp)           :: x(*), y(*), z(*)
+        real(wp)           :: rab(maxint), theta(maxint), tors(maxint), &
             & oopb(maxint)
         real(wp) :: ric(*)
         ! Initialize RIC
@@ -11418,7 +11401,6 @@ module chempotpy_phoh_aprp_dpem_pes
         ! Local variables
         integer  :: i, j, k, l, ij, ijk, ijkl, irow
         real(wp) :: eij(3), ejk(3), ekl(3), eji(3), ejl(3), u(3), v(3)
-        real(wp) :: w(3)
         ! Initialize B matrix
         do i=1, ldbm
             do j=1, 3*natm
@@ -11678,8 +11660,6 @@ module chempotpy_phoh_aprp_dpem_pes
         real(wp) :: tiny
         real(wp) :: x(*), y(*), z(*)
         real(wp) :: eji(3), ejk(3), ejl(3), u(3)
-        real(wp) :: v(3), w(3)
-        real(wp) :: a1, a2
         real(wp) :: a, ai, si, rji, rjk, rjl
         !               l
         !              /

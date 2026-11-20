@@ -34,7 +34,7 @@ module chempotpy_aln_recoxjm_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: coordinates_to_bohr, &
             energy_to_electronvolt
         use chempotpy_kinds, only: wp
@@ -69,8 +69,7 @@ module chempotpy_aln_recoxjm_pes
         use chempotpy_geometry, only: fill_distance_matrix
         use chempotpy_kinds,    only: wp
         implicit none
-        real(wp) :: a2, a3, c0, c1, c2, c3, c4, c5, c6, dd, dx, dy, dz, fsech, oneha, onesi, oneth, poly, q1, q2, q23, &
-            & q3, q332, r(maxatom, maxatom), re, rij, rjk, rki, rr, twoth, v, v2, v3, x(maxatom), y(maxatom), z(maxatom)
+        real(wp)            :: a2, a3, c0, c1, c2, c3, c4, c5, c6, dd, fsech, oneha, onesi, oneth, poly, q1, q2, q23, q3, q332, r(maxatom,maxatom), re, rij, rjk, rki, rr, twoth, v, v2, v3, x(maxatom), y(maxatom), z(maxatom)
         integer             :: i, j, k, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp
@@ -102,7 +101,7 @@ module chempotpy_aln_recoxjm_pes
         oneha = sqrt(1.e0_wp/2.e0_wp)
         twoth = sqrt(2.e0_wp/3.e0_wp)
         onesi = sqrt(1.e0_wp/6.e0_wp)
-        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom, 1:natom))
+        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
         !  calculate the potential energy
         v  = 0.e0_wp
         v2 = 0.e0_wp
@@ -110,13 +109,13 @@ module chempotpy_aln_recoxjm_pes
         do i=1, natom
             do j=i+1, natom
                 !  two body term
-                rr  = r(i, j)
+                rr  = r(i,j)
                 rij = (rr-re)/re
                 v2  = v2-dd*(1.e0_wp+a2*rij)*exp(-a2*rij)
                 do k=j+1, natom
                     ! three body term
-                    rjk   = (r(j, k)-re)/re
-                    rki   = (r(k, i)-re)/re
+                    rjk   = (r(j,k)-re)/re
+                    rki   = (r(k,i)-re)/re
                     q1    = oneth*(rij+rjk+rki)
                     q2    = oneha*(rjk-rki)
                     q3    = twoth*rij-onesi*(rjk+rki)

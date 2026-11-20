@@ -11,7 +11,7 @@ module chempotpy_clh2o_pipnn_pes
 
     !> @brief Evaluate the ClH2O_PIPNN potential energy surface for ClH2O.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -52,7 +52,7 @@ module chempotpy_clh2o_pipnn_pes
         implicit none
         integer, parameter :: ndim = 6
         integer            :: j
-        real(wp)           :: rb(ndim), xbond(ndim), basis(0:nbasis-1), tmp1
+        real(wp)           :: rb(ndim), xbond(ndim), basis(0:nbasis-1)
         real(wp)           :: txinput(1:nbasis-1)
         real(wp)           :: ct(3,4), vpes
         real(wp)           :: vpesa, vpesb, vpesc, r12, r13, r14, r23, r24, r34
@@ -202,10 +202,10 @@ module chempotpy_clh2o_pipnn_pes
         use chempotpy_clh2o_pipnn_parameters, only: vpescut
         use chempotpy_kinds,                  only: wp
         implicit none
-        integer  :: lxc, i, j
-        real(wp) :: xc(3,4), rbond(6), xct(3,4), xvec(3,6), xct2(3,4)
-        real(wp) :: dpthcl, dptho, r13, r23, rhpo, rhcl, vfit, vdp
-        real(wp) :: vt1, vcorr, vpes, tmp1, ybond(6), va, vb, vc
+        integer  :: lxc
+        real(wp) :: xc(3,4), xct(3,4), xvec(3,6), xct2(3,4)
+        real(wp) :: r13, r23, vfit, vdp
+        real(wp) :: vt1, vcorr, vpes, va, vb, vc
         real(wp) :: xcom1(3), xcom2(3), rcom, mass(4), skey
         mass(1)   = 1.00794e0_wp
         mass(2)   = mass(1)
@@ -267,7 +267,7 @@ module chempotpy_clh2o_pipnn_pes
         implicit none
         real(wp) :: xc(3,4), xct2(3,4), vdp, vcorr, rbond(6), vt1
         real(wp) :: xvec(3,6), rhpo, rhcl, dpthcl, dptho
-        real(wp) :: angb, anga, angab, vechcl(3), vecho(3), vechh(3)
+        real(wp) :: angb, anga, angab, vechcl(3), vecho(3)
         real(wp) :: pointa(3), pointb(3), vecacl(3), vecbo(3), vecab(3)
         real(wp) :: racl, rbo, rab
         xct2      = xc
@@ -329,7 +329,7 @@ module chempotpy_clh2o_pipnn_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp) :: xct(3,4), bt(6), xvec(3,6), xct2(3,4)
-        real(wp) :: xcom1(3), xcom2(3), rcom, mass(4)
+        real(wp) :: mass(4)
         real(wp) :: r12, r13, r14, r23, r24, r34
         integer  :: lxc, i, lbc, lcd, lde
         mass(1) = 1.00794e0_wp
@@ -440,7 +440,7 @@ module chempotpy_clh2o_pipnn_pes
         integer, parameter :: nn = 100
         real(wp)           :: ytmp(nn), y2tmp(nn), y2a(nxhcl,nxho), yytmp(nn)
         real(wp)           :: x1a(nxhcl), x2a(nxho), ya(nxhcl,nxho)
-        integer            :: i, j, k, m, n
+        integer            :: j, k, m, n
         real(wp)           :: r1, r2, x1, x2, y, vpes
         x1  = r1
         x2  = r2

@@ -155,7 +155,7 @@ module chempotpy_fh2_leps_no5_1985_pes
         real(wp)              :: q3c
         real(wp)              :: r(n3atom)
         real(wp)              :: re(3)
-        character             :: ref(5)
+        character(len=75)     :: ref(5)
         real(wp)              :: rr(3)
         real(wp)              :: xj(3)
         real(wp)              :: z(3)
@@ -262,10 +262,6 @@ module chempotpy_fh2_leps_no5_1985_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer             :: i
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter  :: natom  = 25
             real(wp), parameter :: ckcau  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: cangau = 0.52917706e0_wp
             if( legacy_natoms .gt. 25 )then
@@ -318,12 +314,6 @@ module chempotpy_fh2_leps_no5_1985_pes
             implicit none
             real(wp)            :: capr, capr2, cosphi, costh, cphi, dcos1, dcos2, dcos3, dcphi, dd2, de3c1, de3c2, de3c3, deg, degdif, dphi1, dphi2, dphi3, dzphi, e3c, ex, ex1, ex2, ex3, exx, hsech, op3z, phi, r12, r1i, r22, r32, r3i, rdif, rdif2, rsum, scale1, scale2, sgnphi, sinp2, sinphi, t, t1, t2, t3, t4, t5, xjx, zhh, zp1, zp3, zphi
             integer             :: i, i1, i2, i3, j
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter  :: natom  = 25
-            real(wp), parameter :: ckcau  = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: cangau = 0.52917706e0_wp
             real(wp), parameter :: tdeg   = 57.29577951e0_wp
             real(wp), parameter :: exlarg = 80.e0_wp
             !   EXLARG IS LN(LARGEST FLOATING POINT NUMBER ALLOWED)
@@ -592,25 +582,13 @@ module chempotpy_fh2_leps_no5_1985_pes
         subroutine ancvrt
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: n3atom     = 75
-            integer, parameter  :: natom      = 25
-            integer, parameter  :: isurf      = 5
-            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
-            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
-            real(wp), parameter :: ce         = 1.602176462e-19_wp
-            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
-            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
-            real(wp), parameter :: cang       = 1.0e-10_wp
-            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
-            real(wp), parameter :: ckcal      = 4.184e10_wp
-            real(wp), parameter :: htomillh   = 1000.e0_wp
-            real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: htowave    = 219474.631e0_wp
-            real(wp), parameter :: htokj      = 2625.49962e0_wp
-            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer, parameter  :: natom    = 25
+            real(wp), parameter :: htomillh = 1000.e0_wp
+            real(wp), parameter :: htoev    = 27.2113834e0_wp
+            real(wp), parameter :: htokcal  = hartree_to_kilocalorie_per_mole
+            real(wp), parameter :: htowave  = 219474.631e0_wp
+            real(wp), parameter :: htokj    = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a   = .5291772083e0_wp
             integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
             character(len=3)    :: periodic_1(7,32)
             character(len=2)    :: name1(natom)
@@ -869,27 +847,15 @@ module chempotpy_fh2_leps_no5_1985_pes
         !> @brief Evaluate CARTOU for the FH2_LEPS_NO5_1985 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
 
         !> @brief Evaluate CARTTOR for the FH2_LEPS_NO5_1985 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: coordinate_status
-            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
-            integer            :: i, ind, k, l
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
+            integer :: coordinate_status
             call cartesian_to_potlib_coordinates(cartnu, legacy_natoms, icartr, r, coordinate_status)
             if( coordinate_status /= 0 )then
                 if( present(status) ) call status%set(status_invalid_input, &
@@ -900,13 +866,8 @@ module chempotpy_fh2_leps_no5_1985_pes
 
         !> @brief Evaluate EUNITZERO for the FH2_LEPS_NO5_1985 potential.
         subroutine eunitzero
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j
             pengygs = engygs * cnvrte - anuzero
             if( ksdiag .ne. 0 )then
                 do i=ksdiag, kediag
@@ -925,7 +886,6 @@ module chempotpy_fh2_leps_no5_1985_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
@@ -1080,13 +1040,8 @@ module chempotpy_fh2_leps_no5_1985_pes
 
         !> @brief Evaluate DEDCOU for the FH2_LEPS_NO5_1985 potential.
         subroutine dedcou
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j, k
             if( ireorder .eq. 1 )then
                 do i = 1, legacy_natoms
                     dgscart(i,1) = dgscartnu(nulbl(i),1) * cnvrtde

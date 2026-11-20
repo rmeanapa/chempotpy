@@ -13,7 +13,7 @@ module chempotpy_c2h2n2o_pipnn_pes
 
     !> @brief Evaluate the C2H2N2O_PIPNN potential energy surface for C2H2N2O.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -25,7 +25,7 @@ module chempotpy_c2h2n2o_pipnn_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: v, tx(3,natoms)
-        integer               :: iatom, idir, j, istate
+        integer               :: iatom, idir, istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
@@ -68,10 +68,9 @@ module chempotpy_c2h2n2o_pipnn_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp), parameter :: alpha = 1.8e0_wp, para=0.5291772e0_wp
-        integer, parameter  :: natom = 7
-        integer             :: j, ndriv
+        integer             :: j
         real(wp)            :: v, p(0:2389), r(1:21)
-        real(wp)            :: xcart(1:3,1:7), m(0:707), xmorse(1:21)
+        real(wp)            :: xcart(1:3,1:7), xmorse(1:21)
         real(wp)            :: txinput(1:456)
         call all_pair_distances(transpose(xcart), r)
         xmorse = exp(-r/(para*alpha))

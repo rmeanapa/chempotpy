@@ -24,12 +24,23 @@ module chempotpy_clh2_leps_altg2_1996_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( rr, e, nt, nsurf )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: rr(nt,3)
+            real(wp) :: e(nt)
+            integer  :: nt
+            integer  :: nsurf
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the ClH2_LEPS_ALTG2_1996 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp

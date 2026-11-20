@@ -9,7 +9,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
 
     !> @brief Evaluate pes for the H3_GEN_BKMP_1991 potential.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -67,7 +67,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp), parameter   :: easybc = 0.174495771e0_wp
-        integer, parameter    :: idbug  = 0, iprt = 6, nder = 1, nsurf = 0
+        integer, parameter    :: idbug  = 0, nder = 1, nsurf = 0
         real(wp), intent(in)  :: rval(3)
         real(wp), intent(out) :: energy, dedr(3)
         !   Check the values of NSURF and NDER for validity.
@@ -103,10 +103,8 @@ module chempotpy_h3_gen_bkmp_1991_pes
         !  if ipr.gt.1  also print out some details about derivatives
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: cal, cas, cb(2,25), cbnda, cbndb, cbp(2,25), db1a(3), db1b(3), db2(3), db3(6), dcal(3), dcas(3), &
-            & dcbnda(3), dcbndb(3), dt(3), dvas(3), dvbnda(3), dvbndb(3), dvlon(3), dvtot(3), expass(4), r(3), t(3), vas, &
-            & vb(2, 25), vbnda, vbndb, vbp(2, 25), vlon, vtot
-        integer :: i, icompc, id, ipr
+        real(wp) :: cal, cas, cb(2,25), cbnda, cbndb, dcal(3), dcas(3), dcbnda(3), dcbndb(3), dt(3), dvas(3), dvbnda(3), dvbndb(3), dvlon(3), dvtot(3), r(3), t(3), vas, vb(2,25), vbnda, vbndb, vlon, vtot
+        integer  :: i, icompc, id, ipr
         !     ipr = 0
         !  zero everything to avoid any 'funny' values:
         vlon  = 0.e0_wp
@@ -129,10 +127,10 @@ module chempotpy_h3_gen_bkmp_1991_pes
         enddo
         !  zero the vb and cb arrays (used only for numerical derivatives)
         do i=1, 25
-            vb(1, i) = 0.e0_wp
-            vb(2, i) = 0.e0_wp
-            cb(1,i)  = 0.e0_wp
-            cb(2,i)  = 0.e0_wp
+            vb(1,i) = 0.e0_wp
+            vb(2,i) = 0.e0_wp
+            cb(1,i) = 0.e0_wp
+            cb(2,i) = 0.e0_wp
         enddo
         call h3lond(r, vlon, dvlon)
         call vascal(r, vas, dvas)
@@ -176,7 +174,6 @@ module chempotpy_h3_gen_bkmp_1991_pes
         real(wp), parameter :: rr = 1.15e0_wp
         real(wp), parameter :: z1 = 1.e0_wp
         real(wp), parameter :: z2 = 2.e0_wp
-        real(wp), parameter :: z4 = 4.e0_wp
         !  triplet and johnson values from fit621:
         real(wp), parameter :: a1 = -0.0253496194e0_wp
         real(wp), parameter :: a2 = -29.2302126444e0_wp
@@ -324,9 +321,8 @@ module chempotpy_h3_gen_bkmp_1991_pes
         ! configurations
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: de1(3), de3(3), dj1(3), dj2(3), dj3(3), dvlon(3), e1(3), e3(3), esing(3), etrip(3), r(3), rootjt, &
-            & sumj, sumq, vlon
-        integer :: i, ipr
+        real(wp) :: de1(3), de3(3), dvlon(3), e1(3), e3(3), esing(3), etrip(3), r(3), rootjt, sumj, sumq, vlon
+        integer  :: i, ipr
         !     real*8 Q(3),J(3),Jt
         real(wp)            :: q(3), j(3), jt
         real(wp), parameter :: half = 0.5e0_wp
@@ -536,8 +532,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         !  correction to all compact geometries
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: cal, dcal(3), dexp3, dg(3), exp3, g(3), r(3), ri, rpri, rpri2, rrri, rrri2, rrri3, sr, sr2, sr3, &
-            & sumg, sumv(3), t(3)
+        real(wp)            :: cal, dcal(3), dexp3, dg(3), exp3, g(3), r(3), ri, rpri, rpri2, rrri, rrri2, rrri3, sr, sr2, sr3, sumg, sumv(3)
         integer             :: i, ipr
         real(wp), parameter :: rr = 1.15e0_wp
         real(wp), parameter :: rp = 1.25e0_wp
@@ -591,14 +586,8 @@ module chempotpy_h3_gen_bkmp_1991_pes
         !   B1b = 1 - sum of [ P3(cos(theta(i))) ]
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: aasum, asum, b1, b12, b13, b14, b15, b1a, b1b, b2, b3, b3b, bsum, c1, c1cube, c2, c2cube, c3, &
-            & c3cube, cb(2,25), cbnda, cbndb, cbnds(2), cos3t1, cos3t2, cos3t3, csum, cx1, d1, d2, d3, daasum, dasum, db1a(3), &
-            & db1b(3), db2(3), db3(6), dbsum, dc1dr1, dc1dr2, dc1dr3, dc2dr1, dc2dr2, dc2dr3, dc3dr1, dc3dr2, dc3dr3, dcb1(3), &
-            & dcb2(3), dcb3(3), dcb4(3), dcb5(3), dcb6(3), dcb7(3), dcb8(3), dcbnda(3), dcbndb(3), dcbnds(2, 3), ddsum1, ddsum2, &
-            & dexp1, dexp2, dexp7, dffsum, dfsum, dgsum, dp(3), dsum1, dsum2, dt(3), dvb1(3), dvb2(3), dvb3(3), dvb4(3), &
-            & dvb5(3), dvbnd(3), dvbnda(3), dvbndb(3), dx1, eps2, exp1, exp2, exp7, ffsum, fsum, gsum, p, pcu, psq, r, r1, r2, &
-            & r3, rcu, rpass(3), rsq, sum, sumb, sumt, t(3), t1, t2, t3, th(3), vb(2, 25), vbnd(2), vbnda, vbndb
-        integer :: icompc, ipr
+        real(wp) :: aasum, asum, b1, b12, b13, b14, b15, b1a, b1b, b2, b3, b3b, bsum, c1, c1cube, c2, c2cube, c3, c3cube, cb(2,25), cbnda, cbndb, cbnds(2), cos3t1, cos3t2, cos3t3, csum, cx1, d1, d2, d3, daasum, dasum, db1a(3), db1b(3), db2(3), db3(6), dbsum, dc1dr1, dc1dr2, dc1dr3, dc2dr1, dc2dr2, dc2dr3, dc3dr1, dc3dr2, dc3dr3, dcb1(3), dcb2(3), dcb3(3), dcb4(3), dcb5(3), dcb6(3), dcb7(3), dcb8(3), dcbnda(3), dcbndb(3), dcbnds(2,3), ddsum1, ddsum2, dexp1, dexp2, dexp7, dffsum, dfsum, dgsum, dp(3), dsum1, dsum2, dt(3), dvb1(3), dvb2(3), dvb3(3), dvb4(3), dvb5(3), dvbnda(3), dvbndb(3), dx1, eps2, exp1, exp2, exp7, ffsum, fsum, gsum, p, pcu, psq, r, r1, r2, r3, rcu, rpass(3), rsq, sum, sumb, sumt, t(3), t1, t2, t3, vb(2,25), vbnd(2), vbnda, vbndb
+        integer  :: icompc, ipr
         !    arrays required for B1,B2,B3 calculations:
         !    arrays required for Vbend calculations:
         !    arrays required for Cbend calculations:
@@ -818,34 +807,34 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dexp2  = -2.e0_wp*beta2*r*exp2
         dexp7  = -beta3*exp7
         !   do the vbnda calculations:
-        b1       = b1a
-        b12      = b1*b1
-        b13      = b12*b1
-        b14      = b13*b1
-        b15      = b14*b1
-        asum     = a11 +  a12*r +  a13*rsq
-        bsum     = a21*b12 +  a22*b13 +  a23*b14 +  a24*b15
-        csum     = a31*b1*exp1 +  a32*b12*exp2
-        dsum1    = a41*exp1 +  a42*exp2
-        dsum2    = a43*exp1 +  a44*exp2
-        fsum     = a51 +  a52*r +  a53*rsq
-        vb(1, 1) = b1*asum*exp1
-        vb(1, 2) = bsum * exp2
-        vb(1, 3) = b2*csum
-        vb(1, 4) = b1*b3*dsum1 + b1*b3b*dsum2
-        vb(1, 5) = b1* fsum  *exp7
-        vbnd(1)  = vb(1, 1)+vb(1, 2)+vb(1, 3)+vb(1, 4)+vb(1, 5)
-        dasum    = a12+2.e0_wp*a13*r
-        dbsum    = 2.e0_wp* a21*b1  + 3.e0_wp* a22*b12 + 4.e0_wp* a23*b13 + 5.e0_wp* a24*b14
-        ddsum1   = a41*dexp1 +  a42*dexp2
-        ddsum2   = a43*dexp1 +  a44*dexp2
-        dfsum    = a52 +2.e0_wp*a53*r
-        dvb1(1)  = db1a(1)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
-        dvb1(2)  = db1a(2)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
-        dvb1(3)  = db1a(3)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
-        dvb2(1)  = dbsum*db1a(1)*exp2 + bsum*dexp2
-        dvb2(2)  = dbsum*db1a(2)*exp2 + bsum*dexp2
-        dvb2(3)  = dbsum*db1a(3)*exp2 + bsum*dexp2
+        b1      = b1a
+        b12     = b1*b1
+        b13     = b12*b1
+        b14     = b13*b1
+        b15     = b14*b1
+        asum    = a11 +  a12*r +  a13*rsq
+        bsum    = a21*b12 +  a22*b13 +  a23*b14 +  a24*b15
+        csum    = a31*b1*exp1 +  a32*b12*exp2
+        dsum1   = a41*exp1 +  a42*exp2
+        dsum2   = a43*exp1 +  a44*exp2
+        fsum    = a51 +  a52*r +  a53*rsq
+        vb(1,1) = b1*asum*exp1
+        vb(1,2) = bsum * exp2
+        vb(1,3) = b2*csum
+        vb(1,4) = b1*b3*dsum1 + b1*b3b*dsum2
+        vb(1,5) = b1* fsum  *exp7
+        vbnd(1) = vb(1,1)+vb(1,2)+vb(1,3)+vb(1,4)+vb(1,5)
+        dasum   = a12+2.e0_wp*a13*r
+        dbsum   = 2.e0_wp* a21*b1  + 3.e0_wp* a22*b12 + 4.e0_wp* a23*b13 + 5.e0_wp* a24*b14
+        ddsum1  = a41*dexp1 +  a42*dexp2
+        ddsum2  = a43*dexp1 +  a44*dexp2
+        dfsum   = a52 +2.e0_wp*a53*r
+        dvb1(1) = db1a(1)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
+        dvb1(2) = db1a(2)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
+        dvb1(3) = db1a(3)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
+        dvb2(1) = dbsum*db1a(1)*exp2 + bsum*dexp2
+        dvb2(2) = dbsum*db1a(2)*exp2 + bsum*dexp2
+        dvb2(3) = dbsum*db1a(3)*exp2 + bsum*dexp2
         ! calculate the Vb3 derivatives:
         dvb3(1) = db2(1)*csum + b2*(  a31*db1a(1)*exp1 +  a31*b1*dexp1 +2.e0_wp* a32*b1*db1a(1)*exp2 +  a32*b12*dexp2)
         dvb3(2) = db2(2)*csum + b2*(  a31*db1a(2)*exp1 +  a31*b1*dexp1 +2.e0_wp* a32*b1*db1a(2)*exp2 +  a32*b12*dexp2)
@@ -867,34 +856,34 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dvbnda(3) = dvb1(3)+dvb2(3)+dvb3(3)+dvb4(3)+dvb5(3)
         vbnda     = vbnd(1)
         !---- now do the vbendb calculations --------
-        b1       = b1b
-        b12      = b1*b1
-        b13      = b12*b1
-        b14      = b13*b1
-        b15      = b14*b1
-        asum     = g11 +  g12*r +  g13*rsq
-        bsum     = g21*b12 +  g22*b13 +  g23*b14 +  g24*b15
-        csum     = g31*b1*exp1 +  g32*b12*exp2
-        dsum1    = g41*exp1 +  g42*exp2
-        dsum2    = g43*exp1 +  g44*exp2
-        fsum     = g51 +  g52*r +  g53*rsq
-        vb(2, 1) = b1*asum*exp1
-        vb(2, 2) = bsum * exp2
-        vb(2, 3) = b2*csum
-        vb(2, 4) = b1*b3*dsum1 + b1*b3b*dsum2
-        vb(2, 5) = b1* fsum  *exp7
-        vbnd(2)  = vb(2, 1)+vb(2, 2)+vb(2, 3)+vb(2, 4)+vb(2, 5)
-        dasum    = g12+2.e0_wp*g13*r
-        dbsum    = 2.e0_wp* g21*b1  + 3.e0_wp* g22*b12 +4.e0_wp* g23*b13 + 5.e0_wp* g24*b14
-        ddsum1   = g41*dexp1 +  g42*dexp2
-        ddsum2   = g43*dexp1 +  g44*dexp2
-        dfsum    = g52 +2.e0_wp*g53*r
-        dvb1(1)  = db1b(1)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
-        dvb1(2)  = db1b(2)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
-        dvb1(3)  = db1b(3)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
-        dvb2(1)  = dbsum*db1b(1)*exp2 + bsum*dexp2
-        dvb2(2)  = dbsum*db1b(2)*exp2 + bsum*dexp2
-        dvb2(3)  = dbsum*db1b(3)*exp2 + bsum*dexp2
+        b1      = b1b
+        b12     = b1*b1
+        b13     = b12*b1
+        b14     = b13*b1
+        b15     = b14*b1
+        asum    = g11 +  g12*r +  g13*rsq
+        bsum    = g21*b12 +  g22*b13 +  g23*b14 +  g24*b15
+        csum    = g31*b1*exp1 +  g32*b12*exp2
+        dsum1   = g41*exp1 +  g42*exp2
+        dsum2   = g43*exp1 +  g44*exp2
+        fsum    = g51 +  g52*r +  g53*rsq
+        vb(2,1) = b1*asum*exp1
+        vb(2,2) = bsum * exp2
+        vb(2,3) = b2*csum
+        vb(2,4) = b1*b3*dsum1 + b1*b3b*dsum2
+        vb(2,5) = b1* fsum  *exp7
+        vbnd(2) = vb(2,1)+vb(2,2)+vb(2,3)+vb(2,4)+vb(2,5)
+        dasum   = g12+2.e0_wp*g13*r
+        dbsum   = 2.e0_wp* g21*b1  + 3.e0_wp* g22*b12 +4.e0_wp* g23*b13 + 5.e0_wp* g24*b14
+        ddsum1  = g41*dexp1 +  g42*dexp2
+        ddsum2  = g43*dexp1 +  g44*dexp2
+        dfsum   = g52 +2.e0_wp*g53*r
+        dvb1(1) = db1b(1)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
+        dvb1(2) = db1b(2)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
+        dvb1(3) = db1b(3)*asum*exp1 + b1*dasum*exp1 +b1*asum*dexp1
+        dvb2(1) = dbsum*db1b(1)*exp2 + bsum*dexp2
+        dvb2(2) = dbsum*db1b(2)*exp2 + bsum*dexp2
+        dvb2(3) = dbsum*db1b(3)*exp2 + bsum*dexp2
         ! calculate the Vb3 derivatives:
         dvb3(1) = db2(1)*csum + b2*(  g31*db1b(1)*exp1 +  g31*b1*dexp1 +2.e0_wp* g32*b1*db1b(1)*exp2 +  g32*b12*dexp2)
         dvb3(2) = db2(2)*csum + b2*(  g31*db1b(2)*exp1 +  g31*b1*dexp1 +2.e0_wp* g32*b1*db1b(2)*exp2 +  g32*b12*dexp2)
@@ -987,21 +976,21 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcb4(3) = db1a(3)*b3 *dsum1 + b1*db3(3)*dsum1 + b1*b3 *ddsum1 + db1a(3)*b3b*dsum2 + b1*db3(6)*dsum2 + b1*b3b* &
             & ddsum2
         !          dCb5 equations may 27/90: (corrected jun01)
-        dcb5(1)      = db1a(1)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(1)/psq
-        dcb5(2)      = db1a(2)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(2)/psq
-        dcb5(3)      = db1a(3)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(3)/psq
-        dcb6(1)      = db1a(1)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb6(2)      = db1a(2)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb6(3)      = db1a(3)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb7(1)      = db1a(1)*aasum*exp2 + b1*daasum*dp(1)*exp2 + b1* aasum*dexp2
-        dcb7(2)      = db1a(2)*aasum*exp2 + b1*daasum*dp(2)*exp2 + b1* aasum*dexp2
-        dcb7(3)      = db1a(3)*aasum*exp2 + b1*daasum*dp(3)*exp2 + b1* aasum*dexp2
-        dcb8(1)      = db1a(1)*ffsum*exp7  +b1*dffsum*dp(1)*exp7 +b1* ffsum*dexp7
-        dcb8(2)      = db1a(2)*ffsum*exp7  +b1*dffsum*dp(2)*exp7 +b1* ffsum*dexp7
-        dcb8(3)      = db1a(3)*ffsum*exp7  +b1*dffsum*dp(3)*exp7 +b1* ffsum*dexp7
-        dcbnds(1, 1) = dcb1(1) +dcb2(1) +dcb3(1) +dcb4(1) +dcb5(1) +dcb6(1) +dcb7(1) +dcb8(1)
-        dcbnds(1, 2) = dcb1(2) +dcb2(2) +dcb3(2) +dcb4(2) +dcb5(2) +dcb6(2) +dcb7(2) +dcb8(2)
-        dcbnds(1, 3) = dcb1(3) +dcb2(3) +dcb3(3) +dcb4(3) +dcb5(3) +dcb6(3) +dcb7(3) +dcb8(3)
+        dcb5(1)     = db1a(1)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(1)/psq
+        dcb5(2)     = db1a(2)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(2)/psq
+        dcb5(3)     = db1a(3)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(3)/psq
+        dcb6(1)     = db1a(1)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb6(2)     = db1a(2)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb6(3)     = db1a(3)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb7(1)     = db1a(1)*aasum*exp2 + b1*daasum*dp(1)*exp2 + b1* aasum*dexp2
+        dcb7(2)     = db1a(2)*aasum*exp2 + b1*daasum*dp(2)*exp2 + b1* aasum*dexp2
+        dcb7(3)     = db1a(3)*aasum*exp2 + b1*daasum*dp(3)*exp2 + b1* aasum*dexp2
+        dcb8(1)     = db1a(1)*ffsum*exp7  +b1*dffsum*dp(1)*exp7 +b1* ffsum*dexp7
+        dcb8(2)     = db1a(2)*ffsum*exp7  +b1*dffsum*dp(2)*exp7 +b1* ffsum*dexp7
+        dcb8(3)     = db1a(3)*ffsum*exp7  +b1*dffsum*dp(3)*exp7 +b1* ffsum*dexp7
+        dcbnds(1,1) = dcb1(1) +dcb2(1) +dcb3(1) +dcb4(1) +dcb5(1) +dcb6(1) +dcb7(1) +dcb8(1)
+        dcbnds(1,2) = dcb1(2) +dcb2(2) +dcb3(2) +dcb4(2) +dcb5(2) +dcb6(2) +dcb7(2) +dcb8(2)
+        dcbnds(1,3) = dcb1(3) +dcb2(3) +dcb3(3) +dcb4(3) +dcb5(3) +dcb6(3) +dcb7(3) +dcb8(3)
         ! ----- calculate the Cbndb correction term ----------------
         b1       = b1b
         b12      = b1*b1
@@ -1052,28 +1041,28 @@ module chempotpy_h3_gen_bkmp_1991_pes
         dcb4(3) = db1b(3)*b3 *dsum1 + b1*db3(3)*dsum1 + b1*b3 *ddsum1 + db1b(3)*b3b*dsum2 + b1*db3(6)*dsum2 + b1*b3b* &
             & ddsum2
         !          dCb5 equations may 27/90:
-        dcb5(1)      = db1b(1)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(1)/psq
-        dcb5(2)      = db1b(2)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(2)/psq
-        dcb5(3)      = db1b(3)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(3)/psq
-        dcb6(1)      = db1b(1)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb6(2)      = db1b(2)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb6(3)      = db1b(3)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
-        dcb7(1)      = db1b(1)*aasum*exp2 + b1*daasum*dp(1)*exp2 + b1* aasum*dexp2
-        dcb7(2)      = db1b(2)*aasum*exp2 + b1*daasum*dp(2)*exp2 + b1* aasum*dexp2
-        dcb7(3)      = db1b(3)*aasum*exp2 + b1*daasum*dp(3)*exp2 + b1* aasum*dexp2
-        dcb8(1)      = db1b(1)*ffsum*exp7  +b1*dffsum*dp(1)*exp7 +b1* ffsum*dexp7
-        dcb8(2)      = db1b(2)*ffsum*exp7  +b1*dffsum*dp(2)*exp7 +b1* ffsum*dexp7
-        dcb8(3)      = db1b(3)*ffsum*exp7  +b1*dffsum*dp(3)*exp7 +b1* ffsum*dexp7
-        dcbnds(2, 1) = dcb1(1) +dcb2(1) +dcb3(1) +dcb4(1) +dcb5(1) +dcb6(1) +dcb7(1) +dcb8(1)
-        dcbnds(2, 2) = dcb1(2) +dcb2(2) +dcb3(2) +dcb4(2) +dcb5(2) +dcb6(2) +dcb7(2) +dcb8(2)
-        dcbnds(2, 3) = dcb1(3) +dcb2(3) +dcb3(3) +dcb4(3) +dcb5(3) +dcb6(3) +dcb7(3) +dcb8(3)
+        dcb5(1)     = db1b(1)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(1)/psq
+        dcb5(2)     = db1b(2)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(2)/psq
+        dcb5(3)     = db1b(3)*fsum*exp7/p + b1*dfsum*exp7/p + b1*fsum*dexp7/p - b1*fsum*exp7*dp(3)/psq
+        dcb6(1)     = db1b(1)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb6(2)     = db1b(2)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb6(3)     = db1b(3)*gsum*exp7 + b1*dgsum*exp7 + b1*gsum*dexp7
+        dcb7(1)     = db1b(1)*aasum*exp2 + b1*daasum*dp(1)*exp2 + b1* aasum*dexp2
+        dcb7(2)     = db1b(2)*aasum*exp2 + b1*daasum*dp(2)*exp2 + b1* aasum*dexp2
+        dcb7(3)     = db1b(3)*aasum*exp2 + b1*daasum*dp(3)*exp2 + b1* aasum*dexp2
+        dcb8(1)     = db1b(1)*ffsum*exp7  +b1*dffsum*dp(1)*exp7 +b1* ffsum*dexp7
+        dcb8(2)     = db1b(2)*ffsum*exp7  +b1*dffsum*dp(2)*exp7 +b1* ffsum*dexp7
+        dcb8(3)     = db1b(3)*ffsum*exp7  +b1*dffsum*dp(3)*exp7 +b1* ffsum*dexp7
+        dcbnds(2,1) = dcb1(1) +dcb2(1) +dcb3(1) +dcb4(1) +dcb5(1) +dcb6(1) +dcb7(1) +dcb8(1)
+        dcbnds(2,2) = dcb1(2) +dcb2(2) +dcb3(2) +dcb4(2) +dcb5(2) +dcb6(2) +dcb7(2) +dcb8(2)
+        dcbnds(2,3) = dcb1(3) +dcb2(3) +dcb3(3) +dcb4(3) +dcb5(3) +dcb6(3) +dcb7(3) +dcb8(3)
         !  calculate the total derivative from the pieces:
-        dcbnda(1) = dt(1) * cbnds(1)    + sumt * dcbnds(1, 1)
-        dcbndb(1) = dt(1) * cbnds(2)    + sumt * dcbnds(2, 1)
-        dcbnda(2) = dt(2) * cbnds(1)    + sumt * dcbnds(1, 2)
-        dcbndb(2) = dt(2) * cbnds(2)    + sumt * dcbnds(2, 2)
-        dcbnda(3) = dt(3) * cbnds(1)    + sumt * dcbnds(1, 3)
-        dcbndb(3) = dt(3) * cbnds(2)    + sumt * dcbnds(2, 3)
+        dcbnda(1) = dt(1) * cbnds(1)    + sumt * dcbnds(1,1)
+        dcbndb(1) = dt(1) * cbnds(2)    + sumt * dcbnds(2,1)
+        dcbnda(2) = dt(2) * cbnds(1)    + sumt * dcbnds(1,2)
+        dcbndb(2) = dt(2) * cbnds(2)    + sumt * dcbnds(2,2)
+        dcbnda(3) = dt(3) * cbnds(1)    + sumt * dcbnds(1,3)
+        dcbndb(3) = dt(3) * cbnds(2)    + sumt * dcbnds(2,3)
         cbnda     = sumt*cbnds(1)
         cbndb     = sumt*cbnds(2)
     end subroutine vbcb

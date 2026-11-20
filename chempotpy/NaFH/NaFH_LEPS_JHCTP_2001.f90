@@ -37,12 +37,21 @@ module chempotpy_nafh_leps_jhctp_2001_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( r, e, de, nt, nsurf )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: de(3,nt), e(nt), r(nt,3)
+            integer  :: nsurf, nt
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the NaFH_LEPS_JHCTP_2001 potential energy surface for NaFH.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -59,7 +68,7 @@ module chempotpy_nafh_leps_jhctp_2001_pes
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         integer               :: iatom, idir
         integer               :: nt
-        real(wp)              :: r(1,3), r2(3), v(1)
+        real(wp)              :: r(1,3), r2(3)
         real(wp)              :: u11(1), u12(1), u22(1)
         real(wp)              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
         real(wp)              :: u(nstates,nstates), dudr(nstates,nstates,3)
@@ -68,7 +77,7 @@ module chempotpy_nafh_leps_jhctp_2001_pes
         real(wp)              :: hr(nstates,nstates,3), gr(nstates,3)
         real(wp)              :: tx(9), drdx(3,9)
         real(wp)              :: hx(nstates,nstates,9), gx(nstates,9)
-        integer               :: i, j, k, l
+        integer               :: i, j, k
         !initialize
         u  = 0.e0_wp; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         nt = 1
@@ -116,6 +125,18 @@ module chempotpy_nafh_leps_jhctp_2001_pes
             enddo
         enddo
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the NaFH_LEPS_JHCTP_2001 potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_nafh_leps_jhctp_2001_pes
 
 !> @brief Expose NaFH_LEPS_JHCTP_2001 through the Python-facing PES entry point.
@@ -132,18 +153,6 @@ subroutine pes( x, igrad, p, g, d )
     real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
-
-!> @brief Evaluate EvdRdX for the NaFH_LEPS_JHCTP_2001 potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
 
 !> @brief Evaluate pot for the NaFH_LEPS_JHCTP_2001 potential.
 subroutine pot( r, e, de, nt, nsurf )
@@ -173,6 +182,37 @@ subroutine pot( r, e, de, nt, nsurf )
     !                          in the reactant channel
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate pot11.
+        subroutine pot11( r, e, de, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3)
+            real(wp) :: e(nt)
+            real(wp) :: de(3,nt)
+            integer  :: nt
+        end subroutine pot11
+
+        !> @brief Evaluate pot12.
+        subroutine pot12( r, e, de, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3)
+            real(wp) :: e(nt)
+            real(wp) :: de(3,nt)
+            integer  :: nt
+        end subroutine pot12
+
+        !> @brief Evaluate pot22.
+        subroutine pot22( r, e, de, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3)
+            real(wp) :: e(nt)
+            real(wp) :: de(3,nt)
+            integer  :: nt
+        end subroutine pot22
+    end interface
     real(wp) :: de(3,nt), e(nt), r(nt,3)
     integer  :: nsurf, nt
     if( nsurf .eq. 1 )then
@@ -197,6 +237,33 @@ module chempotpy_nafh_leps_jhctp_2001_pot11_legacy_state_3ad9bc64
     subroutine dispatch( r, e, de, nt )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate lepscfu11.
+            subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cfu11 )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: a, b, c, d, e, f
+                real(wp) :: dehf, j1_ap, rehf, shf_ac, yhf, j1_ac, snah, chi, tnah, q1_ap, q1_ac, j2_ap, j2_ac, w, leps_ac, &
+                    & leps_ap, q2_ap, c7, c6, shf_ap, q2_ac, thf, r2, r1, r3, snaf, ronaf, j3_ac, q3_ap, j3_ap, denah, renah, q3_ac, t2, &
+                    & t1, t3, tnaf, t4, y, thf_ap, thf_ac, tnaf_ap, tnaf_ac, tnah_ap, tnah_ac, cfu11, de, re, c5, beta, c1, c2, c3, c4, &
+                    & r(1,3)
+                integer            :: ia, ib, ic
+                integer, parameter :: g_pmax_ = 3
+                integer            :: g_i_, g_p_, ldg_r, ldg_cfu11
+                real(wp)           :: g_r(ldg_r,1,3)
+                real(wp)           :: d4_p, d3_p, d17_b, d5_b, d6_b, d7_b, d8_b, d12_v, d2_v, d11_b
+                real(wp)           :: d10_b, d1_w, d2_w, d3_v, d4_v, d5_v, d1_p, d7_v, d8_v, d2_p
+                real(wp)           :: d10_v, d14_v, d4_b, g_r1(g_pmax_), g_r2(g_pmax_ &
+                    & ), g_r3(g_pmax_), g_y(g_pmax_), g_d1_w(g_pmax_), g_d2_w(g_pmax_), &
+                    & g_snaf(g_pmax_)
+                real(wp) :: g_tnaf_ac(g_pmax_), g_tnaf_ap(g_pmax_), g_q3_ac &
+                    & (g_pmax_), g_q3_ap(g_pmax_), g_j3_ac(g_pmax_), g_j3_ap(g_pmax_), g_beta(g_pmax_), g_chi(g_pmax_), g_snah(g_pmax_), g_tnah_ac(g_pmax_ &
+                    & )
+                real(wp) :: g_tnah_ap(g_pmax_), g_q1_ac(g_pmax_), g_q1_ap(g_pmax_), g_j1_ac(g_pmax_), g_j1_ap(g_pmax_), g_yhf(g_pmax_), g_shf_ac(g_pmax_), g_shf_ap(g_pmax_), g_thf_ac(g_pmax_), g_thf_ap(g_pmax_)
+                real(wp) :: g_q2_ac(g_pmax_), g_q2_ap(g_pmax_), g_j2_ac(g_pmax_), g_j2_ap(g_pmax_), g_w(g_pmax_), g_leps_ac(g_pmax_), g_leps_ap(g_pmax_), g_cfu11(ldg_cfu11)
+                integer  :: g_ehfid
+            end subroutine lepscfu11
+        end interface
         optional :: r, e, de, nt
         real(wp) :: abs1, ac(4), acut1(4), adip1(4), ads1, af1, af2, al2(4), al2n(4), aln0(4), aln0n1(4), aln0n2(4), &
             & amf, amh, amna, amu, anorm, ars1, asmall, axs1, bc(0:5), c2a(4), c2b(4), c2c(4), cevau, cfu11, chf(6), cnf(6), &
@@ -946,6 +1013,34 @@ module chempotpy_nafh_leps_jhctp_2001_pot22_legacy_state_3ad9bc64
     subroutine dispatch( r, e, de, nt )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate lepscfu22.
+            subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cfu22 )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: dehf, j1_ap, rehf, shf_ac, yhf, j1_ac, snah, chi, tnah, q1_ap, q1_ac, j2_ap, j2_ac, w, leps_ac, &
+                    & leps_ap, q2_ap, c7, c6, shf_ap, q2_ac, thf, r2, r1, r3, snaf, ronaf, a, b, c, d, e, f, j3_ac, q3_ap, j3_ap, denah, &
+                    & renah, q3_ac, t2, t1, t3, tnaf, t4, y, thf_ap, thf_ac, tnaf_ap, tnaf_ac, tnah_ap, tnah_ac, r(1,3)
+                real(wp) :: shf_u11, nap, t3nah, t4nah, r0, swit, shfa, alph0, ynaf, snaf_ap, denaf, renaf, t1nah, t2nah, c2naf, snaf_ac
+                real(wp) :: c1nf, c2nf, c3nf, c4nf, c5nf, c6nf, c7nf, hlp1, &
+                    & hlp2, hlp22, thf_ap_as, t1hf, dt1hf, t2hf, dt2hf, t, b1, b2, e1, &
+                    & e2, hlp, a3, b3, cc3, d3, e3, f3, cfu22, c5, c4, c3, c2, c1, cc1, &
+                    & cc2, f1, f2, beta
+                integer            :: ia, ib, ic
+                integer, parameter :: g_pmax_ = 3
+                integer            :: g_i_, g_p_, ldg_r, ldg_cfu22
+                real(wp)           :: d4_p, d3_p, d17_b, d8_b, d12_v, d2_p, d2_w, d10_v, d2_v, d11_b
+                real(wp)           :: d2_b, d1_w, d3_v, d3_b, d1_p, d4_v, d5_v, d6_v, &
+                    & d7_v, d8_v
+                real(wp) :: d14_v, d4_b, d5_b, d6_b, d7_b, g_r1(g_pmax_), g_r(ldg_r,1,3), g_r2(g_pmax_), g_r3(g_pmax_), g_ynaf(g_pmax_)
+                real(wp) :: g_d1_w(g_pmax_), g_hlp1(g_pmax_), g_hlp2(g_pmax_), g_hlp22(g_pmax_), g_snaf_ap(g_pmax_), g_beta(g_pmax_), g_snaf_ac(g_pmax_), g_hlp(g_pmax_), g_tnaf_ac(g_pmax_), g_tnaf_ap(g_pmax_ &
+                    & )
+                real(wp) :: g_q3_ac(g_pmax_), g_q3_ap(g_pmax_), g_j3_ac(g_pmax_), g_j3_ap(g_pmax_), g_d2_w(g_pmax_), g_tnah_ac(g_pmax_), g_tnah_ap(g_pmax_), g_q1_ac(g_pmax_), g_q1_ap(g_pmax_), g_j1_ac(g_pmax_)
+                real(wp) :: g_j1_ap(g_pmax_), g_thf_ac(g_pmax_), g_thf_ap(g_pmax_), g_thf(g_pmax_), g_yhf(g_pmax_), g_shf_u11(g_pmax_), g_shfa(g_pmax_), g_swit(g_pmax_), g_shf_ac(g_pmax_), g_thf_ap_as(g_pmax_)
+                real(wp) :: g_shf_ap(g_pmax_), g_q2_ac(g_pmax_), g_q2_ap(g_pmax_), g_j2_ac(g_pmax_), g_j2_ap(g_pmax_), g_w(g_pmax_), g_leps_ac(g_pmax_), g_leps_ap(g_pmax_), g_cfu22(ldg_cfu22)
+                integer  :: g_ehfid
+            end subroutine lepscfu22
+        end interface
         optional :: r, e, de, nt
         real(wp) :: abs1, ac(4), acut2(4), acut2n(4), adip2(4), adip2n(4), ads1, af1, af2, al20, al20a, al20i(4), &
             & al20i1(4), al2a(4), aly(4), amf, amh, amna, amu, anorm, ars1, asmall, bc(0:5), c2a(4), c2b(4), c2c(4), cevau, &
@@ -1457,11 +1552,8 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cfu11 )
     !     each triplet is weighted by a-f, which was optimezed with a GA
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp) :: a, b, c, d, e, f
-    real(wp) :: dehf, j1_ap, rehf, shf_ac, yhf, j1_ac, snah, chi, tnah, q1_ap, q1_ac, j2_ap, j2_ac, w, leps_ac, &
-        & leps_ap, q2_ap, c7, c6, shf_ap, q2_ac, thf, r2, r1, r3, snaf, ronaf, j3_ac, q3_ap, j3_ap, denah, renah, q3_ac, t2, &
-        & t1, t3, tnaf, t4, y, thf_ap, thf_ac, tnaf_ap, tnaf_ac, tnah_ap, tnah_ac, cfu11, de, re, c5, beta, c1, c2, c3, c4, &
-        & r(1,3)
+    real(wp)           :: a, b, c, d, e, f
+    real(wp)           :: dehf, j1_ap, rehf, shf_ac, yhf, j1_ac, snah, chi, q1_ap, q1_ac, j2_ap, j2_ac, w, leps_ac, leps_ap, q2_ap, c7, c6, shf_ap, q2_ac, r2, r1, r3, snaf, ronaf, j3_ac, q3_ap, j3_ap, denah, renah, q3_ac, t2, t1, t3, t4, y, thf_ap, thf_ac, tnaf_ap, tnaf_ac, tnah_ap, tnah_ac, cfu11, c5, beta, c1, c2, c3, c4, r(1,3)
     integer            :: ia, ib, ic
     integer, parameter :: g_pmax_ = 3
     integer            :: g_i_, g_p_, ldg_r, ldg_cfu11
@@ -1476,7 +1568,6 @@ subroutine lepscfu11( g_p_, r, g_r, ldg_r, cfu11, g_cfu11, ldg_cfu11 )
         & )
     real(wp) :: g_tnah_ap(g_pmax_), g_q1_ac(g_pmax_), g_q1_ap(g_pmax_), g_j1_ac(g_pmax_), g_j1_ap(g_pmax_), g_yhf(g_pmax_), g_shf_ac(g_pmax_), g_shf_ap(g_pmax_), g_thf_ac(g_pmax_), g_thf_ap(g_pmax_)
     real(wp) :: g_q2_ac(g_pmax_), g_q2_ap(g_pmax_), g_j2_ac(g_pmax_), g_j2_ap(g_pmax_), g_w(g_pmax_), g_leps_ac(g_pmax_), g_leps_ap(g_pmax_), g_cfu11(ldg_cfu11)
-    integer  :: g_ehfid
     do ia = 1, 3
         do ib = 1, 1
             do ic = 1, 3
@@ -1848,14 +1939,9 @@ end subroutine lepscfu11
 subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cfu22 )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp) :: dehf, j1_ap, rehf, shf_ac, yhf, j1_ac, snah, chi, tnah, q1_ap, q1_ac, j2_ap, j2_ac, w, leps_ac, &
-        & leps_ap, q2_ap, c7, c6, shf_ap, q2_ac, thf, r2, r1, r3, snaf, ronaf, a, b, c, d, e, f, j3_ac, q3_ap, j3_ap, denah, &
-        & renah, q3_ac, t2, t1, t3, tnaf, t4, y, thf_ap, thf_ac, tnaf_ap, tnaf_ac, tnah_ap, tnah_ac, r(1,3)
-    real(wp) :: shf_u11, nap, t3nah, t4nah, r0, swit, shfa, alph0, ynaf, snaf_ap, denaf, renaf, t1nah, t2nah, c2naf, snaf_ac
-    real(wp) :: c1nf, c2nf, c3nf, c4nf, c5nf, c6nf, c7nf, hlp1, &
-        & hlp2, hlp22, thf_ap_as, t1hf, dt1hf, t2hf, dt2hf, t, b1, b2, e1, &
-        & e2, hlp, a3, b3, cc3, d3, e3, f3, cfu22, c5, c4, c3, c2, c1, cc1, &
-        & cc2, f1, f2, beta
+    real(wp)           :: dehf, j1_ap, rehf, shf_ac, yhf, j1_ac, snah, q1_ap, q1_ac, j2_ap, j2_ac, w, leps_ac, leps_ap, q2_ap, c7, c6, shf_ap, q2_ac, thf, r2, r1, r3, j3_ac, q3_ap, j3_ap, q3_ac, thf_ap, thf_ac, tnaf_ap, tnaf_ac, tnah_ap, tnah_ac, r(1,3)
+    real(wp)           :: shf_u11, nap, t3nah, t4nah, r0, swit, shfa, alph0, ynaf, snaf_ap, denaf, renaf, t1nah, t2nah, snaf_ac
+    real(wp)           :: c1nf, c2nf, c3nf, c4nf, c5nf, c6nf, c7nf, hlp1, hlp2, hlp22, thf_ap_as, t1hf, dt1hf, t2hf, dt2hf, b1, b2, e1, e2, hlp, cfu22, c5, c4, c3, c2, c1, cc1, cc2, f1, f2, beta
     integer            :: ia, ib, ic
     integer, parameter :: g_pmax_ = 3
     integer            :: g_i_, g_p_, ldg_r, ldg_cfu22
@@ -1868,7 +1954,6 @@ subroutine lepscfu22( g_p_, r, g_r, ldg_r, cfu22, g_cfu22, ldg_cfu22 )
     real(wp) :: g_q3_ac(g_pmax_), g_q3_ap(g_pmax_), g_j3_ac(g_pmax_), g_j3_ap(g_pmax_), g_d2_w(g_pmax_), g_tnah_ac(g_pmax_), g_tnah_ap(g_pmax_), g_q1_ac(g_pmax_), g_q1_ap(g_pmax_), g_j1_ac(g_pmax_)
     real(wp) :: g_j1_ap(g_pmax_), g_thf_ac(g_pmax_), g_thf_ap(g_pmax_), g_thf(g_pmax_), g_yhf(g_pmax_), g_shf_u11(g_pmax_), g_shfa(g_pmax_), g_swit(g_pmax_), g_shf_ac(g_pmax_), g_thf_ap_as(g_pmax_)
     real(wp) :: g_shf_ap(g_pmax_), g_q2_ac(g_pmax_), g_q2_ap(g_pmax_), g_j2_ac(g_pmax_), g_j2_ap(g_pmax_), g_w(g_pmax_), g_leps_ac(g_pmax_), g_leps_ap(g_pmax_), g_cfu22(ldg_cfu22)
-    integer  :: g_ehfid
     do ia = 1, 3
         do ib = 1, 1
             do ic = 1, 3

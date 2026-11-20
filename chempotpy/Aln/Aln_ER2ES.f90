@@ -33,7 +33,7 @@ module chempotpy_aln_er2es_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: coordinates_to_bohr, &
             energy_to_electronvolt
         use chempotpy_kinds, only: wp
@@ -67,9 +67,7 @@ module chempotpy_aln_er2es_pes
     subroutine pot( x, y, z, v, natom, maxatom )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, bu2b, c(10), co, cob, de, deb, dx, dy, dz, ee, &
-            & eeb, fu2(maxatom, maxatom), poly, polyb, r(maxatom, maxatom), re, reb, rho, rhob, rij, ril, rjl, rr, s, term, v, &
-            & x(maxatom), xk1, xk2, xk3, y(maxatom), z(maxatom)
+        real(wp)            :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, bu2b, co, cob, de, deb, dx, dy, dz, ee, eeb, fu2(maxatom,maxatom), poly, polyb, r(maxatom,maxatom), re, reb, rho, rhob, rij, ril, rjl, rr, s, term, v, x(maxatom), xk1, xk2, xk3, y(maxatom), z(maxatom)
         integer             :: i, j, l, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp
@@ -92,16 +90,16 @@ module chempotpy_aln_er2es_pes
         bu2b = 6.5e0_wp/autoang
         au23 = 0.665852467024914546e-01
         do i=1, natom
-            r(i, i)   = 0.e0_wp
-            fu2(i, i) = 0.e0_wp
+            r(i,i)   = 0.e0_wp
+            fu2(i,i) = 0.e0_wp
             do j=i+1, natom
-                dx        = x(i)-x(j)
-                dy        = y(i)-y(j)
-                dz        = z(i)-z(j)
-                r(i, j)   = sqrt(dx*dx+dy*dy+dz*dz)
-                r(j, i)   = r(i, j)
-                fu2(j, i) = 0.e0_wp
-                fu2(i, j) = 0.e0_wp
+                dx       = x(i)-x(j)
+                dy       = y(i)-y(j)
+                dz       = z(i)-z(j)
+                r(i,j)   = sqrt(dx*dx+dy*dy+dz*dz)
+                r(j,i)   = r(i,j)
+                fu2(j,i) = 0.e0_wp
+                fu2(i,j) = 0.e0_wp
             enddo
         enddo
         ! do BA term, needs xk1,xk2,xk3
@@ -110,9 +108,9 @@ module chempotpy_aln_er2es_pes
                 s = 0.e0_wp
                 do l=1, natom! gamma loop
                     if( l .eq. j.or.l .eq. i ) cycle! gamma != alpha or beta
-                    rjl = r(l, j)
-                    rij = r(i, j)
-                    ril = r(l, i)
+                    rjl = r(l,j)
+                    rij = r(i,j)
+                    ril = r(l,i)
                     if( rjl .ge. bu2 ) cycle! cutoff for Rbeta,delta
                     if( rij .ge. bu2 ) cycle! cutoff for Rbeta,delta
                     if( ril .ge. bu2 ) cycle! cutoff for Rbeta,delta
@@ -124,10 +122,10 @@ module chempotpy_aln_er2es_pes
                 enddo
                 !        e2=dexp(-2d0*s)                       ! equivalent to 1-dtanh(s)
                 !        fu2(i,j)=2d0*e2/(1d0+e2)              ! equivalent to 1-dtanh(s)
-                fu2(i, j) = tanh(s)
-                fu2(j, i) = fu2(i, j)
+                fu2(i,j) = tanh(s)
+                fu2(j,i) = fu2(i,j)
             enddo
-            fu2(i, i) = 1.e0_wp                           ! shouldn't get used anywh
+            fu2(i,i) = 1.e0_wp                           ! shouldn't get used anywh
         enddo
         ! potential, includes cutoff
         v = 0.e0_wp
@@ -147,7 +145,7 @@ module chempotpy_aln_er2es_pes
                 cob   = 0.e0_wp
                 if( rr .le. bu2 ) co=exp(au2*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2)))
                 if( rr .le. bu2b ) cob=exp(au2b*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2b)))
-                v = v-de*ee*poly*co +deb*eeb*polyb*cob*fu2(i, j)
+                v = v-de*ee*poly*co +deb*eeb*polyb*cob*fu2(i,j)
             enddo
         enddo
     end subroutine pot

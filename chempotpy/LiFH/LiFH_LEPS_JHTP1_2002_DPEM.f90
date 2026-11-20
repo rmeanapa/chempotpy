@@ -38,12 +38,21 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( r, e, nt, nsurf )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3), e(nt)
+            integer  :: i, nt, nsurf
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the LiFH_LEPS_JHTP1_2002 diabatic potential matrix for LiFH.
     subroutine evaluate( x, igrad, u, ug, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
@@ -56,9 +65,8 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pes
         real(wp), intent(in)  :: x(natoms,3)
         real(wp), intent(out) :: u(nstates,nstates)
         real(wp), intent(out) :: ug(nstates,nstates,natoms,3)
-        real(wp)              :: nt, r(1,3), v(1)
+        real(wp)              :: nt, r(1,3)
         real(wp)              :: u11(1), u12(1), u22(1)
-        integer               :: i, j, k, l
         !initialize
         u  = 0.e0_wp; ug = 0.e0_wp
         nt = 1
@@ -109,8 +117,36 @@ end subroutine evdrdx
 subroutine pot( r, e, nt, nsurf )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate pot11.
+        subroutine pot11( r, e, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3)
+            real(wp) :: e(nt)
+            integer  :: nt
+        end subroutine pot11
+
+        !> @brief Evaluate pot12.
+        subroutine pot12( r, e, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3)
+            real(wp) :: e(nt)
+            integer  :: nt
+        end subroutine pot12
+
+        !> @brief Evaluate pot22.
+        subroutine pot22( r, e, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3)
+            real(wp) :: e(nt)
+            integer  :: nt
+        end subroutine pot22
+    end interface
     real(wp) :: r(nt,3), e(nt)
-    integer  :: i, nt, nsurf
+    integer  :: nt, nsurf
     if( nsurf .eq. 1 ) call pot11(r, e, nt)
     if( nsurf .eq. 2 ) call pot12(r, e, nt)
     if( nsurf .eq. 3 ) call pot22(r, e, nt)
@@ -510,7 +546,7 @@ module chempotpy_lifh_leps_jhtp1_2002_dpem_pot22_legacy_state_a97514e1
         implicit none
         optional :: r, e, nt
         ! MISC VARIABLES
-        integer  :: i, j, k, nt
+        integer  :: i, j, nt
         real(wp) :: r(:,:), e(:), r1s, r2s, r3s, cs, cevau, uli2p
         real(wp) :: c2a, c2b, c2c, w, cplg2
         ! INTERACTION REGION VARIABLES

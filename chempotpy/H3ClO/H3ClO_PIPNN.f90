@@ -9,7 +9,7 @@ module chempotpy_h3clo_pipnn_pes
 
     !> @brief Evaluate the H3ClO_PIPNN potential energy surface for H3ClO.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -21,8 +21,8 @@ module chempotpy_h3clo_pipnn_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: v
-        real(wp)              :: tx(3,natoms), tg(3,natoms)
-        integer               :: iatom, idir, j, istate
+        real(wp)              :: tx(3,natoms)
+        integer               :: iatom, idir, istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
@@ -63,12 +63,10 @@ module chempotpy_h3clo_pipnn_pes
         use chempotpy_h3clo_pipnn_parameters, only: natom, nbond, network_count, ninput, nmorse
         use chempotpy_kinds,                  only: wp
         implicit none
-        integer  :: i, j, ndriv
-        real(wp) :: v, vpes(network_count), c(0:ninput), dvdx(1:natom*3,network_count)
+        integer  :: i, j
+        real(wp) :: v, vpes(network_count)
         real(wp) :: xcart(1:3,1:natom), m(0:nmorse-1), xmorse(1:nbond), r(1:nbond)
-        real(wp) :: dvdr(1:nbond), x(1:natom*3), drdx(1:nbond,1:natom*3)
-        real(wp) :: txinput(1:ninput), dvdg(1:ninput,network_count), p(0:ninput)
-        real(wp) :: dpdr(1:nbond,0:ninput), dvdxa(1:natom*3)
+        real(wp) :: txinput(1:ninput), p(0:ninput)
         call all_pair_distances(transpose(xcart), r)
         xmorse = exp(-r)
         call bemsav(xmorse, m, p)

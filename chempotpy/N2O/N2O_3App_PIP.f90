@@ -148,12 +148,21 @@ module chempotpy_n2o_3app_pip_pes
 
     !> @brief Evaluate the N2O_3App_PIP potential energy surface for N2O.
     subroutine evaluate( x, igrad, potential, gradient, dvec, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: electronvolt_to_kilocalorie_per_mole
-        use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-            & econv, eref, gconv, p, r, re, rm, rms, totdiss
-        use chempotpy_kinds, only: wp
+        use n2o_3app_pip_par, only: eref
+        use chempotpy_kinds,  only: wp
         implicit none
+        interface
+            !> @brief Evaluate n2o2pes.
+            subroutine n2o2pes( x, v, dvdx, igrad )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer  :: i, igrad, j, nob, k
+                real(wp) :: v
+                real(wp) :: dvdx(12), x(12)
+            end subroutine n2o2pes
+        end interface
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
@@ -245,8 +254,6 @@ end subroutine pes
 ! output gradient:              dVdX in kcal/(mol*Ang)
 !> @brief Evaluate n2o2pes.
 subroutine n2o2pes( x, v, dvdx, igrad )
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
     ! Subroutine to calculate the potential energy V and gradient dVdX
     ! for given Cartesian coordinates X(12)
     ! R:            Interatomic bond distances (6)
@@ -260,7 +267,31 @@ subroutine n2o2pes( x, v, dvdx, igrad )
     ! dRdX:         The derivative of R w.r.t. X, dim(6*12)
     use chempotpy_kinds, only: wp
     implicit none
-    integer  :: i, igrad, j, nob, k
+    interface
+        !> @brief Evaluate coord_convt.
+        subroutine coord_convt( x )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in) :: x(12)
+        end subroutine coord_convt
+
+        !> @brief Evaluate evdvdx.
+        subroutine evdvdx( x, dvdx )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: x(12)
+            real(wp), intent(out) :: dvdx(12)
+        end subroutine evdvdx
+
+        !> @brief Evaluate evv.
+        subroutine evv( v )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j, k
+            real(wp) :: dist, dv2dr, v, v21, v22, v23, v24, v25, v26
+        end subroutine evv
+    end interface
+    integer  :: igrad
     real(wp) :: v
     real(wp) :: dvdx(12), x(12)
     ! Obtain Cartesian coordinates from input file
@@ -279,8 +310,7 @@ end subroutine n2o2pes
 !> @brief Evaluate coord_convt.
 subroutine coord_convt( x )
     use chempotpy_geometry, only: all_pair_distances
-    use n2o_3app_pip_par,   only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par,   only: r
     !  This subroutine calculates the six interatomic distances
     !  from the XYZ coordinates
     !  r1 = r(O1N2)    r2 = r(O1N3)
@@ -294,8 +324,7 @@ end subroutine coord_convt
 
 !> @brief Evaluate EvV.
 subroutine evv( v )
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: b, c, r, totdiss
     ! This subroutine evaluates V for given R
     ! V(R) = C*P
     ! C:            Coefficients, stored in 'dim.inc'
@@ -312,7 +341,53 @@ subroutine evv( v )
     ! B(1:2153):    Array to store basis functions
     use chempotpy_kinds, only: wp
     implicit none
-    integer  :: i, j, k
+    interface
+        !> @brief Evaluate ev2gm2.
+        subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: igrad, imol, pairw
+            real(wp), intent(in)  :: r
+            real(wp), intent(out) :: v2, dv2dr
+            real(wp)              :: cs(0:10)
+            real(wp)              :: red, de, rmin, pi, rx, vx
+            real(wp)              :: fy, dfdr, u, y, dydr, dfdy
+        end subroutine ev2gm2
+
+        !> @brief Evaluate evbas.
+        subroutine evbas
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i
+            real(wp) :: b1(2254)
+        end subroutine evbas
+
+        !> @brief Evaluate evbas2.
+        subroutine evbas2
+            use chempotpy_kinds, only: wp
+            implicit none
+        end subroutine evbas2
+
+        !> @brief Evaluate evmeg.
+        subroutine evmeg
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: i
+        end subroutine evmeg
+
+        !> @brief Evaluate evmono.
+        subroutine evmono
+            use chempotpy_kinds, only: wp
+            implicit none
+        end subroutine evmono
+
+        !> @brief Evaluate evpoly.
+        subroutine evpoly
+            use chempotpy_kinds, only: wp
+            implicit none
+        end subroutine evpoly
+    end interface
+    integer  :: i
     real(wp) :: dist, dv2dr, v, v21, v22, v23, v24, v25, v26
     ! Calculate the six MEG terms for each point
     call evmeg
@@ -349,8 +424,7 @@ end subroutine evv
 !> @brief Evaluate EvdVdX.
 subroutine evdvdx( x, dvdx )
     use chempotpy_geometry, only: transform_internal_gradient_to_cartesian
-    use n2o_3app_pip_par,   only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par,   only: drdx, dvdr
     ! This subroutine evaluates dRdX for given R and X
     ! R:            R(6), 6 bond lengths
     ! X:            X(12), 12 Cartesian coordinates
@@ -362,6 +436,25 @@ subroutine evdvdx( x, dvdx )
     !               Cartesian coordinates
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate evdrdx.
+        subroutine evdrdx( x )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, parameter   :: first_atoms(6)  = [1, 1, 1, 2, 2, 3]
+            integer, parameter   :: second_atoms(6) = [2, 3, 4, 3, 4, 4]
+            real(wp), intent(in) :: x(12)
+        end subroutine evdrdx
+
+        !> @brief Evaluate evdvdr.
+        subroutine evdvdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j
+            real(wp) :: dist, v, v21, v22, v23, v24, v25, v26
+            real(wp) :: dv2dr1, dv2dr2, dv2dr3, dv2dr4, dv2dr5, dv2dr6
+        end subroutine evdvdr
+    end interface
     real(wp), intent(in)  :: x(12)
     real(wp), intent(out) :: dvdx(12)
     call evdvdr
@@ -371,8 +464,7 @@ end subroutine evdvdx
 
 !> @brief Evaluate EvMEG.
 subroutine evmeg
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: a, ab, r, re, rms
     !  This subroutine calculates the MEG function
     !  MEG term rms = exp(-(r-re)/a-(r-re)^2/ab)
     !  re:   equilibrium bond length (Angstrom)
@@ -388,8 +480,7 @@ end subroutine evmeg
 
 !> @brief Evaluate EvMono.
 subroutine evmono
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: rm, rms
     !  This subroutine takes six MEG variables(X) and calculates the
     !  monomials(RM) and that do not have usable decomposition.
     !  For degree 10, the number of monomials is nom.
@@ -417,12 +508,10 @@ end subroutine evmono
 
 !> @brief Evaluate EvPoly.
 subroutine evpoly
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: p, rm
     !  This subroutine takes monomials(RM) and calculates the
     !  permutationally invariant polynomials(p)
     !  For degree 10, the number of polynomials is nob.
-    use chempotpy_kinds, only: wp
     implicit none
     p(0)    = rm(0)
     p(1)    = rm(1)
@@ -2682,8 +2771,7 @@ end subroutine evpoly
 
 !> @brief Evaluate evbas.
 subroutine evbas
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: b2, p
     !  This subroutine eliminates the 2-body terms in the permutationally
     !  invariant formulation
     use chempotpy_kinds, only: wp
@@ -2844,10 +2932,8 @@ end subroutine evbas
 
 !> @brief Evaluate evbas2.
 subroutine evbas2
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: b, b2
     !  This subroutine eliminates unused four-body terms
-    use chempotpy_kinds, only: wp
     implicit none
     b(  1) = b2(   1)
     b(  2) = b2(   2)
@@ -3134,7 +3220,7 @@ subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
     real(wp), intent(in)  :: r
     real(wp), intent(out) :: v2, dv2dr
     real(wp)              :: cs(0:10)
-    real(wp)              :: red, de, rmin, pi, rx, vx
+    real(wp)              :: red, de, vx
     real(wp)              :: fy, dfdr, u, y, dydr, dfdy
     if( pairw .eq. 1 )then
         ! Call MEG function to calculate the pairwise potentials
@@ -3226,8 +3312,7 @@ end subroutine ev2gm2
 
 !> @brief Evaluate EvdVdR.
 subroutine evdvdr
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: c, dbdr, dvdr, r
     ! This subroutine evaluates dVdR for given R
     ! dVdR = dV2dR + C*dBdR
     ! C:            Coefficients, stored in 'dim.inc'
@@ -3244,8 +3329,57 @@ subroutine evdvdr
     ! P(nob):       Array to store polynomials
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate ev2gm2.
+        subroutine ev2gm2( r, v2, dv2dr, pairw, imol, igrad )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: igrad, imol, pairw
+            real(wp), intent(in)  :: r
+            real(wp), intent(out) :: v2, dv2dr
+            real(wp)              :: cs(0:10)
+            real(wp)              :: red, de, rmin, pi, rx, vx
+            real(wp)              :: fy, dfdr, u, y, dydr, dfdy
+        end subroutine ev2gm2
+
+        !> @brief Evaluate evdbdr.
+        subroutine evdbdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: i, j
+            real(wp) :: db1dr(6,2254)
+        end subroutine evdbdr
+
+        !> @brief Evaluate evdbdr2.
+        subroutine evdbdr2
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: j
+        end subroutine evdbdr2
+
+        !> @brief Evaluate evdmdr.
+        subroutine evdmdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: i
+        end subroutine evdmdr
+
+        !> @brief Evaluate evdmsdr.
+        subroutine evdmsdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: i, j
+        end subroutine evdmsdr
+
+        !> @brief Evaluate evdpdr.
+        subroutine evdpdr
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer :: i
+        end subroutine evdpdr
+    end interface
     integer  :: i, j
-    real(wp) :: dist, v, v21, v22, v23, v24, v25, v26
+    real(wp) :: dist, v21, v22, v23, v24, v25, v26
     real(wp) :: dv2dr1, dv2dr2, dv2dr3, dv2dr4, dv2dr5, dv2dr6
     ! Initialize dVdR(6)
     do i=1, 6
@@ -3291,8 +3425,7 @@ end subroutine evdvdr
 !> @brief Evaluate EvdRdX.
 subroutine evdrdx( x )
     use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use n2o_3app_pip_par,   only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par,   only: drdx, r
     ! This subroutine evaluates dRdX for given R and X
     ! R:            R(6), 6 bond lengths
     ! X:            X(12), 12 Cartesian coordinates
@@ -3311,8 +3444,7 @@ end subroutine evdrdx
 
 !> @brief Evaluate EvdMsdR.
 subroutine evdmsdr
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: a, ab, dmsdr, r, re
     ! This subroutine evaluates the derivatives of MEG term X
     ! w.r.t. interatomic distances R(6)
     ! dmsdR:        Local variables, dirm(6,6)
@@ -3339,8 +3471,7 @@ end subroutine evdmsdr
 
 !> @brief Evaluate EvdMdR.
 subroutine evdmdr
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: dmdr, dmsdr, rm
     !  This subroutine takes M(nom) and dMSdR(6,6) and calculates the
     !  dMdR(6,nom) that do not have usable decomposition.
     !  For degree 10, the number of monomials is nom.
@@ -3371,12 +3502,10 @@ end subroutine evdmdr
 
 !> @brief Evaluate EvdPdr.
 subroutine evdpdr
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: dmdr, dpdr, p
     !  This subroutine takes monomials(m) and calculates the
     !  permutationally invariant polynomials(p)
     !  For degree 10, the number of polynomials is nob.
-    use chempotpy_kinds, only: wp
     implicit none
     integer :: i
     do i=1, 6
@@ -5640,14 +5769,14 @@ end subroutine evdpdr
 
 !> @brief Evaluate evdbdr.
 subroutine evdbdr
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: db2dr, dpdr
     !  This subroutine eliminates the 2-body terms in the permutationally
     !  invariant formulation.
     use chempotpy_kinds, only: wp
     implicit none
-    integer  :: i, j
-    real(wp) :: db1dr(6,2254)
+    integer               :: i, j
+    real(wp), allocatable :: db1dr(:,:)
+    allocate(db1dr(6,2254))
     ! Pass P(0:2253) to BM1(1:2254)
     do j=1, 6
         do i=1, 2254
@@ -5806,10 +5935,8 @@ end subroutine evdbdr
 
 !> @brief Evaluate evdbdr2.
 subroutine evdbdr2
-    use n2o_3app_pip_par, only: a, ab, b, b2, c, cconv, db2dr, dbdr, dmdr, dmsdr, dpdr, drdx, dvdr, &
-        & econv, eref, gconv, p, r, re, rm, rms, totdiss
+    use n2o_3app_pip_par, only: db2dr, dbdr
     !  This subroutine eliminates the unused four-body terms
-    use chempotpy_kinds, only: wp
     implicit none
     integer :: j
     do j=1, 6

@@ -72,7 +72,7 @@ module chempotpy_ch4ocl_vbmm_2023_pes
         integer               :: infocm_mder
         integer               :: infocm_msurf
         integer               :: infocm_natoms
-        character             :: infocm_ref(5)
+        character(len=75)     :: infocm_ref(5)
         real(wp)              :: ipforce1_f1(6)
         real(wp)              :: ipforce1_fk0(6,6)
         integer               :: potcm2_nc1h(3)
@@ -496,12 +496,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
         subroutine pot
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: coord(21), dx(21), en, v, vip, vop, vstr, vtor
-            integer            :: i, n
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: en, v, vip, vop, vstr, vtor
+            integer  :: i, n
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -549,7 +545,7 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             if( usricm_nder .ne. 0 )then
                 !  Initialize derivatives
                 do n=1, 21
-                    pt1cm_degsdr(i) = qpdot_pdot(i)*0.0201723e0_wp
+                    pt1cm_degsdr(n) = qpdot_pdot(n)*0.0201723e0_wp
                 enddo
                 call rtocart
                 call dedcou
@@ -561,12 +557,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !  calculates relative coordinates and bond lengths
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: argmax, argp5, p5, rav4, t5tmp
-            integer            :: i, ind
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: argmax, argp5, p5, rav4, t5tmp
+            integer  :: i, ind
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -637,12 +629,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
         subroutine torsion( vtor )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: a, arg1, arg2, dihed, t1(3), vtor
-            integer            :: i
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: a, arg1, arg2, dihed, t1(3), vtor
+            integer  :: i
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -685,11 +673,7 @@ module chempotpy_ch4ocl_vbmm_2023_pes
         subroutine dihedro( i, j, k, l, dihed )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: dihed
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: dihed
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -700,9 +684,9 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             ! Subroutine Switch
             integer  :: i, j, k, l
             integer  :: m
-            real(wp) :: rij(3), rjk(3), rkj(3), rkl(3)
-            real(wp) :: zijjk(3), zijkj(3), zkjkl(3), zjkkl(3)
-            real(wp) :: tmpsign(3), tmp, arg1, arg2
+            real(wp) :: rij(3), rjk(3), rkl(3)
+            real(wp) :: zijjk(3), zjkkl(3)
+            real(wp) :: arg1, arg2
             !        pi=4.0d0*atan(1.0d0)
             do m = 1, 3
                 rij(m) = qpdot_q((i-1)*3+m)-qpdot_q((j-1)*3+m)
@@ -738,12 +722,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !  subroutine calculates reference angles for the "in-plane" potential
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: halfpi, tau, tauco, tauoc, twopi
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: halfpi, tau, tauco, tauoc, twopi
+            integer  :: i, j
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -798,11 +778,7 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             implicit none
             real(wp) :: ach1, ach2, arga1, arga2, dt, e1, e3, expterm, rav1, rav2, vcc, vj(4), vjb1h(3), vjb2h(1), vjc1b, &
                 & vjc1h(3), vjc2b, vjc2h(1), vq(4), vqb1h(3), vqb2h(1), vqc1b, vqc1h(3), vqc2b, vqc2h(1), vstr
-            integer            :: i
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            integer :: i
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -894,12 +870,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !  subroutine calculates symmetrized vop potential and derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: a(3), argd(4), axb(3), b(3), c(4,3), sum2, sum4, sumd2(4), sumd4(4), vop
-            integer            :: i, in(3), j, k, l
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: sum2, sum4, sumd2(4), sumd4(4), vop
+            integer  :: i, j, k, l
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -908,7 +880,6 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             ! Subroutine vop
             ! Subroutine ipforce
             ! Subroutine Switch
-            real(wp) :: norma
             vop = 0.0e0_wp
             !  calculate force constants
             call opforce
@@ -935,13 +906,9 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !   also calculates the derivatives wrt delta
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: a(3), argd(8), atemp2(3), axb(3), b(3), c(8,3), cdot(8,3,3), daxb(8,3,3), delta(8), sum2, sum4
-            integer            :: i, ii, in(3), ind, j, k, l
-            real(wp)           :: norma
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: a(3), argd(8), axb(3), b(3), c(8,3), delta(8), sum2, sum4
+            integer  :: i, ii, in(3), ind, j, k, l
+            real(wp) :: norma
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -1038,12 +1005,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !  and their derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: switch(4)
-            integer            :: i
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: switch(4)
+            integer  :: i
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -1069,12 +1032,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !  subroutine calculates symmetrised in plane bend term
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: costh(6,6), dth(6,6), theta(6,6), vip
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: costh(6,6), dth(6,6), theta(6,6), vip
+            integer  :: i, j
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -1091,23 +1050,21 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !  calculate theta(i,j) and in plane bend potential
             ! c1
             do i=1, 3
-                do j=i+1, 4
-                    if( j .lt. 4.0 )then
-                        costh(i,j) = coord4_tc1h(i,1)*coord4_tc1h(j,1)+coord4_tc1h(i,2)*coord4_tc1h(j,2) + &
-                            & coord4_tc1h(i,3)*coord4_tc1h(j,3)
-                        costh(i,j) = costh(i,j)/coord5_rc1h(i)/coord5_rc1h(j)
-                        theta(i,j) = acos(costh(i,j))
-                        dth(i,j)   = theta(i,j)-refangles1_theta0(i,j)
-                        vip        = vip+0.5e0_wp*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
-                    else
-                        costh(i,j) = coord4_tc1h(i,1)*coord3_tcc(1)+coord4_tc1h(i,2)*coord3_tcc(2) +coord4_tc1h(i,3)* &
-                            & coord3_tcc(3)
-                        costh(i,j) = costh(i,j)/coord5_rc1h(i)/coord5_rcc
-                        theta(i,j) = acos(costh(i,j))
-                        dth(i,j)   = theta(i,j)-refangles1_theta0(i,j)
-                        vip        = vip+0.5e0_wp*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
-                    endif
+                do j=i+1, 3
+                    costh(i,j) = coord4_tc1h(i,1)*coord4_tc1h(j,1)+coord4_tc1h(i,2)*coord4_tc1h(j,2) + coord4_tc1h(i, &
+                        & 3)*coord4_tc1h(j,3)
+                    costh(i,j) = costh(i,j)/coord5_rc1h(i)/coord5_rc1h(j)
+                    theta(i,j) = acos(costh(i,j))
+                    dth(i,j)   = theta(i,j)-refangles1_theta0(i,j)
+                    vip        = vip+0.5e0_wp*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
                 enddo
+                j = 4
+                costh(i,j) = coord4_tc1h(i,1)*coord3_tcc(1)+coord4_tc1h(i,2)*coord3_tcc(2) +coord4_tc1h(i,3)* &
+                    & coord3_tcc(3)
+                costh(i,j) = costh(i,j)/coord5_rc1h(i)/coord5_rcc
+                theta(i,j) = acos(costh(i,j))
+                dth(i,j)   = theta(i,j)-refangles1_theta0(i,j)
+                vip        = vip+0.5e0_wp*ipforce1_fk0(i,j)*ipforce1_f1(i)*ipforce1_f1(j)*dth(i,j)**2
             enddo
             ! c2
             costh(5,6) = coord4_tc2h(1,1)*(-coord3_tcc(1))+coord4_tc2h(1,2)*(-coord3_tcc(2)) +coord4_tc2h(1,3)*(- &
@@ -1124,12 +1081,9 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !  all partial derivatives involving them
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: a1, a2, arga1, arga2, f0, f2, r0hh
-            integer            :: i
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp)            :: a1, a2, arga1, arga2, f0, f2
+            real(wp), parameter :: r0hh = 0.0e0_wp
+            integer             :: i
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -1185,12 +1139,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !  calculates switching functions: s3,sphi,stheta
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: argmax, args1, args2, args3, argsc1, argsc2, argsc3, argsphi, argsphic, argstheta, argsthetac
-            integer            :: i
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: argmax, args1, args2, args3, argsc1, argsc2, argsc3, argsphi, argsphic, argstheta, argsthetac
+            integer  :: i
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -1341,13 +1291,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             !   N3TM must be greater than or equal to N3TMMN.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: fact1, fact2
-            integer            :: i, icount, ind
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
-            integer, parameter :: n3tmmn = 27
+            real(wp) :: fact1, fact2
+            integer  :: i, icount, ind
             !  include file for CH3OH+H PES
             !  CONST
             ! Subroutine Coorden
@@ -1424,13 +1369,9 @@ module chempotpy_ch4ocl_vbmm_2023_pes
 
         !> @brief Evaluate POTINFO for the CH4OCl_VBMM_2023 potential.
         subroutine potinfo
-            use chempotpy_kinds, only: wp
             implicit none
             integer            :: i, j, k, kmax
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer, parameter :: isurf = 5
             do i =1, 5
             enddo
             kmax = 0
@@ -1477,25 +1418,13 @@ module chempotpy_ch4ocl_vbmm_2023_pes
         subroutine ancvrt
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: n3atom     = 75
-            integer, parameter  :: natom      = 25
-            integer, parameter  :: isurf      = 5
-            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
-            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
-            real(wp), parameter :: ce         = 1.602176462e-19_wp
-            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
-            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
-            real(wp), parameter :: cang       = 1.0e-10_wp
-            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
-            real(wp), parameter :: ckcal      = 4.184e10_wp
-            real(wp), parameter :: htomillh   = 1000.e0_wp
-            real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: htowave    = 219474.631e0_wp
-            real(wp), parameter :: htokj      = 2625.49962e0_wp
-            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer, parameter  :: natom    = 25
+            real(wp), parameter :: htomillh = 1000.e0_wp
+            real(wp), parameter :: htoev    = 27.2113834e0_wp
+            real(wp), parameter :: htokcal  = hartree_to_kilocalorie_per_mole
+            real(wp), parameter :: htowave  = 219474.631e0_wp
+            real(wp), parameter :: htokj    = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a   = .5291772083e0_wp
             integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
             character(len=3)    :: periodic_1(7,32)
             character(len=2)    :: name1(natom)
@@ -1754,27 +1683,15 @@ module chempotpy_ch4ocl_vbmm_2023_pes
         !> @brief Evaluate CARTOU for the CH4OCl_VBMM_2023 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(usricm_cart, usricm_nulbl, infocm_natoms, utilcm_cnvrtd, utilcm_ireorder == 1, infocm_cartnu)
         end subroutine cartou
 
         !> @brief Evaluate CARTTOR for the CH4OCl_VBMM_2023 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: coordinate_status
-            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
-            integer            :: i, ind, k, l
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
+            integer :: coordinate_status
             call cartesian_to_potlib_coordinates(infocm_cartnu, infocm_natoms, infocm_icartr, pt1cm_r, coordinate_status)
             if( coordinate_status /= 0 )then
                 if( present(status) ) call status%set(status_invalid_input, &
@@ -1785,14 +1702,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
 
         !> @brief Evaluate EUNITZERO for the CH4OCl_VBMM_2023 potential.
         subroutine eunitzero
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j
-            character(len=75)  :: ref(5)
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j
             usrocm_pengygs = pt1cm_engygs * utilcm_cnvrte - usricm_anuzero
             if( utilcm_ksdiag .ne. 0 )then
                 do i=utilcm_ksdiag, utilcm_kediag
@@ -1811,7 +1722,6 @@ module chempotpy_ch4ocl_vbmm_2023_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
@@ -1966,13 +1876,8 @@ module chempotpy_ch4ocl_vbmm_2023_pes
 
         !> @brief Evaluate DEDCOU for the CH4OCl_VBMM_2023 potential.
         subroutine dedcou
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j, k
             if( utilcm_ireorder .eq. 1 )then
                 do i = 1, infocm_natoms
                     usrocm_dgscart(i,1) = utilcm_dgscartnu(usricm_nulbl(i),1) * utilcm_cnvrtde

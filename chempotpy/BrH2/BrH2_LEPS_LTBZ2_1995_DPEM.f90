@@ -22,12 +22,23 @@ module chempotpy_brh2_leps_ltbz2_1995_dpem_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( r, e, de, nt, nsurf )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, parameter :: g_p_  = 3
+            integer, parameter :: ldg_e = 3
+            real(wp)           :: de(3,nt), e(nt), g_e(ldg_e,nt), r(nt,3)
+            integer            :: i, j, k, ldg_r, nsurf, nt
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the BrH2_LEPS_LTBZ2_1995 diabatic potential matrix for BrH2.
     subroutine evaluate( x, igrad, u, ug, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -44,15 +55,13 @@ module chempotpy_brh2_leps_ltbz2_1995_dpem_pes
         real(wp), intent(out) :: ug(nstates,nstates,natoms,3)
         real(wp)              :: d, g, p
         integer               :: iatom, idir, nder
-        real(wp)              :: nt, r(1,3), r2(3), v(1)
+        real(wp)              :: nt, r(1,3), r2(3)
         real(wp)              :: u11(1), u12(1), u22(1)
         real(wp)              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
         real(wp)              :: dudr(nstates,nstates,3)
         real(wp)              :: dudx(nstates,nstates,9)
-        real(wp)              :: t(nstates,nstates)
-        real(wp)              :: tmpmat(nstates,nstates)
         real(wp)              :: tx(9), drdx(3,9)
-        integer               :: i, j, k, l
+        integer               :: j
         !initialize
         u  = 0.e0_wp; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         nt = 1
@@ -81,6 +90,18 @@ module chempotpy_brh2_leps_ltbz2_1995_dpem_pes
             enddo
         enddo
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_brh2_leps_ltbz2_1995_dpem_pes
 
 !> @brief Expose BrH2_LEPS_LTBZ2_1995 through the Python-facing DPEM entry point.
@@ -97,26 +118,47 @@ subroutine dpem( x, igrad, u, ug )
     call evaluate(x, igrad, u, ug)
 end subroutine dpem
 
-!> @brief Evaluate EvdRdX for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
-
 !> @brief Evaluate pot for the BrH2_LEPS_LTBZ2_1995_DPEM potential.
 subroutine pot( r, e, de, nt, nsurf )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate g_pot11.
+        subroutine g_pot11( g_p_, rr, e, g_e, ldg_e, n )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: g_p_
+            real(wp) :: rr(n,3)
+            real(wp) :: e(n)
+            real(wp) :: g_e(ldg_e,*)
+            integer  :: ldg_e
+            integer  :: n
+        end subroutine g_pot11
+
+        !> @brief Evaluate pot12.
+        subroutine pot12( rr, e, de, n )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: rr(n,3)
+            real(wp) :: e(*)
+            real(wp) :: de(3,n)
+            integer  :: n
+        end subroutine pot12
+
+        !> @brief Evaluate pot22.
+        subroutine pot22( rr, e, der, n )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: rr(n,3)
+            real(wp) :: e(*)
+            real(wp) :: der(3,n)
+            integer  :: n
+        end subroutine pot22
+    end interface
     integer, parameter :: g_p_  = 3
     integer, parameter :: ldg_e = 3
-    real(wp)           :: de(3,nt), e(nt), g_e(ldg_e,nt), r(nt,3)
-    integer            :: i, j, k, ldg_r, nsurf, nt
+    real(wp)           :: de(3,nt), e(nt), r(nt,3)
+    integer            :: nsurf, nt
     if( nsurf .eq. 1 )then
         call g_pot11(g_p_, r, e, de, ldg_e, nt)
     elseif( nsurf .eq. 2 )then
@@ -152,7 +194,7 @@ module chempotpy_brh2_leps_ltbz2_1995_dpem_g_pot11_entry_sta_432f3192
         real(wp), parameter :: cangau  = 0.52917706e0_wp
         real(wp), parameter :: charkc  = hartree_to_kilocalorie_per_mole
         integer, parameter  :: g_pmax_ = 3
-        integer             :: g_i_, g_p_, ldg_rr, ldg_e
+        integer             :: g_i_, g_p_, ldg_e
         real(wp)            :: d3_p, d2_p, d2_v, d10_v, d2_b, d3_v, d4_v, &
             & d5_v, d6_v, d7_v, d3_b, d4_b, d5_b, d6_b, d7_b, d1_p, d8_v, &
             & d8_b, d1_w, d10_b, g_r(g_pmax_, 3), g_r1p2(g_pmax_), &
@@ -171,7 +213,6 @@ module chempotpy_brh2_leps_ltbz2_1995_dpem_g_pot11_entry_sta_432f3192
             & g_dz(g_pmax_, 3, 3), g_beta(g_pmax_, 3), g_v3cp1(g_pmax_), &
             & g_v3cp2(g_pmax_), g_v3cp3(g_pmax_), g_v3cp4(g_pmax_), &
             & g_v3cp5(g_pmax_), g_v3cp6(g_pmax_), g_dv3c(g_pmax_, 3)
-        integer :: g_myrank, g_nprocs
         a1       = 0.e0_wp
         a2       = 0.e0_wp
         a3       = 0.e0_wp
@@ -704,7 +745,6 @@ module chempotpy_brh2_leps_ltbz2_1995_dpem_pot22_legacy_state_432f3192
         real(wp)            :: r(3)
         real(wp), parameter :: cangau = 0.52917706e0_wp
         real(wp), parameter :: charkc = hartree_to_kilocalorie_per_mole
-        integer             :: g_myrank, g_nprocs
         b      = 0.e0_wp
         beta   = 0.e0_wp
         betaa  = 0.e0_wp

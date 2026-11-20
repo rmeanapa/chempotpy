@@ -40,12 +40,24 @@ module chempotpy_nah2_leps_6_2000_dpem_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( r, e, de, nt, nsurf )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, parameter :: g_p_  = 3
+            integer, parameter :: ldg_r = 3
+            integer, parameter :: ldg_e = 3
+            real(wp)           :: de(3,nt), e(nt), g_e(ldg_e,nt), g_r(ldg_r,nt,3), r(nt,3), v11, v12, v22
+            integer            :: i, j, k, nsurf, nt
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the NaH2_LEPS_6_2000 diabatic potential matrix for NaH2.
     subroutine evaluate( x, igrad, u, ug, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -62,16 +74,15 @@ module chempotpy_nah2_leps_6_2000_dpem_pes
         real(wp), intent(out) :: ug(nstates,nstates,natoms,3)
         real(wp)              :: d, g
         integer               :: iatom, idir, nder
-        real(wp)              :: nt, r(1,3), r2(3), v(1)
+        real(wp)              :: nt, r(1,3), r2(3)
         real(wp)              :: p(nstates)
         real(wp)              :: u11(1), u12(1), u22(1)
         real(wp)              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
         real(wp)              :: dudr(nstates,nstates,3)
         real(wp)              :: dudx(nstates,nstates,9)
         real(wp)              :: t(nstates,nstates)
-        real(wp)              :: tmpmat(nstates,nstates)
         real(wp)              :: tx(9), drdx(3,9)
-        integer               :: i, j, k, l
+        integer               :: j
         !initialize
         u  = 0.e0_wp; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         nt = 1
@@ -101,6 +112,18 @@ module chempotpy_nah2_leps_6_2000_dpem_pes
             enddo
         enddo
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the NaH2_LEPS_6_2000_DPEM potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_nah2_leps_6_2000_dpem_pes
 
 !> @brief Expose NaH2_LEPS_6_2000 through the Python-facing DPEM entry point.
@@ -117,26 +140,57 @@ subroutine dpem( x, igrad, u, ug )
     call evaluate(x, igrad, u, ug)
 end subroutine dpem
 
-!> @brief Evaluate EvdRdX for the NaH2_LEPS_6_2000_DPEM potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
-
 !> @brief Evaluate pot for the NaH2_LEPS_6_2000_DPEM potential.
 subroutine pot( r, e, de, nt, nsurf )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate g_pot11.
+        subroutine g_pot11( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: g_p_
+            real(wp) :: r(nt,3)
+            real(wp) :: g_r(ldg_r,nt,3)
+            integer  :: ldg_r
+            real(wp) :: e(nt)
+            real(wp) :: g_e(ldg_e,nt)
+            integer  :: ldg_e
+            integer  :: nt
+        end subroutine g_pot11
+
+        !> @brief Evaluate g_pot12.
+        subroutine g_pot12( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: g_p_
+            real(wp) :: r(nt,3)
+            real(wp) :: g_r(ldg_r,nt,3)
+            integer  :: ldg_r
+            real(wp) :: e(nt)
+            real(wp) :: g_e(ldg_e,nt)
+            integer  :: ldg_e
+            integer  :: nt
+        end subroutine g_pot12
+
+        !> @brief Evaluate g_pot22.
+        subroutine g_pot22( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: g_p_
+            real(wp) :: r(nt,3)
+            real(wp) :: g_r(ldg_r,nt,3)
+            integer  :: ldg_r
+            real(wp) :: e(nt)
+            real(wp) :: g_e(ldg_e,nt)
+            integer  :: ldg_e
+            integer  :: nt
+        end subroutine g_pot22
+    end interface
     integer, parameter :: g_p_  = 3
     integer, parameter :: ldg_r = 3
     integer, parameter :: ldg_e = 3
-    real(wp)           :: de(3,nt), e(nt), g_e(ldg_e,nt), g_r(ldg_r,nt,3), r(nt,3), v11, v12, v22
+    real(wp)           :: de(3,nt), e(nt), g_r(ldg_r,nt,3), r(nt,3), v11(1), v12(1), v22(1)
     integer            :: i, j, k, nsurf, nt
     ! initialize seed matrix here
     do i=1, nt
@@ -158,13 +212,13 @@ subroutine pot( r, e, de, nt, nsurf )
         call g_pot22(g_p_, r, g_r, ldg_r, e, de, ldg_e, nt)
     else
         do i=1, nt
-            call g_pot11(g_p_, r, g_r, ldg_r, v11, de, ldg_e, 1)
-            call g_pot12(g_p_, r, g_r, ldg_r, v12, de, ldg_e, 1)
-            call g_pot22(g_p_, r, g_r, ldg_r, v22, de, ldg_e, 1)
+            call g_pot11(g_p_, r(i:i,:), g_r(:,i:i,:), ldg_r, v11, de(:,i:i), ldg_e, 1)
+            call g_pot12(g_p_, r(i:i,:), g_r(:,i:i,:), ldg_r, v12, de(:,i:i), ldg_e, 1)
+            call g_pot22(g_p_, r(i:i,:), g_r(:,i:i,:), ldg_r, v22, de(:,i:i), ldg_e, 1)
             if( nsurf .eq. 4 )then
-                e(i) = 0.5e0_wp*(v11+v22-sqrt((v11-v22)**2+4.e0_wp*v12**2))
+                e(i) = 0.5e0_wp*(v11(1)+v22(1)-sqrt((v11(1)-v22(1))**2+4.e0_wp*v12(1)**2))
             else
-                e(i) = 0.5e0_wp*(v11+v22+sqrt((v11-v22)**2+4.e0_wp*v12**2))
+                e(i) = 0.5e0_wp*(v11(1)+v22(1)+sqrt((v11(1)-v22(1))**2+4.e0_wp*v12(1)**2))
             endif
         enddo
     endif
@@ -201,7 +255,7 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot11_legacy_state_7d743da0
             & t10c2, t10c3, t10c4, t10c5, t10c6, t10rho, t190, t190c1, t190c2, t190c3, t190c4, t190c5, t190c6, t1i, t1ic1, &
             & t1ic2, t1ic3, t1ic4, t1ic5, t1ic6, t2, t20, t20alp, t20c, t20c1, t20c2, t20c3, t20c4, t20c5, t20c6, t20rho, t2a, &
             & t2c1, t2c2, t2c3, t2c4, t2c5, t2c6, t3, t30, t30alt, t390, t3i, twothd, w
-        integer :: i, j, k, nsurf, nt
+        integer :: i, nt
         ! data blocks for the NaH singlets . . .
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
@@ -2299,7 +2353,7 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot12_legacy_state_7d743da0
         real(wp) :: r(:,:), e(:), amp, erl, ers, eps, rmx, rmod, ralp, frho, thalp, thrho, phalp, phrho, r1s, r2s, r3s, &
             & cevau, pi, f1, f3, rmodswt1, rmodswt3, f1p, f3p, f1mod, f3mod, thetaswt, phi, cosa, rnag, rnagsq, chi, falp, &
             & sinchi, alpha1, alpha3, dtanh
-        integer            :: nt, i, j, k
+        integer            :: nt, i
         logical            :: leven
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e
@@ -2730,7 +2784,7 @@ module chempotpy_nah2_leps_6_2000_dpem_g_pot22_legacy_state_7d743da0
             & t10c1, t10c2, t10c3, t10c4, t10c5, t10c6, t190, t190c1, t190c2, t190c3, t190c4, t190c5, t190c6, t2, t20, t20alp, &
             & t20c, t20c1, t20c2, t20c3, t20c4, t20c5, t20c6, t20rho, t290, t290alp, t290c, t290c1, t290c2, t290c3, t290c4, &
             & t290c5, t290c6, t290rho, t2a, t2c1, t2c2, t2c3, t2c4, t2c5, t2c6, t3, t30, t390, twothd, una2p, w
-        integer :: i, j, k, nsurf, nt
+        integer :: i, nt
         ! the NaH singlet data blocks
         integer, parameter :: g_pmax_ = 3
         integer            :: g_i_, g_p_, ldg_r, ldg_e

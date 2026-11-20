@@ -9,7 +9,7 @@ module chempotpy_ch4_gen_sp_2001_pes
 
     !> @brief Evaluate the Schwenke-Partridge methane potential.
     subroutine evaluate( x, igrad, path, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
@@ -41,16 +41,29 @@ module chempotpy_ch4_gen_sp_2001_pes
     subroutine getpot( potential_energy, coordinates, path )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate vibpot.
+            subroutine vibpot( rij, v, n, path )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer, intent(in)             :: n
+                character(len=1024), intent(in) :: path
+                real(wp), intent(in)            :: rij(n,10)
+                real(wp), intent(out)           :: v(n,1)
+            end subroutine vibpot
+        end interface
         real(wp), parameter :: zero_point_shift = &
             -28.11193019e0_wp*4.556335e-6_wp
         character(len=1024), intent(in) :: path
         real(wp), intent(in)            :: coordinates(5,3)
         real(wp), intent(out)           :: potential_energy
-        real(wp)                        :: energy_hartree
+        real(wp)                        :: energy_batch(1,1)
+        real(wp)                        :: radau_batch(1,10)
         real(wp)                        :: radau_coordinates(10)
         call methaneradau(coordinates, radau_coordinates)
-        call vibpot(radau_coordinates, energy_hartree, 1, path)
-        potential_energy = energy_hartree-zero_point_shift
+        radau_batch(1,:) = radau_coordinates
+        call vibpot(radau_batch, energy_batch, 1, path)
+        potential_energy = energy_batch(1,1)-zero_point_shift
     end subroutine getpot
 
     !> @brief Convert CH4 Cartesian coordinates to the T8 Radau coordinates.

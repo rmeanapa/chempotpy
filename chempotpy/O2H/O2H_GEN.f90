@@ -48,12 +48,22 @@ module chempotpy_o2h_gen_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( r, nder, energy, der )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: r(3)
+            integer, intent(in)   :: nder
+            real(wp), intent(out) :: energy, der(3)
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the O2H_GEN potential energy surface for O2H.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -102,6 +112,18 @@ module chempotpy_o2h_gen_pes
                 'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the O2H_GEN potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_o2h_gen_pes
 
 !> @brief Expose O2H_GEN through the Python-facing PES entry point.
@@ -118,18 +140,6 @@ subroutine pes( x, igrad, p, g, d )
     real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
-
-!> @brief Evaluate EvdRdX for the O2H_GEN potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
 
 module chempotpy_o2h_gen_pot_legacy_state_fffab58a
     use chempotpy_units, only: hartree_to_kilocalorie_per_mole
@@ -149,7 +159,7 @@ module chempotpy_o2h_gen_pot_legacy_state_fffab58a
         real(wp) :: a(5), alpha, b(5,3), beta, c(5,3,3), csth, da(5,3), db(5,3,3), dcsth(3), de(3), der(3), dmew(3), &
             & dprod1(3), dprod2(3), dprod3(3), dsec(3), dthird(3), dv(3), easyab, easyac, easybc, energy, prod1, prod2, prod3, &
             & r(3), rab, rac, rbc, req(3), second, third, vab, vac, vbc, zeroad, zev, zkcal
-        integer  :: i, idum, iprt, it, it1, j, nder, ndum, nsurf
+        integer  :: i, it, it1, j, nder
         real(wp) :: num, denom, gamma(3), junk(4), expo(3), dexpo(3), mew
         !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
         !          Initialize the constants

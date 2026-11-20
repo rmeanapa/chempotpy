@@ -26,7 +26,7 @@ module chempotpy_ih2_leps_knpry_1966_pes
 
     !> @brief Evaluate the IH2_LEPS_KNPRY_1966 potential energy surface for IH2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         type(chempotpy_status_t), intent(out), optional :: status
         integer, intent(in)   :: igrad
         real(wp), intent(in)  :: x(3,3)

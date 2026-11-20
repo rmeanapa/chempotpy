@@ -35,7 +35,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
 
     !> @brief Evaluate the N2O_13_1Ap_AE_2026 potential energy surface for N2O.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -47,7 +47,6 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: t(nstates,nstates)
-        integer               :: iatom, idir, j, istate, jstate
         !initialize
         p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! no conversion needed, input is Angstrom, output is eV, eV/Angstrom, and 1/angstrom
@@ -78,16 +77,17 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         real(wp), intent(inout) :: t(ns,ns)
         real(wp), intent(inout) :: h(ns,ns,n,3)
         ! layers and their sizes
-        real(wp) :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,91)
-        real(wp) :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
-        real(wp) :: r(n*(n-1)/2)
-        real(wp) :: gr(ns,n*(n-1)/2)
-        real(wp) :: hr(ns,ns,n*(n-1)/2)
-        real(wp) :: v2b(ns), v2b_1(n*(n-1)/2,ns)
-        real(wp) :: g2b(ns,n*(n-1)/2)
-        real(wp) :: drdx(n*(n-1)/2,3*n)
-        integer  :: i, j, k, l, m
-        integer  :: imollist(3)
+        real(wp)              :: coeff_l0(3,30), coeff_l1(30,65), coeff_l2(65,95)
+        real(wp), allocatable :: coeff_l3(:,:), coeff_l4(:,:)
+        real(wp)              :: bias_l0(30), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(91)
+        real(wp)              :: r(n*(n-1)/2)
+        real(wp)              :: gr(ns,n*(n-1)/2)
+        real(wp)              :: hr(ns,ns,n*(n-1)/2)
+        real(wp)              :: v2b(ns), v2b_1(n*(n-1)/2,ns)
+        real(wp)              :: g2b(ns,n*(n-1)/2)
+        real(wp)              :: drdx(n*(n-1)/2,3*n)
+        integer               :: imollist(3)
+        allocate(coeff_l3(95,125), coeff_l4(125,91))
         call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4)
         call all_pair_distances(x, r)
         ! calculate the two-body terms
@@ -124,9 +124,8 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         real(wp)                :: dudr(ns,ns,3), tmpmat(ns,ns)
         integer                 :: map(3,13)
         real(wp)                :: e_0(13), sum_dis, s_j
-        real(wp)                :: af_f=1.2, af_a=-2.0, af_b=3.8, order=4.0
+        real(wp)                :: order=4.0
         real(wp)                :: f, dfdr(n*(n-1)/2)
-        real(wp)                :: dfdr_3b(ns,n*(n-1)/2), dfdr_2b(ns,n*(n-1)/2)
         real(wp)                :: ag_f=1.2, ag_a=-2.0, ag_b=6.0
         real(wp)                :: decay, ddecaydr(n*(n-1)/2)
         real(wp)                :: ddecaydr_3b(ns,n*(n-1)/2), ddecaydr_2b(ns,n*(n-1)/2)
@@ -383,8 +382,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         real(wp), intent(inout) :: a(n)
         real(wp), intent(out)   :: f
         real(wp)                :: r_in, ar, br
-        integer                 :: max_index
-        integer                 :: npairs, ibond, jbond, ipair
+        integer                 :: ibond, jbond
         real(wp)                :: pair_sum, bond_sum
         pair_sum = 0.e0_wp
         do ibond=1, nbonds
@@ -419,11 +417,8 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         integer                 :: i
         real(wp)                :: r_in, ar, br
         real(wp)                :: dfdr_in, dr_indr(nbonds)
-        integer                 :: npairs, ibond, jbond, ipair
-        real(wp)                :: r_in_num
-        real(wp)                :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
-        real(wp)                :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
-        real(wp)                :: diff
+        integer                 :: ibond, jbond
+        real(wp)                :: pair_sum, bond_sum
         pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
@@ -473,8 +468,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         real(wp), intent(in)  :: r(nbonds)
         real(wp), intent(out) :: f
         real(wp)              :: r_in, ar, br
-        integer               :: max_index
-        integer               :: npairs, ibond, jbond, ipair
+        integer               :: ibond, jbond
         real(wp)              :: pair_sum, bond_sum
         pair_sum = 0.e0_wp
         do ibond=1, nbonds
@@ -505,11 +499,8 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         real(wp), intent(out) :: dfdr(nbonds)
         real(wp)              :: r_in, ar, br
         real(wp)              :: dfdr_in, dr_indr(nbonds)
-        integer               :: npairs, ibond, jbond, ipair
-        real(wp)              :: r_in_num
-        real(wp)              :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
-        real(wp)              :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
-        real(wp)              :: diff
+        integer               :: ibond, jbond
+        real(wp)              :: pair_sum, bond_sum
         pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
@@ -545,7 +536,6 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
     ! used to compute index in DPEM
     !> @brief Evaluate sumover.
     subroutine sumover( a, b, sum1 )
-        use chempotpy_kinds, only: wp
         implicit none
         integer, intent(in)  :: a, b
         integer, intent(out) :: sum1
@@ -32507,7 +32497,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         real(wp), intent(out) :: v(13), grad(13)
         real(wp)              :: alpha, beta, as(0:7)
         real(wp)              :: gam, del
-        integer               :: i, j, k
+        integer               :: i, k
         ! Dispersion variables
         real(wp) :: dist(1), disp, dispdr(1)
         v    = 0.0e0_wp
@@ -32747,12 +32737,10 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         ! The C6 values are fixed.
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: cn(2), s6, s8, rs6, rs8
+        real(wp) :: s6, s8, rs6, rs8
         real(wp) :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
         real(wp) :: e6dr(1), e8dr(1)
-        integer  :: iz(2), mxc(94), i, j, igrad
-        real(wp) :: c6ab(94,94,5,5,3)
-        real(wp) :: r2r4(94)
+        integer  :: iz(2), mxc(94), i, igrad
         real(wp) :: autoang, autokcal
         integer  :: imol
         autoang  = 0.52917726e0_wp
@@ -32811,15 +32799,11 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         use chempotpy_kinds, only: wp
         implicit none
         integer  :: n, iz(2), max_elem, maxc, mxc(max_elem)
-        real(wp) :: dist(1), r2r4(max_elem), r0ab(max_elem,max_elem)
+        real(wp) :: dist(1), r2r4(max_elem)
         real(wp) :: rs6, rs8, rcov(max_elem)
-        real(wp) :: c6ab(max_elem,max_elem,maxc,maxc,3)
         real(wp) :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
         integer  :: iat, jat, igrad
         real(wp) :: r, tmp, c6, c8, a1, a2
-        real(wp) :: damp6, damp8
-        real(wp) :: cn(n)
-        real(wp) :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
         integer  :: step
         e6(:)   = 0.0e0_wp
         e8(:)   = 0.0e0_wp
@@ -32905,7 +32889,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         real(wp)            :: re, de, as(0:6)
         real(wp)            :: y, fy, u
         real(wp)            :: dfdy, rr, dydr, dfdr
-        integer             :: k, a
+        integer             :: a
         ! Dispersion variables
         real(wp) :: dist(1), disp, dispdr(1)
         ! Modified parameters for D3(BJ)
@@ -32969,7 +32953,7 @@ module chempotpy_n2o_13_1ap_ae_2026_pes
         real(wp)            :: r
         real(wp)            :: v, grad
         real(wp)            :: re, de, c(1:12), u
-        real(wp)            :: dydr, dfdr
+        real(wp)            :: dfdr
         ! Dispersion variables
         real(wp) :: dist(1), disp, dispdr(1)
         re    = 1.1508e0_wp

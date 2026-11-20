@@ -38,12 +38,21 @@ module chempotpy_lifh_leps_jhtp2_2002_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( r, e, de, nt, nsurf )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r(nt,3), e(nt), de(3,nt), g_r(3,nt,3)
+            integer  :: i, j, k, nt, nsurf
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the LiFH_LEPS_JHTP2_2002 potential energy surface for LiFH.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -59,7 +68,7 @@ module chempotpy_lifh_leps_jhtp2_2002_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         integer               :: iatom, idir, nder
-        real(wp)              :: nt, r(1,3), r2(3), v(1)
+        real(wp)              :: nt, r(1,3), r2(3)
         real(wp)              :: u11(1), u12(1), u22(1)
         real(wp)              :: de_u11(3,1), de_u12(3,1), de_u22(3,1)
         real(wp)              :: u(nstates,nstates), dudr(nstates,nstates,3)
@@ -68,7 +77,7 @@ module chempotpy_lifh_leps_jhtp2_2002_pes
         real(wp)              :: hr(nstates,nstates,3), gr(nstates,3)
         real(wp)              :: tx(9), drdx(3,9)
         real(wp)              :: hx(nstates,nstates,9), gx(nstates,9)
-        integer               :: i, j, k, l
+        integer               :: i, j, k
         !initialize
         u  = 0.e0_wp; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         nt = 1
@@ -117,6 +126,18 @@ module chempotpy_lifh_leps_jhtp2_2002_pes
             enddo
         enddo
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the LiFH_LEPS_JHTP2_2002 potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_lifh_leps_jhtp2_2002_pes
 
 !> @brief Expose LiFH_LEPS_JHTP2_2002 through the Python-facing PES entry point.
@@ -134,22 +155,53 @@ subroutine pes( x, igrad, p, g, d )
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
 
-!> @brief Evaluate EvdRdX for the LiFH_LEPS_JHTP2_2002 potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
-
 !> @brief Evaluate pot for the LiFH_LEPS_JHTP2_2002 potential.
 subroutine pot( r, e, de, nt, nsurf )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate pot11.
+        subroutine pot11( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: g_p_
+            real(wp) :: r(nt,3)
+            real(wp) :: g_r(ldg_r,nt,3)
+            integer  :: ldg_r
+            real(wp) :: e(nt)
+            real(wp) :: g_e(ldg_e,nt)
+            integer  :: ldg_e
+            integer  :: nt
+        end subroutine pot11
+
+        !> @brief Evaluate pot12.
+        subroutine pot12( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: g_p_
+            real(wp) :: r(nt,3)
+            real(wp) :: g_r(ldg_r,nt,3)
+            integer  :: ldg_r
+            real(wp) :: e(nt)
+            real(wp) :: g_e(ldg_e,nt)
+            integer  :: ldg_e
+            integer  :: nt
+        end subroutine pot12
+
+        !> @brief Evaluate pot22.
+        subroutine pot22( g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: g_p_
+            real(wp) :: r(nt,3)
+            real(wp) :: g_r(ldg_r,nt,3)
+            integer  :: ldg_r
+            real(wp) :: e(nt)
+            real(wp) :: g_e(ldg_e,nt)
+            integer  :: ldg_e
+            integer  :: nt
+        end subroutine pot22
+    end interface
     real(wp) :: r(nt,3), e(nt), de(3,nt), g_r(3,nt,3)
     integer  :: i, j, k, nt, nsurf
     !       seed matrix
@@ -214,7 +266,6 @@ module chempotpy_lifh_leps_jhtp2_2002_pot11_legacy_state_fb8669b7
         real(wp)           :: g_coschi(g_pmax_), g_xelih(g_pmax_), g_s1a(g_pmax_), g_s1c(g_pmax_), g_r1r3(g_pmax_), g_rcut2(g_pmax_), g_s1(g_pmax_), g_yhf(g_pmax_), g_behf(g_pmax_), g_xehf(g_pmax_)
         real(wp)           :: g_s2(g_pmax_), g_dehfm(g_pmax_), g_xehfm(g_pmax_), g_s2m(g_pmax_), g_xes3(g_pmax_), g_s3(g_pmax_), g_e(:,:), g_hfdip_y(g_pmax_), g_hfdip(g_pmax_), g_hfpol(g_pmax_)
         real(wp)           :: g_hf_did(g_pmax_), g_hf_disp(g_pmax_), g_e_lr_hf(g_pmax_)
-        integer            :: g_ehfid
         ! INTERACTION REGION DATA
         !     LiH
         !     HF
@@ -866,7 +917,6 @@ module chempotpy_lifh_leps_jhtp2_2002_pot12_legacy_state_fb8669b7
         real(wp)           :: d4_v, d1_p, d2_b, d3_b, d4_b, d5_v, d6_v, g_d1_w(g_pmax_), g_r(:,:,:), g_g1(g_pmax_)
         real(wp)           :: g_g3(g_pmax_), g_j2(g_pmax_), g_j2p(g_pmax_), g_h1(g_pmax_), g_h3(g_pmax_), g_e(:,:), g_gc(g_pmax_), g_cut2 &
             & (g_pmax_)
-        integer :: g_ehfid
         ! LiH DATA
         ! LiF DATA
         ! HF DATA
@@ -1105,7 +1155,7 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
         implicit none
         optional :: g_p_, r, g_r, ldg_r, e, g_e, ldg_e, nt
         ! MISC VARIABLES
-        integer  :: i, j, k, nt
+        integer  :: i, j, nt
         real(wp) :: r(:,:), e(:), r1s, r2s, r3s, cs, cevau, uli2p
         real(wp) :: c2a, c2b, c2c, w, cplg2
         ! INTERACTION REGION VARIABLES
@@ -1167,7 +1217,6 @@ module chempotpy_lifh_leps_jhtp2_2002_pot22_legacy_state_fb8669b7
         real(wp) :: g_coul1(g_pmax_), g_coul2(g_pmax_), g_coul3(g_pmax_), g_exch1(g_pmax_), g_exch2(g_pmax_), g_exch3(g_pmax_), g_w(g_pmax_), g_cplg2(g_pmax_), g_e(:,:), g_hfdip_y(g_pmax_)
         real(wp) :: g_hfdip(g_pmax_), g_hfpol(g_pmax_), g_hfqua_y(g_pmax_), g_hfqua(g_pmax_), g_lifdip_y(g_pmax_), g_lifdip_beta(g_pmax_), g_lifdip(g_pmax_), g_li2ppol(g_pmax_), g_hf_did(g_pmax_), g_hf_disp(g_pmax_)
         real(wp) :: g_hf_qq(g_pmax_), g_hf_dq(g_pmax_), g_e_lr_hf(g_pmax_), g_lif_did(g_pmax_), g_lif_disp(g_pmax_), g_e_lr_lif(g_pmax_)
-        integer  :: g_ehfid
         ! INTERACTION REGION DATA
         !     LiH
         !     HF

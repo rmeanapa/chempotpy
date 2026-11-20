@@ -25,7 +25,7 @@ module chempotpy_n4_1a_pip_2013_pes
 
     !> @brief Evaluate the N4_1A_PIP_2013 potential energy surface for N4.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_kinds,  only: wp
         implicit none
@@ -33,7 +33,6 @@ module chempotpy_n4_1a_pip_2013_pes
         ! number of electronic state
         integer, parameter    :: nstates = 1
         integer, parameter    :: natoms  = 4
-        real(wp), parameter   :: eref    = -218.40801323e0_wp
         integer, intent(in)   :: igrad
         real(wp), intent(in)  :: x(natoms,3)
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
@@ -375,7 +374,7 @@ module chempotpy_n4_1a_pip_2013_pes
             ! dRdX:         The derivative of R w.r.t. X, dim(6*12)
             use chempotpy_kinds, only: wp
             implicit none
-            integer  :: i, igrad, j, nob, k
+            integer  :: igrad
             real(wp) :: v
             real(wp) :: dvdx(12), x(12)
             !     $                  dRdX(6,12),dBdR(6,276)
@@ -398,7 +397,6 @@ module chempotpy_n4_1a_pip_2013_pes
             !  from the Cartesian coordinate array
             use chempotpy_kinds, only: wp
             implicit none
-            integer  :: i
             real(wp) :: x(12)
             !  Now, calculate the inter-atomic distance
             !  r1 = r(N1N2)    r2 = r(N1N3)
@@ -429,7 +427,7 @@ module chempotpy_n4_1a_pip_2013_pes
             ! B(1:276):     Array to store basis functions
             use chempotpy_kinds, only: wp
             implicit none
-            integer  :: i, j, k
+            integer  :: i
             real(wp) :: dist, dv2dr, v, v2
             ! Calculate the six Morse terms for each point
             call evmorse
@@ -476,7 +474,6 @@ module chempotpy_n4_1a_pip_2013_pes
 
         !> @brief Evaluate EvMorse for the N4_1A_PIP_2013 potential.
         subroutine evmorse
-            use chempotpy_kinds, only: wp
             implicit none
             integer :: i
             ! Morse term ms = exp(-(r-re)/a)
@@ -613,7 +610,6 @@ module chempotpy_n4_1a_pip_2013_pes
             !  The subroutine accepts monomials (m) and calculates the
             !  permutation invariant polynomials(p)
             !  For A4 with max. degree 9, the number of polynomials is nob.
-            use chempotpy_kinds, only: wp
             implicit none
             epot_p(0) = epot_rm(0)
             epot_p(1) = epot_rm(1) + epot_rm(2) + epot_rm(3) + epot_rm(4) + epot_rm(5) + epot_rm(6)
@@ -1297,7 +1293,6 @@ module chempotpy_n4_1a_pip_2013_pes
             !  The subroutine accepts monomials (m) and calculates the
             !  permutation invariant polynomials(p)
             !  For A4 with max. degree 9, the number of polynomials is nob.
-            use chempotpy_kinds, only: wp
             implicit none
             integer :: i
             do i=1, 6

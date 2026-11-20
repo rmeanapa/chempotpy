@@ -53,7 +53,7 @@ module chempotpy_c2h7_vbmm_pes
         integer               :: infocm_mder
         integer               :: infocm_msurf
         integer               :: infocm_natoms
-        character             :: infocm_ref(5)
+        character(len=75)     :: infocm_ref(5)
         real(wp)              :: ip1_ds1(4)
         real(wp)              :: ip1_ds2(4)
         real(wp)              :: ip1_s1(4)
@@ -126,7 +126,7 @@ module chempotpy_c2h7_vbmm_pes
         real(wp)              :: xangles_dtheta0(4,4,4)
         real(wp)              :: xangles_theta0(4,4)
         real(wp)              :: v
-        integer               :: iatom, idir, j, istate, jstate
+        integer               :: istate
         !initialize
         angles_dtheta0  = 0.e0_wp; angles_theta0 = 0.e0_wp; bonds_rbh = 0.e0_wp; bonds_rcb = 0.e0_wp; bonds_rch = 0.e0_wp
         coords_tbh      = 0.e0_wp; coords_tcb = 0.e0_wp; coords_tch = 0.e0_wp; delta1_fdelta = 0.e0_wp; delta1_hdelta = 0.e0_wp
@@ -267,8 +267,6 @@ module chempotpy_c2h7_vbmm_pes
         subroutine c2h7poth( x, eng_kcal, grad, xnorm, hess )
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: npmm = 23
-            integer, parameter  :: npjg = 34
             real(wp)            :: x(9,3)
             real(wp)            :: eng_kcal
             real(wp)            :: grad(9,3)
@@ -365,8 +363,6 @@ module chempotpy_c2h7_vbmm_pes
         subroutine c2h7potg( x, eng_kcal, grad, xnorm )
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: npmm = 23
-            integer, parameter  :: npjg = 34
             real(wp)            :: x(9,3)
             real(wp)            :: eng_kcal
             real(wp)            :: grad(9,3)
@@ -542,25 +538,14 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: ravg0
             real(wp) :: cr, cp, cs
             ! Modified parameters
-            integer  :: i, j
             integer  :: ipt
-            real(wp) :: x
             real(wp) :: t1, t2, t3
             real(wp) :: t4, t5, t6
             real(wp) :: z1, z2, z3
             real(wp) :: z4, z5, z6
-            real(wp) :: ar0ch, ar0cc
-            real(wp) :: asch, ascc
-            real(wp) :: av3hcch
-            real(wp) :: aksthcch
+            real(wp) :: ascc
             real(wp) :: akthch
             real(wp) :: aktcch
-            real(wp) :: aesph
-            real(wp) :: arvh
-            real(wp) :: at0hch
-            real(wp) :: ar0crh
-            real(wp) :: ar0ccr
-            real(wp) :: at0ccrh
             !%%%  parameter(r0ch=1.1120d0,r0cc=1.52470d0)
             !%%% for ethane
             ipt = 4
@@ -677,9 +662,7 @@ module chempotpy_c2h7_vbmm_pes
             ! Parameter list
             real(wp)            :: r0cb
             real(wp)            :: r0hh
-            real(wp)            :: alpch
             real(wp)            :: r0ch
-            real(wp)            :: tau
             real(wp), parameter :: fact1 = 0.041840e0_wp
             real(wp), parameter :: fact2 = 6.022045e0_wp
             ! streching parameters
@@ -725,9 +708,7 @@ module chempotpy_c2h7_vbmm_pes
             ! Switching
             real(wp) :: ravg0
             real(wp) :: cr, cp, cs
-            integer  :: i
             integer  :: ipt
-            logical  :: labinitio
             real(wp) :: ad1hh
             real(wp) :: ad1ch
             real(wp) :: aalpcb
@@ -876,8 +857,6 @@ module chempotpy_c2h7_vbmm_pes
             integer  :: np
             real(wp) :: para(np)
             ! Parameter list
-            real(wp)            :: alpch
-            real(wp)            :: tau
             real(wp), parameter :: fact1 = 0.041840e0_wp
             real(wp), parameter :: fact2 = 6.022045e0_wp
             ! streching parameters
@@ -998,7 +977,6 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: esph, espc, rvh, rvc, scalech
             ! Func called:
             ! Local parameters:
-            integer, parameter :: iout     = 6
             logical, parameter :: lreact   = .false.
             logical, parameter :: lradical = .false.
             logical, parameter :: lswitch  = .true.
@@ -1023,7 +1001,6 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: sh2(3)
             real(wp) :: sh3(3)
             real(wp) :: sh4(3)
-            real(wp) :: sh5(3)
             real(wp) :: sh6(3)
             real(wp) :: sh7(3)
             real(wp) :: sh8(3)
@@ -1078,9 +1055,6 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: z2
             real(wp) :: z3
             real(wp) :: z4
-            real(wp) :: y1
-            real(wp) :: y2
-            real(wp) :: y3
             ! Assign parameters
             r0ch    = para(1)
             r0cc    = para(2)
@@ -1772,7 +1746,7 @@ module chempotpy_c2h7_vbmm_pes
             !     d
             ! we will use the cross product definition of the
             ! dihedral xangle
-            integer  :: i, j
+            integer  :: i
             real(wp) :: x, y, z
             real(wp) :: s
             real(wp) :: phi
@@ -1976,48 +1950,45 @@ module chempotpy_c2h7_vbmm_pes
             ! Output variables
             real(wp) :: xpot_kcal
             ! Parameter list
-            real(wp)            :: a1ch
-            real(wp)            :: b1ch
-            real(wp)            :: c1ch
-            real(wp)            :: alpcb
-            real(wp)            :: d1cb
-            real(wp)            :: d3cb
-            real(wp)            :: r0cb
-            real(wp)            :: alphh
-            real(wp)            :: d1hh
-            real(wp)            :: d3hh
-            real(wp)            :: r0hh
-            real(wp)            :: alpch
-            real(wp)            :: d1ch
-            real(wp)            :: d3ch
-            real(wp)            :: r0ch
-            real(wp)            :: tau
-            real(wp)            :: aphi
-            real(wp)            :: bphi
-            real(wp)            :: cphi
-            real(wp)            :: atheta
-            real(wp)            :: btheta
-            real(wp)            :: ctheta
-            real(wp)            :: a3s
-            real(wp)            :: b3s
-            real(wp)            :: fd0
-            real(wp)            :: hd0
-            real(wp)            :: a1s
-            real(wp)            :: a2s
-            real(wp)            :: b1s
-            real(wp)            :: b2s
-            real(wp)            :: ak
-            real(wp)            :: kch3
-            real(wp)            :: aa1
-            real(wp)            :: aa2
-            real(wp)            :: aa3
-            real(wp)            :: aa4
-            real(wp), parameter :: fact1 = 0.041840e0_wp
-            real(wp), parameter :: fact2 = 6.022045e0_wp
+            real(wp) :: a1ch
+            real(wp) :: b1ch
+            real(wp) :: c1ch
+            real(wp) :: alpcb
+            real(wp) :: d1cb
+            real(wp) :: d3cb
+            real(wp) :: r0cb
+            real(wp) :: alphh
+            real(wp) :: d1hh
+            real(wp) :: d3hh
+            real(wp) :: r0hh
+            real(wp) :: alpch
+            real(wp) :: d1ch
+            real(wp) :: d3ch
+            real(wp) :: r0ch
+            real(wp) :: tau
+            real(wp) :: aphi
+            real(wp) :: bphi
+            real(wp) :: cphi
+            real(wp) :: atheta
+            real(wp) :: btheta
+            real(wp) :: ctheta
+            real(wp) :: a3s
+            real(wp) :: b3s
+            real(wp) :: fd0
+            real(wp) :: hd0
+            real(wp) :: a1s
+            real(wp) :: a2s
+            real(wp) :: b1s
+            real(wp) :: b2s
+            real(wp) :: ak
+            real(wp) :: kch3
+            real(wp) :: aa1
+            real(wp) :: aa2
+            real(wp) :: aa3
+            real(wp) :: aa4
             ! Funct called
             ! Local variables
             !     Local parameters
-            integer, parameter  :: iout       = 6
             logical, parameter  :: ldebug     = .false.
             real(wp), parameter :: kj_in_kcal = 0.2390057
             !     bond lenght and bond vectors
@@ -2143,18 +2114,16 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: vip45
             real(wp) :: vip
             !     misc and temp variables
-            integer  :: i, j, k
+            integer  :: i
             real(wp) :: t1
             real(wp) :: t2
             real(wp) :: t3
             real(wp) :: t4
             real(wp) :: t5
-            real(wp) :: t6
             real(wp) :: z1
             real(wp) :: z2
             real(wp) :: z3
             real(wp) :: z4
-            real(wp) :: scat0
             real(wp) :: xpot
             !     CH5 surf
             real(wp) :: vsurf
@@ -2613,8 +2582,6 @@ module chempotpy_c2h7_vbmm_pes
             integer  :: i
             real(wp) :: ri
             real(wp) :: rn
-            real(wp) :: r21
-            real(wp) :: r31
             real(wp) :: doti
             real(wp) :: v21(3)
             real(wp) :: v31(3)
@@ -2790,13 +2757,8 @@ module chempotpy_c2h7_vbmm_pes
         !> @brief Evaluate coorden for the C2H7_VBMM potential.
         subroutine coorden
             !  calculates relative coordinates and bond lengths
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, ind
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            integer :: i, ind
             !  calculate relative coordinates
             do ind=1, 3
                 coords_tcb(ind) = qpdot_pl_q(ndx_nc(ind))-qpdot_pl_q(ndx_nhb(ind))
@@ -2820,12 +2782,8 @@ module chempotpy_c2h7_vbmm_pes
             !  subroutine calculates reference xangles for the "in-plane" potential
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: halfpi, tau, twopi
-            integer            :: i, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: halfpi, tau, twopi
+            integer  :: i, j, k
             tau    = acos(-1.0e0_wp/3.0e0_wp)
             halfpi = 0.5e0_wp*PI
             twopi  = 2.0e0_wp*PI
@@ -2900,11 +2858,7 @@ module chempotpy_c2h7_vbmm_pes
             real(wp) :: ach, achdc(3), achdh(4,3), arga, dumach, dumjbh, dumjcb, dumjch, dumjhi, dumjhj, dumqbh, &
                 & dumqcb, dumqch, dumqhi, dumqhj, e1, e3, factj, rav, vj(4), vjbh(4), vjcb, vjch(4), vq(4), vqbh(4), vqcb, vqch(4), &
                 & vstr
-            integer            :: i, ind, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            integer :: i, ind, j, k
             !  calculate avergage bond length for the methane moiety
             rav = (bonds_rch(1)+bonds_rch(2)+bonds_rch(3)+bonds_rch(4))/4.0e0_wp
             !  initialise:
@@ -3017,12 +2971,8 @@ module chempotpy_c2h7_vbmm_pes
             !  subroutine calculates symmetrized vop potential and derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: ddr, sum2, sum4, sumd2(4), sumd4(4), vop
-            integer            :: i, ind, itemp, j, k, l
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: ddr, sum2, sum4, sumd2(4), sumd4(4), vop
+            integer  :: i, ind, itemp, j, k, l
             vop = 0.0e0_wp
             !  calculate force constants and their derivatives
             call opforce
@@ -3069,12 +3019,8 @@ module chempotpy_c2h7_vbmm_pes
             !  and its derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: costh(4,4), dth(4,4), dth0c, dth0k, dthc, dthi, dthj, termth, theta(4,4), vip
-            integer            :: i, ind, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: costh(4,4), dth(4,4), dth0c, dth0k, dthc, dthi, dthj, termth, theta(4,4), vip
+            integer  :: i, ind, j, k
             !  initialise
             vip = 0.0e0_wp
             !  calculate force constants: fk0(i,j), f1(i)
@@ -3135,12 +3081,8 @@ module chempotpy_c2h7_vbmm_pes
             implicit none
             real(wp) :: a(3), argd(4), atemp1, atemp2(3), atemp3, atemp4, atemp5, axb(3), b(3), c(4,3), &
                 & cdot(4, 3, 3), daxb(4, 3, 3), deldot, delta(4), sum2, sum4
-            integer            :: i, ii, in(3), ind, j, jj, k, l
-            real(wp)           :: norma
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            integer  :: i, ii, in(3), ind, j, jj, k, l
+            real(wp) :: norma
             !  initialise
             sum2 = 0.0e0_wp; sum4 = 0.0e0_wp
             !  set j,k,l indices
@@ -3280,12 +3222,8 @@ module chempotpy_c2h7_vbmm_pes
             !  and their derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: dswitch(4,4), switch(4)
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: dswitch(4,4), switch(4)
+            integer  :: i, j
             !  calculate switching functions:
             switch(1) = (1.0e0_wp-op1_s3(1))*op1_s3(2)*op1_s3(3)*op1_s3(4)
             switch(2) = (1.0e0_wp-op1_s3(2))*op1_s3(3)*op1_s3(4)*op1_s3(1)
@@ -3329,12 +3267,8 @@ module chempotpy_c2h7_vbmm_pes
             !  all partial derivatives involving them
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: a1, a2, arga1, arga2, df1dc(4), df1dh(4), dfk0(4,4,4), duma1, duma2, f0, f2
-            integer            :: i
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: a1, a2, arga1, arga2, df1dc(4), df1dh(4), dfk0(4,4,4), duma1, duma2, f0, f2
+            integer  :: i
             !  set force constant at asymptotes
             f0 = potcm_fkinf+potcm_ak
             f2 = potcm_fkinf
@@ -3447,12 +3381,8 @@ module chempotpy_c2h7_vbmm_pes
             !  and their derivatives ds3,dsphi,dstheta
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: argmax, args1, args2, args3, argsphi, argstheta
-            integer            :: i
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: argmax, args1, args2, args3, argsphi, argstheta
+            integer  :: i
             !##
             fsw1_a1s = 1.5313681e-7_wp
             fsw1_b1s = -4.6696246e0_wp
@@ -3535,13 +3465,8 @@ module chempotpy_c2h7_vbmm_pes
             !   N3TM must be greater than or equal to N3TMMN.
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: fact1, fact2
-            integer            :: i, icount, ind
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
-            integer, parameter :: n3tmmn = 18
+            real(wp) :: fact1, fact2
+            integer  :: i, icount, ind
             !  CHECK THE NUMBER OF CARTESIAN COORDINATES SET BY THE CALLING PROGRAM
             if( infocm_natoms .gt. 25 )then
                 if( present(status) ) call status%set(status_invalid_input, &
@@ -3594,7 +3519,6 @@ module chempotpy_c2h7_vbmm_pes
         !> @brief Evaluate CSETUP for the C2H7_VBMM potential.
         subroutine csetup( n3tm )
             !       dummy subroutine to make the code compatable with chk.f
-            use chempotpy_kinds, only: wp
             implicit none
             integer :: n3tm
         end subroutine csetup
@@ -3606,7 +3530,7 @@ module chempotpy_c2h7_vbmm_pes
             real(wp)           :: r
             real(wp)           :: fit
             integer, parameter :: ng = 6
-            integer            :: i, j, k
+            integer            :: i
             real(wp)           :: d
             real(wp)           :: ans
             real(wp)           :: r0(ng)

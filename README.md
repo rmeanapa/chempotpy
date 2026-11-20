@@ -365,6 +365,16 @@ linkage, imports every extension in an isolated Python process, and performs
     python_extension_evaluations: 3267
     python_extension_failures: 0
 
+Run the catalog-wide compiler warning gate with:
+
+    make check-fortran-warnings
+
+This compiles all 396 PES and support units with `-Wall`, `-Wextra`, and
+`-Werror`. Unused dummy arguments are exempt because the stable PES contracts
+intentionally include inputs that some implementations do not consume. Exact
+real comparisons are also exempt because released lookup and branch logic uses
+them; both categories remain protected by the numerical regression suite.
+
 Run the independent direct-Fortran numerical and architecture regression with:
 
     make test-surfaces
@@ -387,14 +397,16 @@ inside the mathematical domain of the released fits. A newly added surface
 must compile, execute, match its declared interface, and return only finite
 values; that revision becomes its protected baseline on the next comparison.
 
-The CODATA 2022 Hartree-to-kcal/mol migration establishes
-`baseline_version: 2`. The one-step transition from version 1 approves that
-documented numerical correction. Records whose approved values did not change
-retain the base revision captured on that same runner, so an unchanged PES is
-never compared with another architecture's fixture. Comparisons between two
-version-2 revisions remain strict. The committed fixture supports local and package-level
-regression tests, while the workflow's base-revision capture protects existing
-surfaces independently of ordinary fixture edits in a proposed change.
+The uninitialized-state correction establishes `baseline_version: 3`. The
+one-step transition from version 2 approves the documented C2H6F indexing fix
+and the explicit zero initialization of sparse SiOH coefficient tables. Version
+2 records the earlier CODATA 2022 Hartree-to-kcal/mol migration. Records whose
+approved values did not change retain the base revision captured on that same
+runner, so an unchanged PES is never compared with another architecture's
+fixture. Comparisons between two version-3 revisions remain strict. The
+committed fixture supports local and package-level regression tests, while the
+workflow's base-revision capture protects existing surfaces independently of
+ordinary fixture edits in a proposed change.
 
 To reproduce the workflow comparison locally against a selected Git revision:
 

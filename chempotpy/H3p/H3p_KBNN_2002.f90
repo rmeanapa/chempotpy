@@ -55,7 +55,7 @@ module chempotpy_h3p_kbnn_2002_pes
 
     !> @brief Evaluate the H3p_KBNN_2002 potential energy surface for H3p.
     subroutine evaluate( x, igrad, pin, grad, dvec, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -83,7 +83,7 @@ module chempotpy_h3p_kbnn_2002_pes
         real(wp)              :: hr(nstates,nstates,3), gr(nstates,3)
         real(wp)              :: tx(9), drdx(3,9)
         real(wp)              :: hx(nstates,nstates,9), gx(nstates,9)
-        integer               :: iatom, idir, i, j, k, l
+        integer               :: iatom, idir, i, j, k
         !initialize
         u  = 0.e0_wp; pin = 0.e0_wp; grad = 0.e0_wp; dvec = 0.e0_wp
         nt = 1

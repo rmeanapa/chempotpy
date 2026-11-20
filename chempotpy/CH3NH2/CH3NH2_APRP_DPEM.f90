@@ -84,7 +84,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
 
     !> @brief Evaluate the CH3NH2_APRP diabatic potential matrix for CH3NH2.
     subroutine evaluate( x, igrad, u, ug, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
@@ -101,7 +101,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         real(wp)              :: vv(nstates), gvv(3,natoms,nstates)
         real(wp)              :: dvec(3,natoms,nstates,nstates)
         real(wp)              :: cc(nstates,nstates)
-        integer               :: iatom, idir, j, istate, jstate
+        integer               :: iatom, idir, istate, jstate
         integer               :: jgrad
         !initialize
         u = 0.e0_wp; ug = 0.e0_wp
@@ -155,8 +155,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         integer             :: igrad
         real(wp)            :: dux(7,3), duy(7,3), duz(7,3)
         real(wp)            :: uu(2,2), vv(2)
-        real(wp)            :: tt(1)
-        real(wp)            :: guu(3,7,2,2), gtt(3,7,1,1)
+        real(wp)            :: guu(3,7,2,2)
         real(wp)            :: gvv(3,7,2)
         real(wp)            :: dvec(3,7,2,2)
         real(wp)            :: eigvec(2,2)
@@ -166,7 +165,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         integer             :: ist, jst
         real(wp), parameter :: evtohartree = 27.21139e0_wp
         real(wp), parameter :: bohrtoang   = 0.52917721067e0_wp
-        real(wp)            :: v2, v4
+        real(wp)            :: v2
         scp = 0e0_wp
         dux = 0e0_wp
         duy = 0e0_wp
@@ -347,8 +346,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         implicit none
         integer  :: kk, nat
         integer  :: i, j, k
-        real(wp) :: xyz(4,3)
-        real(wp) :: beta
         real(wp) :: x(7), y(7), z(7)
         real(wp) :: dk(22)
         real(wp) :: r1, t2
@@ -525,10 +522,8 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ! This subroutine converts a distance derivative to XYZ
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j, k
+        integer  :: i, j
         real(wp) :: x(7), y(7), z(7)
-        real(wp) :: ra, rb
-        real(wp) :: to, be, go, cgo
         real(wp) :: dngx(7), dngy(7), dngz(7)
         dngx    = 0e0_wp
         dngy    = 0e0_wp
@@ -555,19 +550,16 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         integer, parameter :: nqs = 5
         integer, parameter :: nqb = 5
         integer            :: igrad, ii
-        integer            :: ntot, nqtc
-        real(wp)           :: r, ut, dutdr, ra
+        real(wp)           :: ut
         ! Local variables
-        integer  :: i, j, k
+        integer  :: i
         real(wp) :: u0
-        real(wp) :: vs, vb, vbs
+        real(wp) :: vs, vb
         real(wp) :: qs(nqs)
         real(wp) :: qb(nqb)
         real(wp) :: sqb(nqb), cqb(nqb)
         real(wp) :: qc(20), dut(20)
         real(wp) :: v0(nrap,ntap)
-        real(wp) :: dnc1, dnc2
-        real(wp) :: dch1, dch2
         real(wp) :: knhb1(nrap,ntap), knhb2(nrap,ntap)
         real(wp) :: knc1(nrap,ntap), knc2(nrap,ntap)
         real(wp) :: kch1(nrap,ntap), kch2(nrap,ntap)
@@ -812,7 +804,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         use chempotpy_kinds, only: wp
         implicit none
         integer  :: ii
-        integer  :: nrap, i, j, ntap
+        integer  :: nrap, ntap
         real(wp) :: knhb1(nrap,ntap), knhb2(nrap,ntap)
         real(wp) :: knc1(nrap,ntap), knc2(nrap,ntap)
         real(wp) :: kch1(nrap,ntap), kch2(nrap,ntap)
@@ -1540,19 +1532,16 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         integer  :: igrad
         real(wp) :: r1, t2
         real(wp) :: x(7), y(7), z(7)
-        real(wp) :: xyz(4,3)
         real(wp) :: dx(22)
         real(wp) :: rap(nrap,3), tap(ntap,3)
         integer  :: i, ii, j
         integer  :: fg(2)
-        real(wp) :: u, v, f(4)
+        real(wp) :: f(4)
         real(wp) :: h(4), en
         real(wp) :: dh(4,20), dhe(20)
         real(wp) :: df(4,2)
         real(wp) :: dtr(2)
         real(wp) :: dx1(7), dy1(7), dz1(7)
-        real(wp) :: beta
-        real(wp) :: dbeta(12)
         ! The anchor points:
         do i=1, 3
             rap(1,i) = 0.7157485e0_wp
@@ -1618,14 +1607,10 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         integer  :: igrad
         integer  :: ra1, ra2
         integer  :: nrap, ntap
-        real(wp) :: r1, t2
         real(wp) :: x(7), y(7), z(7)
         real(wp) :: qc(20)
-        real(wp) :: e
-        real(wp) :: dx
         integer  :: i, ii
         integer  :: fg(2)
-        real(wp) :: u, v, f(4)
         real(wp) :: h(4), hs
         real(wp) :: dhs(20), dh(4,20)
         hs  = 0e0_wp
@@ -1677,14 +1662,10 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         integer  :: igrad
         integer  :: ra1, ra2
         integer  :: nrap, ntap
-        real(wp) :: r1, t2
         real(wp) :: x(7), y(7), z(7)
         real(wp) :: qc(20)
-        real(wp) :: e
-        real(wp) :: dx
         integer  :: i, ii
         integer  :: fg(2)
-        real(wp) :: u, v, f(4)
         real(wp) :: h(4), hs
         real(wp) :: dhs(20), dh(4,20)
         hs  = 0e0_wp
@@ -1755,14 +1736,10 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         integer  :: igrad
         integer  :: ra1, ra2
         integer  :: nrap, ntap
-        real(wp) :: r1, t2
         real(wp) :: x(7), y(7), z(7)
         real(wp) :: qc(20)
-        real(wp) :: e
-        real(wp) :: dx
         integer  :: i, ii
         integer  :: fg(2)
-        real(wp) :: u, v, f(4)
         real(wp) :: h(4), hs
         real(wp) :: dhs(20), dh(4,20)
         hs  = 0e0_wp
@@ -1798,7 +1775,6 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ! get the internal coords for tertiary calcs
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i
         real(wp) :: x(7), y(7), z(7)
         real(wp) :: qc(20)
         qc(1)  = bndlen(2, 3, x, y, z)
@@ -1828,7 +1804,7 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ! Subroutine to evaluate 2D tent functions
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, si, s, tk
+        integer  :: i, si, tk
         integer  :: nrap !number of anchor points
         integer  :: ntap !number of anchor points
         real(wp) :: r1, t2
@@ -1985,16 +1961,11 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         real(wp) :: ga1(4), ga2(4), ga3(4)
         real(wp) :: gb1(4), gb2(4), gb3(4)
         real(wp) :: ka1(4), ka2(4)
-        real(wp) :: c(0:10)
-        real(wp) :: re, de, rmin, pi, rx
-        real(wp) :: fy, dfdr, u, dydr, lj, dljdr
         real(wp) :: rr, tt, dv2dr, dv2dt, v3
-        integer  :: ri, i, igrad
+        integer  :: i, igrad
         real(wp) :: x(7), y(7), z(7)
         real(wp) :: dx(7), dy(7), dz(7)
-        real(wp) :: ae, e1, e2, e3, f1, f2, f3
-        real(wp) :: g1, g2, g3, g4, i2, i3, i4
-        real(wp) :: h2, h3, h4, j2, j3, j4
+        real(wp) :: e1, e2, e3, f1, f2, f3
         real(wp) :: n1, n2, n3, n4
         real(wp) :: ak, tt0, gr1, gr2, gr3
         real(wp) :: fr1(5), fr2(5), fr3(5)
@@ -2212,17 +2183,14 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         ! modified version of dihedr1 to work through flat amine geoms
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: kkx, kky, kkz, yyx, yyy, yyz
-        real(wp)            :: llx, lly, llz, eex, eey, eez
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: kkx, kky, kkz, yyx, yyy, yyz
+        real(wp) :: llx, lly, llz, eex, eey, eez
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2275,18 +2243,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: ld, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2349,18 +2314,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: ld, td, bd, id
         !         \
         !          \ ajkl
         !           k----l
@@ -2419,18 +2381,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: ld, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2492,18 +2451,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: rd, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2565,18 +2521,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: rd, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2638,18 +2591,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: rd, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2711,18 +2661,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: ld, rd, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2788,18 +2735,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: ld, rd, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2865,18 +2809,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: ld, rd, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -2942,18 +2883,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: ld, rd, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -3019,18 +2957,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !        i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: ld, rd, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk
@@ -3096,18 +3031,15 @@ module chempotpy_ch3nh2_aprp_dpem_pes
         !         i--j--k--l
         use chempotpy_kinds, only: wp
         implicit none
-        integer             :: i, j, k, l
-        real(wp), parameter :: tiny = 1.0e-13_wp
-        real(wp)            :: x(*), y(*), z(*)
-        real(wp)            :: eij(3), ejk(3), ekl(3), u(3), v(3), w(3)
-        real(wp)            :: rij, rjk, rkl, aijk, ajkl, wejk
-        real(wp)            :: ijx, ijy, ijz, kjx, kjy, kjz
-        real(wp)            :: lkx, lky, lkz, jkx, jky, jkz
-        real(wp)            :: oo1(3), oo2(3), so1(3), so2(3)
-        real(wp)            :: sso1, sso2, rso1, rso2
-        real(wp)            :: ab(3)
-        real(wp)            :: sab, p1p2, ra
-        real(wp)            :: ld, rd, td, bd, id, fd
+        integer  :: i, j, k, l
+        real(wp) :: x(*), y(*), z(*)
+        real(wp) :: ijx, ijy, ijz, kjx, kjy, kjz
+        real(wp) :: lkx, lky, lkz, jkx, jky, jkz
+        real(wp) :: oo1(3), oo2(3), so1(3), so2(3)
+        real(wp) :: sso1, sso2, rso1, rso2
+        real(wp) :: ab(3)
+        real(wp) :: sab, p1p2, ra
+        real(wp) :: ld, rd, td, bd, id
         !   eij
         ! i-----j
         !   aijk \ ejk

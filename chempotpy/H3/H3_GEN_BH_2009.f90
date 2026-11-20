@@ -11,12 +11,48 @@ subroutine pot( rvp, evp, dvp )
     use zmasses,         only: zmass1, zmass2
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate golden.
+        subroutine golden( ax, bx, cx, tol, xmin, fval )
+            use chempotpy_kinds, only: wp
+            implicit none
+            external fcn
+            real(wp), parameter :: r = 0.61803399e0_wp, c = 1e0_wp-r
+            real(wp)            :: f1, f2, x0, x1, x2, x3, tol
+            real(wp)            :: fval, xmin, bx, ax, cx, fcn
+            real(wp)            :: fa, fb, fc
+            integer             :: icount
+            integer, parameter  :: maxcount = 5000
+        end subroutine golden
+
+        !> @brief Evaluate potbodcdh2.
+        subroutine potbodcdh2( r1x, r2x, r3x, eee, dv )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r1x
+            real(wp) :: r2x
+            real(wp) :: r3x
+            real(wp) :: eee
+            real(wp) :: dv(1:3)
+        end subroutine potbodcdh2
+
+        !> @brief Evaluate potcbs.
+        subroutine potcbs( r1x, r2x, r3x, eee, dv )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: r1x
+            real(wp) :: r2x
+            real(wp) :: r3x
+            real(wp) :: eee
+            real(wp) :: dv(3)
+        end subroutine potcbs
+    end interface
     real(wp), parameter   :: ccishift = 0.1744759989649372e0_wp
     real(wp), parameter   :: towave   = 219474.7e0_wp
     real(wp), parameter   :: xmass1   = 1836.15264e0_wp, xmass2 = 1836.15264e0_wp, xmass3 = 1836.15264e0_wp
     real(wp), intent(in)  :: rvp(3)
     real(wp), intent(out) :: evp, dvp(3)
-    integer               :: icase, info, i
+    integer               :: icase, i
     real(wp)              :: r1x, r2x, r3x, ecci
     real(wp)              :: dcci(3), d1(3), d2(3), d3(3)
     real(wp)              :: xmh, xmd, xmminv(3,3), amat(3), t
@@ -116,13 +152,46 @@ module chempotpy_h3_gen_bh_2009_potbodcdh2_legacy_state_b8d1df42
     subroutine dispatch( r1x, r2x, r3x, eee, dv )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate bodc2body.
+            real(wp) function bodc2body( r1x, dv )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: xlp(14), beta, re, v, r1x, dv, t
+                integer  :: j, indx
+            end function bodc2body
+
+            !> @brief Evaluate indexa2.
+            subroutine indexa2( mbig, mtop, iind, jind, kind, ipar, maxi, maxi2 )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer, intent(in)    :: mbig, mtop
+                integer, intent(inout) :: iind(5000), jind(5000), kind(5000), ipar(5000), maxi, maxi2
+                integer                :: l, l2, i, j, k, isum
+            end subroutine indexa2
+
+            !> @brief Evaluate leps.
+            subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer  :: i, j
+                real(wp) :: r(3), v1, v2, xma, xmb, xmc, gtot, dgtot(3)
+                real(wp) :: ex, vs(3), vt(3), dvs(3), dvt(3)
+                real(wp) :: h11, h12, h22, hsum, hdif, dhdif(3), rad, delh
+                real(wp) :: f12(3), cos1, cos2, cos3, ga, gb, gc
+                real(wp) :: d2vs(3), d2vt(3), dh11(3), dh12(3), dh22(3)
+                real(wp) :: d2h12(3), d2hdif(3), drad(3), df12(3,3)
+                real(wp) :: dcos1(3), dcos2(3), dcos3(3)
+                real(wp) :: d(3), re(3), beta(3), sato(3), rt3
+            end subroutine leps
+        end interface
         optional :: r1x, r2x, r3x, eee, dv
         integer, parameter :: n2 = 5000
         integer            :: iind(n2), jind(n2), kind(n2), ipar(n2)
         integer            :: ii, it, maxi, maxi2, maxi2a, i
         real(wp)           :: r1x, r2x, r3x, rho1, rho2, rho3, eee, dv(:)
         real(wp)           :: drho1, drho2, drho3
-        real(wp)           :: e1body, xmd, xmh, hatom_bodc, bodc2body
+        real(wp)           :: e1body, xmd, xmh, hatom_bodc
         real(wp)           :: round, ald, betad, beta, deldamp, rhodamp
         real(wp)           :: bb2, bb3, bb4, bb5, v, rnought, towave
         real(wp)           :: xma, xmb, xmc, v1, v2, gtot, rsum, &
@@ -927,7 +996,6 @@ end
 
 !> @brief Evaluate indexa2.
 subroutine indexa2( mbig, mtop, iind, jind, kind, ipar, maxi, maxi2 )
-    use chempotpy_kinds, only: wp
     implicit none
     integer, intent(in)    :: mbig, mtop
     integer, intent(inout) :: iind(5000), jind(5000), kind(5000), ipar(5000), maxi, maxi2
@@ -1088,6 +1156,47 @@ module chempotpy_h3_gen_bh_2009_potcbs_legacy_state_b8d1df42
     subroutine dispatch( r1x, r2x, r3x, eee, dv )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate indexa3.
+            subroutine indexa3( mbig, mtop, iind, jind, kind, ipar, maxi, maxi2 )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer, intent(in)    :: mbig, mtop
+                integer, intent(inout) :: iind(5000), jind(5000), kind(5000), ipar(5000), maxi, maxi2
+                integer                :: l, l2, i, j, k, isum
+            end subroutine indexa3
+
+            !> @brief Evaluate singlet.
+            subroutine singlet( r, v, dv )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer             :: j
+                real(wp)            :: r, v, dv, t0, t1, t2, vsr, damp, xd, xd2, prefac
+                real(wp), parameter :: c6    = -6.499027e0_wp
+                real(wp), parameter :: c8    = -124.3991e0_wp
+                real(wp), parameter :: c10   = -3285.828e0_wp
+                real(wp), parameter :: beta  = 0.2e0_wp
+                real(wp), parameter :: re    = 1.401e0_wp
+                real(wp), parameter :: alpha = 3.980917850296971e0_wp
+                real(wp)            :: xlp(17)
+            end subroutine singlet
+
+            !> @brief Evaluate trip.
+            subroutine trip( r, v, dv )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer             :: j
+                real(wp)            :: r, v, dv, t0, t1, t2, vlr, dvlr, vsr, dvsr
+                real(wp)            :: damp, xd, xd2, prefac
+                real(wp), parameter :: c6    = -6.499027e0_wp
+                real(wp), parameter :: c8    = -124.3991e0_wp
+                real(wp), parameter :: c10   = -3285.828e0_wp
+                real(wp), parameter :: beta  = 0.2e0_wp
+                real(wp), parameter :: re    = 1.401e0_wp
+                real(wp), parameter :: alpha = 4.342902497495857e0_wp
+                real(wp)            :: xlp(17)
+            end subroutine trip
+        end interface
         integer, parameter  :: n2      = 5000
         real(wp), parameter :: eshift  = 0.1744759989649372e0_wp
         real(wp), parameter :: beta    = 0.9246250191375499e0_wp
@@ -1616,7 +1725,6 @@ end subroutine potcbs
 
 !> @brief Evaluate indexa3.
 subroutine indexa3( mbig, mtop, iind, jind, kind, ipar, maxi, maxi2 )
-    use chempotpy_kinds, only: wp
     implicit none
     integer, intent(in)    :: mbig, mtop
     integer, intent(inout) :: iind(5000), jind(5000), kind(5000), ipar(5000), maxi, maxi2
@@ -1819,10 +1927,17 @@ end
 subroutine golden( ax, bx, cx, tol, xmin, fval )
     use chempotpy_kinds, only: wp
     implicit none
-    external fcn
+    interface
+        !> @brief Evaluate fcn.
+        real(wp) function fcn( x )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: x, e, bodc2body, v, dv, towave, xmh, massfact
+        end function fcn
+    end interface
     real(wp), parameter :: r = 0.61803399e0_wp, c = 1e0_wp-r
     real(wp)            :: f1, f2, x0, x1, x2, x3, tol
-    real(wp)            :: fval, xmin, bx, ax, cx, fcn
+    real(wp)            :: fval, xmin, bx, ax, cx
     real(wp)            :: fa, fb, fc
     integer             :: icount
     integer, parameter  :: maxcount = 5000
@@ -1880,7 +1995,31 @@ real(wp) function fcn( x )
     use zmasses,         only: zmass1, zmass2
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp) :: x, e, bodc2body, v, dv, towave, xmh, massfact
+    interface
+        !> @brief Evaluate bodc2body.
+        real(wp) function bodc2body( r1x, dv )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: xlp(14), beta, re, v, r1x, dv, t
+            integer  :: j, indx
+        end function bodc2body
+
+        !> @brief Evaluate singlet.
+        subroutine singlet( r, v, dv )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer             :: j
+            real(wp)            :: r, v, dv, t0, t1, t2, vsr, damp, xd, xd2, prefac
+            real(wp), parameter :: c6    = -6.499027e0_wp
+            real(wp), parameter :: c8    = -124.3991e0_wp
+            real(wp), parameter :: c10   = -3285.828e0_wp
+            real(wp), parameter :: beta  = 0.2e0_wp
+            real(wp), parameter :: re    = 1.401e0_wp
+            real(wp), parameter :: alpha = 3.980917850296971e0_wp
+            real(wp)            :: xlp(17)
+        end subroutine singlet
+    end interface
+    real(wp) :: x, v, dv, towave, xmh, massfact
     !      Evaluates the Born-Huang energy of an isomer of H2 with masses of zmass1 and zmass2
     xmh      = 1836.15264e0_wp   ! H nuclear mass (after substracting 1 for electron mass)
     massfact = 0.5e0_wp*xmh*(zmass1+zmass2)/(zmass1*zmass2)
@@ -1900,13 +2039,41 @@ module chempotpy_h3_gen_bh_2009_pes
 
     !> @brief Evaluate the H3_GEN_BH_2009 potential energy surface for H3.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
         implicit none
+        interface
+            !> @brief Evaluate evdrdx.
+            subroutine evdrdx( x, r, drdx )
+                use chempotpy_kinds, only: wp
+                implicit none
+                integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+                integer, parameter    :: second_atoms(3) = [2, 3, 3]
+                real(wp), intent(in)  :: x(9), r(3)
+                real(wp), intent(out) :: drdx(3,9)
+            end subroutine evdrdx
+
+            !> @brief Evaluate pot.
+            subroutine pot( rvp, evp, dvp )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), parameter   :: ccishift = 0.1744759989649372e0_wp
+                real(wp), parameter   :: towave   = 219474.7e0_wp
+                real(wp), parameter   :: xmass1   = 1836.15264e0_wp, xmass2 = 1836.15264e0_wp, xmass3 = 1836.15264e0_wp
+                real(wp), intent(in)  :: rvp(3)
+                real(wp), intent(out) :: evp, dvp(3)
+                integer               :: icase, info, i
+                real(wp)              :: r1x, r2x, r3x, ecci
+                real(wp)              :: dcci(3), d1(3), d2(3), d3(3)
+                real(wp)              :: xmh, xmd, xmminv(3,3), amat(3), t
+                real(wp)              :: e1, e2, e3, emat(3), ezero, hatom_bodc, xmin
+                real(wp)              :: ezero2
+            end subroutine pot
+        end interface
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
@@ -1918,7 +2085,7 @@ module chempotpy_h3_gen_bh_2009_pes
         real(wp)              :: r(3), dvp(3), v
         real(wp)              :: tx(9), r2(3), drdx(3,9)
         real(wp)              :: gx(nstates,9)
-        integer               :: iatom, idir, i, j
+        integer               :: iatom, idir, j
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         call flatten_cartesian_coordinates(x, tx)

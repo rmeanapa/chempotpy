@@ -32,7 +32,7 @@ module chempotpy_o3_5app_2026_pes
 
     !> @brief Evaluate the O3_5app_2026 potential energy surface for O3.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -44,7 +44,6 @@ module chempotpy_o3_5app_2026_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: t(nstates,nstates)
-        integer               :: iatom, idir, j, istate, jstate
         !initialize
         p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! no conversion needed, input is Angstrom, output is eV, eV/Angstrom, and 1/angstrom
@@ -75,16 +74,17 @@ module chempotpy_o3_5app_2026_pes
         real(wp), intent(inout) :: t(ns,ns)
         real(wp), intent(inout) :: h(ns,ns,n,3)
         ! layers and their sizes
-        real(wp) :: coeff_l0(3,35), coeff_l1(35,65), coeff_l2(65,95), coeff_l3(95,125), coeff_l4(125,21)
-        real(wp) :: bias_l0(35), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(21)
-        real(wp) :: r(n*(n-1)/2)
-        real(wp) :: gr(ns,n*(n-1)/2)
-        real(wp) :: hr(ns,ns,n*(n-1)/2)
-        real(wp) :: v2b(ns), g2b(ns,n*(n-1)/2)  !!!!
-        real(wp) :: v2b_1(n*(n-1)/2,ns)
-        real(wp) :: drdx(n*(n-1)/2,3*n)
-        integer  :: i, j, k, l, m
-        integer  :: imol
+        real(wp)              :: coeff_l0(3,35), coeff_l1(35,65), coeff_l2(65,95)
+        real(wp), allocatable :: coeff_l3(:,:), coeff_l4(:,:)
+        real(wp)              :: bias_l0(35), bias_l1(65), bias_l2(95), bias_l3(125), bias_l4(21)
+        real(wp)              :: r(n*(n-1)/2)
+        real(wp)              :: gr(ns,n*(n-1)/2)
+        real(wp)              :: hr(ns,ns,n*(n-1)/2)
+        real(wp)              :: v2b(ns), g2b(ns,n*(n-1)/2)  !!!!
+        real(wp)              :: v2b_1(n*(n-1)/2,ns)
+        real(wp)              :: drdx(n*(n-1)/2,3*n)
+        integer               :: imol
+        allocate(coeff_l3(95,125), coeff_l4(125,21))
         call assign_coeff_bias(coeff_l0, coeff_l1, coeff_l2, coeff_l3, coeff_l4, bias_l0, bias_l1, bias_l2, bias_l3, bias_l4)
         call all_pair_distances(x, r)
         ! compute 2body terms,
@@ -112,21 +112,12 @@ module chempotpy_o3_5app_2026_pes
         real(wp)                :: r(n*(n-1)/2)
         real(wp)                :: a0(35), a1(65), a2(95), a3(125), a4(21)
         real(wp)                :: z0(35), z1(65), z2(95), z3(125), z4(21)
-        real(wp)                :: g0(3,35), g1(3,65), g2(3,95), g3(3,125), g4(3,21), g4p(21,3)
+        real(wp)                :: g0(3,35), g1(3,65), g2(3,95), g3(3,125), g4(3,21)
         real(wp)                :: dpem(ns,ns), dvdu(ns,21)
-        real(wp)                :: dudr(ns,ns,3), tmpmat(ns,ns)
-        integer                 :: map(3,6)
-        real(wp)                :: e_0(6), sum_dis, s_j
-        real(wp)                :: af_f=1.2, af_a=-2.0, af_b=3.4, order=4.0
+        real(wp)                :: order=4.0
         real(wp)                :: f, dfdr(n*(n-1)/2)
-        real(wp)                :: dfdr_3b(ns,n*(n-1)/2), dfdr_2b(ns,n*(n-1)/2)
-        real(wp)                :: ag_f=1.2, ag_a=-2.0, ag_b=3.8
-        real(wp)                :: decay, ddecaydr(n*(n-1)/2)
-        real(wp)                :: ddecaydr_3b(ns,n*(n-1)/2), ddecaydr_2b(ns,n*(n-1)/2)
         integer                 :: sum1
         integer                 :: i, j, k, l
-        real(wp)                :: sum_v2b(ns), sum_g2b(ns,n*(n-1)/2)
-        real(wp)                :: reordered_v2b(ns), reordered_g2b(ns,n*(n-1)/2)
         real(wp)                :: cpem0(ns,ns)
         real(wp)                :: g4p_0(21,3)
         ! the following parameters are used to construct multi-state many-body SEC
@@ -137,7 +128,6 @@ module chempotpy_o3_5app_2026_pes
         real(wp) :: cpem2(ns,ns)
         real(wp) :: ah_f=1.2, ah_a=-2.0, ah_b=3.5
         real(wp) :: decay_h, ddecay_hdr(n*(n-1)/2)
-        real(wp) :: ddecay_hdr_3b(ns,n*(n-1)/2), ddecay_hdr_2b(ns,n*(n-1)/2)
         ! convert CPEM(1) and CPEM(2) into ns*(ns+1)/2 vector
         real(wp) :: cpem1_vec(21)
         real(wp) :: cpem2_vec(21)
@@ -350,8 +340,7 @@ module chempotpy_o3_5app_2026_pes
         real(wp), intent(inout) :: a(n)
         real(wp), intent(out)   :: f
         real(wp)                :: r_in, ar, br
-        integer                 :: max_index
-        integer                 :: npairs, ibond, jbond, ipair
+        integer                 :: ibond, jbond
         real(wp)                :: pair_sum, bond_sum
         pair_sum = 0.e0_wp
         do ibond=1, nbonds
@@ -386,11 +375,8 @@ module chempotpy_o3_5app_2026_pes
         integer                 :: i
         real(wp)                :: r_in, ar, br
         real(wp)                :: dfdr_in, dr_indr(nbonds)
-        integer                 :: npairs, ibond, jbond, ipair
-        real(wp)                :: r_in_num
-        real(wp)                :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
-        real(wp)                :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
-        real(wp)                :: diff
+        integer                 :: ibond, jbond
+        real(wp)                :: pair_sum, bond_sum
         pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
@@ -440,8 +426,7 @@ module chempotpy_o3_5app_2026_pes
         real(wp), intent(in)  :: r(nbonds)
         real(wp), intent(out) :: f
         real(wp)              :: r_in, ar, br
-        integer               :: max_index
-        integer               :: npairs, ibond, jbond, ipair
+        integer               :: ibond, jbond
         real(wp)              :: pair_sum, bond_sum
         pair_sum = 0.e0_wp
         do ibond=1, nbonds
@@ -472,11 +457,8 @@ module chempotpy_o3_5app_2026_pes
         real(wp), intent(out) :: dfdr(nbonds)
         real(wp)              :: r_in, ar, br
         real(wp)              :: dfdr_in, dr_indr(nbonds)
-        integer               :: npairs, ibond, jbond, ipair
-        real(wp)              :: r_in_num
-        real(wp)              :: pair_sum, bond_sum, pair_sum_num, bond_sum_num
-        real(wp)              :: gr_num(nbonds), r_num(nbonds), ar1, br1, ar2, br2
-        real(wp)              :: diff
+        integer               :: ibond, jbond
+        real(wp)              :: pair_sum, bond_sum
         pair_sum = 0.e0_wp
         do ibond=1, nbonds
             do jbond=ibond+1, nbonds
@@ -512,7 +494,6 @@ module chempotpy_o3_5app_2026_pes
     ! used to compute index in DPEM
     !> @brief Evaluate sumover.
     subroutine sumover( a, b, sum1 )
-        use chempotpy_kinds, only: wp
         implicit none
         integer, intent(in)  :: a, b
         integer, intent(out) :: sum1
@@ -23984,7 +23965,7 @@ module chempotpy_o3_5app_2026_pes
         ! Units: alpha in Angstrom^-2, beta=dimensionless, as_k in milihartree.
         real(wp) :: alpha, beta, as(0:7)
         real(wp) :: gam, del
-        integer  :: i, j, k
+        integer  :: i, k
         v    = 0.0e0_wp
         grad = 0.0e0_wp
         ! list of considered states in 5A'' symmetry

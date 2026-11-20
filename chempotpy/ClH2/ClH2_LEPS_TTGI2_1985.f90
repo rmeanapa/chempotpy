@@ -64,12 +64,22 @@ module chempotpy_clh2_leps_ttgi2_1985_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( q, nder, xter, dq )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: q(3)
+            integer, intent(in)   :: nder
+            real(wp), intent(out) :: xter, dq(3)
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the ClH2_LEPS_TTGI2_1985 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, path, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -118,6 +128,18 @@ module chempotpy_clh2_leps_ttgi2_1985_pes
                 'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the ClH2_LEPS_TTGI2_1985 potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_clh2_leps_ttgi2_1985_pes
 
 !> @brief Expose ClH2_LEPS_TTGI2_1985 through the Python-facing PES entry point.
@@ -135,18 +157,6 @@ subroutine pes( x, igrad, path, p, g, d )
     real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, path, p, g, d)
 end subroutine pes
-
-!> @brief Evaluate EvdRdX for the ClH2_LEPS_TTGI2_1985 potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
 
 module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
     use chempotpy_interpolation, only: evaluate_tabulated_cubic_spline, &
@@ -178,8 +188,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             & s3sab(121), s3spx(121), s3tab(121), s3tpx(121), s3tsx(121), s3uab(121), sabfit(121), spxa, spxb, spxfit(121), &
             & sqrt3, ss11a, ss11b, ss12a, ss12b, ss22a, ss22b, ssab, ssgh, ssgx, st, st2, tabfit(121), test, th(6, 6), tpxa, &
             & tpxb, tpxfit(121), tre, tsab, tsxa, tsxb, tsxfit(121), two, uabfit(121), vec(6, 6), w(6), x(121), xtra, zero
-        integer           :: i, idebug, idum, iflag, indx(3), iptprt, ix, j, k, ndim, ndum, nroot, ns
-        character(len=80) :: title(2)
+        integer :: i, idebug, iflag, indx(3), iptprt, ix, j, k, ndim, nroot, ns
         equivalence (th(1, 1), dh(1, 1))
         !   Echo the name of the potential to the file linked to FORTRAN unit IP
         arg    = 0.e0_wp
@@ -920,7 +929,7 @@ module chempotpy_clh2_leps_ttgi2_1985_pot_legacy_state_d28b0a59
             !     SETS UP SPLINE FITS FOR DIATOMIC CURVES
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: angta0, auterg, eps, fac, r, r1, r2, r3
+            real(wp) :: angta0, auterg, fac
             integer  :: i
             auterg = 4.3598283e-11_wp
             angta0 = 1.88972634e0_wp

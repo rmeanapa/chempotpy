@@ -33,7 +33,7 @@ module chempotpy_almhn_vbo1_pes
 
     !> @brief Evaluate the AlmHn_VBO1 potential energy surface for AlmHn.
     subroutine evaluate( xyz, nal, nh, natoms, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
@@ -78,11 +78,7 @@ module chempotpy_almhn_vbo1_pes
         use chempotpy_geometry, only: fill_distance_matrix
         use chempotpy_kinds,    only: wp
         implicit none
-        real(wp) :: add, c1, c1_al, c1_h, c1_hal, c2, c2_al, c2_h, c2_hal, c3, c3_al, c3_h, c4, c4_al, c4_h, &
-            & del1, den1, den2, den3, den4, dx, dy, dz, en, en1, en2, esn, esn_al, esn_h, fa, gam1_al, gam1_h, gam1_hal, &
-            & gam2_al, gam2_h, gam2_hal, gam3_al, gam3_alh, gam3_h, gam3_hal, gam4_al, gam4_alh, gam4_h, gam4_hal, &
-            & r(maxatom, maxatom), r1, rij, sig3_alh, sig3_hal, sig4_alh, sig4_hal, v, v1, vi3, vi4, x(maxatom), y(maxatom), &
-            & z(maxatom)
+        real(wp)            :: add, c1, c1_al, c1_h, c1_hal, c2, c2_al, c2_h, c2_hal, c3, c3_al, c3_h, c4, c4_al, c4_h, del1, den1, den2, den3, den4, en, en1, en2, esn, esn_al, esn_h, fa, gam1_al, gam1_h, gam1_hal, gam2_al, gam2_h, gam2_hal, gam3_al, gam3_alh, gam3_h, gam3_hal, gam4_al, gam4_alh, gam4_h, gam4_hal, r(maxatom,maxatom), r1, rij, sig3_alh, sig3_hal, sig4_alh, sig4_hal, v, v1, vi3, vi4, x(maxatom), y(maxatom), z(maxatom)
         integer             :: i, id(maxatom), j, k, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp
@@ -140,7 +136,7 @@ module chempotpy_almhn_vbo1_pes
             endif
         enddo
         !    Calculate all internuclear distances
-        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom, 1:natom))
+        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
         !    Calculate en1 which corresponds to the first term in parenthesis in
         en1 = 0e0_wp
         en2 = 0e0_wp
@@ -218,7 +214,7 @@ module chempotpy_almhn_vbo1_pes
                     cn(4,i,j) = exp(gam(4,i,j)/den4)
                 endif
                 !   Calculate bij according to Eq. (1)
-                rij = r(i, j)
+                rij = r(i,j)
                 if( rij .lt. del1 )then
                     b(1,i,j) = exp(-gam(1,i,j)/(1e0_wp-(rij/del1)**en))*cn(1,i,j)
                     b(2,i,j) = exp(-gam(2,i,j)/(1e0_wp-(rij/del1)**en))*cn(2,i,j)

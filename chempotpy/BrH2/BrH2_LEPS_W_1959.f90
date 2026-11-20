@@ -26,7 +26,7 @@ module chempotpy_brh2_leps_w_1959_pes
 
     !> @brief Evaluate the BrH2_LEPS_W_1959 potential energy surface for BrH2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         type(chempotpy_status_t), intent(out), optional :: status
         integer, intent(in)   :: igrad
         real(wp), intent(in)  :: x(3,3)

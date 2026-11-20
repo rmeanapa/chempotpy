@@ -32,7 +32,7 @@ module chempotpy_almhn_vbo2_pes
 
     !> @brief Evaluate the AlmHn_VBO2 potential energy surface for AlmHn.
     subroutine evaluate( xyz, nal, nh, natoms, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
@@ -77,11 +77,7 @@ module chempotpy_almhn_vbo2_pes
         use chempotpy_geometry, only: fill_distance_matrix
         use chempotpy_kinds,    only: wp
         implicit none
-        real(wp) :: add, alpha, alpha_al, alpha_alh, alpha_h, beta, beta_al, beta_alh, beta_h, ca, ca_al, ca_bar, &
-            & ca_bar_al, ca_bar_h, ca_h, cb, cb_al, cb_bar, cb_bar_al, cb_bar_h, cb_h, cgam, cgam_al, cgam_bar, cgam_bar_al, &
-            & cgam_bar_h, cgam_h, del1, den1, den2, den3, den4, den5, dx, dy, dz, en, en1, en2, fa, gam1_al, gam1_alh, gam1_h, &
-            & gam2_al, gam2_alh, gam2_h, gam3_al, gam3_h, gam4_al, gam4_alh, gam4_h, gam5_alh, r(maxatom, maxatom), r1, rij, &
-            & sig5_alh, v, v1, vi3, vi4, vi5, x(maxatom), y(maxatom), z(maxatom)
+        real(wp)            :: add, alpha, alpha_al, alpha_alh, alpha_h, beta, beta_al, beta_alh, beta_h, ca, ca_al, ca_bar, ca_bar_al, ca_bar_h, ca_h, cb, cb_al, cb_bar, cb_bar_al, cb_bar_h, cb_h, cgam, cgam_al, cgam_bar, cgam_bar_al, cgam_bar_h, cgam_h, del1, den1, den2, den3, den4, den5, en, en1, en2, fa, gam1_al, gam1_alh, gam1_h, gam2_al, gam2_alh, gam2_h, gam3_al, gam3_h, gam4_al, gam4_alh, gam4_h, gam5_alh, r(maxatom,maxatom), r1, rij, sig5_alh, v, v1, vi3, vi4, vi5, x(maxatom), y(maxatom), z(maxatom)
         integer             :: i, id(maxatom), j, k, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp
@@ -171,7 +167,7 @@ module chempotpy_almhn_vbo2_pes
         kap5(2,1,2) = 0.e0_wp
         kap5(2,2,1) = 0.e0_wp
         !    Calculate all internuclear distances
-        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom, 1:natom))
+        call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
         !    Calculate en1 which corresponds to the term in brackets in Eq. (11)
         en1 = 0e0_wp
         en2 = 0e0_wp
@@ -244,7 +240,7 @@ module chempotpy_almhn_vbo2_pes
                     sigma(5,i,j) = sig5_alh
                 endif
                 !   Calculate bij according to Eq. (1)
-                rij = r(i, j)
+                rij = r(i,j)
                 if( rij .lt. del1 )then
                     b(1,i,j) = exp(-gam(1,i,j)/(1e0_wp-(rij/del1)**en))*cn(1,i,j)
                     b(2,i,j) = exp(-gam(2,i,j)/(1e0_wp-(rij/del1)**en))*cn(2,i,j)

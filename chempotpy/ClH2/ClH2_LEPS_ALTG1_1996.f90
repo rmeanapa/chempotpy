@@ -51,12 +51,22 @@ module chempotpy_clh2_leps_altg1_1996_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( r, nder, energy, dedr )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: r(3)
+            integer, intent(in)   :: nder
+            real(wp), intent(out) :: energy, dedr(3)
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the ClH2_LEPS_ALTG1_1996 potential energy surface for ClH2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -72,7 +82,7 @@ module chempotpy_clh2_leps_altg1_1996_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: dedr(3), energy, r(3), v
-        integer               :: i, iatom, idir, istate, j
+        integer               :: iatom, idir, istate, j
         real(wp)              :: tx(9), r2(3), dedx(9), drdx(3,9)
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
@@ -105,6 +115,18 @@ module chempotpy_clh2_leps_altg1_1996_pes
                 'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the ClH2_LEPS_ALTG1_1996 potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_clh2_leps_altg1_1996_pes
 
 !> @brief Expose ClH2_LEPS_ALTG1_1996 through the Python-facing PES entry point.
@@ -121,18 +143,6 @@ subroutine pes( x, igrad, p, g, d )
     real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
-
-!> @brief Evaluate EvdRdX for the ClH2_LEPS_ALTG1_1996 potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
 
 !> @brief Own the released fit state for the ClH2_LEPS_ALTG1_1996 potential.
 module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
@@ -161,7 +171,7 @@ module chempotpy_clh2_leps_altg1_1996_pot_legacy_state_46e6d832
 
     !> @brief Evaluate the ClH2 ALTG1 potential for one set of bond distances.
     subroutine evaluate( r, nder, energy, dedr, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         ! Last modified on 3 August 1995 by TCA.
         use chempotpy_kinds, only: wp
         implicit none

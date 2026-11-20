@@ -147,7 +147,7 @@ module chempotpy_ch4f_gen_gcso_1996_pes
         real(wp)              :: switch1_stheta(4)
         integer               :: istate
         real(wp)              :: tx(18), dx(18), v
-        integer               :: iatom, idir, i, j
+        integer               :: iatom, idir, j
         !initialize
         angles_dtheta0 = 0.e0_wp; angles_theta0 = 0.e0_wp; bonds_r0ch = 0.e0_wp; bonds_r0hh = 0.e0_wp; bonds_rbh = 0.e0_wp
         bonds_rcb      = 0.e0_wp; bonds_rch = 0.e0_wp; coords_tbh = 0.e0_wp; coords_tcb = 0.e0_wp; coords_tch = 0.e0_wp
@@ -315,7 +315,6 @@ module chempotpy_ch4f_gen_gcso_1996_pes
         !> @brief Evaluate coorden for the CH4F_GEN_GCSO_1996 potential.
         subroutine coorden
             !  calculates relative coordinates and bond lengths
-            use chempotpy_kinds, only: wp
             implicit none
             integer :: i, ind
             !  calculate relative coordinates
@@ -341,7 +340,7 @@ module chempotpy_ch4f_gen_gcso_1996_pes
             !  subroutine calculates reference angles for the "in-plane" potential
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: ddr(4,4), halfpi, sumd2(4), sumd4(4), tau, twopi
+            real(wp) :: halfpi, tau, twopi
             integer  :: i, j, k
             tau    = acos(-1.0e0_wp/3.0e0_wp)
             halfpi = 0.5e0_wp*PI
@@ -529,9 +528,8 @@ module chempotpy_ch4f_gen_gcso_1996_pes
             !  subroutine calculates symmetrized vop potential and derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: a(3), argd(4), axb(3), b(3), c(4,3), ddr, sum2, sum4, sumd2(4), sumd4(4), vop
-            integer  :: i, in(3), ind, itemp, j, k, l
-            real(wp) :: norma
+            real(wp) :: ddr, sum2, sum4, sumd2(4), sumd4(4), vop
+            integer  :: i, ind, itemp, j, k, l
             vop = 0.0e0_wp
             !  calculate force constants and their derivatives
             call opforce
@@ -1008,7 +1006,6 @@ module chempotpy_ch4f_gen_gcso_1996_pes
 
         !> @brief Evaluate SETUP for the CH4F_GEN_GCSO_1996 potential.
         subroutine setup( n3tm )
-            use chempotpy_kinds, only: wp
             implicit none
             integer :: n3tm
             !   N3TMMN = 3 * NATOMS

@@ -148,7 +148,7 @@ module chempotpy_ch4o_lep_1998_pes
         real(wp)              :: rbh(4)
         real(wp)              :: rcb
         real(wp)              :: rch(4)
-        character             :: ref(5)
+        character(len=75)     :: ref(5)
         real(wp)              :: rphi
         real(wp)              :: s1(4)
         real(wp)              :: s2(4)
@@ -265,12 +265,8 @@ module chempotpy_ch4o_lep_1998_pes
         subroutine pot
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: en, vip, vop, vstr
-            integer            :: i, ind
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: en, vip, vop, vstr
+            integer  :: i, ind
             !     PUT COORDINATES IN PROPER ARRAYS
             call cartou
             call carttor
@@ -328,13 +324,8 @@ module chempotpy_ch4o_lep_1998_pes
         !> @brief Evaluate coorden for the CH4O_LEP_1998 potential.
         subroutine coorden
             !  calculates relative coordinates and bond lengths
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, ind
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            integer :: i, ind
             !  calculate relative coordinates
             do ind=1, 3
                 tcb(ind) = q(nc(ind))-q(nhb(ind))
@@ -356,12 +347,8 @@ module chempotpy_ch4o_lep_1998_pes
             !  subroutine calculates reference angles for the "in-plane" potential
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: ddr(4,4), halfpi, sumd2(4), sumd4(4), tau, twopi
-            integer            :: i, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: halfpi, tau, twopi
+            integer  :: i, j, k
             tau    = acos(-1.0e0_wp/3.0e0_wp)
             halfpi = 0.5e0_wp*PI
             twopi  = 2.0e0_wp*PI
@@ -435,11 +422,7 @@ module chempotpy_ch4o_lep_1998_pes
             real(wp) :: ach, achdc(3), achdh(4,3), arga, dumach, dumjbh, dumjcb, dumjch, dumjhi, dumjhj, dumqbh, &
                 & dumqcb, dumqch, dumqhi, dumqhj, e1, e3, factj, rav, vj(4), vjbh(4), vjcb, vjch(4), vq(4), vqbh(4), vqcb, vqch(4), &
                 & vstr
-            integer            :: i, ind, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            integer :: i, ind, j, k
             !  calculate avergage bond length for the methane moiety
             rav = (rch(1)+rch(2)+rch(3)+rch(4))/4.0e0_wp
             !  initialise:
@@ -536,13 +519,9 @@ module chempotpy_ch4o_lep_1998_pes
             !  subroutine calculates symmetrized vop potential and derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: a(3), argd(4), axb(3), b(3), c(4,3), ddr, sum2, sum4, sumd2(4), sumd4(4), vop
-            integer            :: i, ii, in(3), ind, itemp, j, k, l
-            real(wp)           :: norma
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: a(3), argd(4), axb(3), b(3), c(4,3), ddr, sum2, sum4, sumd2(4), sumd4(4), vop
+            integer  :: i, ii, in(3), ind, itemp, j, k, l
+            real(wp) :: norma
             vop = 0.0e0_wp
             !  calculate force constants and their derivatives
             call opforce
@@ -619,12 +598,8 @@ module chempotpy_ch4o_lep_1998_pes
             !  and its derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: costh(4,4), dth(4,4), dth0c, dth0k, dthc, dthi, dthj, termth, theta(4,4), vip
-            integer            :: i, ind, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: costh(4,4), dth(4,4), dth0c, dth0k, dthc, dthi, dthj, termth, theta(4,4), vip
+            integer  :: i, ind, j, k
             !  initialise
             vip = 0.0e0_wp
             !  calculate force constants: fk0(i,j), f1(i)
@@ -675,12 +650,8 @@ module chempotpy_ch4o_lep_1998_pes
             implicit none
             real(wp) :: a(3), argd(4), atemp1, atemp2(3), atemp3, atemp4, atemp5, axb(3), b(3), c(4,3), &
                 & cdot(4, 3, 3), daxb(4, 3, 3), deldot, delta(4), sum2, sum4
-            integer            :: i, ii, in(3), ind, j, jj, k, l
-            real(wp)           :: norma
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            integer  :: i, ii, in(3), ind, j, jj, k, l
+            real(wp) :: norma
             !  initialise
             sum2 = 0.0e0_wp; sum4 = 0.0e0_wp
             !  set j,k,l indices
@@ -815,12 +786,8 @@ module chempotpy_ch4o_lep_1998_pes
             !  and their derivatives
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: dswitch(4,4), switch(4)
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: dswitch(4,4), switch(4)
+            integer  :: i, j
             !  calculate switching functions:
             switch(1) = (1.0e0_wp-s3(1))*s3(2)*s3(3)*s3(4)
             switch(2) = (1.0e0_wp-s3(2))*s3(3)*s3(4)*s3(1)
@@ -864,12 +831,8 @@ module chempotpy_ch4o_lep_1998_pes
             !  all partial derivatives involving them
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: a1, a2, arga1, arga2, df1dc(4), df1dh(4), dfk0(4,4,4), duma1, duma2, f0, f2
-            integer            :: i
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: a1, a2, arga1, arga2, df1dc(4), df1dh(4), dfk0(4,4,4), duma1, duma2, f0, f2
+            integer  :: i
             !  set force constant at asymptotes
             f0       = fkinf+ak
             f2       = fkinf
@@ -980,12 +943,8 @@ module chempotpy_ch4o_lep_1998_pes
             !  and their derivatives ds3,dsphi,dstheta
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: argmax, args1, args2, args3, argsphi, argstheta
-            integer            :: i
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: argmax, args1, args2, args3, argsphi, argstheta
+            integer  :: i
             !  nb remember that integration units are:
             !  energy in   1.0d+05 j/mol
             !  time in     1.0d-14 s
@@ -1056,12 +1015,8 @@ module chempotpy_ch4o_lep_1998_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: fact1, fact2
-            integer            :: i, icount, ind
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: fact1, fact2
+            integer  :: i, icount, ind
             !   N3TMMN = 3 * legacy_natoms
             !   legacy_natoms = the number of atoms represented by this potential function
             !   The variable N3TMMN is the minimum value of N3TM allowed to be
@@ -1069,7 +1024,6 @@ module chempotpy_ch4o_lep_1998_pes
             !   coordinates needed to represent the full system represented by this
             !   potential energy surface routine.
             !   N3TM must be greater than or equal to N3TMMN.
-            integer, parameter :: n3tmmn = 18
             if( legacy_natoms .gt. 25 )then
                 if( present(status) ) call status%set(status_invalid_input, &
                     'legacy kernel rejected the evaluation request')
@@ -1125,25 +1079,13 @@ module chempotpy_ch4o_lep_1998_pes
         subroutine ancvrt
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: n3atom     = 75
-            integer, parameter  :: natom      = 25
-            integer, parameter  :: isurf      = 5
-            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
-            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
-            real(wp), parameter :: ce         = 1.602176462e-19_wp
-            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
-            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
-            real(wp), parameter :: cang       = 1.0e-10_wp
-            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
-            real(wp), parameter :: ckcal      = 4.184e10_wp
-            real(wp), parameter :: htomillh   = 1000.e0_wp
-            real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: htowave    = 219474.631e0_wp
-            real(wp), parameter :: htokj      = 2625.49962e0_wp
-            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer, parameter  :: natom    = 25
+            real(wp), parameter :: htomillh = 1000.e0_wp
+            real(wp), parameter :: htoev    = 27.2113834e0_wp
+            real(wp), parameter :: htokcal  = hartree_to_kilocalorie_per_mole
+            real(wp), parameter :: htowave  = 219474.631e0_wp
+            real(wp), parameter :: htokj    = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a   = .5291772083e0_wp
             integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
             character(len=3)    :: periodic_1(7,32)
             character(len=2)    :: name1(natom)
@@ -1402,27 +1344,15 @@ module chempotpy_ch4o_lep_1998_pes
         !> @brief Evaluate CARTOU for the CH4O_LEP_1998 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
 
         !> @brief Evaluate CARTTOR for the CH4O_LEP_1998 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: coordinate_status
-            real(wp)           :: cmm, flm, hhd, hym, phi, pi, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
-            integer            :: i, ind, k, l
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
+            integer :: coordinate_status
             call cartesian_to_potlib_coordinates(cartnu, legacy_natoms, icartr, r, coordinate_status)
             if( coordinate_status /= 0 )then
                 if( present(status) ) call status%set(status_invalid_input, &
@@ -1433,13 +1363,8 @@ module chempotpy_ch4o_lep_1998_pes
 
         !> @brief Evaluate EUNITZERO for the CH4O_LEP_1998 potential.
         subroutine eunitzero
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j
             pengygs = engygs * cnvrte - anuzero
             if( ksdiag .ne. 0 )then
                 do i=ksdiag, kediag
@@ -1458,7 +1383,6 @@ module chempotpy_ch4o_lep_1998_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
@@ -1613,13 +1537,8 @@ module chempotpy_ch4o_lep_1998_pes
 
         !> @brief Evaluate DEDCOU for the CH4O_LEP_1998 potential.
         subroutine dedcou
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j, k
             if( ireorder .eq. 1 )then
                 do i = 1, legacy_natoms
                     dgscart(i,1) = dgscartnu(nulbl(i),1) * cnvrtde

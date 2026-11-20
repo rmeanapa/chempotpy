@@ -33,7 +33,7 @@ module chempotpy_aln_er2eba_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: coordinates_to_bohr, &
             energy_to_electronvolt
         use chempotpy_kinds, only: wp
@@ -67,9 +67,7 @@ module chempotpy_aln_er2eba_pes
     subroutine pot( x, y, z, v, natom, maxatom )
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp) :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, bu2b, c(10), co, cob, de, deb, dx, dy, dz, e2, &
-            & ee, eeb, fu2(maxatom, maxatom), poly, polyb, r(maxatom, maxatom), re, reb, rho, rhob, rij, ril, rlj, rr, s, sij, &
-            & sil, slj, term, v, x(maxatom), xk1, xk2, xk3, y(maxatom), z(maxatom)
+        real(wp)            :: a1, a1b, a2, a2b, a3, a3b, ac, au2, au23, au2b, bu2, bu2b, co, cob, de, deb, dx, dy, dz, e2, ee, eeb, fu2(maxatom,maxatom), poly, polyb, r(maxatom,maxatom), re, reb, rho, rhob, rij, ril, rlj, rr, s, sij, sil, slj, term, v, x(maxatom), xk1, xk2, xk3, y(maxatom), z(maxatom)
         integer             :: i, j, l, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp
@@ -92,16 +90,16 @@ module chempotpy_aln_er2eba_pes
         bu2b = 6.5e0_wp/autoang
         au23 = 1.19960918417195894
         do i=1, natom
-            r(i, i)   = 0.e0_wp
-            fu2(i, i) = 1.e0_wp
+            r(i,i)   = 0.e0_wp
+            fu2(i,i) = 1.e0_wp
             do j=i+1, natom
-                dx        = x(i)-x(j)
-                dy        = y(i)-y(j)
-                dz        = z(i)-z(j)
-                r(i, j)   = sqrt(dx*dx+dy*dy+dz*dz)
-                r(j, i)   = r(i, j)
-                fu2(j, i) = 1.e0_wp
-                fu2(i, j) = 1.e0_wp
+                dx       = x(i)-x(j)
+                dy       = y(i)-y(j)
+                dz       = z(i)-z(j)
+                r(i,j)   = sqrt(dx*dx+dy*dy+dz*dz)
+                r(j,i)   = r(i,j)
+                fu2(j,i) = 1.e0_wp
+                fu2(i,j) = 1.e0_wp
             enddo
         enddo
         ! do BA term, needs xk1,xk2,xk3
@@ -109,7 +107,7 @@ module chempotpy_aln_er2eba_pes
             sil = 0.e0_wp
             do l=1, natom! gamma loop
                 if( l .eq. i ) cycle! gamma != alpha
-                ril = r(i, l)
+                ril = r(i,l)
                 if( ril .ge. bu2 ) cycle! cutoff for Ralpha,gamma
                 ac   = au23*(1.e0_wp-1.e0_wp/(1.e0_wp-ril/bu2))   ! cutoff for Ralpha,gamma
                 term = exp(-xk2*ril**xk3+ac)          ! cutoff times Ralpha,gam
@@ -119,13 +117,13 @@ module chempotpy_aln_er2eba_pes
                 slj = 0.e0_wp
                 do l=1, natom! delta loop
                     if( l .eq. j ) cycle! delta != beta
-                    rlj = r(l, j)
+                    rlj = r(l,j)
                     if( rlj .ge. bu2 ) cycle! cutoff for Rbeta,delta
                     ac   = au23*(1e0_wp-1e0_wp/(1e0_wp-rlj/bu2))      ! cutoff for Rbeta,delta
                     term = exp(-xk2*rlj**xk3+ac)          ! cutoff times Rbeta,delt
                     slj  = slj+term                         ! sum
                 enddo
-                rij = r(i, j)
+                rij = r(i,j)
                 sij = 0.e0_wp
                 goto_block_13_131: block
                     if( rij .ge. bu2 ) exit goto_block_13_131! cutoff for Ralpha,beta
@@ -134,13 +132,13 @@ module chempotpy_aln_er2eba_pes
                 end block goto_block_13_131
                 !         s=chi, need to subtract off overcounted Ralpha,beta term (sij)
                 !         and mutiply the two sums to get the double sum
-                s         = xk1*(sil-sij)*(slj-sij)
-                e2        = exp(-2e0_wp*s)                     ! equivalent to 1-dtanh(s)
-                fu2(i, j) = 2e0_wp*e2/(1e0_wp+e2)            ! equivalent to 1-dtanh(s)
-                fu2(i, j) = 1.e0_wp-fu2(i, j)
-                fu2(j, i) = fu2(i, j)
+                s        = xk1*(sil-sij)*(slj-sij)
+                e2       = exp(-2e0_wp*s)                     ! equivalent to 1-dtanh(s)
+                fu2(i,j) = 2e0_wp*e2/(1e0_wp+e2)            ! equivalent to 1-dtanh(s)
+                fu2(i,j) = 1.e0_wp-fu2(i,j)
+                fu2(j,i) = fu2(i,j)
             enddo
-            fu2(i, i) = 1.e0_wp                           ! shouldn't get used anywh
+            fu2(i,i) = 1.e0_wp                           ! shouldn't get used anywh
         enddo
         ! potential, includes cutoff
         v = 0.e0_wp
@@ -160,7 +158,7 @@ module chempotpy_aln_er2eba_pes
                 cob   = 0.e0_wp
                 if( rr .le. bu2 ) co=exp(au2*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2)))
                 if( rr .le. bu2b ) cob=exp(au2b*(1.e0_wp-1.e0_wp/(1.e0_wp-rr/bu2b)))
-                v = v-de*ee*poly*co +deb*eeb*polyb*cob*fu2(i, j)
+                v = v-de*ee*poly*co +deb*eeb*polyb*cob*fu2(i,j)
             enddo
         enddo
     end subroutine pot

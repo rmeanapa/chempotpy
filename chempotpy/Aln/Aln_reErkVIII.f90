@@ -38,7 +38,7 @@ module chempotpy_aln_reerkviii_pes
     !> @brief Evaluate an aluminum-cluster potential through the Python contract.
     subroutine evaluate( coordinates_angstrom, atom_count, derivative_order, &
             energy_ev, gradient_ev_per_angstrom, coupling_per_angstrom, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: coordinates_to_bohr, &
             energy_to_electronvolt
         use chempotpy_kinds, only: wp
@@ -73,9 +73,7 @@ module chempotpy_aln_reerkviii_pes
         use chempotpy_geometry, only: fill_distance_matrix
         use chempotpy_kinds,    only: wp
         implicit none
-        real(wp) :: a1, a2, arc1, arc2, b1, b2, bra, cot12, cot13, cot2, cot3, cote1, cote2, cote3, dx, dy, dz, em, en, &
-            & r(maxatom,maxatom), r0, rel, rr, rr1, rr2, rr3, u, uem, uen, v, v1, w1, w2, war, x(maxatom), y(maxatom), &
-            & z(maxatom)
+        real(wp)            :: a1, a2, arc1, arc2, b1, b2, bra, cot12, cot13, cot2, cot3, cote1, cote2, cote3, em, en, r(maxatom,maxatom), r0, rel, rr, rr1, rr2, rr3, u, uem, uen, v, v1, w1, w2, war, x(maxatom), y(maxatom), z(maxatom)
         integer             :: i, j, m, maxatom, natom
         real(wp), parameter :: autoev  = 27.2113961e0_wp
         real(wp), parameter :: autoang = 0.529177249e0_wp

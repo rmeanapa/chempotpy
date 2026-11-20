@@ -28,12 +28,25 @@ module chempotpy_hobr_3app_pip_pes
 
     !> @brief Evaluate the HOBr_3App_PIP potential energy surface for HOBr.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
-        use chempotpy_units,    only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_geometry, only: cartesian_distance, flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
-        use chempotpy_units,    only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_units,    only: hartree_to_electronvolt
         use chempotpy_kinds,    only: wp
         implicit none
+        interface
+            !> @brief Evaluate mypot.
+            subroutine mypot( r1, r2, r3, value, dr1, dr2, dr3 )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: r1
+                real(wp) :: r2
+                real(wp) :: r3
+                real(wp) :: value
+                real(wp) :: dr1
+                real(wp) :: dr2
+                real(wp) :: dr3
+            end subroutine mypot
+        end interface
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
@@ -47,7 +60,7 @@ module chempotpy_hobr_3app_pip_pes
         real(wp)              :: dr_oh, dr_hbr, dr_obr
         real(wp)              :: r(3), tx(9)
         real(wp)              :: dr(3), drdx(3,9), dx(9)
-        integer               :: iatom, idir, i, j, istate
+        integer               :: iatom, idir, j, istate
         v     = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         r_obr = cartesian_distance(x(2,:), x(3,:))
         r_oh  = cartesian_distance(x(1,:), x(2,:))
@@ -80,6 +93,18 @@ module chempotpy_hobr_3app_pip_pes
                 'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 1, 2]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_hobr_3app_pip_pes
 
 !> @brief Expose HOBr_3App_PIP through the Python-facing PES entry point.
@@ -97,18 +122,6 @@ subroutine pes( x, igrad, path, p, g, d )
     real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
-
-!> @brief Evaluate EvdRdX.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 1, 2]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
 
 !> @brief Evaluate myprepot.
 module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
@@ -184,10 +197,8 @@ module chempotpy_hobr_3app_pip_mypot_legacy_state_fe33e804
         real(wp) :: sum1, sum2, dzdr, dfdr
         real(wp) :: dbetadz, dedr_oh, dedr_hbr
         real(wp) :: v_oh, v_hbr, v_bro, v3
-        real(wp) :: th_y, theta
+        real(wp) :: th_y
         real(wp) :: z, re, de, phi_inf, alpha_s, r_s, z_i, phi_z, f_s
-        real(wp) :: x_1_max, x_2_max, y_1_max
-        real(wp) :: x_1_min, x_2_min, y_1_min
         real(wp) :: q_1, q_2, q_3, dq_1, dq_2, dq_3
         integer  :: i
         if( .not. initialize_only )then

@@ -9,7 +9,7 @@ module chempotpy_h3_gen_bkmp3_1996_pes
 
     !> @brief Evaluate the H3_GEN_BKMP3_1996 potential energy surface for H3.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
@@ -24,7 +24,6 @@ module chempotpy_h3_gen_bkmp3_1996_pes
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         integer               :: istate
         real(wp)              :: r(1,3), e(1), v
-        integer               :: iatom, idir, i, j
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! input cartesian is HHH
@@ -128,7 +127,6 @@ module chempotpy_h3_gen_bkmp3_1996_pes
         real(wp), parameter :: rr = 1.15e0_wp
         real(wp), parameter :: z1 = 1.e0_wp
         real(wp), parameter :: z2 = 2.e0_wp
-        real(wp), parameter :: z4 = 4.e0_wp
         real(wp), parameter :: a1 = -0.0298546962
         real(wp), parameter :: a2 = -23.9604445036
         real(wp), parameter :: a3 = -42.5185569474

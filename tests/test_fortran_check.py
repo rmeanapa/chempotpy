@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 
 from chempotpy.core.registry import SurfaceSource
-from scripts.check_fortran import compiler_command
+from scripts.check_fortran import WARNING_FLAGS, compiler_command
 
 
 class FortranCheckTests( unittest.TestCase ):
@@ -60,6 +60,28 @@ class FortranCheckTests( unittest.TestCase ):
         source_index = command.index(str(source_path))
         self.assertLess(kinds_index, geometry_index)
         self.assertLess(geometry_index, source_index)
+
+    def test_warning_command_promotes_strict_diagnostics( self ) -> None:
+        source = SurfaceSource(
+            system_name="H3",
+            surface_name="example",
+            path=Path("example.f90"),
+            source_form="free",
+            entry_point="pes",
+        )
+        command = compiler_command(
+            source,
+            Path("modules"),
+            "gfortran",
+            warnings_as_errors=True,
+        )
+        for flag in WARNING_FLAGS:
+            self.assertIn(flag, command)
+        self.assertIn("-Wall", command)
+        self.assertIn("-Wextra", command)
+        self.assertIn("-Wno-unused-dummy-argument", command)
+        self.assertIn("-Wno-compare-reals", command)
+        self.assertIn("-Werror", command)
 
 
 if __name__ == "__main__":

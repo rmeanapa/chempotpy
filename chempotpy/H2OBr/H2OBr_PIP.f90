@@ -4,12 +4,21 @@ module chempotpy_h2obr_pip_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( xyz, v )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: xyz(4,3)
+            real(wp) :: v
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the H2OBr_PIP potential energy surface for H2OBr.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
@@ -22,7 +31,7 @@ module chempotpy_h2obr_pip_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: v
-        integer               :: iatom, idir, j, istate
+        integer               :: istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         if( igrad == 0 )then
@@ -221,9 +230,18 @@ module chempotpy_h2obr_pip_pot_legacy_state_d2626f5f
     subroutine dispatch( xyz, v )
         use chempotpy_kinds, only: wp
         implicit none
+        interface
+            !> @brief Evaluate emsav.
+            real(wp) function emsav( x, c ) result(v)
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp) :: x(1:6)
+                real(wp) :: c(0:501)
+            end function emsav
+        end interface
         real(wp), intent(in)  :: xyz(4,3)
         real(wp), intent(out) :: v
-        real(wp)              :: emsav, x(6)
+        real(wp)              :: x(6)
         x(1) = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)
         x(2) = sqrt((xyz(1,1)-xyz(3,1))**2+(xyz(1,2)-xyz(3,2))**2+(xyz(1,3)-xyz(3,3))**2)
         x(3) = sqrt((xyz(1,1)-xyz(4,1))**2+(xyz(1,2)-xyz(4,2))**2+(xyz(1,3)-xyz(4,3))**2)
@@ -260,6 +278,15 @@ end subroutine pot
 subroutine potder( xyz, dxyz )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( xyz, v )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp) :: xyz(4,3)
+            real(wp) :: v
+        end subroutine pot
+    end interface
     real(wp), intent(in)  :: xyz(4,3)
     real(wp), intent(out) :: dxyz(4,3)
     real(wp)              :: h, v1, v2
@@ -282,6 +309,16 @@ end subroutine
 real(wp) function emsav( x, c ) result(v)
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate bemsav.
+        subroutine bemsav( x, p )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: x(1:6)
+            real(wp), intent(out) :: p(0:501)
+            real(wp)              :: m(0:10)
+        end subroutine bemsav
+    end interface
     real(wp) :: x(1:6)
     real(wp) :: c(0:501)
     real(wp) :: p(0:501)
@@ -293,6 +330,23 @@ end function emsav
 subroutine bemsav( x, p )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate evmono.
+        subroutine evmono( x, m )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: x(1:6)
+            real(wp), intent(out) :: m(0:10)
+        end subroutine evmono
+
+        !> @brief Evaluate evpoly.
+        subroutine evpoly( m, p )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: m(0:10)
+            real(wp), intent(out) :: p(0:501)
+        end subroutine evpoly
+    end interface
     real(wp), intent(in)  :: x(1:6)
     real(wp), intent(out) :: p(0:501)
     real(wp)              :: m(0:10)

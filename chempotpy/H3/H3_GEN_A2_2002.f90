@@ -16,12 +16,24 @@ module chempotpy_h3_gen_a2_2002_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( rvp, evp, nt )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)   :: nt
+            real(wp), intent(in)  :: rvp(nt,3)
+            real(wp), intent(out) :: evp(nt)
+            integer               :: ivp
+            real(wp)              :: r1x, r2x, r3x
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the H3_GEN_A2_2002 potential energy surface for H3.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: energy_to_electronvolt
         use chempotpy_legacy_coordinates, only: triatomic_distances_to_bohr
         use chempotpy_kinds,              only: wp
@@ -36,7 +48,6 @@ module chempotpy_h3_gen_a2_2002_pes
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         integer               :: istate
         real(wp)              :: e(1), r(1,3), v
-        integer               :: iatom, idir, i, j
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! input cartesian is HHH
@@ -253,6 +264,19 @@ end module
 subroutine pot( rvp, evp, nt )
     use chempotpy_kinds, only: wp
     implicit none
+    interface
+        !> @brief Evaluate pota2.
+        subroutine pota2( r1x, r2x, r3x, eee )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: r1x, r2x, r3x
+            real(wp), intent(out) :: eee
+            real(wp)              :: bb, damper, es1, es2, es3, etrip1, etrip2, etrip3, q1, q2, q3, rdamp1, rdamp2, &
+                & rdamp3, rho1, rho2, rho3, rprod, sum1, sum2, sum3, sum4, v, vlondon, warp, xj, xj1, xj2, xj3, xjs
+            real(wp) :: rho1t(0:12), rho2t(0:12), rho3t(0:12)
+            integer  :: coefficient_index, first_power, ii, it, second_power, third_power
+        end subroutine pota2
+    end interface
     integer, intent(in)   :: nt
     real(wp), intent(in)  :: rvp(nt,3)
     real(wp), intent(out) :: evp(nt)
@@ -272,6 +296,53 @@ subroutine pota2( r1x, r2x, r3x, eee )
     use chempotpy_h3_2002_basis, only: get_h3_basis_term
     use chempotpy_kinds,         only: wp
     implicit none
+    interface
+        !> @brief Evaluate singlet.
+        subroutine singlet( r, v )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: j
+            real(wp) :: r, v, damp, xd, prefac
+            real(wp) :: c6=-6.499027e0_wp
+            real(wp) :: c8=-124.3991e0_wp
+            real(wp) :: c10=-3285.828e0_wp
+            real(wp) :: beta=0.2e0_wp
+            real(wp) :: re=1.401e0_wp
+            real(wp) :: alpha=4.0578706387229880e0_wp
+            real(wp) :: xlp(17)= (/-1.6244445106378250e-1_wp, &
+                & -6.6081156795821980e-01_wp, -1.1236729331029230e+00_wp, &
+                & -1.1564282634392240e+00_wp, -7.9003598933823580e-01_wp, &
+                & -3.7515947232144770e-01_wp, -1.3997385158833170e-01_wp, &
+                & -6.5955219641305790e-02_wp, -4.0788777170244650e-02_wp, &
+                & -1.8988748368877420e-02_wp, -2.2257283819080430e-03_wp, &
+                & 2.5357629098565200e-03_wp, 1.5612692551680850e-05_wp, &
+                & -6.9340042488041930e-04_wp, 2.3175123448115890e-04_wp, &
+                & -3.3226980442299310e-05_wp, 1.6041565480651940e-06_wp/)
+        end subroutine singlet
+
+        !> @brief Evaluate trip.
+        subroutine trip( r, v )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer  :: j
+            real(wp) :: r, v, damp, xd, prefac
+            real(wp) :: c6=-6.499027e0_wp
+            real(wp) :: c8=-124.3991e0_wp
+            real(wp) :: c10=-3285.828e0_wp
+            real(wp) :: beta=0.2e0_wp
+            real(wp) :: re=1.401e0_wp
+            real(wp) :: alpha=3.9139661662872520e0_wp
+            real(wp) :: xlp(17)=(/2.2349220271817220e-01_wp, &
+                & 6.0356997147268380e-01_wp, 8.9383829921944970e-01_wp, &
+                & 9.0317491929985030e-01_wp, 7.2775729411232600e-01_wp, &
+                & 4.9697572693224850e-01_wp, 2.5866961299917790e-01_wp, &
+                & 6.8824590522579050e-02_wp, 4.8273710815396330e-03_wp, &
+                & 2.8416581979833760e-03_wp, -5.7032138025732140e-03_wp, &
+                & 2.3004916075318040e-03_wp, 3.1740661346757730e-03_wp, &
+                & -2.3028140070272670e-03_wp, 6.4778830165694920e-04_wp, &
+                & -8.5334197479958010e-05_wp, 4.5529457450819180e-06_wp/)
+        end subroutine trip
+    end interface
     real(wp), intent(in)  :: r1x, r2x, r3x
     real(wp), intent(out) :: eee
     real(wp)              :: bb, damper, es1, es2, es3, etrip1, etrip2, etrip3, q1, q2, q3, rdamp1, rdamp2, &

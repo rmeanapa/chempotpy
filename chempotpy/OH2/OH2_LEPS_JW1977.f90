@@ -26,7 +26,7 @@ module chempotpy_oh2_leps_jw1977_pes
 
     !> @brief Evaluate the OH2_LEPS_JW1977 potential energy surface for OH2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         type(chempotpy_status_t), intent(out), optional :: status
         integer, intent(in)   :: igrad
         real(wp), intent(in)  :: x(3,3)

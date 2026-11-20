@@ -10,16 +10,43 @@ end module shell
 
 !> @brief Evaluate getpot.
 subroutine getpot( cood, v )
-    use shell,           only: cof, coff, power, total
+    use shell,           only: cof, coff
     use chempotpy_kinds, only: wp
     implicit none
-    integer  :: i
-    real(wp) :: v, f
-    real(wp) :: cood(3,4), com(3)
-    real(wp) :: y(6), r(6)
-    real(wp) :: bas(coff)
-    real(wp) :: smallch, smalloh
-    real(wp) :: s, x, z, x3, x2, z1, z2
+    interface
+        !> @brief Evaluate basis.
+        subroutine basis( bas, y )
+            use shell,           only: coff
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(out) :: bas(coff)
+            real(wp), intent(in)  :: y(6)
+        end subroutine basis
+
+        !> @brief Evaluate edis.
+        subroutine edis( dis, edist, atomi, atomj )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(out) :: dis, edist
+            real(wp), intent(in)  :: atomi(3), atomj(3)
+        end subroutine edis
+
+        !> @brief Evaluate hcopot.
+        subroutine hcopot( f, rhc, rco, roh )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(out) :: f
+            real(wp), intent(in)  :: rhc, rco, roh
+        end subroutine hcopot
+    end interface
+    integer               :: i
+    real(wp), intent(in)  :: cood(3,4)
+    real(wp), intent(out) :: v
+    real(wp)              :: f
+    real(wp)              :: y(6), r(6)
+    real(wp)              :: bas(coff)
+    real(wp)              :: smallch, smalloh
+    real(wp)              :: s, x, z, x3, x2, z1, z2
     !       This probram expects cood to be in the order C,O,H,H
     call edis(r(1), y(1), cood(:,3), cood(:,4))
     call edis(r(2), y(2), cood(:,2), cood(:,3))
@@ -63,12 +90,11 @@ end subroutine getpot
 
 !> @brief Evaluate edis.
 subroutine edis( dis, edist, atomi, atomj )
-    use shell,           only: cof, coff, power, total
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp), intent(out) :: edist
-    real(wp)              :: atomi(3), atomj(3)
-    real(wp)              :: dis, alfa
+    real(wp), intent(out) :: dis, edist
+    real(wp), intent(in)  :: atomi(3), atomj(3)
+    real(wp)              :: alfa
     alfa  = 2.0
     dis   = sqrt((atomi(1)-atomj(1))**2+(atomi(2)-atomj(2))**2+(atomi(3)-atomj(3))**2)
     edist = exp(-dis/alfa)
@@ -76,12 +102,12 @@ end subroutine edis
 
 !> @brief Evaluate basis.
 subroutine basis( bas, y )
-    use shell,           only: cof, coff, power, total
+    use shell,           only: coff, power
     use chempotpy_kinds, only: wp
     implicit none
-    integer  :: m, n, p, q, i, j, k
-    real(wp) :: bas(coff)
-    real(wp) :: y(6)
+    real(wp), intent(out) :: bas(coff)
+    real(wp), intent(in)  :: y(6)
+    integer               :: k
     do k=1, coff
         bas(k)=(y(1)**power(k, 1))*(y(6)**power(k, 6))*((y(2)**power(k, 2))* (y(3)**power(k, 3))*(y(4)**power(k, 4))* &
             & (y(5)** power(k, 5))+(y(2)**power(k, 5))* (y(3)**power(k, 4))*(y(4)**power(k, 3))*(y(5)**power(k, 2)))
@@ -90,17 +116,23 @@ end subroutine
 
 !> @brief Evaluate hcopot.
 subroutine hcopot( f, rhc, rco, roh )
-    use chempotpy_constants, only: PI
-    use chempotpy_kinds,     only: wp
+    use chempotpy_kinds, only: wp
     implicit none
-    real(wp), parameter :: au2ev = 27.2116e0_wp
-    real(wp), parameter :: a0    = 0.52918e0_wp
-    integer             :: j, loop, iv
-    real(wp)            :: rmin(3), rmax(3), z1, z2, z3, m(3), h(3)
-    real(wp)            :: pot, potmin, ma, mb, mc
-    real(wp)            :: pot3, c3, pothco, f
-    real(wp)            :: v, rhc, rco, cgamma, roh
-    integer             :: istate
+    interface
+        !> @brief Evaluate pothco.
+        function pothco( rhc, rco, rcos, istate )
+            use chempotpy_kinds, only: wp
+            implicit none
+            integer, intent(in)  :: istate
+            real(wp), intent(in) :: rhc, rco, rcos
+            real(wp)             :: pothco
+        end function pothco
+    end interface
+    real(wp)              :: pot, ma, mb, mc
+    real(wp), intent(out) :: f
+    real(wp), intent(in)  :: rhc, rco, roh
+    real(wp)              :: cgamma
+    integer               :: istate
     ma     = 1.0    !  H
     mb     = 12.0    !  C
     mc     = 16.0    !  O
@@ -126,16 +158,30 @@ function pothco( rhc, rco, rcos, istate )
         & parameter_kk => kk, parameter_nenadd => nenadd, parameter_wuradd => wuradd
     use chempotpy_kinds, only: wp
     implicit none
-    integer  :: istate ! Initialiserung falls <>0, INPUT
-    real(wp) :: rhc, rco, rcos, pothco
+    interface
+        !> @brief Evaluate v2ch.
+        function v2ch( r )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in) :: r
+            real(wp)             :: v2ch
+        end function v2ch
+
+        !> @brief Evaluate v2oh.
+        function v2oh( r )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in) :: r
+            real(wp)             :: v2oh
+        end function v2oh
+    end interface
+    integer, intent(in)  :: istate ! Initialiserung falls <>0, INPUT
+    real(wp), intent(in) :: rhc, rco, rcos
+    real(wp)             :: pothco
     ! INPUT: R_HC in a.u., R_CO in a.u.,  COS(gamma_HCO),
     ! OUTPUT: Potentialwert in a.u.
-    real(wp), parameter :: au2ang = 0.529177e0_wp  ! a_0 / Angstroem
-    real(wp), parameter :: au2ev  = 27.2116e0_wp  ! hartree / eV
-    real(wp), parameter :: ev2cm  = 8065.44e0_wp  ! eV / cm^-1
-    real(wp), parameter :: kc2ev  = 23.061e0_wp  ! {kcal/mol} / eV
-    real(wp), parameter :: au2cm  = au2ev*ev2cm  ! hartree / cm^-1
-    integer, parameter  :: nhc    = 12, nco=9, nwin=12
+    real(wp), parameter :: au2ev = 27.2116e0_wp  ! hartree / eV
+    integer, parameter  :: nwin  = 12
     integer             :: gzhc, gzco, gzwin, mlin(2) ! GRAD IM ZAEHLER
     integer             :: gnhc, gnco, gnwin, mtan(2) ! GRAD IM NENNER
     integer             :: ixhc, ixco, ixoh ! FESTE VORFAKTOREN IM NENNER.
@@ -152,14 +198,12 @@ function pothco( rhc, rco, rcos, istate )
         & 3.5e0_wp, 4.0e0_wp/)
     real(wp), parameter :: nuwin(12) = (/100e0_wp, 120e0_wp, 80e0_wp, 140e0_wp, 60e0_wp, 160e0_wp, &    ! NEUE NULLST.
         &40e0_wp, 170e0_wp, 20e0_wp, 180e0_wp, 10e0_wp, 0e0_wp/)
-    real(wp) :: xcos(nwin), nucos(nwin), kk(maxlin,2), aa(maxtan,2), v2ch, v2oh
-    external v2ch, v2oh
-    integer     :: i, j, k, l, ll, jj, j1, j2, j3, ks, i1, i2
-    logical     :: qinit(2) = [.false., .false.] ! zeigt an ob Parameter initialisiert.
-    real(wp)    :: pq, a, b, c, nenn, rhcsin, rhccos, konus
-    real(wp)    :: phc, pco, pcos, poh, rhci, rcoi, rcosi, rohi
+    real(wp)    :: nucos(nwin), kk(maxlin,2), aa(maxtan,2)
+    integer     :: j, k, l, ll, jj, j3, ks
+    real(wp)    :: pq, a, nenn, rhcsin, rhccos, konus
+    real(wp)    :: phc, pco, pcos, rhci, rcoi, rcosi, rohi
     real(wp)    :: thy, aco, ahc, vplus
-    complex(wp) :: qq1, qq2, qq3, qq4, wurz
+    complex(wp) :: qq2, qq4, wurz
     gzhc        = parameter_gzhc; gzco = parameter_gzco; gzwin = parameter_gzwin
     gnhc        = parameter_gnhc; gnco = parameter_gnco; gnwin = parameter_gnwin
     ixhc        = parameter_ixhc; ixco = parameter_ixco; ixoh = parameter_ixoh
@@ -247,7 +291,7 @@ function pothco( rhc, rco, rcos, istate )
             &/ ( abs(qq4)**2 + nenadd ) ! *** PP_HCO(R_HC,R_CO,COS())
         konus = 0e0_wp                      ! Konische Durchschneidung:
         if( ks .eq. 1 )then! (nur auf 1. Flaeche)
-            phc = wurz * nenn
+            phc = real(wurz, kind=wp)*nenn
             do j=0, gwhc
                 pco = phc
                 do k=0, gwco
@@ -291,10 +335,11 @@ end
 function v2oh( r )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp)            :: v2oh, r
-    real(wp), parameter :: au2ang = 0.529177e0_wp  ! a_0 / ANGSTROEM
-    real(wp), parameter :: au2ev  = 27.2116e0_wp  ! HARTREE / EV
-    real(wp)            :: a1, a2, a3, de, re, rho
+    real(wp), parameter  :: au2ang = 0.529177e0_wp  ! a_0 / ANGSTROEM
+    real(wp), parameter  :: au2ev  = 27.2116e0_wp  ! HARTREE / EV
+    real(wp), intent(in) :: r
+    real(wp)             :: v2oh
+    real(wp)             :: a1, a2, a3, de, re, rho
     a1   = 4.507                    ! Huxley etc. nach Daten aus Herzberg.
     a2   = 4.884
     a3   = 3.795
@@ -308,10 +353,11 @@ end
 function v2ch( r )
     use chempotpy_kinds, only: wp
     implicit none
-    real(wp)            :: v2ch, r
-    real(wp), parameter :: au2ang = 0.529177e0_wp  ! a_0 / ANGSTROEM
-    real(wp), parameter :: au2ev  = 27.2116e0_wp  ! HARTREE / EV
-    real(wp)            :: a1, a2, a3, de, re, rho
+    real(wp), parameter  :: au2ang = 0.529177e0_wp  ! a_0 / ANGSTROEM
+    real(wp), parameter  :: au2ev  = 27.2116e0_wp  ! HARTREE / EV
+    real(wp), intent(in) :: r
+    real(wp)             :: v2ch
+    real(wp)             :: a1, a2, a3, de, re, rho
     a1   = 3.836
     a2   = 3.511
     a3   = 2.268
@@ -332,11 +378,19 @@ module chempotpy_h2co_pip_pes
 
     !> @brief Evaluate the H2CO_PIP potential energy surface for H2CO.
     subroutine evaluate( x, igrad, p, gradient_out, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
-        use shell,            only: cof, coff, power, total
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
+        interface
+            !> @brief Evaluate getpot.
+            subroutine getpot( cood, v )
+                use chempotpy_kinds, only: wp
+                implicit none
+                real(wp), intent(in)  :: cood(3,4)
+                real(wp), intent(out) :: v
+            end subroutine getpot
+        end interface
         type(chempotpy_status_t), intent(out), optional :: status
         ! number of electronic state
         integer, parameter    :: nstates = 1
@@ -347,7 +401,7 @@ module chempotpy_h2co_pip_pes
         real(wp), intent(out) :: gradient_out(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: tx(3,natoms), v
-        integer               :: iatom, idir, j, istate
+        integer               :: iatom, idir, istate
         gradient_out = 0.e0_wp; d = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3

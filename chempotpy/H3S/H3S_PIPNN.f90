@@ -12,7 +12,7 @@ module chempotpy_h3s_pipnn_pes
 
     !> @brief Evaluate the H3S_PIPNN potential energy surface for H3S.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_kinds,  only: wp
         implicit none
@@ -24,9 +24,9 @@ module chempotpy_h3s_pipnn_pes
         real(wp), intent(in)  :: x(natoms,3)
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
-        real(wp)              :: v, va, vb, vc
+        real(wp)              :: v
         real(wp)              :: tx(3,natoms), tg(3,natoms)
-        integer               :: iatom, idir, j, istate
+        integer               :: iatom, idir, istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp; tg = 0.e0_wp
         do iatom=1, natoms
@@ -52,11 +52,11 @@ module chempotpy_h3s_pipnn_pes
         use chempotpy_geometry, only: all_pair_distances
         use chempotpy_kinds,    only: wp
         implicit none
-        integer  :: j, lpes
-        real(wp) :: rb(ndim), xbond(ndim), basis(nbasis), tmp1, txinput(nbasis-1)
-        real(wp) :: ct(3,natom), cy(3,natom)
+        integer  :: j
+        real(wp) :: rb(ndim), xbond(ndim), basis(nbasis), txinput(nbasis-1)
+        real(wp) :: ct(3,natom)
         real(wp) :: m(30)
-        real(wp) :: vpes, vpesa, vpesb, vpesc, vpesh, vnn
+        real(wp) :: vpes, vpesa, vpesb, vpesc, vnn
         real(wp) :: dvdg(ninput)
         integer  :: ndriv
         basis = 0.e0_wp
@@ -143,7 +143,7 @@ module chempotpy_h3s_pipnn_pes
         integer             :: j, ndriv
         real(wp)            :: v, dvdx(1:12), p(0:22), r(1:6)
         real(wp)            :: xcart(1:3,1:4), m(0:29), xmorse(1:6)
-        real(wp)            :: dvdr(1:6), drdx(1:6,1:12)
+        real(wp)            :: drdx(1:6,1:12)
         real(wp)            :: txinput(1:22), dvdg(1:22), dpdr(1:6,0:22)
         call all_pair_distances(transpose(xcart), r)
         xmorse = exp(-r/alpha)
@@ -257,7 +257,6 @@ module chempotpy_h3s_pipnn_pes
     subroutine evdvdr( r, m, p, dpdr )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j
         real(wp) :: r(1:6), dmsdr(1:6,1:6), dmdr(1:6,0:29)
         real(wp) :: dvdr(1:6), dpdr(1:6,0:22)
         real(wp) :: m(0:29), p(0:22)
@@ -281,7 +280,7 @@ module chempotpy_h3s_pipnn_pes
         use chempotpy_kinds, only: wp
         implicit none
         real(wp), parameter :: alpha = 1e0_wp
-        integer             :: i, j
+        integer             :: i
         real(wp)            :: dmsdr(1:6,1:6), r(1:6)
         dmsdr(:,:) = 0e0_wp
         !Morse term ms = exp(-r/alpha)
@@ -296,7 +295,7 @@ module chempotpy_h3s_pipnn_pes
     subroutine evdmdr( m, dmsdr, dmdr )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j
+        integer  :: i
         real(wp) :: dmsdr(1:6,1:6), dmdr(1:6,0:29), m(0:29)
         do i=1, 6
             dmdr(i,0)  = 0.e0_wp
@@ -336,7 +335,7 @@ module chempotpy_h3s_pipnn_pes
     subroutine evdpdr( p, dmdr, dpdr )
         use chempotpy_kinds, only: wp
         implicit none
-        integer  :: i, j
+        integer  :: i
         real(wp) :: dmdr(1:6,0:29), dpdr(1:6,0:22)
         real(wp) :: p(0:22)
         do i=1, 6

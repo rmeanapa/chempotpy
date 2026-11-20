@@ -131,7 +131,7 @@ module chempotpy_h3_gen_tk_1984_pes
         real(wp)              :: r(n3atom)
         real(wp)              :: r2t
         real(wp)              :: rbb
-        character             :: ref(5)
+        character(len=75)     :: ref(5)
         real(wp)              :: req(3)
         real(wp)              :: rhh
         real(wp)              :: rn
@@ -216,11 +216,7 @@ module chempotpy_h3_gen_tk_1984_pes
         subroutine prepare_local_context
             use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, it
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            integer :: i, it
             !   Conversion constants
             !   BOHR (Angstrom/bohr) converts Angstroms to Bohr
             !   HARTRE (kcal/Hartree) converts from Hartree to kcal/mol
@@ -294,17 +290,11 @@ module chempotpy_h3_gen_tk_1984_pes
             !CCCCCCCCCCCCCCC
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)           :: bcoor, c, dac, ractmp, rob, stuff, vabbc, vac
-            integer            :: it
-            integer, parameter :: n3atom = 75
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter :: natom  = 25
+            real(wp) :: bcoor, c, dac, ractmp, rob, stuff, vabbc, vac
+            integer  :: it
             !   Conversion constants
             !   BOHR (Angstrom/bohr) converts Angstroms to Bohr
             !   HARTRE (kcal/Hartree) converts from Hartree to kcal/mol
-            real(wp), parameter :: bohr   = 0.52917706e0_wp
-            real(wp), parameter :: hartre = hartree_to_kilocalorie_per_mole
             call cartou
             call carttor
             !   Check the values of NASURF and NDER for validity.
@@ -390,12 +380,7 @@ module chempotpy_h3_gen_tk_1984_pes
         subroutine prepare_local_context_2
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter  :: natom  = 25
             real(wp), parameter :: hartre = hartree_to_kilocalorie_per_mole
-            logical             :: rabl, rbcl
             !         COORDINATES,POTENTIAL ENERGY, AND DERIVATIVES ARE
             !  THIS SUBPROGRAM SHOULD BE CALLED
             !  ONCE BEFORE THE FIRST CALL TO POT
@@ -414,14 +399,9 @@ module chempotpy_h3_gen_tk_1984_pes
         subroutine pot2
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp)            :: alf, brack, ct, ctt, dalfx, dalfy, dgamx, dgamy, dsqigx, dsqigy, gam, quan, rcrc, rnmx, rnmy, squig, st, stt, stt4, sttl, t1, t2, theta
-            integer             :: lm4
-            integer, parameter  :: n3atom = 75
-            integer, parameter  :: isurf  = 5
-            integer, parameter  :: jsurf  = isurf*(isurf+1)/2
-            integer, parameter  :: natom  = 25
-            real(wp), parameter :: hartre = hartree_to_kilocalorie_per_mole
-            logical             :: rabl, rbcl
+            real(wp) :: alf, brack, ct, ctt, dalfx, dalfy, dgamx, dgamy, dsqigx, dsqigy, gam, quan, rcrc, rnmx, rnmy, squig, st, stt, stt4, sttl, t1, t2, theta
+            integer  :: lm4
+            logical  :: rabl, rbcl
             !         COORDINATES,POTENTIAL ENERGY, AND DERIVATIVES ARE
             !         PASSED THROUGH COMMON /PT1CM/ R(3), ENGYGS, DEGSDR(3)
             ! THIS VERSION WORKS ONLY FOR L .LT. 4
@@ -488,25 +468,13 @@ module chempotpy_h3_gen_tk_1984_pes
         subroutine ancvrt
             use chempotpy_kinds, only: wp
             implicit none
-            integer, parameter  :: n3atom     = 75
-            integer, parameter  :: natom      = 25
-            integer, parameter  :: isurf      = 5
-            integer, parameter  :: jsurf      = isurf*(isurf+1)/2
-            real(wp), parameter :: clight     = 2.99792458e08_wp
-            real(wp), parameter :: cmu_0      = 4.0e0_wp*PI*1.0e-07_wp
-            real(wp), parameter :: cepsilon_0 = 1.0e0_wp/(cmu_0*clight**2)
-            real(wp), parameter :: ce         = 1.602176462e-19_wp
-            real(wp), parameter :: cplanck    = 6.62606876e-34_wp
-            real(wp), parameter :: cm_e       = 9.10938188e-31_wp
-            real(wp), parameter :: cang       = 1.0e-10_wp
-            real(wp), parameter :: cavogadro  = 6.02214199e23_wp
-            real(wp), parameter :: ckcal      = 4.184e10_wp
-            real(wp), parameter :: htomillh   = 1000.e0_wp
-            real(wp), parameter :: htoev      = 27.2113834e0_wp
-            real(wp), parameter :: htokcal    = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: htowave    = 219474.631e0_wp
-            real(wp), parameter :: htokj      = 2625.49962e0_wp
-            real(wp), parameter :: bohr_a     = .5291772083e0_wp
+            integer, parameter  :: natom    = 25
+            real(wp), parameter :: htomillh = 1000.e0_wp
+            real(wp), parameter :: htoev    = 27.2113834e0_wp
+            real(wp), parameter :: htokcal  = hartree_to_kilocalorie_per_mole
+            real(wp), parameter :: htowave  = 219474.631e0_wp
+            real(wp), parameter :: htokj    = 2625.49962e0_wp
+            real(wp), parameter :: bohr_a   = .5291772083e0_wp
             integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
             character(len=3)    :: periodic_1(7,32)
             character(len=2)    :: name1(natom)
@@ -765,27 +733,15 @@ module chempotpy_h3_gen_tk_1984_pes
         !> @brief Evaluate CARTOU for the H3_GEN_TK_1984 potential.
         subroutine cartou
             use chempotpy_legacy_coordinates, only: convert_cartesian_input
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
             call convert_cartesian_input(cart, nulbl, legacy_natoms, cnvrtd, ireorder == 1, cartnu)
         end subroutine cartou
 
         !> @brief Evaluate CARTTOR for the H3_GEN_TK_1984 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
-            use chempotpy_kinds,              only: wp
             implicit none
-            integer            :: coordinate_status
-            real(wp)           :: cmm, cphi, flm, hhd, hym, phi, pi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
-            integer            :: i, ind, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
+            integer :: coordinate_status
             call cartesian_to_potlib_coordinates(cartnu, legacy_natoms, icartr, r, coordinate_status)
             if( coordinate_status /= 0 )then
                 if( present(status) ) call status%set(status_invalid_input, &
@@ -796,13 +752,8 @@ module chempotpy_h3_gen_tk_1984_pes
 
         !> @brief Evaluate EUNITZERO for the H3_GEN_TK_1984 potential.
         subroutine eunitzero
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j
             pengygs = engygs * cnvrte - anuzero
             if( ksdiag .ne. 0 )then
                 do i=ksdiag, kediag
@@ -821,7 +772,6 @@ module chempotpy_h3_gen_tk_1984_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
             integer, parameter :: isurf  = 5
             integer, parameter :: jsurf  = isurf*(isurf+1)/2
             real(wp)           :: eps, epsp, phi, r1, r2, rcm, rff, ss1, ss2, ss3, sum, t0, t1, term12, term13, term23, termx, &
@@ -976,13 +926,8 @@ module chempotpy_h3_gen_tk_1984_pes
 
         !> @brief Evaluate DEDCOU for the H3_GEN_TK_1984 potential.
         subroutine dedcou
-            use chempotpy_kinds, only: wp
             implicit none
-            integer            :: i, j, k
-            integer, parameter :: n3atom = 75
-            integer, parameter :: natom  = 25
-            integer, parameter :: isurf  = 5
-            integer, parameter :: jsurf  = isurf*(isurf+1)/2
+            integer :: i, j, k
             if( ireorder .eq. 1 )then
                 do i = 1, legacy_natoms
                     dgscart(i,1) = dgscartnu(nulbl(i),1) * cnvrtde

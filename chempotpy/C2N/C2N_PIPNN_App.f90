@@ -1,6 +1,7 @@
 !     The ^2A doublet prime PES for C2N system at the MC-PDFT/AVTZ level.
 !> @brief Implement C2N_PIPNN_App, a potential energy surface for C2N.
 module chempotpy_c2n_pipnn_app_pes
+    use chempotpy_blas,      only: ddot, dgemm, dgemv
     use chempotpy_constants, only: PI
     use chempotpy_kinds,     only: wp
     implicit none
@@ -11,7 +12,7 @@ module chempotpy_c2n_pipnn_app_pes
 
     !> @brief Evaluate the C2N_PIPNN_App potential energy surface for C2N.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_geometry, only: cartesian_distance
         use chempotpy_kinds,    only: wp
         implicit none
@@ -25,7 +26,7 @@ module chempotpy_c2n_pipnn_app_pes
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: v
         real(wp)              :: rb(3)
-        integer               :: iatom, idir, j, istate
+        integer               :: istate
         !initialize
         v = 0.e0_wp; p = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         ! order of r_CC,r_NC,r_NC
@@ -129,8 +130,7 @@ module chempotpy_c2n_pipnn_app_pes
         real(wp), intent(out) :: v, dv(n0)
         integer               :: i, j, k
         real(wp)              :: r(n0), rgg(n0), vgg, ax(n1), bx(n2)
-        real(wp)              :: dvtm, rtmp, rt1(n1), rt2(n2)
-        real(wp), external    :: ddot
+        real(wp)              :: dvtm, rt1(n1), rt2(n2)
         v   = 0.e0_wp
         r   = r0
         vgg = vg(2)-vg(1)

@@ -25,8 +25,8 @@ module chempotpy_ch5p_pip_pes
 
     !> @brief Evaluate the CH5p_PIP potential energy surface for CH5p.
     subroutine evaluate( x, igrad, p, gradient_out, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
-        use chempotpy_units,  only: bohr_to_angstrom, hartree_to_electronvolt
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
+        use chempotpy_units,  only: hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status
@@ -38,16 +38,10 @@ module chempotpy_ch5p_pip_pes
         real(wp), intent(out) :: p(nstates)
         real(wp), intent(out) :: gradient_out(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
-        real                  :: tx(natoms,3)
         real(wp)              :: v
-        integer               :: iatom, idir, j, istate
+        integer               :: istate
         !initialize
         v = 0.e0_wp; gradient_out = 0.e0_wp; d = 0.e0_wp
-        do iatom=1, natoms
-            do idir=1, 3
-                tx(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
-            enddo
-        enddo
         if( igrad == 0 )then
             call mycalcpot(x, v)
             v = v*hartree_to_electronvolt
@@ -78,7 +72,7 @@ module chempotpy_ch5p_pip_pes
         use chempotpy_kinds, only: wp
         implicit none
         integer, parameter  :: natoms = 6
-        integer             :: i, j, k, l, m
+        integer             :: i, j
         real(wp)            :: a, b, theta
         real(wp)            :: vfit, epot
         real(wp)            :: x(natoms,3)
@@ -139,15 +133,13 @@ module chempotpy_ch5p_pip_pes
         !...  Based on pes6n4
         use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter  :: natoms  = 6
-        integer, parameter  :: natoms1 = 2
+        integer, parameter  :: natoms = 6
         integer             :: i, j
         real(wp)            :: xyz1(5:6,3)
         real(wp)            :: xyz(natoms,3)
-        real(wp)            :: xyzt(3,natoms), f(3,natoms)
-        real(wp)            :: v, ch3pot, ch3potab, h20
+        real(wp)            :: xyzt(3,natoms)
+        real(wp)            :: v, ch3pot, h20
         real(wp), parameter :: ang = 219474.6e0_wp
-        character(len=1)    :: xname(natoms)
         do i = 5, 6
             do j = 1, 3
                 xyz(i,j) = xyz1(i,j)
@@ -183,22 +175,18 @@ module chempotpy_ch5p_pip_pes
     subroutine getfit( xn, f0 )
         use chempotpy_kinds, only: wp
         implicit none
-        integer, parameter  :: m  = 2239
-        integer, parameter  :: mr = 32
-        real(wp)            :: xn(0:2,0:5)
-        real(wp)            :: xn1(0:2,0:5)
-        real(wp)            :: gf0(0:2,0:5)
-        real(wp)            :: d0(0:5,0:5), r0(0:5,0:5)
-        real(wp)            :: rvec(0:2)
-        real(wp)            :: vec(0:m+2*mr-1), vec0(0:m+2*mr-1), vec1(0:m+2*mr-1)
-        real(wp)            :: f0
-        real(wp)            :: t0, t1
-        real(wp), parameter :: dd = 1.0e-6_wp
-        integer             :: i, j, l, k
-        real(wp)            :: dc0 = 0.30547300513
-        real(wp)            :: dc1 = 0.19476072488
-        real(wp)            :: dw0 = 0.09846745640
-        real(wp)            :: dw1 = 0.12149234254
+        integer, parameter :: m  = 2239
+        integer, parameter :: mr = 32
+        real(wp)           :: xn(0:2,0:5)
+        real(wp)           :: d0(0:5,0:5), r0(0:5,0:5)
+        real(wp)           :: rvec(0:2)
+        real(wp)           :: vec(0:m+2*mr-1)
+        real(wp)           :: f0
+        integer            :: l, k
+        real(wp)           :: dc0 = 0.30547300513
+        real(wp)           :: dc1 = 0.19476072488
+        real(wp)           :: dw0 = 0.09846745640
+        real(wp)           :: dw1 = 0.12149234254
         !   coef = the coefficients of the fit
         real(wp) :: coef(0:m+2*mr-1) = (/ &
             & 22.9504077130000, 100.8520699000000, &
@@ -1419,7 +1407,7 @@ module chempotpy_ch5p_pip_pes
         integer  :: m
         real(wp) :: d(0:5,0:5)
         real(wp) :: vec(0:m-1)
-        integer  :: j0, j1, j2, j3, j4, j5, j, k, k0
+        integer  :: j0, j1, j2, j3, j4, j, k, k0
         real(wp) :: x(0:1)
         real(wp) :: y(0:3)
         real(wp) :: z(0:9)
@@ -1900,10 +1888,9 @@ module chempotpy_ch5p_pip_pes
         integer             :: i, j
         real(wp)            :: xyz1(natoms1,3)
         real(wp)            :: xyz(natoms,3)
-        real(wp)            :: xyzt(3,natoms), f(3,natoms)
-        real(wp)            :: v, h2pot, h2potab, ch30
+        real(wp)            :: xyzt(3,natoms)
+        real(wp)            :: v, h2pot, ch30
         real(wp), parameter :: ang = 219474.6e0_wp
-        character(len=1)    :: xname(natoms)
         do i = 1, natoms1
             do j = 1, 3
                 xyz(i,j) = xyz1(i,j)

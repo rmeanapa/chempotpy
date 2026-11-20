@@ -35,7 +35,7 @@ module chempotpy_o4_mbp_singlet_2018_pes
 
     !> @brief Evaluate the O4_MBP_singlet_2018 potential energy surface for O4.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,    only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_geometry, only: cartesian_distance
         use chempotpy_kinds,    only: wp
@@ -48,8 +48,8 @@ module chempotpy_o4_mbp_singlet_2018_pes
         real(wp), intent(in)  :: x(natoms,3)
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
-        real(wp)              :: v, tx(6), sum_d
-        integer               :: ibond, iatom, idir, j, istate
+        real(wp)              :: v, tx(6)
+        integer               :: istate
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         if( igrad == 0 )then
@@ -82,8 +82,7 @@ module chempotpy_o4_mbp_singlet_2018_pes
         real(wp)              :: indices(306,6)
         integer               :: permutation(24,6)
         real(wp)              :: ae, re
-        integer               :: i, j, k
-        integer               :: ci, cj, ck, cl
+        integer               :: ci, cj, ck
         real(wp)              :: mult
         re      = 1.208e0_wp
         ae      = 0.7e0_wp

@@ -59,12 +59,22 @@ module chempotpy_alc7m5_leps_modelsurface_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( rr, nder, e, dedrr )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)  :: rr(3)
+            integer, intent(in)   :: nder
+            real(wp), intent(out) :: e, dedrr(3)
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the ALC7m5_LEPS_ModelSurface potential energy surface for ALC.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status,             only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,              only: hartree_per_bohr_to_ev_per_angstrom
         use chempotpy_geometry,           only: flatten_cartesian_coordinates, transform_internal_gradient_to_cartesian
         use chempotpy_units,              only: bohr_to_angstrom, hartree_to_electronvolt
@@ -80,7 +90,7 @@ module chempotpy_alc7m5_leps_modelsurface_pes
         real(wp), intent(out) :: p(nstates), g(nstates,natoms,3)
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         real(wp)              :: dedrr(3), e, rr(3), v
-        integer               :: i, iatom, idir, istate, j
+        integer               :: iatom, idir, istate, j
         real(wp)              :: tx(9), r2(3), dedx(9), drdx(3,9)
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
@@ -113,6 +123,18 @@ module chempotpy_alc7m5_leps_modelsurface_pes
                 'requested derivatives above first order are unavailable')
         endif
     end subroutine evaluate
+
+    !> @brief Evaluate EvdRdX for the ALC7m5_LEPS_ModelSurface potential.
+    subroutine evdrdx( x, r, drdx )
+        use chempotpy_geometry, only: ordered_pair_distance_jacobian
+        use chempotpy_kinds,    only: wp
+        implicit none
+        integer, parameter    :: first_atoms(3)  = [1, 2, 1]
+        integer, parameter    :: second_atoms(3) = [2, 3, 3]
+        real(wp), intent(in)  :: x(9), r(3)
+        real(wp), intent(out) :: drdx(3,9)
+        call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
+    end subroutine evdrdx
 end module chempotpy_alc7m5_leps_modelsurface_pes
 
 !> @brief Expose ALC7m5_LEPS_ModelSurface through the Python-facing PES entry point.
@@ -129,18 +151,6 @@ subroutine pes( x, igrad, p, g, d )
     real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes
-
-!> @brief Evaluate EvdRdX for the ALC7m5_LEPS_ModelSurface potential.
-subroutine evdrdx( x, r, drdx )
-    use chempotpy_geometry, only: ordered_pair_distance_jacobian
-    use chempotpy_kinds,    only: wp
-    implicit none
-    integer, parameter    :: first_atoms(3)  = [1, 2, 1]
-    integer, parameter    :: second_atoms(3) = [2, 3, 3]
-    real(wp), intent(in)  :: x(9), r(3)
-    real(wp), intent(out) :: drdx(3,9)
-    call ordered_pair_distance_jacobian(x, first_atoms, second_atoms, r, drdx)
-end subroutine evdrdx
 
 !> @brief Own the immutable fit state for the ALC7m5_LEPS_ModelSurface potential.
 module chempotpy_alc7m5_leps_modelsurface_pot_legacy_state_2e55dffc
@@ -160,7 +170,7 @@ module chempotpy_alc7m5_leps_modelsurface_pot_legacy_state_2e55dffc
 
     !> @brief Evaluate dispatch.
     subroutine evaluate( rr, nder, e, dedrr, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_kinds,  only: wp
         implicit none
         type(chempotpy_status_t), intent(out), optional :: status

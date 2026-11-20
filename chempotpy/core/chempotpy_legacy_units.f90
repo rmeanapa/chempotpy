@@ -10,7 +10,7 @@ module chempotpy_legacy_units
     public :: legacy_hartree_to_electronvolt
     ! The released literals were default real and then promoted to wp.
     real(wp), parameter :: legacy_bohr_to_angstrom = &
-        real(0.529177211_real32, wp)
+        real(0.5291772_real32, wp)
     real(wp), parameter :: legacy_hartree_to_electronvolt = &
         real(27.211386_real32, wp)
     ! Preserve the independently rounded gradient factor used by released PES wrappers.

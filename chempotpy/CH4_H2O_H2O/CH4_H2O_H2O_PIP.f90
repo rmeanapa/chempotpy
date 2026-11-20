@@ -25475,7 +25475,8 @@ module bemsa
         implicit none
         real(wp), intent(in)  :: x(1:55)
         real(wp), intent(out) :: p(1:5809)
-        real(wp)              :: m(1:16422)
+        real(wp), allocatable :: m(:)
+        allocate(m(16422))
         call evmono(x, m)
         call evpoly(m, p)
     end subroutine bemsav
@@ -25502,12 +25503,21 @@ module chempotpy_ch4_h2o_h2o_pip_pes
     implicit none
     private
     public :: evaluate
+    interface
+        !> @brief Evaluate pot.
+        subroutine pot( xyz, v )
+            use chempotpy_kinds, only: wp
+            implicit none
+            real(wp), intent(in)    :: xyz(11,3)
+            real(wp), intent(inout) :: v
+        end subroutine pot
+    end interface
 
     contains
 
     !> @brief Evaluate the CH4_H2O_H2O_PIP potential energy surface for CH4_H2O_H2O.
     subroutine evaluate( x, igrad, path, p, gradient_out, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_units,  only: hartree_to_electronvolt
         use chempotpy_kinds,  only: wp
         implicit none
@@ -25522,7 +25532,7 @@ module chempotpy_ch4_h2o_h2o_pip_pes
         real(wp), intent(out)           :: gradient_out(nstates,natoms,3)
         real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
         real(wp)                        :: v
-        integer                         :: iatom, idir, j, istate
+        integer                         :: istate
         !initialize
         gradient_out = 0.e0_wp; d = 0.e0_wp
         if( igrad == 0 )then
@@ -25562,7 +25572,7 @@ subroutine pot( xyz, v )
     real(wp), intent(in)    :: xyz(11,3)
     real(wp), intent(inout) :: v
     real(wp)                :: x(55)
-    real(wp)                :: a1, a2
+    real(wp)                :: a1
     integer                 :: i
     a1    = 2.0
     x(1)  = sqrt((xyz(1,1)-xyz(2,1))**2+(xyz(1,2)-xyz(2,2))**2+(xyz(1,3)-xyz(2,3))**2)

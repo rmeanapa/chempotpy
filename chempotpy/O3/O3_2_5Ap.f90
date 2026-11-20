@@ -28,7 +28,7 @@ module chempotpy_o3_2_5ap_pes
 
     !> @brief Evaluate the O3_2_5Ap potential energy surface for O3.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         use chempotpy_units,  only: electronvolt_to_kilocalorie_per_mole
         use chempotpy_kinds,  only: wp
         implicit none
@@ -160,9 +160,9 @@ module chempotpy_o3_2_5ap_pes
             ! dRdX:         The derivative of R w.r.t. X, dim(3*9)
             use chempotpy_kinds, only: wp
             implicit none
-            integer  :: i, igrad, j, nob, k
+            integer  :: igrad
             real(wp) :: v
-            real(wp) :: dvdx(12), x(12)
+            real(wp) :: dvdx(9), x(9)
             !     $                  dRdX(3,9),dBdR(3,56)
             ! Convert the Cartesian coordinate array to pair distances
             call coord_convt(x)
@@ -183,8 +183,7 @@ module chempotpy_o3_2_5ap_pes
             !  from the Cartesian coordinate array
             use chempotpy_kinds, only: wp
             implicit none
-            integer  :: i
-            real(wp) :: x(12)
+            real(wp) :: x(9)
             !  Now, calculate the inter-atomic distance
             !  r1 = r(O1O2)
             !  r2 = r(O1O3)
@@ -212,7 +211,7 @@ module chempotpy_o3_2_5ap_pes
             ! B(1:56):      Array to store basis functions
             use chempotpy_kinds, only: wp
             implicit none
-            integer  :: i, j, k
+            integer  :: i
             real(wp) :: dist, dv2dr, v, v2, disp, dispdr(6)
             ! Calculate the six MEG terms for each point
             call evmorse
@@ -297,7 +296,6 @@ module chempotpy_o3_2_5ap_pes
             !  The subroutine accepts monomials (m) and calculates the
             !  permutation invariant polynomials(p)
             !  For A4 with max. degree 10, the number of polynomials is nob.
-            use chempotpy_kinds, only: wp
             implicit none
             epot_p( 0) = epot_rm(0)
             epot_p( 1) = epot_rm(1) + epot_rm(2) + epot_rm(3)
@@ -584,7 +582,6 @@ module chempotpy_o3_2_5ap_pes
             !  The subroutine accepts monomials (m) and calculates the
             !  permutation invariant polynomials(p)
             !  For A4 with max. degree 10, the number of polynomials is nob.
-            use chempotpy_kinds, only: wp
             implicit none
             integer :: i
             do i=1, 3
@@ -711,12 +708,10 @@ module chempotpy_o3_2_5ap_pes
         subroutine d3disp( dist, disp, dispdr, igrad )
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: cn(3), s6, s8, rs6, rs8
+            real(wp) :: s6, s8, rs6, rs8
             real(wp) :: dist(3), e6(3), e8(3), disp, dispdr(3), c6(3)
             real(wp) :: e6dr(3), e8dr(3)
-            integer  :: iz(3), mxc(94), i, j, igrad
-            real(wp) :: c6ab(94,94,5,5,3)
-            real(wp) :: r2r4(94)
+            integer  :: iz(3), mxc(94), i, igrad
             real(wp) :: autoang, autokcal
             autoang  = 0.52917726e0_wp
             autokcal = hartree_to_kilocalorie_per_mole
@@ -763,15 +758,11 @@ module chempotpy_o3_2_5ap_pes
             use chempotpy_kinds, only: wp
             implicit none
             integer  :: n, iz(3), max_elem, maxc, mxc(max_elem)
-            real(wp) :: dist(3), r2r4(max_elem), r0ab(max_elem,max_elem)
+            real(wp) :: dist(3), r2r4(max_elem)
             real(wp) :: rs6, rs8, rcov(max_elem)
-            real(wp) :: c6ab(max_elem,max_elem,maxc,maxc,3)
             real(wp) :: e6(3), e8(3), c6a(3), e6dr(3), e8dr(3)
             integer  :: iat, jat, igrad
             real(wp) :: r, tmp, c6, c8, a1, a2
-            real(wp) :: damp6, damp8
-            real(wp) :: cn(n)
-            real(wp) :: r2ab(n*n), cc6ab(n*n), dmp(n*n)
             integer  :: step
             e6(:)   = 0.0e0_wp
             e8(:)   = 0.0e0_wp

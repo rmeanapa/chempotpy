@@ -21,8 +21,7 @@ module chempotpy_h2o2_gen_1998_pes
 
     !> @brief Evaluate the H2O2_GEN_1998 potential energy surface for H2O2.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
-        use chempotpy_units,    only: hartree_per_bohr_to_ev_per_angstrom
+        use chempotpy_status,   only: chempotpy_status_t, status_derivative_unavailable
         use chempotpy_geometry, only: flatten_cartesian_coordinates
         use chempotpy_units,    only: hartree_to_electronvolt
         use chempotpy_kinds,    only: wp
@@ -37,7 +36,7 @@ module chempotpy_h2o2_gen_1998_pes
         real(wp), intent(out) :: d(nstates,nstates,natoms,3)
         integer               :: istate
         real(wp)              :: tx(12), dx(12), v
-        integer               :: iatom, idir, i, j
+        integer               :: iatom, idir, j
         !initialize
         v = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         call flatten_cartesian_coordinates(x, tx)
@@ -102,18 +101,12 @@ module chempotpy_h2o2_gen_1998_pes
         !                       X(10) - X(12) : X, Y, Z for H2
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: coord(n3tm), dx(n3tm), dxx(n3tm), x(n3tm)
-        real(wp)            :: v, pass(6)
-        real(wp)            :: gx(12,12), gv(12,12)
-        real(wp)            :: gxx(12,12,12), gvv(12,12,12)
-        real(wp)            :: temp, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9, temp10, temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18, temp19, temp20, temp21, temp22, temp23, temp24, temp25, temp26, temp27, temp28, temp29, temp30, temp31, temp32, temp33, temp34, temp35, temp36, temp37, temp38, temp39, temp40, temp41, temp42, temp43, temp44, temp45, temp46, temp47, temp48, temp49, temp50, temp51, temp52, temp53, temp54, temp55, temp56, temp57, temp58, temp59, temp60, temp61, temp62, temp63, temp64, temp65, temp66
-        real(wp)            :: tempx, temp1x, temp2x, temp3x, temp4x, temp5x, temp6x, temp7x, temp8x, temp9x, temp10x, temp11x, temp12x, temp13x, temp14x, temp15x, temp16x, temp17x, temp18x, temp19x, temp20x, temp21x, temp22x, temp23x, temp24x, temp25x, temp26x, temp27x, temp28x, temp29x, temp30x, temp31x, temp32x, temp33x, temp34x, temp35x, temp36x, temp37x, temp38x, temp39x, temp40x, temp41x, temp42x, temp43x, temp44x, temp45x, temp46x, temp47x, temp48x, temp49x, temp50x, temp51x, temp52x, temp53x, temp54x, temp55x, temp56x, temp57x, temp58x, temp59x, temp60x, temp61x, temp62x, temp63x, temp64x, temp65x, temp66x
-        integer             :: n3tm, i, j, ii
-        real(wp), parameter :: rohlow  = 1.0e0_wp
-        real(wp), parameter :: rohhigh = 4.0e0_wp
-        real(wp), parameter :: roolow  = 1.8e0_wp
-        real(wp), parameter :: roohigh = 4.0e0_wp
-        real(wp), parameter :: rhhlow  = 0.7e0_wp
+        real(wp) :: dx(n3tm), dxx(n3tm), x(n3tm)
+        real(wp) :: v
+        real(wp) :: gx(12,12), gv(12,12)
+        real(wp) :: gxx(12,12,12), gvv(12,12,12)
+        real(wp) :: tempx, temp2x, temp3x, temp4x, temp5x, temp6x, temp7x, temp8x, temp9x, temp10x, temp11x, temp12x, temp13x, temp14x, temp15x, temp16x, temp17x, temp18x, temp19x, temp20x, temp21x, temp22x, temp23x, temp24x, temp25x, temp26x, temp27x, temp28x, temp29x, temp30x, temp31x, temp32x, temp33x, temp34x, temp35x, temp36x, temp37x, temp38x, temp39x, temp40x, temp41x, temp42x, temp43x, temp44x, temp45x, temp46x, temp47x, temp48x, temp49x, temp50x, temp51x, temp52x, temp53x, temp54x, temp55x, temp56x, temp57x, temp58x, temp59x, temp60x, temp61x, temp62x, temp63x, temp64x, temp65x, temp66x
+        integer  :: n3tm, i, j, ii
         ! Call Koput, Carter, and Handy PES
         call pot(v, x)
         !  Initialize derivatives
@@ -660,25 +653,20 @@ module chempotpy_h2o2_gen_1998_pes
         !                       X(10) - X(12) : X, Y, Z for H2
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: n, n1, n2
-        real(wp)            :: v
-        real(wp)            :: coord(12), dx(12), x(12), pass(6)
-        real(wp)            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
-        real(wp)            :: c11, c12, c13, c14, c15, c16, c17, c18
-        real(wp)            :: rab, rbc, rcd, rac, rbd, rad
-        real(wp)            :: rh1o1, ro1o2, ro2h2
-        real(wp)            :: d1, d2, d, ah1oo, aooh2, thooh
-        real(wp)            :: xcomp1, ycomp1, zcomp1
-        real(wp)            :: xcomp2, ycomp2, zcomp2
-        real(wp)            :: xcomp3, ycomp3, zcomp3
-        real(wp)            :: xcomp4, ycomp4, zcomp4
-        real(wp)            :: x_normal1, y_normal1, z_normal1
-        real(wp)            :: x_normal2, y_normal2, z_normal2
-        real(wp), parameter :: rohlow  = 1.0e0_wp
-        real(wp), parameter :: rohhigh = 4.0e0_wp
-        real(wp), parameter :: roolow  = 1.8e0_wp
-        real(wp), parameter :: roohigh = 4.0e0_wp
-        real(wp), parameter :: rhhlow  = 0.7e0_wp
+        real(wp) :: n, n1, n2
+        real(wp) :: v
+        real(wp) :: x(12), pass(6)
+        real(wp) :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
+        real(wp) :: c11, c12, c13, c14, c15, c16, c17, c18
+        real(wp) :: rab, rbc, rcd, rac, rbd, rad
+        real(wp) :: rh1o1, ro1o2, ro2h2
+        real(wp) :: d1, d2, d, ah1oo, aooh2, thooh
+        real(wp) :: xcomp1, ycomp1, zcomp1
+        real(wp) :: xcomp2, ycomp2, zcomp2
+        real(wp) :: xcomp3, ycomp3, zcomp3
+        real(wp) :: xcomp4, ycomp4, zcomp4
+        real(wp) :: x_normal1, y_normal1, z_normal1
+        real(wp) :: x_normal2, y_normal2, z_normal2
         !  Calculate energy at the configuration space point
         !  NOTE :: This is not necessarily a quadrature point
         ! Expecting input in cartesians
@@ -897,35 +885,30 @@ module chempotpy_h2o2_gen_1998_pes
         !                       X(10) - X(12) : X, Y, Z for H2
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: n, n1, n2
-        real(wp)            :: v
-        real(wp)            :: coord(12), dx(12), x(12), pass(6)
-        real(wp)            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
-        real(wp)            :: c11, c12, c13, c14, c15, c16, c17, c18
-        real(wp)            :: rab, rbc, rcd, rac, rbd, rad
-        real(wp)            :: rh1o1, ro1o2, ro2h2
-        real(wp)            :: d1, d2, d, ah1oo, aooh2, thooh
-        real(wp)            :: xcomp1, ycomp1, zcomp1
-        real(wp)            :: xcomp2, ycomp2, zcomp2
-        real(wp)            :: xcomp3, ycomp3, zcomp3
-        real(wp)            :: xcomp4, ycomp4, zcomp4
-        real(wp)            :: x_normal1, y_normal1, z_normal1
-        real(wp)            :: x_normal2, y_normal2, z_normal2
-        real(wp), parameter :: rohlow  = 1.0e0_wp
-        real(wp), parameter :: rohhigh = 4.0e0_wp
-        real(wp), parameter :: roolow  = 1.8e0_wp
-        real(wp), parameter :: roohigh = 4.0e0_wp
-        real(wp), parameter :: rhhlow  = 0.7e0_wp
-        integer, parameter  :: g_pmax_ = 12
-        integer             :: g_i_, g_p_, ldg_x, ldg_v
-        real(wp)            :: d2_w, d1_p, d7_v, d2_p, d4_b, d5_b, d3_p, d2_v, d3_v, d7_b
-        real(wp)            :: d2_b, d3_b, d1_w, d4_v, d8_b, g_c1(g_pmax_), g_x(ldg_x,12), g_c2(g_pmax_), g_c3(g_pmax_), g_c4(g_pmax_)
-        real(wp)            :: g_c5(g_pmax_), g_c6(g_pmax_), g_c7(g_pmax_), g_c8(g_pmax_), g_c9(g_pmax_), g_c10(g_pmax_), g_c11(g_pmax_), g_c12( g_pmax_), g_c13(g_pmax_), g_c14(g_pmax_)
-        real(wp)            :: g_c15(g_pmax_), g_d1_w(g_pmax_), g_rab(g_pmax_), g_rbc(g_pmax_), g_rcd(g_pmax_), g_rh1o1(g_pmax_), g_ro1o2(g_pmax_), g_ro2h2(g_pmax_), g_n1(g_pmax_), g_d1(g_pmax_)
-        real(wp)            :: g_ah1oo(g_pmax_), g_n2(g_pmax_), g_d2(g_pmax_), g_aooh2(g_pmax_), g_xcomp1(g_pmax_), g_ycomp1(g_pmax_), g_zcomp1( g_pmax_), g_xcomp2(g_pmax_), g_ycomp2(g_pmax_), g_zcomp2(g_pmax_)
-        real(wp)            :: g_x_normal1(g_pmax_), g_y_normal1(g_pmax_), g_z_normal1(g_pmax_), g_xcomp3(g_pmax_), g_ycomp3(g_pmax_), g_zcomp3( g_pmax_), g_xcomp4(g_pmax_), g_ycomp4(g_pmax_), g_zcomp4(g_pmax_), g_x_normal2(g_pmax_)
-        real(wp)            :: g_y_normal2(g_pmax_), g_z_normal2(g_pmax_), g_n (g_pmax_), g_d2_w(g_pmax_), g_d(g_pmax_), g_thooh(g_pmax_), g_pass (g_pmax_,6), g_v(ldg_v)
-        integer             :: g_ehfid
+        real(wp)           :: n, n1, n2
+        real(wp)           :: v
+        real(wp)           :: x(12), pass(6)
+        real(wp)           :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
+        real(wp)           :: c11, c12, c13, c14, c15, c16, c17, c18
+        real(wp)           :: rab, rbc, rcd, rac, rbd, rad
+        real(wp)           :: rh1o1, ro1o2, ro2h2
+        real(wp)           :: d1, d2, d, ah1oo, aooh2, thooh
+        real(wp)           :: xcomp1, ycomp1, zcomp1
+        real(wp)           :: xcomp2, ycomp2, zcomp2
+        real(wp)           :: xcomp3, ycomp3, zcomp3
+        real(wp)           :: xcomp4, ycomp4, zcomp4
+        real(wp)           :: x_normal1, y_normal1, z_normal1
+        real(wp)           :: x_normal2, y_normal2, z_normal2
+        integer, parameter :: g_pmax_ = 12
+        integer            :: g_i_, g_p_, ldg_x, ldg_v
+        real(wp)           :: d2_w, d1_p, d7_v, d2_p, d4_b, d5_b, d3_p, d2_v, d3_v, d7_b
+        real(wp)           :: d2_b, d3_b, d1_w, d4_v, d8_b, g_c1(g_pmax_), g_x(ldg_x,12), g_c2(g_pmax_), g_c3(g_pmax_), g_c4(g_pmax_)
+        real(wp)           :: g_c5(g_pmax_), g_c6(g_pmax_), g_c7(g_pmax_), g_c8(g_pmax_), g_c9(g_pmax_), g_c10(g_pmax_), g_c11(g_pmax_), g_c12( g_pmax_), g_c13(g_pmax_), g_c14(g_pmax_)
+        real(wp)           :: g_c15(g_pmax_), g_d1_w(g_pmax_), g_rab(g_pmax_), g_rbc(g_pmax_), g_rcd(g_pmax_), g_rh1o1(g_pmax_), g_ro1o2(g_pmax_), g_ro2h2(g_pmax_), g_n1(g_pmax_), g_d1(g_pmax_)
+        real(wp)           :: g_ah1oo(g_pmax_), g_n2(g_pmax_), g_d2(g_pmax_), g_aooh2(g_pmax_), g_xcomp1(g_pmax_), g_ycomp1(g_pmax_), g_zcomp1( g_pmax_), g_xcomp2(g_pmax_), g_ycomp2(g_pmax_), g_zcomp2(g_pmax_)
+        real(wp)           :: g_x_normal1(g_pmax_), g_y_normal1(g_pmax_), g_z_normal1(g_pmax_), g_xcomp3(g_pmax_), g_ycomp3(g_pmax_), g_zcomp3( g_pmax_), g_xcomp4(g_pmax_), g_ycomp4(g_pmax_), g_zcomp4(g_pmax_), g_x_normal2(g_pmax_)
+        real(wp)           :: g_y_normal2(g_pmax_), g_z_normal2(g_pmax_), g_n (g_pmax_), g_d2_w(g_pmax_), g_d(g_pmax_), g_thooh(g_pmax_), g_pass (g_pmax_,6), g_v(ldg_v)
+        integer            :: g_ehfid
         !  Calculate energy at the configuration space point
         !  NOTE :: This is not necessarily a quadrature point
         ! Expecting input in cartesians
@@ -1556,44 +1539,39 @@ module chempotpy_h2o2_gen_1998_pes
         !                       X(10) - X(12) : X, Y, Z for H2
         use chempotpy_kinds, only: wp
         implicit none
-        real(wp)            :: n, n1, n2
-        real(wp)            :: v
-        real(wp)            :: coord(12), dx(12), x(12), pass(6)
-        real(wp)            :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
-        real(wp)            :: c11, c12, c13, c14, c15, c16, c17, c18
-        real(wp)            :: rab, rbc, rcd, rac, rbd, rad
-        real(wp)            :: rh1o1, ro1o2, ro2h2
-        real(wp)            :: d1, d2, d, ah1oo, aooh2, thooh
-        real(wp)            :: xcomp1, ycomp1, zcomp1
-        real(wp)            :: xcomp2, ycomp2, zcomp2
-        real(wp)            :: xcomp3, ycomp3, zcomp3
-        real(wp)            :: xcomp4, ycomp4, zcomp4
-        real(wp)            :: x_normal1, y_normal1, z_normal1
-        real(wp)            :: x_normal2, y_normal2, z_normal2
-        real(wp), parameter :: rohlow  = 1.0e0_wp
-        real(wp), parameter :: rohhigh = 4.0e0_wp
-        real(wp), parameter :: roolow  = 1.8e0_wp
-        real(wp), parameter :: roohigh = 4.0e0_wp
-        real(wp), parameter :: rhhlow  = 0.7e0_wp
-        integer, parameter  :: g_pmax_ = 12
-        integer, parameter  :: g2pmax  = 12
-        integer             :: g_i_, g_p_, ldg_x, ldg_v
-        real(wp)            :: d2_w, d1_p, d7_v, d2_p, d4_b, d5_b, d3_p, d2_v, d3_v, d7_b
-        real(wp)            :: d2_b, d3_b, d1_w, d4_v, d8_b, g_c1(g_pmax_), g_x(ldg_x,12), g_c2(g_pmax_), g_c3(g_pmax_), g_c4(g_pmax_)
-        real(wp)            :: g_c5(g_pmax_), g_c6(g_pmax_), g_c7(g_pmax_), g_c8(g_pmax_), g_c9(g_pmax_), g_c10(g_pmax_), g_c11(g_pmax_), g_c12( g_pmax_), g_c13(g_pmax_), g_c14(g_pmax_)
-        real(wp)            :: g_c15(g_pmax_), g_d1_w(g_pmax_), g_rab(g_pmax_), g_rbc(g_pmax_), g_rcd(g_pmax_), g_rh1o1(g_pmax_), g_ro1o2(g_pmax_), g_ro2h2(g_pmax_), g_n1(g_pmax_), g_d1(g_pmax_)
-        real(wp)            :: g_ah1oo(g_pmax_), g_n2(g_pmax_), g_d2(g_pmax_), g_aooh2(g_pmax_), g_xcomp1(g_pmax_), g_ycomp1(g_pmax_), g_zcomp1( g_pmax_), g_xcomp2(g_pmax_), g_ycomp2(g_pmax_), g_zcomp2(g_pmax_)
-        real(wp)            :: g_x_normal1(g_pmax_), g_y_normal1(g_pmax_), g_z_normal1(g_pmax_), g_xcomp3(g_pmax_), g_ycomp3(g_pmax_), g_zcomp3( g_pmax_), g_xcomp4(g_pmax_), g_ycomp4(g_pmax_), g_zcomp4(g_pmax_), g_x_normal2(g_pmax_)
-        real(wp)            :: g_y_normal2(g_pmax_), g_z_normal2(g_pmax_), g_n (g_pmax_), g_d2_w(g_pmax_), g_d(g_pmax_), g_thooh(g_pmax_), g_pass (g_pmax_,6), g_v(ldg_v)
-        integer             :: g_ehfid
-        integer, parameter  :: g__pmax_ = 12
-        integer             :: g2i, g2p, ldg_g_x, ldg_g_v
-        real(wp)            :: g_g_c1(g__pmax_,g_pmax_), g_g_x(ldg_g_x,ldg_x,12), g_g_c2(g__pmax_,g_pmax_), g_g_c3(g__pmax_,g_pmax_), g_g_c4(g__pmax_,g_pmax_), g_g_c5(g__pmax_,g_pmax_), g_g_c6(g__pmax_,g_pmax_), g_g_c7(g__pmax_,g_pmax_), g_g_c8(g__pmax_,g_pmax_), g_g_c9(g__pmax_,g_pmax_)
-        real(wp)            :: g_g_c10(g__pmax_,g_pmax_), g_g_c11(g__pmax_,g_pmax_), g_g_c12(g__pmax_,g_pmax_), g_g_c13(g__pmax_,g_pmax_), g_g_c14(g__pmax_,g_pmax_), g_g_c15(g__pmax_,g_pmax_), g_g_d1_w(g__pmax_,g_pmax_), g_g_rab(g__pmax_,g_pmax_), g_g_rbc(g__pmax_,g_pmax_), g_g_rcd(g__pmax_,g_pmax_)
-        real(wp)            :: g_g_rh1o1(g__pmax_,g_pmax_), g_g_ro1o2(g__pmax_,g_pmax_), g_g_ro2h2(g__pmax_,g_pmax_), g_g_n1(g__pmax_,g_pmax_), g_g_d1(g__pmax_,g_pmax_), g_g_ah1oo(g__pmax_,g_pmax_), g_g_n2(g__pmax_,g_pmax_), g_g_d2(g__pmax_,g_pmax_), g_g_aooh2(g__pmax_,g_pmax_), g_g_xcomp1(g__pmax_,g_pmax_)
-        real(wp)            :: g_g_ycomp1(g__pmax_,g_pmax_), g_g_zcomp1(g__pmax_,g_pmax_), g_g_xcomp2(g__pmax_,g_pmax_), g_g_ycomp2(g__pmax_,g_pmax_), g_g_zcomp2(g__pmax_,g_pmax_), g_g_x_normal1(g__pmax_,g_pmax_), g_g_y_normal1(g__pmax_,g_pmax_), g_g_z_normal1(g__pmax_,g_pmax_), g_g_xcomp3(g__pmax_,g_pmax_), g_g_ycomp3(g__pmax_,g_pmax_)
-        real(wp)            :: g_g_zcomp3(g__pmax_,g_pmax_), g_g_xcomp4(g__pmax_,g_pmax_), g_g_ycomp4(g__pmax_,g_pmax_), g_g_zcomp4(g__pmax_,g_pmax_), g_g_x_normal2(g__pmax_,g_pmax_), g_g_y_normal2(g__pmax_,g_pmax_), g_g_z_normal2(g__pmax_,g_pmax_), g_g_n(g__pmax_,g_pmax_), g_g_d2_w(g__pmax_,g_pmax_), g_g_d(g__pmax_,g_pmax_)
-        real(wp)            :: g_g_thooh(g__pmax_,g_pmax_), g_g_pass(g__pmax_,g_pmax_,6), g_g_v(ldg_g_v,ldg_v)
+        real(wp)           :: n, n1, n2
+        real(wp)           :: v
+        real(wp)           :: x(12), pass(6)
+        real(wp)           :: c1, c2, c3, c4, c5, c6, c7, c8, c9, c10
+        real(wp)           :: c11, c12, c13, c14, c15, c16, c17, c18
+        real(wp)           :: rab, rbc, rcd, rac, rbd, rad
+        real(wp)           :: rh1o1, ro1o2, ro2h2
+        real(wp)           :: d1, d2, d, ah1oo, aooh2, thooh
+        real(wp)           :: xcomp1, ycomp1, zcomp1
+        real(wp)           :: xcomp2, ycomp2, zcomp2
+        real(wp)           :: xcomp3, ycomp3, zcomp3
+        real(wp)           :: xcomp4, ycomp4, zcomp4
+        real(wp)           :: x_normal1, y_normal1, z_normal1
+        real(wp)           :: x_normal2, y_normal2, z_normal2
+        integer, parameter :: g_pmax_ = 12
+        integer, parameter :: g2pmax  = 12
+        integer            :: g_i_, g_p_, ldg_x, ldg_v
+        real(wp)           :: d2_w, d1_p, d7_v, d2_p, d4_b, d5_b, d3_p, d2_v, d3_v, d7_b
+        real(wp)           :: d2_b, d3_b, d1_w, d4_v, d8_b, g_c1(g_pmax_), g_x(ldg_x,12), g_c2(g_pmax_), g_c3(g_pmax_), g_c4(g_pmax_)
+        real(wp)           :: g_c5(g_pmax_), g_c6(g_pmax_), g_c7(g_pmax_), g_c8(g_pmax_), g_c9(g_pmax_), g_c10(g_pmax_), g_c11(g_pmax_), g_c12( g_pmax_), g_c13(g_pmax_), g_c14(g_pmax_)
+        real(wp)           :: g_c15(g_pmax_), g_d1_w(g_pmax_), g_rab(g_pmax_), g_rbc(g_pmax_), g_rcd(g_pmax_), g_rh1o1(g_pmax_), g_ro1o2(g_pmax_), g_ro2h2(g_pmax_), g_n1(g_pmax_), g_d1(g_pmax_)
+        real(wp)           :: g_ah1oo(g_pmax_), g_n2(g_pmax_), g_d2(g_pmax_), g_aooh2(g_pmax_), g_xcomp1(g_pmax_), g_ycomp1(g_pmax_), g_zcomp1( g_pmax_), g_xcomp2(g_pmax_), g_ycomp2(g_pmax_), g_zcomp2(g_pmax_)
+        real(wp)           :: g_x_normal1(g_pmax_), g_y_normal1(g_pmax_), g_z_normal1(g_pmax_), g_xcomp3(g_pmax_), g_ycomp3(g_pmax_), g_zcomp3( g_pmax_), g_xcomp4(g_pmax_), g_ycomp4(g_pmax_), g_zcomp4(g_pmax_), g_x_normal2(g_pmax_)
+        real(wp)           :: g_y_normal2(g_pmax_), g_z_normal2(g_pmax_), g_n (g_pmax_), g_d2_w(g_pmax_), g_d(g_pmax_), g_thooh(g_pmax_), g_pass (g_pmax_,6), g_v(ldg_v)
+        integer            :: g_ehfid
+        integer, parameter :: g__pmax_ = 12
+        integer            :: g2i, g2p, ldg_g_x, ldg_g_v
+        real(wp)           :: g_g_c1(g__pmax_,g_pmax_), g_g_x(ldg_g_x,ldg_x,12), g_g_c2(g__pmax_,g_pmax_), g_g_c3(g__pmax_,g_pmax_), g_g_c4(g__pmax_,g_pmax_), g_g_c5(g__pmax_,g_pmax_), g_g_c6(g__pmax_,g_pmax_), g_g_c7(g__pmax_,g_pmax_), g_g_c8(g__pmax_,g_pmax_), g_g_c9(g__pmax_,g_pmax_)
+        real(wp)           :: g_g_c10(g__pmax_,g_pmax_), g_g_c11(g__pmax_,g_pmax_), g_g_c12(g__pmax_,g_pmax_), g_g_c13(g__pmax_,g_pmax_), g_g_c14(g__pmax_,g_pmax_), g_g_c15(g__pmax_,g_pmax_), g_g_d1_w(g__pmax_,g_pmax_), g_g_rab(g__pmax_,g_pmax_), g_g_rbc(g__pmax_,g_pmax_), g_g_rcd(g__pmax_,g_pmax_)
+        real(wp)           :: g_g_rh1o1(g__pmax_,g_pmax_), g_g_ro1o2(g__pmax_,g_pmax_), g_g_ro2h2(g__pmax_,g_pmax_), g_g_n1(g__pmax_,g_pmax_), g_g_d1(g__pmax_,g_pmax_), g_g_ah1oo(g__pmax_,g_pmax_), g_g_n2(g__pmax_,g_pmax_), g_g_d2(g__pmax_,g_pmax_), g_g_aooh2(g__pmax_,g_pmax_), g_g_xcomp1(g__pmax_,g_pmax_)
+        real(wp)           :: g_g_ycomp1(g__pmax_,g_pmax_), g_g_zcomp1(g__pmax_,g_pmax_), g_g_xcomp2(g__pmax_,g_pmax_), g_g_ycomp2(g__pmax_,g_pmax_), g_g_zcomp2(g__pmax_,g_pmax_), g_g_x_normal1(g__pmax_,g_pmax_), g_g_y_normal1(g__pmax_,g_pmax_), g_g_z_normal1(g__pmax_,g_pmax_), g_g_xcomp3(g__pmax_,g_pmax_), g_g_ycomp3(g__pmax_,g_pmax_)
+        real(wp)           :: g_g_zcomp3(g__pmax_,g_pmax_), g_g_xcomp4(g__pmax_,g_pmax_), g_g_ycomp4(g__pmax_,g_pmax_), g_g_zcomp4(g__pmax_,g_pmax_), g_g_x_normal2(g__pmax_,g_pmax_), g_g_y_normal2(g__pmax_,g_pmax_), g_g_z_normal2(g__pmax_,g_pmax_), g_g_n(g__pmax_,g_pmax_), g_g_d2_w(g__pmax_,g_pmax_), g_g_d(g__pmax_,g_pmax_)
+        real(wp)           :: g_g_thooh(g__pmax_,g_pmax_), g_g_pass(g__pmax_,g_pmax_,6), g_g_v(ldg_g_v,ldg_v)
         !        data rohlow, rohhigh /1.d0, 4.d0/
         !        data roolow, roohigh, rhhlow /1.8d0, 4.d0, 0.7d0/
         !  Calculate energy at the configuration space point
@@ -2478,7 +2456,6 @@ module chempotpy_h2o2_gen_1998_pes
 
     !> @brief Evaluate SETUP for the H2O2_GEN_1998 potential.
     subroutine setup( n3tm )
-        use chempotpy_kinds, only: wp
         implicit none
         integer :: n3tm
         !   N3TMMN = 3 * NATOMS

@@ -26,7 +26,7 @@ module chempotpy_brhcl_leps1_pes
 
     !> @brief Evaluate the BrHCl_LEPS1 potential energy surface for BrHCl.
     subroutine evaluate( x, igrad, p, g, d, status )
-        use chempotpy_status, only: chempotpy_status_t, status_derivative_unavailable, status_invalid_input
+        use chempotpy_status, only: chempotpy_status_t
         type(chempotpy_status_t), intent(out), optional :: status
         integer, intent(in)   :: igrad
         real(wp), intent(in)  :: x(3,3)
