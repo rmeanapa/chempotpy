@@ -1,5 +1,6 @@
 !> @brief Implement ClH2O_PIPNN, a potential energy surface for ClH2O.
 module chempotpy_clh2o_pipnn_pes
+    use chempotpy_neural_network, only: apply_activation
     use chempotpy_interpolation, only: cubic_spline_coefficients, evaluate_cubic_spline
     use chempotpy_units,         only: hartree_to_kilocalorie_per_mole
     use chempotpy_kinds,         only: wp
@@ -97,14 +98,14 @@ module chempotpy_clh2o_pipnn_pes
             do inode2=1, ninput
                 hidden_1(inode1) = hidden_1(inode1) +scaled_input(inode2)*input_hidden_weights(inode2, inode1, network)
             enddo
-            hidden_1(inode1) = tranfun(hidden_1(inode1), activation_function)
+            hidden_1(inode1) = apply_activation(hidden_1(inode1), activation_function)
         enddo
         do inode1=1, hidden_2_count
             hidden_2(inode1) = hidden_2_biases(inode1, network)
             do inode2=1, hidden_1_count
                 hidden_2(inode1) = hidden_2(inode1) +hidden_1(inode2)*hidden_hidden_weights(inode2, inode1, network)
             enddo
-            hidden_2(inode1) = tranfun(hidden_2(inode1), activation_function)
+            hidden_2(inode1) = apply_activation(hidden_2(inode1), activation_function)
         enddo
         output = output_biases(1, network)
         do inode2=1, hidden_2_count
@@ -114,20 +115,6 @@ module chempotpy_clh2o_pipnn_pes
     end subroutine getpot
 
     !> @brief Evaluate tranfun.
-    function tranfun( x, ifunc ) result(value)
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer, intent(in)  :: ifunc
-        real(wp), intent(in) :: x
-        real(wp)             :: value
-        if( ifunc .eq. 1 )then
-            value = tanh(x)
-        elseif( ifunc .eq. 2 )then
-            value = 1e0_wp/(1e0_wp+exp(-x))
-        elseif( ifunc .eq. 3 )then
-            value = x
-        endif
-    end function tranfun
 
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)

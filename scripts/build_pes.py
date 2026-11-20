@@ -124,6 +124,7 @@ SUPPORT_SOURCES = {
 CORE_FORTRAN_ROOT = REPOSITORY_ROOT / "chempotpy" / "core"
 CORE_MODULE_SOURCES = {
     "chempotpy_contract": CORE_FORTRAN_ROOT / "chempotpy_contract.f90",
+    "chempotpy_dispersion": CORE_FORTRAN_ROOT / "chempotpy_dispersion.f90",
     "chempotpy_blas": CORE_FORTRAN_ROOT / "chempotpy_blas.f90",
     "chempotpy_finite_difference": (
         CORE_FORTRAN_ROOT / "chempotpy_finite_difference.f90"
@@ -148,6 +149,9 @@ CORE_MODULE_SOURCES = {
     "chempotpy_status": CORE_FORTRAN_ROOT / "chempotpy_status.f90",
     "chempotpy_linear_algebra": (
         CORE_FORTRAN_ROOT / "chempotpy_linear_algebra.f90"
+    ),
+    "chempotpy_neural_network": (
+        CORE_FORTRAN_ROOT / "chempotpy_neural_network.f90"
     ),
     "chempotpy_units": CORE_FORTRAN_ROOT / "chempotpy_units.f90",
 }

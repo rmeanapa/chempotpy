@@ -108,38 +108,18 @@ module chempotpy_k2rb2_pipnn_pes
 
     !> @brief Evaluate one immutable neural network from the released three-model ensemble.
     subroutine evaluate_network( x, network_index, vpot )
+        use chempotpy_neural_network, only: evaluate_two_hidden_network
         use chempotpy_kinds, only: wp
         implicit none
         real(wp), intent(in)  :: x(ninput)
         integer, intent(in)   :: network_index
         real(wp), intent(out) :: vpot
-        integer               :: i, inode1, inode2
-        real(wp)              :: input_values(ninput), hidden_1_values(hidden_1_count)
-        real(wp)              :: hidden_2_values(hidden_2_count), output_value
-        do i=1, ninput
-            input_values(i) = (x(i)-scale_averages(i, network_index))/scale_deltas(i, network_index)
-        enddo
-        do inode1=1, hidden_1_count
-            hidden_1_values(inode1) = hidden_1_biases(inode1, network_index)
-            do inode2=1, ninput
-                hidden_1_values(inode1) = hidden_1_values(inode1) + input_values(inode2)* input_hidden_weights(inode2, &
-                    & inode1, network_index)
-            enddo
-            hidden_1_values(inode1) = tranfun(hidden_1_values(inode1), activation_function)
-        enddo
-        do inode1=1, hidden_2_count
-            hidden_2_values(inode1) = hidden_2_biases(inode1, network_index)
-            do inode2=1, hidden_1_count
-                hidden_2_values(inode1) = hidden_2_values(inode1) + hidden_1_values(inode2)* &
-                    & hidden_hidden_weights(inode2, inode1, network_index)
-            enddo
-            hidden_2_values(inode1) = tranfun(hidden_2_values(inode1), activation_function)
-        enddo
-        output_value = output_biases(1, network_index)
-        do inode2=1, hidden_2_count
-            output_value = output_value + hidden_2_values(inode2)* hidden_output_weights(inode2, 1, network_index)
-        enddo
-        vpot = output_value*scale_deltas(nscale, network_index)+scale_averages(nscale, network_index)
+        call evaluate_two_hidden_network(x, scale_averages(1:ninput,network_index), &
+            & scale_deltas(1:ninput,network_index), input_hidden_weights(:,:,network_index), &
+            & hidden_1_biases(:,network_index), hidden_hidden_weights(:,:,network_index), &
+            & hidden_2_biases(:,network_index), hidden_output_weights(:,1,network_index), &
+            & output_biases(1,network_index), activation_function, scale_averages(nscale,network_index), &
+            & scale_deltas(nscale,network_index), vpot)
     end subroutine evaluate_network
 
     !> @brief Evaluate released neural network 1 from the ensemble.
@@ -170,19 +150,6 @@ module chempotpy_k2rb2_pipnn_pes
     end subroutine getpotc
 
     !> @brief Evaluate tranfun.
-    function tranfun( x, ifunc )
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer  :: ifunc
-        real(wp) :: tranfun, x
-        if( ifunc .eq. 1 )then
-            tranfun = tanh(x)
-        elseif( ifunc .eq. 2 )then
-            tranfun = 1e0_wp/(1e0_wp+exp(-x))
-        elseif( ifunc .eq. 3 )then
-            tranfun = x
-        endif
-    end
     !> @brief Evaluate before_vpes.
     subroutine before_vpes( xct, lxc )
         use chempotpy_kinds, only: wp

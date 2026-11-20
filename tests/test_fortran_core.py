@@ -95,6 +95,69 @@ end program test_quad_precision
             )
             subprocess.run([str(executable)], check=True, cwd=directory)
 
+    def test_neural_network_and_dispersion_contract( self ) -> None:
+        compiler = shutil.which("gfortran")
+        if compiler is None:
+            self.skipTest("gfortran is not available")
+        repository = Path(__file__).resolve().parents[1]
+        core = repository / "chempotpy" / "core"
+        driver_source = """\
+program test_model_utilities
+    use chempotpy_dispersion, only: evaluate_d3_bj_dispersion
+    use chempotpy_kinds, only: wp
+    use chempotpy_neural_network, only: activation_linear, activation_logistic, activation_tanh, &
+        apply_activation, evaluate_two_hidden_network
+    implicit none
+    integer  :: atomic_numbers(2)
+    real(wp) :: c6(1), distance(1), derivative(1), energy, energy_minus, energy_plus
+    real(wp) :: inputs(2), averages(2), deltas(2), weights_1(2,2), biases_1(2)
+    real(wp) :: weights_2(2,1), biases_2(1), weights_3(1), output
+    if( abs(apply_activation(0.25_wp,activation_tanh)-tanh(0.25_wp)) > epsilon(1.0_wp) ) &
+        error stop 'tanh activation failed'
+    if( abs(apply_activation(0.25_wp,activation_logistic)-1.0_wp/(1.0_wp+exp(-0.25_wp))) > epsilon(1.0_wp) ) &
+        error stop 'logistic activation failed'
+    if( apply_activation(0.25_wp,activation_linear) /= 0.25_wp ) error stop 'linear activation failed'
+    inputs = [1.0_wp, -2.0_wp]; averages = 0.0_wp; deltas = 1.0_wp
+    weights_1 = 0.0_wp; biases_1 = 0.0_wp; weights_2 = 0.0_wp; biases_2 = 0.0_wp; weights_3 = 0.0_wp
+    call evaluate_two_hidden_network(inputs, averages, deltas, weights_1, biases_1, weights_2, biases_2, weights_3, &
+        & 2.0_wp, activation_tanh, 3.0_wp, 4.0_wp, output)
+    if( output /= 11.0_wp ) error stop 'dense network output scaling failed'
+    atomic_numbers = [7, 8]; c6 = 16.7_wp; distance = 1.2_wp
+    call evaluate_d3_bj_dispersion(distance, atomic_numbers, c6, 1.0_wp, 2.0_wp, 0.5299_wp, 2.20_wp, energy, derivative)
+    distance(1) = 1.2_wp-1.0e-5_wp
+    call evaluate_d3_bj_dispersion(distance, atomic_numbers, c6, 1.0_wp, 2.0_wp, 0.5299_wp, 2.20_wp, energy_minus)
+    distance(1) = 1.2_wp+1.0e-5_wp
+    call evaluate_d3_bj_dispersion(distance, atomic_numbers, c6, 1.0_wp, 2.0_wp, 0.5299_wp, 2.20_wp, energy_plus)
+    if( abs(derivative(1)-(energy_plus-energy_minus)/2.0e-5_wp) > 1.0e-7_wp ) &
+        error stop 'D3 distance derivative failed'
+end program test_model_utilities
+"""
+        with tempfile.TemporaryDirectory(
+            prefix="chempotpy-model-utilities-"
+        ) as tmp:
+            directory = Path(tmp)
+            driver = directory / "driver.f90"
+            executable = directory / "test_model_utilities"
+            driver.write_text(driver_source)
+            subprocess.run(
+                [
+                    compiler,
+                    str(core / "chempotpy_kinds.f90"),
+                    str(core / "chempotpy_constants.f90"),
+                    str(core / "chempotpy_units.f90"),
+                    str(core / "chempotpy_dispersion.f90"),
+                    str(core / "chempotpy_neural_network.f90"),
+                    str(driver),
+                    "-o",
+                    str(executable),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                cwd=directory,
+            )
+            subprocess.run([str(executable)], check=True, cwd=directory)
+
     def test_units_geometry_and_status_contract( self ) -> None:
         compiler = shutil.which("gfortran")
         if compiler is None:

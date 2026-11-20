@@ -29492,153 +29492,18 @@ module chempotpy_n2o_11_1app_ae_2025_pes
 
     !> @brief Evaluate d3disp.
     subroutine d3disp( dist, disp, dispdr, igrad, imol )
-        ! Dispersion correction based on Grimme's D3(BJ) calculation for
-        ! diatomic pairs
-        ! Several subroutines of DFTD3 V3.1 Rev 1 by Grimme were merged into
-        ! subroutine edisp and they have been heavily modified to calculate only
-        ! that dispersion energy correction that is needed.
-        ! S. Grimme, J. Antony, S. Ehrlich and H. Krieg
-        ! J. Chem. Phys, 132 (2010), 154104
-        ! and
-        ! S. Grimme, S. Ehrlich and L. Goerigk, J. Comput. Chem, 32 (2011),
-        ! 1456-1465
-        ! The C6 values are fixed.
-        use chempotpy_kinds, only: wp
+        use chempotpy_dispersion, only: evaluate_legacy_d3_diatomic
+        use chempotpy_kinds,      only: wp
         implicit none
-        real(wp) :: s6, s8, rs6, rs8
-        real(wp) :: dist(1), e6(1), e8(1), disp, dispdr(1), c6(2)
-        real(wp) :: e6dr(1), e8dr(1)
-        integer  :: iz(2), mxc(94), i, igrad
-        real(wp) :: autoang, autokcal
-        integer  :: imol
-        autoang  = 0.52917726e0_wp
-        autokcal = hartree_to_kilocalorie_per_mole
-        ! Generalized parameters for BJ damping from P. Verma, B. Wang,
-        ! L. E. Fernandez, and D. G. Truhlar, J. Phys. Chem. A 121, 2855 (2017)
-        s6  = 1.0e0_wp
-        s8  = 2.0e0_wp
-        rs6 = 0.5299e0_wp !not unit conversion
-        rs8 = 2.20e0_wp
-        do i=1, 1
-            dist(i) = dist(i)/autoang
-        enddo
-        if( imol .eq. 2 )then!!N2
-            ! iz for N2 system
-            iz(1) = 7
-            iz(2) = 7
-            ! C6 for N2 system
-            c6(1) = 19.7e0_wp
-            c6(2) = 19.7e0_wp
-        elseif( imol .eq. 3 )then! NO
-            ! iz for NO system
-            iz(1) = 7
-            iz(2) = 8
-            ! C6 for NO system
-            c6(1) = 16.7e0_wp
-            c6(2) = 16.7e0_wp
-        else
-            ! currently imol = 2 & 3 are used
-            return
-        endif
-        ! Calculate dispersion correction
-        call edisp(94, 5, 2, dist, iz, mxc, &
-            rs6, rs8, e6, e8, e6dr, e8dr, c6, 0)
-        disp = 0.0e0_wp
-        do i=1, 1
-            disp = disp + (-s6*e6(i)-s8*e8(i))*autokcal
-        enddo
-        if( igrad .eq. 1 )then
-            call edisp(94, 5, 2, dist, iz, mxc, &
-                rs6, rs8, e6, e8, e6dr, e8dr, c6, 1)
-            dispdr(:) = 0.0e0_wp
-            do i=1, 1
-                dispdr(i) = dispdr(i) + (-s6*e6dr(i)-s8*e8dr(i))*autokcal/autoang
-            enddo
-        endif
-        do i=1, 1
-            dist(i) = dist(i)*autoang
-        enddo
+        real(wp)  :: dist(1)
+        real(wp) :: disp, dispdr(1)
+        integer   :: igrad
+        integer   :: imol
+        call evaluate_legacy_d3_diatomic(dist, disp, dispdr, igrad, imol)
     end subroutine d3disp
 
     ! compute energy
     !> @brief Evaluate edisp.
-    subroutine edisp( max_elem, maxc, n, dist, iz, mxc, &
-            rs6, rs8, e6, e8, e6dr, e8dr, c6a, igrad )
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer  :: n, iz(2), max_elem, maxc, mxc(max_elem)
-        real(wp) :: dist(1), r2r4(max_elem)
-        real(wp) :: rs6, rs8, rcov(max_elem)
-        real(wp) :: e6(1), e8(1), c6a(2), e6dr(1), e8dr(1)
-        integer  :: iat, jat, igrad
-        real(wp) :: r, tmp, c6, c8, a1, a2
-        integer  :: step
-        e6(:)   = 0.0e0_wp
-        e8(:)   = 0.0e0_wp
-        e6dr(:) = 0.0e0_wp
-        e8dr(:) = 0.0e0_wp
-        a1      = rs6
-        a2      = rs8
-        !  r2r4 =sqrt(0.5*r2r4(i)*dfloat(i)**0.5 ) with i=elementnumber
-        !  the large number of digits is just to keep the results consistent
-        !  with older versions. They should not imply any higher accuracy than
-        !  the old values
-        r2r4(1:94)=(/ 2.00734898e0_wp, 1.56637132e0_wp, 5.01986934e0_wp, 3.85379032e0_wp, 3.64446594e0_wp, &
-            & 3.10492822e0_wp, 2.71175247e0_wp, 2.59361680e0_wp, 2.38825250e0_wp, 2.21522516e0_wp, 6.58585536e0_wp, &
-            & 5.46295967e0_wp, 5.65216669e0_wp, 4.88284902e0_wp, 4.29727576e0_wp, 4.04108902e0_wp, 3.72932356e0_wp, &
-            & 3.44677275e0_wp, 7.97762753e0_wp, 7.07623947e0_wp, 6.60844053e0_wp, 6.28791364e0_wp, 6.07728703e0_wp, &
-            & 5.54643096e0_wp, 5.80491167e0_wp, 5.58415602e0_wp, 5.41374528e0_wp, 5.28497229e0_wp, 5.22592821e0_wp, &
-            & 5.09817141e0_wp, 6.12149689e0_wp, 5.54083734e0_wp, 5.06696878e0_wp, 4.87005108e0_wp, 4.59089647e0_wp, &
-            & 4.31176304e0_wp, 9.55461698e0_wp, 8.67396077e0_wp, 7.97210197e0_wp, 7.43439917e0_wp, 6.58711862e0_wp, &
-            & 6.19536215e0_wp, 6.01517290e0_wp, 5.81623410e0_wp, 5.65710424e0_wp, 5.52640661e0_wp, 5.44263305e0_wp, &
-            & 5.58285373e0_wp, 7.02081898e0_wp, 6.46815523e0_wp, 5.98089120e0_wp, 5.81686657e0_wp, 5.53321815e0_wp, &
-            & 5.25477007e0_wp, 11.02204549e0_wp, 0.15679528e0_wp, 9.35167836e0_wp, 9.06926079e0_wp, 8.97241155e0_wp, &
-            & 8.90092807e0_wp, 8.85984840e0_wp, 8.81736827e0_wp, 8.79317710e0_wp, 7.89969626e0_wp, 8.80588454e0_wp, &
-            & 8.42439218e0_wp, 8.54289262e0_wp, 8.47583370e0_wp, 8.45090888e0_wp, 8.47339339e0_wp, 7.83525634e0_wp, &
-            & 8.20702843e0_wp, 7.70559063e0_wp, 7.32755997e0_wp, 7.03887381e0_wp, 6.68978720e0_wp, 6.05450052e0_wp, &
-            & 5.88752022e0_wp, 5.70661499e0_wp, 5.78450695e0_wp, 7.79780729e0_wp, 7.26443867e0_wp, 6.78151984e0_wp, &
-            & 6.67883169e0_wp, 6.39024318e0_wp, 6.09527958e0_wp, 11.79156076e0_wp, 11.10997644e0_wp, 9.51377795e0_wp, &
-            & 8.67197068e0_wp, 8.77140725e0_wp, 8.65402716e0_wp, 8.53923501e0_wp, 8.85024712e0_wp /)
-        ! these new data are scaled with k2=4./3.  and converted a_0 via
-        ! autoang=0.52917726d0
-        rcov(1:94)=(/ 0.80628308e0_wp, 1.15903197e0_wp, 3.02356173e0_wp, 2.36845659e0_wp, 1.94011865e0_wp, &
-            & 1.88972601e0_wp, 1.78894056e0_wp, 1.58736983e0_wp, 1.61256616e0_wp, 1.68815527e0_wp, 3.52748848e0_wp, &
-            & 3.14954334e0_wp, 2.84718717e0_wp, 2.62041997e0_wp, 2.77159820e0_wp, 2.57002732e0_wp, 2.49443835e0_wp, &
-            & 2.41884923e0_wp, 4.43455700e0_wp, 3.88023730e0_wp, 3.35111422e0_wp, 3.07395437e0_wp, 3.04875805e0_wp, &
-            & 2.77159820e0_wp, 2.69600923e0_wp, 2.62041997e0_wp, 2.51963467e0_wp, 2.49443835e0_wp, 2.54483100e0_wp, &
-            & 2.74640188e0_wp, 2.82199085e0_wp, 2.74640188e0_wp, 2.89757982e0_wp, 2.77159820e0_wp, 2.87238349e0_wp, &
-            & 2.94797246e0_wp, 4.76210950e0_wp, 4.20778980e0_wp, 3.70386304e0_wp, 3.50229216e0_wp, 3.32591790e0_wp, &
-            & 3.12434702e0_wp, 2.89757982e0_wp, 2.84718717e0_wp, 2.84718717e0_wp, 2.72120556e0_wp, 2.89757982e0_wp, &
-            & 3.09915070e0_wp, 3.22513231e0_wp, 3.17473967e0_wp, 3.17473967e0_wp, 3.09915070e0_wp, 3.32591790e0_wp, &
-            & 3.30072128e0_wp, 5.26603625e0_wp, 4.43455700e0_wp, 4.08180818e0_wp, 3.70386304e0_wp, 3.98102289e0_wp, &
-            & 3.95582657e0_wp, 3.93062995e0_wp, 3.90543362e0_wp, 3.80464833e0_wp, 3.82984466e0_wp, 3.80464833e0_wp, &
-            & 3.77945201e0_wp, 3.75425569e0_wp, 3.75425569e0_wp, 3.72905937e0_wp, 3.85504098e0_wp, 3.67866672e0_wp, &
-            & 3.45189952e0_wp, 3.30072128e0_wp, 3.09915070e0_wp, 2.97316878e0_wp, 2.92277614e0_wp, 2.79679452e0_wp, &
-            & 2.82199085e0_wp, 2.84718717e0_wp, 3.32591790e0_wp, 3.27552496e0_wp, 3.27552496e0_wp, 3.42670319e0_wp, &
-            & 3.30072128e0_wp, 3.47709584e0_wp, 3.57788113e0_wp, 5.06446567e0_wp, 4.56053862e0_wp, 4.20778980e0_wp, &
-            & 3.98102289e0_wp, 3.82984466e0_wp, 3.85504098e0_wp, 3.88023730e0_wp, 3.90543362e0_wp /)
-        ! DFT-D3
-        step = 0
-        do iat=1, n-1
-            do jat=iat+1, n
-                step = step+1
-                r    = dist(step)
-                c6   = c6a(step)
-                ! r2r4 stored in main as sqrt
-                c8 = 3.0e0_wp*c6*r2r4(iz(iat))*r2r4(iz(jat))
-                ! energy for BJ damping
-                tmp      = sqrt(c8/c6)
-                e6(step) = c6/(r**6+(a1*tmp+a2)**6)
-                e8(step) = c8/(r**8+(a1*tmp+a2)**8)
-                ! calculate gradients
-                if( igrad .eq. 1 )then
-                    ! grad for BJ damping
-                    e6dr(step) = c6*(-6*r**5)/(r**6+(a1*tmp+a2)**6)**2
-                    e8dr(step) = c8*(-8*r**7)/(r**8+(a1*tmp+a2)**8)**2
-                endif
-            enddo
-        enddo
-    end subroutine edisp
 
     !> @brief Evaluate n2ground.
     subroutine n2ground( r, v, grad, imol, igrad )

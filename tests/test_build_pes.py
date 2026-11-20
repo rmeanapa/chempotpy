@@ -148,6 +148,29 @@ end subroutine pes
             ["chempotpy_kinds.f90", "chempotpy_interpolation.f90"],
         )
 
+    def test_neural_network_dependencies_include_working_precision( self ) -> None:
+        dependencies = core_fortran_dependencies(
+            "use chempotpy_neural_network, only: apply_activation\n"
+        )
+        self.assertEqual(
+            [path.name for path in dependencies],
+            ["chempotpy_kinds.f90", "chempotpy_neural_network.f90"],
+        )
+
+    def test_dispersion_dependencies_include_codata_units( self ) -> None:
+        dependencies = core_fortran_dependencies(
+            "use chempotpy_dispersion, only: evaluate_d3_bj_dispersion\n"
+        )
+        self.assertEqual(
+            [path.name for path in dependencies],
+            [
+                "chempotpy_kinds.f90",
+                "chempotpy_constants.f90",
+                "chempotpy_units.f90",
+                "chempotpy_dispersion.f90",
+            ],
+        )
+
     def test_unit_dependencies_include_codata_constants( self ) -> None:
         dependencies = core_fortran_dependencies(
             "use chempotpy_units, only: bohr_to_angstrom\n"

@@ -178,6 +178,28 @@ class AllSurfaceRegressionTests(unittest.TestCase):
                     legacy_helpers.search(source.read_text(errors="replace"))
                 )
 
+    def test_neural_network_and_dispersion_algorithms_use_core(self) -> None:
+        local_activation = re.compile(
+            r"(?im)^\s*function\s+tranfun\d*\s*\("
+        )
+        local_dispersion_kernel = re.compile(
+            r"(?im)^\s*subroutine\s+edisp\s*\("
+        )
+        local_dispersion_table = re.compile(r"(?i)r2r4\s*\(\s*1\s*:\s*94")
+        for key, source in self.sources.items():
+            with self.subTest(surface=key):
+                source_text = source.read_text(errors="replace")
+                self.assertIsNone(local_activation.search(source_text))
+                self.assertIsNone(local_dispersion_kernel.search(source_text))
+                self.assertIsNone(local_dispersion_table.search(source_text))
+                if re.search(r"(?im)^\s*subroutine\s+d3disp\s*\(", source_text):
+                    self.assertIn("use chempotpy_dispersion", source_text)
+                if "apply_activation(" in source_text or re.search(
+                    r"(?im)^\s*subroutine\s+evaluate_network\s*\(",
+                    source_text,
+                ):
+                    self.assertIn("use chempotpy_neural_network", source_text)
+
     def test_migrated_fits_have_no_initialization_lifecycle(self) -> None:
         targets = (
             self.repository / "chempotpy" / "H3" / "chempotpy_h3_2002_basis.f90",

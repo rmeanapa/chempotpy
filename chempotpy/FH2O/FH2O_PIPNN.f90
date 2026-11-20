@@ -283,55 +283,21 @@ module chempotpy_fh2o_pipnn_pes
 
     !> @brief Evaluate one member of the immutable neural-network ensemble.
     subroutine evaluate_network( x, network_index, potential )
-        use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, hidden_1_count, hidden_2_count, hidden_hidden_weights, hidden_output_weights, input_hidden_weights, ninput, nlayer, nodemax, nodes, noutput, nscale, output_biases, scale_averages, scale_deltas
-        use chempotpy_kinds,                 only: wp
+        use chempotpy_neural_network, only: evaluate_two_hidden_network
+        use chempotpy_fh2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, &
+            & hidden_hidden_weights, hidden_output_weights, input_hidden_weights, ninput, nscale, output_biases, &
+            & scale_averages, scale_deltas
+        use chempotpy_kinds, only: wp
         implicit none
         real(wp), intent(in)  :: x(ninput)
         integer, intent(in)   :: network_index
         real(wp), intent(out) :: potential
-        real(wp)              :: y(nodemax,nlayer)
-        integer               :: input_index, node_index, previous_index
-        y = 0.0e0_wp
-        do input_index=1, ninput
-            y(input_index,1) = (x(input_index)-scale_averages(input_index, network_index))/ scale_deltas(input_index, &
-                & network_index)
-        enddo
-        do node_index=1, hidden_1_count
-            y(node_index,2) = hidden_1_biases(node_index, network_index)
-            do previous_index=1, ninput
-                y(node_index,2) = y(node_index,2)+y(previous_index,1)* input_hidden_weights(previous_index, &
-                    & node_index, network_index)
-            enddo
-            select case( activation_function )
-            case( 1 )
-                y(node_index,2) = tanh(y(node_index,2))
-            case( 2 )
-                y(node_index,2) = 1.0e0_wp/(1.0e0_wp+exp(-y(node_index,2)))
-            case( 3 )
-            end select
-        enddo
-        do node_index=1, hidden_2_count
-            y(node_index,3) = hidden_2_biases(node_index, network_index)
-            do previous_index=1, hidden_1_count
-                y(node_index,3) = y(node_index,3)+y(previous_index,2)* hidden_hidden_weights(previous_index, &
-                    & node_index, network_index)
-            enddo
-            select case( activation_function )
-            case( 1 )
-                y(node_index,3) = tanh(y(node_index,3))
-            case( 2 )
-                y(node_index,3) = 1.0e0_wp/(1.0e0_wp+exp(-y(node_index,3)))
-            case( 3 )
-            end select
-        enddo
-        do node_index=1, noutput
-            y(node_index,nlayer) = output_biases(node_index, network_index)
-            do previous_index=1, hidden_2_count
-                y(node_index,nlayer) = y(node_index,nlayer)+y(previous_index,3)* hidden_output_weights(previous_index, &
-                    & node_index, network_index)
-            enddo
-        enddo
-        potential = y(nodes(nlayer),nlayer)*scale_deltas(nscale, network_index)+ scale_averages(nscale, network_index)
+        call evaluate_two_hidden_network(x, scale_averages(1:ninput,network_index), &
+            & scale_deltas(1:ninput,network_index), input_hidden_weights(:,:,network_index), &
+            & hidden_1_biases(:,network_index), hidden_hidden_weights(:,:,network_index), &
+            & hidden_2_biases(:,network_index), hidden_output_weights(:,1,network_index), &
+            & output_biases(1,network_index), activation_function, scale_averages(nscale,network_index), &
+            & scale_deltas(nscale,network_index), potential)
     end subroutine evaluate_network
 
     !> @brief Evaluate emsav.

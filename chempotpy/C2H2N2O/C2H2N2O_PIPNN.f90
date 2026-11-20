@@ -1,5 +1,6 @@
 !> @brief Implement C2H2N2O_PIPNN, a potential energy surface for C2H2N2O.
 module chempotpy_c2h2n2o_pipnn_pes
+    use chempotpy_neural_network, only: apply_activation
     use chempotpy_c2h2n2o_pipnn_parameters, only: activation_function, alpha, hidden_1_biases, &
         & hidden_1_count, hidden_2_biases, hidden_2_count, hidden_hidden_weights, &
         & hidden_output_weights, input_hidden_weights, natom, nbasis, nbond, ninput, nscale, &
@@ -99,7 +100,7 @@ module chempotpy_c2h2n2o_pipnn_pes
                 hidden_1_values(inode1) = hidden_1_values(inode1) + input_values(inode2)* input_hidden_weights(inode2, &
                     & inode1, 1)
             enddo
-            hidden_1_values(inode1) = tranfun1(hidden_1_values(inode1), activation_function)
+            hidden_1_values(inode1) = apply_activation(hidden_1_values(inode1), activation_function)
         enddo
         do inode1=1, hidden_2_count
             hidden_2_values(inode1) = hidden_2_biases(inode1, 1)
@@ -107,7 +108,7 @@ module chempotpy_c2h2n2o_pipnn_pes
                 hidden_2_values(inode1) = hidden_2_values(inode1) + hidden_1_values(inode2)* &
                     & hidden_hidden_weights(inode2, inode1, 1)
             enddo
-            hidden_2_values(inode1) = tranfun1(hidden_2_values(inode1), activation_function)
+            hidden_2_values(inode1) = apply_activation(hidden_2_values(inode1), activation_function)
         enddo
         output_value = output_biases(1, 1)
         do inode2=1, hidden_2_count
@@ -118,22 +119,6 @@ module chempotpy_c2h2n2o_pipnn_pes
 
     !-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->
     !> @brief Evaluate tranfun1.
-    function tranfun1( x, ifunc )
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer  :: ifunc
-        real(wp) :: tranfun1, x
-        !    ifunc=1, transfer function is hyperbolic tangent function, 'tansig'
-        !    ifunc=2, transfer function is log sigmoid function, 'logsig'
-        !    ifunc=3, transfer function is pure linear function, 'purelin'. It is imposed to the output layer by default
-        if( ifunc .eq. 1 )then
-            tranfun1 = tanh(x)
-        elseif( ifunc .eq. 2 )then
-            tranfun1 = 1e0_wp/(1e0_wp+exp(-x))
-        elseif( ifunc .eq. 3 )then
-            tranfun1 = x
-        endif
-    end function tranfun1
 
     !> @brief Evaluate LOGSIG1.
     function logsig1( x )

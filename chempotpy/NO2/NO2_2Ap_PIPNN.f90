@@ -1,4 +1,5 @@
 module chempotpy_no2_2ap_pipnn_pes
+    use chempotpy_neural_network, only: apply_activation
     use chempotpy_no2_2ap_pipnn_parameters, only: activation_function, alpha, bohr, hidden_1_biases, &
         & hidden_1_count, hidden_2_biases, hidden_2_count, hidden_hidden_weights, &
         & hidden_output_weights, input_hidden_weights, natom, nbond, ninput, npes, nscale, &
@@ -125,7 +126,7 @@ module chempotpy_no2_2ap_pipnn_pes
                 do i=1, ninput
                     hidden_1_values(j) = hidden_1_values(j) + input_values(i)* input_hidden_weights(i, j, network_index)
                 enddo
-                hidden_1_values(j) = tranfun(hidden_1_values(j), activation_function)
+                hidden_1_values(j) = apply_activation(hidden_1_values(j), activation_function)
             enddo
             do k=1, hidden_2_count
                 hidden_2_values(k) = hidden_2_biases(k, network_index)
@@ -133,7 +134,7 @@ module chempotpy_no2_2ap_pipnn_pes
                     hidden_2_values(k) = hidden_2_values(k) + hidden_1_values(j)* hidden_hidden_weights(j, k, &
                         & network_index)
                 enddo
-                hidden_2_values(k) = tranfun(hidden_2_values(k), activation_function)
+                hidden_2_values(k) = apply_activation(hidden_2_values(k), activation_function)
             enddo
             output_value = output_biases(1, network_index)
             do k=1, hidden_2_count
@@ -160,22 +161,6 @@ module chempotpy_no2_2ap_pipnn_pes
     end subroutine pot3a
 
     !> @brief Evaluate tranfun.
-    function tranfun( x, ifunc )
-        use chempotpy_kinds, only: wp
-        implicit none
-        integer  :: ifunc
-        real(wp) :: tranfun, x
-        !    ifunc=1, transfer function is hyperbolic tangent function, 'tansig'
-        !    ifunc=2, transfer function is log sigmoid function, 'logsig'
-        !    ifunc=3, transfer function is pure linear function, 'purelin'. It is imposed to the output layer by default
-        if( ifunc .eq. 1 )then
-            tranfun = tanh(x)
-        elseif( ifunc .eq. 2 )then
-            tranfun = 1e0_wp/(1e0_wp+exp(-x))
-        elseif( ifunc .eq. 3 )then
-            tranfun = x
-        endif
-    end function tranfun
 
     !> @brief Evaluate LOGSIG.
     function logsig( x )
