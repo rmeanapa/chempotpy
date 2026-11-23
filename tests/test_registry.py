@@ -1,5 +1,6 @@
 """Tests for automatic CHEMPOTPY surface discovery."""
 
+import json
 import unittest
 from pathlib import Path
 
@@ -15,11 +16,20 @@ class RegistryTests( unittest.TestCase ):
         self.assertGreater(len(sources), 300)
         self.assertGreater(len({source.system_name for source in sources}), 80)
         self.assertTrue(all(source.path.is_file() for source in sources))
+        fixture = json.loads(
+            (
+                Path(__file__).resolve().parent
+                / "data"
+                / "all_surface_references.json"
+            ).read_text()
+        )["surfaces"]
         self.assertEqual(
-            sum(source.entry_point == "pes" for source in sources), 323
+            sum(source.entry_point == "pes" for source in sources),
+            sum(record["entry_point"] == "pes" for record in fixture.values()),
         )
         self.assertEqual(
-            sum(source.entry_point == "dpem" for source in sources), 40
+            sum(source.entry_point == "dpem" for source in sources),
+            sum(record["entry_point"] == "dpem" for record in fixture.values()),
         )
         support_sources = {
             source.path.name for source in sources if not source.is_surface

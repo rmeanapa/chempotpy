@@ -193,17 +193,14 @@ def compare_records(
 
 def comparison_record(
     key: str,
-    actual: dict,
     baseline: Dict[str, dict],
     current_fixture: Dict[str, dict],
 ) -> dict:
-    """Return the protected record, bootstrapping values for a new PES."""
+    """Return the protected record, including reviewed values for a new PES."""
 
     if key in baseline:
         return baseline[key]
-    expected = dict(current_fixture[key])
-    expected["values"] = actual.get("values")
-    return expected
+    return current_fixture[key]
 
 
 def main() -> int:
@@ -294,7 +291,7 @@ def main() -> int:
             diagnostics.append(result.error)
             continue
         expected = comparison_record(
-            result.key, result.record, baseline, current_fixture
+            result.key, baseline, current_fixture
         )
         if result.key not in baseline:
             new_surfaces += 1

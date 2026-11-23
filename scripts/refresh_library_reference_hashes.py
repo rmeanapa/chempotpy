@@ -36,15 +36,28 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("fixture", type=Path)
     parser.add_argument("capture", type=Path)
+    parser.add_argument(
+        "--add-new",
+        action="store_true",
+        help="add a reviewed capture for a surface absent from the fixture",
+    )
     arguments = parser.parse_args()
     fixture_document = json.loads(arguments.fixture.read_text())
     capture_document = json.loads(arguments.capture.read_text())
+    if capture_document.get("baseline_version") != fixture_document.get(
+        "baseline_version"
+    ):
+        raise ValueError("capture and fixture baseline versions differ")
     fixture = fixture_document["surfaces"]
     capture = capture_document["surfaces"]
-    if not set(capture).issubset(fixture):
+    new_keys = set(capture)-set(fixture)
+    if new_keys and not arguments.add_new:
         raise ValueError("capture contains surfaces absent from the fixture")
     compared_fields = ("entry_point", "natoms", "nstates", "signature")
     for key in sorted(capture):
+        if key not in fixture:
+            fixture[key] = capture[key]
+            continue
         for field in compared_fields:
             if fixture[key][field] != capture[key][field]:
                 raise ValueError("{} changed for {}".format(field, key))

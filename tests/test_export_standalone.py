@@ -1,5 +1,6 @@
 """Tests for dependency-complete standalone PES exports."""
 
+import json
 import shutil
 import subprocess
 import tempfile
@@ -20,7 +21,14 @@ class ExportStandaloneTests(unittest.TestCase):
         sources = tuple(
             source for source in discover_surface_sources() if source.is_surface
         )
-        self.assertEqual(len(sources), 363)
+        fixture = json.loads(
+            (
+                Path(__file__).resolve().parent
+                / "data"
+                / "all_surface_references.json"
+            ).read_text()
+        )["surfaces"]
+        self.assertEqual(len(sources), len(fixture))
         for source in sources:
             with self.subTest(
                 surface="{}/{}".format(

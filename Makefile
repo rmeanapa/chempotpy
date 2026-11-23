@@ -1,4 +1,4 @@
-.PHONY: all audit build check check-binaries check-conda check-embedded-parameters check-fortran check-fortran-warnings check-generated check-modernization check-modernization-source check-numerical-regression check-python-extensions check-style clean test test-surfaces
+.PHONY: all audit build check check-binaries check-conda check-embedded-parameters check-fortran check-fortran-warnings check-generated check-modernization check-modernization-source check-new-pes check-numerical-regression check-python-extensions check-style clean test test-surfaces
 
 CONDA_ENV ?= chempotpy
 PYTHON ?= $(shell \
@@ -20,6 +20,7 @@ PYTHON ?= $(shell \
 BUILD_FLAGS ?=
 BUILD_OUTPUT ?= chempotpy
 NUMERICAL_BASELINE ?= tests/data/all_surface_references.json
+BASE_REF ?= HEAD^
 
 audit:
 	$(PYTHON) scripts/audit_pes.py
@@ -43,6 +44,9 @@ check-style:
 
 check-modernization-source:
 	$(PYTHON) scripts/check_modernization.py
+
+check-new-pes:
+	$(PYTHON) scripts/check_new_pes.py --base-ref $(BASE_REF)
 
 check-embedded-parameters:
 	$(PYTHON) scripts/generate_embedded_network_parameters.py --check

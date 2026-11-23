@@ -35,7 +35,7 @@ class AllSurfaceRegressionTests(unittest.TestCase):
         }
 
     def test_fixture_covers_the_callable_catalog(self) -> None:
-        self.assertEqual(len(self.references), 363)
+        self.assertGreater(len(self.references), 0)
         self.assertEqual(set(self.references), set(self.sources))
         for key, reference in self.references.items():
             with self.subTest(surface=key):

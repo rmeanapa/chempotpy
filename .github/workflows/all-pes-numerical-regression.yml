@@ -139,6 +139,18 @@ jobs:
                   echo "sha=$base_sha" >> "$GITHUB_OUTPUT"
                   echo "fixture=$fixture" >> "$GITHUB_OUTPUT"
 
+            - name: Validate new PES onboarding
+              env:
+                  BASE_SHA: ${{ steps.baseline.outputs.sha }}
+              run: |
+                  python scripts/check_new_pes.py --base-ref "$BASE_SHA"
+                  python -m unittest \
+                      tests.test_add_pes \
+                      tests.test_new_pes_check \
+                      tests.test_numerical_regression \
+                      tests.test_refresh_library_reference_hashes \
+                      -v
+
             - name: Compile and compare every PES
               run: |
                   set +e

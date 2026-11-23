@@ -16,6 +16,11 @@ and multi-state potential energy surfaces and couplings.
 
 All fortran source code are stored in folder chempotpy 
 
+New surfaces must follow the documented scientific, architectural, and
+validation procedure in [CONTRIBUTING.md](CONTRIBUTING.md). The repository
+provides `scripts/add_pes.py` to create a non-overwriting modern PES or DPEM
+scaffold.
+
 
 About this fork
 ---------------
@@ -394,8 +399,9 @@ interface changes, non-finite results, compilation failures, and execution
 failures also fail the workflow. Aln and NH3 use
 deterministic system-specific geometries so their regression points remain
 inside the mathematical domain of the released fits. A newly added surface
-must compile, execute, match its declared interface, and return only finite
-values; that revision becomes its protected baseline on the next comparison.
+must compile, execute, match its declared interface, and reproduce the finite,
+independently reviewed values committed in the current fixture. The workflow
+does not bootstrap a new baseline from the implementation being tested.
 
 The SiOH variable-atom driver correction establishes `baseline_version: 4`.
 The one-step transition from version 3 approves evaluating SiOH with its public

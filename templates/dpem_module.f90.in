@@ -1,0 +1,52 @@
+! System:                        {{SYSTEM}}
+! Functional form:               {{FUNCTIONAL_FORM}}
+! Common name:                   {{COMMON_NAME}}
+! Reference:                     {{REFERENCE}}
+! Number of derivatives:         {{DERIVATIVES}}
+! Number of bodies:              {{BODIES}}
+! Number of electronic surfaces: {{NSTATES}}
+! Interface:                     DPEM
+! Data file:                     none; immutable parameters are embedded
+! Notes:                         Replace the scaffold evaluator with the published model.
+! CHEMPOTPY_IMPLEMENTATION_REQUIRED: implement and independently validate this surface.
+
+!> @brief Implement {{SURFACE}}, a diabatic potential matrix for {{SYSTEM}}.
+module {{MODULE_NAME}}_dpem_pes
+    use chempotpy_kinds, only: wp
+    implicit none
+    private
+    public :: evaluate
+
+    contains
+
+    !> @brief Evaluate the {{SURFACE}} diabatic potential matrix for {{SYSTEM}}.
+    subroutine evaluate( x, igrad, u, ug, status )
+        use chempotpy_status, only: chempotpy_status_t, status_model_unavailable
+        use chempotpy_kinds,  only: wp
+        implicit none
+        type(chempotpy_status_t), intent(out), optional :: status
+        integer, parameter    :: natoms  = {{NATOMS}}
+        integer, parameter    :: nstates = {{NSTATES}}
+        integer, intent(in)   :: igrad
+        real(wp), intent(in)  :: x(natoms,3)
+        real(wp), intent(out) :: u(nstates,nstates)
+        real(wp), intent(out) :: ug(nstates,nstates,natoms,3)
+        u = 0.e0_wp; ug = 0.e0_wp
+        if( present(status) ) call status%set(status_model_unavailable, &
+            'the generated DPEM scaffold has not been implemented')
+    end subroutine evaluate
+end module {{MODULE_NAME}}_dpem_pes
+
+!> @brief Expose {{SURFACE}} through the Python-facing DPEM entry point.
+subroutine dpem( x, igrad, u, ug )
+    use {{MODULE_NAME}}_dpem_pes, only: evaluate
+    use chempotpy_kinds,                    only: wp
+    implicit none
+    integer, parameter    :: natoms  = {{NATOMS}}
+    integer, parameter    :: nstates = {{NSTATES}}
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: u(nstates,nstates)
+    real(wp), intent(out) :: ug(nstates,nstates,natoms,3)
+    call evaluate(x, igrad, u, ug)
+end subroutine dpem
