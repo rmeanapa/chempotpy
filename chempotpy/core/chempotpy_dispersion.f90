@@ -9,7 +9,7 @@ module chempotpy_dispersion
     public :: evaluate_legacy_d3_o3
     public :: evaluate_legacy_d3_o4
     real(wp), parameter :: d3_bohr_to_angstrom = 0.52917726_wp
-    real(wp), parameter :: r2r4(94) = [ &
+    real(wp), parameter :: r2r4(94)            = [ &
         & 2.00734898_wp, 1.56637132_wp, 5.01986934_wp, 3.85379032_wp, 3.64446594_wp, 3.10492822_wp, &
         & 2.71175247_wp, 2.59361680_wp, 2.38825250_wp, 2.21522516_wp, 6.58585536_wp, 5.46295967_wp, &
         & 5.65216669_wp, 4.88284902_wp, 4.29727576_wp, 4.04108902_wp, 3.72932356_wp, 3.44677275_wp, &
@@ -39,13 +39,13 @@ module chempotpy_dispersion
         derivative = 0.0_wp
         select case( molecule_id )
         case( 1, 2 )
-            atomic_numbers = [7, 7]
+            atomic_numbers  = [7, 7]
             c6_coefficients = 19.7_wp
         case( 3 )
-            atomic_numbers = [7, 8]
+            atomic_numbers  = [7, 8]
             c6_coefficients = 16.7_wp
         case( 4 )
-            atomic_numbers = [8, 8]
+            atomic_numbers  = [8, 8]
             c6_coefficients = 12.8_wp
         case default
             energy = 0.0_wp
@@ -65,9 +65,9 @@ module chempotpy_dispersion
         real(wp), intent(in)  :: distances(3)
         real(wp), intent(out) :: energy, derivatives(3)
         integer, intent(in)   :: derivative_order
-        integer, parameter    :: atomic_numbers(3) = [8, 8, 8]
+        integer, parameter    :: atomic_numbers(3)  = [8, 8, 8]
         real(wp), parameter   :: c6_coefficients(3) = 12.8_wp
-        derivatives = 0.0_wp
+        derivatives                                 = 0.0_wp
         if( derivative_order == 1 )then
             call evaluate_d3_bj_dispersion(distances, atomic_numbers, c6_coefficients, 1.0_wp, 2.0_wp, 0.5299_wp, &
                 & 2.20_wp, energy, derivatives, .true.)
@@ -82,9 +82,9 @@ module chempotpy_dispersion
         real(wp), intent(in)  :: distances(6)
         real(wp), intent(out) :: energy, derivatives(6)
         integer, intent(in)   :: derivative_order
-        integer, parameter    :: atomic_numbers(4) = [8, 8, 8, 8]
+        integer, parameter    :: atomic_numbers(4)  = [8, 8, 8, 8]
         real(wp), parameter   :: c6_coefficients(6) = 12.8_wp
-        derivatives = 0.0_wp
+        derivatives                                 = 0.0_wp
         if( derivative_order == 1 )then
             call evaluate_d3_bj_dispersion(distances, atomic_numbers, c6_coefficients, 1.0_wp, 2.0_wp, 0.5299_wp, &
                 & 2.20_wp, energy, derivatives, .true.)
@@ -109,15 +109,15 @@ module chempotpy_dispersion
         if( present(derivatives) ) derivatives=0.0_wp
         do atom_1=1, size(atomic_numbers)-1
             do atom_2=atom_1+1, size(atomic_numbers)
-                pair_index     = pair_index+1
-                distance_bohr  = distances(pair_index)/d3_bohr_to_angstrom
-                c6             = c6_coefficients(pair_index)
-                factor_1       = r2r4(atomic_numbers(atom_1))
-                factor_2       = r2r4(atomic_numbers(atom_2))
+                pair_index    = pair_index+1
+                distance_bohr = distances(pair_index)/d3_bohr_to_angstrom
+                c6            = c6_coefficients(pair_index)
+                factor_1      = r2r4(atomic_numbers(atom_1))
+                factor_2      = r2r4(atomic_numbers(atom_2))
                 if( present(legacy_default_real_table) )then
                     if( legacy_default_real_table )then
-                        factor_1 = real(real(factor_1,real32),wp)
-                        factor_2 = real(real(factor_2,real32),wp)
+                        factor_1 = real(real(factor_1, real32), wp)
+                        factor_2 = real(real(factor_2, real32), wp)
                     endif
                 endif
                 c8             = 3.0_wp*c6*factor_1*factor_2
@@ -126,10 +126,9 @@ module chempotpy_dispersion
                 e8             = c8/(distance_bohr**8+damping_radius**8)
                 energy         = energy+(-s6*e6-s8*e8)*hartree_to_kilocalorie_per_mole
                 if( present(derivatives) )then
-                    derivatives(pair_index) = (-s6*c6*(-6.0_wp*distance_bohr**5)/ &
-                        & (distance_bohr**6+damping_radius**6)**2 - s8*c8*(-8.0_wp*distance_bohr**7)/ &
-                        & (distance_bohr**8+damping_radius**8)**2)*hartree_to_kilocalorie_per_mole/ &
-                        & d3_bohr_to_angstrom
+                    derivatives(pair_index) = (-s6*c6*(-6.0_wp*distance_bohr**5)/ (distance_bohr**6+damping_radius** &
+                        & 6)**2 - s8*c8*(-8.0_wp*distance_bohr**7)/ (distance_bohr**8+damping_radius**8)**2)* &
+                        & hartree_to_kilocalorie_per_mole/ d3_bohr_to_angstrom
                 endif
             enddo
         enddo

@@ -2442,12 +2442,11 @@ module chempotpy_o4_singlet_pes
             use chempotpy_dispersion, only: evaluate_legacy_d3_o4
             use chempotpy_kinds,      only: wp
             implicit none
-            real(wp)  :: dist(6)
+            real(wp) :: dist(6)
             real(wp) :: disp, dispdr(6)
-            integer   :: igrad
+            integer  :: igrad
             call evaluate_legacy_d3_o4(dist, disp, dispdr, igrad)
         end subroutine d3disp
-
         !> @brief Evaluate edisp for the O4_singlet potential.
     end subroutine evaluate
 end module chempotpy_o4_singlet_pes

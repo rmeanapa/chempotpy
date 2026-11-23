@@ -32607,16 +32607,15 @@ module chempotpy_n2o_13_1ap_2026_pes
         use chempotpy_dispersion, only: evaluate_legacy_d3_diatomic
         use chempotpy_kinds,      only: wp
         implicit none
-        real(wp)  :: dist(1)
+        real(wp) :: dist(1)
         real(wp) :: disp, dispdr(1)
-        integer   :: igrad
-        integer   :: imol
+        integer  :: igrad
+        integer  :: imol
         call evaluate_legacy_d3_diatomic(dist, disp, dispdr, igrad, imol)
     end subroutine d3disp
 
     ! compute energy
     !> @brief Evaluate edisp.
-
     !> @brief Evaluate n2ground.
     subroutine n2ground( r, v, grad, imol, igrad )
         ! Compute the diatomic potential of ground-state N2 (singlet)

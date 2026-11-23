@@ -186,7 +186,7 @@ module chempotpy_n4_1a_pipnn_pes
 
     !> @brief Evaluate one member of the immutable neural-network ensemble.
     subroutine evaluate_network( x, network_index, potential )
-        use chempotpy_neural_network, only: evaluate_two_hidden_network
+        use chempotpy_neural_network,      only: evaluate_two_hidden_network
         use chempotpy_n4_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_2_biases, &
             & hidden_hidden_weights, hidden_output_weights, input_hidden_weights, ninput, nscale, output_biases, &
             & scale_averages, scale_deltas
@@ -195,12 +195,12 @@ module chempotpy_n4_1a_pipnn_pes
         real(wp), intent(in)  :: x(ninput)
         integer, intent(in)   :: network_index
         real(wp), intent(out) :: potential
-        call evaluate_two_hidden_network(x, scale_averages(1:ninput,network_index), &
-            & scale_deltas(1:ninput,network_index), input_hidden_weights(:,:,network_index), &
-            & hidden_1_biases(:,network_index), hidden_hidden_weights(:,:,network_index), &
-            & hidden_2_biases(:,network_index), hidden_output_weights(:,1,network_index), &
-            & output_biases(1,network_index), activation_function, scale_averages(nscale,network_index), &
-            & scale_deltas(nscale,network_index), potential)
+        call evaluate_two_hidden_network(x, scale_averages(1:ninput, network_index), &
+            & scale_deltas(1:ninput, network_index), input_hidden_weights(:, :, network_index), &
+            & hidden_1_biases(:, network_index), hidden_hidden_weights(:, :, network_index), &
+            & hidden_2_biases(:, network_index), hidden_output_weights(:, 1, network_index), &
+            & output_biases(1, network_index), activation_function, scale_averages(nscale, network_index), &
+            & scale_deltas(nscale, network_index), potential)
     end subroutine evaluate_network
 
     !     v = dot_product(p,c)
@@ -720,16 +720,15 @@ module chempotpy_n4_1a_pipnn_pes
         use chempotpy_dispersion, only: evaluate_legacy_d3_diatomic
         use chempotpy_kinds,      only: wp
         implicit none
-        real(wp)  :: dist(1)
+        real(wp) :: dist(1)
         real(wp) :: disp, dispdr(1)
-        integer   :: igrad
-        integer   :: imol
+        integer  :: igrad
+        integer  :: imol
         call evaluate_legacy_d3_diatomic(dist, disp, dispdr, igrad, imol)
     end subroutine d3disp
 
     ! compute energy
     !> @brief Evaluate edisp.
-
     !> @brief Evaluate bmx2b109.
     subroutine bmx2b109( bm1, bm2, nobm, nob )
         !  The subroutine eliminate the 2-body terms in Bowman's approach

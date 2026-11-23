@@ -709,12 +709,11 @@ module chempotpy_o3_2_1ap_pes
             use chempotpy_dispersion, only: evaluate_legacy_d3_o3
             use chempotpy_kinds,      only: wp
             implicit none
-            real(wp)  :: dist(3)
+            real(wp) :: dist(3)
             real(wp) :: disp, dispdr(3)
-            integer   :: igrad
+            integer  :: igrad
             call evaluate_legacy_d3_o3(dist, disp, dispdr, igrad)
         end subroutine d3disp
-
         !> @brief Evaluate edisp for the O3_2_1Ap potential.
     end subroutine evaluate
 end module chempotpy_o3_2_1ap_pes

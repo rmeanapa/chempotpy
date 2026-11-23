@@ -1,6 +1,6 @@
 !> @brief Implement CH2O2_PIPNN, a potential energy surface for CH2O2.
 module chempotpy_ch2o2_pipnn_pes
-    use chempotpy_neural_network, only: apply_activation
+    use chempotpy_neural_network,         only: apply_activation
     use chempotpy_ch2o2_pipnn_parameters, only: activation_function, alpha, hidden_1_biases, &
         & hidden_1_count, hidden_2_biases, hidden_2_count, hidden_hidden_weights, &
         & hidden_output_weights, input_hidden_weights, natom, nbasis, nbond, ninput, nscale, &
@@ -82,7 +82,6 @@ module chempotpy_ch2o2_pipnn_pes
 
     !-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->!-->
     !> @brief Evaluate tranfun1.
-
     !> @brief Evaluate LOGSIG1.
     function logsig1( x )
         use chempotpy_kinds, only: wp

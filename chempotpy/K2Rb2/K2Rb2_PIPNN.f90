@@ -109,17 +109,17 @@ module chempotpy_k2rb2_pipnn_pes
     !> @brief Evaluate one immutable neural network from the released three-model ensemble.
     subroutine evaluate_network( x, network_index, vpot )
         use chempotpy_neural_network, only: evaluate_two_hidden_network
-        use chempotpy_kinds, only: wp
+        use chempotpy_kinds,          only: wp
         implicit none
         real(wp), intent(in)  :: x(ninput)
         integer, intent(in)   :: network_index
         real(wp), intent(out) :: vpot
-        call evaluate_two_hidden_network(x, scale_averages(1:ninput,network_index), &
-            & scale_deltas(1:ninput,network_index), input_hidden_weights(:,:,network_index), &
-            & hidden_1_biases(:,network_index), hidden_hidden_weights(:,:,network_index), &
-            & hidden_2_biases(:,network_index), hidden_output_weights(:,1,network_index), &
-            & output_biases(1,network_index), activation_function, scale_averages(nscale,network_index), &
-            & scale_deltas(nscale,network_index), vpot)
+        call evaluate_two_hidden_network(x, scale_averages(1:ninput, network_index), &
+            & scale_deltas(1:ninput, network_index), input_hidden_weights(:, :, network_index), &
+            & hidden_1_biases(:, network_index), hidden_hidden_weights(:, :, network_index), &
+            & hidden_2_biases(:, network_index), hidden_output_weights(:, 1, network_index), &
+            & output_biases(1, network_index), activation_function, scale_averages(nscale, network_index), &
+            & scale_deltas(nscale, network_index), vpot)
     end subroutine evaluate_network
 
     !> @brief Evaluate released neural network 1 from the ensemble.

@@ -1,7 +1,7 @@
 !> @brief Implement H3ClO_PIPNN, a potential energy surface for H3ClO.
 module chempotpy_h3clo_pipnn_pes
     use chempotpy_neural_network, only: apply_activation
-    use chempotpy_kinds, only: wp
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate
@@ -124,7 +124,6 @@ module chempotpy_h3clo_pipnn_pes
     end subroutine pot3a
 
     !> @brief Evaluate tranfun.
-
     !> @brief Evaluate LOGSIG.
     function logsig( x )
         use chempotpy_kinds, only: wp

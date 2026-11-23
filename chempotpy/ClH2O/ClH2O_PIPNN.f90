@@ -1,9 +1,9 @@
 !> @brief Implement ClH2O_PIPNN, a potential energy surface for ClH2O.
 module chempotpy_clh2o_pipnn_pes
     use chempotpy_neural_network, only: apply_activation
-    use chempotpy_interpolation, only: cubic_spline_coefficients, evaluate_cubic_spline
-    use chempotpy_units,         only: hartree_to_kilocalorie_per_mole
-    use chempotpy_kinds,         only: wp
+    use chempotpy_interpolation,  only: cubic_spline_coefficients, evaluate_cubic_spline
+    use chempotpy_units,          only: hartree_to_kilocalorie_per_mole
+    use chempotpy_kinds,          only: wp
     implicit none
     private
     public :: evaluate
@@ -115,7 +115,6 @@ module chempotpy_clh2o_pipnn_pes
     end subroutine getpot
 
     !> @brief Evaluate tranfun.
-
     !> @brief Evaluate emsav.
     function emsav( x, c ) result(v)
         use chempotpy_kinds, only: wp

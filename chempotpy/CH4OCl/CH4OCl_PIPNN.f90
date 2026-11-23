@@ -1,6 +1,6 @@
 !> @brief Implement CH4OCl_PIPNN, a potential energy surface for CH4OCl.
 module chempotpy_ch4ocl_pipnn_pes
-    use chempotpy_neural_network, only: apply_activation
+    use chempotpy_neural_network,          only: apply_activation
     use chempotpy_ch4ocl_pipnn_parameters, only: activation_function, alpha, hidden_1_biases, &
         & hidden_1_count, hidden_2_biases, hidden_2_count, hidden_hidden_weights, &
         & hidden_output_weights, input_hidden_weights, natom, nbasis, ndim, ninput, nscale, &

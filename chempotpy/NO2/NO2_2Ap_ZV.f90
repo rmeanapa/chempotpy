@@ -1440,10 +1440,10 @@ subroutine d3disp( dist, disp, dispdr, igrad, imol )
     use chempotpy_dispersion, only: evaluate_legacy_d3_diatomic
     use chempotpy_kinds,      only: wp
     implicit none
-    real(wp)  :: dist(1)
+    real(wp) :: dist(1)
     real(wp) :: disp, dispdr(1)
-    integer   :: igrad
-    integer   :: imol
+    integer  :: igrad
+    integer  :: imol
     call evaluate_legacy_d3_diatomic(dist, disp, dispdr, igrad, imol)
 end subroutine d3disp
 

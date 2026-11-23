@@ -1,5 +1,5 @@
 module chempotpy_no2_4ap_pipnn_pes
-    use chempotpy_neural_network, only: apply_activation
+    use chempotpy_neural_network,           only: apply_activation
     use chempotpy_no2_4ap_pipnn_parameters, only: activation_function, alpha, bohr, hidden_1_biases, &
         & hidden_1_count, hidden_2_biases, hidden_2_count, hidden_hidden_weights, &
         & hidden_output_weights, input_hidden_weights, natom, nbond, ninput, npes, nscale, &
@@ -152,7 +152,6 @@ module chempotpy_no2_4ap_pipnn_pes
     end subroutine pot3a
 
     !> @brief Evaluate tranfun.
-
     !> @brief Evaluate LOGSIG.
     function logsig( x )
         use chempotpy_kinds, only: wp

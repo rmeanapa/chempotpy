@@ -8836,13 +8836,12 @@ module chempotpy_o3_14_3ap_2022_pes
         use chempotpy_dispersion, only: evaluate_legacy_d3_diatomic
         use chempotpy_kinds,      only: wp
         implicit none
-        real(wp)  :: dist(1)
+        real(wp) :: dist(1)
         real(wp) :: disp, dispdr(1)
-        integer   :: igrad
-        integer   :: imol
+        integer  :: igrad
+        integer  :: imol
         call evaluate_legacy_d3_diatomic(dist, disp, dispdr, igrad, imol)
     end subroutine d3disp
-
     ! compute energy
     !> @brief Evaluate edisp.
 end module chempotpy_o3_14_3ap_2022_pes
