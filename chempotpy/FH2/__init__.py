@@ -20,6 +20,7 @@ def intro():
     5.   FH2_GEN_5SECG1_1993:     single-state surface of FH2, ground state,      P/G
     6.   FH2_GEN_5SECG2_1993:     single-state surface of FH2, ground state,      P/G
     7.   FH2_GEN_5SECG3_1993:     single-state surface of FH2, ground state,      P/G
+    8.   FH2_GEN_5SECGM4_1993:    single-state 5SECGM4 surface of FH2, ground state, P/G
     8.   FH2_GEN_5SECS1_1993:     single-state surface of FH2, ground state,      P/G
     9.   FH2_GEN_5SECS2_1993:     single-state surface of FH2, ground state,      P/G
     10.  FH2_GEN_5SECS3_1993:     single-state surface of FH2, ground state,      P/G
@@ -308,7 +309,21 @@ def check(system, surface, geom):
     for iatom in range(natoms):
         rank[iatom][1]=int(iatom)
 
-    if surface=='FH2_GEN_5SEC_1991' or surface=='FH2_GEN_5SECCOG1_1993' or surface=='FH2_GEN_5SECCOG2_1993' or surface=='FH2_GEN_5SECCOG3_1993' or surface=='FH2_GEN_5SECG1_1993' or surface=='FH2_GEN_5SECG2_1993' or surface=='FH2_GEN_5SECG3_1993' or surface=='FH2_GEN_5SECS1_1993' or surface=='FH2_GEN_5SECS2_1993' or surface=='FH2_GEN_5SECS3_1993' or surface=='FH2_GEN_5SECW_1991' or surface=='FH2_GEN_6SEC_1993' or surface=='FH2_LEPS_M5_1991' or surface=='FH2_LEPS_M5SK_1966' or surface=='FH2_LEPS_NO1_1984' or surface=='FH2_LEPS_NO2_1984' or surface=='FH2_LEPS_NO2a_1984' or surface=='FH2_LEPS_NO3_1984' or surface=='FH2_LEPS_NO4_1984' or surface=='FH2_LEPS_NO5_1985' or surface=='FH2_LEPS_NO5a_1985' or surface=='FH2_LEPS_NO5b_1985' or surface=='FH2_LEPS_NO5z_1985' or surface=='FH2_LEPS_SK_1980': 
+    if surface in {
+        'FH2_GEN_5SEC_1991', 'FH2_GEN_5SECCOG1_1993',
+        'FH2_GEN_5SECCOG2_1993', 'FH2_GEN_5SECCOG3_1993',
+        'FH2_GEN_5SECG1_1993', 'FH2_GEN_5SECG2_1993',
+        'FH2_GEN_5SECG3_1993', 'FH2_GEN_5SECGM4_1993',
+        'FH2_GEN_5SECS1_1993', 'FH2_GEN_5SECS2_1993',
+        'FH2_GEN_5SECS3_1993', 'FH2_GEN_5SECW_1991',
+        'FH2_GEN_6SEC_1993', 'FH2_LEPS_M5_1991',
+        'FH2_LEPS_M5SK_1966', 'FH2_LEPS_NO1_1984',
+        'FH2_LEPS_NO2_1984', 'FH2_LEPS_NO2a_1984',
+        'FH2_LEPS_NO3_1984', 'FH2_LEPS_NO4_1984',
+        'FH2_LEPS_NO5_1985', 'FH2_LEPS_NO5a_1985',
+        'FH2_LEPS_NO5b_1985', 'FH2_LEPS_NO5z_1985',
+        'FH2_LEPS_SK_1980',
+    }:
         geom_ordered=sorted(geom, key=lambda x: ("F", "H").index(x[0]))
         rank_ordered=sorted(rank, key=lambda x: ("F", "H").index(x[0]))
         for iatom in range(natoms):

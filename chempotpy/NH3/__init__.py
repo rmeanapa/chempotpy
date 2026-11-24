@@ -19,6 +19,8 @@ def intro():
     2.  NH3_GEN_FFW2_2007:      multi-state surface of NH3, 1-2 state,     P/G/D
     3.  NH3_GEN_FFW1_2006_DPEM: multi-state surface of NH3, 1-2 state,     U/UG
     4.  NH3_GEN_FFW2_2007_DPEM: multi-state surface of NH3, 1-2 state,     U/UG
+    5.  NH3_Surfgen_2state_2012: two-state Zhu-Yarkony surface,             P/G/D
+    6.  NH3_Surfgen_2state_2012_DPEM: Zhu-Yarkony diabatic matrix,          U/UG
 
         """)
 
@@ -54,6 +56,14 @@ def intro_detail():
                                    "Improved direct diabatization and coupled potential 
                                    energy surfaces for the photodissociation of ammonia",
                                    Theor. Chem. Acc. 118, 9-24 (2007).
+    ============================================================================================
+    3.  NH3_Surfgen_2state_2012:
+                              two-state symmetry-adapted quasi-diabatic surface,
+                              availability: potential energy, gradient, nonadiabatic coupling vector
+                              functional form: fourth-order Surfgen expansion
+                              corresponding surface in POTLIB: NH3_2.tar.bz2
+                              ref: X. Zhu and D. R. Yarkony,
+                                   J. Chem. Phys. 137, 22A511 (2012).
 
 
         """)
@@ -89,7 +99,9 @@ def check(system, surface, geom):
         rank[iatom][1]=int(iatom)
 
     #for NH3_GEN_FFW1_2006 and NH3_GEN_FFW2_2006: input Cartesian should in order of NHHH
-    if surface=='NH3_GEN_FFW1_2006' or surface=='NH3_GEN_FFW2_2007' or surface=='NH3_GEN_FFW1_2006_DPEM' or surface=='NH3_GEN_FFW2_2007_DPEM':
+    if surface in {'NH3_GEN_FFW1_2006', 'NH3_GEN_FFW2_2007',
+                   'NH3_GEN_FFW1_2006_DPEM', 'NH3_GEN_FFW2_2007_DPEM',
+                   'NH3_Surfgen_2state_2012', 'NH3_Surfgen_2state_2012_DPEM'}:
         geom_ordered=sorted(geom, key=lambda x: ("N", "H").index(x[0]))
         rank_ordered=sorted(rank, key=lambda x: ("N", "H").index(x[0]))
         for iatom in range(natoms):

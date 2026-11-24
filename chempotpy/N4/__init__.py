@@ -21,6 +21,7 @@ def intro():
     1.  N4_1A_PIPNN:         single-state surface of N4, singlet, ground state,      P/G
     2.  N4_1A_PIP:           single-state surface of N4, singlet, ground state,      P/G
     3.  N4_1A_PIP_2013:      single-state surface of N4, singlet, ground state,      P/G
+    4.  N4_1A_MEG2_2020:     single-state MEG2 surface of N4, singlet ground state, P/G
 
 
         """)

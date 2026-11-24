@@ -38,6 +38,14 @@ extension check, and a standalone-export check.
 | C2H4O4 formic-acid dimer | Implemented and independently compared | None; catalog and standalone gates pass |
 | CO2 five-state RKHS | Implemented and independently compared | None; catalog and standalone gates pass |
 | O+C2H2 ground-triplet PIP-NN | Existing implementation independently audited | None; released 14-geometry example agrees |
+| BrHCl BLM extended LEPS | Implemented and independently compared | None; catalog and standalone gates pass |
+| C7H8S Ia, II, S1.8, S2.0, and S2.5 APRP pairs | Implemented and independently compared | None; all ten interfaces pass |
+| CH2O2 local PIP-NN | Implemented and independently compared | None; embedded three-network ensemble passes |
+| FH2 5SECGM4 | Implemented from the released evaluator | None; catalog and standalone gates pass |
+| H3 LSTH | Implemented from the released evaluator | None; embedded spline and catalog gates pass |
+| HCl-H2O Bowman-Mancini PIP 2013 | Implemented and independently compared | None; immutable 1,603-term fit passes |
+| N4 MEG2 2020 | Implemented and independently compared | None; catalog and standalone gates pass |
+| NH3 two-state Surfgen 2012 | Implemented and independently compared | None; adiabatic and diabatic interfaces pass |
 
 The fully variable Ni surface/cluster models still require a separate
 variable-atom/environment contract and are not disguised as fixed-size
@@ -49,6 +57,47 @@ four active H atoms and one active C atom, in that order, above the released
 397-atom Ni(111) secondary zone. Its implementation is tracked separately as
 `CH4Ni_EAM6_J1_1996`. Movable-Ni configurations and alternate crystal faces
 remain in the variable-environment batch.
+
+POTLIB's `C2O2` archive was also audited. It is the same three-network model
+already exposed as `COCO_PIPNN`, so a second callable name and a duplicate
+parameter module were deliberately not added.
+
+## 2026 POTLIB completion batch
+
+This batch adds 18 callable interfaces and raises the catalog from 384 to 402
+surfaces. Every new runtime is self-contained: released text parameters are
+kept as provenance fixtures and generated into immutable Fortran modules, but
+installed evaluators perform no file I/O and require no setup call.
+
+The released CH2O2 local PIP-NN minimum evaluates to `-1.8556e-4` eV in both
+implementations. The HCl-H2O 2013 minimum is
+`-536.73159603777935` hartree in the released program and
+`-536.7315960376366` hartree after the CODATA 2022 public-coordinate
+conversion. The NH3 reference Hamiltonian has diagonal elements
+`0.015036404252298` and `0.214925976476203` hartree in the rebuilt Surfgen
+2.8.5 evaluator; the modern adiabatic interface returns the corresponding
+`0.40916189` and `5.84843376` eV values.
+
+The five added C7H8S parameterizations were rebuilt from their authoritative
+POTLIB source at the first catalog geometry. Their released adiabatic energies
+in hartree are, respectively: Ia `(5.6575397244, 6.1114383704,
+6.2563635693)`, II `(5.6575397215, 6.1114266102, 6.2547584860)`, S1.8
+`(5.6575397259, 6.1114391251, 6.2572688934)`, S2.0 `(5.6575397278,
+6.1114401262, 6.2584872554)`, and S2.5 `(5.6575397326, 6.1114425576,
+6.2615332311)`. The modern interfaces reproduce them after applying the
+release's independently rounded coordinate boundary and the canonical CODATA
+energy conversion. Each adiabatic/DPEM pair uses the same owned evaluator and
+is checked at nine geometries.
+
+The released N4 MEG2 evaluator returns `457.2551111154461` kcal/mol at the
+first catalog geometry; the modern result is `457.2551130032926` kcal/mol.
+The `1.9e-6` kcal/mol difference follows from the canonical public conversion
+rather than a change to the 276 fit coefficients or the pair and D3 terms.
+BrHCl BLM, FH2 5SECGM4, and H3 LSTH retain their released functional forms and
+coefficient spelling while replacing COMMON/BLOCK-DATA/ENTRY lifecycles with
+ordinary module ownership. LSTH's 87-point H2 spline is compiled directly into
+the surface. All three pass strict compilation, nine-geometry numerical
+regression, and standalone export.
 
 ## CH4Ni_EAM6_J1_1996 import contract
 

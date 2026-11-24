@@ -839,6 +839,30 @@ def generated_documents() -> dict[Path, str]:
         ] = render_module(
             module_name, networks, weights, biases, declarations, ()
         )
+    ch2o2_local_root = SOURCE_ROOT / "CH2O2_local"
+    ch2o2_local_weights = ch2o2_local_root / "weights.txt"
+    ch2o2_local_biases = ch2o2_local_root / "biases.txt"
+    ch2o2_local_networks = attach_biases(
+        ch2o2_local_biases,
+        parse_weight_file(ch2o2_local_weights, input_count=101),
+    )
+    additional_single_networks[
+        REPOSITORY_ROOT / "chempotpy" / "CH2O2" /
+        "chempotpy_ch2o2_local_pipnn_parameters.f90"
+    ] = render_module(
+        "chempotpy_ch2o2_local_pipnn_parameters",
+        ch2o2_local_networks,
+        ch2o2_local_weights,
+        ch2o2_local_biases,
+        (
+            "real(wp), parameter :: alpha = 1.0_wp",
+            "real(wp), parameter :: vpescut = 6.0_wp",
+            "integer, parameter :: natom = 5",
+            "integer, parameter :: nbasis = 102",
+            "integer, parameter :: nbond = 10",
+        ),
+        (),
+    )
     ensemble_configurations = (
         (
             "C2H2O", "chempotpy_c2h2o_pipnn_parameters", 101,

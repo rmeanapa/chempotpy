@@ -4,6 +4,7 @@ module chempotpy_surfgen
     implicit none
     private
     public :: evaluate_cubic_surfgen_hamiltonian
+    public :: evaluate_quartic_surfgen_hamiltonian
     public :: evaluate_surfgen_coordinates
 
     contains
@@ -88,6 +89,53 @@ module chempotpy_surfgen
             hamiltonian(row,1:row-1) = hamiltonian(1:row-1,row)
         enddo
     end subroutine evaluate_cubic_surfgen_hamiltonian
+
+    !> @brief Contract normalized monomials through immutable quartic Surfgen coefficients.
+    pure subroutine evaluate_quartic_surfgen_hamiltonian( coordinates, second_order_parent, second_order_direction, &
+            & second_order_divisor, third_order_parent, third_order_direction, third_order_divisor, &
+            & fourth_order_parent, fourth_order_direction, fourth_order_divisor, coefficient_order, coefficient_row, &
+            & coefficient_column, coefficient_term, coefficient_value, hamiltonian )
+        real(wp), intent(in)  :: coordinates(:), coefficient_value(:)
+        integer, intent(in)   :: second_order_parent(:), second_order_direction(:), second_order_divisor(:)
+        integer, intent(in)   :: third_order_parent(:), third_order_direction(:), third_order_divisor(:)
+        integer, intent(in)   :: fourth_order_parent(:), fourth_order_direction(:), fourth_order_divisor(:)
+        integer, intent(in)   :: coefficient_order(:), coefficient_row(:), coefficient_column(:), coefficient_term(:)
+        real(wp), intent(out) :: hamiltonian(:,:)
+        real(wp)              :: second_order_terms(size(second_order_parent))
+        real(wp)              :: third_order_terms(size(third_order_parent))
+        real(wp)              :: fourth_order_terms(size(fourth_order_parent)), term_value
+        integer               :: coefficient, row, column, term
+        second_order_terms = coordinates(second_order_direction)*coordinates(second_order_parent) / &
+            & real(second_order_divisor, wp)
+        third_order_terms = coordinates(third_order_direction)*second_order_terms(third_order_parent) / &
+            & real(third_order_divisor, wp)
+        fourth_order_terms = coordinates(fourth_order_direction)*third_order_terms(fourth_order_parent) / &
+            & real(fourth_order_divisor, wp)
+        hamiltonian = 0.0_wp
+        do coefficient = 1, size(coefficient_value)
+            term = coefficient_term(coefficient)
+            select case( coefficient_order(coefficient) )
+            case( 0 )
+                term_value = 1.0_wp
+            case( 1 )
+                term_value = coordinates(term)
+            case( 2 )
+                term_value = second_order_terms(term)
+            case( 3 )
+                term_value = third_order_terms(term)
+            case( 4 )
+                term_value = fourth_order_terms(term)
+            case default
+                term_value = 0.0_wp
+            end select
+            row                     = coefficient_row(coefficient)
+            column                  = coefficient_column(coefficient)
+            hamiltonian(row,column) = hamiltonian(row,column)+coefficient_value(coefficient)*term_value
+        enddo
+        do row = 2, size(hamiltonian, 1)
+            hamiltonian(row,1:row-1) = hamiltonian(1:row-1,row)
+        enddo
+    end subroutine evaluate_quartic_surfgen_hamiltonian
 
     !> @brief Return a configured two-atom distance coordinate.
     pure function scaled_distance_between_atoms( cartesian, first_atom, second_atom, scaling_type, parameters ) &

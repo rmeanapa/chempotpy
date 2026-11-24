@@ -186,7 +186,7 @@ model ownership and could silently change a published fit.
 
 The public conversion contract is pinned to NIST CODATA 2022. Updating it is a
 deliberate, tested source change rather than an automatic dependency update.
-The C6H5SH APRP pair and all six C7H8S APRP interfaces retain their released
+The C6H5SH APRP pair and all sixteen C7H8S APRP interfaces retain their released
 input-coordinate scale because a catalog parity study found amplified changes
 up to about `0.18 eV`; the scale is imported under the descriptive local name
 `published_bohr_to_angstrom`. Their output conversions remain canonical.
@@ -282,21 +282,21 @@ structural formatter used during migration.
 
 ## Repository-wide modernization status
 
-- The package contains 375 free-form `.f90` sources and no fixed-form `.f`
-  sources. The registry identifies 363 independently callable PES sources with
-  no competing duplicate stems.
-- All 363 callable surfaces have a uniquely named private owning module that
+- The package contains 480 free-form `.f90` sources and no fixed-form `.f`
+  sources: 402 independently callable PES interfaces, 60 system-support
+  sources, and 18 shared core modules. No callable surface has a competing
+  duplicate stem.
+- All 402 callable surfaces have a uniquely named private owning module that
   publishes `evaluate` with an optional `chempotpy_status_t` result and a thin
   historical external `pes` or `dpem` adapter.
   The catalog regression suite enforces exactly one owner module per surface.
   Structural ownership does not by itself complete coefficient-lifecycle
   migration: legacy setup routines are tracked separately and must still be
   replaced by private compile-time parameters where they only assign constants.
-- Of the 363 owners, 236 are fully encapsulated: `evaluate` and every file-local
-  helper are private module procedures, and only the compatibility adapter is
-  external. The other 127 retain private support modules or external helper
-  procedures, but no surface uses `COMMON`, `BLOCK DATA`, `ENTRY`, or a
-  `PREPOT` lifecycle.
+- Every owner encapsulates `evaluate` and its file-local helpers as private
+  module procedures, leaving only the compatibility adapter external. Some
+  families retain separately compiled private support modules, but no surface
+  uses `COMMON`, `BLOCK DATA`, `ENTRY`, or a `PREPOT` lifecycle.
 - Every procedure scope uses `implicit none`; all variables formerly inferred
   by `implicit double precision(a-h,o-z)`, `implicit real*8`, or default Fortran
   rules now have explicit declarations.
@@ -376,8 +376,8 @@ and compilation gates enforce the resulting source contract directly.
   fixture records each source's SHA-256 digest and 656 formatted outputs. The
   repository-wide regression test recompiles all 205 `.f90` replacements and
   compares their outputs with those frozen release references.
-- A second catalog fixture covers all 363 callable PES interfaces at two
-  deterministic, nonsymmetric geometries. It records the authoritative source
+- A second catalog fixture covers all 402 callable PES interfaces at nine
+  deterministic geometries. It records the authoritative source
   digest, interface signature, state dimensions, and CODATA 2022 boundary
   outputs; run `make test-surfaces` to compile and evaluate the complete catalog.
 - The earlier Aln fixture independently records 42 source digests and 336
@@ -405,12 +405,12 @@ and compilation gates enforce the resulting source contract directly.
 - Complete library build with no surface hidden behind a successful overall
   command when its individual compilation failed.
 
-The current static gate checks all 363 callable surfaces independently; all
-363 pass with gfortran. Extension builds use the bundled `DSYEV` implementation
+The current static gate checks all 402 callable surfaces independently; all
+402 pass with gfortran. Extension builds use the bundled `DSYEV` implementation
 and no MKL, LAPACK, or BLAS link flags.
 
-The optimized macOS extension gate also builds all 363 callable surfaces. A
-binary audit finds all 363 exact module artifacts, no MKL/LAPACK/BLAS links,
+The optimized macOS extension gate also builds all 402 callable surfaces. A
+binary audit finds all 402 exact module artifacts, no MKL/LAPACK/BLAS links,
 and an internally defined `DSYEV` symbol in each extension that imports
 `chempotpy_linear_algebra` (currently 78). The only non-system compiled
 dependency observed is the normal GNU Fortran runtime; distributable wheels

@@ -14,6 +14,7 @@ def intro():
 
     Single-State Surfaces:
     1.  CH2O2_PIPNN:          single-state surface of CH2O2, ground state,      P
+    2.  CH2O2_LOCAL_PIPNN:    local CH2OO Criegee-intermediate surface,         P
 
 
 
@@ -42,6 +43,13 @@ def intro_detail():
                                    invariant potential energy surface for the 
                                    interaction between H O and CO",
                                    Phys. Chem. Chem. Phys. 21, 24101-24111 (2019).
+
+    2.  CH2O2_LOCAL_PIPNN:    local single-state surface around the CH2OO minimum,
+                              availability: potential energy
+                              functional form: PIP-NN ensemble
+                              corresponding surface in POTLIB: CH2O2_loc.zip
+                              ref: J. Li et al., J. Phys. Chem. Lett. 5,
+                                   2364-2369 (2014).
 
 
 
@@ -84,7 +92,7 @@ def check(system, surface, geom):
         rank[iatom][1]=int(iatom)
 
     #for CH2O2_PIPNN: input Cartesian should in order of HHOOC
-    if surface=='CH2O2_PIPNN':
+    if surface in {'CH2O2_PIPNN', 'CH2O2_LOCAL_PIPNN'}:
         geom_ordered=sorted(geom, key=lambda x: ("H", "O", "C").index(x[0]))
         rank_ordered=sorted(rank, key=lambda x: ("H", "O", "C").index(x[0]))
         for iatom in range(natoms):

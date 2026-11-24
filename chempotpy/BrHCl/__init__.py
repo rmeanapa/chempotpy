@@ -16,6 +16,7 @@ def intro():
     1.   BrHCl_LEPS1:              single-state surface of BrHCl, ground state,     P/G
     2.   BrHCl_LEPS2:              single-state surface of BrHCl, ground state,     P/G
     3.   BrHCl_LEPS3:              single-state surface of BrHCl, ground state,     P/G
+    4.   BrHCl_LEPS_BLM_1983:      single-state BLM extended-LEPS surface,          P/G
 
 
         """)
@@ -116,7 +117,10 @@ def check(system, surface, geom):
     for iatom in range(natoms):
         rank[iatom][1]=int(iatom)
 
-    if surface=='BrHCl_LEPS1' or surface=='BrHCl_LEPS2' or surface=='BrHCl_LEPS3':
+    if surface in {
+        'BrHCl_LEPS1', 'BrHCl_LEPS2', 'BrHCl_LEPS3',
+        'BrHCl_LEPS_BLM_1983',
+    }:
         geom_ordered=sorted(geom, key=lambda x: ("Br", "H", "Cl").index(x[0]))
         rank_ordered=sorted(rank, key=lambda x: ("Br", "H", "Cl").index(x[0]))
         for iatom in range(natoms):

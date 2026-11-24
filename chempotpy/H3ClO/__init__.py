@@ -14,6 +14,7 @@ def intro():
 
     Single-State Surfaces:
     1.   H3ClO_PIPNN:        single-state surface of H3ClO, ground state,      P
+    2.   H3ClO_PIP_2013:     Bowman-Mancini HCl-H2O PIP surface,               P
 
 
         """)
@@ -43,6 +44,13 @@ def intro_detail():
                                   intra- and intermolecular vibrational states and frequency 
                                   shifts",
                                   Phys. Chem. Chem. Phys. 23, 7101-7114 (2021).
+    ============================================================================================
+    2.   H3ClO_PIP_2013:     full-dimensional HCl-H2O ground-state surface,
+                             availability: potential energy
+                             functional form: PIP many-body expansion
+                             corresponding surface in POTLIB: HCl-H2O.tar.gz
+                             ref: J. S. Mancini and J. M. Bowman,
+                                  J. Chem. Phys. 138, 121102 (2013).
 
 
         """)
@@ -85,7 +93,7 @@ def check(system, surface, geom):
         rank[iatom][1]=int(iatom)
 
     #for H3ClO_PIPNN: input Cartesian should in order of HHHOCl
-    if surface=='H3ClO_PIPNN':
+    if surface in {'H3ClO_PIPNN', 'H3ClO_PIP_2013'}:
         geom_ordered=sorted(geom, key=lambda x: ("H", "O", "Cl").index(x[0]))
         rank_ordered=sorted(rank, key=lambda x: ("H", "O", "Cl").index(x[0]))
         for iatom in range(natoms):

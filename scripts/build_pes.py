@@ -96,6 +96,17 @@ SUPPORT_SOURCES = {
     ("CH2OH", "chempotpy_ch2oh_surfgen_runtime"): (
         "chempotpy_ch2oh_surfgen_basis.f90",
     ),
+    ("NH3", "NH3_Surfgen_2state_2012"): (
+        "chempotpy_nh3_surfgen_parameters.f90",
+        "chempotpy_nh3_surfgen_runtime.f90",
+    ),
+    ("NH3", "NH3_Surfgen_2state_2012_DPEM"): (
+        "chempotpy_nh3_surfgen_parameters.f90",
+        "chempotpy_nh3_surfgen_runtime.f90",
+    ),
+    ("NH3", "chempotpy_nh3_surfgen_runtime"): (
+        "chempotpy_nh3_surfgen_parameters.f90",
+    ),
     ("C2H2N2O", "C2H2N2O_PIPNN"): (
         "chempotpy_c2h2n2o_pipnn_parameters.f90",
     ),
@@ -128,6 +139,9 @@ SUPPORT_SOURCES = {
     ("CH2O2", "CH2O2_PIPNN"): (
         "chempotpy_ch2o2_pipnn_parameters.f90",
     ),
+    ("CH2O2", "CH2O2_LOCAL_PIPNN"): (
+        "chempotpy_ch2o2_local_pipnn_parameters.f90",
+    ),
     ("CH4OCl", "CH4OCl_PIPNN"): (
         "chempotpy_ch4ocl_pipnn_parameters.f90",
     ),
@@ -157,6 +171,10 @@ SUPPORT_SOURCES = {
     ("HOBr", "HOBr_3App_PIP"): ("chempotpy_hobr_3app_parameters.f90",),
     ("H3ClO", "H3ClO_PIPNN"): (
         "chempotpy_h3clo_pipnn_parameters.f90",
+    ),
+    ("H3ClO", "H3ClO_PIP_2013"): (
+        "chempotpy_hcl_h2o_pip_parameters.f90",
+        "chempotpy_hcl_h2o_pip_basis.f90",
     ),
     ("H3Cl", "H3Cl_PIPNN"): (
         "chempotpy_h3cl_pipnn_parameters.f90",

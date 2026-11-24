@@ -24,6 +24,7 @@ def intro():
     7.   H3_GEN_BKMP_1991:     single-state surface of H3, ground state,    P/G
     8.   H3_GEN_PK2_1964:      single-state surface of H3, ground state,    P/G
     9.   H3_GEN_TK_1984:       single-state surface of H3, ground state,    P/G
+    10.  H3_GEN_LSTH_1978:     single-state LSTH surface of H3, ground state, P/G
 
     Multi-State Surfaces:
     1.   H3_GEN_DMBE_1987:     multi-state surface of H3, 1-2 state,        P/G/D

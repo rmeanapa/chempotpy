@@ -66,7 +66,7 @@ the following changes:
 * Added catalog discovery and isolated f2py builds so each PES extension
   receives only the bundled core modules it actually imports.
 * Added strict compilation, modernization, formatting, packaging, binary
-  linkage, extension-import, and numerical-regression gates for all 384
+  linkage, extension-import, and numerical-regression gates for all 402
   callable surfaces, including nine stored reference geometries per surface.
 * Corrected the CH3NH2 APRP coupling evaluation by initializing terms that are
   absent from the coupling branch and conditionally assigned tent derivatives.
@@ -112,7 +112,7 @@ conversion-like value that is part of a published PES fit remains local to its
 surface and is not replaced merely because it resembles a physical constant;
 changing such a value would change the fitted model itself.
 
-The C6H5SH APRP pair and the three C7H8S APRP adiabatic/diabatic pairs are
+The C6H5SH APRP pair and the eight C7H8S APRP adiabatic/diabatic pairs are
 documented exceptions for input-coordinate scaling. Their released fits are
 numerically sensitive enough that replacing the historical scale changed
 representative energies by as much as about `0.18 eV`. They therefore retain
@@ -174,7 +174,7 @@ How to install
 
   `make check-conda BUILD_FLAGS="--jobs 4"` builds every extension, checks its
   native-library linkage, imports each binary in an isolated Python process,
-  and evaluates all surfaces at both catalog regression geometries.
+  and evaluates all surfaces at all nine catalog regression geometries.
 
   CHEMPOTPY carries the numerical support routines used by its PES kernels.
   Building the extensions does not require MKL, LAPACK, or BLAS. A Fortran
@@ -228,7 +228,7 @@ conventions are collected in `docs/FORTRAN_STYLE.md`.
 
 Run `make check-modernization` for the complete repeatable modernization gate.
 It audits the catalog, rejects forbidden legacy Fortran constructs, runs the
-Python and core tests, strictly compiles all 384 callable PES interfaces, checks
+Python and core tests, strictly compiles all 402 callable PES interfaces, checks
 formatting, and evaluates every surface at nine deterministic geometries in the
 same process. `make test-surfaces` runs only the slower catalog-wide numerical
 and architecture regression portion.
@@ -359,22 +359,22 @@ From the repository root, run the complete Python extension gate with:
 
     make check-conda BUILD_FLAGS="--jobs 4"
 
-This command builds all 384 f2py extensions, checks their native-library
+This command builds all 402 f2py extensions, checks their native-library
 linkage, imports every extension in an isolated Python process, and performs
-3,456 numerical evaluations. A successful run ends with counters equivalent to:
+3,618 numerical evaluations. A successful run ends with counters equivalent to:
 
-    pes_extensions_checked: 384
+    pes_extensions_checked: 402
     missing_or_ambiguous_extensions: 0
     external_mkl_lapack_blas_links: 0
-    python_extensions_checked: 384
-    python_extension_evaluations: 3456
+    python_extensions_checked: 402
+    python_extension_evaluations: 3618
     python_extension_failures: 0
 
 Run the catalog-wide compiler warning gate with:
 
     make check-fortran-warnings
 
-This compiles all 439 PES and support units with `-Wall`, `-Wextra`, and
+This compiles all 462 PES and system-support units with `-Wall`, `-Wextra`, and
 `-Werror`. Unused dummy arguments are exempt because the stable PES contracts
 intentionally include inputs that some implementations do not consume. Exact
 real comparisons are also exempt because released lookup and branch logic uses

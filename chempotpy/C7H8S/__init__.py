@@ -21,6 +21,16 @@ def intro():
     4.  C7H8S_APRP_DPEM:      multi-state surface of C7H8S, 1-3 state,      U/UG
     5.  C7H8S_III_APRP_DPEM:  multi-state surface of C7H8S, 1-3 state,      U/UG
     6.  C7H8S_S22_APRP_DPEM:  multi-state surface of C7H8S, 1-3 state,      U/UG
+    7.  C7H8S_II_APRP:         surface set II,                               P/G/D
+    8.  C7H8S_IA_APRP:         surface set Ia,                               P/G/D
+    9.  C7H8S_S18_APRP:        surface set S-1.8,                            P/G/D
+    10. C7H8S_S20_APRP:        surface set S-2.0,                            P/G/D
+    11. C7H8S_S25_APRP:        surface set S-2.5,                            P/G/D
+    12. C7H8S_II_APRP_DPEM:    surface set II,                               U/UG
+    13. C7H8S_IA_APRP_DPEM:    surface set Ia,                               U/UG
+    14. C7H8S_S18_APRP_DPEM:   surface set S-1.8,                            U/UG
+    15. C7H8S_S20_APRP_DPEM:   surface set S-2.0,                            U/UG
+    16. C7H8S_S25_APRP_DPEM:   surface set S-2.5,                            U/UG
 
 
     ==VERY IMPORTANT NOTICE==
@@ -137,7 +147,15 @@ def check(system, surface, geom):
         rank[iatom][1]=int(iatom)
 
     #for C7H8S_APRP: input Cartesian should in order of CCCCCCHHHHHSCHHH
-    if surface=='C7H8S_APRP' or surface=='C7H8S_III_APRP' or surface=='C7H8S_S22_APRP' or surface=='C7H8S_APRP_DPEM' or surface=='C7H8S_III_APRP_DPEM' or surface=='C7H8S_S22_APRP_DPEM':
+    if surface in {
+        'C7H8S_APRP', 'C7H8S_III_APRP', 'C7H8S_S22_APRP',
+        'C7H8S_II_APRP', 'C7H8S_IA_APRP', 'C7H8S_S18_APRP',
+        'C7H8S_S20_APRP', 'C7H8S_S25_APRP', 'C7H8S_APRP_DPEM',
+        'C7H8S_III_APRP_DPEM', 'C7H8S_S22_APRP_DPEM',
+        'C7H8S_II_APRP_DPEM', 'C7H8S_IA_APRP_DPEM',
+        'C7H8S_S18_APRP_DPEM', 'C7H8S_S20_APRP_DPEM',
+        'C7H8S_S25_APRP_DPEM',
+    }:
         for iatom in range(natoms):
             for idir in range(3):
                 xyz[iatom][idir]=geom[iatom][idir+1]

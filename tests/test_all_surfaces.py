@@ -99,6 +99,16 @@ class AllSurfaceRegressionTests(unittest.TestCase):
             "C7H8S/C7H8S_III_APRP_DPEM",
             "C7H8S/C7H8S_S22_APRP",
             "C7H8S/C7H8S_S22_APRP_DPEM",
+            "C7H8S/C7H8S_IA_APRP",
+            "C7H8S/C7H8S_IA_APRP_DPEM",
+            "C7H8S/C7H8S_II_APRP",
+            "C7H8S/C7H8S_II_APRP_DPEM",
+            "C7H8S/C7H8S_S18_APRP",
+            "C7H8S/C7H8S_S18_APRP_DPEM",
+            "C7H8S/C7H8S_S20_APRP",
+            "C7H8S/C7H8S_S20_APRP_DPEM",
+            "C7H8S/C7H8S_S25_APRP",
+            "C7H8S/C7H8S_S25_APRP_DPEM",
         }
         actual_exceptions = set()
         for key, source in self.sources.items():
@@ -480,7 +490,7 @@ class AllSurfaceRegressionTests(unittest.TestCase):
                 self.assertIsNotNone(module)
                 outside = text[:module.start()]+text[module.end():]
                 adapter = re.search(
-                    r"^!>\s*@brief\s+.*?Python-facing\s+(?:PES|DPEM)\s+entry point\..*?"
+                    r"^!>\s*@brief\s+.*?Python-facing.*?\s+(?:PES|DPEM)\s+entry point\..*?"
                     r"^\s*end\s+subroutine(?:\s+(?:pes|dpem))?\s*$",
                     outside,
                     flags=re.IGNORECASE | re.MULTILINE | re.DOTALL,
