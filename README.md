@@ -403,15 +403,18 @@ must compile, execute, match its declared interface, and reproduce the finite,
 independently reviewed values committed in the current fixture. The workflow
 does not bootstrap a new baseline from the implementation being tested.
 
-The SiOH variable-atom driver correction establishes `baseline_version: 4`.
-The one-step transition from version 3 approves evaluating SiOH with its public
+Removing the obsolete, unused C2H2O PIP-NN data-path argument establishes
+`baseline_version: 5`. The one-step transition from version 4 approves only
+that interface change; its numerical values are unchanged. Version 4 records
+the SiOH variable-atom driver correction. The transition from version 3
+approves evaluating SiOH with its public
 `xyz(natoms,3)` shape instead of a legacy oversized array whose storage layout
 scrambled the regression geometry. Version 3 records the earlier C2H6F indexing
 and uninitialized-state corrections, and version 2 records the CODATA 2022
 Hartree-to-kcal/mol migration. Records whose approved values did not change
 retain the base revision captured on that same runner, so an unchanged PES is
 never compared with another architecture's fixture. Comparisons between two
-version-4 revisions remain strict. The
+version-5 revisions remain strict. The
 committed fixture supports local and package-level regression tests, while the
 workflow's base-revision capture protects existing surfaces independently of
 ordinary fixture edits in a proposed change.

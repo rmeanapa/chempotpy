@@ -31,7 +31,7 @@ class RefreshLibraryReferenceHashesTests(unittest.TestCase):
             fixture = directory / "fixture.json"
             capture = directory / "capture.json"
             fixture.write_text(json.dumps({
-                "baseline_version": 4,
+                "baseline_version": 5,
                 "surfaces": {},
             }))
             record = {
@@ -43,7 +43,7 @@ class RefreshLibraryReferenceHashesTests(unittest.TestCase):
                 "values": ["1.0"],
             }
             capture.write_text(json.dumps({
-                "baseline_version": 4,
+                "baseline_version": 5,
                 "surfaces": {"H3/new": record},
             }))
             script = (
