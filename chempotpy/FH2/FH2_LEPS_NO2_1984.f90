@@ -307,7 +307,7 @@ module chempotpy_fh2_leps_no2_1984_pes
                 return
             endif
             !   Check the value of NDER
-            call phical (phi)
+            call phical(phi)
             z3cm_z(1) = fphi(phi)
             z3cm_z(3) = z3cm_z(1)
             do i=1, 3, 2
@@ -405,7 +405,7 @@ module chempotpy_fh2_leps_no2_1984_pes
         end function fphi
 
         !> @brief Evaluate PHICAL for the FH2_LEPS_NO2_1984 potential.
-        subroutine phical ( phi )
+        subroutine phical( phi )
             !   FH2 NEW SURFACE NO. 2   DON TRUHLAR
             use chempotpy_kinds, only: wp
             implicit none

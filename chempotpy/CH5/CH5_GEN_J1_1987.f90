@@ -350,26 +350,26 @@ module chempotpy_ch5_gen_j1_1987_pes
             !  COMPUTE THE MORSE RANGE PARAMETERS ALPH:
             call calpha
             ! COMPUTE THE FOUR TRIATOMIC TERMS
-            call tri (icorcm_ar(1), icorcm_ar(5), icorcm_ar(6), icorcm_der(1), icorcm_der(5), icorcm_der(6), 1, 3, 2, ee, dtot)
+            call tri(icorcm_ar(1), icorcm_ar(5), icorcm_ar(6), icorcm_der(1), icorcm_der(5), icorcm_der(6), 1, 3, 2, ee, dtot)
             icorcm_der(1) = icorcm_der(1)+dtot
             der2          = dtot
             der3          = dtot
             der4          = dtot
-            call tri (icorcm_ar(2), icorcm_ar(5), icorcm_ar(7), icorcm_der(2), dr2, icorcm_der(7), 1, 3, 2, e, dtot)
+            call tri(icorcm_ar(2), icorcm_ar(5), icorcm_ar(7), icorcm_der(2), dr2, icorcm_der(7), 1, 3, 2, e, dtot)
             ee            = ee+e
             icorcm_der(2) = icorcm_der(2)+der2+dtot
             icorcm_der(1) = icorcm_der(1)+dtot
             der3          = der3+dtot
             der4          = der4+dtot
             icorcm_der(5) = icorcm_der(5)+dr2
-            call tri (icorcm_ar(3), icorcm_ar(5), icorcm_ar(8), icorcm_der(3), dr2, icorcm_der(8), 1, 3, 2, e, dtot)
+            call tri(icorcm_ar(3), icorcm_ar(5), icorcm_ar(8), icorcm_der(3), dr2, icorcm_der(8), 1, 3, 2, e, dtot)
             ee            = ee+e
             icorcm_der(3) = icorcm_der(3)+der3+dtot
             icorcm_der(1) = icorcm_der(1)+dtot
             icorcm_der(2) = icorcm_der(2)+dtot
             der4          = der4+dtot
             icorcm_der(5) = icorcm_der(5)+dr2
-            call tri (icorcm_ar(4), icorcm_ar(5), icorcm_ar(9), icorcm_der(4), dr2, icorcm_der(9), 1, 3, 2, e, dtot)
+            call tri(icorcm_ar(4), icorcm_ar(5), icorcm_ar(9), icorcm_der(4), dr2, icorcm_der(9), 1, 3, 2, e, dtot)
             ee            = ee+e
             icorcm_der(4) = icorcm_der(4)+der4+dtot
             icorcm_der(1) = icorcm_der(1)+dtot
@@ -416,7 +416,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             f(4)  = a14*exf4
             ! DK'S ARE THE FORCE CONSTANTS
             !     FIRST COMPUTE THE K0 SINCE IT IS NOW A FUNCTION OF AR(1)
-            call force (dadr1)
+            call force(dadr1)
             dk(1) = pdatcm_aparm(1)*f(1)*f(2)
             dk(2) = pdatcm_aparm(1)*f(1)*f(3)
             dk(3) = pdatcm_aparm(1)*f(1)*f(4)
@@ -424,7 +424,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             dk(5) = pdatcm_aparm(1)*f(2)*f(4)
             dk(6) = pdatcm_aparm(1)*f(3)*f(4)
             ! COMPUTE THE EQUILIBRIUM ANGLES--THETA AND D(THETA)/DR
-            call theta (asf, dasf, asb, dasb)
+            call theta(asf, dasf, asb, dasb)
             daa = 0.0e0_wp
             ! COMPUTE CONTRIBUTION TO THE TOTAL ENERGY FROM THE ANGLE TERMS
             sum = 0.0e0_wp
@@ -507,7 +507,7 @@ module chempotpy_ch5_gen_j1_1987_pes
             enddo
             icorcm_der(5) = icorcm_der(5)-(dk(if1)*y1(if1)+dk(if2)*y1(if2)+dk(if3)*y1(if3))* daa-(dk(ib1)*y1(ib1)+ &
                 & dk(ib2)*y1(ib2)+dk(ib3)* y1(ib3))*3.0e0_wp* sin(asf)*cos(asf)*daa/sin(asb)
-            call switch (kmax, 2, v, coord, dxx)
+            call switch(kmax, 2, v, coord, dxx)
             potxcm_energy = ee/evcon+pdatcm_refv
             do i = 1, 15
                 icorcm_der(i) = icorcm_der(i)/evcon
@@ -524,7 +524,7 @@ module chempotpy_ch5_gen_j1_1987_pes
                 ipt        = ipt+3
             enddo
             !     NOW ADD IN THE OUT OF PLANE BEND TERM
-            call oopb (voop, dvoop, v, coord, dxx)
+            call oopb(voop, dvoop, v, coord, dxx)
             potxcm_energy = potxcm_energy+voop
             do i = 1, 18
                 dxx(i) = dxx(i)+dvoop(i)
@@ -704,7 +704,7 @@ module chempotpy_ch5_gen_j1_1987_pes
         end subroutine drdxc
 
         !> @brief Evaluate FORCE for the CH5_GEN_J1_1987 potential.
-        subroutine force ( dadr1 )
+        subroutine force( dadr1 )
             !     THIS SUBROUTINE COMPUTES THE BENDING FORCE CONSTANT AS A FUNCTION
             !     OF AR(1). (APARM(1))   IT ALSO COMPUTES THE DERIVATIVE OF THIS
             !     TERM WITH RESPECT TO AR(1).
@@ -717,7 +717,7 @@ module chempotpy_ch5_gen_j1_1987_pes
         end subroutine force
 
         !> @brief Evaluate OOPB for the CH5_GEN_J1_1987 potential.
-        subroutine oopb ( voop, dvoop, v, x, dx )
+        subroutine oopb( voop, dvoop, v, x, dx )
             !     THIS SUBROUTINE CALCULTES THE OUT OF PLANE BEND POTENTIAL THAT
             !     RESULTS FROM THE METHYL.  THE FORM USED IS THE SAME AS THAT
             !     GIVEN BY DUCHOVIC ET. AL. (JPC 89, 1339, (1984)).
@@ -944,7 +944,7 @@ module chempotpy_ch5_gen_j1_1987_pes
         end subroutine oopb
 
         !> @brief Evaluate SECH for the CH5_GEN_J1_1987 potential.
-        function sech ( x )
+        function sech( x )
             use chempotpy_kinds, only: wp
             implicit none
             real(wp) :: sech, x
@@ -956,7 +956,7 @@ module chempotpy_ch5_gen_j1_1987_pes
         end function sech
 
         !> @brief Evaluate SWITCH for the CH5_GEN_J1_1987 potential.
-        subroutine switch ( kmax, lmg, v, coord, dxx )
+        subroutine switch( kmax, lmg, v, coord, dxx )
             ! THIS ROUTINE SWITCHES MATRICES R,R2,DER TO ALLOW FOR DIFFERENT H ATOMS
             !      BEING OFF THE CH4 MOLECULE.
             ! LMG IS A CONTROL PARAMETER
@@ -1050,7 +1050,7 @@ module chempotpy_ch5_gen_j1_1987_pes
         end subroutine switch
 
         !> @brief Evaluate THETA for the CH5_GEN_J1_1987 potential.
-        subroutine theta ( asf, dasf, asb, dasb )
+        subroutine theta( asf, dasf, asb, dasb )
             !     THIS SUBROUTINE COMPUTES THE EQUILIBRIUM THETA AS A FUNCTION OF
             !     R (THE AVERAGE C-H BOND LENGTH IN METHANE).
             !     THE DERIVATIVE OF THETA WITH RESPECT TO AR(I) IS ALSO COMPUTED.
@@ -1111,7 +1111,7 @@ module chempotpy_ch5_gen_j1_1987_pes
         end subroutine theta
 
         !> @brief Evaluate TRI for the CH5_GEN_J1_1987 potential.
-        subroutine tri ( rr1, rr2, rr3, dr1, dr2, dr3, i, j, k, e, dtot )
+        subroutine tri( rr1, rr2, rr3, dr1, dr2, dr3, i, j, k, e, dtot )
             ! ROUTINE TO CALCULATE THREE-BODY ENERGY FOR ABC SYSTEM
             ! RR1,RR2,RR3 ARE THE THREE INTERPARTICLE DISTANCES
             ! DR1,DR2,DR3 ARE THE THREE DERIVATIVES WITH RESPECT TO RR1,RR2, AND RR3

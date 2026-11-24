@@ -694,7 +694,7 @@ module pes_shell
     end subroutine potshell
 
     !> @brief Evaluate getd0.
-    subroutine getd0 ( nk, r0, d0 )
+    subroutine getd0( nk, r0, d0 )
         integer  :: nk
         real(wp) :: r0(0:nk-1,0:nk-1), d0(0:nk-1,0:nk-1)
         integer  :: i, j
@@ -708,7 +708,7 @@ module pes_shell
     end subroutine getd0
 
     !> @brief Evaluate getr0.
-    subroutine getr0 ( nk, xn, r0 )
+    subroutine getr0( nk, xn, r0 )
         integer  :: nk
         real(wp) :: xn(0:2,0:nk-1), r0(0:nk-1,0:nk-1)
         integer  :: i, j
@@ -722,7 +722,7 @@ module pes_shell
     end subroutine getr0
 
     !> @brief Evaluate getrvec.
-    subroutine getrvec ( ms, r, vec )
+    subroutine getrvec( ms, r, vec )
         ! version for X4YZ
         integer            :: ms
         integer, parameter :: nk = 6
@@ -770,7 +770,7 @@ module pes_shell
     end subroutine getrvec
 
     !> @brief Evaluate getvec.
-    subroutine getvec ( ms, mr, xn, vec )
+    subroutine getvec( ms, mr, xn, vec )
         ! version for H4CO (reordering of CH3OH).
         integer            :: ms, mr
         integer, parameter :: nk = 6
@@ -778,10 +778,10 @@ module pes_shell
         integer            :: k, l
         real(wp)           :: rvec(0:4), d0(0:nk-1,0:nk-1), r0(0:nk-1,0:nk-1)
         vec = 0
-        call getr0 (nk, xn, r0)
-        call getd0 (nk, r0, d0)
-        call getv_x4yz (ms, d0, vec(0:ms-1))
-        call getrvec (5, r0, rvec)
+        call getr0(nk, xn, r0)
+        call getd0(nk, r0, d0)
+        call getv_x4yz(ms, d0, vec(0:ms-1))
+        call getrvec(5, r0, rvec)
         do l = 0, mr-1
             do k = 0, 3
                 vec(ms+4*l+k) = rvec(k+1)*vec(l)
@@ -790,7 +790,7 @@ module pes_shell
     end subroutine getvec
 
     !> @brief Evaluate getv_x4yz.
-    subroutine getv_x4yz ( m, d, vec )
+    subroutine getv_x4yz( m, d, vec )
         integer, parameter :: nk = 6
         integer            :: m
         real(wp)           :: d(0:nk-1,0:nk-1), vec(0:m-1)

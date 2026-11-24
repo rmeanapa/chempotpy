@@ -1,4 +1,15 @@
-!> @brief Implement C2H2O_PIPNN, a potential energy surface for C2H2O.
+! System:                        C2H2O
+! Functional form:               permutationally invariant polynomial neural network
+! Common name:                   C2H2O PIP-NN
+! Reference:                     J. Zuo et al., Phys. Chem. Chem. Phys. 21, 1408 (2019)
+! Number of derivatives:         0
+! Number of bodies:              5
+! Number of electronic surfaces: 1
+! Interface:                     PES
+! Data file:                     none; neural-network parameters are embedded
+! Notes:                         Ground triplet surface for the O(3P) + C2H2 reaction.
+
+!> @brief Evaluate the Zuo et al. ground-triplet PIP-NN surface for O + C2H2.
 module chempotpy_c2h2o_pipnn_pes
     use chempotpy_constants,              only: PI
     use chempotpy_c2h2o_pipnn_parameters, only: activation_function, hidden_1_biases, hidden_1_count, hidden_2_biases, &
@@ -416,17 +427,16 @@ module chempotpy_c2h2o_pipnn_pes
 end module chempotpy_c2h2o_pipnn_pes
 
 !> @brief Expose C2H2O_PIPNN through the Python-facing PES entry point.
-subroutine pes( x, igrad, path, p, g, d )
+subroutine pes( x, igrad, p, g, d )
     use chempotpy_c2h2o_pipnn_pes, only: evaluate
     use chempotpy_kinds,           only: wp
     implicit none
-    integer, parameter              :: natoms  = 5
-    integer, parameter              :: nstates = 1
-    integer, intent(in)             :: igrad
-    character(len=1024), intent(in) :: path
-    real(wp), intent(in)            :: x(natoms,3)
-    real(wp), intent(out)           :: p(nstates)
-    real(wp), intent(out)           :: g(nstates,natoms,3)
-    real(wp), intent(out)           :: d(nstates,nstates,natoms,3)
+    integer, parameter    :: natoms  = 5
+    integer, parameter    :: nstates = 1
+    integer, intent(in)   :: igrad
+    real(wp), intent(in)  :: x(natoms,3)
+    real(wp), intent(out) :: p(nstates)
+    real(wp), intent(out) :: g(nstates,natoms,3)
+    real(wp), intent(out) :: d(nstates,nstates,natoms,3)
     call evaluate(x, igrad, p, g, d)
 end subroutine pes

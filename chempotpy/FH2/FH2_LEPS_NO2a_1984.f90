@@ -319,7 +319,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
                 enddo
             endif
             !   Compute the angle dependent Sato parameters
-            call phical (phi)
+            call phical(phi)
             z3cm_z(1) = fphi(phi)
             z3cm_z(3) = z3cm_z(1)
             do i=1, 3, 2
@@ -443,7 +443,7 @@ module chempotpy_fh2_leps_no2a_1984_pes
         end function fphi
 
         !> @brief Evaluate PHICAL for the FH2_LEPS_NO2a_1984 potential.
-        subroutine phical ( phi )
+        subroutine phical( phi )
             !   FH2 NEW SURFACE NO. 2   DON TRUHLAR
             !   Derivatives of phi w.r.t. r(i) also calculated in this routine
             use chempotpy_kinds, only: wp

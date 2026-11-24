@@ -1153,6 +1153,14 @@ def normalize_call_spacing(source_text: str) -> str:
             index = opening+1
 
     for opening, closing in reversed(boundaries):
+        name_end = opening
+        while name_end > 0 and characters[name_end-1] in " \t":
+            name_end -= 1
+        if name_end < opening:
+            del characters[name_end:opening]
+            removed = opening-name_end
+            opening = name_end
+            closing -= removed
         left = opening+1
         while left < closing and characters[left] in " \t":
             left += 1
@@ -1414,6 +1422,12 @@ def normalize_procedures(source_text: str) -> str:
             index += 1
             continue
         opening = lines[index].find("(", match.start("name"))
+        if match.end("name") < opening:
+            lines[index] = (
+                lines[index][:match.end("name")]
+                + lines[index][opening:]
+            )
+            opening = match.end("name")
         if lines[index][opening + 1:opening + 2] != " ":
             lines[index] = lines[index][:opening + 1] + " " + lines[index][opening + 1:]
         close = matching_argument_close(lines, index, match.end("name"))

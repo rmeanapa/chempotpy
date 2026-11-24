@@ -549,10 +549,10 @@ end module example
 
     def test_call_parentheses_have_no_inner_edge_spaces(self) -> None:
         source = """\
-subroutine evaluate( first, second )
+subroutine evaluate ( first, second )
     implicit none
     real :: first, second
-    call calculate( first, second )
+    call calculate ( first, second )
 end subroutine evaluate
 """
         converted = format_source_text(source)

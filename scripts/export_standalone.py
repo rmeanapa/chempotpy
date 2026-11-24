@@ -159,6 +159,87 @@ def evaluator_body(entry_point: str, signature: str) -> str:
     ))
 
 
+def evaluator_interface(entry_point: str, signature: str) -> str:
+    """Return an explicit interface for the exported external evaluator."""
+
+    arguments = signature.split(",")
+    if entry_point == "pes" and len(arguments) == 5:
+        return """\
+        interface
+            subroutine pes( x, igrad, energy, gradient, coupling )
+                import :: wp, natoms, nstates
+                integer, intent(in)   :: igrad
+                real(wp), intent(in)  :: x(natoms,3)
+                real(wp), intent(out) :: energy(nstates), gradient(nstates,natoms,3)
+                real(wp), intent(out) :: coupling(nstates,nstates,natoms,3)
+            end subroutine pes
+        end interface"""
+    if entry_point == "pes" and len(arguments) == 6 and arguments[2] == "path":
+        return """\
+        interface
+            subroutine pes( x, igrad, path, energy, gradient, coupling )
+                import :: wp, natoms, nstates
+                integer, intent(in)          :: igrad
+                real(wp), intent(in)         :: x(natoms,3)
+                character(len=*), intent(in) :: path
+                real(wp), intent(out)        :: energy(nstates), gradient(nstates,natoms,3)
+                real(wp), intent(out)        :: coupling(nstates,nstates,natoms,3)
+            end subroutine pes
+        end interface"""
+    if entry_point == "pes" and len(arguments) == 6:
+        return """\
+        interface
+            subroutine pes( workspace, atom_count, igrad, energy, gradient, coupling )
+                import :: wp, natoms, nstates
+                integer, intent(in)   :: atom_count, igrad
+                real(wp), intent(in)  :: workspace(10000,3)
+                real(wp), intent(out) :: energy(nstates), gradient(nstates,natoms,3)
+                real(wp), intent(out) :: coupling(nstates,nstates,natoms,3)
+            end subroutine pes
+        end interface"""
+    if entry_point == "pes" and len(arguments) in {8, 9}:
+        species_arguments = len(arguments)-6
+        species_names = ["species_{}".format(index) for index in range(1, species_arguments+1)]
+        names = ", ".join(species_names)
+        return """\
+        interface
+            subroutine pes( workspace, {names}, atom_count, igrad, energy, gradient, coupling )
+                import :: wp, natoms, nstates
+                integer, intent(in)   :: {names}, atom_count, igrad
+                real(wp), intent(in)  :: workspace(10000,3)
+                real(wp), intent(out) :: energy(nstates), gradient(nstates,natoms,3)
+                real(wp), intent(out) :: coupling(nstates,nstates,natoms,3)
+            end subroutine pes
+        end interface""".format(names=names)
+    if entry_point == "dpem" and len(arguments) == 4:
+        return """\
+        interface
+            subroutine dpem( x, igrad, matrix, matrix_gradient )
+                import :: wp, natoms, nstates
+                integer, intent(in)   :: igrad
+                real(wp), intent(in)  :: x(natoms,3)
+                real(wp), intent(out) :: matrix(nstates,nstates)
+                real(wp), intent(out) :: matrix_gradient(nstates,nstates,natoms,3)
+            end subroutine dpem
+        end interface"""
+    if entry_point == "dpem" and len(arguments) == 8:
+        return """\
+        interface
+            subroutine dpem( x, igrad, energy, gradient, coupling, transform, matrix, matrix_gradient )
+                import :: wp, natoms, nstates
+                integer, intent(in)   :: igrad
+                real(wp), intent(in)  :: x(natoms,3)
+                real(wp), intent(out) :: energy(nstates), gradient(nstates,natoms,3)
+                real(wp), intent(out) :: coupling(nstates,nstates,natoms,3)
+                real(wp), intent(out) :: transform(nstates,nstates), matrix(nstates,nstates)
+                real(wp), intent(out) :: matrix_gradient(nstates,nstates,natoms,3)
+            end subroutine dpem
+        end interface"""
+    raise ValueError("unsupported standalone interface: {}({})".format(
+        entry_point, signature
+    ))
+
+
 def example_driver(
     source: SurfaceSource,
     geometry_count: int,
@@ -210,7 +291,9 @@ program chempotpy_standalone_example
         real(wp), intent(in)                    :: coordinates(:,:)
         real(wp), intent(out)                   :: values(:)
         type(chempotpy_status_t), intent(inout) :: status
+{evaluator_interface}
 {evaluator_body}
+        if( status%failed() ) values = 0.0_wp
     end subroutine evaluate_values
 
     subroutine report_geometry( geometry_index, coordinates )
@@ -250,6 +333,7 @@ end program chempotpy_standalone_example
         data_declaration=data_declaration,
         data_setup=data_setup,
         geometry_blocks="\n".join(geometry_blocks),
+        evaluator_interface=evaluator_interface(entry_point, signature),
         evaluator_body=evaluator_body(entry_point, signature),
         value_label=value_label,
     )

@@ -16,6 +16,7 @@ WORKING_PRECISION_CORE_SOURCES = (
     "chempotpy_interpolation.f90",
     "chempotpy_linear_algebra.f90",
     "chempotpy_neural_network.f90",
+    "chempotpy_rkhs.f90",
     "chempotpy_legacy_coordinates.f90",
     "chempotpy_legacy_units.f90",
     "chempotpy_constants.f90",

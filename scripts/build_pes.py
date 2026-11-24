@@ -25,6 +25,70 @@ from chempotpy.core.registry import SurfaceSource, discover_surface_sources
 
 
 SUPPORT_SOURCES = {
+    ("HNi", "HNi_EAM5_1995"): (
+        "chempotpy_hni_ni111_parameters.f90",
+        "chempotpy_hni_eam5_parameters.f90",
+    ),
+    ("HNi", "HNi_EAM6_1996"): (
+        "chempotpy_hni_ni111_parameters.f90",
+        "chempotpy_hni_eam67_parameters.f90",
+        "chempotpy_hni_eam67_runtime.f90",
+    ),
+    ("HNi", "HNi_EAM7_1998"): (
+        "chempotpy_hni_ni111_parameters.f90",
+        "chempotpy_hni_eam67_parameters.f90",
+        "chempotpy_hni_eam67_runtime.f90",
+    ),
+    ("HNi", "chempotpy_hni_eam67_runtime"): (
+        "chempotpy_hni_eam67_parameters.f90",
+    ),
+    ("malonaldehyde", "malonaldehyde_MHT_2014"): (
+        "chempotpy_malonaldehyde_mht_parameters.f90",
+    ),
+    ("C2H4O4", "C2H4O4_FAD_PIP"): (
+        "chempotpy_c2h4o4_parameters.f90",
+        "chempotpy_c2h4o4_invariants.f90",
+    ),
+    **{
+        ("CO2", surface): (
+            "chempotpy_co2_{}_parameters.f90".format(key),
+            "chempotpy_co2_asymptotic_parameters.f90",
+            "chempotpy_co2_rkhs_runtime.f90",
+        )
+        for surface, key in (
+            ("CO2_1Ap_RKHS", "1ap"),
+            ("CO2_1App_RKHS", "1app"),
+            ("CO2_21Ap_RKHS", "21ap"),
+            ("CO2_3Ap_RKHS", "3ap"),
+            ("CO2_3App_RKHS", "3app"),
+        )
+    },
+    ("CO2", "chempotpy_co2_rkhs_runtime"): (
+        "chempotpy_co2_asymptotic_parameters.f90",
+    ),
+    ("CH2OH", "CH2OH_Surfgen_2state_2018"): (
+        "chempotpy_ch2oh_surfgen_basis.f90",
+        "chempotpy_ch2oh_2state_parameters.f90",
+        "chempotpy_ch2oh_surfgen_runtime.f90",
+    ),
+    ("CH2OH", "CH2OH_Surfgen_2state_2018_DPEM"): (
+        "chempotpy_ch2oh_surfgen_basis.f90",
+        "chempotpy_ch2oh_2state_parameters.f90",
+        "chempotpy_ch2oh_surfgen_runtime.f90",
+    ),
+    ("CH2OH", "CH2OH_Surfgen_3state_2017"): (
+        "chempotpy_ch2oh_surfgen_basis.f90",
+        "chempotpy_ch2oh_3state_parameters.f90",
+        "chempotpy_ch2oh_surfgen_runtime.f90",
+    ),
+    ("CH2OH", "CH2OH_Surfgen_3state_2017_DPEM"): (
+        "chempotpy_ch2oh_surfgen_basis.f90",
+        "chempotpy_ch2oh_3state_parameters.f90",
+        "chempotpy_ch2oh_surfgen_runtime.f90",
+    ),
+    ("CH2OH", "chempotpy_ch2oh_surfgen_runtime"): (
+        "chempotpy_ch2oh_surfgen_basis.f90",
+    ),
     ("C2H2N2O", "C2H2N2O_PIPNN"): (
         "chempotpy_c2h2n2o_pipnn_parameters.f90",
     ),
@@ -96,6 +160,10 @@ SUPPORT_SOURCES = {
     ("H4O2", "H4O2_PIP"): (
         "chempotpy_h4o2_pip_parameters.f90",
     ),
+    ("H7p", "H7p_PIP"): (
+        "chempotpy_h7p_pip_parameters.f90",
+        "chempotpy_h7p_pip_basis.f90",
+    ),
     ("HClOH", "HClOH_PIPNN"): (
         "chempotpy_hcloh_pipnn_parameters.f90",
     ),
@@ -147,12 +215,14 @@ CORE_MODULE_SOURCES = {
         CORE_FORTRAN_ROOT / "chempotpy_constants.f90"
     ),
     "chempotpy_status": CORE_FORTRAN_ROOT / "chempotpy_status.f90",
+    "chempotpy_surfgen": CORE_FORTRAN_ROOT / "chempotpy_surfgen.f90",
     "chempotpy_linear_algebra": (
         CORE_FORTRAN_ROOT / "chempotpy_linear_algebra.f90"
     ),
     "chempotpy_neural_network": (
         CORE_FORTRAN_ROOT / "chempotpy_neural_network.f90"
     ),
+    "chempotpy_rkhs": CORE_FORTRAN_ROOT / "chempotpy_rkhs.f90",
     "chempotpy_units": CORE_FORTRAN_ROOT / "chempotpy_units.f90",
 }
 INTERNAL_DSYEV = (

@@ -373,6 +373,52 @@ def array_declaration(
     return "\n".join(lines)
 
 
+def chunked_array_declaration(
+    name: str,
+    dimensions: str,
+    values: Sequence[str],
+    chunk_size: int,
+) -> str:
+    """Render a large parameter array from compiler-safe private chunks."""
+
+    if chunk_size <= 0:
+        raise ValueError("array chunk size must be positive")
+    chunks = tuple(
+        values[index:index+chunk_size]
+        for index in range(0, len(values), chunk_size)
+    )
+    width = max(2, len(str(len(chunks))))
+    names = tuple(
+        "{}_chunk_{:0{}d}".format(name, index, width)
+        for index in range(1, len(chunks)+1)
+    )
+    output = []
+    for chunk_name, chunk_values in zip(names, chunks):
+        declaration = array_declaration(
+            chunk_name, str(len(chunk_values)), chunk_values
+        ).replace(
+            "real(wp), parameter ::",
+            "real(wp), parameter, private ::",
+            1,
+        )
+        declaration_lines = declaration.splitlines()
+        declaration_lines[-2] = declaration_lines[-2][:-2]+" ]"
+        declaration = "\n".join(declaration_lines[:-1])
+        output.append(declaration)
+    output.append(
+        "    real(wp), parameter :: {}({}) = reshape([ &".format(
+            name, dimensions
+        )
+    )
+    for index in range(0, len(names), 4):
+        group = ", ".join(names[index:index+4])
+        if index+4 < len(names):
+            output.append("        "+group+", &")
+        else:
+            output.append("        "+group+" ], [{}])".format(dimensions))
+    return "\n".join(output)
+
+
 def render_module(
     module_name: str,
     networks: Sequence[Network],
@@ -381,6 +427,7 @@ def render_module(
     system_declarations: Sequence[str],
     extra_arrays: Sequence[tuple[str, str, Sequence[str]]],
     additional_provenance: Sequence[tuple[str, Path]] = (),
+    large_array_chunk_size: Optional[int] = None,
 ) -> str:
     """Render one private-by-default immutable parameter module."""
 
@@ -483,9 +530,14 @@ def render_module(
             value for network in networks
             for value in network.layer_weights[layer_index]
         )
-        output.append(array_declaration(
-            name, dimensions, values, dimensions
-        ))
+        if large_array_chunk_size is not None and len(values) > large_array_chunk_size:
+            output.append(chunked_array_declaration(
+                name, dimensions, values, large_array_chunk_size
+            ))
+        else:
+            output.append(array_declaration(
+                name, dimensions, values, dimensions
+            ))
     for layer_index, (name, dimensions) in enumerate(bias_names):
         values = tuple(
             value for network in networks
@@ -499,8 +551,9 @@ def render_module(
         output.append(array_declaration(name, dimensions, values, shape))
     output.append("end module {}".format(module_name))
     source = "\n".join(output)+"\n"
-    if any("parameter :: pi " in declaration.lower()
-           for declaration in system_declarations):
+    if (large_array_chunk_size is not None or
+            any("parameter :: pi " in declaration.lower()
+                for declaration in system_declarations)):
         source = format_source_text(source)
     return source
 
@@ -832,7 +885,13 @@ def generated_documents() -> dict[Path, str]:
         additional_ensembles[
             REPOSITORY_ROOT / "chempotpy" / system / (module_name+".f90")
         ] = render_module(
-            module_name, networks, weights, biases, declarations, ()
+            module_name,
+            networks,
+            weights,
+            biases,
+            declarations,
+            (),
+            large_array_chunk_size=400 if system == "C2H2O" else None,
         )
     clh2o_root = SOURCE_ROOT / "ClH2O"
     clh2o_weights = tuple(

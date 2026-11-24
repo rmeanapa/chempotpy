@@ -9,7 +9,7 @@ module h4o2_pes_state
     integer, parameter :: correction_count  = 57
     interface
         !> @brief Evaluate getvec.
-        subroutine getvec ( ms, mr, xn, vec )
+        subroutine getvec( ms, mr, xn, vec )
             implicit none
             integer, intent(in) :: ms, mr
             real, intent(in)    :: xn(0:2,0:5)
@@ -142,7 +142,7 @@ module inv_mg42_t
 end module inv_mg42_t
 
 !> @brief Evaluate getr0.
-subroutine getr0 ( nk, xn, r0 )
+subroutine getr0( nk, xn, r0 )
     implicit none
     integer :: nk
     real    :: xn(0:2,0:nk-1), r0(0:nk-1,0:nk-1)
@@ -157,7 +157,7 @@ subroutine getr0 ( nk, xn, r0 )
 end subroutine getr0
 
 !> @brief Evaluate getrvec.
-subroutine getrvec ( m, r, vec )
+subroutine getrvec( m, r, vec )
     implicit none
     ! version for X4Y2
     integer            :: m
@@ -200,12 +200,12 @@ subroutine getrvec ( m, r, vec )
 end subroutine getrvec
 
 !> @brief Evaluate getvec.
-subroutine getvec ( ms, mr, xn, vec )
+subroutine getvec( ms, mr, xn, vec )
     use inv_mg42_t, only: mg42_ivb
     implicit none
     interface
         !> @brief Evaluate getr0.
-        subroutine getr0 ( nk, xn, r0 )
+        subroutine getr0( nk, xn, r0 )
             use chempotpy_kinds, only: wp
             implicit none
             integer :: nk
@@ -214,7 +214,7 @@ subroutine getvec ( ms, mr, xn, vec )
         end subroutine getr0
 
         !> @brief Evaluate getrvec.
-        subroutine getrvec ( m, r, vec )
+        subroutine getrvec( m, r, vec )
             use chempotpy_kinds, only: wp
             implicit none
             integer            :: m
@@ -225,7 +225,7 @@ subroutine getvec ( ms, mr, xn, vec )
         end subroutine getrvec
 
         !> @brief Evaluate getx0.
-        subroutine getx0 ( nk, r0, x0 )
+        subroutine getx0( nk, r0, x0 )
             use chempotpy_kinds, only: wp
             implicit none
             integer :: nk
@@ -234,7 +234,7 @@ subroutine getvec ( ms, mr, xn, vec )
         end subroutine getx0
 
         !> @brief Evaluate mg42_base.
-        subroutine mg42_base ( mxd, x, w )
+        subroutine mg42_base( mxd, x, w )
             use inv_mg42_t,      only: mg42_ivb, mg42_ivs, mg42_nr
             use chempotpy_kinds, only: wp
             implicit none
@@ -261,10 +261,10 @@ subroutine getvec ( ms, mr, xn, vec )
         return
     endif
     vec = 0
-    call getr0 (nk, xn, r0)
-    call getx0 (nk, r0, x0)
-    call mg42_base (deg, x0, vec(0:ms-1))
-    call getrvec (4, r0, rvec)
+    call getr0(nk, xn, r0)
+    call getx0(nk, r0, x0)
+    call mg42_base(deg, x0, vec(0:ms-1))
+    call getrvec(4, r0, rvec)
     do l = 0, mr-1
         do k = 0, 2
             vec(ms+3*l+k) = rvec(k+1)*vec(l)
@@ -273,7 +273,7 @@ subroutine getvec ( ms, mr, xn, vec )
 end subroutine getvec
 
 !> @brief Evaluate getx0.
-subroutine getx0 ( nk, r0, x0 )
+subroutine getx0( nk, r0, x0 )
     implicit none
     integer :: nk
     real    :: r0(0:nk-1,0:nk-1), x0(0:nk*(nk-1)/2-1)
@@ -288,7 +288,7 @@ subroutine getx0 ( nk, r0, x0 )
 end subroutine getx0
 
 !> @brief Evaluate inv_base.
-subroutine inv_base ( mxd, u, v, w )
+subroutine inv_base( mxd, u, v, w )
     use inv_mg42_t, only: mg42_ivb, mg42_ivp, mg42_ivs
     implicit none
     integer, intent (in) :: mxd
@@ -314,12 +314,12 @@ subroutine inv_base ( mxd, u, v, w )
 end subroutine inv_base
 
 !> @brief Evaluate mg42_base.
-subroutine mg42_base ( mxd, x, w )
+subroutine mg42_base( mxd, x, w )
     use inv_mg42_t, only: mg42_ivb, mg42_ivs, mg42_nr
     implicit none
     interface
         !> @brief Evaluate inv_base.
-        subroutine inv_base ( mxd, u, v, w )
+        subroutine inv_base( mxd, u, v, w )
             use inv_mg42_t,      only: mg42_ivb, mg42_ivp, mg42_ivs
             use chempotpy_kinds, only: wp
             implicit none
@@ -330,7 +330,7 @@ subroutine mg42_base ( mxd, x, w )
         end subroutine inv_base
 
         !> @brief Evaluate mg42_prims.
-        subroutine mg42_prims ( x, u )
+        subroutine mg42_prims( x, u )
             use inv_mg42_t,      only: mg42_nr
             use chempotpy_kinds, only: wp
             implicit none
@@ -343,7 +343,7 @@ subroutine mg42_base ( mxd, x, w )
         end subroutine mg42_prims
 
         !> @brief Evaluate mg42_secs.
-        subroutine mg42_secs ( mxd, x, v )
+        subroutine mg42_secs( mxd, x, v )
             use inv_mg42_t,      only: mg42_ivs, mg42_nr
             use chempotpy_kinds, only: wp
             implicit none
@@ -363,13 +363,13 @@ subroutine mg42_base ( mxd, x, w )
     real, intent (in)    :: x(0:mg42_nr-1)
     real, intent (out)   :: w(0:mg42_ivb(mxd)-1)
     real                 :: u(0:mg42_nr-1), v(0:mg42_ivs(mxd)-1)
-    call mg42_prims (x, u)
-    call mg42_secs (mxd, x, v)
-    call inv_base (mxd, u, v, w)
+    call mg42_prims(x, u)
+    call mg42_secs(mxd, x, v)
+    call inv_base(mxd, u, v, w)
 end subroutine mg42_base
 
 !> @brief Evaluate mg42_gens.
-subroutine mg42_gens ( ind, x, y )
+subroutine mg42_gens( ind, x, y )
     use inv_mg42_t, only: mg42_nr
     implicit none
     integer, intent (in) :: ind
@@ -400,7 +400,7 @@ subroutine mg42_gens ( ind, x, y )
 end subroutine mg42_gens
 
 !> @brief Evaluate mg42_prims.
-subroutine mg42_prims ( x, u )
+subroutine mg42_prims( x, u )
     use inv_mg42_t, only: mg42_nr
     implicit none
     integer, parameter :: m = 4, n=2, m2=m*(m-1)/2, n2=n*(n-1)/2
@@ -440,7 +440,7 @@ subroutine mg42_prims ( x, u )
 end subroutine mg42_prims
 
 !> @brief Evaluate mg42_secs.
-subroutine mg42_secs ( mxd, x, v )
+subroutine mg42_secs( mxd, x, v )
     use inv_mg42_t, only: mg42_ivs, mg42_nr
     implicit none
     !! Note: We stop at degree 7 for now.
@@ -452,21 +452,21 @@ subroutine mg42_secs ( mxd, x, v )
     real                 :: pv(0:npv-1), d(0:nk-1,0:nk-1), d2(0:nk-1,0:nk-1), &
         d3(0:nk-1, 0:nk-1), d4(0:nk-1, 0:nk-1), d5(0:nk-1, 0:nk-1), &
         d6(0:nk-1, 0:nk-1), d7(0:nk-1, 0:nk-1)
-    call mg42_setd ()
+    call mg42_setd()
     pv = 0
     do i0 = 0, m-1
         do i1 = 0, m-1
             if( i1 .ne. i0 )then
                 if( 4 .le. mxd )then
-                    call mg42_deg4_i1 ()
+                    call mg42_deg4_i1()
                 endif
                 if( 5 .le. mxd )then
-                    call mg42_deg5_i1 ()
+                    call mg42_deg5_i1()
                 endif
                 do i2 = 0, m-1
                     if( i2 .ne. i0.and.i2 .ne. i1 )then
                         if( 3 .le. mxd )then
-                            call mg42_deg3_i2 ()
+                            call mg42_deg3_i2()
                         endif
                     endif
                 enddo
@@ -476,50 +476,50 @@ subroutine mg42_secs ( mxd, x, v )
     do j0 = m, m+n-1
         do i0 = 0, m-1
             if( 3 .le. mxd )then
-                call mg42_deg3_i0j0 ()
+                call mg42_deg3_i0j0()
             endif
             if( 5 .le. mxd )then
-                call mg42_deg5_i0j0 ()
+                call mg42_deg5_i0j0()
             endif
             if( 7 .le. mxd )then
-                call mg42_deg7_i0j0 ()
+                call mg42_deg7_i0j0()
             endif
             do i1 = 0, m-1
                 if( i1 .ne. i0 )then
                     if( 2 .le. mxd )then
-                        call mg42_deg2_i1j0 ()
+                        call mg42_deg2_i1j0()
                     endif
                     if( 3 .le. mxd )then
-                        call mg42_deg3_i1j0 ()
+                        call mg42_deg3_i1j0()
                     endif
                     if( 4 .le. mxd )then
-                        call mg42_deg4_i1j0 ()
+                        call mg42_deg4_i1j0()
                     endif
                     if( 5 .le. mxd )then
-                        call mg42_deg5_i1j0 ()
+                        call mg42_deg5_i1j0()
                     endif
                     if( 6 .le. mxd )then
-                        call mg42_deg6_i1j0 ()
+                        call mg42_deg6_i1j0()
                     endif
                     if( 7 .le. mxd )then
-                        call mg42_deg7_i1j0 ()
+                        call mg42_deg7_i1j0()
                     endif
                     do i2 = 0, m-1
                         if( i2 .ne. i0.and.i2 .ne. i1 )then
                             if( 3 .le. mxd )then
-                                call mg42_deg3_i2j0 ()
+                                call mg42_deg3_i2j0()
                             endif
                             if( 4 .le. mxd )then
-                                call mg42_deg4_i2j0 ()
+                                call mg42_deg4_i2j0()
                             endif
                             if( 5 .le. mxd )then
-                                call mg42_deg5_i2j0 ()
+                                call mg42_deg5_i2j0()
                             endif
                             if( 6 .le. mxd )then
-                                call mg42_deg6_i2j0 ()
+                                call mg42_deg6_i2j0()
                             endif
                             if( 7 .le. mxd )then
-                                call mg42_deg7_i2j0 ()
+                                call mg42_deg7_i2j0()
                             endif
                         endif
                     enddo
@@ -530,41 +530,41 @@ subroutine mg42_secs ( mxd, x, v )
             if( j1 .ne. j0 )then
                 do i0 = 0, m-1
                     if( 4 .le. mxd )then
-                        call mg42_deg4_i0j1 ()
+                        call mg42_deg4_i0j1()
                     endif
                     if( 5 .le. mxd )then
-                        call mg42_deg5_i0j1 ()
+                        call mg42_deg5_i0j1()
                     endif
                     if( 6 .le. mxd )then
-                        call mg42_deg6_i0j1 ()
+                        call mg42_deg6_i0j1()
                     endif
                     do i1 = 0, m-1
                         if( i1 .ne. i0 )then
                             if( 3 .le. mxd )then
-                                call mg42_deg3_i1j1 ()
+                                call mg42_deg3_i1j1()
                             endif
                             if( 4 .le. mxd )then
-                                call mg42_deg4_i1j1 ()
+                                call mg42_deg4_i1j1()
                             endif
                             if( 5 .le. mxd )then
-                                call mg42_deg5_i1j1 ()
+                                call mg42_deg5_i1j1()
                             endif
                             if( 6 .le. mxd )then
-                                call mg42_deg6_i1j1 ()
+                                call mg42_deg6_i1j1()
                             endif
                             do i2 = 0, m-1
                                 if( i2 .ne. i0.and.i2 .ne. i1 )then
                                     if( 4 .le. mxd )then
-                                        call mg42_deg4_i2j1 ()
+                                        call mg42_deg4_i2j1()
                                     endif
                                     if( 5 .le. mxd )then
-                                        call mg42_deg5_i2j1 ()
+                                        call mg42_deg5_i2j1()
                                     endif
                                     if( 6 .le. mxd )then
-                                        call mg42_deg6_i2j1 ()
+                                        call mg42_deg6_i2j1()
                                     endif
                                     if( 7 .le. mxd )then
-                                        call mg42_deg7_i2j1 ()
+                                        call mg42_deg7_i2j1()
                                     endif
                                 endif
                             enddo
@@ -871,7 +871,7 @@ subroutine mg42_secs ( mxd, x, v )
     contains
 
     !> @brief Evaluate mg42_setd.
-    subroutine mg42_setd ( )
+    subroutine mg42_setd( )
         integer            :: i, j, k, l0, l1
         integer, parameter :: lb(0:2) = (/ 0, m, m+n /)
         k = 0
@@ -913,22 +913,22 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_setd
 
     !> @brief Evaluate mg42_deg2_i1j0.
-    subroutine mg42_deg2_i1j0 ( )
+    subroutine mg42_deg2_i1j0( )
         pv(0) = pv(0)+d(i0,i1)*d(i0,j0)/m2n
     end subroutine mg42_deg2_i1j0
 
     !> @brief Evaluate mg42_deg3_i2.
-    subroutine mg42_deg3_i2 ( )
+    subroutine mg42_deg3_i2( )
         pv(1) = pv(1)+d2(i0,i1)*d(i0,i2)/m3
     end subroutine mg42_deg3_i2
 
     !> @brief Evaluate mg42_deg3_i0j0.
-    subroutine mg42_deg3_i0j0 ( )
+    subroutine mg42_deg3_i0j0( )
         pv(5) = pv(5)+d3(i0, j0)/mn
     end subroutine mg42_deg3_i0j0
 
     !> @brief Evaluate mg42_deg3_i1j0.
-    subroutine mg42_deg3_i1j0 ( )
+    subroutine mg42_deg3_i1j0( )
         pv(2) = pv(2)+d2(i0,i1)*d(i0,j0)/m2n
         pv(4) = pv(4)+d(i0,i1)*d2(i0,j0)/m2n
         pv(6) = pv(6)+d(i0,i1)*d(i0,j0)*d(i1,j0)/m2n
@@ -936,24 +936,24 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg3_i1j0
 
     !> @brief Evaluate mg42_deg3_i1j1.
-    subroutine mg42_deg3_i1j1 ( )
+    subroutine mg42_deg3_i1j1( )
         pv(9)  = pv(9)+d(i0,i1)*d(i0,j0)*d(i0,j1)/m2n2
         pv(10) = pv(10)+d(i0,i1)*d(i1,j0)*d(i0,j1)/m2n2
     end subroutine mg42_deg3_i1j1
 
     !> @brief Evaluate mg42_deg3_i2j0.
-    subroutine mg42_deg3_i2j0 ( )
+    subroutine mg42_deg3_i2j0( )
         pv(3) = pv(3)+d(i0,i1)*d(i0,i2)*d(i0,j0)/m3n
         pv(7) = pv(7)+d(i0,i2)*d(i0,j0)*d(i1,j0)/m3n
     end subroutine mg42_deg3_i2j0
 
     !> @brief Evaluate mg42_deg4_i1.
-    subroutine mg42_deg4_i1 ( )
+    subroutine mg42_deg4_i1( )
         pv(11) = pv(11)+d4(i0, i1)/m2
     end subroutine mg42_deg4_i1
 
     !> @brief Evaluate mg42_deg4_i1j0.
-    subroutine mg42_deg4_i1j0 ( )
+    subroutine mg42_deg4_i1j0( )
         pv(12) = pv(12)+d3(i0, i1)*d(i0,j0)/m2n
         pv(15) = pv(15)+d2(i0,i1)*d2(i0,j0)/m2n
         pv(17) = pv(17)+d(i0,i1)*d3(i0, j0)/m2n
@@ -964,7 +964,7 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg4_i1j0
 
     !> @brief Evaluate mg42_deg4_i2j0.
-    subroutine mg42_deg4_i2j0 ( )
+    subroutine mg42_deg4_i2j0( )
         pv(13) = pv(13)+d2(i0,i1)*d(i0,i2)*d(i0,j0)/m3n
         pv(14) = pv(14)+d2(i0,i1)*d(i1,i2)*d(i0,j0)/m3n
         pv(16) = pv(16)+d(i0,i1)*d(i0,i2)*d2(i0,j0)/m3n
@@ -976,12 +976,12 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg4_i2j0
 
     !> @brief Evaluate mg42_deg4_i0j1.
-    subroutine mg42_deg4_i0j1 ( )
+    subroutine mg42_deg4_i0j1( )
         pv(30) = pv(30)+d3(i0, j0)*d(i0,j1)/mn2
     end subroutine mg42_deg4_i0j1
 
     !> @brief Evaluate mg42_deg4_i1j1.
-    subroutine mg42_deg4_i1j1 ( )
+    subroutine mg42_deg4_i1j1( )
         pv(27) = pv(27)+d2(i0,i1)*d(i0,j0)*d(i0,j1)/m2n2
         pv(29) = pv(29)+d(i0,i1)*d2(i0,j0)*d(i0,j1)/m2n2
         pv(31) = pv(31)+d2(i0,i1)*d(i1,j0)*d(i0,j1)/m2n2
@@ -990,22 +990,22 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg4_i1j1
 
     !> @brief Evaluate mg42_deg4_i2j1.
-    subroutine mg42_deg4_i2j1 ( )
+    subroutine mg42_deg4_i2j1( )
         pv(28) = pv(28)+d(i0,i1)*d(i0,i2)*d(i0,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg4_i2j1
 
     !> @brief Evaluate mg42_deg5_i1.
-    subroutine mg42_deg5_i1 ( )
+    subroutine mg42_deg5_i1( )
         pv(34) = pv(34)+d5(i0, i1)/m2
     end subroutine mg42_deg5_i1
 
     !> @brief Evaluate mg42_deg5_i0j0.
-    subroutine mg42_deg5_i0j0 ( )
+    subroutine mg42_deg5_i0j0( )
         pv(43) = pv(43)+d5(i0, j0)/mn
     end subroutine mg42_deg5_i0j0
 
     !> @brief Evaluate mg42_deg5_i1j0.
-    subroutine mg42_deg5_i1j0 ( )
+    subroutine mg42_deg5_i1j0( )
         pv(35) = pv(35)+d4(i0, i1)*d(i0,j0)/m2n
         pv(37) = pv(37)+d3(i0, i1)*d2(i0,j0)/m2n
         pv(40) = pv(40)+d2(i0,i1)*d3(i0, j0)/m2n
@@ -1018,7 +1018,7 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg5_i1j0
 
     !> @brief Evaluate mg42_deg5_i2j0.
-    subroutine mg42_deg5_i2j0 ( )
+    subroutine mg42_deg5_i2j0( )
         pv(36) = pv(36)+d3(i0, i1)*d(i0,i2)*d(i0,j0)/m3n
         pv(38) = pv(38)+d2(i0,i1)*d(i0,i2)*d2(i0,j0)/m3n
         pv(39) = pv(39)+d2(i0,i1)*d(i1,i2)*d2(i0,j0)/m3n
@@ -1036,12 +1036,12 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg5_i2j0
 
     !> @brief Evaluate mg42_deg5_i0j1.
-    subroutine mg42_deg5_i0j1 ( )
+    subroutine mg42_deg5_i0j1( )
         pv(63) = pv(63)+d4(i0, j0)*d(i0,j1)/mn2
     end subroutine mg42_deg5_i0j1
 
     !> @brief Evaluate mg42_deg5_i1j1.
-    subroutine mg42_deg5_i1j1 ( )
+    subroutine mg42_deg5_i1j1( )
         pv(59) = pv(59)+d3(i0, i1)*d(i0,j0)*d(i0,j1)/m2n2
         pv(61) = pv(61)+d2(i0,i1)*d2(i0,j0)*d(i0,j1)/m2n2
         pv(62) = pv(62)+d(i0,i1)*d3(i0, j0)*d(i0,j1)/m2n2
@@ -1053,14 +1053,14 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg5_i1j1
 
     !> @brief Evaluate mg42_deg5_i2j1.
-    subroutine mg42_deg5_i2j1 ( )
+    subroutine mg42_deg5_i2j1( )
         pv(60) = pv(60)+d2(i0,i1)*d(i0,i2)*d(i0,j0)*d(i0,j1)/m3n2
         pv(65) = pv(65)+d(i0,i1)*d(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
         pv(67) = pv(67)+d(i0,i2)*d2(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg5_i2j1
 
     !> @brief Evaluate mg42_deg6_i1j0.
-    subroutine mg42_deg6_i1j0 ( )
+    subroutine mg42_deg6_i1j0( )
         pv(71) = pv(71)+d4(i0, i1)*d2(i0,j0)/m2n
         pv(73) = pv(73)+d3(i0, i1)*d3(i0, j0)/m2n
         pv(75) = pv(75)+d2(i0,i1)*d4(i0, j0)/m2n
@@ -1074,7 +1074,7 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg6_i1j0
 
     !> @brief Evaluate mg42_deg6_i2j0.
-    subroutine mg42_deg6_i2j0 ( )
+    subroutine mg42_deg6_i2j0( )
         pv(72) = pv(72)+d3(i0, i1)*d(i0,i2)*d2(i0,j0)/m3n
         pv(74) = pv(74)+d2(i0,i1)*d(i0,i2)*d3(i0, j0)/m3n
         pv(76) = pv(76)+d(i0,i1)*d(i0,i2)*d4(i0, j0)/m3n
@@ -1092,12 +1092,12 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg6_i2j0
 
     !> @brief Evaluate mg42_deg6_i0j1.
-    subroutine mg42_deg6_i0j1 ( )
+    subroutine mg42_deg6_i0j1( )
         pv(96) = pv(96)+d5(i0, j0)*d(i0,j1)/mn2
     end subroutine mg42_deg6_i0j1
 
     !> @brief Evaluate mg42_deg6_i1j1.
-    subroutine mg42_deg6_i1j1 ( )
+    subroutine mg42_deg6_i1j1( )
         pv(95)  = pv(95)+d2(i0,i1)*d3(i0, j0)*d(i0,j1)/m2n2
         pv(98)  = pv(98)+d2(i0,i1)*d2(i0,j0)*d(i1,j0)*d(i0,j1)/m2n2
         pv(100) = pv(100)+d(i0,i1)*d3(i0, j0)*d(i1,j0)*d(i0,j1)/m2n2
@@ -1105,29 +1105,29 @@ subroutine mg42_secs ( mxd, x, v )
     end subroutine mg42_deg6_i1j1
 
     !> @brief Evaluate mg42_deg6_i2j1.
-    subroutine mg42_deg6_i2j1 ( )
+    subroutine mg42_deg6_i2j1( )
         pv(97) = pv(97)+d2(i0,i1)*d(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
         pv(99) = pv(99)+d(i0,i1)*d(i0,i2)*d2(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg6_i2j1
 
     !> @brief Evaluate mg42_deg7_i0j0.
-    subroutine mg42_deg7_i0j0 ( )
+    subroutine mg42_deg7_i0j0( )
         pv(103) = pv(103)+d7(i0, j0)/mn
     end subroutine mg42_deg7_i0j0
 
     !> @brief Evaluate mg42_deg7_i1j0.
-    subroutine mg42_deg7_i1j0 ( )
+    subroutine mg42_deg7_i1j0( )
         pv(102) = pv(102)+d(i0,i1)*d6(i0, j0)/m2n
         pv(105) = pv(105)+d2(i0,i1)*d4(i0, j0)*d(i1,j0)/m2n
     end subroutine mg42_deg7_i1j0
 
     !> @brief Evaluate mg42_deg7_i2j0.
-    subroutine mg42_deg7_i2j0 ( )
+    subroutine mg42_deg7_i2j0( )
         pv(104) = pv(104)+d2(i0,i1)*d2(i0,i2)*d2(i0,j0)*d(i1,j0)/m3n
     end subroutine mg42_deg7_i2j0
 
     !> @brief Evaluate mg42_deg7_i2j1.
-    subroutine mg42_deg7_i2j1 ( )
+    subroutine mg42_deg7_i2j1( )
         pv(106) = pv(106)+d2(i0,i1)*d2(i0,i2)*d(i0,j0)*d(i1,j0)*d(i0,j1)/m3n2
     end subroutine mg42_deg7_i2j1
 end subroutine mg42_secs

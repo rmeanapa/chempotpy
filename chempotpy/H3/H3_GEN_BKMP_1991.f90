@@ -77,7 +77,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
         if( nder .gt. 1 )then
             return
         endif
-        call h3tot (rval, energy, dedr, nder, idbug)
+        call h3tot(rval, energy, dedr, nder, idbug)
         !    Put the zero of energy at the BC asymptotic valley, i.e., at
         !    H infinitely far from the H2 diatomic
         energy = energy + easybc
@@ -138,8 +138,8 @@ module chempotpy_h3_gen_bkmp_1991_pes
         call compac(r, icompc, t, dt)
         !    oct.3/90 compact routines only called for compact geometries:
         if( icompc .ge. 1 )then
-            call csym  (r, cal, dcal)
-            call casym (r, cas, dcas, 1, t, dt)
+            call csym(r, cal, dcal)
+            call casym(r, cas, dcas, 1, t, dt)
         endif
         call vbcb(r, icompc, t, dt, ipr, &
             & vbnda, vbndb, dvbnda, dvbndb, &
@@ -457,7 +457,7 @@ module chempotpy_h3_gen_bkmp_1991_pes
     end subroutine compac
 
     !> @brief Evaluate casym for the H3_GEN_BKMP_1991 potential.
-    subroutine casym ( r, cas, dcas, id, t, dt )
+    subroutine casym( r, cas, dcas, id, t, dt )
         !  version of sept14/90
         !  the compact asymmetric correction term and derivatives
         use chempotpy_kinds, only: wp

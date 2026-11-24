@@ -171,7 +171,7 @@ module chempotpy_h3_gen_bh_2009_potbodcdh2_legacy_state_b8d1df42
             end subroutine indexa2
 
             !> @brief Evaluate leps.
-            subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
+            subroutine leps( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
                 use chempotpy_kinds, only: wp
                 implicit none
                 integer  :: i, j
@@ -1032,7 +1032,7 @@ subroutine indexa2( mbig, mtop, iind, jind, kind, ipar, maxi, maxi2 )
 end
 
 !> @brief Evaluate leps.
-subroutine leps ( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
+subroutine leps( r, v1, v2, xma, xmb, xmc, gtot, dgtot )
     use chempotpy_units, only: hartree_to_kilocalorie_per_mole
     !   r1 is the distance between A and B
     !   r2 is the distance between B and C

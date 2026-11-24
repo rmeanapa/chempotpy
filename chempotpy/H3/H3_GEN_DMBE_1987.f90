@@ -464,20 +464,20 @@ module chempotpy_h3_gen_dmbe_1987_pes
             call cartou
             call carttor
             ! Set up symmetry coordinates and their derivatives
-            call h3coor (pt1cm_r(1), pt1cm_r(2), pt1cm_r(3))
+            call h3coor(pt1cm_r(1), pt1cm_r(2), pt1cm_r(3))
             ! Set up 2-body correlation energies, dispersion damping terms, and
             !    their derivatives
             call h3cor2
             ! Get Leps potentials and derivatives
-            call h3leps (vleps, vleps2, dlep, dlep2)
+            call h3leps(vleps, vleps2, dlep, dlep2)
             ! Get VA term and its derivatives
-            call h3va (pt1cm_r(1), pt1cm_r(2), pt1cm_r(3), va, dva)
+            call h3va(pt1cm_r(1), pt1cm_r(2), pt1cm_r(3), va, dva)
             ! Get VII term and its derivatives
-            call h3vii (pt1cm_r(1), pt1cm_r(2), pt1cm_r(3), vii, dv2)
+            call h3vii(pt1cm_r(1), pt1cm_r(2), pt1cm_r(3), vii, dv2)
             ! Get VIII term and its derivatives
-            call h3viii (viii, dv3)
+            call h3viii(viii, dv3)
             ! Get 3-body correlation and its derivative
-            call h3cor3 (ce3, dc3)
+            call h3cor3(ce3, dc3)
             ! 2-body correlation term
             ce2 = h3crcm_corrs(1) + h3crcm_corrs(2) + h3crcm_corrs(3)
             ! ground state
@@ -522,7 +522,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
         end subroutine pot
 
         !> @brief Evaluate H3COOR for the H3_GEN_DMBE_1987 potential.
-        subroutine h3coor ( r1, r2, r3 )
+        subroutine h3coor( r1, r2, r3 )
             !   Calculates D3H symmetry coordinates and derivatives
             use chempotpy_kinds, only: wp
             implicit none
@@ -682,7 +682,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
         end subroutine h3cor2
 
         !> @brief Evaluate H3COR3 for the H3_GEN_DMBE_1987 potential.
-        subroutine h3cor3 ( ce3, dc3 )
+        subroutine h3cor3( ce3, dc3 )
             !     Calculates 3-body correlation energy and its 1st derivatives
             use chempotpy_kinds, only: wp
             implicit none
@@ -739,7 +739,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
         end subroutine h3cor3
 
         !> @brief Evaluate H3LEPS for the H3_GEN_DMBE_1987 potential.
-        subroutine h3leps ( vleps, vleps2, dlep, dlep2 )
+        subroutine h3leps( vleps, vleps2, dlep, dlep2 )
             !     Calculates 3-body extended-Hartree-Fock energy defined by a
             !     LEPS-type function.
             !   VLEPS  IS LEPS LOWER SURFACE.
@@ -852,7 +852,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
         end subroutine h3leps
 
         !> @brief Evaluate H3VA for the H3_GEN_DMBE_1987 potential.
-        subroutine h3va ( r1, r2, r3, va, dva )
+        subroutine h3va( r1, r2, r3, va, dva )
             !     Calculates Va correction energy and its 1st derivative.
             use chempotpy_kinds, only: wp
             implicit none
@@ -897,7 +897,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
         end subroutine h3va
 
         !> @brief Evaluate H3VII for the H3_GEN_DMBE_1987 potential.
-        subroutine h3vii ( r1, r2, r3, e, dv2 )
+        subroutine h3vii( r1, r2, r3, e, dv2 )
             !     Calculates VII correction energy and its 1st derivative.
             use chempotpy_kinds, only: wp
             implicit none
@@ -990,7 +990,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
         end subroutine h3vii
 
         !> @brief Evaluate H3VIII for the H3_GEN_DMBE_1987 potential.
-        subroutine h3viii ( viii, dv3 )
+        subroutine h3viii( viii, dv3 )
             !     Calculates VIII correction energy and it 1st derivatives
             use chempotpy_kinds, only: wp
             implicit none
@@ -1081,7 +1081,7 @@ module chempotpy_h3_gen_dmbe_1987_pes
         end subroutine capf
 
         !> @brief Evaluate H2COR2 for the H3_GEN_DMBE_1987 potential.
-        subroutine h2cor2 ( rr )
+        subroutine h2cor2( rr )
             !     CALCULATES 1-4 DERIVATIVES OF 2-BODY CORRELATION TERMS FOR
             !     BOTH SINGLET AND TRIPLET STATES AND RETURNS THEIR DIFFERENCE
             use chempotpy_kinds, only: wp

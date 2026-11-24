@@ -102,8 +102,8 @@ module chempotpy_h3_gen_bkmp3_1996_pes
         call vascal95(r, vas, dvas)
         call compac95(r, icompc, t, dt)
         if( icompc .ge. 1 )then
-            call csym95  (r, cal, dcal)
-            call casym95 (r, cas, dcas, 1, t, dt)
+            call csym95(r, cal, dcal)
+            call casym95(r, cas, dcas, 1, t, dt)
         endif
         call vbcb95(r, icompc, t, dt, ipr, &
             &          vbnda, vbndb, dvbnda, dvbndb, &

@@ -1351,9 +1351,9 @@ module chempotpy_ch5p_pip_pes
         ! functions at the configuration described by d0, and finally f0 is the
         ! fitted potential.  The basis functions are polynomials of the entries
         ! in d0, obeying all the expected symmetries.
-        call getd0 (xn, dc0, dc1, dw0, dw1, d0, r0)
-        call getvec (m, d0, vec(0:m-1))
-        call getrvec (3, r0, rvec)
+        call getd0(xn, dc0, dc1, dw0, dw1, d0, r0)
+        call getvec(m, d0, vec(0:m-1))
+        call getrvec(3, r0, rvec)
         do l = 0, mr-1
             do k = 0, 1
                 vec(m+2*l+k) = rvec(k+1)*vec(l)
@@ -1368,7 +1368,7 @@ module chempotpy_ch5p_pip_pes
     end subroutine getfit
 
     !> @brief Evaluate getd0 for the CH5p_PIP potential.
-    subroutine getd0 ( xn, dc0, dc1, dw0, dw1, d0, r0 )
+    subroutine getd0( xn, dc0, dc1, dw0, dw1, d0, r0 )
         use chempotpy_kinds, only: wp
         implicit none
         real(wp)            :: xn(0:2,0:5)
@@ -1401,7 +1401,7 @@ module chempotpy_ch5p_pip_pes
     end subroutine getd0
 
     !> @brief Evaluate getvec for the CH5p_PIP potential.
-    subroutine getvec ( m, d, vec )
+    subroutine getvec( m, d, vec )
         use chempotpy_kinds, only: wp
         implicit none
         integer  :: m
@@ -1816,7 +1816,7 @@ module chempotpy_ch5p_pip_pes
     end subroutine getvec
 
     !> @brief Evaluate getrvec for the CH5p_PIP potential.
-    subroutine getrvec ( m, r, vec )
+    subroutine getrvec( m, r, vec )
         use chempotpy_kinds, only: wp
         implicit none
         integer  :: m
