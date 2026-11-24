@@ -183,7 +183,7 @@ end program test_model_utilities
 program test_fortran_core
     use chempotpy_contract, only: pes_metadata_t, pes_request_t, pes_result_t, &
         representation_adiabatic
-    use chempotpy_finite_difference, only: central_finite_difference
+    use chempotpy_finite_difference, only: central_finite_difference, central_finite_difference_gradient
     use chempotpy_geometry, only: all_pair_distance_jacobian, all_pair_distances, &
         all_pair_distances_and_jacobian, cartesian_distance, compute_cross_product_3d, compute_dot_product_3d, &
         cosine_between_vectors, cross_product_3d, dot_product_3d, fill_distance_matrix, &
@@ -518,6 +518,14 @@ program test_fortran_core
     enddo
     if( maxval(abs(finite_hessian(2,:,:))) > 1.0e-7_wp ) &
         error stop 'finite-difference linear Hessian failed'
+    finite_values = 0.0_wp; finite_gradient = 0.0_wp
+    call central_finite_difference_gradient(test_quadratic_evaluator, coordinates, 1.0e-3_wp, finite_values, &
+        finite_gradient, evaluation_status)
+    if( evaluation_status%failed() ) error stop 'gradient-only finite-difference evaluation failed'
+    if( any(abs(finite_gradient(1,:)-2.0_wp*flat_coordinates) > 1.0e-9_wp) ) &
+        error stop 'gradient-only finite-difference quadratic result failed'
+    if( any(abs(finite_gradient(2,:)-1.0_wp) > 1.0e-10_wp) ) &
+        error stop 'gradient-only finite-difference linear result failed'
     contains
     subroutine test_triatomic_kernel( distances_bohr, derivative_order, energy_hartree, gradient_hartree_per_bohr )
         real(wp), intent(in)  :: distances_bohr(3)

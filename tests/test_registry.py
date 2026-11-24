@@ -60,6 +60,8 @@ class RegistryTests( unittest.TestCase ):
                 "chempotpy_ch2o2_pipnn_parameters.f90",
                 "chempotpy_ch2o_pipnn_parameters.f90",
                 "chempotpy_ch4_t8_parameters.f90",
+                "chempotpy_ch4ni_ni111_parameters.f90",
+                "chempotpy_ch4ni_runtime.f90",
                 "chempotpy_ch4ocl_pipnn_parameters.f90",
                 "chempotpy_coco_pipnn_parameters.f90",
                 "chempotpy_ch4of_pipnn_parameters.f90",

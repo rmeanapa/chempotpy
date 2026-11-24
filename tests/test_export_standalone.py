@@ -124,6 +124,23 @@ class ExportStandaloneTests(unittest.TestCase):
                 combined.index("module {}".format(module_name)),
             )
 
+    def test_ch4ni_export_orders_fixed_environment_and_runtime(self) -> None:
+        combined = combined_source(select_surface(
+            "CH4Ni/CH4Ni_EAM6_J1_1996"
+        ))
+        self.assertLess(
+            combined.index("module chempotpy_ch4ni_ni111_parameters"),
+            combined.index("module chempotpy_ch4ni_runtime"),
+        )
+        self.assertLess(
+            combined.index("module chempotpy_ch4ni_runtime"),
+            combined.index("module chempotpy_ch4ni_eam6_j1_1996_pes"),
+        )
+        self.assertLess(
+            combined.index("module chempotpy_finite_difference"),
+            combined.index("module chempotpy_ch4ni_eam6_j1_1996_pes"),
+        )
+
     def test_example_reports_numerical_gradient_and_hessian(self) -> None:
         source = select_surface("H3_GEN_A2_2002")
         driver = example_driver(source, geometry_count=1, difference_step=1.0e-3)

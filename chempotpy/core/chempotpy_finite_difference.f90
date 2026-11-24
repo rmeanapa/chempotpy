@@ -6,6 +6,7 @@ module chempotpy_finite_difference
     implicit none
     private
     public :: central_finite_difference
+    public :: central_finite_difference_gradient
     public :: pes_value_evaluator
     abstract interface
         !> @brief Evaluate one Cartesian geometry and return a flat vector of PES values.
@@ -18,6 +19,47 @@ module chempotpy_finite_difference
     end interface
 
     contains
+
+    !> @brief Evaluate values and Cartesian gradients using centered finite differences.
+    subroutine central_finite_difference_gradient( evaluator, coordinates, step, values, gradient, status )
+        procedure(pes_value_evaluator)              :: evaluator
+        real(wp), intent(in)  :: coordinates(:,:), step
+        real(wp), intent(out) :: values(:), gradient(:,:)
+        type(chempotpy_status_t), intent(inout)     :: status
+        real(wp) :: backward(size(values)), forward(size(values))
+        real(wp) :: displaced(size(coordinates, 1),size(coordinates, 2))
+        integer  :: atom, coordinate, coordinate_count, direction
+        values = 0.0_wp; gradient = 0.0_wp
+        if( status%failed() ) return
+        coordinate_count = 3*size(coordinates, 1)
+        if( size(coordinates, 2) /= 3 )then
+            call status%set(status_invalid_input, 'finite-difference coordinates must have shape (natoms,3)')
+        elseif( step <= 0.0_wp .or. .not. ieee_is_finite(step) )then
+            call status%set(status_invalid_input, 'finite-difference step must be positive and finite')
+        elseif( size(values) < 1 )then
+            call status%set(status_invalid_input, 'finite-difference values must not be empty')
+        elseif( any(shape(gradient) /= [size(values), coordinate_count]) )then
+            call status%set(status_invalid_input, 'finite-difference gradient has the wrong shape')
+        endif
+        if( status%failed() ) return
+        call evaluator(coordinates, values, status)
+        call require_finite_values(values, status)
+        if( status%failed() ) return
+        do coordinate=1, coordinate_count
+            atom                      = (coordinate-1)/3+1
+            direction                 = mod(coordinate-1, 3)+1
+            displaced                 = coordinates
+            displaced(atom,direction) = displaced(atom,direction)+step
+            call evaluator(displaced, forward, status)
+            call require_finite_values(forward, status)
+            if( status%failed() ) return
+            displaced(atom,direction) = displaced(atom,direction)-2.0_wp*step
+            call evaluator(displaced, backward, status)
+            call require_finite_values(backward, status)
+            if( status%failed() ) return
+            gradient(:,coordinate) = (forward-backward)/(2.0_wp*step)
+        enddo
+    end subroutine central_finite_difference_gradient
 
     !> @brief Evaluate values, Cartesian gradients, and Hessians using centered finite differences.
     subroutine central_finite_difference( evaluator, coordinates, step, values, gradient, hessian, status )

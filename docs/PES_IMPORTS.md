@@ -26,6 +26,7 @@ extension check, and a standalone-export check.
 | HNi_EAM5_1995 Ni(111) adapter | Implemented and independently compared | None; canonical fixed-slab catalog and standalone gates pass |
 | HNi_EAM6_1996 Ni(111) adapter | Implemented and independently compared | None; canonical fixed-slab catalog and standalone gates pass |
 | HNi_EAM7_1998 Ni(111) adapter | Implemented with documented release repair | None; canonical fixed-slab catalog and standalone gates pass |
+| CH4Ni_EAM6_J1_1996 Ni(111) adapter | Implemented and independently compared | None; all six released checkpoints, catalog, extension, and standalone gates pass |
 | H3m_AS_2004 | Implemented with documented release repairs | None; catalog and standalone gates pass |
 | HeH2p_DIM_1976 | Implemented and independently compared | None; catalog and standalone gates pass |
 | HeH2p_MTJS_1987 | Implemented and independently compared | None; catalog and standalone gates pass |
@@ -43,8 +44,49 @@ variable-atom/environment contract and are not disguised as fixed-size
 molecular PESs. The first Ni import is therefore an explicit adapter for the
 released canonical 698-atom fixed Ni(111) configuration with one active H
 coordinate. EAM5, EAM6, and EAM7 now share that explicit adapter contract.
-The methane/Ni surface, movable-Ni configurations, and alternate crystal
-faces remain in the variable-environment batch.
+The methane/Ni release uses a different explicit fixed-environment contract:
+four active H atoms and one active C atom, in that order, above the released
+397-atom Ni(111) secondary zone. Its implementation is tracked separately as
+`CH4Ni_EAM6_J1_1996`. Movable-Ni configurations and alternate crystal faces
+remain in the variable-environment batch.
+
+## CH4Ni_EAM6_J1_1996 import contract
+
+The public geometry contains `H,H,H,H,C` in angstrom. The 397 released Ni(111)
+coordinates, all fit coefficients, and the density-to-pseudodistance maps are
+immutable source parameters. Evaluation performs no setup call or runtime file
+I/O. The energy is the sum of four generalized two-state DIM roots, the fixed
+slab's density-dependent nickel embedding contribution, and the modified J1
+methane bending term. First derivatives are evaluated from the same stateless
+energy kernel using the shared centered finite-difference utility until the
+released analytic chain rule has been independently reconstructed and audited.
+
+The release has one numerically significant initialization defect. Carbon
+declares ten orbital coefficients and its density loop visits all ten, but the
+setup loop initializes only `NTS+NTP=4` radial prefactors. The six remaining
+COMMON-block values happen to be zero in the distributed executable. The
+modern evaluator makes that released behavior deterministic by retaining the
+four initialized carbon radial terms explicitly; enabling the other published
+coefficients would define a different surface and fails the released energy
+checkpoints.
+
+Independent component references were captured from a rebuilt authoritative
+evaluator at all six distributed geometries. In hartree, the EAM/DIM and
+modified-J1 contributions are respectively: `(-1.7594223550e-5,
+1.7646716880e-5)`, `(1.9421758751e-2, 6.5940727505e-3)`,
+`(5.1886733836e-2, 6.2008948652e-3)`, `(-1.1013728212e-2,
+1.1774060522e-2)`, `(8.6729064300e-3, 1.3627036775e-2)`, and
+`(3.2840793670e-3, 6.6481739535e-3)`. With the separated-slab zero aligned to
+the release, the modern totals differ by at most `0.0017` kcal/mol over all six
+geometries. This envelope comes from using the shared full-precision `PI` and
+NIST CODATA 2022 boundary conversions instead of the rounded release constants.
+At the asymmetric `geom3` checkpoint, the centered numerical gradient agrees
+with 14 of the 15 printed release components within `1.3e-6` hartree/bohr; the
+carbon z component differs by `1.3e-5` hartree/bohr from the release's analytic
+chain rule. The numerical derivative is retained because it differentiates the
+audited energy kernel directly. The six component and total-energy comparisons,
+nine catalog geometries, strict compilation, Python extension, and standalone
+export are the acceptance gates for the import.
 
 The released Bowman/Braams malonaldehyde archive is different: its two source files are only
 a command-line shell around a precompiled `libpes.a`. The module that owns

@@ -25,6 +25,13 @@ from chempotpy.core.registry import SurfaceSource, discover_surface_sources
 
 
 SUPPORT_SOURCES = {
+    ("CH4Ni", "CH4Ni_EAM6_J1_1996"): (
+        "chempotpy_ch4ni_ni111_parameters.f90",
+        "chempotpy_ch4ni_runtime.f90",
+    ),
+    ("CH4Ni", "chempotpy_ch4ni_runtime"): (
+        "chempotpy_ch4ni_ni111_parameters.f90",
+    ),
     ("HNi", "HNi_EAM5_1995"): (
         "chempotpy_hni_ni111_parameters.f90",
         "chempotpy_hni_eam5_parameters.f90",

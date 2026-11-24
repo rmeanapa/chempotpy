@@ -66,7 +66,7 @@ the following changes:
 * Added catalog discovery and isolated f2py builds so each PES extension
   receives only the bundled core modules it actually imports.
 * Added strict compilation, modernization, formatting, packaging, binary
-  linkage, extension-import, and numerical-regression gates for all 383
+  linkage, extension-import, and numerical-regression gates for all 384
   callable surfaces, including nine stored reference geometries per surface.
 * Corrected the CH3NH2 APRP coupling evaluation by initializing terms that are
   absent from the coupling branch and conditionally assigned tent derivatives.
@@ -228,7 +228,7 @@ conventions are collected in `docs/FORTRAN_STYLE.md`.
 
 Run `make check-modernization` for the complete repeatable modernization gate.
 It audits the catalog, rejects forbidden legacy Fortran constructs, runs the
-Python and core tests, strictly compiles all 383 callable PES interfaces, checks
+Python and core tests, strictly compiles all 384 callable PES interfaces, checks
 formatting, and evaluates every surface at nine deterministic geometries in the
 same process. `make test-surfaces` runs only the slower catalog-wide numerical
 and architecture regression portion.
@@ -359,22 +359,22 @@ From the repository root, run the complete Python extension gate with:
 
     make check-conda BUILD_FLAGS="--jobs 4"
 
-This command builds all 383 f2py extensions, checks their native-library
+This command builds all 384 f2py extensions, checks their native-library
 linkage, imports every extension in an isolated Python process, and performs
-3,447 numerical evaluations. A successful run ends with counters equivalent to:
+3,456 numerical evaluations. A successful run ends with counters equivalent to:
 
-    pes_extensions_checked: 383
+    pes_extensions_checked: 384
     missing_or_ambiguous_extensions: 0
     external_mkl_lapack_blas_links: 0
-    python_extensions_checked: 383
-    python_extension_evaluations: 3447
+    python_extensions_checked: 384
+    python_extension_evaluations: 3456
     python_extension_failures: 0
 
 Run the catalog-wide compiler warning gate with:
 
     make check-fortran-warnings
 
-This compiles all 436 PES and support units with `-Wall`, `-Wextra`, and
+This compiles all 439 PES and support units with `-Wall`, `-Wextra`, and
 `-Werror`. Unused dummy arguments are exempt because the stable PES contracts
 intentionally include inputs that some implementations do not consume. Exact
 real comparisons are also exempt because released lookup and branch logic uses
