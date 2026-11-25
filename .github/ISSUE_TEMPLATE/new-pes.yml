@@ -1,0 +1,104 @@
+name: Submit a new potential energy surface
+description: Propose a PES without needing Git, Python, or modern Fortran
+title: "[New PES]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for contributing a potential energy surface to ChemPotPy.
+        Legacy Fortran and supporting data files are welcome. You do not need
+        to prepare a pull request or modernize the source yourself.
+
+  - type: dropdown
+    id: submission_kind
+    attributes:
+      label: What material is available?
+      options:
+        - Source code and all required parameters
+        - Published equations and parameters, but no source code
+        - A public repository or scientific archive
+        - An incomplete implementation that needs help
+    validations:
+      required: true
+
+  - type: input
+    id: system
+    attributes:
+      label: Chemical system
+      description: Give the composition and charge, for example H3, H5O2+, or CH4 + F.
+      placeholder: H3
+    validations:
+      required: true
+
+  - type: input
+    id: surface_name
+    attributes:
+      label: Surface name
+      description: Give the published or commonly used name, if one exists.
+      placeholder: H3 example surface
+    validations:
+      required: true
+
+  - type: textarea
+    id: scientific_reference
+    attributes:
+      label: Scientific reference and provenance
+      description: Provide the paper citation or DOI and explain where the implementation came from.
+      placeholder: |
+        Paper/DOI:
+        Source repository, archive, or author:
+        Version or release date:
+    validations:
+      required: true
+
+  - type: textarea
+    id: source_files
+    attributes:
+      label: Source code and parameter files
+      description: Drag files or a small archive here, or provide stable download links. Include every required coefficient, weight, bias, and data file. Do not attach restricted material.
+      placeholder: Attach files here or list their URLs and describe anything that is missing.
+    validations:
+      required: true
+
+  - type: textarea
+    id: interface
+    attributes:
+      label: Scientific interface
+      description: Describe the atom order, coordinate and energy units, electronic states, outputs, and validity range.
+      placeholder: |
+        Atom order:
+        Input units:
+        Output units:
+        Number of electronic states:
+        Available energy/gradient/coupling/DPEM outputs:
+        Intended geometry or energy range:
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference_results
+    attributes:
+      label: Independent reference results
+      description: Provide at least two geometries and expected results from the paper or original program. If unavailable, explain what can be used for verification.
+      placeholder: Paste geometries, energies, gradients, couplings, matrices, and their units, or attach an output file.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: redistribution
+    attributes:
+      label: Redistribution status
+      description: Select the best description. Maintainers will verify this before integration.
+      options:
+        - The files are publicly distributed with permission to reuse them
+        - I am an author or rights holder and authorize redistribution
+        - The files are public, but I do not know their redistribution terms
+        - The material is restricted and I have not attached it
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Mention special compilers, numerical behavior, dependencies, known limitations, or people who should be credited.

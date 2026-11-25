@@ -6,6 +6,20 @@ regression policy as the released catalog. A new surface is not complete when
 it merely compiles: its scientific provenance and independently verified
 outputs are part of the contribution.
 
+## Choose the easiest contribution route
+
+Scientific contributors do not need to fork the repository or modernize legacy
+code. Open the
+[new PES submission form](https://github.com/rmeanapa/chempotpy/issues/new?template=new-pes.yml)
+and provide the available source, parameters, citation, interface information,
+and reference results. The maintainers will triage the submission and create
+the integration pull request. The concise checklist is in
+[docs/SUBMIT_A_PES.md](docs/SUBMIT_A_PES.md).
+
+The developer workflow below is for contributors who want to perform the
+integration themselves. It remains available, but it is not required for
+submitting a scientifically usable PES.
+
 ## 1. Generate the source scaffold
 
 Add a surface to an existing system with:

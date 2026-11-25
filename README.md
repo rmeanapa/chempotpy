@@ -538,11 +538,18 @@ surface name is shared by more than one system.
 
 ## Contributing a PES
 
-New surfaces are welcome through GitHub pull requests. Please fork the
-repository, create a feature branch, follow the scientific and numerical
-procedure in [CONTRIBUTING.md](CONTRIBUTING.md), and open a pull request with
-the implementation, citation, independent reference evidence, and regression
-tests. The helper below creates a modern, non-overwriting PES scaffold:
+You do not need to know Git, Python, or modern Fortran to contribute a surface.
+The easiest route is the
+[new PES submission form](https://github.com/rmeanapa/chempotpy/issues/new?template=new-pes.yml).
+Provide the original source and parameter files, the scientific reference,
+the atom order and units, and any example geometries with known results. The
+maintainers will review the scientific provenance, modernize the source, add
+the tests, and prepare the integration pull request with you.
+
+See [Submit a PES](docs/SUBMIT_A_PES.md) for the short submission checklist.
+Contributors who prefer to implement a surface directly can follow the
+developer procedure in [CONTRIBUTING.md](CONTRIBUTING.md). The helper below
+creates a modern, non-overwriting PES scaffold:
 
 ```bash
 python scripts/add_pes.py SYSTEM SURFACE_NAME \
@@ -554,9 +561,8 @@ python scripts/add_pes.py SYSTEM SURFACE_NAME \
     --reference "AUTHORS, JOURNAL, YEAR"
 ```
 
-Use [GitHub issues](https://github.com/rmeanapa/chempotpy/issues) for bug
-reports, questions, or to discuss a proposed surface before preparing a pull
-request.
+Ordinary [GitHub issues](https://github.com/rmeanapa/chempotpy/issues) remain
+available for bug reports and questions.
 
 ## Citation
 
@@ -574,5 +580,6 @@ each selected potential energy surface:
 - [PES interface contract](docs/PES_CONTRACT.md)
 - [Fortran style](docs/FORTRAN_STYLE.md)
 - [PES import evidence](docs/PES_IMPORTS.md)
+- [Submit a PES](docs/SUBMIT_A_PES.md)
 - [Contribution guide](CONTRIBUTING.md)
 - [License](LICENSE)
