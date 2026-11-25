@@ -137,7 +137,7 @@ def generated_catalog() -> str:
             cells = []
             if source_index == 0:
                 cells.append(
-                    '<td rowspan="{}"><strong>{}</strong></td>'.format(
+                    '<td rowspan="{}" valign="top"><strong>{}</strong></td>'.format(
                         len(system_sources), chemical_composition(system_name)
                     )
                 )
