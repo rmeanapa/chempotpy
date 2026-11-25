@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Generate the complete PES availability table in the project README."""
+"""Generate the system-level PES summary table in the project README."""
 
 from __future__ import annotations
 
 import argparse
+from collections import defaultdict
 import json
 from pathlib import Path
 import re
 import sys
-from typing import Dict, Iterable
+from typing import List
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -21,100 +22,76 @@ README = REPOSITORY_ROOT / "README.md"
 FIXTURE = REPOSITORY_ROOT / "tests" / "data" / "all_surface_references.json"
 START_MARKER = "<!-- BEGIN GENERATED PES CATALOG -->"
 END_MARKER = "<!-- END GENERATED PES CATALOG -->"
-AVAILABILITY_TOKENS = {"P", "G", "D", "U", "UG"}
+MODEL_FAMILIES = (
+    (re.compile(r"PIPNN", re.IGNORECASE), "PIP neural-network"),
+    (re.compile(r"APRP", re.IGNORECASE), "anchor-points reactive potential"),
+    (re.compile(r"VBMM", re.IGNORECASE), "valence-bond molecular-mechanics"),
+    (re.compile(r"LEPS|(?:^|_)LEP(?:_|$)", re.IGNORECASE), "LEPS reactive"),
+    (re.compile(r"(?:^|_)PIP(?:_|$)", re.IGNORECASE), "permutationally invariant polynomial"),
+    (re.compile(r"Surfgen", re.IGNORECASE), "Surfgen multistate"),
+    (re.compile(r"(?:^|_)EAM\d*(?:_|$)", re.IGNORECASE), "embedded-atom"),
+    (re.compile(r"(?:^|_)VBO\d*(?:_|$)", re.IGNORECASE), "valence-bond-order"),
+    (re.compile(r"RKHS", re.IGNORECASE), "RKHS-fitted"),
+    (re.compile(r"(?:^|_)MBP(?:_|$)", re.IGNORECASE), "many-body polynomial"),
+    (re.compile(r"(?:^|_)ZV(?:_|$)", re.IGNORECASE), "ZV analytic"),
+    (re.compile(r"(?:^|_)DIM(?:_|$)", re.IGNORECASE), "diatomics-in-molecules"),
+    (re.compile(r"(?:^|_)GEN(?:_|$)", re.IGNORECASE), "general analytic"),
+)
+
+SYSTEM_DESCRIPTIONS = {
+    "ALC": "Extended-LEPS model surfaces for atom–linear-molecule collisions.",
+    "AlmHn": "Valence-bond-order models for aluminum–hydrogen clusters.",
+    "Aln": "Aluminum-cluster embedded-atom, extended-Rydberg, and many-body models.",
+    "H3": "Benchmark analytic H₃ surfaces, including BKMP, DMBE, LSTH, and related fits.",
+    "N2O": "Ground- and excited-state N₂O fits, including PIP and ZV representations.",
+    "N4": "PIP, neural-network, many-body-expansion, and global analytic N₄ surfaces.",
+    "O3": "Single- and multistate ozone surfaces in analytic, many-body, and diabatic forms.",
+    "O4": "Singlet, triplet, and quintet O₄ many-body and analytic surfaces.",
+}
 
 
-def curated_availability(source: SurfaceSource) -> str:
-    """Return the availability code maintained in a system's short catalog."""
+def joined_phrases(phrases: List[str]) -> str:
+    """Join short descriptive phrases with natural English punctuation."""
 
-    initialization = source.path.parent / "__init__.py"
-    if not initialization.is_file():
-        return ""
-    surface_pattern = re.compile(
-        r"\b{}\s*:".format(re.escape(source.surface_name))
+    if len(phrases) == 1:
+        return phrases[0]
+    if len(phrases) == 2:
+        return "{} and {}".format(*phrases)
+    return "{}, and {}".format(", ".join(phrases[:-1]), phrases[-1])
+
+
+def initial_capital(text: str) -> str:
+    """Capitalize a sentence without lowercasing scientific acronyms."""
+
+    return text[:1].upper()+text[1:]
+
+
+def system_description(system_name: str, sources: List[SurfaceSource]) -> str:
+    """Return a concise description of one system's surface families."""
+
+    if system_name in SYSTEM_DESCRIPTIONS:
+        return SYSTEM_DESCRIPTIONS[system_name]
+    families = []
+    for source in sources:
+        for pattern, description in MODEL_FAMILIES:
+            if pattern.search(source.surface_name):
+                if description not in families:
+                    families.append(description)
+                break
+        else:
+            if "analytic" not in families:
+                families.append("analytic")
+    description = "{} {}.".format(
+        initial_capital(joined_phrases(families)),
+        "surface" if len(sources) == 1 else "surfaces",
     )
-    availability_pattern = re.compile(r"([A-Z]+(?:/[A-Z]+)*)\s*$")
-    for line in initialization.read_text(errors="replace").splitlines():
-        if surface_pattern.search(line) is None:
-            continue
-        match = availability_pattern.search(line.strip())
-        if match is None:
-            continue
-        tokens = match.group(1).split("/")
-        if tokens and set(tokens) <= AVAILABILITY_TOKENS:
-            return "/".join(tokens)
-    return ""
-
-
-def supports_first_derivatives(source: SurfaceSource) -> bool:
-    """Return whether source metadata declares first or higher derivatives."""
-
-    match = re.search(
-        r"^\s*!\s*Number\s+of\s+derivatives\s*:\s*(.*?)\s*$",
-        source.path.read_text(errors="replace"),
-        flags=re.IGNORECASE | re.MULTILINE,
-    )
-    if match is None:
-        raise ValueError(
-            "{} has neither curated availability nor derivative metadata".format(
-                source.path.relative_to(REPOSITORY_ROOT)
-            )
-        )
-    value = match.group(1).strip().lower()
-    number = re.match(r"(\d+)", value)
-    if number is not None:
-        return int(number.group(1)) >= 1
-    if value.startswith("first"):
-        return True
-    raise ValueError(
-        "unsupported derivative metadata {!r} in {}".format(
-            match.group(1), source.path.relative_to(REPOSITORY_ROOT)
-        )
-    )
-
-
-def pes_availability(source: SurfaceSource, state_count: int) -> str:
-    """Return a PES availability code from curated or source metadata."""
-
-    curated = curated_availability(source)
-    if curated:
-        return curated
-    if not supports_first_derivatives(source):
-        return "P"
-    return "P/G/D" if state_count > 1 else "P/G"
-
-
-def catalog_availability(
-    sources: Iterable[SurfaceSource], records: Dict[str, dict]
-) -> Dict[str, str]:
-    """Return availability codes for every callable catalog source."""
-
-    source_map = {
-        "{}/{}".format(source.system_name, source.surface_name): source
-        for source in sources
-    }
-    availability: Dict[str, str] = {}
-    for key, source in source_map.items():
-        if source.entry_point == "pes":
-            availability[key] = pes_availability(
-                source, int(records[key]["nstates"])
-            )
-    for key, source in source_map.items():
-        if source.entry_point != "dpem":
-            continue
-        curated = curated_availability(source)
-        if curated:
-            availability[key] = curated
-            continue
-        pes_key = key[:-len("_DPEM")]
-        if pes_key not in availability:
-            raise ValueError("{} has no paired PES availability".format(key))
-        availability[key] = "U/UG" if "G" in availability[pes_key] else "U"
-    return availability
+    if any(source.entry_point == "dpem" for source in sources):
+        description = description[:-1] + " with paired adiabatic and diabatic forms."
+    return description
 
 
 def generated_catalog() -> str:
-    """Render the complete Markdown availability table."""
+    """Render the grouped Markdown surface table."""
 
     sources = tuple(sorted(
         (
@@ -132,27 +109,26 @@ def generated_catalog() -> str:
     }
     if keys != set(records):
         raise ValueError("README catalog and numerical fixture differ")
-    availability = catalog_availability(sources, records)
-    systems = {source.system_name for source in sources}
+    systems = defaultdict(list)
+    for source in sources:
+        systems[source.system_name].append(source)
     lines = [
         "The catalog currently exposes **{} callable surfaces** across "
-        "**{} chemical systems**. Availability codes are: **P** potential "
-        "energy, **G** Cartesian gradient, **D** nonadiabatic coupling vector, "
-        "**U** diabatic potential matrix, and **UG** Cartesian gradient of "
-        "the diabatic matrix.".format(len(sources), len(systems)),
+        "**{} chemical systems**. Paired PES and DPEM entry points are counted "
+        "separately because each is independently callable.".format(
+            len(sources), len(systems)
+        ),
         "",
-        "| System | Surface | Interface | States | Available |",
-        "| :--- | :--- | :---: | ---: | :--- |",
+        "| System | Surface description | Number of surfaces |",
+        "| :--- | :--- | ---: |",
     ]
-    for source in sources:
-        key = "{}/{}".format(source.system_name, source.surface_name)
+    for system_name in sorted(systems, key=str.casefold):
+        system_sources = systems[system_name]
         lines.append(
-            "| `{}` | `{}` | {} | {} | **{}** |".format(
-                source.system_name,
-                source.surface_name,
-                source.entry_point.upper(),
-                records[key]["nstates"],
-                availability[key],
+            "| `{}` | {} | {} |".format(
+                system_name,
+                system_description(system_name, system_sources),
+                len(system_sources),
             )
         )
     return "\n".join(lines)
