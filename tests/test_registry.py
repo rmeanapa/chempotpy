@@ -79,6 +79,8 @@ class RegistryTests( unittest.TestCase ):
                 "chempotpy_hcl_h2o_pip_parameters.f90",
                 "chempotpy_h3s_pipnn_parameters.f90",
                 "chempotpy_h4o2_pip_parameters.f90",
+                "chempotpy_h5o2p_pip_basis.f90",
+                "chempotpy_h5o2p_pip_parameters.f90",
                 "chempotpy_h7p_pip_basis.f90",
                 "chempotpy_h7p_pip_parameters.f90",
                 "chempotpy_hni_eam5_parameters.f90",

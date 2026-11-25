@@ -22,6 +22,7 @@ extension check, and a standalone-export check.
 
 | Surface | Status | Main remaining work |
 | --- | --- | --- |
+| H5O2p_PIP_2005 | Implemented and independently compared | None; released energy/gradient, catalog, and standalone gates pass |
 | H7p_PIP | Implemented and independently compared | None; catalog and standalone gates pass |
 | HNi_EAM5_1995 Ni(111) adapter | Implemented and independently compared | None; canonical fixed-slab catalog and standalone gates pass |
 | HNi_EAM6_1996 Ni(111) adapter | Implemented and independently compared | None; canonical fixed-slab catalog and standalone gates pass |
@@ -281,6 +282,27 @@ three-network ensemble and requires neither initialization nor a data-path
 argument. Its large parameter constructors are split into standard-conforming
 compile-time chunks, so the standalone export passes the Fortran continuation
 limit without changing the coefficient ordering.
+
+## H5O2p_PIP_2005 independent evidence
+
+The authoritative QM-22 H5O2+ release supplies the 8,001 fitted coefficients,
+an expanded PIP evaluator, reverse analytic derivatives, and a reference
+geometry. At that geometry the release reports `-153.01000221` hartree; the
+modern evaluator gives `-153.01000221171148` hartree with the NIST CODATA 2022
+angstrom/bohr conversion. Every one of the 21 analytic gradient components
+agrees with the release to its reported eight decimal places, and the modern
+gradient also agrees with central finite differences.
+
+The coefficient file is embedded verbatim (SHA-256
+`a4941bb7cdeadbea6bde5c385f2a6928c4e339c1ce7fa9b444f1390e752d6ee3`).
+The released generated source has SHA-256
+`5741e49f6eff7e323a82de9f413d035c7414656d8c46ee3ec88299b10d051236`
+and expands forward and reverse differentiation into roughly 221,000
+Fortran lines, which made a GNU Fortran debug compile exceed 2.7 GB before
+completion. The portable implementation encodes those same ordered expressions
+as an immutable binary operation graph and performs reverse accumulation over
+that graph. It compiles with strict Fortran 2018, needs no initialization or
+external data files, and retains analytic first derivatives.
 
 ## H7p_PIP independent evidence
 

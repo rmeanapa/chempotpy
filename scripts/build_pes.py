@@ -185,6 +185,10 @@ SUPPORT_SOURCES = {
     ("H4O2", "H4O2_PIP"): (
         "chempotpy_h4o2_pip_parameters.f90",
     ),
+    ("H5O2p", "H5O2p_PIP_2005"): (
+        "chempotpy_h5o2p_pip_parameters.f90",
+        "chempotpy_h5o2p_pip_basis.f90",
+    ),
     ("H7p", "H7p_PIP"): (
         "chempotpy_h7p_pip_parameters.f90",
         "chempotpy_h7p_pip_basis.f90",

@@ -79,6 +79,18 @@ class ExportStandaloneTests(unittest.TestCase):
             combined.index("module chempotpy_c2h4o4_fad_pip_pes"),
         )
 
+    def test_h5o2p_export_orders_pip_dependencies(self) -> None:
+        combined = combined_source(select_surface("H5O2p/H5O2p_PIP_2005"))
+        owner = combined.index("module chempotpy_h5o2p_pip_2005_pes")
+        self.assertLess(
+            combined.index("module chempotpy_h5o2p_pip_parameters"),
+            owner,
+        )
+        self.assertLess(
+            combined.index("module chempotpy_h5o2p_pip_basis"),
+            owner,
+        )
+
     def test_malonaldehyde_export_orders_parameter_dependency(self) -> None:
         source = select_surface(
             "malonaldehyde/malonaldehyde_MHT_2014"

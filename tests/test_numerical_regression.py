@@ -143,6 +143,7 @@ class NumericalRegressionTests(unittest.TestCase):
         for system_name, atom_count in (
             ("Aln", 5),
             ("BrNH3", 5),
+            ("H5O2p", 7),
             ("NH3", 4),
         ):
             geometries = []
