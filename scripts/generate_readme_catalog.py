@@ -9,7 +9,6 @@ import json
 from pathlib import Path
 import re
 import sys
-from typing import List
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -24,7 +23,7 @@ START_MARKER = "<!-- BEGIN GENERATED PES CATALOG -->"
 END_MARKER = "<!-- END GENERATED PES CATALOG -->"
 MODEL_FAMILIES = (
     (re.compile(r"PIPNN", re.IGNORECASE), "PIP neural-network"),
-    (re.compile(r"APRP", re.IGNORECASE), "anchor-points reactive potential"),
+    (re.compile(r"APRP", re.IGNORECASE), "anchor-points reactive"),
     (re.compile(r"VBMM", re.IGNORECASE), "valence-bond molecular-mechanics"),
     (re.compile(r"LEPS|(?:^|_)LEP(?:_|$)", re.IGNORECASE), "LEPS reactive"),
     (re.compile(r"(?:^|_)PIP(?:_|$)", re.IGNORECASE), "permutationally invariant polynomial"),
@@ -38,26 +37,15 @@ MODEL_FAMILIES = (
     (re.compile(r"(?:^|_)GEN(?:_|$)", re.IGNORECASE), "general analytic"),
 )
 
-SYSTEM_DESCRIPTIONS = {
-    "ALC": "Extended-LEPS model surfaces for atom–linear-molecule collisions.",
-    "AlmHn": "Valence-bond-order models for aluminum–hydrogen clusters.",
-    "Aln": "Aluminum-cluster embedded-atom, extended-Rydberg, and many-body models.",
-    "H3": "Benchmark analytic H₃ surfaces, including BKMP, DMBE, LSTH, and related fits.",
-    "N2O": "Ground- and excited-state N₂O fits, including PIP and ZV representations.",
-    "N4": "PIP, neural-network, many-body-expansion, and global analytic N₄ surfaces.",
-    "O3": "Single- and multistate ozone surfaces in analytic, many-body, and diabatic forms.",
-    "O4": "Singlet, triplet, and quintet O₄ many-body and analytic surfaces.",
+SPECIAL_COMPOSITIONS = {
+    "AlmHn": "Al<sub>m</sub>H<sub>n</sub>",
+    "CH4_H2O_H2O": "CH<sub>4</sub>·(H<sub>2</sub>O)<sub>2</sub>",
+    "COCO": "C<sub>2</sub>O<sub>2</sub>",
+    "HOCO_Ar": "HOCO·Ar",
+    "malonaldehyde": "C<sub>3</sub>H<sub>4</sub>O<sub>2</sub> (malonaldehyde)",
 }
-
-
-def joined_phrases(phrases: List[str]) -> str:
-    """Join short descriptive phrases with natural English punctuation."""
-
-    if len(phrases) == 1:
-        return phrases[0]
-    if len(phrases) == 2:
-        return "{} and {}".format(*phrases)
-    return "{}, and {}".format(", ".join(phrases[:-1]), phrases[-1])
+GENERIC_SYSTEMS = {"ALC", "MCH", "MXH", "YRH"}
+CHARGED_SUFFIXES = {"p": "+", "m": "−"}
 
 
 def initial_capital(text: str) -> str:
@@ -66,28 +54,48 @@ def initial_capital(text: str) -> str:
     return text[:1].upper()+text[1:]
 
 
-def system_description(system_name: str, sources: List[SurfaceSource]) -> str:
-    """Return a concise description of one system's surface families."""
+def chemical_composition(system_name: str) -> str:
+    """Render a system identifier as a compact HTML chemical composition."""
 
-    if system_name in SYSTEM_DESCRIPTIONS:
-        return SYSTEM_DESCRIPTIONS[system_name]
-    families = []
-    for source in sources:
-        for pattern, description in MODEL_FAMILIES:
-            if pattern.search(source.surface_name):
-                if description not in families:
-                    families.append(description)
-                break
-        else:
-            if "analytic" not in families:
-                families.append("analytic")
-    description = "{} {}.".format(
-        initial_capital(joined_phrases(families)),
-        "surface" if len(sources) == 1 else "surfaces",
+    if system_name in SPECIAL_COMPOSITIONS:
+        return SPECIAL_COMPOSITIONS[system_name]
+    if system_name in GENERIC_SYSTEMS:
+        return system_name
+    charge = ""
+    formula = system_name
+    if formula[-1:] in CHARGED_SUFFIXES:
+        charge = "<sup>{}</sup>".format(CHARGED_SUFFIXES[formula[-1]])
+        formula = formula[:-1]
+    tokens = re.findall(r"[A-Z][a-z]?|\d+|[mn]", formula)
+    if "".join(tokens) != formula:
+        return system_name+charge
+    rendered = "".join(
+        "<sub>{}</sub>".format(token)
+        if token.isdigit() or token in {"m", "n"}
+        else token
+        for token in tokens
     )
-    if any(source.entry_point == "dpem" for source in sources):
-        description = description[:-1] + " with paired adiabatic and diabatic forms."
-    return description
+    return rendered+charge
+
+
+def surface_description(source: SurfaceSource) -> str:
+    """Return a concise description for one callable PES or DPEM entry."""
+
+    family = "analytic"
+    for pattern, description in MODEL_FAMILIES:
+        if pattern.search(source.surface_name):
+            family = description
+            break
+    representation = (
+        "diabatic representation"
+        if source.entry_point == "dpem"
+        else "potential"
+    )
+    return "{} {} — <code>{}</code>.".format(
+        initial_capital(family),
+        representation,
+        source.surface_name,
+    )
 
 
 def generated_catalog() -> str:
@@ -114,23 +122,35 @@ def generated_catalog() -> str:
         systems[source.system_name].append(source)
     lines = [
         "The catalog currently exposes **{} callable surfaces** across "
-        "**{} chemical systems**. Paired PES and DPEM entry points are counted "
-        "separately because each is independently callable.".format(
+        "**{} chemical systems**. The final column gives the number of "
+        "electronic surfaces represented by each callable PES or DPEM entry.".format(
             len(sources), len(systems)
         ),
         "",
-        "| System | Surface description | Number of surfaces |",
-        "| :--- | :--- | ---: |",
+        "<table>",
+        "<thead>",
+        "<tr><th>System composition</th><th>Surface description</th>"
+        "<th>Electronic surfaces</th></tr>",
+        "</thead>",
+        "<tbody>",
     ]
     for system_name in sorted(systems, key=str.casefold):
         system_sources = systems[system_name]
-        lines.append(
-            "| `{}` | {} | {} |".format(
-                system_name,
-                system_description(system_name, system_sources),
-                len(system_sources),
+        for source_index, source in enumerate(system_sources):
+            key = "{}/{}".format(source.system_name, source.surface_name)
+            cells = []
+            if source_index == 0:
+                cells.append(
+                    '<td rowspan="{}"><strong>{}</strong></td>'.format(
+                        len(system_sources), chemical_composition(system_name)
+                    )
+                )
+            cells.append("<td>{}</td>".format(surface_description(source)))
+            cells.append(
+                '<td align="center">{}</td>'.format(records[key]["nstates"])
             )
-        )
+            lines.append("<tr>{}</tr>".format("".join(cells)))
+    lines.extend(("</tbody>", "</table>"))
     return "\n".join(lines)
 
 

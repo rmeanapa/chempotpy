@@ -25,115 +25,425 @@ scaffold.
 Potential energy surface catalog
 --------------------------------
 
-This table groups the callable Fortran registry by chemical system and gives a
-short description of the available surface families. Regenerate it with
-`python scripts/generate_readme_catalog.py` after adding or changing a surface.
+This table groups callable PES and DPEM entries by chemical composition, gives
+each entry a short description, and reports its number of electronic surfaces.
+Regenerate it with `python scripts/generate_readme_catalog.py` after adding or
+changing a surface.
 
 <!-- BEGIN GENERATED PES CATALOG -->
 
-The catalog currently exposes **403 callable surfaces** across **99 chemical systems**. Paired PES and DPEM entry points are counted separately because each is independently callable.
+The catalog currently exposes **403 callable surfaces** across **99 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
 
-| System | Surface description | Number of surfaces |
-| :--- | :--- | ---: |
-| `ALC` | Extended-LEPS model surfaces for atom–linear-molecule collisions. | 12 |
-| `AlmHn` | Valence-bond-order models for aluminum–hydrogen clusters. | 2 |
-| `Aln` | Aluminum-cluster embedded-atom, extended-Rydberg, and many-body models. | 59 |
-| `ArNO` | PIP neural-network surfaces. | 2 |
-| `BrH2` | LEPS reactive surfaces with paired adiabatic and diabatic forms. | 7 |
-| `BrHCl` | LEPS reactive surfaces. | 4 |
-| `BrNH3` | Valence-bond molecular-mechanics surface. | 1 |
-| `C2H2N2O` | PIP neural-network surface. | 1 |
-| `C2H2O` | PIP neural-network surface. | 1 |
-| `C2H4O4` | Permutationally invariant polynomial surface. | 1 |
-| `C2H6Cl` | Valence-bond molecular-mechanics surface. | 1 |
-| `C2H6F` | Valence-bond molecular-mechanics surface. | 1 |
-| `C2H6H` | Valence-bond molecular-mechanics surface. | 1 |
-| `C2H6O` | Valence-bond molecular-mechanics surface. | 1 |
-| `C2H6OH` | Valence-bond molecular-mechanics surface. | 1 |
-| `C2H7` | Valence-bond molecular-mechanics surface. | 1 |
-| `C2N` | PIP neural-network surfaces. | 2 |
-| `C3H7NO` | Permutationally invariant polynomial surface. | 1 |
-| `C6H5SH` | Anchor-points reactive potential surfaces with paired adiabatic and diabatic forms. | 2 |
-| `C6H6O` | Anchor-points reactive potential surfaces with paired adiabatic and diabatic forms. | 2 |
-| `C7H8S` | Anchor-points reactive potential surfaces with paired adiabatic and diabatic forms. | 16 |
-| `CH2O` | PIP neural-network surface. | 1 |
-| `CH2O2` | PIP neural-network surfaces. | 2 |
-| `CH2OH` | Surfgen multistate surfaces with paired adiabatic and diabatic forms. | 4 |
-| `CH3NH2` | Anchor-points reactive potential surfaces with paired adiabatic and diabatic forms. | 2 |
-| `CH3OH` | Permutationally invariant polynomial surface. | 1 |
-| `CH4` | General analytic surface. | 1 |
-| `CH4_H2O_H2O` | Permutationally invariant polynomial surface. | 1 |
-| `CH4Br` | Valence-bond molecular-mechanics surface. | 1 |
-| `CH4Cl` | Valence-bond molecular-mechanics surfaces. | 2 |
-| `CH4CN` | Valence-bond molecular-mechanics surface. | 1 |
-| `CH4F` | General analytic and LEPS reactive surfaces. | 3 |
-| `CH4Ni` | Embedded-atom surface. | 1 |
-| `CH4O` | LEPS reactive surfaces. | 4 |
-| `CH4OCl` | PIP neural-network and valence-bond molecular-mechanics surfaces. | 2 |
-| `CH4OF` | PIP neural-network surface. | 1 |
-| `CH4OH` | Valence-bond molecular-mechanics surfaces. | 2 |
-| `CH5` | General analytic, LEPS reactive, and valence-bond molecular-mechanics surfaces. | 5 |
-| `CH5O2` | Valence-bond molecular-mechanics surface. | 1 |
-| `CH5p` | Permutationally invariant polynomial surface. | 1 |
-| `Cl2H` | LEPS reactive surfaces. | 4 |
-| `ClH2` | LEPS reactive surfaces. | 15 |
-| `ClH2O` | PIP neural-network surface. | 1 |
-| `ClNH3` | Valence-bond molecular-mechanics surface. | 1 |
-| `CO2` | RKHS-fitted surfaces. | 5 |
-| `COCO` | PIP neural-network surface. | 1 |
-| `F2H` | LEPS reactive surfaces. | 2 |
-| `F2H2` | General analytic surfaces. | 3 |
-| `FH2` | General analytic and LEPS reactive surfaces. | 25 |
-| `FH2O` | PIP neural-network surfaces. | 2 |
-| `GeH4OH` | Valence-bond molecular-mechanics surface. | 1 |
-| `GeH5` | LEPS reactive surface. | 1 |
-| `H2CO` | Permutationally invariant polynomial surface. | 1 |
-| `H2O2` | General analytic surface. | 1 |
-| `H2OBr` | Permutationally invariant polynomial surface. | 1 |
-| `H3` | Benchmark analytic H₃ surfaces, including BKMP, DMBE, LSTH, and related fits. | 11 |
-| `H3Cl` | PIP neural-network surface. | 1 |
-| `H3ClO` | Permutationally invariant polynomial and PIP neural-network surfaces. | 2 |
-| `H3m` | Analytic surface. | 1 |
-| `H3p` | Analytic surfaces. | 2 |
-| `H3S` | PIP neural-network surface. | 1 |
-| `H4O2` | Permutationally invariant polynomial surface. | 1 |
-| `H7p` | Permutationally invariant polynomial surface. | 1 |
-| `HClOH` | PIP neural-network surface. | 1 |
-| `HeH2p` | Diatomics-in-molecules and analytic surfaces. | 2 |
-| `HNi` | Embedded-atom surfaces. | 3 |
-| `HO3` | PIP neural-network surface. | 1 |
-| `HOBr` | Permutationally invariant polynomial surface. | 1 |
-| `HOCO_Ar` | Permutationally invariant polynomial surface. | 1 |
-| `I2H` | LEPS reactive surfaces. | 3 |
-| `IH2` | LEPS reactive surfaces. | 5 |
-| `K2Rb2` | PIP neural-network surface. | 1 |
-| `LiFH` | LEPS reactive surfaces with paired adiabatic and diabatic forms. | 6 |
-| `LiH2p` | Analytic surfaces. | 2 |
-| `malonaldehyde` | Analytic surface. | 1 |
-| `MCH` | LEPS reactive surfaces with paired adiabatic and diabatic forms. | 10 |
-| `MXH` | LEPS reactive surfaces with paired adiabatic and diabatic forms. | 6 |
-| `N2HOCp` | PIP neural-network surface. | 1 |
-| `N2O` | Ground- and excited-state N₂O fits, including PIP and ZV representations. | 10 |
-| `N2O2` | Permutationally invariant polynomial and ZV analytic surfaces. | 2 |
-| `N3` | ZV analytic and many-body polynomial surfaces. | 2 |
-| `N4` | PIP, neural-network, many-body-expansion, and global analytic N₄ surfaces. | 6 |
-| `NaFH` | LEPS reactive surfaces with paired adiabatic and diabatic forms. | 6 |
-| `NaH2` | LEPS reactive surfaces with paired adiabatic and diabatic forms. | 14 |
-| `NH3` | General analytic and Surfgen multistate surfaces with paired adiabatic and diabatic forms. | 6 |
-| `NH3CN` | Valence-bond molecular-mechanics surface. | 1 |
-| `NH3OH` | Valence-bond molecular-mechanics surface. | 1 |
-| `NH4` | Valence-bond molecular-mechanics surfaces. | 2 |
-| `NO2` | PIP neural-network and ZV analytic surfaces. | 6 |
-| `O2H` | General analytic surface. | 1 |
-| `O2H3` | PIP neural-network surface. | 1 |
-| `O3` | Single- and multistate ozone surfaces in analytic, many-body, and diabatic forms. | 35 |
-| `O4` | Singlet, triplet, and quintet O₄ many-body and analytic surfaces. | 7 |
-| `OH2` | General analytic and LEPS reactive surfaces. | 9 |
-| `OH3` | LEPS reactive and permutationally invariant polynomial surfaces with paired adiabatic and diabatic forms. | 5 |
-| `SiH4Cl` | Valence-bond molecular-mechanics surface. | 1 |
-| `SiH5` | LEPS reactive surfaces. | 2 |
-| `SiOH` | General analytic surface. | 1 |
-| `YRH` | LEPS reactive surfaces with paired adiabatic and diabatic forms. | 2 |
+<table>
+<thead>
+<tr><th>System composition</th><th>Surface description</th><th>Electronic surfaces</th></tr>
+</thead>
+<tbody>
+<tr><td rowspan="12"><strong>ALC</strong></td><td>LEPS reactive potential — <code>ALC5m0_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC6m0_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC7m0_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC7m10_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC7m1_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC7m4_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC7m5_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC7m7_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC7p2_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC7p3_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC7p5_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ALC_LEPS_ModelSurface</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>Al<sub>m</sub>H<sub>n</sub></strong></td><td>Valence-bond-order potential — <code>AlmHn_VBO1</code>.</td><td align="center">1</td></tr>
+<tr><td>Valence-bond-order potential — <code>AlmHn_VBO2</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="59"><strong>Al<sub>n</sub></strong></td><td>Analytic potential — <code>Aln_BetH</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_CleR</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_CoxJM</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_deSPH_LJAT</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_deSPH_M</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2AT</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2BA</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2CN</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2CoxJM</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2EACN</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2EAT</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2EBA</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2ECN</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2ES</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2ESCNa</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2ESCNm</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2GEA</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2MeiD</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2MisFMP</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2S</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2SCNa</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ER2SCNm</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ErkIV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ErkV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_ErkVIII</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_Gol</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_HalP</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_Jac</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_MeiD</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_MisFMP</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_NP_A</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_NP_Ad</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_NP_B</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_NP_Bd</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_NP_C</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_NP_D</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_NP_E</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_PapCEP</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_PapKEP</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_PeaTHT</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_PetW</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reCoxJM</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_redeSPH_M</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reErkIV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reErkVIII</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reGEA</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reGol</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reHalP</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reJac</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reLJAT</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reMeiD</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reMisFMP</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_rePetW</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reStrM</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_reSutC</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_StrM</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>Aln_SutC</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>ArNO</strong></td><td>PIP neural-network potential — <code>ArNO_Ap_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td>PIP neural-network potential — <code>ArNO_App_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="7"><strong>BrH<sub>2</sub></strong></td><td>LEPS reactive potential — <code>BrH2_LEPS_C_1982</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>BrH2_LEPS_LTBZ1_1995</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>BrH2_LEPS_LTBZ2_1995</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>BrH2_LEPS_LTBZ2_1995_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>BrH2_LEPS_LTBZSO_1995</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>BrH2_LEPS_LTBZSO_1995_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>BrH2_LEPS_W_1959</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="4"><strong>BrHCl</strong></td><td>LEPS reactive potential — <code>BrHCl_LEPS1</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>BrHCl_LEPS2</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>BrHCl_LEPS3</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>BrHCl_LEPS_BLM_1983</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>BrNH<sub>3</sub></strong></td><td>Valence-bond molecular-mechanics potential — <code>BrNH3_VBMM_2026</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>H<sub>2</sub>N<sub>2</sub>O</strong></td><td>PIP neural-network potential — <code>C2H2N2O_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>H<sub>2</sub>O</strong></td><td>PIP neural-network potential — <code>C2H2O_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>H<sub>4</sub>O<sub>4</sub></strong></td><td>Permutationally invariant polynomial potential — <code>C2H4O4_FAD_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>H<sub>6</sub>Cl</strong></td><td>Valence-bond molecular-mechanics potential — <code>C2H6Cl_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>H<sub>6</sub>F</strong></td><td>Valence-bond molecular-mechanics potential — <code>C2H6F_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>H<sub>6</sub>H</strong></td><td>Valence-bond molecular-mechanics potential — <code>C2H6H_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>H<sub>6</sub>O</strong></td><td>Valence-bond molecular-mechanics potential — <code>C2H6O_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>H<sub>6</sub>OH</strong></td><td>Valence-bond molecular-mechanics potential — <code>C2H6OH_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>H<sub>7</sub></strong></td><td>Valence-bond molecular-mechanics potential — <code>C2H7_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>C<sub>2</sub>N</strong></td><td>PIP neural-network potential — <code>C2N_PIPNN_Ap</code>.</td><td align="center">1</td></tr>
+<tr><td>PIP neural-network potential — <code>C2N_PIPNN_App</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>3</sub>H<sub>7</sub>NO</strong></td><td>Permutationally invariant polynomial potential — <code>C3H7NO_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>C<sub>6</sub>H<sub>5</sub>SH</strong></td><td>Anchor-points reactive potential — <code>C6H5SH_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>C6H5SH_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td rowspan="2"><strong>C<sub>6</sub>H<sub>6</sub>O</strong></td><td>Anchor-points reactive potential — <code>PHOH_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>PHOH_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td rowspan="16"><strong>C<sub>7</sub>H<sub>8</sub>S</strong></td><td>Anchor-points reactive potential — <code>C7H8S_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>C7H8S_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive potential — <code>C7H8S_IA_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>C7H8S_IA_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive potential — <code>C7H8S_II_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>C7H8S_II_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive potential — <code>C7H8S_III_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>C7H8S_III_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive potential — <code>C7H8S_S18_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>C7H8S_S18_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive potential — <code>C7H8S_S20_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>C7H8S_S20_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive potential — <code>C7H8S_S22_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>C7H8S_S22_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive potential — <code>C7H8S_S25_APRP</code>.</td><td align="center">3</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>C7H8S_S25_APRP_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>2</sub>O</strong></td><td>PIP neural-network potential — <code>CH2O_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>CH<sub>2</sub>O<sub>2</sub></strong></td><td>PIP neural-network potential — <code>CH2O2_LOCAL_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td>PIP neural-network potential — <code>CH2O2_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="4"><strong>CH<sub>2</sub>OH</strong></td><td>Surfgen multistate potential — <code>CH2OH_Surfgen_2state_2018</code>.</td><td align="center">2</td></tr>
+<tr><td>Surfgen multistate diabatic representation — <code>CH2OH_Surfgen_2state_2018_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>Surfgen multistate potential — <code>CH2OH_Surfgen_3state_2017</code>.</td><td align="center">3</td></tr>
+<tr><td>Surfgen multistate diabatic representation — <code>CH2OH_Surfgen_3state_2017_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td rowspan="2"><strong>CH<sub>3</sub>NH<sub>2</sub></strong></td><td>Anchor-points reactive potential — <code>CH3NH2_APRP</code>.</td><td align="center">2</td></tr>
+<tr><td>Anchor-points reactive diabatic representation — <code>CH3NH2_APRP_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>3</sub>OH</strong></td><td>Permutationally invariant polynomial potential — <code>CH3OH_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>4</sub></strong></td><td>General analytic potential — <code>CH4_GEN_SP_2001</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>4</sub>·(H<sub>2</sub>O)<sub>2</sub></strong></td><td>Permutationally invariant polynomial potential — <code>CH4_H2O_H2O_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>4</sub>Br</strong></td><td>Valence-bond molecular-mechanics potential — <code>CH4Br_VBMM_2002</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>CH<sub>4</sub>Cl</strong></td><td>Valence-bond molecular-mechanics potential — <code>CH4Cl_VBMM_2000</code>.</td><td align="center">1</td></tr>
+<tr><td>Valence-bond molecular-mechanics potential — <code>CH4Cl_VBMM_2005</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>4</sub>CN</strong></td><td>Valence-bond molecular-mechanics potential — <code>CH4CN_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="3"><strong>CH<sub>4</sub>F</strong></td><td>General analytic potential — <code>CH4F_GEN_GC_1996</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>CH4F_GEN_GCSO_1996</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>CH4F_LEPS_RNCG_2006</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>4</sub>Ni</strong></td><td>Embedded-atom potential — <code>CH4Ni_EAM6_J1_1996</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="4"><strong>CH<sub>4</sub>O</strong></td><td>LEPS reactive potential — <code>CH4O_LEP_1995</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>CH4O_LEP_1998</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>CH4O_LEP_2000</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>CH4O_LEP_2014</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>CH<sub>4</sub>OCl</strong></td><td>PIP neural-network potential — <code>CH4OCl_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td>Valence-bond molecular-mechanics potential — <code>CH4OCl_VBMM_2023</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>4</sub>OF</strong></td><td>PIP neural-network potential — <code>CH4OF_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>CH<sub>4</sub>OH</strong></td><td>Valence-bond molecular-mechanics potential — <code>CH4OH_VBMM_2000</code>.</td><td align="center">1</td></tr>
+<tr><td>Valence-bond molecular-mechanics potential — <code>CH4OH_VBMM_2015</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="5"><strong>CH<sub>5</sub></strong></td><td>General analytic potential — <code>CH5_GEN_J1_1987</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>CH5_GEN_J2_1987</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>CH5_LEPS_JG_1995</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>CH5_LEPS_JJ_2002</code>.</td><td align="center">1</td></tr>
+<tr><td>Valence-bond molecular-mechanics potential — <code>CH5_VBMM_CBG_2009</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>5</sub>O<sub>2</sub></strong></td><td>Valence-bond molecular-mechanics potential — <code>CH5O2_VBMM_2023</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>CH<sub>5</sub><sup>+</sup></strong></td><td>Permutationally invariant polynomial potential — <code>CH5p_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="4"><strong>Cl<sub>2</sub>H</strong></td><td>LEPS reactive potential — <code>Cl2H_LEPS_BCMR_1983</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>Cl2H_LEPS_KNPRY_1966</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>Cl2H_LEPS_PK2_1987</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>Cl2H_LEPS_PK3_1987</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="15"><strong>ClH<sub>2</sub></strong></td><td>LEPS reactive potential — <code>ClH2_LEPS_ALTG1_1996</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_ALTG2_1996</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_GTM1_1981</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_GTM2_1981</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_GTM3_1981</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_GTM4_1982</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_KNPRY_1966</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_LB_1980</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_PK1_1966</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_PK2_1966</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_SPK_1973</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_STSBLTG1_1989</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_STSBLTG2_1989</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_TTGI1_1985</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>ClH2_LEPS_TTGI2_1985</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>ClH<sub>2</sub>O</strong></td><td>PIP neural-network potential — <code>ClH2O_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>ClNH<sub>3</sub></strong></td><td>Valence-bond molecular-mechanics potential — <code>ClNH3_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="5"><strong>CO<sub>2</sub></strong></td><td>RKHS-fitted potential — <code>CO2_1Ap_RKHS</code>.</td><td align="center">1</td></tr>
+<tr><td>RKHS-fitted potential — <code>CO2_1App_RKHS</code>.</td><td align="center">1</td></tr>
+<tr><td>RKHS-fitted potential — <code>CO2_21Ap_RKHS</code>.</td><td align="center">1</td></tr>
+<tr><td>RKHS-fitted potential — <code>CO2_3Ap_RKHS</code>.</td><td align="center">1</td></tr>
+<tr><td>RKHS-fitted potential — <code>CO2_3App_RKHS</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>2</sub>O<sub>2</sub></strong></td><td>PIP neural-network potential — <code>COCO_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>F<sub>2</sub>H</strong></td><td>LEPS reactive potential — <code>F2H_LEPS_JOT_1972</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>F2H_LEPS_KNPRY_1966</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="3"><strong>F<sub>2</sub>H<sub>2</sub></strong></td><td>General analytic potential — <code>F2H2_GEN_JBKKL_1990</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>F2H2_GEN_S2_1996</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>F2H2_GEN_SQSBDE_1995</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="25"><strong>FH<sub>2</sub></strong></td><td>General analytic potential — <code>FH2_GEN_5SEC_1991</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECCOG1_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECCOG2_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECCOG3_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECG1_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECG2_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECG3_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECGM4_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECS1_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECS2_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECS3_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_5SECW_1991</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>FH2_GEN_6SEC_1993</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_M5_1991</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_M5SK_1966</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_NO1_1984</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_NO2_1984</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_NO2a_1984</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_NO3_1984</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_NO4_1984</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_NO5_1985</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_NO5a_1985</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_NO5b_1985</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_NO5z_1985</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>FH2_LEPS_SK_1980</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>FH<sub>2</sub>O</strong></td><td>PIP neural-network potential — <code>FH2O_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td>PIP neural-network potential — <code>FH2O_SOC_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>GeH<sub>4</sub>OH</strong></td><td>Valence-bond molecular-mechanics potential — <code>GeH4OH_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>GeH<sub>5</sub></strong></td><td>LEPS reactive potential — <code>GeH5_LEPS</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>H<sub>2</sub>CO</strong></td><td>Permutationally invariant polynomial potential — <code>H2CO_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>H<sub>2</sub>O<sub>2</sub></strong></td><td>General analytic potential — <code>H2O2_GEN_1998</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>H<sub>2</sub>OBr</strong></td><td>Permutationally invariant polynomial potential — <code>H2OBr_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="11"><strong>H<sub>3</sub></strong></td><td>General analytic potential — <code>H3_GEN_A2_2002</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_A3_2002</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_A4_2002</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_BH_2009</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_BKMP3_1996</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_BKMP_1991</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_CCI_2002</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_DMBE_1987</code>.</td><td align="center">2</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_LSTH_1978</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_PK2_1964</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>H3_GEN_TK_1984</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>H<sub>3</sub>Cl</strong></td><td>PIP neural-network potential — <code>H3Cl_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>H<sub>3</sub>ClO</strong></td><td>Permutationally invariant polynomial potential — <code>H3ClO_PIP_2013</code>.</td><td align="center">1</td></tr>
+<tr><td>PIP neural-network potential — <code>H3ClO_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>H<sub>3</sub><sup>−</sup></strong></td><td>Analytic potential — <code>H3m_AS_2004</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>H<sub>3</sub><sup>+</sup></strong></td><td>Analytic potential — <code>H3p_KBNN_2002</code>.</td><td align="center">3</td></tr>
+<tr><td>Analytic potential — <code>H3p_UNO_2001</code>.</td><td align="center">3</td></tr>
+<tr><td rowspan="1"><strong>H<sub>3</sub>S</strong></td><td>PIP neural-network potential — <code>H3S_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>H<sub>4</sub>O<sub>2</sub></strong></td><td>Permutationally invariant polynomial potential — <code>H4O2_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>H<sub>7</sub><sup>+</sup></strong></td><td>Permutationally invariant polynomial potential — <code>H7p_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>HClOH</strong></td><td>PIP neural-network potential — <code>HClOH_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>HeH<sub>2</sub><sup>+</sup></strong></td><td>Diatomics-in-molecules potential — <code>HeH2p_DIM_1976</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>HeH2p_MTJS_1987</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="3"><strong>HNi</strong></td><td>Embedded-atom potential — <code>HNi_EAM5_1995</code>.</td><td align="center">1</td></tr>
+<tr><td>Embedded-atom potential — <code>HNi_EAM6_1996</code>.</td><td align="center">1</td></tr>
+<tr><td>Embedded-atom potential — <code>HNi_EAM7_1998</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>HO<sub>3</sub></strong></td><td>PIP neural-network potential — <code>HO3_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>HOBr</strong></td><td>Permutationally invariant polynomial potential — <code>HOBr_3App_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>HOCO·Ar</strong></td><td>Permutationally invariant polynomial potential — <code>HOCO_Ar_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="3"><strong>I<sub>2</sub>H</strong></td><td>LEPS reactive potential — <code>I2H_LEPS_KK_1981</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>I2H_LEPS_PT1_1971</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>I2H_LEPS_PT2_1971</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="5"><strong>IH<sub>2</sub></strong></td><td>LEPS reactive potential — <code>IH2_LEPS_DT1_1971</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>IH2_LEPS_DT2_1971</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>IH2_LEPS_KNPRY_1966</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>IH2_LEPS_PPW1_1974</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>IH2_LEPS_RSPTS_1970</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>K<sub>2</sub>Rb<sub>2</sub></strong></td><td>PIP neural-network potential — <code>K2Rb2_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="6"><strong>LiFH</strong></td><td>LEPS reactive potential — <code>LiFH_LEPS_JHCTP_2001</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>LiFH_LEPS_JHCTP_2001_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>LiFH_LEPS_JHTP1_2002</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>LiFH_LEPS_JHTP1_2002_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>LiFH_LEPS_JHTP2_2002</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>LiFH_LEPS_JHTP2_2002_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td rowspan="2"><strong>LiH<sub>2</sub><sup>+</sup></strong></td><td>Analytic potential — <code>LiH2p_Excited_2003</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>LiH2p_Ground_2003</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>C<sub>3</sub>H<sub>4</sub>O<sub>2</sub> (malonaldehyde)</strong></td><td>Analytic potential — <code>malonaldehyde_MHT_2014</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="10"><strong>MCH</strong></td><td>LEPS reactive potential — <code>MCHSB_LEPS_ModelSurface</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>MCHSB_LEPS_ModelSurface_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>MCHSL_LEPS_ModelSurface</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>MCHSL_LEPS_ModelSurface_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>MCHTL_LEPS_ModelSurface</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>MCHTL_LEPS_ModelSurface_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>MCHWB_LEPS_ModelSurface</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>MCHWB_LEPS_ModelSurface_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>MCHWL_LEPS_ModelSurface</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>MCHWL_LEPS_ModelSurface_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td rowspan="6"><strong>MXH</strong></td><td>LEPS reactive potential — <code>MXHSB_LEPS_ModelSurface</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>MXHSB_LEPS_ModelSurface_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>MXHSL_LEPS_ModelSurface</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>MXHSL_LEPS_ModelSurface_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>MXHWL_LEPS_ModelSurface</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>MXHWL_LEPS_ModelSurface_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td rowspan="1"><strong>N<sub>2</sub>HOC<sup>+</sup></strong></td><td>PIP neural-network potential — <code>N2HOCp_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="10"><strong>N<sub>2</sub>O</strong></td><td>Analytic potential — <code>N2O_11_1App_2025</code>.</td><td align="center">11</td></tr>
+<tr><td>Analytic potential — <code>N2O_11_1App_AE_2025</code>.</td><td align="center">11</td></tr>
+<tr><td>Analytic potential — <code>N2O_13_1Ap_2025</code>.</td><td align="center">13</td></tr>
+<tr><td>Analytic potential — <code>N2O_13_1Ap_2026</code>.</td><td align="center">13</td></tr>
+<tr><td>Analytic potential — <code>N2O_13_1Ap_AE_2025</code>.</td><td align="center">13</td></tr>
+<tr><td>Analytic potential — <code>N2O_13_1Ap_AE_2026</code>.</td><td align="center">13</td></tr>
+<tr><td>Permutationally invariant polynomial potential — <code>N2O_3Ap_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>N2O_3Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Permutationally invariant polynomial potential — <code>N2O_3App_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>N2O_3App_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>N<sub>2</sub>O<sub>2</sub></strong></td><td>Permutationally invariant polynomial potential — <code>N2O2_3A_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>N2O2_3A_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>N<sub>3</sub></strong></td><td>ZV analytic potential — <code>N3_4App_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Many-body polynomial potential — <code>N3_MBP_2017</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="6"><strong>N<sub>4</sub></strong></td><td>Analytic potential — <code>N4_1A_MEG2_2020</code>.</td><td align="center">1</td></tr>
+<tr><td>Permutationally invariant polynomial potential — <code>N4_1A_PIP</code>.</td><td align="center">1</td></tr>
+<tr><td>Permutationally invariant polynomial potential — <code>N4_1A_PIP_2013</code>.</td><td align="center">1</td></tr>
+<tr><td>PIP neural-network potential — <code>N4_1A_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>N4_1A_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>N4_BDTC_2014</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="6"><strong>NaFH</strong></td><td>LEPS reactive potential — <code>NaFH_LEPS_JHCTP_2001</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaFH_LEPS_JHCTP_2001_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>NaFH_LEPS_TTYPP1_1998</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaFH_LEPS_TTYPP1_1998_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>NaFH_LEPS_TTYPP2_1998</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaFH_LEPS_TTYPP2_1998_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td rowspan="14"><strong>NaH<sub>2</sub></strong></td><td>LEPS reactive potential — <code>NaH2_LEPS_5F_1992</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaH2_LEPS_5F_1992_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>NaH2_LEPS_5G_1992</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaH2_LEPS_5G_1992_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>NaH2_LEPS_6_2000</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaH2_LEPS_6_2000_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>NaH2_LEPS_7L_2000</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaH2_LEPS_7L_2000_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>NaH2_LEPS_7LD_2000</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaH2_LEPS_7LD_2000_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>NaH2_LEPS_7S_2000</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaH2_LEPS_7S_2000_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive potential — <code>NaH2_LEPS_7SD_2000</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>NaH2_LEPS_7SD_2000_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td rowspan="6"><strong>NH<sub>3</sub></strong></td><td>General analytic potential — <code>NH3_GEN_FFW1_2006</code>.</td><td align="center">2</td></tr>
+<tr><td>General analytic diabatic representation — <code>NH3_GEN_FFW1_2006_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>General analytic potential — <code>NH3_GEN_FFW2_2007</code>.</td><td align="center">2</td></tr>
+<tr><td>General analytic diabatic representation — <code>NH3_GEN_FFW2_2007_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td>Surfgen multistate potential — <code>NH3_Surfgen_2state_2012</code>.</td><td align="center">2</td></tr>
+<tr><td>Surfgen multistate diabatic representation — <code>NH3_Surfgen_2state_2012_DPEM</code>.</td><td align="center">2</td></tr>
+<tr><td rowspan="1"><strong>NH<sub>3</sub>CN</strong></td><td>Valence-bond molecular-mechanics potential — <code>NH3CN_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>NH<sub>3</sub>OH</strong></td><td>Valence-bond molecular-mechanics potential — <code>NH3OH_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>NH<sub>4</sub></strong></td><td>Valence-bond molecular-mechanics potential — <code>NH4_VBMM_1997</code>.</td><td align="center">1</td></tr>
+<tr><td>Valence-bond molecular-mechanics potential — <code>NH4_VBMM_2010</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="6"><strong>NO<sub>2</sub></strong></td><td>PIP neural-network potential — <code>NO2_2Ap_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>NO2_2Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>PIP neural-network potential — <code>NO2_4Ap_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>NO2_4Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>PIP neural-network potential — <code>NO2_6Ap_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>NO2_6Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>O<sub>2</sub>H</strong></td><td>General analytic potential — <code>O2H_GEN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>O<sub>2</sub>H<sub>3</sub></strong></td><td>PIP neural-network potential — <code>O2H3_PIPNN</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="35"><strong>O<sub>3</sub></strong></td><td>Analytic potential — <code>O3_14_3Ap_2022</code>.</td><td align="center">14</td></tr>
+<tr><td>Analytic diabatic representation — <code>O3_14_3Ap_2022_DPEM</code>.</td><td align="center">14</td></tr>
+<tr><td>Analytic potential — <code>O3_14_3Ap_2023</code>.</td><td align="center">14</td></tr>
+<tr><td>Analytic diabatic representation — <code>O3_14_3Ap_2023_DPEM</code>.</td><td align="center">14</td></tr>
+<tr><td>Analytic potential — <code>O3_14_3Ap_2023a</code>.</td><td align="center">14</td></tr>
+<tr><td>Analytic diabatic representation — <code>O3_14_3Ap_2023a_DPEM</code>.</td><td align="center">14</td></tr>
+<tr><td>Analytic potential — <code>O3_14_3Ap_2024</code>.</td><td align="center">14</td></tr>
+<tr><td>Analytic diabatic representation — <code>O3_14_3Ap_2024_DPEM</code>.</td><td align="center">14</td></tr>
+<tr><td>Analytic potential — <code>O3_16_3App_2026</code>.</td><td align="center">16</td></tr>
+<tr><td>Analytic potential — <code>O3_16_3App_AE_2026</code>.</td><td align="center">16</td></tr>
+<tr><td>Analytic potential — <code>O3_1_1Ap</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O3_1_1Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O3_1_1App</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O3_1_1App_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O3_1_3Ap</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O3_1_3Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O3_1_3App</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O3_1_3App_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O3_1_5Ap</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O3_1_5Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O3_1_5App</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O3_1_5App_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O3_2_1Ap</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O3_2_1Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O3_2_3Ap</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O3_2_3Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O3_2_5Ap</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O3_2_5Ap_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O3_5app_2026</code>.</td><td align="center">6</td></tr>
+<tr><td>Analytic potential — <code>O3_5app_AE_2026</code>.</td><td align="center">6</td></tr>
+<tr><td>Analytic potential — <code>O3_6_5Ap_2023</code>.</td><td align="center">6</td></tr>
+<tr><td>Analytic diabatic representation — <code>O3_6_5Ap_2023_DPEM</code>.</td><td align="center">6</td></tr>
+<tr><td>Analytic potential — <code>O3_6_5Ap_2023a</code>.</td><td align="center">6</td></tr>
+<tr><td>Analytic diabatic representation — <code>O3_6_5Ap_2023a_DPEM</code>.</td><td align="center">6</td></tr>
+<tr><td>Many-body polynomial potential — <code>O3_MBP_2017</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="7"><strong>O<sub>4</sub></strong></td><td>Many-body polynomial potential — <code>O4_MBP_singlet_2018</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O4_quintet</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O4_quintet_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O4_singlet</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O4_singlet_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td>Analytic potential — <code>O4_triplet_v2</code>.</td><td align="center">1</td></tr>
+<tr><td>ZV analytic potential — <code>O4_triplet_ZV</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="9"><strong>OH<sub>2</sub></strong></td><td>General analytic potential — <code>OH2_Ap_GEN_M21986</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>OH2_App_GEN_M21986</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>OH2_App_GEN_M3n1988</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>OH2_App_GEN_M3na1988</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>OH2_GEN_DIM1981</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>OH2_GEN_POL1980</code>.</td><td align="center">1</td></tr>
+<tr><td>General analytic potential — <code>OH2_GEN_SL1979</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>OH2_LEPS_JW1977</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>OH2_LEPS_JWS1985</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="5"><strong>OH<sub>3</sub></strong></td><td>LEPS reactive potential — <code>OH3_LEPS_SE_1986</code>.</td><td align="center">1</td></tr>
+<tr><td>Permutationally invariant polynomial potential — <code>OH3_PIP_FFW1_2019</code>.</td><td align="center">3</td></tr>
+<tr><td>Permutationally invariant polynomial diabatic representation — <code>OH3_PIP_FFW1_2019_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td>Permutationally invariant polynomial potential — <code>OH3_PIP_FFW2_2022</code>.</td><td align="center">3</td></tr>
+<tr><td>Permutationally invariant polynomial diabatic representation — <code>OH3_PIP_FFW2_2022_DPEM</code>.</td><td align="center">3</td></tr>
+<tr><td rowspan="1"><strong>SiH<sub>4</sub>Cl</strong></td><td>Valence-bond molecular-mechanics potential — <code>SiH4Cl_VBMM</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>SiH<sub>5</sub></strong></td><td>LEPS reactive potential — <code>SiH5_LEP_1998v1</code>.</td><td align="center">1</td></tr>
+<tr><td>LEPS reactive potential — <code>SiH5_LEP_1998v2</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="1"><strong>SiOH</strong></td><td>General analytic potential — <code>SiOH_GEN_1988</code>.</td><td align="center">1</td></tr>
+<tr><td rowspan="2"><strong>YRH</strong></td><td>LEPS reactive potential — <code>YRH_LEPS_ModelSurface</code>.</td><td align="center">2</td></tr>
+<tr><td>LEPS reactive diabatic representation — <code>YRH_LEPS_ModelSurface_DPEM</code>.</td><td align="center">2</td></tr>
+</tbody>
+</table>
 
 <!-- END GENERATED PES CATALOG -->
 
