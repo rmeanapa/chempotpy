@@ -2,7 +2,15 @@
 
 import sys
 
-from .python import adapters, constants, contract, registry, runtime, units
+from .python import (
+    adapters,
+    constants,
+    contract,
+    registry,
+    runtime,
+    socket_transport,
+    units,
+)
 from .python.adapters import LegacyAdiabaticF2PyAdapter
 from .python.contract import (
     PESCapabilities,
@@ -15,6 +23,13 @@ from .python.contract import (
 )
 from .python.registry import SurfaceSource, discover_surface_sources
 from .python.runtime import LegacyRuntime, SurfaceRuntimeError
+from .python.socket_transport import (
+    PESWireProtocolError,
+    RemotePESError,
+    SocketPESClient,
+    SocketPESServer,
+    serve_connection,
+)
 
 # Preserve the established chempotpy.core.<module> import paths while keeping
 # their implementations together under chempotpy/core/python.
@@ -23,6 +38,7 @@ sys.modules[__name__ + ".constants"] = constants
 sys.modules[__name__ + ".contract"] = contract
 sys.modules[__name__ + ".registry"] = registry
 sys.modules[__name__ + ".runtime"] = runtime
+sys.modules[__name__ + ".socket_transport"] = socket_transport
 sys.modules[__name__ + ".units"] = units
 
 __all__ = [
@@ -33,9 +49,14 @@ __all__ = [
     "PESMetadata",
     "PESRequest",
     "PESResult",
+    "PESWireProtocolError",
     "PotentialEnergySurface",
+    "RemotePESError",
     "Representation",
+    "SocketPESClient",
+    "SocketPESServer",
     "SurfaceSource",
     "SurfaceRuntimeError",
     "discover_surface_sources",
+    "serve_connection",
 ]

@@ -53,6 +53,54 @@ owns an adapter type that extends its abstract potential class and delegates to
 the CHEMPOTPY module procedures. Standalone programs bypass that object adapter
 and call the same CHEMPOTPY module API directly.
 
+## Provider transports
+
+The PES request/result contract is independent of process boundaries. Direct
+Fortran and Python calls remain the preferred path when CHEMPOTPY is linked or
+imported in the same process. The bundled Python socket transport exposes the
+same `PotentialEnergySurface` protocol to a persistent external process; PES
+modules themselves never contain networking, ports, or connection state.
+
+`SocketPESClient` performs a versioned handshake, receives immutable metadata,
+and sends one or more evaluations over an already connected TCP or UNIX-domain
+socket. `serve_connection` publishes any Python object implementing the PES
+protocol. Messages are length-prefixed UTF-8 JSON. Numerical arrays are
+explicitly shaped, big-endian binary64 values encoded with base64, so their
+interpretation does not depend on the hosts' byte order. The protocol carries
+atomic-unit coordinates and results and preserves CHEMPOTPY's adiabatic,
+diabatic, and nonadiabatic result shapes.
+
+The socket layer is a CHEMPOTPY transport, not a replacement for MDI or i-PI.
+An MDI adapter can map standard coordinate, energy, and force commands onto the
+same provider contract. An i-PI adapter can expose the energy/force subset. A
+future POLYRATE provider can therefore select direct calls, this socket
+transport, MDI, or i-PI without changing a surface implementation.
+
+A provider process creates a listener around one configured surface:
+
+```python
+from chempotpy.core import SocketPESServer
+
+with SocketPESServer.listen_tcp(surface, host="127.0.0.1", port=8021) as server:
+    server.serve_forever()
+```
+
+The consuming process connects through the same PES interface:
+
+```python
+from chempotpy.core import PESRequest, SocketPESClient
+
+with SocketPESClient.connect_tcp("127.0.0.1", 8021) as surface:
+    result = surface.evaluate(coordinates_bohr, PESRequest(gradient=True))
+```
+
+The first protocol version intentionally serves one configured surface per
+connection and serializes evaluations on that connection. Process launch,
+authentication, TLS, multi-client scheduling, and HPC resource management are
+orchestrator responsibilities. Remote TCP deployments must use a trusted
+network, tunnel, or separately authenticated proxy; the bundled protocol does
+not claim to provide transport security.
+
 ## Boundary
 
 The portable low-level boundary uses:
