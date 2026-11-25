@@ -9,6 +9,7 @@
 ! Number of electronic surfaces: 1
 ! Interface:                     PES
 ! Data file:                     none; the released H2 spline is embedded below
+! Notes:                         Ground-state H + H2 surface with atom order H, H, H.
 
 !> @brief Evaluate the LSTH ground-state potential for H + H2.
 module chempotpy_h3_gen_lsth_1978_pes

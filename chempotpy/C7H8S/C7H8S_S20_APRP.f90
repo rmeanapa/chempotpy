@@ -4,7 +4,8 @@
 !   Number of derivatives:         1
 !   Number of bodies:              16
 !   Number of electronic surfaces: 3
-!   Interface:                     Section-2
+!   Interface:                     PES
+!   Data file:                     none; published APRP coefficients are embedded
 !   Reference: "Full-dimensional ground- and excited-state potential energy surfaces and
 ! state couplings for photodissociation of thioanisole"
 ! Shaohong L. Li and Donald G. Truhlar, J. Chem. Phys., 146, 064301 (2017).
