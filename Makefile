@@ -56,6 +56,7 @@ check-embedded-parameters:
 
 check-generated: check-embedded-parameters
 	$(PYTHON) scripts/generate_constants.py --check
+	$(PYTHON) scripts/generate_readme_catalog.py --check
 
 build:
 	$(PYTHON) scripts/build_pes.py $(BUILD_FLAGS)
