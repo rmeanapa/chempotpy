@@ -152,6 +152,12 @@ class ExportStandaloneTests(unittest.TestCase):
         self.assertIn("numerical_hessian", driver)
         self.assertNotIn("mixed_pp", driver)
 
+    def test_example_uses_system_specific_regression_geometries(self) -> None:
+        source = select_surface("BrNH3/BrNH3_VBMM_2026")
+        driver = example_driver(source, geometry_count=1, difference_step=1.0e-3)
+        self.assertIn("9.50999226250999974d-01", driver)
+        self.assertIn("-2.27510306270600005d+00", driver)
+
     def test_export_writes_source_and_optional_driver(self) -> None:
         source = select_surface("H3/H3_GEN_A2_2002")
         with tempfile.TemporaryDirectory() as temporary_directory:

@@ -32,7 +32,7 @@ changing a surface.
 
 <!-- BEGIN GENERATED PES CATALOG -->
 
-The catalog currently exposes **402 callable surfaces** across **98 chemical systems**. Availability codes are: **P** potential energy, **G** Cartesian gradient, **D** nonadiabatic coupling vector, **U** diabatic potential matrix, and **UG** Cartesian gradient of the diabatic matrix.
+The catalog currently exposes **403 callable surfaces** across **99 chemical systems**. Availability codes are: **P** potential energy, **G** Cartesian gradient, **D** nonadiabatic coupling vector, **U** diabatic potential matrix, and **UG** Cartesian gradient of the diabatic matrix.
 
 | System | Surface | Interface | States | Available |
 | :--- | :--- | :---: | ---: | :--- |
@@ -122,6 +122,7 @@ The catalog currently exposes **402 callable surfaces** across **98 chemical sys
 | `BrHCl` | `BrHCl_LEPS2` | PES | 1 | **P/G** |
 | `BrHCl` | `BrHCl_LEPS3` | PES | 1 | **P/G** |
 | `BrHCl` | `BrHCl_LEPS_BLM_1983` | PES | 1 | **P/G** |
+| `BrNH3` | `BrNH3_VBMM_2026` | PES | 1 | **P/G** |
 | `C2H2N2O` | `C2H2N2O_PIPNN` | PES | 1 | **P** |
 | `C2H2O` | `C2H2O_PIPNN` | PES | 1 | **P** |
 | `C2H4O4` | `C2H4O4_FAD_PIP` | PES | 1 | **P** |

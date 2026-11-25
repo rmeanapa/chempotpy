@@ -140,7 +140,11 @@ class NumericalRegressionTests(unittest.TestCase):
         self.assertFalse(bootstrapped)
 
     def test_problem_systems_use_physical_regression_geometries(self) -> None:
-        for system_name, atom_count in (("Aln", 5), ("NH3", 4)):
+        for system_name, atom_count in (
+            ("Aln", 5),
+            ("BrNH3", 5),
+            ("NH3", 4),
+        ):
             geometries = []
             for geometry_index in range(1, REGRESSION_GEOMETRY_COUNT+1):
                 points = coordinates(

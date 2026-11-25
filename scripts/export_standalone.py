@@ -258,7 +258,12 @@ def example_driver(
         geometry_blocks.append(
             "    coordinates = 0.0_wp\n{}\n"
             "    call report_geometry({}, coordinates)".format(
-                assignments(atom_count, reference_index, "coordinates"),
+                assignments(
+                    atom_count,
+                    reference_index,
+                    "coordinates",
+                    system_name=source.system_name,
+                ),
                 geometry_index,
             )
         )
