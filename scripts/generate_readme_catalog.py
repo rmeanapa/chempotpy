@@ -91,11 +91,7 @@ def surface_description(source: SurfaceSource) -> str:
         if source.entry_point == "dpem"
         else "potential"
     )
-    return "{} {} — <code>{}</code>.".format(
-        initial_capital(family),
-        representation,
-        source.surface_name,
-    )
+    return "{} {}".format(initial_capital(family), representation)
 
 
 def generated_catalog() -> str:
@@ -129,8 +125,8 @@ def generated_catalog() -> str:
         "",
         "<table>",
         "<thead>",
-        "<tr><th>System composition</th><th>Surface description</th>"
-        "<th>Electronic surfaces</th></tr>",
+        "<tr><th>System composition</th><th>Surface name</th>"
+        "<th>Surface description</th><th>Electronic surfaces</th></tr>",
         "</thead>",
         "<tbody>",
     ]
@@ -145,6 +141,7 @@ def generated_catalog() -> str:
                         len(system_sources), chemical_composition(system_name)
                     )
                 )
+            cells.append("<td><code>{}</code></td>".format(source.surface_name))
             cells.append("<td>{}</td>".format(surface_description(source)))
             cells.append(
                 '<td align="center">{}</td>'.format(records[key]["nstates"])
