@@ -83,6 +83,18 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   initialization. `BLOCK DATA` is forbidden and absent from the catalog.
 - Prefer descriptive physical names and include units in a name when ambiguity
   would otherwise remain. Retain established scientific acronyms where useful.
+- Do not preserve collision-avoidance placeholders such as `legacy_d`,
+  `legacy_g`, `legacy_x`, `legacy_p`, or `legacy_u`. Name the physical quantity
+  or numerical role (`dissociation_energies`, `morse_exponentials`,
+  `eigenvectors`, and so on). The `legacy_` prefix is reserved for an explicitly
+  documented compatibility operation or released rounded constant whose
+  historical numerical behavior is intentionally retained.
+- Shared evaluator workspace uses descriptive role names: `input_cartesian`,
+  `cartesian_coordinates`, `coordinate_representation`,
+  `ground_state_energy`, `ground_state_internal_gradient`, and the analogous
+  excited-state, diabatic-coupling, request, and output names. Do not restore
+  POTLIB storage-block prefixes such as `usricm_`, `usrocm_`, `infocm_`,
+  `utilcm_`, or opaque names such as `ENGYGS`, `DEGSDR`, and `CARTNU`.
 
 ## Modules, state, and ownership
 

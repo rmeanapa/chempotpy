@@ -321,9 +321,13 @@ structural formatter used during migration.
   and saved coefficient caches remain visible where they are part of a kernel's
   current private implementation; none is transported through legacy shared
   storage or a public setup routine.
-- The 120 identical `CARTOU` and 120 identical POTLIB `CARTTOR` implementations
-  are compatibility wrappers over `chempotpy_legacy_coordinates`; the distinct
-  F2H2 derivative variant remains local pending its dedicated derivative test.
+- Obsolete `CARTOU` input scaling and atom-reordering wrappers have been
+  removed. Released surfaces use angstrom input in their public contract, so
+  their fixed unit scale of one and disabled zero-filled permutation tables
+  collapsed to direct, explicitly shaped Cartesian assignments. POTLIB
+  Cartesian-to-internal transformations remain centralized in
+  `chempotpy_legacy_coordinates`; the distinct F2H2 JBKKL Jacobi transform
+  remains local to its owning surface.
 - The 71 wrappers that require atom-major one-dimensional Cartesian vectors use
   `flatten_cartesian_coordinates`; the style gate rejects reintroduction of the
   duplicated `(iatom-1)*3+idir` packing loop.
@@ -338,6 +342,13 @@ structural formatter used during migration.
   conversion behavior were preserved. Descriptive renaming and algorithmic
   restructuring remain separate changes that require their own numerical
   review.
+- The remaining POTLIB evaluator cohort uses descriptive workspace names for
+  Cartesian input, internal and Cartesian gradients, energies, state requests,
+  and derivative limits. Fixed identity conversion factors, zero energy
+  offsets, disabled atom permutations, unused output-unit flags, and placeholder
+  names such as `legacy_d`, `legacy_g`, `legacy_x`, `legacy_p`, and `legacy_u`
+  have been removed. Every cohort checkpoint was recompiled and compared with
+  the preceding reference values before the next rename was applied.
 - Legacy shared storage and setup dispatch have been eliminated catalog-wide.
   The final POTLIB migration localized each former named block inside its
   evaluator, preserved aliased layouts explicitly, and converted block-data

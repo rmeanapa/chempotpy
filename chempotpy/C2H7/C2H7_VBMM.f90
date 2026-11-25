@@ -46,12 +46,10 @@ module chempotpy_c2h7_vbmm_pes
         real(wp)              :: fsw1_a2s
         real(wp)              :: fsw1_b1s
         real(wp)              :: fsw1_b2s
-        real(wp)              :: infocm_cartnu(natom,3)
-        integer               :: infocm_icartr
-        integer               :: infocm_indexes(natom)
-        integer               :: infocm_irctnt
-        integer               :: infocm_mder
-        integer               :: infocm_msurf
+        real(wp)              :: cartesian_coordinates(natom,3)
+        integer               :: coordinate_representation
+        integer               :: maximum_derivative_order
+        integer               :: maximum_excited_state
         integer               :: infocm_natoms
         character(len=75)     :: infocm_ref(5)
         real(wp)              :: ip1_ds1(4)
@@ -97,159 +95,150 @@ module chempotpy_c2h7_vbmm_pes
         real(wp)              :: potcm_r0cb
         real(wp)              :: potcm_r0ch
         real(wp)              :: potcm_r0hh
-        real(wp)              :: pt1cm_degsdr(n3atom)
-        real(wp)              :: pt1cm_engygs
+        real(wp)              :: ground_state_internal_gradient(n3atom)
+        real(wp)              :: ground_state_energy
         real(wp)              :: pt1cm_r(n3atom)
         real(wp)              :: pt3cm_ezero(isurf+1)
-        real(wp)              :: pt4cm_deesdr(n3atom,isurf)
-        real(wp)              :: pt4cm_engyes(isurf)
-        real(wp)              :: pt5cm_deijdr(n3atom,jsurf)
-        real(wp)              :: pt5cm_engyij(jsurf)
+        real(wp)              :: excited_state_internal_gradients(n3atom,isurf)
+        real(wp)              :: excited_state_energies(isurf)
+        real(wp)              :: diabatic_internal_gradients(n3atom,jsurf)
+        real(wp)              :: diabatic_couplings(jsurf)
         real(wp)              :: qpdot_pl_pdot(150)
         real(wp)              :: qpdot_pl_q(150)
         real(wp)              :: switch1_dsphi(4)
         real(wp)              :: switch1_dstheta(4)
         real(wp)              :: switch1_sphi(4)
         real(wp)              :: switch1_stheta(4)
-        real(wp)              :: usricm_anuzero
-        real(wp)              :: usricm_cart(natom,3)
-        integer               :: usricm_nasurf(isurf+1,isurf+1)
-        integer               :: usricm_nder
-        integer               :: usricm_nflag(20)
-        integer               :: usricm_nulbl(natom)
-        real(wp)              :: usrocm_descart(natom,3,isurf)
-        real(wp)              :: usrocm_dgscart(natom,3)
-        real(wp)              :: usrocm_dijcart(natom,3,jsurf)
-        real(wp)              :: usrocm_pengyes(isurf)
-        real(wp)              :: usrocm_pengygs
-        real(wp)              :: usrocm_pengyij(jsurf)
+        real(wp)              :: input_cartesian(natom,3)
+        integer               :: surface_requests(isurf+1,isurf+1)
+        integer               :: requested_derivative_order
+        real(wp)              :: output_excited_state_gradients(natom,3,isurf)
+        real(wp)              :: output_ground_state_gradient(natom,3)
+        real(wp)              :: output_diabatic_gradients(natom,3,jsurf)
+        real(wp)              :: output_excited_state_energies(isurf)
+        real(wp)              :: output_ground_state_energy
+        real(wp)              :: output_diabatic_couplings(jsurf)
         real(wp)              :: xangles_dtheta0(4,4,4)
         real(wp)              :: xangles_theta0(4,4)
         real(wp)              :: v
         integer               :: istate
         !initialize
-        angles_dtheta0  = 0.e0_wp; angles_theta0 = 0.e0_wp; bonds_rbh = 0.e0_wp; bonds_rcb = 0.e0_wp; bonds_rch = 0.e0_wp
-        coords_tbh      = 0.e0_wp; coords_tcb = 0.e0_wp; coords_tch = 0.e0_wp; delta1_fdelta = 0.e0_wp; delta1_hdelta = 0.e0_wp
-        delta2_dfdelta  = 0.e0_wp; delta2_dhdelta = 0.e0_wp; force1_dfdc = 0.e0_wp; force1_dfdh = 0.e0_wp; force1_f1 = 0.e0_wp
-        force1_fk0      = 0.e0_wp; fsw1_a1s = 0.e0_wp; fsw1_a2s = 0.e0_wp; fsw1_b1s = 0.e0_wp; fsw1_b2s = 0.e0_wp; infocm_cartnu = 0.e0_wp
-        infocm_icartr   = 0; infocm_indexes = 0; infocm_irctnt = 0; infocm_mder = 0; infocm_msurf = 0; infocm_natoms = 0
-        infocm_ref      = ' '
-        ip1_ds1         = 0.e0_wp
-        ip1_ds2         = 0.e0_wp
-        ip1_s1          = 0.e0_wp
-        ip1_s2          = 0.e0_wp
-        ndx_nc          = 0
-        ndx_nh          = 0
-        ndx_nhb         = 0
-        op1_ds3         = 0.e0_wp
-        op1_s3          = 0.e0_wp
-        potcm_a1ch      = 0.e0_wp
-        potcm_a3s       = 0.e0_wp
-        potcm_aa1       = 0.e0_wp
-        potcm_aa2       = 0.e0_wp
-        potcm_aa3       = 0.e0_wp
-        potcm_aa4       = 0.e0_wp
-        potcm_acb       = 0.e0_wp
-        potcm_ahh       = 0.e0_wp
-        potcm_ak        = 0.e0_wp
-        potcm_aphi      = 0.e0_wp
-        potcm_atheta    = 0.e0_wp
-        potcm_b1ch      = 0.e0_wp
-        potcm_b3s       = 0.e0_wp
-        potcm_bk        = 0.e0_wp
-        potcm_bphi      = 0.e0_wp
-        potcm_btheta    = 0.e0_wp
-        potcm_c1ch      = 0.e0_wp
-        potcm_cphi      = 0.e0_wp
-        potcm_ctheta    = 0.e0_wp
-        potcm_d1cb      = 0.e0_wp
-        potcm_d1ch      = 0.e0_wp
-        potcm_d1hh      = 0.e0_wp
-        potcm_d3cb      = 0.e0_wp
-        potcm_d3ch      = 0.e0_wp
-        potcm_d3hh      = 0.e0_wp
-        potcm_fch3      = 0.e0_wp
-        potcm_fkinf     = 0.e0_wp
-        potcm_hch3      = 0.e0_wp
-        potcm_nnb       = 0
-        potcm_nnc       = 0
-        potcm_nnh       = 0
-        potcm_r0cb      = 0.e0_wp
-        potcm_r0ch      = 0.e0_wp
-        potcm_r0hh      = 0.e0_wp
-        pt1cm_degsdr    = 0.e0_wp
-        pt1cm_engygs    = 0.e0_wp
-        pt1cm_r         = 0.e0_wp
-        pt3cm_ezero     = 0.e0_wp
-        pt4cm_deesdr    = 0.e0_wp
-        pt4cm_engyes    = 0.e0_wp
-        pt5cm_deijdr    = 0.e0_wp
-        pt5cm_engyij    = 0.e0_wp
-        qpdot_pl_pdot   = 0.e0_wp
-        qpdot_pl_q      = 0.e0_wp
-        switch1_dsphi   = 0.e0_wp
-        switch1_dstheta = 0.e0_wp
-        switch1_sphi    = 0.e0_wp
-        switch1_stheta  = 0.e0_wp
-        usricm_anuzero  = 0.e0_wp
-        usricm_cart     = 0.e0_wp
-        usricm_nasurf   = 0
-        usricm_nder     = 0
-        usricm_nflag    = 0
-        usricm_nulbl    = 0
-        usrocm_descart  = 0.e0_wp
-        usrocm_dgscart  = 0.e0_wp
-        usrocm_dijcart  = 0.e0_wp
-        usrocm_pengyes  = 0.e0_wp
-        usrocm_pengygs  = 0.e0_wp
-        usrocm_pengyij  = 0.e0_wp
-        xangles_dtheta0 = 0.e0_wp
-        xangles_theta0  = 0.e0_wp
-        usricm_nasurf = reshape([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
-            & 0, 0, 0, 0, 0, 0, 0, 0], shape(usricm_nasurf))
-        usricm_nder    = 1
-        usricm_nflag   = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        usricm_anuzero = 0.0e0_wp
-        infocm_icartr  = 1
-        infocm_msurf   = 0
-        infocm_mder    = 1
-        usricm_nulbl   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        infocm_natoms  = 6
-        potcm_nnc      = 2
-        potcm_nnb      = 6
-        potcm_nnh      = [3, 4, 5, 1]
-        potcm_r0ch     = 1.09397e0_wp
-        potcm_d1ch     = 112.230e0_wp
-        potcm_d3ch     = 38.834e0_wp
-        potcm_a1ch     = 1.71300e0_wp
-        potcm_b1ch     = 0.13500e0_wp
-        potcm_c1ch     = 6.61404e0_wp
-        potcm_r0hh     = 0.74191e0_wp
-        potcm_d1hh     = 109.458e0_wp
-        potcm_d3hh     = 39.664e0_wp
-        potcm_ahh      = 1.9457e0_wp
-        potcm_r0cb     = 1.09397e0_wp
-        potcm_d1cb     = 26.409e0_wp
-        potcm_d3cb     = 20.063e0_wp
-        potcm_acb      = 1.8530285e0_wp
-        potcm_a3s      = 0.1419147e0_wp
-        potcm_b3s      = -0.3068450e0_wp
-        potcm_aphi     = 0.5287903e0_wp
-        potcm_bphi     = 0.4006638e0_wp
-        potcm_cphi     = 1.9209937e0_wp
-        potcm_atheta   = 0.9078714e0_wp
-        potcm_btheta   = 0.3548859e0_wp
-        potcm_ctheta   = 1.8915497e0_wp
-        potcm_fch3     = 0.0957500e0_wp
-        potcm_hch3     = 0.1915000e0_wp
-        potcm_fkinf    = 0.4077000e0_wp
-        potcm_ak       = 0.1260000e0_wp
-        potcm_bk       = 10.7132e0_wp
-        potcm_aa1      = 3.213952e0_wp
-        potcm_aa2      = 1.599963e0_wp
-        potcm_aa3      = 2.165953e0_wp
-        potcm_aa4      = 11.569977e0_wp
-        p              = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
+        angles_dtheta0                   = 0.e0_wp; angles_theta0 = 0.e0_wp; bonds_rbh = 0.e0_wp; bonds_rcb = 0.e0_wp; bonds_rch = 0.e0_wp
+        coords_tbh                       = 0.e0_wp; coords_tcb = 0.e0_wp; coords_tch = 0.e0_wp; delta1_fdelta = 0.e0_wp; delta1_hdelta = 0.e0_wp
+        delta2_dfdelta                   = 0.e0_wp; delta2_dhdelta = 0.e0_wp; force1_dfdc = 0.e0_wp; force1_dfdh = 0.e0_wp; force1_f1 = 0.e0_wp
+        force1_fk0                       = 0.e0_wp; fsw1_a1s = 0.e0_wp; fsw1_a2s = 0.e0_wp; fsw1_b1s = 0.e0_wp; fsw1_b2s = 0.e0_wp; cartesian_coordinates = 0.e0_wp
+        coordinate_representation        = 0; maximum_derivative_order = 0; maximum_excited_state = 0; infocm_natoms = 0
+        infocm_ref                       = ' '
+        ip1_ds1                          = 0.e0_wp
+        ip1_ds2                          = 0.e0_wp
+        ip1_s1                           = 0.e0_wp
+        ip1_s2                           = 0.e0_wp
+        ndx_nc                           = 0
+        ndx_nh                           = 0
+        ndx_nhb                          = 0
+        op1_ds3                          = 0.e0_wp
+        op1_s3                           = 0.e0_wp
+        potcm_a1ch                       = 0.e0_wp
+        potcm_a3s                        = 0.e0_wp
+        potcm_aa1                        = 0.e0_wp
+        potcm_aa2                        = 0.e0_wp
+        potcm_aa3                        = 0.e0_wp
+        potcm_aa4                        = 0.e0_wp
+        potcm_acb                        = 0.e0_wp
+        potcm_ahh                        = 0.e0_wp
+        potcm_ak                         = 0.e0_wp
+        potcm_aphi                       = 0.e0_wp
+        potcm_atheta                     = 0.e0_wp
+        potcm_b1ch                       = 0.e0_wp
+        potcm_b3s                        = 0.e0_wp
+        potcm_bk                         = 0.e0_wp
+        potcm_bphi                       = 0.e0_wp
+        potcm_btheta                     = 0.e0_wp
+        potcm_c1ch                       = 0.e0_wp
+        potcm_cphi                       = 0.e0_wp
+        potcm_ctheta                     = 0.e0_wp
+        potcm_d1cb                       = 0.e0_wp
+        potcm_d1ch                       = 0.e0_wp
+        potcm_d1hh                       = 0.e0_wp
+        potcm_d3cb                       = 0.e0_wp
+        potcm_d3ch                       = 0.e0_wp
+        potcm_d3hh                       = 0.e0_wp
+        potcm_fch3                       = 0.e0_wp
+        potcm_fkinf                      = 0.e0_wp
+        potcm_hch3                       = 0.e0_wp
+        potcm_nnb                        = 0
+        potcm_nnc                        = 0
+        potcm_nnh                        = 0
+        potcm_r0cb                       = 0.e0_wp
+        potcm_r0ch                       = 0.e0_wp
+        potcm_r0hh                       = 0.e0_wp
+        ground_state_internal_gradient   = 0.e0_wp
+        ground_state_energy              = 0.e0_wp
+        pt1cm_r                          = 0.e0_wp
+        pt3cm_ezero                      = 0.e0_wp
+        excited_state_internal_gradients = 0.e0_wp
+        excited_state_energies           = 0.e0_wp
+        diabatic_internal_gradients      = 0.e0_wp
+        diabatic_couplings               = 0.e0_wp
+        qpdot_pl_pdot                    = 0.e0_wp
+        qpdot_pl_q                       = 0.e0_wp
+        switch1_dsphi                    = 0.e0_wp
+        switch1_dstheta                  = 0.e0_wp
+        switch1_sphi                     = 0.e0_wp
+        switch1_stheta                   = 0.e0_wp
+        input_cartesian                  = 0.e0_wp
+        surface_requests                 = 0
+        requested_derivative_order       = 0
+        output_excited_state_gradients   = 0.e0_wp
+        output_ground_state_gradient     = 0.e0_wp
+        output_diabatic_gradients        = 0.e0_wp
+        output_excited_state_energies    = 0.e0_wp
+        output_ground_state_energy       = 0.e0_wp
+        output_diabatic_couplings        = 0.e0_wp
+        xangles_dtheta0                  = 0.e0_wp
+        xangles_theta0                   = 0.e0_wp
+        surface_requests = reshape([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
+            & 0, 0, 0, 0, 0, 0, 0, 0, 0], shape(surface_requests))
+        requested_derivative_order = 1
+        coordinate_representation  = 1
+        maximum_excited_state      = 0
+        maximum_derivative_order   = 1
+        infocm_natoms              = 6
+        potcm_nnc                  = 2
+        potcm_nnb                  = 6
+        potcm_nnh                  = [3, 4, 5, 1]
+        potcm_r0ch                 = 1.09397e0_wp
+        potcm_d1ch                 = 112.230e0_wp
+        potcm_d3ch                 = 38.834e0_wp
+        potcm_a1ch                 = 1.71300e0_wp
+        potcm_b1ch                 = 0.13500e0_wp
+        potcm_c1ch                 = 6.61404e0_wp
+        potcm_r0hh                 = 0.74191e0_wp
+        potcm_d1hh                 = 109.458e0_wp
+        potcm_d3hh                 = 39.664e0_wp
+        potcm_ahh                  = 1.9457e0_wp
+        potcm_r0cb                 = 1.09397e0_wp
+        potcm_d1cb                 = 26.409e0_wp
+        potcm_d3cb                 = 20.063e0_wp
+        potcm_acb                  = 1.8530285e0_wp
+        potcm_a3s                  = 0.1419147e0_wp
+        potcm_b3s                  = -0.3068450e0_wp
+        potcm_aphi                 = 0.5287903e0_wp
+        potcm_bphi                 = 0.4006638e0_wp
+        potcm_cphi                 = 1.9209937e0_wp
+        potcm_atheta               = 0.9078714e0_wp
+        potcm_btheta               = 0.3548859e0_wp
+        potcm_ctheta               = 1.8915497e0_wp
+        potcm_fch3                 = 0.0957500e0_wp
+        potcm_hch3                 = 0.1915000e0_wp
+        potcm_fkinf                = 0.4077000e0_wp
+        potcm_ak                   = 0.1260000e0_wp
+        potcm_bk                   = 10.7132e0_wp
+        potcm_aa1                  = 3.213952e0_wp
+        potcm_aa2                  = 1.599963e0_wp
+        potcm_aa3                  = 2.165953e0_wp
+        potcm_aa4                  = 11.569977e0_wp
+        p                          = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
         if( igrad == 0 )then
             call c2h7pot(x, v)
             v = v/electronvolt_to_kilocalorie_per_mole
@@ -2710,7 +2699,7 @@ module chempotpy_c2h7_vbmm_pes
         end subroutine xlimit
 
         !> @brief Evaluate CSURF for the C2H7_VBMM potential.
-        subroutine csurf( engygs, r, degsdr, n3tm )
+        subroutine csurf( ground_state_energy, r, ground_state_internal_gradient, n3tm )
             !        This potential is written such that:
             !                       X(1)  - X(3)  : X, Y, Z for H1
             !                       X(4)  - X(6)  : X, Y, Z for C
@@ -2720,7 +2709,7 @@ module chempotpy_c2h7_vbmm_pes
             !                       X(16) - X(18) : X, Y, Z for H5
             use chempotpy_kinds, only: wp
             implicit none
-            real(wp) :: degsdr(n3tm), en, engygs, r(n3tm), vip, vop, vstr
+            real(wp) :: ground_state_internal_gradient(n3tm), en, ground_state_energy, r(n3tm), vip, vop, vstr
             integer  :: i, n3tm
             call prepare_local_context
             ! Changing units from angstrom to bohr and initialize
@@ -2746,11 +2735,11 @@ module chempotpy_c2h7_vbmm_pes
             ! 0.03812 conversion factor from 10(5) j/mol to hartrees
             !##--------------------------------------------------
             !##--------------------------------------------------
-            en     = en*0.03812e0_wp
-            engygs = en
+            en                  = en*0.03812e0_wp
+            ground_state_energy = en
             ! 0.0201723 conversion factor from 10(5)j/mol/A to hartrees/bohr
             do i=1, 18
-                degsdr(i) = qpdot_pl_pdot(i)*0.0201723e0_wp
+                ground_state_internal_gradient(i) = qpdot_pl_pdot(i)*0.0201723e0_wp
             enddo
         end subroutine csurf
 
@@ -3476,15 +3465,8 @@ module chempotpy_c2h7_vbmm_pes
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
-            infocm_ref(1)     = 'M. J. T. Jordan and R. G. Gilbert'
-            infocm_ref(2)     = 'J. Chem. Phys. Vol. 102, p. 5669, 1995'
-            infocm_indexes(1) = 1
-            infocm_indexes(2) = 6
-            infocm_indexes(3) = 1
-            infocm_indexes(4) = 1
-            infocm_indexes(5) = 1
-            infocm_indexes(6) = 1
-            infocm_irctnt     = 6
+            infocm_ref(1) = 'M. J. T. Jordan and R. G. Gilbert'
+            infocm_ref(2) = 'J. Chem. Phys. Vol. 102, p. 5669, 1995'
             !  calculate indexes for coordinates
             do ind=1, 3
                 icount       = ind-3

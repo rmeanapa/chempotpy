@@ -1,5 +1,6 @@
 """Compile and exercise the bundled modern Fortran core modules."""
 
+import re
 import shutil
 import subprocess
 import tempfile
@@ -12,16 +13,21 @@ class FortranCoreTests( unittest.TestCase ):
         repository = Path(__file__).resolve().parents[1]
         owner = repository / "chempotpy" / "core" / "chempotpy_atomic_elements.f90"
         self.assertTrue(owner.is_file())
-        legacy_setup_count = 0
         for source in sorted((repository / "chempotpy").rglob("*.f90")):
             text = source.read_text(errors="replace").lower()
             if source != owner:
                 self.assertNotIn("periodic_1(7,32)", text, str(source))
                 self.assertNotIn("ianum(7,32)", text, str(source))
-            if "subroutine ancvrt" in text:
-                legacy_setup_count += 1
-                self.assertIn("use chempotpy_atomic_elements", text, str(source))
-        self.assertGreater(legacy_setup_count, 0)
+                self.assertNotIn("subroutine ancvrt", text, str(source))
+                self.assertNotIn("subroutine cartou", text, str(source))
+                self.assertNotIn("convert_cartesian_input", text, str(source))
+
+    def test_placeholder_legacy_variable_names_are_absent( self ) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        pattern = re.compile(r"\blegacy_[dgxpu]\b", re.IGNORECASE)
+        for source in sorted((repository / "chempotpy").rglob("*.f90")):
+            match = pattern.search(source.read_text(errors="replace"))
+            self.assertIsNone(match, str(source))
 
     def test_core_and_migrated_surface_support_quad_precision_when_available(
         self,

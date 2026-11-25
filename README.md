@@ -545,9 +545,9 @@ evaluators do not terminate the calling application. `D` and `T` are accepted
 as hydrogen aliases for element-identity checks; isotope-specific masses are
 outside this standard-element table.
 
-Legacy POTLIB setup adapters validate their declared atomic numbers through
-this module. PES sources must not carry private copies of the periodic table;
-fit-specific atom ordering and isotope choices remain with the owning surface.
+PES sources must not carry private copies of the periodic table. Fit-specific
+atom ordering and isotope choices remain with the owning surface, while shared
+element queries use this core owner.
 
 The C6H5SH APRP pair and the eight C7H8S APRP adiabatic/diabatic pairs are
 documented exceptions for input-coordinate scaling. Their released fits are

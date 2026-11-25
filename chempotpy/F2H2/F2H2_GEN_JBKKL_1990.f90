@@ -30,18 +30,18 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
         real(wp)              :: consts_pi
         real(wp)              :: consts_vl
         integer               :: iatom, idir, istate
-        real(wp)              :: cartnu(natoms,3), r(6), v
+        real(wp)              :: cartesian_coordinates(natoms,3), r(6), v
         real(wp)              :: rcm, r1, r2
         !initialize
-        acoef_a = 0.e0_wp; consts_bo = 0.e0_wp; consts_ha = 0.e0_wp; consts_pc = 0.e0_wp; consts_pi = 0.e0_wp; consts_vl = 0.e0_wp
-        v       = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
-        cartnu  = 0.e0_wp
+        acoef_a               = 0.e0_wp; consts_bo = 0.e0_wp; consts_ha = 0.e0_wp; consts_pc = 0.e0_wp; consts_pi = 0.e0_wp; consts_vl = 0.e0_wp
+        v                     = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
+        cartesian_coordinates = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                cartnu(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
+                cartesian_coordinates(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
-        call carttor(cartnu, r)
+        call build_jbkkl_internal_coordinates(cartesian_coordinates, r)
         rcm = r(1)
         r1  = r(2)
         r2  = r(3)
@@ -57,35 +57,35 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
 
         contains
 
-        !> @brief Evaluate CARTTOR for the F2H2_GEN_JBKKL_1990 potential.
-        subroutine carttor( cartnu, r )
+        !> @brief Build the six Jacobi coordinates used by the JBKKL fit.
+        subroutine build_jbkkl_internal_coordinates( cartesian_coordinates, r )
             use chempotpy_kinds, only: wp
             implicit none
             real(wp) :: cmm, cphi, flm, hhd, hym, phi, q, q1, q2, q3, theta1, theta2, xcm1, xcm2, xcm3, xrm1, xrm2, ycm1, ycm2, ycm3, yrm1, yrm2, zcm1, zcm2, zcm3, zrm1, zrm2
-            real(wp) :: cartnu(4,3), r(6)
+            real(wp) :: cartesian_coordinates(4,3), r(6)
             flm    = 18.99840e0_wp
             hym    = 1.007825e0_wp
-            xcm1   = (hym*cartnu(1,1)+flm*cartnu(2,1))/(flm+hym)
-            ycm1   = (hym*cartnu(1,2)+flm*cartnu(2,2))/(flm+hym)
-            zcm1   = (hym*cartnu(1,3)+flm*cartnu(2,3))/(flm+hym)
-            xcm2   = (hym*cartnu(3,1)+flm*cartnu(4,1))/(flm+hym)
-            ycm2   = (hym*cartnu(3,2)+flm*cartnu(4,2))/(flm+hym)
-            zcm2   = (hym*cartnu(3,3)+flm*cartnu(4,3))/(flm+hym)
+            xcm1   = (hym*cartesian_coordinates(1,1)+flm*cartesian_coordinates(2,1))/(flm+hym)
+            ycm1   = (hym*cartesian_coordinates(1,2)+flm*cartesian_coordinates(2,2))/(flm+hym)
+            zcm1   = (hym*cartesian_coordinates(1,3)+flm*cartesian_coordinates(2,3))/(flm+hym)
+            xcm2   = (hym*cartesian_coordinates(3,1)+flm*cartesian_coordinates(4,1))/(flm+hym)
+            ycm2   = (hym*cartesian_coordinates(3,2)+flm*cartesian_coordinates(4,2))/(flm+hym)
+            zcm2   = (hym*cartesian_coordinates(3,3)+flm*cartesian_coordinates(4,3))/(flm+hym)
             xcm3   = xcm2-xcm1
             ycm3   = ycm2-ycm1
             zcm3   = zcm2-zcm1
-            xrm1   = cartnu(1,1)-xcm1
-            yrm1   = cartnu(1,2)-ycm1
-            zrm1   = cartnu(1,3)-zcm1
+            xrm1   = cartesian_coordinates(1,1)-xcm1
+            yrm1   = cartesian_coordinates(1,2)-ycm1
+            zrm1   = cartesian_coordinates(1,3)-zcm1
             theta1 = (xrm1*xcm3+yrm1*ycm3+zrm1*zcm3)
             theta1 = theta1/(sqrt(xrm1**2+yrm1**2+zrm1**2))
             theta1 = theta1/(sqrt(xcm3**2+ycm3**2+zcm3**2))
             if( theta1 .gt. 1.0e0_wp ) theta1=1.0e0_wp
             if( theta1 .lt. -1.0e0_wp ) theta1=-1.0e0_wp
             theta1 = acos(theta1)
-            xrm2   = cartnu(3,1)-xcm2
-            yrm2   = cartnu(3,2)-ycm2
-            zrm2   = cartnu(3,3)-zcm2
+            xrm2   = cartesian_coordinates(3,1)-xcm2
+            yrm2   = cartesian_coordinates(3,2)-ycm2
+            zrm2   = cartesian_coordinates(3,3)-zcm2
             theta2 = (xrm2*(-xcm3)+yrm2*(-ycm3)+zrm2*(-zcm3))
             theta2 = theta2/(sqrt(xrm2**2+yrm2**2+zrm2**2))
             theta2 = theta2/(sqrt(xcm3**2+ycm3**2+zcm3**2))
@@ -97,13 +97,14 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             q2     = sqrt(xrm2**2+yrm2**2+zrm2**2)
             cmm    = (xcm3**2+ycm3**2+zcm3**2)
             cmm    = sqrt(cmm)
-            hhd    = (cartnu(1,1)-cartnu(3,1))**2 + (cartnu(1,2)-cartnu(3,2))**2 + (cartnu(1,3)-cartnu(3,3))**2
-            hhd    = sqrt(hhd)
-            q      = cmm-q1*cos(theta1)+q2*cos(theta2)
-            q3     = sqrt(abs(hhd**2-q**2))
-            q1     = q1*sin(theta1)
-            q2     = q2*sin(theta2)
-            cphi   = (q1**2+q2**2-q3**2)/(2.*q1*q2)
+            hhd    = (cartesian_coordinates(1,1)-cartesian_coordinates(3,1))**2 + (cartesian_coordinates(1,2)- &
+                & cartesian_coordinates(3,2))**2 + (cartesian_coordinates(1,3)-cartesian_coordinates(3,3))**2
+            hhd  = sqrt(hhd)
+            q    = cmm-q1*cos(theta1)+q2*cos(theta2)
+            q3   = sqrt(abs(hhd**2-q**2))
+            q1   = q1*sin(theta1)
+            q2   = q2*sin(theta2)
+            cphi = (q1**2+q2**2-q3**2)/(2.*q1*q2)
             if( cphi .lt. -1.0e0_wp ) cphi=-1.0e0_wp
             if( cphi .gt. 1.0e0_wp ) cphi=1.0e0_wp
             phi  = acos(cphi)
@@ -113,7 +114,7 @@ module chempotpy_f2h2_gen_jbkkl_1990_pes
             r(4) = theta1
             r(5) = theta2
             r(6) = phi
-        end subroutine carttor
+        end subroutine build_jbkkl_internal_coordinates
 
         !> @brief Evaluate trbunk for the F2H2_GEN_JBKKL_1990 potential.
         subroutine trbunk( r, r1, r2, v, iq1, iq2, imu )

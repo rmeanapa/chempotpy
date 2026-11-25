@@ -6,7 +6,6 @@ module chempotpy_legacy_coordinates
     use chempotpy_units,        only: bohr_to_angstrom
     implicit none
     private
-    public :: convert_cartesian_input
     public :: cartesian_to_potlib_coordinates
     public :: legacy_triatomic_distances_to_bohr
     public :: triatomic_distances_to_bohr
@@ -35,26 +34,6 @@ module chempotpy_legacy_coordinates
         distances_bohr(3) = cartesian_distance( coordinates_angstrom(1,:), coordinates_angstrom(3,:) )/ &
             & legacy_bohr_to_angstrom
     end subroutine legacy_triatomic_distances_to_bohr
-
-    !> @brief Convert user Cartesian coordinates to POTLIB distance units.
-    pure subroutine convert_cartesian_input( cartesian_coordinates, &
-            atom_labels, atom_count, distance_conversion, reorder_atoms, &
-            internal_coordinates )
-        real(wp), intent(in)  :: cartesian_coordinates(:,:)
-        integer, intent(in)   :: atom_labels(:)
-        integer, intent(in)   :: atom_count
-        real(wp), intent(in)  :: distance_conversion
-        logical, intent(in)   :: reorder_atoms
-        real(wp), intent(out) :: internal_coordinates(:,:)
-        integer               :: atom
-        if( reorder_atoms )then
-            do atom = 1, atom_count
-                internal_coordinates(atom_labels(atom),1:3) = cartesian_coordinates(atom,1:3)/distance_conversion
-            enddo
-        else
-            internal_coordinates(1:atom_count,1:3) = cartesian_coordinates(1:atom_count,1:3)/distance_conversion
-        endif
-    end subroutine convert_cartesian_input
 
     !> @brief Build a released POTLIB coordinate vector from Cartesian input.
     pure subroutine cartesian_to_potlib_coordinates( &

@@ -36,8 +36,8 @@
 !        passes the coordinates, energy, and derivatives of
 !        the energy with respect to the coordinates.
 !        passes the control flags where
-!        usricm_nder  = 0 => no derivatives are calculated
-!        usricm_nder  = 1 => calculate first derivatives of the energy for the
+!        requested_derivative_order  = 0 => no derivatives are calculated
+!        requested_derivative_order  = 1 => calculate first derivatives of the energy for the
 !                     ground electronic state with respect to the coordi
 !        usricm_nflag  Control flags
 !      usricm_nflag(18-20)
@@ -53,7 +53,7 @@
 !        H2 and the other HF asymptotic valleys, respectively.
 !   Default Parameter Values:
 !      Variable      Default value
-!      usricm_nder             1
+!      requested_derivative_order             1
 !      usricm_nflag(18)        6
 !   ENERGY  = E(EHF) + E(CORR) + De(H2)
 !   E(EHF)  = E(London) + E(3-body)
@@ -126,13 +126,11 @@ module chempotpy_fh2_gen_5secs3_1993_pes
         real(wp)              :: engycm_ecor2b
         real(wp)              :: engycm_ecor3b
         real(wp)              :: engycm_elond
-        real(wp)              :: infocm_cartnu(natom,3)
-        integer               :: infocm_icartr
-        integer               :: infocm_indexes(natom)
-        integer               :: infocm_irctnt
-        integer               :: infocm_mder
-        integer               :: infocm_msurf
-        integer               :: infocm_natoms
+        real(wp)              :: cartesian_coordinates(natom,3)
+        integer               :: coordinate_representation
+        integer               :: maximum_derivative_order
+        integer               :: maximum_excited_state
+        integer               :: atom_count
         character(len=75)     :: infocm_ref(5)
         real(wp)              :: kkp_ck1(10)
         real(wp)              :: kkp_ck2(10)
@@ -149,14 +147,14 @@ module chempotpy_fh2_gen_5secs3_1993_pes
         real(wp)              :: local_q3c
         real(wp)              :: par_bhf(5)
         real(wp)              :: par_bhh(5)
-        real(wp)              :: pt1cm_degsdr(n3atom)
-        real(wp)              :: pt1cm_engygs
+        real(wp)              :: ground_state_internal_gradient(n3atom)
+        real(wp)              :: ground_state_energy
         real(wp)              :: pt1cm_r(n3atom)
         real(wp)              :: pt3cm_ezero(isurf+1)
-        real(wp)              :: pt4cm_deesdr(n3atom,isurf)
-        real(wp)              :: pt4cm_engyes(isurf)
-        real(wp)              :: pt5cm_deijdr(n3atom,jsurf)
-        real(wp)              :: pt5cm_engyij(jsurf)
+        real(wp)              :: excited_state_internal_gradients(n3atom,isurf)
+        real(wp)              :: excited_state_energies(isurf)
+        real(wp)              :: diabatic_internal_gradients(n3atom,jsurf)
+        real(wp)              :: diabatic_couplings(jsurf)
         real(wp)              :: ref_ro(3)
         real(wp)              :: swpar_dec(3)
         real(wp)              :: swpar_dsw(3,3)
@@ -171,221 +169,204 @@ module chempotpy_fh2_gen_5secs3_1993_pes
         real(wp)              :: trial_etap1(10)
         real(wp)              :: trial_etap2(10)
         real(wp)              :: trial_etap3(10)
-        real(wp)              :: usricm_anuzero
-        real(wp)              :: usricm_cart(natom,3)
-        integer               :: usricm_nasurf(isurf+1,isurf+1)
-        integer               :: usricm_nder
-        integer               :: usricm_nflag(20)
-        integer               :: usricm_nulbl(natom)
-        real(wp)              :: usrocm_descart(natom,3,isurf)
-        real(wp)              :: usrocm_dgscart(natom,3)
-        real(wp)              :: usrocm_dijcart(natom,3,jsurf)
-        real(wp)              :: usrocm_pengyes(isurf)
-        real(wp)              :: usrocm_pengygs
-        real(wp)              :: usrocm_pengyij(jsurf)
-        real(wp)              :: utilcm_cnvrtd
-        real(wp)              :: utilcm_cnvrtde
-        real(wp)              :: utilcm_cnvrte
-        real(wp)              :: utilcm_descartnu(natom,3,isurf)
-        real(wp)              :: utilcm_dgscartnu(natom,3)
-        real(wp)              :: utilcm_dijcartnu(natom,3,jsurf)
-        integer               :: utilcm_ireorder
-        integer               :: utilcm_kediag
-        integer               :: utilcm_keoffd
-        integer               :: utilcm_ksdiag
-        integer               :: utilcm_ksoffd
+        real(wp)              :: input_cartesian(natom,3)
+        integer               :: surface_requests(isurf+1,isurf+1)
+        integer               :: requested_derivative_order
+        real(wp)              :: output_excited_state_gradients(natom,3,isurf)
+        real(wp)              :: output_ground_state_gradient(natom,3)
+        real(wp)              :: output_diabatic_gradients(natom,3,jsurf)
+        real(wp)              :: output_excited_state_energies(isurf)
+        real(wp)              :: output_ground_state_energy
+        real(wp)              :: output_diabatic_couplings(jsurf)
+        real(wp)              :: excited_state_cartesian_gradients(natom,3,isurf)
+        real(wp)              :: ground_state_cartesian_gradient(natom,3)
+        real(wp)              :: diabatic_cartesian_gradients(natom,3,jsurf)
+        integer               :: last_requested_excited_state
+        integer               :: last_requested_coupling
+        integer               :: first_requested_excited_state
+        integer               :: first_requested_coupling
         real(wp)              :: vtanh_drtanh(3,10)
         real(wp)              :: vtanh_rtanh(3,10)
         real(wp)              :: v
         integer               :: iatom, idir, istate
         !initialize
-        asycm_easyab     = 0.e0_wp; asycm_easyac = 0.e0_wp; asycm_easybc = 0.e0_wp; atat_chf = 0.e0_wp; atat_chh = 0.e0_wp
-        dampc_ad1        = 0.e0_wp; dampc_ad2 = 0.e0_wp; dampc_ad3 = 0.e0_wp; dampc_bd1 = 0.e0_wp; dampc_bd2 = 0.e0_wp; dampc_bd3 = 0.e0_wp
-        decm_disse       = 0.e0_wp; degsdrcm_dcorr2 = 0.e0_wp; degsdrcm_dcorr3 = 0.e0_wp; degsdrcm_de3c = 0.e0_wp; degsdrcm_dldr = 0.e0_wp
-        diat_a1          = 0.e0_wp; diat_a2 = 0.e0_wp; diat_a3 = 0.e0_wp; diat_d = 0.e0_wp; diat_gamma = 0.e0_wp; dispc_alph0 = 0.e0_wp
-        dispc_alph1      = 0.e0_wp; dispc_bet0 = 0.e0_wp; dispc_bet1 = 0.e0_wp; dist_r0 = 0.e0_wp; dist_rm = 0.e0_wp; dpc_ddp1 = 0.e0_wp
-        dpc_ddp2         = 0.e0_wp; dpc_ddp3 = 0.e0_wp; dpc_dp1 = 0.e0_wp; dpc_dp2 = 0.e0_wp; dpc_dp3 = 0.e0_wp; engycm_e3c = 0.e0_wp
-        engycm_ecor2b    = 0.e0_wp; engycm_ecor3b = 0.e0_wp; engycm_elond = 0.e0_wp; infocm_cartnu = 0.e0_wp; infocm_icartr = 0
-        infocm_indexes   = 0; infocm_irctnt = 0; infocm_mder = 0; infocm_msurf = 0; infocm_natoms = 0
-        infocm_ref       = ' '
-        kkp_ck1          = 0.e0_wp
-        kkp_ck2          = 0.e0_wp
-        kkp_ck3          = 0.e0_wp
-        kkp_ckp1         = 0.e0_wp
-        kkp_ckp2         = 0.e0_wp
-        kkp_ckp3         = 0.e0_wp
-        local_alf        = 0.e0_wp
-        local_alfp       = 0.e0_wp
-        local_alft       = 0.e0_wp
-        local_betp       = 0.e0_wp
-        local_c3c        = 0.e0_wp
-        local_p3c        = 0.e0_wp
-        local_q3c        = 0.e0_wp
-        par_bhf          = 0.e0_wp
-        par_bhh          = 0.e0_wp
-        pt1cm_degsdr     = 0.e0_wp
-        pt1cm_engygs     = 0.e0_wp
-        pt1cm_r          = 0.e0_wp
-        pt3cm_ezero      = 0.e0_wp
-        pt4cm_deesdr     = 0.e0_wp
-        pt4cm_engyes     = 0.e0_wp
-        pt5cm_deijdr     = 0.e0_wp
-        pt5cm_engyij     = 0.e0_wp
-        ref_ro           = 0.e0_wp
-        swpar_dec        = 0.e0_wp
-        swpar_dsw        = 0.e0_wp
-        swpar_rb         = 0.e0_wp
-        swpar_sw         = 0.e0_wp
-        tpar_p           = 0.e0_wp
-        tpar_xhf         = 0.e0_wp
-        tpar_xhh         = 0.e0_wp
-        trial_eta1       = 0.e0_wp
-        trial_eta2       = 0.e0_wp
-        trial_eta3       = 0.e0_wp
-        trial_etap1      = 0.e0_wp
-        trial_etap2      = 0.e0_wp
-        trial_etap3      = 0.e0_wp
-        usricm_anuzero   = 0.e0_wp
-        usricm_cart      = 0.e0_wp
-        usricm_nasurf    = 0
-        usricm_nder      = 0
-        usricm_nflag     = 0
-        usricm_nulbl     = 0
-        usrocm_descart   = 0.e0_wp
-        usrocm_dgscart   = 0.e0_wp
-        usrocm_dijcart   = 0.e0_wp
-        usrocm_pengyes   = 0.e0_wp
-        usrocm_pengygs   = 0.e0_wp
-        usrocm_pengyij   = 0.e0_wp
-        utilcm_cnvrtd    = 0.e0_wp
-        utilcm_cnvrtde   = 0.e0_wp
-        utilcm_cnvrte    = 0.e0_wp
-        utilcm_descartnu = 0.e0_wp
-        utilcm_dgscartnu = 0.e0_wp
-        utilcm_dijcartnu = 0.e0_wp
-        utilcm_ireorder  = 0
-        utilcm_kediag    = 0
-        utilcm_keoffd    = 0
-        utilcm_ksdiag    = 0
-        utilcm_ksoffd    = 0
-        vtanh_drtanh     = 0.e0_wp
-        vtanh_rtanh      = 0.e0_wp
-        usricm_nasurf = reshape([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
-            & 0, 0, 0, 0, 0, 0, 0, 0], shape(usricm_nasurf))
-        usricm_nder     = 0
-        usricm_nflag    = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0]
-        usricm_anuzero  = 0.0e0_wp
-        infocm_icartr   = 3
-        infocm_msurf    = 0
-        infocm_mder     = 1
-        usricm_nulbl    = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        infocm_natoms   = 3
-        decm_disse      = [0.224989335e0_wp, 0.174472692e0_wp, 0.224989355e0_wp]
-        tpar_xhf        = [2.633449e0_wp, 0.417523e0_wp, -0.090289e0_wp]
-        tpar_xhh        = [-0.393828e0_wp, 0.167810e0_wp, -0.017081e0_wp]
-        tpar_p          = [-0.071547e0_wp, -0.108550e0_wp, 0.050461e0_wp, -0.370255e0_wp]
-        local_c3c       = 0.296668e0_wp
-        local_alfp      = 0.078606e0_wp
-        local_alf       = 0.18e0_wp
-        local_alft      = 2.14e0_wp
-        local_p3c       = 0.95e0_wp
-        local_q3c       = 1.0e0_wp
-        local_betp      = 0.18e0_wp
-        swpar_dec       = [2.0e0_wp, 2.0e0_wp, 2.0e0_wp]
-        swpar_rb        = [6.80e0_wp, 5.00e0_wp, 6.80e0_wp]
-        par_bhh         = [0.448467e0_wp, -0.056687e0_wp, 0.246831e0_wp, -0.018419e0_wp, 0.000598e0_wp]
-        par_bhf         = [0.9149555e0_wp, 0.3222197e0_wp, 0.1273001e0_wp, 0.0e0_wp, 0.0e0_wp]
-        atat_chh(6)     = 6.499027e0_wp
-        atat_chh(8)     = 1.243991e2_wp
-        atat_chh(10)    = 3.2858e3_wp
-        atat_chf(6)     = 6.68799e0_wp
-        atat_chf(8)     = 1.0289812e2_wp
-        atat_chf(10)    = 2.07391451e3_wp
-        dist_rm(1)      = 1.7329e0_wp
-        dist_rm(2)      = 1.4010e0_wp
-        dist_rm(3)      = 1.7329e0_wp
-        dist_r0(1)      = 5.9e0_wp
-        dist_r0(2)      = 6.9283e0_wp
-        dist_r0(3)      = 5.9e0_wp
-        ref_ro(1)       = 1.7329e0_wp
-        ref_ro(2)       = 1.449e0_wp
-        ref_ro(3)       = 1.7329e0_wp
-        dispc_alph0     = 2.59528e1_wp
-        dispc_alph1     = 1.1868e0_wp
-        dispc_bet0      = 1.57381e1_wp
-        dispc_bet1      = 9.729e-2_wp
-        trial_eta1(6)   = 0.9438421608e0_wp
-        trial_eta1(8)   = 0.9774440533e0_wp
-        trial_eta1(10)  = 0.9452240321e0_wp
-        trial_eta2(6)   = 0.1085550150e1_wp
-        trial_eta2(8)   = 0.1117269260e1_wp
-        trial_eta2(10)  = 0.1138536961e1_wp
-        trial_eta3(6)   = 0.9438421608e0_wp
-        trial_eta3(8)   = 0.9774440533e0_wp
-        trial_eta3(10)  = 0.9452240321e0_wp
-        trial_etap1(6)  = 6.0e0_wp
-        trial_etap1(8)  = 6.0e0_wp
-        trial_etap1(10) = 6.0e0_wp
-        trial_etap2(6)  = 6.0e0_wp
-        trial_etap2(8)  = 6.0e0_wp
-        trial_etap2(10) = 6.0e0_wp
-        trial_etap3(6)  = 6.0e0_wp
-        trial_etap3(8)  = 6.0e0_wp
-        trial_etap3(10) = 6.0e0_wp
-        kkp_ck1(6)      = -0.2610767389e-1_wp
-        kkp_ck1(8)      = -0.3428701964e-1_wp
-        kkp_ck1(10)     = -0.4858536634e-1_wp
-        kkp_ck2(6)      = -0.9709847270e-1_wp
-        kkp_ck2(8)      = -0.1248186655e0_wp
-        kkp_ck2(10)     = -0.1426680807e0_wp
-        kkp_ck3(6)      = -0.2610767389e-1_wp
-        kkp_ck3(8)      = -0.3428701964e-1_wp
-        kkp_ck3(10)     = -0.4858536634e-1_wp
-        kkp_ckp1(6)     = 0.9438421608e0_wp
-        kkp_ckp1(8)     = 0.9774440533e0_wp
-        kkp_ckp1(10)    = 0.9452240321e0_wp
-        kkp_ckp2(6)     = 0.1085550150e1_wp
-        kkp_ckp2(8)     = 0.1117269260e1_wp
-        kkp_ckp2(10)    = 0.1138536961e1_wp
-        kkp_ckp3(6)     = 0.9438421608e0_wp
-        kkp_ckp3(8)     = 0.9774440533e0_wp
-        kkp_ckp3(10)    = 0.9452240321e0_wp
-        diat_d(1)       = 0.19383609e0_wp
-        diat_a1(1)      = 2.4822787e0_wp
-        diat_a2(1)      = 1.5435337e0_wp
-        diat_a3(1)      = 0.83093855e0_wp
-        diat_gamma(1)   = 2.3992999e0_wp
-        diat_d(2)       = 0.15796326e0_wp
-        diat_a1(2)      = 2.1977034e0_wp
-        diat_a2(2)      = 1.2932502e0_wp
-        diat_a3(2)      = 0.64375666e0_wp
-        diat_gamma(2)   = 2.1835071e0_wp
-        diat_d(3)       = 0.19383609e0_wp
-        diat_a1(3)      = 2.4822787e0_wp
-        diat_a2(3)      = 1.5435337e0_wp
-        diat_a3(3)      = 0.83093855e0_wp
-        diat_gamma(3)   = 2.3992999e0_wp
-        v               = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
-        usricm_cart     = 0.e0_wp
+        asycm_easyab                      = 0.e0_wp; asycm_easyac = 0.e0_wp; asycm_easybc = 0.e0_wp; atat_chf = 0.e0_wp; atat_chh = 0.e0_wp
+        dampc_ad1                         = 0.e0_wp; dampc_ad2 = 0.e0_wp; dampc_ad3 = 0.e0_wp; dampc_bd1 = 0.e0_wp; dampc_bd2 = 0.e0_wp; dampc_bd3 = 0.e0_wp
+        decm_disse                        = 0.e0_wp; degsdrcm_dcorr2 = 0.e0_wp; degsdrcm_dcorr3 = 0.e0_wp; degsdrcm_de3c = 0.e0_wp; degsdrcm_dldr = 0.e0_wp
+        diat_a1                           = 0.e0_wp; diat_a2 = 0.e0_wp; diat_a3 = 0.e0_wp; diat_d = 0.e0_wp; diat_gamma = 0.e0_wp; dispc_alph0 = 0.e0_wp
+        dispc_alph1                       = 0.e0_wp; dispc_bet0 = 0.e0_wp; dispc_bet1 = 0.e0_wp; dist_r0 = 0.e0_wp; dist_rm = 0.e0_wp; dpc_ddp1 = 0.e0_wp
+        dpc_ddp2                          = 0.e0_wp; dpc_ddp3 = 0.e0_wp; dpc_dp1 = 0.e0_wp; dpc_dp2 = 0.e0_wp; dpc_dp3 = 0.e0_wp; engycm_e3c = 0.e0_wp
+        engycm_ecor2b                     = 0.e0_wp; engycm_ecor3b = 0.e0_wp; engycm_elond = 0.e0_wp; cartesian_coordinates = 0.e0_wp; coordinate_representation = 0
+        maximum_derivative_order          = 0; maximum_excited_state = 0; atom_count = 0
+        infocm_ref                        = ' '
+        kkp_ck1                           = 0.e0_wp
+        kkp_ck2                           = 0.e0_wp
+        kkp_ck3                           = 0.e0_wp
+        kkp_ckp1                          = 0.e0_wp
+        kkp_ckp2                          = 0.e0_wp
+        kkp_ckp3                          = 0.e0_wp
+        local_alf                         = 0.e0_wp
+        local_alfp                        = 0.e0_wp
+        local_alft                        = 0.e0_wp
+        local_betp                        = 0.e0_wp
+        local_c3c                         = 0.e0_wp
+        local_p3c                         = 0.e0_wp
+        local_q3c                         = 0.e0_wp
+        par_bhf                           = 0.e0_wp
+        par_bhh                           = 0.e0_wp
+        ground_state_internal_gradient    = 0.e0_wp
+        ground_state_energy               = 0.e0_wp
+        pt1cm_r                           = 0.e0_wp
+        pt3cm_ezero                       = 0.e0_wp
+        excited_state_internal_gradients  = 0.e0_wp
+        excited_state_energies            = 0.e0_wp
+        diabatic_internal_gradients       = 0.e0_wp
+        diabatic_couplings                = 0.e0_wp
+        ref_ro                            = 0.e0_wp
+        swpar_dec                         = 0.e0_wp
+        swpar_dsw                         = 0.e0_wp
+        swpar_rb                          = 0.e0_wp
+        swpar_sw                          = 0.e0_wp
+        tpar_p                            = 0.e0_wp
+        tpar_xhf                          = 0.e0_wp
+        tpar_xhh                          = 0.e0_wp
+        trial_eta1                        = 0.e0_wp
+        trial_eta2                        = 0.e0_wp
+        trial_eta3                        = 0.e0_wp
+        trial_etap1                       = 0.e0_wp
+        trial_etap2                       = 0.e0_wp
+        trial_etap3                       = 0.e0_wp
+        input_cartesian                   = 0.e0_wp
+        surface_requests                  = 0
+        requested_derivative_order        = 0
+        output_excited_state_gradients    = 0.e0_wp
+        output_ground_state_gradient      = 0.e0_wp
+        output_diabatic_gradients         = 0.e0_wp
+        output_excited_state_energies     = 0.e0_wp
+        output_ground_state_energy        = 0.e0_wp
+        output_diabatic_couplings         = 0.e0_wp
+        excited_state_cartesian_gradients = 0.e0_wp
+        ground_state_cartesian_gradient   = 0.e0_wp
+        diabatic_cartesian_gradients      = 0.e0_wp
+        last_requested_excited_state      = 0
+        last_requested_coupling           = 0
+        first_requested_excited_state     = 0
+        first_requested_coupling          = 0
+        vtanh_drtanh                      = 0.e0_wp
+        vtanh_rtanh                       = 0.e0_wp
+        surface_requests = reshape([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
+            & 0, 0, 0, 0, 0, 0, 0, 0, 0], shape(surface_requests))
+        requested_derivative_order = 0
+        coordinate_representation  = 3
+        maximum_excited_state      = 0
+        maximum_derivative_order   = 1
+        atom_count                 = 3
+        decm_disse                 = [0.224989335e0_wp, 0.174472692e0_wp, 0.224989355e0_wp]
+        tpar_xhf                   = [2.633449e0_wp, 0.417523e0_wp, -0.090289e0_wp]
+        tpar_xhh                   = [-0.393828e0_wp, 0.167810e0_wp, -0.017081e0_wp]
+        tpar_p                     = [-0.071547e0_wp, -0.108550e0_wp, 0.050461e0_wp, -0.370255e0_wp]
+        local_c3c                  = 0.296668e0_wp
+        local_alfp                 = 0.078606e0_wp
+        local_alf                  = 0.18e0_wp
+        local_alft                 = 2.14e0_wp
+        local_p3c                  = 0.95e0_wp
+        local_q3c                  = 1.0e0_wp
+        local_betp                 = 0.18e0_wp
+        swpar_dec                  = [2.0e0_wp, 2.0e0_wp, 2.0e0_wp]
+        swpar_rb                   = [6.80e0_wp, 5.00e0_wp, 6.80e0_wp]
+        par_bhh                    = [0.448467e0_wp, -0.056687e0_wp, 0.246831e0_wp, -0.018419e0_wp, 0.000598e0_wp]
+        par_bhf                    = [0.9149555e0_wp, 0.3222197e0_wp, 0.1273001e0_wp, 0.0e0_wp, 0.0e0_wp]
+        atat_chh(6)                = 6.499027e0_wp
+        atat_chh(8)                = 1.243991e2_wp
+        atat_chh(10)               = 3.2858e3_wp
+        atat_chf(6)                = 6.68799e0_wp
+        atat_chf(8)                = 1.0289812e2_wp
+        atat_chf(10)               = 2.07391451e3_wp
+        dist_rm(1)                 = 1.7329e0_wp
+        dist_rm(2)                 = 1.4010e0_wp
+        dist_rm(3)                 = 1.7329e0_wp
+        dist_r0(1)                 = 5.9e0_wp
+        dist_r0(2)                 = 6.9283e0_wp
+        dist_r0(3)                 = 5.9e0_wp
+        ref_ro(1)                  = 1.7329e0_wp
+        ref_ro(2)                  = 1.449e0_wp
+        ref_ro(3)                  = 1.7329e0_wp
+        dispc_alph0                = 2.59528e1_wp
+        dispc_alph1                = 1.1868e0_wp
+        dispc_bet0                 = 1.57381e1_wp
+        dispc_bet1                 = 9.729e-2_wp
+        trial_eta1(6)              = 0.9438421608e0_wp
+        trial_eta1(8)              = 0.9774440533e0_wp
+        trial_eta1(10)             = 0.9452240321e0_wp
+        trial_eta2(6)              = 0.1085550150e1_wp
+        trial_eta2(8)              = 0.1117269260e1_wp
+        trial_eta2(10)             = 0.1138536961e1_wp
+        trial_eta3(6)              = 0.9438421608e0_wp
+        trial_eta3(8)              = 0.9774440533e0_wp
+        trial_eta3(10)             = 0.9452240321e0_wp
+        trial_etap1(6)             = 6.0e0_wp
+        trial_etap1(8)             = 6.0e0_wp
+        trial_etap1(10)            = 6.0e0_wp
+        trial_etap2(6)             = 6.0e0_wp
+        trial_etap2(8)             = 6.0e0_wp
+        trial_etap2(10)            = 6.0e0_wp
+        trial_etap3(6)             = 6.0e0_wp
+        trial_etap3(8)             = 6.0e0_wp
+        trial_etap3(10)            = 6.0e0_wp
+        kkp_ck1(6)                 = -0.2610767389e-1_wp
+        kkp_ck1(8)                 = -0.3428701964e-1_wp
+        kkp_ck1(10)                = -0.4858536634e-1_wp
+        kkp_ck2(6)                 = -0.9709847270e-1_wp
+        kkp_ck2(8)                 = -0.1248186655e0_wp
+        kkp_ck2(10)                = -0.1426680807e0_wp
+        kkp_ck3(6)                 = -0.2610767389e-1_wp
+        kkp_ck3(8)                 = -0.3428701964e-1_wp
+        kkp_ck3(10)                = -0.4858536634e-1_wp
+        kkp_ckp1(6)                = 0.9438421608e0_wp
+        kkp_ckp1(8)                = 0.9774440533e0_wp
+        kkp_ckp1(10)               = 0.9452240321e0_wp
+        kkp_ckp2(6)                = 0.1085550150e1_wp
+        kkp_ckp2(8)                = 0.1117269260e1_wp
+        kkp_ckp2(10)               = 0.1138536961e1_wp
+        kkp_ckp3(6)                = 0.9438421608e0_wp
+        kkp_ckp3(8)                = 0.9774440533e0_wp
+        kkp_ckp3(10)               = 0.9452240321e0_wp
+        diat_d(1)                  = 0.19383609e0_wp
+        diat_a1(1)                 = 2.4822787e0_wp
+        diat_a2(1)                 = 1.5435337e0_wp
+        diat_a3(1)                 = 0.83093855e0_wp
+        diat_gamma(1)              = 2.3992999e0_wp
+        diat_d(2)                  = 0.15796326e0_wp
+        diat_a1(2)                 = 2.1977034e0_wp
+        diat_a2(2)                 = 1.2932502e0_wp
+        diat_a3(2)                 = 0.64375666e0_wp
+        diat_gamma(2)              = 2.1835071e0_wp
+        diat_d(3)                  = 0.19383609e0_wp
+        diat_a1(3)                 = 2.4822787e0_wp
+        diat_a2(3)                 = 1.5435337e0_wp
+        diat_a3(3)                 = 0.83093855e0_wp
+        diat_gamma(3)              = 2.3992999e0_wp
+        v                          = 0.e0_wp; g = 0.e0_wp; d = 0.e0_wp
+        input_cartesian            = 0.e0_wp
         do iatom=1, natoms
             do idir=1, 3
-                usricm_cart(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
+                input_cartesian(iatom,idir) = x(iatom,idir)/bohr_to_angstrom
             enddo
         enddo
-        usricm_nder = igrad
+        requested_derivative_order = igrad
         call prepare_local_context
         call pot
         if( igrad == 0 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*hartree_to_electronvolt
+                p(istate) = output_ground_state_energy*hartree_to_electronvolt
             enddo
         elseif( igrad == 1 )then
             do istate=1, nstates
-                p(istate) = usrocm_pengygs*hartree_to_electronvolt
+                p(istate) = output_ground_state_energy*hartree_to_electronvolt
             enddo
             do iatom=1, natoms
                 do idir=1, 3
-                    g(1,iatom,idir) = usrocm_dgscart(iatom,idir)*hartree_per_bohr_to_ev_per_angstrom
+                    g(1,iatom,idir) = output_ground_state_gradient(iatom,idir)*hartree_per_bohr_to_ev_per_angstrom
                 enddo
             enddo
         elseif( igrad == 2 )then
@@ -402,7 +383,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             integer :: i
             !   Echo the potential name and parameters to the file linked to
             !   UNIT usricm_nflag(18)
-            if( infocm_natoms .gt. 25 )then
+            if( atom_count .gt. 25 )then
                 if( present(status) ) call status%set(status_invalid_input, &
                     'legacy kernel rejected the evaluation request')
                 return
@@ -424,14 +405,9 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             do i=1, 5
                 infocm_ref(i) = ' '
             enddo
-            infocm_ref(1)     = 'S. L. Mielke, G. C. Lynch,'
-            infocm_ref(2)     = 'diat_d. G. Truhlar, diat_d. W. Schwenke,'
-            infocm_ref(3)     = 'Chem. Phys. Lett. 213, 10(1993)'
-            infocm_indexes(1) = 9
-            infocm_indexes(2) = 1
-            infocm_indexes(3) = 1
-            infocm_irctnt     = 2
-            call ancvrt
+            infocm_ref(1) = 'S. L. Mielke, G. C. Lynch,'
+            infocm_ref(2) = 'diat_d. G. Truhlar, diat_d. W. Schwenke,'
+            infocm_ref(3) = 'Chem. Phys. Lett. 213, 10(1993)'
         end subroutine prepare_local_context
 
         !> @brief Evaluate POT for the FH2_GEN_5SECS3_1993 potential.
@@ -456,47 +432,48 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             !        H2 and the other HF asymptotic valleys, respectively.
             implicit none
             integer :: i
-            call cartou
+            cartesian_coordinates(1:atom_count,:) = input_cartesian(1:atom_count,:)
             call carttor
-            !   Check the value of usricm_nder
+            !   Check the value of requested_derivative_order
             !   I: Compute the damping function for the N th. dispersion coefficient
-            !      and, if usricm_nder = 1, compute the derivative of the damping function
+            !      and, if requested_derivative_order = 1, compute the derivative of the damping function
             !      w.pt1cm_r.t. pt1cm_r(i)
             call damp(pt1cm_r, dist_rm)
-            !   II: Compute the two-body dynamical correlation term and, if usricm_nder = 1
+            !   II: Compute the two-body dynamical correlation term and, if requested_derivative_order = 1
             !       compute the derivative of the two-body dynamical correlation ter
             !       w.pt1cm_r.t. pt1cm_r(i)
             call corr2
-            !   III: Compute the auxiliary function, hn(pt1cm_r), and, if usricm_nder = 1,
+            !   III: Compute the auxiliary function, hn(pt1cm_r), and, if requested_derivative_order = 1,
             !            compute the derivative of hn(pt1cm_r) w.pt1cm_r.t. pt1cm_r
             call xtanh(1, trial_eta1)
             call xtanh(2, trial_eta2)
             call xtanh(3, trial_eta3)
-            !   IV: Compute the three-body dynamical correlation term and, if usricm_nder =
+            !   IV: Compute the three-body dynamical correlation term and, if requested_derivative_order =
             !       compute the derivative of the three-body dynamical correlation t
             !       w.pt1cm_r.t. pt1cm_r(i)
             call corr3
             !   V: Compute the switching function, S(pt1cm_r), which is used in the comput
-            !      of the H2 triplet state curves.  If usricm_nder = 1, compute the derivat
+            !      of the H2 triplet state curves.  If requested_derivative_order = 1, compute the derivat
             !      of S w.pt1cm_r.t. pt1cm_r
             call switch
-            !   VI: Compute the lower eigenvalue of the London eq. and, if usricm_nder = 1,
+            !   VI: Compute the lower eigenvalue of the London eq. and, if requested_derivative_order = 1,
             !       compute the derivatives of the London energy w.pt1cm_r.t. pt1cm_r.
             call vlond
-            !   VII: Compute the three-body term and, if usricm_nder = 1, compute the
+            !   VII: Compute the three-body term and, if requested_derivative_order = 1, compute the
             !        the derivatives of the three-body energy w.pt1cm_r.t. pt1cm_r.
             call thcent
             !   IX: Compute the total energy which is a sum of the extended-Hartree-
             !       and the dynamical correlation terms.
-            pt1cm_engygs = engycm_ecor2b + engycm_ecor3b + engycm_elond + engycm_e3c + pt3cm_ezero(1) - usricm_anuzero
+            ground_state_energy = engycm_ecor2b + engycm_ecor3b + engycm_elond + engycm_e3c + pt3cm_ezero(1)
             !   Compute the derivatives of the energy with respect to the coordinate
-            if( usricm_nder .eq. 1 )then
+            if( requested_derivative_order .eq. 1 )then
                 do i = 1, 3
-                    pt1cm_degsdr(i) = degsdrcm_dcorr2(i) + degsdrcm_dcorr3(i) + degsdrcm_dldr(i) + degsdrcm_de3c(i)
+                    ground_state_internal_gradient(i) = degsdrcm_dcorr2(i) + degsdrcm_dcorr3(i) + degsdrcm_dldr(i) + &
+                        & degsdrcm_de3c(i)
                 enddo
             endif
             call eunitzero
-            if( usricm_nder .ne. 0 )then
+            if( requested_derivative_order .ne. 0 )then
                 call rtocart
                 call dedcou
             endif
@@ -521,9 +498,9 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             cor2r2        = -dpc_dp2(1)*atat_chh(6)/r2p6 -dpc_dp2(2)*atat_chh(8)/r2p8 -dpc_dp2(3)*atat_chh(10)/r2p10
             cor2r3        = -dpc_dp3(1)*atat_chf(6)/r3p6 -dpc_dp3(2)*atat_chf(8)/r3p8 -dpc_dp3(3)*atat_chf(10)/r3p10
             engycm_ecor2b = cor2r1 + cor2r2 + cor2r3
-            !   Compute the derivatives w.pt1cm_r.t. pt1cm_r(i) if usricm_nder = 1
+            !   Compute the derivatives w.pt1cm_r.t. pt1cm_r(i) if requested_derivative_order = 1
             goto_block_100_639: block
-                if( usricm_nder .ne. 1 ) exit goto_block_100_639
+                if( requested_derivative_order .ne. 1 ) exit goto_block_100_639
                 degsdrcm_dcorr2(1) = -atat_chf(6)*(dpc_ddp1(1)-6.0e0_wp*dpc_dp1(1)/pt1cm_r(1))/r1p6 -atat_chf(8)* &
                     & (dpc_ddp1(2)-8.0e0_wp*dpc_dp1(2)/pt1cm_r(1))/r1p8 -atat_chf(10)*(dpc_ddp1(3)- 10.0e0_wp* &
                     & dpc_dp1(3)/ pt1cm_r(1))/r1p10
@@ -564,7 +541,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             dpc_dp3(1) = (1.0e0_wp-exp(-pol1(3)))**6
             dpc_dp3(2) = (1.0e0_wp-exp(-pol2(3)))**8
             dpc_dp3(3) = (1.0e0_wp-exp(-pol3(3)))**10
-            if( usricm_nder .eq. 1 )then
+            if( requested_derivative_order .eq. 1 )then
                 dx(1)       = 2.0e0_wp/(rt2(1)+2.5e0_wp*dist_r0(1))
                 dx(2)       = 2.0e0_wp/(rt2(2)+2.5e0_wp*dist_r0(2))
                 dx(3)       = 2.0e0_wp/(rt2(3)+2.5e0_wp*dist_r0(3))
@@ -616,7 +593,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
                 t2      = atat_chh(i)*(1.0e0_wp-0.5e0_wp*(g3*h1+g1*h3)) *dpc_dp2(jj)/r2pi
                 t3      = atat_chf(i)*(1.0e0_wp-0.5e0_wp*(g1*h2+g2*h1)) *dpc_dp3(jj)/r3pi
                 co3(jj) = t1+t2+t3
-                if( usricm_nder .eq. 1 )then
+                if( requested_derivative_order .eq. 1 )then
                     !   Compute the partial derivatives w.pt1cm_r.t. pt1cm_r(i)
                     dg1        = -kkp_ckp1(i)*(g1-1.0e0_wp)
                     dg2        = -kkp_ckp2(i)*(g2-1.0e0_wp)
@@ -641,7 +618,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             !   Compute the three-body dynamical correlation term by summing over al
             !   C6, C8, and C10 terms.
             engycm_ecor3b = co3(1)+co3(2)+co3(3)
-            if( usricm_nder .eq. 1 )then
+            if( requested_derivative_order .eq. 1 )then
                 !   Sum all the partial derivatives.
                 degsdrcm_dcorr3(1) = dc3dr1(1)+dc3dr1(2)+dc3dr1(3)
                 degsdrcm_dcorr3(2) = dc3dr2(1)+dc3dr2(2)+dc3dr2(3)
@@ -677,7 +654,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             fcsi2t = 1.0e0_wp+tpar_p(3)*(1.0e0_wp-csip2)+tpar_p(4)*(1.0e0_wp-csip4)
             fcsi1  = fcsi1t**2
             fcsi2  = fcsi2t**2
-            if( usricm_nder .eq. 1 )then
+            if( requested_derivative_order .eq. 1 )then
                 !   Compute the derivatives w.pt1cm_r.t. pt1cm_r of the terms computed to this point
                 dcsi(1) = 1.0e0_wp/pt1cm_r(2)
                 dcsi(2) = -csi/pt1cm_r(2)
@@ -700,7 +677,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
                 dr     = pt1cm_r(i)-dist_rm(i)
                 drp2   = dr**2
                 ehf(i) = -diat_d(i)*(1.0e0_wp+diat_a1(i)*dr+diat_a2(i)*drp2+diat_a3(i)*drp2*dr) *exp(-diat_gamma(i)*dr)
-                if( usricm_nder .eq. 1 ) &
+                if( requested_derivative_order .eq. 1 ) &
                     & dehf(i) = -diat_d(i)*(diat_a1(i) + 2.0e0_wp*diat_a2(i)*dr +&
                     &3.0e0_wp*diat_a3(i)*drp2)*exp(-diat_gamma(i)*dr) -&
                     &diat_gamma(i)*ehf(i)
@@ -713,7 +690,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             arg      = par_bhh(2)*pt1cm_r(2)+par_bhh(3)*r2p2+par_bhh(4)*r2p3+par_bhh(5)*r2p4
             ehft(2)  = par_bhh(1)*exp(-arg)/pt1cm_r(2)
             etrip(2) = scale*ehft(2)
-            if( usricm_nder .eq. 1 )then
+            if( requested_derivative_order .eq. 1 )then
                 !   Compute the derivatives of the H2 triplet curve w.pt1cm_r.t. pt1cm_r(i)
                 dscale = tpar_xhh(1)+2.0e0_wp*tpar_xhh(2)*pt1cm_r(2)+3.0e0_wp*tpar_xhh(3)*r2p2
                 darg        = par_bhh(2)+2.0e0_wp*par_bhh(3)*pt1cm_r(2)+3.0e0_wp*par_bhh(4)*r2p2+ 4.0e0_wp*par_bhh(5)* &
@@ -731,7 +708,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
                 x(i)     = exp(-tpar_xhf(2)*pt1cm_r(i))
                 etrip(i) = tpar_xhf(1)*(fcsi1*x(i)*x(i)+fcsi2*tpar_xhf(3)*x(i))/pt1cm_r(i)
             enddo
-            if( usricm_nder .eq. 1 )then
+            if( requested_derivative_order .eq. 1 )then
                 !   Compute the derivatives of the HF triplet state curve w.pt1cm_r.t. pt1cm_r(i)
                 do i = 1, 3, 2
                     darg     = par_bhf(2)+2.0e0_wp*par_bhf(3)*pt1cm_r(i)
@@ -771,7 +748,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             ff3          = (ex(3) - ex(1)) ** 2
             exch         = sqrt(0.5e0_wp*(ff1+ff2+ff3))
             engycm_elond = q(1) + q(2) + q(3) - exch
-            if( usricm_nder .eq. 1 )then
+            if( requested_derivative_order .eq. 1 )then
                 !   Compute the derivatives of the lowest eignenvalue of the London equa
                 !   w.pt1cm_r.t. pt1cm_r(i)
                 do i = 1, 3
@@ -841,7 +818,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             f3         = exp(-local_betp*(pt1cm_r(1)+pt1cm_r(3)-pt1cm_r(2))**2)
             engycm_e3c = engycm_e3c*f3
             goto_block_280_1122: block
-                if( usricm_nder .ne. 1 ) exit goto_block_280_1122
+                if( requested_derivative_order .ne. 1 ) exit goto_block_280_1122
                 !   COMPUTE DERIVATIVE OF THE 3C TERM
                 !   FIRST, DERIVATIVE OF COSTH
                 dcos1 = r3i - costh*r1i
@@ -875,10 +852,10 @@ module chempotpy_fh2_gen_5secs3_1993_pes
                     ex  = exp( 2.0e0_wp * rval)
                     sgn = -1.0e0_wp
                 endif
-                t                                          = 1.0e0_wp + ex
-                th                                         = 1.0e0_wp/t
-                if( usricm_nder .eq. 1 ) vtanh_drtanh(i,j) = 4.0e0_wp * a(j) * ex * th * th
-                vtanh_rtanh(i,j)                           = sgn * th * (1.0e0_wp - ex)
+                t                                                         = 1.0e0_wp + ex
+                th                                                        = 1.0e0_wp/t
+                if( requested_derivative_order .eq. 1 ) vtanh_drtanh(i,j) = 4.0e0_wp * a(j) * ex * th * th
+                vtanh_rtanh(i,j)                                          = sgn * th * (1.0e0_wp - ex)
             enddo
         end subroutine xtanh
 
@@ -914,7 +891,7 @@ module chempotpy_fh2_gen_5secs3_1993_pes
                 swpar_sw(i) = 0.5e0_wp*(1.0e0_wp + hytan)
             enddo
             goto_block_100_1229: block
-                if( usricm_nder .ne. 1 ) exit goto_block_100_1229
+                if( requested_derivative_order .ne. 1 ) exit goto_block_100_1229
                 do i = 1, 3
                     rmrb = pt1cm_r(i)-swpar_rb(i)
                     rval = rmrb*swpar_dec(i)
@@ -942,97 +919,47 @@ module chempotpy_fh2_gen_5secs3_1993_pes
             kmax = 0
             do i = 1, isurf+1
                 do j = 1, isurf+1
-                    if( usricm_nasurf(i,j) .ne. 0.and.kmax .lt. max(i, j) ) kmax = max(i, j)
+                    if( surface_requests(i,j) .ne. 0.and.kmax .lt. max(i, j) ) kmax = max(i, j)
                 enddo
             enddo
-            if( kmax-1 .gt. infocm_msurf )then
+            if( kmax-1 .gt. maximum_excited_state )then
                 if( present(status) ) call status%set(status_invalid_input, &
                     'legacy kernel rejected the evaluation request')
                 return
             endif
-            utilcm_ksdiag = 0
-            utilcm_kediag = 0
+            first_requested_excited_state = 0
+            last_requested_excited_state  = 0
             do i = 2, isurf+1
-                if( usricm_nasurf(i,i) .ne. 0 )then
-                    utilcm_kediag = i-1
-                    if( utilcm_ksdiag .eq. 0 ) utilcm_ksdiag = i-1
+                if( surface_requests(i,i) .ne. 0 )then
+                    last_requested_excited_state = i-1
+                    if( first_requested_excited_state .eq. 0 ) first_requested_excited_state = i-1
                 endif
             enddo
-            utilcm_ksoffd = 0
-            utilcm_keoffd = 0
-            k             = 0
+            first_requested_coupling = 0
+            last_requested_coupling  = 0
+            k                        = 0
             do i = 1, isurf
                 do j = i+1, isurf+1
                     k = k+1
-                    if( usricm_nasurf(i,j)+usricm_nasurf(j,i) .ne. 0 )then
-                        utilcm_keoffd = k
-                        if( utilcm_ksoffd .eq. 0 ) utilcm_ksoffd = k
+                    if( surface_requests(i,j)+surface_requests(j,i) .ne. 0 )then
+                        last_requested_coupling = k
+                        if( first_requested_coupling .eq. 0 ) first_requested_coupling = k
                     endif
                 enddo
             enddo
-            if( usricm_nder .gt. infocm_mder )then
+            if( requested_derivative_order .gt. maximum_derivative_order )then
                 if( present(status) ) call status%set(status_invalid_input, &
                     'legacy kernel rejected the evaluation request')
                 return
             endif
-            if( usricm_nflag(19) .eq. 1 )then
-            endif
         end subroutine potinfo
-
-        !> @brief Evaluate ANCVRT for the FH2_GEN_5SECS3_1993 potential.
-        subroutine ancvrt
-            use chempotpy_atomic_elements, only: all_atomic_numbers_valid
-            use chempotpy_kinds,           only: wp
-            implicit none
-            real(wp), parameter :: htomillh = 1000.e0_wp
-            real(wp), parameter :: htoev    = 27.2113834e0_wp
-            real(wp), parameter :: htokcal  = hartree_to_kilocalorie_per_mole
-            real(wp), parameter :: htowave  = 219474.631e0_wp
-            real(wp), parameter :: htokj    = 2625.49962e0_wp
-            real(wp), parameter :: bohr_a   = .5291772083e0_wp
-            integer             :: inu, isum
-            if( .not. all_atomic_numbers_valid(infocm_indexes(1:infocm_natoms)) )then
-                if( present(status) ) call status%set(status_invalid_input, &
-                    'potential declares an invalid atomic number')
-                return
-            endif
-            utilcm_cnvrtd  = 1.e0_wp
-            utilcm_cnvrte  = 1.e0_wp
-            utilcm_cnvrtde = 1.e0_wp
-            if( usricm_nflag(1) .eq. 2 ) utilcm_cnvrtd = bohr_a
-            if( usricm_nflag(2) .eq. 2 )then
-                utilcm_cnvrte = utilcm_cnvrte*htomillh
-            elseif( usricm_nflag(2) .eq. 3 )then
-                utilcm_cnvrte = utilcm_cnvrte*htoev
-            elseif( usricm_nflag(2) .eq. 4 )then
-                utilcm_cnvrte = utilcm_cnvrte*htokcal
-            elseif( usricm_nflag(2) .eq. 5 )then
-                utilcm_cnvrte = utilcm_cnvrte*htowave
-            elseif( usricm_nflag(2) .eq. 6 )then
-                utilcm_cnvrte = utilcm_cnvrte*htokj
-            endif
-            utilcm_cnvrtde = utilcm_cnvrte/utilcm_cnvrtd
-            isum           = 0
-            do inu=1, size(usricm_nulbl)
-                isum = isum+usricm_nulbl(inu)
-            enddo
-            utilcm_ireorder = 0
-            if( isum .ne. 0 ) utilcm_ireorder = 1
-        end subroutine ancvrt
-
-        !> @brief Evaluate CARTOU for the FH2_GEN_5SECS3_1993 potential.
-        subroutine cartou
-            use chempotpy_legacy_coordinates, only: convert_cartesian_input
-            implicit none
-            call convert_cartesian_input(usricm_cart, usricm_nulbl, infocm_natoms, utilcm_cnvrtd, utilcm_ireorder == 1, infocm_cartnu)
-        end subroutine cartou
 
         !> @brief Evaluate CARTTOR for the FH2_GEN_5SECS3_1993 potential.
         subroutine carttor
             use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates
             implicit none
             integer :: coordinate_status
-            call cartesian_to_potlib_coordinates(infocm_cartnu, infocm_natoms, infocm_icartr, pt1cm_r, coordinate_status)
+            call cartesian_to_potlib_coordinates(cartesian_coordinates, atom_count, coordinate_representation, pt1cm_r, coordinate_status)
             if( coordinate_status /= 0 )then
                 if( present(status) ) call status%set(status_invalid_input, &
                     'legacy kernel rejected the evaluation request')
@@ -1044,15 +971,15 @@ module chempotpy_fh2_gen_5secs3_1993_pes
         subroutine eunitzero
             implicit none
             integer :: i, j
-            usrocm_pengygs = pt1cm_engygs * utilcm_cnvrte - usricm_anuzero
-            if( utilcm_ksdiag .ne. 0 )then
-                do i=utilcm_ksdiag, utilcm_kediag
-                    usrocm_pengyes(i) = pt4cm_engyes(i) * utilcm_cnvrte - usricm_anuzero
+            output_ground_state_energy = ground_state_energy
+            if( first_requested_excited_state .ne. 0 )then
+                do i=first_requested_excited_state, last_requested_excited_state
+                    output_excited_state_energies(i) = excited_state_energies(i)
                 enddo
             endif
-            if( utilcm_ksoffd .ne. 0 )then
-                do j=utilcm_ksoffd, utilcm_keoffd
-                    usrocm_pengyij(j) = pt5cm_engyij(j) * utilcm_cnvrte
+            if( first_requested_coupling .ne. 0 )then
+                do j=first_requested_coupling, last_requested_coupling
+                    output_diabatic_couplings(j) = diabatic_couplings(j)
                 enddo
             endif
         end subroutine eunitzero
@@ -1068,115 +995,121 @@ module chempotpy_fh2_gen_5secs3_1993_pes
                 & termy, termz, theta1, theta2, u1, u2, u3, wf, wh, xa, xbb, xc, xd, y, ya, yb, yc, yd, yes(n3atom, isurf), &
                 & ygs(n3atom), yij(n3atom, jsurf), za, zb, zc, zd
             integer :: i, ind, j, j1, j2, k, m1
-            if( infocm_icartr .eq. 1 )then
-                do i = 1, infocm_natoms
-                    ind                   = 3*i-2
-                    utilcm_dgscartnu(i,1) = pt1cm_degsdr(ind)
-                    utilcm_dgscartnu(i,2) = pt1cm_degsdr(ind+1)
-                    utilcm_dgscartnu(i,3) = pt1cm_degsdr(ind+2)
-                    if( utilcm_ksdiag .ne. 0 )then
-                        do j = utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(i,1,j) = pt4cm_deesdr(ind,j)
-                            utilcm_descartnu(i,2,j) = pt4cm_deesdr(ind+1,j)
-                            utilcm_descartnu(i,3,j) = pt4cm_deesdr(ind+2,j)
+            if( coordinate_representation .eq. 1 )then
+                do i = 1, atom_count
+                    ind                                  = 3*i-2
+                    ground_state_cartesian_gradient(i,1) = ground_state_internal_gradient(ind)
+                    ground_state_cartesian_gradient(i,2) = ground_state_internal_gradient(ind+1)
+                    ground_state_cartesian_gradient(i,3) = ground_state_internal_gradient(ind+2)
+                    if( first_requested_excited_state .ne. 0 )then
+                        do j = first_requested_excited_state, last_requested_excited_state
+                            excited_state_cartesian_gradients(i,1,j) = excited_state_internal_gradients(ind,j)
+                            excited_state_cartesian_gradients(i,2,j) = excited_state_internal_gradients(ind+1,j)
+                            excited_state_cartesian_gradients(i,3,j) = excited_state_internal_gradients(ind+2,j)
                         enddo
                     endif
-                    if( utilcm_keoffd .ne. 0 )then
-                        do k = utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(i,1,k) = pt5cm_deijdr(ind,k)
-                            utilcm_dijcartnu(i,2,k) = pt5cm_deijdr(ind+1,k)
-                            utilcm_dijcartnu(i,3,k) = pt5cm_deijdr(ind+2,k)
+                    if( last_requested_coupling .ne. 0 )then
+                        do k = first_requested_coupling, last_requested_coupling
+                            diabatic_cartesian_gradients(i,1,k) = diabatic_internal_gradients(ind,k)
+                            diabatic_cartesian_gradients(i,2,k) = diabatic_internal_gradients(ind+1,k)
+                            diabatic_cartesian_gradients(i,3,k) = diabatic_internal_gradients(ind+2,k)
                         enddo
                     endif
                 enddo
-            elseif( infocm_icartr .eq. 2 )then
-                do i = 1, infocm_natoms
-                    utilcm_dgscartnu(i,1) = 0.e0_wp
-                    utilcm_dgscartnu(i,2) = 0.e0_wp
-                    utilcm_dgscartnu(i,3) = 0.e0_wp
-                    if( utilcm_ksdiag .ne. 0 )then
-                        do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(i,1,j1) = 0.e0_wp
-                            utilcm_descartnu(i,2,j1) = 0.e0_wp
-                            utilcm_descartnu(i,3,j1) = 0.e0_wp
+            elseif( coordinate_representation .eq. 2 )then
+                do i = 1, atom_count
+                    ground_state_cartesian_gradient(i,1) = 0.e0_wp
+                    ground_state_cartesian_gradient(i,2) = 0.e0_wp
+                    ground_state_cartesian_gradient(i,3) = 0.e0_wp
+                    if( first_requested_excited_state .ne. 0 )then
+                        do j1=first_requested_excited_state, last_requested_excited_state
+                            excited_state_cartesian_gradients(i,1,j1) = 0.e0_wp
+                            excited_state_cartesian_gradients(i,2,j1) = 0.e0_wp
+                            excited_state_cartesian_gradients(i,3,j1) = 0.e0_wp
                         enddo
                     endif
-                    if( utilcm_ksoffd .ne. 0 )then
-                        do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(i,1,j2) = 0.e0_wp
-                            utilcm_dijcartnu(i,2,j2) = 0.e0_wp
-                            utilcm_dijcartnu(i,3,j2) = 0.e0_wp
+                    if( first_requested_coupling .ne. 0 )then
+                        do j2=first_requested_coupling, last_requested_coupling
+                            diabatic_cartesian_gradients(i,1,j2) = 0.e0_wp
+                            diabatic_cartesian_gradients(i,2,j2) = 0.e0_wp
+                            diabatic_cartesian_gradients(i,3,j2) = 0.e0_wp
                         enddo
                     endif
-                    do j = 1, infocm_natoms
+                    do j = 1, atom_count
                         if( j .lt. i )then
-                            m1 = infocm_natoms*(j-1) - (j*(j-1))/2 + i-j
+                            m1 = atom_count*(j-1) - (j*(j-1))/2 + i-j
                         elseif( j .gt. i )then
-                            m1 = infocm_natoms*(i-1) - (i*(i-1))/2 + j-i
+                            m1 = atom_count*(i-1) - (i*(i-1))/2 + j-i
                         else
                             cycle
                         endif
-                        y                     = pt1cm_degsdr(m1)
-                        termx                 = (infocm_cartnu(i,1)-infocm_cartnu(j,1))/pt1cm_r(m1)
-                        termy                 = (infocm_cartnu(i,2)-infocm_cartnu(j,2))/pt1cm_r(m1)
-                        termz                 = (infocm_cartnu(i,3)-infocm_cartnu(j,3))/pt1cm_r(m1)
-                        utilcm_dgscartnu(i,1) = utilcm_dgscartnu(i,1) + termx*y
-                        utilcm_dgscartnu(i,2) = utilcm_dgscartnu(i,2) + termy*y
-                        utilcm_dgscartnu(i,3) = utilcm_dgscartnu(i,3) + termz*y
-                        if( utilcm_ksdiag .gt. 0 )then
-                            y = pt4cm_deesdr(m1,j1)
-                            do j1=utilcm_ksdiag, utilcm_kediag
-                                utilcm_descartnu(i,1,j1) = utilcm_descartnu(i,1,j1) + termx*y
-                                utilcm_descartnu(i,2,j1) = utilcm_descartnu(i,2,j1) + termy*y
-                                utilcm_descartnu(i,3,j1) = utilcm_descartnu(i,3,j1) + termz*y
+                        y = ground_state_internal_gradient(m1)
+                        termx                                = (cartesian_coordinates(i,1)-cartesian_coordinates(j, &
+                            & 1))/pt1cm_r(m1)
+                        termy                                = (cartesian_coordinates(i,2)-cartesian_coordinates(j, &
+                            & 2))/pt1cm_r(m1)
+                        termz                                = (cartesian_coordinates(i,3)-cartesian_coordinates(j, &
+                            & 3))/pt1cm_r(m1)
+                        ground_state_cartesian_gradient(i,1) = ground_state_cartesian_gradient(i,1) + termx*y
+                        ground_state_cartesian_gradient(i,2) = ground_state_cartesian_gradient(i,2) + termy*y
+                        ground_state_cartesian_gradient(i,3) = ground_state_cartesian_gradient(i,3) + termz*y
+                        if( first_requested_excited_state .gt. 0 )then
+                            y = excited_state_internal_gradients(m1,j1)
+                            do j1=first_requested_excited_state, last_requested_excited_state
+                                excited_state_cartesian_gradients(i,1,j1) = excited_state_cartesian_gradients(i,1, &
+                                    & j1) + termx*y
+                                excited_state_cartesian_gradients(i,2,j1) = excited_state_cartesian_gradients(i,2, &
+                                    & j1) + termy*y
+                                excited_state_cartesian_gradients(i,3,j1) = excited_state_cartesian_gradients(i,3, &
+                                    & j1) + termz*y
                             enddo
-                        elseif( utilcm_ksoffd .gt. 0 )then
-                            do j2=utilcm_ksoffd, utilcm_keoffd
-                                y                        = pt5cm_deijdr(m1,j2)
-                                utilcm_dijcartnu(i,1,j2) = utilcm_dijcartnu(i,1,j2) + termx*y
-                                utilcm_dijcartnu(i,2,j2) = utilcm_dijcartnu(i,2,j2) + termy*y
-                                utilcm_dijcartnu(i,3,j2) = utilcm_dijcartnu(i,3,j2) + termz*y
+                        elseif( first_requested_coupling .gt. 0 )then
+                            do j2=first_requested_coupling, last_requested_coupling
+                                y                                    = diabatic_internal_gradients(m1,j2)
+                                diabatic_cartesian_gradients(i,1,j2) = diabatic_cartesian_gradients(i,1,j2) + termx*y
+                                diabatic_cartesian_gradients(i,2,j2) = diabatic_cartesian_gradients(i,2,j2) + termy*y
+                                diabatic_cartesian_gradients(i,3,j2) = diabatic_cartesian_gradients(i,3,j2) + termz*y
                             enddo
                         endif
                     enddo
                 enddo
-            elseif( infocm_icartr .eq. 3 )then
-                do i = 1, infocm_natoms
-                    ygs(i) = pt1cm_degsdr(i)/pt1cm_r(i)
-                    if( utilcm_ksdiag .ne. 0 )then
-                        do j=utilcm_ksdiag, utilcm_kediag
-                            yes(i, j) = pt4cm_deesdr(i,j)/pt1cm_r(i)
+            elseif( coordinate_representation .eq. 3 )then
+                do i = 1, atom_count
+                    ygs(i) = ground_state_internal_gradient(i)/pt1cm_r(i)
+                    if( first_requested_excited_state .ne. 0 )then
+                        do j=first_requested_excited_state, last_requested_excited_state
+                            yes(i, j) = excited_state_internal_gradients(i,j)/pt1cm_r(i)
                         enddo
                     endif
-                    if( utilcm_ksoffd .ne. 0 )then
-                        do k=utilcm_ksoffd, utilcm_keoffd
-                            yij(i, k) = pt5cm_deijdr(i,k)/pt1cm_r(i)
+                    if( first_requested_coupling .ne. 0 )then
+                        do k=first_requested_coupling, last_requested_coupling
+                            yij(i, k) = diabatic_internal_gradients(i,k)/pt1cm_r(i)
                         enddo
                     endif
                 enddo
                 do k = 1, 3
-                    term12                = infocm_cartnu(1,k)-infocm_cartnu(2,k)
-                    term23                = infocm_cartnu(2,k)-infocm_cartnu(3,k)
-                    term13                = infocm_cartnu(1,k)-infocm_cartnu(3,k)
-                    utilcm_dgscartnu(1,k) = term12*ygs(1) + term13*ygs(3)
-                    utilcm_dgscartnu(2,k) = -term12*ygs(1) + term23*ygs(2)
-                    utilcm_dgscartnu(3,k) = -term13*ygs(3) - term23*ygs(2)
-                    if( utilcm_ksdiag .ne. 0 )then
-                        do j1=utilcm_ksdiag, utilcm_kediag
-                            utilcm_descartnu(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
-                            utilcm_descartnu(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
-                            utilcm_descartnu(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
+                    term12                               = cartesian_coordinates(1,k)-cartesian_coordinates(2,k)
+                    term23                               = cartesian_coordinates(2,k)-cartesian_coordinates(3,k)
+                    term13                               = cartesian_coordinates(1,k)-cartesian_coordinates(3,k)
+                    ground_state_cartesian_gradient(1,k) = term12*ygs(1) + term13*ygs(3)
+                    ground_state_cartesian_gradient(2,k) = -term12*ygs(1) + term23*ygs(2)
+                    ground_state_cartesian_gradient(3,k) = -term13*ygs(3) - term23*ygs(2)
+                    if( first_requested_excited_state .ne. 0 )then
+                        do j1=first_requested_excited_state, last_requested_excited_state
+                            excited_state_cartesian_gradients(1,k,j1) = term12*yes(1, j1) + term13*yes(3, j1)
+                            excited_state_cartesian_gradients(2,k,j1) = -term12*yes(1, j1) + term23*yes(2, j1)
+                            excited_state_cartesian_gradients(3,k,j1) = -term13*yes(3, j1) - term23*yes(2, j1)
                         enddo
                     endif
-                    if( utilcm_ksoffd .ne. 0 )then
-                        do j2=utilcm_ksoffd, utilcm_keoffd
-                            utilcm_dijcartnu(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
-                            utilcm_dijcartnu(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
-                            utilcm_dijcartnu(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
+                    if( first_requested_coupling .ne. 0 )then
+                        do j2=first_requested_coupling, last_requested_coupling
+                            diabatic_cartesian_gradients(1,k,j2) = term12*yij(1, j2) + term13*yij(3, j2)
+                            diabatic_cartesian_gradients(2,k,j2) = -term12*yij(1, j2) + term23*yij(2, j2)
+                            diabatic_cartesian_gradients(3,k,j2) = -term13*yij(3, j2) - term23*yij(2, j2)
                         enddo
                     endif
                 enddo
-            elseif( infocm_icartr .eq. 4 )then
+            elseif( coordinate_representation .eq. 4 )then
                 wh   = 1.007825e0_wp
                 wf   = 18.99840e0_wp
                 sum  = wh+wf
@@ -1218,47 +1151,25 @@ module chempotpy_fh2_gen_5secs3_1993_pes
         subroutine dedcou
             implicit none
             integer :: i, j, k
-            if( utilcm_ireorder .eq. 1 )then
-                do i = 1, infocm_natoms
-                    usrocm_dgscart(i,1) = utilcm_dgscartnu(usricm_nulbl(i),1) * utilcm_cnvrtde
-                    usrocm_dgscart(i,2) = utilcm_dgscartnu(usricm_nulbl(i),2) * utilcm_cnvrtde
-                    usrocm_dgscart(i,3) = utilcm_dgscartnu(usricm_nulbl(i),3) * utilcm_cnvrtde
-                    if( utilcm_ksdiag .ne. 0 )then
-                        do j=utilcm_ksdiag, utilcm_kediag
-                            usrocm_descart(i,1,j) = utilcm_descartnu(usricm_nulbl(i),1,j) * utilcm_cnvrtde
-                            usrocm_descart(i,2,j) = utilcm_descartnu(usricm_nulbl(i),2,j) * utilcm_cnvrtde
-                            usrocm_descart(i,3,j) = utilcm_descartnu(usricm_nulbl(i),3,j) * utilcm_cnvrtde
-                        enddo
-                    endif
-                    if( utilcm_ksoffd .ne. 0 )then
-                        do k=utilcm_ksoffd, utilcm_keoffd
-                            usrocm_dijcart(i,1,k) = utilcm_dijcartnu(usricm_nulbl(i),1,k) * utilcm_cnvrtde
-                            usrocm_dijcart(i,2,k) = utilcm_dijcartnu(usricm_nulbl(i),2,k) * utilcm_cnvrtde
-                            usrocm_dijcart(i,3,k) = utilcm_dijcartnu(usricm_nulbl(i),3,k) * utilcm_cnvrtde
-                        enddo
-                    endif
-                enddo
-            else
-                do i = 1, infocm_natoms
-                    usrocm_dgscart(i,1) = utilcm_dgscartnu(i,1) * utilcm_cnvrtde
-                    usrocm_dgscart(i,2) = utilcm_dgscartnu(i,2) * utilcm_cnvrtde
-                    usrocm_dgscart(i,3) = utilcm_dgscartnu(i,3) * utilcm_cnvrtde
-                    if( utilcm_ksdiag .ne. 0 )then
-                        do j=utilcm_ksdiag, utilcm_kediag
-                            usrocm_descart(i,1,j) = utilcm_descartnu(i,1,j) * utilcm_cnvrtde
-                            usrocm_descart(i,2,j) = utilcm_descartnu(i,2,j) * utilcm_cnvrtde
-                            usrocm_descart(i,3,j) = utilcm_descartnu(i,3,j) * utilcm_cnvrtde
-                        enddo
-                    endif
-                    if( utilcm_ksoffd .ne. 0 )then
-                        do k=utilcm_ksoffd, utilcm_keoffd
-                            usrocm_dijcart(i,1,k) = utilcm_dijcartnu(i,1,k) * utilcm_cnvrtde
-                            usrocm_dijcart(i,2,k) = utilcm_dijcartnu(i,2,k) * utilcm_cnvrtde
-                            usrocm_dijcart(i,3,k) = utilcm_dijcartnu(i,3,k) * utilcm_cnvrtde
-                        enddo
-                    endif
-                enddo
-            endif
+            do i = 1, atom_count
+                output_ground_state_gradient(i,1) = ground_state_cartesian_gradient(i,1)
+                output_ground_state_gradient(i,2) = ground_state_cartesian_gradient(i,2)
+                output_ground_state_gradient(i,3) = ground_state_cartesian_gradient(i,3)
+                if( first_requested_excited_state .ne. 0 )then
+                    do j=first_requested_excited_state, last_requested_excited_state
+                        output_excited_state_gradients(i,1,j) = excited_state_cartesian_gradients(i,1,j)
+                        output_excited_state_gradients(i,2,j) = excited_state_cartesian_gradients(i,2,j)
+                        output_excited_state_gradients(i,3,j) = excited_state_cartesian_gradients(i,3,j)
+                    enddo
+                endif
+                if( first_requested_coupling .ne. 0 )then
+                    do k=first_requested_coupling, last_requested_coupling
+                        output_diabatic_gradients(i,1,k) = diabatic_cartesian_gradients(i,1,k)
+                        output_diabatic_gradients(i,2,k) = diabatic_cartesian_gradients(i,2,k)
+                        output_diabatic_gradients(i,3,k) = diabatic_cartesian_gradients(i,3,k)
+                    enddo
+                endif
+            enddo
         end subroutine dedcou
     end subroutine evaluate
 end module chempotpy_fh2_gen_5secs3_1993_pes
