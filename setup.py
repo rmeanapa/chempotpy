@@ -40,5 +40,10 @@ setup(
     install_requires=[
         'numpy',
     ],
+    entry_points={
+        "console_scripts": [
+            "chempotpy-provider=chempotpy.core.python.provider_cli:main",
+        ],
+    },
     zip_safe=False,
 )

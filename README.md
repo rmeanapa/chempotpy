@@ -492,6 +492,46 @@ Use `pg` for a PES with an analytic gradient, `pgd` for energies, gradients,
 and nonadiabatic couplings, and `u`/`ug`/`un` for diabatic matrices. The
 `detail` function reports which quantities each surface provides.
 
+### Connect molecular-simulation programs
+
+Every catalog entry is available through one transport-neutral provider layer.
+It accepts Cartesian coordinates and returns energies, gradients, and matrices
+in atomic units. Surfaces without analytic gradients use the library's central
+finite-difference implementation; a selected adiabatic state is obtained from
+a DPEM by symmetric diagonalization and the Hellmann-Feynman gradient.
+
+List the exact `SYSTEM/SURFACE` keys:
+
+```bash
+chempotpy-provider list
+```
+
+Run the persistent CHEMPOTPY socket service:
+
+```bash
+chempotpy-provider socket H3 H3_GEN_A2_2002 --host 127.0.0.1 --port 8021
+```
+
+Connect the same surface as an [i-PI](https://ipi-code.org/) force driver:
+
+```bash
+chempotpy-provider ipi H3 H3_GEN_A2_2002 \
+    --host 127.0.0.1 --port 31415 --state 0
+```
+
+Run it as a [MolSSI Driver Interface](https://molssi-mdi.github.io/MDI_Library/)
+engine after installing the optional `pymdi` package:
+
+```bash
+chempotpy-provider mdi H3 H3_GEN_A2_2002 --state 0 \
+    --mdi-options='-name CHEMPOTPY -role ENGINE -method TCP -port 8021'
+```
+
+`Aln`, `AlmHn`, and `SiOH` have variable compositions and therefore also
+require `--atoms`, for example `--atoms Al,Al,Al,Al`. See the
+[PES interface contract](docs/PES_CONTRACT.md#provider-transports) for the
+native protocol and supported i-PI/MDI quantities.
+
 ## Generate a standalone Fortran PES
 
 Any catalog surface can be exported as one dependency-complete `.f90` source

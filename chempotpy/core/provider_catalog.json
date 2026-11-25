@@ -1,0 +1,4045 @@
+{
+  "schema_version": 1,
+  "surfaces": [
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC5m0_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC6m0_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC7m0_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC7m10_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC7m1_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC7m4_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC7m5_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC7m7_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC7p2_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC7p3_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC7p5_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ALC",
+      "surface_name": "ALC_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "AlmHn",
+      "surface_name": "AlmHn_VBO1",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "AlmHn",
+      "surface_name": "AlmHn_VBO2",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_BetH",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_CleR",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_CoxJM",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_deSPH_LJAT",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_deSPH_M",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2AT",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2BA",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2CN",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2CoxJM",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2EACN",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2EAT",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2EBA",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2ECN",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2ES",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2ESCNa",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2ESCNm",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2GEA",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2MeiD",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2MisFMP",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2S",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2SCNa",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ER2SCNm",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ErkIV",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ErkV",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_ErkVIII",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_Gol",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_HalP",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_Jac",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_MeiD",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_MisFMP",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_NP_A",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_NP_Ad",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_NP_B",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_NP_Bd",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_NP_C",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_NP_D",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_NP_E",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_PapCEP",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_PapKEP",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_PeaTHT",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_PetW",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reCoxJM",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_redeSPH_M",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reErkIV",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reErkVIII",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reGEA",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reGol",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reHalP",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reJac",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reLJAT",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reMeiD",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reMisFMP",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_rePetW",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reStrM",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_reSutC",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_StrM",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "Aln",
+      "surface_name": "Aln_SutC",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "ArNO",
+      "surface_name": "ArNO_Ap_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ArNO",
+      "surface_name": "ArNO_App_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrH2",
+      "surface_name": "BrH2_LEPS_C_1982",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrH2",
+      "surface_name": "BrH2_LEPS_LTBZ1_1995",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrH2",
+      "surface_name": "BrH2_LEPS_LTBZ2_1995",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrH2",
+      "surface_name": "BrH2_LEPS_LTBZ2_1995_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrH2",
+      "surface_name": "BrH2_LEPS_LTBZSO_1995",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrH2",
+      "surface_name": "BrH2_LEPS_LTBZSO_1995_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrH2",
+      "surface_name": "BrH2_LEPS_W_1959",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrHCl",
+      "surface_name": "BrHCl_LEPS1",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrHCl",
+      "surface_name": "BrHCl_LEPS2",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrHCl",
+      "surface_name": "BrHCl_LEPS3",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrHCl",
+      "surface_name": "BrHCl_LEPS_BLM_1983",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "BrNH3",
+      "surface_name": "BrNH3_VBMM_2026",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2H2N2O",
+      "surface_name": "C2H2N2O_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2H2O",
+      "surface_name": "C2H2O_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2H4O4",
+      "surface_name": "C2H4O4_FAD_PIP",
+      "entry_point": "pes",
+      "atom_count": 10,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2H6Cl",
+      "surface_name": "C2H6Cl_VBMM",
+      "entry_point": "pes",
+      "atom_count": 9,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2H6F",
+      "surface_name": "C2H6F_VBMM",
+      "entry_point": "pes",
+      "atom_count": 9,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2H6H",
+      "surface_name": "C2H6H_VBMM",
+      "entry_point": "pes",
+      "atom_count": 9,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2H6O",
+      "surface_name": "C2H6O_VBMM",
+      "entry_point": "pes",
+      "atom_count": 9,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2H6OH",
+      "surface_name": "C2H6OH_VBMM",
+      "entry_point": "pes",
+      "atom_count": 10,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2H7",
+      "surface_name": "C2H7_VBMM",
+      "entry_point": "pes",
+      "atom_count": 9,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2N",
+      "surface_name": "C2N_PIPNN_Ap",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C2N",
+      "surface_name": "C2N_PIPNN_App",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C3H7NO",
+      "surface_name": "C3H7NO_PIP",
+      "entry_point": "pes",
+      "atom_count": 12,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C6H5SH",
+      "surface_name": "C6H5SH_APRP",
+      "entry_point": "pes",
+      "atom_count": 13,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C6H5SH",
+      "surface_name": "C6H5SH_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 13,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C6H6O",
+      "surface_name": "PHOH_APRP",
+      "entry_point": "pes",
+      "atom_count": 13,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C6H6O",
+      "surface_name": "PHOH_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 13,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_APRP",
+      "entry_point": "pes",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_IA_APRP",
+      "entry_point": "pes",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_IA_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_II_APRP",
+      "entry_point": "pes",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_II_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_III_APRP",
+      "entry_point": "pes",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_III_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_S18_APRP",
+      "entry_point": "pes",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_S18_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_S20_APRP",
+      "entry_point": "pes",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_S20_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_S22_APRP",
+      "entry_point": "pes",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_S22_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_S25_APRP",
+      "entry_point": "pes",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "C7H8S",
+      "surface_name": "C7H8S_S25_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 16,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH2O",
+      "surface_name": "CH2O_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH2O2",
+      "surface_name": "CH2O2_LOCAL_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH2O2",
+      "surface_name": "CH2O2_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH2OH",
+      "surface_name": "CH2OH_Surfgen_2state_2018",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH2OH",
+      "surface_name": "CH2OH_Surfgen_2state_2018_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 5,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH2OH",
+      "surface_name": "CH2OH_Surfgen_3state_2017",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH2OH",
+      "surface_name": "CH2OH_Surfgen_3state_2017_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 5,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH3NH2",
+      "surface_name": "CH3NH2_APRP",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH3NH2",
+      "surface_name": "CH3NH2_APRP_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 7,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH3OH",
+      "surface_name": "CH3OH_PIP",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4",
+      "surface_name": "CH4_GEN_SP_2001",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4_H2O_H2O",
+      "surface_name": "CH4_H2O_H2O_PIP",
+      "entry_point": "pes",
+      "atom_count": 11,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4Br",
+      "surface_name": "CH4Br_VBMM_2002",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4Cl",
+      "surface_name": "CH4Cl_VBMM_2000",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4Cl",
+      "surface_name": "CH4Cl_VBMM_2005",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4CN",
+      "surface_name": "CH4CN_VBMM",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4F",
+      "surface_name": "CH4F_GEN_GC_1996",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4F",
+      "surface_name": "CH4F_GEN_GCSO_1996",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4F",
+      "surface_name": "CH4F_LEPS_RNCG_2006",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4Ni",
+      "surface_name": "CH4Ni_EAM6_J1_1996",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4O",
+      "surface_name": "CH4O_LEP_1995",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4O",
+      "surface_name": "CH4O_LEP_1998",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4O",
+      "surface_name": "CH4O_LEP_2000",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4O",
+      "surface_name": "CH4O_LEP_2014",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4OCl",
+      "surface_name": "CH4OCl_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4OCl",
+      "surface_name": "CH4OCl_VBMM_2023",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4OF",
+      "surface_name": "CH4OF_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4OH",
+      "surface_name": "CH4OH_VBMM_2000",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH4OH",
+      "surface_name": "CH4OH_VBMM_2015",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH5",
+      "surface_name": "CH5_GEN_J1_1987",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH5",
+      "surface_name": "CH5_GEN_J2_1987",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH5",
+      "surface_name": "CH5_LEPS_JG_1995",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH5",
+      "surface_name": "CH5_LEPS_JJ_2002",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH5",
+      "surface_name": "CH5_VBMM_CBG_2009",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH5O2",
+      "surface_name": "CH5O2_VBMM_2023",
+      "entry_point": "pes",
+      "atom_count": 8,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CH5p",
+      "surface_name": "CH5p_PIP",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "Cl2H",
+      "surface_name": "Cl2H_LEPS_BCMR_1983",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "Cl2H",
+      "surface_name": "Cl2H_LEPS_KNPRY_1966",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "Cl2H",
+      "surface_name": "Cl2H_LEPS_PK2_1987",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "Cl2H",
+      "surface_name": "Cl2H_LEPS_PK3_1987",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_ALTG1_1996",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_ALTG2_1996",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_GTM1_1981",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_GTM2_1981",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_GTM3_1981",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_GTM4_1982",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_KNPRY_1966",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_LB_1980",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_PK1_1966",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_PK2_1966",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_SPK_1973",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_STSBLTG1_1989",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_STSBLTG2_1989",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_TTGI1_1985",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2",
+      "surface_name": "ClH2_LEPS_TTGI2_1985",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClH2O",
+      "surface_name": "ClH2O_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "ClNH3",
+      "surface_name": "ClNH3_VBMM",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CO2",
+      "surface_name": "CO2_1Ap_RKHS",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CO2",
+      "surface_name": "CO2_1App_RKHS",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CO2",
+      "surface_name": "CO2_21Ap_RKHS",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CO2",
+      "surface_name": "CO2_3Ap_RKHS",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "CO2",
+      "surface_name": "CO2_3App_RKHS",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "COCO",
+      "surface_name": "COCO_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "F2H",
+      "surface_name": "F2H_LEPS_JOT_1972",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "F2H",
+      "surface_name": "F2H_LEPS_KNPRY_1966",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "F2H2",
+      "surface_name": "F2H2_GEN_JBKKL_1990",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "F2H2",
+      "surface_name": "F2H2_GEN_S2_1996",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "F2H2",
+      "surface_name": "F2H2_GEN_SQSBDE_1995",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SEC_1991",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECCOG1_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECCOG2_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECCOG3_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECG1_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECG2_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECG3_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECGM4_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECS1_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECS2_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECS3_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_5SECW_1991",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_GEN_6SEC_1993",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_M5_1991",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_M5SK_1966",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_NO1_1984",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_NO2_1984",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_NO2a_1984",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_NO3_1984",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_NO4_1984",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_NO5_1985",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_NO5a_1985",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_NO5b_1985",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_NO5z_1985",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2",
+      "surface_name": "FH2_LEPS_SK_1980",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2O",
+      "surface_name": "FH2O_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "FH2O",
+      "surface_name": "FH2O_SOC_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "GeH4OH",
+      "surface_name": "GeH4OH_VBMM",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "GeH5",
+      "surface_name": "GeH5_LEPS",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H2CO",
+      "surface_name": "H2CO_PIP",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H2O2",
+      "surface_name": "H2O2_GEN_1998",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H2OBr",
+      "surface_name": "H2OBr_PIP",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_A2_2002",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_A3_2002",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_A4_2002",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_BH_2009",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_BKMP3_1996",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_BKMP_1991",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_CCI_2002",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_DMBE_1987",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_LSTH_1978",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_PK2_1964",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3",
+      "surface_name": "H3_GEN_TK_1984",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3Cl",
+      "surface_name": "H3Cl_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3ClO",
+      "surface_name": "H3ClO_PIP_2013",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3ClO",
+      "surface_name": "H3ClO_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3m",
+      "surface_name": "H3m_AS_2004",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3p",
+      "surface_name": "H3p_KBNN_2002",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3p",
+      "surface_name": "H3p_UNO_2001",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H3S",
+      "surface_name": "H3S_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H4O2",
+      "surface_name": "H4O2_PIP",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H5O2p",
+      "surface_name": "H5O2p_PIP_2005",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "H7p",
+      "surface_name": "H7p_PIP",
+      "entry_point": "pes",
+      "atom_count": 7,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HClOH",
+      "surface_name": "HClOH_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HeH2p",
+      "surface_name": "HeH2p_DIM_1976",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HeH2p",
+      "surface_name": "HeH2p_MTJS_1987",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HNi",
+      "surface_name": "HNi_EAM5_1995",
+      "entry_point": "pes",
+      "atom_count": 1,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HNi",
+      "surface_name": "HNi_EAM6_1996",
+      "entry_point": "pes",
+      "atom_count": 1,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HNi",
+      "surface_name": "HNi_EAM7_1998",
+      "entry_point": "pes",
+      "atom_count": 1,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HO3",
+      "surface_name": "HO3_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HOBr",
+      "surface_name": "HOBr_3App_PIP",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HOCO_Ar",
+      "surface_name": "HOCO_Ar_PIP",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "I2H",
+      "surface_name": "I2H_LEPS_KK_1981",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "I2H",
+      "surface_name": "I2H_LEPS_PT1_1971",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "I2H",
+      "surface_name": "I2H_LEPS_PT2_1971",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "IH2",
+      "surface_name": "IH2_LEPS_DT1_1971",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "IH2",
+      "surface_name": "IH2_LEPS_DT2_1971",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "IH2",
+      "surface_name": "IH2_LEPS_KNPRY_1966",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "IH2",
+      "surface_name": "IH2_LEPS_PPW1_1974",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "IH2",
+      "surface_name": "IH2_LEPS_RSPTS_1970",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "K2Rb2",
+      "surface_name": "K2Rb2_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "LiFH",
+      "surface_name": "LiFH_LEPS_JHCTP_2001",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "LiFH",
+      "surface_name": "LiFH_LEPS_JHCTP_2001_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "LiFH",
+      "surface_name": "LiFH_LEPS_JHTP1_2002",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "LiFH",
+      "surface_name": "LiFH_LEPS_JHTP1_2002_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "LiFH",
+      "surface_name": "LiFH_LEPS_JHTP2_2002",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "LiFH",
+      "surface_name": "LiFH_LEPS_JHTP2_2002_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "LiH2p",
+      "surface_name": "LiH2p_Excited_2003",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "LiH2p",
+      "surface_name": "LiH2p_Ground_2003",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "malonaldehyde",
+      "surface_name": "malonaldehyde_MHT_2014",
+      "entry_point": "pes",
+      "atom_count": 9,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHSB_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHSB_LEPS_ModelSurface_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHSL_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHSL_LEPS_ModelSurface_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHTL_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHTL_LEPS_ModelSurface_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHWB_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHWB_LEPS_ModelSurface_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHWL_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MCH",
+      "surface_name": "MCHWL_LEPS_ModelSurface_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MXH",
+      "surface_name": "MXHSB_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MXH",
+      "surface_name": "MXHSB_LEPS_ModelSurface_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MXH",
+      "surface_name": "MXHSL_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MXH",
+      "surface_name": "MXHSL_LEPS_ModelSurface_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MXH",
+      "surface_name": "MXHWL_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "MXH",
+      "surface_name": "MXHWL_LEPS_ModelSurface_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2HOCp",
+      "surface_name": "N2HOCp_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_11_1App_2025",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 11,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_11_1App_AE_2025",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 11,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_13_1Ap_2025",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 13,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_13_1Ap_2026",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 13,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_13_1Ap_AE_2025",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 13,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_13_1Ap_AE_2026",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 13,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_3Ap_PIP",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_3Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_3App_PIP",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O",
+      "surface_name": "N2O_3App_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O2",
+      "surface_name": "N2O2_3A_PIP",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N2O2",
+      "surface_name": "N2O2_3A_ZV",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N3",
+      "surface_name": "N3_4App_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N3",
+      "surface_name": "N3_MBP_2017",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N4",
+      "surface_name": "N4_1A_MEG2_2020",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N4",
+      "surface_name": "N4_1A_PIP",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N4",
+      "surface_name": "N4_1A_PIP_2013",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N4",
+      "surface_name": "N4_1A_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N4",
+      "surface_name": "N4_1A_ZV",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "N4",
+      "surface_name": "N4_BDTC_2014",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaFH",
+      "surface_name": "NaFH_LEPS_JHCTP_2001",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaFH",
+      "surface_name": "NaFH_LEPS_JHCTP_2001_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaFH",
+      "surface_name": "NaFH_LEPS_TTYPP1_1998",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaFH",
+      "surface_name": "NaFH_LEPS_TTYPP1_1998_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaFH",
+      "surface_name": "NaFH_LEPS_TTYPP2_1998",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaFH",
+      "surface_name": "NaFH_LEPS_TTYPP2_1998_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_5F_1992",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_5F_1992_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_5G_1992",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_5G_1992_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_6_2000",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_6_2000_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_7L_2000",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_7L_2000_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_7LD_2000",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_7LD_2000_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_7S_2000",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_7S_2000_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_7SD_2000",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NaH2",
+      "surface_name": "NaH2_LEPS_7SD_2000_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH3",
+      "surface_name": "NH3_GEN_FFW1_2006",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH3",
+      "surface_name": "NH3_GEN_FFW1_2006_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 4,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH3",
+      "surface_name": "NH3_GEN_FFW2_2007",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH3",
+      "surface_name": "NH3_GEN_FFW2_2007_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 4,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH3",
+      "surface_name": "NH3_Surfgen_2state_2012",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH3",
+      "surface_name": "NH3_Surfgen_2state_2012_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 4,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH3CN",
+      "surface_name": "NH3CN_VBMM",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH3OH",
+      "surface_name": "NH3OH_VBMM",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH4",
+      "surface_name": "NH4_VBMM_1997",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NH4",
+      "surface_name": "NH4_VBMM_2010",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NO2",
+      "surface_name": "NO2_2Ap_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NO2",
+      "surface_name": "NO2_2Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NO2",
+      "surface_name": "NO2_4Ap_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NO2",
+      "surface_name": "NO2_4Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NO2",
+      "surface_name": "NO2_6Ap_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NO2",
+      "surface_name": "NO2_6Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O2H",
+      "surface_name": "O2H_GEN",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O2H3",
+      "surface_name": "O2H3_PIPNN",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_14_3Ap_2022",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 14,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_14_3Ap_2022_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 14,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_14_3Ap_2023",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 14,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_14_3Ap_2023_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 14,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_14_3Ap_2023a",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 14,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_14_3Ap_2023a_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 14,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_14_3Ap_2024",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 14,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_14_3Ap_2024_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 14,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_16_3App_2026",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 16,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_16_3App_AE_2026",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 16,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_1Ap",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_1Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_1App",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_1App_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_3Ap",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_3Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_3App",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_3App_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_5Ap",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_5Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_5App",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_1_5App_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_2_1Ap",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_2_1Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_2_3Ap",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_2_3Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_2_5Ap",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_2_5Ap_ZV",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_5app_2026",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 6,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_5app_AE_2026",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 6,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_6_5Ap_2023",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 6,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_6_5Ap_2023_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 6,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_6_5Ap_2023a",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 6,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_6_5Ap_2023a_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 6,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O3",
+      "surface_name": "O3_MBP_2017",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O4",
+      "surface_name": "O4_MBP_singlet_2018",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O4",
+      "surface_name": "O4_quintet",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O4",
+      "surface_name": "O4_quintet_ZV",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O4",
+      "surface_name": "O4_singlet",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O4",
+      "surface_name": "O4_singlet_ZV",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O4",
+      "surface_name": "O4_triplet_v2",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "O4",
+      "surface_name": "O4_triplet_ZV",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH2",
+      "surface_name": "OH2_Ap_GEN_M21986",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH2",
+      "surface_name": "OH2_App_GEN_M21986",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH2",
+      "surface_name": "OH2_App_GEN_M3n1988",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH2",
+      "surface_name": "OH2_App_GEN_M3na1988",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH2",
+      "surface_name": "OH2_GEN_DIM1981",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH2",
+      "surface_name": "OH2_GEN_POL1980",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH2",
+      "surface_name": "OH2_GEN_SL1979",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH2",
+      "surface_name": "OH2_LEPS_JW1977",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH2",
+      "surface_name": "OH2_LEPS_JWS1985",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH3",
+      "surface_name": "OH3_LEPS_SE_1986",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH3",
+      "surface_name": "OH3_PIP_FFW1_2019",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH3",
+      "surface_name": "OH3_PIP_FFW1_2019_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 4,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH3",
+      "surface_name": "OH3_PIP_FFW2_2022",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "OH3",
+      "surface_name": "OH3_PIP_FFW2_2022_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 4,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "SiH4Cl",
+      "surface_name": "SiH4Cl_VBMM",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "SiH5",
+      "surface_name": "SiH5_LEP_1998v1",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "SiH5",
+      "surface_name": "SiH5_LEP_1998v2",
+      "entry_point": "pes",
+      "atom_count": 6,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "SiOH",
+      "surface_name": "SiOH_GEN_1988",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": true
+    },
+    {
+      "system_name": "YRH",
+      "surface_name": "YRH_LEPS_ModelSurface",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": true,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "YRH",
+      "surface_name": "YRH_LEPS_ModelSurface_DPEM",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    }
+  ]
+}

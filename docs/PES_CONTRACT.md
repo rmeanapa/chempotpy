@@ -71,10 +71,22 @@ atomic-unit coordinates and results and preserves CHEMPOTPY's adiabatic,
 diabatic, and nonadiabatic result shapes.
 
 The socket layer is a CHEMPOTPY transport, not a replacement for MDI or i-PI.
-An MDI adapter can map standard coordinate, energy, and force commands onto the
-same provider contract. An i-PI adapter can expose the energy/force subset. A
-future POLYRATE provider can therefore select direct calls, this socket
-transport, MDI, or i-PI without changing a surface implementation.
+The bundled MDI engine maps the standard `<NATOMS`, `<LABELS`, `<ELEMENTS`,
+`<COORDS`, `>COORDS`, `<ENERGY`, and `<FORCES` commands onto the same provider
+contract. `<ELEMENTS` is omitted for abstract model systems that use
+pseudo-element labels. The bundled i-PI driver implements the versioned i-PI
+socket sequence (`STATUS`, `INIT`, `POSDATA`, `GETFORCE`, and `EXIT`) and
+returns energy, forces, a zero virial, and identifying JSON extras. All three
+transports use atomic units.
+
+`chempotpy-provider` constructs these bridges from the generated installed
+catalog, which is checked against all 404 numerical-regression entries. The
+bridge selects an adiabatic state by zero-based index. For a DPEM it
+diagonalizes the symmetric matrix and transforms its gradient with the
+Hellmann-Feynman expression. If a PES has no published analytic gradient, the
+same runtime's central finite-difference evaluator supplies forces. A future
+POLYRATE provider can therefore select direct calls, the native socket, MDI,
+or i-PI without changing a surface implementation.
 
 A provider process creates a listener around one configured surface:
 
