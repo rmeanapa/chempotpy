@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: >-
+  If you use ChemPotPy, cite both the ChemPotPy paper and the original
+  publication for every potential energy surface used in your work.
+title: ChemPotPy
+abstract: >-
+  A self-contained Python and modern Fortran library of analytic potential
+  energy surfaces, diabatic potential energy matrices, gradients, and
+  nonadiabatic couplings for molecular simulations.
+type: software
+authors:
+  - family-names: Shu
+    given-names: Yinan
+  - family-names: Varga
+    given-names: Zoltan
+  - family-names: Zhang
+    given-names: Dayou
+  - family-names: Truhlar
+    given-names: Donald G.
+  - family-names: Meana-Paneda
+    given-names: Ruben
+version: 2.0.0
+date-released: 2026-11-25
+repository-code: https://github.com/rmeanapa/chempotpy
+url: https://github.com/rmeanapa/chempotpy
+license: Apache-2.0
+keywords:
+  - potential energy surfaces
+  - computational chemistry
+  - chemical dynamics
+  - molecular simulation
+  - Fortran
+  - Python
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Shu
+      given-names: Yinan
+    - family-names: Varga
+      given-names: Zoltan
+    - family-names: Zhang
+      given-names: Dayou
+    - family-names: Truhlar
+      given-names: Donald G.
+  title: >-
+    ChemPotPy: A Python Library for Analytic Representations of Potential
+    Energy Surfaces and Diabatic Potential Energy Matrices
+  journal: Journal of Physical Chemistry A
+  year: 2023
+  volume: 127
+  issue: 45
+  start: 9635
+  end: 9640
+  doi: 10.1021/acs.jpca.3c05899

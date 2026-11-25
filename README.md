@@ -3,6 +3,9 @@
 **CHEMical library of POTential energy surfaces in PYthon**
 
 [![All PES numerical regression](https://github.com/rmeanapa/chempotpy/actions/workflows/all-pes-numerical-regression.yml/badge.svg?branch=main)](https://github.com/rmeanapa/chempotpy/actions/workflows/all-pes-numerical-regression.yml?query=branch%3Amain)
+[![Latest release](https://img.shields.io/github/v/release/rmeanapa/chempotpy?display_name=tag)](https://github.com/rmeanapa/chempotpy/releases/latest)
+[![License](https://img.shields.io/github/license/rmeanapa/chempotpy)](LICENSE)
+[![Submit a PES](https://img.shields.io/badge/Submit-a%20new%20PES-00a6a6)](https://github.com/rmeanapa/chempotpy/issues/new?template=new-pes.yml)
 
 ChemPotPy provides callable analytic potential energy surfaces (PESs),
 multistate surface sets, diabatic potential energy matrices, gradients, and
@@ -582,4 +585,5 @@ each selected potential energy surface:
 - [PES import evidence](docs/PES_IMPORTS.md)
 - [Submit a PES](docs/SUBMIT_A_PES.md)
 - [Contribution guide](CONTRIBUTING.md)
+- [Version 2.0 release notes](docs/releases/2.0.0.md)
 - [License](LICENSE)
