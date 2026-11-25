@@ -6,6 +6,7 @@ from pathlib import Path
 
 
 WORKING_PRECISION_CORE_SOURCES = (
+    "chempotpy_atomic_elements.f90",
     "chempotpy_blas.f90",
     "chempotpy_contract.f90",
     "chempotpy_dispersion.f90",

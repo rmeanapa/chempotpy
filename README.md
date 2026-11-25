@@ -466,9 +466,10 @@ the following changes:
   constructs from governed PES sources.
 * Replaced initialization entry points with stateless, independently owned PES
   modules whose fixed coefficients live in source-controlled module data.
-* Added a bundled Fortran core for numerical kinds, status values, typed PES
-  requests/results/metadata, canonical NIST CODATA 2022 and compatibility unit
-  conversions, Cartesian geometry, coordinate flattening and reshaping,
+* Added a bundled Fortran core for numerical kinds, atomic elements and
+  standard atomic masses, status values, typed PES requests/results/metadata,
+  canonical NIST CODATA 2022 and compatibility unit conversions, Cartesian
+  geometry, coordinate flattening and reshaping,
   internal-to-Cartesian gradient transformations, centered finite-difference
   validation, reusable internal-coordinate adapters, BLAS operations, and
   symmetric eigensolution. The core keeps CHEMPOTPY
@@ -487,7 +488,7 @@ the following changes:
 * Added catalog discovery and isolated f2py builds so each PES extension
   receives only the bundled core modules it actually imports.
 * Added strict compilation, modernization, formatting, packaging, binary
-  linkage, extension-import, and numerical-regression gates for all 402
+  linkage, extension-import, and numerical-regression gates for all 403
   callable surfaces, including nine stored reference geometries per surface.
 * Corrected the CH3NH2 APRP coupling evaluation by initializing terms that are
   absent from the coupling branch and conditionally assigned tent derivatives.
@@ -532,6 +533,21 @@ requested reproduction of the formerly released rounded conversions. A
 conversion-like value that is part of a published PES fit remains local to its
 surface and is not replaced merely because it resembles a physical constant;
 changing such a value would change the fitted model itself.
+
+Atomic element data
+-------------------
+
+The `chempotpy_atomic_elements` core module owns the 118 canonical element
+symbols, their atomic numbers, and standard atomic masses in unified atomic
+mass units. Its case-insensitive `atomic_number`, `atomic_symbol`, and
+`atomic_mass_u` queries return neutral values for invalid input so library
+evaluators do not terminate the calling application. `D` and `T` are accepted
+as hydrogen aliases for element-identity checks; isotope-specific masses are
+outside this standard-element table.
+
+Legacy POTLIB setup adapters validate their declared atomic numbers through
+this module. PES sources must not carry private copies of the periodic table;
+fit-specific atom ordering and isotope choices remain with the owning surface.
 
 The C6H5SH APRP pair and the eight C7H8S APRP adiabatic/diabatic pairs are
 documented exceptions for input-coordinate scaling. Their released fits are
@@ -649,7 +665,7 @@ conventions are collected in `docs/FORTRAN_STYLE.md`.
 
 Run `make check-modernization` for the complete repeatable modernization gate.
 It audits the catalog, rejects forbidden legacy Fortran constructs, runs the
-Python and core tests, strictly compiles all 402 callable PES interfaces, checks
+Python and core tests, strictly compiles all 403 callable PES interfaces, checks
 formatting, and evaluates every surface at nine deterministic geometries in the
 same process. `make test-surfaces` runs only the slower catalog-wide numerical
 and architecture regression portion.
@@ -780,14 +796,14 @@ From the repository root, run the complete Python extension gate with:
 
     make check-conda BUILD_FLAGS="--jobs 4"
 
-This command builds all 402 f2py extensions, checks their native-library
+This command builds all 403 f2py extensions, checks their native-library
 linkage, imports every extension in an isolated Python process, and performs
 3,618 numerical evaluations. A successful run ends with counters equivalent to:
 
-    pes_extensions_checked: 402
+    pes_extensions_checked: 403
     missing_or_ambiguous_extensions: 0
     external_mkl_lapack_blas_links: 0
-    python_extensions_checked: 402
+    python_extensions_checked: 403
     python_extension_evaluations: 3618
     python_extension_failures: 0
 

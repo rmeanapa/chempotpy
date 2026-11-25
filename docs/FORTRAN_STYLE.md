@@ -110,9 +110,14 @@ and the shared PES contract remain defined in `PES_CONTRACT.md`.
   moved into private module storage; do not delete `SAVE` independently of the
   initialization/evaluation lifecycle that consumes it.
 - Published fit coefficients and model-specific constants belong beside their
-  owning PES. General geometry, unit conversion, numerical kinds, linear
-  algebra, status handling, typed request/result/metadata contracts, and
-  finite-difference validation belong in the bundled core.
+  owning PES. Atomic-element data, general geometry, unit conversion,
+  numerical kinds, linear algebra, status handling, typed
+  request/result/metadata contracts, and finite-difference validation belong
+  in the bundled core.
+- Use `chempotpy_atomic_elements` for element symbols, atomic-number
+  validation, and standard atomic masses. PES modules must not embed private
+  periodic tables; surface-specific atom order and isotope choices remain
+  local to the owning PES.
 - Use `symmetric_eigendecomposition` from `chempotpy_linear_algebra` for real
   symmetric matrices. PES modules must not define `diagonalize` or `eign`
   wrappers or call the low-level `DSYEV` ABI directly. The bundled core owns

@@ -216,6 +216,9 @@ SUPPORT_SOURCES = {
 }
 CORE_FORTRAN_ROOT = REPOSITORY_ROOT / "chempotpy" / "core"
 CORE_MODULE_SOURCES = {
+    "chempotpy_atomic_elements": (
+        CORE_FORTRAN_ROOT / "chempotpy_atomic_elements.f90"
+    ),
     "chempotpy_contract": CORE_FORTRAN_ROOT / "chempotpy_contract.f90",
     "chempotpy_dispersion": CORE_FORTRAN_ROOT / "chempotpy_dispersion.f90",
     "chempotpy_blas": CORE_FORTRAN_ROOT / "chempotpy_blas.f90",

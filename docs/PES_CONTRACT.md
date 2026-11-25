@@ -101,6 +101,9 @@ The maintained bundled core currently contains:
 - `chempotpy_kinds`: portable `sp`, `dp`, and `qp` requests plus the single
   compile-time working-precision selector `wp`. The default `wp = dp` preserves
   the released binary64 behavior.
+- `chempotpy_atomic_elements`: canonical symbols, atomic-number lookup,
+  validation, and standard atomic masses for all 118 elements. PES modules use
+  this owner instead of embedding periodic-table maps.
 - `chempotpy_constants`: the canonical mathematical constants plus generated
   NIST CODATA 2022 source values and provenance.
 - `chempotpy_units`: canonical conversions for all public atomic-unit
@@ -282,11 +285,11 @@ structural formatter used during migration.
 
 ## Repository-wide modernization status
 
-- The package contains 480 free-form `.f90` sources and no fixed-form `.f`
-  sources: 402 independently callable PES interfaces, 60 system-support
-  sources, and 18 shared core modules. No callable surface has a competing
+- The package contains 482 free-form `.f90` sources and no fixed-form `.f`
+  sources: 403 independently callable PES interfaces, 60 system-support
+  sources, and 19 shared core modules. No callable surface has a competing
   duplicate stem.
-- All 402 callable surfaces have a uniquely named private owning module that
+- All 403 callable surfaces have a uniquely named private owning module that
   publishes `evaluate` with an optional `chempotpy_status_t` result and a thin
   historical external `pes` or `dpem` adapter.
   The catalog regression suite enforces exactly one owner module per surface.
@@ -376,7 +379,7 @@ and compilation gates enforce the resulting source contract directly.
   fixture records each source's SHA-256 digest and 656 formatted outputs. The
   repository-wide regression test recompiles all 205 `.f90` replacements and
   compares their outputs with those frozen release references.
-- A second catalog fixture covers all 402 callable PES interfaces at nine
+- A second catalog fixture covers all 403 callable PES interfaces at nine
   deterministic geometries. It records the authoritative source
   digest, interface signature, state dimensions, and CODATA 2022 boundary
   outputs; run `make test-surfaces` to compile and evaluate the complete catalog.
@@ -405,12 +408,12 @@ and compilation gates enforce the resulting source contract directly.
 - Complete library build with no surface hidden behind a successful overall
   command when its individual compilation failed.
 
-The current static gate checks all 402 callable surfaces independently; all
-402 pass with gfortran. Extension builds use the bundled `DSYEV` implementation
+The current static gate checks all 403 callable surfaces independently; all
+403 pass with gfortran. Extension builds use the bundled `DSYEV` implementation
 and no MKL, LAPACK, or BLAS link flags.
 
-The optimized macOS extension gate also builds all 402 callable surfaces. A
-binary audit finds all 402 exact module artifacts, no MKL/LAPACK/BLAS links,
+The optimized macOS extension gate also builds all 403 callable surfaces. A
+binary audit finds all 403 exact module artifacts, no MKL/LAPACK/BLAS links,
 and an internally defined `DSYEV` symbol in each extension that imports
 `chempotpy_linear_algebra` (currently 78). The only non-system compiled
 dependency observed is the normal GNU Fortran runtime; distributable wheels

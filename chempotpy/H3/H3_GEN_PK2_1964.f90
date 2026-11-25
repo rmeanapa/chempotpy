@@ -200,245 +200,20 @@ module chempotpy_h3_gen_pk2_1964_pes
 
         !> @brief Evaluate ANCVRT for the H3_GEN_PK2_1964 potential.
         subroutine ancvrt
-            use chempotpy_kinds, only: wp
+            use chempotpy_atomic_elements, only: all_atomic_numbers_valid
+            use chempotpy_kinds,           only: wp
             implicit none
-            integer, parameter  :: natom    = 25
             real(wp), parameter :: htomillh = 1000.e0_wp
             real(wp), parameter :: htoev    = 27.2113834e0_wp
             real(wp), parameter :: htokcal  = hartree_to_kilocalorie_per_mole
             real(wp), parameter :: htowave  = 219474.631e0_wp
             real(wp), parameter :: htokj    = 2625.49962e0_wp
             real(wp), parameter :: bohr_a   = .5291772083e0_wp
-            integer             :: i, ianum(7,32), inc1, inc2, ind, ind2, inu, isave(natom), isum, j, jsave(natom)
-            character(len=3)    :: periodic_1(7,32)
-            character(len=2)    :: name1(natom)
-            character(len=2)    :: name2(natom)
-            character(len=1)    :: iblank
-            character(len=20)   :: distance
-            character(len=20)   :: units
-            do i=1, 7
-                do j=1, 32
-                    ianum(i,j)      = 0
-                    periodic_1(i,j) = ' '
-                enddo
-            enddo
-            distance         = 'BOHR                '
-            units            = 'HARTREE             '
-            ianum(1,1)       = 1
-            ianum(1,32)      = 2
-            ianum(2,1)       = 3
-            ianum(2,2)       = 4
-            ianum(2,27)      = 5
-            ianum(2,28)      = 6
-            ianum(2,29)      = 7
-            ianum(2,30)      = 8
-            ianum(2,31)      = 9
-            ianum(2,32)      = 10
-            ianum(3,1)       = 11
-            ianum(3,2)       = 12
-            ianum(3,27)      = 13
-            ianum(3,28)      = 14
-            ianum(3,29)      = 15
-            ianum(3,30)      = 16
-            ianum(3,31)      = 17
-            ianum(3,32)      = 18
-            ianum(4,1)       = 19
-            ianum(4,2)       = 20
-            ianum(4,17)      = 21
-            ianum(4,18)      = 22
-            ianum(4,19)      = 23
-            ianum(4,20)      = 24
-            ianum(4,21)      = 25
-            ianum(4,22)      = 26
-            ianum(4,23)      = 27
-            ianum(4,24)      = 28
-            ianum(4,25)      = 29
-            ianum(4,26)      = 30
-            ianum(4,27)      = 31
-            ianum(4,28)      = 32
-            ianum(4,29)      = 33
-            ianum(4,30)      = 34
-            ianum(4,31)      = 35
-            ianum(4,32)      = 36
-            ianum(5,1)       = 37
-            ianum(5,2)       = 38
-            ianum(5,17)      = 39
-            ianum(5,18)      = 40
-            ianum(5,19)      = 41
-            ianum(5,20)      = 42
-            ianum(5,21)      = 43
-            ianum(5,22)      = 44
-            ianum(5,23)      = 45
-            ianum(5,24)      = 46
-            ianum(5,25)      = 47
-            ianum(5,26)      = 48
-            ianum(5,27)      = 49
-            ianum(5,28)      = 50
-            ianum(5,29)      = 51
-            ianum(5,30)      = 52
-            ianum(5,31)      = 53
-            ianum(5,32)      = 54
-            ianum(6,1)       = 55
-            ianum(6,2)       = 56
-            ianum(6,3)       = 57
-            ianum(6,4)       = 58
-            ianum(6,5)       = 59
-            ianum(6,6)       = 60
-            ianum(6,7)       = 61
-            ianum(6,8)       = 62
-            ianum(6,9)       = 63
-            ianum(6,10)      = 64
-            ianum(6,11)      = 65
-            ianum(6,12)      = 66
-            ianum(6,13)      = 67
-            ianum(6,14)      = 68
-            ianum(6,15)      = 69
-            ianum(6,16)      = 70
-            ianum(6,17)      = 71
-            ianum(6,18)      = 72
-            ianum(6,19)      = 73
-            ianum(6,20)      = 74
-            ianum(6,21)      = 75
-            ianum(6,22)      = 76
-            ianum(6,23)      = 77
-            ianum(6,24)      = 78
-            ianum(6,25)      = 79
-            ianum(6,26)      = 80
-            ianum(6,27)      = 81
-            ianum(6,28)      = 82
-            ianum(6,29)      = 83
-            ianum(6,30)      = 84
-            ianum(6,31)      = 85
-            ianum(6,32)      = 86
-            ianum(7,1)       = 87
-            ianum(7,2)       = 88
-            ianum(7,3)       = 89
-            ianum(7,4)       = 90
-            ianum(7,5)       = 91
-            ianum(7,6)       = 92
-            ianum(7,7)       = 93
-            ianum(7,8)       = 94
-            ianum(7,9)       = 95
-            ianum(7,10)      = 96
-            ianum(7,11)      = 97
-            ianum(7,12)      = 98
-            ianum(7,13)      = 99
-            ianum(7,14)      = 100
-            ianum(7,15)      = 101
-            ianum(7,16)      = 102
-            ianum(7,17)      = 103
-            ianum(7,18)      = 104
-            ianum(7,19)      = 105
-            ianum(7,20)      = 106
-            ianum(7,21)      = 107
-            ianum(7,22)      = 108
-            ianum(7,23)      = 109
-            ianum(7,24)      = 110
-            ianum(7,25)      = 111
-            ianum(7,26)      = 112
-            ianum(7,27)      = 113
-            ianum(7,28)      = 114
-            ianum(7,29)      = 115
-            ianum(7,30)      = 116
-            ianum(7,31)      = 117
-            ianum(7,32)      = 120
-            periodic_1(1,1)  = 'H  '
-            periodic_1(1,32) = 'He '
-            periodic_1(2,1)  = 'Li '
-            periodic_1(2,2)  = 'Be '
-            periodic_1(2,27) = 'B  '
-            periodic_1(2,28) = 'C  '
-            periodic_1(2,29) = 'N  '
-            periodic_1(2,30) = 'O  '
-            periodic_1(2,31) = 'F  '
-            periodic_1(2,32) = 'Ne '
-            periodic_1(3,1)  = 'Na '
-            periodic_1(3,2)  = 'Mg '
-            periodic_1(3,27) = 'Al '
-            periodic_1(3,28) = 'Si '
-            periodic_1(3,29) = 'P  '
-            periodic_1(3,30) = 'S  '
-            periodic_1(3,31) = 'Cl '
-            periodic_1(3,32) = 'Ar '
-            periodic_1(4,1)  = 'K  '
-            periodic_1(4,2)  = 'Ca '
-            periodic_1(4,17) = 'Sc '
-            periodic_1(4,18) = 'Ti '
-            periodic_1(4,19) = 'V  '
-            periodic_1(4,20) = 'Cr '
-            periodic_1(4,21) = 'Mn '
-            periodic_1(4,22) = 'Fe '
-            periodic_1(4,23) = 'Co '
-            periodic_1(4,24) = 'Ni '
-            periodic_1(4,25) = 'Cu '
-            periodic_1(4,26) = 'Zn '
-            periodic_1(4,27) = 'Ga '
-            periodic_1(4,28) = 'Ge '
-            periodic_1(4,29) = 'As '
-            periodic_1(4,30) = 'Se '
-            periodic_1(4,31) = 'Br '
-            periodic_1(4,32) = 'Kr '
-            periodic_1(5,1)  = 'Rb '
-            periodic_1(5,2)  = 'Sr '
-            periodic_1(5,17) = 'Y  '
-            periodic_1(5,18) = 'Zr '
-            periodic_1(5,19) = 'Nb '
-            periodic_1(5,20) = 'Mo '
-            periodic_1(5,21) = 'Tc '
-            periodic_1(5,22) = 'Ru '
-            periodic_1(5,23) = 'Rh '
-            periodic_1(5,24) = 'Pd '
-            periodic_1(5,25) = 'Ag '
-            periodic_1(5,26) = 'Cd '
-            periodic_1(5,27) = 'In '
-            periodic_1(5,28) = 'Sn '
-            periodic_1(5,29) = 'Sb '
-            periodic_1(5,30) = 'Te '
-            periodic_1(5,31) = 'I  '
-            periodic_1(5,32) = 'Xe '
-            periodic_1(5,32) = 'Xe '
-            do i=1, natoms
-                isave(i) = 0
-                jsave(i) = 0
-                name1(i) = '  '
-                name2(i) = '  '
-            enddo
-            iblank = ' '
-            do ind=1, natoms
-                do i=1, 7
-                    do j=1, 32
-                        if( indexes(ind) .eq. ianum(i,j) )then
-                            isave(ind) = i
-                            jsave(ind) = j
-                        endif
-                    enddo
-                enddo
-            enddo
-            do ind=1, natoms
-                ind2 = nulbl(ind)
-                if( ind2 .eq. 0 ) ind2=ind
-            enddo
-            inc1 = 0
-            do ind=1, irctnt-1
-                inc1        = inc1+1
-                name1(inc1) = periodic_1(isave(ind),jsave(ind))(:2)
-            enddo
-            inc2 = 0
-            do ind=irctnt, natoms
-                inc2        = inc2+1
-                name2(inc2) = periodic_1(isave(ind),jsave(ind))(:2)
-            enddo
-            if( nflag(1) .eq. 2 ) distance = 'ANGSTROMS           '
-            if( nflag(2) .eq. 2 )then
-                units = 'MILLIHARTREE        '
-            elseif( nflag(2) .eq. 3 )then
-                units = 'EV                  '
-            elseif( nflag(2) .eq. 4 )then
-                units = 'KCAL PER MOLE       '
-            elseif( nflag(2) .eq. 5 )then
-                units = 'WAVENUMBERS         '
-            elseif( nflag(2) .eq. 6 )then
-                units = 'KILOJOULES PER MOLE '
+            integer             :: inu, isum
+            if( .not. all_atomic_numbers_valid(indexes(1:natoms)) )then
+                if( present(status) ) call status%set(status_invalid_input, &
+                    'potential declares an invalid atomic number')
+                return
             endif
             cnvrtd  = 1.e0_wp
             cnvrte  = 1.e0_wp
@@ -457,8 +232,8 @@ module chempotpy_h3_gen_pk2_1964_pes
             endif
             cnvrtde = cnvrte/cnvrtd
             isum    = 0
-            do inu=1, 25
-                isum = isum + nulbl(inu)
+            do inu=1, size(nulbl)
+                isum = isum+nulbl(inu)
             enddo
             ireorder = 0
             if( isum .ne. 0 ) ireorder = 1

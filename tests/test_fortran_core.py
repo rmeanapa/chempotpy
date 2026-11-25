@@ -8,6 +8,21 @@ from pathlib import Path
 
 
 class FortranCoreTests( unittest.TestCase ):
+    def test_atomic_element_data_has_one_core_owner( self ) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        owner = repository / "chempotpy" / "core" / "chempotpy_atomic_elements.f90"
+        self.assertTrue(owner.is_file())
+        legacy_setup_count = 0
+        for source in sorted((repository / "chempotpy").rglob("*.f90")):
+            text = source.read_text(errors="replace").lower()
+            if source != owner:
+                self.assertNotIn("periodic_1(7,32)", text, str(source))
+                self.assertNotIn("ianum(7,32)", text, str(source))
+            if "subroutine ancvrt" in text:
+                legacy_setup_count += 1
+                self.assertIn("use chempotpy_atomic_elements", text, str(source))
+        self.assertGreater(legacy_setup_count, 0)
+
     def test_core_and_migrated_surface_support_quad_precision_when_available(
         self,
     ) -> None:
@@ -166,6 +181,7 @@ end program test_model_utilities
         core = repository / "chempotpy" / "core"
         source_names = (
             "chempotpy_kinds.f90",
+            "chempotpy_atomic_elements.f90",
             "chempotpy_constants.f90",
             "chempotpy_units.f90",
             "chempotpy_legacy_units.f90",
@@ -181,6 +197,8 @@ end program test_model_utilities
         )
         driver_source = """
 program test_fortran_core
+    use chempotpy_atomic_elements, only: all_atomic_numbers_valid, atomic_mass_u, atomic_number, atomic_symbol, &
+        is_valid_atomic_number, is_valid_atomic_symbol
     use chempotpy_contract, only: pes_metadata_t, pes_request_t, pes_result_t, &
         representation_adiabatic
     use chempotpy_finite_difference, only: central_finite_difference, central_finite_difference_gradient
@@ -235,6 +253,21 @@ program test_fortran_core
     type(chempotpy_status_t) :: evaluation_status
     integer                  :: conversion_status, i, j, solver_status
 
+    if( atomic_number('H') /= 1 .or. atomic_number(' cl ') /= 17 ) &
+        error stop 'atomic-symbol lookup failed'
+    if( atomic_number('D') /= 1 .or. atomic_number('t') /= 1 ) &
+        error stop 'hydrogen-isotope alias lookup failed'
+    if( atomic_number('Xx') /= 0 .or. atomic_symbol(118) /= 'Og' ) &
+        error stop 'atomic-element boundary lookup failed'
+    if( atomic_symbol(0) /= '  ' .or. is_valid_atomic_number(119) ) &
+        error stop 'invalid atomic-number handling failed'
+    if( .not. is_valid_atomic_symbol('he') .or. is_valid_atomic_symbol('Xx') ) &
+        error stop 'atomic-symbol validation failed'
+    if( .not. all_atomic_numbers_valid([1, 7, 35]) .or. &
+        all_atomic_numbers_valid([1, 0, 35]) ) error stop 'atomic-number array validation failed'
+    if( abs(atomic_mass_u(8)-15.99940492_wp) > epsilon(1.0_wp) .or. &
+        abs(atomic_mass_u('o')-15.99940492_wp) > epsilon(1.0_wp) ) &
+        error stop 'standard atomic-mass lookup failed'
     if( sp /= real32 ) error stop 'single-precision kind is not binary32'
     if( dp /= real64 ) error stop 'double-precision kind is not binary64'
     if( wp /= dp ) error stop 'default working precision is not double precision'
