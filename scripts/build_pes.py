@@ -25,6 +25,9 @@ from chempotpy.core.registry import SurfaceSource, discover_surface_sources
 
 
 SUPPORT_SOURCES = {
+    ("H3O2m", "H3O2m_sGDML_2024"): (
+        "chempotpy_h3o2m_sgdml_parameters.f90",
+    ),
     ("CH4Ni", "CH4Ni_EAM6_J1_1996"): (
         "chempotpy_ch4ni_ni111_parameters.f90",
         "chempotpy_ch4ni_runtime.f90",
@@ -255,6 +258,7 @@ CORE_MODULE_SOURCES = {
         CORE_FORTRAN_ROOT / "chempotpy_neural_network.f90"
     ),
     "chempotpy_rkhs": CORE_FORTRAN_ROOT / "chempotpy_rkhs.f90",
+    "chempotpy_sgdml": CORE_FORTRAN_ROOT / "chempotpy_sgdml.f90",
     "chempotpy_units": CORE_FORTRAN_ROOT / "chempotpy_units.f90",
 }
 INTERNAL_DSYEV = (

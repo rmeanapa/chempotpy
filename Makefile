@@ -52,6 +52,7 @@ check-embedded-parameters:
 	$(PYTHON) scripts/generate_embedded_network_parameters.py --check
 	$(PYTHON) scripts/generate_embedded_pes_parameters.py --check
 	$(PYTHON) scripts/generate_hcl_h2o_parameters.py --check
+	$(PYTHON) scripts/generate_h3o2m_sgdml_parameters.py --check
 	$(PYTHON) scripts/generate_nh3_surfgen_parameters.py --check
 
 check-generated: check-embedded-parameters

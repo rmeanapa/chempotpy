@@ -27,7 +27,7 @@ surfaces.
 
 <!-- BEGIN GENERATED PES CATALOG -->
 
-The catalog currently exposes **404 callable surfaces** across **100 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
+The catalog currently exposes **405 callable surfaces** across **101 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
 
 <table>
 <thead>
@@ -268,6 +268,7 @@ The catalog currently exposes **404 callable surfaces** across **100 chemical sy
 <tr><td rowspan="2" valign="top"><strong>H<sub>3</sub>ClO</strong></td><td><code>H3ClO_PIP_2013</code></td><td>Permutationally invariant polynomial potential</td><td align="center">1</td></tr>
 <tr><td><code>H3ClO_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
 <tr><td rowspan="1" valign="top"><strong>H<sub>3</sub><sup>−</sup></strong></td><td><code>H3m_AS_2004</code></td><td>Analytic potential</td><td align="center">1</td></tr>
+<tr><td rowspan="1" valign="top"><strong>H<sub>3</sub>O<sub>2</sub><sup>−</sup></strong></td><td><code>H3O2m_sGDML_2024</code></td><td>Symmetric gradient-domain machine-learning potential</td><td align="center">1</td></tr>
 <tr><td rowspan="2" valign="top"><strong>H<sub>3</sub><sup>+</sup></strong></td><td><code>H3p_KBNN_2002</code></td><td>Analytic potential</td><td align="center">3</td></tr>
 <tr><td><code>H3p_UNO_2001</code></td><td>Analytic potential</td><td align="center">3</td></tr>
 <tr><td rowspan="1" valign="top"><strong>H<sub>3</sub>S</strong></td><td><code>H3S_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>

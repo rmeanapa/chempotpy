@@ -22,6 +22,7 @@ extension check, and a standalone-export check.
 
 | Surface | Status | Main remaining work |
 | --- | --- | --- |
+| H3O2m_sGDML_2024 | Implemented and independently compared | None; all 50 released checkpoints, catalog, and standalone gates pass |
 | H5O2p_PIP_2005 | Implemented and independently compared | None; released energy/gradient, catalog, and standalone gates pass |
 | H7p_PIP | Implemented and independently compared | None; catalog and standalone gates pass |
 | HNi_EAM5_1995 Ni(111) adapter | Implemented and independently compared | None; canonical fixed-slab catalog and standalone gates pass |
@@ -62,6 +63,30 @@ remain in the variable-environment batch.
 POTLIB's `C2O2` archive was also audited. It is the same three-network model
 already exposed as `COCO_PIPNN`, so a second callable name and a duplicate
 parameter module were deliberately not added.
+
+## H3O2m sGDML and POTLIB alias audit
+
+The requested POTLIB `N4_1A_MB-PIP-MEG3` and
+`N2O2_3A_MB-PIP-MEG2` releases were already present as `N4_1A_ZV` and
+`N2O2_3A_ZV`, respectively. Their source metadata, fit coefficients, updated
+pair potentials, and distributed two-geometry outputs identify them as those
+exact releases, so duplicate callable aliases were not added.
+
+`H3O2m_sGDML_2024` embeds the authors' 3,000-point binary64 model and evaluates
+all 12 oxygen/hydrogen permutations through the shared Matérn-5/2 sGDML core.
+The 36,000 expanded descriptor records in the released text model are
+reconstructed losslessly from the 3,000 base records and the published
+permutation map. No model file is opened at runtime and no setup call or saved
+mutable state is required.
+
+Independent evidence was obtained by rebuilding commit `6dade4a` of the
+authors' H3O2M Fortran evaluator with gfortran and comparing all 50 distributed
+geometries in bohr. After applying the canonical CODATA 2022 public boundary,
+the largest energy difference is `2.25e-9` hartree and the largest Cartesian
+gradient difference is `3.82e-9` hartree/bohr. The nine catalog geometries use
+two released configurations plus their controlled interpolations and
+distortions. The test-only NPZ archive is retained as generator provenance;
+the installed Fortran module contains the immutable parameters directly.
 
 ## 2026 POTLIB completion batch
 

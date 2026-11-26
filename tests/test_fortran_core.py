@@ -128,11 +128,15 @@ program test_model_utilities
     use chempotpy_kinds, only: wp
     use chempotpy_neural_network, only: activation_linear, activation_logistic, activation_tanh, &
         apply_activation, evaluate_two_hidden_network
+    use chempotpy_sgdml, only: evaluate_matern52_sgdml
     implicit none
     integer  :: atomic_numbers(2)
     real(wp) :: c6(1), distance(1), derivative(1), energy, energy_minus, energy_plus
     real(wp) :: inputs(2), averages(2), deltas(2), weights_1(2,2), biases_1(2)
     real(wp) :: weights_2(2,1), biases_2(1), weights_3(1), output
+    real(wp) :: analytic_descriptor_gradient, descriptor(1), descriptor_coefficients(1,1), descriptor_gradient(1)
+    real(wp) :: energy_sgdml, energy_sgdml_minus, energy_sgdml_plus, training_descriptors(1,1)
+    integer  :: descriptor_permutations(1,1)
     if( abs(apply_activation(0.25_wp,activation_tanh)-tanh(0.25_wp)) > epsilon(1.0_wp) ) &
         error stop 'tanh activation failed'
     if( abs(apply_activation(0.25_wp,activation_logistic)-1.0_wp/(1.0_wp+exp(-0.25_wp))) > epsilon(1.0_wp) ) &
@@ -143,6 +147,20 @@ program test_model_utilities
     call evaluate_two_hidden_network(inputs, averages, deltas, weights_1, biases_1, weights_2, biases_2, weights_3, &
         & 2.0_wp, activation_tanh, 3.0_wp, 4.0_wp, output)
     if( output /= 11.0_wp ) error stop 'dense network output scaling failed'
+    descriptor = 2.0_wp; training_descriptors = 1.0_wp; descriptor_coefficients = 3.0_wp
+    descriptor_permutations = 1
+    call evaluate_matern52_sgdml(descriptor, training_descriptors, descriptor_coefficients, &
+        descriptor_permutations, 2.0_wp, 0.5_wp, 4.0_wp, .true., energy_sgdml, descriptor_gradient)
+    analytic_descriptor_gradient = descriptor_gradient(1)
+    descriptor(1) = 2.0_wp-1.0e-5_wp
+    call evaluate_matern52_sgdml(descriptor, training_descriptors, descriptor_coefficients, &
+        descriptor_permutations, 2.0_wp, 0.5_wp, 4.0_wp, .false., energy_sgdml_minus, descriptor_gradient)
+    descriptor(1) = 2.0_wp+1.0e-5_wp
+    call evaluate_matern52_sgdml(descriptor, training_descriptors, descriptor_coefficients, &
+        descriptor_permutations, 2.0_wp, 0.5_wp, 4.0_wp, .false., energy_sgdml_plus, descriptor_gradient)
+    if( abs(analytic_descriptor_gradient-(energy_sgdml_plus-energy_sgdml_minus)/2.0e-5_wp) > 1.0e-9_wp ) &
+        error stop 'sGDML descriptor derivative failed'
+    if( energy_sgdml <= 4.0_wp ) error stop 'sGDML energy offset failed'
     atomic_numbers = [7, 8]; c6 = 16.7_wp; distance = 1.2_wp
     call evaluate_d3_bj_dispersion(distance, atomic_numbers, c6, 1.0_wp, 2.0_wp, 0.5299_wp, 2.20_wp, energy, derivative)
     distance(1) = 1.2_wp-1.0e-5_wp
@@ -168,6 +186,7 @@ end program test_model_utilities
                     str(core / "chempotpy_units.f90"),
                     str(core / "chempotpy_dispersion.f90"),
                     str(core / "chempotpy_neural_network.f90"),
+                    str(core / "chempotpy_sgdml.f90"),
                     str(driver),
                     "-o",
                     str(executable),

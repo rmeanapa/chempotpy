@@ -22,6 +22,7 @@ FIXTURE = REPOSITORY_ROOT / "tests" / "data" / "all_surface_references.json"
 START_MARKER = "<!-- BEGIN GENERATED PES CATALOG -->"
 END_MARKER = "<!-- END GENERATED PES CATALOG -->"
 MODEL_FAMILIES = (
+    (re.compile(r"sGDML", re.IGNORECASE), "symmetric gradient-domain machine-learning"),
     (re.compile(r"PIPNN", re.IGNORECASE), "PIP neural-network"),
     (re.compile(r"APRP", re.IGNORECASE), "anchor-points reactive"),
     (re.compile(r"VBMM", re.IGNORECASE), "valence-bond molecular-mechanics"),
