@@ -2402,6 +2402,16 @@
       "variable_atom_count": false
     },
     {
+      "system_name": "H4",
+      "surface_name": "H4_BMKP_2002",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
       "system_name": "H4O2",
       "surface_name": "H4O2_PIP",
       "entry_point": "pes",
