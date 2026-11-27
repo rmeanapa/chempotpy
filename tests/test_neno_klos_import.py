@@ -78,6 +78,7 @@ end program test_neno_klos_import
                     str(core / "chempotpy_constants.f90"),
                     str(core / "chempotpy_interpolation.f90"),
                     str(core / "chempotpy_quadrature.f90"),
+                    str(core / "chempotpy_special_functions.f90"),
                     str(source / "chempotpy_neno_parameters.f90"),
                     str(source / "chempotpy_neno_runtime.f90"),
                     str(driver),

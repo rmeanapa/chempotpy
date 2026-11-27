@@ -2652,6 +2652,16 @@
       "variable_atom_count": false
     },
     {
+      "system_name": "KrNO",
+      "surface_name": "KrNO_Klos_2009",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
       "system_name": "LiFH",
       "surface_name": "LiFH_LEPS_JHCTP_2001",
       "entry_point": "pes",

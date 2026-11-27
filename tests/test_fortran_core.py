@@ -245,6 +245,7 @@ end program test_model_utilities
             "chempotpy_geometry.f90",
             "chempotpy_interpolation.f90",
             "chempotpy_quadrature.f90",
+            "chempotpy_special_functions.f90",
             "chempotpy_linear_algebra.f90",
             "chempotpy_dsyev.f90",
             "chempotpy_internal_coordinates.f90",
@@ -273,6 +274,7 @@ program test_fortran_core
     use chempotpy_kinds, only: dp, real32, real64, sp, wp
     use chempotpy_linear_algebra, only: symmetric_eigendecomposition
     use chempotpy_quadrature, only: gauss_legendre_rule
+    use chempotpy_special_functions, only: associated_legendre_polynomial
     use chempotpy_constants, only: codata_adjustment_year, PI
     use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates, &
         legacy_triatomic_distances_to_bohr, triatomic_distances_to_bohr
@@ -339,6 +341,9 @@ program test_fortran_core
     if( codata_adjustment_year /= 2022 ) error stop 'CODATA version changed'
     if( abs(cos(PI)+1.0_wp) > epsilon(1.0_wp) ) &
         error stop 'canonical PI is inconsistent'
+    if( abs(associated_legendre_polynomial(2,0,0.5_wp)+0.125_wp) > epsilon(1.0_wp) .or. &
+        abs(associated_legendre_polynomial(2,2,0.5_wp)-2.25_wp) > 4.0_wp*epsilon(1.0_wp) ) &
+        error stop 'associated Legendre polynomial failed'
     if( bohr_to_angstrom /= 0.529177210544_wp ) &
         error stop 'canonical length conversion changed'
     if( hartree_to_electronvolt /= 27.211386245981_wp ) &

@@ -277,6 +277,9 @@ CORE_MODULE_SOURCES = {
     "chempotpy_quadrature": CORE_FORTRAN_ROOT / "chempotpy_quadrature.f90",
     "chempotpy_rkhs": CORE_FORTRAN_ROOT / "chempotpy_rkhs.f90",
     "chempotpy_sgdml": CORE_FORTRAN_ROOT / "chempotpy_sgdml.f90",
+    "chempotpy_special_functions": (
+        CORE_FORTRAN_ROOT / "chempotpy_special_functions.f90"
+    ),
     "chempotpy_units": CORE_FORTRAN_ROOT / "chempotpy_units.f90",
 }
 INTERNAL_DSYEV = (

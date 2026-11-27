@@ -27,7 +27,7 @@ surfaces.
 
 <!-- BEGIN GENERATED PES CATALOG -->
 
-The catalog currently exposes **413 callable surfaces** across **107 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
+The catalog currently exposes **414 callable surfaces** across **108 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
 
 <table>
 <thead>
@@ -299,6 +299,7 @@ The catalog currently exposes **413 callable surfaces** across **107 chemical sy
 <tr><td><code>IH2_LEPS_PPW1_1974</code></td><td>LEPS reactive potential</td><td align="center">1</td></tr>
 <tr><td><code>IH2_LEPS_RSPTS_1970</code></td><td>LEPS reactive potential</td><td align="center">1</td></tr>
 <tr><td rowspan="1" valign="top"><strong>K<sub>2</sub>Rb<sub>2</sub></strong></td><td><code>K2Rb2_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
+<tr><td rowspan="1" valign="top"><strong>KrNO</strong></td><td><code>KrNO_Klos_2009</code></td><td>Rare-gas--diatom analytic potential</td><td align="center">2</td></tr>
 <tr><td rowspan="6" valign="top"><strong>LiFH</strong></td><td><code>LiFH_LEPS_JHCTP_2001</code></td><td>LEPS reactive potential</td><td align="center">2</td></tr>
 <tr><td><code>LiFH_LEPS_JHCTP_2001_DPEM</code></td><td>LEPS reactive diabatic representation</td><td align="center">2</td></tr>
 <tr><td><code>LiFH_LEPS_JHTP1_2002</code></td><td>LEPS reactive potential</td><td align="center">2</td></tr>

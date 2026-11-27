@@ -82,6 +82,7 @@ module chempotpy_neno_runtime
         use chempotpy_neno_parameters, only: difference_angular_inverse, radial_fit_a_double_prime_r2, &
             radial_fit_a_prime_r2, radial_fit_a_double_prime_re, radial_fit_a_prime_re, &
             radial_fit_a_double_prime_r4, radial_fit_a_prime_r4, sum_angular_inverse
+        use chempotpy_special_functions, only: associated_legendre_polynomial
         real(wp), intent(in)  :: distance_bohr, angle_degree
         integer, intent(in)   :: bond_index
         real(wp), intent(out) :: v_sum, v_difference
@@ -113,11 +114,11 @@ module chempotpy_neno_runtime
         coefficients_difference = matmul(difference_angular_inverse, difference_values)
         cosine_theta            = cos(angle_degree*PI/180.0_wp)
         do degree=0, 12
-            basis_sum(degree+1) = associated_legendre(degree, 0, cosine_theta)
+            basis_sum(degree+1) = associated_legendre_polynomial(degree, 0, cosine_theta)
         enddo
         do degree=2, 12
-            basis_difference(degree-1) = associated_legendre(degree, 2, cosine_theta)/ sqrt(real((degree-1)*degree* &
-                & (degree+1)*(degree+2), wp))
+            basis_difference(degree-1) = associated_legendre_polynomial(degree, 2, cosine_theta)/ &
+                & sqrt(real((degree-1)*degree*(degree+1)*(degree+2), wp))
         enddo
         v_sum        = dot_product(coefficients_sum, basis_sum)
         v_difference = dot_product(coefficients_difference, basis_difference)
@@ -141,38 +142,4 @@ module chempotpy_neno_runtime
             & 8+parameters(16)/distance_bohr**9
         energy = exp(-parameters(1)*distance_bohr-parameters(2))*polynomial-switching*dispersion
     end function evaluate_radial_fit
-
-    !> @brief Evaluate an associated Legendre polynomial including the Condon--Shortley phase.
-    pure function associated_legendre( degree, order, argument ) result(value)
-        integer, intent(in)  :: degree, order
-        real(wp), intent(in) :: argument
-        real(wp)             :: value
-        real(wp)             :: factor, previous, previous_previous, root
-        integer              :: current_degree, index
-        value             = 0.0_wp
-        previous_previous = 1.0_wp
-        if( order > 0 )then
-            root   = sqrt(max(0.0_wp, (1.0_wp-argument)*(1.0_wp+argument)))
-            factor = 1.0_wp
-            do index=1, order
-                previous_previous = -previous_previous*factor*root
-                factor            = factor+2.0_wp
-            enddo
-        endif
-        if( degree == order )then
-            value = previous_previous
-            return
-        endif
-        previous = argument*real(2*order+1, wp)*previous_previous
-        if( degree == order+1 )then
-            value = previous
-            return
-        endif
-        do current_degree=order+2, degree
-            value = (argument*real(2*current_degree-1, wp)*previous - real(current_degree+order-1, wp)* &
-                & previous_previous)/real(current_degree-order, wp)
-            previous_previous = previous
-            previous          = value
-        enddo
-    end function associated_legendre
 end module chempotpy_neno_runtime
