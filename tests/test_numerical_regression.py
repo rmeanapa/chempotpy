@@ -51,6 +51,30 @@ class NumericalRegressionTests(unittest.TestCase):
         )
         self.assertEqual(len(diagnostics), 1)
 
+    def test_sgdml_intel_reduction_roundoff_passes(self) -> None:
+        diagnostics, _ = compare_records(
+            "H3O2m/H3O2m_sGDML_2024",
+            record(["5.77890956989007432"]),
+            record(["5.77890957375201797"]),
+        )
+        self.assertEqual(diagnostics, [])
+
+    def test_sgdml_tolerance_does_not_apply_to_other_surfaces(self) -> None:
+        diagnostics, _ = compare_records(
+            "H3/example",
+            record(["5.77890956989007432"]),
+            record(["5.77890957375201797"]),
+        )
+        self.assertEqual(len(diagnostics), 1)
+
+    def test_sgdml_change_beyond_observed_roundoff_fails(self) -> None:
+        diagnostics, _ = compare_records(
+            "H3O2m/H3O2m_sGDML_2024",
+            record(["5.77890956375201797"]),
+            record(["5.77890957375201797"]),
+        )
+        self.assertEqual(len(diagnostics), 1)
+
     def test_numerical_change_fails_with_surface_and_index(self) -> None:
         diagnostics, _ = compare_records(
             "H3/example", record(["1.01"]), record(["1.0"])

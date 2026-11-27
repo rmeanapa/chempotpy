@@ -26,8 +26,8 @@ from scripts.capture_library_references import (  # noqa: E402
     coordinates,
 )
 from scripts.check_numerical_regression import (  # noqa: E402
-    ABSOLUTE_TOLERANCE,
     RELATIVE_TOLERANCE,
+    absolute_tolerance,
 )
 
 
@@ -192,7 +192,7 @@ def validate_one(output_root: Path, key: str, record: dict) -> dict:
     return {"key": key, "values": actual}
 
 
-def values_match(expected: str, actual: float) -> bool:
+def values_match(expected: str, actual: float, key: str = "") -> bool:
     """Return whether one Python result matches its Fortran reference."""
 
     expected_number = float(expected)
@@ -206,7 +206,7 @@ def values_match(expected: str, actual: float) -> bool:
         actual,
         expected_number,
         rel_tol=RELATIVE_TOLERANCE,
-        abs_tol=ABSOLUTE_TOLERANCE,
+        abs_tol=absolute_tolerance(key),
     )
 
 
@@ -321,7 +321,7 @@ def main() -> int:
             for index, (expected_value, actual_value) in enumerate(
                 zip(expected, actual), 1
             ):
-                if not values_match(expected_value, actual_value):
+                if not values_match(expected_value, actual_value, key):
                     failures.append(
                         "{} value {}: expected {}, received {:.17e}".format(
                             key, index, expected_value, actual_value

@@ -30,7 +30,18 @@ METADATA_FIELDS = ("entry_point", "natoms", "nstates", "signature")
 # larger values.
 RELATIVE_TOLERANCE = 1.0e-11
 ABSOLUTE_TOLERANCE = 5.0e-10
+SURFACE_ABSOLUTE_TOLERANCES = {
+    # Intel and ARM GNU Fortran reduce the 36,000 sGDML kernel terms in a
+    # different order. The largest observed difference is 3.862e-9 eV.
+    "H3O2m/H3O2m_sGDML_2024": 5.0e-9,
+}
 MAX_WORKFLOW_ANNOTATIONS = 50
+
+
+def absolute_tolerance(key: str) -> float:
+    """Return the reviewed cross-platform absolute tolerance for one PES."""
+
+    return SURFACE_ABSOLUTE_TOLERANCES.get(key, ABSOLUTE_TOLERANCE)
 
 
 def escape_workflow_command(value: str) -> str:
@@ -181,7 +192,7 @@ def compare_records(
             actual_number,
             expected_number,
             rel_tol=RELATIVE_TOLERANCE,
-            abs_tol=ABSOLUTE_TOLERANCE,
+            abs_tol=absolute_tolerance(key),
         ):
             diagnostics.append(
                 "{}: value {} changed from {} to {}".format(

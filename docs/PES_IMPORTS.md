@@ -36,6 +36,9 @@ extension check, and a standalone-export check.
 | LiH2p_Excited_2003 | Implemented and independently compared | None; catalog and standalone gates pass |
 | CH2OH two/three-state | Implemented and independently compared | None; catalog and standalone gates pass |
 | Malonaldehyde MHT 2014 | Implemented and independently compared | None; catalog and standalone gates pass |
+| CH2O2 Tew formic acid 2016 | Implemented and independently compared | None; released energy/gradient, catalog, and standalone gates pass |
+| HOPO Tew | Implemented and independently compared | None; released energy/gradient, catalog, and standalone gates pass |
+| H3FO Tew H2O-HF 2022 | Implemented and independently compared | None; embedded fit, released energy/gradient, catalog, and standalone gates pass |
 | Malonaldehyde Bowman/Braams 2008 | Blocked: released archive omits the PES library source | Locate the source behind `libpes.a`; coefficient files alone are insufficient |
 | C2H4O4 formic-acid dimer | Implemented and independently compared | None; catalog and standalone gates pass |
 | CO2 five-state RKHS | Implemented and independently compared | None; catalog and standalone gates pass |
@@ -64,6 +67,26 @@ POTLIB's `C2O2` archive was also audited. It is the same three-network model
 already exposed as `COCO_PIPNN`, so a second callable name and a duplicate
 parameter module were deliberately not added.
 
+## David Tew PES collection
+
+All four entries published at `https://davidtew.uk/pes/` are represented. The
+malonaldehyde download is the source already modernized as
+`malonaldehyde_MHT_2014`; its released-source SHA-256 is
+`90aa74312151706bed35b3d1ac15a9f2e6ad63229ae50d97df4c6da0f92b830f`, so no
+duplicate alias was added. The other three releases are exposed as
+`CH2O2_Tew_2016`, `HOPO_Tew`, and `H3FO_Tew_2022`.
+
+The formic-acid and HOPO DATA statements were converted to immutable fit
+parameters while retaining the released binary64 evaluation behavior. At the
+published equilibrium geometries, modern and released energies agree within
+`8e-12` eV and analytic Cartesian gradients within `7e-8` eV/angstrom. The
+H2O-HF release originally read 42,240 Gaussian indices and 42,240 Gaussian
+parameters from an external file. They are now an immutable PES-owned module;
+the installed evaluator performs no setup call and opens no data file. Its
+equilibrium energy agrees with the rebuilt release within `5e-14` eV and its
+gradient within `4e-8` eV/angstrom. The focused test also checks every analytic
+gradient component against an independent centered finite difference.
+
 ## H3O2m sGDML and POTLIB alias audit
 
 The requested POTLIB `N4_1A_MB-PIP-MEG3` and
@@ -78,6 +101,11 @@ The 36,000 expanded descriptor records in the released text model are
 reconstructed losslessly from the 3,000 base records and the published
 permutation map. No model file is opened at runtime and no setup call or saved
 mutable state is required.
+
+GNU Fortran on Intel and ARM reduces the 36,000 kernel contributions in a
+different order. The largest observed cross-platform energy difference is
+`3.862e-9` eV, so the regression checker permits `5e-9` eV for this surface
+only; every other PES retains the catalog default of `5e-10` eV.
 
 Independent evidence was obtained by rebuilding commit `6dade4a` of the
 authors' H3O2M Fortran evaluator with gfortran and comparing all 50 distributed

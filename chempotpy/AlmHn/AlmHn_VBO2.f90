@@ -166,6 +166,14 @@ module chempotpy_almhn_vbo2_pes
         kap5(1,2,2) = 0.e0_wp
         kap5(2,1,2) = 0.e0_wp
         kap5(2,2,1) = 0.e0_wp
+        ! Inactive bond-order channels still appear in products with zero
+        ! coefficients below. Initialize only the active atom slices so those
+        ! products remain deterministic without touching the 10000-atom
+        ! compatibility capacity of this legacy interface.
+        b(:,1:natom,1:natom)     = 0.0_wp
+        cn(:,1:natom,1:natom)    = 0.0_wp
+        gam(:,1:natom,1:natom)   = 0.0_wp
+        sigma(:,1:natom,1:natom) = 0.0_wp
         !    Calculate all internuclear distances
         call fill_distance_matrix(x(1:natom), y(1:natom), z(1:natom), r(1:natom,1:natom))
         !    Calculate en1 which corresponds to the term in brackets in Eq. (11)

@@ -16,8 +16,8 @@ from scripts.capture_library_references import (
     capture_source,
 )
 from scripts.check_numerical_regression import (
-    ABSOLUTE_TOLERANCE,
     RELATIVE_TOLERANCE,
+    absolute_tolerance,
 )
 
 
@@ -551,7 +551,7 @@ class AllSurfaceRegressionTests(unittest.TestCase):
                         actual_number,
                         expected_number,
                         rel_tol=RELATIVE_TOLERANCE,
-                        abs_tol=ABSOLUTE_TOLERANCE,
+                        abs_tol=absolute_tolerance(result.key),
                     ))
 
 

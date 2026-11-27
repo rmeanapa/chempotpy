@@ -27,7 +27,7 @@ surfaces.
 
 <!-- BEGIN GENERATED PES CATALOG -->
 
-The catalog currently exposes **405 callable surfaces** across **101 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
+The catalog currently exposes **408 callable surfaces** across **103 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
 
 <table>
 <thead>
@@ -154,8 +154,9 @@ The catalog currently exposes **405 callable surfaces** across **101 chemical sy
 <tr><td><code>C7H8S_S25_APRP</code></td><td>Anchor-points reactive potential</td><td align="center">3</td></tr>
 <tr><td><code>C7H8S_S25_APRP_DPEM</code></td><td>Anchor-points reactive diabatic representation</td><td align="center">3</td></tr>
 <tr><td rowspan="1" valign="top"><strong>CH<sub>2</sub>O</strong></td><td><code>CH2O_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
-<tr><td rowspan="2" valign="top"><strong>CH<sub>2</sub>O<sub>2</sub></strong></td><td><code>CH2O2_LOCAL_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
+<tr><td rowspan="3" valign="top"><strong>CH<sub>2</sub>O<sub>2</sub></strong></td><td><code>CH2O2_LOCAL_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
 <tr><td><code>CH2O2_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
+<tr><td><code>CH2O2_Tew_2016</code></td><td>Analytic potential</td><td align="center">1</td></tr>
 <tr><td rowspan="4" valign="top"><strong>CH<sub>2</sub>OH</strong></td><td><code>CH2OH_Surfgen_2state_2018</code></td><td>Surfgen multistate potential</td><td align="center">2</td></tr>
 <tr><td><code>CH2OH_Surfgen_2state_2018_DPEM</code></td><td>Surfgen multistate diabatic representation</td><td align="center">2</td></tr>
 <tr><td><code>CH2OH_Surfgen_3state_2017</code></td><td>Surfgen multistate potential</td><td align="center">3</td></tr>
@@ -267,6 +268,7 @@ The catalog currently exposes **405 callable surfaces** across **101 chemical sy
 <tr><td rowspan="1" valign="top"><strong>H<sub>3</sub>Cl</strong></td><td><code>H3Cl_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
 <tr><td rowspan="2" valign="top"><strong>H<sub>3</sub>ClO</strong></td><td><code>H3ClO_PIP_2013</code></td><td>Permutationally invariant polynomial potential</td><td align="center">1</td></tr>
 <tr><td><code>H3ClO_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
+<tr><td rowspan="1" valign="top"><strong>H<sub>3</sub>FO</strong></td><td><code>H3FO_Tew_2022</code></td><td>Analytic potential</td><td align="center">1</td></tr>
 <tr><td rowspan="1" valign="top"><strong>H<sub>3</sub><sup>−</sup></strong></td><td><code>H3m_AS_2004</code></td><td>Analytic potential</td><td align="center">1</td></tr>
 <tr><td rowspan="1" valign="top"><strong>H<sub>3</sub>O<sub>2</sub><sup>−</sup></strong></td><td><code>H3O2m_sGDML_2024</code></td><td>Symmetric gradient-domain machine-learning potential</td><td align="center">1</td></tr>
 <tr><td rowspan="2" valign="top"><strong>H<sub>3</sub><sup>+</sup></strong></td><td><code>H3p_KBNN_2002</code></td><td>Analytic potential</td><td align="center">3</td></tr>
@@ -284,6 +286,7 @@ The catalog currently exposes **405 callable surfaces** across **101 chemical sy
 <tr><td rowspan="1" valign="top"><strong>HO<sub>3</sub></strong></td><td><code>HO3_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
 <tr><td rowspan="1" valign="top"><strong>HOBr</strong></td><td><code>HOBr_3App_PIP</code></td><td>Permutationally invariant polynomial potential</td><td align="center">1</td></tr>
 <tr><td rowspan="1" valign="top"><strong>HOCO·Ar</strong></td><td><code>HOCO_Ar_PIP</code></td><td>Permutationally invariant polynomial potential</td><td align="center">1</td></tr>
+<tr><td rowspan="1" valign="top"><strong>HOPO</strong></td><td><code>HOPO_Tew</code></td><td>Analytic potential</td><td align="center">1</td></tr>
 <tr><td rowspan="3" valign="top"><strong>I<sub>2</sub>H</strong></td><td><code>I2H_LEPS_KK_1981</code></td><td>LEPS reactive potential</td><td align="center">1</td></tr>
 <tr><td><code>I2H_LEPS_PT1_1971</code></td><td>LEPS reactive potential</td><td align="center">1</td></tr>
 <tr><td><code>I2H_LEPS_PT2_1971</code></td><td>LEPS reactive potential</td><td align="center">1</td></tr>

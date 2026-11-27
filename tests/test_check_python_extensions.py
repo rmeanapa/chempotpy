@@ -17,6 +17,18 @@ class CheckPythonExtensionsTests( unittest.TestCase ):
         self.assertTrue(values_match("6.60457730896920303", 6.60457730896168549))
         self.assertFalse(values_match("6.60457730896920303", 6.6045772))
 
+    def test_sgdml_uses_its_reviewed_reduction_tolerance( self ) -> None:
+        self.assertTrue(values_match(
+            "5.77890957375201797",
+            5.77890956989007432,
+            "H3O2m/H3O2m_sGDML_2024",
+        ))
+        self.assertFalse(values_match(
+            "5.77890957375201797",
+            5.77890956989007432,
+            "H3/example",
+        ))
+
     def test_variable_atom_wrapper_places_optional_count_after_igrad(
         self,
     ) -> None:

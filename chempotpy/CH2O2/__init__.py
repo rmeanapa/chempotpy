@@ -15,6 +15,7 @@ def intro():
     Single-State Surfaces:
     1.  CH2O2_PIPNN:          single-state surface of CH2O2, ground state,      P
     2.  CH2O2_LOCAL_PIPNN:    local CH2OO Criegee-intermediate surface,         P
+    3.  CH2O2_Tew_2016:       cis/trans formic-acid analytic surface,           P/G
 
 
 
@@ -50,6 +51,13 @@ def intro_detail():
                               corresponding surface in POTLIB: CH2O2_loc.zip
                               ref: J. Li et al., J. Phys. Chem. Lett. 5,
                                    2364-2369 (2014).
+
+    3.  CH2O2_Tew_2016:       semiglobal cis/trans formic-acid surface,
+                              availability: potential energy and analytic gradient
+                              functional form: Morse functions and distributed
+                              multivariate Gaussian functions
+                              ref: D. P. Tew and W. Mizukami, J. Phys. Chem. A
+                                   120 (2016).
 
 
 
@@ -90,6 +98,27 @@ def check(system, surface, geom):
     rank=np.copy(geom)
     for iatom in range(natoms):
         rank[iatom][1]=int(iatom)
+
+    # The Tew formic-acid fit distinguishes the two hydrogens and oxygens by
+    # connectivity. Its released order is C, H(C), O(carbonyl), O(hydroxyl), H(O).
+    if surface == 'CH2O2_Tew_2016':
+        coordinates = np.asarray(
+            [[float(value) for value in atom[1:4]] for atom in geom],
+            dtype=float,
+        )
+        symbols = [str(atom[0]) for atom in geom]
+        carbon = symbols.index('C')
+        hydrogens = [index for index, symbol in enumerate(symbols) if symbol == 'H']
+        oxygens = [index for index, symbol in enumerate(symbols) if symbol == 'O']
+        hydroxyl_oxygen, hydroxyl_hydrogen = min(
+            ((oxygen, hydrogen) for oxygen in oxygens for hydrogen in hydrogens),
+            key=lambda pair: np.linalg.norm(coordinates[pair[0]] - coordinates[pair[1]]),
+        )
+        carbon_hydrogen = next(index for index in hydrogens if index != hydroxyl_hydrogen)
+        carbonyl_oxygen = next(index for index in oxygens if index != hydroxyl_oxygen)
+        order = [carbon, carbon_hydrogen, carbonyl_oxygen, hydroxyl_oxygen, hydroxyl_hydrogen]
+        rank_ordered = np.asarray([(symbols[index], index) for index in order], dtype=object)
+        return coordinates[order, :], rank_ordered
 
     #for CH2O2_PIPNN: input Cartesian should in order of HHOOC
     if surface in {'CH2O2_PIPNN', 'CH2O2_LOCAL_PIPNN'}:

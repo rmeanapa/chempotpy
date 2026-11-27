@@ -1222,6 +1222,16 @@
       "variable_atom_count": false
     },
     {
+      "system_name": "CH2O2",
+      "surface_name": "CH2O2_Tew_2016",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
       "system_name": "CH2OH",
       "surface_name": "CH2OH_Surfgen_2state_2018",
       "entry_point": "pes",
@@ -2332,6 +2342,16 @@
       "variable_atom_count": false
     },
     {
+      "system_name": "H3FO",
+      "surface_name": "H3FO_Tew_2022",
+      "entry_point": "pes",
+      "atom_count": 5,
+      "state_count": 1,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
       "system_name": "H3m",
       "surface_name": "H3m_AS_2004",
       "entry_point": "pes",
@@ -2498,6 +2518,16 @@
       "atom_count": 5,
       "state_count": 1,
       "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "HOPO",
+      "surface_name": "HOPO_Tew",
+      "entry_point": "pes",
+      "atom_count": 4,
+      "state_count": 1,
+      "analytic_gradient": true,
       "nonadiabatic_coupling": false,
       "variable_atom_count": false
     },
