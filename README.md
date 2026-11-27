@@ -27,7 +27,7 @@ surfaces.
 
 <!-- BEGIN GENERATED PES CATALOG -->
 
-The catalog currently exposes **409 callable surfaces** across **104 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
+The catalog currently exposes **410 callable surfaces** across **105 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
 
 <table>
 <thead>
@@ -161,6 +161,7 @@ The catalog currently exposes **409 callable surfaces** across **104 chemical sy
 <tr><td><code>CH2OH_Surfgen_2state_2018_DPEM</code></td><td>Surfgen multistate diabatic representation</td><td align="center">2</td></tr>
 <tr><td><code>CH2OH_Surfgen_3state_2017</code></td><td>Surfgen multistate potential</td><td align="center">3</td></tr>
 <tr><td><code>CH2OH_Surfgen_3state_2017_DPEM</code></td><td>Surfgen multistate diabatic representation</td><td align="center">3</td></tr>
+<tr><td rowspan="1" valign="top"><strong>CH<sub>2</sub><sup>+</sup></strong></td><td><code>CH2p_3x3_DPEM_2025</code></td><td>Neural-network coupled diabatic representation</td><td align="center">3</td></tr>
 <tr><td rowspan="2" valign="top"><strong>CH<sub>3</sub>NH<sub>2</sub></strong></td><td><code>CH3NH2_APRP</code></td><td>Anchor-points reactive potential</td><td align="center">2</td></tr>
 <tr><td><code>CH3NH2_APRP_DPEM</code></td><td>Anchor-points reactive diabatic representation</td><td align="center">2</td></tr>
 <tr><td rowspan="1" valign="top"><strong>CH<sub>3</sub>OH</strong></td><td><code>CH3OH_PIP</code></td><td>Permutationally invariant polynomial potential</td><td align="center">1</td></tr>

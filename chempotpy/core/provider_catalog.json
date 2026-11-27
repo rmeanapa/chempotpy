@@ -1272,6 +1272,16 @@
       "variable_atom_count": false
     },
     {
+      "system_name": "CH2p",
+      "surface_name": "CH2p_3x3_DPEM_2025",
+      "entry_point": "dpem",
+      "atom_count": 3,
+      "state_count": 3,
+      "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
       "system_name": "CH3NH2",
       "surface_name": "CH3NH2_APRP",
       "entry_point": "pes",

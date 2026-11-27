@@ -25,6 +25,9 @@ from chempotpy.core.registry import SurfaceSource, discover_surface_sources
 
 
 SUPPORT_SOURCES = {
+    ("CH2p", "CH2p_3x3_DPEM_2025"): (
+        "chempotpy_ch2p_long_range.f90",
+    ),
     ("H3FO", "H3FO_Tew_2022"): (
         "chempotpy_h3fo_tew_parameters.f90",
     ),

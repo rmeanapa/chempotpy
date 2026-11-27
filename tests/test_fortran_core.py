@@ -127,16 +127,19 @@ program test_model_utilities
     use chempotpy_dispersion, only: evaluate_d3_bj_dispersion
     use chempotpy_kinds, only: wp
     use chempotpy_neural_network, only: activation_linear, activation_logistic, activation_tanh, &
-        apply_activation, evaluate_two_hidden_network
+        apply_activation, evaluate_three_hidden_tanh_network, evaluate_two_hidden_network
     use chempotpy_sgdml, only: evaluate_matern52_sgdml
     implicit none
     integer  :: atomic_numbers(2)
     real(wp) :: c6(1), distance(1), derivative(1), energy, energy_minus, energy_plus
     real(wp) :: inputs(2), averages(2), deltas(2), weights_1(2,2), biases_1(2)
     real(wp) :: weights_2(2,1), biases_2(1), weights_3(1), output
+    real(wp) :: three_weights_1(2,2), three_weights_2(2,2), three_weights_3(2,2), three_weights_4(2,1)
+    real(wp) :: three_biases_1(2), three_biases_2(2), three_biases_3(2), three_biases_4(1)
+    real(wp) :: three_output(1), three_output_minus(1), three_output_plus(1), three_jacobian(1,2)
     real(wp) :: analytic_descriptor_gradient, descriptor(1), descriptor_coefficients(1,1), descriptor_gradient(1)
     real(wp) :: energy_sgdml, energy_sgdml_minus, energy_sgdml_plus, training_descriptors(1,1)
-    integer  :: descriptor_permutations(1,1)
+    integer  :: descriptor_permutations(1,1), input_index
     if( abs(apply_activation(0.25_wp,activation_tanh)-tanh(0.25_wp)) > epsilon(1.0_wp) ) &
         error stop 'tanh activation failed'
     if( abs(apply_activation(0.25_wp,activation_logistic)-1.0_wp/(1.0_wp+exp(-0.25_wp))) > epsilon(1.0_wp) ) &
@@ -147,6 +150,31 @@ program test_model_utilities
     call evaluate_two_hidden_network(inputs, averages, deltas, weights_1, biases_1, weights_2, biases_2, weights_3, &
         & 2.0_wp, activation_tanh, 3.0_wp, 4.0_wp, output)
     if( output /= 11.0_wp ) error stop 'dense network output scaling failed'
+    three_weights_1 = reshape([0.20_wp, -0.10_wp, 0.30_wp, 0.25_wp], [2,2])
+    three_weights_2 = reshape([0.15_wp, 0.35_wp, -0.20_wp, 0.10_wp], [2,2])
+    three_weights_3 = reshape([0.40_wp, -0.30_wp, 0.05_wp, 0.20_wp], [2,2])
+    three_weights_4(:,1) = [0.70_wp, -0.45_wp]
+    three_biases_1 = [0.05_wp, -0.08_wp]; three_biases_2 = [0.03_wp, 0.02_wp]
+    three_biases_3 = [-0.04_wp, 0.06_wp]; three_biases_4 = [0.11_wp]
+    inputs = [0.40_wp, -0.25_wp]
+    call evaluate_three_hidden_tanh_network(inputs, three_weights_1, three_biases_1, three_weights_2, &
+        three_biases_2, three_weights_3, three_biases_3, three_weights_4, three_biases_4, three_output, three_jacobian)
+    do input_index = 1, 2
+        inputs(input_index) = inputs(input_index)-1.0e-5_wp
+        call evaluate_three_hidden_tanh_network(inputs, three_weights_1, three_biases_1, three_weights_2, &
+            three_biases_2, three_weights_3, three_biases_3, three_weights_4, three_biases_4, three_output_minus, &
+            three_jacobian)
+        inputs(input_index) = inputs(input_index)+2.0e-5_wp
+        call evaluate_three_hidden_tanh_network(inputs, three_weights_1, three_biases_1, three_weights_2, &
+            three_biases_2, three_weights_3, three_biases_3, three_weights_4, three_biases_4, three_output_plus, &
+            three_jacobian)
+        inputs(input_index) = inputs(input_index)-1.0e-5_wp
+        call evaluate_three_hidden_tanh_network(inputs, three_weights_1, three_biases_1, three_weights_2, &
+            three_biases_2, three_weights_3, three_biases_3, three_weights_4, three_biases_4, three_output, &
+            three_jacobian)
+        if( abs(three_jacobian(1,input_index)-(three_output_plus(1)-three_output_minus(1))/2.0e-5_wp) > 1.0e-9_wp ) &
+            error stop 'three-layer network Jacobian failed'
+    enddo
     descriptor = 2.0_wp; training_descriptors = 1.0_wp; descriptor_coefficients = 3.0_wp
     descriptor_permutations = 1
     call evaluate_matern52_sgdml(descriptor, training_descriptors, descriptor_coefficients, &

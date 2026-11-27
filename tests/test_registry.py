@@ -39,6 +39,7 @@ class RegistryTests( unittest.TestCase ):
             {
                 "ch4_t8.f90",
                 "chempotpy_arno_spline_parameters.f90",
+                "chempotpy_ch2p_long_range.f90",
                 "chempotpy_c2h2n2o_pipnn_parameters.f90",
                 "chempotpy_c2h2o_pipnn_parameters.f90",
                 "chempotpy_c2h4o4_invariants.f90",
