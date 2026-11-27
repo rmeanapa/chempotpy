@@ -2462,6 +2462,16 @@
       "variable_atom_count": false
     },
     {
+      "system_name": "HeBeO",
+      "surface_name": "HeBeO_Klos_2013",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 1,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
       "system_name": "HeH2p",
       "surface_name": "HeH2p_DIM_1976",
       "entry_point": "pes",

@@ -27,7 +27,7 @@ surfaces.
 
 <!-- BEGIN GENERATED PES CATALOG -->
 
-The catalog currently exposes **414 callable surfaces** across **108 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
+The catalog currently exposes **415 callable surfaces** across **109 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
 
 <table>
 <thead>
@@ -280,6 +280,7 @@ The catalog currently exposes **414 callable surfaces** across **108 chemical sy
 <tr><td rowspan="1" valign="top"><strong>H<sub>5</sub>O<sub>2</sub><sup>+</sup></strong></td><td><code>H5O2p_PIP_2005</code></td><td>Permutationally invariant polynomial potential</td><td align="center">1</td></tr>
 <tr><td rowspan="1" valign="top"><strong>H<sub>7</sub><sup>+</sup></strong></td><td><code>H7p_PIP</code></td><td>Permutationally invariant polynomial potential</td><td align="center">1</td></tr>
 <tr><td rowspan="1" valign="top"><strong>HClOH</strong></td><td><code>HClOH_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
+<tr><td rowspan="1" valign="top"><strong>HeBeO</strong></td><td><code>HeBeO_Klos_2013</code></td><td>Rare-gas--diatom analytic potential</td><td align="center">1</td></tr>
 <tr><td rowspan="2" valign="top"><strong>HeH<sub>2</sub><sup>+</sup></strong></td><td><code>HeH2p_DIM_1976</code></td><td>Diatomics-in-molecules potential</td><td align="center">1</td></tr>
 <tr><td><code>HeH2p_MTJS_1987</code></td><td>Analytic potential</td><td align="center">1</td></tr>
 <tr><td rowspan="1" valign="top"><strong>HeNO</strong></td><td><code>HeNO_Klos_2000</code></td><td>Rare-gas--diatom analytic potential</td><td align="center">2</td></tr>

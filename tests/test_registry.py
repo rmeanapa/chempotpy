@@ -96,6 +96,8 @@ class RegistryTests( unittest.TestCase ):
                 "chempotpy_malonaldehyde_mht_parameters.f90",
                 "chempotpy_n2hocp_pipnn_parameters.f90",
                 "chempotpy_n4_bdtc_parameters.f90",
+                "chempotpy_neno_parameters.f90",
+                "chempotpy_neno_runtime.f90",
                 "chempotpy_nh3_surfgen_parameters.f90",
                 "chempotpy_nh3_surfgen_runtime.f90",
                 "chempotpy_no2_2ap_pipnn_parameters.f90",

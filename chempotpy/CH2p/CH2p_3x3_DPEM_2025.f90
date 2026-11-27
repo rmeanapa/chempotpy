@@ -1042,12 +1042,12 @@ module chempotpy_ch2p_3x3_dpem_2025_pes
         implicit none
         real(wp), intent(in)  :: x
         real(wp), intent(out) :: y, dydx
-        y    = 1d0 / (1d0 + exp(-x))
-        dydx = y * (1d0 - y)
+        y    = 1.0_wp/(1.0_wp+exp(-x))
+        dydx = y*(1.0_wp-y)
     end subroutine evaluate_logistic
 end module chempotpy_ch2p_3x3_dpem_2025_pes
 
-!> @brief Expose the CH2+ three-state diabatic potential through the Python-facing entry point.
+!> @brief Expose the CH2+ three-state diabatic potential through the Python-facing DPEM entry point.
 subroutine dpem( x, igrad, u, ug )
     use chempotpy_ch2p_3x3_dpem_2025_pes, only: evaluate
     use chempotpy_kinds,                  only: wp
