@@ -8,6 +8,7 @@ module chempotpy_internal_coordinates
     private
     public :: finalize_legacy_triatomic_surface
     public :: prepare_legacy_triatomic_coordinates
+    public :: rigid_diatom_jacobi_coordinates
 
     contains
 
@@ -19,6 +20,37 @@ module chempotpy_internal_coordinates
         call triatomic_distance_jacobian(coordinates_angstrom, distances_angstrom, distance_jacobian)
         distances_bohr = distances_angstrom/bohr_to_angstrom
     end subroutine prepare_legacy_triatomic_coordinates
+
+    !> @brief Convert rare-gas--diatom Cartesian coordinates to rigid-rotor Jacobi coordinates.
+    pure subroutine rigid_diatom_jacobi_coordinates( coordinates_angstrom, diatom_masses, distance_bohr, &
+            & cosine_theta, valid )
+        real(wp), intent(in)           :: coordinates_angstrom(3,3), diatom_masses(2)
+        real(wp), intent(out)          :: distance_bohr, cosine_theta
+        logical, intent(out), optional :: valid
+        real(wp)                       :: bond_axis(3), bond_length, center_of_mass(3)
+        real(wp)                       :: intermolecular_axis(3), distance_angstrom, total_mass
+        total_mass = sum(diatom_masses)
+        if( total_mass <= 0.0_wp )then
+            distance_bohr = 0.0_wp; cosine_theta = 0.0_wp
+            if( present(valid) ) valid = .false.
+            return
+        endif
+        center_of_mass      = (diatom_masses(1)*coordinates_angstrom(2,:)+ diatom_masses(2)*coordinates_angstrom(3, &
+            & :))/total_mass
+        bond_axis           = coordinates_angstrom(3,:)-coordinates_angstrom(2,:)
+        intermolecular_axis = center_of_mass-coordinates_angstrom(1,:)
+        bond_length         = norm2(bond_axis)
+        distance_angstrom   = norm2(intermolecular_axis)
+        distance_bohr       = distance_angstrom/bohr_to_angstrom
+        if( bond_length <= tiny(1.0_wp) .or. distance_angstrom <= tiny(1.0_wp) )then
+            cosine_theta = 0.0_wp
+            if( present(valid) ) valid = .false.
+            return
+        endif
+        cosine_theta = dot_product(bond_axis, intermolecular_axis)/(bond_length*distance_angstrom)
+        cosine_theta = max(-1.0_wp, min(1.0_wp, cosine_theta))
+        if( present(valid) ) valid = .true.
+    end subroutine rigid_diatom_jacobi_coordinates
 
     !> @brief Convert and pack one triatomic internal-coordinate result for the historical PES contract.
     subroutine finalize_legacy_triatomic_surface( derivative_order, energy_hartree, internal_gradient, &

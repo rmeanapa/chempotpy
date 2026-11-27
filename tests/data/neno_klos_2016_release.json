@@ -1,0 +1,435 @@
+{
+  "source": "Zenodo 46119 supplementary release, DOI 10.5281/zenodo.46119",
+  "license": "MIT",
+  "source_md5": {
+    "v0": "efee2fe37cfe816d7a569501854be28a",
+    "v2": "ddb01ec3bdd23ce79ca220367dc5416e",
+    "readme": "a1f12b50eb088b8eab3dafeaed195fb0"
+  },
+  "states": {
+    "v0": [
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": 110089.37596267698,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": 82198.3959190319,
+        "vdif_inverse_centimeter": -5321.630271366653
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": 37833.41825624876,
+        "vdif_inverse_centimeter": -6772.543531234941
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": 11408.763368827089,
+        "vdif_inverse_centimeter": -519.6010165587701
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": 34047.739780961856,
+        "vdif_inverse_centimeter": -3182.4403790311
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": 67536.5249652287,
+        "vdif_inverse_centimeter": -2402.0661744209274
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": 83718.25626857407,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": 15433.647285553945,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": 12343.161659402287,
+        "vdif_inverse_centimeter": -623.1513255799862
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": 5608.936131730513,
+        "vdif_inverse_centimeter": -1054.2119477362633
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": 1109.782566529989,
+        "vdif_inverse_centimeter": -54.94276200098823
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": 3821.6486264664104,
+        "vdif_inverse_centimeter": -417.84247358246904
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": 7394.471358450038,
+        "vdif_inverse_centimeter": -252.53682023056257
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": 8855.350755285264,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": 438.9392896351004,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": 349.9046407861424,
+        "vdif_inverse_centimeter": -40.73759525279373
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": 125.74640120983115,
+        "vdif_inverse_centimeter": -76.40296303859841
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": -54.52671101566507,
+        "vdif_inverse_centimeter": -0.8298345351041942
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": 14.824898926261833,
+        "vdif_inverse_centimeter": -25.94831615989742
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": 91.97062873554398,
+        "vdif_inverse_centimeter": -15.09841830949262
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": 118.41480454690354,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": -37.04726796146445,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": -34.47470658949977,
+        "vdif_inverse_centimeter": -0.6341706842988981
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": -27.684662962615935,
+        "vdif_inverse_centimeter": -0.8924649097306481
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": -19.968415216378236,
+        "vdif_inverse_centimeter": 0.713534401935139
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": -24.155253286413764,
+        "vdif_inverse_centimeter": -0.0150146382253331
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": -28.728786026613818,
+        "vdif_inverse_centimeter": -0.140157545450594
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": -30.2536944572174,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": -2.441379493004321,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": -2.34856830206361,
+        "vdif_inverse_centimeter": 0.013257846245432515
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": -2.0493818143026923,
+        "vdif_inverse_centimeter": 0.03160732418308256
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": -1.5681236927728572,
+        "vdif_inverse_centimeter": 0.0010687056673958856
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": -1.7680735248731028,
+        "vdif_inverse_centimeter": 0.006517612759995849
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": -1.970160716641621,
+        "vdif_inverse_centimeter": 0.0032804691491184436
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": -2.0296797062677854,
+        "vdif_inverse_centimeter": 0.0
+      }
+    ],
+    "v2": [
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": 113540.77012550298,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": 83398.79898058799,
+        "vdif_inverse_centimeter": -5704.718623885104
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": 38023.11857583238,
+        "vdif_inverse_centimeter": -6983.718237833723
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": 11327.99831555142,
+        "vdif_inverse_centimeter": -539.4967685963126
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": 34684.57852041167,
+        "vdif_inverse_centimeter": -3271.6222500955923
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": 69304.22026820364,
+        "vdif_inverse_centimeter": -2625.2066206148374
+      },
+      {
+        "distance_bohr": 3.5,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": 86319.99555024672,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": 16068.25100875698,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": 12763.345730647752,
+        "vdif_inverse_centimeter": -649.0054524848412
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": 5696.4130370845705,
+        "vdif_inverse_centimeter": -1073.9060035809962
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": 1107.7946072795894,
+        "vdif_inverse_centimeter": -58.10746555526193
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": 3916.4791084091335,
+        "vdif_inverse_centimeter": -427.0155588605588
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": 7675.189383833386,
+        "vdif_inverse_centimeter": -260.31670071733856
+      },
+      {
+        "distance_bohr": 4.5,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": 9230.430628272221,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": 464.8719227645479,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": 367.6084346217515,
+        "vdif_inverse_centimeter": -41.74165394407107
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": 129.01311550861018,
+        "vdif_inverse_centimeter": -77.30165954801794
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": -54.41763041774785,
+        "vdif_inverse_centimeter": -1.094579788205312
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": 17.616221545712385,
+        "vdif_inverse_centimeter": -26.24351188929871
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": 99.59721830854949,
+        "vdif_inverse_centimeter": -15.069699929427701
+      },
+      {
+        "distance_bohr": 6.0,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": 128.7289566680752,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": -37.5319390274221,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": -34.932388443898816,
+        "vdif_inverse_centimeter": -0.6593607182994641
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": -28.002132713115564,
+        "vdif_inverse_centimeter": -0.9423559420878235
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": -20.113326818333135,
+        "vdif_inverse_centimeter": 0.7038743809511642
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": -24.544444510324247,
+        "vdif_inverse_centimeter": 0.019285882825203587
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": -29.350929158200774,
+        "vdif_inverse_centimeter": -0.06528081370097745
+      },
+      {
+        "distance_bohr": 8.0,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": -30.870303672242407,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 0.0,
+        "vsum_inverse_centimeter": -2.497490388982419,
+        "vdif_inverse_centimeter": 0.0
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 20.0,
+        "vsum_inverse_centimeter": -2.3985855628358017,
+        "vdif_inverse_centimeter": 0.013720202935384292
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 45.0,
+        "vsum_inverse_centimeter": -2.082150950309206,
+        "vdif_inverse_centimeter": 0.03220545616239787
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 90.0,
+        "vsum_inverse_centimeter": -1.5806364293012065,
+        "vdif_inverse_centimeter": 0.0015961933698920312
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 135.0,
+        "vsum_inverse_centimeter": -1.794469608221439,
+        "vdif_inverse_centimeter": 0.011698286189137133
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 160.0,
+        "vsum_inverse_centimeter": -2.0129325819271746,
+        "vdif_inverse_centimeter": 0.011582234623749714
+      },
+      {
+        "distance_bohr": 12.0,
+        "angle_degree": 180.0,
+        "vsum_inverse_centimeter": -2.0679605012749263,
+        "vdif_inverse_centimeter": 0.0
+      }
+    ]
+  }
+}

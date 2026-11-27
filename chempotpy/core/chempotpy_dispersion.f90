@@ -8,6 +8,7 @@ module chempotpy_dispersion
     public :: evaluate_legacy_d3_diatomic
     public :: evaluate_legacy_d3_o3
     public :: evaluate_legacy_d3_o4
+    public :: tang_toennies_damping
     real(wp), parameter :: d3_bohr_to_angstrom = 0.52917726_wp
     real(wp), parameter :: r2r4(94)            = [ &
         & 2.00734898_wp, 1.56637132_wp, 5.01986934_wp, 3.85379032_wp, 3.64446594_wp, 3.10492822_wp, &
@@ -28,6 +29,39 @@ module chempotpy_dispersion
         & 8.77140725_wp, 8.65402716_wp, 8.53923501_wp, 8.85024712_wp ]
 
     contains
+
+    !> @brief Evaluate the numerically stable Tang--Toennies damping function of integer order.
+    pure function tang_toennies_damping( order, argument ) result(damping)
+        integer, intent(in)  :: order
+        real(wp), intent(in) :: argument
+        real(wp)             :: damping
+        real(wp)             :: series_term, series_sum
+        integer              :: index
+        if( order < 0 .or. argument < 0.0_wp )then
+            damping = 0.0_wp
+            return
+        endif
+        if( argument > 1.0_wp )then
+            series_term = 1.0_wp; series_sum = 1.0_wp
+            do index=1, order
+                series_term = series_term*argument/real(index, wp)
+                series_sum  = series_sum+series_term
+            enddo
+            damping = 1.0_wp-exp(-argument)*series_sum
+        else
+            series_term = 1.0_wp
+            do index=1, order+1
+                series_term = series_term*argument/real(index, wp)
+            enddo
+            series_sum = series_term
+            do index=order+2, order+1000
+                series_term = series_term*argument/real(index, wp)
+                series_sum  = series_sum+series_term
+                if( abs(series_term) <= epsilon(1.0_wp)*abs(series_sum) ) exit
+            enddo
+            damping = exp(-argument)*series_sum
+        endif
+    end function tang_toennies_damping
 
     !> @brief Evaluate the released N2, NO, or O2 D3(BJ) diatomic correction.
     subroutine evaluate_legacy_d3_diatomic( distance, energy, derivative, derivative_order, molecule_id )

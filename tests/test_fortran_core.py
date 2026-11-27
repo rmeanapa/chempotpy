@@ -124,7 +124,7 @@ end program test_quad_precision
         core = repository / "chempotpy" / "core"
         driver_source = """\
 program test_model_utilities
-    use chempotpy_dispersion, only: evaluate_d3_bj_dispersion
+    use chempotpy_dispersion, only: evaluate_d3_bj_dispersion, tang_toennies_damping
     use chempotpy_kinds, only: wp
     use chempotpy_neural_network, only: activation_linear, activation_logistic, activation_tanh, &
         apply_activation, evaluate_three_hidden_tanh_network, evaluate_two_hidden_network
@@ -145,6 +145,10 @@ program test_model_utilities
     if( abs(apply_activation(0.25_wp,activation_logistic)-1.0_wp/(1.0_wp+exp(-0.25_wp))) > epsilon(1.0_wp) ) &
         error stop 'logistic activation failed'
     if( apply_activation(0.25_wp,activation_linear) /= 0.25_wp ) error stop 'linear activation failed'
+    if( abs(tang_toennies_damping(0,0.5_wp)-(1.0_wp-exp(-0.5_wp))) > epsilon(1.0_wp) ) &
+        error stop 'Tang--Toennies order-zero damping failed'
+    if( abs(tang_toennies_damping(6,0.1_wp)-1.8180056068736556e-11_wp) > 1.0e-24_wp ) &
+        error stop 'Tang--Toennies small-argument damping failed'
     inputs = [1.0_wp, -2.0_wp]; averages = 0.0_wp; deltas = 1.0_wp
     weights_1 = 0.0_wp; biases_1 = 0.0_wp; weights_2 = 0.0_wp; biases_2 = 0.0_wp; weights_3 = 0.0_wp
     call evaluate_two_hidden_network(inputs, averages, deltas, weights_1, biases_1, weights_2, biases_2, weights_3, &
@@ -240,6 +244,7 @@ end program test_model_utilities
             "chempotpy_legacy_units.f90",
             "chempotpy_geometry.f90",
             "chempotpy_interpolation.f90",
+            "chempotpy_quadrature.f90",
             "chempotpy_linear_algebra.f90",
             "chempotpy_dsyev.f90",
             "chempotpy_internal_coordinates.f90",
@@ -261,11 +266,13 @@ program test_fortran_core
         flatten_cartesian_coordinates, ordered_pair_distance_jacobian, reshape_cartesian_coordinates, &
         transform_internal_gradient_to_cartesian, triatomic_distance_jacobian
     use chempotpy_internal_coordinates, only: finalize_legacy_triatomic_surface, &
-        prepare_legacy_triatomic_coordinates
-    use chempotpy_interpolation, only: cubic_spline_coefficients, evaluate_cubic_spline, &
-        evaluate_tabulated_cubic_spline, prepare_tabulated_cubic_spline
+        prepare_legacy_triatomic_coordinates, rigid_diatom_jacobi_coordinates
+    use chempotpy_interpolation, only: cubic_spline_coefficients, cubic_spline_polynomial_coefficients, &
+        evaluate_cubic_spline, evaluate_cubic_spline_polynomial, evaluate_tabulated_cubic_spline, &
+        prepare_tabulated_cubic_spline
     use chempotpy_kinds, only: dp, real32, real64, sp, wp
     use chempotpy_linear_algebra, only: symmetric_eigendecomposition
+    use chempotpy_quadrature, only: gauss_legendre_rule
     use chempotpy_constants, only: codata_adjustment_year, PI
     use chempotpy_legacy_coordinates, only: cartesian_to_potlib_coordinates, &
         legacy_triatomic_distances_to_bohr, triatomic_distances_to_bohr
@@ -302,8 +309,11 @@ program test_fortran_core
     real(wp) :: finite_values(2), finite_gradient(2,9), finite_hessian(2,9,9)
     real(wp) :: symmetric_matrix(2,2), eigenvalues(2), eigenvectors(2,2)
     real(wp) :: spline_coordinates(3), spline_values(3), spline_second(3), spline_third(3), spline_first(3)
-    real(wp) :: spline_value, spline_first_value, spline_second_value
+    real(wp) :: polynomial_coordinates(4), polynomial_values(4), polynomial_first(4)
+    real(wp) :: polynomial_second(4), polynomial_third(4), quadrature_nodes(4), quadrature_weights(4)
+    real(wp) :: jacobi_cosine, jacobi_distance, spline_value, spline_first_value, spline_second_value
     type(chempotpy_status_t) :: evaluation_status
+    logical                  :: jacobi_valid
     integer                  :: conversion_status, i, j, solver_status
 
     if( atomic_number('H') /= 1 .or. atomic_number(' cl ') /= 17 ) &
@@ -371,6 +381,17 @@ program test_fortran_core
     call evaluate_cubic_spline(spline_coordinates, spline_values, spline_second, 1.5_wp, spline_value)
     if( abs(spline_value-2.25_wp) > 32.0_wp*epsilon(1.0_wp) ) &
         error stop 'clamped cubic spline failed'
+    polynomial_coordinates = [0.0_wp, 1.0_wp, 2.0_wp, 3.0_wp]
+    polynomial_values      = polynomial_coordinates**3
+    call cubic_spline_polynomial_coefficients(polynomial_coordinates, polynomial_values, polynomial_first, &
+        polynomial_second, polynomial_third)
+    spline_value = evaluate_cubic_spline_polynomial(polynomial_coordinates, polynomial_values, polynomial_first, &
+        polynomial_second, polynomial_third, 1.5_wp)
+    if( abs(spline_value-3.375_wp) > 64.0_wp*epsilon(1.0_wp) ) &
+        error stop 'local cubic-polynomial spline failed'
+    call gauss_legendre_rule(0.0_wp, 1.0_wp, quadrature_nodes, quadrature_weights)
+    if( abs(dot_product(quadrature_weights,quadrature_nodes**4)-0.2_wp) > 64.0_wp*epsilon(1.0_wp) ) &
+        error stop 'Gauss--Legendre quadrature failed'
     spline_values  = spline_coordinates
     spline_second  = 0.0_wp
     call prepare_tabulated_cubic_spline(spline_coordinates, spline_values, 1.0e-12_wp, spline_second, &
@@ -529,6 +550,18 @@ program test_fortran_core
         -12.0_wp/sqrt(160.0_wp), 0.0_wp, -4.0_wp/sqrt(160.0_wp), &
         12.0_wp/sqrt(160.0_wp)]) > 8.0_wp*epsilon(1.0_wp)) ) &
         error stop 'ordered-pair Jacobian failed'
+    coordinates = 0.0_wp
+    coordinates(1,1) = -2.0_wp*bohr_to_angstrom
+    coordinates(2,3) = -16.0_wp/30.0_wp
+    coordinates(3,3) = 14.0_wp/30.0_wp
+    call rigid_diatom_jacobi_coordinates(coordinates, [14.0_wp, 16.0_wp], jacobi_distance, jacobi_cosine, &
+        jacobi_valid)
+    if( .not. jacobi_valid .or. abs(jacobi_distance-2.0_wp) > 8.0_wp*epsilon(1.0_wp) .or. &
+        abs(jacobi_cosine) > 8.0_wp*epsilon(1.0_wp) ) error stop 'rigid-diatom Jacobi adapter failed'
+    coordinates = 0.0_wp
+    coordinates(2,1) = 3.0_wp*bohr_to_angstrom
+    coordinates(3,1) = 3.0_wp*bohr_to_angstrom
+    coordinates(3,2) = 4.0_wp*bohr_to_angstrom
     call prepare_legacy_triatomic_coordinates(coordinates, pair_distances, triatomic_jacobian)
     call test_triatomic_kernel(pair_distances, 1, surface_energy_hartree, surface_internal_gradient)
     call finalize_legacy_triatomic_surface( &

@@ -2482,6 +2482,16 @@
       "variable_atom_count": false
     },
     {
+      "system_name": "HeNO",
+      "surface_name": "HeNO_Klos_2000",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
       "system_name": "HNi",
       "surface_name": "HNi_EAM5_1995",
       "entry_point": "pes",
@@ -3298,6 +3308,26 @@
       "atom_count": 3,
       "state_count": 2,
       "analytic_gradient": true,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NeNO",
+      "surface_name": "NeNO_Klos_2016_v0",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
+      "nonadiabatic_coupling": false,
+      "variable_atom_count": false
+    },
+    {
+      "system_name": "NeNO",
+      "surface_name": "NeNO_Klos_2016_v2",
+      "entry_point": "pes",
+      "atom_count": 3,
+      "state_count": 2,
+      "analytic_gradient": false,
       "nonadiabatic_coupling": false,
       "variable_atom_count": false
     },

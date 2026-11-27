@@ -4,11 +4,89 @@ module chempotpy_interpolation
     implicit none
     private
     public :: cubic_spline_coefficients
+    public :: cubic_spline_polynomial_coefficients
     public :: evaluate_cubic_spline
+    public :: evaluate_cubic_spline_polynomial
     public :: evaluate_tabulated_cubic_spline
     public :: prepare_tabulated_cubic_spline
 
     contains
+
+    !> @brief Build local cubic-polynomial spline coefficients with divided-difference endpoint conditions.
+    subroutine cubic_spline_polynomial_coefficients( coordinates, values, first, second, third )
+        real(wp), intent(in)  :: coordinates(:), values(:)
+        real(wp), intent(out) :: first(size(coordinates)), second(size(coordinates)), third(size(coordinates))
+        integer               :: index, point_count
+        real(wp)              :: factor, interval(size(coordinates))
+        point_count = size(coordinates)
+        first       = 0.0_wp; second = 0.0_wp; third = 0.0_wp
+        if( point_count < 2 ) return
+        if( point_count == 2 )then
+            first = (values(2)-values(1))/(coordinates(2)-coordinates(1))
+            return
+        endif
+        interval(1) = coordinates(2)-coordinates(1)
+        second(2)   = (values(2)-values(1))/interval(1)
+        do index=2, point_count-1
+            interval(index) = coordinates(index+1)-coordinates(index)
+            first(index)    = 2.0_wp*(interval(index-1)+interval(index))
+            second(index+1) = (values(index+1)-values(index))/interval(index)
+            second(index)   = second(index+1)-second(index)
+        enddo
+        first(1)            = -interval(1)
+        first(point_count)  = -interval(point_count-1)
+        second(1)           = 0.0_wp
+        second(point_count) = 0.0_wp
+        if( point_count > 3 )then
+            second(1) = second(3)/(coordinates(4)-coordinates(2)) - second(2)/(coordinates(3)-coordinates(1))
+            second(point_count) = second(point_count-1)/(coordinates(point_count)-coordinates(point_count-2)) - &
+                & second(point_count-2)/(coordinates(point_count-1)-coordinates(point_count-3))
+            second(1) = second(1)*interval(1)**2/(coordinates(4)-coordinates(1))
+            second(point_count) = -second(point_count)*interval(point_count-1)**2/ (coordinates(point_count)- &
+                & coordinates(point_count-3))
+        endif
+        do index=2, point_count
+            factor        = interval(index-1)/first(index-1)
+            first(index)  = first(index)-factor*interval(index-1)
+            second(index) = second(index)-factor*second(index-1)
+        enddo
+        second(point_count) = second(point_count)/first(point_count)
+        do index=point_count-1, 1, -1
+            second(index) = (second(index)-interval(index)*second(index+1))/first(index)
+        enddo
+        first(point_count) = (values(point_count)-values(point_count-1))/interval(point_count-1) + &
+            & interval(point_count-1)*(second(point_count-1)+2.0_wp*second(point_count))
+        do index=1, point_count-1
+            first(index)  = (values(index+1)-values(index))/interval(index) - interval(index)*(second(index+1)+2.0_wp* &
+                & second(index))
+            third(index)  = (second(index+1)-second(index))/interval(index)
+            second(index) = 3.0_wp*second(index)
+        enddo
+        second(point_count) = 3.0_wp*second(point_count)
+        third(point_count)  = third(point_count-1)
+    end subroutine cubic_spline_polynomial_coefficients
+
+    !> @brief Evaluate one local cubic-polynomial spline interval.
+    pure function evaluate_cubic_spline_polynomial( coordinates, values, first, second, third, argument ) &
+            result(value)
+        real(wp), intent(in) :: coordinates(:), values(:), first(:), second(:), third(:), argument
+        real(wp)             :: value
+        real(wp)             :: offset
+        integer              :: lower_index, middle_index, upper_index
+        lower_index = 1; upper_index = size(coordinates)+1
+        do while( upper_index > lower_index+1 )
+            middle_index = (lower_index+upper_index)/2
+            if( argument < coordinates(middle_index) )then
+                upper_index = middle_index
+            else
+                lower_index = middle_index
+            endif
+        enddo
+        lower_index = min(lower_index, size(coordinates))
+        offset      = argument-coordinates(lower_index)
+        value       = values(lower_index)+offset*(first(lower_index)+offset*(second(lower_index)+ offset* &
+            & third(lower_index)))
+    end function evaluate_cubic_spline_polynomial
 
     !> @brief Build cubic-spline second derivatives with natural or clamped endpoints.
     subroutine cubic_spline_coefficients( coordinates, values, first_derivative, last_derivative, second_derivatives )

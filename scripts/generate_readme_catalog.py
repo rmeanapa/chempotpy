@@ -25,6 +25,7 @@ MODEL_FAMILIES = (
     (re.compile(r"3x3_DPEM", re.IGNORECASE), "neural-network coupled"),
     (re.compile(r"sGDML", re.IGNORECASE), "symmetric gradient-domain machine-learning"),
     (re.compile(r"BMKP", re.IGNORECASE), "BMKP global analytic"),
+    (re.compile(r"Klos", re.IGNORECASE), "rare-gas--diatom analytic"),
     (re.compile(r"PIPNN", re.IGNORECASE), "PIP neural-network"),
     (re.compile(r"APRP", re.IGNORECASE), "anchor-points reactive"),
     (re.compile(r"VBMM", re.IGNORECASE), "valence-bond molecular-mechanics"),

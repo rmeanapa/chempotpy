@@ -28,6 +28,17 @@ SUPPORT_SOURCES = {
     ("CH2p", "CH2p_3x3_DPEM_2025"): (
         "chempotpy_ch2p_long_range.f90",
     ),
+    ("NeNO", "NeNO_Klos_2016_v0"): (
+        "chempotpy_neno_parameters.f90",
+        "chempotpy_neno_runtime.f90",
+    ),
+    ("NeNO", "NeNO_Klos_2016_v2"): (
+        "chempotpy_neno_parameters.f90",
+        "chempotpy_neno_runtime.f90",
+    ),
+    ("NeNO", "chempotpy_neno_runtime"): (
+        "chempotpy_neno_parameters.f90",
+    ),
     ("H3FO", "H3FO_Tew_2022"): (
         "chempotpy_h3fo_tew_parameters.f90",
     ),
@@ -263,6 +274,7 @@ CORE_MODULE_SOURCES = {
     "chempotpy_neural_network": (
         CORE_FORTRAN_ROOT / "chempotpy_neural_network.f90"
     ),
+    "chempotpy_quadrature": CORE_FORTRAN_ROOT / "chempotpy_quadrature.f90",
     "chempotpy_rkhs": CORE_FORTRAN_ROOT / "chempotpy_rkhs.f90",
     "chempotpy_sgdml": CORE_FORTRAN_ROOT / "chempotpy_sgdml.f90",
     "chempotpy_units": CORE_FORTRAN_ROOT / "chempotpy_units.f90",

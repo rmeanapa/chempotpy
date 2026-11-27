@@ -8,8 +8,8 @@ from chempotpy.core.catalog import resolve_atom_symbols, surface_catalog
 class ProviderCatalogTests(unittest.TestCase):
     def test_catalog_covers_every_callable_surface(self) -> None:
         records = surface_catalog()
-        self.assertEqual(len(records), 410)
-        self.assertEqual(len({record.key for record in records}), 410)
+        self.assertEqual(len(records), 413)
+        self.assertEqual(len({record.key for record in records}), 413)
 
     def test_every_fixed_system_resolves_its_atom_symbols(self) -> None:
         for record in surface_catalog():

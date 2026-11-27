@@ -27,7 +27,7 @@ surfaces.
 
 <!-- BEGIN GENERATED PES CATALOG -->
 
-The catalog currently exposes **410 callable surfaces** across **105 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
+The catalog currently exposes **413 callable surfaces** across **107 chemical systems**. The final column gives the number of electronic surfaces represented by each callable PES or DPEM entry.
 
 <table>
 <thead>
@@ -282,6 +282,7 @@ The catalog currently exposes **410 callable surfaces** across **105 chemical sy
 <tr><td rowspan="1" valign="top"><strong>HClOH</strong></td><td><code>HClOH_PIPNN</code></td><td>PIP neural-network potential</td><td align="center">1</td></tr>
 <tr><td rowspan="2" valign="top"><strong>HeH<sub>2</sub><sup>+</sup></strong></td><td><code>HeH2p_DIM_1976</code></td><td>Diatomics-in-molecules potential</td><td align="center">1</td></tr>
 <tr><td><code>HeH2p_MTJS_1987</code></td><td>Analytic potential</td><td align="center">1</td></tr>
+<tr><td rowspan="1" valign="top"><strong>HeNO</strong></td><td><code>HeNO_Klos_2000</code></td><td>Rare-gas--diatom analytic potential</td><td align="center">2</td></tr>
 <tr><td rowspan="3" valign="top"><strong>HNi</strong></td><td><code>HNi_EAM5_1995</code></td><td>Embedded-atom potential</td><td align="center">1</td></tr>
 <tr><td><code>HNi_EAM6_1996</code></td><td>Embedded-atom potential</td><td align="center">1</td></tr>
 <tr><td><code>HNi_EAM7_1998</code></td><td>Embedded-atom potential</td><td align="center">1</td></tr>
@@ -364,6 +365,8 @@ The catalog currently exposes **410 callable surfaces** across **105 chemical sy
 <tr><td><code>NaH2_LEPS_7S_2000_DPEM</code></td><td>LEPS reactive diabatic representation</td><td align="center">2</td></tr>
 <tr><td><code>NaH2_LEPS_7SD_2000</code></td><td>LEPS reactive potential</td><td align="center">2</td></tr>
 <tr><td><code>NaH2_LEPS_7SD_2000_DPEM</code></td><td>LEPS reactive diabatic representation</td><td align="center">2</td></tr>
+<tr><td rowspan="2" valign="top"><strong>NeNO</strong></td><td><code>NeNO_Klos_2016_v0</code></td><td>Rare-gas--diatom analytic potential</td><td align="center">2</td></tr>
+<tr><td><code>NeNO_Klos_2016_v2</code></td><td>Rare-gas--diatom analytic potential</td><td align="center">2</td></tr>
 <tr><td rowspan="6" valign="top"><strong>NH<sub>3</sub></strong></td><td><code>NH3_GEN_FFW1_2006</code></td><td>General analytic potential</td><td align="center">2</td></tr>
 <tr><td><code>NH3_GEN_FFW1_2006_DPEM</code></td><td>General analytic diabatic representation</td><td align="center">2</td></tr>
 <tr><td><code>NH3_GEN_FFW2_2007</code></td><td>General analytic potential</td><td align="center">2</td></tr>
